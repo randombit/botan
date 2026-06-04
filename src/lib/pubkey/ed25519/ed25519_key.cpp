@@ -58,7 +58,12 @@ Ed25519_PublicKey::Ed25519_PublicKey(const uint8_t pub_key[], size_t pub_len) {
    m_public.assign(pub_key, pub_key + pub_len);
 }
 
-Ed25519_PublicKey::Ed25519_PublicKey(const AlgorithmIdentifier& /*unused*/, std::span<const uint8_t> key_bits) {
+Ed25519_PublicKey::Ed25519_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
+   // RFC 8310 Section 3: "the parameters MUST be absent".
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for Ed25519 public key");
+   }
+
    m_public.assign(key_bits.begin(), key_bits.end());
 
    if(m_public.size() != 32) {
@@ -110,7 +115,12 @@ Ed25519_PrivateKey::Ed25519_PrivateKey(RandomNumberGenerator& rng) {
    ed25519_gen_keypair(m_public.data(), m_private.data(), seed.data());
 }
 
-Ed25519_PrivateKey::Ed25519_PrivateKey(const AlgorithmIdentifier& /*unused*/, std::span<const uint8_t> key_bits) {
+Ed25519_PrivateKey::Ed25519_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
+   // RFC 8310 Section 3: "the parameters MUST be absent".
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for Ed25519 private key");
+   }
+
    secure_vector<uint8_t> bits;
    BER_Decoder(key_bits, BER_Decoder::Limits::DER()).decode(bits, ASN1_Type::OctetString).discard_remaining();
 

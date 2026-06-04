@@ -259,7 +259,12 @@ FrodoKEM_PublicKey::FrodoKEM_PublicKey(std::span<const uint8_t> pub_key, FrodoKE
 }
 
 FrodoKEM_PublicKey::FrodoKEM_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
-      FrodoKEM_PublicKey(key_bits, FrodoKEMMode(alg_id.oid())) {}
+      FrodoKEM_PublicKey(key_bits, FrodoKEMMode(alg_id.oid())) {
+   // The parameter set is identified by the OID; no parameters are defined.
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for FrodoKEM public key");
+   }
+}
 
 FrodoKEM_PublicKey::FrodoKEM_PublicKey(const FrodoKEM_PublicKey& other) {
    m_public = std::make_shared<FrodoKEM_PublicKeyInternal>(
@@ -381,7 +386,12 @@ FrodoKEM_PrivateKey::FrodoKEM_PrivateKey(std::span<const uint8_t> sk, FrodoKEMMo
 }
 
 FrodoKEM_PrivateKey::FrodoKEM_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
-      FrodoKEM_PrivateKey(key_bits, FrodoKEMMode(alg_id.oid())) {}
+      FrodoKEM_PrivateKey(key_bits, FrodoKEMMode(alg_id.oid())) {
+   // The parameter set is identified by the OID; no parameters are defined.
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for FrodoKEM private key");
+   }
+}
 
 std::unique_ptr<Public_Key> FrodoKEM_PrivateKey::public_key() const {
    return std::make_unique<FrodoKEM_PublicKey>(*this);

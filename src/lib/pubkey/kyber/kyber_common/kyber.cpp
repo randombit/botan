@@ -172,7 +172,12 @@ size_t Kyber_PublicKey::estimated_strength() const {
 }
 
 Kyber_PublicKey::Kyber_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
-      Kyber_PublicKey(key_bits, KyberMode(alg_id.oid())) {}
+      Kyber_PublicKey(key_bits, KyberMode(alg_id.oid())) {
+   // The parameter set is identified by the OID; no parameters are defined.
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for ML-KEM/Kyber public key");
+   }
+}
 
 Kyber_PublicKey::Kyber_PublicKey(std::span<const uint8_t> pub_key, KyberMode mode) {
    m_public = std::make_shared<Kyber_PublicKeyInternal>(mode, KyberSerializedPublicKey(pub_key));
@@ -224,7 +229,12 @@ Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode mode) {
 }
 
 Kyber_PrivateKey::Kyber_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
-      Kyber_PrivateKey(key_bits, KyberMode(alg_id.oid())) {}
+      Kyber_PrivateKey(key_bits, KyberMode(alg_id.oid())) {
+   // The parameter set is identified by the OID; no parameters are defined.
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for ML-KEM/Kyber private key");
+   }
+}
 
 Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) {
    KyberConstants mode(m);

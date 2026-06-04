@@ -34,8 +34,14 @@ class HSS_LMS_PrivateKeyInternal;
 class BOTAN_PUBLIC_API(3, 5) HSS_LMS_PublicKey : public virtual Public_Key {
    public:
       /**
+       * @brief Load a public key from an X.509 SubjectPublicKeyInfo.
+       */
+      HSS_LMS_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
+
+      /**
        * @brief Load an existing public key using its bytes.
        */
+      BOTAN_DEPRECATED("Use the constructor taking an AlgorithmIdentifier")
       BOTAN_FUTURE_EXPLICIT HSS_LMS_PublicKey(std::span<const uint8_t> pub_key_bytes);
 
       ~HSS_LMS_PublicKey() override;
@@ -121,8 +127,14 @@ class BOTAN_PUBLIC_API(3, 5) HSS_LMS_PrivateKey final : public virtual HSS_LMS_P
                                                         public virtual Private_Key {
    public:
       /**
+       * @brief Load a private key from a PKCS #8 PrivateKeyInfo.
+       */
+      HSS_LMS_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
+
+      /**
        * @brief Load an existing LMS private key using its bytes
        */
+      BOTAN_DEPRECATED("Use the constructor taking an AlgorithmIdentifier")
       BOTAN_FUTURE_EXPLICIT HSS_LMS_PrivateKey(std::span<const uint8_t> private_key_bytes);
 
       /**

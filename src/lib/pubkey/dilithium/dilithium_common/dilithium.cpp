@@ -317,7 +317,12 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
 };
 
 Dilithium_PublicKey::Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> pk) :
-      Dilithium_PublicKey(pk, DilithiumMode(alg_id.oid())) {}
+      Dilithium_PublicKey(pk, DilithiumMode(alg_id.oid())) {
+   // The parameter set is identified by the OID; no parameters are defined.
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for ML-DSA/Dilithium public key");
+   }
+}
 
 Dilithium_PublicKey::Dilithium_PublicKey(std::span<const uint8_t> pk, DilithiumMode m) {
    DilithiumConstants mode(m);
@@ -418,7 +423,12 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(RandomNumberGenerator& rng, Dilithium
 }
 
 Dilithium_PrivateKey::Dilithium_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> sk) :
-      Dilithium_PrivateKey(sk, DilithiumMode(alg_id.oid())) {}
+      Dilithium_PrivateKey(sk, DilithiumMode(alg_id.oid())) {
+   // The parameter set is identified by the OID; no parameters are defined.
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for ML-DSA/Dilithium private key");
+   }
+}
 
 Dilithium_PrivateKey::Dilithium_PrivateKey(std::span<const uint8_t> sk, DilithiumMode m) {
    DilithiumConstants mode(m);

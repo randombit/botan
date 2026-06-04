@@ -137,7 +137,12 @@ SphincsPlus_PublicKey::SphincsPlus_PublicKey(std::span<const uint8_t> pub_key, S
 }
 
 SphincsPlus_PublicKey::SphincsPlus_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
-      SphincsPlus_PublicKey(key_bits, Sphincs_Parameters::create(alg_id.oid())) {}
+      SphincsPlus_PublicKey(key_bits, Sphincs_Parameters::create(alg_id.oid())) {
+   // The parameter set is identified by the OID; no parameters are defined.
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for SLH-DSA/SPHINCS+ public key");
+   }
+}
 
 SphincsPlus_PublicKey::~SphincsPlus_PublicKey() = default;
 
@@ -296,7 +301,12 @@ SphincsPlus_PrivateKey::SphincsPlus_PrivateKey(std::span<const uint8_t> private_
       SphincsPlus_PrivateKey(private_key, Sphincs_Parameters::create(type, hash)) {}
 
 SphincsPlus_PrivateKey::SphincsPlus_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
-      SphincsPlus_PrivateKey(key_bits, Sphincs_Parameters::create(alg_id.oid())) {}
+      SphincsPlus_PrivateKey(key_bits, Sphincs_Parameters::create(alg_id.oid())) {
+   // The parameter set is identified by the OID; no parameters are defined.
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for SLH-DSA/SPHINCS+ private key");
+   }
+}
 
 SphincsPlus_PrivateKey::SphincsPlus_PrivateKey(std::span<const uint8_t> private_key, Sphincs_Parameters params) :
       SphincsPlus_PublicKey(slice_off_public_key(params.object_identifier(), private_key), params) {
