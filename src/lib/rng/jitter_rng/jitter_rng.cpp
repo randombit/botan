@@ -36,7 +36,7 @@ Jitter_RNG_Internal::Jitter_RNG_Internal() {
    constexpr unsigned int flags = JENT_FORCE_FIPS;  // enable health tests
 
    // if flags and osr are used, use the same values for init and alloc
-   static int result = jent_entropy_init_ex(oversampling_rate, flags);
+   static const int result = jent_entropy_init_ex(oversampling_rate, flags);
 
    // no further details documented regarding the return value
    if(result != 0) {

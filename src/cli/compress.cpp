@@ -13,6 +13,8 @@
 
 namespace Botan_CLI {
 
+namespace {
+
 #if defined(BOTAN_HAS_COMPRESSION)
 
 class Compress final : public Command {
@@ -151,5 +153,7 @@ class Decompress final : public Command {
 BOTAN_REGISTER_COMMAND("decompress", Decompress);
 
 #endif
+
+}  // namespace
 
 }  // namespace Botan_CLI

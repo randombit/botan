@@ -403,8 +403,6 @@ class tls_proxy_server final {
       ServerStatus m_status;
 };
 
-}  // namespace
-
 class TLS_Proxy final : public Command {
    public:
       TLS_Proxy() :
@@ -484,6 +482,8 @@ class TLS_Proxy final : public Command {
 // NOLINTEND(*-avoid-endl,*-avoid-bind)
 
 BOTAN_REGISTER_COMMAND("tls_proxy", TLS_Proxy);
+
+}  // namespace
 
 }  // namespace Botan_CLI
 

@@ -14,6 +14,8 @@
 
 namespace Botan_CLI {
 
+namespace {
+
 class PSK_Tool_Base : public Command {
    public:
       std::string group() const override { return "psk"; }
@@ -83,6 +85,8 @@ class PSK_Tool_List final : public PSK_Tool_Base {
 BOTAN_REGISTER_COMMAND("psk_set", PSK_Tool_Set);
 BOTAN_REGISTER_COMMAND("psk_get", PSK_Tool_Get);
 BOTAN_REGISTER_COMMAND("psk_list", PSK_Tool_List);
+
+}  // namespace
 
 }  // namespace Botan_CLI
 

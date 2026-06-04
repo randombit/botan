@@ -281,16 +281,13 @@ namespace Botan::TPM2 {
  */
 [[nodiscard]] inline std::optional<std::string> cipher_tss2_to_botan(TPMT_SYM_DEF cipher_def) noexcept {
    const auto cipher_name = block_cipher_tss2_to_botan(cipher_def.algorithm, cipher_def.keyBits.sym);
-   if(!cipher_name) {
-      return std::nullopt;
-   }
-
    const auto mode_name = cipher_mode_tss2_to_botan(cipher_def.mode.sym);
-   if(!mode_name) {
+
+   if(mode_name && cipher_name) {
+      return Botan::fmt("{}({})", *mode_name, *cipher_name);
+   } else {
       return std::nullopt;
    }
-
-   return Botan::fmt("{}({})", mode_name.value(), cipher_name.value());
 }
 
 [[nodiscard]] inline std::optional<TPMT_SYM_DEF> cipher_botan_to_tss2(std::string_view algo_name) {

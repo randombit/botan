@@ -450,7 +450,7 @@ class bitvector_base final {
        * @returns true if @p other contains the same bit pattern as this
        */
       template <bitvectorish OtherT>
-      bool equals(const OtherT& other) const noexcept {
+      bool equals(const OtherT& other) const {
          return (*this ^ other).none();
       }
 

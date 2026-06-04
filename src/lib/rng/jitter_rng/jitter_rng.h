@@ -22,7 +22,12 @@ class Jitter_RNG_Internal;
 class BOTAN_PUBLIC_API(3, 6) Jitter_RNG final : public RandomNumberGenerator {
    public:
       Jitter_RNG();
-      ~Jitter_RNG();
+      ~Jitter_RNG() override;
+
+      Jitter_RNG(const Jitter_RNG& other) = delete;
+      Jitter_RNG(Jitter_RNG&& other) = default;
+      Jitter_RNG& operator=(const Jitter_RNG& other) = delete;
+      Jitter_RNG& operator=(Jitter_RNG&& other) = delete;
 
       std::string name() const override { return "JitterRNG"; }
 
