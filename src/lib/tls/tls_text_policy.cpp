@@ -10,6 +10,7 @@
 
 #include <botan/assert.h>
 #include <botan/exceptn.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <optional>
 #include <sstream>
@@ -199,7 +200,11 @@ size_t Text_Policy::new_session_tickets_upon_handshake_success() const {
 std::vector<uint16_t> Text_Policy::srtp_profiles() const {
    std::vector<uint16_t> r;
    for(const auto& p : get_list("srtp_profiles", std::vector<std::string>())) {
-      r.push_back(to_uint16(p));
+      if(const auto srtp = parse_u16(p)) {
+         r.push_back(srtp.value());
+      } else {
+         throw Invalid_Argument(fmt("Failed to parse input '{}' as a SRTP profile id", p));
+      }
    }
    return r;
 }

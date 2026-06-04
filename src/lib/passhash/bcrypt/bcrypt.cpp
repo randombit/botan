@@ -172,14 +172,10 @@ bool check_bcrypt(std::string_view pass, std::string_view hash) {
    }
 
    // bcrypt workfactor spec is always two characters
-   const char wf0 = hash[4];
-   const char wf1 = hash[5];
-   if(wf0 < '0' || wf0 > '9' || wf1 < '0' || wf1 > '9') {
-      return false;
-   }
-   const uint16_t workfactor = static_cast<uint16_t>((wf0 - '0') * 10 + (wf1 - '0'));
+   const auto workfactor = parse_u16(hash.substr(4, 2));
+
    // bcrypt does support larger range of workfactors, this is what make_bcrypt allows
-   if(workfactor < 4 || workfactor > 18) {
+   if(!workfactor.has_value() || *workfactor < 4 || *workfactor > 18) {
       return false;
    }
 
@@ -188,7 +184,7 @@ bool check_bcrypt(std::string_view pass, std::string_view hash) {
       return false;
    }
 
-   const std::string compare = make_bcrypt(pass, salt, workfactor, bcrypt_version);
+   const std::string compare = make_bcrypt(pass, salt, *workfactor, bcrypt_version);
 
    return CT::is_equal(as_span_of_bytes(hash), as_span_of_bytes(compare)).as_bool();
 }

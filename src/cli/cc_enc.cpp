@@ -13,6 +13,7 @@
    #include <botan/fpe_fe1.h>
    #include <botan/pbkdf.h>
    #include <botan/symkey.h>
+   #include <botan/internal/parsing.h>
 
 namespace Botan_CLI {
 
@@ -91,6 +92,16 @@ uint64_t decrypt_cc_number(uint64_t enc_cc, const Botan::SymmetricKey& key, cons
    return cc_derank(dec_cc);
 }
 
+uint64_t parse_cc(std::string_view input) {
+   if(input.size() >= 13 && input.size() <= 19) {
+      if(auto cc = Botan::parse_u64(input)) {
+         return *cc;
+      }
+   }
+
+   throw CLI_Usage_Error("Invalid credit card input");
+}
+
 class CC_Encrypt final : public Command {
    public:
       CC_Encrypt() : Command("cc_encrypt CC passphrase --tweak=") {}
@@ -102,7 +113,7 @@ class CC_Encrypt final : public Command {
       }
 
       void go() override {
-         const uint64_t cc_number = std::stoull(get_arg("CC"));
+         const uint64_t cc_number = parse_cc(get_arg("CC"));
          const std::vector<uint8_t> tweak = Botan::hex_decode(get_arg("tweak"));
          const std::string pass = get_arg("passphrase");
 
@@ -130,7 +141,7 @@ class CC_Decrypt final : public Command {
       }
 
       void go() override {
-         const uint64_t cc_number = std::stoull(get_arg("CC"));
+         const uint64_t cc_number = parse_cc(get_arg("CC"));
          const std::vector<uint8_t> tweak = Botan::hex_decode(get_arg("tweak"));
          const std::string pass = get_arg("passphrase");
 

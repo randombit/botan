@@ -42,18 +42,43 @@ BOTAN_TEST_API std::vector<std::string> split_on(std::string_view str, char deli
 std::string string_join(const std::vector<std::string>& strs, char delim);
 
 /**
-* Convert a decimal string to a number
-* @param str the string to convert
+* Convert a decimal string to a number, throwing if invalid
+* @param input the string to convert
 * @return number value of the string
 */
-BOTAN_TEST_API uint32_t to_u32bit(std::string_view str);
+BOTAN_TEST_API uint32_t to_u32bit(std::string_view input);
 
 /**
-* Convert a decimal string to a number
-* @param str the string to convert
-* @return number value of the string
+* Attempt to parse a string as a 16-bit decimal integer
+*
+* @param input the string to convert
+* @return integer value, or nullopt if invalid
 */
-uint16_t to_uint16(std::string_view str);
+std::optional<uint16_t> parse_u16(std::string_view input);
+
+/**
+* Attempt to parse a string as a 32-bit decimal integer
+*
+* @param input the string to convert
+* @return integer value, or nullopt if invalid
+*/
+BOTAN_TEST_API std::optional<uint32_t> parse_u32(std::string_view input);
+
+/**
+* Attempt to parse a string as a 64-bit decimal integer
+*
+* @param input the string to convert
+* @return integer value, or nullopt if invalid
+*/
+BOTAN_TEST_API std::optional<uint64_t> parse_u64(std::string_view input);
+
+/**
+* Attempt to parse a string as a size_t-sized decimal integer
+*
+* @param input the string to convert
+* @return integer value, or nullopt if invalid
+*/
+BOTAN_TEST_API std::optional<size_t> parse_sz(std::string_view input);
 
 std::map<std::string, std::string> read_cfg(std::istream& is);
 

@@ -16,6 +16,7 @@
 
 // Always available:
 #include <botan/version.h>
+#include <botan/internal/parsing.h>
 #include <botan/internal/target_info.h>
 
 #if defined(BOTAN_HAS_CPUID)
@@ -178,27 +179,18 @@ std::vector<size_t> unique_buffer_sizes(const std::string& cmdline_arg) {
 
    std::set<size_t> buf;
    for(const std::string& size_str : Command::split_on(cmdline_arg, ',')) {
-      size_t x = 0;
-      try {
-         size_t converted = 0;
-         x = static_cast<size_t>(std::stoul(size_str, &converted, 0));
-
-         if(converted != size_str.size()) {
-            throw CLI_Usage_Error("Invalid integer");
+      if(const auto sz = Botan::parse_sz(size_str)) {
+         if(*sz == 0) {
+            throw CLI_Usage_Error("Cannot have a zero-sized buffer");
          }
-      } catch(std::exception&) {
+         if(*sz > MAX_BUF_SIZE) {
+            throw CLI_Usage_Error("Specified buffer size is too large");
+         }
+
+         buf.insert(*sz);
+      } else {
          throw CLI_Usage_Error("Invalid integer value '" + size_str + "' for option buf-size");
       }
-
-      if(x == 0) {
-         throw CLI_Usage_Error("Cannot have a zero-sized buffer");
-      }
-
-      if(x > MAX_BUF_SIZE) {
-         throw CLI_Usage_Error("Specified buffer size is too large");
-      }
-
-      buf.insert(x);
    }
 
    return std::vector<size_t>(buf.begin(), buf.end());

@@ -8,6 +8,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/os_utils.h>
+#include <botan/internal/parsing.h>
 #include <botan/internal/target_info.h>
 #include <algorithm>
 #include <thread>
@@ -24,9 +25,9 @@ std::optional<size_t> global_thread_pool_size() {
       }
 
       // Try to convert to an integer if possible:
-      try {
-         return std::optional<size_t>(std::stoul(var, nullptr));
-      } catch(std::exception&) {}
+      if(const auto sz = parse_sz(var)) {
+         return sz;
+      }
 
       // If it was neither a number nor a special value, then ignore the env
    }

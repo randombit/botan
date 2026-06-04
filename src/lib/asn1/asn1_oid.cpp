@@ -32,33 +32,27 @@ void oid_valid_check(std::span<const uint32_t> oid) {
    BOTAN_ARG_CHECK(oid[1] <= 0xFFFFFFAF, "OID second arc too large");
 }
 
-// returns empty on invalid
-std::vector<uint32_t> parse_oid_str(std::string_view oid) {
-   try {
-      std::string elem;
-      std::vector<uint32_t> oid_elems;
+// returns nullopt on invalid
+std::optional<std::vector<uint32_t>> parse_oid_str(std::string_view oid) {
+   std::vector<uint32_t> oid_elems;
 
-      for(const char c : oid) {
-         if(c == '.') {
-            if(elem.empty()) {
-               return std::vector<uint32_t>();
-            }
-            oid_elems.push_back(to_u32bit(elem));
-            elem.clear();
-         } else {
-            elem += c;
-         }
+   for(;;) {
+      const size_t dot = oid.find('.');
+
+      if(const auto elem = parse_u32(oid.substr(0, dot))) {
+         oid_elems.push_back(*elem);
+      } else {
+         return {};
       }
 
-      if(!elem.empty()) {
-         oid_elems.push_back(to_u32bit(elem));
+      // No more dots implies we just read the last group
+      if(dot == std::string_view::npos) {
+         break;
       }
-
-      return oid_elems;
-   } catch(Invalid_Argument&) {
-      // thrown by to_u32bit
-      return std::vector<uint32_t>();
+      oid = oid.substr(dot + 1);
    }
+
+   return oid_elems;
 }
 
 }  // namespace
@@ -114,8 +108,12 @@ OID::OID(std::vector<uint32_t>&& init) : m_id(std::move(init)) {
 */
 OID::OID(std::string_view oid_str) {
    if(!oid_str.empty()) {
-      m_id = parse_oid_str(oid_str);
-      oid_valid_check(m_id);
+      if(auto parsed = parse_oid_str(oid_str)) {
+         m_id = std::move(*parsed);
+         oid_valid_check(m_id);
+      } else {
+         throw Invalid_Argument(fmt("Could not parse '{}' as an OID", oid_str));
+      }
    }
 }
 

@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_PASSWORD_HASHING)
    #include <botan/pwdhash.h>
+   #include <botan/internal/parsing.h>
 #endif
 
 #if defined(BOTAN_HAS_OS_UTILS)
@@ -47,14 +48,11 @@ class PBKDF_Tune final : public Command {
             if(time == "default") {
                pwhash = pwdhash_fam->default_params();
             } else {
-               size_t desired_runtime_msec = 0;
-               try {
-                  desired_runtime_msec = std::stoul(time);
-               } catch(std::exception&) {
+               if(const auto desired_runtime_msec = Botan::parse_sz(time)) {
+                  pwhash = pwdhash_fam->tune_params(output_len, *desired_runtime_msec, max_mem, tune_msec);
+               } else {
                   throw CLI_Usage_Error("Unknown time value '" + time + "' for pbkdf_tune");
                }
-
-               pwhash = pwdhash_fam->tune_params(output_len, desired_runtime_msec, max_mem, tune_msec);
             }
 
             output() << "For " << time << " ms selected " << pwhash->to_string();

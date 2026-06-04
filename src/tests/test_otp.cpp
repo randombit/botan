@@ -11,6 +11,7 @@
    #include <botan/hash.h>
    #include <botan/otp.h>
    #include <botan/internal/calendar.h>
+   #include <botan/internal/parsing.h>
 #endif
 
 namespace Botan_Tests {
@@ -111,13 +112,18 @@ class TOTP_KAT_Tests final : public Text_Based_Test {
          }
          // YYYY-MM-DDTHH:MM:SS
          // 0123456789012345678
-         const uint32_t year = static_cast<uint32_t>(std::stoi(time_str.substr(0, 4)));
-         const uint32_t month = static_cast<uint32_t>(std::stoi(time_str.substr(5, 2)));
-         const uint32_t day = static_cast<uint32_t>(std::stoi(time_str.substr(8, 2)));
-         const uint32_t hour = static_cast<uint32_t>(std::stoi(time_str.substr(11, 2)));
-         const uint32_t minute = static_cast<uint32_t>(std::stoi(time_str.substr(14, 2)));
-         const uint32_t second = static_cast<uint32_t>(std::stoi(time_str.substr(17, 2)));
-         return Botan::calendar_point(year, month, day, hour, minute, second).to_std_timepoint();
+         const auto year = Botan::parse_u32(time_str.substr(0, 4));
+         const auto month = Botan::parse_u32(time_str.substr(5, 2));
+         const auto day = Botan::parse_u32(time_str.substr(8, 2));
+         const auto hour = Botan::parse_u32(time_str.substr(11, 2));
+         const auto minute = Botan::parse_u32(time_str.substr(14, 2));
+         const auto second = Botan::parse_u32(time_str.substr(17, 2));
+
+         if(year && month && day && hour && minute && second) {
+            return Botan::calendar_point(*year, *month, *day, *hour, *minute, *second).to_std_timepoint();
+         } else {
+            throw Test_Error("Invalid TOTP timestamp string " + time_str);
+         }
       }
 };
 
