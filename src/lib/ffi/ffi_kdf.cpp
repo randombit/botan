@@ -61,7 +61,7 @@ int botan_pwdhash(const char* algo,
                   size_t password_len,
                   const uint8_t salt[],
                   size_t salt_len) {
-   if(algo == nullptr || password == nullptr) {
+   if(any_null_pointers(algo, password)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
    if(out_len > 0 && out == nullptr) {
@@ -101,7 +101,7 @@ int botan_pwdhash_timed(const char* algo,
                         size_t password_len,
                         const uint8_t salt[],
                         size_t salt_len) {
-   if(algo == nullptr || password == nullptr) {
+   if(any_null_pointers(algo, password)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
    if(out_len > 0 && out == nullptr) {
@@ -178,7 +178,7 @@ int botan_bcrypt_generate(
    uint8_t* out, size_t* out_len, const char* pass, botan_rng_t rng_obj, size_t wf, uint32_t flags) {
 #if defined(BOTAN_HAS_BCRYPT)
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(out == nullptr || out_len == nullptr || pass == nullptr) {
+      if(any_null_pointers(out, out_len, pass)) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
 

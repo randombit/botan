@@ -212,13 +212,16 @@ int botan_view_str_bounce_fn(botan_view_ctx ctx, const char* str, size_t len);
 
 template <typename Fn, typename... Args>
 int copy_view_bin(uint8_t out[], size_t* out_len, Fn fn, Args... args) {
+   if(out_len == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
    botan_view_bounce_struct ctx{out, out_len};
    return fn(args..., &ctx, botan_view_bin_bounce_fn);
 }
 
 template <typename Fn, typename... Args>
 int copy_view_str(uint8_t out[], size_t* out_len, Fn fn, Args... args) {
-   if(fn == nullptr) {
+   if(any_null_pointers(fn, out_len)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
    botan_view_bounce_struct ctx{out, out_len};

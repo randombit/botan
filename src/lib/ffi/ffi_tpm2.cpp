@@ -133,7 +133,7 @@ int botan_tpm2_ctx_init_ex(botan_tpm2_ctx_t* ctx_out, const char* tcti_name, con
 int botan_tpm2_ctx_from_esys(botan_tpm2_ctx_t* ctx_out, ESYS_CONTEXT* esys_ctx) {
 #if defined(BOTAN_HAS_TPM2)
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(ctx_out == nullptr || esys_ctx == nullptr) {
+      if(any_null_pointers(ctx_out, esys_ctx)) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
 
@@ -183,7 +183,7 @@ int botan_tpm2_enable_crypto_backend(botan_tpm2_crypto_backend_state_t* cbs_out,
                                      botan_rng_t rng) {
 #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(cbs_out == nullptr || esys_ctx == nullptr) {
+      if(any_null_pointers(cbs_out, esys_ctx)) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
 

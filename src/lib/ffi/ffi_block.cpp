@@ -62,14 +62,14 @@ int botan_block_cipher_block_size(botan_block_cipher_t bc) {
 }
 
 int botan_block_cipher_encrypt_blocks(botan_block_cipher_t bc, const uint8_t in[], uint8_t out[], size_t blocks) {
-   if(in == nullptr || out == nullptr) {
+   if(any_null_pointers(in, out)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
    return BOTAN_FFI_VISIT(bc, [=](const auto& b) { b.encrypt_n(in, out, blocks); });
 }
 
 int botan_block_cipher_decrypt_blocks(botan_block_cipher_t bc, const uint8_t in[], uint8_t out[], size_t blocks) {
-   if(in == nullptr || out == nullptr) {
+   if(any_null_pointers(in, out)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
    return BOTAN_FFI_VISIT(bc, [=](const auto& b) { b.decrypt_n(in, out, blocks); });

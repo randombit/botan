@@ -21,7 +21,7 @@ int botan_oid_destroy(botan_asn1_oid_t oid) {
 
 int botan_oid_from_string(botan_asn1_oid_t* oid_obj, const char* oid_str) {
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(oid_obj == nullptr || oid_str == nullptr) {
+      if(any_null_pointers(oid_obj, oid_str)) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
       Botan::OID oid;

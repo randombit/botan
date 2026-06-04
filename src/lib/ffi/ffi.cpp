@@ -109,11 +109,15 @@ int botan_view_str_bounce_fn(botan_view_ctx vctx, const char* str, size_t len) {
 }
 
 int botan_view_bin_bounce_fn(botan_view_ctx vctx, const uint8_t* buf, size_t len) {
-   if(vctx == nullptr || buf == nullptr) {
+   if(any_null_pointers(vctx, buf)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
    const botan_view_bounce_struct* ctx = static_cast<botan_view_bounce_struct*>(vctx);
+
+   if(ctx->out_len == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    const size_t avail = *ctx->out_len;
    *ctx->out_len = len;
