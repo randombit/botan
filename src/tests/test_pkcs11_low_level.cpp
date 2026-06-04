@@ -518,11 +518,7 @@ Test::Result login_logout_helper(const RAII_LowLevel& p11_low_level,
       std::ref(pin_as_sec_vec),
       std::placeholders::_1);
 
-   auto logout_binder =
-      std::bind(static_cast<bool (LowLevel::*)(SessionHandle, ReturnValue*) const>(&LowLevel::C_Logout),
-                p11_low_level.get(),
-                handle,
-                std::placeholders::_1);
+   auto logout_binder = std::bind(&LowLevel::C_Logout, p11_low_level.get(), handle, std::placeholders::_1);
 
    return test_function("C_Login", login_secvec_binder, "C_Logout", logout_binder);
 }

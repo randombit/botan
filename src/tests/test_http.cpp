@@ -417,8 +417,7 @@ class HTTP_Parse_Tests final : public Test {
             "Content-Length: 0\r\n"
             "\r\n";
          const auto resp = parse_via_socket(raw);
-         result.test_is_true("find Location regardless of case",
-                             resp.headers().find("Location") != resp.headers().end());
+         result.test_is_true("find Location regardless of case", resp.headers().contains("Location"));
          result.test_is_true("contains Location regardless of case", resp.headers().contains("location"));
          return result;
       }

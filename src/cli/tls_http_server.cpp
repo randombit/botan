@@ -323,8 +323,6 @@ net::awaitable<void> do_listen(tcp::endpoint endpoint,
    }
 }
 
-}  // namespace
-
 class TLS_HTTP_Server final : public Command {
    public:
       TLS_HTTP_Server() :
@@ -408,6 +406,8 @@ class TLS_HTTP_Server final : public Command {
 };
 
 BOTAN_REGISTER_COMMAND("tls_http_server", TLS_HTTP_Server);
+
+}  // namespace
 
 }  // namespace Botan_CLI
 

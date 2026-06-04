@@ -100,7 +100,7 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_WOTS_Parameters final {
       XMSS_WOTS_Parameters(ots_algorithm_t id, size_t hash_len, size_t len, size_t len1, size_t len2) :
             m_id(id), m_element_size(hash_len), m_len(len), m_len_1(len1), m_len_2(len2) {}
 
-      ots_algorithm_t m_id{};
+      ots_algorithm_t m_id;
       size_t m_element_size;
       size_t m_len;
       size_t m_len_1;
@@ -250,7 +250,7 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_Parameters final {
             m_tree_height(tree_height),
             m_len(len) {}
 
-      xmss_algorithm_t m_oid{};
+      xmss_algorithm_t m_oid;
       XMSS_WOTS_Parameters::ots_algorithm_t m_wots_oid;
       size_t m_element_size;
       size_t m_hash_id_size;

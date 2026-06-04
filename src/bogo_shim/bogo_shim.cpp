@@ -1043,8 +1043,8 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[]) {
       "verify-prefs",
    };
 
-   std::unique_ptr<Shim_Arguments> args(new Shim_Arguments(
-      bogo_shim_flags, bogo_shim_string_opts, bogo_shim_base64_opts, bogo_shim_int_opts, bogo_shim_int_vec_opts));
+   auto args = std::make_unique<Shim_Arguments>(
+      bogo_shim_flags, bogo_shim_string_opts, bogo_shim_base64_opts, bogo_shim_int_opts, bogo_shim_int_vec_opts);
 
    // may throw:
    args->parse_args(argv);
@@ -2333,8 +2333,7 @@ int main(int /*argc*/, char* argv[]) {
             if(std::string(e.what()) == "Failed to connect to host") {
                execute_test("::1");
             } else {
-               // NOLINTNEXTLINE(cert-err60-cpp)
-               throw e;
+               throw;
             }
          }
       }
