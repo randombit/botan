@@ -10,6 +10,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
+#include <botan/internal/parsing.h>
 #include <botan/internal/target_info.h>
 
 #if defined(BOTAN_HAS_CPUID)
@@ -482,10 +483,8 @@ bool OS::read_env_variable(std::string& value_out, std::string_view name_view) {
 size_t OS::read_env_variable_sz(std::string_view name, size_t def) {
    std::string value;
    if(read_env_variable(value, name) && !value.empty()) {
-      try {
-         const size_t val = std::stoul(value, nullptr);
-         return val;
-      } catch(std::exception&) { /* ignore it */
+      if(const auto sz = parse_sz(value)) {
+         return *sz;
       }
    }
 

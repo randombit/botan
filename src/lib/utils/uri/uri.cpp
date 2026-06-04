@@ -16,34 +16,13 @@ namespace Botan {
 namespace {
 
 std::optional<uint16_t> parse_port(std::string_view s) {
-   const auto digit_from_ascii = [](char c) -> std::optional<uint32_t> {
-      if(c >= '0' && c <= '9') {
-         return c - '0';
-      } else {
-         return {};
-      }
-   };
-
-   if(s.empty() || s.size() > 5) {
-      return {};
-   }
-
-   uint32_t port = 0;
-
-   for(const char c : s) {
-      if(auto digit = digit_from_ascii(c)) {
-         // Integer overflow impossible here since we checked max length of s earlier
-         port = port * 10 + *digit;
-      } else {
-         return {};
+   if(const auto port = parse_u16(s)) {
+      if(*port > 0) {
+         return port;
       }
    }
 
-   if(port == 0 || port >= 65536) {
-      return {};
-   }
-
-   return static_cast<uint16_t>(port);
+   return {};
 }
 
 bool is_valid_percent_escape(char c1, char c2) {

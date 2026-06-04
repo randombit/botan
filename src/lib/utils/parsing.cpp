@@ -12,41 +12,68 @@
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
+#include <concepts>
 #include <limits>
 #include <sstream>
 
 namespace Botan {
 
-uint16_t to_uint16(std::string_view str) {
-   const uint32_t x = to_u32bit(str);
+namespace {
 
-   if(x != static_cast<uint16_t>(x)) {
-      throw Invalid_Argument("Integer value exceeds 16 bit range");
+std::optional<size_t> digit_from_ascii(char c) {
+   if(c >= '0' && c <= '9') {
+      return c - '0';
+   } else {
+      return {};
    }
-
-   return static_cast<uint16_t>(x);
 }
 
-uint32_t to_u32bit(std::string_view str_view) {
-   const std::string str(str_view);
+template <std::unsigned_integral T>
+std::optional<T> parse_decimal_integer(std::string_view input) {
+   if(input.empty() || input.size() > (std::numeric_limits<T>::digits10 + 1)) {
+      return {};
+   }
 
-   // std::stoul is not strict enough. Ensure that str is digit only [0-9]*
-   for(const char chr : str) {
-      if(chr < '0' || chr > '9') {
-         throw Invalid_Argument("to_u32bit invalid decimal string '" + str + "'");
+   T accum = 0;
+
+   for(const char c : input) {
+      if(const auto digit = digit_from_ascii(c)) {
+         if(accum > (std::numeric_limits<T>::max() - static_cast<T>(*digit)) / 10) {
+            return {};
+         }
+         accum = accum * 10 + static_cast<T>(*digit);
+      } else {
+         return {};
       }
    }
 
-   const unsigned long int x = std::stoul(str);
+   return accum;
+}
 
-   if constexpr(sizeof(unsigned long int) > 4) {
-      // x might be uint64
-      if(x > std::numeric_limits<uint32_t>::max()) {
-         throw Invalid_Argument("Integer value of " + str + " exceeds 32 bit range");
-      }
+}  // namespace
+
+std::optional<uint16_t> parse_u16(std::string_view input) {
+   return parse_decimal_integer<uint16_t>(input);
+}
+
+std::optional<uint32_t> parse_u32(std::string_view input) {
+   return parse_decimal_integer<uint32_t>(input);
+}
+
+std::optional<uint64_t> parse_u64(std::string_view input) {
+   return parse_decimal_integer<uint64_t>(input);
+}
+
+std::optional<size_t> parse_sz(std::string_view input) {
+   return parse_decimal_integer<size_t>(input);
+}
+
+uint32_t to_u32bit(std::string_view input) {
+   if(const auto parsed = parse_u32(input)) {
+      return *parsed;
+   } else {
+      throw Invalid_Argument(fmt("Failed to parse input '{}' as a 32-bit integer", input));
    }
-
-   return static_cast<uint32_t>(x);
 }
 
 /*

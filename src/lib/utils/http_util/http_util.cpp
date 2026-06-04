@@ -117,14 +117,10 @@ std::optional<size_t> validate_response_headers(const Headers& headers, std::opt
    std::optional<size_t> content_length;
    if(auto it = headers.find("Content-Length"); it != headers.end()) {
       // RFC 9110 8.6: Content-Length = 1*DIGIT
-      const auto& cl = it->second;
-      if(cl.empty() || !std::all_of(cl.begin(), cl.end(), [](unsigned char c) { return c >= '0' && c <= '9'; })) {
-         throw HTTP_Error(fmt("Invalid Content-Length value '{}'", cl));
-      }
-      try {
-         content_length = to_u32bit(cl);
-      } catch(const Invalid_Argument& e) {
-         throw HTTP_Error(fmt("Invalid Content-Length value '{}': {}", cl, e.what()));
+      if(const auto cl = parse_sz(it->second)) {
+         content_length = cl;
+      } else {
+         throw HTTP_Error(fmt("Invalid Content-Length value '{}'", it->second));
       }
    }
 

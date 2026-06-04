@@ -1176,10 +1176,10 @@ uint32_t VarMap::get_req_u32(std::string_view key) const {
 
 uint64_t VarMap::get_req_u64(std::string_view key) const {
    const auto& var = get_req_var(key);
-   try {
-      return std::stoull(var);
-   } catch(std::exception&) {
-      throw Test_Error("Invalid u64 value '" + var + "'");
+   if(const auto val = Botan::parse_u64(var)) {
+      return *val;
+   } else {
+      throw Test_Error(Botan::fmt("Invalid u64 value '{}' for key '{}'", var, key));
    }
 }
 
@@ -1192,11 +1192,11 @@ size_t VarMap::get_opt_sz(std::string_view key, const size_t def_value) const {
 }
 
 uint64_t VarMap::get_opt_u64(std::string_view key, const uint64_t def_value) const {
-   if(auto v = get_opt_var(key)) {
-      try {
-         return std::stoull(*v);
-      } catch(std::exception&) {
-         throw Test_Error("Invalid u64 value '" + *v + "'");
+   if(auto var = get_opt_var(key)) {
+      if(const auto val = Botan::parse_u64(*var)) {
+         return *val;
+      } else {
+         throw Test_Error(Botan::fmt("Invalid u64 value '{}' for key '{}'", *var, key));
       }
    } else {
       return def_value;

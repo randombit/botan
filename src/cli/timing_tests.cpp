@@ -753,9 +753,9 @@ class MARVIN_Test_Command final : public Command {
          } else if(param.ends_with("k") || param.ends_with("K")) {
             return parse_runs_arg(param.substr(0, param.size() - 1)) * 1'000;
          } else {
-            try {
-               return static_cast<size_t>(std::stoul(param));
-            } catch(std::exception&) {
+            if(const auto val = Botan::parse_sz(param)) {
+               return *val;
+            } else {
                throw CLI_Usage_Error("Unexpected syntax for --runs option (try 1000, 1K, or 2M)");
             }
          }
