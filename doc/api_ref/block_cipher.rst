@@ -222,7 +222,8 @@ Algorithm specification name:
 CAST-128
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A 64-bit cipher, commonly used in OpenPGP.
+A 64-bit cipher, commonly used in OpenPGP. No reason to use it otherwise.
+Uses large tables, which leave it vulnerable to cache-based side channel attacks.
 
 Available if ``BOTAN_HAS_CAST128`` is defined.
 

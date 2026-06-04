@@ -13,13 +13,13 @@ namespace Botan {
 
 uint64_t prefetch_array_raw(size_t bytes, const void* arrayv) noexcept {
 #if defined(__cpp_lib_hardware_interference_size)
-   const size_t cache_line_size = std::hardware_destructive_interference_size;
+   constexpr size_t cache_line_size = std::hardware_destructive_interference_size;
 #else
    // We arbitrarily use a 64 byte cache line, which is by far the most
    // common size.
    //
    // Runtime detection adds too much overhead to this function.
-   const size_t cache_line_size = 64;
+   constexpr size_t cache_line_size = 64;
 #endif
 
    const uint8_t* array = static_cast<const uint8_t*>(arrayv);
