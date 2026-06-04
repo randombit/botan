@@ -337,6 +337,9 @@ void FrodoMatrix::pack(const FrodoKEMConstants& constants, StrongSpan<FrodoPacke
    const size_t outlen = packed_size(constants);
    BOTAN_ASSERT_NOMSG(out.size() == outlen);
 
+   // The bit assembly below accumulates into out, so it requires a zeroed destination
+   clear_mem(out);
+
    size_t i = 0;      // whole bytes already filled in
    size_t j = 0;      // whole uint16_t already copied
    uint16_t w = 0;    // the leftover, not yet copied
