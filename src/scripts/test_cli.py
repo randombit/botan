@@ -974,8 +974,17 @@ def cli_cpuid_tests(_tmp_dir):
                 logging.error('Clearing CPUID %s caused flag %s to appear', flag, f)
 
 def cli_cc_enc_tests(_tmp_dir):
-    test_cli("cc_encrypt", ["8028028028028029", "pass"], "4308989841607208")
-    test_cli("cc_decrypt", ["4308989841607208", "pass"], "8028028028028027")
+    test_vectors = [
+        ("8028028028028029", "4308989841607208", "8028028028028027"),
+        ("4222222222222", "8448574842145", "4222222222222"),
+        ("4000000000000424", "0000572878697422", "4000000000000424"),
+        ("4000000000000000006", "1096265612632810403", "4000000000000000006"),
+        ("0000000000000", "1986053914205", "0000000000000"),
+    ]
+
+    for plaintext, ciphertext, decrypted in test_vectors:
+        test_cli("cc_encrypt", [plaintext, "pass"], ciphertext)
+        test_cli("cc_decrypt", [ciphertext, "pass"], decrypted)
 
 def cli_cert_issuance_tests(tmp_dir, algos=None):
     root_key = os.path.join(tmp_dir, 'root.key')

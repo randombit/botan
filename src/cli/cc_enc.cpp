@@ -60,36 +60,54 @@ uint64_t cc_derank(uint64_t cc_number) {
    return 0;
 }
 
-uint64_t encrypt_cc_number(uint64_t cc_number, const Botan::SymmetricKey& key, const std::vector<uint8_t>& tweak) {
-   const Botan::BigInt n(1000000000000000);
-
-   const Botan::BigInt c = Botan::FPE::fe1_encrypt(n, Botan::BigInt::from_u64(cc_rank(cc_number)), key, tweak);
-
-   if(c.bits() > 50) {
-      throw Botan::Internal_Error("FPE produced a number too large");
+uint64_t cc_modulus(size_t cc_digits) {
+   uint64_t n = 1;
+   for(size_t i = 1; i != cc_digits; ++i) {
+      n *= 10;
    }
-
-   uint64_t enc_cc = 0;
-   for(size_t i = 0; i != 7; ++i) {
-      enc_cc = (enc_cc << 8) | c.byte_at(6 - i);
-   }
-   return cc_derank(enc_cc);
+   return n;
 }
 
-uint64_t decrypt_cc_number(uint64_t enc_cc, const Botan::SymmetricKey& key, const std::vector<uint8_t>& tweak) {
-   const Botan::BigInt n(1000000000000000);
-
-   const Botan::BigInt c = Botan::FPE::fe1_decrypt(n, Botan::BigInt::from_u64(cc_rank(enc_cc)), key, tweak);
-
-   if(c.bits() > 50) {
+uint64_t bigint_to_u64(const Botan::BigInt& n) {
+   if(n.bits() > 64) {
       throw CLI_Error("FPE produced a number too large");
    }
 
-   uint64_t dec_cc = 0;
-   for(size_t i = 0; i != 7; ++i) {
-      dec_cc = (dec_cc << 8) | c.byte_at(6 - i);
+   uint64_t result = 0;
+   for(size_t i = 0; i != 8; ++i) {
+      result = (result << 8) | n.byte_at(7 - i);
    }
-   return cc_derank(dec_cc);
+   return result;
+}
+
+std::string format_cc_number(uint64_t cc_number, size_t cc_digits) {
+   const std::string cc_str = std::to_string(cc_number);
+   if(cc_str.size() > cc_digits) {
+      throw CLI_Error("FPE produced a number too large");
+   }
+   return std::string(cc_digits - cc_str.size(), '0') + cc_str;
+}
+
+uint64_t encrypt_cc_number(uint64_t cc_number,
+                           size_t cc_digits,
+                           const Botan::SymmetricKey& key,
+                           const std::vector<uint8_t>& tweak) {
+   const Botan::BigInt n(cc_modulus(cc_digits));
+
+   const Botan::BigInt c = Botan::FPE::fe1_encrypt(n, Botan::BigInt::from_u64(cc_rank(cc_number)), key, tweak);
+
+   return cc_derank(bigint_to_u64(c));
+}
+
+uint64_t decrypt_cc_number(uint64_t enc_cc,
+                           size_t cc_digits,
+                           const Botan::SymmetricKey& key,
+                           const std::vector<uint8_t>& tweak) {
+   const Botan::BigInt n(cc_modulus(cc_digits));
+
+   const Botan::BigInt c = Botan::FPE::fe1_decrypt(n, Botan::BigInt::from_u64(cc_rank(enc_cc)), key, tweak);
+
+   return cc_derank(bigint_to_u64(c));
 }
 
 uint64_t parse_cc(std::string_view input) {
@@ -113,7 +131,8 @@ class CC_Encrypt final : public Command {
       }
 
       void go() override {
-         const uint64_t cc_number = parse_cc(get_arg("CC"));
+         const std::string cc = get_arg("CC");
+         const uint64_t cc_number = parse_cc(cc);
          const std::vector<uint8_t> tweak = Botan::hex_decode(get_arg("tweak"));
          const std::string pass = get_arg("passphrase");
 
@@ -124,7 +143,7 @@ class CC_Encrypt final : public Command {
 
          auto key = Botan::SymmetricKey(pbkdf->pbkdf_iterations(32, pass, tweak.data(), tweak.size(), 100000));
 
-         output() << encrypt_cc_number(cc_number, key, tweak) << "\n";
+         output() << format_cc_number(encrypt_cc_number(cc_number, cc.size(), key, tweak), cc.size()) << "\n";
       }
 };
 
@@ -141,7 +160,8 @@ class CC_Decrypt final : public Command {
       }
 
       void go() override {
-         const uint64_t cc_number = parse_cc(get_arg("CC"));
+         const std::string cc = get_arg("CC");
+         const uint64_t cc_number = parse_cc(cc);
          const std::vector<uint8_t> tweak = Botan::hex_decode(get_arg("tweak"));
          const std::string pass = get_arg("passphrase");
 
@@ -152,7 +172,7 @@ class CC_Decrypt final : public Command {
 
          auto key = Botan::SymmetricKey(pbkdf->pbkdf_iterations(32, pass, tweak.data(), tweak.size(), 100000));
 
-         output() << decrypt_cc_number(cc_number, key, tweak) << "\n";
+         output() << format_cc_number(decrypt_cc_number(cc_number, cc.size(), key, tweak), cc.size()) << "\n";
       }
 };
 
