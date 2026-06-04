@@ -72,11 +72,12 @@ template <typename T>
       return std::nullopt;
    }
 
-   if(!std::holds_alternative<std::unique_ptr<T>>(blob->ctx)) {
+   auto* ctx = std::get_if<std::unique_ptr<T>>(&blob->ctx);
+   if(ctx == nullptr) {
       return std::nullopt;
    }
 
-   return {std::ref(*std::get<std::unique_ptr<T>>(blob->ctx))};
+   return {std::ref(**ctx)};
 }
 
 template <typename T>

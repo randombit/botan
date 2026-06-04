@@ -96,16 +96,12 @@ class Dilithium_PrivateKeyInternal final {
       void _const_time_poison() const {
          // Note: m_rho and m_tr is public knowledge
          CT::poison_all(m_signing_seed, m_s1, m_s2, m_t0);
-         if(m_seed.has_value()) {
-            CT::poison(m_seed.value());
-         }
+         CT::poison(m_seed);
       }
 
       void _const_time_unpoison() const {
          CT::unpoison_all(m_signing_seed, m_s1, m_s2, m_t0);
-         if(m_seed.has_value()) {
-            CT::unpoison(*m_seed);
-         }
+         CT::unpoison(m_seed);
       }
 
    private:

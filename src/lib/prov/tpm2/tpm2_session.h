@@ -171,7 +171,7 @@ class SessionBundle {
                     std::shared_ptr<Session> s3 = nullptr) :
             m_sessions({std::move(s1), std::move(s2), std::move(s3)}) {}
 
-      [[nodiscard]] detail::SessionHandle operator[](size_t i) const noexcept {
+      [[nodiscard]] detail::SessionHandle operator[](size_t i) const {
          if(m_sessions[i] == nullptr) {
             return {};
          } else {

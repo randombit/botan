@@ -44,15 +44,21 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size) no
 }
 
 mlock_allocator::mlock_allocator() noexcept {
-   const size_t mem_to_lock = OS::get_memory_locking_limit();
-   const size_t page_size = OS::system_page_size();
+   try {
+      const size_t mem_to_lock = OS::get_memory_locking_limit();
+      const size_t page_size = OS::system_page_size();
 
-   if(mem_to_lock > 0 && mem_to_lock % page_size == 0) {
-      m_locked_pages = OS::allocate_locked_pages(mem_to_lock / page_size);
+      if(mem_to_lock > 0 && mem_to_lock % page_size == 0) {
+         m_locked_pages = OS::allocate_locked_pages(mem_to_lock / page_size);
 
-      if(!m_locked_pages.empty()) {
-         m_pool = std::make_unique<Memory_Pool>(m_locked_pages, page_size);
+         if(!m_locked_pages.empty()) {
+            m_pool = std::make_unique<Memory_Pool>(m_locked_pages, page_size);
+         }
       }
+   } catch(...) {
+      OS::free_locked_pages(m_locked_pages);
+      m_locked_pages.clear();
+      m_pool.reset();
    }
 }
 

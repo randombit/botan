@@ -5,12 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/assert.h>
 #include <botan/tls_signature_scheme.h>
 
 #include <botan/pk_keys.h>
 #include <botan/pss_params.h>
 #include <botan/tls_version.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan::TLS {
 
@@ -51,14 +51,27 @@ Signature_Scheme::Signature_Scheme(uint16_t wire_code) : Signature_Scheme(Signat
 Signature_Scheme::Signature_Scheme(Signature_Scheme::Code wire_code) : m_code(wire_code) {}
 
 bool Signature_Scheme::is_available() const noexcept {
-   return value_exists(Signature_Scheme::all_available_schemes(), *this);
+   switch(m_code) {
+      case RSA_PSS_SHA384:
+      case RSA_PSS_SHA256:
+      case RSA_PSS_SHA512:
+      case RSA_PKCS1_SHA384:
+      case RSA_PKCS1_SHA512:
+      case RSA_PKCS1_SHA256:
+      case ECDSA_SHA384:
+      case ECDSA_SHA512:
+      case ECDSA_SHA256:
+         return true;
+      default:
+         return false;
+   }
 }
 
 bool Signature_Scheme::is_set() const noexcept {
    return m_code != NONE;
 }
 
-std::string Signature_Scheme::to_string() const noexcept {
+std::string Signature_Scheme::to_string() const {
    switch(m_code) {
       case RSA_PKCS1_SHA1:
          return "RSA_PKCS1_SHA1";
@@ -95,7 +108,7 @@ std::string Signature_Scheme::to_string() const noexcept {
    }
 }
 
-std::string Signature_Scheme::hash_function_name() const noexcept {
+std::string Signature_Scheme::hash_function_name() const {
    switch(m_code) {
       case RSA_PKCS1_SHA1:
       case ECDSA_SHA1:
@@ -125,7 +138,7 @@ std::string Signature_Scheme::hash_function_name() const noexcept {
    }
 }
 
-std::string Signature_Scheme::padding_string() const noexcept {
+std::string Signature_Scheme::padding_string() const {
    switch(m_code) {
       case RSA_PKCS1_SHA1:
          return "PKCS1v15(SHA-1)";
@@ -161,7 +174,7 @@ std::string Signature_Scheme::padding_string() const noexcept {
    }
 }
 
-std::string Signature_Scheme::algorithm_name() const noexcept {
+std::string Signature_Scheme::algorithm_name() const {
    switch(m_code) {
       case RSA_PKCS1_SHA1:
       case RSA_PKCS1_SHA256:
@@ -189,7 +202,7 @@ std::string Signature_Scheme::algorithm_name() const noexcept {
    }
 }
 
-AlgorithmIdentifier Signature_Scheme::key_algorithm_identifier() const noexcept {
+AlgorithmIdentifier Signature_Scheme::key_algorithm_identifier() const {
    const auto der_encode_oid = [](const std::string_view oid_name) {
       try {
          if(auto oid = OID::from_name(oid_name)) {
@@ -227,7 +240,7 @@ AlgorithmIdentifier Signature_Scheme::key_algorithm_identifier() const noexcept 
    }
 }
 
-AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const noexcept {
+AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const {
    switch(m_code) {
       case RSA_PKCS1_SHA1:
          return AlgorithmIdentifier(OID::from_string("RSA/PKCS1v15(SHA-1)"), AlgorithmIdentifier::USE_NULL_PARAM);
@@ -290,7 +303,7 @@ bool Signature_Scheme::is_compatible_with(const Protocol_Version& protocol_versi
    //   CertificateVerify messages.
    //
    // Note that Botan enforces that for TLS 1.2 as well.
-   if(hash_function_name() == "SHA-1") {
+   if(m_code == RSA_PKCS1_SHA1 || m_code == ECDSA_SHA1) {
       return false;
    }
 
@@ -307,7 +320,7 @@ bool Signature_Scheme::is_compatible_with(const Protocol_Version& protocol_versi
    return true;
 }
 
-bool Signature_Scheme::is_suitable_for(const Private_Key& private_key) const noexcept {
+bool Signature_Scheme::is_suitable_for(const Private_Key& private_key) const {
    if(algorithm_name() != private_key.algo_name()) {
       return false;
    }

@@ -450,8 +450,17 @@ class bitvector_base final {
        * @returns true if @p other contains the same bit pattern as this
        */
       template <bitvectorish OtherT>
-      bool equals(const OtherT& other) const {
-         return (*this ^ other).none();
+      bool equals(const OtherT& other) const noexcept {
+         if(size() != other.size()) {
+            return false;
+         }
+
+         uint64_t acc = 0;
+         full_range_operation(
+            [&]<std::unsigned_integral BlockT>(BlockT lhs, BlockT rhs) { acc |= static_cast<uint64_t>(lhs ^ rhs); },
+            *this,
+            unwrap_strong_type(other));
+         return !CT::Choice::from_int(acc).as_bool();
       }
 
       /// @name Serialization

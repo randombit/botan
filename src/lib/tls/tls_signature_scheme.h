@@ -83,12 +83,12 @@ class BOTAN_PUBLIC_API(3, 0) Signature_Scheme final {
       */
       bool is_set() const noexcept;
 
-      std::string to_string() const noexcept;
-      std::string hash_function_name() const noexcept;
-      std::string padding_string() const noexcept;
-      std::string algorithm_name() const noexcept;
-      AlgorithmIdentifier key_algorithm_identifier() const noexcept;
-      AlgorithmIdentifier algorithm_identifier() const noexcept;
+      std::string to_string() const;
+      std::string hash_function_name() const;
+      std::string padding_string() const;
+      std::string algorithm_name() const;
+      AlgorithmIdentifier key_algorithm_identifier() const;
+      AlgorithmIdentifier algorithm_identifier() const;
       std::optional<Signature_Format> format() const noexcept;
 
       bool is_compatible_with(const Protocol_Version& protocol_version) const noexcept;
@@ -101,7 +101,7 @@ class BOTAN_PUBLIC_API(3, 0) Signature_Scheme final {
       * pairs with no curve binding -- any hash may be used with any ECDSA
       * curve per RFC 5246.
       */
-      bool is_suitable_for(const Private_Key& private_key) const noexcept;
+      bool is_suitable_for(const Private_Key& private_key) const;
 
       bool operator==(const Signature_Scheme& rhs) const { return m_code == rhs.m_code; }
 

@@ -53,7 +53,7 @@ class MechanismData {
 
 class RSA_SignMechanism final : public MechanismData {
    public:
-      explicit RSA_SignMechanism(MechanismType typ) noexcept :
+      explicit RSA_SignMechanism(MechanismType typ) :
             MechanismData(typ), m_hash(static_cast<MechanismType>(0)), m_mgf(MGF::MgfUnused), m_salt_size(0) {
          auto pss_option = PssOptions().find(type());
          if(pss_option != PssOptions().end()) {

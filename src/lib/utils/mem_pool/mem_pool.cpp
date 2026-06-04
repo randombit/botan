@@ -290,7 +290,7 @@ class Bucket final {
       bool m_is_full;
 };
 
-Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) noexcept : m_page_size(page_size) {
+Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) : m_page_size(page_size) {
    for(auto* page : pages) {
       const uintptr_t p = reinterpret_cast<uintptr_t>(page);
 

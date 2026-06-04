@@ -37,7 +37,7 @@ TSS2_RC get_raw_rc(TSS2_RC rc) {
 
 namespace {
 
-std::string raw_rc_to_string(TSS2_RC rc) noexcept {
+std::string raw_rc_to_string(TSS2_RC rc) {
    switch(rc) {
       case TPM2_RC_SUCCESS:
          return "TPM2_RC_SUCCESS";
