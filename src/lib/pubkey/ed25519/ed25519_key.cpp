@@ -59,7 +59,7 @@ Ed25519_PublicKey::Ed25519_PublicKey(const uint8_t pub_key[], size_t pub_len) {
 }
 
 Ed25519_PublicKey::Ed25519_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
-   // RFC 8310 Section 3: "the parameters MUST be absent".
+   // RFC 8410 Section 3: "the parameters MUST be absent".
    if(!alg_id.parameters_are_empty()) {
       throw Decoding_Error("Unexpected parameters for Ed25519 public key");
    }
@@ -116,7 +116,7 @@ Ed25519_PrivateKey::Ed25519_PrivateKey(RandomNumberGenerator& rng) {
 }
 
 Ed25519_PrivateKey::Ed25519_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
-   // RFC 8310 Section 3: "the parameters MUST be absent".
+   // RFC 8410 Section 3: "the parameters MUST be absent".
    if(!alg_id.parameters_are_empty()) {
       throw Decoding_Error("Unexpected parameters for Ed25519 private key");
    }

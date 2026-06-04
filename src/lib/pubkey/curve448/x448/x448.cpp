@@ -58,7 +58,7 @@ std::unique_ptr<Private_Key> X448_PublicKey::generate_another(RandomNumberGenera
 
 X448_PublicKey::X448_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
       X448_PublicKey(key_bits) {
-   // RFC 8310 Section 3: "the parameters MUST be absent".
+   // RFC 8410 Section 3: "the parameters MUST be absent".
    if(!alg_id.parameters_are_empty()) {
       throw Decoding_Error("Unexpected parameters for X448 public key");
    }
@@ -71,7 +71,7 @@ X448_PublicKey::X448_PublicKey(std::span<const uint8_t> pub) {
 
 X448_PrivateKey::X448_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
       X448_PrivateKey(ber_decode_sk(key_bits)) {
-   // RFC 8310 Section 3: "the parameters MUST be absent".
+   // RFC 8410 Section 3: "the parameters MUST be absent".
    if(!alg_id.parameters_are_empty()) {
       throw Decoding_Error("Unexpected parameters for X448 private key");
    }
