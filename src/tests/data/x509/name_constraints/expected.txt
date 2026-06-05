@@ -6,8 +6,10 @@ different-name-type-constraints-compose-valid:Verified
 directory-name-attribute-type-mismatch-invalid:Certificate does not pass name constraint
 directory-name-case-space-valid-rfc5280:Verified
 directory-name-domain-component-case-valid:Verified
+directory-name-empty-subject-no-dir-san-valid:Verified
 directory-name-excluded-invalid:Certificate does not pass name constraint
 directory-name-excluded-valid:Verified
+directory-name-intermediate-subject-outside-permit-invalid:Certificate does not pass name constraint
 directory-name-permit-multiple-san-mixed-invalid:Certificate does not pass name constraint
 directory-name-rdn-order-mismatch-invalid:Certificate does not pass name constraint
 directory-name-san-constraint-invalid:Certificate does not pass name constraint
@@ -22,15 +24,22 @@ dn-empty-permitted-subtree-valid:Certificate extension encoding error
 dn-empty-rdn-embedded-invalid:Certificate failed to decode
 dn-excluded-prefix-broken-by-rdn-reorder-valid:Verified
 dn-excluded-prefix-strict-match-invalid:Certificate does not pass name constraint
+dn-intermediate-narrows-permitted-valid:Verified
+dn-internal-whitespace-collapse-valid-rfc5280:Verified
 dn-leaf-shorter-than-constraint-invalid:Certificate does not pass name constraint
 dn-mixed-string-types-in-multi-ava-rdn-valid-rfc5280:Verified
 dn-multi-ava-rdn-different-attrs-invalid:Certificate does not pass name constraint
+dn-multi-ava-rdn-duplicate-cn-evades-constraint-invalid:Certificate does not pass name constraint
 dn-multi-ava-rdn-excluded-invalid:Certificate does not pass name constraint
 dn-multi-ava-rdn-match-valid:Verified
 dn-multi-ava-rdn-san-permitted-valid:Verified
+dn-multi-ava-rdn-set-non-canonical-order-valid-rfc5280:Verified
+dn-multi-ava-trailing-after-prefix-permit-valid:Verified
 dn-multi-ava-vs-single-ava-rdn-invalid:Certificate does not pass name constraint
+dn-multi-ca-widening-attempt-invalid:Certificate does not pass name constraint
 dn-printable-vs-utf8-string-valid-rfc5280:Verified
 dn-printablestring-tag-with-non-printable-chars-invalid:Certificate failed to decode
+dn-single-ava-vs-multi-ava-rdn-invalid:Certificate does not pass name constraint
 dn-subtree-exact-match-valid:Verified
 dns-case-insensitive-valid:Verified
 dns-cn-fallback-cn-is-email-string-valid:Verified
@@ -51,14 +60,19 @@ dns-excluded-subtree-only-invalid:Certificate does not pass name constraint
 dns-idn-a-label-valid:Verified
 dns-label-boundary-invalid:Certificate does not pass name constraint
 dns-leading-dot-apex-invalid:Certificate does not pass name constraint
+dns-leading-dot-excluded-apex-valid:Verified
 dns-leading-dot-subdomain-valid:Verified
 dns-leading-empty-label-invalid:Certificate extension encoding error
+dns-multiple-excluded-disjoint-first-invalid:Certificate does not pass name constraint
+dns-multiple-excluded-disjoint-second-invalid:Certificate does not pass name constraint
+dns-multiple-permitted-disjoint-valid:Verified
 dns-non-ascii-raw-san-invalid:Certificate extension encoding error
 dns-noncritical-san-violates-invalid:Certificate does not pass name constraint
 dns-permitted-exact-host-valid:Verified
 dns-permitted-valid:Verified
 dns-san-embedded-nul-evades-constraint-invalid:Certificate extension encoding error
 dns-san-present-cn-outside-valid:Verified
+dns-san-trailing-dot-invalid:Certificate extension encoding error
 dns-space-san-invalid:Certificate extension encoding error
 dns-wildcard-san-tld-constraint-valid:Verified
 dns-wildcard-tld-san-deep-constraint-invalid:Certificate does not pass name constraint
@@ -78,7 +92,9 @@ email-full-mailbox-localpart-case-sensitive-invalid:Certificate does not pass na
 email-full-mailbox-valid:Verified
 email-host-case-insensitive-valid:Verified
 email-host-valid:Verified
+email-ip-literal-domain-outside-host-permit-invalid:Certificate extension encoding error
 email-leading-dot-apex-invalid:Certificate does not pass name constraint
+email-leading-dot-excluded-apex-valid:Verified
 email-leading-dot-subdomain-valid:Verified
 email-multi-at-pkcs9-dn-attribute-invalid:Certificate does not pass name constraint
 email-multiple-at-raw-san-invalid:Certificate extension encoding error
@@ -86,9 +102,11 @@ email-multiple-san-mixed-pass-fail-invalid:Certificate does not pass name constr
 email-permitted-host-subdomain-invalid:Certificate does not pass name constraint
 email-permitted-localpart-case-shift-san-invalid:Certificate does not pass name constraint
 email-permitted-mailbox-different-invalid:Certificate does not pass name constraint
+email-permitted-same-localpart-different-domain-valid:Verified
 email-pkcs9-dn-embedded-nul-evades-constraint-invalid:Certificate failed to decode
 email-punycode-a-label-constraint-valid:Verified
 email-quoted-localpart-not-equal-invalid:Certificate extension encoding error
+email-quoted-localpart-smuggle-at-bypass-invalid:Certificate extension encoding error
 email-rfc822-and-smtputf8-san-mixed-invalid:Certificate does not pass name constraint
 email-san-no-at-invalid:Certificate extension encoding error
 empty-dns-excluded-rejects-everything-invalid:Certificate extension encoding error
@@ -126,12 +144,17 @@ ip-mixed-v4-v6-leaf-v6-outside-root-permit-invalid:Certificate does not pass nam
 ip-multiple-excluded-disjoint-inside-invalid:Certificate does not pass name constraint
 ip-multiple-excluded-disjoint-outside-valid:Verified
 ip-multiple-permitted-disjoint-valid:Verified
+ip-name-constraint-non-contiguous-mask-invalid:Certificate extension encoding error
 ip-name-constraint-wrong-length-invalid:Certificate does not pass name constraint
+ip-permit-all-zeros-mask-catch-all-valid:Verified
+ip-san-with-mask-bytes-invalid:Certificate extension encoding error
 ip-san-wrong-length-invalid:Certificate extension encoding error
+ipv4-catch-all-excluded-invalid:Certificate does not pass name constraint
 ipv4-mapped-ipv6-excl-does-not-affect-ipv4-valid:Verified
 ipv4-mapped-ipv6-not-in-v4-exclude-valid:Verified
 ipv4-mapped-ipv6-rejected-from-v4-permit-invalid:Certificate does not pass name constraint
 ipv4-name-constraint-non-canonical-cidr-valid:Verified
+ipv4-name-constraint-noncontiguous-mask-invalid:Certificate extension encoding error
 ipv4-only-permit-ipv6-san-invalid:Certificate does not pass name constraint
 ipv6-catch-all-exclude-does-not-block-ipv4-valid:Verified
 ipv6-excluded-inside-invalid:Certificate does not pass name constraint
@@ -163,6 +186,7 @@ name-constraints-minimum-nonzero-invalid:Certificate extension encoding error
 name-constraints-noncritical-valid:Verified
 name-constraints-permit-and-exclude-same-name-invalid:Certificate does not pass name constraint
 name-form-absent-valid:Verified
+nc-permitted-subtrees-explicit-tag-invalid:Certificate does not pass name constraint
 non-ca-issuer-invalid:CA certificate not allowed to issue certs
 non-hostname-cn-no-san-excluded-dns-valid:Verified
 non-hostname-cn-no-san-permitted-dns-valid:Verified
@@ -186,6 +210,7 @@ rfc3779-ipaddrblocks-malformed-invalid:IP Address Blocks extension invalid
 san-rfc822-and-smtputf8-both-permitted-valid:Verified
 san-rfc822-pass-smtputf8-fail-invalid:Certificate does not pass name constraint
 self-constraint-not-applied-to-issuing-ca-valid:Verified
+self-issued-ca-constraints-apply-to-leaf-invalid:Certificate does not pass name constraint
 self-issued-final-constrained-invalid:Certificate does not pass name constraint
 self-issued-middle-of-chain-valid:Verified
 self-issued-rollover-skips-name-check-valid:Verified
@@ -194,7 +219,6 @@ smtp-utf8-alabel-domain-permit-valid:Verified
 smtp-utf8-pass-rfc822-fail-invalid:Certificate does not pass name constraint
 smtp-utf8-rfc822-host-permit-valid:Verified
 smtp-utf8-rfc822-mailbox-permit-diff-domain-invalid:Certificate does not pass name constraint
-smtp-utf8-rfc822-mailbox-permit-invalid:Certificate does not pass name constraint
 # These next 2 are valid per RFC, but hit our conservative behavior of rejecting all mailbox constraints applying to SmtpUtf8Mailbox
 smtp-utf8-rfc822-mailbox-permit-strict-9549-exact-valid:Certificate does not pass name constraint
 smtp-utf8-rfc822-mailbox-permit-strict-9549-same-domain-valid:Certificate does not pass name constraint
@@ -244,11 +268,13 @@ uri-leading-dot-apex-invalid:Certificate does not pass name constraint
 uri-leading-dot-subdomain-valid:Verified
 uri-no-authority-invalid:Certificate extension encoding error
 uri-non-numeric-port-invalid:Certificate extension encoding error
+uri-percent-encoded-host-not-decoded-invalid:Certificate extension encoding error
 uri-permit-no-uri-san-in-leaf-valid:Verified
 uri-permitted-host-exact-multi-san-mixed-invalid:Certificate does not pass name constraint
 uri-permitted-multiple-uri-sans-any-outside-invalid:Certificate does not pass name constraint
 uri-permitted-subtree-deep-valid:Verified
 uri-permitted-with-path-query-fragment-valid:Verified
+uri-port-in-san-ignored-valid:Verified
 uri-relative-san-invalid:Certificate extension encoding error
 uri-userinfo-excluded-invalid:Certificate does not pass name constraint
 uri-userinfo-smuggles-different-host-invalid:Certificate does not pass name constraint
