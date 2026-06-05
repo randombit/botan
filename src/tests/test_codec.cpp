@@ -216,6 +216,28 @@ BOTAN_REGISTER_TEST("codec", "base64", Base64_Tests);
 
 #endif
 
+class Hex_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("Hex");
+
+         // The span output overload must reject a buffer too small to hold the
+         // decoding instead of writing past the end, matching base64_decode.
+         std::vector<uint8_t> too_small(2);
+         result.test_throws("hex_decode rejects short output span",
+                            "hex_decode: output buffer is too short",
+                            [&]() { Botan::hex_decode(std::span{too_small}, "aabbccdd"); });
+
+         std::vector<uint8_t> exact(4);
+         const size_t written = Botan::hex_decode(std::span{exact}, "aabbccdd");
+         result.test_sz_eq("hex_decode into exact-sized span", written, 4);
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("codec", "hex", Hex_Tests);
+
 }  // namespace
 
 }  // namespace Botan_Tests
