@@ -144,11 +144,21 @@ class BOTAN_PUBLIC_API(2, 0) X509_DN final : public ASN1_Object {
       */
       static size_t lookup_ub(const OID& oid);
 
+      /**
+      * Return a canonical byte encoding
+      *
+      * Internal interface, not covered by SemVer
+      */
+      const std::vector<uint8_t>& _canonical_bytes() const { return m_canonical_dn_bits; }
+
    private:
+      void update_canonical_bits();
+
       // Outer vector: sequence of RDNs. Inner vector: AVAs within
       // one RDN (X.501 SET OF AttributeTypeAndValue).
       std::vector<std::vector<std::pair<OID, ASN1_String>>> m_rdn;
       std::vector<uint8_t> m_dn_bits;
+      std::vector<uint8_t> m_canonical_dn_bits;
 };
 
 BOTAN_PUBLIC_API(2, 0) bool operator==(const X509_DN& dn1, const X509_DN& dn2);

@@ -726,20 +726,7 @@ bool GeneralName::matches_dn(const X509_DN& name, const X509_DN& constraint) {
    This is implementing directoryName subtree match, so the constraint's RDN
    sequence must be a prefix of the name's RDN sequence.
    */
-   const auto& name_rdns = name.rdns();
-   const auto& constraint_rdns = constraint.rdns();
-
-   if(constraint_rdns.size() > name_rdns.size()) {
-      return false;
-   }
-
-   for(size_t i = 0; i != constraint_rdns.size(); ++i) {
-      if(!rdn_equality(constraint_rdns[i], name_rdns[i])) {
-         return false;
-      }
-   }
-
-   return true;
+   return x509_dn_subtree_match(name, constraint);
 }
 
 std::ostream& operator<<(std::ostream& os, const GeneralName& gn) {
