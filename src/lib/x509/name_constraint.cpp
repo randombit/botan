@@ -219,7 +219,7 @@ namespace {
 */
 bool dns_subtree_match(std::string_view name, std::string_view constraint) {
    // Embedded nulls should have been rejected during decoding before this point
-   BOTAN_ASSERT_NOMSG(name.find('\0') == std::string_view::npos);
+   BOTAN_DEBUG_ASSERT(name.find('\0') == std::string_view::npos);
 
    if(name.size() == constraint.size()) {
       return name == constraint;
