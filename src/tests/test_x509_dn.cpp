@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    #include <botan/ber_dec.h>
+   #include <botan/hex.h>
    #include <botan/pkix_types.h>
    #include <sstream>
 #endif
@@ -70,6 +71,7 @@ class X509_DN_String_Tests final : public Test {
          results.push_back(test_parse_multi_ava_rdn());
          results.push_back(test_mixed_single_and_multi_ava_round_trip());
          results.push_back(test_quoted_plus_in_value_not_split());
+         results.push_back(test_decode_failure_leaves_dn_unchanged());
          return results;
       }
 
@@ -169,6 +171,24 @@ class X509_DN_String_Tests final : public Test {
          result.test_sz_eq("one RDN", parsed.count(), size_t(1));
          result.test_sz_eq("one AVA", parsed.rdns().at(0).size(), size_t(1));
          result.test_str_eq("value preserved", parsed.get_first_attribute("CN"), "A+B");
+         return result;
+      }
+
+      static Test::Result test_decode_failure_leaves_dn_unchanged() {
+         Test::Result result("X509_DN decode failure leaves DN unchanged");
+
+         Botan::X509_DN dn;
+         dn.add_attribute("X520.CommonName", "Original");
+         const Botan::X509_DN original = dn;
+
+         const auto invalid_dn = Botan::hex_decode("3010310C300A06035504030C034261643100");
+         result.test_throws("invalid empty RDN rejected", [&] {
+            Botan::BER_Decoder bd(invalid_dn);
+            dn.decode_from(bd);
+         });
+
+         result.test_str_eq("string form unchanged", format(dn), format(original));
+         result.test_is_true("DN comparison unchanged", dn == original);
          return result;
       }
 };

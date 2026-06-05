@@ -10,6 +10,7 @@
 #include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/x509_utils.h>
 #include <algorithm>
 #include <ostream>
@@ -80,27 +81,6 @@ class X500_Char_Iterator final {
 
 }  // namespace
 
-std::string x500_canonicalize_value(std::string_view name) {
-   return X500_Char_Iterator::canonicalize(name);
-}
-
-bool x500_name_cmp(std::string_view name1, std::string_view name2) {
-   X500_Char_Iterator it1(name1);
-   X500_Char_Iterator it2(name2);
-
-   while(true) {
-      const auto c1 = it1.next();
-      const auto c2 = it2.next();
-
-      if(c1 != c2) {
-         return false;
-      }
-      if(!c1.has_value() && !c2.has_value()) {
-         return true;
-      }
-   }
-}
-
 /*
 * Add an attribute to a X509_DN
 */
@@ -119,6 +99,7 @@ void X509_DN::add_attribute(const OID& oid, const ASN1_String& str) {
    // Each programmatic add appends a new single-AVA RDN.
    m_rdn.push_back({std::make_pair(oid, str)});
    m_dn_bits.clear();
+   update_canonical_bits();
 }
 
 void X509_DN::add_rdn(std::vector<std::pair<OID, ASN1_String>> rdn) {
@@ -127,6 +108,7 @@ void X509_DN::add_rdn(std::vector<std::pair<OID, ASN1_String>> rdn) {
    }
    m_rdn.push_back(std::move(rdn));
    m_dn_bits.clear();
+   update_canonical_bits();
 }
 
 std::vector<std::pair<OID, ASN1_String>> X509_DN::dn_info() const {
@@ -268,46 +250,44 @@ std::vector<std::pair<OID, std::string>> canonicalize_rdn(const std::vector<std:
    std::vector<std::pair<OID, std::string>> result;
    result.reserve(rdn.size());
    for(const auto& ava : rdn) {
-      result.emplace_back(ava.first, x500_canonicalize_value(ava.second.value()));
+      result.emplace_back(ava.first, X500_Char_Iterator::canonicalize(ava.second.value()));
    }
-   std::sort(result.begin(), result.end());
+   if(result.size() != 1) {
+      std::sort(result.begin(), result.end());
+   }
    return result;
 }
 
-}  // namespace
+std::vector<uint8_t> canonicalize_dn(const std::vector<std::vector<std::pair<OID, ASN1_String>>>& rdns) {
+   auto append_canonical_data = []<typename T>(std::vector<uint8_t>& out, const T& data) {
+      const std::array<uint8_t, 8> data_len = store_le(static_cast<uint64_t>(data.size()));
+      out.insert(out.end(), data_len.begin(), data_len.end());
+      out.insert(out.end(), data.begin(), data.end());
+   };
 
-bool rdn_equality(const std::vector<std::pair<OID, ASN1_String>>& a,
-                  const std::vector<std::pair<OID, ASN1_String>>& b) {
-   if(a.size() != b.size()) {
-      return false;
+   std::vector<uint8_t> canonical_bits;
+
+   for(const auto& rdn : rdns) {
+      std::vector<uint8_t> rdn_bits;
+
+      for(const auto& [oid, value] : canonicalize_rdn(rdn)) {
+         append_canonical_data(rdn_bits, oid.BER_encode());
+         append_canonical_data(rdn_bits, value);
+      }
+
+      append_canonical_data(canonical_bits, rdn_bits);
    }
 
-   // Single-AVA RDN is the overwhelmingly common case.
-   if(a.size() == 1) {
-      return a[0].first == b[0].first && x500_name_cmp(a[0].second.value(), b[0].second.value());
-   }
-
-   return canonicalize_rdn(a) == canonicalize_rdn(b);
+   return canonical_bits;
 }
+
+}  // namespace
 
 /*
 * Compare two X509_DNs for equality
 */
 bool operator==(const X509_DN& dn1, const X509_DN& dn2) {
-   const auto& r1 = dn1.rdns();
-   const auto& r2 = dn2.rdns();
-
-   if(r1.size() != r2.size()) {
-      return false;
-   }
-
-   for(size_t i = 0; i < r1.size(); ++i) {
-      if(!rdn_equality(r1[i], r2[i])) {
-         return false;
-      }
-   }
-
-   return true;
+   return dn1._canonical_bytes() == dn2._canonical_bytes();
 }
 
 /*
@@ -322,39 +302,22 @@ bool operator!=(const X509_DN& dn1, const X509_DN& dn2) {
 * and RDN set-equality.
 */
 bool operator<(const X509_DN& dn1, const X509_DN& dn2) {
-   const auto& r1 = dn1.rdns();
-   const auto& r2 = dn2.rdns();
+   return dn1._canonical_bytes() < dn2._canonical_bytes();
+}
 
-   if(r1.size() != r2.size()) {
-      return r1.size() < r2.size();
+bool x509_dn_subtree_match(const X509_DN& name, const X509_DN& constraint) {
+   const auto& name_bits = name._canonical_bytes();
+   const auto& constraint_bits = constraint._canonical_bytes();
+
+   if(constraint_bits.size() > name_bits.size()) {
+      return false;
    }
 
-   for(size_t i = 0; i < r1.size(); ++i) {
-      if(r1[i].size() != r2[i].size()) {
-         return r1[i].size() < r2[i].size();
-      }
+   return std::equal(constraint_bits.begin(), constraint_bits.end(), name_bits.begin());
+}
 
-      if(r1[i].size() == 1) {
-         if(r1[i][0].first != r2[i][0].first) {
-            return r1[i][0].first < r2[i][0].first;
-         }
-         const auto c1 = x500_canonicalize_value(r1[i][0].second.value());
-         const auto c2 = x500_canonicalize_value(r2[i][0].second.value());
-         if(c1 != c2) {
-            return c1 < c2;
-         }
-         continue;
-      }
-
-      const auto c1 = canonicalize_rdn(r1[i]);
-      const auto c2 = canonicalize_rdn(r2[i]);
-      if(c1 != c2) {
-         return c1 < c2;
-      }
-   }
-
-   BOTAN_DEBUG_ASSERT(dn1 == dn2);
-   return false;
+void X509_DN::update_canonical_bits() {
+   m_canonical_dn_bits = canonicalize_dn(m_rdn);
 }
 
 std::vector<uint8_t> X509_DN::DER_encode() const {
@@ -399,7 +362,7 @@ void X509_DN::decode_from(BER_Decoder& source) {
 
    BER_Decoder sequence(bits, source.limits());
 
-   m_rdn.clear();
+   std::vector<std::vector<std::pair<OID, ASN1_String>>> rdns;
 
    // Cap AVAs per RDN to bound work for downstream set-based matching.
    // No legitimate cert has anywhere near this many AVAs in a single RDN.
@@ -433,10 +396,14 @@ void X509_DN::decode_from(BER_Decoder& source) {
       if(rdn.empty()) {
          throw Decoding_Error("X.500 RDN must contain at least one attribute-value assertion");
       }
-      m_rdn.push_back(std::move(rdn));
+      rdns.push_back(std::move(rdn));
    }
 
-   m_dn_bits = bits;
+   auto canonical_bits = canonicalize_dn(rdns);
+
+   m_rdn = std::move(rdns);
+   m_dn_bits = std::move(bits);
+   m_canonical_dn_bits = std::move(canonical_bits);
 }
 
 namespace {
