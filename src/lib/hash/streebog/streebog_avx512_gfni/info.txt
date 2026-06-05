@@ -1,0 +1,16 @@
+<internal_defines>
+STREEBOG_AVX512_GFNI -> 20260605
+</internal_defines>
+
+<module_info>
+name -> "Streebog AVX-512/GFNI"
+</module_info>
+
+<requires>
+cpuid
+</requires>
+
+<isa>
+gfni
+avx512
+</isa>

@@ -26,6 +26,7 @@ class Streebog final : public HashFunction {
 
       void clear() override;
       std::string name() const override;
+      std::string provider() const override;
 
       size_t hash_block_size() const override { return 64; }
 
@@ -42,6 +43,10 @@ class Streebog final : public HashFunction {
       void compress_64(const uint64_t input[], bool lastblock = false);
 
    private:
+#if defined(BOTAN_HAS_STREEBOG_AVX512_GFNI)
+      static void compress_64_avx512_gfni(uint64_t h[8], const uint64_t M[8], uint64_t N);
+#endif
+
       const size_t m_output_bits;
       uint64_t m_count;
       AlignmentBuffer<uint8_t, 64> m_buffer;
