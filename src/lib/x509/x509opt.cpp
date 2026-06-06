@@ -7,6 +7,11 @@
 
 #include <botan/x509self.h>
 
+#include <botan/dns_name.h>
+#include <botan/email.h>
+#include <botan/ipv4_address.h>
+#include <botan/uri.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <chrono>
 
@@ -90,6 +95,92 @@ X509_Cert_Options::X509_Cert_Options(std::string_view initial_opts, uint32_t exp
    if(parsed.size() == 4) {
       org_unit = parsed[3];
    }
+}
+
+CertificateParametersBuilder X509_Cert_Options::into_builder() const {
+   auto builder = CertificateParametersBuilder();
+   if(!this->common_name.empty()) {
+      builder.add_common_name(this->common_name);
+   }
+   if(!this->country.empty()) {
+      builder.add_country(this->country);
+   }
+   if(!this->organization.empty()) {
+      builder.add_organization(this->organization);
+   }
+   if(!this->org_unit.empty()) {
+      builder.add_organizational_unit(this->org_unit);
+   }
+   for(const auto& ou : this->more_org_units) {
+      if(!ou.empty()) {
+         builder.add_organizational_unit(ou);
+      }
+   }
+   if(!this->locality.empty()) {
+      builder.add_locality(this->locality);
+   }
+   if(!this->state.empty()) {
+      builder.add_state(this->state);
+   }
+   if(!this->serial_number.empty()) {
+      builder.add_serial_number(this->serial_number);
+   }
+   if(!this->email.empty()) {
+      if(auto parsed = EmailAddress::from_string(this->email)) {
+         builder.add_email(*parsed);
+      } else {
+         throw Invalid_Argument(fmt("Invalid email address '{}'", this->email));
+      }
+   }
+   if(!this->uri.empty()) {
+      if(auto parsed = URI::parse(this->uri)) {
+         builder.add_uri(*parsed);
+      } else {
+         throw Invalid_Argument(fmt("Invalid URI '{}'", this->uri));
+      }
+   }
+   if(!this->ip.empty()) {
+      if(auto ipv4 = IPv4Address::from_string(this->ip)) {
+         builder.add_ipv4(*ipv4);
+      } else {
+         throw Invalid_Argument(fmt("Invalid IPv4 address '{}'", this->ip));
+      }
+   }
+
+   auto add_dns = [&](std::string_view nm) {
+      if(auto parsed = DNSName::from_san_string(nm)) {
+         builder.add_dns(*parsed);
+      } else {
+         throw Invalid_Argument(fmt("Invalid DNS name '{}'", nm));
+      }
+   };
+
+   if(!this->dns.empty()) {
+      add_dns(this->dns);
+   }
+   for(const auto& nm : this->more_dns) {
+      if(!nm.empty()) {
+         add_dns(nm);
+      }
+   }
+   if(!this->xmpp.empty()) {
+      builder.add_xmpp(this->xmpp);
+   }
+   if(this->is_CA) {
+      builder.set_as_ca_certificate(this->path_limit);
+   }
+   if(!this->constraints.empty()) {
+      builder.add_allowed_usage(this->constraints);
+   }
+   for(const OID& usage : this->ex_constraints) {
+      builder.add_allowed_extended_usage(usage);
+   }
+
+   for(auto& [extn, is_critical] : this->extensions.extensions()) {
+      builder.add_extension(std::move(extn), is_critical);
+   }
+
+   return builder;
 }
 
 }  // namespace Botan
