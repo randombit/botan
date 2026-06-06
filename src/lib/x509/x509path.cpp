@@ -375,8 +375,12 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
 
       for(const auto& rdn : subject.subject_dn().rdns()) {
          for(const auto& ava : rdn) {
+            const size_t dn_len = ava.second.size();
             const size_t dn_ub = X509_DN::lookup_ub(ava.first);
-            if(dn_ub > 0 && ava.second.size() > dn_ub) {
+            if(dn_len == 0) {
+               // RFC 5280 DirectoryStrings are supposed to be non-empty
+               status.insert(Certificate_Status_Code::EMPTY_DIRECTORYNAME);
+            } else if(dn_ub > 0 && dn_len > dn_ub) {
                status.insert(Certificate_Status_Code::DN_TOO_LONG);
             }
          }
