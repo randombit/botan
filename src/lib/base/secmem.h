@@ -108,13 +108,17 @@ std::vector<T, Alloc>& operator+=(std::vector<T, Alloc>& out, T in) {
 
 template <typename T, typename Alloc, typename L>
 std::vector<T, Alloc>& operator+=(std::vector<T, Alloc>& out, const std::pair<const T*, L>& in) {
-   out.insert(out.end(), in.first, in.first + in.second);
+   if(in.second > 0) {
+      out.insert(out.end(), in.first, in.first + in.second);
+   }
    return out;
 }
 
 template <typename T, typename Alloc, typename L>
 std::vector<T, Alloc>& operator+=(std::vector<T, Alloc>& out, const std::pair<T*, L>& in) {
-   out.insert(out.end(), in.first, in.first + in.second);
+   if(in.second > 0) {
+      out.insert(out.end(), in.first, in.first + in.second);
+   }
    return out;
 }
 

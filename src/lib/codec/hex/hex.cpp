@@ -73,6 +73,9 @@ uint8_t hex_char_to_bin(char input) {
 size_t hex_decode(uint8_t output[], const char input[], size_t input_length, size_t& input_consumed, bool ignore_ws) {
    uint8_t* out_ptr = output;
    bool top_nibble = true;
+   uint8_t next = 0;
+
+   input_consumed = 0;
 
    clear_mem(output, input_length / 2);
 
@@ -88,30 +91,28 @@ size_t hex_decode(uint8_t output[], const char input[], size_t input_length, siz
       }
 
       if(top_nibble) {
-         *out_ptr |= bin << 4;
+         next = bin << 4;
       } else {
-         *out_ptr |= bin;
+         next |= bin;
+         *out_ptr = next;
       }
 
       top_nibble = !top_nibble;
       if(top_nibble) {
          ++out_ptr;
+         input_consumed = i + 1;
       }
    }
 
-   input_consumed = input_length;
-   const size_t written = (out_ptr - output);
-
    /*
-   * We only got half of a uint8_t at the end; zap the half-written
-   * output and mark it as unread
+   * Consume trailing whitespace following the last full byte; a leftover
+   * unpaired nibble (if any) stops the scan and is left unconsumed.
    */
-   if(!top_nibble) {
-      *out_ptr = 0;
-      input_consumed -= 1;
+   while(input_consumed < input_length && hex_char_to_bin(input[input_consumed]) == 0x80) {
+      ++input_consumed;
    }
 
-   return written;
+   return (out_ptr - output);
 }
 
 size_t hex_decode(uint8_t output[], const char input[], size_t input_length, bool ignore_ws) {
@@ -130,6 +131,9 @@ size_t hex_decode(uint8_t output[], std::string_view input, bool ignore_ws) {
 }
 
 size_t hex_decode(std::span<uint8_t> output, std::string_view input, bool ignore_ws) {
+   if(output.size() < input.length() / 2) {
+      throw Invalid_Argument("hex_decode: output buffer too small");
+   }
    return hex_decode(output.data(), input.data(), input.length(), ignore_ws);
 }
 

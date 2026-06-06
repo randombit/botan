@@ -35,6 +35,7 @@ constexpr size_t MAX_ARGON_MEMORY_GB = sizeof(size_t) == 4 ? 2 : 8;
 }  // namespace
 
 Argon2::Argon2(uint8_t family, size_t M, size_t t, size_t p) : m_family(family), m_M(M), m_t(t), m_p(p) {
+   BOTAN_ARG_CHECK(m_family == 0 || m_family == 1 || m_family == 2, "Invalid Argon2 family parameter");
    BOTAN_ARG_CHECK(m_p >= 1 && m_p <= 128, "Invalid Argon2 threads parameter");
    BOTAN_ARG_CHECK(m_M >= 8 * m_p && m_M <= MAX_ARGON_MEMORY_GB * 1024 * 1024, "Invalid Argon2 M parameter");
    BOTAN_ARG_CHECK(m_t >= 1 && m_t <= std::numeric_limits<uint32_t>::max(), "Invalid Argon2 t parameter");

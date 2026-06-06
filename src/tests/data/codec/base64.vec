@@ -71,3 +71,21 @@ Base64 = Jw+xiYKADaZA
 Base64 = ZOOL!isnotvalidbase64
 
 Base64 = Neitheris:this?
+
+# Final quantum of a single symbol cannot occur in a valid encoding
+Base64 = A
+
+# Nonzero pad bits (canonical encoding of 0x61 is "YQ")
+Base64 = YR
+
+Base64 = YR==
+
+# Nonzero pad bits in a 3 symbol final quantum (canonical is "Zm8=")
+Base64 = Zm9=
+
+# Padding may only appear at the end (GH #5439)
+Base64 = AA=A
+
+Base64 = AA==AAAA
+
+Base64 = ====AAAA

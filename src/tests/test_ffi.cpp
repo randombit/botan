@@ -3303,15 +3303,16 @@ class FFI_TOTP_Test final : public FFI_Test {
          }
 
          uint32_t code;
-         TEST_FFI_OK(botan_totp_generate, (totp, &code, 59));
-         result.test_u32_eq("TOTP code", code, 94287082);
+
+         const uint64_t timestamp = 1000216740;
+         TEST_FFI_OK(botan_totp_generate, (totp, &code, timestamp));
+         result.test_u32_eq("TOTP code", code, 34097298);
 
          TEST_FFI_OK(botan_totp_generate, (totp, &code, 1111111109));
          result.test_u32_eq("TOTP code 2", code, 7081804);
 
-         TEST_FFI_OK(botan_totp_check, (totp, 94287082, 59 + 60, 60));
-         TEST_FFI_RC(1, botan_totp_check, (totp, 94287082, 59 + 31, 1));
-         TEST_FFI_RC(1, botan_totp_check, (totp, 94287082, 59 + 61, 1));
+         TEST_FFI_OK(botan_totp_check, (totp, 34097298, timestamp + 60, 2));
+         TEST_FFI_RC(1, botan_totp_check, (totp, 34097298, timestamp + 61, 1));
 
          TEST_FFI_OK(botan_totp_destroy, (totp));
       }
