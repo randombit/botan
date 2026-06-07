@@ -1,5 +1,5 @@
 /*
-* (C) 2024,2025 Jack Lloyd
+* (C) 2024,2025,2026 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */

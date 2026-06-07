@@ -1,5 +1,5 @@
 /*
-* (C) 2024,2025 Jack Lloyd
+* (C) 2024,2025,2026 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -25,97 +25,96 @@ namespace Botan::SPAKE2p {
 /**
 * SPAKE2+ (RFC 9383) System Parameters
 */
-class BOTAN_PUBLIC_API(3, 10) SystemParameters final {
+class BOTAN_PUBLIC_API(3, 13) SystemParameters final {
    public:
       /**
-      * SPAKE2+ default system parameters
-      *
-      * If the group is not P-256, P-384, or P-521, then the group must support RFC 9380
-      * hash to curve. Curves with a cofactor are not supported.
-      *
-      * If per_user_params is true, this uses the "quantum annoying" variant where N/M are
-      * the output of hash to curve; this requires an attacker with a quantum computer to
-      * perform a discrete logarithm calculation per PAKE, rather than just once for the
-      * default (fixed) SPAKE2 parameters. This is allowed by RFC 9383 section 3.2
-      *
-      * @param group the elliptic curve group to operate in
-      * @param a_identity the (optional) identity string of peer A
-      * @param b_identity the (optional) identity string of peer B
-      * @param context an optional context string (for example a protocol identifier)
-      * @param hash the hash function to use (SHA-512 highly recommended)
-      * @param per_user_params if true then per-user N/M are used
+      * SPAKE2+ default system parameters for P-256
       */
-      explicit SystemParameters(const EC_Group& group);
+      static SystemParameters rfc9383_p256(const EC_Group& group);
 
       /**
-      * SPAKE2+ system parameters
-      *
-      * If the group is not P-256, P-384, or P-521, then the group must support RFC 9380
-      * hash to curve. Curves with a cofactor are not supported.
-      *
-      * If per_user_params is true, this uses the "quantum annoying" variant where N/M are
-      * the output of hash to curve; this requires an attacker with a quantum computer to
-      * perform a discrete logarithm calculation per PAKE, rather than just once for the
-      * default (fixed) SPAKE2 parameters. This is allowed by RFC 9383 section 3.2
-      *
-      * @param group the elliptic curve group to operate in
-      * @param a_identity the (optional) identity string of peer A
-      * @param b_identity the (optional) identity string of peer B
-      * @param context an optional context string (for example a protocol identifier)
-      * @param hash the hash function to use (SHA-512 highly recommended)
-      * @param per_user_params if true then per-user N/M are used
+      * SPAKE2+ default system parameters for P-384
       */
-      explicit SystemParameters(const EC_Group& group,
-                                std::span<const uint8_t> a_identity = {},
-                                std::span<const uint8_t> b_identity = {},
-                                std::span<const uint8_t> context = {},
-                                std::string_view hash = "SHA-512")
+      static SystemParameters rfc9383_p384(const EC_Group& group);
+
+      /**
+      * SPAKE2+ default system parameters for P-521
+      */
+      static SystemParameters rfc9383_p521(const EC_Group& group);
+
+      /**
+      * SPAKE2+ custom system parameters for an arbitrary group
+      *
+      * Note that the group must support hash2curve
+      *
+      * The M/N values will be derived using hash2curve along with the
+      * provided context string
+      *
+      * @param group the elliptic curve group to use
+      * @param context the context string to hash to derive M/N
+      * @param hash_fn the hash function to use
+      */
+      static SystemParameters custom(const EC_Group& group,
+                                     std::span<const uint8_t> context,
+                                     const std::string& hash_fn);
 
       const EC_Group& group() const { return m_group; }
 
-      const EC_AffinePoint& spake2_m() const { return m_params.first; }
+      const EC_AffinePoint& spake2_m() const { return m_spake2p_m; }
 
-      const EC_AffinePoint& spake2_n() const { return m_params.second; }
+      const EC_AffinePoint& spake2_n() const { return m_spake2p_n; }
 
       const std::string& hash_function() const { return m_hash_fn; }
 
-      std::span<const uint8_t> a_identity() const { return m_a_identity; }
-
-      std::span<const uint8_t> b_identity() const { return m_b_identity; }
-
-      std::span<const uint8_t> context() const { return m_context; }
-
    private:
       // TODO shared_ptr pimpl
-      EC_Group m_group;
-      std::pair<EC_AffinePoint, EC_AffinePoint> m_params;
-      std::string m_hash_fn;
-      std::vector<uint8_t> m_a_identity;
-      std::vector<uint8_t> m_b_identity;
-      std::vector<uint8_t> m_context;
+      const EC_Group m_group;
+      const EC_AffinePoint m_spake2p_m;
+      const EC_AffinePoint m_spake2p_n;
+      const std::string m_hash_fn;
 };
 
 /**
 * SPAKE2+ Registraton Record
 */
-class BOTAN_PUBLIC_API(3, 10) RegistrationRecord final {
+class BOTAN_PUBLIC_API(3, 13) RegistrationRecord final {
    public:
-      RegistrationRecord(const SystemParameters& params, std::string_view shared_secret);
+      /**
+      * Hash a shared secret and return the registration record
+      */
+     static RegistrationRecord
+     from_shared_secret(const SystemParameters &params,
+                        std::string_view shared_secret,
+                        std::span<const uint8_t> id_prover,
+                        std::span<const uint8_t> id_verifier);
 
       /*
       * @warning This interface is potentially unsafe, depending upon how shared_secret is
       * derived from the password. The scalar value must be uniform random, and preferably
       * computed in a way such that testing values is expensive for an attacker. It exists
       * to support testing, as well as applications which require using a different
-      * password hashing scheme than the default one implemented by `hash_shared_secret`
+      * password hashing scheme than the default one implemented by `from_shared_secret`
       */
-      RegistrationRecord(const SystemParameters& params, const EC_Scalar& shared_secret);
+      static RegistrationRecord from_prehashed(const SystemParameters& params, const EC_Scalar& shared_secret);
 
+      /**
+      * Deserialize a RegistrationRecord previously serialized by serialize
+      */
       static RegistrationRecord deserialize(const SystemParameters& params, std::span<const uint8_t> record);
 
+      /**
+      * Serialize the registration record
+      *
+      * @warning the return value is the unencrypted registration record, which
+      * is a sensitive value allowing password guessing attacks. Encrypt for
+      * persistent storage.
+      */
       secure_vector<uint8_t> serialize() const;
 
    private:
+      RegistrationRecord(const SystemParameters& params, const EC_Scalar& shared_secret);
+
+      // TODO pimpl
       EC_Scalar m_w0;
       EC_Point m_L;
 };
@@ -123,24 +122,26 @@ class BOTAN_PUBLIC_API(3, 10) RegistrationRecord final {
 /**
 * SPAKE2+ Prover Secret
 */
-class BOTAN_PUBLIC_API(3, 10) ProverSecret final {
+class BOTAN_PUBLIC_API(3, 13) ProverSecret final {
    public:
-      ProverSecret(const SystemParameters& params,
-                   std::string_view shared_secret);
+     static ProverSecret from_shared_secret(const SystemParameters &params,
+                                            std::string_view shared_secret,
+                                            std::span<const uint8_t> salt);
 
       /*
       * @warning This interface is potentially unsafe, depending upon how shared_secret is
       * derived from the password. The scalar value must be uniform random, and preferably
       * computed in a way such that testing values is expensive for an attacker. It exists
       * to support testing, as well as applications which require using a different
-      * password hashing scheme than the default one implemented by `hash_shared_secret`
+      * password hashing scheme than the default one implemented by `from_shared_secret`
       */
-      ProverSecret(const SystemParameters& params,
-                   const EC_Scalar& shared_secret);
+      static ProverSecret from_prehashed(const SystemParameters& params,
+                                         const EC_Scalar& shared_secret);
 
    private:
       friend class ProverContext;
 
+      // TODO pimpl
       EC_Scalar m_w0;
       EC_Scalar m_w1;
 };
@@ -156,7 +157,7 @@ class BOTAN_PUBLIC_API(3, 10) ProverSecret final {
 * equivalent to Hash(TT) in RFC 9383 so it is possible to implement
 * RFC 9383 conformant key confirmation if necessary.
 */
-class BOTAN_PUBLIC_API(3, 10) ProverContext final {
+class BOTAN_PUBLIC_API(3, 13) ProverContext final {
    public:
       ProverContext(const SystemParameters& params, const ProverSecret& secret) :
          m_params(params), m_secret(secret) {}
@@ -174,6 +175,7 @@ class BOTAN_PUBLIC_API(3, 10) ProverContext final {
       secure_vector<uint8_t> process_message(std::span<const uint8_t> peer_message);
 
    private:
+      // TODO pimpl
       SystemParameters m_params;
       ProverSecret m_secret;
       std::optional<std::pair<std::vector<uint8_t>, EC_Scalar>> m_our_message;
@@ -190,7 +192,7 @@ class BOTAN_PUBLIC_API(3, 10) ProverContext final {
 * equivalent to Hash(TT) in RFC 9383 so it is possible to implement
 * RFC 9383 conformant key confirmation if necessary.
 */
-class BOTAN_PUBLIC_API(3, 10) VerifierContext final {
+class BOTAN_PUBLIC_API(3, 13) VerifierContext final {
    public:
       VerifierContext(const SystemParameters& params, const RegistrationRecord& record) :
          m_params(params), m_record(record) {}
@@ -208,6 +210,7 @@ class BOTAN_PUBLIC_API(3, 10) VerifierContext final {
       secure_vector<uint8_t> process_message(std::span<const uint8_t> peer_message, RandomNumberGenerator& rng);
 
    private:
+      // TODO pimpl
       SystemParameters m_params;
       RegistrationRecord m_record;
       std::optional<std::pair<std::vector<uint8_t>, EC_Scalar>> m_our_message;
