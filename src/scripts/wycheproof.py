@@ -958,9 +958,14 @@ def _mldsa_sign_test(mldsa_mode: str, group: dict, test: dict) -> None:
             )
 
     try:
-        signer = botan.PKSign(priv, "Deterministic")
-        signer.update(_from_hex(test["msg"]))
-        actual_sig = signer.finish(NullRNG())
+        if "rnd" in test:
+            signer = botan.PKSign(priv, "Randomized")
+            signer.update(_from_hex(test["msg"]))
+            actual_sig = signer.finish(FixedOutputRNG(_from_hex(test["rnd"])))
+        else:
+            signer = botan.PKSign(priv, "Deterministic")
+            signer.update(_from_hex(test["msg"]))
+            actual_sig = signer.finish(NullRNG())
     except botan.BotanException:
         if test["result"] == "invalid":
             return
