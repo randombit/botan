@@ -1130,6 +1130,26 @@ class Charset_Tests final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("utils", "charset", Charset_Tests);
 
+class Escape_Control_Chars_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("escape_control_chars");
+
+         result.test_str_eq("newline", Botan::escape_control_chars("a\nb"), "a\\x0Ab");
+         result.test_str_eq("escape", Botan::escape_control_chars("\x1b[0m"), "\\x1B[0m");
+         result.test_str_eq("embedded NUL", Botan::escape_control_chars(std::string("a\0b", 3)), "a\\x00b");
+         result.test_str_eq("DEL", Botan::escape_control_chars("\x7f"), "\\x7F");
+         result.test_str_eq("C1 control U+009B", Botan::escape_control_chars("\xc2\x9b"), "\\xC2\\x9B");
+         result.test_str_eq("printable ASCII ok", Botan::escape_control_chars("Hello.123"), "Hello.123");
+         result.test_str_eq("printable UTF-8 ok", Botan::escape_control_chars("Fräulein"), "Fräulein");
+         result.test_str_eq("U+00A0 is not a control", Botan::escape_control_chars("\xc2\xa0"), "\xc2\xa0");
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("utils", "escape_control_chars", Escape_Control_Chars_Tests);
+
 #if defined(BOTAN_HAS_IPV4_ADDRESS)
 
 class IPv4_Parsing_Tests final : public Text_Based_Test {

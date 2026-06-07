@@ -11,6 +11,7 @@
 #include <botan/bigint.h>
 #include <botan/der_enc.h>
 #include <botan/hex.h>
+#include <botan/internal/charset.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mem_utils.h>
 #include <iomanip>
@@ -258,7 +259,7 @@ std::string ASN1_Pretty_Printer::format(
       const size_t current_pos = static_cast<size_t>(oss.tellp());
       const size_t spaces_to_align = (current_pos >= m_value_column) ? 1 : (m_value_column - current_pos);
 
-      oss << std::string(spaces_to_align, ' ') << value;
+      oss << std::string(spaces_to_align, ' ') << escape_control_chars(value);
    }
 
    oss << "\n";

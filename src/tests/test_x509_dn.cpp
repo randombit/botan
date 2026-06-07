@@ -10,6 +10,8 @@
    #include <botan/ber_dec.h>
    #include <botan/hex.h>
    #include <botan/pkix_types.h>
+   #include <botan/internal/charset.h>
+   #include <algorithm>
    #include <sstream>
 #endif
 
@@ -72,6 +74,7 @@ class X509_DN_String_Tests final : public Test {
          results.push_back(test_mixed_single_and_multi_ava_round_trip());
          results.push_back(test_quoted_plus_in_value_not_split());
          results.push_back(test_decode_failure_leaves_dn_unchanged());
+         results.push_back(test_value_escaping_round_trips());
          return results;
       }
 
@@ -189,6 +192,53 @@ class X509_DN_String_Tests final : public Test {
 
          result.test_str_eq("string form unchanged", format(dn), format(original));
          result.test_is_true("DN comparison unchanged", dn == original);
+         return result;
+      }
+
+      static Test::Result test_value_escaping_round_trips() {
+         Test::Result result("X509_DN value escaping and round-trip");
+
+         auto has_raw_control_byte = [](std::string_view s) -> bool {
+            return std::any_of(s.begin(), s.end(), [](char c) { return Botan::is_ascii_control_char(c); });
+         };
+
+         auto check_cn = [&](const std::string& label, std::string_view value) -> std::string {
+            // Render a DN with CN=value and check the invariants that hold for any
+            // value: the rendering has no raw C0/DEL control byte, and it parses back
+            // to the exact value and re-renders identically. Returns the rendering.
+            Botan::X509_DN dn;
+            dn.add_attribute("X520.CommonName", value);
+            const std::string s = format(dn);
+
+            result.test_is_false(label + ": no raw control byte", has_raw_control_byte(s));
+            const Botan::X509_DN parsed = parse(s);
+            result.test_str_eq(label + ": value preserved", parsed.get_first_attribute("CN"), value);
+            result.test_str_eq(label + ": re-emits identically", format(parsed), s);
+            return s;
+         };
+
+         const std::string all_ascii = []() {
+            std::string s;
+            for(uint8_t b = 0x01; b <= 0x7F; ++b) {
+               s.push_back(static_cast<char>(b));
+            }
+            return s;
+         }();
+
+         const std::vector<std::pair<std::string, std::string>> cases = {
+            {"embedded newline", "This\nThat"},
+            {"terminal escape", "ACME\x1b[2J\x1b[31mTRUSTED"},
+            {"all ASCII bytes", all_ascii},
+            {"embedded NUL", std::string("a\0b", 3)},
+         };
+         for(const auto& [label, value] : cases) {
+            check_cn(label, value);
+         }
+
+         // Normal UTF-8 is unmodified
+         const std::string utf8 = check_cn("printable UTF-8", "Fräulein");
+         result.test_is_true("UTF-8 not escaped", utf8.find('\\') == std::string::npos);
+
          return result;
       }
 };

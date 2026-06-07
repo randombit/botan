@@ -663,7 +663,7 @@ class ASN1_Printer_Tests final : public Test {
 
          const Botan::ASN1_Pretty_Printer printer;
 
-         const size_t num_tests = 7;
+         const size_t num_tests = 8;
 
          for(size_t i = 1; i <= num_tests; ++i) {
             const std::string i_str = std::to_string(i);

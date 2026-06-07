@@ -10,9 +10,11 @@
 #include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/internal/charset.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/x509_utils.h>
 #include <algorithm>
+#include <optional>
 #include <ostream>
 #include <sstream>
 
@@ -22,6 +24,18 @@ namespace {
 
 bool is_space(char c) {
    return c == ' ' || c == '\t';
+}
+
+std::optional<uint8_t> hex_digit_value(char c) {
+   if(c >= '0' && c <= '9') {
+      return static_cast<uint8_t>(c - '0');
+   } else if(c >= 'a' && c <= 'f') {
+      return static_cast<uint8_t>(c - 'a' + 10);
+   } else if(c >= 'A' && c <= 'F') {
+      return static_cast<uint8_t>(c - 'A' + 10);
+   } else {
+      return {};
+   }
 }
 
 /*
@@ -441,6 +455,13 @@ std::string X509_DN::to_string() const {
 std::ostream& operator<<(std::ostream& out, const X509_DN& dn) {
    const auto& rdns = dn.rdns();
 
+   // Escape characters as a backslash plus two hex digits per byte
+   // See RFC 4514 Sections 2.4 and 4
+   auto hex_escape = [](std::ostream& s, char c) {
+      const auto b = static_cast<uint8_t>(c);
+      s << '\\' << nibble_to_hex(b >> 4) << nibble_to_hex(b);
+   };
+
    // AVAs within the same RDN are joined with '+' (per RFC 4514), so a
    // multi-valued RDN remains distinguishable from multiple single-valued
    // RDNs separated by ','.
@@ -458,11 +479,30 @@ std::ostream& operator<<(std::ostream& out, const X509_DN& dn) {
          }
          first_ava = false;
          out << to_short_form(ava.first) << "=\"";
-         for(const char c : ava.second.value()) {
-            if(c == '\\' || c == '\"') {
-               out << "\\";
+         const std::string_view value = ava.second.value();
+         size_t pos = 0;
+         while(pos < value.size()) {
+            const size_t start = pos;
+
+            uint32_t cp = 0;
+            try {
+               cp = next_utf8_codepoint(value, pos);
+            } catch(const Decoding_Error&) {
+               // value() should always be valid UTF-8, but escape defensively otherwise
+               hex_escape(out, value[start]);
+               pos = start + 1;
+               continue;
             }
-            out << c;
+
+            if(cp == '\\' || cp == '"') {
+               out << '\\' << static_cast<char>(cp);
+            } else if(is_unicode_control_char(cp)) {
+               for(size_t i = start; i < pos; ++i) {
+                  hex_escape(out, value[i]);
+               }
+            } else {
+               out << value.substr(start, pos - start);
+            }
          }
          out << "\"";
       }
@@ -523,10 +563,23 @@ std::istream& operator>>(std::istream& in, X509_DN& dn) {
          } else if(c == '"') {
             in_quotes = !in_quotes;
          } else if(c == '\\') {
-            if(in.good()) {
-               in >> c;
+            char e = 0;
+            in >> e;
+            if(!in) {
+               // A trailing backslash is taken literally
+               val.push_back('\\');
+            } else if(const auto hi = hex_digit_value(e)) {
+               // Backslash plus two hex digits decodes to one octet (RFC 4514 2.4)
+               char lo_c = 0;
+               in >> lo_c;
+               const auto lo = hex_digit_value(lo_c);
+               if(!in || !lo) {
+                  throw Invalid_Argument("Ill-formed X.509 DN");
+               }
+               val.push_back(static_cast<char>((*hi << 4) | *lo));
+            } else {
+               val.push_back(e);
             }
-            val.push_back(c);
          } else if((c == ',' || c == '+') && !in_quotes) {
             terminator = c;
             break;

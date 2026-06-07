@@ -60,14 +60,49 @@ BOTAN_TEST_API std::string latin1_to_utf8(std::span<const uint8_t> latin1);
 bool is_valid_utf8(std::string_view str);
 
 /**
+* Return true if c is a control character (0x00..0x1F) or DEL (0x7F)
+*/
+BOTAN_TEST_API bool is_ascii_control_char(char c);
+
+/**
+* Return true if the Unicode code point cp is a control character: a C0 control
+* (U+0000..U+001F), DEL (U+007F), or a C1 control (U+0080..U+009F)
+*/
+BOTAN_TEST_API bool is_unicode_control_char(uint32_t cp);
+
+/**
+* Map the low four bits of b to an uppercase hex digit ('0'..'9','A'..'F')
+*/
+inline constexpr char nibble_to_hex(uint8_t b) {
+   const uint8_t n = b & 0x0F;
+   return static_cast<char>(n < 10 ? '0' + n : 'A' + (n - 10));
+}
+
+/**
+* Decode the UTF-8 code point beginning at utf8[pos], advancing pos past it
+* @throws Decoding_Error if the bytes at pos are not a valid UTF-8 sequence
+*/
+uint32_t next_utf8_codepoint(std::string_view utf8, size_t& pos);
+
+/**
+* Return a copy of utf8 with control characters escaped for safe display
+*
+* C0 controls (0x00..0x1F), DEL (0x7F), and C1 controls (U+0080..U+009F) are
+* each replaced by a "\xHH" escape per byte; all other code points, including
+* printable non-ASCII, are passed through unchanged. Any byte that is not part
+* of a valid UTF-8 sequence is escaped individually.
+*/
+BOTAN_TEST_API std::string escape_control_chars(std::string_view utf8);
+
+/**
 * Return a string containing 'c', quoted and possibly escaped
 *
-* This is used when creating an error message nothing an invalid character
-* in some codex (for example during hex decoding)
+* This is used when creating an error message noting an invalid character
+* in some codec (for example during hex decoding)
 *
-* Currently this function escapes tab, newlines and carriage return
-* as "\t", "\n", and "\r", and also escapes characters > 0x7F as
-* "\xHH" where HH is the hex code.
+* Tab, newline, and carriage return are escaped as "\t", "\n", and "\r".
+* Any other control character (or DEL), and any byte above 0x7F, is escaped
+* as "\xHH" where HH is the hex code.
 */
 std::string format_char_for_display(char c);
 
