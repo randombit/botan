@@ -9,7 +9,6 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/loadstor.h>
-#include <sstream>
 
 namespace Botan {
 
@@ -48,6 +47,8 @@ void append_utf8_for(std::string& s, uint32_t c) {
       throw Decoding_Error("Invalid Unicode character");
    }
 }
+
+}  // namespace
 
 uint32_t next_utf8_codepoint(std::string_view utf8, size_t& pos) {
    auto read_continuation = [&]() -> uint32_t {
@@ -100,8 +101,6 @@ uint32_t next_utf8_codepoint(std::string_view utf8, size_t& pos) {
 
    return c;
 }
-
-}  // namespace
 
 bool is_valid_utf8(std::string_view utf8) {
    try {
@@ -193,27 +192,73 @@ std::string latin1_to_utf8(std::span<const uint8_t> chars) {
    return s;
 }
 
-std::string format_char_for_display(char c) {
-   std::ostringstream oss;
+bool is_ascii_control_char(char c) {
+   const uint8_t b = static_cast<uint8_t>(c);
+   return b < 0x20 || b == 0x7F;
+}
 
-   oss << "'";
+bool is_unicode_control_char(uint32_t cp) {
+   return cp < 0x20 || (cp >= 0x7F && cp <= 0x9F);
+}
 
-   if(c == '\t') {
-      oss << "\\t";
-   } else if(c == '\n') {
-      oss << "\\n";
-   } else if(c == '\r') {
-      oss << "\\r";
-   } else if(static_cast<unsigned char>(c) >= 128) {
-      const unsigned char z = static_cast<unsigned char>(c);
-      oss << "\\x" << std::hex << std::uppercase << static_cast<int>(z);
-   } else {
-      oss << c;
+std::string escape_control_chars(std::string_view utf8) {
+   std::string out;
+   out.reserve(utf8.size());
+
+   const auto append_hex_escape = [&](uint8_t b) {
+      out += "\\x";
+      out += nibble_to_hex(b >> 4);
+      out += nibble_to_hex(b);
+   };
+
+   size_t pos = 0;
+   while(pos < utf8.size()) {
+      const size_t start = pos;
+
+      uint32_t cp = 0;
+      try {
+         cp = next_utf8_codepoint(utf8, pos);
+      } catch(const Decoding_Error&) {
+         // Not valid UTF-8: escape the offending byte and resume
+         append_hex_escape(static_cast<uint8_t>(utf8[start]));
+         pos = start + 1;
+         continue;
+      }
+
+      if(is_unicode_control_char(cp)) {
+         for(size_t i = start; i < pos; ++i) {
+            append_hex_escape(static_cast<uint8_t>(utf8[i]));
+         }
+      } else {
+         out.append(utf8.substr(start, pos - start));
+      }
    }
 
-   oss << "'";
+   return out;
+}
 
-   return oss.str();
+std::string format_char_for_display(char c) {
+   std::string out;
+   out += '\'';
+
+   if(c == '\t') {
+      out += "\\t";
+   } else if(c == '\n') {
+      out += "\\n";
+   } else if(c == '\r') {
+      out += "\\r";
+   } else if(is_ascii_control_char(c) || static_cast<uint8_t>(c) >= 0x80) {
+      const auto b = static_cast<uint8_t>(c);
+      out += "\\x";
+      out += nibble_to_hex(b >> 4);
+      out += nibble_to_hex(b);
+   } else {
+      out += c;
+   }
+
+   out += '\'';
+
+   return out;
 }
 
 }  // namespace Botan

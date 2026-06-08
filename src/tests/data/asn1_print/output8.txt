@@ -1,0 +1,9 @@
+  d= 0, l= 187: SEQUENCE
+  d= 1, l=  32:  UTF8 STRING                                10.0.0.9 denied\x0D10.0.0.9 allowed
+  d= 1, l=  33:  UTF8 STRING                                surprise!\x08\x08\x08\x08\x08\x08\x08\x08\x08all normal here
+  d= 1, l=  46:  IA5 STRING                                 user=admin action=login\x0Auser=admin action=wipe
+  d= 1, l=  18:  UTF8 STRING                                \x1B[31mUNTRUSTED\x1B[0m
+  d= 1, l=  14:  UTF8 STRING                                visible\x00hidden
+  d= 1, l=   8:  BMP STRING                                 A\x0A\xC2\x9BB
+  d= 1, l=  12:  UNIVERSAL STRING                           A\x1BB
+  d= 1, l=   8:  T61 STRING                                 warn\xC2\x9B31m

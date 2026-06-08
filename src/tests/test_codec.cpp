@@ -6,6 +6,7 @@
 
 #include "tests.h"
 
+#include <botan/exceptn.h>
 #include <botan/hex.h>
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
@@ -215,6 +216,37 @@ class Base64_Tests final : public Text_Based_Test {
 BOTAN_REGISTER_TEST("codec", "base64", Base64_Tests);
 
 #endif
+
+class Codec_Error_Char_Display_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("Codec error message character display");
+
+         const std::vector<std::pair<char, std::string>> cases = {
+            {'\x1b', "\\x1B"},
+            {'\x00', "\\x00"},
+            {'\n', "\\n"},
+            {'\r', "\\r"},
+            {'\t', "\\t"},
+            {'\x7f', "\\x7F"},
+            {static_cast<char>(0xFF), "\\xFF"},
+         };
+
+         for(const auto& [bad, expect] : cases) {
+            try {
+               Botan::hex_decode(std::string(1, bad), false);
+               result.test_failure("hex_decode accepted invalid byte");
+            } catch(const Botan::Invalid_Argument& e) {
+               const std::string msg = e.what();
+               result.test_is_true("message uses escaped string", msg.find(expect) != std::string::npos);
+            }
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("codec", "codec_error_char_display", Codec_Error_Char_Display_Tests);
 
 }  // namespace
 
