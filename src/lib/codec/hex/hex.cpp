@@ -56,11 +56,13 @@ uint8_t hex_char_to_bin(char input) {
    // Starts of valid value ranges (v_lo) and their lengths (v_range)
    constexpr uint64_t v_lo = make_uint64(0, '0', 'a', 'A', ' ', '\n', '\t', '\r');
    constexpr uint64_t v_range = make_uint64(0, 10, 6, 6, 1, 1, 1, 1);
+   constexpr uint64_t expand8 = 0x0101010101010101;
+   constexpr uint64_t top64 = 0x8000000000000000;
 
    const uint8_t x = static_cast<uint8_t>(input);
-   const uint64_t x8 = x * 0x0101010101010101;
+   const uint64_t x8 = x * expand8;
 
-   const uint64_t v_mask = swar_in_range<uint64_t>(x8, v_lo, v_range) ^ 0x8000000000000000;
+   const uint64_t v_mask = swar_in_range<uint64_t>(x8, v_lo, v_range) ^ top64;
 
    // This is the offset added to x to get the value we need
    const uint64_t val_v = 0xd0a9c960767773 ^ static_cast<uint64_t>(0xFF - x) << 56;
