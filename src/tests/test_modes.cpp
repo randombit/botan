@@ -473,6 +473,46 @@ class Cipher_Mode_IV_Carry_Tests final : public Test {
 
 BOTAN_REGISTER_TEST("modes", "iv_carryover", Cipher_Mode_IV_Carry_Tests);
 
+class CBC_Invalid_Padding_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("CBC invalid padding");
+
+   #if defined(BOTAN_HAS_MODE_CBC) && defined(BOTAN_HAS_AES)
+         auto enc = Botan::Cipher_Mode::create_or_throw("AES-128/CBC/NoPadding", Botan::Cipher_Dir::Encryption);
+         auto dec = Botan::Cipher_Mode::create_or_throw("AES-128/CBC/PKCS7", Botan::Cipher_Dir::Decryption);
+
+         const std::vector<uint8_t> key(16, 0xAB);
+         const std::vector<uint8_t> iv(16, 0xCD);
+
+         // A final byte of 0x00 is never valid PKCS#7 padding
+         Botan::secure_vector<uint8_t> buf(32, 0x42);
+         buf[31] = 0x00;
+
+         enc->set_key(key);
+         enc->start(iv);
+         enc->finish(buf);
+
+         dec->set_key(key);
+         dec->start(iv);
+
+         result.test_throws<Botan::Decoding_Error>("invalid CBC padding is rejected", [&]() { dec->finish(buf); });
+
+         // The decrypted but unverified plaintext must have been zeroed
+         result.test_sz_eq("buffer size unchanged after padding failure", buf.size(), 32);
+         uint8_t accum = 0;
+         for(const uint8_t b : buf) {
+            accum |= b;
+         }
+         result.test_is_true("plaintext zeroed after padding failure", accum == 0);
+   #endif
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("modes", "cbc_invalid_padding", CBC_Invalid_Padding_Test);
+
 #endif
 
 }  // namespace
