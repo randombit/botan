@@ -23,6 +23,7 @@
 #include <iosfwd>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <string_view>
@@ -100,6 +101,17 @@ class BOTAN_PUBLIC_API(2, 0) X509_DN final : public ASN1_Object {
       std::string to_string() const;
 
       /**
+      * Parse the string representation of a distinguished name.
+      *
+      * The grammar accepted is a subset of RFC 4514 Section 3, but also accepts
+      * quoted-value forms ala RFC 2253. The entire input must be consumed.
+      *
+      * @param str the string to parse
+      * @return the parsed DN, or nullopt if @p str is not a well-formed DN
+      */
+      static std::optional<X509_DN> parse(std::string_view str);
+
+      /**
       * Return the DN as a sequence of RDNs. Each RDN is an X.501
       * SET OF AttributeTypeAndValue; the inner vector preserves the
       * decoded order but RDN equality is set-based per RFC 5280 7.1.
@@ -171,7 +183,12 @@ It is intended for allowing DNs as keys in std::map and similar containers
 BOTAN_PUBLIC_API(2, 0) bool operator<(const X509_DN& dn1, const X509_DN& dn2);
 
 BOTAN_PUBLIC_API(2, 0) std::ostream& operator<<(std::ostream& out, const X509_DN& dn);
-BOTAN_PUBLIC_API(2, 0) std::istream& operator>>(std::istream& in, X509_DN& dn);
+
+/**
+* Parse the input stream as a DN
+* Prefer X509_DN::parse
+*/
+BOTAN_DEPRECATED_API("Use X509_DN::parse") std::istream& operator>>(std::istream& in, X509_DN& dn);
 
 /**
 * Alternative Name
@@ -351,6 +368,12 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
 
       BOTAN_DEPRECATED("Use AlternativeName::othernames") std::multimap<OID, ASN1_String> get_othernames() const;
 
+      /**
+      * This returns all of the alternative name DNs combined into a single DN
+      *
+      * This result is not a valid DN. The logic is retained for compatibility,
+      * but this function should not be used. It will be removed in Botan4.
+      */
       BOTAN_DEPRECATED("Use AlternativeName::directory_names") X509_DN dn() const;
 
       BOTAN_DEPRECATED("Use plain constructor plus add_{uri,dns,email,ipv4_address}")

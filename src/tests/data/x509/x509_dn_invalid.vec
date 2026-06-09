@@ -1,0 +1,42 @@
+# No '=' delimiter
+Input = Alice
+# Bare attribute type, no value
+Input = CN
+# Empty attribute type
+Input = =Alice
+# Whitespace before '='
+Input = CN =Alice
+# Unterminated quoted value
+Input = CN="Alice
+# Dangling escape at end of input
+Input = CN=Alice\
+# Truncated hex escape
+Input = CN=\4
+# Non-hex digit in hex escape
+Input = CN=\4z
+# Empty RDN between separators
+Input = CN=A,,O=B
+# Unknown attribute type name
+Input = NoSuchType=x
+# Escape of a non-special character
+Input = CN=\q
+# Escape of an at sign
+Input = CN=\@
+# Escaped octet that is not valid UTF-8
+Input = CN=\FF
+# Trailing comma separator
+Input = CN=A,
+# Trailing plus separator
+Input = CN=A+
+# Quote in the middle of the value
+Input = CN=Al"ice"
+# Content after the closing quote
+Input = CN="Alice"junk
+# Reopened quote after an empty quoted value
+Input = CN=""Alice
+# Unescaped special characters in unquoted values
+Input = CN=A;B
+Input = CN=A<B
+Input = CN=A>B
+Input = CN=A#B
+Input = CN=A=B

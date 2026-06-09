@@ -14,6 +14,8 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/x509_utils.h>
 #include <algorithm>
+#include <istream>
+#include <iterator>
 #include <optional>
 #include <ostream>
 #include <sstream>
@@ -35,6 +37,40 @@ std::optional<uint8_t> hex_digit_value(char c) {
       return static_cast<uint8_t>(c - 'A' + 10);
    } else {
       return {};
+   }
+}
+
+/*
+* RFC 4514 Section 3 specifies which characters can be escaped
+*/
+bool is_escapable_char(char c) {
+   switch(c) {
+      case '\\':
+      case '"':
+      case '+':
+      case ',':
+      case ';':
+      case '<':
+      case '>':
+      case ' ':
+      case '#':
+      case '=':
+         return true;
+      default:
+         return false;
+   }
+}
+
+bool is_unescaped_special_value_char(char c) {
+   switch(c) {
+      case ';':
+      case '<':
+      case '>':
+      case '#':
+      case '=':
+         return true;
+      default:
+         return false;
    }
 }
 
@@ -510,97 +546,159 @@ std::ostream& operator<<(std::ostream& out, const X509_DN& dn) {
    return out;
 }
 
-std::istream& operator>>(std::istream& in, X509_DN& dn) {
-   in >> std::noskipws;
+/*
+* Parse the string representation of a distinguished name, accepting
+* the formats specified in RFC 4514 Section 3 as well as RFC 2253's
+* quoted format.
+*/
+std::optional<X509_DN> X509_DN::parse(std::string_view str) {
+   X509_DN dn;
 
-   // AVAs are buffered until we hit a ',' (or EOF), at which point they
-   // are flushed as a single RDN. A '+' between AVAs keeps them in the
-   // same RDN, matching the output of operator<<.
+   // AVAs accumulate here; a trailing '+' keeps the next AVA in the same
+   // RDN, while a ',' (or end of input) flushes them as a single RDN.
    std::vector<std::pair<OID, ASN1_String>> pending_rdn;
 
-   // NOLINTNEXTLINE(*-avoid-do-while)
-   do {
-      std::string key;
-      std::string val;
-      char c = 0;
+   // Separator that ended the previous AVA. A ',' or '+' still pending after the
+   // loop means the input ended with a separator and no AVA to follow it.
+   char terminator = '\0';
 
-      while(in.good()) {
-         in >> c;
-
-         if(is_space(c) && key.empty()) {
-            continue;
-         } else if(!is_space(c)) {
-            key.push_back(c);
-            break;
-         } else {
-            break;
-         }
+   size_t pos = 0;
+   while(pos < str.size()) {
+      // Whitespace separating an attributeType from the preceding ',' or '+'
+      // is tolerated even though RFC 4514 does not produce it.
+      while(pos < str.size() && is_space(str[pos])) {
+         ++pos;
       }
-
-      while(in.good()) {
-         in >> c;
-
-         if(!is_space(c) && c != '=') {
-            key.push_back(c);
-         } else if(c == '=') {
-            break;
-         } else {
-            throw Invalid_Argument("Ill-formed X.509 DN");
-         }
-      }
-
-      bool in_quotes = false;
-      char terminator = '\0';
-      while(in.good()) {
-         in >> c;
-
-         if(is_space(c)) {
-            if(!in_quotes && !val.empty()) {
-               break;
-            } else if(in_quotes) {
-               val.push_back(' ');
-            }
-         } else if(c == '"') {
-            in_quotes = !in_quotes;
-         } else if(c == '\\') {
-            char e = 0;
-            in >> e;
-            if(!in) {
-               // A trailing backslash is taken literally
-               val.push_back('\\');
-            } else if(const auto hi = hex_digit_value(e)) {
-               // Backslash plus two hex digits decodes to one octet (RFC 4514 2.4)
-               char lo_c = 0;
-               in >> lo_c;
-               const auto lo = hex_digit_value(lo_c);
-               if(!in || !lo) {
-                  throw Invalid_Argument("Ill-formed X.509 DN");
-               }
-               val.push_back(static_cast<char>((*hi << 4) | *lo));
-            } else {
-               val.push_back(e);
-            }
-         } else if((c == ',' || c == '+') && !in_quotes) {
-            terminator = c;
-            break;
-         } else {
-            val.push_back(c);
-         }
-      }
-
-      if(!key.empty() && !val.empty()) {
-         const OID oid = OID::from_string(X509_DN::deref_info_field(key));
-         pending_rdn.emplace_back(oid, ASN1_String(val));
-         if(terminator != '+') {
-            dn.add_rdn(std::move(pending_rdn));
-            pending_rdn.clear();
-         }
-      } else {
+      if(pos == str.size()) {
          break;
       }
-   } while(in.good());
 
-   dn.add_rdn(std::move(pending_rdn));
+      // attributeType, terminated by '='
+      const size_t type_start = pos;
+      while(pos < str.size() && str[pos] != '=' && !is_space(str[pos])) {
+         ++pos;
+      }
+      const std::string_view type = str.substr(type_start, pos - type_start);
+      if(type.empty() || pos == str.size() || str[pos] != '=') {
+         return std::nullopt;
+      }
+      ++pos;  // consume '='
+
+      /*
+      attributeValue, in RFC 4514 <string> form plus the legacy quoted form.
+      value_len tracks the length up to the last significant octet: leading and
+      trailing unescaped whitespace is not significant unless it was escaped or
+      quoted, so trailing whitespace is dropped by the final resize.
+      */
+      std::string value;
+      size_t value_len = 0;
+
+      // The legacy quoted form wraps the whole value: a quote is only an opening
+      // quote at the start of the value, and nothing but trailing whitespace or a
+      // separator may follow the closing quote.
+      enum class Quote : uint8_t { None, Open, Closed };
+      Quote quote = Quote::None;
+
+      terminator = '\0';
+
+      while(pos < str.size()) {
+         const char c = str[pos];
+
+         if(c == '"') {
+            if(quote == Quote::Open) {
+               quote = Quote::Closed;
+            } else if(quote == Quote::None && value.empty()) {
+               quote = Quote::Open;
+            } else {
+               return std::nullopt;  // quote in mid-value or after the closing quote
+            }
+            ++pos;
+         } else if(c == '\\') {
+            if(quote == Quote::Closed) {
+               return std::nullopt;  // escape after the closing quote
+            }
+            // pair = ESC ( ESC / special / hexpair )
+            ++pos;
+            if(pos == str.size()) {
+               return std::nullopt;
+            }
+            if(const auto hi = hex_digit_value(str[pos])) {
+               const auto lo = (pos + 1 < str.size()) ? hex_digit_value(str[pos + 1]) : std::nullopt;
+               if(!lo) {
+                  return std::nullopt;
+               }
+               value.push_back(static_cast<char>((*hi << 4) | *lo));
+               pos += 2;
+            } else if(is_escapable_char(str[pos])) {
+               value.push_back(str[pos]);
+               ++pos;
+            } else {
+               return std::nullopt;  // not ESC / special / hexpair
+            }
+            value_len = value.size();  // an escaped octet is always significant
+         } else if((c == ',' || c == '+') && quote != Quote::Open) {
+            terminator = c;
+            ++pos;
+            break;
+         } else if(quote == Quote::Closed) {
+            if(!is_space(c)) {
+               return std::nullopt;  // content after the closing quote
+            }
+            ++pos;  // trailing whitespace after the closing quote is insignificant
+         } else if(quote != Quote::Open && is_unescaped_special_value_char(c)) {
+            return std::nullopt;
+         } else {
+            ++pos;
+            if(is_space(c) && quote != Quote::Open) {
+               // Keep interior whitespace only if more content follows; skip it
+               // entirely while leading (value is still empty)
+               if(!value.empty()) {
+                  value.push_back(c);
+               }
+            } else {
+               value.push_back(c);
+               value_len = value.size();
+            }
+         }
+      }
+
+      if(quote == Quote::Open) {
+         return std::nullopt;  // unterminated quoted value
+      }
+      value.resize(value_len);  // strip trailing unescaped whitespace
+
+      try {
+         OID oid = OID::from_string(deref_info_field(type));
+         // ASN1_String rejects values (e.g. a \FF hexpair) that are not valid
+         // for any supported string encoding.
+         pending_rdn.emplace_back(std::move(oid), ASN1_String(value));
+      } catch(const Exception&) {
+         return std::nullopt;  // unknown attributeType or invalid attributeValue
+      }
+
+      if(terminator != '+') {
+         dn.add_rdn(std::move(pending_rdn));
+         pending_rdn.clear();
+      }
+   }
+
+   // A trailing ',' or '+' leaves an RDN/AVA with nothing to follow it
+   if(terminator == ',' || terminator == '+') {
+      return std::nullopt;
+   }
+   return dn;
+}
+
+std::istream& operator>>(std::istream& in, X509_DN& dn) {
+   const std::istreambuf_iterator<char> begin(in);
+   const std::istreambuf_iterator<char> end;
+   const std::string contents(begin, end);
+
+   if(auto parsed = X509_DN::parse(contents)) {
+      dn = std::move(*parsed);
+   } else {
+      in.setstate(std::ios::failbit);
+   }
    return in;
 }
 }  // namespace Botan
