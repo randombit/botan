@@ -576,6 +576,55 @@ std::vector<Test::Result> Validate_NoRevAvail_Test::run() {
 
 BOTAN_REGISTER_TEST("x509", "x509_no_rev_avail", Validate_NoRevAvail_Test);
 
+class Cross_Signed_Mesh_Path_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override;
+};
+
+std::vector<Test::Result> Cross_Signed_Mesh_Path_Test::run() {
+   if(Botan::has_filesystem_impl() == false) {
+      return {Test::Result::Note("Path validation", "Skipping due to missing filesystem access")};
+   }
+
+   Test::Result result("X509 cross-signed mesh path building");
+
+   /*
+   * Roots A, B, C are mutually cross-signed (six cross certificates), so
+   * many valid paths exist from the leaf to the trusted self-signed Root A.
+   * Since the trusted root issued the intermediate directly, path building
+   * should return the minimal path leaf -> A1 -> Root A rather than one
+   * winding through the cross-signatures.
+   */
+   const Botan::X509_Certificate root(Test::data_file("x509/cross_signed_mesh/root_a.pem"));
+
+   std::vector<Botan::X509_Certificate> chain;
+   chain.push_back(Botan::X509_Certificate(Test::data_file("x509/cross_signed_mesh/leaf.pem")));
+   chain.push_back(Botan::X509_Certificate(Test::data_file("x509/cross_signed_mesh/int_a1.pem")));
+   for(const std::string cross : {"a_by_b", "a_by_c", "b_by_a", "b_by_c", "c_by_a", "c_by_b"}) {
+      chain.push_back(Botan::X509_Certificate(Test::data_file("x509/cross_signed_mesh/cross_" + cross + ".pem")));
+   }
+
+   auto validation_time = Botan::calendar_point(2030, 1, 1, 0, 0, 0).to_std_timepoint();
+
+   Botan::Certificate_Store_In_Memory trusted;
+   trusted.add_certificate(root);
+
+   const Botan::Path_Validation_Restrictions restrictions;
+   const Botan::Path_Validation_Result path_result = Botan::x509_path_validate(
+      chain, restrictions, trusted, "mesh.example.com", Botan::Usage_Type::UNSPECIFIED, validation_time);
+
+   result.test_is_true("Cross-signed mesh validates", path_result.successful_validation());
+
+   if(path_result.successful_validation()) {
+      result.test_sz_eq("Validated path is minimal", path_result.cert_path().size(), 3);
+      result.test_is_true("Path ends at the trust anchor", path_result.trust_root() == root);
+   }
+
+   return {result};
+}
+
+BOTAN_REGISTER_TEST("x509", "x509_path_cross_signed_mesh", Cross_Signed_Mesh_Path_Test);
+
 class Validate_Invalid_OCSP_NoCheck_Test final : public Test {
    public:
       std::vector<Test::Result> run() override;

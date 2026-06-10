@@ -211,11 +211,14 @@ class CertificatePathBuilder final {
          // Push a deletion marker on the stack for backtracking later
          m_stack.push_back({std::nullopt, false});
 
-         for(const auto& trusted_cert : trusted_issuers) {
-            m_stack.push_back({trusted_cert, true});
-         }
+         // The stack is LIFO so push trusted issuers last; preferring them
+         // keeps the DFS from wandering through cross-signed CAs when the
+         // trust anchor issued the certificate directly.
          for(const auto& misc : misc_issuers) {
             m_stack.push_back({misc, false});
+         }
+         for(const auto& trusted_cert : trusted_issuers) {
+            m_stack.push_back({trusted_cert, true});
          }
       }
 
