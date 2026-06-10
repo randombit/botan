@@ -63,6 +63,67 @@ class X509_DN_Comparisons_Tests final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("x509", "x509_dn_cmp", X509_DN_Comparisons_Tests);
 
+class X509_DN_Valid_String_Tests final : public Text_Based_Test {
+   public:
+      X509_DN_Valid_String_Tests() : Text_Based_Test("x509/x509_dn_valid.vec", "Input,DER", "Output") {}
+
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
+         Test::Result result("X509_DN valid string encoding");
+
+         const std::string input = vars.get_req_str("Input");
+         const std::vector<uint8_t> expected_der = vars.get_req_bin("DER");
+         const std::string expected_print = vars.get_opt_str("Output", input);
+
+         const auto parsed = Botan::X509_DN::parse(input);
+         if(!result.test_is_true("X509_DN::parse accepts valid input", parsed.has_value())) {
+            return result;
+         }
+
+         // The parsed DN must encode to exactly the expected bytes ...
+         result.test_bin_eq("DER encoding", parsed->DER_encode(), expected_der);
+
+         // ... and that DER must decode back to an equal DN
+         Botan::X509_DN decoded;
+         Botan::BER_Decoder ber(expected_der);
+         decoded.decode_from(ber);
+         ber.verify_end();
+         result.test_is_true("DER decodes to equal DN", *parsed == decoded);
+
+         // to_string reproduces the input exactly, unless it's not canonical
+         result.test_str_eq("string formatting", parsed->to_string(), expected_print);
+
+         // to_string of the parsed DN and the decoded-from-DER DN should be the same
+         result.test_str_eq("string formatting", parsed->to_string(), decoded.to_string());
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_dn_valid", X509_DN_Valid_String_Tests);
+
+class X509_DN_Invalid_String_Tests final : public Text_Based_Test {
+   public:
+      X509_DN_Invalid_String_Tests() : Text_Based_Test("x509/x509_dn_invalid.vec", "Input") {}
+
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
+         Test::Result result("X509_DN invalid string rejection");
+
+         const std::string input = vars.get_req_str("Input");
+
+         result.test_is_false("parse rejects malformed input", Botan::X509_DN::parse(input).has_value());
+
+         // Stream extraction must signal the same failure via the failbit
+         std::istringstream iss(input);
+         Botan::X509_DN dn;
+         iss >> dn;
+         result.test_is_true("stream extraction sets failbit", iss.fail());
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_dn_invalid", X509_DN_Invalid_String_Tests);
+
 class X509_DN_String_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -73,6 +134,7 @@ class X509_DN_String_Tests final : public Test {
          results.push_back(test_parse_multi_ava_rdn());
          results.push_back(test_mixed_single_and_multi_ava_round_trip());
          results.push_back(test_quoted_plus_in_value_not_split());
+         results.push_back(test_parse_rejects_trailing_separator_with_whitespace());
          results.push_back(test_decode_failure_leaves_dn_unchanged());
          results.push_back(test_value_escaping_round_trips());
          return results;
@@ -174,6 +236,20 @@ class X509_DN_String_Tests final : public Test {
          result.test_sz_eq("one RDN", parsed.count(), size_t(1));
          result.test_sz_eq("one AVA", parsed.rdns().at(0).size(), size_t(1));
          result.test_str_eq("value preserved", parsed.get_first_attribute("CN"), "A+B");
+         return result;
+      }
+
+      static Test::Result test_parse_rejects_trailing_separator_with_whitespace() {
+         Test::Result result("X509_DN parser rejects trailing separators");
+
+         // The test vector harness strips trailing whitespace from the input, so
+         // the whitespace-after-separator forms are checked here directly.
+         for(const auto* input : {"CN=A,   ", "CN=A+   ", "CN=A, \t"}) {
+            result.test_is_false(std::string("rejects '") + input + "'", Botan::X509_DN::parse(input).has_value());
+         }
+
+         // A separator with a following AVA is still accepted
+         result.test_is_true("accepts CN=A, O=B", Botan::X509_DN::parse("CN=A, O=B").has_value());
          return result;
       }
 

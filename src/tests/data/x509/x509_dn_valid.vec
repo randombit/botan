@@ -1,0 +1,83 @@
+# Empty string is the empty DN
+Input =
+DER = 3000
+
+# Single AVA, round-trips
+Input = CN="Alice"
+DER = 3010310E300C06035504031305416C696365
+
+# Two single-AVA RDNs, round-trips
+Input = CN="Alice",O="Example"
+DER = 3022310E300C06035504031305416C6963653110300E060355040A13074578616D706C65
+
+# Multi-AVA RDN ('+' keeps AVAs in one SET), round-trips
+Input = CN="Alice"+O="Example"
+DER = 3020311E300C06035504031305416C696365300E060355040A13074578616D706C65
+
+# Mixed single- and multi-AVA RDNs, round-trips
+Input = C="US",CN="Alice"+O="Example",OU="Eng"
+DER = 303B310B3009060355040613025553311E300C06035504031305416C696365300E060355040A13074578616D706C65310C300A060355040B1303456E67
+
+# Interior space is part of the value (PrintableString)
+Input = CN="Alice Smith"
+DER = 3016311430120603550403130B416C69636520536D697468
+
+# Value with non-PrintableString octet is encoded as UTF8String
+Input = CN="foo_bar"
+DER = 30123110300E06035504030C07666F6F5F626172
+
+# Embedded double quote, escaped as backslash-quote
+Input = CN="a\"b"
+DER = 300E310C300A06035504030C03612262
+
+# Embedded control character, hex-escaped on output
+Input = CN="ACME\1BTRUSTED"
+DER = 30173115301306035504030C0C41434D451B54525553544544
+
+# Embedded NUL, hex-escaped on output
+Input = CN="a\00b"
+DER = 300E310C300A06035504030C03610062
+
+# Unquoted value normalizes to the quoted form
+Input = CN=Alice
+Output = CN="Alice"
+DER = 3010310E300C06035504031305416C696365
+
+# Unquoted value keeps interior whitespace
+Input = CN=Alice Smith
+Output = CN="Alice Smith"
+DER = 3016311430120603550403130B416C69636520536D697468
+
+# Trailing whitespace before a separator is dropped
+Input = CN=Alice ,O="Example"
+Output = CN="Alice",O="Example"
+DER = 3022310E300C06035504031305416C6963653110300E060355040A13074578616D706C65
+
+# RFC 4514 unquoted escaping of a special character
+Input = CN=Smith\, Jones
+Output = CN="Smith, Jones"
+DER = 3017311530130603550403130C536D6974682C204A6F6E6573
+
+# Escaped special characters in an unquoted value
+Input = CN=A\;B\<C\>D\#E\=F
+Output = CN="A;B<C>D#E=F"
+DER = 30163114301206035504030C0B413B423C433E4423453D46
+
+# Escaped leading and trailing spaces are significant
+Input = CN=\20Alice\20
+Output = CN=" Alice "
+DER = 30123110300E0603550403130720416C69636520
+
+# Numeric OID for the type normalizes to its short form
+Input = 2.5.4.3=Alice
+Output = CN="Alice"
+DER = 3010310E300C06035504031305416C696365
+
+# Unregistered OID round-trips in dotted-decimal form
+Input = 1.2.3.4="Test"
+DER = 300F310D300B06032A0304130454657374
+
+# UTF-8 value, hex-escaped on input, raw on output
+Input = CN="Fr\C3\A4ulein"
+Output = CN="Fräulein"
+DER = 30143112301006035504030C094672C3A4756C65696E

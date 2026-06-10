@@ -55,10 +55,11 @@ void AlternativeName::add_attribute(std::string_view type, std::string_view valu
    } else if(type == "URI") {
       this->add_uri(value);
    } else if(type == "DN") {
-      X509_DN dn;
-      std::istringstream ss{std::string(value)};
-      ss >> dn;
-      this->add_dn(dn);
+      if(auto dn = X509_DN::parse(value)) {
+         this->add_dn(*dn);
+      } else {
+         throw Invalid_Argument(fmt("Invalid X.509 DN '{}'", value));
+      }
    } else if(type == "IP") {
       if(auto ipv4 = IPv4Address::from_string(value)) {
          add_ipv4_address(*ipv4);
@@ -176,11 +177,9 @@ X509_DN AlternativeName::dn() const {
    X509_DN combined_dn;
 
    for(const auto& dn : this->directory_names()) {
-      std::ostringstream oss;
-      oss << dn;
-
-      std::istringstream iss(oss.str());
-      iss >> combined_dn;
+      for(const auto& rdn : dn.rdns()) {
+         combined_dn.add_rdn(rdn);
+      }
    }
 
    return combined_dn;
