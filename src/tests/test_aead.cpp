@@ -474,6 +474,22 @@ class AEAD_Tests final : public Text_Based_Test {
             result.test_failure("Failure processing AEAD ciphertext", e.what());
          }
 
+         // On tag check failure, every AEAD must zero the unauthenticated
+         // plaintext in the caller's buffer before throwing
+         auto check_plaintext_cleared =
+            [&result, &dec](const std::string& msg, const Botan::secure_vector<uint8_t>& b, size_t ctext_and_tag_len) {
+               const size_t ptext_len = ctext_and_tag_len - dec->tag_size();
+               bool cleared = (b.size() >= ptext_len);
+               if(cleared) {
+                  uint8_t accum = 0;
+                  for(size_t i = 0; i != ptext_len; ++i) {
+                     accum |= b[i];
+                  }
+                  cleared = (accum == 0);
+               }
+               result.test_is_true(msg, cleared);
+            };
+
          // test decryption with modified ciphertext
          const std::vector<uint8_t> mutated_input = mutate_vec(input, rng, true);
          buf.assign(mutated_input.begin(), mutated_input.end());
@@ -488,6 +504,7 @@ class AEAD_Tests final : public Text_Based_Test {
             result.test_failure("accepted modified message", mutated_input);
          } catch(Botan::Integrity_Failure&) {
             result.test_success("correctly rejected modified message");
+            check_plaintext_cleared("plaintext zeroed after rejecting modified message", buf, mutated_input.size());
          } catch(std::exception& e) {
             result.test_failure("unexpected error while rejecting modified message", e.what());
          }
@@ -506,6 +523,7 @@ class AEAD_Tests final : public Text_Based_Test {
                result.test_failure("accepted message with modified nonce", bad_nonce);
             } catch(Botan::Integrity_Failure&) {
                result.test_success("correctly rejected modified nonce");
+               check_plaintext_cleared("plaintext zeroed after rejecting modified nonce", buf, input.size());
             } catch(std::exception& e) {
                result.test_failure("unexpected error while rejecting modified nonce", e.what());
             }
@@ -525,6 +543,7 @@ class AEAD_Tests final : public Text_Based_Test {
             result.test_failure("accepted message with modified ad", bad_ad);
          } catch(Botan::Integrity_Failure&) {
             result.test_success("correctly rejected modified ad");
+            check_plaintext_cleared("plaintext zeroed after rejecting modified ad", buf, input.size());
          } catch(std::exception& e) {
             result.test_failure("unexpected error while rejecting modified nonce", e.what());
          }

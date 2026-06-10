@@ -239,6 +239,7 @@ void CBC_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    const size_t pad_bytes = BS - padding().unpad(std::span{buffer}.last(BS));
    buffer.resize(buffer.size() - pad_bytes);  // remove padding
    if(pad_bytes == 0 && padding().name() != "NoPadding") {
+      clear_mem(std::span{buffer}.subspan(offset));
       throw Decoding_Error("Invalid CBC padding");
    }
 }
