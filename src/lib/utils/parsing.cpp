@@ -29,8 +29,13 @@ std::optional<size_t> digit_from_ascii(char c) {
 }
 
 template <std::unsigned_integral T>
-std::optional<T> parse_decimal_integer(std::string_view input) {
+std::optional<T> parse_decimal_integer(std::string_view input, bool require_canonical) {
    if(input.empty() || input.size() > (std::numeric_limits<T>::digits10 + 1)) {
+      return {};
+   }
+
+   // The canonical encoding of zero is "0"; no other value starts with a zero
+   if(require_canonical && input.size() > 1 && input.front() == '0') {
       return {};
    }
 
@@ -52,20 +57,20 @@ std::optional<T> parse_decimal_integer(std::string_view input) {
 
 }  // namespace
 
-std::optional<uint16_t> parse_u16(std::string_view input) {
-   return parse_decimal_integer<uint16_t>(input);
+std::optional<uint16_t> parse_u16(std::string_view input, bool require_canonical) {
+   return parse_decimal_integer<uint16_t>(input, require_canonical);
 }
 
-std::optional<uint32_t> parse_u32(std::string_view input) {
-   return parse_decimal_integer<uint32_t>(input);
+std::optional<uint32_t> parse_u32(std::string_view input, bool require_canonical) {
+   return parse_decimal_integer<uint32_t>(input, require_canonical);
 }
 
-std::optional<uint64_t> parse_u64(std::string_view input) {
-   return parse_decimal_integer<uint64_t>(input);
+std::optional<uint64_t> parse_u64(std::string_view input, bool require_canonical) {
+   return parse_decimal_integer<uint64_t>(input, require_canonical);
 }
 
-std::optional<size_t> parse_sz(std::string_view input) {
-   return parse_decimal_integer<size_t>(input);
+std::optional<size_t> parse_sz(std::string_view input, bool require_canonical) {
+   return parse_decimal_integer<size_t>(input, require_canonical);
 }
 
 uint32_t to_u32bit(std::string_view input) {
