@@ -20,13 +20,13 @@ InvalidSelfSign.pem:Cannot establish trust
 InvalidWildcardAll.pem:Certificate does not match provided name
 InvalidWildcardAllAltName.pem:Certificate extension encoding error
 InvalidWildcardLeft.pem:Certificate does not match provided name
-InvalidWildcardLeftAltName.pem:Certificate does not match provided name
+InvalidWildcardLeftAltName.pem:Certificate extension encoding error
 InvalidWildcardMid.pem:Certificate does not match provided name
 InvalidWildcardMidAltName.pem:Certificate extension encoding error
 InvalidWildcardMidMixed.pem:Certificate does not match provided name
 InvalidWildcardMidMixedAltName.pem:Certificate extension encoding error
 InvalidWildcardSingle.pem:Certificate does not match provided name
-InvalidWildcardSingleAltName.pem:Certificate does not match provided name
+InvalidWildcardSingleAltName.pem:Certificate extension encoding error
 MissingIntCABasicConstraintWithCertSign.pem:CA certificate not allowed to issue certs
 MissingIntCAExtensions.pem:CA certificate not allowed to issue certs
 ValidAltName.pem:Verified

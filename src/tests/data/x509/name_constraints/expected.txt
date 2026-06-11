@@ -75,7 +75,7 @@ dns-san-present-cn-outside-valid:Verified
 dns-san-trailing-dot-invalid:Certificate extension encoding error
 dns-space-san-invalid:Certificate extension encoding error
 dns-wildcard-san-tld-constraint-valid:Verified
-dns-wildcard-tld-san-deep-constraint-invalid:Certificate does not pass name constraint
+dns-wildcard-tld-san-deep-constraint-invalid:Certificate extension encoding error
 edi-party-name-constraint-rejected:Certificate does not pass name constraint
 email-constraint-leading-at-invalid:Certificate extension encoding error
 email-constraint-mailbox-with-leading-dot-host-invalid:Certificate extension encoding error
@@ -286,7 +286,7 @@ wildcard-cn-permit-miss-invalid:Certificate does not pass name constraint
 wildcard-excluded-case-insensitive-invalid:Certificate does not pass name constraint
 wildcard-excluded-cross-subtree-valid:Verified
 wildcard-excluded-far-inner-invalid:Certificate does not pass name constraint
-wildcard-excluded-far-outer-valid:Verified
+wildcard-excluded-far-outer-valid:Certificate extension encoding error
 wildcard-excluded-inner-invalid:Certificate does not pass name constraint
 wildcard-excluded-parent-invalid:Certificate does not pass name constraint
 wildcard-excluded-sibling-subtree-valid:Verified
@@ -296,7 +296,7 @@ wildcard-middle-label-san-invalid:Certificate extension encoding error
 wildcard-multi-label-san-invalid:Certificate extension encoding error
 wildcard-permitted-cross-subtree-invalid:Certificate does not pass name constraint
 wildcard-permitted-far-inner-valid:Verified
-wildcard-permitted-far-outer-too-broad-invalid:Certificate does not pass name constraint
+wildcard-permitted-far-outer-too-broad-invalid:Certificate extension encoding error
 wildcard-permitted-inner-valid:Verified
 wildcard-permitted-inside-subtree-valid:Verified
 wildcard-permitted-outer-too-broad-invalid:Certificate does not pass name constraint

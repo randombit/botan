@@ -67,6 +67,13 @@ Hostname = averylongsubdomainname.example.com
 Issued = www*.example.com
 Hostname = www.example.com
 
+# A whole-label wildcard may match an IDNA A-label
+Issued = *.example.com
+Hostname = xn--bcher-kva.example.com
+
+Issued = *.xn--p1ai.example
+Hostname = foo.xn--p1ai.example
+
 [Invalid]
 Issued =
 Hostname = empty.com
@@ -152,3 +159,24 @@ Hostname = 0.example.com
 
 Issued = @.example.com
 Hostname = `.example.com
+
+# Hostnames cannot start with a dot
+Issued = *.example.com
+Hostname = .example.com
+
+Issued = .example.com
+Hostname = .example.com
+
+# RFC 6125 does not allow wildcards within an IDNA A-label
+Issued = xn--b*r.example.com
+Hostname = xn--bar.example.com
+
+Issued = XN--b*r.example.com
+Hostname = xn--bar.example.com
+
+# Nor may a partial wildcard match into an A-label of the host
+Issued = x*.example.com
+Hostname = xn--bcher-kva.example.com
+
+Issued = x*.example.com
+Hostname = XN--bcher-kva.example.com

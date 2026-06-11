@@ -101,6 +101,11 @@ class DNSName_Tests final : public Test {
             "label-",
             std::string("evil.com\0.example.com", 21),
             std::string("a\0b", 3),
+            // All-numeric names are rejected
+            "1.2.3.4",
+            "123.456.789",
+            "12345",
+            "999.999.999.999",
          };
 
          for(const auto& s : invalid) {
@@ -121,7 +126,6 @@ class DNSName_Tests final : public Test {
          const std::vector<std::string> usable_wildcards = {
             "*.example.com",
             "*.sub.example.org",
-            "*",
             "foo*.example.com",
             "*bar.example.com",
             "foo*bar.example.com",
@@ -135,12 +139,18 @@ class DNSName_Tests final : public Test {
             }
          }
 
-         // Invalid wildcards: multiple "*", or "*" outside the leftmost label.
+         // Invalid wildcards: multiple "*", "*" outside the leftmost label,
+         // too few labels to ever match, or "*" within an IDNA A-label.
          const std::vector<std::string> malformed = {
             "*.*.example.com",
             "foo.*.example.com",
             "*foo.*.example.com",
             "bar.foo*.example.com",
+            "*",
+            "*.com",
+            "foo*.com",
+            "xn--f*.example.com",
+            "xn--*.example.com",
          };
          for(const auto& w : malformed) {
             result.test_is_false("from_san_string rejects malformed: " + w,
@@ -166,12 +176,55 @@ class DNSName_Tests final : public Test {
          const auto deeper = Botan::DNSName::from_string("a.b.example.com").value();
          result.test_is_false("*.example.com does not match a.b.example.com", deeper.matches_wildcard("*.example.com"));
 
+         // Invalid hosts are rejected even when the pattern would otherwise match
+         result.test_is_false("host with leading dot rejected",
+                              Botan::DNSName::host_wildcard_match("*.example.com", ".example.com"));
+         result.test_is_false("identical invalid host rejected",
+                              Botan::DNSName::host_wildcard_match(".example.com", ".example.com"));
+         result.test_is_false(
+            "host with embedded NUL rejected",
+            Botan::DNSName::host_wildcard_match("*.example.com", std::string("ev\0il.example.com", 17)));
+
+         // RFC 6125 6.4.3: no wildcard matching within IDNA A-labels
+         result.test_is_false("wildcard inside A-label rejected",
+                              Botan::DNSName::host_wildcard_match("xn--b*r.example.com", "xn--bar.example.com"));
+         result.test_is_false("partial wildcard cannot match into an A-label",
+                              Botan::DNSName::host_wildcard_match("x*.example.com", "xn--bcher-kva.example.com"));
+         result.test_is_true("whole-label wildcard still matches an A-label",
+                             Botan::DNSName::host_wildcard_match("*.example.com", "xn--bcher-kva.example.com"));
+
+         return result;
+      }
+
+      static Test::Result test_length_limits() {
+         Test::Result result("DNSName length limits");
+
+         const std::string label63(63, 'a');
+         const std::string label64(64, 'a');
+
+         result.test_is_true("63 char label accepted", Botan::DNSName::from_string(label63 + ".com").has_value());
+         result.test_is_false("64 char label rejected", Botan::DNSName::from_string(label64 + ".com").has_value());
+
+         // Maximum presentation form length is 253 characters
+         const std::string name253 = label63 + "." + label63 + "." + label63 + "." + std::string(61, 'a');
+         const std::string name254 = label63 + "." + label63 + "." + label63 + "." + std::string(62, 'a');
+         result.test_u16_eq("test name has expected length", static_cast<uint16_t>(name253.size()), 253);
+
+         result.test_is_true("253 char name accepted", Botan::DNSName::from_string(name253).has_value());
+         result.test_is_false("254 char name rejected", Botan::DNSName::from_string(name254).has_value());
+
+         // A 253 char name is also matchable
+         const auto long_name = Botan::DNSName::from_string(name253).value();
+         result.test_is_true("253 char name matches itself",
+                             Botan::DNSName::host_wildcard_match(name253, long_name.to_string()));
+
          return result;
       }
 
    public:
       std::vector<Test::Result> run() override {
-         return {test_parse_valid(), test_parse_invalid(), test_wildcard_factories(), test_wildcard()};
+         return {
+            test_parse_valid(), test_parse_invalid(), test_wildcard_factories(), test_wildcard(), test_length_limits()};
       }
 };
 
