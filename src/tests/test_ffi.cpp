@@ -9,6 +9,7 @@
 
 #include "tests.h"
 #include <botan/version.h>
+#include <string_view>
 
 #if defined(BOTAN_HAS_FFI)
    #include <botan/ber_dec.h>
@@ -4545,6 +4546,8 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
       virtual std::vector<const char*> modes() const = 0;
       virtual const char* hash_algo_or_padding() const = 0;
 
+      virtual std::string make_mode_for_key_loading(std::string_view mode) { return std::string(mode); }
+
    public:
       void ffi_test(Test::Result& result, botan_rng_t rng) override {
          const std::vector<uint8_t> message1 = {'H', 'e', 'l', 'l', 'o', ' '};
@@ -4569,9 +4572,13 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
             botan_privkey_t priv_loaded;
             botan_pubkey_t pub_loaded;
             TEST_FFI_OK(private_key_load_function(),
-                        (&priv_loaded, priv_bytes.get().data(), priv_bytes.get().size(), mode));
-            TEST_FFI_OK(public_key_load_function(),
-                        (&pub_loaded, pub_bytes.get().data(), pub_bytes.get().size(), mode));
+                        (&priv_loaded,
+                         priv_bytes.get().data(),
+                         priv_bytes.get().size(),
+                         make_mode_for_key_loading(mode).c_str()));
+            TEST_FFI_OK(
+               public_key_load_function(),
+               (&pub_loaded, pub_bytes.get().data(), pub_bytes.get().size(), make_mode_for_key_loading(mode).c_str()));
 
             // re-encode and compare to the first round
             ViewBytesSink priv_bytes2;
@@ -4838,6 +4845,28 @@ class FFI_ML_DSA_Test final : public FFI_Signature_Roundtrip_Test {
       }
 
       const char* hash_algo_or_padding() const override { return ""; }
+};
+
+class FFI_MLDSA_Composite_Test final : public FFI_Signature_Roundtrip_Test {
+   public:
+      std::string name() const override { return "FFI MLDSA-Composite"; }
+
+   private:
+      const char* algo() const override { return "MLDSA44-RSA2048-PKCS15-SHA256"; }
+
+      privkey_loader_fn_t private_key_load_function() const override { return botan_privkey_load_mldsa_composite; }
+
+      pubkey_loader_fn_t public_key_load_function() const override { return botan_pubkey_load_mldsa_composite; }
+
+      std::vector<const char*> modes() const override {
+         return {
+            "",
+         };
+      }
+
+      const char* hash_algo_or_padding() const override { return ""; }
+
+      std::string make_mode_for_key_loading(std::string_view) override { return std::string(algo()); }
 };
 
 class FFI_SLH_DSA_Test final : public FFI_Signature_Roundtrip_Test {
@@ -5756,6 +5785,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_kyber768", FFI_Kyber768_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_kyber1024", FFI_Kyber1024_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ml_kem", FFI_ML_KEM_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ml_dsa", FFI_ML_DSA_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_mldsa_composite", FFI_MLDSA_Composite_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_slh_dsa", FFI_SLH_DSA_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_frodokem", FFI_FrodoKEM_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cmce", FFI_Classic_McEliece_Test);
