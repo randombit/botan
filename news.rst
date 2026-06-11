@@ -6,22 +6,49 @@ Version 3.13.0, Not Yet Released
 
 * Add URI and email name constraint processing to X509 path validation (GH #5598)
 
-* Add ``DNSName``, ``URI``, and ``EmailAddress`` types. (GH #5598 #5601)
+* Add ``DNSName``, ``URI``, and ``EmailAddress`` types. (GH #5598 #5601 #5622)
 
 * Add support for the RFC 9608 No Revocation Available extension (GH #5595)
 
+* Add ``X509_DN::parse`` and improve the parsing and printing of Distinguished
+  Name strings, including capturing RDN groupings and escaping control
+  characters (GH #5618 #5657 #5658)
+
+* Optimize ``X509_DN`` comparison and name constraint checks using precomputed
+  canonical encodings (GH #5652)
+
+* During path validation, by default require that OCSP responses are no more than
+  seven days old. Previously any age was accepted as long as it preceded the
+  response's ``nextUpdate``. (GH #5623)
+
+* Various X509/PKIX hardenings, bug fixes, and additional sanity checks.
+  (GH #5593 #5598 #5605 #5611 #5633 #5637 #5643 #5660)
+
+* Various BigInt and number-theoretic hardening and bug fixes.
+  (GH #5581 #5585 #5586 #5588 #5592 #5650)
+
+* Add support for the PKCS #12 KDF (GH #5478)
+
 * Improve the HTTP 1.0 client used for OCSP and CRL fetching (GH #5609)
 
-* Fix various edge case bugs in AEAD and cipher mode implementations (GH #5610)
+* Fix various edge case bugs in AEAD, cipher mode, and stream cipher implementations
+  (GH #5610 #5628 #5659)
+
+* Reject RSA signature and ciphertext values which are not exactly the length of
+  the modulus (GH #5592 #5630)
+
+* Add an AVX-512/GFNI implementation of the Streebog compression function (GH #5655)
+
+* Convert the SM4 key schedule to constant time code, including hwaes variant (GH #5638 #5639)
+
+* Improve cache prefetching in table-based cipher implementations (GH #5642)
 
 * Improve ``Database`` abstraction type and make it easier to support databases
   other than SQLite. (GH #5607)
 
-* Various X509/PKIX hardenings, bug fixes, and additional sanity checks.
-  (GH #5593 #5598 #5605 #5611 #5618)
+* Fix various bugs in the PKCS #11 wrapper (GH #5602)
 
-* Various BigInt and number-theoretic hardening and bug fixes.
-  (GH #5581 #5585 #5586 #5588 #5592)
+* Upgrade to TLS-Anvil 1.5 (GH #5630)
 
 Version 3.12.0, 2026-05-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
