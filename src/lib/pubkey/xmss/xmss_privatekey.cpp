@@ -66,7 +66,11 @@ class XMSS_PrivateKey_Internal final {
             m_wots_derivation_method(wots_derivation_method),
             m_prf(rng.random_vec(m_xmss_params.element_size())),
             m_private_seed(rng.random_vec(m_xmss_params.element_size())),
-            m_keyid(Stateful_Key_Index_Registry::KeyId("XMSS", m_xmss_params.oid(), m_private_seed, m_prf)) {}
+            m_keyid(Stateful_Key_Index_Registry::KeyId("XMSS",
+                                                       store_be(static_cast<uint32_t>(m_xmss_params.oid())),
+                                                       m_xmss_params.total_number_of_signatures(),
+                                                       m_private_seed,
+                                                       m_prf)) {}
 
       XMSS_PrivateKey_Internal(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                                WOTS_Derivation_Method wots_derivation_method,
@@ -77,12 +81,14 @@ class XMSS_PrivateKey_Internal final {
             m_wots_derivation_method(wots_derivation_method),
             m_prf(std::move(prf)),
             m_private_seed(std::move(private_seed)),
-            m_keyid(Stateful_Key_Index_Registry::KeyId("XMSS", m_xmss_params.oid(), m_private_seed, m_prf)) {}
+            m_keyid(Stateful_Key_Index_Registry::KeyId("XMSS",
+                                                       store_be(static_cast<uint32_t>(m_xmss_params.oid())),
+                                                       m_xmss_params.total_number_of_signatures(),
+                                                       m_private_seed,
+                                                       m_prf)) {}
 
       XMSS_PrivateKey_Internal(XMSS_Parameters::xmss_algorithm_t xmss_algo_id, std::span<const uint8_t> key_bits) :
-            m_xmss_params(XMSS_Parameters::from_id(xmss_algo_id)),
-            m_wots_params(m_xmss_params.wots_parameters()),
-            m_keyid(/* initialized later*/) {
+            m_xmss_params(XMSS_Parameters::from_id(xmss_algo_id)), m_wots_params(m_xmss_params.wots_parameters()) {
          /*
          The code requires sizeof(size_t) >= ceil(tree_height / 8)
 
@@ -107,14 +113,15 @@ class XMSS_PrivateKey_Internal final {
 
          auto unused_leaf_bytes = s.take(sizeof(uint32_t));
          const size_t unused_leaf = load_be<uint32_t>(unused_leaf_bytes.data(), 0);
-         if(unused_leaf >= (1ULL << m_xmss_params.tree_height())) {
-            throw Decoding_Error("XMSS private key leaf index out of bounds");
-         }
 
          m_prf = s.copy_as_secure_vector(m_xmss_params.element_size());
          m_private_seed = s.copy_as_secure_vector(m_xmss_params.element_size());
 
-         m_keyid = Stateful_Key_Index_Registry::KeyId("XMSS", m_xmss_params.oid(), m_private_seed, m_prf);
+         m_keyid = Stateful_Key_Index_Registry::KeyId("XMSS",
+                                                      store_be(static_cast<uint32_t>(m_xmss_params.oid())),
+                                                      m_xmss_params.total_number_of_signatures(),
+                                                      m_private_seed,
+                                                      m_prf);
 
          // Note m_keyid must be initialized before set_unused_leaf_index is called!
          set_unused_leaf_index(unused_leaf);
@@ -129,7 +136,7 @@ class XMSS_PrivateKey_Internal final {
 
       secure_vector<uint8_t> serialize(std::vector<uint8_t> raw_public_key) const {
          std::vector<uint8_t> unused_index(4);
-         store_be(static_cast<uint32_t>(unused_leaf_index()), unused_index.data());
+         store_be(checked_cast_to<uint32_t>(unused_leaf_index()), unused_index.data());
 
          std::vector<uint8_t> wots_derivation_method;
          wots_derivation_method.push_back(static_cast<uint8_t>(m_wots_derivation_method));
@@ -147,7 +154,8 @@ class XMSS_PrivateKey_Internal final {
       WOTS_Derivation_Method wots_derivation_method() const { return m_wots_derivation_method; }
 
       void set_unused_leaf_index(size_t idx) {
-         if(idx >= (1ULL << m_xmss_params.tree_height())) {
+         // An index equal to 2^h is valid and denotes an exhausted key
+         if(idx > (1ULL << m_xmss_params.tree_height())) {
             throw Decoding_Error("XMSS private key leaf index out of bounds");
          } else {
             Stateful_Key_Index_Registry::global().set_index_lower_bound(m_keyid, idx);
@@ -155,12 +163,12 @@ class XMSS_PrivateKey_Internal final {
       }
 
       size_t reserve_unused_leaf_index() {
-         const uint64_t idx = Stateful_Key_Index_Registry::global().reserve_next_index(m_keyid);
-         if(idx >= m_xmss_params.total_number_of_signatures()) {
-            throw Decoding_Error("XMSS private key, one time signatures exhausted");
+         const auto idx = Stateful_Key_Index_Registry::global().reserve_next_index(m_keyid);
+         if(!idx.has_value()) {
+            throw Invalid_State("XMSS private key, one time signatures exhausted");
          }
          // Cast is safe even on 32 bit since total_number_of_signatures will be less
-         return static_cast<size_t>(idx);
+         return static_cast<size_t>(idx.value());
       }
 
       size_t unused_leaf_index() const {
@@ -169,8 +177,7 @@ class XMSS_PrivateKey_Internal final {
       }
 
       uint64_t remaining_signatures() const {
-         const size_t max = m_xmss_params.total_number_of_signatures();
-         return Stateful_Key_Index_Registry::global().remaining_operations(m_keyid, max);
+         return Stateful_Key_Index_Registry::global().remaining_operations(m_keyid);
       }
 
    private:

@@ -17,6 +17,7 @@
    #include <botan/internal/fmt.h>
    #include <botan/internal/hss.h>
    #include <botan/internal/loadstor.h>
+   #include <limits>
 
 namespace Botan_Tests {
 
@@ -290,7 +291,117 @@ class HSS_LMS_Statefulness_Test final : public Test {
          return result;
       }
 
-      std::vector<Test::Result> run() final { return {test_sig_changes_state(), test_max_sig_count()}; }
+      Test::Result test_idx_bound_checked_on_load() {
+         Test::Result result("HSS-LMS");
+
+         // create_private_key_with_idx uses a single HW(5,8) layer, so the
+         // maximum signature count is 32
+         result.test_no_throw("Index == max_sig_count is accepted on load", [&]() {
+            auto sk = create_private_key_with_idx(32);
+            result.test_opt_u64_eq("Exhausted key loads with no remaining signatures", sk.remaining_operations(), 0);
+            Botan::PK_Signer signer(sk, Test::rng(), "");
+            const std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
+            result.test_throws("Cannot sign with exhausted key", [&]() { signer.sign_message(mes, Test::rng()); });
+         });
+
+         result.test_throws<Botan::Decoding_Error>("Index > max_sig_count is rejected on load",
+                                                   [&]() { create_private_key_with_idx(33); });
+
+         result.test_throws<Botan::Decoding_Error>("Huge index is rejected on load", [&]() {
+            create_private_key_with_idx(std::numeric_limits<uint64_t>::max());
+         });
+
+         return result;
+      }
+
+      Test::Result test_exhausted_key_stays_exhausted() {
+         Test::Result result("HSS-LMS");
+
+         // With a total tree height >= 64 the maximum signature count is
+         // clamped to 2^64 - 1, so an index of 2^64 - 1 is accepted on load
+         auto sk = Botan::HSS_LMS_PrivateKey(Test::rng(), "Truncated(SHA-256,192),HW(5,8),HW(25,8),HW(25,8),HW(25,8)");
+         auto bytes = sk.private_key_bits();
+         Botan::store_be(std::numeric_limits<uint64_t>::max(), bytes.data() + sizeof(uint32_t));
+
+         auto exhausted_sk = Botan::HSS_LMS_PrivateKey(Botan::AlgorithmIdentifier(), bytes);
+         result.test_opt_u64_eq("Exhausted key has no remaining signatures", exhausted_sk.remaining_operations(), 0);
+
+         Botan::PK_Signer signer(exhausted_sk, Test::rng(), "");
+         const std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
+
+         // A failed signing attempt must not wrap the index back to zero
+         result.test_throws("Cannot sign with exhausted key", [&]() { signer.sign_message(mes, Test::rng()); });
+         result.test_opt_u64_eq("Failed signing does not reset the state", exhausted_sk.remaining_operations(), 0);
+         result.test_throws("Exhausted key stays exhausted", [&]() { signer.sign_message(mes, Test::rng()); });
+
+         return result;
+      }
+
+      Test::Result test_params_are_part_of_key_identity() {
+         Test::Result result("HSS-LMS");
+
+         const auto sk = Botan::HSS_LMS_PrivateKey(Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
+         auto bytes = sk.private_key_bits();
+
+         // Patch the LMOTS algorithm type from SHA256_N24_W8 (0x08) to
+         // SHA256_N24_W4 (0x07), pretending the same seed and identifier
+         // belong to a key with a different Winternitz parameter
+         result.require("LMOTS type byte has expected value", bytes[19] == 0x08);
+         bytes[19] = 0x07;
+
+         // The index registry tracks the same key material under different
+         // parameter sets independently. Nothing can prevent such (insecurely)
+         // related keys from issuing overlapping one time signatures.
+         const Botan::HSS_LMS_PrivateKey patched(Botan::AlgorithmIdentifier(), bytes);
+
+         Botan::PK_Signer signer(sk, Test::rng(), "");
+         const std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
+         signer.sign_message(mes, Test::rng());
+
+         result.test_opt_u64_eq("Original key consumed an index", sk.remaining_operations(), 31);
+         result.test_opt_u64_eq(
+            "Key with the same material but other params is unaffected", patched.remaining_operations(), 32);
+
+         return result;
+      }
+
+      Test::Result test_separately_loaded_copies_share_state() {
+         Test::Result result("HSS-LMS");
+
+         const auto sk = Botan::HSS_LMS_PrivateKey(Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
+         const auto sk_bytes = sk.private_key_bits();
+
+         const Botan::HSS_LMS_PrivateKey copy1(Botan::AlgorithmIdentifier(), sk_bytes);
+         const Botan::HSS_LMS_PrivateKey copy2(Botan::AlgorithmIdentifier(), sk_bytes);
+
+         const std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
+
+         Botan::PK_Signer signer1(copy1, Test::rng(), "");
+         const auto sig_0 = signer1.sign_message(mes, Test::rng());
+
+         result.test_opt_u64_eq("Signing with one copy is seen by the other", copy2.remaining_operations(), 31);
+
+         Botan::PK_Signer signer2(copy2, Test::rng(), "");
+         const auto sig_1 = signer2.sign_message(mes, Test::rng());
+
+         result.test_is_true(
+            "First signature uses index 0",
+            Botan::HSS_Signature::from_bytes_or_throw(sig_0).bottom_sig().q() == Botan::LMS_Tree_Node_Idx(0));
+         result.test_is_true(
+            "Second signature uses index 1",
+            Botan::HSS_Signature::from_bytes_or_throw(sig_1).bottom_sig().q() == Botan::LMS_Tree_Node_Idx(1));
+
+         return result;
+      }
+
+      std::vector<Test::Result> run() final {
+         return {test_sig_changes_state(),
+                 test_max_sig_count(),
+                 test_idx_bound_checked_on_load(),
+                 test_exhausted_key_stays_exhausted(),
+                 test_params_are_part_of_key_identity(),
+                 test_separately_loaded_copies_share_state()};
+      }
 };
 
 /**

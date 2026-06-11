@@ -1,9 +1,11 @@
 # Test cases created using the reference implementation https://github.com/cisco/hash-sigs
 # with seed derivation logic Secret Method 2.
 #
-# NOTE: Some of test vectors use the same seed and identifier. They must be
-# ordered by index, as Stateful_Key_Index_Registry enforces that the index for
-# any key only moves forward.
+# NOTE: Some of test vectors use the same seed and identifier, but with
+# different HSS-LMS parameters; Stateful_Key_Index_Registry tracks these
+# independently since the parameters are part of the key identity. Any
+# entries sharing both key material and parameters would have to be ordered
+# by index, as the registry only allows the index of a key to move forward.
 
 # HSS with 8 levels:
 #   Root Level: LMS_SHA256_N32_H5  with LMOTS_SHA256_N32_W8
