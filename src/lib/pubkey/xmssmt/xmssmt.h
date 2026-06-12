@@ -129,8 +129,8 @@ class Atomic;
  */
 
 /**
- * An XMSS: Extended Hash-Based Signature private key.
- * The XMSS private key does not support the X509 and PKCS7 standard. Instead
+ * An XMSS^MT: Extended Hash-Based Signature private key.
+ * The XMSS^MT private key does not support the X509 and PKCS7 standard. Instead
  * the raw format described in [1] is used.
  *
  * [1] XMSS: Extended Hash-Based Signatures,
@@ -204,7 +204,7 @@ class BOTAN_PUBLIC_API(3, 12) XMSSMT_PrivateKey final : public virtual XMSSMT_Pu
        *
        * @return byte sequence consisting of the following elements in order:
        *         4-byte OID, n-byte root node, n-byte public seed,
-       *         8-byte unused leaf index, n-byte prf seed, n-byte private seed.
+       *         ceil(h/8) unused leaf index, n-byte prf seed, n-byte private seed.
        **/
       secure_vector<uint8_t> raw_private_key() const;
 
