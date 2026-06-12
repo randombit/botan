@@ -8,6 +8,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/parsing.h>
+#include <algorithm>
 
 namespace Botan {
 
@@ -20,8 +21,12 @@ namespace {
 * round-trip through this validator unchanged.
 */
 std::optional<std::string> check_and_canonicalize_dns_name(std::string_view name) {
-   // Purported name is longer than what DNS allows
-   if(name.size() > 255) {
+   /*
+   * RFC 1035 limits names to "255 octets or less", but that is in the wire
+   * encoding, which includes a length octet per label plus the root label.
+   * In presentation form (without a trailing dot) the limit is 253.
+   */
+   if(name.size() > 253) {
       return {};
    }
 
@@ -57,6 +62,9 @@ std::optional<std::string> check_and_canonicalize_dns_name(std::string_view name
    // RFC 1035: DNS labels must not exceed 63 characters
    size_t current_label_length = 0;
 
+   // Tracks if the name consists only of digits and dots
+   bool all_numeric = true;
+
    for(size_t i = 0; i != name.size(); ++i) {
       const char c = name[i];
 
@@ -91,6 +99,10 @@ std::optional<std::string> check_and_canonicalize_dns_name(std::string_view name
          return {};
       }
 
+      if(mapped != '.' && (mapped < '0' || mapped > '9')) {
+         all_numeric = false;
+      }
+
       if(mapped == '-') {
          // DNS labels are not allowed to include a leading or trailing hyphen
          if(i == 0 || (i > 0 && name[i - 1] == '.')) {
@@ -106,6 +118,12 @@ std::optional<std::string> check_and_canonicalize_dns_name(std::string_view name
 
    // This should never be hit, due to earlier validation steps
    if(current_label_length == 0) {
+      return {};
+   }
+
+   // An entirely numeric name ("1.2.3.4") is either a misplaced IP address
+   // or an attempt at confusing some other system; reject outright
+   if(all_numeric) {
       return {};
    }
 
@@ -145,6 +163,19 @@ std::optional<DNSName> DNSName::from_san_string(std::string_view name) {
          if(first_dot != std::string::npos && first_dot < first_star) {
             return std::nullopt;
          }
+         /*
+         RFC 6125 6.4.3: "the client SHOULD NOT attempt to match a presented
+         identifier where the wildcard character is embedded within an
+         A-label or U-label"
+         */
+         if(canon->starts_with("xn--")) {
+            return std::nullopt;
+         }
+         // A wildcard match requires at least three labels, so shorter
+         // patterns ("*", "*.com") could never match any host
+         if(std::count(canon->begin(), canon->end(), '.') < 2) {
+            return std::nullopt;
+         }
       }
       return DNSName(std::move(*canon));
    } else {
@@ -179,7 +210,7 @@ bool DNSName::host_wildcard_match(std::string_view issued, std::string_view host
    If there are embedded nulls in your issued name
    Well I feel bad for you son
    */
-   if(issued.find('\0') != std::string_view::npos) {
+   if(issued.find('\0') != std::string_view::npos || host.find('\0') != std::string_view::npos) {
       return false;
    }
 
@@ -190,6 +221,11 @@ bool DNSName::host_wildcard_match(std::string_view issued, std::string_view host
 
    // Similarly a DNS name can't end in .
    if(host.back() == '.') {
+      return false;
+   }
+
+   // Nor can it start with one
+   if(host.front() == '.') {
       return false;
    }
 
@@ -236,6 +272,25 @@ bool DNSName::host_wildcard_match(std::string_view issued, std::string_view host
 
    // If no * at all then not a wildcard, and so not a match
    if(!has_wildcard) {
+      return false;
+   }
+
+   /*
+   RFC 6125 6.4.3: "the client SHOULD NOT attempt to match a presented
+   identifier where the wildcard character is embedded within an
+   A-label or U-label"
+
+   The host side check rejects a partial wildcard absorbing part of an
+   A-label of the host, which would otherwise allow the same confusion.
+   */
+   const auto is_idna_prefixed = [&](std::string_view label) {
+      return label.size() >= 4 && dns_char_eq_range(label.substr(0, 4), "xn--");
+   };
+   const auto issued_label = issued.substr(0, issued.find('.'));
+   if(is_idna_prefixed(issued_label)) {
+      return false;
+   }
+   if(issued_label != "*" && is_idna_prefixed(host.substr(0, host.find('.')))) {
       return false;
    }
 

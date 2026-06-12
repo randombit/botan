@@ -1,0 +1,33 @@
+
+[Valid]
+# Valid entries must be in canonical form (host bits cleared, prefix length
+# a plain decimal), as the test also checks that they round trip through
+# IPv4Subnet::to_string unchanged
+IPv4Subnet = 0.0.0.0/0
+IPv4Subnet = 10.0.0.0/8
+IPv4Subnet = 10.128.0.0/9
+IPv4Subnet = 172.16.0.0/12
+IPv4Subnet = 192.168.1.0/24
+IPv4Subnet = 255.255.255.255/32
+
+[Invalid]
+# The "/N" suffix is required
+IPv4Subnet = 10.0.0.0
+
+# The prefix length must be present, in range, and a canonical decimal
+IPv4Subnet = 10.0.0.0/
+IPv4Subnet = 10.0.0.0/08
+IPv4Subnet = 10.0.0.0/032
+IPv4Subnet = 10.0.0.0/33
+IPv4Subnet = 10.0.0.0/+8
+IPv4Subnet = 10.0.0.0/8a
+IPv4Subnet = 10.0.0.0/8/8
+
+# The address part must be a valid IPv4 address
+IPv4Subnet = 999.0.0.0/8
+IPv4Subnet = /8
+
+# Host bits must be clear: a non-network address is rejected, not masked
+IPv4Subnet = 10.0.0.1/8
+IPv4Subnet = 192.168.1.5/24
+IPv4Subnet = 255.255.255.255/0

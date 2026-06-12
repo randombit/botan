@@ -49,9 +49,12 @@ class URI_Tests final : public Test {
             {"www.example.com", "www.example.com", std::nullopt, HostKind::DNS},
             {"192.168.1.1", "192.168.1.1", std::nullopt, HostKind::IPv4},
             {"192.168.1.1:34567", "192.168.1.1", 34567, HostKind::IPv4},
-            {"[::1]:61234", "0:0:0:0:0:0:0:1", 61234, HostKind::IPv6},
-            {"[::1]", "0:0:0:0:0:0:0:1", std::nullopt, HostKind::IPv6},
+            {"[::1]:61234", "::1", 61234, HostKind::IPv6},
+            {"[::1]", "::1", std::nullopt, HostKind::IPv6},
             {"Example.COM:443", "example.com", 443, HostKind::DNS},
+            // Userinfo is preserved in original_input()
+            {"user:pw@example.com:8443", "example.com", 8443, HostKind::DNS},
+            {"alice@example.com", "example.com", std::nullopt, HostKind::DNS},
          };
 
          for(const auto& c : cases) {
@@ -71,6 +74,12 @@ class URI_Tests final : public Test {
             "localhost:80aa",
             "localhost:%50",
             "localhost:70000",
+            "localhost:0",
+            // Ports may not have leading zeros
+            "localhost:0080",
+            "localhost:007",
+            "192.168.1.1:08080",
+            "[::1]:0443",
             "[::1]:a",
             "[::1]:70000",
             "hello..com",
@@ -107,7 +116,7 @@ class URI_Tests final : public Test {
          const std::vector<Case> cases{
             {"https://foo.example.com/", "https", "foo.example.com", std::nullopt, HostKind::DNS},
             {"http://foo.example.com:8080/path?q=1#frag", "http", "foo.example.com", 8080, HostKind::DNS},
-            {"https://[2001:db8::1]/", "https", "2001:db8:0:0:0:0:0:1", std::nullopt, HostKind::IPv6},
+            {"https://[2001:db8::1]/", "https", "2001:db8::1", std::nullopt, HostKind::IPv6},
             {"https://10.0.0.1/", "https", "10.0.0.1", std::nullopt, HostKind::IPv4},
             {"https://user:pw@sub.example.com:8443/path", "https", "sub.example.com", 8443, HostKind::DNS},
             {"HTTPS://Example.COM/", "https", "example.com", std::nullopt, HostKind::DNS},
@@ -132,6 +141,7 @@ class URI_Tests final : public Test {
             "https://",
             "https:///path",
             "https://[not-an-ip]/",
+            "https://example.com:0443/",
             // URIs without an authority are valid per RFC 5280 but seem unnecessary to support
             "urn:ashes",
             "mailto:root@attacker.com",
@@ -195,6 +205,10 @@ class URI_Tests final : public Test {
          result.test_is_true("userinfo equal when matching",
                              Botan::URI::parse("https://alice:s3cret@example.com/").value() ==
                                 Botan::URI::parse("https://alice:s3cret@example.com/").value());
+         // The authority's original_input() includes the userinfo
+         result.test_str_eq("authority original_input preserves userinfo",
+                            Botan::URI::parse("https://alice:s3cret@example.com/").value().authority().original_input(),
+                            "alice:s3cret@example.com");
          // Userinfo case IS significant (no case normalization).
          result.test_is_false("userinfo case is significant",
                               Botan::URI::parse("https://Alice@example.com/").value() ==

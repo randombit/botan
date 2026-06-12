@@ -543,8 +543,7 @@ class HTTP_Request_Tests final : public Test {
          MockServer mock({make_response(200)});
          const auto uri = Botan::URI::parse("http://[::1]:8080/").value();
          (void)Botan::HTTP::http_sync(mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits());
-         result.test_is_true("Host has brackets and port",
-                             message_contains(mock.request(0), "Host: [0:0:0:0:0:0:0:1]:8080\r\n"));
+         result.test_is_true("Host has brackets and port", message_contains(mock.request(0), "Host: [::1]:8080\r\n"));
          result.test_str_eq("service is the port", mock.service(0), "8080");
          return result;
       }

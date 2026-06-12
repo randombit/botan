@@ -67,8 +67,6 @@ tests_that_succeed_unexpectedly = {
     'webpki::explicit-curve': 'Deprecated but not gone yet',
     'rfc5280::nc::invalid-dnsname-leading-period': 'Common extension',
 
-    'webpki::san::wildcard-embedded-ulabel-san': 'Needs investigation',
-
     # These tests are despite the nameconstraints prefix actually
     # testing that no CN fallback exists - the end entity certs have a
     # CN but no SAN, and are checking if we accept a DNS name that is

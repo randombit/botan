@@ -1,22 +1,29 @@
-
 [Valid]
-IPv6 = 0:0:0:0:0:0:0:0
-IPv6 = 0:0:0:0:0:0:0:1
-IPv6 = 1:0:0:0:0:0:0:0
-IPv6 = 2001:db8:0:0:0:0:0:1
-IPv6 = fe80:0:0:0:0:0:0:1
-IPv6 = ff02:0:0:0:0:0:0:1
-IPv6 = 2001:db8:85a3:0:0:8a2e:370:7334
+# These must be in RFC 5952 canonical form, as the test also checks
+# that they round trip through to_string unchanged
+IPv6 = ::
+IPv6 = ::1
+IPv6 = 1::
+IPv6 = 2001:db8::1
+IPv6 = fe80::1
+IPv6 = ff02::1
+IPv6 = 2001:db8:85a3::8a2e:370:7334
 IPv6 = ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
 IPv6 = abcd:ef01:2345:6789:fedc:ba98:7654:3210
 IPv6 = a:b:c:d:e:f:1:2
+# Single zero groups are not compressed
+IPv6 = 1:0:1:0:1:0:1:0
+IPv6 = 1:2:3:4:5:6:7:0
+IPv6 = 0:1:2:3:4:5:6:7
+IPv6 = 64:ff9b::c000:221
+IPv6 = 2001:db8::ffff:c000:201
 
 [Invalid]
 
 # empty / pure separator
 IPv6 =
 IPv6 = :
-# "::" is valid and tested in ipv6_nc.vec
+# "::" is valid and tested above
 IPv6 = :::
 IPv6 = ::::
 
@@ -34,7 +41,6 @@ IPv6 = ::1::
 
 # trailing or leading single ':'
 IPv6 = :1:2:3:4:5:6:7:8
-IPv6 = 1:2:3:4:5:6:7:8:
 IPv6 = 1:2:3:4:5:6:7:8:
 IPv6 = ::1:
 IPv6 = 1::2:
@@ -54,7 +60,16 @@ IPv6 = ::g
 IPv6 = 2001:db!::1
 IPv6 = 2001:db8::1z
 
+# IPv4-in-IPv6: the dotted quad must be valid, complete, and final
+IPv6 = ::1.2.3
+IPv6 = ::1.2.3.4.5
+IPv6 = ::01.2.3.4
+IPv6 = ::256.1.2.3
+IPv6 = ::1.2.3.4:5
+IPv6 = ::ffff:1.2.3.4.
+IPv6 = 1.2.3.4::
+IPv6 = 1:2:3:4:5:6:7:1.2.3.4
+
 # garbage
 IPv6 = 1.2.3.4
 IPv6 = not an ip
-IPv6 = 2001:db8::ffff:192.0.2.1

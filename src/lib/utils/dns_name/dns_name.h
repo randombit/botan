@@ -19,7 +19,8 @@ namespace Botan {
 *
 * Construction validates that the input conforms to the Preferred Name
 * Syntax (RFC 1035 / RFC 1123 LDH labels, length limits, no leading or
-* trailing dot). The stored form is lowercased ASCII.
+* trailing dot). Entirely numeric names ("1.2.3.4") are rejected. The
+* stored form is lowercased ASCII.
 */
 class BOTAN_PUBLIC_API(3, 13) DNSName final {
    public:
@@ -34,10 +35,12 @@ class BOTAN_PUBLIC_API(3, 13) DNSName final {
       * Like `from_string`, but additionally accepts the RFC 6125 6.4.3
       * wildcard form: a single "*" anywhere within the leftmost label
       * of an otherwise-valid DNS name (e.g. "*.example.com",
-      * "foo*.example.com", bare "*"). Shapes that could never produce
-      * a match - multiple "*" ("*.*.example.com") or "*" outside the
-      * leftmost label ("foo.*.example.com") - are rejected. Intended
-      * for parsing X.509 SAN dnsName entries.
+      * "foo*.example.com"). Shapes that could never produce a match -
+      * multiple "*" ("*.*.example.com"), "*" outside the leftmost label
+      * ("foo.*.example.com"), or patterns with fewer than three labels
+      * ("*", "*.com") - are rejected, as are wildcards embedded within
+      * an IDNA A-label ("xn--f*.example.com"). Intended for parsing
+      * X.509 SAN dnsName entries.
       */
       static std::optional<DNSName> from_san_string(std::string_view name);
 

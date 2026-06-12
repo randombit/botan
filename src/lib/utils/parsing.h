@@ -52,33 +52,37 @@ BOTAN_TEST_API uint32_t to_u32bit(std::string_view input);
 * Attempt to parse a string as a 16-bit decimal integer
 *
 * @param input the string to convert
+* @param require_canonical if set, reject leading zeros ("007"); "0" is still accepted
 * @return integer value, or nullopt if invalid
 */
-std::optional<uint16_t> parse_u16(std::string_view input);
+std::optional<uint16_t> parse_u16(std::string_view input, bool require_canonical = false);
 
 /**
 * Attempt to parse a string as a 32-bit decimal integer
 *
 * @param input the string to convert
+* @param require_canonical if set, reject leading zeros ("007"); "0" is still accepted
 * @return integer value, or nullopt if invalid
 */
-BOTAN_TEST_API std::optional<uint32_t> parse_u32(std::string_view input);
+BOTAN_TEST_API std::optional<uint32_t> parse_u32(std::string_view input, bool require_canonical = false);
 
 /**
 * Attempt to parse a string as a 64-bit decimal integer
 *
 * @param input the string to convert
+* @param require_canonical if set, reject leading zeros ("007"); "0" is still accepted
 * @return integer value, or nullopt if invalid
 */
-BOTAN_TEST_API std::optional<uint64_t> parse_u64(std::string_view input);
+BOTAN_TEST_API std::optional<uint64_t> parse_u64(std::string_view input, bool require_canonical = false);
 
 /**
 * Attempt to parse a string as a size_t-sized decimal integer
 *
 * @param input the string to convert
+* @param require_canonical if set, reject leading zeros ("007"); "0" is still accepted
 * @return integer value, or nullopt if invalid
 */
-BOTAN_TEST_API std::optional<size_t> parse_sz(std::string_view input);
+BOTAN_TEST_API std::optional<size_t> parse_sz(std::string_view input, bool require_canonical = false);
 
 std::map<std::string, std::string> read_cfg(std::istream& is);
 

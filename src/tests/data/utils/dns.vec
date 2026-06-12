@@ -21,7 +21,7 @@ DNS = a1-B2.c3-D4
 DNS = x--x.com
 DNS = xn--test8t.example
 DNS = MixedCase123-Test-123.COM
-DNS = 123.456.789
+DNS = 123.456.789.com
 DNS = a-b-c.d.e.f
 DNS = this-is-a-valid-sixty-three-character-long-label-test-is--magic.com
 
@@ -30,7 +30,6 @@ DNS = this-is-a-valid-sixty-three-character-long-label-test-is--magic.com
 # DNSName::from_string, accepted by DNSName::from_san_string. This is
 # the RFC 6125 6.4.3 form: complete leftmost label, or in-label partial
 # wildcards. is_wildcard() returns true for all of these.
-DNS = *
 DNS = *.example.com
 DNS = foo*.example.com
 DNS = *bar.example.com
@@ -40,10 +39,21 @@ DNS = foo*bar.example.com
 DNS = _acme-challenge.example.com
 DNS = _sip._tcp.example.com
 # Wildcard shapes that can never produce a match: more than one "*",
-# or a "*" outside the leftmost label. Rejected by both factories.
+# a "*" outside the leftmost label, or too few labels to ever match.
+# Also wildcards within an IDNA A-label. Rejected by both factories.
 DNS = *.*.example.com
 DNS = foo.*.example.com
 DNS = *foo.*.example.com
+DNS = *
+DNS = *.com
+DNS = foo*.com
+DNS = xn--f*.example.com
+DNS = xn--*.example.com
+# All-numeric names are rejected
+DNS = 1.2.3.4
+DNS = 123.456.789
+DNS = 12345
+DNS = 999.999.999.999
 DNS =
 DNS = .
 DNS = -bad.com

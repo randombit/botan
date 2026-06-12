@@ -16,7 +16,8 @@ namespace Botan {
 namespace {
 
 std::optional<uint16_t> parse_port(std::string_view s) {
-   if(const auto port = parse_u16(s)) {
+   // RFC 3986 port is "*DIGIT" but we reject leading zeros ("host:0080")
+   if(const auto port = parse_u16(s, /*require_canonical=*/true)) {
       if(*port > 0) {
          return port;
       }
@@ -227,6 +228,10 @@ std::optional<URI::Authority> URI::Authority::parse(std::string_view raw) {
       return {};
    }
 
+   // Capture the full input now; the userinfo prefix is stripped from
+   // `raw` below, and m_raw must reflect the original
+   const std::string original_input(raw);
+
    /*
    RFC 3986
      userinfo = *( unreserved / pct-encoded / sub-delims / ":" )
@@ -317,7 +322,7 @@ std::optional<URI::Authority> URI::Authority::parse(std::string_view raw) {
       }
    }
 
-   return Authority(std::string(raw), std::move(userinfo), std::move(*host), port);
+   return Authority(original_input, std::move(userinfo), std::move(*host), port);
 }
 
 std::string URI::Authority::host_to_string() const {
