@@ -33,9 +33,9 @@ class BOTAN_PUBLIC_API(3, 12) IPv6Address final {
       *
       * Accepts the full form (eight colon-separated hex groups), the
       * "::"-compressed form (exactly one run of zero groups elided), and
-      * combinations such as "2001:db8::1". Does not currently accept the
-      * IPv4-in-IPv6 trailing dotted-quad form (e.g. "::ffff:192.0.2.1") or
-      * surrounding brackets.
+      * combinations such as "2001:db8::1". The final 32 bits may be given
+      * in IPv4 dotted-decimal form (e.g. "::ffff:192.0.2.1"). Surrounding
+      * brackets and zone identifiers are not accepted.
       */
       static std::optional<IPv6Address> from_string(std::string_view str);
 
@@ -54,8 +54,11 @@ class BOTAN_PUBLIC_API(3, 12) IPv6Address final {
       std::array<uint8_t, 16> address() const { return m_ip; }
 
       /**
-      * Convert an IPv6 address to string format. Zero compression ("::") is
-      * not currently applied.
+      * Convert an IPv6 address to the RFC 5952 canonical text form:
+      * lowercase hex, leading zeros within a group suppressed, and the
+      * longest run of two or more zero groups compressed to "::". The
+      * mixed hex/dotted notation is never produced, even for IPv4-mapped
+      * addresses.
       */
       std::string to_string() const;
 
@@ -102,6 +105,7 @@ class BOTAN_PUBLIC_API(3, 12) IPv6Subnet final {
       *
       * The "/N" suffix is required: bare addresses should be parsed via
       * IPv6Address::from_string and wrapped with IPv6Subnet::host if needed.
+      * The prefix length must be canonical decimal ("/32", not "/032").
       *
       * Returns nullopt on parse failure or out-of-range prefix length.
       */

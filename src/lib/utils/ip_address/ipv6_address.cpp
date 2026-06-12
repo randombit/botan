@@ -70,6 +70,7 @@ std::optional<IPv6Address> IPv6Address::from_string(std::string_view str) {
       }
 
       // Parse a hex group of 1..4 digits
+      const size_t group_start = idx;
       uint32_t group = 0;
       size_t hex_chars = 0;
       while(idx < str.size() && hex_chars < 4) {
@@ -87,6 +88,36 @@ std::optional<IPv6Address> IPv6Address::from_string(std::string_view str) {
       // If a 5th hex digit follows, the group is oversized.
       if(hex_chars == 4 && idx < str.size() && hex_value(str[idx]).has_value()) {
          return {};
+      }
+
+      /*
+      RFC 4291 2.2 allows the final 32 bits in dotted decimal, eg
+      "::ffff:1.2.3.4". The dotted quad must consume the remainder of the
+      input, and accounts for two 16-bit groups.
+      */
+      if(idx < str.size() && str[idx] == '.') {
+         const auto ipv4 = IPv4Address::from_string(str.substr(group_start));
+         if(!ipv4.has_value()) {
+            return {};
+         }
+         const uint32_t v4 = ipv4->address();
+         const std::array<uint16_t, 2> v4_groups{static_cast<uint16_t>(v4 >> 16), static_cast<uint16_t>(v4 & 0xFFFF)};
+         for(const auto g : v4_groups) {
+            if(seen_double_colon) {
+               if(post_count >= 8) {
+                  return {};
+               }
+               post[post_count++] = g;
+            } else {
+               if(pre_count >= 8) {
+                  return {};
+               }
+               pre[pre_count++] = g;
+            }
+         }
+         idx = str.size();
+         expect_group = false;
+         continue;
       }
 
       if(seen_double_colon) {
@@ -156,14 +187,36 @@ IPv6Address IPv6Address::netmask(size_t bits) {
 std::string IPv6Address::to_string() const {
    static const char* hex = "0123456789abcdef";
 
+   std::array<uint16_t, 8> groups{};
+   for(size_t i = 0; i != 8; ++i) {
+      groups[i] = make_uint16(m_ip[2 * i], m_ip[2 * i + 1]);
+   }
+
+   /*
+   Find the run of zero groups to elide with "::", per RFC 5952 4.2:
+   "The use of the symbol '::' MUST be used to its maximum capability",
+   "The symbol '::' MUST NOT be used to shorten just one 16-bit 0 field",
+   and on ties "the first sequence of zero bits MUST be shortened".
+   */
+   size_t best_start = 0;
+   size_t best_len = 0;
+   size_t run_len = 0;
+   for(size_t i = 0; i != 8; ++i) {
+      if(groups[i] == 0) {
+         run_len += 1;
+         if(run_len > best_len) {
+            best_len = run_len;
+            best_start = i + 1 - run_len;
+         }
+      } else {
+         run_len = 0;
+      }
+   }
+
    std::string out;
    out.reserve(39);
 
-   for(size_t i = 0; i != 16; i += 2) {
-      if(i != 0) {
-         out.push_back(':');
-      }
-      const uint16_t group = make_uint16(m_ip[i], m_ip[i + 1]);
+   auto append_group = [&](uint16_t group) {
       bool started = false;
       // Write each nibble omitting leading 0s
       for(int s = 12; s >= 0; s -= 4) {
@@ -172,6 +225,30 @@ std::string IPv6Address::to_string() const {
             out.push_back(hex[nibble]);
             started = true;
          }
+      }
+   };
+
+   if(best_len < 2) {
+      // No run of two or more zero groups; write the full form
+      for(size_t i = 0; i != 8; ++i) {
+         if(i > 0) {
+            out.push_back(':');
+         }
+         append_group(groups[i]);
+      }
+   } else {
+      for(size_t i = 0; i != best_start; ++i) {
+         if(i > 0) {
+            out.push_back(':');
+         }
+         append_group(groups[i]);
+      }
+      out += "::";
+      for(size_t i = best_start + best_len; i != 8; ++i) {
+         if(i > best_start + best_len) {
+            out.push_back(':');
+         }
+         append_group(groups[i]);
       }
    }
    return out;
@@ -246,10 +323,10 @@ std::optional<IPv6Subnet> IPv6Subnet::from_string(std::string_view str) {
       return std::nullopt;
    }
 
-   // Parse the prefix length as a decimal integer in [0, 128].
+   // Parse the prefix length as a canonical decimal integer in [0, 128]
    const auto plen_str = str.substr(slash + 1);
 
-   const auto plen = parse_sz(plen_str);
+   const auto plen = parse_sz(plen_str, /*require_canonical=*/true);
 
    if(!plen.has_value() || plen.value() > 128) {
       return std::nullopt;

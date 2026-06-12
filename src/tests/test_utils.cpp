@@ -1177,6 +1177,31 @@ class IPv4_Parsing_Tests final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("utils", "ipv4_parse", IPv4_Parsing_Tests);
 
+class IPv4_Subnet_Parsing_Tests final : public Text_Based_Test {
+   public:
+      IPv4_Subnet_Parsing_Tests() : Text_Based_Test("utils/ipv4_subnet.vec", "IPv4Subnet") {}
+
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override {
+         Test::Result result("IPv4 subnet parsing");
+
+         const std::string input = vars.get_req_str("IPv4Subnet");
+         const bool valid = (header == "Valid");
+
+         const auto subnet = Botan::IPv4Subnet::from_string(input);
+
+         result.test_bool_eq("IPv4Subnet::from_string accepts only valid", subnet.has_value(), valid);
+
+         if(subnet) {
+            result.test_str_eq(
+               "IPv4Subnet::from_string and IPv4Subnet::to_string round trip", subnet->to_string(), input);
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("utils", "ipv4_subnet_parse", IPv4_Subnet_Parsing_Tests);
+
 #endif
 
 #if defined(BOTAN_HAS_IPV6_ADDRESS)
@@ -1224,6 +1249,7 @@ class IPv6_Noncanonical_Parsing_Tests final : public Text_Based_Test {
 
          if(ipv6.has_value() && canonical.has_value()) {
             result.test_is_true("IPv6 non-canonical decoding", *ipv6 == *canonical);
+            result.test_str_eq("IPv6 to_string is canonical", ipv6->to_string(), canonical_str);
          }
 
          return result;
@@ -1231,6 +1257,31 @@ class IPv6_Noncanonical_Parsing_Tests final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("utils", "ipv6_parse_non_canonical", IPv6_Noncanonical_Parsing_Tests);
+
+class IPv6_Subnet_Parsing_Tests final : public Text_Based_Test {
+   public:
+      IPv6_Subnet_Parsing_Tests() : Text_Based_Test("utils/ipv6_subnet.vec", "IPv6Subnet") {}
+
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override {
+         Test::Result result("IPv6 subnet parsing");
+
+         const std::string input = vars.get_req_str("IPv6Subnet");
+         const bool valid = (header == "Valid");
+
+         const auto subnet = Botan::IPv6Subnet::from_string(input);
+
+         result.test_bool_eq("IPv6Subnet::from_string accepts only valid", subnet.has_value(), valid);
+
+         if(subnet) {
+            result.test_str_eq(
+               "IPv6Subnet::from_string and IPv6Subnet::to_string round trip", subnet->to_string(), input);
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("utils", "ipv6_subnet_parse", IPv6_Subnet_Parsing_Tests);
 
 #endif
 

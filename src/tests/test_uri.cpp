@@ -49,8 +49,8 @@ class URI_Tests final : public Test {
             {"www.example.com", "www.example.com", std::nullopt, HostKind::DNS},
             {"192.168.1.1", "192.168.1.1", std::nullopt, HostKind::IPv4},
             {"192.168.1.1:34567", "192.168.1.1", 34567, HostKind::IPv4},
-            {"[::1]:61234", "0:0:0:0:0:0:0:1", 61234, HostKind::IPv6},
-            {"[::1]", "0:0:0:0:0:0:0:1", std::nullopt, HostKind::IPv6},
+            {"[::1]:61234", "::1", 61234, HostKind::IPv6},
+            {"[::1]", "::1", std::nullopt, HostKind::IPv6},
             {"Example.COM:443", "example.com", 443, HostKind::DNS},
             // Userinfo is preserved in original_input()
             {"user:pw@example.com:8443", "example.com", 8443, HostKind::DNS},
@@ -116,7 +116,7 @@ class URI_Tests final : public Test {
          const std::vector<Case> cases{
             {"https://foo.example.com/", "https", "foo.example.com", std::nullopt, HostKind::DNS},
             {"http://foo.example.com:8080/path?q=1#frag", "http", "foo.example.com", 8080, HostKind::DNS},
-            {"https://[2001:db8::1]/", "https", "2001:db8:0:0:0:0:0:1", std::nullopt, HostKind::IPv6},
+            {"https://[2001:db8::1]/", "https", "2001:db8::1", std::nullopt, HostKind::IPv6},
             {"https://10.0.0.1/", "https", "10.0.0.1", std::nullopt, HostKind::IPv4},
             {"https://user:pw@sub.example.com:8443/path", "https", "sub.example.com", 8443, HostKind::DNS},
             {"HTTPS://Example.COM/", "https", "example.com", std::nullopt, HostKind::DNS},

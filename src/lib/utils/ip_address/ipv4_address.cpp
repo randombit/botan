@@ -174,22 +174,16 @@ std::optional<IPv4Subnet> IPv4Subnet::from_string(std::string_view str) {
       return std::nullopt;
    }
 
+   // Parse the prefix length as a canonical decimal integer in [0, 32]
    const auto plen_str = str.substr(slash + 1);
-   if(plen_str.empty() || plen_str.size() > 2) {
-      return std::nullopt;
-   }
-   size_t plen = 0;
-   for(const char c : plen_str) {
-      if(c < '0' || c > '9') {
-         return std::nullopt;
-      }
-      plen = plen * 10 + static_cast<size_t>(c - '0');
-   }
-   if(plen > 32) {
+
+   const auto plen = parse_sz(plen_str, /*require_canonical=*/true);
+
+   if(!plen.has_value() || plen.value() > 32) {
       return std::nullopt;
    }
 
-   return IPv4Subnet(*addr, plen);
+   return IPv4Subnet(*addr, plen.value());
 }
 
 bool IPv4Subnet::contains(const IPv4Address& ip) const {

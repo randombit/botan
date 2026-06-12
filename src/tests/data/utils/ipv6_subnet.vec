@@ -1,0 +1,28 @@
+
+[Valid]
+# Valid entries must be in canonical form (host bits cleared, RFC 5952
+# address, prefix length a plain decimal), as the test also checks that
+# they round trip through IPv6Subnet::to_string unchanged
+IPv6Subnet = ::/0
+IPv6Subnet = ::1/128
+IPv6Subnet = ff00::/8
+IPv6Subnet = fe80::/10
+IPv6Subnet = 2001:db8::/32
+IPv6Subnet = 2001:db8::/48
+
+[Invalid]
+# The "/N" suffix is required
+IPv6Subnet = 2001:db8::
+
+# The prefix length must be present, in range, and a canonical decimal
+IPv6Subnet = 2001:db8::/
+IPv6Subnet = 2001:db8::/032
+IPv6Subnet = 2001:db8::/0128
+IPv6Subnet = 2001:db8::/129
+IPv6Subnet = 2001:db8::/+1
+IPv6Subnet = 2001:db8::/3z
+IPv6Subnet = 2001:db8::/32/32
+
+# The address part must be a valid IPv6 address
+IPv6Subnet = 2001:db8:::/32
+IPv6Subnet = /32

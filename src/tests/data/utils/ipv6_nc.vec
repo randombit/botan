@@ -1,30 +1,34 @@
-Input = ::
-Canonical = 0:0:0:0:0:0:0:0
+# Each Input parses to the same address as Canonical, and Canonical is
+# the RFC 5952 form that to_string produces for it
 
-Input = ::1
-Canonical = 0:0:0:0:0:0:0:1
+# fully expanded forms
+Input = 0:0:0:0:0:0:0:0
+Canonical = ::
 
-Input = 1::
-Canonical = 1:0:0:0:0:0:0:0
+Input = 0:0:0:0:0:0:0:1
+Canonical = ::1
 
-Input = 2001:db8::1
-Canonical = 2001:db8:0:0:0:0:0:1
+Input = 1:0:0:0:0:0:0:0
+Canonical = 1::
 
-Input = 2001:db8::
-Canonical = 2001:db8:0:0:0:0:0:0
+Input = 2001:db8:0:0:0:0:0:1
+Canonical = 2001:db8::1
 
-Input = ::ffff
-Canonical = 0:0:0:0:0:0:0:ffff
+Input = 2001:db8:0:0:0:0:0:0
+Canonical = 2001:db8::
 
-Input = 1::2:3
-Canonical = 1:0:0:0:0:0:2:3
+Input = 0:0:0:0:0:0:0:ffff
+Canonical = ::ffff
 
-Input = fe80::1:2:3:4
-Canonical = fe80:0:0:0:1:2:3:4
+Input = 1:0:0:0:0:0:2:3
+Canonical = 1::2:3
+
+Input = fe80:0:0:0:1:2:3:4
+Canonical = fe80::1:2:3:4
 
 # uppercase hex
 Input = 2001:DB8::1
-Canonical = 2001:db8:0:0:0:0:0:1
+Canonical = 2001:db8::1
 
 Input = FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 Canonical = ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
@@ -32,15 +36,42 @@ Canonical = ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
 Input = ABCD:EF01:2345:6789:FEDC:BA98:7654:3210
 Canonical = abcd:ef01:2345:6789:fedc:ba98:7654:3210
 
-
 # leading zeros within a group
 Input = 2001:0db8::0001
-Canonical = 2001:db8:0:0:0:0:0:1
+Canonical = 2001:db8::1
 
 Input = 0000:0000:0000:0000:0000:0000:0000:0001
-Canonical = 0:0:0:0:0:0:0:1
-
+Canonical = ::1
 
 Input = 2001:0DB8::0001
-Canonical = 2001:db8:0:0:0:0:0:1
+Canonical = 2001:db8::1
 
+# the longest run of zero groups is compressed
+Input = 1:0:0:1:0:0:0:1
+Canonical = 1:0:0:1::1
+
+# on ties, the first run is compressed
+Input = 1:0:0:1:0:0:1:1
+Canonical = 1::1:0:0:1:1
+
+# IPv4-in-IPv6 mixed notation parses, but output is always pure hex
+Input = ::ffff:192.0.2.1
+Canonical = ::ffff:c000:201
+
+Input = ::1.2.3.4
+Canonical = ::102:304
+
+Input = ::ffff:0.0.0.0
+Canonical = ::ffff:0:0
+
+Input = 0:0:0:0:0:0:1.2.3.4
+Canonical = ::102:304
+
+Input = 1:2:3:4:5:6:7.8.9.10
+Canonical = 1:2:3:4:5:6:708:90a
+
+Input = 64:ff9b::192.0.2.33
+Canonical = 64:ff9b::c000:221
+
+Input = 2001:db8::ffff:192.0.2.1
+Canonical = 2001:db8::ffff:c000:201

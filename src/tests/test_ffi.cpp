@@ -1587,7 +1587,7 @@ class FFI_Cert_NameConstraints_Test final : public FFI_Test {
                permitted,
                V{BOTAN_X509_DIRECTORY_NAME, R"(C="IT",X520.State="Roma",X520.Locality="Roma",O="Sogei S.p.A.")"}));
          result.test_is_true("IPv4", Botan::value_exists(excluded, V{BOTAN_X509_IP_ADDRESS, "0.0.0.0/0"}));
-         result.test_is_true("IPv6", Botan::value_exists(excluded, V{BOTAN_X509_IP_ADDRESS, "0:0:0:0:0:0:0:0/0"}));
+         result.test_is_true("IPv6", Botan::value_exists(excluded, V{BOTAN_X509_IP_ADDRESS, "::/0"}));
 
          // below are more generic general_name_t tests
 
