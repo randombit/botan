@@ -9,6 +9,8 @@ IPv6Subnet = ff00::/8
 IPv6Subnet = fe80::/10
 IPv6Subnet = 2001:db8::/32
 IPv6Subnet = 2001:db8::/48
+# An IPv4-mapped host is fine in canonical hex form, just not dotted notation
+IPv6Subnet = ::ffff:102:304/128
 
 [Invalid]
 # The "/N" suffix is required
@@ -26,3 +28,16 @@ IPv6Subnet = 2001:db8::/32/32
 # The address part must be a valid IPv6 address
 IPv6Subnet = 2001:db8:::/32
 IPv6Subnet = /32
+
+# Host bits must be clear: a non-network address is rejected, not masked
+IPv6Subnet = 2001:db8::1/32
+IPv6Subnet = ::1/0
+
+# The address must be in canonical form (leading zeros, uppercase, and the
+# uncompressed and IPv4-mapped dotted forms all round trip to something else)
+IPv6Subnet = 2001:0db8::/32
+IPv6Subnet = 2001:DB8::/32
+IPv6Subnet = 2001:db8:0:0:0:0:0:0/32
+IPv6Subnet = ::ffff:1.2.3.4/64
+IPv6Subnet = ::ffff:1.2.3.4/120
+IPv6Subnet = ::ffff:1.2.3.4/128

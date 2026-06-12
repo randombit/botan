@@ -183,7 +183,15 @@ std::optional<IPv4Subnet> IPv4Subnet::from_string(std::string_view str) {
       return std::nullopt;
    }
 
-   return IPv4Subnet(*addr, plen.value());
+   const IPv4Subnet subnet(*addr, plen.value());
+
+   // Require the input to already be canonical: from_string and to_string
+   // are exact inverses, so a set host bit is rejected rather than masked away
+   if(subnet.to_string() != str) {
+      return std::nullopt;
+   }
+
+   return subnet;
 }
 
 bool IPv4Subnet::contains(const IPv4Address& ip) const {

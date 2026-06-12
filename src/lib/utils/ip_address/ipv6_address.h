@@ -105,7 +105,12 @@ class BOTAN_PUBLIC_API(3, 12) IPv6Subnet final {
       *
       * The "/N" suffix is required: bare addresses should be parsed via
       * IPv6Address::from_string and wrapped with IPv6Subnet::host if needed.
-      * The prefix length must be canonical decimal ("/32", not "/032").
+      * The input must already be canonical, such that from_string and
+      * to_string are exact inverses: the address is RFC 5952 form with host
+      * bits clear ("2001:db8::/32") and the prefix length is canonical
+      * decimal ("/32", not "/032"). In particular the IPv4-mapped dotted form
+      * ("::ffff:1.2.3.4/120") is rejected even though IPv6Address::from_string
+      * would accept the address.
       *
       * Returns nullopt on parse failure or out-of-range prefix length.
       */

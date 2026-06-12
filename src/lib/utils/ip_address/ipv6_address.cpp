@@ -332,7 +332,16 @@ std::optional<IPv6Subnet> IPv6Subnet::from_string(std::string_view str) {
       return std::nullopt;
    }
 
-   return IPv6Subnet(*addr, plen.value());
+   const IPv6Subnet subnet(*addr, plen.value());
+
+   // Require the input to already be canonical: from_string and to_string are
+   // exact inverses, so a non-canonical address (including the IPv4-mapped
+   // dotted form) or a set host bit is rejected rather than masked away
+   if(subnet.to_string() != str) {
+      return std::nullopt;
+   }
+
+   return subnet;
 }
 
 bool IPv6Subnet::contains(const IPv6Address& ip) const {

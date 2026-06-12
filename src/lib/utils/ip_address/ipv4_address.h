@@ -92,7 +92,10 @@ class BOTAN_PUBLIC_API(3, 12) IPv4Subnet final {
       *
       * The "/N" suffix is required: bare addresses should be parsed via
       * IPv4Address::from_string and wrapped with IPv4Subnet::host if needed.
-      * The prefix length must be canonical decimal ("/8", not "/08").
+      * The input must already be canonical, such that from_string and
+      * to_string are exact inverses: the prefix length is canonical decimal
+      * ("/8", not "/08") and the host bits are clear ("10.0.0.0/8", not
+      * "10.1.2.3/8").
       *
       * Returns nullopt on parse failure or out-of-range prefix length.
       */
