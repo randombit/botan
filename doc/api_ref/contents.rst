@@ -16,6 +16,7 @@ API Reference
    cipher_modes
    pubkey
    x509
+   pkcs12
    tls
    credentials_manager
    bigint
