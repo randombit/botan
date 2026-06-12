@@ -74,6 +74,26 @@ std::vector<LMS_Tree_Node_Idx> derive_lms_leaf_indices_from_hss_index(HSS_Sig_Id
    return q;
 }
 
+/**
+ * Encode the HSS-LMS parameter set, for use as the algorithm parameters
+ * in the key's Stateful_Key_Index_Registry identity.
+ */
+std::vector<uint8_t> hss_param_encoding(const HSS_LMS_Params& params) {
+   std::vector<uint8_t> enc;
+   enc.reserve(sizeof(uint32_t) * (1 + 2 * params.L().get()));
+
+   const auto append = [&](std::span<const uint8_t> bytes) { enc.insert(enc.end(), bytes.begin(), bytes.end()); };
+
+   append(store_be(params.L()));
+   for(HSS_Level layer(0); layer < params.L(); ++layer) {
+      const auto& layer_params = params.params_at_level(layer);
+      append(store_be(layer_params.lms_params().algorithm_type()));
+      append(store_be(layer_params.lmots_params().algorithm_type()));
+   }
+
+   return enc;
+}
+
 }  // namespace
 
 HSS_LMS_Params::HSS_LMS_Params(std::vector<LMS_LMOTS_Params_Pair> lm_lmots_params) :
@@ -124,9 +144,8 @@ HSS_LMS_PrivateKeyInternal::HSS_LMS_PrivateKeyInternal(const HSS_LMS_Params& hss
       m_hss_params(hss_params),
       m_hss_seed(rng.random_vec<LMS_Seed>(m_hss_params.params_at_level(HSS_Level(0)).lms_params().m())),
       m_identifier(rng.random_vec<LMS_Identifier>(LMS_IDENTIFIER_LEN)),
-      // LMS doesn't have a single unique parameter code that we can easily use,
-      // so algo_params is left as 0
-      m_keyid("HSS-LMS", 0, m_hss_seed, m_identifier),
+      m_keyid(
+         "HSS-LMS", hss_param_encoding(m_hss_params), m_hss_params.max_sig_count().get(), m_hss_seed, m_identifier),
       m_sig_size(HSS_Signature::size(m_hss_params)) {}
 
 HSS_LMS_PrivateKeyInternal::HSS_LMS_PrivateKeyInternal(HSS_LMS_Params hss_params,
@@ -135,8 +154,8 @@ HSS_LMS_PrivateKeyInternal::HSS_LMS_PrivateKeyInternal(HSS_LMS_Params hss_params
       m_hss_params(std::move(hss_params)),
       m_hss_seed(std::move(hss_seed)),
       m_identifier(std::move(identifier)),
-      // LMS doesn't have a single unique parameter code that we can easily use, so algo_params is left as 0
-      m_keyid("HSS-LMS", 0, m_hss_seed, m_identifier),
+      m_keyid(
+         "HSS-LMS", hss_param_encoding(m_hss_params), m_hss_params.max_sig_count().get(), m_hss_seed, m_identifier),
       m_sig_size(HSS_Signature::size(m_hss_params)) {
    BOTAN_ARG_CHECK(m_hss_seed.size() == m_hss_params.params_at_level(HSS_Level(0)).lms_params().m(),
                    "Invalid HSS-LMS seed size");
@@ -213,20 +232,24 @@ secure_vector<uint8_t> HSS_LMS_PrivateKeyInternal::to_bytes() const {
    return sk_bytes;
 }
 
-HSS_Sig_Idx HSS_LMS_PrivateKeyInternal::remaining_operations(HSS_Sig_Idx idx) const {
-   return HSS_Sig_Idx(Stateful_Key_Index_Registry::global().remaining_operations(m_keyid, idx.get()));
+HSS_Sig_Idx HSS_LMS_PrivateKeyInternal::remaining_operations() const {
+   return HSS_Sig_Idx(Stateful_Key_Index_Registry::global().remaining_operations(m_keyid));
 }
 
 void HSS_LMS_PrivateKeyInternal::set_idx(HSS_Sig_Idx idx) {
+   // An index equal to max_sig_count is valid and denotes an exhausted key
+   if(idx > m_hss_params.max_sig_count()) {
+      throw Decoding_Error("HSS-LMS private key index out of bounds");
+   }
    Stateful_Key_Index_Registry::global().set_index_lower_bound(m_keyid, idx.get());
 }
 
 HSS_Sig_Idx HSS_LMS_PrivateKeyInternal::reserve_next_idx() {
-   const auto idx = HSS_Sig_Idx(Stateful_Key_Index_Registry::global().reserve_next_index(m_keyid));
-   if(idx >= m_hss_params.max_sig_count()) {
-      throw Decoding_Error("HSS private key is exhausted");
+   const auto idx = Stateful_Key_Index_Registry::global().reserve_next_index(m_keyid);
+   if(!idx.has_value()) {
+      throw Invalid_State("HSS private key is exhausted");
    }
-   return idx;
+   return HSS_Sig_Idx(idx.value());
 }
 
 size_t HSS_LMS_PrivateKeyInternal::size() const {

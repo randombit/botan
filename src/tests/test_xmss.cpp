@@ -149,8 +149,21 @@ std::vector<Test::Result> xmss_statefulness() {
       auto msg = Botan::hex_decode("deadbeef");
 
       Botan::PK_Signer signer(sk, *rng, "SHA2_10_256");
-      signer.sign_message(msg, *rng);
+      return signer.sign_message(msg, *rng);
    };
+
+   // An XMSS-SHA2_10_256 private key whose unused leaf index is at 1023,
+   // ie that has exactly one signature left
+   const auto almost_exhausted_sk_bytes = Botan::hex_decode(
+      "000000011BBB81273E8057724A2A894593A1A688B3271410B3BEAB9F5587337BCDCBBF5C4E43AB"
+      "0AB2F88258E5AC54BB252E39335AE9B0D4AF0C0347EA45B8AA0AA3804C000003FFAC0C29C1ACD3"
+      //                                                         ~~1023~~
+      "19DA96E9C8EE4E28C2078441A76B6BB8BAFD358F67FBCBFC559B55C37C01FFADBB118099759EEB"
+      "A3B07643F73BCB4AAC546E244B57782D6BEABC");
+
+   // The 4 byte unused leaf index is stored just after the raw public key
+   // (4 byte OID, 32 byte root, 32 byte public seed)
+   const size_t leaf_idx_offset = 68;
 
    return {CHECK("signing alters state",
                  [&](auto& result) {
@@ -162,20 +175,45 @@ std::vector<Test::Result> xmss_statefulness() {
                     result.test_opt_u64_eq("allows 1023 signatures", sk.remaining_operations(), 1023);
                  }),
 
-           CHECK("state can become exhausted", [&](auto& result) {
-              const auto skbytes = Botan::hex_decode(
-                 "000000011BBB81273E8057724A2A894593A1A688B3271410B3BEAB9F5587337BCDCBBF5C4E43AB"
-                 "0AB2F88258E5AC54BB252E39335AE9B0D4AF0C0347EA45B8AA0AA3804C000003FFAC0C29C1ACD3"
-                 //                                                         ~~1023~~
-                 "19DA96E9C8EE4E28C2078441A76B6BB8BAFD358F67FBCBFC559B55C37C01FFADBB118099759EEB"
-                 "A3B07643F73BCB4AAC546E244B57782D6BEABC");
-              Botan::XMSS_PrivateKey sk(skbytes);
-              result.test_opt_u64_eq("allow one last signature", sk.remaining_operations(), 1);
+           CHECK("state can become exhausted",
+                 [&](auto& result) {
+                    Botan::XMSS_PrivateKey sk(almost_exhausted_sk_bytes);
+                    result.test_opt_u64_eq("allow one last signature", sk.remaining_operations(), 1);
 
-              sign_something(sk);
+                    sign_something(sk);
 
-              result.test_opt_u64_eq("allow no more signatures", sk.remaining_operations(), 0);
-              result.test_throws("no more signing", [&] { sign_something(sk); });
+                    result.test_opt_u64_eq("allow no more signatures", sk.remaining_operations(), 0);
+                    result.test_throws("no more signing", [&] { sign_something(sk); });
+
+                    // The exhausted state must survive a serialization round trip
+                    const Botan::XMSS_PrivateKey sk2(sk.raw_private_key());
+                    result.test_opt_u64_eq("reloaded key allows no signatures", sk2.remaining_operations(), 0);
+                    result.test_throws("no signing with reloaded key", [&] { sign_something(sk2); });
+                 }),
+
+           CHECK("out of range leaf index is rejected on load",
+                 [&](Test::Result& result) {
+                    auto skbytes = almost_exhausted_sk_bytes;
+                    Botan::store_be(static_cast<uint32_t>(1025), &skbytes[leaf_idx_offset]);
+                    result.test_throws<Botan::Decoding_Error>("no key with leaf index 2^h + 1",
+                                                              [&] { const Botan::XMSS_PrivateKey sk(skbytes); });
+                 }),
+
+           CHECK("separately loaded copies share state", [&](auto& result) {
+              const Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, *rng);
+              const auto skbytes = sk.raw_private_key();
+
+              const Botan::XMSS_PrivateKey copy1(skbytes);
+              const Botan::XMSS_PrivateKey copy2(skbytes);
+
+              const auto sig1 = sign_something(copy1);
+              result.test_opt_u64_eq("signing with one copy is seen by the other", copy2.remaining_operations(), 1023);
+
+              const auto sig2 = sign_something(copy2);
+
+              // The first four bytes of an XMSS signature encode the leaf index
+              result.test_u64_eq("first signature used leaf 0", Botan::load_be<uint32_t>(sig1.data(), 0), 0);
+              result.test_u64_eq("second signature used leaf 1", Botan::load_be<uint32_t>(sig2.data(), 0), 1);
            })};
 }
 

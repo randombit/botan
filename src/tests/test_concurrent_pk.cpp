@@ -11,6 +11,7 @@
    #include <botan/pubkey.h>
    #include <botan/rng.h>
    #include <botan/internal/fmt.h>
+   #include <algorithm>
    #include <future>
    #include <sstream>
 #endif
@@ -97,19 +98,30 @@ Test::Result test_concurrent_signing(const ConcurrentPkTestCase& tc,
 
    Botan::PK_Verifier verifier(pubkey, tc.op_params());
 
+   std::vector<std::vector<uint8_t>> signatures;
+
    for(size_t i = 0; i != ConcurrentThreads; ++i) {
       try {
-         const auto signature = futures[i].get();
+         auto signature = futures[i].get();
 
          if(signature.empty()) {
             result.test_failure(Botan::fmt("Thread {} produced empty signature", i));
          } else {
             const bool valid = verifier.verify_message(test_message, signature);
             result.test_is_true(Botan::fmt("Thread {} signature is valid", i), valid);
+            signatures.push_back(std::move(signature));
          }
       } catch(std::exception& e) {
          result.test_failure(Botan::fmt("Thread {} failed: {}", i, e.what()));
       }
+   }
+
+   if(privkey.stateful_operation()) {
+      // Stateful schemes sign deterministically for a given index, so a
+      // duplicate signature over the same message indicates index reuse
+      std::sort(signatures.begin(), signatures.end());
+      const bool unique = std::adjacent_find(signatures.begin(), signatures.end()) == signatures.end();
+      result.test_is_true("Stateful key used a distinct index for each signature", unique);
    }
 
    if(operations_remaining_at_start.has_value()) {

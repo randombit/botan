@@ -154,15 +154,16 @@ class HSS_LMS_PrivateKeyInternal final {
       secure_vector<uint8_t> to_bytes() const;
 
       /**
-       * @brief Get the idx of the next signature to generate.
+       * @brief Get the number of remaining signatures for this key.
        */
-      HSS_Sig_Idx remaining_operations(HSS_Sig_Idx idx) const;
+      HSS_Sig_Idx remaining_operations() const;
 
       /**
        * @brief Set the idx of the next signature to generate.
        *
        * Note that creating two signatures with the same index is insecure.
-       * The index must be lower than hss_params().max_sig_count().
+       * The index must be lower than or equal to hss_params().max_sig_count(),
+       * with an index == max indicating the key is completely exhausted.
        * The index will never go backward (highest value wins).
        */
       void set_idx(HSS_Sig_Idx idx);
