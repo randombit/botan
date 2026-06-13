@@ -88,7 +88,7 @@ class BOTAN_PUBLIC_API(3, 7) Classic_McEliece_PublicKey : public virtual Public_
       Classic_McEliece_PublicKey() = default;
 
    protected:
-      std::shared_ptr<Classic_McEliece_PublicKeyInternal> m_public;  // NOLINT(*-non-private-member-variable*)
+      std::shared_ptr<const Classic_McEliece_PublicKeyInternal> m_public;  // NOLINT(*-non-private-member-variable*)
 };
 
 BOTAN_DIAGNOSTIC_PUSH
@@ -134,7 +134,7 @@ class BOTAN_PUBLIC_API(3, 7) Classic_McEliece_PrivateKey final : public virtual 
                                                                        std::string_view provider) const override;
 
    private:
-      std::shared_ptr<Classic_McEliece_PrivateKeyInternal> m_private;
+      std::shared_ptr<const Classic_McEliece_PrivateKeyInternal> m_private;
 };
 
 BOTAN_DIAGNOSTIC_POP

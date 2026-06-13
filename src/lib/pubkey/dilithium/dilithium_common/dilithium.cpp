@@ -249,7 +249,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
 
 class Dilithium_Verification_Operation final : public PK_Ops::Verification {
    public:
-      explicit Dilithium_Verification_Operation(std::shared_ptr<Dilithium_PublicKeyInternal> pubkey) :
+      explicit Dilithium_Verification_Operation(std::shared_ptr<const Dilithium_PublicKeyInternal> pubkey) :
             m_pub_key(std::move(pubkey)),
             m_A(Dilithium_Algos::expand_A(m_pub_key->rho(), m_pub_key->mode())),
             m_t1_ntt_shifted(ntt(m_pub_key->t1() << DilithiumConstants::D)),
@@ -310,7 +310,7 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
       std::string hash_function() const override { return m_h->name(); }
 
    private:
-      std::shared_ptr<Dilithium_PublicKeyInternal> m_pub_key;
+      std::shared_ptr<const Dilithium_PublicKeyInternal> m_pub_key;
       DilithiumPolyMatNTT m_A;
       DilithiumPolyVecNTT m_t1_ntt_shifted;
       std::unique_ptr<DilithiumMessageHash> m_h;

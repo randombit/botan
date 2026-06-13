@@ -40,7 +40,7 @@ class BOTAN_TEST_API KEX_to_KEM_Adapter_PublicKey : public virtual Public_Key {
          std::string_view kdf, std::string_view provider = "base") const override;
 
    private:
-      std::unique_ptr<Public_Key> m_public_key;
+      std::shared_ptr<const Public_Key> m_public_key;
 };
 
 BOTAN_DIAGNOSTIC_PUSH

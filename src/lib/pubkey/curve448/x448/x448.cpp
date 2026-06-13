@@ -18,6 +18,31 @@
 
 namespace Botan {
 
+class X448_PublicKey_Data final {
+   public:
+      explicit X448_PublicKey_Data(std::array<uint8_t, X448_LEN> key) : m_key(key) {}
+
+      const std::array<uint8_t, X448_LEN>& key() const { return m_key; }
+
+   private:
+      std::array<uint8_t, X448_LEN> m_key;
+};
+
+class X448_PrivateKey_Data final {
+   public:
+      explicit X448_PrivateKey_Data(secure_vector<uint8_t> key) : m_key(std::move(key)) {}
+
+      const secure_vector<uint8_t>& key() const { return m_key; }
+
+   private:
+      secure_vector<uint8_t> m_key;
+};
+
+secure_vector<uint8_t> X448_PrivateKey::raw_private_key_bits() const {
+   const auto& sk = m_private->key();
+   return {sk.begin(), sk.end()};
+}
+
 namespace {
 void x448_basepoint_from_data(std::span<uint8_t, X448_LEN> mypublic, std::span<const uint8_t, X448_LEN> secret) {
    auto bp = x448_basepoint(decode_scalar(secret));
@@ -34,6 +59,22 @@ secure_vector<uint8_t> ber_decode_sk(std::span<const uint8_t> key_bits) {
    return decoded_bits;
 }
 
+// Given a secret key compute the public value and build the immutable public
+// and private key data objects.
+void load_x448_keypair(secure_vector<uint8_t> secret,
+                       std::shared_ptr<const X448_PublicKey_Data>& pk_out,
+                       std::shared_ptr<const X448_PrivateKey_Data>& sk_out) {
+   BOTAN_ASSERT_NOMSG(secret.size() == X448_LEN);
+   std::array<uint8_t, X448_LEN> pub{};
+   {
+      auto scope = CT::scoped_poison(secret);
+      x448_basepoint_from_data(pub, std::span(secret).first<X448_LEN>());
+      CT::unpoison(pub);
+   }
+   pk_out = std::make_shared<const X448_PublicKey_Data>(pub);
+   sk_out = std::make_shared<const X448_PrivateKey_Data>(std::move(secret));
+}
+
 }  // namespace
 
 AlgorithmIdentifier X448_PublicKey::algorithm_identifier() const {
@@ -45,7 +86,8 @@ bool X448_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) 
 }
 
 std::vector<uint8_t> X448_PublicKey::raw_public_key_bits() const {
-   return {m_public.begin(), m_public.end()};
+   const auto& pub = m_public->key();
+   return {pub.begin(), pub.end()};
 }
 
 std::vector<uint8_t> X448_PublicKey::public_key_bits() const {
@@ -66,7 +108,9 @@ X448_PublicKey::X448_PublicKey(const AlgorithmIdentifier& alg_id, std::span<cons
 
 X448_PublicKey::X448_PublicKey(std::span<const uint8_t> pub) {
    BOTAN_ARG_CHECK(pub.size() == X448_LEN, "Invalid size for X448 public key");
-   copy_mem(m_public, pub);
+   std::array<uint8_t, X448_LEN> pub_arr{};
+   copy_mem(pub_arr, pub);
+   m_public = std::make_shared<const X448_PublicKey_Data>(pub_arr);
 }
 
 X448_PrivateKey::X448_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
@@ -79,10 +123,7 @@ X448_PrivateKey::X448_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<co
 
 X448_PrivateKey::X448_PrivateKey(std::span<const uint8_t> secret_key) {
    BOTAN_ARG_CHECK(secret_key.size() == X448_LEN, "Invalid size for X448 private key");
-   m_private.assign(secret_key.begin(), secret_key.end());
-   auto scope = CT::scoped_poison(m_private);
-   x448_basepoint_from_data(m_public, std::span(m_private).first<X448_LEN>());
-   CT::unpoison(m_public);
+   load_x448_keypair(secure_vector<uint8_t>(secret_key.begin(), secret_key.end()), m_public, m_private);
 }
 
 X448_PrivateKey::X448_PrivateKey(RandomNumberGenerator& rng) : X448_PrivateKey(rng.random_vec(X448_LEN)) {}
@@ -92,15 +133,17 @@ std::unique_ptr<Public_Key> X448_PrivateKey::public_key() const {
 }
 
 secure_vector<uint8_t> X448_PrivateKey::private_key_bits() const {
-   return DER_Encoder().encode(m_private, ASN1_Type::OctetString).get_contents();
+   return DER_Encoder().encode(m_private->key(), ASN1_Type::OctetString).get_contents();
 }
 
 bool X448_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
+   const auto& sk = m_private->key();
+   const auto& pub = m_public->key();
    std::array<uint8_t, X448_LEN> public_point{};
-   BOTAN_ASSERT_NOMSG(m_private.size() == X448_LEN);
-   auto scope = CT::scoped_poison(m_private);
-   x448_basepoint_from_data(public_point, std::span(m_private).first<X448_LEN>());
-   return CT::is_equal(public_point.data(), m_public.data(), m_public.size()).as_bool();
+   BOTAN_ASSERT_NOMSG(sk.size() == X448_LEN);
+   auto scope = CT::scoped_poison(sk);
+   x448_basepoint_from_data(public_point, std::span(sk).first<X448_LEN>());
+   return CT::is_equal(public_point.data(), pub.data(), pub.size()).as_bool();
 }
 
 namespace {
@@ -110,21 +153,21 @@ namespace {
 */
 class X448_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
    public:
-      X448_KA_Operation(std::span<const uint8_t> sk, std::string_view kdf) :
-            PK_Ops::Key_Agreement_with_KDF(kdf), m_sk(sk.begin(), sk.end()) {
-         BOTAN_ARG_CHECK(sk.size() == X448_LEN, "Invalid size for X448 private key");
-      }
+      X448_KA_Operation(std::shared_ptr<const X448_PrivateKey_Data> key, std::string_view kdf) :
+            PK_Ops::Key_Agreement_with_KDF(kdf), m_key(std::move(key)) {}
 
       size_t agreed_value_size() const override { return X448_LEN; }
 
       secure_vector<uint8_t> raw_agree(const uint8_t w_data[], size_t w_len) override {
-         auto scope = CT::scoped_poison(m_sk);
+         const auto& sk = m_key->key();
+         BOTAN_ASSERT_NOMSG(sk.size() == X448_LEN);
+         auto scope = CT::scoped_poison(sk);
 
          const std::span<const uint8_t> w(w_data, w_len);
          if(w.size() != X448_LEN) {
             throw Decoding_Error("Invalid size for X448 public key");
          }
-         const auto k = decode_scalar(m_sk);
+         const auto k = decode_scalar(sk);
          const auto u = decode_point(w);
 
          auto shared_secret = encode_point(x448(k, u));
@@ -148,7 +191,7 @@ class X448_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
       }
 
    private:
-      secure_vector<uint8_t> m_sk;
+      std::shared_ptr<const X448_PrivateKey_Data> m_key;
 };
 
 }  // namespace

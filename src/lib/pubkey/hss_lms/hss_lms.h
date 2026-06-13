@@ -77,7 +77,7 @@ class BOTAN_PUBLIC_API(3, 5) HSS_LMS_PublicKey : public virtual Public_Key {
    protected:
       HSS_LMS_PublicKey() = default;
 
-      std::shared_ptr<HSS_LMS_PublicKeyInternal> m_public;  // NOLINT(*non-private-member-variable*)
+      std::shared_ptr<const HSS_LMS_PublicKeyInternal> m_public;  // NOLINT(*non-private-member-variable*)
 };
 
 BOTAN_DIAGNOSTIC_PUSH
@@ -173,7 +173,7 @@ class BOTAN_PUBLIC_API(3, 5) HSS_LMS_PrivateKey final : public virtual HSS_LMS_P
    private:
       explicit HSS_LMS_PrivateKey(std::shared_ptr<HSS_LMS_PrivateKeyInternal> sk);
 
-      std::shared_ptr<HSS_LMS_PrivateKeyInternal> m_private;
+      std::shared_ptr<const HSS_LMS_PrivateKeyInternal> m_private;
 };
 
 BOTAN_DIAGNOSTIC_POP

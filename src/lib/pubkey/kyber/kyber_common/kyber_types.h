@@ -71,7 +71,7 @@ using KyberSigmaOrEncryptionRandomness =
    std::variant<StrongSpan<const KyberSeedSigma>, StrongSpan<const KyberEncryptionRandomness>>;
 
 using KyberInternalKeypair =
-   std::pair<std::shared_ptr<Kyber_PublicKeyInternal>, std::shared_ptr<Kyber_PrivateKeyInternal>>;
+   std::pair<std::shared_ptr<const Kyber_PublicKeyInternal>, std::shared_ptr<const Kyber_PrivateKeyInternal>>;
 
 /// NIST FIPS 203, Section 3
 ///   The seed (𝑑,𝑧) generated in steps 1 and 2 of ML-KEM.KeyGen can be stored

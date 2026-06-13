@@ -20,13 +20,38 @@
 
 namespace Botan {
 
+class Ed448_PublicKey_Data final {
+   public:
+      explicit Ed448_PublicKey_Data(std::array<uint8_t, ED448_LEN> key) : m_key(key) {}
+
+      const std::array<uint8_t, ED448_LEN>& key() const { return m_key; }
+
+   private:
+      std::array<uint8_t, ED448_LEN> m_key;
+};
+
+class Ed448_PrivateKey_Data final {
+   public:
+      explicit Ed448_PrivateKey_Data(secure_vector<uint8_t> key) : m_key(std::move(key)) {}
+
+      const secure_vector<uint8_t>& key() const { return m_key; }
+
+   private:
+      secure_vector<uint8_t> m_key;
+};
+
+secure_vector<uint8_t> Ed448_PrivateKey::raw_private_key_bits() const {
+   const auto& sk = m_private->key();
+   return {sk.begin(), sk.end()};
+}
+
 AlgorithmIdentifier Ed448_PublicKey::algorithm_identifier() const {
    return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_EMPTY_PARAM);
 }
 
 bool Ed448_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
    try {
-      Ed448Point::decode(m_public);
+      Ed448Point::decode(m_public->key());
    } catch(Decoding_Error&) {
       return false;
    }
@@ -45,11 +70,14 @@ Ed448_PublicKey::Ed448_PublicKey(std::span<const uint8_t> key_bits) {
    if(key_bits.size() != ED448_LEN) {
       throw Decoding_Error("Invalid length for Ed448 public key");
    }
-   copy_mem(m_public, key_bits.first<ED448_LEN>());
+   std::array<uint8_t, ED448_LEN> pub{};
+   copy_mem(pub, key_bits.first<ED448_LEN>());
+   m_public = std::make_shared<const Ed448_PublicKey_Data>(pub);
 }
 
 std::vector<uint8_t> Ed448_PublicKey::raw_public_key_bits() const {
-   return {m_public.begin(), m_public.end()};
+   const auto& pub = m_public->key();
+   return {pub.begin(), pub.end()};
 }
 
 std::vector<uint8_t> Ed448_PublicKey::public_key_bits() const {
@@ -72,8 +100,9 @@ Ed448_PrivateKey::Ed448_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<
    if(bits.size() != ED448_LEN) {
       throw Decoding_Error("Invalid size for Ed448 private key");
    }
-   m_private = std::move(bits);
-   m_public = create_pk_from_sk(std::span(m_private).first<ED448_LEN>());
+   auto pub = create_pk_from_sk(std::span(bits).first<ED448_LEN>());
+   m_public = std::make_shared<const Ed448_PublicKey_Data>(pub);
+   m_private = std::make_shared<const Ed448_PrivateKey_Data>(std::move(bits));
 }
 
 Ed448_PrivateKey::Ed448_PrivateKey(RandomNumberGenerator& rng) : Ed448_PrivateKey(rng.random_vec(ED448_LEN)) {}
@@ -82,27 +111,34 @@ Ed448_PrivateKey::Ed448_PrivateKey(std::span<const uint8_t> key_bits) {
    if(key_bits.size() != ED448_LEN) {
       throw Decoding_Error("Invalid size for Ed448 private key");
    }
-   m_private.assign(key_bits.begin(), key_bits.end());
-   auto scope = CT::scoped_poison(m_private);
-   m_public = create_pk_from_sk(std::span(m_private).first<ED448_LEN>());
-   CT::unpoison(m_public);
+   secure_vector<uint8_t> sk(key_bits.begin(), key_bits.end());
+   std::array<uint8_t, ED448_LEN> pub{};
+   {
+      auto scope = CT::scoped_poison(sk);
+      pub = create_pk_from_sk(std::span(sk).first<ED448_LEN>());
+      CT::unpoison(pub);
+   }
+   m_public = std::make_shared<const Ed448_PublicKey_Data>(pub);
+   m_private = std::make_shared<const Ed448_PrivateKey_Data>(std::move(sk));
 }
 
 std::unique_ptr<Public_Key> Ed448_PrivateKey::public_key() const {
-   return std::make_unique<Ed448_PublicKey>(m_public);
+   return std::make_unique<Ed448_PublicKey>(raw_public_key_bits());
 }
 
 secure_vector<uint8_t> Ed448_PrivateKey::private_key_bits() const {
-   BOTAN_ASSERT_NOMSG(m_private.size() == ED448_LEN);
-   return DER_Encoder().encode(m_private, ASN1_Type::OctetString).get_contents();
+   const auto& sk = m_private->key();
+   BOTAN_ASSERT_NOMSG(sk.size() == ED448_LEN);
+   return DER_Encoder().encode(sk, ASN1_Type::OctetString).get_contents();
 }
 
 bool Ed448_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
-   BOTAN_ASSERT_NOMSG(m_private.size() == ED448_LEN);
-   auto scope = CT::scoped_poison(m_private);
-   const auto public_point = create_pk_from_sk(std::span(m_private).first<ED448_LEN>());
+   const auto& sk = m_private->key();
+   BOTAN_ASSERT_NOMSG(sk.size() == ED448_LEN);
+   auto scope = CT::scoped_poison(sk);
+   const auto public_point = create_pk_from_sk(std::span(sk).first<ED448_LEN>());
    CT::unpoison(public_point);
-   return public_point == m_public;
+   return public_point == m_public->key();
 }
 
 namespace {
@@ -148,9 +184,9 @@ class Pure_Ed448_Message final : public Ed448_Message {
 */
 class Ed448_Verify_Operation final : public PK_Ops::Verification {
    public:
-      explicit Ed448_Verify_Operation(const Ed448_PublicKey& key,
+      explicit Ed448_Verify_Operation(std::shared_ptr<const Ed448_PublicKey_Data> public_key,
                                       std::optional<std::string> prehash_function = std::nullopt) :
-            m_pk(key.raw_public_key_bits()), m_prehash_function(std::move(prehash_function)) {
+            m_public_key(std::move(public_key)), m_prehash_function(std::move(prehash_function)) {
          if(m_prehash_function) {
             m_message = std::make_unique<Prehashed_Ed448_Message>(*m_prehash_function);
          } else {
@@ -163,7 +199,8 @@ class Ed448_Verify_Operation final : public PK_Ops::Verification {
       bool is_valid_signature(std::span<const uint8_t> sig) override {
          const auto msg = m_message->get_and_clear();
          try {
-            return verify_signature(std::span(m_pk).first<ED448_LEN>(), m_prehash_function.has_value(), {}, sig, msg);
+            return verify_signature(
+               std::span(m_public_key->key()).first<ED448_LEN>(), m_prehash_function.has_value(), {}, sig, msg);
          } catch(Decoding_Error&) {
             return false;
          }
@@ -172,7 +209,7 @@ class Ed448_Verify_Operation final : public PK_Ops::Verification {
       std::string hash_function() const override { return m_prehash_function.value_or("SHAKE-256(912)"); }
 
    private:
-      std::vector<uint8_t> m_pk;
+      std::shared_ptr<const Ed448_PublicKey_Data> m_public_key;
       std::unique_ptr<Ed448_Message> m_message;
       std::optional<std::string> m_prehash_function;
 };
@@ -182,10 +219,11 @@ class Ed448_Verify_Operation final : public PK_Ops::Verification {
 */
 class Ed448_Sign_Operation final : public PK_Ops::Signature {
    public:
-      explicit Ed448_Sign_Operation(const Ed448_PrivateKey& key,
-                                    std::optional<std::string> prehash_function = std::nullopt) :
-            m_pk(key.raw_public_key_bits()),
-            m_sk(key.raw_private_key_bits()),
+      Ed448_Sign_Operation(std::shared_ptr<const Ed448_PublicKey_Data> public_key,
+                           std::shared_ptr<const Ed448_PrivateKey_Data> private_key,
+                           std::optional<std::string> prehash_function = std::nullopt) :
+            m_public_key(std::move(public_key)),
+            m_private_key(std::move(private_key)),
             m_prehash_function(std::move(prehash_function)) {
          if(m_prehash_function) {
             m_message = std::make_unique<Prehashed_Ed448_Message>(*m_prehash_function);
@@ -197,10 +235,11 @@ class Ed448_Sign_Operation final : public PK_Ops::Signature {
       void update(std::span<const uint8_t> input) override { m_message->update(input); }
 
       std::vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
-         BOTAN_ASSERT_NOMSG(m_sk.size() == ED448_LEN);
-         auto scope = CT::scoped_poison(m_sk);
-         const auto sig = sign_message(std::span(m_sk).first<ED448_LEN>(),
-                                       std::span(m_pk).first<ED448_LEN>(),
+         const auto& sk = m_private_key->key();
+         BOTAN_ASSERT_NOMSG(sk.size() == ED448_LEN);
+         auto scope = CT::scoped_poison(sk);
+         const auto sig = sign_message(std::span(sk).first<ED448_LEN>(),
+                                       std::span(m_public_key->key()).first<ED448_LEN>(),
                                        m_prehash_function.has_value(),
                                        {},
                                        m_message->get_and_clear());
@@ -215,8 +254,8 @@ class Ed448_Sign_Operation final : public PK_Ops::Signature {
       std::string hash_function() const override { return m_prehash_function.value_or("SHAKE-256(912)"); }
 
    private:
-      std::vector<uint8_t> m_pk;
-      secure_vector<uint8_t> m_sk;
+      std::shared_ptr<const Ed448_PublicKey_Data> m_public_key;
+      std::shared_ptr<const Ed448_PrivateKey_Data> m_private_key;
       std::unique_ptr<Ed448_Message> m_message;
       std::optional<std::string> m_prehash_function;
 };
@@ -231,11 +270,11 @@ std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::create_verification_op(st
                                                                               std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
       if(params.empty() || params == "Identity" || params == "Pure" || params == "Ed448") {
-         return std::make_unique<Ed448_Verify_Operation>(*this);
+         return std::make_unique<Ed448_Verify_Operation>(m_public);
       } else if(params == "Ed448ph") {
-         return std::make_unique<Ed448_Verify_Operation>(*this, "SHAKE-256(512)");
+         return std::make_unique<Ed448_Verify_Operation>(m_public, "SHAKE-256(512)");
       } else {
-         return std::make_unique<Ed448_Verify_Operation>(*this, std::string(params));
+         return std::make_unique<Ed448_Verify_Operation>(m_public, std::string(params));
       }
    }
    throw Provider_Not_Found(algo_name(), provider);
@@ -248,7 +287,7 @@ std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::create_x509_verification_
          throw Decoding_Error("Unexpected AlgorithmIdentifier for Ed448 X509 signature");
       }
 
-      return std::make_unique<Ed448_Verify_Operation>(*this);
+      return std::make_unique<Ed448_Verify_Operation>(m_public);
    }
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -258,11 +297,11 @@ std::unique_ptr<PK_Ops::Signature> Ed448_PrivateKey::create_signature_op(RandomN
                                                                          std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
       if(params.empty() || params == "Identity" || params == "Pure" || params == "Ed448") {
-         return std::make_unique<Ed448_Sign_Operation>(*this);
+         return std::make_unique<Ed448_Sign_Operation>(m_public, m_private);
       } else if(params == "Ed448ph") {
-         return std::make_unique<Ed448_Sign_Operation>(*this, "SHAKE-256(512)");
+         return std::make_unique<Ed448_Sign_Operation>(m_public, m_private, "SHAKE-256(512)");
       } else {
-         return std::make_unique<Ed448_Sign_Operation>(*this, std::string(params));
+         return std::make_unique<Ed448_Sign_Operation>(m_public, m_private, std::string(params));
       }
    }
    throw Provider_Not_Found(algo_name(), provider);

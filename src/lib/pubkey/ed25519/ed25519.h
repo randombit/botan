@@ -10,9 +10,14 @@
 #define BOTAN_ED25519_H_
 
 #include <botan/pk_keys.h>
+#include <memory>
 #include <span>
+#include <vector>
 
 namespace Botan {
+
+class Ed25519_PublicKey_Data;
+class Ed25519_PrivateKey_Data;
 
 class BOTAN_PUBLIC_API(2, 2) Ed25519_PublicKey : public virtual Public_Key {
    public:
@@ -34,9 +39,7 @@ class BOTAN_PUBLIC_API(2, 2) Ed25519_PublicKey : public virtual Public_Key {
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::Signature); }
 
-      BOTAN_DEPRECATED("Use raw_public_key_bits") const std::vector<uint8_t>& get_public_key() const {
-         return m_public;
-      }
+      BOTAN_DEPRECATED("Use raw_public_key_bits") const std::vector<uint8_t>& get_public_key() const;
 
       /**
       * Create a Ed25519 Public Key.
@@ -58,7 +61,7 @@ class BOTAN_PUBLIC_API(2, 2) Ed25519_PublicKey : public virtual Public_Key {
 
    protected:
       Ed25519_PublicKey() = default;
-      std::vector<uint8_t> m_public;  // NOLINT(*non-private-member-variable*)
+      std::shared_ptr<const Ed25519_PublicKey_Data> m_public;  // NOLINT(*non-private-member-variable*)
 };
 
 BOTAN_DIAGNOSTIC_PUSH
@@ -111,11 +114,9 @@ class BOTAN_PUBLIC_API(2, 2) Ed25519_PrivateKey final : public Ed25519_PublicKey
       */
       static Ed25519_PrivateKey from_bytes(std::span<const uint8_t> bytes);
 
-      BOTAN_DEPRECATED("Use raw_private_key_bits") const secure_vector<uint8_t>& get_private_key() const {
-         return m_private;
-      }
+      BOTAN_DEPRECATED("Use raw_private_key_bits") const secure_vector<uint8_t>& get_private_key() const;
 
-      secure_vector<uint8_t> raw_private_key_bits() const override { return m_private; }
+      secure_vector<uint8_t> raw_private_key_bits() const override;
 
       secure_vector<uint8_t> private_key_bits() const override;
 
@@ -128,7 +129,7 @@ class BOTAN_PUBLIC_API(2, 2) Ed25519_PrivateKey final : public Ed25519_PublicKey
                                                              std::string_view provider) const override;
 
    private:
-      secure_vector<uint8_t> m_private;
+      std::shared_ptr<const Ed25519_PrivateKey_Data> m_private;
 };
 
 BOTAN_DIAGNOSTIC_POP

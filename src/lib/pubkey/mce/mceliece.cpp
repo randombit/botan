@@ -109,14 +109,13 @@ secure_vector<uint8_t> create_random_error_vector(size_t code_length, size_t err
 void mceliece_encrypt(secure_vector<uint8_t>& ciphertext_out,
                       secure_vector<uint8_t>& error_mask_out,
                       const secure_vector<uint8_t>& plaintext,
-                      const McEliece_PublicKey& key,
+                      const McEliece_PublicKeyInternal& key,
                       RandomNumberGenerator& rng) {
-   const uint16_t code_length = static_cast<uint16_t>(key.get_code_length());
+   const uint16_t code_length = static_cast<uint16_t>(key.code_length());
 
-   secure_vector<uint8_t> error_mask = create_random_error_vector(code_length, key.get_t(), rng);
+   secure_vector<uint8_t> error_mask = create_random_error_vector(code_length, key.t(), rng);
 
-   secure_vector<uint8_t> ciphertext =
-      mult_by_pubkey(plaintext, key.get_public_matrix(), key.get_code_length(), key.get_t());
+   secure_vector<uint8_t> ciphertext = mult_by_pubkey(plaintext, key.public_matrix(), key.code_length(), key.t());
 
    ciphertext ^= error_mask;
 

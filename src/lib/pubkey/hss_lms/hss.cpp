@@ -236,7 +236,7 @@ HSS_Sig_Idx HSS_LMS_PrivateKeyInternal::remaining_operations() const {
    return HSS_Sig_Idx(Stateful_Key_Index_Registry::global().remaining_operations(m_keyid));
 }
 
-void HSS_LMS_PrivateKeyInternal::set_idx(HSS_Sig_Idx idx) {
+void HSS_LMS_PrivateKeyInternal::set_idx(HSS_Sig_Idx idx) const {
    // An index equal to max_sig_count is valid and denotes an exhausted key
    if(idx > m_hss_params.max_sig_count()) {
       throw Decoding_Error("HSS-LMS private key index out of bounds");
@@ -244,7 +244,7 @@ void HSS_LMS_PrivateKeyInternal::set_idx(HSS_Sig_Idx idx) {
    Stateful_Key_Index_Registry::global().set_index_lower_bound(m_keyid, idx.get());
 }
 
-HSS_Sig_Idx HSS_LMS_PrivateKeyInternal::reserve_next_idx() {
+HSS_Sig_Idx HSS_LMS_PrivateKeyInternal::reserve_next_idx() const {
    const auto idx = Stateful_Key_Index_Registry::global().reserve_next_index(m_keyid);
    if(!idx.has_value()) {
       throw Invalid_State("HSS private key is exhausted");
@@ -260,7 +260,7 @@ size_t HSS_LMS_PrivateKeyInternal::size() const {
    return sk_size;
 }
 
-std::vector<uint8_t> HSS_LMS_PrivateKeyInternal::sign(std::span<const uint8_t> msg) {
+std::vector<uint8_t> HSS_LMS_PrivateKeyInternal::sign(std::span<const uint8_t> msg) const {
    std::vector<uint8_t> sig(HSS_Signature::size(hss_params()));
    BufferStuffer sig_stuffer(sig);
    sig_stuffer.append(store_be(hss_params().L() - 1));
