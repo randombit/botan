@@ -79,11 +79,12 @@ Client_Impl_13::Client_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
 void Client_Impl_13::process_handshake_msg(Handshake_Message_13 message) {
    BOTAN_STATE_CHECK(m_handshake != nullptr);
 
+   // first verify that the message was expected by the state machine
+   // (and only then store it in the handshake state)
+   m_handshake->transitions.confirm_transition_to(std::visit([](const auto& msg) { return msg.type(); }, message));
+
    std::visit(
       [&](auto msg) {
-         // first verify that the message was expected by the state machine...
-         m_handshake->transitions.confirm_transition_to(msg.get().type());
-
          // ... then allow the library user to abort on their discretion
          callbacks().tls_inspect_handshake_msg(msg.get());
 

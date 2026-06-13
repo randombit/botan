@@ -152,11 +152,12 @@ size_t Server_Impl_13::send_new_session_tickets(const size_t tickets) {
 void Server_Impl_13::process_handshake_msg(Handshake_Message_13 message) {
    BOTAN_STATE_CHECK(m_handshake != nullptr);
 
+   // first verify that the message was expected by the state machine
+   // (and only then store it in the handshake state)
+   m_handshake->transitions.confirm_transition_to(std::visit([](const auto& msg) { return msg.type(); }, message));
+
    std::visit(
       [&](auto msg) {
-         // first verify that the message was expected by the state machine...
-         m_handshake->transitions.confirm_transition_to(msg.get().type());
-
          // ... then allow the library user to abort on their discretion
          callbacks().tls_inspect_handshake_msg(msg.get());
 
@@ -196,7 +197,7 @@ void Server_Impl_13::process_dummy_change_cipher_spec() {
 }
 
 bool Server_Impl_13::is_handshake_complete() const {
-   return m_active_state.has_value() || (m_handshake != nullptr && m_handshake->state.has_client_finished());
+   return m_active_state.has_value() || (m_handshake != nullptr && m_handshake->state.handshake_finished());
 }
 
 void Server_Impl_13::maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const {

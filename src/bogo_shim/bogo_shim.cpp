@@ -342,6 +342,8 @@ std::string map_to_bogo_error(const std::string& e) noexcept {
        ":UNEXPECTED_MESSAGE:"},
       {"Unexpected state transition in handshake got a certificate expected finished seen server_hello+encrypted_extensions",
        ":UNEXPECTED_MESSAGE:"},
+      {"Unexpected state transition in handshake got a encrypted_extensions expected finished seen client_hello",
+       ":UNEXPECTED_MESSAGE:"},
       {"Unexpected state transition in handshake got a finished expected certificate_verify seen server_hello+certificate+encrypted_extensions",
        ":BAD_HELLO_REQUEST:"},
       {"Unknown TLS handshake message type 43", ":UNEXPECTED_MESSAGE:"},
