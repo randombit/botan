@@ -354,7 +354,7 @@ std::shared_ptr<HSS_LMS_PublicKeyInternal> HSS_LMS_PublicKeyInternal::from_bytes
    BufferSlicer slicer(key_bytes);
 
    const auto L = load_be<HSS_Level>(slicer.take<sizeof(HSS_Level)>());
-   if(L > HSS_MAX_LEVELS) {
+   if(L == 0U || L > HSS_MAX_LEVELS) {
       throw Decoding_Error("Invalid number of HSS layers in public HSS-LMS key.");
    }
 
