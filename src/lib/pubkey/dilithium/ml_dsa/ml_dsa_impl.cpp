@@ -8,20 +8,113 @@
 
 #include <botan/internal/ml_dsa_impl.h>
 
+#include <botan/asn1_obj.h>
+#include <botan/ber_dec.h>
+#include <botan/der_enc.h>
+#include <botan/exceptn.h>
 #include <botan/internal/dilithium_algos.h>
+#include <botan/internal/dilithium_types.h>
+#include <utility>
 
 namespace Botan {
+
+namespace {
+typedef Botan::DilithiumInternalKeypair (*decoding_func)(std::span<const uint8_t> key_bits,
+                                                         Botan::DilithiumConstants mode);
+
+Botan::DilithiumInternalKeypair decode_seed_only(std::span<const uint8_t> key_bits, Botan::DilithiumConstants mode) {
+   Botan::secure_vector<uint8_t> seed;
+   Botan::BER_Decoder(key_bits)
+      .decode(seed, Botan::ASN1_Type::OctetString, Botan::ASN1_Type(0), Botan::ASN1_Class::ContextSpecific)
+      .verify_end();
+   return Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(seed), std::move(mode));
+}
+
+Botan::DilithiumInternalKeypair decode_expanded_only(std::span<const uint8_t> key_bits,
+                                                     Botan::DilithiumConstants mode) {
+   Botan::secure_vector<uint8_t> expanded;
+   Botan::BER_Decoder(key_bits).decode(expanded, Botan::ASN1_Type::OctetString).verify_end();
+   Botan::DilithiumInternalKeypair key_pair =
+      Botan::Dilithium_Algos::decode_keypair(Botan::DilithiumSerializedPrivateKey(expanded), std::move(mode));
+   return key_pair;
+}
+
+Botan::DilithiumInternalKeypair decode_seed_plus_expanded(std::span<const uint8_t> key_bits,
+                                                          Botan::DilithiumConstants mode) {
+   Botan::secure_vector<uint8_t> expanded;
+   Botan::secure_vector<uint8_t> seed;
+   Botan::BER_Decoder(key_bits)
+      .start_sequence()
+      .decode(seed, Botan::ASN1_Type::OctetString)
+      .decode(expanded, Botan::ASN1_Type::OctetString)
+      .end_cons()
+      .verify_end();
+   const Botan::DilithiumInternalKeypair key_pair =
+      Botan::Dilithium_Algos::decode_keypair(Botan::DilithiumSerializedPrivateKey(expanded), mode);
+   const Botan::DilithiumInternalKeypair key_pair_from_seed =
+      Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(seed), std::move(mode));
+
+   DilithiumSerializedPrivateKey expanded_from_seed = Dilithium_Algos::encode_keypair(key_pair_from_seed);
+
+   if(expanded_from_seed.get() != expanded) {
+      throw Botan::Decoding_Error("seed and expanded key in ML-DSA serialized key do not match");
+   }
+   return key_pair_from_seed;
+}
+
+}  // namespace
 
 secure_vector<uint8_t> ML_DSA_Expanding_Keypair_Codec::encode_keypair(DilithiumInternalKeypair keypair) const {
    BOTAN_ASSERT_NONNULL(keypair.second);
    const auto& seed = keypair.second->seed();
-   BOTAN_ARG_CHECK(seed.has_value(), "Cannot encode keypair without the private seed");
-   return seed.value().get();
+   if(!keypair.second->mode().is_ml_dsa()) {
+      // return the raw seed for dilithium
+      BOTAN_ARG_CHECK(seed.has_value(), "Cannot encode keypair without the private seed");
+      return seed.value().get();
+   }
+   secure_vector<uint8_t> result;
+   DER_Encoder der_enc(result);
+   if(!seed.has_value()) {
+      // encode expanded-only format
+      DilithiumSerializedPrivateKey expanded = Dilithium_Algos::encode_keypair(keypair);
+      der_enc.encode(expanded.get(), ASN1_Type::OctetString);
+   } else {
+      // encode seed-only format
+      der_enc.encode(seed.value().get(),
+                     ASN1_Type(Botan::ASN1_Type::OctetString) /*real_type*/,
+                     ASN1_Type(Botan::ASN1_Type(0)),
+                     Botan::ASN1_Class::ContextSpecific);
+      /* 
+       * This yields the following ASN.1/DER structure:
+       <80 20>
+       0  32: [0]
+            :   00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+            :   10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F
+       *
+       *  Note: The previous format, which only contains the seed as an OCTET STRING without the [0]-tag, can still be decoded by OpenSSL. Apparently, it has this feature as a non-standard compatibility fallback for legacy formats.
+       */
+   }
+
+   return result;
 }
 
-DilithiumInternalKeypair ML_DSA_Expanding_Keypair_Codec::decode_keypair(std::span<const uint8_t> private_key_seed,
+DilithiumInternalKeypair ML_DSA_Expanding_Keypair_Codec::decode_keypair(std::span<const uint8_t> private_key_bits,
                                                                         DilithiumConstants mode) const {
-   return Dilithium_Algos::expand_keypair(DilithiumSeedRandomness(private_key_seed), std::move(mode));
+   if(private_key_bits.size() == 32) {
+      // backwards compatibility (not RFC 9881 conforming) to raw seed format.
+      return Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(private_key_bits), std::move(mode));
+   }
+   // "seed-only" format from RFC 9881
+   BER_Decoder ber_dec(private_key_bits);
+   auto obj = ber_dec.peek_next_object();
+   if(obj.type() == ASN1_Type(0)) {
+      return decode_seed_only(private_key_bits, mode);
+   }
+   // now it could still be "expanded-only" or "both"
+   if(obj.type() == ASN1_Type::OctetString) {
+      return decode_expanded_only(private_key_bits, mode);
+   }
+   return decode_seed_plus_expanded(private_key_bits, mode);
 }
 
 }  // namespace Botan
