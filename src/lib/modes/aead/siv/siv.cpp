@@ -93,7 +93,12 @@ void SIV_Mode::set_associated_data_n(size_t n, std::span<const uint8_t> ad) {
       throw Invalid_Argument(name() + " allows no more than " + std::to_string(max_ads) + " ADs");
    }
 
-   if(n >= m_ad_macs.size()) {
+   if(n > m_ad_macs.size()) {
+      // If we are potentially skipping over AD elements in a way that will
+      // create a gap, fill the gaps in with the mac of the empty string.
+      const auto empty_mac = m_mac->process(std::span<const uint8_t>{});
+      m_ad_macs.resize(n + 1, empty_mac);
+   } else if(n == m_ad_macs.size()) {
       m_ad_macs.resize(n + 1);
    }
 
