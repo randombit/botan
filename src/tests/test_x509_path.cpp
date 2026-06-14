@@ -374,7 +374,7 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run() {
 
       const auto validation_year = Botan::to_u32bit((validation_times_iter++)->second);
 
-      const auto validation_time = Botan::calendar_point(validation_year, 0, 0, 0, 0, 0).to_std_timepoint();
+      const auto validation_time = Botan::calendar_point(validation_year, 1, 1, 0, 0, 0).to_std_timepoint();
 
       for(const auto& file : all_files) {
          if(file.find("end.crt") != std::string::npos) {
@@ -624,6 +624,62 @@ std::vector<Test::Result> Cross_Signed_Mesh_Path_Test::run() {
 }
 
 BOTAN_REGISTER_TEST("x509", "x509_path_cross_signed_mesh", Cross_Signed_Mesh_Path_Test);
+
+class Future_Dates_Path_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override;
+};
+
+std::vector<Test::Result> Future_Dates_Path_Test::run() {
+   if(Botan::has_filesystem_impl() == false) {
+      return {Test::Result::Note("Path validation", "Skipping due to missing filesystem access")};
+   }
+
+   Test::Result result("X509 far future date handling");
+
+   /*
+   * The issuing CA uses the RFC 5280 99991231235959Z notAfter sentinel and the
+   * leaf is valid only during the year 2981, exercising decoding of GeneralizedTime
+   * values at the top of the representable range and well past 2050.
+   *
+   * The leaf potentially can't be validated, if std::chrono::system_clock::time_point
+   * cannot represent year 2981, which is the case for libstdc++
+   */
+   const Botan::X509_Certificate ca(Test::data_file("x509/future_dates/ca.pem"));
+   const Botan::X509_Certificate leaf(Test::data_file("x509/future_dates/leaf.pem"));
+
+   result.test_str_eq("CA notAfter is the 9999 sentinel", ca.not_after().to_string(), "99991231235959Z");
+   result.test_str_eq("CA notAfter readable form", ca.not_after().readable_string(), "9999/12/31 23:59:59 UTC");
+   result.test_str_eq("Leaf notBefore is in 2981", leaf.not_before().to_string(), "29810101000000Z");
+   result.test_str_eq("Leaf notAfter is in 2981", leaf.not_after().to_string(), "29811231235959Z");
+
+   // The chain is structurally sound: the leaf signature verifies under the CA key
+   const auto ca_key = ca.subject_public_key();
+   result.test_is_true("Leaf is signed by the CA", leaf.check_signature(*ca_key));
+   result.test_is_true("CA is self-signed", ca.is_self_signed());
+
+   Botan::Certificate_Store_In_Memory trusted;
+   trusted.add_certificate(ca);
+
+   const std::vector<Botan::X509_Certificate> chain = {leaf};
+
+   // At a present-day reference time the CA (notAfter 9999) is current, so path
+   // validation fails specifically because the leaf is not yet valid, confirming
+   // the sentinel notAfter is decoded and compared as a valid future date.
+   const auto validation_time = Botan::calendar_point(2026, 1, 1, 0, 0, 0).to_std_timepoint();
+
+   const Botan::Path_Validation_Restrictions restrictions;
+   const Botan::Path_Validation_Result path_result = Botan::x509_path_validate(
+      chain, restrictions, trusted, "future.example.com", Botan::Usage_Type::UNSPECIFIED, validation_time);
+
+   result.test_is_true("Leaf is not yet valid at present", !path_result.successful_validation());
+   result.test_str_eq(
+      "Validation fails on the leaf, not the 9999 CA", path_result.result_string(), "Certificate is not yet valid");
+
+   return {result};
+}
+
+BOTAN_REGISTER_TEST("x509", "x509_path_future_dates", Future_Dates_Path_Test);
 
 class Validate_Invalid_OCSP_NoCheck_Test final : public Test {
    public:

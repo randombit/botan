@@ -11,7 +11,6 @@
 
 #include <botan/types.h>
 #include <chrono>
-#include <string>
 
 namespace Botan {
 
@@ -20,24 +19,22 @@ namespace Botan {
 */
 class BOTAN_TEST_API calendar_point final {
    public:
-      /** The year */
+      /** The year, less than or equal to 9999 */
       uint32_t year() const { return m_year; }
 
       /** The month, 1 through 12 for Jan to Dec */
       uint32_t month() const { return m_month; }
 
-      /** The day of the month, 1 through 31 (or 28 or 30 based on month */
+      /** The day of the month, 1 through 31 */
       uint32_t day() const { return m_day; }
 
       /** Hour in 24-hour form, 0 to 23 */
       uint32_t hour() const { return m_hour; }
 
-      /** Minutes in the hour, 0 to 60 */
+      /** Minutes in the hour, 0 to 59 */
       uint32_t minutes() const { return m_minutes; }
 
-      /** Seconds in the minute, 0 to 60, but might be slightly
-      larger to deal with leap seconds on some systems
-      */
+      /** Seconds in the minute, 0 to 59 */
       uint32_t seconds() const { return m_seconds; }
 
       /**
@@ -49,8 +46,7 @@ class BOTAN_TEST_API calendar_point final {
       * @param min the minute
       * @param sec the second
       */
-      calendar_point(uint32_t y, uint32_t mon, uint32_t d, uint32_t h, uint32_t min, uint32_t sec) :
-            m_year(y), m_month(mon), m_day(d), m_hour(h), m_minutes(min), m_seconds(sec) {}
+      calendar_point(uint32_t y, uint32_t mon, uint32_t d, uint32_t h, uint32_t min, uint32_t sec);
 
       /**
       * Convert a time_point to a calendar_point
@@ -71,19 +67,13 @@ class BOTAN_TEST_API calendar_point final {
       */
       std::chrono::system_clock::time_point to_std_timepoint() const;
 
-      /**
-      * Returns a human readable string of the struct's components.
-      * Formatting might change over time. Currently it is RFC339 'iso-date-time'.
-      */
-      std::string to_string() const;
-
    private:
-      uint32_t m_year;
-      uint32_t m_month;
-      uint32_t m_day;
-      uint32_t m_hour;
-      uint32_t m_minutes;
-      uint32_t m_seconds;
+      uint16_t m_year;
+      uint8_t m_month;
+      uint8_t m_day;
+      uint8_t m_hour;
+      uint8_t m_minutes;
+      uint8_t m_seconds;
 };
 
 }  // namespace Botan

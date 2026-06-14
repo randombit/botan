@@ -15,12 +15,13 @@ Tspec = 20000229000000Z
 Tspec = 20180131000000Z
 Tspec = 20180131053030Z
 Tspec = 20200229000000Z
-Tspec = 20201231235960Z
-Tspec = 21000101000060Z
 Tspec = 21000101005900Z
 Tspec = 21000101230000Z
-Tspec = 22001231235960Z
 Tspec = 22010131053030Z
+Tspec = 31010131053030Z
+
+# RFC 5280 4.1.2.5 notAfter sentinel for no well-defined expiration date
+Tspec = 99991231235959Z
 
 [Generalized.invalid]
 
@@ -36,5 +37,7 @@ Tspec = 21000101240000Z
 Tspec = 21000101990000Z
 Tspec = 21000229000000Z
 
-# Valid date but year out of allowed range
-Tspec = 31010131053030Z
+# Leap seconds (second = 60) are rejected
+Tspec = 20201231235960Z
+Tspec = 21000101000060Z
+Tspec = 22001231235960Z
