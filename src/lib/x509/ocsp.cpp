@@ -444,8 +444,9 @@ Certificate_Status_Code Response::verify_signature(const X509_Certificate& issue
       auto pub_key = issuer.subject_public_key();
 
       PK_Verifier verifier(*pub_key, m_sig_algo);
-
-      const bool valid_signature = verifier.verify_message(ASN1::put_in_sequence(m_tbs_bits), m_signature);
+      verifier.update(ASN1::der_sequence_header(m_tbs_bits.size()));
+      verifier.update(m_tbs_bits);
+      const bool valid_signature = verifier.check_signature(m_signature);
 
       if(valid_signature == false) {
          return Certificate_Status_Code::OCSP_SIGNATURE_ERROR;

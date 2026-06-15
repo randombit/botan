@@ -181,6 +181,8 @@ class DataSource;
 
 namespace ASN1 {
 
+std::vector<uint8_t> der_sequence_header(size_t contents_len);
+
 std::vector<uint8_t> put_in_sequence(const std::vector<uint8_t>& val);
 std::vector<uint8_t> put_in_sequence(const uint8_t bits[], size_t len);
 std::string to_string(const BER_Object& obj);
