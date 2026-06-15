@@ -222,6 +222,25 @@ std::vector<Test::Result> test_bitvector_bitwise_accessors(Botan::RandomNumberGe
                bv[2] ^= !bv[3];
                result.test_is_true("bv[2] is 0 again", !bv[2]);
             }),
+
+      CHECK("CT::Choice bit modifiers",
+            [](auto& result) {
+               Botan::bitvector bv(6);
+
+               bv[0] = Botan::CT::Choice::yes();
+               bv[1] = Botan::CT::Choice::no();
+               bv[2] |= Botan::CT::Choice::yes();
+               bv[3].set();
+               bv[3] &= Botan::CT::Choice::no();
+               bv[4] ^= Botan::CT::Choice::yes();
+
+               result.test_is_true("CT::Choice assignment set", bv[0]);
+               result.test_is_true("CT::Choice assignment cleared", !bv[1]);
+               result.test_is_true("CT::Choice or", bv[2]);
+               result.test_is_true("CT::Choice and", !bv[3]);
+               result.test_is_true("CT::Choice xor", bv[4]);
+               result.test_is_true("CT::Choice untouched", !bv[5]);
+            }),
    };
 }
 
@@ -268,17 +287,21 @@ std::vector<Test::Result> test_bitvector_capacity(Botan::RandomNumberGenerator& 
                bv.push_back(false);
                bv.push_back(true);
                bv.push_back(false);
+               bv.push_back(Botan::CT::Choice::yes());
+               bv.push_back(Botan::CT::Choice::no());
 
                result.test_is_true("not empty", !bv.empty());
-               result.test_sz_eq("some size", bv.size(), size_t(4));
+               result.test_sz_eq("some size", bv.size(), size_t(6));
                result.test_sz_gte("capacity is typically bigger than size", bv.capacity(), size_t(8));
 
                result.test_is_true("bit 0", bv.at(0));
                result.test_is_true("bit 1", !bv.at(1));
                result.test_is_true("bit 2", bv.at(2));
                result.test_is_true("bit 3", !bv.at(3));
+               result.test_is_true("bit 4", bv.at(4));
+               result.test_is_true("bit 5", !bv.at(5));
 
-               result.test_throws("bit 4 is not yet allocated", [&] { bv.at(4); });
+               result.test_throws("bit 6 is not yet allocated", [&] { bv.at(6); });
             }),
 
       CHECK("pop_back() shortens bitvector",

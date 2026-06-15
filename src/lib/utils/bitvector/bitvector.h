@@ -350,6 +350,12 @@ class bitvector_base final {
                return *this;
             }
 
+            constexpr bitref& operator=(CT::Choice bit) noexcept {
+               const auto mask = CT::Mask<BlockT>::from_choice(bit);
+               this->m_block = mask.select(this->m_mask | this->m_block, this->m_block & ~this->m_mask);
+               return *this;
+            }
+
             constexpr bitref& operator=(const bitref& bit) noexcept { return *this = bit.is_set(); }
 
             constexpr bitref& operator=(bitref&& bit) noexcept { return *this = bit.is_set(); }
@@ -361,13 +367,28 @@ class bitvector_base final {
                return *this;
             }
 
+            constexpr bitref& operator&=(CT::Choice other) noexcept {
+               this->m_block &= ~CT::Mask<BlockT>::from_choice(other).if_not_set_return(this->m_mask);
+               return *this;
+            }
+
             constexpr bitref& operator|=(bool other) noexcept {
                this->m_block |= CT::Mask<BlockT>::expand(other).if_set_return(this->m_mask);
                return *this;
             }
 
+            constexpr bitref& operator|=(CT::Choice other) noexcept {
+               this->m_block |= CT::Mask<BlockT>::from_choice(other).if_set_return(this->m_mask);
+               return *this;
+            }
+
             constexpr bitref& operator^=(bool other) noexcept {
                this->m_block ^= CT::Mask<BlockT>::expand(other).if_set_return(this->m_mask);
+               return *this;
+            }
+
+            constexpr bitref& operator^=(CT::Choice other) noexcept {
+               this->m_block ^= CT::Mask<BlockT>::from_choice(other).if_set_return(this->m_mask);
                return *this;
             }
       };
@@ -567,6 +588,12 @@ class bitvector_base final {
       }
 
       void push_back(bool bit) {
+         const auto i = size();
+         resize(i + 1);
+         ref(i) = bit;
+      }
+
+      void push_back(CT::Choice bit) {
          const auto i = size();
          resize(i + 1);
          ref(i) = bit;
@@ -1426,6 +1453,8 @@ class Strong_Adapter<T> : public Container_Strong_Adapter_Base<T> {
       }
 
       auto push_back(bool b) { return this->get().push_back(b); }
+
+      auto push_back(CT::Choice b) { return this->get().push_back(b); }
 
       auto pop_back() { return this->get().pop_back(); }
 

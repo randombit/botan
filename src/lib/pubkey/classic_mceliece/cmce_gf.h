@@ -156,6 +156,8 @@ class BOTAN_TEST_API GF_Mask final {
          return GF_Mask(CT::Mask<uint16_t>::expand(v));
       }
 
+      static GF_Mask expand(CT::Choice v) { return GF_Mask(CT::Mask<uint16_t>::from_choice(v)); }
+
       static GF_Mask expand(Classic_McEliece_GF v) { return expand(v.elem().get()); }
 
       static GF_Mask is_zero(Classic_McEliece_GF v) { return GF_Mask(CT::Mask<uint16_t>::is_zero(v.elem().get())); }
@@ -191,7 +193,7 @@ class BOTAN_TEST_API GF_Mask final {
          return (*this);
       }
 
-      bool as_bool() const { return m_mask.as_bool(); }
+      CT::Choice as_choice() const { return m_mask.as_choice(); }
 
       CT::Mask<uint16_t>& elem_mask() { return m_mask; }
 

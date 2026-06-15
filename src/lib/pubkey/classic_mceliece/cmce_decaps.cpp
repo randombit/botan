@@ -30,7 +30,7 @@ Classic_McEliece_Polynomial Classic_McEliece_Decryptor::compute_goppa_syndrome(
       auto g_alpha = goppa_poly(alphas[i]);
       auto r = (g_alpha * g_alpha).inv();
 
-      auto c_mask = GF_Mask::expand(static_cast<bool>(code_word.at(i)));
+      auto c_mask = GF_Mask::expand(code_word.at(i).as_choice());
 
       for(size_t j = 0; j < 2 * params.t(); ++j) {
          syndrome[j] += c_mask.if_set_return(r);
@@ -109,7 +109,7 @@ std::pair<CT::Mask<uint8_t>, CmceErrorVector> Classic_McEliece_Decryptor::decode
    e.get().reserve(m_key->params().n());
    auto decode_success = CT::Mask<uint8_t>::set();  // Avoid bool to avoid possible compiler optimizations
    for(const auto& image : images) {
-      e.push_back(GF_Mask::is_zero(image).as_bool());
+      e.push_back(GF_Mask::is_zero(image).as_choice());
    }
    decode_success &= CT::Mask<uint8_t>(CT::Mask<size_t>::is_equal(e.hamming_weight(), m_key->params().t()));
 
