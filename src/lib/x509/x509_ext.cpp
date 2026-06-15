@@ -798,7 +798,20 @@ class Policy_Information final : public ASN1_Object {
       OID m_oid;
 };
 
+bool policy_oids_have_duplicate(const std::vector<OID>& oids) {
+   std::set<OID> seen;
+   for(const auto& oid : oids) {
+      if(!seen.insert(oid).second) {
+         return true;
+      }
+   }
+   return false;
+}
+
 }  // namespace
+
+Certificate_Policies::Certificate_Policies(const std::vector<OID>& oids) :
+      m_oids(oids), m_has_duplicate(policy_oids_have_duplicate(m_oids)) {}
 
 /*
 * Encode the extension
@@ -831,6 +844,7 @@ void Certificate_Policies::decode_inner(const std::vector<uint8_t>& in) {
    for(const auto& policy : policies) {
       m_oids.push_back(policy.oid());
    }
+   m_has_duplicate = policy_oids_have_duplicate(m_oids);
 }
 
 void Certificate_Policies::validate(const X509_Certificate& /*subject*/,
@@ -838,8 +852,7 @@ void Certificate_Policies::validate(const X509_Certificate& /*subject*/,
                                     const std::vector<X509_Certificate>& /*cert_path*/,
                                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
                                     size_t pos) const {
-   const std::set<OID> oid_set(m_oids.begin(), m_oids.end());
-   if(oid_set.size() != m_oids.size()) {
+   if(m_has_duplicate) {
       cert_status.at(pos).insert(Certificate_Status_Code::DUPLICATE_CERT_POLICY);
    }
 }

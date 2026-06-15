@@ -302,12 +302,12 @@ class BOTAN_PUBLIC_API(2, 0) Name_Constraints final : public Certificate_Extensi
 class BOTAN_PUBLIC_API(2, 0) Certificate_Policies final : public Certificate_Extension {
    public:
       std::unique_ptr<Certificate_Extension> copy() const override {
-         return std::make_unique<Certificate_Policies>(m_oids);
+         return std::make_unique<Certificate_Policies>(*this);
       }
 
       Certificate_Policies() = default;
 
-      explicit Certificate_Policies(const std::vector<OID>& o) : m_oids(o) {}
+      explicit Certificate_Policies(const std::vector<OID>& oids);
 
       const std::vector<OID>& get_policy_oids() const { return m_oids; }
 
@@ -332,6 +332,7 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Policies final : public Certificate_Ext
       void decode_inner(const std::vector<uint8_t>& in) override;
 
       std::vector<OID> m_oids;
+      bool m_has_duplicate = false;
 };
 
 /**
