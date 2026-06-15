@@ -179,8 +179,11 @@ std::vector<uint8_t> put_in_sequence(const std::vector<uint8_t>& contents) {
 }
 
 std::vector<uint8_t> put_in_sequence(const uint8_t bits[], size_t len) {
-   std::vector<uint8_t> output;
-   DER_Encoder(output).start_sequence().raw_bytes(bits, len).end_cons();
+   std::vector<uint8_t> output = der_sequence_header(len);
+   output.reserve(output.size() + len);
+   if(len > 0) {
+      output.insert(output.end(), bits, bits + len);
+   }
    return output;
 }
 

@@ -130,7 +130,10 @@ bool X509_Object::check_signature(const Public_Key& pub_key) const {
 std::pair<Certificate_Status_Code, std::string> X509_Object::verify_signature(const Public_Key& pub_key) const {
    try {
       PK_Verifier verifier(pub_key, signature_algorithm());
-      const bool valid = verifier.verify_message(tbs_data(), signature());
+      const auto& tbs = signed_body();
+      verifier.update(ASN1::der_sequence_header(tbs.size()));
+      verifier.update(tbs);
+      const bool valid = verifier.check_signature(signature());
 
       if(valid) {
          return std::make_pair(Certificate_Status_Code::VERIFIED, verifier.hash_function());

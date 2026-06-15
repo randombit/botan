@@ -78,6 +78,7 @@ class X509_Certificate_Data final {
       bool m_is_ca_certificate = false;
       bool m_serial_negative = false;
       bool m_subject_alt_name_exists = false;
+      bool m_skip_revocation_check = false;
 };
 
 X509_Certificate::~X509_Certificate() = default;
@@ -278,6 +279,18 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    const auto san_oid = OID::from_string("X509v3.SubjectAlternativeName");
    data->m_subject_alt_name_exists = data->m_v3_extensions.extension_set(san_oid);
 
+   /*
+   * RFC 9608 Section 4:
+   *
+   *   If the noRevAvail certificate extension specified in this document is
+   *   present or the ocsp-nocheck certificate extension [RFC6960] is
+   *   present, then Step (a)(3) is skipped.  Otherwise, revocation status
+   *   determination of the certificate is performed.
+   */
+   data->m_skip_revocation_check =
+      data->m_v3_extensions.extension_set(Cert_Extension::NoRevocationAvailable::static_oid()) ||
+      data->m_v3_extensions.extension_set(Cert_Extension::OCSP_NoCheck::static_oid());
+
    if(const auto* ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Certificate_Policies>()) {
       data->m_cert_policies = ext->get_policy_oids();
    }
@@ -431,6 +444,10 @@ const std::vector<uint8_t>& X509_Certificate::serial_number() const {
 
 bool X509_Certificate::is_serial_negative() const {
    return data().m_serial_negative;
+}
+
+bool X509_Certificate::skip_revocation_check() const {
+   return data().m_skip_revocation_check;
 }
 
 const X509_DN& X509_Certificate::issuer_dn() const {

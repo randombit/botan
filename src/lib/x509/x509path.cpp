@@ -15,7 +15,9 @@
 #include <botan/internal/concat_util.h>
 #include <algorithm>
 #include <chrono>
+#include <iterator>
 #include <set>
+#include <span>
 #include <sstream>
 #include <string>
 #include <unordered_set>
@@ -28,32 +30,6 @@
 #endif
 
 namespace Botan {
-
-namespace {
-
-/*
-* RFC 9608 Section 4:
-*
-*   Section 6.1.3 of [RFC5280] describes basic certificate processing
-*   within the certification path validation procedures.  In particular,
-*   Step (a)(3) says:
-*
-*   |  At the current time, the certificate is not revoked.  This may be
-*   |  determined by obtaining the appropriate CRL (Section 6.3), by
-*   |  status information, or by out-of-band mechanisms.
-*
-*   If the noRevAvail certificate extension specified in this document is
-*   present or the ocsp-nocheck certificate extension [RFC6960] is
-*   present, then Step (a)(3) is skipped.  Otherwise, revocation status
-*   determination of the certificate is performed.
-*/
-bool skip_revocation_check(const X509_Certificate& cert) {
-   const Extensions& exts = cert.v3_extensions();
-   return exts.extension_set(Cert_Extension::NoRevocationAvailable::static_oid()) ||
-          exts.extension_set(Cert_Extension::OCSP_NoCheck::static_oid());
-}
-
-}  // namespace
 
 namespace {
 
@@ -78,7 +54,7 @@ class CertificatePathBuilder final {
    public:
       CertificatePathBuilder(const std::vector<Certificate_Store*>& trusted_certstores,
                              const X509_Certificate& end_entity,
-                             const std::vector<X509_Certificate>& end_entity_extra,
+                             std::span<const X509_Certificate> end_entity_extra,
                              bool require_self_signed = false) :
             m_trusted_certstores(trusted_certstores), m_require_self_signed(require_self_signed) {
          if(std::ranges::any_of(trusted_certstores, [](auto* ptr) { return ptr == nullptr; })) {
@@ -187,11 +163,18 @@ class CertificatePathBuilder final {
          const X509_DN& issuer_dn = cert.issuer_dn();
          const std::vector<uint8_t>& auth_key_id = cert.authority_key_id();
 
-         // Search for trusted issuers
+         // Common case is a single trusted store; steal its buffer and only
+         // move-append if multiple stores return matches.
          std::vector<X509_Certificate> trusted_issuers;
          for(const Certificate_Store* store : m_trusted_certstores) {
             auto new_issuers = store->find_all_certs(issuer_dn, auth_key_id);
-            trusted_issuers.insert(trusted_issuers.end(), new_issuers.begin(), new_issuers.end());
+            if(trusted_issuers.empty()) {
+               trusted_issuers = std::move(new_issuers);
+            } else {
+               trusted_issuers.insert(trusted_issuers.end(),
+                                      std::make_move_iterator(new_issuers.begin()),
+                                      std::make_move_iterator(new_issuers.end()));
+            }
          }
 
          // Search the supplemental certs
@@ -419,18 +402,11 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
       }
 
       const Extensions& extensions = subject.v3_extensions();
-      const auto& extensions_vec = extensions.extensions();
-      if(subject.x509_version() < 3 && !extensions_vec.empty()) {
+      if(subject.x509_version() < 3 && !extensions.get_extension_oids().empty()) {
          status.insert(Certificate_Status_Code::EXT_IN_V1_V2_CERT);
       }
 
-      for(const auto& extension : extensions_vec) {
-         extension.first->validate(subject, issuer, cert_path, cert_status, i);
-      }
-
-      if(extensions_vec.size() != extensions.get_extension_oids().size()) {
-         status.insert(Certificate_Status_Code::DUPLICATE_CERT_EXTENSION);
-      }
+      extensions.validate(subject, issuer, cert_path, cert_status, i);
    }
 
    // path len check
@@ -478,9 +454,10 @@ Certificate_Status_Code verify_ocsp_signing_cert(const X509_Certificate& signing
    //
    //    1. Matches a local configuration of OCSP signing authority
    //       for the certificate in question, or
-   if(restrictions.trusted_ocsp_responders() != nullptr &&
-      restrictions.trusted_ocsp_responders()->contains(signing_cert)) {
-      return Certificate_Status_Code::OK;
+   if(const auto* trusted_responders = restrictions.trusted_ocsp_responders()) {
+      if(trusted_responders->contains(signing_cert)) {
+         return Certificate_Status_Code::OK;
+      }
    }
 
    // RFC 6960 4.2.2.2
@@ -623,7 +600,7 @@ CertificatePathStatusCodes PKIX::check_ocsp(const std::vector<X509_Certificate>&
       const X509_Certificate& subject = cert_path.at(i);
       const X509_Certificate& ca = cert_path.at(i + 1);
 
-      if(skip_revocation_check(subject)) {
+      if(subject.skip_revocation_check()) {
          continue;
       }
 
@@ -654,7 +631,7 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
    for(size_t i = 0; i != cert_path.size() - 1; ++i) {
       std::set<Certificate_Status_Code>& status = cert_status.at(i);
 
-      if(skip_revocation_check(cert_path.at(i))) {
+      if(cert_path.at(i).skip_revocation_check()) {
          continue;
       }
 
@@ -727,7 +704,7 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
    std::vector<std::optional<X509_CRL>> crls(cert_path.size());
 
    for(size_t i = 0; i != cert_path.size(); ++i) {
-      if(skip_revocation_check(cert_path[i])) {
+      if(cert_path[i].skip_revocation_check()) {
          continue;
       }
       for(auto* certstore : certstores) {
@@ -767,7 +744,7 @@ CertificatePathStatusCodes PKIX::check_ocsp_online(const std::vector<X509_Certif
       const auto& subject = cert_path.at(i);
       const auto& issuer = cert_path.at(i + 1);
 
-      if(skip_revocation_check(subject)) {
+      if(subject.skip_revocation_check()) {
          ocsp_response_futures.emplace_back(
             std::async(std::launch::deferred, []() -> std::optional<OCSP::Response> { return std::nullopt; }));
       } else {
@@ -829,7 +806,7 @@ CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certifi
    for(size_t i = 0; i != cert_path.size(); ++i) {
       const auto& cert = cert_path.at(i);
 
-      if(skip_revocation_check(cert)) {
+      if(cert.skip_revocation_check()) {
          future_crls.emplace_back(
             std::async(std::launch::deferred, []() -> std::optional<X509_CRL> { return std::nullopt; }));
          continue;
@@ -1047,10 +1024,7 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
    }
 
    const X509_Certificate& end_entity = end_certs[0];
-   std::vector<X509_Certificate> end_entity_extra;
-   for(size_t i = 1; i < end_certs.size(); ++i) {
-      end_entity_extra.push_back(end_certs[i]);
-   }
+   const auto end_entity_extra = std::span<const X509_Certificate>(end_certs).subspan(1);
 
    const bool require_self_signed = restrictions.require_self_signed_trust_anchors();
 
@@ -1089,7 +1063,7 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
             const size_t to_online = restrictions.ocsp_all_intermediates() ? (cert_path->size() - 1) : 1;
             bool need_online = false;
             for(size_t i = 0; i < to_online; ++i) {
-               if(skip_revocation_check((*cert_path)[i])) {
+               if((*cert_path)[i].skip_revocation_check()) {
                   continue;
                }
                if(i >= ocsp_status.size() || ocsp_status[i].empty()) {
@@ -1128,7 +1102,7 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
          // merge_revocation_status flags NO_REVOCATION_DATA when require_revocation
          // is set; clear it for certs where RFC 9608 Section 4 says to skip the check.
          for(size_t i = 0; i + 1 < cert_path->size() && i < status.size(); ++i) {
-            if(skip_revocation_check((*cert_path)[i])) {
+            if((*cert_path)[i].skip_revocation_check()) {
                status[i].erase(Certificate_Status_Code::NO_REVOCATION_DATA);
             }
          }

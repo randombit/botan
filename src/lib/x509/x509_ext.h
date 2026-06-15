@@ -275,7 +275,7 @@ class BOTAN_PUBLIC_API(2, 0) Name_Constraints final : public Certificate_Extensi
                     const std::optional<X509_Certificate>& issuer,
                     const std::vector<X509_Certificate>& cert_path,
                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                    size_t pos) override;
+                    size_t pos) const override;
 
       const NameConstraints& get_name_constraints() const { return m_name_constraints; }
 
@@ -302,12 +302,12 @@ class BOTAN_PUBLIC_API(2, 0) Name_Constraints final : public Certificate_Extensi
 class BOTAN_PUBLIC_API(2, 0) Certificate_Policies final : public Certificate_Extension {
    public:
       std::unique_ptr<Certificate_Extension> copy() const override {
-         return std::make_unique<Certificate_Policies>(m_oids);
+         return std::make_unique<Certificate_Policies>(*this);
       }
 
       Certificate_Policies() = default;
 
-      explicit Certificate_Policies(const std::vector<OID>& o) : m_oids(o) {}
+      explicit Certificate_Policies(const std::vector<OID>& oids);
 
       const std::vector<OID>& get_policy_oids() const { return m_oids; }
 
@@ -319,7 +319,7 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Policies final : public Certificate_Ext
                     const std::optional<X509_Certificate>& issuer,
                     const std::vector<X509_Certificate>& cert_path,
                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                    size_t pos) override;
+                    size_t pos) const override;
 
    private:
       std::string oid_name() const override { return "X509v3.CertificatePolicies"; }
@@ -332,6 +332,7 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Policies final : public Certificate_Ext
       void decode_inner(const std::vector<uint8_t>& in) override;
 
       std::vector<OID> m_oids;
+      bool m_has_duplicate = false;
 };
 
 /**
@@ -561,7 +562,7 @@ class OCSP_NoCheck final : public Certificate_Extension {
                     const std::optional<X509_Certificate>& issuer,
                     const std::vector<X509_Certificate>& cert_path,
                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                    size_t pos) override;
+                    size_t pos) const override;
 
    private:
       std::string oid_name() const override { return "PKIX.OCSP.NoCheck"; }
@@ -604,7 +605,7 @@ class BOTAN_PUBLIC_API(3, 13) NoRevocationAvailable final : public Certificate_E
                     const std::optional<X509_Certificate>& issuer,
                     const std::vector<X509_Certificate>& cert_path,
                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                    size_t pos) override;
+                    size_t pos) const override;
 
    private:
       std::string oid_name() const override { return "X509v3.NoRevocationAvailable"; }
@@ -834,7 +835,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
                     const std::optional<X509_Certificate>& issuer,
                     const std::vector<X509_Certificate>& cert_path,
                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                    size_t pos) override;
+                    size_t pos) const override;
 
       /// Add a single IP address to this extension (for the specified SAFI, if any)
       template <Version V>
@@ -975,7 +976,7 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
                     const std::optional<X509_Certificate>& issuer,
                     const std::vector<X509_Certificate>& cert_path,
                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                    size_t pos) override;
+                    size_t pos) const override;
 
       /// Add a single asnum to this extension
       void add_asnum(asnum_t asnum) { add_asnum(asnum, asnum); }
@@ -1068,7 +1069,7 @@ class BOTAN_PUBLIC_API(2, 4) Unknown_Extension final : public Certificate_Extens
                     const std::optional<X509_Certificate>& /*issuer*/,
                     const std::vector<X509_Certificate>& /*cert_path*/,
                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                    size_t pos) override {
+                    size_t pos) const override {
          if(m_failed_to_decode) {
             cert_status.at(pos).insert(Certificate_Status_Code::EXTENSION_ENCODING_ERROR);
          } else if(m_critical) {

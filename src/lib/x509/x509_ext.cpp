@@ -165,7 +165,7 @@ void Certificate_Extension::validate(const X509_Certificate& /*unused*/,
                                      const std::optional<X509_Certificate>& /*unused*/,
                                      const std::vector<X509_Certificate>& /*unused*/,
                                      std::vector<std::set<Certificate_Status_Code>>& /*unused*/,
-                                     size_t /*unused*/) {}
+                                     size_t /*unused*/) const {}
 
 /*
 * Add a new cert
@@ -259,6 +259,16 @@ std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> Extensions:
       exts.push_back(std::make_pair(ext.second.obj().copy(), ext.second.is_critical()));
    }
    return exts;
+}
+
+void Extensions::validate(const X509_Certificate& subject,
+                          const std::optional<X509_Certificate>& issuer,
+                          const std::vector<X509_Certificate>& cert_path,
+                          std::vector<std::set<Certificate_Status_Code>>& cert_status,
+                          size_t pos) const {
+   for(const auto& ext : m_extension_info) {
+      ext.second.obj().validate(subject, issuer, cert_path, cert_status, pos);
+   }
 }
 
 std::map<OID, std::pair<std::vector<uint8_t>, bool>> Extensions::extensions_raw() const {
@@ -733,7 +743,7 @@ void Name_Constraints::validate(const X509_Certificate& subject,
                                 const std::optional<X509_Certificate>& /*issuer*/,
                                 const std::vector<X509_Certificate>& cert_path,
                                 std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                                size_t pos) {
+                                size_t pos) const {
    if(!m_name_constraints.permitted().empty() || !m_name_constraints.excluded().empty()) {
       if(!subject.is_CA_cert()) {
          cert_status.at(pos).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
@@ -788,7 +798,20 @@ class Policy_Information final : public ASN1_Object {
       OID m_oid;
 };
 
+bool policy_oids_have_duplicate(const std::vector<OID>& oids) {
+   std::set<OID> seen;
+   for(const auto& oid : oids) {
+      if(!seen.insert(oid).second) {
+         return true;
+      }
+   }
+   return false;
+}
+
 }  // namespace
+
+Certificate_Policies::Certificate_Policies(const std::vector<OID>& oids) :
+      m_oids(oids), m_has_duplicate(policy_oids_have_duplicate(m_oids)) {}
 
 /*
 * Encode the extension
@@ -821,15 +844,15 @@ void Certificate_Policies::decode_inner(const std::vector<uint8_t>& in) {
    for(const auto& policy : policies) {
       m_oids.push_back(policy.oid());
    }
+   m_has_duplicate = policy_oids_have_duplicate(m_oids);
 }
 
 void Certificate_Policies::validate(const X509_Certificate& /*subject*/,
                                     const std::optional<X509_Certificate>& /*issuer*/,
                                     const std::vector<X509_Certificate>& /*cert_path*/,
                                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                                    size_t pos) {
-   const std::set<OID> oid_set(m_oids.begin(), m_oids.end());
-   if(oid_set.size() != m_oids.size()) {
+                                    size_t pos) const {
+   if(m_has_duplicate) {
       cert_status.at(pos).insert(Certificate_Status_Code::DUPLICATE_CERT_POLICY);
    }
 }
@@ -1716,7 +1739,7 @@ void IPAddressBlocks::validate(const X509_Certificate& /* unused */,
                                const std::optional<X509_Certificate>& /* unused */,
                                const std::vector<X509_Certificate>& cert_path,
                                std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                               size_t pos) {
+                               size_t pos) const {
    // maps in the form of (s)afi -> (needs_checking, ranges)
    auto [v4_needs_check, v6_needs_check] = create_validation_map(m_ip_addr_blocks);
 
@@ -1961,7 +1984,7 @@ void ASBlocks::validate(const X509_Certificate& /* unused */,
                         const std::optional<X509_Certificate>& /* unused */,
                         const std::vector<X509_Certificate>& cert_path,
                         std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                        size_t pos) {
+                        size_t pos) const {
    // the extension may not contain asnums or rdis, but one of them is always present
    const bool asnum_present = m_as_identifiers.asnum().has_value();
    const bool rdi_present = m_as_identifiers.rdi().has_value();
@@ -2031,7 +2054,7 @@ void OCSP_NoCheck::validate(const X509_Certificate& subject,
                             const std::optional<X509_Certificate>& /*issuer*/,
                             const std::vector<X509_Certificate>& /*cert_path*/,
                             std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                            size_t pos) {
+                            size_t pos) const {
    /*
    * RFC 6960 is not particularly explicit about when id-pkix-ocsp-nocheck can
    * or cannot be included in a certificate, but reasonably we should require
@@ -2066,7 +2089,7 @@ void NoRevocationAvailable::validate(const X509_Certificate& subject,
                                      const std::optional<X509_Certificate>& /*issuer*/,
                                      const std::vector<X509_Certificate>& /*cert_path*/,
                                      std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                                     size_t pos) {
+                                     size_t pos) const {
    // RFC 9608 Section 2:
    //    This extension MUST NOT be present in CA public key certificates.
    //

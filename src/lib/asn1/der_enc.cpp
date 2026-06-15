@@ -65,6 +65,18 @@ void encode_length(std::vector<uint8_t>& encoded_length, size_t length) {
 
 }  // namespace
 
+namespace ASN1 {
+
+std::vector<uint8_t> der_sequence_header(size_t contents_len) {
+   std::vector<uint8_t> header;
+   header.reserve(2 + sizeof(contents_len));
+   encode_tag(header, ASN1_Type::Sequence, ASN1_Class::Constructed);
+   encode_length(header, contents_len);
+   return header;
+}
+
+}  // namespace ASN1
+
 DER_Encoder::DER_Encoder(secure_vector<uint8_t>& vec) {
    m_append_output = [&vec](const uint8_t b[], size_t l) { vec.insert(vec.end(), b, b + l); };
 }
