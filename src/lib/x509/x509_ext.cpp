@@ -165,7 +165,7 @@ void Certificate_Extension::validate(const X509_Certificate& /*unused*/,
                                      const std::optional<X509_Certificate>& /*unused*/,
                                      const std::vector<X509_Certificate>& /*unused*/,
                                      std::vector<std::set<Certificate_Status_Code>>& /*unused*/,
-                                     size_t /*unused*/) {}
+                                     size_t /*unused*/) const {}
 
 /*
 * Add a new cert
@@ -733,7 +733,7 @@ void Name_Constraints::validate(const X509_Certificate& subject,
                                 const std::optional<X509_Certificate>& /*issuer*/,
                                 const std::vector<X509_Certificate>& cert_path,
                                 std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                                size_t pos) {
+                                size_t pos) const {
    if(!m_name_constraints.permitted().empty() || !m_name_constraints.excluded().empty()) {
       if(!subject.is_CA_cert()) {
          cert_status.at(pos).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
@@ -827,7 +827,7 @@ void Certificate_Policies::validate(const X509_Certificate& /*subject*/,
                                     const std::optional<X509_Certificate>& /*issuer*/,
                                     const std::vector<X509_Certificate>& /*cert_path*/,
                                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                                    size_t pos) {
+                                    size_t pos) const {
    const std::set<OID> oid_set(m_oids.begin(), m_oids.end());
    if(oid_set.size() != m_oids.size()) {
       cert_status.at(pos).insert(Certificate_Status_Code::DUPLICATE_CERT_POLICY);
@@ -1716,7 +1716,7 @@ void IPAddressBlocks::validate(const X509_Certificate& /* unused */,
                                const std::optional<X509_Certificate>& /* unused */,
                                const std::vector<X509_Certificate>& cert_path,
                                std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                               size_t pos) {
+                               size_t pos) const {
    // maps in the form of (s)afi -> (needs_checking, ranges)
    auto [v4_needs_check, v6_needs_check] = create_validation_map(m_ip_addr_blocks);
 
@@ -1961,7 +1961,7 @@ void ASBlocks::validate(const X509_Certificate& /* unused */,
                         const std::optional<X509_Certificate>& /* unused */,
                         const std::vector<X509_Certificate>& cert_path,
                         std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                        size_t pos) {
+                        size_t pos) const {
    // the extension may not contain asnums or rdis, but one of them is always present
    const bool asnum_present = m_as_identifiers.asnum().has_value();
    const bool rdi_present = m_as_identifiers.rdi().has_value();
@@ -2031,7 +2031,7 @@ void OCSP_NoCheck::validate(const X509_Certificate& subject,
                             const std::optional<X509_Certificate>& /*issuer*/,
                             const std::vector<X509_Certificate>& /*cert_path*/,
                             std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                            size_t pos) {
+                            size_t pos) const {
    /*
    * RFC 6960 is not particularly explicit about when id-pkix-ocsp-nocheck can
    * or cannot be included in a certificate, but reasonably we should require
@@ -2066,7 +2066,7 @@ void NoRevocationAvailable::validate(const X509_Certificate& subject,
                                      const std::optional<X509_Certificate>& /*issuer*/,
                                      const std::vector<X509_Certificate>& /*cert_path*/,
                                      std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                                     size_t pos) {
+                                     size_t pos) const {
    // RFC 9608 Section 2:
    //    This extension MUST NOT be present in CA public key certificates.
    //

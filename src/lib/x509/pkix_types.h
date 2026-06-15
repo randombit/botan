@@ -729,7 +729,7 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Extension /* NOLINT(*-special-member-fu
                             const std::optional<X509_Certificate>& issuer,
                             const std::vector<X509_Certificate>& cert_path,
                             std::vector<std::set<Certificate_Status_Code>>& cert_status,
-                            size_t pos);
+                            size_t pos) const;
 
       virtual ~Certificate_Extension() = default;
 
