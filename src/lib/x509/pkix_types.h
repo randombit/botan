@@ -885,6 +885,15 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
       std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> extensions() const;
 
       /**
+      * Invoke the validation callback for each extension.
+      */
+      void validate(const X509_Certificate& subject,
+                    const std::optional<X509_Certificate>& issuer,
+                    const std::vector<X509_Certificate>& cert_path,
+                    std::vector<std::set<Certificate_Status_Code>>& cert_status,
+                    size_t pos) const;
+
+      /**
       * Returns the list of extensions as raw, encoded bytes
       * together with the corresponding criticality flag.
       * Contains all extensions, including any extensions encoded as Unknown_Extension

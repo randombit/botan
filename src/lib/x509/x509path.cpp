@@ -419,18 +419,11 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
       }
 
       const Extensions& extensions = subject.v3_extensions();
-      const auto& extensions_vec = extensions.extensions();
-      if(subject.x509_version() < 3 && !extensions_vec.empty()) {
+      if(subject.x509_version() < 3 && !extensions.get_extension_oids().empty()) {
          status.insert(Certificate_Status_Code::EXT_IN_V1_V2_CERT);
       }
 
-      for(const auto& extension : extensions_vec) {
-         extension.first->validate(subject, issuer, cert_path, cert_status, i);
-      }
-
-      if(extensions_vec.size() != extensions.get_extension_oids().size()) {
-         status.insert(Certificate_Status_Code::DUPLICATE_CERT_EXTENSION);
-      }
+      extensions.validate(subject, issuer, cert_path, cert_status, i);
    }
 
    // path len check

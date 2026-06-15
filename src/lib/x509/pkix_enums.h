@@ -84,6 +84,7 @@ enum class Certificate_Status_Code : uint16_t {
 
    // Errors in extensions
    UNKNOWN_CRITICAL_EXTENSION = 4009,
+   // TODO(Botan4) remove this code, this is now rejected at parse time
    DUPLICATE_CERT_EXTENSION = 4010,
    IPADDR_BLOCKS_ERROR = 4011,
    AS_BLOCKS_ERROR = 4012,

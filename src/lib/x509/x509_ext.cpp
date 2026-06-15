@@ -261,6 +261,16 @@ std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> Extensions:
    return exts;
 }
 
+void Extensions::validate(const X509_Certificate& subject,
+                          const std::optional<X509_Certificate>& issuer,
+                          const std::vector<X509_Certificate>& cert_path,
+                          std::vector<std::set<Certificate_Status_Code>>& cert_status,
+                          size_t pos) const {
+   for(const auto& ext : m_extension_info) {
+      ext.second.obj().validate(subject, issuer, cert_path, cert_status, pos);
+   }
+}
+
 std::map<OID, std::pair<std::vector<uint8_t>, bool>> Extensions::extensions_raw() const {
    std::map<OID, std::pair<std::vector<uint8_t>, bool>> out;
    for(auto&& ext : m_extension_info) {
