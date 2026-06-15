@@ -48,7 +48,7 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       * well as end entity (if OCSP enabled in path validation request)
       * @param max_ocsp_age maximum age of OCSP responses w/o next_update.
       *        If zero, there is no maximum age
-      * @param trusted_ocsp_responders certificate store containing certificates
+      * @param trusted_ocsp_responders optional certificate store containing certificates
       *        of trusted OCSP responders (additionally to the CA's responders)
       * @param ignore_trusted_root_time_range if true, validity checks on the
       *        time range of the trusted root certificate only produce warnings
@@ -61,7 +61,7 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
          size_t minimum_key_strength = 110,
          bool ocsp_all_intermediates = false,
          std::chrono::seconds max_ocsp_age = std::chrono::hours(24 * 7),
-         std::unique_ptr<Certificate_Store> trusted_ocsp_responders = std::make_unique<Certificate_Store_In_Memory>(),
+         std::unique_ptr<Certificate_Store> trusted_ocsp_responders = nullptr,
          bool ignore_trusted_root_time_range = false,
          bool require_self_signed_trust_anchors = true);
 
@@ -77,7 +77,7 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       *        rejected.
       * @param max_ocsp_age maximum age of OCSP responses w/o next_update.
       *        If zero, there is no maximum age
-      * @param trusted_ocsp_responders certificate store containing certificates
+      * @param trusted_ocsp_responders optional certificate store containing certificates
       *        of trusted OCSP responders (additionally to the CA's responders)
       * @param ignore_trusted_root_time_range if true, validity checks on the
       *        time range of the trusted root certificate only produce warnings
@@ -85,15 +85,14 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       *        are allowed as trust anchors. Trust anchors based on intermediate
       *        and leaf certificates are forbidden in this case.
       */
-      Path_Validation_Restrictions(
-         bool require_rev,
-         size_t minimum_key_strength,
-         bool ocsp_all_intermediates,
-         const std::set<std::string>& trusted_hashes,
-         std::chrono::seconds max_ocsp_age = std::chrono::hours(24 * 7),
-         std::unique_ptr<Certificate_Store> trusted_ocsp_responders = std::make_unique<Certificate_Store_In_Memory>(),
-         bool ignore_trusted_root_time_range = false,
-         bool require_self_signed_trust_anchors = true) :
+      Path_Validation_Restrictions(bool require_rev,
+                                   size_t minimum_key_strength,
+                                   bool ocsp_all_intermediates,
+                                   const std::set<std::string>& trusted_hashes,
+                                   std::chrono::seconds max_ocsp_age = std::chrono::hours(24 * 7),
+                                   std::unique_ptr<Certificate_Store> trusted_ocsp_responders = nullptr,
+                                   bool ignore_trusted_root_time_range = false,
+                                   bool require_self_signed_trust_anchors = true) :
             m_require_revocation_information(require_rev),
             m_ocsp_all_intermediates(ocsp_all_intermediates),
             m_trusted_hashes(trusted_hashes),

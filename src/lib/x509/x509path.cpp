@@ -471,9 +471,10 @@ Certificate_Status_Code verify_ocsp_signing_cert(const X509_Certificate& signing
    //
    //    1. Matches a local configuration of OCSP signing authority
    //       for the certificate in question, or
-   if(restrictions.trusted_ocsp_responders() != nullptr &&
-      restrictions.trusted_ocsp_responders()->contains(signing_cert)) {
-      return Certificate_Status_Code::OK;
+   if(const auto* trusted_responders = restrictions.trusted_ocsp_responders()) {
+      if(trusted_responders->contains(signing_cert)) {
+         return Certificate_Status_Code::OK;
+      }
    }
 
    // RFC 6960 4.2.2.2
