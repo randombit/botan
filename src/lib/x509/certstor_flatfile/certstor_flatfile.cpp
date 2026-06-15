@@ -86,11 +86,12 @@ bool Flatfile_Certificate_Store::contains(const X509_Certificate& cert) const {
 
 std::vector<X509_Certificate> Flatfile_Certificate_Store::find_all_certs(const X509_DN& subject_dn,
                                                                          const std::vector<uint8_t>& key_id) const {
-   if(!m_dn_to_cert.contains(subject_dn)) {
+   const auto certs_for_dn = m_dn_to_cert.find(subject_dn);
+   if(certs_for_dn == m_dn_to_cert.end()) {
       return {};
    }
 
-   const auto& certs = m_dn_to_cert.at(subject_dn);
+   const auto& certs = certs_for_dn->second;
 
    std::vector<X509_Certificate> found_certs;
    for(const auto& cert : certs) {
@@ -138,11 +139,12 @@ std::optional<X509_Certificate> Flatfile_Certificate_Store::find_cert_by_raw_sub
 
 std::optional<X509_Certificate> Flatfile_Certificate_Store::find_cert_by_issuer_dn_and_serial_number(
    const X509_DN& issuer_dn, std::span<const uint8_t> serial_number) const {
-   if(!m_issuer_dn_to_cert.contains(issuer_dn)) {
+   const auto certs_for_issuer = m_issuer_dn_to_cert.find(issuer_dn);
+   if(certs_for_issuer == m_issuer_dn_to_cert.end()) {
       return std::nullopt;
    }
 
-   const auto& certs = m_issuer_dn_to_cert.at(issuer_dn);
+   const auto& certs = certs_for_issuer->second;
 
    for(const auto& cert : certs) {
       if(std::ranges::equal(cert.serial_number(), serial_number)) {
