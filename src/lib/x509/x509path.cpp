@@ -31,32 +31,6 @@ namespace Botan {
 
 namespace {
 
-/*
-* RFC 9608 Section 4:
-*
-*   Section 6.1.3 of [RFC5280] describes basic certificate processing
-*   within the certification path validation procedures.  In particular,
-*   Step (a)(3) says:
-*
-*   |  At the current time, the certificate is not revoked.  This may be
-*   |  determined by obtaining the appropriate CRL (Section 6.3), by
-*   |  status information, or by out-of-band mechanisms.
-*
-*   If the noRevAvail certificate extension specified in this document is
-*   present or the ocsp-nocheck certificate extension [RFC6960] is
-*   present, then Step (a)(3) is skipped.  Otherwise, revocation status
-*   determination of the certificate is performed.
-*/
-bool skip_revocation_check(const X509_Certificate& cert) {
-   const Extensions& exts = cert.v3_extensions();
-   return exts.extension_set(Cert_Extension::NoRevocationAvailable::static_oid()) ||
-          exts.extension_set(Cert_Extension::OCSP_NoCheck::static_oid());
-}
-
-}  // namespace
-
-namespace {
-
 /**
  * Lazy DFS iterator that yields certificate paths one at a time.
  *
@@ -617,7 +591,7 @@ CertificatePathStatusCodes PKIX::check_ocsp(const std::vector<X509_Certificate>&
       const X509_Certificate& subject = cert_path.at(i);
       const X509_Certificate& ca = cert_path.at(i + 1);
 
-      if(skip_revocation_check(subject)) {
+      if(subject.skip_revocation_check()) {
          continue;
       }
 
@@ -648,7 +622,7 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
    for(size_t i = 0; i != cert_path.size() - 1; ++i) {
       std::set<Certificate_Status_Code>& status = cert_status.at(i);
 
-      if(skip_revocation_check(cert_path.at(i))) {
+      if(cert_path.at(i).skip_revocation_check()) {
          continue;
       }
 
@@ -721,7 +695,7 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
    std::vector<std::optional<X509_CRL>> crls(cert_path.size());
 
    for(size_t i = 0; i != cert_path.size(); ++i) {
-      if(skip_revocation_check(cert_path[i])) {
+      if(cert_path[i].skip_revocation_check()) {
          continue;
       }
       for(auto* certstore : certstores) {
@@ -761,7 +735,7 @@ CertificatePathStatusCodes PKIX::check_ocsp_online(const std::vector<X509_Certif
       const auto& subject = cert_path.at(i);
       const auto& issuer = cert_path.at(i + 1);
 
-      if(skip_revocation_check(subject)) {
+      if(subject.skip_revocation_check()) {
          ocsp_response_futures.emplace_back(
             std::async(std::launch::deferred, []() -> std::optional<OCSP::Response> { return std::nullopt; }));
       } else {
@@ -823,7 +797,7 @@ CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certifi
    for(size_t i = 0; i != cert_path.size(); ++i) {
       const auto& cert = cert_path.at(i);
 
-      if(skip_revocation_check(cert)) {
+      if(cert.skip_revocation_check()) {
          future_crls.emplace_back(
             std::async(std::launch::deferred, []() -> std::optional<X509_CRL> { return std::nullopt; }));
          continue;
@@ -1083,7 +1057,7 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
             const size_t to_online = restrictions.ocsp_all_intermediates() ? (cert_path->size() - 1) : 1;
             bool need_online = false;
             for(size_t i = 0; i < to_online; ++i) {
-               if(skip_revocation_check((*cert_path)[i])) {
+               if((*cert_path)[i].skip_revocation_check()) {
                   continue;
                }
                if(i >= ocsp_status.size() || ocsp_status[i].empty()) {
@@ -1122,7 +1096,7 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
          // merge_revocation_status flags NO_REVOCATION_DATA when require_revocation
          // is set; clear it for certs where RFC 9608 Section 4 says to skip the check.
          for(size_t i = 0; i + 1 < cert_path->size() && i < status.size(); ++i) {
-            if(skip_revocation_check((*cert_path)[i])) {
+            if((*cert_path)[i].skip_revocation_check()) {
                status[i].erase(Certificate_Status_Code::NO_REVOCATION_DATA);
             }
          }

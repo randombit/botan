@@ -197,6 +197,13 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
       bool is_serial_negative() const;
 
       /**
+      * Return true if revocation status checking of this certificate should be
+      * skipped, as indicated by the presence of either the noRevAvail extension
+      * (RFC 9608) or the ocsp-nocheck extension (RFC 6960).
+      */
+      bool skip_revocation_check() const;
+
+      /**
       * Get the DER encoded AuthorityKeyIdentifier of this certificate.
       * @return DER encoded AuthorityKeyIdentifier
       */
