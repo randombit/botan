@@ -41,7 +41,7 @@ BOTAN_FUNC_ISA("rdseed,sse2") bool read_rdseed(secure_vector<uint32_t>& seed) {
       int cf = 0;      // NOLINT(*-const-correctness) clang-tidy doesn't understand inline asm
 
 #if defined(BOTAN_USE_GCC_INLINE_ASM)
-      asm("rdseed %0; adcl $0,%1" : "=r"(r), "=r"(cf) : "0"(r), "1"(cf) : "cc");  // NOLINT(*-no-assembler)
+      asm volatile("rdseed %0; adcl $0,%1" : "=r"(r), "=r"(cf) : "0"(r), "1"(cf) : "cc");  // NOLINT(*-no-assembler)
 #else
       cf = _rdseed32_step(&r);
 #endif
