@@ -15,7 +15,9 @@
 #include <botan/internal/concat_util.h>
 #include <algorithm>
 #include <chrono>
+#include <iterator>
 #include <set>
+#include <span>
 #include <sstream>
 #include <string>
 #include <unordered_set>
@@ -52,7 +54,7 @@ class CertificatePathBuilder final {
    public:
       CertificatePathBuilder(const std::vector<Certificate_Store*>& trusted_certstores,
                              const X509_Certificate& end_entity,
-                             const std::vector<X509_Certificate>& end_entity_extra,
+                             std::span<const X509_Certificate> end_entity_extra,
                              bool require_self_signed = false) :
             m_trusted_certstores(trusted_certstores), m_require_self_signed(require_self_signed) {
          if(std::ranges::any_of(trusted_certstores, [](auto* ptr) { return ptr == nullptr; })) {
@@ -161,11 +163,18 @@ class CertificatePathBuilder final {
          const X509_DN& issuer_dn = cert.issuer_dn();
          const std::vector<uint8_t>& auth_key_id = cert.authority_key_id();
 
-         // Search for trusted issuers
+         // Common case is a single trusted store; steal its buffer and only
+         // move-append if multiple stores return matches.
          std::vector<X509_Certificate> trusted_issuers;
          for(const Certificate_Store* store : m_trusted_certstores) {
             auto new_issuers = store->find_all_certs(issuer_dn, auth_key_id);
-            trusted_issuers.insert(trusted_issuers.end(), new_issuers.begin(), new_issuers.end());
+            if(trusted_issuers.empty()) {
+               trusted_issuers = std::move(new_issuers);
+            } else {
+               trusted_issuers.insert(trusted_issuers.end(),
+                                      std::make_move_iterator(new_issuers.begin()),
+                                      std::make_move_iterator(new_issuers.end()));
+            }
          }
 
          // Search the supplemental certs
@@ -1015,10 +1024,7 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
    }
 
    const X509_Certificate& end_entity = end_certs[0];
-   std::vector<X509_Certificate> end_entity_extra;
-   for(size_t i = 1; i < end_certs.size(); ++i) {
-      end_entity_extra.push_back(end_certs[i]);
-   }
+   const auto end_entity_extra = std::span<const X509_Certificate>(end_certs).subspan(1);
 
    const bool require_self_signed = restrictions.require_self_signed_trust_anchors();
 
