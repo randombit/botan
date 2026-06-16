@@ -140,6 +140,7 @@ HMAC::HMAC(std::unique_ptr<HashFunction> hash) :
       m_hash(std::move(hash)),
       m_hash_output_length(m_hash->output_length()),
       m_hash_block_size(m_hash->hash_block_size()) {
+   BOTAN_ARG_CHECK(m_hash_output_length >= 8, "HMAC is not compatible with this hash function");
    BOTAN_ARG_CHECK(m_hash_block_size >= m_hash_output_length, "HMAC is not compatible with this hash function");
 }
 
