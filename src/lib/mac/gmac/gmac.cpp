@@ -65,6 +65,10 @@ void GMAC::key_schedule(std::span<const uint8_t> key) {
 }
 
 void GMAC::start_msg(std::span<const uint8_t> nonce) {
+   if(nonce.empty()) {
+      throw Invalid_IV_Length(name(), nonce.size());
+   }
+
    std::array<uint8_t, GCM_BS> y0 = {0};
 
    if(nonce.size() == 12) {
