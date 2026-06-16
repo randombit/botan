@@ -125,6 +125,11 @@ void SipHash::key_schedule(std::span<const uint8_t> key) {
    m_V[1] = m_K[1] ^ 0x646F72616E646F6D;
    m_V[2] = m_K[0] ^ 0x6C7967656E657261;
    m_V[3] = m_K[1] ^ 0x7465646279746573;
+
+   // Reset message state:
+   m_mbuf = 0;
+   m_mbuf_pos = 0;
+   m_words = 0;
 }
 
 void SipHash::clear() {
