@@ -61,6 +61,8 @@ bool ANSI_X919_MAC::has_keying_material() const {
 */
 void ANSI_X919_MAC::key_schedule(std::span<const uint8_t> key) {
    m_state.resize(8);
+   zeroise(m_state);
+   m_position = 0;
 
    m_des1->set_key(key.first(8));
 
