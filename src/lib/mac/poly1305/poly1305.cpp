@@ -10,6 +10,7 @@
 
 #include <botan/internal/poly1305.h>
 
+#include <botan/exceptn.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/donna128.h>
@@ -337,6 +338,18 @@ void Poly1305::clear() {
 bool Poly1305::has_keying_material() const {
    // Minimum size: pad(2) + accum(3) + r(3) + r^2(3) = 11
    return m_poly.size() >= 11;
+}
+
+void Poly1305::start_msg(std::span<const uint8_t> nonce) {
+   if(!nonce.empty()) {
+      throw Invalid_IV_Length(name(), nonce.size());
+   }
+   assert_key_material_set();
+
+   m_buffer.clear();
+   m_poly[H_BASE + 0] = 0;
+   m_poly[H_BASE + 1] = 0;
+   m_poly[H_BASE + 2] = 0;
 }
 
 void Poly1305::key_schedule(std::span<const uint8_t> key) {

@@ -7,6 +7,7 @@
 
 #include <botan/internal/x919_mac.h>
 
+#include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/buffer_slicer.h>
 
@@ -54,6 +55,16 @@ void ANSI_X919_MAC::final_result(std::span<uint8_t> mac) {
 
 bool ANSI_X919_MAC::has_keying_material() const {
    return m_des1->has_keying_material() && m_des2->has_keying_material();
+}
+
+void ANSI_X919_MAC::start_msg(std::span<const uint8_t> nonce) {
+   if(!nonce.empty()) {
+      throw Invalid_IV_Length(name(), nonce.size());
+   }
+   assert_key_material_set();
+
+   zeroise(m_state);
+   m_position = 0;
 }
 
 /*

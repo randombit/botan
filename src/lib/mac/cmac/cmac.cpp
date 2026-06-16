@@ -65,6 +65,17 @@ void CMAC::final_result(std::span<uint8_t> mac) {
    m_position = 0;
 }
 
+void CMAC::start_msg(std::span<const uint8_t> nonce) {
+   if(!nonce.empty()) {
+      throw Invalid_IV_Length(name(), nonce.size());
+   }
+   assert_key_material_set();
+
+   zeroise(m_state);
+   zeroise(m_buffer);
+   m_position = 0;
+}
+
 bool CMAC::has_keying_material() const {
    return m_cipher->has_keying_material();
 }

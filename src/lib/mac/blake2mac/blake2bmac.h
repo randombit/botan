@@ -36,6 +36,8 @@ class BLAKE2bMAC final : public MessageAuthenticationCode {
    private:
       void key_schedule(std::span<const uint8_t> key) override { m_blake.set_key(key); }
 
+      void start_msg(std::span<const uint8_t> nonce) override;
+
       void add_data(std::span<const uint8_t> input) override {
          assert_key_material_set();
          m_blake.update(input);

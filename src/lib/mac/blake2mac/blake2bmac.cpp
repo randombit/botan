@@ -8,7 +8,17 @@
 
 #include <botan/internal/blake2bmac.h>
 
+#include <botan/exceptn.h>
+
 namespace Botan {
+
+void BLAKE2bMAC::start_msg(std::span<const uint8_t> nonce) {
+   if(!nonce.empty()) {
+      throw Invalid_IV_Length(name(), nonce.size());
+   }
+   assert_key_material_set();
+   m_blake.state_init();
+}
 
 /*
 * Clear memory of sensitive data

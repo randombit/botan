@@ -71,6 +71,10 @@ void GMAC::start_msg(std::span<const uint8_t> nonce) {
 
    std::array<uint8_t, GCM_BS> y0 = {0};
 
+   // Clear any AD accumulated by a prior start() that was never finalized
+   m_ghash->reset_state();
+   m_ghash->reset_associated_data();
+
    if(nonce.size() == 12) {
       copy_mem(y0.data(), nonce.data(), nonce.size());
       y0[GCM_BS - 1] = 1;
