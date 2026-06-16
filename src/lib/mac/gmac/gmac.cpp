@@ -17,7 +17,11 @@
 namespace Botan {
 
 GMAC::GMAC(std::unique_ptr<BlockCipher> cipher) :
-      m_cipher(std::move(cipher)), m_ghash(std::make_unique<GHASH>()), m_H(GCM_BS), m_initialized(false) {}
+      m_cipher(std::move(cipher)), m_ghash(std::make_unique<GHASH>()), m_H(GCM_BS), m_initialized(false) {
+   if(m_cipher->block_size() != GCM_BS) {
+      throw Invalid_Argument(fmt("Invalid block cipher {} for GMAC", m_cipher->name()));
+   }
+}
 
 void GMAC::clear() {
    m_cipher->clear();
