@@ -131,11 +131,29 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 void convert_26_to_44(uint64_t& r0,
    constexpr uint64_t M42 = 0x3FFFFFFFFFF;
 
    // Expand to 64 bits
-   const uint64_t i0 = in[0];
-   const uint64_t i1 = in[1];
-   const uint64_t i2 = in[2];
-   const uint64_t i3 = in[3];
-   const uint64_t i4 = in[4];
+   uint64_t i0 = in[0];
+   uint64_t i1 = in[1];
+   uint64_t i2 = in[2];
+   uint64_t i3 = in[3];
+   uint64_t i4 = in[4];
+
+   // i4 may hold a bit at position 26 (a 2^130 term); fully carry before the
+   // bit-packing below, which requires each limb to be within 26 bits.
+   uint64_t c = i4 >> 26;
+   i4 &= MASK26;
+   i0 += c * 5;
+   c = i0 >> 26;
+   i0 &= MASK26;
+   i1 += c;
+   c = i1 >> 26;
+   i1 &= MASK26;
+   i2 += c;
+   c = i2 >> 26;
+   i2 &= MASK26;
+   i3 += c;
+   c = i3 >> 26;
+   i3 &= MASK26;
+   i4 += c;
 
    r0 = (i0 | (i1 << 26)) & M44;
    r1 = ((i1 >> 18) | (i2 << 8) | (i3 << 34)) & M44;
@@ -144,6 +162,22 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 void convert_26_to_44(uint64_t& r0,
 
 // Convert radix-2^44 limbs to radix-2^26
 BOTAN_FORCE_INLINE std::array<uint32_t, 5> convert_44_to_26(uint64_t r0, uint64_t r1, uint64_t r2) {
+   constexpr uint64_t M44 = 0xFFFFFFFFFFF;
+   constexpr uint64_t M42 = 0x3FFFFFFFFFF;
+
+   // The radix-2^44 scalar reduction leaves r1 in a lazy form that may carry a
+   // bit at position 44; fully carry before the bit-packing below, which
+   // requires each limb to be within its nominal width.
+   uint64_t c = r1 >> 44;
+   r1 &= M44;
+   r2 += c;
+   c = r2 >> 42;
+   r2 &= M42;
+   r0 += c * 5;
+   c = r0 >> 44;
+   r0 &= M44;
+   r1 += c;
+
    std::array<uint32_t, 5> out{};
    out[0] = static_cast<uint32_t>(r0) & MASK26;                       // bits 0-25
    out[1] = static_cast<uint32_t>((r0 >> 26) | (r1 << 18)) & MASK26;  // bits 26-51
