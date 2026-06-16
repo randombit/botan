@@ -50,6 +50,11 @@ void SipRounds(uint64_t M, secure_vector<uint64_t>& V, size_t r) {
 
 }  // namespace
 
+SipHash::SipHash(size_t c, size_t d) : m_C(c), m_D(d) {
+   BOTAN_ARG_CHECK(m_C > 0 && m_C <= 64, "SipHash C parameter out of range");
+   BOTAN_ARG_CHECK(m_D > 0 && m_D <= 64, "SipHash D parameter out of range");
+}
+
 void SipHash::add_data(std::span<const uint8_t> input) {
    assert_key_material_set();
 
