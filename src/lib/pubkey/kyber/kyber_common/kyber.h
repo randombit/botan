@@ -141,7 +141,7 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key {
       friend class Kyber_KEM_Encryptor;
       friend class Kyber_KEM_Decryptor;
 
-      std::shared_ptr<Kyber_PublicKeyInternal> m_public;  // NOLINT(*non-private-member-variable*)
+      std::shared_ptr<const Kyber_PublicKeyInternal> m_public;  // NOLINT(*non-private-member-variable*)
 };
 
 BOTAN_DIAGNOSTIC_PUSH
@@ -209,7 +209,7 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
    private:
       friend class Kyber_KEM_Decryptor;
 
-      std::shared_ptr<Kyber_PrivateKeyInternal> m_private;
+      std::shared_ptr<const Kyber_PrivateKeyInternal> m_private;
 };
 
 BOTAN_DIAGNOSTIC_POP

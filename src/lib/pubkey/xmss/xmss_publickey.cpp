@@ -85,8 +85,6 @@ class XMSS_PublicKey_Internal final {
 
       const secure_vector<uint8_t>& public_seed() const { return m_public_seed; }
 
-      void set_root(secure_vector<uint8_t> root) { m_root = std::move(root); }
-
       std::vector<uint8_t> raw_public_key_bits() const {
          return concat<std::vector<uint8_t>>(
             store_be(static_cast<uint32_t>(m_xmss_params.oid())), m_root, m_public_seed);
@@ -148,10 +146,6 @@ const secure_vector<uint8_t>& XMSS_PublicKey::root() const {
 
 const XMSS_Parameters& XMSS_PublicKey::xmss_parameters() const {
    return m_public_key->xmss_parameters();
-}
-
-void XMSS_PublicKey::set_root(secure_vector<uint8_t> root) {
-   m_public_key->set_root(std::move(root));
 }
 
 size_t XMSS_PublicKey::estimated_strength() const {

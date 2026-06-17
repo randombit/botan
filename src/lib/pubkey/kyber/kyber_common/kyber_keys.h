@@ -87,8 +87,6 @@ class Kyber_PrivateKeyInternal final {
 
       KyberMessage indcpa_decrypt(StrongSpan<const KyberCompressedCiphertext> ct) const;
 
-      KyberPolyVecNTT& s() { return m_s; }
-
       const KyberPolyVecNTT& s() const { return m_s; }
 
       const KyberPrivateKeySeed& seed() const { return m_seed; }

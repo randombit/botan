@@ -76,7 +76,7 @@ secure_vector<uint8_t> Expanded_Keypair_Codec::encode_keypair(KyberInternalKeypa
    BOTAN_ASSERT_NONNULL(keypair.second);
    const auto& mode = keypair.first->mode();
    auto scope = CT::scoped_poison(*keypair.second);
-   auto result = concat(Kyber_Algos::encode_polynomial_vector(keypair.second->s().reduce(), mode),
+   auto result = concat(Kyber_Algos::encode_polynomial_vector(keypair.second->s(), mode),
                         keypair.first->public_key_bits_raw(),
                         keypair.first->H_public_key_bits_raw(),
                         keypair.second->z());

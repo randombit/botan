@@ -341,6 +341,11 @@ KyberInternalKeypair expand_keypair(KyberPrivateKeySeed seed, KyberConstants mod
    t += e;
    t.reduce();
 
+   // Bring s into canonical [0,Q) form (as ByteEncode_12 requires), matching
+   // the representation produced when decoding a private key. This lets the
+   // secret key be serialized directly, without reducing a copy at encode time.
+   s.reduce();
+
    // End Algorithm 13 ---------------------------
 
    CT::unpoison_all(d, t, s);

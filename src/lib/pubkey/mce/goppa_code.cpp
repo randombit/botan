@@ -115,7 +115,7 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m& syndrome_polyn,
 void mceliece_decrypt(secure_vector<uint8_t>& plaintext_out,
                       secure_vector<uint8_t>& error_mask_out,
                       const secure_vector<uint8_t>& ciphertext,
-                      const McEliece_PrivateKey& key) {
+                      const McEliece_PrivateKeyInternal& key) {
    mceliece_decrypt(plaintext_out, error_mask_out, ciphertext.data(), ciphertext.size(), key);
 }
 
@@ -123,11 +123,11 @@ void mceliece_decrypt(secure_vector<uint8_t>& plaintext,
                       secure_vector<uint8_t>& error_mask,
                       const uint8_t ciphertext[],
                       size_t ciphertext_len,
-                      const McEliece_PrivateKey& key) {
+                      const McEliece_PrivateKeyInternal& key) {
    secure_vector<gf2m> error_pos;
    plaintext = mceliece_decrypt(error_pos, ciphertext, ciphertext_len, key);
 
-   const size_t code_length = key.get_code_length();
+   const size_t code_length = key.code_length();
    secure_vector<uint8_t> result((code_length + 7) / 8);
    for(auto&& pos : error_pos) {
       if(pos > code_length) {
@@ -146,26 +146,26 @@ void mceliece_decrypt(secure_vector<uint8_t>& plaintext,
 secure_vector<uint8_t> mceliece_decrypt(secure_vector<gf2m>& error_pos,
                                         const uint8_t* ciphertext,
                                         size_t ciphertext_len,
-                                        const McEliece_PrivateKey& key) {
-   const size_t dimension = key.get_dimension();
-   const size_t codimension = key.get_codimension();
-   const uint32_t t = key.get_goppa_polyn().get_degree();
-   polyn_gf2m syndrome_polyn(key.get_goppa_polyn().get_sp_field());  // init as zero polyn
+                                        const McEliece_PrivateKeyInternal& key) {
+   const size_t dimension = key.dimension();
+   const size_t codimension = key.codimension();
+   const uint32_t t = key.goppa_polyn().get_degree();
+   polyn_gf2m syndrome_polyn(key.goppa_polyn().get_sp_field());  // init as zero polyn
    const unsigned unused_pt_bits = dimension % 8;
    const uint8_t unused_pt_bits_mask = (1 << unused_pt_bits) - 1;
 
-   if(ciphertext_len != (key.get_code_length() + 7) / 8) {
+   if(ciphertext_len != (key.code_length() + 7) / 8) {
       throw Invalid_Argument("wrong size of McEliece ciphertext");
    }
-   const size_t cleartext_len = (key.get_message_word_bit_length() + 7) / 8;
+   const size_t cleartext_len = (key.message_word_bit_length() + 7) / 8;
 
    if(cleartext_len != bit_size_to_byte_size(dimension)) {
       throw Invalid_Argument("mce-decryption: wrong length of cleartext buffer");
    }
 
    secure_vector<uint32_t> syndrome_vec(bit_size_to_32bit_size(codimension));
-   matrix_arr_mul(key.get_H_coeffs(),
-                  key.get_code_length(),
+   matrix_arr_mul(key.H_coeffs(),
+                  key.code_length(),
                   bit_size_to_32bit_size(codimension),
                   ciphertext,
                   syndrome_vec.data(),
@@ -177,11 +177,11 @@ secure_vector<uint8_t> mceliece_decrypt(secure_vector<gf2m>& error_pos,
       syndrome_byte_vec[i] = static_cast<uint8_t>(syndrome_vec[i / 4] >> (8 * (i % 4)));
    }
 
-   syndrome_polyn = polyn_gf2m(
-      t - 1, syndrome_byte_vec.data(), bit_size_to_byte_size(codimension), key.get_goppa_polyn().get_sp_field());
+   syndrome_polyn =
+      polyn_gf2m(t - 1, syndrome_byte_vec.data(), bit_size_to_byte_size(codimension), key.goppa_polyn().get_sp_field());
 
    syndrome_polyn.get_degree();
-   error_pos = goppa_decode(syndrome_polyn, key.get_goppa_polyn(), key.get_sqrtmod(), key.get_Linv());
+   error_pos = goppa_decode(syndrome_polyn, key.goppa_polyn(), key.sqrtmod(), key.Linv());
 
    const size_t nb_err = error_pos.size();
 

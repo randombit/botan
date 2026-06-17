@@ -8,8 +8,13 @@
 #define BOTAN_X25519_H_
 
 #include <botan/pk_keys.h>
+#include <memory>
+#include <vector>
 
 namespace Botan {
+
+class X25519_PublicKey_Data;
+class X25519_PrivateKey_Data;
 
 class BOTAN_PUBLIC_API(2, 0) X25519_PublicKey : public virtual Public_Key {
    public:
@@ -50,7 +55,7 @@ class BOTAN_PUBLIC_API(2, 0) X25519_PublicKey : public virtual Public_Key {
 
    protected:
       X25519_PublicKey() = default;
-      std::vector<uint8_t> m_public;  // NOLINT(*non-private-member-variable*)
+      std::shared_ptr<const X25519_PublicKey_Data> m_public;  // NOLINT(*non-private-member-variable*)
 };
 
 BOTAN_DIAGNOSTIC_PUSH
@@ -83,9 +88,9 @@ class BOTAN_PUBLIC_API(2, 0) X25519_PrivateKey final : public X25519_PublicKey,
 
       secure_vector<uint8_t> agree(const uint8_t w[], size_t w_len) const;
 
-      secure_vector<uint8_t> raw_private_key_bits() const override { return m_private; }
+      secure_vector<uint8_t> raw_private_key_bits() const override;
 
-      BOTAN_DEPRECATED("Use raw_private_key_bits") const secure_vector<uint8_t>& get_x() const { return m_private; }
+      BOTAN_DEPRECATED("Use raw_private_key_bits") const secure_vector<uint8_t>& get_x() const;
 
       secure_vector<uint8_t> private_key_bits() const override;
 
@@ -98,7 +103,7 @@ class BOTAN_PUBLIC_API(2, 0) X25519_PrivateKey final : public X25519_PublicKey,
                                                                      std::string_view provider) const override;
 
    private:
-      secure_vector<uint8_t> m_private;
+      std::shared_ptr<const X25519_PrivateKey_Data> m_private;
 };
 
 BOTAN_DIAGNOSTIC_POP

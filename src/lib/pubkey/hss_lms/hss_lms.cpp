@@ -73,7 +73,7 @@ namespace {
 
 class HSS_LMS_Verification_Operation final : public PK_Ops::Verification {
    public:
-      explicit HSS_LMS_Verification_Operation(std::shared_ptr<HSS_LMS_PublicKeyInternal> pub_key) :
+      explicit HSS_LMS_Verification_Operation(std::shared_ptr<const HSS_LMS_PublicKeyInternal> pub_key) :
             m_public(std::move(pub_key)) {}
 
       void update(std::span<const uint8_t> msg) override {
@@ -94,7 +94,7 @@ class HSS_LMS_Verification_Operation final : public PK_Ops::Verification {
       std::string hash_function() const override { return m_public->lms_pub_key().lms_params().hash_name(); }
 
    private:
-      std::shared_ptr<HSS_LMS_PublicKeyInternal> m_public;
+      std::shared_ptr<const HSS_LMS_PublicKeyInternal> m_public;
       std::vector<uint8_t> m_msg_buffer;
 };
 
@@ -195,8 +195,8 @@ namespace {
 
 class HSS_LMS_Signature_Operation final : public PK_Ops::Signature {
    public:
-      HSS_LMS_Signature_Operation(std::shared_ptr<HSS_LMS_PrivateKeyInternal> private_key,
-                                  std::shared_ptr<HSS_LMS_PublicKeyInternal> public_key) :
+      HSS_LMS_Signature_Operation(std::shared_ptr<const HSS_LMS_PrivateKeyInternal> private_key,
+                                  std::shared_ptr<const HSS_LMS_PublicKeyInternal> public_key) :
             m_private(std::move(private_key)), m_public(std::move(public_key)) {}
 
       void update(std::span<const uint8_t> msg) override {
@@ -216,8 +216,8 @@ class HSS_LMS_Signature_Operation final : public PK_Ops::Signature {
       std::string hash_function() const override { return m_public->lms_pub_key().lms_params().hash_name(); }
 
    private:
-      std::shared_ptr<HSS_LMS_PrivateKeyInternal> m_private;
-      std::shared_ptr<HSS_LMS_PublicKeyInternal> m_public;
+      std::shared_ptr<const HSS_LMS_PrivateKeyInternal> m_private;
+      std::shared_ptr<const HSS_LMS_PublicKeyInternal> m_public;
       std::vector<uint8_t> m_msg_buffer;
 };
 

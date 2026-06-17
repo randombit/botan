@@ -103,7 +103,7 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key {
       friend class Dilithium_Verification_Operation;
       friend class Dilithium_Signature_Operation;
 
-      std::shared_ptr<Dilithium_PublicKeyInternal> m_public;  // NOLINT(*non-private-member-variable*)
+      std::shared_ptr<const Dilithium_PublicKeyInternal> m_public;  // NOLINT(*non-private-member-variable*)
 };
 
 BOTAN_DIAGNOSTIC_PUSH
@@ -147,7 +147,7 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithi
    private:
       friend class Dilithium_Signature_Operation;
 
-      std::shared_ptr<Dilithium_PrivateKeyInternal> m_private;
+      std::shared_ptr<const Dilithium_PrivateKeyInternal> m_private;
 };
 
 BOTAN_DIAGNOSTIC_POP

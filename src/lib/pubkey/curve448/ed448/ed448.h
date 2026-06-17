@@ -11,9 +11,13 @@
 
 #include <botan/pk_keys.h>
 
-#include <array>
+#include <memory>
+#include <vector>
 
 namespace Botan {
+
+class Ed448_PublicKey_Data;
+class Ed448_PrivateKey_Data;
 
 /**
  * @brief A public key for Ed448/Ed448ph according to RFC 8032.
@@ -64,7 +68,7 @@ class BOTAN_PUBLIC_API(3, 4) Ed448_PublicKey : public virtual Public_Key {
 
    protected:
       Ed448_PublicKey() = default;
-      std::array<uint8_t, 57> m_public{};  // NOLINT(*non-private-member-variable*)
+      std::shared_ptr<const Ed448_PublicKey_Data> m_public;  // NOLINT(*non-private-member-variable*)
 };
 
 BOTAN_DIAGNOSTIC_PUSH
@@ -104,7 +108,7 @@ class BOTAN_PUBLIC_API(3, 4) Ed448_PrivateKey final : public Ed448_PublicKey,
       */
       explicit Ed448_PrivateKey(RandomNumberGenerator& rng);
 
-      secure_vector<uint8_t> raw_private_key_bits() const override { return {m_private.begin(), m_private.end()}; }
+      secure_vector<uint8_t> raw_private_key_bits() const override;
 
       secure_vector<uint8_t> private_key_bits() const override;
 
@@ -117,7 +121,7 @@ class BOTAN_PUBLIC_API(3, 4) Ed448_PrivateKey final : public Ed448_PublicKey,
                                                              std::string_view provider) const override;
 
    private:
-      secure_vector<uint8_t> m_private;
+      std::shared_ptr<const Ed448_PrivateKey_Data> m_private;
 };
 
 BOTAN_DIAGNOSTIC_POP

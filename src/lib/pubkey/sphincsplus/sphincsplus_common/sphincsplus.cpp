@@ -191,7 +191,7 @@ namespace {
 
 class SphincsPlus_Verification_Operation final : public PK_Ops::Verification {
    public:
-      explicit SphincsPlus_Verification_Operation(std::shared_ptr<SphincsPlus_PublicKeyInternal> pub_key) :
+      explicit SphincsPlus_Verification_Operation(std::shared_ptr<const SphincsPlus_PublicKeyInternal> pub_key) :
             m_public(std::move(pub_key)),
             m_hashes(Botan::Sphincs_Hash_Functions::create(m_public->parameters(), m_public->seed())),
             m_context(/* TODO: Add API */ {}) {
@@ -246,7 +246,7 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification {
          return ht_verify(fors_root, ht_sig_s, m_public->root(), tree_idx, leaf_idx, p, *m_hashes);
       }
 
-      std::shared_ptr<SphincsPlus_PublicKeyInternal> m_public;
+      std::shared_ptr<const SphincsPlus_PublicKeyInternal> m_public;
       std::unique_ptr<Sphincs_Hash_Functions> m_hashes;
       SphincsInputMessage m_msg_buffer;
       SphincsContext m_context;
@@ -360,8 +360,8 @@ namespace {
 
 class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
    public:
-      SphincsPlus_Signature_Operation(std::shared_ptr<SphincsPlus_PrivateKeyInternal> private_key,
-                                      std::shared_ptr<SphincsPlus_PublicKeyInternal> public_key,
+      SphincsPlus_Signature_Operation(std::shared_ptr<const SphincsPlus_PrivateKeyInternal> private_key,
+                                      std::shared_ptr<const SphincsPlus_PublicKeyInternal> public_key,
                                       bool randomized) :
             m_private(std::move(private_key)),
             m_public(std::move(public_key)),
@@ -439,8 +439,8 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
          return sphincs_sig_buffer;
       }
 
-      std::shared_ptr<SphincsPlus_PrivateKeyInternal> m_private;
-      std::shared_ptr<SphincsPlus_PublicKeyInternal> m_public;
+      std::shared_ptr<const SphincsPlus_PrivateKeyInternal> m_private;
+      std::shared_ptr<const SphincsPlus_PublicKeyInternal> m_public;
       std::unique_ptr<Sphincs_Hash_Functions> m_hashes;
       SphincsInputMessage m_msg_buffer;
       bool m_randomized;

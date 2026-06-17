@@ -29,7 +29,7 @@ class BOTAN_TEST_API Classic_McEliece_Decryptor final : public PK_Ops::KEM_Decry
        * @brief Constructs a Classic_McEliece_Decryptor object with the given private key.
        * @param key The private key used for decryption.
        */
-      Classic_McEliece_Decryptor(std::shared_ptr<Classic_McEliece_PrivateKeyInternal> key, std::string_view kdf) :
+      Classic_McEliece_Decryptor(std::shared_ptr<const Classic_McEliece_PrivateKeyInternal> key, std::string_view kdf) :
             KEM_Decryption_with_KDF(kdf), m_key(std::move(key)) {}
 
       size_t raw_kem_shared_key_length() const override { return m_key->params().hash_out_bytes(); }
@@ -76,7 +76,7 @@ class BOTAN_TEST_API Classic_McEliece_Decryptor final : public PK_Ops::KEM_Decry
        */
       std::pair<CT::Mask<uint8_t>, CmceErrorVector> decode(CmceCodeWord big_c) const;
 
-      std::shared_ptr<Classic_McEliece_PrivateKeyInternal> m_key;
+      std::shared_ptr<const Classic_McEliece_PrivateKeyInternal> m_key;
 };
 
 }  // namespace Botan

@@ -128,10 +128,8 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PublicKey : public virtual Public_Key {
 
       const XMSS_Parameters& xmss_parameters() const;
 
-      void set_root(secure_vector<uint8_t> root);
-
    private:
-      std::shared_ptr<XMSS_PublicKey_Internal> m_public_key;
+      std::shared_ptr<const XMSS_PublicKey_Internal> m_public_key;
 };
 
 template <typename>
@@ -270,11 +268,23 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
    private:
       friend class XMSS_Signature_Operation;
 
+      // The seeds and the precomputed Merkle root produced during key
+      // generation, used to construct the (immutable) public key before the
+      // derived private key body runs.
+      struct Keygen_Material;
+
+      XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
+                      WOTS_Derivation_Method wots_derivation_method,
+                      Keygen_Material material);
+
+      static Keygen_Material generate_keygen_material(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
+                                                      RandomNumberGenerator& rng,
+                                                      WOTS_Derivation_Method wots_derivation_method);
+
       size_t reserve_unused_leaf_index();
 
       const secure_vector<uint8_t>& prf_value() const;
 
-      XMSS_WOTS_PublicKey wots_public_key_for(const XMSS_Address& adrs, XMSS_Hash& hash) const;
       XMSS_WOTS_PrivateKey wots_private_key_for(const XMSS_Address& adrs, XMSS_Hash& hash) const;
 
       /**
@@ -295,13 +305,7 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
                                        const XMSS_Address& adrs,
                                        XMSS_Hash& hash) const;
 
-      void tree_hash_subtree(secure_vector<uint8_t>& result,
-                             size_t start_idx,
-                             size_t target_node_height,
-                             XMSS_Address& adrs,
-                             XMSS_Hash& hash) const;
-
-      std::shared_ptr<XMSS_PrivateKey_Internal> m_private;
+      std::shared_ptr<const XMSS_PrivateKey_Internal> m_private;
 };
 
 BOTAN_DIAGNOSTIC_POP

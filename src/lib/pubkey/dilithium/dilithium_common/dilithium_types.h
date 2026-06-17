@@ -65,7 +65,7 @@ using DilithiumCommitmentHash = Strong<std::vector<uint8_t>, struct DilithiumCom
 
 /// Internal representation of a Dilithium key pair
 using DilithiumInternalKeypair =
-   std::pair<std::shared_ptr<Dilithium_PublicKeyInternal>, std::shared_ptr<Dilithium_PrivateKeyInternal>>;
+   std::pair<std::shared_ptr<const Dilithium_PublicKeyInternal>, std::shared_ptr<const Dilithium_PrivateKeyInternal>>;
 
 }  // namespace Botan
 
