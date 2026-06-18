@@ -44,8 +44,14 @@ class KDF_KAT_Tests final : public Text_Based_Test {
 
          if(expected.size() == 32) {
             const auto key = kdf->derive_key<32>(secret, salt, label);
-            result.test_bin_eq("derived key as array", Botan::secure_vector<uint8_t>{key.begin(), key.end()}, expected);
+            result.test_bin_eq("derived key as array", key, expected);
          }
+
+         // Test using write-to-buffer variant
+         std::vector<uint8_t> buf(expected.size() + 32, 0xFE);
+         kdf->derive_key(std::span{buf}.first(expected.size()), secret, salt, label);
+         result.test_bin_eq("derive key to buffer", std::span{buf}.first(expected.size()), expected);
+         result.test_bin_eq("derive key to buffer (last)", std::span{buf}.last(32), std::vector<uint8_t>(32, 0xFE));
 
          // Test that clone works
          auto clone = kdf->new_object();

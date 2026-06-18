@@ -24,9 +24,9 @@ namespace {
 class CounterParams final {
    public:
       constexpr static void validate_bit_lengths(size_t counter_bits, size_t output_length_bits) {
-         BOTAN_ARG_CHECK(counter_bits % 8 == 0 && counter_bits <= 32,
+         BOTAN_ARG_CHECK(counter_bits != 0 && counter_bits % 8 == 0 && counter_bits <= 32,
                          "SP.800-108 counter length may be one of {8, 16, 24, 32} only");
-         BOTAN_ARG_CHECK(output_length_bits % 8 == 0 && output_length_bits <= 32,
+         BOTAN_ARG_CHECK(output_length_bits != 0 && output_length_bits % 8 == 0 && output_length_bits <= 32,
                          "SP.800-108 output length encoding may be one of {8, 16, 24, 32} only");
       }
 
@@ -50,7 +50,7 @@ class CounterParams final {
          // encoding bit length of the counter ("r"). The counter starts at "1", so the
          // maximum number of usable blocks is 2^r - 1.
          const auto max_blocks = (uint64_t(1) << counter_bits) - 1;
-         BOTAN_ARG_CHECK(blocks_required < max_blocks, "SP.800-108 output size too large");
+         BOTAN_ARG_CHECK(blocks_required <= max_blocks, "SP.800-108 output size too large");
 
          return CounterParams(
             output_bits, output_length_bits / 8, counter_bits / 8, static_cast<uint32_t>(blocks_required));
