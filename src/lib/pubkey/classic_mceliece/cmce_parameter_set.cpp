@@ -108,7 +108,11 @@ std::string Classic_McEliece_Parameter_Set::to_string() const {
 }
 
 Classic_McEliece_Parameter_Set Classic_McEliece_Parameter_Set::from_oid(const OID& oid) {
-   return from_string(oid.to_formatted_string());
+   if(const auto name = oid.registered_name()) {
+      return from_string(*name);
+   } else {
+      throw Invalid_Argument(fmt("OID '{}' is not registered as a Classic McEliece parameter set", oid));
+   }
 }
 
 }  // namespace Botan

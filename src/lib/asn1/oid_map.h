@@ -26,7 +26,7 @@ class OID_Map final {
       // TODO(Botan4) remove this function when oids.h is removed
       void add_oid2str(const OID& oid, std::string_view str);
 
-      std::string oid2str(const OID& oid);
+      std::optional<std::string> oid2str(const OID& oid);
 
       OID str2oid(std::string_view str);
 

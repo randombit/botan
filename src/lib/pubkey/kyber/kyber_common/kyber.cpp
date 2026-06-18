@@ -71,11 +71,19 @@ KyberMode::Mode kyber_mode_from_string(std::string_view str) {
    throw Invalid_Argument(fmt("'{}' is not a valid Kyber mode name", str));
 }
 
+KyberMode::Mode kyber_mode_from_oid(const OID& oid) {
+   if(const auto name = oid.registered_name()) {
+      return kyber_mode_from_string(*name);
+   }
+
+   throw Invalid_Argument(fmt("OID '{}' is not registered as a Kyber/ML-KEM mode", oid));
+}
+
 }  // namespace
 
 KyberMode::KyberMode(Mode mode) : m_mode(mode) {}
 
-KyberMode::KyberMode(const OID& oid) : m_mode(kyber_mode_from_string(oid.to_formatted_string())) {}
+KyberMode::KyberMode(const OID& oid) : m_mode(kyber_mode_from_oid(oid)) {}
 
 KyberMode::KyberMode(std::string_view str) : m_mode(kyber_mode_from_string(str)) {}
 

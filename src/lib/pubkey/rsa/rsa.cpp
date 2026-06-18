@@ -168,7 +168,7 @@ RSA_PublicKey::RSA_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const 
    // reasons make that difficult to enforce, so absent is also accepted.
    //
    // This only checks rsaEncryption; PSS/OAEP key identifiers have their own parameter encoding
-   if(alg_id.oid().to_formatted_string() == "RSA" && !alg_id.parameters_are_null_or_empty()) {
+   if(alg_id.oid().registered_name() == "RSA" && !alg_id.parameters_are_null_or_empty()) {
       throw Decoding_Error("Unexpected parameters for RSA public key");
    }
 
@@ -280,7 +280,7 @@ void RSA_PrivateKey::init(BigInt&& d, BigInt&& p, BigInt&& q, BigInt&& d1, BigIn
 }
 
 RSA_PrivateKey::RSA_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
-   if(alg_id.oid().to_formatted_string() == "RSA" && !alg_id.parameters_are_null_or_empty()) {
+   if(alg_id.oid().registered_name() == "RSA" && !alg_id.parameters_are_null_or_empty()) {
       throw Decoding_Error("Unexpected parameters for RSA private key");
    }
 
@@ -859,7 +859,12 @@ std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::create_verification_op(std:
 namespace {
 
 std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id) {
-   const auto sig_info = split_on(alg_id.oid().to_formatted_string(), '/');
+   const auto oid_name = alg_id.oid().registered_name();
+   if(!oid_name) {
+      throw Decoding_Error("Unknown AlgorithmIdentifier for RSA X.509 signatures");
+   }
+
+   const auto sig_info = split_on(*oid_name, '/');
 
    if(sig_info.empty() || sig_info.size() != 2 || sig_info[0] != "RSA") {
       throw Decoding_Error("Unknown AlgorithmIdentifier for RSA X.509 signatures");
@@ -883,14 +888,14 @@ std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id) {
 
       // hash_algo must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
       // We also support SHA-3 (is also supported by e.g. OpenSSL and bouncycastle)
-      const std::string hash_algo = pss_params.hash_function();
+      const auto hash_algo = pss_params.hash_algid().oid().registered_name();
       if(hash_algo != "SHA-1" && hash_algo != "SHA-224" && hash_algo != "SHA-256" && hash_algo != "SHA-384" &&
          hash_algo != "SHA-512" && hash_algo != "SHA-3(224)" && hash_algo != "SHA-3(256)" &&
          hash_algo != "SHA-3(384)" && hash_algo != "SHA-3(512)") {
          throw Decoding_Error("Unacceptable hash for PSS signatures");
       }
 
-      if(pss_params.mgf_function() != "MGF1") {
+      if(pss_params.mgf_algid().oid().registered_name() != "MGF1") {
          throw Decoding_Error("Unacceptable MGF for PSS signatures");
       }
 
@@ -904,7 +909,7 @@ std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id) {
          throw Decoding_Error("Unacceptable trailer field for PSS signatures");
       }
 
-      padding += fmt("({},MGF1,{})", hash_algo, pss_params.salt_length());
+      padding += fmt("({},MGF1,{})", *hash_algo, pss_params.salt_length());
    }
 
    return padding;

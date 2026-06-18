@@ -61,9 +61,17 @@ DilithiumMode::Mode dilithium_mode_from_string(std::string_view str) {
    throw Invalid_Argument(fmt("'{}' is not a valid Dilithium mode name", str));
 }
 
+DilithiumMode::Mode dilithium_mode_from_oid(const OID& oid) {
+   if(const auto name = oid.registered_name()) {
+      return dilithium_mode_from_string(*name);
+   }
+
+   throw Invalid_Argument(fmt("OID '{}' is not registered as a Dilithium/ML-DSA mode", oid));
+}
+
 }  // namespace
 
-DilithiumMode::DilithiumMode(const OID& oid) : m_mode(dilithium_mode_from_string(oid.to_formatted_string())) {}
+DilithiumMode::DilithiumMode(const OID& oid) : m_mode(dilithium_mode_from_oid(oid)) {}
 
 DilithiumMode::DilithiumMode(std::string_view str) : m_mode(dilithium_mode_from_string(str)) {}
 
@@ -342,7 +350,7 @@ std::string Dilithium_PublicKey::algo_name() const {
    //               there might be other code locations that identify Dilithium
    //               by std::string::starts_with("Dilithium-").
    //               (Above assumes that Dilithium won't be removed entirely!)
-   return (m_public->mode().is_ml_dsa()) ? std::string("ML-DSA") : object_identifier().to_formatted_string();
+   return (m_public->mode().is_ml_dsa()) ? std::string("ML-DSA") : m_public->mode().mode().to_string();
 }
 
 AlgorithmIdentifier Dilithium_PublicKey::algorithm_identifier() const {

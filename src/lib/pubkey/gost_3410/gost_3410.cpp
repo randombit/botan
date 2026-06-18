@@ -189,21 +189,21 @@ std::string gost_hash_from_algid(const AlgorithmIdentifier& alg_id) {
       throw Decoding_Error("Unexpected non-empty AlgorithmIdentifier parameters for GOST 34.10 signature");
    }
 
-   const std::string oid_str = alg_id.oid().to_formatted_string();
-   if(oid_str == "GOST-34.10/GOST-R-34.11-94") {
-      return "GOST-R-34.11-94";
+   if(const auto name = alg_id.oid().registered_name()) {
+      if(*name == "GOST-34.10/GOST-R-34.11-94") {
+         return "GOST-R-34.11-94";
+      } else if(*name == "GOST-34.10-2012-256/Streebog-256") {
+         return "Streebog-256";
+      } else if(*name == "GOST-34.10-2012-512/Streebog-512") {
+         return "Streebog-512";
+      } else if(*name == "GOST-34.10-2012-256/SHA-256") {
+         return "SHA-256";
+      } else {
+         throw Decoding_Error(fmt("Unknown OID ({}, {}) for GOST 34.10 signatures", alg_id.oid(), *name));
+      }
+   } else {
+      throw Decoding_Error(fmt("Unknown OID ({}) for GOST 34.10 signatures", alg_id.oid()));
    }
-   if(oid_str == "GOST-34.10-2012-256/Streebog-256") {
-      return "Streebog-256";
-   }
-   if(oid_str == "GOST-34.10-2012-512/Streebog-512") {
-      return "Streebog-512";
-   }
-   if(oid_str == "GOST-34.10-2012-256/SHA-256") {
-      return "SHA-256";
-   }
-
-   throw Decoding_Error(fmt("Unknown OID ({}) for GOST 34.10 signatures", alg_id.oid()));
 }
 
 /**

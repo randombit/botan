@@ -142,13 +142,12 @@ void ASN1_Formatter::decode(std::ostream& output, BER_Decoder& decoder, size_t l
          OID oid;
          data.decode(oid);
 
-         const std::string name = oid.human_name_or_empty();
          const std::string oid_str = oid.to_string();
 
-         if(name.empty()) {
-            output << format(type_tag, class_tag, level, length, oid_str);
+         if(const auto name = oid.registered_name()) {
+            output << format(type_tag, class_tag, level, length, fmt("{} [{}]", *name, oid_str));
          } else {
-            output << format(type_tag, class_tag, level, length, fmt("{} [{}]", name, oid_str));
+            output << format(type_tag, class_tag, level, length, oid_str);
          }
       } else if(type_tag == ASN1_Type::Integer || type_tag == ASN1_Type::Enumerated) {
          BigInt number;

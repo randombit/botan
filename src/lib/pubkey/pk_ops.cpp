@@ -170,7 +170,13 @@ std::string PK_Ops::Verification_with_Hash::hash_function() const {
 PK_Ops::Verification_with_Hash::Verification_with_Hash(const AlgorithmIdentifier& alg_id,
                                                        std::string_view pk_algo,
                                                        bool allow_null_parameters) {
-   const auto oid_info = split_on(alg_id.oid().to_formatted_string(), '/');
+   const auto oid_name = alg_id.oid().registered_name();
+   if(!oid_name) {
+      throw Decoding_Error(
+         fmt("Unexpected AlgorithmIdentifier OID {} in association with {} key", alg_id.oid(), pk_algo));
+   }
+
+   const auto oid_info = split_on(*oid_name, '/');
 
    if(oid_info.size() != 2 || oid_info[0] != pk_algo) {
       throw Decoding_Error(

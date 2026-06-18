@@ -86,7 +86,7 @@ secure_vector<uint8_t> PKCS8_decode(DataSource& source,
 
    try {
       if(is_encrypted) {
-         if(pbe_alg_id.oid().to_formatted_string() != "PBE-PKCS5v20") {
+         if(pbe_alg_id.oid().registered_name() != "PBE-PKCS5v20") {
             throw PKCS8_Exception(fmt("Unknown PBE type {}", pbe_alg_id.oid()));
          }
 
@@ -304,12 +304,11 @@ std::unique_ptr<Private_Key> load_key(DataSource& source,
    AlgorithmIdentifier alg_id;
    secure_vector<uint8_t> pkcs8_key = PKCS8_decode(source, get_pass, alg_id, is_encrypted);
 
-   const std::string alg_name = alg_id.oid().human_name_or_empty();
-   if(alg_name.empty()) {
+   if(const auto alg_name = alg_id.oid().registered_name()) {
+      return load_private_key(alg_id, pkcs8_key);
+   } else {
       throw PKCS8_Exception(fmt("Unknown algorithm OID {}", alg_id.oid()));
    }
-
-   return load_private_key(alg_id, pkcs8_key);
 }
 
 }  // namespace
