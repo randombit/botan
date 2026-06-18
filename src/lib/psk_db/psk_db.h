@@ -154,7 +154,6 @@ class BOTAN_PUBLIC_API(2, 4) Encrypted_PSK_Database : public PSK_Database /* NOL
    private:
       std::unique_ptr<BlockCipher> m_cipher;
       std::unique_ptr<MessageAuthenticationCode> m_hmac;
-      secure_vector<uint8_t> m_wrap_key;
 };
 
 class SQL_Database;
