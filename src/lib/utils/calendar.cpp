@@ -10,35 +10,11 @@
 
 #include <botan/assert.h>
 #include <botan/exceptn.h>
-#include <botan/internal/target_info.h>
-#include <ctime>
-#include <iomanip>
-#include <sstream>
+#include <array>
 
 namespace Botan {
 
 namespace {
-
-// TODO replace this with https://howardhinnant.github.io/date_algorithms.html#civil_from_days
-std::tm do_gmtime(std::time_t time_val) {
-   std::tm tm{};
-
-#if defined(BOTAN_TARGET_OS_HAS_WIN32)
-   ::gmtime_s(&tm, &time_val);  // Windows
-#elif defined(BOTAN_TARGET_OS_HAS_POSIX1)
-   if(::gmtime_r(&time_val, &tm) == nullptr) {
-      throw Encoding_Error("do_gmtime could not convert");
-   }
-#else
-   std::tm* tm_p = std::gmtime(&time_val);
-   if(tm_p == nullptr) {
-      throw Encoding_Error("do_gmtime could not convert");
-   }
-   tm = *tm_p;
-#endif
-
-   return tm;
-}
 
 /*
 Portable replacement for timegm, _mkgmtime, etc
@@ -62,7 +38,61 @@ uint64_t days_since_epoch(uint32_t year, uint32_t month, uint32_t day) {
    return era * 146097 + doe - 719468;
 }
 
+/*
+Portable replacement for gmtime, gmtime_r, _gmtime_s, etc
+
+Algorithm due to Howard Hinnant
+
+See https://howardhinnant.github.io/date_algorithms.html#civil_from_days
+for details and explanation.
+*/
+std::array<uint32_t, 6> civil_from_time_point(const std::chrono::system_clock::time_point& tp) {
+   const int64_t t = static_cast<int64_t>(std::chrono::system_clock::to_time_t(tp));
+
+   // Split into days since epoch and seconds within the day, flooring towards
+   // negative infinity so that times before the epoch are handled correctly.
+   int64_t days = t / 86400;
+   int64_t tod = t % 86400;
+   if(tod < 0) {
+      tod += 86400;
+      days -= 1;
+   }
+
+   const int64_t z = days + 719468;
+   const int64_t era = (z >= 0 ? z : z - 146096) / 146097;
+   const int64_t doe = z - era * 146097;                                       // [0, 146096]
+   const int64_t yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;  // [0, 399]
+   const int64_t y = yoe + era * 400;
+   const int64_t doy = doe - (365 * yoe + yoe / 4 - yoe / 100);  // [0, 365]
+   const int64_t mp = (5 * doy + 2) / 153;                       // [0, 11]
+   const int64_t day = doy - (153 * mp + 2) / 5 + 1;             // [1, 31]
+   const int64_t month = mp < 10 ? mp + 3 : mp - 9;              // [1, 12]
+   const int64_t year = y + (month <= 2 ? 1 : 0);
+
+   return {static_cast<uint32_t>(year),
+           static_cast<uint32_t>(month),
+           static_cast<uint32_t>(day),
+           static_cast<uint32_t>(tod / 3600),
+           static_cast<uint32_t>((tod % 3600) / 60),
+           static_cast<uint32_t>(tod % 60)};
+}
+
 }  // namespace
+
+calendar_point::calendar_point(uint32_t y, uint32_t mon, uint32_t d, uint32_t h, uint32_t min, uint32_t sec) :
+      m_year(static_cast<uint16_t>(y)),
+      m_month(static_cast<uint8_t>(mon)),
+      m_day(static_cast<uint8_t>(d)),
+      m_hour(static_cast<uint8_t>(h)),
+      m_minutes(static_cast<uint8_t>(min)),
+      m_seconds(static_cast<uint8_t>(sec)) {
+   BOTAN_ARG_CHECK(y <= 9999, "Year is outside representable range");
+   BOTAN_ARG_CHECK(mon >= 1 && mon <= 12, "Month is outside range");
+   BOTAN_ARG_CHECK(d >= 1 && d <= 31, "Day is outside range");
+   BOTAN_ARG_CHECK(h < 24, "Hour is outside range");
+   BOTAN_ARG_CHECK(min < 60, "Minute is outside range");
+   BOTAN_ARG_CHECK(sec < 60, "Seconds is outside range");
+}
 
 uint64_t calendar_point::seconds_since_epoch() const {
    return (days_since_epoch(year(), month(), day()) * 86400) + (hour() * 60 * 60) + (minutes() * 60) + seconds();
@@ -70,6 +100,19 @@ uint64_t calendar_point::seconds_since_epoch() const {
 
 std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const {
    const uint64_t seconds_64 = this->seconds_since_epoch();
+
+   /*
+   * The tick of a system_clock varies by implementation, and so also the
+   * largest representable value varies. Ensure this date is within range of the
+   * clock implementation.
+   */
+   constexpr uint64_t max_representable_seconds = static_cast<uint64_t>(
+      std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::duration::max()).count());
+
+   if(seconds_64 > max_representable_seconds) {
+      throw Invalid_Argument("calendar_point::to_std_timepoint time is outside the representable range");
+   }
+
    const time_t seconds_time_t = static_cast<time_t>(seconds_64);
 
    if(seconds_64 - seconds_time_t != 0) {
@@ -79,24 +122,17 @@ std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const {
    return std::chrono::system_clock::from_time_t(seconds_time_t);
 }
 
-std::string calendar_point::to_string() const {
-   // desired format: <YYYY>-<MM>-<dd>T<HH>:<mm>:<ss>
-   std::stringstream output;
-   output << std::setfill('0') << std::setw(4) << year() << "-" << std::setw(2) << month() << "-" << std::setw(2)
-          << day() << "T" << std::setw(2) << hour() << ":" << std::setw(2) << minutes() << ":" << std::setw(2)
-          << seconds();
-   return output.str();
-}
-
 calendar_point::calendar_point(const std::chrono::system_clock::time_point& time_point) {
-   const std::tm tm = do_gmtime(std::chrono::system_clock::to_time_t(time_point));
+   const auto [year, month, day, hour, minute, second] = civil_from_time_point(time_point);
 
-   m_year = tm.tm_year + 1900;
-   m_month = tm.tm_mon + 1;
-   m_day = tm.tm_mday;
-   m_hour = tm.tm_hour;
-   m_minutes = tm.tm_min;
-   m_seconds = tm.tm_sec;
+   BOTAN_ARG_CHECK(year <= 9999, "Year is outside representable range");
+
+   m_year = static_cast<uint16_t>(year);
+   m_month = static_cast<uint8_t>(month);
+   m_day = static_cast<uint8_t>(day);
+   m_hour = static_cast<uint8_t>(hour);
+   m_minutes = static_cast<uint8_t>(minute);
+   m_seconds = static_cast<uint8_t>(second);
 }
 
 }  // namespace Botan

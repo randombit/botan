@@ -16,10 +16,21 @@
 
    #include <fstream>
    #include <iomanip>
+   #include <sstream>
 
 namespace Botan_CLI {
 
 namespace {
+
+// Format the time point as YYYY-MM-DDTHH:MM:SS in UTC
+std::string format_utc_datetime(const std::chrono::system_clock::time_point& tp) {
+   const Botan::calendar_point c(tp);
+   std::ostringstream out;
+   out << std::setfill('0') << std::setw(4) << c.year() << "-" << std::setw(2) << c.month() << "-" << std::setw(2)
+       << c.day() << "T" << std::setw(2) << c.hour() << ":" << std::setw(2) << c.minutes() << ":" << std::setw(2)
+       << c.seconds();
+   return out.str();
+}
 
 class RoughtimeCheck final : public Command {
    public:
@@ -38,7 +49,7 @@ class RoughtimeCheck final : public Command {
                output()
                   << Botan::Roughtime::Response::sys_microseconds64(response.utc_midpoint()).time_since_epoch().count();
             } else {
-               output() << Botan::calendar_point(response.utc_midpoint()).to_string();
+               output() << format_utc_datetime(response.utc_midpoint());
             }
             output() << " (+-" << Botan::Roughtime::Response::microseconds32(response.utc_radius()).count() << "us)\n";
          }
@@ -100,7 +111,7 @@ class Roughtime final : public Command {
                << "UTC "
                << Botan::Roughtime::Response::sys_microseconds64(response.utc_midpoint()).time_since_epoch().count();
          } else {
-            output() << "UTC " << Botan::calendar_point(response.utc_midpoint()).to_string();
+            output() << "UTC " << format_utc_datetime(response.utc_midpoint());
          }
          output() << " (+-" << Botan::Roughtime::Response::microseconds32(response.utc_radius()).count() << "us)";
          if(!response.validate(public_key)) {

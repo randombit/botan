@@ -1066,14 +1066,6 @@ class Date_Format_Tests final : public Text_Based_Test {
 
          return result;
       }
-
-      std::vector<Test::Result> run_final_tests() override {
-         Test::Result result("calendar_point::to_string");
-         const Botan::calendar_point d(2008, 5, 15, 9, 30, 33);
-         // desired format: <YYYY>-<MM>-<dd>T<HH>:<mm>:<ss>
-         result.test_str_eq("calendar_point::to_string", d.to_string(), "2008-05-15T09:30:33");
-         return {result};
-      }
 };
 
 BOTAN_REGISTER_TEST("utils", "util_dates", Date_Format_Tests);
