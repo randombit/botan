@@ -90,7 +90,8 @@ size_t DLIES_Encryptor::maximum_input_size() const {
 }
 
 size_t DLIES_Encryptor::ciphertext_length(size_t ptext_len) const {
-   return m_own_pub_key.size() + m_mac->output_length() + m_cipher->output_length(ptext_len);
+   const size_t ctext_len = (m_cipher != nullptr) ? m_cipher->output_length(ptext_len) : ptext_len;
+   return m_own_pub_key.size() + m_mac->output_length() + ctext_len;
 }
 
 DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
