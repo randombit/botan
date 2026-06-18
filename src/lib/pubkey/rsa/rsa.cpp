@@ -702,6 +702,15 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_Padding,
       size_t plaintext_length(size_t /*ctext_len*/) const override { return public_modulus_bytes(); }
 
       secure_vector<uint8_t> raw_decrypt(std::span<const uint8_t> input) override {
+         /*
+         * RFC 8017 7.1.2 and 7.2.2
+         *
+         *  If the length of the ciphertext C is not k octets, output
+         *  "decryption error" and stop.
+         */
+         if(input.size() != public_modulus_bytes()) {
+            throw Decoding_Error("RSA ciphertext is an incorrect size for this public key");
+         }
          secure_vector<uint8_t> out(public_modulus_bytes());
          raw_op(out, input);
          return out;
