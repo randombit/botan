@@ -23,7 +23,192 @@
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/polyn_gf2m.h>
 
+#include <array>
+#include <utility>
+
 namespace Botan {
+
+namespace {
+
+enum class McEliece_Key_Source : uint8_t { Raw, Encoded };
+
+constexpr std::array<std::pair<size_t, size_t>, 6> MCE_SUPPORTED_PARAMS = {
+   {{1632, 33}, {2480, 45}, {2960, 57}, {3408, 67}, {4624, 95}, {6624, 115}}};
+
+bool mceliece_params_are_supported(size_t code_length, size_t t) {
+   for(const auto& [supported_n, supported_t] : MCE_SUPPORTED_PARAMS) {
+      if(code_length == supported_n && t == supported_t) {
+         return true;
+      }
+   }
+   return false;
+}
+
+[[noreturn]] void throw_mceliece_validation_error(McEliece_Key_Source source, const char* msg) {
+   if(source == McEliece_Key_Source::Encoded) {
+      throw Decoding_Error(msg);
+   } else {
+      throw Invalid_Argument(msg);
+   }
+}
+
+McEliece_Params mceliece_validate_params(size_t code_length, size_t t, McEliece_Key_Source source) {
+   if(!mceliece_params_are_supported(code_length, t)) {
+      throw_mceliece_validation_error(source, "Unsupported McEliece parameters");
+   }
+
+   const size_t ext_deg = ceil_log2(code_length);
+   if(ext_deg < 2 || ext_deg > 15) {
+      throw_mceliece_validation_error(source, "McEliece code length out of supported range");
+   }
+
+   const size_t codimension = ext_deg * t;
+   if(codimension >= code_length) {
+      throw_mceliece_validation_error(source, "McEliece parameters are inconsistent");
+   }
+
+   const size_t dimension = code_length - codimension;
+   const size_t words_per_matrix_row = bit_size_to_32bit_size(codimension);
+   const size_t public_matrix_bytes = dimension * words_per_matrix_row * sizeof(uint32_t);
+
+   return McEliece_Params{code_length, t, ext_deg, codimension, dimension, words_per_matrix_row, public_matrix_bytes};
+}
+
+uint32_t padding_mask(size_t bit_count) {
+   const size_t used_bits = bit_count % 32;
+   if(used_bits == 0) {
+      return 0;
+   }
+   return ~((static_cast<uint32_t>(1) << used_bits) - 1);
+}
+
+void validate_public_matrix(const std::vector<uint8_t>& public_matrix,
+                            const McEliece_Params& params,
+                            McEliece_Key_Source source) {
+   if(public_matrix.size() != params.public_matrix_bytes) {
+      throw_mceliece_validation_error(source, "McEliece public matrix size does not match parameters");
+   }
+
+   const uint32_t unused_bits_mask = padding_mask(params.codimension);
+   if(unused_bits_mask == 0) {
+      return;
+   }
+
+   const size_t row_bytes = params.words_per_matrix_row * sizeof(uint32_t);
+   const size_t final_word_offset = (params.words_per_matrix_row - 1) * sizeof(uint32_t);
+   for(size_t row = 0; row != params.dimension; ++row) {
+      const uint8_t* row_ptr = public_matrix.data() + row * row_bytes;
+      const uint32_t final_word = load_le<uint32_t>(row_ptr + final_word_offset, 0);
+      if((final_word & unused_bits_mask) != 0) {
+         throw_mceliece_validation_error(source, "McEliece public matrix contains non-zero padding bits");
+      }
+   }
+}
+
+void validate_polynomial(const polyn_gf2m& polyn,
+                         const McEliece_Params& params,
+                         size_t min_coeff_count,
+                         size_t max_degree,
+                         McEliece_Key_Source source) {
+   const std::shared_ptr<GF2m_Field> field = polyn.get_sp_field();
+   if(!field || field->get_extension_degree() != params.ext_deg) {
+      throw_mceliece_validation_error(source, "McEliece polynomial uses an inconsistent field");
+   }
+
+   if(polyn.get_coeff_count() < min_coeff_count) {
+      throw_mceliece_validation_error(source, "McEliece polynomial has too few coefficients");
+   }
+
+   const int degree = polyn.get_degree();
+   if(degree >= 0 && static_cast<size_t>(degree) > max_degree) {
+      throw_mceliece_validation_error(source, "McEliece polynomial degree is too large");
+   }
+
+   const size_t field_cardinality = static_cast<size_t>(1) << params.ext_deg;
+   for(size_t i = 0; i != polyn.get_coeff_count(); ++i) {
+      if(polyn.get_coef(i) >= field_cardinality) {
+         throw_mceliece_validation_error(source, "McEliece polynomial coefficient is out of range");
+      }
+   }
+}
+
+void validate_support_inverse(const std::vector<gf2m>& inverse_support,
+                              const McEliece_Params& params,
+                              McEliece_Key_Source source) {
+   if(inverse_support.size() != params.code_length) {
+      throw_mceliece_validation_error(source, "McEliece support size does not match code length");
+   }
+
+   std::vector<uint8_t> seen(params.code_length);
+   for(const gf2m support_elem : inverse_support) {
+      if(support_elem >= params.code_length) {
+         throw_mceliece_validation_error(source, "McEliece support element is out of range");
+      }
+      if(seen[support_elem] != 0) {
+         throw_mceliece_validation_error(source, "McEliece support is not a permutation");
+      }
+      seen[support_elem] = 1;
+   }
+}
+
+void validate_parity_check_matrix(const std::vector<uint32_t>& parity_check_matrix_coeffs,
+                                  const McEliece_Params& params,
+                                  McEliece_Key_Source source) {
+   if(parity_check_matrix_coeffs.size() != params.words_per_matrix_row * params.code_length) {
+      throw_mceliece_validation_error(source, "McEliece parity check matrix has wrong length");
+   }
+
+   const uint32_t unused_bits_mask = padding_mask(params.codimension);
+   if(unused_bits_mask == 0) {
+      return;
+   }
+
+   for(size_t row = 0; row != params.code_length; ++row) {
+      const uint32_t final_word =
+         parity_check_matrix_coeffs[row * params.words_per_matrix_row + params.words_per_matrix_row - 1];
+      if((final_word & unused_bits_mask) != 0) {
+         throw_mceliece_validation_error(source, "McEliece parity check matrix contains non-zero padding bits");
+      }
+   }
+}
+
+void validate_private_components(const polyn_gf2m& goppa_polyn,
+                                 const std::vector<uint32_t>& parity_check_matrix_coeffs,
+                                 const std::vector<polyn_gf2m>& square_root_matrix,
+                                 const std::vector<gf2m>& inverse_support,
+                                 const std::vector<uint8_t>& public_matrix,
+                                 const McEliece_Params& params,
+                                 McEliece_Key_Source source) {
+   validate_public_matrix(public_matrix, params, source);
+
+   if(goppa_polyn.get_degree() != static_cast<int>(params.t)) {
+      throw_mceliece_validation_error(source, "degree of decoded Goppa polynomial is incorrect");
+   }
+   validate_polynomial(goppa_polyn, params, params.t + 1, params.t, source);
+   if(goppa_polyn.get_lead_coef() != 1) {
+      throw_mceliece_validation_error(source, "McEliece Goppa polynomial is not monic");
+   }
+
+   if(square_root_matrix.size() != params.t / 2) {
+      throw_mceliece_validation_error(source, "McEliece square root matrix has wrong length");
+   }
+   for(const auto& sqrt_polyn : square_root_matrix) {
+      validate_polynomial(sqrt_polyn, params, params.t, params.t - 1, source);
+   }
+
+   validate_support_inverse(inverse_support, params, source);
+   validate_parity_check_matrix(parity_check_matrix_coeffs, params, source);
+}
+
+}  // namespace
+
+McEliece_Params mceliece_validate_keygen_params(size_t code_length, size_t t) {
+   return mceliece_validate_params(code_length, t, McEliece_Key_Source::Raw);
+}
+
+McEliece_Params mceliece_validate_key_encoding_params(size_t code_length, size_t t) {
+   return mceliece_validate_params(code_length, t, McEliece_Key_Source::Encoded);
+}
 
 McEliece_PrivateKey::McEliece_PrivateKey(const McEliece_PrivateKey&) = default;
 McEliece_PrivateKey::McEliece_PrivateKey(McEliece_PrivateKey&&) noexcept = default;
@@ -35,22 +220,34 @@ McEliece_PrivateKey::McEliece_PrivateKey(const polyn_gf2m& goppa_polyn,
                                          const std::vector<uint32_t>& parity_check_matrix_coeffs,
                                          const std::vector<polyn_gf2m>& square_root_matrix,
                                          const std::vector<gf2m>& inverse_support,
-                                         const std::vector<uint8_t>& public_matrix) :
-      McEliece_PublicKey(public_matrix, goppa_polyn.get_degree(), inverse_support.size()) {
-   const size_t codimension = static_cast<size_t>(ceil_log2(inverse_support.size())) * goppa_polyn.get_degree();
-   const size_t dimension = inverse_support.size() - codimension;
+                                         const std::vector<uint8_t>& public_matrix) {
+   const int goppa_degree = goppa_polyn.get_degree();
+   if(goppa_degree <= 0) {
+      throw Invalid_Argument("invalid McEliece Goppa polynomial degree");
+   }
+
+   const McEliece_Params params = mceliece_validate_keygen_params(inverse_support.size(), goppa_degree);
+   validate_private_components(goppa_polyn,
+                               parity_check_matrix_coeffs,
+                               square_root_matrix,
+                               inverse_support,
+                               public_matrix,
+                               params,
+                               McEliece_Key_Source::Raw);
+
+   m_public = std::make_shared<const McEliece_PublicKeyInternal>(public_matrix, params.t, params.code_length);
    m_private = std::make_shared<const McEliece_PrivateKeyInternal>(std::vector<polyn_gf2m>{goppa_polyn},
                                                                    square_root_matrix,
                                                                    inverse_support,
                                                                    parity_check_matrix_coeffs,
-                                                                   codimension,
-                                                                   dimension);
+                                                                   params.codimension,
+                                                                   params.dimension);
 }
 
 // NOLINTNEXTLINE(*-member-init)
 McEliece_PrivateKey::McEliece_PrivateKey(RandomNumberGenerator& rng, size_t code_length, size_t t) {
-   const uint32_t ext_deg = ceil_log2(code_length);
-   *this = generate_mceliece_key(rng, ext_deg, code_length, t);
+   const McEliece_Params params = mceliece_validate_keygen_params(code_length, t);
+   *this = generate_mceliece_key(rng, params.ext_deg, code_length, t);
 }
 
 size_t McEliece_PublicKeyInternal::message_word_bit_length() const {
@@ -73,8 +270,11 @@ secure_vector<uint8_t> McEliece_PublicKeyInternal::random_plaintext_element(Rand
    return plaintext;
 }
 
-McEliece_PublicKey::McEliece_PublicKey(const std::vector<uint8_t>& pub_matrix, size_t t, size_t the_code_length) :
-      m_public(std::make_shared<const McEliece_PublicKeyInternal>(pub_matrix, t, the_code_length)) {}
+McEliece_PublicKey::McEliece_PublicKey(const std::vector<uint8_t>& pub_matrix, size_t t, size_t the_code_length) {
+   const McEliece_Params params = mceliece_validate_keygen_params(the_code_length, t);
+   validate_public_matrix(pub_matrix, params, McEliece_Key_Source::Raw);
+   m_public = std::make_shared<const McEliece_PublicKeyInternal>(pub_matrix, t, the_code_length);
+}
 
 size_t McEliece_PublicKey::get_t() const {
    return m_public->t();
@@ -94,6 +294,20 @@ size_t McEliece_PublicKey::get_message_word_bit_length() const {
 
 secure_vector<uint8_t> McEliece_PublicKey::random_plaintext_element(RandomNumberGenerator& rng) const {
    return m_public->random_plaintext_element(rng);
+}
+
+bool McEliece_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
+   try {
+      if(!m_public) {
+         return false;
+      }
+
+      const McEliece_Params params = mceliece_validate_keygen_params(m_public->code_length(), m_public->t());
+      validate_public_matrix(m_public->public_matrix(), params, McEliece_Key_Source::Raw);
+      return true;
+   } catch(...) {
+      return false;
+   }
 }
 
 const polyn_gf2m& McEliece_PrivateKey::get_goppa_polyn() const {
@@ -172,35 +386,8 @@ McEliece_PublicKey::McEliece_PublicKey(const AlgorithmIdentifier& alg_id, std::s
       .end_cons()
       .verify_end();
 
-   if(n == 0 || t == 0) {
-      throw Decoding_Error("Invalid McEliece parameters");
-   }
-
-   // GF(2^m) field requires extension degree in [2, 16]
-   const size_t ext_deg = ceil_log2(n);
-   if(ext_deg < 2 || ext_deg > 16) {
-      throw Decoding_Error("McEliece code length out of supported range");
-   }
-
-   // Since ext_deg >= 2, t >= n already implies ext_deg * t > n
-   if(t >= n) {
-      throw Decoding_Error("McEliece parameters are inconsistent");
-   }
-
-   const size_t codimension = ext_deg * t;
-
-   // codimension must be strictly less than n, otherwise the code has no message bits
-   if(codimension >= n) {
-      throw Decoding_Error("McEliece parameters are inconsistent");
-   }
-
-   const size_t dimension = n - codimension;
-
-   // public matrix is a dimension x codimension binary matrix stored as uint32_t rows
-   const size_t expected_pubmat_size = dimension * bit_size_to_32bit_size(codimension) * sizeof(uint32_t);
-   if(public_matrix.size() != expected_pubmat_size) {
-      throw Decoding_Error("McEliece public matrix size does not match parameters");
-   }
+   const McEliece_Params params = mceliece_validate_key_encoding_params(n, t);
+   validate_public_matrix(public_matrix, params, McEliece_Key_Source::Encoded);
 
    m_public = std::make_shared<const McEliece_PublicKeyInternal>(std::move(public_matrix), t, n);
 }
@@ -275,38 +462,11 @@ McEliece_PrivateKey::McEliece_PrivateKey(const AlgorithmIdentifier& alg_id, std:
    dec.start_sequence().decode(n).decode(t).end_cons();
    dec.decode(public_matrix, ASN1_Type::OctetString).decode(enc_g, ASN1_Type::OctetString);
 
-   if(t == 0 || n == 0) {
-      throw Decoding_Error("invalid McEliece parameters");
-   }
+   const McEliece_Params params = mceliece_validate_key_encoding_params(n, t);
+   validate_public_matrix(public_matrix, params, McEliece_Key_Source::Encoded);
 
-   const uint32_t ext_deg = ceil_log2(n);
-
-   if(ext_deg < 2 || ext_deg > 16) {
-      throw Decoding_Error("McEliece code length out of supported range");
-   }
-
-   // Since ext_deg >= 2, t >= n already implies ext_deg * t > n
-   if(t >= n) {
-      throw Decoding_Error("McEliece parameters are inconsistent");
-   }
-
-   const size_t codimension = ext_deg * t;
-
-   if(codimension >= n) {
-      throw Decoding_Error("McEliece parameters are inconsistent");
-   }
-
-   const size_t dimension = n - codimension;
-   const size_t expected_pubmat_size = dimension * bit_size_to_32bit_size(codimension) * sizeof(uint32_t);
-   if(public_matrix.size() != expected_pubmat_size) {
-      throw Decoding_Error("McEliece public matrix size does not match parameters");
-   }
-
-   auto sp_field = std::make_shared<GF2m_Field>(ext_deg);
+   auto sp_field = std::make_shared<GF2m_Field>(params.ext_deg);
    std::vector<polyn_gf2m> g = {polyn_gf2m(enc_g, sp_field)};
-   if(g[0].get_degree() != static_cast<int>(t)) {
-      throw Decoding_Error("degree of decoded Goppa polynomial is incorrect");
-   }
    std::vector<polyn_gf2m> sqrtmod;
    BER_Decoder dec2 = dec.start_sequence();
    for(uint32_t i = 0; i < t / 2; i++) {
@@ -341,19 +501,20 @@ McEliece_PrivateKey::McEliece_PrivateKey(const AlgorithmIdentifier& alg_id, std:
    if(enc_H.size() % 4 != 0) {
       throw Decoding_Error("encoded parity check matrix has length which is not a multiple of four");
    }
-   if(enc_H.size() / 4 != bit_size_to_32bit_size(codimension) * n) {
+   if(enc_H.size() / 4 != params.words_per_matrix_row * n) {
       throw Decoding_Error("encoded parity check matrix has wrong length");
    }
 
    std::vector<uint32_t> coeffs;
    for(uint32_t i = 0; i < enc_H.size(); i += 4) {
-      const uint32_t coeff = (enc_H[i] << 24) | (enc_H[i + 1] << 16) | (enc_H[i + 2] << 8) | enc_H[i + 3];
-      coeffs.push_back(coeff);
+      coeffs.push_back(make_uint32(enc_H[i], enc_H[i + 1], enc_H[i + 2], enc_H[i + 3]));
    }
+
+   validate_private_components(g[0], coeffs, sqrtmod, Linv, public_matrix, params, McEliece_Key_Source::Encoded);
 
    m_public = std::make_shared<const McEliece_PublicKeyInternal>(std::move(public_matrix), t, n);
    m_private = std::make_shared<const McEliece_PrivateKeyInternal>(
-      std::move(g), std::move(sqrtmod), std::move(Linv), std::move(coeffs), codimension, dimension);
+      std::move(g), std::move(sqrtmod), std::move(Linv), std::move(coeffs), params.codimension, params.dimension);
 }
 
 bool McEliece_PrivateKey::operator==(const McEliece_PrivateKey& other) const {

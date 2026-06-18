@@ -18,7 +18,7 @@ namespace Botan {
 
 namespace {
 
-void matrix_arr_mul(std::vector<uint32_t> matrix,
+void matrix_arr_mul(const std::vector<uint32_t>& matrix,
                     size_t numo_rows,
                     size_t words_per_row,
                     const uint8_t input_vec[],
@@ -100,12 +100,12 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m& syndrome_polyn,
       const gf2m current = res[i];
 
       const gf2m tmp = gray_to_lex(current);
-      /// XXX double assignment, possible bug?
       if(tmp >= code_length) /* invalid root */
       {
          result[i] = static_cast<gf2m>(i);
+      } else {
+         result[i] = Linv[tmp];
       }
-      result[i] = Linv[tmp];
    }
 
    return result;
@@ -130,7 +130,7 @@ void mceliece_decrypt(secure_vector<uint8_t>& plaintext,
    const size_t code_length = key.code_length();
    secure_vector<uint8_t> result((code_length + 7) / 8);
    for(auto&& pos : error_pos) {
-      if(pos > code_length) {
+      if(pos >= code_length) {
          throw Invalid_Argument("error position larger than code size");
       }
       result[pos / 8] |= (1 << (pos % 8));

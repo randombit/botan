@@ -20,7 +20,7 @@ namespace Botan {
 typedef uint16_t gf2m;
 
 /**
-* GF(2^m) field for m = [2...16]
+* GF(2^m) field for m = [2...15]
 */
 class BOTAN_TEST_API GF2m_Field {
    public:

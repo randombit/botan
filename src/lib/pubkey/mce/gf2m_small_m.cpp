@@ -16,7 +16,7 @@
 
 namespace Botan {
 
-const size_t MAX_EXT_DEG = 16;
+const size_t MAX_EXT_DEG = 15;
 
 namespace {
 

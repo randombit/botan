@@ -42,7 +42,14 @@ secure_vector<uint8_t> concat_vectors(const secure_vector<uint8_t>& a,
          ++l;
          x[l] = static_cast<uint8_t>(b[k] >> (8 - final_bits));
       }
-      x[l] ^= static_cast<uint8_t>(b[codimension / 8] << final_bits);
+      if(const size_t remaining_codim_bits = codimension % 8) {
+         const uint8_t final_codim_byte = b[codimension / 8];
+         x[l] ^= static_cast<uint8_t>(final_codim_byte << final_bits);
+         if(final_bits + remaining_codim_bits > 8) {
+            ++l;
+            x[l] = static_cast<uint8_t>(final_codim_byte >> (8 - final_bits));
+         }
+      }
    }
 
    return x;
@@ -56,6 +63,9 @@ secure_vector<uint8_t> mult_by_pubkey(const secure_vector<uint8_t>& cleartext,
    const size_t codimension = ext_deg * t;
    const size_t dimension = code_length - codimension;
    secure_vector<uint8_t> cR(bit_size_to_32bit_size(codimension) * sizeof(uint32_t));
+
+   BOTAN_ARG_CHECK(cleartext.size() == bit_size_to_byte_size(dimension), "Invalid McEliece plaintext length");
+   BOTAN_ARG_CHECK(public_matrix.size() == dimension * cR.size(), "Invalid McEliece public matrix length");
 
    const uint8_t* pt = public_matrix.data();
 

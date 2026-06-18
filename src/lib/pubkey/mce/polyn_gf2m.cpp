@@ -97,8 +97,12 @@ gf2m random_code_element(uint16_t code_length, RandomNumberGenerator& rng) {
 
 polyn_gf2m::polyn_gf2m(const polyn_gf2m& other) = default;
 
-polyn_gf2m::polyn_gf2m(int d, const std::shared_ptr<GF2m_Field>& sp_field) :
-      m_deg(-1), m_coeff(d + 1), m_sp_field(sp_field) {}
+polyn_gf2m::polyn_gf2m(int d, const std::shared_ptr<GF2m_Field>& sp_field) : m_deg(-1), m_sp_field(sp_field) {
+   if(d < 0) {
+      throw Invalid_Argument("invalid polynomial degree");
+   }
+   m_coeff.resize(d + 1);
+}
 
 /**
 * doesn't save coefficients:
@@ -109,6 +113,10 @@ void polyn_gf2m::realloc(uint32_t new_size) {
 
 polyn_gf2m::polyn_gf2m(const uint8_t* mem, uint32_t mem_len, const std::shared_ptr<GF2m_Field>& sp_field) :
       m_deg(-1), m_sp_field(sp_field) {
+   if(!sp_field) {
+      throw Decoding_Error("missing field for polynomial decoding");
+   }
+
    if(mem_len % sizeof(gf2m)) {
       throw Decoding_Error("illegal length of memory to decode ");
    }
@@ -121,7 +129,7 @@ polyn_gf2m::polyn_gf2m(const uint8_t* mem, uint32_t mem_len, const std::shared_p
       mem += sizeof(this->m_coeff[0]);
    }
    for(uint32_t i = 0; i < size; i++) {
-      if(this->m_coeff[i] >= (1 << sp_field->get_extension_degree())) {
+      if(this->m_coeff[i] >= (static_cast<size_t>(1) << sp_field->get_extension_degree())) {
          throw Decoding_Error("error decoding polynomial");
       }
    }
@@ -135,6 +143,14 @@ polyn_gf2m::polyn_gf2m(int degree,
                        size_t mem_byte_len,
                        const std::shared_ptr<GF2m_Field>& sp_field) :
       m_sp_field(sp_field) {
+   if(!sp_field) {
+      throw Decoding_Error("missing field for polynomial decoding");
+   }
+
+   if(degree < 0) {
+      throw Decoding_Error("invalid polynomial degree");
+   }
+
    const uint32_t polyn_size = degree + 1;
    if(polyn_size * sp_field->get_extension_degree() > 8 * mem_byte_len) {
       throw Decoding_Error("memory vector for polynomial has wrong size");
@@ -633,11 +649,19 @@ std::vector<polyn_gf2m> syndrome_init(const polyn_gf2m& generator, const std::ve
 
 polyn_gf2m::polyn_gf2m(const secure_vector<uint8_t>& encoded, const std::shared_ptr<GF2m_Field>& sp_field) :
       m_sp_field(sp_field) {
+   if(!sp_field) {
+      throw Decoding_Error("missing field for polynomial decoding");
+   }
+
    if(encoded.size() % 2) {
       throw Decoding_Error("encoded polynomial has odd length");
    }
+   const size_t field_cardinality = static_cast<size_t>(1) << sp_field->get_extension_degree();
    for(uint32_t i = 0; i < encoded.size(); i += 2) {
       const gf2m el = (encoded[i] << 8) | encoded[i + 1];
+      if(el >= field_cardinality) {
+         throw Decoding_Error("encoded polynomial coefficient is out of range");
+      }
       m_coeff.push_back(el);
    }
    get_degree();

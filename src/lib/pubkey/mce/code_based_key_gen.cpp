@@ -90,10 +90,15 @@ secure_vector<size_t> binary_matrix::row_reduced_echelon_form() {
 
       //if no row with a 1 found then swap last column and the column with no 1 down.
       if(!found_row) {
-         perm[m_coln - m_rown - 1 - failcnt] = static_cast<int>(max);
+         if(failcnt >= m_coln - m_rown) {
+            perm.clear();
+            return perm;
+         }
+         perm[m_coln - m_rown - 1 - failcnt] = max;
          failcnt++;
          if(max == 0) {
             perm.clear();
+            return perm;
          }
          i--;
       } else {
@@ -179,13 +184,14 @@ std::unique_ptr<binary_matrix> generate_R(
 }  // namespace
 
 McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator& rng, size_t ext_deg, size_t code_length, size_t t) {
-   const size_t codimension = t * ext_deg;
+   const McEliece_Params params = mceliece_validate_keygen_params(code_length, t);
 
-   if(code_length <= codimension) {
-      throw Invalid_Argument("invalid McEliece parameters");
+   if(ext_deg != params.ext_deg) {
+      throw Invalid_Argument("inconsistent McEliece extension degree");
    }
 
-   auto sp_field = std::make_shared<GF2m_Field>(ext_deg);
+   const size_t codimension = params.codimension;
+   auto sp_field = std::make_shared<GF2m_Field>(params.ext_deg);
 
    //pick the support.........
    std::vector<gf2m> L(code_length);
