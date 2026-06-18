@@ -42,7 +42,7 @@ void TLS_12_PRF::perform_kdf(std::span<uint8_t> key,
       m_mac->final(h);
 
       const size_t writing = std::min(h.size(), o.remaining_capacity());
-      xor_buf(o.next(writing), std::span{h}.first(writing));
+      o.append(std::span{h}.first(writing));
    }
 }
 
