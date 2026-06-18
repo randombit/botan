@@ -147,6 +147,11 @@ void SP800_56A_One_Step_KMAC_Abstract::perform_kdf(std::span<uint8_t> key,
                                                    std::span<const uint8_t> secret,
                                                    std::span<const uint8_t> salt,
                                                    std::span<const uint8_t> label) const {
+   // We follow the usual convention within the library that a KDF request for
+   // zero bytes is valid and, exactly as requested, outputs nothing.
+   if(key.empty()) {
+      return;
+   }
    auto mac = create_kmac_instance(key.size());
    kdm_internal<MessageAuthenticationCode>(key, secret, label, *mac, [&](MessageAuthenticationCode& kdf_mac) {
       // 4.1 Option 2 and 3 - An implementation dependent byte string, salt,
