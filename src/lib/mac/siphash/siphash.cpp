@@ -7,6 +7,7 @@
 
 #include <botan/internal/siphash.h>
 
+#include <botan/exceptn.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
@@ -49,6 +50,11 @@ void SipRounds(uint64_t M, secure_vector<uint64_t>& V, size_t r) {
 }
 
 }  // namespace
+
+SipHash::SipHash(size_t c, size_t d) : m_C(c), m_D(d) {
+   BOTAN_ARG_CHECK(m_C > 0 && m_C <= 64, "SipHash C parameter out of range");
+   BOTAN_ARG_CHECK(m_D > 0 && m_D <= 64, "SipHash D parameter out of range");
+}
 
 void SipHash::add_data(std::span<const uint8_t> input) {
    assert_key_material_set();
@@ -99,6 +105,20 @@ void SipHash::final_result(std::span<uint8_t> mac) {
 
    store_le(X, mac.data());
 
+   reset_msg();
+}
+
+void SipHash::start_msg(std::span<const uint8_t> nonce) {
+   if(!nonce.empty()) {
+      throw Invalid_IV_Length(name(), nonce.size());
+   }
+   assert_key_material_set();
+
+   reset_msg();
+}
+
+void SipHash::reset_msg() {
+   m_V.resize(4);
    m_V[0] = m_K[0] ^ 0x736F6D6570736575;
    m_V[1] = m_K[1] ^ 0x646F72616E646F6D;
    m_V[2] = m_K[0] ^ 0x6C7967656E657261;
@@ -121,10 +141,7 @@ void SipHash::key_schedule(std::span<const uint8_t> key) {
    m_K[1] = K1;
 
    m_V.resize(4);
-   m_V[0] = m_K[0] ^ 0x736F6D6570736575;
-   m_V[1] = m_K[1] ^ 0x646F72616E646F6D;
-   m_V[2] = m_K[0] ^ 0x6C7967656E657261;
-   m_V[3] = m_K[1] ^ 0x7465646279746573;
+   reset_msg();
 }
 
 void SipHash::clear() {

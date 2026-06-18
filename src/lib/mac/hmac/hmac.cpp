@@ -8,6 +8,7 @@
 
 #include <botan/internal/hmac.h>
 
+#include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
@@ -31,6 +32,16 @@ void HMAC::final_result(std::span<uint8_t> mac) {
    m_hash->update(m_okey);
    m_hash->update(mac.first(m_hash_output_length));
    m_hash->final(mac);
+   m_hash->update(m_ikey);
+}
+
+void HMAC::start_msg(std::span<const uint8_t> nonce) {
+   if(!nonce.empty()) {
+      throw Invalid_IV_Length(name(), nonce.size());
+   }
+   assert_key_material_set();
+
+   m_hash->clear();
    m_hash->update(m_ikey);
 }
 
@@ -140,6 +151,7 @@ HMAC::HMAC(std::unique_ptr<HashFunction> hash) :
       m_hash(std::move(hash)),
       m_hash_output_length(m_hash->output_length()),
       m_hash_block_size(m_hash->hash_block_size()) {
+   BOTAN_ARG_CHECK(m_hash_output_length >= 8, "HMAC is not compatible with this hash function");
    BOTAN_ARG_CHECK(m_hash_block_size >= m_hash_output_length, "HMAC is not compatible with this hash function");
 }
 

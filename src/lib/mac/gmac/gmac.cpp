@@ -17,7 +17,11 @@
 namespace Botan {
 
 GMAC::GMAC(std::unique_ptr<BlockCipher> cipher) :
-      m_cipher(std::move(cipher)), m_ghash(std::make_unique<GHASH>()), m_H(GCM_BS), m_initialized(false) {}
+      m_cipher(std::move(cipher)), m_ghash(std::make_unique<GHASH>()), m_H(GCM_BS), m_initialized(false) {
+   if(m_cipher->block_size() != GCM_BS) {
+      throw Invalid_Argument(fmt("Invalid block cipher {} for GMAC", m_cipher->name()));
+   }
+}
 
 void GMAC::clear() {
    m_cipher->clear();
@@ -61,7 +65,15 @@ void GMAC::key_schedule(std::span<const uint8_t> key) {
 }
 
 void GMAC::start_msg(std::span<const uint8_t> nonce) {
+   if(nonce.empty()) {
+      throw Invalid_IV_Length(name(), nonce.size());
+   }
+
    std::array<uint8_t, GCM_BS> y0 = {0};
+
+   // Clear any AD accumulated by a prior start() that was never finalized
+   m_ghash->reset_state();
+   m_ghash->reset_associated_data();
 
    if(nonce.size() == 12) {
       copy_mem(y0.data(), nonce.data(), nonce.size());

@@ -152,13 +152,6 @@ std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create_or_
    throw Lookup_Error("MAC", algo, provider);
 }
 
-void MessageAuthenticationCode::start_msg(std::span<const uint8_t> nonce) {
-   BOTAN_UNUSED(nonce);
-   if(!nonce.empty()) {
-      throw Invalid_IV_Length(name(), nonce.size());
-   }
-}
-
 /*
 * Default (deterministic) MAC verification operation
 */

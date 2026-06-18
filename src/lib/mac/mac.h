@@ -49,6 +49,7 @@ class BOTAN_PUBLIC_API(2, 0) MessageAuthenticationCode : public Buffered_Computa
 
       /**
       * Prepare for processing a message under the specified nonce
+      * Calling start() abandons any partial message and begins a new one.
       *
       * Most MACs neither require nor support a nonce; for these algorithms
       * calling start() is optional and calling it with anything other than
@@ -117,10 +118,10 @@ class BOTAN_PUBLIC_API(2, 0) MessageAuthenticationCode : public Buffered_Computa
       /**
       * Prepare for processing a message under the specified nonce
       *
-      * If the MAC does not support nonces, it should not override the default
-      * implementation.
+      * This should reset any state associated with any message currently being
+      * processed.
       */
-      virtual void start_msg(std::span<const uint8_t> nonce);
+      virtual void start_msg(std::span<const uint8_t> nonce) = 0;
 
       /**
       * Verify the MACs final result

@@ -167,6 +167,8 @@ class TLS_CBC_Tests final : public Text_Based_Test {
             }
 
          private:
+            void start_msg(std::span<const uint8_t> /*nonce*/) override {}
+
             void key_schedule(std::span<const uint8_t> /* key */) override {}
 
             size_t m_mac_len;

@@ -52,8 +52,10 @@ void Buffered_Computation::update_le(uint64_t val) {
 }
 
 void Buffered_Computation::final(std::span<uint8_t> out) {
-   BOTAN_ARG_CHECK(out.size() >= output_length(), "provided output buffer has insufficient capacity");
-   final_result(out);
+   BOTAN_ARG_CHECK(out.size() >= output_length(), "Output buffer has insufficient capacity");
+   // Pass exactly output_length() bytes so that an oversized buffer has the
+   // result written to its leading bytes with the remainder left untouched.
+   final_result(out.first(output_length()));
 }
 
 }  // namespace Botan

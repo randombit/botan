@@ -33,6 +33,7 @@ class Message_Auth_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> input = vars.get_req_bin("In");
          const std::vector<uint8_t> expected = vars.get_req_bin("Out");
          const std::vector<uint8_t> iv = vars.get_opt_bin("IV");
+         const std::vector<uint8_t> discarded_input = rng().random_vec<std::vector<uint8_t>>(rng().next_nonzero_byte());
 
          Test::Result result(algo);
 
@@ -70,6 +71,23 @@ class Message_Auth_Tests final : public Text_Based_Test {
             mac->start(iv);
             mac->update(input);
             result.test_bin_eq(provider + " correct mac", mac->final(), expected);
+
+            mac->set_key(key);
+            mac->start(iv);
+            mac->update(discarded_input);
+            mac->start(iv);
+            mac->update(input);
+            result.test_bin_eq(provider + " start resets partial message", mac->final(), expected);
+
+            mac->set_key(key);
+            mac->start(iv);
+            mac->update(discarded_input);
+            mac->set_key(key);
+            if(!iv.empty()) {
+               mac->start(iv);
+            }
+            mac->update(input);
+            result.test_bin_eq(provider + " set_key resets partial message", mac->final(), expected);
 
             mac->set_key(key);
             mac->start(iv);

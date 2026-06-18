@@ -7,8 +7,8 @@
 
 #include <botan/internal/par_hash.h>
 
+#include <botan/exceptn.h>
 #include <botan/internal/buffer_stuffer.h>
-
 #include <sstream>
 
 namespace Botan {
@@ -81,6 +81,9 @@ void Parallel::clear() {
 }
 
 Parallel::Parallel(std::vector<std::unique_ptr<HashFunction>>& hashes) {
+   if(hashes.size() < 2) {
+      throw Invalid_Argument("Parallel hash requires at least two hashes be specified");
+   }
    m_hashes.reserve(hashes.size());
    for(auto&& hash : hashes) {
       m_hashes.push_back(std::move(hash));
