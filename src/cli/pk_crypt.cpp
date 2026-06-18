@@ -135,8 +135,8 @@ class PK_Decrypt final : public Command {
             return set_return_code(1);
          }
 
-         const std::string aead_algo = aead_oid.human_name_or_empty();
-         if(aead_algo.empty()) {
+         const auto aead_algo = aead_oid.registered_name();
+         if(!aead_algo.has_value()) {
             error_output() << "Ciphertext was encrypted with an unknown algorithm";
             return set_return_code(1);
          }
@@ -149,9 +149,9 @@ class PK_Decrypt final : public Command {
          Botan::AlgorithmIdentifier oaep_hash_id;
          Botan::BER_Decoder(pk_alg_id.parameters(), Botan::BER_Decoder::Limits::DER()).decode(oaep_hash_id);
 
-         const std::string oaep_hash = oaep_hash_id.oid().human_name_or_empty();
+         const auto oaep_hash = oaep_hash_id.oid().registered_name();
 
-         if(oaep_hash.empty()) {
+         if(!oaep_hash.has_value()) {
             error_output() << "Unknown hash function used with OAEP, OID " << oaep_hash_id.oid().to_string() << "\n";
             return set_return_code(1);
          }
@@ -162,11 +162,11 @@ class PK_Decrypt final : public Command {
          }
 
          std::unique_ptr<Botan::AEAD_Mode> aead =
-            Botan::AEAD_Mode::create_or_throw(aead_algo, Botan::Cipher_Dir::Decryption);
+            Botan::AEAD_Mode::create_or_throw(*aead_algo, Botan::Cipher_Dir::Decryption);
 
          const size_t expected_keylen = aead->key_spec().maximum_keylength();
 
-         const Botan::PK_Decryptor_EME dec(*key, rng(), "OAEP(" + oaep_hash + ")");
+         const Botan::PK_Decryptor_EME dec(*key, rng(), "OAEP(" + *oaep_hash + ")");
 
          const Botan::secure_vector<uint8_t> file_key =
             dec.decrypt_or_random(encrypted_key.data(), encrypted_key.size(), expected_keylen, rng());

@@ -48,6 +48,8 @@ Test::Result test_OID_to_string() {
    Test::Result result("OID::to_string");
 
    result.test_str_eq("OID::to_string behaves as we expect", oid.to_string(), "1.2.1000.1001.1002000");
+   result.test_str_eq(
+      "OID::to_formatted_string falls back to dotted decimal", oid.to_formatted_string(), oid.to_string());
 
    return result;
 }
@@ -64,7 +66,7 @@ Test::Result test_oid_registration() {
 
    result.test_is_true("named OID found", Botan::OID::from_name(name).has_value());
 
-   result.test_str_eq("name of OID matches expected", oid.to_formatted_string(), name);
+   result.test_opt_str_eq("name of OID matches expected", oid.registered_name(), name);
 
    return result;
 }
@@ -82,7 +84,7 @@ Test::Result test_add_and_lookup() {
    Botan::OID::register_oid(oid, name);
 
    result.test_is_true("named OID found", Botan::OID::from_name(name).value_or(Botan::OID()) == oid);
-   result.test_str_eq("name of OID matches expected", oid.to_formatted_string(), name);
+   result.test_opt_str_eq("name of OID matches expected", oid.registered_name(), name);
 
    // completely redundant, nothing happens:
    Botan::OID::register_oid(oid, name);
@@ -96,9 +98,9 @@ Test::Result test_add_and_lookup() {
    // name->oid map is unchanged:
    result.test_is_true("named OID found after second insert",
                        Botan::OID::from_name(name).value_or(Botan::OID()) == oid);
-   result.test_str_eq("name of OID matches expected", oid.to_formatted_string(), name);
+   result.test_opt_str_eq("name of OID matches expected", oid.registered_name(), name);
    // now second OID maps back to the string as expected:
-   result.test_str_eq("name of OID matches expected", oid2.to_formatted_string(), name);
+   result.test_opt_str_eq("name of OID matches expected", oid2.registered_name(), name);
 
    try {
       Botan::OID::register_oid(oid2, name2);
@@ -106,6 +108,11 @@ Test::Result test_add_and_lookup() {
    } catch(Botan::Invalid_State&) {
       result.test_success("Registration of second name to the same OID fails");
    }
+
+   const Botan::OID oid3("1.3.6.1.4.1.25258.1001.3");
+   result.test_throws<Botan::Invalid_Argument>("Registration of an empty name is rejected",
+                                               [&]() { Botan::OID::register_oid(oid3, ""); });
+   result.test_is_false("OID with rejected empty name remains unregistered", oid3.registered_oid());
 
    return result;
 }

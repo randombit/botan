@@ -361,6 +361,10 @@ class Test {
                                  std::optional<uint64_t> produced,
                                  std::optional<uint64_t> expected);
 
+            bool test_opt_str_eq(std::string_view what,
+                                 std::optional<std::string> produced,
+                                 std::optional<std::string> expected);
+
 #if defined(BOTAN_HAS_BIGINT)
             /* Test predicates for BigInt */
             bool test_bn_eq(std::string_view what, const BigInt& produced, const BigInt& expected);

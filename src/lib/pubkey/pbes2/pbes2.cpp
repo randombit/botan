@@ -208,10 +208,15 @@ std::unique_ptr<Pbes2Pbkdf2Parameters> Pbes2Pbkdf2Parameters::decode(const Algor
    validate_pbes2_params(salt.size(), key_length);
    validate_params(iterations);
 
-   const std::string prf = prf_algo.oid().human_name_or_empty();
-   if(prf.empty() || !prf.starts_with("HMAC")) {
+   const std::string prf = [&]() {
+      if(const auto name = prf_algo.oid().registered_name()) {
+         if(name->starts_with("HMAC")) {
+            return *name;
+         }
+      }
+
       throw Decoding_Error(fmt("Unknown PBES2 PRF '{}'", prf_algo.oid()));
-   }
+   }();
 
    // RFC 8018 A.2 defines the PBKDF2 PRFs with NULL parameters; accept NULL or
    // absent and reject any other parameter encoding rather than ignoring it.
@@ -416,11 +421,16 @@ secure_vector<uint8_t> pbes2_decrypt(std::span<const uint8_t> key_bits,
       .end_cons()
       .verify_end();
 
-   const std::string cipher = enc_algo.oid().human_name_or_empty();
-   const auto cipher_spec = split_on(cipher, '/');
-   if(cipher_spec.size() != 2 || !known_pbes_cipher_mode(cipher_spec[1])) {
+   const std::string cipher = [&]() -> std::string {
+      if(const auto name = enc_algo.oid().registered_name()) {
+         const auto cipher_spec = split_on(*name, '/');
+         if(cipher_spec.size() == 2 && known_pbes_cipher_mode(cipher_spec[1])) {
+            return *name;
+         }
+      }
+
       throw Decoding_Error(fmt("PBES2: Unknown/invalid cipher OID {}", enc_algo.oid()));
-   }
+   }();
 
    std::vector<uint8_t> iv;
    BER_Decoder(enc_algo.parameters(), BER_Decoder::Limits::DER()).decode(iv, ASN1_Type::OctetString).verify_end();

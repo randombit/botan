@@ -59,11 +59,19 @@ FrodoKEMMode::Mode FrodoKEM_mode_from_string(std::string_view str) {
    throw Invalid_Argument(fmt("'{}' is not a valid FrodoKEM mode name", str));
 }
 
+FrodoKEMMode::Mode FrodoKEM_mode_from_oid(const OID& oid) {
+   if(const auto name = oid.registered_name()) {
+      return FrodoKEM_mode_from_string(*name);
+   }
+
+   throw Invalid_Argument(fmt("OID '{}' is not registered as a FrodoKEM mode", oid));
+}
+
 }  // anonymous namespace
 
 FrodoKEMMode::FrodoKEMMode(Mode mode) : m_mode(mode) {}
 
-FrodoKEMMode::FrodoKEMMode(const OID& oid) : m_mode(FrodoKEM_mode_from_string(oid.to_formatted_string())) {}
+FrodoKEMMode::FrodoKEMMode(const OID& oid) : m_mode(FrodoKEM_mode_from_oid(oid)) {}
 
 FrodoKEMMode::FrodoKEMMode(std::string_view str) : m_mode(FrodoKEM_mode_from_string(str)) {}
 

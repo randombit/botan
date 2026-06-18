@@ -37,8 +37,8 @@ Test::Result test_decode_ecdsa_X509() {
       try {
          const Botan::X509_Certificate cert(Test::data_file("x509/ecc/CSCA.CSCA.csca-germany.1.crt"));
 
-         result.test_str_eq(
-            "correct signature oid", cert.signature_algorithm().oid().to_formatted_string(), "ECDSA/SHA-224");
+         result.test_opt_str_eq(
+            "correct signature oid", cert.signature_algorithm().oid().registered_name(), "ECDSA/SHA-224");
 
          result.test_bin_eq("serial number", cert.serial_number(), std::vector<uint8_t>{1});
          result.test_bin_eq("authority key id", cert.authority_key_id(), cert.subject_key_id());

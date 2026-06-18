@@ -135,19 +135,23 @@ std::string OID::to_string() const {
 }
 
 std::string OID::to_formatted_string() const {
-   std::string s = this->human_name_or_empty();
-   if(!s.empty()) {
-      return s;
+   if(auto name = this->registered_name()) {
+      return *name;
+   } else {
+      return this->to_string();
    }
-   return this->to_string();
 }
 
 std::string OID::human_name_or_empty() const {
+   return this->registered_name().value_or("");
+}
+
+std::optional<std::string> OID::registered_name() const {
    return OID_Map::global_registry().oid2str(*this);
 }
 
 bool OID::registered_oid() const {
-   return !human_name_or_empty().empty();
+   return this->registered_name().has_value();
 }
 
 bool OID::matches(std::initializer_list<uint32_t> other) const {

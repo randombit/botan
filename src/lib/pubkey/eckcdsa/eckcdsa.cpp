@@ -60,17 +60,19 @@ std::unique_ptr<HashFunction> eckcdsa_signature_hash(std::string_view padding) {
 }
 
 std::unique_ptr<HashFunction> eckcdsa_signature_hash(const AlgorithmIdentifier& alg_id) {
-   const auto oid_info = split_on(alg_id.oid().to_formatted_string(), '/');
+   if(const auto name = alg_id.oid().registered_name()) {
+      const auto alg_info = split_on(*name, '/');
 
-   if(oid_info.size() != 2 || oid_info[0] != "ECKCDSA") {
-      throw Decoding_Error(fmt("Unexpected AlgorithmIdentifier OID {} in association with ECKCDSA key", alg_id.oid()));
+      if(alg_info.size() == 2 && alg_info[0] == "ECKCDSA") {
+         if(!alg_id.parameters_are_empty()) {
+            throw Decoding_Error("Unexpected non-empty AlgorithmIdentifier parameters for ECKCDSA");
+         }
+
+         return HashFunction::create_or_throw(alg_info[1]);
+      }
    }
 
-   if(!alg_id.parameters_are_empty()) {
-      throw Decoding_Error("Unexpected non-empty AlgorithmIdentifier parameters for ECKCDSA");
-   }
-
-   return HashFunction::create_or_throw(oid_info[1]);
+   throw Decoding_Error(fmt("Unexpected AlgorithmIdentifier OID {} in association with ECKCDSA key", alg_id.oid()));
 }
 
 std::vector<uint8_t> eckcdsa_prefix(const EC_AffinePoint& point, size_t hash_block_size) {

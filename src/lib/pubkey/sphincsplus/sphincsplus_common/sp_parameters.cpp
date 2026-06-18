@@ -398,7 +398,11 @@ std::string Sphincs_Parameters::to_string() const {
 }
 
 Sphincs_Parameters Sphincs_Parameters::create(const OID& oid) {
-   return Sphincs_Parameters::create(oid.to_formatted_string());
+   if(const auto name = oid.registered_name()) {
+      return Sphincs_Parameters::create(*name);
+   }
+
+   throw Lookup_Error(fmt("No SLH-DSA (or SPHINCS+) parameter registered for OID {}", oid));
 }
 
 OID Sphincs_Parameters::object_identifier() const {

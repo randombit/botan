@@ -19,6 +19,10 @@ OID_Map& OID_Map::global_registry() {
 }
 
 void OID_Map::add_oid(const OID& oid, std::string_view str) {
+   if(str.empty()) {
+      throw Invalid_Argument("Cannot register an empty name for an OID");
+   }
+
    if(auto name = lookup_static_oid(oid)) {
       if(*name != str) {
          throw Invalid_State("Cannot register two different names to a single OID");
@@ -66,7 +70,7 @@ void OID_Map::add_oid2str(const OID& oid, std::string_view str) {
    }
 }
 
-std::string OID_Map::oid2str(const OID& oid) {
+std::optional<std::string> OID_Map::oid2str(const OID& oid) {
    if(auto name = lookup_static_oid(oid)) {
       return std::string(*name);
    }
@@ -78,7 +82,7 @@ std::string OID_Map::oid2str(const OID& oid) {
       return i->second;
    }
 
-   return "";
+   return {};
 }
 
 OID OID_Map::str2oid(std::string_view str) {

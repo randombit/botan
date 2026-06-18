@@ -455,6 +455,20 @@ bool Test::Result::test_opt_u64_eq(std::string_view what,
    }
 }
 
+bool Test::Result::test_opt_str_eq(std::string_view what,
+                                   std::optional<std::string> produced,
+                                   std::optional<std::string> expected) {
+   if(produced.has_value() and !expected.has_value()) {
+      return test_failure(Botan::fmt("Assertion {} produced value {} but nullopt was expected", what, *produced));
+   } else if(!produced.has_value() && expected.has_value()) {
+      return test_failure(Botan::fmt("Assertion {} produced nullopt but {} was expected", what, *expected));
+   } else if(produced.has_value() && expected.has_value()) {
+      return test_str_eq(what, *produced, *expected);
+   } else {
+      return test_success();
+   }
+}
+
 #if defined(BOTAN_HAS_BIGINT)
 bool Test::Result::test_bn_eq(std::string_view what, const BigInt& produced, const BigInt& expected) {
    if(produced == expected) {

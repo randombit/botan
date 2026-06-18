@@ -42,7 +42,7 @@ bool CertID::is_id_for(const X509_Certificate& issuer, const X509_Certificate& s
          return false;
       }
 
-      const std::string hash_algo = m_hash_id.oid().to_formatted_string();
+      const auto hash_algo = m_hash_id.oid().registered_name();
 
       /*
       RFC 6960 4.1.1

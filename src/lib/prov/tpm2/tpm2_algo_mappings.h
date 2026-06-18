@@ -241,7 +241,7 @@ namespace Botan::TPM2 {
    // Currently, tpm2-tss does not include support for Brainpool curves or 25519/448.
    // Once the corresponding PR (https://github.com/tpm2-software/tpm2-tss/pull/2897) is merged and released,
    // this function should be updated.
-   const std::string curve_name = curve_oid.to_formatted_string();
+   const auto curve_name = curve_oid.registered_name();
    if(curve_name == "secp192r1") {
       return TPM2_ECC_NIST_P192;
    } else if(curve_name == "secp224r1") {

@@ -71,10 +71,9 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       DER_Encoder der(m_der_named_curve);
       der.encode(m_oid);
 
-      const std::string name = m_oid.human_name_or_empty();
-      if(!name.empty()) {
+      if(const auto name = m_oid.registered_name()) {
          // returns nullptr if unknown or not supported
-         m_pcurve = PCurve::PrimeOrderCurve::for_named_curve(name);
+         m_pcurve = PCurve::PrimeOrderCurve::for_named_curve(*name);
       }
       if(m_pcurve) {
          m_engine = EC_Group_Engine::Optimized;

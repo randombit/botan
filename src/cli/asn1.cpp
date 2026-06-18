@@ -96,11 +96,10 @@ class OID_Info final : public Command {
          try {
             const Botan::OID oid(oid_str);
 
-            const std::string name = oid.human_name_or_empty();
-            if(name.empty()) {
-               output() << "OID " << oid_str << " is not recognized\n";
+            if(const auto name = oid.registered_name()) {
+               output() << "OID " << oid_str << " is associated with " << *name << "\n";
             } else {
-               output() << "OID " << oid_str << " is associated with " << name << "\n";
+               output() << "OID " << oid_str << " is not recognized\n";
             }
 
             return;
