@@ -6,9 +6,24 @@
 
 #include <botan/database.h>
 
+#include <botan/internal/charset.h>
 #include <string>
 
 namespace Botan {
+
+bool SQL_Database::is_valid_table_name(std::string_view table) const {
+   if(table.empty()) {
+      return false;
+   }
+
+   constexpr auto valid_table_name_char = CharacterValidityTable::alpha_numeric_plus("_");
+   for(const char c : table) {
+      if(!valid_table_name_char(c)) {
+         return false;
+      }
+   }
+   return true;
+}
 
 std::shared_ptr<SQL_Database::Statement> SQL_Database::select(std::string_view columns,
                                                               std::string_view table,

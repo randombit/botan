@@ -171,6 +171,13 @@ class BOTAN_PUBLIC_API(2, 0) SQL_Database /* NOLINT(*-special-member-functions) 
 
       virtual bool is_threadsafe() const { return false; }
 
+      /**
+      * Return true if the given name seems to be valid as the name for a table
+      *
+      * Default implementation accepts non-empty [a-zA-Z0-9_]
+      */
+      virtual bool is_valid_table_name(std::string_view table) const;
+
       virtual ~SQL_Database() = default;
 };
 
