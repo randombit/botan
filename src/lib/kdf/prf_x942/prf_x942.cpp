@@ -52,30 +52,41 @@ void X942_PRF::perform_kdf(std::span<uint8_t> key,
    BOTAN_ARG_CHECK(key.size() <= 0x1FFFFFFF, "X942_PRF output length too large for DER encoding");
 
    auto hash = HashFunction::create("SHA-1");
-   const auto in = concat<secure_vector<uint8_t>>(label, salt);
+
+   const auto label_and_salt = [&]() -> std::vector<uint8_t> {
+      if(label.empty() && salt.empty()) {
+         return {};
+      }
+
+      const auto combined = concat<std::vector<uint8_t>>(label, salt);
+      return DER_Encoder()
+         .start_explicit(0)
+         .encode(combined, ASN1_Type::OctetString)
+         .end_explicit()
+         .get_contents_unlocked();
+   }();
 
    BufferStuffer k(key);
    for(uint32_t counter = 1; !k.full(); ++counter) {
       BOTAN_ASSERT_NOMSG(counter != 0);  // overflow check
 
       hash->update(secret);
-      hash->update(
-         DER_Encoder()
-            .start_sequence()
+      hash->update(DER_Encoder()
+                      .start_sequence()
 
-            .start_sequence()
-            .encode(m_key_wrap_oid)
-            .raw_bytes(encode_x942_int(counter))
-            .end_cons()
+                      .start_sequence()
+                      .encode(m_key_wrap_oid)
+                      .raw_bytes(encode_x942_int(counter))
+                      .end_cons()
 
-            .encode_if(!salt.empty(), DER_Encoder().start_explicit(0).encode(in, ASN1_Type::OctetString).end_explicit())
+                      .raw_bytes(label_and_salt)
 
-            .start_explicit(2)
-            .raw_bytes(encode_x942_int(static_cast<uint32_t>(8 * key.size())))
-            .end_explicit()
+                      .start_explicit(2)
+                      .raw_bytes(encode_x942_int(static_cast<uint32_t>(8 * key.size())))
+                      .end_explicit()
 
-            .end_cons()
-            .get_contents());
+                      .end_cons()
+                      .get_contents());
 
       // Write straight into the output buffer, except if the hash output needs
       // a truncation in the final iteration.
