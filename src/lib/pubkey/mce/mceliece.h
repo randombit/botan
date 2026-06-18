@@ -51,7 +51,7 @@ class BOTAN_PUBLIC_API(2, 0) McEliece_PublicKey : public virtual Public_Key /* N
       std::vector<uint8_t> raw_public_key_bits() const override;
       std::vector<uint8_t> public_key_bits() const override;
 
-      bool check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const override { return true; }
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       size_t get_t() const;
 
@@ -89,7 +89,7 @@ class BOTAN_PUBLIC_API(2, 0) McEliece_PrivateKey final : public virtual McEliece
       /**
       Generate a McEliece key pair
 
-      Suggested parameters for a given security level (SL)
+      Supported parameters for a given security level (SL)
 
       SL=80 n=1632 t=33 - 59 KB pubkey 140 KB privkey
       SL=107 n=2480 t=45 - 128 KB pubkey 300 KB privkey

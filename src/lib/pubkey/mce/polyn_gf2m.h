@@ -94,6 +94,8 @@ class polyn_gf2m {
 
       int get_degree() const;
 
+      size_t get_coeff_count() const { return m_coeff.size(); }
+
       /**
       * determine the degree in a timing secure manner. the timing of this function
       * only depends on the number of allocated coefficients, not on the actual

@@ -1152,8 +1152,13 @@ Public Key Creation, Import and Export
 
 .. cpp:function:: int botan_privkey_create_mceliece(botan_privkey_t* key, botan_rng_t rng, size_t n, size_t t)
 
-   Create a McEliece key using the specified parameters. See
-   :ref:`mceliece` for details on choosing parameters.
+   Create a McEliece key using one of the supported deprecated parameter sets.
+   See :ref:`mceliece` for details.
+
+   .. warning::
+
+      This McEliece implementation is deprecated and will be removed in a future major release.
+      Prefer the newer, widely implemented and standardized, Classic McEliece.
 
 .. cpp:function:: int botan_privkey_create_dh(botan_privkey_t* key, botan_rng_t rng, const char* params)
 

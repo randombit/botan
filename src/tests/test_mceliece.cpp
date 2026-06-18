@@ -127,51 +127,63 @@ class McEliece_Tests final : public Test {
 
       std::vector<Test::Result> run() override {
          struct keygen_params {
-               size_t code_length, t_min, t_max;
+               size_t code_length, t;
          };
 
-         const keygen_params param_sets[] = {
-            {256, 5, 15}, {512, 5, 33}, {1024, 15, 35}, {2048, 33, 50}, {6624, 110, 115}};
+         const keygen_params param_sets[] = {{1632, 33}, {2480, 45}, {2960, 57}, {3408, 67}, {4624, 95}, {6624, 115}};
 
          std::vector<Test::Result> results;
+         results.push_back(test_invalid_params(this->rng()));
 
          for(const auto& params : param_sets) {
             if(Test::run_long_tests() == false && params.code_length >= 2048) {
                continue;
             }
 
-            for(size_t t = params.t_min; t <= params.t_max; ++t) {
-               Test::Result result("McEliece keygen");
-               result.start_timer();
+            Test::Result result("McEliece keygen");
+            result.start_timer();
 
-               const Botan::McEliece_PrivateKey sk1(this->rng(), params.code_length, t);
-               const Botan::McEliece_PublicKey& pk1 = sk1;
+            const Botan::McEliece_PrivateKey sk1(this->rng(), params.code_length, params.t);
+            const Botan::McEliece_PublicKey& pk1 = sk1;
 
-               const std::vector<uint8_t> pk_enc = pk1.public_key_bits();
-               const Botan::secure_vector<uint8_t> sk_enc = sk1.private_key_bits();
+            const std::vector<uint8_t> pk_enc = pk1.public_key_bits();
+            const Botan::secure_vector<uint8_t> sk_enc = sk1.private_key_bits();
 
-               const Botan::McEliece_PublicKey pk(pk_enc);
-               const Botan::McEliece_PrivateKey sk(sk_enc);
+            const Botan::McEliece_PublicKey pk(pk_enc);
+            const Botan::McEliece_PrivateKey sk(sk_enc);
 
-               result.test_str_eq("decoded public key equals original", fingerprint(pk1), fingerprint(pk));
-               result.test_str_eq("decoded private key equals original", fingerprint(sk1), fingerprint(sk));
-               result.test_is_true("key validation passes", sk.check_key(this->rng(), false));
-               result.end_timer();
+            result.test_str_eq("decoded public key equals original", fingerprint(pk1), fingerprint(pk));
+            result.test_str_eq("decoded private key equals original", fingerprint(sk1), fingerprint(sk));
+            result.test_is_true("key validation passes", sk.check_key(this->rng(), false));
+            result.end_timer();
 
-               result.end_timer();
-
-               results.push_back(result);
+            results.push_back(result);
 
       #if defined(BOTAN_HAS_KDF2)
-               results.push_back(test_kem(sk, pk, this->rng()));
+            results.push_back(test_kem(sk, pk, this->rng()));
       #endif
-            }
          }
 
          return results;
       }
 
    private:
+      static Test::Result test_invalid_params(Botan::RandomNumberGenerator& rng) {
+         Test::Result result("McEliece invalid parameters");
+
+         result.test_throws("unsupported keygen parameters", [&] { Botan::McEliece_PrivateKey(rng, 2048, 50); });
+         result.test_throws("unsupported public key parameters", [&] {
+            const std::vector<uint8_t> pub_matrix;
+            Botan::McEliece_PublicKey(pub_matrix, 50, 2048);
+         });
+         result.test_throws("wrong public matrix length", [&] {
+            const std::vector<uint8_t> pub_matrix;
+            Botan::McEliece_PublicKey(pub_matrix, 33, 1632);
+         });
+
+         return result;
+      }
+
       static Test::Result test_kem(const Botan::McEliece_PrivateKey& sk,
                                    const Botan::McEliece_PublicKey& pk,
                                    Botan::RandomNumberGenerator& rng) {

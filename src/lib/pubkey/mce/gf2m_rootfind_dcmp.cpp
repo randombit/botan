@@ -220,6 +220,7 @@ secure_vector<gf2m> gf2m_decomp_rootfind_state::find_roots(const polyn_gf2m& sig
       }
 
       if(eval_result == 0) {
+         BOTAN_ASSERT_NOMSG(root_pos < result.size());
          result[root_pos] = this->m_j_gray;
          root_pos++;
       }

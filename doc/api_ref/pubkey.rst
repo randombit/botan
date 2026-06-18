@@ -1490,15 +1490,16 @@ plaintext is represented directly in the ciphertext, with only a small number of
 bit errors. Thus it is absolutely essential to only use McEliece with a CCA2
 secure scheme.
 
-For a given security level (SL) a McEliece key would use
-parameters n and t, and have the corresponding key sizes listed:
+The deprecated McEliece implementation only supports the following parameter
+sets. For a given security level (SL) a McEliece key would use parameters n and
+t, and have the corresponding key sizes listed:
 
 +-----+------+-----+---------------+----------------+
 | SL  |   n  |   t | public key KB | private key KB |
 +=====+======+=====+===============+================+
 |  80 | 1632 |  33 |            59 |            140 |
 +-----+------+-----+---------------+----------------+
-| 107 | 2280 |  45 |           128 |            300 |
+| 107 | 2480 |  45 |           128 |            300 |
 +-----+------+-----+---------------+----------------+
 | 128 | 2960 |  57 |           195 |            459 |
 +-----+------+-----+---------------+----------------+
@@ -1653,4 +1654,3 @@ and `draft-fluhrer-lms-more-parm-sets-11 <https://datatracker.ietf.org/doc/html/
 - hash: ``SHA-256``, ``Truncated(SHA-256,192)``, ``SHAKE-256(256)``, ``SHAKE-256(192)``
 - h: ``5``, ``10``, ``15``, ``20``, ``25``
 - w: ``1``, ``2``, ``4``, ``8``
-

@@ -18,6 +18,19 @@
 
 namespace Botan {
 
+struct McEliece_Params final {
+      size_t code_length;
+      size_t t;
+      size_t ext_deg;
+      size_t codimension;
+      size_t dimension;
+      size_t words_per_matrix_row;
+      size_t public_matrix_bytes;
+};
+
+McEliece_Params mceliece_validate_keygen_params(size_t code_length, size_t t);
+McEliece_Params mceliece_validate_key_encoding_params(size_t code_length, size_t t);
+
 class McEliece_PublicKeyInternal final {
    public:
       McEliece_PublicKeyInternal(std::vector<uint8_t> public_matrix, size_t t, size_t code_length) :
