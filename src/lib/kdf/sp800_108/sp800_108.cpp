@@ -50,7 +50,7 @@ class CounterParams final {
          // encoding bit length of the counter ("r"). The counter starts at "1", so the
          // maximum number of usable blocks is 2^r - 1.
          const auto max_blocks = (uint64_t(1) << counter_bits) - 1;
-         BOTAN_ARG_CHECK(blocks_required < max_blocks, "SP.800-108 output size too large");
+         BOTAN_ARG_CHECK(blocks_required <= max_blocks, "SP.800-108 output size too large");
 
          return CounterParams(
             output_bits, output_length_bits / 8, counter_bits / 8, static_cast<uint32_t>(blocks_required));
