@@ -6,6 +6,7 @@
 
 #include <botan/psk_db.h>
 
+#include <botan/assert.h>
 #include <botan/database.h>
 
 namespace Botan {
@@ -15,6 +16,7 @@ Encrypted_PSK_Database_SQL::Encrypted_PSK_Database_SQL(const secure_vector<uint8
                                                        std::string_view table_name) :
       Encrypted_PSK_Database(master_key), m_db(std::move(db)), m_table_name(table_name) {
    using DB = SQL_Database;
+   BOTAN_ARG_CHECK(m_db->is_valid_table_name(m_table_name), "Provided table name is not valid for this database");
    m_db->create_table(DB::Table_Schema(m_table_name,
                                        {
                                           DB::Column("psk_name", DB::Column_Type::String).primary_key(),
