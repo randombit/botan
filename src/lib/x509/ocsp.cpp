@@ -17,12 +17,29 @@
 #include <botan/uri.h>
 #include <botan/x509_ext.h>
 #include <botan/x509path.h>
+#include <botan/internal/fmt.h>
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
    #include <botan/internal/http_util.h>
 #endif
 
 namespace Botan::OCSP {
+
+namespace {
+
+/*
+* RFC 6960 requires producedAt, thisUpdate, nextUpdate, and revocationTime
+* to be encoded as GeneralizedTime. ASN1_Time also accepts UTCTime since that
+* is required for X.509 certificates and CRLs (RFC 5280), so enforce the
+* stricter OCSP requirement at the call site.
+*/
+void check_generalized_time(const ASN1_Time& time, const char* field) {
+   if(time.tagging() != ASN1_Type::GeneralizedTime) {
+      throw Decoding_Error(fmt("OCSP response {} was not encoded as GeneralizedTime", field));
+   }
+}
+
+}  // namespace
 
 CertID::CertID(const X509_Certificate& issuer, const BigInt& subject_serial) : m_subject_serial(subject_serial) {
    /*
@@ -143,6 +160,11 @@ void SingleResponse::decode_from(BER_Decoder& from) {
       .get_next(cert_status)
       .decode(m_thisupdate)
       .decode_optional(m_nextupdate, ASN1_Type(0), ASN1_Class::ContextSpecific | ASN1_Class::Constructed);
+
+   check_generalized_time(m_thisupdate, "thisUpdate");
+   if(m_nextupdate.time_is_set()) {
+      check_generalized_time(m_nextupdate, "nextUpdate");
+   }
 
    if(seq.more_items()) {
       const BER_Object next = seq.get_next_object();
@@ -360,6 +382,8 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
          .decode(m_produced_at)
 
          .decode_list(m_responses);
+
+      check_generalized_time(m_produced_at, "producedAt");
 
       if(tbs_decoder.more_items()) {
          const BER_Object next = tbs_decoder.get_next_object();

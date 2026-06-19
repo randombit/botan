@@ -32,6 +32,9 @@ class BOTAN_PUBLIC_API(2, 0) ASN1_Time final : public ASN1_Object {
       /// Return if the time has been set somehow
       bool time_is_set() const;
 
+      /// Return the tag (UtcTime or GeneralizedTime) this time was encoded with
+      ASN1_Type tagging() const { return m_tag; }
+
       ///  Compare this time against another
       int32_t cmp(const ASN1_Time& other) const;
 
