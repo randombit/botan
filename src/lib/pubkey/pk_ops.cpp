@@ -42,7 +42,7 @@ std::vector<uint8_t> PK_Ops::Encryption_with_Padding::encrypt(std::span<const ui
    const size_t max_input_bytes = (max_input_bits + 7) / 8;
    BOTAN_ARG_CHECK(msg.size() <= max_input_bytes, "Plaintext too large");
 
-   secure_vector<uint8_t> padded_ptext(max_input_bits);
+   secure_vector<uint8_t> padded_ptext(max_input_bytes);
    const size_t written = m_padding->pad(padded_ptext, msg, max_input_bits, rng);
    return raw_encrypt(std::span{padded_ptext}.first(written), rng);
 }
