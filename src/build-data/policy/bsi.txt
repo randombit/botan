@@ -68,7 +68,8 @@ hss_lms
 
 # Table 5.4: Recommended padding schemes for the RSA signature algorithm.
 emsa_pssr
-iso9796 # DS 2 and 3
+# ISO 9796 support is deprecated
+# iso9796
 
 # === 8. Random Number Generators ===
 auto_rng

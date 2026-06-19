@@ -187,6 +187,8 @@ Deprecated modules include
 - `cryptobox`: A not unreasonable password based encryption utility
   but neither modern (these days) nor widely implemented.
 
+- `iso9796`: Obscure, complicated, and apparently little used.
+
 - ``dlies``: DLIES is considered quite obsolete
 
 - ``tpm`` (TPM 1.2 only, rarely tested)
