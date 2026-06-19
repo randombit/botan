@@ -51,23 +51,12 @@ bool AlgorithmIdentifier::parameters_are_null() const {
    return (m_parameters.size() == 2 && (m_parameters[0] == 0x05) && (m_parameters[1] == 0x00));
 }
 
-bool operator==(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2) {
-   if(a1.oid() != a2.oid()) {
-      return false;
-   }
-
-   /*
-   * Treat NULL and empty as equivalent
-   */
-   if(a1.parameters_are_null_or_empty() && a2.parameters_are_null_or_empty()) {
-      return true;
-   }
-
-   return (a1.parameters() == a2.parameters());
+bool operator==(const AlgorithmIdentifier& x, const AlgorithmIdentifier& y) {
+   return (x.oid() == y.oid() && x.parameters() == y.parameters());
 }
 
-bool operator!=(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2) {
-   return !(a1 == a2);
+bool operator!=(const AlgorithmIdentifier& x, const AlgorithmIdentifier& y) {
+   return !(x == y);
 }
 
 /*

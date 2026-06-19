@@ -41,7 +41,7 @@ class BOTAN_PUBLIC_API(2, 0) ECDSA_PublicKey : public virtual EC_PublicKey {
       * @param key_bits DER encoded public key bits
       */
       ECDSA_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
-            EC_PublicKey(alg_id, key_bits) {}
+            EC_PublicKey(assert_algorithm_identifier(alg_id, "ECDSA"), key_bits) {}
 
       /**
       * Recover a public key from a signature/msg pair
@@ -95,7 +95,7 @@ class BOTAN_PUBLIC_API(2, 0) ECDSA_PrivateKey final : public ECDSA_PublicKey,
       * @param key_bits ECPrivateKey bits
       */
       ECDSA_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
-            EC_PrivateKey(alg_id, key_bits) {}
+            EC_PrivateKey(assert_algorithm_identifier(alg_id, "ECDSA"), key_bits) {}
 
       /**
       * Create a private key from a given secret @p x

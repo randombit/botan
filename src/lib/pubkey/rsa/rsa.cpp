@@ -682,7 +682,8 @@ AlgorithmIdentifier RSA_Signature_Operation::algorithm_identifier() const {
    try {
       const std::string full_name = "RSA/" + padding_name;
       const OID oid = OID::from_string(full_name);
-      return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
+      // RFC 8017 Appendix A.2 specifies RSA signatures for most hashes use NULL parameter
+      return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_NULL_PARAM);
    } catch(Lookup_Error&) {}
 
    if(padding_name.starts_with("PSS(")) {

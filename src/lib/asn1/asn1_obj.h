@@ -732,9 +732,6 @@ class BOTAN_PUBLIC_API(2, 0) AlgorithmIdentifier final : public ASN1_Object {
 /**
 * Compare two AlgorithmIdentifiers
 *
-* An absent parameters field and a parameters field consisting of a DER NULL are
-* treated as equivalent.
-*
 * @param x the first AlgorithmIdentifier
 * @param y the second AlgorithmIdentifier
 * @return true if x is equal to y
