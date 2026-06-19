@@ -619,8 +619,8 @@ Test::Result test_rsa_oaep() {
       #if defined(BOTAN_HAS_RSA)
    const Botan::X509_Certificate cert(Test::data_file("x509/misc/rsa_oaep.pem"));
 
-   auto public_key = cert.subject_public_key();
-   result.test_not_null("Decoding RSA-OAEP worked", public_key.get());
+   result.test_throws<Botan::Decoding_Error>("RSA-OAEP SubjectPublicKeyInfo is not decoded as generic RSA",
+                                             [&]() { auto public_key = cert.subject_public_key(); });
    const auto& pk_info = cert.subject_public_key_algo();
 
    result.test_str_eq("RSA-OAEP OID", pk_info.oid().to_string(), Botan::OID::from_string("RSA/OAEP").to_string());
@@ -927,6 +927,8 @@ Test::Result test_padding_config() {
    test_result.test_opt_str_eq("CA certificate signature algorithm (default)",
                                ca_cert_def.signature_algorithm().oid().registered_name(),
                                "RSA/PKCS1v15(SHA-512)");
+   test_result.test_is_true("CA certificate PKCS1v15 signature parameters are NULL",
+                            ca_cert_def.signature_algorithm().parameters_are_null());
 
    // Create X509 CA certificate; RSA-PSS is explicitly set
    opt.set_padding_scheme("PSSR");
@@ -980,6 +982,8 @@ Test::Result test_padding_config() {
    test_result.test_opt_str_eq("End certificate signature algorithm",
                                end_cert_pkcs1.signature_algorithm().oid().registered_name(),
                                "RSA/PKCS1v15(SHA-512)");
+   test_result.test_is_true("End certificate PKCS1v15 signature parameters are NULL",
+                            end_cert_pkcs1.signature_algorithm().parameters_are_null());
 
    // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is different from the CA certificate's scheme
    const Botan::X509_CA ca_diff(ca_cert_def, (*sk), "SHA-512", "PSS", *rng);
@@ -1008,7 +1012,6 @@ Test::Result test_padding_config() {
    return test_result;
 }
       #endif
-
    #endif
 
 Test::Result test_pkcs10_ext(const Botan::Private_Key& key,

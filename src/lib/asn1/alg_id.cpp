@@ -57,6 +57,7 @@ bool operator==(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2) {
 
    /*
    * Treat NULL and empty as equivalent
+   * TODO(Botan4) remove this
    */
    if(a1.parameters_are_null_or_empty() && a2.parameters_are_null_or_empty()) {
       return true;

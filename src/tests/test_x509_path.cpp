@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    #include "test_arb_eq.h"
    #include <botan/assert.h>
+   #include <botan/ber_dec.h>
    #include <botan/data_src.h>
    #include <botan/exceptn.h>
    #include <botan/pk_keys.h>
@@ -344,6 +345,18 @@ BOTAN_REGISTER_TEST("x509", "x509_path_extended", Extended_Path_Validation_Tests
 
       #if defined(BOTAN_HAS_PSS)
 
+bool spki_uses_rsa_pss(std::span<const uint8_t> spki) {
+   Botan::AlgorithmIdentifier key_alg_id;
+   Botan::BER_Decoder(spki, Botan::BER_Decoder::Limits::DER())
+      .start_sequence()
+      .decode(key_alg_id)
+      .discard_remaining()
+      .end_cons()
+      .verify_end();
+
+   return key_alg_id.oid() == Botan::OID::from_string("RSA/PSS");
+}
+
 class PSS_Path_Validation_Tests : public Test {
    public:
       std::vector<Test::Result> run() override;
@@ -412,14 +425,24 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run() {
          result.test_str_eq(test_name + " path validation result", validation_result.result_string(), expected_result);
       } else if(end && !root) {
          // CRT self signed test
-         auto pubkey = end->subject_public_key();
-         const bool accept = expected_result == "Verified";
-         result.test_bool_eq(test_name + " verify signature", end->check_signature(*pubkey), accept);
+         if(end->subject_public_key_algo().oid() == Botan::OID::from_string("RSA/PSS")) {
+            result.test_throws<Botan::Decoding_Error>(test_name + " rejects RSA-PSS SubjectPublicKeyInfo",
+                                                      [&]() { auto pubkey = end->subject_public_key(); });
+         } else {
+            auto pubkey = end->subject_public_key();
+            const bool accept = expected_result == "Verified";
+            result.test_bool_eq(test_name + " verify signature", end->check_signature(*pubkey), accept);
+         }
       } else if(csr) {
          // PKCS#10 Request test
-         auto pubkey = csr->subject_public_key();
-         const bool accept = expected_result == "Verified";
-         result.test_bool_eq(test_name + " verify signature", csr->check_signature(*pubkey), accept);
+         if(spki_uses_rsa_pss(csr->raw_public_key())) {
+            result.test_throws<Botan::Decoding_Error>(test_name + " rejects RSA-PSS SubjectPublicKeyInfo",
+                                                      [&]() { auto pubkey = csr->subject_public_key(); });
+         } else {
+            auto pubkey = csr->subject_public_key();
+            const bool accept = expected_result == "Verified";
+            result.test_bool_eq(test_name + " verify signature", csr->check_signature(*pubkey), accept);
+         }
       }
 
       result.end_timer();

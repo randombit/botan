@@ -43,6 +43,16 @@ EC_Group_Encoding default_encoding_for(const EC_Group& group) {
 
 }  // namespace
 
+const AlgorithmIdentifier& EC_PublicKey::assert_algorithm_identifier(const AlgorithmIdentifier& alg_id,
+                                                                     std::string_view alg_name) {
+   if(alg_id.oid() != OID::from_string(alg_name)) {
+      throw Decoding_Error(
+         fmt("Unexpected AlgorithmIdentifier OID {} in association with {} key", alg_id.oid(), alg_name));
+   }
+
+   return alg_id;
+}
+
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
 EC_PublicKey::EC_PublicKey(const EC_Group& group, const EC_Point& pub_point) {
    auto pt = EC_AffinePoint(group, pub_point);

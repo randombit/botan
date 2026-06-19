@@ -136,7 +136,8 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    if(data->m_version > 2) {
       throw Decoding_Error("Unknown X.509 cert version " + std::to_string(data->m_version));
    }
-   if(obj.signature_algorithm() != data->m_sig_algo_inner) {
+   if(obj.signature_algorithm().oid() != data->m_sig_algo_inner.oid() ||
+      obj.signature_algorithm().parameters() != data->m_sig_algo_inner.parameters()) {
       throw Decoding_Error("X.509 Certificate had differing algorithm identifiers in inner and outer ID fields");
    }
 
