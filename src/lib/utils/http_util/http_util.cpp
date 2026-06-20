@@ -175,7 +175,11 @@ std::optional<URI> resolve_location(const URI& base, std::string_view location) 
       return absolute;
    }
    if(location.starts_with("/") && !location.starts_with("//")) {
-      const std::string composed = base.scheme() + "://" + base.authority().original_input() + std::string(location);
+      const auto raw_authority = base.raw_authority();
+      if(!raw_authority.has_value()) {
+         return std::nullopt;
+      }
+      const std::string composed = base.scheme() + "://" + std::string(*raw_authority) + std::string(location);
       return URI::parse(composed);
    }
    return std::nullopt;
@@ -299,11 +303,17 @@ Response http_sync(const http_exch_fn& http_transact,
       throw HTTP_Error(fmt("Cannot initiate HTTP request to URI with scheme of '{}'", uri.scheme()));
    }
 
+   const auto& authority = uri.authority();
+   if(!authority.has_value()) {
+      throw HTTP_Error("Cannot initiate HTTP request to URI without authority");
+   }
+
    check_no_crlf_nul("verb", verb);
    check_no_crlf_nul("content type", content_type);
 
-   const std::string hostname = uri.host_to_string();
-   const std::string service = uri.port().has_value() ? std::to_string(*uri.port()) : uri.scheme();
+   const std::string hostname = authority->host_to_string();
+   const auto port = authority->port();
+   const std::string service = port.has_value() ? std::to_string(*port) : uri.scheme();
 
    // RFC 9112 3.2.1: request-target origin-form is "absolute-path [ '?' query ]".
    // If the URI has an empty path, the client MUST send "/". Fragment is
@@ -315,8 +325,8 @@ Response http_sync(const http_exch_fn& http_transact,
    }
 
    const std::string host_header = [&]() -> std::string {
-      const std::string h = (uri.host_kind() == URI::HostKind::IPv6) ? "[" + hostname + "]" : hostname;
-      return uri.port().has_value() ? h + ":" + std::to_string(*uri.port()) : h;
+      const std::string h = (authority->host_kind() == URI::HostKind::IPv6) ? "[" + hostname + "]" : hostname;
+      return port.has_value() ? h + ":" + std::to_string(*port) : h;
    }();
 
    std::ostringstream outbuf;

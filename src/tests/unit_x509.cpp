@@ -804,6 +804,53 @@ Test::Result test_x509_authority_info_access_extension() {
    return result;
 }
 
+Test::Result test_x509_ldap_empty_authority_uris() {
+   Test::Result result("X509 LDAP URIs with empty authority");
+
+   const auto check_uri = [&](std::string_view label, const Botan::URI& uri, std::string_view expected) {
+      result.test_str_eq(std::string(label) + " original URI", uri.original_input(), expected);
+      result.test_str_eq(std::string(label) + " scheme", uri.scheme(), "ldap");
+      const auto raw_authority = uri.raw_authority();
+      result.test_is_true(std::string(label) + " raw authority present", raw_authority.has_value());
+      if(raw_authority.has_value()) {
+         result.test_str_eq(std::string(label) + " raw authority is empty", std::string(*raw_authority), "");
+      }
+      result.test_is_false(std::string(label) + " has no parsed authority", uri.authority().has_value());
+      result.test_is_false(std::string(label) + " has no host", uri.host().has_value());
+   };
+
+   const auto check_contains_uri =
+      [&](std::string_view label, const std::vector<Botan::URI>& uris, std::string_view expected) {
+         for(const auto& uri : uris) {
+            if(uri.original_input() == expected) {
+               check_uri(label, uri, expected);
+               return;
+            }
+         }
+         result.test_failure(std::string(label) + " URI not found");
+      };
+
+   const Botan::X509_Certificate aruba_cert(Test::data_file("x509/misc/aruba.pem"));
+   const std::string aruba_aia =
+      "ldap:///CN=Security1-WIN-05PRGNGEKAO-CA,CN=AIA,CN=Public%20Key%20Services,CN=Services,CN=Configuration,"
+      "DC=Security1,DC=aruba,DC=com?cACertificate?base?objectClass=certificationAuthority";
+   const std::string aruba_cdp =
+      "ldap:///CN=Security1-WIN-05PRGNGEKAO-CA,CN=WIN-05PRGNGEKAO,CN=CDP,CN=Public%20Key%20Services,CN=Services,"
+      "CN=Configuration,DC=Security1,DC=aruba,DC=com?certificateRevocationList?base?objectClass=cRLDistributionPoint";
+
+   check_contains_uri("Aruba AIA", aruba_cert.ca_issuer_uris(), aruba_aia);
+   check_contains_uri("Aruba CDP", aruba_cert.crl_distribution_point_uris(), aruba_cdp);
+
+   const Botan::X509_Certificate bde_cert(Test::data_file("x509/misc/bde_v2.pem"));
+   const std::string bde_cdp =
+      "ldap:///CN=BANCO%20DE%20ESPA%D1A-AC%20RAIZ%20V2,CN=PKIBDE,CN=CDP,CN=Public%20Key%20Services,CN=Services,"
+      "CN=Configuration,DC=BDE,DC=ES?authorityRevocationList?base?objectclass=cRLDistributionPoint";
+
+   check_contains_uri("BDE CDP", bde_cert.crl_distribution_point_uris(), bde_cdp);
+
+   return result;
+}
+
 Test::Result test_crl_issuing_distribution_point_extension() {
    Test::Result result("X509 CRL IssuingDistributionPoint extension");
 
@@ -2037,6 +2084,7 @@ class X509_Cert_Unit_Tests final : public Test {
          results.push_back(test_x509_decode_list());
          results.push_back(test_rsa_oaep());
          results.push_back(test_x509_authority_info_access_extension());
+         results.push_back(test_x509_ldap_empty_authority_uris());
          results.push_back(test_crl_issuing_distribution_point_extension());
          results.push_back(test_verify_gost2012_cert());
          results.push_back(test_parse_rsa_pss_cert());

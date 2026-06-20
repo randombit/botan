@@ -441,6 +441,34 @@ bool Test::Result::test_opt_u8_eq(std::string_view what,
    }
 }
 
+bool Test::Result::test_opt_u16_eq(std::string_view what,
+                                   std::optional<uint16_t> produced,
+                                   std::optional<uint16_t> expected) {
+   if(produced.has_value() and !expected.has_value()) {
+      return test_failure(Botan::fmt("Assertion {} produced value {} but nullopt was expected", what, *produced));
+   } else if(!produced.has_value() && expected.has_value()) {
+      return test_failure(Botan::fmt("Assertion {} produced nullopt but {} was expected", what, *expected));
+   } else if(produced.has_value() && expected.has_value()) {
+      return test_u16_eq(what, *produced, *expected);
+   } else {
+      return test_success();
+   }
+}
+
+bool Test::Result::test_opt_u32_eq(std::string_view what,
+                                   std::optional<uint32_t> produced,
+                                   std::optional<uint32_t> expected) {
+   if(produced.has_value() and !expected.has_value()) {
+      return test_failure(Botan::fmt("Assertion {} produced value {} but nullopt was expected", what, *produced));
+   } else if(!produced.has_value() && expected.has_value()) {
+      return test_failure(Botan::fmt("Assertion {} produced nullopt but {} was expected", what, *expected));
+   } else if(produced.has_value() && expected.has_value()) {
+      return test_u32_eq(what, *produced, *expected);
+   } else {
+      return test_success();
+   }
+}
+
 bool Test::Result::test_opt_u64_eq(std::string_view what,
                                    std::optional<uint64_t> produced,
                                    std::optional<uint64_t> expected) {

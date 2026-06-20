@@ -357,6 +357,14 @@ class Test {
                                 std::optional<uint8_t> produced,
                                 std::optional<uint8_t> expected);
 
+            bool test_opt_u16_eq(std::string_view what,
+                                 std::optional<uint16_t> produced,
+                                 std::optional<uint16_t> expected);
+
+            bool test_opt_u32_eq(std::string_view what,
+                                 std::optional<uint32_t> produced,
+                                 std::optional<uint32_t> expected);
+
             bool test_opt_u64_eq(std::string_view what,
                                  std::optional<uint64_t> produced,
                                  std::optional<uint64_t> expected);

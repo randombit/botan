@@ -11,6 +11,7 @@
 #include <botan/ipv4_address.h>
 #include <botan/ipv6_address.h>
 #include <botan/types.h>
+#include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -24,8 +25,8 @@ namespace Botan {
 class BOTAN_PUBLIC_API(3, 13) URI final {
    public:
       /**
-      * The authority component of a URI: a validated DNS name, IPv4 literal,
-      * or IPv6 literal, with an optional port.
+      * The optional authority component of a URI: a validated DNS name, IPv4
+      * literal, or IPv6 literal, with an optional port.
       */
       class BOTAN_PUBLIC_API(3, 13) Authority final {
          public:
@@ -113,29 +114,24 @@ class BOTAN_PUBLIC_API(3, 13) URI final {
       const std::string& scheme() const { return m_scheme; }
 
       /**
-      * Return the parsed URI authority.
+      * Return the parsed URI authority, if this URI has one.
       */
-      const Authority& authority() const { return m_authority; }
+      const std::optional<Authority>& authority() const { return m_authority; }
 
       /**
-      * Return the parsed host; a DNS name, an IPv4 literal, or an IPv6 literal.
+      * Return the raw authority component if this URI included one, including
+      * the empty string for URIs such as "ldap:///CN=...".
       */
-      const Host& host() const { return m_authority.host(); }
+      std::optional<std::string_view> raw_authority() const;
 
       /**
-      * Which alternative of `host()` is held.
+      * Return the parsed host, if this URI has an authority.
+      * TODO(C++26) This can return std::optional<const Host&>
       */
-      HostKind host_kind() const { return m_authority.host_kind(); }
-
-      /**
-      * Return the host as a string.
-      */
-      std::string host_to_string() const { return m_authority.host_to_string(); }
-
-      /**
-      * Return the port if present; nullopt otherwise.
-      */
-      std::optional<uint16_t> port() const { return m_authority.port(); }
+      std::optional<std::reference_wrapper<const Host>> host() const {
+         return m_authority.has_value() ? std::optional<std::reference_wrapper<const Host>>(m_authority->host())
+                                        : std::nullopt;
+      }
 
       /**
       * The path component, preserved verbatim. Begins with "/" when present;
@@ -169,13 +165,14 @@ class BOTAN_PUBLIC_API(3, 13) URI final {
 
       /**
       * Return a list of URIs (possibly empty) which match the specified scheme
+      * and which contain a non-empty authority
       */
       static std::vector<URI> filter_scheme(std::string_view scheme, std::span<const URI> uris);
 
    private:
       URI(std::string raw,
           std::string scheme,
-          Authority authority,
+          std::optional<Authority> authority,
           std::string path,
           std::optional<std::string> query,
           std::optional<std::string> fragment) :
@@ -188,7 +185,7 @@ class BOTAN_PUBLIC_API(3, 13) URI final {
 
       std::string m_raw;
       std::string m_scheme;
-      Authority m_authority;
+      std::optional<Authority> m_authority;
       std::string m_path;
       std::optional<std::string> m_query;
       std::optional<std::string> m_fragment;

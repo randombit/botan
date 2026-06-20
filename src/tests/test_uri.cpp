@@ -21,19 +21,6 @@ class URI_Tests final : public Test {
    private:
       using HostKind = Botan::URI::Authority::HostKind;
 
-      static void test_port(Test::Result& result,
-                            std::string_view what,
-                            const std::optional<uint16_t>& got,
-                            const std::optional<uint16_t>& expected) {
-         if(got.has_value() != expected.has_value()) {
-            result.test_failure(std::string(what) + ": port presence mismatch");
-         } else if(got.has_value()) {
-            result.test_u16_eq(what, *got, *expected);
-         } else {
-            result.test_success(std::string(what) + ": both nullopt");
-         }
-      }
-
       static Test::Result test_authority_parse() {
          Test::Result result("URI::Authority::parse");
 
@@ -63,7 +50,7 @@ class URI_Tests final : public Test {
                continue;
             }
             result.test_str_eq("host: " + c.input, authority->host_to_string(), c.host);
-            test_port(result, "port: " + c.input, authority->port(), c.port);
+            result.test_opt_u16_eq("port: " + c.input, authority->port(), c.port);
             result.test_is_true("host kind: " + c.input, authority->host_kind() == c.kind);
             result.test_str_eq("original input: " + c.input, authority->original_input(), c.input);
          }
@@ -128,9 +115,91 @@ class URI_Tests final : public Test {
                continue;
             }
             result.test_str_eq("scheme: " + c.input, uri->scheme(), c.scheme);
-            result.test_str_eq("host: " + c.input, uri->host_to_string(), c.host);
-            test_port(result, "port: " + c.input, uri->port(), c.port);
-            result.test_is_true("host kind: " + c.input, uri->host_kind() == c.kind);
+            if(result.test_is_true("authority present: " + c.input, uri->authority().has_value())) {
+               const auto authority = uri->authority().value();
+               const auto raw_authority = uri->raw_authority();
+               result.test_is_true("raw authority present: " + c.input, raw_authority.has_value());
+               if(raw_authority.has_value()) {
+                  result.test_str_eq(
+                     "raw authority: " + c.input, std::string(*raw_authority), authority.original_input());
+               }
+               result.test_str_eq("host: " + c.input, authority.host_to_string(), c.host);
+               result.test_opt_u16_eq("port: " + c.input, authority.port(), c.port);
+               result.test_enum_eq("host kind: " + c.input, authority.host_kind(), c.kind);
+            }
+         }
+
+         struct NoAuthorityCase {
+               std::string input;
+               std::string scheme;
+               std::string path;
+               std::optional<std::string> query;
+               std::optional<std::string> fragment;
+         };
+
+         const std::vector<NoAuthorityCase> no_authority_cases{
+            {"urn:ashes", "urn", "ashes", std::nullopt, std::nullopt},
+            {"mailto:root@attacker.com", "mailto", "root@attacker.com", std::nullopt, std::nullopt},
+            {"tel:867-5309", "tel", "867-5309", std::nullopt, std::nullopt},
+            {"foo:", "foo", "", std::nullopt, std::nullopt},
+            {"foo:/path?q=1#frag", "foo", "/path", "q=1", "frag"},
+         };
+
+         for(const auto& c : no_authority_cases) {
+            const auto uri = Botan::URI::parse(c.input);
+            if(!result.test_is_true("parse succeeds without authority: " + c.input, uri.has_value())) {
+               continue;
+            }
+            result.test_is_false("authority absent: " + c.input, uri->authority().has_value());
+            result.test_is_false("raw authority absent: " + c.input, uri->raw_authority().has_value());
+            result.test_str_eq("scheme: " + c.input, uri->scheme(), c.scheme);
+            result.test_is_false("host absent: " + c.input, uri->host().has_value());
+            result.test_str_eq("path: " + c.input, uri->path(), c.path);
+            result.test_bool_eq("query presence: " + c.input, uri->query().has_value(), c.query.has_value());
+            if(c.query.has_value() && uri->query().has_value()) {
+               result.test_str_eq("query: " + c.input, *uri->query(), *c.query);
+            }
+            result.test_bool_eq("fragment presence: " + c.input, uri->fragment().has_value(), c.fragment.has_value());
+            if(c.fragment.has_value() && uri->fragment().has_value()) {
+               result.test_str_eq("fragment: " + c.input, *uri->fragment(), *c.fragment);
+            }
+         }
+
+         const std::vector<NoAuthorityCase> empty_authority_cases{
+            {"ldap:///CN=Example,C=US?cACertificate?base?objectClass=certificationAuthority",
+             "ldap",
+             "/CN=Example,C=US",
+             "cACertificate?base?objectClass=certificationAuthority",
+             std::nullopt},
+            {"ldaps:///CN=Example", "ldaps", "/CN=Example", std::nullopt, std::nullopt},
+            {"file:///tmp/cert.pem", "file", "/tmp/cert.pem", std::nullopt, std::nullopt},
+            {"http:///path", "http", "/path", std::nullopt, std::nullopt},
+            {"https://", "https", "", std::nullopt, std::nullopt},
+            {"https:///path", "https", "/path", std::nullopt, std::nullopt},
+         };
+
+         for(const auto& c : empty_authority_cases) {
+            const auto uri = Botan::URI::parse(c.input);
+            if(!result.test_is_true("parse succeeds with empty authority: " + c.input, uri.has_value())) {
+               continue;
+            }
+            result.test_is_false("parsed authority absent: " + c.input, uri->authority().has_value());
+            const auto raw_authority = uri->raw_authority();
+            result.test_is_true("raw authority present: " + c.input, raw_authority.has_value());
+            if(raw_authority.has_value()) {
+               result.test_str_eq("raw authority is empty: " + c.input, std::string(*raw_authority), "");
+            }
+            result.test_str_eq("scheme: " + c.input, uri->scheme(), c.scheme);
+            result.test_is_false("host absent: " + c.input, uri->host().has_value());
+            result.test_str_eq("path: " + c.input, uri->path(), c.path);
+            result.test_bool_eq("query presence: " + c.input, uri->query().has_value(), c.query.has_value());
+            if(c.query.has_value() && uri->query().has_value()) {
+               result.test_str_eq("query: " + c.input, *uri->query(), *c.query);
+            }
+            result.test_bool_eq("fragment presence: " + c.input, uri->fragment().has_value(), c.fragment.has_value());
+            if(c.fragment.has_value() && uri->fragment().has_value()) {
+               result.test_str_eq("fragment: " + c.input, *uri->fragment(), *c.fragment);
+            }
          }
 
          const std::vector<std::string> invalid = {
@@ -138,14 +207,8 @@ class URI_Tests final : public Test {
             "://no.scheme/",
             "1http://host/",
             "https//no-colon/",
-            "https://",
-            "https:///path",
             "https://[not-an-ip]/",
             "https://example.com:0443/",
-            // URIs without an authority are valid per RFC 5280 but seem unnecessary to support
-            "urn:ashes",
-            "mailto:root@attacker.com",
-            "tel:867-5309",
             // Path/query/fragment must use RFC 3986 character set.
             "https://example.com/has space",
             "https://example.com/path<bracket>",
@@ -199,15 +262,16 @@ class URI_Tests final : public Test {
          // Userinfo is preserved verbatim and participates in identity
          // (RFC 3986 6.2 case-normalizes only scheme and host; RFC 5280
          // 7.4 requires URI comparison to be exact-match after that).
-         result.test_is_false("userinfo distinguishes identity",
-                              Botan::URI::parse("https://alice:s3cret@example.com/").value() ==
-                                 Botan::URI::parse("https://example.com/").value());
+         const auto uri_with_userinfo = Botan::URI::parse("https://alice:s3cret@example.com/").value();
+
+         result.test_is_true("userinfo distinguishes identity",
+                             uri_with_userinfo != Botan::URI::parse("https://example.com/").value());
          result.test_is_true("userinfo equal when matching",
-                             Botan::URI::parse("https://alice:s3cret@example.com/").value() ==
-                                Botan::URI::parse("https://alice:s3cret@example.com/").value());
+                             uri_with_userinfo == Botan::URI::parse("https://alice:s3cret@example.com/").value());
          // The authority's original_input() includes the userinfo
+         result.test_is_true("authority present with userinfo", uri_with_userinfo.authority().has_value());
          result.test_str_eq("authority original_input preserves userinfo",
-                            Botan::URI::parse("https://alice:s3cret@example.com/").value().authority().original_input(),
+                            uri_with_userinfo.authority()->original_input(),
                             "alice:s3cret@example.com");
          // Userinfo case IS significant (no case normalization).
          result.test_is_false("userinfo case is significant",
@@ -217,10 +281,10 @@ class URI_Tests final : public Test {
          // authority grammar: "@" delimiter presence is significant).
          const auto absent = Botan::URI::parse("https://example.com/").value();
          const auto empty = Botan::URI::parse("https://@example.com/").value();
-         result.test_is_false("empty userinfo != absent userinfo", absent == empty);
-         result.test_is_false("absent userinfo: accessor reports nullopt", absent.authority().userinfo().has_value());
-         result.test_is_true("empty userinfo: accessor reports present", empty.authority().userinfo().has_value());
-         result.test_str_eq("empty userinfo: accessor reports empty string", *empty.authority().userinfo(), "");
+         result.test_is_true("empty userinfo != absent userinfo", absent != empty);
+         result.test_is_false("absent userinfo: accessor reports nullopt", absent.authority()->userinfo().has_value());
+         result.test_is_true("empty userinfo: accessor reports present", empty.authority()->userinfo().has_value());
+         result.test_str_eq("empty userinfo: accessor reports empty string", *empty.authority()->userinfo(), "");
 
          // Path, query, and fragment are split out and exposed separately.
          const auto full = Botan::URI::parse("https://example.com/path?q=1#frag").value();
@@ -235,6 +299,15 @@ class URI_Tests final : public Test {
          result.test_str_eq("empty path stays empty", no_path.path(), "");
          result.test_is_false("no query", no_path.query().has_value());
          result.test_is_false("no fragment", no_path.fragment().has_value());
+
+         const auto mailto = Botan::URI::parse("mailto:root@example.com").value();
+         result.test_is_false("mailto has no authority", mailto.authority().has_value());
+         result.test_is_false("mailto has no raw authority", mailto.raw_authority().has_value());
+         result.test_is_false(
+            "authorityful URI differs from authorityless URI",
+            Botan::URI::parse("foo://example.com/path").value() == Botan::URI::parse("foo:/path").value());
+         result.test_is_false("empty authority differs from absent authority",
+                              Botan::URI::parse("foo:///path").value() == Botan::URI::parse("foo:/path").value());
 
          // Query without path: empty path, present query.
          const auto query_only = Botan::URI::parse("https://example.com?q=1").value();
