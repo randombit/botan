@@ -891,6 +891,53 @@ bool operator!=(const X509_Certificate& cert1, const X509_Certificate& cert2) {
    return !(cert1 == cert2);
 }
 
+namespace {
+
+void format_alt_name(std::ostream& out, std::string_view label, const AlternativeName& alt_name) {
+   if(alt_name.is_empty()) {
+      return;
+   }
+
+   out << label << ":\n";
+
+   for(const auto& dns : alt_name.dns_names()) {
+      out << "   DNS: " << dns.to_string() << "\n";
+   }
+   for(const auto& ipv4 : alt_name.ipv4_addresses()) {
+      out << "   IP: " << ipv4.to_string() << "\n";
+   }
+   for(const auto& ipv6 : alt_name.ipv6_addresses()) {
+      out << "   IP: " << ipv6.to_string() << "\n";
+   }
+   for(const auto& uri : alt_name.uri_names()) {
+      out << "   URI: " << uri.original_input() << "\n";
+   }
+   for(const auto& email : alt_name.email_addresses()) {
+      out << "   Email: " << email.to_string() << "\n";
+   }
+   for(const auto& mbox : alt_name.smtp_utf8_mailboxes()) {
+      out << "   SmtpUTF8: " << mbox.to_string() << "\n";
+   }
+   for(const auto& dn : alt_name.directory_names()) {
+      out << "   DirName: " << dn << "\n";
+   }
+   for(const auto& oid : alt_name.registered_ids()) {
+      out << "   RegisteredID: " << oid.to_formatted_string() << "\n";
+   }
+
+   // SmtpUTF8Mailbox values are also retained verbatim in other_name_values;
+   // skip them here since they are already printed in decoded form above
+   const auto smtp_utf8_oid = OID::from_string("PKIX.SmtpUTF8Mailbox");
+   for(const auto& other : alt_name.other_name_values()) {
+      if(other.oid() == smtp_utf8_oid) {
+         continue;
+      }
+      out << "   OtherName " << other.oid().to_formatted_string() << ": " << hex_encode(other.value()) << "\n";
+   }
+}
+
+}  // namespace
+
 std::string X509_Certificate::to_string() const {
    std::ostringstream out;
 
@@ -911,6 +958,8 @@ std::string X509_Certificate::to_string() const {
           << " Error: " << ex.what() << "\n"
           << " Hex: " << hex_encode(this->subject_public_key_bitstring()) << "\n";
    }
+
+   format_alt_name(out, "Subject Alternative Name", this->subject_alt_name());
 
    out << "Constraints:\n";
    const Key_Constraints constraints = this->constraints();
@@ -944,6 +993,14 @@ std::string X509_Certificate::to_string() const {
       if(constraints.includes(Key_Constraints::DecipherOnly)) {
          out << "   Decipher Only\n";
       }
+   }
+
+   if(this->is_CA_cert()) {
+      out << "Basic Constraints: CA";
+      if(const auto path_len = this->path_length_constraint()) {
+         out << ", path length " << *path_len;
+      }
+      out << "\n";
    }
 
    const std::vector<OID>& policies = this->certificate_policy_oids();
@@ -1015,6 +1072,12 @@ std::string X509_Certificate::to_string() const {
 
    if(!this->subject_key_id().empty()) {
       out << "Subject keyid: " << hex_encode(this->subject_key_id()) << "\n";
+   }
+
+   format_alt_name(out, "Issuer Alternative Name", this->issuer_alt_name());
+
+   if(this->skip_revocation_check()) {
+      out << "Revocation status checking is disabled for this certificate\n";
    }
 
    if(this->is_self_signed()) {
