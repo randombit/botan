@@ -22,11 +22,12 @@ Portable replacement for timegm, _mkgmtime, etc
 Algorithm due to Howard Hinnant
 
 See https://howardhinnant.github.io/date_algorithms.html#days_from_civil
-for details and explanation. The code is slightly simplified by our assumption
-that the date is at least 1970, which is sufficient for our purposes.
+for details and explanation. The result is negative for dates before the epoch.
+The code is slightly simplified by our assumption that the date is at least 1950,
+which is sufficient for our purposes (ASN1_Time uses the same lower bound).
 */
-uint64_t days_since_epoch(uint32_t year, uint32_t month, uint32_t day) {
-   BOTAN_ARG_CHECK(year >= 1970, "Years before 1970 not supported");
+int64_t days_since_epoch(uint32_t year, uint32_t month, uint32_t day) {
+   BOTAN_ARG_CHECK(year >= 1950, "Years before 1950 not supported");
 
    if(month <= 2) {
       year -= 1;
@@ -35,7 +36,7 @@ uint64_t days_since_epoch(uint32_t year, uint32_t month, uint32_t day) {
    const uint32_t yoe = year - era * 400;                                          // [0, 399]
    const uint32_t doy = (153 * (month + (month > 2 ? -3 : 9)) + 2) / 5 + day - 1;  // [0, 365]
    const uint32_t doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;                     // [0, 146096]
-   return era * 146097 + doe - 719468;
+   return static_cast<int64_t>(era) * 146097 + static_cast<int64_t>(doe) - 719468;
 }
 
 /*
@@ -94,29 +95,31 @@ calendar_point::calendar_point(uint32_t y, uint32_t mon, uint32_t d, uint32_t h,
    BOTAN_ARG_CHECK(sec < 60, "Seconds is outside range");
 }
 
-uint64_t calendar_point::seconds_since_epoch() const {
+int64_t calendar_point::seconds_since_epoch() const {
    return (days_since_epoch(year(), month(), day()) * 86400) + (hour() * 60 * 60) + (minutes() * 60) + seconds();
 }
 
 std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const {
-   const uint64_t seconds_64 = this->seconds_since_epoch();
+   const int64_t seconds_64 = this->seconds_since_epoch();
 
    /*
    * The tick of a system_clock varies by implementation, and so also the
-   * largest representable value varies. Ensure this date is within range of the
-   * clock implementation.
+   * largest and smallest representable values vary. Ensure this date is within
+   * range of the clock implementation.
    */
-   constexpr uint64_t max_representable_seconds = static_cast<uint64_t>(
+   constexpr int64_t max_representable_seconds = static_cast<int64_t>(
       std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::duration::max()).count());
+   constexpr int64_t min_representable_seconds = static_cast<int64_t>(
+      std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::duration::min()).count());
 
-   if(seconds_64 > max_representable_seconds) {
+   if(seconds_64 > max_representable_seconds || seconds_64 < min_representable_seconds) {
       throw Invalid_Argument("calendar_point::to_std_timepoint time is outside the representable range");
    }
 
    const time_t seconds_time_t = static_cast<time_t>(seconds_64);
 
    if(seconds_64 - seconds_time_t != 0) {
-      throw Invalid_Argument("calendar_point::to_std_timepoint time_t overflow");
+      throw Invalid_Argument("calendar_point::to_std_timepoint time is outside the representable range");
    }
 
    return std::chrono::system_clock::from_time_t(seconds_time_t);

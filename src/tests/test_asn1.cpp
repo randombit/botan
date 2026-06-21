@@ -16,6 +16,7 @@
    #include <botan/der_enc.h>
    #include <botan/pss_params.h>
    #include <botan/internal/fmt.h>
+   #include <botan/internal/parsing.h>
 #endif
 
 namespace Botan_Tests {
@@ -557,6 +558,20 @@ class ASN1_Time_Parsing_Tests final : public Text_Based_Test {
             throw Test_Error("Invalid tag value in ASN1 date parsing test");
          }
 
+         const bool out_of_range = [&]() -> bool {
+            if(tspec.size() == 15) {
+               const size_t year = Botan::to_u32bit(std::string_view(tspec).substr(0, 4));
+               if(year >= 2262) {
+                  return true;
+               }
+               if(year >= 2038 && sizeof(time_t) == 4) {
+                  return true;
+               }
+            }
+
+            return false;
+         }();
+
          const Botan::ASN1_Type tag = (tag_str == "UTC" || tag_str == "UTC.invalid")
                                          ? Botan::ASN1_Type::UtcTime
                                          : Botan::ASN1_Type::GeneralizedTime;
@@ -566,6 +581,20 @@ class ASN1_Time_Parsing_Tests final : public Text_Based_Test {
          if(valid) {
             const Botan::ASN1_Time time(tspec, tag);
             result.test_success("Accepted valid time");
+
+            try {
+               const auto std_timepoint = time.to_std_timepoint();
+               result.test_success("Was able to convert time to std timepoint");
+
+               const auto from_std_timepoint = Botan::ASN1_Time::from_time_point(std_timepoint);
+               result.test_is_true("ASN1_Time from std timepoint matches input", from_std_timepoint == time);
+            } catch(std::exception& e) {
+               if(out_of_range) {
+                  result.test_str_contains("Exception message", e.what(), "time is outside the representable range");
+               } else {
+                  result.test_failure("Was not able to convert time to std timepoint", e.what());
+               }
+            }
          } else {
             result.test_throws("Invalid time rejected", [=]() { const Botan::ASN1_Time time(tspec, tag); });
          }

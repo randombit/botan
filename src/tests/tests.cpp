@@ -323,6 +323,17 @@ bool Test::Result::test_str_ne(std::string_view what, std::string_view str1, std
    }
 }
 
+bool Test::Result::test_str_contains(std::string_view what,
+                                     std::string_view produced,
+                                     std::string_view expected_substr) {
+   if(produced.find(expected_substr) == std::string::npos) {
+      return test_failure(Botan::fmt(
+         "{} {} produced '{}' which unexpectedly does not contain '{}'", who(), what, produced, expected_substr));
+   } else {
+      return test_success(Botan::fmt("{} {} '{}' contains '{}'", who(), what, produced, expected_substr));
+   }
+}
+
 bool Test::Result::test_i16_eq(std::string_view what, int16_t produced, int16_t expected) {
    return test_i32_eq(what, produced, expected);
 }
