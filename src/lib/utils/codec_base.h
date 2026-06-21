@@ -126,6 +126,8 @@ size_t base_decode(const Base& base,
    constexpr size_t decoding_bytes_in = std::remove_reference_t<Base>::decoding_bytes_in();
    constexpr size_t decoding_bytes_out = std::remove_reference_t<Base>::decoding_bytes_out();
 
+   input_consumed = 0;
+
    uint8_t* out_ptr = output;
    std::array<uint8_t, decoding_bytes_in> decode_buf{};
    size_t decode_buf_pos = 0;
