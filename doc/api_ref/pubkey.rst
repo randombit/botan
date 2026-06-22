@@ -168,7 +168,7 @@ Currently two flavors of Dilithium are implemented in separate Botan modules:
  * ``dilithium_aes``, that uses AES instead of Keccak-based primitives.
    This mode is deprecated and will be removed in a future release.
 
-ML-DSA (draft-ietf-lamps-pq-composite-sigs-15)
+ML-DSA-composite (draft-ietf-lamps-pq-composite-sigs-15)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Composite signature algorithms combining ML-DSA with a traditional signature algorithm. All
 variants defined in draft-ietf-lamps-pq-composite-sigs-15 are supported. Each is modelled as a
