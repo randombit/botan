@@ -31,8 +31,6 @@ namespace Botan {
 
 namespace {
 std::span<const uint8_t> mldsa_pubkey_subspan(const MLDSA_Composite_Param& param, std::span<const uint8_t> key_bits) {
-   const OID oid(param.mldsa_oid_str());
-   const AlgorithmIdentifier aid(oid, AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
    if(key_bits.size() <= param.mldsa_pubkey_size()) {
       throw Invalid_Argument(fmt("encoded MLDSA component public key is too short (len = {})", key_bits.size()));
    }
@@ -40,8 +38,6 @@ std::span<const uint8_t> mldsa_pubkey_subspan(const MLDSA_Composite_Param& param
 }
 
 std::span<const uint8_t> mldsa_privkey_subspan(const MLDSA_Composite_Param& param, std::span<const uint8_t> key_bits) {
-   const OID oid(param.mldsa_oid_str());
-   const AlgorithmIdentifier aid(oid, AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
    if(key_bits.size() <= param.mldsa_privkey_size()) {
       throw Invalid_Argument("encoded MLDSA component private key is too short");
    }
