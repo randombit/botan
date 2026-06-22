@@ -4438,14 +4438,7 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
 
             // KEM encryption (using the loaded public key)
             botan_pk_op_kem_encrypt_t kem_enc;
-   #if defined(BOTAN_HAS_MLKEM_COMPOSITE)
-            if(algo() == Botan::MLKEM_Composite_Param::generic_algo_name) {
-               TEST_FFI_OK(botan_pk_op_kem_encrypt_create_with_rng, (&kem_enc, pub_loaded, "Raw", rng));
-            } else
-   #endif
-            {
-               TEST_FFI_OK(botan_pk_op_kem_encrypt_create, (&kem_enc, pub_loaded, "Raw"));
-            }
+            TEST_FFI_OK(botan_pk_op_kem_encrypt_create, (&kem_enc, pub_loaded, "Raw"));
 
             // explicitly query output lengths
             size_t shared_key_length = 0;

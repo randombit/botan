@@ -79,7 +79,7 @@ std::unique_ptr<Private_Key> Classic_McEliece_PublicKey::generate_another(Random
 }
 
 std::unique_ptr<PK_Ops::KEM_Encryption> Classic_McEliece_PublicKey::create_kem_encryption_op(
-   std::string_view params, std::string_view provider, RandomNumberGenerator* /*rng_may_be_null*/) const {
+   std::string_view params, std::string_view provider) const {
    if(provider.empty() || provider == "base") {
       return std::make_unique<Classic_McEliece_Encryptor>(this->m_public, params);
    }

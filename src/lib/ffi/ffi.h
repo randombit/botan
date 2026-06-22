@@ -2311,12 +2311,6 @@ typedef struct botan_pk_op_kem_encrypt_struct* botan_pk_op_kem_encrypt_t;
 BOTAN_FFI_EXPORT(3, 0)
 int botan_pk_op_kem_encrypt_create(botan_pk_op_kem_encrypt_t* op, botan_pubkey_t key, const char* kdf);
 
-BOTAN_FFI_EXPORT(3, 0)
-int botan_pk_op_kem_encrypt_create_with_rng(botan_pk_op_kem_encrypt_t* op,
-                                            botan_pubkey_t key_obj,
-                                            const char* padding,
-                                            botan_rng_t rng_obj);
-
 /**
 * @return 0 if success, error if invalid object handle
 */

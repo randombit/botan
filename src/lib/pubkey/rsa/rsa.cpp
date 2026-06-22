@@ -839,8 +839,8 @@ std::unique_ptr<PK_Ops::Encryption> RSA_PublicKey::create_encryption_op(RandomNu
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::KEM_Encryption> RSA_PublicKey::create_kem_encryption_op(
-   std::string_view params, std::string_view provider, RandomNumberGenerator* /*rng_may_be_null*/) const {
+std::unique_ptr<PK_Ops::KEM_Encryption> RSA_PublicKey::create_kem_encryption_op(std::string_view params,
+                                                                                std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
       return std::make_unique<RSA_KEM_Encryption_Operation>(*this, params);
    }

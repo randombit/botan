@@ -291,8 +291,8 @@ bool Kyber_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const 
    return K == K_prime;
 }
 
-std::unique_ptr<PK_Ops::KEM_Encryption> Kyber_PublicKey::create_kem_encryption_op(
-   std::string_view params, std::string_view provider, RandomNumberGenerator* /*rng_may_be_null*/) const {
+std::unique_ptr<PK_Ops::KEM_Encryption> Kyber_PublicKey::create_kem_encryption_op(std::string_view params,
+                                                                                  std::string_view provider) const {
    if(provider.empty() || provider == "base") {
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
       if(mode().is_kyber_round3()) {

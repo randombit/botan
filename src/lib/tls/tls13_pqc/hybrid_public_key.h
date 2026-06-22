@@ -54,9 +54,7 @@ class BOTAN_TEST_API Hybrid_KEM_PublicKey : public virtual Hybrid_PublicKey {
 
       // no KDF support
       std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(
-         std::string_view params,
-         std::string_view provider = "base",
-         RandomNumberGenerator* rng_may_be_null = nullptr) const override;
+         std::string_view params, std::string_view provider = "base") const override;
 
    protected:
       Hybrid_KEM_PublicKey() = default;

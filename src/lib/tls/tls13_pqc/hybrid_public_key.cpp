@@ -303,7 +303,7 @@ std::unique_ptr<Private_Key> Hybrid_KEM_PublicKey::generate_another(RandomNumber
 }
 
 std::unique_ptr<Botan::PK_Ops::KEM_Encryption> Hybrid_KEM_PublicKey::create_kem_encryption_op(
-   std::string_view params, std::string_view provider, RandomNumberGenerator* /*rng_may_be_null*/) const {
+   std::string_view params, std::string_view provider) const {
    if(params != "Raw" && !params.empty()) {
       throw Botan::Invalid_Argument("Hybrid KEM encryption does not support KDFs");
    }

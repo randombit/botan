@@ -6,14 +6,9 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
 
-#include "botan/ffi.h"
+#include "test_pubkey.h"
 #include "tests.h"
 
-#include <iostream>
-#include <memory>
-#include <optional>
-#include <string_view>
-#include <vector>
 #if defined(BOTAN_HAS_MLKEM_COMPOSITE)
    #include <botan/base64.h>
    #include <botan/ber_dec.h>
@@ -29,14 +24,17 @@
    #include <botan/rng.h>
    #include <botan/secmem.h>
 
-   #include "test_pubkey.h"
-   #include "test_rng.h"
    #if defined(BOTAN_HAS_X509_CERTIFICATES)
       #include <botan/pkix_enums.h>
       #include <botan/x509cert.h>
    #endif
 
 #endif
+
+#include <memory>
+#include <optional>
+#include <string_view>
+#include <vector>
 
 namespace Botan_Tests {
 
@@ -62,10 +60,10 @@ std::vector<uint8_t> manipulate_mlkem_comp_artifact(std::span<const uint8_t> in,
                                                     const Botan::MLKEM_Composite_Param& param,
                                                     artifact_modification_e mod_type,
                                                     size_t index_offset_for_manipulation,
-                                                    uint8_t xor_for_manipluation) {
+                                                    uint8_t xor_for_manipulation) {
    std::string id_str = param.id_str();
    size_t index = 0;
-   xor_for_manipluation = (xor_for_manipluation == 0) ? 1 : xor_for_manipluation;
+   xor_for_manipulation = (xor_for_manipulation == 0) ? 1 : xor_for_manipulation;
    if(artifact_type == mlkem_comp_artifact_e::Privatekey) {
       index = 64;
    } else if(id_str.find("MLKEM768") != std::string::npos) {
@@ -92,10 +90,10 @@ std::vector<uint8_t> manipulate_mlkem_comp_artifact(std::span<const uint8_t> in,
       case truncate_after_boundary:
          return std::vector<uint8_t>(in.begin(), in.begin() + index + truncation_offset);
       case manipulate_mlkem:
-         result[10] ^= xor_for_manipluation;
+         result[10] ^= xor_for_manipulation;
          return result;
       case manipulate_traditional:
-         result[index + 10] ^= xor_for_manipluation;
+         result[index + 10] ^= xor_for_manipulation;
          return result;
    }
    throw Test_Error("unreachable code");
@@ -132,7 +130,7 @@ void encrypt_and_decrypt(const Botan::Private_Key& privkey,
    Botan::PK_KEM_Decryptor decryptor(privkey, rng, "", "");
    const Botan::secure_vector<uint8_t> shared_key(32);
 
-   Botan::PK_KEM_Encryptor encryptor(pubkey, rng, "", "");
+   Botan::PK_KEM_Encryptor encryptor(pubkey, "", "");
    Botan::secure_vector<uint8_t> ss_rt(32);
    Botan::secure_vector<uint8_t> ct_rt(encryptor.encapsulated_key_length());
    encryptor.encrypt(ct_rt, ss_rt, rng, 32);
@@ -187,7 +185,7 @@ class MLKEM_Composite_KAT_Tests : public Text_Based_Test {
 
          try {
             privkey = std::make_unique<Botan::MLKEM_Composite_PrivateKey>(comp_parm.id(), sk);
-         } catch(const Botan::Exception& e) {
+         } catch(const Botan::Exception&) {
             exc_during_privkey_decoding = true;
          }
          result.test_bool_eq("privkey decoding OK", !exc_during_privkey_decoding, privkey_valid);
@@ -197,7 +195,7 @@ class MLKEM_Composite_KAT_Tests : public Text_Based_Test {
 
          try {
             pubkey = std::make_unique<Botan::MLKEM_Composite_PublicKey>(comp_parm.id(), pk);
-         } catch(const Botan::Exception& e) {
+         } catch(const Botan::Exception&) {
             exc_during_pubkey_decoding = true;
          }
          result.test_bool_eq("pubkey decoding OK", !exc_during_pubkey_decoding, pubkey_valid);
@@ -211,7 +209,7 @@ class MLKEM_Composite_KAT_Tests : public Text_Based_Test {
             decryptor.decrypt(shared_key, ct_vec, shared_key.size());
             result.test_bin_eq("decryption of valid KAT ciphertext", shared_key, ss_vec);
 
-            Botan::PK_KEM_Encryptor encryptor(*pubkey, *rng, "", "");
+            Botan::PK_KEM_Encryptor encryptor(*pubkey, "", "");
             Botan::secure_vector<uint8_t> ss_rt(32);
             Botan::secure_vector<uint8_t> ct_rt(ct_vec.size());
             encryptor.encrypt(ct_rt, ss_rt, *rng, 32);
@@ -371,7 +369,7 @@ class MLKEM_Composite_KAT_Invalid_Tests : public Text_Based_Test {
 
          try {
             privkey = std::make_unique<Botan::MLKEM_Composite_PrivateKey>(comp_param.id(), private_key);
-         } catch(const Botan::Exception& e) {
+         } catch(const Botan::Exception&) {
             // No need to check if the private key was invalid, since this case is covered by the normal (positive) KAT tests
             result.test_success("exception during private key decoding");
             return;
@@ -379,7 +377,7 @@ class MLKEM_Composite_KAT_Invalid_Tests : public Text_Based_Test {
 
          try {
             pubkey = std::make_unique<Botan::MLKEM_Composite_PublicKey>(comp_param.id(), public_key);
-         } catch(const Botan::Exception& e) {
+         } catch(const Botan::Exception&) {
             // No need to check if the public key was invalid, since this case is covered by the normal (positive) KAT tests
             result.test_success("exception during public key decoding");
             return;
@@ -390,7 +388,7 @@ class MLKEM_Composite_KAT_Invalid_Tests : public Text_Based_Test {
          Botan::secure_vector<uint8_t> shared_key(32);
          try {
             decryptor.decrypt(shared_key, ciphertext, shared_key.size());
-         } catch(const Botan::Exception& e) {
+         } catch(const Botan::Exception&) {
             exc_during_decryption = true;
          }
          if(exc_during_decryption or
@@ -408,7 +406,7 @@ class MLKEM_Composite_KAT_Invalid_Tests : public Text_Based_Test {
 
          //result.test_bin_eq("decryption of valid KAT ciphertext", shared_key, ss_vec);
 
-         Botan::PK_KEM_Encryptor encryptor(*pubkey, rng, "", "");
+         Botan::PK_KEM_Encryptor encryptor(*pubkey, "", "");
          Botan::secure_vector<uint8_t> ss_rt(32);
          Botan::secure_vector<uint8_t> ct_rt(encryptor.encapsulated_key_length());
          try {

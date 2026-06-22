@@ -71,8 +71,8 @@ class BOTAN_PUBLIC_API(3, 0) MLKEM_Composite_PublicKey : public virtual Public_K
          return (op == PublicKeyOperation::KeyEncapsulation);
       }
 
-      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(
-         std::string_view params, std::string_view provider, RandomNumberGenerator* rng_may_be_null) const override;
+      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(std::string_view params,
+                                                                       std::string_view provider) const override;
 
       MLKEM_Composite_PublicKey(const MLKEM_Composite_PublicKey& other);
 

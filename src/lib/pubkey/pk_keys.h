@@ -266,8 +266,8 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       * @param params additional parameters
       * @param provider the provider to use
       */
-      virtual std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(
-         std::string_view params, std::string_view provider, RandomNumberGenerator* rng_may_be_null = nullptr) const;
+      virtual std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(std::string_view params,
+                                                                               std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.

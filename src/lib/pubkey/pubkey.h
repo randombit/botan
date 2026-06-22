@@ -606,8 +606,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
       */
       BOTAN_FUTURE_EXPLICIT PK_KEM_Encryptor(const Public_Key& key,
                                              std::string_view kem_param = "",
-                                             std::string_view provider = "",
-                                             RandomNumberGenerator* rng_may_be_null = nullptr);
+                                             std::string_view provider = "");
 
       /**
       * Construct an instance.

@@ -108,8 +108,8 @@ std::unique_ptr<PK_Ops::Encryption> Public_Key::create_encryption_op(RandomNumbe
    throw Lookup_Error(fmt("{} does not support encryption", algo_name()));
 }
 
-std::unique_ptr<PK_Ops::KEM_Encryption> Public_Key::create_kem_encryption_op(
-   std::string_view /*params*/, std::string_view /*provider*/, RandomNumberGenerator* /*rng_may_be_null*/) const {
+std::unique_ptr<PK_Ops::KEM_Encryption> Public_Key::create_kem_encryption_op(std::string_view /*params*/,
+                                                                             std::string_view /*provider*/) const {
    throw Lookup_Error(fmt("{} does not support KEM encryption", algo_name()));
 }
 

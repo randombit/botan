@@ -66,7 +66,7 @@ class PerfTest_PK_KEM : public PerfTest {
             auto pk = sk->public_key();
 
             Botan::PK_KEM_Decryptor dec(*sk, rng, kdf, provider);
-            Botan::PK_KEM_Encryptor enc(*pk, kdf, provider, &rng);
+            Botan::PK_KEM_Encryptor enc(*pk, kdf, provider);
 
             auto kem_enc_timer = config.make_timer(nm, 1, "KEM encrypt");
             auto kem_dec_timer = config.make_timer(nm, 1, "KEM decrypt");

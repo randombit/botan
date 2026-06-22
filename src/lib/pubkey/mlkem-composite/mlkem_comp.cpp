@@ -19,8 +19,7 @@
    #include <botan/ec_group.h>
    #include <botan/ecdh.h>
 #endif
-#include <algorithm>
-#include <optional>
+
 #if defined BOTAN_HAS_X25519
    #include <botan/x25519.h>
 #endif
@@ -98,18 +97,18 @@ void ensure_consistent_algo_names(const Public_Key* trad_pubkey, const MLKEM_Com
 
 class MLKEM_Composite_Encapsulation_Operation final : public PK_Ops::KEM_Encryption {
    public:
-      explicit MLKEM_Composite_Encapsulation_Operation(RandomNumberGenerator& rng,
-                                                       const MLKEM_Composite_Param& param,
-                                                       const ML_KEM_PublicKey& mlkem_pubkey,
-                                                       const Public_Key* trad_pubkey,
-                                                       std::string_view provider) :
+      explicit MLKEM_Composite_Encapsulation_Operation(  //RandomNumberGenerator& rng,
+         const MLKEM_Composite_Param& param,
+         const ML_KEM_PublicKey& mlkem_pubkey,
+         const Public_Key* trad_pubkey,
+         std::string_view provider) :
             m_parameters(param),
             m_mlkem_enc_op(mlkem_pubkey.create_kem_encryption_op("Raw", "")),
             m_traditional_pubkey_encoded(trad_pubkey->public_key_bits()) {
          ensure_consistent_algo_names(trad_pubkey, param);
          if(trad_pubkey->algo_name() == "RSA") {
             m_traditional_enc_op.emplace<std::unique_ptr<PK_Ops::Encryption>>(
-               trad_pubkey->create_encryption_op(rng, param.traditional_padding(), provider));
+               trad_pubkey->create_encryption_op(m_null_rng, param.traditional_padding(), provider));
          } else {
             // this cast, which would simplify the code (remove the X... branches below), doesn't work:
             //const PK_Key_Agreement_Key* ec_key = dynamic_cast<const PK_Key_Agreement_Key*>(trad_pubkey);
@@ -160,7 +159,12 @@ class MLKEM_Composite_Encapsulation_Operation final : public PK_Ops::KEM_Encrypt
          std::vector<uint8_t> trad_ct;
          if(std::get_if<std::unique_ptr<PK_Ops::Encryption>>(&this->m_traditional_enc_op) != nullptr) {
             PK_Ops::Encryption& encr_op = *std::get<std::unique_ptr<PK_Ops::Encryption>>(this->m_traditional_enc_op);
-            trad_ct = encr_op.encrypt(ss_trad, rng);
+            try {
+               trad_ct = encr_op.encrypt(ss_trad, rng);
+            } catch(const PRNG_Unseeded&) {
+               throw Internal_Error(
+                  "RSA encryption operation failed with PRNG_Unseeded even though use of the provided Null_RNG is not excepted");
+            }
          } else {
             std::unique_ptr<PK_Key_Agreement_Key> privkey;
             if(m_parameters.traditional_algorithm() == "ECDH") {
@@ -239,6 +243,7 @@ class MLKEM_Composite_Encapsulation_Operation final : public PK_Ops::KEM_Encrypt
       std::variant<std::unique_ptr<PK_Ops::Encryption>, std::vector<uint8_t>> m_traditional_enc_op;
       std::vector<uint8_t> m_traditional_pubkey_encoded;
       std::optional<EC_Group> m_ec_group_opt;
+      Null_RNG m_null_rng;
 };
 
 class MLKEM_Composite_Decapsulation_Operation final : public PK_Ops::KEM_Decryption {
@@ -420,17 +425,13 @@ std::unique_ptr<Private_Key> MLKEM_Composite_PublicKey::generate_another(RandomN
 }
 
 std::unique_ptr<PK_Ops::KEM_Encryption> MLKEM_Composite_PublicKey::create_kem_encryption_op(
-   std::string_view params, std::string_view provider, RandomNumberGenerator* rng_may_be_null) const {
+   std::string_view params, std::string_view provider) const {
    if(!params.empty() && params != "Raw") {
       throw Botan::Invalid_Argument("only empty parameters or 'Raw' is supported by MLKEM-composite KEM");
    }
-   if(rng_may_be_null == nullptr) {
-      throw Botan::Invalid_Argument(
-         "MLKEM_Composite_PublicKey::create_kem_encryption_op() requires the supplied optionalal RNG argument to have a value");
-   }
    if(provider.empty() || provider == "base") {
       return std::make_unique<MLKEM_Composite_Encapsulation_Operation>(
-         *rng_may_be_null, *this->m_parameters, *this->m_mlkem_pubkey, this->m_traditional_pubkey.get(), provider);
+         *this->m_parameters, *this->m_mlkem_pubkey, this->m_traditional_pubkey.get(), provider);
    }
    throw Provider_Not_Found(algo_name(), provider);
 }

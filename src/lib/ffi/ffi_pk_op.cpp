@@ -283,20 +283,6 @@ int botan_pk_op_kem_encrypt_create(botan_pk_op_kem_encrypt_t* op, botan_pubkey_t
    });
 }
 
-int botan_pk_op_kem_encrypt_create_with_rng(botan_pk_op_kem_encrypt_t* op,
-                                            botan_pubkey_t key_obj,
-                                            const char* padding,
-                                            botan_rng_t rng_obj) {
-   if(op == nullptr || padding == nullptr) {
-      return BOTAN_FFI_ERROR_NULL_POINTER;
-   }
-
-   return ffi_guard_thunk(__func__, [=]() -> int {
-      auto pk = std::make_unique<Botan::PK_KEM_Encryptor>(safe_get(key_obj), padding, "", &safe_get(rng_obj));
-      return ffi_new_object(op, std::move(pk));
-   });
-}
-
 int botan_pk_op_kem_encrypt_destroy(botan_pk_op_kem_encrypt_t op) {
    return BOTAN_FFI_CHECKED_DELETE(op);
 }

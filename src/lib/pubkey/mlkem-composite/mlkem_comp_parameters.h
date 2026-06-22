@@ -39,7 +39,7 @@ class BOTAN_PUBLIC_API(3, 0) MLKEM_Composite_Param {
       static std::vector<MLKEM_Composite_Param> all_supported_param_sets();
 
       /**
-       * @brief Create a paramters object from the provided id. If the parameters are not supported by the build configuration of the library, throw a Not_Implemented exception.
+       * @brief Create a parameters object from the provided id. If the parameters are not supported by the build configuration of the library, throw a Not_Implemented exception.
        *
        * @param id The id of the parameter set to create.
        *
@@ -63,7 +63,7 @@ class BOTAN_PUBLIC_API(3, 0) MLKEM_Composite_Param {
        * @brief 
        * Find out whether the library build supports this parameter. 
        *
-       * @return true if the parameter is supported, false otherwhise
+       * @return true if the parameter is supported, false otherwise
        */
       bool is_supported() const;
 

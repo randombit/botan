@@ -65,8 +65,8 @@ class BOTAN_PUBLIC_API(3, 3) FrodoKEM_PublicKey : public virtual Public_Key {
 
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
 
-      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(
-         std::string_view params, std::string_view provider, RandomNumberGenerator* rng_may_be_null) const override;
+      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(std::string_view params,
+                                                                       std::string_view provider) const override;
 
    protected:
       FrodoKEM_PublicKey() = default;
