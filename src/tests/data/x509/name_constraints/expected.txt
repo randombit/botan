@@ -251,7 +251,7 @@ uri-constraint-with-port-invalid:Certificate extension encoding error
 uri-double-trailing-dot-san-invalid:Certificate extension encoding error
 uri-excluded-host-exact-subdomain-valid:Verified
 uri-excluded-ip-host-invalid:Certificate does not pass name constraint
-uri-excluded-no-authority-invalid:Certificate extension encoding error
+uri-excluded-no-authority-invalid:Certificate does not pass name constraint
 uri-excluded-subtree-inside-invalid:Certificate does not pass name constraint
 uri-excluded-subtree-outside-valid:Verified
 uri-hex-ipv4-host-invalid:Certificate does not pass name constraint
@@ -266,7 +266,7 @@ uri-ipv6-literal-no-zone-host-invalid:Certificate does not pass name constraint
 uri-ipv6-zone-host-invalid:Certificate extension encoding error
 uri-leading-dot-apex-invalid:Certificate does not pass name constraint
 uri-leading-dot-subdomain-valid:Verified
-uri-no-authority-invalid:Certificate extension encoding error
+uri-no-authority-invalid:Certificate does not pass name constraint
 uri-non-numeric-port-invalid:Certificate extension encoding error
 uri-percent-encoded-host-not-decoded-invalid:Certificate extension encoding error
 uri-permit-no-uri-san-in-leaf-valid:Verified

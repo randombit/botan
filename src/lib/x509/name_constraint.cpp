@@ -528,10 +528,11 @@ bool GeneralName::matches_uri(const URI& uri) const {
    }
    // RFC 5280 4.2.1.10 does not provide for applying a DNS-form URI
    // constraint to an IP-literal host.
-   if(uri.host_kind() != URI::HostKind::DNS) {
+   const auto host = uri.host();
+   if(!host.has_value() || !std::holds_alternative<DNSName>(host->get())) {
       return false;
    }
-   const std::string& host = std::get<DNSName>(uri.host()).to_string();
+   const std::string& dns_host = std::get<DNSName>(host->get()).to_string();
    const std::string& constraint = std::get<URIConstraint>(m_name).value();
    /*
    RFC 5280 4.2.1.10:
@@ -546,9 +547,9 @@ bool GeneralName::matches_uri(const URI& uri) const {
    satisfy it. dns_subtree_match handles the leading-dot form correctly.
    */
    if(!constraint.empty() && constraint.front() == '.') {
-      return dns_subtree_match(host, constraint);
+      return dns_subtree_match(dns_host, constraint);
    }
-   return host == constraint;
+   return dns_host == constraint;
 }
 
 bool GeneralName::matches_email(const EmailAddress& addr) const {
@@ -928,10 +929,11 @@ bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unk
          authority component in which the host name is specified as an
          IP address), then the application MUST reject the certificate.
       */
-      if(uri.host_kind() != URI::HostKind::DNS) {
+      const auto host = uri.host();
+      if(!host.has_value() || !std::holds_alternative<DNSName>(host->get())) {
          return false;
       }
-      if(std::get<DNSName>(uri.host()).to_string().find('.') == std::string::npos) {
+      if(std::get<DNSName>(host->get()).to_string().find('.') == std::string::npos) {
          return false;
       }
       for(const auto& c : m_permitted_subtrees) {
@@ -1195,10 +1197,11 @@ bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unkn
          authority component in which the host name is specified as an
          IP address), then the application MUST reject the certificate.
       */
-      if(uri.host_kind() != URI::HostKind::DNS) {
+      const auto host = uri.host();
+      if(!host.has_value() || !std::holds_alternative<DNSName>(host->get())) {
          return true;
       }
-      if(std::get<DNSName>(uri.host()).to_string().find('.') == std::string::npos) {
+      if(std::get<DNSName>(host->get()).to_string().find('.') == std::string::npos) {
          return true;
       }
       for(const auto& c : m_excluded_subtrees) {

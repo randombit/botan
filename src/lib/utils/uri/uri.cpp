@@ -113,13 +113,34 @@ bool validate_userinfo(std::string_view userinfo) {
 }  // namespace
 
 std::strong_ordering URI::operator<=>(const URI& other) const {
-   return std::tie(m_scheme, m_authority, m_path, m_query, m_fragment) <=>
-          std::tie(other.m_scheme, other.m_authority, other.m_path, other.m_query, other.m_fragment);
+   const bool has_authority = raw_authority().has_value();
+   const bool other_has_authority = other.raw_authority().has_value();
+
+   return std::tie(m_scheme, has_authority, m_authority, m_path, m_query, m_fragment) <=>
+          std::tie(
+             other.m_scheme, other_has_authority, other.m_authority, other.m_path, other.m_query, other.m_fragment);
 }
 
 bool URI::operator==(const URI& other) const {
-   return m_scheme == other.m_scheme && m_authority == other.m_authority && m_path == other.m_path &&
-          m_query == other.m_query && m_fragment == other.m_fragment;
+   return m_scheme == other.m_scheme && raw_authority().has_value() == other.raw_authority().has_value() &&
+          m_authority == other.m_authority && m_path == other.m_path && m_query == other.m_query &&
+          m_fragment == other.m_fragment;
+}
+
+std::optional<std::string_view> URI::raw_authority() const {
+   const auto colon = m_raw.find(':');
+   BOTAN_ASSERT_NOMSG(colon != std::string::npos);
+
+   const size_t rest_offset = colon + 1;
+   if(m_raw.size() < rest_offset + 2 || m_raw[rest_offset] != '/' || m_raw[rest_offset + 1] != '/') {
+      return std::nullopt;
+   }
+
+   const size_t authority_start = rest_offset + 2;
+   const auto authority_end = m_raw.find_first_of("/?#", authority_start);
+   const size_t authority_len =
+      (authority_end == std::string::npos) ? std::string::npos : authority_end - authority_start;
+   return std::string_view(m_raw).substr(authority_start, authority_len);
 }
 
 std::strong_ordering URI::Authority::operator<=>(const URI::Authority& other) const {
@@ -170,28 +191,29 @@ std::optional<URI> URI::parse(std::string_view raw) {
    // Canonicalize the scheme
    const std::string scheme = tolower_string(raw.substr(0, i));
 
-   // The scheme must be followed by "//" introducing an authority. RFC 5280
-   // does allow including URIs without an authority ("urn:of:cat:ashes",
-   // "mailto:root@attacker.com") but they seem like an potential footgun (for
-   // example a rfc822 name constraint will not apply to a mailto: URL) and
-   // without any obvious justification to support here.
-
    auto rest = raw.substr(i + 1);
-   if(rest.size() < 2 || rest[0] != '/' || rest[1] != '/') {
-      return {};
-   }
-   rest.remove_prefix(2);  // Strip off the '//'
 
-   // Authority runs to the first '/', '?' or '#'. The remaining is `path ? query # fragment`,
-   // which is validated against the RFC 3986 character set.
-   const auto end = rest.find_first_of("/?#");
-   const auto authority = (end == std::string_view::npos) ? rest : rest.substr(0, end);
-   const auto path_query_fragment = (end == std::string_view::npos) ? std::string_view{} : rest.substr(end);
+   std::optional<Authority> parsed_authority;
+   std::string_view path_query_fragment;
 
-   // Parse and validate the authority string (hostname, IPv4, or IPv6 address)
-   auto parsed_authority = Authority::parse(authority);
-   if(!parsed_authority.has_value()) {
-      return {};
+   if(rest.starts_with("//")) {
+      rest.remove_prefix(2);  // Strip off the '//'
+
+      // Authority runs to the first '/', '?' or '#'. The remaining is `path ? query # fragment`,
+      // which is validated against the RFC 3986 character set.
+      const auto end = rest.find_first_of("/?#");
+      const auto authority = (end == std::string_view::npos) ? rest : rest.substr(0, end);
+      path_query_fragment = (end == std::string_view::npos) ? std::string_view{} : rest.substr(end);
+
+      // Parse and validate non-empty authority strings (hostname, IPv4, or IPv6 address)
+      if(!authority.empty()) {
+         parsed_authority = Authority::parse(authority);
+         if(!parsed_authority.has_value()) {
+            return {};
+         }
+      }
+   } else {
+      path_query_fragment = rest;
    }
 
    // Validate any `path ? query # fragment` portions of the URL
@@ -219,7 +241,7 @@ std::optional<URI> URI::parse(std::string_view raw) {
 
    // Accept
    return URI(
-      std::string(raw), scheme, std::move(*parsed_authority), std::string(path), std::move(query), std::move(fragment));
+      std::string(raw), scheme, std::move(parsed_authority), std::string(path), std::move(query), std::move(fragment));
 }
 
 //static
@@ -348,7 +370,7 @@ std::vector<URI> URI::filter_scheme(std::string_view scheme, std::span<const URI
    const auto normalized_scheme = tolower_string(scheme);
 
    for(const auto& uri : uris) {
-      if(uri.scheme() == normalized_scheme) {
+      if(uri.scheme() == normalized_scheme && uri.authority().has_value()) {
          results.push_back(uri);
       }
    }
