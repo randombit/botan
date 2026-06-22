@@ -7,8 +7,6 @@
 */
 
 #include <botan/ffi.h>
-#include <botan/mldsa_comp.h>
-#include <botan/mldsa_comp_parameters.h>
 
 #include <botan/assert.h>
 #include <botan/ec_group.h>
@@ -87,6 +85,10 @@
 
 #if defined(BOTAN_HAS_ML_DSA)
    #include <botan/ml_dsa.h>
+#endif
+
+#if defined(BOTAN_HAS_MLDSA_COMPOSITE)
+   #include <botan/mldsa_comp.h>
 #endif
 
 #if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
