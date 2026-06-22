@@ -288,7 +288,13 @@ std::chrono::system_clock::time_point ASN1_Time::to_std_timepoint() const {
 }
 
 uint64_t ASN1_Time::time_since_epoch() const {
-   return calendar_point(m_year, m_month, m_day, m_hour, m_minute, m_second).seconds_since_epoch();
+   const int64_t tse = calendar_point(m_year, m_month, m_day, m_hour, m_minute, m_second).seconds_since_epoch();
+
+   if(tse >= 0) {
+      return static_cast<uint64_t>(tse);
+   } else {
+      throw Encoding_Error("ASN1_Time::time_since_epoch value is prior to epoch");
+   }
 }
 
 /*

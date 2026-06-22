@@ -296,6 +296,8 @@ class Test {
 
             bool test_str_ne(std::string_view what, std::string_view produced, std::string_view expected);
 
+            bool test_str_contains(std::string_view what, std::string_view produced, std::string_view expected_substr);
+
             /* Test predicates on bool */
             bool test_bool_eq(std::string_view what, bool produced, bool expected);
 

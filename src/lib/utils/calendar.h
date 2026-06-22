@@ -56,8 +56,10 @@ class BOTAN_TEST_API calendar_point final {
 
       /**
       * Return seconds since epoch
+      *
+      * This is negative for dates before 1970
       */
-      uint64_t seconds_since_epoch() const;
+      int64_t seconds_since_epoch() const;
 
       /**
       * Returns an STL timepoint object
