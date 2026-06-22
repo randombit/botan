@@ -18,6 +18,7 @@
 #include <botan/uri.h>
 #include <botan/x509_ext.h>
 #include <botan/x509_key.h>
+#include <botan/internal/charset.h>
 #include <sstream>
 
 namespace Botan {
@@ -901,7 +902,7 @@ void format_alt_name(std::ostream& out, std::string_view label, const Alternativ
    out << label << ":\n";
 
    for(const auto& dns : alt_name.dns_names()) {
-      out << "   DNS: " << dns.to_string() << "\n";
+      out << "   DNS: " << escape_control_chars(dns.to_string()) << "\n";
    }
    for(const auto& ipv4 : alt_name.ipv4_addresses()) {
       out << "   IP: " << ipv4.to_string() << "\n";
@@ -910,13 +911,13 @@ void format_alt_name(std::ostream& out, std::string_view label, const Alternativ
       out << "   IP: " << ipv6.to_string() << "\n";
    }
    for(const auto& uri : alt_name.uri_names()) {
-      out << "   URI: " << uri.original_input() << "\n";
+      out << "   URI: " << escape_control_chars(uri.original_input()) << "\n";
    }
    for(const auto& email : alt_name.email_addresses()) {
-      out << "   Email: " << email.to_string() << "\n";
+      out << "   Email: " << escape_control_chars(email.to_string()) << "\n";
    }
    for(const auto& mbox : alt_name.smtp_utf8_mailboxes()) {
-      out << "   SmtpUTF8: " << mbox.to_string() << "\n";
+      out << "   SmtpUTF8: " << escape_control_chars(mbox.to_string()) << "\n";
    }
    for(const auto& dn : alt_name.directory_names()) {
       out << "   DirName: " << dn << "\n";
