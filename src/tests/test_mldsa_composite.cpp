@@ -62,7 +62,12 @@ void mimic_speed_test(Botan::RandomNumberGenerator& rng, Test::Result& result) {
    std::vector<uint8_t> signature;
    std::vector<uint8_t> bad_signature;
    rng.random_vec(message, 48);
-   auto sk = Botan::create_private_key("MLDSA65-RSA3072-PKCS15-SHA512", rng, "");
+   auto sk =
+      Botan::create_private_key(Botan::MLDSA_Composite_Param::generic_algo_name, rng, "MLDSA65-RSA3072-PKCS15-SHA512");
+   result.test_not_null("generated private key is non-null", sk);
+   if(sk == nullptr) {
+      return;
+   }
    const char* padding = "";
    Botan::PK_Signer sig(*sk, rng, padding, Botan::Signature_Format::Standard, "");
    auto pk = sk->public_key();
@@ -136,6 +141,7 @@ class MLDSA_Composite_Key_Detail_Tests : public Test {
          auto rng = Test::new_rng(test_name);
 
          const Botan::MLDSA_Composite_PrivateKey priv_key_generated(*rng, param);
+
          Botan::MLDSA_Composite_PrivateKey priv_key_generated_cp(priv_key_generated);
          const Botan::MLDSA_Composite_PrivateKey priv_key_other(*rng, param);
 
@@ -253,7 +259,13 @@ class MLDSA_Composite_Sig_Detail_Tests : public Test {
          Test::Result result(test_name);
          auto rng = Test::new_rng(test_name);
 
-         auto priv_key_generated(Botan::create_private_key(param.id_str(), *rng));
+         auto priv_key_generated(
+            Botan::create_private_key(Botan::MLDSA_Composite_Param::generic_algo_name, *rng, param.id_str()));
+
+         result.test_not_null("generated private key is not null", priv_key_generated);
+         if(!priv_key_generated) {
+            return result;
+         }
 
          auto pub_key_generated = priv_key_generated->public_key();
          Botan::Public_Key* pub_key_cast = static_cast<Botan::Public_Key*>(priv_key_generated.get());
@@ -285,28 +297,8 @@ class MLDSA_Composite_Sig_Detail_Tests : public Test {
       }
 
       std::vector<Test::Result> run() override {
-         const std::vector<Botan::MLDSA_Composite_Param> params {
-   #if defined(BOTAN_HAS_RSA)
-            Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
-               Botan::MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PKCS15_SHA256),
-   #endif
-   #if defined(BOTAN_HAS_PSS)
-               Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
-                  Botan::MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PSS_SHA256),
-   #endif
-   #if defined(BOTAN_HAS_ED25519)
-               Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
-                  Botan::MLDSA_Composite_Param::id_t::MLDSA44_Ed25519_SHA512),
-   #endif
-   #if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_BRAINPOOL256R1
-               Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
-                  Botan::MLDSA_Composite_Param::id_t::MLDSA65_ECDSA_brainpoolP256r1_SHA512),
-   #endif
-   #if defined BOTAN_HAS_ED448 && defined BOTAN_HAS_SHAKE
-               Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
-                  Botan::MLDSA_Composite_Param::id_t::MLDSA87_Ed448_SHAKE256)
-   #endif
-         };
+         const std::vector<Botan::MLDSA_Composite_Param> params =
+            Botan::MLDSA_Composite_Param::all_supported_param_sets();
 
          std::vector<Test::Result> result;
          result.reserve(params.size());
@@ -353,22 +345,22 @@ class MLDSA_Composite_RT_Tests : public Test {
          Test::Result result(test_name);
          auto rng = Test::new_rng(test_name);
          if(!param.is_supported()) {
-            result.test_throws<Botan::Not_Implemented>("create MLDSA-composite private key for non-supported parameter",
-                                                       [&]() { Botan::create_private_key(param.id_str(), *rng); });
+            result.test_throws<Botan::Not_Implemented>(
+               "create MLDSA-composite private key for non-supported parameter", [&]() {
+                  Botan::create_private_key(Botan::MLDSA_Composite_Param::generic_algo_name, *rng, param.id_str());
+               });
             return result;
          }
 
-         auto priv_key_generated = Botan::create_private_key(param.id_str(), *rng);
+         auto priv_key_generated =
+            Botan::create_private_key(Botan::MLDSA_Composite_Param::generic_algo_name, *rng, param.id_str());
+         result.test_not_null("generated private key is non-null", priv_key_generated);
          if(nullptr == priv_key_generated) {
-            result.test_bool_eq("generated private key non-null", false, true);
-         } else {
-            auto pub_key_generated = priv_key_generated->public_key();
-            if(nullptr == pub_key_generated) {
-               result.test_bool_eq("generated pub key key non-null", false, true);
-            } else {
-               sign_and_verify(*priv_key_generated, *pub_key_generated, *rng, result, "produced with generated key");
-            }
+            return result;
          }
+         auto pub_key_generated = priv_key_generated->public_key();
+         sign_and_verify(*priv_key_generated, *pub_key_generated, *rng, result, "produced with generated key");
+
          const uint64_t rep_cnt = options().run_long_tests() ? 150 : 1;
          for(uint64_t i = 1; i < rep_cnt; i++) {
             Botan::secure_vector<uint8_t> private_enc = priv_key_generated->private_key_bits();

@@ -14,6 +14,7 @@
 #include <botan/pss_params.h>
 #include <botan/internal/fmt.h>
 #include <cstring>
+#include <iostream>
 #include <string_view>
 
 namespace Botan {
@@ -257,9 +258,11 @@ std::optional<MLDSA_Composite_Param> MLDSA_Composite_Param::from_id(MLDSA_Compos
 MLDSA_Composite_Param MLDSA_Composite_Param::from_id_supported_or_throw(MLDSA_Composite_Param::id_t id) {
    const auto result = from_id(id);
    if(!result.has_value()) {
+      std::cout << "MLDSA_Composite_Param::from_id_supported_or_throw has no value\n";
       throw Botan::Invalid_Argument("no parameter found for provided MLDSA composite id (enum)");
    }
    if(!result.value().is_supported()) {
+      std::cout << "MLDSA_Composite_Param::from_id_supported_or_throw is not supported\n";
       throw Not_Implemented("Parameter set " + result.value().id_str() +
                             " is not supported by Botan's build configuration");
    }

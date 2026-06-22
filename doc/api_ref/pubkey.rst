@@ -169,7 +169,7 @@ Currently two flavors of Dilithium are implemented in separate Botan modules:
    This mode is deprecated and will be removed in a future release.
 
 ML-DSA-composite (draft-ietf-lamps-pq-composite-sigs-15)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Composite signature algorithms combining ML-DSA with a traditional signature algorithm. All
 variants defined in draft-ietf-lamps-pq-composite-sigs-15 are supported. Each is modelled as a
 distinct algorithm in Botan. The module for the composite algorithms is given by `mldsa-composite`, but note that
