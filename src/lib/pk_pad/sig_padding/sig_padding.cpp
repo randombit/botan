@@ -87,19 +87,25 @@ std::unique_ptr<SignaturePaddingScheme> SignaturePaddingScheme::create(std::stri
 #if defined(BOTAN_HAS_ISO_9796)
    if(req.algo_name() == "ISO_9796_DS2") {
       if(req.arg_count_between(1, 3)) {
+         const std::string trailer = req.arg(1, "exp");
+         if(trailer != "imp" && trailer != "exp") {
+            return nullptr;
+         }
          if(auto hash = HashFunction::create(req.arg(0))) {
             const size_t salt_size = req.arg_as_integer(2, hash->output_length());
-            const bool implicit = req.arg(1, "exp") == "imp";
-            return std::make_unique<ISO_9796_DS2>(std::move(hash), implicit, salt_size);
+            return std::make_unique<ISO_9796_DS2>(std::move(hash), trailer == "imp", salt_size);
          }
       }
    }
    //ISO-9796-2 DS 3 is deterministic and DS2 without a salt
    if(req.algo_name() == "ISO_9796_DS3") {
       if(req.arg_count_between(1, 2)) {
+         const std::string trailer = req.arg(1, "exp");
+         if(trailer != "imp" && trailer != "exp") {
+            return nullptr;
+         }
          if(auto hash = HashFunction::create(req.arg(0))) {
-            const bool implicit = req.arg(1, "exp") == "imp";
-            return std::make_unique<ISO_9796_DS3>(std::move(hash), implicit);
+            return std::make_unique<ISO_9796_DS3>(std::move(hash), trailer == "imp");
          }
       }
    }

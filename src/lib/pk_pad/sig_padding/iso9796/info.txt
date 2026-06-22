@@ -4,6 +4,7 @@ ISO_9796 -> 20161121
 
 <module_info>
 name -> "ISO-9796-2"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>

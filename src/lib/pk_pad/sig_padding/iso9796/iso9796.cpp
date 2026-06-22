@@ -75,8 +75,8 @@ std::vector<uint8_t> iso9796_encoding(std::span<const uint8_t> msg,
    const size_t mgf1_bytes = EM.size() - hash_len - trailer_len;
    mgf1_mask(*hash, H, std::span{EM}.first(mgf1_bytes));
 
-   //clear the leftmost bit (confer bouncy castle)
-   EM[0] &= 0x7F;
+   //clear the unused leftmost bits so the representative is < the modulus
+   EM[0] &= 0xFF >> (8 * output_length - output_bits);
 
    stuffer.append(H);
 
@@ -102,41 +102,65 @@ bool iso9796_verification(std::span<const uint8_t> repr,
                           std::span<const uint8_t> raw,
                           size_t key_bits,
                           std::unique_ptr<HashFunction>& hash,
-                          size_t salt_len) {
-   if(repr.size() != (key_bits + 7) / 8) {
-      return false;
-   }
-   //get trailer length
+                          size_t salt_len,
+                          bool implicit) {
+   const size_t key_bytes = ceil_tobytes(key_bits);
 
-   const uint8_t last = repr[repr.size() - 1];
-
-   if(last != 0xBC && last != 0xCC) {
+   if(repr.size() > key_bytes) {
       return false;
    }
 
-   const size_t trailer_len = last == 0xBC ? 1 : 2;
+   // The recovered representative is minimally encoded, so left-pad a value
+   // with leading zero bytes back to the full width before parsing (cf PSS).
+   std::vector<uint8_t> coded(key_bytes);
+   {
+      BufferStuffer stuffer(coded);
+      stuffer.append(0x00, key_bytes - repr.size());
+      stuffer.append(repr);
+   }
 
-   if(trailer_len == 2) {
+   if(coded.empty()) {
+      return false;
+   }
+
+   //the trailer length is fixed by the configured mode, and the verifier
+   //rejects a signature whose trailer does not match that mode
+
+   const size_t trailer_len = implicit ? 1 : 2;
+
+   const size_t hash_len = hash->output_length();
+
+   // The encoder requires output_length > hash_len + salt_len + trailer_len so
+   // that the message capacity is at least zero; match that here (the <= rejects
+   // the boundary case where the later capacity computation would underflow).
+   if(coded.size() <= hash_len + trailer_len + salt_len) {
+      return false;
+   }
+
+   if(implicit) {
+      if(coded[coded.size() - 1] != 0xBC) {
+         return false;
+      }
+   } else {
       const uint8_t hash_id = ieee1363_hash_id(hash->name());
       if(hash_id == 0) {
          throw Decoding_Error("ISO-9796: no hash identifier for " + hash->name());
       }
 
-      const uint8_t trailer_0 = repr[repr.size() - 2];
-      const uint8_t trailer_1 = repr[repr.size() - 1];
+      const uint8_t trailer_0 = coded[coded.size() - 2];
+      const uint8_t trailer_1 = coded[coded.size() - 1];
 
       if(trailer_0 != hash_id || trailer_1 != 0xCC) {
          return false;
       }
    }
 
-   const size_t hash_len = hash->output_length();
-
-   if(repr.size() < hash_len + trailer_len + salt_len) {
+   // The encoder clears the unused leftmost bits of the representative, so a
+   // valid signature always has them zero; reject otherwise (cf PSS).
+   const size_t top_bits = 8 * key_bytes - key_bits;
+   if(top_bits > 8 - high_bit(coded[0])) {
       return false;
    }
-
-   std::vector<uint8_t> coded(repr.begin(), repr.end());
 
    CT::poison(coded.data(), coded.size());
    //remove mask
@@ -146,8 +170,8 @@ bool iso9796_verification(std::span<const uint8_t> repr,
    const uint8_t* H = &coded[DB_size];
 
    mgf1_mask(*hash, {H, hash_len}, {DB, DB_size});
-   //clear the leftmost bit (confer bouncy castle)
-   DB[0] &= 0x7F;
+   //clear the unused leftmost bits (matching the encoding mask)
+   DB[0] &= 0xFF >> top_bits;
 
    //recover msg1 and salt
    size_t msg1_offset = 1;
@@ -185,7 +209,9 @@ bool iso9796_verification(std::span<const uint8_t> repr,
    const auto salt = std::span(coded).subspan(msg1_offset + msg1.size(), salt_len);
 
    //compute H2(C||msg1||H(msg2)||S*). * indicates a recovered value
-   const size_t capacity = (key_bits - 2 + 7) / 8 - hash_len - salt_len - trailer_len - 1;
+   // key_bytes == ceil_tobytes(key_bits) == the encoder's output_length, so the
+   // verifier splits the message at exactly the capacity the encoder used.
+   const size_t capacity = key_bytes - hash_len - salt_len - trailer_len - 1;
 
    std::span<const uint8_t> msg1raw = raw;
    if(msg1raw.size() > capacity) {
@@ -217,7 +243,9 @@ bool iso9796_verification(std::span<const uint8_t> repr,
  */
 void ISO_9796_DS2::update(const uint8_t input[], size_t length) {
    //need to buffer message completely, before digest
-   m_msg_buffer.insert(m_msg_buffer.end(), input, input + length);
+   if(length > 0) {
+      m_msg_buffer.insert(m_msg_buffer.end(), input, input + length);
+   }
 }
 
 /*
@@ -242,7 +270,7 @@ std::vector<uint8_t> ISO_9796_DS2::encoding_of(std::span<const uint8_t> msg,
  * ISO-9796-2 scheme 2 verify operation
  */
 bool ISO_9796_DS2::verify(std::span<const uint8_t> repr, std::span<const uint8_t> raw, size_t key_bits) {
-   return iso9796_verification(repr, raw, key_bits, m_hash, m_salt_len);
+   return iso9796_verification(repr, raw, key_bits, m_hash, m_salt_len, m_implicit);
 }
 
 std::string ISO_9796_DS2::hash_function() const {
@@ -262,7 +290,9 @@ std::string ISO_9796_DS2::name() const {
  */
 void ISO_9796_DS3::update(const uint8_t input[], size_t length) {
    //need to buffer message completely, before digest
-   m_msg_buffer.insert(m_msg_buffer.end(), input, input + length);
+   if(length > 0) {
+      m_msg_buffer.insert(m_msg_buffer.end(), input, input + length);
+   }
 }
 
 /*
@@ -287,7 +317,7 @@ std::vector<uint8_t> ISO_9796_DS3::encoding_of(std::span<const uint8_t> msg,
  * ISO-9796-2 scheme 3 verify operation
  */
 bool ISO_9796_DS3::verify(std::span<const uint8_t> repr, std::span<const uint8_t> raw, size_t key_bits) {
-   return iso9796_verification(repr, raw, key_bits, m_hash, 0);
+   return iso9796_verification(repr, raw, key_bits, m_hash, 0, m_implicit);
 }
 
 std::string ISO_9796_DS3::hash_function() const {

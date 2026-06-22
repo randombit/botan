@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_RSA)
    #include "test_pubkey.h"
    #include "test_rng.h"
+   #include <botan/numthry.h>
    #include <botan/pubkey.h>
    #include <botan/rsa.h>
    #include <botan/internal/blinding.h>
@@ -276,6 +277,76 @@ class RSA_Blinding_Tests final : public Test {
       }
 };
 
+class RSA_ISO9796_Roundtrip_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("RSA ISO-9796 sign/verify roundtrip");
+
+         try {
+            const Botan::RSA_PrivateKey rsa(this->rng(), 1024);
+
+            // A leading-zero recovered representative occurs about 1/128 of the
+            // time, so iterate enough that the roundtrip reliably exercises it.
+            constexpr size_t iterations = 2000;
+
+            for(const std::string padding : {"ISO_9796_DS2(SHA-256)", "ISO_9796_DS3(SHA-256)"}) {
+               Botan::PK_Signer signer(rsa, this->rng(), padding);
+               Botan::PK_Verifier verifier(rsa, padding);
+
+               size_t verified = 0;
+               for(size_t i = 0; i != iterations; ++i) {
+                  const auto msg = rng().random_vec<std::vector<uint8_t>>(i);
+
+                  const auto sig = signer.sign_message(msg, this->rng());
+                  if(verifier.verify_message(msg, sig)) {
+                     verified += 1;
+                  }
+               }
+
+               result.test_sz_eq(padding + " signatures all verify", verified, iterations);
+            }
+
+            // ISO-9796-2 DS2/DS3 are message-recovery schemes: the verifier
+            // must split the message at the same capacity the encoder used. A
+            // modulus whose bit-length is not a multiple of 8 and a message that
+            // fills the recoverable region exercise a capacity calculation that
+            // previously differed by one byte between the two sides. Byte-aligned
+            // moduli (e.g. 1024 above) hide it, so sweep every residue mod 8.
+            const Botan::BigInt e = Botan::BigInt::from_u64(65537);
+            for(size_t mod_bits = 1025; mod_bits <= 1031; ++mod_bits) {
+               const size_t p_bits = (mod_bits + 1) / 2;
+               const size_t q_bits = mod_bits - p_bits;
+               const Botan::BigInt p = Botan::generate_rsa_prime(this->rng(), this->rng(), p_bits, e);
+               const Botan::BigInt q = Botan::generate_rsa_prime(this->rng(), this->rng(), q_bits, e);
+
+               const Botan::RSA_PrivateKey rsa_unaligned(p, q, e);
+               if(!result.test_sz_eq("modulus has expected bit length", rsa_unaligned.key_length(), mod_bits)) {
+                  continue;
+               }
+
+               for(const std::string padding : {"ISO_9796_DS2(SHA-256)", "ISO_9796_DS3(SHA-256)"}) {
+                  Botan::PK_Signer signer(rsa_unaligned, this->rng(), padding);
+                  Botan::PK_Verifier verifier(rsa_unaligned, padding);
+
+                  // Check inputs under, at and above the recoverable capacity
+                  for(size_t msg_len = 0; msg_len != 1024; ++msg_len) {
+                     const auto msg = this->rng().random_vec<std::vector<uint8_t>>(msg_len);
+                     const auto sig = signer.sign_message(msg, this->rng());
+                     result.test_is_true(
+                        Botan::fmt(
+                           "{} verifies recovery message of length {} (modulus {} bits)", padding, msg_len, mod_bits),
+                        verifier.verify_message(msg, sig));
+                  }
+               }
+            }
+         } catch(const Botan::Lookup_Error& e) {
+            result.note_missing(e.what());
+         }
+
+         return {result};
+      }
+};
+
 class RSA_DecryptOrRandom_Tests : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -393,6 +464,7 @@ BOTAN_REGISTER_TEST("pubkey", "rsa_keygen", RSA_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_keygen_stability", RSA_Keygen_Stability_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_keygen_badrng", RSA_Keygen_Bad_RNG_Test);
 BOTAN_REGISTER_TEST("pubkey", "rsa_blinding", RSA_Blinding_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rsa_iso9796_roundtrip", RSA_ISO9796_Roundtrip_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_decrypt_or_random", RSA_DecryptOrRandom_Tests);
 
 #endif
