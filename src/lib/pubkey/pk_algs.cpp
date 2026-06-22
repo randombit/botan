@@ -273,12 +273,17 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #endif
 
 #if defined(BOTAN_HAS_MLDSA_COMPOSITE)
-   if(alg_name.starts_with("MLDSA")) {
-      auto comp_parm = MLDSA_Composite_Param::from_id_str(alg_name);
-      if(comp_parm.has_value()) {
-         return std::make_unique<MLDSA_Composite_PublicKey>(comp_parm->id(), key_bits);
+   {
+      auto mldsa_comp_param_opt = MLDSA_Composite_Param::from_algo_id(alg_id);
+      if(mldsa_comp_param_opt.has_value()) {
+         auto& comp_parm = mldsa_comp_param_opt.value();
+         if(comp_parm.is_supported()) {
+            return std::make_unique<MLDSA_Composite_PublicKey>(alg_id, key_bits);
+         } else {
+            throw Not_Implemented(fmt("MLDSA-composite is supported, but the requested parameter set {} is not",
+                                      alg_id.get_oid().to_string()));
+         }
       }
-      // we continue the search as there might be other algorithms defined with leading "MLDSA"
    }
 #endif
 
@@ -450,12 +455,17 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #endif
 
 #if defined(BOTAN_HAS_MLDSA_COMPOSITE)
-   if(alg_name.starts_with("MLDSA")) {
-      auto comp_parm = MLDSA_Composite_Param::from_id_str(alg_name);
-      if(comp_parm.has_value()) {
-         return std::make_unique<MLDSA_Composite_PrivateKey>(comp_parm->id(), key_bits);
+   {
+      auto mldsa_comp_param_opt = MLDSA_Composite_Param::from_algo_id(alg_id);
+      if(mldsa_comp_param_opt.has_value()) {
+         auto& comp_parm = mldsa_comp_param_opt.value();
+         if(comp_parm.is_supported()) {
+            return std::make_unique<MLDSA_Composite_PrivateKey>(alg_id, key_bits);
+         } else {
+            throw Not_Implemented(fmt("MLDSA-composite is supported, but the requested parameter set {} is not",
+                                      alg_id.get_oid().to_string()));
+         }
       }
-      // we continue the search as there might be other algorithms defined with leading "MLDSA"
    }
 #endif
 
@@ -647,13 +657,16 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 #endif
 
 #if defined(BOTAN_HAS_MLDSA_COMPOSITE)
-
-   if(alg_name.starts_with("MLDSA")) {
-      auto comp_parm = MLDSA_Composite_Param::from_id_str(alg_name);
-      if(comp_parm.has_value()) {
-         return std::make_unique<MLDSA_Composite_PrivateKey>(rng, comp_parm.value());
+   {
+      if(alg_name == MLDSA_Composite_Param::generic_algo_name) {
+         auto comp_param = MLDSA_Composite_Param::from_id_str_or_throw(params);
+         if(comp_param.is_supported()) {
+            return std::make_unique<MLDSA_Composite_PrivateKey>(rng, comp_param);
+         } else {
+            throw Not_Implemented(
+               fmt("MLDSA-composite is supported, but the requested parameter set {} is not", params));
+         }
       }
-      // we continue, there might be other algorithms defined with leading "MLDSA"
    }
 #endif
 

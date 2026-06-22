@@ -36,6 +36,10 @@
    #include <tss2/tss2_tctildr.h>
 #endif
 
+#if defined(BOTAN_HAS_MLDSA_COMPOSITE)
+   #include <botan/mldsa_comp_parameters.h>
+#endif
+
 namespace Botan_Tests {
 
 namespace {
@@ -4852,7 +4856,7 @@ class FFI_MLDSA_Composite_Test final : public FFI_Signature_Roundtrip_Test {
       std::string name() const override { return "FFI MLDSA-Composite"; }
 
    private:
-      const char* algo() const override { return "MLDSA44-RSA2048-PKCS15-SHA256"; }
+      const char* algo() const override { return Botan::MLDSA_Composite_Param::generic_algo_name; }
 
       privkey_loader_fn_t private_key_load_function() const override { return botan_privkey_load_mldsa_composite; }
 
@@ -4860,7 +4864,15 @@ class FFI_MLDSA_Composite_Test final : public FFI_Signature_Roundtrip_Test {
 
       std::vector<const char*> modes() const override {
          return {
-            "",
+   #if defined(BOTAN_HAS_RSA)
+            "MLDSA44-RSA2048-PSS-SHA256",
+   #endif
+   #if defined(BOTAN_HAS_ED25519)
+               "MLDSA44-Ed25519-SHA512",
+   #endif
+   #if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_PCURVES_BRAINPOOL256R1)
+               "MLDSA65-ECDSA-brainpoolP256r1-SHA512",
+   #endif
          };
       }
 
