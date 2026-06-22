@@ -104,7 +104,6 @@ static inline const char* generic_algo_name = "MLDSA-Composite";¬
       std::string curve() const { return std::string(this->m_curve); }
 
       std::string get_traditional_algo_param_str() const;
-      size_t traditional_pubkey_encoded_size() const;
 
       size_t mldsa_privkey_size() const { return 32; }
 
