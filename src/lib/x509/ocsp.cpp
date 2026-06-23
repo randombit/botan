@@ -347,7 +347,7 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
          .raw_bytes(m_tbs_bits)
          .end_cons()
          .decode(m_sig_algo)
-         .decode(m_signature, ASN1_Type::BitString);
+         .decode_octet_aligned_bitstring(m_signature);
       decode_optional_list(basicresponse, ASN1_Type(0), m_certs);
 
       basicresponse.verify_end();

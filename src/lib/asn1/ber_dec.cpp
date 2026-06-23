@@ -758,6 +758,37 @@ void asn1_decode_binary_string(std::vector<uint8_t, Alloc>& buffer,
    }
 }
 
+uint8_t asn1_bitstring_unused_bits(const BER_Object& obj, ASN1_Type type_tag, ASN1_Class class_tag, bool require_der) {
+   obj.assert_is_a(type_tag, class_tag);
+
+   if(require_der && is_constructed(obj)) {
+      throw BER_Decoding_Error("Detected constructed string encoding in DER structure");
+   }
+
+   if(obj.length() == 0) {
+      throw BER_Decoding_Error("Invalid BIT STRING");
+   }
+
+   const uint8_t unused_bits = obj.bits()[0];
+
+   if(unused_bits >= 8) {
+      throw BER_Decoding_Error("Invalid number of unused bits in BIT STRING");
+   }
+
+   if(obj.length() == 1 && unused_bits != 0) {
+      throw BER_Decoding_Error("Invalid BIT STRING");
+   }
+
+   if(require_der && unused_bits > 0) {
+      const uint8_t last_byte = obj.bits()[obj.length() - 1];
+      if((last_byte & ((1 << unused_bits) - 1)) != 0) {
+         throw BER_Decoding_Error("Detected non-zero padding bits in BIT STRING in DER structure");
+      }
+   }
+
+   return unused_bits;
+}
+
 }  // namespace
 
 /*
@@ -786,6 +817,51 @@ BER_Decoder& BER_Decoder::decode(std::vector<uint8_t>& buffer,
 
    asn1_decode_binary_string(
       buffer, get_next_object(), real_type, type_tag, class_tag, m_limits.require_der_encoding());
+   return (*this);
+}
+
+BER_Decoder& BER_Decoder::decode_bitstring(ASN1_BitString& out, ASN1_Type type_tag, ASN1_Class class_tag) {
+   const BER_Object obj = get_next_object();
+   const uint8_t unused_bits = asn1_bitstring_unused_bits(obj, type_tag, class_tag, m_limits.require_der_encoding());
+
+   std::vector<uint8_t> bits;
+   bits.assign(obj.bits() + 1, obj.bits() + obj.length());
+
+   if(unused_bits > 0 && !bits.empty()) {
+      bits.back() &= static_cast<uint8_t>(0xFF << unused_bits);
+   }
+
+   out = ASN1_BitString(std::move(bits), unused_bits);
+   return (*this);
+}
+
+BER_Decoder& BER_Decoder::decode_named_bitstring(uint64_t& out,
+                                                 size_t width,
+                                                 ASN1_Type type_tag,
+                                                 ASN1_Class class_tag) {
+   if(width > 64) {
+      throw Invalid_Argument("BER_Decoder: Named BIT STRING width is too large");
+   }
+
+   ASN1_BitString bits;
+   decode_bitstring(bits, type_tag, class_tag);
+
+   if(bits.bit_length() > width) {
+      throw BER_Decoding_Error("Named BIT STRING exceeds declared width");
+   }
+
+   if(m_limits.require_der_encoding() && bits.bit_length() > 0 && !bits.bit_at(bits.bit_length() - 1)) {
+      throw BER_Decoding_Error("Named BIT STRING is not minimally encoded");
+   }
+
+   uint64_t decoded = 0;
+   for(size_t bit = 0; bit != bits.bit_length(); ++bit) {
+      if(bits.bit_at(bit)) {
+         decoded |= uint64_t(1) << (width - 1 - bit);
+      }
+   }
+
+   out = decoded;
    return (*this);
 }
 

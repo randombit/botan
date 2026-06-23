@@ -83,7 +83,7 @@ void X509_Object::encode_into(DER_Encoder& to) const {
       .raw_bytes(signed_body())
       .end_cons()
       .encode(signature_algorithm())
-      .encode(signature(), ASN1_Type::BitString)
+      .encode_octet_aligned_bitstring(signature())
       .end_cons();
 }
 
@@ -98,7 +98,7 @@ void X509_Object::decode_from(BER_Decoder& from) {
       .raw_bytes(data->m_tbs_bits)
       .end_cons()
       .decode(data->m_sig_algo)
-      .decode(data->m_sig, ASN1_Type::BitString)
+      .decode_octet_aligned_bitstring(data->m_sig)
       .end_cons();
 
    m_signed_data = std::move(data);
@@ -164,7 +164,7 @@ std::vector<uint8_t> X509_Object::make_signed(PK_Signer& signer,
       .start_sequence()
       .raw_bytes(tbs_bits)
       .encode(algo)
-      .encode(signature, ASN1_Type::BitString)
+      .encode_octet_aligned_bitstring(signature)
       .end_cons();
 
    return output;

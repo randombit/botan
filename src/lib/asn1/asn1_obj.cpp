@@ -14,6 +14,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/mem_utils.h>
 #include <sstream>
+#include <utility>
 
 namespace Botan {
 
@@ -22,6 +23,36 @@ std::vector<uint8_t> ASN1_Object::BER_encode() const {
    DER_Encoder der(output);
    this->encode_into(der);
    return output;
+}
+
+ASN1_BitString::ASN1_BitString(std::vector<uint8_t> bytes, size_t unused_bits) :
+      m_bytes(std::move(bytes)), m_unused_bits(unused_bits) {
+   if(m_unused_bits >= 8) {
+      throw Invalid_Argument("ASN1_BitString: Invalid unused bit count");
+   }
+
+   if(m_bytes.empty() && m_unused_bits != 0) {
+      throw Invalid_Argument("ASN1_BitString: Empty BIT STRING cannot have unused bits");
+   }
+
+   if(m_unused_bits > 0 && (m_bytes.back() & ((1U << m_unused_bits) - 1)) != 0) {
+      throw Invalid_Argument("ASN1_BitString: Unused bits must be zero");
+   }
+}
+
+ASN1_BitString::ASN1_BitString(std::span<const uint8_t> bytes, size_t unused_bits) :
+      ASN1_BitString(std::vector<uint8_t>(bytes.begin(), bytes.end()), unused_bits) {}
+
+size_t ASN1_BitString::bit_length() const {
+   return 8 * m_bytes.size() - m_unused_bits;
+}
+
+bool ASN1_BitString::bit_at(size_t bit) const {
+   if(bit >= bit_length()) {
+      throw Invalid_Argument("ASN1_BitString: Bit index out of range");
+   }
+
+   return (m_bytes[bit / 8] & (0x80 >> (bit % 8))) != 0;
 }
 
 BER_Object::~BER_Object() {

@@ -167,7 +167,7 @@ secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const {
       .encode(static_cast<size_t>(1))
       .encode(raw_private_key_bits(), ASN1_Type::OctetString)
       .start_explicit_context_specific(1)
-      .encode(m_public_key->public_key().serialize_uncompressed(), ASN1_Type::BitString)
+      .encode_octet_aligned_bitstring(m_public_key->public_key().serialize_uncompressed())
       .end_cons()
       .end_cons()
       .get_contents();
@@ -188,7 +188,7 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
       .decode_and_check<size_t>(1, "Unknown version code for ECC key")
       .decode(private_key_bits, ASN1_Type::OctetString)
       .decode_optional(key_parameters, ASN1_Type(0), ASN1_Class::ExplicitContextSpecific)
-      .decode_optional_string(public_key_bits, ASN1_Type::BitString, 1, ASN1_Class::ExplicitContextSpecific)
+      .decode_optional_octet_aligned_bitstring(public_key_bits, 1, ASN1_Class::ExplicitContextSpecific)
       .end_cons()
       .verify_end();
 
