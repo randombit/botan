@@ -90,6 +90,10 @@ enum class Group_Params_Code : uint16_t {
    X25519 = 29,
    X448 = 30,
 
+   BRAINPOOL256R1TLS13 = 31,
+   BRAINPOOL384R1TLS13 = 32,
+   BRAINPOOL512R1TLS13 = 33,
+
    FFDHE_2048 = 256,
    FFDHE_3072 = 257,
    FFDHE_4096 = 258,
@@ -173,7 +177,9 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
       constexpr bool is_ecdh_named_curve() const {
          return m_code == Group_Params_Code::SECP256R1 || m_code == Group_Params_Code::SECP384R1 ||
                 m_code == Group_Params_Code::SECP521R1 || m_code == Group_Params_Code::BRAINPOOL256R1 ||
-                m_code == Group_Params_Code::BRAINPOOL384R1 || m_code == Group_Params_Code::BRAINPOOL512R1;
+                m_code == Group_Params_Code::BRAINPOOL384R1 || m_code == Group_Params_Code::BRAINPOOL512R1 ||
+                m_code == Group_Params_Code::BRAINPOOL256R1TLS13 || m_code == Group_Params_Code::BRAINPOOL384R1TLS13 ||
+                m_code == Group_Params_Code::BRAINPOOL512R1TLS13;
       }
 
       constexpr bool is_in_ffdhe_range() const {
@@ -247,6 +253,10 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
 
       // Returns std::nullopt if the param has no known name
       std::optional<std::string> to_string() const;
+
+      // Returns the string that is typically used to instantiate the algorithm.
+      // This might not be unique across specific code points.
+      std::optional<std::string> to_algorithm_spec() const;
 
    private:
       Group_Params_Code m_code;

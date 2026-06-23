@@ -202,8 +202,11 @@ std::vector<Group_Params> Policy::key_exchange_groups() const {
       Group_Params::SECP521R1,
 
       Group_Params::BRAINPOOL256R1,
+      Group_Params::BRAINPOOL256R1TLS13,
       Group_Params::BRAINPOOL384R1,
+      Group_Params::BRAINPOOL384R1TLS13,
       Group_Params::BRAINPOOL512R1,
+      Group_Params::BRAINPOOL512R1TLS13,
 
       Group_Params::FFDHE_2048,
       Group_Params::FFDHE_3072,

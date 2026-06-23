@@ -153,15 +153,15 @@ consteval auto available_group_params() {
 #endif
 
 #if defined(BOTAN_HAS_PCURVES_BRAINPOOL256R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
-         Group_Params_Code::BRAINPOOL256R1,
+         Group_Params_Code::BRAINPOOL256R1, Group_Params_Code::BRAINPOOL256R1TLS13,
 #endif
 
 #if defined(BOTAN_HAS_PCURVES_BRAINPOOL384R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
-         Group_Params_Code::BRAINPOOL384R1,
+         Group_Params_Code::BRAINPOOL384R1, Group_Params_Code::BRAINPOOL384R1TLS13,
 #endif
 
 #if defined(BOTAN_HAS_PCURVES_BRAINPOOL512R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
-         Group_Params_Code::BRAINPOOL512R1,
+         Group_Params_Code::BRAINPOOL512R1, Group_Params_Code::BRAINPOOL512R1TLS13,
 #endif
 
 #if defined(BOTAN_HAS_X25519)
@@ -297,6 +297,15 @@ std::optional<Group_Params> Group_Params::from_string(std::string_view group_nam
    if(group_name == "x448") {
       return Group_Params::X448;
    }
+   if(group_name == "brainpool256r1tls13") {
+      return Group_Params::BRAINPOOL256R1TLS13;
+   }
+   if(group_name == "brainpool384r1tls13") {
+      return Group_Params::BRAINPOOL384R1TLS13;
+   }
+   if(group_name == "brainpool512r1tls13") {
+      return Group_Params::BRAINPOOL512R1TLS13;
+   }
 
    if(group_name == "ffdhe/ietf/2048") {
       return Group_Params::FFDHE_2048;
@@ -408,6 +417,12 @@ std::optional<std::string> Group_Params::to_string() const {
          return "x25519";
       case Group_Params::X448:
          return "x448";
+      case Group_Params::BRAINPOOL256R1TLS13:
+         return "brainpool256r1tls13";
+      case Group_Params::BRAINPOOL384R1TLS13:
+         return "brainpool384r1tls13";
+      case Group_Params::BRAINPOOL512R1TLS13:
+         return "brainpool512r1tls13";
 
       case Group_Params::FFDHE_2048:
          return "ffdhe/ietf/2048";
@@ -470,6 +485,24 @@ std::optional<std::string> Group_Params::to_string() const {
 
       default:
          return std::nullopt;
+   }
+}
+
+std::optional<std::string> Group_Params::to_algorithm_spec() const {
+   switch(m_code) {
+      // Brainpool curves have two sets of code points. See RFCs 7027 and 8734.
+      case Group_Params::BRAINPOOL256R1:
+      case Group_Params::BRAINPOOL256R1TLS13:
+         return "brainpool256r1";
+      case Group_Params::BRAINPOOL384R1:
+      case Group_Params::BRAINPOOL384R1TLS13:
+         return "brainpool384r1";
+      case Group_Params::BRAINPOOL512R1:
+      case Group_Params::BRAINPOOL512R1TLS13:
+         return "brainpool512r1";
+
+      default:
+         return to_string();
    }
 }
 
