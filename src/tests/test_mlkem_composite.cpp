@@ -205,18 +205,42 @@ class MLKEM_Composite_KAT_Tests : public Text_Based_Test {
          const size_t limit = ((options().run_long_tests() == true) ? 100 : 1);
          for(size_t i = 0; i < limit; i++) {
             Botan::PK_KEM_Decryptor decryptor(*privkey, *rng, "", "");
-            Botan::secure_vector<uint8_t> shared_key(32);
-            decryptor.decrypt(shared_key, ct_vec, shared_key.size());
-            result.test_bin_eq("decryption of valid KAT ciphertext", shared_key, ss_vec);
+            {
+               Botan::secure_vector<uint8_t> shared_key(32);
+               decryptor.decrypt(shared_key, ct_vec, shared_key.size());
+               result.test_bin_eq("decryption of valid KAT ciphertext", shared_key, ss_vec);
 
-            Botan::PK_KEM_Encryptor encryptor(*pubkey, "", "");
-            Botan::secure_vector<uint8_t> ss_rt(32);
-            Botan::secure_vector<uint8_t> ct_rt(ct_vec.size());
-            encryptor.encrypt(ct_rt, ss_rt, *rng, 32);
-            Botan::secure_vector<uint8_t> ss_rt_2(32);
-            decryptor.decrypt(ss_rt_2, ct_rt, 32);
-            result.test_bin_eq(
-               std::string("decryption of valid roundtrip ciphertext (#") + std::to_string(i) + ")", ss_rt, ss_rt_2);
+               Botan::PK_KEM_Encryptor encryptor(*pubkey, "", "");
+               Botan::secure_vector<uint8_t> ss_rt(32);
+               Botan::secure_vector<uint8_t> ct_rt(ct_vec.size());
+               encryptor.encrypt(ct_rt, ss_rt, *rng, 32);
+               Botan::secure_vector<uint8_t> ss_rt_2(32);
+               decryptor.decrypt(ss_rt_2, ct_rt, 32);
+               result.test_bin_eq(
+                  std::string("decryption of valid roundtrip ciphertext (#") + std::to_string(i) + ")", ss_rt, ss_rt_2);
+            }
+
+      #if defined(BOTAN_HAS_X509_CERTIFICATES)
+            const std::vector<uint8_t> x5c = decode_var_base64(vars, "x5c");
+            std::unique_ptr<Botan::Public_Key> pub_key_from_cert;
+            if(comp_parm_opt.has_value() and comp_parm_opt.value().is_supported()) {
+               Botan::X509_Certificate cert(x5c);
+               pub_key_from_cert = cert.subject_public_key();
+               Botan::PK_KEM_Encryptor encryptor_cert(*pub_key_from_cert, "", "");
+               Botan::secure_vector<uint8_t> ss_rt_crt(32);
+               Botan::secure_vector<uint8_t> ct_rt_crt(ct_vec.size());
+               encryptor_cert.encrypt(ct_rt_crt, ss_rt_crt, *rng, 32);
+               Botan::secure_vector<uint8_t> ss_rt_2_crt(32);
+               decryptor.decrypt(ss_rt_2_crt, ct_rt_crt, 32);
+               result.test_bin_eq(
+                  std::string(
+                     "decryption of valid roundtrip ciphertext encrypted with public key from certificate (#") +
+                     std::to_string(i) + ")",
+                  ss_rt_crt,
+                  ss_rt_2_crt);
+            }
+
+      #endif
          }
 
          return result;
