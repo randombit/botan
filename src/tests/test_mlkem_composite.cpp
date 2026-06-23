@@ -224,7 +224,7 @@ class MLKEM_Composite_KAT_Tests : public Text_Based_Test {
             const std::vector<uint8_t> x5c = decode_var_base64(vars, "x5c");
             std::unique_ptr<Botan::Public_Key> pub_key_from_cert;
             if(comp_parm_opt.has_value() and comp_parm_opt.value().is_supported()) {
-               Botan::X509_Certificate cert(x5c);
+               const Botan::X509_Certificate cert(x5c);
                pub_key_from_cert = cert.subject_public_key();
                Botan::PK_KEM_Encryptor encryptor_cert(*pub_key_from_cert, "", "");
                Botan::secure_vector<uint8_t> ss_rt_crt(32);
