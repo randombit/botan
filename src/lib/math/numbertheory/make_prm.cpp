@@ -16,6 +16,7 @@
 #include <botan/internal/divide.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/monty.h>
+#include <numeric>
 
 namespace Botan {
 
@@ -115,6 +116,11 @@ BigInt random_prime_with_sieve(RandomNumberGenerator& rng,
 
    const size_t mr_trials = miller_rabin_test_iterations(bits, prob, true);
 
+   // Variable time gcd here is fine since these are generation parameters, not secrets
+   if(std::gcd(equiv, modulo) != 1) {
+      throw Invalid_Argument("random_prime equiv and modulo must be relatively prime");
+   }
+
    while(true) {
       BigInt p(rng, bits);
 
@@ -198,6 +204,7 @@ BigInt random_prime(
       throw Invalid_Argument("random_prime: Invalid modulo value");
    }
 
+   // TODO(Botan4) reject equiv > modulo instead of reducing here
    equiv %= modulo;
 
    if(equiv == 0) {
