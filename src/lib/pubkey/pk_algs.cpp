@@ -246,7 +246,7 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #endif
 
 #if defined(BOTAN_HAS_XMSS_RFC8391)
-   if(alg_name == "XMSS") {
+   if(alg_name == "XMSS" or alg_name == "XMSS-RFC9802") {
       return std::make_unique<XMSS_PublicKey>(key_bits);
    }
 #endif

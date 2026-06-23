@@ -84,8 +84,8 @@ class BOTAN_PUBLIC_API(3, 12) XMSSMT_PublicKey : public virtual Public_Key {
       std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
                                                                    std::string_view provider) const override;
 
-      //   std::unique_ptr<PK_Ops::Verification> create_x509_verification_op(const AlgorithmIdentifier& alg_id,
-      //                                                                     std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Verification> create_x509_verification_op(const AlgorithmIdentifier& alg_id,
+                                                                        std::string_view provider) const override;
 
       //    protected:
       //       friend class XMSS_Verification_Operation;
