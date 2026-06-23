@@ -900,6 +900,8 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
       */
       std::map<OID, std::pair<std::vector<uint8_t>, bool>> extensions_raw() const;
 
+      size_t count() const { return m_extension_oids.size(); }
+
       Extensions() = default;
 
       Extensions(const Extensions&) = default;

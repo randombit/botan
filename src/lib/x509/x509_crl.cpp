@@ -136,6 +136,9 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
       throw Decoding_Error("Unknown X.509 CRL version " + std::to_string(data->m_version));
    }
 
+   // Extensions are only defined for v2 CRLs
+   const bool supports_extensions = data->m_version > 1;
+
    AlgorithmIdentifier sig_algo_inner;
    tbs_crl.decode(sig_algo_inner);
 
@@ -172,26 +175,43 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
             data->m_has_unknown_critical_extension = true;
          }
 
+         if(!supports_extensions && entry.extensions().count() > 0) {
+            throw Decoding_Error("X509 CRL included extensions in a version that doesn't support them");
+         }
+
          data->m_entries.push_back(std::move(entry));
       }
+
+      /*
+      RFC 5280 Section 5.1.2.6
+         When there are no revoked certificates, the revoked certificates list MUST be absent.
+
+      So strictly speaking we should be checking that m_entries is not empty. But practically,
+      it seems nearly all implementations accept a present-but-empty SEQUENCE as equivalent
+      to an absent one, and several major ones (including GnuTLS) will emit it. Considering
+      this situation, and the benign nature of the deviation, accept the non-conforming encoding.
+      */
+
       next = tbs_crl.get_next_object();
    }
 
    if(next.is_a(0, ASN1_Class::Constructed | ASN1_Class::ContextSpecific)) {
+      if(!supports_extensions) {
+         throw Decoding_Error("X509 CRL included extensions in a version that doesn't support them");
+      }
       BER_Decoder crl_options(next, tbs_crl.limits());
       data->m_extensions.decode_from(crl_options, Extension_Context::CRL);
       crl_options.verify_end();
-      next = tbs_crl.get_next_object();
       if(data->m_extensions.has_unknown_critical_extension()) {
          data->m_has_unknown_critical_extension = true;
       }
+
+      if(tbs_crl.get_next_object().is_set()) {
+         throw Decoding_Error("Unknown tag following extensions in CRL");
+      }
    }
 
-   if(next.is_set()) {
-      throw Decoding_Error("Unknown tag following extensions in CRL");
-   }
-
-   tbs_crl.verify_end();
+   tbs_crl.verify_end("Unexpected trailing data after CRL");
 
    // Now cache some fields from the extensions
    if(const auto* ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_Number>()) {
