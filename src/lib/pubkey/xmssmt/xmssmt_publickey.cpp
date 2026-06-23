@@ -13,6 +13,7 @@
 #include <botan/xmssmt_parameters.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/concat_util.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/xmssmt_verification_operation.h>
@@ -29,8 +30,8 @@ XMSSMT_Parameters::xmssmt_algorithm_t deserialize_xmssmt_oid(std::span<const uin
 }
 
 std::vector<uint8_t> extract_raw_xmssmt_public_key(std::span<const uint8_t> key_bits) {
-   std::vector<uint8_t> raw_key;
-   BER_Decoder(key_bits).decode(raw_key, ASN1_Type::OctetString).verify_end();
+   std::vector<uint8_t> raw_key(key_bits.begin(), key_bits.end());
+   // BER_Decoder(key_bits).decode(raw_key, ASN1_Type::OctetString).verify_end();
    return raw_key;
 }
 }  // namespace
@@ -46,7 +47,9 @@ XMSSMT_PublicKey::XMSSMT_PublicKey(std::span<const uint8_t> key_bits) :
       m_xmssmt_params(deserialize_xmssmt_oid(m_raw_key)),
       m_wots_params(m_xmssmt_params.ots_oid()) {
    if(m_raw_key.size() < m_xmssmt_params.raw_public_key_size()) {
-      throw Decoding_Error("Invalid XMSS^MT public key size detected");
+      throw Decoding_Error(fmt("Invalid XMSS^MT public key size of {} bytes detected, should by {} bytes",
+                               m_raw_key.size(),
+                               m_xmssmt_params.raw_public_key_size()));
    }
 
    BufferSlicer s(m_raw_key);
@@ -85,6 +88,17 @@ std::unique_ptr<Private_Key> XMSSMT_PublicKey::generate_another(RandomNumberGene
 std::unique_ptr<PK_Ops::Verification> XMSSMT_PublicKey::create_verification_op(std::string_view /*params*/,
                                                                                std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
+      return std::make_unique<XMSSMT_Verification_Operation>(*this);
+   }
+   throw Provider_Not_Found(algo_name(), provider);
+}
+
+std::unique_ptr<PK_Ops::Verification> XMSSMT_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
+                                                                                    std::string_view provider) const {
+   if(provider.empty() || provider == "base") {
+      if(alg_id != this->algorithm_identifier()) {
+         throw Decoding_Error("Unexpected AlgorithmIdentifier for MLDSA-Composite X.509 signature");
+      }
       return std::make_unique<XMSSMT_Verification_Operation>(*this);
    }
    throw Provider_Not_Found(algo_name(), provider);

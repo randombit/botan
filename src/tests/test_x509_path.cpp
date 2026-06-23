@@ -1689,6 +1689,9 @@ class XMSS_Path_Validation_Tests final : public Test {
 
          auto cert_path = std::vector<Botan::X509_Certificate>{self_signed};
          auto valid_time = Botan::calendar_point(2019, 10, 8, 4, 45, 0).to_std_timepoint();
+         if(file.find("-rfc9802") != std::string::npos) {
+            valid_time = Botan::calendar_point(2026, 5, 8, 4, 45, 0).to_std_timepoint();
+         }
 
          auto status = Botan::PKIX::overall_status(
             Botan::PKIX::check_chain(cert_path, valid_time, "", Botan::Usage_Type::UNSPECIFIED, restrictions));
@@ -1704,7 +1707,9 @@ class XMSS_Path_Validation_Tests final : public Test {
          return {
             validate_self_signed("XMSS path validation with certificate created by ISARA corp", "xmss_isara_root.pem"),
             validate_self_signed("XMSS path validation with certificate created by BouncyCastle",
-                                 "xmss_bouncycastle_sha256_10_root.pem")};
+                                 "xmss_bouncycastle_sha256_10_root.pem"),
+            validate_self_signed("XMSS path validation with certificate from RFC 9802", "xmss-rfc9802.pem"),
+            validate_self_signed("XMSS^MT path validation with certificate from RFC 9802", "xmssmt-rfc9802.pem")};
       }
 };
 
