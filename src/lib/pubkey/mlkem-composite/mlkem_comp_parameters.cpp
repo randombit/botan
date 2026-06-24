@@ -293,71 +293,50 @@ std::string MLKEM_Composite_Param::get_traditional_algo_param_str() const {
 }
 
 bool MLKEM_Composite_Param::is_supported() const {
-   switch(m_id) {
-      case MLKEM768_RSA2048_SHA3_256:
-      case MLKEM768_RSA3072_SHA3_256:
-      case MLKEM768_RSA4096_SHA3_256:
-      case MLKEM1024_RSA3072_SHA3_256:
-#if defined BOTAN_HAS_RSA && defined BOTAN_HAS_OAEP
-         return true;
-#else
-         return false;
+   constexpr auto supported = std::array{
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_OAEP)
+      MLKEM768_RSA2048_SHA3_256,
+      MLKEM768_RSA3072_SHA3_256,
+      MLKEM768_RSA4096_SHA3_256,
+      MLKEM1024_RSA3072_SHA3_256,
 #endif
 
-      case MLKEM768_ECDH_P256_SHA3_256:
-#if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_SECP256R1
-         return true;
-#else
-         return false;
-#endif
-      case MLKEM768_ECDH_P384_SHA3_256:
-#if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_SECP384R1
-         return true;
-#else
-         return false;
-#endif
-      case MLKEM768_ECDH_brainpoolP256r1_SHA3_256:
-#if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_BRAINPOOL256R1
-         return true;
-#else
-         return false;
-#endif
-      case MLKEM1024_ECDH_P384_SHA3_256:
-#if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_SECP384R1
-         return true;
-#else
-         return false;
-#endif
-      case MLKEM1024_ECDH_brainpoolP384r1_SHA3_256:
-#if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_BRAINPOOL384R1
-         return true;
-#else
-         return false;
-#endif
-      case MLKEM1024_ECDH_P521_SHA3_256:
-#if defined BOTAN_HAS_ECDH
-         return true;
-#else
-         return false;
+#if defined(BOTAN_HAS_ECDH)
+   #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_SECP256R1)
+      MLKEM768_ECDH_P256_SHA3_256,
+   #endif
+
+   #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_SECP384R1)
+      MLKEM768_ECDH_P384_SHA3_256,
+   #endif
+
+   #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_BRAINPOOL256R1)
+      MLKEM768_ECDH_brainpoolP256r1_SHA3_256,
+   #endif
+
+   #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_SECP384R1)
+      MLKEM1024_ECDH_P384_SHA3_256,
+   #endif
+
+   #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_BRAINPOOL384R1)
+      MLKEM1024_ECDH_brainpoolP384r1_SHA3_256,
+   #endif
+
+   #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_SECP521R1)
+      MLKEM1024_ECDH_P521_SHA3_256,
+   #endif
 #endif
 
-      case MLKEM768_X25519_SHA3_256:
-#if defined BOTAN_HAS_X25519
-         return true;
-#else
-         return false;
+#if defined(BOTAN_HAS_X25519)
+      MLKEM768_X25519_SHA3_256,
 #endif
 
-      case MLKEM1024_X448_SHA3_256:
-#if defined BOTAN_HAS_X448
-         return true;
-#else
-         return false;
+#if defined(BOTAN_HAS_X448)
+      MLKEM1024_X448_SHA3_256,
 #endif
+   };
 
-      default:
-         return false;
-   }
+   return std::find(supported.begin(), supported.end(), m_id) != supported.end();
 }
 
 }  // namespace Botan
