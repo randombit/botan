@@ -13,8 +13,9 @@
 #include <botan/oids.h>
 #include <botan/pss_params.h>
 #include <botan/internal/fmt.h>
+
+#include <algorithm>
 #include <cstring>
-#include <iostream>
 #include <string_view>
 
 namespace Botan {
@@ -293,46 +294,43 @@ std::string MLKEM_Composite_Param::get_traditional_algo_param_str() const {
 }
 
 bool MLKEM_Composite_Param::is_supported() const {
-   constexpr auto supported = std::array{
+   constexpr auto supported = std::array {
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_OAEP)
-      MLKEM768_RSA2048_SHA3_256,
-      MLKEM768_RSA3072_SHA3_256,
-      MLKEM768_RSA4096_SHA3_256,
-      MLKEM1024_RSA3072_SHA3_256,
+      MLKEM768_RSA2048_SHA3_256, MLKEM768_RSA3072_SHA3_256, MLKEM768_RSA4096_SHA3_256, MLKEM1024_RSA3072_SHA3_256,
 #endif
 
 #if defined(BOTAN_HAS_ECDH)
    #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_SECP256R1)
-      MLKEM768_ECDH_P256_SHA3_256,
+         MLKEM768_ECDH_P256_SHA3_256,
    #endif
 
    #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_SECP384R1)
-      MLKEM768_ECDH_P384_SHA3_256,
+         MLKEM768_ECDH_P384_SHA3_256,
    #endif
 
    #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_BRAINPOOL256R1)
-      MLKEM768_ECDH_brainpoolP256r1_SHA3_256,
+         MLKEM768_ECDH_brainpoolP256r1_SHA3_256,
    #endif
 
    #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_SECP384R1)
-      MLKEM1024_ECDH_P384_SHA3_256,
+         MLKEM1024_ECDH_P384_SHA3_256,
    #endif
 
    #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_BRAINPOOL384R1)
-      MLKEM1024_ECDH_brainpoolP384r1_SHA3_256,
+         MLKEM1024_ECDH_brainpoolP384r1_SHA3_256,
    #endif
 
    #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_SECP521R1)
-      MLKEM1024_ECDH_P521_SHA3_256,
+         MLKEM1024_ECDH_P521_SHA3_256,
    #endif
 #endif
 
 #if defined(BOTAN_HAS_X25519)
-      MLKEM768_X25519_SHA3_256,
+         MLKEM768_X25519_SHA3_256,
 #endif
 
 #if defined(BOTAN_HAS_X448)
-      MLKEM1024_X448_SHA3_256,
+         MLKEM1024_X448_SHA3_256,
 #endif
    };
 
