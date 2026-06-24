@@ -19,7 +19,6 @@ ba = "ba"
 
 # These should be removed if possible
 Probablistic = "Probablistic" # pkcs11.h typo
-divisable = "divisable"       # Typo in Limbo test data
 
 # Weird names only used in a few modules
 Lik = "Lik"           # TODO(Botan4) remove when mce is removed
