@@ -1332,7 +1332,7 @@ equivalent options are listed in :ref:`pk_signature_options`.
    round 3 variants do not support a context.
 
 #. ML-DSA-composite (draft-ietf-lamps-pq-composite-sigs-19).
-   The algorithm is identified by the generic algorithm name "MLDSA-Composite" defined in the variable `MLDSA_Composite_Param::generic_algo_name`. It requires a parameter identifying the specific algorithm combination. The following
+   The algorithm is identified by the generic algorithm name "ML-DSA-Composite". It requires a parameter identifying the specific algorithm combination. The following
    parameter sets are principally available: MLDSA44-RSA2048-PKCS15-SHA256, MLDSA65-RSA3072-PKCS15-SHA512,
    MLDSA65-RSA4096-PKCS15-SHA512, MLDSA44-RSA2048-PSS-SHA256, MLDSA65-RSA3072-PSS-SHA512,
    MLDSA65-RSA4096-PSS-SHA512, MLDSA87-RSA3072-PSS-SHA512, MLDSA87-RSA4096-PSS-SHA512,
