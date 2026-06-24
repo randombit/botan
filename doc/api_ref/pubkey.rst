@@ -1047,7 +1047,7 @@ Botan implements the following signature algorithms:
 #. ML-DSA (Dilithium).
    Takes and optional parameter string formed by comma-separated list of the following format ``[(Deterministic|Randomized),][Pure,][ctx_hex=<hex-value>]``, where the ordering of the comma-separated elements is arbitrary. The specification of ``Pure`` is redundant since currently only the pure variant of ML-DSA is implemented. The defaults of the other values are ``Randomized`` and an empty context parameter (`ctx_hex`).  Non-empty context parameters are only supported by ML-DSA, but not by Dilithium. ``Deterministic`` or ``Randomized`` may also be specified in a verification operation thought it has no effect there.
 #. ML-DSA-composite (draft-ietf-lamps-pq-composite-sigs-19).
-   The algorithm is identified by the generic algorithm name "MLDSA-Composite" defined in the variable `MLDSA_Composite_Param::generic_algo_name`. It requires a parameter identifying the specific algorithm combination. The following
+   The algorithm is identified by the generic algorithm name "ML-DSA-Composite". It requires a parameter identifying the specific algorithm combination. The following
    parameter sets are principally available: MLDSA44-RSA2048-PKCS15-SHA256, MLDSA65-RSA3072-PKCS15-SHA512,
    MLDSA65-RSA4096-PKCS15-SHA512, MLDSA44-RSA2048-PSS-SHA256, MLDSA65-RSA3072-PSS-SHA512,
    MLDSA65-RSA4096-PSS-SHA512, MLDSA87-RSA3072-PSS-SHA512, MLDSA87-RSA4096-PSS-SHA512,

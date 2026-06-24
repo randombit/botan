@@ -38,7 +38,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
          MLDSA87_Ed448_SHAKE256,
       };
 
-      static inline const char* generic_algo_name = "MLDSA-Composite";
+      static inline const char* generic_algo_name = "ML-DSA-Composite";
 
       static std::vector<MLDSA_Composite_Param> all_param_sets();
 
