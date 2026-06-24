@@ -179,10 +179,11 @@ DL_Group get_dl_group(const std::variant<TLS::Group_Params, DL_Group>& group) {
    // TLS 1.2 allows specifying arbitrary DL_Group parameters in-lieu of
    // a standardized DH group identifier. TLS 1.3 just offers pre-defined
    // groups.
-   return std::visit(
-      overloaded{[](const DL_Group& dl_group) { return dl_group; },
-                 [&](TLS::Group_Params group_param) { return DL_Group::from_name(group_param.to_string().value()); }},
-      group);
+   return std::visit(overloaded{[](const DL_Group& dl_group) { return dl_group; },
+                                [&](TLS::Group_Params group_param) {
+                                   return DL_Group::from_name(group_param.to_algorithm_spec().value());
+                                }},
+                     group);
 }
 
 }  // namespace
@@ -215,7 +216,7 @@ std::unique_ptr<Public_Key> TLS::Callbacks::tls_deserialize_peer_public_key(
    const auto group_params = std::get<TLS::Group_Params>(group);
 
    if(group_params.is_ecdh_named_curve()) {
-      const auto ec_group = EC_Group::from_name(group_params.to_string().value());
+      const auto ec_group = EC_Group::from_name(group_params.to_algorithm_spec().value());
       return std::make_unique<ECDH_PublicKey>(ec_group, EC_AffinePoint(ec_group, key_bits));
    }
 
@@ -239,13 +240,13 @@ std::unique_ptr<Public_Key> TLS::Callbacks::tls_deserialize_peer_public_key(
 
 #if defined(BOTAN_HAS_ML_KEM)
    if(group_params.is_pure_ml_kem()) {
-      return std::make_unique<ML_KEM_PublicKey>(key_bits, ML_KEM_Mode(group_params.to_string().value()));
+      return std::make_unique<ML_KEM_PublicKey>(key_bits, ML_KEM_Mode(group_params.to_algorithm_spec().value()));
    }
 #endif
 
 #if defined(BOTAN_HAS_FRODOKEM)
    if(group_params.is_pure_frodokem()) {
-      return std::make_unique<FrodoKEM_PublicKey>(key_bits, FrodoKEMMode(group_params.to_string().value()));
+      return std::make_unique<FrodoKEM_PublicKey>(key_bits, FrodoKEMMode(group_params.to_algorithm_spec().value()));
    }
 #endif
 
@@ -255,13 +256,13 @@ std::unique_ptr<Public_Key> TLS::Callbacks::tls_deserialize_peer_public_key(
 std::unique_ptr<Private_Key> TLS::Callbacks::tls_kem_generate_key(TLS::Group_Params group, RandomNumberGenerator& rng) {
 #if defined(BOTAN_HAS_ML_KEM)
    if(group.is_pure_ml_kem()) {
-      return std::make_unique<ML_KEM_PrivateKey>(rng, ML_KEM_Mode(group.to_string().value()));
+      return std::make_unique<ML_KEM_PrivateKey>(rng, ML_KEM_Mode(group.to_algorithm_spec().value()));
    }
 #endif
 
 #if defined(BOTAN_HAS_FRODOKEM)
    if(group.is_pure_frodokem()) {
-      return std::make_unique<FrodoKEM_PrivateKey>(rng, FrodoKEMMode(group.to_string().value()));
+      return std::make_unique<FrodoKEM_PrivateKey>(rng, FrodoKEMMode(group.to_algorithm_spec().value()));
    }
 #endif
 
@@ -350,7 +351,7 @@ std::unique_ptr<PK_Key_Agreement_Key> TLS::Callbacks::tls_generate_ephemeral_key
    const auto group_params = std::get<TLS::Group_Params>(group);
 
    if(group_params.is_ecdh_named_curve()) {
-      const auto ec_group = EC_Group::from_name(group_params.to_string().value());
+      const auto ec_group = EC_Group::from_name(group_params.to_algorithm_spec().value());
       return std::make_unique<ECDH_PrivateKey>(rng, ec_group);
    }
 
