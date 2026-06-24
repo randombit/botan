@@ -43,8 +43,8 @@ tests_that_succeed_unexpectedly = {
     'webpki::san::no-san': 'Conflates CA and verifier requirements',
     'webpki::san::san-critical-with-nonempty-subject': 'Conflates CA and verifier requirements',
     'webpki::v1-cert': 'Conflates CA and verifier requirements',
-    'webpki::forbidden-rsa-not-divisable-by-8-in-root': 'Conflates CA and verifier requirements',
-    'webpki::forbidden-rsa-key-not-divisable-by-8-in-leaf': 'Conflates CA and verifier requirements',
+    'webpki::forbidden-rsa-not-divisible-by-8-in-root': 'Conflates CA and verifier requirements',
+    'webpki::forbidden-rsa-key-not-divisible-by-8-in-leaf': 'Conflates CA and verifier requirements',
     'webpki::forbidden-dsa-leaf': 'Conflates CA and verifier requirements',
     'webpki::forbidden-dsa-root': 'Conflates CA and verifier requirements',
 
@@ -63,6 +63,12 @@ tests_that_succeed_unexpectedly = {
 
     'webpki::san::wildcard-embedded-leftmost-san': 'CABF rule not RFC 5280',
     'webpki::ca-as-leaf': 'Not applicable outside of webpki',
+
+    # Tests rejecting a wildcard issued for public suffixes; requires
+    # a Public Suffix List lookup which is out of scope for the library.
+    # (Also a CABF issuer rule that doesn't apply to verifiers in any case)
+    'webpki::san::public-suffix-multi-label-wildcard-san': 'Requires a full PSL, not just a label-count heuristic',
+    'webpki::san::public-suffix-private-namespace-wildcard-san': 'Same as public-suffix-multi-label-wildcard-san',
 
     'webpki::explicit-curve': 'Deprecated but not gone yet',
     'rfc5280::nc::invalid-dnsname-leading-period': 'Common extension',
