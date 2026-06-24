@@ -123,6 +123,30 @@ class BOTAN_PUBLIC_API(2, 0) ASN1_Object {
 };
 
 /**
+* ASN.1 BIT STRING with explicit unused-bit count.
+*/
+class BOTAN_PUBLIC_API(3, 13) ASN1_BitString final {
+   public:
+      ASN1_BitString() = default;
+
+      ASN1_BitString(std::vector<uint8_t> bytes, size_t unused_bits);
+
+      ASN1_BitString(std::span<const uint8_t> bytes, size_t unused_bits);
+
+      std::span<const uint8_t> bytes() const { return std::span{m_bytes}; }
+
+      size_t unused_bits() const { return m_unused_bits; }
+
+      size_t bit_length() const;
+
+      bool bit_at(size_t bit) const;
+
+   private:
+      std::vector<uint8_t> m_bytes;
+      size_t m_unused_bits = 0;
+};
+
+/**
 * BER Encoded Object
 */
 class BOTAN_PUBLIC_API(2, 0) BER_Object final {

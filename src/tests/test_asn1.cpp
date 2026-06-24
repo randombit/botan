@@ -25,6 +25,20 @@ namespace {
 
 #if defined(BOTAN_HAS_ASN1)
 
+class ASN1_Test_Sequence final : public Botan::ASN1_Object {
+   public:
+      explicit ASN1_Test_Sequence(size_t value = 0) : m_value(value) {}
+
+      void encode_into(Botan::DER_Encoder& der) const override { der.start_sequence().encode(m_value).end_cons(); }
+
+      void decode_from(Botan::BER_Decoder& ber) override { ber.start_sequence().decode(m_value).end_cons(); }
+
+      size_t value() const { return m_value; }
+
+   private:
+      size_t m_value;
+};
+
 Test::Result test_ber_stack_recursion() {
    Test::Result result("BER stack recursion");
 
@@ -349,6 +363,110 @@ Test::Result test_der_constructed_tag_17_not_sorted() {
    return result;
 }
 
+Test::Result test_der_implicit_tagging_helpers() {
+   Test::Result result("DER implicit tagging helpers");
+
+   const std::vector<uint8_t> first = {0x02, 0x01, 0x02};   // INTEGER 2
+   const std::vector<uint8_t> second = {0x02, 0x01, 0x01};  // INTEGER 1
+
+   Botan::DER_Encoder set_enc;
+   set_enc.start_set(23).raw_bytes(first).raw_bytes(second).end_cons();
+   const auto implicit_set = set_enc.get_contents_unlocked();
+   result.test_bin_eq("implicit SET is still sorted", implicit_set, "B706020101020102");
+
+   const ASN1_Test_Sequence seq(42);
+   const auto implicit_seq = Botan::DER_Encoder().encode_implicit(seq, Botan::ASN1_Type(3)).get_contents_unlocked();
+   result.test_bin_eq("implicit constructed object keeps constructed bit", implicit_seq, "A30302012A");
+
+   ASN1_Test_Sequence decoded;
+   Botan::BER_Decoder(implicit_seq, Botan::BER_Decoder::Limits::DER())
+      .decode_implicit(decoded,
+                       Botan::ASN1_Type(3),
+                       Botan::ASN1_Class::ContextSpecific | Botan::ASN1_Class::Constructed,
+                       Botan::ASN1_Type::Sequence,
+                       Botan::ASN1_Class::Constructed)
+      .verify_end();
+   result.test_sz_eq("implicit constructed object decodes", decoded.value(), 42);
+
+   const std::vector<uint8_t> one_bit = {0x80};
+   const auto implicit_bitstring =
+      Botan::DER_Encoder()
+         .encode_bitstring(one_bit, 7, Botan::ASN1_Type(1), Botan::ASN1_Class::ContextSpecific)
+         .get_contents_unlocked();
+   result.test_bin_eq("implicit BIT STRING keeps unused bit count", implicit_bitstring, "81020780");
+
+   const std::vector<uint8_t> bad_padding = {0x81};
+   result.test_throws<Botan::Invalid_Argument>("BIT STRING unused bits must be zero",
+                                               [&] { Botan::DER_Encoder().encode_bitstring(bad_padding, 7); });
+
+   return result;
+}
+
+Test::Result test_asn1_bitstring_helpers() {
+   Test::Result result("ASN.1 BIT STRING helpers");
+
+   const std::vector<uint8_t> raw_der = {0x03, 0x03, 0x03, 0xA8, 0x00};
+   Botan::ASN1_BitString raw_bits;
+   Botan::BER_Decoder(raw_der, Botan::BER_Decoder::Limits::DER()).decode_bitstring(raw_bits).verify_end();
+
+   result.test_sz_eq("raw bytes", raw_bits.bytes().size(), 2);
+   result.test_sz_eq("raw unused bits", raw_bits.unused_bits(), 3);
+   result.test_sz_eq("raw bit length", raw_bits.bit_length(), 13);
+   result.test_is_true("raw bit 0", raw_bits.bit_at(0));
+   result.test_is_false("raw bit 1", raw_bits.bit_at(1));
+   result.test_is_true("raw bit 2", raw_bits.bit_at(2));
+
+   const auto raw_reencoded = Botan::DER_Encoder().encode_bitstring(raw_bits).get_contents_unlocked();
+   result.test_bin_eq("raw BIT STRING re-encodes", raw_reencoded, raw_der);
+
+   const std::vector<uint8_t> octet_aligned_der = {0x03, 0x02, 0x00, 0xAA};
+   std::vector<uint8_t> octets;
+   Botan::BER_Decoder(octet_aligned_der, Botan::BER_Decoder::Limits::DER())
+      .decode_octet_aligned_bitstring(octets)
+      .verify_end();
+   const std::vector<uint8_t> expected_octets = {0xAA};
+   result.test_bin_eq("octet-aligned BIT STRING decodes as bytes", octets, expected_octets);
+
+   const std::vector<uint8_t> non_octet_aligned_der = {0x03, 0x02, 0x01, 0x80};
+   result.test_throws<Botan::Decoding_Error>("octet-aligned BIT STRING rejects unused bits", [&] {
+      std::vector<uint8_t> rejected;
+      Botan::BER_Decoder(non_octet_aligned_der, Botan::BER_Decoder::Limits::DER())
+         .decode_octet_aligned_bitstring(rejected)
+         .verify_end();
+   });
+
+   const uint64_t named = (uint64_t(1) << 15) | (uint64_t(1) << 7);
+   const auto named_der = Botan::DER_Encoder().encode_named_bitstring(named, 16).get_contents_unlocked();
+   const std::vector<uint8_t> expected_named_der = {0x03, 0x03, 0x07, 0x80, 0x80};
+   result.test_bin_eq("named BIT STRING uses DER minimum length", named_der, expected_named_der);
+
+   uint64_t decoded_named = 0;
+   Botan::BER_Decoder(named_der, Botan::BER_Decoder::Limits::DER())
+      .decode_named_bitstring(decoded_named, 16)
+      .verify_end();
+   result.test_u64_eq("named BIT STRING round-trips", decoded_named, named);
+
+   const auto width9_der = Botan::DER_Encoder().encode_named_bitstring(1, 9).get_contents_unlocked();
+   const std::vector<uint8_t> expected_width9_der = {0x03, 0x03, 0x07, 0x00, 0x80};
+   result.test_bin_eq("named BIT STRING handles non-byte width", width9_der, expected_width9_der);
+
+   const std::vector<uint8_t> non_minimal_named_der = {0x03, 0x02, 0x00, 0x80};
+   result.test_throws<Botan::BER_Decoding_Error>("DER named BIT STRING rejects trailing zero bits", [&] {
+      uint64_t rejected = 0;
+      Botan::BER_Decoder(non_minimal_named_der, Botan::BER_Decoder::Limits::DER())
+         .decode_named_bitstring(rejected, 16)
+         .verify_end();
+   });
+
+   uint64_t non_minimal_named = 0;
+   Botan::BER_Decoder(non_minimal_named_der, Botan::BER_Decoder::Limits::BER())
+      .decode_named_bitstring(non_minimal_named, 16)
+      .verify_end();
+   result.test_u64_eq("BER named BIT STRING accepts trailing zero bits", non_minimal_named, uint64_t(1) << 15);
+
+   return result;
+}
+
 Test::Result test_ber_indefinite_length_trailing_data() {
    Test::Result result("BER indefinite length trailing data");
 
@@ -535,6 +653,8 @@ class ASN1_Tests final : public Test {
          results.push_back(test_asn1_tag_underlying_type());
          results.push_back(test_asn1_negative_int_encoding());
          results.push_back(test_der_constructed_tag_17_not_sorted());
+         results.push_back(test_der_implicit_tagging_helpers());
+         results.push_back(test_asn1_bitstring_helpers());
          results.push_back(test_asn1_string_zero_length_roundtrip());
          results.push_back(test_pss_params_rejects_trailing_data_in_mgf1_params());
 

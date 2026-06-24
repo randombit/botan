@@ -34,7 +34,7 @@ std::unique_ptr<Public_Key> load_key(DataSource& source) {
          BER_Decoder(source, BER_Decoder::Limits::DER())
             .start_sequence()
             .decode(alg_id)
-            .decode(key_bits, ASN1_Type::BitString)
+            .decode_octet_aligned_bitstring(key_bits)
             .end_cons()
             .verify_end();
       } else {
@@ -43,7 +43,7 @@ std::unique_ptr<Public_Key> load_key(DataSource& source) {
          BER_Decoder(ber, BER_Decoder::Limits::DER())
             .start_sequence()
             .decode(alg_id)
-            .decode(key_bits, ASN1_Type::BitString)
+            .decode_octet_aligned_bitstring(key_bits)
             .end_cons()
             .verify_end();
       }

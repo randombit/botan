@@ -66,7 +66,7 @@ std::vector<uint8_t> Public_Key::subject_public_key() const {
    DER_Encoder(output)
       .start_sequence()
       .encode(algorithm_identifier())
-      .encode(public_key_bits(), ASN1_Type::BitString)
+      .encode_octet_aligned_bitstring(public_key_bits())
       .end_cons();
 
    return output;

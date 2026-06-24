@@ -497,18 +497,8 @@ std::vector<uint8_t> Key_Usage::encode_inner() const {
       throw Encoding_Error("Cannot encode empty PKIX key constraints");
    }
 
-   const size_t constraint_bits = m_constraints.value();
-   const size_t unused_bits = ctz(static_cast<uint32_t>(constraint_bits));
-
    std::vector<uint8_t> der;
-   der.push_back(static_cast<uint8_t>(ASN1_Type::BitString));
-   der.push_back(2 + ((unused_bits < 8) ? 1 : 0));
-   der.push_back(unused_bits % 8);
-   der.push_back(static_cast<uint8_t>((constraint_bits >> 8) & 0xFF));
-   if((constraint_bits & 0xFF) != 0) {
-      der.push_back(static_cast<uint8_t>(constraint_bits & 0xFF));
-   }
-
+   DER_Encoder(der).encode_named_bitstring(m_constraints.value(), 16);
    return der;
 }
 
@@ -517,23 +507,10 @@ std::vector<uint8_t> Key_Usage::encode_inner() const {
 */
 void Key_Usage::decode_inner(const std::vector<uint8_t>& in) {
    /* RFC 5280 Section 4.2.1.3 - KeyUsage ::= BIT STRING */
-   std::vector<uint8_t> bits;
+   uint64_t usage = 0;
    BER_Decoder(in, BER_Decoder::Limits::DER())
-      .decode(bits, ASN1_Type::BitString, ASN1_Type::BitString, ASN1_Class::Universal)
+      .decode_named_bitstring(usage, 16, ASN1_Type::BitString, ASN1_Class::Universal)
       .verify_end();
-
-   const uint16_t usage = [&bits]() -> uint16_t {
-      switch(bits.size()) {
-         case 0:
-            return 0;
-         case 1:
-            return make_uint16(bits[0], 0);
-         case 2:
-            return make_uint16(bits[0], bits[1]);
-         default:
-            throw Decoding_Error("Invalid KeyUsage bitstring encoding");
-      }
-   }();
 
    /* RFC 5280 Section 4.2.1.3:
    *  "When the keyUsage extension appears in a certificate, at least one of
@@ -542,7 +519,7 @@ void Key_Usage::decode_inner(const std::vector<uint8_t>& in) {
       throw Decoding_Error("KeyUsage extension must have at least one bit set");
    }
 
-   m_constraints = Key_Constraints(usage);
+   m_constraints = Key_Constraints(static_cast<uint32_t>(usage));
 }
 
 /*
@@ -1596,14 +1573,7 @@ void IPAddressBlocks::IPAddressOrRange<V>::encode_into(Botan::DER_Encoder& into)
    // both the full octets and the partially used one match
    if(octets_match && used_bits_match) {
       // at this point the range can be encoded as a prefix
-      std::vector<uint8_t> prefix;
-
-      prefix.push_back(unused_bits);
-      for(size_t i = 0; i < static_cast<uint8_t>(version_octets - discarded_octets); i++) {
-         prefix.push_back(min[i]);
-      }
-
-      into.add_object(ASN1_Type::BitString, ASN1_Class::Universal, prefix);
+      into.encode_bitstring(std::span{min}.first(version_octets - discarded_octets), unused_bits);
    } else {
       const uint8_t discarded_octets_min = zeros / 8;
       const uint8_t unused_bits_min = zeros % 8;
@@ -1618,23 +1588,9 @@ void IPAddressBlocks::IPAddressOrRange<V>::encode_into(Botan::DER_Encoder& into)
          max[version_octets - 1 - discarded_octets_max] <<= unused_bits_max;
       }
 
-      std::vector<uint8_t> compressed_min;
-      std::vector<uint8_t> compressed_max;
-
-      // construct the address as a byte sequence of the unused bits followed by the compressed address
-      compressed_min.push_back(unused_bits_min);
-      for(size_t i = 0; i < static_cast<uint8_t>(version_octets - discarded_octets_min); i++) {
-         compressed_min.push_back(min[i]);
-      }
-
-      compressed_max.push_back(unused_bits_max);
-      for(size_t i = 0; i < static_cast<uint8_t>(version_octets - discarded_octets_max); i++) {
-         compressed_max.push_back(max[i]);
-      }
-
       into.start_sequence()
-         .add_object(ASN1_Type::BitString, ASN1_Class::Universal, compressed_min)
-         .add_object(ASN1_Type::BitString, ASN1_Class::Universal, compressed_max)
+         .encode_bitstring(std::span{min}.first(version_octets - discarded_octets_min), unused_bits_min)
+         .encode_bitstring(std::span{max}.first(version_octets - discarded_octets_max), unused_bits_max)
          .end_cons();
    }
 }
@@ -1647,29 +1603,23 @@ void IPAddressBlocks::IPAddressOrRange<V>::decode_from(Botan::BER_Decoder& from)
    if(next_tag == ASN1_Type::BitString) {
       // construct a min and a max address from the prefix
 
-      std::vector<uint8_t> prefix_min;
-      from.decode(prefix_min, ASN1_Type::OctetString, ASN1_Type::BitString, ASN1_Class::Universal);
-
-      // copy because we modify the address in `decode_single_address`, but we need it twice for min and max
-      std::vector<uint8_t> prefix_max(prefix_min);
+      ASN1_BitString prefix;
+      from.decode_bitstring(prefix);
 
       // min address gets filled with 0's
-      m_min = decode_single_address(std::move(prefix_min), true);
+      m_min = decode_single_address(prefix, true);
       // max address with 1's
-      m_max = decode_single_address(std::move(prefix_max), false);
+      m_max = decode_single_address(prefix, false);
    } else if(next_tag == ASN1_Type::Sequence) {
       // this is a range
 
-      std::vector<uint8_t> addr_min;
-      std::vector<uint8_t> addr_max;
+      ASN1_BitString addr_min;
+      ASN1_BitString addr_max;
 
-      from.start_sequence()
-         .decode(addr_min, ASN1_Type::OctetString, ASN1_Type::BitString, ASN1_Class::Universal)
-         .decode(addr_max, ASN1_Type::OctetString, ASN1_Type::BitString, ASN1_Class::Universal)
-         .end_cons();
+      from.start_sequence().decode_bitstring(addr_min).decode_bitstring(addr_max).end_cons();
 
-      m_min = decode_single_address(std::move(addr_min), true);
-      m_max = decode_single_address(std::move(addr_max), false);
+      m_min = decode_single_address(addr_min, true);
+      m_max = decode_single_address(addr_max, false);
 
       if(m_min > m_max) {
          throw Decoding_Error("IP address ranges must be sorted.");
@@ -1680,48 +1630,42 @@ void IPAddressBlocks::IPAddressOrRange<V>::decode_from(Botan::BER_Decoder& from)
 }
 
 template <IPAddressBlocks::Version V>
-IPAddressBlocks::IPAddress<V> IPAddressBlocks::IPAddressOrRange<V>::decode_single_address(std::vector<uint8_t> decoded,
+IPAddressBlocks::IPAddress<V> IPAddressBlocks::IPAddressOrRange<V>::decode_single_address(const ASN1_BitString& decoded,
                                                                                           bool min) {
    const size_t version_octets = static_cast<size_t>(V);
 
    // decode a single address according to https://datatracker.ietf.org/doc/html/rfc3779#section-2.1.1 and following
 
-   // we have to account for the octet at the beginning that specifies how many bits are unused in the last octet
-   if(decoded.empty() || decoded.size() > version_octets + 1) {
-      throw Decoding_Error(fmt("IP address range entries must have a length between 1 and {} bytes.", version_octets));
+   if(decoded.bytes().size() > version_octets) {
+      throw Decoding_Error(fmt("IP address range entries must have a length between 0 and {} bytes.", version_octets));
    }
 
-   const uint8_t unused = decoded.front();
-   const uint8_t discarded_octets = version_octets - (static_cast<uint8_t>(decoded.size()) - 1);
+   const uint8_t unused = static_cast<uint8_t>(decoded.unused_bits());
+   const uint8_t discarded_octets = version_octets - static_cast<uint8_t>(decoded.bytes().size());
 
-   decoded.erase(decoded.begin());
+   std::vector<uint8_t> address(decoded.bytes().begin(), decoded.bytes().end());
 
-   if(decoded.empty() && unused != 0) {
+   if(address.empty() && unused != 0) {
       throw Decoding_Error("IP address range entry specified unused bits, but did not provide any octets.");
-   }
-
-   // if they were 8, the entire octet should have been discarded
-   if(unused > 7) {
-      throw Decoding_Error("IP address range entry specified invalid number of unused bits.");
    }
 
    // pad to version length with 0's for min addresses, 255's (0xff) for max addresses
    const uint8_t fill_discarded = min ? 0 : 0xff;
    for(size_t i = 0; i < discarded_octets; i++) {
-      decoded.push_back(fill_discarded);
+      address.push_back(fill_discarded);
    }
 
    // for min addresses they should already be 0, but we set them to zero regardless
    // for max addresses this turns the unused bits to 1
    for(size_t i = 0; i < unused; i++) {
       if(min) {
-         decoded[version_octets - 1 - discarded_octets] &= ~(1 << i);
+         address[version_octets - 1 - discarded_octets] &= ~(1 << i);
       } else {
-         decoded[version_octets - 1 - discarded_octets] |= (1 << i);
+         address[version_octets - 1 - discarded_octets] |= (1 << i);
       }
    }
 
-   return IPAddressBlocks::IPAddress<V>(decoded);
+   return IPAddressBlocks::IPAddress<V>(address);
 }
 
 template <IPAddressBlocks::Version V>

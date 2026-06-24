@@ -259,6 +259,30 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
                           ASN1_Type type_tag,
                           ASN1_Class class_tag = ASN1_Class::ContextSpecific);
 
+      BER_Decoder& decode_bitstring(ASN1_BitString& out,
+                                    ASN1_Type type_tag = ASN1_Type::BitString,
+                                    ASN1_Class class_tag = ASN1_Class::Universal);
+
+      template <typename Alloc>
+      BER_Decoder& decode_octet_aligned_bitstring(std::vector<uint8_t, Alloc>& out,
+                                                  ASN1_Type type_tag = ASN1_Type::BitString,
+                                                  ASN1_Class class_tag = ASN1_Class::Universal) {
+         ASN1_BitString bits;
+         decode_bitstring(bits, type_tag, class_tag);
+
+         if(bits.unused_bits() != 0) {
+            throw Decoding_Error("Expected octet-aligned BIT STRING");
+         }
+
+         out.assign(bits.bytes().begin(), bits.bytes().end());
+         return (*this);
+      }
+
+      BER_Decoder& decode_named_bitstring(uint64_t& bits,
+                                          size_t width,
+                                          ASN1_Type type_tag = ASN1_Type::BitString,
+                                          ASN1_Class class_tag = ASN1_Class::Universal);
+
       BER_Decoder& decode(ASN1_Object& obj,
                           ASN1_Type type_tag = ASN1_Type::NoObject,
                           ASN1_Class class_tag = ASN1_Class::NoObject);
@@ -311,6 +335,14 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
          obj.set_tagging(real_type, real_class);
          push_back(std::move(obj));
          return decode(out, real_type, real_class);
+      }
+
+      template <typename T>
+      BER_Decoder& decode_implicit(
+         T& out, ASN1_Type type_tag, ASN1_Class class_tag, ASN1_Type real_type, ASN1_Class real_class) {
+         BER_Object obj = get_next_object();
+         obj.assert_is_a(type_tag, class_tag);
+         return decode_implicit(std::move(obj), out, real_type, real_class);
       }
 
       template <typename T>
@@ -370,6 +402,36 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
          return decode_optional_string(out, real_type, static_cast<uint32_t>(expected_tag), class_tag);
       }
 
+      template <typename Alloc>
+      BER_Decoder& decode_optional_octet_aligned_bitstring(std::vector<uint8_t, Alloc>& out,
+                                                           uint32_t expected_tag,
+                                                           ASN1_Class class_tag = ASN1_Class::ContextSpecific) {
+         BER_Object obj = get_next_object();
+
+         const ASN1_Type type_tag = static_cast<ASN1_Type>(expected_tag);
+
+         if(obj.is_a(type_tag, class_tag)) {
+            if(class_tag == ASN1_Class::ExplicitContextSpecific) {
+               BER_Decoder(obj, m_limits).decode_octet_aligned_bitstring(out).verify_end();
+            } else {
+               push_back(std::move(obj));
+               decode_octet_aligned_bitstring(out, type_tag, class_tag);
+            }
+         } else {
+            out.clear();
+            push_back(std::move(obj));
+         }
+
+         return (*this);
+      }
+
+      template <typename Alloc>
+      BER_Decoder& decode_optional_octet_aligned_bitstring(std::vector<uint8_t, Alloc>& out,
+                                                           ASN1_Type expected_tag,
+                                                           ASN1_Class class_tag = ASN1_Class::ContextSpecific) {
+         return decode_optional_octet_aligned_bitstring(out, static_cast<uint32_t>(expected_tag), class_tag);
+      }
+
       ~BER_Decoder();
 
    private:
@@ -424,9 +486,7 @@ BER_Decoder& BER_Decoder::decode_optional_implicit(T& out,
    BER_Object obj = get_next_object();
 
    if(obj.is_a(type_tag, class_tag)) {
-      obj.set_tagging(real_type, real_class);
-      push_back(std::move(obj));
-      decode(out, real_type, real_class);
+      decode_implicit(std::move(obj), out, real_type, real_class);
    } else {
       // Not what we wanted, push it back on the stream
       out = default_value;

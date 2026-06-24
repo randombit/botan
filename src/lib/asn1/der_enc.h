@@ -68,6 +68,13 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
 
       DER_Encoder& start_set() { return start_cons(ASN1_Type::Set, ASN1_Class::Universal); }
 
+      /**
+       * Start a SET/SET OF with an alternate tag. Contents are still DER sorted.
+       */
+      DER_Encoder& start_set(ASN1_Type type_tag, ASN1_Class class_tag);
+
+      DER_Encoder& start_set(uint32_t tag) { return start_set(ASN1_Type(tag), ASN1_Class::ContextSpecific); }
+
       DER_Encoder& start_context_specific(uint32_t tag) {
          return start_cons(ASN1_Type(tag), ASN1_Class::ContextSpecific);
       }
@@ -94,6 +101,33 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
       DER_Encoder& encode(const BigInt& n);
 
       DER_Encoder& encode(std::span<const uint8_t> val, ASN1_Type real_type);
+
+      /**
+       * Encode a BIT STRING, with `bits` not including the initial unused-bits octet.
+       */
+      DER_Encoder& encode_bitstring(std::span<const uint8_t> bits,
+                                    size_t unused_bits = 0,
+                                    ASN1_Type type_tag = ASN1_Type::BitString,
+                                    ASN1_Class class_tag = ASN1_Class::Universal);
+
+      DER_Encoder& encode_bitstring(const ASN1_BitString& bits,
+                                    ASN1_Type type_tag = ASN1_Type::BitString,
+                                    ASN1_Class class_tag = ASN1_Class::Universal);
+
+      DER_Encoder& encode_octet_aligned_bitstring(std::span<const uint8_t> bytes,
+                                                  ASN1_Type type_tag = ASN1_Type::BitString,
+                                                  ASN1_Class class_tag = ASN1_Class::Universal) {
+         return encode_bitstring(bytes, 0, type_tag, class_tag);
+      }
+
+      /**
+      * Helper for encoding BIT STRING elements that are actually bit sets, rather
+      * than being OCTET STRINGS with the wrong type.
+      */
+      DER_Encoder& encode_named_bitstring(uint64_t bits,
+                                          size_t width,
+                                          ASN1_Type type_tag = ASN1_Type::BitString,
+                                          ASN1_Class class_tag = ASN1_Class::Universal);
 
       DER_Encoder& encode(const uint8_t val[], size_t len, ASN1_Type real_type) {
          return this->encode(std::span{val, len}, real_type);
@@ -198,12 +232,15 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
       DER_Encoder& add_object(ASN1_Type type_tag, ASN1_Class class_tag, uint8_t val);
 
       /**
-      * Encode `value` and emit just its body bytes under an IMPLICIT
-      * `type_tag`/`class_tag` (e.g. for `[N] IMPLICIT OBJECT IDENTIFIER` where the
-      * body is an OID's arc bytes but the tag must be `[N]`).
-      */
+       * Encode `value` and emit just its body bytes under an IMPLICIT
+       * `type_tag`/`class_tag` (e.g. for `[N] IMPLICIT OBJECT IDENTIFIER` where the
+       * body is an OID's arc bytes but the tag must be `[N]`). The
+       * primitive/constructed bit is copied from `value`.
+       */
       template <typename T>
-      DER_Encoder& encode_implicit(const T& value, ASN1_Type type_tag, ASN1_Class class_tag) {
+      DER_Encoder& encode_implicit(const T& value,
+                                   ASN1_Type type_tag,
+                                   ASN1_Class class_tag = ASN1_Class::ContextSpecific) {
          std::vector<uint8_t> tlv;
          DER_Encoder(tlv).encode(value);
          return add_object_tlv(type_tag, class_tag, std::move(tlv));
@@ -211,6 +248,8 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
 
    private:
       DER_Encoder& add_object_tlv(ASN1_Type type_tag, ASN1_Class class_tag, std::vector<uint8_t> tlv);
+
+      DER_Encoder& start_cons(ASN1_Type type_tag, ASN1_Class class_tag, bool sort_contents);
 
       class DER_Sequence final {
          public:
@@ -222,17 +261,19 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
 
             void add_bytes(const uint8_t hdr[], size_t hdr_len, const uint8_t val[], size_t val_len);
 
-            DER_Sequence(ASN1_Type type_tag, ASN1_Class class_tag);
+            DER_Sequence(ASN1_Type type_tag, ASN1_Class class_tag, bool sort_contents);
 
             DER_Sequence(DER_Sequence&& seq) noexcept :
                   m_type_tag(seq.m_type_tag),
                   m_class_tag(seq.m_class_tag),
+                  m_sort_contents(seq.m_sort_contents),
                   m_contents(std::move(seq.m_contents)),
                   m_set_contents(std::move(seq.m_set_contents)) {}
 
             DER_Sequence& operator=(DER_Sequence&& seq) noexcept {
                std::swap(m_type_tag, seq.m_type_tag);
                std::swap(m_class_tag, seq.m_class_tag);
+               std::swap(m_sort_contents, seq.m_sort_contents);
                std::swap(m_contents, seq.m_contents);
                std::swap(m_set_contents, seq.m_set_contents);
                return (*this);
@@ -245,6 +286,7 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
          private:
             ASN1_Type m_type_tag;
             ASN1_Class m_class_tag;
+            bool m_sort_contents;
             secure_vector<uint8_t> m_contents;
             std::vector<secure_vector<uint8_t>> m_set_contents;
       };

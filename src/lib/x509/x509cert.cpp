@@ -157,7 +157,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
    BER_Decoder(data->m_subject_public_key_bits, BER_Decoder::Limits::DER())
       .decode(data->m_subject_public_key_algid)
-      .decode(data->m_subject_public_key_bitstring, ASN1_Type::BitString)
+      .decode_octet_aligned_bitstring(data->m_subject_public_key_bitstring)
       .verify_end();
 
    if(v3_exts_data.is_a(3, ASN1_Class::Constructed | ASN1_Class::ContextSpecific)) {
