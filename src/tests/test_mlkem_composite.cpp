@@ -36,6 +36,7 @@
 #include <string_view>
 #include <vector>
 
+#if defined(BOTAN_HAS_MLKEM_COMPOSITE)
 namespace Botan_Tests {
 
 namespace {
@@ -139,8 +140,6 @@ void encrypt_and_decrypt(const Botan::Private_Key& privkey,
    test_result.test_bin_eq(test_context, ss_rt, ss_rt_2);
 }
 }  // namespace
-
-#if defined(BOTAN_HAS_MLKEM_COMPOSITE)
 
    #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
@@ -453,5 +452,5 @@ class MLKEM_Composite_KAT_Invalid_Tests : public Text_Based_Test {
 BOTAN_REGISTER_TEST("pubkey", "mlkem_composite_kat_invalid", MLKEM_Composite_KAT_Invalid_Tests);
 
    #endif
-#endif
 }  // namespace Botan_Tests
+#endif

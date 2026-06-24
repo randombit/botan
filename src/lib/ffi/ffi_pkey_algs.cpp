@@ -1377,7 +1377,7 @@ int botan_privkey_load_mlkem_composite(botan_privkey_t* key,
       return ffi_new_object(key, std::move(mlkem_composite_key));
    });
 #else
-   BOTAN_UNUSED(key, key_len, privkey, mlkem_mode);
+   BOTAN_UNUSED(key, key_len, privkey, mlkem_composite_algo);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
@@ -1404,7 +1404,7 @@ int botan_pubkey_load_mlkem_composite(botan_pubkey_t* key,
       return ffi_new_object(key, std::move(mlkem_composite_key));
    });
 #else
-   BOTAN_UNUSED(key, key_len, pubkey, mlkem_mode);
+   BOTAN_UNUSED(key, key_len, pubkey, mlkem_composite_algo);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }

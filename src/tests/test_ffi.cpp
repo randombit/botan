@@ -7,7 +7,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "botan/mlkem_comp_parameters.h"
 #include "tests.h"
 #include <botan/version.h>
 

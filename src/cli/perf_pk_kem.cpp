@@ -4,7 +4,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "botan/mlkem_comp_parameters.h"
 #include "perf.h"
 
 #include <ostream>
@@ -14,6 +13,10 @@
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
    #include <botan/rng.h>
+#endif
+
+#if defined(BOTAN_HAS_MLKEM_COMPOSITE)
+   #include <botan/mlkem_comp_parameters.h>
 #endif
 
 namespace Botan_CLI {
