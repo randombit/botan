@@ -198,7 +198,7 @@ ML-KEM-composite (draft-ietf-lamps-pq-composite-kem-16)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ML-KEM-composite algorithms are accessible in Botan via the generic algorithm string
-"MLKEM-composite" and the respective OIDs registered
+"ML-KEM-composite" and the respective OIDs registered
 under the names MLKEM768-RSA2048-SHA3-256, MLKEM768-RSA3072-SHA3-256,
 MLKEM768-RSA4096-SHA3-256, MLKEM768-X25519-SHA3-256,
 MLKEM768-ECDH-P256-SHA3-256, MLKEM768-ECDH-P384-SHA3-256,
