@@ -12,7 +12,6 @@
 #include <botan/pk_ops_fwd.h>
 #include <botan/secmem.h>
 
-#include <algorithm>
 #include <memory>
 #include <optional>
 #include <span>

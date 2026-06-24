@@ -391,8 +391,8 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
    {
       auto mlkem_comp_param_opt = MLKEM_Composite_Param::from_algo_id(alg_id);
       if(mlkem_comp_param_opt.has_value()) {
-         auto& comp_parm = mlkem_comp_param_opt.value();
-         if(comp_parm.is_supported()) {
+         auto& comp_param = mlkem_comp_param_opt.value();
+         if(comp_param.is_supported()) {
             return std::make_unique<MLKEM_Composite_PrivateKey>(alg_id, key_bits);
          } else {
             throw Not_Implemented(fmt("MLKEM-composite is supported, but the requested parameter set {} is not",

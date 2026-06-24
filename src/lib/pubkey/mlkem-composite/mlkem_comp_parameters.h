@@ -32,7 +32,7 @@ class BOTAN_PUBLIC_API(3, 0) MLKEM_Composite_Param {
          MLKEM1024_ECDH_P521_SHA3_256
       };
 
-      static inline const char* generic_algo_name = "MLKEM-Composite";
+      static inline const char* generic_algo_name = "ML-KEM-Composite";
 
       static std::vector<MLKEM_Composite_Param> all_param_sets();
 

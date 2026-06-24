@@ -234,12 +234,6 @@ size_t MLKEM_Composite_Param::mlkem_pubkey_size() const {
    return 1568;  // must be ML-KEM-1024
 }
 
-// std::string MLDSA_Composite_Param::mlkem_param_str() const {
-//    std::string label_str(m_label);
-//    std::vector<uint8_t> label_vec(label_str.begin(), label_str.end());
-//    return std::string("Pure,Randomized,ctx_hex=") + hex_encode(label_vec);
-// }
-
 size_t MLKEM_Composite_Param::mlkem_ciphertext_size() const {
    if(this->m_mlkem_variant == ML_KEM_Mode::Mode::ML_KEM_768) {
       return 1088;
