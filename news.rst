@@ -50,6 +50,11 @@ Version 3.13.0, Not Yet Released
 
 * Upgrade to TLS-Anvil 1.5 (GH #5630)
 
+* Fix DTLS 1.2 handshake retransmission edge cases, including pacing of
+  repeated timeout checks, replay of final flights after local activation,
+  partial server-flight delivery, and delayed server-side flight handling.
+  (GH #2310 #2498 #4022 #4036)
+
 Version 3.12.0, 2026-05-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

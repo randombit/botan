@@ -87,6 +87,8 @@ class Channel_Impl_12 : public Channel_Impl {
       */
       bool is_active() const override;
 
+      bool requires_timeout_check() const override;
+
       /**
       * @return true iff the connection has been definitely closed
       */
@@ -142,10 +144,8 @@ class Channel_Impl_12 : public Channel_Impl {
       bool secure_renegotiation_supported() const override;
 
       /**
-      * Perform a handshake timeout check. This does nothing unless
-      * this is a DTLS channel with a pending handshake state, in
-      * which case we check for timeout and potentially retransmit
-      * handshake packets.
+      * Perform a handshake timeout check. This does nothing unless this is a
+      * DTLS channel that still needs handshake retransmission handling.
       */
       bool timeout_check() override;
 
@@ -246,6 +246,7 @@ class Channel_Impl_12 : public Channel_Impl {
       secure_vector<uint8_t> m_record_buf;
 
       bool m_has_been_closed;
+      bool m_dtls_peer_traffic_seen = true;
 
       std::optional<Active_Connection_State_12> m_active_state;
 };

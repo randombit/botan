@@ -151,6 +151,8 @@ Protocol_Version Datagram_Handshake_IO::initial_record_version() const {
 }
 
 void Datagram_Handshake_IO::retransmit_last_flight() {
+   // m_flights keeps an empty trailing slot while waiting for the peer, so the
+   // last completed flight is normally the one before it.
    const size_t flight_idx = (m_flights.size() == 1) ? 0 : (m_flights.size() - 2);
    retransmit_flight(flight_idx);
 }
@@ -160,13 +162,16 @@ void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx) {
 
    BOTAN_ASSERT(!flight.empty(), "Nonempty flight to retransmit");
 
-   uint16_t epoch = m_flight_data[flight[0]].epoch;
+   const uint16_t first_epoch = m_flight_data[flight[0]].epoch;
+   uint16_t epoch = (first_epoch == 0) ? 0 : first_epoch - 1;
 
    for(auto msg_seq : flight) {
       auto& msg = m_flight_data[msg_seq];
 
       if(msg.epoch != epoch) {
-         // Epoch gap: insert the CCS
+         // CCS is not a handshake message and therefore has no message_seq of
+         // its own. When replaying a cached flight that crosses into a new
+         // epoch, synthesize the CCS record that originally separated them.
          const std::vector<uint8_t> ccs(1, 1);
          m_send_hs(epoch, Record_Type::ChangeCipherSpec, ccs);
       }
@@ -178,6 +183,15 @@ void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx) {
 
 bool Datagram_Handshake_IO::have_more_data() const {
    return false;
+}
+
+void Datagram_Handshake_IO::conclude_flight() {
+   // Keep an empty trailing flight to mean "we are waiting for the peer".
+   // Retransmission then replays the previous, completed flight instead of
+   // appending to it.
+   if(!m_flights.rbegin()->empty()) {
+      m_flights.push_back(std::vector<uint16_t>());
+   }
 }
 
 bool Datagram_Handshake_IO::timeout_check() {
@@ -197,6 +211,8 @@ bool Datagram_Handshake_IO::timeout_check() {
 
    retransmit_last_flight();
 
+   // Retransmission restarts the backoff window just like a normal write.
+   m_last_write = steady_clock_ms();
    m_next_timeout = std::min(2 * m_next_timeout, m_max_timeout);
    return true;
 }
@@ -218,6 +234,8 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
    }
 
    const size_t DTLS_HANDSHAKE_HEADER_LEN = 12;
+
+   bool retransmit_response = false;
 
    while(record_len > 0) {
       if(record_len < DTLS_HANDSHAKE_HEADER_LEN) {
@@ -266,11 +284,18 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
          it->second.add_fragment(
             &record[DTLS_HANDSHAKE_HEADER_LEN], fragment_length, fragment_offset, epoch, msg_type, msg_len);
       } else {
-         // TODO: detect retransmitted flight
+         // A peer retransmitted an already-consumed handshake flight. RFC 6347
+         // requires us to answer with our last flight, even if the handshake is
+         // otherwise complete.
+         retransmit_response = true;
       }
 
       record += total_size;
       record_len -= total_size;
+   }
+
+   if(retransmit_response) {
+      retransmit_last_flight();
    }
 }
 
@@ -428,9 +453,16 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_under_epoch(const Handshake_Mes
       m_send_hs(epoch, Record_Type::ChangeCipherSpec, msg_bits);
       return std::vector<uint8_t>();  // not included in handshake hashes
    } else if(msg_type == Handshake_Type::HelloVerifyRequest) {
-      // This message is not included in the handshake hashes
-      send_message(m_out_message_seq, epoch, msg_type, msg_bits);
+      // This message is not included in the handshake hashes, but it is a
+      // DTLS flight and must be available for retransmission if it is lost.
+      m_flights.rbegin()->push_back(m_out_message_seq);
+      m_flight_data[m_out_message_seq] = Message_Info(epoch, msg_type, msg_bits);
+
       m_out_message_seq += 1;
+      m_last_write = steady_clock_ms();
+      m_next_timeout = m_initial_timeout;
+
+      send_message(m_out_message_seq - 1, epoch, msg_type, msg_bits);
       return std::vector<uint8_t>();
    }
 

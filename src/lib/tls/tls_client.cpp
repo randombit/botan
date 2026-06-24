@@ -119,6 +119,10 @@ bool Client::is_active() const {
    return m_impl->is_active();
 }
 
+bool Client::requires_timeout_check() const {
+   return m_impl->requires_timeout_check();
+}
+
 bool Client::is_closed() const {
    return m_impl->is_closed();
 }

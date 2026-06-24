@@ -86,6 +86,12 @@ class Channel_Impl {
       virtual bool is_active() const = 0;
 
       /**
+      * @return true iff timeout_check() should be polled to drive handshake
+      *         retransmissions.
+      */
+      virtual bool requires_timeout_check() const { return !is_handshake_complete(); }
+
+      /**
       * @return true iff the connection has been definitely closed
       */
       virtual bool is_closed() const = 0;
@@ -167,10 +173,10 @@ class Channel_Impl {
       virtual bool secure_renegotiation_supported() const = 0;
 
       /**
-      * Perform a handshake timeout check. This does nothing unless
-      * this is a DTLS channel with a pending handshake state, in
-      * which case we check for timeout and potentially retransmit
-      * handshake packets.
+      * Perform a handshake timeout check. This does nothing unless this is a
+      * DTLS channel that still needs handshake retransmission handling. A DTLS
+      * channel can require this briefly after local activation while its last
+      * flight may still be lost in transit.
       */
       virtual bool timeout_check() = 0;
 

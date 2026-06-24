@@ -147,6 +147,8 @@ class Datagram_Handshake_IO final : public Handshake_IO {
       std::pair<Handshake_Type, std::vector<uint8_t>> get_next_record(bool expecting_ccs,
                                                                       size_t max_message_size) override;
 
+      void conclude_flight();
+
    private:
       void retransmit_flight(size_t flight);
       void retransmit_last_flight();

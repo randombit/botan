@@ -87,6 +87,10 @@ bool Server::is_active() const {
    return m_impl->is_active();
 }
 
+bool Server::requires_timeout_check() const {
+   return m_impl->requires_timeout_check();
+}
+
 bool Server::is_closed() const {
    return m_impl->is_closed();
 }

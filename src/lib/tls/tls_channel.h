@@ -122,6 +122,12 @@ class BOTAN_PUBLIC_API(2, 0) Channel {
       virtual bool is_active() const = 0;
 
       /**
+      * @return true iff timeout_check() should be polled to drive handshake
+      *         retransmissions.
+      */
+      virtual bool requires_timeout_check() const { return !is_handshake_complete(); }
+
+      /**
       * Note: For TLS 1.3 a connection is closed only after both peers have
       *       signaled a "close_notify". While TLS 1.2 automatically responded
       *       in suit once the peer had sent "close_notify", TLS 1.3 allows to
@@ -196,9 +202,9 @@ class BOTAN_PUBLIC_API(2, 0) Channel {
       * Perform a handshake timeout check.
       *
       * This function does nothing unless the channel represents a DTLS
-      * connection and a handshake is actively in progress. In this case it will
-      * check the current timeout state and potentially initiate retransmission
-      * of handshake packets.
+      * connection and a handshake still needs retransmission handling. This can
+      * include a locally active DTLS session whose final flight may not have
+      * reached the peer yet.
       *
       * @returns true if a timeout condition occurred
       */

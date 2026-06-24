@@ -81,6 +81,8 @@ class Active_Connection_State_12 final {
        */
       Datagram_Handshake_IO* dtls_handshake_io() { return m_dtls_handshake_io.get(); }
 
+      const Datagram_Handshake_IO* dtls_handshake_io() const { return m_dtls_handshake_io.get(); }
+
    private:
       Protocol_Version m_version;
       uint16_t m_ciphersuite_code = 0;
