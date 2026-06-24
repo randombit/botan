@@ -70,13 +70,13 @@ bool operator!=(const CRL_Entry& a1, const CRL_Entry& a2) {
 * DER encode a CRL_Entry
 */
 void CRL_Entry::encode_into(DER_Encoder& der) const {
-   der.start_sequence()
-      .encode(BigInt::from_bytes(serial_number()))
-      .encode(expire_time())
-      .start_sequence()
-      .encode(extensions())
-      .end_cons()
-      .end_cons();
+   der.start_sequence().encode(BigInt::from_bytes(serial_number())).encode(expire_time());
+
+   if(extensions().count() > 0) {
+      der.start_sequence().encode(extensions()).end_cons();
+   }
+
+   der.end_cons();
 }
 
 /*
@@ -95,6 +95,10 @@ void CRL_Entry::decode_from(BER_Decoder& source) {
 
    if(entry.more_items()) {
       data->m_extensions.decode_from(entry, Extension_Context::CRL_Entry);
+
+      // TODO(Botan4) start checking that CRLEntry extensions is not empty
+      // Extensions  ::=  SEQUENCE SIZE (1..MAX) OF Extension
+
       if(const auto* ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_ReasonCode>()) {
          data->m_reason = ext->get_reason();
       } else {
