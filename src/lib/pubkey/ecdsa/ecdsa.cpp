@@ -218,7 +218,7 @@ class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash
             PK_Ops::Verification_with_Hash(padding), m_group(ecdsa.domain()), m_gy_mul(ecdsa._public_ec_point()) {}
 
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, const AlgorithmIdentifier& alg_id) :
-            PK_Ops::Verification_with_Hash(alg_id, "ECDSA", true),
+            PK_Ops::Verification_with_Hash(alg_id, "ECDSA"),
             m_group(ecdsa.domain()),
             m_gy_mul(ecdsa._public_ec_point()) {}
 

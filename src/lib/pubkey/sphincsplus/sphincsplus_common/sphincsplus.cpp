@@ -265,7 +265,7 @@ std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::create_verification
 std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::create_x509_verification_op(
    const AlgorithmIdentifier& signature_algorithm, std::string_view provider) const {
    if(provider.empty() || provider == "base") {
-      if(signature_algorithm != this->algorithm_identifier()) {
+      if(signature_algorithm.oid() != this->object_identifier() || !signature_algorithm.parameters_are_empty()) {
          throw Decoding_Error("Unexpected AlgorithmIdentifier for SLH-DSA (or SPHINCS+) signature");
       }
       return std::make_unique<SphincsPlus_Verification_Operation>(m_public);

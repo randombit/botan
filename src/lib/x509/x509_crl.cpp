@@ -142,7 +142,7 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
    AlgorithmIdentifier sig_algo_inner;
    tbs_crl.decode(sig_algo_inner);
 
-   if(sig_algo != sig_algo_inner) {
+   if(sig_algo.oid() != sig_algo_inner.oid() || sig_algo.parameters() != sig_algo_inner.parameters()) {
       throw Decoding_Error("Algorithm identifier mismatch in CRL");
    }
 
