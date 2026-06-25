@@ -13,9 +13,10 @@
 #include <botan/oids.h>
 #include <botan/pss_params.h>
 #include <botan/internal/fmt.h>
+
+#include <botan/internal/oid_map.h>
+
 #include <cstring>
-#include <iostream>
-#include <string_view>
 
 namespace Botan {
 
@@ -358,6 +359,10 @@ std::string MLDSA_Composite_Param::get_traditional_algo_param_str() const {
       return std::to_string(m_traditional_key_size);
    }
    return "";
+}
+
+OID MLDSA_Composite_Param::object_identifier() const {
+   return OID_Map::global_registry().str2oid(this->m_id_str);
 }
 
 bool MLDSA_Composite_Param::is_supported() const {
