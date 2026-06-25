@@ -192,7 +192,7 @@ X509_CRL X509_CA::new_crl(RandomNumberGenerator& rng,
                           std::chrono::system_clock::time_point issue_time,
                           std::chrono::seconds next_update) const {
    const std::vector<CRL_Entry> empty;
-   return make_crl(empty, 1, rng, issue_time, next_update);
+   return make_crl(empty, BigInt::one(), rng, issue_time, next_update);
 }
 
 X509_CRL X509_CA::update_crl(const X509_CRL& last_crl,
@@ -204,14 +204,15 @@ X509_CRL X509_CA::update_crl(const X509_CRL& last_crl,
 
    std::copy(new_revoked.begin(), new_revoked.end(), std::back_inserter(revoked));
 
-   return make_crl(revoked, last_crl.crl_number() + 1, rng, issue_time, next_update);
+   const BigInt last_crl_number = last_crl.crl_number_bigint().value_or(BigInt::zero());
+   return make_crl(revoked, last_crl_number + 1, rng, issue_time, next_update);
 }
 
 /*
 * Create a CRL
 */
 X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
-                           uint32_t crl_number,
+                           const BigInt& crl_number,
                            RandomNumberGenerator& rng,
                            std::chrono::system_clock::time_point issue_time,
                            std::chrono::seconds next_update) const {

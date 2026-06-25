@@ -21,7 +21,6 @@
    #include <botan/x509path.h>
    #include <botan/internal/ffi_mp.h>
    #include <botan/internal/ffi_oid.h>
-   #include <botan/internal/loadstor.h>
    #include <botan/internal/stl_util.h>
 #endif
 
@@ -1224,8 +1223,15 @@ int botan_x509_crl_view_binary_values(botan_x509_crl_t crl_obj,
 
    return BOTAN_FFI_VISIT(crl_obj, [=](const Botan::X509_CRL& crl) -> int {
       switch(value_type) {
-         case BOTAN_X509_SERIAL_NUMBER:
-            return view(Botan::store_be(crl.crl_number()));
+         case BOTAN_X509_SERIAL_NUMBER: {
+            if(const auto& crln = crl.crl_number_bigint()) {
+               // Previously CRL number was a fixed 4 byte value, continue this for small CRL numbers
+               const size_t view_bytes = std::min<size_t>(crln->bytes(), 4);
+               return view(crln->serialize<std::vector<uint8_t>>(view_bytes));
+            } else {
+               return BOTAN_FFI_ERROR_NO_VALUE;
+            }
+         }
          case BOTAN_X509_ISSUER_DN_BITS:
             return view(Botan::ASN1::put_in_sequence(crl.issuer_dn().get_bits()));
          case BOTAN_X509_AUTHORITY_KEY_IDENTIFIER:
