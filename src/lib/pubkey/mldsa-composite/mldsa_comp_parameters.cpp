@@ -342,7 +342,7 @@ AlgorithmIdentifier MLDSA_Composite_Param::get_mldsa_algorithm_id() const {
 AlgorithmIdentifier MLDSA_Composite_Param::get_traditional_algorithm_id() const {
    std::optional<OID> oid;
    if(0 == std::strcmp(this->m_traditional_algorithm, "ECDSA")) {
-      oid = OID::from_name(std::string("ECDSA/") + m_prehash_func);
+      oid = OID::from_name(std::string("ECDSA/") + m_traditional_padding);
    } else {
       oid = OID::from_name(this->m_traditional_algorithm);
    }
