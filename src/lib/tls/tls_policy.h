@@ -617,6 +617,8 @@ typedef Policy Default_Policy;
 *
 * @warning As of August 2015 NSA indicated only the 192-bit Suite B
 * should be used for all classification levels.
+*
+* TODO(Botan4) remove this class
 */
 class BOTAN_PUBLIC_API(2, 0) NSA_Suite_B_128 : public Policy {
    public:
