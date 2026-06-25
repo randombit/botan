@@ -117,21 +117,21 @@ class MLKEM_Composite_Encapsulation_Operation final : public PK_Ops::KEM_Encrypt
                const ECDH_PublicKey* ecdh_key = dynamic_cast<const ECDH_PublicKey*>(trad_pubkey);
                m_traditional_enc_op.emplace<std::vector<uint8_t>>(ecdh_key->public_value());
                m_ec_group_opt = ecdh_key->domain();
-            }
+            } else
 #endif
 #if BOTAN_HAS_X25519
-            else if(param.traditional_algorithm() == "X25519") {
+               if(param.traditional_algorithm() == "X25519") {
                const X25519_PublicKey* ecdh_key = dynamic_cast<const X25519_PublicKey*>(trad_pubkey);
                m_traditional_enc_op.emplace<std::vector<uint8_t>>(ecdh_key->public_value());
-            }
+            } else
 #endif
 #if BOTAN_HAS_X448
-            else if(param.traditional_algorithm() == "X448") {
+               if(param.traditional_algorithm() == "X448") {
                const X448_PublicKey* ecdh_key = dynamic_cast<const X448_PublicKey*>(trad_pubkey);
                m_traditional_enc_op.emplace<std::vector<uint8_t>>(ecdh_key->public_value());
-            }
+            } else
 #endif
-            else {
+            {
                throw Not_Implemented("MLKEM_Composite_Encapsulation_Operation(): parameters not supported");
             }
          }
@@ -151,8 +151,8 @@ class MLKEM_Composite_Encapsulation_Operation final : public PK_Ops::KEM_Encrypt
                    encapsulated_key_length(),
                    out_encapsulated_key.size()));
          }
-         const std::span<uint8_t> out_mlkem_ct(
-            out_encapsulated_key.begin(), out_encapsulated_key.begin() + m_mlkem_enc_op->encapsulated_key_length());
+         const std::span<uint8_t> out_mlkem_ct(out_encapsulated_key.begin(),
+                                               out_encapsulated_key.begin() + m_parameters.mlkem_ciphertext_size());
          m_mlkem_enc_op->kem_encrypt(out_mlkem_ct, ss_mlkem, rng, 32, empty_salt);
          rng.randomize_with_ts_input(ss_trad);
          std::vector<uint8_t> trad_ct;
@@ -162,7 +162,7 @@ class MLKEM_Composite_Encapsulation_Operation final : public PK_Ops::KEM_Encrypt
                trad_ct = encr_op.encrypt(ss_trad, rng);
             } catch(const PRNG_Unseeded&) {
                throw Internal_Error(
-                  "RSA encryption operation failed with PRNG_Unseeded even though use of the provided Null_RNG is not excepted");
+                  "RSA encryption operation failed with PRNG_Unseeded even though use of the provided Null_RNG is not expected");
             }
          } else {
             std::unique_ptr<PK_Key_Agreement_Key> privkey;
@@ -258,13 +258,17 @@ class MLKEM_Composite_Decapsulation_Operation final : public PK_Ops::KEM_Decrypt
          if(trad_privkey->algo_name() == "RSA") {
             m_traditional_dec_op.emplace<std::unique_ptr<PK_Ops::Decryption>>(
                trad_privkey->create_decryption_op(rng, param.traditional_padding(), provider));
-            // For some reason, the RSA decryption OP can't tell us it's ciphertext size. Thus we have to dvelve into the details...
+            // For some reason, the RSA decryption OP can't tell us it's ciphertext size. Thus we have to delve into the details...
             m_rsa_modulus_bytes = dynamic_cast<RSA_PublicKey*>(trad_privkey->public_key().get())->get_n().bytes();
          }
 #if BOTAN_HAS_ECDH
          else if(param.traditional_algorithm() == "ECDH") {
             m_traditional_dec_op.emplace<PK_Key_Agreement>(PK_Key_Agreement(*trad_privkey, rng, "Raw"));
             const ECDH_PublicKey* ecdh_key = dynamic_cast<const ECDH_PrivateKey*>(trad_privkey);
+            if(ecdh_key == nullptr) {
+               throw Internal_Error(
+                  "ECDH_PublicKey ptr is null in MLKEM_Composite_Decapsulation_Operation, this should not happen");
+            }
             m_ec_group_opt = ecdh_key->domain();
          }
 #endif
@@ -283,7 +287,7 @@ class MLKEM_Composite_Decapsulation_Operation final : public PK_Ops::KEM_Decrypt
          secure_vector<uint8_t> ss_trad(traditional_shared_key_length());
          if(encapsulated_key.size() != encapsulated_key_length()) {
             throw Invalid_Argument(
-               fmt("ML-KEM composite ciphtertext length is wrong. Should be {} bytes, but is {} bytes",
+               fmt("ML-KEM composite ciphertext length is wrong. Should be {} bytes, but is {} bytes",
                    encapsulated_key_length(),
                    encapsulated_key.size()));
          }
@@ -357,7 +361,7 @@ class MLKEM_Composite_Decapsulation_Operation final : public PK_Ops::KEM_Decrypt
       std::unique_ptr<PK_Ops::KEM_Decryption> m_mlkem_dec_op;
       std::variant<std::unique_ptr<PK_Ops::Decryption>, PK_Key_Agreement> m_traditional_dec_op;
       std::vector<uint8_t> m_traditional_pubkey_encoded;
-      size_t m_rsa_modulus_bytes;
+      size_t m_rsa_modulus_bytes = 0;
       std::optional<EC_Group> m_ec_group_opt;
 };
 
