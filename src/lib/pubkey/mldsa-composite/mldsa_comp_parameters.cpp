@@ -16,6 +16,7 @@
 
 #include <botan/internal/oid_map.h>
 
+#include <algorithm>
 #include <cstring>
 
 namespace Botan {
@@ -259,11 +260,9 @@ std::optional<MLDSA_Composite_Param> MLDSA_Composite_Param::from_id(MLDSA_Compos
 MLDSA_Composite_Param MLDSA_Composite_Param::from_id_supported_or_throw(MLDSA_Composite_Param::id_t id) {
    const auto result = from_id(id);
    if(!result.has_value()) {
-      std::cout << "MLDSA_Composite_Param::from_id_supported_or_throw has no value\n";
       throw Botan::Invalid_Argument("no parameter found for provided MLDSA composite id (enum)");
    }
    if(!result.value().is_supported()) {
-      std::cout << "MLDSA_Composite_Param::from_id_supported_or_throw is not supported\n";
       throw Not_Implemented("Parameter set " + result.value().id_str() +
                             " is not supported by Botan's build configuration");
    }
@@ -366,87 +365,38 @@ OID MLDSA_Composite_Param::object_identifier() const {
 }
 
 bool MLDSA_Composite_Param::is_supported() const {
-   switch(m_id) {
-      case MLDSA44_RSA2048_PKCS15_SHA256:
-         [[fallthrough]];
-      case MLDSA65_RSA3072_PKCS15_SHA512:
-         [[fallthrough]];
-      case MLDSA65_RSA4096_PKCS15_SHA512:
+   constexpr auto supported = std::to_array<id_t>({
 #if defined BOTAN_HAS_RSA
-         return true;
-#else
-         return false;
+      MLDSA44_RSA2048_PKCS15_SHA256, MLDSA65_RSA3072_PKCS15_SHA512, MLDSA65_RSA4096_PKCS15_SHA512,
+   #if defined BOTAN_HAS_PSS
+         MLDSA44_RSA2048_PSS_SHA256, MLDSA65_RSA3072_PSS_SHA512, MLDSA65_RSA4096_PSS_SHA512, MLDSA87_RSA3072_PSS_SHA512,
+         MLDSA87_RSA4096_PSS_SHA512,
+   #endif
 #endif
-      case MLDSA44_RSA2048_PSS_SHA256:
-         [[fallthrough]];
-      case MLDSA65_RSA3072_PSS_SHA512:
-         [[fallthrough]];
-      case MLDSA65_RSA4096_PSS_SHA512:
-         [[fallthrough]];
-      case MLDSA87_RSA3072_PSS_SHA512:
-         [[fallthrough]];
-      case MLDSA87_RSA4096_PSS_SHA512:
-
-#if defined BOTAN_HAS_RSA && defined BOTAN_HAS_PSS
-         return true;
-#else
-         return false;
+#if defined(BOTAN_HAS_ECDSA)
+   #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_SECP256R1)
+         MLDSA44_ECDSA_P256_SHA256, MLDSA65_ECDSA_P256_SHA512,
+   #endif
+   #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_SECP384R1)
+         MLDSA65_ECDSA_P384_SHA512, MLDSA87_ECDSA_P384_SHA512,
+   #endif
+   #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_BRAINPOOL256R1)
+         MLDSA65_ECDSA_brainpoolP256r1_SHA512,
+   #endif
+   #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_BRAINPOOL384R1)
+         MLDSA87_ECDSA_brainpoolP384r1_SHA512,
+   #endif
+   #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_SECP521R1)
+         MLDSA87_ECDSA_P521_SHA512,
+   #endif
 #endif
-      case MLDSA44_ECDSA_P256_SHA256:
-         [[fallthrough]];
-         /* NOLINTNEXTLINE(bugprone-branch-clone) */
-      case MLDSA65_ECDSA_P256_SHA512:
-#if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_SECP256R1
-         return true;
-#else
-         return false;
-#endif
-      case MLDSA65_ECDSA_P384_SHA512:
-         [[fallthrough]];
-         /* NOLINTNEXTLINE(bugprone-branch-clone) */
-      case MLDSA87_ECDSA_P384_SHA512:
-#if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_SECP384R1
-         return true;
-#else
-         return false;
-#endif
-      case MLDSA65_ECDSA_brainpoolP256r1_SHA512:
-#if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_BRAINPOOL256R1
-         return true;
-#else
-         return false;
-#endif
-      case MLDSA87_ECDSA_brainpoolP384r1_SHA512:
-#if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_BRAINPOOL384R1
-         return true;
-#else
-         return false;
-#endif
-      case MLDSA87_ECDSA_P521_SHA512:
-#if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_BRAINPOOL512R1
-         return true;
-#else
-         return false;
-#endif
-      case MLDSA_Composite_Param::id_t::MLDSA44_Ed25519_SHA512:
-         [[fallthrough]];
-         /* NOLINTNEXTLINE(bugprone-branch-clone) */
-      case MLDSA_Composite_Param::id_t::MLDSA65_Ed25519_SHA512:
 #if defined BOTAN_HAS_ED25519
-         return true;
-#else
-         return false;
+         MLDSA44_Ed25519_SHA512, MLDSA65_Ed25519_SHA512,
 #endif
-         /* NOLINTNEXTLINE(bugprone-branch-clone) */
-      case MLDSA_Composite_Param::id_t::MLDSA87_Ed448_SHAKE256:
 #if defined BOTAN_HAS_ED448 && defined BOTAN_HAS_SHAKE
-         return true;
-#else
-         return false;
+         MLDSA87_Ed448_SHAKE256,
 #endif
-   }
-   // should be dead code, needed for compiler (why?)
-   return false;
+   });
+   return std::find(supported.begin(), supported.end(), m_id) != supported.end();
 }
-
 }  // namespace Botan
