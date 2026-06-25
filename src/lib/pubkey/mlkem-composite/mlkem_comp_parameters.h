@@ -11,7 +11,6 @@
 #include <botan/exceptn.h>
 #include <botan/ml_kem.h>
 #include <botan/types.h>
-#include <botan/internal/oid_map.h>
 
 namespace Botan {
 

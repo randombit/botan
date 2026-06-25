@@ -13,6 +13,7 @@
 #include <botan/oids.h>
 #include <botan/pss_params.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/oid_map.h>
 
 #include <algorithm>
 #include <cstring>

@@ -10,7 +10,6 @@
 #include <botan/pubkey.h>
 #include <botan/rng.h>
 #include <botan/rsa.h>
-#include <botan/system_rng.h>
 
 #include <botan/assert.h>
 #include <botan/ber_dec.h>
