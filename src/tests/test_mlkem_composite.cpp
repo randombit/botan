@@ -62,7 +62,7 @@ std::vector<uint8_t> manipulate_mlkem_comp_artifact(std::span<const uint8_t> in,
                                                     artifact_modification_e mod_type,
                                                     size_t index_offset_for_manipulation,
                                                     uint8_t xor_for_manipulation) {
-   std::string id_str = param.id_str();
+   const std::string id_str = param.id_str();
    size_t index = 0;
    xor_for_manipulation = (xor_for_manipulation == 0) ? 1 : xor_for_manipulation;
    if(artifact_type == mlkem_comp_artifact_e::Privatekey) {
@@ -324,7 +324,7 @@ class MLKEM_Composite_RT_Tests : public Test {
                .end_cons()
                .verify_end();
          } catch(const Botan::Exception& e) {
-            result.test_failure(std::format("verify ECC private format decoding: {}", e.what()));
+            result.test_failure(std::string("verify ECC private format decoding: ") + e.what());
          }
       }
 };

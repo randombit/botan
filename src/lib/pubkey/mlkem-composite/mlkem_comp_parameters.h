@@ -75,7 +75,7 @@ class BOTAN_PUBLIC_API(3, 0) MLKEM_Composite_Param {
 
       size_t traditional_shared_key_length() const;
 
-      OID object_identifier() const { return OID_Map::global_registry().str2oid(this->m_id_str); }
+      OID object_identifier() const;
 
       /* std::string mlkem_param_str() const; */
 

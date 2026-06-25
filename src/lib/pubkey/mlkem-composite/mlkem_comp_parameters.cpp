@@ -293,6 +293,10 @@ std::string MLKEM_Composite_Param::get_traditional_algo_param_str() const {
    return "";
 }
 
+OID MLKEM_Composite_Param::object_identifier() const {
+   return OID_Map::global_registry().str2oid(this->m_id_str);
+}
+
 bool MLKEM_Composite_Param::is_supported() const {
    constexpr auto supported = std::array {
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_OAEP)
