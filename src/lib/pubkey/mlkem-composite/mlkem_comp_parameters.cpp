@@ -16,6 +16,7 @@
 #include <botan/internal/oid_map.h>
 
 #include <algorithm>
+#include <array>
 #include <cstring>
 #include <string_view>
 
@@ -299,7 +300,7 @@ OID MLKEM_Composite_Param::object_identifier() const {
 }
 
 bool MLKEM_Composite_Param::is_supported() const {
-   constexpr auto supported = std::array {
+   constexpr auto supported = std::to_array<id_t>({
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_OAEP)
       MLKEM768_RSA2048_SHA3_256, MLKEM768_RSA3072_SHA3_256, MLKEM768_RSA4096_SHA3_256, MLKEM1024_RSA3072_SHA3_256,
 #endif
@@ -337,7 +338,7 @@ bool MLKEM_Composite_Param::is_supported() const {
 #if defined(BOTAN_HAS_X448)
          MLKEM1024_X448_SHA3_256,
 #endif
-   };
+   });
 
    return std::find(supported.begin(), supported.end(), m_id) != supported.end();
 }
