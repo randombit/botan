@@ -11,7 +11,6 @@
 #include <botan/dilithium.h>
 #include <botan/exceptn.h>
 #include <botan/types.h>
-#include <botan/internal/oid_map.h>
 
 namespace Botan {
 
@@ -45,7 +44,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
       static std::vector<MLDSA_Composite_Param> all_supported_param_sets();
 
       /**
-       * @brief Create a paramters object from the provided id. If the parameters are not supported by the build configuration of the library, throw a Not_Implemented exception.
+       * @brief Create a parameters object from the provided id. If the parameters are not supported by the build configuration of the library, throw a Not_Implemented exception.
        *
        * @param id The id of the parameter set to create.
        *
@@ -69,7 +68,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
        * @brief 
        * Find out whether the library build supports this parameter. 
        *
-       * @return true if the parameter is supported, false otherwhise
+       * @return true if the parameter is supported, false otherwise
        */
       bool is_supported() const;
 
@@ -79,7 +78,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
 
       AlgorithmIdentifier get_traditional_algorithm_id() const;
 
-      OID object_identifier() const { return OID_Map::global_registry().str2oid(this->m_id_str); }
+      OID object_identifier() const;
 
       std::string mldsa_param_str() const;
 
