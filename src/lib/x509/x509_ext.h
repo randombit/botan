@@ -9,6 +9,7 @@
 #ifndef BOTAN_X509_EXTENSIONS_H_
 #define BOTAN_X509_EXTENSIONS_H_
 
+#include <botan/bigint.h>
 #include <botan/pkix_types.h>
 
 #include <array>
@@ -398,11 +399,15 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Number final : public Certificate_Extension {
    public:
       std::unique_ptr<Certificate_Extension> copy() const override;
 
-      CRL_Number() : m_has_value(false), m_crl_number(0) {}
+      CRL_Number() : m_has_value(false), m_crl_number(BigInt::zero()) {}
 
-      BOTAN_FUTURE_EXPLICIT CRL_Number(size_t n) : m_has_value(true), m_crl_number(n) {}
+      BOTAN_FUTURE_EXPLICIT CRL_Number(size_t n) : CRL_Number(BigInt::from_u64(n)) {}
 
-      size_t get_crl_number() const;
+      explicit CRL_Number(BigInt n);
+
+      const BigInt& crl_number() const;
+
+      BOTAN_DEPRECATED("Use crl_number") size_t get_crl_number() const;
 
       static OID static_oid() { return OID({2, 5, 29, 20}); }
 
@@ -419,7 +424,7 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Number final : public Certificate_Extension {
       void decode_inner(const std::vector<uint8_t>& in) override;
 
       bool m_has_value;
-      size_t m_crl_number;
+      BigInt m_crl_number;
 };
 
 /**

@@ -963,14 +963,23 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in) 
    }
 }
 
+CRL_Number::CRL_Number(BigInt n) : m_has_value(true), m_crl_number(std::move(n)) {
+   BOTAN_ARG_CHECK(m_crl_number.signum() >= 0, "CRL number cannot be negative");
+}
+
+const BigInt& CRL_Number::crl_number() const {
+   // This can only happen via a misuse of the CRL_Number default constructor
+   BOTAN_STATE_CHECK(m_has_value);
+   return m_crl_number;
+}
+
 /*
 * Checked accessor for the crl_number member
 */
 size_t CRL_Number::get_crl_number() const {
-   if(!m_has_value) {
-      throw Invalid_State("CRL_Number::get_crl_number: Not set");
-   }
-   return m_crl_number;
+   // This can only happen via a misuse of the CRL_Number default constructor
+   BOTAN_STATE_CHECK(m_has_value);
+   return m_crl_number.to_u32bit();
 }
 
 /*
@@ -995,6 +1004,9 @@ std::vector<uint8_t> CRL_Number::encode_inner() const {
 void CRL_Number::decode_inner(const std::vector<uint8_t>& in) {
    /* RFC 5280 Section 5.2.3 - CRLNumber ::= INTEGER (0..MAX) */
    BER_Decoder(in, BER_Decoder::Limits::DER()).decode(m_crl_number).verify_end();
+   if(m_crl_number.signum() < 0) {
+      throw Decoding_Error("CRL number cannot be negative");
+   }
    m_has_value = true;
 }
 

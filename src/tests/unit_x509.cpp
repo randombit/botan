@@ -264,8 +264,27 @@ Test::Result test_x509_extension() {
 
    const auto* crl_number = decoded_extns.get_extension_object_as<Botan::Cert_Extension::CRL_Number>();
    if(result.test_is_true("CRL number recognized without explicit context", crl_number != nullptr)) {
-      result.test_sz_eq("Decoded CRL number", crl_number->get_crl_number(), 42);
+      result.test_bn_eq("Decoded CRL number", crl_number->crl_number(), Botan::BigInt(42));
+      result.test_sz_eq("Decoded CRL number legacy accessor", crl_number->get_crl_number(), 42);
    }
+
+   const Botan::BigInt large_crl_number("0xE3F59B2C66C2789E9AC53C545C80CF1F8B9E4BEA");
+   const Botan::X509_CRL large_number_crl(Test::read_binary_data_file("x509/misc/crl_number_160bit.pem"));
+   if(result.test_opt_not_null("X509_CRL large CRL number is present", large_number_crl.crl_number_bigint())) {
+      result.test_bn_eq("X509_CRL large CRL number", large_number_crl.crl_number_bigint().value(), large_crl_number);
+   }
+
+   const auto* large_crl_number_extn =
+      large_number_crl.extensions().get_extension_object_as<Botan::Cert_Extension::CRL_Number>();
+   if(result.test_is_true("Large CRL number extension is present", large_crl_number_extn != nullptr)) {
+      result.test_bn_eq("Large CRL number extension", large_crl_number_extn->crl_number(), large_crl_number);
+
+      result.test_throws<Botan::Encoding_Error>("Large CRL number extension legacy accessor throws",
+                                                [&]() { large_crl_number_extn->get_crl_number(); });
+   }
+
+   result.test_throws<Botan::Encoding_Error>("X509_CRL legacy CRL number accessor throws",
+                                             [&]() { large_number_crl.crl_number(); });
 
    return result;
 }
@@ -1389,7 +1408,7 @@ Test::Result test_x509_uninit() {
 
    Botan::X509_CRL crl;
    result.test_throws(
-      "uninitialized crl access causes exception", "X509_CRL uninitialized", [&crl]() { crl.crl_number(); });
+      "uninitialized crl access causes exception", "X509_CRL uninitialized", [&crl]() { crl.crl_number_bigint(); });
 
    // X509_CRL constructed via the issuer-DN constructor leaves the inherited
    // X509_Object signed-data null. The accessors must reject rather than UB.

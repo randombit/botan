@@ -18,6 +18,7 @@
 namespace Botan {
 
 class Extensions;
+class BigInt;
 class X509_Certificate;
 class X509_DN;
 
@@ -131,10 +132,16 @@ class BOTAN_PUBLIC_API(2, 0) X509_CRL final : public X509_Object {
       const std::vector<uint8_t>& authority_key_id() const;
 
       /**
-      * Get the serial number of this CRL.
-      * @return CRLs serial number (or zero if not set in the extensions)
-      */
-      uint32_t crl_number() const;
+       * Get the CRL number of this CRL.
+       * @return CRL number (or nullopt if not set in the extensions)
+       */
+      const std::optional<BigInt>& crl_number_bigint() const;
+
+      /**
+       * Get the CRL number of this CRL.
+       * @return CRL number (or zero if not set in the extensions)
+       */
+      BOTAN_DEPRECATED("Use crl_number_bigint") uint32_t crl_number() const;
 
       /**
       * Get the CRL's thisUpdate value.

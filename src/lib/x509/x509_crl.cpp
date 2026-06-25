@@ -9,7 +9,9 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/asn1_time.h>
+#include <botan/assert.h>
 #include <botan/ber_dec.h>
+#include <botan/bigint.h>
 #include <botan/data_src.h>
 #include <botan/x509_ext.h>
 #include <botan/x509cert.h>
@@ -49,7 +51,7 @@ class CRL_Data final {
       std::set<std::vector<uint8_t>> m_revoked_serials;
 
       // cached values from extensions
-      size_t m_crl_number = 0;
+      std::optional<BigInt> m_crl_number;
       std::vector<uint8_t> m_auth_key_id;
       std::vector<URI> m_idp_urls;
       bool m_has_unknown_critical_extension = false;
@@ -119,11 +121,11 @@ bool X509_CRL::is_revoked(const X509_Certificate& cert) const {
    return serial_appears;
 }
 
+namespace {
+
 /*
 * Decode the TBSCertList data
 */
-namespace {
-
 std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, const AlgorithmIdentifier& sig_algo) {
    auto data = std::make_unique<CRL_Data>();
 
@@ -215,7 +217,7 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
 
    // Now cache some fields from the extensions
    if(const auto* ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_Number>()) {
-      data->m_crl_number = ext->get_crl_number();
+      data->m_crl_number = ext->crl_number();
    }
    if(const auto* ext = data->m_extensions.get_extension_object_as<Cert_Extension::Authority_Key_ID>()) {
       data->m_auth_key_id = ext->get_key_id();
@@ -280,8 +282,23 @@ const std::vector<uint8_t>& X509_CRL::authority_key_id() const {
 /*
 * Return the CRL number of this CRL
 */
+const std::optional<BigInt>& X509_CRL::crl_number_bigint() const {
+   return data().m_crl_number;
+}
+
 uint32_t X509_CRL::crl_number() const {
-   return static_cast<uint32_t>(data().m_crl_number);
+   if(const auto num = this->crl_number_bigint()) {
+      // This should already be caught at decode time
+      BOTAN_ASSERT_NOMSG(num->signum() >= 0);
+
+      if(num->bits() > 32) {
+         throw Encoding_Error("CRL number is too large to fit in uint32_t");
+      }
+
+      return num->to_u32bit();
+   } else {
+      return 0;
+   }
 }
 
 /*
