@@ -100,7 +100,19 @@ void CRL_Entry::decode_from(BER_Decoder& source) {
       // Extensions  ::=  SEQUENCE SIZE (1..MAX) OF Extension
 
       if(const auto* ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_ReasonCode>()) {
-         data->m_reason = ext->get_reason();
+         const auto reason = ext->get_reason();
+
+         /*
+         * This reason code only makes sense in the context of delta CRL processing, which
+         * we do not currently support. Seeing it in a regular CRL suggests that something
+         * has gone very wrong (eg we are somehow processing a delta CRL, though that
+         * shouldn't happen since the delta CRL indicator extension should be a critical
+         * extension which we will reject.)
+         */
+         if(reason == CRL_Code::RemoveFromCrl) {
+            throw Decoding_Error("CRL entry ReasonCode extension included invalid RemoveFromCrl");
+         }
+         data->m_reason = reason;
       } else {
          data->m_reason = CRL_Code::Unspecified;
       }
