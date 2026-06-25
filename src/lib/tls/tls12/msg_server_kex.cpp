@@ -148,7 +148,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 /**
 * Deserialize a Server Key Exchange message
 */
-Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
+Server_Key_Exchange::Server_Key_Exchange(std::span<const uint8_t> buf,
                                          const Kex_Algo kex_algo,
                                          const Auth_Method auth_method,
                                          Protocol_Version version) {

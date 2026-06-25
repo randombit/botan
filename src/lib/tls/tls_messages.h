@@ -18,6 +18,7 @@
 #include <botan/tls_version.h>
 #include <memory>
 #include <set>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -62,9 +63,9 @@ class BOTAN_UNSTABLE_API Hello_Verify_Request final : public Handshake_Message {
 
       const std::vector<uint8_t>& cookie() const { return m_cookie; }
 
-      explicit Hello_Verify_Request(const std::vector<uint8_t>& buf);
+      explicit Hello_Verify_Request(std::span<const uint8_t> buf);
 
-      Hello_Verify_Request(const std::vector<uint8_t>& client_hello_bits,
+      Hello_Verify_Request(std::span<const uint8_t> client_hello_bits,
                            std::string_view client_identity,
                            const SymmetricKey& secret_key);
 
@@ -155,7 +156,7 @@ class BOTAN_UNSTABLE_API Client_Hello : public Handshake_Message {
  */
 class BOTAN_UNSTABLE_API Client_Hello_12_Shim : public Client_Hello {
    public:
-      explicit Client_Hello_12_Shim(const std::vector<uint8_t>& buf);
+      explicit Client_Hello_12_Shim(std::span<const uint8_t> buf);
 
    protected:
       using Client_Hello::Client_Hello;
@@ -209,7 +210,7 @@ class BOTAN_UNSTABLE_API Server_Hello : public Handshake_Message {
  */
 class BOTAN_UNSTABLE_API Server_Hello_12_Shim : public Server_Hello {
    public:
-      explicit Server_Hello_12_Shim(const std::vector<uint8_t>& buf);
+      explicit Server_Hello_12_Shim(std::span<const uint8_t> buf);
 
    protected:
       friend class Server_Hello_13;  // to allow construction by Server_Hello_13::parse()
@@ -238,7 +239,7 @@ class BOTAN_UNSTABLE_API Certificate_Status : public Handshake_Message {
 
       const std::vector<uint8_t>& response() const { return m_response; }
 
-      explicit Certificate_Status(const std::vector<uint8_t>& buf, Connection_Side from);
+      explicit Certificate_Status(std::span<const uint8_t> buf, Connection_Side from);
 
       explicit Certificate_Status(std::vector<uint8_t> raw_response_bytes);
 
@@ -254,7 +255,7 @@ class BOTAN_UNSTABLE_API Certificate_Verify : public Handshake_Message {
 
       Signature_Scheme signature_scheme() const { return m_scheme; }
 
-      explicit Certificate_Verify(const std::vector<uint8_t>& buf);
+      explicit Certificate_Verify(std::span<const uint8_t> buf);
       Certificate_Verify() = default;
 
       std::vector<uint8_t> serialize() const override;
@@ -269,7 +270,7 @@ class BOTAN_UNSTABLE_API Certificate_Verify : public Handshake_Message {
 */
 class BOTAN_UNSTABLE_API Finished : public Handshake_Message {
    public:
-      explicit Finished(const std::vector<uint8_t>& buf) : m_verification_data(buf) {}
+      explicit Finished(std::vector<uint8_t> buf) : m_verification_data(std::move(buf)) {}
 
       Handshake_Type type() const override { return Handshake_Type::Finished; }
 

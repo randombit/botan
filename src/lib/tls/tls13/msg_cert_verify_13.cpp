@@ -83,7 +83,7 @@ Certificate_Verify_13::Certificate_Verify_13(const Certificate_13& certificate_m
       *private_key, rng, m_scheme.padding_string(), m_scheme.format().value(), message(m_side, hash));
 }
 
-Certificate_Verify_13::Certificate_Verify_13(const std::vector<uint8_t>& buf, const Connection_Side side) :
+Certificate_Verify_13::Certificate_Verify_13(std::span<const uint8_t> buf, const Connection_Side side) :
       Certificate_Verify(buf), m_side(side) {
    if(!m_scheme.is_available()) {
       throw TLS_Exception(Alert::IllegalParameter, "Peer sent unknown signature scheme");

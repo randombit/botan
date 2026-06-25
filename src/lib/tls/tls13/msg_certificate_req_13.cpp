@@ -22,7 +22,7 @@ Handshake_Type Certificate_Request_13::type() const {
    return TLS::Handshake_Type::CertificateRequest;
 }
 
-Certificate_Request_13::Certificate_Request_13(const std::vector<uint8_t>& buf, const Connection_Side side) {
+Certificate_Request_13::Certificate_Request_13(std::span<const uint8_t> buf, const Connection_Side side) {
    TLS_Data_Reader reader("Certificate_Request_13", buf);
 
    // RFC 8446 4.3.2
@@ -70,7 +70,7 @@ Certificate_Request_13::Certificate_Request_13(const std::vector<uint8_t>& buf, 
    reader.assert_done();
 }
 
-Certificate_Request_13::Certificate_Request_13(const std::vector<X509_DN>& acceptable_CAs,
+Certificate_Request_13::Certificate_Request_13(std::vector<X509_DN> acceptable_CAs,
                                                const Policy& policy,
                                                Callbacks& callbacks) {
    // RFC 8446 4.3.2
@@ -99,7 +99,7 @@ Certificate_Request_13::Certificate_Request_13(const std::vector<X509_DN>& accep
    }
 
    if(!acceptable_CAs.empty()) {
-      m_extensions.add(std::make_unique<Certificate_Authorities>(acceptable_CAs));
+      m_extensions.add(std::make_unique<Certificate_Authorities>(std::move(acceptable_CAs)));
    }
 
    // TODO: Support cert_status_request for OCSP stapling

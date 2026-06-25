@@ -24,15 +24,15 @@ Certificate_12::~Certificate_12() = default;
 /**
 * Create a new Certificate message
 */
-Certificate_12::Certificate_12(Handshake_IO& io, Handshake_Hash& hash, const std::vector<X509_Certificate>& cert_list) :
-      m_certs(cert_list) {
+Certificate_12::Certificate_12(Handshake_IO& io, Handshake_Hash& hash, std::vector<X509_Certificate> cert_list) :
+      m_certs(std::move(cert_list)) {
    hash.update(io.send(*this));
 }
 
 /**
 * Deserialize a Certificate message
 */
-Certificate_12::Certificate_12(const std::vector<uint8_t>& buf, const Policy& policy) {
+Certificate_12::Certificate_12(std::span<const uint8_t> buf, const Policy& policy) {
    if(buf.size() < 3) {
       throw Decoding_Error("Certificate: Message malformed");
    }

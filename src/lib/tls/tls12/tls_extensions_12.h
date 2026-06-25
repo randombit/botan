@@ -34,7 +34,7 @@ class BOTAN_UNSTABLE_API Renegotiation_Extension final : public Extension {
 
       Renegotiation_Extension() = default;
 
-      explicit Renegotiation_Extension(const std::vector<uint8_t>& bits) : m_reneg_data(bits) {}
+      explicit Renegotiation_Extension(std::vector<uint8_t> bits) : m_reneg_data(std::move(bits)) {}
 
       Renegotiation_Extension(TLS_Data_Reader& reader, uint16_t extension_size);
 

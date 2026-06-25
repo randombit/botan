@@ -11,7 +11,7 @@
 
 namespace Botan::TLS {
 
-Certificate_Status::Certificate_Status(const std::vector<uint8_t>& buf, const Connection_Side /*side*/) {
+Certificate_Status::Certificate_Status(std::span<const uint8_t> buf, const Connection_Side /*side*/) {
    if(buf.size() < 5) {
       throw Decoding_Error("Invalid Certificate_Status message: too small");
    }

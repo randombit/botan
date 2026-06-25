@@ -37,11 +37,11 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello {
                       Callbacks& cb,
                       RandomNumberGenerator& rng,
                       std::string_view hostname,
-                      const std::vector<std::string>& next_protocols,
+                      std::vector<std::string> next_protocols,
                       std::optional<Session_with_Handle>& session,
                       std::vector<ExternalPSK> psks);
 
-      static std::variant<Client_Hello_13, Client_Hello_12_Shim> parse(const std::vector<uint8_t>& buf);
+      static std::variant<Client_Hello_13, Client_Hello_12_Shim> parse(std::span<const uint8_t> buf);
 
       void retry(const Hello_Retry_Request& hrr,
                  const Transcript_Hash_State& transcript_hash_state,
@@ -118,7 +118,7 @@ class BOTAN_UNSTABLE_API Server_Hello_13 : public Server_Hello {
                                                                        Callbacks& cb);
 
       static std::variant<Hello_Retry_Request, Server_Hello_13, Server_Hello_12_Shim> parse(
-         const std::vector<uint8_t>& buf);
+         std::span<const uint8_t> buf);
 
       /**
        * Return desired downgrade version indicated by hello random, if any.
@@ -145,7 +145,7 @@ class BOTAN_UNSTABLE_API Hello_Retry_Request final : public Server_Hello_13 {
 
 class BOTAN_UNSTABLE_API Encrypted_Extensions final : public Handshake_Message {
    public:
-      explicit Encrypted_Extensions(const std::vector<uint8_t>& buf);
+      explicit Encrypted_Extensions(std::span<const uint8_t> buf);
       Encrypted_Extensions(const Client_Hello_13& client_hello,
                            const Policy& policy,
                            Callbacks& cb,
@@ -244,7 +244,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
       * @param side is this a Connection_Side::Server or Connection_Side::Client certificate message
       * @param cert_type is the certificate type that was negotiated during the handshake
       */
-      Certificate_13(const std::vector<uint8_t>& buf,
+      Certificate_13(std::span<const uint8_t> buf,
                      const Policy& policy,
                      Connection_Side side,
                      Certificate_Type cert_type);
@@ -295,7 +295,7 @@ class BOTAN_UNSTABLE_API Certificate_Request_13 final : public Handshake_Message
    public:
       Handshake_Type type() const override;
 
-      Certificate_Request_13(const std::vector<uint8_t>& buf, Connection_Side side);
+      Certificate_Request_13(std::span<const uint8_t> buf, Connection_Side side);
 
       //! Creates a Certificate_Request message if it is required by the configuration
       //! @return std::nullopt if configuration does not require client authentication
@@ -315,7 +315,7 @@ class BOTAN_UNSTABLE_API Certificate_Request_13 final : public Handshake_Message
       const std::vector<uint8_t>& context() const { return m_context; }
 
    private:
-      Certificate_Request_13(const std::vector<X509_DN>& acceptable_CAs, const Policy& policy, Callbacks& callbacks);
+      Certificate_Request_13(std::vector<X509_DN> acceptable_CAs, const Policy& policy, Callbacks& callbacks);
 
    private:
       std::vector<uint8_t> m_context;
@@ -332,7 +332,7 @@ class BOTAN_UNSTABLE_API Certificate_Verify_13 final : public Certificate_Verify
       * @param buf the serialized message
       * @param side is this a Connection_Side::Server or Connection_Side::Client certificate message
       */
-      Certificate_Verify_13(const std::vector<uint8_t>& buf, Connection_Side side);
+      Certificate_Verify_13(std::span<const uint8_t> buf, Connection_Side side);
 
       Certificate_Verify_13(const Certificate_13& certificate_message,
                             const std::vector<Signature_Scheme>& peer_allowed_schemes,
@@ -367,7 +367,7 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message 
                             const Session_Handle& handle,
                             Callbacks& callbacks);
 
-      New_Session_Ticket_13(const std::vector<uint8_t>& buf, Connection_Side from);
+      New_Session_Ticket_13(std::span<const uint8_t> buf, Connection_Side from);
 
       std::vector<uint8_t> serialize() const override;
 
@@ -407,7 +407,7 @@ class BOTAN_UNSTABLE_API Key_Update final : public Handshake_Message {
       Handshake_Type type() const override { return Handshake_Type::KeyUpdate; }
 
       explicit Key_Update(bool request_peer_update);
-      explicit Key_Update(const std::vector<uint8_t>& buf);
+      explicit Key_Update(std::span<const uint8_t> buf);
 
       std::vector<uint8_t> serialize() const override;
 

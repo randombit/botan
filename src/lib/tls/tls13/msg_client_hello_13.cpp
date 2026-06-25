@@ -155,7 +155,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
                                  Callbacks& cb,
                                  RandomNumberGenerator& rng,
                                  std::string_view hostname,
-                                 const std::vector<std::string>& next_protocols,
+                                 std::vector<std::string> next_protocols,
                                  std::optional<Session_with_Handle>& session,
                                  std::vector<ExternalPSK> psks) {
    // RFC 8446 4.1.2
@@ -231,7 +231,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    }
 
    if(!next_protocols.empty()) {
-      m_data->extensions().add(new Application_Layer_Protocol_Notification(next_protocols));
+      m_data->extensions().add(new Application_Layer_Protocol_Notification(std::move(next_protocols)));
    }
 
 #if defined(BOTAN_HAS_TLS_12)
@@ -283,7 +283,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    }
 }
 
-std::variant<Client_Hello_13, Client_Hello_12_Shim> Client_Hello_13::parse(const std::vector<uint8_t>& buf) {
+std::variant<Client_Hello_13, Client_Hello_12_Shim> Client_Hello_13::parse(std::span<const uint8_t> buf) {
    auto data = std::make_unique<Client_Hello_Internal>(buf);
    const auto version = data->version();
 

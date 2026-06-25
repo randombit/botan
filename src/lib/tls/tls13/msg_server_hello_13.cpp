@@ -82,7 +82,7 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
 }
 
 std::variant<Hello_Retry_Request, Server_Hello_13, Server_Hello_12_Shim> Server_Hello_13::parse(
-   const std::vector<uint8_t>& buf) {
+   std::span<const uint8_t> buf) {
    auto data = std::make_unique<Server_Hello_Internal>(buf);
    const auto version = data->version();
 

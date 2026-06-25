@@ -435,10 +435,9 @@ Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification
    m_protocols.emplace_back(protocol);
 }
 
-Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification(
-   const std::vector<std::string>& protocols) :
-      m_protocols(protocols) {
-   for(const auto& protocol : protocols) {
+Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification(std::vector<std::string> protocols) :
+      m_protocols(std::move(protocols)) {
+   for(const auto& protocol : m_protocols) {
       BOTAN_ARG_CHECK(!protocol.empty(), "ALPN protocol name must not be empty");
       BOTAN_ARG_CHECK(protocol.size() < 256, "ALPN protocol name too long");
    }

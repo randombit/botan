@@ -17,7 +17,7 @@ namespace Botan::TLS {
 /*
 * Deserialize a Certificate Verify message
 */
-Certificate_Verify::Certificate_Verify(const std::vector<uint8_t>& buf) {
+Certificate_Verify::Certificate_Verify(std::span<const uint8_t> buf) {
    TLS_Data_Reader reader("CertificateVerify", buf);
 
    m_scheme = Signature_Scheme(reader.get_uint16_t());

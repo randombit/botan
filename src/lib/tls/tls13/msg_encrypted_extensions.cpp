@@ -131,7 +131,7 @@ Encrypted_Extensions::Encrypted_Extensions(const Client_Hello_13& client_hello,
    }
 }
 
-Encrypted_Extensions::Encrypted_Extensions(const std::vector<uint8_t>& buf) {
+Encrypted_Extensions::Encrypted_Extensions(std::span<const uint8_t> buf) {
    TLS_Data_Reader reader("encrypted extensions reader", buf);
 
    // Encrypted Extensions contains a list of extensions. This list may legally

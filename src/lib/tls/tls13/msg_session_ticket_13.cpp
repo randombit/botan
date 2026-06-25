@@ -42,7 +42,7 @@ New_Session_Ticket_13::New_Session_Ticket_13(Ticket_Nonce nonce,
    callbacks.tls_modify_extensions(m_extensions, Connection_Side::Server, type());
 }
 
-New_Session_Ticket_13::New_Session_Ticket_13(const std::vector<uint8_t>& buf, Connection_Side from) {
+New_Session_Ticket_13::New_Session_Ticket_13(std::span<const uint8_t> buf, Connection_Side from) {
    TLS_Data_Reader reader("New_Session_Ticket_13", buf);
 
    m_ticket_lifetime_hint = std::chrono::seconds(reader.get_uint32_t());
