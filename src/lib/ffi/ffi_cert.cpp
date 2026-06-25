@@ -364,33 +364,10 @@ int botan_x509_cert_view_string_values(botan_x509_cert_t cert,
       }
    };
 
-   auto enumerate_crl_distribution_points = [view_fn, ctx](const Botan::X509_Certificate& c, size_t idx) -> int {
-      const auto* crl_dp_ext =
-         c.v3_extensions().get_extension_object_as<Botan::Cert_Extension::CRL_Distribution_Points>();
-      if(crl_dp_ext == nullptr) {
-         return BOTAN_FFI_ERROR_OUT_OF_RANGE;  // essentially an empty list
-      }
-
-      const auto& dps = crl_dp_ext->distribution_points();
-      for(size_t i = idx; const auto& dp : dps) {
-         const auto& uris = dp.point().uri_names();
-         if(i >= uris.size()) {
-            i -= uris.size();
-            continue;
-         }
-
-         auto itr = uris.begin();
-         std::advance(itr, i);
-         return invoke_view_callback(view_fn, ctx, itr->original_input());
-      }
-
-      return BOTAN_FFI_ERROR_OUT_OF_RANGE;
-   };
-
    return BOTAN_FFI_VISIT(cert, [=](const Botan::X509_Certificate& c) -> int {
       switch(value_type) {
          case BOTAN_X509_CRL_DISTRIBUTION_URLS:
-            return enumerate_crl_distribution_points(c, index);
+            return enumerate_uris(c.crl_distribution_point_uris(), index);
          case BOTAN_X509_OCSP_RESPONDER_URLS:
             return enumerate_uris(c.ocsp_responder_uris(), index);
          case BOTAN_X509_CA_ISSUERS_URLS:
