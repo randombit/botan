@@ -438,9 +438,8 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
       // DTLS retransmission from the previous handshake. The latter must not
       // create fresh pending state; it only asks us to replay our last flight.
       if(record_version.is_datagram_protocol() && epoch0_restart && m_sequence_numbers && m_active_state.has_value()) {
-         const bool starts_new_handshake =
-            (record_type == Record_Type::Handshake && !record.empty() &&
-             static_cast<Handshake_Type>(record[0]) == Handshake_Type::ClientHello);
+         const bool starts_new_handshake = (record_type == Record_Type::Handshake && !record.empty() &&
+                                            static_cast<Handshake_Type>(record[0]) == Handshake_Type::ClientHello);
 
          if(!starts_new_handshake) {
             BOTAN_ASSERT(m_active_state->dtls_handshake_io(), "Have DTLS handshake IO for retransmission");

@@ -29,10 +29,8 @@
    #include <botan/tls_server.h>
    #include <botan/tls_session_manager_memory.h>
    #include <botan/tls_session_manager_noop.h>
-   #include <botan/internal/tls_handshake_io.h>
-   #include <botan/internal/tls_seq_numbers.h>
+   #include <botan/internal/loadstor.h>
    #include <botan/internal/tls_reader.h>
-   #include <botan/tls_handshake_msg.h>
 
    #include <botan/ec_group.h>
    #include <botan/ecdh.h>
@@ -1553,26 +1551,10 @@ callbacks collect bytes emitted by TLS::Client/TLS::Server, and deliver() feeds
 those bytes into the peer's received_data(). Clearing, splitting, copying, or
 delaying those buffers simulates datagram loss, retransmission, duplicates, and
 partial flights while still running the real DTLS record, handshake, epoch, and
-Datagram_Handshake_IO logic. A few tests instantiate Datagram_Handshake_IO
-directly when the behavior under test is only flight caching/retransmission.
+retransmission logic.
 */
 class DTLS_Core_Regression_Tests final : public Test {
    private:
-      class Test_Handshake_Message final : public Botan::TLS::Handshake_Message {
-         public:
-            explicit Test_Handshake_Message(Botan::TLS::Handshake_Type type = Botan::TLS::Handshake_Type::ServerHelloDone,
-                                            std::vector<uint8_t> serialized = {0x01, 0x02, 0x03}) :
-                  m_type(type), m_serialized(std::move(serialized)) {}
-
-            Botan::TLS::Handshake_Type type() const override { return m_type; }
-
-            std::vector<uint8_t> serialize() const override { return m_serialized; }
-
-         private:
-            Botan::TLS::Handshake_Type m_type;
-            std::vector<uint8_t> m_serialized;
-      };
-
       static void deliver(Test::Result& result,
                           const std::string& label,
                           std::vector<uint8_t>& outbound,
@@ -1644,9 +1626,9 @@ class DTLS_Core_Regression_Tests final : public Test {
                size_t hs_offset = offset + dtls_header_len;
                while(hs_offset + dtls_handshake_header_len <= record_end) {
                   const auto handshake_type = static_cast<Botan::TLS::Handshake_Type>(records[hs_offset]);
-                  const size_t fragment_len =
-                     (static_cast<size_t>(records[hs_offset + 9]) << 16) |
-                     (static_cast<size_t>(records[hs_offset + 10]) << 8) | records[hs_offset + 11];
+                  const size_t fragment_len = (static_cast<size_t>(records[hs_offset + 9]) << 16) |
+                                              (static_cast<size_t>(records[hs_offset + 10]) << 8) |
+                                              records[hs_offset + 11];
                   const size_t handshake_end = hs_offset + dtls_handshake_header_len + fragment_len;
 
                   if(handshake_end > record_end) {
@@ -1664,6 +1646,29 @@ class DTLS_Core_Regression_Tests final : public Test {
          return types;
       }
 
+      static std::vector<Botan::TLS::Record_Type> dtls_record_types(const std::vector<uint8_t>& records) {
+         constexpr size_t dtls_header_len = 13;
+
+         std::vector<Botan::TLS::Record_Type> types;
+
+         size_t offset = 0;
+         while(offset + dtls_header_len <= records.size()) {
+            const auto record_type = static_cast<Botan::TLS::Record_Type>(records[offset]);
+            const size_t record_len =
+               static_cast<size_t>((static_cast<uint16_t>(records[offset + 11]) << 8) | records[offset + 12]);
+            const size_t record_end = offset + dtls_header_len + record_len;
+
+            if(record_end > records.size()) {
+               break;
+            }
+
+            types.push_back(record_type);
+            offset = record_end;
+         }
+
+         return types;
+      }
+
       static bool contains_dtls_handshake_type(const std::vector<uint8_t>& records,
                                                Botan::TLS::Handshake_Type expected) {
          for(auto type : dtls_handshake_types(records)) {
@@ -1675,38 +1680,48 @@ class DTLS_Core_Regression_Tests final : public Test {
          return false;
       }
 
+      static bool contains_dtls_record_type(const std::vector<uint8_t>& records, Botan::TLS::Record_Type expected) {
+         for(auto type : dtls_record_types(records)) {
+            if(type == expected) {
+               return true;
+            }
+         }
+
+         return false;
+      }
+
       template <typename Predicate>
-      static bool wait_until(Predicate&& predicate) {
+      static bool wait_until(Predicate predicate) {
          // DTLS timeouts are clock based. Poll briefly instead of sleeping for
          // an exact duration so slow/debug builds and timer granularity do not
          // make retransmission tests flaky.
          const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(1);
 
-         do {
+         while(std::chrono::steady_clock::now() < deadline) {
             if(predicate()) {
                return true;
             }
 
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-         } while(std::chrono::steady_clock::now() < deadline);
+         }
 
          return predicate();
       }
 
       template <typename Predicate>
-      static bool remains_false_for(Predicate&& predicate, std::chrono::milliseconds duration) {
+      static bool remains_false_for(Predicate predicate, std::chrono::milliseconds duration) {
          // Negative timeout checks need to observe a small window: a single
          // immediate false could pass even though the channel retransmits a few
          // milliseconds later.
          const auto deadline = std::chrono::steady_clock::now() + duration;
 
-         do {
+         while(std::chrono::steady_clock::now() < deadline) {
             if(predicate()) {
                return false;
             }
 
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-         } while(std::chrono::steady_clock::now() < deadline);
+         }
 
          return !predicate();
       }
@@ -1722,106 +1737,91 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_timeout_check_paces_retransmissions() {
          Test::Result result("DTLS timeout_check retransmit pacing");
 
-         Botan::TLS::Datagram_Sequence_Numbers seq;
-         std::vector<std::vector<uint8_t>> sent_records;
+         auto rng = Test::new_shared_rng("dtls-core-timeout-pacing");
+         auto policy = std::make_shared<Dtls_PSK_Policy>();
+         auto creds = std::make_shared<Dtls_PSK_Credentials>();
+         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
 
-         Botan::TLS::Datagram_Handshake_IO io(
-            [&](uint16_t /*epoch*/, Botan::TLS::Record_Type type, const std::vector<uint8_t>& record) {
-               if(type == Botan::TLS::Record_Type::Handshake) {
-                  sent_records.push_back(record);
-               }
-            },
-            seq,
-            1500,
-            1,
-            64,
-            64 * 1024);
+         std::vector<uint8_t> c2s;
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> client_recv;
+         std::vector<uint8_t> server_recv;
 
-         Test_Handshake_Message msg;
-         io.send(msg);
+         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
+         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
 
-         if(!result.test_sz_eq("initial send", sent_records.size(), 1)) {
+         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
+         Botan::TLS::Client client(client_callbacks,
+                                   client_sessions,
+                                   creds,
+                                   policy,
+                                   rng,
+                                   Botan::TLS::Server_Information("localhost"),
+                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         deliver(result, "client hello 1", c2s, server);
+         if(!result.test_is_true("hello verify request was produced", !s2c.empty())) {
             return result;
          }
+         s2c.clear();  // simulate losing the HelloVerifyRequest
 
-         if(!result.test_is_true("first timeout retransmits", wait_until([&] { return io.timeout_check(); }))) {
-            return result;
-         }
+         wait_for_timeout_retransmit(result, client, c2s);
+         const auto retransmit_size = c2s.size();
 
-         result.test_sz_eq("first retransmit emitted", sent_records.size(), 2);
-         result.test_is_false("immediate second timeout is suppressed", io.timeout_check());
-         result.test_sz_eq("no immediate second retransmit", sent_records.size(), 2);
+         result.test_is_false("immediate second timeout is suppressed", client.timeout_check());
+         result.test_sz_eq("no immediate second retransmit", c2s.size(), retransmit_size);
 
          return result;
       }
 
       static Test::Result test_retransmitted_epoch_transition_flight_includes_ccs() {
-         // Verify that retransmitting a cached flight spanning the epoch
-         // transition emits both the epoch-0 CCS record and the epoch-1
-         // Finished record.
-         //
-         // This is a Datagram_Handshake_IO regression test, not a simulated
-         // selective loss of CCS during a complete DTLS handshake.
          Test::Result result("DTLS retransmitted epoch-1 flight includes CCS");
 
-         Botan::TLS::Datagram_Sequence_Numbers seq;
-         std::vector<Botan::TLS::Record_Type> sent_record_types;
-         std::vector<std::vector<uint8_t>> sent_records;
+         auto rng = Test::new_shared_rng("dtls-core-retransmitted-ccs");
+         auto policy = std::make_shared<Dtls_PSK_Policy>();
+         auto creds = std::make_shared<Dtls_PSK_Credentials>();
+         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
 
-         Botan::TLS::Datagram_Handshake_IO io(
-            [&](uint16_t /*epoch*/, Botan::TLS::Record_Type type, const std::vector<uint8_t>& record) {
-               sent_record_types.push_back(type);
-               sent_records.push_back(record);
-            },
-            seq,
-            1500,
-            1,
-            64,
-            64 * 1024);
+         std::vector<uint8_t> c2s;
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> client_recv;
+         std::vector<uint8_t> server_recv;
 
-         Test_Handshake_Message ccs(Botan::TLS::Handshake_Type::HandshakeCCS, {0x01});
-         Test_Handshake_Message finished(Botan::TLS::Handshake_Type::Finished, {0xC0, 0xDE});
+         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
+         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
 
-         io.send_under_epoch(ccs, 0);
-         io.send_under_epoch(finished, 1);
+         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
+         Botan::TLS::Client client(client_callbacks,
+                                   client_sessions,
+                                   creds,
+                                   policy,
+                                   rng,
+                                   Botan::TLS::Server_Information("localhost"),
+                                   Botan::TLS::Protocol_Version::latest_dtls_version());
 
-         if(!result.test_sz_eq("initial flight record count", sent_record_types.size(), 2)) {
+         deliver(result, "client hello 1", c2s, server);
+         deliver(result, "hello verify request", s2c, client);
+         deliver(result, "client hello 2", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+         deliver(result, "client final flight", c2s, server);
+
+         result.test_is_true("server became active", server.is_active());
+         if(!result.test_is_true("server final flight was produced", !s2c.empty())) {
             return result;
          }
+         s2c.clear();  // simulate losing the server final flight
 
-         result.test_enum_eq("initial flight starts with CCS",
-                             sent_record_types[0],
-                             Botan::TLS::Record_Type::ChangeCipherSpec);
-         result.test_enum_eq("initial flight ends with Finished",
-                             sent_record_types[1],
-                             Botan::TLS::Record_Type::Handshake);
+         wait_for_timeout_retransmit(result, server, s2c);
 
-         if(!result.test_is_true("timeout retransmits final flight", wait_until([&] { return io.timeout_check(); }))) {
-            return result;
-         }
+         result.test_is_true("retransmitted final flight includes CCS",
+                             contains_dtls_record_type(s2c, Botan::TLS::Record_Type::ChangeCipherSpec));
+         result.test_is_true("retransmitted final flight includes Finished record",
+                             contains_dtls_record_type(s2c, Botan::TLS::Record_Type::Handshake));
 
-         if(!result.test_sz_eq("retransmitted flight record count", sent_record_types.size(), 4)) {
-            return result;
-         }
-
-         if(!result.test_sz_eq("retransmitted flight storage count", sent_records.size(), 4)) {
-            return result;
-         }
-
-         result.test_enum_eq("retransmitted flight starts with CCS",
-                             sent_record_types[2],
-                             Botan::TLS::Record_Type::ChangeCipherSpec);
-         result.test_enum_eq("retransmitted flight ends with Finished",
-                             sent_record_types[3],
-                             Botan::TLS::Record_Type::Handshake);
-
-         if(!result.test_is_true("retransmitted Finished record is non-empty", !sent_records[3].empty())) {
-            return result;
-         }
-
-         result.test_u8_eq("retransmitted handshake is Finished",
-                           sent_records[3][0],
-                           static_cast<uint8_t>(Botan::TLS::Handshake_Type::Finished));
+         deliver(result, "retransmitted server final flight", s2c, client);
+         result.test_is_true("client became active", client.is_active());
 
          return result;
       }
@@ -1912,9 +1912,9 @@ class DTLS_Core_Regression_Tests final : public Test {
          if(!result.test_is_true("hello verify request was produced", !hello_verify.empty())) {
             return result;
          }
-         result.test_is_true("server response is HelloVerifyRequest",
-                             contains_dtls_handshake_type(hello_verify,
-                                                          Botan::TLS::Handshake_Type::HelloVerifyRequest));
+         result.test_is_true(
+            "server response is HelloVerifyRequest",
+            contains_dtls_handshake_type(hello_verify, Botan::TLS::Handshake_Type::HelloVerifyRequest));
          s2c.clear();
 
          deliver_copy(result, "hello verify request", hello_verify, client);
@@ -1977,9 +1977,9 @@ class DTLS_Core_Regression_Tests final : public Test {
 
          result.test_is_true("partial server flight starts with ServerHello",
                              contains_dtls_handshake_type(first_record, Botan::TLS::Handshake_Type::ServerHello));
-         result.test_is_true("partial server flight remainder has ServerHelloDone",
-                             contains_dtls_handshake_type(remaining_records,
-                                                          Botan::TLS::Handshake_Type::ServerHelloDone));
+         result.test_is_true(
+            "partial server flight remainder has ServerHelloDone",
+            contains_dtls_handshake_type(remaining_records, Botan::TLS::Handshake_Type::ServerHelloDone));
 
          deliver_copy(result, "partial server flight first record", first_record, client);
          result.test_is_false("client waits for the rest of the server flight", client.is_active());
@@ -2166,9 +2166,8 @@ class DTLS_Core_Regression_Tests final : public Test {
          deliver(result, "server application data", s2c, client);
          result.test_bin_eq("client received server application data", client_recv, app_data);
 
-         result.test_is_true(
-            "client stops retransmitting after peer application data",
-            remains_false_for([&] { return client.timeout_check(); }, std::chrono::milliseconds(20)));
+         result.test_is_true("client stops retransmitting after peer application data",
+                             remains_false_for([&] { return client.timeout_check(); }, std::chrono::milliseconds(20)));
 
          return result;
       }
@@ -2224,14 +2223,13 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
-      static Test::Result run_handshake(
-         Test::Result& result,
-         const std::shared_ptr<Botan::RandomNumberGenerator>& rng,
-         const std::shared_ptr<Botan::TLS::Policy>& policy,
-         const std::shared_ptr<Botan::Credentials_Manager>& creds,
-         const std::shared_ptr<Botan::TLS::Session_Manager>& client_sessions,
-         const std::shared_ptr<Botan::TLS::Session_Manager>& server_sessions,
-         bool expect_resumption) {
+      static Test::Result run_handshake(Test::Result& result,
+                                        const std::shared_ptr<Botan::RandomNumberGenerator>& rng,
+                                        const std::shared_ptr<Botan::TLS::Policy>& policy,
+                                        const std::shared_ptr<Botan::Credentials_Manager>& creds,
+                                        const std::shared_ptr<Botan::TLS::Session_Manager>& client_sessions,
+                                        const std::shared_ptr<Botan::TLS::Session_Manager>& server_sessions,
+                                        bool expect_resumption) {
          std::vector<uint8_t> c2s;
          std::vector<uint8_t> s2c;
          std::vector<uint8_t> client_recv;
@@ -2276,14 +2274,12 @@ class DTLS_Core_Regression_Tests final : public Test {
          result.test_is_true("client became active", client.is_active());
 
          if(client_callbacks->session_was_resumption().has_value()) {
-            result.test_bool_eq("client resumption state",
-                                client_callbacks->session_was_resumption().value(),
-                                expect_resumption);
+            result.test_bool_eq(
+               "client resumption state", client_callbacks->session_was_resumption().value(), expect_resumption);
          }
          if(server_callbacks->session_was_resumption().has_value()) {
-            result.test_bool_eq("server resumption state",
-                                server_callbacks->session_was_resumption().value(),
-                                expect_resumption);
+            result.test_bool_eq(
+               "server resumption state", server_callbacks->session_was_resumption().value(), expect_resumption);
          }
 
          const std::vector<uint8_t> app_data = {0xD7, 0x15, 0xA9};
