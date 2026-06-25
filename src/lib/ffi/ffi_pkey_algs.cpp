@@ -1386,7 +1386,7 @@ int botan_pubkey_load_mlkem_composite(botan_pubkey_t* key,
                                       const uint8_t pubkey[],
                                       size_t key_len,
                                       const char* mlkem_composite_algo) {
-#if defined(BOTAN_HAS_ML_DSA)
+#if defined(BOTAN_HAS_MLKEM_COMPOSITE)
    if(key == nullptr || pubkey == nullptr || mlkem_composite_algo == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
