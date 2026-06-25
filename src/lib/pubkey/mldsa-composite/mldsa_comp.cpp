@@ -32,7 +32,7 @@ namespace Botan {
 namespace {
 std::span<const uint8_t> mldsa_pubkey_subspan(const MLDSA_Composite_Param& param, std::span<const uint8_t> key_bits) {
    if(key_bits.size() <= param.mldsa_pubkey_size()) {
-      throw Invalid_Argument(fmt("encoded MLDSA component public key is too short (len = {})", key_bits.size()));
+      throw Invalid_Argument(fmt("encoded MLDSA-composite public key is too short (len = {})", key_bits.size()));
    }
    return std::span<const uint8_t>(key_bits.begin(), param.mldsa_pubkey_size());
 }
@@ -136,7 +136,6 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
             m_traditional_sig_op(trad_privkey->create_signature_op(rng, param.traditional_padding(), "")) {}
 
       std::vector<uint8_t> raw_sign(std::span<const uint8_t> ph, RandomNumberGenerator& rng) override {
-         // PROBLEM: when called repeatedly, the computed pre-hash ph differs and leads to failed verifications.
          //  M' = Prefix || Label || len(ctx) || ctx || PH( M )
          std::string msg_str = "CompositeAlgorithmSignatures2025";
          msg_str += m_parameters.label();
@@ -148,6 +147,7 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
          auto sig = m_mldsa_sig_op->sign(rng);
          auto trad_sig = m_traditional_sig_op->sign(rng);
 
+#if defined(BOTAN_HAS_ECDSA)
          if(m_parameters.traditional_algorithm() == "ECDSA") {
             BOTAN_ASSERT(trad_sig.size() % 2 == 0, "ECDSA signature size is not divisible by 2");
             std::vector<uint8_t> enc_sig;
@@ -159,22 +159,23 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
             enc.start_sequence().encode(r).encode(s).end_cons();
             std::swap(trad_sig, enc_sig);
          }
+#endif
          sig.insert(sig.end(), trad_sig.begin(), trad_sig.end());
          return sig;
       }
 
       size_t signature_length() const override {
          size_t encoding_len = 0;
+#if defined(BOTAN_HAS_ECDSA)
          if(m_parameters.traditional_algorithm() == "ECDSA") {
             encoding_len =
                3 /* SEQ */ + 2 * 2 /* 2x INTEGER T+L */ + 2 * 1 /* 2x potential leading sign octet in INTEGER */;
          }
+#endif
          return m_mldsa_sig_op->signature_length() + m_traditional_sig_op->signature_length() + encoding_len;
       }
 
       AlgorithmIdentifier algorithm_identifier() const override { return m_parameters.get_composite_algorithm_id(); }
-
-   private:
 
    private:
       MLDSA_Composite_Param m_parameters;
