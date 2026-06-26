@@ -284,6 +284,14 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
          it->second.add_fragment(
             &record[DTLS_HANDSHAKE_HEADER_LEN], fragment_length, fragment_offset, epoch, msg_type, msg_len);
       } else {
+         // Empty fragments of non-empty messages are legal DTLS noise. Do not
+         // treat such a fragment by itself as a retransmission of an old flight.
+         if(fragment_length == 0 && msg_len != 0) {
+            record += total_size;
+            record_len -= total_size;
+            continue;
+         }
+
          // A peer retransmitted an already-consumed handshake flight. RFC 6347
          // requires us to answer with our last flight, even if the handshake is
          // otherwise complete.

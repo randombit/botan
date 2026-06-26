@@ -1690,6 +1690,30 @@ class DTLS_Core_Regression_Tests final : public Test {
          return false;
       }
 
+      static std::vector<uint8_t> empty_dtls_handshake_fragment(Botan::TLS::Handshake_Type type,
+                                                                size_t message_length,
+                                                                uint16_t message_sequence) {
+         std::vector<uint8_t> record;
+         record.reserve(25);
+
+         record.push_back(static_cast<uint8_t>(Botan::TLS::Record_Type::Handshake));
+         record.push_back(0xFE);
+         record.push_back(0xFD);
+         record.insert(record.end(), 8, 0);  // epoch 0, sequence number 0
+         record.push_back(0);
+         record.push_back(12);
+
+         record.push_back(static_cast<uint8_t>(type));
+         record.push_back(static_cast<uint8_t>((message_length >> 16) & 0xFF));
+         record.push_back(static_cast<uint8_t>((message_length >> 8) & 0xFF));
+         record.push_back(static_cast<uint8_t>(message_length & 0xFF));
+         record.push_back(static_cast<uint8_t>((message_sequence >> 8) & 0xFF));
+         record.push_back(static_cast<uint8_t>(message_sequence & 0xFF));
+         record.insert(record.end(), 6, 0);  // fragment offset 0, fragment length 0
+
+         return record;
+      }
+
       template <typename Predicate>
       static bool wait_until(Predicate predicate) {
          // DTLS timeouts are clock based. Poll briefly instead of sleeping for
@@ -2172,6 +2196,51 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      static Test::Result test_empty_old_handshake_fragment_does_not_retransmit() {
+         Test::Result result("DTLS empty old handshake fragment does not retransmit");
+
+         auto rng = Test::new_shared_rng("dtls-core-empty-old-fragment");
+         auto policy = std::make_shared<Dtls_PSK_Policy>();
+         auto creds = std::make_shared<Dtls_PSK_Credentials>();
+         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+
+         std::vector<uint8_t> c2s;
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> client_recv;
+         std::vector<uint8_t> server_recv;
+
+         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
+         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
+
+         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
+         Botan::TLS::Client client(client_callbacks,
+                                   client_sessions,
+                                   creds,
+                                   policy,
+                                   rng,
+                                   Botan::TLS::Server_Information("localhost"),
+                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         deliver(result, "client hello 1", c2s, server);
+         deliver(result, "hello verify request", s2c, client);
+         deliver(result, "client hello 2", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+         deliver(result, "client final flight", c2s, server);
+         deliver(result, "server final flight", s2c, client);
+
+         result.test_is_true("client became active", client.is_active());
+         result.test_is_true("server became active", server.is_active());
+
+         const auto empty_fragment = empty_dtls_handshake_fragment(Botan::TLS::Handshake_Type::Finished, 12, 0);
+
+         result.test_no_throw("empty old fragment is ignored",
+                              [&] { server.received_data(empty_fragment.data(), empty_fragment.size()); });
+         result.test_is_true("server did not retransmit final flight", s2c.empty());
+
+         return result;
+      }
+
       static Test::Result test_resumed_final_flight_and_app_data_in_one_receive() {
          Test::Result result("DTLS resumed final flight and app data in one receive");
 
@@ -2300,6 +2369,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_partial_server_flight_does_not_advance_client(),
                  test_lost_server_flight_retransmits(),
                  test_lost_server_final_flight_retransmits(),
+                 test_empty_old_handshake_fragment_does_not_retransmit(),
                  test_retransmitted_final_flight_then_application_data(false),
                  test_retransmitted_final_flight_then_application_data(true),
                  test_resumed_client_final_flight_retransmits_after_activation(),
