@@ -344,7 +344,7 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
       // RFC 8446 4.2.11
       //    The "pre_shared_key" extension MUST be the last extension in the
       //    ClientHello (this facilitates implementation [...]).
-      m_data->extensions().reorder({Extension_Code::PresharedKey});
+      m_data->extensions().reorder(std::array{Extension_Code::PresharedKey});
 
       // Cipher suite should always be a known suite as this is checked upstream
       const auto cipher = Ciphersuite::by_id(hrr.ciphersuite());

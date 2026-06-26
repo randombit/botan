@@ -23,6 +23,7 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <span>
 
 namespace Botan {
 
@@ -176,7 +177,7 @@ class BOTAN_UNSTABLE_API Certificate_Type_Base : public Extension {
        * Called by the server to select a cert type to be used in the handshake.
        */
       Certificate_Type_Base(const Certificate_Type_Base& certificate_type_from_client,
-                            const std::vector<Certificate_Type>& server_preference);
+                            std::span<const Certificate_Type> server_preference);
 
    public:
       Certificate_Type_Base(TLS_Data_Reader& reader, uint16_t extension_size, Connection_Side from);
@@ -247,7 +248,7 @@ class BOTAN_UNSTABLE_API Supported_Groups final : public Extension {
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
-      explicit Supported_Groups(const std::vector<Group_Params>& groups);
+      explicit Supported_Groups(std::vector<Group_Params> groups);
 
       Supported_Groups(TLS_Data_Reader& reader, uint16_t extension_size);
 
@@ -328,7 +329,7 @@ class BOTAN_UNSTABLE_API SRTP_Protection_Profiles final : public Extension {
 
       bool empty() const override { return m_pp.empty(); }
 
-      explicit SRTP_Protection_Profiles(const std::vector<uint16_t>& pp) : m_pp(pp) {}
+      explicit SRTP_Protection_Profiles(std::vector<uint16_t> pp) : m_pp(std::move(pp)) {}
 
       explicit SRTP_Protection_Profiles(uint16_t pp) : m_pp(1, pp) {}
 
@@ -518,7 +519,7 @@ class BOTAN_UNSTABLE_API Extensions final {
       * @p order retain their relative position at the front; extensions in
       * @p order are appended in the given order.
       */
-      void reorder(const std::vector<Extension_Code>& order);
+      void reorder(std::span<const Extension_Code> order);
 
       /**
       * Return the code of the extension that appears last in the encoding

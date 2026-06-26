@@ -283,7 +283,7 @@ std::set<Extension_Code> Extensions::extension_types() const {
    return offers;
 }
 
-void Extensions::reorder(const std::vector<Extension_Code>& order) {
+void Extensions::reorder(std::span<const Extension_Code> order) {
    const std::set<Extension_Code> in_order(order.begin(), order.end());
 
    std::vector<Extension_Code> new_codes;
@@ -527,7 +527,7 @@ Server_Certificate_Type::Server_Certificate_Type(const Server_Certificate_Type& 
       Certificate_Type_Base(sct, policy.accepted_server_certificate_types()) {}
 
 Certificate_Type_Base::Certificate_Type_Base(const Certificate_Type_Base& certificate_type_from_client,
-                                             const std::vector<Certificate_Type>& server_preference) :
+                                             std::span<const Certificate_Type> server_preference) :
       m_from(Connection_Side::Server) {
    // RFC 7250 4.2
    //    The server_certificate_type extension in the client hello indicates the
@@ -618,7 +618,7 @@ Certificate_Type Certificate_Type_Base::selected_certificate_type() const {
    return m_certificate_types.front();
 }
 
-Supported_Groups::Supported_Groups(const std::vector<Group_Params>& groups) : m_groups(groups) {}
+Supported_Groups::Supported_Groups(std::vector<Group_Params> groups) : m_groups(std::move(groups)) {}
 
 const std::vector<Group_Params>& Supported_Groups::groups() const {
    return m_groups;
