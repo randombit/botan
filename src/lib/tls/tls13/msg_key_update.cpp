@@ -14,7 +14,7 @@ namespace Botan::TLS {
 
 Key_Update::Key_Update(const bool request_peer_update) : m_update_requested(request_peer_update) {}
 
-Key_Update::Key_Update(const std::vector<uint8_t>& buf) {
+Key_Update::Key_Update(std::span<const uint8_t> buf) {
    if(buf.size() != 1) {
       throw TLS_Exception(Alert::DecodeError, "malformed key_update");
    }
@@ -22,7 +22,7 @@ Key_Update::Key_Update(const std::vector<uint8_t>& buf) {
    // RFC 8446 4.6.3
    //    If an implementation receives any other value [than 0 or 1], it MUST
    //    terminate the connection with an "illegal_parameter" alert.
-   const uint8_t update_requested = buf.at(0);
+   const uint8_t update_requested = buf[0];
    if(update_requested > 1) {
       throw TLS_Exception(Alert::IllegalParameter, "unexpected key_update parameter");
    }

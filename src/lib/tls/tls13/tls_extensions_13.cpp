@@ -21,7 +21,7 @@
 
 namespace Botan::TLS {
 
-Cookie::Cookie(const std::vector<uint8_t>& cookie) : m_cookie(cookie) {}
+Cookie::Cookie(std::vector<uint8_t> cookie) : m_cookie(std::move(cookie)) {}
 
 Cookie::Cookie(TLS_Data_Reader& reader, uint16_t extension_size) {
    // RFC 8446 4.2.2

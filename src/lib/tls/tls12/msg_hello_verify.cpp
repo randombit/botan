@@ -12,7 +12,7 @@
 
 namespace Botan::TLS {
 
-Hello_Verify_Request::Hello_Verify_Request(const std::vector<uint8_t>& buf) {
+Hello_Verify_Request::Hello_Verify_Request(std::span<const uint8_t> buf) {
    if(buf.size() < 3) {
       throw Decoding_Error("Hello verify request too small");
    }
@@ -30,7 +30,7 @@ Hello_Verify_Request::Hello_Verify_Request(const std::vector<uint8_t>& buf) {
    m_cookie.assign(buf.begin() + 3, buf.end());
 }
 
-Hello_Verify_Request::Hello_Verify_Request(const std::vector<uint8_t>& client_hello_bits,
+Hello_Verify_Request::Hello_Verify_Request(std::span<const uint8_t> client_hello_bits,
                                            std::string_view client_identity,
                                            const SymmetricKey& secret_key) {
    auto hmac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");

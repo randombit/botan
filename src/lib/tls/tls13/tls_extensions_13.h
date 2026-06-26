@@ -51,7 +51,7 @@ class BOTAN_UNSTABLE_API Cookie final : public Extension {
 
       const std::vector<uint8_t>& get_cookie() const { return m_cookie; }
 
-      explicit Cookie(const std::vector<uint8_t>& cookie);
+      explicit Cookie(std::vector<uint8_t> cookie);
 
       explicit Cookie(TLS_Data_Reader& reader, uint16_t extension_size);
 
@@ -175,7 +175,7 @@ class BOTAN_UNSTABLE_API PSK final : public Extension /* NOLINT(*-special-member
       ~PSK() override;
 
       void calculate_binders(const Transcript_Hash_State& truncated_transcript_hash);
-      bool validate_binder(const PSK& server_psk, const std::vector<uint8_t>& binder) const;
+      bool validate_binder(const PSK& server_psk, std::span<const uint8_t> binder) const;
 
       // TODO: Implement pure PSK negotiation that is not used for session
       //       resumption.

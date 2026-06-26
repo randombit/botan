@@ -24,7 +24,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
                                  const Policy& policy,
                                  Callbacks& cb,
                                  RandomNumberGenerator& rng,
-                                 const std::vector<uint8_t>& reneg_info,
+                                 std::vector<uint8_t> reneg_info,
                                  const Client_Hello_12& client_hello,
                                  const Server_Hello_12::Settings& server_settings,
                                  std::string_view next_protocol) :
@@ -59,7 +59,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
    }
 
    if(client_hello.secure_renegotiation()) {
-      m_data->extensions().add(new Renegotiation_Extension(reneg_info));
+      m_data->extensions().add(new Renegotiation_Extension(std::move(reneg_info)));
    }
 
    if(client_hello.supports_session_ticket() && server_settings.offer_session_ticket()) {
@@ -99,7 +99,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
                                  const Policy& policy,
                                  Callbacks& cb,
                                  RandomNumberGenerator& rng,
-                                 const std::vector<uint8_t>& reneg_info,
+                                 std::vector<uint8_t> reneg_info,
                                  const Client_Hello_12& client_hello,
                                  const Session& resumed_session,
                                  bool offer_session_ticket,
@@ -132,7 +132,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
    }
 
    if(client_hello.secure_renegotiation()) {
-      m_data->extensions().add(new Renegotiation_Extension(reneg_info));
+      m_data->extensions().add(new Renegotiation_Extension(std::move(reneg_info)));
    }
 
    if(client_hello.supports_session_ticket() && offer_session_ticket) {
@@ -145,7 +145,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
    hash.update(io.send(*this));
 }
 
-Server_Hello_12::Server_Hello_12(const std::vector<uint8_t>& buf) :
+Server_Hello_12::Server_Hello_12(std::span<const uint8_t> buf) :
       Server_Hello_12(std::make_unique<Server_Hello_Internal>(buf)) {}
 
 Server_Hello_12::Server_Hello_12(std::unique_ptr<Server_Hello_Internal> data) : Server_Hello_12_Shim(std::move(data)) {}
@@ -213,7 +213,7 @@ Server_Hello_Done::Server_Hello_Done(Handshake_IO& io, Handshake_Hash& hash) {
 /*
 * Deserialize a Server Hello Done message
 */
-Server_Hello_Done::Server_Hello_Done(const std::vector<uint8_t>& buf) {
+Server_Hello_Done::Server_Hello_Done(std::span<const uint8_t> buf) {
    if(!buf.empty()) {
       throw Decoding_Error("Server_Hello_Done: Must be empty, and is not");
    }

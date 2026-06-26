@@ -59,8 +59,8 @@ uint8_t cert_type_name_to_code(std::string_view name) {
 Certificate_Request_12::Certificate_Request_12(Handshake_IO& io,
                                                Handshake_Hash& hash,
                                                const Policy& policy,
-                                               const std::vector<X509_DN>& ca_certs) :
-      m_names(ca_certs), m_cert_key_types({"RSA", "ECDSA"}) {
+                                               std::vector<X509_DN> ca_certs) :
+      m_names(std::move(ca_certs)), m_cert_key_types({"RSA", "ECDSA"}) {
    m_schemes = policy.acceptable_signature_schemes();
    // RFC 5246 7.4.4: supported_signature_algorithms<2..2^16-2>
    if(m_schemes.empty()) {
@@ -72,7 +72,7 @@ Certificate_Request_12::Certificate_Request_12(Handshake_IO& io,
 /**
 * Deserialize a Certificate Request message
 */
-Certificate_Request_12::Certificate_Request_12(const std::vector<uint8_t>& buf) {
+Certificate_Request_12::Certificate_Request_12(std::span<const uint8_t> buf) {
    if(buf.size() < 4) {
       throw Decoding_Error("Certificate_Req: Bad certificate request");
    }

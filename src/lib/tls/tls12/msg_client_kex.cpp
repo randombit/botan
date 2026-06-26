@@ -236,7 +236,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 /*
 * Read a Client Key Exchange message
 */
-Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
+Client_Key_Exchange::Client_Key_Exchange(std::span<const uint8_t> contents,
                                          const Handshake_State& state,
                                          const Private_Key* server_rsa_kex_key,
                                          Credentials_Manager& creds,

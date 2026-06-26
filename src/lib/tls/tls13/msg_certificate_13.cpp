@@ -361,7 +361,7 @@ std::vector<uint8_t> Certificate_13::Certificate_Entry::serialize() const {
 /**
 * Deserialize a Certificate message
 */
-Certificate_13::Certificate_13(const std::vector<uint8_t>& buf,
+Certificate_13::Certificate_13(std::span<const uint8_t> buf,
                                const Policy& policy,
                                Connection_Side side,
                                Certificate_Type cert_type) :

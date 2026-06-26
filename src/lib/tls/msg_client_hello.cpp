@@ -43,7 +43,7 @@ std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng, Callbacks& cb
    return buf;
 }
 
-Client_Hello_Internal::Client_Hello_Internal(const std::vector<uint8_t>& buf) {
+Client_Hello_Internal::Client_Hello_Internal(std::span<const uint8_t> buf) {
    /*
    Minimum possible client hello
 
@@ -287,7 +287,7 @@ const std::vector<uint8_t>& Client_Hello::cookie() const {
 Client_Hello_12_Shim::Client_Hello_12_Shim(std::unique_ptr<Client_Hello_Internal> data) :
       Client_Hello(std::move(data)) {}
 
-Client_Hello_12_Shim::Client_Hello_12_Shim(const std::vector<uint8_t>& buf) :
+Client_Hello_12_Shim::Client_Hello_12_Shim(std::span<const uint8_t> buf) :
       Client_Hello_12_Shim(std::make_unique<Client_Hello_Internal>(buf)) {}
 
 }  // namespace Botan::TLS

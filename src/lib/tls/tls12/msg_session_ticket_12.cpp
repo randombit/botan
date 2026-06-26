@@ -25,7 +25,7 @@ New_Session_Ticket_12::New_Session_Ticket_12(Handshake_IO& io, Handshake_Hash& h
    hash.update(io.send(*this));
 }
 
-New_Session_Ticket_12::New_Session_Ticket_12(const std::vector<uint8_t>& buf) {
+New_Session_Ticket_12::New_Session_Ticket_12(std::span<const uint8_t> buf) {
    if(buf.size() < 6) {
       throw Decoding_Error("Session ticket message too short to be valid");
    }

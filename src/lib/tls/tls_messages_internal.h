@@ -58,7 +58,7 @@ class Client_Hello_Internal {
    public:
       Client_Hello_Internal() : m_comp_methods({0}) {}
 
-      explicit Client_Hello_Internal(const std::vector<uint8_t>& buf);
+      explicit Client_Hello_Internal(std::span<const uint8_t> buf);
 
       /**
        * This distinguishes between a TLS 1.3 compliant Client Hello (containing
@@ -112,7 +112,7 @@ class Server_Hello_Internal final {
       /**
        * Deserialize a Server Hello message
        */
-      explicit Server_Hello_Internal(const std::vector<uint8_t>& buf);
+      explicit Server_Hello_Internal(std::span<const uint8_t> buf);
 
       Server_Hello_Internal(Protocol_Version lv,
                             Session_ID sid,

@@ -442,7 +442,7 @@ void PSK::calculate_binders(const Transcript_Hash_State& truncated_transcript_ha
    }
 }
 
-bool PSK::validate_binder(const PSK& server_psk, const std::vector<uint8_t>& binder) const {
+bool PSK::validate_binder(const PSK& server_psk, std::span<const uint8_t> binder) const {
    BOTAN_STATE_CHECK(std::holds_alternative<std::vector<Client_PSK>>(m_impl->psk));
    BOTAN_STATE_CHECK(std::holds_alternative<Server_PSK>(server_psk.m_impl->psk));
 

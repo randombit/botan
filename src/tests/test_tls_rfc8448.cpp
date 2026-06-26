@@ -781,7 +781,7 @@ void sort_rfc8448_extensions(Botan::TLS::Extensions& exts,
                              Botan::TLS::Connection_Side side,
                              Botan::TLS::Handshake_Type /*type*/ = Botan::TLS::Handshake_Type::ClientHello) {
    if(side == Botan::TLS::Connection_Side::Client) {
-      exts.reorder({
+      exts.reorder(std::array{
          Botan::TLS::Extension_Code::ServerNameIndication,
          Botan::TLS::Extension_Code::SafeRenegotiation,
          Botan::TLS::Extension_Code::SupportedGroups,
@@ -797,7 +797,7 @@ void sort_rfc8448_extensions(Botan::TLS::Extensions& exts,
          Botan::TLS::Extension_Code::PresharedKey,
       });
    } else {
-      exts.reorder({
+      exts.reorder(std::array{
          Botan::TLS::Extension_Code::SupportedGroups,
          Botan::TLS::Extension_Code::KeyShare,
          Botan::TLS::Extension_Code::Cookie,
@@ -1528,7 +1528,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
             // This is the order of extensions when we first introduced the PSK
             // implementation and generated the transcript. To stay compatible
             // with the now hard-coded transcript, we pin the extension order.
-            exts.reorder({
+            exts.reorder(std::array{
                Botan::TLS::Extension_Code::ServerNameIndication,
                Botan::TLS::Extension_Code::SupportedGroups,
                Botan::TLS::Extension_Code::KeyShare,
@@ -1664,7 +1664,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
             // public key authentication implementation and generated the transcript.
             // To stay compatible with the now hard-coded transcript, we pin the
             // extension order.
-            exts.reorder({
+            exts.reorder(std::array{
                Botan::TLS::Extension_Code::ServerNameIndication,
                Botan::TLS::Extension_Code::SupportedGroups,
                Botan::TLS::Extension_Code::KeyShare,
@@ -2460,13 +2460,13 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                         // implementation and generated the transcript. To stay compatible
                         // with the now hard-coded transcript, we pin the extension order.
                         if(type == Botan::TLS::Handshake_Type::EncryptedExtensions) {
-                           exts.reorder({
+                           exts.reorder(std::array{
                               Botan::TLS::Extension_Code::SupportedGroups,
                               Botan::TLS::Extension_Code::RecordSizeLimit,
                               Botan::TLS::Extension_Code::ServerNameIndication,
                            });
                         } else if(type == Botan::TLS::Handshake_Type::ServerHello) {
-                           exts.reorder({
+                           exts.reorder(std::array{
                               Botan::TLS::Extension_Code::SupportedVersions,
                               Botan::TLS::Extension_Code::KeyShare,
                               Botan::TLS::Extension_Code::PresharedKey,
@@ -2598,7 +2598,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                // To stay compatible with the now hard-coded transcript, we pin the
                // extension order.
                if(type == Botan::TLS::Handshake_Type::EncryptedExtensions) {
-                  exts.reorder({
+                  exts.reorder(std::array{
                      Botan::TLS::Extension_Code::ClientCertificateType,
                      Botan::TLS::Extension_Code::ServerCertificateType,
                      Botan::TLS::Extension_Code::SupportedGroups,
@@ -2606,7 +2606,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      Botan::TLS::Extension_Code::ServerNameIndication,
                   });
                } else if(type == Botan::TLS::Handshake_Type::ServerHello) {
-                  exts.reorder({
+                  exts.reorder(std::array{
                      Botan::TLS::Extension_Code::KeyShare,
                      Botan::TLS::Extension_Code::SupportedVersions,
                   });

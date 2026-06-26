@@ -113,9 +113,9 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
                                  const Policy& policy,
                                  Callbacks& cb,
                                  RandomNumberGenerator& rng,
-                                 const std::vector<uint8_t>& reneg_info,
+                                 std::vector<uint8_t> reneg_info,
                                  const Client_Hello_12::Settings& client_settings,
-                                 const std::vector<std::string>& next_protocols) {
+                                 std::vector<std::string> next_protocols) {
    m_data->m_legacy_version = client_settings.protocol_version();
    m_data->m_random = make_hello_random(rng, cb, policy);
    m_data->m_suites = policy.ciphersuite_list(client_settings.protocol_version());
@@ -142,7 +142,8 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
 
    m_data->extensions().add(new Session_Ticket_Extension());
 
-   m_data->extensions().add(new Renegotiation_Extension(reneg_info));
+   const bool has_reneg_info = !reneg_info.empty();
+   m_data->extensions().add(new Renegotiation_Extension(std::move(reneg_info)));
 
    m_data->extensions().add(new Supported_Versions(m_data->legacy_version(), policy));
 
@@ -165,8 +166,8 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
       m_data->extensions().add(new Signature_Algorithms_Cert(std::move(cert_signing_prefs.value())));
    }
 
-   if(reneg_info.empty() && !next_protocols.empty()) {
-      m_data->extensions().add(new Application_Layer_Protocol_Notification(next_protocols));
+   if(!has_reneg_info && !next_protocols.empty()) {
+      m_data->extensions().add(new Application_Layer_Protocol_Notification(std::move(next_protocols)));
    }
 
    if(m_data->legacy_version().is_datagram_protocol()) {
@@ -188,9 +189,9 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
                                  const Policy& policy,
                                  Callbacks& cb,
                                  RandomNumberGenerator& rng,
-                                 const std::vector<uint8_t>& reneg_info,
+                                 std::vector<uint8_t> reneg_info,
                                  const Session_with_Handle& session,
-                                 const std::vector<std::string>& next_protocols) {
+                                 std::vector<std::string> next_protocols) {
    m_data->m_legacy_version = session.session.version();
    m_data->m_random = make_hello_random(rng, cb, policy);
 
@@ -228,7 +229,8 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
       m_data->extensions().add(new Session_Ticket_Extension(session.handle.ticket().value()));
    }
 
-   m_data->extensions().add(new Renegotiation_Extension(reneg_info));
+   const bool has_reneg_info = !reneg_info.empty();
+   m_data->extensions().add(new Renegotiation_Extension(std::move(reneg_info)));
 
    const std::string hostname = session.session.server_info().hostname();
 
@@ -251,8 +253,8 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
       m_data->extensions().add(new Signature_Algorithms_Cert(std::move(cert_signing_prefs.value())));
    }
 
-   if(reneg_info.empty() && !next_protocols.empty()) {
-      m_data->extensions().add(new Application_Layer_Protocol_Notification(next_protocols));
+   if(!has_reneg_info && !next_protocols.empty()) {
+      m_data->extensions().add(new Application_Layer_Protocol_Notification(std::move(next_protocols)));
    }
 
    // NOLINTEND(*-owning-memory)
@@ -262,7 +264,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    hash.update(io.send(*this));
 }
 
-Client_Hello_12::Client_Hello_12(const std::vector<uint8_t>& buf) :
+Client_Hello_12::Client_Hello_12(std::span<const uint8_t> buf) :
       Client_Hello_12(std::make_unique<Client_Hello_Internal>(buf)) {}
 
 Client_Hello_12::Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data) : Client_Hello_12_Shim(std::move(data)) {
@@ -284,7 +286,7 @@ Hello_Request::Hello_Request(Handshake_IO& io) {
    io.send(*this);
 }
 
-Hello_Request::Hello_Request(const std::vector<uint8_t>& buf) {
+Hello_Request::Hello_Request(std::span<const uint8_t> buf) {
    if(!buf.empty()) {
       throw Decoding_Error("Bad Hello_Request, has non-zero size");
    }
