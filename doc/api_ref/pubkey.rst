@@ -168,6 +168,12 @@ Currently two flavors of Dilithium are implemented in separate Botan modules:
  * ``dilithium_aes``, that uses AES instead of Keccak-based primitives.
    This mode is deprecated and will be removed in a future release.
 
+ML-DSA-composite (draft-ietf-lamps-pq-composite-sigs-19)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Composite signature algorithms combining ML-DSA with a traditional signature algorithm. All variants defined in draft-ietf-lamps-pq-composite-sigs-19 are supported. Each is modelled as a specific parameter value of the generic algorithm
+``MLDSA-Composite``. The module for the composite algorithms is given by `mldsa-composite`, but note that naturally only those algorithm combinations are available for which the respective module support is compiled.
+
+
 ML-KEM (FIPS 203)
 ~~~~~~~~~~~~~~~~~
 
@@ -1039,7 +1045,16 @@ Botan implements the following signature algorithms:
    - ``<user ID>,<HashFunction>``
 
 #. ML-DSA (Dilithium).
-   Takes the optional parameter ``Deterministic`` (default) or ``Randomized``.
+   Takes and optional parameter string formed by comma-separated list of the following format ``[(Deterministic|Randomized),][Pure,][ctx_hex=<hex-value>]``, where the ordering of the comma-separated elements is arbitrary. The specification of ``Pure`` is redundant since currently only the pure variant of ML-DSA is implemented. The defaults of the other values are ``Randomized`` and an empty context parameter (`ctx_hex`).  Non-empty context parameters are only supported by ML-DSA, but not by Dilithium. ``Deterministic`` or ``Randomized`` may also be specified in a verification operation thought it has no effect there.
+#. ML-DSA-composite (draft-ietf-lamps-pq-composite-sigs-19).
+   The algorithm is identified by the generic algorithm name "MLDSA-Composite" defined in the variable `MLDSA_Composite_Param::generic_algo_name`. It requires a parameter identifying the specific algorithm combination. The following
+   parameter sets are principally available: MLDSA44-RSA2048-PKCS15-SHA256, MLDSA65-RSA3072-PKCS15-SHA512,
+   MLDSA65-RSA4096-PKCS15-SHA512, MLDSA44-RSA2048-PSS-SHA256, MLDSA65-RSA3072-PSS-SHA512,
+   MLDSA65-RSA4096-PSS-SHA512, MLDSA87-RSA3072-PSS-SHA512, MLDSA87-RSA4096-PSS-SHA512,
+   MLDSA44-ECDSA-P256-SHA256, MLDSA65-ECDSA-P256-SHA512, MLDSA65-ECDSA-P384-SHA512,
+   MLDSA65-ECDSA-brainpoolP256r1-SHA512, MLDSA87-ECDSA-P384-SHA512,
+   MLDSA87-ECDSA-brainpoolP384r1-SHA512, MLDSA87-ECDSA-P521-SHA512, MLDSA44-Ed25519-SHA512,
+   MLDSA65-Ed25519-SHA512, MLDSA87-Ed448-SHAKE256
 #. SLH-DSA.
    Takes the optional parameter ``Deterministic`` (default) or ``Randomized``.
 #. XMSS. Takes no parameter.
