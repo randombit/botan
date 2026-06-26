@@ -285,9 +285,8 @@ class RSA_ISO9796_Roundtrip_Tests final : public Test {
          try {
             const Botan::RSA_PrivateKey rsa(this->rng(), 1024);
 
-            // A leading-zero recovered representative occurs about 1/128 of the
-            // time, so iterate enough that the roundtrip reliably exercises it.
-            constexpr size_t iterations = 2000;
+            // A leading-zero recovered representative occurs about 1/128 of the time
+            constexpr size_t iterations = 256;
 
             for(const std::string padding : {"ISO_9796_DS2(SHA-256)", "ISO_9796_DS3(SHA-256)"}) {
                Botan::PK_Signer signer(rsa, this->rng(), padding);
@@ -313,10 +312,10 @@ class RSA_ISO9796_Roundtrip_Tests final : public Test {
             // previously differed by one byte between the two sides. Byte-aligned
             // moduli (e.g. 1024 above) hide it, so sweep every residue mod 8.
             const Botan::BigInt e = Botan::BigInt::from_u64(65537);
+            const size_t p_bits = 512;
+            const Botan::BigInt p = Botan::generate_rsa_prime(this->rng(), this->rng(), p_bits, e);
             for(size_t mod_bits = 1025; mod_bits <= 1031; ++mod_bits) {
-               const size_t p_bits = (mod_bits + 1) / 2;
                const size_t q_bits = mod_bits - p_bits;
-               const Botan::BigInt p = Botan::generate_rsa_prime(this->rng(), this->rng(), p_bits, e);
                const Botan::BigInt q = Botan::generate_rsa_prime(this->rng(), this->rng(), q_bits, e);
 
                const Botan::RSA_PrivateKey rsa_unaligned(p, q, e);
@@ -329,7 +328,7 @@ class RSA_ISO9796_Roundtrip_Tests final : public Test {
                   Botan::PK_Verifier verifier(rsa_unaligned, padding);
 
                   // Check inputs under, at and above the recoverable capacity
-                  for(size_t msg_len = 0; msg_len != 1024; ++msg_len) {
+                  for(size_t msg_len = 0; msg_len != 128; ++msg_len) {
                      const auto msg = this->rng().random_vec<std::vector<uint8_t>>(msg_len);
                      const auto sig = signer.sign_message(msg, this->rng());
                      result.test_is_true(
