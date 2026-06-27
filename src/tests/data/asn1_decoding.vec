@@ -173,6 +173,11 @@ ResultBER = OID encoding is too short
 Input = 06FF00
 ResultBER = Length field is too large
 
+# OCTET STRING declaring 256 MiB of content, over the default 128 MiB object
+# size limit (the actual content is absent, but the size is rejected first)
+Input = 048410000000
+ResultBER = Encoded object exceeds maximum size
+
 # Leading zero in multibyte encoding with many continuation bytes
 # 0.1 followed by a component starting with 0x80 (leading zero)
 Input = 06070180808080807F
