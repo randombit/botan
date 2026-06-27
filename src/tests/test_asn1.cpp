@@ -14,6 +14,7 @@
    #include <botan/bigint.h>
    #include <botan/data_src.h>
    #include <botan/der_enc.h>
+   #include <botan/hex.h>
    #include <botan/pss_params.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/parsing.h>
@@ -634,6 +635,45 @@ Test::Result test_pss_params_rejects_trailing_data_in_mgf1_params() {
    return result;
 }
 
+Test::Result test_alg_id_parameter_validation() {
+   Test::Result result("AlgorithmIdentifier parameter validation");
+
+   auto decode_alg_id = [](std::string_view hex) {
+      const auto wire = Botan::hex_decode(hex);
+      Botan::AlgorithmIdentifier alg_id;
+      Botan::BER_Decoder(wire).decode(alg_id).verify_end();
+   };
+
+   auto verify_params_accepted = [&](const std::string& label, std::string_view hex) {
+      try {
+         decode_alg_id(hex);
+         result.test_success(Botan::fmt("{} parameters accepted", label));
+      } catch(const std::exception& e) {
+         result.test_failure(Botan::fmt("{} parameters unexpectedly rejected: {}", label, e.what()));
+      }
+   };
+
+   auto verify_params_rejected = [&](const std::string& label, std::string_view hex) {
+      result.test_throws<Botan::Decoding_Error>(Botan::fmt("{} parameters rejected", label),
+                                                [&]() { decode_alg_id(hex); });
+   };
+
+   // The wire is SEQUENCE { OID 2.5.4.3, <parameters> } in each case
+
+   verify_params_accepted("absent", "30050603550403");
+   verify_params_accepted("NULL", "300706035504030500");
+   verify_params_accepted("SEQUENCE", "300706035504033000");
+   verify_params_accepted("OID", "300A06035504030603550403");
+   verify_params_accepted("OCTET STRING", "300906035504030402AABB");
+
+   verify_params_rejected("two values (NULL, NULL)", "3009060355040305000500");
+   verify_params_rejected("trailing data after NULL", "300A06035504030500020100");
+   verify_params_rejected("truncated SEQUENCE", "300706035504033005");
+   verify_params_rejected("single INTEGER", "30080603550403020100");
+
+   return result;
+}
+
 class ASN1_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -657,6 +697,7 @@ class ASN1_Tests final : public Test {
          results.push_back(test_asn1_bitstring_helpers());
          results.push_back(test_asn1_string_zero_length_roundtrip());
          results.push_back(test_pss_params_rejects_trailing_data_in_mgf1_params());
+         results.push_back(test_alg_id_parameter_validation());
 
          return results;
       }

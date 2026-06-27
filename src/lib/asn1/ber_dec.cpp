@@ -9,6 +9,7 @@
 
 #include <botan/bigint.h>
 #include <botan/data_src.h>
+#include <botan/internal/asn1_utils.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <memory>
@@ -358,6 +359,41 @@ class DataSource_BERObject final : public DataSource {
 
    private:
       BER_Object m_obj;
+      size_t m_offset = 0;
+};
+
+/*
+* A non-owning DataSource over a span, used to drive tag/length decoding
+* without copying the underlying buffer.
+*/
+class DataSource_Span final : public DataSource {
+   public:
+      size_t read(uint8_t out[], size_t length) override {
+         const size_t got = std::min(m_buf.size() - m_offset, length);
+         copy_mem(out, m_buf.data() + m_offset, got);
+         m_offset += got;
+         return got;
+      }
+
+      size_t peek(uint8_t out[], size_t length, size_t peek_offset) const override {
+         if(peek_offset >= m_buf.size() - m_offset) {
+            return 0;
+         }
+         const size_t got = std::min(m_buf.size() - m_offset - peek_offset, length);
+         copy_mem(out, m_buf.data() + m_offset + peek_offset, got);
+         return got;
+      }
+
+      bool check_available(size_t n) override { return n <= (m_buf.size() - m_offset); }
+
+      bool end_of_data() const override { return m_offset == m_buf.size(); }
+
+      size_t get_bytes_read() const override { return m_offset; }
+
+      explicit DataSource_Span(std::span<const uint8_t> buf) : m_buf(buf) {}
+
+   private:
+      std::span<const uint8_t> m_buf;
       size_t m_offset = 0;
 };
 
@@ -864,5 +900,41 @@ BER_Decoder& BER_Decoder::decode_named_bitstring(uint64_t& out,
    out = decoded;
    return (*this);
 }
+
+namespace ASN1 {
+
+bool is_single_der_object(std::span<const uint8_t> bytes, ASN1_Type expected_type, ASN1_Class expected_class) {
+   if(bytes.empty()) {
+      return false;
+   }
+
+   try {
+      DataSource_Span src(bytes);
+
+      ASN1_Type type_tag = ASN1_Type::NoObject;
+      ASN1_Class class_tag = ASN1_Class::NoObject;
+      const size_t tag_bytes = decode_tag(&src, type_tag, class_tag);
+
+      if(type_tag != expected_type || class_tag != expected_class) {
+         return false;
+      }
+
+      const auto dl = decode_length(&src, /*allow_indef=*/0, /*der_mode=*/true, is_constructed(expected_class));
+
+      const size_t header_bytes = tag_bytes + dl.field_length();
+      if(header_bytes > bytes.size()) {
+         return false;
+      }
+      return dl.content_length() == bytes.size() - header_bytes;
+   } catch(Decoding_Error&) {
+      return false;
+   }
+}
+
+bool is_der_sequence_header(std::span<const uint8_t> bytes) {
+   return is_single_der_object(bytes, ASN1_Type::Sequence, ASN1_Class::Universal | ASN1_Class::Constructed);
+}
+
+}  // namespace ASN1
 
 }  // namespace Botan
