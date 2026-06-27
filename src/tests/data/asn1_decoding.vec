@@ -61,10 +61,9 @@ Input = 0202FFFF
 ResultDER = Detected non-minimal INTEGER encoding in DER structure
 ResultBER = OK
 
-# Empty INTEGER encoding
+# Empty INTEGER encoding (invalid in both BER and DER, X.690 8.3.1)
 Input = 0200
-ResultDER = Detected empty INTEGER encoding in DER structure
-ResultBER = OK
+ResultBER = INTEGER encoding has no content octets
 
 # DER-encoded NULL
 Input = 0500

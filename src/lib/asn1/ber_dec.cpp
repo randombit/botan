@@ -697,11 +697,13 @@ BER_Decoder& BER_Decoder::decode(BigInt& out, ASN1_Type type_tag, ASN1_Class cla
    const BER_Object obj = get_next_object();
    obj.assert_is_a(type_tag, class_tag);
 
+   // An INTEGER must have at least one content octet (X.690 section 8.3.1)
+   if(obj.length() == 0) {
+      throw BER_Decoding_Error("INTEGER encoding has no content octets");
+   }
+
    // DER requires minimal INTEGER encoding (X.690 section 8.3.2)
    if(m_limits.require_der_encoding()) {
-      if(obj.length() == 0) {
-         throw BER_Decoding_Error("Detected empty INTEGER encoding in DER structure");
-      }
       if(obj.length() > 1) {
          if(obj.bits()[0] == 0x00 && (obj.bits()[1] & 0x80) == 0) {
             throw BER_Decoding_Error("Detected non-minimal INTEGER encoding in DER structure");
@@ -712,29 +714,25 @@ BER_Decoder& BER_Decoder::decode(BigInt& out, ASN1_Type type_tag, ASN1_Class cla
       }
    }
 
-   if(obj.length() == 0) {
-      out.clear();
-   } else {
-      const uint8_t first = obj.bits()[0];
-      const bool negative = (first & 0x80) == 0x80;
+   const uint8_t first = obj.bits()[0];
+   const bool negative = (first & 0x80) == 0x80;
 
-      if(negative) {
-         secure_vector<uint8_t> vec(obj.bits(), obj.bits() + obj.length());
-         for(size_t i = obj.length(); i > 0; --i) {
-            const bool gt0 = (vec[i - 1] > 0);
-            vec[i - 1] -= 1;
-            if(gt0) {
-               break;
-            }
+   if(negative) {
+      secure_vector<uint8_t> vec(obj.bits(), obj.bits() + obj.length());
+      for(size_t i = obj.length(); i > 0; --i) {
+         const bool gt0 = (vec[i - 1] > 0);
+         vec[i - 1] -= 1;
+         if(gt0) {
+            break;
          }
-         for(size_t i = 0; i != obj.length(); ++i) {
-            vec[i] = ~vec[i];
-         }
-         out._assign_from_bytes(vec);
-         out.flip_sign();
-      } else {
-         out._assign_from_bytes(obj.data());
       }
+      for(size_t i = 0; i != obj.length(); ++i) {
+         vec[i] = ~vec[i];
+      }
+      out._assign_from_bytes(vec);
+      out.flip_sign();
+   } else {
+      out._assign_from_bytes(obj.data());
    }
 
    return (*this);
