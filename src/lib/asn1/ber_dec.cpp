@@ -765,9 +765,10 @@ void asn1_decode_binary_string(std::vector<uint8_t, Alloc>& buffer,
                                bool require_der) {
    obj.assert_is_a(type_tag, class_tag);
 
-   // DER requires BIT STRING and OCTET STRING to use primitive encoding
-   if(require_der && is_constructed(obj)) {
-      throw BER_Decoding_Error("Detected constructed string encoding in DER structure");
+   // Only primitive OCTET STRING/BIT STRING are supported; constructed
+   // (fragmented) BER forms are rejected rather than concatenated.
+   if(is_constructed(obj)) {
+      throw BER_Decoding_Error("Constructed OCTET STRING/BIT STRING is not supported");
    }
 
    if(real_type == ASN1_Type::OctetString) {
@@ -807,8 +808,10 @@ void asn1_decode_binary_string(std::vector<uint8_t, Alloc>& buffer,
 uint8_t asn1_bitstring_unused_bits(const BER_Object& obj, ASN1_Type type_tag, ASN1_Class class_tag, bool require_der) {
    obj.assert_is_a(type_tag, class_tag);
 
-   if(require_der && is_constructed(obj)) {
-      throw BER_Decoding_Error("Detected constructed string encoding in DER structure");
+   // Only primitive BIT STRING is supported; constructed (fragmented) BER
+   // forms are rejected rather than concatenated.
+   if(is_constructed(obj)) {
+      throw BER_Decoding_Error("Constructed OCTET STRING/BIT STRING is not supported");
    }
 
    if(obj.length() == 0) {
