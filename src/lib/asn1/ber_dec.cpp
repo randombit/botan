@@ -12,6 +12,7 @@
 #include <botan/internal/asn1_utils.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
+#include <algorithm>
 #include <memory>
 
 namespace Botan {
@@ -248,7 +249,7 @@ size_t peek_tag(DataSource* src, size_t offset, ASN1_Type& type_tag, ASN1_Class&
 * Returns the decoded length and sets field_size to the number of bytes consumed.
 * For indefinite-length encoding, recursively scans ahead to find the EOC marker.
 */
-size_t peek_length(DataSource* src, size_t offset, size_t& field_size, size_t allow_indef, bool constructed) {
+size_t peek_length(DataSource* src, size_t offset, size_t& field_size, size_t allow_indef, bool constructed, bool der_mode) {
    uint8_t b = 0;
    if(src->peek(&b, 1, offset) == 0) {
       throw BER_Decoding_Error("Length field not found");
@@ -266,6 +267,10 @@ size_t peek_length(DataSource* src, size_t offset, size_t& field_size, size_t al
    }
 
    if(num_length_bytes == 0) {
+      // Indefinite length is not allowed in DER
+      if(der_mode) {
+         throw BER_Decoding_Error("Detected indefinite-length encoding in DER structure");
+      }
       // Indefinite length is only valid for constructed types (X.690 8.1.3.2)
       if(!constructed) {
          throw BER_Decoding_Error("Indefinite-length encoding used with non-constructed type");
@@ -305,7 +310,7 @@ size_t find_eoc(DataSource* src, size_t base_offset, size_t allow_indef) {
       }
 
       size_t length_size = 0;
-      const size_t item_size = peek_length(src, offset + tag_size, length_size, allow_indef, is_constructed(class_tag));
+      const size_t item_size = peek_length(src, offset + tag_size, length_size, allow_indef, is_constructed(class_tag), false);
 
       if(auto new_offset = checked_add(offset, tag_size, length_size, item_size)) {
          offset = new_offset.value();
@@ -398,6 +403,39 @@ class DataSource_Span final : public DataSource {
       std::span<const uint8_t> m_buf;
       size_t m_offset = 0;
 };
+
+/*
+* Verify that the elements of a SET appear in sorted order, comparing the full
+* encoding of each element as an octet string. DER requires this canonical
+* ordering. Throws if the elements are not sorted.
+*/
+void verify_set_is_sorted(std::span<const uint8_t> content) {
+   DataSource_Span src(content);
+   size_t offset = 0;
+   std::optional<std::span<const uint8_t>> prev;
+
+   while(offset < content.size()) {
+      ASN1_Type type_tag = ASN1_Type::NoObject;
+      ASN1_Class class_tag = ASN1_Class::NoObject;
+      const size_t tag_size = peek_tag(&src, offset, type_tag, class_tag);
+
+      size_t length_size = 0;
+      const size_t item_size =
+         peek_length(&src, offset + tag_size, length_size, /*allow_indef=*/0, is_constructed(class_tag), true);
+
+      const auto end = checked_add(offset, tag_size, length_size, item_size);
+      if(!end || *end > content.size()) {
+         throw BER_Decoding_Error("SET element exceeds available data");
+      }
+
+      const auto elem = content.subspan(offset, *end - offset);
+      if(prev && std::lexicographical_compare(elem.begin(), elem.end(), prev->begin(), prev->end())) {
+         throw BER_Decoding_Error("Detected unsorted SET in DER structure");
+      }
+      prev = elem;
+      offset = *end;
+   }
+}
 
 }  // namespace
 
@@ -562,6 +600,12 @@ void BER_Decoder::push_back(BER_Object&& obj) {
 BER_Decoder BER_Decoder::start_cons(ASN1_Type type_tag, ASN1_Class class_tag) {
    BER_Object obj = get_next_object();
    obj.assert_is_a(type_tag, class_tag | ASN1_Class::Constructed);
+
+   // In DER mode the elements of a universal SET must appear in sorted order
+   if(m_limits.require_der_encoding() && type_tag == ASN1_Type::Set && class_tag == ASN1_Class::Universal) {
+      verify_set_is_sorted(std::span<const uint8_t>{obj.bits(), obj.length()});
+   }
+
    BER_Decoder child(std::move(obj), this);
    return child;
 }
