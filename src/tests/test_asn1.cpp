@@ -449,6 +449,50 @@ Test::Result test_asn1_negative_int_encoding() {
    return result;
 }
 
+Test::Result test_der_set_ordering() {
+   Test::Result result("DER SET ordering validation");
+
+   using Limits = Botan::BER_Decoder::Limits;
+
+   // SET { INTEGER 1, INTEGER 2 } - canonically sorted
+   const std::vector<uint8_t> sorted_set = {0x31, 0x06, 0x02, 0x01, 0x01, 0x02, 0x01, 0x02};
+   // SET { INTEGER 2, INTEGER 1 } - elements out of order
+   const std::vector<uint8_t> unsorted_set = {0x31, 0x06, 0x02, 0x01, 0x02, 0x02, 0x01, 0x01};
+
+   auto decode_set = [](const std::vector<uint8_t>& wire, Limits limits) {
+      Botan::BER_Decoder dec(wire, limits);
+      Botan::BER_Decoder set = dec.start_set();
+      while(set.more_items()) {
+         Botan::BigInt v;
+         set.decode(v);
+      }
+      set.end_cons();
+   };
+
+   // A sorted SET is accepted in both modes
+   try {
+      decode_set(sorted_set, Limits::DER());
+      decode_set(sorted_set, Limits::BER());
+      result.test_success("sorted SET accepted");
+   } catch(const std::exception& e) {
+      result.test_failure(Botan::fmt("sorted SET unexpectedly rejected: {}", e.what()));
+   }
+
+   // An unsorted SET is rejected in DER mode ...
+   result.test_throws<Botan::Decoding_Error>("unsorted SET rejected in DER mode",
+                                             [&]() { decode_set(unsorted_set, Limits::DER()); });
+
+   // ... but accepted in BER mode (canonical ordering is a DER requirement)
+   try {
+      decode_set(unsorted_set, Limits::BER());
+      result.test_success("unsorted SET accepted in BER mode");
+   } catch(const std::exception& e) {
+      result.test_failure(Botan::fmt("unsorted SET unexpectedly rejected in BER mode: {}", e.what()));
+   }
+
+   return result;
+}
+
 Test::Result test_der_constructed_tag_17_not_sorted() {
    Test::Result result("DER constructed [17] is not SET-sorted");
 
@@ -819,6 +863,7 @@ class ASN1_Tests final : public Test {
          results.push_back(test_asn1_tag_underlying_type());
          results.push_back(test_asn1_high_tag_number());
          results.push_back(test_asn1_negative_int_encoding());
+         results.push_back(test_der_set_ordering());
          results.push_back(test_der_constructed_tag_17_not_sorted());
          results.push_back(test_der_implicit_tagging_helpers());
          results.push_back(test_asn1_bitstring_helpers());

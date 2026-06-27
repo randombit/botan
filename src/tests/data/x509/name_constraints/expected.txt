@@ -33,7 +33,7 @@ dn-multi-ava-rdn-duplicate-cn-evades-constraint-invalid:Certificate does not pas
 dn-multi-ava-rdn-excluded-invalid:Certificate does not pass name constraint
 dn-multi-ava-rdn-match-valid:Verified
 dn-multi-ava-rdn-san-permitted-valid:Verified
-dn-multi-ava-rdn-set-non-canonical-order-valid-rfc5280:Verified
+dn-multi-ava-rdn-set-non-canonical-order-invalid-rfc5280:Certificate failed to decode
 dn-multi-ava-trailing-after-prefix-permit-valid:Verified
 dn-multi-ava-vs-single-ava-rdn-invalid:Certificate does not pass name constraint
 dn-multi-ca-widening-attempt-invalid:Certificate does not pass name constraint
