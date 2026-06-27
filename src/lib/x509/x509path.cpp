@@ -33,6 +33,11 @@ namespace Botan {
 
 namespace {
 
+constexpr size_t PathBuildingDfsBudget = 300;
+constexpr size_t PathBuildingMaximumChainLength = 16;
+constexpr size_t PathBuildingVerificationBudget = 200;
+constexpr size_t PathBuildingMaxPathsExamined = 50;
+
 /**
  * Lazy DFS iterator that yields certificate paths one at a time.
  *
@@ -55,8 +60,13 @@ class CertificatePathBuilder final {
       CertificatePathBuilder(const std::vector<Certificate_Store*>& trusted_certstores,
                              const X509_Certificate& end_entity,
                              std::span<const X509_Certificate> end_entity_extra,
-                             bool require_self_signed = false) :
-            m_trusted_certstores(trusted_certstores), m_require_self_signed(require_self_signed) {
+                             size_t dfs_budget,
+                             bool require_self_signed) :
+            m_trusted_certstores(trusted_certstores),
+            m_require_self_signed(require_self_signed),
+            m_dfs_budget(dfs_budget) {
+         BOTAN_ARG_CHECK(m_dfs_budget > 0, "DFS budget must be non-zero");
+
          if(std::ranges::any_of(trusted_certstores, [](auto* ptr) { return ptr == nullptr; })) {
             throw Invalid_Argument("Certificate store list must not contain nullptr");
          }
@@ -71,18 +81,15 @@ class CertificatePathBuilder final {
       }
 
       std::optional<std::vector<X509_Certificate>> next() {
-         size_t steps = 0;
-
          while(!m_stack.empty()) {
-            constexpr size_t MAX_DFS_STEPS = 1000;
-
-            steps++;
-
-            if(steps > MAX_DFS_STEPS) {
+            if(m_dfs_budget == 0) {
                // Intentionally overwrite any previous builder error
                m_error = Certificate_Status_Code::CERT_ISSUER_NOT_FOUND;
                return std::nullopt;
             }
+
+            BOTAN_ASSERT_NOMSG(m_dfs_budget > 0);
+            m_dfs_budget -= 1;
 
             auto [last, trusted] = std::move(m_stack.back());  // move before pop_back
             m_stack.pop_back();
@@ -212,6 +219,7 @@ class CertificatePathBuilder final {
       std::vector<X509_Certificate> m_path_so_far;
       std::unordered_set<X509_Certificate::Tag, X509_Certificate::TagHash> m_certs_seen;
       std::optional<Certificate_Status_Code> m_error;
+      size_t m_dfs_budget = 0;
 };
 
 }  // namespace
@@ -885,7 +893,8 @@ Certificate_Status_Code PKIX::build_certificate_path(std::vector<X509_Certificat
       return Certificate_Status_Code::EXCEEDED_SEARCH_LIMITS;
    }
 
-   CertificatePathBuilder builder(trusted_certstores, end_entity, end_entity_extra);
+   CertificatePathBuilder builder(
+      trusted_certstores, end_entity, end_entity_extra, PathBuildingDfsBudget, /*require_self_signed=*/false);
 
    std::vector<X509_Certificate> first_path;
    size_t paths_examined = 0;
@@ -928,7 +937,8 @@ Certificate_Status_Code PKIX::build_all_certificate_paths(std::vector<std::vecto
    if(!cert_paths_out.empty()) {
       throw Invalid_Argument("PKIX::build_all_certificate_paths: cert_paths_out must be empty");
    }
-   CertificatePathBuilder builder(trusted_certstores, end_entity, end_entity_extra);
+   CertificatePathBuilder builder(
+      trusted_certstores, end_entity, end_entity_extra, PathBuildingDfsBudget, /*require_self_signed=*/false);
 
    while(auto path = builder.next()) {
       BOTAN_ASSERT_NOMSG(path->empty() == false);
@@ -1028,10 +1038,8 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
 
    const bool require_self_signed = restrictions.require_self_signed_trust_anchors();
 
-   CertificatePathBuilder builder(trusted_roots, end_entity, end_entity_extra, require_self_signed);
-
-   constexpr size_t max_paths = 50;
-   constexpr size_t max_verifications = 200;
+   CertificatePathBuilder builder(
+      trusted_roots, end_entity, end_entity_extra, PathBuildingDfsBudget, require_self_signed);
 
    std::optional<Path_Validation_Result> first_path_error;
    size_t paths_checked = 0;
@@ -1040,9 +1048,13 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
    while(auto cert_path = builder.next()) {
       BOTAN_ASSERT_NOMSG(cert_path->empty() == false);
 
+      if(cert_path->size() > PathBuildingMaximumChainLength) {
+         continue;
+      }
+
       paths_checked += 1;
       certs_checked += cert_path->size();
-      if(paths_checked > max_paths || certs_checked > max_verifications) {
+      if(paths_checked > PathBuildingMaxPathsExamined || certs_checked > PathBuildingVerificationBudget) {
          first_path_error = Path_Validation_Result(Certificate_Status_Code::EXCEEDED_SEARCH_LIMITS);
          break;
       }
