@@ -21,28 +21,10 @@ namespace Botan {
 
 namespace {
 
-// Printable here means fits into an ASN.1 "PRINTABLE STRING" type
-bool is_printable_char(char c) {
-   if(c >= 'a' && c <= 'z') {
-      return true;
-   }
-
-   if(c >= 'A' && c <= 'Z') {
-      return true;
-   }
-
-   if(c >= '0' && c <= '9') {
-      return true;
-   }
-
-   if(c == '.' || c == ':' || c == '/' || c == '-') {
-      return true;
-   }
-
-   return false;
-}
-
 bool all_printable_chars(const uint8_t bits[], size_t bits_len) {
+   // Printable here means fits into an ASN.1 "PRINTABLE STRING" type
+   constexpr auto is_printable_char = CharacterValidityTable::alpha_numeric_plus(".:/-");
+
    for(size_t i = 0; i != bits_len; ++i) {
       if(!is_printable_char(bits[i])) {
          return false;
@@ -272,6 +254,13 @@ std::string ASN1_Pretty_Printer::format(
 std::string ASN1_Pretty_Printer::format_bin(ASN1_Type /*type_tag*/,
                                             ASN1_Class /*class_tag*/,
                                             const std::vector<uint8_t>& vec) const {
+   // A value larger than the binary print limit is suppressed by format(), so
+   // skip the (potentially large) string/hex conversion entirely. vec.size() is
+   // a lower bound on the formatted length, so such a value is certainly dropped.
+   if(vec.size() > m_print_binary_limit) {
+      return "";
+   }
+
    if(all_printable_chars(vec.data(), vec.size())) {
       return bytes_to_string(vec);
    } else {
