@@ -32,14 +32,14 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
             /**
             * Accept only DER encodings
             */
-            static Limits DER() { return Limits(false, 0); }
+            static Limits DER() { return Limits(false, 0, false); }
 
             /**
             * Accept non-canonical BER encodings.
             *
             * @param max_nested_indef maximum number of nested indefinite-length encodings accepted
             */
-            static Limits BER(size_t max_nested_indef = 16) { return Limits(true, max_nested_indef); }
+            static Limits BER(size_t max_nested_indef = 16) { return Limits(true, max_nested_indef, false); }
 
             bool allow_ber_encoding() const { return m_allow_ber; }
 
@@ -47,14 +47,35 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
 
             size_t max_nested_indefinite_length() const { return m_max_nested_indef; }
 
+            /**
+            * If true, a standalone EOC marker (one that does not terminate an
+            * indefinite-length encoding) is skipped rather than rejected. Some
+            * BER producers emit trailing EOC markers; accepting them is needed to
+            * parse such data (eg CMS signatures in PDFs). Off by default.
+            */
+            bool allow_standalone_eoc() const { return m_allow_standalone_eoc; }
+
+            /**
+            * Return a copy of these limits that tolerates standalone EOC markers.
+            * See allow_standalone_eoc().
+            */
+            Limits with_standalone_eoc_allowed() const {
+               Limits copy = *this;
+               copy.m_allow_standalone_eoc = true;
+               return copy;
+            }
+
             bool operator==(const Limits&) const = default;
 
          private:
-            Limits(bool allow_ber, size_t max_nested_indef) :
-                  m_allow_ber(allow_ber), m_max_nested_indef(max_nested_indef) {}
+            Limits(bool allow_ber, size_t max_nested_indef, bool allow_standalone_eoc) :
+                  m_allow_ber(allow_ber),
+                  m_max_nested_indef(max_nested_indef),
+                  m_allow_standalone_eoc(allow_standalone_eoc) {}
 
             bool m_allow_ber;
             size_t m_max_nested_indef;
+            bool m_allow_standalone_eoc;
       };
 
       /**

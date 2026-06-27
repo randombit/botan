@@ -509,10 +509,16 @@ BER_Object BER_Decoder::get_next_object() {
          if(m_limits.require_der_encoding()) {
             throw BER_Decoding_Error("Detected EOC marker in DER structure");
          }
-         continue;
-      } else {
-         break;
+         // An EOC marker is only valid as an indefinite-length terminator, which
+         // is consumed above when reading the indefinite-length object. A
+         // standalone EOC is rejected unless the caller opted to tolerate it.
+         if(m_limits.allow_standalone_eoc()) {
+            continue;
+         }
+         throw BER_Decoding_Error("Encountered EOC marker outside of indefinite-length encoding");
       }
+
+      break;
    }
 
    return next;
