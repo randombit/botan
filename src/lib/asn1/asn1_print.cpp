@@ -83,7 +83,10 @@ std::string ASN1_Formatter::print(const uint8_t in[], size_t len) const {
 }
 
 void ASN1_Formatter::print_to_stream(std::ostream& output, const uint8_t in[], size_t len) const {
-   const auto decoder_limits = m_require_der ? BER_Decoder::Limits::DER() : BER_Decoder::Limits::BER();
+   // The pretty printer is a best-effort diagnostic tool, so in BER mode it
+   // tolerates standalone EOC markers emitted by some BER producers.
+   const auto decoder_limits =
+      m_require_der ? BER_Decoder::Limits::DER() : BER_Decoder::Limits::BER().with_standalone_eoc_allowed();
    BER_Decoder dec(std::span<const uint8_t>{in, len}, decoder_limits);
    decode(output, dec, 0);
 }

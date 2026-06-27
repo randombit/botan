@@ -96,6 +96,39 @@ Test::Result test_ber_eoc_decoding_limits() {
    return result;
 }
 
+Test::Result test_ber_standalone_eoc_limits() {
+   Test::Result result("BER standalone EOC handling");
+
+   // Empty SEQUENCE (30 00) followed by a standalone EOC marker (00 00) that
+   // does not terminate any indefinite-length encoding.
+   const std::vector<uint8_t> wire = {0x30, 0x00, 0x00, 0x00};
+
+   auto count_objects = [](const std::vector<uint8_t>& in, Botan::BER_Decoder::Limits limits) {
+      Botan::BER_Decoder dec(in, limits);
+      size_t objects = 0;
+      while(dec.more_items()) {
+         if(dec.get_next_object().is_set()) {
+            objects += 1;
+         }
+      }
+      return objects;
+   };
+
+   // A standalone EOC marker is rejected by default
+   result.test_throws<Botan::Decoding_Error>("standalone EOC rejected by default",
+                                             [&]() { count_objects(wire, Botan::BER_Decoder::Limits::BER()); });
+
+   // ... but tolerated when the decoder is configured to allow it
+   try {
+      const size_t objects = count_objects(wire, Botan::BER_Decoder::Limits::BER().with_standalone_eoc_allowed());
+      result.test_sz_eq("standalone EOC skipped when allowed", objects, 1);
+   } catch(const std::exception& e) {
+      result.test_failure(Botan::fmt("standalone EOC unexpectedly rejected: {}", e.what()));
+   }
+
+   return result;
+}
+
 Test::Result test_asn1_utf8_ascii_parsing() {
    Test::Result result("ASN.1 ASCII parsing");
 
@@ -681,6 +714,7 @@ class ASN1_Tests final : public Test {
 
          results.push_back(test_ber_stack_recursion());
          results.push_back(test_ber_eoc_decoding_limits());
+         results.push_back(test_ber_standalone_eoc_limits());
          results.push_back(test_ber_indefinite_length_trailing_data());
          results.push_back(test_ber_find_eoc());
          results.push_back(test_asn1_utf8_ascii_parsing());
