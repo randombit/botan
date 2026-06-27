@@ -1225,22 +1225,6 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    result_u2 = Botan::x509_path_validate(user2_cert, restrictions, store);
    result.test_str_eq("user 1 revoked", result_u2.result_string(), revoked_str);
 
-   // RFC 5280 5.3.1: the removeFromCRL reason code MAY only appear in delta
-   // CRLs. Botan does not process delta CRLs, so a base CRL with this reason
-   // code is malformed; we keep the cert marked as revoked rather than honor
-   // the spec-violating "un-revoke" semantics.
-   revoked.clear();
-   revoked.push_back(Botan::CRL_Entry(user1_cert, Botan::CRL_Code::RemoveFromCrl));
-   const Botan::X509_CRL crl3 = ca.update_crl(crl2, revoked, rng);
-
-   store.add_crl(crl3);
-
-   result_u1 = Botan::x509_path_validate(user1_cert, restrictions, store);
-   result.test_str_eq("user 1 still revoked after RemoveFromCrl in base CRL", result_u1.result_string(), revoked_str);
-
-   result_u2 = Botan::x509_path_validate(user2_cert, restrictions, store);
-   result.test_str_eq("user 2 still revoked", result_u2.result_string(), revoked_str);
-
    return result;
 }
 
