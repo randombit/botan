@@ -49,7 +49,8 @@ size_t decode_tag(DataSource* ber, ASN1_Type& type_tag, ASN1_Class& class_tag) {
       if(!b) {
          throw BER_Decoding_Error("Long-form tag truncated");
       }
-      if((tag_buf >> 24) != 0) {
+      // Reject if shifting in another 7 bits would overflow the uint32_t tag
+      if((tag_buf >> 25) != 0) {
          throw BER_Decoding_Error("Long-form tag overflowed 32 bits");
       }
       // This is required even by BER (see X.690 section 8.1.2.4.2 sentence c).
@@ -208,7 +209,8 @@ size_t peek_tag(DataSource* src, size_t offset, ASN1_Type& type_tag, ASN1_Class&
       if(src->peek(&b, 1, offset + tag_bytes) == 0) {
          throw BER_Decoding_Error("Long-form tag truncated");
       }
-      if((tag_buf >> 24) != 0) {
+      // Reject if shifting in another 7 bits would overflow the uint32_t tag
+      if((tag_buf >> 25) != 0) {
          throw BER_Decoding_Error("Long-form tag overflowed 32 bits");
       }
       // Required even by BER (X.690 section 8.1.2.4.2 sentence c).

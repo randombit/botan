@@ -340,6 +340,38 @@ Test::Result test_asn1_tag_underlying_type() {
    return result;
 }
 
+Test::Result test_asn1_high_tag_number() {
+   Test::Result result("ASN.1 high tag number encode/decode");
+
+   // The encoder emits high-tag-number encodings for the full uint32_t range,
+   // so the decoder must round trip the same range.
+   const std::vector<uint8_t> content = {0x01, 0x02, 0x03};
+
+   const uint32_t tags[] = {31, 0x7FFFFFFF, 0x80000000, 0xFFFFFFFE, 0xFFFFFFFF};
+
+   for(const uint32_t tag : tags) {
+      Botan::DER_Encoder enc;
+      // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+      enc.add_object(static_cast<Botan::ASN1_Type>(tag), Botan::ASN1_Class::ContextSpecific, content);
+      const auto der = enc.get_contents_unlocked();
+
+      try {
+         const Botan::BER_Object obj = Botan::BER_Decoder(der).get_next_object();
+         result.test_sz_eq("decoded tag matches encoded tag", static_cast<uint32_t>(obj.type()), tag);
+      } catch(const std::exception& e) {
+         result.test_failure(Botan::fmt("tag {} unexpectedly rejected: {}", tag, e.what()));
+      }
+   }
+
+   // A tag value that does not fit in uint32_t (here 2^32, encoded as
+   // 1F 90 80 80 80 00) must be rejected rather than silently truncated.
+   const std::vector<uint8_t> overflow_tag = {0x1F, 0x90, 0x80, 0x80, 0x80, 0x00};
+   result.test_throws<Botan::Decoding_Error>("over-uint32 tag rejected",
+                                             [&]() { Botan::BER_Decoder(overflow_tag).get_next_object(); });
+
+   return result;
+}
+
 Test::Result test_asn1_negative_int_encoding() {
    Test::Result result("DER encode/decode of negative integers");
 
@@ -725,6 +757,7 @@ class ASN1_Tests final : public Test {
          results.push_back(test_asn1_ascii_encoding());
          results.push_back(test_asn1_utf8_encoding());
          results.push_back(test_asn1_tag_underlying_type());
+         results.push_back(test_asn1_high_tag_number());
          results.push_back(test_asn1_negative_int_encoding());
          results.push_back(test_der_constructed_tag_17_not_sorted());
          results.push_back(test_der_implicit_tagging_helpers());
