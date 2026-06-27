@@ -154,6 +154,41 @@ Test::Result test_ber_max_object_size() {
    return result;
 }
 
+Test::Result test_ber_constructed_string_rejected() {
+   Test::Result result("BER constructed OCTET/BIT STRING rejected");
+
+   using Botan::ASN1_Class;
+   using Botan::ASN1_Type;
+
+   // Constructed OCTET STRING (24) wrapping two OCTET STRING fragments
+   const std::vector<uint8_t> cons_octet = {0x24, 0x06, 0x04, 0x02, 0xAA, 0xBB, 0x04, 0x00};
+   // Constructed BIT STRING (23) wrapping one BIT STRING fragment
+   const std::vector<uint8_t> cons_bits = {0x23, 0x04, 0x03, 0x02, 0x00, 0xAA};
+
+   // Reachable when the caller's expected class matches the constructed object;
+   // rejected in both BER and DER rather than mis-decoded.
+   for(auto limits : {Botan::BER_Decoder::Limits::BER(), Botan::BER_Decoder::Limits::DER()}) {
+      result.test_throws<Botan::Decoding_Error>("constructed OCTET STRING rejected", [&]() {
+         std::vector<uint8_t> out;
+         Botan::BER_Decoder(cons_octet, limits)
+            .decode(out, ASN1_Type::OctetString, ASN1_Type::OctetString, ASN1_Class::Constructed);
+      });
+
+      result.test_throws<Botan::Decoding_Error>("constructed BIT STRING rejected", [&]() {
+         std::vector<uint8_t> out;
+         Botan::BER_Decoder(cons_bits, limits)
+            .decode(out, ASN1_Type::BitString, ASN1_Type::BitString, ASN1_Class::Constructed);
+      });
+
+      result.test_throws<Botan::Decoding_Error>("constructed BIT STRING rejected via decode_bitstring", [&]() {
+         Botan::ASN1_BitString bs;
+         Botan::BER_Decoder(cons_bits, limits).decode_bitstring(bs, ASN1_Type::BitString, ASN1_Class::Constructed);
+      });
+   }
+
+   return result;
+}
+
 Test::Result test_asn1_utf8_ascii_parsing() {
    Test::Result result("ASN.1 ASCII parsing");
 
@@ -771,6 +806,7 @@ class ASN1_Tests final : public Test {
          results.push_back(test_ber_eoc_decoding_limits());
          results.push_back(test_ber_standalone_eoc_limits());
          results.push_back(test_ber_max_object_size());
+         results.push_back(test_ber_constructed_string_rejected());
          results.push_back(test_ber_indefinite_length_trailing_data());
          results.push_back(test_ber_find_eoc());
          results.push_back(test_asn1_utf8_ascii_parsing());
