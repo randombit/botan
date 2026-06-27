@@ -22,5 +22,6 @@ pss_params.h
 </header:public>
 
 <header:internal>
+asn1_utils.h
 oid_map.h
 </header:internal>
