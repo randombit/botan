@@ -443,7 +443,8 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
 
          if(!starts_new_handshake) {
             BOTAN_ASSERT(m_active_state->dtls_handshake_io(), "Have DTLS handshake IO for retransmission");
-            m_active_state->dtls_handshake_io()->add_record(record.data(), record.size(), record_type, record_sequence);
+            m_active_state->dtls_handshake_io()->add_retransmitted_record(
+               record.data(), record.size(), record_type, record_sequence);
             return;
          }
       }
@@ -456,13 +457,16 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
 
             const uint16_t current_epoch = sequence_numbers().current_read_epoch();
             if(epoch == current_epoch) {
+               // Either endpoint can initiate renegotiation from FINISHED:
+               // clients send ClientHello, servers send HelloRequest.
                const bool starts_new_handshake =
                   (record_type == Record_Type::Handshake && !record.empty() &&
-                   static_cast<Handshake_Type>(record[0]) == Handshake_Type::ClientHello);
+                   (static_cast<Handshake_Type>(record[0]) == Handshake_Type::ClientHello ||
+                    static_cast<Handshake_Type>(record[0]) == Handshake_Type::HelloRequest));
 
                if(m_active_state.has_value() && !starts_new_handshake) {
                   BOTAN_ASSERT(m_active_state->dtls_handshake_io(), "Have DTLS handshake IO for retransmission");
-                  m_active_state->dtls_handshake_io()->add_record(
+                  m_active_state->dtls_handshake_io()->add_retransmitted_record(
                      record.data(), record.size(), record_type, record_sequence);
                   return;
                } else {
@@ -471,7 +475,7 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
             } else if(current_epoch > 0 && epoch == current_epoch - 1) {
                BOTAN_ASSERT(m_active_state.has_value() && m_active_state->dtls_handshake_io(),
                             "Have DTLS handshake IO for retransmission");
-               m_active_state->dtls_handshake_io()->add_record(
+               m_active_state->dtls_handshake_io()->add_retransmitted_record(
                   record.data(), record.size(), record_type, record_sequence);
                return;
             }

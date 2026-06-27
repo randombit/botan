@@ -182,7 +182,10 @@ void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx) {
 }
 
 bool Datagram_Handshake_IO::have_more_data() const {
-   return false;
+   // Future or incomplete fragments remain buffered, but only a complete
+   // next-in-sequence message is trailing handshake data.
+   const auto next = m_messages.find(m_in_message_seq);
+   return next != m_messages.end() && next->second.complete();
 }
 
 void Datagram_Handshake_IO::conclude_flight() {
@@ -221,6 +224,109 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
                                        size_t record_len,
                                        Record_Type record_type,
                                        uint64_t record_sequence) {
+   add_record(record, record_len, record_type, record_sequence, false);
+}
+
+void Datagram_Handshake_IO::add_retransmitted_record(const uint8_t record[],
+                                                     size_t record_len,
+                                                     Record_Type record_type,
+                                                     uint64_t record_sequence) {
+   add_record(record, record_len, record_type, record_sequence, true);
+}
+
+bool Datagram_Handshake_IO::reassemble_retransmitted_fragment(const uint8_t fragment[],
+                                                              size_t fragment_length,
+                                                              size_t fragment_offset,
+                                                              uint16_t epoch,
+                                                              Handshake_Type msg_type,
+                                                              size_t msg_length,
+                                                              uint16_t message_seq) {
+   auto [i, inserted] = m_retransmitted_messages.try_emplace(msg_type, message_seq, Handshake_Reassembly{});
+
+   if(!inserted && i->second.first != message_seq) {
+      i->second = std::make_pair(message_seq, Handshake_Reassembly());
+   }
+
+   auto& reassembly = i->second.second;
+   reassembly.add_fragment(fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length);
+
+   if(!reassembly.complete()) {
+      return false;
+   }
+
+   m_retransmitted_messages.erase(i);
+   return true;
+}
+
+bool Datagram_Handshake_IO::process_previous_handshake_fragment(const uint8_t fragment[],
+                                                                size_t fragment_length,
+                                                                size_t fragment_offset,
+                                                                uint16_t epoch,
+                                                                Handshake_Type msg_type,
+                                                                size_t msg_length,
+                                                                uint16_t message_seq,
+                                                                bool retransmitted_flight) {
+   // Empty fragments of non-empty messages add no information and must not
+   // trigger a flight retransmission. A zero-length message such as
+   // ServerHelloDone is not an empty fragment in this sense.
+   if(fragment_length == 0 && msg_length != 0) {
+      return false;
+   }
+
+   // ClientHello is special: losing HelloVerifyRequest leaves the server in
+   // the pending handshake, where it must still replay the cookie.
+   if(msg_type == Handshake_Type::ClientHello) {
+      return reassemble_retransmitted_fragment(
+         fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length, message_seq);
+   }
+
+   // Other previous-flight messages request an immediate response only after
+   // the handshake IO was retained by an active association. While pending,
+   // the normal retransmission timer handles recovery.
+   if(!retransmitted_flight) {
+      return false;
+   }
+
+   if(msg_type == Handshake_Type::ServerHello) {
+      m_retransmitted_server_hello_complete = reassemble_retransmitted_fragment(
+         fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length, message_seq);
+
+      if(m_retransmitted_server_hello_complete && m_retransmitted_server_hello_done_complete) {
+         m_retransmitted_server_hello_complete = false;
+         m_retransmitted_server_hello_done_complete = false;
+         return true;
+      }
+   } else if(msg_type == Handshake_Type::ServerHelloDone && msg_length == 0) {
+      if(reassemble_retransmitted_fragment(
+            fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length, message_seq)) {
+         m_retransmitted_server_hello_done_complete = true;
+         if(m_retransmitted_server_hello_complete) {
+            m_retransmitted_server_hello_complete = false;
+            m_retransmitted_server_hello_done_complete = false;
+            return true;
+         }
+      }
+   } else if(msg_type == Handshake_Type::Finished &&
+             reassemble_retransmitted_fragment(
+                fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length, message_seq)) {
+      // A final-flight retransmission includes CCS, but UDP may deliver its
+      // records in either order. Wait until both have been observed.
+      if(m_retransmitted_ccs_epoch == epoch) {
+         m_retransmitted_ccs_epoch.reset();
+         return true;
+      }
+
+      m_retransmitted_finished_epoch = epoch;
+   }
+
+   return false;
+}
+
+void Datagram_Handshake_IO::add_record(const uint8_t record[],
+                                       size_t record_len,
+                                       Record_Type record_type,
+                                       uint64_t record_sequence,
+                                       bool retransmitted_flight) {
    const uint16_t epoch = static_cast<uint16_t>(record_sequence >> 48);
 
    if(record_type == Record_Type::ChangeCipherSpec) {
@@ -230,6 +336,18 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
 
       // TODO: check this is otherwise empty
       m_ccs_epochs.insert(epoch);
+      if(retransmitted_flight) {
+         // Retransmitted final flights cross the epoch boundary: CCS is sent
+         // under the previous epoch and Finished under the newly activated one.
+         // Keep both observations because their datagrams may arrive reordered.
+         const uint16_t finished_epoch = static_cast<uint16_t>(epoch + 1);
+         if(m_retransmitted_finished_epoch == finished_epoch) {
+            m_retransmitted_finished_epoch.reset();
+            retransmit_last_flight();
+         } else {
+            m_retransmitted_ccs_epoch = finished_epoch;
+         }
+      }
       return;
    }
 
@@ -271,6 +389,16 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
       const size_t max_pending = 4 * m_max_handshake_msg_size;
 
       if(message_seq >= m_in_message_seq && (message_seq - m_in_message_seq) < reassembly_window) {
+         if(retransmitted_flight) {
+            if(fragment_length == 0) {
+               record += total_size;
+               record_len -= total_size;
+               continue;
+            }
+
+            throw TLS_Exception(Alert::UnexpectedMessage, "Unexpected new DTLS handshake message");
+         }
+
          auto [it, inserted] = m_messages.try_emplace(message_seq);
          if(inserted) {
             if(m_max_handshake_msg_size > 0 && m_pending_reassembly_bytes + msg_len > max_pending) {
@@ -284,18 +412,14 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
          it->second.add_fragment(
             &record[DTLS_HANDSHAKE_HEADER_LEN], fragment_length, fragment_offset, epoch, msg_type, msg_len);
       } else {
-         // Empty fragments of non-empty messages are legal DTLS noise. Do not
-         // treat such a fragment by itself as a retransmission of an old flight.
-         if(fragment_length == 0 && msg_len != 0) {
-            record += total_size;
-            record_len -= total_size;
-            continue;
-         }
-
-         // A peer retransmitted an already-consumed handshake flight. RFC 6347
-         // requires us to answer with our last flight, even if the handshake is
-         // otherwise complete.
-         retransmit_response = true;
+         retransmit_response |= process_previous_handshake_fragment(&record[DTLS_HANDSHAKE_HEADER_LEN],
+                                                                    fragment_length,
+                                                                    fragment_offset,
+                                                                    epoch,
+                                                                    msg_type,
+                                                                    msg_len,
+                                                                    message_seq,
+                                                                    retransmitted_flight);
       }
 
       record += total_size;

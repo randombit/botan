@@ -12,8 +12,11 @@
 #include "tests.h"
 #include <chrono>
 #include <memory>
-#include <thread>
 #include <vector>
+
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+   #include <thread>
+#endif
 
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_RSA)
 
@@ -1540,6 +1543,10 @@ class Dtls_PSK_Policy final : public Botan::TLS::Policy {
 
       bool allow_dtls_epoch0_restart() const override { return true; }
 
+      bool allow_server_initiated_renegotiation() const override { return true; }
+
+      bool allow_client_initiated_renegotiation() const override { return true; }
+
       size_t dtls_initial_timeout() const override { return 1; }
 
       size_t dtls_maximum_timeout() const override { return 8; }
@@ -1726,7 +1733,9 @@ class DTLS_Core_Regression_Tests final : public Test {
                return true;
             }
 
+   #if defined(BOTAN_TARGET_OS_HAS_THREADS)
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
+   #endif
          }
 
          return predicate();
@@ -1744,7 +1753,9 @@ class DTLS_Core_Regression_Tests final : public Test {
                return false;
             }
 
+   #if defined(BOTAN_TARGET_OS_HAS_THREADS)
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
+   #endif
          }
 
          return !predicate();
@@ -2074,6 +2085,71 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      static Test::Result test_duplicate_server_flight_defers_to_timer() {
+         Test::Result result("DTLS duplicate server flight defers replay to timer");
+
+         auto rng = Test::new_shared_rng("dtls-core-retransmitted-server-flight");
+         auto policy = std::make_shared<Dtls_PSK_Policy>();
+         auto creds = std::make_shared<Dtls_PSK_Credentials>();
+         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+
+         std::vector<uint8_t> c2s;
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> client_recv;
+         std::vector<uint8_t> server_recv;
+
+         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
+         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
+
+         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
+         Botan::TLS::Client client(client_callbacks,
+                                   client_sessions,
+                                   creds,
+                                   policy,
+                                   rng,
+                                   Botan::TLS::Server_Information("localhost"),
+                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         deliver(result, "client hello 1", c2s, server);
+         deliver(result, "hello verify request", s2c, client);
+         deliver(result, "client hello 2", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+         if(!result.test_is_true("client final flight was produced", !c2s.empty())) {
+            return result;
+         }
+         c2s.clear();  // simulate losing the client's response flight
+
+         wait_for_timeout_retransmit(result, server, s2c);
+
+         std::vector<uint8_t> first_server_record;
+         std::vector<uint8_t> remaining_server_records;
+         if(!split_first_dtls_record(result, s2c, first_server_record, remaining_server_records)) {
+            return result;
+         }
+         s2c.clear();
+
+         result.test_is_true(
+            "first retransmitted server record is ServerHello",
+            contains_dtls_handshake_type(first_server_record, Botan::TLS::Handshake_Type::ServerHello));
+         result.test_is_true(
+            "remaining retransmitted records include ServerHelloDone",
+            contains_dtls_handshake_type(remaining_server_records, Botan::TLS::Handshake_Type::ServerHelloDone));
+
+         deliver_copy(result, "retransmitted ServerHello record", first_server_record, client);
+         result.test_is_true("non-terminal record does not replay client flight", c2s.empty());
+
+         deliver_copy(result, "rest of retransmitted server flight", remaining_server_records, client);
+         result.test_is_true("duplicated server flight does not immediately replay client flight", c2s.empty());
+
+         // The response flight is still recoverable. Deferring to the timer
+         // avoids injecting an epoch-0 replay after the peer has progressed.
+         wait_for_timeout_retransmit(result, client, c2s);
+         result.test_is_true("client timer replays the lost response flight", !c2s.empty());
+
+         return result;
+      }
+
       static Test::Result test_lost_server_final_flight_retransmits() {
          Test::Result result("DTLS lost server final flight retransmits");
 
@@ -2192,6 +2268,130 @@ class DTLS_Core_Regression_Tests final : public Test {
 
          result.test_is_true("client stops retransmitting after peer application data",
                              remains_false_for([&] { return client.timeout_check(); }, std::chrono::milliseconds(20)));
+
+         return result;
+      }
+
+      static Test::Result test_reordered_retransmitted_final_flight() {
+         Test::Result result("DTLS reordered retransmitted final flight");
+
+         auto rng = Test::new_shared_rng("dtls-core-reordered-retransmitted-final");
+         auto policy = std::make_shared<Dtls_PSK_Policy>();
+         auto creds = std::make_shared<Dtls_PSK_Credentials>();
+         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+
+         std::vector<uint8_t> c2s;
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> client_recv;
+         std::vector<uint8_t> server_recv;
+
+         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
+         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
+
+         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
+         Botan::TLS::Client client(client_callbacks,
+                                   client_sessions,
+                                   creds,
+                                   policy,
+                                   rng,
+                                   Botan::TLS::Server_Information("localhost"),
+                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         deliver(result, "client hello 1", c2s, server);
+         deliver(result, "hello verify request", s2c, client);
+         deliver(result, "client hello 2", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+         deliver(result, "client final flight", c2s, server);
+
+         result.test_is_true("server became active", server.is_active());
+         result.test_is_false("client is waiting for server final flight", client.is_active());
+         s2c.clear();  // simulate losing the server's last flight
+
+         wait_for_timeout_retransmit(result, client, c2s);
+
+         std::vector<uint8_t> client_key_exchange;
+         std::vector<uint8_t> ccs_and_finished;
+         if(!split_first_dtls_record(result, c2s, client_key_exchange, ccs_and_finished)) {
+            return result;
+         }
+
+         std::vector<uint8_t> ccs;
+         std::vector<uint8_t> finished;
+         if(!split_first_dtls_record(result, ccs_and_finished, ccs, finished)) {
+            return result;
+         }
+         c2s.clear();
+
+         result.test_is_true(
+            "first retransmitted record is ClientKeyExchange",
+            contains_dtls_handshake_type(client_key_exchange, Botan::TLS::Handshake_Type::ClientKeyExchange));
+         result.test_is_true("second retransmitted record is CCS",
+                             contains_dtls_record_type(ccs, Botan::TLS::Record_Type::ChangeCipherSpec));
+         result.test_is_true("third retransmitted record is Finished",
+                             contains_dtls_record_type(finished, Botan::TLS::Record_Type::Handshake));
+
+         deliver_copy(result, "retransmitted ClientKeyExchange", client_key_exchange, server);
+         result.test_is_true("non-terminal retransmitted record produces no response", s2c.empty());
+
+         deliver_copy(result, "retransmitted Finished before CCS", finished, server);
+         result.test_is_true("partial retransmitted flight produces no response", s2c.empty());
+
+         deliver_copy(result, "retransmitted CCS after Finished", ccs, server);
+         result.test_is_true("complete reordered flight retransmits server flight", !s2c.empty());
+
+         return result;
+      }
+
+      static Test::Result test_renegotiation(bool server_initiated) {
+         Test::Result result(server_initiated ? "DTLS server-initiated renegotiation"
+                                              : "DTLS client-initiated renegotiation");
+
+         auto rng = Test::new_shared_rng(server_initiated ? "dtls-core-server-renegotiation"
+                                                          : "dtls-core-client-renegotiation");
+         auto policy = std::make_shared<Dtls_PSK_Policy>();
+         auto creds = std::make_shared<Dtls_PSK_Credentials>();
+         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+
+         std::vector<uint8_t> c2s;
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> client_recv;
+         std::vector<uint8_t> server_recv;
+
+         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
+         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
+
+         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
+         Botan::TLS::Client client(client_callbacks,
+                                   client_sessions,
+                                   creds,
+                                   policy,
+                                   rng,
+                                   Botan::TLS::Server_Information("localhost"),
+                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         deliver(result, "client hello 1", c2s, server);
+         deliver(result, "hello verify request", s2c, client);
+         deliver(result, "client hello 2", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+         deliver(result, "client final flight", c2s, server);
+         deliver(result, "server final flight", s2c, client);
+
+         if(server_initiated) {
+            result.test_no_throw("server requests renegotiation", [&] { server.renegotiate(true); });
+            deliver(result, "hello request", s2c, client);
+         } else {
+            result.test_no_throw("client requests renegotiation", [&] { client.renegotiate(true); });
+         }
+
+         deliver(result, "renegotiation client hello", c2s, server);
+         deliver(result, "renegotiation server handshake flight", s2c, client);
+         deliver(result, "renegotiation client final flight", c2s, server);
+         deliver(result, "renegotiation server final flight", s2c, client);
+
+         result.test_is_true("client remains active after renegotiation", client.is_active());
+         result.test_is_true("server remains active after renegotiation", server.is_active());
 
          return result;
       }
@@ -2368,12 +2568,16 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_duplicate_hello_verify_request_is_tolerated(),
                  test_partial_server_flight_does_not_advance_client(),
                  test_lost_server_flight_retransmits(),
+                 test_duplicate_server_flight_defers_to_timer(),
                  test_lost_server_final_flight_retransmits(),
+                 test_reordered_retransmitted_final_flight(),
                  test_empty_old_handshake_fragment_does_not_retransmit(),
                  test_retransmitted_final_flight_then_application_data(false),
                  test_retransmitted_final_flight_then_application_data(true),
                  test_resumed_client_final_flight_retransmits_after_activation(),
-                 test_resumed_final_flight_and_app_data_in_one_receive()};
+                 test_resumed_final_flight_and_app_data_in_one_receive(),
+                 test_renegotiation(false),
+                 test_renegotiation(true)};
       }
 };
 
