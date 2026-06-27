@@ -490,6 +490,10 @@ BER_Object BER_Decoder::get_next_object() {
          throw BER_Decoding_Error("EOC marker with non-zero length");
       }
 
+      if(const auto max_size = m_limits.max_object_size(); max_size && dl.content_length() > *max_size) {
+         throw BER_Decoding_Error("Encoded object exceeds maximum size");
+      }
+
       if(!m_source->check_available(dl.total_length())) {
          throw BER_Decoding_Error("Value truncated");
       }

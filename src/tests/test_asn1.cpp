@@ -129,6 +129,31 @@ Test::Result test_ber_standalone_eoc_limits() {
    return result;
 }
 
+Test::Result test_ber_max_object_size() {
+   Test::Result result("BER maximum object size");
+
+   // OCTET STRING with 5 content bytes
+   const std::vector<uint8_t> obj = {0x04, 0x05, 0x01, 0x02, 0x03, 0x04, 0x05};
+
+   auto decode = [&](const char* what, Botan::BER_Decoder::Limits limits, bool expect_ok) {
+      try {
+         Botan::BER_Decoder(obj, limits).get_next_object();
+         result.test_bool_eq(what, true, expect_ok);
+      } catch(const Botan::Decoding_Error&) {
+         result.test_bool_eq(what, false, expect_ok);
+      }
+   };
+
+   using Limits = Botan::BER_Decoder::Limits;
+
+   decode("accepted under the default limit", Limits::BER(), true);
+   decode("accepted at exactly the limit", Limits::BER().with_max_object_size(5), true);
+   decode("rejected one byte over the limit", Limits::BER().with_max_object_size(4), false);
+   decode("accepted when the limit is disabled", Limits::BER().with_max_object_size(std::nullopt), true);
+
+   return result;
+}
+
 Test::Result test_asn1_utf8_ascii_parsing() {
    Test::Result result("ASN.1 ASCII parsing");
 
@@ -745,6 +770,7 @@ class ASN1_Tests final : public Test {
          results.push_back(test_ber_stack_recursion());
          results.push_back(test_ber_eoc_decoding_limits());
          results.push_back(test_ber_standalone_eoc_limits());
+         results.push_back(test_ber_max_object_size());
          results.push_back(test_ber_indefinite_length_trailing_data());
          results.push_back(test_ber_find_eoc());
          results.push_back(test_asn1_utf8_ascii_parsing());
