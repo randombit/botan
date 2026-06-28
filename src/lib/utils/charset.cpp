@@ -62,6 +62,9 @@ uint32_t next_utf8_codepoint(std::string_view utf8, size_t& pos) {
       return b & 0x3F;
    };
 
+   if(pos >= utf8.size()) {
+      throw Decoding_Error("Invalid UTF-8 sequence");
+   }
    const uint8_t lead = static_cast<uint8_t>(utf8[pos++]);
    uint32_t c = 0;
 
