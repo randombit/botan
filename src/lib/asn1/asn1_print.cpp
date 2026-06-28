@@ -83,6 +83,23 @@ void ASN1_Formatter::decode(std::ostream& output, BER_Decoder& decoder, size_t l
       const ASN1_Class class_tag = obj.get_class();
       const size_t length = obj.length();
 
+      if(intersects(class_tag, ASN1_Class::Constructed)) {
+         if(recurse_deeper) {
+            output << format(type_tag, class_tag, level, length, "");
+            // Move (not copy) the content into the sub-decoder; copying at every
+            // nesting level lets deeply nested input exhaust memory.
+            BER_Decoder cons_info(std::move(obj), decoder.limits());
+            decode(output, cons_info, level + 1);  // recurse
+         } else {
+            std::vector<uint8_t> bits;
+            DER_Encoder(bits).add_object(type_tag, class_tag, obj.bits(), obj.length());
+            output << format(type_tag, class_tag, level, length, format_bin(type_tag, class_tag, bits));
+         }
+
+         obj = decoder.get_next_object();
+         continue;
+      }
+
       /* hack to insert the tag+length back in front of the stuff now
          that we've gotten the type info */
       std::vector<uint8_t> bits;
@@ -90,16 +107,7 @@ void ASN1_Formatter::decode(std::ostream& output, BER_Decoder& decoder, size_t l
 
       BER_Decoder data(bits, decoder.limits());
 
-      if(intersects(class_tag, ASN1_Class::Constructed)) {
-         BER_Decoder cons_info(obj, decoder.limits());
-
-         if(recurse_deeper) {
-            output << format(type_tag, class_tag, level, length, "");
-            decode(output, cons_info, level + 1);  // recurse
-         } else {
-            output << format(type_tag, class_tag, level, length, format_bin(type_tag, class_tag, bits));
-         }
-      } else if(intersects(class_tag, ASN1_Class::Application) || intersects(class_tag, ASN1_Class::ContextSpecific)) {
+      if(intersects(class_tag, ASN1_Class::Application) || intersects(class_tag, ASN1_Class::ContextSpecific)) {
          bool success_parsing_cs = false;
 
          if(m_print_context_specific) {
