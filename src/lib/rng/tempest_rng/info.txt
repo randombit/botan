@@ -1,0 +1,5 @@
+# Botan RNG module: Tempest_RNG
+<define>BOTAN_HAS_TEMPEST_RNG</define>
+<requires>
+rng:stateful_rng
+</requires>
