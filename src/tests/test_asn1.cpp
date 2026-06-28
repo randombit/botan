@@ -841,6 +841,51 @@ Test::Result test_alg_id_parameter_validation() {
    return result;
 }
 
+Test::Result test_der_default_value_encoding() {
+   Test::Result result("DER DEFAULT value rejection");
+
+   using Limits = Botan::BER_Decoder::Limits;
+
+   // SEQUENCE { version INTEGER DEFAULT 0 } in three forms
+   const std::vector<uint8_t> present_default = {0x30, 0x03, 0x02, 0x01, 0x00};     // present, == default
+   const std::vector<uint8_t> omitted = {0x30, 0x00};                               // absent
+   const std::vector<uint8_t> present_nondefault = {0x30, 0x03, 0x02, 0x01, 0x05};  // present, != default
+
+   auto decode_version = [](const std::vector<uint8_t>& wire, Limits limits) {
+      Botan::BER_Decoder dec(wire, limits);
+      size_t version = 99;
+      dec.start_sequence()
+         .decode_default(version, Botan::ASN1_Type::Integer, Botan::ASN1_Class::Universal, size_t(0))
+         .end_cons();
+      return version;
+   };
+
+   // By default an explicitly-encoded default value is accepted
+   try {
+      result.test_sz_eq("present default accepted (lax)", decode_version(present_default, Limits::DER()), 0);
+      result.test_sz_eq("omitted uses default (lax)", decode_version(omitted, Limits::DER()), 0);
+      result.test_sz_eq("present non-default decoded", decode_version(present_nondefault, Limits::DER()), 5);
+   } catch(const std::exception& e) {
+      result.test_failure(Botan::fmt("unexpected rejection: {}", e.what()));
+   }
+
+   // With the flag set, a present default-valued component is rejected ...
+   result.test_throws<Botan::Decoding_Error>("present default rejected (strict)", [&]() {
+      decode_version(present_default, Limits::DER().with_default_value_encoding_rejected());
+   });
+
+   // ... but omitted and non-default forms are still accepted
+   try {
+      const auto strict = Limits::DER().with_default_value_encoding_rejected();
+      result.test_sz_eq("omitted uses default (strict)", decode_version(omitted, strict), 0);
+      result.test_sz_eq("present non-default accepted (strict)", decode_version(present_nondefault, strict), 5);
+   } catch(const std::exception& e) {
+      result.test_failure(Botan::fmt("unexpected strict rejection: {}", e.what()));
+   }
+
+   return result;
+}
+
 class ASN1_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -870,6 +915,7 @@ class ASN1_Tests final : public Test {
          results.push_back(test_asn1_string_zero_length_roundtrip());
          results.push_back(test_pss_params_rejects_trailing_data_in_mgf1_params());
          results.push_back(test_alg_id_parameter_validation());
+         results.push_back(test_der_default_value_encoding());
 
          return results;
       }
