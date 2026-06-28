@@ -629,6 +629,11 @@ BER_Decoder::BER_Decoder(BER_Object&& obj, BER_Decoder* parent) :
    m_source = m_data_src.get();
 }
 
+BER_Decoder::BER_Decoder(BER_Object&& obj, Limits limits) : m_limits(limits) {
+   m_data_src = std::make_unique<DataSource_BERObject>(std::move(obj));
+   m_source = m_data_src.get();
+}
+
 /*
 * BER_Decoder Constructor
 */

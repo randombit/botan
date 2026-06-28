@@ -158,6 +158,11 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       */
       BOTAN_FUTURE_EXPLICIT BER_Decoder(BER_Object&& obj) : BER_Decoder(std::move(obj), nullptr) {}
 
+      /**
+      * Set up to BER decode the data in obj, taking ownership of its contents
+      */
+      BER_Decoder(BER_Object&& obj, Limits limits);
+
       BER_Decoder(const BER_Decoder& other) = delete;
       BER_Decoder(BER_Decoder&& other) noexcept;
 
