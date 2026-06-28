@@ -96,7 +96,6 @@ class BOTAN_PUBLIC_API(3, 0) Tempest_RNG final : public Stateful_RNG {
       void mix_state(const uint64_t data[4]);
       void init_from_key(const uint64_t key[4], const uint64_t nonce[2]);
 };
-
 }  // namespace Botan
 
 #endif
