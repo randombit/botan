@@ -2695,6 +2695,82 @@ int botan_x509_cert_verify(int* validation_result,
 BOTAN_FFI_EXPORT(2, 8) const char* botan_x509_cert_validation_status(int code);
 
 /*
+* X.509 Extensions
+*/
+
+/**
+* Get info about the IP Address Blocks extension
+* @param v4_count is set to the number of v4 families contained in the extension
+* @param v6_count is set to the number of v6 families
+* @returns 0 on success, negative number on error
+*/
+BOTAN_FFI_EXPORT(3, 12)
+int botan_x509_ext_ip_addr_blocks_get_counts(botan_x509_cert_t cert, size_t* v4_count, size_t* v6_count);
+
+/**
+* Get info about a specific family in the extension
+* @param v4_count must be set to the number of v4 families contained in the cert, obtained from `botan_x509_ext_ip_addr_blocks_get_counts`
+* @param ipv6 must be set to 1 if the family is an IPv6 family, 0 for IPv4 families
+* @param i is the (local) index for this family kind (the first v4 family is at i = 0, ipv6 = 0; the first v6 family is at i = 0, ipv6 = 1)
+* @param has_safi will be set to 1 if the family has an associated SAFI
+* @param safi will be set to the families' SAFI, if it has one
+* @param present is set to 1 if the family contains values (ranges), 0 if it is marked as "inherit"
+* @param count is set to the number of values (ranges), if they were present
+* @returns 0 on success, negative number on error
+*/
+BOTAN_FFI_EXPORT(3, 12)
+int botan_x509_ext_ip_addr_blocks_get_family(botan_x509_cert_t cert,
+                                             size_t v4_count,
+                                             int ipv6,
+                                             size_t i,
+                                             int* has_safi,
+                                             uint8_t* safi,
+                                             int* present,
+                                             size_t* count);
+
+/**
+* Get info about a specific range in the extension
+* @param v4_count must be set to the number of v4 families present
+* @param ipv6 must be set to 1 if the family is an IPv6 family, 0 for IPv4 families
+* @param i is the (local) index of the family, see `botan_x509_ext_ip_addr_blocks_get_family`
+* @param entry is the index of the range
+* @param min_out is set to the lower address of the range
+* @param max_out is set to the upper address of the range
+* @param out_len is set to the length of the addresses (4 for IPv4, 16 for IPv6)
+* @returns 0 on success, negative number on error
+*/
+BOTAN_FFI_EXPORT(3, 12)
+int botan_x509_ext_ip_addr_blocks_get_address(botan_x509_cert_t cert,
+                                              size_t v4_count,
+                                              int ipv6,
+                                              size_t i,
+                                              size_t entry,
+                                              uint8_t min_out[],
+                                              uint8_t max_out[],
+                                              size_t* out_len);
+
+/**
+* Get basic info about the AS Blocks extension
+* @param asnum must be set to 1 to get info about AS numbers, 0 for RDIs (the type)
+* @param present is set to 1 if the extension contains entries for the type, 0 if it is marked as "inherit"
+* @param count is set to number of entries for this type, if it was present
+* @returns 0 on success, negative number on error
+*/
+BOTAN_FFI_EXPORT(3, 12)
+int botan_x509_ext_as_blocks_get_info(botan_x509_cert_t cert, int asnum, int* present, size_t* count);
+
+/**
+* Get a specific entry from the extension
+* @param asnum Set to 1 to get info about AS numbers, 0 for RDIs (the type)
+* @param i The index of the entry to get
+* @param min is set to the min value of the range
+* @param max is set to the max value of the range
+* @returns 0 on success, negative number on error
+*/
+BOTAN_FFI_EXPORT(3, 12)
+int botan_x509_ext_as_blocks_get_entry_at(botan_x509_cert_t cert, int asnum, size_t i, uint32_t* min, uint32_t* max);
+
+/*
 * X.509 CRL
 **************************/
 
