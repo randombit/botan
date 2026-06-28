@@ -2197,6 +2197,58 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      static Test::Result test_stale_client_hello_does_not_replace_active_handshake() {
+         Test::Result result("DTLS stale ClientHello after server activation");
+
+         auto rng = Test::new_shared_rng("dtls-core-stale-client-hello");
+         auto policy = std::make_shared<Dtls_PSK_Policy>();
+         auto creds = std::make_shared<Dtls_PSK_Credentials>();
+         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+
+         std::vector<uint8_t> c2s;
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> client_recv;
+         std::vector<uint8_t> server_recv;
+
+         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
+         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
+
+         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
+         Botan::TLS::Client client(client_callbacks,
+                                   client_sessions,
+                                   creds,
+                                   policy,
+                                   rng,
+                                   Botan::TLS::Server_Information("localhost"),
+                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         deliver(result, "client hello 1", c2s, server);
+         deliver(result, "hello verify request", s2c, client);
+         const auto cookie_client_hello = c2s;
+         deliver(result, "client hello 2", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+         deliver(result, "client final flight", c2s, server);
+
+         result.test_is_true("server became active", server.is_active());
+         result.test_is_false("client is waiting for server final flight", client.is_active());
+         s2c.clear();  // simulate losing the server final flight
+
+         // A delayed retransmission of the cookie-bearing ClientHello has
+         // message_seq 1. It belongs to the completed handshake, whereas a
+         // genuinely new association starts at message_seq 0.
+         deliver_copy(result, "stale client hello 2", cookie_client_hello, server);
+         result.test_is_true("server remains active", server.is_active());
+         result.test_is_true("stale ClientHello replays the final server flight", !s2c.empty());
+         s2c.clear();
+
+         wait_for_timeout_retransmit(result, client, c2s);
+         deliver(result, "retransmitted client final flight", c2s, server);
+         result.test_is_true("client final flight still receives a response", !s2c.empty());
+
+         return result;
+      }
+
       static Test::Result test_retransmitted_final_flight_then_application_data(bool expect_resumption) {
          Test::Result result(expect_resumption ? "DTLS resumed handshake accepts app data"
                                                : "DTLS final flight retransmit before app data");
@@ -2570,6 +2622,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_lost_server_flight_retransmits(),
                  test_duplicate_server_flight_defers_to_timer(),
                  test_lost_server_final_flight_retransmits(),
+                 test_stale_client_hello_does_not_replace_active_handshake(),
                  test_reordered_retransmitted_final_flight(),
                  test_empty_old_handshake_fragment_does_not_retransmit(),
                  test_retransmitted_final_flight_then_application_data(false),

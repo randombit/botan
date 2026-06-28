@@ -24,6 +24,21 @@
 
 namespace Botan::TLS {
 
+namespace {
+
+bool is_new_dtls_association_client_hello(std::span<const uint8_t> record, Record_Type record_type) {
+   constexpr size_t DTLS_HANDSHAKE_HEADER_SIZE = 12;
+
+   // Every new DTLS handshake starts at message_seq 0. A cookie-bearing
+   // ClientHello uses message_seq 1, so one arriving late belongs to the
+   // previous handshake and must not replace the active association's state.
+   return record_type == Record_Type::Handshake && record.size() >= DTLS_HANDSHAKE_HEADER_SIZE &&
+          static_cast<Handshake_Type>(record[0]) == Handshake_Type::ClientHello &&
+          load_be<uint16_t>(&record[4], 0) == 0;
+}
+
+}  // namespace
+
 Channel_Impl_12::Channel_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
                                  const std::shared_ptr<Session_Manager>& session_manager,
                                  const std::shared_ptr<RandomNumberGenerator>& rng,
@@ -438,8 +453,7 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
       // DTLS retransmission from the previous handshake. The latter must not
       // create fresh pending state; it only asks us to replay our last flight.
       if(record_version.is_datagram_protocol() && epoch0_restart && m_sequence_numbers && m_active_state.has_value()) {
-         const bool starts_new_handshake = (record_type == Record_Type::Handshake && !record.empty() &&
-                                            static_cast<Handshake_Type>(record[0]) == Handshake_Type::ClientHello);
+         const bool starts_new_handshake = is_new_dtls_association_client_hello(record, record_type);
 
          if(!starts_new_handshake) {
             BOTAN_ASSERT(m_active_state->dtls_handshake_io(), "Have DTLS handshake IO for retransmission");
