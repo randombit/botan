@@ -78,11 +78,19 @@ std::vector<uint8_t> der_sequence_header(size_t contents_len) {
 }  // namespace ASN1
 
 DER_Encoder::DER_Encoder(secure_vector<uint8_t>& vec) {
-   m_append_output = [&vec](const uint8_t b[], size_t l) { vec.insert(vec.end(), b, b + l); };
+   m_append_output = [&vec](const uint8_t b[], size_t l) {
+      if(l > 0) {
+         vec.insert(vec.end(), b, b + l);
+      }
+   };
 }
 
 DER_Encoder::DER_Encoder(std::vector<uint8_t>& vec) {
-   m_append_output = [&vec](const uint8_t b[], size_t l) { vec.insert(vec.end(), b, b + l); };
+   m_append_output = [&vec](const uint8_t b[], size_t l) {
+      if(l > 0) {
+         vec.insert(vec.end(), b, b + l);
+      }
+   };
 }
 
 /*
@@ -108,7 +116,11 @@ void DER_Encoder::DER_Sequence::push_contents(DER_Encoder& der) {
 */
 void DER_Encoder::DER_Sequence::add_bytes(const uint8_t data[], size_t length) {
    if(m_sort_contents) {
-      m_set_contents.push_back(secure_vector<uint8_t>(data, data + length));
+      if(length > 0) {
+         m_set_contents.emplace_back(data, data + length);
+      } else {
+         m_set_contents.emplace_back();
+      }
    } else {
       m_contents += std::make_pair(data, length);
    }
