@@ -728,6 +728,18 @@ class RSA_KEM_Decryption_Operation final : public PK_Ops::KEM_Decryption_with_KD
       size_t encapsulated_key_length() const override { return public_modulus_bytes(); }
 
       void raw_kem_decrypt(std::span<uint8_t> out_shared_key, std::span<const uint8_t> encapsulated_key) override {
+         /*
+         * RFC 9690 Section 8
+         *
+         *    The RSA-KEM algorithm provides a fixed-length ciphertext. The recipient MUST
+         *    check that the received byte string is the expected length [...]
+         *
+         * This length check is based only on public information (the encapsulated key and
+         * the public modulus) so an early exit does not leak anything.
+         */
+         if(encapsulated_key.size() != public_modulus_bytes()) {
+            throw Decoding_Error("Invalid RSA-KEM ciphertext length");
+         }
          raw_op(out_shared_key, encapsulated_key);
       }
 };
