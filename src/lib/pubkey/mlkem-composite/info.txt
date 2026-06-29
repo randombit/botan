@@ -1,0 +1,22 @@
+<defines>
+MLKEM_COMPOSITE -> 20260615
+</defines>
+
+<module_info>
+name -> "ML-KEM-composite"
+</module_info>
+
+<header:public>
+mlkem_comp.h
+mlkem_comp_parameters.h
+</header:public>
+
+<header:internal>
+</header:internal>
+
+<requires>
+kyber
+rng
+hash
+asn1
+</requires>

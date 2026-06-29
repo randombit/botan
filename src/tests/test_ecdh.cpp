@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_ECDH)
    #include "test_pubkey.h"
+   #include <botan/asn1_obj.h>
    #include <botan/ec_group.h>
    #include <botan/ecdh.h>
    #include <botan/pubkey.h>
@@ -134,9 +135,50 @@ class ECDH_AllGroups_Tests : public Test {
       }
 };
 
+/**
+ * @brief Testing PK key decoding
+ */
+class ECC_Private_Key_Param_Decoding_Test : public Text_Based_Test {
+   public:
+      ECC_Private_Key_Param_Decoding_Test() : Text_Based_Test("pubkey/ecc-key-and-param.vec", "key,param,valid") {}
+
+   protected:
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) final {
+         const auto key_bin = vars.get_req_bin("key");
+         const auto param_str = vars.get_req_str("param");
+         const auto valid_pair = vars.get_req_bool("valid");
+
+         Test::Result result("ECC Private Key Decoding with external AlgorithmIdentifier parameter");
+         try {
+            const auto alg_id = [&]() {
+               const auto oid_ecdh = Botan::OID("1.3.132.1.12");
+               if(param_str.empty()) {
+                  return Botan::AlgorithmIdentifier(oid_ecdh,
+                                                    Botan::AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
+               }
+               const auto enc_param = Botan::OID(param_str).BER_encode();
+               return Botan::AlgorithmIdentifier(oid_ecdh, enc_param);
+            };
+            const auto create_key = [&]() { const Botan::ECDH_PrivateKey priv_key(alg_id(), key_bin); };
+            if(valid_pair) {
+               create_key();
+               result.test_success("deserialize valid combination of ECC private key and AlgorithmIdentifier");
+            } else {
+               result.test_throws(
+                  "exception when decoding invalid pair of private key group parameters and AlgorithmIdentifier",
+                  [&]() { create_key(); });
+            }
+         } catch(Botan::Exception& e) {
+            result.test_failure("Failed to deserialize key", e.what());
+         }
+         return result;
+      }
+};
+
 BOTAN_REGISTER_TEST("pubkey", "ecdh_kat", ECDH_KAT_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdh_keygen", ECDH_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdh_all_groups", ECDH_AllGroups_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecc_key_and_params", ECC_Private_Key_Param_Decoding_Test);
 
 #endif
 

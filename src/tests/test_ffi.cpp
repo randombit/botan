@@ -25,6 +25,10 @@
    #include <set>
 #endif
 
+#if BOTAN_HAS_MLKEM_COMPOSITE
+   #include <botan/mlkem_comp_parameters.h>
+#endif
+
 #if defined(BOTAN_HAS_X509)
    #include <botan/pkix_enums.h>
    #include <botan/pkix_types.h>
@@ -4789,6 +4793,33 @@ class FFI_ML_KEM_Test final : public FFI_KEM_Roundtrip_Test {
       std::vector<const char*> modes() const override { return {"ML-KEM-512", "ML-KEM-768", "ML-KEM-1024"}; }
 };
 
+class FFI_MLKEM_Composite_Test final : public FFI_KEM_Roundtrip_Test {
+   public:
+      std::string name() const override { return "FFI MLKEM-composite"; }
+
+   private:
+      const char* algo() const override { return Botan::MLKEM_Composite_Param::generic_algo_name; }
+
+      privkey_loader_fn_t private_key_load_function() const override { return botan_privkey_load_mlkem_composite; }
+
+      pubkey_loader_fn_t public_key_load_function() const override { return botan_pubkey_load_mlkem_composite; }
+
+      /* the type const char in the returned vector is not a good choice since it makes it impossible to dynamically generate the result */
+      std::vector<const char*> modes() const override {
+         return {
+   #if defined(BOTAN_HASH_RSA)
+            "MLKEM768-RSA2048-SHA3-256",
+   #endif
+   #if defined(BOTAN_HAS_X25519)
+               "MLKEM768-X25519-SHA3-256",
+   #endif
+   #if defined(BOTAN_HASH_ECDH) && defined(BOTAN_HAS_PCURVES_SECP256R1)
+               "MLKEM768-ECDH-P256-SHA3-256",
+   #endif
+         };
+      }
+};
+
 class FFI_FrodoKEM_Test final : public FFI_KEM_Roundtrip_Test {
    public:
       std::string name() const override { return "FFI FrodoKEM"; }
@@ -5755,6 +5786,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_kyber512", FFI_Kyber512_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_kyber768", FFI_Kyber768_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_kyber1024", FFI_Kyber1024_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ml_kem", FFI_ML_KEM_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_mlkem_composite", FFI_MLKEM_Composite_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ml_dsa", FFI_ML_DSA_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_slh_dsa", FFI_SLH_DSA_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_frodokem", FFI_FrodoKEM_Test);

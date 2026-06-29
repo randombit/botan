@@ -7,11 +7,16 @@
 #include "perf.h"
 
 #include <ostream>
+#include <vector>
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
    #include <botan/rng.h>
+#endif
+
+#if defined(BOTAN_HAS_MLKEM_COMPOSITE)
+   #include <botan/mlkem_comp_parameters.h>
 #endif
 
 namespace Botan_CLI {
@@ -45,7 +50,12 @@ class PerfTest_PK_KEM : public PerfTest {
          const auto msec = config.runtime();
          auto& rng = config.rng();
 
-         const std::string kdf = "KDF2(SHA-256)";  // arbitrary choice
+         std::string kdf = "KDF2(SHA-256)";  // arbitrary choice
+   #if BOTAN_HAS_MLKEM_COMPOSITE
+         if(algo == Botan::MLKEM_Composite_Param::generic_algo_name) {
+            kdf = "";
+         }
+   #endif
 
          auto keygen_timer = config.make_timer(nm, 1, "keygen");
 
@@ -127,6 +137,27 @@ class PerfTest_ML_KEM final : public PerfTest_PK_KEM {
 };
 
 BOTAN_REGISTER_PERF_TEST("ML-KEM", PerfTest_ML_KEM);
+
+#endif
+
+#if defined(BOTAN_HAS_MLKEM_COMPOSITE)
+
+class PerfTest_MLKEM_Composite final : public PerfTest_PK_KEM {
+   public:
+      std::string algo() const override { return std::string(Botan::MLKEM_Composite_Param::generic_algo_name); }
+
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
+         const auto all_params = Botan::MLKEM_Composite_Param::all_supported_param_sets();
+         std::vector<std::string> result;
+         result.reserve(all_params.size());
+         for(const auto& param : all_params) {
+            result.push_back(param.id_str());
+         }
+         return result;
+      }
+};
+
+BOTAN_REGISTER_PERF_TEST("MLKEM-Composite", PerfTest_MLKEM_Composite);
 
 #endif
 
