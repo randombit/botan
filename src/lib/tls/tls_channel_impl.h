@@ -85,11 +85,7 @@ class Channel_Impl {
       */
       virtual bool is_active() const = 0;
 
-      /**
-      * @return true iff timeout_check() should be polled to drive handshake
-      *         retransmissions.
-      */
-      virtual bool requires_timeout_check() const { return !is_handshake_complete(); }
+      virtual std::optional<std::chrono::milliseconds> next_retransmission_timeout() const { return std::nullopt; }
 
       /**
       * @return true iff the connection has been definitely closed

@@ -1764,7 +1764,10 @@ class DTLS_Core_Regression_Tests final : public Test {
       static void wait_for_timeout_retransmit(Test::Result& result,
                                               Botan::TLS::Channel& channel,
                                               std::vector<uint8_t>& outbound) {
-         if(!wait_until([&] { return channel.timeout_check() && !outbound.empty(); })) {
+         if(!wait_until([&] {
+               const auto timeout = channel.next_retransmission_timeout();
+               return timeout.has_value() && timeout->count() == 0 && channel.timeout_check() && !outbound.empty();
+            })) {
             result.test_failure("DTLS retransmit was not produced");
          }
       }
@@ -1804,6 +1807,8 @@ class DTLS_Core_Regression_Tests final : public Test {
          wait_for_timeout_retransmit(result, client, c2s);
          const auto retransmit_size = c2s.size();
 
+         result.test_is_true("next retransmission timeout remains available",
+                             client.next_retransmission_timeout().has_value());
          result.test_is_false("immediate second timeout is suppressed", client.timeout_check());
          result.test_sz_eq("no immediate second retransmit", c2s.size(), retransmit_size);
 
@@ -2318,6 +2323,8 @@ class DTLS_Core_Regression_Tests final : public Test {
          deliver(result, "server application data", s2c, client);
          result.test_bin_eq("client received server application data", client_recv, app_data);
 
+         result.test_is_false("client no longer needs timeout checks",
+                              client.next_retransmission_timeout().has_value());
          result.test_is_true("client stops retransmitting after peer application data",
                              remains_false_for([&] { return client.timeout_check(); }, std::chrono::milliseconds(20)));
 
@@ -2444,6 +2451,8 @@ class DTLS_Core_Regression_Tests final : public Test {
 
          result.test_is_true("client remains active after renegotiation", client.is_active());
          result.test_is_true("server remains active after renegotiation", server.is_active());
+         result.test_is_true("client tracks the new final flight", client.next_retransmission_timeout().has_value());
+         result.test_is_true("server tracks the new final flight", server.next_retransmission_timeout().has_value());
 
          return result;
       }

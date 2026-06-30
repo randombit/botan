@@ -188,7 +188,7 @@ bool Datagram_Handshake_IO::have_more_data() const {
    return next != m_messages.end() && next->second.complete();
 }
 
-void Datagram_Handshake_IO::conclude_flight() {
+void Datagram_Handshake_IO::finalize_handshake() {
    // Keep an empty trailing flight to mean "we are waiting for the peer".
    // Retransmission then replays the previous, completed flight instead of
    // appending to it.
@@ -198,17 +198,8 @@ void Datagram_Handshake_IO::conclude_flight() {
 }
 
 bool Datagram_Handshake_IO::timeout_check() {
-   if(m_last_write == 0 || (m_flights.size() > 1 && !m_flights.rbegin()->empty())) {
-      /*
-      If we haven't written anything yet obviously no timeout.
-      Also no timeout possible if we are mid-flight,
-      */
-      return false;
-   }
-
-   const uint64_t ms_since_write = steady_clock_ms() - m_last_write;
-
-   if(ms_since_write < m_next_timeout) {
+   const auto timeout = next_retransmission_timeout();
+   if(!timeout || timeout->count() > 0) {
       return false;
    }
 
@@ -218,6 +209,21 @@ bool Datagram_Handshake_IO::timeout_check() {
    m_last_write = steady_clock_ms();
    m_next_timeout = std::min(2 * m_next_timeout, m_max_timeout);
    return true;
+}
+
+std::optional<std::chrono::milliseconds> Datagram_Handshake_IO::next_retransmission_timeout() const {
+   // Without an outgoing flight, or while constructing one, there is nothing
+   // complete that timeout_check() could retransmit.
+   if(m_last_write == 0 || (m_flights.size() > 1 && !m_flights.rbegin()->empty())) {
+      return std::nullopt;
+   }
+
+   const uint64_t ms_since_write = steady_clock_ms() - m_last_write;
+   if(ms_since_write >= m_next_timeout) {
+      return std::chrono::milliseconds(0);
+   }
+
+   return std::chrono::milliseconds(m_next_timeout - ms_since_write);
 }
 
 void Datagram_Handshake_IO::add_record(const uint8_t record[],

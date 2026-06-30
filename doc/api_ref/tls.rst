@@ -255,12 +255,15 @@ available:
      this connection and the connection has not been subsequently
      closed.
 
-   .. cpp:function:: bool requires_timeout_check()
+   .. cpp:function:: std::optional<std::chrono::milliseconds> next_retransmission_timeout()
 
-      Returns true if ``timeout_check`` should be polled to drive DTLS
-      handshake retransmissions. This may remain true briefly after
-      ``is_active`` becomes true, because a DTLS peer may not have
-      received the final handshake flight yet.
+      Returns the remaining time until a call to ``timeout_check`` might
+      retransmit DTLS handshake data. A zero duration means that a
+      retransmission is due. If ``std::nullopt`` is returned, no timeout check
+      is currently needed.
+
+      This may return a duration briefly after ``is_active`` becomes true,
+      because a DTLS peer may not have received the final handshake flight yet.
 
    .. cpp:function:: bool is_closed()
 

@@ -119,8 +119,8 @@ bool Client::is_active() const {
    return m_impl->is_active();
 }
 
-bool Client::requires_timeout_check() const {
-   return m_impl->requires_timeout_check();
+std::optional<std::chrono::milliseconds> Client::next_retransmission_timeout() const {
+   return m_impl->next_retransmission_timeout();
 }
 
 bool Client::is_closed() const {

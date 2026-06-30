@@ -87,7 +87,7 @@ class Channel_Impl_12 : public Channel_Impl {
       */
       bool is_active() const override;
 
-      bool requires_timeout_check() const override;
+      std::optional<std::chrono::milliseconds> next_retransmission_timeout() const override;
 
       /**
       * @return true iff the connection has been definitely closed
@@ -200,6 +200,10 @@ class Channel_Impl_12 : public Channel_Impl {
 
       void reset_state();
 
+      class Handshake_IO* retransmission_io();
+
+      const class Handshake_IO* retransmission_io() const;
+
       Connection_Sequence_Numbers& sequence_numbers() const;
 
       std::shared_ptr<Connection_Cipher_State> read_cipher_state_epoch(uint16_t epoch) const;
@@ -246,7 +250,6 @@ class Channel_Impl_12 : public Channel_Impl {
       secure_vector<uint8_t> m_record_buf;
 
       bool m_has_been_closed;
-      bool m_dtls_peer_traffic_seen = true;
 
       std::optional<Active_Connection_State_12> m_active_state;
 };
