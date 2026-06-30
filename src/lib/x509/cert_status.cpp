@@ -33,6 +33,8 @@ const char* to_string(Certificate_Status_Code code) {
          return "Trusted certificate has expired";
       case Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED:
          return "OCSP issuer is not trustworthy";
+      case Certificate_Status_Code::EMPTY_DIRECTORYNAME:
+         return "DirectoryName was empty";
 
       case Certificate_Status_Code::NO_REVOCATION_DATA:
          return "No revocation data";
