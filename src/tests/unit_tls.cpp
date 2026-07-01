@@ -1520,6 +1520,7 @@ class Dtls_PSK_Credentials final : public Botan::Credentials_Manager {
          }
 
          if(type == "tls-server" && context == "dtls-cookie-secret") {
+            ++m_dtls_cookie_secret_requests;
             return Botan::SymmetricKey("4AEA5EAD279CADEB537A594DA0E9DE3A");
          }
 
@@ -1529,6 +1530,11 @@ class Dtls_PSK_Credentials final : public Botan::Credentials_Manager {
 
          throw Test_Error("No PSK set for " + type + "/" + context);
       }
+
+      size_t dtls_cookie_secret_requests() const { return m_dtls_cookie_secret_requests; }
+
+   private:
+      size_t m_dtls_cookie_secret_requests = 0;
 };
 
 class Dtls_PSK_Policy final : public Botan::TLS::Policy {
@@ -2254,6 +2260,86 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      static Test::Result test_epoch0_client_hello_retransmit_while_restart_pending() {
+         Test::Result result("DTLS epoch-zero ClientHello retransmit while restart pending");
+
+         auto rng = Test::new_shared_rng("dtls-core-pending-epoch0-restart");
+         auto policy = std::make_shared<Dtls_PSK_Policy>();
+         auto creds = std::make_shared<Dtls_PSK_Credentials>();
+         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> server_recv;
+         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
+         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
+
+         std::vector<uint8_t> c1_c2s;
+         std::vector<uint8_t> client1_recv;
+         auto client1_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c1_c2s, client1_recv);
+         Botan::TLS::Client client1(client1_callbacks,
+                                    client_sessions,
+                                    creds,
+                                    policy,
+                                    rng,
+                                    Botan::TLS::Server_Information("localhost"),
+                                    Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         deliver(result, "client 1 hello", c1_c2s, server);
+         deliver(result, "client 1 hello verify request", s2c, client1);
+         deliver(result, "client 1 cookie-bearing hello", c1_c2s, server);
+         deliver(result, "client 1 server handshake flight", s2c, client1);
+         deliver(result, "client 1 final flight", c1_c2s, server);
+         deliver(result, "client 1 server final flight", s2c, client1);
+
+         result.test_is_true("first client became active", client1.is_active());
+         result.test_is_true("server became active for first client", server.is_active());
+         result.test_sz_eq("server established one session", server_callbacks->sessions_established(), 1);
+
+         std::vector<uint8_t> c2_c2s;
+         std::vector<uint8_t> client2_recv;
+         auto client2_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2_c2s, client2_recv);
+         Botan::TLS::Client client2(client2_callbacks,
+                                    client_sessions,
+                                    creds,
+                                    policy,
+                                    rng,
+                                    Botan::TLS::Server_Information("localhost"),
+                                    Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         const auto epoch0_client_hello = c2_c2s;
+         deliver(result, "client 2 epoch-zero hello", c2_c2s, server);
+         const auto hello_verify_request = s2c;
+         const auto cookie_secret_requests = creds->dtls_cookie_secret_requests();
+         s2c.clear();
+
+         // Once the pending handshake consumes message_seq 0, receiving it
+         // again must replay HelloVerifyRequest rather than restart processing.
+         deliver_copy(result, "retransmitted client 2 epoch-zero hello", epoch0_client_hello, server);
+         result.test_is_true("pending restart replays HelloVerifyRequest",
+                             contains_dtls_handshake_type(s2c, Botan::TLS::Handshake_Type::HelloVerifyRequest));
+         result.test_sz_eq("retransmitted ClientHello does not establish another session",
+                           server_callbacks->sessions_established(),
+                           1);
+         result.test_sz_eq("retransmitted ClientHello does not repeat cookie processing",
+                           creds->dtls_cookie_secret_requests(),
+                           cookie_secret_requests);
+         result.test_is_true("previous association remains active during restart", server.is_active());
+         s2c.clear();
+
+         deliver_copy(result, "client 2 hello verify request", hello_verify_request, client2);
+         deliver(result, "client 2 cookie-bearing hello", c2_c2s, server);
+         deliver(result, "client 2 server handshake flight", s2c, client2);
+         deliver(result, "client 2 final flight", c2_c2s, server);
+         deliver(result, "client 2 server final flight", s2c, client2);
+
+         result.test_is_true("second client became active", client2.is_active());
+         result.test_is_true("server became active for second client", server.is_active());
+         result.test_sz_eq("server established the replacement session", server_callbacks->sessions_established(), 2);
+
+         return result;
+      }
+
       static Test::Result test_retransmitted_final_flight_then_application_data(bool expect_resumption) {
          Test::Result result(expect_resumption ? "DTLS resumed handshake accepts app data"
                                                : "DTLS final flight retransmit before app data");
@@ -2632,6 +2718,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_duplicate_server_flight_defers_to_timer(),
                  test_lost_server_final_flight_retransmits(),
                  test_stale_client_hello_does_not_replace_active_handshake(),
+                 test_epoch0_client_hello_retransmit_while_restart_pending(),
                  test_reordered_retransmitted_final_flight(),
                  test_empty_old_handshake_fragment_does_not_retransmit(),
                  test_retransmitted_final_flight_then_application_data(false),

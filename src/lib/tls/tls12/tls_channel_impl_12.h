@@ -27,6 +27,7 @@ namespace TLS {
 class Callbacks;
 class Connection_Cipher_State;
 class Connection_Sequence_Numbers;
+class Handshake_IO;
 class Handshake_State;
 class Handshake_Message;
 class Client_Hello_12;
@@ -158,7 +159,7 @@ class Channel_Impl_12 : public Channel_Impl {
                                          bool epoch0_restart) = 0;
 
       Handshake_State& create_handshake_state(Protocol_Version version);
-      virtual std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<class Handshake_IO> io) = 0;
+      virtual std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) = 0;
 
       void inspect_handshake_message(const Handshake_Message& msg);
 
@@ -200,9 +201,9 @@ class Channel_Impl_12 : public Channel_Impl {
 
       void reset_state();
 
-      class Handshake_IO* retransmission_io();
+      Handshake_IO* retransmission_io();
 
-      const class Handshake_IO* retransmission_io() const;
+      const Handshake_IO* retransmission_io() const;
 
       Connection_Sequence_Numbers& sequence_numbers() const;
 

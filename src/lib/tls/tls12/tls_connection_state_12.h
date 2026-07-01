@@ -85,9 +85,9 @@ class Active_Connection_State_12 final {
 
       // Protected application data proves that the peer processed our final
       // handshake flight, so timeout-driven replay is no longer necessary.
-      bool peer_has_progressed() const { return m_peer_has_progressed; }
+      bool peer_sent_protected_application_data() const { return m_peer_sent_protected_application_data; }
 
-      void mark_peer_as_progressed() { m_peer_has_progressed = true; }
+      void mark_peer_as_having_sent_protected_application_data() { m_peer_sent_protected_application_data = true; }
 
    private:
       Protocol_Version m_version;
@@ -106,7 +106,7 @@ class Active_Connection_State_12 final {
       std::vector<uint8_t> m_server_finished_verify_data;
       bool m_supports_extended_master_secret = false;
       std::unique_ptr<Datagram_Handshake_IO> m_dtls_handshake_io;
-      bool m_peer_has_progressed = false;
+      bool m_peer_sent_protected_application_data = false;
 };
 
 }  // namespace Botan::TLS
