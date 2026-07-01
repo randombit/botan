@@ -27,6 +27,7 @@ namespace TLS {
 class Callbacks;
 class Connection_Cipher_State;
 class Connection_Sequence_Numbers;
+class Handshake_IO;
 class Handshake_State;
 class Handshake_Message;
 class Client_Hello_12;
@@ -87,6 +88,8 @@ class Channel_Impl_12 : public Channel_Impl {
       */
       bool is_active() const override;
 
+      std::optional<std::chrono::milliseconds> next_retransmission_timeout() const override;
+
       /**
       * @return true iff the connection has been definitely closed
       */
@@ -142,10 +145,8 @@ class Channel_Impl_12 : public Channel_Impl {
       bool secure_renegotiation_supported() const override;
 
       /**
-      * Perform a handshake timeout check. This does nothing unless
-      * this is a DTLS channel with a pending handshake state, in
-      * which case we check for timeout and potentially retransmit
-      * handshake packets.
+      * Perform a handshake timeout check. This does nothing unless this is a
+      * DTLS channel that still needs handshake retransmission handling.
       */
       bool timeout_check() override;
 
@@ -158,7 +159,7 @@ class Channel_Impl_12 : public Channel_Impl {
                                          bool epoch0_restart) = 0;
 
       Handshake_State& create_handshake_state(Protocol_Version version);
-      virtual std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<class Handshake_IO> io) = 0;
+      virtual std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) = 0;
 
       void inspect_handshake_message(const Handshake_Message& msg);
 
@@ -199,6 +200,10 @@ class Channel_Impl_12 : public Channel_Impl {
          Connection_Cipher_State* cipher_state, uint16_t epoch, Record_Type type, const uint8_t input[], size_t length);
 
       void reset_state();
+
+      Handshake_IO* retransmission_io();
+
+      const Handshake_IO* retransmission_io() const;
 
       Connection_Sequence_Numbers& sequence_numbers() const;
 

@@ -255,6 +255,16 @@ available:
      this connection and the connection has not been subsequently
      closed.
 
+   .. cpp:function:: std::optional<std::chrono::milliseconds> next_retransmission_timeout()
+
+      Returns the remaining time until a call to ``timeout_check`` might
+      retransmit DTLS handshake data. A zero duration means that a
+      retransmission is due. If ``std::nullopt`` is returned, no timeout check
+      is currently needed.
+
+      This may return a duration briefly after ``is_active`` becomes true,
+      because a DTLS peer may not have received the final handshake flight yet.
+
    .. cpp:function:: bool is_closed()
 
       Returns true if and only if either a close notification or a
@@ -275,10 +285,10 @@ available:
    .. cpp:function:: bool timeout_check()
 
       This function does nothing unless the channel represents a DTLS
-      connection and a handshake is actively in progress. In this case
-      it will check the current timeout state and potentially initiate
-      retransmission of handshake packets. Returns true if a timeout
-      condition occurred.
+      connection and a handshake still needs retransmission handling. This
+      includes handshakes in progress and locally active sessions whose final
+      handshake flight may not have reached the peer yet. Returns true if a
+      timeout condition occurred and handshake packets were retransmitted.
 
    .. cpp:function:: void renegotiate(bool force_full_renegotiation = false)
 

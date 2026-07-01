@@ -10,9 +10,11 @@
 
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>
+#include <chrono>
 #include <deque>
 #include <functional>
 #include <map>
+#include <optional>
 #include <set>
 #include <utility>
 #include <vector>
@@ -49,6 +51,8 @@ class Handshake_IO {
       virtual std::vector<uint8_t> send_under_epoch(const Handshake_Message& msg, uint16_t epoch) = 0;
 
       virtual bool timeout_check() = 0;
+
+      virtual std::optional<std::chrono::milliseconds> next_retransmission_timeout() const = 0;
 
       virtual bool have_more_data() const = 0;
 
@@ -88,6 +92,8 @@ class Stream_Handshake_IO final : public Handshake_IO {
       Protocol_Version initial_record_version() const override;
 
       bool timeout_check() override { return false; }
+
+      std::optional<std::chrono::milliseconds> next_retransmission_timeout() const override { return std::nullopt; }
 
       bool have_more_data() const override { return !m_queue.empty(); }
 
@@ -133,6 +139,8 @@ class Datagram_Handshake_IO final : public Handshake_IO {
 
       bool timeout_check() override;
 
+      std::optional<std::chrono::milliseconds> next_retransmission_timeout() const override;
+
       bool have_more_data() const override;
 
       std::vector<uint8_t> send(const Handshake_Message& msg) override;
@@ -144,10 +152,47 @@ class Datagram_Handshake_IO final : public Handshake_IO {
 
       void add_record(const uint8_t record[], size_t record_len, Record_Type type, uint64_t sequence_number) override;
 
+      // Process previous-flight records after this IO object was retained by
+      // an active DTLS association for final-flight recovery.
+      void add_retransmitted_record(const uint8_t record[],
+                                    size_t record_len,
+                                    Record_Type type,
+                                    uint64_t sequence_number);
+
       std::pair<Handshake_Type, std::vector<uint8_t>> get_next_record(bool expecting_ccs,
                                                                       size_t max_message_size) override;
 
+      /**
+      * Finalize the terminal outgoing handshake flight after channel
+      * activation. Intermediate flights are finalized implicitly when the
+      * peer's next handshake message is requested.
+      */
+      void finalize_handshake();
+
    private:
+      void add_record(const uint8_t record[],
+                      size_t record_len,
+                      Record_Type record_type,
+                      uint64_t record_sequence,
+                      bool retransmitted_flight);
+
+      bool reassemble_retransmitted_fragment(const uint8_t fragment[],
+                                             size_t fragment_length,
+                                             size_t fragment_offset,
+                                             uint16_t epoch,
+                                             Handshake_Type msg_type,
+                                             size_t msg_length,
+                                             uint16_t message_seq);
+
+      bool process_previous_handshake_fragment(const uint8_t fragment[],
+                                               size_t fragment_length,
+                                               size_t fragment_offset,
+                                               uint16_t epoch,
+                                               Handshake_Type msg_type,
+                                               size_t msg_length,
+                                               uint16_t message_seq,
+                                               bool retransmitted_flight);
+
       void retransmit_flight(size_t flight);
       void retransmit_last_flight();
 
@@ -215,6 +260,14 @@ class Datagram_Handshake_IO final : public Handshake_IO {
       std::map<uint16_t, Handshake_Reassembly> m_messages;
       size_t m_pending_reassembly_bytes = 0;
       std::set<uint16_t> m_ccs_epochs;
+
+      // A retransmitted final flight may deliver CCS and Finished in either
+      // order. Other terminal messages may themselves be fragmented.
+      std::optional<uint16_t> m_retransmitted_ccs_epoch;
+      std::optional<uint16_t> m_retransmitted_finished_epoch;
+      std::map<Handshake_Type, std::pair<uint16_t, Handshake_Reassembly>> m_retransmitted_messages;
+      bool m_retransmitted_server_hello_complete = false;
+      bool m_retransmitted_server_hello_done_complete = false;
       std::vector<std::vector<uint16_t>> m_flights;
       std::map<uint16_t, Message_Info> m_flight_data;
 
