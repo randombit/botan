@@ -109,10 +109,10 @@
   d=10, l=  94:           SEQUENCE
   d=11, l=  58:            SEQUENCE
   d=12, l=   8:             OBJECT                          PKIX.CertificateAuthorityIssuers [1.3.6.1.5.5.7.48.2]
-  d=12, l=  12:             [6] context                     http://postarca.posta.si/files/POSTArCA-G2.cer
+  d=12, l=  46:             [6] context                     http://postarca.posta.si/files/POSTArCA-G2.cer
   d=11, l=  32:            SEQUENCE
   d=12, l=   8:             OBJECT                          PKIX.OCSP [1.3.6.1.5.5.7.48.1]
-  d=12, l=  12:             [6] context                     http://ocsp.posta.si
+  d=12, l=  20:             [6] context                     http://ocsp.posta.si
   d= 8, l=  27:         SEQUENCE
   d= 9, l=   3:          OBJECT                             X509v3.SubjectAlternativeName [2.5.29.17]
   d= 9, l=  20:          OCTET STRING
@@ -125,7 +125,7 @@
   d=11, l= 201:            SEQUENCE
   d=12, l= 198:             cons [0] context
   d=13, l= 195:              cons [0] context
-  d=14, l=  14:               [6] context                   http://postarca.posta.si/crl/postarca-g2.crl
+  d=14, l=  44:               [6] context                   http://postarca.posta.si/crl/postarca-g2.crl
   d=14, l= 146:               [6] context                   8681926C6461703A2F2F706F7374617263612E706F7374612E73692F636E3D504F53544172434125323047322C6F7267616E697A6174696F6E4964656E7469666965723D56415453492D32353032383032322C6F3D504F535441253230534C4F56454E494A45253230642E6F2E6F2E2C633D53493F63657274696669636174655265766F636174696F6E4C6973743B62696E617279
   d=11, l= 117:            SEQUENCE
   d=12, l= 115:             cons [0] context
@@ -252,10 +252,10 @@
   d=10, l=  96:           SEQUENCE
   d=11, l=  60:            SEQUENCE
   d=12, l=   8:             OBJECT                          PKIX.CertificateAuthorityIssuers [1.3.6.1.5.5.7.48.2]
-  d=12, l=  12:             [6] context                     http://postarca.posta.si/files/POSTArCA-Root.cer
+  d=12, l=  48:             [6] context                     http://postarca.posta.si/files/POSTArCA-Root.cer
   d=11, l=  32:            SEQUENCE
   d=12, l=   8:             OBJECT                          PKIX.OCSP [1.3.6.1.5.5.7.48.1]
-  d=12, l=  12:             [6] context                     http://ocsp.posta.si
+  d=12, l=  20:             [6] context                     http://ocsp.posta.si
   d= 8, l= 341:         SEQUENCE
   d= 9, l=   3:          OBJECT                             X509v3.CRLDistributionPoints [2.5.29.31]
   d= 9, l= 332:          OCTET STRING
@@ -263,7 +263,7 @@
   d=11, l= 205:            SEQUENCE
   d=12, l= 202:             cons [0] context
   d=13, l= 199:              cons [0] context
-  d=14, l=  14:               [6] context                   http://postarca.posta.si/crl/POSTArCA-Root.crl
+  d=14, l=  46:               [6] context                   http://postarca.posta.si/crl/POSTArCA-Root.crl
   d=14, l= 148:               [6] context                   8681946C6461703A2F2F706F7374617263612E706F7374612E73692F636E3D504F535441724341253230526F6F742C6F7267616E697A6174696F6E4964656E7469666965723D56415453492D32353032383032322C6F3D504F535441253230534C4F56454E494A45253230642E6F2E6F2E2C633D53493F63657274696669636174655265766F636174696F6E4C6973743B62696E617279
   d=11, l= 118:            SEQUENCE
   d=12, l= 116:             cons [0] context
