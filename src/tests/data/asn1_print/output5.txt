@@ -65,13 +65,13 @@
   d= 5, l=   3:      OBJECT                                 X509v3.SubjectAlternativeName [2.5.29.17]
   d= 5, l= 145:      OCTET STRING
   d= 6, l= 142:       SEQUENCE
-  d= 7, l=   7:        [2] context                          privacy.microsoft.com
-  d= 7, l=   7:        [2] context                          c.s-microsoft.com
-  d= 7, l=   7:        [2] context                          microsoft.com
-  d= 7, l=   7:        [2] context                          i.s-microsoft.com
-  d= 7, l=   7:        [2] context                          staticview.microsoft.com
-  d= 7, l=   7:        [2] context                          www.microsoft.com
-  d= 7, l=   7:        [2] context                          wwwqa.microsoft.com
+  d= 7, l=  21:        [2] context                          privacy.microsoft.com
+  d= 7, l=  17:        [2] context                          c.s-microsoft.com
+  d= 7, l=  13:        [2] context                          microsoft.com
+  d= 7, l=  17:        [2] context                          i.s-microsoft.com
+  d= 7, l=  24:        [2] context                          staticview.microsoft.com
+  d= 7, l=  17:        [2] context                          www.microsoft.com
+  d= 7, l=  19:        [2] context                          wwwqa.microsoft.com
   d= 4, l=   9:     SEQUENCE
   d= 5, l=   3:      OBJECT                                 X509v3.BasicConstraints [2.5.29.19]
   d= 5, l=   2:      OCTET STRING
@@ -113,17 +113,17 @@
   d= 7, l=  32:        SEQUENCE
   d= 8, l=  30:         cons [0] context
   d= 9, l=  28:          cons [0] context
-  d=10, l=  10:           [6] context                       http://ss.symcb.com/ss.crl
+  d=10, l=  26:           [6] context                       http://ss.symcb.com/ss.crl
   d= 4, l=  87:     SEQUENCE
   d= 5, l=   8:      OBJECT                                 PKIX.AuthorityInformationAccess [1.3.6.1.5.5.7.1.1]
   d= 5, l=  75:      OCTET STRING
   d= 6, l=  73:       SEQUENCE
   d= 7, l=  31:        SEQUENCE
   d= 8, l=   8:         OBJECT                              PKIX.OCSP [1.3.6.1.5.5.7.48.1]
-  d= 8, l=   8:         [6] context                         http://ss.symcd.com
+  d= 8, l=  19:         [6] context                         http://ss.symcd.com
   d= 7, l=  38:        SEQUENCE
   d= 8, l=   8:         OBJECT                              PKIX.CertificateAuthorityIssuers [1.3.6.1.5.5.7.48.2]
-  d= 8, l=   8:         [6] context                         http://ss.symcb.com/ss.crt
+  d= 8, l=  26:         [6] context                         http://ss.symcb.com/ss.crt
   d= 4, l= 384:     SEQUENCE
   d= 5, l=  10:      OBJECT                                 1.3.6.1.4.1.11129.2.4.2
   d= 5, l= 368:      OCTET STRING
