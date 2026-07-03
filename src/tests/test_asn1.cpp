@@ -126,6 +126,17 @@ Test::Result test_ber_standalone_eoc_limits() {
       result.test_failure(Botan::fmt("standalone EOC unexpectedly rejected: {}", e.what()));
    }
 
+   // A constructed encoding of the EOC tag (20 00) is not an EOC marker at
+   // all; it is rejected in every mode, including with the leniency flag
+   const std::vector<uint8_t> cons_eoc = {0x20, 0x00};
+
+   for(auto limits : {Botan::BER_Decoder::Limits::DER(),
+                      Botan::BER_Decoder::Limits::BER(),
+                      Botan::BER_Decoder::Limits::BER().with_standalone_eoc_allowed()}) {
+      result.test_throws<Botan::Decoding_Error>("constructed EOC tag rejected",
+                                                [&]() { count_objects(cons_eoc, limits); });
+   }
+
    return result;
 }
 

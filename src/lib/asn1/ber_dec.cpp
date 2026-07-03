@@ -38,6 +38,12 @@ size_t decode_tag(DataSource* ber, ASN1_Type& type_tag, ASN1_Class& class_tag) {
    if((*b & 0x1F) != 0x1F) {
       type_tag = ASN1_Type(*b & 0x1F);
       class_tag = ASN1_Class(*b & 0xE0);
+      // The EOC marker is primitive; a constructed universal tag 0 has no
+      // valid meaning and would otherwise bypass the EOC handling, which
+      // matches on (Eoc, Universal) exactly
+      if(type_tag == ASN1_Type::Eoc && class_tag == ASN1_Class::Constructed) {
+         throw BER_Decoding_Error("EOC tag with constructed encoding");
+      }
       return 1;
    }
 
@@ -199,6 +205,12 @@ size_t peek_tag(DataSource* src, size_t offset, ASN1_Type& type_tag, ASN1_Class&
    if((b & 0x1F) != 0x1F) {
       type_tag = ASN1_Type(b & 0x1F);
       class_tag = ASN1_Class(b & 0xE0);
+      // The EOC marker is primitive; a constructed universal tag 0 has no
+      // valid meaning and would otherwise bypass the EOC handling, which
+      // matches on (Eoc, Universal) exactly
+      if(type_tag == ASN1_Type::Eoc && class_tag == ASN1_Class::Constructed) {
+         throw BER_Decoding_Error("EOC tag with constructed encoding");
+      }
       return 1;
    }
 
@@ -249,7 +261,8 @@ size_t peek_tag(DataSource* src, size_t offset, ASN1_Type& type_tag, ASN1_Class&
 * Returns the decoded length and sets field_size to the number of bytes consumed.
 * For indefinite-length encoding, recursively scans ahead to find the EOC marker.
 */
-size_t peek_length(DataSource* src, size_t offset, size_t& field_size, size_t allow_indef, bool constructed, bool der_mode) {
+size_t peek_length(
+   DataSource* src, size_t offset, size_t& field_size, size_t allow_indef, bool constructed, bool der_mode) {
    uint8_t b = 0;
    if(src->peek(&b, 1, offset) == 0) {
       throw BER_Decoding_Error("Length field not found");
@@ -310,7 +323,8 @@ size_t find_eoc(DataSource* src, size_t base_offset, size_t allow_indef) {
       }
 
       size_t length_size = 0;
-      const size_t item_size = peek_length(src, offset + tag_size, length_size, allow_indef, is_constructed(class_tag), false);
+      const size_t item_size =
+         peek_length(src, offset + tag_size, length_size, allow_indef, is_constructed(class_tag), false);
 
       if(auto new_offset = checked_add(offset, tag_size, length_size, item_size)) {
          offset = new_offset.value();

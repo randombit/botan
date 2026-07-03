@@ -124,6 +124,15 @@ Input = 000002010A
 ResultDER = Detected EOC marker in DER structure
 ResultBER = OK
 
+# A constructed encoding of the EOC tag (0x20), rejected even in BER and even
+# when standalone EOC markers are tolerated
+Input = 2000
+ResultBER = EOC tag with constructed encoding
+
+# Same, with declared content
+Input = 20050102030405
+ResultBER = EOC tag with constructed encoding
+
 # Valid OID: 1.2.840.113549.1.1.11 (sha256WithRSAEncryption)
 Input = 06092A864886F70D01010B
 ResultBER = OK
