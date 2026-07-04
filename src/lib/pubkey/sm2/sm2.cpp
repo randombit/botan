@@ -239,26 +239,32 @@ bool SM2_Verification_Operation::is_valid_signature(std::span<const uint8_t> sig
    return false;
 }
 
-void parse_sm2_param_string(std::string_view params, std::string& userid, std::string& hash) {
-   // GM/T 0009-2012 specifies this as the default userid
-   const std::string default_userid = "1234567812345678";
-
-   // defaults:
-   userid = default_userid;
-   hash = "SM3";
+std::pair<std::string, std::string> parse_sm2_param_string(std::string_view params) {
+   const std::string default_hash = "SM3";
 
    /*
    * SM2 parameters have the following possible formats:
    * Ident [since 2.2.0]
    * Ident,Hash [since 2.3.0]
+   *
+   * Historically a completely empty parameter string was treated as
+   * if the identity was empty. This probably should have instead been
+   * treated as if it was the "default userid" ("1234567812345678") but
+   * there was a bug and it wasn't.
+   *
+   * TODO(Botan4) evaluate if this should be changed
    */
+   if(params.empty()) {
+      return std::make_pair(std::string(), default_hash);
+   }
 
    auto comma = params.find(',');
    if(comma == std::string::npos) {
-      userid = params;
+      return std::make_pair(std::string(params), default_hash);
    } else {
-      userid = params.substr(0, comma);
-      hash = params.substr(comma + 1, std::string::npos);
+      const auto userid = params.substr(0, comma);
+      const auto hash = params.substr(comma + 1, std::string::npos);
+      return std::make_pair(std::string(userid), std::string(hash));
    }
 }
 
@@ -271,9 +277,7 @@ std::unique_ptr<Private_Key> SM2_PublicKey::generate_another(RandomNumberGenerat
 std::unique_ptr<PK_Ops::Verification> SM2_PublicKey::create_verification_op(std::string_view params,
                                                                             std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
-      std::string userid;
-      std::string hash;
-      parse_sm2_param_string(params, userid, hash);
+      const auto [userid, hash] = parse_sm2_param_string(params);
       return std::make_unique<SM2_Verification_Operation>(*this, userid, hash);
    }
 
@@ -284,9 +288,7 @@ std::unique_ptr<PK_Ops::Signature> SM2_PrivateKey::create_signature_op(RandomNum
                                                                        std::string_view params,
                                                                        std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
-      std::string userid;
-      std::string hash;
-      parse_sm2_param_string(params, userid, hash);
+      const auto [userid, hash] = parse_sm2_param_string(params);
       return std::make_unique<SM2_Signature_Operation>(*this, userid, hash);
    }
 
