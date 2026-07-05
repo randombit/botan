@@ -96,6 +96,110 @@ Test::Result test_ber_eoc_decoding_limits() {
    return result;
 }
 
+Test::Result test_ber_standalone_eoc_limits() {
+   Test::Result result("BER standalone EOC handling");
+
+   // Empty SEQUENCE (30 00) followed by a standalone EOC marker (00 00) that
+   // does not terminate any indefinite-length encoding.
+   const std::vector<uint8_t> wire = {0x30, 0x00, 0x00, 0x00};
+
+   auto count_objects = [](const std::vector<uint8_t>& in, Botan::BER_Decoder::Limits limits) {
+      Botan::BER_Decoder dec(in, limits);
+      size_t objects = 0;
+      while(dec.more_items()) {
+         if(dec.get_next_object().is_set()) {
+            objects += 1;
+         }
+      }
+      return objects;
+   };
+
+   // A standalone EOC marker is rejected by default
+   result.test_throws<Botan::Decoding_Error>("standalone EOC rejected by default",
+                                             [&]() { count_objects(wire, Botan::BER_Decoder::Limits::BER()); });
+
+   // ... but tolerated when the decoder is configured to allow it
+   try {
+      const size_t objects = count_objects(wire, Botan::BER_Decoder::Limits::BER().with_standalone_eoc_allowed());
+      result.test_sz_eq("standalone EOC skipped when allowed", objects, 1);
+   } catch(const std::exception& e) {
+      result.test_failure(Botan::fmt("standalone EOC unexpectedly rejected: {}", e.what()));
+   }
+
+   // A constructed encoding of the EOC tag (20 00) is not an EOC marker at
+   // all; it is rejected in every mode, including with the leniency flag
+   const std::vector<uint8_t> cons_eoc = {0x20, 0x00};
+
+   for(auto limits : {Botan::BER_Decoder::Limits::DER(),
+                      Botan::BER_Decoder::Limits::BER(),
+                      Botan::BER_Decoder::Limits::BER().with_standalone_eoc_allowed()}) {
+      result.test_throws<Botan::Decoding_Error>("constructed EOC tag rejected",
+                                                [&]() { count_objects(cons_eoc, limits); });
+   }
+
+   return result;
+}
+
+Test::Result test_ber_max_object_size() {
+   Test::Result result("BER maximum object size");
+
+   // OCTET STRING with 5 content bytes
+   const std::vector<uint8_t> obj = {0x04, 0x05, 0x01, 0x02, 0x03, 0x04, 0x05};
+
+   auto decode = [&](const char* what, Botan::BER_Decoder::Limits limits, bool expect_ok) {
+      try {
+         Botan::BER_Decoder(obj, limits).get_next_object();
+         result.test_bool_eq(what, true, expect_ok);
+      } catch(const Botan::Decoding_Error&) {
+         result.test_bool_eq(what, false, expect_ok);
+      }
+   };
+
+   using Limits = Botan::BER_Decoder::Limits;
+
+   decode("accepted under the default limit", Limits::BER(), true);
+   decode("accepted at exactly the limit", Limits::BER().with_max_object_size(5), true);
+   decode("rejected one byte over the limit", Limits::BER().with_max_object_size(4), false);
+   decode("accepted when the limit is disabled", Limits::BER().with_max_object_size(std::nullopt), true);
+
+   return result;
+}
+
+Test::Result test_ber_constructed_string_rejected() {
+   Test::Result result("BER constructed OCTET/BIT STRING rejected");
+
+   using Botan::ASN1_Class;
+   using Botan::ASN1_Type;
+
+   // Constructed OCTET STRING (24) wrapping two OCTET STRING fragments
+   const std::vector<uint8_t> cons_octet = {0x24, 0x06, 0x04, 0x02, 0xAA, 0xBB, 0x04, 0x00};
+   // Constructed BIT STRING (23) wrapping one BIT STRING fragment
+   const std::vector<uint8_t> cons_bits = {0x23, 0x04, 0x03, 0x02, 0x00, 0xAA};
+
+   // Reachable when the caller's expected class matches the constructed object;
+   // rejected in both BER and DER
+   for(auto limits : {Botan::BER_Decoder::Limits::BER(), Botan::BER_Decoder::Limits::DER()}) {
+      result.test_throws<Botan::Decoding_Error>("constructed OCTET STRING rejected", [&]() {
+         std::vector<uint8_t> out;
+         Botan::BER_Decoder(cons_octet, limits)
+            .decode(out, ASN1_Type::OctetString, ASN1_Type::OctetString, ASN1_Class::Constructed);
+      });
+
+      result.test_throws<Botan::Decoding_Error>("constructed BIT STRING rejected", [&]() {
+         std::vector<uint8_t> out;
+         Botan::BER_Decoder(cons_bits, limits)
+            .decode(out, ASN1_Type::BitString, ASN1_Type::BitString, ASN1_Class::Constructed);
+      });
+
+      result.test_throws<Botan::Decoding_Error>("constructed BIT STRING rejected via decode_bitstring", [&]() {
+         Botan::ASN1_BitString bs;
+         Botan::BER_Decoder(cons_bits, limits).decode_bitstring(bs, ASN1_Type::BitString, ASN1_Class::Constructed);
+      });
+   }
+
+   return result;
+}
+
 Test::Result test_asn1_utf8_ascii_parsing() {
    Test::Result result("ASN.1 ASCII parsing");
 
@@ -307,6 +411,38 @@ Test::Result test_asn1_tag_underlying_type() {
    return result;
 }
 
+Test::Result test_asn1_high_tag_number() {
+   Test::Result result("ASN.1 high tag number encode/decode");
+
+   // The encoder emits high-tag-number encodings for the full uint32_t range,
+   // so the decoder must round trip the same range.
+   const std::vector<uint8_t> content = {0x01, 0x02, 0x03};
+
+   const uint32_t tags[] = {31, 0x7FFFFFFF, 0x80000000, 0xFFFFFFFE, 0xFFFFFFFF};
+
+   for(const uint32_t tag : tags) {
+      Botan::DER_Encoder enc;
+      // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+      enc.add_object(static_cast<Botan::ASN1_Type>(tag), Botan::ASN1_Class::ContextSpecific, content);
+      const auto der = enc.get_contents_unlocked();
+
+      try {
+         const Botan::BER_Object obj = Botan::BER_Decoder(der).get_next_object();
+         result.test_sz_eq("decoded tag matches encoded tag", static_cast<uint32_t>(obj.type()), tag);
+      } catch(const std::exception& e) {
+         result.test_failure(Botan::fmt("tag {} unexpectedly rejected: {}", tag, e.what()));
+      }
+   }
+
+   // A tag value that does not fit in uint32_t (here 2^32, encoded as
+   // 1F 90 80 80 80 00) must be rejected rather than silently truncated.
+   const std::vector<uint8_t> overflow_tag = {0x1F, 0x90, 0x80, 0x80, 0x80, 0x00};
+   result.test_throws<Botan::Decoding_Error>("over-uint32 tag rejected",
+                                             [&]() { Botan::BER_Decoder(overflow_tag).get_next_object(); });
+
+   return result;
+}
+
 Test::Result test_asn1_negative_int_encoding() {
    Test::Result result("DER encode/decode of negative integers");
 
@@ -321,6 +457,50 @@ Test::Result test_asn1_negative_int_encoding() {
       Botan::BER_Decoder(enc, Botan::BER_Decoder::Limits::DER()).decode(n_dec);
 
       result.test_bn_eq("DER encoding round trips negative integers", n_dec, n);
+   }
+
+   return result;
+}
+
+Test::Result test_der_set_ordering() {
+   Test::Result result("DER SET ordering validation");
+
+   using Limits = Botan::BER_Decoder::Limits;
+
+   // SET { INTEGER 1, INTEGER 2 } - canonically sorted
+   const std::vector<uint8_t> sorted_set = {0x31, 0x06, 0x02, 0x01, 0x01, 0x02, 0x01, 0x02};
+   // SET { INTEGER 2, INTEGER 1 } - elements out of order
+   const std::vector<uint8_t> unsorted_set = {0x31, 0x06, 0x02, 0x01, 0x02, 0x02, 0x01, 0x01};
+
+   auto decode_set = [](const std::vector<uint8_t>& wire, Limits limits) {
+      Botan::BER_Decoder dec(wire, limits);
+      Botan::BER_Decoder set = dec.start_set();
+      while(set.more_items()) {
+         Botan::BigInt v;
+         set.decode(v);
+      }
+      set.end_cons();
+   };
+
+   // A sorted SET is accepted in both modes
+   try {
+      decode_set(sorted_set, Limits::DER());
+      decode_set(sorted_set, Limits::BER());
+      result.test_success("sorted SET accepted");
+   } catch(const std::exception& e) {
+      result.test_failure(Botan::fmt("sorted SET unexpectedly rejected: {}", e.what()));
+   }
+
+   // An unsorted SET is rejected in DER mode ...
+   result.test_throws<Botan::Decoding_Error>("unsorted SET rejected in DER mode",
+                                             [&]() { decode_set(unsorted_set, Limits::DER()); });
+
+   // ... but accepted in BER mode (canonical ordering is a DER requirement)
+   try {
+      decode_set(unsorted_set, Limits::BER());
+      result.test_success("unsorted SET accepted in BER mode");
+   } catch(const std::exception& e) {
+      result.test_failure(Botan::fmt("unsorted SET unexpectedly rejected in BER mode: {}", e.what()));
    }
 
    return result;
@@ -674,6 +854,51 @@ Test::Result test_alg_id_parameter_validation() {
    return result;
 }
 
+Test::Result test_der_default_value_encoding() {
+   Test::Result result("DER DEFAULT value rejection");
+
+   using Limits = Botan::BER_Decoder::Limits;
+
+   // SEQUENCE { version INTEGER DEFAULT 0 } in three forms
+   const std::vector<uint8_t> present_default = {0x30, 0x03, 0x02, 0x01, 0x00};     // present, == default
+   const std::vector<uint8_t> omitted = {0x30, 0x00};                               // absent
+   const std::vector<uint8_t> present_nondefault = {0x30, 0x03, 0x02, 0x01, 0x05};  // present, != default
+
+   auto decode_version = [](const std::vector<uint8_t>& wire, Limits limits) {
+      Botan::BER_Decoder dec(wire, limits);
+      size_t version = 99;
+      dec.start_sequence()
+         .decode_default(version, Botan::ASN1_Type::Integer, Botan::ASN1_Class::Universal, size_t(0))
+         .end_cons();
+      return version;
+   };
+
+   // By default an explicitly-encoded default value is accepted
+   try {
+      result.test_sz_eq("present default accepted (lax)", decode_version(present_default, Limits::DER()), 0);
+      result.test_sz_eq("omitted uses default (lax)", decode_version(omitted, Limits::DER()), 0);
+      result.test_sz_eq("present non-default decoded", decode_version(present_nondefault, Limits::DER()), 5);
+   } catch(const std::exception& e) {
+      result.test_failure(Botan::fmt("unexpected rejection: {}", e.what()));
+   }
+
+   // With the flag set, a present default-valued component is rejected ...
+   result.test_throws<Botan::Decoding_Error>("present default rejected (strict)", [&]() {
+      decode_version(present_default, Limits::DER().with_default_value_encoding_rejected());
+   });
+
+   // ... but omitted and non-default forms are still accepted
+   try {
+      const auto strict = Limits::DER().with_default_value_encoding_rejected();
+      result.test_sz_eq("omitted uses default (strict)", decode_version(omitted, strict), 0);
+      result.test_sz_eq("present non-default accepted (strict)", decode_version(present_nondefault, strict), 5);
+   } catch(const std::exception& e) {
+      result.test_failure(Botan::fmt("unexpected strict rejection: {}", e.what()));
+   }
+
+   return result;
+}
+
 class ASN1_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -681,6 +906,9 @@ class ASN1_Tests final : public Test {
 
          results.push_back(test_ber_stack_recursion());
          results.push_back(test_ber_eoc_decoding_limits());
+         results.push_back(test_ber_standalone_eoc_limits());
+         results.push_back(test_ber_max_object_size());
+         results.push_back(test_ber_constructed_string_rejected());
          results.push_back(test_ber_indefinite_length_trailing_data());
          results.push_back(test_ber_find_eoc());
          results.push_back(test_asn1_utf8_ascii_parsing());
@@ -691,13 +919,16 @@ class ASN1_Tests final : public Test {
          results.push_back(test_asn1_ascii_encoding());
          results.push_back(test_asn1_utf8_encoding());
          results.push_back(test_asn1_tag_underlying_type());
+         results.push_back(test_asn1_high_tag_number());
          results.push_back(test_asn1_negative_int_encoding());
+         results.push_back(test_der_set_ordering());
          results.push_back(test_der_constructed_tag_17_not_sorted());
          results.push_back(test_der_implicit_tagging_helpers());
          results.push_back(test_asn1_bitstring_helpers());
          results.push_back(test_asn1_string_zero_length_roundtrip());
          results.push_back(test_pss_params_rejects_trailing_data_in_mgf1_params());
          results.push_back(test_alg_id_parameter_validation());
+         results.push_back(test_der_default_value_encoding());
 
          return results;
       }

@@ -30,16 +30,23 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       class BOTAN_PUBLIC_API(3, 12) Limits final {
          public:
             /**
+            * The default maximum size in bytes of a single decoded object.
+            */
+            static constexpr size_t DefaultMaxObjectSize = 128 * 1024 * 1024;
+
+            /**
             * Accept only DER encodings
             */
-            static Limits DER() { return Limits(false, 0); }
+            static Limits DER() { return Limits(false, 0, false, DefaultMaxObjectSize, false); }
 
             /**
             * Accept non-canonical BER encodings.
             *
             * @param max_nested_indef maximum number of nested indefinite-length encodings accepted
             */
-            static Limits BER(size_t max_nested_indef = 16) { return Limits(true, max_nested_indef); }
+            static Limits BER(size_t max_nested_indef = 16) {
+               return Limits(true, max_nested_indef, false, DefaultMaxObjectSize, false);
+            }
 
             bool allow_ber_encoding() const { return m_allow_ber; }
 
@@ -47,14 +54,79 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
 
             size_t max_nested_indefinite_length() const { return m_max_nested_indef; }
 
+            /**
+            * If true, a standalone EOC marker (one that does not terminate an
+            * indefinite-length encoding) is skipped rather than rejected. Some
+            * BER producers emit trailing EOC markers; accepting them is needed to
+            * parse such data (eg CMS signatures in PDFs). Off by default.
+            */
+            bool allow_standalone_eoc() const { return m_allow_standalone_eoc; }
+
+            /**
+            * The maximum size in bytes of a single decoded object, or nullopt if
+            * no object size limit is enforced.
+            */
+            std::optional<size_t> max_object_size() const { return m_max_object_size; }
+
+            /**
+            * If true, a DER component that is explicitly encoded with a value
+            * equal to its DEFAULT is rejected (such components must be omitted in
+            * DER). Only applies in DER mode and only to fields decoded via
+            * decode_default(). Off by default, since Botan and many other
+            * implementations emit such components. See decode_default().
+            */
+            bool reject_default_value_encoding() const { return m_reject_default_value_encoding; }
+
+            /**
+            * Return a copy of these limits that tolerates standalone EOC markers.
+            * See allow_standalone_eoc().
+            */
+            Limits with_standalone_eoc_allowed() const {
+               Limits copy = *this;
+               copy.m_allow_standalone_eoc = true;
+               return copy;
+            }
+
+            /**
+            * Return a copy of these limits with the given maximum object size.
+            * A value of nullopt disables the object size limit. See
+            * max_object_size().
+            */
+            Limits with_max_object_size(std::optional<size_t> max_object_size) const {
+               Limits copy = *this;
+               copy.m_max_object_size = max_object_size;
+               return copy;
+            }
+
+            /**
+            * Return a copy of these limits that rejects DER components encoded
+            * equal to their DEFAULT value. See reject_default_value_encoding().
+            */
+            Limits with_default_value_encoding_rejected() const {
+               Limits copy = *this;
+               copy.m_reject_default_value_encoding = true;
+               return copy;
+            }
+
             bool operator==(const Limits&) const = default;
 
          private:
-            Limits(bool allow_ber, size_t max_nested_indef) :
-                  m_allow_ber(allow_ber), m_max_nested_indef(max_nested_indef) {}
+            Limits(bool allow_ber,
+                   size_t max_nested_indef,
+                   bool allow_standalone_eoc,
+                   std::optional<size_t> max_object_size,
+                   bool reject_default_value_encoding) :
+                  m_allow_ber(allow_ber),
+                  m_max_nested_indef(max_nested_indef),
+                  m_allow_standalone_eoc(allow_standalone_eoc),
+                  m_max_object_size(max_object_size),
+                  m_reject_default_value_encoding(reject_default_value_encoding) {}
 
             bool m_allow_ber;
             size_t m_max_nested_indef;
+            bool m_allow_standalone_eoc;
+            std::optional<size_t> m_max_object_size;
+            bool m_reject_default_value_encoding;
       };
 
       /**
@@ -85,6 +157,11 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       * TODO(Botan4) remove this?
       */
       BOTAN_FUTURE_EXPLICIT BER_Decoder(BER_Object&& obj) : BER_Decoder(std::move(obj), nullptr) {}
+
+      /**
+      * Set up to BER decode the data in obj, taking ownership of its contents
+      */
+      BER_Decoder(BER_Object&& obj, Limits limits);
 
       BER_Decoder(const BER_Decoder& other) = delete;
       BER_Decoder(BER_Decoder&& other) noexcept;
@@ -310,6 +387,30 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
          std::optional<T> optval;
          this->decode_optional(optval, type_tag, class_tag);
          out = optval ? *optval : default_value;
+         return (*this);
+      }
+
+      /**
+      * Decode a field carrying an ASN.1 DEFAULT value: if the field is absent
+      * @p out is set to @p default_value. Unlike decode_optional this is only
+      * for fields with a DEFAULT (not bare OPTIONAL fields): when the decoder is
+      * configured with Limits::with_default_value_encoding_rejected() and is in
+      * DER mode, a field that is present but equal to @p default_value is
+      * rejected, since DER requires such components to be omitted.
+      */
+      template <typename T>
+      BER_Decoder& decode_default(T& out, ASN1_Type type_tag, ASN1_Class class_tag, const T& default_value) {
+         std::optional<T> optval;
+         this->decode_optional(optval, type_tag, class_tag);
+         if(optval.has_value()) {
+            if(m_limits.require_der_encoding() && m_limits.reject_default_value_encoding() &&
+               *optval == default_value) {
+               throw BER_Decoding_Error("DER component encoded with its DEFAULT value");
+            }
+            out = std::move(*optval);
+         } else {
+            out = default_value;
+         }
          return (*this);
       }
 

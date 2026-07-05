@@ -126,7 +126,7 @@ class BOTAN_PUBLIC_API(2, 0) DataSource_Memory final : public DataSource {
       * @param in the byte array to read from
       * @param length the length of the byte array
       */
-      DataSource_Memory(const uint8_t in[], size_t length) : m_source(in, in + length), m_offset(0) {}
+      DataSource_Memory(const uint8_t in[], size_t length) : DataSource_Memory(std::span<const uint8_t>(in, length)) {}
 
       /**
       * Construct a memory source that reads from a secure_vector
@@ -138,13 +138,18 @@ class BOTAN_PUBLIC_API(2, 0) DataSource_Memory final : public DataSource {
       * Construct a memory source that reads from an arbitrary byte buffer
       * @param in the MemoryRegion to read from
       */
-      explicit DataSource_Memory(std::span<const uint8_t> in) : m_source(in.begin(), in.end()), m_offset(0) {}
+      explicit DataSource_Memory(std::span<const uint8_t> in) : m_offset(0) {
+         // Guard against forming a range from a null pointer (eg an empty span)
+         if(!in.empty()) {
+            m_source.assign(in.begin(), in.end());
+         }
+      }
 
       /**
       * Construct a memory source that reads from a std::vector
       * @param in the MemoryRegion to read from
       */
-      explicit DataSource_Memory(const std::vector<uint8_t>& in) : m_source(in.begin(), in.end()), m_offset(0) {}
+      explicit DataSource_Memory(const std::vector<uint8_t>& in) : DataSource_Memory(std::span<const uint8_t>(in)) {}
 
       size_t get_bytes_read() const override { return m_offset; }
 

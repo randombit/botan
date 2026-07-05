@@ -61,10 +61,9 @@ Input = 0202FFFF
 ResultDER = Detected non-minimal INTEGER encoding in DER structure
 ResultBER = OK
 
-# Empty INTEGER encoding
+# Empty INTEGER encoding (invalid in both BER and DER, X.690 8.3.1)
 Input = 0200
-ResultDER = Detected empty INTEGER encoding in DER structure
-ResultBER = OK
+ResultBER = INTEGER encoding has no content octets
 
 # DER-encoded NULL
 Input = 0500
@@ -125,6 +124,15 @@ Input = 000002010A
 ResultDER = Detected EOC marker in DER structure
 ResultBER = OK
 
+# A constructed encoding of the EOC tag (0x20), rejected even in BER and even
+# when standalone EOC markers are tolerated
+Input = 2000
+ResultBER = EOC tag with constructed encoding
+
+# Same, with declared content
+Input = 20050102030405
+ResultBER = EOC tag with constructed encoding
+
 # Valid OID: 1.2.840.113549.1.1.11 (sha256WithRSAEncryption)
 Input = 06092A864886F70D01010B
 ResultBER = OK
@@ -173,6 +181,11 @@ ResultBER = OID encoding is too short
 # Tag 06 with length 0xFF (invalid long-form length)
 Input = 06FF00
 ResultBER = Length field is too large
+
+# OCTET STRING declaring 256 MiB of content, over the default 128 MiB object
+# size limit (the actual content is absent, but the size is rejected first)
+Input = 048410000000
+ResultBER = Encoded object exceeds maximum size
 
 # Leading zero in multibyte encoding with many continuation bytes
 # 0.1 followed by a component starting with 0x80 (leading zero)
