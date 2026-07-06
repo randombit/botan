@@ -166,13 +166,22 @@ class MLKEM_Composite_Encapsulation_Operation final : public PK_Ops::KEM_Encrypt
             }
          } else {
             std::unique_ptr<PK_Key_Agreement_Key> privkey;
+#if defined(BOTAN_HAS_ECDH)
             if(m_parameters.traditional_algorithm() == "ECDH") {
-               privkey = std::make_unique<Botan::ECDH_PrivateKey>(rng, m_ec_group_opt.value());
-            } else if(m_parameters.traditional_algorithm() == "X25519") {
+               privkey = std::make_unique<ECDH_PrivateKey>(rng, m_ec_group_opt.value());
+            } else
+#endif
+#if defined(BOTAN_HAS_X25519)
+               if(m_parameters.traditional_algorithm() == "X25519") {
                privkey = std::make_unique<X25519_PrivateKey>(rng);
-            } else if(m_parameters.traditional_algorithm() == "X448") {
+            } else
+#endif
+#if defined(BOTAN_HAS_X448)
+               if(m_parameters.traditional_algorithm() == "X448") {
                privkey = std::make_unique<X448_PrivateKey>(rng);
-            } else {
+            } else
+#endif
+            {
                throw Internal_Error("kem_encrypt(): requested algorithm not implemented");
             }
             perform_key_agreement(ss_trad, trad_ct, privkey.get(), rng);
