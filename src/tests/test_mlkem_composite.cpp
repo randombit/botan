@@ -39,6 +39,7 @@
 #if defined(BOTAN_HAS_MLKEM_COMPOSITE)
 namespace Botan_Tests {
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 namespace {
 std::vector<uint8_t> decode_var_base64(const VarMap& vars, std::string_view var) {
    const auto var_b64 = vars.get_req_str(var);
@@ -140,8 +141,6 @@ void encrypt_and_decrypt(const Botan::Private_Key& privkey,
    test_result.test_bin_eq(test_context, ss_rt, ss_rt_2);
 }
 }  // namespace
-
-   #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 class MLKEM_Composite_KAT_Tests : public Text_Based_Test {
    public:
