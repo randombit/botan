@@ -1,5 +1,5 @@
 <defines>
-BLOWFISH -> 20180718
+BLOWFISH -> 20260704
 </defines>
 
 <module_info>
