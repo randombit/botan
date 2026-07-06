@@ -4798,7 +4798,7 @@ class FFI_MLKEM_Composite_Test final : public FFI_KEM_Roundtrip_Test {
       std::string name() const override { return "FFI MLKEM-composite"; }
 
    private:
-      const char* algo() const override { return Botan::MLKEM_Composite_Param::generic_algo_name; }
+      const char* algo() const override { return "ML-KEM-Composite"; }
 
       privkey_loader_fn_t private_key_load_function() const override { return botan_privkey_load_mlkem_composite; }
 
