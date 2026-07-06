@@ -30,7 +30,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
       BOTAN_FUTURE_EXPLICIT MLDSA_Composite_PublicKey(const AlgorithmIdentifier& algo_id,
                                                       std::span<const uint8_t> key_bits);
 
-      std::string algo_name() const override { return "MLDSA_Composite"; }
+      std::string algo_name() const override { return MLDSA_Composite_Param::generic_algo_name; }
 
       AlgorithmIdentifier algorithm_identifier() const override {
          return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_EMPTY_PARAM);
