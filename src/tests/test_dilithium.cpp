@@ -21,8 +21,6 @@
    #include "test_rng.h"
 #endif
 
-#include <format>
-
 namespace Botan_Tests {
 
 namespace {
@@ -321,7 +319,7 @@ class MLDSA_Param_Tests final : public Test {
             Test_Case{false, std::string("ctx=A"), true}};
 
          for(const auto& [expect_success, param_str, random_sig] : sign_params) {
-            Test::Result result(std::format("{}: param string = '{}'", test_name, param_str));
+            Test::Result result(std::string(test_name) + ": param string = '" + param_str + "'");
             std::unique_ptr<Botan::PK_Signer> signer;
             bool exc = false;
             try {
@@ -329,7 +327,7 @@ class MLDSA_Param_Tests final : public Test {
             } catch(Botan::Exception&) {
                exc = true;
             }
-            result.test_bool_eq(std::format("parameters string '{}' for ML-DSA op was valid", param_str),
+            result.test_bool_eq("parameters string '" + param_str + "' for ML-DSA op was valid",
                                 !exc && signer,
                                 expect_success);
             if(exc) {
@@ -340,7 +338,7 @@ class MLDSA_Param_Tests final : public Test {
             auto signature = signer->sign_message(msgvec, *rng);
             auto signature2 = signer->sign_message(msgvec, *rng);
             result.test_bool_eq(
-               std::format("signature randomization (param = '{}')", param_str), signature != signature2, random_sig);
+               "signature randomization (param = '" + param_str + "')", signature != signature2, random_sig);
             result.test_is_true("signature verification", verifier.verify_message(msgvec, signature));
             results.push_back(result);
          }
