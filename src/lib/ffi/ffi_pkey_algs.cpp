@@ -1427,7 +1427,7 @@ int botan_privkey_load_mldsa_composite(botan_privkey_t* key,
       return ffi_new_object(key, std::move(mldsa_composite_key));
    });
 #else
-   BOTAN_UNUSED(key, key_len, privkey, mldsa_mode);
+   BOTAN_UNUSED(key, key_len, privkey, mldsa_composite_algo);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
@@ -1436,7 +1436,7 @@ int botan_pubkey_load_mldsa_composite(botan_pubkey_t* key,
                                       const uint8_t pubkey[],
                                       size_t key_len,
                                       const char* mldsa_composite_algo) {
-#if defined(BOTAN_HAS_ML_DSA)
+#if defined(BOTAN_HAS_MLDSA_COMPOSITE)
    if(key == nullptr || pubkey == nullptr || mldsa_composite_algo == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
@@ -1454,7 +1454,7 @@ int botan_pubkey_load_mldsa_composite(botan_pubkey_t* key,
       return ffi_new_object(key, std::move(mldsa_composite_key));
    });
 #else
-   BOTAN_UNUSED(key, key_len, pubkey, mldsa_mode);
+   BOTAN_UNUSED(key, key_len, pubkey, mldsa_composite_algo);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
