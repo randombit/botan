@@ -3,8 +3,8 @@
 #include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
-#include <botan/ec_group.h>
 #if defined BOTAN_HAS_ECDSA
+   #include <botan/ec_group.h>
    #include <botan/ecdsa.h>
 #endif
 #if defined BOTAN_HAS_ED25519
