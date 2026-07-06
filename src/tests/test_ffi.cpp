@@ -4550,7 +4550,12 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
       virtual std::vector<const char*> modes() const = 0;
       virtual const char* hash_algo_or_padding() const = 0;
 
-      virtual std::string make_mode_for_key_loading(std::string_view mode) { return std::string(mode); }
+      virtual void test_signature_length(size_t produced_sig_size,
+                                         size_t expected_sig_size,
+                                         std::string /*mode*/,
+                                         Test::Result& result) const {
+         result.test_sz_eq("reported sig lengths are equal", produced_sig_size, expected_sig_size);
+      }
 
    public:
       void ffi_test(Test::Result& result, botan_rng_t rng) override {
@@ -4576,13 +4581,9 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
             botan_privkey_t priv_loaded;
             botan_pubkey_t pub_loaded;
             TEST_FFI_OK(private_key_load_function(),
-                        (&priv_loaded,
-                         priv_bytes.get().data(),
-                         priv_bytes.get().size(),
-                         make_mode_for_key_loading(mode).c_str()));
-            TEST_FFI_OK(
-               public_key_load_function(),
-               (&pub_loaded, pub_bytes.get().data(), pub_bytes.get().size(), make_mode_for_key_loading(mode).c_str()));
+                        (&priv_loaded, priv_bytes.get().data(), priv_bytes.get().size(), mode));
+            TEST_FFI_OK(public_key_load_function(),
+                        (&pub_loaded, pub_bytes.get().data(), pub_bytes.get().size(), mode));
 
             // re-encode and compare to the first round
             ViewBytesSink priv_bytes2;
@@ -4609,7 +4610,8 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
                         botan_pk_op_sign_finish,
                         (signer, rng, nullptr, &sig_output_length_out));
-            result.test_sz_eq("reported sig lengths are equal", sig_output_length, sig_output_length_out);
+
+            test_signature_length(sig_output_length_out, sig_output_length, mode, result);
 
             // Recreate signer and try again
             TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
@@ -4621,7 +4623,7 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
             sig_output_length_out = sig_output_length * 2;
             Botan::secure_vector<uint8_t> signature(sig_output_length_out);
             TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_output_length_out));
-            result.test_sz_eq("signature length", sig_output_length, sig_output_length_out);
+            test_signature_length(sig_output_length_out, sig_output_length, mode, result);
             signature.resize(sig_output_length_out);
             TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
 
@@ -4862,6 +4864,19 @@ class FFI_MLDSA_Composite_Test final : public FFI_Signature_Roundtrip_Test {
 
       pubkey_loader_fn_t public_key_load_function() const override { return botan_pubkey_load_mldsa_composite; }
 
+      void test_signature_length(size_t produced_sig_size,
+                                 size_t expected_sig_size,
+                                 std::string mode,
+                                 Test::Result& result) const override {
+         if((mode.find("ECDSA") != std::string::npos)) {
+            result.test_sz_lte(
+               "reported sig length is smaller or equal than limit", produced_sig_size, expected_sig_size);
+         } else {
+            result.test_sz_eq(
+               "reported sig length is different from expected length", produced_sig_size, expected_sig_size);
+         }
+      }
+
       std::vector<const char*> modes() const override {
          return {
    #if defined(BOTAN_HAS_RSA)
@@ -4877,8 +4892,6 @@ class FFI_MLDSA_Composite_Test final : public FFI_Signature_Roundtrip_Test {
       }
 
       const char* hash_algo_or_padding() const override { return ""; }
-
-      std::string make_mode_for_key_loading(std::string_view) override { return std::string(algo()); }
 };
 
 class FFI_SLH_DSA_Test final : public FFI_Signature_Roundtrip_Test {
