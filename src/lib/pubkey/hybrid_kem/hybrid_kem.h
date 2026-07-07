@@ -37,7 +37,7 @@ using PairOfPrivateKeys = std::pair<std::unique_ptr<Private_Key>, std::unique_pt
  * override the serialization and deserialization of the combined public key or add specific
  * algorithm identifiers.
  */
-class BOTAN_TEST_API Hybrid_KEM_PublicKey : public virtual Public_Key {
+class BOTAN_PUBLIC_API(3, 13) Hybrid_KEM_PublicKey : public virtual Public_Key {
    public:
       /**
        * @brief Constructor for a pair of KEM public keys.
@@ -98,7 +98,7 @@ BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
  * specifying how a KEM combiner is applied to derive the shared secret using the
  * individual shared secrets, ciphertexts, and other context information.
  */
-class BOTAN_TEST_API Hybrid_KEM_PrivateKey : virtual public Private_Key {
+class BOTAN_PUBLIC_API(3, 13) Hybrid_KEM_PrivateKey : virtual public Private_Key {
    public:
       Hybrid_KEM_PrivateKey(const Hybrid_KEM_PrivateKey&) = delete;
       Hybrid_KEM_PrivateKey& operator=(const Hybrid_KEM_PrivateKey&) = delete;
