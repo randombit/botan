@@ -327,9 +327,8 @@ class MLDSA_Param_Tests final : public Test {
             } catch(Botan::Exception&) {
                exc = true;
             }
-            result.test_bool_eq("parameters string '" + param_str + "' for ML-DSA op was valid",
-                                !exc && signer,
-                                expect_success);
+            result.test_bool_eq(
+               "parameters string '" + param_str + "' for ML-DSA op was valid", !exc && signer, expect_success);
             if(exc) {
                results.push_back(result);
                continue;
