@@ -17,5 +17,4 @@ hybrid_public_key.h
 <requires>
 tls13
 hybrid_kem
-kex_to_kem_adapter
 </requires>
