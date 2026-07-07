@@ -11,7 +11,6 @@
 
 #include "tests.h"
 
-#include <format>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -98,22 +97,22 @@ void sign_and_verify(const Botan::Private_Key& priv_key,
 
    Botan::PK_Verifier verifier(pub_key, "");
    verifier.update(message);
-   test_result.test_bool_eq(
-      std::format("verification of correct signature ({})", test_context), verifier.check_signature(signature), true);
+   test_result.test_bool_eq("verification of correct signature (" + std::string(test_context) + ")",
+                            verifier.check_signature(signature),
+                            true);
 
    verifier.update(message);
-   test_result.test_bool_eq(
-      std::format("verification of correct signature (repeated use of only verifier with update) ({})", test_context),
-      verifier.check_signature(signature),
-      true);
+   test_result.test_bool_eq("verification of correct signature (repeated use of only verifier with update) (" +
+                               std::string(test_context) + ")",
+                            verifier.check_signature(signature),
+                            true);
 
    // test sign_message() with already used signature-op and already used verify-op
    for(size_t i = 0; i < 2; i++) {
       signature = signer.sign_message(message, rng);  // PK_Ops::Signature_with_Hash::update() is called before signing
       test_result.test_bool_eq(
-         std::format(
-            "verification of correct signature (repeated use of signer and verifier with sign/verify_message) ({})",
-            test_context),
+         "verification of correct signature (repeated use of signer and verifier with sign/verify_message) (" +
+            std::string(test_context) + ")",
          verifier.verify_message(message, signature),
          true);
    }
@@ -122,11 +121,10 @@ void sign_and_verify(const Botan::Private_Key& priv_key,
    signer.update(message);
    signature = signer.signature(rng);
    verifier.update(message);
-   test_result.test_bool_eq(
-      std::format("verification of correct signature (repeated use of signer and verifier with update) ({})",
-                  test_context),
-      verifier.check_signature(signature),
-      true);
+   test_result.test_bool_eq("verification of correct signature (repeated use of signer and verifier with update) (" +
+                               std::string(test_context) + ")",
+                            verifier.check_signature(signature),
+                            true);
 }
 }  // namespace
 
@@ -180,7 +178,7 @@ class MLDSA_Composite_Key_Detail_Tests : public Test {
             mimic_speed_test(*rng, result);
 
          } catch(const Botan::Exception& e) {
-            result.test_failure(std::format("Exception during key operations: {}", e.what()));
+            result.test_failure(std::string("Exception during key operations: ") + e.what());
          }
 
          for(const auto& false_private_key_enc : false_private_keys) {
@@ -287,10 +285,9 @@ class MLDSA_Composite_Sig_Detail_Tests : public Test {
             result.test_bool_eq("verification of false signature", verifier2.check_signature(false_signature), false);
             verifier2.update(message);
             result.test_is_true(
-               std::format(
-                  "verification of correct signature after failed verification, false signature length = {}, length of correct signature = {}",
-                  false_signature.size(),
-                  signature.size()),
+               "verification of correct signature after failed verification, false signature length = " +
+                  std::to_string(false_signature.size()) +
+                  ", length of correct signature = " + std::to_string(signature.size()),
                verifier2.check_signature(signature));
          }
          return result;
@@ -405,7 +402,7 @@ class MLDSA_Composite_RT_Tests : public Test {
                .end_cons()
                .verify_end();
          } catch(const Botan::Exception& e) {
-            result.test_failure(std::format("verify ECDSA private format decoding: {}", e.what()));
+            result.test_failure(std::string("verify ECDSA private format decoding: ") + e.what());
          }
       }
 };
