@@ -7,7 +7,8 @@
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
-#include <botan/internal/hybrid_kem.h>
+
+#include <botan/hybrid_kem.h>
 
 #include <botan/internal/concat_util.h>
 #include <botan/internal/fmt.h>
