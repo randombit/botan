@@ -299,7 +299,7 @@ class MLDSA_Param_Tests final : public Test {
       };
 
       std::vector<Test::Result> run() override {
-         std::string test_name = "MLDSA_Param_Tests";
+         const std::string test_name = "MLDSA_Param_Tests";
          std::vector<Test::Result> results;
          auto rng = Test::new_rng(test_name);
 
