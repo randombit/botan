@@ -39,7 +39,7 @@
 #if defined(BOTAN_HAS_MLKEM_COMPOSITE)
 namespace Botan_Tests {
 
-#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+   #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 namespace {
 std::vector<uint8_t> decode_var_base64(const VarMap& vars, std::string_view var) {
    const auto var_b64 = vars.get_req_str(var);
