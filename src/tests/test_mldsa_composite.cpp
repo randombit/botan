@@ -187,7 +187,7 @@ class MLDSA_Composite_Key_Detail_Tests : public Test {
             bool exc = false;
             try {
                Botan::MLDSA_Composite_PrivateKey(param.id(), false_private_key_enc);
-            } catch(const Botan::Exception& e) {
+            } catch(const Botan::Exception&) {
                exc = true;
             }
             result.test_bool_eq("decoding of false private key", exc, true);
@@ -196,7 +196,7 @@ class MLDSA_Composite_Key_Detail_Tests : public Test {
             bool exc = false;
             try {
                Botan::MLDSA_Composite_PublicKey(param.id(), false_public_key_enc);
-            } catch(const Botan::Exception& e) {
+            } catch(const Botan::Exception&) {
                exc = true;
             }
             result.test_bool_eq("decoding of false public key", exc, true);
@@ -459,7 +459,7 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
 
          try {
             pubkey = std::make_unique<Botan::MLDSA_Composite_PublicKey>(comp_parm.id(), pk_bin);
-         } catch(const Botan::Exception& e) {
+         } catch(const Botan::Exception&) {
             exc_during_pubkey_decoding = true;
          }
          result.test_bool_eq("pubkey decoding OK", !exc_during_pubkey_decoding, pubkey_valid);
@@ -472,7 +472,7 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
 
          try {
             privkey = std::make_unique<Botan::MLDSA_Composite_PrivateKey>(comp_parm.id(), sk_bin);
-         } catch(const Botan::Exception& e) {
+         } catch(const Botan::Exception&) {
             exc_during_privkey_decoding = true;
          }
          result.test_bool_eq("privkey decoding OK", !exc_during_privkey_decoding, privkey_valid);
