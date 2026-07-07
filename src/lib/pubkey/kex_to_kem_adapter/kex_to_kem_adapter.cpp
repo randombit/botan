@@ -11,6 +11,7 @@
 #include <botan/internal/kex_to_kem_adapter.h>
 
 #include <botan/assert.h>
+#include <botan/pk_options_readers.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/pk_ops_impl.h>
 
@@ -25,7 +26,6 @@
 #endif
 
 #if defined(BOTAN_HAS_X25519)
-   #include <botan/pk_options_readers.h>
    #include <botan/x25519.h>
 #endif
 
