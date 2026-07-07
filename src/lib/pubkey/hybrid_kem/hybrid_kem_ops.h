@@ -11,9 +11,10 @@
 #ifndef BOTAN_HYBRID_KEM_OPS_H_
 #define BOTAN_HYBRID_KEM_OPS_H_
 
+#include <botan/hybrid_kem.h>
 #include <botan/pk_algs.h>
 #include <botan/pubkey.h>
-#include <botan/internal/hybrid_kem.h>
+#include <botan/secmem.h>
 #include <botan/internal/pk_ops_impl.h>
 
 #include <utility>
