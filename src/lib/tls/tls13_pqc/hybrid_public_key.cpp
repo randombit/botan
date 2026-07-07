@@ -229,7 +229,17 @@ std::unique_ptr<Hybrid_TLS_KEM_PublicKey> Hybrid_TLS_KEM_PublicKey::load_for_gro
 }
 
 Hybrid_TLS_KEM_PrivateKey::Hybrid_TLS_KEM_PrivateKey(PairOfPrivateKeys private_keys) :
-      Hybrid_TLS_KEM_PublicKey(extract_public_keys(private_keys)), Hybrid_KEM_PrivateKey(std::move(private_keys)) {}
+      // Explicitly calling the constructor of the virtually inherited base class
+      // Hybrid_KEM_PublicKey to avoid the diamond problem of multiple inheritance.
+      // Hybrid_TLS_KEM_PublicKey also calls this constructor, but without effect,
+      // because the standard mandates that virtually inherited base classes are
+      // only constructed once, by the most derived class: i.e. "here".
+      //
+      // TODO(Botan4): This is a workaround for the PrivateKey-is-a-PublicKey
+      //               design nuisance and may be removed along with it.
+      Hybrid_KEM_PublicKey(extract_public_keys(private_keys)),
+      Hybrid_TLS_KEM_PublicKey(extract_public_keys(private_keys)),
+      Hybrid_KEM_PrivateKey(std::move(private_keys)) {}
 
 std::string Hybrid_TLS_KEM_PublicKey::algo_name() const {
    return fmt("Hybrid({},{})", public_keys().first->algo_name(), public_keys().second->algo_name());
