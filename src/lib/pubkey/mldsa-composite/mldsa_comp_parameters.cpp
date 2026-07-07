@@ -16,7 +16,6 @@
 
 #include <botan/internal/oid_map.h>
 
-#include <algorithm>
 #include <cstring>
 
 namespace Botan {
@@ -365,38 +364,39 @@ OID MLDSA_Composite_Param::object_identifier() const {
 }
 
 bool MLDSA_Composite_Param::is_supported() const {
-   constexpr auto supported = std::to_array<id_t>({
+   bool result = false;
 #if defined BOTAN_HAS_RSA
-      MLDSA44_RSA2048_PKCS15_SHA256, MLDSA65_RSA3072_PKCS15_SHA512, MLDSA65_RSA4096_PKCS15_SHA512,
+   result = result || m_id == MLDSA44_RSA2048_PKCS15_SHA256 || m_id == MLDSA65_RSA3072_PKCS15_SHA512 ||
+            m_id == MLDSA65_RSA4096_PKCS15_SHA512;
    #if defined BOTAN_HAS_PSS
-         MLDSA44_RSA2048_PSS_SHA256, MLDSA65_RSA3072_PSS_SHA512, MLDSA65_RSA4096_PSS_SHA512, MLDSA87_RSA3072_PSS_SHA512,
-         MLDSA87_RSA4096_PSS_SHA512,
+   result = result || m_id == MLDSA44_RSA2048_PSS_SHA256 || m_id == MLDSA65_RSA3072_PSS_SHA512 ||
+            m_id == MLDSA65_RSA4096_PSS_SHA512 || m_id == MLDSA87_RSA3072_PSS_SHA512 ||
+            m_id == MLDSA87_RSA4096_PSS_SHA512;
    #endif
 #endif
 #if defined(BOTAN_HAS_ECDSA)
    #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_SECP256R1)
-         MLDSA44_ECDSA_P256_SHA256, MLDSA65_ECDSA_P256_SHA512,
+   result = result || m_id == MLDSA44_ECDSA_P256_SHA256 || m_id == MLDSA65_ECDSA_P256_SHA512;
    #endif
    #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_SECP384R1)
-         MLDSA65_ECDSA_P384_SHA512, MLDSA87_ECDSA_P384_SHA512,
+   result = result || m_id == MLDSA65_ECDSA_P384_SHA512 || m_id == MLDSA87_ECDSA_P384_SHA512;
    #endif
    #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_BRAINPOOL256R1)
-         MLDSA65_ECDSA_brainpoolP256r1_SHA512,
+   result = result || m_id == MLDSA65_ECDSA_brainpoolP256r1_SHA512;
    #endif
    #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_BRAINPOOL384R1)
-         MLDSA87_ECDSA_brainpoolP384r1_SHA512,
+   result = result || m_id == MLDSA87_ECDSA_brainpoolP384r1_SHA512;
    #endif
    #if defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_PCURVES_SECP521R1)
-         MLDSA87_ECDSA_P521_SHA512,
+   result = result || m_id == MLDSA87_ECDSA_P521_SHA512;
    #endif
 #endif
 #if defined BOTAN_HAS_ED25519
-         MLDSA44_Ed25519_SHA512, MLDSA65_Ed25519_SHA512,
+   result = result || m_id == MLDSA44_Ed25519_SHA512 || m_id == MLDSA65_Ed25519_SHA512;
 #endif
 #if defined BOTAN_HAS_ED448 && defined BOTAN_HAS_SHAKE
-         MLDSA87_Ed448_SHAKE256,
+   result = result || m_id == MLDSA87_Ed448_SHAKE256;
 #endif
-   });
-   return std::find(supported.begin(), supported.end(), m_id) != supported.end();
+   return result;
 }
 }  // namespace Botan
