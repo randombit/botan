@@ -46,12 +46,6 @@ namespace Botan_Tests {
 
 namespace {
 
-std::vector<uint8_t> decode_var_base64(const VarMap& vars, std::string_view var) {
-   const auto var_b64 = vars.get_req_str(var);
-   const auto var_sv = Botan::base64_decode(var_b64);
-   return std::vector<uint8_t>(var_sv.begin(), var_sv.end());
-}
-
 void mimic_speed_test(Botan::RandomNumberGenerator& rng, Test::Result& result) {
    // test for a real-life bug that occurred because of lazy evaluation of the 2nd signature verification.
    #if !defined BOTAN_HAS_RSA
@@ -410,6 +404,14 @@ class MLDSA_Composite_RT_Tests : public Test {
 BOTAN_REGISTER_TEST("pubkey", "mldsa_composite_roundtrips", MLDSA_Composite_RT_Tests);
 
    #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
+namespace {
+std::vector<uint8_t> decode_var_base64(const VarMap& vars, std::string_view var) {
+   const auto var_b64 = vars.get_req_str(var);
+   const auto var_sv = Botan::base64_decode(var_b64);
+   return std::vector<uint8_t>(var_sv.begin(), var_sv.end());
+}
+}  // namespace
 
 class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
    public:
