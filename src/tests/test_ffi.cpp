@@ -4552,7 +4552,7 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
 
       virtual void test_signature_length(size_t produced_sig_size,
                                          size_t expected_sig_size,
-                                         std::string /*mode*/,
+                                         const std::string& /*mode*/,
                                          Test::Result& result) const {
          result.test_sz_eq("reported sig lengths are equal", produced_sig_size, expected_sig_size);
       }
@@ -4866,7 +4866,7 @@ class FFI_MLDSA_Composite_Test final : public FFI_Signature_Roundtrip_Test {
 
       void test_signature_length(size_t produced_sig_size,
                                  size_t expected_sig_size,
-                                 std::string mode,
+                                 const std::string& mode,
                                  Test::Result& result) const override {
          if((mode.find("ECDSA") != std::string::npos)) {
             result.test_sz_lte(
