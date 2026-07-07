@@ -83,11 +83,6 @@ class BOTAN_TEST_API Hybrid_KEM_PublicKey : public virtual Public_Key {
       /// @returns the public keys combined in this hybrid key
       const PairOfPublicKeys& public_keys() const { return m_pks; }
 
-   protected:
-      // Default constructor used for virtual inheritance to prevent, that the derived class
-      // calls the constructor twice.
-      Hybrid_KEM_PublicKey() = default;
-
    private:
       PairOfPublicKeys m_pks;
 };
