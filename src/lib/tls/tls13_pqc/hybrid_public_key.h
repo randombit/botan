@@ -14,8 +14,8 @@
 
 #include <botan/pubkey.h>
 
+#include <botan/hybrid_kem.h>
 #include <botan/tls_algos.h>
-#include <botan/internal/hybrid_kem.h>
 
 #include <memory>
 
