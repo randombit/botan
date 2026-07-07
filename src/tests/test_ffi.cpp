@@ -4855,10 +4855,10 @@ class FFI_ML_DSA_Test final : public FFI_Signature_Roundtrip_Test {
 
 class FFI_MLDSA_Composite_Test final : public FFI_Signature_Roundtrip_Test {
    public:
-      std::string name() const override { return "FFI MLDSA-Composite"; }
+      std::string name() const override { return "FFI ML-DSA-Composite"; }
 
    private:
-      const char* algo() const override { return Botan::MLDSA_Composite_Param::generic_algo_name; }
+      const char* algo() const override { return "ML-DSA-Composite"; }
 
       privkey_loader_fn_t private_key_load_function() const override { return botan_privkey_load_mldsa_composite; }
 
