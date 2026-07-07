@@ -159,7 +159,7 @@ std::string map_to_bogo_error(const std::string& e) noexcept {
       {"Client sent plaintext HTTP request instead of TLS handshake", ":HTTP_REQUEST:"},
       {"Client signalled fallback SCSV, possible attack", ":INAPPROPRIATE_FALLBACK:"},
       {"Client version TLS v1.1 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:"},
-      {"Concatenated public values have an unexpected length", ":BAD_ECPOINT:"},
+      {"Hybrid_TLS_KEM_PublicKey: Concatenated public values have an unexpected length", ":BAD_ECPOINT:"},
       {"No shared TLS version based on supported versions extension", ":UNSUPPORTED_PROTOCOL:"},
       {"Client: No certificates sent by server", ":DECODE_ERROR:"},
       {"Decoded polynomial coefficients out of range", ":BAD_ECPOINT:"},

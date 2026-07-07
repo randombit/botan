@@ -13,5 +13,5 @@ hybrid_kem_ops.h
 </header:internal>
 
 <requires>
-
+kex_to_kem_adapter
 </requires>
