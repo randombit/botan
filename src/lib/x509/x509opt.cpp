@@ -133,7 +133,7 @@ CertificateParametersBuilder X509_Cert_Options::into_builder() const {
       }
    }
    if(!this->uri.empty()) {
-      if(auto parsed = URI::parse(this->uri)) {
+      if(auto parsed = URI::from_string(this->uri)) {
          builder.add_uri(*parsed);
       } else {
          throw Invalid_Argument(fmt("Invalid URI '{}'", this->uri));

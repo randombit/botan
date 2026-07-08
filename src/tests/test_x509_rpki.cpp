@@ -112,7 +112,7 @@ Botan::X509_Certificate make_self_signed(Botan::RandomNumberGenerator& rng,
    const auto not_before = now - std::chrono::seconds(180);
    const auto not_after = now + std::chrono::seconds(86400);
 
-   return params.into_self_signed_cert(not_before, not_after, *key, rng, hash_fn);
+   return params.into_self_signed_cert(not_before, not_after, *key, rng, std::nullopt, hash_fn);
 }
 
 CA_Creation_Result make_ca(Botan::RandomNumberGenerator& rng, const Botan::CertificateParametersBuilder& params) {
@@ -123,7 +123,7 @@ CA_Creation_Result make_ca(Botan::RandomNumberGenerator& rng, const Botan::Certi
    const auto not_before = now - std::chrono::seconds(180);
    const auto not_after = now + std::chrono::seconds(86400);
 
-   const auto ca_cert = params.into_self_signed_cert(not_before, not_after, *ca_key, rng, hash_fn);
+   const auto ca_cert = params.into_self_signed_cert(not_before, not_after, *ca_key, rng, std::nullopt, hash_fn);
 
    Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, rng);
    auto sub_key = generate_key(sig_algo, rng);
