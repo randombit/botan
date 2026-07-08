@@ -204,7 +204,7 @@ std::vector<Test::Result> hybrid_kem_keypair() {
       CHECK("handles incompatible keys (non-KEM, non-KEX)",
             [&](auto& result) {
                result.test_throws("hybrid KEM key does not accept signature keys", [&] {
-                  Botan::TLS::Hybrid_TLS_KEM_PrivateKey({sig(), kem()});
+                  Botan::TLS::Hybrid_TLS_KEM_PrivateKey({sig(), sig()});
                });
                result.test_throws("signature keys aren't allowed along with KEM keys", [&] {
                   Botan::TLS::Hybrid_TLS_KEM_PrivateKey({sig(), kem()});
