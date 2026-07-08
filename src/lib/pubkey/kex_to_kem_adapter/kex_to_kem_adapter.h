@@ -39,6 +39,8 @@ class BOTAN_TEST_API KEX_to_KEM_Adapter_PublicKey : public virtual Public_Key {
       std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(
          std::string_view kdf, std::string_view provider = "base") const override;
 
+      const Public_Key& inner() const { return *m_public_key; }
+
    private:
       std::shared_ptr<const Public_Key> m_public_key;
 };
@@ -80,6 +82,8 @@ class BOTAN_TEST_API KEX_to_KEM_Adapter_PrivateKey final : public KEX_to_KEM_Ada
 
       std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(
          RandomNumberGenerator& rng, std::string_view kdf, std::string_view provider = "base") const override;
+
+      const Private_Key& inner() const { return *m_private_key; }
 
    private:
       std::unique_ptr<PK_Key_Agreement_Key> m_private_key;
