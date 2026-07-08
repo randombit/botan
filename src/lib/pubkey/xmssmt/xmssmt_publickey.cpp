@@ -7,8 +7,6 @@
 
 #include <botan/xmssmt.h>
 
-#include <botan/ber_dec.h>
-#include <botan/der_enc.h>
 #include <botan/rng.h>
 #include <botan/xmssmt_parameters.h>
 #include <botan/internal/buffer_slicer.h>
@@ -29,11 +27,6 @@ XMSSMT_Parameters::xmssmt_algorithm_t deserialize_xmssmt_oid(std::span<const uin
    return XMSSMT_Parameters::parse_oid(raw_key.first(4));
 }
 
-std::vector<uint8_t> extract_raw_xmssmt_public_key(std::span<const uint8_t> key_bits) {
-   std::vector<uint8_t> raw_key(key_bits.begin(), key_bits.end());
-   // BER_Decoder(key_bits).decode(raw_key, ASN1_Type::OctetString).verify_end();
-   return raw_key;
-}
 }  // namespace
 
 XMSSMT_PublicKey::XMSSMT_PublicKey(XMSSMT_Parameters::xmssmt_algorithm_t xmssmt_oid, RandomNumberGenerator& rng) :
@@ -43,11 +36,11 @@ XMSSMT_PublicKey::XMSSMT_PublicKey(XMSSMT_Parameters::xmssmt_algorithm_t xmssmt_
       m_public_seed(rng.random_vec(m_xmssmt_params.element_size())) {}
 
 XMSSMT_PublicKey::XMSSMT_PublicKey(std::span<const uint8_t> key_bits) :
-      m_raw_key(extract_raw_xmssmt_public_key(key_bits)),
+      m_raw_key(key_bits.begin(), key_bits.end()),
       m_xmssmt_params(deserialize_xmssmt_oid(m_raw_key)),
       m_wots_params(m_xmssmt_params.ots_oid()) {
    if(m_raw_key.size() < m_xmssmt_params.raw_public_key_size()) {
-      throw Decoding_Error(fmt("Invalid XMSS^MT public key size of {} bytes detected, should by {} bytes",
+      throw Decoding_Error(fmt("Invalid XMSS^MT public key size of {} bytes detected, should be {} bytes",
                                m_raw_key.size(),
                                m_xmssmt_params.raw_public_key_size()));
    }
@@ -76,9 +69,9 @@ std::vector<uint8_t> XMSSMT_PublicKey::raw_public_key_bits() const {
 }
 
 std::vector<uint8_t> XMSSMT_PublicKey::public_key_bits() const {
-   std::vector<uint8_t> output;
-   DER_Encoder(output).encode(raw_public_key_bits(), ASN1_Type::OctetString);
-   return output;
+   // Contrary to the private key, the public key is not wrapped in an ASN.1
+   // OCTET STRING (see RFC 9802 Section 2.3)
+   return raw_public_key_bits();
 }
 
 std::unique_ptr<Private_Key> XMSSMT_PublicKey::generate_another(RandomNumberGenerator& rng) const {
@@ -97,7 +90,7 @@ std::unique_ptr<PK_Ops::Verification> XMSSMT_PublicKey::create_x509_verification
                                                                                     std::string_view provider) const {
    if(provider.empty() || provider == "base") {
       if(alg_id != this->algorithm_identifier()) {
-         throw Decoding_Error("Unexpected AlgorithmIdentifier for MLDSA-Composite X.509 signature");
+         throw Decoding_Error("Unexpected AlgorithmIdentifier for XMSS^MT X.509 signature");
       }
       return std::make_unique<XMSSMT_Verification_Operation>(*this);
    }
