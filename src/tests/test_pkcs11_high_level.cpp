@@ -775,6 +775,8 @@ Test::Result test_rsa_encrypt_decrypt() {
          try {
             const Botan::PK_Encryptor_EME encryptor(keypair.first, *rng, padding);
             encrypted = encryptor.encrypt(plaintext, *rng);
+            result.test_sz_lte(
+               "ciphertext length estimate", encrypted.size(), encryptor.ciphertext_length(plaintext.size()));
          } catch(Botan::PKCS11::PKCS11_ReturnError& e) {
             result.test_failure("PKCS11 RSA encrypt " + padding, e.what());
          }
@@ -785,6 +787,11 @@ Test::Result test_rsa_encrypt_decrypt() {
             keypair.second.set_use_software_padding(blinding);
             const Botan::PK_Decryptor_EME decryptor(keypair.second, *rng, padding);
             decrypted = decryptor.decrypt(encrypted);
+
+            result.test_sz_lte(
+               "plaintext length estimate", decrypted.size(), decryptor.plaintext_length(encrypted.size()));
+            result.test_sz_lte(
+               "ciphertext length estimate", encrypted.size(), decryptor.ciphertext_length(decrypted.size()));
          } catch(Botan::PKCS11::PKCS11_ReturnError& e) {
             std::ostringstream err;
             err << "PKCS11 RSA decrypt " << padding;

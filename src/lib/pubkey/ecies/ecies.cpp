@@ -394,6 +394,17 @@ size_t ECIES_Decryptor::plaintext_length(size_t ctext_len) const {
    return m_cipher->output_length(ctext_len - overhead);
 }
 
+size_t ECIES_Decryptor::ciphertext_length(size_t ptext_len) const {
+   // We need the encryption direction to estimate the ciphertext length given
+   // an expected plaintext length.
+   auto cipher = m_params.create_cipher(Cipher_Dir::Encryption);
+
+   const size_t point_size = compute_point_size(m_params.group(), m_params.point_format());
+   const size_t mac_size = m_mac->output_length();
+   const size_t ct_size_bound = cipher->output_length(ptext_len);
+   return point_size + mac_size + ct_size_bound;
+}
+
 /**
 * ECIES Decryption according to ISO 18033-2
 */

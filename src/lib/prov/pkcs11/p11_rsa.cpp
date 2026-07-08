@@ -141,6 +141,8 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
 
       size_t plaintext_length(size_t /*ctext_len*/) const override { return m_key.get_n().bytes(); }
 
+      size_t ciphertext_length(size_t /*ptext_len*/) const override { return m_key.get_n().bytes(); }
+
       secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) override {
          valid_mask = 0;
 
@@ -205,6 +207,8 @@ class PKCS11_RSA_Decryption_Operation_Software_EME final : public PK_Ops::Decryp
             PK_Ops::Decryption_with_Padding(padding), m_raw_op(key, "Raw", rng) {}
 
       size_t plaintext_length(size_t ctext_len) const override { return m_raw_op.plaintext_length(ctext_len); }
+
+      size_t ciphertext_length(size_t ptext_len) const override { return m_raw_op.ciphertext_length(ptext_len); }
 
       secure_vector<uint8_t> raw_decrypt(std::span<const uint8_t> input) override {
          // Returns the fixed-width RSA encoded message (I2OSP(m, k)); the outer

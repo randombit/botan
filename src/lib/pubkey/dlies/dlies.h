@@ -137,6 +137,8 @@ class BOTAN_PUBLIC_API(2, 0) DLIES_Decryptor final : public PK_Decryptor {
 
       size_t plaintext_length(size_t ctext_len) const override;
 
+      size_t ciphertext_length(size_t ptext_len) const override;
+
       const size_t m_pub_key_size;
       PK_Key_Agreement m_ka;
       std::unique_ptr<KDF> m_kdf;

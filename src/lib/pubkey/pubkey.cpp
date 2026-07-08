@@ -135,6 +135,10 @@ size_t PK_Decryptor_EME::plaintext_length(size_t ctext_len) const {
    return m_op->plaintext_length(ctext_len);
 }
 
+size_t PK_Decryptor_EME::ciphertext_length(size_t ptext_len) const {
+   return m_op->ciphertext_length(ptext_len);
+}
+
 secure_vector<uint8_t> PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const {
    return m_op->decrypt(valid_mask, {in, in_len});
 }

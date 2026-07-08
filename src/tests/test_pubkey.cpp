@@ -417,6 +417,8 @@ Test::Result PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_
 
          result.test_sz_lte(
             "Plaintext within length", decrypted.size(), decryptor->plaintext_length(ciphertext.size()));
+         result.test_sz_lte(
+            "Ciphertext within length", ciphertext.size(), decryptor->ciphertext_length(plaintext.size()));
       } catch(Botan::Exception& e) {
          result.test_failure("Failed to decrypt KAT ciphertext", e.what());
       }
@@ -488,6 +490,8 @@ Test::Result PK_Decryption_Test::run_one_test(const std::string& pad_hdr, const 
       Botan::secure_vector<uint8_t> decrypted;
       try {
          decrypted = decryptor->decrypt(ciphertext);
+         result.test_sz_lte(
+            "Ciphertext within length", ciphertext.size(), decryptor->ciphertext_length(plaintext.size()));
       } catch(Botan::Exception& e) {
          result.test_failure("Failed to decrypt KAT ciphertext", e.what());
       }

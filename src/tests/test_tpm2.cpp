@@ -702,6 +702,10 @@ std::vector<Test::Result> test_tpm2_rsa() {
                const Botan::PK_Encryptor_EME enc(*pk, null_rng, "OAEP(SHA-256)");
                const auto ciphertext = enc.encrypt(plaintext, null_rng);
 
+               // make sure that the ciphertext estimate tallies
+               const auto ciphertext_estimate = enc.ciphertext_length(plaintext.size());
+               result.test_sz_lte("ciphertext length estimate", ciphertext.size(), ciphertext_estimate);
+
                // decrypt the message using the TPM's private RSA key
                const Botan::PK_Decryptor_EME dec(*sk, null_rng, "OAEP(SHA-256)");
                const auto decrypted = dec.decrypt(ciphertext);
@@ -726,6 +730,12 @@ std::vector<Test::Result> test_tpm2_rsa() {
                Botan::PK_Decryptor_EME dec(*key, null_rng /* TPM takes care of this */, "OAEP(SHA-256)");
                const auto decrypted = dec.decrypt(ciphertext);
                result.test_bin_eq("decrypted message", decrypted, plaintext);
+
+               // make sure that the ciphertext and plaintext estimates tally
+               const auto plaintext_estimate = dec.plaintext_length(ciphertext.size());
+               const auto ciphertext_estimate = enc.ciphertext_length(plaintext.size());
+               result.test_sz_lte("plaintext length estimate", plaintext.size(), plaintext_estimate);
+               result.test_sz_lte("ciphertext length estimate", ciphertext.size(), ciphertext_estimate);
 
                // corrupt the ciphertext and try to decrypt it
                auto mutated_ciphertext = Test::mutate_vec(ciphertext, *rng);
