@@ -41,7 +41,7 @@
 #endif
 
 #if defined(BOTAN_HAS_TLS_13_PQC)
-   #include <botan/internal/hybrid_public_key.h>
+   #include <botan/internal/tls_hybrid_kem.h>
 #endif
 
 namespace Botan {
