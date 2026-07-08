@@ -12,9 +12,9 @@
 
    #include <botan/pk_algs.h>
    #include <botan/rng.h>
-   #include <botan/internal/hybrid_public_key.h>
    #include <botan/internal/kex_to_kem_adapter.h>
    #include <botan/internal/stl_util.h>
+   #include <botan/internal/tls_hybrid_kem.h>
    #include <algorithm>
 
 namespace Botan_Tests {

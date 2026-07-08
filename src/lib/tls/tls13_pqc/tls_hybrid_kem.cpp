@@ -9,7 +9,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/hybrid_public_key.h>
+#include <botan/internal/tls_hybrid_kem.h>
 
 #include <botan/ec_group.h>
 #include <botan/mem_ops.h>
