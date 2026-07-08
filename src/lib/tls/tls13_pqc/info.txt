@@ -11,7 +11,7 @@ brief -> "Hybrid Key Exchange for TLS 1.3 with Post-Quantum Algorithms"
 </header:public>
 
 <header:internal>
-hybrid_public_key.h
+tls_hybrid_kem.h
 </header:internal>
 
 <requires>
