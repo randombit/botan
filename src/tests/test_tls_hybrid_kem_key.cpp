@@ -177,37 +177,55 @@ std::vector<Test::Result> hybrid_kem_keypair() {
    return {
       CHECK("public key handles nullptr",
             [&](auto& result) {
-               result.test_throws("hybrid KEM key does not accept nullptr keys",
-                                  [] { Botan::TLS::Hybrid_TLS_KEM_PublicKey({nullptr, nullptr}); });
-               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEM",
-                                  [&] { Botan::TLS::Hybrid_TLS_KEM_PublicKey({nullptr, as_public_key(kem())}); });
-               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEX",
-                                  [&] { Botan::TLS::Hybrid_TLS_KEM_PublicKey({as_public_key(kex_dh()), nullptr}); });
+               result.test_throws("hybrid KEM key does not accept nullptr keys", [] {
+                  Botan::TLS::Hybrid_TLS_KEM_PublicKey({nullptr, nullptr});
+               });
+               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEM", [&] {
+                  Botan::TLS::Hybrid_TLS_KEM_PublicKey({nullptr, as_public_key(kem())});
+               });
+               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEX", [&] {
+                  Botan::TLS::Hybrid_TLS_KEM_PublicKey({as_public_key(kex_dh()), nullptr});
+               });
             }),
 
       CHECK("private key handles nullptr",
             [&](auto& result) {
-               result.test_throws("hybrid KEM key does not accept nullptr keys",
-                                  [] { Botan::TLS::Hybrid_TLS_KEM_PrivateKey({nullptr, nullptr}); });
-               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEM",
-                                  [&] { Botan::TLS::Hybrid_TLS_KEM_PrivateKey({nullptr, kem()}); });
-               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEX",
-                                  [&] { Botan::TLS::Hybrid_TLS_KEM_PrivateKey({kex_dh(), nullptr}); });
+               result.test_throws("hybrid KEM key does not accept nullptr keys", [] {
+                  Botan::TLS::Hybrid_TLS_KEM_PrivateKey({nullptr, nullptr});
+               });
+               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEM", [&] {
+                  Botan::TLS::Hybrid_TLS_KEM_PrivateKey({nullptr, kem()});
+               });
+               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEX", [&] {
+                  Botan::TLS::Hybrid_TLS_KEM_PrivateKey({kex_dh(), nullptr});
+               });
             }),
 
       CHECK("handles incompatible keys (non-KEM, non-KEX)",
             [&](auto& result) {
-               result.test_throws("hybrid KEM key does not accept signature keys",
-                                  [&] { Botan::TLS::Hybrid_TLS_KEM_PrivateKey({sig(), kem()}); });
-               result.test_throws("signature keys aren't allowed along with KEM keys",
-                                  [&] { Botan::TLS::Hybrid_TLS_KEM_PrivateKey({sig(), kem()}); });
-               result.test_throws("signature keys aren't allowed along with KEX keys",
-                                  [&] { Botan::TLS::Hybrid_TLS_KEM_PrivateKey({kex_dh(), sig()}); });
+               result.test_throws("hybrid KEM key does not accept signature keys", [&] {
+                  Botan::TLS::Hybrid_TLS_KEM_PrivateKey({sig(), kem()});
+               });
+               result.test_throws("signature keys aren't allowed along with KEM keys", [&] {
+                  Botan::TLS::Hybrid_TLS_KEM_PrivateKey({sig(), kem()});
+               });
+               result.test_throws("signature keys aren't allowed along with KEX keys", [&] {
+                  Botan::TLS::Hybrid_TLS_KEM_PrivateKey({kex_dh(), sig()});
+               });
             }),
 
-      CHECK("dual KEM key", [&](auto& result) { roundtrip_test(result, {kem(), kem()}); }),
-      CHECK("dual KEX key", [&](auto& result) { roundtrip_test(result, {kex_dh(), kex_ecdh()}); }),
-      CHECK("hybrid KEX/KEM key", [&](auto& result) { roundtrip_test(result, {kex_dh(), kem()}); }),
+      CHECK("dual KEM key",
+            [&](auto& result) {
+               roundtrip_test(result, {kem(), kem()});
+            }),
+      CHECK("dual KEX key",
+            [&](auto& result) {
+               roundtrip_test(result, {kex_dh(), kex_ecdh()});
+            }),
+      CHECK("hybrid KEX/KEM key",
+            [&](auto& result) {
+               roundtrip_test(result, {kex_dh(), kem()});
+            }),
    };
 }
 
