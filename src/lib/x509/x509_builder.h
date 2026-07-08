@@ -17,6 +17,7 @@
 
 namespace Botan {
 
+class BigInt;
 class Certificate_Extension;
 class DNSName;
 class EmailAddress;
@@ -52,18 +53,52 @@ class BOTAN_PUBLIC_API(3, 9) CertificateParametersBuilder final {
       * @param not_after the final validity time of the generated certificate
       * @param key the private key
       * @param rng the rng to use
+      * @param serial_number the serial number assigned to the created certificate;
+      *        randomly generated if unset
       * @param hash_fn the hash function to use; if unset a reasonable default is used
       * @param padding optional padding scheme (for specifying RSA-PSS vs RSA-PKCS1,
       *        otherwise not necessary)
       *
       * @return newly created self-signed certificate
+      *
+      * TODO(C++26) Use std::optional<const BigInt&> instead
       */
       X509_Certificate into_self_signed_cert(std::chrono::system_clock::time_point not_before,
                                              std::chrono::system_clock::time_point not_after,
                                              const Private_Key& key,
                                              RandomNumberGenerator& rng,
+                                             std::optional<const BigInt> serial_number,
                                              std::optional<std::string_view> hash_fn = {},
                                              std::optional<std::string_view> padding = {}) const;
+
+      /**
+      * Create a X.509 certificate signed by a certificate authority from these parameters.
+      *
+      * @param not_before the initial validity time of the generated certificate
+      * @param not_after the final validity time of the generated certificate
+      * @param ca_cert the CA certificate
+      * @param ca_key the CA certificate private key
+      * @param key the private key
+      * @param rng the rng to use
+      * @param serial_number the serial number assigned to the created certificate;
+      *        randomly generated if unset
+      * @param hash_fn the hash function to use; if unset a reasonable default is used
+      * @param padding optional padding scheme (for specifying RSA-PSS vs RSA-PKCS1,
+      *        otherwise not necessary)
+      *
+      * @return newly created certificate
+      *
+      * TODO(C++26) Use std::optional<const BigInt&> instead
+      */
+      X509_Certificate into_cert(std::chrono::system_clock::time_point not_before,
+                                 std::chrono::system_clock::time_point not_after,
+                                 const X509_Certificate& ca_cert,
+                                 const Private_Key& ca_key,
+                                 const Private_Key& key,
+                                 RandomNumberGenerator& rng,
+                                 std::optional<const BigInt> serial_number,
+                                 std::optional<std::string_view> hash_fn,
+                                 std::optional<std::string_view> padding) const;
 
       /**
       * Create a PKCS10 request
@@ -156,7 +191,7 @@ class BOTAN_PUBLIC_API(3, 9) CertificateParametersBuilder final {
       /**
       * Add another allowed usage to the KeyUsage extension
       *
-      * This is cummulative; all usages indicated are ORed together
+      * This is cumulative; all usages indicated are ORed together
       */
       CertificateParametersBuilder& add_allowed_usage(Key_Constraints kc);
 

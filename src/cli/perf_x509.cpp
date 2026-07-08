@@ -12,6 +12,7 @@
 #include <botan/assert.h>
 
 #if defined(BOTAN_HAS_X509)
+   #include <botan/asn1_time.h>
    #include <botan/ber_dec.h>
    #include <botan/bigint.h>
    #include <botan/der_enc.h>
@@ -61,8 +62,8 @@ class PerfTest_ASN1_Parsing final : public PerfTest {
          const auto not_before = std::chrono::system_clock::now();
          const auto not_after = not_before + std::chrono::seconds(86400);
 
-         auto root_cert =
-            root_cert_params.into_self_signed_cert(not_before, not_after, *root_key, rng, get_hash_function());
+         auto root_cert = root_cert_params.into_self_signed_cert(
+            not_before, not_after, *root_key, rng, std::nullopt, get_hash_function());
          auto ca = Botan::X509_CA(root_cert, *root_key, get_hash_function(), rng);
 
          return CA{

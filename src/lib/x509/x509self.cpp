@@ -5,6 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/bigint.h>
 #include <botan/x509self.h>
 
 namespace Botan::X509 {
@@ -22,7 +23,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    const std::optional<std::string_view> padding =
       (opts.padding_scheme.empty()) ? std::nullopt : std::optional<std::string_view>(opts.padding_scheme);
 
-   return opts.into_builder().into_self_signed_cert(not_before, not_after, key, rng, hash_fn, padding);
+   return opts.into_builder().into_self_signed_cert(not_before, not_after, key, rng, std::nullopt, hash_fn, padding);
 }
 
 /*
