@@ -175,6 +175,8 @@ class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_Paddin
 
       size_t plaintext_length(size_t /*ctext_len*/) const override { return m_key->group().p_bytes(); }
 
+      size_t ciphertext_length(size_t /*ptext_len*/) const override { return 2 * m_key->group().p_bytes(); }
+
       secure_vector<uint8_t> raw_decrypt(std::span<const uint8_t> ctext) override;
 
    private:

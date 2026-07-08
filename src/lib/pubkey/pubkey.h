@@ -133,6 +133,12 @@ class BOTAN_PUBLIC_API(2, 0) PK_Decryptor {
       */
       virtual size_t plaintext_length(size_t ctext_len) const = 0;
 
+      /**
+      * Return an upper bound on the ciphertext length for a particular
+      * plaintext input length.
+      */
+      virtual size_t ciphertext_length(size_t ptext_len) const = 0;
+
       PK_Decryptor() = default;
       virtual ~PK_Decryptor() = default;
 
@@ -541,6 +547,8 @@ class BOTAN_PUBLIC_API(2, 0) PK_Decryptor_EME final : public PK_Decryptor {
                        std::string_view provider = "");
 
       size_t plaintext_length(size_t ctext_len) const override;
+
+      size_t ciphertext_length(size_t ptext_len) const override;
 
       ~PK_Decryptor_EME() override;
 

@@ -127,6 +127,20 @@ size_t DLIES_Decryptor::plaintext_length(size_t ctext_len) const {
    return ctext_len - (m_pub_key_size + m_mac->output_length());
 }
 
+size_t DLIES_Decryptor::ciphertext_length(size_t ptext_len) const {
+   const auto ctext_len = [&]() -> size_t {
+      if(m_cipher != nullptr) {
+         // We need the encryption direction to estimate ciphertext lengths
+         const auto cipher = Cipher_Mode::create(m_cipher->name(), Cipher_Dir::Encryption);
+         return cipher->output_length(ptext_len);
+      } else {
+         return ptext_len;
+      }
+   }();
+
+   return m_pub_key_size + m_mac->output_length() + ctext_len;
+}
+
 secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask, const uint8_t msg[], size_t length) const {
    if(length < m_pub_key_size + m_mac->output_length()) {
       throw Decoding_Error("DLIES decryption: ciphertext is too short");

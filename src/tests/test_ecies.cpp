@@ -62,12 +62,22 @@ void check_encrypt_decrypt(Test::Result& result,
          ecies_dec.set_label(label);
       }
 
+      const auto ct_len_bound_enc = static_cast<Botan::PK_Encryptor&>(ecies_enc).ciphertext_length(plaintext.size());
+      const auto ct_len_bound_dec = static_cast<Botan::PK_Decryptor&>(ecies_dec).ciphertext_length(plaintext.size());
+      result.test_sz_eq("ciphertext length bounds match", ct_len_bound_enc, ct_len_bound_dec);
+
       const std::vector<uint8_t> encrypted = ecies_enc.encrypt(plaintext, rng);
       if(!ciphertext.empty()) {
          result.test_bin_eq("encrypted data", encrypted, ciphertext);
       }
+      result.test_sz_lte("ciphertext length within bounds",
+                         encrypted.size(),
+                         static_cast<Botan::PK_Decryptor&>(ecies_dec).ciphertext_length(plaintext.size()));
       const Botan::secure_vector<uint8_t> decrypted = ecies_dec.decrypt(encrypted);
       result.test_bin_eq("decrypted data equals plaintext", decrypted, plaintext);
+
+      const auto pt_len_bound_dec = static_cast<Botan::PK_Decryptor&>(ecies_dec).plaintext_length(encrypted.size());
+      result.test_sz_lte("plaintext length bounds match", plaintext.size(), pt_len_bound_dec);
 
       std::vector<uint8_t> invalid_encrypted = encrypted;
       uint8_t& last_byte = invalid_encrypted[invalid_encrypted.size() - 1];

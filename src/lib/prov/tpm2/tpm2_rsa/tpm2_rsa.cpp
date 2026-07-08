@@ -381,6 +381,10 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption {
          return m_key_handle._public_info(m_sessions, TPM2_ALG_RSA).pub->publicArea.parameters.rsaDetail.keyBits / 8;
       }
 
+      size_t ciphertext_length(size_t /* ptext_len */) const override {
+         return m_key_handle._public_info(m_sessions, TPM2_ALG_RSA).pub->publicArea.parameters.rsaDetail.keyBits / 8;
+      }
+
    private:
       const Object& m_key_handle;
       const SessionBundle& m_sessions;

@@ -341,6 +341,8 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_Decryptor final : public PK_Decryptor {
 
       size_t plaintext_length(size_t ctext_len) const override;
 
+      size_t ciphertext_length(size_t ptext_len) const override;
+
       const ECIES_KA_Operation m_ka;
       const ECIES_System_Params m_params;
       std::unique_ptr<MessageAuthenticationCode> m_mac;

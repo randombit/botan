@@ -110,6 +110,13 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
          return ptext_len - (2 * elem_size + m_hash->output_length());
       }
 
+      size_t ciphertext_length(size_t ptext_len) const override {
+         const size_t elem_size = m_group.get_order_bytes();
+         const size_t der_overhead = 16;
+
+         return der_overhead + 2 * elem_size + m_hash->output_length() + ptext_len;
+      }
+
       secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) override {
          const size_t p_bytes = m_group.get_p_bytes();
 

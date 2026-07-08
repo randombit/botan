@@ -68,6 +68,12 @@ class BOTAN_UNSTABLE_API Decryption /* NOLINT(*special-member-functions) */ {
 
       virtual size_t plaintext_length(size_t ctext_len) const = 0;
 
+      /**
+      * Given the plaintext length, return an upper bound on the ciphertext
+      * length that decrypt() expects for this key and padding.
+      */
+      virtual size_t ciphertext_length(size_t ptext_len) const = 0;
+
       virtual ~Decryption() = default;
 };
 
