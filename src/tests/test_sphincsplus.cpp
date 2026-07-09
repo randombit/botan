@@ -16,6 +16,10 @@
    #include <botan/sp_parameters.h>
    #include <botan/sphincsplus.h>
 
+   #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+      #include <botan/x509cert.h>
+   #endif
+
    #include "test_pubkey.h"
    #include "test_rng.h"
 
@@ -289,11 +293,29 @@ class Generic_SlhDsa_Verification_Tests final : public PK_Signature_Verification
       }
 };
 
+   #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+class SLH_DSA_X509_Tests : public Test {
+   public:
+      SLH_DSA_X509_Tests() = default;
+
+      std::vector<Test::Result> run() override {
+         Test::Result result("SLH-DSA-X.509");
+         const Botan::X509_Certificate cert(Test::data_file("x509/slh-dsa/slh-dsa-rfc-9909-cert.pem"));
+         auto ver_res = cert.verify_signature(*cert.subject_public_key());
+         result.test_is_true("signature of certificate verifies", ver_res.first == Botan::Certificate_Status_Code::OK);
+         return std::vector<Test::Result>({result});
+      }
+};
+   #endif
+
 BOTAN_REGISTER_TEST("pubkey", "sphincsplus", SPHINCS_Plus_Test);
 BOTAN_REGISTER_TEST("pubkey", "slh_dsa", SLH_DSA_Test);
 BOTAN_REGISTER_TEST("pubkey", "slh_dsa_keygen", SPHINCS_Plus_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "slh_dsa_sign_generic", Generic_SlhDsa_Signature_Tests);
 BOTAN_REGISTER_TEST("pubkey", "slh_dsa_verify_generic", Generic_SlhDsa_Verification_Tests);
+   #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+BOTAN_REGISTER_TEST("pubkey", "slh_dsa_x509", SLH_DSA_X509_Tests);
+   #endif
 
 }  // namespace
 
