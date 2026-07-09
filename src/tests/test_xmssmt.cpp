@@ -35,7 +35,20 @@ class XMSSMT_Signature_Tests final : public PK_Signature_Generation_Test {
          if(Test::run_long_tests() == false) {
             const std::string params = vars.get_req_str("Params");
 
-            if(params.find("60/3") != std::string::npos || params.find("40/2") != std::string::npos) {
+            // exclude all parameters with tree height greater 5 for normal tests
+            if(params.find("60/3") != std::string::npos || params.find("60/6") != std::string::npos ||
+               params.find("40/2") != std::string::npos || params.find("40/4") != std::string::npos ||
+               params.find("20/2") != std::string::npos) {
+               return true;
+            }
+
+            // only SHA2 for normal tests
+            if(params.find("SHAKE") != std::string::npos) {
+               return true;
+            }
+
+            // no 512-bit due to long runtimes for normal tests
+            if(params.find("512") != std::string::npos) {
                return true;
             }
 
