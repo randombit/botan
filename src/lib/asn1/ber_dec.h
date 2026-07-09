@@ -13,6 +13,7 @@
 #include <cstring>
 #include <memory>
 #include <optional>
+#include <utility>
 
 namespace Botan {
 
@@ -424,6 +425,26 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
                                             ASN1_Type real_type,
                                             ASN1_Class real_class,
                                             const T& default_value = T());
+
+      /**
+      * Decode an OPTIONAL field identified by a context-specific tag number.
+      *
+      * If the next object is tagged [tag_no] with class @p class_tag, @p fn is
+      * invoked to decode it (fn must consume exactly that object). Otherwise the
+      * stream is left unchanged and fn is not called.
+      *
+      * For a SEQUENCE of optional tagged fields that (per DER) appear at most
+      * once and in increasing tag order: call this once per field in tag order,
+      * then end_cons(), which rejects any unconsumed object (i.e. a duplicate,
+      * out-of-order, or unknown-tag field).
+      */
+      template <typename F>
+      BER_Decoder& decode_optional_field(uint32_t tag_no, ASN1_Class class_tag, F&& fn) {
+         if(peek_next_object().is_a(tag_no, class_tag)) {
+            std::forward<F>(fn)(*this);
+         }
+         return (*this);
+      }
 
       /**
       * Decode an already-extracted BER_Object as if its tag were

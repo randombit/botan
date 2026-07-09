@@ -183,21 +183,33 @@ class BOTAN_PUBLIC_API(2, 0) X509_CRL final : public X509_Object {
       const std::vector<URI>& issuing_distribution_point_uris() const;
 
       /**
-      * Check if this CRL's scope covers the given certificate's CRL distribution points.
+      * Check whether this CRL's scope covers the given certificate per the
+      * RFC 5280 6.3.3 (b)(1) and (b)(2)(i) name-matching rules.
       *
-      * Per RFC 5280 6.3.3 step (b)(2), if the certificate has a CRL Distribution Points
-      * extension (4.2.1.13) and this CRL has an Issuing Distribution Point extension
-      * (5.2.5), at least one general name from the IDP must match a general name in one
-      * of the certificate's distribution points.
+      * When the certificate has a CRLDP extension (4.2.1.13), iterates each
+      * DistributionPoint and verifies:
+      *   - (b)(1): if the DP includes cRLIssuer, this CRL's issuer must
+      *     appear in that field and this CRL must carry an IDP with
+      *     indirectCRL = TRUE; otherwise this CRL's issuer must match the
+      *     certificate's issuer.
+      *   - (b)(2)(i): if this CRL's IDP names a distributionPoint, that
+      *     name must overlap with the DP's distributionPoint (fullName
+      *     GeneralNames) or, if the DP omits distributionPoint, with
+      *     the DP's cRLIssuer entries.
       *
-      * Returns true if the certificate has no CRLDP extension (this CRL's scope is
-      * unconstrained from the certificate's perspective), or if both extensions are
-      * present and their distribution point names overlap. Returns false otherwise,
-      * including when the certificate has a CRLDP but this CRL has no IDP.
+      * The trailing paragraph of 6.3.3 supplies an implicit DP: this CRL
+      * is also usable if its issuer matches the certificate's issuer and,
+      * if its IDP names a distributionPoint, that name overlaps with the
+      * certificate's issuer DN or any entry in the certificate's
+      * issuerAltName extension. This implicit DP applies both when the
+      * certificate has no CRLDP and, as a fallback, when it has a CRLDP
+      * but no DistributionPoint matches: a same-issuer complete CRL not
+      * named in any DP is still usable.
       *
-      * The nameRelativeToCRLIssuer RDN form of DistributionPointName is not currently
-      * parsed by Botan's CRLDP/IDP decoders, so this comparison operates only on the
-      * fullName (GeneralNames) form.
+      * Returns false if none of the above match. Returns true on a name
+      * match. Reason coverage is a separate question; this predicate
+      * intentionally does not consult the DP's reasons field or the IDP's
+      * onlySomeReasons.
       */
       bool has_matching_distribution_point(const X509_Certificate& cert) const;
 

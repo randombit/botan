@@ -15,6 +15,8 @@
 
 namespace Botan {
 
+class X509_CRL;
+class X509_Certificate;
 class X509_DN;
 
 inline std::optional<uint32_t> is_sub_element_of(const OID& oid, std::initializer_list<uint32_t> prefix) {
@@ -36,6 +38,23 @@ inline std::optional<uint32_t> is_sub_element_of(const OID& oid, std::initialize
 * RDN sequence must be a prefix of the candidate name's RDN sequence.
 */
 bool x509_dn_subtree_match(const X509_DN& name, const X509_DN& constraint);
+
+/*
+* Combined result of the two has_matching_distribution_point* questions:
+*   - `any`: at least one DP (explicit or implicit) name-matches per
+*     RFC 5280 6.3.3 (b)(1) and (b)(2)(i).
+*   - `any_with_absent_reasons`: also true if a matching DP omits the reasons
+*     field (or the match is via the implicit DP, which has no reasons by
+*     construction).
+* Sharing a single DP-loop pass between the two predicates keeps their
+* matching rules in sync and avoids re-walking the cert's CDP.
+*/
+struct DistributionPointMatch {
+      bool any;
+      bool any_with_absent_reasons;
+};
+
+DistributionPointMatch distribution_point_match(const X509_CRL& crl, const X509_Certificate& cert);
 
 /*
 * Does the wildcard SAN @p pattern have some expansion that falls

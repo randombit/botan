@@ -1,6 +1,6 @@
 /*
 * X.509 CRL
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2026 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -15,6 +15,7 @@
 #include <botan/data_src.h>
 #include <botan/x509_ext.h>
 #include <botan/x509cert.h>
+#include <botan/internal/x509_utils.h>
 #include <algorithm>
 #include <set>
 
@@ -223,8 +224,11 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
       data->m_auth_key_id = ext->get_key_id();
    }
    if(const auto* ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_Issuing_Distribution_Point>()) {
-      for(const auto& uri : ext->get_point().uri_names()) {
-         data->m_idp_urls.push_back(uri);
+      const auto& dpn = ext->distribution_point_name();
+      if(dpn.has_value() && dpn->full_name().has_value()) {
+         for(const auto& uri : dpn->full_name()->uri_names()) {
+            data->m_idp_urls.push_back(uri);
+         }
       }
    }
 
@@ -357,21 +361,159 @@ bool dp_names_overlap(const AlternativeName& a, const AlternativeName& b) {
    return has_common(a.uri_names(), b.uri_names()) || has_common(a.directory_names(), b.directory_names());
 }
 
-}  // namespace
+bool dp_issuer_and_scope_ok(const Cert_Extension::CRL_Distribution_Points::Distribution_Point& dp,
+                            const X509_DN& crl_issuer_dn,
+                            const Cert_Extension::CRL_Issuing_Distribution_Point* idp_ext,
+                            const X509_Certificate& cert) {
+   /*
+   * RFC 5280 6.3.3 step (b)(1):
+   *    If the DP includes cRLIssuer, then verify that the issuer field in
+   *    the complete CRL matches cRLIssuer in the DP and that the complete
+   *    CRL contains an issuing distribution point extension with the
+   *    indirectCRL boolean asserted.  Otherwise, verify that the CRL
+   *    issuer matches the certificate issuer.
+   */
 
-bool X509_CRL::has_matching_distribution_point(const X509_Certificate& cert) const {
-   const auto* cdp_ext = cert.v3_extensions().get_extension_object_as<Cert_Extension::CRL_Distribution_Points>();
-   if(cdp_ext == nullptr || cdp_ext->distribution_points().empty()) {
+   if(dp.crl_issuer().has_value()) {
+      // Verify that the DP cRLIssuer field matches the CRL issuer
+      if(!dp.crl_issuer()->directory_names().contains(crl_issuer_dn)) {
+         return false;
+      }
+      // Verify that the IDP with the indirectCRL boolean asserted
+      if(idp_ext == nullptr || !idp_ext->indirect_crl()) {
+         return false;
+      }
+      return true;
+   } else {
+      // Verify that the CRL issuer matches the certificate issuer
+      return crl_issuer_dn == cert.issuer_dn();
+   }
+}
+
+bool dp_idp_name_matches(const Cert_Extension::CRL_Distribution_Points::Distribution_Point& dp,
+                         const Cert_Extension::CRL_Issuing_Distribution_Point* idp_ext) {
+   /*
+   * RFC 5280 6.3.3 step (b)(2)(i):
+   *    If the distribution point name is present in the IDP CRL extension
+   *    and the distribution field is present in the DP, then verify that
+   *    one of the names in the IDP matches one of the names in the DP.
+   *    If the distribution point name is present in the IDP CRL extension
+   *    and the distribution field is omitted from the DP, then verify
+   *    that one of the names in the IDP matches one of the names in the
+   *    cRLIssuer field of the DP.
+   */
+   if(idp_ext != nullptr) {
+      const auto& idp_dpn = idp_ext->distribution_point_name();
+      if(!idp_dpn.has_value()) {
+         return true;
+      }
+      const auto& cert_dpn = dp.distribution_point_name();
+      if(cert_dpn.has_value()) {
+         // Match the cert's DistributionPoint name against the CRL's IDP DistributionPoint name.
+         if(cert_dpn->full_name().has_value() && idp_dpn->full_name().has_value()) {
+            return dp_names_overlap(*cert_dpn->full_name(), *idp_dpn->full_name());
+         } else {
+            return false;
+         }
+      }
+      // DP omits distributionPoint: match IDP name against names in dp.cRLIssuer.
+      if(dp.crl_issuer().has_value() && idp_dpn->full_name().has_value()) {
+         return dp_names_overlap(*idp_dpn->full_name(), *dp.crl_issuer());
+      }
+      return false;
+   } else {
       return true;
    }
+}
 
-   const auto* idp_ext = this->extensions().get_extension_object_as<Cert_Extension::CRL_Issuing_Distribution_Point>();
-   if(idp_ext == nullptr) {
+/*
+* True if the cert has no CDP, in which case RFC 5280 6.3.3 trailing
+* paragraph applies: assume an implicit DP whose name is the certificate
+* issuer field plus the certificate issuerAltName entries, and whose
+* cRLIssuer and reasons are omitted.
+*/
+bool implicit_dp_matches(const X509_CRL& crl,
+                         const X509_Certificate& cert,
+                         const Cert_Extension::CRL_Issuing_Distribution_Point* idp_ext) {
+   if(crl.issuer_dn() != cert.issuer_dn()) {
       return false;
    }
+   if(idp_ext == nullptr) {
+      return true;
+   }
+   const auto& idp_dpn = idp_ext->distribution_point_name();
+   if(!idp_dpn.has_value()) {
+      return true;
+   }
+   if(!idp_dpn->full_name().has_value()) {
+      return false;
+   }
+   AlternativeName implicit_full_name = cert.issuer_alt_name();
+   implicit_full_name.add_dn(cert.issuer_dn());
+   return dp_names_overlap(*idp_dpn->full_name(), implicit_full_name);
+}
 
-   return std::ranges::any_of(cdp_ext->distribution_points(),
-                              [&](const auto& dp) { return dp_names_overlap(dp.point(), idp_ext->get_point()); });
+}  // namespace
+
+DistributionPointMatch distribution_point_match(const X509_CRL& crl, const X509_Certificate& cert) {
+   const auto* idp_ext = crl.extensions().get_extension_object_as<Cert_Extension::CRL_Issuing_Distribution_Point>();
+   const auto* cdp_ext = cert.v3_extensions().get_extension_object_as<Cert_Extension::CRL_Distribution_Points>();
+
+   /*
+   * RFC 5280 6.3.3 trailing paragraph: "If the revocation status has not
+   * been determined, repeat the process above with any available CRLs not
+   * specified in a distribution point but issued by the certificate issuer.
+   * For the processing of such a CRL, assume a DP with both the reasons and
+   * the cRLIssuer fields omitted and a distribution point name of the
+   * certificate issuer."
+   *
+   * When the cert has no CDP this implicit DP is the only DP; with no reasons
+   * field it covers all reasons by construction.
+   */
+   if(cdp_ext == nullptr || cdp_ext->distribution_points().empty()) {
+      const bool match = implicit_dp_matches(crl, cert, idp_ext);
+      return {match, match};
+   }
+
+   /*
+   * Walk the cert's CDP once, recording both the bare name-match and whether
+   * any matching DP omits the reasons field. (b)(1) cRLIssuer + indirectCRL
+   * and (b)(2)(i) IDP-vs-DP name overlap live in the helpers; reason coverage
+   * is decided per (d)(3): a matching DP whose reasons field is set narrows
+   * the CRL's coverage to that subset, so full coverage requires a
+   * matching DP with no reasons field.
+   */
+   const auto name_matches = [&](const auto& dp) {
+      return dp_issuer_and_scope_ok(dp, crl.issuer_dn(), idp_ext, cert) && dp_idp_name_matches(dp, idp_ext);
+   };
+
+   bool any = false;
+   bool any_with_absent_reasons = false;
+   for(const auto& dp : cdp_ext->distribution_points()) {
+      if(name_matches(dp)) {
+         any = true;
+         if(!dp.reasons().has_value()) {
+            any_with_absent_reasons = true;
+         }
+      }
+   }
+   if(any) {
+      return {true, any_with_absent_reasons};
+   }
+
+   /*
+   * Implicit-DP fallback: a same-issuer complete CRL that matches no explicit
+   * DP is still usable, unless its own IDP scopes it to a distribution point
+   * (see crl_eligible_for_implicit_dp_fallback). The implicit DP omits
+   * reasons, so a name match here also gives full reason coverage.
+   */
+   const bool implicit_dp_fallback = (idp_ext == nullptr || !idp_ext->distribution_point_name().has_value());
+   const bool implicit = implicit_dp_fallback && implicit_dp_matches(crl, cert, idp_ext);
+   return {implicit, implicit};
+}
+
+bool X509_CRL::has_matching_distribution_point(const X509_Certificate& cert) const {
+   return distribution_point_match(*this, cert).any;
 }
 
 }  // namespace Botan

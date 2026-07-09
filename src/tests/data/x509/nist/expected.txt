@@ -70,6 +70,13 @@ test72:CRL has expired
 test73:CRL has expired
 test74:Verified
 
+# CRL contains IDP extension saying CRL is for CA certs only. Per
+# RFC 5280 6.3.3 step (b)(2) such a CRL cannot be used to determine the
+# revocation status of a user (end-entity) certificate. With revocation
+# required there is no other source of revocation information for this
+# end entity, so the chain fails NO_REVOCATION_DATA.
+test76:No revocation data
+
 # Following answers are incorrect:
 
 # test45/test46/test47: Wrong results due to not supporting policies
@@ -80,8 +87,3 @@ test47:Verified
 # Delta CRL with no base CRL: the delta CRL Indicator extension is critical and
 # not processed, so the CRL is unusable.
 test75:CRL contains a critical extension that could not be processed
-
-# CRL contains IDP extension saying CRL is for CA certs only.
-# The IDP parser does not handle onlyContainsCACerts, so the critical
-# extension is treated as unprocessable and the CRL is rejected.
-test76:CRL contains a critical extension that could not be processed

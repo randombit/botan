@@ -15,13 +15,13 @@
 #include <botan/der_enc.h>
 #include <botan/hash.h>
 #include <botan/x509cert.h>
-#include <botan/internal/bit_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/x509_utils.h>
 #include <algorithm>
 #include <set>
+#include <span>
 
 namespace Botan {
 
@@ -849,6 +849,27 @@ std::vector<URI> parse_aia_uris(const std::vector<std::string>& uris, const char
    return out;
 }
 
+// Convert the application provided URIs into AccessDescription entries
+std::vector<Authority_Information_Access::AccessDescription> uri_access_descriptions(
+   const std::vector<URI>& ocsp_responders, const std::vector<URI>& ca_issuers) {
+   std::vector<Authority_Information_Access::AccessDescription> out;
+   out.reserve(ocsp_responders.size() + ca_issuers.size());
+
+   const auto append = [&](const OID& method, const std::vector<URI>& uris) {
+      for(const auto& uri : uris) {
+         const ASN1_String value(uri.original_input(), ASN1_Type::Ia5String);
+         out.emplace_back(method,
+                          ASN1_Type(6),
+                          ASN1_Class::ContextSpecific,
+                          std::vector<uint8_t>(value.value().begin(), value.value().end()));
+      }
+   };
+
+   append(OID::from_string("PKIX.OCSP"), ocsp_responders);
+   append(OID::from_string("PKIX.CertificateAuthorityIssuers"), ca_issuers);
+   return out;
+}
+
 }  // namespace
 
 Authority_Information_Access::Authority_Information_Access(std::string_view ocsp,
@@ -861,12 +882,20 @@ Authority_Information_Access::Authority_Information_Access(std::string_view ocsp
          throw Invalid_Argument("Invalid URI in AuthorityInformationAccess OCSP responder");
       }
    }
+   m_access_descriptions = uri_access_descriptions(m_ocsp_responders, m_ca_issuers);
 }
 
 Authority_Information_Access::Authority_Information_Access(const std::vector<std::string>& ocsp_responders,
                                                            const std::vector<std::string>& ca_issuers) :
       m_ocsp_responders(parse_aia_uris(ocsp_responders, "AuthorityInformationAccess OCSP responders")),
-      m_ca_issuers(parse_aia_uris(ca_issuers, "AuthorityInformationAccess CA issuers")) {}
+      m_ca_issuers(parse_aia_uris(ca_issuers, "AuthorityInformationAccess CA issuers")),
+      m_access_descriptions(uri_access_descriptions(m_ocsp_responders, m_ca_issuers)) {}
+
+Authority_Information_Access::Authority_Information_Access(std::vector<URI> ocsp_responders,
+                                                           std::vector<URI> ca_issuers) :
+      m_ocsp_responders(std::move(ocsp_responders)),
+      m_ca_issuers(std::move(ca_issuers)),
+      m_access_descriptions(uri_access_descriptions(m_ocsp_responders, m_ca_issuers)) {}
 
 std::vector<std::string> Authority_Information_Access::ocsp_responders() const {
    std::vector<std::string> out;
@@ -875,6 +904,85 @@ std::vector<std::string> Authority_Information_Access::ocsp_responders() const {
       out.push_back(uri.original_input());
    }
    return out;
+}
+
+std::unique_ptr<Certificate_Extension> Authority_Information_Access::copy() const {
+   return std::make_unique<Authority_Information_Access>(*this);
+}
+
+namespace {
+
+void validate_general_name_encoding(ASN1_Type tag, ASN1_Class cls, std::span<const uint8_t> value) {
+   // AlternativeName decodes GeneralNames; AIA accessLocation is a single GeneralName.
+   std::vector<uint8_t> wrapped_name;
+   DER_Encoder(wrapped_name).start_sequence().add_object(tag, cls, value).end_cons();
+
+   AlternativeName decoded_name;
+   BER_Decoder(wrapped_name, BER_Decoder::Limits::DER()).decode(decoded_name).verify_end();
+
+   if((tag == ASN1_Type(1) || tag == ASN1_Type(2) || tag == ASN1_Type(6)) && value.empty()) {
+      throw Decoding_Error("GeneralName IA5String value must not be empty");
+   }
+   if(tag == ASN1_Type(4) &&
+      std::ranges::any_of(decoded_name.directory_names(), [](const X509_DN& dn) { return dn.empty(); })) {
+      throw Decoding_Error("GeneralName directoryName must not be empty");
+   }
+}
+
+// Construction-time validation for an AccessDescription entering
+// m_access_descriptions. encode_inner repeats this as a safety net; doing it
+// here means the throw lands where the caller is building the AIA.
+void validate_access_description(const Authority_Information_Access::AccessDescription& ad) {
+   try {
+      validate_general_name_encoding(ad.location_tag(), ad.location_class(), ad.location_value());
+   } catch(const Exception&) {
+      throw Invalid_Argument("AccessDescription accessLocation is not a valid GeneralName");
+   }
+}
+
+// Mirror the decode-time logic that populates the typed URI accessors from
+// id-ad-ocsp / id-ad-caIssuers entries. Used by the AccessDescription-based
+// constructor and add_access_description so the two views stay consistent.
+// An id-ad-ocsp / id-ad-caIssuers entry whose URI fails to parse is rejected
+// here (mirroring decode_inner) so the typed accessors and m_access_descriptions
+// cannot disagree, and so the AIA cannot re-encode bytes that its own decoder
+// would reject.
+void populate_uri_view_from_access_description(const Authority_Information_Access::AccessDescription& ad,
+                                               std::vector<URI>& ocsp_responders,
+                                               std::vector<URI>& ca_issuers) {
+   const auto oid_ocsp_responders = OID::from_string("PKIX.OCSP");
+   const auto oid_ca_issuers = OID::from_string("PKIX.CertificateAuthorityIssuers");
+   if(const auto uri_str = ad.location_as_uri_string()) {
+      if(ad.access_method() == oid_ocsp_responders) {
+         if(auto uri = URI::parse(*uri_str)) {
+            ocsp_responders.push_back(std::move(*uri));
+         } else {
+            throw Invalid_Argument("Invalid URI in AuthorityInformationAccess OCSP responder");
+         }
+      } else if(ad.access_method() == oid_ca_issuers) {
+         if(auto uri = URI::parse(*uri_str)) {
+            ca_issuers.push_back(std::move(*uri));
+         } else {
+            throw Invalid_Argument("Invalid URI in AuthorityInformationAccess CA issuers");
+         }
+      }
+   }
+}
+
+}  // namespace
+
+Authority_Information_Access::Authority_Information_Access(std::vector<AccessDescription> access_descriptions) :
+      m_access_descriptions(std::move(access_descriptions)) {
+   for(const auto& ad : m_access_descriptions) {
+      validate_access_description(ad);
+      populate_uri_view_from_access_description(ad, m_ocsp_responders, m_ca_issuers);
+   }
+}
+
+void Authority_Information_Access::add_access_description(AccessDescription ad) {
+   validate_access_description(ad);
+   populate_uri_view_from_access_description(ad, m_ocsp_responders, m_ca_issuers);
+   m_access_descriptions.push_back(std::move(ad));
 }
 
 std::vector<std::string> Authority_Information_Access::ca_issuers() const {
@@ -886,26 +994,28 @@ std::vector<std::string> Authority_Information_Access::ca_issuers() const {
    return out;
 }
 
+std::optional<std::string> Authority_Information_Access::AccessDescription::location_as_uri_string() const {
+   if(m_location_class == ASN1_Class::ContextSpecific && m_location_tag == ASN1_Type(6)) {
+      return std::string(m_location_value.begin(), m_location_value.end());
+   }
+   return std::nullopt;
+}
+
 std::vector<uint8_t> Authority_Information_Access::encode_inner() const {
    std::vector<uint8_t> output;
    DER_Encoder der(output);
 
    der.start_sequence();
-   // OCSP Responders
-   for(const auto& ocsp_responder : m_ocsp_responders) {
-      const ASN1_String url(ocsp_responder.original_input(), ASN1_Type::Ia5String);
-      der.start_sequence()
-         .encode(OID::from_string("PKIX.OCSP"))
-         .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, url.value())
-         .end_cons();
-   }
 
-   // CA Issuers
-   for(const auto& ca_issuer : m_ca_issuers) {
-      const ASN1_String asn1_ca_issuer(ca_issuer.original_input(), ASN1_Type::Ia5String);
+   for(const auto& ad : m_access_descriptions) {
+      try {
+         validate_general_name_encoding(ad.location_tag(), ad.location_class(), ad.location_value());
+      } catch(const Exception&) {
+         throw Encoding_Error("AccessDescription accessLocation is not a valid GeneralName");
+      }
       der.start_sequence()
-         .encode(OID::from_string("PKIX.CertificateAuthorityIssuers"))
-         .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, asn1_ca_issuer.value())
+         .encode(ad.access_method())
+         .add_object(ad.location_tag(), ad.location_class(), ad.location_value())
          .end_cons();
    }
 
@@ -928,7 +1038,10 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in) 
    const OID ocsp_responder = OID::from_string("PKIX.OCSP");
    const OID ca_issuer = OID::from_string("PKIX.CertificateAuthorityIssuers");
 
-   size_t access_descriptions_seen = 0;
+   m_access_descriptions.clear();
+   m_ocsp_responders.clear();
+   m_ca_issuers.clear();
+
    while(ber.more_items()) {
       OID oid;
 
@@ -936,21 +1049,34 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in) 
 
       info.decode(oid);
       const BER_Object name = info.get_next_object();
+
+      /* RFC 5280 4.2.2.1:
+      *    AccessDescription  ::=  SEQUENCE {
+      *         accessMethod          OBJECT IDENTIFIER,
+      *         accessLocation        GeneralName  }
+      */
+      if(!name.is_set()) {
+         throw Decoding_Error("AuthorityInformationAccess AccessDescription missing accessLocation");
+      }
+      validate_general_name_encoding(name.type_tag(), name.get_class(), name.data());
       info.end_cons();
 
-      access_descriptions_seen += 1;
+      m_access_descriptions.emplace_back(
+         oid, name.type_tag(), name.get_class(), std::vector<uint8_t>(name.data().begin(), name.data().end()));
 
-      if(oid == ocsp_responder && name.is_a(6, ASN1_Class::ContextSpecific)) {
-         if(auto parsed = URI::parse(ASN1::to_string(name))) {
-            m_ocsp_responders.push_back(std::move(*parsed));
-         } else {
-            throw Decoding_Error("Invalid URI in AuthorityInformationAccess OCSP responder");
-         }
-      } else if(oid == ca_issuer && name.is_a(6, ASN1_Class::ContextSpecific)) {
-         if(auto parsed = URI::parse(ASN1::to_string(name))) {
-            m_ca_issuers.push_back(std::move(*parsed));
-         } else {
-            throw Decoding_Error("Invalid URI in AuthorityInformationAccess CA issuers");
+      if(name.is_a(6, ASN1_Class::ContextSpecific)) {
+         if(oid == ocsp_responder) {
+            if(auto parsed = URI::parse(ASN1::to_string(name))) {
+               m_ocsp_responders.push_back(std::move(*parsed));
+            } else {
+               throw Decoding_Error("Invalid URI in AuthorityInformationAccess OCSP responder");
+            }
+         } else if(oid == ca_issuer) {
+            if(auto parsed = URI::parse(ASN1::to_string(name))) {
+               m_ca_issuers.push_back(std::move(*parsed));
+            } else {
+               throw Decoding_Error("Invalid URI in AuthorityInformationAccess CA issuers");
+            }
          }
       }
    }
@@ -958,7 +1084,7 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in) 
    ber.end_cons();
    outer.verify_end();
 
-   if(access_descriptions_seen == 0) {
+   if(m_access_descriptions.empty()) {
       throw Decoding_Error("AuthorityInformationAccess extension must contain at least one AccessDescription");
    }
 }
@@ -1051,6 +1177,113 @@ void CRL_ReasonCode::decode_inner(const std::vector<uint8_t>& in) {
    m_reason = static_cast<CRL_Code>(reason_code);
 }
 
+namespace {
+
+/*
+* Encode an AlternativeName as `GeneralNames` but with an outer IMPLICIT
+* context-specific tag rather than the universal SEQUENCE tag. Used for
+* fullName [0] / cRLIssuer [2] / similar.
+*/
+void emit_general_names_implicit(DER_Encoder& der, const AlternativeName& names, uint32_t tag) {
+   // RFC 5280 4.2.1.6: GeneralNames ::= SEQUENCE SIZE (1..MAX) OF GeneralName
+   if(!names.has_items()) {
+      throw Encoding_Error("Cannot encode empty GeneralNames");
+   }
+   if(std::ranges::any_of(names.directory_names(), [](const X509_DN& dn) { return dn.empty(); })) {
+      throw Encoding_Error("GeneralNames must not contain an empty directoryName");
+   }
+   der.encode_implicit(names, ASN1_Type(tag));
+}
+
+constexpr size_t ReasonFlagsNamedBitWidth = 9;
+
+void emit_reason_flags_implicit(DER_Encoder& der, uint32_t tag, ReasonFlags reasons) {
+   der.encode_named_bitstring(reasons.value(), ReasonFlagsNamedBitWidth, ASN1_Type(tag), ASN1_Class::ContextSpecific);
+}
+
+ReasonFlags decode_reason_flags_implicit(BER_Decoder& decoder, uint32_t tag) {
+   uint64_t bits = 0;
+   decoder.decode_named_bitstring(bits, ReasonFlagsNamedBitWidth, ASN1_Type(tag), ASN1_Class::ContextSpecific);
+   return ReasonFlags(checked_cast_to<uint16_t>(bits));
+}
+
+/*
+* RFC 5280 4.2.1.13: "If present, the cRLIssuer MUST only contain the
+* distinguished name (DN) from the issuer field of the CRL to which the
+* DistributionPoint is pointing."
+*
+* We don't know the value of the CRL issuer at this point so we can only
+* enforce that the cRLIssuer name is exactly one non-empty DN.
+*/
+bool crl_issuer_is_well_formed(const AlternativeName& crl_issuer) {
+   const auto& dn = crl_issuer.directory_names();
+   return crl_issuer.count() == 1 && dn.size() == 1 && !dn.begin()->empty();
+}
+
+std::vector<URI> crl_distribution_point_uris_from_distribution_points(
+   const std::vector<CRL_Distribution_Points::Distribution_Point>& dps) {
+   std::vector<URI> out;
+   for(const auto& dp : dps) {
+      const auto& dpn = dp.distribution_point_name();
+      if(dpn.has_value() && dpn->full_name().has_value()) {
+         for(const auto& uri : dpn->full_name()->uri_names()) {
+            out.push_back(uri);
+         }
+      }
+   }
+   return out;
+}
+
+}  // namespace
+
+const AlternativeName& CRL_Distribution_Points::Distribution_Point::point() const {
+   BOTAN_STATE_CHECK(m_dp_name.has_value() && m_dp_name->full_name().has_value());
+   return *m_dp_name->full_name();
+}
+
+CRL_Distribution_Points::CRL_Distribution_Points(const std::vector<Distribution_Point>& points) :
+      m_distribution_points(points),
+      m_crl_distribution_urls(crl_distribution_point_uris_from_distribution_points(m_distribution_points)) {}
+
+const AlternativeName& CRL_Issuing_Distribution_Point::get_point() const {
+   BOTAN_STATE_CHECK(m_dp_name.has_value() && m_dp_name->full_name().has_value());
+   return *m_dp_name->full_name();
+}
+
+void DistributionPointName::encode_into(DER_Encoder& der) const {
+   if(!m_full_name.has_value()) {
+      throw Encoding_Error("DistributionPointName has no fullName to encode");
+   }
+   // fullName [0] IMPLICIT GeneralNames. emit_general_names_implicit rejects
+   // empty AlternativeNames per RFC 5280 4.2.1.6: GeneralNames ::= SEQUENCE
+   // SIZE (1..MAX).
+   emit_general_names_implicit(der, *m_full_name, 0);
+}
+
+void DistributionPointName::decode_from(BER_Decoder& ber) {
+   const BER_Object& obj = ber.peek_next_object();
+   if(obj.is_a(0, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
+      AlternativeName full_name;
+      ber.decode_implicit(full_name,
+                          ASN1_Type(0),
+                          ASN1_Class::ContextSpecific | ASN1_Class::Constructed,
+                          ASN1_Type::Sequence,
+                          ASN1_Class::Constructed);
+      // RFC 5280 4.2.1.6: GeneralNames ::= SEQUENCE SIZE (1..MAX) OF GeneralName
+      if(!full_name.has_items()) {
+         throw Decoding_Error("DistributionPointName fullName must contain at least one GeneralName");
+      }
+      if(std::ranges::any_of(full_name.directory_names(), [](const X509_DN& dn) { return dn.empty(); })) {
+         throw Decoding_Error("DistributionPointName fullName must not contain an empty directoryName");
+      }
+      m_full_name = std::move(full_name);
+   } else if(obj.is_a(1, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
+      throw Decoding_Error("nameRelativeToCrlIssuer not supported in DistributionPointName");
+   } else {
+      throw Decoding_Error("DistributionPointName CHOICE is neither fullName nor nameRelativeToCRLIssuer");
+   }
+}
+
 std::vector<uint8_t> CRL_Distribution_Points::encode_inner() const {
    std::vector<uint8_t> output;
    DER_Encoder(output).start_sequence().encode_list(m_distribution_points).end_cons();
@@ -1069,11 +1302,7 @@ void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf) {
       throw Decoding_Error("CRLDistributionPoints extension must contain at least one DistributionPoint");
    }
 
-   for(const auto& distribution_point : m_distribution_points) {
-      for(const auto& uri : distribution_point.point().uri_names()) {
-         m_crl_distribution_urls.push_back(uri);
-      }
-   }
+   m_crl_distribution_urls = crl_distribution_point_uris_from_distribution_points(m_distribution_points);
 }
 
 std::vector<std::string> CRL_Distribution_Points::crl_distribution_urls() const {
@@ -1086,42 +1315,219 @@ std::vector<std::string> CRL_Distribution_Points::crl_distribution_urls() const 
 }
 
 void CRL_Distribution_Points::Distribution_Point::encode_into(DER_Encoder& der) const {
-   const auto& uris = m_point.uri_names();
-
-   if(uris.empty()) {
-      throw Not_Implemented("Empty CRL_Distribution_Point encoding not implemented");
+   /*
+   * DistributionPoint ::= SEQUENCE {
+   *      distributionPoint       [0]     DistributionPointName OPTIONAL,
+   *      reasons                 [1]     ReasonFlags OPTIONAL,
+   *      cRLIssuer               [2]     GeneralNames OPTIONAL }
+   *
+   * RFC 5280 4.2.1.13: "either distributionPoint or cRLIssuer MUST be present".
+   */
+   const bool has_dp_name = m_dp_name.has_value();
+   const bool has_crl_issuer = m_crl_issuer.has_value();
+   if(!has_dp_name && !has_crl_issuer) {
+      throw Encoding_Error("DistributionPoint must contain either distributionPoint or cRLIssuer");
+   }
+   if(has_crl_issuer && !crl_issuer_is_well_formed(*m_crl_issuer)) {
+      /* RFC 5280 4.2.1.13: "If present, the cRLIssuer MUST only contain the
+      * distinguished name (DN) from the issuer field of the CRL". */
+      throw Encoding_Error("cRLIssuer must contain exactly one non-empty directoryName GeneralName");
    }
 
-   for(const auto& uri : uris) {
-      der.start_sequence()
-         .start_cons(ASN1_Type(0), ASN1_Class::ContextSpecific)
-         .start_cons(ASN1_Type(0), ASN1_Class::ContextSpecific)
-         .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, uri.original_input())
-         .end_cons()
-         .end_cons()
-         .end_cons();
+   der.start_sequence();
+
+   if(has_dp_name) {
+      // distributionPoint [0] EXPLICIT DistributionPointName
+      der.start_explicit_context_specific(0).encode(*m_dp_name).end_cons();
    }
+
+   if(m_reasons) {
+      emit_reason_flags_implicit(der, 1, *m_reasons);
+   }
+
+   if(has_crl_issuer) {
+      emit_general_names_implicit(der, *m_crl_issuer, 2);
+   }
+
+   der.end_cons();
 }
 
 void CRL_Distribution_Points::Distribution_Point::decode_from(BER_Decoder& ber) {
-   ber.start_sequence()
-      .start_context_specific(0)
-      .decode_optional_implicit(m_point,
-                                ASN1_Type(0),
-                                ASN1_Class::ContextSpecific | ASN1_Class::Constructed,
-                                ASN1_Type::Sequence,
-                                ASN1_Class::Constructed)
-      .end_cons()
-      .end_cons();
+   /*
+   * DistributionPoint ::= SEQUENCE {
+   *      distributionPoint       [0]     DistributionPointName OPTIONAL,
+   *      reasons                 [1]     ReasonFlags OPTIONAL,
+   *      cRLIssuer               [2]     GeneralNames OPTIONAL }
+   */
+   BER_Decoder dp = ber.start_sequence();
+
+   m_dp_name.reset();
+   m_reasons.reset();
+   m_crl_issuer.reset();
+
+   // DER: these optional fields appear at most once and in increasing tag
+   // order. Decoding them in tag order and then rejecting anything left over
+   // (see end_cons below) catches out-of-order, duplicate, and unknown fields.
+   dp.decode_optional_field(0,
+                            ASN1_Class::ContextSpecific | ASN1_Class::Constructed,
+                            [&](BER_Decoder& d) {
+                               DistributionPointName name;
+                               d.start_context_specific(0).decode(name).verify_end();
+                               m_dp_name = std::move(name);
+                            })
+      .decode_optional_field(
+         1, ASN1_Class::ContextSpecific, [&](BER_Decoder& d) { m_reasons = decode_reason_flags_implicit(d, 1); })
+      .decode_optional_field(2, ASN1_Class::ContextSpecific | ASN1_Class::Constructed, [&](BER_Decoder& d) {
+         AlternativeName crl_issuer;
+         d.decode_implicit(crl_issuer,
+                           ASN1_Type(2),
+                           ASN1_Class::ContextSpecific | ASN1_Class::Constructed,
+                           ASN1_Type::Sequence,
+                           ASN1_Class::Constructed);
+         m_crl_issuer = std::move(crl_issuer);
+      });
+
+   dp.end_cons();
+
+   // RFC 5280 4.2.1.6: GeneralNames ::= SEQUENCE SIZE (1..MAX) OF GeneralName
+   if(m_crl_issuer.has_value() && m_crl_issuer->is_empty()) {
+      throw Decoding_Error("cRLIssuer GeneralNames must contain at least one GeneralName");
+   }
+
+   if(m_crl_issuer.has_value() && !crl_issuer_is_well_formed(*m_crl_issuer)) {
+      /* RFC 5280 4.2.1.13: "If present, the cRLIssuer MUST only contain the
+      * distinguished name (DN) from the issuer field of the CRL". */
+      throw Decoding_Error("cRLIssuer must contain exactly one non-empty directoryName GeneralName");
+   }
+
+   if(!m_dp_name.has_value() && !m_crl_issuer.has_value()) {
+      throw Decoding_Error("DistributionPoint must contain either distributionPoint or cRLIssuer");
+   }
 }
 
 std::vector<uint8_t> CRL_Issuing_Distribution_Point::encode_inner() const {
-   throw Not_Implemented("CRL_Issuing_Distribution_Point encoding");
+   /* RFC 5280 Section 5.2.5
+   *
+   *    Conforming CRL issuers MUST NOT issue CRLs where the DER encoding of the
+   *    issuing distribution point extension is an empty sequence. [...] at most one
+   *    of onlyContainsUserCerts, onlyContainsCACerts, and onlyContainsAttributeCerts
+   *    may be set to TRUE
+   */
+   if(!should_encode()) {
+      throw Encoding_Error("Refusing to encode empty IssuingDistributionPoint");
+   }
+
+   const size_t scope_set = static_cast<size_t>(m_only_contains_user_certs) +
+                            static_cast<size_t>(m_only_contains_ca_certs) +
+                            static_cast<size_t>(m_only_contains_attribute_certs);
+   if(scope_set > 1) {
+      throw Encoding_Error(
+         "At most one of onlyContainsUserCerts, onlyContainsCACerts, onlyContainsAttributeCerts may be TRUE");
+   }
+
+   auto emit_optional_boolean_implicit = [](DER_Encoder& der, uint32_t tag, bool value) {
+      // All of the values encoded here are DEFAULT FALSE so skip encoding if false
+      if(value == true) {
+         // Encode a BOOLEAN TRUE (0xFF) as [tag] IMPLICIT BOOLEAN
+         const uint8_t val = 0xFF;
+         der.add_object(ASN1_Type(tag), ASN1_Class::ContextSpecific, &val, 1);
+      }
+   };
+
+   std::vector<uint8_t> output;
+   DER_Encoder der(output);
+   der.start_sequence();
+
+   if(m_dp_name.has_value()) {
+      der.start_explicit_context_specific(0).encode(*m_dp_name).end_cons();
+   }
+
+   emit_optional_boolean_implicit(der, 1, m_only_contains_user_certs);
+   emit_optional_boolean_implicit(der, 2, m_only_contains_ca_certs);
+
+   if(m_only_some_reasons) {
+      emit_reason_flags_implicit(der, 3, *m_only_some_reasons);
+   }
+
+   emit_optional_boolean_implicit(der, 4, m_indirect_crl);
+   emit_optional_boolean_implicit(der, 5, m_only_contains_attribute_certs);
+
+   der.end_cons();
+   return output;
 }
 
 void CRL_Issuing_Distribution_Point::decode_inner(const std::vector<uint8_t>& buf) {
-   /* RFC 5280 Section 5.2.5 - IssuingDistributionPoint ::= SEQUENCE { ... } */
-   BER_Decoder(buf, BER_Decoder::Limits::DER()).decode(m_distribution_point).verify_end();
+   /*
+   * RFC 5280 Section 5.2.5
+   *
+   * IssuingDistributionPoint ::= SEQUENCE {
+   *      distributionPoint          [0] DistributionPointName OPTIONAL,
+   *      onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
+   *      onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
+   *      onlySomeReasons            [3] ReasonFlags OPTIONAL,
+   *      indirectCRL                [4] BOOLEAN DEFAULT FALSE,
+   *      onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE }
+   */
+   BER_Decoder outer(buf, BER_Decoder::Limits::DER());
+   BER_Decoder seq = outer.start_sequence();
+
+   m_dp_name.reset();
+   m_only_contains_user_certs = false;
+   m_only_contains_ca_certs = false;
+   m_only_some_reasons = {};
+   m_indirect_crl = false;
+   m_only_contains_attribute_certs = false;
+
+   auto decode_implicit_bool = [&](BER_Decoder& dec, uint32_t tag) -> bool {
+      bool value = false;
+      dec.decode(value, ASN1_Type(tag), ASN1_Class::ContextSpecific);
+      return value;
+   };
+
+   // DER: these optional fields appear at most once and in increasing tag
+   // order. Decoding them in tag order and then rejecting anything left over
+   // (see end_cons below) catches out-of-order, duplicate, and unknown fields.
+   seq.decode_optional_field(0,
+                             ASN1_Class::ContextSpecific | ASN1_Class::Constructed,
+                             [&](BER_Decoder& d) {
+                                DistributionPointName name;
+                                d.start_context_specific(0).decode(name).verify_end();
+                                m_dp_name = std::move(name);
+                             })
+      .decode_optional_field(1,
+                             ASN1_Class::ContextSpecific,
+                             [&](BER_Decoder& d) { m_only_contains_user_certs = decode_implicit_bool(d, 1); })
+      .decode_optional_field(
+         2, ASN1_Class::ContextSpecific, [&](BER_Decoder& d) { m_only_contains_ca_certs = decode_implicit_bool(d, 2); })
+      .decode_optional_field(3,
+                             ASN1_Class::ContextSpecific,
+                             [&](BER_Decoder& d) { m_only_some_reasons = decode_reason_flags_implicit(d, 3); })
+      .decode_optional_field(
+         4, ASN1_Class::ContextSpecific, [&](BER_Decoder& d) { m_indirect_crl = decode_implicit_bool(d, 4); })
+      .decode_optional_field(5, ASN1_Class::ContextSpecific, [&](BER_Decoder& d) {
+         m_only_contains_attribute_certs = decode_implicit_bool(d, 5);
+      });
+
+   seq.end_cons();
+   outer.verify_end();
+
+   /* RFC 5280 5.2.5: "Conforming CRLs issuers MUST NOT issue CRLs where the
+   * DER encoding of the issuing distribution point extension is an empty
+   * sequence." Empty here means none of the fields above were present. */
+   if(!m_dp_name.has_value() && !m_only_contains_user_certs && !m_only_contains_ca_certs &&
+      !m_only_some_reasons.has_value() && !m_indirect_crl && !m_only_contains_attribute_certs) {
+      throw Decoding_Error("IssuingDistributionPoint must contain at least one field");
+   }
+
+   /* RFC 5280 5.2.5: "at most one of onlyContainsUserCerts,
+   * onlyContainsCACerts, and onlyContainsAttributeCerts may be set to TRUE." */
+   const size_t scope_set = static_cast<size_t>(m_only_contains_user_certs) +
+                            static_cast<size_t>(m_only_contains_ca_certs) +
+                            static_cast<size_t>(m_only_contains_attribute_certs);
+   if(scope_set > 1) {
+      throw Decoding_Error(
+         "IssuingDistributionPoint sets more than one of onlyContainsUserCerts/CACerts/AttributeCerts");
+   }
 }
 
 void TNAuthList::Entry::encode_into(DER_Encoder& /*to*/) const {
@@ -2086,9 +2492,17 @@ void NoRevocationAvailable::validate(const X509_Certificate& subject,
    // RFC 9608 Section 3:
    //    The Authority Information Access certificate extension, if
    //    present, MUST NOT include an id-ad-ocsp accessMethod
-   if(const auto* aia = exts.get_extension_object_as<Authority_Information_Access>();
-      aia != nullptr && !aia->ocsp_responder_uris().empty()) {
-      cert_status.at(pos).insert(Certificate_Status_Code::NO_REV_AVAIL_INVALID_USE);
+   //
+   // Walk the raw AccessDescription list rather than the URI-only typed
+   // accessor so a non-URI OCSP accessLocation also triggers the rejection.
+   if(const auto* aia = exts.get_extension_object_as<Authority_Information_Access>(); aia != nullptr) {
+      const OID id_ad_ocsp = OID::from_string("PKIX.OCSP");
+      const bool has_ocsp = !aia->ocsp_responder_uris().empty() ||
+                            std::ranges::any_of(aia->access_descriptions(),
+                                                [&](const auto& ad) { return ad.access_method() == id_ad_ocsp; });
+      if(has_ocsp) {
+         cert_status.at(pos).insert(Certificate_Status_Code::NO_REV_AVAIL_INVALID_USE);
+      }
    }
 }
 
