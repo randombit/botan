@@ -449,6 +449,8 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pubkey_x448_get_pubkey, [c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_load_ml_dsa, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_pubkey_load_ml_dsa, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_privkey_load_mldsa_composite, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_pubkey_load_mldsa_composite, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_privkey_load_slh_dsa, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_pubkey_load_slh_dsa, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_privkey_load_kyber, [c_void_p, c_char_p, c_int])
@@ -1634,6 +1636,14 @@ class PublicKey: # pylint: disable=invalid-name
         return pub
 
     @classmethod
+    def load_mldsa_composite(cls, mldsa_composite_mode: str, key: bytes) -> PublicKey:
+        """Load an ML-DSA-Composite public key giving the mode as a string
+        (like "MLDSA44-ECDSA-P256-SHA256") and the raw encoding of the public key."""
+        pub = PublicKey()
+        _DLL.botan_pubkey_load_mldsa_composite(byref(pub.handle_()), key, len(key), _ctype_str(mldsa_composite_mode))
+        return pub
+
+    @classmethod
     def load_frodokem(cls, frodo_mode: str, key: bytes) -> PublicKey:
         pub = PublicKey()
         _DLL.botan_pubkey_load_frodokem(byref(pub.handle_()), key, len(key), _ctype_str(frodo_mode))
@@ -1877,6 +1887,13 @@ class PrivateKey:
         """Return a private ML-DSA key"""
         priv = PrivateKey()
         _DLL.botan_privkey_load_ml_dsa(byref(priv.handle_()), key, len(key), _ctype_str(mldsa_mode))
+        return priv
+
+    @classmethod
+    def load_mldsa_composite(cls, mldsa_composite_mode: str, key: bytes) -> PrivateKey:
+        """Return a private ML-DSA-Composite key"""
+        priv = PrivateKey()
+        _DLL.botan_privkey_load_mldsa_composite(byref(priv.handle_()), key, len(key), _ctype_str(mldsa_composite_mode))
         return priv
 
     @classmethod
