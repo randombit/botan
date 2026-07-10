@@ -1241,6 +1241,20 @@ iWtHjIcunpiq6+IiB8IVu7Ncu6uPKoFS/mWzTvjgdNusmgNle9p3OAbE
         self.assertEqual(sk_read.to_raw(), sk_bits)
         self.assertEqual(pk_read.to_raw(), pk_bits)
 
+    def test_ml_kem_composite_raw_keys(self):
+        mlkem_composite_mode = "MLKEM768-X25519-SHA3-256"
+        sk = botan.PrivateKey.create("ML-KEM-Composite", mlkem_composite_mode, botan.RandomNumberGenerator("user"))
+        pk = sk.get_public_key()
+
+        sk_bits = sk.to_raw()
+        pk_bits = pk.to_raw()
+
+        sk_read = botan.PrivateKey.load_mlkem_composite(mlkem_composite_mode, sk_bits)
+        pk_read = botan.PublicKey.load_mlkem_composite(mlkem_composite_mode, pk_bits)
+
+        self.assertEqual(sk_read.to_raw(), sk_bits)
+        self.assertEqual(pk_read.to_raw(), pk_bits)
+
     def test_ml_dsa_raw_keys(self):
         mldsa_mode = "ML-DSA-4x4"
         sk = botan.PrivateKey.create("ML-DSA", mldsa_mode, botan.RandomNumberGenerator("user"))
