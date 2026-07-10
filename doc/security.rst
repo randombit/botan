@@ -4,13 +4,16 @@
 Security Advisories
 ========================================
 
-If you think you have found a security bug in Botan please report
-it using GitHub's private security issue reporting flow at
+If you think you have found a security bug in Botan please report it using
+GitHub's private security issue reporting flow at
 https://github.com/randombit/botan/security/advisories/new
 
-If this is not an option, you can also directly email the maintainer
-Jack Lloyd at ``jack@randombit.net``. If you are uncomfortable sending
-the report in plain text, email first to exchange Signal identifiers.
+If this is not an option, you can also directly email the maintainer Jack Lloyd
+at ``jack@randombit.net``. If you are uncomfortable sending the report in plain
+text, email first to exchange Signal identifiers.
+
+Before reporting an issue, please read ``doc/threat_model.rst`` to make sure that
+it is within the general threat model that the library operates under.
 
 2026
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
