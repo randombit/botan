@@ -1904,6 +1904,8 @@ class DTLS_Core_Regression_Tests final : public Test {
          }
          result.test_is_true("server response is HelloVerifyRequest",
                              contains_dtls_handshake_type(s2c, Botan::TLS::Handshake_Type::HelloVerifyRequest));
+         result.test_is_false("server does not arm a HelloVerifyRequest retransmission timer",
+                              server.next_retransmission_timeout().has_value());
          s2c.clear();  // simulate losing the HelloVerifyRequest
 
          wait_for_timeout_retransmit(result, client, c2s);
@@ -2313,17 +2315,17 @@ class DTLS_Core_Regression_Tests final : public Test {
          const auto cookie_secret_requests = creds->dtls_cookie_secret_requests();
          s2c.clear();
 
-         // Once the pending handshake consumes message_seq 0, receiving it
-         // again must replay HelloVerifyRequest rather than restart processing.
+         // HelloVerifyRequest is not retained as retransmittable flight data.
+         // A repeated initial ClientHello recreates the cookie response.
          deliver_copy(result, "retransmitted client 2 epoch-zero hello", epoch0_client_hello, server);
          result.test_is_true("pending restart replays HelloVerifyRequest",
                              contains_dtls_handshake_type(s2c, Botan::TLS::Handshake_Type::HelloVerifyRequest));
          result.test_sz_eq("retransmitted ClientHello does not establish another session",
                            server_callbacks->sessions_established(),
                            1);
-         result.test_sz_eq("retransmitted ClientHello does not repeat cookie processing",
+         result.test_sz_eq("retransmitted ClientHello recreates the cookie response",
                            creds->dtls_cookie_secret_requests(),
-                           cookie_secret_requests);
+                           cookie_secret_requests + 1);
          result.test_is_true("previous association remains active during restart", server.is_active());
          s2c.clear();
 
@@ -2530,6 +2532,13 @@ class DTLS_Core_Regression_Tests final : public Test {
             result.test_no_throw("client requests renegotiation", [&] { client.renegotiate(true); });
          }
 
+         // A renegotiation ClientHello is already protected under the active
+         // epoch. Replaying it must not infer a preceding CCS merely because
+         // the cached handshake message has a non-zero epoch.
+         c2s.clear();  // simulate losing the renegotiation ClientHello
+         wait_for_timeout_retransmit(result, client, c2s);
+         result.test_is_false("retransmitted renegotiation ClientHello does not include CCS",
+                              contains_dtls_record_type(c2s, Botan::TLS::Record_Type::ChangeCipherSpec));
          deliver(result, "renegotiation client hello", c2s, server);
          deliver(result, "renegotiation server handshake flight", s2c, client);
          deliver(result, "renegotiation client final flight", c2s, server);
@@ -2537,7 +2546,8 @@ class DTLS_Core_Regression_Tests final : public Test {
 
          result.test_is_true("client remains active after renegotiation", client.is_active());
          result.test_is_true("server remains active after renegotiation", server.is_active());
-         result.test_is_true("client tracks the new final flight", client.next_retransmission_timeout().has_value());
+         result.test_is_false("client does not track a non-terminal flight",
+                              client.next_retransmission_timeout().has_value());
          result.test_is_true("server tracks the new final flight", server.next_retransmission_timeout().has_value());
 
          return result;

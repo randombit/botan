@@ -129,6 +129,7 @@ class Datagram_Handshake_IO final : public Handshake_IO {
                             size_t max_handshake_msg_size) :
             m_seqs(seq),
             m_flights(1),
+            m_flight_ccs(1),
             m_initial_timeout(initial_timeout_ms),
             m_max_timeout(max_timeout_ms),
             m_send_hs(std::move(writer)),
@@ -269,7 +270,15 @@ class Datagram_Handshake_IO final : public Handshake_IO {
       bool m_retransmitted_server_hello_complete = false;
       bool m_retransmitted_server_hello_done_complete = false;
       std::vector<std::vector<uint16_t>> m_flights;
+      // Each entry records where in the corresponding flight a CCS was sent
+      // and the epoch under which it was transmitted.
+      std::vector<std::vector<std::pair<size_t, uint16_t>>> m_flight_ccs;
       std::map<uint16_t, Message_Info> m_flight_data;
+
+      std::optional<std::pair<uint16_t, Handshake_Reassembly>> m_retransmitted_client_hello;
+      bool m_awaiting_cookie_client_hello = false;
+      bool m_recreating_hello_verify_request = false;
+      std::optional<uint64_t> m_final_flight_expiration;
 
       uint64_t m_initial_timeout = 0;
       uint64_t m_max_timeout = 0;

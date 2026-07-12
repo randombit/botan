@@ -130,6 +130,7 @@ std::string map_to_bogo_error(const std::string& e) noexcept {
       {"Certificate usage constraints do not allow signing", ":KEY_USAGE_BIT_INCORRECT:"},
       {"Can't agree on a ciphersuite with client", ":NO_SHARED_CIPHER:"},
       {"Can't interleave application and handshake data", ":UNEXPECTED_RECORD:"},
+      {"Unexpected DTLS handshake retransmission", ":UNEXPECTED_RECORD:"},
       {"Unexpected new DTLS handshake message", ":UNEXPECTED_RECORD:"},
       {"Certificate chain exceeds policy specified maximum size", ":EXCESSIVE_MESSAGE_SIZE:"},
       {"Certificate key type did not match ciphersuite", ":WRONG_CERTIFICATE_TYPE:"},

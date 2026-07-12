@@ -324,8 +324,13 @@ void Channel_Impl_12::activate_session() {
       map_remove_if(not_current_epoch, m_read_cipher_states);
    }
 
-   // For DTLS, keep the handshake IO for last-flight retransmission.
-   if(m_is_datagram) {
+   // In a full handshake the server sends the terminal flight; in an
+   // abbreviated handshake the client does. Only that endpoint needs the
+   // completed handshake IO for post-activation recovery.
+   const bool sent_terminal_dtls_flight =
+      m_is_datagram && (m_is_server == (state.server_hello_done() != nullptr));
+
+   if(sent_terminal_dtls_flight) {
       m_active_state = Active_Connection_State_12(state, application_protocol(), m_pending_state->take_handshake_io());
       if(auto* dtls_io = m_active_state->dtls_handshake_io()) {
          // Explicitly mark the just-sent final flight complete so timeout_check()
@@ -457,6 +462,16 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
                                             Record_Type record_type,
                                             Protocol_Version record_version,
                                             bool epoch0_restart) {
+   const auto process_retransmitted_record = [&] {
+      BOTAN_ASSERT(m_active_state.has_value(), "Have active DTLS association for retransmission");
+
+      if(auto* dtls_io = m_active_state->dtls_handshake_io()) {
+         dtls_io->add_retransmitted_record(record.data(), record.size(), record_type, record_sequence);
+      } else {
+         throw TLS_Exception(Alert::UnexpectedMessage, "Unexpected DTLS handshake retransmission");
+      }
+   };
+
    if(!m_pending_state) {
       // With no pending handshake this is either a new handshake attempt or a
       // DTLS retransmission from the previous handshake. The latter must not
@@ -465,9 +480,7 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
          const bool starts_new_handshake = is_new_dtls_association_client_hello(record, record_type);
 
          if(!starts_new_handshake) {
-            BOTAN_ASSERT_NONNULL(m_active_state->dtls_handshake_io());
-            m_active_state->dtls_handshake_io()->add_retransmitted_record(
-               record.data(), record.size(), record_type, record_sequence);
+            process_retransmitted_record();
             return;
          }
       }
@@ -488,17 +501,12 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
                     static_cast<Handshake_Type>(record[0]) == Handshake_Type::HelloRequest));
 
                if(m_active_state.has_value() && !starts_new_handshake) {
-                  BOTAN_ASSERT_NONNULL(m_active_state->dtls_handshake_io());
-                  m_active_state->dtls_handshake_io()->add_retransmitted_record(
-                     record.data(), record.size(), record_type, record_sequence);
+                  process_retransmitted_record();
                } else {
                   create_handshake_state(record_version);
                }
             } else if(current_epoch > 0 && epoch == current_epoch - 1) {
-               BOTAN_ASSERT(m_active_state.has_value(), "Have active DTLS association for retransmission");
-               BOTAN_ASSERT_NONNULL(m_active_state->dtls_handshake_io());
-               m_active_state->dtls_handshake_io()->add_retransmitted_record(
-                  record.data(), record.size(), record_type, record_sequence);
+               process_retransmitted_record();
             }
          } else {
             create_handshake_state(record_version);
