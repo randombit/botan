@@ -289,6 +289,13 @@ std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
 }
 
 Record_Layer::ReadResult<Record> Record_Layer::next_record(Cipher_State* cipher_state) {
+   // Special case: on the record boundary we don't actually need any more data
+   // and we also don't want to be the know-it-all that now demands exactly
+   // enough bytes to start parsing the next record header.
+   if(m_read_buffer.empty()) {
+      return BytesNeeded(0);
+   }
+
    const auto remaining = m_read_buffer.size() - m_read_offset;
 
    if(remaining < TLS_HEADER_SIZE) {
