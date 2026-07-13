@@ -327,8 +327,7 @@ void Channel_Impl_12::activate_session() {
    // In a full handshake the server sends the terminal flight; in an
    // abbreviated handshake the client does. Both endpoints retain handshake
    // sequence state, but only the terminal sender replays its outgoing flight.
-   const bool sent_terminal_dtls_flight =
-      m_is_datagram && (m_is_server == (state.server_hello_done() != nullptr));
+   const bool sent_terminal_dtls_flight = m_is_datagram && (m_is_server == (state.server_hello_done() != nullptr));
 
    if(m_is_datagram) {
       m_active_state = Active_Connection_State_12(state, application_protocol(), m_pending_state->take_handshake_io());
@@ -393,8 +392,7 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
             throw TLS_Exception(Alert::RecordOverflow, "TLS plaintext record is larger than allowed maximum");
          }
 
-         const bool epoch0_restart =
-            allow_epoch0_restart && record.epoch() == 0 && m_active_state.has_value();
+         const bool epoch0_restart = allow_epoch0_restart && record.epoch() == 0 && m_active_state.has_value();
          BOTAN_ASSERT_IMPLICATION(epoch0_restart, allow_epoch0_restart, "Allowed state");
 
          const bool initial_record = epoch0_restart || (pending_state() == nullptr && !m_active_state.has_value());
