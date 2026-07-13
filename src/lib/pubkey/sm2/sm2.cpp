@@ -52,22 +52,46 @@ bool SM2_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
 SM2_PrivateKey::SM2_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
       EC_PrivateKey(alg_id, key_bits),
       m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
-      m_da_inv_legacy(m_da_inv.to_bigint()) {}
+      m_da_inv_legacy(m_da_inv.to_bigint()) {
+   if(m_da_inv.is_zero()) {
+      throw Decoding_Error("SM2 private key cannot equal n-1");
+   }
+}
 
 SM2_PrivateKey::SM2_PrivateKey(const EC_Group& group, const EC_Scalar& x) :
       EC_PrivateKey(group, x),
       m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
-      m_da_inv_legacy(m_da_inv.to_bigint()) {}
+      m_da_inv_legacy(m_da_inv.to_bigint()) {
+   BOTAN_ARG_CHECK(m_da_inv.is_nonzero(), "SM2 private key cannot equal n-1");
+}
+
+namespace {
+
+// Avoid the (unlikely) case of random generating an invalid key of n - 1
+EC_Scalar generate_sm2_private_key(RandomNumberGenerator& rng, const EC_Group& group) {
+   const auto one = EC_Scalar::one(group);
+
+   for(;;) {
+      // EC_Scalar::random never returns zero
+      auto x = EC_Scalar::random(group, rng);
+      BOTAN_ASSERT_NOMSG(x.is_nonzero());
+      if((x + one).is_nonzero()) {
+         return x;
+      }
+   }
+}
+
+}  // namespace
 
 SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group) :
-      EC_PrivateKey(rng, group),
-      m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
-      m_da_inv_legacy(m_da_inv.to_bigint()) {}
+      SM2_PrivateKey(group, generate_sm2_private_key(rng, group)) {}
 
 SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x) :
       EC_PrivateKey(rng, group, x),
       m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
-      m_da_inv_legacy(m_da_inv.to_bigint()) {}
+      m_da_inv_legacy(m_da_inv.to_bigint()) {
+   BOTAN_ARG_CHECK(m_da_inv.is_nonzero(), "SM2 private key cannot equal n-1");
+}
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
 std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
@@ -166,8 +190,10 @@ std::vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng) {
    const auto r = EC_Scalar::gk_x_mod_order(k, rng) + e;
    const auto s = (k - r * m_x) * m_da_inv;
 
+   const auto rs = r + s;
+
    // With overwhelming probability, a bug rather than actual zero r/s
-   if(r.is_zero() || s.is_zero()) {
+   if(r.is_zero() || s.is_zero() || rs.is_zero()) {
       throw Internal_Error("During SM2 signature generated zero r/s");
    }
 
@@ -239,26 +265,32 @@ bool SM2_Verification_Operation::is_valid_signature(std::span<const uint8_t> sig
    return false;
 }
 
-void parse_sm2_param_string(std::string_view params, std::string& userid, std::string& hash) {
-   // GM/T 0009-2012 specifies this as the default userid
-   const std::string default_userid = "1234567812345678";
-
-   // defaults:
-   userid = default_userid;
-   hash = "SM3";
+std::pair<std::string, std::string> parse_sm2_param_string(std::string_view params) {
+   const std::string default_hash = "SM3";
 
    /*
    * SM2 parameters have the following possible formats:
    * Ident [since 2.2.0]
    * Ident,Hash [since 2.3.0]
+   *
+   * Historically a completely empty parameter string was treated as
+   * if the identity was empty. This probably should have instead been
+   * treated as if it was the "default userid" ("1234567812345678") but
+   * there was a bug and it wasn't.
+   *
+   * TODO(Botan4) evaluate if this should be changed
    */
+   if(params.empty()) {
+      return std::make_pair(std::string(), default_hash);
+   }
 
    auto comma = params.find(',');
    if(comma == std::string::npos) {
-      userid = params;
+      return std::make_pair(std::string(params), default_hash);
    } else {
-      userid = params.substr(0, comma);
-      hash = params.substr(comma + 1, std::string::npos);
+      const auto userid = params.substr(0, comma);
+      const auto hash = params.substr(comma + 1, std::string::npos);
+      return std::make_pair(std::string(userid), std::string(hash));
    }
 }
 
@@ -271,9 +303,7 @@ std::unique_ptr<Private_Key> SM2_PublicKey::generate_another(RandomNumberGenerat
 std::unique_ptr<PK_Ops::Verification> SM2_PublicKey::create_verification_op(std::string_view params,
                                                                             std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
-      std::string userid;
-      std::string hash;
-      parse_sm2_param_string(params, userid, hash);
+      const auto [userid, hash] = parse_sm2_param_string(params);
       return std::make_unique<SM2_Verification_Operation>(*this, userid, hash);
    }
 
@@ -284,9 +314,7 @@ std::unique_ptr<PK_Ops::Signature> SM2_PrivateKey::create_signature_op(RandomNum
                                                                        std::string_view params,
                                                                        std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
-      std::string userid;
-      std::string hash;
-      parse_sm2_param_string(params, userid, hash);
+      const auto [userid, hash] = parse_sm2_param_string(params);
       return std::make_unique<SM2_Signature_Operation>(*this, userid, hash);
    }
 
