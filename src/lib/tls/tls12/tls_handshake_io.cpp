@@ -194,7 +194,7 @@ bool Datagram_Handshake_IO::have_more_data() const {
    return next != m_messages.end() && next->second.complete();
 }
 
-void Datagram_Handshake_IO::finalize_handshake() {
+void Datagram_Handshake_IO::finalize_handshake(bool retransmit_terminal_flight) {
    // Keep an empty trailing flight to mean "we are waiting for the peer".
    // Retransmission then replays the previous, completed flight instead of
    // appending to it.
@@ -203,12 +203,11 @@ void Datagram_Handshake_IO::finalize_handshake() {
       m_flight_ccs.push_back({});
    }
 
-   // RFC 6347 requires the sender of the final flight to remain responsive
-   // for at least twice the TCP MSL. Bound proactive timeout retransmissions
-   // to the same interval so a receive-silent application cannot keep them
-   // alive for the lifetime of the connection.
-   constexpr uint64_t TCP_MSL_MS = 120'000;
-   m_final_flight_expiration = steady_clock_ms() + 2 * TCP_MSL_MS;
+   // RFC 6347 4.2.4 transitions directly to FINISHED after sending the
+   // terminal flight. Keep the flight for reactive replay when the peer
+   // retransmits, but do not arm a proactive retransmission timer.
+   m_finished = true;
+   m_retransmit_terminal_flight = retransmit_terminal_flight;
 }
 
 bool Datagram_Handshake_IO::timeout_check() {
@@ -226,18 +225,17 @@ bool Datagram_Handshake_IO::timeout_check() {
 }
 
 std::optional<std::chrono::milliseconds> Datagram_Handshake_IO::next_retransmission_timeout() const {
+   if(m_finished) {
+      return std::nullopt;
+   }
+
    // Without an outgoing flight, or while constructing one, there is nothing
    // complete that timeout_check() could retransmit.
    if(m_last_write == 0 || (m_flights.size() > 1 && !m_flights.rbegin()->empty())) {
       return std::nullopt;
    }
 
-   const uint64_t now = steady_clock_ms();
-   if(m_final_flight_expiration.has_value() && now >= m_final_flight_expiration.value()) {
-      return std::nullopt;
-   }
-
-   const uint64_t ms_since_write = now - m_last_write;
+   const uint64_t ms_since_write = steady_clock_ms() - m_last_write;
    if(ms_since_write >= m_next_timeout) {
       return std::chrono::milliseconds(0);
    }
@@ -379,7 +377,9 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
          const uint16_t finished_epoch = static_cast<uint16_t>(epoch + 1);
          if(m_retransmitted_finished_epoch == finished_epoch) {
             m_retransmitted_finished_epoch.reset();
-            retransmit_last_flight();
+            if(m_retransmit_terminal_flight) {
+               retransmit_last_flight();
+            }
          } else {
             m_retransmitted_ccs_epoch = finished_epoch;
          }
@@ -462,7 +462,7 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
       record_len -= total_size;
    }
 
-   if(retransmit_response) {
+   if(retransmit_response && (!m_finished || m_retransmit_terminal_flight)) {
       retransmit_last_flight();
    }
 }

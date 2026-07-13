@@ -39,7 +39,8 @@ class Active_Connection_State_12 final {
 
       Active_Connection_State_12(const Handshake_State& state, std::string application_protocol);
 
-      // DTLS variant: takes the handshake IO for replay of final flight
+      // DTLS variant: retains handshake IO for retransmission validation and
+      // reactive replay of the terminal flight when appropriate.
       Active_Connection_State_12(const Handshake_State& state,
                                  std::string application_protocol,
                                  std::unique_ptr<Handshake_IO> io);
@@ -75,9 +76,9 @@ class Active_Connection_State_12 final {
       bool supports_extended_master_secret() const { return m_supports_extended_master_secret; }
 
       /**
-       * For DTLS: the handshake IO from the completed handshake, needed
-       * to retransmit the last flight when records arrive under the
-       * previous epoch. Null for stream TLS.
+       * For DTLS: the handshake IO from the completed handshake, needed to
+       * validate retransmissions and, for the terminal-flight sender, replay
+       * the final flight. Null for stream TLS.
        */
       Datagram_Handshake_IO* dtls_handshake_io() { return m_dtls_handshake_io.get(); }
 

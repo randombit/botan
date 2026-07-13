@@ -164,11 +164,11 @@ class Datagram_Handshake_IO final : public Handshake_IO {
                                                                       size_t max_message_size) override;
 
       /**
-      * Finalize the terminal outgoing handshake flight after channel
-      * activation. Intermediate flights are finalized implicitly when the
-      * peer's next handshake message is requested.
+      * Enter FINISHED after channel activation. Intermediate outgoing flights
+      * are finalized implicitly when the peer's next handshake message is
+      * requested. The terminal-flight sender retains reactive replay behavior.
       */
-      void finalize_handshake();
+      void finalize_handshake(bool retransmit_terminal_flight);
 
    private:
       void add_record(const uint8_t record[],
@@ -278,7 +278,8 @@ class Datagram_Handshake_IO final : public Handshake_IO {
       std::optional<std::pair<uint16_t, Handshake_Reassembly>> m_retransmitted_client_hello;
       bool m_awaiting_cookie_client_hello = false;
       bool m_recreating_hello_verify_request = false;
-      std::optional<uint64_t> m_final_flight_expiration;
+      bool m_finished = false;
+      bool m_retransmit_terminal_flight = false;
 
       uint64_t m_initial_timeout = 0;
       uint64_t m_max_timeout = 0;

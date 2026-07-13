@@ -93,11 +93,14 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers {
          m_write_seqs[0] = 0;
          m_write_epoch = 0;
          m_read_epoch = 0;
-         m_window_highest = 0;
-         m_window_bits = 0;
+         m_read_windows.clear();
+         m_read_windows[0] = Replay_Window{};
       }
 
-      void new_read_cipher_state() override { m_read_epoch++; }
+      void new_read_cipher_state() override {
+         m_read_epoch++;
+         m_read_windows.try_emplace(m_read_epoch);
+      }
 
       void new_write_cipher_state() override {
          m_write_epoch++;
@@ -120,56 +123,71 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers {
       uint64_t next_read_sequence() override { throw Invalid_State("DTLS uses explicit sequence numbers"); }
 
       bool already_seen(uint64_t sequence) const override {
-         const size_t window_size = sizeof(m_window_bits) * 8;
+         const uint16_t epoch = static_cast<uint16_t>(sequence >> 48);
+         const uint64_t record_sequence = sequence & 0x0000FFFFFFFFFFFF;
+         const auto window = m_read_windows.find(epoch);
 
-         if(sequence > m_window_highest) {
+         if(window == m_read_windows.end()) {
             return false;
          }
 
-         const uint64_t offset = m_window_highest - sequence;
+         const size_t window_size = sizeof(window->second.bits) * 8;
+
+         if(record_sequence > window->second.highest) {
+            return false;
+         }
+
+         const uint64_t offset = window->second.highest - record_sequence;
 
          if(offset >= window_size) {
             return true;  // really old?
          }
 
-         return (((m_window_bits >> offset) & 1) == 1);
+         return (((window->second.bits >> offset) & 1) == 1);
       }
 
       void read_accept(uint64_t sequence) override {
-         const size_t window_size = sizeof(m_window_bits) * 8;
+         const uint16_t epoch = static_cast<uint16_t>(sequence >> 48);
+         const uint64_t record_sequence = sequence & 0x0000FFFFFFFFFFFF;
+         auto& window = m_read_windows[epoch];
+         const size_t window_size = sizeof(window.bits) * 8;
 
-         if(sequence > m_window_highest) {
+         if(record_sequence > window.highest) {
             // We've received a later sequence which advances our window
-            const uint64_t offset = sequence - m_window_highest;
-            m_window_highest += offset;
+            const uint64_t offset = record_sequence - window.highest;
+            window.highest += offset;
 
             if(offset >= window_size) {
-               m_window_bits = 0;
+               window.bits = 0;
             } else {
-               m_window_bits <<= offset;
+               window.bits <<= offset;
             }
 
-            m_window_bits |= 0x01;
+            window.bits |= 0x01;
          } else {
-            const uint64_t offset = m_window_highest - sequence;
+            const uint64_t offset = window.highest - record_sequence;
 
             if(offset < window_size) {
                // We've received an old sequence but still within our window
-               m_window_bits |= (static_cast<uint64_t>(1) << offset);
+               window.bits |= (static_cast<uint64_t>(1) << offset);
             } else {
                // This occurs only if we have reset state (DTLS reconnection case)
-               m_window_highest = sequence;
-               m_window_bits = 0;
+               window.highest = record_sequence;
+               window.bits = 0;
             }
          }
       }
 
    private:
+      struct Replay_Window final {
+            uint64_t highest = 0;
+            uint64_t bits = 0;
+      };
+
       std::map<uint16_t, uint64_t> m_write_seqs;
+      std::map<uint16_t, Replay_Window> m_read_windows;
       uint16_t m_write_epoch = 0;
       uint16_t m_read_epoch = 0;
-      uint64_t m_window_highest = 0;
-      uint64_t m_window_bits = 0;
 };
 
 }  // namespace Botan::TLS
