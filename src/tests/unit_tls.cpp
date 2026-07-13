@@ -4,6 +4,7 @@
 *     2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *     2023 René Meusel, Rohde & Schwarz Cybersecurity
+*     2026 René Meusel, Rohde & Schwarz Networks and Cybersecurity
 *     2025 Lars Dürkop, CARIAD SE
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -42,22 +43,14 @@
       #include <botan/tls_session_manager_sqlite.h>
    #endif
 
-namespace Botan::TLS {
-
-// TODO: remove this, once TLS 1.3 is fully implemented
-class Strict_Policy_Without_TLS13 : public Strict_Policy {
-      bool allow_tls13() const override { return false; }
-};
-
-}  // namespace Botan::TLS
-
 #endif
 
 namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_TLS_12)
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_RSA)
+
 class Credentials_Manager_Test final : public Botan::Credentials_Manager {
    public:
       Credentials_Manager_Test(bool with_client_certs,
@@ -749,11 +742,6 @@ class Test_Policy final : public Botan::TLS::Text_Policy {
    public:
       Test_Policy() : Text_Policy("") {}
 
-      bool acceptable_protocol_version(Botan::TLS::Protocol_Version version) const override {
-         // TODO: handle TLS 1.3 server once the time is ripe.
-         return version.is_pre_tls_13();
-      }
-
       size_t dtls_initial_timeout() const override { return 1; }
 
       size_t dtls_maximum_timeout() const override { return 8; }
@@ -845,6 +833,27 @@ class HardwareEcdhKey final : public Botan::PK_Key_Agreement_Key {
 
 class TLS_Unit_Tests final : public Test {
    private:
+      static std::vector<Botan::TLS::Protocol_Version> available_versions() {
+         return {
+   #if defined(BOTAN_HAS_TLS_12)
+            Botan::TLS::Protocol_Version::TLS_V12, Botan::TLS::Protocol_Version::DTLS_V12,
+   #endif
+         };
+      }
+
+      static void enable_versions([[maybe_unused]] const std::shared_ptr<Test_Policy>& policy,
+                                  [[maybe_unused]] std::span<const Botan::TLS::Protocol_Version> versions) {
+         for(const auto& version : versions) {
+            if(version == Botan::TLS::Protocol_Version::TLS_V12) {
+               policy->set("allow_tls12", "true");
+            } else if(version == Botan::TLS::Protocol_Version::DTLS_V12) {
+               policy->set("allow_dtls12", "true");
+            } else if(version == Botan::TLS::Protocol_Version::TLS_V13) {
+               policy->set("allow_tls13", "true");
+            }
+         }
+      }
+
       static void test_with_policy(const std::string& test_descr,
                                    std::vector<Test::Result>& results,
                                    const std::shared_ptr<Botan::TLS::Session_Manager>& client_ses,
@@ -902,18 +911,14 @@ class TLS_Unit_Tests final : public Test {
          policy->set("key_exchange_methods", kex_policy);
          policy->set("negotiate_encrypt_then_mac", etm_policy);
 
-         policy->set("allow_tls12", "true");
-         policy->set("allow_dtls12", "true");
+         enable_versions(policy, available_versions());
 
          if(kex_policy.find("RSA") != std::string::npos) {
             policy->set("signature_methods", "IMPLICIT");
          }
 
-         const std::vector<Botan::TLS::Protocol_Version> versions = {Botan::TLS::Protocol_Version::TLS_V12,
-                                                                     Botan::TLS::Protocol_Version::DTLS_V12};
-
          return test_with_policy(
-            test_descr, results, client_ses, server_ses, creds, versions, policy, rng, client_auth);
+            test_descr, results, client_ses, server_ses, creds, available_versions(), policy, rng, client_auth);
       }
 
       static void test_modern_versions(const std::string& test_descr,
@@ -955,8 +960,8 @@ class TLS_Unit_Tests final : public Test {
          policy->set("ciphers", cipher_policy);
          policy->set("macs", mac_policy);
          policy->set("key_exchange_methods", kex_policy);
-         policy->set("allow_tls12", "true");
-         policy->set("allow_dtls12", "true");
+
+         enable_versions(policy, available_versions());
 
          if(kex_policy.find("RSA") != std::string::npos) {
             policy->set("signature_methods", "IMPLICIT");
@@ -966,24 +971,18 @@ class TLS_Unit_Tests final : public Test {
             policy->set(kv.first, kv.second);
          }
 
-         const std::vector<Botan::TLS::Protocol_Version> versions = {Botan::TLS::Protocol_Version::TLS_V12,
-                                                                     Botan::TLS::Protocol_Version::DTLS_V12};
-
          return test_with_policy(
-            test_descr, results, client_ses, server_ses, creds, versions, policy, rng, client_auth);
+            test_descr, results, client_ses, server_ses, creds, available_versions(), policy, rng, client_auth);
       }
 
       void test_session_established_abort(std::vector<Test::Result>& results,
                                           std::shared_ptr<Credentials_Manager_Test> creds,
                                           std::shared_ptr<Botan::RandomNumberGenerator> rng) {
-         std::vector<Botan::TLS::Protocol_Version> versions = {Botan::TLS::Protocol_Version::TLS_V12,
-                                                               Botan::TLS::Protocol_Version::DTLS_V12};
-
          auto policy = std::make_shared<Test_Policy>();
          auto noop_session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
 
          auto client_aborts = [&](const std::exception_ptr& ex, Botan::TLS::Alert expected_server_alert) {
-            for(const auto version : versions) {
+            for(const auto version : available_versions()) {
                TLS_Handshake_Test test("Client aborts in tls_session_established with " +
                                           expected_server_alert.type_string() + ": " + version.to_string(),
                                        version,
@@ -1005,7 +1004,7 @@ class TLS_Unit_Tests final : public Test {
          };
 
          auto server_aborts = [&](const std::exception_ptr& ex, Botan::TLS::Alert expected_server_alert) {
-            for(const auto version : versions) {
+            for(const auto version : available_versions()) {
                TLS_Handshake_Test test("Server aborts in tls_session_established with " +
                                           expected_server_alert.type_string() + ": " + version.to_string(),
                                        version,
@@ -1055,7 +1054,19 @@ class TLS_Unit_Tests final : public Test {
             Botan::TLS::Group_Params::BRAINPOOL512R1,
          };
 
-         for(const Botan::TLS::Group_Params ecdh_group : groups) {
+         const auto versions = available_versions();
+
+         const auto groups_and_versions = [&]() {
+            std::vector<std::pair<Botan::TLS::Group_Params, Botan::TLS::Protocol_Version>> out;
+            for(const auto& group : groups) {
+               for(const auto& version : versions) {
+                  out.emplace_back(group, version);
+               }
+            }
+            return out;
+         };
+
+         for(const auto& [ecdh_group, version] : groups_and_versions()) {
             if(!Botan::EC_Group::supports_named_group(ecdh_group.to_string().value())) {
                continue;
             }
@@ -1063,16 +1074,16 @@ class TLS_Unit_Tests final : public Test {
             auto policy = std::make_shared<Test_Policy>();
             policy->set("groups", "0x" + Botan::hex_encode(Botan::store_be(ecdh_group.wire_code())));
 
-            TLS_Handshake_Test test(
-               "Client uses a custom ECDH provider for " + ecdh_group.to_string().value() + " in TLS 1.2",
-               Botan::TLS::Protocol_Version::TLS_V12,
-               creds,
-               policy,
-               policy,
-               rng,
-               noop_session_manager,
-               noop_session_manager,
-               false);
+            TLS_Handshake_Test test("Client uses a custom ECDH provider for " + ecdh_group.to_string().value() +
+                                       " in " + version.to_string(),
+                                    version,
+                                    creds,
+                                    policy,
+                                    policy,
+                                    rng,
+                                    noop_session_manager,
+                                    noop_session_manager,
+                                    false);
 
             auto& test_results = test.results();
 
@@ -1241,16 +1252,11 @@ class TLS_Unit_Tests final : public Test {
          test_modern_versions("NULL PSK", results, client_ses, server_ses, creds, rng, "PSK", "NULL", "SHA-256");
    #endif
 
-         auto strict_policy = std::make_shared<Botan::TLS::Strict_Policy_Without_TLS13>();
-         test_with_policy("Strict policy",
-                          results,
-                          client_ses,
-                          server_ses,
-                          creds,
-                          {Botan::TLS::Protocol_Version::TLS_V12},
-                          strict_policy,
-                          rng);
+         auto strict_policy = std::make_shared<Botan::TLS::Strict_Policy>();
+         test_with_policy(
+            "Strict policy", results, client_ses, server_ses, creds, available_versions(), strict_policy, rng);
 
+   #if defined(BOTAN_HAS_TLS_12)
          auto suiteb_128 = std::make_shared<Botan::TLS::NSA_Suite_B_128>();
          test_with_policy("Suite B",
                           results,
@@ -1260,6 +1266,7 @@ class TLS_Unit_Tests final : public Test {
                           {Botan::TLS::Protocol_Version::TLS_V12},
                           suiteb_128,
                           rng);
+   #endif
 
          // Remove server sessions before client, so clients retry with session server doesn't know
          server_ses->remove_all();
@@ -1459,14 +1466,19 @@ class TLS_Unit_Tests final : public Test {
          test_custom_ecdh_provider(results, creds, rng);
 
          // Test using a custom KDF instead of the original TLS 1.2 KDF
+         // (this is a TLS 1.2 specific feature)
 
+   #if defined(BOTAN_HAS_TLS_12)
          test_custom_kdf_provider(results, creds, rng);
+   #endif
 
          return results;
       }
 };
 
 BOTAN_REGISTER_TEST("tls", "unit_tls", TLS_Unit_Tests);
+
+   #if defined(BOTAN_HAS_TLS_12)
 
 class DTLS_Reconnection_Test : public Test {
    public:
@@ -1676,6 +1688,8 @@ class DTLS_Reconnection_Test : public Test {
 };
 
 BOTAN_REGISTER_TEST("tls", "tls_dtls_reconnect", DTLS_Reconnection_Test);
+
+   #endif
 
 #endif
 
