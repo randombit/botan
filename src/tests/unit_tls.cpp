@@ -842,6 +842,14 @@ class HardwareEcdhKey final : public Botan::PK_Key_Agreement_Key {
 
 class TLS_Unit_Tests final : public Test {
    private:
+      static std::vector<Botan::TLS::Protocol_Version> legacy_versions() {
+         return {
+   #if defined(BOTAN_HAS_TLS_12)
+            Botan::TLS::Protocol_Version::TLS_V12, Botan::TLS::Protocol_Version::DTLS_V12,
+   #endif
+         };
+      }
+
       static std::vector<Botan::TLS::Protocol_Version> available_versions() {
          return {
    #if defined(BOTAN_HAS_TLS_12)
@@ -903,33 +911,43 @@ class TLS_Unit_Tests final : public Test {
          }
       }
 
-      static void test_all_versions(const std::string& test_descr,
-                                    std::vector<Test::Result>& results,
-                                    const std::shared_ptr<Botan::TLS::Session_Manager>& client_ses,
-                                    const std::shared_ptr<Botan::TLS::Session_Manager>& server_ses,
-                                    const std::shared_ptr<Credentials_Manager_Test>& creds,
-                                    std::shared_ptr<Botan::RandomNumberGenerator>& rng,
-                                    const std::string& kex_policy,
-                                    const std::string& cipher_policy,
-                                    const std::string& mac_policy,
-                                    const std::string& etm_policy,
-                                    bool client_auth = false) {
+      /**
+       * Legacy versions are TLS 1.2 and DTLS 1.2, which allow combinations of
+       * various ciphers, MACs and key exchange methods that aren't supported
+       * in TLS 1.3 anymore.
+       */
+      static void test_legacy_versions(const std::string& test_descr,
+                                       std::vector<Test::Result>& results,
+                                       const std::shared_ptr<Botan::TLS::Session_Manager>& client_ses,
+                                       const std::shared_ptr<Botan::TLS::Session_Manager>& server_ses,
+                                       const std::shared_ptr<Credentials_Manager_Test>& creds,
+                                       std::shared_ptr<Botan::RandomNumberGenerator>& rng,
+                                       const std::string& kex_policy,
+                                       const std::string& cipher_policy,
+                                       const std::string& mac_policy = "AEAD",
+                                       bool etm_policy = true,
+                                       bool client_auth = false) {
          auto policy = std::make_shared<Test_Policy>();
          policy->set("ciphers", cipher_policy);
          policy->set("macs", mac_policy);
          policy->set("key_exchange_methods", kex_policy);
-         policy->set("negotiate_encrypt_then_mac", etm_policy);
+         policy->set("negotiate_encrypt_then_mac", etm_policy ? "true" : "false");
 
-         enable_versions(policy, available_versions());
+         enable_versions(policy, legacy_versions());
 
          if(kex_policy.find("RSA") != std::string::npos) {
             policy->set("signature_methods", "IMPLICIT");
          }
 
          return test_with_policy(
-            test_descr, results, client_ses, server_ses, creds, available_versions(), policy, rng, client_auth);
+            test_descr, results, client_ses, server_ses, creds, legacy_versions(), policy, rng, client_auth);
       }
 
+      /**
+       * Modern versions are both TLS 1.2 and 1.3, as well as their DTLS
+       * counterparts, but with the restrictions that TLS 1.3 imposes on
+       * ciphers, MACs and key exchange methods.
+       */
       static void test_modern_versions(const std::string& test_descr,
                                        std::vector<Test::Result>& results,
                                        const std::shared_ptr<Botan::TLS::Session_Manager>& client_ses,
@@ -1220,32 +1238,32 @@ class TLS_Unit_Tests final : public Test {
          }
 
    #if defined(BOTAN_HAS_TLS_CBC)
-         for(const std::string etm_setting : {"false", "true"}) {
-            test_all_versions("AES-128 RSA",
-                              results,
-                              client_ses,
-                              server_ses,
-                              creds,
-                              rng,
-                              "RSA",
-                              "AES-128",
-                              "SHA-256 SHA-1",
-                              etm_setting);
-            test_all_versions("AES-128 ECDH",
-                              results,
-                              client_ses,
-                              server_ses,
-                              creds,
-                              rng,
-                              "ECDH",
-                              "AES-128",
-                              "SHA-256 SHA-1",
-                              etm_setting);
+         for(const bool etm_setting : {false, true}) {
+            test_legacy_versions("AES-128 RSA",
+                                 results,
+                                 client_ses,
+                                 server_ses,
+                                 creds,
+                                 rng,
+                                 "RSA",
+                                 "AES-128",
+                                 "SHA-256 SHA-1",
+                                 etm_setting);
+            test_legacy_versions("AES-128 ECDH",
+                                 results,
+                                 client_ses,
+                                 server_ses,
+                                 creds,
+                                 rng,
+                                 "ECDH",
+                                 "AES-128",
+                                 "SHA-256 SHA-1",
+                                 etm_setting);
 
       #if defined(BOTAN_HAS_DES)
-            test_all_versions(
+            test_legacy_versions(
                "3DES RSA", results, client_ses, server_ses, creds, rng, "RSA", "3DES", "SHA-1", etm_setting);
-            test_all_versions(
+            test_legacy_versions(
                "3DES ECDH", results, client_ses, server_ses, creds, rng, "ECDH", "3DES", "SHA-1", etm_setting);
       #endif
 
@@ -1253,12 +1271,12 @@ class TLS_Unit_Tests final : public Test {
          }
          client_ses->remove_all();
 
-         test_modern_versions("AES-128 DH", results, client_ses, server_ses, creds, rng, "DH", "AES-128", "SHA-256");
+         test_legacy_versions("AES-128 DH", results, client_ses, server_ses, creds, rng, "DH", "AES-128", "SHA-256");
 
    #endif
 
    #if defined(BOTAN_HAS_TLS_NULL)
-         test_modern_versions("NULL PSK", results, client_ses, server_ses, creds, rng, "PSK", "NULL", "SHA-256");
+         test_legacy_versions("NULL PSK", results, client_ses, server_ses, creds, rng, "PSK", "NULL", "SHA-256");
    #endif
 
          auto strict_policy = std::make_shared<Botan::TLS::Strict_Policy>();
@@ -1280,7 +1298,7 @@ class TLS_Unit_Tests final : public Test {
          // Remove server sessions before client, so clients retry with session server doesn't know
          server_ses->remove_all();
 
-         test_modern_versions("AES-128/GCM RSA", results, client_ses, server_ses, creds, rng, "RSA", "AES-128/GCM");
+         test_legacy_versions("AES-128/GCM RSA", results, client_ses, server_ses, creds, rng, "RSA", "AES-128/GCM");
          test_modern_versions("AES-128/GCM ECDH", results, client_ses, server_ses, creds, rng, "ECDH", "AES-128/GCM");
 
          test_modern_versions("AES-128/GCM ECDH RSA",
@@ -1308,15 +1326,18 @@ class TLS_Unit_Tests final : public Test {
          client_ses->remove_all();
 
    #if defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_AEAD_GCM)
-         test_modern_versions(
+         test_legacy_versions(
             "Camellia-128/GCM ECDH", results, client_ses, server_ses, creds, rng, "ECDH", "Camellia-128/GCM", "AEAD");
    #endif
 
    #if defined(BOTAN_HAS_ARIA)
-         test_modern_versions(
+         test_legacy_versions(
             "ARIA/GCM ECDH", results, client_ses, server_ses, creds, rng, "ECDH", "ARIA-128/GCM", "AEAD");
    #endif
 
+         // Note: TLS 1.3 actually does not support point compression and will
+         //       simply ignore this policy configuration. Nevertheless, the
+         //       handshake should complete successfully.
          test_modern_versions("AES-128/GCM point compression",
                               results,
                               client_ses,
@@ -1396,7 +1417,7 @@ class TLS_Unit_Tests final : public Test {
    #endif
 
    #if defined(BOTAN_HAS_AEAD_OCB)
-         test_modern_versions(
+         test_legacy_versions(
             "AES-256/OCB ECDH", results, client_ses, server_ses, creds, rng, "ECDH", "AES-256/OCB(12)");
    #endif
 
