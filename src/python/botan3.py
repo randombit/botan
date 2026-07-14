@@ -691,27 +691,34 @@ def _call_fn_returning_str(guess, fn):
     v = _call_fn_returning_vec(guess, fn)
     return v.decode('ascii')[:-1]
 
-@VIEW_BIN_CALLBACK
-def _view_bin_fn(_ctx, buf_val, buf_len):
-    _view_bin_fn.output = buf_val[0:buf_len]
-    return 0
-
 def _call_fn_viewing_vec(fn) -> bytes:
-    fn(None, _view_bin_fn)
-    result = _view_bin_fn.output
-    _view_bin_fn.output = None
-    return result
+    # The viewer callback and its output holder are call-local so that
+    # concurrent calls from multiple threads (ctypes releases the GIL across
+    # the C call) cannot clobber each other's exported data.
+    output = []
 
-@VIEW_STR_CALLBACK
-def _view_str_fn(_ctx, str_val, _str_len):
-    _view_str_fn.output = str_val
-    return 0
+    @VIEW_BIN_CALLBACK
+    def viewer(_ctx, buf_val, buf_len):
+        output.append(buf_val[0:buf_len])
+        return 0
+
+    fn(None, viewer)
+    if not output:
+        raise BotanException('View callback was not invoked')
+    return output[0]
 
 def _call_fn_viewing_str(fn) -> str:
-    fn(None, _view_str_fn)
-    result = _view_str_fn.output.decode('utf8')
-    _view_str_fn.output = None
-    return result
+    output = []
+
+    @VIEW_STR_CALLBACK
+    def viewer(_ctx, str_val, _str_len):
+        output.append(str_val)
+        return 0
+
+    fn(None, viewer)
+    if not output:
+        raise BotanException('View callback was not invoked')
+    return output[0].decode('utf8')
 
 def _ctype_str(s: str | None) -> bytes | None:
     if s is None:
@@ -1420,9 +1427,10 @@ def pbkdf(algo: str, password: str, out_len: int, iterations: int = 100000, salt
 
     out_buf = create_string_buffer(out_len)
 
+    passbits = _ctype_bits(password)
     _DLL.botan_pwdhash(_ctype_str(algo), iterations, 0, 0,
                        out_buf, out_len,
-                       _ctype_str(password), len(password),
+                       passbits, len(passbits),
                        salt, len(salt))
     return (salt, iterations, out_buf.raw)
 
@@ -1436,10 +1444,11 @@ def pbkdf_timed(algo: str, password: str, out_len: int, ms_to_run: int = 300, sa
     out_buf = create_string_buffer(out_len)
     iterations = c_size_t(0)
 
+    passbits = _ctype_bits(password)
     _DLL.botan_pwdhash_timed(_ctype_str(algo), c_uint32(ms_to_run),
                              byref(iterations), None, None,
                              out_buf, out_len,
-                             _ctype_str(password), len(password),
+                             passbits, len(passbits),
                              salt, len(salt))
     return (salt, iterations.value, out_buf.raw)
 
@@ -3389,11 +3398,38 @@ def zfec_decode(k: int, n: int, indexes: list[int], inputs: list[bytes]) -> list
     :param indexes: which of the shares are we giving the decoder
     :param inputs: the input shares (e.g. from a previous call to zfec_encode) which all must be the same length
 
+    Exactly `k` shares are needed to recover the data. Supplying more than `k`
+    (index, share) pairs is allowed; the extras are ignored.
+
     :returns: a list of bytes containing the original shares decoded from the provided shares (in `inputs`)
     """
 
+    # botan_zfec_decode() reads exactly K indexes and K input shares without
+    # bounds checking, so validate and normalize the arrays here before handing
+    # them to the native call to avoid out-of-bounds reads.
+    if not 1 <= k <= n < 256:
+        raise BotanException('Invalid zfec parameters: require 1 <= k <= n < 256')
+
+    if len(indexes) != len(inputs):
+        raise BotanException('zfec_decode requires one index per input share')
+
     if len(inputs) < k:
-        raise BotanException('Insufficient inputs for zfec decoding')
+        raise BotanException('zfec_decode requires at least k input shares')
+
+    if any(not 0 <= index < n for index in indexes):
+        raise BotanException('zfec_decode index out of range [0, n)')
+
+    if len(set(indexes)) != len(indexes):
+        raise BotanException('zfec_decode indexes must be unique')
+
+    # Only k shares are needed. If more are supplied, keep the k with the
+    # lowest indexes and ignore the rest: indexes 0..k-1 are the systematic
+    # shares, which reproduce the original data directly, so preferring the
+    # lower indexes avoids the cost of decoding from parity shares.
+    if len(inputs) > k:
+        chosen = sorted(zip(indexes, inputs), key=lambda pair: pair[0])[:k]
+        indexes = [index for index, _ in chosen]
+        inputs = [share for _, share in chosen]
 
     p_size_t = c_size_t * len(indexes)
     c_indexes = p_size_t(*[c_size_t(index) for index in indexes])
