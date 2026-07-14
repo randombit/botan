@@ -17,6 +17,7 @@
 #include <botan/tls_extensions.h>
 #include <botan/tls_policy.h>
 #include <botan/x509_key.h>
+#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_reader.h>
 #include <algorithm>
 #include <iterator>
@@ -39,7 +40,10 @@ std::vector<std::string> filter_signature_schemes(const std::vector<Signature_Sc
    std::vector<std::string> compatible_schemes;
    for(const auto& scheme : peer_scheme_preference) {
       if(scheme.is_available() && scheme.is_compatible_with(Protocol_Version::TLS_V13)) {
-         compatible_schemes.push_back(scheme.algorithm_name());
+         const auto algo_name = scheme.algorithm_name();
+         if(!value_exists(compatible_schemes, algo_name)) {
+            compatible_schemes.push_back(algo_name);
+         }
       }
    }
 
