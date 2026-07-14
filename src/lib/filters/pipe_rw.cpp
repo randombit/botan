@@ -152,11 +152,11 @@ size_t Pipe::peek(uint8_t& out, size_t offset, message_id msg) const {
 }
 
 size_t Pipe::get_bytes_read() const {
-   return m_outputs->get_bytes_read(default_msg());
+   return get_bytes_read(DEFAULT_MESSAGE);
 }
 
 size_t Pipe::get_bytes_read(message_id msg) const {
-   return m_outputs->get_bytes_read(msg);
+   return m_outputs->get_bytes_read(get_message_no("get_bytes_read", msg));
 }
 
 bool Pipe::check_available(size_t n) {

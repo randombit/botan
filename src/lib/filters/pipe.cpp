@@ -12,6 +12,7 @@
 #include <botan/internal/out_buf.h>
 #include <botan/internal/secqueue.h>
 #include <memory>
+#include <utility>
 
 namespace Botan {
 
@@ -29,7 +30,12 @@ class Null_Filter final : public Filter {
 
 }  // namespace
 
-Pipe::Pipe(Pipe&&) noexcept = default;
+// Transfer ownership and leave the moved-from Pipe empty
+Pipe::Pipe(Pipe&& other) noexcept :
+      m_pipe(std::exchange(other.m_pipe, nullptr)),
+      m_outputs(std::move(other.m_outputs)),
+      m_default_read(std::exchange(other.m_default_read, 0)),
+      m_inside_msg(std::exchange(other.m_inside_msg, false)) {}
 
 Pipe::Invalid_Message_Number::Invalid_Message_Number(std::string_view where, message_id msg) :
       Invalid_Argument(fmt("Pipe::{}: Invalid message number {}", where, msg)) {}
@@ -300,7 +306,9 @@ void Pipe::pop() {
 
    while(to_remove > 0) {
       const std::unique_ptr<Filter> to_destroy(m_pipe);
-      m_pipe = m_pipe->m_next[0];
+      // A filter with no ports has an empty m_next. Such a filter has no
+      // successor, so if popped the pipe is certainly empty at this point
+      m_pipe = (m_pipe->total_ports() > 0) ? m_pipe->m_next[0] : nullptr;
       to_remove -= 1;
    }
 }

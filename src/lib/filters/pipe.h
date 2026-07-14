@@ -342,7 +342,7 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       Pipe(std::initializer_list<Filter*> filters);
 
       Pipe(const Pipe&) = delete;
-      Pipe(Pipe&&) noexcept;
+      Pipe(Pipe&& other) noexcept;
       Pipe& operator=(const Pipe&) = delete;
       Pipe& operator=(Pipe&&) = delete;
 

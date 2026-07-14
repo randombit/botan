@@ -6,13 +6,18 @@
 */
 
 #include <botan/filters.h>
+
+#include <botan/assert.h>
 #include <algorithm>
 
 namespace Botan {
 
 #if defined(BOTAN_HAS_STREAM_CIPHER)
 
-StreamCipher_Filter::StreamCipher_Filter(StreamCipher* cipher) : m_cipher(cipher), m_buffer(m_cipher->buffer_size()) {}
+StreamCipher_Filter::StreamCipher_Filter(StreamCipher* cipher) :
+      m_cipher(cipher), m_buffer(cipher != nullptr ? cipher->buffer_size() : 0) {
+   BOTAN_ARG_CHECK(m_cipher != nullptr, "StreamCipher_Filter cipher argument must not be null");
+}
 
 StreamCipher_Filter::StreamCipher_Filter(StreamCipher* cipher, const SymmetricKey& key) : StreamCipher_Filter(cipher) {
    m_cipher->set_key(key);

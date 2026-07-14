@@ -8,6 +8,7 @@
 #include <botan/pipe.h>
 
 #include <botan/exceptn.h>
+#include <cerrno>
 #include <unistd.h>
 
 namespace Botan {
@@ -23,6 +24,9 @@ int operator<<(int fd, Pipe& pipe) {
       while(got > 0) {
          const ssize_t ret = ::write(fd, &buffer[position], got);
          if(ret < 0) {
+            if(errno == EINTR) {
+               continue;
+            }
             throw Stream_IO_Error("Pipe output operator (unixfd) has failed");
          }
 
@@ -41,6 +45,9 @@ int operator>>(int fd, Pipe& pipe) {
    while(true) {
       const ssize_t ret = ::read(fd, buffer.data(), buffer.size());
       if(ret < 0) {
+         if(errno == EINTR) {
+            continue;
+         }
          throw Stream_IO_Error("Pipe input operator (unixfd) has failed");
       } else if(ret == 0) {
          break;
