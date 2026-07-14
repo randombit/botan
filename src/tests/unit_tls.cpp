@@ -611,15 +611,15 @@ void TLS_Handshake_Test::go() {
          break;
       }
 
-      if(!client_handshake_completed && client->is_active()) {
+      if(!client_handshake_completed && client->is_handshake_complete()) {
          client_handshake_completed = true;
       }
 
-      if(!server_handshake_completed && m_server->is_active()) {
+      if(!server_handshake_completed && m_server->is_handshake_complete()) {
          server_handshake_completed = true;
       }
 
-      if(client->is_active() && !client_has_written) {
+      if(client->is_handshake_complete() && client->is_active() && !client_has_written) {
          m_results.test_str_eq("client ALPN protocol", client->application_protocol(), "test/1");
 
          size_t sent_so_far = 0;
@@ -635,7 +635,7 @@ void TLS_Handshake_Test::go() {
          client_has_written = true;
       }
 
-      if(m_server->is_active() && !server_has_written) {
+      if(m_server && m_server->is_handshake_complete() && m_server->is_active() && !server_has_written) {
          m_results.test_str_eq("server ALPN protocol", m_server->application_protocol(), "test/1");
 
          size_t sent_so_far = 0;
@@ -724,7 +724,7 @@ void TLS_Handshake_Test::go() {
          m_results.test_is_false("Client is not closed", client->is_closed());
          client->close();
          m_results.test_is_false("Client is no longer active", client->is_active());
-         m_results.test_is_true("Client is closed", client->is_closed());
+         m_results.test_is_true("Client is closed", client->is_closed_for_writing());
       }
    }
 
