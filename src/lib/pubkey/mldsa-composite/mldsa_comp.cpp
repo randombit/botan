@@ -48,7 +48,8 @@ std::span<const uint8_t> traditional_pubkey_subspan(const MLDSA_Composite_Param&
                                                     std::span<const uint8_t> key_bits) {
    const size_t offset = param.mldsa_pubkey_size();
    if(key_bits.size() <= 1 + offset) {
-      throw Invalid_Argument(fmt("encoded traditional component public key is too short (len = {})", key_bits.size()));
+      throw Invalid_Argument(fmt("encoded traditional component public key is too short, its length is only {} bytes",
+                                 key_bits.size() - offset));
    }
    return std::span<const uint8_t>(key_bits.begin() + offset, key_bits.end());
 }
@@ -96,7 +97,11 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
             BER_Decoder dec(trad_sig);
             BigInt ri;
             BigInt si;
-            dec.start_sequence().decode(ri).decode(si).end_cons();
+            try {
+               dec.start_sequence().decode(ri).decode(si).end_cons();
+            } catch(Exception&) {
+               return false;
+            }
             const auto group = Botan::EC_Group::from_name(m_parameters.curve());
             const EC_Scalar r = EC_Scalar::from_bigint(group, ri);
             const EC_Scalar s = EC_Scalar::from_bigint(group, si);
