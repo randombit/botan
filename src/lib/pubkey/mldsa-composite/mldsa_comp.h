@@ -47,7 +47,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
        * This is justified by the assumption that composite algorithms are used in the assumption that
        * one of the component algorithms might be broken.
        *
-       * @return the mimium of the components' estimated strengths.
+       * @return the maximum of the components' estimated strengths.
        */
       size_t estimated_strength() const override {
          return std::max(this->m_mldsa_pubkey->estimated_strength(), this->m_traditional_pubkey->estimated_strength());
