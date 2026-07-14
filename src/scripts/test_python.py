@@ -8,6 +8,7 @@ Botan is released under the Simplified BSD License (see license.txt)
 
 import unittest
 import binascii
+import hashlib
 import os
 import platform
 import argparse
@@ -127,6 +128,48 @@ class BotanPythonTests(unittest.TestCase):
         self.assertFalse(botan.check_bcrypt('live fire', phash))
 
         self.assertTrue(botan.check_bcrypt('test', '$2a$04$wjen1fAA.UW6UxthpKK.huyOoxvCR7ATRCVC4CBIEGVDOCtr8Oj1C'))
+
+    def test_password_utf8(self):
+        # The password-based interfaces must consume the full UTF-8 encoding of
+        # a non-ASCII password, not a truncated character-count prefix. The
+        # precomposed characters 'é' (U+00E9) and 'è' (U+00E8), each prefixed
+        # with 'p', encode to UTF-8 as 70 c3 a9 and 70 c3 a8 respectively: they
+        # share their first two bytes and differ only in the third, so a
+        # wrapper that truncated to the character count would derive identical
+        # keys for them.
+        salt = hex_decode('0001020304050607')
+        pw_a = 'pé'  # 70 c3 a9
+        pw_b = 'pè'  # 70 c3 a8
+        self.assertEqual(len(pw_a), 2)
+        self.assertEqual(len(pw_a.encode('utf-8')), 3)
+
+        # PBKDF2: cross-check against the stdlib reference over the full UTF-8
+        # bytes, and confirm the two passwords do not collide.
+        (_, _, key_a) = botan.pbkdf('PBKDF2(SHA-256)', pw_a, 32, 1000, salt)
+        self.assertEqual(key_a, hashlib.pbkdf2_hmac('sha256', pw_a.encode('utf-8'), salt, 1000, 32))
+        (_, _, key_b) = botan.pbkdf('PBKDF2(SHA-256)', pw_b, 32, 1000, salt)
+        self.assertNotEqual(key_a, key_b)
+
+        # pbkdf_timed derives over the same iterations must match pbkdf.
+        (t_salt, iters, timed) = botan.pbkdf_timed('PBKDF2(SHA-256)', pw_a, 32, 10)
+        self.assertEqual(timed, botan.pbkdf('PBKDF2(SHA-256)', pw_a, 32, iters, t_salt)[2])
+
+        # Every length-taking pwdhash interface must treat a str password
+        # identically to its explicit UTF-8 bytes (i.e. it passes the byte
+        # length, not the character count) and must not collide pw_a with pw_b.
+        def check(derive):
+            self.assertEqual(derive(pw_a), derive(pw_a.encode('utf-8')))
+            self.assertNotEqual(derive(pw_a), derive(pw_b))
+
+        check(lambda p: botan.pbkdf('PBKDF2(SHA-256)', p, 32, 1000, salt)[2])
+        check(lambda p: botan.scrypt(32, p, salt, 16, 1, 1))
+        check(lambda p: botan.argon2('Argon2id', 32, p, salt, 8, 1, 1))
+
+        # bcrypt passes a NUL-terminated string; a non-ASCII password must
+        # round-trip through generate/verify and not match a different one.
+        phash = botan.bcrypt(pw_a, botan.RandomNumberGenerator(), 4)
+        self.assertTrue(botan.check_bcrypt(pw_a, phash))
+        self.assertFalse(botan.check_bcrypt(pw_b, phash))
 
     def test_mac(self):
 
@@ -1491,6 +1534,36 @@ class BotanPythonZfecTests(unittest.TestCase):
                 b"".join(decoded),
                 input_bytes
             )
+
+    def test_decode_extra_shares(self):
+        # Supplying more than k shares is allowed; the extras are ignored.
+        k, n = 3, 6
+        input_bytes = bytes(range(96))  # 96 == 32 * k
+        output_shares = botan.zfec_encode(k, n, input_bytes)
+        all_indexes = list(range(n))
+
+        # All n shares provided (out of order): still decodes.
+        decoded = botan.zfec_decode(k, n, list(reversed(all_indexes)), list(reversed(output_shares)))
+        self.assertEqual(b"".join(decoded), input_bytes)
+
+        # k+1 shares provided: decodes.
+        decoded = botan.zfec_decode(k, n, all_indexes[:k + 1], output_shares[:k + 1])
+        self.assertEqual(b"".join(decoded), input_bytes)
+
+    def test_decode_rejects_bad_input(self):
+        k, n = 3, 5
+        input_bytes = bytes(range(96))
+        shares = botan.zfec_encode(k, n, input_bytes)
+        for indexes, inputs in [
+                ([0, 1], shares[:2]),          # fewer than k shares
+                ([0, 1], shares[:3]),          # index/share count mismatch
+                ([0, 1, n], shares[:3]),       # index out of range
+                ([0, 1, 1], shares[:3]),       # duplicate index
+        ]:
+            with self.assertRaises(botan.BotanException):
+                botan.zfec_decode(k, n, indexes, inputs)
+        with self.assertRaises(botan.BotanException):
+            botan.zfec_decode(k + n, n, list(range(k)), shares[:k])  # k > n
 
 
 def main():
