@@ -346,7 +346,7 @@ std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_verification_op(
 std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
                                                                                      std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
-      if(alg_id != this->algorithm_identifier()) {
+      if(alg_id.oid() != this->object_identifier() || !alg_id.parameters_are_empty()) {
          throw Decoding_Error("Unexpected AlgorithmIdentifier for Ed25519 X509 signature");
       }
 

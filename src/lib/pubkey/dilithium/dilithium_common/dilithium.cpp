@@ -405,7 +405,7 @@ std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_verification_o
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_x509_verification_op(
    const AlgorithmIdentifier& alg_id, std::string_view provider) const {
    if(provider.empty() || provider == "base") {
-      if(alg_id != this->algorithm_identifier()) {
+      if(alg_id.oid() != this->object_identifier() || !alg_id.parameters_are_empty()) {
          throw Decoding_Error("Unexpected AlgorithmIdentifier for Dilithium X.509 signature");
       }
       return std::make_unique<Dilithium_Verification_Operation>(m_public);

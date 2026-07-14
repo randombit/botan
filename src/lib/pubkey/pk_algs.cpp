@@ -131,10 +131,7 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
                                             [[maybe_unused]] std::span<const uint8_t> key_bits) {
    const std::string alg_name = [&]() -> std::string {
       if(const auto name = alg_id.oid().registered_name()) {
-         const std::vector<std::string> alg_info = split_on(*name, '/');
-         if(!alg_info.empty()) {
-            return alg_info[0];
-         }
+         return *name;
       }
 
       throw Decoding_Error(
@@ -298,10 +295,7 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
                                               [[maybe_unused]] std::span<const uint8_t> key_bits) {
    const std::string alg_name = [&]() -> std::string {
       if(const auto name = alg_id.oid().registered_name()) {
-         const std::vector<std::string> alg_info = split_on(*name, '/');
-         if(!alg_info.empty()) {
-            return alg_info[0];
-         }
+         return *name;
       }
 
       throw Decoding_Error(

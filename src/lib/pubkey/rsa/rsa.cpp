@@ -166,9 +166,12 @@ void RSA_PublicKey::init(BigInt&& n, BigInt&& e) {
 RSA_PublicKey::RSA_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
    // RFC 4055 Section 1.2 has that parameters MUST be NULL, but historical
    // reasons make that difficult to enforce, so absent is also accepted.
-   //
-   // This only checks rsaEncryption; PSS/OAEP key identifiers have their own parameter encoding
-   if(alg_id.oid().registered_name() == "RSA" && !alg_id.parameters_are_null_or_empty()) {
+   if(alg_id.oid().registered_name() != "RSA") {
+      throw Decoding_Error(
+         fmt("Unexpected AlgorithmIdentifier OID {} in association with RSA public key", alg_id.oid()));
+   }
+
+   if(!alg_id.parameters_are_null_or_empty()) {
       throw Decoding_Error("Unexpected parameters for RSA public key");
    }
 
@@ -280,7 +283,12 @@ void RSA_PrivateKey::init(BigInt&& d, BigInt&& p, BigInt&& q, BigInt&& d1, BigIn
 }
 
 RSA_PrivateKey::RSA_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
-   if(alg_id.oid().registered_name() == "RSA" && !alg_id.parameters_are_null_or_empty()) {
+   if(alg_id.oid().registered_name() != "RSA") {
+      throw Decoding_Error(
+         fmt("Unexpected AlgorithmIdentifier OID {} in association with RSA private key", alg_id.oid()));
+   }
+
+   if(!alg_id.parameters_are_null_or_empty()) {
       throw Decoding_Error("Unexpected parameters for RSA private key");
    }
 
@@ -682,7 +690,7 @@ AlgorithmIdentifier RSA_Signature_Operation::algorithm_identifier() const {
    try {
       const std::string full_name = "RSA/" + padding_name;
       const OID oid = OID::from_string(full_name);
-      return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
+      return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_NULL_PARAM);
    } catch(Lookup_Error&) {}
 
    if(padding_name.starts_with("PSS(")) {

@@ -853,12 +853,12 @@ Test::Result test_pss_params_rejects_trailing_data_in_mgf1_params() {
    const Botan::AlgorithmIdentifier sha256_alg_id("SHA-256", Botan::AlgorithmIdentifier::USE_NULL_PARAM);
    const auto sha256_der = sha256_alg_id.BER_encode();
 
-   auto encode_pss_params = [&](const std::vector<uint8_t>& mgf_params) {
-      const Botan::AlgorithmIdentifier mgf("MGF1", mgf_params);
+   auto encode_pss_params = [](const Botan::AlgorithmIdentifier& hash, const Botan::AlgorithmIdentifier& mgf_hash) {
+      const Botan::AlgorithmIdentifier mgf("MGF1", mgf_hash.BER_encode());
       Botan::DER_Encoder enc;
       enc.start_sequence()
          .start_context_specific(0)
-         .encode(sha256_alg_id)
+         .encode(hash)
          .end_cons()
          .start_context_specific(1)
          .encode(mgf)
@@ -871,7 +871,7 @@ Test::Result test_pss_params_rejects_trailing_data_in_mgf1_params() {
    };
 
    try {
-      const auto clean_der = encode_pss_params(sha256_der);
+      const auto clean_der = encode_pss_params(sha256_alg_id, sha256_alg_id);
       const Botan::PSS_Params clean(clean_der);
       result.test_success("control: clean PSS-Params decodes");
    } catch(const std::exception& e) {
@@ -881,10 +881,36 @@ Test::Result test_pss_params_rejects_trailing_data_in_mgf1_params() {
    std::vector<uint8_t> mgf_params_with_junk = sha256_der;
    const std::vector<uint8_t> trailing_junk{0x02, 0x01, 0x00};
    mgf_params_with_junk.insert(mgf_params_with_junk.end(), trailing_junk.begin(), trailing_junk.end());
-   const auto bad_der = encode_pss_params(mgf_params_with_junk);
+   const Botan::AlgorithmIdentifier mgf_with_trailing_junk("MGF1", mgf_params_with_junk);
+
+   Botan::DER_Encoder bad_mgf_params_enc;
+   bad_mgf_params_enc.start_sequence()
+      .start_context_specific(0)
+      .encode(sha256_alg_id)
+      .end_cons()
+      .start_context_specific(1)
+      .encode(mgf_with_trailing_junk)
+      .end_cons()
+      .start_context_specific(2)
+      .encode(static_cast<size_t>(32))
+      .end_cons()
+      .end_cons();
+   const auto bad_der = bad_mgf_params_enc.get_contents();
 
    result.test_throws<Botan::Decoding_Error>("PSS-Params rejects trailing data in MGF1 parameters",
                                              [&]() { const Botan::PSS_Params bad(bad_der); });
+
+   const Botan::AlgorithmIdentifier sha256_with_params("SHA-256", std::vector<uint8_t>{0x04, 0x00});
+
+   result.test_throws<Botan::Decoding_Error>("PSS-Params rejects hash AlgorithmIdentifier parameters", [&]() {
+      const auto bad_hash_der = encode_pss_params(sha256_with_params, sha256_alg_id);
+      const Botan::PSS_Params bad(bad_hash_der);
+   });
+
+   result.test_throws<Botan::Decoding_Error>("PSS-Params rejects MGF1 hash AlgorithmIdentifier parameters", [&]() {
+      const auto bad_mgf_hash_der = encode_pss_params(sha256_alg_id, sha256_with_params);
+      const Botan::PSS_Params bad(bad_mgf_hash_der);
+   });
 
    return result;
 }

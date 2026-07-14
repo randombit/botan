@@ -87,8 +87,7 @@ class BOTAN_PUBLIC_API(2, 0) GOST_3410_PrivateKey final : public GOST_3410_Publi
       * @param alg_id the X.509 algorithm identifier
       * @param key_bits ECPrivateKey bits
       */
-      GOST_3410_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
-            EC_PrivateKey(alg_id, key_bits) {}
+      GOST_3410_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
 
       /**
       * Create a private key from a given secret @p x
@@ -116,7 +115,7 @@ class BOTAN_PUBLIC_API(2, 0) GOST_3410_PrivateKey final : public GOST_3410_Publi
       std::unique_ptr<Public_Key> public_key() const override;
 
       AlgorithmIdentifier pkcs8_algorithm_identifier() const override {
-         return EC_PublicKey::algorithm_identifier();  // NOLINT(bugprone-parent-virtual-call)
+         return GOST_3410_PublicKey::algorithm_identifier();  // NOLINT(bugprone-parent-virtual-call)
       }
 
       std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
