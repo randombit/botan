@@ -28,6 +28,10 @@ const std::vector<Signature_Scheme>& Signature_Scheme::all_available_schemes() {
       //       EDDSA_25519,
       // #endif
 
+      ECDSA_SHA384,
+      ECDSA_SHA512,
+      ECDSA_SHA256,
+
       RSA_PSS_SHA384,
       RSA_PSS_SHA256,
       RSA_PSS_SHA512,
@@ -35,10 +39,6 @@ const std::vector<Signature_Scheme>& Signature_Scheme::all_available_schemes() {
       RSA_PKCS1_SHA384,
       RSA_PKCS1_SHA512,
       RSA_PKCS1_SHA256,
-
-      ECDSA_SHA384,
-      ECDSA_SHA512,
-      ECDSA_SHA256,
    };
 
    return all_schemes;

@@ -1524,7 +1524,28 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
 
          auto sort_our_extensions = [](Botan::TLS::Extensions& exts,
                                        Botan::TLS::Connection_Side /* side */,
-                                       Botan::TLS::Handshake_Type /* which_message */) {
+                                       Botan::TLS::Handshake_Type msg_type) {
+            if(msg_type == Handshake_Type::ClientHello) {
+               exts.remove_extension(Signature_Algorithms::static_type());
+               // This is the preference order of signature algorithms that we
+               // used when we first implemented this test case. To stay
+               // compatible with the now hard-coded transcript, we pin the
+               // algorithm order of preference.
+               //
+               // NOLINTNEXTLINE(*-owning-memory)
+               exts.add(new Signature_Algorithms({
+                  Signature_Scheme::RSA_PSS_SHA384,
+                  Signature_Scheme::RSA_PSS_SHA256,
+                  Signature_Scheme::RSA_PSS_SHA512,
+                  Signature_Scheme::RSA_PKCS1_SHA384,
+                  Signature_Scheme::RSA_PKCS1_SHA512,
+                  Signature_Scheme::RSA_PKCS1_SHA256,
+                  Signature_Scheme::ECDSA_SHA384,
+                  Signature_Scheme::ECDSA_SHA512,
+                  Signature_Scheme::ECDSA_SHA256,
+               }));
+            }
+
             // This is the order of extensions when we first introduced the PSK
             // implementation and generated the transcript. To stay compatible
             // with the now hard-coded transcript, we pin the extension order.
