@@ -4,6 +4,7 @@ extend-exclude = [
    "src/build-data/cc/msvc.txt",
    "src/build-data/cc/clangcl.txt",
    "doc/authors.txt",
+   "/src/tests/data/pubkey/mlkem_composite.vec",
 ]
 
 [default]

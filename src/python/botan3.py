@@ -457,6 +457,8 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pubkey_view_kyber_raw_key, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_privkey_load_ml_kem, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_pubkey_load_ml_kem, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_privkey_load_mlkem_composite, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_pubkey_load_mlkem_composite, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_privkey_load_frodokem, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_pubkey_load_frodokem, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_privkey_load_classic_mceliece, [c_void_p, c_void_p, c_int, c_char_p])
@@ -1618,6 +1620,14 @@ class PublicKey: # pylint: disable=invalid-name
         return pub
 
     @classmethod
+    def load_mlkem_composite(cls, mlkem_composite_mode: str, key: bytes) -> PublicKey:
+        """Load an ML-KEM-Composite public key giving the mode as a string
+        (like "MLKEM768-X25519-SHA3-256") and the raw encoding of the public key."""
+        pub = PublicKey()
+        _DLL.botan_pubkey_load_mlkem_composite(byref(pub.handle_()), key, len(key), _ctype_str(mlkem_composite_mode))
+        return pub
+
+    @classmethod
     def load_ml_dsa(cls, mldsa_mode: str, key: bytes) -> PublicKey:
         """Load an ML-DSA public key giving the mode as a string (like "ML-DSA-4x4")
         and the raw encoding of the public key."""
@@ -1870,6 +1880,13 @@ class PrivateKey:
         """Return a private ML-KEM key"""
         priv = PrivateKey()
         _DLL.botan_privkey_load_ml_kem(byref(priv.handle_()), key, len(key), _ctype_str(mlkem_mode))
+        return priv
+
+    @classmethod
+    def load_mlkem_composite(cls, mlkem_composite_mode: str, key: bytes) -> PrivateKey:
+        """Return a private ML-KEM-Composite key"""
+        priv = PrivateKey()
+        _DLL.botan_privkey_load_mlkem_composite(byref(priv.handle_()), key, len(key), _ctype_str(mlkem_composite_mode))
         return priv
 
     @classmethod
