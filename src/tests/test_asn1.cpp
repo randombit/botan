@@ -165,37 +165,111 @@ Test::Result test_ber_max_object_size() {
    return result;
 }
 
-Test::Result test_ber_constructed_string_rejected() {
-   Test::Result result("BER constructed OCTET/BIT STRING rejected");
+Test::Result test_ber_constructed_string_decoding() {
+   Test::Result result("BER constructed OCTET/BIT STRING decoding");
 
    using Botan::ASN1_Class;
    using Botan::ASN1_Type;
 
-   // Constructed OCTET STRING (24) wrapping two OCTET STRING fragments
-   const std::vector<uint8_t> cons_octet = {0x24, 0x06, 0x04, 0x02, 0xAA, 0xBB, 0x04, 0x00};
-   // Constructed BIT STRING (23) wrapping one BIT STRING fragment
-   const std::vector<uint8_t> cons_bits = {0x23, 0x04, 0x03, 0x02, 0x00, 0xAA};
+   const auto ber = Botan::BER_Decoder::Limits::BER();
 
-   // Reachable when the caller's expected class matches the constructed object;
-   // rejected in both BER and DER
-   for(auto limits : {Botan::BER_Decoder::Limits::BER(), Botan::BER_Decoder::Limits::DER()}) {
-      result.test_throws<Botan::Decoding_Error>("constructed OCTET STRING rejected", [&]() {
-         std::vector<uint8_t> out;
-         Botan::BER_Decoder(cons_octet, limits)
-            .decode(out, ASN1_Type::OctetString, ASN1_Type::OctetString, ASN1_Class::Constructed);
-      });
+   // Constructed OCTET STRING wrapping two fragments plus an empty one
+   const std::vector<uint8_t> cons_octet = {0x24, 0x09, 0x04, 0x02, 0xAA, 0xBB, 0x04, 0x00, 0x04, 0x01, 0xCC};
+   // The same value using indefinite length
+   const std::vector<uint8_t> cons_octet_indef = {
+      0x24, 0x80, 0x04, 0x02, 0xAA, 0xBB, 0x04, 0x00, 0x04, 0x01, 0xCC, 0x00, 0x00};
+   // The same value with a nested constructed segment holding the last fragment
+   const std::vector<uint8_t> cons_octet_nested = {
+      0x24, 0x0B, 0x04, 0x02, 0xAA, 0xBB, 0x24, 0x80, 0x04, 0x01, 0xCC, 0x00, 0x00};
+   const std::vector<uint8_t> expected_octets = {0xAA, 0xBB, 0xCC};
 
-      result.test_throws<Botan::Decoding_Error>("constructed BIT STRING rejected", [&]() {
-         std::vector<uint8_t> out;
-         Botan::BER_Decoder(cons_bits, limits)
-            .decode(out, ASN1_Type::BitString, ASN1_Type::BitString, ASN1_Class::Constructed);
-      });
-
-      result.test_throws<Botan::Decoding_Error>("constructed BIT STRING rejected via decode_bitstring", [&]() {
-         Botan::ASN1_BitString bs;
-         Botan::BER_Decoder(cons_bits, limits).decode_bitstring(bs, ASN1_Type::BitString, ASN1_Class::Constructed);
-      });
+   for(const auto& input : {cons_octet, cons_octet_indef, cons_octet_nested}) {
+      std::vector<uint8_t> out;
+      Botan::BER_Decoder(input, ber).decode(out, ASN1_Type::OctetString).verify_end();
+      result.test_bin_eq("constructed OCTET STRING concatenated", out, expected_octets);
    }
+
+   // An implicitly tagged [0] constructed OCTET STRING
+   const std::vector<uint8_t> cons_octet_implicit = {0xA0, 0x07, 0x04, 0x02, 0xAA, 0xBB, 0x04, 0x01, 0xCC};
+   std::vector<uint8_t> implicit_out;
+   Botan::BER_Decoder(cons_octet_implicit, ber)
+      .decode(implicit_out, ASN1_Type::OctetString, ASN1_Type(0), ASN1_Class::ContextSpecific)
+      .verify_end();
+   result.test_bin_eq("implicitly tagged constructed OCTET STRING", implicit_out, expected_octets);
+
+   // Constructed BIT STRING: 8 bits then 4 bits, so the final segment
+   // carries 4 unused bits
+   const std::vector<uint8_t> cons_bits = {0x23, 0x08, 0x03, 0x02, 0x00, 0xAA, 0x03, 0x02, 0x04, 0xB0};
+   Botan::ASN1_BitString bs;
+   Botan::BER_Decoder(cons_bits, ber).decode_bitstring(bs).verify_end();
+   result.test_sz_eq("constructed BIT STRING length", bs.bit_length(), 12);
+   result.test_bin_eq("constructed BIT STRING value", bs.bytes(), std::vector<uint8_t>{0xAA, 0xB0});
+
+   std::vector<uint8_t> bits_out;
+   Botan::BER_Decoder(cons_bits, ber).decode(bits_out, ASN1_Type::BitString).verify_end();
+   result.test_bin_eq("constructed BIT STRING via vector decode", bits_out, std::vector<uint8_t>{0xAA, 0xB0});
+
+   // A constructed string with no segments is an empty string
+   const std::vector<uint8_t> cons_empty = {0x24, 0x00};
+   std::vector<uint8_t> empty_out = {0xFF};
+   Botan::BER_Decoder(cons_empty, ber).decode(empty_out, ASN1_Type::OctetString).verify_end();
+   result.test_sz_eq("empty constructed OCTET STRING", empty_out.size(), 0);
+
+   // Unused bits are only permitted in the final segment (X.690 8.6.4)
+   const std::vector<uint8_t> bad_bits = {0x23, 0x08, 0x03, 0x02, 0x04, 0xA0, 0x03, 0x02, 0x00, 0xBB};
+   result.test_throws<Botan::Decoding_Error>("unused bits before final segment rejected", [&]() {
+      Botan::ASN1_BitString out;
+      Botan::BER_Decoder(bad_bits, ber).decode_bitstring(out);
+   });
+
+   // Segments must have the same string type as the outer object
+   const std::vector<uint8_t> bad_segment = {0x24, 0x04, 0x03, 0x02, 0x00, 0xAA};
+   result.test_throws<Botan::Decoding_Error>("wrong segment type rejected", [&]() {
+      std::vector<uint8_t> out;
+      Botan::BER_Decoder(bad_segment, ber).decode(out, ASN1_Type::OctetString);
+   });
+
+   // Nesting beyond the limit is rejected. This value must match ALLOWED_CONSTRUCTED_STRING_NESTING
+   // in ber_dec.cpp
+   constexpr size_t expected_constr_nesting_allowed = 2;
+
+   for(size_t depth = 0; depth != 16; ++depth) {
+      std::vector<uint8_t> deep = {0x04, 0x01, 0xAA};
+      for(size_t i = 0; i != depth; ++i) {
+         std::vector<uint8_t> wrapped = {0x24, static_cast<uint8_t>(deep.size())};
+         wrapped.insert(wrapped.end(), deep.begin(), deep.end());
+         deep = std::move(wrapped);
+      }
+
+      if(depth <= expected_constr_nesting_allowed) {
+         std::vector<uint8_t> out;
+         Botan::BER_Decoder(deep, ber).decode(out, ASN1_Type::OctetString);
+         result.test_success("BER_Decoder accepted nested encoding");
+         result.test_bin_eq("Constructed matched expected value", out, "AA");
+      } else {
+         result.test_throws<Botan::Decoding_Error>("deeply nested constructed string rejected", [&]() {
+            std::vector<uint8_t> out;
+            Botan::BER_Decoder(deep, ber).decode(out, ASN1_Type::OctetString);
+         });
+      }
+   }
+
+   // DER requires the primitive form, in every code path
+   const auto der = Botan::BER_Decoder::Limits::DER();
+   result.test_throws<Botan::Decoding_Error>("constructed OCTET STRING rejected in DER", [&]() {
+      std::vector<uint8_t> out;
+      Botan::BER_Decoder(cons_octet, der)
+         .decode(out, ASN1_Type::OctetString, ASN1_Type::OctetString, ASN1_Class::Constructed);
+   });
+   result.test_throws<Botan::Decoding_Error>("constructed BIT STRING rejected in DER", [&]() {
+      std::vector<uint8_t> out;
+      Botan::BER_Decoder(cons_bits, der)
+         .decode(out, ASN1_Type::BitString, ASN1_Type::BitString, ASN1_Class::Constructed);
+   });
+   result.test_throws<Botan::Decoding_Error>("constructed BIT STRING rejected in DER via decode_bitstring", [&]() {
+      Botan::ASN1_BitString out;
+      Botan::BER_Decoder(cons_bits, der).decode_bitstring(out, ASN1_Type::BitString, ASN1_Class::Constructed);
+   });
 
    return result;
 }
@@ -908,7 +982,7 @@ class ASN1_Tests final : public Test {
          results.push_back(test_ber_eoc_decoding_limits());
          results.push_back(test_ber_standalone_eoc_limits());
          results.push_back(test_ber_max_object_size());
-         results.push_back(test_ber_constructed_string_rejected());
+         results.push_back(test_ber_constructed_string_decoding());
          results.push_back(test_ber_indefinite_length_trailing_data());
          results.push_back(test_ber_find_eoc());
          results.push_back(test_asn1_utf8_ascii_parsing());

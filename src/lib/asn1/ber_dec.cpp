@@ -819,20 +819,119 @@ bool is_constructed(const BER_Object& obj) {
    return is_constructed(obj.class_tag());
 }
 
+/*
+* Bounds the nesting of constructed OCTET STRING/BIT STRING encodings.
+*
+* It's allowed, though probably rarely used, for a BER constructed string
+* to have a segment which is itself a BER constructed string. We handle
+* this recursively, so place an explicit limit on how deep we'll go.
+*/
+constexpr size_t ALLOWED_CONSTRUCTED_STRING_NESTING = 2;
+
+/*
+* Concatenate the segments of a BER constructed OCTET STRING (X.690 sec 8.7.3)
+*
+* In the constructed form the secondary tags are always universal OCTET STRING
+* rather than any possible implicit tag. It's also allowed for any of the
+* segments to themselves be constructed.
+*/
+template <typename Alloc>
+void asn1_concat_constructed_octet_string(std::vector<uint8_t, Alloc>& buffer,
+                                          const BER_Object& obj,
+                                          const BER_Decoder::Limits& limits,
+                                          size_t depth) {
+   if(depth >= ALLOWED_CONSTRUCTED_STRING_NESTING) {
+      throw BER_Decoding_Error("Constructed OCTET STRING is too deeply nested");
+   }
+
+   BER_Decoder segments(obj, limits);
+   while(segments.more_items()) {
+      const BER_Object seg = segments.get_next_object();
+      if(seg.is_a(ASN1_Type::OctetString, ASN1_Class::Universal)) {
+         buffer.insert(buffer.end(), seg.bits(), seg.bits() + seg.length());
+      } else if(seg.is_a(ASN1_Type::OctetString, ASN1_Class::Universal | ASN1_Class::Constructed)) {
+         asn1_concat_constructed_octet_string(buffer, seg, limits, depth + 1);
+      } else {
+         throw BER_Decoding_Error("Constructed OCTET STRING contains an invalid segment");
+      }
+   }
+}
+
+/*
+* Concatenate the segments of a BER constructed BIT STRING (X.690 sec 8.6.4)
+*
+* Returns the unused bit count of the final segment; BER requires that every
+* earlier segment must be a multiple of eight bits.
+*/
+template <typename Alloc>
+uint8_t asn1_concat_constructed_bit_string(std::vector<uint8_t, Alloc>& buffer,
+                                           const BER_Object& obj,
+                                           const BER_Decoder::Limits& limits,
+                                           size_t depth) {
+   if(depth >= ALLOWED_CONSTRUCTED_STRING_NESTING) {
+      throw BER_Decoding_Error("Constructed BIT STRING is too deeply nested");
+   }
+
+   uint8_t unused_bits = 0;
+
+   BER_Decoder segments(obj, limits);
+   while(segments.more_items()) {
+      if(unused_bits != 0) {
+         throw BER_Decoding_Error("Constructed BIT STRING has unused bits before the final segment");
+      }
+
+      const BER_Object seg = segments.get_next_object();
+      if(seg.is_a(ASN1_Type::BitString, ASN1_Class::Universal)) {
+         if(seg.length() == 0) {
+            throw BER_Decoding_Error("Invalid BIT STRING");
+         }
+         unused_bits = seg.bits()[0];
+         if(unused_bits >= 8) {
+            throw BER_Decoding_Error("Bad number of unused bits in BIT STRING");
+         }
+         if(seg.length() == 1 && unused_bits != 0) {
+            throw BER_Decoding_Error("Invalid BIT STRING");
+         }
+         buffer.insert(buffer.end(), seg.bits() + 1, seg.bits() + seg.length());
+      } else if(seg.is_a(ASN1_Type::BitString, ASN1_Class::Universal | ASN1_Class::Constructed)) {
+         unused_bits = asn1_concat_constructed_bit_string(buffer, seg, limits, depth + 1);
+      } else {
+         throw BER_Decoding_Error("Constructed BIT STRING contains an invalid segment");
+      }
+   }
+
+   return unused_bits;
+}
+
 template <typename Alloc>
 void asn1_decode_binary_string(std::vector<uint8_t, Alloc>& buffer,
                                const BER_Object& obj,
                                ASN1_Type real_type,
                                ASN1_Type type_tag,
                                ASN1_Class class_tag,
-                               bool require_der) {
-   obj.assert_is_a(type_tag, class_tag);
-
-   // Only primitive OCTET STRING/BIT STRING are supported; constructed
-   // (fragmented) BER forms are rejected rather than concatenated.
+                               const BER_Decoder::Limits& limits) {
+   // DER requires BIT STRING and OCTET STRING to use primitive encoding;
+   // in BER the constructed (fragmented) form is decoded by concatenation
    if(is_constructed(obj)) {
-      throw BER_Decoding_Error("Constructed OCTET STRING/BIT STRING is not supported");
+      obj.assert_is_a(type_tag, class_tag | ASN1_Class::Constructed);
+
+      if(limits.require_der_encoding()) {
+         throw BER_Decoding_Error("Detected constructed string encoding in DER structure");
+      }
+
+      // Concatenate into a temporary so a failed decode leaves buffer unmodified
+      std::vector<uint8_t, Alloc> concat;
+      concat.reserve(obj.length());  // upper possible bound on the output size
+      if(real_type == ASN1_Type::OctetString) {
+         asn1_concat_constructed_octet_string(concat, obj, limits, 0);
+      } else {
+         asn1_concat_constructed_bit_string(concat, obj, limits, 0);
+      }
+      buffer = std::move(concat);
+      return;
    }
+
+   obj.assert_is_a(type_tag, class_tag);
 
    if(real_type == ASN1_Type::OctetString) {
       buffer.assign(obj.bits(), obj.bits() + obj.length());
@@ -853,7 +952,7 @@ void asn1_decode_binary_string(std::vector<uint8_t, Alloc>& buffer,
       }
 
       // DER requires unused bits in BIT STRING to be zero (X.690 section 11.2.2)
-      if(require_der && unused_bits > 0) {
+      if(limits.require_der_encoding() && unused_bits > 0) {
          const uint8_t last_byte = obj.bits()[obj.length() - 1];
          if((last_byte & ((1 << unused_bits) - 1)) != 0) {
             throw BER_Decoding_Error("Detected non-zero padding bits in BIT STRING in DER structure");
@@ -870,12 +969,7 @@ void asn1_decode_binary_string(std::vector<uint8_t, Alloc>& buffer,
 
 uint8_t asn1_bitstring_unused_bits(const BER_Object& obj, ASN1_Type type_tag, ASN1_Class class_tag, bool require_der) {
    obj.assert_is_a(type_tag, class_tag);
-
-   // Only primitive BIT STRING is supported; constructed (fragmented) BER
-   // forms are rejected rather than concatenated.
-   if(is_constructed(obj)) {
-      throw BER_Decoding_Error("Constructed OCTET STRING/BIT STRING is not supported");
-   }
+   BOTAN_ASSERT_NOMSG(!is_constructed(obj));
 
    if(obj.length() == 0) {
       throw BER_Decoding_Error("Invalid BIT STRING");
@@ -914,8 +1008,7 @@ BER_Decoder& BER_Decoder::decode(secure_vector<uint8_t>& buffer,
       throw BER_Bad_Tag("Bad tag for {BIT,OCTET} STRING", static_cast<uint32_t>(real_type));
    }
 
-   asn1_decode_binary_string(
-      buffer, get_next_object(), real_type, type_tag, class_tag, m_limits.require_der_encoding());
+   asn1_decode_binary_string(buffer, get_next_object(), real_type, type_tag, class_tag, m_limits);
    return (*this);
 }
 
@@ -927,17 +1020,27 @@ BER_Decoder& BER_Decoder::decode(std::vector<uint8_t>& buffer,
       throw BER_Bad_Tag("Bad tag for {BIT,OCTET} STRING", static_cast<uint32_t>(real_type));
    }
 
-   asn1_decode_binary_string(
-      buffer, get_next_object(), real_type, type_tag, class_tag, m_limits.require_der_encoding());
+   asn1_decode_binary_string(buffer, get_next_object(), real_type, type_tag, class_tag, m_limits);
    return (*this);
 }
 
 BER_Decoder& BER_Decoder::decode_bitstring(ASN1_BitString& out, ASN1_Type type_tag, ASN1_Class class_tag) {
    const BER_Object obj = get_next_object();
-   const uint8_t unused_bits = asn1_bitstring_unused_bits(obj, type_tag, class_tag, m_limits.require_der_encoding());
 
    std::vector<uint8_t> bits;
-   bits.assign(obj.bits() + 1, obj.bits() + obj.length());
+   uint8_t unused_bits = 0;
+
+   if(is_constructed(obj.class_tag())) {
+      obj.assert_is_a(type_tag, class_tag | ASN1_Class::Constructed);
+      if(m_limits.require_der_encoding()) {
+         throw BER_Decoding_Error("Detected constructed string encoding in DER structure");
+      }
+      bits.reserve(obj.length());  // upper possible bound on the output size
+      unused_bits = asn1_concat_constructed_bit_string(bits, obj, m_limits, 0);
+   } else {
+      unused_bits = asn1_bitstring_unused_bits(obj, type_tag, class_tag, m_limits.require_der_encoding());
+      bits.assign(obj.bits() + 1, obj.bits() + obj.length());
+   }
 
    if(unused_bits > 0 && !bits.empty()) {
       bits.back() &= static_cast<uint8_t>(0xFF << unused_bits);
