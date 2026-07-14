@@ -150,7 +150,7 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager {
          const std::vector<std::string>& identities = {},
          const std::optional<std::string>& prf = std::nullopt) override {
          if(identities.empty()) {
-            return find_preshared_keys(host, whoami, identities, prf);
+            return Botan::Credentials_Manager::find_preshared_keys(host, whoami, identities, prf);
          }
 
          std::vector<Botan::TLS::ExternalPSK> psks;

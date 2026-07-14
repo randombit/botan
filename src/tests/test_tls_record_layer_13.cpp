@@ -178,8 +178,7 @@ std::vector<Test::Result> basic_sanitization_parse_records(TLS::Connection_Side 
                  [&](auto& result) {
                     auto read = parse_records({});
                     result.require("needs bytes", std::holds_alternative<TLS::BytesNeeded>(read));
-                    result.test_sz_eq(
-                       "need all the header bytes", std::get<TLS::BytesNeeded>(read), Botan::TLS::TLS_HEADER_SIZE);
+                    result.test_sz_eq("require no bytes on record boundary", std::get<TLS::BytesNeeded>(read), 0);
                  }),
 
            CHECK("incomplete header asks for more data",
