@@ -10,7 +10,6 @@
 #include <botan/base64.h>
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
-#include <botan/internal/int_utils.h>
 #include <algorithm>
 
 namespace Botan {
@@ -112,8 +111,9 @@ void Base64_Decoder::write(const uint8_t input[], size_t length) {
    while(length > 0) {
       const size_t to_copy = std::min<size_t>(length, m_in.size() - m_position);
       if(to_copy == 0) {
-         m_in.resize(mul_or_throw<size_t>(2, m_in.size(), "Base64_Decoder input too large"));
-         m_out.resize(mul_or_throw<size_t>(2, m_out.size(), "Base64_Decoder input too large"));
+         // The input buffer filled without the decoder consuming any of it.
+         // Reject rather than trying to grow the buffer.
+         throw Invalid_Argument("Base64_Decoder: invalid input");
       }
       copy_mem(&m_in[m_position], input, to_copy);
       m_position += to_copy;

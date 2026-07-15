@@ -342,7 +342,7 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       Pipe(std::initializer_list<Filter*> filters);
 
       Pipe(const Pipe&) = delete;
-      Pipe(Pipe&&) noexcept;
+      Pipe(Pipe&& other) noexcept;
       Pipe& operator=(const Pipe&) = delete;
       Pipe& operator=(Pipe&&) = delete;
 
@@ -354,6 +354,10 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       void do_prepend(Filter* filt);
       void find_endpoints(Filter* filt);
       void clear_endpoints(Filter* filt);
+
+      // Accessors for m_outputs which is null in a moved-from Pipe
+      Output_Buffers& outputs();
+      const Output_Buffers& outputs() const;
 
       message_id get_message_no(std::string_view func_name, message_id msg) const;
 

@@ -17,26 +17,26 @@ namespace Botan {
 
 struct Threaded_Fork_Data {
       /*
-   * Semaphore for indicating that there is work to be done (or to
-   * quit)
-   */
+      * Semaphore for indicating that there is work to be done (or to
+      * quit)
+      */
       Semaphore m_input_ready_semaphore;
 
       /*
-   * Synchronises all threads to complete processing data in lock-step.
-   */
+      * Synchronises all threads to complete processing data in lock-step.
+      */
       Barrier m_input_complete_barrier;
 
       /*
-   * The work that needs to be done. This should be only when the threads
-   * are NOT running (i.e. before notifying the work condition, after
-   * the input_complete_barrier has reset.)
-   */
+      * The work that needs to be done. This should be only when the threads
+      * are NOT running (i.e. before notifying the work condition, after
+      * the input_complete_barrier has reset.)
+      */
       const uint8_t* m_input = nullptr;
 
       /*
-   * The length of the work that needs to be done.
-   */
+      * The length of the work that needs to be done.
+      */
       size_t m_input_length = 0;
 };
 
@@ -87,6 +87,14 @@ void Threaded_Fork::set_next(Filter* f[], size_t n) {
 }
 
 void Threaded_Fork::send(const uint8_t input[], size_t length) {
+   /*
+   * The workers treat a nullptr input pointer as a shutdown marker, and a (nullptr, 0)
+   * call is otherwise valid. Just ignore an empty input here, matching Filter::send
+   */
+   if(length == 0) {
+      return;
+   }
+
    if(!m_write_queue.empty()) {
       thread_delegate_work(m_write_queue.data(), m_write_queue.size());
    }
@@ -131,7 +139,10 @@ void Threaded_Fork::thread_entry(Filter* filter) {
          break;
       }
 
-      filter->write(m_thread_data->m_input, m_thread_data->m_input_length);
+      // Plain Fork skips null ports the same way
+      if(filter != nullptr) {
+         filter->write(m_thread_data->m_input, m_thread_data->m_input_length);
+      }
       m_thread_data->m_input_complete_barrier.sync();
    }
 }

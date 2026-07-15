@@ -83,7 +83,14 @@ void Filter::attach(Filter* new_filter) {
       while(last->get_next() != nullptr) {
          last = last->get_next();
       }
-      last->m_next[last->current_port()] = new_filter;
+      // A filter with no ports (e.g. Fork(nullptr, 0)) has an empty m_next, so
+      // indexing current_port() would be out of bounds. Such a filter has no
+      // free port to attach to.
+      if(last->current_port() < last->m_next.size()) {
+         last->m_next[last->current_port()] = new_filter;
+      } else {
+         throw Invalid_Argument("Filter::attach: cannot attach to a filter with no output port");
+      }
    }
 }
 

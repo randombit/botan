@@ -35,6 +35,9 @@ void DataSink_Stream::write(const uint8_t buf[], size_t length) {
 */
 void DataSink_Stream::end_msg() {
    m_sink.flush();
+   if(!m_sink.good()) {
+      throw Stream_IO_Error("DataSink_Stream: Failure flushing " + m_identifier);
+   }
 }
 
 /*
