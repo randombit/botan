@@ -34,6 +34,7 @@
    #include <botan/ecdh.h>
    #include <botan/ecdsa.h>
    #include <botan/hex.h>
+   #include <botan/pk_ops.h>
    #include <botan/pkcs10.h>
    #include <botan/rsa.h>
    #include <botan/x509_ca.h>
@@ -786,83 +787,70 @@ class Test_Policy final : public Botan::TLS::Text_Policy {
 };
 
 /**
- * This mocks a custom ECDH adapter class that generates ephemeral keys and
- * performs key agreement in a single operation (see the member
- * `custom_ephemeral_agreement()` in this class).
- *
- * In Botan 2.x, this mode of operation was implemented as an explicit callback,
- * namely `tls_ecdh_agree()` that was explicitly only useful for TLS 1.2
- * clients. While implementing TLS 1.3 in Botan3, this functionality was
- * reworked to be more flexible [1], but it broke this particular use case by
- * making too strong assumptions on the custom keypair adapter type obtained
- * from `tls_generate_ephemeral_key()`: It had to be derived from
- * `ECDH_PublicKey`.
- *
- * While this serves as a regression test for this particular use case, the
- * issue of too-strong assumptions on user-defined adapter types is more general
- * and should be covered by this test case as well.
- *
- * [1] https://github.com/randombit/botan/pull/3322
+ * This mocks a custom ECDH adapter class that essentially just wraps an
+ * ordinary ECDH key to mimic a typical hardware-based ECDH key.
  */
 class HardwareEcdhKey final : public Botan::PK_Key_Agreement_Key {
    public:
-      HardwareEcdhKey(Botan::EC_Group group, Botan::EC_Point_Format public_key_format) :
-            m_group(std::move(group)), m_public_key_format(public_key_format) {}
+      HardwareEcdhKey(Botan::EC_Group group,
+                      Botan::RandomNumberGenerator& rng,
+                      Botan::EC_Point_Format public_key_format) :
+            m_group(std::move(group)),
+            m_public_key_format(public_key_format),
+            m_key(std::make_unique<Botan::ECDH_PrivateKey>(rng, m_group)) {}
 
-      std::string algo_name() const override { return "ECDH"; }
+      std::string algo_name() const override { return m_key->algo_name(); }
 
-      size_t estimated_strength() const override { return m_group.get_p().bits(); }
+      size_t estimated_strength() const override { return m_key->estimated_strength(); }
 
       bool supports_operation(Botan::PublicKeyOperation op) const override {
          return op == Botan::PublicKeyOperation::KeyAgreement;
       }
 
-      bool check_key(Botan::RandomNumberGenerator& /*rng*/, bool /*strong*/) const override { return true; }
-
-      size_t key_length() const override { return m_group.get_p().bits() / 2; }
-
-      Botan::AlgorithmIdentifier algorithm_identifier() const override { return {}; }
-
-      std::vector<uint8_t> raw_public_key_bits() const override {
-         if(m_public_value.empty()) {
-            throw Botan::Invalid_State("Public key bits are not available");
-         }
-         return m_public_value;
+      bool check_key(Botan::RandomNumberGenerator& rng, bool strong) const override {
+         return m_key->check_key(rng, strong);
       }
 
-      std::vector<uint8_t> public_key_bits() const override { return raw_public_key_bits(); }
+      size_t key_length() const override { return m_key->key_length(); }
+
+      Botan::AlgorithmIdentifier algorithm_identifier() const override {
+         throw Botan::Not_Implemented("TLS should never call Public_Key::algorithm_identifier()");
+      }
+
+      std::vector<uint8_t> raw_public_key_bits() const override { return m_key->public_value(m_public_key_format); }
+
+      std::vector<uint8_t> public_key_bits() const override {
+         throw Botan::Not_Implemented("TLS should never call Public_Key::public_key_bits()");
+         // ... instead it should always call raw_public_key_bits() to get the public value
+         // in the format required by TLS.
+      }
+
+      std::vector<uint8_t> public_value() const override {
+         throw Botan::Not_Implemented("TLS should never call Public_Key::public_value()");
+         // ... instead it should always call raw_public_key_bits() to get the public value
+         // in the format required by TLS.
+      }
 
       Botan::secure_vector<uint8_t> private_key_bits() const override {
          throw Botan::Not_Implemented("This mocks a hardware key and thus hides its private bits");
       }
 
-      std::unique_ptr<Botan::Public_Key> public_key() const override {
-         return std::make_unique<Botan::ECDH_PublicKey>(m_group, Botan::EC_AffinePoint(m_group, raw_public_key_bits()));
+      std::unique_ptr<Botan::Public_Key> public_key() const override { return m_key->public_key(); }
+
+      std::unique_ptr<Botan::Private_Key> generate_another(Botan::RandomNumberGenerator& rng) const override {
+         return std::make_unique<HardwareEcdhKey>(m_group, rng, m_public_key_format);
       }
 
-      std::unique_ptr<Botan::Private_Key> generate_another(Botan::RandomNumberGenerator& /*rng*/) const override {
-         return std::make_unique<HardwareEcdhKey>(m_group, m_public_key_format);
-      }
-
-      std::vector<uint8_t> public_value() const override { return raw_public_key_bits(); }
-
-      Botan::secure_vector<uint8_t> custom_ephemeral_agreement(std::span<const uint8_t> peer_public_key,
-                                                               Botan::RandomNumberGenerator& rng) const {
-         // This is meant to mock an imaginary "ECDH hardware" that generates an
-         // ephemeral ECDH key, performs key agreement with the peer's public
-         // value and outputs the corresponding shared secret. Our public key is
-         // stored in this wrapper class' state.
-         auto ephemeral_key = Botan::ECDH_PrivateKey(rng, m_group);
-         const Botan::PK_Key_Agreement ka(ephemeral_key, rng, "Raw");
-         auto shared_secret = ka.derive_key(0, peer_public_key).bits_of();
-         m_public_value = ephemeral_key.public_value(m_public_key_format);
-         return shared_secret;
+      std::unique_ptr<Botan::PK_Ops::Key_Agreement> create_key_agreement_op(Botan::RandomNumberGenerator& rng,
+                                                                            std::string_view params,
+                                                                            std::string_view provider) const override {
+         return m_key->create_key_agreement_op(rng, params, provider);
       }
 
    private:
       Botan::EC_Group m_group;
       Botan::EC_Point_Format m_public_key_format;
-      mutable std::vector<uint8_t> m_public_value;
+      std::unique_ptr<Botan::ECDH_PrivateKey> m_key;
 };
 
 class TLS_Unit_Tests final : public Test {
@@ -1138,13 +1126,13 @@ class TLS_Unit_Tests final : public Test {
 
             test.set_custom_client_tls_generate_ephemeral_ecdh_key_callback(
                [&](const Botan::TLS::Group_Params& group,
-                   Botan::RandomNumberGenerator&,
+                   Botan::RandomNumberGenerator& clbk_rng,
                    Botan::EC_Point_Format format) -> std::unique_ptr<Botan::PK_Key_Agreement_Key> {
                   generator_called = true;
                   test_results.require("tls_generate_ephemeral_ecdh_key_callback called for ECDH",
                                        group.is_ecdh_named_curve());
-                  return std::make_unique<HardwareEcdhKey>(Botan::EC_Group::from_name(group.to_string().value()),
-                                                           format);
+                  const auto ec_group = Botan::EC_Group::from_name(group.to_string().value());
+                  return std::make_unique<HardwareEcdhKey>(ec_group, clbk_rng, format);
                });
 
             test.set_custom_client_tls_ephemeral_key_agreement_callback(
@@ -1165,7 +1153,8 @@ class TLS_Unit_Tests final : public Test {
                   test_results.require("tls_ephemeral_key_agreement_callback called with a HardwareEcdhKey",
                                        hwkey != nullptr);
 
-                  return hwkey->custom_ephemeral_agreement(peer_public_value, clbk_rng);
+                  const Botan::PK_Key_Agreement ka(private_key, clbk_rng, "Raw");
+                  return ka.derive_key(0 /* no KDF */, peer_public_value).bits_of();
                });
 
             test.go();
@@ -1402,9 +1391,9 @@ class TLS_Unit_Tests final : public Test {
 
          test_session_established_abort(results, creds, rng);
 
-         // Test using tls_generate_epheral_ecdh_key() to establish a custom
-         // ECDH provider that combines ephemeral key generation with key
-         // establishment (as it used to work in Botan 2.x via tls_ecdh_agree()).
+         // Use tls12_generate_ephemeral_ecdh_key() / tls_generate_ephemeral_key() to
+         // establish a custom ECDH provider mocking some hardware adapter for key
+         // generation and tls_ephemeral_key_agreement() for performing the key agreement.
 
          test_custom_ecdh_provider(results, creds, rng);
 
