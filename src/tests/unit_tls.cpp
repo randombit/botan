@@ -569,6 +569,7 @@ class TLS_Handshake_Test final {
       bool m_expect_handshake_completion = true;
 
       std::vector<uint8_t> m_c2s, m_s2c, m_client_recv, m_server_recv;
+      std::vector<std::string> m_caught_tls_exceptions;
 };
 
 void TLS_Handshake_Test::go() {
@@ -662,8 +663,9 @@ void TLS_Handshake_Test::go() {
 
          try {
             const size_t needed = m_server->received_data(input.data(), input.size());
-            m_results.test_sz_eq("full packet received", needed, 0);
-         } catch(...) { /* ignore exceptions */
+            m_results.test_sz_eq("full packet received (server)", needed, 0);
+         } catch(const std::exception& e) {
+            m_caught_tls_exceptions.push_back(e.what());
          }
 
          continue;
@@ -675,8 +677,9 @@ void TLS_Handshake_Test::go() {
 
          try {
             const size_t needed = client->received_data(input.data(), input.size());
-            m_results.test_sz_eq("full packet received", needed, 0);
-         } catch(...) { /* ignore exceptions */
+            m_results.test_sz_eq("full packet received (client)", needed, 0);
+         } catch(const std::exception& e) {
+            m_caught_tls_exceptions.push_back(e.what());
          }
 
          continue;
@@ -731,6 +734,12 @@ void TLS_Handshake_Test::go() {
    // unwinds cleanly. Assert that both sides reached is_active() unless the
    // test was deliberately set up to drive a handshake abort.
    if(m_expect_handshake_completion) {
+      if(!m_caught_tls_exceptions.empty()) {
+         for(const auto& e : m_caught_tls_exceptions) {
+            m_results.test_note("TLS exception", e);
+         }
+      }
+
       m_results.test_is_true("client handshake completed", client_handshake_completed);
       m_results.test_is_true("server handshake completed", server_handshake_completed);
    }
