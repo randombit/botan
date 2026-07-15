@@ -234,12 +234,22 @@ class PrimeOrderCurve /* NOLINT(*-special-member-functions) */ {
       /// Return the standard generator
       virtual AffinePoint generator() const = 0;
 
-      /// Deserialize a point
+      /// Return the identity element (aka the point at infinity)
+      virtual AffinePoint point_identity() const = 0;
+
+      /// Deserialize a point in the SEC1 uncompressed format
       ///
-      /// Both compressed and uncompressed encodings are accepted
+      /// The input must be exactly 1 + 2*field_element_bytes long and have a
+      /// header byte of 0x04. All other encodings are rejected, as are inputs
+      /// where (x,y) is not a point on the curve.
+      virtual std::optional<AffinePoint> deserialize_point_uncompressed(std::span<const uint8_t> bytes) const = 0;
+
+      /// Deserialize a point in the SEC1 compressed format
       ///
-      /// Note that the deprecated "hybrid" encoding is not supported here
-      virtual std::optional<AffinePoint> deserialize_point(std::span<const uint8_t> bytes) const = 0;
+      /// The input must be exactly 1 + field_element_bytes long and have a
+      /// header byte of 0x02 or 0x03. All other encodings are rejected, as are
+      /// inputs where x is not the affine x coordinate of a point on the curve.
+      virtual std::optional<AffinePoint> deserialize_point_compressed(std::span<const uint8_t> bytes) const = 0;
 
       /// Deserialize a scalar in [1,p)
       ///

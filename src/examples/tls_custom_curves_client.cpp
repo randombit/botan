@@ -3,6 +3,7 @@
 #include <botan/dl_group.h>
 #include <botan/ec_group.h>
 #include <botan/ecdh.h>
+#include <botan/exceptn.h>
 #include <botan/tls.h>
 
 /**
@@ -49,7 +50,16 @@ class Callbacks : public Botan::TLS::Callbacks {
             std::get<Botan::TLS::Group_Params>(group) == Botan::TLS::Group_Params(0xFE00)) {
             // load the peer's public key of my custom curve
             const auto ec_group = Botan::EC_Group::from_name("numsp256d1");
-            return std::make_unique<Botan::ECDH_PublicKey>(ec_group, Botan::EC_AffinePoint(ec_group, public_value));
+            auto point = Botan::EC_AffinePoint::deserialize_uncompressed(ec_group, public_value);
+
+            if(!point) {
+               // TLS 1.2 allows negotiating compressed points
+               point = Botan::EC_AffinePoint::deserialize_compressed(ec_group, public_value);
+            }
+            if(!point) {
+               throw Botan::Decoding_Error("Invalid ECDH public key encoding");
+            }
+            return std::make_unique<Botan::ECDH_PublicKey>(ec_group, std::move(*point));
          } else {
             // no custom curve used: up-call the default implementation
             return Botan::TLS::Callbacks::tls_deserialize_peer_public_key(group, public_value);

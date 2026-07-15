@@ -34,8 +34,9 @@ EC_AffinePoint& EC_AffinePoint::operator=(EC_AffinePoint&& other) noexcept {
 }
 
 EC_AffinePoint::EC_AffinePoint(const EC_Group& group, std::span<const uint8_t> bytes) {
-   m_point = group._data()->point_deserialize(bytes);
-   if(!m_point) {
+   if(auto pt = EC_AffinePoint::deserialize(group, bytes)) {
+      m_point = std::move(pt->m_point);
+   } else {
       throw Decoding_Error("Failed to deserialize elliptic curve point");
    }
 }
@@ -77,8 +78,7 @@ bool EC_AffinePoint::operator==(const EC_AffinePoint& other) const {
 }
 
 EC_AffinePoint EC_AffinePoint::identity(const EC_Group& group) {
-   const uint8_t id_encoding[1] = {0};
-   return EC_AffinePoint(group, id_encoding);
+   return EC_AffinePoint(group._data()->point_identity());
 }
 
 EC_AffinePoint EC_AffinePoint::generator(const EC_Group& group) {
@@ -104,7 +104,7 @@ std::optional<EC_AffinePoint> EC_AffinePoint::from_bigint_xy(const EC_Group& gro
    x.serialize_to(std::span{sec1}.subspan(1, fe_bytes));
    y.serialize_to(std::span{sec1}.last(fe_bytes));
 
-   return EC_AffinePoint::deserialize(group, sec1);
+   return EC_AffinePoint::deserialize_uncompressed(group, sec1);
 }
 
 size_t EC_AffinePoint::field_element_bytes() const {
@@ -148,7 +148,56 @@ EC_AffinePoint EC_AffinePoint::hash_to_curve_nu(const EC_Group& group,
 EC_AffinePoint::~EC_AffinePoint() = default;
 
 std::optional<EC_AffinePoint> EC_AffinePoint::deserialize(const EC_Group& group, std::span<const uint8_t> bytes) {
-   if(auto pt = group._data()->point_deserialize(bytes)) {
+   if(bytes.empty()) {
+      return {};
+   }
+
+   switch(bytes[0]) {
+      case 0x00:
+         // The identity element (see SEC1 section 2.3.4)
+         // TODO(Botan4) remove this - we should reject the identity encoding
+         if(bytes.size() == 1) {
+            return EC_AffinePoint::identity(group);
+         } else {
+            return {};
+         }
+      case 0x02:
+      case 0x03:
+         return EC_AffinePoint::deserialize_compressed(group, bytes);
+      case 0x04:
+         return EC_AffinePoint::deserialize_uncompressed(group, bytes);
+      case 0x06:
+      case 0x07: {
+         // The deprecated "hybrid" point format
+         // TODO(Botan4) remove this
+         const bool hdr_y_is_even = bytes[0] == 0x06;
+         const bool y_is_even = (bytes.back() & 0x01) == 0;
+
+         if(hdr_y_is_even == y_is_even) {
+            std::vector<uint8_t> sec1(bytes.begin(), bytes.end());
+            sec1[0] = 0x04;
+            return EC_AffinePoint::deserialize_uncompressed(group, sec1);
+         } else {
+            return {};
+         }
+      }
+      default:
+         return {};
+   }
+}
+
+std::optional<EC_AffinePoint> EC_AffinePoint::deserialize_compressed(const EC_Group& group,
+                                                                     std::span<const uint8_t> bytes) {
+   if(auto pt = group._data()->point_deserialize_compressed(bytes)) {
+      return EC_AffinePoint(std::move(pt));
+   } else {
+      return {};
+   }
+}
+
+std::optional<EC_AffinePoint> EC_AffinePoint::deserialize_uncompressed(const EC_Group& group,
+                                                                       std::span<const uint8_t> bytes) {
+   if(auto pt = group._data()->point_deserialize_uncompressed(bytes)) {
       return EC_AffinePoint(std::move(pt));
    } else {
       return {};

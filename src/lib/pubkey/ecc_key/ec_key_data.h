@@ -25,8 +25,7 @@ class EC_PublicKey_Data final {
    public:
       EC_PublicKey_Data(EC_Group group, EC_AffinePoint pt);
 
-      EC_PublicKey_Data(const EC_Group& group, std::span<const uint8_t> bytes) :
-            EC_PublicKey_Data(group, EC_AffinePoint(group, bytes)) {}
+      EC_PublicKey_Data(const EC_Group& group, std::span<const uint8_t> bytes);
 
       const EC_Group& group() const { return m_group; }
 

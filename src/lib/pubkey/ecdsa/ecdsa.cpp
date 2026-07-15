@@ -54,7 +54,7 @@ EC_AffinePoint recover_ecdsa_public_key(
       X[0] = 0x02 | y_odd;
       x.serialize_to(std::span{X}.subspan(1));
 
-      if(auto R = EC_AffinePoint::deserialize(group, X)) {
+      if(auto R = EC_AffinePoint::deserialize_compressed(group, X)) {
          // Compute r_inv * (-eG + s*R)
          const auto ne = EC_Scalar::from_bytes_with_trunc(group, msg).negate();
          const auto ss = EC_Scalar::from_bigint(group, s);

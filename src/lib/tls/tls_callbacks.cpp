@@ -217,7 +217,20 @@ std::unique_ptr<Public_Key> TLS::Callbacks::tls_deserialize_peer_public_key(
 
    if(group_params.is_ecdh_named_curve()) {
       const auto ec_group = EC_Group::from_name(group_params.to_algorithm_spec().value());
-      return std::make_unique<ECDH_PublicKey>(ec_group, EC_AffinePoint(ec_group, key_bits));
+      // TLS 1.3 requires uncompressed points (checked when parsing the key
+      // share); TLS 1.2 may negotiate the compressed format. The deprecated
+      // hybrid encoding and the identity element are never accepted.
+
+      auto point = [&]() -> EC_AffinePoint {
+         if(auto pt_uncompressed = EC_AffinePoint::deserialize_uncompressed(ec_group, key_bits)) {
+            return std::move(pt_uncompressed).value();
+         } else if(auto pt_compressed = EC_AffinePoint::deserialize_compressed(ec_group, key_bits)) {
+            return std::move(pt_compressed).value();
+         } else {
+            throw Decoding_Error("Invalid ECDH public key encoding");
+         }
+      }();
+      return std::make_unique<ECDH_PublicKey>(ec_group, std::move(point));
    }
 
 #if defined(BOTAN_HAS_X25519)

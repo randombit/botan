@@ -239,15 +239,10 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          }
       }
 
-      std::optional<AffinePoint> deserialize_point(std::span<const uint8_t> bytes) const override {
-         // The identity element (see SEC1 section 2.3.4)
-         // TODO(Botan4) remove this - we should reject the identity encoding
-         if(bytes.size() == 1 && bytes[0] == 0x00) {
-            return stash(C::AffinePoint::identity());
-         }
+      AffinePoint point_identity() const override { return stash(C::AffinePoint::identity()); }
 
+      std::optional<AffinePoint> deserialize_point_uncompressed(std::span<const uint8_t> bytes) const override {
          constexpr size_t FieldElementBytes = C::FieldElement::BYTES;
-         constexpr size_t CompressedBytes = C::FieldElement::BYTES + 1;
          constexpr size_t UncompressedBytes = 2 * C::FieldElement::BYTES + 1;
 
          if(bytes.size() == UncompressedBytes && bytes[0] == 0x04) {
@@ -264,7 +259,16 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
                   return stash(typename C::AffinePoint(*x, *y));
                }
             }
-         } else if(bytes.size() == CompressedBytes && (bytes[0] == 0x02 || bytes[0] == 0x03)) {
+         }
+
+         return {};
+      }
+
+      std::optional<AffinePoint> deserialize_point_compressed(std::span<const uint8_t> bytes) const override {
+         constexpr size_t FieldElementBytes = C::FieldElement::BYTES;
+         constexpr size_t CompressedBytes = C::FieldElement::BYTES + 1;
+
+         if(bytes.size() == CompressedBytes && (bytes[0] == 0x02 || bytes[0] == 0x03)) {
             const CT::Choice y_is_even = CT::Mask<uint8_t>::is_equal(bytes[0], 0x02).as_choice();
 
             if(auto x = C::FieldElement::deserialize(bytes.subspan(1, FieldElementBytes))) {

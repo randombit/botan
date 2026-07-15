@@ -37,13 +37,41 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
    public:
       /// Point deserialization. Throws if wrong length or not a valid point
       ///
-      /// This accepts SEC1 compressed or uncompressed formats
+      /// This accepts SEC1 compressed or uncompressed formats. It also (for
+      /// backward compatibility) accepts the deprecated hybrid format, and
+      /// the encoding of the identity element as a single zero byte. Prefer
+      /// deserialize_compressed or deserialize_uncompressed, which accept
+      /// exactly one well-defined encoding.
       EC_AffinePoint(const EC_Group& group, std::span<const uint8_t> bytes);
 
       /// Point deserialization. Returns nullopt if wrong length or not a valid point
       ///
-      /// This accepts SEC1 compressed or uncompressed formats
+      /// This accepts SEC1 compressed or uncompressed formats. It also (for
+      /// backward compatibility) accepts the deprecated hybrid format, and
+      /// the encoding of the identity element as a single zero byte. Prefer
+      /// deserialize_compressed or deserialize_uncompressed, which accept
+      /// exactly one well-defined encoding.
       static std::optional<EC_AffinePoint> deserialize(const EC_Group& group, std::span<const uint8_t> bytes);
+
+      /// Point deserialization, accepting only the SEC1 compressed format
+      ///
+      /// The encoding must be exactly 1 + field_element_bytes long, with a
+      /// header byte of either 0x02 or 0x03. All other encodings (including
+      /// the uncompressed, hybrid, and identity encodings) are rejected.
+      ///
+      /// Returns nullopt if the encoding was rejected or not a valid point
+      static std::optional<EC_AffinePoint> deserialize_compressed(const EC_Group& group,
+                                                                  std::span<const uint8_t> bytes);
+
+      /// Point deserialization, accepting only the SEC1 uncompressed format
+      ///
+      /// The encoding must be exactly 1 + 2*field_element_bytes long, with a
+      /// header byte of 0x04. All other encodings (including the compressed,
+      /// hybrid, and identity encodings) are rejected.
+      ///
+      /// Returns nullopt if the encoding was rejected or not a valid point
+      static std::optional<EC_AffinePoint> deserialize_uncompressed(const EC_Group& group,
+                                                                    std::span<const uint8_t> bytes);
 
       /// Create a point from a pair (x,y) of integers
       ///
