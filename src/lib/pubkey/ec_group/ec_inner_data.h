@@ -252,10 +252,20 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
 
       std::unique_ptr<EC_Scalar_Data> gk_x_mod_order(const EC_Scalar_Data& scalar, RandomNumberGenerator& rng) const;
 
-      /// Deserialize a point
+      /// Deserialize a point in the SEC1 uncompressed format
       ///
-      /// Returns nullptr if the point encoding was invalid or not on the curve
-      std::unique_ptr<EC_AffinePoint_Data> point_deserialize(std::span<const uint8_t> bytes) const;
+      /// Returns nullptr if the encoding was not in the uncompressed format,
+      /// or if the point is not on the curve
+      std::unique_ptr<EC_AffinePoint_Data> point_deserialize_uncompressed(std::span<const uint8_t> bytes) const;
+
+      /// Deserialize a point in the SEC1 compressed format
+      ///
+      /// Returns nullptr if the encoding was not in the compressed format,
+      /// or if the point is not on the curve
+      std::unique_ptr<EC_AffinePoint_Data> point_deserialize_compressed(std::span<const uint8_t> bytes) const;
+
+      /// Return the identity element (aka the point at infinity)
+      std::unique_ptr<EC_AffinePoint_Data> point_identity() const;
 
       std::unique_ptr<EC_AffinePoint_Data> point_hash_to_curve_ro(std::string_view hash_fn,
                                                                   std::span<const uint8_t> input,

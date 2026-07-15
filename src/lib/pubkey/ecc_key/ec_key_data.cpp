@@ -6,10 +6,36 @@
 
 #include <botan/internal/ec_key_data.h>
 
+#include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/rng.h>
 
 namespace Botan {
+
+namespace {
+
+EC_AffinePoint decode_ec_public_key_point(const EC_Group& group, std::span<const uint8_t> bytes) {
+   /*
+   * RFC 5480 section 2.2:
+   *    The first octet of the OCTET STRING indicates whether the key is
+   *    compressed or uncompressed.  The uncompressed form is indicated
+   *    by 0x04 and the compressed form is indicated by either 0x02 or
+   *    0x03 (see 2.3.3 in [SEC1]).  The public key MUST be rejected if
+   *    any other value is included in the first octet.
+   */
+   if(auto pt_uncompressed = EC_AffinePoint::deserialize_uncompressed(group, bytes)) {
+      return std::move(pt_uncompressed).value();
+   } else if(auto pt_compressed = EC_AffinePoint::deserialize_compressed(group, bytes)) {
+      return std::move(pt_compressed).value();
+   } else {
+      throw Decoding_Error("Failed to deserialize elliptic curve point");
+   }
+}
+
+}  // namespace
+
+EC_PublicKey_Data::EC_PublicKey_Data(const EC_Group& group, std::span<const uint8_t> bytes) :
+      EC_PublicKey_Data(group, decode_ec_public_key_point(group, bytes)) {}
 
 EC_PublicKey_Data::EC_PublicKey_Data(EC_Group group, EC_AffinePoint pt) :
       m_group(std::move(group)), m_point(std::move(pt)) {

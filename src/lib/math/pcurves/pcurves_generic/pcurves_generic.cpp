@@ -982,12 +982,10 @@ class GenericAffinePoint final {
       }
 
       /**
-      * Point deserialization
-      *
-      * This accepts compressed or uncompressed formats.
+      * Point deserialization (SEC1 uncompressed format only)
       */
-      static std::optional<GenericAffinePoint> deserialize(const GenericPrimeOrderCurve* curve,
-                                                           std::span<const uint8_t> bytes) {
+      static std::optional<GenericAffinePoint> deserialize_uncompressed(const GenericPrimeOrderCurve* curve,
+                                                                        std::span<const uint8_t> bytes) {
          const size_t fe_bytes = curve->_params().field_bytes();
 
          if(bytes.size() == 1 + 2 * fe_bytes && bytes[0] == 0x04) {
@@ -1001,7 +999,19 @@ class GenericAffinePoint final {
                   return GenericAffinePoint(*x, *y);
                }
             }
-         } else if(bytes.size() == 1 + fe_bytes && (bytes[0] == 0x02 || bytes[0] == 0x03)) {
+         }
+
+         return {};
+      }
+
+      /**
+      * Point deserialization (SEC1 compressed format only)
+      */
+      static std::optional<GenericAffinePoint> deserialize_compressed(const GenericPrimeOrderCurve* curve,
+                                                                      std::span<const uint8_t> bytes) {
+         const size_t fe_bytes = curve->_params().field_bytes();
+
+         if(bytes.size() == 1 + fe_bytes && (bytes[0] == 0x02 || bytes[0] == 0x03)) {
             const CT::Choice y_is_even = CT::Mask<uint8_t>::is_equal(bytes[0], 0x02).as_choice();
 
             if(auto x = GenericField::deserialize(curve, bytes.subspan(1, fe_bytes))) {
@@ -1013,9 +1023,6 @@ class GenericAffinePoint final {
                   return GenericAffinePoint(*x, y);
                }
             }
-         } else if(bytes.size() == 1 && bytes[0] == 0x00) {
-            // See SEC1 section 2.3.4
-            return GenericAffinePoint::identity(curve);
          }
 
          return {};
@@ -1547,6 +1554,10 @@ PrimeOrderCurve::AffinePoint GenericPrimeOrderCurve::generator() const {
    return PrimeOrderCurve::AffinePoint::_create(shared_from_this(), _params().base_x(), _params().base_y());
 }
 
+PrimeOrderCurve::AffinePoint GenericPrimeOrderCurve::point_identity() const {
+   return stash(GenericAffinePoint::identity(this));
+}
+
 PrimeOrderCurve::AffinePoint GenericPrimeOrderCurve::point_to_affine(const ProjectivePoint& pt) const {
    auto affine = to_affine<GenericCurve>(from_stash(pt));
 
@@ -1600,9 +1611,18 @@ std::optional<PrimeOrderCurve::Scalar> GenericPrimeOrderCurve::scalar_from_wide_
    }
 }
 
-std::optional<PrimeOrderCurve::AffinePoint> GenericPrimeOrderCurve::deserialize_point(
+std::optional<PrimeOrderCurve::AffinePoint> GenericPrimeOrderCurve::deserialize_point_uncompressed(
    std::span<const uint8_t> bytes) const {
-   if(auto pt = GenericAffinePoint::deserialize(this, bytes)) {
+   if(auto pt = GenericAffinePoint::deserialize_uncompressed(this, bytes)) {
+      return stash(pt.value());
+   } else {
+      return {};
+   }
+}
+
+std::optional<PrimeOrderCurve::AffinePoint> GenericPrimeOrderCurve::deserialize_point_compressed(
+   std::span<const uint8_t> bytes) const {
+   if(auto pt = GenericAffinePoint::deserialize_compressed(this, bytes)) {
       return stash(pt.value());
    } else {
       return {};

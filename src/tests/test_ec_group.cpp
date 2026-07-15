@@ -836,6 +836,22 @@ class EC_PointEnc_Tests final : public Test {
 
             result.start_timer();
 
+            // The SEC1 encoding of the identity element; accepted by the
+            // permissive deserialization but not the strict variants
+            const std::vector<uint8_t> id_encoding{0x00};
+
+            result.test_is_true("Permissive deserialization accepts the identity encoding",
+                                Botan::EC_AffinePoint::deserialize(group, id_encoding).has_value());
+            result.test_is_false("deserialize_uncompressed rejects the identity encoding",
+                                 Botan::EC_AffinePoint::deserialize_uncompressed(group, id_encoding).has_value());
+            result.test_is_false("deserialize_compressed rejects the identity encoding",
+                                 Botan::EC_AffinePoint::deserialize_compressed(group, id_encoding).has_value());
+
+            result.test_is_false("deserialize_uncompressed rejects empty input",
+                                 Botan::EC_AffinePoint::deserialize_uncompressed(group, {}).has_value());
+            result.test_is_false("deserialize_compressed rejects empty input",
+                                 Botan::EC_AffinePoint::deserialize_compressed(group, {}).has_value());
+
             for(size_t trial = 0; trial != 100; ++trial) {
                const auto scalar = Botan::EC_Scalar::random(group, rng);
                const auto pt = Botan::EC_AffinePoint::g_mul(scalar, rng);
@@ -879,6 +895,53 @@ class EC_PointEnc_Tests final : public Test {
                } else {
                   result.test_failure("Failed to deserialize compressed point");
                }
+
+               // The deprecated hybrid encoding; accepted by the permissive
+               // deserialization (until Botan4) but not the strict variants
+               const auto pt_h = [&]() {
+                  auto x = pt_u;
+                  x[0] = ((pt_u[pt_u.size() - 1] & 0x01) == 0x01) ? 0x07 : 0x06;
+                  return x;
+               }();
+
+               if(auto d_pt_h = Botan::EC_AffinePoint::deserialize(group, pt_h)) {
+                  result.test_bin_eq(
+                     "Permissive deserialization accepts hybrid encoding", d_pt_h->serialize_uncompressed(), pt_u);
+               } else {
+                  result.test_failure("Failed to deserialize hybrid point");
+               }
+
+               if(auto d_pt_u = Botan::EC_AffinePoint::deserialize_uncompressed(group, pt_u)) {
+                  result.test_bin_eq(
+                     "deserialize_uncompressed accepts uncompressed", d_pt_u->serialize_uncompressed(), pt_u);
+               } else {
+                  result.test_failure("Failed to deserialize uncompressed point");
+               }
+
+               result.test_is_false("deserialize_uncompressed rejects compressed",
+                                    Botan::EC_AffinePoint::deserialize_uncompressed(group, pt_c).has_value());
+               result.test_is_false("deserialize_uncompressed rejects hybrid",
+                                    Botan::EC_AffinePoint::deserialize_uncompressed(group, pt_h).has_value());
+               result.test_is_false(
+                  "deserialize_uncompressed rejects truncated input",
+                  Botan::EC_AffinePoint::deserialize_uncompressed(group, std::span{pt_u}.first(pt_u.size() - 1))
+                     .has_value());
+
+               if(auto d_pt_c = Botan::EC_AffinePoint::deserialize_compressed(group, pt_c)) {
+                  result.test_bin_eq(
+                     "deserialize_compressed accepts compressed", d_pt_c->serialize_uncompressed(), pt_u);
+               } else {
+                  result.test_failure("Failed to deserialize compressed point");
+               }
+
+               result.test_is_false("deserialize_compressed rejects uncompressed",
+                                    Botan::EC_AffinePoint::deserialize_compressed(group, pt_u).has_value());
+               result.test_is_false("deserialize_compressed rejects hybrid",
+                                    Botan::EC_AffinePoint::deserialize_compressed(group, pt_h).has_value());
+               result.test_is_false(
+                  "deserialize_compressed rejects truncated input",
+                  Botan::EC_AffinePoint::deserialize_compressed(group, std::span{pt_c}.first(pt_c.size() - 1))
+                     .has_value());
             }
 
             result.end_timer();

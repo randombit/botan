@@ -140,13 +140,37 @@ side channels) unless otherwise documented. Usually this is denoted by including
 
       Point deserialization. Throws if invalid, including if the point is not on the curve.
 
-      This accepts SEC1 compressed or uncompressed formats
+      This accepts SEC1 compressed or uncompressed formats. It also (for
+      backward compatibility) accepts the deprecated hybrid format, and the
+      encoding of the identity element as a single zero byte. Prefer
+      ``deserialize_compressed`` or ``deserialize_uncompressed``, which accept
+      exactly one well-defined encoding.
 
    .. cpp:function:: static std::optional<EC_AffinePoint> deserialize(const EC_Group& group, std::span<const uint8_t> bytes)
 
       Point deserialization. Returns ``nullopt`` if invalid, including if the point is not on the curve.
 
-      This accepts SEC1 compressed or uncompressed formats
+      This accepts SEC1 compressed or uncompressed formats. It also (for
+      backward compatibility) accepts the deprecated hybrid format, and the
+      encoding of the identity element as a single zero byte. Prefer
+      ``deserialize_compressed`` or ``deserialize_uncompressed``, which accept
+      exactly one well-defined encoding.
+
+   .. cpp:function:: static std::optional<EC_AffinePoint> deserialize_compressed(const EC_Group& group, std::span<const uint8_t> bytes)
+
+      Point deserialization, accepting only the SEC1 compressed format (header
+      byte 0x02 or 0x03). The hybrid and identity encodings are rejected.
+      Returns ``nullopt`` if invalid, including if the point is not on the curve.
+
+      Available since Botan 3.13
+
+   .. cpp:function:: static std::optional<EC_AffinePoint> deserialize_uncompressed(const EC_Group& group, std::span<const uint8_t> bytes)
+
+      Point deserialization, accepting only the SEC1 uncompressed format
+      (header byte 0x04). The hybrid and identity encodings are rejected.
+      Returns ``nullopt`` if invalid, including if the point is not on the curve.
+
+      Available since Botan 3.13
 
    .. cpp:function:: bool is_identity() const
 
