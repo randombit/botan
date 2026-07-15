@@ -355,6 +355,10 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       void find_endpoints(Filter* filt);
       void clear_endpoints(Filter* filt);
 
+      // Accessors for m_outputs which is null in a moved-from Pipe
+      Output_Buffers& outputs();
+      const Output_Buffers& outputs() const;
+
       message_id get_message_no(std::string_view func_name, message_id msg) const;
 
       Filter* m_pipe;

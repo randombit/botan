@@ -7,6 +7,7 @@
 
 #include <botan/pipe.h>
 
+#include <botan/assert.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/out_buf.h>
@@ -36,6 +37,16 @@ Pipe::Pipe(Pipe&& other) noexcept :
       m_outputs(std::move(other.m_outputs)),
       m_default_read(std::exchange(other.m_default_read, 0)),
       m_inside_msg(std::exchange(other.m_inside_msg, false)) {}
+
+Output_Buffers& Pipe::outputs() {
+   BOTAN_STATE_CHECK(m_outputs != nullptr);
+   return *m_outputs;
+}
+
+const Output_Buffers& Pipe::outputs() const {
+   BOTAN_STATE_CHECK(m_outputs != nullptr);
+   return *m_outputs;
+}
 
 Pipe::Invalid_Message_Number::Invalid_Message_Number(std::string_view where, message_id msg) :
       Invalid_Argument(fmt("Pipe::{}: Invalid message number {}", where, msg)) {}
@@ -177,7 +188,7 @@ void Pipe::end_msg() {
    }
    m_inside_msg = false;
 
-   m_outputs->retire();
+   outputs().retire();
 }
 
 /*
@@ -190,7 +201,7 @@ void Pipe::find_endpoints(Filter* f) {
       } else {
          SecureQueue* q = new SecureQueue;  // NOLINT(*-owning-memory)
          f->m_next[j] = q;
-         m_outputs->add(q);
+         outputs().add(q);
       }
    }
 }
@@ -215,7 +226,7 @@ void Pipe::append(Filter* filter) {
 }
 
 void Pipe::append_filter(Filter* filter) {
-   if(m_outputs->message_count() != 0) {
+   if(outputs().message_count() != 0) {
       throw Invalid_State("Cannot call Pipe::append_filter after start_msg");
    }
 
@@ -227,7 +238,7 @@ void Pipe::prepend(Filter* filter) {
 }
 
 void Pipe::prepend_filter(Filter* filter) {
-   if(m_outputs->message_count() != 0) {
+   if(outputs().message_count() != 0) {
       throw Invalid_State("Cannot call Pipe::prepend_filter after start_msg");
    }
 
@@ -317,7 +328,7 @@ void Pipe::pop() {
 * Return the number of messages in this Pipe
 */
 Pipe::message_id Pipe::message_count() const {
-   return m_outputs->message_count();
+   return outputs().message_count();
 }
 
 /*
