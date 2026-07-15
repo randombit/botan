@@ -201,10 +201,6 @@ class Channel_Impl_12 : public Channel_Impl {
 
       void reset_state();
 
-      Handshake_IO* retransmission_io();
-
-      const Handshake_IO* retransmission_io() const;
-
       Connection_Sequence_Numbers& sequence_numbers() const;
 
       std::shared_ptr<Connection_Cipher_State> read_cipher_state_epoch(uint16_t epoch) const;

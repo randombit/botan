@@ -155,6 +155,7 @@ void Datagram_Handshake_IO::retransmit_last_flight() {
    // last completed flight is normally the one before it.
    const size_t flight_idx = (m_flights.size() == 1) ? 0 : (m_flights.size() - 2);
    retransmit_flight(flight_idx);
+   m_last_write = steady_clock_ms();
 }
 
 void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx) {
@@ -218,8 +219,6 @@ bool Datagram_Handshake_IO::timeout_check() {
 
    retransmit_last_flight();
 
-   // Retransmission restarts the backoff window just like a normal write.
-   m_last_write = steady_clock_ms();
    m_next_timeout = std::min(2 * m_next_timeout, m_max_timeout);
    return true;
 }

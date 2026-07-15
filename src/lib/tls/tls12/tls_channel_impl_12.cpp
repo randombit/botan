@@ -186,31 +186,9 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
    return *m_pending_state;
 }
 
-Handshake_IO* Channel_Impl_12::retransmission_io() {
-   return const_cast<Handshake_IO*>(std::as_const(*this).retransmission_io());
-}
-
-const Handshake_IO* Channel_Impl_12::retransmission_io() const {
-   if(!m_is_datagram || m_has_been_closed) {
-      return nullptr;
-   }
-
-   if(m_pending_state) {
-      return &m_pending_state->handshake_io();
-   }
-
-   // Once protected application data confirms peer progress, the completed
-   // handshake IO is no longer relevant to timeout scheduling.
-   if(m_active_state.has_value() && !m_active_state->peer_sent_protected_application_data()) {
-      return m_active_state->dtls_handshake_io();
-   }
-
-   return nullptr;
-}
-
 bool Channel_Impl_12::timeout_check() {
-   if(auto* io = retransmission_io()) {
-      return io->timeout_check();
+   if(m_is_datagram && !m_has_been_closed && m_pending_state) {
+      return m_pending_state->handshake_io().timeout_check();
    }
 
    //FIXME: scan cipher suites and remove epochs older than 2*MSL
@@ -298,8 +276,8 @@ bool Channel_Impl_12::is_active() const {
 }
 
 std::optional<std::chrono::milliseconds> Channel_Impl_12::next_retransmission_timeout() const {
-   if(const auto* io = retransmission_io()) {
-      return io->next_retransmission_timeout();
+   if(m_is_datagram && !m_has_been_closed && m_pending_state) {
+      return m_pending_state->handshake_io().next_retransmission_timeout();
    }
 
    return std::nullopt;
@@ -544,8 +522,6 @@ void Channel_Impl_12::process_application_data(uint64_t seq_no, const secure_vec
    if(read_epoch == 0) {
       throw Unexpected_Message("Application data received in unexpected read epoch");
    }
-
-   m_active_state->mark_peer_as_having_sent_protected_application_data();
 
    callbacks().tls_record_received(seq_no, record);
 }
