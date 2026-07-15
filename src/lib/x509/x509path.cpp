@@ -1341,6 +1341,14 @@ Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
    m_trusted_hashes.insert("SHA-512");
    m_trusted_hashes.insert("SHAKE-256(512)");  // Dilithium/ML-DSA
    m_trusted_hashes.insert("SHAKE-256(912)");  // Ed448
+
+   // SLH-DSA-SHAKE reports the H_msg output length, which depends on the parameter set
+   m_trusted_hashes.insert("SHAKE-256(240)");  // SLH-DSA-SHAKE-128s
+   m_trusted_hashes.insert("SHAKE-256(272)");  // SLH-DSA-SHAKE-128f
+   m_trusted_hashes.insert("SHAKE-256(312)");  // SLH-DSA-SHAKE-192s
+   m_trusted_hashes.insert("SHAKE-256(336)");  // SLH-DSA-SHAKE-192f
+   m_trusted_hashes.insert("SHAKE-256(376)");  // SLH-DSA-SHAKE-256s
+   m_trusted_hashes.insert("SHAKE-256(392)");  // SLH-DSA-SHAKE-256f
 }
 
 namespace {
