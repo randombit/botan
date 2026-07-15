@@ -250,8 +250,6 @@ class Datagram_Handshake_IO final : public Handshake_IO {
             Message_Info(uint16_t e, Handshake_Type mt, const std::vector<uint8_t>& msg) :
                   epoch(e), msg_type(mt), msg_bits(msg) {}
 
-            Message_Info() : epoch(0xFFFF), msg_type(Handshake_Type::None) {}
-
             uint16_t epoch;                 // NOLINT(*non-private-member-variable*)
             Handshake_Type msg_type;        // NOLINT(*non-private-member-variable*)
             std::vector<uint8_t> msg_bits;  // NOLINT(*non-private-member-variable*)

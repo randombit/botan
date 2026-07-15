@@ -146,7 +146,7 @@ class Channel_Impl_12 : public Channel_Impl {
 
       /**
       * Perform a handshake timeout check. This does nothing unless this is a
-      * DTLS channel that still needs handshake retransmission handling.
+      * DTLS channel with a handshake in progress.
       */
       bool timeout_check() override;
 

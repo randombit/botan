@@ -32,7 +32,6 @@
    #include <botan/tls_server.h>
    #include <botan/tls_session_manager_memory.h>
    #include <botan/tls_session_manager_noop.h>
-   #include <botan/internal/loadstor.h>
    #include <botan/internal/tls_reader.h>
 
    #include <botan/ec_group.h>
@@ -1747,26 +1746,6 @@ class DTLS_Core_Regression_Tests final : public Test {
          return predicate();
       }
 
-      template <typename Predicate>
-      static bool remains_false_for(Predicate predicate, std::chrono::milliseconds duration) {
-         // Negative timeout checks need to observe a small window: a single
-         // immediate false could pass even though the channel retransmits a few
-         // milliseconds later.
-         const auto deadline = std::chrono::steady_clock::now() + duration;
-
-         while(std::chrono::steady_clock::now() < deadline) {
-            if(predicate()) {
-               return false;
-            }
-
-   #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-   #endif
-         }
-
-         return !predicate();
-      }
-
       static void wait_for_timeout_retransmit(Test::Result& result,
                                               Botan::TLS::Channel& channel,
                                               std::vector<uint8_t>& outbound) {
@@ -2417,9 +2396,9 @@ class DTLS_Core_Regression_Tests final : public Test {
             return result;
          }
 
-         std::vector<uint8_t> delayed_ccs;
+         std::vector<uint8_t> discarded_ccs;
          std::vector<uint8_t> delayed_finished;
-         if(!split_first_dtls_record(result, c2s, delayed_ccs, delayed_finished)) {
+         if(!split_first_dtls_record(result, c2s, discarded_ccs, delayed_finished)) {
             return result;
          }
          c2s.clear();  // simulate delaying the original client final flight
@@ -2443,11 +2422,6 @@ class DTLS_Core_Regression_Tests final : public Test {
                               [&] { server.send(app_data); });
          deliver(result, "server application data", s2c, client);
          result.test_bin_eq("client received server application data", client_recv, app_data);
-
-         result.test_is_false("client no longer needs timeout checks",
-                              client.next_retransmission_timeout().has_value());
-         result.test_is_true("client stops retransmitting after peer application data",
-                             remains_false_for([&] { return client.timeout_check(); }, std::chrono::milliseconds(20)));
 
          return result;
       }

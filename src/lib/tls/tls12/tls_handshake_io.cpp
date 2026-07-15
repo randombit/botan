@@ -20,6 +20,8 @@ namespace Botan::TLS {
 
 namespace {
 
+constexpr size_t DTLS_HANDSHAKE_HEADER_SIZE = 12;
+
 inline size_t load_be24(const uint8_t q[3]) {
    return make_uint32(0, q[0], q[1], q[2]);
 }
@@ -159,26 +161,25 @@ void Datagram_Handshake_IO::retransmit_last_flight() {
 }
 
 void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx) {
-   const std::vector<uint16_t>& flight = m_flights.at(flight_idx);
+   const auto& flight = m_flights.at(flight_idx);
    const auto& ccs_records = m_flight_ccs.at(flight_idx);
+   const std::vector<uint8_t> ccs = {1};
 
    BOTAN_ASSERT(!flight.empty(), "Nonempty flight to retransmit");
 
    size_t ccs_idx = 0;
    for(size_t msg_idx = 0; msg_idx != flight.size(); ++msg_idx) {
       while(ccs_idx != ccs_records.size() && ccs_records[ccs_idx].first == msg_idx) {
-         const std::vector<uint8_t> ccs(1, 1);
          m_send_hs(ccs_records[ccs_idx].second, Record_Type::ChangeCipherSpec, ccs);
          ++ccs_idx;
       }
 
       const auto msg_seq = flight[msg_idx];
-      auto& msg = m_flight_data[msg_seq];
+      const auto& msg = m_flight_data.at(msg_seq);
       send_message(msg_seq, msg.epoch, msg.msg_type, msg.msg_bits);
    }
 
    while(ccs_idx != ccs_records.size() && ccs_records[ccs_idx].first == flight.size()) {
-      const std::vector<uint8_t> ccs(1, 1);
       m_send_hs(ccs_records[ccs_idx].second, Record_Type::ChangeCipherSpec, ccs);
       ++ccs_idx;
    }
@@ -200,8 +201,8 @@ void Datagram_Handshake_IO::finalize_handshake(bool retransmit_terminal_flight) 
    // Retransmission then replays the previous, completed flight instead of
    // appending to it.
    if(!m_flights.rbegin()->empty()) {
-      m_flights.push_back(std::vector<uint16_t>());
-      m_flight_ccs.push_back({});
+      m_flights.emplace_back();
+      m_flight_ccs.emplace_back();
    }
 
    // RFC 6347 4.2.4 transitions directly to FINISHED after sending the
@@ -386,12 +387,10 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
       return;
    }
 
-   const size_t DTLS_HANDSHAKE_HEADER_LEN = 12;
-
    bool retransmit_response = false;
 
    while(record_len > 0) {
-      if(record_len < DTLS_HANDSHAKE_HEADER_LEN) {
+      if(record_len < DTLS_HANDSHAKE_HEADER_SIZE) {
          return;  // completely bogus? at least degenerate/weird
       }
 
@@ -411,7 +410,7 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
       const size_t fragment_offset = load_be24(&record[6]);
       const size_t fragment_length = load_be24(&record[9]);
 
-      const size_t total_size = DTLS_HANDSHAKE_HEADER_LEN + fragment_length;
+      const size_t total_size = DTLS_HANDSHAKE_HEADER_SIZE + fragment_length;
 
       if(record_len < total_size) {
          throw Decoding_Error("Bad lengths in DTLS header");
@@ -445,9 +444,9 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
             m_pending_reassembly_bytes += msg_len;
          }
          it->second.add_fragment(
-            &record[DTLS_HANDSHAKE_HEADER_LEN], fragment_length, fragment_offset, epoch, msg_type, msg_len);
+            &record[DTLS_HANDSHAKE_HEADER_SIZE], fragment_length, fragment_offset, epoch, msg_type, msg_len);
       } else {
-         retransmit_response |= process_previous_handshake_fragment(&record[DTLS_HANDSHAKE_HEADER_LEN],
+         retransmit_response |= process_previous_handshake_fragment(&record[DTLS_HANDSHAKE_HEADER_SIZE],
                                                                     fragment_length,
                                                                     fragment_offset,
                                                                     epoch,
@@ -470,8 +469,8 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::get_next_
                                                                                        size_t /*max_message_size*/) {
    // Expecting a message means the last flight is concluded
    if(!m_flights.rbegin()->empty()) {
-      m_flights.push_back(std::vector<uint16_t>());
-      m_flight_ccs.push_back({});
+      m_flights.emplace_back();
+      m_flight_ccs.emplace_back();
    }
 
    if(expecting_ccs) {
@@ -631,7 +630,7 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_under_epoch(const Handshake_Mes
    if(msg_type == Handshake_Type::HandshakeCCS) {
       m_flight_ccs.rbegin()->emplace_back(m_flights.rbegin()->size(), epoch);
       m_send_hs(epoch, Record_Type::ChangeCipherSpec, msg_bits);
-      return std::vector<uint8_t>();  // not included in handshake hashes
+      return {};  // not included in handshake hashes
    } else if(msg_type == Handshake_Type::HelloVerifyRequest) {
       // RFC 6347 3.2.1 explicitly excludes HelloVerifyRequest from timeout
       // retransmission. A repeated ClientHello recreates the response using
@@ -640,11 +639,11 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_under_epoch(const Handshake_Mes
       m_awaiting_cookie_client_hello = true;
       m_recreating_hello_verify_request = false;
       send_message(msg_seq, epoch, msg_type, msg_bits);
-      return std::vector<uint8_t>();
+      return {};
    }
 
    m_flights.rbegin()->push_back(m_out_message_seq);
-   m_flight_data[m_out_message_seq] = Message_Info(epoch, msg_type, msg_bits);
+   m_flight_data.emplace(m_out_message_seq, Message_Info(epoch, msg_type, msg_bits));
 
    m_out_message_seq += 1;
    m_last_write = steady_clock_ms();
@@ -657,8 +656,6 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
                                                          uint16_t epoch,
                                                          Handshake_Type msg_type,
                                                          const std::vector<uint8_t>& msg_bits) {
-   const size_t DTLS_HANDSHAKE_HEADER_LEN = 12;
-
    auto no_fragment = format_w_seq(msg_bits, msg_type, msg_seq);
 
    if(no_fragment.size() + DTLS_HEADER_SIZE <= m_mtu) {
@@ -674,7 +671,7 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
       * per-record nonce.
       */
       const size_t ciphersuite_overhead = (epoch > 0) ? 128 : 0;
-      const size_t header_overhead = DTLS_HEADER_SIZE + DTLS_HANDSHAKE_HEADER_LEN;
+      const size_t header_overhead = DTLS_HEADER_SIZE + DTLS_HANDSHAKE_HEADER_SIZE;
 
       if(m_mtu <= (header_overhead + ciphersuite_overhead)) {
          throw Invalid_Argument("DTLS MTU is too small to send headers");

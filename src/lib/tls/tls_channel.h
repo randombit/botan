@@ -203,9 +203,7 @@ class BOTAN_PUBLIC_API(2, 0) Channel {
       * Perform a handshake timeout check.
       *
       * This function does nothing unless the channel represents a DTLS
-      * connection and a handshake still needs retransmission handling. This can
-      * include a locally active DTLS session whose final flight may not have
-      * reached the peer yet.
+      * connection with a handshake in progress.
       *
       * @returns true if a timeout condition occurred
       */

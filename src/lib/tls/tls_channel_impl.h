@@ -170,9 +170,7 @@ class Channel_Impl {
 
       /**
       * Perform a handshake timeout check. This does nothing unless this is a
-      * DTLS channel that still needs handshake retransmission handling. A DTLS
-      * channel can require this briefly after local activation while its last
-      * flight may still be lost in transit.
+      * DTLS channel with a handshake in progress.
       */
       virtual bool timeout_check() = 0;
 
