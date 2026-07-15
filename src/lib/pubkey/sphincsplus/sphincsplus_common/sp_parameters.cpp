@@ -115,43 +115,9 @@ std::pair<Sphincs_Parameter_Set, Sphincs_Hash_Type> set_and_hash_from_name(std::
       return {Sphincs_Parameter_Set::SLHDSA256Fast, Sphincs_Hash_Type::Shake256};
    }
 
-   // SLH-DSA instances WITH prehash mode
-   if(name == "Hash-SLH-DSA-SHA2-128s-with-SHA256") {
-      return {Sphincs_Parameter_Set::SLHDSA128Small, Sphincs_Hash_Type::Sha256};
-   }
-   if(name == "Hash-SLH-DSA-SHA2-128f-with-SHA256") {
-      return {Sphincs_Parameter_Set::SLHDSA128Fast, Sphincs_Hash_Type::Sha256};
-   }
-   if(name == "Hash-SLH-DSA-SHA2-192s-with-SHA512") {
-      return {Sphincs_Parameter_Set::SLHDSA192Small, Sphincs_Hash_Type::Sha256};
-   }
-   if(name == "Hash-SLH-DSA-SHA2-192f-with-SHA512") {
-      return {Sphincs_Parameter_Set::SLHDSA192Fast, Sphincs_Hash_Type::Sha256};
-   }
-   if(name == "Hash-SLH-DSA-SHA2-256s-with-SHA512") {
-      return {Sphincs_Parameter_Set::SLHDSA256Small, Sphincs_Hash_Type::Sha256};
-   }
-   if(name == "Hash-SLH-DSA-SHA2-256f-with-SHA512") {
-      return {Sphincs_Parameter_Set::SLHDSA256Fast, Sphincs_Hash_Type::Sha256};
-   }
-
-   if(name == "Hash-SLH-DSA-SHAKE-128s-with-SHAKE128") {
-      return {Sphincs_Parameter_Set::SLHDSA128Small, Sphincs_Hash_Type::Shake256};
-   }
-   if(name == "Hash-SLH-DSA-SHAKE-128f-with-SHAKE128") {
-      return {Sphincs_Parameter_Set::SLHDSA128Fast, Sphincs_Hash_Type::Shake256};
-   }
-   if(name == "Hash-SLH-DSA-SHAKE-192s-with-SHAKE256") {
-      return {Sphincs_Parameter_Set::SLHDSA192Small, Sphincs_Hash_Type::Shake256};
-   }
-   if(name == "Hash-SLH-DSA-SHAKE-192f-with-SHAKE256") {
-      return {Sphincs_Parameter_Set::SLHDSA192Fast, Sphincs_Hash_Type::Shake256};
-   }
-   if(name == "Hash-SLH-DSA-SHAKE-256s-with-SHAKE256") {
-      return {Sphincs_Parameter_Set::SLHDSA256Small, Sphincs_Hash_Type::Shake256};
-   }
-   if(name == "Hash-SLH-DSA-SHAKE-256f-with-SHAKE256") {
-      return {Sphincs_Parameter_Set::SLHDSA256Fast, Sphincs_Hash_Type::Shake256};
+   // The pre-hash variants (HashSLH-DSA) are not currently implemented
+   if(name.starts_with("Hash-SLH-DSA-")) {
+      throw Not_Implemented(fmt("Pre-hash SLH-DSA ({}) is not supported", name));
    }
 
    throw Lookup_Error(fmt("No SLH-DSA (or SPHINCS+) parameter supported for: {}", name));

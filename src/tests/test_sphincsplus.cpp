@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON) && defined(BOTAN_HAS_AES)
 
    #include <botan/assert.h>
+   #include <botan/exceptn.h>
    #include <botan/hash.h>
    #include <botan/pubkey.h>
    #include <botan/secmem.h>
@@ -17,7 +18,9 @@
    #include <botan/sphincsplus.h>
 
    #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+      #include <botan/certstor.h>
       #include <botan/x509cert.h>
+      #include <botan/x509path.h>
    #endif
 
    #include "test_pubkey.h"
@@ -299,11 +302,47 @@ class SLH_DSA_X509_Tests : public Test {
       SLH_DSA_X509_Tests() = default;
 
       std::vector<Test::Result> run() override {
+         return {test_cert_verifies(), test_null_params_rejected(), test_shake_path_validation()};
+      }
+
+   private:
+      static Test::Result test_cert_verifies() {
          Test::Result result("SLH-DSA-X.509");
          const Botan::X509_Certificate cert(Test::data_file("x509/slh-dsa/slh-dsa-rfc-9909-cert.pem"));
          auto ver_res = cert.verify_signature(*cert.subject_public_key());
          result.test_is_true("signature of certificate verifies", ver_res.first == Botan::Certificate_Status_Code::OK);
-         return std::vector<Test::Result>({result});
+         return result;
+      }
+
+      static Test::Result test_null_params_rejected() {
+         Test::Result result("SLH-DSA-X.509 NULL parameters");
+         const Botan::X509_Certificate cert(Test::data_file("x509/slh-dsa/slh-dsa-rfc-9909-cert.pem"));
+         auto pub_key = cert.subject_public_key();
+         const Botan::AlgorithmIdentifier with_null(pub_key->object_identifier(),
+                                                    Botan::AlgorithmIdentifier::USE_NULL_PARAM);
+         result.test_throws<Botan::Decoding_Error>("NULL signature algorithm parameters are rejected",
+                                                   [&]() { const Botan::PK_Verifier v(*pub_key, with_null); });
+         return result;
+      }
+
+      static Test::Result test_shake_path_validation() {
+         Test::Result result("SLH-DSA-X.509 SHAKE path validation");
+
+         if(!Botan::Sphincs_Parameters::create("SLH-DSA-SHAKE-128f").is_available()) {
+            result.test_note("Skipping due to missing SLH-DSA-SHAKE module");
+            return result;
+         }
+
+         const Botan::X509_Certificate ee(Test::data_file("x509/slh-dsa/slh-dsa-leaf.pem"));
+         Botan::Certificate_Store_In_Memory store;
+         store.add_certificate(Botan::X509_Certificate(Test::data_file("x509/slh-dsa/slh-dsa-root.pem")));
+
+         const Botan::Path_Validation_Restrictions restrictions;
+         const auto path_result = Botan::x509_path_validate(ee, restrictions, store);
+         if(!result.test_is_true("SLH-DSA-SHAKE chain validates", path_result.successful_validation())) {
+            result.test_note(path_result.result_string());
+         }
+         return result;
       }
 };
    #endif
@@ -313,6 +352,7 @@ BOTAN_REGISTER_TEST("pubkey", "slh_dsa", SLH_DSA_Test);
 BOTAN_REGISTER_TEST("pubkey", "slh_dsa_keygen", SPHINCS_Plus_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "slh_dsa_sign_generic", Generic_SlhDsa_Signature_Tests);
 BOTAN_REGISTER_TEST("pubkey", "slh_dsa_verify_generic", Generic_SlhDsa_Verification_Tests);
+
    #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 BOTAN_REGISTER_TEST("pubkey", "slh_dsa_x509", SLH_DSA_X509_Tests);
    #endif
