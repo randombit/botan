@@ -112,6 +112,8 @@ class BOTAN_PUBLIC_API(3, 1) SphincsPlus_PrivateKey final : public virtual Sphin
       secure_vector<uint8_t> raw_private_key_bits() const override;
       std::unique_ptr<Public_Key> public_key() const override;
 
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
+
       std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
                                                              std::string_view params,
                                                              std::string_view provider) const override;

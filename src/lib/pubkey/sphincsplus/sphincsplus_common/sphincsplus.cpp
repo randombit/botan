@@ -168,8 +168,6 @@ OID SphincsPlus_PublicKey::object_identifier() const {
 
 bool SphincsPlus_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
    // Nothing to check for the public key. It's literally just hashes. :-)
-   // A sign/verify roundtrip for the private key could be added for strong
-   // validation, but SLH-DSA signing is very expensive.
    return true;
 }
 
@@ -265,7 +263,9 @@ std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::create_verification
 std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::create_x509_verification_op(
    const AlgorithmIdentifier& signature_algorithm, std::string_view provider) const {
    if(provider.empty() || provider == "base") {
-      if(signature_algorithm != this->algorithm_identifier()) {
+      // RFC 9909 Section 3:
+      // The contents of the parameters component for each algorithm MUST be absent.
+      if(signature_algorithm.oid() != this->object_identifier() || !signature_algorithm.parameters_are_empty()) {
          throw Decoding_Error("Unexpected AlgorithmIdentifier for SLH-DSA (or SPHINCS+) signature");
       }
       return std::make_unique<SphincsPlus_Verification_Operation>(m_public);
@@ -354,6 +354,19 @@ secure_vector<uint8_t> SphincsPlus_PrivateKey::raw_private_key_bits() const {
 
 std::unique_ptr<Public_Key> SphincsPlus_PrivateKey::public_key() const {
    return std::make_unique<SphincsPlus_PublicKey>(*this);
+}
+
+bool SphincsPlus_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool strong) const {
+   if(strong) {
+      // Check that the embedded public root is consistent with the secret
+      // seed by recomputing it. This costs about as much as a key generation,
+      // but much less than a sign/verify roundtrip.
+      const auto& params = m_public->parameters();
+      auto hashes = Sphincs_Hash_Functions::create(params, m_public->seed());
+      const auto root = xmss_gen_root(params, m_private->seed(), *hashes);
+      return root == m_public->root();
+   }
+   return true;
 }
 
 namespace {
