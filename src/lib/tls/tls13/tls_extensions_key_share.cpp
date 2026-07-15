@@ -61,31 +61,7 @@ class Key_Share_Entry {
             throw TLS_Exception(Alert::InternalError, "Application did not provide a suitable ephemeral key pair");
          }
 
-         if(group.is_kem()) {
-            m_key_exchange = m_private_key->public_key_bits();
-         } else if(group.is_ecdh_named_curve()) {
-            auto* pkey = dynamic_cast<ECDH_PublicKey*>(m_private_key.get());
-            if(pkey == nullptr) {
-               throw TLS_Exception(Alert::InternalError, "Application did not provide a ECDH_PublicKey");
-            }
-
-            // RFC 8446 Ch. 4.2.8.2
-            //
-            //   Note: Versions of TLS prior to 1.3 permitted point format
-            //   negotiation; TLS 1.3 removes this feature in favor of a single point
-            //   format for each curve.
-            //
-            // Hence, we neither need to take Policy::use_ecc_point_compression() nor
-            // ClientHello::prefers_compressed_ec_points() into account here.
-            m_key_exchange = pkey->public_value(EC_Point_Format::Uncompressed);
-         } else {
-            auto* pkey = dynamic_cast<PK_Key_Agreement_Key*>(m_private_key.get());
-            if(pkey == nullptr) {
-               throw TLS_Exception(Alert::InternalError, "Application did not provide a key-agreement key");
-            }
-
-            m_key_exchange = pkey->public_value();
-         }
+         m_key_exchange = m_private_key->raw_public_key_bits();
       }
 
       bool empty() const { return (m_group == Group_Params::NONE) && m_key_exchange.empty(); }
