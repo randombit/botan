@@ -74,7 +74,9 @@ class LZMA_Compression_Stream final : public LZMA_Stream {
 class LZMA_Decompression_Stream final : public LZMA_Stream {
    public:
       LZMA_Decompression_Stream() {
-         const lzma_ret rc = ::lzma_stream_decoder(streamp(), UINT64_MAX, LZMA_TELL_UNSUPPORTED_CHECK);
+         // LZMA's highest preset compression level uses 64 MiB of dictionary
+         constexpr uint64_t memory_limit = static_cast<uint64_t>(128) * 1024 * 1024;
+         const lzma_ret rc = ::lzma_stream_decoder(streamp(), memory_limit, LZMA_TELL_UNSUPPORTED_CHECK);
 
          if(rc != LZMA_OK) {
             throw Compression_Error("lzma_stream_decoder", ErrorType::LzmaError, rc);

@@ -18,7 +18,7 @@ namespace Botan {
 Compression_Error::Compression_Error(const char* func_name, ErrorType type, int rc) :
       Exception(fmt("Compression API {} failed with return code {}", func_name, rc)), m_type(type), m_rc(rc) {}
 
-void* Compression_Alloc_Info::do_malloc(size_t n, size_t size) {
+void* Compression_Alloc_Info::do_malloc(size_t n, size_t size) noexcept {
    // Precheck for integer overflow in the multiplication
    // before passing to calloc, which may or may not check.
    if(!checked_mul(n, size)) {
@@ -27,27 +27,51 @@ void* Compression_Alloc_Info::do_malloc(size_t n, size_t size) {
 
    void* ptr = std::calloc(n, size);  // NOLINT(*-no-malloc,*-owning-memory,*-const-correctness)
 
+   if(ptr == nullptr) {
+      return nullptr;
+   }
+
    /*
    * Return null rather than throwing here as we are being called by a
    * C library and it may not be possible for an exception to unwind
    * the call stack from here. The compression library is expecting a
    * function written in C and a null return on error, which it will
-   * send upwards to the compression wrappers.
+   * send upwards to the compression wrappers. So if recording the
+   * allocation throws (eg bad_alloc growing the map), free the block and
+   * report failure the same way.
    */
-
-   if(ptr != nullptr) {
+   try {
       m_current_allocs[ptr] = n * size;
+   } catch(...) {
+      std::free(ptr);  // NOLINT(*-no-malloc,*-owning-memory)
+      return nullptr;
    }
 
    return ptr;
 }
 
-void Compression_Alloc_Info::do_free(void* ptr) {
+void Compression_Alloc_Info::do_free(void* ptr) noexcept {
    if(ptr != nullptr) {
       auto i = m_current_allocs.find(ptr);
 
       if(i == m_current_allocs.end()) {
-         throw Internal_Error("Compression_Alloc_Info::free got pointer not allocated by us");
+         /*
+         * The compression library tried to free a pointer that was not allocated by
+         * a call to the allocation function. We do not have any particularly good
+         * options here.
+         *
+         * - Throwing is not possible since it would unwind through a C ABI library,
+         *   which results in undefined behavior.
+         *
+         * - We could panic (fprintf to stderr and abort) but causing a unilateral
+         *   and unrecoverable process crash isn't necessarily the right choice either.
+         *
+         * - We could skip the scrub step and pass the pointer along directly to
+         *   std::free, but that risks corrupting the system heap.
+         *
+         * So instead we just ignore the request entirely
+         */
+         return;
       }
 
       secure_scrub_memory(ptr, i->second);
