@@ -47,7 +47,7 @@ std::span<const uint8_t> mldsa_privkey_subspan(const MLDSA_Composite_Param& para
 std::span<const uint8_t> traditional_pubkey_subspan(const MLDSA_Composite_Param& param,
                                                     std::span<const uint8_t> key_bits) {
    const size_t offset = param.mldsa_pubkey_size();
-   if(key_bits.size() <= 1 + offset) {
+   if(key_bits.size() <= offset) {
       throw Invalid_Argument(fmt("encoded traditional component public key is too short, its length is only {} bytes",
                                  key_bits.size() - offset));
    }
@@ -57,7 +57,7 @@ std::span<const uint8_t> traditional_pubkey_subspan(const MLDSA_Composite_Param&
 std::span<const uint8_t> traditional_privkey_subspan(const MLDSA_Composite_Param& param,
                                                      std::span<const uint8_t> key_bits) {
    const size_t offset = param.mldsa_privkey_size();
-   if(key_bits.size() <= 1 + offset) {
+   if(key_bits.size() <= offset) {
       throw Invalid_Argument("encoded traditional component private key is too short");
    }
    return std::span<const uint8_t>(key_bits.begin() + offset, key_bits.end());
