@@ -10,7 +10,9 @@
 
 #include <botan/compression.h>
 
+#include <botan/exceptn.h>
 #include <botan/mem_ops.h>
+#include <limits>
 #include <memory>
 #include <unordered_map>
 
@@ -22,15 +24,15 @@ namespace Botan {
 class Compression_Alloc_Info final {
    public:
       template <typename T>
-      static void* malloc(void* self, T n, T size) {
+      static void* malloc(void* self, T n, T size) noexcept {
          return static_cast<Compression_Alloc_Info*>(self)->do_malloc(n, size);
       }
 
-      static void free(void* self, void* ptr) { static_cast<Compression_Alloc_Info*>(self)->do_free(ptr); }
+      static void free(void* self, void* ptr) noexcept { static_cast<Compression_Alloc_Info*>(self)->do_free(ptr); }
 
    private:
-      void* do_malloc(size_t n, size_t size);
-      void do_free(void* ptr);
+      void* do_malloc(size_t n, size_t size) noexcept;
+      void do_free(void* ptr) noexcept;
 
       std::unordered_map<void*, size_t> m_current_allocs;
 };
@@ -42,11 +44,17 @@ template <typename Stream, typename ByteType, typename StreamLenType = size_t>
 class Zlib_Style_Stream : public Compression_Stream {
    public:
       void next_in(uint8_t* b, size_t len) override {
+         if(len > std::numeric_limits<StreamLenType>::max()) {
+            throw Not_Implemented("Compression chunk is too large for this backend's length field");
+         }
          m_stream.next_in = reinterpret_cast<ByteType*>(b);
          m_stream.avail_in = static_cast<StreamLenType>(len);
       }
 
       void next_out(uint8_t* b, size_t len) override {
+         if(len > std::numeric_limits<StreamLenType>::max()) {
+            throw Not_Implemented("Compression chunk is too large for this backend's length field");
+         }
          m_stream.next_out = reinterpret_cast<ByteType*>(b);
          m_stream.avail_out = static_cast<StreamLenType>(len);
       }
