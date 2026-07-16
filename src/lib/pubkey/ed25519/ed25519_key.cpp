@@ -70,6 +70,16 @@ bool Ed25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*
       return false;
    }
 
+   // Also reject the non-canonical encoding of the identity (y = 1 with the
+   // sign bit set). The subgroup check below flips the sign bit before decoding,
+   // which would otherwise normalize {0x01, .., 0x80} to the canonical identity
+   // and let it pass.
+   uint8_t noncanonical_identity[32] = {1};
+   noncanonical_identity[31] = 0x80;
+   if(CT::is_equal(pub.data(), noncanonical_identity, 32).as_bool()) {
+      return false;
+   }
+
    // The order of the Ed25519 group encoded
    const uint8_t modm_m[32] = {0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7,
                                0xa2, 0xde, 0xf9, 0xde, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
