@@ -9,6 +9,7 @@
 #include <botan/pkix_types.h>
 
 #include <botan/ber_dec.h>
+#include <botan/der_enc.h>
 #include <botan/uri.h>
 #include <botan/x509cert.h>
 #include <botan/internal/concat_util.h>
@@ -20,8 +21,6 @@
 #include <span>
 
 namespace Botan {
-
-class DER_Encoder;
 
 namespace {
 
@@ -408,8 +407,62 @@ std::vector<uint8_t> GeneralName::binary_name() const {
                      m_name);
 }
 
-void GeneralName::encode_into(DER_Encoder& /*to*/) const {
-   throw Not_Implemented("GeneralName encoding");
+void GeneralName::encode_into(DER_Encoder& to) const {
+   /*
+   GeneralName ::= CHOICE {
+        otherName                       [0]     OtherName,
+        rfc822Name                      [1]     IA5String,
+        dNSName                         [2]     IA5String,
+        x400Address                     [3]     ORAddress,
+        directoryName                   [4]     Name,
+        ediPartyName                    [5]     EDIPartyName,
+        uniformResourceIdentifier       [6]     IA5String,
+        iPAddress                       [7]     OCTET STRING,
+        registeredID                    [8]     OBJECT IDENTIFIER }
+   */
+   auto emit_ia5_implicit = [&](uint32_t tag, std::string_view value) {
+      const ASN1_String str(value, ASN1_Type::Ia5String);
+      to.add_object(ASN1_Type(tag), ASN1_Class::ContextSpecific, str.value());
+   };
+
+   switch(m_type) {
+      case NameType::RFC822:
+         emit_ia5_implicit(1, std::get<EmailConstraint>(m_name).value());
+         return;
+      case NameType::DNS:
+         emit_ia5_implicit(2, std::get<DNSConstraint>(m_name).value());
+         return;
+      case NameType::URI:
+         emit_ia5_implicit(6, std::get<URIConstraint>(m_name).value());
+         return;
+      case NameType::DN:
+         to.add_object(ASN1_Type(4), ASN1_Class::ExplicitContextSpecific, std::get<X509_DN>(m_name).DER_encode());
+         return;
+      case NameType::IPv4: {
+         // In a name constraint the iPAddress is always address followed by mask,
+         // even for a single host (unlike the SAN form)
+         const auto& subnet = std::get<IPv4Subnet>(m_name);
+         const auto addr_and_mask =
+            concat(subnet.address().to_bytes(), IPv4Address::netmask(subnet.prefix_length()).to_bytes());
+         // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+         to.add_object(ASN1_Type(7), ASN1_Class::ContextSpecific, addr_and_mask);
+         return;
+      }
+      case NameType::IPv6: {
+         const auto& subnet = std::get<IPv6Subnet>(m_name);
+         const auto addr_and_mask =
+            concat(subnet.address().address(), IPv6Address::netmask(subnet.prefix_length()).address());
+         // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+         to.add_object(ASN1_Type(7), ASN1_Class::ContextSpecific, addr_and_mask);
+         return;
+      }
+      case NameType::Other:
+      case NameType::Unknown:
+         // Decoding retains only the type tag for these forms, not the value
+         break;
+   }
+
+   throw Encoding_Error("Cannot encode GeneralName of Other or Unknown type");
 }
 
 void GeneralName::decode_from(BER_Decoder& ber) {
@@ -737,8 +790,15 @@ std::ostream& operator<<(std::ostream& os, const GeneralName& gn) {
 
 GeneralSubtree::GeneralSubtree() = default;
 
-void GeneralSubtree::encode_into(DER_Encoder& /*to*/) const {
-   throw Not_Implemented("GeneralSubtree encoding");
+void GeneralSubtree::encode_into(DER_Encoder& to) const {
+   /*
+   * RFC 5280 Section 4.2.1.10:
+   *    Within this profile, the minimum and maximum fields are not used with any
+   *    name forms, thus, the minimum MUST be zero, and maximum MUST be absent.
+   *
+   * minimum is DEFAULT 0 so it is not encoded.
+   */
+   to.start_sequence().encode(m_base).end_cons();
 }
 
 void GeneralSubtree::decode_from(BER_Decoder& ber) {

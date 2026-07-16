@@ -10,13 +10,17 @@
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    #include <botan/ber_dec.h>
    #include <botan/data_src.h>
+   #include <botan/der_enc.h>
+   #include <botan/hex.h>
    #include <botan/pkix_types.h>
+   #include <botan/x509_ext.h>
    #include <botan/x509cert.h>
    #include <botan/x509path.h>
    #include <botan/internal/calendar.h>
    #include <botan/internal/x509_utils.h>
    #include <algorithm>
    #include <fstream>
+   #include <set>
 #endif
 
 namespace Botan_Tests {
@@ -25,6 +29,49 @@ namespace {
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_SHA2_32) && \
    defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
+// Read all certificates from a PEM bundle in file order (leaf first).
+std::vector<Botan::X509_Certificate> load_chain(const std::string& filename) {
+   Botan::DataSource_Stream in(filename);
+   std::vector<Botan::X509_Certificate> certs;
+   while(!in.end_of_data()) {
+      try {
+         certs.emplace_back(in);
+      } catch(const Botan::Decoding_Error&) {
+         break;
+      }
+   }
+   return certs;
+}
+
+// (type, name) pairs for order-preserving comparison of subtree lists
+std::vector<std::pair<Botan::GeneralName::NameType, std::string>> describe(
+   const std::vector<Botan::GeneralSubtree>& subtrees) {
+   std::vector<std::pair<Botan::GeneralName::NameType, std::string>> out;
+   out.reserve(subtrees.size());
+   for(const auto& subtree : subtrees) {
+      out.emplace_back(subtree.base().type_code(), subtree.base().name());
+   }
+   return out;
+}
+
+// Parse `<chain-name>:<result>` lines; ignore blanks and `#` comments.
+std::vector<std::pair<std::string, std::string>> read_manifest(const std::string& path) {
+   std::vector<std::pair<std::string, std::string>> out;
+   std::ifstream in(path);
+   std::string line;
+   while(std::getline(in, line)) {
+      if(line.empty() || line.front() == '#') {
+         continue;
+      }
+      const auto colon = line.find(':');
+      if(colon == std::string::npos) {
+         continue;
+      }
+      out.emplace_back(line.substr(0, colon), line.substr(colon + 1));
+   }
+   return out;
+}
 
 class Name_Constraint_Validation_Tests final : public Test {
    public:
@@ -68,39 +115,6 @@ class Name_Constraint_Validation_Tests final : public Test {
          }
 
          return results;
-      }
-
-   private:
-      // Read all certificates from a PEM bundle in file order (leaf first).
-      static std::vector<Botan::X509_Certificate> load_chain(const std::string& filename) {
-         Botan::DataSource_Stream in(filename);
-         std::vector<Botan::X509_Certificate> certs;
-         while(!in.end_of_data()) {
-            try {
-               certs.emplace_back(in);
-            } catch(const Botan::Decoding_Error&) {
-               break;
-            }
-         }
-         return certs;
-      }
-
-      // Parse `<chain-name>:<result>` lines; ignore blanks and `#` comments.
-      static std::vector<std::pair<std::string, std::string>> read_manifest(const std::string& path) {
-         std::vector<std::pair<std::string, std::string>> out;
-         std::ifstream in(path);
-         std::string line;
-         while(std::getline(in, line)) {
-            if(line.empty() || line.front() == '#') {
-               continue;
-            }
-            const auto colon = line.find(':');
-            if(colon == std::string::npos) {
-               continue;
-            }
-            out.emplace_back(line.substr(0, colon), line.substr(colon + 1));
-         }
-         return out;
       }
 };
 
@@ -456,6 +470,288 @@ class SmtpUTF8Mailbox_Constraint_Match_Tests final : public Test {
 };
 
 BOTAN_REGISTER_TEST("x509", "x509_name_constraint_smtp_utf8_match", SmtpUTF8Mailbox_Constraint_Match_Tests);
+
+class Name_Constraint_Encoding_Tests final : public Test {
+   private:
+      static std::vector<uint8_t> der_encode_name(const Botan::GeneralName& gn) {
+         std::vector<uint8_t> der;
+         Botan::DER_Encoder enc(der);
+         enc.encode(gn);
+         return der;
+      }
+
+      static Test::Result test_general_name_golden_bytes() {
+         Test::Result result("X509v3 Name Constraints: GeneralName encoding");
+
+         result.test_bin_eq(
+            "dNSName host", der_encode_name(Botan::GeneralName::dns("example.com")), "820B6578616D706C652E636F6D");
+         result.test_bin_eq("dNSName subtree",
+                            der_encode_name(Botan::GeneralName::dns(".example.com")),
+                            "820C2E6578616D706C652E636F6D");
+         result.test_bin_eq("rfc822Name mailbox",
+                            der_encode_name(Botan::GeneralName::email("alice@example.com")),
+                            "8111616C696365406578616D706C652E636F6D");
+         result.test_bin_eq("uniformResourceIdentifier host",
+                            der_encode_name(Botan::GeneralName::uri("host.example.com")),
+                            "8610686F73742E6578616D706C652E636F6D");
+         result.test_bin_eq(
+            "iPAddress IPv4 subnet",
+            der_encode_name(Botan::GeneralName::ipv4_address(Botan::IPv4Subnet::from_string("10.0.0.0/8").value())),
+            "87080A000000FF000000");
+         result.test_bin_eq(
+            "iPAddress IPv4 host",
+            der_encode_name(Botan::GeneralName::ipv4_address(Botan::IPv4Address::from_string("192.0.2.1").value())),
+            "8708C0000201FFFFFFFF");
+         result.test_bin_eq(
+            "iPAddress IPv6 subnet",
+            der_encode_name(Botan::GeneralName::ipv6_address(Botan::IPv6Subnet::from_string("2001:db8::/32").value())),
+            "872020010DB8000000000000000000000000FFFFFFFF000000000000000000000000");
+
+         Botan::X509_DN dn;
+         dn.add_attribute("X520.Country", "US");
+         result.test_bin_eq("directoryName",
+                            der_encode_name(Botan::GeneralName::directory_name(dn)),
+                            "A40F300D310B3009060355040613025553");
+
+         return result;
+      }
+
+      static Test::Result test_extension_golden_bytes() {
+         Test::Result result("X509v3 Name Constraints: extension encoding");
+
+         std::vector<Botan::GeneralSubtree> permitted;
+         permitted.emplace_back(Botan::GeneralName::dns("example.com"));
+         std::vector<Botan::GeneralSubtree> excluded;
+         excluded.emplace_back(Botan::GeneralName::dns("evil.example.com"));
+
+         Botan::Extensions exts;
+         exts.add(std::make_unique<Botan::Cert_Extension::Name_Constraints>(
+                     Botan::NameConstraints(std::move(permitted), std::move(excluded))),
+                  true);
+
+         result.test_bin_eq("NameConstraints extension body",
+                            exts.get_extension_bits(Botan::Cert_Extension::Name_Constraints::static_oid()),
+                            "3027A00F300D820B6578616D706C652E636F6DA11430128210"
+                            "6576696C2E6578616D706C652E636F6D");
+         return result;
+      }
+
+      static Test::Result test_roundtrip() {
+         Test::Result result("X509v3 Name Constraints: encode/decode round trip");
+
+         Botan::X509_DN dn;
+         dn.add_attribute("X520.Country", "US");
+         dn.add_attribute("X520.Organization", "Example Corp");
+
+         std::vector<Botan::GeneralSubtree> permitted;
+         permitted.emplace_back(Botan::GeneralName::dns("example.com"));
+         permitted.emplace_back(Botan::GeneralName::dns(".sub.example.com"));
+         permitted.emplace_back(Botan::GeneralName::email("alice@example.com"));
+         permitted.emplace_back(Botan::GeneralName::email(".mail.example.com"));
+         permitted.emplace_back(Botan::GeneralName::uri("host.example.com"));
+         permitted.emplace_back(Botan::GeneralName::ipv4_address(Botan::IPv4Subnet::from_string("10.0.0.0/8").value()));
+         permitted.emplace_back(
+            Botan::GeneralName::ipv6_address(Botan::IPv6Subnet::from_string("2001:db8::/32").value()));
+         permitted.emplace_back(Botan::GeneralName::directory_name(dn));
+
+         std::vector<Botan::GeneralSubtree> excluded;
+         excluded.emplace_back(Botan::GeneralName::dns("evil.example.com"));
+         excluded.emplace_back(Botan::GeneralName::ipv4_address(Botan::IPv4Address::from_string("192.0.2.1").value()));
+         excluded.emplace_back(Botan::GeneralName::ipv6_address(Botan::IPv6Address::from_string("::1").value()));
+
+         const auto expected_permitted = describe(permitted);
+         const auto expected_excluded = describe(excluded);
+
+         Botan::Extensions exts;
+         exts.add(std::make_unique<Botan::Cert_Extension::Name_Constraints>(
+                     Botan::NameConstraints(std::move(permitted), std::move(excluded))),
+                  true);
+
+         const auto oid = Botan::Cert_Extension::Name_Constraints::static_oid();
+         const auto first_encoding = exts.get_extension_bits(oid);
+
+         std::vector<uint8_t> wire;
+         // Extensions::encode_into skips the outer SEQUENCE
+         Botan::DER_Encoder(wire).start_sequence().encode(exts).end_cons();
+         Botan::Extensions parsed;
+         Botan::BER_Decoder dec(wire);
+         parsed.decode_from(dec, Botan::Extension_Context::Certificate);
+
+         const auto* nc = parsed.get_extension_object_as<Botan::Cert_Extension::Name_Constraints>();
+         if(!result.test_not_null("NameConstraints decoded as typed extension", nc)) {
+            return result;
+         }
+
+         const auto& decoded = nc->get_name_constraints();
+         result.test_is_true("permitted subtrees survive round trip",
+                             describe(decoded.permitted()) == expected_permitted);
+         result.test_is_true("excluded subtrees survive round trip", describe(decoded.excluded()) == expected_excluded);
+
+         Botan::Extensions reencoded;
+         reencoded.add(nc->copy(), true);
+         result.test_bin_eq("re-encoding is byte identical", reencoded.get_extension_bits(oid), first_encoding);
+
+         return result;
+      }
+
+      static Test::Result test_empty_encode_rejected() {
+         Test::Result result("X509v3 Name Constraints: encoder rejects empty NameConstraints");
+         Botan::Extensions exts;
+         result.test_throws("Extensions::add throws on empty NameConstraints",
+                            [&] { exts.add(std::make_unique<Botan::Cert_Extension::Name_Constraints>(), true); });
+         return result;
+      }
+
+      static Test::Result test_othername_encode_rejected() {
+         Test::Result result("X509v3 Name Constraints: encoder rejects otherName constraint");
+
+         // otherName [0]: type-id 1.2.3.4 with a [0] UTF8String "abc" value.
+         // Decoding retains only the type tag, so re-encoding must refuse.
+         const auto der = Botan::hex_decode("A00C06032A0304A0050C03616263");
+         Botan::BER_Decoder dec(der, Botan::BER_Decoder::Limits::DER());
+         Botan::GeneralName gn;
+         gn.decode_from(dec);
+         if(!result.test_is_true("decoded as otherName", gn.type_code() == Botan::GeneralName::NameType::Other)) {
+            return result;
+         }
+
+         std::vector<Botan::GeneralSubtree> permitted;
+         permitted.emplace_back(gn);
+         Botan::Extensions exts;
+         result.test_throws("Extensions::add throws on otherName constraint", [&] {
+            exts.add(std::make_unique<Botan::Cert_Extension::Name_Constraints>(
+                        Botan::NameConstraints(std::move(permitted), {})),
+                     true);
+         });
+         return result;
+      }
+
+   public:
+      std::vector<Test::Result> run() override {
+         return {test_general_name_golden_bytes(),
+                 test_extension_golden_bytes(),
+                 test_roundtrip(),
+                 test_empty_encode_rejected(),
+                 test_othername_encode_rejected()};
+      }
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_name_constraint_encoding", Name_Constraint_Encoding_Tests);
+
+/*
+* Re-encode every NameConstraints extension in the validation corpus and
+* require byte-identical output. Constraint forms whose decode does not
+* retain a value (otherName, unrecognized tags) must instead be rejected
+* at encode time.
+*/
+class Name_Constraint_Corpus_Reencode_Tests final : public Test {
+   private:
+      static bool has_unencodable_name(const std::vector<Botan::GeneralSubtree>& subtrees) {
+         return std::any_of(subtrees.begin(), subtrees.end(), [](const Botan::GeneralSubtree& subtree) {
+            const auto type = subtree.base().type_code();
+            return type == Botan::GeneralName::NameType::Other || type == Botan::GeneralName::NameType::Unknown;
+         });
+      }
+
+      // Decode a NameConstraints extension body via the Extensions wire form.
+      // `parsed` must outlive the returned pointer.
+      static const Botan::Cert_Extension::Name_Constraints* decode_nc_body(Botan::Extensions& parsed,
+                                                                           const std::vector<uint8_t>& body) {
+         std::vector<uint8_t> wire;
+         Botan::DER_Encoder enc(wire);
+         enc.start_sequence()
+            .start_sequence()
+            .encode(Botan::Cert_Extension::Name_Constraints::static_oid())
+            .encode(true)
+            .encode(body, Botan::ASN1_Type::OctetString)
+            .end_cons()
+            .end_cons();
+         Botan::BER_Decoder dec(wire);
+         parsed.decode_from(dec, Botan::Extension_Context::Certificate);
+         return parsed.get_extension_object_as<Botan::Cert_Extension::Name_Constraints>();
+      }
+
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("X509v3 Name Constraints: corpus re-encode");
+
+         /*
+         * These chains deliberately carry constraint encodings that decoding
+         * canonicalizes (uppercase IA5 hosts, host bits set inside a CIDR mask,
+         * an explicitly encoded DEFAULT minimum). Re-encoding produces the
+         * canonical form, so for them require semantic equality and encoding
+         * stability rather than byte identity.
+         */
+         const std::set<std::string> canonicalized_by_decode = {
+            "dns-case-insensitive-valid",
+            "ia5-locale-independent-case-valid",
+            "ipv4-name-constraint-non-canonical-cidr-valid",
+            "name-constraints-explicit-minimum-zero-valid",
+            "uri-host-case-insensitive-valid",
+            "wildcard-excluded-case-insensitive-invalid",
+         };
+
+         const std::string base = "x509/name_constraints/";
+         std::vector<std::string> files{"root"};
+         for(const auto& entry : read_manifest(Test::data_file(base + "expected.txt"))) {
+            files.push_back(entry.first);
+         }
+
+         const auto oid = Botan::Cert_Extension::Name_Constraints::static_oid();
+         size_t reencoded_count = 0;
+
+         for(const auto& file : files) {
+            for(const auto& cert : load_chain(Test::data_file(base + file + ".pem"))) {
+               const auto& exts = cert.v3_extensions();
+               const auto* nc = exts.get_extension_object_as<Botan::Cert_Extension::Name_Constraints>();
+               if(nc == nullptr) {
+                  continue;
+               }
+
+               const auto original = exts.get_extension_bits(oid);
+               const bool critical = exts.critical_extension_set(oid);
+
+               try {
+                  Botan::Extensions fresh;
+                  fresh.add(nc->copy(), critical);
+                  const auto reencoded = fresh.get_extension_bits(oid);
+                  reencoded_count += 1;
+
+                  if(canonicalized_by_decode.contains(file)) {
+                     Botan::Extensions parsed;
+                     const auto* nc2 = decode_nc_body(parsed, reencoded);
+                     if(!result.test_not_null(file + " canonical re-encoding decodes", nc2)) {
+                        continue;
+                     }
+                     const auto& before = nc->get_name_constraints();
+                     const auto& after = nc2->get_name_constraints();
+                     result.test_is_true(file + " canonical re-encoding is semantically equal",
+                                         describe(after.permitted()) == describe(before.permitted()) &&
+                                            describe(after.excluded()) == describe(before.excluded()));
+
+                     Botan::Extensions again;
+                     again.add(nc2->copy(), critical);
+                     result.test_bin_eq(
+                        file + " canonical re-encoding is stable", again.get_extension_bits(oid), reencoded);
+                  } else {
+                     result.test_bin_eq(file + " re-encodes byte identical", reencoded, original);
+                  }
+               } catch(const Botan::Encoding_Error&) {
+                  const auto& decoded = nc->get_name_constraints();
+                  result.test_is_true(
+                     file + " encode rejected only for otherName/unknown constraint",
+                     has_unencodable_name(decoded.permitted()) || has_unencodable_name(decoded.excluded()));
+               }
+            }
+         }
+
+         result.test_sz_gte("corpus provided name constraint extensions", reencoded_count, 100);
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_name_constraint_corpus_reencode", Name_Constraint_Corpus_Reencode_Tests);
 
 #endif
 
