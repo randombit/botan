@@ -1298,6 +1298,20 @@ iWtHjIcunpiq6+IiB8IVu7Ncu6uPKoFS/mWzTvjgdNusmgNle9p3OAbE
         self.assertEqual(sk_read.to_raw(), sk_bits)
         self.assertEqual(pk_read.to_raw(), pk_bits)
 
+    def test_ml_dsa_composite_raw_keys(self):
+        mldsa_composite_mode = "MLDSA44-ECDSA-P256-SHA256"
+        sk = botan.PrivateKey.create("ML-DSA-Composite", mldsa_composite_mode, botan.RandomNumberGenerator("user"))
+        pk = sk.get_public_key()
+
+        sk_bits = sk.to_raw()
+        pk_bits = pk.to_raw()
+
+        sk_read = botan.PrivateKey.load_mldsa_composite(mldsa_composite_mode, sk_bits)
+        pk_read = botan.PublicKey.load_mldsa_composite(mldsa_composite_mode, pk_bits)
+
+        self.assertEqual(sk_read.to_raw(), sk_bits)
+        self.assertEqual(pk_read.to_raw(), pk_bits)
+
     def test_slh_dsa_raw_keys(self):
         slhdsa_mode = "SLH-DSA-SHAKE-128f"
         sk = botan.PrivateKey.create("SLH-DSA", slhdsa_mode, botan.RandomNumberGenerator("user"))

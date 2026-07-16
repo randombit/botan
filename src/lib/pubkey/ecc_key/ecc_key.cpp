@@ -17,6 +17,8 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/workfactor.h>
 
+#include <memory>
+
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
    #include <botan/ec_point.h>
 #endif
@@ -177,8 +179,6 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
                              std::span<const uint8_t> key_bits,
                              bool with_modular_inverse) :
       m_with_modular_inverse(with_modular_inverse) {
-   const EC_Group group(alg_id.parameters());
-
    OID key_parameters;
    secure_vector<uint8_t> private_key_bits;
    secure_vector<uint8_t> public_key_bits;
@@ -192,12 +192,31 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
       .end_cons()
       .verify_end();
 
-   m_private_key = std::make_shared<EC_PrivateKey_Data>(group, private_key_bits);
+   std::unique_ptr<EC_Group> group;
+
+   if(!alg_id.parameters_are_empty()) {
+      group = std::make_unique<EC_Group>(alg_id.parameters());
+   }
+   if(!key_parameters.empty()) {
+      if(group) {
+         if(EC_Group(key_parameters) != *group) {
+            throw Invalid_Argument(
+               "Domain parameters supplied AlgorithmIdentifier does not match the ECC private key's domain parameters in EC_PrivateKey construction");
+         }
+      } else {
+         group = std::make_unique<EC_Group>(key_parameters);
+      }
+   }
+   if(!group) {
+      throw Invalid_Argument("Domain parameters are not supplied in EC_PrivateKey construction");
+   }
+
+   m_private_key = std::make_shared<EC_PrivateKey_Data>(*group, private_key_bits);
 
    if(public_key_bits.empty()) {
       m_public_key = m_private_key->public_key(with_modular_inverse);
    } else {
-      m_public_key = std::make_shared<EC_PublicKey_Data>(group, public_key_bits);
+      m_public_key = std::make_shared<EC_PublicKey_Data>(*group, public_key_bits);
    }
 
    m_domain_encoding = default_encoding_for(domain());
