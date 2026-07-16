@@ -559,7 +559,7 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
 
     if cert_info.find('Subject: CN="CA",C="VT"') < 0:
         logging.error('Unexpected output for cert_info command %s', cert_info)
-    if cert_info.find('Subject keyid: 69DD911C9EEE3400C67CBC3F3056CBE711BD56AF9495013F') < 0:
+    if cert_info.find('Subject keyid: F4E2C7A1E26C971BEC4EE971363D8A28AD437F01') < 0:
         logging.error('Unexpected output for cert_info command %s', cert_info)
 
     test_cli("gen_pkcs10", "%s User --output=%s" % (priv_key, crt_req))

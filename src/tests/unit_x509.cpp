@@ -696,6 +696,22 @@ Test::Result test_x509_utf8() {
    return result;
 }
 
+Test::Result test_x509_subject_key_id_derivation() {
+   Test::Result result("X509 subject key id derivation");
+
+   /*
+   * Externally generated certificates whose subject key identifier was
+   * derived using RFC 5280 4.2.1.2 method (1), covering RSA and ECDSA keys
+   */
+   for(const auto* file : {"name_constraints/root.pem", "misc/aruba.pem", "misc/contains_any_extended_key_usage.pem"}) {
+      const Botan::X509_Certificate cert(Test::data_file(std::string("x509/") + file));
+      const Botan::Cert_Extension::Subject_Key_ID skid(*cert.subject_public_key());
+      result.test_bin_eq(std::string(file) + " subject key id", skid.get_key_id(), cert.subject_key_id());
+   }
+
+   return result;
+}
+
 Test::Result test_x509_any_key_extended_usage() {
    using Botan::Key_Constraints;
    using Botan::Usage_Type;
@@ -1086,6 +1102,11 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    {
       result.test_is_true("ca key usage cert", ca_cert.constraints().includes(Botan::Key_Constraints::KeyCertSign));
       result.test_is_true("ca key usage crl", ca_cert.constraints().includes(Botan::Key_Constraints::CrlSign));
+
+      // The subject key id is derived using SHA-1 regardless of the signature hash
+      result.test_bin_eq("ca cert subject key id is SHA-1 of subjectPublicKey",
+                         ca_cert.subject_key_id(),
+                         ca_cert.subject_public_key_bitstring_sha1());
    }
 
    /* Create user #1's key and cert request */
@@ -1119,6 +1140,10 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
 
    result.test_sz_eq("User1 serial size matches expected", user1_cert.serial_number().size(), 1);
    result.test_sz_eq("User1 serial matches expected", user1_cert.serial_number().at(0), size_t(99));
+
+   result.test_bin_eq("user1 subject key id is SHA-1 of subjectPublicKey",
+                      user1_cert.subject_key_id(),
+                      user1_cert.subject_public_key_bitstring_sha1());
 
    const Botan::X509_Certificate user2_cert =
       ca.sign_request(user2_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
@@ -2085,6 +2110,7 @@ class X509_Cert_Unit_Tests final : public Test {
 
    #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
          results.push_back(test_x509_utf8());
+         results.push_back(test_x509_subject_key_id_derivation());
          results.push_back(test_x509_any_key_extended_usage());
          results.push_back(test_x509_bmpstring());
          results.push_back(test_x509_teletex());
