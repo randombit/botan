@@ -340,6 +340,17 @@ std::optional<Ed25519_Point_Extended> frombytes_negate_vartime(std::span<const u
       h.X = -h.X;
    }
 
+   // RFC 8032 Section 5.1.3: "If x = 0, and x_0 = 1, decoding fails."
+   // x = 0 is invariant under the negation above, and x_0 is the encoded sign
+   // bit s[31] >> 7. This rejects the non-canonical identity encoding
+   // {0x01, 0x00 ..., 0x00, 0x80} during decoding, which otherwise decodes to
+   // the identity and slips past the canonical-only identity check in
+   // ed25519_verify(). (Ed25519_PublicKey::check_key() rejects this encoding
+   // separately, as it flips the sign bit before decoding.)
+   if(h.X.is_zero() && bool(s[31] >> 7)) {
+      return {};
+   }
+
    h.T = h.X * h.Y;
    return h;
 }
