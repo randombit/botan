@@ -29,6 +29,9 @@ namespace Botan {
  * identity. The maximum operation count is a function of the identity.
  *
  * Used by XMSS and HSS-LMS.
+ *
+ * If this registry or a key identity is inherited across fork(), it fails
+ * closed and refuses to issue further indices in the child process.
  */
 class Stateful_Key_Index_Registry final {
    public:
@@ -65,7 +68,10 @@ class Stateful_Key_Index_Registry final {
 
          private:
             std::array<uint8_t, 32> m_val{};
+            uint32_t m_process_id = 0;
             uint64_t m_max_operations = 0;
+
+            friend class Stateful_Key_Index_Registry;
       };
 
       Stateful_Key_Index_Registry(const Stateful_Key_Index_Registry&) = delete;
@@ -106,11 +112,14 @@ class Stateful_Key_Index_Registry final {
       typedef std::map<KeyId, uint64_t> RegistryMap;
 
       RegistryMap::iterator lookup(const KeyId& key_id);
+      bool fork_detected(const KeyId& key_id);
 
       Stateful_Key_Index_Registry();
 
       mutex_type m_mutex;
       RegistryMap m_registry;
+      uint32_t m_process_id = 0;
+      bool m_fork_detected = false;
 };
 
 }  // namespace Botan
