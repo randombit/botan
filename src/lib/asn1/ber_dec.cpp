@@ -668,7 +668,11 @@ BER_Decoder& BER_Decoder::operator=(BER_Decoder&&) noexcept = default;
 /*
 * Request for an object to decode itself
 */
-BER_Decoder& BER_Decoder::decode(ASN1_Object& obj, ASN1_Type /*unused*/, ASN1_Class /*unused*/) {
+BER_Decoder& BER_Decoder::decode(ASN1_Object& obj, ASN1_Type type_tag, ASN1_Class class_tag) {
+   // TODO support this case properly
+   if(type_tag != ASN1_Type::NoObject || class_tag != ASN1_Class::NoObject) {
+      throw Not_Implemented("BER_Decoder::decode(ASN1_Object) does not support implicit tagged decoding");
+   }
    obj.decode_from(*this);
    return (*this);
 }

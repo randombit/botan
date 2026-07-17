@@ -30,6 +30,22 @@ namespace {
 
 constexpr size_t MaximumKeyIdentifierLength = 64;
 
+/*
+* Encode an AlternativeName as `GeneralNames` but with an outer IMPLICIT
+* context-specific tag rather than the universal SEQUENCE tag. Used for
+* fullName [0] / cRLIssuer [2] / similar.
+*/
+void emit_general_names_implicit(DER_Encoder& der, const AlternativeName& names, uint32_t tag) {
+   // RFC 5280 4.2.1.6: GeneralNames ::= SEQUENCE SIZE (1..MAX) OF GeneralName
+   if(!names.has_items()) {
+      throw Encoding_Error("Cannot encode empty GeneralNames");
+   }
+   if(std::ranges::any_of(names.directory_names(), [](const X509_DN& dn) { return dn.empty(); })) {
+      throw Encoding_Error("GeneralNames must not contain an empty directoryName");
+   }
+   der.encode_implicit(names, ASN1_Type(tag));
+}
+
 template <std::derived_from<Certificate_Extension> T>
 auto make_extension([[maybe_unused]] const OID& oid) {
    BOTAN_DEBUG_ASSERT(oid == T::static_oid());
@@ -589,10 +605,16 @@ Subject_Key_ID::Subject_Key_ID(const std::vector<uint8_t>& pub_key, std::string_
 */
 std::vector<uint8_t> Authority_Key_ID::encode_inner() const {
    std::vector<uint8_t> output;
-   DER_Encoder(output)
-      .start_sequence()
-      .encode(m_key_id, ASN1_Type::OctetString, ASN1_Type(0), ASN1_Class::ContextSpecific)
-      .end_cons();
+   DER_Encoder der(output);
+   der.start_sequence();
+   if(!m_key_id.empty()) {
+      der.encode(m_key_id, ASN1_Type::OctetString, ASN1_Type(0), ASN1_Class::ContextSpecific);
+   }
+   if(m_authority_cert.has_value()) {
+      emit_general_names_implicit(der, m_authority_cert->issuer, 1);
+      der.encode(m_authority_cert->serial_number.to_bigint(), ASN1_Type(2), ASN1_Class::ContextSpecific);
+   }
+   der.end_cons();
    return output;
 }
 
@@ -611,9 +633,38 @@ void Authority_Key_ID::decode_inner(const std::vector<uint8_t>& in) {
    BER_Decoder ber(in, BER_Decoder::Limits::DER());
    BER_Decoder seq = ber.start_sequence();
 
-   const bool key_id_present = seq.peek_next_object().is_a(0, ASN1_Class::ContextSpecific);
+   m_key_id.clear();
+   m_authority_cert.reset();
 
-   seq.decode_optional_string(m_key_id, ASN1_Type::OctetString, 0).discard_remaining().end_cons();
+   bool key_id_present = false;
+   std::optional<AlternativeName> authority_cert_issuer;
+   std::optional<X509_Serial_Number> authority_cert_serial;
+
+   seq.decode_optional_field(0,
+                             ASN1_Class::ContextSpecific,
+                             [&](BER_Decoder& d) {
+                                d.decode(m_key_id, ASN1_Type::OctetString, ASN1_Type(0), ASN1_Class::ContextSpecific);
+                                key_id_present = true;
+                             })
+      .decode_optional_field(1,
+                             ASN1_Class::ContextSpecific | ASN1_Class::Constructed,
+                             [&](BER_Decoder& d) {
+                                AlternativeName names;
+                                d.decode_implicit(names,
+                                                  ASN1_Type(1),
+                                                  ASN1_Class::ContextSpecific | ASN1_Class::Constructed,
+                                                  ASN1_Type::Sequence,
+                                                  ASN1_Class::Constructed);
+                                authority_cert_issuer = std::move(names);
+                             })
+      .decode_optional_field(2, ASN1_Class::ContextSpecific, [&](BER_Decoder& d) {
+         X509_Serial_Number serial;
+         d.decode_implicit(
+            serial, ASN1_Type(2), ASN1_Class::ContextSpecific, ASN1_Type::Integer, ASN1_Class::Universal);
+         authority_cert_serial = std::move(serial);
+      });
+
+   seq.end_cons();
    ber.verify_end();
 
    if(key_id_present) {
@@ -625,6 +676,27 @@ void Authority_Key_ID::decode_inner(const std::vector<uint8_t>& in) {
                                   m_key_id.size(),
                                   MaximumKeyIdentifierLength));
       }
+   }
+
+   // RFC 5280 4.2.1.6: GeneralNames ::= SEQUENCE SIZE (1..MAX) OF GeneralName
+   if(authority_cert_issuer.has_value() && authority_cert_issuer->is_empty()) {
+      throw Decoding_Error("AuthorityKeyIdentifier authorityCertIssuer must contain at least one GeneralName");
+   }
+
+   /*
+   * RFC 5280 Appendix A.2:
+   *
+   *    authorityCertIssuer and authorityCertSerialNumber MUST both be
+   *    present or both be absent
+   */
+   if(authority_cert_issuer.has_value() != authority_cert_serial.has_value()) {
+      throw Decoding_Error(
+         "AuthorityKeyIdentifier authorityCertIssuer and authorityCertSerialNumber must both be present or absent");
+   }
+
+   if(authority_cert_issuer.has_value()) {
+      m_authority_cert =
+         Authority_Cert_Identifier{std::move(*authority_cert_issuer), std::move(*authority_cert_serial)};
    }
 }
 
@@ -1214,22 +1286,6 @@ void CRL_ReasonCode::decode_inner(const std::vector<uint8_t>& in) {
 }
 
 namespace {
-
-/*
-* Encode an AlternativeName as `GeneralNames` but with an outer IMPLICIT
-* context-specific tag rather than the universal SEQUENCE tag. Used for
-* fullName [0] / cRLIssuer [2] / similar.
-*/
-void emit_general_names_implicit(DER_Encoder& der, const AlternativeName& names, uint32_t tag) {
-   // RFC 5280 4.2.1.6: GeneralNames ::= SEQUENCE SIZE (1..MAX) OF GeneralName
-   if(!names.has_items()) {
-      throw Encoding_Error("Cannot encode empty GeneralNames");
-   }
-   if(std::ranges::any_of(names.directory_names(), [](const X509_DN& dn) { return dn.empty(); })) {
-      throw Encoding_Error("GeneralNames must not contain an empty directoryName");
-   }
-   der.encode_implicit(names, ASN1_Type(tag));
-}
 
 constexpr size_t ReasonFlagsNamedBitWidth = 9;
 
