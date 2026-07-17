@@ -9,8 +9,29 @@
 
 #include <botan/asn1_obj.h>
 #include <span>
+#include <vector>
+
+namespace Botan {
+
+class BigInt;
+
+}
 
 namespace Botan::ASN1 {
+
+/**
+* Return the contents octets of the DER encoding of the INTEGER @p n:
+* big-endian two's complement, minimal length. Zero encodes as a single
+* 0x00 octet.
+*/
+std::vector<uint8_t> integer_contents(const BigInt& n);
+
+/**
+* Decode the contents octets of a BER INTEGER (big-endian two's
+* complement). Redundant leading octets are accepted; an empty input is
+* rejected.
+*/
+BigInt integer_from_contents(std::span<const uint8_t> contents);
 
 /*
 * Return true if the bytes are exactly one DER-encoded value of the expected

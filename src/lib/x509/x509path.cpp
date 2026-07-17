@@ -475,7 +475,7 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
       }
 
       // Check the serial number
-      if(subject.is_serial_negative()) {
+      if(subject.serial().is_negative()) {
          status.insert(Certificate_Status_Code::CERT_SERIAL_NEGATIVE);
       }
 
@@ -891,7 +891,7 @@ CertificatePathStatusCodes PKIX::check_ocsp_online(const std::vector<X509_Certif
                return OCSP::Response(Certificate_Status_Code::OCSP_NO_REVOCATION_URL);
             }));
          } else {
-            auto ocsp_req = OCSP::Request(issuer, BigInt::from_bytes(subject.serial_number()));
+            auto ocsp_req = OCSP::Request(issuer, subject);
             ocsp_response_futures.emplace_back(
                std::async(std::launch::async, [ocsp_urls, ocsp_req, timeout]() -> std::optional<OCSP::Response> {
                   HTTP::Response http;

@@ -9,7 +9,9 @@
 
 #if defined(BOTAN_HAS_OCSP)
    #include "test_arb_eq.h"
+   #include <botan/ber_dec.h>
    #include <botan/certstor.h>
+   #include <botan/der_enc.h>
    #include <botan/ocsp.h>
    #include <botan/x509path.h>
    #include <botan/internal/calendar.h>
@@ -30,6 +32,35 @@ class OCSP_Tests final : public Test {
 
       static Botan::OCSP::Response load_test_OCSP_resp(const std::string& path) {
          return Botan::OCSP::Response(Test::read_binary_data_file(path));
+      }
+
+      static Test::Result test_certid_serial_sign() {
+         Test::Result result("OCSP CertID serial matching respects sign");
+
+         const std::string base = "x509/serial_numbers/";
+         const auto ca = load_test_X509_cert(base + "ca.pem");
+         const auto pos = load_test_X509_cert(base + "pos255.pem");
+         const auto neg = load_test_X509_cert(base + "neg255.pem");
+
+         const Botan::OCSP::CertID neg_id(ca, neg.serial());
+         result.test_is_true("CertID matches its own cert", neg_id.is_id_for(ca, neg));
+         result.test_is_false("CertID does not match same-magnitude positive serial", neg_id.is_id_for(ca, pos));
+
+         const Botan::OCSP::CertID pos_id(ca, pos.serial());
+         result.test_is_true("positive CertID matches its own cert", pos_id.is_id_for(ca, pos));
+         result.test_is_false("positive CertID does not match negative serial", pos_id.is_id_for(ca, neg));
+
+         // The sign survives an encode/decode round trip
+         std::vector<uint8_t> der;
+         Botan::DER_Encoder enc(der);
+         neg_id.encode_into(enc);
+         Botan::OCSP::CertID neg_id_rt;
+         Botan::BER_Decoder dec(der);
+         neg_id_rt.decode_from(dec);
+         result.test_is_true("round-tripped CertID matches its own cert", neg_id_rt.is_id_for(ca, neg));
+         result.test_is_false("round-tripped CertID does not match positive serial", neg_id_rt.is_id_for(ca, pos));
+
+         return result;
       }
 
       static Test::Result test_response_parsing() {
@@ -577,6 +608,7 @@ class OCSP_Tests final : public Test {
          std::vector<Test::Result> results;
 
          results.push_back(test_request_encoding());
+         results.push_back(test_certid_serial_sign());
          results.push_back(test_response_parsing());
          results.push_back(test_response_with_bykey_responder_id());
          results.push_back(test_response_certificate_access());

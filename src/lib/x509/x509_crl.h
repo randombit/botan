@@ -24,6 +24,7 @@ class X509_DN;
 
 class CRL_Entry_Data;
 class CRL_Data;
+class X509_Serial_Number;
 
 /**
 * This class represents CRL entries
@@ -35,9 +36,19 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Entry final : public ASN1_Object {
 
       /**
       * Get the serial number of the certificate associated with this entry.
+      *
+      * Note this is the absolute value; the (rare, non-conforming) negative
+      * serial numbers are indistinguishable from their positive counterpart.
+      * Prefer serial() which preserves the sign.
+      *
       * @return certificate's serial number
       */
-      const std::vector<uint8_t>& serial_number() const;
+      BOTAN_DEPRECATED("Prefer CRL_Entry::serial") const std::vector<uint8_t>& serial_number() const;
+
+      /**
+      * Get the serial number of the certificate associated with this entry
+      */
+      const X509_Serial_Number& serial() const;
 
       /**
       * Get the revocation date of the certificate associated with this entry

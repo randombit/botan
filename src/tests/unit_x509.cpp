@@ -591,6 +591,94 @@ Test::Result test_x509_encode_authority_info_access_extension() {
    return result;
 }
 
+Test::Result test_x509_serial_number_type() {
+   Test::Result result("X509_Serial_Number");
+
+   auto der_of = [](const Botan::X509_Serial_Number& sn) {
+      std::vector<uint8_t> der;
+      Botan::DER_Encoder enc(der);
+      enc.encode(sn);
+      return der;
+   };
+
+   auto from_bigint = [](int64_t v) {
+      const auto mag = Botan::BigInt::from_u64(static_cast<uint64_t>(v < 0 ? -v : v));
+      return Botan::X509_Serial_Number(v < 0 ? -mag : mag);
+   };
+
+   // Default construction is zero
+   const Botan::X509_Serial_Number zero;
+   result.test_is_true("default is zero", zero.is_zero());
+   result.test_is_false("zero is not negative", zero.is_negative());
+   result.test_is_false("zero does not conform", zero.conforms_to_rfc5280());
+   result.test_str_eq("zero to_string", zero.to_string(), "00");
+   result.test_is_true("zero magnitude is empty", zero.magnitude().empty());
+
+   // Golden DER encodings
+   result.test_bin_eq("encode 0", der_of(zero), "020100");
+   result.test_bin_eq("encode 127", der_of(from_bigint(127)), "02017F");
+   result.test_bin_eq("encode 128", der_of(from_bigint(128)), "02020080");
+   result.test_bin_eq("encode 255", der_of(from_bigint(255)), "020200FF");
+   result.test_bin_eq("encode -1", der_of(from_bigint(-1)), "0201FF");
+   result.test_bin_eq("encode -129", der_of(from_bigint(-129)), "0202FF7F");
+   result.test_bin_eq("encode -255", der_of(from_bigint(-255)), "0202FF01");
+
+   // Construction paths agree
+   const std::vector<uint8_t> ff{0xFF};
+   const std::vector<uint8_t> zero_ff{0x00, 0xFF};
+   result.test_is_true("from_bytes strips leading zeros",
+                       Botan::X509_Serial_Number::from_bytes(zero_ff) == from_bigint(255));
+   result.test_is_true("from_bytes is unsigned", Botan::X509_Serial_Number::from_bytes(ff) == from_bigint(255));
+   result.test_is_true("from_der_contents normalizes",
+                       Botan::X509_Serial_Number::from_der_contents(zero_ff) == from_bigint(255));
+   const std::vector<uint8_t> redundant_neg{0xFF, 0xFF, 0x80};
+   result.test_is_true("from_der_contents normalizes negative",
+                       Botan::X509_Serial_Number::from_der_contents(redundant_neg) == from_bigint(-128));
+   result.test_is_true("from_bytes of empty is zero", Botan::X509_Serial_Number::from_bytes({}).is_zero());
+
+   // BigInt round trip
+   result.test_is_true("to_bigint round trip", from_bigint(-129).to_bigint() == -Botan::BigInt::from_u64(129));
+   result.test_str_eq("to_string negative", from_bigint(-255).to_string(), "-FF");
+   result.test_str_eq("to_string positive", from_bigint(255).to_string(), "FF");
+
+   // Decoding rejects an empty INTEGER encoding
+   {
+      const auto empty_int = Botan::hex_decode("0200");
+      Botan::BER_Decoder dec(empty_int);
+      Botan::X509_Serial_Number sn;
+      result.test_throws("empty INTEGER rejected", [&] { sn.decode_from(dec); });
+   }
+
+   // Numeric ordering
+   const std::vector<int64_t> ordered{-256, -129, -2, -1, 0, 1, 127, 128, 255, 256};
+   for(size_t i = 1; i != ordered.size(); ++i) {
+      result.test_is_true("ordering " + std::to_string(ordered[i - 1]) + " < " + std::to_string(ordered[i]),
+                          from_bigint(ordered[i - 1]) < from_bigint(ordered[i]));
+   }
+
+   // Conformance predicate
+   result.test_is_true("1 conforms", from_bigint(1).conforms_to_rfc5280());
+   result.test_is_false("-1 does not conform", from_bigint(-1).conforms_to_rfc5280());
+   const std::vector<uint8_t> twenty(20, 0x7F);
+   result.test_is_true("20 octets conforms", Botan::X509_Serial_Number::from_bytes(twenty).conforms_to_rfc5280());
+   const std::vector<uint8_t> twentyone(21, 0x7F);
+   result.test_is_false("21 octets does not conform",
+                        Botan::X509_Serial_Number::from_bytes(twentyone).conforms_to_rfc5280());
+
+   // Random serials suit certificate issuance
+   auto rng = Test::new_rng(__func__);
+   std::set<Botan::X509_Serial_Number> seen;
+   for(size_t i = 0; i != 20; ++i) {
+      const auto sn = Botan::X509_Serial_Number::random(*rng);
+      result.test_is_true("random serial conforms", sn.conforms_to_rfc5280());
+      result.test_is_true("random serial has expected size", sn.octet_length() <= 17);
+      seen.insert(sn);
+   }
+   result.test_sz_eq("random serials are distinct", seen.size(), 20);
+
+   return result;
+}
+
    #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 Test::Result test_crl_dn_name() {
@@ -664,6 +752,76 @@ Test::Result test_x509_decode_list() {
 
    return result;
 }
+
+Test::Result test_x509_serial_decoding() {
+   Test::Result result("X509 certificate serial number decoding");
+
+   const std::string base = "x509/serial_numbers/";
+
+   const Botan::X509_Certificate pos(Test::data_file(base + "pos255.pem"));
+   result.test_is_false("pos255 not negative", pos.serial().is_negative());
+   result.test_is_true("pos255 conforms", pos.serial().conforms_to_rfc5280());
+   result.test_str_eq("pos255 to_string", pos.serial().to_string(), "FF");
+   result.test_bin_eq("pos255 magnitude matches legacy accessor", pos.serial_number(), pos.serial().magnitude());
+
+   const Botan::X509_Certificate neg(Test::data_file(base + "neg255.pem"));
+   result.test_is_true("neg255 negative", neg.serial().is_negative());
+   result.test_is_true("neg255 value", neg.serial().to_bigint() == -Botan::BigInt::from_u64(255));
+   result.test_bin_eq("neg255 DER contents", neg.serial().der_contents(), "FF01");
+   result.test_bin_eq("neg255 magnitude collides with pos255", neg.serial_number(), pos.serial_number());
+   result.test_is_true("neg255 and pos255 serials differ", neg.serial() != pos.serial());
+   result.test_str_eq("neg255 to_string", neg.serial().to_string(), "-FF");
+   result.test_is_false("neg255 does not conform", neg.serial().conforms_to_rfc5280());
+
+   const Botan::X509_Certificate zero(Test::data_file(base + "zero.pem"));
+   result.test_is_true("zero serial is zero", zero.serial().is_zero());
+   result.test_is_true("zero legacy accessor is empty", zero.serial_number().empty());
+   result.test_is_false("zero does not conform", zero.serial().conforms_to_rfc5280());
+
+   const Botan::X509_Certificate twenty(Test::data_file(base + "twenty_octets.pem"));
+   result.test_sz_eq("twenty octet serial length", twenty.serial().octet_length(), 20);
+   result.test_is_true("twenty octet serial conforms", twenty.serial().conforms_to_rfc5280());
+
+   const Botan::X509_Certificate twentyone(Test::data_file(base + "twentyone_octets.pem"));
+   result.test_sz_eq("twentyone octet serial length", twentyone.serial().octet_length(), 21);
+   result.test_is_false("twentyone octet serial does not conform", twentyone.serial().conforms_to_rfc5280());
+
+   return result;
+}
+
+      #if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_SHA2_32)
+Test::Result test_x509_serial_revocation_matching() {
+   Test::Result result("X509 CRL serial matching respects sign");
+
+   auto rng = Test::new_rng(__func__);
+   const std::string base = "x509/serial_numbers/";
+
+   const Botan::X509_Certificate ca_cert(Test::data_file(base + "ca.pem"));
+   Botan::DataSource_Stream key_in(Test::data_file(base + "ca_key.pem"));
+   auto ca_key = Botan::PKCS8::load_key(key_in);
+
+   const Botan::X509_Certificate pos(Test::data_file(base + "pos255.pem"));
+   const Botan::X509_Certificate neg(Test::data_file(base + "neg255.pem"));
+
+   const Botan::X509_CA ca(ca_cert, *ca_key, "SHA-256", "", *rng);
+
+   // Revoke the +255 cert: the -255 cert shares its magnitude but must not match
+   const auto crl_pos = ca.update_crl(ca.new_crl(*rng), {Botan::CRL_Entry(pos, Botan::CRL_Code::KeyCompromise)}, *rng);
+   result.test_is_true("pos255 is revoked", crl_pos.is_revoked(pos));
+   result.test_is_false("neg255 with the same magnitude is not revoked", crl_pos.is_revoked(neg));
+
+   // Revoke the -255 cert: the entry's sign survives encoding of the CRL
+   const auto crl_neg = ca.update_crl(ca.new_crl(*rng), {Botan::CRL_Entry(neg, Botan::CRL_Code::KeyCompromise)}, *rng);
+   const Botan::X509_CRL crl_neg_rt(crl_neg.BER_encode());
+   result.test_sz_eq("one revoked entry", crl_neg_rt.get_revoked().size(), 1);
+   result.test_is_true("entry serial still negative after round trip",
+                       crl_neg_rt.get_revoked().at(0).serial().is_negative());
+   result.test_is_true("neg255 is revoked", crl_neg_rt.is_revoked(neg));
+   result.test_is_false("pos255 with the same magnitude is not revoked", crl_neg_rt.is_revoked(pos));
+
+   return result;
+}
+      #endif
 
 Test::Result test_x509_utf8() {
    Test::Result result("X509 with UTF-8 encoded fields");
@@ -1254,7 +1412,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
 }
 
 Test::Result test_crl_entry_negative_serial() {
-   Test::Result result("CRL entry with negative serial matches certificate serial");
+   Test::Result result("CRL entry serial number preserves sign");
 
    const auto build_crl_entry = [](const std::vector<uint8_t>& serial_bytes) {
       std::vector<uint8_t> der;
@@ -1273,14 +1431,29 @@ Test::Result test_crl_entry_negative_serial() {
    // -129 in two's complement
    auto entry = build_crl_entry({0xFF, 0x7F});
    result.test_bin_eq("negative serial -129 magnitude", entry.serial_number(), Botan::BigInt(129).serialize());
+   result.test_is_true("negative serial detected", entry.serial().is_negative());
+   result.test_is_true("negative serial value", entry.serial().to_bigint() == -Botan::BigInt::from_u64(129));
+
+   // The sign survives re-encoding
+   {
+      std::vector<uint8_t> der;
+      Botan::DER_Encoder enc(der);
+      entry.encode_into(enc);
+      Botan::CRL_Entry rt;
+      Botan::BER_Decoder dec(der);
+      rt.decode_from(dec);
+      result.test_is_true("re-encoded entry serial is unchanged", rt.serial() == entry.serial());
+   }
 
    // -1 in two's complement
    entry = build_crl_entry({0xFF});
    result.test_bin_eq("negative serial -1 magnitude", entry.serial_number(), Botan::BigInt(1).serialize());
+   result.test_is_true("-1 is negative", entry.serial().is_negative());
 
    // 128 (positive, high bit set so DER requires the leading zero)
    entry = build_crl_entry({0x00, 0x80});
    result.test_bin_eq("positive serial 128", entry.serial_number(), Botan::BigInt(128).serialize());
+   result.test_is_false("128 is not negative", entry.serial().is_negative());
 
    return result;
 }
@@ -2111,6 +2284,10 @@ class X509_Cert_Unit_Tests final : public Test {
    #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
          results.push_back(test_x509_utf8());
          results.push_back(test_x509_subject_key_id_derivation());
+         results.push_back(test_x509_serial_decoding());
+      #if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_SHA2_32)
+         results.push_back(test_x509_serial_revocation_matching());
+      #endif
          results.push_back(test_x509_any_key_extended_usage());
          results.push_back(test_x509_bmpstring());
          results.push_back(test_x509_teletex());
@@ -2127,6 +2304,7 @@ class X509_Cert_Unit_Tests final : public Test {
    #endif
 
          results.push_back(test_x509_encode_authority_info_access_extension());
+         results.push_back(test_x509_serial_number_type());
          results.push_back(test_x509_extension());
          results.push_back(test_x509_extension_decode_duplicate());
          results.push_back(test_x509_wrong_context_certificate_extensions());

@@ -121,11 +121,10 @@ X509_Certificate X509_CA::make_cert(PK_Signer& signer,
                                     const X509_DN& issuer_dn,
                                     const X509_DN& subject_dn,
                                     const Extensions& extensions) {
-   const size_t SERIAL_BITS = 128;
-   const BigInt serial_no(rng, SERIAL_BITS);
+   const auto serial_no = X509_Serial_Number::random(rng);
 
    return make_cert(
-      signer, rng, serial_no, sig_algo, pub_key, not_before, not_after, issuer_dn, subject_dn, extensions);
+      signer, rng, serial_no.to_bigint(), sig_algo, pub_key, not_before, not_after, issuer_dn, subject_dn, extensions);
 }
 
 /*

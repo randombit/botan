@@ -9,6 +9,7 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/bigint.h>
+#include <botan/internal/asn1_utils.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
@@ -352,9 +353,9 @@ DER_Encoder& DER_Encoder::encode(size_t n, ASN1_Type type_tag, ASN1_Class class_
 /*
 * DER encode an INTEGER
 */
-DER_Encoder& DER_Encoder::encode(const BigInt& n, ASN1_Type type_tag, ASN1_Class class_tag) {
+std::vector<uint8_t> ASN1::integer_contents(const BigInt& n) {
    if(n == 0) {
-      return add_object(type_tag, class_tag, 0);
+      return {0x00};
    }
 
    // Serialize magnitude with one extra leading byte
@@ -378,9 +379,15 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n, ASN1_Type type_tag, ASN1_Class
    BOTAN_ASSERT_NOMSG(contents.size() >= 2);
    const bool leading_byte_redundant =
       (contents[0] == 0x00 && (contents[1] & 0x80) == 0) || (contents[0] == 0xFF && (contents[1] & 0x80) != 0);
-   auto encoding = std::span{contents}.subspan(leading_byte_redundant ? 1 : 0);
 
-   return add_object(type_tag, class_tag, encoding);
+   if(leading_byte_redundant) {
+      contents.erase(contents.begin());
+   }
+   return contents;
+}
+
+DER_Encoder& DER_Encoder::encode(const BigInt& n, ASN1_Type type_tag, ASN1_Class class_tag) {
+   return add_object(type_tag, class_tag, ASN1::integer_contents(n));
 }
 
 /*

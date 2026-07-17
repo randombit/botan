@@ -41,7 +41,11 @@ void check_generalized_time(const ASN1_Time& time, const char* field) {
 
 }  // namespace
 
-CertID::CertID(const X509_Certificate& issuer, const BigInt& subject_serial) : m_subject_serial(subject_serial) {
+CertID::CertID(const X509_Certificate& issuer, const BigInt& subject_serial) :
+      CertID(issuer, X509_Serial_Number(subject_serial)) {}
+
+CertID::CertID(const X509_Certificate& issuer, const X509_Serial_Number& subject_serial) :
+      m_subject_serial(subject_serial) {
    /*
    In practice it seems some responders, including, notably,
    ocsp.verisign.com, will reject anything but SHA-1 here
@@ -55,7 +59,7 @@ CertID::CertID(const X509_Certificate& issuer, const BigInt& subject_serial) : m
 
 bool CertID::is_id_for(const X509_Certificate& issuer, const X509_Certificate& subject) const {
    try {
-      if(BigInt::from_bytes(subject.serial_number()) != m_subject_serial) {
+      if(subject.serial() != m_subject_serial) {
          return false;
       }
 
@@ -221,7 +225,7 @@ void decode_optional_list(BER_Decoder& ber, ASN1_Type tag, std::vector<X509_Cert
 }  // namespace
 
 Request::Request(const X509_Certificate& issuer_cert, const X509_Certificate& subject_cert) :
-      m_issuer(issuer_cert), m_certid(m_issuer, BigInt::from_bytes(subject_cert.serial_number())) {
+      m_issuer(issuer_cert), m_certid(m_issuer, subject_cert.serial()) {
    if(subject_cert.issuer_dn() != issuer_cert.subject_dn()) {
       throw Invalid_Argument("Invalid cert pair to OCSP::Request (mismatched issuer,subject args?)");
    }
@@ -631,7 +635,7 @@ Response online_check(const X509_Certificate& issuer,
       throw Invalid_Argument("No HTTP OCSP responder URLs available for this certificate");
    }
 
-   const auto subject_serial = BigInt::from_bytes(subject.serial_number());
+   const auto subject_serial = subject.serial().to_bigint();
 
    // Try the first N - 1 responder addresses in sequence, ignoring errors
    for(size_t i = 0; i + 1 < responders.size(); ++i) {

@@ -36,7 +36,7 @@ class CRL_Data final {
       void update_index() {
          m_revoked_serials.clear();
          for(const auto& entry : m_entries) {
-            m_revoked_serials.insert(entry.serial_number());
+            m_revoked_serials.insert(entry.serial());
          }
       }
 
@@ -49,7 +49,7 @@ class CRL_Data final {
       Extensions m_extensions;
 
       // cached values from entries
-      std::set<std::vector<uint8_t>> m_revoked_serials;
+      std::set<X509_Serial_Number> m_revoked_serials;
 
       // cached values from extensions
       std::optional<BigInt> m_crl_number;
@@ -94,7 +94,7 @@ X509_CRL::X509_CRL(const X509_DN& issuer,
 * Check if this particular certificate is listed in the CRL
 */
 bool X509_CRL::is_revoked(const X509_Certificate& cert) const {
-   const bool serial_appears = data().m_revoked_serials.contains(cert.serial_number());
+   const bool serial_appears = data().m_revoked_serials.contains(cert.serial());
 
    // If the serial number does not appear in the revocation list then
    // the later checks are not necessary anyway

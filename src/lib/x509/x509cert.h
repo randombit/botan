@@ -21,6 +21,7 @@ class Extensions;
 class NameConstraints;
 class Public_Key;
 class X509_DN;
+class X509_Serial_Number;
 
 class DNSName;
 class EmailAddress;
@@ -186,15 +187,25 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
 
       /**
       * Get the serial number of this certificate.
+      *
+      * Note this is the absolute value; the (rare, non-conforming) negative
+      * serial numbers are indistinguishable from their positive counterpart.
+      * Prefer serial() which preserves the sign.
+      *
       * @return certificates serial number
       */
       const std::vector<uint8_t>& serial_number() const;
 
       /**
+      * Get the serial number of this certificate
+      */
+      const X509_Serial_Number& serial() const;
+
+      /**
       * Get the serial number's sign
       * @return 1 iff the serial is negative.
       */
-      bool is_serial_negative() const;
+      BOTAN_DEPRECATED("Use serial().is_negative()") bool is_serial_negative() const;
 
       /**
       * Return true if revocation status checking of this certificate should be

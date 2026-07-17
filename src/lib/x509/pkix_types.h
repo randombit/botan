@@ -19,6 +19,7 @@
 #include <botan/ipv6_address.h>
 #include <botan/pkix_enums.h>
 #include <botan/uri.h>
+#include <compare>
 #include <initializer_list>
 #include <iosfwd>
 #include <map>
@@ -34,12 +35,121 @@ namespace Botan {
 
 class X509_Certificate;
 class Public_Key;
+class BigInt;
+class RandomNumberGenerator;
 
 BOTAN_DEPRECATED("Use Key_Constraints::to_string")
 
 inline std::string key_constraints_to_string(Key_Constraints c) {
    return c.to_string();
 }
+
+/**
+* X.509 certificate serial number (RFC 5280 CertificateSerialNumber)
+*
+* Stores the value as the contents octets of the DER INTEGER encoding
+* (two's complement, minimal length), so the sign is preserved and
+* equality on the stored bytes is value equality.
+*
+* RFC 5280 4.1.2.2:
+*    The serial number MUST be a positive integer assigned by the CA to
+*    each certificate.
+* and
+*    Note: Non-conforming CAs may issue certificates with serial numbers
+*    that are negative or zero.  Certificate users SHOULD be prepared to
+*    gracefully handle such certificates.
+*
+* so non-conforming values are representable, and can be detected with
+* is_negative, is_zero and octet_length.
+*/
+class BOTAN_PUBLIC_API(3, 13) X509_Serial_Number final : public ASN1_Object {
+   public:
+      /**
+      * Serial number zero
+      */
+      X509_Serial_Number() : m_contents{0x00} {}
+
+      /**
+      * Create from an integer value
+      */
+      explicit X509_Serial_Number(const BigInt& value);
+
+      /**
+      * Create from an unsigned big-endian encoded integer
+      */
+      static X509_Serial_Number from_bytes(std::span<const uint8_t> bytes);
+
+      /**
+      * Create from the contents octets of a BER INTEGER (big-endian two's
+      * complement). Redundant leading octets are normalized away; an empty
+      * input is rejected.
+      */
+      static X509_Serial_Number from_der_contents(std::span<const uint8_t> contents);
+
+      /**
+      * Generate a serial number suitable for issuing a certificate.
+      *
+      * The result is positive, never zero, and contains 126 bits of output
+      * from the RNG. The topmost bit is cleared, and the 127th bit is set.
+      */
+      static X509_Serial_Number random(RandomNumberGenerator& rng);
+
+      /**
+      * Return true if the serial number is negative
+      *
+      * TODO(Botan4) remove this once negative serial numbers are prohibited
+      */
+      bool is_negative() const;
+
+      /**
+      * Return true if the serial number is the integer zero
+      */
+      bool is_zero() const;
+
+      /**
+      * Number of contents octets in the DER encoding of this value
+      */
+      size_t octet_length() const { return m_contents.size(); }
+
+      /**
+      * True if this serial number satisfies the RFC 5280 4.1.2.2 rules for
+      * conforming CAs: a positive integer of at most 20 octets
+      */
+      bool conforms_to_rfc5280() const { return !is_negative() && !is_zero() && octet_length() <= 20; }
+
+      /**
+      * The contents octets of the DER INTEGER encoding (big-endian two's
+      * complement, minimal length)
+      */
+      std::span<const uint8_t> der_contents() const { return m_contents; }
+
+      /**
+      * The absolute value as unsigned big-endian bytes without leading
+      * zeros. Note this loses the sign, and is empty for a zero serial;
+      * it matches X509_Certificate::serial_number.
+      */
+      std::vector<uint8_t> magnitude() const;
+
+      BigInt to_bigint() const;
+
+      /**
+      * The value in hex, prefixed with '-' if negative
+      */
+      std::string to_string() const;
+
+      void encode_into(DER_Encoder& to) const override;
+      void decode_from(BER_Decoder& from) override;
+
+      bool operator==(const X509_Serial_Number& other) const { return m_contents == other.m_contents; }
+
+      /**
+      * Numeric ordering
+      */
+      std::strong_ordering operator<=>(const X509_Serial_Number& other) const;
+
+   private:
+      std::vector<uint8_t> m_contents;
+};
 
 /**
 * Distinguished Name

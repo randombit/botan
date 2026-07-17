@@ -789,28 +789,39 @@ BER_Decoder& BER_Decoder::decode(BigInt& out, ASN1_Type type_tag, ASN1_Class cla
       }
    }
 
-   const uint8_t first = obj.bits()[0];
-   const bool negative = (first & 0x80) == 0x80;
+   out = ASN1::integer_from_contents(obj.data());
+
+   return (*this);
+}
+
+BigInt ASN1::integer_from_contents(std::span<const uint8_t> contents) {
+   if(contents.empty()) {
+      throw BER_Decoding_Error("INTEGER encoding has no content octets");
+   }
+
+   BigInt out;
+
+   const bool negative = (contents[0] & 0x80) == 0x80;
 
    if(negative) {
-      secure_vector<uint8_t> vec(obj.bits(), obj.bits() + obj.length());
-      for(size_t i = obj.length(); i > 0; --i) {
+      secure_vector<uint8_t> vec(contents.begin(), contents.end());
+      for(size_t i = vec.size(); i > 0; --i) {
          const bool gt0 = (vec[i - 1] > 0);
          vec[i - 1] -= 1;
          if(gt0) {
             break;
          }
       }
-      for(size_t i = 0; i != obj.length(); ++i) {
-         vec[i] = ~vec[i];
+      for(auto& byte : vec) {
+         byte = ~byte;
       }
       out._assign_from_bytes(vec);
-      out.flip_sign();
+      out.set_sign(BigInt::Negative);
    } else {
-      out._assign_from_bytes(obj.data());
+      out._assign_from_bytes(contents);
    }
 
-   return (*this);
+   return out;
 }
 
 namespace {

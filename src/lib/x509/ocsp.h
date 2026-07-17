@@ -31,6 +31,8 @@ class BOTAN_PUBLIC_API(2, 0) CertID final : public ASN1_Object {
 
       CertID(const X509_Certificate& issuer, const BigInt& subject_serial);
 
+      CertID(const X509_Certificate& issuer, const X509_Serial_Number& subject_serial);
+
       bool is_id_for(const X509_Certificate& issuer, const X509_Certificate& subject) const;
 
       void encode_into(DER_Encoder& to) const override;
@@ -43,7 +45,7 @@ class BOTAN_PUBLIC_API(2, 0) CertID final : public ASN1_Object {
       AlgorithmIdentifier m_hash_id;
       std::vector<uint8_t> m_issuer_dn_hash;
       std::vector<uint8_t> m_issuer_key_hash;
-      BigInt m_subject_serial;
+      X509_Serial_Number m_subject_serial;
 };
 
 class BOTAN_PUBLIC_API(2, 0) SingleResponse final : public ASN1_Object {
