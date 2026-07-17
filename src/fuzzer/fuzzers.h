@@ -7,9 +7,11 @@
 #ifndef BOTAN_FUZZER_DRIVER_H_
 #define BOTAN_FUZZER_DRIVER_H_
 
-#include <botan/chacha_rng.h>
 #include <botan/exceptn.h>
 #include <botan/internal/target_info.h>
+
+#include <memory>
+#include <span>
 #include <fstream>
 #include <iostream>
 #include <stdint.h>
@@ -19,6 +21,48 @@
 static constexpr size_t max_fuzzer_input_size = 8192;
 
 extern void fuzz(std::span<const uint8_t> in);
+
+class Deterministic_Fuzzer_RNG final : public Botan::RandomNumberGenerator {
+   public:
+      bool accepts_input() const override { return false; }
+
+      std::string name() const override { return "Deterministic_Fuzzer_RNG"; }
+
+      void clear() override {
+         m_state = initial_state;
+         m_buffer = 0;
+         m_bytes_left = 0;
+      }
+
+      bool is_seeded() const override { return true; }
+
+   private:
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /*ignored*/) override {
+         for(auto& out_byte : output) {
+            if(m_bytes_left == 0) {
+               m_buffer = next_word();
+               m_bytes_left = sizeof(m_buffer);
+            }
+
+            out_byte = static_cast<uint8_t>(m_buffer & 0xFF);
+            m_buffer >>= 8;
+            --m_bytes_left;
+         }
+      }
+
+      uint64_t next_word() {
+         m_state ^= m_state >> 12;
+         m_state ^= m_state << 25;
+         m_state ^= m_state >> 27;
+         return m_state * 0x2545F4914F6CDD1DULL;
+      }
+
+      static constexpr uint64_t initial_state = 0x9E3779B97F4A7C15ULL;
+
+      uint64_t m_state = initial_state;
+      uint64_t m_buffer = 0;
+      size_t m_bytes_left = 0;
+};
 
 // Need to declare these before defining them;
 extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv);
@@ -54,8 +98,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t in[], size_t len) {
 // Some helpers for the fuzzer jigs
 
 inline std::shared_ptr<Botan::RandomNumberGenerator> fuzzer_rng_as_shared() {
-   static const std::shared_ptr<Botan::ChaCha_RNG> rng =
-      std::make_shared<Botan::ChaCha_RNG>(Botan::secure_vector<uint8_t>(32));
+   static const std::shared_ptr<Deterministic_Fuzzer_RNG> rng = std::make_shared<Deterministic_Fuzzer_RNG>();
    return rng;
 }
 
