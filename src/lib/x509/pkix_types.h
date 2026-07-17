@@ -476,7 +476,6 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
       */
       static GeneralName _dns_san_value(std::string_view dns);
 
-      // Encoding is not implemented
       void encode_into(DER_Encoder& to) const override;
 
       void decode_from(BER_Decoder& from) override;
@@ -612,6 +611,11 @@ class BOTAN_PUBLIC_API(2, 0) GeneralSubtree final : public ASN1_Object {
       * Creates an empty name constraint.
       */
       BOTAN_DEPRECATED("Deprecated use NameConstraints") GeneralSubtree();
+
+      /**
+      * Creates a name constraint over the given base name.
+      */
+      explicit GeneralSubtree(GeneralName base) : m_base(std::move(base)) {}
 
       void encode_into(DER_Encoder& to) const override;
 

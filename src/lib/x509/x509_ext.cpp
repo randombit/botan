@@ -675,7 +675,24 @@ void Extended_Key_Usage::decode_inner(const std::vector<uint8_t>& in) {
 * Encode the extension
 */
 std::vector<uint8_t> Name_Constraints::encode_inner() const {
-   throw Not_Implemented("Name_Constraints encoding");
+   const auto& permitted = m_name_constraints.permitted();
+   const auto& excluded = m_name_constraints.excluded();
+
+   if(permitted.empty() && excluded.empty()) {
+      throw Encoding_Error("Refusing to encode empty NameConstraints");
+   }
+
+   std::vector<uint8_t> output;
+   DER_Encoder der(output);
+   der.start_sequence();
+   if(!permitted.empty()) {
+      der.start_explicit_context_specific(0).encode_list(permitted).end_cons();
+   }
+   if(!excluded.empty()) {
+      der.start_explicit_context_specific(1).encode_list(excluded).end_cons();
+   }
+   der.end_cons();
+   return output;
 }
 
 /*
