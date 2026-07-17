@@ -366,7 +366,7 @@ class tls_proxy_server final {
             m_policy(std::move(policy)),
             m_session_manager(std::move(session_mgr)),
             m_status(max_clients) {
-         log_info("Listening for new connections on port " + std::to_string(port));
+         log_info("Listening for new connections on port " + std::to_string(m_acceptor.local_endpoint().port()));
          serve_one_session();
       }
 

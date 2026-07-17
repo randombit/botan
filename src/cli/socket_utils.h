@@ -109,6 +109,21 @@ inline std::string err_to_string(int e) {
 
 #endif
 
+/**
+* Return the port that a socket is bound to. If the socket was bound to port
+* zero this is the port the operating system assigned to it.
+*/
+inline uint16_t socket_port(socket_type s) {
+   sockaddr_in addr{};
+   socklen_t addr_len = sizeof(addr);
+
+   if(::getsockname(s, reinterpret_cast<sockaddr*>(&addr), &addr_len) != 0) {
+      throw Botan_CLI::CLI_Error("getsockname failed");
+   }
+
+   return ntohs(addr.sin_port);
+}
+
 #if !defined(MSG_NOSIGNAL)
    #define MSG_NOSIGNAL 0
 #endif
