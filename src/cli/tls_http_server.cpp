@@ -305,7 +305,9 @@ net::awaitable<void> do_listen(tcp::endpoint endpoint,
 
    const bool run_forever = (max_clients == 0);
 
-   logger->log(Botan::fmt("Listening for new connections on {}:{}", endpoint.address().to_string(), endpoint.port()));
+   const auto local_endpoint = acceptor.local_endpoint();
+   logger->log(Botan::fmt(
+      "Listening for new connections on {}:{}", local_endpoint.address().to_string(), local_endpoint.port()));
    logger->flush();
 
    auto done = [&] {

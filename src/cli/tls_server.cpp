@@ -179,7 +179,8 @@ class TLS_Server final : public Command {
          const socket_type server_fd = make_server_socket(port);
          size_t clients_served = 0;
 
-         output() << "Listening for new connections on " << transport << " port " << port << std::endl;
+         output() << "Listening for new connections on " << transport << " port " << socket_port(server_fd)
+                  << std::endl;
 
          while(true) {
             if(max_clients > 0 && clients_served >= max_clients) {

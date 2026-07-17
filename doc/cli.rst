@@ -245,20 +245,23 @@ from which a policy description will be read.
 ``tls_server cert key --port=443 --type=tcp --policy=default --dump-traces= --max-clients=0 --socket-id=0``
   Implements a testing TLS server, which allows TLS clients to connect and which
   echos any data that is sent to it. Binds to either TCP or UDP on port
-  *port*. The server uses the certificate *cert* and the respective PKCS #8
-  private key *key*. The server honors the TLS policy specified with *policy*.
-  *socket-id* is only available on FreeBSD and sets the *so_user_cookie* value
-  of the used socket.
+  *port*; if *port* is zero the operating system assigns a free port, which is
+  reported once the server is listening. The server uses the certificate *cert*
+  and the respective PKCS #8 private key *key*. The server honors the TLS policy
+  specified with *policy*. *socket-id* is only available on FreeBSD and sets the
+  *so_user_cookie* value of the used socket.
 
 ``tls_http_server cert key --port=443 --policy=default --threads=0 --max-clients=0 --session-db --session-db-pass=``
   Only available if Boost.Asio support was enabled. Provides a simple HTTP server
   which replies to all requests with an informational text output. The server
-  honors the TLS policy specified with *policy*.
+  honors the TLS policy specified with *policy*. If *port* is zero the operating
+  system assigns a free port, which is reported once the server is listening.
 
 ``tls_proxy listen_port target_host target_port server_cert server_key--policy=default --threads=0 --max-clients=0 --session-db= --session-db-pass=``
-  Only available if Boost.Asio support was enabled. Listens on a port and
-  forwards all connects to a target server specified at
-  ``target_host`` and ``target_port``.
+  Only available if Boost.Asio support was enabled. Listens on ``listen_port``
+  and forwards all connects to a target server specified at
+  ``target_host`` and ``target_port``. If ``listen_port`` is zero the operating
+  system assigns a free port, which is reported once the proxy is listening.
 
 ``tls_client_hello --hex input``
   Parse and print a TLS client hello message.

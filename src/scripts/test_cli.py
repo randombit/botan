@@ -68,24 +68,6 @@ def setup_logging(options):
     logging.getLogger().addHandler(lh)
     logging.getLogger().setLevel(log_level)
 
-def port_for(service):
-    base_port = 47890
-
-    port_assignments = {
-        'tls_server': 0,
-        'tls_http_server': 1,
-        'tls_proxy': 2,
-        'tls_proxy_backend': 3,
-        'roughtime': 4,
-    }
-
-    if service in port_assignments:
-        return base_port + port_assignments.get(service)
-    else:
-        logging.warning("Unknown service '%s', update port_for function", service)
-        return base_port + random.randint(30, 100)
-
-
 class AsyncTestProcess:
     """
     An asyncio wrapper around a long-running process with some helpers to
@@ -132,6 +114,26 @@ class AsyncTestProcess:
             await self._finalize()
             raise
 
+    async def _launch_server(self, cmd):
+        """Launch a server process and return the port it is listening on.
+
+        Servers are started on port zero, which lets the OS assign us some free
+        port. They report the port they actually bound at the end of the line
+        announcing that they are ready to accept connections.
+        """
+        await self._launch(cmd, b'Listening for new connections')
+
+        try:
+            line = await self._read_stdout_line()
+            match = re.search(r'(\d+)\s*$', line)
+            if match is None:
+                raise Exception(f"Failed to parse a port out of '{line.strip()}'")
+            return int(match.group(1))
+        except:
+            logging.error("%s did not report the port it is listening on", self._name)
+            await self._finalize()
+            raise
+
     async def _write_to_stdin(self, data):
         self._proc.stdin.write(data)
         await self._proc.stdin.drain()
@@ -152,6 +154,12 @@ class AsyncTestProcess:
         except asyncio.TimeoutError:
             logging.error("%s ran into a timeout before reporting back", self._name)
             raise
+
+    async def _read_stdout_line(self):
+        """Read a single line from the process' stdout."""
+        line = await asyncio.wait_for(self._proc.stdout.readline(), timeout=ASYNC_TIMEOUT)
+        self._stdout += line
+        return line.decode('utf-8')
 
     async def _close_stdin_read_stdout_to_eof_and_wait_for_termination(self): # pylint: disable=invalid-name
         """Gracefully signal the process to terminate by closing its stdin.
@@ -767,15 +775,14 @@ def cli_roughtime_tests(tmp_dir):
     if not check_for_command("roughtime"):
         return
 
-    server_port = port_for('roughtime')
     chain_file = os.path.join(tmp_dir, 'roughtime-chain')
     ecosystem = os.path.join(tmp_dir, 'ecosystem')
 
-    def run_udp_server():
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        server_address = ('127.0.0.1', server_port)
-        sock.bind(server_address)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind(('127.0.0.1', 0))
+    server_port = sock.getsockname()[1]
 
+    def run_udp_server():
         while True:
             data, address = sock.recvfrom(4096)
 
@@ -1182,9 +1189,9 @@ def cli_tls_socket_tests(tmp_dir):
     ]
 
     class TestServer(AsyncTestProcess):
-        def __init__(self, tmp_dir, port, psk, psk_identity, psk_prf, clients=0):
+        def __init__(self, tmp_dir, psk, psk_identity, psk_prf, clients=0):
             super().__init__("Server")
-            self.port = port
+            self.port = None
             self.psk = psk
             self.psk_identity = psk_identity
             self.psk_prf = psk_prf
@@ -1203,12 +1210,12 @@ def cli_tls_socket_tests(tmp_dir):
 
         async def __aenter__(self):
             server_cmd = [CLI_PATH, "tls_server", f"--max-clients={self.clients}",
-                          f"--port={self.port}", f"--policy={self.policy}",
+                          "--port=0", f"--policy={self.policy}",
                           f"--psk={self.psk}", f"--psk-identity={self.psk_identity}",
                           f"--psk-prf={self.psk_prf}",
                           self.cert_suite.cert, self.cert_suite.private_key]
 
-            await self._launch(server_cmd, b'Listening for new connections')
+            self.port = await self._launch_server(server_cmd)
 
             return self
 
@@ -1272,7 +1279,7 @@ def cli_tls_socket_tests(tmp_dir):
             await self._finalize()
 
     async def run_async_test():
-        async with TestServer(tmp_dir, port_for('tls_server'), psk, psk_identity, psk_prf, len(configs)) as server:
+        async with TestServer(tmp_dir, psk, psk_identity, psk_prf, len(configs)) as server:
             errors = 0
             for tls_config in configs:
                 logging.debug("Running test for %s in TLS %s mode", tls_config.name, tls_config.protocol_version)
@@ -1398,12 +1405,10 @@ def cli_tls_http_server_tests(tmp_dir):
     if not run_socket_tests() or not check_for_command("tls_http_server"):
         return
 
-    server_port = port_for('tls_http_server')
-
     class BotanHttpServer(AsyncTestProcess):
-        def __init__(self, tmp_dir, port, clients=0):
+        def __init__(self, tmp_dir, clients=0):
             super().__init__("HTTP Server")
-            self.port = port
+            self.port = None
             self.clients = clients
             self.cert_suite = ServerCertificateSuite(tmp_dir, "secp384r1", "SHA-384")
 
@@ -1412,10 +1417,10 @@ def cli_tls_http_server_tests(tmp_dir):
             return self.cert_suite.ca_cert
 
         async def __aenter__(self):
-            server_cmd = [CLI_PATH, 'tls_http_server', f'--port={self.port}', f'--max-clients={self.clients}',
+            server_cmd = [CLI_PATH, 'tls_http_server', '--port=0', f'--max-clients={self.clients}',
                           self.cert_suite.cert, self.cert_suite.private_key]
 
-            await self._launch(server_cmd, b'Listening for new connections')
+            self.port = await self._launch_server(server_cmd)
 
             return self
 
@@ -1423,13 +1428,13 @@ def cli_tls_http_server_tests(tmp_dir):
             await self._finalize()
 
     async def run_async_test():
-        async with BotanHttpServer(tmp_dir, server_port, 4) as tls_server:
+        async with BotanHttpServer(tmp_dir, 4) as tls_server:
             for tls_version in [ssl.TLSVersion.TLSv1_2, ssl.TLSVersion.TLSv1_3]:
                 context = ssl.create_default_context(cafile=tls_server.ca_cert)
                 context.minimum_version = tls_version
                 context.maximum_version = tls_version
 
-                conn = HTTPSConnection('localhost', port=server_port, context=context)
+                conn = HTTPSConnection('localhost', port=tls_server.port, context=context)
                 conn.request("GET", "/", headers={"Connection": "close"})
                 resp = conn.getresponse()
 
@@ -1453,17 +1458,15 @@ def cli_tls_proxy_tests(tmp_dir):
     if not run_socket_tests() or not check_for_command("tls_proxy"):
         return
 
-    server_port = port_for('tls_proxy_backend')
-    proxy_port = port_for('tls_proxy')
     max_clients = 4
 
     server_response = binascii.hexlify(os.urandom(32))
 
     class Proxy(AsyncTestProcess):
-        def __init__(self, tmp_dir, server_port, proxy_port, clients=0):
+        def __init__(self, tmp_dir, server_port, clients=0):
             super().__init__("Proxy")
             self.server_port = server_port
-            self.proxy_port = proxy_port
+            self.proxy_port = None
             self.clients = clients
 
             self.cert_suite = ServerCertificateSuite(tmp_dir, "secp384r1", "SHA-384")
@@ -1473,35 +1476,34 @@ def cli_tls_proxy_tests(tmp_dir):
             return self.cert_suite.ca_cert
 
         async def __aenter__(self):
-            proxy_cmd = [CLI_PATH, 'tls_proxy', str(proxy_port), '127.0.0.1', str(server_port),
+            proxy_cmd = [CLI_PATH, 'tls_proxy', '0', '127.0.0.1', str(self.server_port),
                          self.cert_suite.cert, self.cert_suite.private_key, f'--max-clients={self.clients}']
 
-            await self._launch(proxy_cmd, b'Listening for new connections')
+            self.proxy_port = await self._launch_server(proxy_cmd)
 
             return self
 
         async def __aexit__(self, *_):
             await self._finalize()
 
-    def run_http_server():
-        class Handler(BaseHTTPRequestHandler):
-            def log_message(self, _fmt, *_args): # pylint: disable=arguments-differ
-                pass  # muzzle log output
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self, _fmt, *_args): # pylint: disable=arguments-differ
+            pass  # muzzle log output
 
-            def do_GET(self): # pylint: disable=invalid-name
-                self.send_response(200)
-                self.end_headers()
-                self.wfile.write(server_response)
+        def do_GET(self): # pylint: disable=invalid-name
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(server_response)
 
-        httpd = HTTPServer(('', server_port), Handler)
-        httpd.serve_forever()
+    httpd = HTTPServer(('', 0), Handler)
+    server_port = httpd.server_address[1]
 
-    http_thread = threading.Thread(target=run_http_server)
+    http_thread = threading.Thread(target=httpd.serve_forever)
     http_thread.daemon = True
     http_thread.start()
 
     async def run_async_test():
-        async with Proxy(tmp_dir, server_port, proxy_port, max_clients) as tls_proxy:
+        async with Proxy(tmp_dir, server_port, max_clients) as tls_proxy:
             context = ssl.create_default_context(cafile=tls_proxy.ca_cert)
             context.minimum_version = ssl.TLSVersion.TLSv1_3
             context.maximum_version = ssl.TLSVersion.TLSv1_3
@@ -1512,7 +1514,7 @@ def cli_tls_proxy_tests(tmp_dir):
                     context.minimum_version = ssl.TLSVersion.TLSv1_2
                     context.maximum_version = ssl.TLSVersion.TLSv1_2
 
-                conn = HTTPSConnection('localhost', port=proxy_port, context=context, timeout=20)
+                conn = HTTPSConnection('localhost', port=tls_proxy.proxy_port, context=context, timeout=20)
                 conn.request("GET", "/")
                 resp = conn.getresponse()
 
