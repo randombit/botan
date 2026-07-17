@@ -50,6 +50,25 @@ class BOTAN_PUBLIC_API(2, 0) CertID final : public ASN1_Object {
 
 class BOTAN_PUBLIC_API(2, 0) SingleResponse final : public ASN1_Object {
    public:
+      SingleResponse() = default;
+
+      /**
+      * Create a SingleResponse asserting a good status, as emitted by an
+      * OCSP responder. All times must be tagged as GeneralizedTime; an
+      * unset next_update omits the optional nextUpdate field.
+      */
+      static SingleResponse good(CertID certid, X509_Time this_update, X509_Time next_update);
+
+      /// As good(), but asserting an unknown status
+      static SingleResponse unknown(CertID certid, X509_Time this_update, X509_Time next_update);
+
+      /// As good(), but asserting a revoked status with the given RevokedInfo
+      static SingleResponse revoked(CertID certid,
+                                    X509_Time revocation_time,
+                                    std::optional<CRL_Code> reason,
+                                    X509_Time this_update,
+                                    X509_Time next_update);
+
       const CertID& certid() const { return m_certid; }
 
       size_t cert_status() const { return m_cert_status; }
@@ -58,6 +77,12 @@ class BOTAN_PUBLIC_API(2, 0) SingleResponse final : public ASN1_Object {
 
       const X509_Time& next_update() const { return m_nextupdate; }
 
+      /// The revocationTime; set only when cert_status() is 1 (revoked)
+      const std::optional<X509_Time>& revocation_time() const { return m_revocation_time; }
+
+      /// The revocationReason, when cert_status() is 1 and one was provided
+      const std::optional<CRL_Code>& revocation_reason() const { return m_revocation_reason; }
+
       void encode_into(DER_Encoder& to) const override;
 
       void decode_from(BER_Decoder& from) override;
@@ -65,10 +90,19 @@ class BOTAN_PUBLIC_API(2, 0) SingleResponse final : public ASN1_Object {
       bool has_unknown_critical_extension() const { return m_has_unknown_critical_ext; }
 
    private:
+      SingleResponse(CertID certid,
+                     size_t cert_status,
+                     std::optional<X509_Time> revocation_time,
+                     std::optional<CRL_Code> revocation_reason,
+                     X509_Time this_update,
+                     X509_Time next_update);
+
       CertID m_certid;
       size_t m_cert_status = 2;  // unknown
       X509_Time m_thisupdate;
       X509_Time m_nextupdate;
+      std::optional<X509_Time> m_revocation_time;
+      std::optional<CRL_Code> m_revocation_reason;
       bool m_has_unknown_critical_ext = false;
 };
 
@@ -246,6 +280,12 @@ class BOTAN_PUBLIC_API(2, 0) Response final {
        * @return the certificate chain, if provided in response
        */
       const std::vector<X509_Certificate>& certificates() const { return m_certs; }
+
+      /**
+       * @return the SingleResponses included in this response (empty for a 'fake'
+       *         or non-successful response)
+       */
+      const std::vector<SingleResponse>& responses() const { return m_responses; }
 
       /**
       * @return the dummy response if this is a 'fake' OCSP response otherwise std::nullopt
