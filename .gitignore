@@ -96,6 +96,8 @@ callgrind.*
 /*.crt
 /*.txt
 /*.rst
+/*.md
+/*.pdf
 
 # Add back files from the toplevel
 !/news.rst
