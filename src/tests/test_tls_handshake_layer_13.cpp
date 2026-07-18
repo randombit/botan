@@ -29,13 +29,6 @@ bool has_message(Test::Result& test_result, const std::optional<Handshake_Messag
    return std::holds_alternative<T>(read_result.value());
 }
 
-template <typename T>
-const Handshake_Message_13& get_message(Test::Result& test_result,
-                                        const std::optional<Handshake_Message_13>& read_result) {
-   test_result.require("has the expected message", has_message<T>(test_result, read_result));
-   return std::get<T>(read_result.value());
-}
-
 // NOLINTBEGIN(cert-err58-cpp,bugprone-throwing-static-initialization)
 const auto client_hello_message = Botan::hex_decode_locked(  // from RFC 8448
    "01 00 00 c0 03 03 cb"

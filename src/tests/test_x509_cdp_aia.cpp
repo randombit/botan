@@ -58,15 +58,6 @@ const Botan::Cert_Extension::Authority_Information_Access* require_aia(Test::Res
    return aia;
 }
 
-// Fetch the typed extension T from `exts`, recording a not-null failure if it is
-// absent. Returns nullptr in that case so callers can early-return.
-template <typename T>
-const T* require_cert_ext(Test::Result& result, const Botan::Extensions& exts, const char* what) {
-   const auto* ext = exts.get_extension_object_as<T>();
-   result.test_not_null(what, ext);
-   return ext;
-}
-
 // Wrap a single extension (oid, optional critical flag, extn_value OCTET STRING)
 // in the Extensions wire form (SEQUENCE OF Extension) and decode it. This is the
 // public path that reaches an extension's decode_inner; a body that fails to
