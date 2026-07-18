@@ -19,6 +19,8 @@ namespace Botan {
 * Update an CMAC Calculation
 */
 void CMAC::add_data(std::span<const uint8_t> input) {
+   assert_key_material_set();
+
    const size_t bs = output_length();
 
    const size_t initial_fill = std::min(m_buffer.size() - m_position, input.size());
