@@ -25,7 +25,9 @@ namespace Botan {
 
 class X509_Certificate_Data final {
    public:
-      std::vector<uint8_t> m_serial;
+      X509_Serial_Number m_serial;
+      // TODO(Botan4) once negative serials are rejected this extra vector can go away
+      std::vector<uint8_t> m_serial_bits;
       AlgorithmIdentifier m_sig_algo_inner;
       X509_DN m_issuer_dn;
       X509_DN m_subject_dn;
@@ -77,7 +79,6 @@ class X509_Certificate_Data final {
       Key_Constraints m_key_constraints;
       bool m_self_signed = false;
       bool m_is_ca_certificate = false;
-      bool m_serial_negative = false;
       bool m_subject_alt_name_exists = false;
       bool m_skip_revocation_check = false;
 };
@@ -113,13 +114,12 @@ namespace {
 std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& obj) {
    auto data = std::make_unique<X509_Certificate_Data>();
 
-   BigInt serial_bn;
    BER_Object public_key;
    BER_Object v3_exts_data;
 
    BER_Decoder(obj.signed_body(), BER_Decoder::Limits::DER())
       .decode_optional(data->m_version, ASN1_Type(0), ASN1_Class::Constructed | ASN1_Class::ContextSpecific)
-      .decode(serial_bn)
+      .decode(data->m_serial)
       .decode(data->m_sig_algo_inner)
       .decode(data->m_issuer_dn)
       .start_sequence()
@@ -145,9 +145,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    // for general sanity convert wire version (0 based) to standards version (v1 .. v3)
    data->m_version += 1;
 
-   data->m_serial = serial_bn.serialize();
-   // crude method to save the serial's sign; will get lost during decoding, otherwise
-   data->m_serial_negative = serial_bn.signum() < 0;
+   data->m_serial_bits = data->m_serial.magnitude();
    data->m_subject_dn_bits = ASN1::put_in_sequence(data->m_subject_dn.get_bits());
    data->m_issuer_dn_bits = ASN1::put_in_sequence(data->m_issuer_dn.get_bits());
 
@@ -440,11 +438,15 @@ const std::vector<uint8_t>& X509_Certificate::subject_key_id() const {
 }
 
 const std::vector<uint8_t>& X509_Certificate::serial_number() const {
+   return data().m_serial_bits;
+}
+
+const X509_Serial_Number& X509_Certificate::serial() const {
    return data().m_serial;
 }
 
 bool X509_Certificate::is_serial_negative() const {
-   return data().m_serial_negative;
+   return data().m_serial.is_negative();
 }
 
 bool X509_Certificate::skip_revocation_check() const {
@@ -1065,7 +1067,7 @@ std::string X509_Certificate::to_string() const {
 
    out << "Signature algorithm: " << this->signature_algorithm().oid().to_formatted_string() << "\n";
 
-   out << "Serial number: " << hex_encode(this->serial_number()) << "\n";
+   out << "Serial number: " << this->serial().to_string() << "\n";
 
    if(!this->authority_key_id().empty()) {
       out << "Authority keyid: " << hex_encode(this->authority_key_id()) << "\n";

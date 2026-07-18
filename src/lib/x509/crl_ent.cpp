@@ -20,7 +20,10 @@ namespace Botan {
 class CRL_Entry_Data final {
    public:
       CRL_Entry_Data(const X509_Certificate& cert, CRL_Code why) :
-            m_serial(cert.serial_number()), m_time(X509_Time(std::chrono::system_clock::now())), m_reason(why) {
+            m_serial(cert.serial()),
+            m_serial_bits(cert.serial_number()),
+            m_time(X509_Time(std::chrono::system_clock::now())),
+            m_reason(why) {
          if(why != CRL_Code::Unspecified) {
             m_extensions.add(std::make_unique<Cert_Extension::CRL_ReasonCode>(why));
          }
@@ -29,7 +32,8 @@ class CRL_Entry_Data final {
       CRL_Entry_Data() = default;
 
       // NOLINTBEGIN(*non-private-member-variables-in-classes)
-      std::vector<uint8_t> m_serial;
+      X509_Serial_Number m_serial;
+      std::vector<uint8_t> m_serial_bits;
       X509_Time m_time;
       CRL_Code m_reason = CRL_Code::Unspecified;
       Extensions m_extensions;
@@ -47,7 +51,7 @@ CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why) {
 * Compare two CRL_Entry structs for equality
 */
 bool operator==(const CRL_Entry& a1, const CRL_Entry& a2) {
-   if(a1.serial_number() != a2.serial_number()) {
+   if(a1.serial() != a2.serial()) {
       return false;
    }
    if(a1.expire_time() != a2.expire_time()) {
@@ -70,7 +74,7 @@ bool operator!=(const CRL_Entry& a1, const CRL_Entry& a2) {
 * DER encode a CRL_Entry
 */
 void CRL_Entry::encode_into(DER_Encoder& der) const {
-   der.start_sequence().encode(BigInt::from_bytes(serial_number())).encode(expire_time());
+   der.start_sequence().encode(serial()).encode(expire_time());
 
    if(extensions().count() > 0) {
       der.start_sequence().encode(extensions()).end_cons();
@@ -87,11 +91,10 @@ void CRL_Entry::decode_from(BER_Decoder& source) {
 
    BER_Decoder entry = source.start_sequence();
 
-   BigInt serial;
-   entry.decode(serial);
-   data->m_serial = serial.serialize();
-
+   entry.decode(data->m_serial);
    entry.decode(data->m_time);
+
+   data->m_serial_bits = data->m_serial.magnitude();
 
    if(entry.more_items()) {
       data->m_extensions.decode_from(entry, Extension_Context::CRL_Entry);
@@ -132,6 +135,10 @@ const CRL_Entry_Data& CRL_Entry::data() const {
 }
 
 const std::vector<uint8_t>& CRL_Entry::serial_number() const {
+   return data().m_serial_bits;
+}
+
+const X509_Serial_Number& CRL_Entry::serial() const {
    return data().m_serial;
 }
 

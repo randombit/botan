@@ -65,6 +65,8 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Store /* NOLINT(*-special-member-functi
       * @param issuer_dn the distinguished name of the issuer
       * @param serial_number the certificate's serial number
       * @return a matching certificate or nullopt otherwise
+      *
+      * TODO(Botan4) change this to use X509_Serial_Number
       */
       virtual std::optional<X509_Certificate> find_cert_by_issuer_dn_and_serial_number(
          const X509_DN& issuer_dn, std::span<const uint8_t> serial_number) const = 0;
