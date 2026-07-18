@@ -58,6 +58,8 @@ std::unique_ptr<StreamCipher> OFB::new_object() const {
 }
 
 void OFB::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) {
+   assert_key_material_set();
+
    while(length >= m_buffer.size() - m_buf_pos) {
       xor_buf(out, in, &m_buffer[m_buf_pos], m_buffer.size() - m_buf_pos);
       length -= (m_buffer.size() - m_buf_pos);

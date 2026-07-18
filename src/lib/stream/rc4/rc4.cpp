@@ -138,7 +138,9 @@ void RC4::clear() {
 /*
 * RC4 Constructor
 */
-RC4::RC4(size_t s) : m_SKIP(s) {}
+RC4::RC4(size_t s) : m_SKIP(s) {
+   BOTAN_ARG_CHECK(m_SKIP <= 64 * 1024, "Invalid skip parameter for RC4");
+}
 
 void RC4::seek(uint64_t /*offset*/) {
    throw Not_Implemented("RC4 does not support seeking");

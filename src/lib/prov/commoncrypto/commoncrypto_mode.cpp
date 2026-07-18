@@ -132,7 +132,7 @@ void CommonCrypto_Cipher_Mode::finish_msg(secure_vector<uint8_t>& buffer, size_t
    if(m_opts.padding != ccNoPadding || buffer.size() < new_len) {
       buffer.resize(new_len);
    }
-   copy_mem(buffer.data() - offset + written, out.data(), outl);
+   copy_mem(buffer.data() + offset + written, out.data(), outl);
    written += outl;
 }
 

@@ -164,31 +164,35 @@ std::unique_ptr<KDF> KDF::create(std::string_view algo_spec, std::string_view pr
 
 #if defined(BOTAN_HAS_SP800_56A)
    if(req.algo_name() == "SP800-56A" && req.arg_count() == 1) {
-      if(auto hash = HashFunction::create(req.arg(0))) {
-         return std::make_unique<SP800_56C_One_Step_Hash>(std::move(hash));
-      }
-      if(req.arg(0) == "KMAC-128") {
-         return std::make_unique<SP800_56C_One_Step_KMAC128>();
-      }
-      if(req.arg(0) == "KMAC-256") {
-         return std::make_unique<SP800_56C_One_Step_KMAC256>();
-      }
-      if(auto mac = MessageAuthenticationCode::create(req.arg(0))) {
-         return std::make_unique<SP800_56C_One_Step_HMAC>(std::move(mac));
+      if(provider.empty() || provider == "base") {
+         if(auto hash = HashFunction::create(req.arg(0))) {
+            return std::make_unique<SP800_56C_One_Step_Hash>(std::move(hash));
+         }
+         if(req.arg(0) == "KMAC-128") {
+            return std::make_unique<SP800_56C_One_Step_KMAC128>();
+         }
+         if(req.arg(0) == "KMAC-256") {
+            return std::make_unique<SP800_56C_One_Step_KMAC256>();
+         }
+         if(auto mac = MessageAuthenticationCode::create(req.arg(0))) {
+            return std::make_unique<SP800_56C_One_Step_HMAC>(std::move(mac));
+         }
       }
    }
 #endif
 
 #if defined(BOTAN_HAS_SP800_56C)
    if(req.algo_name() == "SP800-56C" && req.arg_count() == 1) {
-      std::unique_ptr<KDF> exp(kdf_create_mac_or_hash<SP800_108_Feedback>(req.arg(0), 32, 32));
-      if(exp) {
-         if(auto mac = MessageAuthenticationCode::create(req.arg(0))) {
-            return std::make_unique<SP800_56C_Two_Step>(std::move(mac), std::move(exp));
-         }
+      if(provider.empty() || provider == "base") {
+         std::unique_ptr<KDF> exp(kdf_create_mac_or_hash<SP800_108_Feedback>(req.arg(0), 32, 32));
+         if(exp) {
+            if(auto mac = MessageAuthenticationCode::create(fmt("HMAC({})", req.arg(0)))) {
+               return std::make_unique<SP800_56C_Two_Step>(std::move(mac), std::move(exp));
+            }
 
-         if(auto mac = MessageAuthenticationCode::create(fmt("HMAC({})", req.arg(0)))) {
-            return std::make_unique<SP800_56C_Two_Step>(std::move(mac), std::move(exp));
+            if(auto mac = MessageAuthenticationCode::create(req.arg(0))) {
+               return std::make_unique<SP800_56C_Two_Step>(std::move(mac), std::move(exp));
+            }
          }
       }
    }

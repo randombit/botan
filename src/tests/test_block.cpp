@@ -109,6 +109,7 @@ class Block_Cipher_Tests final : public Text_Based_Test {
             auto clone = cipher->new_object();
             result.test_is_true("Clone has different pointer", cipher.get() != clone.get());
             result.test_str_eq("Clone has same name", cipher->name(), clone->name());
+            result.test_is_false("Clone has no key set", clone->has_keying_material());
             clone->set_key(this->rng().random_vec(cipher->maximum_keylength()));
 
             // have called set_key on clone: process input values

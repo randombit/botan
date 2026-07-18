@@ -44,6 +44,14 @@ class Ascon_AEAD128_Mode : public AEAD_Mode {
 
       bool has_keying_material() const final { return m_key.has_value(); }
 
+      ~Ascon_AEAD128_Mode() override;
+
+      Ascon_AEAD128_Mode(const Ascon_AEAD128_Mode& other) = default;
+      Ascon_AEAD128_Mode(Ascon_AEAD128_Mode&& other) = default;
+
+      Ascon_AEAD128_Mode& operator=(const Ascon_AEAD128_Mode& other) = delete;
+      Ascon_AEAD128_Mode& operator=(Ascon_AEAD128_Mode&& other) = delete;
+
    protected:
       Ascon_AEAD128_Mode();
 

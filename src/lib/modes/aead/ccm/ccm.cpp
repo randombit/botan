@@ -297,6 +297,9 @@ void CCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    if(!CT::is_equal(T.data(), buf_end, tag_size()).as_bool()) {
       clear_mem(std::span{buffer}.subspan(offset, sz - tag_size()));
+      // Reset on the failure path too, matching GCM/SIV/ChaCha20Poly1305, so a
+      // failed decryptor is reusable rather than stuck in a partial state.
+      reset();
       throw Invalid_Authentication_Tag("CCM tag check failed");
    }
 

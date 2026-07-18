@@ -404,6 +404,12 @@ size_t SM4::parallelism() const {
    }
 #endif
 
+#if defined(BOTAN_HAS_SM4_X86)
+   if(CPUID::has(CPUID::Feature::SM4)) {
+      return 8;
+   }
+#endif
+
 #if defined(BOTAN_HAS_SM4_AVX512_GFNI)
    if(CPUID::has(CPUID::Feature::AVX512, CPUID::Feature::GFNI)) {
       return 16;
@@ -427,6 +433,12 @@ size_t SM4::parallelism() const {
 
 std::string SM4::provider() const {
 #if defined(BOTAN_HAS_SM4_ARMV8)
+   if(auto feat = CPUID::check(CPUID::Feature::SM4)) {
+      return *feat;
+   }
+#endif
+
+#if defined(BOTAN_HAS_SM4_X86)
    if(auto feat = CPUID::check(CPUID::Feature::SM4)) {
       return *feat;
    }
