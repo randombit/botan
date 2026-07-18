@@ -85,6 +85,8 @@ class Channel_Impl {
       */
       virtual bool is_active() const = 0;
 
+      virtual std::optional<std::chrono::milliseconds> next_retransmission_timeout() const { return std::nullopt; }
+
       /**
       * @return true iff the connection has been definitely closed
       */
@@ -167,10 +169,8 @@ class Channel_Impl {
       virtual bool secure_renegotiation_supported() const = 0;
 
       /**
-      * Perform a handshake timeout check. This does nothing unless
-      * this is a DTLS channel with a pending handshake state, in
-      * which case we check for timeout and potentially retransmit
-      * handshake packets.
+      * Perform a handshake timeout check. This does nothing unless this is a
+      * DTLS channel with a handshake in progress.
       */
       virtual bool timeout_check() = 0;
 

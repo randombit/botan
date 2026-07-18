@@ -265,7 +265,6 @@
         "KeyChangeWithBufferedMessages-DTLS": "No DTLS 1.3",
         "Renegotiate-DTLS-Server-Forbidden": "Botan tolerates DTLS renegotiation",
         "Renegotiate-DTLS-Client-Forbidden": "Botan tolerates DTLS renegotiation",
-        "DTLS12-SendExtraFinished-*": "Botan tolerates extra Finished messages in DTLS",
         "MixCompleteMessageWithFragments-DTLS-TLS12": "DTLS fragment handling difference",
         "RejectPSSKeyType-*": "Botan does not reject RSA-PSS key type",
         "CertificateCipherMismatch-PSS": "Botan does not reject PSS cipher mismatch",

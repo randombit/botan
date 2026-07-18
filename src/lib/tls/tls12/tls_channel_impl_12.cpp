@@ -21,8 +21,24 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_record.h>
 #include <botan/internal/tls_seq_numbers.h>
+#include <utility>
 
 namespace Botan::TLS {
+
+namespace {
+
+bool is_new_dtls_association_client_hello(std::span<const uint8_t> msg_and_header, Record_Type record_type) {
+   constexpr size_t DTLS_HANDSHAKE_HEADER_SIZE = 12;
+
+   // Every new DTLS handshake starts at message_seq 0. A cookie-bearing
+   // ClientHello uses message_seq 1, so one arriving late belongs to the
+   // previous handshake and must not replace the active association's state.
+   return record_type == Record_Type::Handshake && msg_and_header.size() >= DTLS_HANDSHAKE_HEADER_SIZE &&
+          static_cast<Handshake_Type>(msg_and_header[0]) == Handshake_Type::ClientHello &&
+          load_be(msg_and_header.subspan<4, 2>()) == 0;
+}
+
+}  // namespace
 
 Channel_Impl_12::Channel_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
                                  const std::shared_ptr<Session_Manager>& session_manager,
@@ -171,7 +187,7 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
 }
 
 bool Channel_Impl_12::timeout_check() {
-   if(m_pending_state) {
+   if(m_is_datagram && !m_has_been_closed && m_pending_state) {
       return m_pending_state->handshake_io().timeout_check();
    }
 
@@ -259,6 +275,14 @@ bool Channel_Impl_12::is_active() const {
    return !is_closed() && is_handshake_complete();
 }
 
+std::optional<std::chrono::milliseconds> Channel_Impl_12::next_retransmission_timeout() const {
+   if(m_is_datagram && !m_has_been_closed && m_pending_state) {
+      return m_pending_state->handshake_io().next_retransmission_timeout();
+   }
+
+   return std::nullopt;
+}
+
 bool Channel_Impl_12::is_closed() const {
    return m_has_been_closed;
 }
@@ -278,9 +302,19 @@ void Channel_Impl_12::activate_session() {
       map_remove_if(not_current_epoch, m_read_cipher_states);
    }
 
-   // For DTLS, keep the handshake IO for last-flight retransmission.
+   // In a full handshake the server sends the terminal flight; in an
+   // abbreviated handshake the client does. Both endpoints retain handshake
+   // sequence state, but only the terminal sender replays its outgoing flight.
+   const bool sent_terminal_dtls_flight = m_is_datagram && (m_is_server == (state.server_hello_done() != nullptr));
+
    if(m_is_datagram) {
       m_active_state = Active_Connection_State_12(state, application_protocol(), m_pending_state->take_handshake_io());
+      if(auto* dtls_io = m_active_state->dtls_handshake_io()) {
+         // Retain receive sequence state on both endpoints to distinguish a
+         // retransmission from an unexpected new handshake message. Only the
+         // terminal-flight sender responds by replaying its final flight.
+         dtls_io->finalize_handshake(sent_terminal_dtls_flight);
+      }
    } else {
       m_active_state = Active_Connection_State_12(state, application_protocol());
    }
@@ -336,7 +370,7 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
             throw TLS_Exception(Alert::RecordOverflow, "TLS plaintext record is larger than allowed maximum");
          }
 
-         const bool epoch0_restart = m_is_datagram && record.epoch() == 0 && m_active_state.has_value();
+         const bool epoch0_restart = allow_epoch0_restart && record.epoch() == 0 && m_active_state.has_value();
          BOTAN_ASSERT_IMPLICATION(epoch0_restart, allow_epoch0_restart, "Allowed state");
 
          const bool initial_record = epoch0_restart || (pending_state() == nullptr && !m_active_state.has_value());
@@ -406,26 +440,48 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
                                             Record_Type record_type,
                                             Protocol_Version record_version,
                                             bool epoch0_restart) {
+   const auto process_retransmitted_record = [&] {
+      BOTAN_ASSERT(m_active_state.has_value(), "Have active DTLS association for retransmission");
+      BOTAN_ASSERT_NONNULL(m_active_state->dtls_handshake_io());
+      m_active_state->dtls_handshake_io()->add_retransmitted_record(
+         record.data(), record.size(), record_type, record_sequence);
+   };
+
    if(!m_pending_state) {
-      // No pending handshake, possibly new:
-      if(record_version.is_datagram_protocol() && !epoch0_restart) {
+      // With no pending handshake this is either a new handshake attempt or a
+      // DTLS retransmission from the previous handshake. The latter must not
+      // create fresh pending state; it only asks us to replay our last flight.
+      if(epoch0_restart && m_sequence_numbers && m_active_state.has_value()) {
+         const bool starts_new_handshake = is_new_dtls_association_client_hello(record, record_type);
+
+         if(!starts_new_handshake) {
+            process_retransmitted_record();
+            return;
+         }
+      }
+
+      if(m_is_datagram && !epoch0_restart) {
          if(m_sequence_numbers) {
-            /*
-            * Might be a peer retransmit under epoch - 1 in which
-            * case we must retransmit last flight
-            */
             sequence_numbers().read_accept(record_sequence);
 
             const uint16_t epoch = record_sequence >> 48;
 
             const uint16_t current_epoch = sequence_numbers().current_read_epoch();
             if(epoch == current_epoch) {
-               create_handshake_state(record_version);
+               // Either endpoint can initiate renegotiation from FINISHED:
+               // clients send ClientHello, servers send HelloRequest.
+               const bool starts_new_handshake =
+                  (record_type == Record_Type::Handshake && !record.empty() &&
+                   (static_cast<Handshake_Type>(record[0]) == Handshake_Type::ClientHello ||
+                    static_cast<Handshake_Type>(record[0]) == Handshake_Type::HelloRequest));
+
+               if(m_active_state.has_value() && !starts_new_handshake) {
+                  process_retransmitted_record();
+               } else {
+                  create_handshake_state(record_version);
+               }
             } else if(current_epoch > 0 && epoch == current_epoch - 1) {
-               BOTAN_ASSERT(m_active_state.has_value() && m_active_state->dtls_handshake_io(),
-                            "Have DTLS handshake IO for retransmission");
-               m_active_state->dtls_handshake_io()->add_record(
-                  record.data(), record.size(), record_type, record_sequence);
+               process_retransmitted_record();
             }
          } else {
             create_handshake_state(record_version);
