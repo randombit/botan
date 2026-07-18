@@ -132,6 +132,14 @@ size_t SIV_Mode::process_msg(uint8_t buf[], size_t sz) {
 }
 
 secure_vector<uint8_t> SIV_Mode::S2V(const uint8_t* text, size_t text_len) {
+   // S2V processes at most block_size()*8 - 1 (127 for a 128-bit block)
+   // components; the associated data, the nonce (if present), and the plaintext
+   // are all components, so reject inputs that would exceed the limit.
+   const size_t s2v_components = m_ad_macs.size() + (m_nonce.empty() ? 0 : 1) + 1;
+   if(s2v_components > block_size() * 8 - 1) {
+      throw Invalid_Argument(name() + ": too many S2V components");
+   }
+
    const std::vector<uint8_t> zeros(block_size());
 
    secure_vector<uint8_t> V = m_mac->process(zeros.data(), zeros.size());
