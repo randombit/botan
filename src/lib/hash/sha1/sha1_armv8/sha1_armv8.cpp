@@ -30,17 +30,17 @@ void BOTAN_FN_ISA_SHA2 SHA_1::sha1_armv8_compress_n(digest_type& digest,
    uint32x4_t ABCD = vld1q_u32(&digest[0]);  // NOLINT(*-container-data-pointer)
    uint32_t E0 = digest[4];
 
-   const uint32_t* input32 = reinterpret_cast<const uint32_t*>(input8.data());
+   const uint8_t* input = input8.data();
 
    while(blocks > 0) {
       // Save current hash
       const uint32x4_t ABCD_SAVED = ABCD;
       const uint32_t E0_SAVED = E0;
 
-      uint32x4_t MSG0 = vld1q_u32(input32 + 0);
-      uint32x4_t MSG1 = vld1q_u32(input32 + 4);
-      uint32x4_t MSG2 = vld1q_u32(input32 + 8);
-      uint32x4_t MSG3 = vld1q_u32(input32 + 12);
+      uint32x4_t MSG0 = vreinterpretq_u32_u8(vld1q_u8(input + 0));
+      uint32x4_t MSG1 = vreinterpretq_u32_u8(vld1q_u8(input + 16));
+      uint32x4_t MSG2 = vreinterpretq_u32_u8(vld1q_u8(input + 32));
+      uint32x4_t MSG3 = vreinterpretq_u32_u8(vld1q_u8(input + 48));
 
       MSG0 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG0)));
       MSG1 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG1)));
@@ -185,7 +185,7 @@ void BOTAN_FN_ISA_SHA2 SHA_1::sha1_armv8_compress_n(digest_type& digest,
       E0 += E0_SAVED;
       ABCD = vaddq_u32(ABCD_SAVED, ABCD);
 
-      input32 += 64 / 4;
+      input += 64;
       blocks--;
    }
 

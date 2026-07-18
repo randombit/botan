@@ -43,7 +43,7 @@ void BOTAN_FN_ISA_SHA512 SHA_512::compress_digest_armv8(digest_type& digest,
    uint64x2_t STATE2 = vld1q_u64(&digest[4]);  // ef
    uint64x2_t STATE3 = vld1q_u64(&digest[6]);  // gh
 
-   const uint64_t* input64 = reinterpret_cast<const uint64_t*>(input8.data());
+   const uint8_t* input = input8.data();
 
    while(blocks > 0) {
       // Save current state
@@ -52,14 +52,14 @@ void BOTAN_FN_ISA_SHA512 SHA_512::compress_digest_armv8(digest_type& digest,
       const uint64x2_t EF_SAVE = STATE2;
       const uint64x2_t GH_SAVE = STATE3;
 
-      uint64x2_t MSG0 = vld1q_u64(input64 + 0);
-      uint64x2_t MSG1 = vld1q_u64(input64 + 2);
-      uint64x2_t MSG2 = vld1q_u64(input64 + 4);
-      uint64x2_t MSG3 = vld1q_u64(input64 + 6);
-      uint64x2_t MSG4 = vld1q_u64(input64 + 8);
-      uint64x2_t MSG5 = vld1q_u64(input64 + 10);
-      uint64x2_t MSG6 = vld1q_u64(input64 + 12);
-      uint64x2_t MSG7 = vld1q_u64(input64 + 14);
+      uint64x2_t MSG0 = vreinterpretq_u64_u8(vld1q_u8(input + 0));
+      uint64x2_t MSG1 = vreinterpretq_u64_u8(vld1q_u8(input + 16));
+      uint64x2_t MSG2 = vreinterpretq_u64_u8(vld1q_u8(input + 32));
+      uint64x2_t MSG3 = vreinterpretq_u64_u8(vld1q_u8(input + 48));
+      uint64x2_t MSG4 = vreinterpretq_u64_u8(vld1q_u8(input + 64));
+      uint64x2_t MSG5 = vreinterpretq_u64_u8(vld1q_u8(input + 80));
+      uint64x2_t MSG6 = vreinterpretq_u64_u8(vld1q_u8(input + 96));
+      uint64x2_t MSG7 = vreinterpretq_u64_u8(vld1q_u8(input + 112));
 
       MSG0 = vreinterpretq_u64_u8(vrev64q_u8(vreinterpretq_u8_u64(MSG0)));
       MSG1 = vreinterpretq_u64_u8(vrev64q_u8(vreinterpretq_u8_u64(MSG1)));
@@ -392,7 +392,7 @@ void BOTAN_FN_ISA_SHA512 SHA_512::compress_digest_armv8(digest_type& digest,
       STATE2 = vaddq_u64(STATE2, EF_SAVE);
       STATE3 = vaddq_u64(STATE3, GH_SAVE);
 
-      input64 += 64 / 4;
+      input += 128;
       blocks--;
    }
 
