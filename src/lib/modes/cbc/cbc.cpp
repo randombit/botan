@@ -130,7 +130,9 @@ void CBC_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    buffer.resize(output_bytes);
    padding().add_padding(std::span(buffer).subspan(offset), bytes_in_final_block, BS);
 
-   BOTAN_ASSERT_EQUAL(buffer.size() % BS, offset % BS, "Padded to block boundary");
+   // With NoPadding a non-block-multiple input reaches here un-padded; reject it
+   // as an argument error rather than tripping the assertion.
+   BOTAN_ARG_CHECK(buffer.size() % BS == offset % BS, "CBC input is not full blocks (NoPadding)");
 
    update(buffer, offset);
 }
