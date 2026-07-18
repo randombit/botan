@@ -118,7 +118,7 @@ class PerfTest_EllipticCurve_H2C final : public PerfTest {
 
             const bool h2c_supported = [&]() {
                try {
-                  Botan::EC_AffinePoint::hash_to_curve_nu(group, "SHA-256", {}, "");
+                  Botan::EC_AffinePoint::hash_to_curve_nu(group, "SHA-256", {}, "dst");
                } catch(Botan::Not_Implemented&) {
                   return false;
                }

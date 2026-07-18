@@ -23,6 +23,11 @@ void expand_message_xmd(std::string_view hash_fn,
       throw Not_Implemented("XMD does not currently implement oversize DST handling");
    }
 
+   if(domain_sep.empty()) {
+      // RFC 9380 Section 3.1: "Tags MUST have nonzero length."
+      throw Invalid_Argument("expand_message_xmd requires a non-empty domain separation tag");
+   }
+
    const uint8_t domain_sep_len = static_cast<uint8_t>(domain_sep.size());
 
    auto hash = HashFunction::create_or_throw(hash_fn);
