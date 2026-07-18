@@ -14,6 +14,7 @@
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/hash.h>
+#include <botan/pk_keys.h>
 #include <botan/x509cert.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
@@ -545,6 +546,24 @@ void Subject_Key_ID::decode_inner(const std::vector<uint8_t>& in) {
       throw Decoding_Error(
          fmt("SubjectKeyIdentifier length {} exceeds limit of {} bytes", m_key_id.size(), MaximumKeyIdentifierLength));
    }
+}
+
+/*
+* Subject_Key_ID Constructor
+*/
+Subject_Key_ID::Subject_Key_ID(const Public_Key& pub_key) {
+   /*
+   * RFC 5280 4.2.1.2:
+   *    (1) The keyIdentifier is composed of the 160-bit SHA-1 hash of the
+   *    value of the BIT STRING subjectPublicKey (excluding the tag, length,
+   *    and number of unused bits).
+   */
+   auto hash = HashFunction::create_or_throw("SHA-1");
+
+   m_key_id.resize(hash->output_length());
+
+   hash->update(pub_key.public_key_bits());
+   hash->final(m_key_id.data());
 }
 
 /*

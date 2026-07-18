@@ -111,6 +111,17 @@ class BOTAN_PUBLIC_API(2, 0) Subject_Key_ID final : public Certificate_Extension
 
       explicit Subject_Key_ID(const std::vector<uint8_t>& k) : m_key_id(k) {}
 
+      /**
+      * Derive the key identifier from the public key, using the first
+      * method given in RFC 5280 4.2.1.2:
+      *
+      *    (1) The keyIdentifier is composed of the 160-bit SHA-1 hash of
+      *    the value of the BIT STRING subjectPublicKey (excluding the tag,
+      *    length, and number of unused bits).
+      */
+      explicit Subject_Key_ID(const Public_Key& pub_key);
+
+      BOTAN_DEPRECATED("Use Subject_Key_ID(const Public_Key&)")
       Subject_Key_ID(const std::vector<uint8_t>& public_key, std::string_view hash_fn);
 
       std::unique_ptr<Certificate_Extension> copy() const override {

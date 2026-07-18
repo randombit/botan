@@ -99,8 +99,7 @@ int main() {
       alt_name.add_email("rene.meusel@rohde-schwarz.com");
       return alt_name;
    }()));
-   extensions.add_new(
-      std::make_unique<Botan::Cert_Extension::Subject_Key_ID>(cert_private_key->public_key_bits(), "SHA-256"));
+   extensions.add_new(std::make_unique<Botan::Cert_Extension::Subject_Key_ID>(*cert_private_key->public_key()));
 
    // All done, create the CSR
    auto csr = Botan::PKCS10_Request::create(*cert_private_key, dn, extensions, "SHA-256", tpm_rng, "PSS(SHA-256)");
