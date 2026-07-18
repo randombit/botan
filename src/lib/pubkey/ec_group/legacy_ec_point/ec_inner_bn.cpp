@@ -53,7 +53,7 @@ void EC_Scalar_Data_BN::zeroize() {
 }
 
 void EC_Scalar_Data_BN::square_self() {
-   m_group->mod_order().square(m_v);
+   m_v = m_group->mod_order().square(m_v);
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::negate() const {
