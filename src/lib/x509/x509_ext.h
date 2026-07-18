@@ -152,15 +152,30 @@ class BOTAN_PUBLIC_API(2, 0) Subject_Key_ID final : public Certificate_Extension
 */
 class BOTAN_PUBLIC_API(2, 0) Authority_Key_ID final : public Certificate_Extension {
    public:
-      std::unique_ptr<Certificate_Extension> copy() const override {
-         return std::make_unique<Authority_Key_ID>(m_key_id);
-      }
+      std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<Authority_Key_ID>(*this); }
 
       Authority_Key_ID() = default;
 
       explicit Authority_Key_ID(const std::vector<uint8_t>& k) : m_key_id(k) {}
 
+      /**
+      * The authorityCertIssuer and authorityCertSerialNumber fields, which
+      * identify the certificate holding the authority's signing key.
+      */
+      struct Authority_Cert_Identifier final {
+            AlternativeName issuer;
+            X509_Serial_Number serial_number;
+      };
+
+      Authority_Key_ID(const std::vector<uint8_t>& k, Authority_Cert_Identifier authority_cert) :
+            m_key_id(k), m_authority_cert(std::move(authority_cert)) {}
+
       const std::vector<uint8_t>& get_key_id() const { return m_key_id; }
+
+      /**
+      * The authorityCertIssuer/authorityCertSerialNumber fields, if present
+      */
+      const std::optional<Authority_Cert_Identifier>& authority_cert_identifier() const { return m_authority_cert; }
 
       static OID static_oid() { return OID({2, 5, 29, 35}); }
 
@@ -171,12 +186,13 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Key_ID final : public Certificate_Extensi
 
       bool is_appropriate_context(Extension_Context context) const override;
 
-      bool should_encode() const override { return (!m_key_id.empty()); }
+      bool should_encode() const override { return !m_key_id.empty() || m_authority_cert.has_value(); }
 
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>& in) override;
 
       std::vector<uint8_t> m_key_id;
+      std::optional<Authority_Cert_Identifier> m_authority_cert;
 };
 
 /**

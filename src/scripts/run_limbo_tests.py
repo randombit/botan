@@ -35,8 +35,6 @@ tests_that_succeed_unexpectedly = {
     'rfc5280::ski::root-missing-ski': 'Conflates CA and verifier requirements',
 
     'webpki::aki::root-with-aki-missing-keyidentifier': 'Conflates CA and verifier requirements',
-    'webpki::aki::root-with-aki-authoritycertissuer': 'Conflates CA and verifier requirements',
-    'webpki::aki::root-with-aki-authoritycertserialnumber': 'Conflates CA and verifier requirements',
     'webpki::aki::root-with-aki-all-fields': 'Conflates CA and verifier requirements',
     'webpki::ee-basicconstraints-ca': 'Conflates CA and verifier requirements',
     'webpki::eku::ee-without-eku': 'Conflates CA and verifier requirements',

@@ -1740,7 +1740,10 @@ class String_Extension final : public Botan::Certificate_Extension {
 
       void decode_inner(const std::vector<uint8_t>& in) override {
          Botan::ASN1_String str;
-         Botan::BER_Decoder(in).decode(str, Botan::ASN1_Type::Utf8String).verify_end();
+         Botan::BER_Decoder(in).decode(str).verify_end();
+         if(str.tagging() != Botan::ASN1_Type::Utf8String) {
+            throw Botan::Decoding_Error("String_Extension expected a UTF8 string");
+         }
          m_contents = str.value();
       }
 

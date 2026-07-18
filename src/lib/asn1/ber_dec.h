@@ -13,6 +13,7 @@
 #include <cstring>
 #include <memory>
 #include <optional>
+#include <type_traits>
 #include <utility>
 
 namespace Botan {
@@ -456,7 +457,12 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       BER_Decoder& decode_implicit(BER_Object obj, T& out, ASN1_Type real_type, ASN1_Class real_class) {
          obj.set_tagging(real_type, real_class);
          push_back(std::move(obj));
-         return decode(out, real_type, real_class);
+         if constexpr(std::is_base_of_v<ASN1_Object, T>) {
+            // The object was re-tagged above; decode_from checks the real tag itself
+            return decode(out);
+         } else {
+            return decode(out, real_type, real_class);
+         }
       }
 
       template <typename T>
@@ -584,7 +590,13 @@ BER_Decoder& BER_Decoder::decode_optional(std::optional<T>& optval, ASN1_Type ty
          BER_Decoder(obj, m_limits).decode(out).verify_end();
       } else {
          this->push_back(std::move(obj));
-         this->decode(out, type_tag, class_tag);
+         if constexpr(std::is_base_of_v<ASN1_Object, T>) {
+            // Object types check the tag in decode_from; a re-tagging
+            // implicit override of an object is not supported here
+            this->decode(out);
+         } else {
+            this->decode(out, type_tag, class_tag);
+         }
       }
       optval = std::move(out);
    } else {
