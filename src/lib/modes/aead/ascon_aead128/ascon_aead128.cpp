@@ -47,7 +47,16 @@ constexpr uint64_t ascon_aead_128_domain_sep = 0x8000000000000000;
 
 Ascon_AEAD128_Mode::Ascon_AEAD128_Mode() : m_ascon_p(initial_state_of_ascon_aead_permutation) {}
 
+Ascon_AEAD128_Mode::~Ascon_AEAD128_Mode() {
+   if(m_key.has_value()) {
+      secure_scrub_memory(*m_key);
+   }
+}
+
 void Ascon_AEAD128_Mode::clear() {
+   if(m_key.has_value()) {
+      secure_scrub_memory(*m_key);
+   }
    m_key.reset();
    m_ad.clear();
    reset();
