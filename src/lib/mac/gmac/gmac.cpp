@@ -49,6 +49,9 @@ size_t GMAC::output_length() const {
 }
 
 void GMAC::add_data(std::span<const uint8_t> input) {
+   if(!m_initialized) {
+      throw Invalid_State("GMAC was not used with a fresh nonce");
+   }
    m_ghash->update_associated_data(input);
 }
 
