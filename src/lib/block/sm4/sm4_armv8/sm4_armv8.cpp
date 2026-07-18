@@ -42,7 +42,7 @@ inline void BOTAN_FN_ISA_SM4 SM4_E(uint32x4_t& B0, uint32x4_t& B1, uint32x4_t& B
 
 }  // namespace
 
-void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_encrypt(const uint8_t input8[], uint8_t output8[], size_t blocks) const {
+void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_encrypt(const uint8_t input[], uint8_t output[], size_t blocks) const {
    const uint32x4_t K0 = vld1q_u32(&m_RK[0]);  // NOLINT(*-container-data-pointer)
    const uint32x4_t K1 = vld1q_u32(&m_RK[4]);
    const uint32x4_t K2 = vld1q_u32(&m_RK[8]);
@@ -52,14 +52,11 @@ void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_encrypt(const uint8_t input8[], uint8_t out
    const uint32x4_t K6 = vld1q_u32(&m_RK[24]);
    const uint32x4_t K7 = vld1q_u32(&m_RK[28]);
 
-   const uint32_t* input32 = reinterpret_cast<const uint32_t*>(input8);
-   uint32_t* output32 = reinterpret_cast<uint32_t*>(output8);
-
    while(blocks >= 4) {
-      uint32x4_t B0 = bswap_32(vld1q_u32(input32));
-      uint32x4_t B1 = bswap_32(vld1q_u32(input32 + 4));
-      uint32x4_t B2 = bswap_32(vld1q_u32(input32 + 8));
-      uint32x4_t B3 = bswap_32(vld1q_u32(input32 + 12));
+      uint32x4_t B0 = bswap_32(vreinterpretq_u32_u8(vld1q_u8(input)));
+      uint32x4_t B1 = bswap_32(vreinterpretq_u32_u8(vld1q_u8(input + 16)));
+      uint32x4_t B2 = bswap_32(vreinterpretq_u32_u8(vld1q_u8(input + 32)));
+      uint32x4_t B3 = bswap_32(vreinterpretq_u32_u8(vld1q_u8(input + 48)));
 
       SM4_E(B0, B1, B2, B3, K0);
       SM4_E(B0, B1, B2, B3, K1);
@@ -70,18 +67,18 @@ void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_encrypt(const uint8_t input8[], uint8_t out
       SM4_E(B0, B1, B2, B3, K6);
       SM4_E(B0, B1, B2, B3, K7);
 
-      vst1q_u32(output32, bqswap_32(B0));
-      vst1q_u32(output32 + 4, bqswap_32(B1));
-      vst1q_u32(output32 + 8, bqswap_32(B2));
-      vst1q_u32(output32 + 12, bqswap_32(B3));
+      vst1q_u8(output, vreinterpretq_u8_u32(bqswap_32(B0)));
+      vst1q_u8(output + 16, vreinterpretq_u8_u32(bqswap_32(B1)));
+      vst1q_u8(output + 32, vreinterpretq_u8_u32(bqswap_32(B2)));
+      vst1q_u8(output + 48, vreinterpretq_u8_u32(bqswap_32(B3)));
 
-      input32 += 4 * 4;
-      output32 += 4 * 4;
+      input += 64;
+      output += 64;
       blocks -= 4;
    }
 
    for(size_t i = 0; i != blocks; ++i) {
-      uint32x4_t B = bswap_32(vld1q_u32(input32));
+      uint32x4_t B = bswap_32(vreinterpretq_u32_u8(vld1q_u8(input)));
 
       B = vsm4eq_u32(B, K0);
       B = vsm4eq_u32(B, K1);
@@ -92,14 +89,14 @@ void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_encrypt(const uint8_t input8[], uint8_t out
       B = vsm4eq_u32(B, K6);
       B = vsm4eq_u32(B, K7);
 
-      vst1q_u32(output32, bqswap_32(B));
+      vst1q_u8(output, vreinterpretq_u8_u32(bqswap_32(B)));
 
-      input32 += 4;
-      output32 += 4;
+      input += 16;
+      output += 16;
    }
 }
 
-void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_decrypt(const uint8_t input8[], uint8_t output8[], size_t blocks) const {
+void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_decrypt(const uint8_t input[], uint8_t output[], size_t blocks) const {
    const uint32x4_t K0 = qswap_32(vld1q_u32(&m_RK[0]));  // NOLINT(*-container-data-pointer)
    const uint32x4_t K1 = qswap_32(vld1q_u32(&m_RK[4]));
    const uint32x4_t K2 = qswap_32(vld1q_u32(&m_RK[8]));
@@ -109,14 +106,11 @@ void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_decrypt(const uint8_t input8[], uint8_t out
    const uint32x4_t K6 = qswap_32(vld1q_u32(&m_RK[24]));
    const uint32x4_t K7 = qswap_32(vld1q_u32(&m_RK[28]));
 
-   const uint32_t* input32 = reinterpret_cast<const uint32_t*>(input8);
-   uint32_t* output32 = reinterpret_cast<uint32_t*>(output8);
-
    while(blocks >= 4) {
-      uint32x4_t B0 = bswap_32(vld1q_u32(input32));
-      uint32x4_t B1 = bswap_32(vld1q_u32(input32 + 4));
-      uint32x4_t B2 = bswap_32(vld1q_u32(input32 + 8));
-      uint32x4_t B3 = bswap_32(vld1q_u32(input32 + 12));
+      uint32x4_t B0 = bswap_32(vreinterpretq_u32_u8(vld1q_u8(input)));
+      uint32x4_t B1 = bswap_32(vreinterpretq_u32_u8(vld1q_u8(input + 16)));
+      uint32x4_t B2 = bswap_32(vreinterpretq_u32_u8(vld1q_u8(input + 32)));
+      uint32x4_t B3 = bswap_32(vreinterpretq_u32_u8(vld1q_u8(input + 48)));
 
       SM4_E(B0, B1, B2, B3, K7);
       SM4_E(B0, B1, B2, B3, K6);
@@ -127,18 +121,18 @@ void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_decrypt(const uint8_t input8[], uint8_t out
       SM4_E(B0, B1, B2, B3, K1);
       SM4_E(B0, B1, B2, B3, K0);
 
-      vst1q_u32(output32, bqswap_32(B0));
-      vst1q_u32(output32 + 4, bqswap_32(B1));
-      vst1q_u32(output32 + 8, bqswap_32(B2));
-      vst1q_u32(output32 + 12, bqswap_32(B3));
+      vst1q_u8(output, vreinterpretq_u8_u32(bqswap_32(B0)));
+      vst1q_u8(output + 16, vreinterpretq_u8_u32(bqswap_32(B1)));
+      vst1q_u8(output + 32, vreinterpretq_u8_u32(bqswap_32(B2)));
+      vst1q_u8(output + 48, vreinterpretq_u8_u32(bqswap_32(B3)));
 
-      input32 += 4 * 4;
-      output32 += 4 * 4;
+      input += 64;
+      output += 64;
       blocks -= 4;
    }
 
    for(size_t i = 0; i != blocks; ++i) {
-      uint32x4_t B = bswap_32(vld1q_u32(input32));
+      uint32x4_t B = bswap_32(vreinterpretq_u32_u8(vld1q_u8(input)));
 
       B = vsm4eq_u32(B, K7);
       B = vsm4eq_u32(B, K6);
@@ -149,10 +143,10 @@ void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_decrypt(const uint8_t input8[], uint8_t out
       B = vsm4eq_u32(B, K1);
       B = vsm4eq_u32(B, K0);
 
-      vst1q_u32(output32, bqswap_32(B));
+      vst1q_u8(output, vreinterpretq_u8_u32(bqswap_32(B)));
 
-      input32 += 4;
-      output32 += 4;
+      input += 16;
+      output += 16;
    }
 }
 
