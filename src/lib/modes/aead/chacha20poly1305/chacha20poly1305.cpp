@@ -176,9 +176,9 @@ void ChaCha20Poly1305_Decryption::finish_msg(secure_vector<uint8_t>& buffer, siz
    const size_t remaining = sz - tag_size();
 
    if(remaining > 0) {
-      m_poly1305->update(buf, remaining);  // poly1305 of ciphertext
-      m_chacha->cipher1(buf, remaining);
-      m_ctext_len += remaining;
+      // Route through process_msg so the RFC 8439 length limit is enforced for
+      // one-shot decryption too (finish() calls finish_msg() directly).
+      process_msg(buf, remaining);
    }
 
    if(cfrg_version()) {
