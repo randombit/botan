@@ -21,6 +21,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/x509_utils.h>
 #include <algorithm>
+#include <bit>
 #include <set>
 #include <span>
 
@@ -1717,7 +1718,34 @@ std::vector<uint8_t> IPAddressBlocks::encode_inner() const {
 void IPAddressBlocks::decode_inner(const std::vector<uint8_t>& in) {
    /* RFC 3779 Section 2.2.3.1 - IPAddrBlocks ::= SEQUENCE OF IPAddressFamily */
    BER_Decoder(in, BER_Decoder::Limits::DER()).decode_list(m_ip_addr_blocks).verify_end();
-   sort_and_merge();
+
+   /* RFC 3779 Section 2.2.3.3
+   *
+   *    There MUST be only one IPAddressFamily SEQUENCE per unique combination of
+   *    AFI and SAFI. Each SEQUENCE MUST be ordered by ascending addressFamily
+   *    values (treating the octets as unsigned quantities).
+   *
+   * Comparing (afi, safi) pairs matches the octet string ordering, since
+   * a std::nullopt safi sorts before any actual safi value.
+   */
+   for(size_t i = 1; i < m_ip_addr_blocks.size(); i++) {
+      const auto prev = std::make_pair(m_ip_addr_blocks[i - 1].afi(), m_ip_addr_blocks[i - 1].safi());
+      const auto cur = std::make_pair(m_ip_addr_blocks[i].afi(), m_ip_addr_blocks[i].safi());
+      if(prev >= cur) {
+         throw Decoding_Error("IPAddrBlocks families must be sorted by AFI/SAFI and not repeat");
+      }
+   }
+
+   // IPAddressFamily::decode_from only accepts AFI 1 (IPv4) or 2 (IPv6)
+   m_v4_count = 0;
+   m_v6_count = 0;
+   for(const IPAddressFamily& block : m_ip_addr_blocks) {
+      if(block.afi() == 1) {
+         m_v4_count++;
+      } else {
+         m_v6_count++;
+      }
+   }
 }
 
 void IPAddressBlocks::IPAddressFamily::encode_into(Botan::DER_Encoder& into) const {
@@ -1915,6 +1943,54 @@ std::optional<std::vector<T>> sort_and_merge_ranges(std::optional<std::span<cons
    return merged;
 }
 
+// Used to check that decoded IPAddressOrRange or ASIdOrRange entries were
+// encoded in the (unique) canonical form RFC 3779 requires of issuers
+template <typename T>
+bool ranges_are_sorted_and_merged(const std::vector<T>& ranges) {
+   for(size_t i = 1; i < ranges.size(); i++) {
+      // Required sorted order without overlaps implies the previous maximum
+      // is strictly below the next minimum
+      if(!(ranges[i - 1].max() < ranges[i].min())) {
+         return false;
+      }
+      // Contiguous entries were required to be combined by the issuer. The
+      // increment cannot wrap since max() < min() <= the all-ones value.
+      if(ranges[i - 1].max() + 1 == ranges[i].min()) {
+         return false;
+      }
+   }
+   return true;
+}
+
+// True if [min,max] covers exactly the address set of some prefix
+template <IPAddressBlocks::Version V>
+bool range_is_expressible_as_prefix(const IPAddressBlocks::IPAddress<V>& min_addr,
+                                    const IPAddressBlocks::IPAddress<V>& max_addr) {
+   const auto min = min_addr.value();
+   const auto max = max_addr.value();
+
+   size_t i = 0;
+   while(i < min.size() && min[i] == max[i]) {
+      i++;
+   }
+   if(i == min.size()) {
+      // min == max is a single address, ie a full length prefix
+      return true;
+   }
+
+   // From the first differing bit on, min must be all zero bits and max all one bits
+   const uint8_t diff_mask = static_cast<uint8_t>(0xFF >> std::countl_zero(static_cast<uint8_t>(min[i] ^ max[i])));
+   if((min[i] & diff_mask) != 0 || (max[i] & diff_mask) != diff_mask) {
+      return false;
+   }
+   for(size_t j = i + 1; j < min.size(); j++) {
+      if(min[j] != 0x00 || max[j] != 0xFF) {
+         return false;
+      }
+   }
+   return true;
+}
+
 template <typename T>
 bool validate_subject_in_issuer(std::span<const T> subject, std::span<const T> issuer) {
    // ensures that the subject ranges are enclosed by the issuer ranges
@@ -2008,7 +2084,17 @@ void IPAddressBlocks::IPAddressChoice<V>::decode_from(Botan::BER_Decoder& from) 
    } else if(next_tag == ASN1_Type::Sequence) {
       std::vector<IPAddressOrRange<V>> ip_ranges;
       from.decode_list(ip_ranges);
-      m_ip_addr_ranges = sort_and_merge_ranges<IPAddressOrRange<V>>(ip_ranges);
+
+      /* RFC 3779 Section 2.2.3.6 -
+      *
+      *    Any pair of IPAddressOrRange choices in an extension MUST NOT overlap
+      *    each other. Any contiguous address prefixes or ranges MUST be combined
+      *    into a single range or, whenever possible, a single prefix.
+      */
+      if(!ranges_are_sorted_and_merged(ip_ranges)) {
+         throw Decoding_Error("IPAddressChoice entries must be sorted, non-overlapping and fully merged");
+      }
+      m_ip_addr_ranges = std::move(ip_ranges);
    } else {
       throw Decoding_Error(fmt("Unexpected type for IPAddressChoice {}", static_cast<uint32_t>(next_tag)));
    }
@@ -2136,11 +2222,42 @@ void IPAddressBlocks::IPAddressOrRange<V>::decode_from(Botan::BER_Decoder& from)
 
       from.start_sequence().decode_bitstring(addr_min).decode_bitstring(addr_max).end_cons();
 
+      /* RFC 3779 Section 2.2.3.9 -
+      *
+      *    The BIT STRING for the minimum address results from removing all the
+      *    least-significant zero-bits from the minimum address.  The BIT STRING
+      *    for the maximum address results from removing all the least-significant
+      *    one-bits from the maximum address.
+      *
+      * So a canonically encoded minimum ends in a one bit (or is empty) and
+      * a canonically encoded maximum ends in a zero bit (or is empty).
+      * Section 2.2.3.9 also requires that a maximum "MUST contain at least
+      * one bit whose value is 1", but verified erratum 2537 removes that
+      * sentence as it contradicts the removal rule, so it is not checked.
+      */
+      if(!addr_min.bytes().empty() && ((addr_min.bytes().back() >> addr_min.unused_bits()) & 1) == 0) {
+         throw Decoding_Error("IPAddressRange minimum must have trailing zero bits removed");
+      }
+      if(!addr_max.bytes().empty() && ((addr_max.bytes().back() >> addr_max.unused_bits()) & 1) == 1) {
+         throw Decoding_Error("IPAddressRange maximum must have trailing one bits removed");
+      }
+
       m_min = decode_single_address(addr_min, true);
       m_max = decode_single_address(addr_max, false);
 
       if(m_min > m_max) {
          throw Decoding_Error("IP address ranges must be sorted.");
+      }
+
+      /* RFC 3779 Section 2.2.3.7 -
+      *
+      *    This specification requires that any range of addresses that can be
+      *    encoded as a prefix MUST be encoded using an IPAddress element (a BIT
+      *    STRING), and any range that cannot be encoded as a prefix MUST be
+      *    encoded using an IPAddressRange
+      */
+      if(range_is_expressible_as_prefix<V>(m_min, m_max)) {
+         throw Decoding_Error("IPAddressRange expressible as a prefix must be encoded as a prefix");
       }
    } else {
       throw Decoding_Error(fmt("Unexpected type for IPAddressOrRange {}", static_cast<uint32_t>(next_tag)));
@@ -2158,30 +2275,16 @@ IPAddressBlocks::IPAddress<V> IPAddressBlocks::IPAddressOrRange<V>::decode_singl
       throw Decoding_Error(fmt("IP address range entries must have a length between 0 and {} bytes.", version_octets));
    }
 
-   const uint8_t unused = static_cast<uint8_t>(decoded.unused_bits());
-   const uint8_t discarded_octets = version_octets - static_cast<uint8_t>(decoded.bytes().size());
-
    std::vector<uint8_t> address(decoded.bytes().begin(), decoded.bytes().end());
 
-   if(address.empty() && unused != 0) {
-      throw Decoding_Error("IP address range entry specified unused bits, but did not provide any octets.");
+   // ASN1_BitString guarantees the unused bits are zero (and absent if empty),
+   // which is already correct for a min address; for a max address set them
+   if(!min && decoded.unused_bits() > 0) {
+      address.back() |= static_cast<uint8_t>((1 << decoded.unused_bits()) - 1);
    }
 
    // pad to version length with 0's for min addresses, 255's (0xff) for max addresses
-   const uint8_t fill_discarded = min ? 0 : 0xff;
-   for(size_t i = 0; i < discarded_octets; i++) {
-      address.push_back(fill_discarded);
-   }
-
-   // for min addresses they should already be 0, but we set them to zero regardless
-   // for max addresses this turns the unused bits to 1
-   for(size_t i = 0; i < unused; i++) {
-      if(min) {
-         address[version_octets - 1 - discarded_octets] &= ~(1 << i);
-      } else {
-         address[version_octets - 1 - discarded_octets] |= (1 << i);
-      }
-   }
+   address.resize(version_octets, min ? 0x00 : 0xFF);
 
    return IPAddressBlocks::IPAddress<V>(address);
 }
@@ -2339,39 +2442,44 @@ void ASBlocks::ASIdentifiers::decode_from(Botan::BER_Decoder& from) {
    BER_Decoder seq_dec = from.start_sequence();
 
    const BER_Object elem_obj = seq_dec.get_next_object();
-   const uint32_t elem_type_tag = static_cast<uint32_t>(elem_obj.type_tag());
 
    // asnum, potentially followed by an rdi
-   if(elem_type_tag == 0) {
+   if(elem_obj.is_a(0, ASN1_Class::ExplicitContextSpecific)) {
       BER_Decoder as_obj_ber = BER_Decoder(elem_obj, seq_dec.limits());
       ASIdentifierChoice asnum;
       as_obj_ber.decode(asnum).verify_end();
       m_asnum = asnum;
 
       const BER_Object rdi_obj = seq_dec.get_next_object();
-      const ASN1_Type rdi_type_tag = rdi_obj.type_tag();
-      if(static_cast<uint32_t>(rdi_type_tag) == 1) {
+      if(rdi_obj.is_a(1, ASN1_Class::ExplicitContextSpecific)) {
          BER_Decoder rdi_obj_ber = BER_Decoder(rdi_obj, seq_dec.limits());
          ASIdentifierChoice rdi;
          rdi_obj_ber.decode(rdi).verify_end();
          m_rdi = rdi;
-      } else if(rdi_type_tag != ASN1_Type::NoObject) {
-         throw Decoding_Error(fmt("Unexpected type for ASIdentifiers rdi: {}", static_cast<uint32_t>(rdi_type_tag)));
+      } else if(rdi_obj.type_tag() != ASN1_Type::NoObject) {
+         throw Decoding_Error(
+            fmt("Unexpected type for ASIdentifiers rdi: {}", static_cast<uint32_t>(rdi_obj.type_tag())));
       }
-   }
-
-   // just an rdi
-   if(elem_type_tag == 1) {
+   } else if(elem_obj.is_a(1, ASN1_Class::ExplicitContextSpecific)) {
+      // just an rdi
       BER_Decoder rdi_obj_ber = BER_Decoder(elem_obj, seq_dec.limits());
       ASIdentifierChoice rdi;
       rdi_obj_ber.decode(rdi).verify_end();
       m_rdi = rdi;
       const BER_Object end = seq_dec.get_next_object();
-      const ASN1_Type end_type_tag = end.type_tag();
-      if(end_type_tag != ASN1_Type::NoObject) {
+      if(end.type_tag() != ASN1_Type::NoObject) {
          throw Decoding_Error(
-            fmt("Unexpected element with type {} in ASIdentifiers", static_cast<uint32_t>(end_type_tag)));
+            fmt("Unexpected element with type {} in ASIdentifiers", static_cast<uint32_t>(end.type_tag())));
       }
+   } else if(elem_obj.type_tag() == ASN1_Type::NoObject) {
+      /* RFC 3779 Section 3.2.3.1 -
+      *    "The ASIdentifiers type is a SEQUENCE containing one or more forms of
+      *    autonomous system identifiers"
+      */
+      throw Decoding_Error("ASIdentifiers must contain an asnum or rdi element");
+   } else {
+      throw Decoding_Error(
+         fmt("Unexpected element with type {} in ASIdentifiers", static_cast<uint32_t>(elem_obj.type_tag())));
    }
 
    seq_dec.end_cons();
@@ -2403,7 +2511,16 @@ void ASBlocks::ASIdentifierChoice::decode_from(Botan::BER_Decoder& from) {
       std::vector<ASIdOrRange> as_ranges;
       from.decode_list(as_ranges);
 
-      m_as_ranges = sort_and_merge_ranges<ASIdOrRange>(as_ranges);
+      /* RFC 3779 Section 3.2.3.4 -
+      *    "Any pair of items in the asIdsOrRanges SEQUENCE MUST NOT overlap.
+      *    Any contiguous series of AS identifiers MUST be combined into a
+      *    single range whenever possible.  The AS identifiers in the
+      *    asIdsOrRanges element MUST be sorted by increasing numeric value."
+      */
+      if(!ranges_are_sorted_and_merged(as_ranges)) {
+         throw Decoding_Error("ASIdentifierChoice entries must be sorted, non-overlapping and fully merged");
+      }
+      m_as_ranges = std::move(as_ranges);
    } else {
       throw Decoding_Error(fmt("Unexpected type for ASIdentifierChoice {}", static_cast<uint32_t>(next_tag)));
    }

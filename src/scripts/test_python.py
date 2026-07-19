@@ -1143,8 +1143,8 @@ ofvkP1EDmpx50fHLawIDAQAB
 
     def test_x509_extensions(self):
         no_ext_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/x509test/root.pem"))
-        ip_addr_blocks_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/x509test/IPAddrBlocksUnsorted.pem"))
-        as_blocks_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/x509test/ASNumberInherit.pem"))
+        ip_addr_blocks_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/rfc3779/ip_safi.pem"))
+        as_blocks_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/rfc3779/as_inherit.pem"))
 
         rpki_accessors = [
             lambda cert: cert.ext_as_blocks_asnum(),
@@ -1189,7 +1189,7 @@ ofvkP1EDmpx50fHLawIDAQAB
         rdi = as_blocks_cert.ext_as_blocks_rdi()
 
         self.assertEqual(asnum, None)
-        self.assertEqual(rdi, [(0, 4294967295)])
+        self.assertEqual(rdi, [(1234, 5678), (32768, 32768)])
 
     def test_crls(self):
         rng = botan.RandomNumberGenerator()

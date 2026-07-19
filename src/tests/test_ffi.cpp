@@ -1720,7 +1720,7 @@ class FFI_Cert_ExtRFC3779_Test final : public FFI_Test {
       void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
          botan_x509_cert_t ip_addr_blocks_cert;
          if(!TEST_FFI_INIT(botan_x509_cert_load_file,
-                           (&ip_addr_blocks_cert, Test::data_file("x509/x509test/IPAddrBlocksUnsorted.pem").c_str()))) {
+                           (&ip_addr_blocks_cert, Test::data_file("x509/rfc3779/ip_safi.pem").c_str()))) {
             return;
          }
 
@@ -1781,11 +1781,12 @@ class FFI_Cert_ExtRFC3779_Test final : public FFI_Test {
 
          botan_x509_cert_t as_blocks_cert;
          TEST_FFI_OK(botan_x509_cert_load_file,
-                     (&as_blocks_cert, Test::data_file("x509/x509test/ASNumberOnly.pem").c_str()));
+                     (&as_blocks_cert, Test::data_file("x509/rfc3779/as_asnum_only.pem").c_str()));
 
+         // contains asnum 0-999, 5042 and no rdi
          TEST_FFI_OK(botan_x509_ext_as_blocks_get_info, (as_blocks_cert, 1, &present, &count));
          result.test_is_true("AS numbers are present", present == 1);
-         result.test_sz_eq("Correct number of AS ranges are present", count, 1);
+         result.test_sz_eq("Correct number of AS ranges are present", count, 2);
 
          TEST_FFI_RC(
             BOTAN_FFI_ERROR_NO_VALUE, botan_x509_ext_as_blocks_get_info, (as_blocks_cert, 0, &present, &count));
@@ -1795,11 +1796,15 @@ class FFI_Cert_ExtRFC3779_Test final : public FFI_Test {
 
          TEST_FFI_OK(botan_x509_ext_as_blocks_get_entry_at, (as_blocks_cert, 1, 0, &min_as, &max_as));
          result.test_u32_eq("Min AS number is correct", min_as, 0);
-         result.test_u32_eq("Max AS number is correct", max_as, 4294967295);
+         result.test_u32_eq("Max AS number is correct", max_as, 999);
+
+         TEST_FFI_OK(botan_x509_ext_as_blocks_get_entry_at, (as_blocks_cert, 1, 1, &min_as, &max_as));
+         result.test_u32_eq("Min AS number is correct", min_as, 5042);
+         result.test_u32_eq("Max AS number is correct", max_as, 5042);
 
          TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE,
                      botan_x509_ext_as_blocks_get_entry_at,
-                     (as_blocks_cert, 1, 1, &min_as, &max_as));
+                     (as_blocks_cert, 1, 2, &min_as, &max_as));
 
          TEST_FFI_RC(
             BOTAN_FFI_ERROR_NO_VALUE, botan_x509_ext_as_blocks_get_entry_at, (as_blocks_cert, 0, 0, &min_as, &max_as));
