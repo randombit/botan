@@ -6,9 +6,17 @@ Version 3.13.0, Not Yet Released
 
 * Add URI and email name constraint processing to X509 path validation (GH #5598)
 
-* Add ``DNSName``, ``URI``, and ``EmailAddress`` types. (GH #5598 #5601 #5622)
+* Add ``DNSName``, ``URI``, and ``EmailAddress`` types. (GH #5598 #5601 #5622 #5663
+  #5683)
 
 * Add support for the RFC 9608 No Revocation Available extension (GH #5595)
+
+* Add support for parsing EC keys which contain the ECC domain parameters within
+  the key rather than in the algorithm identifier (GH #5532)
+
+* Add support for the PKCS #12 KDF (GH #5478)
+
+* Add support for encoding name constraint extensions (GH #5734)
 
 * Add ``X509_DN::parse`` and improve the parsing and printing of Distinguished
   Name strings, including capturing RDN groupings and escaping control
@@ -21,32 +29,76 @@ Version 3.13.0, Not Yet Released
   seven days old. Previously any age was accepted as long as it preceded the
   response's ``nextUpdate``. (GH #5623)
 
-* Various X509/PKIX hardenings, bug fixes, and additional sanity checks.
-  (GH #5593 #5598 #5605 #5611 #5633 #5637 #5643 #5660)
+* Improve OCSP request and response serialization (GH #5678 #5741)
+
+* Improve handling of the authority and subject key identifier extensions (GH #5735 #5737)
+
+* Properly decode and handle the X509 CRL Distribution Point and Authority Information Access
+  extensions (GH #5712)
+
+* Add an explicit ``X509_Serial_Number`` type (GH #5740)
+
+* Improve CRL decoding and encoding, including support for CRL numbers larger than
+  32 bits (GH #5687 #5694 #5697)
+
+* Various X509/PKIX hardenings, optimizations, bug fixes, and additional sanity checks.
+  (GH #5593 #5598 #5605 #5611 #5633 #5637 #5643 #5660 #5668 #5670 #5682 #5685 #5698)
+
+* Various ASN.1 hardening and decoder strictness improvements (GH #5693 #5703 #5710 #5720)
 
 * Various BigInt and number-theoretic hardening and bug fixes.
-  (GH #5581 #5585 #5586 #5588 #5592 #5650)
+  (GH #5581 #5585 #5586 #5588 #5592 #5650 #5688)
 
-* Add support for the PKCS #12 KDF (GH #5478)
+* Reject RSA signature and ciphertext values which are not exactly the length of
+  the modulus (GH #5592 #5630 #5675)
+
+* Introduce ``PK_Decryptor::ciphertext_length`` (GH #5717)
+
+* Fix several bugs in ISO 9796-2 signature verification, and deprecate the
+  ``iso9796`` module (GH #5680)
+
+* Fix several edge cases in stateful hash-based signatures, including rejecting HSS
+  public keys with L = 0 and detecting ``fork`` in the stateful key index
+  (GH #5662 #5666 #5723)
+
+* Various fixes and improvements for SLH-DSA (GH #5730)
+
+* Various fixes for SM2 signatures and encryption (GH #5713)
+
+* Improve input validation in the McEliece implementations, and avoid using
+  ``bool`` for secret data in Classic McEliece (GH #5667 #5676)
+
+* In Ed25519 verification also reject the non-canonical encoding of the identity
+  element (GH #5731)
 
 * Improve the HTTP 1.0 client used for OCSP and CRL fetching (GH #5609)
 
-* Fix various edge case bugs in AEAD, cipher mode, and stream cipher implementations
-  (GH #5610 #5628 #5659)
+* Extend Blowfish to support keys up to 72 bytes in length (GH #5714)
 
-* Reject RSA signature and ciphertext values which are not exactly the length of
-  the modulus (GH #5592 #5630)
+* Fix various edge case bugs in AEAD, cipher mode, stream cipher, MACs, and KDFs
+  (GH #5610 #5628 #5642 #5659 #5665 #5672 #5674 #5742 #5743)
 
 * Add an AVX-512/GFNI implementation of the Streebog compression function (GH #5655)
 
 * Convert the SM4 key schedule to constant time code, including hwaes variant (GH #5638 #5639)
 
-* Improve cache prefetching in table-based cipher implementations (GH #5642)
+* In the default TLS policy, prefer ECDSA over RSA signatures (GH #5727)
+
+* Add support for the Brainpool ECDH groups in TLS 1.3 as specified in RFC 8734
+  (GH #5691)
+
+* TLS 1.3 handshake hardening and various minor TLS fixes (GH #5664 #5721)
 
 * Improve ``Database`` abstraction type and make it easier to support databases
-  other than SQLite. (GH #5607)
+  other than SQLite, and validate SQL table names. (GH #5607 #5673)
 
 * Fix various bugs in the PKCS #11 wrapper (GH #5602)
+
+* Fix various bugs in the Pipe/Filter library (GH #5724)
+
+* Fix several issues in the compression wrappers (GH #5733)
+
+* Fix several errors in the Python binding (GH #5722)
 
 * Upgrade to TLS-Anvil 1.5 (GH #5630)
 
