@@ -70,7 +70,7 @@ API follows a few simple rules:
 * that declaration is not visible here since this header is intentionally
 * free-standing, depending only on a few C standard library headers.
 */
-#define BOTAN_FFI_API_VERSION 20260506
+#define BOTAN_FFI_API_VERSION 20260811
 
 /**
 * BOTAN_FFI_EXPORT indicates public FFI functions.
@@ -521,6 +521,16 @@ BOTAN_FFI_EXPORT(2, 0) int botan_hash_output_length(botan_hash_t hash, size_t* o
 * @return 0 on success, a negative value on failure
 */
 BOTAN_FFI_EXPORT(2, 2) int botan_hash_block_size(botan_hash_t hash, size_t* block_size);
+
+/**
+* Writes the estimated security level of the hash function, in bits, with
+* respect to collision resistance, to *security_level. Returns zero for
+* checksums and any hash where finding collisions is trivial.
+* @param hash hash object
+* @param security_level output variable to hold the security level
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13) int botan_hash_security_level(botan_hash_t hash, size_t* security_level);
 
 /**
 * Send more input to the hash function

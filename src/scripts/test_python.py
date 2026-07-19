@@ -411,10 +411,15 @@ class BotanPythonTests(unittest.TestCase):
         except botan.BotanException as e:
             self.assertEqual(str(e), "botan_hash_init failed: -40 (Not implemented)")
 
+        sha1 = botan.HashFunction('SHA-1')
+        self.assertEqual(sha1.security_level(), 61)
+
         sha256 = botan.HashFunction('SHA-256')
         self.assertEqual(sha256.algo_name(), 'SHA-256')
         self.assertEqual(sha256.output_length(), 32)
         self.assertEqual(sha256.block_size(), 64)
+        self.assertEqual(sha256.security_level(), 128)
+
         sha256.update('ignore this please')
         sha256.clear()
         sha256.update('a')

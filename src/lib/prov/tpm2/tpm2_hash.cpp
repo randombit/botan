@@ -53,6 +53,16 @@ size_t HashFunction::output_length() const {
    }
 }
 
+size_t HashFunction::security_level() const {
+   if(m_hash_type == TPM2_ALG_SHA1) {
+      // Collision attacks with cost ~2^61 are known (Leurent and Peyrin, 2020)
+      return 61;
+   } else {
+      // Otherwise just call the base class impl
+      return HashFunction::security_level();
+   }
+}
+
 void HashFunction::clear() {
    m_handle._reset();
 }

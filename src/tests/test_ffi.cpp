@@ -2621,6 +2621,11 @@ class FFI_HashFunction_Test final : public FFI_Test {
                result.test_sz_eq("hash block size", block_size, 64);
             }
 
+            size_t security_level;
+            if(TEST_FFI_OK(botan_hash_security_level, (hash, &security_level))) {
+               result.test_sz_eq("hash security level", security_level, 128);
+            }
+
             size_t output_len;
             if(TEST_FFI_OK(botan_hash_output_length, (hash, &output_len))) {
                result.test_sz_eq("hash output length", output_len, 32);

@@ -35,6 +35,7 @@ class BOTAN_TEST_API HashFunction final : public Botan::HashFunction {
 
       std::string name() const override;
       size_t output_length() const override;
+      size_t security_level() const override;
       void clear() override;
 
       /// @throws Not_Implemented as copying state is not supported within the TPM

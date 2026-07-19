@@ -92,6 +92,11 @@ class Hash_Function_Tests final : public Text_Based_Test {
             result.test_str_eq(provider, hash->name(), algo);
             result.test_str_eq(provider, hash->name(), clone->name());
 
+            // A security level beyond the generic birthday attack is nonsensical
+            result.test_sz_lte(provider + " security level is bounded by the birthday attack",
+                               hash->security_level(),
+                               4 * hash->output_length());
+
             for(size_t i = 0; i != 3; ++i) {
                hash->update(input);
                result.test_bin_eq(provider + " hashing", hash->final(), expected);
@@ -288,6 +293,59 @@ class Hash_LongRepeat_Tests final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("hash", "hash_rep", Hash_LongRepeat_Tests);
+
+Test::Result hash_security_level_tests() {
+   Test::Result result("HashFunction security level");
+
+   const std::vector<std::pair<std::string, size_t>> expected_levels = {
+      {"Adler32", 0},
+      {"CRC24", 0},
+      {"CRC32", 0},
+      {"MD4", 0},
+      {"MD5", 0},
+      {"SHA-1", 61},
+      {"SHA-224", 112},
+      {"SHA-256", 128},
+      {"SHA-384", 192},
+      {"SHA-512", 256},
+      {"SHA-512-256", 128},
+      {"SHA-3(224)", 112},
+      {"SHA-3(256)", 128},
+      {"SHA-3(384)", 192},
+      {"SHA-3(512)", 256},
+      {"Keccak-1600(512)", 256},
+      {"SHAKE-128(128)", 64},
+      {"SHAKE-128(256)", 128},
+      {"SHAKE-128(1024)", 128},
+      {"SHAKE-256(256)", 128},
+      {"SHAKE-256(512)", 256},
+      {"SHAKE-256(2048)", 256},
+      {"Ascon-Hash256", 128},
+      {"Blake2b(512)", 256},
+      {"Blake2s(256)", 128},
+      {"GOST-R-34.11-94", 105},
+      {"RIPEMD-160", 80},
+      {"SM3", 128},
+      {"Skein-512(512)", 256},
+      {"Streebog-256", 128},
+      {"Streebog-512", 256},
+      {"Whirlpool", 256},
+      {"Truncated(SHA-256,64)", 32},
+      {"Truncated(SHA-512,300)", 150},
+      {"Parallel(MD5,SHA-256)", 128},
+      {"Comb4P(MD4,MD5)", 0},
+   };
+
+   for(const auto& [name, expected] : expected_levels) {
+      if(auto hash = Botan::HashFunction::create(name)) {
+         result.test_sz_eq(name + " security level", hash->security_level(), expected);
+      }
+   }
+
+   return result;
+}
+
+BOTAN_REGISTER_TEST_FN("hash", "hash_security_level", hash_security_level_tests);
 
    #if defined(BOTAN_HAS_TRUNCATED_HASH) && defined(BOTAN_HAS_SHA2_32)
 

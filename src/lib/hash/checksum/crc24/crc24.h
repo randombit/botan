@@ -24,6 +24,8 @@ class CRC24 final : public HashFunction {
 
       size_t output_length() const override { return 3; }
 
+      size_t security_level() const override { return 0; }
+
       std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<CRC24>(); }
 
       std::unique_ptr<HashFunction> copy_state() const override;
