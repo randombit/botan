@@ -1,0 +1,20 @@
+<internal_defines>
+BASE64_AVX512 -> 20260720
+</internal_defines>
+
+<module_info>
+name -> "Base64 AVX-512"
+brief -> "Base64 using AVX-512"
+</module_info>
+
+<requires>
+cpuid
+</requires>
+
+<isa>
+avx512
+</isa>
+
+<header:internal>
+base64_avx512.h
+</header:internal>

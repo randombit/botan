@@ -66,6 +66,7 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
       CLMUL = (1ULL << 33),
       SSSE3 = (1ULL << 41),
       SSE41 = (1ULL << 51),
+      POPCNT = (1ULL << 55),
       AESNI = (1ULL << 57),
       // AVX + OSXSAVE
       OSXSAVE = (1ULL << 59) | (1ULL << 60),
@@ -137,6 +138,8 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
       feat |= if_set(flags0, x86_CPUID_1_bits::RDTSC, CPUFeature::Bit::RDTSC, allowed);
 
       feat |= if_set(flags0, x86_CPUID_1_bits::RDRAND, CPUFeature::Bit::RDRAND, allowed);
+
+      feat |= if_set(flags0, x86_CPUID_1_bits::POPCNT, CPUFeature::Bit::POPCNT, allowed);
 
       feat |= if_set(flags0, x86_CPUID_1_bits::SSE2, CPUFeature::Bit::SSE2, allowed);
 

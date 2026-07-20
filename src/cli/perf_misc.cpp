@@ -121,13 +121,16 @@ class PerfTest_Base64 final : public PerfTest {
 
             const auto msec = config.runtime();
 
-            while(enc_timer->under(msec) && dec_timer->under(msec)) {
-               config.rng().randomize(ibuf);
+            config.rng().randomize(ibuf);
 
-               std::string b64 = enc_timer->run([&]() { return Botan::base64_encode(ibuf); });
+            // Check the roundtrip once, outside of the timed loop
+            Botan::base64_decode(rbuf.data(), Botan::base64_encode(ibuf));
+            BOTAN_ASSERT(rbuf == ibuf, "Encode/decode round trip ok");
+
+            while(enc_timer->under(msec) && dec_timer->under(msec)) {
+               const std::string b64 = enc_timer->run([&]() { return Botan::base64_encode(ibuf); });
 
                dec_timer->run([&]() { Botan::base64_decode(rbuf.data(), b64); });
-               BOTAN_ASSERT(rbuf == ibuf, "Encode/decode round trip ok");
             }
 
             config.record_result(*enc_timer);
