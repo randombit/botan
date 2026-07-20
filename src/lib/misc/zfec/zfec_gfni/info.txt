@@ -1,0 +1,17 @@
+<internal_defines>
+ZFEC_GFNI -> 20260719
+</internal_defines>
+
+<module_info>
+name -> "ZFEC AVX-512/GFNI"
+brief -> "ZFEC using AVX-512 and GFNI"
+</module_info>
+
+<requires>
+cpuid
+</requires>
+
+<isa>
+gfni
+avx512
+</isa>

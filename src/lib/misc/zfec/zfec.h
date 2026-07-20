@@ -72,8 +72,16 @@ class BOTAN_PUBLIC_API(3, 0) ZFEC final {
    private:
       static void addmul(uint8_t z[], const uint8_t x[], uint8_t y, size_t size);
 
+      static void linear_combination(uint8_t z[], const uint8_t* const x[], const uint8_t y[], size_t k, size_t size);
+
 #if defined(BOTAN_HAS_ZFEC_VPERM)
-      static size_t addmul_vperm(uint8_t z[], const uint8_t x[], uint8_t y, size_t size);
+      static size_t linear_combination_vperm(
+         uint8_t z[], const uint8_t* const x[], const uint8_t y[], size_t k, size_t size);
+#endif
+
+#if defined(BOTAN_HAS_ZFEC_GFNI)
+      static void linear_combination_gfni(
+         uint8_t z[], const uint8_t* const x[], const uint8_t y[], size_t k, size_t size);
 #endif
 
       const size_t m_K, m_N;
