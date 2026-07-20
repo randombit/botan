@@ -64,6 +64,15 @@ class BOTAN_PUBLIC_API(2, 0) HashFunction : public Buffered_Computation {
       virtual size_t hash_block_size() const { return 0; }
 
       /**
+      * Return an estimate, in bits, of the security level of this hash
+      * function, with respect to collision resistance. For most hashes this is
+      * simply half the output length, matching the generic birthday attack.
+      * It is lower for hash functions with a known collision attack, and zero
+      * for checksums and any hash where finding collisions is trivial.
+      */
+      virtual size_t security_level() const { return 4 * output_length(); }
+
+      /**
       * Return a new hash object with the same state as *this. This
       * allows computing the hash of several messages with a common
       * prefix more efficiently than would otherwise be possible.

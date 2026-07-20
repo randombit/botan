@@ -47,6 +47,15 @@ class CommonCrypto_HashFunction final : public HashFunction {
 
       size_t output_length() const override { return m_info.digestLength; }
 
+      size_t security_level() const override {
+         if(m_info.name == "SHA-1") {
+            // Collision attacks with cost ~2^61 are known (Leurent and Peyrin, 2020)
+            return 61;
+         } else {
+            return HashFunction::security_level();
+         }
+      }
+
       size_t hash_block_size() const override { return m_info.blockSize; }
 
       CommonCrypto_HashFunction(const digest_config_t& info) : m_info(info) { clear(); }

@@ -259,6 +259,7 @@ supported it.
 ============== ===================
 FFI Version    Supported Starting
 ============== ===================
+20260811       3.13.0
 20260506       3.12.0
 20260303       3.11.0
 20250829       3.10.0
@@ -489,6 +490,12 @@ Hash Functions
 .. cpp:function:: int botan_hash_output_length(botan_hash_t hash, size_t* output_length)
 
    Return the output length of the hash function.
+
+.. cpp:function:: int botan_hash_security_level(botan_hash_t hash, size_t* security_level)
+
+   Return the estimated security level of the hash function, in bits, with
+   respect to collision resistance. Returns zero for checksums and any hash
+   where finding collisions is trivial.
 
 .. cpp:function:: int botan_hash_update(botan_hash_t hash, const uint8_t* input, size_t len)
 

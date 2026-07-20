@@ -29,6 +29,8 @@ class Truncated_Hash final : public HashFunction {
 
       size_t output_length() const override;
 
+      size_t security_level() const override;
+
       /**
       * @param hash   the underlying hash function whose output shall be truncated
       * @param length the number of bits the hash shall be truncated to

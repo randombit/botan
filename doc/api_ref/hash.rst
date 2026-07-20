@@ -36,6 +36,14 @@ internal state is reset to begin hashing a new message.
 
     Return the size (in *bytes*) of the output of this function.
 
+  .. cpp:function:: size_t security_level()
+
+    Return an estimate, in bits, of the security level of this hash function,
+    with respect to collision resistance. For most hashes this is simply half
+    the output length, matching the generic birthday attack. It is lower for
+    hash functions with a known collision attack, and zero for checksums and
+    any hash where finding collisions is trivial.
+
   .. cpp:function:: void update(const uint8_t* input, size_t length)
 
     Updates the computation with *input*.

@@ -25,6 +25,8 @@ class Parallel final : public HashFunction {
 
       size_t output_length() const override;
 
+      size_t security_level() const override;
+
       /**
       * @param hashes a set of hashes to compute in parallel
       * Takes ownership of all pointers

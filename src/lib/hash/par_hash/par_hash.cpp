@@ -9,6 +9,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/buffer_stuffer.h>
+#include <algorithm>
 #include <sstream>
 
 namespace Botan {
@@ -33,6 +34,16 @@ size_t Parallel::output_length() const {
       sum += hash->output_length();
    }
    return sum;
+}
+
+size_t Parallel::security_level() const {
+   // Joux multicollisions show a concatenation is barely stronger than its strongest hash
+   size_t level = 0;
+
+   for(auto&& hash : m_hashes) {
+      level = std::max(level, hash->security_level());
+   }
+   return level;
 }
 
 std::string Parallel::name() const {

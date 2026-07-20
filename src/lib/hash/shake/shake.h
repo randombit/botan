@@ -11,6 +11,7 @@
 #include <botan/hash.h>
 #include <botan/internal/keccak_perm.h>
 
+#include <algorithm>
 #include <string>
 
 namespace Botan {
@@ -29,6 +30,8 @@ class SHAKE_128 final : public HashFunction {
       size_t hash_block_size() const override { return m_keccak.byte_rate(); }
 
       size_t output_length() const override { return m_output_bits / 8; }
+
+      size_t security_level() const override { return std::min<size_t>(m_output_bits / 2, 128); }
 
       std::unique_ptr<HashFunction> new_object() const override;
       std::unique_ptr<HashFunction> copy_state() const override;
@@ -60,6 +63,8 @@ class SHAKE_256 final : public HashFunction {
       size_t hash_block_size() const override { return m_keccak.byte_rate(); }
 
       size_t output_length() const override { return m_output_bits / 8; }
+
+      size_t security_level() const override { return std::min<size_t>(m_output_bits / 2, 256); }
 
       std::unique_ptr<HashFunction> new_object() const override;
       std::unique_ptr<HashFunction> copy_state() const override;

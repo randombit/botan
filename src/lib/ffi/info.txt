@@ -4,7 +4,7 @@
 # - botan_ffi_supports_api in ffi.cpp
 # - The table of versions in ffi.rst
 # - BOTAN_FFI_VERSION in botan3.py
-FFI -> 20260506
+FFI -> 20260811
 </defines>
 
 <module_info>

@@ -53,6 +53,11 @@ std::string Comb4P::name() const {
    return fmt("Comb4P({},{})", m_hash1->name(), m_hash2->name());
 }
 
+size_t Comb4P::security_level() const {
+   // Comb4P is collision resistant as long as either hash is
+   return std::max(m_hash1->security_level(), m_hash2->security_level());
+}
+
 std::unique_ptr<HashFunction> Comb4P::new_object() const {
    return std::make_unique<Comb4P>(m_hash1->new_object(), m_hash2->new_object());
 }

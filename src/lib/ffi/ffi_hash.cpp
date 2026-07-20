@@ -52,6 +52,13 @@ int botan_hash_block_size(botan_hash_t hash, size_t* out) {
    return BOTAN_FFI_VISIT(hash, [=](const auto& h) { *out = h.hash_block_size(); });
 }
 
+int botan_hash_security_level(botan_hash_t hash, size_t* out) {
+   if(out == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   return BOTAN_FFI_VISIT(hash, [=](const auto& h) { *out = h.security_level(); });
+}
+
 int botan_hash_clear(botan_hash_t hash) {
    return BOTAN_FFI_VISIT(hash, [](auto& h) { h.clear(); });
 }

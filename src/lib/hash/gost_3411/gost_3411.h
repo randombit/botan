@@ -25,6 +25,13 @@ class GOST_34_11 final : public HashFunction {
 
       size_t hash_block_size() const override { return 32; }
 
+      /*
+      A collision attack with cost ~2^105 is known, described in
+      "Cryptanalysis of the GOST Hash Function"
+      Mendel, Pramstaller, Rechberger1, Kontak, and Szmidt
+      */
+      size_t security_level() const override { return 105; }
+
       std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<GOST_34_11>(); }
 
       std::unique_ptr<HashFunction> copy_state() const override;

@@ -35,6 +35,8 @@ class MD4 final : public HashFunction {
 
       size_t hash_block_size() const override { return block_bytes; }
 
+      size_t security_level() const override { return 0; }
+
       std::unique_ptr<HashFunction> new_object() const override;
 
       std::unique_ptr<HashFunction> copy_state() const override;

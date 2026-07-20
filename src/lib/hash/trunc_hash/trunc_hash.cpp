@@ -12,6 +12,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <algorithm>
 
 namespace Botan {
 
@@ -38,6 +39,10 @@ void Truncated_Hash::final_result(std::span<uint8_t> out) {
 
 size_t Truncated_Hash::output_length() const {
    return (m_output_bits + 7) / 8;
+}
+
+size_t Truncated_Hash::security_level() const {
+   return std::min(m_output_bits / 2, m_hash->security_level());
 }
 
 std::string Truncated_Hash::name() const {
