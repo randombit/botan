@@ -300,17 +300,36 @@ Poly1305
 ----------------------
 
 The Poly1305 implementation does not have any secret lookups or conditionals.
-The code is based on the public domain version by Andrew Moon.
+The baseline code is based on the public domain version by Andrew Moon. There
+are also AVX2 and AVX-512 variants, also constant time.
 
 DES/3DES
 ----------------------
 
-The DES implementation relies on table lookups but they are limited to
-tables which are exactly 64 bytes in size. On systems with 64 byte (or
-larger) cache lines, these should not leak information. It may still
-be vulnerable to side channels on processors which leak cache line
-access offsets via cache bank conflicts; vulnerable hardware includes
-Sandy Bridge processors, but not later Intel or AMD CPUs.
+The DES implementation uses a classic 32-wide bitsliced implementation,
+which is completely constant time as there are no table lookups; instead
+the sboxes are executed directly as circuits.
+
+SM4
+------------------------
+
+The baseline implementation of SM4 uses table lookups, and is consequently
+vulnerable to cache based side channels. There are also constant time
+implementations of SM4 making use of AES hardware instructions, or GFNI where
+available. The dedicated SM4 instructions available on recent x86-64 and Aarch64
+processors are used when available.
+
+ARIA/Camellia/SEED
+------------------------
+
+The baseline implementations of these ciphers all use table lookups. These
+ciphers have multiple implementation approaches, which often make use of
+relatively large (multi kilobyte) tables. The library prefers to instead use the
+smallest possible representation (eg SEED uses just a pair of 256 byte tables)
+to avoid increasing the cache side channel signature.
+
+There are also implementation using hardware AES instructions and AVX-512/GFNI
+which are used whenever available. These implementations are constant time.
 
 Twofish
 ------------------------
@@ -330,15 +349,22 @@ IDEA
 ---------------
 
 IDEA encryption, decryption, and key schedule are implemented to take constant
-time regardless of their inputs.
+time regardless of their inputs. In particular the multiplication modulo 65537
+uses masked operations so as to not leak the value of subkeys to side channels,
+and the modular inversion in the key schedule uses FLT rather than a Euclidean
+algorithm.
 
 Hash Functions
 -------------------------
 
 Most hash functions included in Botan such as MD5, SHA-1, SHA-2, SHA-3, Skein,
 and BLAKE2 do not require any input-dependent memory lookups, and so seem to not be
-affected by common CPU side channels. However the implementations of Whirlpool
-and Streebog use table lookups and probably can be attacked by side channels.
+affected by common CPU side channels.
+
+The baseline implementations of Whirlpool and Streebog use table lookups and
+probably can be attacked by side channels. For systems supporting AVX2 and
+AVX-512 there are additional constant time implementations of the Whirlpool and
+Streebog compression functions.
 
 Memory comparisons
 ----------------------
