@@ -28,6 +28,7 @@
    #include <botan/tls_server.h>
    #include <botan/tls_session_manager_memory.h>
    #include <botan/tls_session_manager_noop.h>
+   #include <botan/internal/stl_util.h>
    #include <botan/internal/tls_reader.h>
 
    #include <botan/ec_group.h>
@@ -184,7 +185,10 @@ std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenera
                                                        bool with_client_certs = false) {
    // RSA and ECDSA are required for the TLS module, but we need to find an
    // ECC group that is supported in this build or skip this test.
-   const auto ec_group = Test::supported_ec_group_name({"secp256r1", "secp384r1", "secp521r1"});
+   //
+   // secp256r1 is excluded because the Strict_Policy requires at least SHA-384
+   // and TLS 1.3 enforces that hash lengths match the key strength.
+   const auto ec_group = Test::supported_ec_group_name({"secp384r1", "secp521r1"});
    if(!ec_group) {
       return nullptr;
    }
@@ -405,29 +409,62 @@ class TLS_Handshake_Test final {
 
             void tls_modify_extensions(Botan::TLS::Extensions& extn,
                                        Botan::TLS::Connection_Side which_side,
-                                       Botan::TLS::Handshake_Type /* unused */) override {
-               extn.add(new Test_Extension(which_side));  // NOLINT(*-owning-memory)
+                                       Botan::TLS::Handshake_Type msg_type) override {
+               // We don't alter any TLS 1.3 ServerHellos (including the special
+               // HelloRetryRequest), as Botan explicitly rejects any custom
+               // extensions in those messages. Even though RFC 9846 doesn't
+               // explicitly forbid them.
+               if(m_expected_version.is_tls_13_or_later() &&
+                  (msg_type == Botan::TLS::Handshake_Type::HelloRetryRequest ||
+                   msg_type == Botan::TLS::Handshake_Type::ServerHello)) {
+                  return;
+               }
+
+               // When updating a previously-sent ClientHello after having received
+               // a HelloRetryRequest, we don't want to re-add the test extension.
+               if(!extn.has<Test_Extension>()) {
+                  extn.add(new Test_Extension(which_side));  // NOLINT(*-owning-memory)
+               }
 
                // Insert an unsupported signature scheme as highest prio, to ensure we are tolerant of this
                if(auto* sig_algs = extn.get<Botan::TLS::Signature_Algorithms>()) {
                   std::vector<Botan::TLS::Signature_Scheme> schemes = sig_algs->supported_schemes();
                   // 0x0301 is RSA PKCS1/SHA-224, which is not supported anymore
-                  schemes.insert(schemes.begin(), 0x0301);
-                  // This replaces the previous extension value
-                  extn.remove_extension(Botan::TLS::Extension_Code::SignatureAlgorithms);
-                  extn.add(new Botan::TLS::Signature_Algorithms(schemes));  // NOLINT(*-owning-memory)
+                  // NOLINTNEXTLINE(*.EnumCastOutOfRange)
+                  constexpr auto unsupported_sig_scheme = Botan::TLS::Signature_Scheme::Code(0x0301);
+
+                  // Don't inadvertently add the unsupported signature scheme
+                  // multiple times, e.g. when updating a ClientHello after
+                  // receiving a HelloRetryRequest.
+                  if(!Botan::value_exists(schemes, unsupported_sig_scheme)) {
+                     schemes.insert(schemes.begin(), unsupported_sig_scheme);
+
+                     // This replaces the previous extension value
+                     extn.remove_extension(Botan::TLS::Extension_Code::SignatureAlgorithms);
+                     extn.add(new Botan::TLS::Signature_Algorithms(schemes));  // NOLINT(*-owning-memory)
+                  }
                }
+
+               // In TLS 1.3 ClientHellos the PSK extension must always be the
+               // very last extension.
+               extn.reorder(std::array{Botan::TLS::Extension_Code::PresharedKey});
             }
 
             void tls_examine_extensions(const Botan::TLS::Extensions& extn,
                                         Botan::TLS::Connection_Side which_side,
-                                        Botan::TLS::Handshake_Type /*unused*/) override {
+                                        Botan::TLS::Handshake_Type msg_type) override {
                // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
                const auto extn_id = static_cast<Botan::TLS::Extension_Code>(666);
                Botan::TLS::Extension* test_extn = extn.get(extn_id);
 
                if(test_extn == nullptr) {
-                  m_results.test_failure("Did not receive test extension from peer");
+                  // The test extension won't be added to any TLS 1.3 ServerHello
+                  // or HelloRetryRequest messages, so we don't expect it.
+                  if(!m_expected_version.is_tls_13_or_later() ||
+                     (msg_type != Botan::TLS::Handshake_Type::HelloRetryRequest &&
+                      msg_type != Botan::TLS::Handshake_Type::ServerHello)) {
+                     m_results.test_failure("Did not receive test extension from peer");
+                  }
                } else {
                   Botan::TLS::Unknown_Extension* unknown_ext = dynamic_cast<Botan::TLS::Unknown_Extension*>(test_extn);
 
@@ -480,10 +517,16 @@ class TLS_Handshake_Test final {
             std::unique_ptr<Botan::PK_Key_Agreement_Key> tls_generate_ephemeral_key(
                const std::variant<Botan::TLS::Group_Params, Botan::DL_Group>& group,
                Botan::RandomNumberGenerator& rng) override {
-               if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
-                  std::get<Botan::TLS::Group_Params>(group).wire_code() == 0xFEE1) {
+               const bool is_group = std::holds_alternative<Botan::TLS::Group_Params>(group);
+
+               if(is_group && std::get<Botan::TLS::Group_Params>(group).wire_code() == 0xFEE1) {
                   const auto ec_group = Botan::EC_Group::from_name("numsp256d1");
                   return std::make_unique<Botan::ECDH_PrivateKey>(rng, ec_group);
+               }
+
+               if(is_group && m_generate_ephemeral_ecdh_key_callback) {
+                  return m_generate_ephemeral_ecdh_key_callback(
+                     std::get<Botan::TLS::Group_Params>(group), rng, Botan::EC_Point_Format::Uncompressed);
                }
 
                return Botan::TLS::Callbacks::tls_generate_ephemeral_key(group, rng);
@@ -644,7 +687,10 @@ void TLS_Handshake_Test::go() {
             client->send(&client_msg[sent_so_far], sending);
             sent_so_far += sending;
          }
-         client->send_warning_alert(Botan::TLS::Alert::NoRenegotiation);
+
+         if(m_client_cb->summary()->version().is_pre_tls_13()) {
+            client->send_warning_alert(Botan::TLS::Alert::NoRenegotiation);
+         }
          client_has_written = true;
       }
 
@@ -661,7 +707,9 @@ void TLS_Handshake_Test::go() {
             sent_so_far += sending;
          }
 
-         m_server->send_warning_alert(Botan::TLS::Alert::NoRenegotiation);
+         if(m_server_cb->summary()->version().is_pre_tls_13()) {
+            m_server->send_warning_alert(Botan::TLS::Alert::NoRenegotiation);
+         }
          server_has_written = true;
       }
 
@@ -867,6 +915,10 @@ class TLS_Unit_Tests final : public Test {
          return {
    #if defined(BOTAN_HAS_TLS_12)
             Botan::TLS::Protocol_Version::TLS_V12, Botan::TLS::Protocol_Version::DTLS_V12,
+   #endif
+
+   #if defined(BOTAN_HAS_TLS_13)
+               Botan::TLS::Protocol_Version::TLS_V13,
    #endif
          };
       }
