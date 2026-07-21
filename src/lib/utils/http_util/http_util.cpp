@@ -171,7 +171,7 @@ void check_no_crlf_nul(std::string_view field, std::string_view value) {
 * relative, dot-segments) are rejected.
 */
 std::optional<URI> resolve_location(const URI& base, std::string_view location) {
-   if(auto absolute = URI::parse(location)) {
+   if(auto absolute = URI::from_string(location)) {
       return absolute;
    }
    if(location.starts_with("/") && !location.starts_with("//")) {
@@ -180,7 +180,7 @@ std::optional<URI> resolve_location(const URI& base, std::string_view location) 
          return std::nullopt;
       }
       const std::string composed = base.scheme() + "://" + std::string(*raw_authority) + std::string(location);
-      return URI::parse(composed);
+      return URI::from_string(composed);
    }
    return std::nullopt;
 }

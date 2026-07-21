@@ -265,7 +265,7 @@ class Name_Constraint_Factory_Validation_Tests final : public Test {
          check_valid(result, "URI SAN", m, "HTTPS://Example.COM/", "HTTPS://Example.COM/");
          check_valid(result, "URI SAN", m, "https://localhost/", "https://localhost/");
          check_valid(result, "URI SAN", m, "mailto:root@example.com", "mailto:root@example.com");
-         // Inputs URI::parse rejects (RFC 3986 syntax violations,
+         // Inputs URI::from_string rejects (RFC 3986 syntax violations,
          // constraint-shape values that aren't URIs).
          for(const auto& bad : {"",
                                 "example.com",

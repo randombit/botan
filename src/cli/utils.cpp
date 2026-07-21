@@ -314,7 +314,7 @@ class HTTP_Get final : public Command {
          const std::chrono::milliseconds timeout(get_arg_sz("timeout"));
          const size_t redirects = get_arg_sz("redirects");
 
-         auto uri = Botan::URI::parse(url);
+         auto uri = Botan::URI::from_string(url);
          if(!uri) {
             throw CLI_Usage_Error("Could not parse URL '" + url + "'");
          }

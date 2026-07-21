@@ -418,7 +418,7 @@ std::unique_ptr<OS::SocketUDP> OS::open_socket_udp(std::string_view hostname,
 }
 
 std::unique_ptr<OS::SocketUDP> OS::open_socket_udp(std::string_view uri_string, std::chrono::microseconds timeout) {
-   const auto authority = URI::Authority::parse(uri_string);
+   const auto authority = URI::Authority::from_string(uri_string);
    if(!authority.has_value() || !authority->port().has_value()) {
       throw Invalid_Argument("UDP port not specified");
    }

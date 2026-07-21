@@ -48,7 +48,7 @@ class BOTAN_PUBLIC_API(3, 13) URI final {
             * Parse a bare authority "host[:port]" or "[ipv6][:port]".
             * Returns nullopt for any parse failure.
             */
-            static std::optional<Authority> parse(std::string_view raw);
+            static std::optional<Authority> from_string(std::string_view raw);
 
             /**
             * Parsed host: a DNS name, an IPv4 literal, or an IPv6 literal.
@@ -106,7 +106,7 @@ class BOTAN_PUBLIC_API(3, 13) URI final {
       /**
       * Parse a URI, return nullopt on failure
       */
-      static std::optional<URI> parse(std::string_view raw);
+      static std::optional<URI> from_string(std::string_view raw);
 
       /**
       * Return the scheme, lowercase normalized

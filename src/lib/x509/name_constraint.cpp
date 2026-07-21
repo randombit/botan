@@ -89,7 +89,7 @@ std::optional<GeneralName::URIConstraint> GeneralName::URIConstraint::from_strin
 }
 
 std::optional<GeneralName::URIConstraint> GeneralName::URIConstraint::from_san_value(std::string_view full_uri) {
-   if(URI::parse(full_uri).has_value()) {
+   if(URI::from_string(full_uri).has_value()) {
       return URIConstraint(std::string(full_uri));
    } else {
       return std::nullopt;
