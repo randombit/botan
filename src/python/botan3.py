@@ -1660,6 +1660,24 @@ class PublicKey: # pylint: disable=invalid-name
         _DLL.botan_pubkey_load_classic_mceliece(byref(pub.handle_()), key, len(key), _ctype_str(cmce_mode))
         return pub
 
+    @classmethod
+    def load_x25519(cls, key: bytes) -> PublicKey:
+        """Return a public X25519 key from 32 raw bytes"""
+        if len(key) != 32:
+            raise BotanException("Invalid input length to load_x25519")
+        pub = PublicKey()
+        _DLL.botan_pubkey_load_x25519(byref(pub.handle_()), key)
+        return pub
+
+    @classmethod
+    def load_x448(cls, key: bytes) -> PublicKey:
+        """Return a public X448 key from 56 raw bytes"""
+        if len(key) != 56:
+            raise BotanException("Invalid input length to load_x448")
+        pub = PublicKey()
+        _DLL.botan_pubkey_load_x448(byref(pub.handle_()), key)
+        return pub
+
     def __del__(self):
         _DLL.botan_pubkey_destroy(self.__obj)
 
