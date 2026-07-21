@@ -76,8 +76,14 @@
       #define BOTAN_DEPRECATED_HEADER(hdr) _Pragma("message \"this header is deprecated\"")
       #define BOTAN_FUTURE_INTERNAL_HEADER(hdr) _Pragma("message \"this header will be made internal in the future\"")
    #elif defined(_MSC_VER)
-      #define BOTAN_DEPRECATED_HEADER(hdr) __pragma(message("this header is deprecated"))
-      #define BOTAN_FUTURE_INTERNAL_HEADER(hdr) __pragma(message("this header will be made internal in the future"))
+      #if !defined(BOTAN_STRINGIFY) && !defined(BOTAN_STRINGIFY_2)
+         #define BOTAN_STRINGIFY_2(x) #x
+         #define BOTAN_STRINGIFY(x) BOTAN_STRINGIFY_2(x)
+      #endif
+      #define BOTAN_DEPRECATED_HEADER(hdr) \
+         __pragma(message(__FILE__ "(" BOTAN_STRINGIFY(__LINE__) "): this header is deprecated"))
+      #define BOTAN_FUTURE_INTERNAL_HEADER(hdr) \
+         __pragma(message(__FILE__ "(" BOTAN_STRINGIFY(__LINE__) "): this header will be made internal in the future"))
    #elif defined(__GNUC__)
       #define BOTAN_DEPRECATED_HEADER(hdr) _Pragma("GCC warning \"this header is deprecated\"")
       #define BOTAN_FUTURE_INTERNAL_HEADER(hdr) \
