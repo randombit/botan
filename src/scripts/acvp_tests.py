@@ -176,8 +176,12 @@ def _process_directory(args: tuple[str, str, int]) -> _FileResult:
     header = {k: v for k, v in prompt.items() if k != "testGroups"}
 
     expected_by_tg: dict[int, dict[int, dict]] = {}
+    expected_group_by_tg: dict[int, dict] = {}
     for eg in expected.get("testGroups", []):
         expected_by_tg[eg["tgId"]] = {t["tcId"]: t for t in eg.get("tests", [])}
+        expected_group_by_tg[eg["tgId"]] = {
+            k: v for k, v in eg.items() if k != "tests"
+        }
 
     result = _FileResult(algo_name, "claimed")
     out = io.StringIO()
@@ -188,6 +192,9 @@ def _process_directory(args: tuple[str, str, int]) -> _FileResult:
     for group in prompt.get("testGroups", []):
         tg_id = group["tgId"]
         expected_tests = expected_by_tg.get(tg_id, {})
+        # Group-level fields of expectedResults (eg a reference public key)
+        # are reachable via _group_state(group, "expected_group")
+        _set_group_state(group, "expected_group", expected_group_by_tg.get(tg_id, {}))
 
         for test in group.get("tests", []):
             tc_id = test.get("tcId", "?")
@@ -2319,7 +2326,7 @@ def _wrap_lms_spki(lms_pub: bytes) -> bytes:
     return _der_seq(alg_id + bit_string)
 
 
-@register("LMS-sigVer-1.0")
+@register("LMS-sigVer-1.0", "LMS-sigVer-SP800-208")
 def handle_lms_sigver(_header: dict, group: dict, test: dict, exp: dict) -> None:
     _require_aft(group)
 
@@ -2352,6 +2359,40 @@ def handle_lms_sigver(_header: dict, group: dict, test: dict, exp: dict) -> None
                 "Msg": test["message"][:80] + "...",
                 "Expected": "valid" if expected_valid else "invalid",
                 "Got": "valid" if valid else "invalid",
+            }
+        )
+
+
+@register("LMS-sigGen-1.0", "LMS-sigGen-SP800-208")
+def handle_lms_siggen(_header: dict, group: dict, test: dict, exp: dict) -> None:
+    _require_aft(group)
+
+    # The reference signer's private key is not in the vector data, so
+    # signing cannot be reproduced offline. Instead verify the reference
+    # signatures from expectedResults against its group-level public key.
+    pub = _group_state(group, "pub")
+    if pub is None:
+        exp_group = _group_state(group, "expected_group") or {}
+        if "publicKey" not in exp_group:
+            raise TestSkip("LMS sigGen reference public key not present")
+        try:
+            pub = botan.PublicKey.load(_wrap_lms_spki(_from_hex(exp_group["publicKey"])))
+        except botan.BotanException as e:
+            raise TestSkip(f"HSS-LMS pubkey load failed: {e}") from e
+        _set_group_state(group, "pub", pub)
+
+    # Same Nspk=0 HSS wrapper as in handle_lms_sigver
+    sig = b"\x00\x00\x00\x00" + _from_hex(exp["signature"])
+    verifier = botan.PKVerify(pub, "")
+    verifier.update(_from_hex(test["message"]))
+    if not verifier.check_signature(sig):
+        raise TestFailure(
+            {
+                "LmsMode": group.get("lmsMode"),
+                "LmOtsMode": group.get("lmOtsMode"),
+                "Msg": test["message"][:80] + "...",
+                "Expected": "valid",
+                "Got": "invalid",
             }
         )
 
@@ -2490,7 +2531,7 @@ def handle_mlkem_keygen(_header: dict, group: dict, test: dict, exp: dict) -> No
     # expects the expanded dk.
 
 
-@register("ML-KEM-encapDecap-FIPS203")
+@register("ML-KEM-encapDecap-FIPS203", "ML-KEM-encapDecap-FIPS203-tr1")
 def handle_mlkem_encapdecap(_header: dict, group: dict, test: dict, exp: dict) -> None:
     test_type = group.get("testType", "AFT")
     param_set = group["parameterSet"]
@@ -2517,7 +2558,11 @@ def handle_mlkem_encapdecap(_header: dict, group: dict, test: dict, exp: dict) -
         return
 
     if function == "decapsulation" and test_type == "VAL":
-        dk = _from_hex(test["dk"])
+        # keyFormat "expanded" groups carry dk; "seed" groups carry d and z
+        if "dk" in test:
+            dk = _from_hex(test["dk"])
+        else:
+            dk = _from_hex(test["d"]) + _from_hex(test["z"])
         c = _from_hex(test["c"])
         priv = botan.PrivateKey.load_ml_kem(param_set, dk)
         kem_d = botan.KemDecrypt(priv, "Raw")
@@ -2533,6 +2578,11 @@ def handle_mlkem_encapdecap(_header: dict, group: dict, test: dict, exp: dict) -
         function in ("encapsulationKeyCheck", "decapsulationKeyCheck")
         and test_type == "VAL"
     ):
+        if function == "decapsulationKeyCheck" and "dk" not in test:
+            # ACVP-Server (as of v1.1.0.43) omits dk from the prompt for
+            # these groups (keyFormat "none" matches neither the seed nor
+            # the expanded serialization path); the tests cannot be run
+            raise TestSkip("decapsulationKeyCheck dk missing from prompt data")
         expected_pass = exp.get("testPassed", True)
         try:
             if function == "encapsulationKeyCheck":
@@ -2582,7 +2632,7 @@ def handle_mldsa_keygen(_header: dict, group: dict, test: dict, exp: dict) -> No
     # sk comparison skipped: priv.to_raw() is seed form.
 
 
-@register("ML-DSA-sigGen-FIPS204")
+@register("ML-DSA-sigGen-FIPS204", "ML-DSA-sigGen-FIPS204-tr1")
 def handle_mldsa_siggen(_header: dict, group: dict, test: dict, exp: dict) -> None:
     _require_aft(group)
 
@@ -2600,7 +2650,9 @@ def handle_mldsa_siggen(_header: dict, group: dict, test: dict, exp: dict) -> No
     if test.get("context", ""):
         raise TestSkip("ML-DSA context not supported")
 
-    sk = _from_hex(test["sk"])
+    # FIPS204-tr1 keyFormat "seed" groups carry the 32-byte seed;
+    # keyFormat "expanded" groups (and all FIPS204 tests) carry sk
+    sk = _from_hex(test["seed"]) if "seed" in test else _from_hex(test["sk"])
     msg = _from_hex(test["message"])
 
     try:
@@ -2778,7 +2830,7 @@ def handle_slhdsa_siggen(_header: dict, group: dict, test: dict, exp: dict) -> N
 # ---- HMAC_DRBG ----
 
 
-@register("hmacDRBG-1.0")
+@register("hmacDRBG-1.0", "hmacDRBG-SP800-90Ar1")
 def handle_hmac_drbg(_header: dict, group: dict, test: dict, exp: dict) -> None:
     _require_aft(group)
 
@@ -2817,6 +2869,65 @@ def handle_hmac_drbg(_header: dict, group: dict, test: dict, exp: dict) -> None:
                 "Mode": group["mode"],
                 "ReturnedBits": exp["returnedBits"],
                 "ComputedBits": out.hex(),
+            }
+        )
+
+
+# ---- XECDH (RFC 7748) ----
+
+
+@register("XECDH-keyGen-RFC7748")
+def handle_xecdh_keygen(_header: dict, group: dict, _test: dict, exp: dict) -> None:
+    _require_aft(group)
+
+    # Key generation is randomized, so instead load the reference private
+    # key from expectedResults and check we derive the same public key
+    curve = group["curve"]
+    priv_bytes = _from_hex(exp["privateKey"])
+    if curve == "Curve25519":
+        priv = botan.PrivateKey.load_x25519(priv_bytes)
+    elif curve == "Curve448":
+        priv = botan.PrivateKey.load_x448(priv_bytes)
+    else:
+        raise TestSkip(f"Unsupported curve: {curve}")
+
+    pub = priv.get_public_key().to_raw()
+    if pub.hex() != exp["publicKey"].lower():
+        raise TestFailure(
+            {
+                "Curve": curve,
+                "PublicKey": exp["publicKey"],
+                "ComputedPublicKey": pub.hex(),
+            }
+        )
+
+
+@register("XECDH-keyVer-RFC7748")
+def handle_xecdh_keyver(_header: dict, group: dict, test: dict, exp: dict) -> None:
+    _require_aft(group)
+
+    curve = group["curve"]
+    if curve not in ("Curve25519", "Curve448"):
+        raise TestSkip(f"Unsupported curve: {curve}")
+
+    expected_valid = exp.get("testPassed", True)
+    raw = _from_hex(test["publicKey"])
+    try:
+        if curve == "Curve25519":
+            botan.PublicKey.load_x25519(raw)
+        else:
+            botan.PublicKey.load_x448(raw)
+        valid = True
+    except botan.BotanException:
+        valid = False
+
+    if valid != expected_valid:
+        raise TestFailure(
+            {
+                "Curve": curve,
+                "PublicKey": test["publicKey"],
+                "Expected": "valid" if expected_valid else "invalid",
+                "Got": "valid" if valid else "invalid",
             }
         )
 
@@ -2872,9 +2983,12 @@ _registry.ignore(
     # Doesn't seem relevant
     "safePrimes-keyVer-1.0",
     "safePrimes-keyGen-1.0",
+    "XECDH-SSC-RFC7748",
     # Unimplemented DRBGs and support fns
     "ctrDRBG-1.0",
+    "ctrDRBG-SP800-90Ar1",
     "hashDRBG-1.0",
+    "hashDRBG-SP800-90Ar1",
     "ConditioningComponent-AES-CBC-MAC-Sp800-90B",
     "ConditioningComponent-BlockCipher_DF-Sp800-90B",
     "ConditioningComponent-Hash_DF-Sp800-90B",
@@ -2888,6 +3002,7 @@ _registry.ignore(
     "kdf-components-tpm-1.0",
     "KDF-KMAC-Sp800-108r1",
     "KDA-OneStepNoCounter-Sp800-56Cr2",
+    "KDF-SPDM-1.0",
     # These are all some kind of multi-step protocol rather than
     # just testing a primitive
     "RSA-signaturePrimitive-1.0",
