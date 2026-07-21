@@ -864,8 +864,8 @@ Test::Result test_aia_uri_constructor_then_add_access_description_keeps_all() {
    const std::string ocsp2 = "http://ocsp2.example.com/";
 
    Botan::Cert_Extension::Authority_Information_Access aia(
-      std::vector<Botan::URI>{Botan::URI::parse(ocsp1).value()},
-      std::vector<Botan::URI>{Botan::URI::parse(ca_issuer).value()});
+      std::vector<Botan::URI>{Botan::URI::from_string(ocsp1).value()},
+      std::vector<Botan::URI>{Botan::URI::from_string(ca_issuer).value()});
 
    const Botan::OID ocsp_oid = Botan::OID::from_string("PKIX.OCSP");
    const std::vector<uint8_t> ocsp2_bytes(ocsp2.begin(), ocsp2.end());
@@ -910,7 +910,7 @@ Test::Result test_aia_builder_rejects_malformed_uri_access_locations() {
    const Botan::OID ocsp = Botan::OID::from_string("PKIX.OCSP");
    const Botan::OID ca_issuer = Botan::OID::from_string("PKIX.CertificateAuthorityIssuers");
 
-   // URI::parse rejects strings that don't begin with an ASCII-alpha scheme
+   // URI::from_string rejects strings that don't begin with an ASCII-alpha scheme
    // followed by ':'. "not a uri" fails the first-character ALPHA check.
    const std::string bad_uri = "not a uri";
    const std::vector<uint8_t> bad_bytes(bad_uri.begin(), bad_uri.end());

@@ -498,14 +498,14 @@ Test::Result test_x509_encode_authority_info_access_extension() {
 
    // CA Issuer information
    const std::vector<Botan::URI> ca_issuers = {
-      Botan::URI::parse("http://www.d-trust.net/cgi-bin/Bdrive_Test_CA_1-2_2017.crt").value(),
-      Botan::URI::parse(
+      Botan::URI::from_string("http://www.d-trust.net/cgi-bin/Bdrive_Test_CA_1-2_2017.crt").value(),
+      Botan::URI::from_string(
          "ldap://directory.d-trust.net/CN=Bdrive%20Test%20CA%201-2%202017,O=Bundesdruckerei%20GmbH,C=DE?cACertificate?base?")
          .value()};
 
    // OCSP
    const std::string_view ocsp_uri{"http://staging.ocsp.d-trust.net"};
-   const auto ocsp_uri_parsed = Botan::URI::parse(ocsp_uri).value();
+   const auto ocsp_uri_parsed = Botan::URI::from_string(ocsp_uri).value();
 
    // create a CA
    auto ca_key = make_a_private_key(sig_algo, *rng);

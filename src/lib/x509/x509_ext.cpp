@@ -948,7 +948,7 @@ std::vector<URI> parse_aia_uris(const std::vector<std::string>& uris, const char
    std::vector<URI> out;
    out.reserve(uris.size());
    for(const auto& uri : uris) {
-      if(auto parsed = URI::parse(uri)) {
+      if(auto parsed = URI::from_string(uri)) {
          out.push_back(std::move(*parsed));
       } else {
          throw Invalid_Argument(fmt("Invalid URI in {}", context));
@@ -984,7 +984,7 @@ Authority_Information_Access::Authority_Information_Access(std::string_view ocsp
                                                            const std::vector<std::string>& ca_issuers) :
       m_ca_issuers(parse_aia_uris(ca_issuers, "AuthorityInformationAccess CA issuers")) {
    if(!ocsp.empty()) {
-      if(auto parsed = URI::parse(ocsp)) {
+      if(auto parsed = URI::from_string(ocsp)) {
          m_ocsp_responders.push_back(std::move(*parsed));
       } else {
          throw Invalid_Argument("Invalid URI in AuthorityInformationAccess OCSP responder");
@@ -1062,13 +1062,13 @@ void populate_uri_view_from_access_description(const Authority_Information_Acces
    const auto oid_ca_issuers = OID::from_string("PKIX.CertificateAuthorityIssuers");
    if(const auto uri_str = ad.location_as_uri_string()) {
       if(ad.access_method() == oid_ocsp_responders) {
-         if(auto uri = URI::parse(*uri_str)) {
+         if(auto uri = URI::from_string(*uri_str)) {
             ocsp_responders.push_back(std::move(*uri));
          } else {
             throw Invalid_Argument("Invalid URI in AuthorityInformationAccess OCSP responder");
          }
       } else if(ad.access_method() == oid_ca_issuers) {
-         if(auto uri = URI::parse(*uri_str)) {
+         if(auto uri = URI::from_string(*uri_str)) {
             ca_issuers.push_back(std::move(*uri));
          } else {
             throw Invalid_Argument("Invalid URI in AuthorityInformationAccess CA issuers");
@@ -1174,13 +1174,13 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in) 
 
       if(name.is_a(6, ASN1_Class::ContextSpecific)) {
          if(oid == ocsp_responder) {
-            if(auto parsed = URI::parse(ASN1::to_string(name))) {
+            if(auto parsed = URI::from_string(ASN1::to_string(name))) {
                m_ocsp_responders.push_back(std::move(*parsed));
             } else {
                throw Decoding_Error("Invalid URI in AuthorityInformationAccess OCSP responder");
             }
          } else if(oid == ca_issuer) {
-            if(auto parsed = URI::parse(ASN1::to_string(name))) {
+            if(auto parsed = URI::from_string(ASN1::to_string(name))) {
                m_ca_issuers.push_back(std::move(*parsed));
             } else {
                throw Decoding_Error("Invalid URI in AuthorityInformationAccess CA issuers");

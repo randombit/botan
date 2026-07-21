@@ -476,7 +476,7 @@ class HTTP_Request_Tests final : public Test {
       static Test::Result test_get_request_shape() {
          Test::Result result("HTTP::GET_sync request shape");
          MockServer mock({make_response(200, "OK", {{"Content-Length", "0"}}, "")});
-         const auto uri = Botan::URI::parse("http://example.com/path/to/resource").value();
+         const auto uri = Botan::URI::from_string("http://example.com/path/to/resource").value();
 
          (void)Botan::HTTP::http_sync(
             mock.as_exch_fn(), "GET", uri, "", std::vector<uint8_t>(), Botan::HTTP::RequestLimits());
@@ -495,7 +495,7 @@ class HTTP_Request_Tests final : public Test {
       static Test::Result test_post_request_shape() {
          Test::Result result("HTTP::POST_sync request shape");
          MockServer mock({make_response(200, "OK", {{"Content-Length", "2"}}, "ok")});
-         const auto uri = Botan::URI::parse("http://example.com/submit").value();
+         const auto uri = Botan::URI::from_string("http://example.com/submit").value();
          const std::vector<uint8_t> body{'h', 'i'};
 
          (void)Botan::HTTP::http_sync(mock.as_exch_fn(), "POST", uri, "text/plain", body, Botan::HTTP::RequestLimits());
@@ -510,7 +510,7 @@ class HTTP_Request_Tests final : public Test {
       static Test::Result test_query_in_request_target() {
          Test::Result result("HTTP request target includes query");
          MockServer mock({make_response(200)});
-         const auto uri = Botan::URI::parse("http://example.com/api?id=42&n=1").value();
+         const auto uri = Botan::URI::from_string("http://example.com/api?id=42&n=1").value();
          (void)Botan::HTTP::http_sync(mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits());
          result.test_str_eq("query preserved", request_target(mock.request(0)), "/api?id=42&n=1");
          return result;
@@ -519,7 +519,7 @@ class HTTP_Request_Tests final : public Test {
       static Test::Result test_fragment_excluded_from_request_target() {
          Test::Result result("HTTP request target excludes fragment (RFC 9110 7.1)");
          MockServer mock({make_response(200)});
-         const auto uri = Botan::URI::parse("http://example.com/page#section").value();
+         const auto uri = Botan::URI::from_string("http://example.com/page#section").value();
          (void)Botan::HTTP::http_sync(mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits());
          result.test_str_eq("no fragment in target", request_target(mock.request(0)), "/page");
          return result;
@@ -528,11 +528,11 @@ class HTTP_Request_Tests final : public Test {
       static Test::Result test_empty_path_defaults_to_slash() {
          Test::Result result("HTTP request target defaults empty path to /");
          MockServer mock({make_response(200), make_response(200)});
-         const auto bare = Botan::URI::parse("http://example.com").value();
+         const auto bare = Botan::URI::from_string("http://example.com").value();
          (void)Botan::HTTP::http_sync(mock.as_exch_fn(), "GET", bare, "", {}, Botan::HTTP::RequestLimits());
          result.test_str_eq("no path => /", request_target(mock.request(0)), "/");
 
-         const auto query_only = Botan::URI::parse("http://example.com?q=1").value();
+         const auto query_only = Botan::URI::from_string("http://example.com?q=1").value();
          (void)Botan::HTTP::http_sync(mock.as_exch_fn(), "GET", query_only, "", {}, Botan::HTTP::RequestLimits());
          result.test_str_eq("no path with query => /?q=1", request_target(mock.request(1)), "/?q=1");
          return result;
@@ -541,7 +541,7 @@ class HTTP_Request_Tests final : public Test {
       static Test::Result test_ipv6_host_header_bracketed() {
          Test::Result result("HTTP Host header brackets IPv6");
          MockServer mock({make_response(200)});
-         const auto uri = Botan::URI::parse("http://[::1]:8080/").value();
+         const auto uri = Botan::URI::from_string("http://[::1]:8080/").value();
          (void)Botan::HTTP::http_sync(mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits());
          result.test_is_true("Host has brackets and port", message_contains(mock.request(0), "Host: [::1]:8080\r\n"));
          result.test_str_eq("service is the port", mock.service(0), "8080");
@@ -551,7 +551,7 @@ class HTTP_Request_Tests final : public Test {
       static Test::Result test_https_scheme_rejected() {
          Test::Result result("HTTP rejects non-http scheme");
          MockServer mock({});
-         const auto uri = Botan::URI::parse("https://example.com/").value();
+         const auto uri = Botan::URI::from_string("https://example.com/").value();
          result.test_throws<Botan::HTTP::HTTP_Error>("https URI", [&] {
             (void)Botan::HTTP::http_sync(mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits());
          });
@@ -562,7 +562,7 @@ class HTTP_Request_Tests final : public Test {
       static Test::Result test_max_body_size_propagated() {
          Test::Result result("HTTP max_body_size reaches the transact callback");
          MockServer mock({make_response(200)});
-         const auto uri = Botan::URI::parse("http://example.com/").value();
+         const auto uri = Botan::URI::from_string("http://example.com/").value();
          (void)Botan::HTTP::http_sync(
             mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits().set_max_body_size(8192));
          result.test_is_true("max_body_size present", mock.max_body_size(0).has_value());
@@ -597,7 +597,7 @@ class HTTP_Redirect_Tests final : public Test {
             make_response(301, "Moved", {{"Location", "http://other.example/new"}}),
             make_response(200, "OK", {{"Content-Length", "2"}}, "ok"),
          });
-         const auto uri = Botan::URI::parse("http://example.com/old").value();
+         const auto uri = Botan::URI::from_string("http://example.com/old").value();
          const auto resp = Botan::HTTP::http_sync(
             mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits().set_max_redirects(2));
          result.test_sz_eq("two calls", mock.calls(), 2);
@@ -613,7 +613,7 @@ class HTTP_Redirect_Tests final : public Test {
             make_response(303, "See Other", {{"Location", "http://example.com/result"}}),
             make_response(200, "OK"),
          });
-         const auto uri = Botan::URI::parse("http://example.com/submit").value();
+         const auto uri = Botan::URI::from_string("http://example.com/submit").value();
          const std::vector<uint8_t> body{'p', 'a', 'y', 'l', 'o', 'a', 'd'};
 
          (void)Botan::HTTP::http_sync(
@@ -632,7 +632,7 @@ class HTTP_Redirect_Tests final : public Test {
             make_response(307, "Temporary Redirect", {{"Location", "http://example.com/v2"}}),
             make_response(200, "OK", {{"Content-Length", "2"}}, "ok"),
          });
-         const auto uri = Botan::URI::parse("http://example.com/submit").value();
+         const auto uri = Botan::URI::from_string("http://example.com/submit").value();
          const std::vector<uint8_t> body{'p', 'a', 'y', 'l', 'o', 'a', 'd'};
 
          (void)Botan::HTTP::http_sync(mock.as_exch_fn(),
@@ -656,7 +656,7 @@ class HTTP_Redirect_Tests final : public Test {
             make_response(308, "Permanent Redirect", {{"Location", "http://example.com/new"}}),
             make_response(200, "OK"),
          });
-         const auto uri = Botan::URI::parse("http://example.com/old").value();
+         const auto uri = Botan::URI::from_string("http://example.com/old").value();
          (void)Botan::HTTP::http_sync(mock.as_exch_fn(),
                                       "POST",
                                       uri,
@@ -673,7 +673,7 @@ class HTTP_Redirect_Tests final : public Test {
             make_response(301, "Moved", {{"Location", "http://example.com/a"}}),
             make_response(301, "Moved", {{"Location", "http://example.com/b"}}),
          });
-         const auto uri = Botan::URI::parse("http://example.com/start").value();
+         const auto uri = Botan::URI::from_string("http://example.com/start").value();
          result.test_throws<Botan::HTTP::HTTP_Error>("exceeds redirect budget", [&] {
             (void)Botan::HTTP::http_sync(
                mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits().set_max_redirects(1));
@@ -687,7 +687,7 @@ class HTTP_Redirect_Tests final : public Test {
          MockServer mock({
             make_response(301, "Moved", {{"Location", "::not a url::"}}),
          });
-         const auto uri = Botan::URI::parse("http://example.com/").value();
+         const auto uri = Botan::URI::from_string("http://example.com/").value();
          result.test_throws<Botan::HTTP::HTTP_Error>("invalid Location", [&] {
             (void)Botan::HTTP::http_sync(
                mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits().set_max_redirects(1));
@@ -700,7 +700,7 @@ class HTTP_Redirect_Tests final : public Test {
          MockServer mock({
             make_response(301, "Moved", {{"Location", "https://example.com/"}}),
          });
-         const auto uri = Botan::URI::parse("http://example.com/").value();
+         const auto uri = Botan::URI::from_string("http://example.com/").value();
          result.test_throws<Botan::HTTP::HTTP_Error>("https Location", [&] {
             (void)Botan::HTTP::http_sync(
                mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits().set_max_redirects(1));
@@ -714,7 +714,7 @@ class HTTP_Redirect_Tests final : public Test {
             make_response(301, "Moved", {{"Location", "/v2/resource?id=1"}}),
             make_response(200, "OK"),
          });
-         const auto uri = Botan::URI::parse("http://example.com:8080/v1/old").value();
+         const auto uri = Botan::URI::from_string("http://example.com:8080/v1/old").value();
          (void)Botan::HTTP::http_sync(
             mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits().set_max_redirects(1));
          result.test_sz_eq("two calls", mock.calls(), 2);
@@ -730,7 +730,7 @@ class HTTP_Redirect_Tests final : public Test {
          MockServer mock({
             make_response(301, "Moved", {{"Location", "//evil.example/new"}}),
          });
-         const auto uri = Botan::URI::parse("http://example.com/").value();
+         const auto uri = Botan::URI::from_string("http://example.com/").value();
          result.test_throws<Botan::HTTP::HTTP_Error>("// prefix not resolved", [&] {
             (void)Botan::HTTP::http_sync(
                mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits().set_max_redirects(1));
@@ -744,7 +744,7 @@ class HTTP_Redirect_Tests final : public Test {
             make_response(301, "Moved", {{"Location", "/elsewhere"}}),
             make_response(200, "OK"),
          });
-         const auto uri = Botan::URI::parse("http://user:pass@example.com/start").value();
+         const auto uri = Botan::URI::from_string("http://user:pass@example.com/start").value();
          (void)Botan::HTTP::http_sync(
             mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits().set_max_redirects(1));
          result.test_sz_eq("two calls", mock.calls(), 2);
@@ -758,7 +758,7 @@ class HTTP_Redirect_Tests final : public Test {
       static Test::Result test_redirect_without_location_returned() {
          Test::Result result("HTTP 3xx without Location returned to caller");
          MockServer mock({make_response(301, "Moved")});
-         const auto uri = Botan::URI::parse("http://example.com/").value();
+         const auto uri = Botan::URI::from_string("http://example.com/").value();
          const auto resp = Botan::HTTP::http_sync(
             mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits().set_max_redirects(1));
          result.test_sz_eq("one call only", mock.calls(), 1);

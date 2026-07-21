@@ -103,7 +103,7 @@ class X509_Alt_Name_Tests final : public Test {
 
          result.test_sz_eq("Expected number of URIs", recoded.uri_names().size(), uri_names.size());
          for(const auto& name : uri_names) {
-            auto parsed = Botan::URI::parse(name);
+            auto parsed = Botan::URI::from_string(name);
             result.test_is_true("URI parses: " + name, parsed.has_value());
             if(parsed.has_value()) {
                result.test_is_true("Has expected URI name: " + name, recoded.uri_names().contains(*parsed));

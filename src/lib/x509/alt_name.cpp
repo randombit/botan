@@ -18,7 +18,7 @@ void AlternativeName::add_uri(std::string_view uri) {
    if(uri.empty()) {
       return;
    }
-   if(auto parsed = URI::parse(uri)) {
+   if(auto parsed = URI::from_string(uri)) {
       add_uri(std::move(*parsed));
    } else {
       throw Decoding_Error("Invalid URI in SubjectAlternativeName");

@@ -696,7 +696,7 @@ Response online_check(const X509_Certificate& issuer,
       throw Invalid_Argument("No OCSP responder specified");
    }
 
-   if(auto uri = URI::parse(ocsp_responder)) {
+   if(auto uri = URI::from_string(ocsp_responder)) {
       return online_check(issuer, subject_serial, *uri, timeout);
    } else {
       throw Invalid_Argument("Unparsable URI for OCSP responder");
