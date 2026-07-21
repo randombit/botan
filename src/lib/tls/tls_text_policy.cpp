@@ -107,6 +107,12 @@ std::optional<uint16_t> Text_Policy::record_size_limit() const {
    return (limit > 0) ? std::make_optional(static_cast<uint16_t>(limit)) : std::nullopt;
 }
 
+std::optional<uint16_t> Text_Policy::minimum_record_size() const {
+   const auto limit = get_len("minimum_record_size", 0);
+   BOTAN_ARG_CHECK(limit <= record_size_limit().value_or(16385), "TLS 1.3 minimum record size too large");
+   return (limit > 0) ? std::make_optional(static_cast<uint16_t>(limit)) : std::nullopt;
+}
+
 bool Text_Policy::support_cert_status_message() const {
    return get_bool("support_cert_status_message", Policy::support_cert_status_message());
 }

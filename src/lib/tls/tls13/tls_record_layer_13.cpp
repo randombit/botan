@@ -2,6 +2,7 @@
 * TLS record layer implementation for TLS 1.3
 * (C) 2022 Jack Lloyd
 *     2022 Hannes Rantzsch, René Meusel - neXenio GmbH
+*     2026 Amos Treiber, René Meusel - Rohde & Schwarz Networks and Cybersecurity GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,6 +11,7 @@
 
 #include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_policy.h>
 #include <botan/tls_version.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
@@ -144,10 +146,11 @@ class TLSPlaintext_Header final {
 
 }  // namespace
 
-Record_Layer::Record_Layer(Connection_Side side) :
+Record_Layer::Record_Layer(Connection_Side side, const Policy& policy) :
       m_side(side),
       m_outgoing_record_size_limit(MAX_PLAINTEXT_SIZE + 1 /* content type byte */),
-      m_incoming_record_size_limit(MAX_PLAINTEXT_SIZE + 1 /* content type byte */)
+      m_incoming_record_size_limit(MAX_PLAINTEXT_SIZE + 1 /* content type byte */),
+      m_outgoing_minimum_record_size(policy.minimum_record_size().value_or(0))
 
       // RFC 8446 5.1
       //    legacy_record_version: MUST be set to 0x0303 for all records
@@ -169,7 +172,10 @@ Record_Layer::Record_Layer(Connection_Side side) :
       // the marshalling responsibility to our TLS 1.2 implementation.
       ,
       m_sending_compat_mode(m_side == Connection_Side::Client),
-      m_receiving_compat_mode(true) {}
+      m_receiving_compat_mode(true) {
+   BOTAN_ARG_CHECK(m_outgoing_minimum_record_size <= m_outgoing_record_size_limit,
+                   "Configured minimum record size is larger than the specified plaintext size limit");
+}
 
 void Record_Layer::copy_data(std::span<const uint8_t> data) {
    // Compact consumed data before appending new data
@@ -233,8 +239,9 @@ std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
       output_length +=
          (records - 1) * cipher_state->encrypt_output_length(max_plaintext_size + content_type_tag_length);
       // last record with size of remaining data
-      output_length += cipher_state->encrypt_output_length(data.size() - ((records - 1) * max_plaintext_size) +
-                                                           content_type_tag_length);
+      const auto remaining_bytes = data.size() - ((records - 1) * max_plaintext_size) + content_type_tag_length;
+      const auto padded_remaining_bytes = std::max<size_t>(remaining_bytes, m_outgoing_minimum_record_size);
+      output_length += cipher_state->encrypt_output_length(padded_remaining_bytes);
    } else {
       output_length += data.size();
    }
@@ -250,8 +257,13 @@ std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
    // NOLINTNEXTLINE(*-avoid-do-while)
    do {
       const size_t pt_size = std::min<size_t>(to_process, max_plaintext_size);
-      const size_t ct_size =
-         (!protect) ? pt_size : cipher_state->encrypt_output_length(pt_size + content_type_tag_length);
+      const size_t pt_size_with_type = pt_size + content_type_tag_length;
+      const size_t pt_size_with_type_and_padding = std::max<size_t>(pt_size_with_type, m_outgoing_minimum_record_size);
+      BOTAN_ASSERT_IMPLICATION(protect,
+                               pt_size_with_type_and_padding <= m_outgoing_record_size_limit,
+                               "Padded record size is within the negotiated record size limit");
+
+      const size_t ct_size = (!protect) ? pt_size : cipher_state->encrypt_output_length(pt_size_with_type_and_padding);
       const auto pt_type = (!protect) ? type : Record_Type::ApplicationData;
 
       // RFC 8446 5.1
@@ -270,7 +282,12 @@ std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
          // assemble TLSInnerPlaintext structure
          fragment.insert(fragment.end(), pt_fragment.begin(), pt_fragment.end());
          fragment.push_back(static_cast<uint8_t>(type));
-         // TODO: zero padding could go here, see RFC 8446 5.4
+
+         // RFC 9846 5.4
+         //    When generating a TLSCiphertext record, implementations MAY
+         //    choose to pad. [...] Implementations MUST set the padding octets
+         //    to all zeros before encrypting.
+         fragment.insert(fragment.end(), pt_size_with_type_and_padding - pt_size_with_type, 0x00);
 
          cipher_state->encrypt_record_fragment(record_header, fragment);
          BOTAN_ASSERT_NOMSG(fragment.size() == ct_size);
@@ -420,6 +437,8 @@ void Record_Layer::set_record_size_limits(const uint16_t outgoing_limit, const u
    BOTAN_ARG_CHECK(outgoing_limit >= 64, "Invalid outgoing record size limit");
    BOTAN_ARG_CHECK(incoming_limit >= 64 && incoming_limit <= MAX_PLAINTEXT_SIZE + 1,
                    "Invalid incoming record size limit");
+   BOTAN_ARG_CHECK(outgoing_limit >= m_outgoing_minimum_record_size,
+                   "Configured minimum record size is not compatible with the negotiated outgoing record size limit");
 
    // RFC 8449 4.
    //    Even if a larger record size limit is provided by a peer, an endpoint

@@ -37,6 +37,15 @@ bool is_error_alert(const Botan::TLS::Alert& alert) {
 
 namespace Botan::TLS {
 
+namespace {
+
+const auto& checked_deref(const auto& ptr) {
+   BOTAN_ASSERT_NONNULL(ptr);
+   return *ptr;
+}
+
+}  // namespace
+
 Channel_Impl_13::Channel_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
                                  const std::shared_ptr<Session_Manager>& session_manager,
                                  const std::shared_ptr<Credentials_Manager>& credentials_manager,
@@ -49,7 +58,7 @@ Channel_Impl_13::Channel_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
       m_credentials_manager(credentials_manager),
       m_rng(rng),
       m_policy(policy),
-      m_record_layer(m_side),
+      m_record_layer(m_side, checked_deref(m_policy)),
       m_handshake_layer(m_side),
       m_can_read(true),
       m_can_write(true),

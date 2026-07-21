@@ -1,6 +1,7 @@
 /*
 * (C) 2021 Jack Lloyd
 * (C) 2021 Hannes Rantzsch, René Meusel - neXenio
+* (C) 2026 Amos Treiber, René Meusel - Rohde & Schwarz Networks and Cybersecurity GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -13,6 +14,7 @@
    #include <botan/tls_ciphersuite.h>
    #include <botan/tls_exceptn.h>
    #include <botan/tls_magic.h>
+   #include <botan/tls_policy.h>
    #include <botan/internal/concat_util.h>
    #include <botan/internal/tls_channel_impl_13.h>
    #include <botan/internal/tls_cipher_state.h>
@@ -28,8 +30,21 @@ namespace TLS = Botan::TLS;
 
 using Records = std::vector<TLS::Record>;
 
-TLS::Record_Layer record_layer_client(const bool skip_client_hello = false) {
-   auto rl = TLS::Record_Layer(TLS::Connection_Side::Client);
+class Test_Policy : public Botan::TLS::Policy {
+   public:
+      explicit Test_Policy(std::optional<uint16_t> minimum_record_size = std::nullopt) :
+            m_minimum_record_size(minimum_record_size) {}
+
+      std::optional<uint16_t> minimum_record_size() const override { return m_minimum_record_size; }
+
+   private:
+      std::optional<uint16_t> m_minimum_record_size;
+};
+
+TLS::Record_Layer record_layer_client(const bool skip_client_hello = false,
+                                      std::optional<uint16_t> minimum_record_size = {}) {
+   auto policy = Test_Policy(minimum_record_size);
+   auto rl = TLS::Record_Layer(TLS::Connection_Side::Client, policy);
 
    // this is relevant for tests that rely on the legacy version in the record
    if(skip_client_hello) {
@@ -39,8 +54,10 @@ TLS::Record_Layer record_layer_client(const bool skip_client_hello = false) {
    return rl;
 }
 
-TLS::Record_Layer record_layer_server(const bool skip_client_hello = false) {
-   auto rl = TLS::Record_Layer(TLS::Connection_Side::Server);
+TLS::Record_Layer record_layer_server(const bool skip_client_hello = false,
+                                      std::optional<uint16_t> minimum_record_size = {}) {
+   auto policy = Test_Policy(minimum_record_size);
+   auto rl = TLS::Record_Layer(TLS::Connection_Side::Server, policy);
 
    // this is relevant for tests that rely on the legacy version in the record
    if(skip_client_hello) {
@@ -742,32 +759,49 @@ std::vector<Test::Result> write_encrypted_records() {
                result.test_bin_eq("CCS record is well-formed", record, "140303000101");
             }),
 
-      CHECK("write a lot of data producing two protected records", [&](Test::Result& result) {
-         std::vector<uint8_t> big_data(TLS::MAX_PLAINTEXT_SIZE + TLS::MAX_PLAINTEXT_SIZE / 2);
-         auto ct = record_layer_client(true).prepare_records(TLS::Record_Type::ApplicationData, big_data, cs.get());
-         result.require("encryption added some MAC and record headers",
-                        ct.size() > big_data.size() + Botan::TLS::TLS_HEADER_SIZE * 2);
+      CHECK("write a lot of data producing two protected records",
+            [&](Test::Result& result) {
+               std::vector<uint8_t> big_data(TLS::MAX_PLAINTEXT_SIZE + TLS::MAX_PLAINTEXT_SIZE / 2);
+               auto ct =
+                  record_layer_client(true).prepare_records(TLS::Record_Type::ApplicationData, big_data, cs.get());
+               result.require("encryption added some MAC and record headers",
+                              ct.size() > big_data.size() + Botan::TLS::TLS_HEADER_SIZE * 2);
 
-         auto read_record_header = [&](auto& reader) {
-            result.test_u8_eq(
-               "APPLICATION_DATA", reader.get_byte(), static_cast<uint8_t>(TLS::Record_Type::ApplicationData));
-            result.test_u16_eq("TLS legacy version", reader.get_uint16_t(), uint16_t(0x0303));
+               auto read_record_header = [&](auto& reader) {
+                  result.test_u8_eq(
+                     "APPLICATION_DATA", reader.get_byte(), static_cast<uint8_t>(TLS::Record_Type::ApplicationData));
+                  result.test_u16_eq("TLS legacy version", reader.get_uint16_t(), uint16_t(0x0303));
 
-            const auto fragment_length = reader.get_uint16_t();
-            result.test_sz_lte("TLS limits", fragment_length, TLS::MAX_CIPHERTEXT_SIZE_TLS13);
-            result.require("enough data", fragment_length + Botan::TLS::TLS_HEADER_SIZE < ct.size());
-            return fragment_length;
-         };
+                  const auto fragment_length = reader.get_uint16_t();
+                  result.test_sz_lte("TLS limits", fragment_length, TLS::MAX_CIPHERTEXT_SIZE_TLS13);
+                  result.require("enough data", fragment_length + Botan::TLS::TLS_HEADER_SIZE < ct.size());
+                  return fragment_length;
+               };
 
-         TLS::TLS_Data_Reader reader("test reader", ct);
-         const auto fragment_length1 = read_record_header(reader);
-         reader.discard_next(fragment_length1);
+               TLS::TLS_Data_Reader reader("test reader", ct);
+               const auto fragment_length1 = read_record_header(reader);
+               reader.discard_next(fragment_length1);
 
-         const auto fragment_length2 = read_record_header(reader);
-         reader.discard_next(fragment_length2);
+               const auto fragment_length2 = read_record_header(reader);
+               reader.discard_next(fragment_length2);
 
-         result.test_is_true("consumed all bytes", !reader.has_remaining());
-      })};
+               result.test_is_true("consumed all bytes", !reader.has_remaining());
+            }),
+
+      CHECK("write a record with padding",
+            [&](Test::Result& result) {
+               std::vector<uint8_t> data(5);
+               auto rl = record_layer_client(true, 128);
+
+               auto ct = rl.prepare_records(TLS::Record_Type::Handshake, data, cs.get());
+
+               // The content type byte that is appended to the plaintext does
+               // count as ordinary plaintext, so the padding is added to six
+               // bytes of plaintext, not five.
+               const auto expected_length = cs->encrypt_output_length(128) + Botan::TLS::TLS_HEADER_SIZE;
+               result.test_sz_eq("encryption added some padding", ct.size(), expected_length);
+            }),
+   };
 }
 
 std::vector<Test::Result> legacy_version_handling() {
@@ -1014,6 +1048,53 @@ std::vector<Test::Result> record_size_limits() {
                result.test_throws("overflow detected",
                                   "Received an encrypted record that exceeds maximum plaintext size",
                                   [&] { rls.next_record(css.get()); });
+            }),
+
+      CHECK("record size limits incompatible with the padding size are rejected",
+            [&](Test::Result& result) {
+               constexpr uint16_t minimum_record_size = 1024;
+               auto rl = record_layer_client(true, minimum_record_size);
+
+               const uint16_t valid_record_size_limit = minimum_record_size;
+               const uint16_t invalid_record_size_limit = minimum_record_size - 1;
+
+               result.test_no_throw("padding size is compatible with record size limit", [&] {
+                  rl.set_record_size_limits(valid_record_size_limit, valid_record_size_limit);
+               });
+
+               result.test_throws(
+                  "padding size exceeds record size limit",
+                  "Configured minimum record size is not compatible with the negotiated outgoing record size limit",
+                  [&] { rl.set_record_size_limits(invalid_record_size_limit, invalid_record_size_limit); });
+
+               result.test_no_throw("incoming record size limit is not relevant", [&] {
+                  rl.set_record_size_limits(valid_record_size_limit, invalid_record_size_limit);
+               });
+
+               const uint16_t content_type_byte = 1;
+               const uint16_t absolute_plaintext_size_limit = Botan::TLS::MAX_PLAINTEXT_SIZE + content_type_byte;
+               const uint16_t invalid_plaintext_size_limit = absolute_plaintext_size_limit + 1;
+
+               result.test_no_throw("padding size exceeds record size limit",
+                                    [&] { record_layer_client(true, absolute_plaintext_size_limit); });
+               result.test_throws("padding size exceeds record size limit",
+                                  "Configured minimum record size is larger than the specified plaintext size limit",
+                                  [&] { record_layer_client(true, invalid_plaintext_size_limit); });
+            }),
+
+      CHECK("preparing a record where minimum_record_size == maximum_size_limit",
+            [&](Test::Result& result) {
+               constexpr uint16_t limit = 1024;
+               auto rl = record_layer_client(true, /* minimum_record_size = */ limit);
+               rl.set_record_size_limits(/* outgoing_limit = */ limit,
+                                         /* incoming_limit = */ limit);
+
+               auto cs = rfc8448_rtt1_handshake_traffic();
+               const std::array<uint8_t, 5> data = {0x01, 0x02, 0x03, 0x04, 0x05};
+               const auto ct = rl.prepare_records(TLS::Record_Type::ApplicationData, data, cs.get());
+
+               const auto expected_length = cs->encrypt_output_length(limit) + Botan::TLS::TLS_HEADER_SIZE;
+               result.test_sz_eq("encryption result has the correct length", ct.size(), expected_length);
             }),
    };
 }
