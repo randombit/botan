@@ -1372,6 +1372,15 @@ class TLS_Unit_Tests final : public Test {
                               "AEAD",
                               {{"groups", "ffdhe/ietf/2048"}});
 
+         test_modern_versions("AES-128/GCM with record padding",
+                              results,
+                              creds,
+                              rng,
+                              "ECDH",
+                              "AES-128/GCM",
+                              "AEAD",
+                              {{"minimum_record_size", "2048"}});
+
          auto creds_with_client_cert = create_creds(*rng, true);
          if(creds_with_client_cert) {
             test_modern_versions(
