@@ -1,13 +1,14 @@
 /*
 * SM4
 * (C) 2017 Ribose Inc
-* (C) 2018 Jack Lloyd
+* (C) 2018,2026 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/internal/sm4.h>
 
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
@@ -20,135 +21,440 @@ namespace Botan {
 
 namespace {
 
-alignas(256) const uint8_t SM4_SBOX[256] = {
-   0xD6, 0x90, 0xE9, 0xFE, 0xCC, 0xE1, 0x3D, 0xB7, 0x16, 0xB6, 0x14, 0xC2, 0x28, 0xFB, 0x2C, 0x05, 0x2B, 0x67, 0x9A,
-   0x76, 0x2A, 0xBE, 0x04, 0xC3, 0xAA, 0x44, 0x13, 0x26, 0x49, 0x86, 0x06, 0x99, 0x9C, 0x42, 0x50, 0xF4, 0x91, 0xEF,
-   0x98, 0x7A, 0x33, 0x54, 0x0B, 0x43, 0xED, 0xCF, 0xAC, 0x62, 0xE4, 0xB3, 0x1C, 0xA9, 0xC9, 0x08, 0xE8, 0x95, 0x80,
-   0xDF, 0x94, 0xFA, 0x75, 0x8F, 0x3F, 0xA6, 0x47, 0x07, 0xA7, 0xFC, 0xF3, 0x73, 0x17, 0xBA, 0x83, 0x59, 0x3C, 0x19,
-   0xE6, 0x85, 0x4F, 0xA8, 0x68, 0x6B, 0x81, 0xB2, 0x71, 0x64, 0xDA, 0x8B, 0xF8, 0xEB, 0x0F, 0x4B, 0x70, 0x56, 0x9D,
-   0x35, 0x1E, 0x24, 0x0E, 0x5E, 0x63, 0x58, 0xD1, 0xA2, 0x25, 0x22, 0x7C, 0x3B, 0x01, 0x21, 0x78, 0x87, 0xD4, 0x00,
-   0x46, 0x57, 0x9F, 0xD3, 0x27, 0x52, 0x4C, 0x36, 0x02, 0xE7, 0xA0, 0xC4, 0xC8, 0x9E, 0xEA, 0xBF, 0x8A, 0xD2, 0x40,
-   0xC7, 0x38, 0xB5, 0xA3, 0xF7, 0xF2, 0xCE, 0xF9, 0x61, 0x15, 0xA1, 0xE0, 0xAE, 0x5D, 0xA4, 0x9B, 0x34, 0x1A, 0x55,
-   0xAD, 0x93, 0x32, 0x30, 0xF5, 0x8C, 0xB1, 0xE3, 0x1D, 0xF6, 0xE2, 0x2E, 0x82, 0x66, 0xCA, 0x60, 0xC0, 0x29, 0x23,
-   0xAB, 0x0D, 0x53, 0x4E, 0x6F, 0xD5, 0xDB, 0x37, 0x45, 0xDE, 0xFD, 0x8E, 0x2F, 0x03, 0xFF, 0x6A, 0x72, 0x6D, 0x6C,
-   0x5B, 0x51, 0x8D, 0x1B, 0xAF, 0x92, 0xBB, 0xDD, 0xBC, 0x7F, 0x11, 0xD9, 0x5C, 0x41, 0x1F, 0x10, 0x5A, 0xD8, 0x0A,
-   0xC1, 0x31, 0x88, 0xA5, 0xCD, 0x7B, 0xBD, 0x2D, 0x74, 0xD0, 0x12, 0xB8, 0xE5, 0xB4, 0xB0, 0x89, 0x69, 0x97, 0x4A,
-   0x0C, 0x96, 0x77, 0x7E, 0x65, 0xB9, 0xF1, 0x09, 0xC5, 0x6E, 0xC6, 0x84, 0x18, 0xF0, 0x7D, 0xEC, 0x3A, 0xDC, 0x4D,
-   0x20, 0x79, 0xEE, 0x5F, 0x3E, 0xD7, 0xCB, 0x39, 0x48};
+/*
+The baseline implementation is constant time and bitsliced.
+
+The SM4 sbox is an affine equivalent of the AES sbox; both are inversion
+in GF(2^8) composed with affine transformations, and the two fields are
+isomorphic. Following https://eprint.iacr.org/2022/1154 section 3.3 (the
+same decomposition used by sm4_gfni and sm4_hwaes),
+
+   S_SM4(x) = A2 * S_AES(A1 * x ^ 0x3E) ^ 0x6C
+
+where A1 is the input matrix given in the paper and A2 is the paper's
+output matrix composed with the inverse of the AES sbox's own output
+affine transformation.
+
+The sbox circuit is derived from the size 113 AES sbox circuit of the
+"Circuit Minimization Team" that aes.cpp uses, which is a linear top
+layer expanding the 8 inputs to 22 signals, a nonlinear middle section,
+and a linear bottom layer. Affine equivalence only changes the outer
+linear layers, so the middle section is used unchanged, while A1 and A2
+are folded into the top and bottom layers respectively, each re-optimized
+with the Boyar-Peralta SLP heuristic (27 and 35 gates, 124 in total).
+The same construction, applied to the depth 16 variant of the circuit,
+appears in "A Lightweight ISA Extension for AES and SM4"
+(https://arxiv.org/abs/2002.07041).
+
+Bitsliced layout
+
+The state is kept in bitsliced form for the entire cipher. Each of the
+four 32-bit state words is represented by eight plane words; plane i
+holds bit 7-i of every byte. Within a plane, the bits of byte j from all
+blocks in the batch occupy the group of LANES consecutive bits starting
+at bit LANES*j, where LANES is the number of blocks per batch: 8 with
+32-bit words and 16 with 64-bit words.
+
+In this layout the round key becomes a set of plane constants, the sbox
+is the circuit above applied plane-wise, and the linear layer L (rotations
+of the 32-bit word by 2, 10, 18 and 24) becomes a fixed permutation of the
+planes combined with rotations of the plane words by multiples of LANES.
+*/
+
+using sm4_bs_word = word;
+static_assert(std::same_as<sm4_bs_word, uint32_t> || std::same_as<sm4_bs_word, uint64_t>);
+
+template <std::unsigned_integral W>
+constexpr size_t sm4_bs_lanes() {
+   return 8 * sizeof(W) / 4;
+}
+
+constexpr size_t SM4_BITSLICED_BLOCKS = sm4_bs_lanes<sm4_bs_word>();
+
+/**
+* Rotate a plane word by N bytes of the original 32-bit word
+*/
+template <size_t N, std::unsigned_integral W>
+BOTAN_FORCE_INLINE constexpr W sm4_bs_byte_rotl(W x) {
+   return rotl<N * sm4_bs_lanes<W>()>(x);
+}
 
 /*
-* SM4_SBOX_T[j] == L(SM4_SBOX[j]).
-*
-* Each entry has the form 0xXXYYZZZZ where ZZ = XX ^ YY; can we take
-* advantage of this to create a smaller equivalent table?
-*
-* Additionally YY differs from SBOX[i] by at most 3 (64x 0, 96x 1, 64x 2, 32x 3)
+* Apply the SM4 sbox to the eight planes B[]
 */
-alignas(256) const uint32_t SM4_SBOX_T[256] = {
-   0x8ED55B5B, 0xD0924242, 0x4DEAA7A7, 0x06FDFBFB, 0xFCCF3333, 0x65E28787, 0xC93DF4F4, 0x6BB5DEDE, 0x4E165858,
-   0x6EB4DADA, 0x44145050, 0xCAC10B0B, 0x8828A0A0, 0x17F8EFEF, 0x9C2CB0B0, 0x11051414, 0x872BACAC, 0xFB669D9D,
-   0xF2986A6A, 0xAE77D9D9, 0x822AA8A8, 0x46BCFAFA, 0x14041010, 0xCFC00F0F, 0x02A8AAAA, 0x54451111, 0x5F134C4C,
-   0xBE269898, 0x6D482525, 0x9E841A1A, 0x1E061818, 0xFD9B6666, 0xEC9E7272, 0x4A430909, 0x10514141, 0x24F7D3D3,
-   0xD5934646, 0x53ECBFBF, 0xF89A6262, 0x927BE9E9, 0xFF33CCCC, 0x04555151, 0x270B2C2C, 0x4F420D0D, 0x59EEB7B7,
-   0xF3CC3F3F, 0x1CAEB2B2, 0xEA638989, 0x74E79393, 0x7FB1CECE, 0x6C1C7070, 0x0DABA6A6, 0xEDCA2727, 0x28082020,
-   0x48EBA3A3, 0xC1975656, 0x80820202, 0xA3DC7F7F, 0xC4965252, 0x12F9EBEB, 0xA174D5D5, 0xB38D3E3E, 0xC33FFCFC,
-   0x3EA49A9A, 0x5B461D1D, 0x1B071C1C, 0x3BA59E9E, 0x0CFFF3F3, 0x3FF0CFCF, 0xBF72CDCD, 0x4B175C5C, 0x52B8EAEA,
-   0x8F810E0E, 0x3D586565, 0xCC3CF0F0, 0x7D196464, 0x7EE59B9B, 0x91871616, 0x734E3D3D, 0x08AAA2A2, 0xC869A1A1,
-   0xC76AADAD, 0x85830606, 0x7AB0CACA, 0xB570C5C5, 0xF4659191, 0xB2D96B6B, 0xA7892E2E, 0x18FBE3E3, 0x47E8AFAF,
-   0x330F3C3C, 0x674A2D2D, 0xB071C1C1, 0x0E575959, 0xE99F7676, 0xE135D4D4, 0x661E7878, 0xB4249090, 0x360E3838,
-   0x265F7979, 0xEF628D8D, 0x38596161, 0x95D24747, 0x2AA08A8A, 0xB1259494, 0xAA228888, 0x8C7DF1F1, 0xD73BECEC,
-   0x05010404, 0xA5218484, 0x9879E1E1, 0x9B851E1E, 0x84D75353, 0x00000000, 0x5E471919, 0x0B565D5D, 0xE39D7E7E,
-   0x9FD04F4F, 0xBB279C9C, 0x1A534949, 0x7C4D3131, 0xEE36D8D8, 0x0A020808, 0x7BE49F9F, 0x20A28282, 0xD4C71313,
-   0xE8CB2323, 0xE69C7A7A, 0x42E9ABAB, 0x43BDFEFE, 0xA2882A2A, 0x9AD14B4B, 0x40410101, 0xDBC41F1F, 0xD838E0E0,
-   0x61B7D6D6, 0x2FA18E8E, 0x2BF4DFDF, 0x3AF1CBCB, 0xF6CD3B3B, 0x1DFAE7E7, 0xE5608585, 0x41155454, 0x25A38686,
-   0x60E38383, 0x16ACBABA, 0x295C7575, 0x34A69292, 0xF7996E6E, 0xE434D0D0, 0x721A6868, 0x01545555, 0x19AFB6B6,
-   0xDF914E4E, 0xFA32C8C8, 0xF030C0C0, 0x21F6D7D7, 0xBC8E3232, 0x75B3C6C6, 0x6FE08F8F, 0x691D7474, 0x2EF5DBDB,
-   0x6AE18B8B, 0x962EB8B8, 0x8A800A0A, 0xFE679999, 0xE2C92B2B, 0xE0618181, 0xC0C30303, 0x8D29A4A4, 0xAF238C8C,
-   0x07A9AEAE, 0x390D3434, 0x1F524D4D, 0x764F3939, 0xD36EBDBD, 0x81D65757, 0xB7D86F6F, 0xEB37DCDC, 0x51441515,
-   0xA6DD7B7B, 0x09FEF7F7, 0xB68C3A3A, 0x932FBCBC, 0x0F030C0C, 0x03FCFFFF, 0xC26BA9A9, 0xBA73C9C9, 0xD96CB5B5,
-   0xDC6DB1B1, 0x375A6D6D, 0x15504545, 0xB98F3636, 0x771B6C6C, 0x13ADBEBE, 0xDA904A4A, 0x57B9EEEE, 0xA9DE7777,
-   0x4CBEF2F2, 0x837EFDFD, 0x55114444, 0xBDDA6767, 0x2C5D7171, 0x45400505, 0x631F7C7C, 0x50104040, 0x325B6969,
-   0xB8DB6363, 0x220A2828, 0xC5C20707, 0xF531C4C4, 0xA88A2222, 0x31A79696, 0xF9CE3737, 0x977AEDED, 0x49BFF6F6,
-   0x992DB4B4, 0xA475D1D1, 0x90D34343, 0x5A124848, 0x58BAE2E2, 0x71E69797, 0x64B6D2D2, 0x70B2C2C2, 0xAD8B2626,
-   0xCD68A5A5, 0xCB955E5E, 0x624B2929, 0x3C0C3030, 0xCE945A5A, 0xAB76DDDD, 0x867FF9F9, 0xF1649595, 0x5DBBE6E6,
-   0x35F2C7C7, 0x2D092424, 0xD1C61717, 0xD66FB9B9, 0xDEC51B1B, 0x94861212, 0x78186060, 0x30F3C3C3, 0x897CF5F5,
-   0x5CEFB3B3, 0xD23AE8E8, 0xACDF7373, 0x794C3535, 0xA0208080, 0x9D78E5E5, 0x56EDBBBB, 0x235E7D7D, 0xC63EF8F8,
-   0x8BD45F5F, 0xE7C82F2F, 0xDD39E4E4, 0x68492121};
+template <std::unsigned_integral W>
+BOTAN_FORCE_INLINE void SM4_SBOX(W B[8]) {
+   // Top linear layer: A1 (with constant 0x3E) merged with the AES
+   // circuit's top layer
+   const W a0 = ~B[3];
+   const W y4 = B[5] ^ B[2];
+   const W y12 = B[6] ^ a0;
+   const W a1 = B[0] ^ y12;
+   const W y6 = B[4] ^ a1;
+   const W a2 = B[7] ^ B[1];
+   const W a3 = B[5] ^ B[1];
+   const W y10 = B[0] ^ y4;
+   const W y8 = ~B[2];
+   const W a4 = B[6] ^ y4;
+   const W y14 = a2 ^ a4;
+   const W y19 = y10 ^ y8;
+   const W y9 = y8 ^ y14;
+   const W y11 = y6 ^ a4;
+   const W y15 = a1 ^ a3;
+   const W y17 = B[4] ^ a0;
+   const W y1 = a4 ^ y17;
+   const W y16 = y15 ^ y17;
+   const W y13 = y12 ^ y14;
+   const W U7 = y6 ^ y15;
+   const W y7 = a4 ^ y15;
+   const W y2 = y4 ^ y9;
+   const W y20 = y9 ^ y11;
+   const W y21 = y16 ^ y13;
+   const W y5 = y13 ^ y2;
+   const W y18 = y7 ^ y2;
+   const W y3 = B[4] ^ y1;
 
-inline uint32_t SM4_T_slow(uint32_t b) {
-   const uint32_t t = make_uint32(
-      SM4_SBOX[get_byte<0>(b)], SM4_SBOX[get_byte<1>(b)], SM4_SBOX[get_byte<2>(b)], SM4_SBOX[get_byte<3>(b)]);
+   // The nonlinear middle section of the AES sbox circuit, from the
+   // "Circuit Minimization Team" group
+   // http://www.cs.yale.edu/homes/peralta/CircuitStuff/CMT.html
+   // http://www.cs.yale.edu/homes/peralta/CircuitStuff/SLP_AES_113.txt
+   const W t2 = y12 & y15;
+   const W t3 = y3 & y6;
+   const W t4 = t3 ^ t2;
+   const W t5 = y4 & U7;
+   const W t6 = t5 ^ t2;
+   const W t7 = y13 & y16;
+   const W t8 = y5 & y1;
+   const W t9 = t8 ^ t7;
+   const W t10 = y2 & y7;
+   const W t11 = t10 ^ t7;
+   const W t12 = y9 & y11;
+   const W t13 = y14 & y17;
+   const W t14 = t13 ^ t12;
+   const W t15 = y8 & y10;
+   const W t16 = t15 ^ t12;
+   const W t17 = t4 ^ y20;
+   const W t18 = t6 ^ t16;
+   const W t19 = t9 ^ t14;
+   const W t20 = t11 ^ t16;
+   const W t21 = t17 ^ t14;
+   const W t22 = t18 ^ y19;
+   const W t23 = t19 ^ y21;
+   const W t24 = t20 ^ y18;
+   const W t25 = t21 ^ t22;
+   const W t26 = t21 & t23;
+   const W t27 = t24 ^ t26;
+   const W t28 = t25 & t27;
+   const W t29 = t28 ^ t22;
+   const W t30 = t23 ^ t24;
+   const W t31 = t22 ^ t26;
+   const W t32 = t31 & t30;
+   const W t33 = t32 ^ t24;
+   const W t34 = t23 ^ t33;
+   const W t35 = t27 ^ t33;
+   const W t36 = t24 & t35;
+   const W t37 = t36 ^ t34;
+   const W t38 = t27 ^ t36;
+   const W t39 = t29 & t38;
+   const W t40 = t25 ^ t39;
+   const W t41 = t40 ^ t37;
+   const W t42 = t29 ^ t33;
+   const W t43 = t29 ^ t40;
+   const W t44 = t33 ^ t37;
+   const W t45 = t42 ^ t41;
+   const W z0 = t44 & y15;
+   const W z1 = t37 & y6;
+   const W z2 = t33 & U7;
+   const W z3 = t43 & y16;
+   const W z4 = t40 & y1;
+   const W z5 = t29 & y7;
+   const W z6 = t42 & y11;
+   const W z7 = t45 & y17;
+   const W z8 = t41 & y10;
+   const W z9 = t44 & y12;
+   const W z10 = t37 & y3;
+   const W z11 = t33 & y4;
+   const W z12 = t43 & y13;
+   const W z13 = t40 & y5;
+   const W z14 = t29 & y2;
+   const W z15 = t42 & y9;
+   const W z16 = t45 & y14;
+   const W z17 = t41 & y8;
 
-   // L linear transform
-   return t ^ rotl<2>(t) ^ rotl<10>(t) ^ rotl<18>(t) ^ rotl<24>(t);
+   // Bottom linear layer: the AES circuit's bottom layer merged with A2
+   // (with constant 0x6C)
+   const W c0 = z0 ^ z7;
+   const W c1 = z2 ^ z4;
+   const W c2 = z11 ^ z14;
+   const W c3 = ~z9;
+   const W c4 = c0 ^ c1;
+   const W c5 = z15 ^ c3;
+   const W c6 = z3 ^ z8;
+   const W c7 = z10 ^ c6;
+   const W c8 = c4 ^ c7;
+   const W c9 = z5 ^ z6;
+   const W c10 = z13 ^ c2;
+   const W c11 = z16 ^ c5;
+   const W c12 = z12 ^ c2;
+   const W c14 = z14 ^ z17;
+   const W c15 = z13 ^ c14;
+   const W B0 = c8 ^ c11;
+   const W B2 = c8 ^ c10;
+   const W c16 = ~c4;
+   const W B7 = c9 ^ c16;
+   const W c17 = z9 ^ c12;
+   const W c18 = B0 ^ c17;
+   const W B5 = B7 ^ c18;
+   const W c19 = c5 ^ c15;
+   const W c20 = z6 ^ c0;
+   const W c21 = z1 ^ c20;
+   const W B4 = c17 ^ c21;
+   const W B1 = z10 ^ c19;
+   const W c22 = c19 ^ B4;
+   const W c23 = B7 ^ c22;
+   const W B3 = c11 ^ c23;
+   const W c24 = z4 ^ c10;
+   const W c25 = c11 ^ c24;
+   const W c26 = z0 ^ z1;
+   const W c27 = c25 ^ c26;
+   const W B6 = z3 ^ c27;
+
+   B[0] = B0;
+   B[1] = B1;
+   B[2] = B2;
+   B[3] = B3;
+   B[4] = B4;
+   B[5] = B5;
+   B[6] = B6;
+   B[7] = B7;
 }
 
-inline uint32_t SM4_T(uint32_t b) {
-   const uint32_t s0 = SM4_SBOX_T[get_byte<0>(b)];
-   const uint32_t s1 = SM4_SBOX_T[get_byte<1>(b)];
-   const uint32_t s2 = SM4_SBOX_T[get_byte<2>(b)];
-   const uint32_t s3 = SM4_SBOX_T[get_byte<3>(b)];
-   return (s0) ^ rotr<8>(s1) ^ rotr<16>(s2) ^ rotr<24>(s3);
+/*
+* Apply the linear layer L to the planes T[] and xor the result into X[]
+*
+* Written in terms of rotations of the underlying 32-bit word, L(t) is
+* t ^ rotl<2>(t) ^ rotl<10>(t) ^ rotl<18>(t) ^ rotl<24>(t). A rotation by
+* 8*n moves each byte to byte n higher, which is a rotation of each plane
+* word by n lane groups. A rotation by 2 moves bit b of a byte to bit b+2,
+* which is plane i to plane i-2, except for the top two bits, which move
+* into the next byte and become planes 6 and 7.
+*/
+template <std::unsigned_integral W>
+BOTAN_FORCE_INLINE void SM4_L_xor(W X[8], const W T[8]) {
+   W A[8];
+   W E[8];
+
+   for(size_t i = 0; i != 8; ++i) {
+      const W r1 = sm4_bs_byte_rotl<1>(T[i]);
+      const W r2 = sm4_bs_byte_rotl<2>(T[i]);
+      const W r3 = sm4_bs_byte_rotl<3>(T[i]);
+      const W r12 = r1 ^ r2;
+      A[i] = T[i] ^ r3;
+      E[i] = (i < 2) ? (r12 ^ r3) : (T[i] ^ r12);
+   }
+
+   for(size_t i = 0; i != 6; ++i) {
+      X[i] ^= A[i] ^ E[i + 2];
+   }
+   X[6] ^= A[6] ^ E[0];
+   X[7] ^= A[7] ^ E[1];
 }
 
-template <size_t R, typename F>
-BOTAN_FORCE_INLINE void SM4_E(
-   uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3, const secure_vector<uint32_t>& RK, F& f) {
-   B0 ^= f(B1 ^ B2 ^ B3 ^ RK[4 * R + 0]);
-   B1 ^= f(B2 ^ B3 ^ B0 ^ RK[4 * R + 1]);
-   B2 ^= f(B3 ^ B0 ^ B1 ^ RK[4 * R + 2]);
-   B3 ^= f(B0 ^ B1 ^ B2 ^ RK[4 * R + 3]);
+template <std::unsigned_integral W>
+BOTAN_FORCE_INLINE void SM4_round(W X0[8], const W X1[8], const W X2[8], const W X3[8], const W K[8]) {
+   W T[8];
+   for(size_t i = 0; i != 8; ++i) {
+      T[i] = X1[i] ^ X2[i] ^ X3[i] ^ K[i];
+   }
+   SM4_SBOX(T);
+   SM4_L_xor(X0, T);
 }
 
-template <size_t R, typename F>
-BOTAN_FORCE_INLINE void SM4_E(uint32_t& B0,
-                              uint32_t& B1,
-                              uint32_t& B2,
-                              uint32_t& B3,
-                              uint32_t& C0,
-                              uint32_t& C1,
-                              uint32_t& C2,
-                              uint32_t& C3,
-                              const secure_vector<uint32_t>& RK,
-                              F& f) {
-   B0 ^= f(B1 ^ B2 ^ B3 ^ RK[4 * R + 0]);
-   C0 ^= f(C1 ^ C2 ^ C3 ^ RK[4 * R + 0]);
-   B1 ^= f(B2 ^ B3 ^ B0 ^ RK[4 * R + 1]);
-   C1 ^= f(C2 ^ C3 ^ C0 ^ RK[4 * R + 1]);
-   B2 ^= f(B3 ^ B0 ^ B1 ^ RK[4 * R + 2]);
-   C2 ^= f(C3 ^ C0 ^ C1 ^ RK[4 * R + 2]);
-   B3 ^= f(B0 ^ B1 ^ B2 ^ RK[4 * R + 3]);
-   C3 ^= f(C0 ^ C1 ^ C2 ^ RK[4 * R + 3]);
+/*
+* Transpose the 8x8 bit matrix formed by the bytes of B[]. Afterwards,
+* plane B[i] holds bit 7-i of each byte, and the lane order within each
+* byte is reversed; the transpose is an involution so this cancels when
+* converting back.
+*/
+inline void sm4_bit_transpose(uint32_t B[8]) {
+   swap_bits<uint32_t>(B[1], B[0], 0x55555555, 1);
+   swap_bits<uint32_t>(B[3], B[2], 0x55555555, 1);
+   swap_bits<uint32_t>(B[5], B[4], 0x55555555, 1);
+   swap_bits<uint32_t>(B[7], B[6], 0x55555555, 1);
+
+   swap_bits<uint32_t>(B[2], B[0], 0x33333333, 2);
+   swap_bits<uint32_t>(B[3], B[1], 0x33333333, 2);
+   swap_bits<uint32_t>(B[6], B[4], 0x33333333, 2);
+   swap_bits<uint32_t>(B[7], B[5], 0x33333333, 2);
+
+   swap_bits<uint32_t>(B[4], B[0], 0x0F0F0F0F, 4);
+   swap_bits<uint32_t>(B[5], B[1], 0x0F0F0F0F, 4);
+   swap_bits<uint32_t>(B[6], B[2], 0x0F0F0F0F, 4);
+   swap_bits<uint32_t>(B[7], B[3], 0x0F0F0F0F, 4);
 }
 
-template <size_t R, typename F>
-BOTAN_FORCE_INLINE void SM4_D(
-   uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3, const secure_vector<uint32_t>& RK, F& f) {
-   B0 ^= f(B1 ^ B2 ^ B3 ^ RK[4 * R + 3]);
-   B1 ^= f(B2 ^ B3 ^ B0 ^ RK[4 * R + 2]);
-   B2 ^= f(B3 ^ B0 ^ B1 ^ RK[4 * R + 1]);
-   B3 ^= f(B0 ^ B1 ^ B2 ^ RK[4 * R + 0]);
+/*
+* Interleave the bytes of two 32-bit planes into one 64-bit plane with
+* 16-bit lane groups: byte j of lo becomes the low half of group j and
+* byte j of hi the high half.
+*
+* Only used for 64-bit
+*/
+[[maybe_unused]] inline uint64_t sm4_bs_zip(uint32_t lo, uint32_t hi) {
+   uint64_t x = (static_cast<uint64_t>(hi) << 32) | lo;
+   x = bit_permute_step<uint64_t>(x, 0x00000000FFFF0000, 16);
+   x = bit_permute_step<uint64_t>(x, 0x0000FF000000FF00, 8);
+   return x;
 }
 
-template <size_t R, typename F>
-BOTAN_FORCE_INLINE void SM4_D(uint32_t& B0,
-                              uint32_t& B1,
-                              uint32_t& B2,
-                              uint32_t& B3,
-                              uint32_t& C0,
-                              uint32_t& C1,
-                              uint32_t& C2,
-                              uint32_t& C3,
-                              const secure_vector<uint32_t>& RK,
-                              F& f) {
-   B0 ^= f(B1 ^ B2 ^ B3 ^ RK[4 * R + 3]);
-   C0 ^= f(C1 ^ C2 ^ C3 ^ RK[4 * R + 3]);
-   B1 ^= f(B2 ^ B3 ^ B0 ^ RK[4 * R + 2]);
-   C1 ^= f(C2 ^ C3 ^ C0 ^ RK[4 * R + 2]);
-   B2 ^= f(B3 ^ B0 ^ B1 ^ RK[4 * R + 1]);
-   C2 ^= f(C3 ^ C0 ^ C1 ^ RK[4 * R + 1]);
-   B3 ^= f(B0 ^ B1 ^ B2 ^ RK[4 * R + 0]);
-   C3 ^= f(C0 ^ C1 ^ C2 ^ RK[4 * R + 0]);
+[[maybe_unused]] inline void sm4_bs_unzip(uint64_t x, uint32_t& lo, uint32_t& hi) {
+   x = bit_permute_step<uint64_t>(x, 0x0000FF000000FF00, 8);
+   x = bit_permute_step<uint64_t>(x, 0x00000000FFFF0000, 16);
+   lo = static_cast<uint32_t>(x);
+   hi = static_cast<uint32_t>(x >> 32);
+}
+
+/*
+* Load word w of each of the n_blocks input blocks into the planes P[]
+*/
+template <std::unsigned_integral W>
+void sm4_bs_load(W P[8], const uint8_t in[], size_t w, size_t n_blocks) {
+   constexpr size_t LANES = sm4_bs_lanes<W>();
+
+   uint32_t T[LANES] = {0};
+   for(size_t k = 0; k != n_blocks; ++k) {
+      T[k] = load_be<uint32_t>(in + 16 * k, w);
+   }
+
+   for(size_t g = 0; g != LANES; g += 8) {
+      sm4_bit_transpose(&T[g]);
+   }
+
+   for(size_t i = 0; i != 8; ++i) {
+      if constexpr(std::same_as<W, uint32_t>) {
+         P[i] = T[i];
+      } else {
+         P[i] = sm4_bs_zip(T[i], T[i + 8]);
+      }
+   }
+}
+
+/*
+* Store the planes P[] as word w of each of the n_blocks output blocks
+*/
+template <std::unsigned_integral W>
+void sm4_bs_store(uint8_t out[], const W P[8], size_t w, size_t n_blocks) {
+   constexpr size_t LANES = sm4_bs_lanes<W>();
+
+   uint32_t T[LANES];
+   for(size_t i = 0; i != 8; ++i) {
+      if constexpr(std::same_as<W, uint32_t>) {
+         T[i] = P[i];
+      } else {
+         sm4_bs_unzip(P[i], T[i], T[i + 8]);
+      }
+   }
+
+   for(size_t g = 0; g != LANES; g += 8) {
+      sm4_bit_transpose(&T[g]);
+   }
+
+   for(size_t k = 0; k != n_blocks; ++k) {
+      store_be(T[k], out + 16 * k + 4 * w);
+   }
+}
+
+/*
+* Expand round key rk into plane i: each lane group j is all ones if
+* bit 7-i of byte j of rk is set
+*/
+template <std::unsigned_integral W>
+W sm4_bs_key_plane(uint32_t rk, size_t i) {
+   constexpr size_t LANES = sm4_bs_lanes<W>();
+   constexpr W lane_mask = (static_cast<W>(1) << LANES) - 1;
+
+   W p = 0;
+   for(size_t j = 0; j != 4; ++j) {
+      const W bit = (rk >> (8 * j + 7 - i)) & 1;
+      p |= (static_cast<W>(0) - bit) & (lane_mask << (LANES * j));
+   }
+   return p;
+}
+
+template <bool DECRYPT, std::unsigned_integral W>
+void sm4_bitsliced_blocks(const uint8_t in[], uint8_t out[], size_t blocks, const W KS[32 * 8]) {
+   BOTAN_ASSERT_NOMSG(blocks >= 1 && blocks <= sm4_bs_lanes<W>());
+
+   W X[4][8];
+   for(size_t w = 0; w != 4; ++w) {
+      sm4_bs_load(X[w], in, w, blocks);
+   }
+
+   CT::poison(&X[0][0], 4 * 8);
+
+   for(size_t r = 0; r != 32; r += 4) {
+      auto key = [&](size_t i) { return &KS[8 * (DECRYPT ? 31 - i : i)]; };
+      SM4_round(X[0], X[1], X[2], X[3], key(r + 0));
+      SM4_round(X[1], X[2], X[3], X[0], key(r + 1));
+      SM4_round(X[2], X[3], X[0], X[1], key(r + 2));
+      SM4_round(X[3], X[0], X[1], X[2], key(r + 3));
+   }
+
+   CT::unpoison(&X[0][0], 4 * 8);
+
+   for(size_t w = 0; w != 4; ++w) {
+      sm4_bs_store(out, X[3 - w], w, blocks);
+   }
+}
+
+template <bool DECRYPT>
+void sm4_bitsliced(const uint8_t in[], uint8_t out[], size_t blocks, const secure_vector<sm4_bs_word>& KS) {
+   BOTAN_ASSERT_NOMSG(KS.size() == 32 * 8);
+
+   while(blocks > 0) {
+      const size_t this_loop = std::min(blocks, SM4_BITSLICED_BLOCKS);
+      sm4_bitsliced_blocks<DECRYPT>(in, out, this_loop, KS.data());
+      in += this_loop * 16;
+      out += this_loop * 16;
+      blocks -= this_loop;
+   }
+}
+
+/*
+* Returns true if the bitsliced implementation will be used
+*/
+bool sm4_use_bitsliced() {
+#if defined(BOTAN_HAS_SM4_ARMV8)
+   if(CPUID::has(CPUID::Feature::SM4)) {
+      return false;
+   }
+#endif
+
+#if defined(BOTAN_HAS_SM4_X86)
+   if(CPUID::has(CPUID::Feature::SM4)) {
+      return false;
+   }
+#endif
+
+#if defined(BOTAN_HAS_SM4_AVX512_GFNI)
+   if(CPUID::has(CPUID::Feature::AVX512, CPUID::Feature::GFNI)) {
+      return false;
+   }
+#endif
+
+#if defined(BOTAN_HAS_SM4_GFNI)
+   if(CPUID::has(CPUID::Feature::GFNI)) {
+      return false;
+   }
+#endif
+
+#if defined(BOTAN_HAS_SM4_HWAES)
+   if(CPUID::has(CPUID::Feature::HW_AES)) {
+      return false;
+   }
+#endif
+
+   return true;
 }
 
 }  // namespace
@@ -189,53 +495,7 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    }
 #endif
 
-   while(blocks >= 2) {
-      uint32_t B0 = load_be<uint32_t>(in, 0);
-      uint32_t B1 = load_be<uint32_t>(in, 1);
-      uint32_t B2 = load_be<uint32_t>(in, 2);
-      uint32_t B3 = load_be<uint32_t>(in, 3);
-
-      uint32_t C0 = load_be<uint32_t>(in, 4);
-      uint32_t C1 = load_be<uint32_t>(in, 5);
-      uint32_t C2 = load_be<uint32_t>(in, 6);
-      uint32_t C3 = load_be<uint32_t>(in, 7);
-
-      SM4_E<0>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T_slow);
-      SM4_E<1>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
-      SM4_E<2>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
-      SM4_E<3>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
-      SM4_E<4>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
-      SM4_E<5>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
-      SM4_E<6>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
-      SM4_E<7>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T_slow);
-
-      store_be(out, B3, B2, B1, B0, C3, C2, C1, C0);
-
-      in += 2 * BLOCK_SIZE;
-      out += 2 * BLOCK_SIZE;
-      blocks -= 2;
-   }
-
-   for(size_t i = 0; i != blocks; ++i) {
-      uint32_t B0 = load_be<uint32_t>(in, 0);
-      uint32_t B1 = load_be<uint32_t>(in, 1);
-      uint32_t B2 = load_be<uint32_t>(in, 2);
-      uint32_t B3 = load_be<uint32_t>(in, 3);
-
-      SM4_E<0>(B0, B1, B2, B3, m_RK, SM4_T_slow);
-      SM4_E<1>(B0, B1, B2, B3, m_RK, SM4_T);
-      SM4_E<2>(B0, B1, B2, B3, m_RK, SM4_T);
-      SM4_E<3>(B0, B1, B2, B3, m_RK, SM4_T);
-      SM4_E<4>(B0, B1, B2, B3, m_RK, SM4_T);
-      SM4_E<5>(B0, B1, B2, B3, m_RK, SM4_T);
-      SM4_E<6>(B0, B1, B2, B3, m_RK, SM4_T);
-      SM4_E<7>(B0, B1, B2, B3, m_RK, SM4_T_slow);
-
-      store_be(out, B3, B2, B1, B0);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
-   }
+   sm4_bitsliced<false>(in, out, blocks, m_BSK);
 }
 
 /*
@@ -274,53 +534,7 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    }
 #endif
 
-   while(blocks >= 2) {
-      uint32_t B0 = load_be<uint32_t>(in, 0);
-      uint32_t B1 = load_be<uint32_t>(in, 1);
-      uint32_t B2 = load_be<uint32_t>(in, 2);
-      uint32_t B3 = load_be<uint32_t>(in, 3);
-
-      uint32_t C0 = load_be<uint32_t>(in, 4);
-      uint32_t C1 = load_be<uint32_t>(in, 5);
-      uint32_t C2 = load_be<uint32_t>(in, 6);
-      uint32_t C3 = load_be<uint32_t>(in, 7);
-
-      SM4_D<7>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T_slow);
-      SM4_D<6>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
-      SM4_D<5>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
-      SM4_D<4>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
-      SM4_D<3>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
-      SM4_D<2>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
-      SM4_D<1>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
-      SM4_D<0>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T_slow);
-
-      store_be(out, B3, B2, B1, B0, C3, C2, C1, C0);
-
-      in += 2 * BLOCK_SIZE;
-      out += 2 * BLOCK_SIZE;
-      blocks -= 2;
-   }
-
-   for(size_t i = 0; i != blocks; ++i) {
-      uint32_t B0 = load_be<uint32_t>(in, 0);
-      uint32_t B1 = load_be<uint32_t>(in, 1);
-      uint32_t B2 = load_be<uint32_t>(in, 2);
-      uint32_t B3 = load_be<uint32_t>(in, 3);
-
-      SM4_D<7>(B0, B1, B2, B3, m_RK, SM4_T_slow);
-      SM4_D<6>(B0, B1, B2, B3, m_RK, SM4_T);
-      SM4_D<5>(B0, B1, B2, B3, m_RK, SM4_T);
-      SM4_D<4>(B0, B1, B2, B3, m_RK, SM4_T);
-      SM4_D<3>(B0, B1, B2, B3, m_RK, SM4_T);
-      SM4_D<2>(B0, B1, B2, B3, m_RK, SM4_T);
-      SM4_D<1>(B0, B1, B2, B3, m_RK, SM4_T);
-      SM4_D<0>(B0, B1, B2, B3, m_RK, SM4_T_slow);
-
-      store_be(out, B3, B2, B1, B0);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
-   }
+   sm4_bitsliced<true>(in, out, blocks, m_BSK);
 }
 
 bool SM4::has_keying_material() const {
@@ -341,25 +555,12 @@ uint32_t SM4::SM4_Tp(uint32_t b) {
    }
 #endif
 
-   const uint8_t b0 = get_byte<0>(b);
-   const uint8_t b1 = get_byte<1>(b);
-   const uint8_t b2 = get_byte<2>(b);
-   const uint8_t b3 = get_byte<3>(b);
+   uint32_t T[8] = {b, 0, 0, 0, 0, 0, 0, 0};
+   sm4_bit_transpose(T);
+   SM4_SBOX(T);
+   sm4_bit_transpose(T);
 
-   uint8_t t0 = 0;
-   uint8_t t1 = 0;
-   uint8_t t2 = 0;
-   uint8_t t3 = 0;
-   for(size_t i = 0; i != 256; ++i) {
-      const uint8_t i8 = static_cast<uint8_t>(i);
-      const uint8_t s = SM4_SBOX[i];
-      t0 |= CT::Mask<uint8_t>::is_equal(i8, b0).if_set_return(s);
-      t1 |= CT::Mask<uint8_t>::is_equal(i8, b1).if_set_return(s);
-      t2 |= CT::Mask<uint8_t>::is_equal(i8, b2).if_set_return(s);
-      t3 |= CT::Mask<uint8_t>::is_equal(i8, b3).if_set_return(s);
-   }
-
-   const uint32_t t = make_uint32(t0, t1, t2, t3);
+   const uint32_t t = T[0];
    // L' linear transform
    return t ^ rotl<13>(t) ^ rotl<23>(t);
 }
@@ -373,6 +574,8 @@ void SM4::key_schedule(std::span<const uint8_t> key) {
                             0x888F969D, 0xA4ABB2B9, 0xC0C7CED5, 0xDCE3EAF1, 0xF8FF060D, 0x141B2229, 0x30373E45,
                             0x4C535A61, 0x686F767D, 0x848B9299, 0xA0A7AEB5, 0xBCC3CAD1, 0xD8DFE6ED, 0xF4FB0209,
                             0x10171E25, 0x2C333A41, 0x484F565D, 0x646B7279};
+
+   CT::poison(key.data(), key.size());
 
    uint32_t K0 = load_be<uint32_t>(key.data(), 0) ^ FK[0];
    uint32_t K1 = load_be<uint32_t>(key.data(), 1) ^ FK[1];
@@ -391,10 +594,23 @@ void SM4::key_schedule(std::span<const uint8_t> key) {
       m_RK[i + 2] = K2;
       m_RK[i + 3] = K3;
    }
+
+   if(sm4_use_bitsliced()) {
+      m_BSK.resize(32 * 8);
+      for(size_t r = 0; r != 32; ++r) {
+         for(size_t i = 0; i != 8; ++i) {
+            m_BSK[8 * r + i] = sm4_bs_key_plane<sm4_bs_word>(m_RK[r], i);
+         }
+      }
+   }
+
+   CT::unpoison(m_RK.data(), m_RK.size());
+   CT::unpoison(key.data(), key.size());
 }
 
 void SM4::clear() {
    zap(m_RK);
+   zap(m_BSK);
 }
 
 size_t SM4::parallelism() const {
@@ -428,7 +644,7 @@ size_t SM4::parallelism() const {
    }
 #endif
 
-   return 1;
+   return SM4_BITSLICED_BLOCKS;
 }
 
 std::string SM4::provider() const {

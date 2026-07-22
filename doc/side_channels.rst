@@ -330,11 +330,11 @@ the sboxes are executed directly as circuits.
 SM4
 ------------------------
 
-The baseline implementation of SM4 uses table lookups, and is consequently
-vulnerable to cache based side channels. There are also constant time
-implementations of SM4 making use of AES hardware instructions, or GFNI where
-available. The dedicated SM4 instructions available on recent x86-64 and Aarch64
-processors are used when available.
+The baseline SM4 code is a constant-time bitsliced implementation very similar
+to the AES bitsliced code. There are also constant time implementations of SM4
+making use of AES hardware instructions, GFNI/AVX512, or the dedicated SM4
+instructions available on recent x86-64 and Aarch64 processors, which are used
+if available.
 
 ARIA/Camellia/SEED
 ------------------------
