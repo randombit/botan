@@ -69,7 +69,9 @@ class PrimeOrderCurve /* NOLINT(*-special-member-functions) */ {
             Scalar(Scalar&& other) = default;
             Scalar& operator=(const Scalar& other) = default;
             Scalar& operator=(Scalar&& other) = default;
-            ~Scalar() = default;
+
+            // Scalars are commonly secret values so wipe on destruction
+            ~Scalar() { _zeroize(); }
 
             void _zeroize();
 
