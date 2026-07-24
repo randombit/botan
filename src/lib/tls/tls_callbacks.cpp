@@ -41,7 +41,7 @@
 #endif
 
 #if defined(BOTAN_HAS_TLS_13_PQC)
-   #include <botan/internal/hybrid_public_key.h>
+   #include <botan/internal/tls_hybrid_kem.h>
 #endif
 
 namespace Botan {
@@ -247,7 +247,7 @@ std::unique_ptr<Public_Key> TLS::Callbacks::tls_deserialize_peer_public_key(
 
 #if defined(BOTAN_HAS_TLS_13_PQC)
    if(group_params.is_pqc_hybrid()) {
-      return Hybrid_KEM_PublicKey::load_for_group(group_params, key_bits);
+      return Hybrid_TLS_KEM_PublicKey::load_for_group(group_params, key_bits);
    }
 #endif
 
@@ -281,7 +281,7 @@ std::unique_ptr<Private_Key> TLS::Callbacks::tls_kem_generate_key(TLS::Group_Par
 
 #if defined(BOTAN_HAS_TLS_13_PQC)
    if(group.is_pqc_hybrid()) {
-      return Hybrid_KEM_PrivateKey::generate_from_group(group, rng);
+      return Hybrid_TLS_KEM_PrivateKey::generate_from_group(group, rng);
    }
 #endif
 
