@@ -56,20 +56,20 @@ if type -p "apt-get"; then
         "${SCRIPT_LOCATION}"/download_ci_dep.py limbo "${SCRIPT_LOCATION}/../../../limbo.json"
 
     elif [ "$TARGET" = "lint" ]; then
-        pip install ruff
+        pip install "ruff~=0.15.0"
 
     elif [ "$TARGET" = "typos" ]; then
-        cargo install typos-cli
+        cargo install typos-cli@1.48.0
 
     elif [ "$TARGET" = "coverage" ]; then
         "${SCRIPT_LOCATION}"/download_ci_dep.py coveralls --extract 'tar -xz -C /usr/local/bin -f {file}'
 
     elif [ "$TARGET" = "wycheproof" ]; then
-        git clone --depth 1 "${WYCHEPROOF_GIT_URL}" wycheproof-git
+        git clone --depth 1 "${WYCHEPROOF_GIT_URL}" --revision "${WYCHEPROOF_GIT_REV}" wycheproof-git
         echo "WYCHEPROOF_DIR=$(pwd)/wycheproof-git" >> "$GITHUB_ENV"
 
     elif [ "$TARGET" = "acvp" ]; then
-        git clone --depth 1 "${ACVP_SERVER_GIT_URL}" acvp-server-git
+        git clone --depth 1 "${ACVP_SERVER_GIT_URL}" --revision "${ACVP_GIT_REV}" acvp-server-git
         echo "ACVP_TESTDATA_DIR=$(pwd)/acvp-server-git/gen-val/json-files" >> "$GITHUB_ENV"
     fi
 
