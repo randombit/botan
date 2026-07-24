@@ -28,6 +28,8 @@ std::string to_string(ErrorType type) {
          return "InvalidObjectState";
       case ErrorType::KeyNotSet:
          return "KeyNotSet";
+      case ErrorType::OperationCanceled:
+         return "OperationCanceled";
       case ErrorType::InvalidArgument:
          return "InvalidArgument";
       case ErrorType::InvalidKeyLength:
@@ -108,6 +110,8 @@ Invalid_IV_Length::Invalid_IV_Length(std::string_view mode, size_t bad_len) :
       Invalid_Argument(fmt("IV length {} is invalid for {}", bad_len, mode)) {}
 
 Key_Not_Set::Key_Not_Set(std::string_view algo) : Invalid_State(fmt("Key not set in {}", algo)) {}
+
+Operation_Canceled::Operation_Canceled(std::string_view oper) : Invalid_State(fmt("{} canceled", oper)) {}
 
 PRNG_Unseeded::PRNG_Unseeded(std::string_view algo) : Invalid_State(fmt("PRNG {} not seeded", algo)) {}
 
