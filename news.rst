@@ -47,7 +47,7 @@ Version 3.13.0, Not Yet Released
 * Various ASN.1 hardening and decoder strictness improvements (GH #5693 #5703 #5710 #5720)
 
 * Various BigInt and number-theoretic hardening and bug fixes.
-  (GH #5581 #5585 #5586 #5588 #5592 #5650 #5688)
+  (GH #5581 #5585 #5586 #5588 #5592 #5620 #5650 #5688)
 
 * Reject RSA signature and ciphertext values which are not exactly the length of
   the modulus (GH #5592 #5630 #5675)
