@@ -6,9 +6,10 @@
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import sys
-import re
 import os
+import re
+import sys
+
 
 def main(args = None):
     if args is None:

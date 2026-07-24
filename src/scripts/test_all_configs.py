@@ -11,9 +11,10 @@ There is probably no reason for you to run this. Unless you want to.
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import optparse # pylint: disable=deprecated-module
-import sys
+import optparse  # pylint: disable=deprecated-module
 import subprocess
+import sys
+
 
 def get_module_list(configure_py):
     configure = subprocess.Popen([configure_py, '--list-modules'], stdout=subprocess.PIPE)

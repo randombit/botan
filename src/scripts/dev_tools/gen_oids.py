@@ -9,10 +9,12 @@ Botan is released under the Simplified BSD License (see license.txt)
 NOTE: This script requires the Jinja templating library to be installed.
 """
 
-import sys
 import datetime
 import re
+import sys
+
 from jinja2 import Environment, FileSystemLoader
+
 
 # This must match OID::hash_code
 def hash_oid(oid):

@@ -9,6 +9,7 @@ Botan is released under the Simplified BSD License (see license.txt)
 """
 
 import traceback
+
 from pycparser import c_ast, parse_file
 
 ffi_header = 'src/lib/ffi/ffi.h'

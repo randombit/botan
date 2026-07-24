@@ -15,7 +15,7 @@ import errno
 import hashlib
 import io
 import logging
-import optparse # pylint: disable=deprecated-module
+import optparse  # pylint: disable=deprecated-module
 import os
 import re
 import shutil
@@ -94,7 +94,7 @@ def extract_revision(revision, to):
     tar_val = run_git(['archive', '--format=tar', '--prefix=%s/' % (to), revision])
     tar_f = tarfile.open(fileobj=io.BytesIO(tar_val))
 
-    if sys.version_info.major == 3 and sys.version_info.minor >= 12:
+    if sys.version_info >= (3, 12):
         tar_f.extractall(filter='fully_trusted')
     else:
         tar_f.extractall()

@@ -13,9 +13,9 @@ Botan is released under the Simplified BSD License (see license.txt)
 """
 
 import asyncio
-import tempfile
-import sys
 import binascii
+import sys
+import tempfile
 
 
 async def run(cmd, args):
@@ -95,11 +95,11 @@ async def join(strings):
 async def make_xmss_sig_vec_entry(xmss_param):
     async def entry(msg):
         kp = await Keypair.generate(xmss_param)
-        out = "Params = {}\n".format(kp.params_name)
-        out += "Msg = {}\n".format(tohex(msg))
-        out += "PrivateKey = {}\n".format(tohex(kp.secret_key))
+        out = f"Params = {kp.params_name}\n"
+        out += f"Msg = {tohex(msg)}\n"
+        out += f"PrivateKey = {tohex(kp.secret_key)}\n"
         sig = await kp.sign(msg)
-        out += "Signature = {}\n".format(tohex(sig))
+        out += f"Signature = {tohex(sig)}\n"
         return out
 
     return await join([entry(msg) for msg in TEST_MESSAGES])
@@ -108,11 +108,11 @@ async def make_xmss_sig_vec_entry(xmss_param):
 async def make_xmss_verify_vec_entry(xmss_param):
     async def entry(msg):
         kp = await Keypair.generate(xmss_param)
-        out = "Params = {}\n".format(kp.params_name)
-        out += "Msg = {}\n".format(tohex(msg))
-        out += "PublicKey = {}\n".format(tohex(kp.public_key))
+        out = f"Params = {kp.params_name}\n"
+        out += f"Msg = {tohex(msg)}\n"
+        out += f"PublicKey = {tohex(kp.public_key)}\n"
         sig = await kp.sign(msg)
-        out += "Signature = {}\n".format(tohex(sig))
+        out += f"Signature = {tohex(sig)}\n"
         return out
 
     return await join([entry(msg) for msg in TEST_MESSAGES])
@@ -120,18 +120,17 @@ async def make_xmss_verify_vec_entry(xmss_param):
 
 async def make_xmss_keygen_vec_entry(xmss_param):
     kp = await Keypair.generate(xmss_param)
-    out = "Params = {}\n".format(xmss_param)
-    out += "SecretSeed = {}\n".format(tohex(kp.secret_seed))
-    out += "PublicSeed = {}\n".format(tohex(kp.public_seed))
-    out += "SecretPrf = {}\n".format(tohex(kp.secret_prf))
-    out += "PublicKey = {}\n".format(tohex(kp.public_key))
-    out += "PrivateKey = {}\n".format(tohex(kp.secret_key))
+    out = f"Params = {xmss_param}\n"
+    out += f"SecretSeed = {tohex(kp.secret_seed)}\n"
+    out += f"PublicSeed = {tohex(kp.public_seed)}\n"
+    out += f"SecretPrf = {tohex(kp.secret_prf)}\n"
+    out += f"PublicKey = {tohex(kp.public_key)}\n"
+    out += f"PrivateKey = {tohex(kp.secret_key)}\n"
     return out
 
 
 if len(sys.argv) < 3:
-    print("Usage: {} <test vector: 'sig', 'verify', 'keygen'> <XMSS Parameter Set Name(s)>".format(
-        sys.argv[0]))
+    print(f"Usage: {sys.argv[0]} <test vector: 'sig', 'verify', 'keygen'> <XMSS Parameter Set Name(s)>")
     sys.exit(1)
 
 funs = {

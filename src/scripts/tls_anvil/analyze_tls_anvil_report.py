@@ -6,12 +6,11 @@
 # (C) 2023 Fabian Albert, Rohde & Schwarz Cybersecurity
 #
 # Botan is released under the Simplified BSD License (see license.txt)
-import sys
 import argparse
-import os
 import json
 import logging
-
+import os
+import sys
 
 result_level = {
     "STRICTLY_SUCCEEDED": 0,
@@ -61,13 +60,13 @@ def xfail_list(side):
 
     xfails = {}
     for test in conceptually_succeeded:
-        if test.startswith('both.') or test.startswith(side):
+        if test.startswith(('both.', side)):
             xfails[test] = result_level["CONCEPTUALLY_SUCCEEDED"]
     for test in partially_failed:
-        if test.startswith('both.') or test.startswith(side):
+        if test.startswith(('both.', side)):
             xfails[test] = result_level["PARTIALLY_FAILED"]
     for test in fully_failed:
-        if test.startswith('both.') or test.startswith(side):
+        if test.startswith(('both.', side)):
             xfails[test] = result_level["FULLY_FAILED"]
     return xfails
 
@@ -148,7 +147,7 @@ def process_test_result(result_path: str, xfails: dict, seen_xfails: set):
             if method_id in xfails:
                 expected_level = xfails[method_id]
                 seen_xfails.add(method_id)
-                expected_label = [k for k, v in result_level.items() if v == expected_level][0]
+                expected_label = next(k for k, v in result_level.items() if v == expected_level)
 
                 if actual_level != expected_level:
                     # Test is doing other than expected -> error
@@ -226,7 +225,7 @@ def main(args=None):
     # Check that every xfail entry was actually seen in the results
     missing_xfails = set(xfails.keys()) - seen_xfails
     for method_id in sorted(missing_xfails):
-        expected_label = [k for k, v in result_level.items() if v == xfails[method_id]][0]
+        expected_label = next(k for k, v in result_level.items() if v == xfails[method_id])
         logging.warning(
             "xfailed test '%s' (expected %s) was not found in results.",
             method_id, expected_label)

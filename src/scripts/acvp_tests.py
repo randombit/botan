@@ -10,6 +10,7 @@ $ACVP_TESTDATA_DIR at the gen-val/json-files directory.
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
+from __future__ import annotations
 
 import argparse
 import binascii
@@ -26,7 +27,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import botan3 as botan
-
 
 # ---- Infra ----
 
@@ -1981,7 +1981,7 @@ def _kda_party_info(party: dict) -> bytes:
     # uPartyInfo / vPartyInfo: concatenation of the party's fields in the
     # order they appear (partyId, ephemeralData).
     out = _from_hex(party["partyId"])
-    if "ephemeralData" in party and party["ephemeralData"]:
+    if party.get("ephemeralData"):
         out += _from_hex(party["ephemeralData"])
     return out
 
@@ -2100,7 +2100,7 @@ def _kda_resolve(group: dict, test: dict) -> tuple[str, bytes]:
         algo = _KDA_ONESTEP_AUX_MAP.get(aux)
         if algo is None:
             raise TestSkip(f"Unsupported auxFunction: {aux}")
-        uses_salt = aux.startswith("HMAC-") or aux.startswith("KMAC-")
+        uses_salt = aux.startswith(("HMAC-", "KMAC-"))
         salt = _from_hex(kp.get("salt", "")) if uses_salt else b""
         return algo, salt
 
