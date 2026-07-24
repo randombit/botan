@@ -1,0 +1,29 @@
+soname_suffix "so"
+
+use_stack_protector no
+
+<feature_macros>
+_XOPEN_SOURCE=600
+_ALL_SOURCE
+_OPEN_SYS_FILE_EXT=1
+_AE_BIMODAL=1
+_ENHANCED_ASCII_EXT=0xFFFFFFFF
+</feature_macros>
+
+<target_features>
+posix1
+clock_gettime
+dev_random
+
+atomics
+sockets
+system_clock
+threads
+filesystem
+</target_features>
+
+<aliases>
+z/OS
+os/390
+os390
+</aliases>
