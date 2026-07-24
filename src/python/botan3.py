@@ -556,6 +556,16 @@ def _set_prototypes(dll):
     dll.botan_x509_cert_validation_status.argtypes = [c_int]
     dll.botan_x509_cert_validation_status.restype = c_char_p
 
+    # X509 Extensions
+    ffi_api(dll.botan_x509_ext_ip_addr_blocks_get_counts, [c_void_p, POINTER(c_size_t), POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_ext_ip_addr_blocks_get_family,
+            [c_void_p, c_int, c_size_t, POINTER(c_int), POINTER(c_uint8), POINTER(c_int), POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_ext_ip_addr_blocks_get_address,
+            [c_void_p, c_int, c_size_t, c_size_t, c_char_p, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_ext_as_blocks_get_info, [c_void_p, c_int, POINTER(c_int), POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_ext_as_blocks_get_entry_at,
+            [c_void_p, c_int, c_size_t, POINTER(c_uint32), POINTER(c_uint32)])
+
     # X509 CRL
     ffi_api(dll.botan_x509_crl_load, [c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_x509_crl_load_file, [c_void_p, c_char_p])
@@ -2394,6 +2404,102 @@ class X509Cert: # pylint: disable=invalid-name
 
     def handle_(self):
         return self.__obj
+
+    def ext_ip_addr_blocks(self) -> tuple[
+        list[tuple[int | None, list[tuple[tuple[int], tuple[int]]] | None]],
+        list[tuple[int | None, list[tuple[tuple[int], tuple[int]]] | None]]
+    ]:
+        """Get values from the IP Address Blocks extension.
+        If the extension is not present, an exception will be raised.
+
+        Returns all values in the extension, in the form of (v4, v6), where both contain a list of tuples of
+        type (int | None, list[...]). The first element of each tuple is the SAFI, it may be `None`
+        to indicate no SAFI is present. The second element is a list of elements of type
+        tuple[tuple[int], tuple[int]], where each element is a single address range. Each element contains
+        two tuples of equal length, 4 for IPv4 families and 16 for IPv6 families. The values are the minimum
+        and maximum addresses of the range respectively. If the particular family is marked as "inherit",
+        the outer tuple will contain `None` as its second element instead of a list of ranges."""
+        v4 = []
+        v6 = []
+
+        v4_count = c_size_t(0)
+        v6_count = c_size_t(0)
+
+        _DLL.botan_x509_ext_ip_addr_blocks_get_counts(self.__obj, byref(v4_count), byref(v6_count))
+
+        v4_count = v4_count.value
+        v6_count = v6_count.value
+
+        for (ipv6, stop) in ((0, v4_count), (1, v6_count)):
+            for i in range(stop):
+                size = 16 if ipv6 else 4
+
+                has_safi = c_int(0)
+                safi = c_uint8(0)
+                present = c_int(0)
+                count = c_size_t(0)
+                _DLL.botan_x509_ext_ip_addr_blocks_get_family(self.__obj, c_int(ipv6), c_size_t(i), byref(has_safi), byref(safi), byref(present), byref(count))
+                ranges = None
+                if present.value == 1:
+                    ranges = []
+                    for entry in range(count.value):
+                        min_, max_ = _call_fn_returning_vec_pair(
+                            size, size, lambda mi, _, ma, out_len, ipv6=ipv6, i=i, entry=entry: _DLL.botan_x509_ext_ip_addr_blocks_get_address(
+                                self.__obj,
+                                c_int(ipv6),
+                                c_size_t(i),
+                                c_size_t(entry),
+                                mi,
+                                ma,
+                                out_len))
+                        ranges.append((tuple(min_), tuple(max_)))
+
+                safi = safi.value if has_safi.value == 1 else None
+                if ipv6 == 0:
+                    v4.append((safi, ranges))
+                else:
+                    v6.append((safi, ranges))
+        return (v4, v6)
+
+    def __get_as_blocks_values(self, asnum: bool) -> list[tuple[int, int]] | None:
+        present = c_int(0)
+        count = c_size_t(0)
+        asnum = c_int(1 if asnum else 0)
+        _DLL.botan_x509_ext_as_blocks_get_info(self.__obj, asnum, byref(present), byref(count))
+
+        # value is 'inherit'
+        if present.value == 0:
+            return None
+
+        values = []
+        for i in range(count.value):
+            min_ = c_uint32(0)
+            max_ = c_uint32(0)
+            _DLL.botan_x509_ext_as_blocks_get_entry_at(self.__obj, asnum, c_size_t(i), byref(min_), byref(max_))
+            values.append((min_.value, max_.value))
+        return values
+
+    def ext_as_blocks_asnum(self) -> list[tuple[int, int]] | None:
+        """Get values from the AS Blocks extension.
+        If the extension is not present, an exception will be raised.
+
+        Returns all AS numbers contained in the extension.
+        Returns a list of tuples, where each tuple is a range, and its inner elements are the
+        minimum and maximum values of the range respectively.
+        If AS numbers are marked as "inherit", `None` is returned instead.
+        If AS numbers are not present in the extension at all, this raises an exception."""
+        return self.__get_as_blocks_values(True)
+
+    def ext_as_blocks_rdi(self) -> list[tuple[int, int]] | None:
+        """Get values from the AS Blocks extension.
+        If the extension is not present, an exception will be raised.
+
+        Get all RDIs contained in the extension.
+        Returns a list of tuples, where each tuple is a range, and its inner elements are the
+        minimum and maximum values of the range respectively.
+        If RDIs are marked as "inherit", `None` is returned instead.
+        If RDIs are not present in the extension at all, this raises an exception."""
+        return self.__get_as_blocks_values(False)
 
     def verify(self,
                intermediates: list[X509Cert] | None = None,

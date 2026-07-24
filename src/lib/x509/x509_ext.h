@@ -1105,6 +1105,12 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
 
       const std::vector<IPAddressFamily>& addr_blocks() const { return m_ip_addr_blocks; }
 
+      /// The number of IPv4 families contained in the extension
+      size_t v4_count() const { return m_v4_count; }
+
+      /// The number of IPv6 families contained in the extension
+      size_t v6_count() const { return m_v6_count; }
+
    private:
       std::string oid_name() const override { return "PKIX.IpAddrBlocks"; }
 
@@ -1116,6 +1122,8 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
       void decode_inner(const std::vector<uint8_t>& in) override;
 
       std::vector<IPAddressFamily> m_ip_addr_blocks;
+      size_t m_v4_count = 0;
+      size_t m_v6_count = 0;
 
       void sort_and_merge();
       template <Version V>
