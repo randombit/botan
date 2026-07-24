@@ -23,7 +23,7 @@ In the week prior to a release, after feature freeze goes into effect
 - [ ] Perform a full clang-tidy run with latest available Clang
 - [ ] Test build configurations using `src/scripts/test_all_configs.py`
 - [ ] Test a few builds on platforms not in CI (eg OpenBSD, FreeBSD, Solaris)
-- [ ] Update relevant third party test suites (eg Limbo, BoGo, TLS-Anvil, ...)
+- [ ] Update relevant third party test suites (eg Limbo, ACVP, Wycheproof, BoGo, TLS-Anvil, ...)
 
 Tag the Release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
