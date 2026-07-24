@@ -1,0 +1,231 @@
+BLS12-381
+============================
+
+.. versionadded:: 3.13.0
+
+BLS12-381 is a pairing-friendly elliptic curve widely used for BLS signatures,
+verifiable random functions, threshold cryptography, and zero knowledge proof systems.
+
+.. warning::
+
+   This is a low level mathematical primitive intended for implementing higher level
+   protocols. It does not by itself implement any signature or encryption scheme.
+
+The interface consists of value types for the scalar field, the two source groups G1 and
+G2, and the pairing target group Gt, all declared in ``bls12_381.h`` within namespace
+``Botan::BLS12_381``. The base field and extension tower arithmetic is internal to the
+library.
+
+All operations are constant time unless otherwise documented; in particular scalar
+multiplication via ``mul`` is safe for secret scalars. Operations documented as variable
+time (such as ``msm_vartime``), the pairing, and hash-to-curve assume their inputs are
+public values, which is the case in the standard usages (signature verification, hashing
+a message to the curve).
+
+Serialization Formats
+----------------------------
+
+Group elements use the ZCash compressed point encoding: 48 bytes for G1, 96 bytes for G2.
+The three high bits of the first byte are flag bits indicating (in order) compressed
+encoding, the point at infinity, and the lexicographically larger of the two possible y
+coordinates. The x coordinate follows as a big-endian integer; for G2 the ``c1``
+coefficient of the extension field element is encoded first. Deserialization rejects
+any encoding that is non-canonical, not on the curve, or outside the prime order
+subgroup.
+
+Scalars are encoded as 32 byte big-endian integers, field elements as 48 byte big-endian
+integers; deserialization of values not fully reduced modulo the respective prime is
+rejected.
+
+.. note::
+
+   Some implementations of BLS12-381 default to using little-endian encoding of scalars.
+
+.. note::
+
+   There is no standardized serialization for elements of Gt. ``Gt::serialize``
+   encodes the twelve field coefficients of the underlying extension field
+   element in a fixed order. This encoding is stable across versions of the
+   library but is not guaranteed to match the encoding of any other
+   implementation. Note also that while all correct implementations will agree
+   on whether a pairing product equals the identity, the exact value of that
+   pairing output may vary depending on implementation choices (eg using
+   an alternative field tower)
+
+Scalars
+----------------------------
+
+.. cpp:class:: Botan::BLS12_381::Scalar
+
+   An integer modulo the group order r. Default constructed as zero. Since scalars are
+   commonly secret keys, the value is zeroized on destruction, and moving from a
+   ``Scalar`` zeroizes the moved-from value.
+
+   .. cpp:function:: static Scalar zero()
+   .. cpp:function:: static Scalar one()
+   .. cpp:function:: static Scalar from_u32(uint32_t v)
+
+   .. cpp:function:: static std::optional<Scalar> deserialize(std::span<const uint8_t> bytes)
+
+      Accepts exactly 32 bytes encoding a big-endian integer smaller than r.
+
+   .. cpp:function:: static Scalar from_bytes_wide(std::span<const uint8_t, 64> bytes)
+
+      Reduces a 64 byte big-endian integer modulo r, suitable for deriving
+      uniformly distributed scalars from an RNG or hash.
+
+   .. cpp:function:: static Scalar hash(std::span<const uint8_t> input, std::span<const uint8_t> dst)
+
+      Hash an input to a uniformly distributed scalar, using the hash_to_field
+      construction of RFC 9380 (``expand_message_xmd`` with SHA-256 followed by wide
+      reduction). Useful for example for deriving Fiat-Shamir challenges. The domain
+      separation tag ``dst`` distinguishes different uses of the hash; see RFC 9380
+      section 3.1 for the requirements. An empty tag is rejected with
+      ``Invalid_Argument``; tags longer than 255 bytes are replaced by an intermediate
+      hash, following RFC 9380 section 5.3.3.
+
+   .. cpp:function:: std::array<uint8_t, 32> serialize() const
+
+   Arithmetic is available via ``add``, ``sub``, ``mul``, ``square``, ``negate`` and
+   ``invert`` (the inverse of zero is zero), as well as the usual overloaded operators.
+
+Group Elements
+----------------------------
+
+.. cpp:class:: Botan::BLS12_381::G1Affine
+
+   A point of the prime order group G1 in affine form, used for serialization and as
+   pairing input.
+
+   .. cpp:function:: static G1Affine generator()
+   .. cpp:function:: static G1Affine identity()
+
+   .. cpp:function:: static std::optional<G1Affine> deserialize(std::span<const uint8_t> bytes)
+
+      Only the 48 byte compressed encoding is accepted. Points outside the prime
+      order subgroup are rejected.
+
+   .. cpp:function:: std::array<uint8_t, 48> serialize() const
+   .. cpp:function:: bool is_identity() const
+
+.. cpp:class:: Botan::BLS12_381::G1Projective
+
+   A point of G1 in projective form, used for group arithmetic. Default
+   constructed as the identity element.
+
+   .. cpp:function:: static G1Projective generator()
+   .. cpp:function:: static G1Projective identity()
+   .. cpp:function:: static G1Projective from_affine(const G1Affine& affine)
+   .. cpp:function:: G1Affine to_affine() const
+
+   .. cpp:function:: static std::vector<G1Affine> to_affine_batch(std::span<const G1Projective> points)
+
+      Equivalent to calling ``to_affine`` on each point, but much faster, since a
+      single field inversion is shared across the batch; always prefer this when
+      converting more than one point.
+
+   .. cpp:function:: G1Projective add(const G1Projective& other) const
+   .. cpp:function:: G1Projective add_mixed(const G1Affine& other) const
+   .. cpp:function:: G1Projective negate() const
+
+   .. cpp:function:: G1Projective mul(const Scalar& scalar) const
+
+      Constant time scalar multiplication, safe for secret scalars.
+
+   .. cpp:function:: static G1Projective mul2(const G1Projective& p, const Scalar& a, \
+         const G1Projective& q, const Scalar& b)
+
+      Compute ``a*p + b*q`` in constant time, sharing one doubling chain; notably faster
+      than composing ``mul`` and ``add``. Being constant time it is safe for secret
+      scalars, for example when computing a Pedersen commitment.
+
+   .. cpp:function:: static G1Projective mul2_vartime(const G1Projective& p, const Scalar& a, \
+         const G1Projective& q, const Scalar& b)
+
+      Compute ``a*p + b*q``, faster than ``mul2``.
+
+      .. warning::
+
+         Runs in variable time and must only be used with public inputs, such as
+         verification equations.
+
+   .. cpp:function:: static G1Projective msm_vartime(std::span<const G1Affine> points, \
+         std::span<const Scalar> scalars)
+
+      Multiscalar multiplication, returning the sum of ``scalars[i] * points[i]``.
+      Above a certain number of terms this will use Pippenger's algorithm.  Below that
+      size, instead a chain of 2-ary multiplications will be used.  The algorithm choice
+      will in any event always be superior to chaining individual multiplications and
+      additions.
+
+      .. warning::
+
+         Runs in variable time and must only be used with public inputs.
+
+   .. cpp:function:: static G1Projective hash_to_curve_ro(std::span<const uint8_t> input, \
+         std::span<const uint8_t> dst)
+
+      Hash to curve following RFC 9380, using the suite ``BLS12381G1_XMD:SHA-256_SSWU_RO_``.
+      The domain separation tag ``dst`` distinguishes different uses of the hash; see
+      RFC 9380 section 3.1 for the requirements. An empty tag is rejected with
+      ``Invalid_Argument``; tags longer than 255 bytes are replaced by an intermediate
+      hash, following RFC 9380 section 5.3.3.
+
+   .. cpp:function:: static G1Projective hash_to_curve_nu(std::span<const uint8_t> input, \
+         std::span<const uint8_t> dst)
+
+      The nonuniform (``encode_to_curve``) variant, using the suite ``BLS12381G1_XMD:SHA-256_SSWU_NU_``.
+      Faster, but the output is distinguishable from a uniformly random group element;
+      use ``hash_to_curve_ro`` unless the protocol explicitly calls for the nonuniform
+      encoding.
+
+.. cpp:class:: Botan::BLS12_381::G2Affine
+
+.. cpp:class:: Botan::BLS12_381::G2Projective
+
+   The group G2, defined over the quadratic extension field, with the same interface as
+   the G1 types. Compressed points are 96 bytes, and the hash to curve functions implement
+   the suites ``BLS12381G2_XMD:SHA-256_SSWU_RO_`` and ``BLS12381G2_XMD:SHA-256_SSWU_NU_``.
+
+The Pairing
+----------------------------
+
+.. cpp:class:: Botan::BLS12_381::Gt
+
+   An element of the pairing target group, a prime order subgroup of the multiplicative
+   group of Fp12. Elements are created only by the pairing functions; there is no
+   deserialization.
+
+   .. cpp:function:: static Gt identity()
+   .. cpp:function:: bool is_identity() const
+   .. cpp:function:: bool operator==(const Gt& other) const
+   .. cpp:function:: std::array<uint8_t, 576> serialize() const
+
+      Note that the serialization format of Gt is not standardized for BLS12-381, and
+      the encoding may differ between implementations.
+
+   .. cpp:function:: Gt pairing(const G1Affine& p, const G2Affine& q)
+
+      Compute the optimal ate pairing ``e(p, q)``. If either input is the identity
+      element the result is the identity.
+
+   .. cpp:function:: Gt multi_pairing(std::span<const G1Affine> p, std::span<const G2Affine> q)
+
+      Compute the product of pairings ``e(p[0], q[0]) * e(p[1], q[1]) * ...``, sharing
+      one final exponentiation; always prefer this over multiplying individual pairing
+      results. The empty product is the identity. Throws ``Invalid_Argument`` if the
+      spans have different lengths.
+
+      Pairing equations of the form ``e(a, b) == e(c, d)`` should be checked by testing
+      ``multi_pairing({a, -c}, {b, d}).is_identity()``, which is both faster and the
+      standard formulation.
+
+Example
+----------------------------
+
+The following example implements the operations of a BLS signature (the
+minimal-pubkey-size variant of draft-irtf-cfrg-bls-signature, with public keys in G1 and
+signatures in G2): key generation, signing, verification, and signature aggregation.
+
+.. literalinclude:: /../src/examples/bls_signature.cpp
+   :language: cpp

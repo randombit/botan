@@ -18,9 +18,23 @@ void expand_message_xmd(std::string_view hash_fn,
                         std::span<uint8_t> output,
                         std::span<const uint8_t> input,
                         std::span<const uint8_t> domain_sep) {
+   auto hash = HashFunction::create_or_throw(hash_fn);
+
+   std::vector<uint8_t> hashed_domain_sep;
    if(domain_sep.size() > 0xFF) {
-      // RFC 9380 has a specification for handling this
-      throw Not_Implemented("XMD does not currently implement oversize DST handling");
+      /* RFC 9380 section 5.3.3: "If applications require a domain
+       * separation tag longer than 255 bytes, e.g., because of
+       * requirements imposed by an invoking protocol, implementors MUST
+       * compute a short domain separation tag by hashing, as follows:
+       *
+       * For expand_message_xmd using hash function H, DST is computed as
+       *
+       *    DST = H("H2C-OVERSIZE-DST-" || a_very_long_DST)"
+       */
+      hash->update("H2C-OVERSIZE-DST-");
+      hash->update(domain_sep);
+      hashed_domain_sep = hash->final_stdvec();
+      domain_sep = hashed_domain_sep;
    }
 
    if(domain_sep.empty()) {
@@ -29,8 +43,6 @@ void expand_message_xmd(std::string_view hash_fn,
    }
 
    const uint8_t domain_sep_len = static_cast<uint8_t>(domain_sep.size());
-
-   auto hash = HashFunction::create_or_throw(hash_fn);
    const size_t block_size = hash->hash_block_size();
    if(block_size == 0) {
       throw Invalid_Argument(fmt("expand_message_xmd cannot be used with {}", hash_fn));
