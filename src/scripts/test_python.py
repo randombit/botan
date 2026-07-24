@@ -6,14 +6,14 @@
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import unittest
+import argparse
 import binascii
 import hashlib
 import os
 import platform
-import argparse
 import sys
 import time
+import unittest
 from itertools import permutations
 
 # Starting with Python 3.8 DLL search locations are more restricted on Windows.
@@ -23,7 +23,8 @@ from itertools import permutations
 if platform.system() == "Windows" and hasattr(os, "add_dll_directory"):
     os.add_dll_directory(os.getcwd())
 
-import botan3 as botan # pylint: disable=wrong-import-position
+import botan3 as botan  # pylint: disable=wrong-import-position
+
 
 def hex_encode(buf):
     return binascii.hexlify(buf).decode('ascii')
@@ -331,7 +332,7 @@ class BotanPythonTests(unittest.TestCase):
             if ex.error_code() == -40: # Not Implemented
                 self.skipTest("No ESDM support in this build")
             else:
-                raise ex
+                raise
 
         output1 = esdm_rng.get(32)
         output2 = esdm_rng.get(32)
@@ -359,7 +360,7 @@ class BotanPythonTests(unittest.TestCase):
             if ex.error_code() == -40: # Not Implemented
                 self.skipTest("No TPM2 support in this build")
             else:
-                raise ex
+                raise
 
         if tpm2_ctx.supports_botan_crypto_backend():
             user_rng = botan.RandomNumberGenerator("user")
@@ -374,7 +375,7 @@ class BotanPythonTests(unittest.TestCase):
         # invalid session object provided
         with self.assertRaisesRegex(botan.BotanException, r".*0 to 3 TPM2Session objects.*"):
             botan.RandomNumberGenerator("tpm2", tpm2_context=tpm2_ctx,
-                                                tpm2_sessions=int(0))
+                                                tpm2_sessions=0)
 
         # too many "sessions" provided
         with self.assertRaisesRegex(botan.BotanException, r".*0 to 3 TPM2Session objects.*"):
@@ -945,7 +946,7 @@ ofvkP1EDmpx50fHLawIDAQAB
             a_pubv = a_op.public_value()
             b_pubv = b_op.public_value()
 
-            salt = bytes()
+            salt = b""
 
             a_key = a_op.agree(b_pubv, 0, salt)
             b_key = b_op.agree(a_pubv, 0, salt)
@@ -1473,7 +1474,7 @@ iWtHjIcunpiq6+IiB8IVu7Ncu6uPKoFS/mWzTvjgdNusmgNle9p3OAbE
 
         self.assertTrue(xy_bytes == x_bytes + y_bytes)
         self.assertTrue(uncompressed_bytes == "04" + xy_bytes)
-        self.assertTrue(compressed_bytes.startswith("02") or compressed_bytes.startswith("03"))
+        self.assertTrue(compressed_bytes.startswith(("02", "03")))
         self.assertTrue(compressed_bytes[2::] == x_bytes)
 
         self.assertTrue(result == botan.ECPoint.from_xy(group, botan.MPI(x_bytes, 16), botan.MPI(y_bytes, 16)))

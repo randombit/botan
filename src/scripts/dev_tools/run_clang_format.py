@@ -6,16 +6,17 @@
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import subprocess
-import sys
-import optparse # pylint: disable=deprecated-module
-import multiprocessing
 import difflib
-import time
+import multiprocessing
+import optparse  # pylint: disable=deprecated-module
 import os
 import re
 import shutil
+import subprocess
+import sys
+import time
 from multiprocessing.pool import ThreadPool
+
 
 def clang_format_style_path():
     script_location = os.path.dirname(os.path.abspath(__file__))
@@ -76,10 +77,8 @@ def list_source_files_in(directory):
 
     for (dirpath, _, filenames) in os.walk(directory):
         for filename in filenames:
-            if filename.endswith('.cpp') or filename.endswith('.h'):
-
-                if filename not in excluded:
-                    yield os.path.join(dirpath, filename)
+            if filename.endswith(('.cpp', '.h')) and filename not in excluded:
+                yield os.path.join(dirpath, filename)
 
 def filter_files(files, filters):
     if len(filters) == 0:

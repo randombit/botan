@@ -14,8 +14,11 @@ import sys
 import unittest
 
 sys.path.append("../..") # Botan repo root
-from configure import AmalgamationHelper # pylint: disable=wrong-import-position
-from configure import ModulesChooser # pylint: disable=wrong-import-position
+from configure import (  # pylint: disable=wrong-import-position
+    AmalgamationHelper,
+    ModulesChooser,
+)
+
 
 class AmalgamationHelperTests(unittest.TestCase):
     def test_matcher_std_includes(self):
@@ -63,23 +66,23 @@ class AmalgamationHelperTests(unittest.TestCase):
 
 class ModulesChooserResolveDependencies(unittest.TestCase):
     def test_base(self):
-        available_modules = set(["A", "B"])
+        available_modules = {"A", "B"}
         table = {
             "A": [],
         }
         ok, modules = ModulesChooser.resolve_dependencies(available_modules, table, "A")
         self.assertTrue(ok)
-        self.assertEqual(modules, set(["A"]))
+        self.assertEqual(modules, {"A"})
 
     def test_no_dependencies_defined(self):
-        available_modules = set(["A", "B"])
+        available_modules = {"A", "B"}
         table = {
             "A": [],
         }
         with self.assertRaises(KeyError):
             ModulesChooser.resolve_dependencies(available_modules, table, "B")
 
-        available_modules = set(["A", "B"])
+        available_modules = {"A", "B"}
         table = {
             "A": ["B"],
         }
@@ -87,17 +90,17 @@ class ModulesChooserResolveDependencies(unittest.TestCase):
             ModulesChooser.resolve_dependencies(available_modules, table, "A")
 
     def test_add_dependency(self):
-        available_modules = set(["A", "B"])
+        available_modules = {"A", "B"}
         table = {
             "A": ["B"],
             "B": []
         }
         ok, modules = ModulesChooser.resolve_dependencies(available_modules, table, "A")
         self.assertTrue(ok)
-        self.assertEqual(modules, set(["A", "B"]))
+        self.assertEqual(modules, {"A", "B"})
 
     def test_add_dependencies_two_levels(self):
-        available_modules = set(["A", "B", "C"])
+        available_modules = {"A", "B", "C"}
         table = {
             "A": ["B"],
             "B": ["C"],
@@ -105,10 +108,10 @@ class ModulesChooserResolveDependencies(unittest.TestCase):
         }
         ok, modules = ModulesChooser.resolve_dependencies(available_modules, table, "A")
         self.assertTrue(ok)
-        self.assertEqual(modules, set(["A", "B", "C"]))
+        self.assertEqual(modules, {"A", "B", "C"})
 
     def test_circular(self):
-        available_modules = set(["A", "B", "C"])
+        available_modules = {"A", "B", "C"}
         table = {
             "A": ["B"],
             "B": ["C"],
@@ -116,10 +119,10 @@ class ModulesChooserResolveDependencies(unittest.TestCase):
         }
         ok, modules = ModulesChooser.resolve_dependencies(available_modules, table, "A")
         self.assertTrue(ok)
-        self.assertEqual(modules, set(["A", "B", "C"]))
+        self.assertEqual(modules, {"A", "B", "C"})
 
     def test_not_available(self):
-        available_modules = set(["A", "C"])
+        available_modules = {"A", "C"}
         table = {
             "A": ["B"],
             "B": ["C"],
@@ -129,7 +132,7 @@ class ModulesChooserResolveDependencies(unittest.TestCase):
         self.assertFalse(ok)
 
     def test_dependency_not_available(self):
-        available_modules = set(["A", "C"])
+        available_modules = {"A", "C"}
         table = {
             "A": ["B"],
             "B": ["C"],
@@ -139,7 +142,7 @@ class ModulesChooserResolveDependencies(unittest.TestCase):
         self.assertFalse(ok)
 
     def test_dependency2_not_available(self):
-        available_modules = set(["A", "B"])
+        available_modules = {"A", "B"}
         table = {
             "A": ["B"],
             "B": ["C"],
@@ -149,7 +152,7 @@ class ModulesChooserResolveDependencies(unittest.TestCase):
         self.assertFalse(ok)
 
     def test_dependency_choices(self):
-        available_modules = set(["A", "B", "C"])
+        available_modules = {"A", "B", "C"}
         table = {
             "A": ["B|C"],
             "B": [],
@@ -157,10 +160,10 @@ class ModulesChooserResolveDependencies(unittest.TestCase):
         }
         ok, modules = ModulesChooser.resolve_dependencies(available_modules, table, "A")
         self.assertTrue(ok)
-        self.assertTrue(modules == set(["A", "B"]) or modules == set(["A", "C"]))
+        self.assertTrue(modules in ({"A", "B"}, {"A", "C"}))
 
     def test_dependency_prefer_existing(self):
-        available_modules = set(["A", "B", "C"])
+        available_modules = {"A", "B", "C"}
         table = {
             "A": ["C", "B|C"],
             "B": [],
@@ -168,10 +171,10 @@ class ModulesChooserResolveDependencies(unittest.TestCase):
         }
         ok, modules = ModulesChooser.resolve_dependencies(available_modules, table, "A")
         self.assertTrue(ok)
-        self.assertEqual(modules, set(["A", "C"]))
+        self.assertEqual(modules, {"A", "C"})
 
     def test_dependency_prefer_existing2(self):
-        available_modules = set(["A", "B", "C"])
+        available_modules = {"A", "B", "C"}
         table = {
             "A": ["B", "B|C"],
             "B": [],
@@ -179,10 +182,10 @@ class ModulesChooserResolveDependencies(unittest.TestCase):
         }
         ok, modules = ModulesChooser.resolve_dependencies(available_modules, table, "A")
         self.assertTrue(ok)
-        self.assertEqual(modules, set(["A", "B"]))
+        self.assertEqual(modules, {"A", "B"})
 
     def test_dependency_choices_impossible(self):
-        available_modules = set(["A", "C"])
+        available_modules = {"A", "C"}
         table = {
             "A": ["B|C"],
             "B": [],
@@ -190,10 +193,10 @@ class ModulesChooserResolveDependencies(unittest.TestCase):
         }
         ok, modules = ModulesChooser.resolve_dependencies(available_modules, table, "A")
         self.assertTrue(ok)
-        self.assertEqual(modules, set(["A", "C"]))
+        self.assertEqual(modules, {"A", "C"})
 
     def test_dependency_choices_impossible2(self):
-        available_modules = set(["A", "B"])
+        available_modules = {"A", "B"}
         table = {
             "A": ["B|C"],
             "B": [],
@@ -201,10 +204,10 @@ class ModulesChooserResolveDependencies(unittest.TestCase):
         }
         ok, modules = ModulesChooser.resolve_dependencies(available_modules, table, "A")
         self.assertTrue(ok)
-        self.assertEqual(modules, set(["A", "B"]))
+        self.assertEqual(modules, {"A", "B"})
 
     def test_deep(self):
-        available_modules = set(["A", "B", "C", "E", "G"])
+        available_modules = {"A", "B", "C", "E", "G"}
         table = {
             "A": ["B|C"],
             "B": ["D"],
@@ -216,7 +219,7 @@ class ModulesChooserResolveDependencies(unittest.TestCase):
         }
         ok, modules = ModulesChooser.resolve_dependencies(available_modules, table, "G")
         self.assertTrue(ok)
-        self.assertEqual(modules, set(["G", "A", "C", "E"]))
+        self.assertEqual(modules, {"G", "A", "C", "E"})
 
 
 if __name__ == '__main__':

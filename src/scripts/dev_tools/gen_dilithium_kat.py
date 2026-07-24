@@ -12,9 +12,10 @@
 # Botan is released under the Simplified BSD License (see license.txt)
 #
 
-import sys
-import hashlib
 import binascii
+import hashlib
+import sys
+
 
 class KatReader:
     def __init__(self, file):

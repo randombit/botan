@@ -10,8 +10,7 @@ import datetime
 import hashlib
 import json
 import multiprocessing
-from multiprocessing.pool import ThreadPool
-import optparse # pylint: disable=deprecated-module
+import optparse  # pylint: disable=deprecated-module
 import os
 import random
 import re
@@ -21,6 +20,7 @@ import subprocess
 import sys
 import time
 import uuid
+from multiprocessing.pool import ThreadPool
 
 enabled_checks = [
     'bugprone-*',
@@ -189,7 +189,7 @@ def preproc_file(compile_commands):
         cmd,
         check=True,
         stdout=subprocess.PIPE,
-        universal_newlines=True)
+        text=True)
 
     return hashlib.sha256(result.stdout.encode('utf-8')).hexdigest()
 
@@ -308,7 +308,7 @@ def main(args = None): # pylint: disable=too-many-return-statements
 
         files_to_check = []
         for file in changes.split():
-            if file.endswith('.cpp') or file.endswith('.h'):
+            if file.endswith(('.cpp', '.h')):
                 files_to_check.append(os.path.basename(file))
 
         if len(files_to_check) == 0:
@@ -319,7 +319,7 @@ def main(args = None): # pylint: disable=too-many-return-statements
 
         for line in sys.stdin:
             file = os.path.basename(line.strip())
-            if file.endswith('.cpp') or file.endswith('.h'):
+            if file.endswith(('.cpp', '.h')):
                 files_to_check.append(file)
             elif file in ['run_clang_tidy.py']:
                 scan_all = True
@@ -388,9 +388,9 @@ def main(args = None): # pylint: disable=too-many-return-statements
             continue
 
         cache_hit = False
-        if cache is not None:
-            if cache.hit(config=check_config, source_file=info['preproc'], clang_tidy=clang_tidy_version):
-                cache_hit = True
+        if cache is not None and \
+           cache.hit(config=check_config, source_file=info['preproc'], clang_tidy=clang_tidy_version):
+            cache_hit = True
 
         if cache_hit and not options.quiet:
             print("Checked", info["file"], " (cached)")

@@ -6,15 +6,14 @@
 # Botan is released under the Simplified BSD License (see license.txt)
 #
 
-import subprocess
-import os
-import sys
 import argparse
-import tempfile
+import os
 import platform
-
-from textwrap import indent
+import subprocess
+import sys
+import tempfile
 from enum import Enum
+from textwrap import indent
 
 SCRIPT_LOCATION = os.path.dirname(os.path.abspath(__file__))
 GDB_EXTENSION = os.path.join(SCRIPT_LOCATION, "gdb", "strubtest.py")

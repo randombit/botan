@@ -8,13 +8,14 @@ Generate the Botan website
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import optparse # pylint: disable=deprecated-module
+import errno
+import optparse  # pylint: disable=deprecated-module
+import os
+import shutil
 import subprocess
 import sys
-import errno
-import shutil
 import tempfile
-import os
+
 
 def run_and_check(cmd_line, cwd=None):
     print("Executing %s ..." % (' '.join(cmd_line)))
@@ -137,7 +138,7 @@ def main(args):
                 if e.errno == errno.EEXIST:
                     pass
                 else:
-                    raise e
+                    raise
 
     for subdir in ['_static', '_sources', 'doxygen', 'handbook']:
         try:

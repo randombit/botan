@@ -14,10 +14,11 @@
 # Botan is released under the Simplified BSD License (see license.txt)
 #
 
-import sys
-import hashlib
 import binascii
+import hashlib
 import os
+import sys
+
 
 class KatReader:
     def __init__(self, file):
@@ -122,9 +123,9 @@ def main(args = None):
             for kat in list(reader.read_kats())[:25]:
                 kat = compress_kat(kat)
 
-                for key in kat.keys():
+                for key in kat:
                     print(key, '=', kat[key], file=output)
-                print("", file=output)
+                print(file=output)
 
 if __name__ == '__main__':
     sys.exit(main())

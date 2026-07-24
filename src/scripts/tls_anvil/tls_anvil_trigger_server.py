@@ -7,14 +7,13 @@
 #
 # Botan is released under the Simplified BSD License (see license.txt)
 
-import sys
+import argparse
 import os
 import signal
 import subprocess
-import argparse
+import sys
 import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
-
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # Populated from command-line arguments in main()
 botan_cli = None

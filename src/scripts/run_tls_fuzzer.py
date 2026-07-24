@@ -4,11 +4,12 @@
 # Botan is released under the Simplified BSD License (see license.txt)
 
 import argparse
-import subprocess
 import logging
-import sys
 import os
+import subprocess
+import sys
 import time
+
 
 def script_is_disabled(script_name):
     if script_name.find('tls13') >= 0:
@@ -36,10 +37,7 @@ def script_is_disabled(script_name):
         'test-invalid-client-hello.py',
         'test-large-hello.py',
     }
-    if script_name in slow:
-        return True
-
-    return False
+    return script_name in slow
 
 def main(args = None):
     if args is None:

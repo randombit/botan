@@ -10,19 +10,21 @@ Compare Botan with OpenSSL using their respective benchmark utils
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import logging
-import os
-import sys
-import optparse # pylint: disable=deprecated-module
-import subprocess
-import re
 import json
+import logging
 import math
+import optparse  # pylint: disable=deprecated-module
+import os
 import platform
-from datetime import datetime
+import re
 import shutil
-import numpy as np
+import subprocess
+import sys
+from datetime import datetime
+
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 def setup_logging(options):
     if options.verbose:
@@ -283,11 +285,9 @@ class BenchmarkResult:
         buf_sizes = self.results.keys()
         x = np.arange(len(buf_sizes))
         width = 0.4
-        multiplier = 0
-
         fig, ax = plt.subplots(layout='constrained')
 
-        for lib in ['Botan', 'OpenSSL']:
+        for multiplier, lib in enumerate(['Botan', 'OpenSSL']):
             offset = width * multiplier
             results = [math.ceil(x[lib.lower()]/(1024*1024)) for x in self.results.values()]
             rects = ax.bar(x + offset, results, width, label=lib)
@@ -328,7 +328,7 @@ class SignatureBenchmarkResult:
             openssl = v['openssl']
             botan = v['botan']
 
-            for op in openssl.keys():
+            for op in openssl:
                 if openssl[op] > botan[op]:
                     winner = 'openssl'
                     ratio = float(openssl[op]) / botan[op]
@@ -350,9 +350,7 @@ class SignatureBenchmarkResult:
 
         for op in ['sign', 'verify']:
             fig, ax = plt.subplots(layout='constrained')
-            multiplier = 0
-
-            for lib in ['Botan', 'OpenSSL']:
+            for multiplier, lib in enumerate(['Botan', 'OpenSSL']):
                 offset = width * multiplier
                 results = [x[lib.lower()][op] for x in self.results.values()]
                 rects = ax.bar(x + offset, results, width, label=lib)
@@ -408,11 +406,9 @@ class KeyAgreementBenchmarkResult:
         key_sizes = self.results.keys()
         x = np.arange(len(key_sizes))
         width = 0.4
-        multiplier = 0
-
         fig, ax = plt.subplots(layout='constrained')
 
-        for lib in ['Botan', 'OpenSSL']:
+        for multiplier, lib in enumerate(['Botan', 'OpenSSL']):
             offset = width * multiplier
             results = [x[lib.lower()] for x in self.results.values()]
             rects = ax.bar(x + offset, results, width, label=lib)

@@ -7,17 +7,18 @@
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import binascii
 import argparse
+import binascii
+import logging
+import multiprocessing
+import os.path
 import re
 import subprocess
 import sys
-import os.path
-import logging
 import time
 from collections import OrderedDict
-import multiprocessing
 from multiprocessing.pool import ThreadPool
+
 
 class VecDocument:
     def __init__(self, filepath):
@@ -70,10 +71,10 @@ class VecDocument:
 TESTS_RUN = 0
 TESTS_FAILED = 0
 
-class TestLogHandler(logging.StreamHandler, object):
+class TestLogHandler(logging.StreamHandler):
     def emit(self, record):
         # Do the default stuff first
-        super(TestLogHandler, self).emit(record)
+        super().emit(record)
         if record.levelno >= logging.ERROR:
             global TESTS_FAILED
             TESTS_FAILED += 1
@@ -92,7 +93,7 @@ def setup_logging(options):
     logging.getLogger().setLevel(log_level)
 
 def test_cipher_kat(cli_binary, data):
-    iv = data['Nonce'] if 'Nonce' in data else ''
+    iv = data.get('Nonce', '')
     key = data['Key']
     plaintext = data['In'].lower()
     ciphertext = data['Out'].lower()
@@ -133,12 +134,9 @@ def test_cipher_kat(cli_binary, data):
 def get_testdata(document, max_tests):
     out = []
     for algorithm in document:
-        testcase_number = 0
-        for testcase in document[algorithm]:
-            testcase_number += 1
+        for testcase_number, testcase in enumerate(document[algorithm], start=1):
             for direction in ['encrypt', 'decrypt']:
-                testname = "{} no {:0>3} ({})".format(
-                    algorithm.lower(), testcase_number, direction)
+                testname = f"{algorithm.lower()} no {testcase_number:0>3} ({direction})"
                 testname = re.sub("[^a-z0-9-]", "_", testname)
                 testname = re.sub("_+", "_", testname)
                 testname = testname.strip("_")

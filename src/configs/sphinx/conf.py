@@ -1,8 +1,7 @@
-# -* coding: utf-8 -*-
 # Sphinx configuration file
 
-import sys
 import re
+import sys
 
 #import sphinx
 
@@ -21,7 +20,7 @@ def parse_version_file(version_path):
     key_and_val = re.compile(r"([a-z_]+) = ([a-zA-Z0-9:\-\']+)")
 
     results = {}
-    for line in version_file.readlines():
+    for line in version_file:
         if not line or line[0] == '#':
             continue
         match = key_and_val.match(line)
@@ -58,8 +57,8 @@ source_encoding = 'utf-8-sig'
 
 master_doc = 'contents'
 
-project = u'botan'
-copyright = u'2000-2023, The Botan Authors'
+project = 'botan'
+copyright = '2000-2023, The Botan Authors'
 
 version = '%d.%d' % (version_major, version_minor)
 release = '%d.%d.%d%s' % (version_major, version_minor, version_patch, version_suffix)
@@ -101,7 +100,7 @@ highlight_language = 'cpp'
 
 try:
     # On Arch this is python-sphinx-furo
-    import furo # noqa: F401
+    import furo  # noqa: F401
     html_theme = "furo"
 
     # Add a small edit button to each document to allow visitors to easily
@@ -195,9 +194,9 @@ htmlhelp_basename = 'botandoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 
-authors = u'The Botan Authors'
+authors = 'The Botan Authors'
 latex_documents = [
-    ('contents', 'botan.tex', u'Botan Reference Guide', authors, 'manual'),
+    ('contents', 'botan.tex', 'Botan Reference Guide', authors, 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

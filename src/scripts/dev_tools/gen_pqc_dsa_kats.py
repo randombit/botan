@@ -12,6 +12,7 @@ import hashlib
 import os
 import re
 import sys
+
 from dilithium_py.drbg.aes256_ctr_drbg import AES256_CTR_DRBG
 from fips204 import ML_DSA, ML_DSA_PARAM
 from fips205 import SLH_DSA_PARAMS
@@ -97,20 +98,20 @@ def main(args = None):
                 print("SigDet = %s" % binascii.hexlify(signature_det).decode("utf-8").upper(), file=output)
             print("HashSigDet = %s" % binascii.hexlify(hash_fn(signature_det)).decode("utf-8").upper(), file=output)
             print("HashSigRand = %s" % binascii.hexlify(hash_fn(signature_rand)).decode("utf-8").upper(), file=output)
-            print("", file=output)
+            print(file=output)
 
     elif algo == "ml_dsa":
-        for param in ML_DSA_PARAM.keys():
+        for param in ML_DSA_PARAM:
             for det_str, deterministic in [("Deterministic", True), ("Randomized", False)]:
                 alg = ML_DSA(param)
                 output = open('src/tests/data/pubkey/%s_%s.vec' % (transform_mldsa_string(param), det_str), 'w')
                 print("# See src/scripts/dev_tools/gen_pqc_dsa_kats.py", file=output)
-                print("", file=output)
+                print(file=output)
                 print(create_mldsa_ini_label(param, det_str), file=output)
-                print("", file=output)
+                print(file=output)
 
                 hash_fn = sha3_256
-                def mldsa_sign_internal(m, sk, rnd):
+                def mldsa_sign_internal(m, sk, rnd, alg=alg):
                     # For some reason the interfaces vary between FIPS 204 and FIPS 205...
                     if rnd is None:
                         rnd = bytes([0]*32)
@@ -134,7 +135,7 @@ def main(args = None):
                     print("HashPk = %s" % binascii.hexlify(hash_fn(pk)).decode("utf-8").upper(), file=output)
                     print("HashSk = %s" % binascii.hexlify(hash_fn(keygen_rand)).decode("utf-8").upper(), file=output)
                     print("HashSig = %s" % binascii.hexlify(hash_fn(signature)).decode("utf-8").upper(), file=output)
-                    print("", file=output)
+                    print(file=output)
     else:
         print("Usage: gen_pqc_dsa_kats.py <ml_dsa|slh_dsa>")
         return 1
