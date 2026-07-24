@@ -37,7 +37,7 @@ if type -p "apt-get"; then
     # so the job stops after a reasonable interval
     timeout 3m sudo apt-get -qq update
     # shellcheck disable=SC2046
-    sudo apt-get -qq install $("${SCRIPT_LOCATION}"/gha_linux_packages.py "$TARGET" "$COMPILER")
+    timeout 5m sudo apt-get -qq install $("${SCRIPT_LOCATION}"/gha_linux_packages.py "$TARGET" "$COMPILER")
 
     if [ "$TARGET" = "sde" ]; then
         "${SCRIPT_LOCATION}"/download_ci_dep.py intel_sde --extract 'tar -xf {file}'
