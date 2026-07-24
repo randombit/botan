@@ -218,6 +218,36 @@ X.509
 ``trust_roots --dn --dn-only --display``
   List the certificates in the system trust store.
 
+PKCS#12
+----------------------------------------------
+
+``pkcs12_export --output= --pass= --in-key-pass= --friendly-name= --key-cipher=PBES2-SHA256-AES256 --no-mac --cert-cipher= --mac-digest=SHA-256 --iterations=100000 key cert *ca_certs``
+  Bundle a PKCS#8 *key*, its end-entity *cert*, and optionally one or more CA
+  certificates (*ca_certs*) into a PKCS#12/PFX file. The PFX password is
+  taken from ``--pass``; if the input key is itself encrypted, its passphrase
+  is taken from ``--in-key-pass``.
+
+  ``--key-cipher`` selects the private-key encryption algorithm. Modern
+  choices (default): ``"PBES2-SHA256-AES256"``, ``"PBES2-SHA256-AES128"``.
+  Legacy interop: ``"PBE-SHA1-3DES"``, ``"PBE-SHA1-2DES"``.
+  ``--cert-cipher`` (empty by default) wraps the certificate bags in an
+  EncryptedData; leave empty for unencrypted certificates.
+  ``--mac-digest`` selects the integrity-MAC digest (``SHA-256`` default,
+  ``SHA-1`` for maximum interoperability). ``--no-mac`` omits the MAC
+  entirely (required when ``--pass`` is empty).
+
+``pkcs12_info --pass= --key-out= --cert-out= --chain-out= --out-key-pass= --out-key-cipher= --key-pbkdf-iter=100000 pfx_file``
+  Inspect a PKCS#12/PFX file. Without output arguments, prints a summary of
+  the contents (key algorithm, end-entity subject/issuer/serial/validity,
+  SHA-1 and SHA-256 fingerprints, CA chain, friendly name).
+
+  ``--key-out`` writes the extracted private key as PEM. When
+  ``--out-key-pass`` is set the key is re-encrypted with the algorithm from
+  ``--out-key-cipher`` (default ``AES-256/CBC``) using ``--key-pbkdf-iter``
+  PBKDF iterations. ``--cert-out`` writes the end-entity certificate as PEM,
+  and ``--chain-out`` writes the CA certificate chain (one PEM block per
+  cert) if any are present.
+
 TLS Server/Client
 -----------------------
 
