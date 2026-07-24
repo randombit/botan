@@ -18,7 +18,6 @@ Botan3
 
 The following major feature work is currently planned for Botan3:
 
-* SPAKE2+ password authenticated key exchange
 * BLS12-381
 * HPKE (RFC 9180)
 * XMSS^MT

@@ -3223,6 +3223,343 @@ BOTAN_FFI_EXPORT(3, 0)
 int botan_srp6_group_size(const char* group_id, size_t* group_p_bytes);
 
 /**
+* SPAKE2+ (RFC 9383) password authenticated key exchange
+*
+* All operations are relative to a set of system parameters, which select
+* the elliptic curve group, the SPAKE2+ M/N group elements, and the hash
+* function. The parameters are created either from the name of one of the
+* RFC 9383 ciphersuites using HMAC key confirmation ("P256-SHA256",
+* "P256-SHA512", "P384-SHA256", "P384-SHA512", or "P521-SHA512"), or for
+* an application specific group using botan_spake2p_params_init_custom.
+*
+* The identity, salt, and context parameters may be null, if the
+* corresponding length is zero.
+*
+* Since the lengths of the outputs vary with the system parameters, all
+* outputs are produced using view callbacks. The expected lengths of the
+* messages received from the peer can be obtained from
+* botan_spake2p_params_share_size and
+* botan_spake2p_params_confirmation_size.
+*/
+
+/**
+* SPAKE2+ system parameters
+*/
+typedef struct botan_spake2p_params_struct* botan_spake2p_params_t;
+
+/**
+* Create SPAKE2+ system parameters from an RFC 9383 ciphersuite name
+*
+* Objects created from the system parameters hold their own copy, so the
+* parameters may be destroyed at any time.
+*
+* @param params output parameter for the created system parameters
+* @param ciphersuite the SPAKE2+ ciphersuite name
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_params_init(botan_spake2p_params_t* params, const char* ciphersuite);
+
+/**
+* Create custom SPAKE2+ system parameters for an arbitrary group
+*
+* The M/N group elements are derived from the seed using hash to curve;
+* returns BOTAN_FFI_ERROR_NOT_IMPLEMENTED if the group does not support
+* hash to curve. Both peers must use the same group, seed, and hash.
+*
+* If the seed includes the identities of the participants, this
+* additionally makes the scheme "quantum annoying", in that an attacker
+* with a discrete logarithm oracle must compute a new discrete log for
+* each (prover, verifier) pair they wish to attack.
+*
+* @param params output parameter for the created system parameters
+* @param group the elliptic curve group to use
+* @param seed the seed bytes used to derive the M/N group elements
+* @param seed_len length of seed in bytes
+* @param hash_fn the hash function to use (eg "SHA-256")
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_params_init_custom(
+   botan_spake2p_params_t* params, botan_ec_group_t group, const uint8_t seed[], size_t seed_len, const char* hash_fn);
+
+/**
+* Frees all resources of SPAKE2+ system parameters
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_params_destroy(botan_spake2p_params_t params);
+
+/**
+* Return the size in bytes of a SPAKE2+ key share (shareP or shareV)
+*
+* @param params the SPAKE2+ system parameters
+* @param share_size output parameter for the key share size
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_params_share_size(botan_spake2p_params_t params, size_t* share_size);
+
+/**
+* Return the size in bytes of a SPAKE2+ key confirmation message (confirmP or confirmV)
+*
+* @param params the SPAKE2+ system parameters
+* @param confirmation_size output parameter for the key confirmation size
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_params_confirmation_size(botan_spake2p_params_t params, size_t* confirmation_size);
+
+/**
+* Derive a SPAKE2+ prover secret (w0 and w1) from a password, using Argon2id
+*
+* The view callback is invoked with the serialized prover secret, which is
+* password equivalent and must be protected accordingly. It is used with
+* botan_spake2p_registration_record and botan_spake2p_prover_init.
+*
+* @param params the SPAKE2+ system parameters
+* @param password the (null terminated) password
+* @param prover_id the identity of the prover
+* @param prover_id_len length of prover_id in bytes
+* @param verifier_id the identity of the verifier
+* @param verifier_id_len length of verifier_id in bytes
+* @param salt a salt value, ideally random and stored with the registration record
+* @param salt_len length of salt in bytes
+* @param ctx a context pointer passed to the view callback
+* @param view a view callback which is invoked with the serialized prover secret
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_derive_secret(botan_spake2p_params_t params,
+                                const char* password,
+                                const uint8_t prover_id[],
+                                size_t prover_id_len,
+                                const uint8_t verifier_id[],
+                                size_t verifier_id_len,
+                                const uint8_t salt[],
+                                size_t salt_len,
+                                botan_view_ctx ctx,
+                                botan_view_bin_fn view);
+
+/**
+* Compute a SPAKE2+ registration record (w0 and L) from a prover secret
+*
+* The registration record is provided to the verifier during registration.
+* While it does not allow directly impersonating the prover, it does allow
+* offline password guessing attacks, so it should be protected.
+*
+* @param params the SPAKE2+ system parameters
+* @param rng a random number generator
+* @param secret the serialized prover secret
+* @param secret_len length of secret in bytes
+* @param ctx a context pointer passed to the view callback
+* @param view a view callback which is invoked with the serialized registration record
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_registration_record(botan_spake2p_params_t params,
+                                      botan_rng_t rng,
+                                      const uint8_t secret[],
+                                      size_t secret_len,
+                                      botan_view_ctx ctx,
+                                      botan_view_bin_fn view);
+
+/**
+* SPAKE2+ prover
+*/
+typedef struct botan_spake2p_prover_struct* botan_spake2p_prover_t;
+
+/**
+* SPAKE2+ verifier
+*/
+typedef struct botan_spake2p_verifier_struct* botan_spake2p_verifier_t;
+
+/**
+* Initialize a SPAKE2+ prover
+*
+* The identities and context must be agreed upon by both parties; the
+* identities must additionally match the values used when deriving the
+* prover secret.
+*
+* @param prover output parameter for the created prover object
+* @param params the SPAKE2+ system parameters
+* @param secret the serialized prover secret
+* @param secret_len length of secret in bytes
+* @param prover_id the identity of the prover
+* @param prover_id_len length of prover_id in bytes
+* @param verifier_id the identity of the verifier
+* @param verifier_id_len length of verifier_id in bytes
+* @param context an application specific context string
+* @param context_len length of context in bytes
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_prover_init(botan_spake2p_prover_t* prover,
+                              botan_spake2p_params_t params,
+                              const uint8_t secret[],
+                              size_t secret_len,
+                              const uint8_t prover_id[],
+                              size_t prover_id_len,
+                              const uint8_t verifier_id[],
+                              size_t verifier_id_len,
+                              const uint8_t context[],
+                              size_t context_len);
+
+/**
+* Frees all resources of a SPAKE2+ prover
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_prover_destroy(botan_spake2p_prover_t prover);
+
+/**
+* Generate the prover's key share (shareP), which is sent to the verifier
+*
+* This can be called only once per prover object.
+*
+* @param prover the prover object
+* @param rng a random number generator
+* @param ctx a context pointer passed to the view callback
+* @param view a view callback which is invoked with the key share
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_prover_generate_message(botan_spake2p_prover_t prover,
+                                          botan_rng_t rng,
+                                          botan_view_ctx ctx,
+                                          botan_view_bin_fn view);
+
+/**
+* Consume the verifier's response (shareV followed by confirmV) and produce
+* the prover's key confirmation (confirmP), which is sent to the verifier.
+*
+* Returns BOTAN_FFI_ERROR_BAD_MAC if the verifier's key confirmation is
+* wrong, typically meaning the passwords do not match.
+*
+* @param prover the prover object
+* @param rng a random number generator
+* @param peer_message the verifier's response
+* @param peer_message_len length of peer_message in bytes
+* @param ctx a context pointer passed to the view callback
+* @param view a view callback which is invoked with the prover's key confirmation
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_prover_process_message(botan_spake2p_prover_t prover,
+                                         botan_rng_t rng,
+                                         const uint8_t peer_message[],
+                                         size_t peer_message_len,
+                                         botan_view_ctx ctx,
+                                         botan_view_bin_fn view);
+
+/**
+* Return the prover's shared secret (K_shared)
+*
+* This may be called only after botan_spake2p_prover_process_message
+* has succeeded.
+*
+* @param prover the prover object
+* @param ctx a context pointer passed to the view callback
+* @param view a view callback which is invoked with the shared secret
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_prover_shared_secret(botan_spake2p_prover_t prover, botan_view_ctx ctx, botan_view_bin_fn view);
+
+/**
+* Initialize a SPAKE2+ verifier
+*
+* The identities and context must be agreed upon by both parties; the
+* identities must additionally match the values used when deriving the
+* prover secret.
+*
+* @param verifier output parameter for the created verifier object
+* @param params the SPAKE2+ system parameters
+* @param record the serialized registration record
+* @param record_len length of record in bytes
+* @param prover_id the identity of the prover
+* @param prover_id_len length of prover_id in bytes
+* @param verifier_id the identity of the verifier
+* @param verifier_id_len length of verifier_id in bytes
+* @param context an application specific context string
+* @param context_len length of context in bytes
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_verifier_init(botan_spake2p_verifier_t* verifier,
+                                botan_spake2p_params_t params,
+                                const uint8_t record[],
+                                size_t record_len,
+                                const uint8_t prover_id[],
+                                size_t prover_id_len,
+                                const uint8_t verifier_id[],
+                                size_t verifier_id_len,
+                                const uint8_t context[],
+                                size_t context_len);
+
+/**
+* Frees all resources of a SPAKE2+ verifier
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_verifier_destroy(botan_spake2p_verifier_t verifier);
+
+/**
+* Consume the prover's key share (shareP) and produce the verifier's
+* response (shareV followed by confirmV), which is sent to the prover.
+*
+* This can be called only once per verifier object.
+*
+* @param verifier the verifier object
+* @param rng a random number generator
+* @param peer_message the prover's key share
+* @param peer_message_len length of peer_message in bytes
+* @param ctx a context pointer passed to the view callback
+* @param view a view callback which is invoked with the verifier's response
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_verifier_process_message(botan_spake2p_verifier_t verifier,
+                                           botan_rng_t rng,
+                                           const uint8_t peer_message[],
+                                           size_t peer_message_len,
+                                           botan_view_ctx ctx,
+                                           botan_view_bin_fn view);
+
+/**
+* Check the prover's key confirmation (confirmP)
+*
+* Returns BOTAN_FFI_ERROR_BAD_MAC if the confirmation is wrong, meaning
+* the prover does not know the password.
+*
+* @param verifier the verifier object
+* @param confirmation the prover's key confirmation
+* @param confirmation_len length of confirmation in bytes
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_verifier_verify_confirmation(botan_spake2p_verifier_t verifier,
+                                               const uint8_t confirmation[],
+                                               size_t confirmation_len);
+
+/**
+* Skip checking the prover's key confirmation (confirmP)
+*
+* This can be called after botan_spake2p_verifier_process_message, in
+* place of botan_spake2p_verifier_verify_confirmation, to allow extracting
+* the shared secret without having checked the prover's key confirmation.
+*
+* Warning: after calling this, nothing is known about the peer; only a
+* prover which knows the password can compute the same shared secret, but
+* no evidence of this has been received. It is intended solely for
+* protocols which embed SPAKE2+ and perform the prover's key confirmation
+* themselves, for example the proposed TLS PAKE extension, where the TLS
+* handshake takes the place of confirmP. Anywhere else, use
+* botan_spake2p_verifier_verify_confirmation.
+*
+* @param verifier the verifier object
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_verifier_skip_confirmation(botan_spake2p_verifier_t verifier);
+
+/**
+* Return the verifier's shared secret (K_shared)
+*
+* This may be called only after botan_spake2p_verifier_verify_confirmation
+* has succeeded, or after botan_spake2p_verifier_skip_confirmation.
+*
+* @param verifier the verifier object
+* @param ctx a context pointer passed to the view callback
+* @param view a view callback which is invoked with the shared secret
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_spake2p_verifier_shared_secret(botan_spake2p_verifier_t verifier, botan_view_ctx ctx, botan_view_bin_fn view);
+
+/**
  * ZFEC
  */
 

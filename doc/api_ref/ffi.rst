@@ -2435,6 +2435,175 @@ All available value types of the generic X.509 object getters are:
    The URLs of the issuing CA certificate of a certificate as a character array.
    There might be more than one such URL defined in a certificate.
 
+SPAKE2+ Password Authenticated Key Exchange
+--------------------------------------------
+
+.. versionadded:: 3.13.0
+
+An implementation of the SPAKE2+ password authenticated key exchange
+(RFC 9383). The *prover* knows the password itself, while the *verifier*
+stores only a registration record derived from the password. See
+:doc:`spake2p` for a description of the protocol and the expected
+message flow.
+
+The identity, salt, and context parameters of these functions may be null,
+if the corresponding length is zero. Since the lengths of the outputs vary
+with the system parameters, all outputs are produced using view callbacks.
+
+.. cpp:type:: opaque* botan_spake2p_params_t
+
+   An opaque data type for SPAKE2+ system parameters, which select the
+   elliptic curve group, the SPAKE2+ M/N group elements, and the hash
+   function. Objects created from the system parameters hold their own
+   copy, so the parameters may be destroyed at any time.
+
+.. cpp:function:: int botan_spake2p_params_init(botan_spake2p_params_t* params, const char* ciphersuite)
+
+   Create system parameters from an RFC 9383 ciphersuite name, one of
+   "P256-SHA256", "P256-SHA512", "P384-SHA256", "P384-SHA512", or
+   "P521-SHA512", all using HMAC key confirmation.
+
+.. cpp:function:: int botan_spake2p_params_init_custom(botan_spake2p_params_t* params, \
+                  botan_ec_group_t group, const uint8_t seed[], size_t seed_len, \
+                  const char* hash_fn)
+
+   Create custom system parameters for an arbitrary group, deriving the
+   M/N group elements from the seed using hash to curve; returns
+   ``BOTAN_FFI_ERROR_NOT_IMPLEMENTED`` if the group does not support hash
+   to curve. Both peers must use the same group, seed, and hash.
+
+.. cpp:function:: int botan_spake2p_params_destroy(botan_spake2p_params_t params)
+
+   Destroy an object.
+
+.. cpp:function:: int botan_spake2p_params_share_size(botan_spake2p_params_t params, size_t* share_size)
+
+   Return the size in bytes of a key share (shareP or shareV).
+
+.. cpp:function:: int botan_spake2p_params_confirmation_size(botan_spake2p_params_t params, size_t* confirmation_size)
+
+   Return the size in bytes of a key confirmation message (confirmP or confirmV).
+
+.. cpp:function:: int botan_spake2p_derive_secret(botan_spake2p_params_t params, \
+                  const char* password, \
+                  const uint8_t prover_id[], size_t prover_id_len, \
+                  const uint8_t verifier_id[], size_t verifier_id_len, \
+                  const uint8_t salt[], size_t salt_len, \
+                  botan_view_ctx ctx, botan_view_bin_fn view)
+
+   Derive a prover secret (w0 and w1) from a password, using Argon2id.
+   The view callback is invoked with the serialized prover secret, which
+   is password equivalent and must be protected accordingly. It is used
+   with ``botan_spake2p_registration_record`` and
+   ``botan_spake2p_prover_init``.
+
+.. cpp:function:: int botan_spake2p_registration_record(botan_spake2p_params_t params, \
+                  botan_rng_t rng, const uint8_t secret[], size_t secret_len, \
+                  botan_view_ctx ctx, botan_view_bin_fn view)
+
+   Compute a registration record (w0 and L) from a serialized prover
+   secret. The record is provided to the verifier during registration.
+   While it does not allow directly impersonating the prover, it does
+   allow offline password guessing attacks, so it should be protected.
+
+.. cpp:type:: opaque* botan_spake2p_prover_t
+
+   An opaque data type for a SPAKE2+ prover.
+
+.. cpp:function:: int botan_spake2p_prover_init(botan_spake2p_prover_t* prover, \
+                  botan_spake2p_params_t params, \
+                  const uint8_t secret[], size_t secret_len, \
+                  const uint8_t prover_id[], size_t prover_id_len, \
+                  const uint8_t verifier_id[], size_t verifier_id_len, \
+                  const uint8_t context[], size_t context_len)
+
+   Initialize a prover from a serialized prover secret. The identities
+   and context must be agreed upon by both parties; the identities must
+   additionally match the values used when deriving the prover secret.
+
+.. cpp:function:: int botan_spake2p_prover_destroy(botan_spake2p_prover_t prover)
+
+   Destroy an object.
+
+.. cpp:function:: int botan_spake2p_prover_generate_message(botan_spake2p_prover_t prover, \
+                  botan_rng_t rng, botan_view_ctx ctx, botan_view_bin_fn view)
+
+   Generate the prover's key share (shareP), which is sent to the
+   verifier. This can be called only once per prover object.
+
+.. cpp:function:: int botan_spake2p_prover_process_message(botan_spake2p_prover_t prover, \
+                  botan_rng_t rng, const uint8_t peer_message[], size_t peer_message_len, \
+                  botan_view_ctx ctx, botan_view_bin_fn view)
+
+   Consume the verifier's response (shareV followed by confirmV) and
+   produce the prover's key confirmation (confirmP), which is sent to the
+   verifier. Returns ``BOTAN_FFI_ERROR_BAD_MAC`` if the verifier's key
+   confirmation is wrong, typically meaning the passwords do not match.
+
+.. cpp:function:: int botan_spake2p_prover_shared_secret(botan_spake2p_prover_t prover, \
+                  botan_view_ctx ctx, botan_view_bin_fn view)
+
+   Return the shared secret (K_shared). This may be called only after
+   ``botan_spake2p_prover_process_message`` has succeeded.
+
+.. cpp:type:: opaque* botan_spake2p_verifier_t
+
+   An opaque data type for a SPAKE2+ verifier.
+
+.. cpp:function:: int botan_spake2p_verifier_init(botan_spake2p_verifier_t* verifier, \
+                  botan_spake2p_params_t params, \
+                  const uint8_t record[], size_t record_len, \
+                  const uint8_t prover_id[], size_t prover_id_len, \
+                  const uint8_t verifier_id[], size_t verifier_id_len, \
+                  const uint8_t context[], size_t context_len)
+
+   Initialize a verifier from a serialized registration record. See
+   ``botan_spake2p_prover_init`` for the requirements on the identities
+   and context.
+
+.. cpp:function:: int botan_spake2p_verifier_destroy(botan_spake2p_verifier_t verifier)
+
+   Destroy an object.
+
+.. cpp:function:: int botan_spake2p_verifier_process_message(botan_spake2p_verifier_t verifier, \
+                  botan_rng_t rng, const uint8_t peer_message[], size_t peer_message_len, \
+                  botan_view_ctx ctx, botan_view_bin_fn view)
+
+   Consume the prover's key share (shareP) and produce the verifier's
+   response (shareV followed by confirmV), which is sent to the prover.
+   This can be called only once per verifier object.
+
+.. cpp:function:: int botan_spake2p_verifier_verify_confirmation(botan_spake2p_verifier_t verifier, \
+                  const uint8_t confirmation[], size_t confirmation_len)
+
+   Check the prover's key confirmation (confirmP). Returns
+   ``BOTAN_FFI_ERROR_BAD_MAC`` if the confirmation is wrong, meaning the
+   prover does not know the password.
+
+.. cpp:function:: int botan_spake2p_verifier_skip_confirmation(botan_spake2p_verifier_t verifier)
+
+   Can be called after ``botan_spake2p_verifier_process_message``, in
+   place of ``botan_spake2p_verifier_verify_confirmation``, to allow
+   extracting the shared secret without having checked the prover's key
+   confirmation.
+
+   .. warning::
+
+      After calling this, nothing is known about the peer; only a prover
+      which knows the password can compute the same shared secret, but no
+      evidence of this has been received. It is intended solely for
+      protocols which embed SPAKE2+ and perform the prover's key
+      confirmation themselves, such as the proposed PAKE extension for
+      TLS 1.3, where the TLS handshake takes the place of confirmP.
+      Anywhere else, use ``botan_spake2p_verifier_verify_confirmation``.
+
+.. cpp:function:: int botan_spake2p_verifier_shared_secret(botan_spake2p_verifier_t verifier, \
+                  botan_view_ctx ctx, botan_view_bin_fn view)
+
+   Return the shared secret (K_shared). This may be called only after
+   ``botan_spake2p_verifier_verify_confirmation`` has succeeded, or after
+   ``botan_spake2p_verifier_skip_confirmation``.
+
 ZFEC (Forward Error Correction)
 ----------------------------------------
 

@@ -5824,6 +5824,307 @@ class FFI_SRP6_Test final : public FFI_Test {
       }
 };
 
+class FFI_SPAKE2P_Test final : public FFI_Test {
+   public:
+      std::string name() const override { return "FFI SPAKE2+"; }
+
+      bool skip_this_test() const override {
+   #if !defined(BOTAN_HAS_PAKE_SPAKE2PLUS)
+         return true;
+   #else
+         return false;
+   #endif
+      }
+
+      void ffi_test(Test::Result& result, botan_rng_t rng) override {
+         const char* password = "hunter2";
+         const std::vector<uint8_t> prover_id = {'c', 'l', 'i', 'e', 'n', 't'};
+         const std::vector<uint8_t> verifier_id = {'s', 'e', 'r', 'v', 'e', 'r'};
+         const std::vector<uint8_t> context = {'f', 'f', 'i'};
+         const auto salt = Botan::hex_decode("adb63d2727f971e1b52b7ba1e42ab73c");
+
+         botan_spake2p_params_t params;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_spake2p_params_init, (&params, "P37-MD5"));
+         TEST_FFI_OK(botan_spake2p_params_init, (&params, "P256-SHA256"));
+
+         size_t share_size = 0;
+         TEST_FFI_OK(botan_spake2p_params_share_size, (params, &share_size));
+         result.test_sz_eq("share size", share_size, 65);
+
+         size_t confirmation_size = 0;
+         TEST_FFI_OK(botan_spake2p_params_confirmation_size, (params, &confirmation_size));
+         result.test_sz_eq("confirmation size", confirmation_size, 32);
+
+         ViewBytesSink secret;
+         TEST_FFI_OK(botan_spake2p_derive_secret,
+                     (params,
+                      password,
+                      prover_id.data(),
+                      prover_id.size(),
+                      verifier_id.data(),
+                      verifier_id.size(),
+                      salt.data(),
+                      salt.size(),
+                      secret.delegate(),
+                      secret.callback()));
+         result.test_sz_eq("secret length", secret.size(), 64);
+
+         ViewBytesSink record;
+         TEST_FFI_OK(botan_spake2p_registration_record,
+                     (params, rng, secret.data(), secret.size(), record.delegate(), record.callback()));
+         result.test_sz_eq("record length", record.size(), 32 + 65);
+
+         auto init_prover = [&](botan_spake2p_prover_t* prover) {
+            TEST_FFI_OK(botan_spake2p_prover_init,
+                        (prover,
+                         params,
+                         secret.data(),
+                         secret.size(),
+                         prover_id.data(),
+                         prover_id.size(),
+                         verifier_id.data(),
+                         verifier_id.size(),
+                         context.data(),
+                         context.size()));
+         };
+
+         auto init_verifier = [&](botan_spake2p_verifier_t* verifier) {
+            TEST_FFI_OK(botan_spake2p_verifier_init,
+                        (verifier,
+                         params,
+                         record.data(),
+                         record.size(),
+                         prover_id.data(),
+                         prover_id.size(),
+                         verifier_id.data(),
+                         verifier_id.size(),
+                         context.data(),
+                         context.size()));
+         };
+
+         // A successful exchange
+         {
+            botan_spake2p_prover_t prover;
+            init_prover(&prover);
+            botan_spake2p_verifier_t verifier;
+            init_verifier(&verifier);
+
+            ViewBytesSink share_p;
+            TEST_FFI_OK(botan_spake2p_prover_generate_message, (prover, rng, share_p.delegate(), share_p.callback()));
+            result.test_sz_eq("share length", share_p.size(), share_size);
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE,
+                        botan_spake2p_prover_generate_message,
+                        (prover, rng, share_p.delegate(), share_p.callback()));
+
+            ViewBytesSink verifier_msg;
+            TEST_FFI_OK(
+               botan_spake2p_verifier_process_message,
+               (verifier, rng, share_p.data(), share_p.size(), verifier_msg.delegate(), verifier_msg.callback()));
+            result.test_sz_eq("verifier message length", verifier_msg.size(), share_size + confirmation_size);
+
+            // The shared secret is not available before confirmation
+            ViewBytesSink key2;
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE,
+                        botan_spake2p_verifier_shared_secret,
+                        (verifier, key2.delegate(), key2.callback()));
+
+            ViewBytesSink confirmation;
+            TEST_FFI_OK(botan_spake2p_prover_process_message,
+                        (prover,
+                         rng,
+                         verifier_msg.data(),
+                         verifier_msg.size(),
+                         confirmation.delegate(),
+                         confirmation.callback()));
+            result.test_sz_eq("confirmation length", confirmation.size(), confirmation_size);
+
+            TEST_FFI_OK(botan_spake2p_verifier_verify_confirmation,
+                        (verifier, confirmation.data(), confirmation.size()));
+
+            ViewBytesSink key1;
+            TEST_FFI_OK(botan_spake2p_prover_shared_secret, (prover, key1.delegate(), key1.callback()));
+            result.test_sz_eq("shared secret length", key1.size(), 32);
+
+            TEST_FFI_OK(botan_spake2p_verifier_shared_secret, (verifier, key2.delegate(), key2.callback()));
+
+            result.test_bin_eq("Shared secrets match", key1.get(), key2.get());
+
+            TEST_FFI_OK(botan_spake2p_prover_destroy, (prover));
+            TEST_FFI_OK(botan_spake2p_verifier_destroy, (verifier));
+         }
+
+         // An exchange where the verifier explicitly skips the prover's confirmation
+         {
+            botan_spake2p_prover_t prover;
+            init_prover(&prover);
+            botan_spake2p_verifier_t verifier;
+            init_verifier(&verifier);
+
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE, botan_spake2p_verifier_skip_confirmation, (verifier));
+
+            ViewBytesSink share_p;
+            TEST_FFI_OK(botan_spake2p_prover_generate_message, (prover, rng, share_p.delegate(), share_p.callback()));
+
+            ViewBytesSink verifier_msg;
+            TEST_FFI_OK(
+               botan_spake2p_verifier_process_message,
+               (verifier, rng, share_p.data(), share_p.size(), verifier_msg.delegate(), verifier_msg.callback()));
+
+            ViewBytesSink confirmation;
+            TEST_FFI_OK(botan_spake2p_prover_process_message,
+                        (prover,
+                         rng,
+                         verifier_msg.data(),
+                         verifier_msg.size(),
+                         confirmation.delegate(),
+                         confirmation.callback()));
+
+            TEST_FFI_OK(botan_spake2p_verifier_skip_confirmation, (verifier));
+
+            ViewBytesSink key1;
+            TEST_FFI_OK(botan_spake2p_prover_shared_secret, (prover, key1.delegate(), key1.callback()));
+            ViewBytesSink key2;
+            TEST_FFI_OK(botan_spake2p_verifier_shared_secret, (verifier, key2.delegate(), key2.callback()));
+
+            result.test_bin_eq("Shared secrets match", key1.get(), key2.get());
+
+            // Having skipped, the confirmation can no longer be checked
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE,
+                        botan_spake2p_verifier_verify_confirmation,
+                        (verifier, confirmation.data(), confirmation.size()));
+
+            TEST_FFI_OK(botan_spake2p_prover_destroy, (prover));
+            TEST_FFI_OK(botan_spake2p_verifier_destroy, (verifier));
+         }
+
+         // A tampered confirmation is rejected and terminates the exchange
+         {
+            botan_spake2p_prover_t prover;
+            init_prover(&prover);
+            botan_spake2p_verifier_t verifier;
+            init_verifier(&verifier);
+
+            ViewBytesSink share_p;
+            TEST_FFI_OK(botan_spake2p_prover_generate_message, (prover, rng, share_p.delegate(), share_p.callback()));
+
+            ViewBytesSink verifier_msg;
+            TEST_FFI_OK(
+               botan_spake2p_verifier_process_message,
+               (verifier, rng, share_p.data(), share_p.size(), verifier_msg.delegate(), verifier_msg.callback()));
+
+            // Tamper with the verifier's key confirmation
+            std::vector<uint8_t> tampered_msg(verifier_msg.get().begin(), verifier_msg.get().end());
+            tampered_msg[tampered_msg.size() - 1] ^= 0x01;
+
+            ViewBytesSink confirmation;
+            TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_MAC,
+                        botan_spake2p_prover_process_message,
+                        (prover,
+                         rng,
+                         tampered_msg.data(),
+                         tampered_msg.size(),
+                         confirmation.delegate(),
+                         confirmation.callback()));
+
+            ViewBytesSink key;
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE,
+                        botan_spake2p_prover_shared_secret,
+                        (prover, key.delegate(), key.callback()));
+
+            const std::vector<uint8_t> zeros(confirmation_size);
+            TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_MAC,
+                        botan_spake2p_verifier_verify_confirmation,
+                        (verifier, zeros.data(), zeros.size()));
+
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE, botan_spake2p_verifier_skip_confirmation, (verifier));
+
+            TEST_FFI_OK(botan_spake2p_prover_destroy, (prover));
+            TEST_FFI_OK(botan_spake2p_verifier_destroy, (verifier));
+         }
+
+         // Custom system parameters over the same group, so the secret can be reused
+         {
+            botan_ec_group_t group;
+            TEST_FFI_OK(botan_ec_group_from_name, (&group, "secp256r1"));
+
+            const std::vector<uint8_t> seed = {'f', 'f', 'i', ' ', 's', 'e', 'e', 'd'};
+            botan_spake2p_params_t cparams;
+            const int rc = botan_spake2p_params_init_custom(&cparams, group, seed.data(), seed.size(), "SHA-256");
+
+            if(rc == BOTAN_FFI_SUCCESS) {
+               ViewBytesSink crecord;
+               TEST_FFI_OK(botan_spake2p_registration_record,
+                           (cparams, rng, secret.data(), secret.size(), crecord.delegate(), crecord.callback()));
+
+               botan_spake2p_prover_t prover;
+               TEST_FFI_OK(botan_spake2p_prover_init,
+                           (&prover,
+                            cparams,
+                            secret.data(),
+                            secret.size(),
+                            prover_id.data(),
+                            prover_id.size(),
+                            verifier_id.data(),
+                            verifier_id.size(),
+                            context.data(),
+                            context.size()));
+
+               botan_spake2p_verifier_t verifier;
+               TEST_FFI_OK(botan_spake2p_verifier_init,
+                           (&verifier,
+                            cparams,
+                            crecord.data(),
+                            crecord.size(),
+                            prover_id.data(),
+                            prover_id.size(),
+                            verifier_id.data(),
+                            verifier_id.size(),
+                            context.data(),
+                            context.size()));
+
+               ViewBytesSink share_p;
+               TEST_FFI_OK(botan_spake2p_prover_generate_message,
+                           (prover, rng, share_p.delegate(), share_p.callback()));
+
+               ViewBytesSink verifier_msg;
+               TEST_FFI_OK(
+                  botan_spake2p_verifier_process_message,
+                  (verifier, rng, share_p.data(), share_p.size(), verifier_msg.delegate(), verifier_msg.callback()));
+
+               ViewBytesSink confirmation;
+               TEST_FFI_OK(botan_spake2p_prover_process_message,
+                           (prover,
+                            rng,
+                            verifier_msg.data(),
+                            verifier_msg.size(),
+                            confirmation.delegate(),
+                            confirmation.callback()));
+
+               TEST_FFI_OK(botan_spake2p_verifier_verify_confirmation,
+                           (verifier, confirmation.data(), confirmation.size()));
+
+               ViewBytesSink key1;
+               TEST_FFI_OK(botan_spake2p_prover_shared_secret, (prover, key1.delegate(), key1.callback()));
+               ViewBytesSink key2;
+               TEST_FFI_OK(botan_spake2p_verifier_shared_secret, (verifier, key2.delegate(), key2.callback()));
+
+               result.test_bin_eq("Shared secrets match", key1.get(), key2.get());
+
+               TEST_FFI_OK(botan_spake2p_prover_destroy, (prover));
+               TEST_FFI_OK(botan_spake2p_verifier_destroy, (verifier));
+               TEST_FFI_OK(botan_spake2p_params_destroy, (cparams));
+            } else {
+               result.test_is_true("custom params requires hash to curve support",
+                                   rc == BOTAN_FFI_ERROR_NOT_IMPLEMENTED);
+            }
+
+            TEST_FFI_OK(botan_ec_group_destroy, (group));
+         }
+
+         TEST_FFI_OK(botan_spake2p_params_destroy, (params));
+      }
+};
+
 // NOLINTEND(*-init-variables)
 
 BOTAN_REGISTER_TEST("ffi", "ffi_utils", FFI_Utils_Test);
@@ -5881,6 +6182,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_oid", FFI_OID_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ec_group", FFI_EC_Group_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ec_points", FFI_EC_Point_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_srp6", FFI_SRP6_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_spake2p", FFI_SPAKE2P_Test);
 
    #if defined(BOTAN_HAS_X509)
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_alt_names", FFI_Cert_AlternativeNames_Test);
