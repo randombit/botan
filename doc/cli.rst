@@ -202,6 +202,13 @@ X.509
   defaults to the padding scheme used in the CA certificate, or otherwise
   some suitable default.
 
+``create_cert_for_key client_public_key ca_cert ca_key CN --ca-key-pass= --duration=365  --country= --organization= --ca --path-limit=1 --email= --dns= --ext-ku= --hash= --padding="``
+  Create a certificate directly for the *client_public_key* using *ca_key* and *ca_cert* of
+  the desired CA. This is necessary to issue certificates for KEM keys, which cannot be used to sign PKCS#10 requests.
+  If the CA's private key is encrypted, the decryption passphrase has to be provided with *--ca-key-pass=...*.
+  The client public key file can be created from the private key using the above described ``pkcs8``
+  command with the flag ``--pub-out``.
+
 ``ocsp_check --timeout=3000 subject issuer``
   Verify an X.509 certificate against the issuers OCSP responder. Pass the
   certificate to validate as *subject* and the CA certificate as *issuer*.
