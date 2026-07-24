@@ -12,6 +12,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/bigint.h>
 #include <botan/internal/monty.h>
+#include <functional>
 #include <memory>
 #include <span>
 
@@ -267,6 +268,10 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       /// Return the identity element (aka the point at infinity)
       std::unique_ptr<EC_AffinePoint_Data> point_identity() const;
 
+      /// Return true if point_hash_to_curve_ro/point_hash_to_curve_nu will
+      /// work for this group when using the specified hash function
+      bool hash_to_curve_supported(std::string_view hash_fn) const;
+
       std::unique_ptr<EC_AffinePoint_Data> point_hash_to_curve_ro(std::string_view hash_fn,
                                                                   std::span<const uint8_t> input,
                                                                   std::span<const uint8_t> domain_sep) const;
@@ -353,6 +358,18 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       EC_Group_Source m_source;
       EC_Group_Engine m_engine;
 };
+
+/**
+* Instantiate the named hash and return a closure implementing the
+* expand_message function of RFC 9380
+*
+* Throws if the hash is unknown, or too weak for use with a group
+* of order_bits, per the RFC 9380 requirements
+*/
+std::function<void(std::span<uint8_t>)> h2c_expand_message(std::string_view hash_fn,
+                                                           size_t order_bits,
+                                                           std::span<const uint8_t> input,
+                                                           std::span<const uint8_t> domain_sep);
 
 }  // namespace Botan
 

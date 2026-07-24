@@ -903,7 +903,7 @@ int botan_pwdhash(const char* algo,
 
 /*
 * Derive a key from a passphrase
-* @param pbkdf_algo PBKDF algorithm, e.g., "Scrypt" or "PBKDF2(SHA-256)"
+* @param algo PBKDF algorithm, e.g., "Scrypt" or "PBKDF2(SHA-256)"
 * @param msec the desired runtime in milliseconds
 * @param param1 will be set to the first password hash parameter
 * @param param2 will be set to the second password hash parameter

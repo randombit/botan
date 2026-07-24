@@ -381,6 +381,21 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       };
 
       /**
+      * Return true if RFC 9380 hash to curve is supported for this group
+      * with the specified hash function
+      *
+      * If this returns true then EC_AffinePoint::hash_to_curve_ro and
+      * EC_AffinePoint::hash_to_curve_nu will work for this group and hash.
+      *
+      * This checks that the hash function is available and satisfies the
+      * RFC 9380 requirements for this group (in particular that the hash
+      * output is at least twice the target security level), that the curve
+      * implementation supports hash to curve, and that the required message
+      * expansion (currently just expand_message_xmd) is included in the build.
+      */
+      bool hash_to_curve_supported(std::string_view hash_fn) const;
+
+      /**
       * Return the OID of these domain parameters
       * @result the OID
       */
