@@ -3,14 +3,15 @@
 # (C) 2017 Jack Lloyd
 # Botan is released under the Simplified BSD License (see license.txt)
 
+import optparse
 import os
-import sys
+import random
+import string
 import subprocess
+import sys
 import tempfile
 import time
-import random
-import optparse
-import string
+
 
 def run_subprocess(cmd):
     print("Running '%s'" % (' '.join(cmd)))

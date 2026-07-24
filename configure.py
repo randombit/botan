@@ -15,8 +15,10 @@ Botan is released under the Simplified BSD License (see license.txt)
 
 import collections
 import copy
+import errno
 import json
-import sys
+import logging
+import optparse  # pylint: disable=deprecated-module
 import os
 import os.path
 import platform
@@ -24,11 +26,10 @@ import re
 import shlex
 import shutil
 import subprocess
-import traceback
-import logging
+import sys
 import time
-import errno
-import optparse # pylint: disable=deprecated-module
+import traceback
+
 
 # An error caused by and to be fixed by the user, e.g. invalid command line argument
 class UserError(Exception):
@@ -42,7 +43,7 @@ class InternalError(Exception):
 
 
 def flatten(lst):
-    return sum(lst, [])
+    return [elem for sub in lst for elem in sub]
 
 def normalize_source_path(source):
     """
@@ -73,7 +74,7 @@ def parse_version_file(version_path):
     key_and_val = re.compile(r"([a-z_]+) = ([a-zA-Z0-9:\-\']+)")
 
     results = {}
-    for line in version_file.readlines():
+    for line in version_file:
         if not line or line[0] == '#':
             continue
         match = key_and_val.match(line)
@@ -95,7 +96,7 @@ class Version:
     """
     Version information are all static members
     """
-    data = {}
+    data = {} # noqa: RUF012
 
     @staticmethod
     def get_data():
@@ -769,7 +770,7 @@ def parse_lex_dict(as_list, map_name, infofile):
         raise InternalError("Lex dictionary has invalid format (input not divisible by 3): %s" % as_list)
 
     result = {}
-    for key, sep, value in [as_list[3*i:3*i+3] for i in range(0, len(as_list)//3)]:
+    for key, sep, value in [as_list[3*i:3*i+3] for i in range(len(as_list)//3)]:
         if sep != '->':
             raise InternalError("Map %s in %s has invalid format" % (map_name, infofile))
         if key in result:
@@ -825,7 +826,7 @@ def lex_me_harder(infofile, allowed_groups, allowed_maps, name_val_pairs):
                     raise LexerError('Group "%s" not terminated' % (group),
                                      infofile, lexer.lineno)
 
-        elif token in name_val_pairs.keys():
+        elif token in name_val_pairs:
             if isinstance(out.__dict__[token], list):
                 out.__dict__[token].append(lexer.get_token())
             else:
@@ -1020,9 +1021,7 @@ class ModuleInfo(InfoObject):
                 return True
 
             compound_isa = isa.split(':')
-            if len(compound_isa) == 2 and compound_isa[0] in arch_info and compound_isa[1] in all_isa_extn:
-                return True
-            return False
+            return len(compound_isa) == 2 and compound_isa[0] in arch_info and compound_isa[1] in all_isa_extn
 
         for isa in self.isa:
             if not known_isa(isa):
@@ -1074,11 +1073,7 @@ class ModuleInfo(InfoObject):
             if isa not in archinfo.isa_extensions:
                 return False
 
-        if self.arch != []:
-            if arch_name not in self.arch and cpu_name not in self.arch:
-                return False
-
-        return True
+        return self.arch == [] or arch_name in self.arch or cpu_name in self.arch
 
     def compatible_os(self, os_data, options):
         if not self.os_features:
@@ -1186,10 +1181,7 @@ class ModuleInfo(InfoObject):
             if not dependency.is_virtual():
                 return False
 
-            if this_module.parent_module == dependency.basename:
-                return False
-
-            return True
+            return this_module.parent_module != dependency.basename
 
         missing = [s for s in self.dependencies(None, None) if s not in modules or is_dependency_on_virtual(self, modules[s])]
 
@@ -1273,9 +1265,9 @@ class ArchInfo(InfoObject):
         isas = []
 
         for isa in self.isa_extensions:
-            if (isa, self.basename) not in options.disable_intrinsics:
-                if cc.isa_flags_for(isa, self.basename) is not None:
-                    isas.append(isa)
+            if (isa, self.basename) not in options.disable_intrinsics and \
+               cc.isa_flags_for(isa, self.basename) is not None:
+                isas.append(isa)
 
         return sorted(isas)
 
@@ -1477,7 +1469,7 @@ class CompilerInfo(InfoObject):
                 else:
                     yield 'rt'
 
-            for all_except in [s for s in self.mach_abi_linking.keys() if s.startswith('all!')]:
+            for all_except in [s for s in self.mach_abi_linking if s.startswith('all!')]:
                 exceptions = all_except[4:].split(',')
                 if options.os not in exceptions and options.arch not in exceptions:
                     yield all_except
@@ -1582,10 +1574,9 @@ class CompilerInfo(InfoObject):
         if options.arch in self.cpu_flags:
             yield self.cpu_flags[options.arch]
 
-        if options.arch in self.cpu_flags_no_debug:
-            # Only enable these if no debug/sanitizer options enabled
-            if not (options.debug_mode or sanitizers_enabled):
-                yield self.cpu_flags_no_debug[options.arch]
+        # Only enable these if no debug/sanitizer options enabled
+        if options.arch in self.cpu_flags_no_debug and not (options.debug_mode or sanitizers_enabled):
+            yield self.cpu_flags_no_debug[options.arch]
 
         yield from options.extra_cxxflags
 
@@ -1737,12 +1728,12 @@ class OsInfo(InfoObject):
         return sorted(feats)
 
     def enabled_features_public(self, options):
-        public_feat = set(['threads', 'filesystem'])
-        return sorted(list(set(self.enabled_features(options)) & public_feat))
+        public_feat = {'threads', 'filesystem'}
+        return sorted(set(self.enabled_features(options)) & public_feat)
 
     def enabled_features_internal(self, options):
-        public_feat = set(['threads', 'filesystem'])
-        return sorted(list(set(self.enabled_features(options)) - public_feat))
+        public_feat = {'threads', 'filesystem'}
+        return sorted(set(self.enabled_features(options)) - public_feat)
 
     def macros(self, cc):
         value = [cc.add_compile_definition_option + define
@@ -1872,12 +1863,10 @@ def process_template_string(template_text, variables, template_source):
                     cond_type = cond_match.group(1)
                     cond_var = cond_match.group(2)
 
-                    include_cond = False
-
-                    if cond_type == 'if' and cond_var in self.vals and self.vals.get(cond_var):
-                        include_cond = True
-                    elif cond_type == 'unless' and (cond_var not in self.vals or (not self.vals.get(cond_var))):
-                        include_cond = True
+                    if cond_type == 'if':
+                        include_cond = bool(self.vals.get(cond_var))
+                    else: # unless
+                        include_cond = not self.vals.get(cond_var)
 
                     idx += 1
                     while idx < len(lines):
@@ -1949,6 +1938,16 @@ def process_template(template_file, variables):
 def yield_objectfile_list(sources, obj_dir, obj_suffix, options):
     obj_suffix = '.' + obj_suffix
 
+    def fixup_obj_name(name):
+        def remove_dups(parts):
+            last = None
+            for part in parts:
+                if last is None or part != last:
+                    last = part
+                    yield part
+
+        return '_'.join(remove_dups(name.split('_')))
+
     for src in sources:
         (directory, filename) = os.path.split(os.path.normpath(src))
         parts_in_src = directory.split('src' + os.sep)
@@ -1965,16 +1964,6 @@ def yield_objectfile_list(sources, obj_dir, obj_suffix, options):
                 name = '_'.join(parts) + '.cpp'
             else:
                 name = '_'.join(parts) + '_' + filename
-
-            def fixup_obj_name(name):
-                def remove_dups(parts):
-                    last = None
-                    for part in parts:
-                        if last is None or part != last:
-                            last = part
-                            yield part
-
-                return '_'.join(remove_dups(name.split('_')))
 
             name = fixup_obj_name(name)
         else:
@@ -2643,7 +2632,7 @@ class ModulesChooser:
         - loaded_modules: modules already loaded. Defensive copy in order to not change value for caller.
         """
         if loaded_modules is None:
-            loaded_modules = set([])
+            loaded_modules = set()
         else:
             loaded_modules = copy.copy(loaded_modules)
 
@@ -2740,13 +2729,12 @@ class ModulesChooser:
                 else:
                     self._handle_by_load_on(module)
 
-        if 'compression' in self._to_load:
-            # Confirm that we have at least one compression library enabled
-            # Otherwise we leave a lot of useless support code compiled in, plus a
-            # make_compressor call that always fails
-            if 'zlib' not in self._to_load and 'bzip2' not in self._to_load and 'lzma' not in self._to_load:
-                self._to_load.remove('compression')
-                self._not_using_because['no enabled compression schemes'].add('compression')
+        # Confirm that we have at least one compression library enabled
+        # Otherwise we leave a lot of useless support code compiled in, plus a
+        # make_compressor call that always fails
+        if 'compression' in self._to_load and not self._to_load & {'zlib', 'bzip2', 'lzma'}:
+            self._to_load.remove('compression')
+            self._not_using_because['no enabled compression schemes'].add('compression')
 
         # The AVX2 implementation of Argon2 fails when compiled by GCC in
         # amalgamation mode.
@@ -2882,7 +2870,7 @@ class AmalgamationHeader:
             try:
                 contents = AmalgamationGenerator.read_header(filepath)
                 self.file_contents[os.path.basename(filepath)] = contents
-            except IOError as ex:
+            except OSError as ex:
                 logging.error('Error processing file %s for amalgamation: %s', filepath, ex)
 
         self.contents = ''
@@ -2982,10 +2970,7 @@ class AmalgamationGenerator:
         logging.info('Writing amalgamation header to %s', amalgamation_header_fsname)
         pub_header_amalag.write_to_file(amalgamation_header_fsname, "BOTAN_AMALGAMATION_H_")
 
-        internal_headers_list = []
-
-        for hdr in self._build_paths.internal_headers:
-            internal_headers_list.append(hdr)
+        internal_headers_list = list(self._build_paths.internal_headers)
 
         # file descriptors for all `amalgamation_sources`
         amalgamation_fsname = '%s.cpp' % (self._filename_prefix)
@@ -3000,7 +2985,7 @@ class AmalgamationGenerator:
         amalgamation_file.write(internal_headers.header_includes)
         amalgamation_file.write(internal_headers.contents)
 
-        unconditional_headers = set([])
+        unconditional_headers = set()
 
         for mod in sorted(self._modules, key=lambda module: module.basename):
             for src in sorted(mod.source):
@@ -3298,9 +3283,8 @@ def canonicalize_options(options, info_os, info_arch):
     if options.os == 'windows' and options.build_shared_lib is None and options.build_static_lib is None:
         options.build_shared_lib = True
 
-    if options.with_stack_protector is None:
-        if options.os in info_os:
-            options.with_stack_protector = info_os[options.os].use_stack_protector
+    if options.with_stack_protector is None and options.os in info_os:
+        options.with_stack_protector = info_os[options.os].use_stack_protector
 
     if options.build_shared_lib is None:
         if options.os == 'windows' and options.build_static_lib:
@@ -3408,9 +3392,8 @@ def validate_options(options, info_os, info_cc, available_module_policies):
     if options.with_texinfo and not options.with_sphinx:
         raise UserError('Option --with-texinfo requires --with-sphinx')
 
-    if options.ct_value_barrier_type:
-        if options.ct_value_barrier_type not in ['asm', 'volatile', 'none']:
-            raise UserError('Unknown setting "%s" for --ct-value-barrier-type' % (options.ct_value_barrier_type))
+    if options.ct_value_barrier_type and options.ct_value_barrier_type not in ['asm', 'volatile', 'none']:
+        raise UserError('Unknown setting "%s" for --ct-value-barrier-type' % (options.ct_value_barrier_type))
 
     # Warnings
     if options.os == 'windows' and options.compiler not in ('msvc', 'clangcl'):
@@ -3662,8 +3645,7 @@ botan
         with open(rst2man_file, 'w', encoding='utf8') as f:
             f.write(rst2man_header)
             f.write("\n")
-            for line in cli_doc_contents:
-                f.write(line)
+            f.writelines(cli_doc_contents)
 
     date = 'dated %d' % (Version.datestamp()) if Version.datestamp() != 0 else 'undated'
 
@@ -3682,8 +3664,8 @@ botan
 
 def list_os_features(all_os_features, info_os):
     for feat in all_os_features:
-        os_with_feat = [o for o in info_os.keys() if feat in info_os[o].target_features]
-        os_without_feat = [o for o in info_os.keys() if feat not in info_os[o].target_features]
+        os_with_feat = [o for o in info_os if feat in info_os[o].target_features]
+        os_without_feat = [o for o in info_os if feat not in info_os[o].target_features]
 
         if len(os_with_feat) < len(os_without_feat):
             print("%s: %s" % (feat, ' '.join(sorted(os_with_feat))))

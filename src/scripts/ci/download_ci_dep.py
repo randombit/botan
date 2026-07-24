@@ -15,6 +15,7 @@ import sys
 import tempfile
 import urllib.request
 
+
 def load_config(dep_name):
     config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                '..', '..', 'configs', 'ci_deps.conf')

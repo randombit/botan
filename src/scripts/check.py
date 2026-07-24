@@ -10,10 +10,11 @@ Botan is released under the Simplified BSD License (see license.txt)
 
 import json
 import logging
-import optparse # pylint: disable=deprecated-module
+import optparse  # pylint: disable=deprecated-module
 import os
 import subprocess
 import sys
+
 
 def run_and_check(cmd_line, env=None, cwd=None):
 

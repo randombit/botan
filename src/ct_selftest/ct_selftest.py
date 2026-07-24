@@ -8,14 +8,16 @@ Runs all tests inmplemented in `ct_selftest`
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
+from __future__ import annotations
 
-import subprocess
 import argparse
-import os
-import sys
-from typing import Self
-from enum import StrEnum, auto
 import json
+import os
+import subprocess
+import sys
+from enum import StrEnum, auto
+from typing import Self
+
 
 def run_command(cmd: list[str], is_text = True):
     """ Run the command . """

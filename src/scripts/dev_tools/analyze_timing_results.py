@@ -8,7 +8,9 @@ Botan is released under the Simplified BSD License (see license.txt)
 
 import re
 import sys
+
 import numpy
+
 
 def compute_stats_for(nm, results):
     return {
@@ -33,7 +35,7 @@ def main(args = None):
 
     timing_line = re.compile('([0-9]+);([0-9]+);([0-9]+)')
 
-    key_ids = set([])
+    key_ids = set()
     results = {}
 
     for line in open(args[1]):

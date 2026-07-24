@@ -9,12 +9,12 @@ Botan is released under the Simplified BSD License (see license.txt)
 """
 
 import multiprocessing
-import optparse # pylint: disable=deprecated-module
+import optparse  # pylint: disable=deprecated-module
 import subprocess
 import sys
 import time
-
 from multiprocessing.pool import ThreadPool
+
 
 def get_concurrency():
     def_concurrency = 2
@@ -44,7 +44,7 @@ def run_valgrind(options, test):
     cmd = valgrind_cmd + [options.test_binary] + botan_test_options + test
 
     start = time.time()
-    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.run(cmd, capture_output=True, check=False)
     duration = time.time() - start
 
     if options.verbose:
@@ -60,7 +60,7 @@ def run_valgrind(options, test):
     return False
 
 def filter_tests(available, cmdline, options):
-    skip_tests = sum([x.split(',') for x in options.skip_tests], [])
+    skip_tests = [t for x in options.skip_tests for t in x.split(',')]
 
     to_run = []
 

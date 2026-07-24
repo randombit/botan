@@ -1,0 +1,11 @@
+target-version = "py38"
+
+[lint]
+ignore = [
+    "BLE001",  # catching Exception in a script's top level error handler is fine
+    "DTZ",     # datetimes are fine in build/dev scripts
+    "LOG015",  # standalone scripts use the root logger on purpose
+    "SIM115",  # not worth rewriting every open() into a with block
+    "TRY002",  # raising plain Exception is fine for standalone scripts
+    "UP031",   # printf-style formatting is fine
+]

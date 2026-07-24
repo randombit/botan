@@ -6,9 +6,10 @@
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import sys
 import json
 import re
+import sys
+
 
 def map_group_name(group):
     if group.startswith('brainpoolP'):

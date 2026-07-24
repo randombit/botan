@@ -8,6 +8,7 @@ Botan is released under the Simplified BSD License (see license.txt)
 
 import sys
 
+
 def gha_linux_packages(target, compiler):
     packages = [
         'ccache',

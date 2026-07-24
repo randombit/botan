@@ -6,9 +6,10 @@
 # Scans all source and test files and makes sure we are not using a
 # BOTAN_HAS_xxx macro which is not actually defined anywhere.
 
-from configure import ModuleInfo, load_info_files
 import os
 import re
+
+from configure import ModuleInfo, load_info_files
 
 src_dir = 'src'
 lib_dir = os.path.join(src_dir, 'lib')
@@ -34,7 +35,7 @@ macro = re.compile('BOTAN_HAS_([A-Za-z0-9_]+)')
 
 for dirname, subdirs, files in os.walk(src_dir):
     for fname in files:
-        if fname.endswith('.h') or fname.endswith('.cpp'):
+        if fname.endswith(('.h', '.cpp')):
             contents = open(os.path.join(dirname, fname)).read()
 
             for m in re.finditer(macro, contents):

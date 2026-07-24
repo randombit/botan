@@ -10,6 +10,7 @@ This script is run against a git checkout of Wycheproof
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
+from __future__ import annotations
 
 import argparse
 import base64
@@ -1596,16 +1597,15 @@ def handle_rsa_oaep(_data: dict, group: dict, test: dict) -> None:
                     "ComputedMsg": plaintext.hex(),
                 }
             )
-    elif test["result"] == "invalid":
-        if plaintext == expected:
-            raise TestFailure(
-                {
-                    "Ctext": test["ct"],
-                    "Ptext": test["msg"],
-                    "Padding": padding,
-                    "Note": "Invalid test decrypted successfully",
-                }
-            )
+    elif test["result"] == "invalid" and plaintext == expected:
+        raise TestFailure(
+            {
+                "Ctext": test["ct"],
+                "Ptext": test["msg"],
+                "Padding": padding,
+                "Note": "Invalid test decrypted successfully",
+            }
+        )
 
 
 @register("RSAES-PKCS1-v1_5")
@@ -1635,15 +1635,14 @@ def handle_rsa_pkcs1_enc(_data: dict, group: dict, test: dict) -> None:
                     "ComputedMsg": plaintext.hex(),
                 }
             )
-    elif test["result"] == "invalid":
-        if plaintext == expected:
-            raise TestFailure(
-                {
-                    "Ctext": test["ct"],
-                    "Ptext": test["msg"],
-                    "Note": "Invalid test decrypted successfully",
-                }
-            )
+    elif test["result"] == "invalid" and plaintext == expected:
+        raise TestFailure(
+            {
+                "Ctext": test["ct"],
+                "Ptext": test["msg"],
+                "Note": "Invalid test decrypted successfully",
+            }
+        )
 
 
 # ---- XDH handler (X25519, X448) ----

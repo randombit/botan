@@ -3,7 +3,9 @@
 import argparse
 import os
 import sys
-from common import run_cmd, get_concurrency
+
+from common import get_concurrency, run_cmd
+
 
 def find_repo_root():
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -17,7 +19,7 @@ def find_repo_root():
 REPO_ROOT = find_repo_root()
 
 sys.path.insert(0, os.path.join(REPO_ROOT, 'src', 'scripts'))
-from repo_config import RepoConfig  # noqa: E402 pylint: disable=wrong-import-position
+from repo_config import RepoConfig  # pylint: disable=wrong-import-position
 
 BORING_PATH = os.path.join(REPO_ROOT, "build_deps", "boringssl")
 BOGO_PATH = os.path.join(BORING_PATH, "ssl", "test", "runner")

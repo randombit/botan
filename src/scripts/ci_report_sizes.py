@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding=utf8
 
 """
 This script reports the sizes of various binary artifacts in CI
@@ -9,9 +8,10 @@ This script reports the sizes of various binary artifacts in CI
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
+import json
 import os
 import sys
-import json
+
 
 def format_size(bytes):
     kB = 1024

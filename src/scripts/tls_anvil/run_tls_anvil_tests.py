@@ -7,13 +7,13 @@
 # (C) 2023 Fabian Albert, Rohde & Schwarz Cybersecurity
 #
 # Botan is released under the Simplified BSD License (see license.txt)
-import sys
 import argparse
 import os
 import subprocess
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from repo_config import RepoConfig  # noqa: E402
+from repo_config import RepoConfig
 
 _repo_config = RepoConfig()
 

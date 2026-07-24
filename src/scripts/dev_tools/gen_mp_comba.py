@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import sys
 import datetime
+import sys
 
 # (C) 2011,2014,2015,2016 Jack Lloyd
 # Botan is released under the Simplified BSD License (see license.txt)
@@ -12,7 +12,7 @@ def comba_indexes(N):
 
     indexes = []
 
-    for i in range(0, 2*N):
+    for i in range(2*N):
         x = []
 
         for j in range(max(0, i-N+1), min(N, i+1)):
@@ -25,7 +25,7 @@ def comba_sqr_indexes(N):
 
     indexes = []
 
-    for i in range(0, 2*N):
+    for i in range(2*N):
         x = []
 
         for j in range(max(0, i-N+1), min(N, i+1)):
@@ -40,7 +40,7 @@ def comba_sqr_indexes(N):
 def comba_multiply_code(N):
     indexes = comba_indexes(N)
 
-    for (i,idx) in zip(range(0, len(indexes)), indexes):
+    for (i,idx) in zip(range(len(indexes)), indexes):
         for pair in idx:
             print("   accum.mul(x[%d], y[%d]);" % (pair[0], pair[1]))
 
@@ -49,8 +49,8 @@ def comba_multiply_code(N):
 def comba_square_code(N):
     indexes = comba_sqr_indexes(N)
 
-    for (rnd,idx) in zip(range(0, len(indexes)), indexes):
-        for (i,pair) in zip(range(0, len(idx)), idx):
+    for (rnd,idx) in zip(range(len(indexes)), indexes):
+        for (i,pair) in zip(range(len(idx)), idx):
             if pair[0] == pair[1]:
                 print("   accum.mul(x[%d], x[%d]);" % (pair[0], pair[1]))
             elif i % 2 == 0:

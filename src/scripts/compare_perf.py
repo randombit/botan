@@ -9,9 +9,10 @@ on noticeable improvements or regressions in performance.
 """
 
 import json
-import optparse # pylint: disable=deprecated-module
-import sys
+import optparse  # pylint: disable=deprecated-module
 import re
+import sys
+
 
 def ops_per_second(events, nanos):
     return (events * 1000000000) / nanos

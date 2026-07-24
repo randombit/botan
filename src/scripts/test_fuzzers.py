@@ -3,14 +3,15 @@
 # (C) 2017,2018 Jack Lloyd
 # Botan is released under the Simplified BSD License (see license.txt)
 
-import sys
-import os
-import subprocess
-import optparse # pylint: disable=deprecated-module
-import stat
 import multiprocessing
-import time
+import optparse  # pylint: disable=deprecated-module
+import os
+import stat
+import subprocess
+import sys
 import tempfile
+import time
+
 
 def run_fuzzer_gdb(args):
     (fuzzer_bin, corpus_file) = args
@@ -80,13 +81,13 @@ def main(args=None):
         print("Error could not access fuzzers directory '%s'" % (fuzzer_dir))
         return 1
 
-    fuzzers = set([])
+    fuzzers = set()
     for fuzzer in os.listdir(fuzzer_dir):
         if fuzzer.endswith('.zip'):
             continue
         fuzzers.add(fuzzer)
 
-    corpii = set([])
+    corpii = set()
     for corpus in os.listdir(corpus_dir):
         # Ignore regular files in toplevel dir
         if not stat.S_ISDIR(os.stat(os.path.join(corpus_dir, corpus)).st_mode):
@@ -100,9 +101,9 @@ def main(args=None):
     fuzzers_without_corpus = fuzzers - corpii
     corpus_without_fuzzers = corpii - fuzzers
 
-    for f in sorted(list(fuzzers_without_corpus)):
+    for f in sorted(fuzzers_without_corpus):
         print("Warning: Fuzzer %s has no corpus" % (f))
-    for c in sorted(list(corpus_without_fuzzers)):
+    for c in sorted(corpus_without_fuzzers):
         print("Warning: Corpus %s has no fuzzer" % (c))
 
     fuzzers_with_corpus = fuzzers & corpii
@@ -117,10 +118,10 @@ def main(args=None):
 
         run_fuzzer_func = run_fuzzer_gdb if options.gdb else run_fuzzer
 
-        for fuzzer in sorted(list(fuzzers_with_corpus)):
+        for fuzzer in sorted(fuzzers_with_corpus):
             fuzzer_bin = os.path.join(fuzzer_dir, fuzzer)
             corpus_subdir = os.path.join(corpus_dir, fuzzer)
-            corpus_files = [os.path.join(corpus_subdir, fsname) for fsname in sorted(list(os.listdir(corpus_subdir)))]
+            corpus_files = [os.path.join(corpus_subdir, fsname) for fsname in sorted(os.listdir(corpus_subdir))]
 
             # We have to do this hack because multiprocessing's Pool.map doesn't support
             # passing any initial arguments, just the single iterable
@@ -162,7 +163,7 @@ def main(args=None):
             fd.write(random_input)
             fd.close()
 
-        for fuzzer in sorted(list(fuzzers)):
+        for fuzzer in sorted(fuzzers):
             fuzzer_bin = os.path.join(fuzzer_dir, fuzzer)
 
             if fuzzer in fuzzers_with_corpus:
@@ -170,7 +171,7 @@ def main(args=None):
             else:
                 corpus_subdir = random_corpus_dir
 
-            corpus_files = [os.path.join(corpus_subdir, fsname) for fsname in sorted(list(os.listdir(corpus_subdir)))]
+            corpus_files = [os.path.join(corpus_subdir, fsname) for fsname in sorted(os.listdir(corpus_subdir))]
 
             if fuzzer in slow_fuzzers:
                 corpus_files = corpus_files[:random_corpus_size_for_slow_fuzzers]

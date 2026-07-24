@@ -9,8 +9,8 @@ Setup script for OSS-Fuzz
 """
 
 import os
-import sys
 import subprocess
+import sys
 
 if len(sys.argv) != 3:
     print("Expected args: %s <cxx> <cxxflags>" % (sys.argv[0]))
@@ -38,4 +38,4 @@ if cxxflags.find("-fsanitize=memory") > 0:
 
 configure = os.path.realpath(os.path.join(os.path.realpath(__file__), '..', '..', '..', 'configure.py'))
 
-subprocess.run([configure] + args)
+subprocess.run([configure] + args, check=True)

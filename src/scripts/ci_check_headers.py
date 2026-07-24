@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding=utf8
 
 """
 Botan CI check headers script
@@ -9,10 +8,11 @@ Botan CI check headers script
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import sys
-import os
 import json
+import os
 import re
+import sys
+
 
 def main(args=None):
     if args is None:
