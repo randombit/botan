@@ -250,6 +250,7 @@ class BuildPaths:
         self.libobj_dir = os.path.join(self.build_dir, 'obj', 'lib')
         self.cliobj_dir = os.path.join(self.build_dir, 'obj', 'cli')
         self.testobj_dir = os.path.join(self.build_dir, 'obj', 'test')
+        self.pch_dir = os.path.join(self.build_dir, 'obj', 'pch') if options.enable_pch else None
 
         self.doc_output_dir = os.path.join(self.build_dir, 'docs')
         self.handbook_output_dir = os.path.join(self.doc_output_dir, 'handbook')
@@ -327,6 +328,8 @@ class BuildPaths:
             out += [self.fuzzobj_dir, self.fuzzer_output_dir]
         if self.example_output_dir:
             out += [self.example_obj_dir, self.example_output_dir]
+        if self.pch_dir:
+            out += [self.pch_dir]
         return out
 
     def format_public_include_flags(self, cc):
@@ -563,6 +566,8 @@ def process_command_line(args):
     build_group.add_option('--disable-cc-tests', dest='enable_cc_tests',
                            default=True, action='store_false',
                            help=optparse.SUPPRESS_HELP)
+
+    add_enable_disable_pair(build_group, 'pch', True, 'disable precompiled headers')
 
     add_with_without_pair(build_group, 'valgrind', False, 'use valgrind API')
 
@@ -1325,6 +1330,9 @@ class CompilerInfo(InfoObject):
                 'ninja_header_deps_style': '',
                 'header_deps_flag': '',
                 'header_deps_out': '',
+                'pch_compile': None,
+                'pch_suffix': None,
+                'pch_include': None,
             })
 
         self.add_framework_option = lex.add_framework_option
@@ -1373,6 +1381,9 @@ class CompilerInfo(InfoObject):
         self.header_deps_flag = lex.header_deps_flag
         self.header_deps_out = lex.header_deps_out
         self.ct_value_barrier = lex.ct_value_barrier
+        self.pch_compile = lex.pch_compile
+        self.pch_suffix = lex.pch_suffix
+        self.pch_include = lex.pch_include
 
     def cross_check(self, os_info, arch_info, all_isas):
 
@@ -1419,16 +1430,14 @@ class CompilerInfo(InfoObject):
         """
 
         def flag_builder():
-            # We always emit -fPIC or equivalent so that position independent executables
-            # can be created that link to the static library
-            yield self.shared_flags
+            # -fPIC or equiv is emitted via cc_compile_flags so that it's used for all objects
+            # (this is mostly for the benefit of being able to share the PCH)
 
             if options.build_shared_lib:
                 yield self.visibility_build_flags
 
             if 'debug' in self.lib_flags and options.with_debug_info:
                 yield process_template_string(self.lib_flags['debug'], variables, self.infofile)
-
 
         return ' '.join(list(flag_builder()))
 
@@ -1457,6 +1466,12 @@ class CompilerInfo(InfoObject):
                     return x
 
         return None
+
+    def supports_pch(self):
+        if self.pch_compile is not None:
+            return self.pch_compile != ''
+        else:
+            return False
 
     def mach_abi_link_flags(self, options, debug_mode=None):
 
@@ -1561,11 +1576,16 @@ class CompilerInfo(InfoObject):
         if options.cxxflags:
             # CXXFLAGS is assumed to be the entire set of desired compilation flags
             # if not the case the user should have used --extra-cxxflags
+            if self.shared_flags != '':
+                yield self.shared_flags
             yield options.cxxflags
             return
 
         if options.with_debug_info:
             yield self.debug_info_flags
+
+        if self.shared_flags != '':
+            yield self.shared_flags
 
         if not options.no_optimizations:
             if options.optimize_for_size:
@@ -2248,6 +2268,10 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'with_doxygen': options.with_doxygen,
         'maintainer_mode': options.maintainer_mode,
 
+        'enable_pch': options.enable_pch and cc.supports_pch(),
+        'pch_suffix': cc.pch_suffix or '',
+        'pch_compile': cc.pch_compile or '',
+
         'out_dir': normalize_source_path(build_dir),
         'build_dir': normalize_source_path(build_paths.build_dir),
         'module_info_dir': build_paths.doc_module_info,
@@ -2420,6 +2444,29 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         variables['ldflags'] = '%s %s' % (variables['ldflags'], variables['cc_compile_flags'])
 
     variables['lib_flags'] = cc.gen_lib_flags(options, variables)
+
+    if variables['enable_pch']:
+        variables['pch_dir'] = build_paths.pch_dir
+        variables['pch_src_header'] = os.path.join(source_paths.lib_dir, 'pch/pch.h')
+        variables['pch_header_for_lib'] = os.path.join(build_paths.pch_dir, 'pch_lib.h')
+        variables['pch_include_for_lib'] = '%s %s' % (cc.pch_include, variables['pch_header_for_lib'])
+        variables['pch_path_for_lib'] = variables['pch_header_for_lib'] + '.' + cc.pch_suffix
+
+        variables['pch_header_for_exe'] = os.path.join(build_paths.pch_dir, 'pch_exe.h')
+        variables['pch_include_for_exe'] = '%s %s' % (cc.pch_include, variables['pch_header_for_exe'])
+        variables['pch_path_for_exe'] = variables['pch_header_for_exe'] + '.' + cc.pch_suffix
+
+        variables['pch_target'] = 'pch'
+    else:
+        variables['pch_src_header'] = ''
+        variables['pch_header_for_lib'] = ''
+        variables['pch_include_for_lib'] = ''
+        variables['pch_path_for_lib'] = ''
+        variables['pch_header_for_exe'] = ''
+        variables['pch_include_for_exe'] = ''
+        variables['pch_path_for_exe'] = ''
+
+        variables['pch_target'] = ''
 
     if options.with_pkg_config:
         variables['botan_pkgconfig'] = os.path.join(build_paths.build_dir, 'botan-%d.pc' % (Version.major()))

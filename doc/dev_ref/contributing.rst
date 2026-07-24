@@ -154,6 +154,9 @@ If you don't already use it for all your C/C++ development, install ``ccache``
 (or on Windows, ``sccache``) right now, and configure a large cache on a fast
 disk. It allows for very quick rebuilds by caching the compiler output.
 
+For ``ccache``, setting ``CCACHE_SLOPPINESS=pch_defines,time_macros`` allows
+using both the compiler cache and precompiled headers, for best compilation speed.
+
 Use ``--enable-sanitizers=`` flag to enable various sanitizer checks.  Supported
 values including "address" and "undefined" for GCC and Clang. GCC also supports
 "iterator" (checked iterators), and Clang supports "memory" (MSan) and
