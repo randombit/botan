@@ -281,6 +281,8 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          return {};
       }
 
+      bool supports_hash_to_curve() const override { return C::ValidForSswuHash; }
+
       AffinePoint hash_to_curve_nu(std::function<void(std::span<uint8_t>)> expand_message) const override {
          if constexpr(C::ValidForSswuHash) {
             return stash(hash_to_curve_sswu<C, false>(expand_message));

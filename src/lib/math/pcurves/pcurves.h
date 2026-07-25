@@ -319,6 +319,14 @@ class PrimeOrderCurve /* NOLINT(*-special-member-functions) */ {
       virtual Scalar random_scalar(RandomNumberGenerator& rng) const = 0;
 
       /**
+      * Return true if this curve supports RFC 9380 hash to curve
+      *
+      * If this returns false then hash_to_curve_nu and hash_to_curve_ro
+      * will throw Not_Implemented
+      */
+      virtual bool supports_hash_to_curve() const = 0;
+
+      /**
       * RFC 9380 hash to curve (NU variant)
       *
       * This is currently only supported for a few specific curves

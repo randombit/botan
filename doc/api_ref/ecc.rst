@@ -223,6 +223,11 @@ side channels) unless otherwise documented. Usually this is denoted by including
 
       This is currently only supported for a few curves.
 
+      The named hash must satisfy the requirements of RFC 9380; in
+      particular its output length must be at least twice the target
+      security level of the curve. For example hashing to secp384r1
+      requires a hash of at least 384 bits.
+
    .. cpp:function:: static EC_AffinePoint hash_to_curve_nu(const EC_Group& group, \
                                              std::string_view hash_fn, \
                                              std::span<const uint8_t> input, \
@@ -231,6 +236,8 @@ side channels) unless otherwise documented. Usually this is denoted by including
       Hash to curve (RFC 9380), non-uniform variant.
 
       This is currently only supported for a few curves.
+
+      The hash requirements of ``hash_to_curve_ro`` also apply here.
 
    .. cpp:function:: size_t field_element_bytes() const
 

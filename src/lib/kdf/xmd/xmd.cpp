@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-void expand_message_xmd(std::string_view hash_fn,
+void expand_message_xmd(HashFunction& hash,
                         std::span<uint8_t> output,
                         std::span<const uint8_t> input,
                         std::span<const uint8_t> domain_sep) {
@@ -30,36 +30,41 @@ void expand_message_xmd(std::string_view hash_fn,
 
    const uint8_t domain_sep_len = static_cast<uint8_t>(domain_sep.size());
 
-   auto hash = HashFunction::create_or_throw(hash_fn);
-   const size_t block_size = hash->hash_block_size();
+   const size_t block_size = hash.hash_block_size();
    if(block_size == 0) {
-      throw Invalid_Argument(fmt("expand_message_xmd cannot be used with {}", hash_fn));
+      throw Invalid_Argument(fmt("expand_message_xmd cannot be used with {}", hash.name()));
    }
 
-   const size_t hash_output_size = hash->output_length();
+   const size_t hash_output_size = hash.output_length();
+
+   // RFC 9380 Section 5.3.1: "For correctness, H requires b <= s."
+   if(hash_output_size > block_size) {
+      throw Invalid_Argument(fmt("expand_message_xmd cannot be used with {}", hash.name()));
+   }
+
    if(output.size() > 255 * hash_output_size || output.size() > 0xFFFF) {
       throw Invalid_Argument("expand_message_xmd requested output length too long");
    }
 
    // Compute b_0 = H(msg_prime) = H(Z_pad || msg || l_i_b_str || 0x00 || DST_prime)
 
-   hash->update(std::vector<uint8_t>(block_size));
-   hash->update(input);
-   hash->update_be(static_cast<uint16_t>(output.size()));
-   hash->update(0x00);
-   hash->update(domain_sep);
-   hash->update(domain_sep_len);
+   hash.update(std::vector<uint8_t>(block_size));
+   hash.update(input);
+   hash.update_be(static_cast<uint16_t>(output.size()));
+   hash.update(0x00);
+   hash.update(domain_sep);
+   hash.update(domain_sep_len);
 
-   const secure_vector<uint8_t> b_0 = hash->final();
+   const secure_vector<uint8_t> b_0 = hash.final();
 
    // Compute b_1 = H(b_0 || 0x01 || DST_prime)
 
-   hash->update(b_0);
-   hash->update(0x01);
-   hash->update(domain_sep);
-   hash->update(domain_sep_len);
+   hash.update(b_0);
+   hash.update(0x01);
+   hash.update(domain_sep);
+   hash.update(domain_sep_len);
 
-   secure_vector<uint8_t> b_i = hash->final();
+   secure_vector<uint8_t> b_i = hash.final();
 
    uint8_t cnt = 2;
    for(;;) {
@@ -75,11 +80,11 @@ void expand_message_xmd(std::string_view hash_fn,
       // Now compute the next b_i if needed
 
       b_i ^= b_0;
-      hash->update(b_i);
-      hash->update(cnt);
-      hash->update(domain_sep);
-      hash->update(domain_sep_len);
-      hash->final(b_i);
+      hash.update(b_i);
+      hash.update(cnt);
+      hash.update(domain_sep);
+      hash.update(domain_sep_len);
+      hash.final(b_i);
       cnt += 1;
    }
 }

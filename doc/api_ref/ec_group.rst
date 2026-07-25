@@ -143,6 +143,19 @@ fields are supported.
 
          Attempt to verify the group seems valid.
 
+      .. cpp:function:: bool hash_to_curve_supported(std::string_view hash_fn) const
+
+         Return true if RFC 9380 hash to curve is supported for this group when
+         using the specified hash function, ie if
+         ``EC_AffinePoint::hash_to_curve_ro`` and
+         ``EC_AffinePoint::hash_to_curve_nu`` will work.
+
+         Hash to curve is only implemented for certain curves, and support also
+         depends on the build configuration. In addition the hash function must
+         satisfy the requirements of RFC 9380; in particular its output length
+         must be at least twice the target security level of the curve. For
+         example hashing to secp384r1 requires a hash of at least 384 bits.
+
       .. cpp:function:: static const std::set<std::string>& known_named_groups()
 
          Return a list of known groups, ie groups for which ``EC_Group::from_name(name)``

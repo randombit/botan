@@ -747,6 +747,10 @@ EC_Group_Engine EC_Group::engine() const {
    return data().engine();
 }
 
+bool EC_Group::hash_to_curve_supported(std::string_view hash_fn) const {
+   return data().hash_to_curve_supported(hash_fn);
+}
+
 std::vector<uint8_t> EC_Group::DER_encode() const {
    const auto& der_named_curve = data().der_named_curve();
    // TODO(Botan4) this can be removed because an OID will always be defined

@@ -116,16 +116,18 @@ class PerfTest_EllipticCurve_H2C final : public PerfTest {
          for(const auto& group_name : config.ecc_groups()) {
             const auto group = Botan::EC_Group::from_name(group_name);
 
-            const bool h2c_supported = [&]() {
-               try {
-                  Botan::EC_AffinePoint::hash_to_curve_nu(group, "SHA-256", {}, "dst");
-               } catch(Botan::Not_Implemented&) {
-                  return false;
+            const std::string hash_fn = [&]() -> std::string {
+               const size_t order_bits = group.get_order_bits();
+               if(order_bits <= 256) {
+                  return "SHA-256";
+               } else if(order_bits <= 384) {
+                  return "SHA-384";
+               } else {
+                  return "SHA-512";
                }
-               return true;
             }();
 
-            if(!h2c_supported) {
+            if(!group.hash_to_curve_supported(hash_fn)) {
                continue;
             }
 
@@ -136,8 +138,8 @@ class PerfTest_EllipticCurve_H2C final : public PerfTest {
 
             while(h2c_ro_timer->under(run)) {
                rng.randomize(input);
-               h2c_nu_timer->run([&]() { Botan::EC_AffinePoint::hash_to_curve_nu(group, "SHA-256", input, "domain"); });
-               h2c_ro_timer->run([&]() { Botan::EC_AffinePoint::hash_to_curve_ro(group, "SHA-256", input, "domain"); });
+               h2c_nu_timer->run([&]() { Botan::EC_AffinePoint::hash_to_curve_nu(group, hash_fn, input, "domain"); });
+               h2c_ro_timer->run([&]() { Botan::EC_AffinePoint::hash_to_curve_ro(group, hash_fn, input, "domain"); });
             }
 
             config.record_result(*h2c_nu_timer);
