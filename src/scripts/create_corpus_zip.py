@@ -8,10 +8,11 @@
 # This is primarily used by OSS-Fuzz but might be useful if you were
 # deploying the binaries in a custom fuzzer deployment system.
 
-import sys
 import os
-import zipfile
 import stat
+import sys
+import zipfile
+
 
 def main(args=None):
     if args is None:

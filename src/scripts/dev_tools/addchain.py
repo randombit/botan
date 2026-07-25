@@ -9,15 +9,16 @@ Runs https://github.com/mmcloughlin/addchain and formats
 the code suitable for pcurves
 """
 
-import sys
 import subprocess
+import sys
+
 
 def addchain_gen(n):
     search = subprocess.Popen(['addchain', 'search', str(n)],
                               stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE)
 
-    (stdout, stderr) = search.communicate()
+    (stdout, _stderr) = search.communicate()
 
     gen = subprocess.Popen(['addchain', 'gen'],
                            stdin=subprocess.PIPE,
@@ -26,12 +27,12 @@ def addchain_gen(n):
 
     gen.stdin.write(stdout)
 
-    (stdout, stderr) = gen.communicate()
+    (stdout, _stderr) = gen.communicate()
 
     return stdout.decode('utf8').split('\n')
 
 def addchain_code(n, indent=3):
-    vars = set([])
+    vars = set()
 
     output = []
 

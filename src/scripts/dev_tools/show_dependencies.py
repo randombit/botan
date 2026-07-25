@@ -14,18 +14,18 @@ Botan is released under the Simplified BSD License (see license.txt)
 # global
 import argparse
 import copy
-import sys
-import subprocess
-from collections import OrderedDict
 import glob
 import os
+import subprocess
+import sys
+from collections import OrderedDict
 
 # Assume this script is in botan/src/scripts
 botan_root = os.path.join(os.path.dirname(sys.argv[0]), "..", "..")
 
 # locale
 sys.path.append(botan_root)
-from configure import ModuleInfo # noqa: E402
+from configure import ModuleInfo
 
 parser = argparse.ArgumentParser(description=
     'Show Botan module dependencies. '
@@ -71,7 +71,9 @@ modules = []
 
 def dicts(t): return {k: dicts(t[k]) for k in t}
 
-def paths(t, path = [], level=0):
+def paths(t, path=None, level=0):
+    if path is None:
+        path = []
     ret =  []
     for key in t:
         ret.append(path + [key])
@@ -95,7 +97,7 @@ if args.verbose:
     names=[m.basename for m in modules]
     names.sort()
     print(names)
-    print("")
+    print()
 
 if args.verbose:
     print("resolving dependencies ...")
@@ -103,13 +105,13 @@ if args.verbose:
 def cartinality(depdict):
     return sum([len(depdict[k]) for k in depdict])
 
-registered_dependencies = dict()
-all_dependencies = dict()
-direct_dependencies = dict()
+registered_dependencies = {}
+all_dependencies = {}
+direct_dependencies = {}
 
 for module in modules:
     lst = module.dependencies(None)
-    registered_dependencies[module.basename] = set(lst) - set([module.basename])
+    registered_dependencies[module.basename] = set(lst) - {module.basename}
 
 # Get all_dependencies from registered_dependencies
 def add_dependency():
@@ -118,7 +120,7 @@ def add_dependency():
         new_modules_for_key = None
         for currently_in in all_dependencies[key]:
             if currently_in in all_dependencies:
-                potentially_new_modules_for_key = all_dependencies[currently_in] - set([key])
+                potentially_new_modules_for_key = all_dependencies[currently_in] - {key}
                 if not potentially_new_modules_for_key <= all_dependencies[key]:
                     new_modules_for_key = potentially_new_modules_for_key.copy()
                     break
@@ -156,7 +158,7 @@ def depends_on(a, b):
 def remove_indirect_dependencies():
     for mod in direct_dependencies:
         for one in direct_dependencies[mod]:
-            others = direct_dependencies[mod] - set([one])
+            others = direct_dependencies[mod] - {one}
             for other in others:
                 if depends_on(other, one):
                     direct_dependencies[mod].remove(one)
@@ -192,8 +194,9 @@ if args.mode == "list":
             print(key.ljust(17) + " : " + ", ".join(sorted(direct_dependencies[key])))
 
 if args.mode == "draw":
-    import graphviz as gv
     import tempfile
+
+    import graphviz as gv
 
     tmpdir = tempfile.mkdtemp(prefix="botan-")
 

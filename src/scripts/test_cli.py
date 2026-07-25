@@ -12,7 +12,7 @@ import binascii
 import json
 import logging
 import multiprocessing
-import optparse # pylint: disable=deprecated-module
+import optparse  # pylint: disable=deprecated-module
 import os
 import platform
 import random
@@ -26,9 +26,9 @@ import tempfile
 import threading
 import time
 import traceback
-from multiprocessing.pool import ThreadPool
 from http.client import HTTPSConnection
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from multiprocessing.pool import ThreadPool
 
 # pylint: disable=global-statement,unused-argument
 
@@ -280,13 +280,12 @@ def test_cli(cmd, cmd_options,
         if expected_stderr is not None:
             logging.error('Expected output on stderr but got nothing', stack_info=True)
 
-    if expected_output is not None:
-        if stdout != expected_output:
-            logging.error("Got unexpected output running cmd %s %s", cmd, cmd_options, stack_info=True)
-            if len(stdout) != len(expected_output):
-                logging.info("Output lengths %d vs expected %d", len(stdout), len(expected_output))
-            logging.info("Got %s", stdout)
-            logging.info("Exp %s", expected_output)
+    if expected_output is not None and stdout != expected_output:
+        logging.error("Got unexpected output running cmd %s %s", cmd, cmd_options, stack_info=True)
+        if len(stdout) != len(expected_output):
+            logging.info("Output lengths %d vs expected %d", len(stdout), len(expected_output))
+        logging.info("Got %s", stdout)
+        logging.info("Exp %s", expected_output)
 
     return stdout
 
@@ -306,12 +305,12 @@ def cli_config_tests(_tmp_dir):
     if platform.system() == 'Windows':
         if len(prefix) < 4 or prefix[1] != ':' or prefix[2] != '\\':
             logging.error("Bad prefix %s", prefix)
-        if not ldflags.endswith(("-L%s\\lib" % (prefix))):
+        if not ldflags.endswith("-L%s\\lib" % (prefix)):
             logging.error("Bad ldflags %s", ldflags)
     else:
         if len(prefix) < 4 or prefix[0] != '/':
             logging.error("Bad prefix %s", prefix)
-        if not ldflags.endswith(("-L%s/lib" % (prefix))):
+        if not ldflags.endswith("-L%s/lib" % (prefix)):
             logging.error("Bad ldflags %s", ldflags)
     if ("-I%s/include/botan-3" % (prefix)) not in cflags and ("-I%s/include" % (prefix)) not in cflags:
         logging.error("Bad cflags %s", cflags)
@@ -1775,9 +1774,8 @@ def cli_speed_tests(_tmp_dir):
     format_re_ks = re.compile(r'^AES-128/GCM\(16\).* [0-9]+ key schedule/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9\.]+ ms\)')
     format_re_cipher = re.compile(r'^AES-128/GCM\(16\) .* buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB\/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms\)')
     for line in output:
-        if format_re_ks.match(line) is None:
-            if format_re_cipher.match(line) is None:
-                logging.error('Unexpected line %s', line)
+        if format_re_ks.match(line) is None and format_re_cipher.match(line) is None:
+            logging.error('Unexpected line %s', line)
 
     output = test_cli("speed", ["--msec=%d" % (msec), "scrypt"], None).split('\n')
 

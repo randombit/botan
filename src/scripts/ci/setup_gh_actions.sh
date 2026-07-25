@@ -56,7 +56,7 @@ if type -p "apt-get"; then
         "${SCRIPT_LOCATION}"/download_ci_dep.py limbo "${SCRIPT_LOCATION}/../../../limbo.json"
 
     elif [ "$TARGET" = "lint" ]; then
-        pip install "ruff~=0.15.0"
+        pip install "ruff~=0.16.0"
 
     elif [ "$TARGET" = "typos" ]; then
         cargo install typos-cli@1.48.0

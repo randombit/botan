@@ -6,14 +6,15 @@
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import sys
-import re
 import datetime
-import os
 import errno
+import os
+import re
+import sys
 from textwrap import dedent, indent
-from jinja2 import Environment, FileSystemLoader
+
 from addchain import addchain_code
+from jinja2 import Environment, FileSystemLoader
 
 """
 NOTE: This script requires the Jinja templating library to be installed.

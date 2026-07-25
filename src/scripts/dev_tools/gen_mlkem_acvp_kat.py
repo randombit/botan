@@ -10,11 +10,12 @@
 # Botan is released under the Simplified BSD License (see license.txt)
 #
 
+import argparse
 import binascii
 import hashlib
 import json
-import argparse
 import sys
+
 
 def shake_256_16(v):
     # v is assumed to be hex
@@ -135,12 +136,12 @@ def main(args = None):
 
                 for kat in kat_by_paramset:
                     kat = compress_kat_keygen(kat)
-                    for key in kat.keys():
+                    for key in kat:
                         if key in ["Z", "D", "EK", "DK"]:
                             print(key, '=', kat[key], file=output)
-                    print("", file=output)
+                    print(file=output)
     if args.encapdecap_directory is not None:
-        encaps_kat, decaps_kat = mlkem_load_encdec(
+        encaps_kat, _decaps_kat = mlkem_load_encdec(
                     args.encapdecap_directory + '/prompt.json',
                     args.encapdecap_directory + '/expectedResults.json')
 
@@ -153,10 +154,10 @@ def main(args = None):
 
                 for kat in kat_by_paramset:
                     kat = compress_kat_encaps(kat)
-                    for key in kat.keys():
+                    for key in kat:
                         if key in ["M", "EK", "K", "C"]:
                             print(key, '=', kat[key], file=output)
-                    print("", file=output)
+                    print(file=output)
 
         with open("src/tests/data/pubkey/ml_kem_acvp_decap.vec", 'w') as output:
             print("# This file was auto-generated from the ACVP KATs", file=output)

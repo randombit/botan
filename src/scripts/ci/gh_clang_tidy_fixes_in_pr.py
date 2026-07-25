@@ -6,6 +6,7 @@
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
+from __future__ import annotations
 
 import argparse
 import glob
@@ -13,6 +14,7 @@ import os
 import sys
 
 import yaml
+
 
 class FileLocation:
     def __init__(self, line : int, column : int, endline : int | None = None, endcolumn : int | None = None):
@@ -47,10 +49,8 @@ class Diagnostic:
         """ For self.file determine the (line, column) given a byte offset """
         with open(self.file, encoding="utf-8") as srcfile:
             readoffset = 0
-            lineoffset = 0
-            for line in srcfile.readlines():
+            for lineoffset, line in enumerate(srcfile, start=1):
                 readoffset += len(line)
-                lineoffset += 1
                 if readoffset >= offset:
                     coloffset = offset - readoffset + len(line)
                     return (lineoffset, coloffset)

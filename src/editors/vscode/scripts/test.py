@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-import os
-import re
 import argparse
 import glob
+import os
+import re
 
 import common
 
@@ -11,7 +11,7 @@ TESTS_DIR = "src/tests"
 
 
 def discover_tests_in_file(test_file):
-    if not os.path.dirname(test_file) == TESTS_DIR:
+    if os.path.dirname(test_file) != TESTS_DIR:
         return []
 
     with open(test_file, 'r', encoding='utf-8') as f:

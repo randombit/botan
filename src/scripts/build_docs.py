@@ -8,16 +8,17 @@ Botan doc generation script
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import sys
-import optparse # pylint: disable=deprecated-module
-import subprocess
-import shutil
-import logging
 import json
-import tempfile
-import os
-import stat
+import logging
 import multiprocessing
+import optparse  # pylint: disable=deprecated-module
+import os
+import shutil
+import stat
+import subprocess
+import sys
+import tempfile
+
 
 def get_concurrency():
     """

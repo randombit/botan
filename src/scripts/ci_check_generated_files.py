@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding=utf8
 
 """
 (C) 2026 Jack Lloyd

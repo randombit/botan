@@ -9,12 +9,14 @@ Used to generate lib/tls/tls_suite_info.cpp from IANA params
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import sys
-import re
 import datetime
 import hashlib
 import optparse
+import re
+import sys
+
 from jinja2 import Environment, FileSystemLoader
+
 
 def to_ciphersuite_info(code, name):
 
@@ -56,10 +58,7 @@ def to_ciphersuite_info(code, name):
 
     cipher = cipher_and_mac[:-1]
 
-    if mac_algo == '8' and cipher[-1] == 'CCM':
-        cipher = cipher[:-1]
-        mac_algo = 'CCM_8'
-    elif len(cipher) >= 2 and cipher[-2] == 'CCM' and cipher[-1] == '8':
+    if (mac_algo == '8' and cipher[-1] == 'CCM') or (len(cipher) >= 2 and cipher[-2] == 'CCM' and cipher[-1] == '8'):
         cipher = cipher[:-1]
         mac_algo = 'CCM_8'
 
@@ -174,9 +173,9 @@ def open_input(args):
         except OSError:
             pass
 
-        import urllib.request
         import urllib.error
         import urllib.parse
+        import urllib.request
         return urllib.request.urlopen(iana_url)
     else:
          return open(args[1])

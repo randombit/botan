@@ -8,15 +8,16 @@ Implements the "make clean" target
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import os
-import sys
-import stat
-import re
-import optparse  # pylint: disable=deprecated-module
-import logging
-import json
-import shutil
 import errno
+import json
+import logging
+import optparse  # pylint: disable=deprecated-module
+import os
+import re
+import shutil
+import stat
+import sys
+
 
 def remove_dir(d):
     try:
@@ -122,10 +123,9 @@ def main(args=None):
         if match and match.group(1) in known_suffix:
             remove_file(os.path.join(build_config['out_dir'], f))
 
-    if options.distclean:
-        if 'generated_files' in build_config:
-            for f in build_config['generated_files'].split(' '):
-                remove_file(f)
+    if options.distclean and 'generated_files' in build_config:
+        for f in build_config['generated_files'].split(' '):
+            remove_file(f)
 
     return 0
 

@@ -30,7 +30,7 @@ class RepoConfig(dict):
         self._file_path = env_file
         parser = re.compile(r'^(?P<var>\w+)\s*=\s*((?P<val>[^\"]\S+)|\"(?P<quoted_val>\S+)\")\s*$')
         with open(self._file_path, 'r', encoding='utf-8') as f:
-            for line in f.readlines():
+            for line in f:
                 if m := parser.match(line):
                     var = m.group('var')
                     val = m.group('val') or m.group('quoted_val')

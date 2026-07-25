@@ -12,9 +12,10 @@
 # Botan is released under the Simplified BSD License (see license.txt)
 #
 
-import sys
-import hashlib
 import binascii
+import hashlib
+import sys
+
 
 class KatReader:
     def __init__(self, file):
@@ -85,11 +86,9 @@ def main(args = None):
 
     hash_fn = sha256 if "sha2" in param.lower() else sha3_256
 
-    cnt = 0
-    for kat in reader.read_kats():
+    for cnt, kat in enumerate(reader.read_kats()):
         if cnt >= limit:
             break
-        cnt += 1
 
         # Remove the input message from the end of the 'sm' field
         signature = binascii.unhexlify(kat["sm"][:-kat["mlen"]*2])

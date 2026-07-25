@@ -17,17 +17,37 @@ It uses botan's ffi module, which exposes a C API.
 """
 
 from __future__ import annotations
-from ctypes import CDLL, CFUNCTYPE, POINTER, byref, create_string_buffer, \
-    c_void_p, c_size_t, c_uint8, c_uint32, c_uint64, c_int, c_uint, c_char, c_char_p, addressof, Array, \
-    cast, memmove, py_object, string_at
-from typing import Callable, Any, Union
 
-from sys import platform
-from time import strptime, mktime, time as system_time
 from binascii import hexlify
-from datetime import datetime
 from collections.abc import Iterable
+from ctypes import (
+    CDLL,
+    CFUNCTYPE,
+    POINTER,
+    Array,
+    addressof,
+    byref,
+    c_char,
+    c_char_p,
+    c_int,
+    c_size_t,
+    c_uint,
+    c_uint8,
+    c_uint32,
+    c_uint64,
+    c_void_p,
+    cast,
+    create_string_buffer,
+    memmove,
+    py_object,
+    string_at,
+)
+from datetime import datetime
 from enum import IntEnum
+from sys import platform
+from time import mktime, strptime
+from time import time as system_time
+from typing import Any, Callable, Union
 
 # This Python module requires the FFI API version introduced in Botan 3.11.0
 #
@@ -747,7 +767,7 @@ def _ctype_bits(s: str | bytes) -> bytes:
     elif isinstance(s, str):
         return s.encode('utf-8')
     else:
-        raise Exception("Internal error - unexpected type %s provided to _ctype_bits" % (type(s).__name__))
+        raise TypeError("Internal error - unexpected type %s provided to _ctype_bits" % (type(s).__name__))
 
 def _ctype_bufout(buf):
     return buf.raw
@@ -2041,9 +2061,7 @@ class PrivateKey:
         """Return whether the key is stateful or not."""
         r = c_int(0)
         _DLL.botan_privkey_stateful_operation(self.__obj, byref(r))
-        if r.value == 0:
-            return False
-        return True
+        return r.value != 0
 
     def remaining_operations(self) -> int:
         """If the key is stateful, return the number of remaining operations.
@@ -2143,9 +2161,7 @@ class PKVerify:
     def check_signature(self, signature: str | bytes) -> bool:
         bits = _ctype_bits(signature)
         rc = _DLL.botan_pk_op_verify_finish(self.__obj, bits, len(bits))
-        if rc == 0:
-            return True
-        return False
+        return rc == 0
 
 class PKKeyAgreement:
     """Previously ``pk_op_key_agreement``"""
@@ -3056,18 +3072,14 @@ class ECGroup:
         to register an application specific elliptic curve"""
         r = c_int(0)
         _DLL.botan_ec_group_supports_application_specific_group(byref(r))
-        if r.value == 0:
-            return False
-        return True
+        return r.value != 0
 
     @classmethod
     def supports_named_group(cls, name: str) -> bool:
         """Returns true if in this build configuration `ECGroup.from_name(name)` will succeed"""
         r = c_int(0)
         _DLL.botan_ec_group_supports_named_group(_ctype_str(name), byref(r))
-        if r.value == 0:
-            return False
-        return True
+        return r.value != 0
 
     @classmethod
     def from_params(cls, oid: OID, p: MPI, a: MPI, b: MPI, base_x: MPI, base_y: MPI, order: MPI) -> ECGroup:
@@ -3117,9 +3129,7 @@ class ECGroup:
     def unregister(cls, oid: OID) -> bool:
         """Unregister a previously registered group"""
         rc = _DLL.botan_ec_group_unregister(oid.handle_())
-        if rc == 1:
-            return True
-        return False
+        return rc == 1
 
     def to_der(self) -> bytes:
         """Export the group in DER encoding"""
@@ -3385,9 +3395,7 @@ class TOTP:
         if timestamp is None:
             timestamp = int(system_time())
         rc = _DLL.botan_totp_check(self.__obj, code, timestamp, acceptable_drift)
-        if rc == 0:
-            return True
-        return False
+        return rc == 0
 
 def nist_key_wrap(kek: bytes, key: bytes, cipher: str | None = None) -> bytes:
     cipher_algo = "AES-%d" % (8*len(kek)) if cipher is None else cipher
@@ -3570,7 +3578,7 @@ def zfec_decode(k: int, n: int, indexes: list[int], inputs: list[bytes]) -> list
     for i in inputs:
         if len(i) != share_size:
             raise ValueError(
-                "Share size mismatch: {} != {}".format(len(i), share_size)
+                f"Share size mismatch: {len(i)} != {share_size}"
             )
 
     # allocate memory for our outputs (create_string_buffer creates

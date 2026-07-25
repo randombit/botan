@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
 import json
-import subprocess
 import re
+import subprocess
 import sys
 from multiprocessing.pool import ThreadPool
+
 
 def lines_in(f):
     lines = 0
@@ -18,7 +19,7 @@ def lines_in(f):
     return lines
 
 def run_cc(cmd):
-    preproc = subprocess.run(cmd.split(' '), stdout=subprocess.PIPE)
+    preproc = subprocess.run(cmd.split(' '), stdout=subprocess.PIPE, check=True)
 
     return lines_in(preproc.stdout)
 
