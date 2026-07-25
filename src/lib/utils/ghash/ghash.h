@@ -84,6 +84,16 @@ class GHASH final : public SymmetricAlgorithm {
 
       void ghash_multiply(std::span<uint8_t, GCM_BS> x, std::span<const uint8_t> input, size_t blocks);
 
+      static void ghash_precompute_base(std::span<const uint8_t, GCM_BS> key, secure_vector<uint64_t>& HM);
+
+      static void ghash_multiply_base(std::span<uint8_t, GCM_BS> x,
+                                      const secure_vector<uint64_t>& HM,
+                                      std::span<const uint8_t> input,
+                                      size_t blocks);
+
+      /// Polyval reuses the GHASH tables and kernels for its non-CLMUL fallback
+      friend class Polyval;
+
    private:
       AlignmentBuffer<uint8_t, GCM_BS> m_buffer;
 

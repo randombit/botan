@@ -12,9 +12,33 @@
 #include <botan/internal/target_info.h>
 #include <immintrin.h>
 
+#if defined(BOTAN_HAS_POLYVAL)
+   #include <botan/internal/polyval.h>
+#endif
+
 namespace Botan {
 
 namespace {
+
+template <bool BSWAP>
+BOTAN_FORCE_INLINE __m512i BOTAN_FN_ISA_AVX512_CLMUL load_blocks(const uint8_t in[]) {
+   const auto B = _mm512_loadu_si512(in);
+
+   if constexpr(BSWAP) {
+      // Byte swap each lane
+      const auto swap = _mm512_set_epi64(0x0001020304050607,
+                                         0x08090A0B0C0D0E0F,
+                                         0x0001020304050607,
+                                         0x08090A0B0C0D0E0F,
+                                         0x0001020304050607,
+                                         0x08090A0B0C0D0E0F,
+                                         0x0001020304050607,
+                                         0x08090A0B0C0D0E0F);
+      return _mm512_shuffle_epi8(B, swap);
+   } else {
+      return B;
+   }
+}
 
 BOTAN_FORCE_INLINE __m512i BOTAN_FN_ISA_AVX512_CLMUL fold(__m512i H) {
    return _mm512_xor_si512(H, _mm512_bsrli_epi128(H, 8));
@@ -44,11 +68,7 @@ BOTAN_FORCE_INLINE __m512i BOTAN_FN_ISA_AVX512_CLMUL insert_a(__m512i M, const S
    return _mm512_xor_epi64(M, _mm512_inserti64x2(_mm512_setzero_si512(), a.raw(), 0));
 }
 
-}  // namespace
-
-void BOTAN_FN_ISA_AVX512_CLMUL GHASH::ghash_precompute_avx512_clmul(const uint8_t H_bytes[16], uint64_t H_pow[16 * 2]) {
-   const SIMD_4x32 H1 = mulx_polyval(reverse_vector(SIMD_4x32::load_le(H_bytes)));
-
+void BOTAN_FN_ISA_AVX512_CLMUL precompute_avx512(const SIMD_4x32& H1, uint64_t H_pow[16 * 2]) {
    const SIMD_4x32 H2 = polyval_multiply(H1, H1);
    const SIMD_4x32 H3 = polyval_multiply(H1, H2);
    const SIMD_4x32 H4 = polyval_multiply(H2, H2);
@@ -91,21 +111,10 @@ void BOTAN_FN_ISA_AVX512_CLMUL GHASH::ghash_precompute_avx512_clmul(const uint8_
    H13.store_le(H_pow + 30);
 }
 
-void BOTAN_FN_ISA_AVX512_CLMUL GHASH::ghash_multiply_avx512_clmul(uint8_t x[16],
-                                                                  const uint64_t H_pow[16 * 2],
-                                                                  const uint8_t input[],
-                                                                  size_t blocks) {
-   SIMD_4x32 a = reverse_vector(SIMD_4x32::load_le(x));
-
-   // Byte swap each lane
-   const auto BSWAP = _mm512_set_epi64(0x0001020304050607,
-                                       0x08090A0B0C0D0E0F,
-                                       0x0001020304050607,
-                                       0x08090A0B0C0D0E0F,
-                                       0x0001020304050607,
-                                       0x08090A0B0C0D0E0F,
-                                       0x0001020304050607,
-                                       0x08090A0B0C0D0E0F);
+template <bool BSWAP>
+void BOTAN_FN_ISA_AVX512_CLMUL
+multiply_avx512(uint8_t x[16], const uint64_t H_pow[16 * 2], const uint8_t input[], size_t blocks) {
+   SIMD_4x32 a = load_block<BSWAP>(x);
 
    if(blocks >= 16) {
       const auto H1 = _mm512_loadu_si512(H_pow);       // [H4,H3,H2,H1]
@@ -120,10 +129,10 @@ void BOTAN_FN_ISA_AVX512_CLMUL GHASH::ghash_multiply_avx512_clmul(uint8_t x[16],
       const auto H4_fold = fold(H4);
 
       while(blocks >= 16) {
-         __m512i M1 = _mm512_shuffle_epi8(_mm512_loadu_si512(input), BSWAP);
-         const auto M2 = _mm512_shuffle_epi8(_mm512_loadu_si512(input + 64), BSWAP);
-         const auto M3 = _mm512_shuffle_epi8(_mm512_loadu_si512(input + 128), BSWAP);
-         const auto M4 = _mm512_shuffle_epi8(_mm512_loadu_si512(input + 192), BSWAP);
+         __m512i M1 = load_blocks<BSWAP>(input);
+         const auto M2 = load_blocks<BSWAP>(input + 64);
+         const auto M3 = load_blocks<BSWAP>(input + 128);
+         const auto M4 = load_blocks<BSWAP>(input + 192);
 
          M1 = insert_a(M1, a);
 
@@ -151,8 +160,8 @@ void BOTAN_FN_ISA_AVX512_CLMUL GHASH::ghash_multiply_avx512_clmul(uint8_t x[16],
       const auto H2_fold = fold(H2);
 
       while(blocks >= 8) {
-         __m512i M1 = _mm512_shuffle_epi8(_mm512_loadu_si512(input), BSWAP);
-         const __m512i M2 = _mm512_shuffle_epi8(_mm512_loadu_si512(input + 64), BSWAP);
+         __m512i M1 = load_blocks<BSWAP>(input);
+         const __m512i M2 = load_blocks<BSWAP>(input + 64);
 
          M1 = insert_a(M1, a);
 
@@ -175,7 +184,7 @@ void BOTAN_FN_ISA_AVX512_CLMUL GHASH::ghash_multiply_avx512_clmul(uint8_t x[16],
       const auto H1_fold = fold(H1);
 
       while(blocks >= 4) {
-         __m512i M = _mm512_shuffle_epi8(_mm512_loadu_si512(input), BSWAP);
+         __m512i M = load_blocks<BSWAP>(input);
          M = insert_a(M, a);
 
          auto lo = _mm512_clmulepi64_epi128(H1, M, 0x00);
@@ -194,14 +203,41 @@ void BOTAN_FN_ISA_AVX512_CLMUL GHASH::ghash_multiply_avx512_clmul(uint8_t x[16],
       const SIMD_4x32 H1 = SIMD_4x32::load_le(H_pow + 6);
 
       for(size_t i = 0; i != blocks; ++i) {
-         const SIMD_4x32 m = reverse_vector(SIMD_4x32::load_le(input + 16 * i));
+         const SIMD_4x32 m = load_block<BSWAP>(input + 16 * i);
          a ^= m;
          a = polyval_multiply(H1, a);
       }
    }
 
-   a = reverse_vector(a);
-   a.store_le(x);
+   store_block<BSWAP>(a, x);
 }
+
+}  // namespace
+
+void BOTAN_FN_ISA_AVX512_CLMUL GHASH::ghash_precompute_avx512_clmul(const uint8_t H_bytes[16], uint64_t H_pow[16 * 2]) {
+   precompute_avx512(mulx_polyval(reverse_vector(SIMD_4x32::load_le(H_bytes))), H_pow);
+}
+
+void BOTAN_FN_ISA_AVX512_CLMUL GHASH::ghash_multiply_avx512_clmul(uint8_t x[16],
+                                                                  const uint64_t H_pow[16 * 2],
+                                                                  const uint8_t input[],
+                                                                  size_t blocks) {
+   multiply_avx512<true>(x, H_pow, input, blocks);
+}
+
+#if defined(BOTAN_HAS_POLYVAL)
+
+void BOTAN_FN_ISA_AVX512_CLMUL Polyval::polyval_precompute_avx512_clmul(const uint8_t H[16], uint64_t H_pow[16 * 2]) {
+   precompute_avx512(SIMD_4x32::load_le(H), H_pow);
+}
+
+void BOTAN_FN_ISA_AVX512_CLMUL Polyval::polyval_multiply_avx512_clmul(uint8_t x[16],
+                                                                      const uint64_t H_pow[16 * 2],
+                                                                      const uint8_t input[],
+                                                                      size_t blocks) {
+   multiply_avx512<false>(x, H_pow, input, blocks);
+}
+
+#endif
 
 }  // namespace Botan

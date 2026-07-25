@@ -11,6 +11,10 @@
 #include <botan/internal/polyval_fn.h>
 #include <botan/internal/simd_4x32.h>
 
+#if defined(BOTAN_HAS_POLYVAL)
+   #include <botan/internal/polyval.h>
+#endif
+
 namespace Botan {
 
 namespace {
@@ -76,10 +80,7 @@ inline SIMD_4x32 BOTAN_FN_ISA_CLMUL polyval_multiply_x8(const SIMD_4x32& H1,
    return polyval_reduce(hi ^ mid.shift_elems_right<2>(), lo ^ mid.shift_elems_left<2>());
 }
 
-}  // namespace
-
-void BOTAN_FN_ISA_CLMUL GHASH::ghash_precompute_cpu(const uint8_t H_bytes[16], secure_vector<uint64_t>& H_pow) {
-   const SIMD_4x32 H1 = mulx_polyval(reverse_vector(SIMD_4x32::load_le(H_bytes)));
+void BOTAN_FN_ISA_CLMUL precompute_clmul(const SIMD_4x32& H1, secure_vector<uint64_t>& H_pow) {
    const SIMD_4x32 H2 = polyval_multiply(H1, H1);
    const SIMD_4x32 H3 = polyval_multiply(H1, H2);
    const SIMD_4x32 H4 = polyval_multiply(H2, H2);
@@ -92,15 +93,14 @@ void BOTAN_FN_ISA_CLMUL GHASH::ghash_precompute_cpu(const uint8_t H_bytes[16], s
    H4.store_le(&H_pow[6]);
 }
 
-void BOTAN_FN_ISA_CLMUL GHASH::ghash_multiply_cpu(uint8_t x[16],
-                                                  secure_vector<uint64_t>& H_pow,
-                                                  const uint8_t input[],
-                                                  size_t blocks) {
+template <bool BSWAP>
+void BOTAN_FN_ISA_CLMUL
+multiply_clmul(uint8_t x[16], secure_vector<uint64_t>& H_pow, const uint8_t input[], size_t blocks) {
    BOTAN_ASSERT_NOMSG(H_pow.size() == 2 * 4 || H_pow.size() == 2 * 8);
 
    const SIMD_4x32 H1 = SIMD_4x32::load_le(&H_pow[0]);  // NOLINT(*-container-data-pointer)
 
-   SIMD_4x32 a = reverse_vector(SIMD_4x32::load_le(x));
+   SIMD_4x32 a = load_block<BSWAP>(x);
 
    if(blocks >= 8) {
       const SIMD_4x32 H2 = SIMD_4x32::load_le(&H_pow[2]);
@@ -125,14 +125,14 @@ void BOTAN_FN_ISA_CLMUL GHASH::ghash_multiply_cpu(uint8_t x[16],
       const SIMD_4x32 H8 = SIMD_4x32::load_le(&H_pow[14]);
 
       while(blocks >= 8) {
-         const SIMD_4x32 m0 = reverse_vector(SIMD_4x32::load_le(input));
-         const SIMD_4x32 m1 = reverse_vector(SIMD_4x32::load_le(input + 16 * 1));
-         const SIMD_4x32 m2 = reverse_vector(SIMD_4x32::load_le(input + 16 * 2));
-         const SIMD_4x32 m3 = reverse_vector(SIMD_4x32::load_le(input + 16 * 3));
-         const SIMD_4x32 m4 = reverse_vector(SIMD_4x32::load_le(input + 16 * 4));
-         const SIMD_4x32 m5 = reverse_vector(SIMD_4x32::load_le(input + 16 * 5));
-         const SIMD_4x32 m6 = reverse_vector(SIMD_4x32::load_le(input + 16 * 6));
-         const SIMD_4x32 m7 = reverse_vector(SIMD_4x32::load_le(input + 16 * 7));
+         const SIMD_4x32 m0 = load_block<BSWAP>(input);
+         const SIMD_4x32 m1 = load_block<BSWAP>(input + 16 * 1);
+         const SIMD_4x32 m2 = load_block<BSWAP>(input + 16 * 2);
+         const SIMD_4x32 m3 = load_block<BSWAP>(input + 16 * 3);
+         const SIMD_4x32 m4 = load_block<BSWAP>(input + 16 * 4);
+         const SIMD_4x32 m5 = load_block<BSWAP>(input + 16 * 5);
+         const SIMD_4x32 m6 = load_block<BSWAP>(input + 16 * 6);
+         const SIMD_4x32 m7 = load_block<BSWAP>(input + 16 * 7);
 
          a = polyval_multiply_x8(H1, H2, H3, H4, H5, H6, H7, H8, m7, m6, m5, m4, m3, m2, m1, m0 ^ a);
 
@@ -147,10 +147,10 @@ void BOTAN_FN_ISA_CLMUL GHASH::ghash_multiply_cpu(uint8_t x[16],
       const SIMD_4x32 H4 = SIMD_4x32::load_le(&H_pow[6]);
 
       while(blocks >= 4) {
-         const SIMD_4x32 m0 = reverse_vector(SIMD_4x32::load_le(input));
-         const SIMD_4x32 m1 = reverse_vector(SIMD_4x32::load_le(input + 16 * 1));
-         const SIMD_4x32 m2 = reverse_vector(SIMD_4x32::load_le(input + 16 * 2));
-         const SIMD_4x32 m3 = reverse_vector(SIMD_4x32::load_le(input + 16 * 3));
+         const SIMD_4x32 m0 = load_block<BSWAP>(input);
+         const SIMD_4x32 m1 = load_block<BSWAP>(input + 16 * 1);
+         const SIMD_4x32 m2 = load_block<BSWAP>(input + 16 * 2);
+         const SIMD_4x32 m3 = load_block<BSWAP>(input + 16 * 3);
 
          a ^= m0;
          a = polyval_multiply_x4(H1, H2, H3, H4, m3, m2, m1, a);
@@ -161,14 +161,41 @@ void BOTAN_FN_ISA_CLMUL GHASH::ghash_multiply_cpu(uint8_t x[16],
    }
 
    for(size_t i = 0; i != blocks; ++i) {
-      const SIMD_4x32 m = reverse_vector(SIMD_4x32::load_le(input + 16 * i));
+      const SIMD_4x32 m = load_block<BSWAP>(input + 16 * i);
 
       a ^= m;
       a = polyval_multiply(H1, a);
    }
 
-   a = reverse_vector(a);
-   a.store_le(x);
+   store_block<BSWAP>(a, x);
 }
+
+}  // namespace
+
+void BOTAN_FN_ISA_CLMUL GHASH::ghash_precompute_cpu(const uint8_t H_bytes[16], secure_vector<uint64_t>& H_pow) {
+   precompute_clmul(mulx_polyval(reverse_vector(SIMD_4x32::load_le(H_bytes))), H_pow);
+}
+
+void BOTAN_FN_ISA_CLMUL GHASH::ghash_multiply_cpu(uint8_t x[16],
+                                                  secure_vector<uint64_t>& H_pow,
+                                                  const uint8_t input[],
+                                                  size_t blocks) {
+   multiply_clmul<true>(x, H_pow, input, blocks);
+}
+
+#if defined(BOTAN_HAS_POLYVAL)
+
+void BOTAN_FN_ISA_CLMUL Polyval::polyval_precompute_cpu(const uint8_t H[16], secure_vector<uint64_t>& H_pow) {
+   precompute_clmul(SIMD_4x32::load_le(H), H_pow);
+}
+
+void BOTAN_FN_ISA_CLMUL Polyval::polyval_multiply_cpu(uint8_t x[16],
+                                                      secure_vector<uint64_t>& H_pow,
+                                                      const uint8_t input[],
+                                                      size_t blocks) {
+   multiply_clmul<false>(x, H_pow, input, blocks);
+}
+
+#endif
 
 }  // namespace Botan
