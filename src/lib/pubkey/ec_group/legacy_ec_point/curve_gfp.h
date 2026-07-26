@@ -30,11 +30,13 @@ class EC_Group_Data;
 class BOTAN_UNSTABLE_API CurveGFp final {
    public:
       /**
+      * Get the a parameter of the elliptic curve equation
       * @return curve coefficient a
       */
       const BigInt& get_a() const;
 
       /**
+      * Get the b parameter of the elliptic curve equation
       * @return curve coefficient b
       */
       const BigInt& get_b() const;
@@ -45,9 +47,20 @@ class BOTAN_UNSTABLE_API CurveGFp final {
       */
       const BigInt& get_p() const;
 
+      /**
+      * Get the size of the field prime in words
+      * @return number of words needed to represent the prime modulus
+      */
       size_t get_p_words() const;
 
+      /**
+      * Copy constructor
+      */
       CurveGFp(const CurveGFp&) = default;
+
+      /**
+      * Move constructor
+      */
       CurveGFp(CurveGFp&&) = default;
 
       ~CurveGFp() = default;

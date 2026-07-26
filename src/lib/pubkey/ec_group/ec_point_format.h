@@ -34,6 +34,10 @@ enum class EC_Group_Encoding : uint8_t {
    EC_DOMPAR_ENC_OID = NamedCurve
 };
 
+/**
+* This enum indicates the format used to encode an elliptic curve point
+* as an octet string, as specified in SEC1 section 2.3.3
+*/
 enum class EC_Point_Format : uint8_t {
    Uncompressed = 0,
    Compressed = 1,

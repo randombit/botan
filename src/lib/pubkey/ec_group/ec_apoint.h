@@ -31,8 +31,9 @@ class EC_Point;
 class EC_Group_Data;
 class EC_AffinePoint_Data;
 
-/// Elliptic Curve Point in Affine Representation
-///
+/**
+* Elliptic Curve Point in Affine Representation
+*/
 class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
    public:
       /// Point deserialization. Throws if wrong length or not a valid point
@@ -244,17 +245,47 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
          return bytes;
       }
 
+      /**
+      * Test if two points are equal
+      * @param other the point to compare against
+      * @return true if the two points are equal
+      */
       bool operator==(const EC_AffinePoint& other) const;
 
+      /**
+      * Test if two points are unequal
+      * @param other the point to compare against
+      * @return true if the two points are not equal
+      */
       bool operator!=(const EC_AffinePoint& other) const { return !(*this == other); }
 
       /// Return an encoding depending on the requested format
       std::vector<uint8_t> serialize(EC_Point_Format format) const;
 
+      /**
+      * Copy constructor
+      * @param other the point to copy
+      */
       EC_AffinePoint(const EC_AffinePoint& other);
+
+      /**
+      * Move constructor
+      * @param other the point to move from
+      */
       EC_AffinePoint(EC_AffinePoint&& other) noexcept;
 
+      /**
+      * Copy assignment
+      * @param other the point to copy
+      * @return reference to this
+      */
       EC_AffinePoint& operator=(const EC_AffinePoint& other);
+
+      /**
+      * Move assignment
+      * @param other the point to move from
+      * @return reference to this
+      */
       EC_AffinePoint& operator=(EC_AffinePoint&& other) noexcept;
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
@@ -269,11 +300,23 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
       EC_Point to_legacy_point() const;
 #endif
 
+      /**
+      * Multiply by the group generator returning a complete point
+      * @param scalar the scalar to multiply the generator by
+      * @param rng a random number generator, used for blinding
+      * @return the resulting point
+      */
       BOTAN_DEPRECATED("Use version without workspace arg")
       static EC_AffinePoint g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& /*ws*/) {
          return EC_AffinePoint::g_mul(scalar, rng);
       }
 
+      /**
+      * Multiply a point by a scalar returning a complete point
+      * @param scalar the scalar to multiply this point by
+      * @param rng a random number generator, used for blinding
+      * @return the resulting point
+      */
       BOTAN_DEPRECATED("Use version without workspace arg")
       EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& /*ws*/) const {
          return this->mul(scalar, rng);
@@ -288,10 +331,19 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
 
       ~EC_AffinePoint();
 
+      /**
+      * For internal use only
+      */
       const EC_AffinePoint_Data& _inner() const { return inner(); }
 
+      /**
+      * For internal use only
+      */
       static EC_AffinePoint _from_inner(std::unique_ptr<EC_AffinePoint_Data> inner);
 
+      /**
+      * For internal use only
+      */
       const std::shared_ptr<const EC_Group_Data>& _group() const;
 
    private:

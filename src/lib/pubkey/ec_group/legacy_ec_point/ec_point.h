@@ -35,6 +35,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       friend class EC_Point_Multi_Point_Precompute;
       friend class EC_Point_Base_Point_Precompute;
 
+      /**
+      * The format used to encode a point as an octet string
+      */
       typedef EC_Point_Format Compression_Type;
       using enum EC_Point_Format;
 
@@ -154,6 +157,10 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       */
       static void force_all_affine(std::span<EC_Point> points, secure_vector<word>& ws);
 
+      /**
+      * Is this point already in affine form?
+      * @result true, if the internal representation is affine, false otherwise
+      */
       bool is_affine() const;
 
       /**
@@ -212,6 +219,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       */
       bool operator==(const EC_Point& other) const;
 
+      /**
+      * Inequality operator
+      */
       bool operator!=(const EC_Point& other) const = default;
 
       /**
@@ -251,6 +261,15 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       */
       BOTAN_DEPRECATED("Use affine coordinates only") const BigInt& get_z() const { return m_z; }
 
+      /**
+      * Swap the internal projective coordinates with the provided values
+      *
+      * Note these may be in Montgomery form
+      *
+      * @param new_x swapped with the internal x coordinate
+      * @param new_y swapped with the internal y coordinate
+      * @param new_z swapped with the internal z coordinate
+      */
       BOTAN_DEPRECATED("Deprecated no replacement")
 
       void swap_coords(BigInt& new_x, BigInt& new_y, BigInt& new_z) {
@@ -378,24 +397,54 @@ EC_Point BOTAN_PUBLIC_API(2, 0)
    multi_exponentiate(const EC_Point& p1, const BigInt& z1, const EC_Point& p2, const BigInt& z2);
 
 // arithmetic operators
+
+/**
+* Negate a point
+* @param lhs the point to negate
+* @result the additive inverse of lhs
+*/
 inline EC_Point operator-(const EC_Point& lhs) {
    return EC_Point(lhs).negate();
 }
 
+/**
+* Add two points
+* @param lhs the first point
+* @param rhs the second point
+* @result (lhs + rhs)
+*/
 inline EC_Point operator+(const EC_Point& lhs, const EC_Point& rhs) {
    EC_Point tmp(lhs);
    return tmp += rhs;
 }
 
+/**
+* Subtract one point from another
+* @param lhs the minuend
+* @param rhs the subtrahend
+* @result (lhs - rhs)
+*/
 inline EC_Point operator-(const EC_Point& lhs, const EC_Point& rhs) {
    EC_Point tmp(lhs);
    return tmp -= rhs;
 }
 
+/**
+* Multiply a point by a scalar
+* @param point the point
+* @param scalar the scalar
+* @result (point * scalar)
+*/
 inline EC_Point operator*(const EC_Point& point, const BigInt& scalar) {
    return point.mul(scalar);
 }
 
+/**
+* Multiply a point by a scalar
+* @param scalar the scalar
+* @param point the point
+* @result (point * scalar)
+*/
 inline EC_Point operator*(const BigInt& scalar, const EC_Point& point) {
    return point.mul(scalar);
 }
@@ -423,10 +472,19 @@ BOTAN_DEPRECATED("Use EC_AffinePoint::deserialize")
 std::pair<BigInt, BigInt> BOTAN_UNSTABLE_API
    OS2ECP(const uint8_t data[], size_t data_len, const BigInt& curve_p, const BigInt& curve_a, const BigInt& curve_b);
 
+/**
+* Perform point decoding
+*
+* @param data the encoded point
+* @param curve the curve the point is on
+* @result the decoded point
+*/
 BOTAN_DEPRECATED("Use EC_AffinePoint::deserialize")
 EC_Point BOTAN_UNSTABLE_API OS2ECP(std::span<const uint8_t> data, const CurveGFp& curve);
 
-// The name used for this type in older versions
+/**
+* The name used for the EC_Point type in older versions
+*/
 typedef EC_Point PointGFp;
 
 }  // namespace Botan
