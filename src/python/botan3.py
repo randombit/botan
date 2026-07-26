@@ -37,10 +37,9 @@ from enum import IntEnum
 # 3.10.0 - introduced botan_pubkey_load_ec*_sec1()
 BOTAN_FFI_VERSION = 20260811
 
-#
-# Base exception for all exceptions raised from this module
-#
+
 class BotanException(Exception):
+    """Base exception for all exceptions raised from this module"""
 
     def __init__(self, message, rc=0):
 
@@ -937,28 +936,35 @@ class RandomNumberGenerator:
     rng). The system RNG is very cheap to create, as just a single file
     handle or CSP handle is kept open, from first use until shutdown,
     no matter how many 'system' rng instances are created. Thus it is
-    easy to use the RNG in a one-off way, with `botan.RandomNumberGenerator().get(32)`.
+    easy to use the RNG in a one-off way, with ``botan.RandomNumberGenerator().get(32)``.
+
+    For some use cases it can be useful to provide a custom RNG implementation.
+    Use 'custom' as the rng_type and provide the ``get_callback=`` and
+    ``add_entropy_callback=`` arguments. The latter is optional.
+    ``get_callback`` takes an integer and is expected to return a bytes object
+    with the requested number of random bytes.
+    ``add_entropy_callback`` takes a bytes object containing entropy bytes and
+    is expected to add the given entropy to the RNG.
 
     When Botan is configured with TPM 2.0 support, also 'tpm2' is allowed
     to instantiate a TPM-backed RNG. Note that this requires passing
     additional named arguments ``tpm2_context=`` with a ``TPM2Context`` and
-    (optionally) ``tpm2_sessions=`` with one or more ``TPM2Session`` objects."""
+    (optionally) ``tpm2_sessions=`` with one or more ``TPM2Session`` objects.
 
-    # Can also use type "system"
+    Constructs a RandomNumberGenerator of type rng_type.
+    Available RNG types are:
+
+    * 'system': Adapter to the operating system's RNG
+    * 'user':   Software-PRNG that is auto-seeded by the system RNG
+    * 'null':   Mock-RNG that fails if randomness is pulled from it
+    * 'hwrng':  Adapter to an available hardware RNG (platform dependent)
+    * 'tpm2':   Adapter to a TPM 2.0 RNG
+                (needs additional named arguments tpm2_context= and, optionally, tpm2_sessions=)
+    * 'custom': Adapter to user-defined callbacks
+                (needs additional named arguments get_callback= and, optionally, add_entropy_callback=)
+    """
+
     def __init__(self, rng_type: str = 'system', **kwargs):
-        """Constructs a RandomNumberGenerator of type rng_type
-
-        Available RNG types are::
-
-        * 'system': Adapter to the operating system's RNG
-        * 'user':   Software-PRNG that is auto-seeded by the system RNG
-        * 'null':   Mock-RNG that fails if randomness is pulled from it
-        * 'hwrng':  Adapter to an available hardware RNG (platform dependent)
-        * 'tpm2':   Adapter to a TPM 2.0 RNG
-                    (needs additional named arguments tpm2_context= and, optionally, tpm2_sessions=)
-        * 'custom': Adapter to user-defined callbacks
-                    (needs additional named arguments get_callback= and, optionally, add_entropy_callback=)
-        """
         obj = kwargs.pop("_obj", None)
         if isinstance(obj, c_void_p):
             self.__obj = obj
@@ -1105,11 +1111,11 @@ class BlockCipher:
 # Hash function
 #
 class HashFunction:
-    """Previously ``hash_function``"""
+    """Previously ``hash_function``
+
+    The ``algo`` param is a string (eg 'SHA-1', 'SHA-384', 'BLAKE2b')"""
 
     def __init__(self, algo: str | c_void_p):
-        """The ``algo`` param is a string (eg 'SHA-1', 'SHA-384', 'BLAKE2b')"""
-
         if isinstance(algo, c_void_p):
             self.__obj = algo
         else:
@@ -1191,7 +1197,7 @@ class XOF:
         _DLL.botan_xof_update(self.__obj, bits, len(bits))
 
     def output(self, length: int) -> bytes:
-        """Returns `length` bytes of output from the XOF after all input was provided"""
+        """Returns ``length`` bytes of output from the XOF after all input was provided"""
         if length <= 0:
             return b''
         buf = create_string_buffer(length)
@@ -1214,10 +1220,11 @@ class XOF:
 # Message authentication codes
 #
 class MsgAuthCode:
-    """Previously ``message_authentication_code``"""
+    """Previously ``message_authentication_code``
+
+    Algo is a string (eg 'HMAC(SHA-256)', 'Poly1305', 'CMAC(AES-256)')"""
 
     def __init__(self, algo: str):
-        """Algo is a string (eg 'HMAC(SHA-256)', 'Poly1305', 'CMAC(AES-256)')"""
         flags = c_uint32(0) # always zero in this API version
         self.__obj = c_void_p(0)
         _DLL.botan_mac_init(byref(self.__obj), _ctype_str(algo), flags)
@@ -1278,13 +1285,13 @@ class MsgAuthCode:
         return _ctype_bufout(out)
 
 class SymmetricCipher:
-    """Previously ``cipher``"""
+    """Previously ``cipher``
+
+    The algorithm is specified as a string (eg 'AES-128/GCM', 'Serpent/OCB(12)', 'Threefish-512/EAX').
+    Set ``encrypt`` to False for decryption."""
 
     def __init__(self, algo: str, encrypt: bool = True):
-        """The algorithm is specified as a string (eg 'AES-128/GCM',
-        'Serpent/OCB(12)', 'Threefish-512/EAX').
 
-        Set `encrypt` to False for decryption"""
         flags = 0 if encrypt else 1
         self.__obj = c_void_p(0)
         _DLL.botan_cipher_init(byref(self.__obj), _ctype_str(algo), flags)
@@ -2351,14 +2358,14 @@ class X509Cert: # pylint: disable=invalid-name
     def subject_dn(self, key: str, index: int) -> str:
         """Get a value from the subject DN field.
 
-        ``key`` specifies a value to get, for instance ``"Name"`` or `"Country"`."""
+        ``key`` specifies a value to get, for instance ``"Name"`` or ``"Country"``."""
         return _call_fn_returning_str(
             0, lambda b, bl: _DLL.botan_x509_cert_get_subject_dn(self.__obj, _ctype_str(key), index, b, bl))
 
     def issuer_dn(self, key: str, index: int) -> str:
         """Get a value from the issuer DN field.
 
-        ``key`` specifies a value to get, for instance ``"Name"`` or `"Country"`."""
+        ``key`` specifies a value to get, for instance ``"Name"`` or ``"Country"``."""
         return _call_fn_returning_str(
             0, lambda b, bl: _DLL.botan_x509_cert_get_issuer_dn(self.__obj, _ctype_str(key), index, b, bl))
 
@@ -2413,12 +2420,12 @@ class X509Cert: # pylint: disable=invalid-name
         If the extension is not present, an exception will be raised.
 
         Returns all values in the extension, in the form of (v4, v6), where both contain a list of tuples of
-        type (int | None, list[...]). The first element of each tuple is the SAFI, it may be `None`
+        type (int | None, list[...]). The first element of each tuple is the SAFI, it may be ``None``
         to indicate no SAFI is present. The second element is a list of elements of type
         tuple[tuple[int], tuple[int]], where each element is a single address range. Each element contains
         two tuples of equal length, 4 for IPv4 families and 16 for IPv6 families. The values are the minimum
         and maximum addresses of the range respectively. If the particular family is marked as "inherit",
-        the outer tuple will contain `None` as its second element instead of a list of ranges."""
+        the outer tuple will contain ``None`` as its second element instead of a list of ranges."""
         v4 = []
         v6 = []
 
@@ -2486,7 +2493,7 @@ class X509Cert: # pylint: disable=invalid-name
         Returns all AS numbers contained in the extension.
         Returns a list of tuples, where each tuple is a range, and its inner elements are the
         minimum and maximum values of the range respectively.
-        If AS numbers are marked as "inherit", `None` is returned instead.
+        If AS numbers are marked as "inherit", ``None`` is returned instead.
         If AS numbers are not present in the extension at all, this raises an exception."""
         return self.__get_as_blocks_values(True)
 
@@ -2497,7 +2504,7 @@ class X509Cert: # pylint: disable=invalid-name
         Get all RDIs contained in the extension.
         Returns a list of tuples, where each tuple is a range, and its inner elements are the
         minimum and maximum values of the range respectively.
-        If RDIs are marked as "inherit", `None` is returned instead.
+        If RDIs are marked as "inherit", ``None`` is returned instead.
         If RDIs are not present in the extension at all, this raises an exception."""
         return self.__get_as_blocks_values(False)
 
@@ -2516,7 +2523,7 @@ class X509Cert: # pylint: disable=invalid-name
 
         ``trusted`` is a list of trusted root CAs.
 
-        The `trusted_path` refers to a directory where one or more trusted CA
+        The ``trusted_path`` refers to a directory where one or more trusted CA
         certificates are stored.
 
         Set ``required_strength`` to indicate the minimum key and hash strength
@@ -2647,11 +2654,13 @@ class X509CRLEntry:
 
 
 class X509CRL:
-    """Class representing an X.509 Certificate Revocation List."""
+    """Class representing an X.509 Certificate Revocation List.
+
+    A CRL in PEM or DER format can be loaded from a file, with the ``filename`` argument,
+    or from a bytestring, with the ``buf`` argument.
+    """
 
     def __init__(self, filename: str | None = None, buf: bytes | None = None):
-        """A CRL in PEM or DER format can be loaded from a file, with the ``filename`` argument,
-        or from a bytestring, with the ``buf`` argument."""
         if not filename and not buf:
             self.__obj = c_void_p(0)
         else:
@@ -2736,13 +2745,14 @@ class X509CRL:
 
 
 class MPI:
-    """Most of the usual arithmetic operators (``__add__``, ``__mul__``, etc) are defined."""
+    """Initialize an MPI object with specified value, left as zero otherwise. The
+    ``initial_value`` should be an ``int``, ``str``, or ``MPI``.
+    The ``radix`` value should be set to 16 when initializing from a base 16 ``str`` value.
+
+    Most of the usual arithmetic operators (``__add__``, ``__mul__``, etc) are defined.
+    """
 
     def __init__(self, initial_value: MPILike | c_void_p = None, radix: int | None = None):
-        """Initialize an MPI object with specified value, left as zero otherwise.  The
-        ``initial_value`` should be an ``int``, ``str``, or ``MPI``.
-        The ``radix`` value should be set to 16 when initializing from a base 16 `str` value."""
-
         if isinstance(initial_value, c_void_p):
             self.__obj = initial_value
             return
@@ -3062,7 +3072,7 @@ class ECGroup:
 
     @classmethod
     def supports_named_group(cls, name: str) -> bool:
-        """Returns true if in this build configuration `ECGroup.from_name(name)` will succeed"""
+        """Returns true if in this build configuration ``ECGroup.from_name(name)`` will succeed"""
         r = c_int(0)
         _DLL.botan_ec_group_supports_named_group(_ctype_str(name), byref(r))
         if r.value == 0:
@@ -3310,9 +3320,9 @@ class ECPoint:
 
 
 class FormatPreservingEncryptionFE1:
+    """Initialize an instance for format preserving encryption"""
 
     def __init__(self, modulus: MPI, key: bytes, rounds: int = 5, compat_mode: bool = False):
-        """Initialize an instance for format preserving encryption"""
         flags = c_uint32(1 if compat_mode else 0)
         self.__obj = c_void_p(0)
         _DLL.botan_fpe_fe1_init(byref(self.__obj), modulus.handle_(), key, len(key), c_size_t(rounds), flags)
@@ -3321,14 +3331,14 @@ class FormatPreservingEncryptionFE1:
         _DLL.botan_fpe_destroy(self.__obj)
 
     def encrypt(self, msg: MPILike, tweak: str | bytes) -> MPI:
-        """The msg should be a `botan3.MPI` or an object which can be converted to one"""
+        """The msg should be a ``botan3.MPI`` or an object which can be converted to one"""
         r = MPI(msg)
         bits = _ctype_bits(tweak)
         _DLL.botan_fpe_encrypt(self.__obj, r.handle_(), bits, len(bits))
         return r
 
     def decrypt(self, msg: MPILike, tweak: str | bytes) -> MPI:
-        """The msg should be a `botan3.MPI` or an object which can be converted to one"""
+        """The msg should be a ``botan3.MPI`` or an object which can be converted to one"""
         r = MPI(msg)
         bits = _ctype_bits(tweak)
         _DLL.botan_fpe_decrypt(self.__obj, r.handle_(), bits, len(bits))
@@ -3528,10 +3538,10 @@ def zfec_decode(k: int, n: int, indexes: list[int], inputs: list[bytes]) -> list
     :param indexes: which of the shares are we giving the decoder
     :param inputs: the input shares (e.g. from a previous call to zfec_encode) which all must be the same length
 
-    Exactly `k` shares are needed to recover the data. Supplying more than `k`
+    Exactly ``k`` shares are needed to recover the data. Supplying more than ``k``
     (index, share) pairs is allowed; the extras are ignored.
 
-    :returns: a list of bytes containing the original shares decoded from the provided shares (in `inputs`)
+    :returns: a list of bytes containing the original shares decoded from the provided shares (in ``inputs``)
     """
 
     # botan_zfec_decode() reads exactly K indexes and K input shares without

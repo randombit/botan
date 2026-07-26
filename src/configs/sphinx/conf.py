@@ -1,10 +1,11 @@
 # -* coding: utf-8 -*-
 # Sphinx configuration file
 
-import sys
+import ctypes
+import pathlib
 import re
+import sys
 
-#import sphinx
 
 def check_for_tag(tag):
     # Nasty hack :(
@@ -38,6 +39,10 @@ def parse_version_file(version_path):
 
             results[key] = val
     return results
+
+
+# add src/python to PATH, so that `import botan3` works
+sys.path.insert(0, str(pathlib.Path("../../python").resolve()))
 
 version_info = parse_version_file('../../build-data/version.txt')
 
@@ -227,10 +232,42 @@ latex_elements = {
     'printindex': '\\footnotesize\\raggedright\\printindex'
 }
 
-# Give all sections a label, so we can reference them
 extensions = [
+    # Give all sections a label, so we can reference them
     "sphinx.ext.autosectionlabel",
+    # infer documentation from the source
+    "sphinx.ext.autodoc"
 ]
+
+
+# Mock CDLL interface so that sphinx can import botan3.py without an actual lib present
+class MockCDLL:
+    def __getattr__(self, name):
+        def _func(*_):
+            # this actually needs to succeed
+            if name == "botan_ffi_supports_api":
+                return 0
+            # all others we don't want to silently run
+            raise RuntimeError(f"Tried to call '{name}' while building docs")
+
+        return _func
+
+
+ctypes.CDLL = lambda *_: MockCDLL()
+
+autodoc_default_options = {
+    # document methods in the order they appear in the source
+    "member-order": "bysource",
+    # document members that don't have a docstring
+    "undoc-members": True,
+    # don't document these
+    "exclude-members": "handle_,cmp"
+}
+
+# resolve these type hints as something else
+autodoc_type_aliases = {
+    "MPILike": "MPILike",  # prevents sphinx from expanding the Union[]
+}
 
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
