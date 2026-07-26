@@ -599,7 +599,7 @@ You can generate a new random group using
 
 You can serialize a ``DL_Group`` using
 
-.. cpp:function:: std::vector<uint8_t> DL_Group::DER_Encode(Format format) const
+.. cpp:function:: std::vector<uint8_t> DL_Group::DER_encode(Format format) const
 
 or
 
@@ -616,7 +616,7 @@ You can reload a serialized group from BER or PEM formats using
 
 .. cpp:function:: DL_Group::DL_Group(std::span<const uint8_t> ber, DL_Group_Format format)
 
-.. cpp:function:: static DL_Group DL_Group::from_pem(std::string_view pem, DL_Group_Format format)
+.. cpp:function:: static DL_Group DL_Group::from_PEM(std::string_view pem)
 
 Code Example: DL_Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -637,7 +637,7 @@ based on the discrete logarithm problem need a generator > 1.
 
 Each public key type has a function
 
-.. cpp:function:: bool Public_Key::check_key(RandomNumberGenerator& rng, bool strong)
+.. cpp:function:: bool Asymmetric_Key::check_key(RandomNumberGenerator& rng, bool strong)
 
   This function performs a number of algorithm-specific tests that the key
   seems to be mathematically valid and consistent, and returns true if all of
@@ -704,7 +704,10 @@ support it directly, such as RSA or ElGamal; these use the EME class:
 
 .. cpp:class:: PK_Encryptor_EME
 
-   .. cpp:function:: PK_Encryptor_EME(const Public_Key& key, std::string padding)
+   .. cpp:function:: PK_Encryptor_EME(const Public_Key& key, \
+         RandomNumberGenerator& rng, \
+         std::string_view padding, \
+         std::string_view provider = "")
 
      With *key* being the key you want to encrypt messages to. The padding
      method to use is specified in *padding*.

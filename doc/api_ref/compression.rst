@@ -39,7 +39,7 @@ finally completing processing the stream (``finish``).
        entire message up to this point without having the see the rest of the
        compressed stream.
 
-   .. cpp::function:: void finish(secure_vector<uint8_t>& buf, size_t offset = 0)
+  .. cpp:function:: void finish(secure_vector<uint8_t>& buf, size_t offset = 0)
 
        Finish compressing a message. The ``buf`` and ``offset`` parameters are
        treated as in ``update``. It is acceptable to call ``start`` followed by
@@ -63,7 +63,7 @@ finally completing processing the stream (``finish``).
 
        This function may throw if the data seems to be invalid.
 
-   .. cpp::function:: void finish(secure_vector<uint8_t>& buf, size_t offset = 0)
+  .. cpp:function:: void finish(secure_vector<uint8_t>& buf, size_t offset = 0)
 
        Finish decompressing a message. The ``buf`` and ``offset`` parameters are
        treated as in ``update``. It is acceptable to call ``start`` followed by
@@ -82,8 +82,8 @@ unavailable.
 
 Two older functions for this are
 
-.. cpp:function:: Compression_Algorithm* make_compressor(std::string type)
-.. cpp:function:: Decompression_Algorithm* make_decompressor(std::string type)
+.. cpp:function:: Compression_Algorithm* make_compressor(std::string_view type)
+.. cpp:function:: Decompression_Algorithm* make_decompressor(std::string_view type)
 
 which call the relevant ``create`` function and then ``release`` the
 returned ``unique_ptr``. Avoid these in new code.

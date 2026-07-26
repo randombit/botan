@@ -35,7 +35,7 @@ of same, are provided in ``psk_db.h``
 
       Remove ``name`` from the database. If ``name`` doesn't exist, ignores the request.
 
-   .. cpp::function:: std::string get_str(const std::string& name) const
+   .. cpp:function:: std::string get_str(const std::string& name) const
 
       Like ``get`` but casts the return value to a string.
 

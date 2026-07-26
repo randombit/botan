@@ -179,13 +179,15 @@ additional information about the connection.
      This callback is optional, and can be used to inspect all handshake messages
      while the session establishment occurs.
 
- .. cpp:function:: void tls_modify_extensions(Extensions& extn, Connection_Side which_side)
+ .. cpp:function:: void tls_modify_extensions(Extensions& extn, Connection_Side which_side, \
+                                              Handshake_Type which_message)
 
      This callback is optional, and can be used to modify extensions before they
      are sent to the peer. For example this enables adding a custom extension,
      or replacing or removing an extension set by the library.
 
- .. cpp:function:: void tls_examine_extensions(const Extensions& extn, Connection_Side which_side)
+ .. cpp:function:: void tls_examine_extensions(const Extensions& extn, Connection_Side which_side, \
+                                               Handshake_Type which_message)
 
      This callback is optional, and can be used to examine extensions sent by
      the peer.
@@ -483,7 +485,7 @@ included that provides information about that session:
        Returns the :cpp:class:`protocol version <TLS::Protocol_Version>`
        that was negotiated
 
-   .. cpp:function:: Ciphersuite ciphersite() const
+   .. cpp:function:: Ciphersuite ciphersuite() const
 
        Returns the :cpp:class:`ciphersuite <TLS::Ciphersuite>` that
        was negotiated.
@@ -934,10 +936,6 @@ policy settings from a file.
 
      Minimum accepted RSA key size. Default 2048 bits.
 
- .. cpp:function:: size_t minimum_dsa_group_size() const
-
-     Minimum accepted DSA key size. Default 2048 bits.
-
  .. cpp:function:: size_t minimum_ecdsa_group_size() const
 
      Minimum size for ECDSA keys (256 bits).
@@ -1041,7 +1039,7 @@ TLS Ciphersuites
      undesirable for whatever reason without having to reimplement
      :cpp:func:`TLS::Ciphersuite::ciphersuite_list`
 
- .. cpp:function:: std::vector<uint16_t> ciphersuite_list(Protocol_Version version, bool have_srp) const
+ .. cpp:function:: std::vector<uint16_t> ciphersuite_list(Protocol_Version version) const
 
      Return allowed ciphersuites in order of preference
 
@@ -1320,7 +1318,7 @@ The asio Stream offers the following interface:
 
    Constructor for TLS::Context.
 
-   .. cpp:function:: void set_verify_callback(Verify_Callback_T callback)
+   .. cpp:function:: void set_verify_callback(Verify_Callback callback)
 
    Set a user-defined callback function for certificate chain verification. This
    will cause the stream to override the default implementation of the

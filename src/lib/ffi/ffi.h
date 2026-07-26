@@ -1325,6 +1325,7 @@ BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_supports_application_specific_group(in
 
 /**
 * Checks if in this build configuration botan_ec_group_from_name(group_ptr, name) will succeed and sets
+* @param name the name of the group to check
 * @param out to 1 if so, 0 otherwise.
 * @returns negative number on error, or zero on success
 */
@@ -1335,6 +1336,7 @@ BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_supports_named_group(const char* name,
 * @warning use only elliptic curve parameters that you trust
 *
 * @param ec_group the new object will be placed here
+* @param oid the OID to associate with the group
 * @param p the elliptic curve prime (at most 521 bits)
 * @param a the elliptic curve a param
 * @param b the elliptic curve b param
@@ -1863,6 +1865,7 @@ int botan_privkey_oid(botan_asn1_oid_t* oid, botan_privkey_t key);
 
 /**
 * Checks whether a key is stateful and sets
+* @param key the private key to check
 * @param out to 1 if it is, or 0 if the key is not stateful
 * @return 0 on success, a negative value on failure
 */
@@ -1870,6 +1873,7 @@ BOTAN_FFI_EXPORT(3, 8) int botan_privkey_stateful_operation(botan_privkey_t key,
 
 /**
 * Gets information on many operations a (stateful) key has remaining and sets
+* @param key the private key to check
 * @param out to that value
 * @return 0 on success, a negative value on failure or if the key is not stateful
 */
@@ -2710,6 +2714,7 @@ BOTAN_FFI_EXPORT(2, 8) const char* botan_x509_cert_validation_status(int code);
 
 /**
 * Get info about the IP Address Blocks extension from RFC 3779
+* @param cert the certificate to inspect
 * @param v4_count is set to the number of v4 families contained in the extension
 * @param v6_count is set to the number of v6 families
 * @returns 0 on success, negative number on error
@@ -2721,6 +2726,7 @@ int botan_x509_ext_ip_addr_blocks_get_counts(botan_x509_cert_t cert, size_t* v4_
 
 /**
 * Get info about a specific family in the IP Address Blocks extension from RFC 3779
+* @param cert the certificate to inspect
 * @param ipv6 must be set to 1 if the family is an IPv6 family, 0 for IPv4 families
 * @param i is the (local) index for this family kind (the first v4 family is at i = 0, ipv6 = 0; the first v6 family is at i = 0, ipv6 = 1)
 * @param has_safi will be set to 1 if the family has an associated SAFI
@@ -2738,6 +2744,7 @@ int botan_x509_ext_ip_addr_blocks_get_family(
 
 /**
 * Get info about a specific range in the IP Address Blocks extension from RFC 3779
+* @param cert the certificate to inspect
 * @param ipv6 must be set to 1 if the family is an IPv6 family, 0 for IPv4 families
 * @param i is the (local) index of the family, see `botan_x509_ext_ip_addr_blocks_get_family`
 * @param entry is the index of the range
@@ -2755,6 +2762,7 @@ int botan_x509_ext_ip_addr_blocks_get_address(
 
 /**
 * Get basic info about the AS Blocks extension from RFC 3779
+* @param cert the certificate to inspect
 * @param asnum must be set to 1 to get info about AS numbers, 0 for RDIs (the type)
 * @param present is set to 1 if the extension contains entries for the type, 0 if it is marked as "inherit"
 * @param count is set to number of entries for this type, if it was present, otherwise `count` is not modified
@@ -2767,6 +2775,7 @@ int botan_x509_ext_as_blocks_get_info(botan_x509_cert_t cert, int asnum, int* pr
 
 /**
 * Get a specific entry in the AS Blocks extension from RFC 3779
+* @param cert the certificate to inspect
 * @param asnum Set to 1 to get info about AS numbers, 0 for RDIs (the type)
 * @param i The index of the entry to get
 * @param min is set to the min value of the range
