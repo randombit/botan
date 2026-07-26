@@ -230,6 +230,25 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
                result.test_bin_eq(provider + " write_keystream", buf, expected);
             }
 
+            {
+               // A single large request exercises any internal multi-block refill paths
+               cipher->set_key(key);
+
+               cipher->set_iv(nonce.data(), nonce.size());
+
+               if(seek != 0) {
+                  cipher->seek(seek);
+               }
+
+               std::vector<uint8_t> buf(input.size());
+               cipher->write_keystream(buf.data(), buf.size());
+
+               for(size_t i = 0; i != input.size(); ++i) {
+                  buf[i] ^= input[i];
+               }
+               result.test_bin_eq(provider + " write_keystream one-shot", buf, expected);
+            }
+
             result.test_is_true("key set", cipher->has_keying_material());
             cipher->clear();
             result.test_is_false("key not set", cipher->has_keying_material());
