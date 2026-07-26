@@ -1,0 +1,13 @@
+<defines>
+AEAD_GCM_SIV -> 20260719
+</defines>
+
+<module_info>
+name -> "GCM-SIV"
+brief -> "GCM-SIV nonce misuse-resistant AEAD (RFC 8452)"
+</module_info>
+
+<requires>
+block
+polyval
+</requires>
