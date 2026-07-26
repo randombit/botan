@@ -43,7 +43,7 @@ class RandomNumberGenerator;
 */
 enum class ECIES_Flags : uint8_t {
    None = 0,
-   /// if set: prefix the input of the (ecdh) key agreement with the encoded (ephemeral) public key
+   /// if set: do NOT prefix the input of the (ecdh) key agreement with the encoded (ephemeral) public key
    SingleHashMode = 1,
    /// (decryption only) if set: use cofactor multiplication during (ecdh) key agreement
    /// This only matters if the curve has a cofactor
@@ -80,8 +80,11 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_KA_Params {
       * @param group ec domain parameters of the involved ec keys
       * @param kdf_spec name of the key derivation function
       * @param length length of the secret to be derived
-      * @param point_format format of encoded keys (affects the secret derivation if single_hash_mode is used)
-      * @param single_hash_mode prefix the KDF input with the ephemeral public key (recommended)
+      * @param point_format format of encoded keys (the ephemeral public key encoding
+      *        only affects the secret derivation when single_hash_mode is false)
+      * @param single_hash_mode if false, prefix the KDF input with the encoded
+      *        ephemeral public key; if true (recommended, and the default), the
+      *        KDF input is just the ECDH shared secret
       */
       ECIES_KA_Params(const EC_Group& group,
                       std::string_view kdf_spec,
@@ -93,7 +96,8 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_KA_Params {
       * @param group ec domain parameters of the involved ec keys
       * @param kdf_spec name of the key derivation function
       * @param length length of the secret to be derived
-      * @param point_format format of encoded keys (affects the secret derivation if single_hash_mode is used)
+      * @param point_format format of encoded keys (the ephemeral public key encoding
+      *        only affects the secret derivation when ECIES_Flags::SingleHashMode is not set)
       * @param flags options, see documentation of ECIES_Flags
       *
       * This constructor makes sense only if you are using the CofactorMode or
@@ -161,6 +165,10 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_System_Params final : public ECIES_KA_Params 
       * @param dem_key_len length of the key used for the data encryption method
       * @param mac_spec name of the message authentication code
       * @param mac_key_len length of the key used for the message authentication code
+      * @param point_format format of encoded keys (the ephemeral public key encoding
+      *        only affects the secret derivation when single_hash_mode is false)
+      * @param single_hash_mode if false, prefix the KDF input with the encoded
+      *        ephemeral public key; if true, the KDF input is just the ECDH shared secret
       */
       ECIES_System_Params(const EC_Group& group,
                           std::string_view kdf_spec,
@@ -178,7 +186,8 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_System_Params final : public ECIES_KA_Params 
       * @param dem_key_len length of the key used for the data encryption method
       * @param mac_spec name of the message authentication code
       * @param mac_key_len length of the key used for the message authentication code
-      * @param point_format format of encoded keys (affects the secret derivation if single_hash_mode is used)
+      * @param point_format format of encoded keys (the ephemeral public key encoding
+      *        only affects the secret derivation when ECIES_Flags::SingleHashMode is not set)
       * @param flags options, see documentation of ECIES_Flags
       *
       * This constructor makes sense only if you are using the CofactorMode or

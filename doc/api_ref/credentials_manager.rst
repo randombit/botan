@@ -40,13 +40,16 @@ stores credentials. The main user is the :doc:`tls` implementation.
 
    .. cpp:function:: std::vector<X509_Certificate> find_cert_chain( \
                      const std::vector<std::string>& cert_key_types, \
+                     const std::vector<AlgorithmIdentifier>& cert_signature_schemes, \
                      const std::vector<X509_DN>& acceptable_CAs, \
                      const std::string& type, \
                      const std::string& context)
 
       Return the certificate chain to use to identify ourselves. The
       ``acceptable_CAs`` parameter gives a list of CAs the peer trusts.
-      This may be empty.
+      This may be empty. The ``cert_signature_schemes`` parameter gives the
+      signature types desired as signatures in the certificate(s) itself, or
+      may be empty for no preference by the caller.
 
       .. warning::
          If this function returns a certificate that is not one of the
@@ -55,6 +58,7 @@ stores credentials. The main user is the :doc:`tls` implementation.
 
    .. cpp:function:: std::vector<X509_Certificate> cert_chain( \
          const std::vector<std::string>& cert_key_types, \
+         const std::vector<AlgorithmIdentifier>& cert_signature_schemes, \
          const std::string& type, \
          const std::string& context)
 
@@ -63,6 +67,7 @@ stores credentials. The main user is the :doc:`tls` implementation.
 
    .. cpp:function:: std::vector<X509_Certificate> cert_chain_single_type( \
          const std::string& cert_key_type, \
+         const std::vector<AlgorithmIdentifier>& cert_signature_schemes, \
          const std::string& type, \
          const std::string& context)
 
@@ -88,55 +93,6 @@ stores credentials. The main user is the :doc:`tls` implementation.
       Return a shared pointer to the private key for this certificate. The
       *cert* will be the leaf cert of a chain returned previously by
       ``cert_chain`` or ``cert_chain_single_type``.
-
-In versions before 1.11.34, there was an additional function on `Credentials_Manager`
-
-   .. cpp::function:: void verify_certificate_chain( \
-         const std::string& type, \
-         const std::string& hostname, \
-         const std::vector<X509_Certificate>& cert_chain)
-
-This function has been replaced by `TLS::Callbacks::tls_verify_cert_chain`.
-
-SRP Authentication
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-``Credentials_Manager`` contains the hooks used by TLS clients and
-servers for SRP authentication.
-
-.. note::
-
-   Support for TLS-SRP is deprecated, and will be removed in a future
-   major release. When that occurs these APIs will be removed. Prefer
-   instead performing a standard TLS handshake, then perform a PAKE
-   authentication inside of (and cryptographically bound to) the TLS
-   channel.
-
-.. cpp:function:: bool attempt_srp(const std::string& type, \
-                                   const std::string& context)
-
-   Returns if we should consider using SRP for authentication
-
-.. cpp:function:: std::string srp_identifier(const std::string& type, \
-                                             const std::string& context)
-
-   Returns the SRP identifier we'd like to use (used by client)
-
-.. cpp:function:: std::string srp_password(const std::string& type, \
-                                           const std::string& context, \
-                                           const std::string& identifier)
-
-   Returns the password for *identifier* (used by client)
-
-.. cpp:function:: bool srp_verifier(const std::string& type, \
-                                    const std::string& context, \
-                                    const std::string& identifier, \
-                                    std::string& group_name, \
-                                    BigInt& verifier, \
-                                    std::vector<uint8_t>& salt, \
-                                    bool generate_fake_on_unknown)
-
-    Returns the SRP verifier information for *identifier* (used by server)
 
 Preshared Keys
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

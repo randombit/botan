@@ -53,7 +53,7 @@ The major certificate format in use today is X.509v3, used for instance in the
 
       Return alternative names for the issuer.
 
-  .. cpp:function:: std::unique_ptr<Public_Key> load_subject_public_key() const
+  .. cpp:function:: std::unique_ptr<Public_Key> subject_public_key() const
 
      Deserialize the stored public key and return a new object. This
      might throw, if it happens that the public key object stored in
@@ -315,10 +315,8 @@ information. For example::
    DataSource_Stream in("crl2.pem");
    X509_CRL crl2(in);
 
-After that, pass the ``X509_CRL`` object to a ``Certificate_Store`` object
-with
-
-.. cpp:function:: void Certificate_Store::add_crl(const X509_CRL& crl)
+After that, pass the ``X509_CRL`` object to a ``Certificate_Store_In_Memory`` object
+with :cpp:func:`Certificate_Store_In_Memory::add_crl`
 
 and all future verifications will take into account the provided CRL.
 

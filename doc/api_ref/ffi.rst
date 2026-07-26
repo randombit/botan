@@ -543,7 +543,7 @@ Message Authentication Codes
 
    Add input to the MAC computation.
 
-.. cpp:function:: int botan_mac_final(botan_mac_t mac, uint8_t out[], size_t* out_len)
+.. cpp:function:: int botan_mac_final(botan_mac_t mac, uint8_t out[])
 
    Finalize the MAC and place the output in out. Exactly
    :cpp:func:`botan_mac_output_length` bytes will be written.
@@ -1806,12 +1806,6 @@ X.509 Certificates
 .. cpp:function:: int botan_x509_cert_destroy(botan_x509_cert_t cert)
 
    Destroy the certificate object
-
-.. cpp:function:: int botan_x509_cert_gen_selfsigned(botan_x509_cert_t* cert, \
-                                             botan_privkey_t key, \
-                                             botan_rng_t rng, \
-                                             const char* common_name, \
-                                             const char* org_name)
 
 .. cpp:function:: int botan_x509_cert_view_binary_values(botan_x509_cert_t cert, \
                                                          botan_x509_value_type value_type, \
