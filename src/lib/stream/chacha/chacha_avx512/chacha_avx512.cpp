@@ -14,15 +14,11 @@ namespace Botan {
 //static
 void BOTAN_FN_ISA_AVX512 ChaCha::chacha_avx512_x16(uint8_t output[64 * 16], uint32_t state[16], size_t rounds) {
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
-   const SIMD_16x32 CTR0 = SIMD_16x32(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
 
-   const uint32_t C = 0xFFFFFFFF - state[12];
-
-   // clang-format off
-   const SIMD_16x32 CTR1 = SIMD_16x32(
-      // NOLINTNEXTLINE(*-implicit-bool-conversion)
-      0, C < 1, C < 2, C < 3, C < 4, C < 5, C < 6, C < 7, C < 8, C < 9, C < 10, C < 11, C < 12, C < 13, C < 14, C < 15);
-   // clang-format on
+   const SIMD_16x32 CTR_LO =
+      SIMD_16x32::splat(state[12]) + SIMD_16x32(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+   // Carry into the high counter word for lanes whose low word wrapped
+   const SIMD_16x32 CTR_HI = SIMD_16x32::splat(state[13]) - CTR_LO.unsigned_lt(SIMD_16x32::splat(state[12]));
 
    SIMD_16x32 R00 = SIMD_16x32::splat(state[0]);
    SIMD_16x32 R01 = SIMD_16x32::splat(state[1]);
@@ -36,8 +32,8 @@ void BOTAN_FN_ISA_AVX512 ChaCha::chacha_avx512_x16(uint8_t output[64 * 16], uint
    SIMD_16x32 R09 = SIMD_16x32::splat(state[9]);
    SIMD_16x32 R10 = SIMD_16x32::splat(state[10]);
    SIMD_16x32 R11 = SIMD_16x32::splat(state[11]);
-   SIMD_16x32 R12 = SIMD_16x32::splat(state[12]) + CTR0;
-   SIMD_16x32 R13 = SIMD_16x32::splat(state[13]) + CTR1;
+   SIMD_16x32 R12 = CTR_LO;
+   SIMD_16x32 R13 = CTR_HI;
    SIMD_16x32 R14 = SIMD_16x32::splat(state[14]);
    SIMD_16x32 R15 = SIMD_16x32::splat(state[15]);
 
@@ -175,8 +171,8 @@ void BOTAN_FN_ISA_AVX512 ChaCha::chacha_avx512_x16(uint8_t output[64 * 16], uint
    R09 += SIMD_16x32::splat(state[9]);
    R10 += SIMD_16x32::splat(state[10]);
    R11 += SIMD_16x32::splat(state[11]);
-   R12 += SIMD_16x32::splat(state[12]) + CTR0;
-   R13 += SIMD_16x32::splat(state[13]) + CTR1;
+   R12 += CTR_LO;
+   R13 += CTR_HI;
    R14 += SIMD_16x32::splat(state[14]);
    R15 += SIMD_16x32::splat(state[15]);
 

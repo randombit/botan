@@ -14,15 +14,11 @@ namespace Botan {
 //static
 void BOTAN_FN_ISA_AVX512 Salsa20::salsa20_avx512_x16(uint8_t output[64 * 16], uint32_t state[16], size_t rounds) {
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
-   const SIMD_16x32 CTR0 = SIMD_16x32(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
 
-   const uint32_t C = 0xFFFFFFFF - state[8];
-
-   // clang-format off
-   const SIMD_16x32 CTR1 = SIMD_16x32(
-      // NOLINTNEXTLINE(*-implicit-bool-conversion)
-      0, C < 1, C < 2, C < 3, C < 4, C < 5, C < 6, C < 7, C < 8, C < 9, C < 10, C < 11, C < 12, C < 13, C < 14, C < 15);
-   // clang-format on
+   const SIMD_16x32 CTR_LO =
+      SIMD_16x32::splat(state[8]) + SIMD_16x32(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+   // Carry into the high counter word for lanes whose low word wrapped
+   const SIMD_16x32 CTR_HI = SIMD_16x32::splat(state[9]) - CTR_LO.unsigned_lt(SIMD_16x32::splat(state[8]));
 
    SIMD_16x32 R00 = SIMD_16x32::splat(state[0]);
    SIMD_16x32 R01 = SIMD_16x32::splat(state[1]);
@@ -32,8 +28,8 @@ void BOTAN_FN_ISA_AVX512 Salsa20::salsa20_avx512_x16(uint8_t output[64 * 16], ui
    SIMD_16x32 R05 = SIMD_16x32::splat(state[5]);
    SIMD_16x32 R06 = SIMD_16x32::splat(state[6]);
    SIMD_16x32 R07 = SIMD_16x32::splat(state[7]);
-   SIMD_16x32 R08 = SIMD_16x32::splat(state[8]) + CTR0;
-   SIMD_16x32 R09 = SIMD_16x32::splat(state[9]) + CTR1;
+   SIMD_16x32 R08 = CTR_LO;
+   SIMD_16x32 R09 = CTR_HI;
    SIMD_16x32 R10 = SIMD_16x32::splat(state[10]);
    SIMD_16x32 R11 = SIMD_16x32::splat(state[11]);
    SIMD_16x32 R12 = SIMD_16x32::splat(state[12]);
@@ -93,8 +89,8 @@ void BOTAN_FN_ISA_AVX512 Salsa20::salsa20_avx512_x16(uint8_t output[64 * 16], ui
    R05 += SIMD_16x32::splat(state[5]);
    R06 += SIMD_16x32::splat(state[6]);
    R07 += SIMD_16x32::splat(state[7]);
-   R08 += SIMD_16x32::splat(state[8]) + CTR0;
-   R09 += SIMD_16x32::splat(state[9]) + CTR1;
+   R08 += CTR_LO;
+   R09 += CTR_HI;
    R10 += SIMD_16x32::splat(state[10]);
    R11 += SIMD_16x32::splat(state[11]);
    R12 += SIMD_16x32::splat(state[12]);

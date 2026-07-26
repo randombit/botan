@@ -309,6 +309,17 @@ class SIMD_8x32 final {
          swap_tops(B3, B7);
       }
 
+      /**
+      * Unsigned lane comparison; returns a mask with all bits set in each
+      * 32-bit lane that is (unsigned) less than the corresponding lane of
+      * @p other, and all bits cleared otherwise.
+      */
+      SIMD_8x32 BOTAN_FN_ISA_AVX2 unsigned_lt(const SIMD_8x32& other) const noexcept {
+         // No unsigned comparison before AVX-512; bias into the signed domain
+         const __m256i bias = _mm256_set1_epi32(static_cast<int32_t>(0x80000000));
+         return SIMD_8x32(_mm256_cmpgt_epi32(_mm256_xor_si256(other.raw(), bias), _mm256_xor_si256(raw(), bias)));
+      }
+
       BOTAN_FN_ISA_AVX2
       static SIMD_8x32 choose(const SIMD_8x32& mask, const SIMD_8x32& a, const SIMD_8x32& b) noexcept {
 #if defined(__AVX512VL__)

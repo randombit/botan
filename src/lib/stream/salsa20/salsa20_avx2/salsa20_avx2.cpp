@@ -16,11 +16,10 @@ void BOTAN_FN_ISA_AVX2 Salsa20::salsa20_avx2_x8(uint8_t output[64 * 8], uint32_t
    SIMD_8x32::reset_registers();
 
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
-   const SIMD_8x32 CTR0 = SIMD_8x32(0, 1, 2, 3, 4, 5, 6, 7);
 
-   const uint32_t C = 0xFFFFFFFF - state[8];
-   // NOLINTNEXTLINE(*-implicit-bool-conversion)
-   const SIMD_8x32 CTR1 = SIMD_8x32(0, C < 1, C < 2, C < 3, C < 4, C < 5, C < 6, C < 7);
+   const SIMD_8x32 CTR_LO = SIMD_8x32::splat(state[8]) + SIMD_8x32(0, 1, 2, 3, 4, 5, 6, 7);
+   // Carry into the high counter word for lanes whose low word wrapped
+   const SIMD_8x32 CTR_HI = SIMD_8x32::splat(state[9]) - CTR_LO.unsigned_lt(SIMD_8x32::splat(state[8]));
 
    SIMD_8x32 R00 = SIMD_8x32::splat(state[0]);
    SIMD_8x32 R01 = SIMD_8x32::splat(state[1]);
@@ -30,8 +29,8 @@ void BOTAN_FN_ISA_AVX2 Salsa20::salsa20_avx2_x8(uint8_t output[64 * 8], uint32_t
    SIMD_8x32 R05 = SIMD_8x32::splat(state[5]);
    SIMD_8x32 R06 = SIMD_8x32::splat(state[6]);
    SIMD_8x32 R07 = SIMD_8x32::splat(state[7]);
-   SIMD_8x32 R08 = SIMD_8x32::splat(state[8]) + CTR0;
-   SIMD_8x32 R09 = SIMD_8x32::splat(state[9]) + CTR1;
+   SIMD_8x32 R08 = CTR_LO;
+   SIMD_8x32 R09 = CTR_HI;
    SIMD_8x32 R10 = SIMD_8x32::splat(state[10]);
    SIMD_8x32 R11 = SIMD_8x32::splat(state[11]);
    SIMD_8x32 R12 = SIMD_8x32::splat(state[12]);
@@ -89,8 +88,8 @@ void BOTAN_FN_ISA_AVX2 Salsa20::salsa20_avx2_x8(uint8_t output[64 * 8], uint32_t
    R05 += SIMD_8x32::splat(state[5]);
    R06 += SIMD_8x32::splat(state[6]);
    R07 += SIMD_8x32::splat(state[7]);
-   R08 += SIMD_8x32::splat(state[8]) + CTR0;
-   R09 += SIMD_8x32::splat(state[9]) + CTR1;
+   R08 += CTR_LO;
+   R09 += CTR_HI;
    R10 += SIMD_8x32::splat(state[10]);
    R11 += SIMD_8x32::splat(state[11]);
    R12 += SIMD_8x32::splat(state[12]);
