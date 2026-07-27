@@ -308,6 +308,7 @@ void Channel_Impl_13::to_peer(std::span<const uint8_t> data) {
 void Channel_Impl_13::send_alert(const Alert& alert) {
    if(alert.is_valid() && m_can_write) {
       try {
+         maybe_handle_compatibility_mode(Compat_Mode_Situation::BeforeSendingAlert);
          send_record(Record_Type::Alert, alert.serialize());
       } catch(...) { /* swallow it */
       }
@@ -354,7 +355,15 @@ void Channel_Impl_13::send_record(Record_Type type, const std::vector<uint8_t>& 
    BOTAN_STATE_CHECK(!is_downgrading());
    BOTAN_STATE_CHECK(m_can_write);
 
-   auto to_write = m_record_layer.prepare_records(type, record, m_cipher_state.get());
+   // RFC 9846 5.
+   //    An implementation which [...] receives a protected change_cipher_spec
+   //    record MUST abort the handshake [...].
+   //
+   // I.e. Change Cipher Spec records must always be sent unprotected, even if
+   // the cipher state is already set up for handshake message encryption.
+   auto* cipher_state = (type != Record_Type::ChangeCipherSpec) ? m_cipher_state.get() : nullptr;
+
+   auto to_write = m_record_layer.prepare_records(type, record, cipher_state);
 
    // After the initial handshake message is sent, the record layer must
    // adhere to a more strict record specification. Note that for the
@@ -363,14 +372,6 @@ void Channel_Impl_13::send_record(Record_Type type, const std::vector<uint8_t>& 
    if(!m_first_message_sent && type == Record_Type::Handshake) {
       m_record_layer.disable_sending_compat_mode();
       m_first_message_sent = true;
-   }
-
-   // The dummy CCS must not be prepended if the following record is
-   // an unprotected Alert record.
-   if(prepend_ccs() && (m_cipher_state || type != Record_Type::Alert)) {
-      std::array<uint8_t, 1> ccs_content = {0x01};
-      const auto ccs = m_record_layer.prepare_records(Record_Type::ChangeCipherSpec, ccs_content, m_cipher_state.get());
-      to_write = concat(ccs, to_write);
    }
 
    callbacks().tls_emit_data(to_write);

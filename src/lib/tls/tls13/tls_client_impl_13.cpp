@@ -63,15 +63,7 @@ Client_Impl_13::Client_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
       preserve_client_hello(msg);
    }
 
-   // RFC 8446 Appendix D.4
-   //    If not offering early data, the client sends a dummy change_cipher_spec
-   //    record [...] immediately before its second flight. This may either be before
-   //    its second ClientHello or before its encrypted handshake flight.
-   //
-   // TODO: don't schedule ccs here when early data is used
-   if(policy->tls_13_middlebox_compatibility_mode()) {
-      m_handshake->should_send_ccs = true;
-   }
+   maybe_handle_compatibility_mode(Compat_Mode_Situation::AfterSendingFirstClientHello);
 
    m_handshake->transitions.set_expected_next({Handshake_Type::ServerHello, Handshake_Type::HelloRetryRequest});
 }
@@ -395,6 +387,7 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr) {
 
    callbacks().tls_examine_extensions(hrr.extensions(), Connection_Side::Server, Handshake_Type::HelloRetryRequest);
 
+   maybe_handle_compatibility_mode(Compat_Mode_Situation::BeforeSendingSecondClientHello);
    send_handshake_message(std::reference_wrapper(ch));
 
    // RFC 8446 4.1.4
@@ -642,6 +635,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
    // send client finished handshake message (still using handshake traffic secrets)
    flight.add(m_handshake->state.sending(Finished_13(m_cipher_state.get(), m_transcript_hash.current())));
 
+   maybe_handle_compatibility_mode(Compat_Mode_Situation::BeforeSendingEncryptedClientFlight);
    flight.send();
 
    // derives the sending application traffic secrets
@@ -774,8 +768,65 @@ std::optional<std::string> Client_Impl_13::external_psk_identity() const {
    return std::nullopt;
 }
 
-bool Client_Impl_13::prepend_ccs() {
-   return m_handshake && std::exchange(m_handshake->should_send_ccs, false);
+void Client_Impl_13::maybe_handle_compatibility_mode(Compat_Mode_Situation situation) {
+   // RFC 9846 E.4
+   //    This "compatibility mode" is partially negotiated: the client can opt
+   //    [in] or not [...].
+   if(!policy().tls_13_middlebox_compatibility_mode()) {
+      return;
+   }
+
+   // RFC 9846 5.
+   //    An implementation [...] which receives a protected change_cipher_spec
+   //    record MUST abort the handshake with an "unexpected_message" alert.
+   if(m_handshake == nullptr) {
+      return;
+   }
+
+   switch(situation) {
+      case Compat_Mode_Situation::AfterSendingFirstClientHello:
+         // RFC 9846 E.4
+         //    If offering early data, the record is placed immediately after
+         //    the first ClientHello.
+         //
+         // TODO: Implement early data support
+         break;
+
+      case Compat_Mode_Situation::BeforeSendingSecondClientHello:
+         // RFC 9846 E.4
+         //    [...] the client sends a dummy change_cipher_spec record [...]
+         //    immediately before its second flight. This may either be before
+         //    its second ClientHello [...].
+         BOTAN_ASSERT_NOMSG(m_handshake->state.has_hello_retry_request());
+         send_dummy_change_cipher_spec();
+         break;
+
+      case Compat_Mode_Situation::BeforeSendingEncryptedClientFlight:
+         // RFC 9846 E.4
+         //    [...] or before its encrypted handshake flight.
+         BOTAN_ASSERT_NOMSG(m_handshake->state.has_server_finished());
+         if(!m_handshake->state.has_hello_retry_request()) {
+            send_dummy_change_cipher_spec();
+         }
+         break;
+
+      case Compat_Mode_Situation::BeforeSendingAlert:
+         // RFC 9846 E.4
+         //    [...] or before its encrypted handshake flight.
+         //
+         // Note that an encrypted alert message also counts as an encrypted
+         // handshake flight, so we also send a dummy CCS in that case. Except
+         // if we did receive a HelloRetryRequest, in which case we already sent
+         // a dummy CCS before the second ClientHello.
+         if(m_cipher_state != nullptr && !m_handshake->state.has_hello_retry_request()) {
+            send_dummy_change_cipher_spec();
+         }
+         break;
+
+      case Compat_Mode_Situation::AfterSendingFirstServerHello:
+      case Compat_Mode_Situation::AfterSendingHelloRetryRequest:
+         BOTAN_ASSERT_UNREACHABLE();  // These situations occur on the server side.
+   }
 }
 
 void Client_Impl_13::maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const {

@@ -222,14 +222,16 @@ class Channel_Impl_13 : public Channel_Impl,
       virtual void process_post_handshake_msg(Post_Handshake_Message_13 msg) = 0;
       virtual void process_dummy_change_cipher_spec() = 0;
 
-      /**
-       * @return whether a change cipher spec record should be prepended _now_
-       *
-       * This method can be used by subclasses to indicate that send_record
-       * should prepend a CCS before the actual record. This is useful for
-       * middlebox compatibility mode. See RFC 8446 D.4.
-       */
-      virtual bool prepend_ccs() { return false; }
+      enum class Compat_Mode_Situation : uint8_t {
+         BeforeSendingAlert,
+         AfterSendingFirstClientHello,
+         BeforeSendingSecondClientHello,
+         BeforeSendingEncryptedClientFlight,
+         AfterSendingFirstServerHello,
+         AfterSendingHelloRetryRequest,
+      };
+
+      virtual void maybe_handle_compatibility_mode(Compat_Mode_Situation situation) = 0;
 
       void handle(const Key_Update& key_update);
 

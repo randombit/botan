@@ -85,7 +85,7 @@ class Client_Impl_13 final : public Channel_Impl_13 {
       void process_dummy_change_cipher_spec() override;
 
       void maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const override;
-      bool prepend_ccs() override;
+      void maybe_handle_compatibility_mode(Compat_Mode_Situation situation) override;
 
       using Channel_Impl_13::handle;
       void handle(const Server_Hello_12_Shim& server_hello_msg);
@@ -107,7 +107,6 @@ class Client_Impl_13 final : public Channel_Impl_13 {
       struct Pending_Handshake {
             Client_Handshake_State_13 state;
             Handshake_Transitions transitions;
-            bool should_send_ccs = false;
             std::optional<Session_with_Handle> resumed_session;
             std::optional<std::string> psk_identity;
       };
