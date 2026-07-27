@@ -22,8 +22,17 @@ namespace Botan {
 */
 class BOTAN_PUBLIC_API(3, 12) IPv4Address final {
    public:
+      /**
+      * Create an address from its integer value
+      * @param ip the address as a 32-bit big-endian integer
+      */
       explicit IPv4Address(uint32_t ip) : m_ip(ip) {}
 
+      /**
+      * Convert a dotted-decimal string to an IPv4Address
+      * @param str the address to parse
+      * @return the parsed address, or nullopt if str is not a valid IPv4 address
+      */
       static std::optional<IPv4Address> from_string(std::string_view str);
 
       /**
@@ -32,10 +41,23 @@ class BOTAN_PUBLIC_API(3, 12) IPv4Address final {
       */
       static IPv4Address netmask(size_t bits);
 
+      /**
+      * Return the netmask matching a single host
+      * @return an address with all 32 bits set
+      */
       static IPv4Address host_mask() { return netmask(32); }
 
+      /**
+      * Bitwise AND of two addresses, typically used to apply a netmask
+      * @param other the address to AND with
+      * @return the bitwise AND of the two addresses
+      */
       IPv4Address operator&(const IPv4Address& other) const { return IPv4Address(m_ip & other.m_ip); }
 
+      /**
+      * Order two addresses numerically
+      * @return the ordering of this address relative to the other
+      */
       auto operator<=>(const IPv4Address&) const = default;
 
       /// The address as a 32-bit big-endian integer

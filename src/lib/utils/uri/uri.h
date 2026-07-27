@@ -35,7 +35,7 @@ class BOTAN_PUBLIC_API(3, 13) URI final {
             */
             using Host = std::variant<DNSName, IPv4Address, IPv6Address>;
 
-            /*
+            /**
             * Tag for the alternative held by `Host`.
             */
             enum class HostKind : uint8_t {
@@ -86,8 +86,18 @@ class BOTAN_PUBLIC_API(3, 13) URI final {
             */
             const std::optional<std::string>& userinfo() const { return m_userinfo; }
 
+            /**
+            * Order two authorities
+            * @param other the authority to compare against
+            * @return the ordering of this authority relative to other
+            */
             std::strong_ordering operator<=>(const Authority& other) const;
 
+            /**
+            * Compare two authorities
+            * @param other the authority to compare against
+            * @return true if the two authorities are equal
+            */
             bool operator==(const Authority& other) const;
 
          private:
@@ -100,7 +110,10 @@ class BOTAN_PUBLIC_API(3, 13) URI final {
             std::optional<uint16_t> m_port;
       };
 
+      /// A validated DNS name, or a literal IPv4 or IPv6 address
       using Host = Authority::Host;
+
+      /// Tag for the alternative held by `Host`
       using HostKind = Authority::HostKind;
 
       /**
@@ -159,8 +172,18 @@ class BOTAN_PUBLIC_API(3, 13) URI final {
       */
       const std::string& original_input() const { return m_raw; }
 
+      /**
+      * Order two URIs
+      * @param other the URI to compare against
+      * @return the ordering of this URI relative to other
+      */
       std::strong_ordering operator<=>(const URI& other) const;
 
+      /**
+      * Compare two URIs
+      * @param other the URI to compare against
+      * @return true if the two URIs are equal
+      */
       bool operator==(const URI& other) const;
 
       /**

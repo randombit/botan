@@ -107,20 +107,33 @@ using std::uint8_t;
 * or code. They are kept only for compatibility with software
 * written against older versions.
 */
+
+/// Unsigned 8 bit integer; retained for compatibility with older versions
 using byte = std::uint8_t;
+
+/// Unsigned 16 bit integer; retained for compatibility with older versions
 using u16bit = std::uint16_t;
+
+/// Unsigned 32 bit integer; retained for compatibility with older versions
 using u32bit = std::uint32_t;
+
+/// Unsigned 64 bit integer; retained for compatibility with older versions
 using u64bit = std::uint64_t;
+
+/// Signed 32 bit integer; retained for compatibility with older versions
 using s32bit = std::int32_t;
 #endif
 
+/// True if this target has native 64 bit registers
 static constexpr bool HasNative64BitRegisters = sizeof(void*) >= 8;
 
+/// The native machine word, used as the limb type for multiprecision integers
 using word = std::conditional_t<HasNative64BitRegisters, std::uint64_t, uint32_t>;
 
 #if defined(__SIZEOF_INT128__)
    #define BOTAN_TARGET_HAS_NATIVE_UINT128
 
+/// Unsigned 128 bit integer, only available if the compiler supports it
 // GCC complains if this isn't marked with __extension__
 __extension__ typedef unsigned __int128 uint128_t;
 #endif

@@ -18,6 +18,9 @@ namespace Botan {
 
 class RandomNumberGenerator;
 
+/**
+* A universally unique identifier (UUID)
+*/
 class BOTAN_UNSTABLE_API UUID final {
    public:
       /**
@@ -45,12 +48,30 @@ class BOTAN_UNSTABLE_API UUID final {
       */
       std::string to_string() const;
 
+      /**
+      * Access the raw bytes of the UUID
+      * @return the 16 byte binary value, or an empty vector if uninitialized
+      */
       const std::vector<uint8_t>& binary_value() const { return m_uuid; }
 
+      /**
+      * Compare two UUIDs for equality
+      * @param other the UUID to compare against
+      * @return true if the two UUIDs are equal
+      */
       bool operator==(const UUID& other) const { return m_uuid == other.m_uuid; }
 
+      /**
+      * Compare two UUIDs for inequality
+      * @param other the UUID to compare against
+      * @return true if the two UUIDs are not equal
+      */
       bool operator!=(const UUID& other) const { return !(*this == other); }
 
+      /**
+      * Test whether this UUID was initialized
+      * @return true if this object holds a 16 byte UUID
+      */
       bool is_valid() const { return m_uuid.size() == 16; }
 
    private:
