@@ -479,7 +479,7 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
       // Unencrypted initial handshake
       recbuf.assign(readbuf.begin() + DTLS_HEADER_SIZE, readbuf.begin() + DTLS_HEADER_SIZE + record_size);
       readbuf.clear();
-      if(sequence_numbers != nullptr) {
+      if(sequence_numbers != nullptr && sequence_numbers->current_read_epoch() == 0) {
          sequence_numbers->read_accept(sequence);
       }
       return Record_Header(sequence, version, type);

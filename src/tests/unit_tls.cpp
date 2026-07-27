@@ -1731,6 +1731,25 @@ class DTLS_Core_Regression_Tests final : public Test {
          return record;
       }
 
+      static std::vector<uint8_t> unprotected_dtls_record(Botan::TLS::Record_Type type,
+                                                          uint64_t sequence,
+                                                          std::span<const uint8_t> payload) {
+         std::vector<uint8_t> record;
+         record.reserve(13 + payload.size());
+
+         record.push_back(static_cast<uint8_t>(type));
+         record.push_back(0xFE);
+         record.push_back(0xFD);
+         for(size_t i = 0; i != 8; ++i) {
+            record.push_back(static_cast<uint8_t>(sequence >> (56 - 8 * i)));
+         }
+         record.push_back(static_cast<uint8_t>(payload.size() >> 8));
+         record.push_back(static_cast<uint8_t>(payload.size()));
+         record.insert(record.end(), payload.begin(), payload.end());
+
+         return record;
+      }
+
       template <typename Predicate>
       static bool wait_until(Predicate predicate) {
          // DTLS timeouts are clock based. Poll briefly instead of sleeping for
@@ -1743,9 +1762,9 @@ class DTLS_Core_Regression_Tests final : public Test {
                return true;
             }
 
-   #if defined(BOTAN_TARGET_OS_HAS_THREADS)
+      #if defined(BOTAN_TARGET_OS_HAS_THREADS)
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-   #endif
+      #endif
          }
 
          return predicate();
@@ -2611,6 +2630,70 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      static Test::Result test_spoofed_epoch0_records_do_not_abort_or_poison_retransmission() {
+         Test::Result result("DTLS spoofed epoch 0 records do not abort or poison retransmission");
+
+         auto rng = Test::new_shared_rng("dtls-core-spoofed-epoch0");
+         auto policy = std::make_shared<Dtls_PSK_Policy>();
+         auto creds = std::make_shared<Dtls_PSK_Credentials>();
+         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+
+         std::vector<uint8_t> c2s;
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> client_recv;
+         std::vector<uint8_t> server_recv;
+
+         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
+         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
+
+         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
+         Botan::TLS::Client client(client_callbacks,
+                                   client_sessions,
+                                   creds,
+                                   policy,
+                                   rng,
+                                   Botan::TLS::Server_Information("localhost"),
+                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         deliver(result, "client hello 1", c2s, server);
+         deliver(result, "hello verify request", s2c, client);
+         deliver(result, "client hello 2", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+         deliver(result, "client final flight", c2s, server);
+
+         result.test_is_true("server became active", server.is_active());
+         result.test_is_false("client is waiting for server final flight", client.is_active());
+         s2c.clear();  // simulate losing the server's final flight
+
+         const std::array<uint8_t, 2> fatal_alert = {2, 40};
+         const auto spoofed_alert =
+            unprotected_dtls_record(Botan::TLS::Record_Type::Alert, 0x0000FFFFFFFFFFFF, fatal_alert);
+         result.test_no_throw("spoofed epoch 0 fatal alert is ignored",
+                              [&] { server.received_data(spoofed_alert.data(), spoofed_alert.size()); });
+         result.test_is_true("server remains active after spoofed alert", server.is_active());
+         result.test_is_true("server does not respond to spoofed alert", s2c.empty());
+
+         std::array<uint8_t, 12> invalid_handshake = {};
+         invalid_handshake[0] = 0xFF;
+         const auto spoofed_handshake =
+            unprotected_dtls_record(Botan::TLS::Record_Type::Handshake, 0x0000FFFFFFFFFFFE, invalid_handshake);
+         result.test_no_throw("invalid epoch 0 handshake is ignored",
+                              [&] { server.received_data(spoofed_handshake.data(), spoofed_handshake.size()); });
+         result.test_is_true("server remains active after invalid handshake", server.is_active());
+         result.test_is_true("server does not respond to invalid handshake", s2c.empty());
+
+         wait_for_timeout_retransmit(result, client, c2s);
+         deliver(result, "genuine client final flight retransmit", c2s, server);
+         result.test_is_true("server retransmits final flight", !s2c.empty());
+         deliver(result, "retransmitted server final flight", s2c, client);
+
+         result.test_is_true("client became active", client.is_active());
+         result.test_is_true("server remains active", server.is_active());
+
+         return result;
+      }
+
       static Test::Result test_resumed_final_flight_and_app_data_in_one_receive() {
          Test::Result result("DTLS resumed final flight and app data in one receive");
 
@@ -2744,6 +2827,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_epoch0_client_hello_retransmit_while_restart_pending(),
                  test_reordered_retransmitted_final_flight(),
                  test_empty_old_handshake_fragment_does_not_retransmit(),
+                 test_spoofed_epoch0_records_do_not_abort_or_poison_retransmission(),
                  test_retransmitted_final_flight_then_application_data(false),
                  test_retransmitted_final_flight_then_application_data(true),
                  test_resumed_client_final_flight_retransmits_after_activation(),

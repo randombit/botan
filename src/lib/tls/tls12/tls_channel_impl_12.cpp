@@ -366,7 +366,22 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
             return 0;
          }
 
+         const bool old_unprotected_record = m_is_datagram && record.epoch() == 0 && m_active_state.has_value() &&
+                                             sequence_numbers().current_read_epoch() > 0;
+
+         // Once encrypted traffic is expected, epoch-zero records are
+         // unauthenticated. Only handshake records can be useful as part of a
+         // retransmitted flight or an explicitly allowed association restart.
+         if(old_unprotected_record && record.type() != Record_Type::Handshake &&
+            record.type() != Record_Type::ChangeCipherSpec) {
+            continue;
+         }
+
          if(m_record_buf.size() > MAX_PLAINTEXT_SIZE) {
+            if(old_unprotected_record) {
+               continue;
+            }
+
             throw TLS_Exception(Alert::RecordOverflow, "TLS plaintext record is larger than allowed maximum");
          }
 
@@ -380,7 +395,7 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
             initial_handshake_message = (type == Handshake_Type::ClientHello);
          }
 
-         if(record.type() != Record_Type::Alert) {
+         if(record.type() != Record_Type::Alert && !old_unprotected_record) {
             if(initial_record) {
                // For initial records just check for basic sanity
                if(record.version().major_version() != 3 && record.version().major_version() != 0xFE) {
@@ -443,8 +458,16 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
    const auto process_retransmitted_record = [&] {
       BOTAN_ASSERT(m_active_state.has_value(), "Have active DTLS association for retransmission");
       BOTAN_ASSERT_NONNULL(m_active_state->dtls_handshake_io());
-      m_active_state->dtls_handshake_io()->add_retransmitted_record(
-         record.data(), record.size(), record_type, record_sequence);
+      try {
+         m_active_state->dtls_handshake_io()->add_retransmitted_record(
+            record.data(), record.size(), record_type, record_sequence);
+      } catch(...) {
+         // Epoch-zero records are unauthenticated and may be spoofed. Invalid
+         // retransmissions must not tear down an established association.
+         if((record_sequence >> 48) > 0) {
+            throw;
+         }
+      }
    };
 
    if(!m_pending_state) {
@@ -462,8 +485,6 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
 
       if(m_is_datagram && !epoch0_restart) {
          if(m_sequence_numbers) {
-            sequence_numbers().read_accept(record_sequence);
-
             const uint16_t epoch = record_sequence >> 48;
 
             const uint16_t current_epoch = sequence_numbers().current_read_epoch();
