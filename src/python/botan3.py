@@ -35,13 +35,16 @@ from enum import IntEnum
 # 3.12.0 - EcScalar/EcPoint, DRBG
 # 3.11.0 - XOF API
 # 3.10.0 - introduced botan_pubkey_load_ec*_sec1()
-BOTAN_FFI_VERSION = 20260811
+BOTAN_FFI_VERSION = 20260811  #: The minimum FFI API version this module requires of the library.
 
 
 class BotanException(Exception):
     """Base exception for all exceptions raised from this module"""
 
     def __init__(self, message, rc=0):
+        """Create an exception with ``message``. If ``rc`` is a nonzero library error
+        code, the description of that error plus the library's most recent exception
+        message are appended."""
 
         self.__rc = rc
 
@@ -58,6 +61,7 @@ class BotanException(Exception):
             super().__init__(formatted_msg)
 
     def error_code(self) -> int:
+        """Returns the library error code associated with this exception, or zero if there is none"""
         return self.__rc
 
 #
@@ -95,11 +99,11 @@ def _load_botan_dll(expected_version):
 
     raise BotanException("Could not find a usable Botan shared object library")
 
-VIEW_BIN_CALLBACK = CFUNCTYPE(c_int, c_void_p, POINTER(c_char), c_size_t)
-VIEW_STR_CALLBACK = CFUNCTYPE(c_int, c_void_p, c_char_p, c_size_t)
-RNG_GET_CALLBACK = CFUNCTYPE(c_int, c_void_p, POINTER(c_uint8), c_size_t)
-RNG_ADD_ENTROPY_CALLBACK = CFUNCTYPE(c_int, c_void_p, POINTER(c_uint8), c_size_t)
-RNG_DESTROY_CALLBACK = CFUNCTYPE(None, c_void_p)
+_VIEW_BIN_CALLBACK = CFUNCTYPE(c_int, c_void_p, POINTER(c_char), c_size_t)
+_VIEW_STR_CALLBACK = CFUNCTYPE(c_int, c_void_p, c_char_p, c_size_t)
+_RNG_GET_CALLBACK = CFUNCTYPE(c_int, c_void_p, POINTER(c_uint8), c_size_t)
+_RNG_ADD_ENTROPY_CALLBACK = CFUNCTYPE(c_int, c_void_p, POINTER(c_uint8), c_size_t)
+_RNG_DESTROY_CALLBACK = CFUNCTYPE(None, c_void_p)
 
 def _errcheck(rc, fn, _args):
     # This errcheck should only be used for int-returning functions
@@ -154,7 +158,7 @@ def _set_prototypes(dll):
 
     #  RNG
     ffi_api(dll.botan_rng_init, [c_void_p, c_char_p])
-    ffi_api(dll.botan_rng_init_custom, [c_void_p, c_char_p, c_void_p, RNG_GET_CALLBACK, RNG_ADD_ENTROPY_CALLBACK, RNG_DESTROY_CALLBACK])
+    ffi_api(dll.botan_rng_init_custom, [c_void_p, c_char_p, c_void_p, _RNG_GET_CALLBACK, _RNG_ADD_ENTROPY_CALLBACK, _RNG_DESTROY_CALLBACK])
     ffi_api(dll.botan_rng_get, [c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_rng_reseed, [c_void_p, c_size_t])
     ffi_api(dll.botan_rng_reseed_from_rng, [c_void_p, c_void_p, c_size_t])
@@ -251,9 +255,9 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_mp_init, [c_void_p])
     ffi_api(dll.botan_mp_destroy, [c_void_p])
     ffi_api(dll.botan_mp_to_hex, [c_void_p, c_char_p])
-    ffi_api(dll.botan_mp_view_hex, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_mp_view_hex, [c_void_p, c_void_p, _VIEW_STR_CALLBACK])
     ffi_api(dll.botan_mp_to_str, [c_void_p, c_uint8, c_char_p, POINTER(c_size_t)])
-    ffi_api(dll.botan_mp_view_str, [c_void_p, c_uint8, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_mp_view_str, [c_void_p, c_uint8, c_void_p, _VIEW_STR_CALLBACK])
     ffi_api(dll.botan_mp_clear, [c_void_p])
     ffi_api(dll.botan_mp_set_from_int, [c_void_p, c_int])
     ffi_api(dll.botan_mp_set_from_mp, [c_void_p, c_void_p])
@@ -300,8 +304,8 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_oid_destroy, [c_void_p])
     ffi_api(dll.botan_oid_from_string, [c_void_p, c_char_p])
     ffi_api(dll.botan_oid_register, [c_void_p, c_char_p])
-    ffi_api(dll.botan_oid_view_string, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
-    ffi_api(dll.botan_oid_view_name, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_oid_view_string, [c_void_p, c_void_p, _VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_oid_view_name, [c_void_p, c_void_p, _VIEW_STR_CALLBACK])
     ffi_api(dll.botan_oid_equal, [c_void_p, c_void_p])
     ffi_api(dll.botan_oid_cmp, [POINTER(c_int), c_void_p, c_void_p])
 
@@ -316,8 +320,8 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_ec_group_from_oid, [c_void_p, c_void_p])
     ffi_api(dll.botan_ec_group_from_name, [c_void_p, c_char_p])
     ffi_api(dll.botan_ec_group_unregister, [c_void_p])
-    ffi_api(dll.botan_ec_group_view_der, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
-    ffi_api(dll.botan_ec_group_view_pem, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_ec_group_view_der, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_ec_group_view_pem, [c_void_p, c_void_p, _VIEW_STR_CALLBACK])
     ffi_api(dll.botan_ec_group_get_curve_oid, [c_void_p, c_void_p])
     ffi_api(dll.botan_ec_group_get_p, [c_void_p, c_void_p])
     ffi_api(dll.botan_ec_group_get_a, [c_void_p, c_void_p])
@@ -337,11 +341,11 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_ec_point_generator, [c_void_p, c_void_p])
     ffi_api(dll.botan_ec_point_from_xy, [c_void_p, c_void_p, c_void_p, c_void_p])
     ffi_api(dll.botan_ec_point_from_bytes, [c_void_p, c_void_p, c_char_p, c_size_t])
-    ffi_api(dll.botan_ec_point_view_x_bytes, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
-    ffi_api(dll.botan_ec_point_view_y_bytes, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
-    ffi_api(dll.botan_ec_point_view_xy_bytes, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
-    ffi_api(dll.botan_ec_point_view_uncompressed, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
-    ffi_api(dll.botan_ec_point_view_compressed, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_ec_point_view_x_bytes, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_ec_point_view_y_bytes, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_ec_point_view_xy_bytes, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_ec_point_view_uncompressed, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_ec_point_view_compressed, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_ec_point_is_identity, [c_void_p])
     ffi_api(dll.botan_ec_point_equal, [c_void_p, c_void_p])
     ffi_api(dll.botan_ec_point_negate, [c_void_p, c_void_p])
@@ -363,9 +367,9 @@ def _set_prototypes(dll):
             [c_void_p, c_void_p, c_char_p, c_size_t, c_char_p])
     ffi_api(dll.botan_privkey_destroy, [c_void_p])
 
-    ffi_api(dll.botan_privkey_view_der, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
-    ffi_api(dll.botan_privkey_view_pem, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
-    ffi_api(dll.botan_privkey_view_raw, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_privkey_view_der, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_privkey_view_pem, [c_void_p, c_void_p, _VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_privkey_view_raw, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
 
     ffi_api(dll.botan_privkey_algo_name, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_privkey_export_encrypted,
@@ -377,21 +381,21 @@ def _set_prototypes(dll):
             [c_void_p, c_char_p, POINTER(c_size_t), c_void_p, c_char_p, c_size_t, c_char_p, c_char_p, c_uint32])
 
     ffi_api(dll.botan_privkey_view_encrypted_der,
-            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, VIEW_BIN_CALLBACK])
+            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, _VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_privkey_view_encrypted_pem,
-            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, VIEW_STR_CALLBACK])
+            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, _VIEW_STR_CALLBACK])
 
     ffi_api(dll.botan_privkey_view_encrypted_der_timed,
-            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, VIEW_BIN_CALLBACK])
+            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, _VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_privkey_view_encrypted_pem_timed,
-            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, VIEW_STR_CALLBACK])
+            [c_void_p, c_void_p, c_char_p, c_char_p, c_char_p, c_size_t, c_void_p, _VIEW_STR_CALLBACK])
 
     ffi_api(dll.botan_privkey_export_pubkey, [c_void_p, c_void_p])
     ffi_api(dll.botan_pubkey_load, [c_void_p, c_char_p, c_size_t])
 
-    ffi_api(dll.botan_pubkey_view_der, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
-    ffi_api(dll.botan_pubkey_view_pem, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
-    ffi_api(dll.botan_pubkey_view_raw, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_pubkey_view_der, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_pubkey_view_pem, [c_void_p, c_void_p, _VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_pubkey_view_raw, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
 
     ffi_api(dll.botan_pubkey_algo_name, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_pubkey_check_key, [c_void_p, c_void_p, c_uint32], [-1])
@@ -454,8 +458,8 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pubkey_load_slh_dsa, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_privkey_load_kyber, [c_void_p, c_char_p, c_int])
     ffi_api(dll.botan_pubkey_load_kyber, [c_void_p, c_char_p, c_int])
-    ffi_api(dll.botan_privkey_view_kyber_raw_key, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
-    ffi_api(dll.botan_pubkey_view_kyber_raw_key, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_privkey_view_kyber_raw_key, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_pubkey_view_kyber_raw_key, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_privkey_load_ml_kem, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_pubkey_load_ml_kem, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_privkey_load_frodokem, [c_void_p, c_void_p, c_int, c_char_p])
@@ -476,7 +480,7 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pubkey_sm2_compute_za,
             [c_char_p, POINTER(c_size_t), c_char_p, c_char_p, c_void_p])
     ffi_api(dll.botan_pubkey_view_ec_public_point,
-            [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+            [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_pubkey_ecc_key_used_explicit_encoding, [c_void_p], [-32])
 
     #  PK
@@ -501,7 +505,7 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pk_op_verify_finish, [c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_pk_op_key_agreement_create, [c_void_p, c_void_p, c_char_p, c_uint32])
     ffi_api(dll.botan_pk_op_key_agreement_destroy, [c_void_p])
-    ffi_api(dll.botan_pk_op_key_agreement_view_public, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_pk_op_key_agreement_view_public, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
 
     ffi_api(dll.botan_pk_op_key_agreement_size, [c_void_p, POINTER(c_size_t)])
     ffi_api(dll.botan_pk_op_key_agreement,
@@ -540,13 +544,13 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_cert_get_serial_number, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_get_authority_key_id, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_get_subject_key_id, [c_void_p, c_char_p, POINTER(c_size_t)])
-    ffi_api(dll.botan_x509_cert_view_public_key_bits, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_x509_cert_view_public_key_bits, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_x509_cert_get_public_key, [c_void_p, c_void_p])
     ffi_api(dll.botan_x509_cert_get_issuer_dn,
             [c_void_p, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_get_subject_dn,
             [c_void_p, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
-    ffi_api(dll.botan_x509_cert_view_as_string, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_x509_cert_view_as_string, [c_void_p, c_void_p, _VIEW_STR_CALLBACK])
     ffi_api(dll.botan_x509_cert_allowed_usage, [c_void_p, c_uint])
     ffi_api(dll.botan_x509_cert_hostname_match, [c_void_p, c_char_p], [-1])
     ffi_api(dll.botan_x509_cert_verify,
@@ -583,7 +587,7 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_crl_entry_reason, [c_void_p, POINTER(c_int)])
     ffi_api(dll.botan_x509_crl_entry_revocation_date, [c_void_p, POINTER(c_uint64)])
     ffi_api(dll.botan_x509_crl_entry_serial_number, [c_void_p, c_void_p])
-    ffi_api(dll.botan_x509_crl_entry_view_serial_number, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_x509_crl_entry_view_serial_number, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_x509_crl_entry_destroy, [c_void_p])
     ffi_api(dll.botan_x509_cert_verify_with_crl,
             [POINTER(c_int), c_void_p, c_void_p, c_size_t, c_void_p, c_size_t, c_void_p, c_size_t, c_char_p, c_size_t, c_char_p, c_uint64])
@@ -708,7 +712,7 @@ def _call_fn_viewing_vec(fn) -> bytes:
     # the C call) cannot clobber each other's exported data.
     output = []
 
-    @VIEW_BIN_CALLBACK
+    @_VIEW_BIN_CALLBACK
     def viewer(_ctx, buf_val, buf_len):
         output.append(buf_val[0:buf_len])
         return 0
@@ -721,7 +725,7 @@ def _call_fn_viewing_vec(fn) -> bytes:
 def _call_fn_viewing_str(fn) -> str:
     output = []
 
-    @VIEW_STR_CALLBACK
+    @_VIEW_STR_CALLBACK
     def viewer(_ctx, str_val, _str_len):
         output.append(str_val)
         return 0
@@ -772,6 +776,7 @@ def version_patch() -> int:
     return int(_DLL.botan_version_patch())
 
 def ffi_api_version() -> int:
+    """Returns the version of the FFI API provided by the library"""
     return int(_DLL.botan_ffi_api_version())
 
 def version_string() -> str:
@@ -782,6 +787,9 @@ def version_string() -> str:
 # Utilities
 #
 def const_time_compare(x: str | bytes, y: str | bytes) -> bool:
+    """Compare two strings or byte vectors, returning True if they are equal.
+    The comparison of the contents runs in constant time; unequal lengths are
+    rejected immediately."""
     xbits = _ctype_bits(x)
     ybits = _ctype_bits(y)
     len_x = len(xbits)
@@ -799,7 +807,10 @@ MPILike = Union[str, "MPI", Any, None]  #: Alias for parameters that get turned 
 #
 
 class TPM2Object:
+    """Base class for objects that own a handle to a TPM 2.0 resource"""
+
     def __init__(self, obj: c_void_p, destroyer: Callable[[c_void_p], None]):
+        """Take ownership of ``obj``, invoking ``destroyer`` on it during destruction"""
         self.__obj = obj
         self.__destroyer = destroyer
 
@@ -807,7 +818,7 @@ class TPM2Object:
         if hasattr(self, '__obj') and hasattr(self, '__destroyer'):
             self.__destroyer(self.__obj)
 
-    def handle_(self):
+    def _handle(self):
         return self.__obj
 
 class TPM2Context(TPM2Object):
@@ -842,12 +853,13 @@ class TPM2Context(TPM2Object):
         # By keeping a reference to the passed-in RNG object, we make sure
         # that the underlying object lives at least as long as this context.
         self.rng_ = rng
-        _DLL.botan_tpm2_ctx_enable_crypto_backend(self.handle_(), self.rng_.handle_())
+        _DLL.botan_tpm2_ctx_enable_crypto_backend(self._handle(), self.rng_._handle())
 
 class TPM2Session(TPM2Object):
     """Basic TPM 2.0 Session object, typically users will instantiate a derived class."""
 
     def __init__(self, obj: c_void_p):
+        """Take ownership of a TPM 2.0 session handle"""
         super().__init__(obj, _DLL.botan_tpm2_session_destroy)
 
     @staticmethod
@@ -864,7 +876,7 @@ class TPM2Session(TPM2Object):
             sessions = list(args)
             while len(sessions) < 3:
                 sessions.append(None)
-            return (s.handle_() if isinstance(s, TPM2Session) else None for s in sessions)
+            return (s._handle() if isinstance(s, TPM2Session) else None for s in sessions)
         else:
             raise BotanException("session bundle arguments must be 0 to 3 TPM2Session objects")
 
@@ -874,8 +886,9 @@ class TPM2UnauthenticatedSession(TPM2Session):
     It provides basic parameter encryption between the application and the TPM."""
 
     def __init__(self, ctx: TPM2Context):
+        """Create a new unauthenticated session within the given TPM 2.0 context"""
         obj = c_void_p(0)
-        _DLL.botan_tpm2_unauthenticated_session_init(byref(obj), ctx.handle_())
+        _DLL.botan_tpm2_unauthenticated_session_init(byref(obj), ctx._handle())
         super().__init__(obj)
 
 class _CustomRngContext:
@@ -900,7 +913,7 @@ class _CustomRngContext:
         return wrapper
 
     @staticmethod
-    @RNG_GET_CALLBACK
+    @_RNG_GET_CALLBACK
     @_translate_exceptions
     def _custom_get(ctx, out, out_len):
         py_ctx = cast(ctx, POINTER(py_object)).contents.value
@@ -911,7 +924,7 @@ class _CustomRngContext:
         return 0  # success
 
     @staticmethod
-    @RNG_ADD_ENTROPY_CALLBACK
+    @_RNG_ADD_ENTROPY_CALLBACK
     @_translate_exceptions
     def _custom_add_entropy(ctx, entropy, length):
         py_ctx = cast(ctx, POINTER(py_object)).contents.value
@@ -921,7 +934,7 @@ class _CustomRngContext:
         return 0  # success
 
     @staticmethod
-    @RNG_DESTROY_CALLBACK
+    @_RNG_DESTROY_CALLBACK
     @_translate_exceptions
     def _custom_destroy(ctx):
         pass
@@ -965,6 +978,7 @@ class RandomNumberGenerator:
     """
 
     def __init__(self, rng_type: str = 'system', **kwargs):
+        """Create a RandomNumberGenerator of the named type."""
         obj = kwargs.pop("_obj", None)
         if isinstance(obj, c_void_p):
             self.__obj = obj
@@ -991,7 +1005,7 @@ class RandomNumberGenerator:
             sessions = TPM2Session.session_bundle_(kwargs.pop("tpm2_sessions", None))
             if kwargs:
                 raise BotanException("Unexpected arguments for TPM2 RNG: %s" % (", ".join(kwargs.keys())))
-            _DLL.botan_tpm2_rng_init(byref(self.__obj), ctx.handle_(), *sessions)
+            _DLL.botan_tpm2_rng_init(byref(self.__obj), ctx._handle(), *sessions)
         else:
             if kwargs:
                 raise BotanException("Unexpected arguments for RNG type %s: %s" % (rng_type, ", ".join(kwargs.keys())))
@@ -1000,7 +1014,7 @@ class RandomNumberGenerator:
     def __del__(self):
         _DLL.botan_rng_destroy(self.__obj)
 
-    def handle_(self):
+    def _handle(self):
         return self.__obj
 
     def reseed(self, bits: int = 256):
@@ -1009,7 +1023,7 @@ class RandomNumberGenerator:
 
     def reseed_from_rng(self, source_rng: RandomNumberGenerator, bits: int = 256):
         """Take bits from the source RNG and use it to seed ``self``"""
-        _DLL.botan_rng_reseed_from_rng(self.__obj, source_rng.handle_(), bits)
+        _DLL.botan_rng_reseed_from_rng(self.__obj, source_rng._handle(), bits)
 
     def add_entropy(self, seed: str | bytes):
         """Add some unpredictable seed data to the RNG"""
@@ -1044,7 +1058,13 @@ class RandomNumberGenerator:
 # Block cipher
 #
 class BlockCipher:
+    """A raw block cipher, eg 'AES-128' or 'Threefish-512'
+
+    This is a low level interface which does not provide any confidentiality
+    on its own; most applications should use ``SymmetricCipher`` instead."""
+
     def __init__(self, algo: str | c_void_p):
+        """Create a block cipher object for the named algorithm"""
 
         if isinstance(algo, c_void_p):
             self.__obj = algo
@@ -1068,9 +1088,11 @@ class BlockCipher:
         _DLL.botan_block_cipher_destroy(self.__obj)
 
     def set_key(self, key: bytes):
+        """Set the key"""
         _DLL.botan_block_cipher_set_key(self.__obj, key, len(key))
 
     def encrypt(self, pt: bytes) -> Array[c_char]:
+        """Encrypt the input, whose length must be a multiple of ``block_size()``"""
         if len(pt) % self.block_size() != 0:
             raise Exception("Invalid input must be multiple of block size")
 
@@ -1080,6 +1102,7 @@ class BlockCipher:
         return output
 
     def decrypt(self, ct: bytes) -> Array[c_char]:
+        """Decrypt the input, whose length must be a multiple of ``block_size()``"""
         if len(ct) % self.block_size() != 0:
             raise Exception("Invalid input must be multiple of block size")
 
@@ -1089,21 +1112,27 @@ class BlockCipher:
         return output
 
     def algo_name(self) -> str:
+        """Returns the name of this algorithm"""
         return _call_fn_returning_str(32, lambda b, bl: _DLL.botan_block_cipher_name(self.__obj, b, bl))
 
     def clear(self):
+        """Clear internal state including the key"""
         _DLL.botan_block_cipher_clear(self.__obj)
 
     def block_size(self) -> int:
+        """Returns the block size in bytes"""
         return self.__block_size
 
     def minimum_keylength(self) -> int:
+        """Returns the minimum key length in bytes"""
         return self.__min_keylen
 
     def maximum_keylength(self) -> int:
+        """Returns the maximum key length in bytes"""
         return self.__max_keylen
 
     def keylength_modulo(self) -> int:
+        """Returns the granularity of key lengths; any valid key length is a multiple of this value"""
         return self.__mod_keylen
 
 
@@ -1116,6 +1145,7 @@ class HashFunction:
     The ``algo`` param is a string (eg 'SHA-1', 'SHA-384', 'BLAKE2b')"""
 
     def __init__(self, algo: str | c_void_p):
+        """Create a hash function object for the named algorithm"""
         if isinstance(algo, c_void_p):
             self.__obj = algo
         else:
@@ -1130,6 +1160,7 @@ class HashFunction:
         _DLL.botan_hash_destroy(self.__obj)
 
     def copy_state(self) -> HashFunction:
+        """Returns an independent copy of this object, with the same state"""
         copy = c_void_p(0)
         _DLL.botan_hash_copy_state(byref(copy), self.__obj)
         return HashFunction(copy)
@@ -1172,6 +1203,7 @@ class XOF:
     """eXtensible Output Function (XOF). The ``algo`` param is a string (e.g 'SHAKE-256', 'Ascon-XOF128')"""
 
     def __init__(self, algo: str | c_void_p):
+        """Create a XOF object for the named algorithm"""
         if isinstance(algo, c_void_p):
             self.__obj = algo
         else:
@@ -1183,6 +1215,7 @@ class XOF:
         _DLL.botan_xof_destroy(self.__obj)
 
     def copy_state(self) -> XOF:
+        """Returns an independent copy of this object, with the same state"""
         copy = c_void_p(0)
         _DLL.botan_xof_copy_state(byref(copy), self.__obj)
         return XOF(copy)
@@ -1222,9 +1255,10 @@ class XOF:
 class MsgAuthCode:
     """Previously ``message_authentication_code``
 
-    Algo is a string (eg 'HMAC(SHA-256)', 'Poly1305', 'CMAC(AES-256)')"""
+    The constructor `algo` param is a string (eg 'HMAC(SHA-256)', 'Poly1305', 'CMAC(AES-256)')"""
 
     def __init__(self, algo: str):
+        """Create a message authentication code object for the named algorithm"""
         flags = c_uint32(0) # always zero in this API version
         self.__obj = c_void_p(0)
         _DLL.botan_mac_init(byref(self.__obj), _ctype_str(algo), flags)
@@ -1258,12 +1292,15 @@ class MsgAuthCode:
         return self.__output_length
 
     def minimum_keylength(self) -> int:
+        """Returns the minimum key length in bytes"""
         return self.__min_keylen
 
     def maximum_keylength(self) -> int:
+        """Returns the maximum key length in bytes"""
         return self.__max_keylen
 
     def keylength_modulo(self) -> int:
+        """Returns the granularity of key lengths; any valid key length is a multiple of this value"""
         return self.__mod_keylen
 
     def set_key(self, key: bytes):
@@ -1271,6 +1308,7 @@ class MsgAuthCode:
         _DLL.botan_mac_set_key(self.__obj, key, len(key))
 
     def set_nonce(self, nonce: bytes):
+        """Set the nonce. Only a few MACs, such as GMAC, take a nonce"""
         _DLL.botan_mac_set_nonce(self.__obj, nonce, len(nonce))
 
     def update(self, x: str | bytes):
@@ -1291,6 +1329,7 @@ class SymmetricCipher:
     Set ``encrypt`` to False for decryption."""
 
     def __init__(self, algo: str, encrypt: bool = True):
+        """Create a cipher object for the named algorithm, for encryption unless ``encrypt`` is False"""
 
         flags = 0 if encrypt else 1
         self.__obj = c_void_p(0)
@@ -1318,22 +1357,26 @@ class SymmetricCipher:
         return length.value
 
     def ideal_update_granularity(self) -> int:
+        """Returns a multiple of ``update_granularity()`` which is likely to provide the best performance"""
         length = c_size_t(0)
         _DLL.botan_cipher_get_ideal_update_granularity(self.__obj, byref(length))
         return length.value
 
     def key_length(self) -> tuple[int, int]:
+        """Returns a tuple of the minimum and maximum key lengths, in bytes"""
         kmin = c_size_t(0)
         kmax = c_size_t(0)
         _DLL.botan_cipher_query_keylen(self.__obj, byref(kmin), byref(kmax))
         return kmin.value, kmax.value
 
     def minimum_keylength(self) -> int:
+        """Returns the minimum key length in bytes"""
         length = c_size_t(0)
         _DLL.botan_cipher_get_keyspec(self.__obj, byref(length), None, None)
         return length.value
 
     def maximum_keylength(self) -> int:
+        """Returns the maximum key length in bytes"""
         length = c_size_t(0)
         _DLL.botan_cipher_get_keyspec(self.__obj, None, byref(length), None)
         return length.value
@@ -1355,6 +1398,8 @@ class SymmetricCipher:
         return rc == 1
 
     def reset(self):
+        """Reset the nonce and any state associated with the message processed so far,
+        retaining the key. Equivalent to ``clear()`` followed by setting the same key again."""
         _DLL.botan_cipher_reset(self.__obj)
 
     def clear(self):
@@ -1420,7 +1465,7 @@ def bcrypt(passwd: str, rng_obj: RandomNumberGenerator, work_factor=10):
     out = create_string_buffer(out_len.value)
     flags = c_uint32(0)
     _DLL.botan_bcrypt_generate(out, byref(out_len), _ctype_str(passwd),
-                               rng_obj.handle_(), c_size_t(work_factor), flags)
+                               rng_obj._handle(), c_size_t(work_factor), flags)
     b = out.raw[0:int(out_len.value)-1]
     if b[-1] == '\x00':
         b = b[:-1]
@@ -1492,16 +1537,15 @@ def scrypt(out_len: int, password: str, salt: str | bytes, n: int = 1024, r: int
 
     return out_buf.raw
 
+#
 # Argon2
 #
-# The variant param should be "Argon2i", "Argon2d", or "Argon2id"
-#
-# m specifies megabytes of memory used during processing
-# t specifies the number of passes
-# p specifies the parallelism
-#
-# returns an output of out_len bytes
 def argon2(variant: str, out_len: int, password: str, salt: str | bytes, m: int = 256, t: int = 1, p: int = 1) -> bytes:
+    """Runs the Argon2 password hashing function, returning ``out_len`` bytes
+
+    The ``variant`` should be "Argon2i", "Argon2d", or "Argon2id".
+    ``m`` specifies the memory used during processing, in kibibytes,
+    ``t`` the number of passes, and ``p`` the parallelism."""
     out_buf = create_string_buffer(out_len)
     passbits = _ctype_bits(password)
     saltbits = _ctype_bits(salt)
@@ -1534,6 +1578,8 @@ class PublicKey: # pylint: disable=invalid-name
     """Previously ``public_key``"""
 
     def __init__(self, obj: c_void_p | None = None):
+        """Create a public key object wrapping the given FFI handle, or an empty one.
+        Applications should use one of the ``load`` methods instead."""
         if not obj:
             obj = c_void_p(0)
         self.__obj = obj
@@ -1543,7 +1589,7 @@ class PublicKey: # pylint: disable=invalid-name
         """Load a public key. The value should be a PEM or DER blob."""
         pub = PublicKey()
         bits = _ctype_bits(val)
-        _DLL.botan_pubkey_load(byref(pub.handle_()), bits, len(bits))
+        _DLL.botan_pubkey_load(byref(pub._handle()), bits, len(bits))
         return pub
 
     @classmethod
@@ -1552,7 +1598,7 @@ class PublicKey: # pylint: disable=invalid-name
         pub = PublicKey()
         n = MPI(n)
         e = MPI(e)
-        _DLL.botan_pubkey_load_rsa(byref(pub.handle_()), n.handle_(), e.handle_())
+        _DLL.botan_pubkey_load_rsa(byref(pub._handle()), n._handle(), e._handle())
         return pub
 
     @classmethod
@@ -1563,7 +1609,7 @@ class PublicKey: # pylint: disable=invalid-name
         q = MPI(q)
         g = MPI(g)
         y = MPI(y)
-        _DLL.botan_pubkey_load_dsa(byref(pub.handle_()), p.handle_(), q.handle_(), g.handle_(), y.handle_())
+        _DLL.botan_pubkey_load_dsa(byref(pub._handle()), p._handle(), q._handle(), g._handle(), y._handle())
         return pub
 
     @classmethod
@@ -1573,7 +1619,7 @@ class PublicKey: # pylint: disable=invalid-name
         p = MPI(p)
         g = MPI(g)
         y = MPI(y)
-        _DLL.botan_pubkey_load_dh(byref(pub.handle_()), p.handle_(), g.handle_(), y.handle_())
+        _DLL.botan_pubkey_load_dh(byref(pub._handle()), p._handle(), g._handle(), y._handle())
         return pub
 
     @classmethod
@@ -1584,7 +1630,7 @@ class PublicKey: # pylint: disable=invalid-name
         q = MPI(q)
         g = MPI(g)
         y = MPI(y)
-        _DLL.botan_pubkey_load_elgamal(byref(pub.handle_()), p.handle_(), q.handle_(), g.handle_(), y.handle_())
+        _DLL.botan_pubkey_load_elgamal(byref(pub._handle()), p._handle(), q._handle(), g._handle(), y._handle())
         return pub
 
     @classmethod
@@ -1594,13 +1640,15 @@ class PublicKey: # pylint: disable=invalid-name
         pub = PublicKey()
         pub_x = MPI(pub_x)
         pub_y = MPI(pub_y)
-        _DLL.botan_pubkey_load_ecdsa(byref(pub.handle_()), pub_x.handle_(), pub_y.handle_(), _ctype_str(curve))
+        _DLL.botan_pubkey_load_ecdsa(byref(pub._handle()), pub_x._handle(), pub_y._handle(), _ctype_str(curve))
         return pub
 
     @classmethod
     def load_ecdsa_sec1(cls, curve: str, sec1_encoding: str | bytes) -> PublicKey:
+        """Load an ECDSA public key giving the curve as a string (like "secp256r1")
+        and the public point in SEC1 format."""
         pub = PublicKey()
-        _DLL.botan_pubkey_load_ecdsa_sec1(byref(pub.handle_()), _ctype_bits(sec1_encoding), len(sec1_encoding), _ctype_str(curve))
+        _DLL.botan_pubkey_load_ecdsa_sec1(byref(pub._handle()), _ctype_bits(sec1_encoding), len(sec1_encoding), _ctype_str(curve))
         return pub
 
     @classmethod
@@ -1610,13 +1658,15 @@ class PublicKey: # pylint: disable=invalid-name
         pub = PublicKey()
         pub_x = MPI(pub_x)
         pub_y = MPI(pub_y)
-        _DLL.botan_pubkey_load_ecdh(byref(pub.handle_()), pub_x.handle_(), pub_y.handle_(), _ctype_str(curve))
+        _DLL.botan_pubkey_load_ecdh(byref(pub._handle()), pub_x._handle(), pub_y._handle(), _ctype_str(curve))
         return pub
 
     @classmethod
     def load_ecdh_sec1(cls, curve: str, sec1_encoding: str | bytes) -> PublicKey:
+        """Load an ECDH public key giving the curve as a string (like "secp256r1")
+        and the public point in SEC1 format."""
         pub = PublicKey()
-        _DLL.botan_pubkey_load_ecdh_sec1(byref(pub.handle_()), _ctype_bits(sec1_encoding), len(sec1_encoding), _ctype_str(curve))
+        _DLL.botan_pubkey_load_ecdh_sec1(byref(pub._handle()), _ctype_bits(sec1_encoding), len(sec1_encoding), _ctype_str(curve))
         return pub
 
     @classmethod
@@ -1626,19 +1676,22 @@ class PublicKey: # pylint: disable=invalid-name
         pub = PublicKey()
         pub_x = MPI(pub_x)
         pub_y = MPI(pub_y)
-        _DLL.botan_pubkey_load_sm2(byref(pub.handle_()), pub_x.handle_(), pub_y.handle_(), _ctype_str(curve))
+        _DLL.botan_pubkey_load_sm2(byref(pub._handle()), pub_x._handle(), pub_y._handle(), _ctype_str(curve))
         return pub
 
     @classmethod
     def load_sm2_sec1(cls, curve: str, sec1_encoding: str | bytes) -> PublicKey:
+        """Load a SM2 public key giving the curve as a string (like "sm2p256v1")
+        and the public point in SEC1 format."""
         pub = PublicKey()
-        _DLL.botan_pubkey_load_sm2_sec1(byref(pub.handle_()), _ctype_bits(sec1_encoding), len(sec1_encoding), _ctype_str(curve))
+        _DLL.botan_pubkey_load_sm2_sec1(byref(pub._handle()), _ctype_bits(sec1_encoding), len(sec1_encoding), _ctype_str(curve))
         return pub
 
     @classmethod
     def load_kyber(cls, key: bytes) -> PublicKey:
+        """Load a Kyber public key from the raw encoding of the public key"""
         pub = PublicKey()
-        _DLL.botan_pubkey_load_kyber(byref(pub.handle_()), key, len(key))
+        _DLL.botan_pubkey_load_kyber(byref(pub._handle()), key, len(key))
         return pub
 
     @classmethod
@@ -1646,7 +1699,7 @@ class PublicKey: # pylint: disable=invalid-name
         """Load an ML-KEM public key giving the mode as a string (like "ML-KEM-512")
         and the raw encoding of the public key."""
         pub = PublicKey()
-        _DLL.botan_pubkey_load_ml_kem(byref(pub.handle_()), key, len(key), _ctype_str(mlkem_mode))
+        _DLL.botan_pubkey_load_ml_kem(byref(pub._handle()), key, len(key), _ctype_str(mlkem_mode))
         return pub
 
     @classmethod
@@ -1654,7 +1707,7 @@ class PublicKey: # pylint: disable=invalid-name
         """Load an ML-DSA public key giving the mode as a string (like "ML-DSA-4x4")
         and the raw encoding of the public key."""
         pub = PublicKey()
-        _DLL.botan_pubkey_load_ml_dsa(byref(pub.handle_()), key, len(key), _ctype_str(mldsa_mode))
+        _DLL.botan_pubkey_load_ml_dsa(byref(pub._handle()), key, len(key), _ctype_str(mldsa_mode))
         return pub
 
     @classmethod
@@ -1662,19 +1715,23 @@ class PublicKey: # pylint: disable=invalid-name
         """Load an SLH-DSA public key giving the mode as a string (like "SLH-DSA-SHAKE-128f")
         and the raw encoding of the public key."""
         pub = PublicKey()
-        _DLL.botan_pubkey_load_slh_dsa(byref(pub.handle_()), key, len(key), _ctype_str(slhdsa_mode))
+        _DLL.botan_pubkey_load_slh_dsa(byref(pub._handle()), key, len(key), _ctype_str(slhdsa_mode))
         return pub
 
     @classmethod
     def load_frodokem(cls, frodo_mode: str, key: bytes) -> PublicKey:
+        """Load a FrodoKEM public key giving the mode as a string (like "FrodoKEM-640-SHAKE")
+        and the raw encoding of the public key."""
         pub = PublicKey()
-        _DLL.botan_pubkey_load_frodokem(byref(pub.handle_()), key, len(key), _ctype_str(frodo_mode))
+        _DLL.botan_pubkey_load_frodokem(byref(pub._handle()), key, len(key), _ctype_str(frodo_mode))
         return pub
 
     @classmethod
     def load_classic_mceliece(cls, cmce_mode: str, key: bytes) -> PublicKey:
+        """Load a Classic McEliece public key giving the mode as a string (like "348864f")
+        and the raw encoding of the public key."""
         pub = PublicKey()
-        _DLL.botan_pubkey_load_classic_mceliece(byref(pub.handle_()), key, len(key), _ctype_str(cmce_mode))
+        _DLL.botan_pubkey_load_classic_mceliece(byref(pub._handle()), key, len(key), _ctype_str(cmce_mode))
         return pub
 
     @classmethod
@@ -1683,7 +1740,7 @@ class PublicKey: # pylint: disable=invalid-name
         if len(key) != 32:
             raise BotanException("Invalid input length to load_x25519")
         pub = PublicKey()
-        _DLL.botan_pubkey_load_x25519(byref(pub.handle_()), key)
+        _DLL.botan_pubkey_load_x25519(byref(pub._handle()), key)
         return pub
 
     @classmethod
@@ -1692,19 +1749,19 @@ class PublicKey: # pylint: disable=invalid-name
         if len(key) != 56:
             raise BotanException("Invalid input length to load_x448")
         pub = PublicKey()
-        _DLL.botan_pubkey_load_x448(byref(pub.handle_()), key)
+        _DLL.botan_pubkey_load_x448(byref(pub._handle()), key)
         return pub
 
     def __del__(self):
         _DLL.botan_pubkey_destroy(self.__obj)
 
-    def handle_(self):
+    def _handle(self):
         return self.__obj
 
     def check_key(self, rng_obj: RandomNumberGenerator, strong: bool = True) -> bool:
         """Test the key for consistency. If ``strong`` is ``True`` then more expensive tests are performed."""
         flags = 1 if strong else 0
-        rc = _DLL.botan_pubkey_check_key(self.__obj, rng_obj.handle_(), flags)
+        rc = _DLL.botan_pubkey_check_key(self.__obj, rng_obj._handle(), flags)
         return rc == 0
 
     def estimated_strength(self) -> int:
@@ -1758,19 +1815,23 @@ class PublicKey: # pylint: disable=invalid-name
         vary depending on the algorithm. For example RSA public modulus can be
         extracted with ``rsa_key.get_field("n")``."""
         v = MPI()
-        _DLL.botan_pubkey_get_field(v.handle_(), self.__obj, _ctype_str(field_name))
+        _DLL.botan_pubkey_get_field(v._handle(), self.__obj, _ctype_str(field_name))
         return int(v)
 
     def object_identifier(self) -> OID:
         """Returns the associated OID"""
         oid = OID()
-        _DLL.botan_pubkey_oid(byref(oid.handle_()), self.__obj)
+        _DLL.botan_pubkey_oid(byref(oid._handle()), self.__obj)
         return oid
 
     def get_public_point(self) -> bytes:
+        """Returns the SEC1 uncompressed encoding of the public point, if this is an EC key"""
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_pubkey_view_ec_public_point(self.__obj, vc, vfn))
 
     def used_explicit_encoding(self) -> bool:
+        """Returns True if this key was decoded from a structure which encoded the
+        elliptic curve using explicit parameters rather than a named curve.
+        Raises an exception if the key is not an EC key."""
         rc = _DLL.botan_pubkey_ecc_key_used_explicit_encoding(self.__obj)
         if rc == -32:
             raise BotanException("Only ECC keys have a notion of explicit encoding")
@@ -1780,7 +1841,7 @@ class PublicKey: # pylint: disable=invalid-name
         """Return the group associated with the key if the key is an EC key.
         Raises an exception if the key is not an EC key."""
         group = ECGroup()
-        _DLL.botan_ec_pubkey_get_group(self.__obj, byref(group.handle_()))
+        _DLL.botan_ec_pubkey_get_group(self.__obj, byref(group._handle()))
         return group
 
 
@@ -1791,6 +1852,8 @@ class PrivateKey:
     """Previously ``private_key``"""
 
     def __init__(self, obj: c_void_p | None = None):
+        """Create a private key object wrapping the given FFI handle, or an empty one.
+        Applications should use ``create`` or one of the ``load`` methods instead."""
         if not obj:
             obj = c_void_p(0)
         self.__obj = obj
@@ -1802,7 +1865,7 @@ class PrivateKey:
         rng_obj = c_void_p(0) # unused in recent versions
         bits = _ctype_bits(val)
         passwd = None if passphrase is None else _ctype_str(passphrase)
-        _DLL.botan_privkey_load(byref(priv.handle_()), rng_obj, bits, len(bits), passwd)
+        _DLL.botan_privkey_load(byref(priv._handle()), rng_obj, bits, len(bits), passwd)
         return priv
 
     @classmethod
@@ -1833,14 +1896,14 @@ class PrivateKey:
             params = "%d,%d" % (params[0], params[1])
 
         priv = PrivateKey()
-        _DLL.botan_privkey_create(byref(priv.handle_()), _ctype_str(algo), _ctype_str(params), rng_obj.handle_())
+        _DLL.botan_privkey_create(byref(priv._handle()), _ctype_str(algo), _ctype_str(params), rng_obj._handle())
         return priv
 
     @classmethod
     def create_ec(cls, algo: str, ec_group: ECGroup, rng_obj: RandomNumberGenerator) -> PrivateKey:
         """Creates a new ec private key."""
         obj = c_void_p(0)
-        _DLL.botan_ec_privkey_create(byref(obj), _ctype_str(algo), ec_group.handle_(), rng_obj.handle_())
+        _DLL.botan_ec_privkey_create(byref(obj), _ctype_str(algo), ec_group._handle(), rng_obj._handle())
         return PrivateKey(obj)
 
     @classmethod
@@ -1850,7 +1913,7 @@ class PrivateKey:
         p = MPI(p)
         q = MPI(q)
         e = MPI(e)
-        _DLL.botan_privkey_load_rsa(byref(priv.handle_()), p.handle_(), q.handle_(), e.handle_())
+        _DLL.botan_privkey_load_rsa(byref(priv._handle()), p._handle(), q._handle(), e._handle())
         return priv
 
     @classmethod
@@ -1861,7 +1924,7 @@ class PrivateKey:
         q = MPI(q)
         g = MPI(g)
         x = MPI(x)
-        _DLL.botan_privkey_load_dsa(byref(priv.handle_()), p.handle_(), q.handle_(), g.handle_(), x.handle_())
+        _DLL.botan_privkey_load_dsa(byref(priv._handle()), p._handle(), q._handle(), g._handle(), x._handle())
         return priv
 
     @classmethod
@@ -1871,7 +1934,7 @@ class PrivateKey:
         p = MPI(p)
         g = MPI(g)
         x = MPI(x)
-        _DLL.botan_privkey_load_dh(byref(priv.handle_()), p.handle_(), g.handle_(), x.handle_())
+        _DLL.botan_privkey_load_dh(byref(priv._handle()), p._handle(), g._handle(), x._handle())
         return priv
 
     @classmethod
@@ -1882,7 +1945,7 @@ class PrivateKey:
         q = MPI(q)
         g = MPI(g)
         x = MPI(x)
-        _DLL.botan_privkey_load_elgamal(byref(priv.handle_()), p.handle_(), q.handle_(), g.handle_(), x.handle_())
+        _DLL.botan_privkey_load_elgamal(byref(priv._handle()), p._handle(), q._handle(), g._handle(), x._handle())
         return priv
 
     @classmethod
@@ -1890,7 +1953,7 @@ class PrivateKey:
         """Return a private ECDSA key"""
         priv = PrivateKey()
         x = MPI(x)
-        _DLL.botan_privkey_load_ecdsa(byref(priv.handle_()), x.handle_(), _ctype_str(curve))
+        _DLL.botan_privkey_load_ecdsa(byref(priv._handle()), x._handle(), _ctype_str(curve))
         return priv
 
     @classmethod
@@ -1898,7 +1961,7 @@ class PrivateKey:
         """Return a private ECDH key"""
         priv = PrivateKey()
         x = MPI(x)
-        _DLL.botan_privkey_load_ecdh(byref(priv.handle_()), x.handle_(), _ctype_str(curve))
+        _DLL.botan_privkey_load_ecdh(byref(priv._handle()), x._handle(), _ctype_str(curve))
         return priv
 
     @classmethod
@@ -1906,46 +1969,51 @@ class PrivateKey:
         """Return a private SM2 key"""
         priv = PrivateKey()
         x = MPI(x)
-        _DLL.botan_privkey_load_sm2(byref(priv.handle_()), x.handle_(), _ctype_str(curve))
+        _DLL.botan_privkey_load_sm2(byref(priv._handle()), x._handle(), _ctype_str(curve))
         return priv
 
     @classmethod
     def load_kyber(cls, key: bytes) -> PrivateKey:
+        """Return a private Kyber key from the raw encoding of the private key"""
         priv = PrivateKey()
-        _DLL.botan_privkey_load_kyber(byref(priv.handle_()), key, len(key))
+        _DLL.botan_privkey_load_kyber(byref(priv._handle()), key, len(key))
         return priv
 
     @classmethod
     def load_ml_kem(cls, mlkem_mode: str, key: bytes) -> PrivateKey:
         """Return a private ML-KEM key"""
         priv = PrivateKey()
-        _DLL.botan_privkey_load_ml_kem(byref(priv.handle_()), key, len(key), _ctype_str(mlkem_mode))
+        _DLL.botan_privkey_load_ml_kem(byref(priv._handle()), key, len(key), _ctype_str(mlkem_mode))
         return priv
 
     @classmethod
     def load_ml_dsa(cls, mldsa_mode: str, key: bytes) -> PrivateKey:
         """Return a private ML-DSA key"""
         priv = PrivateKey()
-        _DLL.botan_privkey_load_ml_dsa(byref(priv.handle_()), key, len(key), _ctype_str(mldsa_mode))
+        _DLL.botan_privkey_load_ml_dsa(byref(priv._handle()), key, len(key), _ctype_str(mldsa_mode))
         return priv
 
     @classmethod
     def load_slh_dsa(cls, slh_dsa: str, key: bytes) -> PrivateKey:
         """Return a private SLH-DSA key"""
         priv = PrivateKey()
-        _DLL.botan_privkey_load_slh_dsa(byref(priv.handle_()), key, len(key), _ctype_str(slh_dsa))
+        _DLL.botan_privkey_load_slh_dsa(byref(priv._handle()), key, len(key), _ctype_str(slh_dsa))
         return priv
 
     @classmethod
     def load_frodokem(cls, frodo_mode: str, key: bytes) -> PrivateKey:
+        """Return a private FrodoKEM key giving the mode as a string (like "FrodoKEM-640-SHAKE")
+        and the raw encoding of the private key."""
         priv = PrivateKey()
-        _DLL.botan_privkey_load_frodokem(byref(priv.handle_()), key, len(key), _ctype_str(frodo_mode))
+        _DLL.botan_privkey_load_frodokem(byref(priv._handle()), key, len(key), _ctype_str(frodo_mode))
         return priv
 
     @classmethod
     def load_classic_mceliece(cls, cmce_mode: str, key: bytes) -> PrivateKey:
+        """Return a private Classic McEliece key giving the mode as a string (like "348864f")
+        and the raw encoding of the private key."""
         priv = PrivateKey()
-        _DLL.botan_privkey_load_classic_mceliece(byref(priv.handle_()), key, len(key), _ctype_str(cmce_mode))
+        _DLL.botan_privkey_load_classic_mceliece(byref(priv._handle()), key, len(key), _ctype_str(cmce_mode))
         return priv
 
     @classmethod
@@ -1954,7 +2022,7 @@ class PrivateKey:
         if len(key) != 32:
             raise BotanException("Invalid input length to load_x25519")
         priv = PrivateKey()
-        _DLL.botan_privkey_load_x25519(byref(priv.handle_()), key)
+        _DLL.botan_privkey_load_x25519(byref(priv._handle()), key)
         return priv
 
     @classmethod
@@ -1963,19 +2031,19 @@ class PrivateKey:
         if len(key) != 56:
             raise BotanException("Invalid input length to load_x448")
         priv = PrivateKey()
-        _DLL.botan_privkey_load_x448(byref(priv.handle_()), key)
+        _DLL.botan_privkey_load_x448(byref(priv._handle()), key)
         return priv
 
     def __del__(self):
         _DLL.botan_privkey_destroy(self.__obj)
 
-    def handle_(self):
+    def _handle(self):
         return self.__obj
 
     def check_key(self, rng_obj: RandomNumberGenerator, strong: bool = True) -> bool:
         """Test the key for consistency. If ``strong`` is ``True`` then more expensive tests are performed."""
         flags = 1 if strong else 0
-        rc = _DLL.botan_privkey_check_key(self.__obj, rng_obj.handle_(), flags)
+        rc = _DLL.botan_privkey_check_key(self.__obj, rng_obj._handle(), flags)
         return rc == 0
 
     def algo_name(self) -> str:
@@ -1985,7 +2053,7 @@ class PrivateKey:
     def get_public_key(self) -> PublicKey:
         """Return a public_key object"""
         pub = PublicKey()
-        _DLL.botan_privkey_export_pubkey(byref(pub.handle_()), self.__obj)
+        _DLL.botan_privkey_export_pubkey(byref(pub._handle()), self.__obj)
         return pub
 
     def to_der(self) -> bytes:
@@ -2021,12 +2089,12 @@ class PrivateKey:
         if pem:
             return _call_fn_viewing_str(
                 lambda vc, vfn: _DLL.botan_privkey_view_encrypted_pem_timed(
-                    self.__obj, rng.handle_(), _ctype_str(passphrase),
+                    self.__obj, rng._handle(), _ctype_str(passphrase),
                     _ctype_str(cipher), _ctype_str(pbkdf), c_size_t(msec), vc, vfn))
         else:
             return _call_fn_viewing_vec(
                 lambda vc, vfn: _DLL.botan_privkey_view_encrypted_der_timed(
-                    self.__obj, rng.handle_(), _ctype_str(passphrase),
+                    self.__obj, rng._handle(), _ctype_str(passphrase),
                     _ctype_str(cipher), _ctype_str(pbkdf), c_size_t(msec), vc, vfn))
 
     def get_field(self, field_name: str) -> int:
@@ -2035,13 +2103,13 @@ class PrivateKey:
         extracted with ``rsa_key.get_field("p")``. This function can also be
         used to extract the public parameters."""
         v = MPI()
-        _DLL.botan_privkey_get_field(v.handle_(), self.__obj, _ctype_str(field_name))
+        _DLL.botan_privkey_get_field(v._handle(), self.__obj, _ctype_str(field_name))
         return int(v)
 
     def object_identifier(self) -> OID:
         """Return the associated OID"""
         oid = OID()
-        _DLL.botan_privkey_oid(byref(oid.handle_()), self.__obj)
+        _DLL.botan_privkey_oid(byref(oid._handle()), self.__obj)
         return oid
 
     def stateful_operation(self) -> bool:
@@ -2062,14 +2130,14 @@ class PrivateKey:
     def get_private_key(self) -> ECScalar:
         """Return the private value if the key is an EC key."""
         scalar = ECScalar()
-        _DLL.botan_ec_privkey_get_private_key(self.__obj, byref(scalar.handle_()))
+        _DLL.botan_ec_privkey_get_private_key(self.__obj, byref(scalar._handle()))
         return scalar
 
     def get_group(self) -> ECGroup:
         """Return the group associated with the key if the key is an EC key.
         Raises an exception if the key is not an EC key."""
         group = ECGroup()
-        _DLL.botan_ec_privkey_get_group(self.__obj, byref(group.handle_()))
+        _DLL.botan_ec_privkey_get_group(self.__obj, byref(group._handle()))
         return group
 
 
@@ -2077,18 +2145,20 @@ class PKEncrypt:
     """Previously ``pk_op_encrypt``"""
 
     def __init__(self, key: PublicKey, padding: str):
+        """Create an encryption operation using ``key`` and the named padding (eg "OAEP(SHA-256)")"""
         self.__obj = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
-        _DLL.botan_pk_op_encrypt_create(byref(self.__obj), key.handle_(), _ctype_str(padding), flags)
+        _DLL.botan_pk_op_encrypt_create(byref(self.__obj), key._handle(), _ctype_str(padding), flags)
 
     def __del__(self):
         _DLL.botan_pk_op_encrypt_destroy(self.__obj)
 
     def encrypt(self, msg: bytes, rng_obj: RandomNumberGenerator) -> bytes:
+        """Encrypt a message, returning the ciphertext"""
         outbuf_sz = c_size_t(0)
         _DLL.botan_pk_op_encrypt_output_length(self.__obj, len(msg), byref(outbuf_sz))
         outbuf = create_string_buffer(outbuf_sz.value)
-        _DLL.botan_pk_op_encrypt(self.__obj, rng_obj.handle_(), outbuf, byref(outbuf_sz), msg, len(msg))
+        _DLL.botan_pk_op_encrypt(self.__obj, rng_obj._handle(), outbuf, byref(outbuf_sz), msg, len(msg))
         return outbuf.raw[0:int(outbuf_sz.value)]
 
 
@@ -2096,14 +2166,16 @@ class PKDecrypt:
     """Previously ``pk_op_decrypt``"""
 
     def __init__(self, key: PrivateKey, padding: str):
+        """Create a decryption operation using ``key`` and the named padding (eg "OAEP(SHA-256)")"""
         self.__obj = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
-        _DLL.botan_pk_op_decrypt_create(byref(self.__obj), key.handle_(), _ctype_str(padding), flags)
+        _DLL.botan_pk_op_decrypt_create(byref(self.__obj), key._handle(), _ctype_str(padding), flags)
 
     def __del__(self):
         _DLL.botan_pk_op_decrypt_destroy(self.__obj)
 
     def decrypt(self, msg: bytes) -> bytes:
+        """Decrypt a ciphertext, returning the plaintext"""
         outbuf_sz = c_size_t(0)
         _DLL.botan_pk_op_decrypt_output_length(self.__obj, len(msg), byref(outbuf_sz))
         outbuf = create_string_buffer(outbuf_sz.value)
@@ -2115,39 +2187,48 @@ class PKSign: # pylint: disable=invalid-name
     """Previously ``pk_op_sign``"""
 
     def __init__(self, key: PrivateKey, padding: str, der: bool = False):
+        """Create a signature operation using ``key`` and the named padding, eg "PSS(SHA-256)".
+        If ``der`` is True then the signature is DER encoded."""
         self.__obj = c_void_p(0)
         flags = c_uint32(1) if der else c_uint32(0)
-        _DLL.botan_pk_op_sign_create(byref(self.__obj), key.handle_(), _ctype_str(padding), flags)
+        _DLL.botan_pk_op_sign_create(byref(self.__obj), key._handle(), _ctype_str(padding), flags)
 
     def __del__(self):
         _DLL.botan_pk_op_sign_destroy(self.__obj)
 
     def update(self, msg: str | bytes):
+        """Add more data to be signed"""
         _DLL.botan_pk_op_sign_update(self.__obj, _ctype_bits(msg), len(msg))
 
     def finish(self, rng_obj: RandomNumberGenerator) -> bytes:
+        """Returns the signature of the message provided so far, and resets for another message"""
         outbuf_sz = c_size_t(0)
         _DLL.botan_pk_op_sign_output_length(self.__obj, byref(outbuf_sz))
         outbuf = create_string_buffer(outbuf_sz.value)
-        _DLL.botan_pk_op_sign_finish(self.__obj, rng_obj.handle_(), outbuf, byref(outbuf_sz))
+        _DLL.botan_pk_op_sign_finish(self.__obj, rng_obj._handle(), outbuf, byref(outbuf_sz))
         return outbuf.raw[0:int(outbuf_sz.value)]
 
 class PKVerify:
     """Previously ``pk_op_verify``"""
 
     def __init__(self, key: PublicKey, padding: str, der: bool = False):
+        """Create a verification operation using ``key`` and the named padding, eg "PSS(SHA-256)".
+        If ``der`` is True then the signature is expected to be DER encoded."""
         self.__obj = c_void_p(0)
         flags = c_uint32(1) if der else c_uint32(0)
-        _DLL.botan_pk_op_verify_create(byref(self.__obj), key.handle_(), _ctype_str(padding), flags)
+        _DLL.botan_pk_op_verify_create(byref(self.__obj), key._handle(), _ctype_str(padding), flags)
 
     def __del__(self):
         _DLL.botan_pk_op_verify_destroy(self.__obj)
 
     def update(self, msg: str | bytes):
+        """Add more data to be verified"""
         bits = _ctype_bits(msg)
         _DLL.botan_pk_op_verify_update(self.__obj, bits, len(bits))
 
     def check_signature(self, signature: str | bytes) -> bool:
+        """Returns True if the signature is valid for the message provided so far,
+        and resets for another message"""
         bits = _ctype_bits(signature)
         rc = _DLL.botan_pk_op_verify_finish(self.__obj, bits, len(bits))
         if rc == 0:
@@ -2158,12 +2239,14 @@ class PKKeyAgreement:
     """Previously ``pk_op_key_agreement``"""
 
     def __init__(self, key: PrivateKey, kdf_name: str):
+        """Create a key agreement operation using ``key`` and the named KDF,
+        eg "KDF2(SHA-256)", or "Raw" to return the agreed value directly."""
         self.__obj = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
-        _DLL.botan_pk_op_key_agreement_create(byref(self.__obj), key.handle_(), _ctype_str(kdf_name), flags)
+        _DLL.botan_pk_op_key_agreement_create(byref(self.__obj), key._handle(), _ctype_str(kdf_name), flags)
 
         self.m_public_value = _call_fn_viewing_vec(
-            lambda vc, vfn: _DLL.botan_pk_op_key_agreement_view_public(key.handle_(), vc, vfn))
+            lambda vc, vfn: _DLL.botan_pk_op_key_agreement_view_public(key._handle(), vc, vfn))
 
     def __del__(self):
         _DLL.botan_pk_op_key_agreement_destroy(self.__obj)
@@ -2173,6 +2256,7 @@ class PKKeyAgreement:
         return self.m_public_value
 
     def underlying_output_length(self) -> int:
+        """Returns the length of the agreed value before the KDF is applied"""
         out_len = c_size_t(0)
         _DLL.botan_pk_op_key_agreement_size(self.__obj, byref(out_len))
         return out_len.value
@@ -2187,22 +2271,30 @@ class PKKeyAgreement:
                                                                      salt, len(salt)))
 
 class KemEncrypt:
+    """Key encapsulation using a public key"""
+
     def __init__(self, key: PublicKey, params: str):
+        """Create an encapsulation operation using ``key`` and the named KDF,
+        eg "KDF2(SHA-256)", or "Raw" to return the shared secret directly."""
         self.__obj = c_void_p(0)
-        _DLL.botan_pk_op_kem_encrypt_create(byref(self.__obj), key.handle_(), _ctype_str(params))
+        _DLL.botan_pk_op_kem_encrypt_create(byref(self.__obj), key._handle(), _ctype_str(params))
 
     def __del__(self):
         _DLL.botan_pk_op_kem_encrypt_destroy(self.__obj)
 
     def shared_key_length(self, desired_key_len: int) -> int:
+        """Returns the length of the shared key produced for a request of ``desired_key_len`` bytes"""
         return _call_fn_returning_sz(
             lambda len: _DLL.botan_pk_op_kem_encrypt_shared_key_length(self.__obj, desired_key_len, len))
 
     def encapsulated_key_length(self) -> int:
+        """Returns the length of the encapsulated key"""
         return _call_fn_returning_sz(
             lambda len: _DLL.botan_pk_op_kem_encrypt_encapsulated_key_length(self.__obj, len))
 
     def create_shared_key(self, rng: RandomNumberGenerator, salt: bytes, desired_key_len: int) -> tuple[bytes, bytes]:
+        """Generate a new shared key, returning a tuple of the shared key and the
+        encapsulated key to be sent to the holder of the private key"""
         shared_key_len = self.shared_key_length(desired_key_len)
         shared_key_buf = create_string_buffer(shared_key_len)
 
@@ -2211,7 +2303,7 @@ class KemEncrypt:
 
         _DLL.botan_pk_op_kem_encrypt_create_shared_key(
             self.__obj,
-            rng.handle_(),
+            rng._handle(),
             salt,
             len(salt),
             c_size_t(desired_key_len),
@@ -2227,18 +2319,24 @@ class KemEncrypt:
         return (shared_key, encapsulated_key)
 
 class KemDecrypt:
+    """Key decapsulation using a private key"""
+
     def __init__(self, key: PrivateKey, params: str):
+        """Create a decapsulation operation using ``key`` and the named KDF,
+        eg "KDF2(SHA-256)", or "Raw" to return the shared secret directly."""
         self.__obj = c_void_p(0)
-        _DLL.botan_pk_op_kem_decrypt_create(byref(self.__obj), key.handle_(), _ctype_str(params))
+        _DLL.botan_pk_op_kem_decrypt_create(byref(self.__obj), key._handle(), _ctype_str(params))
 
     def __del__(self):
         _DLL.botan_pk_op_kem_decrypt_destroy(self.__obj)
 
     def shared_key_length(self, desired_key_len: int) -> int:
+        """Returns the length of the shared key produced for a request of ``desired_key_len`` bytes"""
         return _call_fn_returning_sz(
             lambda len: _DLL.botan_pk_op_kem_decrypt_shared_key_length(self.__obj, desired_key_len, len))
 
     def decrypt_shared_key(self, salt: bytes, desired_key_len: int, encapsulated_key: bytes) -> bytes:
+        """Recover the shared key from the encapsulated key"""
         shared_key_len = self.shared_key_length(desired_key_len)
 
         return _call_fn_returning_vec(
@@ -2275,7 +2373,13 @@ def _load_buf_or_file(filename, buf, file_fn, buf_fn):
 # X.509 certificates
 #
 class X509Cert: # pylint: disable=invalid-name
+    """Class representing an X.509 certificate.
+
+    A certificate in PEM or DER format can be loaded from a file, with the ``filename``
+    argument, or from a bytestring, with the ``buf`` argument."""
+
     def __init__(self, filename: str | None = None, buf: bytes | None = None):
+        """Load a certificate from either a file or a bytestring, but not both"""
         self.__obj = c_void_p(0)
         self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_cert_load_file, _DLL.botan_x509_cert_load)
 
@@ -2409,7 +2513,7 @@ class X509Cert: # pylint: disable=invalid-name
         rc = _DLL.botan_x509_cert_allowed_usage(self.__obj, c_uint(usage))
         return rc == 0
 
-    def handle_(self):
+    def _handle(self):
         return self.__obj
 
     def ext_ip_addr_blocks(self) -> tuple[
@@ -2542,7 +2646,7 @@ class X509Cert: # pylint: disable=invalid-name
             c_intermediates = len(intermediates) * c_void_p
             arr_intermediates = c_intermediates()
             for i, ca in enumerate(intermediates):
-                arr_intermediates[i] = ca.handle_()
+                arr_intermediates[i] = ca._handle()
             len_intermediates = c_size_t(len(intermediates))
         else:
             arr_intermediates = c_void_p(0)
@@ -2552,7 +2656,7 @@ class X509Cert: # pylint: disable=invalid-name
             c_trusted = len(trusted) * c_void_p
             arr_trusted = c_trusted()
             for i, ca in enumerate(trusted):
-                arr_trusted[i] = ca.handle_()
+                arr_trusted[i] = ca._handle()
             len_trusted = c_size_t(len(trusted))
         else:
             arr_trusted = c_void_p(0)
@@ -2562,7 +2666,7 @@ class X509Cert: # pylint: disable=invalid-name
             c_crls = len(crls) * c_void_p
             arr_crls = c_crls()
             for i, crl in enumerate(crls):
-                arr_crls[i] = crl.handle_()
+                arr_crls[i] = crl._handle()
             len_crls = c_size_t(len(crls))
         else:
             arr_crls = c_void_p(0)
@@ -2592,7 +2696,7 @@ class X509Cert: # pylint: disable=invalid-name
 
     def is_revoked(self, crl: X509CRL) -> bool:
         """Check if the certificate (``self``) is revoked on the given ``crl``."""
-        rc = _DLL.botan_x509_is_revoked(crl.handle_(), self.__obj)
+        rc = _DLL.botan_x509_is_revoked(crl._handle(), self.__obj)
         return rc == 0
 
 
@@ -2601,6 +2705,8 @@ class X509Cert: # pylint: disable=invalid-name
 #
 
 class X509CRLReason(IntEnum):
+    """The reason a certificate was revoked, as encoded in the CRL entry reason code"""
+
     UNSPECIFIED = 0
     KEY_COMPROMISE = 1
     CA_COMPROMISE = 2
@@ -2614,40 +2720,49 @@ class X509CRLReason(IntEnum):
 
     @classmethod
     def to_bits(cls, reason: X509CRLReason) -> int:
+        """Returns the numeric encoding of ``reason``"""
         return reason.value
 
     @classmethod
     def from_bits(cls, reason: int) -> X509CRLReason:
+        """Returns the reason corresponding to the numeric encoding ``reason``"""
         return cls(reason)
 
 
 class X509CRLEntry:
+    """A single revoked certificate, as recorded in a CRL"""
+
     def __init__(self):
+        """Create an entry with no associated certificate; applications should use ``create``"""
         self.__obj = c_void_p(0)
 
     def __del__(self):
         _DLL.botan_x509_crl_entry_destroy(self.__obj)
 
-    def handle_(self):
+    def _handle(self):
         return self.__obj
 
     @classmethod
     def create(cls, cert: X509Cert, reason: X509CRLReason):
+        """Create a new entry revoking ``cert`` for the given ``reason``"""
         entry = X509CRLEntry()
-        _DLL.botan_x509_crl_entry_create(byref(entry.handle_()), cert.handle_(), X509CRLReason.to_bits(reason))
+        _DLL.botan_x509_crl_entry_create(byref(entry._handle()), cert._handle(), X509CRLReason.to_bits(reason))
         return entry
 
     def serial_number(self) -> MPI:
+        """Returns the serial number of the revoked certificate"""
         sn = c_void_p(0)
         _DLL.botan_x509_crl_entry_serial_number(self.__obj, byref(sn))
         return MPI(sn)
 
     def revocation_date(self) -> int:
+        """Returns the time the certificate was revoked, as seconds since epoch"""
         time = c_uint64(0)
         _DLL.botan_x509_crl_entry_revocation_date(self.__obj, byref(time))
         return time.value
 
     def reason(self) -> X509CRLReason:
+        """Returns the reason the certificate was revoked"""
         reason = c_int(0)
         _DLL.botan_x509_crl_entry_reason(self.__obj, byref(reason))
         return X509CRLReason.from_bits(reason.value)
@@ -2661,6 +2776,7 @@ class X509CRL:
     """
 
     def __init__(self, filename: str | None = None, buf: bytes | None = None):
+        """Load a CRL from either a file or a bytestring. If neither is given the object is empty."""
         if not filename and not buf:
             self.__obj = c_void_p(0)
         else:
@@ -2669,7 +2785,7 @@ class X509CRL:
     def __del__(self):
         _DLL.botan_x509_crl_destroy(self.__obj)
 
-    def handle_(self):
+    def _handle(self):
         return self.__obj
 
     @classmethod
@@ -2683,12 +2799,17 @@ class X509CRL:
         hash_fn: str | None = None,
         padding: str | None = None
     ) -> X509CRL:
+        """Create a new, empty CRL issued by ``ca_cert`` and signed using ``ca_key``.
+
+        ``issue_time`` is the time the CRL becomes valid, in seconds since epoch, and
+        ``next_update`` the number of seconds after that until the CRL expires.
+        The signature ``hash_fn`` and ``padding`` may be None to use a default."""
         crl = X509CRL()
         _DLL.botan_x509_crl_create(
-            byref(crl.handle_()),
-            rng.handle_(),
-            ca_cert.handle_(),
-            ca_key.handle_(),
+            byref(crl._handle()),
+            rng._handle(),
+            ca_cert._handle(),
+            ca_key._handle(),
             issue_time,
             next_update,
             _ctype_str(hash_fn),
@@ -2707,19 +2828,21 @@ class X509CRL:
         hash_fn: str | None = None,
         padding: str | None = None
     ) -> X509CRL:
+        """Returns a new CRL, again issued by ``ca_cert`` and signed using ``ca_key``,
+        containing the entries of ``self`` plus ``new_entries``."""
         crl = X509CRL()
         c_revoked = len(new_entries) * c_void_p
         arr_new_entries = c_revoked()
         for i, entry in enumerate(new_entries):
-            arr_new_entries[i] = entry.handle_()
+            arr_new_entries[i] = entry._handle()
         new_entries_len = c_size_t(len(new_entries))
 
         _DLL.botan_x509_crl_update(
-            byref(crl.handle_()),
+            byref(crl._handle()),
             self.__obj,
-            rng.handle_(),
-            ca_cert.handle_(),
-            ca_key.handle_(),
+            rng._handle(),
+            ca_cert._handle(),
+            ca_key._handle(),
             issue_time,
             next_update,
             arr_new_entries,
@@ -2730,17 +2853,19 @@ class X509CRL:
         return crl
 
     def revoked(self) -> list[X509CRLEntry]:
+        """Returns the list of entries contained in this CRL"""
         count = c_size_t(0)
         _DLL.botan_x509_crl_entries_count(self.__obj, byref(count))
         revoked = []
         for i in range(count.value):
             entry = X509CRLEntry()
-            _DLL.botan_x509_crl_entries(self.__obj, c_size_t(i), byref(entry.handle_()))
+            _DLL.botan_x509_crl_entries(self.__obj, c_size_t(i), byref(entry._handle()))
             revoked.append(entry)
         return revoked
 
     def verify(self, key: PublicKey) -> bool:
-        rc = _DLL.botan_x509_crl_verify_signature(self.__obj, key.handle_())
+        """Returns True if the signature on this CRL is valid for the given public key"""
+        rc = _DLL.botan_x509_crl_verify_signature(self.__obj, key._handle())
         return rc == 1
 
 
@@ -2753,6 +2878,7 @@ class MPI:
     """
 
     def __init__(self, initial_value: MPILike | c_void_p = None, radix: int | None = None):
+        """Initialize an MPI, see the class documentation for the accepted values"""
         if isinstance(initial_value, c_void_p):
             self.__obj = initial_value
             return
@@ -2763,7 +2889,7 @@ class MPI:
         if initial_value is None:
             pass # left as zero
         elif isinstance(initial_value, MPI):
-            _DLL.botan_mp_set_from_mp(self.__obj, initial_value.handle_())
+            _DLL.botan_mp_set_from_mp(self.__obj, initial_value._handle())
         elif radix is not None:
             _DLL.botan_mp_set_from_radix_str(self.__obj, _ctype_str(initial_value), c_size_t(radix))
         elif isinstance(initial_value, str):
@@ -2774,20 +2900,22 @@ class MPI:
 
     @classmethod
     def random(cls, rng_obj: RandomNumberGenerator, bits: int) -> MPI:
+        """Returns a new MPI with a random value of exactly ``bits`` bits"""
         bn = MPI()
-        _DLL.botan_mp_rand_bits(bn.handle_(), rng_obj.handle_(), c_size_t(bits))
+        _DLL.botan_mp_rand_bits(bn._handle(), rng_obj._handle(), c_size_t(bits))
         return bn
 
     @classmethod
     def random_range(cls, rng_obj: RandomNumberGenerator, lower: MPI, upper: MPI):
+        """Returns a new MPI with a random value in the range [``lower``, ``upper``)"""
         bn = MPI()
-        _DLL.botan_mp_rand_range(bn.handle_(), rng_obj.handle_(), lower.handle_(), upper.handle_())
+        _DLL.botan_mp_rand_range(bn._handle(), rng_obj._handle(), lower._handle(), upper._handle())
         return bn
 
     def __del__(self):
         _DLL.botan_mp_destroy(self.__obj)
 
-    def handle_(self):
+    def _handle(self):
         return self.__obj
 
     def __int__(self):
@@ -2798,6 +2926,7 @@ class MPI:
         return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_mp_view_str(self.__obj, 10, vc, vfn))
 
     def to_bytes(self) -> Array[c_char]:
+        """Returns the big-endian binary encoding of this value"""
         byte_count = self.byte_count()
         out_len = c_size_t(byte_count)
         out = create_string_buffer(out_len.value)
@@ -2806,29 +2935,37 @@ class MPI:
         return out
 
     def is_negative(self) -> bool:
+        """Returns True if this value is less than zero"""
         rc = _DLL.botan_mp_is_negative(self.__obj)
         return rc == 1
 
     def is_positive(self) -> bool:
+        """Returns True if this value is greater than or equal to zero"""
         rc = _DLL.botan_mp_is_positive(self.__obj)
         return rc == 1
 
     def is_zero(self) -> bool:
+        """Returns True if this value is zero"""
         rc = _DLL.botan_mp_is_zero(self.__obj)
         return rc == 1
 
     def is_odd(self) -> bool:
+        """Returns True if this value is odd"""
         return self.get_bit(0) == 1
 
     def is_even(self) -> bool:
+        """Returns True if this value is even"""
         return self.get_bit(0) == 0
 
     def flip_sign(self):
+        """Negate this value in place"""
         _DLL.botan_mp_flip_sign(self.__obj)
 
     def cmp(self, other: MPI) -> int:
+        """Returns a negative number, zero, or a positive number if ``self`` is
+        less than, equal to, or greater than ``other``"""
         r = c_int(0)
-        _DLL.botan_mp_cmp(byref(r), self.__obj, other.handle_())
+        _DLL.botan_mp_cmp(byref(r), self.__obj, other._handle())
         return r.value
 
     def __hash__(self):
@@ -2872,46 +3009,46 @@ class MPI:
 
     def __add__(self, other: MPI):
         r = MPI()
-        _DLL.botan_mp_add(r.handle_(), self.__obj, other.handle_())
+        _DLL.botan_mp_add(r._handle(), self.__obj, other._handle())
         return r
 
     def __iadd__(self, other: MPI):
-        _DLL.botan_mp_add(self.__obj, self.__obj, other.handle_())
+        _DLL.botan_mp_add(self.__obj, self.__obj, other._handle())
         return self
 
     def __sub__(self, other: MPI):
         r = MPI()
-        _DLL.botan_mp_sub(r.handle_(), self.__obj, other.handle_())
+        _DLL.botan_mp_sub(r._handle(), self.__obj, other._handle())
         return r
 
     def __isub__(self, other: MPI):
-        _DLL.botan_mp_sub(self.__obj, self.__obj, other.handle_())
+        _DLL.botan_mp_sub(self.__obj, self.__obj, other._handle())
         return self
 
     def __mul__(self, other: MPI):
         r = MPI()
-        _DLL.botan_mp_mul(r.handle_(), self.__obj, other.handle_())
+        _DLL.botan_mp_mul(r._handle(), self.__obj, other._handle())
         return r
 
     def __imul__(self, other: MPI):
-        _DLL.botan_mp_mul(self.__obj, self.__obj, other.handle_())
+        _DLL.botan_mp_mul(self.__obj, self.__obj, other._handle())
         return self
 
     def __divmod__(self, other: MPI):
         d = MPI()
         q = MPI()
-        _DLL.botan_mp_div(d.handle_(), q.handle_(), self.__obj, other.handle_())
+        _DLL.botan_mp_div(d._handle(), q._handle(), self.__obj, other._handle())
         return (d, q)
 
     def __mod__(self, other: MPI):
         d = MPI()
         q = MPI()
-        _DLL.botan_mp_div(d.handle_(), q.handle_(), self.__obj, other.handle_())
+        _DLL.botan_mp_div(d._handle(), q._handle(), self.__obj, other._handle())
         return q
 
     def __lshift__(self, shift: int):
         r = MPI()
-        _DLL.botan_mp_lshift(r.handle_(), self.__obj, c_size_t(shift))
+        _DLL.botan_mp_lshift(r._handle(), self.__obj, c_size_t(shift))
         return r
 
     def __ilshift__(self, shift: int):
@@ -2920,7 +3057,7 @@ class MPI:
 
     def __rshift__(self, shift: int):
         r = MPI()
-        _DLL.botan_mp_rshift(r.handle_(), self.__obj, c_size_t(shift))
+        _DLL.botan_mp_rshift(r._handle(), self.__obj, c_size_t(shift))
         return r
 
     def __irshift__(self, shift: int):
@@ -2930,53 +3067,62 @@ class MPI:
     def mod_mul(self, other: MPI, modulus: MPI) -> MPI:
         """Return the multiplication product of ``self`` and ``other`` modulo ``modulus``"""
         r = MPI()
-        _DLL.botan_mp_mod_mul(r.handle_(), self.__obj, other.handle_(), modulus.handle_())
+        _DLL.botan_mp_mod_mul(r._handle(), self.__obj, other._handle(), modulus._handle())
         return r
 
     def gcd(self, other: MPI) -> MPI:
         """Return the greatest common divisor of ``self`` and ``other``"""
         r = MPI()
-        _DLL.botan_mp_gcd(r.handle_(), self.__obj, other.handle_())
+        _DLL.botan_mp_gcd(r._handle(), self.__obj, other._handle())
         return r
 
     def pow_mod(self, exponent: MPI, modulus: MPI) -> MPI:
         """Return ``self`` to the ``exponent`` power modulo ``modulus``"""
         r = MPI()
-        _DLL.botan_mp_powmod(r.handle_(), self.__obj, exponent.handle_(), modulus.handle_())
+        _DLL.botan_mp_powmod(r._handle(), self.__obj, exponent._handle(), modulus._handle())
         return r
 
     def is_prime(self, rng_obj: RandomNumberGenerator, prob: int = 128) -> bool:
         """Test if ``self`` is prime"""
-        return _DLL.botan_mp_is_prime(self.__obj, rng_obj.handle_(), c_size_t(prob)) == 1
+        return _DLL.botan_mp_is_prime(self.__obj, rng_obj._handle(), c_size_t(prob)) == 1
 
     def inverse_mod(self, modulus: MPI) -> MPI:
         """Return the inverse of ``self`` modulo ``modulus``, or zero if no inverse exists"""
         r = MPI()
-        _DLL.botan_mp_mod_inverse(r.handle_(), self.__obj, modulus.handle_())
+        _DLL.botan_mp_mod_inverse(r._handle(), self.__obj, modulus._handle())
         return r
 
     def bit_count(self) -> int:
+        """Returns the size of this value in bits"""
         b = c_size_t(0)
         _DLL.botan_mp_num_bits(self.__obj, byref(b))
         return b.value
 
     def byte_count(self) -> int:
+        """Returns the size of this value in bytes"""
         b = c_size_t(0)
         _DLL.botan_mp_num_bytes(self.__obj, byref(b))
         return b.value
 
     def get_bit(self, bit: int) -> bool:
+        """Returns the value of the specified bit"""
         return _DLL.botan_mp_get_bit(self.__obj, c_size_t(bit)) == 1
 
     def clear_bit(self, bit: int):
+        """Set the specified bit to zero"""
         _DLL.botan_mp_clear_bit(self.__obj, c_size_t(bit))
 
     def set_bit(self, bit: int):
+        """Set the specified bit to one"""
         _DLL.botan_mp_set_bit(self.__obj, c_size_t(bit))
 
 
 class OID:
+    """An ASN.1 object identifier"""
+
     def __init__(self, obj: c_void_p | None = None):
+        """Create an OID wrapping the given FFI handle, or an empty one.
+        Applications should use ``from_string`` instead."""
         if not obj:
             obj = c_void_p(0)
         self.__obj = obj
@@ -2984,14 +3130,14 @@ class OID:
     def __del__(self):
         _DLL.botan_oid_destroy(self.__obj)
 
-    def handle_(self):
+    def _handle(self):
         return self.__obj
 
     @classmethod
     def from_string(cls, value: str) -> OID:
         """Create a new OID from dot notation or from a known name"""
         oid = OID()
-        _DLL.botan_oid_from_string(byref(oid.handle_()), _ctype_str(value))
+        _DLL.botan_oid_from_string(byref(oid._handle()), _ctype_str(value))
         return oid
 
     def to_string(self) -> str:
@@ -3007,8 +3153,10 @@ class OID:
         _DLL.botan_oid_register(self.__obj, _ctype_str(name))
 
     def cmp(self, other: OID) -> int:
+        """Returns a negative number, zero, or a positive number if ``self`` sorts
+        before, equal to, or after ``other``"""
         r = c_int(0)
-        _DLL.botan_oid_cmp(byref(r), self.__obj, other.handle_())
+        _DLL.botan_oid_cmp(byref(r), self.__obj, other._handle())
         return r.value
 
     def __eq__(self, other: OID | object) -> bool:
@@ -3049,12 +3197,16 @@ class OID:
 
 
 class ECGroup:
+    """An elliptic curve group"""
+
     def __init__(self, obj: c_void_p | None = None):
+        """Create an ECGroup wrapping the given FFI handle, or an empty one.
+        Applications should use one of the ``from_*`` methods instead."""
         if not obj:
             obj = c_void_p(0)
         self.__obj = obj
 
-    def handle_(self):
+    def _handle(self):
         return self.__obj
 
     def __del__(self):
@@ -3084,14 +3236,14 @@ class ECGroup:
         """Creates a new ECGroup from ec parameters"""
         ec_group = ECGroup()
         _DLL.botan_ec_group_from_params(
-            byref(ec_group.handle_()),
-            oid.handle_(),
-            p.handle_(),
-            a.handle_(),
-            b.handle_(),
-            base_x.handle_(),
-            base_y.handle_(),
-            order.handle_()
+            byref(ec_group._handle()),
+            oid._handle(),
+            p._handle(),
+            a._handle(),
+            b._handle(),
+            base_x._handle(),
+            base_y._handle(),
+            order._handle()
         )
         return ec_group
 
@@ -3099,34 +3251,34 @@ class ECGroup:
     def from_ber(cls, ber: bytes) -> ECGroup:
         """Creates a new ECGroup from a BER blob"""
         ec_group = ECGroup()
-        _DLL.botan_ec_group_from_ber(byref(ec_group.handle_()), ber, len(ber))
+        _DLL.botan_ec_group_from_ber(byref(ec_group._handle()), ber, len(ber))
         return ec_group
 
     @classmethod
     def from_pem(cls, pem: str) -> ECGroup:
         """Creates a new ECGroup from a PEM encoding"""
         ec_group = ECGroup()
-        _DLL.botan_ec_group_from_pem(byref(ec_group.handle_()), _ctype_str(pem))
+        _DLL.botan_ec_group_from_pem(byref(ec_group._handle()), _ctype_str(pem))
         return ec_group
 
     @classmethod
     def from_oid(cls, oid: OID) -> ECGroup:
         """Creates a new ECGroup from a group named by an OID"""
         ec_group = ECGroup()
-        _DLL.botan_ec_group_from_oid(byref(ec_group.handle_()), oid.handle_())
+        _DLL.botan_ec_group_from_oid(byref(ec_group._handle()), oid._handle())
         return ec_group
 
     @classmethod
     def from_name(cls, name: str) -> ECGroup:
         """Creates a new ECGroup from a common group name"""
         ec_group = ECGroup()
-        _DLL.botan_ec_group_from_name(byref(ec_group.handle_()), _ctype_str(name))
+        _DLL.botan_ec_group_from_name(byref(ec_group._handle()), _ctype_str(name))
         return ec_group
 
     @classmethod
     def unregister(cls, oid: OID) -> bool:
         """Unregister a previously registered group"""
-        rc = _DLL.botan_ec_group_unregister(oid.handle_())
+        rc = _DLL.botan_ec_group_unregister(oid._handle())
         if rc == 1:
             return True
         return False
@@ -3142,7 +3294,7 @@ class ECGroup:
     def get_curve_oid(self) -> OID:
         """Get the curve OID"""
         oid = OID()
-        _DLL.botan_ec_group_get_curve_oid(byref(oid.handle_()), self.__obj)
+        _DLL.botan_ec_group_get_curve_oid(byref(oid._handle()), self.__obj)
         return oid
 
     def get_p(self) -> MPI:
@@ -3182,14 +3334,16 @@ class ECGroup:
         return MPI(order)
 
     def get_identity(self) -> ECPoint:
+        """Returns the identity element of this group"""
         return ECPoint.identity(self)
 
     def get_generator(self) -> ECPoint:
+        """Returns the base point of this group"""
         return ECPoint.generator(self)
 
     def __eq__(self, other: ECGroup | object) -> bool:
         if isinstance(other, ECGroup):
-            return _DLL.botan_ec_group_equal(self.__obj, other.handle_()) == 1
+            return _DLL.botan_ec_group_equal(self.__obj, other._handle()) == 1
         else:
             return False
 
@@ -3198,12 +3352,16 @@ class ECGroup:
 
 
 class ECScalar:
+    """An integer modulo the order of an elliptic curve group"""
+
     def __init__(self, obj: c_void_p | None = None):
+        """Create an ECScalar wrapping the given FFI handle, or an empty one.
+        Applications should use ``random`` or ``from_mpi`` instead."""
         if not obj:
             obj = c_void_p(0)
         self.__obj = obj
 
-    def handle_(self):
+    def _handle(self):
         return self.__obj
 
     def __del__(self):
@@ -3213,14 +3371,14 @@ class ECScalar:
     def random(cls, group: ECGroup, rng: RandomNumberGenerator) -> ECScalar:
         """Create a new scalar with a random value"""
         scalar = ECScalar()
-        _DLL.botan_ec_scalar_random(byref(scalar.handle_()), group.handle_(), rng.handle_())
+        _DLL.botan_ec_scalar_random(byref(scalar._handle()), group._handle(), rng._handle())
         return scalar
 
     @classmethod
     def from_mpi(cls, group: ECGroup, mpi: MPI) -> ECScalar:
         """Convert from an MPI to a scalar. Raises an exception if the MPI is negative or too large."""
         scalar = ECScalar()
-        _DLL.botan_ec_scalar_from_mp(byref(scalar.handle_()), group.handle_(), mpi.handle_())
+        _DLL.botan_ec_scalar_from_mp(byref(scalar._handle()), group._handle(), mpi._handle())
         return scalar
 
     def to_mpi(self) -> MPI:
@@ -3231,12 +3389,16 @@ class ECScalar:
 
 
 class ECPoint:
+    """A point on an elliptic curve"""
+
     def __init__(self, obj: c_void_p | None = None):
+        """Create an ECPoint wrapping the given FFI handle, or an empty one.
+        Applications should use one of the ``from_*`` methods instead."""
         if not obj:
             obj = c_void_p(0)
         self.__obj = obj
 
-    def handle_(self):
+    def _handle(self):
         return self.__obj
 
     def __del__(self):
@@ -3246,14 +3408,14 @@ class ECPoint:
     def identity(cls, group: ECGroup) -> ECPoint:
         """Create a point set to the group identity"""
         ec_point = ECPoint()
-        _DLL.botan_ec_point_identity(byref(ec_point.handle_()), group.handle_())
+        _DLL.botan_ec_point_identity(byref(ec_point._handle()), group._handle())
         return ec_point
 
     @classmethod
     def generator(cls, group: ECGroup) -> ECPoint:
         """Create a point set to the group generator"""
         ec_point = ECPoint()
-        _DLL.botan_ec_point_generator(byref(ec_point.handle_()), group.handle_())
+        _DLL.botan_ec_point_generator(byref(ec_point._handle()), group._handle())
         return ec_point
 
     @classmethod
@@ -3261,19 +3423,19 @@ class ECPoint:
         """Create a point from a set of (x,y) integers.
         The integers must be within the field and must satisfy the curve equation."""
         ec_point = ECPoint()
-        _DLL.botan_ec_point_from_xy(byref(ec_point.handle_()), group.handle_(), x.handle_(), y.handle_())
+        _DLL.botan_ec_point_from_xy(byref(ec_point._handle()), group._handle(), x._handle(), y._handle())
         return ec_point
 
     @classmethod
     def from_bytes(cls, group: ECGroup, buf: bytes) -> ECPoint:
         """Create a point from a SEC1 compressed or uncompressed format."""
         ec_point = ECPoint()
-        _DLL.botan_ec_point_from_bytes(byref(ec_point.handle_()), group.handle_(), buf, len(buf))
+        _DLL.botan_ec_point_from_bytes(byref(ec_point._handle()), group._handle(), buf, len(buf))
         return ec_point
 
     def __eq__(self, other: ECPoint | object) -> bool:
         if isinstance(other, ECPoint):
-            return _DLL.botan_ec_point_equal(self.__obj, other.handle_()) == 1
+            return _DLL.botan_ec_point_equal(self.__obj, other._handle()) == 1
         else:
             return False
 
@@ -3282,20 +3444,23 @@ class ECPoint:
 
     def __add__(self, other: ECPoint):
         r = ECPoint()
-        _DLL.botan_ec_point_add(byref(r.handle_()), self.__obj, other.handle_())
+        _DLL.botan_ec_point_add(byref(r._handle()), self.__obj, other._handle())
         return r
 
     def is_identity(self):
+        """Returns True if this point is the identity element of its group"""
         return _DLL.botan_ec_point_is_identity(self.__obj) == 1
 
     def negate(self) -> ECPoint:
+        """Returns the negation of this point"""
         r = ECPoint()
-        _DLL.botan_ec_point_negate(byref(r.handle_()), self.__obj)
+        _DLL.botan_ec_point_negate(byref(r._handle()), self.__obj)
         return r
 
     def mul(self, scalar: ECScalar, rng: RandomNumberGenerator) -> ECPoint:
+        """Returns the product of this point and ``scalar``. The RNG is used for blinding."""
         r = ECPoint()
-        _DLL.botan_ec_point_mul(byref(r.handle_()), self.__obj, scalar.handle_(), rng.handle_())
+        _DLL.botan_ec_point_mul(byref(r._handle()), self.__obj, scalar._handle(), rng._handle())
         return r
 
     def to_x_bytes(self) -> bytes:
@@ -3323,9 +3488,10 @@ class FormatPreservingEncryptionFE1:
     """Initialize an instance for format preserving encryption"""
 
     def __init__(self, modulus: MPI, key: bytes, rounds: int = 5, compat_mode: bool = False):
+        """Create an instance encrypting integers modulo ``modulus`` under ``key``"""
         flags = c_uint32(1 if compat_mode else 0)
         self.__obj = c_void_p(0)
-        _DLL.botan_fpe_fe1_init(byref(self.__obj), modulus.handle_(), key, len(key), c_size_t(rounds), flags)
+        _DLL.botan_fpe_fe1_init(byref(self.__obj), modulus._handle(), key, len(key), c_size_t(rounds), flags)
 
     def __del__(self):
         _DLL.botan_fpe_destroy(self.__obj)
@@ -3334,18 +3500,21 @@ class FormatPreservingEncryptionFE1:
         """The msg should be a ``botan3.MPI`` or an object which can be converted to one"""
         r = MPI(msg)
         bits = _ctype_bits(tweak)
-        _DLL.botan_fpe_encrypt(self.__obj, r.handle_(), bits, len(bits))
+        _DLL.botan_fpe_encrypt(self.__obj, r._handle(), bits, len(bits))
         return r
 
     def decrypt(self, msg: MPILike, tweak: str | bytes) -> MPI:
         """The msg should be a ``botan3.MPI`` or an object which can be converted to one"""
         r = MPI(msg)
         bits = _ctype_bits(tweak)
-        _DLL.botan_fpe_decrypt(self.__obj, r.handle_(), bits, len(bits))
+        _DLL.botan_fpe_decrypt(self.__obj, r._handle(), bits, len(bits))
         return r
 
 class HOTP:
+    """Counter based one time passwords (RFC 4226)"""
+
     def __init__(self, key: bytes, digest: str = "SHA-1", digits: int = 6):
+        """Create an HOTP instance using the given key, hash function, and number of digits"""
         self.__obj = c_void_p(0)
         _DLL.botan_hotp_init(byref(self.__obj), key, len(key), _ctype_str(digest), digits)
 
@@ -3377,7 +3546,11 @@ class HOTP:
             return (False, counter)
 
 class TOTP:
+    """Time based one time passwords (RFC 6238)"""
+
     def __init__(self, key: bytes, digest: str = "SHA-1", digits: int = 6, timestep: int = 30):
+        """Create a TOTP instance using the given key, hash function, number of digits,
+        and time step in seconds"""
         self.__obj = c_void_p(0)
         _DLL.botan_totp_init(byref(self.__obj), key, len(key), _ctype_str(digest), digits, timestep)
 
@@ -3385,6 +3558,7 @@ class TOTP:
         _DLL.botan_totp_destroy(self.__obj)
 
     def generate(self, timestamp: int | None = None) -> int:
+        """Generate the TOTP code for the given Unix timestamp, or for the current time"""
         if timestamp is None:
             timestamp = int(system_time())
         code = c_uint32(0)
@@ -3392,6 +3566,9 @@ class TOTP:
         return code.value
 
     def check(self, code: int, timestamp: int | None = None, acceptable_drift: int = 0) -> bool:
+        """Returns True if ``code`` is the correct code for the given Unix timestamp
+        (or for the current time), allowing up to ``acceptable_drift`` time steps of
+        clock skew in either direction"""
         if timestamp is None:
             timestamp = int(system_time())
         rc = _DLL.botan_totp_check(self.__obj, code, timestamp, acceptable_drift)
@@ -3400,6 +3577,9 @@ class TOTP:
         return False
 
 def nist_key_wrap(kek: bytes, key: bytes, cipher: str | None = None) -> bytes:
+    """Wrap ``key`` under the key encryption key ``kek`` using the NIST SP 800-38F KW mode.
+    The input length must be a multiple of 8 bytes. If ``cipher`` is not specified,
+    AES with a key length matching ``kek`` is used."""
     cipher_algo = "AES-%d" % (8*len(kek)) if cipher is None else cipher
     padding = 0
     output = create_string_buffer(len(key) + 8)
@@ -3411,6 +3591,7 @@ def nist_key_wrap(kek: bytes, key: bytes, cipher: str | None = None) -> bytes:
     return bytes(output[0:int(out_len.value)])
 
 def nist_key_unwrap(kek: bytes, wrapped: bytes, cipher: str | None = None) -> bytes:
+    """Unwrap a key which was wrapped using ``nist_key_wrap``"""
     cipher_algo = "AES-%d" % (8*len(kek)) if cipher is None else cipher
     padding = 0
     output = create_string_buffer(len(wrapped))
@@ -3422,6 +3603,9 @@ def nist_key_unwrap(kek: bytes, wrapped: bytes, cipher: str | None = None) -> by
     return bytes(output[0:int(out_len.value)])
 
 def nist_key_wrap_padded(kek: bytes, key: bytes, cipher: str | None = None) -> bytes:
+    """Wrap ``key`` under the key encryption key ``kek`` using the NIST SP 800-38F KWP mode,
+    which accepts an input of any length. If ``cipher`` is not specified, AES with a
+    key length matching ``kek`` is used."""
     cipher_algo = "AES-%d" % (8*len(kek)) if cipher is None else cipher
     padding = 1
     output = create_string_buffer(len(key) + 15)
@@ -3433,6 +3617,7 @@ def nist_key_wrap_padded(kek: bytes, key: bytes, cipher: str | None = None) -> b
     return bytes(output[0:int(out_len.value)])
 
 def nist_key_unwrap_padded(kek: bytes, wrapped: bytes, cipher: str | None = None) -> bytes:
+    """Unwrap a key which was wrapped using ``nist_key_wrap_padded``"""
     cipher_algo = "AES-%d" % (8*len(kek)) if cipher is None else cipher
     padding = 1
     output = create_string_buffer(len(wrapped))
@@ -3444,9 +3629,12 @@ def nist_key_unwrap_padded(kek: bytes, wrapped: bytes, cipher: str | None = None
     return bytes(output[0:int(out_len.value)])
 
 class Srp6ServerSession:
+    """The server side of the SRP-6a password authenticated key exchange"""
+
     __obj = c_void_p(0)
 
     def __init__(self, group: str):
+        """Create a session using the named group (eg "modp/srp/2048")"""
         _DLL.botan_srp6_server_session_init(byref(self.__obj))
         self.__group = group
         self.__group_size = _call_fn_returning_sz(
@@ -3456,22 +3644,25 @@ class Srp6ServerSession:
         _DLL.botan_srp6_server_session_destroy(self.__obj)
 
     def step1(self, verifier: bytes, hsh: str, rng: RandomNumberGenerator) -> bytes:
+        """Given the verifier stored for this user, returns the value B to send to the client"""
         return _call_fn_returning_vec(self.__group_size,
                                       lambda b, bl:
                                       _DLL.botan_srp6_server_session_step1(self.__obj,
                                                                            verifier, len(verifier),
                                                                            _ctype_str(self.__group),
                                                                            _ctype_str(hsh),
-                                                                           rng.handle_(),
+                                                                           rng._handle(),
                                                                            b, bl))
 
     def step2(self, a: bytes) -> bytes:
+        """Given the value A received from the client, returns the shared session key"""
         return _call_fn_returning_vec(self.__group_size, lambda k, kl:
                                       _DLL.botan_srp6_server_session_step2(self.__obj,
                                                                            a, len(a),
                                                                            k, kl))
 
 def srp6_generate_verifier(identifier: str, password: str, salt: bytes, group: str, hsh: str) -> bytes:
+    """Returns the verifier which the server stores for this user"""
     sz = _call_fn_returning_sz(lambda len: _DLL.botan_srp6_group_size(_ctype_str(group), len))
 
     return _call_fn_returning_vec(sz, lambda v, vl:
@@ -3483,6 +3674,9 @@ def srp6_generate_verifier(identifier: str, password: str, salt: bytes, group: s
                                                                     v, vl))
 
 def srp6_client_agree(username: str, password: str, group: str, hsh: str, salt: bytes, b: bytes, rng: RandomNumberGenerator) -> tuple[bytes, bytes]:
+    """The client side of the SRP-6a password authenticated key exchange.
+    Given the value ``b`` received from the server, returns a tuple of the value A
+    to send to the server and the shared session key."""
     sz = _call_fn_returning_sz(lambda len: _DLL.botan_srp6_group_size(_ctype_str(group), len))
 
     return _call_fn_returning_vec_pair(sz, sz, lambda a, al, k, kl:
@@ -3492,7 +3686,7 @@ def srp6_client_agree(username: str, password: str, group: str, hsh: str, salt: 
                                                                     _ctype_str(hsh),
                                                                     salt, len(salt),
                                                                     b, len(b),
-                                                                    rng.handle_(),
+                                                                    rng._handle(),
                                                                     a, al,
                                                                     k, kl))
 
