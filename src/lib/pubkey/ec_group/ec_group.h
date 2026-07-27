@@ -162,6 +162,11 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       explicit EC_Group(std::span<const uint8_t> der);
 
+      /**
+      * Decode a DER encoded ECC domain parameter set
+      * @param der the bytes of the DER encoding
+      * @param der_len the length of der in bytes
+      */
       BOTAN_DEPRECATED("Use EC_Group(std::span)")
       EC_Group(const uint8_t der[], size_t der_len) : EC_Group(std::span{der, der_len}) {}
 
@@ -196,6 +201,11 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       static EC_Group from_name(std::string_view name);
 
+      /**
+      * Initialize an EC group from the PEM/ASN.1 encoding
+      * @param pem the PEM encoded group
+      * @return the decoded group
+      */
       BOTAN_DEPRECATED("Use EC_Group::from_PEM") static EC_Group EC_Group_from_PEM(std::string_view pem) {
          return EC_Group::from_PEM(pem);
       }
@@ -217,12 +227,34 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
 
       ~EC_Group();
 
+      /**
+      * Copy constructor
+      */
       EC_Group(const EC_Group&);
+
+      /**
+      * Move constructor
+      */
       EC_Group(EC_Group&&) = default;
 
+      /**
+      * Copy assignment
+      * @return reference to this
+      */
       EC_Group& operator=(const EC_Group&);
+
+      /**
+      * Move assignment
+      * @return reference to this
+      */
       EC_Group& operator=(EC_Group&&) = default;
 
+      /**
+      * Return true if this group has been initialized with domain parameters
+      *
+      * This is only false for groups created using the deprecated default
+      * constructor.
+      */
       bool initialized() const { return (m_data != nullptr); }
 
       /**
@@ -231,8 +263,17 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
        */
       bool verify_group(RandomNumberGenerator& rng, bool strong = false) const;
 
+      /**
+      * Test if two groups describe the same curve
+      * @param other the group to compare against
+      * @return true if the two groups are equal
+      */
       bool operator==(const EC_Group& other) const;
 
+      /**
+      * Return how this group was created, eg from a builtin table or by
+      * decoding an external encoding
+      */
       EC_Group_Source source() const;
 
       /**
@@ -326,7 +367,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       size_t get_order_bytes() const;
 
-      /// Table for computing g*x + h*y
+      /**
+      * Table for computing g*x + h*y
+      */
       class BOTAN_PUBLIC_API(3, 6) Mul2Table final {
          public:
             /**
@@ -371,9 +414,21 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
                                              const EC_Scalar& y) const;
 
             ~Mul2Table();
+
             Mul2Table(const Mul2Table& other) = delete;
-            Mul2Table(Mul2Table&& other) noexcept;
             Mul2Table& operator=(const Mul2Table& other) = delete;
+
+            /**
+            * Move constructor
+            * @param other the table to move from
+            */
+            Mul2Table(Mul2Table&& other) noexcept;
+
+            /**
+            * Move assignment
+            * @param other the table to move from
+            * @return reference to this
+            */
             Mul2Table& operator=(Mul2Table&& other) noexcept;
 
          private:
@@ -445,30 +500,47 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       bool has_cofactor() const;
 
-      /*
+      /**
+      * Look up the parameters of a builtin group by OID
+      *
       * For internal use only
+      *
+      * @param oid the OID of the group to look up
+      * @return the group data, or nullptr if the OID is not a known group
+      *
       * TODO(Botan4): Move this to an internal header
       */
       static std::shared_ptr<EC_Group_Data> EC_group_info(const OID& oid);
 
-      /*
+      /**
+      * Discard all cached and application registered group data
+      *
       * For internal use only
       *
       * @warning this invalidates pointers and can cause memory corruption.
       * This function exists only to be called in tests.
       *
+      * @return the number of groups which were discarded
+      *
       * TODO(Botan4): Move this to an internal header
       */
       static size_t clear_registered_curve_data();
 
-      /*
+      /**
+      * Identify a builtin group by its order
+      *
       * For internal use only
+      *
+      * @param order the group order to look up
+      * @return the OID of the matching group, or an empty OID if none matches
+      *
       * TODO(Botan4): Move this to an internal header
       */
       static OID EC_group_identity_from_order(const BigInt& order);
 
-      /*
+      /**
       * For internal use only
+      * @return the inner representation of this group
       */
       const std::shared_ptr<EC_Group_Data>& _data() const { return m_data; }
 
@@ -490,6 +562,14 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
          return EC_AffinePoint(*this, std::span{bits, len}).to_legacy_point();
       }
 
+      /**
+      * OS2ECP (Octet String To Elliptic Curve Point)
+      *
+      * Deserialize an encoded point. Verifies that the point is on the curve.
+      *
+      * @param encoded_point the encoded point
+      * @return the decoded point
+      */
       BOTAN_DEPRECATED("Use EC_AffinePoint::deserialize")
       EC_Point OS2ECP(std::span<const uint8_t> encoded_point) const {
          return EC_AffinePoint(*this, encoded_point).to_legacy_point();
@@ -669,22 +749,28 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       BOTAN_DEPRECATED("Deprecated no replacement") bool a_is_zero() const { return get_a().is_zero(); }
 
-      /*
+      /**
       * Reduce x modulo the order
+      * @param x the value to reduce
+      * @return x reduced modulo the group order
       */
       BOTAN_DEPRECATED("Use EC_Scalar") BigInt mod_order(const BigInt& x) const {
          return EC_Scalar::from_bytes_mod_order(*this, x.serialize()).to_bigint();
       }
 
-      /*
+      /**
       * Return inverse of x modulo the order
+      * @param x the value to invert
+      * @return the multiplicative inverse of x modulo the group order
       */
       BOTAN_DEPRECATED("Use EC_Scalar") BigInt inverse_mod_order(const BigInt& x) const {
          return EC_Scalar::from_bigint(*this, x).invert().to_bigint();
       }
 
-      /*
+      /**
       * Reduce (x*x) modulo the order
+      * @param x the value to square
+      * @return (x*x) reduced modulo the group order
       */
       BOTAN_DEPRECATED("Use EC_Scalar") BigInt square_mod_order(const BigInt& x) const {
          auto xs = EC_Scalar::from_bigint(*this, x);
@@ -692,8 +778,11 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
          return xs.to_bigint();
       }
 
-      /*
+      /**
       * Reduce (x*y) modulo the order
+      * @param x the first factor
+      * @param y the second factor
+      * @return (x*y) reduced modulo the group order
       */
       BOTAN_DEPRECATED("Use EC_Scalar") BigInt multiply_mod_order(const BigInt& x, const BigInt& y) const {
          auto xs = EC_Scalar::from_bigint(*this, x);
@@ -701,8 +790,12 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
          return (xs * ys).to_bigint();
       }
 
-      /*
+      /**
       * Reduce (x*y*z) modulo the order
+      * @param x the first factor
+      * @param y the second factor
+      * @param z the third factor
+      * @return (x*y*z) reduced modulo the group order
       */
       BOTAN_DEPRECATED("Use EC_Scalar")
       BigInt multiply_mod_order(const BigInt& x, const BigInt& y, const BigInt& z) const {
@@ -712,14 +805,21 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
          return (xs * ys * zs).to_bigint();
       }
 
-      /*
+      /**
       * Return x^3 modulo the order
+      * @param x the value to cube
+      * @return (x*x*x) reduced modulo the group order
       */
       BOTAN_DEPRECATED("Deprecated no replacement") BigInt cube_mod_order(const BigInt& x) const {
          auto xs = EC_Scalar::from_bigint(*this, x);
          return (xs * xs * xs).to_bigint();
       }
 
+      /**
+      * Return the size in bytes of a point encoded in the given format
+      * @param format the point encoding format
+      * @return the length of the encoding in bytes
+      */
       BOTAN_DEPRECATED("Just serialize the point and check") size_t point_size(EC_Point_Format format) const {
          // Hybrid and standard format are (x,y), compressed is y, +1 format byte
          if(format == EC_Point_Format::Compressed) {
@@ -752,6 +852,12 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       bool m_explicit_encoding = false;
 };
 
+/**
+* Test if two groups describe different curves
+* @param lhs the first group
+* @param rhs the second group
+* @return true if the two groups are not equal
+*/
 inline bool operator!=(const EC_Group& lhs, const EC_Group& rhs) {
    return !(lhs == rhs);
 }

@@ -105,6 +105,15 @@ class BOTAN_PUBLIC_API(3, 6) EC_Scalar final {
       */
       static EC_Scalar gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng);
 
+      /**
+      * Compute the elliptic curve scalar multiplication (g*k) where g is the
+      * standard base point on the curve. Then extract the x coordinate of
+      * the resulting point, and reduce it modulo the group order.
+      *
+      * @param scalar the scalar k to multiply the base point by
+      * @param rng a random number generator, used for blinding
+      * @return the x coordinate of g*k reduced modulo the group order
+      */
       BOTAN_DEPRECATED("Use version without workspace arg")
       static EC_Scalar
          gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& /*ws*/) {
@@ -233,16 +242,45 @@ class BOTAN_PUBLIC_API(3, 6) EC_Scalar final {
 
       friend bool operator==(const EC_Scalar& x, const EC_Scalar& y) { return x.is_eq(y); }
 
+      /**
+      * Copy constructor
+      * @param other the scalar to copy
+      */
       EC_Scalar(const EC_Scalar& other);
+
+      /**
+      * Move constructor
+      * @param other the scalar to move from
+      */
       EC_Scalar(EC_Scalar&& other) noexcept;
 
+      /**
+      * Copy assignment
+      * @param other the scalar to copy
+      * @return reference to this
+      */
       EC_Scalar& operator=(const EC_Scalar& other);
+
+      /**
+      * Move assignment
+      * @param other the scalar to move from
+      * @return reference to this
+      */
       EC_Scalar& operator=(EC_Scalar&& other) noexcept;
 
       ~EC_Scalar();
 
+      /**
+      * For internal use only
+      * @return the inner representation of this scalar
+      */
       const EC_Scalar_Data& _inner() const { return inner(); }
 
+      /**
+      * For internal use only
+      * @param inner the inner representation to wrap
+      * @return a scalar wrapping the provided inner representation
+      */
       static EC_Scalar _from_inner(std::unique_ptr<EC_Scalar_Data> inner);
 
    private:
