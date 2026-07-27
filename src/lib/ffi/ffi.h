@@ -52,8 +52,6 @@ API follows a few simple rules:
 
   In some cases knowing the exact size is difficult or impossible. In these
   situations view functions are used; see the handbook for further details.
-
-  TODO: Doxygen comments for all parameters
 */
 
 #include <stddef.h>
@@ -406,7 +404,7 @@ int botan_rng_generate_with_input(
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_rng_destroy(botan_rng_t rng);
 
-/*
+/**
 * Opaque type of an eXtendable Output Function (XOF)
 */
 typedef struct botan_xof_struct* botan_xof_t;
@@ -484,7 +482,7 @@ BOTAN_FFI_EXPORT(3, 11) int botan_xof_output(botan_xof_t xof, uint8_t* out, size
 */
 BOTAN_FFI_EXPORT(3, 11) int botan_xof_destroy(botan_xof_t xof);
 
-/*
+/**
 * Opaque type of a hash function
 */
 typedef struct botan_hash_struct* botan_hash_t;
@@ -574,7 +572,7 @@ BOTAN_FFI_EXPORT(2, 0) int botan_hash_destroy(botan_hash_t hash);
 */
 BOTAN_FFI_EXPORT(2, 8) int botan_hash_name(botan_hash_t hash, char* name, size_t* name_len);
 
-/*
+/**
 * Opaque type of a message authentication code
 */
 typedef struct botan_mac_struct* botan_mac_t;
@@ -670,7 +668,7 @@ int botan_mac_get_keyspec(botan_mac_t mac,
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_mac_destroy(botan_mac_t mac);
 
-/*
+/**
 * Opaque type of a cipher mode
 */
 typedef struct botan_cipher_struct* botan_cipher_t;
@@ -815,7 +813,7 @@ BOTAN_FFI_EXPORT(2, 0) int botan_cipher_clear(botan_cipher_t hash);
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_cipher_destroy(botan_cipher_t cipher);
 
-/*
+/**
 * Derive a key from a passphrase for a number of iterations
 * @param pbkdf_algo PBKDF algorithm, e.g., "PBKDF2(SHA-256)"
 * @param out buffer to store the derived key, must be of out_len bytes
@@ -874,7 +872,7 @@ int botan_pbkdf_timed(const char* pbkdf_algo,
                       size_t milliseconds_to_run,
                       size_t* out_iterations_used);
 
-/*
+/**
 * Derive a key from a passphrase
 * @param algo PBKDF algorithm, e.g., "PBKDF2(SHA-256)" or "Scrypt"
 * @param param1 the first PBKDF algorithm parameter
@@ -901,8 +899,8 @@ int botan_pwdhash(const char* algo,
                   const uint8_t salt[],
                   size_t salt_len);
 
-/*
-* Derive a key from a passphrase
+/**
+* Derive a key from a passphrase, choosing parameters to hit a target runtime
 * @param algo PBKDF algorithm, e.g., "Scrypt" or "PBKDF2(SHA-256)"
 * @param msec the desired runtime in milliseconds
 * @param param1 will be set to the first password hash parameter
@@ -970,8 +968,8 @@ int botan_kdf(const char* kdf_algo,
               const uint8_t label[],
               size_t label_len);
 
-/*
-* Raw Block Cipher (PRP) interface
+/**
+* Opaque type of a raw block cipher (PRP)
 */
 typedef struct botan_block_cipher_struct* botan_block_cipher_t;
 
@@ -1036,8 +1034,8 @@ int botan_block_cipher_get_keyspec(botan_block_cipher_t cipher,
                                    size_t* out_maximum_keylength,
                                    size_t* out_keylength_modulo);
 
-/*
-* Multiple precision integers (MPI)
+/**
+* Opaque type of a multiple precision integer (MPI)
 */
 typedef struct botan_mp_struct* botan_mp_t;
 
@@ -1110,27 +1108,45 @@ BOTAN_FFI_EXPORT(2, 1) int botan_mp_num_bits(botan_mp_t n, size_t* bits);
 */
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_num_bytes(botan_mp_t n, size_t* bytes);
 
-/*
+/**
 * Convert the MPI to a big-endian binary string. Writes botan_mp_num_bytes to vec
 *
 * Note that the sign of the integer is ignored here; only the absolute value is copied
+*
+* @param mp the integer to encode
+* @param vec output buffer of at least botan_mp_num_bytes(mp) bytes
+* @return 0 on success, a negative value on failure
 */
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_to_bin(botan_mp_t mp, uint8_t vec[]);
 
-/*
+/**
 * View the big-endian binary string encoding of this integer
 *
 * Note that the sign of the integer is ignored here; only the absolute value is viewed
+*
+* @param mp the integer to encode
+* @param ctx an application context passed to the view function
+* @param view the view callback which receives the encoding
+* @return 0 on success, a negative value on failure
 */
 BOTAN_FFI_EXPORT(3, 10) int botan_mp_view_bin(botan_mp_t mp, botan_view_ctx ctx, botan_view_bin_fn view);
 
-/*
+/**
 * Set an MP to the big-endian binary value
+*
+* @param mp the integer to set
+* @param vec the big-endian encoding to decode
+* @param vec_len length of vec in bytes
+* @return 0 on success, a negative value on failure
 */
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_from_bin(botan_mp_t mp, const uint8_t vec[], size_t vec_len);
 
-/*
+/**
 * Convert the MPI to a uint32_t, if possible. Fails if MPI is negative or too large.
+*
+* @param mp the integer to convert
+* @param val set to the value of mp
+* @return 0 on success, a negative value on failure
 */
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_to_uint32(botan_mp_t mp, uint32_t* val);
 
@@ -1146,59 +1162,192 @@ BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_positive(botan_mp_t mp);
 */
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_negative(botan_mp_t mp);
 
+/**
+* Negate the MPI, ie replace it by its additive inverse
+* @param mp the integer to negate, modified in place
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_flip_sign(botan_mp_t mp);
 
+/**
+* Return 1 iff mp is equal to zero
+* @param mp the integer to test
+* @return 1 if zero, 0 if not, or a negative value on error
+*/
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_zero(botan_mp_t mp);
 
+/**
+* Return 1 iff mp is odd
+* @param mp the integer to test
+* @return 1 if odd, 0 if even, or a negative value on error
+*/
 BOTAN_FFI_DEPRECATED("Use botan_mp_get_bit(0)") BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_odd(botan_mp_t mp);
+
+/**
+* Return 1 iff mp is even
+* @param mp the integer to test
+* @return 1 if even, 0 if odd, or a negative value on error
+*/
 BOTAN_FFI_DEPRECATED("Use botan_mp_get_bit(0)") BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_even(botan_mp_t mp);
 
+/**
+* Set result to x + y
+* @param result set to the sum
+* @param x the first addend
+* @param y the second addend
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8) int botan_mp_add_u32(botan_mp_t result, botan_mp_t x, uint32_t y);
+
+/**
+* Set result to x - y
+* @param result set to the difference
+* @param x the minuend
+* @param y the subtrahend
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8) int botan_mp_sub_u32(botan_mp_t result, botan_mp_t x, uint32_t y);
 
+/**
+* Set result to x + y
+* @param result set to the sum
+* @param x the first addend
+* @param y the second addend
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_add(botan_mp_t result, botan_mp_t x, botan_mp_t y);
+
+/**
+* Set result to x - y
+* @param result set to the difference
+* @param x the minuend
+* @param y the subtrahend
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_sub(botan_mp_t result, botan_mp_t x, botan_mp_t y);
+
+/**
+* Set result to x * y
+* @param result set to the product
+* @param x the first factor
+* @param y the second factor
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_mul(botan_mp_t result, botan_mp_t x, botan_mp_t y);
 
+/**
+* Divide x by y, producing both the quotient and the remainder
+* @param quotient set to x / y
+* @param remainder set to x % y
+* @param x the dividend
+* @param y the divisor, which must not be zero
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 1)
 int botan_mp_div(botan_mp_t quotient, botan_mp_t remainder, botan_mp_t x, botan_mp_t y);
 
+/**
+* Set result to (x * y) % mod
+* @param result set to the modular product
+* @param x the first factor
+* @param y the second factor
+* @param mod the modulus, which must be positive
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 1)
 int botan_mp_mod_mul(botan_mp_t result, botan_mp_t x, botan_mp_t y, botan_mp_t mod);
 
-/*
-* Returns 0 if x != y
-* Returns 1 if x == y
-* Returns negative number on error
+/**
+* Test if two integers are equal
+* @param x the first integer
+* @param y the second integer
+* @return 1 if x == y, 0 if x != y, or a negative value on error
 */
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_equal(botan_mp_t x, botan_mp_t y);
 
-/*
-* Sets *result to comparison result:
-* -1 if x < y, 0 if x == y, 1 if x > y
-* Returns negative number on error or zero on success
+/**
+* Compare two integers
+* @param result set to -1 if x < y, 0 if x == y, 1 if x > y
+* @param x the first integer
+* @param y the second integer
+* @return 0 on success, a negative value on failure
 */
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_cmp(int* result, botan_mp_t x, botan_mp_t y);
 
-/*
-* Swap two botan_mp_t
+/**
+* Swap the values of two integers
+* @param x the first integer
+* @param y the second integer
+* @return 0 on success, a negative value on failure
 */
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_swap(botan_mp_t x, botan_mp_t y);
 
-/* Return (base^exponent) % modulus */
+/**
+* Set out to (base^exponent) % modulus
+* @param out set to the result of the modular exponentiation
+* @param base the base
+* @param exponent the exponent
+* @param modulus the modulus, which must be positive
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 1)
 int botan_mp_powmod(botan_mp_t out, botan_mp_t base, botan_mp_t exponent, botan_mp_t modulus);
 
+/**
+* Set out to in shifted left by the specified number of bits
+* @param out set to the shifted value
+* @param in the integer to shift
+* @param shift the number of bits to shift by
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_lshift(botan_mp_t out, botan_mp_t in, size_t shift);
+
+/**
+* Set out to in shifted right by the specified number of bits
+* @param out set to the shifted value
+* @param in the integer to shift
+* @param shift the number of bits to shift by
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_rshift(botan_mp_t out, botan_mp_t in, size_t shift);
 
+/**
+* Set out to the inverse of in modulo the specified modulus. If no
+* inverse exists, out is set to zero.
+* @param out set to the modular inverse
+* @param in the value to invert
+* @param modulus the modulus
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_mod_inverse(botan_mp_t out, botan_mp_t in, botan_mp_t modulus);
 
+/**
+* Set rand_out to a random integer of the specified bit length
+* @param rand_out set to the random integer
+* @param rng a random number generator
+* @param bits the desired bit length
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_rand_bits(botan_mp_t rand_out, botan_rng_t rng, size_t bits);
 
+/**
+* Set rand_out to a random integer within the half-open range [lower_bound, upper_bound)
+* @param rand_out set to the random integer
+* @param rng a random number generator
+* @param lower_bound the inclusive lower bound
+* @param upper_bound the exclusive upper bound
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 1)
 int botan_mp_rand_range(botan_mp_t rand_out, botan_rng_t rng, botan_mp_t lower_bound, botan_mp_t upper_bound);
 
+/**
+* Set out to the greatest common divisor of x and y
+* @param out set to gcd(x, y)
+* @param x the first integer
+* @param y the second integer
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_gcd(botan_mp_t out, botan_mp_t x, botan_mp_t y);
 
 /**
@@ -1260,9 +1409,14 @@ BOTAN_FFI_EXPORT(2, 0) int botan_bcrypt_is_valid(const char* pass, const char* h
 * OIDs
 */
 
+/**
+* Opaque type of an ASN.1 object identifier
+*/
 typedef struct botan_asn1_oid_struct* botan_asn1_oid_t;
 
 /**
+* Frees all resources of the OID object
+* @param oid the OID object to destroy
 * @returns negative number on error, or zero on success
 */
 BOTAN_FFI_EXPORT(3, 8) int botan_oid_destroy(botan_asn1_oid_t oid);
@@ -1292,6 +1446,9 @@ BOTAN_FFI_EXPORT(3, 8) int botan_oid_view_string(botan_asn1_oid_t oid, botan_vie
 BOTAN_FFI_EXPORT(3, 8) int botan_oid_view_name(botan_asn1_oid_t oid, botan_view_ctx ctx, botan_view_str_fn view);
 
 /**
+* Test if two OIDs are equal
+* @param a the first OID
+* @param b the second OID
 * @returns 0 if a != b
 * @returns 1 if a == b
 * @returns negative number on error
@@ -1309,9 +1466,14 @@ BOTAN_FFI_EXPORT(3, 8) int botan_oid_cmp(int* result, botan_asn1_oid_t a, botan_
 * EC Groups
 */
 
+/**
+* Opaque type of a set of elliptic curve domain parameters
+*/
 typedef struct botan_ec_group_struct* botan_ec_group_t;
 
 /**
+* Frees all resources of the EC Group object
+* @param ec_group the EC Group object to destroy
 * @returns negative number on error, or zero on success
 */
 BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_destroy(botan_ec_group_t ec_group);
@@ -1446,18 +1608,30 @@ BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_g_y(botan_mp_t* g_y, botan_ec_grou
 BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_order(botan_mp_t* order, botan_ec_group_t ec_group);
 
 /**
+* Test if two EC Groups describe the same curve
+* @param curve1 the first group
+* @param curve2 the second group
 * @returns 0 if curve1 != curve2
 * @returns 1 if curve1 == curve2
 * @returns negative number on error
 */
 BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_equal(botan_ec_group_t curve1, botan_ec_group_t curve2);
 
-/*
-* EC Points and Scalars
+/**
+* Opaque type of a scalar, that is an integer modulo the group order
 */
 typedef struct botan_ec_scalar_struct* botan_ec_scalar_t;
+
+/**
+* Opaque type of an elliptic curve point
+*/
 typedef struct botan_ec_point_struct* botan_ec_point_t;
 
+/**
+* Frees all resources of the scalar object
+* @param ec_scalar the scalar object to destroy
+* @returns negative number on error, or zero on success
+*/
 BOTAN_FFI_EXPORT(3, 12) int botan_ec_scalar_destroy(botan_ec_scalar_t ec_scalar);
 
 /**
@@ -1480,6 +1654,11 @@ int botan_ec_scalar_from_mp(botan_ec_scalar_t* ec_scalar, botan_ec_group_t ec_gr
 BOTAN_FFI_EXPORT(3, 12)
 int botan_ec_scalar_to_mp(botan_ec_scalar_t ec_scalar, botan_mp_t* mp);
 
+/**
+* Frees all resources of the point object
+* @param ec_point the point object to destroy
+* @returns negative number on error, or zero on success
+*/
 BOTAN_FFI_EXPORT(3, 12) int botan_ec_point_destroy(botan_ec_point_t ec_point);
 
 /**
@@ -1545,33 +1724,55 @@ BOTAN_FFI_EXPORT(3, 12)
 int botan_ec_point_view_compressed(botan_ec_point_t ec_point, botan_view_ctx ctx, botan_view_bin_fn view);
 
 /**
-* @returns 1 if @param ec_point is the identity element, else 0
+* Test if a point is the identity element of the group
+* @param ec_point the point to test
+* @returns 1 if ec_point is the identity element, else 0
 * @returns negative number on error
 */
 BOTAN_FFI_EXPORT(3, 12) int botan_ec_point_is_identity(botan_ec_point_t ec_point);
 
 /**
-* @returns 1 if @param x == @param y else 0 otherwise
+* Test if two points are equal
+* @param x the first point
+* @param y the second point
+* @returns 1 if x == y, else 0
 * @returns negative number on error
 */
 BOTAN_FFI_EXPORT(3, 12) int botan_ec_point_equal(botan_ec_point_t x, botan_ec_point_t y);
 
 /**
+* Compute the additive inverse of a point
+* @param result the new object will be placed here
 * @param ec_point point to negate
-* @param result contains the result
+* @returns negative number on error, or zero on success
 */
 BOTAN_FFI_EXPORT(3, 12) int botan_ec_point_negate(botan_ec_point_t* result, botan_ec_point_t ec_point);
 
+/**
+* Add two points
+* @param result the new object will be placed here
+* @param x the first point
+* @param y the second point
+* @returns negative number on error, or zero on success
+*/
 BOTAN_FFI_EXPORT(3, 12) int botan_ec_point_add(botan_ec_point_t* result, botan_ec_point_t x, botan_ec_point_t y);
 
+/**
+* Multiply a point by a scalar
+* @param result the new object will be placed here
+* @param ec_point the point to multiply
+* @param ec_scalar the scalar to multiply by
+* @param rng a random number generator, used for blinding
+* @returns negative number on error, or zero on success
+*/
 BOTAN_FFI_EXPORT(3, 12)
 int botan_ec_point_mul(botan_ec_point_t* result,
                        botan_ec_point_t ec_point,
                        botan_ec_scalar_t ec_scalar,
                        botan_rng_t rng);
 
-/*
-* Public/private key creation, import, ...
+/**
+* Opaque type of a private key
 */
 typedef struct botan_privkey_struct* botan_privkey_t;
 
@@ -1598,16 +1799,63 @@ int botan_ec_privkey_create(botan_privkey_t* key, const char* algo_name, botan_e
 
 #define BOTAN_CHECK_KEY_EXPENSIVE_TESTS 1
 
+/**
+* Test the consistency of a private key
+* @param key the private key to check
+* @param rng a random number generator
+* @param flags either 0 or BOTAN_CHECK_KEY_EXPENSIVE_TESTS
+* @return 0 if the key is valid, negative if invalid or some other error
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_check_key(botan_privkey_t key, botan_rng_t rng, uint32_t flags);
 
+/**
+* Create a new RSA private key
+* @param key the new object will be placed here
+* @param rng a random number generator
+* @param n_bits the bit length of the modulus
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_create")
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_create_rsa(botan_privkey_t* key, botan_rng_t rng, size_t n_bits);
+
+/**
+* Create a new ECDSA private key
+* @param key the new object will be placed here
+* @param rng a random number generator
+* @param params the name of the curve, eg "secp256r1"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_create")
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_create_ecdsa(botan_privkey_t* key, botan_rng_t rng, const char* params);
+
+/**
+* Create a new ECDH private key
+* @param key the new object will be placed here
+* @param rng a random number generator
+* @param params the name of the curve, eg "secp256r1"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_create")
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_create_ecdh(botan_privkey_t* key, botan_rng_t rng, const char* params);
+
+/**
+* Create a new McEliece private key
+* @param key the new object will be placed here
+* @param rng a random number generator
+* @param n the code length
+* @param t the error correction capability
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_create")
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_create_mceliece(botan_privkey_t* key, botan_rng_t rng, size_t n, size_t t);
+
+/**
+* Create a new Diffie-Hellman private key
+* @param key the new object will be placed here
+* @param rng a random number generator
+* @param param the name of the group, eg "modp/ietf/2048"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_create")
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_create_dh(botan_privkey_t* key, botan_rng_t rng, const char* param);
 
@@ -1662,6 +1910,8 @@ BOTAN_FFI_EXPORT(2, 0)
 int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng, const uint8_t bits[], size_t len, const char* password);
 
 /**
+* Frees all resources of the private key object
+* @param key the private key to destroy
 * @return 0 if success, error if invalid object handle
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_destroy(botan_privkey_t key);
@@ -1671,11 +1921,19 @@ BOTAN_FFI_EXPORT(2, 0) int botan_privkey_destroy(botan_privkey_t key);
 #define BOTAN_PRIVKEY_EXPORT_FLAG_RAW 2
 
 /**
+* Export a private key in DER, PEM or raw encoding
+*
 * On input *out_len is number of bytes in out[]
 * On output *out_len is number of bytes written (or required)
 * If out is not big enough no output is written, *out_len is set and 1 is returned
 * Returns 0 on success and sets
 * If some other error occurs a negative integer is returned.
+*
+* @param key the private key to export
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @param flags one of BOTAN_PRIVKEY_EXPORT_FLAG_DER, _PEM or _RAW
+* @return 0 on success, 1 if the buffer was too small, a negative value on other failures
 */
 BOTAN_FFI_DEPRECATED("Use botan_privkey_view_{der,pem,raw}")
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_export(botan_privkey_t key, uint8_t out[], size_t* out_len, uint32_t flags);
@@ -1695,10 +1953,28 @@ BOTAN_FFI_EXPORT(3, 0) int botan_privkey_view_pem(botan_privkey_t key, botan_vie
 */
 BOTAN_FFI_EXPORT(3, 6) int botan_privkey_view_raw(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
 
+/**
+* Get the name of the algorithm this private key is for
+* @param key the private key to query
+* @param out output buffer
+* @param out_len on input the length of out, on success the number of bytes written
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8) int botan_privkey_algo_name(botan_privkey_t key, char out[], size_t* out_len);
 
 /**
+* Export a private key encrypted with a passphrase
+*
 * Set encryption_algo to NULL or "" to have the library choose a default (recommended)
+*
+* @param key the private key to export
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @param rng a random number generator
+* @param passphrase the passphrase to encrypt under
+* @param encryption_algo the cipher to use, or NULL for the default
+* @param flags either BOTAN_PRIVKEY_EXPORT_FLAG_DER or BOTAN_PRIVKEY_EXPORT_FLAG_PEM
+* @return 0 on success, a negative value on failure
 */
 BOTAN_FFI_DEPRECATED("Use botan_privkey_export_encrypted_pbkdf_{msec,iter}")
 BOTAN_FFI_EXPORT(2, 0)
@@ -1710,11 +1986,23 @@ int botan_privkey_export_encrypted(botan_privkey_t key,
                                    const char* encryption_algo,
                                    uint32_t flags);
 
-/*
-* Export a private key, running PBKDF for specified amount of time
-* @param key the private key to export
+/**
+* Export a private key encrypted with a passphrase, running the PBKDF for a
+* specified amount of time
 *
 * Note: starting in 3.0, the output iterations count is not provided
+*
+* @param key the private key to export
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @param rng a random number generator
+* @param passphrase the passphrase to encrypt under
+* @param pbkdf_msec_runtime desired PBKDF runtime in milliseconds
+* @param pbkdf_iterations_out ignored since 3.0
+* @param cipher_algo the cipher to use, or NULL for the default
+* @param pbkdf_algo the password hash to use, or NULL for the default
+* @param flags either BOTAN_PRIVKEY_EXPORT_FLAG_DER or BOTAN_PRIVKEY_EXPORT_FLAG_PEM
+* @return 0 on success, a negative value on failure
 */
 BOTAN_FFI_DEPRECATED("Use botan_privkey_view_encrypted_{der,pem}_timed")
 BOTAN_FFI_EXPORT(2, 0)
@@ -1730,7 +2018,19 @@ int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key,
                                               uint32_t flags);
 
 /**
-* Export a private key using the specified number of iterations.
+* Export a private key encrypted with a passphrase, using the specified number
+* of PBKDF iterations.
+*
+* @param key the private key to export
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @param rng a random number generator
+* @param passphrase the passphrase to encrypt under
+* @param pbkdf_iterations the number of PBKDF iterations to run
+* @param cipher_algo the cipher to use, or NULL for the default
+* @param pbkdf_algo the password hash to use, or NULL for the default
+* @param flags either BOTAN_PRIVKEY_EXPORT_FLAG_DER or BOTAN_PRIVKEY_EXPORT_FLAG_PEM
+* @return 0 on success, a negative value on failure
 */
 BOTAN_FFI_DEPRECATED("Use botan_privkey_view_encrypted_{der,pem}")
 BOTAN_FFI_EXPORT(2, 0)
@@ -1806,12 +2106,36 @@ int botan_privkey_view_encrypted_pem_timed(botan_privkey_t key,
                                            botan_view_ctx ctx,
                                            botan_view_str_fn view);
 
+/**
+* Opaque type of a public key
+*/
 typedef struct botan_pubkey_struct* botan_pubkey_t;
 
+/**
+* Load a public key from an X.509 SubjectPublicKeyInfo structure
+* @param key the new object will be placed here
+* @param bits the DER encoding to load
+* @param len length of bits in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_load(botan_pubkey_t* key, const uint8_t bits[], size_t len);
 
+/**
+* Extract the public key associated with a private key
+* @param out the new object will be placed here
+* @param in the private key to extract the public key from
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_export_pubkey(botan_pubkey_t* out, botan_privkey_t in);
 
+/**
+* Export a public key in DER, PEM or raw encoding
+* @param key the public key to export
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @param flags one of BOTAN_PRIVKEY_EXPORT_FLAG_DER, _PEM or _RAW
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_pubkey_view_{der,pem,raw}")
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags);
 
@@ -1830,6 +2154,13 @@ BOTAN_FFI_EXPORT(3, 0) int botan_pubkey_view_pem(botan_pubkey_t key, botan_view_
 */
 BOTAN_FFI_EXPORT(3, 6) int botan_pubkey_view_raw(botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
 
+/**
+* Get the name of the algorithm this public key is for
+* @param key the public key to query
+* @param out output buffer
+* @param out_len on input the length of out, on success the number of bytes written
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len);
 
 /**
@@ -1837,29 +2168,65 @@ BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_algo_name(botan_pubkey_t key, char out[]
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_check_key(botan_pubkey_t key, botan_rng_t rng, uint32_t flags);
 
+/**
+* Estimate the strength of this key, in bits, against the best known attack
+* @param key the public key to query
+* @param estimate set to the estimated strength in bits
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_estimated_strength(botan_pubkey_t key, size_t* estimate);
 
+/**
+* Compute a fingerprint (hash of the public key encoding)
+* @param key the public key to fingerprint
+* @param hash the name of the hash to use, eg "SHA-256"
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0)
 int botan_pubkey_fingerprint(botan_pubkey_t key, const char* hash, uint8_t out[], size_t* out_len);
 
 /**
+* Frees all resources of the public key object
+* @param key the public key to destroy
 * @return 0 if success, error if invalid object handle
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_destroy(botan_pubkey_t key);
 
-/*
-* Get arbitrary named fields from public or private keys
+/**
+* Get an arbitrary named field from a public key, eg "n" or "e" for RSA
+* @param output set to the value of the requested field
+* @param key the public key to query
+* @param field_name the name of the field to retrieve
+* @return 0 on success, a negative value on failure
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_get_field(botan_mp_t output, botan_pubkey_t key, const char* field_name);
 
+/**
+* Get an arbitrary named field from a private key, eg "p" or "q" for RSA
+* @param output set to the value of the requested field
+* @param key the private key to query
+* @param field_name the name of the field to retrieve
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_get_field(botan_mp_t output, botan_privkey_t key, const char* field_name);
 
-/*
-* Get the OID from public or private keys
+/**
+* Get the object identifier associated with a public key
+* @param oid the new object will be placed here
+* @param key the public key to query
+* @return 0 on success, a negative value on failure
 */
 BOTAN_FFI_EXPORT(3, 8)
 int botan_pubkey_oid(botan_asn1_oid_t* oid, botan_pubkey_t key);
 
+/**
+* Get the object identifier associated with a private key
+* @param oid the new object will be placed here
+* @param key the private key to query
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 8)
 int botan_privkey_oid(botan_asn1_oid_t* oid, botan_privkey_t key);
 
@@ -1882,55 +2249,192 @@ BOTAN_FFI_EXPORT(3, 8) int botan_privkey_remaining_operations(botan_privkey_t ke
 /*
 * Algorithm specific key operations: RSA
 */
+
+/**
+* Load an RSA private key from its factors and public exponent
+* @param key the new object will be placed here
+* @param p the first prime factor
+* @param q the second prime factor
+* @param e the public exponent
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_load_rsa(botan_privkey_t* key, botan_mp_t p, botan_mp_t q, botan_mp_t e);
 
+/**
+* Load an RSA private key from a PKCS #1 RSAPrivateKey structure
+* @param key the new object will be placed here
+* @param bits the DER encoding to load
+* @param len length of bits in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8) int botan_privkey_load_rsa_pkcs1(botan_privkey_t* key, const uint8_t bits[], size_t len);
 
+/**
+* Get the first prime factor of an RSA private key
+* @param p set to the value of the factor
+* @param rsa_key the RSA private key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_get_field")
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_rsa_get_p(botan_mp_t p, botan_privkey_t rsa_key);
+
+/**
+* Get the second prime factor of an RSA private key
+* @param q set to the value of the factor
+* @param rsa_key the RSA private key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_get_field")
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_rsa_get_q(botan_mp_t q, botan_privkey_t rsa_key);
+
+/**
+* Get the private exponent of an RSA private key
+* @param d set to the value of the private exponent
+* @param rsa_key the RSA private key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_get_field")
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_rsa_get_d(botan_mp_t d, botan_privkey_t rsa_key);
+
+/**
+* Get the modulus of an RSA private key
+* @param n set to the value of the modulus
+* @param rsa_key the RSA private key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_get_field")
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_rsa_get_n(botan_mp_t n, botan_privkey_t rsa_key);
+
+/**
+* Get the public exponent of an RSA private key
+* @param e set to the value of the public exponent
+* @param rsa_key the RSA private key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_get_field")
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_rsa_get_e(botan_mp_t e, botan_privkey_t rsa_key);
 
+/**
+* Export an RSA private key as a PKCS #1 RSAPrivateKey structure
+* @param rsa_key the RSA private key
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @param flags either BOTAN_PRIVKEY_EXPORT_FLAG_DER or BOTAN_PRIVKEY_EXPORT_FLAG_PEM
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8)
 int botan_privkey_rsa_get_privkey(botan_privkey_t rsa_key, uint8_t out[], size_t* out_len, uint32_t flags);
 
+/**
+* Load an RSA public key from its modulus and public exponent
+* @param key the new object will be placed here
+* @param n the modulus
+* @param e the public exponent
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_load_rsa(botan_pubkey_t* key, botan_mp_t n, botan_mp_t e);
 
+/**
+* Load an RSA public key from a PKCS #1 RSAPublicKey structure
+* @param key the new object will be placed here
+* @param bits the DER encoding to load
+* @param len length of bits in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 11) int botan_pubkey_load_rsa_pkcs1(botan_pubkey_t* key, const uint8_t bits[], size_t len);
 
+/**
+* Get the public exponent of an RSA public key
+* @param e set to the value of the public exponent
+* @param rsa_key the RSA public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_pubkey_get_field")
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_rsa_get_e(botan_mp_t e, botan_pubkey_t rsa_key);
+
+/**
+* Get the modulus of an RSA public key
+* @param n set to the value of the modulus
+* @param rsa_key the RSA public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_pubkey_get_field")
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_rsa_get_n(botan_mp_t n, botan_pubkey_t rsa_key);
 
 /*
 * Algorithm specific key operations: DSA
 */
+
+/**
+* Load a DSA private key from its group parameters and secret value
+* @param key the new object will be placed here
+* @param p the group prime
+* @param q the order of the subgroup
+* @param g the subgroup generator
+* @param x the private key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0)
 int botan_privkey_load_dsa(botan_privkey_t* key, botan_mp_t p, botan_mp_t q, botan_mp_t g, botan_mp_t x);
 
+/**
+* Load a DSA public key from its group parameters and public value
+* @param key the new object will be placed here
+* @param p the group prime
+* @param q the order of the subgroup
+* @param g the subgroup generator
+* @param y the public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0)
 int botan_pubkey_load_dsa(botan_pubkey_t* key, botan_mp_t p, botan_mp_t q, botan_mp_t g, botan_mp_t y);
 
+/**
+* Get the secret value of a DSA private key
+* @param n set to the value of the private key
+* @param key the DSA private key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_get_field")
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_dsa_get_x(botan_mp_t n, botan_privkey_t key);
 
+/**
+* Get the group prime of a DSA public key
+* @param p set to the value of the group prime
+* @param key the DSA public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_pubkey_get_field")
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_dsa_get_p(botan_mp_t p, botan_pubkey_t key);
+
+/**
+* Get the subgroup order of a DSA public key
+* @param q set to the value of the subgroup order
+* @param key the DSA public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_pubkey_get_field")
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_dsa_get_q(botan_mp_t q, botan_pubkey_t key);
+
+/**
+* Get the subgroup generator of a DSA public key
+* @param d set to the value of the generator
+* @param key the DSA public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_pubkey_get_field")
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_dsa_get_g(botan_mp_t d, botan_pubkey_t key);
+
+/**
+* Get the public value of a DSA public key
+* @param y set to the value of the public key
+* @param key the DSA public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_pubkey_get_field")
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_dsa_get_y(botan_mp_t y, botan_pubkey_t key);
 
-/*
+/**
 * Loads Diffie Hellman private key
 *
 * @param key variable populated with key material
@@ -1996,22 +2500,65 @@ BOTAN_FFI_EXPORT(2, 0) int botan_privkey_load_elgamal(botan_privkey_t* key, bota
 * Algorithm specific key operations: EC keys
 */
 
+/**
+* Get the secret scalar of an elliptic curve private key
+* @param key the EC private key
+* @param value the new object will be placed here
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 12) int botan_ec_privkey_get_private_key(botan_privkey_t key, botan_ec_scalar_t* value);
 
+/**
+* Get the group of an elliptic curve private key
+* @param key the EC private key
+* @param ec_group the new object will be placed here
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 12) int botan_ec_privkey_get_group(botan_privkey_t key, botan_ec_group_t* ec_group);
 
+/**
+* Get the group of an elliptic curve public key
+* @param key the EC public key
+* @param ec_group the new object will be placed here
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 12) int botan_ec_pubkey_get_group(botan_pubkey_t key, botan_ec_group_t* ec_group);
+
 /*
 * Algorithm specific key operations: Ed25519
 */
 
+/**
+* Load an Ed25519 private key from its raw 32 byte encoding
+* @param key the new object will be placed here
+* @param privkey the raw private key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 2) int botan_privkey_load_ed25519(botan_privkey_t* key, const uint8_t privkey[32]);
 
+/**
+* Load an Ed25519 public key from its raw 32 byte encoding
+* @param key the new object will be placed here
+* @param pubkey the raw public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 2) int botan_pubkey_load_ed25519(botan_pubkey_t* key, const uint8_t pubkey[32]);
 
+/**
+* Get the raw encoding of an Ed25519 private key, followed by the public key
+* @param key the Ed25519 private key
+* @param output set to the 64 byte concatenation of the private and public keys
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_view_raw")
 BOTAN_FFI_EXPORT(2, 2) int botan_privkey_ed25519_get_privkey(botan_privkey_t key, uint8_t output[64]);
 
+/**
+* Get the raw 32 byte encoding of an Ed25519 public key
+* @param key the Ed25519 public key
+* @param pubkey set to the raw public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_pubkey_view_raw")
 BOTAN_FFI_EXPORT(2, 2) int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key, uint8_t pubkey[32]);
 
@@ -2019,13 +2566,37 @@ BOTAN_FFI_EXPORT(2, 2) int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key, u
 * Algorithm specific key operations: Ed448
 */
 
+/**
+* Load an Ed448 private key from its raw 57 byte encoding
+* @param key the new object will be placed here
+* @param privkey the raw private key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 4) int botan_privkey_load_ed448(botan_privkey_t* key, const uint8_t privkey[57]);
 
+/**
+* Load an Ed448 public key from its raw 57 byte encoding
+* @param key the new object will be placed here
+* @param pubkey the raw public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 4) int botan_pubkey_load_ed448(botan_pubkey_t* key, const uint8_t pubkey[57]);
 
+/**
+* Get the raw 57 byte encoding of an Ed448 private key
+* @param key the Ed448 private key
+* @param output set to the raw private key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_view_raw")
 BOTAN_FFI_EXPORT(3, 4) int botan_privkey_ed448_get_privkey(botan_privkey_t key, uint8_t output[57]);
 
+/**
+* Get the raw 57 byte encoding of an Ed448 public key
+* @param key the Ed448 public key
+* @param pubkey set to the raw public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_pubkey_view_raw")
 BOTAN_FFI_EXPORT(3, 4) int botan_pubkey_ed448_get_pubkey(botan_pubkey_t key, uint8_t pubkey[57]);
 
@@ -2033,13 +2604,37 @@ BOTAN_FFI_EXPORT(3, 4) int botan_pubkey_ed448_get_pubkey(botan_pubkey_t key, uin
 * Algorithm specific key operations: X25519
 */
 
+/**
+* Load an X25519 private key from its raw 32 byte encoding
+* @param key the new object will be placed here
+* @param privkey the raw private key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8) int botan_privkey_load_x25519(botan_privkey_t* key, const uint8_t privkey[32]);
 
+/**
+* Load an X25519 public key from its raw 32 byte encoding
+* @param key the new object will be placed here
+* @param pubkey the raw public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8) int botan_pubkey_load_x25519(botan_pubkey_t* key, const uint8_t pubkey[32]);
 
+/**
+* Get the raw 32 byte encoding of an X25519 private key
+* @param key the X25519 private key
+* @param output set to the raw private key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_view_raw")
 BOTAN_FFI_EXPORT(2, 8) int botan_privkey_x25519_get_privkey(botan_privkey_t key, uint8_t output[32]);
 
+/**
+* Get the raw 32 byte encoding of an X25519 public key
+* @param key the X25519 public key
+* @param pubkey set to the raw public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_pubkey_view_raw")
 BOTAN_FFI_EXPORT(2, 8) int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key, uint8_t pubkey[32]);
 
@@ -2047,13 +2642,37 @@ BOTAN_FFI_EXPORT(2, 8) int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key, ui
 * Algorithm specific key operations: X448
 */
 
+/**
+* Load an X448 private key from its raw 56 byte encoding
+* @param key the new object will be placed here
+* @param privkey the raw private key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 4) int botan_privkey_load_x448(botan_privkey_t* key, const uint8_t privkey[56]);
 
+/**
+* Load an X448 public key from its raw 56 byte encoding
+* @param key the new object will be placed here
+* @param pubkey the raw public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 4) int botan_pubkey_load_x448(botan_pubkey_t* key, const uint8_t pubkey[56]);
 
+/**
+* Get the raw 56 byte encoding of an X448 private key
+* @param key the X448 private key
+* @param output set to the raw private key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_view_raw")
 BOTAN_FFI_EXPORT(3, 4) int botan_privkey_x448_get_privkey(botan_privkey_t key, uint8_t output[56]);
 
+/**
+* Get the raw 56 byte encoding of an X448 public key
+* @param key the X448 public key
+* @param pubkey set to the raw public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_pubkey_view_raw")
 BOTAN_FFI_EXPORT(3, 4) int botan_pubkey_x448_get_pubkey(botan_pubkey_t key, uint8_t pubkey[56]);
 
@@ -2061,9 +2680,25 @@ BOTAN_FFI_EXPORT(3, 4) int botan_pubkey_x448_get_pubkey(botan_pubkey_t key, uint
 * Algorithm specific key operations: ML-DSA
 */
 
+/**
+* Load an ML-DSA private key from its raw encoding
+* @param key the new object will be placed here
+* @param privkey the raw private key
+* @param key_len length of privkey in bytes
+* @param mldsa_mode the parameter set, eg "ML-DSA-6x5"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 6)
 int botan_privkey_load_ml_dsa(botan_privkey_t* key, const uint8_t privkey[], size_t key_len, const char* mldsa_mode);
 
+/**
+* Load an ML-DSA public key from its raw encoding
+* @param key the new object will be placed here
+* @param pubkey the raw public key
+* @param key_len length of pubkey in bytes
+* @param mldsa_mode the parameter set, eg "ML-DSA-6x5"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 6)
 int botan_pubkey_load_ml_dsa(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len, const char* mldsa_mode);
 
@@ -2075,40 +2710,102 @@ int botan_pubkey_load_ml_dsa(botan_pubkey_t* key, const uint8_t pubkey[], size_t
 * system.
 */
 
+/**
+* Load a Kyber private key from its raw encoding. The parameter set is
+* inferred from the key length.
+* @param key the new object will be placed here
+* @param privkey the raw private key
+* @param key_len length of privkey in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Kyber R3 support is deprecated")
 BOTAN_FFI_EXPORT(3, 1) int botan_privkey_load_kyber(botan_privkey_t* key, const uint8_t privkey[], size_t key_len);
 
+/**
+* Load a Kyber public key from its raw encoding. The parameter set is
+* inferred from the key length.
+* @param key the new object will be placed here
+* @param pubkey the raw public key
+* @param key_len length of pubkey in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Kyber R3 support is deprecated")
 BOTAN_FFI_EXPORT(3, 1) int botan_pubkey_load_kyber(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len);
 
+/**
+* View the raw encoding of a Kyber private key
+* @param key the Kyber private key
+* @param ctx an application context passed to the view function
+* @param view the view callback which receives the encoding
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use generic botan_privkey_view_raw")
 BOTAN_FFI_EXPORT(3, 1)
 int botan_privkey_view_kyber_raw_key(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
 
+/**
+* View the raw encoding of a Kyber public key
+* @param key the Kyber public key
+* @param ctx an application context passed to the view function
+* @param view the view callback which receives the encoding
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use generic botan_pubkey_view_raw")
 BOTAN_FFI_EXPORT(3, 1)
 int botan_pubkey_view_kyber_raw_key(botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
 
-/**
+/*
 * Algorithm specific key operation: FrodoKEM
 */
 
+/**
+* Load a FrodoKEM private key from its raw encoding
+* @param key the new object will be placed here
+* @param privkey the raw private key
+* @param key_len length of privkey in bytes
+* @param frodo_mode the parameter set, eg "FrodoKEM-640-SHAKE"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 6)
 int botan_privkey_load_frodokem(botan_privkey_t* key, const uint8_t privkey[], size_t key_len, const char* frodo_mode);
 
+/**
+* Load a FrodoKEM public key from its raw encoding
+* @param key the new object will be placed here
+* @param pubkey the raw public key
+* @param key_len length of pubkey in bytes
+* @param frodo_mode the parameter set, eg "FrodoKEM-640-SHAKE"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 6)
 int botan_pubkey_load_frodokem(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len, const char* frodo_mode);
 
-/**
+/*
 * Algorithm specific key operation: Classic McEliece
 */
 
+/**
+* Load a Classic McEliece private key from its raw encoding
+* @param key the new object will be placed here
+* @param privkey the raw private key
+* @param key_len length of privkey in bytes
+* @param cmce_mode the parameter set, eg "348864"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 6)
 int botan_privkey_load_classic_mceliece(botan_privkey_t* key,
                                         const uint8_t privkey[],
                                         size_t key_len,
                                         const char* cmce_mode);
 
+/**
+* Load a Classic McEliece public key from its raw encoding
+* @param key the new object will be placed here
+* @param pubkey the raw public key
+* @param key_len length of pubkey in bytes
+* @param cmce_mode the parameter set, eg "348864"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 6)
 int botan_pubkey_load_classic_mceliece(botan_pubkey_t* key,
                                        const uint8_t pubkey[],
@@ -2119,9 +2816,25 @@ int botan_pubkey_load_classic_mceliece(botan_pubkey_t* key,
 * Algorithm specific key operations: ML-KEM
 */
 
+/**
+* Load an ML-KEM private key from its raw encoding
+* @param key the new object will be placed here
+* @param privkey the raw private key
+* @param key_len length of privkey in bytes
+* @param mlkem_mode the parameter set, eg "ML-KEM-768"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 6)
 int botan_privkey_load_ml_kem(botan_privkey_t* key, const uint8_t privkey[], size_t key_len, const char* mlkem_mode);
 
+/**
+* Load an ML-KEM public key from its raw encoding
+* @param key the new object will be placed here
+* @param pubkey the raw public key
+* @param key_len length of pubkey in bytes
+* @param mlkem_mode the parameter set, eg "ML-KEM-768"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 6)
 int botan_pubkey_load_ml_kem(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len, const char* mlkem_mode);
 
@@ -2129,53 +2842,170 @@ int botan_pubkey_load_ml_kem(botan_pubkey_t* key, const uint8_t pubkey[], size_t
 * Algorithm specific key operations: SLH-DSA
 */
 
+/**
+* Load an SLH-DSA private key from its raw encoding
+* @param key the new object will be placed here
+* @param privkey the raw private key
+* @param key_len length of privkey in bytes
+* @param slhdsa_mode the parameter set, eg "SLH-DSA-SHA2-128s"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 6)
 int botan_privkey_load_slh_dsa(botan_privkey_t* key, const uint8_t privkey[], size_t key_len, const char* slhdsa_mode);
 
+/**
+* Load an SLH-DSA public key from its raw encoding
+* @param key the new object will be placed here
+* @param pubkey the raw public key
+* @param key_len length of pubkey in bytes
+* @param slhdsa_mode the parameter set, eg "SLH-DSA-SHA2-128s"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 6)
 int botan_pubkey_load_slh_dsa(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len, const char* slhdsa_mode);
 
 /*
 * Algorithm specific key operations: ECDSA and ECDH
 */
+
+/**
+* Check if the group of this EC key was encoded using explicit curve parameters
+* rather than a named curve OID
+* @param key the EC public key to examine
+* @return 1 if explicit encoding was used, 0 if not, negative on error
+*/
 BOTAN_FFI_EXPORT(3, 2)
 int botan_pubkey_ecc_key_used_explicit_encoding(botan_pubkey_t key);
 
+/**
+* Load an ECDSA private key from its secret scalar
+* @param key the new object will be placed here
+* @param scalar the private scalar
+* @param curve_name the name of the curve, eg "secp256r1"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 2)
 int botan_privkey_load_ecdsa(botan_privkey_t* key, botan_mp_t scalar, const char* curve_name);
 
+/**
+* Load an ECDSA public key from the affine coordinates of the public point
+* @param key the new object will be placed here
+* @param public_x the x coordinate of the public point
+* @param public_y the y coordinate of the public point
+* @param curve_name the name of the curve, eg "secp256r1"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 2)
 int botan_pubkey_load_ecdsa(botan_pubkey_t* key, botan_mp_t public_x, botan_mp_t public_y, const char* curve_name);
 
+/**
+* Load an ECDSA public key from the SEC1 encoding of the public point
+* @param key the new object will be placed here
+* @param sec1 the SEC1 compressed or uncompressed point encoding
+* @param sec1_len length of sec1 in bytes
+* @param curve_name the name of the curve, eg "secp256r1"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 10)
 int botan_pubkey_load_ecdsa_sec1(botan_pubkey_t* key, const uint8_t sec1[], size_t sec1_len, const char* curve_name);
 
+/**
+* Load an ECDH public key from the affine coordinates of the public point
+* @param key the new object will be placed here
+* @param public_x the x coordinate of the public point
+* @param public_y the y coordinate of the public point
+* @param curve_name the name of the curve, eg "secp256r1"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 2)
 int botan_pubkey_load_ecdh(botan_pubkey_t* key, botan_mp_t public_x, botan_mp_t public_y, const char* curve_name);
 
+/**
+* Load an ECDH public key from the SEC1 encoding of the public point
+* @param key the new object will be placed here
+* @param sec1 the SEC1 compressed or uncompressed point encoding
+* @param sec1_len length of sec1 in bytes
+* @param curve_name the name of the curve, eg "secp256r1"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 10)
 int botan_pubkey_load_ecdh_sec1(botan_pubkey_t* key, const uint8_t sec1[], size_t sec1_len, const char* curve_name);
 
+/**
+* Load an ECDH private key from its secret scalar
+* @param key the new object will be placed here
+* @param scalar the private scalar
+* @param curve_name the name of the curve, eg "secp256r1"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 2)
 int botan_privkey_load_ecdh(botan_privkey_t* key, botan_mp_t scalar, const char* curve_name);
 
+/**
+* Load an SM2 public key from the affine coordinates of the public point
+* @param key the new object will be placed here
+* @param public_x the x coordinate of the public point
+* @param public_y the y coordinate of the public point
+* @param curve_name the name of the curve, typically "sm2p256v1"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 2)
 int botan_pubkey_load_sm2(botan_pubkey_t* key, botan_mp_t public_x, botan_mp_t public_y, const char* curve_name);
 
+/**
+* Load an SM2 public key from the SEC1 encoding of the public point
+* @param key the new object will be placed here
+* @param sec1 the SEC1 compressed or uncompressed point encoding
+* @param sec1_len length of sec1 in bytes
+* @param curve_name the name of the curve, typically "sm2p256v1"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 10)
 int botan_pubkey_load_sm2_sec1(botan_pubkey_t* key, const uint8_t sec1[], size_t sec1_len, const char* curve_name);
 
+/**
+* Load an SM2 private key from its secret scalar
+* @param key the new object will be placed here
+* @param scalar the private scalar
+* @param curve_name the name of the curve, typically "sm2p256v1"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 2)
 int botan_privkey_load_sm2(botan_privkey_t* key, botan_mp_t scalar, const char* curve_name);
 
+/**
+* Load an SM2 encryption public key; identical to botan_pubkey_load_sm2
+* @param key the new object will be placed here
+* @param public_x the x coordinate of the public point
+* @param public_y the y coordinate of the public point
+* @param curve_name the name of the curve, typically "sm2p256v1"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_pubkey_load_sm2")
 BOTAN_FFI_EXPORT(2, 2)
 int botan_pubkey_load_sm2_enc(botan_pubkey_t* key, botan_mp_t public_x, botan_mp_t public_y, const char* curve_name);
 
+/**
+* Load an SM2 encryption private key; identical to botan_privkey_load_sm2
+* @param key the new object will be placed here
+* @param scalar the private scalar
+* @param curve_name the name of the curve, typically "sm2p256v1"
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_DEPRECATED("Use botan_privkey_load_sm2")
 BOTAN_FFI_EXPORT(2, 2)
 int botan_privkey_load_sm2_enc(botan_privkey_t* key, botan_mp_t scalar, const char* curve_name);
 
+/**
+* Compute the SM2 ZA value, the hash of the user identity and public key which
+* is prefixed to the message before signing
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @param ident the user identifier
+* @param hash_algo the hash to use, typically "SM3"
+* @param key the SM2 public key
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 3)
 int botan_pubkey_sm2_compute_za(
    uint8_t out[], size_t* out_len, const char* ident, const char* hash_algo, botan_pubkey_t key);
@@ -2189,19 +3019,49 @@ int botan_pubkey_view_ec_public_point(botan_pubkey_t key, botan_view_ctx ctx, bo
 /*
 * Public Key Encryption
 */
+/**
+* Opaque type of a public key encryption operation
+*/
 typedef struct botan_pk_op_encrypt_struct* botan_pk_op_encrypt_t;
 
+/**
+* Create a public key encryption operation
+* @param op the new object will be placed here
+* @param key the public key to encrypt to
+* @param padding the padding/encoding method, eg "OAEP(SHA-256)"
+* @param flags should be 0 in current API revision
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0)
 int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op, botan_pubkey_t key, const char* padding, uint32_t flags);
 
 /**
+* Frees all resources of the encryption operation object
+* @param op the operation to destroy
 * @return 0 if success, error if invalid object handle
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_pk_op_encrypt_destroy(botan_pk_op_encrypt_t op);
 
+/**
+* Return the ciphertext length for a given plaintext length
+* @param op the encryption operation
+* @param ptext_len the plaintext length in bytes
+* @param ctext_len set to the resulting ciphertext length in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8)
 int botan_pk_op_encrypt_output_length(botan_pk_op_encrypt_t op, size_t ptext_len, size_t* ctext_len);
 
+/**
+* Encrypt a message with a public key
+* @param op the encryption operation
+* @param rng a random number generator
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @param plaintext the message to encrypt
+* @param plaintext_len length of plaintext in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0)
 int botan_pk_op_encrypt(botan_pk_op_encrypt_t op,
                         botan_rng_t rng,
@@ -2210,22 +3070,48 @@ int botan_pk_op_encrypt(botan_pk_op_encrypt_t op,
                         const uint8_t plaintext[],
                         size_t plaintext_len);
 
-/*
-* Public Key Decryption
+/**
+* Opaque type of a public key decryption operation
 */
 typedef struct botan_pk_op_decrypt_struct* botan_pk_op_decrypt_t;
 
+/**
+* Create a public key decryption operation
+* @param op the new object will be placed here
+* @param key the private key to decrypt with
+* @param padding the padding/encoding method, eg "OAEP(SHA-256)"
+* @param flags should be 0 in current API revision
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0)
 int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op, botan_privkey_t key, const char* padding, uint32_t flags);
 
 /**
+* Frees all resources of the decryption operation object
+* @param op the operation to destroy
 * @return 0 if success, error if invalid object handle
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_pk_op_decrypt_destroy(botan_pk_op_decrypt_t op);
 
+/**
+* Return an upper bound on the plaintext length for a given ciphertext length
+* @param op the decryption operation
+* @param ctext_len the ciphertext length in bytes
+* @param ptext_len set to the maximum plaintext length in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8)
 int botan_pk_op_decrypt_output_length(botan_pk_op_decrypt_t op, size_t ctext_len, size_t* ptext_len);
 
+/**
+* Decrypt a message with a private key
+* @param op the decryption operation
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @param ciphertext the message to decrypt
+* @param ciphertext_len length of ciphertext in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0)
 int botan_pk_op_decrypt(
    botan_pk_op_decrypt_t op, uint8_t out[], size_t* out_len, const uint8_t ciphertext[], size_t ciphertext_len);
@@ -2236,28 +3122,70 @@ int botan_pk_op_decrypt(
 
 #define BOTAN_PUBKEY_DER_FORMAT_SIGNATURE 1
 
+/**
+* Opaque type of a signature generation operation
+*/
 typedef struct botan_pk_op_sign_struct* botan_pk_op_sign_t;
 
+/**
+* Create a signature generation operation
+* @param op the new object will be placed here
+* @param key the private key to sign with
+* @param hash_and_padding the signature padding and hash, eg "PSS(SHA-256)"
+* @param flags 0, or BOTAN_PUBKEY_DER_FORMAT_SIGNATURE to request DER encoded signatures
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0)
 int botan_pk_op_sign_create(botan_pk_op_sign_t* op, botan_privkey_t key, const char* hash_and_padding, uint32_t flags);
 
 /**
+* Frees all resources of the signature generation operation object
+* @param op the operation to destroy
 * @return 0 if success, error if invalid object handle
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_pk_op_sign_destroy(botan_pk_op_sign_t op);
 
+/**
+* Return the length of the signatures this operation produces
+* @param op the signature operation
+* @param olen set to the signature length in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8) int botan_pk_op_sign_output_length(botan_pk_op_sign_t op, size_t* olen);
 
+/**
+* Add more data to the message being signed
+* @param op the signature operation
+* @param in input buffer
+* @param in_len number of bytes to read from the input buffer
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_pk_op_sign_update(botan_pk_op_sign_t op, const uint8_t in[], size_t in_len);
 
+/**
+* Produce a signature over the message, then reset for signing another message
+* @param op the signature operation
+* @param rng a random number generator
+* @param sig output buffer
+* @param sig_len on input the size of sig, on output the number of bytes written or required
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0)
 int botan_pk_op_sign_finish(botan_pk_op_sign_t op, botan_rng_t rng, uint8_t sig[], size_t* sig_len);
 
-/*
-* Signature Verification
+/**
+* Opaque type of a signature verification operation
 */
 typedef struct botan_pk_op_verify_struct* botan_pk_op_verify_t;
 
+/**
+* Create a signature verification operation
+* @param op the new object will be placed here
+* @param key the public key to verify with
+* @param hash_and_padding the signature padding and hash, eg "PSS(SHA-256)"
+* @param flags 0, or BOTAN_PUBKEY_DER_FORMAT_SIGNATURE if the signature is DER encoded
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0)
 int botan_pk_op_verify_create(botan_pk_op_verify_t* op,
                               botan_pubkey_t key,
@@ -2265,33 +3193,93 @@ int botan_pk_op_verify_create(botan_pk_op_verify_t* op,
                               uint32_t flags);
 
 /**
+* Frees all resources of the signature verification operation object
+* @param op the operation to destroy
 * @return 0 if success, error if invalid object handle
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_pk_op_verify_destroy(botan_pk_op_verify_t op);
 
+/**
+* Add more data to the message being verified
+* @param op the verification operation
+* @param in input buffer
+* @param in_len number of bytes to read from the input buffer
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_pk_op_verify_update(botan_pk_op_verify_t op, const uint8_t in[], size_t in_len);
+
+/**
+* Check the signature over the message, then reset for verifying another message
+* @param op the verification operation
+* @param sig the signature to check
+* @param sig_len length of sig in bytes
+* @return 0 if the signature is valid, BOTAN_FFI_INVALID_VERIFIER if it is not,
+*         or some other negative value on error
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_pk_op_verify_finish(botan_pk_op_verify_t op, const uint8_t sig[], size_t sig_len);
 
-/*
-* Key Agreement
+/**
+* Opaque type of a key agreement operation
 */
 typedef struct botan_pk_op_ka_struct* botan_pk_op_ka_t;
 
+/**
+* Create a key agreement operation
+* @param op the new object will be placed here
+* @param key our private key
+* @param kdf the KDF applied to the shared secret, or "Raw" for no KDF
+* @param flags should be 0 in current API revision
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0)
 int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op, botan_privkey_t key, const char* kdf, uint32_t flags);
 
 /**
+* Frees all resources of the key agreement operation object
+* @param op the operation to destroy
 * @return 0 if success, error if invalid object handle
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_pk_op_key_agreement_destroy(botan_pk_op_ka_t op);
 
+/**
+* Export the public value of a key agreement private key, in the format
+* expected by botan_pk_op_key_agreement
+* @param key the key agreement private key
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_pk_op_key_agreement_export_public(botan_privkey_t key, uint8_t out[], size_t* out_len);
 
+/**
+* View the public value of a key agreement private key
+* @param key the key agreement private key
+* @param ctx an application context passed to the view function
+* @param view the view callback which receives the encoding
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 0)
 int botan_pk_op_key_agreement_view_public(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
 
+/**
+* Return the length of the shared secret this operation produces
+* @param op the key agreement operation
+* @param out_len set to the output length in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8) int botan_pk_op_key_agreement_size(botan_pk_op_ka_t op, size_t* out_len);
 
+/**
+* Perform key agreement with the counterparty's public value
+* @param op the key agreement operation
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @param other_key the counterparty's public value
+* @param other_key_len length of other_key in bytes
+* @param salt a salt passed to the KDF, may be NULL if salt_len is 0
+* @param salt_len length of salt in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0)
 int botan_pk_op_key_agreement(botan_pk_op_ka_t op,
                               uint8_t out[],
@@ -2301,28 +3289,63 @@ int botan_pk_op_key_agreement(botan_pk_op_ka_t op,
                               const uint8_t salt[],
                               size_t salt_len);
 
-/*
-* Key Encapsulation
+/**
+* Opaque type of a key encapsulation (KEM encryption) operation
 */
 typedef struct botan_pk_op_kem_encrypt_struct* botan_pk_op_kem_encrypt_t;
 
+/**
+* Create a key encapsulation operation
+* @param op the new object will be placed here
+* @param key the public key to encapsulate to
+* @param kdf the KDF applied to the shared secret, or "Raw" for no KDF
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 0)
 int botan_pk_op_kem_encrypt_create(botan_pk_op_kem_encrypt_t* op, botan_pubkey_t key, const char* kdf);
 
 /**
+* Frees all resources of the key encapsulation operation object
+* @param op the operation to destroy
 * @return 0 if success, error if invalid object handle
 */
 BOTAN_FFI_EXPORT(3, 0) int botan_pk_op_kem_encrypt_destroy(botan_pk_op_kem_encrypt_t op);
 
+/**
+* Return the length of the shared key this operation will produce
+* @param op the encapsulation operation
+* @param desired_shared_key_length the requested shared key length in bytes
+* @param output_shared_key_length set to the shared key length that will result
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 0)
 int botan_pk_op_kem_encrypt_shared_key_length(botan_pk_op_kem_encrypt_t op,
                                               size_t desired_shared_key_length,
                                               size_t* output_shared_key_length);
 
+/**
+* Return the length of the encapsulated key this operation produces
+* @param op the encapsulation operation
+* @param output_encapsulated_key_length set to the encapsulated key length in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 0)
 int botan_pk_op_kem_encrypt_encapsulated_key_length(botan_pk_op_kem_encrypt_t op,
                                                     size_t* output_encapsulated_key_length);
 
+/**
+* Generate a shared key along with the encapsulation of it for the counterparty
+* @param op the encapsulation operation
+* @param rng a random number generator
+* @param salt a salt passed to the KDF, may be NULL if salt_len is 0
+* @param salt_len length of salt in bytes
+* @param desired_shared_key_len the requested shared key length in bytes
+* @param shared_key output buffer for the shared key
+* @param shared_key_len on input the size of shared_key, on output the number of bytes written
+* @param encapsulated_key output buffer for the encapsulated key
+* @param encapsulated_key_len on input the size of encapsulated_key, on output the number of bytes written
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 0)
 int botan_pk_op_kem_encrypt_create_shared_key(botan_pk_op_kem_encrypt_t op,
                                               botan_rng_t rng,
@@ -2334,21 +3357,52 @@ int botan_pk_op_kem_encrypt_create_shared_key(botan_pk_op_kem_encrypt_t op,
                                               uint8_t encapsulated_key[],
                                               size_t* encapsulated_key_len);
 
+/**
+* Opaque type of a key decapsulation (KEM decryption) operation
+*/
 typedef struct botan_pk_op_kem_decrypt_struct* botan_pk_op_kem_decrypt_t;
 
+/**
+* Create a key decapsulation operation
+* @param op the new object will be placed here
+* @param key the private key to decapsulate with
+* @param kdf the KDF applied to the shared secret, or "Raw" for no KDF
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 0)
 int botan_pk_op_kem_decrypt_create(botan_pk_op_kem_decrypt_t* op, botan_privkey_t key, const char* kdf);
 
 /**
+* Frees all resources of the key decapsulation operation object
+* @param op the operation to destroy
 * @return 0 if success, error if invalid object handle
 */
 BOTAN_FFI_EXPORT(3, 0) int botan_pk_op_kem_decrypt_destroy(botan_pk_op_kem_decrypt_t op);
 
+/**
+* Return the length of the shared key this operation will produce
+* @param op the decapsulation operation
+* @param desired_shared_key_length the requested shared key length in bytes
+* @param output_shared_key_length set to the shared key length that will result
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 0)
 int botan_pk_op_kem_decrypt_shared_key_length(botan_pk_op_kem_decrypt_t op,
                                               size_t desired_shared_key_length,
                                               size_t* output_shared_key_length);
 
+/**
+* Recover the shared key from an encapsulated key
+* @param op the decapsulation operation
+* @param salt a salt passed to the KDF, may be NULL if salt_len is 0
+* @param salt_len length of salt in bytes
+* @param encapsulated_key the encapsulated key from the counterparty
+* @param encapsulated_key_len length of encapsulated_key in bytes
+* @param desired_shared_key_len the requested shared key length in bytes
+* @param shared_key output buffer for the shared key
+* @param shared_key_len on input the size of shared_key, on output the number of bytes written
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 0)
 int botan_pk_op_kem_decrypt_shared_key(botan_pk_op_kem_decrypt_t op,
                                        const uint8_t salt[],
@@ -2365,8 +3419,21 @@ int botan_pk_op_kem_decrypt_shared_key(botan_pk_op_kem_decrypt_t op,
 
 BOTAN_FFI_EXPORT(2, 0) int botan_pkcs_hash_id(const char* hash_name, uint8_t pkcs_id[], size_t* pkcs_id_len);
 
-/*
+/**
+* Formerly encrypted a message using McEliece with an AEAD.
+*
 * Always returns BOTAN_FFI_ERROR_NOT_IMPLEMENTED
+*
+* @param mce_key ignored
+* @param rng ignored
+* @param aead ignored
+* @param pt ignored
+* @param pt_len ignored
+* @param ad ignored
+* @param ad_len ignored
+* @param ct ignored
+* @param ct_len ignored
+* @return BOTAN_FFI_ERROR_NOT_IMPLEMENTED
 */
 BOTAN_FFI_DEPRECATED("No longer implemented")
 BOTAN_FFI_EXPORT(2, 0)
@@ -2380,8 +3447,20 @@ int botan_mceies_encrypt(botan_pubkey_t mce_key,
                          uint8_t ct[],
                          size_t* ct_len);
 
-/*
+/**
+* Formerly decrypted a message using McEliece with an AEAD.
+*
 * Always returns BOTAN_FFI_ERROR_NOT_IMPLEMENTED
+*
+* @param mce_key ignored
+* @param aead ignored
+* @param ct ignored
+* @param ct_len ignored
+* @param ad ignored
+* @param ad_len ignored
+* @param pt ignored
+* @param pt_len ignored
+* @return BOTAN_FFI_ERROR_NOT_IMPLEMENTED
 */
 BOTAN_FFI_DEPRECATED("No longer implemented")
 BOTAN_FFI_EXPORT(2, 0)
@@ -2398,6 +3477,9 @@ int botan_mceies_decrypt(botan_privkey_t mce_key,
 * X.509 certificates
 **************************/
 
+/**
+* Opaque type of an X.509 certificate
+*/
 typedef struct botan_x509_cert_struct* botan_x509_cert_t;
 
 /**
@@ -2433,14 +3515,36 @@ typedef enum /* NOLINT(*-enum-size,*-use-enum-class) */ {
    BOTAN_X509_CA_ISSUERS_URLS = 402,       /** multi-value string of the CA issuer URLs */
 } botan_x509_value_type;
 
+/**
+* Load a certificate from a DER or PEM encoding
+* @param cert_obj the new object will be placed here
+* @param cert the encoding to load
+* @param cert_len length of cert in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert[], size_t cert_len);
+
+/**
+* Load a certificate from a file containing a DER or PEM encoding
+* @param cert_obj the new object will be placed here
+* @param filename path of the file to read
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* filename);
 
 /**
+* Frees all resources of the certificate object
+* @param cert the certificate to destroy
 * @return 0 if success, error if invalid object handle
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_destroy(botan_x509_cert_t cert);
 
+/**
+* Create a new handle referring to the same certificate
+* @param new_cert the new object will be placed here
+* @param cert the certificate to duplicate
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8) int botan_x509_cert_dup(botan_x509_cert_t* new_cert, botan_x509_cert_t cert);
 
 /**
@@ -2456,6 +3560,15 @@ BOTAN_FFI_EXPORT(2, 8) int botan_x509_cert_dup(botan_x509_cert_t* new_cert, bota
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_cert_view_binary_values(
    botan_x509_cert_t cert, botan_x509_value_type value_type, size_t index, botan_view_ctx ctx, botan_view_bin_fn view);
+
+/**
+ * Count the binary values of the given type available in an X.509 certificate.
+ *
+ * @param cert the certificate to inspect
+ * @param value_type the value type to count
+ * @param count set to the number of available entries
+ * @returns 0 on success, a negative value on failure
+ */
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_cert_view_binary_values_count(botan_x509_cert_t cert, botan_x509_value_type value_type, size_t* count);
 
@@ -2472,30 +3585,133 @@ int botan_x509_cert_view_binary_values_count(botan_x509_cert_t cert, botan_x509_
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_cert_view_string_values(
    botan_x509_cert_t cert, botan_x509_value_type value_type, size_t index, botan_view_ctx ctx, botan_view_str_fn view);
+
+/**
+ * Count the string values of the given type available in an X.509 certificate.
+ *
+ * @param cert the certificate to inspect
+ * @param value_type the value type to count
+ * @param count set to the number of available entries
+ * @returns 0 on success, a negative value on failure
+ */
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_cert_view_string_values_count(botan_x509_cert_t cert, botan_x509_value_type value_type, size_t* count);
 
-/* Prefer botan_x509_cert_not_before and botan_x509_cert_not_after */
+/**
+* Get the start of the validity period as a string
+*
+* Prefer botan_x509_cert_not_before
+*
+* @param cert the certificate to inspect
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_time_starts(botan_x509_cert_t cert, char out[], size_t* out_len);
+
+/**
+* Get the end of the validity period as a string
+*
+* Prefer botan_x509_cert_not_after
+*
+* @param cert the certificate to inspect
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_time_expires(botan_x509_cert_t cert, char out[], size_t* out_len);
 
+/**
+* Get the start of the validity period as seconds since the Unix epoch
+* @param cert the certificate to inspect
+* @param time_since_epoch set to the notBefore time
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8) int botan_x509_cert_not_before(botan_x509_cert_t cert, uint64_t* time_since_epoch);
+
+/**
+* Get the end of the validity period as seconds since the Unix epoch
+* @param cert the certificate to inspect
+* @param time_since_epoch set to the notAfter time
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8) int botan_x509_cert_not_after(botan_x509_cert_t cert, uint64_t* time_since_epoch);
 
-/* TODO(Botan4) this should use char for the out param */
+/**
+* Compute the fingerprint of the certificate, formatted as a hex string with
+* colons between the bytes
+*
+* @param cert the certificate to inspect
+* @param hash the name of the hash to use, eg "SHA-256"
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @return 0 on success, a negative value on failure
+*
+* TODO(Botan4) this should use char for the out param
+*/
 BOTAN_FFI_EXPORT(2, 0)
 int botan_x509_cert_get_fingerprint(botan_x509_cert_t cert, const char* hash, uint8_t out[], size_t* out_len);
 
+/**
+* Get the serial number of the certificate as a big-endian binary string
+* @param cert the certificate to inspect
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_serial_number(botan_x509_cert_t cert, uint8_t out[], size_t* out_len);
+
+/**
+* Get the serial number of the certificate as an integer
+* @param cert the certificate to inspect
+* @param serial_number the new object will be placed here
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_serial_number(botan_x509_cert_t cert, botan_mp_t* serial_number);
+
+/**
+* Get the key identifier from the authority key identifier extension
+* @param cert the certificate to inspect
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_authority_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len);
+
+/**
+* Get the subject key identifier extension
+* @param cert the certificate to inspect
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_subject_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len);
 
+/**
+* Get the DER encoded SubjectPublicKeyInfo of the certificate
+* @param cert the certificate to inspect
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_public_key_bits(botan_x509_cert_t cert, uint8_t out[], size_t* out_len);
 
+/**
+* View the DER encoded SubjectPublicKeyInfo of the certificate
+* @param cert the certificate to inspect
+* @param ctx an application context passed to the view function
+* @param view the view callback which receives the encoding
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 0)
 int botan_x509_cert_view_public_key_bits(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_bin_fn view);
 
+/**
+* Get the public key of the certificate
+* @param cert the certificate to inspect
+* @param key the new object will be placed here
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key);
 
 /**
@@ -2519,6 +3735,14 @@ BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_get_path_length_constraint(botan_x50
 BOTAN_FFI_EXPORT(2, 0)
 int botan_x509_cert_get_issuer_dn(
    botan_x509_cert_t cert, const char* key, size_t index, uint8_t out[], size_t* out_len);
+/**
+ * Count the names of the given @p key present in the issuer DN.
+ *
+ * @param cert the certificate to inspect
+ * @param key the DN component to count, eg "Name"
+ * @param count set to the number of available entries
+ * @return 0 on success, a negative value on failure
+ */
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_get_issuer_dn_count(botan_x509_cert_t cert, const char* key, size_t* count);
 
 /**
@@ -2531,15 +3755,41 @@ BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_get_issuer_dn_count(botan_x509_cert_
 BOTAN_FFI_EXPORT(2, 0)
 int botan_x509_cert_get_subject_dn(
    botan_x509_cert_t cert, const char* key, size_t index, uint8_t out[], size_t* out_len);
+/**
+ * Count the names of the given @p key present in the subject DN.
+ *
+ * @param cert the certificate to inspect
+ * @param key the DN component to count, eg "Name"
+ * @param count set to the number of available entries
+ * @return 0 on success, a negative value on failure
+ */
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_cert_get_subject_dn_count(botan_x509_cert_t cert, const char* key, size_t* count);
 
+/**
+* Format the certificate as a human readable string
+* @param cert the certificate to format
+* @param out output buffer
+* @param out_len on input the size of out, on output the number of bytes written or required
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_to_string(botan_x509_cert_t cert, char out[], size_t* out_len);
 
+/**
+* View the certificate formatted as a human readable string
+* @param cert the certificate to format
+* @param ctx an application context passed to the view function
+* @param view the view callback which receives the string
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 0)
 int botan_x509_cert_view_as_string(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view);
 
-/* Must match values of Key_Constraints in pkix_enums.h */
+/**
+* Key usage constraints from the key usage extension
+*
+* Must match values of Key_Constraints in pkix_enums.h
+*/
 enum botan_x509_cert_key_constraints /* NOLINT(*-enum-size,*-use-enum-class) */ {
    NO_CONSTRAINTS = 0,
    DIGITAL_SIGNATURE = 32768,
@@ -2553,6 +3803,13 @@ enum botan_x509_cert_key_constraints /* NOLINT(*-enum-size,*-use-enum-class) */ 
    DECIPHER_ONLY = 128
 };
 
+/**
+* Check if the certificate allows the specified key usage. If no key usage
+* extension is found in the certificate, this always returns success.
+* @param cert the certificate to inspect
+* @param key_usage one or more values from botan_x509_cert_key_constraints, ORed together
+* @return 0 if the usage is allowed, 1 if it is not, negative on error
+*/
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage);
 
 /**
@@ -2581,6 +3838,9 @@ BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_allowed_extended_usage_str(botan_x50
 */
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_allowed_extended_usage_oid(botan_x509_cert_t cert, botan_asn1_oid_t oid);
 
+/**
+* Opaque type of an X.509 GeneralName value
+*/
 typedef struct botan_x509_general_name_struct* botan_x509_general_name_t;
 
 /**
@@ -2628,6 +3888,11 @@ int botan_x509_general_name_view_binary_value(botan_x509_general_name_t name,
                                               botan_view_ctx ctx,
                                               botan_view_bin_fn view);
 
+/**
+* Frees all resources of the GeneralName object
+* @param alt_names the GeneralName to destroy
+* @return 0 if success, error if invalid object handle
+*/
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_general_name_destroy(botan_x509_general_name_t alt_names);
 
 /**
@@ -2639,6 +3904,12 @@ BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_cert_permitted_name_constraints(botan_x509_cert_t cert,
                                                size_t index,
                                                botan_x509_general_name_t* constraint);
+/**
+* Count the "permitted" name constraints of a given @p cert.
+* @param cert the certificate to inspect
+* @param count set to the number of available entries
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_permitted_name_constraints_count(botan_x509_cert_t cert, size_t* count);
 
 /**
@@ -2650,6 +3921,12 @@ BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_cert_excluded_name_constraints(botan_x509_cert_t cert,
                                               size_t index,
                                               botan_x509_general_name_t* constraint);
+/**
+* Count the "excluded" name constraints of a given @p cert.
+* @param cert the certificate to inspect
+* @param count set to the number of available entries
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_excluded_name_constraints_count(botan_x509_cert_t cert, size_t* count);
 
 /**
@@ -2663,6 +3940,12 @@ BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_cert_subject_alternative_names(botan_x509_cert_t cert,
                                               size_t index,
                                               botan_x509_general_name_t* alt_name);
+/**
+* Count the "subject alternative names" of a given @p cert.
+* @param cert the certificate to inspect
+* @param count set to the number of available entries
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_subject_alternative_names_count(botan_x509_cert_t cert, size_t* count);
 
 /**
@@ -2674,6 +3957,12 @@ BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_subject_alternative_names_count(bota
 */
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_cert_issuer_alternative_names(botan_x509_cert_t cert, size_t index, botan_x509_general_name_t* alt_name);
+/**
+* Count the "issuer alternative names" of a given @p cert.
+* @param cert the certificate to inspect
+* @param count set to the number of available entries
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_issuer_alternative_names_count(botan_x509_cert_t cert, size_t* count);
 
 /**
@@ -2791,14 +4080,48 @@ int botan_x509_ext_as_blocks_get_entry_at(botan_x509_cert_t cert, int asnum, siz
 * X.509 CRL
 **************************/
 
+/**
+* Opaque type of an X.509 certificate revocation list
+*/
 typedef struct botan_x509_crl_struct* botan_x509_crl_t;
+
+/**
+* Opaque type of a single entry within an X.509 certificate revocation list
+*/
 typedef struct botan_x509_crl_entry_struct* botan_x509_crl_entry_t;
 
+/**
+* Load a CRL from a file containing a DER or PEM encoding
+* @param crl_obj the new object will be placed here
+* @param crl_path path of the file to read
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 13) int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* crl_path);
+
+/**
+* Load a CRL from a DER or PEM encoding
+* @param crl_obj the new object will be placed here
+* @param crl_bits the encoding to load
+* @param crl_bits_len length of crl_bits in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 13)
 int botan_x509_crl_load(botan_x509_crl_t* crl_obj, const uint8_t crl_bits[], size_t crl_bits_len);
 
+/**
+* Get the thisUpdate field of the CRL as seconds since the Unix epoch
+* @param crl the CRL to inspect
+* @param time_since_epoch set to the thisUpdate time
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_this_update(botan_x509_crl_t crl, uint64_t* time_since_epoch);
+
+/**
+* Get the nextUpdate field of the CRL as seconds since the Unix epoch
+* @param crl the CRL to inspect
+* @param time_since_epoch set to the nextUpdate time
+* @return 0 on success, or BOTAN_FFI_ERROR_NO_VALUE if the field is absent
+*/
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_next_update(botan_x509_crl_t crl, uint64_t* time_since_epoch);
 
 /**
@@ -2822,7 +4145,11 @@ int botan_x509_crl_create(botan_x509_crl_t* crl_obj,
                           const char* hash_fn,
                           const char* padding);
 
-/* Must match values of CRL_Code in pkix_enums.h */
+/**
+* Revocation reason codes for CRL entries, see RFC 5280 Section 5.3.1
+*
+* Must match values of CRL_Code in pkix_enums.h
+*/
 enum botan_x509_crl_reason_code /* NOLINT(*-enum-size,*-use-enum-class) */ {
    BOTAN_CRL_ENTRY_UNSPECIFIED = 0,
    BOTAN_CRL_ENTRY_KEY_COMPROMISE = 1,
@@ -2872,8 +4199,19 @@ int botan_x509_crl_update(botan_x509_crl_t* crl_obj,
                           const char* hash_fn,
                           const char* padding);
 
+/**
+* Check the signature on a CRL against the issuer's public key
+* @param crl the CRL to verify
+* @param key the public key of the issuing CA
+* @return 1 if the signature is valid, 0 if it is not, negative on error
+*/
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_verify_signature(botan_x509_crl_t crl, botan_pubkey_t key);
 
+/**
+* Frees all resources of the CRL object
+* @param crl the CRL to destroy
+* @return 0 if success, error if invalid object handle
+*/
 BOTAN_FFI_EXPORT(2, 13) int botan_x509_crl_destroy(botan_x509_crl_t crl);
 
 /**
@@ -2892,6 +4230,15 @@ int botan_x509_crl_view_binary_values(botan_x509_crl_t crl_obj,
                                       size_t index,
                                       botan_view_ctx ctx,
                                       botan_view_bin_fn view);
+
+/**
+ * Count the binary values of the given type available in a CRL.
+ *
+ * @param crl_obj the CRL to inspect
+ * @param value_type the value type to count
+ * @param count set to the number of available entries
+ * @returns 0 on success, a negative value on failure
+ */
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_crl_view_binary_values_count(botan_x509_crl_t crl_obj, botan_x509_value_type value_type, size_t* count);
 
@@ -2911,6 +4258,15 @@ int botan_x509_crl_view_string_values(botan_x509_crl_t crl_obj,
                                       size_t index,
                                       botan_view_ctx ctx,
                                       botan_view_str_fn view);
+
+/**
+ * Count the string values of the given type available in a CRL.
+ *
+ * @param crl_obj the CRL to inspect
+ * @param value_type the value type to count
+ * @param count set to the number of available entries
+ * @returns 0 on success, a negative value on failure
+ */
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_crl_view_string_values_count(botan_x509_crl_t crl_obj, botan_x509_value_type value_type, size_t* count);
 
@@ -2932,6 +4288,14 @@ BOTAN_FFI_EXPORT(2, 13) int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x5
 */
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_crl_entries(botan_x509_crl_t crl, size_t index, botan_x509_crl_entry_t* entry);
+
+/**
+* Count the entries of the CRL.
+*
+* @param crl the CRL whose entries should be counted
+* @param count set to the number of available entries
+* @returns 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_entries_count(botan_x509_crl_t crl, size_t* count);
 
 /**
@@ -2959,6 +4323,11 @@ int botan_x509_crl_entry_serial_number(botan_x509_crl_entry_t entry, botan_mp_t*
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_crl_entry_view_serial_number(botan_x509_crl_entry_t entry, botan_view_ctx ctx, botan_view_bin_fn view);
 
+/**
+* Frees all resources of the CRL entry object
+* @param entry the CRL entry to destroy
+* @return 0 if success, error if invalid object handle
+*/
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_entry_destroy(botan_x509_crl_entry_t entry);
 
 /**
@@ -2991,6 +4360,16 @@ int botan_key_wrap3394(const uint8_t key[],
                        uint8_t wrapped_key[],
                        size_t* wrapped_key_len);
 
+/**
+ * Key unwrapping as per RFC 3394
+ * @param wrapped_key the wrapped key to unwrap
+ * @param wrapped_key_len length of wrapped_key in bytes
+ * @param kek the key encryption key
+ * @param kek_len length of kek in bytes
+ * @param key output buffer for the unwrapped key
+ * @param key_len on input the size of key, on output the number of bytes written or required
+ * @return 0 on success, a negative value on failure
+ */
 BOTAN_FFI_DEPRECATED("Use botan_nist_kw_dec")
 BOTAN_FFI_EXPORT(2, 2)
 int botan_key_unwrap3394(const uint8_t wrapped_key[],
@@ -3000,6 +4379,18 @@ int botan_key_unwrap3394(const uint8_t wrapped_key[],
                          uint8_t key[],
                          size_t* key_len);
 
+/**
+ * Key wrapping as per NIST SP 800-38F
+ * @param cipher_algo the block cipher to use, eg "AES-256"
+ * @param padded if non-zero use KWP (the padded variant), otherwise KW
+ * @param key the key to wrap
+ * @param key_len length of key in bytes
+ * @param kek the key encryption key
+ * @param kek_len length of kek in bytes
+ * @param wrapped_key output buffer for the wrapped key
+ * @param wrapped_key_len on input the size of wrapped_key, on output the number of bytes written or required
+ * @return 0 on success, a negative value on failure
+ */
 BOTAN_FFI_EXPORT(3, 0)
 int botan_nist_kw_enc(const char* cipher_algo,
                       int padded,
@@ -3010,6 +4401,18 @@ int botan_nist_kw_enc(const char* cipher_algo,
                       uint8_t wrapped_key[],
                       size_t* wrapped_key_len);
 
+/**
+ * Key unwrapping as per NIST SP 800-38F
+ * @param cipher_algo the block cipher to use, eg "AES-256"
+ * @param padded if non-zero use KWP (the padded variant), otherwise KW
+ * @param wrapped_key the wrapped key to unwrap
+ * @param wrapped_key_len length of wrapped_key in bytes
+ * @param kek the key encryption key
+ * @param kek_len length of kek in bytes
+ * @param key output buffer for the unwrapped key
+ * @param key_len on input the size of key, on output the number of bytes written or required
+ * @return 0 on success, a negative value on failure
+ */
 BOTAN_FFI_EXPORT(3, 0)
 int botan_nist_kw_dec(const char* cipher_algo,
                       int padded,
@@ -3100,19 +4503,49 @@ typedef struct botan_fpe_struct* botan_fpe_t;
 
 #define BOTAN_FPE_FLAG_FE1_COMPAT_MODE 1
 
+/**
+* Initialize an FE1 format preserving encryption object, which encrypts
+* integers in the range [0, n)
+* @param fpe the new object will be placed here
+* @param n the modulus defining the range of the permutation
+* @param key the key
+* @param key_len length of key in bytes
+* @param rounds the number of Feistel rounds; at least 16 is recommended
+* @param flags 0, or BOTAN_FPE_FLAG_FE1_COMPAT_MODE to match the encoding used
+*        by Botan versions prior to 2.5
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8)
 int botan_fpe_fe1_init(
    botan_fpe_t* fpe, botan_mp_t n, const uint8_t key[], size_t key_len, size_t rounds, uint32_t flags);
 
 /**
+* Frees all resources of the FPE object
+* @param fpe the FPE object to destroy
 * @return 0 if success, error if invalid object handle
 */
 BOTAN_FFI_EXPORT(2, 8)
 int botan_fpe_destroy(botan_fpe_t fpe);
 
+/**
+* Encrypt an integer, replacing it with the result
+* @param fpe the FPE object
+* @param x the value to encrypt, modified in place; must be less than n
+* @param tweak the tweak, may be NULL if tweak_len is 0
+* @param tweak_len length of tweak in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8)
 int botan_fpe_encrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size_t tweak_len);
 
+/**
+* Decrypt an integer, replacing it with the result
+* @param fpe the FPE object
+* @param x the value to decrypt, modified in place; must be less than n
+* @param tweak the tweak, may be NULL if tweak_len is 0
+* @param tweak_len length of tweak in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_FFI_EXPORT(2, 8)
 int botan_fpe_decrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size_t tweak_len);
 
