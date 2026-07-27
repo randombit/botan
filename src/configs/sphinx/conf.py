@@ -239,6 +239,8 @@ extensions = [
     "sphinx.ext.autodoc"
 ]
 
+# Options for sphinx.ext.autodoc
+autoclass_content = "both"
 
 # Mock CDLL interface so that sphinx can import botan3.py without an actual lib present
 class MockCDLL:
