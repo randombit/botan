@@ -18,6 +18,9 @@ struct sqlite3_stmt;
 
 namespace Botan {
 
+/**
+* An SQL_Database implementation backed by SQLite3
+*/
 class BOTAN_PUBLIC_API(2, 0) Sqlite3_Database final : public SQL_Database {
    public:
       /**
@@ -32,22 +35,51 @@ class BOTAN_PUBLIC_API(2, 0) Sqlite3_Database final : public SQL_Database {
 
       ~Sqlite3_Database() override;
 
+      // Database handles are not copyable or moveable
       Sqlite3_Database(const Sqlite3_Database& other) = delete;
       Sqlite3_Database(Sqlite3_Database&& other) = delete;
       Sqlite3_Database& operator=(const Sqlite3_Database& other) = delete;
       Sqlite3_Database& operator=(Sqlite3_Database&& other) = delete;
 
+      /**
+      * Count the rows of a table
+      * @param table_name the table to count
+      * @return the number of rows in the table
+      */
       size_t row_count(std::string_view table_name) override;
 
+      /**
+      * Create a table
+      * @param schema the name and columns of the table to create
+      */
       void create_table(const Table_Schema& schema) override;
 
+      /**
+      * Count the rows modified by the most recently executed statement
+      * @return the number of rows inserted, updated or deleted
+      */
       size_t rows_changed_by_last_statement() override;
 
+      /**
+      * Create a new statement for execution
+      * @param sql the SQL text of the statement
+      * @return the prepared statement
+      */
       std::shared_ptr<Statement> new_statement(std::string_view sql) const override;
 
+      /**
+      * Prepare an insert-or-replace statement
+      * @param table the table to upsert into
+      * @param columns the columns to write, in placeholder order
+      * @return the prepared statement
+      */
       std::shared_ptr<Statement> upsert(std::string_view table,
                                         std::initializer_list<std::string_view> columns) const override;
 
+      /**
+      * Query whether this database may be used from multiple threads
+      * @return true if SQLite3 was compiled with threading support
+      */
       bool is_threadsafe() const override;
 
    private:

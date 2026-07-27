@@ -131,12 +131,30 @@ class BOTAN_PUBLIC_API(2, 0) Exception : public std::exception {
 */
 class BOTAN_PUBLIC_API(2, 0) Invalid_Argument : public Exception {
    public:
+      /**
+      * Create a Invalid_Argument exception
+      * @param msg a description of the problem
+      */
       explicit Invalid_Argument(std::string_view msg);
 
+      /**
+      * Create a Invalid_Argument exception
+      * @param msg a description of the problem
+      * @param where the API call which received the invalid argument
+      */
       explicit Invalid_Argument(std::string_view msg, std::string_view where);
 
+      /**
+      * Create a Invalid_Argument exception
+      * @param msg a description of the problem
+      * @param e the exception which caused this one
+      */
       Invalid_Argument(std::string_view msg, const std::exception& e);
 
+      /**
+      * Return the error type of this exception
+      * @return the error type of this exception
+      */
       ErrorType error_type() const noexcept override { return ErrorType::InvalidArgument; }
 };
 
@@ -145,6 +163,11 @@ class BOTAN_PUBLIC_API(2, 0) Invalid_Argument : public Exception {
 */
 class BOTAN_PUBLIC_API(3, 0) Unknown_PK_Field_Name final : public Invalid_Argument {
    public:
+      /**
+      * Create a Unknown_PK_Field_Name exception
+      * @param algo_name the name of the key algorithm
+      * @param field_name the unknown field which was requested
+      */
       Unknown_PK_Field_Name(std::string_view algo_name, std::string_view field_name);
 };
 
@@ -153,8 +176,17 @@ class BOTAN_PUBLIC_API(3, 0) Unknown_PK_Field_Name final : public Invalid_Argume
 */
 class BOTAN_PUBLIC_API(2, 0) Invalid_Key_Length final : public Invalid_Argument {
    public:
+      /**
+      * Create a Invalid_Key_Length exception
+      * @param name the name of the algorithm which rejected the key
+      * @param length the invalid key length in bytes
+      */
       Invalid_Key_Length(std::string_view name, size_t length);
 
+      /**
+      * Return the error type of this exception
+      * @return the error type of this exception
+      */
       ErrorType error_type() const noexcept override { return ErrorType::InvalidKeyLength; }
 };
 
@@ -163,8 +195,17 @@ class BOTAN_PUBLIC_API(2, 0) Invalid_Key_Length final : public Invalid_Argument 
 */
 class BOTAN_PUBLIC_API(2, 0) Invalid_IV_Length final : public Invalid_Argument {
    public:
+      /**
+      * Create a Invalid_IV_Length exception
+      * @param mode the name of the mode which rejected the nonce
+      * @param bad_len the invalid nonce length in bytes
+      */
       Invalid_IV_Length(std::string_view mode, size_t bad_len);
 
+      /**
+      * Return the error type of this exception
+      * @return the error type of this exception
+      */
       ErrorType error_type() const noexcept override { return ErrorType::InvalidNonceLength; }
 };
 
@@ -173,6 +214,10 @@ class BOTAN_PUBLIC_API(2, 0) Invalid_IV_Length final : public Invalid_Argument {
 */
 class BOTAN_PUBLIC_API(2, 0) Invalid_Algorithm_Name final : public Invalid_Argument {
    public:
+      /**
+      * Create a Invalid_Algorithm_Name exception
+      * @param name the algorithm name which could not be parsed
+      */
       explicit Invalid_Algorithm_Name(std::string_view name);
 };
 
@@ -181,8 +226,16 @@ class BOTAN_PUBLIC_API(2, 0) Invalid_Algorithm_Name final : public Invalid_Argum
 */
 class BOTAN_PUBLIC_API(2, 0) Encoding_Error final : public Exception {
    public:
+      /**
+      * Create a Encoding_Error exception
+      * @param name a description of the encoding which failed
+      */
       explicit Encoding_Error(std::string_view name);
 
+      /**
+      * Return the error type of this exception
+      * @return the error type of this exception
+      */
       ErrorType error_type() const noexcept override { return ErrorType::EncodingFailure; }
 };
 
@@ -191,12 +244,30 @@ class BOTAN_PUBLIC_API(2, 0) Encoding_Error final : public Exception {
 */
 class BOTAN_PUBLIC_API(2, 0) Decoding_Error : public Exception {
    public:
+      /**
+      * Create a Decoding_Error exception
+      * @param name a description of the decoding which failed
+      */
       explicit Decoding_Error(std::string_view name);
 
+      /**
+      * Create a Decoding_Error exception
+      * @param category the kind of object being decoded
+      * @param err a description of the problem
+      */
       Decoding_Error(std::string_view category, std::string_view err);
 
+      /**
+      * Create a Decoding_Error exception
+      * @param msg a description of the problem
+      * @param e the exception which caused this one
+      */
       Decoding_Error(std::string_view msg, const std::exception& e);
 
+      /**
+      * Return the error type of this exception
+      * @return the error type of this exception
+      */
       ErrorType error_type() const noexcept override { return ErrorType::DecodingFailure; }
 };
 
@@ -206,8 +277,16 @@ class BOTAN_PUBLIC_API(2, 0) Decoding_Error : public Exception {
 */
 class BOTAN_PUBLIC_API(2, 0) Invalid_State : public Exception {
    public:
+      /**
+      * Create a Invalid_State exception
+      * @param err a description of the invalid state
+      */
       explicit Invalid_State(std::string_view err) : Exception(err) {}
 
+      /**
+      * Return the error type of this exception
+      * @return the error type of this exception
+      */
       ErrorType error_type() const noexcept override { return ErrorType::InvalidObjectState; }
 };
 
@@ -216,6 +295,10 @@ class BOTAN_PUBLIC_API(2, 0) Invalid_State : public Exception {
 */
 class BOTAN_PUBLIC_API(2, 0) PRNG_Unseeded final : public Invalid_State {
    public:
+      /**
+      * Create a PRNG_Unseeded exception
+      * @param algo the name of the unseeded PRNG
+      */
       explicit PRNG_Unseeded(std::string_view algo);
 };
 
@@ -225,8 +308,16 @@ class BOTAN_PUBLIC_API(2, 0) PRNG_Unseeded final : public Invalid_State {
 */
 class BOTAN_PUBLIC_API(2, 4) Key_Not_Set : public Invalid_State {
    public:
+      /**
+      * Create a Key_Not_Set exception
+      * @param algo the name of the algorithm whose key was not set
+      */
       explicit Key_Not_Set(std::string_view algo);
 
+      /**
+      * Return the error type of this exception
+      * @return the error type of this exception
+      */
       ErrorType error_type() const noexcept override { return ErrorType::KeyNotSet; }
 };
 
@@ -235,10 +326,24 @@ class BOTAN_PUBLIC_API(2, 4) Key_Not_Set : public Invalid_State {
 */
 class BOTAN_PUBLIC_API(2, 0) Lookup_Error : public Exception {
    public:
+      /**
+      * Create a Lookup_Error exception
+      * @param err a description of the object which was not found
+      */
       explicit Lookup_Error(std::string_view err) : Exception(err) {}
 
+      /**
+      * Create a Lookup_Error exception
+      * @param type the kind of object which was requested
+      * @param algo the algorithm name which was requested
+      * @param provider the provider which was requested, if any
+      */
       Lookup_Error(std::string_view type, std::string_view algo, std::string_view provider = "");
 
+      /**
+      * Return the error type of this exception
+      * @return the error type of this exception
+      */
       ErrorType error_type() const noexcept override { return ErrorType::LookupError; }
 };
 
@@ -250,6 +355,10 @@ class BOTAN_PUBLIC_API(2, 0) Lookup_Error : public Exception {
 */
 class BOTAN_PUBLIC_API(2, 0) Algorithm_Not_Found final : public Lookup_Error {
    public:
+      /**
+      * Create a Algorithm_Not_Found exception
+      * @param name the algorithm which was not found
+      */
       explicit Algorithm_Not_Found(std::string_view name);
 };
 
@@ -262,6 +371,11 @@ class BOTAN_PUBLIC_API(2, 0) Algorithm_Not_Found final : public Lookup_Error {
 */
 class BOTAN_PUBLIC_API(2, 0) Provider_Not_Found final : public Lookup_Error {
    public:
+      /**
+      * Create a Provider_Not_Found exception
+      * @param algo the algorithm which was requested
+      * @param provider the provider which was not available
+      */
       Provider_Not_Found(std::string_view algo, std::string_view provider);
 };
 
@@ -273,8 +387,16 @@ class BOTAN_PUBLIC_API(2, 0) Provider_Not_Found final : public Lookup_Error {
 */
 class BOTAN_PUBLIC_API(2, 0) Invalid_Authentication_Tag final : public Exception {
    public:
+      /**
+      * Create a Invalid_Authentication_Tag exception
+      * @param msg a description of the failure
+      */
       explicit Invalid_Authentication_Tag(std::string_view msg);
 
+      /**
+      * Return the error type of this exception
+      * @return the error type of this exception
+      */
       ErrorType error_type() const noexcept override { return ErrorType::InvalidTag; }
 };
 
@@ -288,8 +410,16 @@ typedef Invalid_Authentication_Tag Integrity_Failure;
 */
 class BOTAN_PUBLIC_API(2, 0) Stream_IO_Error final : public Exception {
    public:
+      /**
+      * Create a Stream_IO_Error exception
+      * @param err a description of the IO failure
+      */
       explicit Stream_IO_Error(std::string_view err);
 
+      /**
+      * Return the error type of this exception
+      * @return the error type of this exception
+      */
       ErrorType error_type() const noexcept override { return ErrorType::IoError; }
 };
 
@@ -304,12 +434,29 @@ class BOTAN_PUBLIC_API(2, 0) Stream_IO_Error final : public Exception {
 */
 class BOTAN_PUBLIC_API(2, 9) System_Error : public Exception {
    public:
+      /**
+      * Create a System_Error exception
+      * @param msg a description of the problem
+      */
       explicit System_Error(std::string_view msg) : Exception(msg), m_error_code(0) {}
 
+      /**
+      * Create a System_Error exception
+      * @param msg a description of the problem
+      * @param err_code the operating system error code
+      */
       System_Error(std::string_view msg, int err_code);
 
+      /**
+      * Return the error type of this exception
+      * @return the error type of this exception
+      */
       ErrorType error_type() const noexcept override { return ErrorType::SystemError; }
 
+      /**
+      * Return the operating system error code associated with this exception
+      * @return the operating system error code captured at construction
+      */
       int error_code() const noexcept override { return m_error_code; }
 
    private:
@@ -321,8 +468,16 @@ class BOTAN_PUBLIC_API(2, 9) System_Error : public Exception {
 */
 class BOTAN_PUBLIC_API(2, 0) Internal_Error : public Exception {
    public:
+      /**
+      * Create a Internal_Error exception
+      * @param err a description of the internal error
+      */
       explicit Internal_Error(std::string_view err);
 
+      /**
+      * Return the error type of this exception
+      * @return the error type of this exception
+      */
       ErrorType error_type() const noexcept override { return ErrorType::InternalError; }
 };
 
@@ -334,11 +489,27 @@ class BOTAN_PUBLIC_API(2, 0) Internal_Error : public Exception {
 */
 class BOTAN_PUBLIC_API(2, 0) Not_Implemented final : public Exception {
    public:
+      /**
+      * Create a Not_Implemented exception
+      * @param err a description of the unimplemented operation
+      */
       explicit Not_Implemented(std::string_view err);
 
+      /**
+      * Return the error type of this exception
+      * @return the error type of this exception
+      */
       ErrorType error_type() const noexcept override { return ErrorType::NotImplemented; }
 };
 
+/**
+* Throw an exception of type E, prefixing the message with the source location
+*
+* @param file the source file name
+* @param line the source line number
+* @param func the enclosing function name
+* @param args the remaining arguments forwarded to E's constructor
+*/
 template <typename E, typename... Args>
 inline void do_throw_error(const char* file, int line, const char* func, Args... args) {
    throw E(file, line, func, args...);

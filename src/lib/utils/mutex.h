@@ -17,7 +17,10 @@ namespace Botan {
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
 
+/// The mutex type used by the library
 using mutex_type = std::mutex;
+
+/// The recursive mutex type used by the library
 using recursive_mutex_type = std::recursive_mutex;
 
 template <typename T>

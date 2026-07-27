@@ -32,16 +32,36 @@ namespace Botan {
 */
 class BOTAN_PUBLIC_API(3, 13) EmailAddress final {
    public:
+      /**
+      * Parse an rfc822Name mailbox
+      * @param addr the address to parse
+      * @return the parsed address, or nullopt if addr is not a valid rfc822Name
+      */
       static std::optional<EmailAddress> from_string(std::string_view addr);
 
       /// The local-part, ASCII only
       const std::string& local_part() const { return m_local_part; }
 
+      /// The domain part of the address
+      /// @return the domain of the address
       const DNSName& domain() const { return m_domain; }
 
+      /**
+      * Format the address as "local-part@domain"
+      * @return the text form of the address
+      */
       std::string to_string() const;
 
+      /**
+      * Order two addresses
+      * @return the ordering of this address relative to the other
+      */
       auto operator<=>(const EmailAddress&) const = default;
+
+      /**
+      * Compare two addresses
+      * @return true if the two addresses are equal
+      */
       bool operator==(const EmailAddress&) const = default;
 
    private:
@@ -65,6 +85,11 @@ class BOTAN_PUBLIC_API(3, 13) EmailAddress final {
 */
 class BOTAN_PUBLIC_API(3, 13) SmtpUtf8Mailbox final {
    public:
+      /**
+      * Parse an SmtpUTF8Mailbox
+      * @param addr the address to parse
+      * @return the parsed address, or nullopt if addr is not a valid SmtpUTF8Mailbox
+      */
       static std::optional<SmtpUtf8Mailbox> from_string(std::string_view addr);
 
       /// The local-part, UTF-8 encoded, should contain non-ASCII
@@ -73,9 +98,22 @@ class BOTAN_PUBLIC_API(3, 13) SmtpUtf8Mailbox final {
       /// The domain, as an LDH host name in A-label form (RFC 9598 Section 3)
       const DNSName& domain() const { return m_domain; }
 
+      /**
+      * Format the mailbox as "local-part@domain"
+      * @return the text form of the mailbox
+      */
       std::string to_string() const;
 
+      /**
+      * Order two mailboxes
+      * @return the ordering of this mailbox relative to the other
+      */
       auto operator<=>(const SmtpUtf8Mailbox&) const = default;
+
+      /**
+      * Compare two mailboxes
+      * @return true if the two mailboxes are equal
+      */
       bool operator==(const SmtpUtf8Mailbox&) const = default;
 
    private:

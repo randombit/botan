@@ -14,8 +14,12 @@
 
 namespace Botan {
 
+/**
+ * Trait that checks whether all of the given types are the same type
+ */
 template <typename T0 = void, typename... Ts>
 struct all_same {
+      /// True if every type in Ts is the same as T0
       static constexpr bool value = (std::is_same_v<T0, Ts> && ... && true);
 };
 
@@ -29,6 +33,7 @@ namespace detail {
  * detected based on the context.
  */
 struct AutoDetect {
+      /// This type is a tag only and cannot be instantiated
       constexpr AutoDetect() = delete;
 };
 

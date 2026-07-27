@@ -24,8 +24,16 @@ class IPv4Address;
 */
 class BOTAN_PUBLIC_API(3, 12) IPv6Address final {
    public:
+      /**
+      * Create an address from its 16 byte big-endian encoding
+      * @param ip the bytes of the address
+      */
       explicit IPv6Address(std::span<const uint8_t, 16> ip);
 
+      /**
+      * Create an address from its 16 byte big-endian encoding
+      * @param ip the bytes of the address
+      */
       explicit IPv6Address(std::array<uint8_t, 16> ip) : m_ip(ip) {}
 
       /**
@@ -45,12 +53,29 @@ class BOTAN_PUBLIC_API(3, 12) IPv6Address final {
       */
       static IPv6Address netmask(size_t bits);
 
+      /**
+      * Return the netmask matching a single host
+      * @return an address with all 128 bits set
+      */
       static IPv6Address host_mask() { return netmask(128); }
 
+      /**
+      * Bitwise AND of two addresses, typically used to apply a netmask
+      * @param other the address to AND with
+      * @return the bitwise AND of the two addresses
+      */
       IPv6Address operator&(const IPv6Address& other) const;
 
+      /**
+      * Order two addresses numerically
+      * @return the ordering of this address relative to the other
+      */
       auto operator<=>(const IPv6Address&) const = default;
 
+      /**
+      * Access the raw bytes of the address
+      * @return the 16 byte big-endian encoding of the address
+      */
       std::array<uint8_t, 16> address() const { return m_ip; }
 
       /**
