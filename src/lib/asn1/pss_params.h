@@ -40,6 +40,12 @@ class BOTAN_PUBLIC_API(3, 7) PSS_Params final : public ASN1_Object {
          return PSS_Params::from_padding_name(padding_name);
       }
 
+      /**
+      * Create PSS parameters using MGF1 with the same hash as the message hash
+      *
+      * @param hash_fn the name of the hash function to use
+      * @param salt_len the salt length in bytes
+      */
       PSS_Params(std::string_view hash_fn, size_t salt_len);
 
       /**
@@ -47,20 +53,44 @@ class BOTAN_PUBLIC_API(3, 7) PSS_Params final : public ASN1_Object {
       */
       BOTAN_FUTURE_EXPLICIT PSS_Params(std::span<const uint8_t> der);
 
+      /**
+      * Return the AlgorithmIdentifier of the hash used to hash the message
+      */
       const AlgorithmIdentifier& hash_algid() const { return m_hash; }
 
+      /**
+      * Return the AlgorithmIdentifier of the mask generation function
+      */
       const AlgorithmIdentifier& mgf_algid() const { return m_mgf; }
 
+      /**
+      * Return the AlgorithmIdentifier of the hash used within the mask generation function
+      */
       const AlgorithmIdentifier& mgf_hash_algid() const { return m_mgf_hash; }
 
+      /**
+      * Return the salt length in bytes
+      */
       size_t salt_length() const { return m_salt_len; }
 
+      /**
+      * Return the trailer field; only a value of 1 is supported
+      */
       size_t trailer_field() const { return m_trailer_field; }
 
+      /**
+      * Return the name of the hash used to hash the message
+      */
       std::string hash_function() const { return hash_algid().oid().to_formatted_string(); }
 
+      /**
+      * Return the name of the mask generation function; only MGF1 is supported
+      */
       std::string mgf_function() const { return mgf_algid().oid().to_formatted_string(); }
 
+      /**
+      * Return the DER encoding of these RSASSA-PSS-params
+      */
       std::vector<uint8_t> serialize() const;
 
       void encode_into(DER_Encoder& to) const override;

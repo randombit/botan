@@ -91,12 +91,45 @@ class BOTAN_PUBLIC_API(2, 0) ASN1_Time final : public ASN1_Object {
 
 /*
 * Comparison Operations
+*
+* These compare the instants represented, and ignore whether the times were
+* tagged as UtcTime or GeneralizedTime.
+*/
+
+/**
+* Compare two times
+* @return true if x is equal to y
 */
 BOTAN_PUBLIC_API(2, 0) bool operator==(const ASN1_Time& x, const ASN1_Time& y);
+
+/**
+* Compare two times
+* @return true if x is not equal to y
+*/
 BOTAN_PUBLIC_API(2, 0) bool operator!=(const ASN1_Time& x, const ASN1_Time& y);
+
+/**
+* Compare two times
+* @return true if x is not later than y
+*/
 BOTAN_PUBLIC_API(2, 0) bool operator<=(const ASN1_Time& x, const ASN1_Time& y);
+
+/**
+* Compare two times
+* @return true if x is not earlier than y
+*/
 BOTAN_PUBLIC_API(2, 0) bool operator>=(const ASN1_Time& x, const ASN1_Time& y);
+
+/**
+* Compare two times
+* @return true if x is earlier than y
+*/
 BOTAN_PUBLIC_API(2, 0) bool operator<(const ASN1_Time& x, const ASN1_Time& y);
+
+/**
+* Compare two times
+* @return true if x is later than y
+*/
 BOTAN_PUBLIC_API(2, 0) bool operator>(const ASN1_Time& x, const ASN1_Time& y);
 
 }  // namespace Botan

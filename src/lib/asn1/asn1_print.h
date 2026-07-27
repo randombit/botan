@@ -25,6 +25,8 @@ class BOTAN_PUBLIC_API(2, 4) ASN1_Formatter /* NOLINT(*-special-member-functions
       virtual ~ASN1_Formatter() = default;
 
       /**
+      * Create a formatter with the given settings
+      *
       * @param print_context_specific if true, try to parse nested context specific data.
       * @param max_depth do not recurse more than this many times. If zero, recursion
       *        is unbounded.
@@ -33,10 +35,28 @@ class BOTAN_PUBLIC_API(2, 4) ASN1_Formatter /* NOLINT(*-special-member-functions
       ASN1_Formatter(bool print_context_specific, size_t max_depth, bool require_der = false) :
             m_print_context_specific(print_context_specific), m_max_depth(max_depth), m_require_der(require_der) {}
 
+      /**
+      * Format the given ASN.1 data, writing the result to a stream
+      *
+      * @param out the stream to write the formatted output to
+      * @param in the DER or BER encoded data
+      * @param len the length of in in bytes
+      */
       void print_to_stream(std::ostream& out, const uint8_t in[], size_t len) const;
 
+      /**
+      * Return the given ASN.1 data in formatted form
+      *
+      * @param in the DER or BER encoded data
+      * @param len the length of in in bytes
+      */
       std::string print(const uint8_t in[], size_t len) const;
 
+      /**
+      * Return the given ASN.1 data in formatted form
+      *
+      * @param vec the DER or BER encoded data
+      */
       template <typename Alloc>
       std::string print(const std::vector<uint8_t, Alloc>& vec) const {
          return print(vec.data(), vec.size());
@@ -80,6 +100,8 @@ class BOTAN_PUBLIC_API(2, 4) ASN1_Formatter /* NOLINT(*-special-member-functions
 class BOTAN_PUBLIC_API(2, 4) ASN1_Pretty_Printer final : public ASN1_Formatter {
    public:
       /**
+      * Create a pretty printer with the given settings
+      *
       * @param print_limit strings larger than this are not printed
       * @param print_binary_limit binary strings larger than this are not printed
       * @param print_context_specific if true, try to parse nested context specific data.
