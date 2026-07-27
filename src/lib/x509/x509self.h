@@ -206,6 +206,24 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
                                          RandomNumberGenerator& rng);
 
 /**
+* Create a self-signed X.509 certificate using an explicit subject key
+* identifier derivation method.
+* @param opts the options defining the certificate to create
+* @param key the private key used for signing, i.e. the key
+* associated with this self-signed certificate
+* @param hash_fn the hash function to use for the certificate signature
+* @param subject_key_id_method the subject key identifier derivation method
+* @param rng the rng to use
+* @return newly created self-signed certificate
+*/
+BOTAN_PUBLIC_API(3, 13)
+X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
+                                         const Private_Key& key,
+                                         std::string_view hash_fn,
+                                         Subject_Key_ID_Method subject_key_id_method,
+                                         RandomNumberGenerator& rng);
+
+/**
 * Create a PKCS#10 certificate request.
 * @param opts the options defining the request to create
 * @param key the key used to sign this request

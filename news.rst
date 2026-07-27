@@ -33,6 +33,11 @@ Version 3.13.0, Not Yet Released
 
 * Improve handling of the authority and subject key identifier extensions (GH #5735 #5737)
 
+* Add explicit subject key identifier derivation methods for RFC 5280
+  method 1 and RFC 7093 methods 1, 2, and 3. The existing SHA-1 default
+  remains unchanged, while certificate issuance and self-signed certificate
+  generation can opt into SHA-256, SHA-384, or SHA-512 derivation. (GH #3479)
+
 * Properly decode and handle the X509 CRL Distribution Point and Authority Information Access
   extensions (GH #5712)
 

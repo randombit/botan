@@ -232,7 +232,12 @@ handling.
    versions are present, then the KeyIdentifier will be used, and the
    GeneralNames ignored.
 
- - Subject Key Identifier: No problems known.
+ - Subject Key Identifier: When generating certificates, Botan uses RFC 5280
+   section 4.2.1.2 method 1 (SHA-1 over the value of the
+   ``subjectPublicKey`` BIT STRING) by default. The
+   ``Subject_Key_ID_Method`` enum can be used to explicitly select RFC 7093
+   methods 1, 2, or 3 instead. These use the leftmost 160 bits of SHA-256,
+   SHA-384, or SHA-512 over the same BIT STRING value.
 
  - Name Constraints: No problems known (though encoding is not supported).
 
@@ -645,6 +650,23 @@ new certificate:
                          const X509_Time& not_before, \
                          const X509_Time& not_after)
 
+This overload derives the subject key identifier using RFC 5280 method 1.
+An additional overload accepts a final ``Subject_Key_ID_Method`` argument to
+explicitly select an RFC 5280 or RFC 7093 derivation method:
+
+.. cpp:function:: X509_Certificate \
+   X509_CA::sign_request(const PKCS10_Request& req, \
+                         RandomNumberGenerator& rng, \
+                         const X509_Time& not_before, \
+                         const X509_Time& not_after, \
+                         Subject_Key_ID_Method subject_key_id_method)
+
+The equivalent overload that accepts an explicit certificate serial number
+also accepts ``subject_key_id_method`` as its final argument. This selection is
+independent of the hash function used for the certificate signature. The
+authority key identifier continues to be copied from the issuer certificate's
+subject key identifier.
+
 If you need more control over the signing process, you can use the methods
 
 .. cpp:function:: static X509_Certificate X509_CA::make_cert(PK_Signer& signer, \
@@ -659,12 +681,13 @@ If you need more control over the signing process, you can use the methods
                                         const Extensions& extensions)
 
 .. cpp:function:: static Extensions X509_CA::choose_extensions(const PKCS10_Request& req, \
-                                          const X509_Certificate& ca_certificate, \
-                                          const std::string& hash_fn)
+                                          const X509_Certificate& ca_certificate)
 
    Returns the extensions that would be created by sign_request if it was used.
    You can call this and then modify the extensions list before invoking
-   :cpp:func:`X509_CA::make_cert`
+   :cpp:func:`X509_CA::make_cert`. An overload accepting
+   ``Subject_Key_ID_Method`` selects the subject key identifier derivation
+   method.
 
 Generating CRLs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -730,6 +753,18 @@ protocols. The library provides a utility function for this:
    and ``opts`` is an structure that has various bits of information
    that will be used in creating the certificate (this structure, and
    its use, is discussed below).
+
+The default overload derives the subject key identifier using RFC 5280
+method 1. To select one of the RFC 7093 methods, use the overload accepting a
+``Subject_Key_ID_Method``:
+
+.. cpp:function:: X509_Certificate create_self_signed_cert( \
+   const X509_Cert_Options& opts, const Private_Key& key, \
+   const std::string& hash_fn, Subject_Key_ID_Method subject_key_id_method, \
+   RandomNumberGenerator& rng)
+
+For a self-signed certificate, the authority key identifier is set to the same
+value as the newly derived subject key identifier.
 
 Creating PKCS #10 Requests
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
