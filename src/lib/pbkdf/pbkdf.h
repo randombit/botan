@@ -67,7 +67,7 @@ class BOTAN_PUBLIC_API(2, 0) PBKDF /* NOLINT(*-special-member-functions) */ {
       PBKDF* clone() const { return this->new_object().release(); }
 
       /**
-      * @return name of this PBKDF
+      * Return free-form string identifying this algorithm
       */
       virtual std::string name() const = 0;
 

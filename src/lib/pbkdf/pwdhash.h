@@ -30,6 +30,9 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
    public:
       virtual ~PasswordHash() = default;
 
+      /**
+      * Return a free-form string identifying the algorithm and parameters
+      */
       virtual std::string to_string() const = 0;
 
       /**
@@ -63,11 +66,15 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
       virtual size_t total_memory_usage() const { return 0; }
 
       /**
+      * Query if this password hash supports a symmetric key
+      *
       * @returns true if this password hash supports supplying a key
       */
       virtual bool supports_keyed_operation() const { return false; }
 
       /**
+      * Query if this password hash supports associated data
+      *
       * @returns true if this password hash supports supplying associated data
       */
       virtual bool supports_associated_data() const { return false; }

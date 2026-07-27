@@ -47,6 +47,12 @@ class BOTAN_PUBLIC_API(2, 0) Buffered_Filter /* NOLINT(*-special-member-function
       */
       void write(const uint8_t in[], size_t length);
 
+      /**
+      * Write bytes into the buffered filter, which will them emit them
+      * in calls to buffered_block in the subclass
+      * @param in the input bytes
+      * @param length of in in bytes
+      */
       template <typename Alloc>
       void write(const std::vector<uint8_t, Alloc>& in, size_t length) {
          write(in.data(), length);
@@ -140,7 +146,7 @@ class BOTAN_PUBLIC_API(2, 0) Keyed_Filter : public Filter {
       bool valid_keylength(size_t length) const { return key_spec().valid_keylength(length); }
 
       /**
-      * @return object describing limits on key size
+      * Return object describing limitations on key size
       */
       virtual Key_Length_Specification key_spec() const = 0;
 

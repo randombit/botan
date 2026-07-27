@@ -81,23 +81,35 @@ enum class Extension_Code : uint16_t {
 class BOTAN_UNSTABLE_API Extension /* NOLINT(*-special-member-functions) */ {
    public:
       /**
+      * Return TLS extension code
+      *
       * @return code number of the extension
       */
       virtual Extension_Code type() const = 0;
 
       /**
+      * Serialize a TLS extension
+      *
+      * @param whoami which peer we are acting as in the protocol
       * @return serialized binary for the extension
       */
       virtual std::vector<uint8_t> serialize(Connection_Side whoami) const = 0;
 
       /**
-      * @return if we should encode this extension or not
+      * Predicate if a TLS extension should be included or not
+      *
+      * @return true if this extension should be encoded, otherwise false
       */
       virtual bool empty() const = 0;
 
       /**
-       * @return true if this extension is known and implemented by Botan
-       */
+      * Predicate if the extension is known/implemented
+      *
+      * @note this exists primarily to support unknown extension handling and
+      * doesn't need to be overridden even in the custom extension case.
+      *
+      * @return true if this extension is known
+      */
       virtual bool is_implemented() const { return true; }
 
       virtual ~Extension() = default;

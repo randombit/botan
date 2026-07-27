@@ -22,12 +22,13 @@ namespace Botan {
 class BOTAN_PUBLIC_API(2, 0) Filter {
    public:
       /**
-      * @return descriptive name for this filter
+      * Return a descriptive name for this filter
       */
       virtual std::string name() const = 0;
 
       /**
       * Write a portion of a message to this filter.
+      *
       * @param input the input as a byte array
       * @param length the length of the byte array input
       */
@@ -37,15 +38,13 @@ class BOTAN_PUBLIC_API(2, 0) Filter {
       * Start a new message. Must be closed by end_msg() before another
       * message can be started.
       */
-      virtual void start_msg() { /* default empty */
-      }
+      virtual void start_msg() {}
 
       /**
       * Notify that the current message is finished; flush buffers and
       * do end-of-message processing (if any).
       */
-      virtual void end_msg() { /* default empty */
-      }
+      virtual void end_msg() {}
 
       /**
       * Check whether this filter is an attachable filter.
@@ -62,22 +61,30 @@ class BOTAN_PUBLIC_API(2, 0) Filter {
 
    protected:
       /**
+      * Send some bytes to the next filter in the chain
+      *
       * @param in some input for the filter
       * @param length the length of in
       */
       virtual void send(const uint8_t in[], size_t length);
 
       /**
+      * Send some bytes to the next filter in the chain
+      *
       * @param in some input for the filter
       */
       void send(uint8_t in) { send(&in, 1); }
 
       /**
+      * Send some bytes to the next filter in the chain
+      *
       * @param in some input for the filter
       */
       void send(std::span<const uint8_t> in) { send(in.data(), in.size()); }
 
       /**
+      * Send some bytes to the next filter in the chain
+      *
       * @param in some input for the filter
       * @param length the number of bytes of in to send
       *

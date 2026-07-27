@@ -802,15 +802,19 @@ enum class Extension_Context : uint8_t { Certificate, CRL, CRL_Entry, OCSP_Reque
 class BOTAN_PUBLIC_API(2, 0) Certificate_Extension /* NOLINT(*-special-member-functions) */ {
    public:
       /**
+      * Return object identifier for this extension
+      *
       * @return OID representing this extension
       */
       virtual OID oid_of() const = 0;
 
-      /*
-      * @return specific OID name
-      * If possible OIDS table should match oid_name to OIDS, ie
-      * OID::from_string(ext->oid_name()) == ext->oid_of()
-      * Should return empty string if OID is not known
+      /**
+      * Return string identifier for this extension
+      *
+      * If possible the OID table should match oid_name, ie
+      * `OID::from_string(ext->oid_name()) == ext->oid_of()`
+      *
+      * @return specific OID name, or empty if unknown
       */
       virtual std::string oid_name() const = 0;
 
@@ -818,12 +822,18 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Extension /* NOLINT(*-special-member-fu
       * Make a copy of this extension
       * @return copy of this
       */
-
       virtual std::unique_ptr<Certificate_Extension> copy() const = 0;
 
+      /**
+      * Query if @param context is an appropriate context for this extension to exist
+      *
+      * Many extensions are used across different types of X509 objects but some
+      * are specific, this allows decoding to reject extensions in an
+      * inappropriate context.
+      */
       virtual bool is_appropriate_context(Extension_Context context) const = 0;
 
-      /*
+      /**
       * Callback visited during path validation.
       *
       * An extension can implement this callback to inspect
