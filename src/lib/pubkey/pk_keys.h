@@ -111,11 +111,11 @@ class BOTAN_PUBLIC_API(3, 0) Asymmetric_Key /* NOLINT(*special-member-functions)
        * Generate another (cryptographically independent) key pair using the
        * same algorithm parameters as this key. This is most useful for algorithms
        * that support PublicKeyOperation::KeyAgreement to generate a fitting ephemeral
-       * key pair. For other key types it might throw Not_Implemented.
+       * key pair. For other key types it might throw `Not_Implemented`.
        */
       virtual std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const = 0;
 
-      /*
+      /**
       * Test the key values for consistency.
       *
       * Note this function is always "best effort"; for many algorithms it is
@@ -168,28 +168,32 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       BOTAN_DEPRECATED("Use object_identifier") OID get_oid() const { return this->object_identifier(); }
 
       /**
-      * @return X.509 AlgorithmIdentifier for this key
+      * Return the X.509 AlgorithmIdentifier for this key
       */
       virtual AlgorithmIdentifier algorithm_identifier() const = 0;
 
       /**
-      * @return binary public key bits, with no additional encoding
+      * Return the raw public key bits (algorithm specific) with no extra encoding
       *
       * For key agreements this is an alias for PK_Key_Agreement_Key::public_value.
       *
-      * Note: some algorithms (for example RSA) do not have an obvious encoding
+      * @note some algorithms (for example RSA) do not have an obvious encoding
       * for this value due to having many different values, and thus throw
-      * Not_Implemented when invoking this method.
+      * `Not_Implemented` when invoking this method.
       */
       virtual std::vector<uint8_t> raw_public_key_bits() const = 0;
 
       /**
-      * @return BER encoded public key bits
+      * Return the subject public key encoding of this public key
+      *
+      * @note this excludes the parameters field and may not be reliably decodable
       */
       virtual std::vector<uint8_t> public_key_bits() const = 0;
 
       /**
-      * @return X.509 subject key encoding for this key object
+      * Return the SubjectPublicKeyInfo encoding of this public key
+      *
+      * This is the subjectPublicKey field plus the algorithm-specific parameters
       */
       std::vector<uint8_t> subject_public_key() const;
 
@@ -301,16 +305,19 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
 class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
    public:
       /**
-      * @return BER encoded private key bits
+      * Return the PKCS8 private key encoding
+      *
+      * @note this encoding omits the outer PKCS8 algorithm identifiers and will
+      * not be portably decodable on its own. Prefer `private_key_info`.
       */
       virtual secure_vector<uint8_t> private_key_bits() const = 0;
 
       /**
-      * @return binary private key bits, with no additional encoding
+      * Return the binary private key bits, with no additional encoding
       *
-      * Note: some algorithms (for example RSA) do not have an obvious encoding
+      * @note some algorithms (for example RSA) do not have an obvious encoding
       * for this value due to having many different values, and thus not implement
-      * this function. The default implementation throws Not_Implemented
+      * this function. The default implementation throws `Not_Implemented`
       */
       virtual secure_vector<uint8_t> raw_private_key_bits() const;
 
@@ -323,13 +330,15 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       virtual std::unique_ptr<Public_Key> public_key() const = 0;
 
       /**
-      * @return PKCS #8 private key encoding for this key object
+      * Return PKCS #8 private key encoding for this key object
       */
       secure_vector<uint8_t> private_key_info() const;
 
       /**
-      * @return PKCS #8 AlgorithmIdentifier for this key
-      * Might be different from the X.509 identifier, but normally is not
+      * Return the PKCS #8 AlgorithmIdentifier for this key
+      *
+      * @note normally this is the same as the public key identifier, but a few
+      * oddball algorithms use a different value
       */
       virtual AlgorithmIdentifier pkcs8_algorithm_identifier() const { return algorithm_identifier(); }
 
@@ -424,8 +433,8 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
 */
 class BOTAN_PUBLIC_API(2, 0) PK_Key_Agreement_Key : public virtual Private_Key {
    public:
-      /*
-      * @return public component of this key
+      /**
+      * Return the public value used to effect key exchange
       */
       virtual std::vector<uint8_t> public_value() const = 0;
 };

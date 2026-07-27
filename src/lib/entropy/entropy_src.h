@@ -33,7 +33,7 @@ class BOTAN_PUBLIC_API(2, 0) Entropy_Source {
       static std::unique_ptr<Entropy_Source> create(std::string_view type);
 
       /**
-      * @return name identifying this entropy source
+      * Return a free-form string identifying this entropy source
       */
       virtual std::string name() const = 0;
 
