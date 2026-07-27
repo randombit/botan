@@ -1,0 +1,25 @@
+<internal_defines>
+SALSA20_SIMD32 -> 20260726
+</internal_defines>
+
+<module_info>
+name -> "Salsa20 SIMD"
+brief -> "Salsa20 using SIMD instructions"
+</module_info>
+
+<requires>
+simd_4x32
+cpuid
+</requires>
+
+<isa>
+x86_32:ssse3
+x86_64:ssse3
+x32:ssse3
+arm32:neon
+arm64:neon
+ppc32:altivec
+ppc64:altivec
+loongarch64:lsx
+wasm:simd128
+</isa>

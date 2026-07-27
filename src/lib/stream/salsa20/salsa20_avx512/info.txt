@@ -1,0 +1,17 @@
+<internal_defines>
+SALSA20_AVX512 -> 20260726
+</internal_defines>
+
+<module_info>
+name -> "Salsa20 AVX512"
+brief -> "Salsa20 using AVX512 instructions"
+</module_info>
+
+<isa>
+avx512
+</isa>
+
+<requires>
+simd_avx512
+cpuid
+</requires>
