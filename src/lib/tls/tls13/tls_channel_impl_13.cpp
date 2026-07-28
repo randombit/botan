@@ -275,12 +275,16 @@ std::vector<uint8_t> Channel_Impl_13::AggregatedMessages::send() {
 }
 
 void Channel_Impl_13::send_dummy_change_cipher_spec() {
-   // RFC 8446 5.
+   // RFC 9846 5.
    //    The change_cipher_spec record is used only for compatibility purposes
-   //    (see Appendix D.4).
+   //    (see Appendix E.4).
    //
-   // The only allowed CCS message content is 0x01, all other CCS records MUST
-   // be rejected by TLS 1.3 implementations.
+   //    An implementation may receive an unencrypted record of type
+   //    change_cipher_spec consisting of the single byte value 0x01 at any time
+   //    after the first ClientHello message has been sent or received and
+   //    before the peer's Finished message has been received.
+   BOTAN_STATE_CHECK(!is_handshake_complete());
+
    send_record(Record_Type::ChangeCipherSpec, {0x01});
 }
 
