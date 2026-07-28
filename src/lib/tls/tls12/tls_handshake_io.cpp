@@ -20,6 +20,8 @@ namespace Botan::TLS {
 
 namespace {
 
+constexpr size_t DTLS_HANDSHAKE_HEADER_SIZE = 12;
+
 inline size_t load_be24(const uint8_t q[3]) {
    return make_uint32(0, q[0], q[1], q[2]);
 }
@@ -155,46 +157,59 @@ void Datagram_Handshake_IO::retransmit_last_flight() {
    // last completed flight is normally the one before it.
    const size_t flight_idx = (m_flights.size() == 1) ? 0 : (m_flights.size() - 2);
    retransmit_flight(flight_idx);
+   m_last_write = steady_clock_ms();
 }
 
 void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx) {
-   const std::vector<uint16_t>& flight = m_flights.at(flight_idx);
+   const auto& flight = m_flights.at(flight_idx);
+   const auto& ccs_records = m_flight_ccs.at(flight_idx);
+   const std::vector<uint8_t> ccs = {1};
 
    BOTAN_ASSERT(!flight.empty(), "Nonempty flight to retransmit");
 
-   const uint16_t first_epoch = m_flight_data[flight[0]].epoch;
-   uint16_t epoch = (first_epoch == 0) ? 0 : first_epoch - 1;
-
-   for(auto msg_seq : flight) {
-      auto& msg = m_flight_data[msg_seq];
-
-      if(msg.epoch != epoch) {
-         // CCS is not a handshake message and therefore has no message_seq of
-         // its own. When replaying a cached flight that crosses into a new
-         // epoch, synthesize the CCS record that originally separated them.
-         const std::vector<uint8_t> ccs(1, 1);
-         m_send_hs(epoch, Record_Type::ChangeCipherSpec, ccs);
+   size_t ccs_idx = 0;
+   for(size_t msg_idx = 0; msg_idx != flight.size(); ++msg_idx) {
+      while(ccs_idx != ccs_records.size() && ccs_records[ccs_idx].first == msg_idx) {
+         m_send_hs(ccs_records[ccs_idx].second, Record_Type::ChangeCipherSpec, ccs);
+         ++ccs_idx;
       }
 
+      const auto msg_seq = flight[msg_idx];
+      const auto& msg = m_flight_data.at(msg_seq);
       send_message(msg_seq, msg.epoch, msg.msg_type, msg.msg_bits);
-      epoch = msg.epoch;
+   }
+
+   while(ccs_idx != ccs_records.size() && ccs_records[ccs_idx].first == flight.size()) {
+      m_send_hs(ccs_records[ccs_idx].second, Record_Type::ChangeCipherSpec, ccs);
+      ++ccs_idx;
    }
 }
 
 bool Datagram_Handshake_IO::have_more_data() const {
+   if(m_retransmitted_client_hello.has_value() && m_retransmitted_client_hello->second.complete()) {
+      return true;
+   }
+
    // Future or incomplete fragments remain buffered, but only a complete
    // next-in-sequence message is trailing handshake data.
    const auto next = m_messages.find(m_in_message_seq);
    return next != m_messages.end() && next->second.complete();
 }
 
-void Datagram_Handshake_IO::finalize_handshake() {
+void Datagram_Handshake_IO::finalize_handshake(bool retransmit_terminal_flight) {
    // Keep an empty trailing flight to mean "we are waiting for the peer".
    // Retransmission then replays the previous, completed flight instead of
    // appending to it.
    if(!m_flights.rbegin()->empty()) {
-      m_flights.push_back(std::vector<uint16_t>());
+      m_flights.emplace_back();
+      m_flight_ccs.emplace_back();
    }
+
+   // RFC 6347 4.2.4 transitions directly to FINISHED after sending the
+   // terminal flight. Keep the flight for reactive replay when the peer
+   // retransmits, but do not arm a proactive retransmission timer.
+   m_finished = true;
+   m_retransmit_terminal_flight = retransmit_terminal_flight;
 }
 
 bool Datagram_Handshake_IO::timeout_check() {
@@ -205,13 +220,15 @@ bool Datagram_Handshake_IO::timeout_check() {
 
    retransmit_last_flight();
 
-   // Retransmission restarts the backoff window just like a normal write.
-   m_last_write = steady_clock_ms();
    m_next_timeout = std::min(2 * m_next_timeout, m_max_timeout);
    return true;
 }
 
 std::optional<std::chrono::milliseconds> Datagram_Handshake_IO::next_retransmission_timeout() const {
+   if(m_finished) {
+      return std::nullopt;
+   }
+
    // Without an outgoing flight, or while constructing one, there is nothing
    // complete that timeout_check() could retransmit.
    if(m_last_write == 0 || (m_flights.size() > 1 && !m_flights.rbegin()->empty())) {
@@ -279,9 +296,20 @@ bool Datagram_Handshake_IO::process_previous_handshake_fragment(const uint8_t fr
       return false;
    }
 
-   // ClientHello is special: losing HelloVerifyRequest leaves the server in
-   // the pending handshake, where it must still replay the cookie.
+   // HelloVerifyRequest has no retransmission timer or cached flight. Feed a
+   // retransmitted initial ClientHello back to the server handshake logic so
+   // it can recreate the stateless cookie response instead.
    if(msg_type == Handshake_Type::ClientHello) {
+      if(!retransmitted_flight && m_awaiting_cookie_client_hello) {
+         if(!m_retransmitted_client_hello.has_value() || m_retransmitted_client_hello->first != message_seq) {
+            m_retransmitted_client_hello = std::make_pair(message_seq, Handshake_Reassembly());
+         }
+
+         m_retransmitted_client_hello->second.add_fragment(
+            fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length);
+         return false;
+      }
+
       return reassemble_retransmitted_fragment(
          fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length, message_seq);
    }
@@ -349,7 +377,9 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
          const uint16_t finished_epoch = static_cast<uint16_t>(epoch + 1);
          if(m_retransmitted_finished_epoch == finished_epoch) {
             m_retransmitted_finished_epoch.reset();
-            retransmit_last_flight();
+            if(m_retransmit_terminal_flight) {
+               retransmit_last_flight();
+            }
          } else {
             m_retransmitted_ccs_epoch = finished_epoch;
          }
@@ -357,12 +387,10 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
       return;
    }
 
-   const size_t DTLS_HANDSHAKE_HEADER_LEN = 12;
-
    bool retransmit_response = false;
 
    while(record_len > 0) {
-      if(record_len < DTLS_HANDSHAKE_HEADER_LEN) {
+      if(record_len < DTLS_HANDSHAKE_HEADER_SIZE) {
          return;  // completely bogus? at least degenerate/weird
       }
 
@@ -382,7 +410,7 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
       const size_t fragment_offset = load_be24(&record[6]);
       const size_t fragment_length = load_be24(&record[9]);
 
-      const size_t total_size = DTLS_HANDSHAKE_HEADER_LEN + fragment_length;
+      const size_t total_size = DTLS_HANDSHAKE_HEADER_SIZE + fragment_length;
 
       if(record_len < total_size) {
          throw Decoding_Error("Bad lengths in DTLS header");
@@ -416,9 +444,9 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
             m_pending_reassembly_bytes += msg_len;
          }
          it->second.add_fragment(
-            &record[DTLS_HANDSHAKE_HEADER_LEN], fragment_length, fragment_offset, epoch, msg_type, msg_len);
+            &record[DTLS_HANDSHAKE_HEADER_SIZE], fragment_length, fragment_offset, epoch, msg_type, msg_len);
       } else {
-         retransmit_response |= process_previous_handshake_fragment(&record[DTLS_HANDSHAKE_HEADER_LEN],
+         retransmit_response |= process_previous_handshake_fragment(&record[DTLS_HANDSHAKE_HEADER_SIZE],
                                                                     fragment_length,
                                                                     fragment_offset,
                                                                     epoch,
@@ -432,7 +460,7 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
       record_len -= total_size;
    }
 
-   if(retransmit_response) {
+   if(retransmit_response && (!m_finished || m_retransmit_terminal_flight)) {
       retransmit_last_flight();
    }
 }
@@ -441,7 +469,8 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::get_next_
                                                                                        size_t /*max_message_size*/) {
    // Expecting a message means the last flight is concluded
    if(!m_flights.rbegin()->empty()) {
-      m_flights.push_back(std::vector<uint16_t>());
+      m_flights.emplace_back();
+      m_flight_ccs.emplace_back();
    }
 
    if(expecting_ccs) {
@@ -455,6 +484,13 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::get_next_
       return std::make_pair(Handshake_Type::None, std::vector<uint8_t>());
    }
 
+   if(m_retransmitted_client_hello.has_value() && m_retransmitted_client_hello->second.complete()) {
+      auto result = m_retransmitted_client_hello->second.message();
+      m_retransmitted_client_hello.reset();
+      m_recreating_hello_verify_request = true;
+      return result;
+   }
+
    auto i = m_messages.find(m_in_message_seq);
 
    if(i == m_messages.end() || !i->second.complete()) {
@@ -464,6 +500,10 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::get_next_
    m_in_message_seq += 1;
 
    auto result = i->second.message();
+
+   if(result.first == Handshake_Type::ClientHello) {
+      m_awaiting_cookie_client_hello = false;
+   }
 
    // Free the reassembly buffer for this delivered slot and uncommit its
    // bytes against the cap. The entry itself stays in m_messages because
@@ -588,25 +628,22 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_under_epoch(const Handshake_Mes
    const Handshake_Type msg_type = msg.type();
 
    if(msg_type == Handshake_Type::HandshakeCCS) {
+      m_flight_ccs.rbegin()->emplace_back(m_flights.rbegin()->size(), epoch);
       m_send_hs(epoch, Record_Type::ChangeCipherSpec, msg_bits);
-      return std::vector<uint8_t>();  // not included in handshake hashes
+      return {};  // not included in handshake hashes
    } else if(msg_type == Handshake_Type::HelloVerifyRequest) {
-      // This message is not included in the handshake hashes, but it is a
-      // DTLS flight and must be available for retransmission if it is lost.
-      m_flights.rbegin()->push_back(m_out_message_seq);
-      m_flight_data[m_out_message_seq] = Message_Info(epoch, msg_type, msg_bits);
-
-      m_out_message_seq += 1;
-      m_last_write = steady_clock_ms();
-      m_next_timeout = m_initial_timeout;
-
-      send_message(m_out_message_seq - 1, epoch, msg_type, msg_bits);
-      return std::vector<uint8_t>();
+      // RFC 6347 3.2.1 explicitly excludes HelloVerifyRequest from timeout
+      // retransmission. A repeated ClientHello recreates the response using
+      // the original message sequence number without retaining a flight.
+      const uint16_t msg_seq = m_recreating_hello_verify_request ? m_out_message_seq - 1 : m_out_message_seq++;
+      m_awaiting_cookie_client_hello = true;
+      m_recreating_hello_verify_request = false;
+      send_message(msg_seq, epoch, msg_type, msg_bits);
+      return {};
    }
 
-   // Note: not saving CCS, instead we know it was there due to change in epoch
    m_flights.rbegin()->push_back(m_out_message_seq);
-   m_flight_data[m_out_message_seq] = Message_Info(epoch, msg_type, msg_bits);
+   m_flight_data.emplace(m_out_message_seq, Message_Info(epoch, msg_type, msg_bits));
 
    m_out_message_seq += 1;
    m_last_write = steady_clock_ms();
@@ -619,8 +656,6 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
                                                          uint16_t epoch,
                                                          Handshake_Type msg_type,
                                                          const std::vector<uint8_t>& msg_bits) {
-   const size_t DTLS_HANDSHAKE_HEADER_LEN = 12;
-
    auto no_fragment = format_w_seq(msg_bits, msg_type, msg_seq);
 
    if(no_fragment.size() + DTLS_HEADER_SIZE <= m_mtu) {
@@ -636,7 +671,7 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
       * per-record nonce.
       */
       const size_t ciphersuite_overhead = (epoch > 0) ? 128 : 0;
-      const size_t header_overhead = DTLS_HEADER_SIZE + DTLS_HANDSHAKE_HEADER_LEN;
+      const size_t header_overhead = DTLS_HEADER_SIZE + DTLS_HANDSHAKE_HEADER_SIZE;
 
       if(m_mtu <= (header_overhead + ciphersuite_overhead)) {
          throw Invalid_Argument("DTLS MTU is too small to send headers");

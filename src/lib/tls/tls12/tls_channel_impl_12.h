@@ -146,7 +146,7 @@ class Channel_Impl_12 : public Channel_Impl {
 
       /**
       * Perform a handshake timeout check. This does nothing unless this is a
-      * DTLS channel that still needs handshake retransmission handling.
+      * DTLS channel with a handshake in progress.
       */
       bool timeout_check() override;
 
@@ -200,10 +200,6 @@ class Channel_Impl_12 : public Channel_Impl {
          Connection_Cipher_State* cipher_state, uint16_t epoch, Record_Type type, const uint8_t input[], size_t length);
 
       void reset_state();
-
-      Handshake_IO* retransmission_io();
-
-      const Handshake_IO* retransmission_io() const;
 
       Connection_Sequence_Numbers& sequence_numbers() const;
 

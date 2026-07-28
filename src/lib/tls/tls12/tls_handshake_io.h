@@ -129,6 +129,7 @@ class Datagram_Handshake_IO final : public Handshake_IO {
                             size_t max_handshake_msg_size) :
             m_seqs(seq),
             m_flights(1),
+            m_flight_ccs(1),
             m_initial_timeout(initial_timeout_ms),
             m_max_timeout(max_timeout_ms),
             m_send_hs(std::move(writer)),
@@ -163,11 +164,11 @@ class Datagram_Handshake_IO final : public Handshake_IO {
                                                                       size_t max_message_size) override;
 
       /**
-      * Finalize the terminal outgoing handshake flight after channel
-      * activation. Intermediate flights are finalized implicitly when the
-      * peer's next handshake message is requested.
+      * Enter FINISHED after channel activation. Intermediate outgoing flights
+      * are finalized implicitly when the peer's next handshake message is
+      * requested. The terminal-flight sender retains reactive replay behavior.
       */
-      void finalize_handshake();
+      void finalize_handshake(bool retransmit_terminal_flight);
 
    private:
       void add_record(const uint8_t record[],
@@ -249,8 +250,6 @@ class Datagram_Handshake_IO final : public Handshake_IO {
             Message_Info(uint16_t e, Handshake_Type mt, const std::vector<uint8_t>& msg) :
                   epoch(e), msg_type(mt), msg_bits(msg) {}
 
-            Message_Info() : epoch(0xFFFF), msg_type(Handshake_Type::None) {}
-
             uint16_t epoch;                 // NOLINT(*non-private-member-variable*)
             Handshake_Type msg_type;        // NOLINT(*non-private-member-variable*)
             std::vector<uint8_t> msg_bits;  // NOLINT(*non-private-member-variable*)
@@ -269,7 +268,16 @@ class Datagram_Handshake_IO final : public Handshake_IO {
       bool m_retransmitted_server_hello_complete = false;
       bool m_retransmitted_server_hello_done_complete = false;
       std::vector<std::vector<uint16_t>> m_flights;
+      // Each entry records where in the corresponding flight a CCS was sent
+      // and the epoch under which it was transmitted.
+      std::vector<std::vector<std::pair<size_t, uint16_t>>> m_flight_ccs;
       std::map<uint16_t, Message_Info> m_flight_data;
+
+      std::optional<std::pair<uint16_t, Handshake_Reassembly>> m_retransmitted_client_hello;
+      bool m_awaiting_cookie_client_hello = false;
+      bool m_recreating_hello_verify_request = false;
+      bool m_finished = false;
+      bool m_retransmit_terminal_flight = false;
 
       uint64_t m_initial_timeout = 0;
       uint64_t m_max_timeout = 0;

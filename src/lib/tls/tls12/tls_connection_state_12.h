@@ -39,7 +39,8 @@ class Active_Connection_State_12 final {
 
       Active_Connection_State_12(const Handshake_State& state, std::string application_protocol);
 
-      // DTLS variant: takes the handshake IO for replay of final flight
+      // DTLS variant: retains handshake IO for retransmission validation and
+      // reactive replay of the terminal flight when appropriate.
       Active_Connection_State_12(const Handshake_State& state,
                                  std::string application_protocol,
                                  std::unique_ptr<Handshake_IO> io);
@@ -75,19 +76,13 @@ class Active_Connection_State_12 final {
       bool supports_extended_master_secret() const { return m_supports_extended_master_secret; }
 
       /**
-       * For DTLS: the handshake IO from the completed handshake, needed
-       * to retransmit the last flight when records arrive under the
-       * previous epoch. Null for stream TLS.
+       * For DTLS: the handshake IO from the completed handshake, needed to
+       * validate retransmissions and, for the terminal-flight sender, replay
+       * the final flight. Null for stream TLS.
        */
       Datagram_Handshake_IO* dtls_handshake_io() { return m_dtls_handshake_io.get(); }
 
       const Datagram_Handshake_IO* dtls_handshake_io() const { return m_dtls_handshake_io.get(); }
-
-      // Protected application data proves that the peer processed our final
-      // handshake flight, so timeout-driven replay is no longer necessary.
-      bool peer_sent_protected_application_data() const { return m_peer_sent_protected_application_data; }
-
-      void mark_peer_as_having_sent_protected_application_data() { m_peer_sent_protected_application_data = true; }
 
    private:
       Protocol_Version m_version;
@@ -106,7 +101,6 @@ class Active_Connection_State_12 final {
       std::vector<uint8_t> m_server_finished_verify_data;
       bool m_supports_extended_master_secret = false;
       std::unique_ptr<Datagram_Handshake_IO> m_dtls_handshake_io;
-      bool m_peer_sent_protected_application_data = false;
 };
 
 }  // namespace Botan::TLS

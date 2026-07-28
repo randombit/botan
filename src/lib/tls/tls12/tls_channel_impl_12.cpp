@@ -186,31 +186,9 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
    return *m_pending_state;
 }
 
-Handshake_IO* Channel_Impl_12::retransmission_io() {
-   return const_cast<Handshake_IO*>(std::as_const(*this).retransmission_io());
-}
-
-const Handshake_IO* Channel_Impl_12::retransmission_io() const {
-   if(!m_is_datagram || m_has_been_closed) {
-      return nullptr;
-   }
-
-   if(m_pending_state) {
-      return &m_pending_state->handshake_io();
-   }
-
-   // Until protected application data confirms that the peer processed our
-   // final flight, keep it eligible for timeout-driven retransmission.
-   if(m_active_state.has_value() && !m_active_state->peer_sent_protected_application_data()) {
-      return m_active_state->dtls_handshake_io();
-   }
-
-   return nullptr;
-}
-
 bool Channel_Impl_12::timeout_check() {
-   if(auto* io = retransmission_io()) {
-      return io->timeout_check();
+   if(m_is_datagram && !m_has_been_closed && m_pending_state) {
+      return m_pending_state->handshake_io().timeout_check();
    }
 
    //FIXME: scan cipher suites and remove epochs older than 2*MSL
@@ -298,8 +276,8 @@ bool Channel_Impl_12::is_active() const {
 }
 
 std::optional<std::chrono::milliseconds> Channel_Impl_12::next_retransmission_timeout() const {
-   if(const auto* io = retransmission_io()) {
-      return io->next_retransmission_timeout();
+   if(m_is_datagram && !m_has_been_closed && m_pending_state) {
+      return m_pending_state->handshake_io().next_retransmission_timeout();
    }
 
    return std::nullopt;
@@ -324,13 +302,18 @@ void Channel_Impl_12::activate_session() {
       map_remove_if(not_current_epoch, m_read_cipher_states);
    }
 
-   // For DTLS, keep the handshake IO for last-flight retransmission.
+   // In a full handshake the server sends the terminal flight; in an
+   // abbreviated handshake the client does. Both endpoints retain handshake
+   // sequence state, but only the terminal sender replays its outgoing flight.
+   const bool sent_terminal_dtls_flight = m_is_datagram && (m_is_server == (state.server_hello_done() != nullptr));
+
    if(m_is_datagram) {
       m_active_state = Active_Connection_State_12(state, application_protocol(), m_pending_state->take_handshake_io());
       if(auto* dtls_io = m_active_state->dtls_handshake_io()) {
-         // Explicitly mark the just-sent final flight complete so timeout_check()
-         // may retransmit it if the peer never receives it.
-         dtls_io->finalize_handshake();
+         // Retain receive sequence state on both endpoints to distinguish a
+         // retransmission from an unexpected new handshake message. Only the
+         // terminal-flight sender responds by replaying its final flight.
+         dtls_io->finalize_handshake(sent_terminal_dtls_flight);
       }
    } else {
       m_active_state = Active_Connection_State_12(state, application_protocol());
@@ -387,7 +370,7 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
             throw TLS_Exception(Alert::RecordOverflow, "TLS plaintext record is larger than allowed maximum");
          }
 
-         const bool epoch0_restart = m_is_datagram && record.epoch() == 0 && m_active_state.has_value();
+         const bool epoch0_restart = allow_epoch0_restart && record.epoch() == 0 && m_active_state.has_value();
          BOTAN_ASSERT_IMPLICATION(epoch0_restart, allow_epoch0_restart, "Allowed state");
 
          const bool initial_record = epoch0_restart || (pending_state() == nullptr && !m_active_state.has_value());
@@ -457,6 +440,13 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
                                             Record_Type record_type,
                                             Protocol_Version record_version,
                                             bool epoch0_restart) {
+   const auto process_retransmitted_record = [&] {
+      BOTAN_ASSERT(m_active_state.has_value(), "Have active DTLS association for retransmission");
+      BOTAN_ASSERT_NONNULL(m_active_state->dtls_handshake_io());
+      m_active_state->dtls_handshake_io()->add_retransmitted_record(
+         record.data(), record.size(), record_type, record_sequence);
+   };
+
    if(!m_pending_state) {
       // With no pending handshake this is either a new handshake attempt or a
       // DTLS retransmission from the previous handshake. The latter must not
@@ -465,9 +455,7 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
          const bool starts_new_handshake = is_new_dtls_association_client_hello(record, record_type);
 
          if(!starts_new_handshake) {
-            BOTAN_ASSERT_NONNULL(m_active_state->dtls_handshake_io());
-            m_active_state->dtls_handshake_io()->add_retransmitted_record(
-               record.data(), record.size(), record_type, record_sequence);
+            process_retransmitted_record();
             return;
          }
       }
@@ -488,17 +476,12 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
                     static_cast<Handshake_Type>(record[0]) == Handshake_Type::HelloRequest));
 
                if(m_active_state.has_value() && !starts_new_handshake) {
-                  BOTAN_ASSERT_NONNULL(m_active_state->dtls_handshake_io());
-                  m_active_state->dtls_handshake_io()->add_retransmitted_record(
-                     record.data(), record.size(), record_type, record_sequence);
+                  process_retransmitted_record();
                } else {
                   create_handshake_state(record_version);
                }
             } else if(current_epoch > 0 && epoch == current_epoch - 1) {
-               BOTAN_ASSERT(m_active_state.has_value(), "Have active DTLS association for retransmission");
-               BOTAN_ASSERT_NONNULL(m_active_state->dtls_handshake_io());
-               m_active_state->dtls_handshake_io()->add_retransmitted_record(
-                  record.data(), record.size(), record_type, record_sequence);
+               process_retransmitted_record();
             }
          } else {
             create_handshake_state(record_version);
@@ -539,8 +522,6 @@ void Channel_Impl_12::process_application_data(uint64_t seq_no, const secure_vec
    if(read_epoch == 0) {
       throw Unexpected_Message("Application data received in unexpected read epoch");
    }
-
-   m_active_state->mark_peer_as_having_sent_protected_application_data();
 
    callbacks().tls_record_received(seq_no, record);
 }

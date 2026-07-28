@@ -34,7 +34,6 @@
    #include <botan/tls_session_manager_memory.h>
    #include <botan/tls_session_manager_noop.h>
    #include <botan/internal/stl_util.h>
-   #include <botan/internal/loadstor.h>
    #include <botan/internal/tls_reader.h>
 
    #include <botan/ec_group.h>
@@ -1752,26 +1751,6 @@ class DTLS_Core_Regression_Tests final : public Test {
          return predicate();
       }
 
-      template <typename Predicate>
-      static bool remains_false_for(Predicate predicate, std::chrono::milliseconds duration) {
-         // Negative timeout checks need to observe a small window: a single
-         // immediate false could pass even though the channel retransmits a few
-         // milliseconds later.
-         const auto deadline = std::chrono::steady_clock::now() + duration;
-
-         while(std::chrono::steady_clock::now() < deadline) {
-            if(predicate()) {
-               return false;
-            }
-
-   #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-   #endif
-         }
-
-         return !predicate();
-      }
-
       static void wait_for_timeout_retransmit(Test::Result& result,
                                               Botan::TLS::Channel& channel,
                                               std::vector<uint8_t>& outbound) {
@@ -1864,7 +1843,8 @@ class DTLS_Core_Regression_Tests final : public Test {
          }
          s2c.clear();  // simulate losing the server final flight
 
-         wait_for_timeout_retransmit(result, server, s2c);
+         wait_for_timeout_retransmit(result, client, c2s);
+         deliver(result, "retransmitted client final flight", c2s, server);
 
          result.test_is_true("retransmitted final flight includes CCS",
                              contains_dtls_record_type(s2c, Botan::TLS::Record_Type::ChangeCipherSpec));
@@ -1909,6 +1889,8 @@ class DTLS_Core_Regression_Tests final : public Test {
          }
          result.test_is_true("server response is HelloVerifyRequest",
                              contains_dtls_handshake_type(s2c, Botan::TLS::Handshake_Type::HelloVerifyRequest));
+         result.test_is_false("server does not arm a HelloVerifyRequest retransmission timer",
+                              server.next_retransmission_timeout().has_value());
          s2c.clear();  // simulate losing the HelloVerifyRequest
 
          wait_for_timeout_retransmit(result, client, c2s);
@@ -2203,12 +2185,30 @@ class DTLS_Core_Regression_Tests final : public Test {
          if(!result.test_is_true("server final flight was produced", !s2c.empty())) {
             return result;
          }
-         s2c.clear();  // simulate losing the server final flight
 
-         wait_for_timeout_retransmit(result, server, s2c);
+         std::vector<uint8_t> delayed_ccs;
+         std::vector<uint8_t> delayed_finished;
+         if(!split_first_dtls_record(result, s2c, delayed_ccs, delayed_finished)) {
+            return result;
+         }
+         s2c.clear();  // simulate delaying the original server final flight
+
+         result.test_is_false("finished server has no proactive retransmission timer",
+                              server.next_retransmission_timeout().has_value());
+         wait_for_timeout_retransmit(result, client, c2s);
+         deliver(result, "retransmitted client final flight", c2s, server);
          deliver(result, "retransmitted server final flight", s2c, client);
 
          result.test_is_true("client became active", client.is_active());
+         result.test_is_false("active client has no retransmission timer",
+                              client.next_retransmission_timeout().has_value());
+
+         // The original Finished may arrive after the retransmitted flight
+         // activated the client. It has an unseen DTLS record sequence number
+         // but an old handshake message_seq and must be discarded silently.
+         deliver(result, "delayed original server Finished", delayed_finished, client);
+         result.test_is_true("client remains active after delayed Finished", client.is_active());
+         result.test_is_true("client does not respond to delayed Finished", c2s.empty());
 
          return result;
       }
@@ -2318,17 +2318,17 @@ class DTLS_Core_Regression_Tests final : public Test {
          const auto cookie_secret_requests = creds->dtls_cookie_secret_requests();
          s2c.clear();
 
-         // Once the pending handshake consumes message_seq 0, receiving it
-         // again must replay HelloVerifyRequest rather than restart processing.
+         // HelloVerifyRequest is not retained as retransmittable flight data.
+         // A repeated initial ClientHello recreates the cookie response.
          deliver_copy(result, "retransmitted client 2 epoch-zero hello", epoch0_client_hello, server);
          result.test_is_true("pending restart replays HelloVerifyRequest",
                              contains_dtls_handshake_type(s2c, Botan::TLS::Handshake_Type::HelloVerifyRequest));
          result.test_sz_eq("retransmitted ClientHello does not establish another session",
                            server_callbacks->sessions_established(),
                            1);
-         result.test_sz_eq("retransmitted ClientHello does not repeat cookie processing",
+         result.test_sz_eq("retransmitted ClientHello recreates the cookie response",
                            creds->dtls_cookie_secret_requests(),
-                           cookie_secret_requests);
+                           cookie_secret_requests + 1);
          result.test_is_true("previous association remains active during restart", server.is_active());
          s2c.clear();
 
@@ -2401,23 +2401,32 @@ class DTLS_Core_Regression_Tests final : public Test {
             return result;
          }
 
-         c2s.clear();  // simulate losing the client's final flight
+         std::vector<uint8_t> discarded_ccs;
+         std::vector<uint8_t> delayed_finished;
+         if(!split_first_dtls_record(result, c2s, discarded_ccs, delayed_finished)) {
+            return result;
+         }
+         c2s.clear();  // simulate delaying the original client final flight
 
-         wait_for_timeout_retransmit(result, client, c2s);
+         result.test_is_false("finished client has no proactive retransmission timer",
+                              client.next_retransmission_timeout().has_value());
+         wait_for_timeout_retransmit(result, server, s2c);
+         deliver(result, "retransmitted resumed server flight", s2c, client);
          deliver(result, "retransmitted resumed client final flight", c2s, server);
 
          result.test_is_true("server became active from retransmitted client final flight", server.is_active());
+
+         // As in the full handshake, a delayed copy of the original terminal
+         // Finished must not turn normal DTLS reordering into a fatal alert.
+         deliver(result, "delayed original client Finished", delayed_finished, server);
+         result.test_is_true("server remains active after delayed Finished", server.is_active());
+         result.test_is_true("server does not respond to delayed Finished", s2c.empty());
 
          const std::vector<uint8_t> app_data = {0xB0, 0x7A, 0x11};
          result.test_no_throw("server sends application data after completing resumed handshake",
                               [&] { server.send(app_data); });
          deliver(result, "server application data", s2c, client);
          result.test_bin_eq("client received server application data", client_recv, app_data);
-
-         result.test_is_false("client no longer needs timeout checks",
-                              client.next_retransmission_timeout().has_value());
-         result.test_is_true("client stops retransmitting after peer application data",
-                             remains_false_for([&] { return client.timeout_check(); }, std::chrono::milliseconds(20)));
 
          return result;
       }
@@ -2535,6 +2544,13 @@ class DTLS_Core_Regression_Tests final : public Test {
             result.test_no_throw("client requests renegotiation", [&] { client.renegotiate(true); });
          }
 
+         // A renegotiation ClientHello is already protected under the active
+         // epoch. Replaying it must not infer a preceding CCS merely because
+         // the cached handshake message has a non-zero epoch.
+         c2s.clear();  // simulate losing the renegotiation ClientHello
+         wait_for_timeout_retransmit(result, client, c2s);
+         result.test_is_false("retransmitted renegotiation ClientHello does not include CCS",
+                              contains_dtls_record_type(c2s, Botan::TLS::Record_Type::ChangeCipherSpec));
          deliver(result, "renegotiation client hello", c2s, server);
          deliver(result, "renegotiation server handshake flight", s2c, client);
          deliver(result, "renegotiation client final flight", c2s, server);
@@ -2542,8 +2558,10 @@ class DTLS_Core_Regression_Tests final : public Test {
 
          result.test_is_true("client remains active after renegotiation", client.is_active());
          result.test_is_true("server remains active after renegotiation", server.is_active());
-         result.test_is_true("client tracks the new final flight", client.next_retransmission_timeout().has_value());
-         result.test_is_true("server tracks the new final flight", server.next_retransmission_timeout().has_value());
+         result.test_is_false("finished client has no proactive retransmission timer",
+                              client.next_retransmission_timeout().has_value());
+         result.test_is_false("finished server has no proactive retransmission timer",
+                              server.next_retransmission_timeout().has_value());
 
          return result;
       }
