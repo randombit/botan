@@ -220,15 +220,18 @@ void Server_Impl_13::downgrade() {
    m_handshake->transitions.set_expected_next({});
 }
 
-void Server_Impl_13::maybe_handle_compatibility_mode() {
-   BOTAN_ASSERT_NOMSG(m_handshake->state.has_client_hello());
-   BOTAN_ASSERT_NOMSG(m_handshake->state.has_hello_retry_request() || m_handshake->state.has_server_hello());
-
-   // RFC 8446 Appendix D.4  (Middlebox Compatibility Mode)
-   //    The server sends a dummy change_cipher_spec record immediately after
-   //    its first handshake message. This may either be after a ServerHello or
-   //    a HelloRetryRequest.
+void Server_Impl_13::maybe_handle_compatibility_mode(Compat_Mode_Situation situation) {
+   // RFC 9846 E.4
+   //    This "compatibility mode" is partially negotiated: the client can opt
+   //    to provide a session ID or not, [...].
    //
+   // I.e., before we received a ClientHello, we cannot know whether the client
+   // requested middlebox compatibility mode or not.
+   if(m_handshake == nullptr || !m_handshake->state.has_client_hello()) {
+      return;
+   }
+
+   // RFC 9846 E.4
    //    This "compatibility mode" is partially negotiated: the client can opt
    //    to provide a session ID or not, and the server has to echo it. Either
    //    side can send change_cipher_spec at any time during the handshake, as
@@ -240,17 +243,34 @@ void Server_Impl_13::maybe_handle_compatibility_mode() {
    // sending a non-empty session ID. Nevertheless, when the policy requests
    // it we send a CCS regardless. Note that this is perfectly legal and also
    // satisfies some BoGo tests that expect this behaviour.
-   //
-   // Send a CCS immediately after the _first_ handshake message. I.e. either
-   // after Hello Retry Request (exclusively) or after a Server Hello that was
-   // not preseded by a Hello Retry Request.
-   const bool just_after_first_handshake_message =
-      m_handshake->state.has_hello_retry_request() ^ m_handshake->state.has_server_hello();
    const bool client_requested_compatibility_mode = !m_handshake->state.client_hello().session_id().empty();
+   if(!policy().tls_13_middlebox_compatibility_mode() && !client_requested_compatibility_mode) {
+      return;
+   }
 
-   if(just_after_first_handshake_message &&
-      (policy().tls_13_middlebox_compatibility_mode() || client_requested_compatibility_mode)) {
-      send_dummy_change_cipher_spec();
+   switch(situation) {
+      case Compat_Mode_Situation::AfterSendingFirstServerHello:
+      case Compat_Mode_Situation::AfterSendingHelloRetryRequest:
+         // RFC 9846 E.4
+         //    The server sends a dummy change_cipher_spec record immediately after
+         //    its first handshake message. This may either be after a ServerHello or
+         //    a HelloRetryRequest.
+         send_dummy_change_cipher_spec();
+         break;
+
+      case Compat_Mode_Situation::BeforeSendingAlert:
+         // RFC 9846 E.4
+         //    The server sends a dummy change_cipher_spec record immediately after
+         //    its first handshake message.
+         //
+         // The server cannot send an encrypted alert message as its first
+         // message. Hence, it won't ever need a dummy CCS before an alert.
+         break;
+
+      case Compat_Mode_Situation::AfterSendingFirstClientHello:
+      case Compat_Mode_Situation::BeforeSendingSecondClientHello:
+      case Compat_Mode_Situation::BeforeSendingEncryptedClientFlight:
+         BOTAN_ASSERT_UNREACHABLE();  // These situations occur on the client side.
    }
 }
 
@@ -320,7 +340,10 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
    //       references to the Server Hello will need to consult the handshake
    //       state object!
    send_handshake_message(m_handshake->state.sending(std::move(server_hello)));
-   maybe_handle_compatibility_mode();
+
+   if(!m_handshake->state.has_hello_retry_request()) {
+      maybe_handle_compatibility_mode(Compat_Mode_Situation::AfterSendingFirstServerHello);
+   }
 
    // Setup encryption for all the remaining handshake messages
    m_cipher_state = [&] {
@@ -449,7 +472,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Hello_Retry_Request hello_retr
    BOTAN_ASSERT_NOMSG(cipher.has_value());  // should work, since we chose that suite
 
    send_handshake_message(m_handshake->state.sending(std::move(hello_retry_request)));
-   maybe_handle_compatibility_mode();
+   maybe_handle_compatibility_mode(Compat_Mode_Situation::AfterSendingHelloRetryRequest);
 
    m_transcript_hash = Transcript_Hash_State::recreate_after_hello_retry_request(cipher->prf_algo(), m_transcript_hash);
 
