@@ -10,6 +10,7 @@
 
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>
+#include <chrono>
 #include <deque>
 #include <functional>
 #include <map>
@@ -51,6 +52,8 @@ class Handshake_IO {
 
       virtual bool timeout_check() = 0;
 
+      virtual std::optional<std::chrono::milliseconds> next_retransmission_timeout() const = 0;
+
       virtual bool have_more_data() const = 0;
 
       virtual std::vector<uint8_t> format(const std::vector<uint8_t>& handshake_msg,
@@ -89,6 +92,8 @@ class Stream_Handshake_IO final : public Handshake_IO {
       Protocol_Version initial_record_version() const override;
 
       bool timeout_check() override { return false; }
+
+      std::optional<std::chrono::milliseconds> next_retransmission_timeout() const override { return std::nullopt; }
 
       bool have_more_data() const override { return !m_queue.empty(); }
 
@@ -134,6 +139,8 @@ class Datagram_Handshake_IO final : public Handshake_IO {
 
       bool timeout_check() override;
 
+      std::optional<std::chrono::milliseconds> next_retransmission_timeout() const override;
+
       bool have_more_data() const override;
 
       std::vector<uint8_t> send(const Handshake_Message& msg) override;
@@ -155,7 +162,12 @@ class Datagram_Handshake_IO final : public Handshake_IO {
       std::pair<Handshake_Type, std::vector<uint8_t>> get_next_record(bool expecting_ccs,
                                                                       size_t max_message_size) override;
 
-      void conclude_flight();
+      /**
+      * Finalize the terminal outgoing handshake flight after channel
+      * activation. Intermediate flights are finalized implicitly when the
+      * peer's next handshake message is requested.
+      */
+      void finalize_handshake();
 
    private:
       void add_record(const uint8_t record[],

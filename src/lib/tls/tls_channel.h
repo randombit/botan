@@ -13,6 +13,7 @@
 
 #include <botan/symkey.h>
 #include <botan/tls_alert.h>
+#include <chrono>
 #include <memory>
 #include <optional>
 #include <span>
@@ -122,10 +123,10 @@ class BOTAN_PUBLIC_API(2, 0) Channel {
       virtual bool is_active() const = 0;
 
       /**
-      * @return true iff timeout_check() should be polled to drive handshake
-      *         retransmissions.
+      * @return the remaining time until timeout_check() might retransmit
+      *         handshake data, or std::nullopt if no timeout check is needed.
       */
-      virtual bool requires_timeout_check() const { return !is_handshake_complete(); }
+      virtual std::optional<std::chrono::milliseconds> next_retransmission_timeout() const = 0;
 
       /**
       * Note: For TLS 1.3 a connection is closed only after both peers have
