@@ -90,6 +90,8 @@ class BOTAN_PUBLIC_API(2, 0) Server final : public Channel {
 
       bool is_active() const override;
 
+      bool requires_timeout_check() const override;
+
       bool is_closed() const override;
 
       bool is_closed_for_reading() const override;
