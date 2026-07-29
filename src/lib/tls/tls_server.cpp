@@ -87,6 +87,10 @@ bool Server::is_active() const {
    return m_impl->is_active();
 }
 
+std::optional<std::chrono::milliseconds> Server::next_retransmission_timeout() const {
+   return m_impl->next_retransmission_timeout();
+}
+
 bool Server::is_closed() const {
    return m_impl->is_closed();
 }
