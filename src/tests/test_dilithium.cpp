@@ -54,10 +54,8 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
 
          const Botan::Dilithium_PrivateKey priv_key(*dilithium_test_rng, DerivedT::mode);
 
-         if(!priv_key.is_mldsa()) {
-            result.test_bin_eq(
-               "generated expected private key hash", sha3_256->process(priv_key.private_key_bits()), ref_sk_hash);
-         }
+         const auto sk_bytes = priv_key.is_mldsa() ? priv_key.raw_private_key_bits() : priv_key.private_key_bits();
+         result.test_bin_eq("generated expected private key hash", sha3_256->process(sk_bytes), ref_sk_hash);
 
          result.test_bin_eq(
             "generated expected public key hash", sha3_256->process(priv_key.public_key_bits()), ref_pk_hash);
