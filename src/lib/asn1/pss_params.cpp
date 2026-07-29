@@ -76,6 +76,10 @@ void PSS_Params::decode_from(BER_Decoder& from) {
       .end_cons();
 
    BER_Decoder(m_mgf.parameters(), from.limits()).decode(m_mgf_hash).verify_end();
+
+   if(!m_hash.parameters_are_null_or_empty() || !m_mgf_hash.parameters_are_null_or_empty()) {
+      throw Decoding_Error("Unexpected parameters for PSS hash algorithm identifier");
+   }
 }
 
 }  // namespace Botan

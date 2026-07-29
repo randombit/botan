@@ -218,6 +218,18 @@ class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash
             PK_Ops::Verification_with_Hash(padding), m_group(ecdsa.domain()), m_gy_mul(ecdsa._public_ec_point()) {}
 
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, const AlgorithmIdentifier& alg_id) :
+            /*
+            * RFC 5758 Section 3.2 is clear that for ECDSA signatures the parameters field is empty
+            *
+            *    When the [ecdsa-with-SHA*] algorithm identifier appears in the algorithm
+            *    field as an AlgorithmIdentifier, the encoding MUST omit the parameters
+            *    field. That is, the AlgorithmIdentifier SHALL be a SEQUENCE of one
+            *    component, the OID [ecdsa-with-SHA*].
+            *
+            * However ECDSA is old enough and widely implemented enough that many non-conformant
+            * implementations which emit X509 signatures using an explicit NULL parameter do exist,
+            * so accept it here.
+            */
             PK_Ops::Verification_with_Hash(alg_id, "ECDSA", true),
             m_group(ecdsa.domain()),
             m_gy_mul(ecdsa._public_ec_point()) {}

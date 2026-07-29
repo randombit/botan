@@ -186,7 +186,7 @@ class RSA_Signature_Operation final : public Signature_Operation {
          try {
             const std::string full_name = "RSA/" + padding_name;
             const OID oid = OID::from_string(full_name);
-            return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
+            return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_NULL_PARAM);
          } catch(Lookup_Error&) {}
 
          if(padding_name.starts_with("PSS(")) {

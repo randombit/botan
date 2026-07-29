@@ -10,6 +10,7 @@
 
 #include <botan/ec_group.h>
 #include <botan/hash.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/pk_ops_impl.h>
@@ -19,6 +20,23 @@ namespace Botan {
 std::string SM2_PublicKey::algo_name() const {
    return "SM2";
 }
+
+namespace {
+
+const AlgorithmIdentifier& assert_sm2_algorithm_identifier(const AlgorithmIdentifier& alg_id) {
+   const auto alg_name = alg_id.oid().registered_name();
+   // OpenSSL uses ECDSA's OID for SM2
+   if(alg_name != "SM2" && alg_name != "SM2_Enc" && alg_name != "ECDSA") {
+      throw Decoding_Error(fmt("Unexpected AlgorithmIdentifier OID {} in association with SM2 key", alg_id.oid()));
+   }
+
+   return alg_id;  // NOLINT(*-return-const-ref-from-parameter)
+}
+
+}  // namespace
+
+SM2_PublicKey::SM2_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
+      EC_PublicKey(assert_sm2_algorithm_identifier(alg_id), key_bits) {}
 
 std::optional<size_t> SM2_PublicKey::_signature_element_size_for_DER_encoding() const {
    return domain().get_order_bytes();
@@ -50,7 +68,7 @@ bool SM2_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
 }
 
 SM2_PrivateKey::SM2_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
-      EC_PrivateKey(alg_id, key_bits),
+      EC_PrivateKey(assert_sm2_algorithm_identifier(alg_id), key_bits),
       m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
       m_da_inv_legacy(m_da_inv.to_bigint()) {
    if(m_da_inv.is_zero()) {
