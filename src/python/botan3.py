@@ -2707,15 +2707,25 @@ class X509Cert: # pylint: disable=invalid-name
 class X509CRLReason(IntEnum):
     """The reason a certificate was revoked, as encoded in the CRL entry reason code"""
 
+    #: No specific reason was given for the revocation.
     UNSPECIFIED = 0
+    #: The subject's private key is known or suspected to have been compromised.
     KEY_COMPROMISE = 1
+    #: A CA certificate's private key is known or suspected to have been compromised.
     CA_COMPROMISE = 2
+    #: The subject's name or other information changed, without any suspicion of key compromise.
     AFFILIATION_CHANGED = 3
+    #: The certificate has been superseded, without any suspicion of key compromise.
     SUPERSEDED = 4
+    #: The certificate is no longer needed, without any suspicion of key compromise.
     CESSATION_OF_OPERATION = 5
+    #: The certificate is temporarily suspended (placed on hold).
     CERTIFICATE_HOLD = 6
+    #: Used only in delta CRLs to remove an entry from the base CRL (e.g. a hold was lifted).
     REMOVE_FROM_CRL = 8
+    #: A privilege contained in the certificate has been withdrawn.
     PRIVILEGE_WITHDRAWN = 9
+    #: An attribute authority's private key is known or suspected to have been compromised.
     AA_COMPROMISE = 10
 
     @classmethod
