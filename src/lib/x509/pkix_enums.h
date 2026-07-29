@@ -38,6 +38,7 @@ enum class Certificate_Status_Code : uint16_t {
    OCSP_SERVER_NOT_AVAILABLE = 503,
    TRUSTED_CERT_HAS_EXPIRED = 504,
    TRUSTED_CERT_NOT_YET_VALID = 505,
+   EMPTY_DIRECTORYNAME = 506,
 
    // Errors
    FIRST_ERROR_STATUS = 1000,
