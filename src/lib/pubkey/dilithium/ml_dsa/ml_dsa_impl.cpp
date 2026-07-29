@@ -104,6 +104,13 @@ DilithiumInternalKeypair ML_DSA_Expanding_Keypair_Codec::decode_keypair(std::spa
       // backwards compatibility (not RFC 9881 conforming) to raw seed format.
       return Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(private_key_bits), std::move(mode));
    }
+   if(private_key_bits.size() == mode.private_key_bytes()) {
+      // raw expanded key in the FIPS 204 sk encoding without ASN.1 wrapping (not RFC 9881 conforming),
+      // as used e.g. by the NIST ACVP and Wycheproof test vectors. The length cannot collide with any
+      // of the RFC 9881 encodings.
+      return Dilithium_Algos::decode_keypair(StrongSpan<const DilithiumSerializedPrivateKey>(private_key_bits),
+                                             std::move(mode));
+   }
    // "seed-only" format from RFC 9881
    BER_Decoder ber_dec(private_key_bits);
    auto obj = ber_dec.peek_next_object();
