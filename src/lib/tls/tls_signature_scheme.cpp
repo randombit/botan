@@ -8,9 +8,12 @@
 #include <botan/assert.h>
 #include <botan/tls_signature_scheme.h>
 
+#include <botan/hex.h>
 #include <botan/pk_keys.h>
 #include <botan/pss_params.h>
 #include <botan/tls_version.h>
+#include <botan/internal/fmt.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan::TLS {
 
@@ -42,6 +45,57 @@ const std::vector<Signature_Scheme>& Signature_Scheme::all_available_schemes() {
    };
 
    return all_schemes;
+}
+
+Signature_Scheme Signature_Scheme::from_string(std::string_view str) {
+   if(str == "RSA_PKCS1_SHA1") {
+      return RSA_PKCS1_SHA1;
+   }
+   if(str == "RSA_PKCS1_SHA256") {
+      return RSA_PKCS1_SHA256;
+   }
+   if(str == "RSA_PKCS1_SHA384") {
+      return RSA_PKCS1_SHA384;
+   }
+   if(str == "RSA_PKCS1_SHA512") {
+      return RSA_PKCS1_SHA512;
+   }
+
+   if(str == "ECDSA_SHA1") {
+      return ECDSA_SHA1;
+   }
+   if(str == "ECDSA_SHA256") {
+      return ECDSA_SHA256;
+   }
+   if(str == "ECDSA_SHA384") {
+      return ECDSA_SHA384;
+   }
+   if(str == "ECDSA_SHA512") {
+      return ECDSA_SHA512;
+   }
+
+   if(str == "RSA_PSS_SHA256") {
+      return RSA_PSS_SHA256;
+   }
+   if(str == "RSA_PSS_SHA384") {
+      return RSA_PSS_SHA384;
+   }
+   if(str == "RSA_PSS_SHA512") {
+      return RSA_PSS_SHA512;
+   }
+
+   // Parse signature schemes passed as hexadecimal code points (e.g. "0x081A")
+   if(str.size() == 6 && str.starts_with("0x")) {
+      try {
+         std::array<uint8_t, 2> wire_code{};
+         Botan::hex_decode(wire_code, str.substr(2), false /* no white space */);
+         return Signature_Scheme(load_be(wire_code));
+      } catch(const Invalid_Argument&) {
+         // pass, will throw below
+      }
+   }
+
+   throw Invalid_Argument(fmt("Unknown TLS signature scheme '{}'", str));
 }
 
 Signature_Scheme::Signature_Scheme() : m_code(NONE) {}

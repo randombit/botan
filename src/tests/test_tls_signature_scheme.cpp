@@ -28,6 +28,9 @@ std::vector<Test::Result> test_signature_scheme() {
          result.test_is_true("is_available handles all cases", s.is_available());
 
          result.test_is_true("to_string handles all cases", not_unknown(s.to_string()));
+         result.test_u16_eq("to_string/from_string roundtrip",
+                            Botan::TLS::Signature_Scheme::from_string(s.to_string()).wire_code(),
+                            s.wire_code());
          result.test_is_true("hash_function_name handles all cases", not_unknown(s.hash_function_name()));
          result.test_is_true("padding_string handles all cases", not_unknown(s.padding_string()));
          result.test_is_true("algorithm_name handles all cases", not_unknown(s.algorithm_name()));
@@ -51,6 +54,29 @@ std::vector<Test::Result> test_signature_scheme() {
       result.test_is_true("format deals with bogus schemes", !bogus.format().has_value());
       result.test_is_true("algorithm_identifier deals with bogus schemes",
                           Botan::AlgorithmIdentifier() == bogus.key_algorithm_identifier());
+   }));
+
+   results.push_back(CHECK("from_string", [&](auto& result) {
+      using Sig = Botan::TLS::Signature_Scheme;
+
+      result.test_u16_eq("RSA_PKCS1_SHA1", Sig::from_string("RSA_PKCS1_SHA1").wire_code(), Sig::RSA_PKCS1_SHA1);
+      result.test_u16_eq("RSA_PKCS1_SHA256", Sig::from_string("RSA_PKCS1_SHA256").wire_code(), Sig::RSA_PKCS1_SHA256);
+      result.test_u16_eq("RSA_PKCS1_SHA384", Sig::from_string("RSA_PKCS1_SHA384").wire_code(), Sig::RSA_PKCS1_SHA384);
+      result.test_u16_eq("RSA_PKCS1_SHA512", Sig::from_string("RSA_PKCS1_SHA512").wire_code(), Sig::RSA_PKCS1_SHA512);
+      result.test_u16_eq("ECDSA_SHA1", Sig::from_string("ECDSA_SHA1").wire_code(), Sig::ECDSA_SHA1);
+      result.test_u16_eq("ECDSA_SHA256", Sig::from_string("ECDSA_SHA256").wire_code(), Sig::ECDSA_SHA256);
+      result.test_u16_eq("ECDSA_SHA384", Sig::from_string("ECDSA_SHA384").wire_code(), Sig::ECDSA_SHA384);
+      result.test_u16_eq("ECDSA_SHA512", Sig::from_string("ECDSA_SHA512").wire_code(), Sig::ECDSA_SHA512);
+      result.test_u16_eq("RSA_PSS_SHA256", Sig::from_string("RSA_PSS_SHA256").wire_code(), Sig::RSA_PSS_SHA256);
+      result.test_u16_eq("RSA_PSS_SHA384", Sig::from_string("RSA_PSS_SHA384").wire_code(), Sig::RSA_PSS_SHA384);
+      result.test_u16_eq("RSA_PSS_SHA512", Sig::from_string("RSA_PSS_SHA512").wire_code(), Sig::RSA_PSS_SHA512);
+
+      result.test_u16_eq("custom code point", Sig::from_string("0xFE42").wire_code(), Sig(0xFE42).wire_code());
+
+      result.test_throws("from_string throws on unknown scheme", [] { Sig::from_string("bogus"); });
+      result.test_throws("from_string throws on invalid hex 1", [] { Sig::from_string("0xZZZZ"); });
+      result.test_throws("from_string throws on invalid hex 2", [] { Sig::from_string("0x03g0"); });
+      result.test_throws("from_string throws on invalid hex 3", [] { Sig::from_string("0xabc"); });
    }));
 
    return results;

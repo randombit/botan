@@ -63,6 +63,11 @@ class BOTAN_PUBLIC_API(3, 0) Signature_Scheme final {
       static const std::vector<Signature_Scheme>& all_available_schemes();
 
       /**
+      * @return the signature scheme corresponding to the given string
+      */
+      static Signature_Scheme from_string(std::string_view str);
+
+      /**
       * Construct an uninitialized / invalid scheme
       */
       Signature_Scheme();
