@@ -37,12 +37,14 @@ class BOTAN_PUBLIC_API(2, 0) HashFunction : public Buffered_Computation {
       static std::unique_ptr<HashFunction> create_or_throw(std::string_view algo_spec, std::string_view provider = "");
 
       /**
+      * List the providers available for a given hash
       * @return list of available providers for this algorithm, empty if not available
       * @param algo_spec algorithm name
       */
       static std::vector<std::string> providers(std::string_view algo_spec);
 
       /**
+      * Return the name of the provider implementing this object
       * @return provider information about this implementation. Default is "base",
       * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
       */
@@ -54,11 +56,13 @@ class BOTAN_PUBLIC_API(2, 0) HashFunction : public Buffered_Computation {
       virtual void clear() = 0;
 
       /**
+      * Return the name of this hash function
       * @return the hash function name
       */
       virtual std::string name() const = 0;
 
       /**
+      * Return the internal block size of this hash function
       * @return hash block size as defined for this algorithm
       */
       virtual size_t hash_block_size() const { return 0; }
@@ -84,11 +88,13 @@ class BOTAN_PUBLIC_API(2, 0) HashFunction : public Buffered_Computation {
       virtual std::unique_ptr<HashFunction> copy_state() const = 0;
 
       /**
+      * Create a new uninitialized object of the same type
       * @return new object representing the same algorithm as *this
       */
       virtual std::unique_ptr<HashFunction> new_object() const = 0;
 
       /**
+      * Create a new uninitialized object of the same type
       * @return new object representing the same algorithm as *this
       */
       HashFunction* clone() const { return this->new_object().release(); }

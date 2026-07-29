@@ -43,11 +43,13 @@ class BOTAN_PUBLIC_API(2, 0) KDF /* NOLINT(*-special-member-functions*) */ {
       static std::unique_ptr<KDF> create_or_throw(std::string_view algo_spec, std::string_view provider = "");
 
       /**
+      * List the providers available for a given KDF
       * @return list of available providers for this algorithm, empty if not available
       */
       static std::vector<std::string> providers(std::string_view algo_spec);
 
       /**
+      * Return the name of this KDF
       * @return KDF name
       */
       virtual std::string name() const = 0;
@@ -232,11 +234,13 @@ class BOTAN_PUBLIC_API(2, 0) KDF /* NOLINT(*-special-member-functions*) */ {
       }
 
       /**
+      * Create a new uninitialized object of the same type
       * @return new object representing the same algorithm as *this
       */
       virtual std::unique_ptr<KDF> new_object() const = 0;
 
       /**
+      * Create a new uninitialized object of the same type
       * @return new object representing the same algorithm as *this
       */
       KDF* clone() const { return this->new_object().release(); }

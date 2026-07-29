@@ -26,11 +26,13 @@ class MessageAuthenticationCode;
 class BOTAN_PUBLIC_API(2, 4) PSK_Database /* NOLINT(*-special-member-functions) */ {
    public:
       /**
+      * List the names stored in the database
       * @returns the set of names for which get() will return a value.
       */
       virtual std::set<std::string> list_names() const = 0;
 
       /**
+      * Retrieve a PSK from the database
       * @returns the value associated with the specified @p name or otherwise
       * throw an exception.
       */
@@ -48,6 +50,7 @@ class BOTAN_PUBLIC_API(2, 4) PSK_Database /* NOLINT(*-special-member-functions) 
       virtual void remove(std::string_view name) = 0;
 
       /**
+      * Test whether values in this database are stored encrypted
       * @returns true if the values in the PSK database are encrypted. If false,
       *          saved values are being stored in plaintext.
       */
@@ -117,14 +120,38 @@ class BOTAN_PUBLIC_API(2, 4) Encrypted_PSK_Database : public PSK_Database /* NOL
 
       ~Encrypted_PSK_Database() override;
 
+      /**
+      * List the names stored in the database
+      * @return the set of names for which get() will return a value
+      */
       std::set<std::string> list_names() const override;
 
+      /**
+      * Retrieve a PSK from the database
+      * @param name the name of the PSK to retrieve
+      * @return the value associated with name, or throw if not found
+      */
       secure_vector<uint8_t> get(std::string_view name) const override;
 
+      /**
+      * Set a value that can later be accessed with get()
+      * If name already exists in the database, the old value will be overwritten.
+      * @param name the name to store the PSK under
+      * @param psk the PSK to store
+      * @param psk_len length of psk in bytes
+      */
       void set(std::string_view name, const uint8_t psk[], size_t psk_len) override;
 
+      /**
+      * Remove the PSK with the given name from the database
+      * @param name the name of the PSK to remove
+      */
       void remove(std::string_view name) override;
 
+      /**
+      * Test whether values in this database are stored encrypted
+      * @return always true for this type
+      */
       bool is_encrypted() const override { return true; }
 
    protected:
@@ -158,6 +185,9 @@ class BOTAN_PUBLIC_API(2, 4) Encrypted_PSK_Database : public PSK_Database /* NOL
 
 class SQL_Database;
 
+/**
+* An Encrypted_PSK_Database which stores its key/value pairs in a SQL table
+*/
 class BOTAN_PUBLIC_API(2, 4) Encrypted_PSK_Database_SQL : public Encrypted_PSK_Database {
    public:
       /**

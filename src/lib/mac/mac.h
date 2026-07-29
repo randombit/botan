@@ -32,7 +32,8 @@ class BOTAN_PUBLIC_API(2, 0) MessageAuthenticationCode : public Buffered_Computa
       static std::unique_ptr<MessageAuthenticationCode> create(std::string_view algo_spec,
                                                                std::string_view provider = "");
 
-      /*
+      /**
+      * Create an instance based on a name, throwing if it is not available
       * Create an instance based on a name
       * If provider is empty then best available is chosen.
       * @param algo_spec algorithm name
@@ -43,6 +44,7 @@ class BOTAN_PUBLIC_API(2, 0) MessageAuthenticationCode : public Buffered_Computa
                                                                         std::string_view provider = "");
 
       /**
+      * List the providers available for a given MAC
       * @return list of available providers for this algorithm, empty if not available
       */
       static std::vector<std::string> providers(std::string_view algo_spec);
@@ -91,6 +93,7 @@ class BOTAN_PUBLIC_API(2, 0) MessageAuthenticationCode : public Buffered_Computa
       bool verify_mac(std::span<const uint8_t> in) { return verify_mac_result(in); }
 
       /**
+      * Create a new uninitialized object of the same type
       * @return new object representing the same algorithm as *this
       */
       virtual std::unique_ptr<MessageAuthenticationCode> new_object() const = 0;
@@ -101,6 +104,7 @@ class BOTAN_PUBLIC_API(2, 0) MessageAuthenticationCode : public Buffered_Computa
       MessageAuthenticationCode* clone() const { return this->new_object().release(); }
 
       /**
+      * Return the name of the provider implementing this object
       * @return provider information about this implementation. Default is "base",
       * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
       */
@@ -129,6 +133,9 @@ class BOTAN_PUBLIC_API(2, 0) MessageAuthenticationCode : public Buffered_Computa
       virtual bool verify_mac_result(std::span<const uint8_t> in);
 };
 
+/**
+* A shorter alias for MessageAuthenticationCode
+*/
 typedef MessageAuthenticationCode MAC;
 
 }  // namespace Botan

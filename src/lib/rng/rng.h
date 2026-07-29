@@ -51,6 +51,9 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
 
       virtual ~RandomNumberGenerator() = default;
 
+      /**
+      * Default constructor
+      */
       RandomNumberGenerator() = default;
 
       /*
@@ -59,7 +62,15 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       RandomNumberGenerator(const RandomNumberGenerator& rng) = delete;
       RandomNumberGenerator& operator=(const RandomNumberGenerator& rng) = delete;
 
+      /**
+      * Move constructor
+      */
       RandomNumberGenerator(RandomNumberGenerator&& rng) = default;
+
+      /**
+      * Move assignment
+      * @return reference to this
+      */
       RandomNumberGenerator& operator=(RandomNumberGenerator&& rng) = default;
 
       /**
@@ -74,6 +85,11 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       */
       void randomize(std::span<uint8_t> output) { this->fill_bytes_with_input(output, {}); }
 
+      /**
+      * Randomize a byte array
+      * @param output the byte array to hold the random output
+      * @param length the number of bytes to generate
+      */
       void randomize(uint8_t output[], size_t length) { this->randomize(std::span(output, length)); }
 
       /**
@@ -97,6 +113,11 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       */
       void add_entropy(std::span<const uint8_t> input) { this->fill_bytes_with_input({}, input); }
 
+      /**
+      * Incorporate some additional data into the RNG state
+      * @param input a byte array containing the entropy to be added
+      * @param length the number of bytes in input
+      */
       void add_entropy(const uint8_t input[], size_t length) { this->add_entropy(std::span(input, length)); }
 
       /**
@@ -128,6 +149,13 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
          this->fill_bytes_with_input(output, input);
       }
 
+      /**
+      * Randomize a byte array, first incorporating additional input
+      * @param output the byte array to hold the random output
+      * @param output_len the number of bytes to generate
+      * @param input a byte array containing the entropy to be added
+      * @param input_len the number of bytes in input
+      */
       void randomize_with_input(uint8_t output[], size_t output_len, const uint8_t input[], size_t input_len) {
          this->randomize_with_input(std::span(output, output_len), std::span(input, input_len));
       }
@@ -148,11 +176,17 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       */
       void randomize_with_ts_input(std::span<uint8_t> output);
 
+      /**
+      * Randomize a byte array, using timestamps as additional input
+      * @param output the byte array to hold the random output
+      * @param output_len the number of bytes to generate
+      */
       void randomize_with_ts_input(uint8_t output[], size_t output_len) {
          this->randomize_with_ts_input(std::span(output, output_len));
       }
 
       /**
+      * Return the name of this RNG type
       * @return the name of this RNG type
       */
       virtual std::string name() const = 0;
@@ -256,6 +290,7 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       }
 
       /**
+      * Generate a single random byte which is not zero
       * @return a random byte that is greater than zero
       * @throws PRNG_Unseeded if the RNG fails because it has not enough entropy
       * @throws Exception if the RNG fails
@@ -339,8 +374,10 @@ typedef RandomNumberGenerator RNG;
 */
 class BOTAN_PUBLIC_API(2, 0) Hardware_RNG : public RandomNumberGenerator {
    public:
-      void clear() final { /* no way to clear state of hardware RNG */
-      }
+      /**
+      * No-op clear implementation - no way to clear state of a hardware RNG
+      */
+      void clear() final {}
 };
 
 /**
@@ -349,12 +386,27 @@ class BOTAN_PUBLIC_API(2, 0) Hardware_RNG : public RandomNumberGenerator {
 */
 class BOTAN_PUBLIC_API(2, 0) Null_RNG final : public RandomNumberGenerator {
    public:
+      /**
+      * Test whether this RNG has been seeded
+      * @return true if this RNG is seeded and ready for use
+      */
       bool is_seeded() const override { return false; }
 
+      /**
+      * Test whether this RNG accepts externally provided input
+      * @return false if this RNG is known to ignore provided inputs
+      */
       bool accepts_input() const override { return false; }
 
+      /**
+      * Clear all internally held values of this RNG
+      */
       void clear() override {}
 
+      /**
+      * Return the name of this RNG type
+      * @return the name of this RNG type
+      */
       std::string name() const override { return "Null_RNG"; }
 
    private:

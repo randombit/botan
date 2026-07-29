@@ -182,6 +182,9 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
                               size_t key_len) const;
 };
 
+/**
+* A factory for PasswordHash parameter sets of a particular algorithm
+*/
 class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily /* NOLINT(*-special-member-functions) */ {
    public:
       /**
@@ -202,6 +205,7 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily /* NOLINT(*-special-member-funct
                                                                  std::string_view provider = "");
 
       /**
+      * List the providers available for a given password hash
       * @return list of available providers for this algorithm, empty if not available
       */
       static std::vector<std::string> providers(std::string_view algo_spec);
@@ -209,6 +213,7 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily /* NOLINT(*-special-member-funct
       virtual ~PasswordHashFamily() = default;
 
       /**
+      * Return the name of this password hash family
       * @return name of this PasswordHash
       */
       virtual std::string name() const = 0;

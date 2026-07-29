@@ -29,6 +29,12 @@ namespace Botan {
 */
 class BOTAN_PUBLIC_API(3, 0) ZFEC final {
    public:
+      /**
+      * Callback invoked with each produced share
+      *
+      * Receives the share index, a pointer to the share contents, and the
+      * length of the share in bytes.
+      */
       typedef std::function<void(size_t, const uint8_t[], size_t)> output_cb_t;
 
       /**
@@ -38,13 +44,26 @@ class BOTAN_PUBLIC_API(3, 0) ZFEC final {
       */
       ZFEC(size_t K, size_t N);
 
+      /**
+      * Return how many shares are needed for recovery
+      * @return the value of K
+      */
       size_t recovery_threshold() const { return m_K; }
 
+      /**
+      * Return how many shares are generated
+      * @return the value of N
+      */
       size_t generated_shares() const { return m_N; }
 
+      /**
+      * Return the name of the provider implementing this object
+      * @return the provider name
+      */
       std::string provider() const;
 
       /**
+      * Encode the input into N shares
       * @param input the data to FEC
       * @param size the length in bytes of input
       * @param output_cb the output callback
@@ -52,6 +71,7 @@ class BOTAN_PUBLIC_API(3, 0) ZFEC final {
       void encode(const uint8_t input[], size_t size, const output_cb_t& output_cb) const;
 
       /**
+      * Encode K existing shares into N shares
       * @param shares exactly K shares of data to FEC
       * @param share_size the length in bytes of each share
       * @param output_cb the output callback
@@ -61,6 +81,7 @@ class BOTAN_PUBLIC_API(3, 0) ZFEC final {
                          const output_cb_t& output_cb) const;
 
       /**
+      * Recover the original data from K shares
       * @param shares map of share id to share contents
       * @param share_size size in bytes of each share
       * @param output_cb the output callback

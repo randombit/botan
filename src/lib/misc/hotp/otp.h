@@ -20,6 +20,7 @@ namespace Botan {
 class BOTAN_PUBLIC_API(2, 2) HOTP final {
    public:
       /**
+      * Create an HOTP instance
       * @param key the secret key shared between client and server
       * @param hash_algo the hash algorithm to use, should be SHA-1 or SHA-256
       * @param digits the number of digits in the OTP (must be 6, 7, or 8)
@@ -29,6 +30,7 @@ class BOTAN_PUBLIC_API(2, 2) HOTP final {
             HOTP(key.begin(), key.size(), hash_algo, digits) {}
 
       /**
+      * Create an HOTP instance
       * @param key the secret key shared between client and server
       * @param key_len length of key param
       * @param hash_algo the hash algorithm to use, should be SHA-1 or SHA-256
@@ -66,6 +68,7 @@ class BOTAN_PUBLIC_API(2, 2) HOTP final {
 class BOTAN_PUBLIC_API(2, 2) TOTP final {
    public:
       /**
+      * Create a TOTP instance
       * @param key the secret key shared between client and server
       * @param hash_algo the hash algorithm to use, should be SHA-1, SHA-256 or SHA-512
       * @param digits the number of digits in the OTP (must be 6, 7, or 8)
@@ -79,6 +82,7 @@ class BOTAN_PUBLIC_API(2, 2) TOTP final {
             TOTP(key.begin(), key.size(), hash_algo, digits, time_step) {}
 
       /**
+      * Create a TOTP instance
       * @param key the secret key shared between client and server
       * @param key_len length of key
       * @param hash_algo the hash algorithm to use, should be SHA-1, SHA-256 or SHA-512
@@ -103,8 +107,22 @@ class BOTAN_PUBLIC_API(2, 2) TOTP final {
       */
       uint32_t generate_totp(uint64_t unix_time);
 
+      /**
+      * Verify a TOTP against the provided time point
+      * @param otp the presented OTP
+      * @param time the current local time
+      * @param clock_drift_accepted the acceptable clock drift, in time steps
+      * @return true if the OTP is valid
+      */
       bool verify_totp(uint32_t otp, std::chrono::system_clock::time_point time, size_t clock_drift_accepted = 0);
 
+      /**
+      * Verify a TOTP against the provided Unix timestamp
+      * @param otp the presented OTP
+      * @param unix_time the current local time as a Unix timestamp
+      * @param clock_drift_accepted the acceptable clock drift, in time steps
+      * @return true if the OTP is valid
+      */
       bool verify_totp(uint32_t otp, uint64_t unix_time, size_t clock_drift_accepted = 0);
 
    private:

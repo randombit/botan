@@ -101,10 +101,22 @@ class BOTAN_PUBLIC_API(2, 3) ChaCha_RNG final : public Stateful_RNG {
                  Entropy_Sources& entropy_sources,
                  size_t reseed_interval = RandomNumberGenerator::DefaultReseedInterval);
 
+      /**
+      * Return the name of this RNG type
+      * @return the name of this RNG type
+      */
       std::string name() const override { return "ChaCha_RNG"; }
 
+      /**
+      * Return the security level of this DRBG
+      * @return the estimated security level in bits
+      */
       size_t security_level() const override;
 
+      /**
+      * Return the largest number of bytes this DRBG will produce per request
+      * @return always zero, as this RNG has no such limit
+      */
       size_t max_number_of_bytes_per_request() const override { return 0; }
 
    private:

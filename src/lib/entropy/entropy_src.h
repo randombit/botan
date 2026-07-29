@@ -50,6 +50,9 @@ class BOTAN_PUBLIC_API(2, 0) Entropy_Source {
       */
       virtual size_t poll(RandomNumberGenerator& rng) = 0;
 
+      /**
+      * Default constructor
+      */
       Entropy_Source() = default;
       Entropy_Source(const Entropy_Source& other) = delete;
       Entropy_Source(Entropy_Source&& other) = delete;
@@ -59,9 +62,13 @@ class BOTAN_PUBLIC_API(2, 0) Entropy_Source {
       virtual ~Entropy_Source() = default;
 };
 
+/**
+* A collection of entropy sources which can be polled together
+*/
 class BOTAN_PUBLIC_API(2, 0) Entropy_Sources final {
    public:
       /**
+      * Access the process-wide set of entropy sources used by default
       * @warning This object is not synchronized. For general usage (eg polling)
       * this is fine. However if you use global_sources().add_source() concurrently
       * with a poll, likely a race leading to memory corruption will occur; only
@@ -69,8 +76,16 @@ class BOTAN_PUBLIC_API(2, 0) Entropy_Sources final {
       */
       static Entropy_Sources& global_sources();
 
+      /**
+      * Add an entropy source to this collection
+      * @param src the source to add
+      */
       void add_source(std::unique_ptr<Entropy_Source> src);
 
+      /**
+      * List the entropy sources in this collection
+      * @return the names of the enabled sources
+      */
       std::vector<std::string> enabled_sources() const;
 
       /**
@@ -103,7 +118,14 @@ class BOTAN_PUBLIC_API(2, 0) Entropy_Sources final {
       */
       size_t poll_just(RandomNumberGenerator& rng, std::string_view src);
 
+      /**
+      * Create an empty collection of entropy sources
+      */
       Entropy_Sources() = default;
+      /**
+      * Create a collection containing the named entropy sources
+      * @param sources the names of the sources to enable
+      */
       explicit Entropy_Sources(const std::vector<std::string>& sources);
 
       Entropy_Sources(const Entropy_Sources& other) = delete;

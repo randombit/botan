@@ -20,6 +20,10 @@ namespace Botan {
 */
 class BOTAN_PUBLIC_API(2, 0) DataSink : public Filter {
    public:
+      /**
+      * Check whether this filter is an attachable filter
+      * @return always false, since nothing may be attached after a sink
+      */
       bool attachable() override { return false; }
 };
 
@@ -51,10 +55,22 @@ class BOTAN_PUBLIC_API(2, 0) DataSink_Stream final : public DataSink {
       DataSink_Stream& operator=(const DataSink_Stream& other) = delete;
       DataSink_Stream& operator=(DataSink_Stream&& other) = delete;
 
+      /**
+      * Return a descriptive name for this filter
+      * @return the identifier given at construction
+      */
       std::string name() const override { return m_identifier; }
 
+      /**
+      * Write a portion of a message to the stream
+      * @param buf the input as a byte array
+      * @param len the length of the byte array buf
+      */
       void write(const uint8_t buf[], size_t len) override;
 
+      /**
+      * Notify that the current message is finished and flush the stream
+      */
       void end_msg() override;
 
       ~DataSink_Stream() override;
