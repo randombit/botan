@@ -1167,7 +1167,7 @@ class Shim_Policy final : public Botan::TLS::Policy {
             if(!m_args.flag_set("server")) {
                schemes.emplace_back(Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA256);
                schemes.emplace_back(Botan::TLS::Signature_Scheme::RSA_PSS_SHA256);
-               schemes.emplace_back(Botan::TLS::Signature_Scheme::ECDSA_SHA256);
+               schemes.emplace_back(Botan::TLS::Signature_Scheme::ECDSA_SECP256R1_TLS13_SHA256);
             }
 
             return schemes;

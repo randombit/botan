@@ -1509,9 +1509,9 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                   Signature_Scheme::RSA_PKCS1_SHA384,
                   Signature_Scheme::RSA_PKCS1_SHA512,
                   Signature_Scheme::RSA_PKCS1_SHA256,
-                  Signature_Scheme::ECDSA_SHA384,
-                  Signature_Scheme::ECDSA_SHA512,
-                  Signature_Scheme::ECDSA_SHA256,
+                  Signature_Scheme::ECDSA_SECP384R1_TLS13_SHA384,
+                  Signature_Scheme::ECDSA_SECP521R1_TLS13_SHA512,
+                  Signature_Scheme::ECDSA_SECP256R1_TLS13_SHA256,
                }));
             }
 

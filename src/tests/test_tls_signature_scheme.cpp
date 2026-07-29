@@ -65,8 +65,17 @@ std::vector<Test::Result> test_signature_scheme() {
       result.test_u16_eq("RSA_PKCS1_SHA512", Sig::from_string("RSA_PKCS1_SHA512").wire_code(), Sig::RSA_PKCS1_SHA512);
       result.test_u16_eq("ECDSA_SHA1", Sig::from_string("ECDSA_SHA1").wire_code(), Sig::ECDSA_SHA1);
       result.test_u16_eq("ECDSA_SHA256", Sig::from_string("ECDSA_SHA256").wire_code(), Sig::ECDSA_SHA256);
+      result.test_u16_eq("ECDSA_SECP256R1_TLS13_SHA256",
+                         Sig::from_string("ECDSA_SECP256R1_TLS13_SHA256").wire_code(),
+                         Sig::ECDSA_SECP256R1_TLS13_SHA256);
       result.test_u16_eq("ECDSA_SHA384", Sig::from_string("ECDSA_SHA384").wire_code(), Sig::ECDSA_SHA384);
+      result.test_u16_eq("ECDSA_SECP384R1_TLS13_SHA384",
+                         Sig::from_string("ECDSA_SECP384R1_TLS13_SHA384").wire_code(),
+                         Sig::ECDSA_SECP384R1_TLS13_SHA384);
       result.test_u16_eq("ECDSA_SHA512", Sig::from_string("ECDSA_SHA512").wire_code(), Sig::ECDSA_SHA512);
+      result.test_u16_eq("ECDSA_SECP521R1_TLS13_SHA512",
+                         Sig::from_string("ECDSA_SECP521R1_TLS13_SHA512").wire_code(),
+                         Sig::ECDSA_SECP521R1_TLS13_SHA512);
       result.test_u16_eq("RSA_PSS_SHA256", Sig::from_string("RSA_PSS_SHA256").wire_code(), Sig::RSA_PSS_SHA256);
       result.test_u16_eq("RSA_PSS_SHA384", Sig::from_string("RSA_PSS_SHA384").wire_code(), Sig::RSA_PSS_SHA384);
       result.test_u16_eq("RSA_PSS_SHA512", Sig::from_string("RSA_PSS_SHA512").wire_code(), Sig::RSA_PSS_SHA512);

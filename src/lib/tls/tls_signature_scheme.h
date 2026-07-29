@@ -43,10 +43,30 @@ class BOTAN_PUBLIC_API(3, 0) Signature_Scheme final {
          RSA_PKCS1_SHA384 = 0x0501,
          RSA_PKCS1_SHA512 = 0x0601,
 
+         // RFC 9846 4.3.3
+         //    ECDSA algorithms:  Indicates a signature algorithm using ECDSA,
+         //    the corresponding curve as defined in NIST SP 800-186.
+         //
+         // In TLS 1.3 these code points specifically refer to the NIST curves
+         // P-256, P-384, and P-521. In contrast TLS 1.2 uses these code points
+         // for ECDSA on any curve paired with the specified hash function.
+         ECDSA_SECP256R1_TLS13_SHA256 = 0x0403,
+         ECDSA_SECP384R1_TLS13_SHA384 = 0x0503,
+         ECDSA_SECP521R1_TLS13_SHA512 = 0x0603,
+
+         // RFC 5246 7.4.1.4.1
+         //   The client uses the "signature_algorithms" extension to indicate
+         //   to the server which signature/hash algorithm pairs may be used in
+         //   digital signatures.
+         //
+         // In TLS 1.2 the signature_algorithms extension contains pairs of hash
+         // and signature algorithms. For ECDSA these code points are not bound
+         // to a specific curve in contrast to TLS 1.3, where these code points
+         // imply the usage of NIST's P-256, P-384, and P-521 curves.
          ECDSA_SHA1 = 0x0203,  // not implemented
-         ECDSA_SHA256 = 0x0403,
-         ECDSA_SHA384 = 0x0503,
-         ECDSA_SHA512 = 0x0603,
+         ECDSA_SHA256 = ECDSA_SECP256R1_TLS13_SHA256,
+         ECDSA_SHA384 = ECDSA_SECP384R1_TLS13_SHA384,
+         ECDSA_SHA512 = ECDSA_SECP521R1_TLS13_SHA512,
 
          RSA_PSS_SHA256 = 0x0804,
          RSA_PSS_SHA384 = 0x0805,
