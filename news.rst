@@ -7,9 +7,14 @@ Version 3.13.0, Not Yet Released
 * Add URI and email name constraint processing to X509 path validation (GH #5598)
 
 * Add ``DNSName``, ``URI``, and ``EmailAddress`` types. (GH #5598 #5601 #5622 #5663
-  #5683)
+  #5683 #5750)
 
 * Add support for the RFC 9608 No Revocation Available extension (GH #5595)
+
+* Fix DTLS 1.2 handshake retransmission edge cases, including pacing of
+  repeated timeout checks, replay of final flights after local activation,
+  partial server-flight delivery, and delayed server-side flight handling.
+  (GH #5696 #2310 #2498 #4022 #4036)
 
 * Add support for parsing EC keys which contain the ECC domain parameters within
   the key rather than in the algorithm identifier (GH #5532)
@@ -42,7 +47,7 @@ Version 3.13.0, Not Yet Released
   32 bits (GH #5687 #5694 #5697)
 
 * Various X509/PKIX hardenings, optimizations, bug fixes, and additional sanity checks.
-  (GH #5593 #5598 #5605 #5611 #5633 #5637 #5643 #5660 #5668 #5670 #5682 #5685 #5698)
+  (GH #5593 #5598 #5605 #5611 #5633 #5637 #5643 #5660 #5668 #5670 #5682 #5685 #5689 #5698)
 
 * Various ASN.1 hardening and decoder strictness improvements (GH #5693 #5703 #5710 #5720)
 
@@ -71,6 +76,9 @@ Version 3.13.0, Not Yet Released
 * In Ed25519 verification also reject the non-canonical encoding of the identity
   element (GH #5731)
 
+* Add hash to curve support for brainpool256r1, brainpool384r1, brainpool512r1,
+  and numsp512d1 (GH #5754)
+
 * Improve the HTTP 1.0 client used for OCSP and CRL fetching (GH #5609)
 
 * Extend Blowfish to support keys up to 72 bytes in length (GH #5714)
@@ -78,7 +86,14 @@ Version 3.13.0, Not Yet Released
 * Fix various edge case bugs in AEAD, cipher mode, stream cipher, MACs, and KDFs
   (GH #5610 #5628 #5642 #5659 #5665 #5672 #5674 #5742 #5743)
 
+* Add ``HashFunction::security_level`` (GH #5746)
+
 * Add an AVX-512/GFNI implementation of the Streebog compression function (GH #5655)
+
+* Add optimized Salsa20 implementations using 128-bit SIMD (SSSE3, NEON), AVX2, and AVX-512
+  (GH #5759)
+
+* Add an AVX-512/GFNI implementation of ZFEC, optimize the existing vperm code (GH #5747)
 
 * Convert the SM4 key schedule to constant time code, including hwaes variant (GH #5638 #5639)
 
@@ -87,7 +102,10 @@ Version 3.13.0, Not Yet Released
 * Add support for the Brainpool ECDH groups in TLS 1.3 as specified in RFC 8734
   (GH #5691)
 
-* TLS 1.3 handshake hardening and various minor TLS fixes (GH #5664 #5721)
+* Add ``TLS::Policy::minimum_record_size``, which allows padding TLS 1.3 records
+  out to a minimum plaintext size (GH #5752)
+
+* TLS 1.3 handshake hardening and various minor TLS fixes (GH #5664 #5721 #5767)
 
 * Improve ``Database`` abstraction type and make it easier to support databases
   other than SQLite, and validate SQL table names. (GH #5607 #5673)
@@ -100,12 +118,21 @@ Version 3.13.0, Not Yet Released
 
 * Fix several errors in the Python binding (GH #5722)
 
-* Upgrade to TLS-Anvil 1.5 (GH #5630)
+* Add getters for the RFC 3779 extensions to the FFI interface and Python binding
+  (GH #5491)
 
-* Fix DTLS 1.2 handshake retransmission edge cases, including pacing of
-  repeated timeout checks, replay of final flights after local activation,
-  partial server-flight delivery, and delayed server-side flight handling.
-  (GH #2310 #2498 #4022 #4036)
+* Add ``PublicKey.load_x25519`` and ``PublicKey.load_x448`` to the Python binding
+  (GH #5748)
+
+* The Python binding documentation is now generated from the docstrings in
+  ``botan3.py`` using Sphinx (GH #5233 #5765)
+
+* Add missing, or correct erroneous, documentation comments in many headers
+  (GH #5760 #5761 #5762 #5763 #5764 #5766 #5774)
+
+* On MSVC, deprecation warnings now include the file and line number (GH #5749)
+
+* Upgrade to TLS-Anvil 1.5 (GH #5630)
 
 Version 3.12.0, 2026-05-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
