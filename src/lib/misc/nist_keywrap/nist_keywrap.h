@@ -35,6 +35,7 @@ inline std::vector<uint8_t> nist_key_wrap(std::span<const uint8_t> input, const 
 }
 
 /**
+* KW (key unwrap). See RFC 3394 and NIST SP800-38F
 * @param input the value to be decrypted, output of nist_key_wrap
 * @param input_len length of input
 * @param bc a keyed 128-bit block cipher that will be used to decrypt input
@@ -45,6 +46,7 @@ secure_vector<uint8_t> BOTAN_PUBLIC_API(2, 4)
    nist_key_unwrap(const uint8_t input[], size_t input_len, const BlockCipher& bc);
 
 /**
+* KW (key unwrap). See RFC 3394 and NIST SP800-38F
 * @param input the value to be decrypted, output of nist_key_wrap
 * @param bc a keyed 128-bit block cipher that will be used to decrypt input
 * @return input decrypted under NIST key wrap algorithm
@@ -75,6 +77,7 @@ inline std::vector<uint8_t> nist_key_wrap_padded(std::span<const uint8_t> input,
 }
 
 /**
+* KWP (key unwrap with padding). See RFC 5649 and NIST SP800-38F
 * @param input the value to be decrypted, output of nist_key_wrap
 * @param input_len length of input
 * @param bc a keyed 128-bit block cipher that will be used to decrypt input
@@ -85,6 +88,7 @@ secure_vector<uint8_t> BOTAN_PUBLIC_API(2, 4)
    nist_key_unwrap_padded(const uint8_t input[], size_t input_len, const BlockCipher& bc);
 
 /**
+* KWP (key unwrap with padding). See RFC 5649 and NIST SP800-38F
 * @param input the value to be decrypted, output of nist_key_wrap
 * @param bc a keyed 128-bit block cipher that will be used to decrypt input
 * @return input decrypted under NIST key wrap algorithm

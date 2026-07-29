@@ -36,6 +36,7 @@ enum class Cipher_Dir : uint8_t {
 class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
    public:
       /**
+      * List the providers available for a given cipher mode
       * @return list of available providers for this algorithm, empty if not available
       * @param algo_spec algorithm name
       */
@@ -64,19 +65,19 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
                                                           std::string_view provider = "");
 
    protected:
-      /*
+      /**
       * Prepare for processing a message under the specified nonce
       */
       virtual void start_msg(const uint8_t nonce[], size_t nonce_len) = 0;
 
-      /*
+      /**
       * Process message blocks
       * Input must be a multiple of update_granularity.
       */
       virtual size_t process_msg(uint8_t msg[], size_t msg_len) = 0;
 
-      /*
-      * Finishes a message
+      /**
+      * Finish processing a message
       */
       virtual void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) = 0;
 
@@ -130,6 +131,12 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
       */
       size_t process(std::span<uint8_t> msg) { return this->process_msg(msg.data(), msg.size()); }
 
+      /**
+      * Process message blocks in place
+      * @param msg the message to be processed
+      * @param msg_len length of msg in bytes
+      * @return bytes written in-place
+      */
       size_t process(uint8_t msg[], size_t msg_len) { return this->process_msg(msg, msg_len); }
 
       /**
@@ -232,17 +239,20 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
       virtual bool requires_entire_message() const { return false; }
 
       /**
+      * Return the smallest input accepted by finish()
       * @return required minimum size to finalize() - may be any
       *         length larger than this.
       */
       virtual size_t minimum_final_size() const = 0;
 
       /**
+      * Return the default nonce length for this mode
       * @return the default size for a nonce
       */
       virtual size_t default_nonce_length() const = 0;
 
       /**
+      * Test if a nonce length is valid for this mode
       * @return true iff nonce_len is a valid length for the nonce
       */
       virtual bool valid_nonce_length(size_t nonce_len) const = 0;
@@ -262,11 +272,13 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
       bool authenticated() const { return this->tag_size() > 0; }
 
       /**
+      * Return the authentication tag length of this mode
       * @return the size of the authentication tag used (in bytes)
       */
       virtual size_t tag_size() const { return 0; }
 
       /**
+      * Return the name of the provider implementing this object
       * @return provider information about this implementation. Default is "base",
       * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
       */

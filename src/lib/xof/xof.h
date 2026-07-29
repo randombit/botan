@@ -47,12 +47,14 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
       static std::unique_ptr<XOF> create_or_throw(std::string_view algo_spec, std::string_view provider = "");
 
       /**
+       * List the providers available for a given XOF
        * @return list of available providers for this algorithm, empty if not available
        * @param algo_spec algorithm name
        */
       static std::vector<std::string> providers(std::string_view algo_spec);
 
       /**
+       * Return the name of the provider implementing this object
        * @return provider information about this implementation. Default is "base",
        * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
        */
@@ -67,6 +69,7 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
       }
 
       /**
+       * Return the name of this XOF
        * @return the hash function name
        */
       virtual std::string name() const = 0;
@@ -84,6 +87,7 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
       void start(std::span<const uint8_t> salt = {}, std::span<const uint8_t> key = {});
 
       /**
+       * Test if a salt length is valid for this XOF
        * @returns true if salt length is acceptable, false otherwise
        */
       virtual bool valid_salt_length(size_t salt_len) const {
@@ -92,6 +96,7 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
       }
 
       /**
+       * Return the key lengths supported by this XOF
        * @returns an object describing limits on the key size
        */
       virtual Key_Length_Specification key_spec() const {
@@ -100,6 +105,7 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
       }
 
       /**
+       * Return the internal block size of this XOF
        * @return the intrinsic processing block size of this XOF
        */
       virtual size_t block_size() const = 0;
@@ -120,6 +126,7 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
       virtual std::unique_ptr<XOF> copy_state() const = 0;
 
       /**
+       * Create a new uninitialized object of the same type
        * @return new object representing the same algorithm as *this
        */
       virtual std::unique_ptr<XOF> new_object() const = 0;
@@ -147,6 +154,7 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
       }
 
       /**
+       * Generate output bytes into a newly allocated container
        * @return the next @p bytes output bytes as the specified container type @p T.
        */
       template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
@@ -157,6 +165,7 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
       }
 
       /**
+       * Generate a fixed number of output bytes into a std::array
        * @return the next @p count output bytes as a std::array<>.
        */
       template <size_t count>
@@ -175,12 +184,14 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
       std::vector<uint8_t> output_stdvec(size_t bytes) { return output<std::vector<uint8_t>>(bytes); }
 
       /**
+       * Generate output bytes into a caller provided buffer
        * Fill @p output with the next output bytes. The number of bytes
        * depends on the size of @p output.
        */
       void output(std::span<uint8_t> output) { generate_bytes(output); }
 
       /**
+       * Generate a single output byte
        * @return the next single output byte
        */
       uint8_t output_next_byte() {

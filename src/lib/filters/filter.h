@@ -95,6 +95,9 @@ class BOTAN_PUBLIC_API(2, 0) Filter {
       */
       void send(std::span<const uint8_t> in, size_t length);
 
+      /**
+      * Default constructor
+      */
       Filter();
 
    private:
@@ -158,12 +161,25 @@ class BOTAN_PUBLIC_API(2, 0) Fanout_Filter : public Filter {
       */
       void incr_owns() { ++m_filter_owns; }
 
+      /**
+      * Select which of the attached filters subsequent output is sent to
+      * @param n the index of the port to select
+      */
       // NOLINTNEXTLINE(bugprone-derived-method-shadowing-base-method)
       void set_port(size_t n) { Filter::set_port(n); }
 
+      /**
+      * Set the filters which follow this one
+      * @param f the filters to attach
+      * @param n the number of filters in f
+      */
       // NOLINTNEXTLINE(bugprone-derived-method-shadowing-base-method)
       void set_next(Filter* f[], size_t n) { Filter::set_next(f, n); }
 
+      /**
+      * Attach a filter to the end of this filter chain
+      * @param f the filter to attach
+      */
       // NOLINTNEXTLINE(bugprone-derived-method-shadowing-base-method)
       void attach(Filter* f) { Filter::attach(f); }
 };

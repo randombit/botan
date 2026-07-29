@@ -16,25 +16,46 @@ namespace Botan {
 
 class Jitter_RNG_Internal;
 
-/*
-* RNG using libjitterentropy (https://github.com/smuellerDD/jitterentropy-library).
+/**
+* RNG using libjitterentropy (https://github.com/smuellerDD/jitterentropy-library)
 */
 class BOTAN_PUBLIC_API(3, 6) Jitter_RNG final : public RandomNumberGenerator {
    public:
+      /**
+      * Create a Jitter_RNG, throwing if libjitterentropy cannot be initialized
+      */
       Jitter_RNG();
       ~Jitter_RNG() override;
 
       Jitter_RNG(const Jitter_RNG& other) = delete;
+      /**
+      * Move constructor
+      */
       Jitter_RNG(Jitter_RNG&& other) = default;
       Jitter_RNG& operator=(const Jitter_RNG& other) = delete;
       Jitter_RNG& operator=(Jitter_RNG&& other) = delete;
 
+      /**
+      * Return the name of this RNG type
+      * @return the name of this RNG type
+      */
       std::string name() const override { return "JitterRNG"; }
 
+      /**
+      * Test whether this RNG has been seeded
+      * @return true if this RNG is seeded and ready for use
+      */
       bool is_seeded() const override { return true; }
 
+      /**
+      * Test whether this RNG accepts externally provided input
+      * @return false if this RNG is known to ignore provided inputs
+      */
       bool accepts_input() const override { return false; }
 
+      /**
+      * Clear all internally held values of this RNG
+      */
       void clear() override;
 
    private:

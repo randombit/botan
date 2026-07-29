@@ -21,8 +21,17 @@ namespace Botan {
 */
 class BOTAN_PUBLIC_API(2, 0) Modular_Reducer final {
    public:
+      /**
+      * Return the modulus of this reducer
+      * @return the modulus
+      */
       const BigInt& get_modulus() const { return m_modulus; }
 
+      /**
+      * Reduce a value modulo p
+      * @param x the value to reduce
+      * @return (x % p)
+      */
       BigInt reduce(const BigInt& x) const;
 
       /**
@@ -64,8 +73,15 @@ class BOTAN_PUBLIC_API(2, 0) Modular_Reducer final {
       */
       void reduce(BigInt& out, const BigInt& x, secure_vector<word>& /*ws*/) const { out = reduce(x); }
 
+      /**
+      * Test whether this reducer was initialized with a non-zero modulus
+      * @return true if a modulus is set
+      */
       bool initialized() const { return (m_mod_words != 0); }
 
+      /**
+      * Create an uninitialized Modular_Reducer
+      */
       BOTAN_DEPRECATED("Use for_public_modulus or for_secret_modulus") Modular_Reducer() : m_mod_words(0) {}
 
       /**

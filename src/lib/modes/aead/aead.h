@@ -58,6 +58,14 @@ class BOTAN_PUBLIC_API(2, 0) AEAD_Mode : public Cipher_Mode {
       */
       void set_associated_data(std::span<const uint8_t> ad) { set_associated_data_n(0, ad); }
 
+      /**
+      * Set associated data that is not included in the ciphertext but
+      * that should be authenticated. Must be called after set_key() and
+      * before start().
+      *
+      * @param ad the associated data
+      * @param ad_len length of ad in bytes
+      */
       void set_associated_data(const uint8_t ad[], size_t ad_len) { set_associated_data(std::span(ad, ad_len)); }
 
       /**
@@ -124,6 +132,7 @@ class BOTAN_PUBLIC_API(2, 0) AEAD_Mode : public Cipher_Mode {
       BOTAN_DEPRECATED("Use set_associated_data") void set_ad(std::span<const uint8_t> ad) { set_associated_data(ad); }
 
       /**
+      * Return the default nonce length for this mode
       * @return default AEAD nonce size (a commonly supported value among AEAD
       * modes, and large enough that random collisions are unlikely)
       */

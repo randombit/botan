@@ -37,6 +37,7 @@ class BOTAN_PUBLIC_API(2, 0) Key_Length_Specification final {
             m_min_keylen(min_k), m_max_keylen(max_k > 0 ? max_k : min_k), m_keylen_mod(k_mod) {}
 
       /**
+      * Test if a key length is acceptable
       * @param length is a key length in bytes
       * @return true iff this length is a valid length for this algo
       */
@@ -45,21 +46,25 @@ class BOTAN_PUBLIC_API(2, 0) Key_Length_Specification final {
       }
 
       /**
+      * Return the smallest acceptable key length
       * @return minimum key length in bytes
       */
       size_t minimum_keylength() const { return m_min_keylen; }
 
       /**
+      * Return the largest acceptable key length
       * @return maximum key length in bytes
       */
       size_t maximum_keylength() const { return m_max_keylen; }
 
       /**
+      * Return the granularity of acceptable key lengths
       * @return key length multiple in bytes
       */
       size_t keylength_multiple() const { return m_keylen_mod; }
 
-      /*
+      /**
+      * Scale all length requirements by a factor
       * Multiplies all length requirements with the given factor
       * @param n the multiplication factor
       * @return a key length specification multiplied by the factor
@@ -77,11 +82,33 @@ class BOTAN_PUBLIC_API(2, 0) Key_Length_Specification final {
 */
 class BOTAN_PUBLIC_API(2, 0) SymmetricAlgorithm {
    public:
+      /**
+      * Default constructor
+      */
       SymmetricAlgorithm() = default;
+
       virtual ~SymmetricAlgorithm() = default;
+
+      /**
+      * Copy constructor
+      */
       SymmetricAlgorithm(const SymmetricAlgorithm& other) = default;
+
+      /**
+      * Move constructor
+      */
       SymmetricAlgorithm(SymmetricAlgorithm&& other) = default;
+
+      /**
+      * Copy assignment
+      * @return reference to this
+      */
       SymmetricAlgorithm& operator=(const SymmetricAlgorithm& other) = default;
+
+      /**
+      * Move assignment
+      * @return reference to this
+      */
       SymmetricAlgorithm& operator=(SymmetricAlgorithm&& other) = default;
 
       /**
@@ -91,16 +118,19 @@ class BOTAN_PUBLIC_API(2, 0) SymmetricAlgorithm {
       virtual void clear() = 0;
 
       /**
+      * Return the key lengths supported by this algorithm
       * @return object describing limits on key size
       */
       virtual Key_Length_Specification key_spec() const = 0;
 
       /**
+      * Return the largest acceptable key length
       * @return maximum allowed key length
       */
       size_t maximum_keylength() const { return key_spec().maximum_keylength(); }
 
       /**
+      * Return the smallest acceptable key length
       * @return minimum allowed key length
       */
       size_t minimum_keylength() const { return key_spec().minimum_keylength(); }
@@ -132,18 +162,27 @@ class BOTAN_PUBLIC_API(2, 0) SymmetricAlgorithm {
       void set_key(const uint8_t key[], size_t length) { set_key(std::span{key, length}); }
 
       /**
+      * Return the name of this algorithm
       * @return the algorithm name
       */
       virtual std::string name() const = 0;
 
       /**
+      * Test whether a key has been set on this object
       * @return true if a key has been set on this object
       */
       virtual bool has_keying_material() const = 0;
 
    protected:
+      /**
+      * Throw Key_Not_Set unless a key has been set on this object
+      */
       void assert_key_material_set() const { assert_key_material_set(has_keying_material()); }
 
+      /**
+      * Throw Key_Not_Set unless the predicate holds
+      * @param predicate if false, a Key_Not_Set exception is thrown
+      */
       void assert_key_material_set(bool predicate) const {
          if(!predicate) {
             throw_key_not_set_error();

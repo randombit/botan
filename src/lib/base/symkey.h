@@ -22,30 +22,43 @@ class RandomNumberGenerator;
 class BOTAN_PUBLIC_API(2, 0) OctetString final {
    public:
       /**
+      * Return the length of this octet string
       * @return size of this octet string in bytes
       */
       size_t length() const { return m_data.size(); }
 
+      /**
+      * Return the length of this octet string
+      * @return size of this octet string in bytes
+      */
       size_t size() const { return m_data.size(); }
 
+      /**
+      * Test whether this octet string is empty
+      * @return true if this string holds no bytes
+      */
       bool empty() const { return m_data.empty(); }
 
       /**
+      * Return the contents of this octet string
       * @return this object as a secure_vector<uint8_t>
       */
       secure_vector<uint8_t> bits_of() const { return m_data; }
 
       /**
+      * Return a pointer to the first byte
       * @return start of this string
       */
       const uint8_t* begin() const { return m_data.data(); }
 
       /**
+      * Return a pointer one past the last byte
       * @return end of this string
       */
       const uint8_t* end() const { return begin() + m_data.size(); }
 
       /**
+      * Format this octet string as a hex string
       * @return this encoded as hex
       */
       std::string to_string() const;

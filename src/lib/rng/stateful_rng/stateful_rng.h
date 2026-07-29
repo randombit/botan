@@ -26,6 +26,8 @@ namespace Botan {
 class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
    public:
       /**
+      * Create a Stateful_RNG which reseeds from both an RNG and entropy sources
+      *
       * @param rng is a reference to some RNG which will be used
       * to perform the periodic reseeding
       * @param entropy_sources will be polled to perform reseeding periodically
@@ -36,6 +38,8 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
             m_underlying_rng(&rng), m_entropy_sources(&entropy_sources), m_reseed_interval(reseed_interval) {}
 
       /**
+      * Create a Stateful_RNG which reseeds from another RNG
+      *
       * @param rng is a reference to some RNG which will be used
       * to perform the periodic reseeding
       * @param reseed_interval specifies a limit of how many times
@@ -45,6 +49,8 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
             m_underlying_rng(&rng), m_reseed_interval(reseed_interval) {}
 
       /**
+      * Create a Stateful_RNG which reseeds from entropy sources
+      *
       * @param entropy_sources will be polled to perform reseeding periodically
       * @param reseed_interval specifies a limit of how many times
       * the RNG will be called before automatic reseeding is performed
@@ -64,10 +70,24 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       */
       void initialize_with(std::span<const uint8_t> input);
 
+      /**
+      * Consume this input and mark the RNG as initialized regardless
+      * of the length of the input or the current seeded state of the RNG.
+      * @param input the seed material
+      * @param length the number of bytes in input
+      */
       void initialize_with(const uint8_t input[], size_t length) { this->initialize_with(std::span(input, length)); }
 
+      /**
+      * Test whether this RNG has been seeded
+      * @return true if this RNG is seeded and ready for use
+      */
       bool is_seeded() const final;
 
+      /**
+      * Test whether this RNG accepts externally provided input
+      * @return false if this RNG is known to ignore provided inputs
+      */
       bool accepts_input() const final { return true; }
 
       /**
@@ -75,6 +95,11 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       */
       void force_reseed();
 
+      /**
+      * Reseed this RNG from another RNG
+      * @param rng the RNG to draw seed material from
+      * @param poll_bits the number of bits to collect
+      */
       void reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits = RandomNumberGenerator::DefaultPollBits) final;
 
       /**
@@ -85,11 +110,13 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
                                  size_t poll_bits = RandomNumberGenerator::DefaultPollBits) final;
 
       /**
+      * Return the security level of this DRBG
       * @return intended security level of this DRBG
       */
       virtual size_t security_level() const = 0;
 
       /**
+      * Return the largest number of bytes this DRBG will produce per request
       * Some DRBGs have a notion of the maximum number of bytes per
       * request.  Longer requests (to randomize) will be treated as
       * multiple requests, and may initiate reseeding multiple times,
@@ -101,17 +128,39 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       */
       virtual size_t max_number_of_bytes_per_request() const = 0;
 
+      /**
+      * Return how many requests may be made before automatic reseeding
+      * @return the reseed interval, or zero if automatic reseeding is disabled
+      */
       size_t reseed_interval() const { return m_reseed_interval; }
 
+      /**
+      * Clear all internally held values of this RNG
+      */
       void clear() final;
 
    protected:
+      /**
+      * Reseed if the reseed interval has elapsed, or throw if unseeded
+      */
       void reseed_check();
 
+      /**
+      * Generate output, incorporating the provided input
+      * @param output the buffer to fill
+      * @param input additional input to incorporate
+      */
       virtual void generate_output(std::span<uint8_t> output, std::span<const uint8_t> input) = 0;
 
+      /**
+      * Incorporate the provided input into the RNG state
+      * @param input the seed material
+      */
       virtual void update(std::span<const uint8_t> input) = 0;
 
+      /**
+      * Clear the subclass specific portion of the RNG state
+      */
       virtual void clear_state() = 0;
 
    private:

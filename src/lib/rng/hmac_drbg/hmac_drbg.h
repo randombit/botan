@@ -132,10 +132,22 @@ class BOTAN_PUBLIC_API(2, 0) HMAC_DRBG final : public Stateful_RNG {
       HMAC_DRBG(HMAC_DRBG&& rng) = delete;
       HMAC_DRBG& operator=(HMAC_DRBG&& rng) = delete;
 
+      /**
+      * Return the name of this RNG type
+      * @return the name of this RNG type
+      */
       std::string name() const override;
 
+      /**
+      * Return the security level of this DRBG
+      * @return the estimated security level in bits
+      */
       size_t security_level() const override;
 
+      /**
+      * Return the largest number of bytes this DRBG will produce per request
+      * @return the maximum request size in bytes
+      */
       size_t max_number_of_bytes_per_request() const override { return m_max_number_of_bytes_per_request; }
 
    private:

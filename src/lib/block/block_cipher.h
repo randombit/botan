@@ -38,6 +38,7 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
       static std::unique_ptr<BlockCipher> create_or_throw(std::string_view algo_spec, std::string_view provider = "");
 
       /**
+      * List the providers available for a given block cipher
       * @return list of available providers for this algorithm, empty if not available
       * @param algo_spec algorithm name
       */
@@ -52,21 +53,25 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
       static constexpr size_t ParallelismMult = 4;
 
       /**
+      * Return the block size of this cipher
       * @return block size of this algorithm
       */
       virtual size_t block_size() const = 0;
 
       /**
+      * Return how many blocks this cipher processes in parallel
       * @return native parallelism of this cipher in blocks
       */
       virtual size_t parallelism() const { return 1; }
 
       /**
+      * Return the preferred input size for bulk processing
       * @return preferred parallelism of this cipher in bytes
       */
       size_t parallel_bytes() const { return parallelism() * block_size() * BlockCipher::ParallelismMult; }
 
       /**
+      * Return the name of the provider implementing this object
       * @return provider information about this implementation. Default is "base",
       * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
       */
@@ -156,6 +161,12 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
       */
       virtual void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const = 0;
 
+      /**
+      * Encrypt blocks in XEX mode: XOR with the mask, encrypt, then XOR again
+      * @param data the input/output buffer of blocks*block_size() bytes
+      * @param mask the mask to XOR with, same size as data
+      * @param blocks the number of blocks to process
+      */
       BOTAN_DEPRECATED("Deprecated no replacement")
       void encrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const {
          const size_t BS = block_size();
@@ -168,6 +179,12 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
          }
       }
 
+      /**
+      * Decrypt blocks in XEX mode: XOR with the mask, decrypt, then XOR again
+      * @param data the input/output buffer of blocks*block_size() bytes
+      * @param mask the mask to XOR with, same size as data
+      * @param blocks the number of blocks to process
+      */
       BOTAN_DEPRECATED("Deprecated no replacement")
       void decrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const {
          const size_t BS = block_size();
@@ -181,10 +198,15 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
       }
 
       /**
+      * Create a new uninitialized object of the same type
       * @return new object representing the same algorithm as *this
       */
       virtual std::unique_ptr<BlockCipher> new_object() const = 0;
 
+      /**
+      * Create a new uninitialized object of the same type
+      * @return new object representing the same algorithm as *this
+      */
       BlockCipher* clone() const { return this->new_object().release(); }
 };
 
@@ -211,8 +233,16 @@ class Block_Cipher_Fixed_Params : public BaseClass {
    public:
       enum { BLOCK_SIZE = BS }; /* NOLINT(*-enum-size,*-use-enum-class) */
 
+      /**
+      * Return the block size of this cipher
+      * @return the fixed block size BS
+      */
       size_t block_size() const final { return BS; }
 
+      /**
+      * Return the key lengths supported by this cipher
+      * @return the fixed key length specification
+      */
       Key_Length_Specification key_spec() const final { return Key_Length_Specification(KMIN, KMAX, KMOD); }
 };
 

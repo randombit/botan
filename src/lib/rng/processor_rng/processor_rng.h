@@ -28,10 +28,22 @@ class BOTAN_PUBLIC_API(2, 15) Processor_RNG final : public Hardware_RNG {
       */
       static bool available();
 
+      /**
+      * Test whether this RNG accepts externally provided input
+      * @return false if this RNG is known to ignore provided inputs
+      */
       bool accepts_input() const override { return false; }
 
+      /**
+      * Test whether this RNG has been seeded
+      * @return true if this RNG is seeded and ready for use
+      */
       bool is_seeded() const override { return true; }
 
+      /**
+      * Return the name of this RNG type
+      * @return the name of this RNG type
+      */
       std::string name() const override;
 
    private:

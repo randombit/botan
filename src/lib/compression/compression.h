@@ -74,6 +74,7 @@ class BOTAN_PUBLIC_API(2, 0) Compression_Algorithm /* NOLINT(*-special-member-fu
       virtual void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) = 0;
 
       /**
+      * Return the name of this compression algorithm
       * @return name of the compression algorithm
       */
       virtual std::string name() const = 0;
@@ -87,7 +88,7 @@ class BOTAN_PUBLIC_API(2, 0) Compression_Algorithm /* NOLINT(*-special-member-fu
       virtual ~Compression_Algorithm() = default;
 };
 
-/*
+/**
 * Interface for a decompression algorithm.
 */
 class BOTAN_PUBLIC_API(2, 0) Decompression_Algorithm /* NOLINT(*-special-member-functions) */ {
@@ -136,6 +137,7 @@ class BOTAN_PUBLIC_API(2, 0) Decompression_Algorithm /* NOLINT(*-special-member-
       virtual void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) = 0;
 
       /**
+      * Return the name of this decompression algorithm
       * @return name of the decompression algorithm
       */
       virtual std::string name() const = 0;
@@ -149,14 +151,22 @@ class BOTAN_PUBLIC_API(2, 0) Decompression_Algorithm /* NOLINT(*-special-member-
       virtual ~Decompression_Algorithm() = default;
 };
 
+/**
+* Create a compression algorithm by name
+* @param type the algorithm to create
+* @return the new object, or nullptr if not available
+*/
 BOTAN_DEPRECATED("Use Compression_Algorithm::create")
-
 inline Compression_Algorithm* make_compressor(std::string_view type) {
    return Compression_Algorithm::create(type).release();
 }
 
+/**
+* Create a decompression algorithm by name
+* @param type the algorithm to create
+* @return the new object, or nullptr if not available
+*/
 BOTAN_DEPRECATED("Use Decompression_Algorithm::create")
-
 inline Decompression_Algorithm* make_decompressor(std::string_view type) {
    return Decompression_Algorithm::create(type).release();
 }
@@ -167,6 +177,7 @@ inline Decompression_Algorithm* make_decompressor(std::string_view type) {
 class BOTAN_PUBLIC_API(2, 9) Compression_Error final : public Exception {
    public:
       /**
+      * Create a Compression_Error
       * @param func_name the name of the compression API that was called
       * (eg "BZ2_bzCompressInit" or "lzma_code")
       * @param type what library this came from
@@ -175,8 +186,16 @@ class BOTAN_PUBLIC_API(2, 9) Compression_Error final : public Exception {
       */
       Compression_Error(const char* func_name, ErrorType type, int rc);
 
+      /**
+      * Return the error type of this exception
+      * @return the error type passed at construction
+      */
       ErrorType error_type() const noexcept override { return m_type; }
 
+      /**
+      * Return the library specific error code
+      * @return the return code from the underlying compression API
+      */
       int error_code() const noexcept override { return m_rc; }
 
    private:
@@ -191,18 +210,55 @@ class Compression_Stream /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~Compression_Stream() = default;
 
+      /**
+      * Set the input buffer
+      * @param b the input buffer
+      * @param len the length of b in bytes
+      */
       virtual void next_in(uint8_t* b, size_t len) = 0;
 
+      /**
+      * Set the output buffer
+      * @param b the output buffer
+      * @param len the length of b in bytes
+      */
       virtual void next_out(uint8_t* b, size_t len) = 0;
 
+      /**
+      * Return how much input remains unconsumed
+      * @return the number of unread input bytes
+      */
       virtual size_t avail_in() const = 0;
 
+      /**
+      * Return how much output space remains
+      * @return the number of unwritten output bytes
+      */
       virtual size_t avail_out() const = 0;
 
+      /**
+      * Return the library specific flag for ordinary processing
+      * @return the run flag
+      */
       virtual uint32_t run_flag() const = 0;
+
+      /**
+      * Return the library specific flag for flushing the stream
+      * @return the flush flag
+      */
       virtual uint32_t flush_flag() const = 0;
+
+      /**
+      * Return the library specific flag for finishing the stream
+      * @return the finish flag
+      */
       virtual uint32_t finish_flag() const = 0;
 
+      /**
+      * Run the compression engine over the current buffers
+      * @param flags one of run_flag(), flush_flag() or finish_flag()
+      * @return true once the stream is complete
+      */
       virtual bool run(uint32_t flags) = 0;
 };
 
@@ -211,10 +267,24 @@ class Compression_Stream /* NOLINT(*-special-member-functions) */ {
 */
 class Stream_Compression : public Compression_Algorithm {
    public:
+      /**
+      * Compress some data
+      * @param buf in/out parameter which will possibly be resized or swapped
+      * @param offset an offset into buf to begin processing
+      * @param flush if true the compressor will be told to flush state
+      */
       void update(secure_vector<uint8_t>& buf, size_t offset, bool flush) final;
 
+      /**
+      * Finish compressing
+      * @param buf in/out parameter which will possibly be resized or swapped
+      * @param offset an offset into buf to begin processing
+      */
       void finish(secure_vector<uint8_t>& buf, size_t offset) final;
 
+      /**
+      * Reset the state and abort the current message
+      */
       void clear() final;
 
    private:
@@ -233,10 +303,23 @@ class Stream_Compression : public Compression_Algorithm {
 */
 class Stream_Decompression : public Decompression_Algorithm {
    public:
+      /**
+      * Decompress some data
+      * @param buf in/out parameter which will possibly be resized or swapped
+      * @param offset an offset into buf to begin processing
+      */
       void update(secure_vector<uint8_t>& buf, size_t offset) final;
 
+      /**
+      * Finish decompressing
+      * @param buf in/out parameter which will possibly be resized or swapped
+      * @param offset an offset into buf to begin processing
+      */
       void finish(secure_vector<uint8_t>& buf, size_t offset) final;
 
+      /**
+      * Reset the state and abort the current message
+      */
       void clear() final;
 
    private:

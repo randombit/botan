@@ -40,6 +40,7 @@ BigInt BOTAN_PUBLIC_API(2, 0) gcd(const BigInt& x, const BigInt& y);
 BOTAN_DEPRECATED("Deprecated no replacement") BigInt BOTAN_PUBLIC_API(2, 0) lcm(const BigInt& x, const BigInt& y);
 
 /**
+* Square an integer
 * @param x an integer
 * @return (x*x)
 */
@@ -94,6 +95,7 @@ BOTAN_DEPRECATED("Deprecated no replacement")
 BigInt BOTAN_PUBLIC_API(3, 0) sqrt_modulo_prime(const BigInt& x, const BigInt& p);
 
 /**
+* Count the low zero bits of an integer
 * @param x an integer
 * @return count of the low zero bits in x, or, equivalently, the
 *         largest value of n such that 2^n divides x evenly. Returns
