@@ -494,36 +494,8 @@ class RFC8448_Text_Policy : public Botan::TLS::Text_Policy {
       }
 
    public:
-      explicit RFC8448_Text_Policy(const std::string& policy_file, bool rfc8448 = true) :
-            Botan::TLS::Text_Policy(read_policy(policy_file)), m_rfc8448(rfc8448) {}
-
-      std::vector<Botan::TLS::Signature_Scheme> allowed_signature_schemes() const override {
-         if(!m_rfc8448) {
-            return Botan::TLS::Text_Policy::allowed_signature_schemes();
-         }
-
-         // We extend the allowed signature schemes with algorithms that we don't
-         // actually support. The nature of the RFC 8448 test forces us to generate
-         // bit-compatible TLS messages. Unfortunately, the test data offers all
-         // those algorithms in its Client Hellos.
-         return {
-            Botan::TLS::Signature_Scheme::ECDSA_SHA256,
-            Botan::TLS::Signature_Scheme::ECDSA_SHA384,
-            Botan::TLS::Signature_Scheme::ECDSA_SHA512,
-            Botan::TLS::Signature_Scheme::ECDSA_SHA1,  // not actually supported
-            Botan::TLS::Signature_Scheme::RSA_PSS_SHA256,
-            Botan::TLS::Signature_Scheme::RSA_PSS_SHA384,
-            Botan::TLS::Signature_Scheme::RSA_PSS_SHA512,
-            Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA256,
-            Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA384,
-            Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA512,
-            Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA1,  // not actually supported
-            Botan::TLS::Signature_Scheme(0x0402),          // DSA_SHA256, not actually supported
-            Botan::TLS::Signature_Scheme(0x0502),          // DSA_SHA384, not actually supported
-            Botan::TLS::Signature_Scheme(0x0602),          // DSA_SHA512, not actually supported
-            Botan::TLS::Signature_Scheme(0x0202),          // DSA_SHA1, not actually supported
-         };
-      }
+      explicit RFC8448_Text_Policy(const std::string& policy_file) :
+            Botan::TLS::Text_Policy(read_policy(policy_file)) {}
 
       // Overriding the key exchange group selection to favour the server's key
       // exchange group preference. This is required to enforce a Hello Retry Request
@@ -540,9 +512,6 @@ class RFC8448_Text_Policy : public Botan::TLS::Text_Policy {
 
          return selected_group != supported_by_us.end() ? *selected_group : Named_Group::NONE;
       }
-
-   private:
-      bool m_rfc8448;
 };
 
 /**
@@ -1566,15 +1535,14 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
          return {
             CHECK("Client Hello",
                   [&](Test::Result& result) {
-                     ctx = std::make_unique<Client_Context>(
-                        std::move(rng),
-                        std::make_shared<RFC8448_Text_Policy>("rfc8448_psk_dhe", false /* no rfc8448 */),
-                        vars.get_req_u64("CurrentTimestamp"),
-                        sort_our_extensions,
-                        std::nullopt,
-                        ExternalPSK(vars.get_req_str("PskIdentity"),
-                                    vars.get_req_str("PskPRF"),
-                                    lock(vars.get_req_bin("PskSecret"))));
+                     ctx = std::make_unique<Client_Context>(std::move(rng),
+                                                            std::make_shared<RFC8448_Text_Policy>("rfc8448_psk_dhe"),
+                                                            vars.get_req_u64("CurrentTimestamp"),
+                                                            sort_our_extensions,
+                                                            std::nullopt,
+                                                            ExternalPSK(vars.get_req_str("PskIdentity"),
+                                                                        vars.get_req_str("PskPRF"),
+                                                                        lock(vars.get_req_bin("PskSecret"))));
 
                      result.test_is_true("client not closed", !ctx->client.is_closed());
                      ctx->check_callback_invocations(result,
@@ -2495,17 +2463,16 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                         }
                      };
 
-                     ctx = std::make_unique<Server_Context>(
-                        std::move(rng),
-                        std::make_shared<RFC8448_Text_Policy>("rfc8448_psk_dhe", false /* no rfc8448 */),
-                        vars.get_req_u64("CurrentTimestamp"),
-                        sort_our_extensions,
-                        make_mock_signatures(vars),
-                        false,
-                        std::nullopt,
-                        ExternalPSK(vars.get_req_str("PskIdentity"),
-                                    vars.get_req_str("PskPRF"),
-                                    lock(vars.get_req_bin("PskSecret"))));
+                     ctx = std::make_unique<Server_Context>(std::move(rng),
+                                                            std::make_shared<RFC8448_Text_Policy>("rfc8448_psk_dhe"),
+                                                            vars.get_req_u64("CurrentTimestamp"),
+                                                            sort_our_extensions,
+                                                            make_mock_signatures(vars),
+                                                            false,
+                                                            std::nullopt,
+                                                            ExternalPSK(vars.get_req_str("PskIdentity"),
+                                                                        vars.get_req_str("PskPRF"),
+                                                                        lock(vars.get_req_bin("PskSecret"))));
                      result.test_is_true("server not closed", !ctx->server.is_closed());
 
                      ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));

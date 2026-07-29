@@ -691,6 +691,17 @@ void print_vec(std::ostream& o, const char* key, const std::vector<Certificate_T
    o << '\n';
 }
 
+void print_vec(std::ostream& o, const char* key, const std::vector<Signature_Scheme>& schemes) {
+   o << key << " = ";
+   for(size_t i = 0; i != schemes.size(); ++i) {
+      o << schemes[i].to_string();
+      if(i != schemes.size() - 1) {
+         o << ' ';
+      }
+   }
+   o << '\n';
+}
+
 void print_bool(std::ostream& o, const char* key, bool b) {
    o << key << " = " << (b ? "true" : "false") << '\n';
 }
@@ -706,6 +717,8 @@ void Policy::print(std::ostream& o) const {
    print_vec(o, "macs", allowed_macs());
    print_vec(o, "signature_hashes", allowed_signature_hashes());
    print_vec(o, "signature_methods", allowed_signature_methods());
+   print_vec(o, "signature_schemes", allowed_signature_schemes());
+   print_vec(o, "acceptable_signature_schemes", acceptable_signature_schemes());
    print_vec(o, "key_exchange_methods", allowed_key_exchange_methods());
    print_vec(o, "key_exchange_groups", key_exchange_groups());
    const auto groups_to_offer = key_exchange_groups_to_offer();

@@ -10,6 +10,7 @@
 
 #include <botan/assert.h>
 #include <botan/exceptn.h>
+#include <botan/tls_signature_scheme.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <optional>
@@ -39,6 +40,16 @@ std::vector<std::string> Text_Policy::allowed_key_exchange_methods() const {
 
 std::vector<std::string> Text_Policy::allowed_signature_methods() const {
    return get_list("signature_methods", Policy::allowed_signature_methods());
+}
+
+std::vector<Signature_Scheme> Text_Policy::allowed_signature_schemes() const {
+   const auto sig_schemes_str = get_str("signature_schemes", "");
+   return (sig_schemes_str.empty()) ? Policy::allowed_signature_schemes() : read_sig_scheme_list(sig_schemes_str);
+}
+
+std::vector<Signature_Scheme> Text_Policy::acceptable_signature_schemes() const {
+   const auto sig_schemes_str = get_str("acceptable_signature_schemes", "");
+   return (sig_schemes_str.empty()) ? Policy::acceptable_signature_schemes() : read_sig_scheme_list(sig_schemes_str);
 }
 
 bool Text_Policy::use_ecc_point_compression() const {
@@ -288,6 +299,14 @@ std::vector<Certificate_Type> Text_Policy::read_cert_type_list(const std::string
    }
 
    return cert_types;
+}
+
+std::vector<Signature_Scheme> Text_Policy::read_sig_scheme_list(std::string_view sig_scheme_str) const {
+   std::vector<Signature_Scheme> sig_schemes;
+   for(const auto& sig_scheme_name : split_on(sig_scheme_str, ' ')) {
+      sig_schemes.push_back(Signature_Scheme::from_string(sig_scheme_name));
+   }
+   return sig_schemes;
 }
 
 size_t Text_Policy::get_len(const std::string& key, size_t def) const {
