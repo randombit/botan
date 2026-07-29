@@ -4,6 +4,7 @@
 *     2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *     2023 René Meusel, Rohde & Schwarz Cybersecurity
+*     2026 René Meusel, Rohde & Schwarz Networks and Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -184,7 +185,10 @@ class TLS_Client final : public Command {
          init_sockets();
       }
 
-      ~TLS_Client() override { stop_sockets(); }
+      ~TLS_Client() override {
+         shutdown_socket();
+         stop_sockets();
+      }
 
       TLS_Client(const TLS_Client& other) = delete;
       TLS_Client(TLS_Client&& other) = delete;
@@ -361,7 +365,7 @@ class TLS_Client final : public Command {
 
          set_return_code((we_closed || callbacks->peer_closed()) ? 0 : 1);
 
-         ::close(m_sockfd);
+         shutdown_socket();
       }
 
    public:
@@ -435,6 +439,25 @@ class TLS_Client final : public Command {
          if(r == -1) {
             throw CLI_Error("Socket write failed errno=" + std::to_string(errno));
          }
+      }
+
+      void shutdown_socket() {
+         if(m_sockfd == invalid_socket()) {
+            return;
+         }
+
+         // Signal that we are done writing so pending alert records are
+         // delivered with a FIN rather than lost to a RST.
+         ::shutdown(m_sockfd, SHUT_WR);
+
+         // Drain unread incoming data; if the receive buffer is non-empty when
+         // we close(), the kernel sends RST which discards our outgoing data
+         // (including any alert we sent).
+         char buf[256];
+         while(::read(m_sockfd, buf, sizeof(buf)) > 0) {}
+         ::close(m_sockfd);
+
+         m_sockfd = invalid_socket();
       }
 
       socket_type m_sockfd = invalid_socket();
