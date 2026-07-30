@@ -52,6 +52,11 @@ class BOTAN_PUBLIC_API(3, 0) Signature_Scheme final {
          RSA_PSS_SHA384 = 0x0805,
          RSA_PSS_SHA512 = 0x0806,
 
+         // RFC 8734
+         ECDSA_BRAINPOOL256R1_TLS13_SHA256 = 0x081A,
+         ECDSA_BRAINPOOL384R1_TLS13_SHA384 = 0x081B,
+         ECDSA_BRAINPOOL512R1_TLS13_SHA512 = 0x081C,
+
          EDDSA_25519 = 0x0807,
          EDDSA_448 = 0x0808,
       };

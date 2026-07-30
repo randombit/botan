@@ -70,6 +70,15 @@ std::vector<Test::Result> test_signature_scheme() {
       result.test_u16_eq("RSA_PSS_SHA256", Sig::from_string("RSA_PSS_SHA256").wire_code(), Sig::RSA_PSS_SHA256);
       result.test_u16_eq("RSA_PSS_SHA384", Sig::from_string("RSA_PSS_SHA384").wire_code(), Sig::RSA_PSS_SHA384);
       result.test_u16_eq("RSA_PSS_SHA512", Sig::from_string("RSA_PSS_SHA512").wire_code(), Sig::RSA_PSS_SHA512);
+      result.test_u16_eq("ECDSA_BRAINPOOL256R1_TLS13_SHA256",
+                         Sig::from_string("ECDSA_BRAINPOOL256R1_TLS13_SHA256").wire_code(),
+                         Sig::ECDSA_BRAINPOOL256R1_TLS13_SHA256);
+      result.test_u16_eq("ECDSA_BRAINPOOL384R1_TLS13_SHA384",
+                         Sig::from_string("ECDSA_BRAINPOOL384R1_TLS13_SHA384").wire_code(),
+                         Sig::ECDSA_BRAINPOOL384R1_TLS13_SHA384);
+      result.test_u16_eq("ECDSA_BRAINPOOL512R1_TLS13_SHA512",
+                         Sig::from_string("ECDSA_BRAINPOOL512R1_TLS13_SHA512").wire_code(),
+                         Sig::ECDSA_BRAINPOOL512R1_TLS13_SHA512);
 
       result.test_u16_eq("custom code point", Sig::from_string("0xFE42").wire_code(), Sig(0xFE42).wire_code());
 
