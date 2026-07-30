@@ -19,8 +19,6 @@
 namespace Botan {
 
 namespace {
-typedef Botan::DilithiumInternalKeypair (*decoding_func)(std::span<const uint8_t> key_bits,
-                                                         Botan::DilithiumConstants mode);
 
 Botan::DilithiumInternalKeypair decode_seed_only(std::span<const uint8_t> key_bits, Botan::DilithiumConstants mode) {
    Botan::secure_vector<uint8_t> seed;
