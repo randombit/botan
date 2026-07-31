@@ -63,6 +63,27 @@ void prune_old_cipher_states(std::map<uint16_t, T>& states) {
    }
 }
 
+// Run fn, absorbing the exceptions that report malformed input when `absorb`
+// is set. Used where the input is unauthenticated epoch-zero data that must
+// not be able to tear down an established association. Only TLS_Exception and
+// Decoding_Error are absorbed: an Internal_Error from one of the reassembly
+// accounting assertions, or a failed allocation, still propagates rather than
+// leaving the association running on state those assertions exist to protect.
+template <typename F>
+void absorb_malformed_input_errors(bool absorb, F fn) {
+   try {
+      fn();
+   } catch(const TLS_Exception&) {
+      if(!absorb) {
+         throw;
+      }
+   } catch(const Decoding_Error&) {
+      if(!absorb) {
+         throw;
+      }
+   }
+}
+
 }  // namespace
 
 Channel_Impl_12::Channel_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
@@ -636,16 +657,14 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
    const auto process_retransmitted_record = [&] {
       BOTAN_ASSERT(m_active_state.has_value(), "Have active DTLS association for retransmission");
       BOTAN_ASSERT_NONNULL(m_active_state->dtls_handshake_io());
-      try {
+      // Epoch-zero records are unauthenticated and may be spoofed, so a
+      // malformed one must not tear down an established association.
+      const bool unauthenticated = (record_sequence >> 48) == 0;
+
+      absorb_malformed_input_errors(unauthenticated, [&] {
          m_active_state->dtls_handshake_io()->add_retransmitted_record(
             record.data(), record.size(), record_type, record_sequence);
-      } catch(...) {
-         // Epoch-zero records are unauthenticated and may be spoofed. Invalid
-         // retransmissions must not tear down an established association.
-         if((record_sequence >> 48) > 0) {
-            throw;
-         }
-      }
+      });
    };
 
    if(!m_pending_state) {
@@ -664,7 +683,6 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
       if(m_is_datagram && !epoch0_restart) {
          if(m_sequence_numbers) {
             const uint16_t epoch = record_sequence >> 48;
-
             const uint16_t current_epoch = sequence_numbers().current_read_epoch();
             if(epoch == current_epoch) {
                // Either endpoint can initiate renegotiation from FINISHED:
@@ -692,21 +710,36 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
 
    // May have been created in above conditional
    if(m_pending_state) {
-      m_pending_state->handshake_io().add_record(record.data(), record.size(), record_type, record_sequence);
+      // An epoch-zero record is unauthenticated. Once an association is
+      // established, one arriving during a pending renegotiation must not be
+      // able to destroy it, exactly as for the no-pending-handshake path above.
+      // Without this a single forged CCS or handshake fragment tore down the
+      // active association and the renegotiation along with it.
+      //
+      // Delivery is inside the guard as well as reassembly. A bare 12-byte
+      // header declaring a zero-length message reassembles cleanly and only
+      // fails when the message itself is parsed or dispatched, which reaches
+      // the same teardown by a later route.
+      const bool unauthenticated_against_active_association =
+         m_is_datagram && (record_sequence >> 48) == 0 && m_active_state.has_value();
 
-      while(auto* pending = m_pending_state.get()) {
-         auto msg = pending->get_next_handshake_msg(policy().maximum_handshake_message_size());
+      absorb_malformed_input_errors(unauthenticated_against_active_association, [&] {
+         m_pending_state->handshake_io().add_record(record.data(), record.size(), record_type, record_sequence);
 
-         if(msg.first == Handshake_Type::None) {  // no full handshake yet
-            break;
+         while(auto* pending = m_pending_state.get()) {
+            auto msg = pending->get_next_handshake_msg(policy().maximum_handshake_message_size());
+
+            if(msg.first == Handshake_Type::None) {  // no full handshake yet
+               break;
+            }
+
+            process_handshake_msg(*pending, msg.first, msg.second, epoch0_restart);
+
+            if(!m_pending_state) {
+               break;
+            }
          }
-
-         process_handshake_msg(*pending, msg.first, msg.second, epoch0_restart);
-
-         if(!m_pending_state) {
-            break;
-         }
-      }
+      });
    }
 }
 

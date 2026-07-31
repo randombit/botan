@@ -209,6 +209,14 @@ std::shared_ptr<DTLS_PSK_Policy> dtls_policy_with_max_retransmissions(size_t lim
    return std::make_shared<DTLS_PSK_Policy>(std::move(opts));
 }
 
+// allow_dtls_epoch0_restart() off, which is the Policy default and the
+// configuration every DTLS client runs in.
+std::shared_ptr<DTLS_PSK_Policy> dtls_policy_without_epoch0_restart() {
+   DTLS_Policy_Options opts;
+   opts.allow_epoch0_restart = false;
+   return std::make_shared<DTLS_PSK_Policy>(std::move(opts));
+}
+
 std::shared_ptr<DTLS_PSK_Policy> dtls_policy_with_cipher(std::string cipher, bool allow_epoch0_restart) {
    DTLS_Policy_Options opts;
    opts.cipher = std::move(cipher);
@@ -1310,6 +1318,115 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      // A bare handshake header declaring a zero-length message reassembles
+      // completely, so it is not rejected by add_record; it fails later, when
+      // the message is parsed or offered to the state machine. That route
+      // reached the same teardown until the guard was widened to cover
+      // delivery. The client is the exposed side: its pending IO has received
+      // nothing, so the stale-epoch check cannot help it.
+      static Test::Result test_forged_epoch0_message_during_renegotiation() {
+         Test::Result result("DTLS forged epoch-zero message during renegotiation");
+
+         auto rng = Test::new_shared_rng("dtls-core-forged-epoch0-message");
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& server_recv = assoc->server_recv;
+
+         if(!complete_dtls_handshake(result, *assoc)) {
+            return result;
+         }
+
+         result.test_no_throw("client starts renegotiation", [&] { client.renegotiate(true); });
+
+         // Drop the ClientHello. The client's pending IO has now received
+         // nothing at all, which is the state it spends the renegotiation in.
+         c2s.clear();
+
+         // ServerHello and Certificate: the first fails in the message parser,
+         // the second in the state machine. Each carries the message_seq the
+         // pending IO is waiting for, so each reaches dispatch.
+         const std::array<uint8_t, 2> forged_types = {0x02, 0x0B};
+
+         for(size_t i = 0; i != forged_types.size(); ++i) {
+            std::array<uint8_t, 12> header = {};
+            header[0] = forged_types[i];          // msg_type
+            header[5] = static_cast<uint8_t>(i);  // message_seq, in sequence
+                                                  // msg_len, fragment_offset, fragment_length all zero
+            const auto forged = unprotected_dtls_record(Botan::TLS::Record_Type::Handshake, 9 + i, header);
+
+            result.test_no_throw("forged epoch-zero message is absorbed",
+                                 [&] { client.received_data(forged.data(), forged.size()); });
+            result.test_is_true("client remains active", client.is_active());
+            result.test_is_false("client did not close", client.is_closed());
+            result.test_is_true("client said nothing in reply", c2s.empty());
+         }
+
+         // The association still carries data under the established epoch. The
+         // pending renegotiation may not survive being desynchronized this way,
+         // but nothing unauthenticated may destroy what is already running.
+         client.send("still alive");
+         result.test_is_true("client can still write", !c2s.empty());
+         deliver(result, "application data after the forgery", c2s, server);
+         result.test_is_true("server received it", server_recv.size() == 11);
+
+         return result;
+      }
+
+      // A single forged epoch-zero record must not tear down an established
+      // association while a handshake is pending, whether it is malformed at the
+      // record layer or only once the new handshake IO reassembles it.
+      static Test::Result test_forged_epoch0_record_during_renegotiation() {
+         Test::Result result("DTLS forged epoch-zero record during renegotiation");
+
+         auto rng = Test::new_shared_rng("dtls-core-forged-epoch0-reneg");
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
+
+         if(!complete_dtls_handshake(result, *assoc)) {
+            return result;
+         }
+
+         result.test_no_throw("client starts renegotiation", [&] { client.renegotiate(true); });
+         deliver(result, "renegotiation client hello", c2s, server);
+
+         // Hold the server's renegotiation flight back so that anything it emits
+         // in response to the forged records below is visible on its own.
+         std::vector<uint8_t> renegotiation_flight;
+         std::swap(renegotiation_flight, s2c);
+         result.test_is_true("server produced a renegotiation flight", !renegotiation_flight.empty());
+
+         // A ChangeCipherSpec payload must be 0x01, so this one is malformed.
+         const std::vector<uint8_t> bad_ccs_body = {0x02};
+         const auto bad_ccs = unprotected_dtls_record(Botan::TLS::Record_Type::ChangeCipherSpec, 7, bad_ccs_body);
+         result.test_no_throw("forged epoch-zero CCS is ignored",
+                              [&] { server.received_data(bad_ccs.data(), bad_ccs.size()); });
+         result.test_is_true("server remains active", server.is_active());
+         result.test_is_false("server did not close", server.is_closed());
+         result.test_is_true("server said nothing in reply", s2c.empty());
+
+         // A malformed handshake fragment must be equally harmless.
+         std::array<uint8_t, 12> bogus_handshake = {};
+         bogus_handshake[0] = 0xFF;
+         const auto forged_handshake = unprotected_dtls_record(Botan::TLS::Record_Type::Handshake, 8, bogus_handshake);
+         result.test_no_throw("forged epoch-zero handshake record is ignored",
+                              [&] { server.received_data(forged_handshake.data(), forged_handshake.size()); });
+         result.test_is_true("server still active", server.is_active());
+
+         // The renegotiation itself survived and can still complete.
+         deliver_copy(result, "renegotiation server flight", renegotiation_flight, client);
+         deliver(result, "renegotiation client final flight", c2s, server);
+         deliver(result, "renegotiation server final flight", s2c, client);
+         result.test_is_true("client active after renegotiation", client.is_active());
+         result.test_is_true("server active after renegotiation", server.is_active());
+
+         return result;
+      }
+
       // A forged pre-cookie fragment must not poison the reassembly slot the
       // genuine ClientHello needs, which would close the channel before any
       // cookie was ever validated.
@@ -1980,6 +2097,8 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_coalesced_stale_client_hello_does_not_abort(),
                  test_unvalidated_client_hellos_do_not_lock_out_a_server(),
                  test_hello_verify_request_flood_is_bounded(),
+                 test_forged_epoch0_record_during_renegotiation(),
+                 test_forged_epoch0_message_during_renegotiation(),
                  test_short_client_hello_does_not_discard_cookie_state(),
                  test_epoch_retirement_does_not_outlive_a_restart(),
                  test_timed_out_initial_handshake_closes_the_channel(),
@@ -2088,6 +2207,103 @@ class DTLS_Reconnection_Test : public Test {
 };
 
 BOTAN_REGISTER_TEST("tls", "tls_dtls_reconnect", DTLS_Reconnection_Test);
+
+// One unauthenticated epoch-0 record, from anyone able to target the
+// connection's 5-tuple, must not be able to end an established association.
+class DTLS_Epoch0_Inject_Test : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+         results.push_back(run_one("server target", true));
+         results.push_back(run_one("client target", false));
+         return results;
+      }
+
+   private:
+      Test::Result run_one(const std::string& subtest, bool target_server) {
+         Test::Result result("DTLS epoch-0 inject: " + subtest);
+
+         auto rng = Test::new_shared_rng(this->test_name() + "/" + subtest);
+
+         // allow_dtls_epoch0_restart() is off, which is the vulnerable
+         // configuration and the default for every DTLS endpoint.
+         auto assoc = make_association(result, rng, dtls_policy_without_epoch0_restart());
+
+         result.test_is_true("DTLS handshake completed", assoc->pump());
+
+         // The sequence number is chosen so that, immediately after handshake
+         // completion, the bit at (m_window_highest - sequence) is unset and
+         // already_seen() returns false. With m_window_highest = 2^48 and
+         // m_window_bits = 0b1, sequence = 2^48 - 1 lands at offset 1 in the
+         // window, where the bit is zero.
+         const std::vector<uint8_t> body = {0xAA};
+         const auto attack = unprotected_dtls_record(Botan::TLS::Record_Type::Handshake, (uint64_t(1) << 48) - 1, body);
+
+         auto& target = target_server ? static_cast<Botan::TLS::Channel&>(*assoc->server)
+                                      : static_cast<Botan::TLS::Channel&>(*assoc->client);
+         result.test_no_throw("epoch-0 inject does not throw",
+                              [&] { target.received_data(attack.data(), attack.size()); });
+
+         result.test_is_true("target still active after inject", target.is_active());
+         result.test_is_false("target not closed after inject", target.is_closed());
+
+         // App data must still flow on the live keys.
+         const std::vector<uint8_t> ping(8, 0xAA);
+         const std::vector<uint8_t> pong(8, 0x55);
+         assoc->server_recv.clear();
+         assoc->client_recv.clear();
+         assoc->client->send(ping);
+         assoc->server->send(pong);
+         result.test_is_true("app data still flows after inject", assoc->pump_until([&] {
+            return assoc->server_recv == ping && assoc->client_recv == pong;
+         }));
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls_dtls_epoch0_inject", DTLS_Epoch0_Inject_Test);
+
+// A spoofed epoch-0 record at the top of the 48-bit sequence space must not
+// advance the read replay window past anything the legitimate peer can still
+// reach, which would silently drop every later record of its handshake.
+class DTLS_Epoch0_Window_Tampering_Test : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("DTLS epoch-0 window tampering");
+
+         auto rng = Test::new_shared_rng(this->test_name());
+         auto assoc = make_association(result, rng, dtls_policy_without_epoch0_restart());
+
+         // One round-trip so the server has processed the first ClientHello and
+         // its sequence numbers exist with the window highest at 0.
+         result.test_is_true("client produced initial CH", !assoc->c2s.empty());
+         assoc->pump_one();
+
+         // Recentering the replay window here would drop every later
+         // ClientHello and key exchange from the legitimate client.
+         const std::vector<uint8_t> body = {0xAA};
+         const auto attack = unprotected_dtls_record(Botan::TLS::Record_Type::Handshake, (uint64_t(1) << 48) - 1, body);
+         result.test_no_throw("epoch-0 inject does not throw",
+                              [&] { assoc->server->received_data(attack.data(), attack.size()); });
+
+         result.test_is_true("handshake completed despite epoch-0 inject", assoc->pump());
+
+         const std::vector<uint8_t> ping(8, 0xAA);
+         const std::vector<uint8_t> pong(8, 0x55);
+         assoc->server_recv.clear();
+         assoc->client_recv.clear();
+         assoc->client->send(ping);
+         assoc->server->send(pong);
+         result.test_is_true("app data flows after recovery", assoc->pump_until([&] {
+            return assoc->server_recv == ping && assoc->client_recv == pong;
+         }));
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls_dtls_epoch0_window_tamper", DTLS_Epoch0_Window_Tampering_Test);
 
 // A restart ClientHello that authenticates via the DTLS cookie but then fails a
 // later, attacker-influenced validation step must not tear down the active
