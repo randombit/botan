@@ -663,6 +663,16 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
       virtual std::chrono::system_clock::time_point tls_current_timestamp();
 
       /**
+       * Optional callback: provide the current monotonic timer in milliseconds.
+       *
+       * Used internally by DTLS for retransmit timer scheduling. The default
+       * implementation reads std::chrono::steady_clock. Override only to
+       * substitute a deterministic / virtual clock for testing; production
+       * code should not need to.
+       */
+      virtual uint64_t tls_current_monotonic_clock_ms();
+
+      /**
        * Optional callback: error logging. (not currently called)
        * @param err An error message related to this connection.
        *

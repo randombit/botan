@@ -117,24 +117,20 @@ class Stream_Handshake_IO final : public Handshake_IO {
 /**
 * Handshake IO for datagram-based handshakes
 */
-class Datagram_Handshake_IO final : public Handshake_IO {
+class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
    public:
-      typedef std::function<void(uint16_t, Record_Type, const std::vector<uint8_t>&)> writer_fn;
+      using writer_fn = std::function<void(uint16_t, Record_Type, const std::vector<uint8_t>&)>;
+
+      // Lambda pointing to clock function (normally TLS::Callbacks::tls_current_monotonic_clock_ms)
+      using steady_clock_fn = std::function<uint64_t()>;
 
       Datagram_Handshake_IO(writer_fn writer,
+                            steady_clock_fn clock_ms,
                             class Connection_Sequence_Numbers& seq,
                             uint16_t mtu,
                             uint64_t initial_timeout_ms,
                             uint64_t max_timeout_ms,
-                            size_t max_handshake_msg_size) :
-            m_seqs(seq),
-            m_flights(1),
-            m_flight_ccs(1),
-            m_initial_timeout(initial_timeout_ms),
-            m_max_timeout(max_timeout_ms),
-            m_send_hs(std::move(writer)),
-            m_mtu(mtu),
-            m_max_handshake_msg_size(max_handshake_msg_size) {}
+                            size_t max_handshake_msg_size);
 
       Protocol_Version initial_record_version() const override;
 
@@ -282,13 +278,18 @@ class Datagram_Handshake_IO final : public Handshake_IO {
       uint64_t m_initial_timeout = 0;
       uint64_t m_max_timeout = 0;
 
-      uint64_t m_last_write = 0;
+      // Time the current flight was last written, unset until one has been.
+      // A caller's clock may legitimately read zero, so the absence of a write
+      // cannot be spelled as a reserved timestamp.
+      std::optional<uint64_t> m_last_write;
+
       uint64_t m_next_timeout = 0;
 
       uint16_t m_in_message_seq = 0;
       uint16_t m_out_message_seq = 0;
 
       writer_fn m_send_hs;
+      steady_clock_fn m_steady_clock_ms;
       uint16_t m_mtu;
       size_t m_max_handshake_msg_size;
 };

@@ -81,6 +81,22 @@ class DTLS_Test_Callbacks final : public Botan::TLS::Callbacks {
          ++m_sessions_established;
       }
 
+      // Returns the normal clock unless advance_clock_ms has been called, in
+      // which case the timer becomes controlled entirely by the test
+      uint64_t tls_current_monotonic_clock_ms() override {
+         // TODO(C++23) std::optional::or_else
+         if(m_virtual_now_ms.has_value()) {
+            return m_virtual_now_ms.value();
+         } else {
+            return Botan::TLS::Callbacks::tls_current_monotonic_clock_ms();
+         }
+      }
+
+      // A test using a synthetic clock should call advance_clock_ms before
+      // sending any flights, as otherwise the clock may seem to move backwards
+      // from the perspective of the handshake timer
+      void advance_clock_ms(uint64_t delta) { m_virtual_now_ms = m_virtual_now_ms.value_or(0) + delta; }
+
       // For endpoints a test expects to fail; without this a fatal alert marks
       // the whole result failed.
       void tolerate_fatal_alerts() { m_tolerate_fatal_alerts = true; }
@@ -101,6 +117,7 @@ class DTLS_Test_Callbacks final : public Botan::TLS::Callbacks {
       size_t m_alerts = 0;
       std::optional<Botan::TLS::Alert> m_last_alert;
       std::optional<bool> m_session_was_resumption;
+      std::optional<uint64_t> m_virtual_now_ms;
       bool m_tolerate_fatal_alerts = false;
 };
 

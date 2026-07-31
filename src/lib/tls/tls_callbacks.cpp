@@ -62,6 +62,11 @@ std::chrono::system_clock::time_point TLS::Callbacks::tls_current_timestamp() {
    return std::chrono::system_clock::now();
 }
 
+uint64_t TLS::Callbacks::tls_current_monotonic_clock_ms() {
+   const auto now = std::chrono::steady_clock::now().time_since_epoch();
+   return std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+}
+
 void TLS::Callbacks::tls_modify_extensions(Extensions& /*unused*/,
                                            Connection_Side /*unused*/,
                                            Handshake_Type /*unused*/) {}
