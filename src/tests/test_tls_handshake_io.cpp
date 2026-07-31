@@ -8,13 +8,17 @@
 
 #if defined(BOTAN_HAS_TLS_12)
 
+   #include <botan/rng.h>
+   #include <botan/tls_exceptn.h>
    #include <botan/tls_handshake_msg.h>
    #include <botan/tls_magic.h>
+   #include <botan/tls_policy.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/tls_handshake_io.h>
    #include <botan/internal/tls_seq_numbers.h>
 
    #include <algorithm>
+   #include <cstring>
    #include <vector>
 
 namespace Botan_Tests {
@@ -23,12 +27,43 @@ namespace {
 
 using namespace Botan::TLS;
 
+// Build a DTLS handshake record (12-byte header + payload). This is the
+// stream-of-bytes that Datagram_Handshake_IO::add_record consumes; the
+// outer DTLS record-layer header is stripped before this call.
+std::vector<uint8_t> dtls_hs_record(Handshake_Type msg_type,
+                                    uint32_t msg_len,
+                                    uint16_t message_seq,
+                                    uint32_t fragment_offset,
+                                    std::span<const uint8_t> fragment_bytes) {
+   const uint32_t fragment_length = static_cast<uint32_t>(fragment_bytes.size());
+   std::vector<uint8_t> r(12 + fragment_bytes.size());
+   r[0] = static_cast<uint8_t>(msg_type);
+   r[1] = static_cast<uint8_t>((msg_len >> 16) & 0xFF);
+   r[2] = static_cast<uint8_t>((msg_len >> 8) & 0xFF);
+   r[3] = static_cast<uint8_t>(msg_len & 0xFF);
+   r[4] = static_cast<uint8_t>((message_seq >> 8) & 0xFF);
+   r[5] = static_cast<uint8_t>(message_seq & 0xFF);
+   r[6] = static_cast<uint8_t>((fragment_offset >> 16) & 0xFF);
+   r[7] = static_cast<uint8_t>((fragment_offset >> 8) & 0xFF);
+   r[8] = static_cast<uint8_t>(fragment_offset & 0xFF);
+   r[9] = static_cast<uint8_t>((fragment_length >> 16) & 0xFF);
+   r[10] = static_cast<uint8_t>((fragment_length >> 8) & 0xFF);
+   r[11] = static_cast<uint8_t>(fragment_length & 0xFF);
+   if(!fragment_bytes.empty()) {
+      std::memcpy(r.data() + 12, fragment_bytes.data(), fragment_bytes.size());
+   }
+   return r;
+}
+
 class Datagram_IO_Fixture {
    public:
+      static constexpr size_t k_max_handshake_msg_size = 65536;  // default TLS::Policy value
+
       explicit Datagram_IO_Fixture(uint64_t initial_timeout_ms = 1000,
                                    uint64_t max_timeout_ms = 60000,
                                    std::optional<size_t> max_retransmissions = std::nullopt,
-                                   uint16_t mtu = 1500) :
+                                   uint16_t mtu = 1500,
+                                   size_t max_handshake_msg_size = k_max_handshake_msg_size) :
             m_io(
                [this](uint16_t, Record_Type type, const std::vector<uint8_t>& record) {
                   if(type == Record_Type::Handshake) {
@@ -42,7 +77,16 @@ class Datagram_IO_Fixture {
                initial_timeout_ms,
                max_timeout_ms,
                max_retransmissions,
-               65536) {}
+               max_handshake_msg_size) {}
+
+      void feed(std::span<const uint8_t> record, uint16_t epoch = 0) {
+         const uint64_t record_seq = static_cast<uint64_t>(epoch) << 48;
+         m_io.add_record(record.data(), record.size(), Record_Type::Handshake, record_seq);
+      }
+
+      std::pair<Handshake_Type, std::vector<uint8_t>> next_message() {
+         return m_io.get_next_record(false, k_max_handshake_msg_size);
+      }
 
       Datagram_Handshake_IO& io() { return m_io; }
 
@@ -69,6 +113,8 @@ class Datagram_IO_Fixture {
       Datagram_Handshake_IO m_io;
 };
 
+// Minimal Handshake_Message stub for tests that need to drive sends through
+// Datagram_Handshake_IO::send (and therefore exercise the timer state).
 class Stub_Handshake_Message final : public Botan::TLS::Handshake_Message {
    public:
       Stub_Handshake_Message(Handshake_Type type, std::vector<uint8_t> bytes) :
@@ -84,6 +130,10 @@ class Stub_Handshake_Message final : public Botan::TLS::Handshake_Message {
 };
 
 std::vector<Test::Result> dtls12_handshake_io_tests() {
+   const auto rng = Test::new_rng("dtls12_handshake_io_tests");
+
+   auto make_payload = [&rng](size_t len) { return rng->random_vec<std::vector<uint8_t>>(len); };
+
    return {
       CHECK(
          "protected handshake records respect MTU",
@@ -124,6 +174,319 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
             result.test_sz_eq(
                "unprotected message of that size is not fragmented", plaintext.sent_record_sizes().size(), size_t(1));
          }),
+
+      CHECK("single in-order ClientHello is delivered",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               const auto payload = make_payload(64);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 64, 0, 0, payload));
+
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("delivered ClientHello", type, Handshake_Type::ClientHello);
+               result.test_bin_eq("payload matches", bytes, payload);
+            }),
+
+      CHECK("multi-fragment reassembly in order",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               const auto payload = make_payload(100);
+
+               const std::vector<uint8_t> p1(payload.begin(), payload.begin() + 40);
+               const std::vector<uint8_t> p2(payload.begin() + 40, payload.begin() + 75);
+               const std::vector<uint8_t> p3(payload.begin() + 75, payload.end());
+
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 100, 0, 0, p1));
+               result.test_is_true("not yet complete", fix.next_message().first == Handshake_Type::None);
+
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 100, 0, 40, p2));
+               result.test_is_true("still not complete", fix.next_message().first == Handshake_Type::None);
+
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 100, 0, 75, p3));
+
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("delivered after final fragment", type, Handshake_Type::ClientHello);
+               result.test_bin_eq("reassembled payload", bytes, payload);
+            }),
+
+      CHECK("out-of-order msg_seq waits for in-sequence message",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               const auto p_seq0 = make_payload(50);
+               const auto p_seq1 = make_payload(60);
+
+               // Deliver message_seq=1 first
+               fix.feed(dtls_hs_record(Handshake_Type::Certificate, 60, 1, 0, p_seq1));
+               result.test_is_true("seq=1 not delivered while waiting for seq=0",
+                                   fix.next_message().first == Handshake_Type::None);
+
+               // Now deliver message_seq=0; both should come out in order.
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 50, 0, 0, p_seq0));
+               auto [t0, b0] = fix.next_message();
+               result.test_enum_eq("first delivery is seq=0", t0, Handshake_Type::ClientHello);
+               result.test_bin_eq("seq=0 payload", b0, p_seq0);
+
+               auto [t1, b1] = fix.next_message();
+               result.test_enum_eq("second delivery is seq=1", t1, Handshake_Type::Certificate);
+               result.test_bin_eq("seq=1 payload", b1, p_seq1);
+            }),
+
+      // Regression test for the asymmetric DoS reported against the
+      // claim-based reassembly budget: an attacker sends header-only records
+      // for future message_seq values with a large declared msg_len. Before
+      // the fix, those records reserved the entire claimed msg_len against
+      // m_pending_reassembly_bytes and starved the legitimate ClientHello
+      // arriving at message_seq=0.
+      CHECK("header-only future-seq records do not block legit ClientHello",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+
+               // Exhaust the cap if claim-based: 4 * 65536 == max_pending.
+               for(uint16_t seq = 1; seq <= 4; ++seq) {
+                  fix.feed(dtls_hs_record(
+                     Handshake_Type::ClientHello, Datagram_IO_Fixture::k_max_handshake_msg_size, seq, 0, {}));
+               }
+               result.test_is_true("attacker records yield no in-sequence message",
+                                   fix.next_message().first == Handshake_Type::None);
+
+               // The legit ClientHello must still get through.
+               const auto payload = make_payload(40);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 40, 0, 0, payload));
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("legit ClientHello delivered", type, Handshake_Type::ClientHello);
+               result.test_bin_eq("legit payload intact", bytes, payload);
+            }),
+
+      // Sparse segments cost far more than their payload, so a per-segment
+      // constant is charged as well. They also arrive out of sequence here, and
+      // out-of-sequence slots may only use part of the budget, so however many
+      // are sent the message actually being waited on still gets through.
+      CHECK("sparse one-byte segments cannot starve the expected message",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+
+               const std::vector<uint8_t> one_byte = {0x42};
+               const uint32_t big = Datagram_IO_Fixture::k_max_handshake_msg_size;
+
+               for(uint32_t offset = 0; offset < 40000; offset += 2) {
+                  fix.feed(dtls_hs_record(Handshake_Type::Certificate, big, 1, offset, one_byte));
+               }
+
+               const auto payload = make_payload(40);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 40, 0, 0, payload));
+
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("expected message still delivered", type, Handshake_Type::ClientHello);
+               result.test_bin_eq("its body is intact", bytes, payload);
+            }),
+
+      CHECK("tiny future-seq fragments do not exhaust the reassembly budget",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+
+               const std::vector<uint8_t> fragment = {0x42};
+
+               // Saturate the reassembly window with 1-byte fragments
+               // claiming max msg_len at out-of-order msg_seq values.
+               for(uint16_t seq = 1; seq <= 8; ++seq) {
+                  fix.feed(dtls_hs_record(
+                     Handshake_Type::ClientHello, Datagram_IO_Fixture::k_max_handshake_msg_size, seq, 0, fragment));
+               }
+               result.test_is_true("no in-sequence delivery yet", fix.next_message().first == Handshake_Type::None);
+
+               // The legit msg_seq=0 ClientHello must still go through.
+               const std::vector<uint8_t> legit = make_payload(40);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 40, 0, 0, legit));
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("legit msg_seq=0 delivered", type, Handshake_Type::ClientHello);
+               result.test_bin_eq("legit body intact", bytes, legit);
+            }),
+
+      // Reassembly storage is sparse: a single-byte fragment at offset
+      // msg_length-1 must not pre-allocate msg_length bytes of buffer.
+      // Filling the gap afterwards still completes the message.
+      CHECK("sparse reassembly tolerates fragments at high offset",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               const size_t big = Datagram_IO_Fixture::k_max_handshake_msg_size;
+               const auto payload = make_payload(big);
+
+               // First the trailing 1 byte at offset big-1, then the
+               // leading big-1 bytes at offset 0. Eager merging produces a
+               // single contiguous segment and delivery succeeds.
+               const std::vector<uint8_t> tail(payload.end() - 1, payload.end());
+               const std::vector<uint8_t> head(payload.begin(), payload.end() - 1);
+
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, static_cast<uint32_t>(big), 0, big - 1, tail));
+               result.test_is_true("not yet complete", fix.next_message().first == Handshake_Type::None);
+
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, static_cast<uint32_t>(big), 0, 0, head));
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("delivered after gap fill", type, Handshake_Type::ClientHello);
+               result.test_bin_eq("reassembled payload intact", bytes, payload);
+            }),
+
+      // Sibling check to the "tiny future-seq" test above using fully
+      // delivered payloads instead of one-byte fragments; confirms the cap
+      // is enforced symmetrically regardless of how much of each message
+      // the attacker actually sends.
+      CHECK("legitimately-large future-seq fragments are capped",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               const size_t big = Datagram_IO_Fixture::k_max_handshake_msg_size;
+
+               // max_pending = min(4 * 65536, 1 MiB) = 256 KiB, and each of these
+               // is charged its 64 KiB payload plus one segment's overhead, so
+               // only three fit. Whichever exceeds the cap must be dropped
+               // silently rather than throwing.
+               for(uint16_t seq = 1; seq <= 5; ++seq) {
+                  result.test_no_throw("oversize future-seq fragment dropped without exception", [&] {
+                     fix.feed(dtls_hs_record(
+                        Handshake_Type::ClientHello, static_cast<uint32_t>(big), seq, 0, make_payload(big)));
+                  });
+               }
+
+               // Fill the rest of what out-of-sequence slots are allowed with
+               // non-adjacent one-byte fragments.
+               const std::vector<uint8_t> one_byte = {0x42};
+               for(uint32_t offset = 0; offset < 4000; offset += 2) {
+                  fix.feed(
+                     dtls_hs_record(Handshake_Type::Certificate, static_cast<uint32_t>(big), 6, offset, one_byte));
+               }
+
+               // Whatever those slots consumed, the message being waited on keeps
+               // its own share of the budget.
+               const auto expected = make_payload(16);
+               result.test_no_throw("expected msg_seq=0 is still admitted",
+                                    [&] { fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 16, 0, 0, expected)); });
+
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("expected message delivered", type, Handshake_Type::ClientHello);
+               result.test_bin_eq("its body is intact", bytes, expected);
+            }),
+
+      // A whole-message retransmission overlapping an already-buffered partial
+      // copy must not be charged as if all its bytes were new: near the budget
+      // ceiling that misestimate dropped the one fragment able to complete the
+      // message, stalling reassembly permanently.
+      CHECK("overlapping retransmission is admitted near the budget ceiling",
+            [&](Test::Result& result) {
+               // max_pending = 4 * 512 = 2048, future-seq slots limited to half
+               Datagram_IO_Fixture fix(1000, 60000, std::nullopt, 1500, 512);
+
+               const auto msg = make_payload(512);
+
+               // Consume most of the out-of-sequence half of the budget
+               fix.feed(dtls_hs_record(Handshake_Type::Certificate, 512, 1, 0, make_payload(300)));
+               fix.feed(dtls_hs_record(Handshake_Type::Certificate, 512, 2, 0, make_payload(300)));
+               fix.feed(dtls_hs_record(Handshake_Type::Certificate, 512, 3, 0, make_payload(100)));
+
+               // All but the tail of the awaited message
+               fix.feed(dtls_hs_record(Handshake_Type::Certificate, 512, 0, 0, std::span(msg).first(500)));
+               result.test_is_true("partial message not yet complete",
+                                   fix.next_message().first == Handshake_Type::None);
+
+               // The peer retransmits the message unfragmented. Charged naively
+               // this would exceed the ceiling; merged, it replaces the partial
+               // copy and adds only the missing tail.
+               fix.feed(dtls_hs_record(Handshake_Type::Certificate, 512, 0, 0, msg));
+
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("retransmitted message delivered", type, Handshake_Type::Certificate);
+               result.test_bin_eq("its body is intact", bytes, msg);
+            }),
+
+      // Empty handshake messages (msg_len == 0, e.g. ServerHelloDone) use a
+      // single record with fragment_length == 0; the zero-length filter must
+      // not eat them.
+      CHECK("empty handshake message is delivered",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               fix.feed(dtls_hs_record(Handshake_Type::ServerHelloDone, 0, 0, 0, {}));
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("delivered ServerHelloDone", type, Handshake_Type::ServerHelloDone);
+               result.test_sz_eq("no payload bytes", bytes.size(), size_t(0));
+            }),
+
+      CHECK("fragment past end of message is rejected",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               // msg_len=10 but fragment claims offset=0, length=20.
+               result.template test_throws<Botan::Decoding_Error>("overflow rejected", [&] {
+                  fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 10, 0, 0, make_payload(20)));
+               });
+            }),
+
+      CHECK("inconsistent fragment metadata is rejected",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 50, 0, 0, make_payload(20)));
+               result.template test_throws<Botan::Decoding_Error>("metadata mismatch rejected", [&] {
+                  // Same message_seq but advertise a different msg_type.
+                  fix.feed(dtls_hs_record(Handshake_Type::Certificate, 50, 0, 20, make_payload(10)));
+               });
+            }),
+
+      // RFC 6347 4.2.3 permits overlapping retransmissions, and overlapping bytes
+      // that disagree are a protocol error. For anything other than a
+      // ClientHello that stays an error.
+      CHECK("inconsistent overlapping bytes are rejected",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               // Partial first fragment so the slot is not yet complete; a
+               // completed slot silently ignores retransmissions.
+               const auto base = make_payload(50);
+               const std::vector<uint8_t> first(base.begin(), base.begin() + 30);
+               fix.feed(dtls_hs_record(Handshake_Type::Certificate, 50, 0, 0, first));
+
+               auto bad = first;
+               bad[10] ^= 0xFF;
+               result.template test_throws<Botan::Decoding_Error>("overlap mismatch rejected", [&] {
+                  fix.feed(dtls_hs_record(Handshake_Type::Certificate, 50, 0, 0, bad));
+               });
+            }),
+
+      CHECK("consistent retransmits are tolerated",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               const auto p = make_payload(100);
+               const std::vector<uint8_t> half1(p.begin(), p.begin() + 50);
+               const std::vector<uint8_t> half2(p.begin() + 50, p.end());
+
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 100, 0, 0, half1));
+               // Same first half, repeated. Must not throw or alter state.
+               result.test_no_throw("retransmit accepted",
+                                    [&] { fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 100, 0, 0, half1)); });
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 100, 0, 50, half2));
+
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("delivered after retransmit", type, Handshake_Type::ClientHello);
+               result.test_bin_eq("payload unchanged by retransmit", bytes, p);
+            }),
+
+      CHECK("msg_len above policy max is rejected",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               result.template test_throws<TLS_Exception>("oversize msg_len rejected", [&] {
+                  fix.feed(dtls_hs_record(
+                     Handshake_Type::ClientHello, Datagram_IO_Fixture::k_max_handshake_msg_size + 1, 0, 0, {}));
+               });
+            }),
+
+      CHECK("message_seq beyond reassembly window is dropped",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               // Window is 16 starting at m_in_message_seq=0, so seq=16 is
+               // out of window and should be silently ignored.
+               result.test_no_throw("out-of-window seq is silently dropped", [&] {
+                  fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 32, 16, 0, make_payload(32)));
+               });
+               // The legit in-sequence message still works.
+               const auto p = make_payload(20);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 20, 0, 0, p));
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("legit message delivered", type, Handshake_Type::ClientHello);
+               result.test_bin_eq("payload intact", bytes, p);
+            }),
 
       // Once the backoff saturates at m_max_timeout, the elapsed time since the
       // last write keeps growing, so a retransmit must re-anchor it. Otherwise
@@ -248,6 +611,44 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
                fix.advance_clock_ms(next);
                result.test_throws("give-up only after the reset budget is exhausted",
                                   [&] { fix.io().timeout_check(); });
+            }),
+
+      // message_seq is 16 bits. Once it wraps, the next expected slot is one
+      // already delivered, whose buffers were released. Such a slot must not
+      // report itself complete: message() would fail its single-segment
+      // invariant.
+      CHECK("message_seq wrapping onto a delivered slot does not assert",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+
+               const std::vector<uint8_t> body(4, 0x5A);
+               bool all_delivered = true;
+               for(size_t i = 0; i <= 0xFFFF && all_delivered; ++i) {
+                  fix.feed(dtls_hs_record(Handshake_Type::Certificate, 4, static_cast<uint16_t>(i), 0, body));
+                  all_delivered = (fix.next_message().first == Handshake_Type::Certificate);
+               }
+               result.test_is_true("every message_seq up to the wrap was delivered", all_delivered);
+
+               // m_in_message_seq is back at 0, where a delivered sentinel sits.
+               fix.feed(dtls_hs_record(Handshake_Type::Certificate, 4, 0, 0, body));
+
+               std::pair<Handshake_Type, std::vector<uint8_t>> after;
+               result.test_no_throw("wrapped slot is not mistaken for a complete message",
+                                    [&] { after = fix.next_message(); });
+               result.test_is_true("nothing is delivered from the released slot", after.first == Handshake_Type::None);
+
+               // format() names the message just delivered, so its guard is
+               // that one exists rather than that the counter is non-zero.
+               // Those differ here, and the difference used to be a reachable
+               // assertion. The subtraction wraps to 65535 of its own accord,
+               // which is the right sequence number for that message.
+               std::vector<uint8_t> formatted;
+               result.test_no_throw("format does not assert after the wrap",
+                                    [&] { formatted = fix.io().format(body, Handshake_Type::Certificate); });
+               if(result.test_is_true("format produced a header", formatted.size() >= 12)) {
+                  const uint16_t msg_seq = (static_cast<uint16_t>(formatted[4]) << 8) | formatted[5];
+                  result.test_sz_eq("it names the wrapped sequence number", msg_seq, size_t(0xFFFF));
+               }
             }),
 
       // A caller's monotonic clock may legitimately read zero, so sending the

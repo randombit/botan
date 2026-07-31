@@ -124,6 +124,10 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       // Lambda pointing to clock function (normally TLS::Callbacks::tls_current_monotonic_clock_ms)
       using steady_clock_fn = std::function<uint64_t()>;
 
+      // msg_type(1) + length(3) + message_seq(2) + fragment_offset(3) +
+      // fragment_length(3)
+      static constexpr size_t DTLS_HANDSHAKE_HEADER_SIZE = 12;
+
       Datagram_Handshake_IO(writer_fn writer,
                             steady_clock_fn clock_ms,
                             class Connection_Sequence_Numbers& seq,
@@ -174,6 +178,17 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
                       uint64_t record_sequence,
                       bool retransmitted_flight);
 
+      // Handle one fragment parsed out of an incoming record, returning true
+      // if it cues a replay of our last flight.
+      bool process_handshake_fragment(const uint8_t fragment[],
+                                      size_t fragment_length,
+                                      size_t fragment_offset,
+                                      uint16_t epoch,
+                                      Handshake_Type msg_type,
+                                      size_t msg_length,
+                                      uint16_t message_seq,
+                                      bool retransmitted_flight);
+
       bool reassemble_retransmitted_fragment(const uint8_t fragment[],
                                              size_t fragment_length,
                                              size_t fragment_offset,
@@ -194,6 +209,10 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       void retransmit_flight(size_t flight);
       void retransmit_last_flight();
 
+      // Drop delivered reassembly slots, keeping the lowest as the epoch
+      // sentinel the expecting_ccs branch of get_next_record reads.
+      void prune_delivered_messages();
+
       std::vector<uint8_t> format_fragment(const uint8_t fragment[],
                                            size_t fragment_len,
                                            uint32_t frag_offset,
@@ -212,6 +231,14 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
 
       class Handshake_Reassembly final {
          public:
+            // Approximate real cost of one segment: red-black tree node holding
+            // the offset key and an inline std::vector, plus that vector's own
+            // heap allocation. Rounded up, since under-charging is what charging
+            // for segments at all is meant to prevent.
+            static constexpr size_t SEGMENT_OVERHEAD = 96;
+
+            // Callers charge the change in charged_bytes() against the per-IO
+            // reassembly budget; see recharge_reassembly_bytes.
             void add_fragment(const uint8_t fragment[],
                               size_t fragment_length,
                               size_t fragment_offset,
@@ -226,10 +253,31 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
             // 0 until the first fragment has set the declared msg_length.
             size_t msg_length() const { return m_msg_length; }
 
+            size_t bytes_received() const { return m_bytes_received; }
+
+            // What this reassembly costs against the budget. Payload alone is a
+            // poor proxy: a sparse segment costs far more in allocator and map
+            // overhead than it holds, so 1-byte fragments at alternating offsets
+            // would otherwise buy roughly a hundred times the memory the budget
+            // believes it has handed out.
+            // Zero once delivered: the buffers are gone, and m_bytes_received is
+            // kept only as a record of what the slot held.
+            size_t charged_bytes() const {
+               return m_delivered ? 0 : m_bytes_received + SEGMENT_OVERHEAD * m_segments.size();
+            }
+
+            // What charged_bytes() would report after add_fragment of this
+            // fragment: mirrors the merge walk without mutating, so overlap with
+            // already-buffered segments is not counted twice. On paths where
+            // add_fragment stores nothing it can only overestimate.
+            size_t charged_bytes_after_add(size_t fragment_length, size_t fragment_offset) const;
+
             std::pair<Handshake_Type, std::vector<uint8_t>> message() const;
 
             // Release the memory buffers; called after reassembly has completed
             void release_buffers();
+
+            bool delivered() const { return m_delivered; }
 
          private:
             Handshake_Type m_msg_type = Handshake_Type::None;
@@ -237,11 +285,38 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
             size_t m_bytes_received = 0;
             uint16_t m_epoch = 0;
 
-            // Reassembly buffer (sized to m_msg_length once known) and a parallel
-            // byte-mask marking which positions have already been seen.
-            std::vector<uint8_t> m_received_mask;
-            std::vector<uint8_t> m_message;
+            // Set by release_buffers. The entry lives on as an epoch sentinel
+            // with its metadata intact but no bytes behind it.
+            bool m_delivered = false;
+
+            // Sparse store of received fragments keyed by offset, with the
+            // invariant that segments are non-overlapping and eagerly merged
+            // (no two adjacent segments). Total memory is proportional to
+            // bytes actually received: a 1-byte fragment at any offset costs
+            // ~1 byte of payload + std::map node overhead, never the claimed
+            // msg_length. complete() iff the segments form a single span
+            // [0, m_msg_length).
+            std::map<size_t, std::vector<uint8_t>> m_segments;
       };
+
+      // Add a fragment to a reassembly slot, keeping the pending-reassembly
+      // budget in step with the slot's charged_bytes(). Returns false, adding
+      // nothing, if the budget ceiling would be exceeded.
+      bool charged_add_fragment(Handshake_Reassembly& reassembly,
+                                size_t ceiling,
+                                const uint8_t fragment[],
+                                size_t fragment_length,
+                                size_t fragment_offset,
+                                uint16_t epoch,
+                                Handshake_Type msg_type,
+                                size_t msg_length);
+
+      // Uncommit a reassembly buffer's bytes from the pending-reassembly budget.
+      void release_reassembly_bytes(const Handshake_Reassembly& reassembly);
+
+      // Apply the change in a reassembly's charged_bytes() to the running total.
+      // Merging adjacent segments can lower it, so this goes both ways.
+      void recharge_reassembly_bytes(size_t charged_before, const Handshake_Reassembly& reassembly);
 
       struct Message_Info final {
             Message_Info(uint16_t e, Handshake_Type mt, const std::vector<uint8_t>& msg) :
@@ -296,10 +371,15 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       uint16_t m_in_message_seq = 0;
       uint16_t m_out_message_seq = 0;
 
+      // Whether any incoming message has been delivered. Not the same as
+      // m_in_message_seq being non-zero once that counter wraps; see format().
+      bool m_any_message_delivered = false;
+
       writer_fn m_send_hs;
       steady_clock_fn m_steady_clock_ms;
       uint16_t m_mtu;
       size_t m_max_handshake_msg_size;
+      size_t m_max_pending_reassembly;
 };
 
 }  // namespace Botan::TLS

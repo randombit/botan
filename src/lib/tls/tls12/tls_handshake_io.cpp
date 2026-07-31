@@ -19,8 +19,6 @@ namespace Botan::TLS {
 
 namespace {
 
-constexpr size_t DTLS_HANDSHAKE_HEADER_SIZE = 12;
-
 inline size_t load_be24(const uint8_t q[3]) {
    return make_uint32(0, q[0], q[1], q[2]);
 }
@@ -142,6 +140,20 @@ std::vector<uint8_t> Stream_Handshake_IO::send(const Handshake_Message& msg) {
    return buf;
 }
 
+namespace {
+
+size_t max_pending_reassembly(size_t policy_hs_max) {
+   constexpr size_t overall_cap = 1024 * 1024;  // arbitrary
+
+   if(policy_hs_max == 0) {
+      return overall_cap;
+   } else {
+      return std::min<size_t>(policy_hs_max * 4, overall_cap);
+   }
+}
+
+}  // namespace
+
 Datagram_Handshake_IO::Datagram_Handshake_IO(writer_fn writer,
                                              steady_clock_fn steady_clock_ms,
                                              class Connection_Sequence_Numbers& seq,
@@ -159,7 +171,8 @@ Datagram_Handshake_IO::Datagram_Handshake_IO(writer_fn writer,
       m_send_hs(std::move(writer)),
       m_steady_clock_ms(std::move(steady_clock_ms)),
       m_mtu(mtu),
-      m_max_handshake_msg_size(max_handshake_msg_size) {}
+      m_max_handshake_msg_size(max_handshake_msg_size),
+      m_max_pending_reassembly(max_pending_reassembly(m_max_handshake_msg_size)) {}
 
 Protocol_Version Datagram_Handshake_IO::initial_record_version() const {
    return Protocol_Version::DTLS_V12;
@@ -300,18 +313,77 @@ bool Datagram_Handshake_IO::reassemble_retransmitted_fragment(const uint8_t frag
    auto [i, inserted] = m_retransmitted_messages.try_emplace(msg_type, message_seq, Handshake_Reassembly{});
 
    if(!inserted && i->second.first != message_seq) {
+      release_reassembly_bytes(i->second.second);
       i->second = std::make_pair(message_seq, Handshake_Reassembly());
    }
 
    auto& reassembly = i->second.second;
-   reassembly.add_fragment(fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length);
+
+   // These buffers hold unauthenticated input, so they are charged against the
+   // same budget as the main reassembly path rather than growing on their own.
+   if(!charged_add_fragment(reassembly,
+                            m_max_pending_reassembly,
+                            fragment,
+                            fragment_length,
+                            fragment_offset,
+                            epoch,
+                            msg_type,
+                            msg_length)) {
+      return false;
+   }
 
    if(!reassembly.complete()) {
       return false;
    }
 
+   release_reassembly_bytes(reassembly);
    m_retransmitted_messages.erase(i);
    return true;
+}
+
+bool Datagram_Handshake_IO::charged_add_fragment(Handshake_Reassembly& reassembly,
+                                                 size_t ceiling,
+                                                 const uint8_t fragment[],
+                                                 size_t fragment_length,
+                                                 size_t fragment_offset,
+                                                 uint16_t epoch,
+                                                 Handshake_Type msg_type,
+                                                 size_t msg_length) {
+   // Preflight the merge so overlap with already-buffered segments is not
+   // charged twice: near the ceiling, a whole-message retransmission landing
+   // on top of a partially received copy must stay admissible.
+   const size_t charged_before = reassembly.charged_bytes();
+   const size_t charged_after = reassembly.charged_bytes_after_add(fragment_length, fragment_offset);
+   BOTAN_ASSERT_NOMSG(m_pending_reassembly_bytes >= charged_before);
+   if(m_pending_reassembly_bytes - charged_before + charged_after > ceiling) {
+      return false;
+   }
+
+   try {
+      reassembly.add_fragment(fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length);
+   } catch(...) {
+      recharge_reassembly_bytes(charged_before, reassembly);
+      throw;
+   }
+   recharge_reassembly_bytes(charged_before, reassembly);
+   return true;
+}
+
+void Datagram_Handshake_IO::release_reassembly_bytes(const Handshake_Reassembly& reassembly) {
+   BOTAN_ASSERT_NOMSG(m_pending_reassembly_bytes >= reassembly.charged_bytes());
+   m_pending_reassembly_bytes -= reassembly.charged_bytes();
+}
+
+void Datagram_Handshake_IO::recharge_reassembly_bytes(size_t charged_before, const Handshake_Reassembly& reassembly) {
+   const size_t charged_after = reassembly.charged_bytes();
+
+   if(charged_after >= charged_before) {
+      m_pending_reassembly_bytes += charged_after - charged_before;
+   } else {
+      const size_t refund = charged_before - charged_after;
+      BOTAN_ASSERT_NOMSG(m_pending_reassembly_bytes >= refund);
+      m_pending_reassembly_bytes -= refund;
+   }
 }
 
 bool Datagram_Handshake_IO::process_previous_handshake_fragment(const uint8_t fragment[],
@@ -335,11 +407,20 @@ bool Datagram_Handshake_IO::process_previous_handshake_fragment(const uint8_t fr
    if(msg_type == Handshake_Type::ClientHello) {
       if(!retransmitted_flight && m_awaiting_cookie_client_hello) {
          if(!m_retransmitted_client_hello.has_value() || m_retransmitted_client_hello->first != message_seq) {
+            if(m_retransmitted_client_hello.has_value()) {
+               release_reassembly_bytes(m_retransmitted_client_hello->second);
+            }
             m_retransmitted_client_hello = std::make_pair(message_seq, Handshake_Reassembly());
          }
 
-         m_retransmitted_client_hello->second.add_fragment(
-            fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length);
+         charged_add_fragment(m_retransmitted_client_hello->second,
+                              m_max_pending_reassembly,
+                              fragment,
+                              fragment_length,
+                              fragment_offset,
+                              epoch,
+                              msg_type,
+                              msg_length);
          return false;
       }
 
@@ -449,45 +530,14 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
          throw Decoding_Error("Bad lengths in DTLS header");
       }
 
-      // Bound the out-of-order reassembly window.
-      constexpr uint16_t reassembly_window = 16;
-
-      // Independently cap total bytes committed to in-flight reassembly slots
-      const size_t max_pending = 4 * m_max_handshake_msg_size;
-
-      if(message_seq >= m_in_message_seq && (message_seq - m_in_message_seq) < reassembly_window) {
-         if(retransmitted_flight) {
-            if(fragment_length == 0) {
-               record += total_size;
-               record_len -= total_size;
-               continue;
-            }
-
-            throw TLS_Exception(Alert::UnexpectedMessage, "Unexpected new DTLS handshake message");
-         }
-
-         auto [it, inserted] = m_messages.try_emplace(message_seq);
-         if(inserted) {
-            if(m_max_handshake_msg_size > 0 && m_pending_reassembly_bytes + msg_len > max_pending) {
-               m_messages.erase(it);
-               record += total_size;
-               record_len -= total_size;
-               continue;
-            }
-            m_pending_reassembly_bytes += msg_len;
-         }
-         it->second.add_fragment(
-            &record[DTLS_HANDSHAKE_HEADER_SIZE], fragment_length, fragment_offset, epoch, msg_type, msg_len);
-      } else {
-         retransmit_response |= process_previous_handshake_fragment(&record[DTLS_HANDSHAKE_HEADER_SIZE],
-                                                                    fragment_length,
-                                                                    fragment_offset,
-                                                                    epoch,
-                                                                    msg_type,
-                                                                    msg_len,
-                                                                    message_seq,
-                                                                    retransmitted_flight);
-      }
+      retransmit_response |= process_handshake_fragment(&record[DTLS_HANDSHAKE_HEADER_SIZE],
+                                                        fragment_length,
+                                                        fragment_offset,
+                                                        epoch,
+                                                        msg_type,
+                                                        msg_len,
+                                                        message_seq,
+                                                        retransmitted_flight);
 
       record += total_size;
       record_len -= total_size;
@@ -496,6 +546,73 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
    if(retransmit_response && (!m_finished || m_retransmit_terminal_flight)) {
       retransmit_last_flight();
    }
+}
+
+bool Datagram_Handshake_IO::process_handshake_fragment(const uint8_t fragment[],
+                                                       size_t fragment_length,
+                                                       size_t fragment_offset,
+                                                       uint16_t epoch,
+                                                       Handshake_Type msg_type,
+                                                       size_t msg_length,
+                                                       uint16_t message_seq,
+                                                       bool retransmitted_flight) {
+   // Bound the out-of-order reassembly window.
+   constexpr uint16_t reassembly_window = 16;
+
+   // An empty fragment for a non-empty message is garbage, just drop it.
+   if(fragment_length == 0 && msg_length > 0) {
+      return false;
+   }
+
+   if(message_seq < m_in_message_seq) {
+      return process_previous_handshake_fragment(
+         fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length, message_seq, retransmitted_flight);
+   }
+
+   // Beyond the reassembly window is not a retransmission of anything we
+   // have seen, so it must not be able to pull a flight replay out of us.
+   // Drop it silently: the sender has proven nothing at this point.
+   if((message_seq - m_in_message_seq) >= reassembly_window) {
+      return false;
+   }
+
+   if(retransmitted_flight) {
+      if(fragment_length == 0) {
+         return false;
+      }
+
+      throw TLS_Exception(Alert::UnexpectedMessage, "Unexpected new DTLS handshake message");
+   }
+
+   // Charge the reassembly budget by bytes actually committed, not by
+   // the claimed msg_length. Otherwise an attacker can lock the full
+   // budget by sending small (e.g. fragment_length=1) fragments with
+   // a large claimed msg_length, displacing legitimate handshake
+   // messages.
+   // Reserve headroom for the message actually being waited on. Otherwise
+   // fragments for the fifteen slots beyond it can consume the whole
+   // budget, after which every fragment of the expected message is
+   // silently dropped and the handshake cannot proceed.
+   const size_t ceiling = (message_seq == m_in_message_seq) ? m_max_pending_reassembly : m_max_pending_reassembly / 2;
+
+   auto [it, inserted] = m_messages.try_emplace(message_seq);
+
+   bool accepted = false;
+   try {
+      accepted = charged_add_fragment(
+         it->second, ceiling, fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length);
+   } catch(...) {
+      if(inserted) {
+         m_messages.erase(it);
+      }
+      throw;
+   }
+
+   if(!accepted && inserted) {
+      m_messages.erase(it);
+   }
+
+   return false;
 }
 
 std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::get_next_record(bool expecting_ccs,
@@ -519,6 +636,7 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::get_next_
 
    if(m_retransmitted_client_hello.has_value() && m_retransmitted_client_hello->second.complete()) {
       auto result = m_retransmitted_client_hello->second.message();
+      release_reassembly_bytes(m_retransmitted_client_hello->second);
       m_retransmitted_client_hello.reset();
       m_recreating_hello_verify_request = true;
       return result;
@@ -531,6 +649,7 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::get_next_
    }
 
    m_in_message_seq += 1;
+   m_any_message_delivered = true;
 
    auto result = i->second.message();
 
@@ -542,18 +661,36 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::get_next_
    // bytes against the cap. The entry itself stays in m_messages because
    // the expecting_ccs branch above uses m_messages.begin()->second.epoch()
    // as an epoch-0 sentinel; it only needs the metadata, not the buffers.
-   BOTAN_ASSERT_NOMSG(m_pending_reassembly_bytes >= i->second.msg_length());
-   m_pending_reassembly_bytes -= i->second.msg_length();
+   release_reassembly_bytes(i->second);
    i->second.release_buffers();
+
+   // May erase the entry i refers to, so nothing below may use it.
+   prune_delivered_messages();
 
    return result;
 }
 
+void Datagram_Handshake_IO::prune_delivered_messages() {
+   // Delivered slots are retained only so that the expecting_ccs branch above
+   // can read an epoch from m_messages.begin(). Keeping one per delivered
+   // message let unauthenticated input retain a map node apiece, none of it
+   // charged against the reassembly budget, so all but the lowest are dropped.
+   auto i = m_messages.begin();
+
+   if(i == m_messages.end()) {
+      return;
+   }
+
+   ++i;
+
+   while(i != m_messages.end() && i->second.delivered()) {
+      i = m_messages.erase(i);
+   }
+}
+
 void Datagram_Handshake_IO::Handshake_Reassembly::release_buffers() {
-   m_received_mask.clear();
-   m_received_mask.shrink_to_fit();
-   m_message.clear();
-   m_message.shrink_to_fit();
+   m_segments.clear();
+   m_delivered = true;
 }
 
 void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(const uint8_t fragment[],
@@ -567,15 +704,20 @@ void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(const uint8_t fra
       m_epoch = epoch;
       m_msg_type = msg_type;
       m_msg_length = msg_length;
-      m_message.resize(msg_length);
-      m_received_mask.assign(msg_length, 0);
    } else {
-      if(msg_type != m_msg_type || msg_length != m_msg_length || epoch != m_epoch) {
-         throw Decoding_Error("Inconsistent values in fragmented DTLS handshake header");
+      // A delivered slot is a post-delivery sentinel kept for the expecting_ccs
+      // branch; drop the fragment cheaply before running the per-fragment-header
+      // consistency check. Otherwise a stray retransmission whose msg_length
+      // field was rewritten in transit (or spoofed by an attacker for any
+      // message_seq < m_in_message_seq) would throw Decoding_Error and tear down
+      // the connection -- but post-delivery, no header check is meaningful since
+      // the storage buffers are already released.
+      if(m_delivered || complete()) {
+         return;  // already have entire message, ignore this
       }
 
-      if(complete()) {
-         return;  // already have entire message, ignore this
+      if(msg_type != m_msg_type || msg_length != m_msg_length || epoch != m_epoch) {
+         throw Decoding_Error("Inconsistent values in fragmented DTLS handshake header");
       }
    }
 
@@ -587,26 +729,101 @@ void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(const uint8_t fra
       throw Decoding_Error("Fragment overlaps past end of message");
    }
 
-   BOTAN_ASSERT_NOMSG(m_received_mask.size() == m_msg_length);
+   if(fragment_length == 0) {
+      return;
+   }
 
-   for(size_t i = 0; i != fragment_length; ++i) {
-      const size_t off = fragment_offset + i;
-      if(m_received_mask[off] != 0) {
-         // RFC 6347 4.2.3 permits overlapping retransmissions, but the
-         // overlapping bytes must agree.
-         if(m_message[off] != fragment[i]) {
-            throw Decoding_Error("Inconsistent overlapping DTLS handshake fragment");
-         }
-      } else {
-         m_message[off] = fragment[i];
-         m_received_mask[off] = 1;
-         ++m_bytes_received;
+   const size_t new_start = fragment_offset;
+   const size_t new_end = fragment_offset + fragment_length;
+
+   // Find the first existing segment that touches or overlaps [new_start,...].
+   auto it = m_segments.lower_bound(new_start);
+   if(it != m_segments.begin()) {
+      auto prev = std::prev(it);
+      if(prev->first + prev->second.size() >= new_start) {
+         it = prev;
       }
    }
+
+   // Walk forward through every segment that overlaps or is adjacent to the
+   // (potentially-growing) merged span. RFC 6347 4.2.3: "DTLS implementations
+   // MUST be able to handle overlapping fragment ranges." Requiring the
+   // overlapping bytes to agree is ours, not the RFC's: disagreement means one
+   // of the two copies is corrupt or forged.
+   size_t merged_start = new_start;
+   size_t merged_end = new_end;
+   size_t existing_bytes = 0;
+   const auto first_to_merge = it;
+   while(it != m_segments.end() && it->first <= merged_end) {
+      const size_t seg_start = it->first;
+      const size_t seg_end = seg_start + it->second.size();
+
+      const size_t ov_start = std::max(seg_start, new_start);
+      const size_t ov_end = std::min(seg_end, new_end);
+      for(size_t i = ov_start; i < ov_end; ++i) {
+         if(it->second[i - seg_start] != fragment[i - new_start]) {
+            throw Decoding_Error("Inconsistent overlapping DTLS handshake fragment");
+         }
+      }
+
+      merged_start = std::min(merged_start, seg_start);
+      merged_end = std::max(merged_end, seg_end);
+      existing_bytes += it->second.size();
+      ++it;
+   }
+
+   std::vector<uint8_t> merged(merged_end - merged_start);
+   for(auto i = first_to_merge; i != it; ++i) {
+      std::copy(i->second.begin(), i->second.end(), merged.begin() + (i->first - merged_start));
+   }
+   std::copy(fragment, fragment + fragment_length, merged.begin() + (new_start - merged_start));
+   m_segments.erase(first_to_merge, it);
+   m_segments.emplace(merged_start, std::move(merged));
+
+   m_bytes_received += (merged_end - merged_start) - existing_bytes;
+}
+
+size_t Datagram_Handshake_IO::Handshake_Reassembly::charged_bytes_after_add(size_t fragment_length,
+                                                                            size_t fragment_offset) const {
+   // The early-out and merge-walk structure must match add_fragment above.
+   if(m_delivered || complete() || fragment_length == 0) {
+      return charged_bytes();
+   }
+
+   const size_t new_start = fragment_offset;
+   const size_t new_end = fragment_offset + fragment_length;
+
+   auto it = m_segments.lower_bound(new_start);
+   if(it != m_segments.begin()) {
+      auto prev = std::prev(it);
+      if(prev->first + prev->second.size() >= new_start) {
+         it = prev;
+      }
+   }
+
+   size_t merged_start = new_start;
+   size_t merged_end = new_end;
+   size_t existing_bytes = 0;
+   size_t merged_segments = 0;
+   while(it != m_segments.end() && it->first <= merged_end) {
+      merged_start = std::min(merged_start, it->first);
+      merged_end = std::max(merged_end, it->first + it->second.size());
+      existing_bytes += it->second.size();
+      ++merged_segments;
+      ++it;
+   }
+
+   const size_t merged_payload = m_bytes_received + (merged_end - merged_start) - existing_bytes;
+   const size_t segments_after = m_segments.size() - merged_segments + 1;
+   return merged_payload + SEGMENT_OVERHEAD * segments_after;
 }
 
 bool Datagram_Handshake_IO::Handshake_Reassembly::complete() const {
-   return (m_msg_type != Handshake_Type::None && m_bytes_received == m_msg_length);
+   // A delivered slot keeps its metadata but no longer has the bytes, so it
+   // must not claim to be complete: message() would fail its own invariant and
+   // have_more_data() would report trailing data that is not there. Reachable
+   // once message_seq wraps back onto a slot already delivered.
+   return (!m_delivered && m_msg_type != Handshake_Type::None && m_bytes_received == m_msg_length);
 }
 
 std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::Handshake_Reassembly::message() const {
@@ -614,7 +831,16 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::Handshake
       throw Internal_Error("Datagram_Handshake_IO - message not complete");
    }
 
-   return std::make_pair(m_msg_type, m_message);
+   if(m_msg_length == 0) {
+      return std::make_pair(m_msg_type, std::vector<uint8_t>());
+   }
+
+   // Eager merging guarantees a single segment spanning [0, m_msg_length)
+   // once bytes_received == m_msg_length.
+   BOTAN_ASSERT_NOMSG(m_segments.size() == 1);
+   const auto& only = *m_segments.begin();
+   BOTAN_ASSERT_NOMSG(only.first == 0 && only.second.size() == m_msg_length);
+   return std::make_pair(m_msg_type, only.second);
 }
 
 std::vector<uint8_t> Datagram_Handshake_IO::format_fragment(const uint8_t fragment[],
@@ -648,8 +874,14 @@ std::vector<uint8_t> Datagram_Handshake_IO::format_w_seq(const std::vector<uint8
 }
 
 std::vector<uint8_t> Datagram_Handshake_IO::format(const std::vector<uint8_t>& msg, Handshake_Type type) const {
-   BOTAN_ASSERT_NOMSG(m_in_message_seq > 0);
-   return format_w_seq(msg, type, m_in_message_seq - 1);
+   // Formats the message just delivered, so the guard is that one exists, not
+   // that the counter is non-zero. Those differ once m_in_message_seq wraps,
+   // which unauthenticated ClientHellos can drive: the cookie exchange is
+   // supposed to be stateless but its pending state survives, and each attempt
+   // advances the counter. The subtraction then wraps to 65535 of its own
+   // accord, which is the right sequence number for that message.
+   BOTAN_ASSERT_NOMSG(m_any_message_delivered);
+   return format_w_seq(msg, type, static_cast<uint16_t>(m_in_message_seq - 1));
 }
 
 std::vector<uint8_t> Datagram_Handshake_IO::send(const Handshake_Message& msg) {
