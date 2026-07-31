@@ -924,6 +924,27 @@ class TLS_Unit_Tests final : public Test {
          };
       }
 
+      // Policy::ciphersuite_list refuses both CBC+HMAC and _CCM_8 suites for
+      // DTLS, so those policies leave no DTLS ciphersuite to negotiate.
+      static std::vector<Botan::TLS::Protocol_Version> versions_for_policy(
+         std::vector<Test::Result>& results,
+         std::vector<Botan::TLS::Protocol_Version> versions,
+         const std::string& cipher_policy,
+         const std::string& mac_policy) {
+         const bool dtls_has_no_suite =
+            (mac_policy != "AEAD") || (cipher_policy != "NULL") || cipher_policy.find("CCM(8)") != std::string::npos;
+
+         if(dtls_has_no_suite) {
+            std::erase_if(versions, [](const auto& version) { return version.is_datagram_protocol(); });
+            Test::Result result("DTLS ciphersuite filtering");
+   #if defined(BOTAN_HAS_TLS_12)
+            result.test_sz_gte("At least one testable version remains", versions.size(), 1);
+   #endif
+            results.push_back(result);
+         }
+         return versions;
+      }
+
       static void enable_versions([[maybe_unused]] const std::shared_ptr<Test_Policy>& policy,
                                   [[maybe_unused]] std::span<const Botan::TLS::Protocol_Version> versions) {
          for(const auto& version : versions) {
@@ -1014,7 +1035,9 @@ class TLS_Unit_Tests final : public Test {
             policy->set("signature_methods", "IMPLICIT");
          }
 
-         return test_with_policy(test_descr, results, creds, legacy_versions(), policy, rng, client_auth);
+         const auto versions = versions_for_policy(results, legacy_versions(), cipher_policy, mac_policy);
+
+         return test_with_policy(test_descr, results, creds, versions, policy, rng, client_auth);
       }
 
       /**
@@ -1059,7 +1082,9 @@ class TLS_Unit_Tests final : public Test {
             policy->set(kv.first, kv.second);
          }
 
-         return test_with_policy(test_descr, results, creds, available_versions(), policy, rng, client_auth);
+         const auto versions = versions_for_policy(results, available_versions(), cipher_policy, mac_policy);
+
+         return test_with_policy(test_descr, results, creds, versions, policy, rng, client_auth);
       }
 
       void test_session_established_abort(std::vector<Test::Result>& results,

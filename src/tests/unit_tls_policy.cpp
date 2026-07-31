@@ -9,6 +9,8 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_TLS)
+   #include <botan/assert.h>
+   #include <botan/tls_ciphersuite.h>
    #include <botan/tls_exceptn.h>
    #include <botan/tls_policy.h>
 #endif
@@ -50,8 +52,70 @@ class TLS_Policy_Unit_Tests final : public Test {
          results.push_back(test_peer_key_acceptable_dh());
          results.push_back(test_key_exchange_groups_to_offer());
          results.push_back(test_require_extended_master_secret());
+         results.push_back(test_dtls_refuses_weak_ciphersuites());
 
          return results;
+      }
+
+      // RFC 9147 4.5.3 forbids _CCM_8 in DTLS absent forgery safeguards Botan does
+      // not implement, and CBC+HMAC keeps a residual timing channel that DTLS
+      // makes observable many times per association. Both are refused for DTLS
+      // while remaining available to stream TLS.
+      static Test::Result test_dtls_refuses_weak_ciphersuites() {
+         Test::Result result("TLS Policy DTLS ciphersuite refusals");
+
+         class Permissive_Policy final : public Botan::TLS::Policy {
+            public:
+               std::vector<std::string> allowed_ciphers() const override {
+                  return {"AES-256/CCM(8)", "AES-128/CCM(8)", "AES-256/CCM", "AES-128/CCM", "AES-128/GCM", "AES-128"};
+               }
+
+               std::vector<std::string> allowed_macs() const override { return {"AEAD", "SHA-256", "SHA-1"}; }
+
+               bool allow_tls12() const override { return true; }
+
+               bool allow_dtls12() const override { return true; }
+         };
+
+         const Permissive_Policy policy;
+
+         auto classify = [&](Botan::TLS::Protocol_Version version) {
+            size_t ccm_8 = 0;
+            size_t cbc = 0;
+            for(const auto id : policy.ciphersuite_list(version)) {
+               const auto suite = Botan::TLS::Ciphersuite::by_id(id);
+               if(!suite.has_value()) {
+                  continue;
+               }
+               if(suite->uses_short_authentication_tag()) {
+                  ccm_8 += 1;
+               }
+               if(suite->cbc_ciphersuite()) {
+                  cbc += 1;
+               }
+            }
+            return std::make_pair(ccm_8, cbc);
+         };
+
+         const auto [tls_ccm_8, tls_cbc] = classify(Botan::TLS::Protocol_Version::TLS_V12);
+         const auto [dtls_ccm_8, dtls_cbc] = classify(Botan::TLS::Protocol_Version::DTLS_V12);
+
+         // Guard against the test passing because the policy offered none at all.
+   #if defined(BOTAN_HAS_AEAD_CCM)
+         result.test_is_true("TLS 1.2 still offers CCM_8 suites", tls_ccm_8 > 0);
+   #endif
+   #if defined(BOTAN_HAS_TLS_CBC)
+         result.test_is_true("TLS 1.2 still offers CBC suites", tls_cbc > 0);
+   #endif
+         BOTAN_UNUSED(tls_ccm_8, tls_cbc);
+
+         result.test_sz_eq("DTLS 1.2 offers no CCM_8 suite", dtls_ccm_8, 0);
+         result.test_sz_eq("DTLS 1.2 offers no CBC suite", dtls_cbc, 0);
+         result.test_sz_gte("DTLS 1.2 still has usable suites",
+                            policy.ciphersuite_list(Botan::TLS::Protocol_Version::DTLS_V12).size(),
+                            1);
+
+         return result;
       }
 
       static Test::Result test_require_extended_master_secret() {

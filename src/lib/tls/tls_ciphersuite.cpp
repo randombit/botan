@@ -100,6 +100,11 @@ bool Ciphersuite::aead_ciphersuite() const {
    return (mac_algo() == "AEAD");
 }
 
+bool Ciphersuite::uses_short_authentication_tag() const {
+   // The only AEAD we currently support that has a short tag is CCM-8
+   return cipher_algo().ends_with("/CCM(8)");
+}
+
 bool Ciphersuite::signature_used() const {
    return auth_method() != Auth_Method::IMPLICIT;
 }
