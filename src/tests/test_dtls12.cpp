@@ -224,6 +224,14 @@ std::shared_ptr<DTLS_PSK_Policy> dtls_policy_with_cipher(std::string cipher, boo
    return std::make_shared<DTLS_PSK_Policy>(std::move(opts));
 }
 
+// So that a test's own find() call does not consume the ticket it is checking
+// for.
+std::shared_ptr<DTLS_PSK_Policy> dtls_policy_reusing_session_tickets() {
+   DTLS_Policy_Options opts;
+   opts.reuse_session_tickets = true;
+   return std::make_shared<DTLS_PSK_Policy>(std::move(opts));
+}
+
 std::unique_ptr<Botan::TLS::Client> make_dtls_client(const std::shared_ptr<Botan::TLS::Callbacks>& callbacks,
                                                      const std::shared_ptr<Botan::TLS::Session_Manager>& sessions,
                                                      const std::shared_ptr<Botan::Credentials_Manager>& creds,
@@ -2425,6 +2433,235 @@ class DTLS_Epoch0_Restart_Validation_Failure_Test : public Test {
 };
 
 BOTAN_REGISTER_TEST("tls", "tls_dtls_epoch0_restart_validation_failure", DTLS_Epoch0_Restart_Validation_Failure_Test);
+
+/*
+* RFC 5246 7.2.2 requires a fatally terminated connection to forget its keys and
+* to become unresumable, and 7.2.1 says data arriving after a closure alert is
+* ignored. These check the receive side of both, which previously only tore down
+* on locally generated alerts.
+*/
+class TLS_Closure_Teardown_Test : public Test {
+   private:
+      // Session_Manager::remove() reaches application storage and is not
+      // noexcept. A failure there must not be able to abort a fatal-alert
+      // teardown partway through.
+      class Throwing_Session_Manager final : public Botan::TLS::Session_Manager {
+         public:
+            explicit Throwing_Session_Manager(const std::shared_ptr<Botan::RandomNumberGenerator>& rng) :
+                  Session_Manager(rng) {}
+
+            void store(const Botan::TLS::Session& /*session*/, const Botan::TLS::Session_Handle& /*handle*/) override {}
+
+            size_t remove(const Botan::TLS::Session_Handle& /*handle*/) override {
+               throw Botan::Invalid_State("session storage is unavailable");
+            }
+
+            size_t remove_all() override { return 0; }
+
+         protected:
+            std::optional<Botan::TLS::Session> retrieve_one(const Botan::TLS::Session_Handle& /*handle*/) override {
+               return std::nullopt;
+            }
+
+            std::vector<Botan::TLS::Session_with_Handle> find_some(const Botan::TLS::Server_Information& /*info*/,
+                                                                   size_t /*max_sessions_hint*/) override {
+               return {};
+            }
+      };
+
+      Test::Result fatal_alert_teardown(const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         Test::Result result("received fatal alert destroys connection state");
+
+         DTLS_Association_Options opts;
+         opts.tolerate_fatal_alerts = true;
+         auto assoc = make_association(result, rng, opts);
+         if(!result.test_is_true("handshake completed", assoc->pump())) {
+            return result;
+         }
+
+         result.test_no_throw("exporter works while active",
+                              [&] { assoc->client->key_material_export("test label", "", 32); });
+
+         assoc->server->send_fatal_alert(Botan::TLS::Alert::InternalError);
+         result.test_is_true("server emitted the alert", !assoc->s2c.empty());
+
+         std::vector<uint8_t> alert;
+         std::swap(assoc->s2c, alert);
+         result.test_no_throw("client accepts the alert record",
+                              [&] { assoc->client->received_data(alert.data(), alert.size()); });
+
+         result.test_sz_eq("the application saw the alert", assoc->client_cb->alerts_received(), size_t(1));
+         result.test_is_true("client is closed", assoc->client->is_closed());
+         result.test_is_true("client is no longer active", !assoc->client->is_active());
+         result.test_is_true("handshake state is gone", !assoc->client->is_handshake_complete());
+
+         result.test_throws("exporter is refused after a fatal alert",
+                            [&] { assoc->client->key_material_export("test label", "", 32); });
+
+         return result;
+      }
+
+      // RFC 5246 7.2.2 makes a fatally terminated connection's secrets unusable,
+      // but a clean close_notify does not, and TLS 1.3 keeps its exporter
+      // working across one. Keying the refusal on is_closed() broke both.
+      Test::Result exporter_after_clean_close(const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         Test::Result result("exporter survives close_notify but not a fatal alert");
+
+         DTLS_Association_Options opts;
+         opts.tolerate_fatal_alerts = true;
+         auto assoc = make_association(result, rng, opts);
+         if(!result.test_is_true("handshake completed", assoc->pump())) {
+            return result;
+         }
+
+         assoc->client->close();
+         result.test_is_true("client is closed", assoc->client->is_closed());
+         result.test_no_throw("exporter still works after close_notify",
+                              [&] { assoc->client->key_material_export("test label", "", 32); });
+
+         // A fatal alert is different: the teardown clears the active state, so
+         // the exporter refuses on that ground too.
+         auto fatal = make_association(result, rng, opts);
+         if(!result.test_is_true("second handshake completed", fatal->pump())) {
+            return result;
+         }
+         fatal->server->send_fatal_alert(Botan::TLS::Alert::InternalError);
+         std::vector<uint8_t> alert;
+         std::swap(fatal->s2c, alert);
+         fatal->client->received_data(alert.data(), alert.size());
+         result.test_throws("exporter refuses after a fatal alert",
+                            [&] { fatal->client->key_material_export("test label", "", 32); });
+
+         return result;
+      }
+
+      // The teardown touches application storage. If that throws before the
+      // keys are destroyed, the channel is left half closed: inbound records
+      // dropped, but is_active() still true and the write side still usable.
+      Test::Result teardown_survives_a_throwing_session_manager(
+         const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         Test::Result result("fatal teardown completes despite a throwing session manager");
+
+         DTLS_Association_Options opts;
+         opts.client_sessions = std::make_shared<Throwing_Session_Manager>(rng);
+         opts.tolerate_fatal_alerts = true;
+         auto assoc = make_association(result, rng, opts);
+         if(!result.test_is_true("handshake completed", assoc->pump())) {
+            return result;
+         }
+
+         // Locally generated fatal alert, which invalidates cached sessions
+         // before the channel state is torn down.
+         result.test_no_throw("local fatal alert does not surface the storage failure",
+                              [&] { assoc->client->send_fatal_alert(Botan::TLS::Alert::InternalError); });
+
+         result.test_is_true("client is closed", assoc->client->is_closed());
+         result.test_is_true("client is not active", !assoc->client->is_active());
+         result.test_is_true("connection state is gone", !assoc->client->is_handshake_complete());
+         result.test_throws("writes are refused", [&] { assoc->client->send("nope"); });
+         result.test_throws("exporter is refused", [&] { assoc->client->key_material_export("test label", "", 32); });
+
+         // And the receive side, where the callback also runs before teardown.
+         DTLS_Association_Options received_opts;
+         received_opts.client_sessions = std::make_shared<Throwing_Session_Manager>(rng);
+         received_opts.tolerate_fatal_alerts = true;
+         auto received = make_association(result, rng, received_opts);
+         if(!result.test_is_true("second handshake completed", received->pump())) {
+            return result;
+         }
+         received->server->send_fatal_alert(Botan::TLS::Alert::InternalError);
+         std::vector<uint8_t> alert;
+         std::swap(received->s2c, alert);
+         result.test_no_throw("received fatal alert does not surface the storage failure",
+                              [&] { received->client->received_data(alert.data(), alert.size()); });
+         result.test_is_true("client is closed", received->client->is_closed());
+         result.test_is_true("connection state is gone", !received->client->is_handshake_complete());
+
+         return result;
+      }
+
+      Test::Result ticket_invalidated(const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         Test::Result result("received fatal alert invalidates a ticket-backed session");
+
+         DTLS_Association_Options opts;
+         opts.policy = dtls_policy_reusing_session_tickets();
+         opts.stateless_tickets = true;
+         opts.tolerate_fatal_alerts = true;
+         auto assoc = make_association(result, rng, opts);
+         if(!result.test_is_true("handshake completed", assoc->pump())) {
+            return result;
+         }
+
+         auto policy = DTLS_PSK_Policy();
+         const auto cached =
+            assoc->client_sessions->find(Botan::TLS::Server_Information("localhost"), *assoc->client_cb, policy);
+         if(!result.test_is_true("client cached a resumable session", !cached.empty())) {
+            return result;
+         }
+         // The ServerHello session ID, which is all the channel used to track,
+         // does not identify this session.
+         result.test_is_true("the session is ticket-backed, not ID-backed", cached[0].handle.is_ticket());
+
+         assoc->server->send_fatal_alert(Botan::TLS::Alert::InternalError);
+         std::vector<uint8_t> alert;
+         std::swap(assoc->s2c, alert);
+         assoc->client->received_data(alert.data(), alert.size());
+
+         const auto after =
+            assoc->client_sessions->find(Botan::TLS::Server_Information("localhost"), *assoc->client_cb, policy);
+         result.test_is_true("the ticket was removed from the client cache", after.empty());
+
+         return result;
+      }
+
+      Test::Result data_after_close_notify(const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         Test::Result result("data reordered behind a close_notify is ignored");
+
+         DTLS_Association_Options opts;
+         opts.tolerate_fatal_alerts = true;
+         auto assoc = make_association(result, rng, opts);
+         if(!result.test_is_true("handshake completed", assoc->pump())) {
+            return result;
+         }
+
+         // Send application data and then close, but hand the client the
+         // close_notify first. Reordering is ordinary for DTLS, and it must not
+         // turn a clean shutdown into a fatal error.
+         const std::string payload = "reordered";
+         assoc->server->send(payload);
+         std::vector<uint8_t> app_data;
+         std::swap(assoc->s2c, app_data);
+         result.test_is_true("app data record captured", !app_data.empty());
+
+         assoc->server->close();
+         std::vector<uint8_t> close_notify;
+         std::swap(assoc->s2c, close_notify);
+         result.test_is_true("close_notify record captured", !close_notify.empty());
+
+         result.test_no_throw("client accepts the close_notify",
+                              [&] { assoc->client->received_data(close_notify.data(), close_notify.size()); });
+         result.test_is_true("client is closed", assoc->client->is_closed());
+
+         result.test_no_throw("late application data is ignored, not rejected",
+                              [&] { assoc->client->received_data(app_data.data(), app_data.size()); });
+         result.test_is_true("the ignored data was not delivered", assoc->client_recv.empty());
+
+         return result;
+      }
+
+   public:
+      std::vector<Test::Result> run() override {
+         auto rng = Test::new_shared_rng(this->test_name());
+
+         return {fatal_alert_teardown(rng),
+                 ticket_invalidated(rng),
+                 data_after_close_notify(rng),
+                 exporter_after_clean_close(rng),
+                 teardown_survives_a_throwing_session_manager(rng)};
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls_closure_teardown", TLS_Closure_Teardown_Test);
 
 /*
 * A DTLS server must have a cookie secret, but a stream server has no use for

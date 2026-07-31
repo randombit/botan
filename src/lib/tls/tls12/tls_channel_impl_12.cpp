@@ -117,9 +117,52 @@ void Channel_Impl_12::reset_state() {
    m_active_state.reset();
    m_pending_state.reset();
    m_epochs_before_latest_renegotiation.reset();
+   m_resumption_handle.reset();
    m_readbuf.clear();
    m_write_cipher_states.clear();
    m_read_cipher_states.clear();
+}
+
+void Channel_Impl_12::note_resumption_handle(std::optional<Session_Handle> handle) {
+   m_resumption_handle = std::move(handle);
+}
+
+std::vector<Session_Handle> Channel_Impl_12::take_sessions_to_invalidate() {
+   // A ticket-backed session is not cached under the ServerHello session ID, so
+   // both handles have to be collected.
+   std::vector<Session_Handle> handles;
+
+   if(m_resumption_handle.has_value()) {
+      handles.push_back(m_resumption_handle.value());
+      m_resumption_handle.reset();
+   }
+
+   if(m_active_state.has_value()) {
+      const auto& sid = m_active_state->session_id();
+      if(!sid.empty()) {
+         handles.emplace_back(sid);
+      }
+   }
+
+   return handles;
+}
+
+void Channel_Impl_12::invalidate_sessions(const std::vector<Session_Handle>& handles) {
+   // RFC 5246 7.2.2: "Servers and clients MUST forget any session-identifiers,
+   // keys, and secrets associated with a failed connection.  Thus, any
+   // connection terminated with a fatal alert MUST NOT be resumed."
+   //
+   // Best effort, and deliberately last: remove() reaches application-supplied
+   // storage and can throw, and by then the keys are already gone. Letting a
+   // failed cache eviction abort the teardown would leave the channel usable
+   // after a security-fatal event, which is the worse of the two outcomes. A
+   // stateless ticket issuer has nothing to remove and cannot revoke what it
+   // already handed out.
+   for(const auto& handle : handles) {
+      try {
+         session_manager().remove(handle);
+      } catch(...) {}
+   }
 }
 
 void Channel_Impl_12::reset_active_association_state() {
@@ -480,6 +523,14 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
 
    try {
       while(input_size > 0) {
+         // A fatal alert destroys the cipher states, so nothing further can even
+         // be decrypted. Closure by close_notify is different: the responding
+         // close_notify still has to be read, so those records keep flowing
+         // through the loop and are filtered per record type below.
+         if(m_had_fatal_alert) {
+            return 0;
+         }
+
          size_t consumed = 0;
 
          auto get_epoch = [this](uint16_t epoch) { return read_cipher_state_epoch(epoch); };
@@ -559,6 +610,14 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
                   throw TLS_Exception(Alert::ProtocolVersion, "Received unexpected record version");
                }
             }
+         }
+
+         // RFC 5246 7.2.1: "Any data received after a closure alert is ignored."
+         // This is about a closure alert the peer sent us. A peer that keeps
+         // talking after *our* close_notify is a different case, kept as an
+         // error below; BoGo's Shutdown-Shim-ApplicationData requires it.
+         if(m_peer_closed_connection && record.type() != Record_Type::Alert) {
+            continue;
          }
 
          if(record.type() == Record_Type::Handshake || record.type() == Record_Type::ChangeCipherSpec) {
@@ -781,17 +840,41 @@ void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record) {
       m_pending_state.reset();
    }
 
-   callbacks().tls_alert(alert_msg);
+   std::vector<Session_Handle> invalidated;
 
-   // If the alert is fatal on an active session, prevent later resumptions
-   if(alert_msg.is_fatal() && m_active_state.has_value()) {
-      const auto& sid = m_active_state->session_id();
-      if(!sid.empty()) {
-         session_manager().remove(Session_Handle(sid));
+   if(alert_msg.is_fatal()) {
+      // RFC 5246 7.2.2: "Upon transmission or receipt of a fatal alert message,
+      // both parties immediately close the connection."
+      //
+      // Closing before the callback means application code called from there
+      // cannot keep using the connection or its exporter. The active state
+      // itself survives until the callback returns, so a handler can still
+      // report the peer identity that failed.
+      m_has_been_closed = true;
+      m_had_fatal_alert = true;
+      invalidated = take_sessions_to_invalidate();
+   }
+
+   // The callback is application code and may throw. It must not be able to
+   // leave the connection secrets alive after a fatal alert.
+   try {
+      callbacks().tls_alert(alert_msg);
+   } catch(...) {
+      if(alert_msg.is_fatal()) {
+         reset_state();
+         invalidate_sessions(invalidated);
       }
+      throw;
+   }
+
+   if(alert_msg.is_fatal()) {
+      reset_state();
+      invalidate_sessions(invalidated);
    }
 
    if(alert_msg.type() == Alert::CloseNotify) {
+      m_peer_closed_connection = true;
+
       // TLS 1.2 requires us to immediately react with our "close_notify",
       // the return value of the application's callback has no effect on that.
       callbacks().tls_peer_closed_connection();
@@ -871,13 +954,22 @@ void Channel_Impl_12::send_alert(const Alert& alert) {
    }
 
    if(alert.is_fatal()) {
-      if(m_active_state.has_value()) {
-         const auto& sid = m_active_state->session_id();
-         if(!sid.empty()) {
-            session_manager().remove(Session_Handle(sid));
-         }
-      }
+      // Order matters: the channel is made unusable and its secrets destroyed
+      // before any application-supplied storage is touched, so a throwing
+      // session manager cannot leave is_active() true with live keys.
+      m_had_fatal_alert = true;
+      m_has_been_closed = true;
+
+      // Alert::None is the local teardown that is never sent to the peer, used
+      // where the trigger was unauthenticated input or a local timeout. Evicting
+      // the resumption state on that basis would hand anyone able to reach the
+      // address the ability to destroy it, which is what keeping the teardown
+      // local exists to prevent.
+      const auto invalidated =
+         (alert.type() == Alert::None) ? std::vector<Session_Handle>() : take_sessions_to_invalidate();
+
       reset_state();
+      invalidate_sessions(invalidated);
    }
 
    if(alert.type() == Alert::CloseNotify || alert.is_fatal()) {
@@ -957,6 +1049,15 @@ SymmetricKey Channel_Impl_12::key_material_export(std::string_view label,
                                                   size_t length) const {
    if(!m_active_state.has_value()) {
       throw Invalid_State("Channel_Impl_12::key_material_export connection not active");
+   }
+
+   // Keyed on the fatal alert rather than on is_closed(): RFC 5246 7.2.2 makes
+   // a fatally terminated connection's secrets unusable, but a clean
+   // close_notify does not, and TLS 1.3 keeps its exporter working across one.
+   // Reachable only from a tls_alert callback, since the teardown that follows
+   // clears m_active_state and the check above then fires instead.
+   if(m_had_fatal_alert) {
+      throw Invalid_State("Channel_Impl_12::key_material_export connection had a fatal alert");
    }
 
    if(pending_state() != nullptr) {

@@ -798,6 +798,8 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          }
       }
 
+      note_resumption_handle(handle);
+
       activate_session();
    } else {
       throw Unexpected_Message("Unknown handshake message received");
