@@ -187,6 +187,13 @@ class Channel_Impl_12 : public Channel_Impl {
 
       void reset_active_association_state();
 
+      /**
+      * Record the resumption handle this connection was established or resumed
+      * under, so that a fatal alert can invalidate it. The ServerHello session
+      * ID does not identify a ticket-backed session.
+      */
+      void note_resumption_handle(std::optional<Session_Handle> handle);
+
       virtual void initiate_handshake(Handshake_State& state, bool force_full_renegotiation) = 0;
 
    private:
@@ -200,6 +207,13 @@ class Channel_Impl_12 : public Channel_Impl {
          Connection_Cipher_State* cipher_state, uint16_t epoch, Record_Type type, const uint8_t input[], size_t length);
 
       void reset_state();
+
+      // Collect the handles this connection's session is cached under, clearing
+      // the tracked one. Separate from the removal so that the caller can
+      // destroy the connection state first; see invalidate_sessions.
+      std::vector<Session_Handle> take_sessions_to_invalidate();
+
+      void invalidate_sessions(const std::vector<Session_Handle>& handles);
 
       Connection_Sequence_Numbers& sequence_numbers() const;
 
@@ -236,6 +250,9 @@ class Channel_Impl_12 : public Channel_Impl {
 
       /* pending handshake state (null when no handshake is in progress) */
       std::unique_ptr<Handshake_State> m_pending_state;
+
+      /* handle under which this connection's session is cached, if any */
+      std::optional<Session_Handle> m_resumption_handle;
 
       // Epochs in force when the pending handshake began. Whether either has
       // moved decides if an abandoned handshake can be discarded or has to
@@ -276,6 +293,14 @@ class Channel_Impl_12 : public Channel_Impl {
       secure_vector<uint8_t> m_record_buf;
 
       bool m_has_been_closed;
+
+      // Set when a fatal alert was sent or received, which unlike close_notify
+      // destroys the connection state outright.
+      bool m_had_fatal_alert = false;
+
+      // Set when the peer sent close_notify, as opposed to us closing. Only
+      // then is later data from the peer something to ignore rather than reject.
+      bool m_peer_closed_connection = false;
 
       std::optional<Active_Connection_State_12> m_active_state;
       // TODO(Botan4) remember to remove this when renegotiation support is dropped
