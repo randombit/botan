@@ -231,6 +231,10 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
                               Handshake_Type msg_type,
                               size_t msg_length);
 
+            // Set by the first fragment, which fixes the header metadata and
+            // (in Datagram_Handshake_IO) charges the reassembly budget.
+            bool initialized() const { return m_msg_type != Handshake_Type::None; }
+
             bool complete() const;
 
             uint16_t epoch() const { return m_epoch; }
@@ -239,9 +243,6 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
             size_t msg_length() const { return m_msg_length; }
 
             std::pair<Handshake_Type, std::vector<uint8_t>> message() const;
-
-            // Release the memory buffers; called after reassembly has completed
-            void release_buffers();
 
          private:
             Handshake_Type m_msg_type = Handshake_Type::None;
@@ -254,6 +255,21 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
             std::vector<uint8_t> m_received_mask;
             std::vector<uint8_t> m_message;
       };
+
+      // Add a fragment to a reassembly slot, charging the slot's declared
+      // length against the pending-reassembly budget at its first fragment.
+      // Returns false, adding nothing, if the budget ceiling would be exceeded.
+      bool charged_add_fragment(Handshake_Reassembly& reassembly,
+                                size_t ceiling,
+                                const uint8_t fragment[],
+                                size_t fragment_length,
+                                size_t fragment_offset,
+                                uint16_t epoch,
+                                Handshake_Type msg_type,
+                                size_t msg_length);
+
+      // Uncommit a reassembly buffer's bytes from the pending-reassembly budget.
+      void release_reassembly_bytes(const Handshake_Reassembly& reassembly);
 
       struct Message_Info final {
             Message_Info(uint16_t e, Handshake_Type mt, const std::vector<uint8_t>& msg) :
@@ -308,10 +324,20 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       uint16_t m_in_message_seq = 0;
       uint16_t m_out_message_seq = 0;
 
+      // Epoch of the first delivered incoming message; its presence also
+      // guards format(), which is not the same as m_in_message_seq being
+      // non-zero once that counter wraps.
+      std::optional<uint16_t> m_first_delivered_epoch;
+
+      // Set once m_in_message_seq wraps, after which all handshake input is
+      // refused; see process_handshake_fragment.
+      bool m_in_message_seq_wrapped = false;
+
       writer_fn m_send_hs;
       steady_clock_fn m_steady_clock_ms;
       uint16_t m_mtu;
       size_t m_max_handshake_msg_size;
+      size_t m_max_pending_reassembly;
 };
 
 }  // namespace Botan::TLS
