@@ -265,8 +265,10 @@ class Channel_Impl_12 : public Channel_Impl {
       /* handle under which this connection's session is cached, if any */
       std::optional<Session_Handle> m_resumption_handle;
 
-      // Epochs in force when the pending handshake began. Whether either has
-      // moved decides if an abandoned handshake can be discarded or has to
+      // Epochs in force when the pending handshake began. The read epoch says
+      // whether application data belongs to the old association or to the new,
+      // still-unauthenticated epoch; whether either epoch has moved decides
+      // whether an abandoned handshake can be discarded or has to
       // take the association with it.
       struct Epochs_Before_Latest_Renegotiation final {
             uint16_t read_epoch;

@@ -204,7 +204,6 @@
         "CipherNegotiation-5": "No support for cipher equivalence classes",
         "CipherNegotiation-8": "No support for cipher equivalence classes",
         "ALPNServer-SelectEmpty-*": "Botan treats empty ALPN from callback as a decline",
-        "AppDataAfterChangeCipherSpec-DTLS*": "BoringSSL DTLS drops out of order AppData, we reject",
         "Resume-Client-NoResume-TLS1-TLS11-TLS": "BoGo expects resumption attempt sends latest version",
         "Resume-Client-NoResume-TLS1-TLS12-TLS": "BoGo expects resumption attempt sends latest version",
         "Resume-Client-NoResume-TLS11-TLS12-TLS": "BoGo expects resumption attempt sends latest version",
