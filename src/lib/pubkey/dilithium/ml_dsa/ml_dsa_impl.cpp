@@ -32,6 +32,9 @@ Botan::DilithiumInternalKeypair decode_expanded_only(std::span<const uint8_t> ke
                                                      Botan::DilithiumConstants mode) {
    Botan::secure_vector<uint8_t> expanded;
    Botan::BER_Decoder(key_bits).decode(expanded, Botan::ASN1_Type::OctetString).verify_end();
+   if(expanded.size() != mode.private_key_bytes()) {
+      throw Botan::Decoding_Error("invalid length of ML-DSA (or Dilithium) expanded private key byte string");
+   }
    Botan::DilithiumInternalKeypair key_pair =
       Botan::Dilithium_Algos::decode_keypair(Botan::DilithiumSerializedPrivateKey(expanded), std::move(mode));
    return key_pair;
@@ -98,7 +101,7 @@ secure_vector<uint8_t> ML_DSA_Expanding_Keypair_Codec::encode_keypair(DilithiumI
 
 DilithiumInternalKeypair ML_DSA_Expanding_Keypair_Codec::decode_keypair(std::span<const uint8_t> private_key_bits,
                                                                         DilithiumConstants mode) const {
-   if(private_key_bits.size() == 32) {
+   if(private_key_bits.size() == DilithiumConstants::SEED_RANDOMNESS_BYTES) {
       // backwards compatibility (not RFC 9881 conforming) to raw seed format.
       return Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(private_key_bits), std::move(mode));
    }
@@ -112,11 +115,11 @@ DilithiumInternalKeypair ML_DSA_Expanding_Keypair_Codec::decode_keypair(std::spa
    // "seed-only" format from RFC 9881
    BER_Decoder ber_dec(private_key_bits);
    auto obj = ber_dec.peek_next_object();
-   if(obj.type() == ASN1_Type(0)) {
+   if(obj.type() == ASN1_Type(0) && obj.class_tag() == ASN1_Class::ContextSpecific) {
       return decode_seed_only(private_key_bits, mode);
    }
    // now it could still be "expanded-only" or "both"
-   if(obj.type() == ASN1_Type::OctetString) {
+   if(obj.type() == ASN1_Type::OctetString && obj.class_tag() == ASN1_Class::Universal) {
       return decode_expanded_only(private_key_bits, mode);
    }
    return decode_seed_plus_expanded(private_key_bits, mode);
