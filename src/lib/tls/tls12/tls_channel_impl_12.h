@@ -171,7 +171,10 @@ class Channel_Impl_12 : public Channel_Impl {
 
       /* secure renegotiation handling */
 
-      void secure_renegotiation_check(const Client_Hello_12* client_hello);
+      // `fresh_handshake_mode` makes the check ignore m_active_state and treat
+      // the new ClientHello as starting a fresh handshake. Used for DTLS
+      // epoch-0 restart, where the peer has lost association state.
+      void secure_renegotiation_check(const Client_Hello_12* client_hello, bool fresh_handshake_mode = false);
       void secure_renegotiation_check(const Server_Hello_12* server_hello);
 
       std::vector<uint8_t> secure_renegotiation_data_for_client_hello() const;
@@ -186,6 +189,14 @@ class Channel_Impl_12 : public Channel_Impl {
       Callbacks& callbacks() const { return *m_callbacks; }
 
       void reset_active_association_state();
+
+      // Drop a pending DTLS cookie exchange that a fresh ClientHello supersedes,
+      // so unvalidated ClientHellos cannot wedge the handshake sequence numbers.
+      void discard_stale_cookie_exchange_state(const secure_vector<uint8_t>& record, Record_Type record_type);
+
+      // Whether epoch-0 restart of an active DTLS association is permitted
+      // (only true for Server_Impl with a valid DTLS cookie secret)
+      virtual bool dtls_epoch0_restart_enabled() const { return false; }
 
       virtual void initiate_handshake(Handshake_State& state, bool force_full_renegotiation) = 0;
 

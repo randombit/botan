@@ -445,6 +445,57 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
                });
             }),
 
+      // A ClientHello is different: it begins a handshake, so nothing already in
+      // its slot belongs to the same one, and at epoch zero neither candidate is
+      // authenticated. Throwing would mean the ClientHello is what fails, so one
+      // planted fragment could deny every later handshake attempt. The newest
+      // ClientHello wins instead.
+      CHECK("a conflicting ClientHello supersedes an unauthenticated slot",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+
+               // A planted fragment claiming a large message, at a high offset.
+               const std::vector<uint8_t> planted = {0xAA};
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 65536, 0, 65535, planted));
+               result.test_is_true("planted fragment completes nothing",
+                                   fix.next_message().first == Handshake_Type::None);
+
+               // The genuine ClientHello declares a different length.
+               const auto genuine = make_payload(48);
+               result.test_no_throw("conflicting ClientHello is not an error",
+                                    [&] { fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 48, 0, 0, genuine)); });
+
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("genuine ClientHello delivered", type, Handshake_Type::ClientHello);
+               result.test_bin_eq("genuine body intact", bytes, genuine);
+            }),
+
+      // Same reasoning for a byte-level conflict within a matching header.
+      CHECK("a ClientHello with conflicting overlap supersedes the slot",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               const auto base = make_payload(50);
+               const std::vector<uint8_t> first(base.begin(), base.begin() + 30);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 50, 0, 0, first));
+
+               auto conflicting = first;
+               conflicting[10] ^= 0xFF;
+               result.test_no_throw("conflicting overlap is not an error", [&] {
+                  fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 50, 0, 0, conflicting));
+               });
+
+               // The newest bytes are what remain, so completing from them works.
+               const std::vector<uint8_t> rest(base.begin() + 30, base.end());
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 50, 0, 30, rest));
+
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("delivered after restart", type, Handshake_Type::ClientHello);
+               result.test_sz_eq("full length reassembled", bytes.size(), size_t(50));
+               result.test_bin_eq("first 30 bytes are the newer copy",
+                                  std::vector<uint8_t>(bytes.begin(), bytes.begin() + 30),
+                                  conflicting);
+            }),
+
       CHECK("consistent retransmits are tolerated",
             [&](Test::Result& result) {
                Datagram_IO_Fixture fix;

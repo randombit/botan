@@ -512,6 +512,12 @@ size_t Policy::dtls_maximum_timeout() const {
    return 60 * 1000;
 }
 
+// Generous next to the one or two a legitimate cookie-secret rotation can
+// produce, while still bounding a forged stream.
+size_t Policy::dtls_maximum_hello_verify_requests() const {
+   return 4;
+}
+
 std::optional<size_t> Policy::dtls_maximum_retransmissions() const {
    // Matches BoringSSL's DTLS1_MAX_TIMEOUTS.
    //

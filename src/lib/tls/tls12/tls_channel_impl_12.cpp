@@ -28,12 +28,11 @@ namespace Botan::TLS {
 namespace {
 
 bool is_new_dtls_association_client_hello(std::span<const uint8_t> msg_and_header, Record_Type record_type) {
-   constexpr size_t DTLS_HANDSHAKE_HEADER_SIZE = 12;
-
    // Every new DTLS handshake starts at message_seq 0. A cookie-bearing
    // ClientHello uses message_seq 1, so one arriving late belongs to the
    // previous handshake and must not replace the active association's state.
-   return record_type == Record_Type::Handshake && msg_and_header.size() >= DTLS_HANDSHAKE_HEADER_SIZE &&
+   return record_type == Record_Type::Handshake &&
+          msg_and_header.size() >= Datagram_Handshake_IO::DTLS_HANDSHAKE_HEADER_SIZE &&
           static_cast<Handshake_Type>(msg_and_header[0]) == Handshake_Type::ClientHello &&
           load_be(msg_and_header.subspan<4, 2>()) == 0;
 }
@@ -219,7 +218,8 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
                                                    initial_timeout_ms,
                                                    max_timeout_ms,
                                                    max_retransmissions,
-                                                   policy().maximum_handshake_message_size());
+                                                   policy().maximum_handshake_message_size(),
+                                                   m_is_server);
    } else {
       auto send_record_f = [this](Record_Type rec_type, const std::vector<uint8_t>& record) {
          send_record(rec_type, record);
@@ -440,7 +440,7 @@ void Channel_Impl_12::activate_session() {
 }
 
 size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
-   const bool allow_epoch0_restart = m_is_datagram && m_is_server && policy().allow_dtls_epoch0_restart();
+   const bool allow_epoch0_restart = m_is_datagram && dtls_epoch0_restart_enabled();
 
    const auto* input = data.data();
    auto input_size = data.size();
@@ -532,7 +532,16 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
             if(m_has_been_closed) {
                throw TLS_Exception(Alert::UnexpectedMessage, "Received handshake data after connection closure");
             }
-            process_handshake_ccs(m_record_buf, record.sequence(), record.type(), record.version(), epoch0_restart);
+            try {
+               process_handshake_ccs(m_record_buf, record.sequence(), record.type(), record.version(), epoch0_restart);
+            } catch(Exception&) {
+               // The restart ClientHello is unauthenticated until its cookie
+               // validates; if it fails, roll back the state.
+               if(!epoch0_restart) {
+                  throw;
+               }
+               clear_pending_handshake_state();
+            }
          } else if(record.type() == Record_Type::ApplicationData) {
             if(m_has_been_closed) {
                throw TLS_Exception(Alert::UnexpectedMessage, "Received application data after connection closure");
@@ -565,11 +574,65 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
    }
 }
 
+void Channel_Impl_12::discard_stale_cookie_exchange_state(const secure_vector<uint8_t>& record,
+                                                          Record_Type record_type) {
+   if(!m_is_datagram || !m_pending_state || record_type != Record_Type::Handshake ||
+      record.size() < Datagram_Handshake_IO::DTLS_HANDSHAKE_HEADER_SIZE) {
+      return;
+   }
+
+   if(static_cast<Handshake_Type>(record[0]) != Handshake_Type::ClientHello) {
+      return;
+   }
+
+   // Only the start of a ClientHello, at the message_seq every handshake begins
+   // with (RFC 6347 4.2.2).
+   const uint16_t message_seq = load_be<uint16_t>(&record[4], 0);
+   const size_t fragment_offset = make_uint32(0, record[6], record[7], record[8]);
+   const size_t msg_length = make_uint32(0, record[1], record[2], record[3]);
+
+   if(message_seq != 0 || fragment_offset != 0) {
+      return;
+   }
+
+   // A declared length this short cannot be a real ClientHello, so it cannot be
+   // the start of one. The same reasoning as the reassembly path's guard: a bare
+   // 12-byte header should not be able to discard a pending cookie exchange.
+   if(msg_length < Datagram_Handshake_IO::MIN_CLIENT_HELLO_SIZE) {
+      return;
+   }
+
+   auto* dtls_io = dynamic_cast<Datagram_Handshake_IO*>(&m_pending_state->handshake_io());
+   if(dtls_io == nullptr) {
+      return;
+   }
+
+   /*
+   The cookie exchange is meant to be stateless, but the pending state carrying
+   it survives across the HelloVerifyRequest. Anyone able to reach this address
+   can therefore advance its handshake sequence numbers with ClientHellos that
+   never validate, and every later handshake starting at message_seq 0 then
+   looks like a stale duplicate of that one. Two forged datagrams were enough to
+   lock a channel out permanently.
+
+   Discard the state instead, so a new cookie exchange begins. Restricted to a
+   pending state that has consumed a message but holds no accepted ClientHello,
+   ie one that has answered with a HelloVerifyRequest and is still waiting for
+   the cookie to come back. A handshake that got past the cookie check keeps its
+   state, so this cannot be used to reset one in progress.
+   */
+   if(dtls_io->in_message_seq() > 0 && m_pending_state->client_hello() == nullptr) {
+      clear_pending_handshake_state();
+   }
+}
+
 void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record,
                                             uint64_t record_sequence,
                                             Record_Type record_type,
                                             Protocol_Version record_version,
                                             bool epoch0_restart) {
+   discard_stale_cookie_exchange_state(record, record_type);
+
    const auto process_retransmitted_record = [&] {
       BOTAN_ASSERT(m_active_state.has_value(), "Have active DTLS association for retransmission");
       BOTAN_ASSERT_NONNULL(m_active_state->dtls_handshake_io());
@@ -777,18 +840,20 @@ void Channel_Impl_12::send_alert(const Alert& alert) {
    }
 }
 
-void Channel_Impl_12::secure_renegotiation_check(const Client_Hello_12* client_hello) {
+void Channel_Impl_12::secure_renegotiation_check(const Client_Hello_12* client_hello, bool fresh_handshake_mode) {
    BOTAN_ASSERT_NONNULL(client_hello);
    const bool secure_renegotiation = client_hello->secure_renegotiation();
 
-   if(m_active_state && m_active_state->client_supports_secure_renegotiation() != secure_renegotiation) {
+   if(!fresh_handshake_mode && m_active_state &&
+      m_active_state->client_supports_secure_renegotiation() != secure_renegotiation) {
       throw TLS_Exception(Alert::HandshakeFailure, "Client changed its mind about secure renegotiation");
    }
 
    if(secure_renegotiation) {
       const std::vector<uint8_t>& data = client_hello->renegotiation_info();
 
-      const auto expected = secure_renegotiation_data_for_client_hello();
+      const auto expected =
+         fresh_handshake_mode ? std::vector<uint8_t>() : secure_renegotiation_data_for_client_hello();
       if(!CT::is_equal<uint8_t>(data, expected).as_bool()) {
          throw TLS_Exception(Alert::HandshakeFailure, "Client sent bad values for secure renegotiation");
       }

@@ -88,11 +88,15 @@ class Server_Impl_12 final : public Channel_Impl_12 {
                                 Handshake_Type type,
                                 const std::vector<uint8_t>& contents);
 
-      void session_resume(Server_Handshake_State& pending_state, const Session_with_Handle& session_info);
+      void session_resume(Server_Handshake_State& pending_state,
+                          const Session_with_Handle& session_info,
+                          bool epoch0_restart);
 
-      void session_create(Server_Handshake_State& pending_state);
+      void session_create(Server_Handshake_State& pending_state, bool epoch0_restart);
 
       std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) override;
+
+      bool dtls_epoch0_restart_enabled() const override;
 
       std::shared_ptr<Credentials_Manager> m_creds;
       std::string m_next_protocol;

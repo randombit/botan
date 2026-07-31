@@ -124,6 +124,12 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       // Lambda pointing to clock function (normally TLS::Callbacks::tls_current_monotonic_clock_ms)
       using steady_clock_fn = std::function<uint64_t()>;
 
+      // client_version(2) + random(32) + session_id length(1) + cookie length(1)
+      // + cipher_suites length(2) + one suite(2) + compression_methods
+      // length(1) + one method(1). RFC 6347 4.2.1 gives the DTLS ClientHello
+      // layout. A shorter declared length cannot be a real ClientHello.
+      static constexpr size_t MIN_CLIENT_HELLO_SIZE = 42;
+
       // msg_type(1) + length(3) + message_seq(2) + fragment_offset(3) +
       // fragment_length(3)
       static constexpr size_t DTLS_HANDSHAKE_HEADER_SIZE = 12;
@@ -135,7 +141,8 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
                             uint64_t initial_timeout_ms,
                             uint64_t max_timeout_ms,
                             std::optional<size_t> max_retransmissions,
-                            size_t max_handshake_msg_size);
+                            size_t max_handshake_msg_size,
+                            bool is_server = false);
 
       Protocol_Version initial_record_version() const override;
 
@@ -170,6 +177,11 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       * requested. The terminal-flight sender retains reactive replay behavior.
       */
       void finalize_handshake(bool retransmit_terminal_flight);
+
+      // Sequence number of the next handshake message to be delivered upward.
+      // Zero until at least one full message has been reassembled and consumed
+      // by get_next_record.
+      uint16_t in_message_seq() const { return m_in_message_seq; }
 
    private:
       void add_record(const uint8_t record[],
@@ -212,6 +224,15 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       // Drop delivered reassembly slots, keeping the lowest as the epoch
       // sentinel the expecting_ccs branch of get_next_record reads.
       void prune_delivered_messages();
+
+      // Whether this is a server that has yet to send a flight. Since a
+      // HelloVerifyRequest is not retained as one, that is exactly the window
+      // before a cookie has validated. Restricted to servers because a client
+      // legitimately receives a HelloRequest into a fresh IO that has not sent
+      // anything either.
+      bool server_awaiting_first_flight() const {
+         return m_is_server && m_flights.size() == 1 && m_flights.front().empty();
+      }
 
       std::vector<uint8_t> format_fragment(const uint8_t fragment[],
                                            size_t fragment_len,
@@ -347,7 +368,10 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
 
       std::optional<std::pair<uint16_t, Handshake_Reassembly>> m_retransmitted_client_hello;
       bool m_awaiting_cookie_client_hello = false;
-      bool m_recreating_hello_verify_request = false;
+
+      // message_seq of the most recently delivered ClientHello, which is what a
+      // HelloVerifyRequest answering it must carry.
+      std::optional<uint16_t> m_last_client_hello_msg_seq;
       bool m_finished = false;
       bool m_retransmit_terminal_flight = false;
 
@@ -380,6 +404,7 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       uint16_t m_mtu;
       size_t m_max_handshake_msg_size;
       size_t m_max_pending_reassembly;
+      bool m_is_server;
 };
 
 }  // namespace Botan::TLS
