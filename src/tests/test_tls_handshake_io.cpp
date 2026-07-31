@@ -10,6 +10,7 @@
 
    #include <botan/tls_handshake_msg.h>
    #include <botan/tls_magic.h>
+   #include <botan/internal/fmt.h>
    #include <botan/internal/tls_handshake_io.h>
    #include <botan/internal/tls_seq_numbers.h>
 
@@ -26,16 +27,18 @@ class Datagram_IO_Fixture {
    public:
       explicit Datagram_IO_Fixture(uint64_t initial_timeout_ms = 1000,
                                    uint64_t max_timeout_ms = 60000,
-                                   std::optional<size_t> max_retransmissions = std::nullopt) :
+                                   std::optional<size_t> max_retransmissions = std::nullopt,
+                                   uint16_t mtu = 1500) :
             m_io(
-               [this](uint16_t, Record_Type type, const std::vector<uint8_t>&) {
+               [this](uint16_t, Record_Type type, const std::vector<uint8_t>& record) {
                   if(type == Record_Type::Handshake) {
                      ++m_handshake_records_sent;
+                     m_sent_record_sizes.push_back(record.size());
                   }
                },
                [this]() -> uint64_t { return m_clock_ms; },
                m_seqs,
-               1500,
+               mtu,
                initial_timeout_ms,
                max_timeout_ms,
                max_retransmissions,
@@ -49,11 +52,19 @@ class Datagram_IO_Fixture {
 
       size_t handshake_records_sent() const { return m_handshake_records_sent; }
 
-      void reset_send_counter() { m_handshake_records_sent = 0; }
+      // Sizes of the handshake payloads handed to the record layer, before
+      // record framing and cipher expansion are added.
+      const std::vector<size_t>& sent_record_sizes() const { return m_sent_record_sizes; }
+
+      void reset_send_counter() {
+         m_handshake_records_sent = 0;
+         m_sent_record_sizes.clear();
+      }
 
    private:
       uint64_t m_clock_ms = 0;
       size_t m_handshake_records_sent = 0;
+      std::vector<size_t> m_sent_record_sizes;
       Datagram_Sequence_Numbers m_seqs;
       Datagram_Handshake_IO m_io;
 };
@@ -74,6 +85,45 @@ class Stub_Handshake_Message final : public Botan::TLS::Handshake_Message {
 
 std::vector<Test::Result> dtls12_handshake_io_tests() {
    return {
+      CHECK(
+         "protected handshake records respect MTU",
+         [&](Test::Result& result) {
+            constexpr uint16_t mtu = 1232;           // the default policy value
+            constexpr size_t cipher_expansion = 48;  // matches NULL_WITH_SHA384 overhead
+            constexpr size_t dtls_header = Botan::TLS::DTLS_HEADER_SIZE;
+
+            size_t largest = 0;
+            size_t largest_body = 0;
+
+            for(size_t body = 900; body <= 1300; ++body) {
+               Datagram_IO_Fixture fix(1000, 60000, std::nullopt, mtu);
+               const Stub_Handshake_Message msg(Handshake_Type::Certificate, std::vector<uint8_t>(body, 0xAB));
+               fix.io().send_under_epoch(msg, 1);
+
+               for(const size_t fragment : fix.sent_record_sizes()) {
+                  const size_t on_the_wire = dtls_header + fragment + cipher_expansion;
+                  if(on_the_wire > largest) {
+                     largest = on_the_wire;
+                     largest_body = body;
+                  }
+               }
+            }
+
+            result.test_is_true("Something was sent", largest > 0);
+            result.test_sz_lte(Botan::fmt("Largest protected record ({} bytes from {} byte body) fits within MTU ({})",
+                                          largest,
+                                          largest_body,
+                                          mtu),
+                               largest,
+                               mtu);
+
+            // Epoch zero is unprotected, so the full MTU stays available there.
+            Datagram_IO_Fixture plaintext(1000, 60000, std::nullopt, mtu);
+            const Stub_Handshake_Message big(Handshake_Type::ClientHello, std::vector<uint8_t>(1150, 0xCD));
+            plaintext.io().send_under_epoch(big, 0);
+            result.test_sz_eq(
+               "unprotected message of that size is not fragmented", plaintext.sent_record_sizes().size(), size_t(1));
+         }),
 
       // Once the backoff saturates at m_max_timeout, the elapsed time since the
       // last write keeps growing, so a retransmit must re-anchor it. Otherwise
