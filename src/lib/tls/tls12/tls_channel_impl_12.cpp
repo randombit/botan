@@ -448,9 +448,11 @@ void Channel_Impl_12::activate_session() {
       map_remove_if(not_current_epoch, m_read_cipher_states);
    }
 
-   // In a full handshake the server sends the terminal flight; in an
-   // abbreviated handshake the client does. Both endpoints retain handshake
-   // sequence state, but only the terminal sender replays its outgoing flight.
+   // RFC 6347 4.2.4: "the node that transmits the last flight (the server in an
+   // ordinary handshake or the client in a resumed handshake) MUST respond to a
+   // retransmit of the peer's last flight with a retransmit of the last
+   // flight." Both endpoints retain handshake sequence state, but only that
+   // node replays its outgoing flight.
    const bool sent_terminal_dtls_flight = m_is_datagram && (m_is_server == (state.server_hello_done() != nullptr));
 
    if(m_is_datagram) {
