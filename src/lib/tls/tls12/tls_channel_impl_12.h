@@ -251,9 +251,24 @@ class Channel_Impl_12 : public Channel_Impl {
 
       void clear_pending_handshake_state();
 
+      /*
+      A read cipher state together with the point at which it stopped being the
+      current epoch, in Callbacks::tls_current_monotonic_clock_ms units, if it has.
+
+      The two are stored together deliberately. Epoch numbers are not unique for
+      the lifetime of the channel: reset_active_association_state() rewinds them,
+      so a DTLS epoch-0 restart produces a second epoch 1. A retirement time held
+      apart from the state it describes therefore outlives it and gets applied to
+      the reused epoch, expiring a brand new cipher state.
+      */
+      struct Retained_Read_Cipher_State final {
+            std::shared_ptr<Connection_Cipher_State> state;
+            std::optional<uint64_t> retired_at;
+      };
+
       /* cipher states for each epoch */
       std::map<uint16_t, std::shared_ptr<Connection_Cipher_State>> m_write_cipher_states;
-      std::map<uint16_t, std::shared_ptr<Connection_Cipher_State>> m_read_cipher_states;
+      std::map<uint16_t, Retained_Read_Cipher_State> m_read_cipher_states;
 
       /* I/O buffers */
       secure_vector<uint8_t> m_writebuf;

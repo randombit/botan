@@ -38,6 +38,32 @@ bool is_new_dtls_association_client_hello(std::span<const uint8_t> msg_and_heade
           load_be(msg_and_header.subspan<4, 2>()) == 0;
 }
 
+// Cap on the number of non-zero-epoch cipher states retained per direction.
+// The current epoch is in active use; one earlier epoch covers any in-flight
+// DTLS records sent immediately before a rekey. Epoch 0 is the pre-handshake
+// plaintext placeholder and is always retained.
+//
+// Note the logic in prune_epochs in tls_seq_numbers.h assumes this is exactly 2
+// so adjust that code if changing this.
+constexpr size_t TLS_RETAINED_CIPHERSTATES = 2;
+
+// The "default MSL specified for TCP" of RFC 6347 4.1; RFC 793 sets it to two
+// minutes. Bounds how long a retired DTLS read epoch stays usable.
+constexpr uint64_t TCP_MSL_MS = 2 * 60 * 1000;
+
+template <typename T>
+void prune_old_cipher_states(std::map<uint16_t, T>& states) {
+   // std::map iterates in ascending key order. Drop the lowest non-zero
+   // entries until at most TLS_RETAINED_CIPHERSTATES remain. The newly
+   // installed epoch is the highest key, so it is preserved.
+   size_t non_zero = states.size() - states.count(0);
+   auto it = states.lower_bound(1);
+   while(non_zero > TLS_RETAINED_CIPHERSTATES) {
+      it = states.erase(it);
+      --non_zero;
+   }
+}
+
 }  // namespace
 
 Channel_Impl_12::Channel_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
@@ -61,7 +87,7 @@ Channel_Impl_12::Channel_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
 
    /* epoch 0 is plaintext, thus null cipher state */
    m_write_cipher_states[0] = nullptr;
-   m_read_cipher_states[0] = nullptr;
+   m_read_cipher_states[0] = {};
 
    m_writebuf.reserve(reserved_io_buffer_size);
    m_readbuf.reserve(reserved_io_buffer_size);
@@ -84,7 +110,7 @@ void Channel_Impl_12::reset_active_association_state() {
    m_write_cipher_states.clear();
 
    m_write_cipher_states[0] = nullptr;
-   m_read_cipher_states[0] = nullptr;
+   m_read_cipher_states[0] = {};
 
    if(m_sequence_numbers) {
       m_sequence_numbers->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
@@ -103,7 +129,23 @@ std::shared_ptr<Connection_Cipher_State> Channel_Impl_12::read_cipher_state_epoc
    if(i == m_read_cipher_states.end()) {
       throw Internal_Error("TLS::Channel_Impl_12 No read cipherstate for epoch " + std::to_string(epoch));
    }
-   return i->second;
+
+   // RFC 6347 4.1: "In general, implementations SHOULD discard packets from
+   // earlier epochs, but if packet loss causes noticeable problems they MAY
+   // choose to retain keying material from previous epochs for up to the
+   // default MSL specified for TCP [TCP] to allow for packet reordering."
+   // read_dtls_record drops the record when this throws.
+   if(const auto& retired_at = i->second.retired_at; retired_at.has_value()) {
+      const auto now = callbacks().tls_current_monotonic_clock_ms();
+      const auto retired = retired_at.value();
+      BOTAN_ASSERT_NOMSG(now >= retired);
+      if(now - retired > TCP_MSL_MS) {
+         throw Invalid_State("TLS::Channel_Impl_12 Read cipherstate for epoch " + std::to_string(epoch) +
+                             " is past its retention window");
+      }
+   }
+
+   return i->second.state;
 }
 
 std::shared_ptr<Connection_Cipher_State> Channel_Impl_12::write_cipher_state_epoch(uint16_t epoch) const {
@@ -244,7 +286,8 @@ bool Channel_Impl_12::timeout_check() {
       }
    }
 
-   //FIXME: scan cipher suites and remove epochs older than 2*MSL
+   // Old cipher states are pruned at install time (see prune_old_cipher_states),
+   // so no periodic cleanup is needed here.
    return false;
 }
 
@@ -254,6 +297,14 @@ void Channel_Impl_12::renegotiate(bool force_full_renegotiation) {
    }
 
    if(m_active_state.has_value()) {
+      // A DTLS handshake consumes one read and one write epoch. Refuse here if
+      // either is spent, so the caller learns before the handshake tears the
+      // working association down partway through. See next_epoch().
+      if(m_is_datagram &&
+         (sequence_numbers().current_read_epoch() == 0xFFFF || sequence_numbers().current_write_epoch() == 0xFFFF)) {
+         throw Invalid_State("DTLS epoch counter exhausted, a new association is required");
+      }
+
       if(!force_full_renegotiation) {
          force_full_renegotiation = !policy().allow_resumption_for_renegotiation();
       }
@@ -292,7 +343,17 @@ void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side) {
       pending->session_keys(),
       pending->server_hello()->supports_encrypt_then_mac());
 
-   m_read_cipher_states[epoch] = read_state;
+   // The epoch we just left is retained only to absorb reordering, so start its
+   // clock now (see read_cipher_state_epoch). Epoch 0 is the plaintext
+   // placeholder and holds no keys, so the window does not apply to it.
+   if(m_is_datagram && epoch > 1) {
+      if(auto prev = m_read_cipher_states.find(static_cast<uint16_t>(epoch - 1)); prev != m_read_cipher_states.end()) {
+         prev->second.retired_at = callbacks().tls_current_monotonic_clock_ms();
+      }
+   }
+
+   m_read_cipher_states[epoch] = Retained_Read_Cipher_State{.state = read_state, .retired_at = std::nullopt};
+   prune_old_cipher_states(m_read_cipher_states);
 }
 
 void Channel_Impl_12::change_cipher_spec_writer(Connection_Side side) {
@@ -318,6 +379,7 @@ void Channel_Impl_12::change_cipher_spec_writer(Connection_Side side) {
                                                                 pending->server_hello()->supports_encrypt_then_mac());
 
    m_write_cipher_states[epoch] = write_state;
+   prune_old_cipher_states(m_write_cipher_states);
 }
 
 bool Channel_Impl_12::is_handshake_complete() const {

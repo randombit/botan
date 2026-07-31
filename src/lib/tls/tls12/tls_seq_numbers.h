@@ -98,13 +98,15 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers {
       }
 
       void new_read_cipher_state() override {
-         m_read_epoch++;
+         m_read_epoch = next_epoch(m_read_epoch);
          m_read_windows.try_emplace(m_read_epoch);
+         prune_epochs(m_read_windows, m_read_epoch);
       }
 
       void new_write_cipher_state() override {
-         m_write_epoch++;
+         m_write_epoch = next_epoch(m_write_epoch);
          m_write_seqs[m_write_epoch] = 0;
+         prune_epochs(m_write_seqs, m_write_epoch);
       }
 
       uint16_t current_read_epoch() const override { return m_read_epoch; }
@@ -113,7 +115,9 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers {
 
       uint64_t next_write_sequence(uint16_t epoch) override {
          auto i = m_write_seqs.find(epoch);
-         BOTAN_ASSERT(i != m_write_seqs.end(), "Found epoch");
+         if(i == m_write_seqs.end()) {
+            throw Invalid_State("DTLS epoch not found");
+         }
          if(i->second > 0x0000FFFFFFFFFFFF) {
             throw Invalid_State("DTLS write sequence number overflow");
          }
@@ -171,9 +175,11 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers {
                // We've received an old sequence but still within our window
                window.bits |= (static_cast<uint64_t>(1) << offset);
             } else {
-               // This occurs only if we have reset state (DTLS reconnection case)
+               // DTLS reconnection: recenter the window on this sequence. Bit 0
+               // marks the sequence itself as seen so an immediate replay is
+               // detected; the other branches above set this implicitly.
                window.highest = record_sequence;
-               window.bits = 0;
+               window.bits = 1;
             }
          }
       }
@@ -183,6 +189,41 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers {
             uint64_t highest = 0;
             uint64_t bits = 0;
       };
+
+      /*
+      * RFC 6347 4.1: "Similarly, implementations MUST NOT allow the epoch to
+      * wrap, but instead MUST establish a new association, terminating the old
+      * association as described in Section 4.2.8."
+      *
+      * Throwing leaves the counters untouched; the channel turns it into a
+      * fatal alert, which is the termination the requirement asks for.
+      */
+      static uint16_t next_epoch(uint16_t epoch) {
+         if(epoch == std::numeric_limits<uint16_t>::max()) {
+            throw Invalid_State("DTLS epoch counter exhausted");
+         }
+         return static_cast<uint16_t>(epoch + 1);
+      }
+
+      /*
+      * Only the current epoch and the one it replaced can still carry traffic;
+      *
+      * The behavior of this function must match the value of TLS_RETAINED_CIPHERSTATES
+      * in tls_channel_impl_12.cpp
+      *
+      * Epoch 0 is exempt: a HelloVerifyRequest is written under it
+      * however many times the association has rekeyed.
+      */
+      template <typename T>
+      static void prune_epochs(std::map<uint16_t, T>& epochs, uint16_t current) {
+         for(auto i = epochs.begin(); i != epochs.end();) {
+            if(i->first == 0 || i->first + 1 >= current) {
+               ++i;
+            } else {
+               i = epochs.erase(i);
+            }
+         }
+      }
 
       std::map<uint16_t, uint64_t> m_write_seqs;
       std::map<uint16_t, Replay_Window> m_read_windows;
