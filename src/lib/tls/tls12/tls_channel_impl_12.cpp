@@ -219,6 +219,15 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
    m_epochs_before_latest_renegotiation = Epochs_Before_Latest_Renegotiation{sequence_numbers().current_read_epoch(),
                                                                              sequence_numbers().current_write_epoch()};
 
+   // Floor for the pending handshake's reassembly: a delayed record from the
+   // handshake before it arrives under a lower epoch and would otherwise take
+   // the sequence slot the real message needs.
+   //
+   // Zero when epoch-zero restart is enabled, because there the peer
+   // legitimately begins again at epoch zero and the floor would reject it.
+   // That policy defaults to off, so a server ordinarily keeps the protection.
+   const uint16_t initial_epoch = dtls_epoch0_restart_enabled() ? 0 : m_epochs_before_latest_renegotiation->read_epoch;
+
    using namespace std::placeholders;
 
    std::unique_ptr<Handshake_IO> io;
@@ -240,7 +249,8 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
                                                    max_timeout_ms,
                                                    max_retransmissions,
                                                    policy().maximum_handshake_message_size(),
-                                                   m_is_server);
+                                                   m_is_server,
+                                                   initial_epoch);
    } else {
       auto send_record_f = [this](Record_Type rec_type, const std::vector<uint8_t>& record) {
          send_record(rec_type, record);

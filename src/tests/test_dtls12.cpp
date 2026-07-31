@@ -2208,6 +2208,69 @@ class DTLS_Reconnection_Test : public Test {
 
 BOTAN_REGISTER_TEST("tls", "tls_dtls_reconnect", DTLS_Reconnection_Test);
 
+// End-to-end coverage for DTLS 1.2 renegotiation in both directions. RFC 6347
+// 4.2.2 restarts msg_seq at 0 for each handshake, so the message that opens a
+// renegotiation looks like a stray retransmit to a naive sequence check.
+//
+// BoGo does not exercise DTLS renegotiation at all (BoringSSL itself does not
+// support it), so this test is the only regression coverage.
+class DTLS_Renegotiation_Test : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+         results.push_back(run_one("client-initiated", false));
+         results.push_back(run_one("server-initiated", true));
+         return results;
+      }
+
+   private:
+      Test::Result run_one(const std::string& subtest, bool server_initiates) {
+         Test::Result result("DTLS renegotiation: " + subtest);
+
+         auto rng = Test::new_shared_rng(this->test_name() + "/" + subtest);
+         auto assoc = make_association(result, rng);
+
+         const auto sessions_established = [&](size_t n) {
+            return assoc->client_cb->sessions_established() == n && assoc->server_cb->sessions_established() == n &&
+                   assoc->both_active();
+         };
+
+         result.test_is_true("initial DTLS handshake completed",
+                             assoc->pump_until([&] { return sessions_established(1); }));
+
+         // App data must flow before and after the renegotiation, under each
+         // set of keys in turn.
+         const std::vector<uint8_t> ping(8, 0xAA);
+         const std::vector<uint8_t> pong(8, 0x55);
+
+         const auto exchange_app_data = [&](const std::string& label) {
+            assoc->server_recv.clear();
+            assoc->client_recv.clear();
+            assoc->client->send(ping);
+            assoc->server->send(pong);
+            result.test_is_true(
+               label, assoc->pump_until([&] { return assoc->server_recv == ping && assoc->client_recv == pong; }));
+         };
+
+         exchange_app_data("app data exchanged before renegotiation");
+
+         // If the receiver drops the initiator because msg_seq is below the
+         // active handshake's, this pump exhausts its rounds with one session.
+         if(server_initiates) {
+            assoc->server->renegotiate();
+         } else {
+            assoc->client->renegotiate();
+         }
+         result.test_is_true("renegotiation completed", assoc->pump_until([&] { return sessions_established(2); }));
+
+         exchange_app_data("app data exchanged after renegotiation");
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls_dtls_renegotiate", DTLS_Renegotiation_Test);
+
 // One unauthenticated epoch-0 record, from anyone able to target the
 // connection's 5-tuple, must not be able to end an established association.
 class DTLS_Epoch0_Inject_Test : public Test {

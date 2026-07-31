@@ -169,13 +169,16 @@ Datagram_Handshake_IO::Datagram_Handshake_IO(writer_fn writer,
                                              uint64_t max_timeout_ms,
                                              std::optional<size_t> max_retransmissions,
                                              size_t max_handshake_msg_size,
-                                             bool is_server) :
+                                             bool is_server,
+                                             uint16_t initial_epoch) :
       m_seqs(seq),
       m_flights(1),
       m_flight_ccs(1),
       m_initial_timeout(initial_timeout_ms),
       m_max_timeout(max_timeout_ms),
       m_max_retransmissions(max_retransmissions),
+      m_initial_epoch(initial_epoch),
+      m_last_delivered_epoch(initial_epoch),
       m_send_hs(std::move(writer)),
       m_steady_clock_ms(std::move(steady_clock_ms)),
       m_mtu(mtu),
@@ -595,6 +598,32 @@ bool Datagram_Handshake_IO::process_handshake_fragment(const uint8_t fragment[],
       return false;
    }
 
+   // Epochs never decrease within a handshake, so a fragment carrying an
+   // older epoch belongs to an earlier handshake whose records were
+   // delayed into this one. Renegotiation restarts message_seq at zero,
+   // so without this such a record can occupy a slot the current
+   // handshake still needs.
+   if(epoch < m_last_delivered_epoch) {
+      return false;
+   }
+
+   /*
+   RFC 6347 4.2.2 keeps message_seq across a retransmission but gives the
+   record a new sequence number, and a rehandshake restarts message_seq at
+   zero. A delayed Finished from the previous handshake therefore arrives
+   with a plausible sequence number and, before this handshake's own
+   ChangeCipherSpec, the same epoch as its pre-CCS records, so neither the
+   sequence nor the epoch floor tells it apart. It cannot be genuine
+   though: a Finished is sent under the epoch its own ChangeCipherSpec
+   installed, which is always above the one this handshake began in.
+
+   Left in, it takes the slot the real Finished needs, and a complete slot
+   is never replaced, so verification fails against the wrong transcript.
+   */
+   if(msg_type == Handshake_Type::Finished && epoch <= m_initial_epoch) {
+      return false;
+   }
+
    /*
    RFC 6347 4.2.1 has the cookie exchange exist so that a server need not
    allocate state before the peer's reachability is proved. Until this
@@ -659,6 +688,17 @@ bool Datagram_Handshake_IO::process_handshake_fragment(const uint8_t fragment[],
    return false;
 }
 
+void Datagram_Handshake_IO::discard_stale_epoch_messages() {
+   for(auto i = m_messages.lower_bound(m_in_message_seq); i != m_messages.end();) {
+      if(i->second.epoch() < m_last_delivered_epoch) {
+         release_reassembly_bytes(i->second);
+         i = m_messages.erase(i);
+      } else {
+         ++i;
+      }
+   }
+}
+
 std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::get_next_record(bool expecting_ccs,
                                                                                        size_t /*max_message_size*/) {
    // Expecting a message means the last flight is concluded
@@ -721,6 +761,12 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::get_next_
    // as an epoch-0 sentinel; it only needs the metadata, not the buffers.
    release_reassembly_bytes(i->second);
    i->second.release_buffers();
+
+   const uint16_t delivered_epoch = i->second.epoch();
+   if(delivered_epoch > m_last_delivered_epoch) {
+      m_last_delivered_epoch = delivered_epoch;
+      discard_stale_epoch_messages();
+   }
 
    // May erase the entry i refers to, so nothing below may use it.
    prune_delivered_messages();
