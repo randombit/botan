@@ -76,6 +76,9 @@ class DTLS_Test_Callbacks final : public Botan::TLS::Callbacks {
          }
       }
 
+      // A DTLS server requires a non-empty peer identity to bind the cookie to.
+      std::string tls_peer_network_identity() override { return "test-peer"; }
+
       void tls_session_established(const Botan::TLS::Session_Summary& session) override {
          m_session_was_resumption = session.was_resumption();
          ++m_sessions_established;
@@ -879,6 +882,49 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      // RFC 6347 4.2.1: "Note to implementors: This may result in clients
+      // receiving multiple HelloVerifyRequest messages with different cookies.
+      // Clients SHOULD handle this by sending a new ClientHello with a cookie
+      // in response to the new HelloVerifyRequest."
+      static Test::Result test_rotated_cookie_secret_produces_fresh_hello_verify_request() {
+         Test::Result result("DTLS fresh HelloVerifyRequest after cookie secret rotation");
+
+         auto rng = Test::new_shared_rng("dtls-core-rotated-cookie-secret");
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
+
+         deliver(result, "client hello 1", c2s, server);
+         result.test_is_true("server sent HelloVerifyRequest",
+                             contains_dtls_handshake_type(s2c, Botan::TLS::Handshake_Type::HelloVerifyRequest));
+         deliver(result, "hello verify request", s2c, client);
+
+         // The cookie the client is about to present is now signed under a
+         // secret the server no longer uses.
+         assoc->creds->rotate_cookie_secret();
+
+         deliver(result, "client hello 2 carrying the stale cookie", c2s, server);
+         result.test_is_true("server re-challenges with a fresh HelloVerifyRequest",
+                             contains_dtls_handshake_type(s2c, Botan::TLS::Handshake_Type::HelloVerifyRequest));
+
+         deliver(result, "fresh hello verify request", s2c, client);
+         if(!result.test_is_true("client answers the fresh HelloVerifyRequest", !c2s.empty())) {
+            return result;
+         }
+
+         deliver(result, "client hello 3 carrying the rotated cookie", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+         deliver(result, "client final flight", c2s, server);
+         deliver(result, "server final flight", s2c, client);
+
+         result.test_is_true("client became active", client.is_active());
+         result.test_is_true("server became active", server.is_active());
+
+         return result;
+      }
+
       static Test::Result test_duplicate_server_flight_defers_to_timer() {
          Test::Result result("DTLS duplicate server flight defers replay to timer");
 
@@ -1475,6 +1521,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_retransmitted_epoch_transition_flight_includes_ccs(),
                  test_lost_hello_verify_request_retransmits(),
                  test_duplicate_hello_verify_request_is_tolerated(),
+                 test_rotated_cookie_secret_produces_fresh_hello_verify_request(),
                  test_partial_server_flight_does_not_advance_client(),
                  test_lost_server_flight_retransmits(),
                  test_duplicate_server_flight_defers_to_timer(),

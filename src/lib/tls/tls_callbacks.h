@@ -638,14 +638,16 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
       virtual std::optional<OCSP::Response> tls_parse_ocsp_response(const std::vector<uint8_t>& raw_response);
 
       /**
-       * Optional callback: return peer network identity
+       * Callback: return peer network identity
        *
        * There is no expected or specified format. The only expectation is this
        * function will return a unique value. For example returning the peer
        * host IP and port.
        *
-       * This is used to bind the DTLS cookie to a particular network identity.
-       * It is only called if the dtls-cookie-secret PSK is also defined.
+       * This is used to bind the DTLS cookie to a particular network identity
+       * (RFC 6347 4.2.1 / RFC 9147 11: "the cookie MUST depend on the client's
+       * address"). DTLS servers MUST override this to return a non-empty value;
+       * the default empty implementation will cause cookie verification to throw.
        */
       virtual std::string tls_peer_network_identity();
 

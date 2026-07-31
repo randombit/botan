@@ -515,6 +515,8 @@ class TLS_Handshake_Test final {
                return "test/1";
             }
 
+            std::string tls_peer_network_identity() override { return "test-peer"; }
+
             std::unique_ptr<Botan::PK_Key_Agreement_Key> tls_generate_ephemeral_key(
                const std::variant<Botan::TLS::Group_Params, Botan::DL_Group>& group,
                Botan::RandomNumberGenerator& rng) override {

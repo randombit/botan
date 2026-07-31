@@ -2149,6 +2149,8 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
          return g_now + m_clock_skew;
       }
 
+      std::string tls_peer_network_identity() override { return "bogo-shim-peer"; }
+
       void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& msg) override {
          if(msg.type() == Botan::TLS::Handshake_Type::HelloRetryRequest) {
             m_hello_retry_request = true;

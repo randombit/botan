@@ -30,9 +30,6 @@ class X509_Certificate;
 class X509_DN;
 class RandomNumberGenerator;
 
-class OctetString;
-typedef OctetString SymmetricKey;
-
 namespace OCSP {
 class Response;
 }
@@ -67,7 +64,7 @@ class BOTAN_UNSTABLE_API Hello_Verify_Request final : public Handshake_Message {
 
       Hello_Verify_Request(std::span<const uint8_t> client_hello_bits,
                            std::string_view client_identity,
-                           const SymmetricKey& secret_key);
+                           std::span<const uint8_t> cookie_secret);
 
    private:
       std::vector<uint8_t> m_cookie;
