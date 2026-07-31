@@ -22,6 +22,10 @@ namespace {
 
 constexpr size_t DTLS_HANDSHAKE_HEADER_SIZE = 12;
 
+// Bound on peer-cued flight replays when the policy leaves the timer's own retransmission
+// count unlimited. Matches the default value of Policy::dtls_maximum_retransmissions.
+constexpr size_t DEFAULT_PEER_REPLAY_BUDGET = 12;
+
 inline size_t load_be24(const uint8_t q[3]) {
    return make_uint32(0, q[0], q[1], q[2]);
 }
@@ -210,12 +214,58 @@ Protocol_Version Datagram_Handshake_IO::initial_record_version() const {
    return Protocol_Version::DTLS_V12;
 }
 
-void Datagram_Handshake_IO::retransmit_last_flight() {
+std::optional<size_t> Datagram_Handshake_IO::last_completed_flight_index() const {
    // m_flights keeps an empty trailing slot while waiting for the peer, so the
    // last completed flight is normally the one before it.
    const size_t flight_idx = (m_flights.size() == 1) ? 0 : (m_flights.size() - 2);
-   retransmit_flight(flight_idx);
-   m_last_write = m_steady_clock_ms();
+
+   // A peer can ask us to replay a flight before we have sent one, eg
+   // with a ClientHello whose message_seq is past the reassembly
+   // window. In that case there is nothing to retransmit.
+   if(m_flights[flight_idx].empty()) {
+      return std::nullopt;
+   }
+
+   return flight_idx;
+}
+
+void Datagram_Handshake_IO::retransmit_last_flight() {
+   if(const auto flight_idx = last_completed_flight_index()) {
+      retransmit_flight(*flight_idx);
+      m_last_write = m_steady_clock_ms();
+   }
+}
+
+/*
+* RFC 6347 4.2.4 gives the WAITING state a "read retransmit" transition that
+* replays our flight when the peer retransmits theirs.
+*
+* The cue for it is unauthenticated epoch-zero data, so this deliberately is not
+* retransmit_last_flight(). Re-anchoring m_last_write the way that does means a
+* peer cueing faster than the timeout keeps next_retransmission_timeout() from
+* ever expiring, so m_retransmit_count never advances and the handshake never
+* gives up; and unbounded, each cue draws a whole flight toward whatever address
+* the cue claims to come from.
+*
+* Spending the timer's own budget, reset by the same forward progress, caps a
+* continuously cueing peer at doubling the flight traffic the handshake would
+* emit anyway. Counting rather than rate limiting answers a legitimate peer's
+* retransmit promptly, which BoGo's DTLS-Retransmit-Client-Basic requires.
+*/
+void Datagram_Handshake_IO::replay_last_flight_for_peer() {
+   // An unset m_max_retransmissions means "retransmit on my own timer forever",
+   // which is a different proposition from "replay whenever an unauthenticated
+   // packet asks me to". This path is never unbounded, whatever the policy.
+   const size_t bound = m_max_retransmissions.value_or(DEFAULT_PEER_REPLAY_BUDGET);
+
+   if(m_peer_replay_count >= bound) {
+      return;
+   }
+
+   if(const auto flight_idx = last_completed_flight_index()) {
+      m_peer_replay_count += 1;
+      retransmit_flight(*flight_idx);
+   }
 }
 
 void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx) {
@@ -244,10 +294,6 @@ void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx) {
 }
 
 bool Datagram_Handshake_IO::have_more_data() const {
-   if(m_retransmitted_client_hello.has_value() && m_retransmitted_client_hello->second.complete()) {
-      return true;
-   }
-
    // Future or incomplete fragments remain buffered, but only a complete
    // next-in-sequence message is trailing handshake data.
    const auto next = m_messages.find(m_in_message_seq);
@@ -263,8 +309,9 @@ void Datagram_Handshake_IO::finalize_handshake(bool retransmit_terminal_flight) 
       m_flight_ccs.emplace_back();
    }
 
-   // RFC 6347 4.2.4 transitions directly to FINISHED after sending the
-   // terminal flight. Keep the flight for reactive replay when the peer
+   // RFC 6347 4.2.4: "Once the messages have been sent, the implementation
+   // then enters the FINISHED state if this is the last flight in the
+   // handshake." Keep the flight for reactive replay when the peer
    // retransmits, but do not arm a proactive retransmission timer.
    m_finished = true;
    m_retransmit_terminal_flight = retransmit_terminal_flight;
@@ -439,39 +486,41 @@ bool Datagram_Handshake_IO::process_previous_handshake_fragment(const uint8_t fr
          return false;
       }
 
+      // RFC 6347 4.2.4 makes the terminal-flight sender "respond to a retransmit
+      // of the peer's last flight with a retransmit of the last flight". Once our
+      // handshake has completed, the peer's last flight is the one ending in its
+      // Finished, never a ClientHello.
+      if(m_finished) {
+         return false;
+      }
+
       return reassemble_retransmitted_fragment(
          fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length, message_seq);
    }
 
-   // Other previous-flight messages request an immediate response only after
-   // the handshake IO was retained by an active association. While pending,
-   // the normal retransmission timer handles recovery.
+   // Only an association that has already completed its handshake answers a
+   // retransmitted peer flight here.
+   //
+   // RFC 6347 4.2.4 also gives the WAITING state a "read retransmit" exit that
+   // replays the outgoing flight immediately. Applying that while the handshake
+   // is still pending misfires under fragment reordering: a late duplicate
+   // fragment of an already-consumed message is indistinguishable from a
+   // genuine retransmission, so the peer sees a flight replay it never asked
+   // for (BoGo ReorderHandshakeFragments-Large). Recovery is left to the local
+   // retransmission timer, which costs latency but cannot desynchronise a peer
+   // that was not retransmitting. A retransmitted ClientHello is handled above,
+   // because the stateless cookie response has no timer of its own.
    if(!retransmitted_flight) {
       return false;
    }
 
-   if(msg_type == Handshake_Type::ServerHello) {
-      m_retransmitted_server_hello_complete = reassemble_retransmitted_fragment(
-         fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length, message_seq);
-
-      if(m_retransmitted_server_hello_complete && m_retransmitted_server_hello_done_complete) {
-         m_retransmitted_server_hello_complete = false;
-         m_retransmitted_server_hello_done_complete = false;
-         return true;
-      }
-   } else if(msg_type == Handshake_Type::ServerHelloDone && msg_length == 0) {
-      if(reassemble_retransmitted_fragment(
-            fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length, message_seq)) {
-         m_retransmitted_server_hello_done_complete = true;
-         if(m_retransmitted_server_hello_complete) {
-            m_retransmitted_server_hello_complete = false;
-            m_retransmitted_server_hello_done_complete = false;
-            return true;
-         }
-      }
-   } else if(msg_type == Handshake_Type::Finished &&
-             reassemble_retransmitted_fragment(
-                fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length, message_seq)) {
+   // A genuine Finished follows a ChangeCipherSpec, so it is authenticated
+   // under a non-zero epoch. An unauthenticated epoch-zero record claiming to
+   // be one is spoofable off-path, and must not clear a ChangeCipherSpec we
+   // have legitimately saved to pair against the real Finished.
+   if(msg_type == Handshake_Type::Finished && epoch > 0 &&
+      reassemble_retransmitted_fragment(
+         fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length, message_seq)) {
       // A final-flight retransmission includes CCS, but UDP may deliver its
       // records in either order. Wait until both have been observed.
       if(m_retransmitted_ccs_epoch == epoch) {
@@ -479,6 +528,10 @@ bool Datagram_Handshake_IO::process_previous_handshake_fragment(const uint8_t fr
          return true;
       }
 
+      // Only the matching pair means anything, so a half seen for some other
+      // epoch is stale. Leaving it set would keep this armed indefinitely for an
+      // epoch an attacker chose, since epoch-zero CCS records are unauthenticated.
+      m_retransmitted_ccs_epoch.reset();
       m_retransmitted_finished_epoch = epoch;
    }
 
@@ -491,6 +544,21 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
                                        uint64_t record_sequence,
                                        bool retransmitted_flight) {
    const uint16_t epoch = static_cast<uint16_t>(record_sequence >> 48);
+
+   // A record under a non-zero epoch authenticated at the record layer, so the
+   // peer is live and is who it claims to be. Restore the peer-cued replay
+   // budget: RFC 6347 4.2.4 requires the terminal-flight sender to answer a
+   // retransmit of the peer's last flight for as long as the association lasts,
+   // and the retained IO never sends a new flight to reset the count otherwise.
+   //
+   // Only once our handshake has finished, though. While it is still pending,
+   // forward progress already resets the count in send_under_epoch, so
+   // restoring it here as well would let a peer alternate a cheap out-of-window
+   // protected record with an epoch-zero cue to draw the pending flight without
+   // bound.
+   if(epoch > 0 && m_finished) {
+      m_peer_replay_count = 0;
+   }
 
    if(record_type == Record_Type::ChangeCipherSpec) {
       if(record_len != 1 || record[0] != 1) {
@@ -507,9 +575,10 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
          if(m_retransmitted_finished_epoch == finished_epoch) {
             m_retransmitted_finished_epoch.reset();
             if(m_retransmit_terminal_flight) {
-               retransmit_last_flight();
+               replay_last_flight_for_peer();
             }
          } else {
+            m_retransmitted_finished_epoch.reset();
             m_retransmitted_ccs_epoch = finished_epoch;
          }
       }
@@ -614,7 +683,7 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
    }
 
    if(retransmit_response && (!m_finished || m_retransmit_terminal_flight)) {
-      retransmit_last_flight();
+      replay_last_flight_for_peer();
    }
 }
 
@@ -797,7 +866,7 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_under_epoch(const Handshake_Mes
    }
 
    m_flights.rbegin()->push_back(m_out_message_seq);
-   m_flight_data.emplace(m_out_message_seq, Message_Info(epoch, msg_type, msg_bits));
+   m_flight_data.insert_or_assign(m_out_message_seq, Message_Info(epoch, msg_type, msg_bits));
 
    m_out_message_seq += 1;
    m_last_write = m_steady_clock_ms();
@@ -805,6 +874,7 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_under_epoch(const Handshake_Mes
    // Sending a new flight is forward progress: reset the give-up counter so the
    // retransmission budget applies per flight, not across the whole handshake.
    m_retransmit_count = 0;
+   m_peer_replay_count = 0;
 
    return send_message(m_out_message_seq - 1, epoch, msg_type, msg_bits);
 }

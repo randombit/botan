@@ -1608,14 +1608,23 @@ class DTLS_Core_Regression_Tests final : public Test {
          // A delayed retransmission of the cookie-bearing ClientHello has
          // message_seq 1. It belongs to the completed handshake, whereas a
          // genuinely new association starts at message_seq 0.
+         //
+         // It draws no response. Once the server has completed, the peer's last
+         // flight is the one ending in its Finished, so a peer still
+         // retransmitting a ClientHello cannot be asking for the final flight.
+         // Answering would also let a replayed epoch-zero record pull a flight
+         // out of the server without limit.
          deliver_copy(result, "stale client hello 2", cookie_client_hello, server);
          result.test_is_true("server remains active", server.is_active());
-         result.test_is_true("stale ClientHello replays the final server flight", !s2c.empty());
-         s2c.clear();
+         result.test_is_true("stale ClientHello draws no response", s2c.empty());
 
+         // Recovery still works: the client's own retransmitted final flight is
+         // what asks for the server's final flight, and it is authenticated.
          fire_retransmission_timer(result, *assoc->client_cb, client, c2s);
          deliver(result, "retransmitted client final flight", c2s, server);
          result.test_is_true("client final flight still receives a response", !s2c.empty());
+         deliver(result, "server final flight", s2c, client);
+         result.test_is_true("client became active", client.is_active());
 
          return result;
       }

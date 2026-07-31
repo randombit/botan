@@ -205,6 +205,11 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
 
       void retransmit_flight(size_t flight);
       void retransmit_last_flight();
+      void replay_last_flight_for_peer();
+
+      // Index of the last completed outgoing flight, or nullopt when no
+      // flight has been sent yet.
+      std::optional<size_t> last_completed_flight_index() const;
 
       std::vector<uint8_t> format_fragment(const uint8_t fragment[],
                                            size_t fragment_len,
@@ -290,8 +295,6 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       std::optional<uint16_t> m_retransmitted_ccs_epoch;
       std::optional<uint16_t> m_retransmitted_finished_epoch;
       std::map<Handshake_Type, std::pair<uint16_t, Handshake_Reassembly>> m_retransmitted_messages;
-      bool m_retransmitted_server_hello_complete = false;
-      bool m_retransmitted_server_hello_done_complete = false;
       std::vector<std::vector<uint16_t>> m_flights;
       // Each entry records where in the corresponding flight a CCS was sent
       // and the epoch under which it was transmitted.
@@ -318,6 +321,11 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       // A caller's clock may legitimately read zero, so the absence of a write
       // cannot be spelled as a reserved timestamp.
       std::optional<uint64_t> m_last_write;
+
+      // Flight replays the peer has cued since the current flight was sent.
+      // Kept apart from the timer's own budget because the cue for it is
+      // unauthenticated. See replay_last_flight_for_peer.
+      size_t m_peer_replay_count = 0;
 
       uint64_t m_next_timeout = 0;
 

@@ -78,6 +78,19 @@ class Datagram_IO_Fixture {
          m_io.add_record(record.data(), record.size(), Record_Type::Handshake, record_seq);
       }
 
+      // Retransmitted-flight variants reach the terminal-flight replay path a
+      // finished association uses to answer a peer's retransmitted last flight.
+      void feed_retransmitted(std::span<const uint8_t> record, uint16_t epoch = 0) {
+         const uint64_t record_seq = static_cast<uint64_t>(epoch) << 48;
+         m_io.add_retransmitted_record(record.data(), record.size(), Record_Type::Handshake, record_seq);
+      }
+
+      void feed_ccs_retransmitted(uint16_t epoch) {
+         const uint64_t record_seq = static_cast<uint64_t>(epoch) << 48;
+         const uint8_t ccs = 1;
+         m_io.add_retransmitted_record(&ccs, 1, Record_Type::ChangeCipherSpec, record_seq);
+      }
+
       std::pair<Handshake_Type, std::vector<uint8_t>> next_message() {
          return m_io.get_next_record(false, k_max_handshake_msg_size);
       }
@@ -607,6 +620,52 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
                                   [&] { fix.io().timeout_check(); });
             }),
 
+      // An unset dtls_maximum_retransmissions() means "retransmit on my own
+      // timer forever", which is a different proposition from "replay whenever an
+      // unauthenticated packet asks me to". The peer-cued budget must stay
+      // bounded whatever the timer policy says.
+      CHECK("peer-cued replays stay bounded when the timer budget is unlimited",
+            [&](Test::Result& result) {
+               constexpr std::optional<size_t> unlimited = std::nullopt;
+               Datagram_IO_Fixture fix(1000, 60000, unlimited);
+
+               fix.advance_clock_ms(1);
+               const auto real_ch = dtls_hs_record(Handshake_Type::ClientHello, 64, 0, 0, make_payload(64));
+               fix.feed(real_ch);
+               result.test_is_true("priming ClientHello delivered",
+                                   fix.next_message().first == Handshake_Type::ClientHello);
+
+               const Stub_Handshake_Message sh(Handshake_Type::ServerHello, std::vector<uint8_t>(64, 0x11));
+               fix.io().send(sh);
+               fix.reset_send_counter();
+
+               const auto cue = dtls_hs_record(Handshake_Type::ClientHello, 42, 0, 0, std::vector<uint8_t>(42, 0x00));
+
+               for(int i = 0; i < 200; ++i) {
+                  fix.feed(cue);
+               }
+
+               // With no timer budget to spend, the replay bound falls back to the
+               // policy default rather than becoming unlimited.
+               const size_t fallback_budget = Botan::TLS::Policy().dtls_maximum_retransmissions().value();
+               result.test_sz_eq(
+                  "replays bounded despite the unlimited timer", fix.handshake_records_sent(), fallback_budget);
+
+               // While the handshake is still pending, an out-of-window
+               // protected record is not forward progress and must not restore
+               // the budget: otherwise a peer could alternate one with an
+               // epoch-zero cue to draw the flight without bound. Genuine
+               // progress resets the count through send_under_epoch instead.
+               const auto out_of_window = dtls_hs_record(Handshake_Type::Certificate, 4, 1000, 0, make_payload(4));
+               fix.feed(out_of_window, 1);
+               fix.reset_send_counter();
+
+               fix.feed(cue);
+               result.test_sz_eq("an out-of-window protected record does not restore the pending budget",
+                                 fix.handshake_records_sent(),
+                                 size_t(0));
+            }),
+
       // message_seq is 16 bits, and no legitimate handshake delivers 65536
       // messages. Once the counter wraps all further handshake input is
       // refused: a fresh message at a wrapped sequence number must not be
@@ -643,6 +702,148 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
                   const uint16_t msg_seq = (static_cast<uint16_t>(formatted[4]) << 8) | formatted[5];
                   result.test_sz_eq("it names the wrapped sequence number", msg_seq, size_t(0xFFFF));
                }
+            }),
+
+      // RFC 6347 4.2.4 has us replay our flight when the peer retransmits
+      // theirs, but the cue is unauthenticated epoch-zero data, so it must not
+      // be able to draw out a flight per datagram.
+      CHECK("peer-cued flight replays are bounded",
+            [&](Test::Result& result) {
+               constexpr uint64_t initial_timeout = 1000;
+               constexpr size_t max_replays = 3;
+               Datagram_IO_Fixture fix(initial_timeout, 60000, max_replays);
+
+               fix.advance_clock_ms(1);
+
+               // Deliver and consume a ClientHello so a msg_seq 0 record is
+               // afterwards a fragment of a previous message, then send a flight.
+               const auto real_ch = dtls_hs_record(Handshake_Type::ClientHello, 64, 0, 0, make_payload(64));
+               fix.feed(real_ch);
+               result.test_is_true("priming ClientHello delivered",
+                                   fix.next_message().first == Handshake_Type::ClientHello);
+
+               const Stub_Handshake_Message sh(Handshake_Type::ServerHello, std::vector<uint8_t>(64, 0x11));
+               fix.io().send(sh);
+               fix.reset_send_counter();
+
+               // The cue: a bare ClientHello whose body is never parsed.
+               const auto cue = dtls_hs_record(Handshake_Type::ClientHello, 42, 0, 0, std::vector<uint8_t>(42, 0x00));
+
+               // A legitimate peer's retransmit is answered at once, up to the
+               // per-flight budget. Past it the cues draw nothing.
+               for(size_t i = 0; i < max_replays; ++i) {
+                  fix.feed(cue);
+               }
+               result.test_sz_eq(
+                  "cues within the budget each replay the flight", fix.handshake_records_sent(), max_replays);
+
+               fix.reset_send_counter();
+               for(int i = 0; i < 20; ++i) {
+                  fix.feed(cue);
+               }
+               result.test_sz_eq("cues past the budget draw nothing", fix.handshake_records_sent(), size_t(0));
+
+               // Forward progress restores it, as it does for the timer. The
+               // flight now holds two messages, so a replay emits two records.
+               const Stub_Handshake_Message next(Handshake_Type::Certificate, std::vector<uint8_t>(64, 0x33));
+               fix.io().send(next);
+               fix.reset_send_counter();
+               fix.feed(cue);
+               result.test_sz_eq("a new flight restores the replay budget", fix.handshake_records_sent(), size_t(2));
+            }),
+
+      // A peer cueing faster than the timeout must not re-anchor the timer:
+      // that keeps it from ever expiring, so the handshake never gives up.
+      CHECK("peer cues do not hold off the give-up timer",
+            [&](Test::Result& result) {
+               constexpr uint64_t initial_timeout = 1000;
+               Datagram_IO_Fixture fix(initial_timeout, 60000, 3);
+
+               fix.advance_clock_ms(1);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 64, 0, 0, make_payload(64)));
+               fix.next_message();
+
+               const Stub_Handshake_Message sh(Handshake_Type::ServerHello, std::vector<uint8_t>(64, 0x22));
+               fix.io().send(sh);
+
+               const auto cue = dtls_hs_record(Handshake_Type::ClientHello, 42, 0, 0, std::vector<uint8_t>(42, 0x00));
+
+               bool gave_up = false;
+               for(int i = 0; i < 200 && !gave_up; ++i) {
+                  fix.advance_clock_ms(initial_timeout - 100);
+                  fix.feed(cue);
+                  try {
+                     fix.io().timeout_check();
+                  } catch(const Botan::TLS::TLS_Exception&) {
+                     gave_up = true;
+                  }
+               }
+               result.test_is_true("the handshake still gives up while being cued", gave_up);
+            }),
+
+      // A finished association sends no new flights, so an authenticated record
+      // is what restores its peer-cued budget. RFC 6347 4.2.4 requires answering
+      // a retransmit of the peer's last flight for as long as the association
+      // lasts, and a genuine retransmit carries the peer's authenticated
+      // Finished, so it keeps being answered past the bare-cue budget.
+      CHECK("a finished association keeps answering authenticated peer retransmits",
+            [&](Test::Result& result) {
+               constexpr size_t max_replays = 2;
+               Datagram_IO_Fixture fix(1000, 60000, max_replays);
+
+               fix.advance_clock_ms(1);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 64, 0, 0, make_payload(64)));
+               fix.next_message();
+
+               const Stub_Handshake_Message sh(Handshake_Type::ServerHello, std::vector<uint8_t>(64, 0x11));
+               fix.io().send(sh);
+               fix.io().finalize_handshake(true);
+               fix.reset_send_counter();
+
+               // A genuine terminal-flight retransmit is a ChangeCipherSpec under
+               // the old epoch plus an authenticated Finished under the new one.
+               const auto finished = dtls_hs_record(Handshake_Type::Finished, 12, 0, 0, std::vector<uint8_t>(12, 0x00));
+
+               for(int i = 0; i < 4 * static_cast<int>(max_replays); ++i) {
+                  fix.reset_send_counter();
+                  fix.feed_ccs_retransmitted(0);
+                  fix.feed_retransmitted(finished, 1);
+                  result.test_sz_eq(
+                     "each authenticated retransmit is answered", fix.handshake_records_sent(), size_t(1));
+               }
+            }),
+
+      // The final-flight cue pairs an unauthenticated ChangeCipherSpec with the
+      // peer's authenticated Finished. A spoofed epoch-zero Finished must not be
+      // able to discard a legitimately saved ChangeCipherSpec and suppress the
+      // recovery the genuine Finished would otherwise complete.
+      CHECK("an unauthenticated epoch-zero Finished does not clear a saved CCS",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix(1000, 60000, 12);
+
+               fix.advance_clock_ms(1);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 64, 0, 0, make_payload(64)));
+               fix.next_message();
+
+               const Stub_Handshake_Message sh(Handshake_Type::ServerHello, std::vector<uint8_t>(64, 0x11));
+               fix.io().send(sh);
+               fix.io().finalize_handshake(true);
+               fix.reset_send_counter();
+
+               // The genuine ChangeCipherSpec of the peer's retransmit arrives.
+               fix.feed_ccs_retransmitted(0);
+
+               // A spoofed epoch-zero Finished is discarded rather than clearing
+               // the saved ChangeCipherSpec.
+               const auto forged = dtls_hs_record(Handshake_Type::Finished, 12, 0, 0, std::vector<uint8_t>(12, 0x00));
+               fix.feed_retransmitted(forged, 0);
+               result.test_sz_eq("the spoofed Finished draws nothing", fix.handshake_records_sent(), size_t(0));
+
+               // The genuine authenticated Finished still completes the pair.
+               const auto real = dtls_hs_record(Handshake_Type::Finished, 12, 0, 0, std::vector<uint8_t>(12, 0x11));
+               fix.feed_retransmitted(real, 1);
+               result.test_sz_eq(
+                  "the authenticated Finished completes recovery", fix.handshake_records_sent(), size_t(1));
             }),
 
       // A caller's monotonic clock may legitimately read zero, so sending the
@@ -727,7 +928,6 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
                seqs.new_read_cipher_state();  // epoch 3
                result.test_is_true("window released two rekeys later", !seqs.already_seen(epoch1_seq));
             }),
-
    };
 }
 
