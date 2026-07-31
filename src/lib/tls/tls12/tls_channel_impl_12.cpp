@@ -260,6 +260,10 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
       }
    }
 
+   // Read epochs at or below this one belong to the association already in place,
+   // so application data under them stays deliverable while this handshake runs.
+   // Anything above it is this handshake's own, unauthenticated until its
+   // Finished. See the application-data gate in from_peer.
    m_epochs_before_latest_renegotiation = Epochs_Before_Latest_Renegotiation{sequence_numbers().current_read_epoch(),
                                                                              sequence_numbers().current_write_epoch()};
 
@@ -618,7 +622,34 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
                throw TLS_Exception(Alert::UnexpectedMessage, "Received application data after connection closure");
             }
             if(pending_state() != nullptr) {
-               throw TLS_Exception(Alert::UnexpectedMessage, "Can't interleave application and handshake data");
+               /*
+               What matters is which epoch the record belongs to, not which role we
+               are playing.
+
+               RFC 6347 4.2.4: "Implementations MUST either discard or buffer all
+               application data packets for the new epoch until they have received
+               the Finished message for that epoch." Data under the epoch this
+               handshake installed is not authenticated until its Finished, so it
+               must not reach the application; equally it is not an error, because
+               ordinary reordering produces it whenever a peer writes immediately
+               after activating.
+
+               Data under an epoch the established association owns stays valid
+               while a renegotiation is in flight, per 4.1.
+
+               Epoch zero is neither: application data there is plaintext, so it is
+               never legitimate and no association is at stake.
+               */
+               if(m_is_datagram && record.epoch() > 0) {
+                  const uint16_t active_epoch =
+                     m_epochs_before_latest_renegotiation ? m_epochs_before_latest_renegotiation->read_epoch : 0;
+
+                  if(!m_active_state.has_value() || record.epoch() > active_epoch) {
+                     continue;  // this handshake's epoch, still unauthenticated
+                  }
+               } else {
+                  throw TLS_Exception(Alert::UnexpectedMessage, "Can't interleave application and handshake data");
+               }
             }
             process_application_data(record.sequence(), m_record_buf);
          } else if(record.type() == Record_Type::Alert) {

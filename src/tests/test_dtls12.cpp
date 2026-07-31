@@ -1146,6 +1146,56 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      // Plaintext epoch-zero application data is dropped before the pending
+      // handshake application data gate ever sees it, on either side of a
+      // renegotiation. Regression test for a review claim that it could reach
+      // the gate and fatally close the association.
+      static Test::Result test_forged_epoch0_appdata_during_renegotiation() {
+         Test::Result result("DTLS forged epoch-zero application data during renegotiation");
+
+         auto rng = Test::new_shared_rng("dtls-core-forged-epoch0-appdata");
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
+         auto& client_recv = assoc->client_recv;
+         auto& server_recv = assoc->server_recv;
+
+         if(!complete_dtls_handshake(result, *assoc)) {
+            return result;
+         }
+
+         // Both sides sit mid-renegotiation: the server has the ClientHello,
+         // the client's pending IO has received nothing at all.
+         result.test_no_throw("client starts renegotiation", [&] { client.renegotiate(true); });
+         deliver(result, "renegotiation client hello", c2s, server);
+         s2c.clear();  // hold back the server's renegotiation flight
+
+         const std::vector<uint8_t> payload = {0xDE, 0xAD, 0xBE, 0xEF};
+         const auto forged = unprotected_dtls_record(Botan::TLS::Record_Type::ApplicationData, 50, payload);
+
+         result.test_no_throw("client absorbs the forged record",
+                              [&] { client.received_data(forged.data(), forged.size()); });
+         result.test_is_true("client remains active", client.is_active());
+         result.test_is_true("client said nothing in reply", c2s.empty());
+         result.test_is_true("client delivered nothing to the application", client_recv.empty());
+
+         result.test_no_throw("server absorbs the forged record",
+                              [&] { server.received_data(forged.data(), forged.size()); });
+         result.test_is_true("server remains active", server.is_active());
+         result.test_is_true("server said nothing in reply", s2c.empty());
+         result.test_is_true("server delivered nothing to the application", server_recv.empty());
+
+         // The association still carries data under the established epoch.
+         client.send("still alive");
+         result.test_is_true("client can still write", !c2s.empty());
+         deliver(result, "application data after the forgery", c2s, server);
+         result.test_is_true("server received it", server_recv.size() == 11);
+
+         return result;
+      }
+
       // A single forged epoch-zero record must not tear down an established
       // association while a handshake is pending, whether it is malformed at the
       // record layer or only once the new handshake IO reassembles it.
@@ -1195,6 +1245,105 @@ class DTLS_Core_Regression_Tests final : public Test {
          deliver(result, "renegotiation server final flight", s2c, client);
          result.test_is_true("client active after renegotiation", client.is_active());
          result.test_is_true("server active after renegotiation", server.is_active());
+
+         return result;
+      }
+
+      // RFC 6347 4.2.4: "Implementations MUST either discard or buffer all
+      // application data packets for the new epoch until they have received the
+      // Finished message for that epoch." Ordinary reordering produces exactly
+      // that whenever a peer writes immediately after activating, so it must not
+      // be fatal either.
+      static Test::Result test_app_data_reordered_before_finished_is_discarded() {
+         Test::Result result("DTLS application data ahead of Finished is discarded");
+
+         auto rng = Test::new_shared_rng("dtls-core-appdata-before-finished");
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
+         auto& client_recv = assoc->client_recv;
+
+         deliver(result, "client hello 1", c2s, server);
+         deliver(result, "hello verify request", s2c, client);
+         deliver(result, "client hello 2", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+         deliver(result, "client final flight", c2s, server);
+         result.test_is_true("server became active", server.is_active());
+         result.test_is_false("client is still waiting for Finished", client.is_active());
+
+         // The server writes as soon as it activates, which is ordinary practice
+         // from tls_session_activated().
+         const std::vector<uint8_t> app_data = {0xAA, 0xBB, 0xCC};
+         result.test_no_throw("server sends application data", [&] { server.send(app_data); });
+
+         // Reorder so the application data overtakes the Finished.
+         std::vector<uint8_t> ccs;
+         std::vector<uint8_t> finished;
+         std::vector<uint8_t> application;
+         if(!split_first_dtls_record(result, s2c, ccs, finished)) {
+            return result;
+         }
+         std::vector<uint8_t> remainder;
+         if(!split_first_dtls_record(result, finished, remainder, application)) {
+            return result;
+         }
+         finished = remainder;
+         s2c.clear();
+
+         deliver_copy(result, "change cipher spec", ccs, client);
+         result.test_no_throw("application data ahead of Finished is not fatal",
+                              [&] { client.received_data(application.data(), application.size()); });
+         result.test_is_false("client did not close", client.is_closed());
+         result.test_is_true("nothing was delivered to the application", client_recv.empty());
+
+         // The handshake still completes, and traffic flows afterwards.
+         deliver_copy(result, "finished", finished, client);
+         result.test_is_true("client became active", client.is_active());
+
+         client_recv.clear();
+         result.test_no_throw("server sends again", [&] { server.send(app_data); });
+         deliver(result, "application data after activation", s2c, client);
+         result.test_bin_eq("delivered once the handshake completed", client_recv, app_data);
+
+         return result;
+      }
+
+      // RFC 6347 4.1 keeps the previous epoch usable, so a peer that keeps
+      // writing during a renegotiation must still be heard.
+      static Test::Result test_old_epoch_app_data_during_renegotiation() {
+         Test::Result result("DTLS old-epoch application data during renegotiation");
+
+         auto rng = Test::new_shared_rng("dtls-core-appdata-old-epoch");
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
+         auto& client_recv = assoc->client_recv;
+
+         if(!complete_dtls_handshake(result, *assoc)) {
+            return result;
+         }
+
+         // Server writes under the established epoch, held back.
+         s2c.clear();
+         const std::vector<uint8_t> app_data = {0x44, 0x55};
+         result.test_no_throw("server sends application data", [&] { server.send(app_data); });
+         std::vector<uint8_t> old_epoch_data;
+         std::swap(old_epoch_data, s2c);
+
+         // The client opens a renegotiation, so it has a pending handshake.
+         result.test_no_throw("client starts renegotiation", [&] { client.renegotiate(true); });
+         result.test_is_true("client emitted a renegotiation ClientHello", !c2s.empty());
+
+         client_recv.clear();
+         result.test_no_throw("old-epoch application data is accepted",
+                              [&] { client.received_data(old_epoch_data.data(), old_epoch_data.size()); });
+         result.test_bin_eq("delivered to the application", client_recv, app_data);
+         result.test_is_true("client remains active", client.is_active());
+         result.test_is_false("client did not close", client.is_closed());
 
          return result;
       }
@@ -1802,9 +1951,12 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_hello_request_during_handshake_is_ignored(),
                  test_forged_epoch0_record_during_renegotiation(),
                  test_forged_epoch0_message_during_renegotiation(),
+                 test_forged_epoch0_appdata_during_renegotiation(),
                  test_epoch_retirement_does_not_outlive_a_restart(),
                  test_timed_out_initial_handshake_closes_the_channel(),
                  test_timed_out_renegotiation_keeps_the_association(),
+                 test_app_data_reordered_before_finished_is_discarded(),
+                 test_old_epoch_app_data_during_renegotiation(),
                  test_lost_server_final_flight_retransmits(),
                  test_stale_client_hello_does_not_replace_active_handshake(),
                  test_epoch0_client_hello_retransmit_while_restart_pending(),
