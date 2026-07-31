@@ -148,12 +148,14 @@ Datagram_Handshake_IO::Datagram_Handshake_IO(writer_fn writer,
                                              uint16_t mtu,
                                              uint64_t initial_timeout_ms,
                                              uint64_t max_timeout_ms,
+                                             std::optional<size_t> max_retransmissions,
                                              size_t max_handshake_msg_size) :
       m_seqs(seq),
       m_flights(1),
       m_flight_ccs(1),
       m_initial_timeout(initial_timeout_ms),
       m_max_timeout(max_timeout_ms),
+      m_max_retransmissions(max_retransmissions),
       m_send_hs(std::move(writer)),
       m_steady_clock_ms(std::move(steady_clock_ms)),
       m_mtu(mtu),
@@ -229,6 +231,19 @@ bool Datagram_Handshake_IO::timeout_check() {
       return false;
    }
 
+   // The retransmit timer has expired. Count this attempt and, once the
+   // configured cap is reached, abandon the handshake rather than retransmit
+   // forever. RFC 6347 4.2.4.1 gives the backoff schedule but states no
+   // condition for giving up, so the cap is local policy, not a requirement.
+   // No alert is sent - the peer is by definition unresponsive.
+   m_retransmit_count += 1;
+   if(m_max_retransmissions.has_value() && m_retransmit_count > m_max_retransmissions.value()) {
+      throw TLS_Exception(Alert::None, "DTLS handshake timed out: maximum retransmissions exceeded");
+   }
+
+   // retransmit_last_flight re-anchors m_last_write. Without that, once
+   // m_next_timeout saturates at m_max_timeout the elapsed time keeps growing
+   // and every subsequent poll fires another retransmission.
    retransmit_last_flight();
 
    m_next_timeout = std::min(2 * m_next_timeout, m_max_timeout);
@@ -659,6 +674,9 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_under_epoch(const Handshake_Mes
    m_out_message_seq += 1;
    m_last_write = m_steady_clock_ms();
    m_next_timeout = m_initial_timeout;
+   // Sending a new flight is forward progress: reset the give-up counter so the
+   // retransmission budget applies per flight, not across the whole handshake.
+   m_retransmit_count = 0;
 
    return send_message(m_out_message_seq - 1, epoch, msg_type, msg_bits);
 }

@@ -202,8 +202,16 @@ class BOTAN_PUBLIC_API(2, 0) Channel {
       /**
       * Perform a handshake timeout check.
       *
-      * This function does nothing unless the channel represents a DTLS
-      * connection with a handshake in progress.
+      * This function does nothing unless the channel represents a DTLS connection with
+      * a handshake in progress.
+      *
+      * By default after a certain interval where no progress has been made in the
+      * handshake (controlled by the policy values `TLS::Policy::dtls_initial_timeout`,
+      * `TLS::Policy::dtls_maximum_timeout`, and `TLS::Policy::dtls_maximum_retransmissions`),
+      * calling `timeout_check` will throw indicating the handshake has failed to
+      * complete. If you wish to never fully timeout, this can be accomplished by
+      * overriding `TLS::Policy::dtls_maximum_retransmissions` to return `std::nullopt`,
+      * in which case a handshake attempt will retry indefinitely.
       *
       * @returns true if a timeout condition occurred
       */

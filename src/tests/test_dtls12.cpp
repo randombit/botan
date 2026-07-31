@@ -160,6 +160,7 @@ class DTLS_PSK_Credentials final : public Botan::Credentials_Manager {
 // clock; everything else follows Botan::TLS::Policy, which the unset optionals
 // below defer to.
 struct DTLS_Policy_Options final {
+      std::optional<size_t> max_retransmissions;
       std::optional<std::string> cipher;
       bool allow_epoch0_restart = true;
       bool reuse_session_tickets = false;
@@ -172,6 +173,15 @@ class DTLS_PSK_Policy final : public Botan::TLS::Policy {
       DTLS_PSK_Policy() = default;
 
       explicit DTLS_PSK_Policy(DTLS_Policy_Options opts) : m_opts(std::move(opts)) {}
+
+      std::optional<size_t> dtls_maximum_retransmissions() const override {
+         // TODO(C++23) std::optional::or_else
+         if(m_opts.max_retransmissions.has_value()) {
+            return m_opts.max_retransmissions;
+         } else {
+            return Botan::TLS::Policy::dtls_maximum_retransmissions();
+         }
+      }
 
       std::vector<std::string> allowed_macs() const override { return {"AEAD"}; }
 
@@ -206,6 +216,12 @@ class DTLS_PSK_Policy final : public Botan::TLS::Policy {
 
 // The variants the tests below need. Everything not named here follows the
 // baseline above.
+
+std::shared_ptr<DTLS_PSK_Policy> dtls_policy_with_max_retransmissions(size_t limit) {
+   DTLS_Policy_Options opts;
+   opts.max_retransmissions = limit;
+   return std::make_shared<DTLS_PSK_Policy>(std::move(opts));
+}
 
 std::unique_ptr<Botan::TLS::Client> make_dtls_client(const std::shared_ptr<Botan::TLS::Callbacks>& callbacks,
                                                      const std::shared_ptr<Botan::TLS::Session_Manager>& sessions,
@@ -375,6 +391,16 @@ std::unique_ptr<DTLS_Association> make_association(Test::Result& result,
    }
 
    return assoc;
+}
+
+// Both endpoints under a policy other than the baseline, which is by far the
+// most common reason to reach for the options above.
+std::unique_ptr<DTLS_Association> make_association(Test::Result& result,
+                                                   const std::shared_ptr<Botan::RandomNumberGenerator>& rng,
+                                                   std::shared_ptr<const Botan::TLS::Policy> policy) {
+   DTLS_Association_Options opts;
+   opts.policy = std::move(policy);
+   return make_association(result, rng, std::move(opts));
 }
 
 // The full cookie exchange and handshake, step by step, so that a failure names
@@ -921,6 +947,65 @@ class DTLS_Core_Regression_Tests final : public Test {
 
          result.test_is_true("client became active", client.is_active());
          result.test_is_true("server became active", server.is_active());
+
+         return result;
+      }
+
+      // Poll the retransmission timer forward until the handshake gives up.
+      static bool run_out_the_clock(DTLS_Test_Callbacks& cb, Botan::TLS::Channel& channel) {
+         for(int i = 0; i < 200; ++i) {
+            cb.advance_clock_ms(50);
+            try {
+               channel.timeout_check();
+            } catch(const Botan::TLS::TLS_Exception&) {
+               return true;
+            }
+         }
+         return false;
+      }
+
+      // Reaching the retransmission limit left the expired timer and its IO
+      // installed, so every later timeout check threw again from unchanged
+      // state and renegotiate() could never start another attempt.
+      static Test::Result test_timed_out_initial_handshake_closes_the_channel() {
+         Test::Result result("DTLS unanswered handshake closes the channel");
+
+         auto rng = Test::new_shared_rng("dtls-core-timeout-abandon");
+         auto assoc = make_association(result, rng, dtls_policy_with_max_retransmissions(2));
+         auto& client = *assoc->client;
+
+         // Nothing is ever delivered to the server, so the client retransmits
+         // until its budget is spent.
+         result.test_is_true("initial handshake gave up", run_out_the_clock(*assoc->client_cb, client));
+         result.test_is_true("channel is closed", client.is_closed());
+         result.test_no_throw("later polls are quiet", [&] { client.timeout_check(); });
+
+         return result;
+      }
+
+      // A renegotiation that dies before any ChangeCipherSpec leaves the
+      // established association intact, and another attempt can be made.
+      static Test::Result test_timed_out_renegotiation_keeps_the_association() {
+         Test::Result result("DTLS timed out renegotiation keeps the association");
+
+         auto rng = Test::new_shared_rng("dtls-core-timeout-abandon-reneg");
+         auto assoc = make_association(result, rng, dtls_policy_with_max_retransmissions(2));
+         auto& client = *assoc->client;
+         auto& c2s = assoc->c2s;
+
+         if(!complete_dtls_handshake(result, *assoc)) {
+            return result;
+         }
+
+         client.renegotiate(true);
+         c2s.clear();  // the renegotiation ClientHello never arrives
+
+         result.test_is_true("renegotiation gave up", run_out_the_clock(*assoc->client_cb, client));
+         result.test_is_true("association survived", client.is_active());
+         result.test_is_false("channel not closed", client.is_closed());
+
+         result.test_no_throw("another renegotiation can start", [&] { client.renegotiate(true); });
+         result.test_is_true("it emitted a ClientHello", !c2s.empty());
 
          return result;
       }
@@ -1526,6 +1611,8 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_lost_server_flight_retransmits(),
                  test_duplicate_server_flight_defers_to_timer(),
                  test_hello_request_during_handshake_is_ignored(),
+                 test_timed_out_initial_handshake_closes_the_channel(),
+                 test_timed_out_renegotiation_keeps_the_association(),
                  test_lost_server_final_flight_retransmits(),
                  test_stale_client_hello_does_not_replace_active_handshake(),
                  test_epoch0_client_hello_retransmit_while_restart_pending(),
