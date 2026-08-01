@@ -867,8 +867,20 @@ void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record) {
    //    no_renegotiation
    //       Sent by the client in response to a hello request or by the
    //       server in response to a client hello after initial handshaking.
+   //
+   // Both of those precede any ChangeCipherSpec from the refusing side, so a
+   // refusal arriving after one means the peer both refused the handshake and
+   // proceeded with it. Discarding the pending state is what implements the
+   // refusal, but past a CCS that state is the only thing keeping application
+   // data under the new, un-Finished keys from being delivered, and there is no
+   // rollback that would leave keys, identity and exporter describing the same
+   // handshake. End the association rather than open that gate.
    if(alert_msg.type() == Alert::NoRenegotiation && m_active_state.has_value()) {
-      m_pending_state.reset();
+      if(!pending_handshake_epochs_unmoved()) {
+         throw TLS_Exception(Alert::UnexpectedMessage, "Received no_renegotiation after ChangeCipherSpec");
+      }
+
+      clear_pending_handshake_state();
    }
 
    std::vector<Session_Handle> invalidated;
@@ -980,8 +992,14 @@ void Channel_Impl_12::send_alert(const Alert& alert) {
       }
    }
 
+   // We are the refusing side here, so our own epochs cannot have moved for
+   // this handshake and the check is defensive. send_alert is called from
+   // from_peer's catch handlers and must not throw, so an unexpected case
+   // leaves the pending state in place rather than ending the association.
    if(alert.type() == Alert::NoRenegotiation && m_active_state.has_value()) {
-      m_pending_state.reset();
+      if(pending_handshake_epochs_unmoved()) {
+         clear_pending_handshake_state();
+      }
    }
 
    if(alert.is_fatal()) {

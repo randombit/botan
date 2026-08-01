@@ -1195,6 +1195,73 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      // Refusing a renegotiation is implemented by discarding the pending
+      // state, which is safe only before a ChangeCipherSpec: the association
+      // still owns both epochs, so dropping the handshake leaves it as it was.
+      static Test::Result test_no_renegotiation_before_ccs_is_accepted() {
+         Test::Result result("DTLS no_renegotiation before ChangeCipherSpec");
+
+         auto rng = Test::new_shared_rng("dtls-core-no-reneg-pre-ccs");
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
+
+         if(!complete_dtls_handshake(result, *assoc)) {
+            return result;
+         }
+
+         client.renegotiate(true);
+         c2s.clear();
+
+         assoc->server->send_warning_alert(Botan::TLS::Alert::NoRenegotiation);
+         deliver(result, "pre-CCS refusal is accepted", s2c, client);
+         result.test_is_true("association survives the refusal", client.is_active());
+
+         // The pending handshake is gone, so another can be started.
+         result.test_no_throw("a further renegotiation can start", [&] { client.renegotiate(true); });
+         result.test_is_true("it emitted a ClientHello", !c2s.empty());
+
+         return result;
+      }
+
+      // Past a ChangeCipherSpec the pending state is all that keeps application
+      // data under the new, un-Finished keys from being delivered, and there is
+      // no rollback, so the association ends instead.
+      static Test::Result test_no_renegotiation_after_ccs_ends_the_association() {
+         Test::Result result("DTLS no_renegotiation after ChangeCipherSpec");
+
+         auto rng = Test::new_shared_rng("dtls-core-no-reneg-post-ccs");
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
+
+         if(!complete_dtls_handshake(result, *assoc)) {
+            return result;
+         }
+
+         client.renegotiate(true);
+         deliver(result, "renegotiation client hello", c2s, server);
+         deliver(result, "renegotiation server flight", s2c, client);
+
+         // The client has now sent its own CCS and Finished.
+         result.test_is_true("client produced its final flight", !c2s.empty());
+         c2s.clear();
+         s2c.clear();
+
+         server.send_warning_alert(Botan::TLS::Alert::NoRenegotiation);
+         result.test_throws("post-CCS refusal ends the association", [&] {
+            std::vector<uint8_t> in;
+            std::swap(s2c, in);
+            client.received_data(in.data(), in.size());
+         });
+         result.test_is_false("client is no longer active", client.is_active());
+
+         return result;
+      }
+
       // Epoch numbers restart after an epoch-0 restart, so a retirement time
       // recorded for the first association's epoch 1 must not expire the second
       // association's epoch 1. Regression test: it previously did, and past the
@@ -2216,6 +2283,8 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_forged_epoch0_record_during_renegotiation(),
                  test_forged_epoch0_message_during_renegotiation(),
                  test_short_client_hello_does_not_discard_cookie_state(),
+                 test_no_renegotiation_before_ccs_is_accepted(),
+                 test_no_renegotiation_after_ccs_ends_the_association(),
                  test_epoch_retirement_does_not_outlive_a_restart(),
                  test_timed_out_initial_handshake_closes_the_channel(),
                  test_timed_out_renegotiation_keeps_the_association(),
