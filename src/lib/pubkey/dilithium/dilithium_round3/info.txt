@@ -5,6 +5,7 @@ DILITHIUM_ROUND3 -> 20240916
 <module_info>
 name -> "Dilithium Round 3"
 type -> "Internal"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>

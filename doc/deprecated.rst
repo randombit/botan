@@ -59,6 +59,8 @@ in a future major release:
 
 - All ciphersuites using static RSA key exchange
 
+- Support for CCM-8 ciphersuites
+
 - ``Credentials_Manager::psk()`` to provide various TLS-specific keys and
   secrets, most notably "session-ticket", "dtls-cookie-secret" and the actual
   TLS PSKs for given identities and hosts. Instead, use the dedicated methods in
@@ -145,6 +147,8 @@ Deprecated modules include
 - Kyber R3 support: prefer ML-KEM
 
 - Dilithium R3 support: prefer ML-DSA
+
+- SPHINCS+: prefer SLH-DSA
 
 - Block cipher ``gost_28147``: This cipher was obsolete 20 years ago.
 

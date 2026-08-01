@@ -2,6 +2,8 @@
 AES_CRYSTALS_XOF -> 20230816
 </internal_defines>
 
+# TODO(Botan4) only needed for 90s mode, remove
+
 <module_info>
 name -> "CRYSTALS XOF"
 brief -> "XOF used in Kyber 90s and Dilithium AES"

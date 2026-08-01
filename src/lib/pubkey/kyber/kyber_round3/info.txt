@@ -6,6 +6,7 @@ KYBER_ROUND3 -> 20240117
 name -> "Kyber Round 3 Encapsulation"
 brief -> "Kyber key encapsulation as specified in the Round 3 spec"
 type -> "Internal"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>

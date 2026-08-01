@@ -4,6 +4,7 @@ DSA -> 20131128
 
 <module_info>
 name -> "DSA"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>
