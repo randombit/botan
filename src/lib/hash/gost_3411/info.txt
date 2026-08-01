@@ -4,6 +4,7 @@ GOST_34_11 -> 20131128
 
 <module_info>
 name -> "GOST 34.11"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>

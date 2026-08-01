@@ -56,7 +56,8 @@ gmac
 
 # Table 5.3/5.5: Recommended signature algorithms.
 # rsa (already enabled above)
-dsa
+# (DSA support is deprecated)
+# dsa
 ecdsa
 ecgdsa
 eckcdsa
