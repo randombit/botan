@@ -89,6 +89,28 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_CLMUL SIMD_4x32 clmul(const SIMD_4x32& H, const 
 
 // NOLINTEND(portability-simd-intrinsics)
 
+/**
+* Load a block in the reflected GHASH convention (BSWAP == true) or the
+* natural POLYVAL convention (BSWAP == false)
+*/
+template <bool BSWAP>
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SIMD_4X32 SIMD_4x32 load_block(const uint8_t in[]) {
+   if constexpr(BSWAP) {
+      return reverse_vector(SIMD_4x32::load_le(in));
+   } else {
+      return SIMD_4x32::load_le(in);
+   }
+}
+
+template <bool BSWAP>
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SIMD_4X32 void store_block(const SIMD_4x32& b, uint8_t out[]) {
+   if constexpr(BSWAP) {
+      reverse_vector(b).store_le(out);
+   } else {
+      b.store_le(out);
+   }
+}
+
 BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 mulx_polyval(const SIMD_4x32& h) {
    const auto V = SIMD_4x32(0x00000001, 0x00000000, 0x00000000, 0xc2000000);
 

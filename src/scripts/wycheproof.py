@@ -382,6 +382,10 @@ def _aead_algorithm(
         return f"AES-{key_size_bits // 2}/SIV"
     if algorithm == "AES-EAX":
         return f"AES-{key_size_bits}/EAX"
+    if algorithm == "AES-GCM-SIV":
+        if tag_size_bits is not None and tag_size_bits != 128:
+            raise ValueError(f"AES-GCM-SIV requires a 128-bit tag not {tag_size_bits}")
+        return f"AES-{key_size_bits}/GCM-SIV"
     if algorithm in ("CHACHA20-POLY1305", "XCHACHA20-POLY1305"):
         return "ChaCha20Poly1305"
 
@@ -415,6 +419,7 @@ def _aead_process(
 
 @register(
     "AES-GCM",
+    "AES-GCM-SIV",
     "AES-CCM",
     "AES-EAX",
     "AEAD-AES-SIV-CMAC",
@@ -1756,7 +1761,6 @@ def handle_primality(_data: dict, _group: dict, test: dict) -> None:
 
 _registry.ignore(
     "AES-FF1",         # Not implemented
-    "AES-GCM-SIV",     # Not implemented
     "A128CBC-HS256",   # Not implemented
     "A192CBC-HS384",   # Not implemented
     "A256CBC-HS512",   # Not implemented

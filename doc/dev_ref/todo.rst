@@ -9,7 +9,6 @@ Request a new feature by opening a pull request to update this file.
 
 New Ciphers/Hashes/MACs
 ----------------------------------------
-* GCM-SIV (RFC 8452)
 * EME* tweakable block cipher (https://eprint.iacr.org/2004/125)
 * PMAC
 * SIV-PMAC

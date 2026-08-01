@@ -1,0 +1,12 @@
+<internal_defines>
+POLYVAL -> 20260719
+</internal_defines>
+
+<module_info>
+name -> "POLYVAL"
+brief -> "POLYVAL universal hash (RFC 8452)"
+</module_info>
+
+<requires>
+ghash
+</requires>
