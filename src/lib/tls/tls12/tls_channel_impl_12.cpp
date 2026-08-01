@@ -792,8 +792,20 @@ void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record) {
    //    no_renegotiation
    //       Sent by the client in response to a hello request or by the
    //       server in response to a client hello after initial handshaking.
+   //
+   // Both of those precede any ChangeCipherSpec from the refusing side, so a
+   // refusal arriving after one means the peer both refused the handshake and
+   // proceeded with it. Discarding the pending state is what implements the
+   // refusal, but past a CCS that state is the only thing keeping application
+   // data under the new, un-Finished keys from being delivered, and there is no
+   // rollback that would leave keys, identity and exporter describing the same
+   // handshake. End the association rather than open that gate.
    if(alert_msg.type() == Alert::NoRenegotiation && m_active_state.has_value()) {
-      m_pending_state.reset();
+      if(!pending_handshake_epochs_unmoved()) {
+         throw TLS_Exception(Alert::UnexpectedMessage, "Received no_renegotiation after ChangeCipherSpec");
+      }
+
+      clear_pending_handshake_state();
    }
 
    if(alert_msg.is_fatal()) {
@@ -889,8 +901,20 @@ void Channel_Impl_12::send_alert(const Alert& alert) {
       }
    }
 
+   // RFC 5246 7.2.2:
+   //    no_renegotiation
+   //       Sent by the client in response to a hello request or by the
+   //       server in response to a client hello after initial handshaking.
+   //
+   // In this case we are the peer sending the refusal, so there is no reason
+   // for our epochs to have moved. If they somehow did, clear the pending
+   // state. A strictly better approach here would be to simply throw
+   // Internal_Error, but send_alert is called from within catch handlers
+   // so this is not currently viable.
    if(alert.type() == Alert::NoRenegotiation && m_active_state.has_value()) {
-      m_pending_state.reset();
+      if(pending_handshake_epochs_unmoved()) {
+         clear_pending_handshake_state();
+      }
    }
 
    if(alert.is_fatal()) {
