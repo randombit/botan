@@ -825,6 +825,43 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      // RFC 5246 7.4.1.1 says a HelloRequest is ignored by a client that is
+      // already negotiating. Answering with a fatal alert instead killed a
+      // server whose own HelloRequest merely crossed with our renegotiation.
+      static Test::Result test_hello_request_during_handshake_is_ignored() {
+         Test::Result result("DTLS HelloRequest crossing a client renegotiation");
+
+         auto rng = Test::new_shared_rng("dtls-core-crossed-hello-request");
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
+
+         if(!complete_dtls_handshake(result, *assoc)) {
+            return result;
+         }
+
+         // Both sides ask to renegotiate at once. Hold the client's ClientHello
+         // back so the two requests genuinely cross.
+         result.test_no_throw("client starts renegotiation", [&] { client.renegotiate(true); });
+         c2s.clear();
+
+         result.test_no_throw("server sends its own HelloRequest", [&] { server.renegotiate(false); });
+         result.test_is_true("server emitted a HelloRequest", !s2c.empty());
+
+         result.test_no_throw("crossed HelloRequest is ignored", [&] {
+            std::vector<uint8_t> in;
+            std::swap(s2c, in);
+            client.received_data(in.data(), in.size());
+         });
+         result.test_is_true("client produced no response to HelloRequest", c2s.empty());
+         result.test_is_true("client remains active", client.is_active());
+         result.test_is_false("client did not close", client.is_closed());
+
+         return result;
+      }
+
       static Test::Result test_duplicate_server_flight_defers_to_timer() {
          Test::Result result("DTLS duplicate server flight defers replay to timer");
 
@@ -1424,6 +1461,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_partial_server_flight_does_not_advance_client(),
                  test_lost_server_flight_retransmits(),
                  test_duplicate_server_flight_defers_to_timer(),
+                 test_hello_request_during_handshake_is_ignored(),
                  test_lost_server_final_flight_retransmits(),
                  test_stale_client_hello_does_not_replace_active_handshake(),
                  test_epoch0_client_hello_retransmit_while_restart_pending(),
