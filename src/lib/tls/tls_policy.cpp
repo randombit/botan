@@ -97,7 +97,7 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const {
       //"ECDHE_PSK",
       //"PSK",
       "ECDH",
-      "DH",
+      //"DH",
       //"RSA",
    };
 }
@@ -207,9 +207,6 @@ std::vector<Group_Params> Policy::key_exchange_groups() const {
       Group_Params::BRAINPOOL384R1TLS13,
       Group_Params::BRAINPOOL512R1,
       Group_Params::BRAINPOOL512R1TLS13,
-
-      Group_Params::FFDHE_2048,
-      Group_Params::FFDHE_3072,
 
       // clang-format on
    };
