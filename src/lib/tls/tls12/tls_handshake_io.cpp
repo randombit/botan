@@ -266,7 +266,14 @@ std::optional<std::chrono::milliseconds> Datagram_Handshake_IO::next_retransmiss
       return std::chrono::milliseconds(0);
    }
 
-   return std::chrono::milliseconds(m_next_timeout - ms_since_write);
+   // BoringSSL reports a sub-15ms remainder as zero (ssl/d1_lib.cc
+   // DTLSTimer::MicrosecondsRemaining) to absorb divergence with caller
+   // scheduling; BoGo's DTLS-Retransmit-Fudge test requires it. The cap keeps
+   // the fudge from swallowing the very short timers some tests configure.
+   const uint64_t fudge_ms = std::min<uint64_t>(15, m_initial_timeout / 2);
+   const uint64_t remaining_ms = m_next_timeout - ms_since_write;
+
+   return std::chrono::milliseconds(remaining_ms <= fudge_ms ? 0 : remaining_ms);
 }
 
 void Datagram_Handshake_IO::add_record(const uint8_t record[],

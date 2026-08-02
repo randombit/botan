@@ -171,6 +171,7 @@ std::string map_to_bogo_error(const std::string& e) noexcept {
       {"Not enough PSK binders", ":PSK_IDENTITY_BINDER_COUNT_MISMATCH:"},
       {"Counterparty sent inconsistent key and sig types", ":WRONG_SIGNATURE_TYPE:"},
       {"Downgrade attack detected", ":TLS13_DOWNGRADE:"},
+      {"DTLS handshake timed out: maximum retransmissions exceeded", ":READ_TIMEOUT_EXPIRED:"},
       {"Empty ALPN protocol not allowed", ":PARSE_TLSEXT:"},
       {"Empty PSK binders list", ":DECODE_ERROR: "},
       {"Encoding error: Cannot encode PSS string, output length too small", ":NO_COMMON_SIGNATURE_ALGORITHMS:"},
@@ -1414,9 +1415,11 @@ class Shim_Policy final : public Botan::TLS::Policy {
 
       size_t dtls_default_mtu() const override { return m_args.get_int_opt_or_else("mtu", 1500); }
 
-      //size_t dtls_initial_timeout() const override;
-
-      //size_t dtls_maximum_timeout() const override;
+      size_t dtls_initial_timeout() const override {
+         // BoGo's default expectation is 400ms; tests that override pass
+         // -initial-timeout-duration-ms (typically 250ms for the Short variant).
+         return m_args.get_int_opt_or_else("initial-timeout-duration-ms", 400);
+      }
 
       bool abort_connection_on_undesired_renegotiation() const override {
          return !m_args.flag_set("renegotiate-ignore");
@@ -2149,6 +2152,17 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
          return g_now + m_clock_skew;
       }
 
+      // The DTLS retransmit timer reads this. BoGo's AdvanceClock opcode ('T')
+      // bumps the virtual clock forward so the runner can fire timeouts
+      // deterministically without real-time waits.
+      uint64_t tls_current_monotonic_clock_ms() override { return m_dtls_timer_ns / 1'000'000; }
+
+      void advance_dtls_timer_ns(uint64_t ns) { m_dtls_timer_ns += ns; }
+
+      // A DTLS server requires a non-empty peer network identity to bind the
+      // HelloVerifyRequest cookie to (RFC 6347 4.2.1). BoGo drives each test from
+      // a single peer, so a constant identity is sufficient; without this the
+      // cookie path throws and every DTLS server test fails.
       std::string tls_peer_network_identity() override { return "bogo-shim-peer"; }
 
       void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& msg) override {
@@ -2169,6 +2183,9 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
       bool m_got_close;
       bool m_hello_retry_request;
       std::chrono::seconds m_clock_skew;
+      // Virtual clock for the DTLS retransmit timer. Tracked in nanoseconds
+      // (BoGo's wire unit) to avoid rounding errors
+      uint64_t m_dtls_timer_ns = 0;
 };
 
 }  // namespace
@@ -2274,18 +2291,41 @@ int main(int /*argc*/, char* argv[]) {
 
                      chan->received_data(buf.data(), packet_len);
                   } else if(opcode == 'T') {
-                     const uint8_t timeout_ack = 't';
-
+                     // AdvanceClock: bump the virtual DTLS timer, ACK, and
+                     // THEN fire timeout_check. Any packets emitted during
+                     // the AdvanceClock window (between 'T' and 't' ACK) are
+                     // treated by the runner as unexpected; the retransmit
+                     // packets must arrive only after the ACK, where the
+                     // runner's ReadRetransmit picks them up.
                      uint8_t timeout_bytes[8];
                      socket.read_exactly(timeout_bytes, sizeof(timeout_bytes));
-
                      const uint64_t nsec = Botan::load_be<uint64_t>(timeout_bytes, 0);
-
-                     shim_log("Timeout nsec " + std::to_string(nsec));
-
-                     // FIXME handle this!
-
-                     socket.write(&timeout_ack, 1);  // ack it anyway
+                     shim_log("AdvanceClock " + std::to_string(nsec) + "ns");
+                     callbacks->advance_dtls_timer_ns(nsec);
+                     const uint8_t timeout_ack = 't';
+                     socket.write(&timeout_ack, 1);
+                     chan->timeout_check();
+                  } else if(opcode == 'E') {
+                     // ExpectNextTimeout: runner-side self-check that the next
+                     // timeout matches its model. Botan doesn't expose the
+                     // pending timer to the application; consume the bytes and
+                     // skip. AdvanceClock failures (unexpected packets / no
+                     // packets) still catch incorrect timing.
+                     uint8_t bytes[8];
+                     socket.read_exactly(bytes, sizeof(bytes));
+                  } else if(opcode == 'M') {
+                     // SetPeerMTU: Botan's MTU is fixed at handshake
+                     // construction; consume and ignore.
+                     uint8_t bytes[4];
+                     socket.read_exactly(bytes, sizeof(bytes));
+                     shim_log(Botan::fmt("SetPeerMTU({}), currently ignored!", Botan::load_be<uint32_t>(bytes)));
+                  } else if(opcode == 'U') {
+                     // SetPeerTimeout: not yet plumbed through Botan's IO
+                     // (no API to override the running m_next_timeout).
+                     // Consume and ignore; SetTimeout-* tests will fail.
+                     uint8_t bytes[4];
+                     socket.read_exactly(bytes, sizeof(bytes));
+                     shim_log(Botan::fmt("SetPeerTimeout({}), currently ignored!", Botan::load_be<uint32_t>(bytes)));
                   } else {
                      shim_exit_with_error("Unknown opcode " + std::to_string(opcode));
                   }
