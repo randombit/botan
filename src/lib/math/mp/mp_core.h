@@ -13,6 +13,7 @@
 #include <botan/assert.h>
 #include <botan/types.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/mp_asmi.h>
 #include <array>
@@ -1062,6 +1063,34 @@ constexpr std::array<W, N> redc_crandall(std::span<const W, 2 * N> z) {
    borrow = (carry - borrow) > carry;
 
    CT::conditional_assign_mem(borrow, r.data(), hi.data(), N);
+
+   return r;
+}
+
+template <WordType W, size_t N, size_t L>
+inline constexpr auto bytes_to_words(std::span<const uint8_t, L> bytes) {
+   static_assert(L <= WordInfo<W>::bytes * N);
+
+   std::array<W, N> r = {};
+
+   constexpr size_t full_words = L / WordInfo<W>::bytes;
+   constexpr size_t extra_bytes = L % WordInfo<W>::bytes;
+
+   static_assert(full_words + (extra_bytes ? 1 : 0) <= N);
+
+   for(size_t i = 0; i != full_words; ++i) {
+      r[i] = load_be<W>(bytes.data(), full_words - 1 - i);
+   }
+
+   if constexpr(extra_bytes > 0) {
+      constexpr size_t shift = extra_bytes * 8;
+      shift_left<shift>(r);
+
+      for(size_t i = 0; i != extra_bytes; ++i) {
+         const W b0 = bytes[WordInfo<W>::bytes * full_words + i];
+         r[0] |= (b0 << (8 * (extra_bytes - 1 - i)));
+      }
+   }
 
    return r;
 }
