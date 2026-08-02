@@ -1611,6 +1611,143 @@ def cli_pk_encrypt_tests(tmp_dir):
     test_cli("pk_decrypt", [rsa_priv_key, ctext_file, "--output=%s" % (recovered_file)], "")
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", recovered_file], rng_output_hash)
 
+def cli_pkcs12_tests(tmp_dir):
+    if not check_for_command("pkcs12_export") or not check_for_command("pkcs12_info"):
+        logging.info("Skipping PKCS#12 CLI tests: pkcs12_export/pkcs12_info not available")
+        return
+
+    priv_key  = os.path.join(tmp_dir, 'leaf.key')
+    cert_file = os.path.join(tmp_dir, 'leaf.crt')
+    pfx_file  = os.path.join(tmp_dir, 'leaf.pfx')
+    out_key   = os.path.join(tmp_dir, 'out.key')
+    out_cert  = os.path.join(tmp_dir, 'out.crt')
+
+    test_cli("keygen", ["--algo=ECDSA", "--params=secp256r1", "--output=" + priv_key], "")
+    test_cli("gen_self_signed", [priv_key, "PKCS12Test", "--output=" + cert_file], "")
+
+    # Basic export (default: PBES2-SHA256-AES256, SHA-256 MAC)
+    test_cli("pkcs12_export",
+             ["--pass=hunter2", "--output=" + pfx_file, priv_key, cert_file], "")
+
+    # pkcs12_info info-only (no output file args)
+    # Note: logging.error() is a hard failure in this harness (TestLogHandler increments TESTS_FAILED)
+    import_info = test_cli("pkcs12_info", ["--pass=hunter2", pfx_file], None)
+    if "ECDSA" not in import_info:
+        logging.error("pkcs12_info info missing key algorithm: %s", import_info)
+    if 'PKCS12Test' not in import_info:
+        logging.error("pkcs12_info info missing subject: %s", import_info)
+    # SHA-256 fingerprint should be in info output
+    if "SHA-256 Fingerprint" not in import_info:
+        logging.error("pkcs12_info info missing SHA-256 fingerprint: %s", import_info)
+
+    # pkcs12_info: extract key and cert to files
+    test_cli("pkcs12_info",
+             ["--pass=hunter2", "--key-out=" + out_key, "--cert-out=" + out_cert, pfx_file],
+             None)
+
+    if not os.path.exists(out_key):
+        logging.error("pkcs12_info did not write key file")
+    if not os.path.exists(out_cert):
+        logging.error("pkcs12_info did not write cert file")
+
+    # Roundtrip: cert extracted from PFX must match original (DER fingerprint comparison)
+    fp_orig = test_cli("cert_info", ["--fingerprint", cert_file], None)
+    fp_extr = test_cli("cert_info", ["--fingerprint", out_cert], None)
+    fp_prefix = "Fingerprint: "
+    orig_fp = next((line for line in fp_orig.splitlines() if line.startswith(fp_prefix)), None)
+    extr_fp = next((line for line in fp_extr.splitlines() if line.startswith(fp_prefix)), None)
+    if orig_fp is None or extr_fp is None:
+        logging.error("pkcs12 roundtrip: cert_info did not produce fingerprint")
+    elif orig_fp != extr_fp:
+        logging.error("pkcs12 roundtrip: certificate mismatch (orig=%s extr=%s)",
+                      orig_fp, extr_fp)
+
+    # Roundtrip: public key derived from extracted key must match original
+    pub_orig = os.path.join(tmp_dir, 'orig.pub')
+    pub_extr = os.path.join(tmp_dir, 'extr.pub')
+    test_cli("pkcs8", ["--pub-out", "--output=" + pub_orig, priv_key], "")
+    test_cli("pkcs8", ["--pub-out", "--output=" + pub_extr, out_key], "")
+    fp_orig = test_cli("fingerprint", ["--no-fsname", pub_orig], None)
+    fp_extr = test_cli("fingerprint", ["--no-fsname", pub_extr], None)
+    if fp_orig != fp_extr:
+        logging.error("pkcs12 roundtrip: key mismatch after import (orig=%s extr=%s)", fp_orig, fp_extr)
+
+    # Export with explicit legacy cipher for compatibility testing
+    pfx_legacy = os.path.join(tmp_dir, 'legacy.pfx')
+    test_cli("pkcs12_export",
+             ["--pass=hunter2", "--key-cipher=PBE-SHA1-3DES", "--mac-digest=SHA-1",
+              "--iterations=2048", "--output=" + pfx_legacy, priv_key, cert_file], "")
+    info_legacy = test_cli("pkcs12_info", ["--pass=hunter2", pfx_legacy], None)
+    if "ECDSA" not in info_legacy:
+        logging.error("pkcs12_info (legacy cipher) missing key algorithm: %s", info_legacy)
+
+    # Export with friendly name
+    pfx_named = os.path.join(tmp_dir, 'named.pfx')
+    test_cli("pkcs12_export",
+             ["--pass=hunter2", "--friendly-name=MioTest",
+              "--output=" + pfx_named, priv_key, cert_file], "")
+    info_named = test_cli("pkcs12_info", ["--pass=hunter2", pfx_named], None)
+    if "MioTest" not in info_named:
+        logging.error("pkcs12 friendly-name not preserved in info output: %s", info_named)
+
+    # Export with MAC SHA-256 explicitly
+    pfx_sha256mac = os.path.join(tmp_dir, 'sha256mac.pfx')
+    test_cli("pkcs12_export",
+             ["--pass=hunter2", "--mac-digest=SHA-256",
+              "--key-cipher=PBE-SHA1-3DES", "--iterations=2048",
+              "--output=" + pfx_sha256mac, priv_key, cert_file], "")
+    test_cli("pkcs12_info", ["--pass=hunter2", pfx_sha256mac], None)
+
+    # Export with cert cipher
+    pfx_certenc = os.path.join(tmp_dir, 'certenc.pfx')
+    test_cli("pkcs12_export",
+             ["--pass=hunter2", "--cert-cipher=PBE-SHA1-3DES",
+              "--key-cipher=PBE-SHA1-3DES", "--iterations=2048",
+              "--output=" + pfx_certenc, priv_key, cert_file], "")
+    test_cli("pkcs12_info", ["--pass=hunter2", pfx_certenc], None)
+
+    # Export with CA chain and test --chain-out
+    ca_key_file = os.path.join(tmp_dir, 'ca.key')
+    ca_cert_file = os.path.join(tmp_dir, 'ca.crt')
+    pfx_chain = os.path.join(tmp_dir, 'chain.pfx')
+    chain_out = os.path.join(tmp_dir, 'chain.pem')
+
+    test_cli("keygen", ["--algo=ECDSA", "--params=secp256r1", "--output=" + ca_key_file], "")
+    test_cli("gen_self_signed", [ca_key_file, "TestCA", "--output=" + ca_cert_file], "")
+
+    test_cli("pkcs12_export",
+             ["--pass=hunter2", "--key-cipher=PBE-SHA1-3DES", "--iterations=2048",
+              "--output=" + pfx_chain, priv_key, cert_file, ca_cert_file], "")
+    test_cli("pkcs12_info",
+             ["--pass=hunter2", "--chain-out=" + chain_out, pfx_chain], None)
+    if not os.path.exists(chain_out):
+        logging.error("pkcs12_info --chain-out did not produce a file")
+
+    # Export key with output password protection
+    out_key_enc = os.path.join(tmp_dir, 'out_enc.key')
+    test_cli("pkcs12_info",
+             ["--pass=hunter2",
+              "--key-out=" + out_key_enc,
+              "--out-key-pass=keypassword",
+              "--key-pbkdf-iter=2048",
+              pfx_file], None)
+    if not os.path.exists(out_key_enc):
+        logging.error("pkcs12_info --out-key-pass: key file not written")
+    else:
+        with open(out_key_enc, encoding='utf-8') as f:
+            key_pem = f.read()
+        if "ENCRYPTED" not in key_pem:
+            logging.error("pkcs12_info --out-key-pass: output key is not encrypted")
+
+    # Export with empty password and no MAC (key is still encrypted via PBE)
+    pfx_noenc = os.path.join(tmp_dir, 'noenc.pfx')
+    test_cli("pkcs12_export",
+             ["--pass=", "--no-mac", "--key-cipher=PBE-SHA1-3DES",
+              "--output=" + pfx_noenc, priv_key, cert_file], "")
+    info_noenc = test_cli("pkcs12_info", ["--pass=", pfx_noenc], None)
+    if "ECDSA" not in info_noenc:
+        logging.error("pkcs12_info (no-mac) missing key algorithm: %s", info_noenc)
+
 def cli_uuid_tests(_tmp_dir):
     test_cli("uuid", [], "D80F88F6-ADBE-45AC-B10C-3602E67D985B")
 
@@ -1910,6 +2047,7 @@ def main(args=None):
         cli_pbkdf_tune_tests,
         cli_pk_encrypt_tests,
         cli_pk_workfactor_tests,
+        cli_pkcs12_tests,
         cli_psk_db_tests,
         cli_rng_tests,
         cli_roughtime_check_tests,
