@@ -19,7 +19,9 @@ Version 3.13.0, Not Yet Released
 * Add support for parsing EC keys which contain the ECC domain parameters within
   the key rather than in the algorithm identifier (GH #5532)
 
-* Add support for the PKCS #12 KDF (GH #5478)
+* Add support for PKCS #12 (GH #5478 #5625)
+
+* Add support for GCM-SIV from RFC 8452 (GH #5770)
 
 * Add support for encoding name constraint extensions (GH #5734)
 
