@@ -450,7 +450,7 @@ The constructor has the following signature:
 
    .. cpp:function:: ObjectFinder::ObjectFinder(Session& session, const std::vector<Attribute>& search_template)
 
-      A search can be prepared with an :cpp:class:`ObjectSearcher` by passing a :cpp:class:`Session` and a ``search_template``.
+      A search can be prepared with an :cpp:class:`ObjectFinder` by passing a :cpp:class:`Session` and a ``search_template``.
 
 The actual search operation is started by calling the :cpp:func:`find` method:
 

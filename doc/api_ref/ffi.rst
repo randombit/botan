@@ -882,7 +882,7 @@ Password Hashing
 .. cpp:function:: int botan_bcrypt_is_valid(const char* pass, const char* hash)
 
    Check a previously created password hash.  Returns
-   :cpp:enumerator:`BOTAN_SUCCESS` if if this password/hash
+   :cpp:enumerator:`BOTAN_FFI_SUCCESS` if if this password/hash
    combination is valid, :cpp:enumerator:`BOTAN_FFI_INVALID_VERIFIER`
    if the combination is not valid (but otherwise well formed),
    negative on error.

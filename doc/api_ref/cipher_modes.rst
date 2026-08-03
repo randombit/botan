@@ -165,7 +165,7 @@ Available Unauthenticated Cipher Modes
 
 .. note::
    CTR and OFB modes are also implemented, but these are treated as
-   :cpp:class:`Stream_Cipher`\s instead.
+   :cpp:class:`StreamCipher`\s instead.
 
 CBC
 ~~~~~~~~~~~~
