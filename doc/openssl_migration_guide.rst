@@ -22,8 +22,8 @@ General Remarks
   whereas Botan's API is more consistent
 * OpenSSL's API is mostly underdocumented, whereas Botan targets 100% Doxygen
   coverage for all public API
-* It is often hard to find example code for OpenSSL, whereas Botan provides
-  many :ref:`examples <index:examples>` and lots of
+* It is often hard to find example code for OpenSSL, whereas Botan provides extensive
+  `examples <https://github.com/randombit/botan/tree/master/src/examples>`_ and
   `test code <https://github.com/randombit/botan/tree/master/src/tests>`_.
 
 X.509
