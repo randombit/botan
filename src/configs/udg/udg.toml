@@ -1,0 +1,77 @@
+# udg configuration for documenting Botan
+#
+# Requires a configured botan tree (./configure.py) so that build/include/public exists.
+
+[project]
+name = "Botan"
+root_namespace = "Botan"
+# Relative paths below resolve against the checkout root, not this
+# file's directory.
+root = "../../.."
+
+[cpp]
+std = "c++20"
+include_prefix = "botan"
+hide = ["*::detail", "*::_*"]
+include_dirs = ["build/include/public", "build/include/external"]
+defines = ["BOTAN_NO_DEPRECATED_WARNINGS"]
+
+# This machine's libstdc++ (GCC 16) uses builtins newer than libclang 22
+# understands; parse against libc++ instead (headers only, nothing links).
+extra_args = ["-stdlib=libc++"]
+
+[[cpp.attributes]]
+match = { macro = "BOTAN_PUBLIC_API", args = ["major", "minor"] }
+effect = { since = "{major}.{minor}" }
+
+[[cpp.attributes]]
+match = { macro = "BOTAN_DEPRECATED", args = ["msg"] }
+effect = { deprecated = "{msg}" }
+
+[[cpp.attributes]]
+match = { macro = "BOTAN_DEPRECATED_API", args = ["msg"] }
+effect = { deprecated = "{msg}" }
+
+[modules.cpp]
+# ffi is excluded here: it renders as its own C tree via [c] below.
+map = { command = "python3 src/configs/udg/module_map.py . --exclude ffi" }
+
+[c]
+std = "c++20"
+include_prefix = "botan"
+extra_args = ["-stdlib=libc++"]
+include_dirs = ["build/include/public", "build/include/external"]
+defines = ["BOTAN_NO_DEPRECATED_WARNINGS"]
+headers = ["build/include/public/botan/ffi.h"]
+
+[[c.attributes]]
+match = { macro = "BOTAN_FFI_EXPORT", args = ["major", "minor"] }
+effect = { since = "{major}.{minor}" }
+
+[[c.attributes]]
+match = { macro = "BOTAN_DEPRECATED", args = ["msg"] }
+effect = { deprecated = "{msg}" }
+
+[python]
+modules = ["src/python/botan3.py"]
+
+[bindings]
+map_file = "src/configs/udg/type_bindings.toml"
+
+[guide]
+src = ["doc", "doc/api_ref"]
+exclude = ["contents", "index", "news_2x", "old_news", "credits", "authors"]
+default_code_language = "cpp"   # Sphinx highlight_language equivalent
+title = "Handbook"
+
+[check]
+ratchet = "src/configs/udg/doc_coverage.toml"
+
+# ffi.h and Python have 100% doc coverage and will stay that way
+require_docs = ["c", "py"]
+
+[output]
+# build/docs belongs to the sphinx handbook while both doc systems
+# coexist; udg claims its own directory.
+dir = "build/udg-docs"
+footer = "Botan is released under the Simplified BSD License. Docs built with udg."
