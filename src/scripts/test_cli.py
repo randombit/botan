@@ -1811,6 +1811,32 @@ def cli_speed_pbkdf_tests(_tmp_dir):
             if format_re.match(line) is None:
                 logging.error("Unexpected line %s", line)
 
+def cli_speed_pake_tests(_tmp_dir):
+    def verify_pake_output(output, matcher):
+        # Each PAKE reports three operations
+        if len(output) == 0 or len(output) % 3 != 0:
+            logging.error("Unexpected number of lines for PAKE speed test")
+
+        for line in output:
+            if matcher.match(line) is None:
+                logging.error("Unexpected line %s", line)
+
+    msec = 1
+
+    srp6_output = test_cli("speed", ["--msec=%d" % (msec), "SRP6"], None).split('\n')
+
+    # SRP6-2048 1200 server step1/sec; 0.83 ms/op 2988134 cycles/op (2 ops in 1.67 ms)
+    srp6_re = re.compile(r'^SRP6-[0-9]+ [0-9]+ (server step1|client agree|server step2)/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9\.]+ ms\)')
+
+    verify_pake_output(srp6_output, srp6_re)
+
+    spake2p_output = test_cli("speed", ["--msec=%d" % (msec), "SPAKE2+"], None).split('\n')
+
+    # SPAKE2+ P256-SHA256 3672 prover share/sec; 0.27 ms/op 981056 cycles/op (4 ops in 1.09 ms)
+    spake2p_re = re.compile(r'^SPAKE2\+ .* [0-9]+ (prover share|verifier respond|prover confirm)/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9\.]+ ms\)')
+
+    verify_pake_output(spake2p_output, spake2p_re)
+
 def cli_speed_table_tests(_tmp_dir):
     msec = 1
 
@@ -2054,6 +2080,7 @@ def main(args=None):
         cli_roughtime_tests,
         cli_speed_invalid_option_tests,
         cli_speed_math_tests,
+        cli_speed_pake_tests,
         cli_speed_pk_fast_tests,
         cli_speed_table_tests,
         cli_speed_tests,

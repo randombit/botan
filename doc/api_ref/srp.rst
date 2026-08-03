@@ -18,6 +18,10 @@ example "modp/srp/2048".
 
 .. warning::
 
+   If possible prefer a newer PAKE design such as SPAKE2+
+
+.. warning::
+
      While knowledge of the verifier does not easily allow an attacker
      to get the raw password, they could still use the verifier to
      impersonate the server to the client, so verifiers should be
