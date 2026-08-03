@@ -35,6 +35,7 @@
    #include <botan/tls_server.h>
    #include <botan/tls_session_manager_memory.h>
    #include <botan/tls_session_manager_noop.h>
+   #include <botan/tls_session_manager_stateless.h>
 
 #endif
 
@@ -44,9 +45,18 @@ namespace {
 
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_TLS_12)
 
-class Dtls_Test_Callbacks final : public Botan::TLS::Callbacks {
+/*
+These tests exercise the DTLS core without opening real UDP sockets. The test
+callbacks collect bytes emitted by TLS::Client/TLS::Server, and deliver() feeds
+those bytes into the peer's received_data(). Clearing, splitting, copying, or
+delaying those buffers simulates datagram loss, retransmission, duplicates, and
+partial flights while still running the real DTLS record, handshake, epoch, and
+retransmission logic.
+*/
+
+class DTLS_Test_Callbacks final : public Botan::TLS::Callbacks {
    public:
-      Dtls_Test_Callbacks(Test::Result& result, std::vector<uint8_t>& outbound, std::vector<uint8_t>& received) :
+      DTLS_Test_Callbacks(Test::Result& result, std::vector<uint8_t>& outbound, std::vector<uint8_t>& received) :
             m_result(result), m_outbound(outbound), m_received(received) {}
 
       void tls_emit_data(std::span<const uint8_t> bits) override {
@@ -58,7 +68,10 @@ class Dtls_Test_Callbacks final : public Botan::TLS::Callbacks {
       }
 
       void tls_alert(Botan::TLS::Alert alert) override {
-         if(alert.is_fatal()) {
+         ++m_alerts;
+         m_last_alert = alert;
+
+         if(alert.is_fatal() && !m_tolerate_fatal_alerts) {
             m_result.test_failure("unexpected fatal alert: " + alert.type_string());
          }
       }
@@ -68,7 +81,15 @@ class Dtls_Test_Callbacks final : public Botan::TLS::Callbacks {
          ++m_sessions_established;
       }
 
+      // For endpoints a test expects to fail; without this a fatal alert marks
+      // the whole result failed.
+      void tolerate_fatal_alerts() { m_tolerate_fatal_alerts = true; }
+
       size_t sessions_established() const { return m_sessions_established; }
+
+      size_t alerts_received() const { return m_alerts; }
+
+      std::optional<Botan::TLS::Alert> last_alert() const { return m_last_alert; }
 
       std::optional<bool> session_was_resumption() const { return m_session_was_resumption; }
 
@@ -77,10 +98,13 @@ class Dtls_Test_Callbacks final : public Botan::TLS::Callbacks {
       std::vector<uint8_t>& m_outbound;
       std::vector<uint8_t>& m_received;
       size_t m_sessions_established = 0;
+      size_t m_alerts = 0;
+      std::optional<Botan::TLS::Alert> m_last_alert;
       std::optional<bool> m_session_was_resumption;
+      bool m_tolerate_fatal_alerts = false;
 };
 
-class Dtls_PSK_Credentials final : public Botan::Credentials_Manager {
+class DTLS_PSK_Credentials final : public Botan::Credentials_Manager {
    public:
       Botan::SymmetricKey psk(const std::string& type,
                               const std::string& context,
@@ -91,7 +115,8 @@ class Dtls_PSK_Credentials final : public Botan::Credentials_Manager {
 
          if(type == "tls-server" && context == "dtls-cookie-secret") {
             ++m_dtls_cookie_secret_requests;
-            return Botan::SymmetricKey("4AEA5EAD279CADEB537A594DA0E9DE3A");
+            return m_cookie_secret_rotated ? Botan::SymmetricKey("0123456789ABCDEF0123456789ABCDEF")
+                                           : Botan::SymmetricKey("4AEA5EAD279CADEB537A594DA0E9DE3A");
          }
 
          if(context == "localhost" && (type == "tls-client" || type == "tls-server")) {
@@ -103,30 +128,305 @@ class Dtls_PSK_Credentials final : public Botan::Credentials_Manager {
 
       size_t dtls_cookie_secret_requests() const { return m_dtls_cookie_secret_requests; }
 
+      void rotate_cookie_secret() { m_cookie_secret_rotated = true; }
+
    private:
       size_t m_dtls_cookie_secret_requests = 0;
+      bool m_cookie_secret_rotated = false;
 };
 
-class Dtls_PSK_Policy final : public Botan::TLS::Policy {
+// Settings a test wants to differ from the shared PSK-over-DTLS baseline. The
+// timeouts are short so that the retransmission tests do not wait on a real
+// clock; everything else follows Botan::TLS::Policy, which the unset optionals
+// below defer to.
+struct DTLS_Policy_Options final {
+      std::optional<std::string> cipher;
+      bool allow_epoch0_restart = true;
+      bool reuse_session_tickets = false;
+      size_t initial_timeout_ms = 1;
+      size_t maximum_timeout_ms = 8;
+};
+
+class DTLS_PSK_Policy final : public Botan::TLS::Policy {
    public:
+      DTLS_PSK_Policy() = default;
+
+      explicit DTLS_PSK_Policy(DTLS_Policy_Options opts) : m_opts(std::move(opts)) {}
+
       std::vector<std::string> allowed_macs() const override { return {"AEAD"}; }
 
       std::vector<std::string> allowed_key_exchange_methods() const override { return {"PSK"}; }
+
+      std::vector<std::string> allowed_ciphers() const override {
+         if(m_opts.cipher.has_value()) {
+            return {m_opts.cipher.value()};
+         }
+         return Botan::TLS::Policy::allowed_ciphers();
+      }
 
       bool allow_tls12() const override { return false; }
 
       bool allow_dtls12() const override { return true; }
 
-      bool allow_dtls_epoch0_restart() const override { return true; }
+      bool allow_dtls_epoch0_restart() const override { return m_opts.allow_epoch0_restart; }
 
       bool allow_server_initiated_renegotiation() const override { return true; }
 
       bool allow_client_initiated_renegotiation() const override { return true; }
 
-      size_t dtls_initial_timeout() const override { return 1; }
+      bool reuse_session_tickets() const override { return m_opts.reuse_session_tickets; }
 
-      size_t dtls_maximum_timeout() const override { return 8; }
+      size_t dtls_initial_timeout() const override { return m_opts.initial_timeout_ms; }
+
+      size_t dtls_maximum_timeout() const override { return m_opts.maximum_timeout_ms; }
+
+   private:
+      DTLS_Policy_Options m_opts;
 };
+
+// The variants the tests below need. Everything not named here follows the
+// baseline above.
+
+std::unique_ptr<Botan::TLS::Client> make_dtls_client(const std::shared_ptr<Botan::TLS::Callbacks>& callbacks,
+                                                     const std::shared_ptr<Botan::TLS::Session_Manager>& sessions,
+                                                     const std::shared_ptr<Botan::Credentials_Manager>& creds,
+                                                     const std::shared_ptr<const Botan::TLS::Policy>& policy,
+                                                     const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+   return std::make_unique<Botan::TLS::Client>(callbacks,
+                                               sessions,
+                                               creds,
+                                               policy,
+                                               rng,
+                                               Botan::TLS::Server_Information("localhost"),
+                                               Botan::TLS::Protocol_Version::latest_dtls_version());
+}
+
+std::unique_ptr<Botan::TLS::Server> make_dtls_server(const std::shared_ptr<Botan::TLS::Callbacks>& callbacks,
+                                                     const std::shared_ptr<Botan::TLS::Session_Manager>& sessions,
+                                                     const std::shared_ptr<Botan::Credentials_Manager>& creds,
+                                                     const std::shared_ptr<const Botan::TLS::Policy>& policy,
+                                                     const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+   return std::make_unique<Botan::TLS::Server>(callbacks, sessions, creds, policy, rng, true /* is_datagram */);
+}
+
+void deliver(Test::Result& result,
+             const std::string& label,
+             std::vector<uint8_t>& outbound,
+             Botan::TLS::Channel& peer) {
+   if(!result.test_is_true(label + " has data", !outbound.empty())) {
+      return;
+   }
+
+   std::vector<uint8_t> input;
+   std::swap(input, outbound);
+   result.test_no_throw(label, [&] { peer.received_data(input.data(), input.size()); });
+}
+
+void deliver_copy(Test::Result& result,
+                  const std::string& label,
+                  const std::vector<uint8_t>& outbound,
+                  Botan::TLS::Channel& peer) {
+   if(!result.test_is_true(label + " has data", !outbound.empty())) {
+      return;
+   }
+
+   result.test_no_throw(label, [&] { peer.received_data(outbound.data(), outbound.size()); });
+}
+
+// Hand each waiting buffer to its peer until `done` holds or both run dry.
+// Bounded so that a regression cannot hang the suite.
+template <typename Predicate>
+bool pump_records(std::vector<uint8_t>& c2s,
+                  Botan::TLS::Channel& server,
+                  std::vector<uint8_t>& s2c,
+                  Botan::TLS::Channel& client,
+                  Predicate done,
+                  size_t max_rounds = 64) {
+   for(size_t i = 0; i != max_rounds; ++i) {
+      if(done()) {
+         return true;
+      }
+
+      if(!c2s.empty()) {
+         std::vector<uint8_t> in;
+         std::swap(c2s, in);
+         server.received_data(in.data(), in.size());
+      } else if(!s2c.empty()) {
+         std::vector<uint8_t> in;
+         std::swap(s2c, in);
+         client.received_data(in.data(), in.size());
+      } else {
+         break;
+      }
+   }
+
+   return done();
+}
+
+// One client/server pair plus the buffers carrying records between them. The
+// buffers are declared ahead of the callbacks that write into them.
+struct DTLS_Association final {
+      // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
+      std::vector<uint8_t> c2s;
+      std::vector<uint8_t> s2c;
+      std::vector<uint8_t> client_recv;
+      std::vector<uint8_t> server_recv;
+      std::shared_ptr<DTLS_Test_Callbacks> client_cb;
+      std::shared_ptr<DTLS_Test_Callbacks> server_cb;
+      std::shared_ptr<Botan::TLS::Session_Manager> client_sessions;
+      std::shared_ptr<Botan::TLS::Session_Manager> server_sessions;
+      std::shared_ptr<DTLS_PSK_Credentials> creds;
+      // Retained so that a test can attach a further client to this server.
+      std::shared_ptr<const Botan::TLS::Policy> client_policy;
+      std::unique_ptr<Botan::TLS::Server> server;
+      std::unique_ptr<Botan::TLS::Client> client;
+
+      // NOLINTEND(misc-non-private-member-variables-in-classes)
+
+      bool both_active() const { return client->is_active() && server->is_active(); }
+
+      // Hand one waiting buffer to its peer. Returns false when both are empty.
+      bool pump_one() {
+         if(!c2s.empty()) {
+            std::vector<uint8_t> in;
+            std::swap(c2s, in);
+            server->received_data(in.data(), in.size());
+            return true;
+         }
+         if(!s2c.empty()) {
+            std::vector<uint8_t> in;
+            std::swap(s2c, in);
+            client->received_data(in.data(), in.size());
+            return true;
+         }
+         return false;
+      }
+
+      template <typename Predicate>
+      bool pump_until(Predicate done, size_t max_rounds = 64) {
+         return pump_records(c2s, *server, s2c, *client, done, max_rounds);
+      }
+
+      bool pump(size_t max_rounds = 64) {
+         return pump_until([this] { return both_active(); }, max_rounds);
+      }
+};
+
+// Options for the association builder. `stateless_tickets` selects a server
+// that issues session tickets rather than session IDs, which is the case the
+// ServerHello session ID cannot identify.
+struct DTLS_Association_Options final {
+      std::shared_ptr<const Botan::TLS::Policy> policy;
+      std::shared_ptr<const Botan::TLS::Policy> client_policy;
+      std::shared_ptr<Botan::TLS::Session_Manager> client_sessions;
+      bool stateless_tickets = false;
+      // For tests whose subject is a fatal alert, which otherwise fails the
+      // result the moment the callbacks see it.
+      bool tolerate_fatal_alerts = false;
+};
+
+std::unique_ptr<DTLS_Association> make_association(Test::Result& result,
+                                                   const std::shared_ptr<Botan::RandomNumberGenerator>& rng,
+                                                   DTLS_Association_Options opts = {}) {
+   auto assoc = std::make_unique<DTLS_Association>();
+
+   auto policy = opts.policy ? opts.policy : std::make_shared<DTLS_PSK_Policy>();
+   assoc->client_policy = opts.client_policy ? opts.client_policy : policy;
+   assoc->creds = std::make_shared<DTLS_PSK_Credentials>();
+
+   if(opts.stateless_tickets) {
+      assoc->server_sessions = std::make_shared<Botan::TLS::Session_Manager_Stateless>(assoc->creds, rng);
+   } else {
+      assoc->server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+   }
+
+   assoc->client_sessions = opts.client_sessions ? std::move(opts.client_sessions)
+                                                 : std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+
+   assoc->server_cb = std::make_shared<DTLS_Test_Callbacks>(result, assoc->s2c, assoc->server_recv);
+   assoc->server = make_dtls_server(assoc->server_cb, assoc->server_sessions, assoc->creds, policy, rng);
+
+   assoc->client_cb = std::make_shared<DTLS_Test_Callbacks>(result, assoc->c2s, assoc->client_recv);
+   assoc->client = make_dtls_client(assoc->client_cb, assoc->client_sessions, assoc->creds, assoc->client_policy, rng);
+
+   if(opts.tolerate_fatal_alerts) {
+      assoc->server_cb->tolerate_fatal_alerts();
+      assoc->client_cb->tolerate_fatal_alerts();
+   }
+
+   return assoc;
+}
+
+// The full cookie exchange and handshake, step by step, so that a failure names
+// the flight it stalled on. Tests that only need an established association can
+// use DTLS_Association::pump() instead.
+bool complete_dtls_handshake(Test::Result& result, DTLS_Association& assoc, const std::string& prefix = "") {
+   deliver(result, prefix + "client hello 1", assoc.c2s, *assoc.server);
+   deliver(result, prefix + "hello verify request", assoc.s2c, *assoc.client);
+   deliver(result, prefix + "client hello 2", assoc.c2s, *assoc.server);
+   deliver(result, prefix + "server handshake flight", assoc.s2c, *assoc.client);
+   deliver(result, prefix + "client final flight", assoc.c2s, *assoc.server);
+   deliver(result, prefix + "server final flight", assoc.s2c, *assoc.client);
+
+   return result.test_is_true(prefix + "handshake completed", assoc.both_active());
+}
+
+// A DTLS record with a plaintext body, ie one the record layer will either
+// reject or (at epoch 0) hand straight to the handshake layer.
+std::vector<uint8_t> unprotected_dtls_record(Botan::TLS::Record_Type type,
+                                             uint64_t sequence,
+                                             std::span<const uint8_t> payload) {
+   std::vector<uint8_t> record;
+   record.reserve(13 + payload.size());
+
+   record.push_back(static_cast<uint8_t>(type));
+   record.push_back(0xFE);
+   record.push_back(0xFD);
+   for(size_t i = 0; i != 8; ++i) {
+      record.push_back(static_cast<uint8_t>(sequence >> (56 - 8 * i)));
+   }
+   record.push_back(static_cast<uint8_t>(payload.size() >> 8));
+   record.push_back(static_cast<uint8_t>(payload.size()));
+   record.insert(record.end(), payload.begin(), payload.end());
+
+   return record;
+}
+
+// A 12-byte DTLS handshake header followed by `fragment`, which may be a piece
+// of the message or all of it.
+std::vector<uint8_t> dtls_handshake_fragment(Botan::TLS::Handshake_Type type,
+                                             size_t message_length,
+                                             uint16_t message_sequence,
+                                             size_t fragment_offset,
+                                             std::span<const uint8_t> fragment) {
+   const auto push_be24 = [](std::vector<uint8_t>& out, size_t value) {
+      out.push_back(static_cast<uint8_t>((value >> 16) & 0xFF));
+      out.push_back(static_cast<uint8_t>((value >> 8) & 0xFF));
+      out.push_back(static_cast<uint8_t>(value & 0xFF));
+   };
+
+   std::vector<uint8_t> msg;
+   msg.reserve(12 + fragment.size());
+
+   msg.push_back(static_cast<uint8_t>(type));
+   push_be24(msg, message_length);
+   msg.push_back(static_cast<uint8_t>(message_sequence >> 8));
+   msg.push_back(static_cast<uint8_t>(message_sequence));
+   push_be24(msg, fragment_offset);
+   push_be24(msg, fragment.size());
+   msg.insert(msg.end(), fragment.begin(), fragment.end());
+
+   return msg;
+}
+
+// A record carrying only a handshake header: it declares `message_length` bytes
+// but delivers none of them.
+std::vector<uint8_t> empty_dtls_handshake_fragment(Botan::TLS::Handshake_Type type,
+                                                   size_t message_length,
+                                                   uint16_t message_sequence) {
+   return unprotected_dtls_record(
+      Botan::TLS::Record_Type::Handshake, 0, dtls_handshake_fragment(type, message_length, message_sequence, 0, {}));
+}
 
 /*
 These tests exercise the DTLS core without opening real UDP sockets. The test
@@ -138,30 +438,6 @@ retransmission logic.
 */
 class DTLS_Core_Regression_Tests final : public Test {
    private:
-      static void deliver(Test::Result& result,
-                          const std::string& label,
-                          std::vector<uint8_t>& outbound,
-                          Botan::TLS::Channel& peer) {
-         if(!result.test_is_true(label + " has data", !outbound.empty())) {
-            return;
-         }
-
-         std::vector<uint8_t> input;
-         std::swap(input, outbound);
-         result.test_no_throw(label, [&] { peer.received_data(input.data(), input.size()); });
-      }
-
-      static void deliver_copy(Test::Result& result,
-                               const std::string& label,
-                               const std::vector<uint8_t>& outbound,
-                               Botan::TLS::Channel& peer) {
-         if(!result.test_is_true(label + " has data", !outbound.empty())) {
-            return;
-         }
-
-         result.test_no_throw(label, [&] { peer.received_data(outbound.data(), outbound.size()); });
-      }
-
       static bool split_first_dtls_record(Test::Result& result,
                                           const std::vector<uint8_t>& records,
                                           std::vector<uint8_t>& first_record,
@@ -182,6 +458,25 @@ class DTLS_Core_Regression_Tests final : public Test {
          first_record.assign(records.begin(), records.begin() + total_len);
          remaining_records.assign(records.begin() + total_len, records.end());
          return result.test_is_true("DTLS server flight has more than one record", !remaining_records.empty());
+      }
+
+      // Pack the handshake payloads of two DTLS records into a single record,
+      // reusing the first record's header. RFC 6347 4.2.3 allows this for
+      // messages "part of the same flight"; a stale duplicate is not, which is
+      // the point of the test using it.
+      static std::vector<uint8_t> coalesce_dtls_records(const std::vector<uint8_t>& first,
+                                                        const std::vector<uint8_t>& second) {
+         constexpr size_t dtls_header_len = 13;
+
+         const size_t first_len = (static_cast<size_t>(first[11]) << 8) | first[12];
+         const size_t second_len = (static_cast<size_t>(second[11]) << 8) | second[12];
+
+         std::vector<uint8_t> record(first.begin(), first.begin() + dtls_header_len);
+         record[11] = static_cast<uint8_t>((first_len + second_len) >> 8);
+         record[12] = static_cast<uint8_t>(first_len + second_len);
+         record.insert(record.end(), first.begin() + dtls_header_len, first.begin() + dtls_header_len + first_len);
+         record.insert(record.end(), second.begin() + dtls_header_len, second.begin() + dtls_header_len + second_len);
+         return record;
       }
 
       static std::vector<Botan::TLS::Handshake_Type> dtls_handshake_types(const std::vector<uint8_t>& records) {
@@ -273,49 +568,7 @@ class DTLS_Core_Regression_Tests final : public Test {
          return false;
       }
 
-      static std::vector<uint8_t> empty_dtls_handshake_fragment(Botan::TLS::Handshake_Type type,
-                                                                size_t message_length,
-                                                                uint16_t message_sequence) {
-         std::vector<uint8_t> record;
-         record.reserve(25);
-
-         record.push_back(static_cast<uint8_t>(Botan::TLS::Record_Type::Handshake));
-         record.push_back(0xFE);
-         record.push_back(0xFD);
-         record.insert(record.end(), 8, 0);  // epoch 0, sequence number 0
-         record.push_back(0);
-         record.push_back(12);
-
-         record.push_back(static_cast<uint8_t>(type));
-         record.push_back(static_cast<uint8_t>((message_length >> 16) & 0xFF));
-         record.push_back(static_cast<uint8_t>((message_length >> 8) & 0xFF));
-         record.push_back(static_cast<uint8_t>(message_length & 0xFF));
-         record.push_back(static_cast<uint8_t>((message_sequence >> 8) & 0xFF));
-         record.push_back(static_cast<uint8_t>(message_sequence & 0xFF));
-         record.insert(record.end(), 6, 0);  // fragment offset 0, fragment length 0
-
-         return record;
-      }
-
-      static std::vector<uint8_t> unprotected_dtls_record(Botan::TLS::Record_Type type,
-                                                          uint64_t sequence,
-                                                          std::span<const uint8_t> payload) {
-         std::vector<uint8_t> record;
-         record.reserve(13 + payload.size());
-
-         record.push_back(static_cast<uint8_t>(type));
-         record.push_back(0xFE);
-         record.push_back(0xFD);
-         for(size_t i = 0; i != 8; ++i) {
-            record.push_back(static_cast<uint8_t>(sequence >> (56 - 8 * i)));
-         }
-         record.push_back(static_cast<uint8_t>(payload.size() >> 8));
-         record.push_back(static_cast<uint8_t>(payload.size()));
-         record.insert(record.end(), payload.begin(), payload.end());
-
-         return record;
-      }
-
+      // A complete, unfragmented DTLS handshake message: 12-byte header plus body.
       template <typename Predicate>
       static bool wait_until(Predicate predicate) {
          // DTLS timeouts are clock based. Poll briefly instead of sleeping for
@@ -351,27 +604,11 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result("DTLS timeout_check retransmit pacing");
 
          auto rng = Test::new_shared_rng("dtls-core-timeout-pacing");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-
-         std::vector<uint8_t> c2s;
-         std::vector<uint8_t> s2c;
-         std::vector<uint8_t> client_recv;
-         std::vector<uint8_t> server_recv;
-
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
-
-         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
-         Botan::TLS::Client client(client_callbacks,
-                                   client_sessions,
-                                   creds,
-                                   policy,
-                                   rng,
-                                   Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
 
          deliver(result, "client hello 1", c2s, server);
          if(!result.test_is_true("hello verify request was produced", !s2c.empty())) {
@@ -394,27 +631,11 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result("DTLS retransmitted epoch-1 flight includes CCS");
 
          auto rng = Test::new_shared_rng("dtls-core-retransmitted-ccs");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-
-         std::vector<uint8_t> c2s;
-         std::vector<uint8_t> s2c;
-         std::vector<uint8_t> client_recv;
-         std::vector<uint8_t> server_recv;
-
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
-
-         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
-         Botan::TLS::Client client(client_callbacks,
-                                   client_sessions,
-                                   creds,
-                                   policy,
-                                   rng,
-                                   Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
 
          deliver(result, "client hello 1", c2s, server);
          deliver(result, "hello verify request", s2c, client);
@@ -446,27 +667,11 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result("DTLS lost HelloVerifyRequest retransmits");
 
          auto rng = Test::new_shared_rng("dtls-core-lost-hvr");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-
-         std::vector<uint8_t> c2s;
-         std::vector<uint8_t> s2c;
-         std::vector<uint8_t> client_recv;
-         std::vector<uint8_t> server_recv;
-
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
-
-         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
-         Botan::TLS::Client client(client_callbacks,
-                                   client_sessions,
-                                   creds,
-                                   policy,
-                                   rng,
-                                   Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
 
          deliver(result, "client hello 1", c2s, server);
          if(!result.test_is_true("hello verify request was produced", !s2c.empty())) {
@@ -502,27 +707,11 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result("DTLS duplicate HelloVerifyRequest is tolerated");
 
          auto rng = Test::new_shared_rng("dtls-core-duplicate-hvr");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-
-         std::vector<uint8_t> c2s;
-         std::vector<uint8_t> s2c;
-         std::vector<uint8_t> client_recv;
-         std::vector<uint8_t> server_recv;
-
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
-
-         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
-         Botan::TLS::Client client(client_callbacks,
-                                   client_sessions,
-                                   creds,
-                                   policy,
-                                   rng,
-                                   Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
 
          deliver(result, "client hello 1", c2s, server);
 
@@ -560,27 +749,11 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result("DTLS partial server flight waits for ServerHelloDone");
 
          auto rng = Test::new_shared_rng("dtls-core-partial-server-flight");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-
-         std::vector<uint8_t> c2s;
-         std::vector<uint8_t> s2c;
-         std::vector<uint8_t> client_recv;
-         std::vector<uint8_t> server_recv;
-
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
-
-         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
-         Botan::TLS::Client client(client_callbacks,
-                                   client_sessions,
-                                   creds,
-                                   policy,
-                                   rng,
-                                   Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
 
          deliver(result, "client hello 1", c2s, server);
          deliver(result, "hello verify request", s2c, client);
@@ -621,27 +794,11 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result("DTLS lost server flight retransmits");
 
          auto rng = Test::new_shared_rng("dtls-core-lost-server-flight");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-
-         std::vector<uint8_t> c2s;
-         std::vector<uint8_t> s2c;
-         std::vector<uint8_t> client_recv;
-         std::vector<uint8_t> server_recv;
-
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
-
-         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
-         Botan::TLS::Client client(client_callbacks,
-                                   client_sessions,
-                                   creds,
-                                   policy,
-                                   rng,
-                                   Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
 
          deliver(result, "client hello 1", c2s, server);
          deliver(result, "hello verify request", s2c, client);
@@ -672,27 +829,11 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result("DTLS duplicate server flight defers replay to timer");
 
          auto rng = Test::new_shared_rng("dtls-core-retransmitted-server-flight");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-
-         std::vector<uint8_t> c2s;
-         std::vector<uint8_t> s2c;
-         std::vector<uint8_t> client_recv;
-         std::vector<uint8_t> server_recv;
-
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
-
-         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
-         Botan::TLS::Client client(client_callbacks,
-                                   client_sessions,
-                                   creds,
-                                   policy,
-                                   rng,
-                                   Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
 
          deliver(result, "client hello 1", c2s, server);
          deliver(result, "hello verify request", s2c, client);
@@ -725,8 +866,10 @@ class DTLS_Core_Regression_Tests final : public Test {
          deliver_copy(result, "rest of retransmitted server flight", remaining_server_records, client);
          result.test_is_true("duplicated server flight does not immediately replay client flight", c2s.empty());
 
-         // The response flight is still recoverable. Deferring to the timer
-         // avoids injecting an epoch-0 replay after the peer has progressed.
+         // A pending handshake deliberately does not take RFC 6347 4.2.4's
+         // "read retransmit" exit; see process_previous_handshake_fragment for
+         // why reordering makes that unsafe. The flight is still recoverable
+         // from the local timer.
          wait_for_timeout_retransmit(result, client, c2s);
          result.test_is_true("client timer replays the lost response flight", !c2s.empty());
 
@@ -737,27 +880,11 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result("DTLS lost server final flight retransmits");
 
          auto rng = Test::new_shared_rng("dtls-core-lost-server-final");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-
-         std::vector<uint8_t> c2s;
-         std::vector<uint8_t> s2c;
-         std::vector<uint8_t> client_recv;
-         std::vector<uint8_t> server_recv;
-
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
-
-         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
-         Botan::TLS::Client client(client_callbacks,
-                                   client_sessions,
-                                   creds,
-                                   policy,
-                                   rng,
-                                   Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
 
          deliver(result, "client hello 1", c2s, server);
          deliver(result, "hello verify request", s2c, client);
@@ -802,27 +929,11 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result("DTLS stale ClientHello after server activation");
 
          auto rng = Test::new_shared_rng("dtls-core-stale-client-hello");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-
-         std::vector<uint8_t> c2s;
-         std::vector<uint8_t> s2c;
-         std::vector<uint8_t> client_recv;
-         std::vector<uint8_t> server_recv;
-
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
-
-         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
-         Botan::TLS::Client client(client_callbacks,
-                                   client_sessions,
-                                   creds,
-                                   policy,
-                                   rng,
-                                   Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
 
          deliver(result, "client hello 1", c2s, server);
          deliver(result, "hello verify request", s2c, client);
@@ -854,19 +965,19 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result("DTLS epoch-zero ClientHello retransmit while restart pending");
 
          auto rng = Test::new_shared_rng("dtls-core-pending-epoch0-restart");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
+         auto policy = std::make_shared<DTLS_PSK_Policy>();
+         auto creds = std::make_shared<DTLS_PSK_Credentials>();
          auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
          auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_Noop>();
 
          std::vector<uint8_t> s2c;
          std::vector<uint8_t> server_recv;
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
+         auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
          Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
 
          std::vector<uint8_t> c1_c2s;
          std::vector<uint8_t> client1_recv;
-         auto client1_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c1_c2s, client1_recv);
+         auto client1_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c1_c2s, client1_recv);
          Botan::TLS::Client client1(client1_callbacks,
                                     client_sessions,
                                     creds,
@@ -888,7 +999,7 @@ class DTLS_Core_Regression_Tests final : public Test {
 
          std::vector<uint8_t> c2_c2s;
          std::vector<uint8_t> client2_recv;
-         auto client2_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2_c2s, client2_recv);
+         auto client2_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2_c2s, client2_recv);
          Botan::TLS::Client client2(client2_callbacks,
                                     client_sessions,
                                     creds,
@@ -935,8 +1046,8 @@ class DTLS_Core_Regression_Tests final : public Test {
                                                : "DTLS final flight retransmit before app data");
 
          auto rng = Test::new_shared_rng(expect_resumption ? "dtls-core-resumption" : "dtls-core-full");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
+         auto policy = std::make_shared<DTLS_PSK_Policy>();
+         auto creds = std::make_shared<DTLS_PSK_Credentials>();
          auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
          auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
 
@@ -951,8 +1062,8 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result("DTLS resumed client final flight retransmits after activation");
 
          auto rng = Test::new_shared_rng("dtls-core-resumed-client-active");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
+         auto policy = std::make_shared<DTLS_PSK_Policy>();
+         auto creds = std::make_shared<DTLS_PSK_Credentials>();
          auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
          auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
 
@@ -963,8 +1074,8 @@ class DTLS_Core_Regression_Tests final : public Test {
          std::vector<uint8_t> client_recv;
          std::vector<uint8_t> server_recv;
 
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
+         auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
+         auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
 
          Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
          Botan::TLS::Client client(client_callbacks,
@@ -1020,27 +1131,11 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result("DTLS reordered retransmitted final flight");
 
          auto rng = Test::new_shared_rng("dtls-core-reordered-retransmitted-final");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-
-         std::vector<uint8_t> c2s;
-         std::vector<uint8_t> s2c;
-         std::vector<uint8_t> client_recv;
-         std::vector<uint8_t> server_recv;
-
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
-
-         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
-         Botan::TLS::Client client(client_callbacks,
-                                   client_sessions,
-                                   creds,
-                                   policy,
-                                   rng,
-                                   Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
 
          deliver(result, "client hello 1", c2s, server);
          deliver(result, "hello verify request", s2c, client);
@@ -1093,34 +1188,13 @@ class DTLS_Core_Regression_Tests final : public Test {
 
          auto rng = Test::new_shared_rng(server_initiated ? "dtls-core-server-renegotiation"
                                                           : "dtls-core-client-renegotiation");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
 
-         std::vector<uint8_t> c2s;
-         std::vector<uint8_t> s2c;
-         std::vector<uint8_t> client_recv;
-         std::vector<uint8_t> server_recv;
-
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
-
-         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
-         Botan::TLS::Client client(client_callbacks,
-                                   client_sessions,
-                                   creds,
-                                   policy,
-                                   rng,
-                                   Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
-
-         deliver(result, "client hello 1", c2s, server);
-         deliver(result, "hello verify request", s2c, client);
-         deliver(result, "client hello 2", c2s, server);
-         deliver(result, "server handshake flight", s2c, client);
-         deliver(result, "client final flight", c2s, server);
-         deliver(result, "server final flight", s2c, client);
+         complete_dtls_handshake(result, *assoc);
 
          if(server_initiated) {
             result.test_no_throw("server requests renegotiation", [&] { server.renegotiate(true); });
@@ -1155,34 +1229,12 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result("DTLS empty old handshake fragment does not retransmit");
 
          auto rng = Test::new_shared_rng("dtls-core-empty-old-fragment");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& s2c = assoc->s2c;
 
-         std::vector<uint8_t> c2s;
-         std::vector<uint8_t> s2c;
-         std::vector<uint8_t> client_recv;
-         std::vector<uint8_t> server_recv;
-
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
-
-         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
-         Botan::TLS::Client client(client_callbacks,
-                                   client_sessions,
-                                   creds,
-                                   policy,
-                                   rng,
-                                   Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
-
-         deliver(result, "client hello 1", c2s, server);
-         deliver(result, "hello verify request", s2c, client);
-         deliver(result, "client hello 2", c2s, server);
-         deliver(result, "server handshake flight", s2c, client);
-         deliver(result, "client final flight", c2s, server);
-         deliver(result, "server final flight", s2c, client);
+         complete_dtls_handshake(result, *assoc);
 
          result.test_is_true("client became active", client.is_active());
          result.test_is_true("server became active", server.is_active());
@@ -1200,27 +1252,11 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result("DTLS spoofed epoch 0 records do not abort or poison retransmission");
 
          auto rng = Test::new_shared_rng("dtls-core-spoofed-epoch0");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-
-         std::vector<uint8_t> c2s;
-         std::vector<uint8_t> s2c;
-         std::vector<uint8_t> client_recv;
-         std::vector<uint8_t> server_recv;
-
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
-
-         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
-         Botan::TLS::Client client(client_callbacks,
-                                   client_sessions,
-                                   creds,
-                                   policy,
-                                   rng,
-                                   Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
 
          deliver(result, "client hello 1", c2s, server);
          deliver(result, "hello verify request", s2c, client);
@@ -1264,8 +1300,8 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result("DTLS resumed final flight and app data in one receive");
 
          auto rng = Test::new_shared_rng("dtls-core-resumed-final-and-app-data");
-         auto policy = std::make_shared<Dtls_PSK_Policy>();
-         auto creds = std::make_shared<Dtls_PSK_Credentials>();
+         auto policy = std::make_shared<DTLS_PSK_Policy>();
+         auto creds = std::make_shared<DTLS_PSK_Credentials>();
          auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
          auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
 
@@ -1276,8 +1312,8 @@ class DTLS_Core_Regression_Tests final : public Test {
          std::vector<uint8_t> client_recv;
          std::vector<uint8_t> server_recv;
 
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
+         auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
+         auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
 
          Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
          Botan::TLS::Client client(client_callbacks,
@@ -1323,8 +1359,8 @@ class DTLS_Core_Regression_Tests final : public Test {
          std::vector<uint8_t> client_recv;
          std::vector<uint8_t> server_recv;
 
-         auto server_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<Dtls_Test_Callbacks>(result, c2s, client_recv);
+         auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
+         auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
 
          Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
          Botan::TLS::Client client(client_callbacks,
@@ -1405,208 +1441,86 @@ class DTLS_Core_Regression_Tests final : public Test {
 
 BOTAN_REGISTER_TEST("tls", "tls_dtls_core_regressions", DTLS_Core_Regression_Tests);
 
+// RFC 6347 4.2.8: a client that goes silent may be replaced by a new one
+// arriving on the same 5-tuple, which the server has to take up as a fresh
+// association rather than as traffic on the old one.
 class DTLS_Reconnection_Test : public Test {
    public:
       std::vector<Test::Result> run() override {
-         class Test_Callbacks : public Botan::TLS::Callbacks {
-            public:
-               Test_Callbacks(Test::Result& results, std::vector<uint8_t>& outbound, std::vector<uint8_t>& recv_buf) :
-                     m_results(results), m_outbound(outbound), m_recv(recv_buf) {}
-
-               void tls_emit_data(std::span<const uint8_t> bits) override {
-                  m_outbound.insert(m_outbound.end(), bits.begin(), bits.end());
-               }
-
-               void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> bits) override {
-                  m_recv.insert(m_recv.end(), bits.begin(), bits.end());
-               }
-
-               void tls_alert(Botan::TLS::Alert /*alert*/) override {
-                  // ignore
-               }
-
-               void tls_session_established(const Botan::TLS::Session_Summary& /*session*/) override {
-                  m_results.test_success("Established a session");
-               }
-
-            private:
-               Test::Result& m_results;
-               std::vector<uint8_t>& m_outbound;
-               std::vector<uint8_t>& m_recv;
-         };
-
-         class Credentials_PSK : public Botan::Credentials_Manager {
-            public:
-               Botan::SymmetricKey psk(const std::string& type,
-                                       const std::string& context,
-                                       const std::string& /*identity*/) override {
-                  if(type == "tls-server" && context == "session-ticket") {
-                     return Botan::SymmetricKey("AABBCCDDEEFF012345678012345678");
-                  }
-
-                  if(type == "tls-server" && context == "dtls-cookie-secret") {
-                     return Botan::SymmetricKey("4AEA5EAD279CADEB537A594DA0E9DE3A");
-                  }
-
-                  if(context == "localhost" && type == "tls-client") {
-                     return Botan::SymmetricKey("20B602D1475F2DF888FCB60D2AE03AFD");
-                  }
-
-                  if(context == "localhost" && type == "tls-server") {
-                     return Botan::SymmetricKey("20B602D1475F2DF888FCB60D2AE03AFD");
-                  }
-
-                  throw Test_Error("No PSK set for " + type + "/" + context);
-               }
-         };
-
-         class Datagram_PSK_Policy : public Botan::TLS::Policy {
-            public:
-               std::vector<std::string> allowed_macs() const override { return std::vector<std::string>({"AEAD"}); }
-
-               std::vector<std::string> allowed_key_exchange_methods() const override { return {"PSK"}; }
-
-               bool allow_tls12() const override { return false; }
-
-               bool allow_dtls12() const override { return true; }
-
-               bool allow_dtls_epoch0_restart() const override { return true; }
-         };
-
          Test::Result result("DTLS reconnection");
 
          auto rng = Test::new_shared_rng(this->test_name());
 
-         auto server_policy = std::make_shared<Datagram_PSK_Policy>();
-         auto client_policy = std::make_shared<Datagram_PSK_Policy>();
-         auto creds = std::make_shared<Credentials_PSK>();
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+         // Neither client caches sessions, so the second one starts a genuinely
+         // new handshake rather than trying to resume.
+         DTLS_Association_Options opts;
+         opts.client_sessions = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+         auto assoc = make_association(result, rng, opts);
 
-         std::vector<uint8_t> s2c;
-         std::vector<uint8_t> server_recv;
-         auto server_callbacks = std::make_shared<Test_Callbacks>(result, s2c, server_recv);
-         Botan::TLS::Server server(server_callbacks, server_sessions, creds, server_policy, rng, true);
+         auto& server = *assoc->server;
 
-         std::vector<uint8_t> c1_c2s;
-         std::vector<uint8_t> client1_recv;
-         auto client1_callbacks = std::make_shared<Test_Callbacks>(result, c1_c2s, client1_recv);
-         Botan::TLS::Client client1(client1_callbacks,
-                                    client_sessions,
-                                    creds,
-                                    client_policy,
-                                    rng,
-                                    Botan::TLS::Server_Information("localhost"),
-                                    Botan::TLS::Protocol_Version::latest_dtls_version());
+         // Run one client to completion against the shared server and exchange a
+         // datagram in each direction. Bounded so a regression cannot hang.
+         const auto exchange = [&](Botan::TLS::Client& client,
+                                   std::vector<uint8_t>& c2s,
+                                   std::vector<uint8_t>& client_recv,
+                                   uint8_t to_server_byte,
+                                   uint8_t to_client_byte,
+                                   const std::string& label) {
+            const std::vector<uint8_t> to_server(16, to_server_byte);
+            const std::vector<uint8_t> to_client(16, to_client_byte);
+            bool client_sent = false;
+            bool server_sent = false;
 
-         bool c1_to_server_sent = false;
-         const bool server_to_c1_sent = false;
-
-         const std::vector<uint8_t> c1_to_server_magic(16, 0xC1);
-         const std::vector<uint8_t> server_to_c1_magic(16, 0x42);
-
-         size_t c1_rounds = 0;
-         for(;;) {
-            c1_rounds++;
-
-            if(c1_rounds > 64) {
-               result.test_failure("Still spinning in client1 loop after 64 rounds");
-               return {result};
+            for(size_t round = 0; round != 64; ++round) {
+               if(!c2s.empty()) {
+                  std::vector<uint8_t> input;
+                  std::swap(c2s, input);
+                  server.received_data(input.data(), input.size());
+               } else if(!assoc->s2c.empty()) {
+                  std::vector<uint8_t> input;
+                  std::swap(assoc->s2c, input);
+                  client.received_data(input.data(), input.size());
+               } else if(!client_sent && client.is_active()) {
+                  client.send(to_server);
+                  client_sent = true;
+               } else if(!server_sent && server.is_active()) {
+                  server.send(to_client);
+                  server_sent = true;
+               } else if(!assoc->server_recv.empty() && !client_recv.empty()) {
+                  result.test_bin_eq("message from " + label, assoc->server_recv, to_server);
+                  result.test_bin_eq("message to " + label, client_recv, to_client);
+                  return true;
+               } else {
+                  break;  // out of input with nothing left to send
+               }
             }
 
-            if(!c1_c2s.empty()) {
-               std::vector<uint8_t> input;
-               std::swap(c1_c2s, input);
-               server.received_data(input.data(), input.size());
-               continue;
-            }
+            result.test_failure("the " + label + " exchange did not complete");
+            return false;
+         };
 
-            if(!s2c.empty()) {
-               std::vector<uint8_t> input;
-               std::swap(s2c, input);
-               client1.received_data(input.data(), input.size());
-               continue;
-            }
-
-            if(!c1_to_server_sent && client1.is_active()) {
-               client1.send(c1_to_server_magic);
-               c1_to_server_sent = true;
-            }
-
-            if(!server_to_c1_sent && server.is_active()) {
-               server.send(server_to_c1_magic);
-            }
-
-            if(!server_recv.empty() && !client1_recv.empty()) {
-               result.test_bin_eq("Expected message from client1", server_recv, c1_to_server_magic);
-               result.test_bin_eq("Expected message to client1", client1_recv, server_to_c1_magic);
-               break;
-            }
+         if(!exchange(*assoc->client, assoc->c2s, assoc->client_recv, 0xC1, 0x42, "client1")) {
+            return {result};
          }
+         result.test_sz_eq("client1 established a session", assoc->client_cb->sessions_established(), size_t(1));
+         result.test_sz_eq("server established a session", assoc->server_cb->sessions_established(), size_t(1));
 
-         // Now client1 "goes away" (goes silent) and new client
-         // connects to same server context (ie due to reuse of client source port)
-         // See RFC 6347 section 4.2.8
-
-         server_recv.clear();
-         s2c.clear();
+         // Now client1 goes silent and a new client connects to the same server
+         // context, as happens when a client source port is reused.
+         assoc->server_recv.clear();
+         assoc->s2c.clear();
 
          std::vector<uint8_t> c2_c2s;
          std::vector<uint8_t> client2_recv;
-         auto client2_callbacks = std::make_shared<Test_Callbacks>(result, c2_c2s, client2_recv);
-         Botan::TLS::Client client2(client2_callbacks,
-                                    client_sessions,
-                                    creds,
-                                    client_policy,
-                                    rng,
-                                    Botan::TLS::Server_Information("localhost"),
-                                    Botan::TLS::Protocol_Version::latest_dtls_version());
+         auto client2_cb = std::make_shared<DTLS_Test_Callbacks>(result, c2_c2s, client2_recv);
+         auto client2 = make_dtls_client(client2_cb, assoc->client_sessions, assoc->creds, assoc->client_policy, rng);
 
-         bool c2_to_server_sent = false;
-         const bool server_to_c2_sent = false;
-
-         const std::vector<uint8_t> c2_to_server_magic(16, 0xC2);
-         const std::vector<uint8_t> server_to_c2_magic(16, 0x66);
-
-         size_t c2_rounds = 0;
-
-         for(;;) {
-            c2_rounds++;
-
-            if(c2_rounds > 64) {
-               result.test_failure("Still spinning in client2 loop after 64 rounds");
-               return {result};
-            }
-
-            if(!c2_c2s.empty()) {
-               std::vector<uint8_t> input;
-               std::swap(c2_c2s, input);
-               server.received_data(input.data(), input.size());
-               continue;
-            }
-
-            if(!s2c.empty()) {
-               std::vector<uint8_t> input;
-               std::swap(s2c, input);
-               client2.received_data(input.data(), input.size());
-               continue;
-            }
-
-            if(!c2_to_server_sent && client2.is_active()) {
-               client2.send(c2_to_server_magic);
-               c2_to_server_sent = true;
-            }
-
-            if(!server_to_c2_sent && server.is_active()) {
-               server.send(server_to_c2_magic);
-            }
-
-            if(!server_recv.empty() && !client2_recv.empty()) {
-               result.test_bin_eq("Expected message from client2", server_recv, c2_to_server_magic);
-               result.test_bin_eq("Expected message to client2", client2_recv, server_to_c2_magic);
-               break;
-            }
+         if(!exchange(*client2, c2_c2s, client2_recv, 0xC2, 0x66, "client2")) {
+            return {result};
          }
+         result.test_sz_eq("client2 established a session", client2_cb->sessions_established(), size_t(1));
+         result.test_sz_eq("server established a second session", assoc->server_cb->sessions_established(), size_t(2));
 
          return {result};
       }
