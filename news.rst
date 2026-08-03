@@ -9,19 +9,21 @@ Version 3.13.0, Not Yet Released
 * Add ``DNSName``, ``URI``, and ``EmailAddress`` types. (GH #5598 #5601 #5622 #5663
   #5683 #5750)
 
-* Add support for the RFC 9608 No Revocation Available extension (GH #5595)
+* The default policy for TLS now no longer lists finite field Diffie-Hellman.
+  If required for compatability it must be enabled by the application. (GH #5782)
 
 * Fix DTLS 1.2 handshake retransmission edge cases, including pacing of
   repeated timeout checks, replay of final flights after local activation,
   partial server-flight delivery, and delayed server-side flight handling.
   (GH #5696 #2310 #2498 #4022 #4036)
 
-* Add support for parsing EC keys which contain the ECC domain parameters within
-  the key rather than in the algorithm identifier (GH #5532)
+* Add support for SPAKE2+ from RFC 9383 (GH #5711)
 
 * Add support for PKCS #12 (GH #5478 #5625)
 
 * Add support for GCM-SIV from RFC 8452 (GH #5770)
+
+* Add support for the RFC 9608 No Revocation Available extension (GH #5595)
 
 * Add support for encoding name constraint extensions (GH #5734)
 
@@ -67,6 +69,9 @@ Version 3.13.0, Not Yet Released
 * Fix several edge cases in stateful hash-based signatures, including rejecting HSS
   public keys with L = 0 and detecting ``fork`` in the stateful key index
   (GH #5662 #5666 #5723)
+
+* Add support for parsing EC keys which contain the ECC domain parameters within
+  the key rather than in the algorithm identifier (GH #5532)
 
 * Various fixes and improvements for SLH-DSA (GH #5730)
 
