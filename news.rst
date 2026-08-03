@@ -10,7 +10,7 @@ Version 3.13.0, Not Yet Released
   #5683 #5750)
 
 * The default policy for TLS now no longer lists finite field Diffie-Hellman.
-  If required for compatability it must be enabled by the application. (GH #5782)
+  If required for compatibility it must be enabled by the application. (GH #5782)
 
 * Fix DTLS 1.2 handshake retransmission edge cases, including pacing of
   repeated timeout checks, replay of final flights after local activation,
