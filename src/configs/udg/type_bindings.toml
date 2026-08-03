@@ -1,0 +1,118 @@
+
+[[bind]]
+c_prefix = "botan_hash_"
+cpp = "HashFunction"
+py = "HashFunction"
+
+[[bind]]
+c_prefix = "botan_mac_"
+cpp = "MessageAuthenticationCode"
+py = "MsgAuthCode"
+
+[[bind]]
+c_prefix = "botan_cipher_"
+cpp = "Cipher_Mode"
+py = "SymmetricCipher"
+
+[[bind]]
+c_prefix = "botan_block_cipher_"
+cpp = "BlockCipher"
+py = "BlockCipher"
+
+[[bind]]
+c_prefix = "botan_pubkey_"
+cpp = "Public_Key"
+py = "PublicKey"
+
+[[bind]]
+c_prefix = "botan_privkey_"
+cpp = "Private_Key"
+py = "PrivateKey"
+
+[[bind]]
+c_prefix = "botan_pk_op_encrypt_"
+cpp = "PK_Encryptor"
+py = "PKEncrypt"
+
+[[bind]]
+c_prefix = "botan_pk_op_decrypt_"
+cpp = "PK_Decryptor"
+py = "PKDecrypt"
+
+[[bind]]
+c_prefix = "botan_pk_op_sign_"
+cpp = "PK_Signer"
+py = "PKSign"
+
+[[bind]]
+c_prefix = "botan_pk_op_verify_"
+cpp = "PK_Verifier"
+py = "PKVerify"
+
+[[bind]]
+c_prefix = "botan_pk_op_key_agreement"
+cpp = "PK_Key_Agreement"
+py = "PKKeyAgreement"
+
+[[bind]]
+c_prefix = "botan_pk_op_kem_encrypt_"
+cpp = "PK_KEM_Encryptor"
+py = "KemEncrypt"
+
+[[bind]]
+c_prefix = "botan_pk_op_kem_decrypt_"
+cpp = "PK_KEM_Decryptor"
+py = "KemDecrypt"
+
+[[bind]]
+c_prefix = "botan_mp_"
+cpp = "BigInt"
+py = "MPI"
+
+[[bind]]
+c_prefix = "botan_rng_"
+cpp = "RandomNumberGenerator"
+py = "RandomNumberGenerator"
+
+[[bind]]
+c_prefix = "botan_x509_cert_"
+cpp = "X509_Certificate"
+py = "X509Cert"
+
+[[bind]]
+c_prefix = "botan_fpe_"
+cpp = "FPE_FE1"
+py = "FormatPreservingEncryptionFE1"
+
+[[bind]]
+c_prefix = "botan_hotp_"
+cpp = "HOTP"
+py = "HOTP"
+
+[[bind]]
+c_prefix = "botan_totp_"
+cpp = "TOTP"
+py = "TOTP"
+
+[[bind]]
+c_prefix = "botan_srp6_"
+py = "Srp6ServerSession"
+
+[[bind]]
+c_prefix = "botan_ec_group_"
+cpp = "EC_Group"
+py = "ECGroup"
+
+[[bind]]
+c_prefix = "botan_oid_"
+cpp = "OID"
+py = "OID"
+
+[[bind]]
+c_prefix = "botan_xof_"
+cpp = "XOF"
+py = "XOF"
+
+[[bind]]
+cpp = "X509_CRL"
+py = "X509CRL"
