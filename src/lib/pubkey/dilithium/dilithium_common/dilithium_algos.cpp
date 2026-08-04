@@ -436,7 +436,23 @@ DilithiumInternalKeypair decode_keypair(StrongSpan<const DilithiumSerializedPriv
    CT::unpoison(rho);  // rho is public (used in rejection sampling of matrix A)
 
    const auto A = expand_A(rho, mode);
-   auto [t1, _] = compute_t1_and_t0(A, s1, s2);
+   auto [t1, t0_derived] = compute_t1_and_t0(A, s1, s2);
+
+   // The t0 vector is not covered by the public key hash check below, as only
+   // rho and t1 form the public key. An inconsistent t0 should be detected
+   // explicitly (see RFC 9881, Appendix C.4 for such malformed keys).
+   auto t0_consistent = CT::Mask<uint32_t>::set();
+   for(size_t i = 0; i < t0.size(); ++i) {
+      const auto stored = t0[i].coefficients();
+      const auto derived = t0_derived[i].coefficients();
+      for(size_t j = 0; j < stored.size(); ++j) {
+         t0_consistent &=
+            CT::Mask<uint32_t>::is_equal(static_cast<uint32_t>(stored[j]), static_cast<uint32_t>(derived[j]));
+      }
+   }
+   if(!t0_consistent.as_bool()) {
+      throw Decoding_Error("t0 in serialized Dilithium/ML-DSA private key is inconsistent with s1 and s2");
+   }
 
    CT::unpoison(t1);  // part of the public key
 
