@@ -296,7 +296,7 @@ BOTAN_REGISTER_TEST("pubkey", "dilithium_keygen", Dilithium_Keygen_Tests);
 
 }  // namespace
 
-#if defined(BOTAN_HAS_ML_DSA) && defined(BOTAN_HAS_AES)
+#if defined(BOTAN_HAS_ML_DSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 class MLDSA_Privkey_Tests : public Test {
    public:
       std::vector<Test::Result> run() override {
