@@ -322,6 +322,7 @@ class MLDSA_Privkey_Tests : public Text_Based_Test {
             result.test_is_true("invalid ML-DSA key rejected", expect_decoding_failure);
             return result;
          }
+         result.test_is_false("only valid keys are decodable", expect_decoding_failure);
          std::vector<uint8_t> ref_msg = {0, 1, 2, 4};
          std::vector<uint8_t> rng_seed(48);
          Botan_Tests::CTR_DRBG_AES256 rng(rng_seed);
@@ -335,7 +336,9 @@ class MLDSA_Privkey_Tests : public Text_Based_Test {
 
          auto reencoded_priv_key = priv_key->private_key_bits();
          auto redecoded_priv_key = Botan::Dilithium_PrivateKey(reencoded_priv_key, mode);
-         result.test_is_true("re-encoding and subsequent re-decoding of private ML-DSA key without error", true);
+         result.test_bin_eq("encoding roungtrip for private ML-DSA key yields same public key",
+                            priv_key->raw_public_key_bits(),
+                            redecoded_priv_key.raw_public_key_bits());
          return result;
       }
 };
