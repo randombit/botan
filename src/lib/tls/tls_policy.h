@@ -584,6 +584,19 @@ class BOTAN_PUBLIC_API(2, 0) Policy /* NOLINT(*-special-member-functions) */ {
       virtual size_t dtls_maximum_timeout() const;
 
       /**
+      * @return the maximum number of times a DTLS handshake flight will be
+      * retransmitted on timeouts before the handshake is abandoned. After this
+      * many timer-driven retransmissions without progress, timeout_check()
+      * throws to signal the handshake has failed. Return nullopt to retransmit
+      * indefinitely (the historical behavior).
+      *
+      * RFC 6347 4.2.4.1 gives the retransmission timer schedule but states no
+      * condition for giving up, so this bound is local policy rather than a
+      * protocol requirement.
+      */
+      virtual std::optional<size_t> dtls_maximum_retransmissions() const;
+
+      /**
       * @return the maximum size of a single handshake message, in bytes.
       * Messages larger than this will be rejected prior to processing.
       * Return 0 to disable this and accept any size.

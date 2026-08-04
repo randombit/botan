@@ -130,6 +130,7 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
                             uint16_t mtu,
                             uint64_t initial_timeout_ms,
                             uint64_t max_timeout_ms,
+                            std::optional<size_t> max_retransmissions,
                             size_t max_handshake_msg_size);
 
       Protocol_Version initial_record_version() const override;
@@ -277,6 +278,13 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
 
       uint64_t m_initial_timeout = 0;
       uint64_t m_max_timeout = 0;
+
+      // Maximum timer-driven retransmissions of the current flight before the
+      // handshake is abandoned (nullopt unlimited). m_retransmit_count tracks the
+      // number fired for the in-flight wait; it resets to 0 whenever a new
+      // flight is sent (forward progress) and is incremented on each timeout.
+      std::optional<size_t> m_max_retransmissions = 0;
+      size_t m_retransmit_count = 0;
 
       // Time the current flight was last written, unset until one has been.
       // A caller's clock may legitimately read zero, so the absence of a write

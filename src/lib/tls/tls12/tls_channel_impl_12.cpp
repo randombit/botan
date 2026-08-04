@@ -70,6 +70,7 @@ Channel_Impl_12::Channel_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
 void Channel_Impl_12::reset_state() {
    m_active_state.reset();
    m_pending_state.reset();
+   m_epochs_before_latest_renegotiation.reset();
    m_readbuf.clear();
    m_write_cipher_states.clear();
    m_read_cipher_states.clear();
@@ -153,6 +154,9 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
       }
    }
 
+   m_epochs_before_latest_renegotiation = Epochs_Before_Latest_Renegotiation{sequence_numbers().current_read_epoch(),
+                                                                             sequence_numbers().current_write_epoch()};
+
    using namespace std::placeholders;
 
    std::unique_ptr<Handshake_IO> io;
@@ -160,6 +164,7 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
       const uint16_t mtu = static_cast<uint16_t>(policy().dtls_default_mtu());
       const size_t initial_timeout_ms = policy().dtls_initial_timeout();
       const size_t max_timeout_ms = policy().dtls_maximum_timeout();
+      const std::optional<size_t> max_retransmissions = policy().dtls_maximum_retransmissions();
 
       auto send_record_f = [this](uint16_t epoch, Record_Type record_type, const std::vector<uint8_t>& record) {
          send_record_under_epoch(epoch, record_type, record);
@@ -171,6 +176,7 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
                                                    mtu,
                                                    initial_timeout_ms,
                                                    max_timeout_ms,
+                                                   max_retransmissions,
                                                    policy().maximum_handshake_message_size());
    } else {
       auto send_record_f = [this](Record_Type rec_type, const std::vector<uint8_t>& record) {
@@ -188,9 +194,54 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
    return *m_pending_state;
 }
 
+bool Channel_Impl_12::pending_handshake_epochs_unmoved() const {
+   // Nothing pending: there is nothing to act on, and the epoch markers are
+   // unset, so the comparison would be meaningless.
+   if(!m_pending_state || !m_epochs_before_latest_renegotiation.has_value()) {
+      return true;
+   }
+
+   // Before either ChangeCipherSpec the established association still owns both
+   // epochs, so dropping the pending handshake leaves it exactly as it was.
+   return sequence_numbers().current_read_epoch() == m_epochs_before_latest_renegotiation->read_epoch &&
+          sequence_numbers().current_write_epoch() == m_epochs_before_latest_renegotiation->write_epoch;
+}
+
+void Channel_Impl_12::clear_pending_handshake_state() {
+   m_pending_state.reset();
+   m_epochs_before_latest_renegotiation.reset();
+}
+
+/*
+* The retransmission budget is exhausted and this handshake will not complete.
+* Leaving the pending state installed makes every later timeout_check throw
+* again from unchanged state, and blocks renegotiate(), so the channel can
+* neither recover nor be retried.
+*/
+void Channel_Impl_12::abandon_timed_out_handshake() {
+   if(m_active_state.has_value() && pending_handshake_epochs_unmoved()) {
+      // A renegotiation that never reached its ChangeCipherSpec. The
+      // established association is untouched, so keep it and let the
+      // application try again.
+      clear_pending_handshake_state();
+   } else {
+      // Either there is no established association to fall back to, or a
+      // ChangeCipherSpec has already moved an epoch and there is no rollback
+      // that would leave keys, identity and sequence numbers describing the
+      // same handshake. Close.
+      m_has_been_closed = true;
+      reset_state();
+   }
+}
+
 bool Channel_Impl_12::timeout_check() {
    if(m_is_datagram && !m_has_been_closed && m_pending_state) {
-      return m_pending_state->handshake_io().timeout_check();
+      try {
+         return m_pending_state->handshake_io().timeout_check();
+      } catch(const TLS_Exception&) {
+         abandon_timed_out_handshake();
+         throw;
+      }
    }
 
    //FIXME: scan cipher suites and remove epochs older than 2*MSL
@@ -321,7 +372,7 @@ void Channel_Impl_12::activate_session() {
       m_active_state = Active_Connection_State_12(state, application_protocol());
    }
 
-   m_pending_state.reset();
+   clear_pending_handshake_state();
 
    callbacks().tls_session_activated();
 }

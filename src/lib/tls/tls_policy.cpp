@@ -512,6 +512,16 @@ size_t Policy::dtls_maximum_timeout() const {
    return 60 * 1000;
 }
 
+std::optional<size_t> Policy::dtls_maximum_retransmissions() const {
+   // Matches BoringSSL's DTLS1_MAX_TIMEOUTS.
+   //
+   // With the default schedule of a 1 second initial timeout and 60
+   // second maximum, this gives up after roughly 8 minutes
+   // (1+2+4+8+16+32+7*60 s).
+
+   return 12;
+}
+
 size_t Policy::dtls_default_mtu() const {
    // default MTU is IPv6 min MTU minus UDP/IP headers
    return 1280 - 40 - 8;
