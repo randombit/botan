@@ -259,6 +259,28 @@ std::map<std::string, std::vector<X509_Certificate>> get_server_certs(
    return cert_chains;
 }
 
+secure_vector<uint8_t> load_dtls_cookie_secret(Credentials_Manager& creds) {
+   auto cookie_secret = [&]() -> secure_vector<uint8_t> {
+      try {
+         return creds.psk("tls-server", "dtls-cookie-secret", "").bits_of();
+      } catch(...) {
+         return {};
+      }
+   }();
+
+   if(cookie_secret.empty()) {
+      // TODO(Botan4): Simplify this error message that was meant to ease the
+      //               burden on users running into a deliberate semver violation.
+      throw Invalid_State(
+         "Since Botan 3.13 DTLS server requires setting a non-empty cookie secret. "
+         "Either override Credentials_Manager::dtls_cookie_secret() or disable the "
+         "cookie exchange using TLS::Policy::dtls_server_require_cookie_exchange(), "
+         "if you understand the security implications of doing so.");
+   }
+
+   return cookie_secret;
+}
+
 }  // namespace
 
 Server_Impl_12::Server_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
@@ -270,6 +292,12 @@ Server_Impl_12::Server_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
                                size_t io_buf_sz) :
       Channel_Impl_12(callbacks, session_manager, rng, policy, true, is_datagram, io_buf_sz), m_creds(creds) {
    BOTAN_ASSERT_NONNULL(m_creds);
+
+   // Try to load the cookie secret on initialization, rather than waiting to fail
+   // until the first client connects.
+   if(is_datagram && policy->dtls_server_require_cookie_exchange()) {
+      load_dtls_cookie_secret(*m_creds);
+   }
 }
 
 Server_Impl_12::Server_Impl_12(const Channel_Impl::Downgrade_Information& downgrade_info) :
@@ -420,31 +448,34 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
       throw TLS_Exception(Alert::IllegalParameter, "Client did not offer NULL compression");
    }
 
-   if(initial_handshake && datagram) {
-      SymmetricKey cookie_secret;
+   if(initial_handshake && datagram && policy().dtls_server_require_cookie_exchange()) {
+      // The cookie secret is read each time to allow for refreshing the key
+      const auto cookie_secret = load_dtls_cookie_secret(*m_creds);
 
-      try {
-         cookie_secret = m_creds->psk("tls-server", "dtls-cookie-secret", "");
-      } catch(...) {}
+      const std::string client_identity = callbacks().tls_peer_network_identity();
+      if(client_identity.empty()) {
+         // RFC 9147 Section 11: the cookie MUST depend on the client's address
+         //
+         // Without an application-supplied identity the cookie is reusable from
+         // any source address, defeating the whole point of the cookie exchange.
+         //
+         // TODO(Botan4): Remove the version hint about the breaking change.
+         throw Invalid_State(
+            "Since Botan 3.13 DTLS server requires tls_peer_network_identity() return a non-empty value");
+      }
+      const Hello_Verify_Request verify(
+         pending_state.client_hello()->cookie_input_data(), client_identity, cookie_secret);
 
-      if(!cookie_secret.empty()) {
-         const std::string client_identity = callbacks().tls_peer_network_identity();
-         const Hello_Verify_Request verify(
-            pending_state.client_hello()->cookie_input_data(), client_identity, cookie_secret);
-
-         if(!CT::is_equal<uint8_t>(pending_state.client_hello()->cookie(), verify.cookie()).as_bool()) {
-            if(epoch0_restart) {
-               pending_state.handshake_io().send_under_epoch(verify, 0);
-            } else {
-               pending_state.handshake_io().send(verify);
-            }
-
-            pending_state.client_hello(nullptr);
-            pending_state.set_expected_next(Handshake_Type::ClientHello);
-            return;
+      if(!CT::is_equal<uint8_t>(pending_state.client_hello()->cookie(), verify.cookie()).as_bool()) {
+         if(epoch0_restart) {
+            pending_state.handshake_io().send_under_epoch(verify, 0);
+         } else {
+            pending_state.handshake_io().send(verify);
          }
-      } else if(epoch0_restart) {
-         throw TLS_Exception(Alert::HandshakeFailure, "Reuse of DTLS association requires DTLS cookie secret be set");
+
+         pending_state.client_hello(nullptr);
+         pending_state.set_expected_next(Handshake_Type::ClientHello);
+         return;
       }
    }
 

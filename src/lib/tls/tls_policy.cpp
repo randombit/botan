@@ -471,6 +471,22 @@ bool Policy::allow_dtls_epoch0_restart() const {
    return false;
 }
 
+bool Policy::dtls_server_require_cookie_exchange() const {
+   /*
+   RFC 9147 Section 11 "Security Considerations":
+
+      The primary additional security consideration raised by DTLS is that of
+      denial of service by excessive resource consumption. DTLS includes a
+      cookie exchange designed to protect against denial of service. [...]
+      In particular, DTLS servers that do not use the cookie exchange may be
+      used as attack amplifiers even if they themselves are not experiencing
+      DoS. Therefore, DTLS servers SHOULD use the cookie exchange unless there
+      is good reason to believe that amplification is not a threat in their
+      environment.
+   */
+   return true;
+}
+
 size_t Policy::maximum_handshake_message_size() const {
    return 65536;
 }
