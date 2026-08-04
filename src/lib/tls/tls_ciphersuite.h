@@ -86,6 +86,12 @@ class BOTAN_PUBLIC_API(2, 0) Ciphersuite final {
        */
       bool aead_ciphersuite() const;
 
+      /**
+       * @return true if this suite uses a short (less than 128 bit)
+       * authentication tag, for instance one of the _CCM_8 suites.
+       */
+      bool uses_short_authentication_tag() const;
+
       bool signature_used() const;
 
       /**
