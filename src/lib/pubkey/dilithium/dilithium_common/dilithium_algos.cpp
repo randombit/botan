@@ -402,7 +402,9 @@ DilithiumSerializedPrivateKey encode_keypair(const DilithiumInternalKeypair& key
 DilithiumInternalKeypair decode_keypair(StrongSpan<const DilithiumSerializedPrivateKey> sk, DilithiumConstants mode) {
    auto scope = CT::scoped_poison(sk);
 
-   BOTAN_ASSERT_NOMSG(sk.size() == mode.private_key_bytes());
+   if(sk.size() != mode.private_key_bytes()) {
+      throw Decoding_Error("invalid size for expanded ML-DSA (or Dilithium) private key");
+   }
 
    BufferSlicer slicer(sk);
 
