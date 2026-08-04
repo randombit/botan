@@ -14,7 +14,6 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_record.h>
 #include <botan/internal/tls_seq_numbers.h>
-#include <chrono>
 
 namespace Botan::TLS {
 
@@ -42,11 +41,6 @@ void store_be24(uint8_t out[3], size_t val) {
    out[0] = get_byte<1>(static_cast<uint32_t>(val));
    out[1] = get_byte<2>(static_cast<uint32_t>(val));
    out[2] = get_byte<3>(static_cast<uint32_t>(val));
-}
-
-uint64_t steady_clock_ms() {
-   return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
-      .count();
 }
 
 }  // namespace
@@ -148,6 +142,23 @@ std::vector<uint8_t> Stream_Handshake_IO::send(const Handshake_Message& msg) {
    return buf;
 }
 
+Datagram_Handshake_IO::Datagram_Handshake_IO(writer_fn writer,
+                                             steady_clock_fn steady_clock_ms,
+                                             class Connection_Sequence_Numbers& seq,
+                                             uint16_t mtu,
+                                             uint64_t initial_timeout_ms,
+                                             uint64_t max_timeout_ms,
+                                             size_t max_handshake_msg_size) :
+      m_seqs(seq),
+      m_flights(1),
+      m_flight_ccs(1),
+      m_initial_timeout(initial_timeout_ms),
+      m_max_timeout(max_timeout_ms),
+      m_send_hs(std::move(writer)),
+      m_steady_clock_ms(std::move(steady_clock_ms)),
+      m_mtu(mtu),
+      m_max_handshake_msg_size(max_handshake_msg_size) {}
+
 Protocol_Version Datagram_Handshake_IO::initial_record_version() const {
    return Protocol_Version::DTLS_V12;
 }
@@ -157,7 +168,7 @@ void Datagram_Handshake_IO::retransmit_last_flight() {
    // last completed flight is normally the one before it.
    const size_t flight_idx = (m_flights.size() == 1) ? 0 : (m_flights.size() - 2);
    retransmit_flight(flight_idx);
-   m_last_write = steady_clock_ms();
+   m_last_write = m_steady_clock_ms();
 }
 
 void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx) {
@@ -231,11 +242,11 @@ std::optional<std::chrono::milliseconds> Datagram_Handshake_IO::next_retransmiss
 
    // Without an outgoing flight, or while constructing one, there is nothing
    // complete that timeout_check() could retransmit.
-   if(m_last_write == 0 || (m_flights.size() > 1 && !m_flights.rbegin()->empty())) {
+   if(!m_last_write.has_value() || (m_flights.size() > 1 && !m_flights.rbegin()->empty())) {
       return std::nullopt;
    }
 
-   const uint64_t ms_since_write = steady_clock_ms() - m_last_write;
+   const uint64_t ms_since_write = m_steady_clock_ms() - m_last_write.value();
    if(ms_since_write >= m_next_timeout) {
       return std::chrono::milliseconds(0);
    }
@@ -646,7 +657,7 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_under_epoch(const Handshake_Mes
    m_flight_data.emplace(m_out_message_seq, Message_Info(epoch, msg_type, msg_bits));
 
    m_out_message_seq += 1;
-   m_last_write = steady_clock_ms();
+   m_last_write = m_steady_clock_ms();
    m_next_timeout = m_initial_timeout;
 
    return send_message(m_out_message_seq - 1, epoch, msg_type, msg_bits);
