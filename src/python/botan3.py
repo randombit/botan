@@ -3667,17 +3667,25 @@ def nist_key_unwrap_padded(kek: bytes, wrapped: bytes, cipher: str | None = None
 class Srp6ServerSession:
     """The server side of the SRP-6a password authenticated key exchange"""
 
-    __obj = c_void_p(0)
-
     def __init__(self, group: str):
         """Create a session using the named group (eg "modp/srp/2048")"""
+        self.__obj = c_void_p(0)
         _DLL.botan_srp6_server_session_init(byref(self.__obj))
         self.__group = group
         self.__group_size = _call_fn_returning_sz(
             lambda len: _DLL.botan_srp6_group_size(_ctype_str(group), len))
 
     def __del__(self):
-        _DLL.botan_srp6_server_session_destroy(self.__obj)
+        obj = getattr(self, '_Srp6ServerSession__obj', None)
+        self.__obj = c_void_p(0)
+        if obj:
+            _DLL.botan_srp6_server_session_destroy(obj)
+
+    def __copy__(self):
+        raise TypeError('Srp6ServerSession objects cannot be copied')
+
+    def __deepcopy__(self, _memo):
+        raise TypeError('Srp6ServerSession objects cannot be copied')
 
     def step1(self, verifier: bytes, hsh: str, rng: RandomNumberGenerator) -> bytes:
         """Given the verifier stored for this user, returns the value B to send to the client"""
