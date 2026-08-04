@@ -303,6 +303,15 @@ std::unique_ptr<PSK> PSK::select_offered_psk(std::string_view host,
          session_mgr.choose_from_offered_tickets(psk_identities, cipher.prf_algo(), callbacks, policy)) {
       auto& [session, psk_index] = selected_session.value();
 
+      // A session manager shared with our client role must not resume a session
+      // here that we stored as a client: its peer certificates are a remote
+      // server's, and this connection would adopt them as the client's. The
+      // session manager must never hand out such a session to a server.
+      if(session.side() != Connection_Side::Server) {
+         throw TLS_Exception(Alert::InternalError,
+                             "Session manager chose a session stored by a TLS client for server-side resumption");
+      }
+
       // Refuse to resume a ticket across SNI: a session minted for one
       // virtual host must not be presentable against another. Treat as a
       // cache miss and fall through to the external PSK path rather than

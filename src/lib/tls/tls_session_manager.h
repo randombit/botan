@@ -104,7 +104,12 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        * the order offered by the peer and picks the first that is found and
        * features a matching hash algorithm.
        *
-       * This method is called only by TLS 1.3 servers.
+       * This method is called only by TLS 1.3 servers. Implementations must
+       * only return sessions that were established by a TLS server (via
+       * Session_Manager::establish()), as applications may share a single
+       * manager between a client and a server role. The TLS server treats a
+       * session that was stored by a TLS client as an internal error. The
+       * default implementation relies on Session_Manager::retrieve() for this.
        *
        * @param tickets a list of tickets that were offered by the client
        * @param hash_function the hash algorithm name we are going to use for
@@ -137,6 +142,13 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        * check fails, the default implementation calls Session_Manager::remove()
        * for the provided @p handle.
        *
+       * Sessions that were stored by a TLS client (via Session_Manager::store())
+       * are never returned, as applications may share a single manager between
+       * a client and a server role. Such sessions are not removed; they remain
+       * valid for the client role. Overriding implementations must uphold this;
+       * the TLS server treats a client session returned here as an internal
+       * error.
+       *
        * Applications that wish to implement their own Session_Manager may
        * override the default implementation to add further policy checks.
        * Though, typically implementing Session_Manager::retrieve_one() and
@@ -161,6 +173,11 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        * The default implementation will invoke Session_Manager::find_some() and
        * filter the result against a policy. Most notably an expiry check.
        * Expired sessions will be removed via Session_Manager::remove().
+       *
+       * Sessions that were established by a TLS server (via
+       * Session_Manager::establish()) are never returned, as applications may
+       * share a single manager between a client and a server role. Such
+       * sessions are not removed; they remain valid for the server role.
        *
        * The TLS client implementations will query the session manager exactly
        * once per handshake attempt. If no reuse is desired, the session manager
@@ -228,7 +245,10 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        * Applications that wish to implement their own Session_Manager will
        * have to provide an implementation for it.
        *
-       * This method is called only by servers.
+       * This method is called only by servers. Sessions that were stored by a
+       * TLS client (via Session_Manager::store()) must not be returned, as
+       * applications may share a single manager between a client and a server
+       * role. Session_Manager::retrieve() discards them regardless.
        *
        * @param handle a Session_Handle containing either an ID or a ticket
        * @return the obtained session or std::nullopt if none can be obtained
@@ -251,7 +271,11 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        * in RFC 8446 4.6.1 regarding server certificate validity for the given
        * @p info.
        *
-       * This is called for TLS clients only.
+       * This is called for TLS clients only. Sessions that were established by
+       * a TLS server (via Session_Manager::establish()) must not be returned,
+       * as applications may share a single manager between a client and a
+       * server role. Session_Manager::find() discards them regardless, but
+       * they would use up the @p max_sessions_hint budget.
        *
        * @param info               the information about the server
        * @param max_sessions_hint  a non-binding guideline for an upper bound of
