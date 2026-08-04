@@ -258,8 +258,11 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
    if(type == Handshake_Type::HelloRequest && active_state().has_value()) {
       const Hello_Request hello_request(contents);
 
+      // RFC 5246 Section 7.4.1.1
+      //    This message will be ignored by the client if the client is
+      //    currently negotiating a session.
       if(state.client_hello() != nullptr) {
-         throw TLS_Exception(Alert::HandshakeFailure, "Cannot renegotiate during a handshake");
+         return;
       }
 
       if(policy().allow_server_initiated_renegotiation()) {
