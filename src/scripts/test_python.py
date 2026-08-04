@@ -8,6 +8,7 @@ Botan is released under the Simplified BSD License (see license.txt)
 
 import unittest
 import binascii
+import copy
 import hashlib
 import os
 import platform
@@ -1363,6 +1364,61 @@ iWtHjIcunpiq6+IiB8IVu7Ncu6uPKoFS/mWzTvjgdNusmgNle9p3OAbE
         verifier.verify_confirmation(confirmation)
 
         self.assertEqual(prover.shared_secret(), verifier.shared_secret())
+
+    def test_srp6_server_sessions_are_independent(self):
+        """An overlapping account must not replace another session's SRP state."""
+        group = 'modp/srp/1024'
+        hash_fn = 'SHA-256'
+        victim_identity = 'victim@example.test'
+        attacker_identity = 'attacker@example.test'
+        victim_password = 'victim-password'
+        attacker_password = 'attacker-password'
+        victim_salt = bytes.fromhex('00112233445566778899aabbccddeeff')
+        attacker_salt = bytes.fromhex('102132435465768798a9bacbdcedfe0f')
+        rng = botan.RandomNumberGenerator()
+
+        victim_verifier = botan.srp6_generate_verifier(
+            victim_identity, victim_password, victim_salt, group, hash_fn)
+        attacker_verifier = botan.srp6_generate_verifier(
+            attacker_identity, attacker_password, attacker_salt, group, hash_fn)
+
+        victim = botan.Srp6ServerSession(group)
+        victim.step1(victim_verifier, hash_fn, rng)
+        attacker = botan.Srp6ServerSession(group)
+        attacker_b = attacker.step1(attacker_verifier, hash_fn, rng)
+        attacker_a, attacker_key = botan.srp6_client_agree(
+            attacker_identity, attacker_password, group, hash_fn,
+            attacker_salt, attacker_b, rng)
+
+        handle_name = '_Srp6ServerSession__obj'
+        try:
+            try:
+                victim_key = victim.step2(attacker_a)
+            except botan.BotanException:
+                victim_key = None
+            self.assertNotEqual(attacker_key, victim_key)
+        finally:
+            # On a vulnerable checkout both wrappers alias one native handle.
+            # Detach it before assertion cleanup so the red regression cannot
+            # exercise the separate duplicate-destruction UAF.
+            if getattr(victim, handle_name) is getattr(attacker, handle_name):
+                setattr(victim, handle_name, botan.c_void_p(0))
+                setattr(attacker, handle_name, botan.c_void_p(0))
+
+    def test_srp6_server_sessions_are_not_copyable(self):
+        """A live owning wrapper must not gain a second destructor via copying."""
+        session = botan.Srp6ServerSession('modp/srp/1024')
+        duplicate = None
+        try:
+            with self.assertRaises(TypeError):
+                duplicate = copy.copy(session)
+            with self.assertRaises(TypeError):
+                copy.deepcopy(session)
+        finally:
+            # Safe cleanup for the vulnerable red run, where copy.copy()
+            # succeeds and aliases the original ctypes handle container.
+            if duplicate is not None:
+                duplicate._Srp6ServerSession__obj = botan.c_void_p(0)  # pylint: disable=protected-access
 
     def test_kyber_raw_keys(self):
         a_pub_bits = hex_decode("38d4851e5c010da39a7470bc1c80916f78c7bd5891dcd3b1ea84b6f051b346b803c1b97c94604020b7279b27836c3049ea0b9a3758510b7559593237ade72587462206b709f365848c96559326a5fe6c6f4cf531fd1a18477267f66ba14af20163c41f1138a01995147f271ddfc2be5361b281e6029d210584b2859b7383667284f767bb32782baad10933da0138a3a0660a149531c03f9c8ffccb33e3c3a5a7984e21fab26aa72a8a6b942f265e52551a9c800e5a44805f0c0141a05554213387f105df56458496bd8f469051886da223cb9fe78e7b390bf94b0a937691af9550082b76d045cb4d29c23c67942608d078a1c80f24767a945d19f077d82c9b9b197073464abe69cf7c5626177308f384672d5263b0c4826db4470e1a70e4751e3918abe8fcbc3bc0531ae89e5512214b5cc94a16a014bcb3826c79fbf4add0825eeefbab88cb7cff37bb8d491f8de902578a1e961655565b7718782a23504fdc13c783f130e177925e305d1fbc63cc8c15c2c67f85500cca785de9f480490558ef71aaf0fb5b513914401269b309c4c59c64d2a757d8855f58465615925f1ea6812cb143fff383e1048e285118bf932944b86fbdf4b1b9e65685664a07775c46952aaada1168f54b47c7a231e7355c64637467b5a3c09cab67bb35f58640c2726283bb63530a15f66eca48a840c00ca8862e283c73bfbb413a2915b8d1159a043f12c59bfa828248249b76106faa61a127a0280c586350e7a42cb74ca49cabd606891ec7cb8e84affe4b2e14c71658332b755611bab7977fa76ce736b21ed34a17ac0ec3561ca9b282d4a2bc407697924b1cf918ba83d3a4fdc82564c95bd904bdeee91ed6ccb36baa88a05c80712901bf280aee6538ec2078c2a84ee5862fc137cd92e97968d69fc3453a1e1cb161c50c9f2473a0d09037b188a0fa01efc344c2ac8fe8592b0a58456662a95033659a158a2d90a6e50c253a87975785ce29c4570000a154d4b3b2c642205c8c7cf9ac6b1071fbb368ab950a744b88c95ba5243017831120a9048338d29847830d12a933a09abd21a46b828cb14e808cd35129c9dc6e5b931d4a126fefe07909618e2b4586e7b6b424963b7323ba505ba112bb9b834a7d1b78ad0df53d556a1c69369f09148b1dc9938df59223f087fd6833be5b2bc2651fe58911ac01467f9297dfdc22b41a0f1702718710b78cf35b1865813a896d45214d338155b6c043c532330c002d520739467a504a866637fb3451c849f8f83e6a94147f168da53acdf9d8affd968a84124a9abc09af960cd3b29f2344831bb41e67605eebf00df202857117399dd748b6514aed61bb2f6cb841d168d5f35e20054573a331cd4882a04b072c179158825bcf471266da0dcceab1a021c73254751d5a161c1a92062c220a217a69d9823314b4de996fe8d45f6db5af16c1561495a4c43090bc394c94e1b0ec738eb56267201c2ecd1c7b4993c0efc0284bdc9a091c294f95703a7178822c8a95b79b1e4591e0998d893875c1a879c08a073cc67df426bba792c18ae6c1feba879bec54812c2affa012973b700ad48e271078280864268600a7aa309eaa1098750a0f8a522eb929577b412f7855613688b72f9bc85c0a13b9d041586fd583feb12afd5a402dd33b43543f5fa4eb436c8d")
