@@ -43,9 +43,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
       OID object_identifier() const override;
 
       /**
-       * Return the pessimistic estimated key strength, i.e., the smaller strength of the component keys.
-       * This is justified by the assumption that composite algorithms are used in the assumption that
-       * one of the component algorithms might be broken.
+       * Return the estimated key strength, i.e., the maximum strength of the component keys.
        *
        * @return the maximum of the components' estimated strengths.
        */

@@ -68,11 +68,10 @@ std::span<const uint8_t> traditional_privkey_subspan(const MLDSA_Composite_Param
 // traditional algorithms have fixed key sizes enforced by their decoding routines.
 void validate_traditional_key_size(const MLDSA_Composite_Param& param, const Public_Key& trad_key) {
    if(param.traditional_algorithm() == "RSA" && trad_key.key_length() != param.traditional_key_size()) {
-      throw Decoding_Error(
-         fmt("RSA component key of {} must have a {} bit modulus, but the provided key has {} bits",
-             param.id_str(),
-             param.traditional_key_size(),
-             trad_key.key_length()));
+      throw Decoding_Error(fmt("RSA component key of {} must have a {} bit modulus, but the provided key has {} bits",
+                               param.id_str(),
+                               param.traditional_key_size(),
+                               trad_key.key_length()));
    }
 }
 }  // namespace
@@ -111,7 +110,7 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
             BigInt ri;
             BigInt si;
             try {
-               dec.start_sequence().decode(ri).decode(si).end_cons();
+               dec.start_sequence().decode(ri).decode(si).verify_().end_cons();
             } catch(Exception&) {
                return false;
             }
