@@ -22,8 +22,14 @@ namespace Botan_FFI {
 
 namespace {
 
-// NOLINTNEXTLINE(*-avoid-non-const-global-variables)
-thread_local std::string g_last_exception_what;
+
+#if defined(BOTAN_TARGET_OS_HAS_THREAD_LOCAL)
+   // NOLINTNEXTLINE(*-avoid-non-const-global-variables)
+   thread_local std::string g_last_exception_what;
+#else
+   // NOLINTNEXTLINE(*-avoid-non-const-global-variables)
+   std::string g_last_exception_what;
+#endif
 
 int ffi_map_error_type(Botan::ErrorType err) {
    switch(err) {
