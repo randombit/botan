@@ -213,12 +213,22 @@ class OCSP_Check final : public Command {
          cas.add_certificate(issuer);
          const Botan::OCSP::Response resp = Botan::OCSP::online_check(issuer, subject, timeout);
 
-         auto status = resp.status_for(issuer, subject, std::chrono::system_clock::now());
+         const auto ref_time = std::chrono::system_clock::now();
+         const Botan::Path_Validation_Restrictions restrictions;
+         const std::vector<Botan::Certificate_Store*> certstores = {&cas};
+         const auto ocsp_status = Botan::PKIX::check_ocsp(std::vector{subject, issuer},
+                                                          std::vector<std::optional<Botan::OCSP::Response>>{resp},
+                                                          certstores,
+                                                          ref_time,
+                                                          restrictions);
+         const auto status = Botan::PKIX::overall_status(ocsp_status);
 
-         if(status == Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD) {
+         if(status == Botan::Certificate_Status_Code::OK &&
+            ocsp_status.at(0).contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD)) {
             output() << "OCSP check OK\n";
          } else {
             output() << "OCSP check failed " << Botan::Path_Validation_Result::status_string(status) << "\n";
+            set_return_code(1);
          }
       }
 };
