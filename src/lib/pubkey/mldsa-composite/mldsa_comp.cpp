@@ -110,7 +110,7 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
             BigInt ri;
             BigInt si;
             try {
-               dec.start_sequence().decode(ri).decode(si).verify_().end_cons();
+               dec.start_sequence().decode(ri).decode(si).verify_end().end_cons();
             } catch(Exception&) {
                return false;
             }
