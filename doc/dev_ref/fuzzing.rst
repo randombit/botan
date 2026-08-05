@@ -9,16 +9,19 @@ the library.
 Fuzzing with libFuzzer
 ------------------------
 
-As of Clang Version 6.0 libFuzzer is automatically included in the compiler. Therefore you don't need to install any new software.
+libFuzzer is provided by Clang's sanitizer runtime. You do not need a separate
+libFuzzer checkout; link the fuzz targets with ``-fsanitize=fuzzer``.
 You can build the fuzzers by running ::
 
   $ ./configure.py --cc=clang --build-fuzzer=libfuzzer --enable-sanitizers=fuzzer
   $ make fuzzers
 
-The option `--enable-sanitizers=fuzzer` compiles the library for coverage-guided fuzzing.
-You can add additional sanitizers like `address`, `undefined` and `memory` or with/without
-additional information during building by either adding `--unsafe-fuzzer-mode` or `--with-debug-info`.
-The `coverage` sanitizer is not compatible with this configuration.
+The option ``--enable-sanitizers=fuzzer`` adds the required compile and link
+flags for coverage-guided fuzzing. You can add additional sanitizers like
+``address``, ``undefined`` and ``memory`` or with/without additional
+information during building by either adding ``--unsafe-fuzzer-mode`` or
+``--with-debug-info``. The ``coverage`` sanitizer is not compatible with this
+configuration.
 
 If you want to link additional libraries you can use the `--with-fuzzer-lib` option
 while configuring the build with configure.py.
@@ -34,27 +37,9 @@ with
 
 you can test the Fuzzers.
 
-Fuzzing with AFL++
---------------------
-
-Please make sure that you have installed AFL++ according to https://aflplus.plus/building/.
-The version of Clang should match the version of `afl-clang-fast++`/ `afl-clang-fast`.
-You can fuzz with AFL++ in LLVM mode (https://github.com/AFLplusplus/AFLplusplus/blob/stable/instrumentation/README.llvm.md) by running ::
-
-  $ ./configure.py --cc=clang --with-sanitizers --build-fuzzer=afl --unsafe-fuzzer-mode --cc-bin=afl-clang-fast++
-  $ make fuzzers
-
-For AFL++ in GCC mode make sure that you have `afl-g++-fast` installed.
-Otherwise follow https://github.com/AFLplusplus/AFLplusplus/blob/stable/instrumentation/README.gcc_plugin.md to build and install it.
-You can configure the build by running ::
-
-  $ ./configure.py --cc=gcc --with-sanitizers --build-fuzzer=afl --unsafe-fuzzer-mode --cc-bin=afl-g++-fast
-  $ make fuzzers
-
-The fuzzer binaries will be in `build/fuzzer`. To run them you need to
-run under `afl-fuzz`::
-
-  $ afl-fuzz -i corpus_path -o output_path ./build/fuzzer/binary
+Legacy AFL++ support remains available through ``--build-fuzzer=afl``, but it
+is not actively tested. If you use it, configure Botan with a matching AFL++
+compiler wrapper and run the resulting binary under ``afl-fuzz``.
 
 Fuzzing with TLS-Attacker
 --------------------------
