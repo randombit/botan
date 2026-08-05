@@ -273,6 +273,66 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
                result.test_sz_eq("the flight was resent", fix.handshake_records_sent(), size_t(2));
             }),
 
+      // RFC 6347 4.1: "implementations MUST NOT allow the epoch to wrap, but
+      // instead MUST establish a new association". Reaching 0xFFFF is legal;
+      // the increment past it is refused without disturbing the counter.
+      CHECK("DTLS epoch counters refuse to wrap",
+            [&](Test::Result& result) {
+               Datagram_Sequence_Numbers seqs;
+
+               for(size_t i = 0; i != 0xFFFF; ++i) {
+                  seqs.new_write_cipher_state();
+                  seqs.new_read_cipher_state();
+               }
+               result.test_sz_eq("write epoch reaches the maximum", seqs.current_write_epoch(), size_t(0xFFFF));
+               result.test_sz_eq("read epoch reaches the maximum", seqs.current_read_epoch(), size_t(0xFFFF));
+
+               result.test_throws("write epoch will not wrap", [&] { seqs.new_write_cipher_state(); });
+               result.test_throws("read epoch will not wrap", [&] { seqs.new_read_cipher_state(); });
+
+               // Refusing left the counters where they were, rather than
+               // rolling over onto the retained epoch 0 and reusing its keys.
+               result.test_sz_eq("write epoch unchanged by the refusal", seqs.current_write_epoch(), size_t(0xFFFF));
+               result.test_sz_eq("read epoch unchanged by the refusal", seqs.current_read_epoch(), size_t(0xFFFF));
+               result.test_is_true("the final epoch is still writable",
+                                   seqs.next_write_sequence(0xFFFF) == (uint64_t(0xFFFF) << 48));
+            }),
+
+      // Write sequence counters and replay windows are pruned as the
+      // association rekeys, so a long-lived connection does not accumulate an
+      // entry per epoch. Epoch 0 is exempt: a HelloVerifyRequest is written
+      // under it at any point in the association's life.
+      CHECK("stale DTLS epoch state is pruned",
+            [&](Test::Result& result) {
+               Datagram_Sequence_Numbers seqs;
+
+               seqs.new_write_cipher_state();  // epoch 1
+               seqs.next_write_sequence(1);
+               seqs.new_write_cipher_state();  // epoch 2
+               result.test_is_true("epoch 1 still writable one rekey later",
+                                   seqs.next_write_sequence(1) == ((uint64_t(1) << 48) | 1));
+
+               seqs.new_write_cipher_state();  // epoch 3
+               result.test_throws("epoch 1 dropped two rekeys later", [&] { seqs.next_write_sequence(1); });
+               result.test_is_true("epoch 2 retained", seqs.next_write_sequence(2) == (uint64_t(2) << 48));
+               result.test_is_true("epoch 0 retained for HelloVerifyRequest", seqs.next_write_sequence(0) == 0);
+
+               // Replay windows follow the same schedule. By the time a window
+               // is released the epoch's cipher state is gone as well, so no
+               // record under it can be decrypted to be replayed.
+               const uint64_t epoch1_seq = (uint64_t(1) << 48) | 7;
+
+               seqs.new_read_cipher_state();  // epoch 1
+               seqs.read_accept(epoch1_seq);
+               result.test_is_true("replay caught while the window is live", seqs.already_seen(epoch1_seq));
+
+               seqs.new_read_cipher_state();  // epoch 2
+               result.test_is_true("window survives one rekey", seqs.already_seen(epoch1_seq));
+
+               seqs.new_read_cipher_state();  // epoch 3
+               result.test_is_true("window released two rekeys later", !seqs.already_seen(epoch1_seq));
+            }),
+
    };
 }
 

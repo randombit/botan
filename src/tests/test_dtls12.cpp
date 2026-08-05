@@ -943,6 +943,78 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      // Epoch numbers restart after an epoch-0 restart, so a retirement time
+      // recorded for the first association's epoch 1 must not expire the second
+      // association's epoch 1. Regression test: it previously did, and past the
+      // retention window the restarted handshake could not complete at all.
+      static Test::Result test_epoch_retirement_does_not_outlive_a_restart() {
+         Test::Result result("DTLS epoch retention window survives an association restart");
+
+         auto rng = Test::new_shared_rng("dtls-core-epoch-retirement-restart");
+         auto policy = std::make_shared<DTLS_PSK_Policy>();
+         auto creds = std::make_shared<DTLS_PSK_Credentials>();
+         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> server_recv;
+         auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
+         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
+
+         // Drive a full handshake plus a renegotiation, which advances the
+         // server to epoch 2 and so retires its epoch 1.
+         auto associate = [&](const std::string& label, bool renegotiate) {
+            std::vector<uint8_t> c2s;
+            std::vector<uint8_t> client_recv;
+            auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
+            auto client = std::make_shared<Botan::TLS::Client>(client_callbacks,
+                                                               std::make_shared<Botan::TLS::Session_Manager_Noop>(),
+                                                               creds,
+                                                               policy,
+                                                               rng,
+                                                               Botan::TLS::Server_Information("localhost"),
+                                                               Botan::TLS::Protocol_Version::latest_dtls_version());
+
+            deliver(result, label + " client hello 1", c2s, server);
+            deliver(result, label + " hello verify request", s2c, *client);
+            deliver(result, label + " client hello 2", c2s, server);
+            deliver(result, label + " server handshake flight", s2c, *client);
+            deliver(result, label + " client final flight", c2s, server);
+            deliver(result, label + " server final flight", s2c, *client);
+
+            result.test_is_true(label + " client became active", client->is_active());
+            result.test_is_true(label + " server became active", server.is_active());
+
+            if(renegotiate) {
+               result.test_no_throw(label + " renegotiates", [&] { client->renegotiate(true); });
+               deliver(result, label + " renegotiation client hello", c2s, server);
+               deliver(result, label + " renegotiation server flight", s2c, *client);
+               deliver(result, label + " renegotiation client final flight", c2s, server);
+               deliver(result, label + " renegotiation server final flight", s2c, *client);
+               result.test_is_true(label + " still active after renegotiation",
+                                   client->is_active() && server.is_active());
+            }
+
+            return client;
+         };
+
+         associate("first association", true);
+
+         // The renegotiation is what retires epoch 1, so the test is only
+         // meaningful if it actually happened.
+         result.test_sz_eq(
+            "handshake plus renegotiation established two sessions", server_callbacks->sessions_established(), 2);
+
+         // Well past the RFC 6347 4.1 retention window for the retired epoch 1.
+         server_callbacks->advance_clock_ms(5 * 60 * 1000);
+
+         s2c.clear();
+         associate("restarted association", false);
+
+         result.test_sz_eq("the restart established a third session", server_callbacks->sessions_established(), 3);
+
+         return result;
+      }
+
       // Poll the retransmission timer forward until the handshake gives up.
       static bool run_out_the_clock(DTLS_Test_Callbacks& cb, Botan::TLS::Channel& channel) {
          for(int i = 0; i < 200; ++i) {
@@ -1603,6 +1675,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_lost_server_flight_retransmits(),
                  test_duplicate_server_flight_defers_to_timer(),
                  test_hello_request_during_handshake_is_ignored(),
+                 test_epoch_retirement_does_not_outlive_a_restart(),
                  test_timed_out_initial_handshake_closes_the_channel(),
                  test_timed_out_renegotiation_keeps_the_association(),
                  test_lost_server_final_flight_retransmits(),
