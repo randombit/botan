@@ -694,26 +694,26 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
                                                          const std::vector<uint8_t>& msg_bits) {
    auto no_fragment = format_w_seq(msg_bits, msg_type, msg_seq);
 
-   if(no_fragment.size() + DTLS_HEADER_SIZE <= m_mtu) {
+   /**
+   * Since CBC suites are no longer supported/allowed in DTLS, the largest
+   * possible ciphersuite overhead is 48 bytes, from NULL_WITH_SHA384. The AEAD
+   * suites add at most 24 bytes (8 byte explicit nonce plus 16 byte tag).
+   */
+   const size_t ciphersuite_overhead = (epoch > 0) ? 48 : 0;
+
+   if(no_fragment.size() + DTLS_HEADER_SIZE + ciphersuite_overhead <= m_mtu) {
+      // We think the entire final packet will fit into the MTU
       m_send_hs(epoch, Record_Type::Handshake, no_fragment);
    } else {
       size_t frag_offset = 0;
 
-      /**
-      * Largest possible overhead is for SHA-384 CBC ciphers, with 16 byte IV,
-      * 16+ for padding and 48 bytes for MAC. 128 is probably a strict
-      * over-estimate here. When CBC ciphers are removed this can be reduced
-      * since AEAD modes have no padding, at most 16 byte mac, and smaller
-      * per-record nonce.
-      */
-      const size_t ciphersuite_overhead = (epoch > 0) ? 128 : 0;
-      const size_t header_overhead = DTLS_HEADER_SIZE + DTLS_HANDSHAKE_HEADER_SIZE;
+      constexpr size_t DTLS_HANDSHAKE_OVERHEAD = DTLS_HEADER_SIZE + DTLS_HANDSHAKE_HEADER_SIZE;
 
-      if(m_mtu <= (header_overhead + ciphersuite_overhead)) {
+      if(m_mtu <= (DTLS_HANDSHAKE_OVERHEAD + ciphersuite_overhead)) {
          throw Invalid_Argument("DTLS MTU is too small to send headers");
       }
 
-      const size_t max_rec_size = m_mtu - (header_overhead + ciphersuite_overhead);
+      const size_t max_rec_size = m_mtu - (DTLS_HANDSHAKE_OVERHEAD + ciphersuite_overhead);
 
       while(frag_offset != msg_bits.size()) {
          const size_t frag_len = std::min<size_t>(msg_bits.size() - frag_offset, max_rec_size);
