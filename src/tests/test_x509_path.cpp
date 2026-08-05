@@ -1728,6 +1728,129 @@ class Path_Validation_With_OCSP_Tests final : public Test {
          return result;
       }
 
+      static Test::Result validate_with_ocsp_softfail_statuses() {
+         Test::Result result("path check with OCSP softfail statuses");
+         Botan::Certificate_Store_In_Memory trusted;
+
+         auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/identrust.pem");
+         trusted.add_certificate(trust_root);
+
+         const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
+
+         // A time when all certificates in the chain are valid
+         const auto valid_time = Botan::calendar_point(2016, 11, 18, 12, 30, 0).to_std_timepoint();
+
+         auto check_path = [&](const Botan::Path_Validation_Restrictions& restrictions,
+                               const Botan::OCSP::Response& dummy_ocsp,
+                               const Botan::Certificate_Status_Code expected) {
+            const auto path_result = Botan::x509_path_validate(cert_path,
+                                                               restrictions,
+                                                               trusted,
+                                                               "",
+                                                               Botan::Usage_Type::UNSPECIFIED,
+                                                               valid_time,
+                                                               std::chrono::milliseconds(0),
+                                                               {dummy_ocsp});
+
+            result.test_enum_eq("expected overall validation result", path_result.result(), expected);
+            result.test_is_true("softfail status is retained in the result",
+                                flatten(path_result.all_statuses()).contains(dummy_ocsp.dummy_status().value()));
+         };
+
+         const auto server_not_available = Botan::OCSP::Response::dummy_server_not_available_response();
+         const auto no_revocation_url = Botan::OCSP::Response::dummy_no_revocation_url_response();
+
+         // Without a revocation requirement, softfail statuses are just warnings
+         const auto relaxed = Botan::Path_Validation_Restrictions(false, 110, false);
+         check_path(relaxed, server_not_available, Botan::Certificate_Status_Code::VERIFIED);
+         check_path(relaxed, no_revocation_url, Botan::Certificate_Status_Code::VERIFIED);
+
+         // By default softfail statuses do not satisfy a revocation requirement
+         const auto strict = Botan::Path_Validation_Restrictions(true, 110, false);
+         check_path(strict, server_not_available, Botan::Certificate_Status_Code::NO_REVOCATION_DATA);
+         check_path(strict, no_revocation_url, Botan::Certificate_Status_Code::NO_REVOCATION_DATA);
+
+         // With accept_ocsp_softfail set, softfail statuses satisfy the requirement
+         const auto strict_accepting_softfail = Botan::Path_Validation_Restrictions(
+            true, 110, false, std::chrono::hours(24 * 7), nullptr, false, true, true);
+         check_path(strict_accepting_softfail, server_not_available, Botan::Certificate_Status_Code::VERIFIED);
+         check_path(strict_accepting_softfail, no_revocation_url, Botan::Certificate_Status_Code::VERIFIED);
+
+         // A stapled unsigned error response (here tryLater) is not a softfail
+         // condition; only failures of our own fetch attempts are forgiven
+         {
+            const Botan::OCSP::Response try_later(std::vector<uint8_t>{0x30, 0x03, 0x0A, 0x01, 0x03});
+            const auto path_result = Botan::x509_path_validate(cert_path,
+                                                               strict_accepting_softfail,
+                                                               trusted,
+                                                               "",
+                                                               Botan::Usage_Type::UNSPECIFIED,
+                                                               valid_time,
+                                                               std::chrono::milliseconds(0),
+                                                               {try_later});
+            result.test_enum_eq("stapled tryLater still requires revocation data",
+                                path_result.result(),
+                                Botan::Certificate_Status_Code::NO_REVOCATION_DATA);
+         }
+
+         return result;
+      }
+
+      static Test::Result merge_revocation_status_ocsp_softfail() {
+         Test::Result result("PKIX::merge_revocation_status OCSP softfail handling");
+
+         const auto no_rev_data = Botan::Certificate_Status_Code::NO_REVOCATION_DATA;
+
+         // Chain of (ee, intermediate, root) with a softfail OCSP status for
+         // both the ee and the intermediate
+         auto run_merge = [](const Botan::Certificate_Status_Code softfail,
+                             const Botan::Path_Validation_Restrictions& restrictions,
+                             const Botan::CertificatePathStatusCodes& crl_status = {}) {
+            Botan::CertificatePathStatusCodes chain_status(3);
+            const Botan::CertificatePathStatusCodes ocsp_status = {{softfail}, {softfail}};
+            Botan::PKIX::merge_revocation_status(chain_status, crl_status, ocsp_status, restrictions);
+            return chain_status;
+         };
+
+         for(const auto softfail : {Botan::Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE,
+                                    Botan::Certificate_Status_Code::OCSP_NO_REVOCATION_URL,
+                                    Botan::Certificate_Status_Code::OCSP_NO_HTTP}) {
+            const auto code_name = std::string(Botan::to_string(softfail));
+
+            {
+               const auto strict = Botan::Path_Validation_Restrictions(true, 110, true);
+               const auto status = run_merge(softfail, strict);
+               result.test_is_true("strict: ee is flagged for " + code_name, status[0].contains(no_rev_data));
+               result.test_is_true("strict: intermediate is flagged for " + code_name, status[1].contains(no_rev_data));
+               result.test_is_true("strict: softfail status retained for " + code_name, status[0].contains(softfail));
+            }
+
+            {
+               const auto accepting = Botan::Path_Validation_Restrictions(
+                  true, 110, true, std::chrono::hours(24 * 7), nullptr, false, true, true);
+               const auto status = run_merge(softfail, accepting);
+               result.test_is_false("accepting: ee is not flagged for " + code_name, status[0].contains(no_rev_data));
+               result.test_is_false("accepting: intermediate is not flagged for " + code_name,
+                                    status[1].contains(no_rev_data));
+               result.test_is_true("accepting: softfail status retained for " + code_name,
+                                   status[0].contains(softfail));
+            }
+         }
+
+         {
+            // A successful CRL check satisfies the requirement even if OCSP softfailed
+            const auto strict = Botan::Path_Validation_Restrictions(true, 110, false);
+            const auto status = run_merge(Botan::Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE,
+                                          strict,
+                                          {{Botan::Certificate_Status_Code::VALID_CRL_CHECKED}});
+            result.test_is_false("crl: ee is not flagged", status[0].contains(no_rev_data));
+         }
+
+         return result;
+      }
+
       std::vector<Test::Result> run() override {
          return {validate_with_ocsp_with_next_update_without_max_age(),
                  validate_with_ocsp_with_next_update_with_max_age(),
@@ -1737,7 +1860,9 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                  validate_with_ocsp_with_authorized_responder(),
                  validate_with_ocsp_with_authorized_responder_without_keyusage(),
                  validate_with_forged_ocsp_using_self_signed_cert(),
-                 validate_with_ocsp_self_signed_by_intermediate_cert()};
+                 validate_with_ocsp_self_signed_by_intermediate_cert(),
+                 validate_with_ocsp_softfail_statuses(),
+                 merge_revocation_status_ocsp_softfail()};
       }
 };
 

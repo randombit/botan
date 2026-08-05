@@ -657,7 +657,8 @@ Certificate_Status_Code verify_ocsp_signing_cert(const X509_Certificate& signing
                                    /* max_ocsp_age */ std::chrono::seconds(0),
                                    /* trusted_responders */ {},
                                    restrictions.ignore_trusted_root_time_range(),
-                                   restrictions.require_self_signed_trust_anchors());
+                                   restrictions.require_self_signed_trust_anchors(),
+                                   restrictions.accept_ocsp_softfail());
 
    const auto validation_result = x509_path_validate(concat(std::vector{signing_cert}, extra_certs),
                                                      relaxed_restrictions,
@@ -888,7 +889,7 @@ CertificatePathStatusCodes PKIX::check_ocsp_online(const std::vector<X509_Certif
 
          if(ocsp_urls.empty()) {
             ocsp_response_futures.emplace_back(std::async(std::launch::deferred, []() -> std::optional<OCSP::Response> {
-               return OCSP::Response(Certificate_Status_Code::OCSP_NO_REVOCATION_URL);
+               return OCSP::Response::dummy_no_revocation_url_response();
             }));
          } else {
             auto ocsp_req = OCSP::Request(issuer, subject);
@@ -902,12 +903,24 @@ CertificatePathStatusCodes PKIX::check_ocsp_online(const std::vector<X509_Certif
                                             HTTP::RequestLimits().set_timeout(timeout).set_max_body_size(64 * 1024));
 
                      if(http.status_code() != 200) {
-                        return OCSP::Response(Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE);
+                        return OCSP::Response::dummy_server_not_available_response();
                      }
 
-                     return OCSP::Response(http.body());
+                     OCSP::Response response(http.body());
+
+                     /*
+                     * RFC 6960 2.3: "In case of errors, the OCSP responder may return an
+                     * error message. These messages are not signed." Since such responses
+                     * (eg tryLater) carry no revocation information, treat them the same
+                     * as the server being unavailable.
+                     */
+                     if(response.status() != OCSP::Response_Status_Code::Successful) {
+                        return OCSP::Response::dummy_server_not_available_response();
+                     }
+
+                     return response;
                   } catch(std::exception&) {
-                     return OCSP::Response(Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE);
+                     return OCSP::Response::dummy_server_not_available_response();
                   }
                }));
          }
@@ -1114,11 +1127,16 @@ void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
 
       if(i < ocsp_status.size() && !ocsp_status[i].empty()) {
          for(auto&& code : ocsp_status[i]) {
-            // NO_REVOCATION_URL and OCSP_SERVER_NOT_AVAILABLE are softfail
-            if(code == Certificate_Status_Code::OCSP_RESPONSE_GOOD ||
-               code == Certificate_Status_Code::OCSP_NO_REVOCATION_URL ||
-               code == Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE ||
-               code == Certificate_Status_Code::CERT_IS_REVOKED) {
+            const bool was_definitive =
+               code == Certificate_Status_Code::OCSP_RESPONSE_GOOD || code == Certificate_Status_Code::CERT_IS_REVOKED;
+
+            const bool was_softfail = code == Certificate_Status_Code::OCSP_NO_REVOCATION_URL ||
+                                      code == Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE ||
+                                      code == Certificate_Status_Code::OCSP_NO_HTTP;
+
+            const bool accepted_softfail = was_softfail && restrictions.accept_ocsp_softfail();
+
+            if(was_definitive || accepted_softfail) {
                had_ocsp = true;
             }
 
@@ -1323,14 +1341,16 @@ Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
                                                            std::chrono::seconds max_ocsp_age,
                                                            std::unique_ptr<Certificate_Store> trusted_ocsp_responders,
                                                            bool ignore_trusted_root_time_range,
-                                                           bool require_self_signed_trust_anchors) :
+                                                           bool require_self_signed_trust_anchors,
+                                                           bool accept_ocsp_softfail) :
       m_require_revocation_information(require_rev),
       m_ocsp_all_intermediates(ocsp_intermediates),
       m_minimum_key_strength(key_strength),
       m_max_ocsp_age(max_ocsp_age),
       m_trusted_ocsp_responders(std::move(trusted_ocsp_responders)),
       m_ignore_trusted_root_time_range(ignore_trusted_root_time_range),
-      m_require_self_signed_trust_anchors(require_self_signed_trust_anchors) {
+      m_require_self_signed_trust_anchors(require_self_signed_trust_anchors),
+      m_accept_ocsp_softfail(accept_ocsp_softfail) {
    if(key_strength <= 80) {
       m_trusted_hashes.insert("SHA-1");
    }

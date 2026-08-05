@@ -174,6 +174,8 @@ class BOTAN_PUBLIC_API(2, 0) Response final {
       /**
       * Create a fake OCSP response from a given status code.
       * @param status the status code the check functions will return
+      *
+      * TODO(Botan4) make this constructor private
       */
       BOTAN_FUTURE_EXPLICIT Response(Certificate_Status_Code status);
 
@@ -288,7 +290,24 @@ class BOTAN_PUBLIC_API(2, 0) Response final {
       const std::vector<SingleResponse>& responses() const { return m_responses; }
 
       /**
-      * @return the dummy response if this is a 'fake' OCSP response otherwise std::nullopt
+      * Return a fake OCSP response indicating the server was not available
+      * This is not normally useful for applications
+      */
+      static Response dummy_server_not_available_response() {
+         return Response(Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE);
+      }
+
+      /**
+      * Return a fake OCSP response indicating there was no usable OCSP URL
+      * This is not normally useful for applications
+      */
+      static Response dummy_no_revocation_url_response() {
+         return Response(Certificate_Status_Code::OCSP_NO_REVOCATION_URL);
+      }
+
+      /**
+      * Return the dummy response if this is a 'fake' OCSP response otherwise std::nullopt
+      * This is not normally useful for applications
       */
       std::optional<Certificate_Status_Code> dummy_status() const { return m_dummy_response_status; }
 
