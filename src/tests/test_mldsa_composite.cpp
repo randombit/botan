@@ -19,6 +19,7 @@
 
    #include <botan/base64.h>
    #include <botan/ber_dec.h>
+   #include <botan/der_enc.h>
    #include <botan/exceptn.h>
    #include <botan/hash.h>
    #include <botan/hex.h>
@@ -274,6 +275,52 @@ class MLDSA_Composite_RSA_Key_Size_Tests : public Test {
 };
 
 BOTAN_REGISTER_TEST("pubkey", "mldsa_composite_rsa_key_size", MLDSA_Composite_RSA_Key_Size_Tests);
+   #endif
+
+   #if defined(BOTAN_HAS_ECDSA) && \
+      (defined(BOTAN_HAS_PCURVES_GENERIC) || \
+       (defined(BOTAN_HAS_PCURVES_SECP256R1) && defined(BOTAN_HAS_PCURVES_SECP384R1)))
+class MLDSA_Composite_ECDSA_Curve_Tests : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("MLDSA_Composite_ECDSA_Curve");
+         auto rng = Test::new_rng("mldsa_composite_ecdsa_curve");
+         const auto param = Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
+            Botan::MLDSA_Composite_Param::id_t::MLDSA44_ECDSA_P256_SHA256);
+
+         const Botan::MLDSA_Composite_PrivateKey valid_key(*rng, param);
+         const auto wrong_curve_key = Botan::create_private_key("ECDSA", *rng, "secp384r1");
+
+         // wrong-curve component private key in the SEC1 ECPrivateKey encoding
+         // with the curve OID in the [0] parameters field
+         std::vector<uint8_t> trad_priv_bits;
+         Botan::DER_Encoder(trad_priv_bits)
+            .start_sequence()
+            .encode(static_cast<size_t>(1))
+            .encode(wrong_curve_key->raw_private_key_bits(), Botan::ASN1_Type::OctetString)
+            .start_explicit_context_specific(0)
+            .encode(Botan::OID::from_string("secp384r1"))
+            .end_cons()
+            .end_cons();
+
+         const auto valid_priv = valid_key.private_key_bits();
+         std::vector<uint8_t> priv_bits(valid_priv.begin(), valid_priv.begin() + param.mldsa_privkey_size());
+         priv_bits.insert(priv_bits.end(), trad_priv_bits.begin(), trad_priv_bits.end());
+         result.test_throws("private key with wrong ECDSA curve is rejected",
+                            [&]() { const Botan::MLDSA_Composite_PrivateKey priv(param.id(), priv_bits); });
+
+         const auto valid_pub = valid_key.public_key_bits();
+         std::vector<uint8_t> pub_bits(valid_pub.begin(), valid_pub.begin() + param.mldsa_pubkey_size());
+         const auto wrong_pub_point = wrong_curve_key->public_key()->raw_public_key_bits();
+         pub_bits.insert(pub_bits.end(), wrong_pub_point.begin(), wrong_pub_point.end());
+         result.test_throws("public key with wrong ECDSA curve point is rejected",
+                            [&]() { const Botan::MLDSA_Composite_PublicKey pub(param.id(), pub_bits); });
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "mldsa_composite_ecdsa_curve", MLDSA_Composite_ECDSA_Curve_Tests);
    #endif
 
 class MLDSA_Composite_Sig_Detail_Tests : public Test {
