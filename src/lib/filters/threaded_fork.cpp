@@ -13,6 +13,9 @@
    #include <botan/internal/barrier.h>
    #include <botan/internal/semaphore.h>
 
+   #include <exception>
+   #include <mutex>
+
 namespace Botan {
 
 struct Threaded_Fork_Data {
@@ -38,6 +41,27 @@ struct Threaded_Fork_Data {
       * The length of the work that needs to be done.
       */
       size_t m_input_length = 0;
+
+      void clear_exception() {
+         std::lock_guard lock(m_exception_mutex);
+         m_exception = nullptr;
+      }
+
+      void capture_exception() {
+         std::lock_guard lock(m_exception_mutex);
+         if(!m_exception) {
+            m_exception = std::current_exception();
+         }
+      }
+
+      std::exception_ptr exception() {
+         std::lock_guard lock(m_exception_mutex);
+         return m_exception;
+      }
+
+   private:
+      std::mutex m_exception_mutex;
+      std::exception_ptr m_exception;
 };
 
 /*
@@ -116,6 +140,7 @@ void Threaded_Fork::send(const uint8_t input[], size_t length) {
 
 void Threaded_Fork::thread_delegate_work(const uint8_t input[], size_t length) {
    //Set the data to do.
+   m_thread_data->clear_exception();
    m_thread_data->m_input = input;
    m_thread_data->m_input_length = length;
 
@@ -126,9 +151,15 @@ void Threaded_Fork::thread_delegate_work(const uint8_t input[], size_t length) {
    //Wait for all the filters to finish processing.
    m_thread_data->m_input_complete_barrier.sync();
 
+   const auto exception = m_thread_data->exception();
+
    //Reset the thread data
    m_thread_data->m_input = nullptr;
    m_thread_data->m_input_length = 0;
+
+   if(exception) {
+      std::rethrow_exception(exception);
+   }
 }
 
 void Threaded_Fork::thread_entry(Filter* filter) {
@@ -141,7 +172,11 @@ void Threaded_Fork::thread_entry(Filter* filter) {
 
       // Plain Fork skips null ports the same way
       if(filter != nullptr) {
-         filter->write(m_thread_data->m_input, m_thread_data->m_input_length);
+         try {
+            filter->write(m_thread_data->m_input, m_thread_data->m_input_length);
+         } catch(...) {
+            m_thread_data->capture_exception();
+         }
       }
       m_thread_data->m_input_complete_barrier.sync();
    }

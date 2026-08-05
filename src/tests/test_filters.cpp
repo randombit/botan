@@ -748,9 +748,8 @@ class Filter_Tests final : public Test {
 
          Botan::Pipe rejecting_pipe(
             new Botan::Threaded_Fork(new Botan::Base64_Decoder(Botan::FULL_CHECK), new Botan::Hex_Encoder));
-         result.test_throws<Botan::Invalid_Argument>("Threaded_Fork propagates branch exceptions", [&] {
-            rejecting_pipe.process_msg("@@@@");
-         });
+         result.test_throws<Botan::Invalid_Argument>("Threaded_Fork propagates branch exceptions",
+                                                     [&] { rejecting_pipe.process_msg("@@@@"); });
    #endif
          return result;
       }
