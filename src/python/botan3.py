@@ -739,6 +739,8 @@ def _ctype_str(s: str | None) -> bytes | None:
     if s is None:
         return None
     assert isinstance(s, str)
+    if '\0' in s:
+        raise ValueError('Botan C string arguments cannot contain embedded NUL bytes')
     return s.encode('utf-8')
 
 def _ctype_to_str(s: bytes) -> str:
