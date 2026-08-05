@@ -13,6 +13,9 @@
 #include <botan/oids.h>
 #include <botan/pss_params.h>
 #include <botan/internal/fmt.h>
+#if defined(BOTAN_HAS_ECDSA)
+   #include <botan/ec_group.h>
+#endif
 
 #include <botan/internal/oid_map.h>
 
@@ -342,6 +345,15 @@ AlgorithmIdentifier MLDSA_Composite_Param::get_traditional_algorithm_id() const 
    std::optional<OID> oid;
    if(0 == std::strcmp(this->m_traditional_algorithm, "ECDSA")) {
       oid = OID::from_name(std::string("ECDSA/") + m_traditional_padding);
+#if defined(BOTAN_HAS_ECDSA)
+      if(oid.has_value()) {
+         // Carry the curve mandated by the composite parameter set as the algorithm
+         // parameters. The EC key decoding routines check the curve encoded within
+         // a private key against these parameters, so that a component key on any
+         // other curve is rejected.
+         return AlgorithmIdentifier(oid.value(), EC_Group::from_name(m_curve).DER_encode());
+      }
+#endif
    } else {
       oid = OID::from_name(this->m_traditional_algorithm);
    }
