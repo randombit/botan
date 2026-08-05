@@ -1035,6 +1035,18 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertFalse(int04_1.is_revoked(rootcrl))
         self.assertTrue(end21.is_revoked(int21crl))
 
+    def test_x509_rejects_embedded_nul_strings(self):
+        cert = botan.X509Cert(filename=test_data("src/tests/data/x509/ecc/isrg-root-x2.pem"))
+
+        with self.assertRaises(ValueError):
+            cert.hostname_match("example.com\0.attacker.invalid")
+
+        with self.assertRaises(ValueError):
+            cert.verify(hostname="example.com\0.attacker.invalid")
+
+        with self.assertRaises(ValueError):
+            cert.verify(trusted_path="/trusted/roots\0/attacker")
+
     def test_x509_extensions(self):
         no_ext_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/x509test/root.pem"))
 
