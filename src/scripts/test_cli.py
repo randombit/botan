@@ -35,6 +35,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 CLI_PATH = None
 ASYNC_TIMEOUT = 15 # seconds
 TEST_DATA_DIR = '.'
+SOURCE_TEST_DATA_DIR = '.'
 ONLINE_TESTS = False
 TESTS_RUN = 0
 TESTS_FAILED = 0
@@ -336,6 +337,71 @@ def cli_version_tests(_tmp_dir):
     version_full_re = re.compile(r'Botan [0-9]\.[0-9]+\.[0-9](\-[a-z]+[0-9]+)?( UNSAFE .* BUILD)? \(.*\)$')
     if not version_full_re.match(output):
         logging.error("Unexpected long version output %s", output)
+
+class OCSPTestHandler(BaseHTTPRequestHandler):
+    response_body = b''
+
+    def log_message(self, _format, *_args):
+        return
+
+    def do_POST(self):
+        content_length = int(self.headers.get('Content-Length', '0'))
+        self.rfile.read(content_length)
+        body = type(self).response_body
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/ocsp-response')
+        self.send_header('Content-Length', str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+def cli_ocsp_check_tests(tmp_dir):
+    global TESTS_RUN
+
+    if not run_socket_tests() or not check_for_command('ocsp_check'):
+        return
+
+    fixture_dir = os.path.join(SOURCE_TEST_DATA_DIR, 'x509', 'ocsp', 'cli')
+
+    def fixture(name):
+        with open(os.path.join(fixture_dir, name + '.b64'), encoding='ascii') as fixture_file:
+            return base64.b64decode(fixture_file.read())
+
+    issuer = os.path.join(tmp_dir, 'issuer.der')
+    subject = os.path.join(tmp_dir, 'subject.der')
+    with open(issuer, 'wb') as issuer_file:
+        issuer_file.write(fixture('issuer.der'))
+    with open(subject, 'wb') as subject_file:
+        subject_file.write(fixture('subject.der'))
+
+    server = HTTPServer(('127.0.0.1', 38493), OCSPTestHandler)
+    server_thread = threading.Thread(target=server.serve_forever, daemon=True)
+    server_thread.start()
+
+    def run(response):
+        OCSPTestHandler.response_body = fixture(response)
+        return subprocess.run(
+            [CLI_PATH, 'ocsp_check', '--timeout=1000', subject, issuer],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False)
+
+    try:
+        TESTS_RUN += 2
+
+        unsigned = run('good-empty.der')
+        if unsigned.returncode != 1 or unsigned.stdout != 'OCSP check failed OCSP signature error\n' or unsigned.stderr:
+            logging.error("ocsp_check accepted an unsigned GOOD response: rc=%d stdout=%r stderr=%r",
+                          unsigned.returncode, unsigned.stdout, unsigned.stderr)
+
+        valid = run('good-issuer.der')
+        if valid.returncode != 0 or valid.stdout != 'OCSP check OK\n' or valid.stderr:
+            logging.error("ocsp_check rejected an issuer-authenticated GOOD response: rc=%d stdout=%r stderr=%r",
+                          valid.returncode, valid.stdout, valid.stderr)
+    finally:
+        server.shutdown()
+        server.server_close()
+        server_thread.join(timeout=2)
 
 def cli_is_prime_tests(_tmp_dir):
     test_cli("is_prime", "5", "5 is probably prime")
@@ -2002,6 +2068,9 @@ def main(args=None):
     global TEST_DATA_DIR
     TEST_DATA_DIR = os.path.join(options.test_data_dir, 'src/tests/data/timing/')
 
+    global SOURCE_TEST_DATA_DIR
+    SOURCE_TEST_DATA_DIR = os.path.join(options.test_data_dir, 'src/tests/data')
+
     test_regex = None
     if len(args) == 3:
         try:
@@ -2044,6 +2113,7 @@ def main(args=None):
         cli_key_tests,
         cli_marvin_tests,
         cli_mod_inverse_tests,
+        cli_ocsp_check_tests,
         cli_pbkdf_tune_tests,
         cli_pk_encrypt_tests,
         cli_pk_workfactor_tests,
