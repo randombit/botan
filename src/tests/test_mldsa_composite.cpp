@@ -243,6 +243,39 @@ class MLDSA_Composite_Key_Detail_Tests : public Test {
 
 BOTAN_REGISTER_TEST("pubkey", "mldsa_composite_key_detail", MLDSA_Composite_Key_Detail_Tests);
 
+   #if defined(BOTAN_HAS_RSA)
+class MLDSA_Composite_RSA_Key_Size_Tests : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("MLDSA_Composite_RSA_Key_Size");
+         auto rng = Test::new_rng("mldsa_composite_rsa_key_size");
+         const auto param = Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
+            Botan::MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PKCS15_SHA256);
+
+         const Botan::MLDSA_Composite_PrivateKey valid_key(*rng, param);
+         const auto rsa_1024 = Botan::create_private_key("RSA", *rng, "1024");
+
+         const auto valid_pub = valid_key.public_key_bits();
+         std::vector<uint8_t> pub_bits(valid_pub.begin(), valid_pub.begin() + param.mldsa_pubkey_size());
+         const auto rsa_pub_bits = rsa_1024->public_key()->public_key_bits();
+         pub_bits.insert(pub_bits.end(), rsa_pub_bits.begin(), rsa_pub_bits.end());
+         result.test_throws("public key with wrong RSA modulus size is rejected",
+                            [&]() { const Botan::MLDSA_Composite_PublicKey pub(param.id(), pub_bits); });
+
+         const auto valid_priv = valid_key.private_key_bits();
+         std::vector<uint8_t> priv_bits(valid_priv.begin(), valid_priv.begin() + param.mldsa_privkey_size());
+         const auto rsa_priv_bits = rsa_1024->private_key_bits();
+         priv_bits.insert(priv_bits.end(), rsa_priv_bits.begin(), rsa_priv_bits.end());
+         result.test_throws("private key with wrong RSA modulus size is rejected",
+                            [&]() { const Botan::MLDSA_Composite_PrivateKey priv(param.id(), priv_bits); });
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "mldsa_composite_rsa_key_size", MLDSA_Composite_RSA_Key_Size_Tests);
+   #endif
+
 class MLDSA_Composite_Sig_Detail_Tests : public Test {
    public:
       static Test::Result run_detail_test(Botan::MLDSA_Composite_Param::id_t id) {
