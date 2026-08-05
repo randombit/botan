@@ -201,6 +201,11 @@ class X509test_Path_Validation_Tests final : public Test {
             // if softfail, there is warnings
             result.test_is_true("test warnings", !path_result.no_warnings());
             result.test_str_eq("test warnings string", path_result.warnings_string(), "[0] OCSP URL not available");
+      #else
+            result.test_is_true("test warnings", !path_result.no_warnings());
+            result.test_str_eq("test warnings string",
+                               path_result.warnings_string(),
+                               "[0] OCSP requests not available, no HTTP support compiled in");
       #endif
             result.end_timer();
             results.push_back(result);
@@ -1757,6 +1762,8 @@ class Path_Validation_With_OCSP_Tests final : public Test {
             result.test_enum_eq("expected overall validation result", path_result.result(), expected);
             result.test_is_true("softfail status is retained in the result",
                                 flatten(path_result.all_statuses()).contains(dummy_ocsp.dummy_status().value()));
+            result.test_is_true("softfail status is visible as a warning",
+                                flatten(path_result.warnings()).contains(dummy_ocsp.dummy_status().value()));
          };
 
          const auto server_not_available = Botan::OCSP::Response::dummy_server_not_available_response();
@@ -1836,6 +1843,13 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                     status[1].contains(no_rev_data));
                result.test_is_true("accepting: softfail status retained for " + code_name,
                                    status[0].contains(softfail));
+
+               // Even when accepted, the softfail condition must surface as a warning
+               const Botan::Path_Validation_Result pvr(status, {});
+               result.test_is_true("accepting: validation succeeds for " + code_name, pvr.successful_validation());
+               result.test_is_false("accepting: warnings are non-empty for " + code_name, pvr.no_warnings());
+               result.test_is_true("accepting: softfail status is a warning for " + code_name,
+                                   flatten(pvr.warnings()).contains(softfail));
             }
          }
 
