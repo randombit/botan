@@ -62,6 +62,19 @@ std::span<const uint8_t> traditional_privkey_subspan(const MLDSA_Composite_Param
    }
    return std::span<const uint8_t>(key_bits.begin() + offset, key_bits.end());
 }
+
+// The composite parameter set mandates the RSA modulus bit length; a key with any
+// other modulus size is not a valid component key for this parameter set. All other
+// traditional algorithms have fixed key sizes enforced by their decoding routines.
+void validate_traditional_key_size(const MLDSA_Composite_Param& param, const Public_Key& trad_key) {
+   if(param.traditional_algorithm() == "RSA" && trad_key.key_length() != param.traditional_key_size()) {
+      throw Decoding_Error(
+         fmt("RSA component key of {} must have a {} bit modulus, but the provided key has {} bits",
+             param.id_str(),
+             param.traditional_key_size(),
+             trad_key.key_length()));
+   }
+}
 }  // namespace
 
 class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification_with_Hash {
@@ -197,7 +210,9 @@ std::shared_ptr<Public_Key> MLDSA_Composite_PublicKey::load_traditional_public_k
       return std::make_shared<Botan::ECDSA_PublicKey>(group, EC_AffinePoint(group, key_bits));
    }
 #endif
-   return load_public_key(param.get_traditional_algorithm_id(), key_bits);
+   std::shared_ptr<Public_Key> key = load_public_key(param.get_traditional_algorithm_id(), key_bits);
+   validate_traditional_key_size(param, *key);
+   return key;
 }
 
 MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(const MLDSA_Composite_PublicKey& other) :
@@ -296,7 +311,9 @@ std::shared_ptr<Private_Key> MLDSA_Composite_PrivateKey::load_traditional_privat
       return std::make_shared<ECDSA_PrivateKey>(param.get_traditional_algorithm_id(), trad_key_bits);
    }
 #endif
-   return load_private_key(param.get_traditional_algorithm_id(), trad_key_bits);
+   std::shared_ptr<Private_Key> key = load_private_key(param.get_traditional_algorithm_id(), trad_key_bits);
+   validate_traditional_key_size(param, *key);
+   return key;
 }
 
 MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id_t id, std::span<const uint8_t> sk) :
