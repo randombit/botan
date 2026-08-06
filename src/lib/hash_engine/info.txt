@@ -1,0 +1,16 @@
+<internal_defines>
+HASH_ENGINES -> 20260222
+</internal_defines>
+
+<module_info>
+name -> "Hash Engine"
+</module_info>
+
+<requires>
+hash
+</requires>
+
+<header:internal>
+hash_engine.h
+</header:internal>
+
