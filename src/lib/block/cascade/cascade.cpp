@@ -57,6 +57,7 @@ Cascade_Cipher::Cascade_Cipher(std::unique_ptr<BlockCipher> cipher1, std::unique
       m_cipher1(std::move(cipher1)),
       m_cipher2(std::move(cipher2)),
       m_block_size(std::lcm(m_cipher1->block_size(), m_cipher2->block_size())) {
+   // TODO(Botan4) require the block lengths of the two ciphers be the same
    BOTAN_ASSERT(m_block_size % m_cipher1->block_size() == 0 && m_block_size % m_cipher2->block_size() == 0,
                 "Combined block size is a multiple of each ciphers block");
 }
