@@ -19,6 +19,7 @@
 namespace Botan {
 
 struct Threaded_Fork_Data {
+      // NOLINTBEGIN(*-non-private-member-variables-in-classes)
       /*
       * Semaphore for indicating that there is work to be done (or to
       * quit)
@@ -42,20 +43,22 @@ struct Threaded_Fork_Data {
       */
       size_t m_input_length = 0;
 
+      // NOLINTEND(*-non-private-member-variables-in-classes)
+
       void clear_exception() {
-         std::lock_guard lock(m_exception_mutex);
+         const std::lock_guard lock(m_exception_mutex);
          m_exception = nullptr;
       }
 
       void capture_exception() {
-         std::lock_guard lock(m_exception_mutex);
+         const std::lock_guard lock(m_exception_mutex);
          if(!m_exception) {
             m_exception = std::current_exception();
          }
       }
 
       std::exception_ptr exception() {
-         std::lock_guard lock(m_exception_mutex);
+         const std::lock_guard lock(m_exception_mutex);
          return m_exception;
       }
 
