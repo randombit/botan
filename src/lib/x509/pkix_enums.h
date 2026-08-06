@@ -28,7 +28,6 @@ enum class Certificate_Status_Code : uint16_t {
    OCSP_RESPONSE_GOOD = 1,
    OCSP_SIGNATURE_OK = 2,
    VALID_CRL_CHECKED = 3,
-   OCSP_NO_HTTP = 4,
 
    // Warnings
    FIRST_WARNING_STATUS = 500,
@@ -38,6 +37,7 @@ enum class Certificate_Status_Code : uint16_t {
    OCSP_SERVER_NOT_AVAILABLE = 503,
    TRUSTED_CERT_HAS_EXPIRED = 504,
    TRUSTED_CERT_NOT_YET_VALID = 505,
+   OCSP_NO_HTTP = 506,
 
    // Errors
    FIRST_ERROR_STATUS = 1000,

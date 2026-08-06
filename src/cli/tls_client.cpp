@@ -62,8 +62,16 @@ class Callbacks : public Botan::TLS::Callbacks {
             throw Botan::Invalid_Argument("Certificate chain was empty");
          }
 
+         // As a diagnostic tool we want to attempt OCSP but still connect if
+         // the responder was unavailable or the certs have no OCSP URL
          const Botan::Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
-                                                                policy.minimum_signature_strength());
+                                                                policy.minimum_signature_strength(),
+                                                                /* ocsp_all_intermediates */ false,
+                                                                std::chrono::hours(24 * 7),
+                                                                /* trusted_ocsp_responders */ nullptr,
+                                                                /* ignore_trusted_root_time_range */ false,
+                                                                /* require_self_signed_trust_anchors */ true,
+                                                                /* accept_ocsp_softfail */ true);
 
          auto ocsp_timeout = std::chrono::milliseconds(1000);
 
@@ -78,6 +86,10 @@ class Callbacks : public Botan::TLS::Callbacks {
 
             if(!status.empty() && status[0].contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD)) {
                output() << "Valid OCSP response for this server\n";
+            }
+
+            if(!result.no_warnings()) {
+               output() << "Certificate validation warnings: " << result.warnings_string() << "\n";
             }
          } else {
             if(flag_set("ignore-cert-error")) {
