@@ -291,6 +291,12 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
 
       psk_cipher_state = std::visit(
          overloaded{[&, this](Session session) {
+                       if(policy().require_client_certificate_authentication() && session.peer_certs().empty() &&
+                          !session.peer_raw_public_key()) {
+                          throw TLS_Exception(Alert::AccessDenied,
+                                              "Resumed session does not satisfy current client authentication policy");
+                       }
+
                        m_handshake->resumed_session = std::move(session);
                        return Cipher_State::init_with_psk(Connection_Side::Server,
                                                           Cipher_State::PSK_Type::Resumption,
