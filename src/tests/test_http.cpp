@@ -591,6 +591,26 @@ class HTTP_Redirect_Tests final : public Test {
    private:
       static std::string verb_of(std::string_view message) { return std::string(message.substr(0, message.find(' '))); }
 
+      static Test::Result test_redirects_disabled_by_default() {
+         Test::Result result("HTTP redirects are disabled by default");
+         MockServer mock({
+            make_response(303, "See Other", {{"Location", "http://127.0.0.1/private-control?operation=export"}}),
+            make_response(200, "OK"),
+         });
+         const auto uri = Botan::URI::from_string("http://ocsp.example/status").value();
+
+         result.test_throws<Botan::HTTP::HTTP_Error>("default redirect budget rejects redirect", [&] {
+            (void)Botan::HTTP::http_sync(mock.as_exch_fn(),
+                                         "POST",
+                                         uri,
+                                         "application/ocsp-request",
+                                         std::vector<uint8_t>{0x30, 0x00},
+                                         Botan::HTTP::RequestLimits());
+         });
+         result.test_sz_eq("only the configured origin was contacted", mock.calls(), 1);
+         return result;
+      }
+
       static Test::Result test_301_preserves_method_for_get() {
          Test::Result result("HTTP 301 with GET: re-issues GET to new URL");
          MockServer mock({
@@ -769,6 +789,7 @@ class HTTP_Redirect_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          return {
+            test_redirects_disabled_by_default(),
             test_301_preserves_method_for_get(),
             test_303_post_downgrades_to_get(),
             test_307_post_preserves_method_and_body(),
