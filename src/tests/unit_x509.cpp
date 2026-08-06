@@ -18,6 +18,7 @@
    #include <botan/rng.h>
    #include <botan/x509_ca.h>
    #include <botan/x509_ext.h>
+   #include <botan/x509_key.h>
    #include <botan/x509path.h>
    #include <botan/x509self.h>
    #include <botan/internal/calendar.h>
@@ -867,6 +868,39 @@ Test::Result test_x509_subject_key_id_derivation() {
       result.test_bin_eq(std::string(file) + " subject key id", skid.get_key_id(), cert.subject_key_id());
    }
 
+      #if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_SHA2_32)
+   /*
+   * The P-256 SubjectPublicKeyInfo and SHA-256 result are from RFC 7093
+   * Section 3. The remaining results use the same published key.
+   */
+   const auto rfc7093_key =
+      Botan::X509::load_key(Botan::hex_decode("3059301306072A8648CE3D020106082A8648CE3D030107034200"
+                                              "047F7F35A79794C950060B8029FC8F363A28F11159692D9D34E6AC948190434735"
+                                              "F833B1A66652DC514337AFF7F5C9C75D670C019D95A5D639B72744C64A9128BB"));
+
+   if(result.test_not_null("loaded RFC 7093 public key", rfc7093_key.get())) {
+      const auto check = [&](Botan::Subject_Key_ID_Method method, std::string_view name, std::string_view expected) {
+         const Botan::Cert_Extension::Subject_Key_ID skid(*rfc7093_key, method);
+         result.test_bin_eq(std::string(name), skid.get_key_id(), expected);
+      };
+
+      check(Botan::Subject_Key_ID_Method::RFC5280_SHA1, "RFC 5280 SHA-1", "6FEF9162C0A3F2E7608956D41C37DA0C8E87F0AE");
+      check(
+         Botan::Subject_Key_ID_Method::RFC7093_SHA256, "RFC 7093 SHA-256", "BF37B3E5808FD46D54B28E846311BCCE1CAD2E1A");
+
+         #if defined(BOTAN_HAS_SHA2_64)
+      check(
+         Botan::Subject_Key_ID_Method::RFC7093_SHA384, "RFC 7093 SHA-384", "39AB33561A203C3E782D69B1A0F4F8AD50A773DF");
+      check(
+         Botan::Subject_Key_ID_Method::RFC7093_SHA512, "RFC 7093 SHA-512", "907E7E9D05878A273D597F2AEA91BDB6056245CB");
+         #endif
+
+      result.test_throws("rejects an unknown subject key identifier method", [&] {
+         Botan::Cert_Extension::Subject_Key_ID skid(*rfc7093_key, static_cast<Botan::Subject_Key_ID_Method>(0xFF));
+      });
+   }
+      #endif
+
    return result;
 }
 
@@ -1302,6 +1336,53 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    result.test_bin_eq("user1 subject key id is SHA-1 of subjectPublicKey",
                       user1_cert.subject_key_id(),
                       user1_cert.subject_public_key_bitstring_sha1());
+
+   #if defined(BOTAN_HAS_SHA2_32)
+   if(sig_algo == "ECDSA") {
+      const auto check_issued_certificate = [&](const Botan::X509_Certificate& cert,
+                                                Botan::Subject_Key_ID_Method method,
+                                                std::string_view name) {
+         const Botan::Cert_Extension::Subject_Key_ID expected(*cert.subject_public_key(), method);
+         result.test_bin_eq(std::string(name) + " subject key id", cert.subject_key_id(), expected.get_key_id());
+         result.test_bin_eq(std::string(name) + " authority key id", cert.authority_key_id(), ca_cert.subject_key_id());
+      };
+
+      const auto explicit_sha1_cert = ca.sign_request(
+         user1_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01), Botan::Subject_Key_ID_Method::RFC5280_SHA1);
+      result.test_bin_eq("explicit RFC 5280 method preserves the default",
+                         explicit_sha1_cert.subject_key_id(),
+                         user1_cert.subject_key_id());
+
+      const BigInt rfc7093_serial(100);
+      const auto sha256_cert = ca.sign_request(user1_req,
+                                               rng,
+                                               rfc7093_serial,
+                                               from_date(-1, 01, 01),
+                                               from_date(2, 01, 01),
+                                               Botan::Subject_Key_ID_Method::RFC7093_SHA256);
+      check_issued_certificate(sha256_cert, Botan::Subject_Key_ID_Method::RFC7093_SHA256, "RFC 7093 SHA-256");
+
+      #if defined(BOTAN_HAS_SHA2_64)
+      const auto sha384_cert = ca.sign_request(
+         user1_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01), Botan::Subject_Key_ID_Method::RFC7093_SHA384);
+      check_issued_certificate(sha384_cert, Botan::Subject_Key_ID_Method::RFC7093_SHA384, "RFC 7093 SHA-384");
+
+      const auto sha512_cert = ca.sign_request(
+         user1_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01), Botan::Subject_Key_ID_Method::RFC7093_SHA512);
+      check_issued_certificate(sha512_cert, Botan::Subject_Key_ID_Method::RFC7093_SHA512, "RFC 7093 SHA-512");
+      #endif
+
+      const auto sha256_self_signed = Botan::X509::create_self_signed_cert(
+         ca_opts(sig_padding), ca_key, hash_fn, Botan::Subject_Key_ID_Method::RFC7093_SHA256, rng);
+      const Botan::Cert_Extension::Subject_Key_ID expected_self_signed(*sha256_self_signed.subject_public_key(),
+                                                                       Botan::Subject_Key_ID_Method::RFC7093_SHA256);
+      result.test_bin_eq(
+         "RFC 7093 self-signed subject key id", sha256_self_signed.subject_key_id(), expected_self_signed.get_key_id());
+      result.test_bin_eq("RFC 7093 self-signed authority key id",
+                         sha256_self_signed.authority_key_id(),
+                         sha256_self_signed.subject_key_id());
+   }
+   #endif
 
    const Botan::X509_Certificate user2_cert =
       ca.sign_request(user2_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));

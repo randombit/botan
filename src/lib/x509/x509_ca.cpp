@@ -47,6 +47,12 @@ Extensions X509_CA::choose_extensions(const PKCS10_Request& req,
 }
 
 Extensions X509_CA::choose_extensions(const PKCS10_Request& req, const X509_Certificate& ca_cert) {
+   return choose_extensions(req, ca_cert, Subject_Key_ID_Method::RFC5280_SHA1);
+}
+
+Extensions X509_CA::choose_extensions(const PKCS10_Request& req,
+                                      const X509_Certificate& ca_cert,
+                                      Subject_Key_ID_Method subject_key_id_method) {
    const auto constraints = req.is_CA() ? Key_Constraints::ca_constraints() : req.constraints();
 
    auto key = req.subject_public_key();
@@ -64,7 +70,7 @@ Extensions X509_CA::choose_extensions(const PKCS10_Request& req, const X509_Cert
    }
 
    extensions.replace(std::make_unique<Cert_Extension::Authority_Key_ID>(ca_cert.subject_key_id()));
-   extensions.replace(std::make_unique<Cert_Extension::Subject_Key_ID>(*key));
+   extensions.replace(std::make_unique<Cert_Extension::Subject_Key_ID>(*key, subject_key_id_method));
 
    extensions.replace(std::make_unique<Cert_Extension::Subject_Alternative_Name>(req.subject_alt_name()));
 
@@ -78,7 +84,16 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
                                        const BigInt& serial_number,
                                        const X509_Time& not_before,
                                        const X509_Time& not_after) const {
-   auto extensions = choose_extensions(req, m_ca_cert);
+   return sign_request(req, rng, serial_number, not_before, not_after, Subject_Key_ID_Method::RFC5280_SHA1);
+}
+
+X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
+                                       RandomNumberGenerator& rng,
+                                       const BigInt& serial_number,
+                                       const X509_Time& not_before,
+                                       const X509_Time& not_after,
+                                       Subject_Key_ID_Method subject_key_id_method) const {
+   auto extensions = choose_extensions(req, m_ca_cert, subject_key_id_method);
 
    return make_cert(*m_signer,
                     rng,
@@ -99,7 +114,15 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
                                        RandomNumberGenerator& rng,
                                        const X509_Time& not_before,
                                        const X509_Time& not_after) const {
-   auto extensions = choose_extensions(req, m_ca_cert);
+   return sign_request(req, rng, not_before, not_after, Subject_Key_ID_Method::RFC5280_SHA1);
+}
+
+X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
+                                       RandomNumberGenerator& rng,
+                                       const X509_Time& not_before,
+                                       const X509_Time& not_after,
+                                       Subject_Key_ID_Method subject_key_id_method) const {
+   auto extensions = choose_extensions(req, m_ca_cert, subject_key_id_method);
 
    return make_cert(*m_signer,
                     rng,

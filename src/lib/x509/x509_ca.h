@@ -61,6 +61,22 @@ class BOTAN_PUBLIC_API(2, 0) X509_CA final {
                                     const X509_Time& not_after) const;
 
       /**
+      * Sign a PKCS#10 Request using an explicit subject key identifier
+      * derivation method.
+      * @param req the request to sign
+      * @param rng the rng to use
+      * @param not_before the starting time for the certificate
+      * @param not_after the expiration time for the certificate
+      * @param subject_key_id_method the subject key identifier derivation method
+      * @return resulting certificate
+      */
+      X509_Certificate sign_request(const PKCS10_Request& req,
+                                    RandomNumberGenerator& rng,
+                                    const X509_Time& not_before,
+                                    const X509_Time& not_after,
+                                    Subject_Key_ID_Method subject_key_id_method) const;
+
+      /**
       * Sign a PKCS#10 Request.
       * @param req the request to sign
       * @param rng the rng to use
@@ -74,6 +90,24 @@ class BOTAN_PUBLIC_API(2, 0) X509_CA final {
                                     const BigInt& serial_number,
                                     const X509_Time& not_before,
                                     const X509_Time& not_after) const;
+
+      /**
+      * Sign a PKCS#10 Request using an explicit subject key identifier
+      * derivation method.
+      * @param req the request to sign
+      * @param rng the rng to use
+      * @param serial_number the serial number the cert will be assigned
+      * @param not_before the starting time for the certificate
+      * @param not_after the expiration time for the certificate
+      * @param subject_key_id_method the subject key identifier derivation method
+      * @return resulting certificate
+      */
+      X509_Certificate sign_request(const PKCS10_Request& req,
+                                    RandomNumberGenerator& rng,
+                                    const BigInt& serial_number,
+                                    const X509_Time& not_before,
+                                    const X509_Time& not_after,
+                                    Subject_Key_ID_Method subject_key_id_method) const;
 
       /**
       * Create a new and empty CRL for this CA.
@@ -132,6 +166,18 @@ class BOTAN_PUBLIC_API(2, 0) X509_CA final {
       * creating a certificate using X509_CA::make_cert.
       */
       static Extensions choose_extensions(const PKCS10_Request& req, const X509_Certificate& ca_certificate);
+
+      /**
+      * Return the set of extensions that will be used for a certificate,
+      * deriving its subject key identifier with the requested method.
+      *
+      * @param req the certificate request
+      * @param ca_certificate the issuing CA certificate
+      * @param subject_key_id_method the subject key identifier derivation method
+      */
+      static Extensions choose_extensions(const PKCS10_Request& req,
+                                          const X509_Certificate& ca_certificate,
+                                          Subject_Key_ID_Method subject_key_id_method);
 
       BOTAN_DEPRECATED("Use the overload that does not take a hash function name (SKID is now always SHA-1)")
       static Extensions

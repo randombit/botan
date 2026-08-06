@@ -121,6 +121,36 @@ enum class Certificate_Status_Code : uint16_t {
 BOTAN_PUBLIC_API(2, 0) const char* to_string(Certificate_Status_Code code);
 
 /**
+* Methods described in RFC 5280 and RFC 7093 for deriving an X.509
+* subject key identifier from a public key.
+*/
+enum class Subject_Key_ID_Method : uint8_t {
+   /**
+   * RFC 5280 Section 4.2.1.2 method 1: SHA-1 over the subjectPublicKey
+   * BIT STRING value.
+   */
+   RFC5280_SHA1,
+
+   /**
+   * RFC 7093 Section 2 method 1: the leftmost 160 bits of SHA-256 over
+   * the subjectPublicKey BIT STRING value.
+   */
+   RFC7093_SHA256,
+
+   /**
+   * RFC 7093 Section 2 method 2: the leftmost 160 bits of SHA-384 over
+   * the subjectPublicKey BIT STRING value.
+   */
+   RFC7093_SHA384,
+
+   /**
+   * RFC 7093 Section 2 method 3: the leftmost 160 bits of SHA-512 over
+   * the subjectPublicKey BIT STRING value.
+   */
+   RFC7093_SHA512,
+};
+
+/**
 * X.509v3 Key Constraints.
 * If updating update copy in ffi.h
 */

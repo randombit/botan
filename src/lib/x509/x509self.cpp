@@ -82,6 +82,14 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
                                          const Private_Key& key,
                                          std::string_view hash_fn,
                                          RandomNumberGenerator& rng) {
+   return create_self_signed_cert(opts, key, hash_fn, Subject_Key_ID_Method::RFC5280_SHA1, rng);
+}
+
+X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
+                                         const Private_Key& key,
+                                         std::string_view hash_fn,
+                                         Subject_Key_ID_Method subject_key_id_method,
+                                         RandomNumberGenerator& rng) {
    const std::vector<uint8_t> pub_key = X509::BER_encode(key);
    auto signer = X509_Object::choose_sig_format(key, rng, hash_fn, opts.padding_scheme);
    const AlgorithmIdentifier sig_algo = signer->algorithm_identifier();
@@ -103,7 +111,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
       extensions.add_new(std::make_unique<Cert_Extension::Key_Usage>(constraints), true);
    }
 
-   auto skid = std::make_unique<Cert_Extension::Subject_Key_ID>(key);
+   auto skid = std::make_unique<Cert_Extension::Subject_Key_ID>(key, subject_key_id_method);
 
    extensions.add_new(std::make_unique<Cert_Extension::Authority_Key_ID>(skid->get_key_id()));
    extensions.add_new(std::move(skid));

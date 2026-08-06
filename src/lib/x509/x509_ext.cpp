@@ -29,6 +29,22 @@ namespace Botan {
 namespace {
 
 constexpr size_t MaximumKeyIdentifierLength = 64;
+constexpr size_t StandardKeyIdentifierLength = 160 / 8;
+
+std::string_view subject_key_id_hash(Subject_Key_ID_Method method) {
+   switch(method) {
+      case Subject_Key_ID_Method::RFC5280_SHA1:
+         return "SHA-1";
+      case Subject_Key_ID_Method::RFC7093_SHA256:
+         return "SHA-256";
+      case Subject_Key_ID_Method::RFC7093_SHA384:
+         return "SHA-384";
+      case Subject_Key_ID_Method::RFC7093_SHA512:
+         return "SHA-512";
+   }
+
+   throw Invalid_Argument("Unknown subject key identifier derivation method");
+}
 
 /*
 * Encode an AlternativeName as `GeneralNames` but with an outer IMPLICIT
@@ -567,19 +583,24 @@ void Subject_Key_ID::decode_inner(const std::vector<uint8_t>& in) {
 /*
 * Subject_Key_ID Constructor
 */
-Subject_Key_ID::Subject_Key_ID(const Public_Key& pub_key) {
-   /*
-   * RFC 5280 4.2.1.2:
-   *    (1) The keyIdentifier is composed of the 160-bit SHA-1 hash of the
-   *    value of the BIT STRING subjectPublicKey (excluding the tag, length,
-   *    and number of unused bits).
-   */
-   auto hash = HashFunction::create_or_throw("SHA-1");
+Subject_Key_ID::Subject_Key_ID(const Public_Key& pub_key) :
+      Subject_Key_ID(pub_key, Subject_Key_ID_Method::RFC5280_SHA1) {}
 
-   m_key_id.resize(hash->output_length());
+/*
+* Subject_Key_ID Constructor
+*/
+Subject_Key_ID::Subject_Key_ID(const Public_Key& pub_key, Subject_Key_ID_Method method) {
+   /*
+   * RFC 5280 4.2.1.2 method 1 uses SHA-1. RFC 7093 Section 2 methods
+   * 1, 2, and 3 use SHA-256, SHA-384, and SHA-512, respectively, and
+   * truncate the digest to the leftmost 160 bits. All four methods hash
+   * the value of the BIT STRING subjectPublicKey.
+   */
+   auto hash = HashFunction::create_or_throw(subject_key_id_hash(method));
 
    hash->update(pub_key.public_key_bits());
-   hash->final(m_key_id.data());
+   m_key_id = hash->final_stdvec();
+   m_key_id.resize(StandardKeyIdentifierLength);
 }
 
 /*

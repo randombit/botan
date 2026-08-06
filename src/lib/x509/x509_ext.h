@@ -121,6 +121,15 @@ class BOTAN_PUBLIC_API(2, 0) Subject_Key_ID final : public Certificate_Extension
       */
       explicit Subject_Key_ID(const Public_Key& pub_key);
 
+      /**
+      * Derive the key identifier from the public key using a method
+      * described in RFC 5280 or RFC 7093.
+      *
+      * @param pub_key the public key from which to derive the identifier
+      * @param method the subject key identifier derivation method
+      */
+      Subject_Key_ID(const Public_Key& pub_key, Subject_Key_ID_Method method);
+
       BOTAN_DEPRECATED("Use Subject_Key_ID(const Public_Key&)")
       Subject_Key_ID(const std::vector<uint8_t>& public_key, std::string_view hash_fn);
 
