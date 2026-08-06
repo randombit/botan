@@ -129,6 +129,12 @@ class BotanPythonTests(unittest.TestCase):
 
         self.assertTrue(botan.check_bcrypt('test', '$2a$04$wjen1fAA.UW6UxthpKK.huyOoxvCR7ATRCVC4CBIEGVDOCtr8Oj1C'))
 
+        with self.assertRaises(ValueError):
+            botan.bcrypt('x\0-Acceptable-Password-42!', r, 4)
+
+        with self.assertRaises(ValueError):
+            botan.check_bcrypt('testing\0ignored', phash)
+
     def test_password_utf8(self):
         # The password-based interfaces must consume the full UTF-8 encoding of
         # a non-ASCII password, not a truncated character-count prefix. The
