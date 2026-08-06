@@ -706,6 +706,26 @@ ofvkP1EDmpx50fHLawIDAQAB
         verify = botan.PKVerify(pk, param_str)
         verify_positive_and_negative(verify, sig)
 
+    def test_pksign_utf8_input(self):
+        # A Python str's character count can be shorter than the length of its
+        # UTF-8 encoding. PKSign must pass the encoded byte length to the FFI,
+        # both for a single update and when the message is split across calls.
+        rng = botan.RandomNumberGenerator()
+        private_key = botan.PrivateKey.create('RSA', '1024', rng)
+        public_key = private_key.get_public_key()
+        unicode_msg = "sign this: café € 😀"
+
+        for updates in [[unicode_msg], ["sign this: ", "café ", "€ ", "😀"]]:
+            with self.subTest(updates=updates):
+                signer = botan.PKSign(private_key, 'PKCS1v15(SHA-256)')
+                for update in updates:
+                    signer.update(update)
+                signature = signer.finish(rng)
+
+                verifier = botan.PKVerify(public_key, 'PKCS1v15(SHA-256)')
+                verifier.update(unicode_msg.encode('utf-8'))
+                self.assertTrue(verifier.check_signature(signature))
+
     @staticmethod
     def _ecc_sec1_convert_to_compressed(uncompressed_sec1):
         assert uncompressed_sec1[0] == 0x04
