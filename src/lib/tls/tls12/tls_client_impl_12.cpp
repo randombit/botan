@@ -201,7 +201,10 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
 
          const bool session_version_ok = policy().only_resume_with_exact_version() ? exact_version : ok_version;
 
-         if(policy().acceptable_ciphersuite(session_info.ciphersuite()) && session_version_ok) {
+         const bool session_suite_ok =
+            value_exists(policy().ciphersuite_list(session_info.version()), session_info.ciphersuite_code());
+
+         if(session_suite_ok && session_version_ok) {
             state.client_hello(std::make_unique<Client_Hello_12>(state.handshake_io(),
                                                                  state.hash(),
                                                                  policy(),
