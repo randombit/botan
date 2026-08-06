@@ -22,7 +22,7 @@ class Kyber_PrivateKey;
 using ML_KEM_PublicKey = Kyber_PublicKey;
 using ML_KEM_PrivateKey = Kyber_PrivateKey;
 
-class BOTAN_PUBLIC_API(3, 0) MLKEM_Composite_PublicKey : public virtual Hybrid_KEM_PublicKey {
+class BOTAN_PUBLIC_API(3, 13) MLKEM_Composite_PublicKey : public virtual Hybrid_KEM_PublicKey {
    public:
       MLKEM_Composite_PublicKey(const MLKEM_Composite_Param& parameters, PairOfPublicKeys public_keys);
 
@@ -37,7 +37,7 @@ class BOTAN_PUBLIC_API(3, 0) MLKEM_Composite_PublicKey : public virtual Hybrid_K
       BOTAN_FUTURE_EXPLICIT MLKEM_Composite_PublicKey(const AlgorithmIdentifier& algo_id,
                                                       std::span<const uint8_t> key_bits);
 
-      std::string algo_name() const override { return "MLKEM_Composite"; }
+      std::string algo_name() const override { return MLKEM_Composite_Param::generic_algo_name; }
 
       AlgorithmIdentifier algorithm_identifier() const override {
          return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_EMPTY_PARAM);
@@ -54,14 +54,14 @@ class BOTAN_PUBLIC_API(3, 0) MLKEM_Composite_PublicKey : public virtual Hybrid_K
       const Public_Key& traditional_public_key() const;
 
    private:
-      std::shared_ptr<MLKEM_Composite_Param> m_parameters;  // NOLINT(*non-private-member-variable*)
+      MLKEM_Composite_Param m_parameters;
 };
 
 BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
-class BOTAN_PUBLIC_API(3, 0) MLKEM_Composite_PrivateKey final : public virtual MLKEM_Composite_PublicKey,
-                                                                public virtual Hybrid_KEM_PrivateKey {
+class BOTAN_PUBLIC_API(3, 13) MLKEM_Composite_PrivateKey final : public virtual MLKEM_Composite_PublicKey,
+                                                                 public virtual Hybrid_KEM_PrivateKey {
    public:
       std::unique_ptr<Public_Key> public_key() const override;
 
@@ -102,7 +102,7 @@ class BOTAN_PUBLIC_API(3, 0) MLKEM_Composite_PrivateKey final : public virtual M
                                                                        std::string_view provider) const override;
 
    private:
-      std::shared_ptr<MLKEM_Composite_Param> m_parameters;
+      MLKEM_Composite_Param m_parameters;
 };
 }  // namespace Botan
 
