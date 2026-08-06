@@ -29,6 +29,10 @@
       #include <botan/x509cert.h>
    #endif
 
+   #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_OAEP) && defined(BOTAN_HAS_SHA2_32)
+      #include <botan/internal/asymmetric_encryption_to_kem_adapter.h>
+   #endif
+
 #endif
 
 #include <memory>
@@ -451,5 +455,78 @@ class MLKEM_Composite_KAT_Invalid_Tests : public Text_Based_Test {
 BOTAN_REGISTER_TEST("pubkey", "mlkem_composite_kat_invalid", MLKEM_Composite_KAT_Invalid_Tests);
 
    #endif
+
+   #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_OAEP) && defined(BOTAN_HAS_SHA2_32)
+
+namespace {
+
+std::vector<Test::Result> test_asymmetric_encryption_to_kem_adapter() {
+   constexpr std::string_view oaep = "OAEP(SHA-256)";
+
+   auto rng = Test::new_rng("asym-enc-to-kem");
+
+   return {
+      Botan_Tests::CHECK("handles nullptr",
+                         [&](Test::Result& result) {
+                            result.test_throws("private KEM adapter handles nullptr", [&] {
+                               Botan::Asymmetric_Encryption_to_KEM_Adapter_PrivateKey(nullptr, oaep);
+                            });
+                            result.test_throws("public KEM adapter handles nullptr", [&] {
+                               Botan::Asymmetric_Encryption_to_KEM_Adapter_PublicKey(nullptr, oaep);
+                            });
+                         }),
+
+      Botan_Tests::CHECK("handles non-KEX keys",
+                         [&](Test::Result& result) {
+                            auto mlkem_sk = Botan::create_private_key("ML-KEM", *rng);
+                            auto mlkem_pk = mlkem_sk->public_key();
+
+                            result.test_throws("public KEM adapter does not work with KEM keys", [&] {
+                               Botan::Asymmetric_Encryption_to_KEM_Adapter_PublicKey(std::move(mlkem_pk), oaep);
+                            });
+
+                            result.test_throws("private KEM adapter does not work with KEM keys", [&] {
+                               Botan::Asymmetric_Encryption_to_KEM_Adapter_PrivateKey(std::move(mlkem_sk), oaep);
+                            });
+                         }),
+
+      Botan_Tests::CHECK(
+         "RSA roundtrip",
+         [&](Test::Result& result) {
+            auto rsa = Botan::create_private_key("RSA", *rng);
+
+            Botan::Asymmetric_Encryption_to_KEM_Adapter_PublicKey rsa_kem_pk(rsa->public_key(), oaep);
+            Botan::Asymmetric_Encryption_to_KEM_Adapter_PrivateKey rsa_kem_sk(std::move(rsa), oaep);
+
+            Botan::PK_KEM_Encryptor encryptor(rsa_kem_pk, "Raw" /* no KDF */);
+            Botan::PK_KEM_Decryptor decryptor(rsa_kem_sk, *rng, "Raw" /* no KDF */);
+
+            result.test_sz_eq("ciphertexts has the same length",
+                              encryptor.encapsulated_key_length(),
+                              decryptor.encapsulated_key_length());
+            result.test_sz_eq("shared secrets has the same length",
+                              encryptor.shared_key_length(0 /* no KDF */),
+                              decryptor.shared_key_length(0 /* no KDF */));
+
+            const auto [encaps, ss1] = Botan::KEM_Encapsulation::destructure(encryptor.encrypt(*rng));
+            result.test_sz_eq("ciphertext has expected length", encaps.size(), encryptor.encapsulated_key_length());
+            result.test_sz_eq(
+               "shared secret has expected length", ss1.size(), encryptor.shared_key_length(0 /* no KDF */));
+
+            const auto ss2 = decryptor.decrypt(encaps);
+            result.test_sz_eq("decapsulated shared secret has expected length",
+                              ss2.size(),
+                              decryptor.shared_key_length(0 /* no KDF */));
+            result.test_bin_eq("shared secrets match", ss1, ss2);
+         }),
+   };
+}
+
+}  // namespace
+
+BOTAN_REGISTER_TEST_FN("pubkey", "asym_enc_to_kem_adapter", test_asymmetric_encryption_to_kem_adapter);
+
+   #endif
+
 }  // namespace Botan_Tests
 #endif
