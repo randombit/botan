@@ -269,14 +269,14 @@ class MLKEM_Composite_Decapsulation_Operation final : public KEM_Decryption_with
 
 MLKEM_Composite_PublicKey::MLKEM_Composite_PublicKey(const MLKEM_Composite_Param& parameters,
                                                      PairOfPublicKeys public_keys) :
-      Hybrid_KEM_PublicKey(std::move(public_keys)), m_parameters(std::make_shared<MLKEM_Composite_Param>(parameters)) {
-   BOTAN_ARG_CHECK(mlkem_public_key().algorithm_identifier() == m_parameters->get_mlkem_algorithm_id(),
+      Hybrid_KEM_PublicKey(std::move(public_keys)), m_parameters(parameters) {
+   BOTAN_ARG_CHECK(mlkem_public_key().algorithm_identifier() == m_parameters.get_mlkem_algorithm_id(),
                    "ML-KEM component does not match the ML-KEM composite parameters");
 
-   if(traditional_public_key().algo_name() != m_parameters->traditional_algorithm()) {
+   if(traditional_public_key().algo_name() != m_parameters.traditional_algorithm()) {
       throw Invalid_Argument(
          fmt("MLKEM_Composite_Param indicates {} as the traditional algorithm – this does not fit to the {} public key",
-             m_parameters->traditional_algorithm(),
+             m_parameters.traditional_algorithm(),
              traditional_public_key().algo_name()));
    }
 }
@@ -284,19 +284,19 @@ MLKEM_Composite_PublicKey::MLKEM_Composite_PublicKey(const MLKEM_Composite_Param
 MLKEM_Composite_PublicKey::MLKEM_Composite_PublicKey(const AlgorithmIdentifier& algo_id,
                                                      std::span<const uint8_t> key_bits) :
       Hybrid_KEM_PublicKey(load_public_keys(MLKEM_Composite_Param::from_algo_id_or_throw(algo_id), key_bits)),
-      m_parameters(std::make_shared<MLKEM_Composite_Param>(MLKEM_Composite_Param::from_algo_id_or_throw(algo_id))) {}
+      m_parameters(MLKEM_Composite_Param::from_algo_id_or_throw(algo_id)) {}
 
 MLKEM_Composite_PublicKey::MLKEM_Composite_PublicKey(MLKEM_Composite_Param::id_t id,
                                                      std::span<const uint8_t> key_bits) :
       Hybrid_KEM_PublicKey(load_public_keys(MLKEM_Composite_Param::from_id_supported_or_throw(id), key_bits)),
-      m_parameters(std::make_shared<MLKEM_Composite_Param>(MLKEM_Composite_Param::from_id_supported_or_throw(id))) {}
+      m_parameters(MLKEM_Composite_Param::from_id_supported_or_throw(id)) {}
 
 OID MLKEM_Composite_PublicKey::object_identifier() const {
-   return m_parameters->object_identifier();
+   return m_parameters.object_identifier();
 }
 
 std::unique_ptr<Private_Key> MLKEM_Composite_PublicKey::generate_another(RandomNumberGenerator& rng) const {
-   return std::make_unique<MLKEM_Composite_PrivateKey>(rng, *m_parameters);
+   return std::make_unique<MLKEM_Composite_PrivateKey>(rng, m_parameters);
 }
 
 std::unique_ptr<PK_Ops::KEM_Encryption> MLKEM_Composite_PublicKey::create_kem_encryption_op(
@@ -309,7 +309,7 @@ std::unique_ptr<PK_Ops::KEM_Encryption> MLKEM_Composite_PublicKey::create_kem_en
       throw Provider_Not_Found(algo_name(), provider);
    }
 
-   return std::make_unique<MLKEM_Composite_Encapsulation_Operation>(public_keys(), m_parameters->label(), provider);
+   return std::make_unique<MLKEM_Composite_Encapsulation_Operation>(public_keys(), m_parameters.label(), provider);
 }
 
 const ML_KEM_PublicKey& MLKEM_Composite_PublicKey::mlkem_public_key() const {
@@ -347,7 +347,7 @@ MLKEM_Composite_PrivateKey::MLKEM_Composite_PrivateKey(const MLKEM_Composite_Par
       Hybrid_KEM_PublicKey(extract_public_keys(private_keys)),
       MLKEM_Composite_PublicKey(parameters, extract_public_keys(private_keys)),
       Hybrid_KEM_PrivateKey(std::move(private_keys)),
-      m_parameters(std::make_shared<MLKEM_Composite_Param>(parameters)) {}
+      m_parameters(parameters) {}
 
 MLKEM_Composite_PrivateKey::MLKEM_Composite_PrivateKey(MLKEM_Composite_Param::id_t id, std::span<const uint8_t> sk) :
       MLKEM_Composite_PrivateKey(MLKEM_Composite_Param::from_id_supported_or_throw(id),
@@ -355,11 +355,11 @@ MLKEM_Composite_PrivateKey::MLKEM_Composite_PrivateKey(MLKEM_Composite_Param::id
 
 secure_vector<uint8_t> MLKEM_Composite_PrivateKey::private_key_bits() const {
    return concat(mlkem_private_key().private_key_bits_with_format(MlPrivateKeyFormat::Seed),
-                 encode_traditional_private_key(*m_parameters, traditional_private_key()));
+                 encode_traditional_private_key(m_parameters, traditional_private_key()));
 }
 
 std::unique_ptr<Public_Key> MLKEM_Composite_PrivateKey::public_key() const {
-   return std::make_unique<MLKEM_Composite_PublicKey>(*m_parameters, extract_public_keys(private_keys()));
+   return std::make_unique<MLKEM_Composite_PublicKey>(m_parameters, extract_public_keys(private_keys()));
 }
 
 /**
@@ -376,7 +376,7 @@ std::unique_ptr<PK_Ops::KEM_Decryption> MLKEM_Composite_PrivateKey::create_kem_d
    }
 
    return std::make_unique<MLKEM_Composite_Decapsulation_Operation>(
-      private_keys(), m_parameters->label(), rng, provider);
+      private_keys(), m_parameters.label(), rng, provider);
 }
 
 MLKEM_Composite_PrivateKey::MLKEM_Composite_PrivateKey(const AlgorithmIdentifier& algo_id,

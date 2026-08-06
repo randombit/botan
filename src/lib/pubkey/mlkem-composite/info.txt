@@ -3,7 +3,7 @@ MLKEM_COMPOSITE -> 20260615
 </defines>
 
 <module_info>
-name -> "ML-KEM-composite"
+name -> "mlkem_composite"
 </module_info>
 
 <header:public>
@@ -16,9 +16,8 @@ asymmetric_encryption_to_kem_adapter.h
 </header:internal>
 
 <requires>
-kyber
+ml_kem
 rng
-hash
+sha3
 asn1
-hybrid_kem
 </requires>

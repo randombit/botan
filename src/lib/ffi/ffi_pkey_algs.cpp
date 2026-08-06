@@ -1361,7 +1361,7 @@ int botan_privkey_load_mlkem_composite(botan_privkey_t* key,
                                        size_t key_len,
                                        const char* mlkem_composite_algo) {
 #if defined(BOTAN_HAS_MLKEM_COMPOSITE)
-   if(key == nullptr || privkey == nullptr || mlkem_composite_algo == nullptr) {
+   if(Botan::any_null_pointers(key, privkey, mlkem_composite_algo)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
    *key = nullptr;
@@ -1387,7 +1387,7 @@ int botan_pubkey_load_mlkem_composite(botan_pubkey_t* key,
                                       size_t key_len,
                                       const char* mlkem_composite_algo) {
 #if defined(BOTAN_HAS_MLKEM_COMPOSITE)
-   if(key == nullptr || pubkey == nullptr || mlkem_composite_algo == nullptr) {
+   if(Botan::any_null_pointers(key, pubkey, mlkem_composite_algo)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
