@@ -1105,6 +1105,92 @@ class TLS_Unit_Tests final : public Test {
          return test_with_policy(test_descr, results, creds, versions, policy, rng, client_auth);
       }
 
+      /**
+       * Exercise asymmetric client/server version policies: successful TLS 1.3
+       * to 1.2 downgrades (client-side and server-side) and hard mismatches
+       * that must abort with protocol_version.
+       */
+      void test_version_negotiation(std::vector<Test::Result>& results,
+                                    const std::shared_ptr<Credentials_Manager_Test>& creds,
+                                    const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         using PV = Botan::TLS::Protocol_Version;
+
+         struct Case {
+               std::string name;
+               std::vector<PV> client_versions;
+               std::vector<PV> server_versions;
+               PV offer_version;
+               std::optional<PV> expected_version;  // nullopt => handshake must fail
+         };
+
+         const auto cases = std::array{
+            Case{
+               .name = "Client downgrade TLS 1.3 to 1.2",
+               .client_versions = {PV::TLS_V12, PV::TLS_V13},
+               .server_versions = {PV::TLS_V12},
+               .offer_version = PV::TLS_V13,
+               .expected_version = PV::TLS_V12,
+            },
+            Case{
+               .name = "Server downgrade TLS 1.3 to 1.2",
+               .client_versions = {PV::TLS_V12},
+               .server_versions = {PV::TLS_V12, PV::TLS_V13},
+               .offer_version = PV::TLS_V12,
+               .expected_version = PV::TLS_V12,
+            },
+            Case{
+               .name = "No shared version (client TLS 1.3 only)",
+               .client_versions = {PV::TLS_V13},
+               .server_versions = {PV::TLS_V12},
+               .offer_version = PV::TLS_V13,
+               .expected_version = std::nullopt,
+            },
+            Case{
+               .name = "No shared version (server TLS 1.3 only)",
+               .client_versions = {PV::TLS_V12},
+               .server_versions = {PV::TLS_V13},
+               .offer_version = PV::TLS_V12,
+               .expected_version = std::nullopt,
+            },
+         };
+
+         auto make_policy = [&](std::span<const PV> versions) {
+            auto policy = std::make_shared<Test_Policy>();
+            policy->set("ciphers", "AES-128/GCM");
+            policy->set("macs", "AEAD");
+            policy->set("key_exchange_methods", "ECDH");
+            set_allowed_versions(policy, versions);
+            return policy;
+         };
+
+         for(const auto& c : cases) {
+            auto client_policy = make_policy(c.client_versions);
+            auto server_policy = make_policy(c.server_versions);
+            auto client_ses = make_session_manager(rng);
+            auto server_ses = make_session_manager(rng);
+
+            TLS_Handshake_Test test(c.name,
+                                    c.offer_version,
+                                    creds,
+                                    client_policy,
+                                    server_policy,
+                                    rng,
+                                    client_ses,
+                                    server_ses,
+                                    false,
+                                    c.expected_version);
+
+            const bool expect_version_mismatch = !c.expected_version.has_value();
+            if(expect_version_mismatch) {
+               test.set_client_expected_handshake_alert(Botan::TLS::Alert::ProtocolVersion);
+               test.expect_handshake_failure();
+            }
+
+            test.go();
+            results.push_back(test.results());
+         }
+      }
+
       void test_session_established_abort(std::vector<Test::Result>& results,
                                           std::shared_ptr<Credentials_Manager_Test> creds,
                                           std::shared_ptr<Botan::RandomNumberGenerator> rng) {
@@ -1495,6 +1581,12 @@ class TLS_Unit_Tests final : public Test {
          // by throwing in Callbacks::tls_session_established()
 
          test_session_established_abort(results, creds, rng);
+
+         // TLS version negotiation / downgrade (and mismatch failures)
+
+   #if defined(BOTAN_HAS_TLS_12) && defined(BOTAN_HAS_TLS_13)
+         test_version_negotiation(results, creds, rng);
+   #endif
 
          // Use tls12_generate_ephemeral_ecdh_key() / tls_generate_ephemeral_key() to
          // establish a custom ECDH provider mocking some hardware adapter for key
