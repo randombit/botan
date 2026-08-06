@@ -2224,7 +2224,8 @@ class PKSign: # pylint: disable=invalid-name
 
     def update(self, msg: str | bytes):
         """Add more data to be signed"""
-        _DLL.botan_pk_op_sign_update(self.__obj, _ctype_bits(msg), len(msg))
+        bits = _ctype_bits(msg)
+        _DLL.botan_pk_op_sign_update(self.__obj, bits, len(bits))
 
     def finish(self, rng_obj: RandomNumberGenerator) -> bytes:
         """Returns the signature of the message provided so far, and resets for another message"""
