@@ -37,7 +37,8 @@ void pbkdf2(MessageAuthenticationCode& prf,
             size_t out_len,
             const uint8_t salt[],
             size_t salt_len,
-            size_t iterations);
+            size_t iterations,
+            const std::optional<std::stop_token>& stop_token = std::nullopt);
 
 /**
 * PBKDF2
@@ -58,7 +59,8 @@ class BOTAN_PUBLIC_API(2, 8) PBKDF2 final : public PasswordHash {
                       const char* password,
                       size_t password_len,
                       const uint8_t salt[],
-                      size_t salt_len) const override;
+                      size_t salt_len,
+                      const std::optional<std::stop_token>& stop_token) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
