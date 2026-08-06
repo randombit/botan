@@ -28,12 +28,11 @@ namespace Botan::TLS {
 namespace {
 
 bool is_new_dtls_association_client_hello(std::span<const uint8_t> msg_and_header, Record_Type record_type) {
-   constexpr size_t DTLS_HANDSHAKE_HEADER_SIZE = 12;
-
    // Every new DTLS handshake starts at message_seq 0. A cookie-bearing
    // ClientHello uses message_seq 1, so one arriving late belongs to the
    // previous handshake and must not replace the active association's state.
-   return record_type == Record_Type::Handshake && msg_and_header.size() >= DTLS_HANDSHAKE_HEADER_SIZE &&
+   return record_type == Record_Type::Handshake &&
+          msg_and_header.size() >= Datagram_Handshake_IO::DTLS_HANDSHAKE_HEADER_SIZE &&
           static_cast<Handshake_Type>(msg_and_header[0]) == Handshake_Type::ClientHello &&
           load_be(msg_and_header.subspan<4, 2>()) == 0;
 }
@@ -61,6 +60,27 @@ void prune_old_cipher_states(std::map<uint16_t, T>& states) {
    while(non_zero > TLS_RETAINED_CIPHERSTATES) {
       it = states.erase(it);
       --non_zero;
+   }
+}
+
+// Run fn, absorbing the exceptions that report malformed input when `absorb`
+// is set. Used where the input is unauthenticated epoch-zero data that must
+// not be able to tear down an established association. Only TLS_Exception and
+// Decoding_Error are absorbed: an Internal_Error from one of the reassembly
+// accounting assertions, or a failed allocation, still propagates rather than
+// leaving the association running on state those assertions exist to protect.
+template <typename F>
+void absorb_malformed_input_errors(bool absorb, F fn) {
+   try {
+      fn();
+   } catch(const TLS_Exception&) {
+      if(!absorb) {
+         throw;
+      }
+   } catch(const Decoding_Error&) {
+      if(!absorb) {
+         throw;
+      }
    }
 }
 
@@ -97,9 +117,52 @@ void Channel_Impl_12::reset_state() {
    m_active_state.reset();
    m_pending_state.reset();
    m_epochs_before_latest_renegotiation.reset();
+   m_resumption_handle.reset();
    m_readbuf.clear();
    m_write_cipher_states.clear();
    m_read_cipher_states.clear();
+}
+
+void Channel_Impl_12::note_resumption_handle(std::optional<Session_Handle> handle) {
+   m_resumption_handle = std::move(handle);
+}
+
+std::vector<Session_Handle> Channel_Impl_12::take_sessions_to_invalidate() {
+   // A ticket-backed session is not cached under the ServerHello session ID, so
+   // both handles have to be collected.
+   std::vector<Session_Handle> handles;
+
+   if(m_resumption_handle.has_value()) {
+      handles.push_back(m_resumption_handle.value());
+      m_resumption_handle.reset();
+   }
+
+   if(m_active_state.has_value()) {
+      const auto& sid = m_active_state->session_id();
+      if(!sid.empty()) {
+         handles.emplace_back(sid);
+      }
+   }
+
+   return handles;
+}
+
+void Channel_Impl_12::invalidate_sessions(const std::vector<Session_Handle>& handles) {
+   // RFC 5246 7.2.2: "Servers and clients MUST forget any session-identifiers,
+   // keys, and secrets associated with a failed connection.  Thus, any
+   // connection terminated with a fatal alert MUST NOT be resumed."
+   //
+   // Best effort, and deliberately last: remove() reaches application-supplied
+   // storage and can throw, and by then the keys are already gone. Letting a
+   // failed cache eviction abort the teardown would leave the channel usable
+   // after a security-fatal event, which is the worse of the two outcomes. A
+   // stateless ticket issuer has nothing to remove and cannot revoke what it
+   // already handed out.
+   for(const auto& handle : handles) {
+      try {
+         session_manager().remove(handle);
+      } catch(...) {}
+   }
 }
 
 void Channel_Impl_12::reset_active_association_state() {
@@ -196,8 +259,21 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
       }
    }
 
+   // Read epochs at or below this one belong to the association already in place,
+   // so application data under them stays deliverable while this handshake runs.
+   // Anything above it is this handshake's own, unauthenticated until its
+   // Finished. See the application-data gate in from_peer.
    m_epochs_before_latest_renegotiation = Epochs_Before_Latest_Renegotiation{sequence_numbers().current_read_epoch(),
                                                                              sequence_numbers().current_write_epoch()};
+
+   // Floor for the pending handshake's reassembly: a delayed record from the
+   // handshake before it arrives under a lower epoch and would otherwise take
+   // the sequence slot the real message needs.
+   //
+   // Zero when epoch-zero restart is enabled, because there the peer
+   // legitimately begins again at epoch zero and the floor would reject it.
+   // That policy defaults to off, so a server ordinarily keeps the protection.
+   const uint16_t initial_epoch = dtls_epoch0_restart_enabled() ? 0 : m_epochs_before_latest_renegotiation->read_epoch;
 
    using namespace std::placeholders;
 
@@ -219,7 +295,9 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
                                                    initial_timeout_ms,
                                                    max_timeout_ms,
                                                    max_retransmissions,
-                                                   policy().maximum_handshake_message_size());
+                                                   policy().maximum_handshake_message_size(),
+                                                   m_is_server,
+                                                   initial_epoch);
    } else {
       auto send_record_f = [this](Record_Type rec_type, const std::vector<uint8_t>& record) {
          send_record(rec_type, record);
@@ -417,9 +495,11 @@ void Channel_Impl_12::activate_session() {
       map_remove_if(not_current_epoch, m_read_cipher_states);
    }
 
-   // In a full handshake the server sends the terminal flight; in an
-   // abbreviated handshake the client does. Both endpoints retain handshake
-   // sequence state, but only the terminal sender replays its outgoing flight.
+   // RFC 6347 4.2.4: "the node that transmits the last flight (the server in an
+   // ordinary handshake or the client in a resumed handshake) MUST respond to a
+   // retransmit of the peer's last flight with a retransmit of the last
+   // flight." Both endpoints retain handshake sequence state, but only that
+   // node replays its outgoing flight.
    const bool sent_terminal_dtls_flight = m_is_datagram && (m_is_server == (state.server_hello_done() != nullptr));
 
    if(m_is_datagram) {
@@ -440,13 +520,21 @@ void Channel_Impl_12::activate_session() {
 }
 
 size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
-   const bool allow_epoch0_restart = m_is_datagram && m_is_server && policy().allow_dtls_epoch0_restart();
+   const bool allow_epoch0_restart = m_is_datagram && dtls_epoch0_restart_enabled();
 
    const auto* input = data.data();
    auto input_size = data.size();
 
    try {
       while(input_size > 0) {
+         // A fatal alert destroys the cipher states, so nothing further can even
+         // be decrypted. Closure by close_notify is different: the responding
+         // close_notify still has to be read, so those records keep flowing
+         // through the loop and are filtered per record type below.
+         if(m_had_fatal_alert) {
+            return 0;
+         }
+
          size_t consumed = 0;
 
          auto get_epoch = [this](uint16_t epoch) { return read_cipher_state_epoch(epoch); };
@@ -528,17 +616,61 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
             }
          }
 
+         // RFC 5246 7.2.1: "Any data received after a closure alert is ignored."
+         // This is about a closure alert the peer sent us. A peer that keeps
+         // talking after *our* close_notify is a different case, kept as an
+         // error below; BoGo's Shutdown-Shim-ApplicationData requires it.
+         if(m_peer_closed_connection && record.type() != Record_Type::Alert) {
+            continue;
+         }
+
          if(record.type() == Record_Type::Handshake || record.type() == Record_Type::ChangeCipherSpec) {
             if(m_has_been_closed) {
                throw TLS_Exception(Alert::UnexpectedMessage, "Received handshake data after connection closure");
             }
-            process_handshake_ccs(m_record_buf, record.sequence(), record.type(), record.version(), epoch0_restart);
+            try {
+               process_handshake_ccs(m_record_buf, record.sequence(), record.type(), record.version(), epoch0_restart);
+            } catch(Exception&) {
+               // The restart ClientHello is unauthenticated until its cookie
+               // validates; if it fails, roll back the state.
+               if(!epoch0_restart) {
+                  throw;
+               }
+               clear_pending_handshake_state();
+            }
          } else if(record.type() == Record_Type::ApplicationData) {
             if(m_has_been_closed) {
                throw TLS_Exception(Alert::UnexpectedMessage, "Received application data after connection closure");
             }
             if(pending_state() != nullptr) {
-               throw TLS_Exception(Alert::UnexpectedMessage, "Can't interleave application and handshake data");
+               /*
+               What matters is which epoch the record belongs to, not which role we
+               are playing.
+
+               RFC 6347 4.2.4: "Implementations MUST either discard or buffer all
+               application data packets for the new epoch until they have received
+               the Finished message for that epoch." Data under the epoch this
+               handshake installed is not authenticated until its Finished, so it
+               must not reach the application; equally it is not an error, because
+               ordinary reordering produces it whenever a peer writes immediately
+               after activating.
+
+               Data under an epoch the established association owns stays valid
+               while a renegotiation is in flight, per 4.1.
+
+               Epoch zero is neither: application data there is plaintext, so it is
+               never legitimate and no association is at stake.
+               */
+               if(m_is_datagram && record.epoch() > 0) {
+                  const uint16_t active_epoch =
+                     m_epochs_before_latest_renegotiation ? m_epochs_before_latest_renegotiation->read_epoch : 0;
+
+                  if(!m_active_state.has_value() || record.epoch() > active_epoch) {
+                     continue;  // this handshake's epoch, still unauthenticated
+                  }
+               } else {
+                  throw TLS_Exception(Alert::UnexpectedMessage, "Can't interleave application and handshake data");
+               }
             }
             process_application_data(record.sequence(), m_record_buf);
          } else if(record.type() == Record_Type::Alert) {
@@ -565,24 +697,76 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
    }
 }
 
+void Channel_Impl_12::discard_stale_cookie_exchange_state(const secure_vector<uint8_t>& record,
+                                                          Record_Type record_type) {
+   if(!m_is_datagram || !m_pending_state || record_type != Record_Type::Handshake ||
+      record.size() < Datagram_Handshake_IO::DTLS_HANDSHAKE_HEADER_SIZE) {
+      return;
+   }
+
+   if(static_cast<Handshake_Type>(record[0]) != Handshake_Type::ClientHello) {
+      return;
+   }
+
+   // Only the start of a ClientHello, at the message_seq every handshake begins
+   // with (RFC 6347 4.2.2).
+   const uint16_t message_seq = load_be<uint16_t>(&record[4], 0);
+   const size_t fragment_offset = make_uint32(0, record[6], record[7], record[8]);
+   const size_t msg_length = make_uint32(0, record[1], record[2], record[3]);
+
+   if(message_seq != 0 || fragment_offset != 0) {
+      return;
+   }
+
+   // A declared length this short cannot be a real ClientHello, so it cannot be
+   // the start of one. The same reasoning as the reassembly path's guard: a bare
+   // 12-byte header should not be able to discard a pending cookie exchange.
+   if(msg_length < Datagram_Handshake_IO::MIN_CLIENT_HELLO_SIZE) {
+      return;
+   }
+
+   auto* dtls_io = dynamic_cast<Datagram_Handshake_IO*>(&m_pending_state->handshake_io());
+   if(dtls_io == nullptr) {
+      return;
+   }
+
+   /*
+   The cookie exchange is meant to be stateless, but the pending state carrying
+   it survives across the HelloVerifyRequest. Anyone able to reach this address
+   can therefore advance its handshake sequence numbers with ClientHellos that
+   never validate, and every later handshake starting at message_seq 0 then
+   looks like a stale duplicate of that one. Two forged datagrams were enough to
+   lock a channel out permanently.
+
+   Discard the state instead, so a new cookie exchange begins. Restricted to a
+   pending state that has consumed a message but holds no accepted ClientHello,
+   ie one that has answered with a HelloVerifyRequest and is still waiting for
+   the cookie to come back. A handshake that got past the cookie check keeps its
+   state, so this cannot be used to reset one in progress.
+   */
+   if(dtls_io->in_message_seq() > 0 && m_pending_state->client_hello() == nullptr) {
+      clear_pending_handshake_state();
+   }
+}
+
 void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record,
                                             uint64_t record_sequence,
                                             Record_Type record_type,
                                             Protocol_Version record_version,
                                             bool epoch0_restart) {
+   discard_stale_cookie_exchange_state(record, record_type);
+
    const auto process_retransmitted_record = [&] {
       BOTAN_ASSERT(m_active_state.has_value(), "Have active DTLS association for retransmission");
       BOTAN_ASSERT_NONNULL(m_active_state->dtls_handshake_io());
-      try {
+      // Epoch-zero records are unauthenticated and may be spoofed, so a
+      // malformed one must not tear down an established association.
+      const bool unauthenticated = (record_sequence >> 48) == 0;
+
+      absorb_malformed_input_errors(unauthenticated, [&] {
          m_active_state->dtls_handshake_io()->add_retransmitted_record(
             record.data(), record.size(), record_type, record_sequence);
-      } catch(...) {
-         // Epoch-zero records are unauthenticated and may be spoofed. Invalid
-         // retransmissions must not tear down an established association.
-         if((record_sequence >> 48) > 0) {
-            throw;
-         }
-      }
+      });
    };
 
    if(!m_pending_state) {
@@ -601,7 +785,6 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
       if(m_is_datagram && !epoch0_restart) {
          if(m_sequence_numbers) {
             const uint16_t epoch = record_sequence >> 48;
-
             const uint16_t current_epoch = sequence_numbers().current_read_epoch();
             if(epoch == current_epoch) {
                // Either endpoint can initiate renegotiation from FINISHED:
@@ -629,21 +812,36 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
 
    // May have been created in above conditional
    if(m_pending_state) {
-      m_pending_state->handshake_io().add_record(record.data(), record.size(), record_type, record_sequence);
+      // An epoch-zero record is unauthenticated. Once an association is
+      // established, one arriving during a pending renegotiation must not be
+      // able to destroy it, exactly as for the no-pending-handshake path above.
+      // Without this a single forged CCS or handshake fragment tore down the
+      // active association and the renegotiation along with it.
+      //
+      // Delivery is inside the guard as well as reassembly. A bare 12-byte
+      // header declaring a zero-length message reassembles cleanly and only
+      // fails when the message itself is parsed or dispatched, which reaches
+      // the same teardown by a later route.
+      const bool unauthenticated_against_active_association =
+         m_is_datagram && (record_sequence >> 48) == 0 && m_active_state.has_value();
 
-      while(auto* pending = m_pending_state.get()) {
-         auto msg = pending->get_next_handshake_msg(policy().maximum_handshake_message_size());
+      absorb_malformed_input_errors(unauthenticated_against_active_association, [&] {
+         m_pending_state->handshake_io().add_record(record.data(), record.size(), record_type, record_sequence);
 
-         if(msg.first == Handshake_Type::None) {  // no full handshake yet
-            break;
+         while(auto* pending = m_pending_state.get()) {
+            auto msg = pending->get_next_handshake_msg(policy().maximum_handshake_message_size());
+
+            if(msg.first == Handshake_Type::None) {  // no full handshake yet
+               break;
+            }
+
+            process_handshake_msg(*pending, msg.first, msg.second, epoch0_restart);
+
+            if(!m_pending_state) {
+               break;
+            }
          }
-
-         process_handshake_msg(*pending, msg.first, msg.second, epoch0_restart);
-
-         if(!m_pending_state) {
-            break;
-         }
-      }
+      });
    }
 }
 
@@ -669,21 +867,57 @@ void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record) {
    //    no_renegotiation
    //       Sent by the client in response to a hello request or by the
    //       server in response to a client hello after initial handshaking.
+   //
+   // Both of those precede any ChangeCipherSpec from the refusing side, so a
+   // refusal arriving after one means the peer both refused the handshake and
+   // proceeded with it. Discarding the pending state is what implements the
+   // refusal, but past a CCS that state is the only thing keeping application
+   // data under the new, un-Finished keys from being delivered, and there is no
+   // rollback that would leave keys, identity and exporter describing the same
+   // handshake. End the association rather than open that gate.
    if(alert_msg.type() == Alert::NoRenegotiation && m_active_state.has_value()) {
-      m_pending_state.reset();
+      if(!pending_handshake_epochs_unmoved()) {
+         throw TLS_Exception(Alert::UnexpectedMessage, "Received no_renegotiation after ChangeCipherSpec");
+      }
+
+      clear_pending_handshake_state();
    }
 
-   callbacks().tls_alert(alert_msg);
+   std::vector<Session_Handle> invalidated;
 
-   // If the alert is fatal on an active session, prevent later resumptions
-   if(alert_msg.is_fatal() && m_active_state.has_value()) {
-      const auto& sid = m_active_state->session_id();
-      if(!sid.empty()) {
-         session_manager().remove(Session_Handle(sid));
+   if(alert_msg.is_fatal()) {
+      // RFC 5246 7.2.2: "Upon transmission or receipt of a fatal alert message,
+      // both parties immediately close the connection."
+      //
+      // Closing before the callback means application code called from there
+      // cannot keep using the connection or its exporter. The active state
+      // itself survives until the callback returns, so a handler can still
+      // report the peer identity that failed.
+      m_has_been_closed = true;
+      m_had_fatal_alert = true;
+      invalidated = take_sessions_to_invalidate();
+   }
+
+   // The callback is application code and may throw. It must not be able to
+   // leave the connection secrets alive after a fatal alert.
+   try {
+      callbacks().tls_alert(alert_msg);
+   } catch(...) {
+      if(alert_msg.is_fatal()) {
+         reset_state();
+         invalidate_sessions(invalidated);
       }
+      throw;
+   }
+
+   if(alert_msg.is_fatal()) {
+      reset_state();
+      invalidate_sessions(invalidated);
    }
 
    if(alert_msg.type() == Alert::CloseNotify) {
+      m_peer_closed_connection = true;
+
       // TLS 1.2 requires us to immediately react with our "close_notify",
       // the return value of the application's callback has no effect on that.
       callbacks().tls_peer_closed_connection();
@@ -758,18 +992,33 @@ void Channel_Impl_12::send_alert(const Alert& alert) {
       }
    }
 
+   // We are the refusing side here, so our own epochs cannot have moved for
+   // this handshake and the check is defensive. send_alert is called from
+   // from_peer's catch handlers and must not throw, so an unexpected case
+   // leaves the pending state in place rather than ending the association.
    if(alert.type() == Alert::NoRenegotiation && m_active_state.has_value()) {
-      m_pending_state.reset();
+      if(pending_handshake_epochs_unmoved()) {
+         clear_pending_handshake_state();
+      }
    }
 
    if(alert.is_fatal()) {
-      if(m_active_state.has_value()) {
-         const auto& sid = m_active_state->session_id();
-         if(!sid.empty()) {
-            session_manager().remove(Session_Handle(sid));
-         }
-      }
+      // Order matters: the channel is made unusable and its secrets destroyed
+      // before any application-supplied storage is touched, so a throwing
+      // session manager cannot leave is_active() true with live keys.
+      m_had_fatal_alert = true;
+      m_has_been_closed = true;
+
+      // Alert::None is the local teardown that is never sent to the peer, used
+      // where the trigger was unauthenticated input or a local timeout. Evicting
+      // the resumption state on that basis would hand anyone able to reach the
+      // address the ability to destroy it, which is what keeping the teardown
+      // local exists to prevent.
+      const auto invalidated =
+         (alert.type() == Alert::None) ? std::vector<Session_Handle>() : take_sessions_to_invalidate();
+
       reset_state();
+      invalidate_sessions(invalidated);
    }
 
    if(alert.type() == Alert::CloseNotify || alert.is_fatal()) {
@@ -777,18 +1026,20 @@ void Channel_Impl_12::send_alert(const Alert& alert) {
    }
 }
 
-void Channel_Impl_12::secure_renegotiation_check(const Client_Hello_12* client_hello) {
+void Channel_Impl_12::secure_renegotiation_check(const Client_Hello_12* client_hello, bool fresh_handshake_mode) {
    BOTAN_ASSERT_NONNULL(client_hello);
    const bool secure_renegotiation = client_hello->secure_renegotiation();
 
-   if(m_active_state && m_active_state->client_supports_secure_renegotiation() != secure_renegotiation) {
+   if(!fresh_handshake_mode && m_active_state &&
+      m_active_state->client_supports_secure_renegotiation() != secure_renegotiation) {
       throw TLS_Exception(Alert::HandshakeFailure, "Client changed its mind about secure renegotiation");
    }
 
    if(secure_renegotiation) {
       const std::vector<uint8_t>& data = client_hello->renegotiation_info();
 
-      const auto expected = secure_renegotiation_data_for_client_hello();
+      const auto expected =
+         fresh_handshake_mode ? std::vector<uint8_t>() : secure_renegotiation_data_for_client_hello();
       if(!CT::is_equal<uint8_t>(data, expected).as_bool()) {
          throw TLS_Exception(Alert::HandshakeFailure, "Client sent bad values for secure renegotiation");
       }
@@ -847,6 +1098,15 @@ SymmetricKey Channel_Impl_12::key_material_export(std::string_view label,
                                                   size_t length) const {
    if(!m_active_state.has_value()) {
       throw Invalid_State("Channel_Impl_12::key_material_export connection not active");
+   }
+
+   // Keyed on the fatal alert rather than on is_closed(): RFC 5246 7.2.2 makes
+   // a fatally terminated connection's secrets unusable, but a clean
+   // close_notify does not, and TLS 1.3 keeps its exporter working across one.
+   // Reachable only from a tls_alert callback, since the teardown that follows
+   // clears m_active_state and the check above then fires instead.
+   if(m_had_fatal_alert) {
+      throw Invalid_State("Channel_Impl_12::key_material_export connection had a fatal alert");
    }
 
    if(pending_state() != nullptr) {

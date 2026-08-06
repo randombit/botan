@@ -171,7 +171,10 @@ class Channel_Impl_12 : public Channel_Impl {
 
       /* secure renegotiation handling */
 
-      void secure_renegotiation_check(const Client_Hello_12* client_hello);
+      // `fresh_handshake_mode` makes the check ignore m_active_state and treat
+      // the new ClientHello as starting a fresh handshake. Used for DTLS
+      // epoch-0 restart, where the peer has lost association state.
+      void secure_renegotiation_check(const Client_Hello_12* client_hello, bool fresh_handshake_mode = false);
       void secure_renegotiation_check(const Server_Hello_12* server_hello);
 
       std::vector<uint8_t> secure_renegotiation_data_for_client_hello() const;
@@ -187,6 +190,21 @@ class Channel_Impl_12 : public Channel_Impl {
 
       void reset_active_association_state();
 
+      /**
+      * Record the resumption handle this connection was established or resumed
+      * under, so that a fatal alert can invalidate it. The ServerHello session
+      * ID does not identify a ticket-backed session.
+      */
+      void note_resumption_handle(std::optional<Session_Handle> handle);
+
+      // Drop a pending DTLS cookie exchange that a fresh ClientHello supersedes,
+      // so unvalidated ClientHellos cannot wedge the handshake sequence numbers.
+      void discard_stale_cookie_exchange_state(const secure_vector<uint8_t>& record, Record_Type record_type);
+
+      // Whether epoch-0 restart of an active DTLS association is permitted
+      // (only true for Server_Impl with a valid DTLS cookie secret)
+      virtual bool dtls_epoch0_restart_enabled() const { return false; }
+
       virtual void initiate_handshake(Handshake_State& state, bool force_full_renegotiation) = 0;
 
    private:
@@ -200,6 +218,13 @@ class Channel_Impl_12 : public Channel_Impl {
          Connection_Cipher_State* cipher_state, uint16_t epoch, Record_Type type, const uint8_t input[], size_t length);
 
       void reset_state();
+
+      // Collect the handles this connection's session is cached under, clearing
+      // the tracked one. Separate from the removal so that the caller can
+      // destroy the connection state first; see invalidate_sessions.
+      std::vector<Session_Handle> take_sessions_to_invalidate();
+
+      void invalidate_sessions(const std::vector<Session_Handle>& handles);
 
       Connection_Sequence_Numbers& sequence_numbers() const;
 
@@ -237,8 +262,13 @@ class Channel_Impl_12 : public Channel_Impl {
       /* pending handshake state (null when no handshake is in progress) */
       std::unique_ptr<Handshake_State> m_pending_state;
 
-      // Epochs in force when the pending handshake began. Whether either has
-      // moved decides if an abandoned handshake can be discarded or has to
+      /* handle under which this connection's session is cached, if any */
+      std::optional<Session_Handle> m_resumption_handle;
+
+      // Epochs in force when the pending handshake began. The read epoch says
+      // whether application data belongs to the old association or to the new,
+      // still-unauthenticated epoch; whether either epoch has moved decides
+      // whether an abandoned or refused handshake can be discarded or has to
       // take the association with it.
       struct Epochs_Before_Latest_Renegotiation final {
             uint16_t read_epoch;
@@ -247,8 +277,11 @@ class Channel_Impl_12 : public Channel_Impl {
 
       void abandon_timed_out_handshake();
 
+      // Whether neither epoch has moved since the pending handshake began, so
+      // dropping it cannot leave the channel describing two handshakes at once.
       bool pending_handshake_epochs_unmoved() const;
 
+      // Drop the pending handshake and the epoch markers that describe it.
       void clear_pending_handshake_state();
 
       /*
@@ -276,6 +309,14 @@ class Channel_Impl_12 : public Channel_Impl {
       secure_vector<uint8_t> m_record_buf;
 
       bool m_has_been_closed;
+
+      // Set when a fatal alert was sent or received, which unlike close_notify
+      // destroys the connection state outright.
+      bool m_had_fatal_alert = false;
+
+      // Set when the peer sent close_notify, as opposed to us closing. Only
+      // then is later data from the peer something to ignore rather than reject.
+      bool m_peer_closed_connection = false;
 
       std::optional<Active_Connection_State_12> m_active_state;
       // TODO(Botan4) remember to remove this when renegotiation support is dropped
