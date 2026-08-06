@@ -17,7 +17,7 @@
 
 namespace Botan {
 
-class BOTAN_PUBLIC_API(3, 0) MLKEM_Composite_Param {
+class BOTAN_PUBLIC_API(3, 13) MLKEM_Composite_Param {
    public:
       enum id_t : uint32_t /* NOLINT(*-enum-size,*-use-enum-class) */ {
          MLKEM768_RSA2048_SHA3_256,
