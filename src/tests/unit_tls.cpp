@@ -265,7 +265,8 @@ class TLS_Handshake_Test final {
                          const std::shared_ptr<Botan::RandomNumberGenerator>& rng,
                          const std::shared_ptr<Botan::TLS::Session_Manager>& client_sessions,
                          const std::shared_ptr<Botan::TLS::Session_Manager>& server_sessions,
-                         bool expect_client_auth) :
+                         bool expect_client_auth,
+                         std::optional<Botan::TLS::Protocol_Version> expected_version = std::nullopt) :
             m_offer_version(offer_version),
             m_results(test_descr),
             m_creds(creds),
@@ -273,8 +274,9 @@ class TLS_Handshake_Test final {
             m_client_sessions(client_sessions),
             m_rng(rng),
             m_client_auth(expect_client_auth) {
-         m_server_cb = std::make_shared<Test_Callbacks>(m_results, offer_version, m_s2c, m_server_recv);
-         m_client_cb = std::make_shared<Test_Callbacks>(m_results, offer_version, m_c2s, m_client_recv);
+         const auto negotiated = expected_version.value_or(offer_version);
+         m_server_cb = std::make_shared<Test_Callbacks>(m_results, negotiated, m_s2c, m_server_recv);
+         m_client_cb = std::make_shared<Test_Callbacks>(m_results, negotiated, m_c2s, m_client_recv);
 
          const bool is_dtls = offer_version.is_datagram_protocol();
 
@@ -957,7 +959,21 @@ class TLS_Unit_Tests final : public Test {
             } else if(version == Botan::TLS::Protocol_Version::TLS_V13) {
                policy->set("allow_tls13", "true");
             }
+            // TODO(DTLS13): once implemented, map DTLS_V13 -> allow_dtls13 here.
          }
+      }
+
+      // Unlike enable_versions(), this first disables all known version flags so
+      // Policy defaults cannot leave unwanted versions enabled. Useful for
+      // asymmetric client/server negotiation and downgrade tests.
+      static void set_allowed_versions(const std::shared_ptr<Test_Policy>& policy,
+                                       std::span<const Botan::TLS::Protocol_Version> versions) {
+         policy->set("allow_tls12", "false");
+         policy->set("allow_tls13", "false");
+         policy->set("allow_dtls12", "false");
+         // TODO(DTLS13): once implemented, also set allow_dtls13=false here.
+
+         enable_versions(policy, versions);
       }
 
       static std::shared_ptr<Botan::TLS::Session_Manager> make_session_manager(
