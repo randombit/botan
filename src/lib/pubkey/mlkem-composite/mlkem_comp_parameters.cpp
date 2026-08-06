@@ -1,6 +1,7 @@
 /*
  * ML-KEM Composite KEM Parameters
  * (C) 2026 Falko Strenzke, MTG AG
+ *     2026 René Meusel
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -25,7 +26,7 @@ const MLKEM_Composite_Param MLKEM_Composite_Param::mlkem_composite_registry[] = 
    MLKEM_Composite_Param(MLKEM_Composite_Param::id_t::MLKEM768_RSA2048_SHA3_256,
                          "MLKEM768-RSA2048-SHA3-256",
                          "MLKEM768-RSAOAEP2048",
-                         ML_KEM_Mode::Mode::ML_KEM_768,
+                         "ML-KEM-768",
                          "RSA",
                          "OAEP(SHA-256)",
                          "",
@@ -33,7 +34,7 @@ const MLKEM_Composite_Param MLKEM_Composite_Param::mlkem_composite_registry[] = 
    MLKEM_Composite_Param(MLKEM_Composite_Param::id_t::MLKEM768_RSA3072_SHA3_256,
                          "MLKEM768-RSA3072-SHA3-256",
                          "MLKEM768-RSAOAEP3072",
-                         ML_KEM_Mode::Mode::ML_KEM_768,
+                         "ML-KEM-768",
                          "RSA",
                          "OAEP(SHA-256)",
                          "",
@@ -41,23 +42,17 @@ const MLKEM_Composite_Param MLKEM_Composite_Param::mlkem_composite_registry[] = 
    MLKEM_Composite_Param(MLKEM_Composite_Param::id_t::MLKEM768_RSA4096_SHA3_256,
                          "MLKEM768-RSA4096-SHA3-256",
                          "MLKEM768-RSAOAEP4096",
-                         ML_KEM_Mode::Mode::ML_KEM_768,
+                         "ML-KEM-768",
                          "RSA",
                          "OAEP(SHA-256)",
                          "",
                          4096),
-   MLKEM_Composite_Param(MLKEM768_X25519_SHA3_256,
-                         "MLKEM768-X25519-SHA3-256",
-                         "\\.//^\\",
-                         ML_KEM_Mode::Mode::ML_KEM_768,
-                         "X25519",
-                         "",
-                         "",
-                         255),
+   MLKEM_Composite_Param(
+      MLKEM768_X25519_SHA3_256, "MLKEM768-X25519-SHA3-256", "\\.//^\\", "ML-KEM-768", "X25519", "", "", 255),
    MLKEM_Composite_Param(MLKEM_Composite_Param::id_t::MLKEM1024_RSA3072_SHA3_256,
                          "MLKEM1024-RSA3072-SHA3-256",
                          "MLKEM1024-RSAOAEP3072",
-                         ML_KEM_Mode::Mode::ML_KEM_1024,
+                         "ML-KEM-1024",
                          "RSA",
                          "OAEP(SHA-256)",
                          "",
@@ -65,7 +60,7 @@ const MLKEM_Composite_Param MLKEM_Composite_Param::mlkem_composite_registry[] = 
    MLKEM_Composite_Param(MLKEM768_ECDH_P256_SHA3_256,
                          "MLKEM768-ECDH-P256-SHA3-256",
                          "MLKEM768-P256",
-                         ML_KEM_Mode::Mode::ML_KEM_768,
+                         "ML-KEM-768",
                          "ECDH",
                          "",
                          "secp256r1",
@@ -73,7 +68,7 @@ const MLKEM_Composite_Param MLKEM_Composite_Param::mlkem_composite_registry[] = 
    MLKEM_Composite_Param(MLKEM768_ECDH_P384_SHA3_256,
                          "MLKEM768-ECDH-P384-SHA3-256",
                          "MLKEM768-P384",
-                         ML_KEM_Mode::Mode::ML_KEM_768,
+                         "ML-KEM-768",
                          "ECDH",
                          "",
                          "secp384r1",
@@ -81,7 +76,7 @@ const MLKEM_Composite_Param MLKEM_Composite_Param::mlkem_composite_registry[] = 
    MLKEM_Composite_Param(MLKEM768_ECDH_brainpoolP256r1_SHA3_256,
                          "MLKEM768-ECDH-brainpoolP256r1-SHA3-256",
                          "MLKEM768-BP256",
-                         ML_KEM_Mode::Mode::ML_KEM_768,
+                         "ML-KEM-768",
                          "ECDH",
                          "",
                          "brainpool256r1",
@@ -89,7 +84,7 @@ const MLKEM_Composite_Param MLKEM_Composite_Param::mlkem_composite_registry[] = 
    MLKEM_Composite_Param(MLKEM1024_ECDH_P384_SHA3_256,
                          "MLKEM1024-ECDH-P384-SHA3-256",
                          "MLKEM1024-P384",
-                         ML_KEM_Mode::Mode::ML_KEM_1024,
+                         "ML-KEM-1024",
                          "ECDH",
                          "",
                          "secp384r1",
@@ -97,23 +92,17 @@ const MLKEM_Composite_Param MLKEM_Composite_Param::mlkem_composite_registry[] = 
    MLKEM_Composite_Param(MLKEM1024_ECDH_brainpoolP384r1_SHA3_256,
                          "MLKEM1024-ECDH-brainpoolP384r1-SHA3-256",
                          "MLKEM1024-BP384",
-                         ML_KEM_Mode::Mode::ML_KEM_1024,
+                         "ML-KEM-1024",
                          "ECDH",
                          "",
                          "brainpool384r1",
                          384),
-   MLKEM_Composite_Param(MLKEM1024_X448_SHA3_256,
-                         "MLKEM1024-X448-SHA3-256",
-                         "MLKEM1024-X448",
-                         ML_KEM_Mode::Mode::ML_KEM_1024,
-                         "X448",
-                         "",
-                         "",
-                         224),
+   MLKEM_Composite_Param(
+      MLKEM1024_X448_SHA3_256, "MLKEM1024-X448-SHA3-256", "MLKEM1024-X448", "ML-KEM-1024", "X448", "", "", 224),
    MLKEM_Composite_Param(MLKEM1024_ECDH_P521_SHA3_256,
                          "MLKEM1024-ECDH-P521-SHA3-256",
                          "MLKEM1024-P521",
-                         ML_KEM_Mode::Mode::ML_KEM_1024,
+                         "ML-KEM-1024",
                          "ECDH",
                          "",
                          "secp521r1",
@@ -203,45 +192,27 @@ MLKEM_Composite_Param MLKEM_Composite_Param::from_id_supported_or_throw(MLKEM_Co
 }
 
 MLKEM_Composite_Param::MLKEM_Composite_Param(id_t the_id,
-                                             const char* the_id_str,
-                                             const char* the_label,
-                                             ML_KEM_Mode::Mode the_mlkem_variant,
-                                             const char* the_traditional_algorithm,
-                                             const char* the_traditional_padding,
-                                             const char* the_curve,
+                                             std::string_view the_id_str,
+                                             std::string_view the_label,
+                                             std::string_view the_mlkem_variant,
+                                             std::string_view the_traditional_algorithm,
+                                             std::string_view the_traditional_padding,
+                                             std::string_view the_curve,
                                              uint32_t the_traditional_key_size) noexcept :
       m_id_str(the_id_str),
       m_label(the_label),
+      m_mlkem_variant(the_mlkem_variant),
       m_traditional_algorithm(the_traditional_algorithm),
       m_traditional_padding(the_traditional_padding),
       m_curve(the_curve),
       m_id(the_id),
-      m_traditional_key_size(the_traditional_key_size),
-      m_mlkem_variant(the_mlkem_variant) {}
-
-const char* MLKEM_Composite_Param::mlkem_oid_str() const {
-   if(m_mlkem_variant == ML_KEM_Mode::ML_KEM_768) {
-      return "2.16.840.1.101.3.4.4.2";
-   } else if(m_mlkem_variant == ML_KEM_Mode::ML_KEM_1024) {
-      return "2.16.840.1.101.3.4.4.3";
-   }
-   throw Internal_Error("invalid MLKEM mode in MLKEM composite parameters");
-}
+      m_traditional_key_size(the_traditional_key_size) {}
 
 size_t MLKEM_Composite_Param::mlkem_pubkey_size() const {
-   if(m_mlkem_variant == ML_KEM_Mode::Mode::ML_KEM_768) {
+   if(m_mlkem_variant == "ML-KEM-768") {
       return 1184;
    }
    return 1568;  // must be ML-KEM-1024
-}
-
-size_t MLKEM_Composite_Param::mlkem_ciphertext_size() const {
-   if(this->m_mlkem_variant == ML_KEM_Mode::Mode::ML_KEM_768) {
-      return 1088;
-   } else if(this->m_mlkem_variant == ML_KEM_Mode::Mode::ML_KEM_1024) {
-      return 1568;
-   }
-   throw Botan::Internal_Error("MLKEM_Composite_Param::mlkem_signature_size() encountered unknown ML-KEM variant ");
 }
 
 AlgorithmIdentifier MLKEM_Composite_Param::get_composite_algorithm_id() const {
@@ -254,13 +225,13 @@ AlgorithmIdentifier MLKEM_Composite_Param::get_composite_algorithm_id() const {
 }
 
 AlgorithmIdentifier MLKEM_Composite_Param::get_mlkem_algorithm_id() const {
-   const OID oid(this->mlkem_oid_str());
+   const auto oid = OID::from_string(m_mlkem_variant);
    return AlgorithmIdentifier(oid, AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
 }
 
 AlgorithmIdentifier MLKEM_Composite_Param::get_traditional_algorithm_id() const {
    std::optional<OID> oid;
-   if(0 == std::strcmp(this->m_traditional_algorithm, "ECDH")) {
+   if(this->m_traditional_algorithm == "ECDH") {
       oid = OID::from_name(std::string("ECDH"));
    } else {
       oid = OID::from_name(this->m_traditional_algorithm);
@@ -272,22 +243,8 @@ AlgorithmIdentifier MLKEM_Composite_Param::get_traditional_algorithm_id() const 
    return AlgorithmIdentifier(oid.value(), AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
 }
 
-size_t MLKEM_Composite_Param::traditional_pubkey_size() const {
-   if(0 == std::strcmp(this->m_traditional_algorithm, "RSA")) {
-      return m_traditional_key_size;
-   }
-   throw Not_Implemented("todo");
-}
-
-size_t MLKEM_Composite_Param::traditional_ciphertext_length() const {
-   if(traditional_algorithm() == "RSA") {
-      return (traditional_pubkey_size() + 7) / 8;
-   }
-   throw Not_Implemented("todo");
-}
-
 std::string MLKEM_Composite_Param::get_traditional_algo_param_str() const {
-   if(0 == strcmp(this->m_traditional_algorithm, "RSA")) {
+   if(this->m_traditional_algorithm == "RSA") {
       return std::to_string(m_traditional_key_size);
    }
    return "";

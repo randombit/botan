@@ -12,6 +12,7 @@ mlkem_comp_parameters.h
 </header:public>
 
 <header:internal>
+asymmetric_encryption_to_kem_adapter.h
 </header:internal>
 
 <requires>
@@ -19,4 +20,5 @@ kyber
 rng
 hash
 asn1
+hybrid_kem
 </requires>
