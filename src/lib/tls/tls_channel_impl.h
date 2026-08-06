@@ -21,6 +21,10 @@
 #include <utility>
 #include <vector>
 
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+   #include <botan/tls_messages_13.h>
+#endif
+
 namespace Botan {
 
 class Credentials_Manager;
@@ -198,7 +202,7 @@ class Channel_Impl {
        */
       struct Downgrade_Information {
             /// The client hello message including the handshake header bytes as transferred to the peer.
-            std::vector<uint8_t> client_hello_message;
+            std::optional<Client_Hello_13> client_hello;
 
             /// The full data transcript received from the peer. This will contain the server hello message that forced us to downgrade.
             std::vector<uint8_t> peer_transcript;
@@ -228,9 +232,9 @@ class Channel_Impl {
          m_downgrade_info->peer_transcript.insert(m_downgrade_info->peer_transcript.end(), input.begin(), input.end());
       }
 
-      void preserve_client_hello(std::span<const uint8_t> msg) {
+      void preserve_client_hello(Client_Hello_13 client_hello) {
          BOTAN_STATE_CHECK(m_downgrade_info);
-         m_downgrade_info->client_hello_message.assign(msg.begin(), msg.end());
+         m_downgrade_info->client_hello.emplace(std::move(client_hello));
       }
 
       friend class Client;
@@ -255,7 +259,7 @@ class Channel_Impl {
       }
 
       void request_downgrade_for_resumption(Session_with_Handle session) {
-         BOTAN_STATE_CHECK(m_downgrade_info && m_downgrade_info->client_hello_message.empty() &&
+         BOTAN_STATE_CHECK(m_downgrade_info && !m_downgrade_info->client_hello.has_value() &&
                            m_downgrade_info->peer_transcript.empty() && !m_downgrade_info->tls12_session.has_value());
          BOTAN_ASSERT_NOMSG(session.session.version().is_pre_tls_13());
          m_downgrade_info->tls12_session = std::move(session);

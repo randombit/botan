@@ -25,6 +25,7 @@ class X509_Certificate;
 namespace Botan::TLS {
 
 class Transcript_Hash_State;
+class Client_Hello_12;
 
 class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello {
    public:
@@ -64,6 +65,12 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello {
 
    private:
       explicit Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data);
+
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+      // This lets the TLS 1.2 implementation extract the internal data
+      // from this Client Hello object for downgrade purposes.
+      friend class Client_Hello_12;
+#endif
 
       /**
       * If the Client Hello contains a PSK extensions with identities this will

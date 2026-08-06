@@ -7,6 +7,7 @@
 
 #include <botan/internal/tls_handshake_io.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_handshake_msg.h>
@@ -141,6 +142,20 @@ std::vector<uint8_t> Stream_Handshake_IO::send(const Handshake_Message& msg) {
    m_send_hs(Record_Type::Handshake, buf);
    return buf;
 }
+
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+
+std::vector<uint8_t> Stream_Handshake_IO::start_with_client_hello_from_downgrade(
+   const Handshake_Message& client_hello) {
+   BOTAN_ARG_CHECK(client_hello.type() == Handshake_Type::ClientHello,
+                   "Expected ClientHello message for TLS downgrade");
+
+   // In TLS we don't have to update any internal state, we just need to
+   // format the Client Hello message for absorption into the handshake hash.
+   return format(client_hello.serialize(), client_hello.wire_type());
+}
+
+#endif
 
 Datagram_Handshake_IO::Datagram_Handshake_IO(writer_fn writer,
                                              steady_clock_fn steady_clock_ms,
@@ -687,6 +702,19 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_under_epoch(const Handshake_Mes
 
    return send_message(m_out_message_seq - 1, epoch, msg_type, msg_bits);
 }
+
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+
+std::vector<uint8_t> Datagram_Handshake_IO::start_with_client_hello_from_downgrade(
+   const Handshake_Message& client_hello) {
+   BOTAN_ARG_CHECK(client_hello.type() == Handshake_Type::ClientHello,
+                   "Expected ClientHello message for DTLS downgrade");
+   BOTAN_STATE_CHECK(m_out_message_seq == 0);
+   BOTAN_STATE_CHECK(m_seqs.current_write_epoch() == 0);
+   return format_w_seq(client_hello.serialize(), client_hello.wire_type(), m_out_message_seq++);
+}
+
+#endif
 
 std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
                                                          uint16_t epoch,

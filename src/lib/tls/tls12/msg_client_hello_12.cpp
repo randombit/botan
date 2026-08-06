@@ -267,6 +267,15 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
 Client_Hello_12::Client_Hello_12(std::span<const uint8_t> buf) :
       Client_Hello_12(std::make_unique<Client_Hello_Internal>(buf)) {}
 
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+
+Client_Hello_12::Client_Hello_12(Client_Hello_13 client_hello, Handshake_IO& io, Handshake_Hash& hash) :
+      Client_Hello_12(std::move(client_hello.m_data)) {
+   hash.update(io.start_with_client_hello_from_downgrade(*this));
+}
+
+#endif
+
 Client_Hello_12::Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data) : Client_Hello_12_Shim(std::move(data)) {
    const uint16_t TLS_EMPTY_RENEGOTIATION_INFO_SCSV = 0x00FF;
 
