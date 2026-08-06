@@ -229,6 +229,9 @@ release, or where a backwards incompatible change is expected.
   this only affects you if you are directly referencing
   ``Botan::Buffered_Computation`` in some way.
 
+- Using the Cascade cipher construction where the two block ciphers do
+  not have identical block lengths is deprecated.
+
 - GCM support for 64-bit tags
 
 - All built in MODP groups < 2048 bits

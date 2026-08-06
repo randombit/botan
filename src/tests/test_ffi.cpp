@@ -3024,6 +3024,19 @@ class FFI_Blockcipher_Test final : public FFI_Test {
             TEST_FFI_OK(botan_block_cipher_clear, (cipher));
             botan_block_cipher_destroy(cipher);
          }
+
+         // The combined block size of this Cascade (the lcm of the two Lion
+         // block sizes) is too large to represent in an int, so asking for
+         // the block size must return an error rather than a truncated value.
+         // With a 32-bit size_t the Cascade itself refuses the construction.
+         if constexpr(sizeof(size_t) == 8) {
+            botan_block_cipher_t giant = nullptr;
+            if(TEST_FFI_INIT(botan_block_cipher_init,
+                             (&giant, "Cascade(Lion(SHA-256,ChaCha20,977022),Lion(SHA-256,ChaCha20,1006679))"))) {
+               TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE, botan_block_cipher_block_size, (giant));
+               botan_block_cipher_destroy(giant);
+            }
+         }
       }
 };
 

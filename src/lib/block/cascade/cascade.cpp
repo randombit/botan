@@ -9,9 +9,19 @@
 
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/int_utils.h>
 #include <numeric>
 
 namespace Botan {
+
+namespace {
+
+size_t cascade_block_size(size_t b1, size_t b2) {
+   // std::lcm itself is undefined if the result is not representable
+   return mul_or_throw(b1 / std::gcd(b1, b2), b2, "Cascade combined block size is too large");
+}
+
+}  // namespace
 
 void Cascade_Cipher::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const size_t c1_blocks = blocks * (block_size() / m_cipher1->block_size());
@@ -56,7 +66,8 @@ std::unique_ptr<BlockCipher> Cascade_Cipher::new_object() const {
 Cascade_Cipher::Cascade_Cipher(std::unique_ptr<BlockCipher> cipher1, std::unique_ptr<BlockCipher> cipher2) :
       m_cipher1(std::move(cipher1)),
       m_cipher2(std::move(cipher2)),
-      m_block_size(std::lcm(m_cipher1->block_size(), m_cipher2->block_size())) {
+      m_block_size(cascade_block_size(m_cipher1->block_size(), m_cipher2->block_size())) {
+   // TODO(Botan4) require the block lengths of the two ciphers be the same
    BOTAN_ASSERT(m_block_size % m_cipher1->block_size() == 0 && m_block_size % m_cipher2->block_size() == 0,
                 "Combined block size is a multiple of each ciphers block");
 }
