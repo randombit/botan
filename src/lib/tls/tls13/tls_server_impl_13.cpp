@@ -259,7 +259,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
    const auto& client_hello = m_handshake->state.client_hello();
    const auto& exts = client_hello.extensions();
 
-   const bool uses_psk = server_hello.extensions().has<PSK>();
+   bool uses_psk = server_hello.extensions().has<PSK>();
 
    const auto cipher_opt = Ciphersuite::by_id(server_hello.ciphersuite());
    BOTAN_ASSERT_NOMSG(cipher_opt.has_value());
@@ -306,6 +306,25 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
       if(!exts.get<PSK>()->validate_binder(*psk_extension,
                                            psk_cipher_state->psk_binder_mac(m_transcript_hash->truncated()))) {
          throw TLS_Exception(Alert::DecryptError, "PSK binder does not check out");
+      }
+
+      // RFC 8446 4.3.2
+      //    Servers which are authenticating with a PSK MUST NOT send the
+      //    CertificateRequest message in the main handshake
+      //
+      // A resumed session that does not satisfy the current client authentication
+      // policy is declined in favor of a full handshake. Checked only after binder
+      // validation, so an unauthenticated peer cannot probe for policy details.
+      if(m_handshake->resumed_session.has_value() && policy().require_client_certificate_authentication()) {
+         const auto credential_type = m_handshake->resumed_session->peer_credential_type();
+
+         if(!credential_type.has_value() ||
+            !value_exists(policy().accepted_client_certificate_types(), credential_type.value())) {
+            m_handshake->resumed_session.reset();
+            psk_cipher_state.reset();
+            server_hello.decline_psk();
+            uses_psk = false;
+         }
       }
 
       // RFC 8446 4.2.10

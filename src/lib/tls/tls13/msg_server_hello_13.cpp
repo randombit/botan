@@ -338,6 +338,10 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
    }
 }
 
+void Server_Hello_13::decline_psk() {
+   m_data->extensions().remove_extension(Extension_Code::PresharedKey);
+}
+
 std::optional<Protocol_Version> Server_Hello_13::random_signals_downgrade() const {
    const uint64_t last8 = load_be<uint64_t>(m_data->random().data(), 3);
    if(last8 == DOWNGRADE_TLS11) {
