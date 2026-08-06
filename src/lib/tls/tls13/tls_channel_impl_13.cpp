@@ -272,10 +272,9 @@ Channel_Impl_13::AggregatedPostHandshakeMessages& Channel_Impl_13::AggregatedPos
    return *this;
 }
 
-std::vector<uint8_t> Channel_Impl_13::AggregatedMessages::send() {
+void Channel_Impl_13::AggregatedMessages::send() const {
    BOTAN_STATE_CHECK(contains_messages());
    m_channel.send_record(Record_Type::Handshake, m_message_buffer);
-   return std::exchange(m_message_buffer, {});
 }
 
 void Channel_Impl_13::send_dummy_change_cipher_spec() {
