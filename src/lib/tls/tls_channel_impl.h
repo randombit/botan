@@ -184,6 +184,8 @@ class Channel_Impl {
    protected:
       Channel_Impl() = default;
 
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+
       /**
        * This struct collect all information required to perform a downgrade from TLS 1.3 to TLS 1.2.
        *
@@ -262,18 +264,32 @@ class Channel_Impl {
 
    public:
       /**
-       * Indicates whether a downgrade to TLS 1.2 or lower is in progress
-       *
-       * @sa Downgrade_Information
-       */
-      bool is_downgrading() const { return m_downgrade_info && m_downgrade_info->will_downgrade; }
-
-      /**
        * @sa Downgrade_Information
        */
       std::unique_ptr<Downgrade_Information> extract_downgrade_info() { return std::exchange(m_downgrade_info, {}); }
 
-      bool expects_downgrade() const { return m_downgrade_info != nullptr; }
+#endif
+
+      /**
+       * Indicates whether a downgrade to TLS 1.2 or lower is in progress
+       *
+       * @sa Downgrade_Information
+       */
+      bool is_downgrading() const {
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+         return m_downgrade_info && m_downgrade_info->will_downgrade;
+#else
+         return false;
+#endif
+      }
+
+      bool expects_downgrade() const {
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+         return m_downgrade_info != nullptr;
+#else
+         return false;
+#endif
+      }
 };
 
 }  // namespace TLS

@@ -56,7 +56,11 @@ class Client_Impl_12 final : public Channel_Impl_12 {
                               const std::vector<std::string>& next_protocols = {},
                               size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE);
 
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+
       explicit Client_Impl_12(const Channel_Impl::Downgrade_Information& downgrade_info);
+
+#endif
 
       /**
       * @return network protocol as advertised by the TLS server, if server sent the ALPN extension

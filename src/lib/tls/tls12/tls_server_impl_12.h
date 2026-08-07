@@ -52,7 +52,9 @@ class Server_Impl_12 final : public Channel_Impl_12 {
                               bool is_datagram = false,
                               size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE);
 
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       explicit Server_Impl_12(const Channel_Impl::Downgrade_Information& downgrade_info);
+#endif
 
    private:
       /**

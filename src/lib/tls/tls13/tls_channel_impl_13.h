@@ -293,6 +293,7 @@ class Channel_Impl_13 : public Channel_Impl,
       std::unique_ptr<Cipher_State> m_cipher_state;              // NOLINT(*non-private-member-variable*)
       std::optional<Active_Connection_State_13> m_active_state;  // NOLINT(*non-private-member-variable*)
 
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       /**
        * Indicate that we have to expect a downgrade to TLS 1.2. In which case the current
        * implementation (i.e. Client_Impl_13 or Server_Impl_13) will need to be replaced
@@ -303,6 +304,7 @@ class Channel_Impl_13 : public Channel_Impl,
        * @sa `Channel_Impl::Downgrade_Information`
        */
       void expect_downgrade(const Server_Information& server_info, const std::vector<std::string>& next_protocols);
+#endif
 
       /**
        * Set the record size limits as negotiated by the "record_size_limit"

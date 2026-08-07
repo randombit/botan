@@ -40,9 +40,11 @@ Server::Server(const std::shared_ptr<Callbacks>& callbacks,
    if(!max_version.is_pre_tls_13()) {
       m_impl = std::make_unique<Server_Impl_13>(callbacks, session_manager, creds, policy, rng);
 
+   #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       if(m_impl->expects_downgrade()) {
          m_impl->set_io_buffer_size(io_buf_sz);
       }
+   #endif
 
       return;
    }
@@ -64,7 +66,7 @@ Server::~Server() = default;
 size_t Server::from_peer(std::span<const uint8_t> data) {
    auto read = m_impl->from_peer(data);
 
-#if defined(BOTAN_HAS_TLS_12)
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
    // If TLS 1.2 is not available, we will never downgrade, the downgrade info
    // won't even be created and `is_downgrading()` would always return false.
    if(m_impl->is_downgrading()) {

@@ -33,21 +33,24 @@ Client_Impl_13::Client_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
       Channel_Impl_13(callbacks, session_manager, creds, rng, policy, false /* is_server */),
       m_info(std::move(info)),
       m_handshake(std::make_unique<Pending_Handshake>()) {
-#if defined(BOTAN_HAS_TLS_12)
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
    if(policy->allow_tls12()) {
       expect_downgrade(m_info, next_protocols);
    }
 #endif
 
    if(auto session = find_session_for_resumption()) {
-      if(!session->session.version().is_pre_tls_13()) {
+      if(session->session.version().is_tls_13_or_later()) {
          m_handshake->resumed_session = std::move(session);
-      } else if(expects_downgrade()) {
+      }
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+      else if(expects_downgrade()) {
          // If we found a session that was created with TLS 1.2, we downgrade
          // the implementation right away, before even issuing a Client Hello.
          request_downgrade_for_resumption(std::move(session.value()));
          return;
       }
+#endif
    }
 
    auto msg = send_handshake_message(m_handshake->state.sending(
@@ -59,9 +62,11 @@ Client_Impl_13::Client_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
                       m_handshake->resumed_session,
                       creds->find_preshared_keys(m_info.hostname(), Connection_Side::Client))));
 
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
    if(expects_downgrade()) {
       preserve_client_hello(msg);
    }
+#endif
 
    maybe_handle_compatibility_mode(Compat_Mode_Situation::AfterSendingFirstClientHello);
 
@@ -155,6 +160,11 @@ void Client_Impl_13::handle(const Server_Hello_12_Shim& server_hello_msg) {
       throw TLS_Exception(Alert::UnexpectedMessage, "Version downgrade received after Hello Retry");
    }
 
+#if !defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+   BOTAN_UNUSED(server_hello_msg);
+   throw TLS_Exception(Alert::ProtocolVersion, "Received an unsupported Server Hello");
+#else
+
    // RFC 8446 Appendix D.1
    //    If the version chosen by the server is not supported by the client
    //    (or is not acceptable), the client MUST abort the handshake with a
@@ -211,6 +221,7 @@ void Client_Impl_13::handle(const Server_Hello_12_Shim& server_hello_msg) {
    // After this, no further messages are expected here because this instance will be replaced
    // by a Client_Impl_12.
    m_handshake->transitions.set_expected_next({});
+#endif
 }
 
 namespace {
