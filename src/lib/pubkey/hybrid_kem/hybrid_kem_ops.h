@@ -3,6 +3,7 @@
 *
 * (C) 2024 Jack Lloyd
 *     2024 Fabian Albert, René Meusel - Rohde & Schwarz Cybersecurity
+*     2026 René Meusel
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,27 +11,37 @@
 #ifndef BOTAN_HYBRID_KEM_OPS_H_
 #define BOTAN_HYBRID_KEM_OPS_H_
 
+#include <botan/hybrid_kem.h>
 #include <botan/pk_algs.h>
 #include <botan/pubkey.h>
+#include <botan/secmem.h>
 #include <botan/internal/pk_ops_impl.h>
 
-#include <memory>
+#include <utility>
 #include <vector>
 
 namespace Botan {
 
+using PairOfSharedSecrets = std::pair<secure_vector<uint8_t>, secure_vector<uint8_t>>;
+using PairOfCiphertexts = std::pair<std::vector<uint8_t>, std::vector<uint8_t>>;
+using PairOfEncryptors = std::pair<PK_KEM_Encryptor, PK_KEM_Encryptor>;
+using PairOfDecryptors = std::pair<PK_KEM_Decryptor, PK_KEM_Decryptor>;
+
 /**
  * @brief Abstract interface for a KEM encryption operation for KEM combiners.
  *
- * Multiple public keys are used to encapsulate shared secrets. These shared
+ * Two public keys are used to encapsulate shared secrets. These shared
  * secrets (and maybe the ciphertexts and public keys) are combined using the
  * KEM combiner to derive the final shared secret.
  *
+ * Concrete implementations of this class must implement all remaining pure
+ * methods including combine_shared_secrets and shared_key_length. They may
+ * also override combine_ciphertexts and encapsulated_key_length if the default
+ * simple concatenation is not enough.
  */
 class KEM_Encryption_with_Combiner : public PK_Ops::KEM_Encryption {
    public:
-      KEM_Encryption_with_Combiner(const std::vector<std::unique_ptr<Public_Key>>& public_keys,
-                                   std::string_view provider);
+      KEM_Encryption_with_Combiner(const PairOfPublicKeys& public_keys, std::string_view provider);
 
       void kem_encrypt(std::span<uint8_t> out_encapsulated_key,
                        std::span<uint8_t> out_shared_key,
@@ -38,10 +49,12 @@ class KEM_Encryption_with_Combiner : public PK_Ops::KEM_Encryption {
                        size_t desired_shared_key_len,
                        std::span<const uint8_t> salt) final;
 
-      /// The default implementation returns the sum of the encapsulated key lengths of the underlying KEMs.
-      size_t encapsulated_key_length() const override { return m_encapsulated_key_length; }
-
    protected:
+      /**
+       * Returns the sum of the encapsulated key lengths of the individual encryptors.
+       */
+      size_t encapsulated_key_length() const override;
+
       /**
        * @brief Defines how multiple ciphertexts are combined into a single ciphertext.
        *
@@ -52,7 +65,7 @@ class KEM_Encryption_with_Combiner : public PK_Ops::KEM_Encryption {
        * @param salt The salt. In this default implementation the salt must be empty.
        */
       virtual void combine_ciphertexts(std::span<uint8_t> out_ciphertext,
-                                       const std::vector<std::vector<uint8_t>>& ciphertexts,
+                                       const PairOfCiphertexts& ciphertexts,
                                        std::span<const uint8_t> salt);
 
       /**
@@ -65,31 +78,34 @@ class KEM_Encryption_with_Combiner : public PK_Ops::KEM_Encryption {
        * @param salt the salt (input of kem_encrypt)
        */
       virtual void combine_shared_secrets(std::span<uint8_t> out_shared_secret,
-                                          const std::vector<secure_vector<uint8_t>>& shared_secrets,
-                                          const std::vector<std::vector<uint8_t>>& ciphertexts,
+                                          const PairOfSharedSecrets& shared_secrets,
+                                          const PairOfCiphertexts& ciphertexts,
                                           size_t desired_shared_key_len,
                                           std::span<const uint8_t> salt) = 0;
 
-      std::vector<PK_KEM_Encryptor>& encryptors() { return m_encryptors; }
+      PairOfEncryptors& encryptors() { return m_encryptors; }
 
-      const std::vector<PK_KEM_Encryptor>& encryptors() const { return m_encryptors; }
+      const PairOfEncryptors& encryptors() const { return m_encryptors; }
 
    private:
-      std::vector<PK_KEM_Encryptor> m_encryptors;
-      size_t m_encapsulated_key_length;
+      PairOfEncryptors m_encryptors;
 };
 
 /**
  * @brief Abstract interface for a KEM decryption operation for KEM combiners.
  *
- * Multiple private keys are used to decapsulate shared secrets from a combined
- * ciphertext (concatenated in most cases). These shared
- * secrets (and maybe the ciphertexts and public keys) are combined using the
- * KEM combiner to derive the final shared secret.
+ * Two private keys are used to decapsulate shared secrets from a combined
+ * ciphertext. These shared secrets (and maybe the ciphertexts and public keys)
+ * are combined using the KEM combiner to derive the final shared secret.
+ *
+ * Concrete implementations of this class must implement all remaining pure
+ * methods including combine_shared_secrets and shared_key_length. They may also
+ * override split_ciphertexts and encapsulated_key_length if the default simple
+ * split-by-ciphertext-lengths is not enough.
  */
 class KEM_Decryption_with_Combiner : public PK_Ops::KEM_Decryption {
    public:
-      KEM_Decryption_with_Combiner(const std::vector<std::unique_ptr<Private_Key>>& private_keys,
+      KEM_Decryption_with_Combiner(const PairOfPrivateKeys& private_keys,
                                    RandomNumberGenerator& rng,
                                    std::string_view provider);
 
@@ -98,10 +114,12 @@ class KEM_Decryption_with_Combiner : public PK_Ops::KEM_Decryption {
                        size_t desired_shared_key_len,
                        std::span<const uint8_t> salt) final;
 
-      /// The default implementation returns the sum of the encapsulated key lengths of the underlying KEMs.
-      size_t encapsulated_key_length() const override { return m_encapsulated_key_length; }
-
    protected:
+      /**
+       * Returns the sum of the encapsulated key lengths of the individual decryptors.
+       */
+      size_t encapsulated_key_length() const override;
+
       /**
        * @brief Defines how the individual ciphertexts are extracted from the combined ciphertext.
        *
@@ -109,7 +127,7 @@ class KEM_Decryption_with_Combiner : public PK_Ops::KEM_Decryption {
        * @param concat_ciphertext The combined ciphertext
        * @returns The individual ciphertexts
        */
-      virtual std::vector<std::vector<uint8_t>> split_ciphertexts(std::span<const uint8_t> concat_ciphertext);
+      virtual PairOfCiphertexts split_ciphertexts(std::span<const uint8_t> concat_ciphertext);
 
       /**
        * @brief Describes how the shared secrets are combined to derive the final shared secret.
@@ -121,18 +139,17 @@ class KEM_Decryption_with_Combiner : public PK_Ops::KEM_Decryption {
        * @param salt the salt (input of kem_decrypt)
        */
       virtual void combine_shared_secrets(std::span<uint8_t> out_shared_secret,
-                                          const std::vector<secure_vector<uint8_t>>& shared_secrets,
-                                          const std::vector<std::vector<uint8_t>>& ciphertexts,
+                                          const PairOfSharedSecrets& shared_secrets,
+                                          const PairOfCiphertexts& ciphertexts,
                                           size_t desired_shared_key_len,
                                           std::span<const uint8_t> salt) = 0;
 
-      std::vector<PK_KEM_Decryptor>& decryptors() { return m_decryptors; }
+      PairOfDecryptors& decryptors() { return m_decryptors; }
 
-      const std::vector<PK_KEM_Decryptor>& decryptors() const { return m_decryptors; }
+      const PairOfDecryptors& decryptors() const { return m_decryptors; }
 
    private:
-      std::vector<PK_KEM_Decryptor> m_decryptors;
-      size_t m_encapsulated_key_length;
+      PairOfDecryptors m_decryptors;
 };
 
 }  // namespace Botan
