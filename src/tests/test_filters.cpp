@@ -745,6 +745,11 @@ class Filter_Tests final : public Test {
             result.test_bin_eq(
                "Output", pipe.read_all(2 + i), "327AD8055223F5926693D8BEA40F7B35BDEEB535647DFB93F464E40EA01939A9");
          }
+
+         Botan::Pipe rejecting_pipe(
+            new Botan::Threaded_Fork(new Botan::Base64_Decoder(Botan::FULL_CHECK), new Botan::Hex_Encoder));
+         result.test_throws<Botan::Invalid_Argument>("Threaded_Fork propagates branch exceptions",
+                                                     [&] { rejecting_pipe.process_msg("@@@@"); });
    #endif
          return result;
       }
