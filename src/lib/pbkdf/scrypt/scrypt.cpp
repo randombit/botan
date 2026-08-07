@@ -16,6 +16,7 @@
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/salsa20.h>
 #include <botan/internal/time_utils.h>
+#include <array>
 
 namespace Botan {
 
@@ -23,7 +24,7 @@ namespace {
 
 constexpr size_t MAX_SCRYPT_N = 4194304;
 constexpr size_t MAX_SCRYPT_MEMORY_GB = sizeof(size_t) == 4 ? 2 : 8;
-constexpr size_t MAX_SCRYPT_MEMORY_BYTES = MAX_SCRYPT_MEMORY_GB * 1024 * 1024 * 1024 + 65536;
+constexpr size_t MAX_SCRYPT_MEMORY_BYTES = MAX_SCRYPT_MEMORY_GB * 1024 * 1024 * 1024 + 2 * 1024 * 1024;
 
 std::optional<size_t> scrypt_memory_usage(size_t N, size_t r, size_t p) {
    // 128 * r * (N + p) rejecting on overflow
@@ -56,7 +57,7 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune_params(size_t /*output_length*
    *
    * Empirically for smaller sizes:
    * stime(N,8*r,p) / stime(N,r,p) is ~ 6-7
-   * stime(N,r,8*p) / stime(N,r,8*p) is ~ 7
+   * stime(N,r,8*p) / stime(N,r,p) is ~ 7
    * stime(2*N,r,p) / stime(N,r,p) is ~ 2
    *
    * Compute stime(8192,1,1) as baseline and extrapolate
@@ -191,7 +192,7 @@ namespace {
 
 void scryptBlockMix(size_t r, uint8_t* B, uint8_t* Y) {
    uint32_t B32[16];
-   secure_vector<uint8_t> X(64);
+   std::array<uint8_t, 64> X{};
    copy_mem(X.data(), &B[(2 * r - 1) * 64], 64);
 
    for(size_t i = 0; i != 2 * r; i++) {
@@ -242,10 +243,10 @@ void Scrypt::derive_key(uint8_t output[],
    const size_t p = parallelism();
    const size_t r = iterations();
 
-   const size_t S = 128 * r;
-   secure_vector<uint8_t> B(p * S);
+   const size_t S = mul_or_throw(size_t(128), r, "Scrypt S size overflow");
+   secure_vector<uint8_t> B(mul_or_throw(p, S, "Scrypt B size overflow"));
    // temp space
-   secure_vector<uint8_t> V((N + 1) * S);
+   secure_vector<uint8_t> V(mul_or_throw(N + 1, S, "Scrypt V size overflow"));
 
    auto hmac_sha256 = MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
 

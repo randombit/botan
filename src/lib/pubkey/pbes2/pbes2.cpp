@@ -180,9 +180,10 @@ std::unique_ptr<Pbes2Pbkdf2Parameters> Pbes2Pbkdf2Parameters::tune(std::string_v
 
 //static
 void Pbes2Pbkdf2Parameters::validate_params(size_t iterations) {
-   // The upper bound corresponds to about 10 to 60 seconds of CPU time
-   // (depending on hash and hardware) which seems sufficient...
-   if(iterations == 0 || iterations > (1U << 26)) {
+   // NSS, AWS-LC, and BoringSSL all allow up to exactly 100 million for this operation
+   constexpr size_t MaximumPbes2Pbkdf2Iterations = 100'000'000;
+
+   if(iterations == 0 || iterations > MaximumPbes2Pbkdf2Iterations) {
       throw Decoding_Error(fmt("PBES2: Invalid or unacceptable PBKDF2 iteration count ({})", iterations));
    }
 }
@@ -274,6 +275,17 @@ void Pbes2ScryptParameters::validate_params(size_t N, size_t r, size_t p) {
    }
    if(p == 0 || p >= 1024) {
       throw Decoding_Error(fmt("PBES2: Invalid or unacceptable Scrypt parameter p ({})", p));
+   }
+
+   /*
+   * Practically speaking this work limit aligns relatively closely to the 100 million
+   * iteration limit applied in PBES2 and PKCS12
+   */
+   const uint64_t scrypt_work = uint64_t(N) * r * p;
+   constexpr uint64_t MaximumPbes2ScryptWork = (1 << 26);
+
+   if(scrypt_work > MaximumPbes2ScryptWork) {
+      throw Decoding_Error(fmt("PBES2: Invalid or unacceptable Scrypt parameters N={} r={} p={}", N, r, p));
    }
 }
 

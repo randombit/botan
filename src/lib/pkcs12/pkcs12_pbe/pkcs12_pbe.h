@@ -20,7 +20,9 @@ namespace Botan {
 class RandomNumberGenerator;
 
 /// Maximum allowed iteration count for PKCS#12 KDF/PBE/MAC operations
-inline constexpr size_t PKCS12_MAX_ITERATIONS = 1'000'000;
+///
+/// This matches the limit used by NSS, AWS-LC and BoringSSL for PKCS12 files
+inline constexpr size_t PKCS12_MAX_ITERATIONS = 100'000'000;
 
 /**
 * Decrypt data protected by PKCS#12 PBE (RFC 7292 Appendix B) or PBES2.
