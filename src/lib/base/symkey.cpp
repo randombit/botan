@@ -75,7 +75,8 @@ OctetString& OctetString::operator^=(const OctetString& k) {
       zeroise(m_data);
       return (*this);
    }
-   xor_buf(m_data.data(), k.begin(), std::min(length(), k.length()));
+   const auto len = std::min(length(), k.length());
+   xor_buf(std::span{m_data}.first(len), std::span{k}.first(len));
    return (*this);
 }
 
@@ -109,8 +110,8 @@ OctetString operator+(const OctetString& k1, const OctetString& k2) {
 OctetString operator^(const OctetString& k1, const OctetString& k2) {
    secure_vector<uint8_t> out(std::max(k1.length(), k2.length()));
 
-   copy_mem(out.data(), k1.begin(), k1.length());
-   xor_buf(out.data(), k2.begin(), k2.length());
+   copy_mem(std::span{out}.first(k1.length()), k1.bits_of());
+   xor_buf(std::span{out}.first(k2.length()), k2.bits_of());
    return OctetString(out);
 }
 
