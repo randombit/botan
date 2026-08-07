@@ -130,6 +130,12 @@ class BotanPythonTests(unittest.TestCase):
 
         self.assertTrue(botan.check_bcrypt('test', '$2a$04$wjen1fAA.UW6UxthpKK.huyOoxvCR7ATRCVC4CBIEGVDOCtr8Oj1C'))
 
+        with self.assertRaises(ValueError):
+            botan.bcrypt('x\0-Acceptable-Password-42!', r, 4)
+
+        with self.assertRaises(ValueError):
+            botan.check_bcrypt('testing\0ignored', phash)
+
     def test_password_utf8(self):
         # The password-based interfaces must consume the full UTF-8 encoding of
         # a non-ASCII password, not a truncated character-count prefix. The
@@ -1055,6 +1061,18 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertTrue(int20.is_revoked(rootcrl))
         self.assertFalse(int04_1.is_revoked(rootcrl))
         self.assertTrue(end21.is_revoked(int21crl))
+
+    def test_x509_rejects_embedded_nul_strings(self):
+        cert = botan.X509Cert(filename=test_data("src/tests/data/x509/ecc/isrg-root-x2.pem"))
+
+        with self.assertRaises(ValueError):
+            cert.hostname_match("example.com\0.attacker.invalid")
+
+        with self.assertRaises(ValueError):
+            cert.verify(hostname="example.com\0.attacker.invalid")
+
+        with self.assertRaises(ValueError):
+            cert.verify(trusted_path="/trusted/roots\0/attacker")
 
     def test_x509_extensions(self):
         no_ext_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/x509test/root.pem"))
