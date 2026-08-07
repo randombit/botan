@@ -476,12 +476,12 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
    }
 
    if(epoch == 0) {
-      // Unencrypted initial handshake
+      // Unencrypted initial handshake. Epoch-0 records are unauthenticated and
+      // deliberately do not advance the replay window: one spoofed record with a
+      // high sequence number would otherwise silently drop every later record
+      // from the real peer. Duplicates are filtered by handshake reassembly.
       recbuf.assign(readbuf.begin() + DTLS_HEADER_SIZE, readbuf.begin() + DTLS_HEADER_SIZE + record_size);
       readbuf.clear();
-      if(sequence_numbers != nullptr && sequence_numbers->current_read_epoch() == 0) {
-         sequence_numbers->read_accept(sequence);
-      }
       return Record_Header(sequence, version, type);
    }
 
