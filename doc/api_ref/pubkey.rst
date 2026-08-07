@@ -777,6 +777,12 @@ support it directly, such as RSA or ElGamal; these use the EME class:
 
       Creates an ephemeral private key which is used for the key agreement.
 
+   .. cpp:function:: void ECIES_Encryptor::set_initialization_vector(const InitializationVector& iv)
+
+      Set a new initialization vector for the encryptor. This must be called
+      before each message with a random nonce suitable for the chosen cipher. In
+      the ECIES message format the nonce is not conveyed with the produced
+      ciphertext, so it must be set separately.
 
 .. cpp:class:: PK_Decryptor
 
