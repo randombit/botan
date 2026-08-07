@@ -122,7 +122,7 @@ class RequestLimits final {
       }
 
    private:
-      size_t m_max_redirects = 1;
+      size_t m_max_redirects = 0;
       std::chrono::milliseconds m_timeout = std::chrono::milliseconds(3000);
       std::optional<size_t> m_max_body_size;
 };
