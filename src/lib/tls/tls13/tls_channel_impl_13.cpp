@@ -84,9 +84,11 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
    }
 
    try {
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       if(expects_downgrade()) {
          preserve_peer_transcript(data);
       }
+#endif
 
       m_record_layer.copy_data(data);
 
@@ -144,6 +146,7 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
 
                   process_handshake_msg(std::move(handshake_msg.value()));
 
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
                   if(is_downgrading()) {
                      // Downgrade to TLS 1.2 was detected. Stop everything we do and await being replaced by a 1.2 implementation.
                      return 0;
@@ -157,6 +160,7 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
                      // Downgrade can only be indicated in the first received peer message. This was not the case.
                      m_downgrade_info.reset();
                   }
+#endif
 
                   // After the initial handshake message is received, the record
                   // layer must be more restrictive.
@@ -400,15 +404,19 @@ void Channel_Impl_13::process_alert(const secure_vector<uint8_t>& record) {
    //    regardless of the AlertLevel in the message.  Unknown Alert types
    //    MUST be treated as error alerts.
    if(is_error_alert(alert) && !alert.is_fatal()) {
+      if(!expects_downgrade()) {
+         throw TLS_Exception(Alert::DecodeError, "Error alert not marked fatal");
+      }
+
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+      BOTAN_DEBUG_ASSERT(expects_downgrade());
+
       // In TLS 1.2 error alerts might be marked as 'warnings' and would not
       // demand an immediate shutdown. Until we are sure to talk to a TLS 1.3
       // peer we must defer the shutdown and refrain from raising a decode
       // error.
-      if(expects_downgrade()) {
-         m_downgrade_info->received_tls_13_error_alert = true;
-      } else {
-         throw TLS_Exception(Alert::DecodeError, "Error alert not marked fatal");  // will shutdown in send_alert
-      }
+      m_downgrade_info->received_tls_13_error_alert = true;
+#endif
    }
 
    if(alert.is_fatal()) {
@@ -433,6 +441,8 @@ void Channel_Impl_13::shutdown() {
    m_active_state.reset();
 }
 
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+
 void Channel_Impl_13::expect_downgrade(const Server_Information& server_info,
                                        const std::vector<std::string>& next_protocols) {
    Downgrade_Information di{
@@ -452,6 +462,8 @@ void Channel_Impl_13::expect_downgrade(const Server_Information& server_info,
    };
    m_downgrade_info = std::make_unique<Downgrade_Information>(std::move(di));
 }
+
+#endif
 
 void Channel_Impl_13::set_record_size_limits(const uint16_t outgoing_limit, const uint16_t incoming_limit) {
    m_record_layer.set_record_size_limits(outgoing_limit, incoming_limit);

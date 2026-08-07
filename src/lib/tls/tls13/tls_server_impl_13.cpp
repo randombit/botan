@@ -210,6 +210,8 @@ void Server_Impl_13::maybe_log_secret(std::string_view label, std::span<const ui
    }
 }
 
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+
 void Server_Impl_13::downgrade() {
    BOTAN_ASSERT_NOMSG(expects_downgrade());
 
@@ -219,6 +221,8 @@ void Server_Impl_13::downgrade() {
    // will be replaced by a Server_Impl_12.
    m_handshake->transitions.set_expected_next({});
 }
+
+#endif
 
 void Server_Impl_13::maybe_handle_compatibility_mode(Compat_Mode_Situation situation) {
    // RFC 9846 E.4
@@ -490,6 +494,10 @@ void Server_Impl_13::handle(const Client_Hello_12_Shim& ch) {
       throw TLS_Exception(Alert::UnexpectedMessage, "Received a TLS 1.2 Client Hello after Hello Retry Request");
    }
 
+#if !defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+   throw TLS_Exception(Alert::ProtocolVersion, "Received an unsupported Client Hello");
+#else
+
    // RFC 8446 Appendix D.2
    //    If the "supported_versions" extension is absent and the server only
    //    supports versions greater than ClientHello.legacy_version, the server
@@ -501,6 +509,7 @@ void Server_Impl_13::handle(const Client_Hello_12_Shim& ch) {
    }
 
    downgrade();
+#endif
 }
 
 void Server_Impl_13::handle(const Client_Hello_13& client_hello) {

@@ -44,6 +44,7 @@ Client::Client(const std::shared_ptr<Callbacks>& callbacks,
       m_impl = std::make_unique<Client_Impl_13>(
          callbacks, session_manager, creds, policy, rng, std::move(info), next_protocols);
 
+   #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       if(m_impl->expects_downgrade()) {
          m_impl->set_io_buffer_size(io_buf_sz);
       }
@@ -53,6 +54,7 @@ Client::Client(const std::shared_ptr<Callbacks>& callbacks,
          // requested a downgrade right away.
          downgrade();
       }
+   #endif
 
       return;
    }
@@ -79,10 +81,11 @@ Client::Client(const std::shared_ptr<Callbacks>& callbacks,
 
 Client::~Client() = default;
 
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+
 size_t Client::downgrade() {
    BOTAN_ASSERT_NOMSG(m_impl->is_downgrading());
 
-#if defined(BOTAN_HAS_TLS_12)
    auto info = m_impl->extract_downgrade_info();
    m_impl = std::make_unique<Client_Impl_12>(*info);
 
@@ -94,19 +97,18 @@ size_t Client::downgrade() {
       // before any data was transferred
       return 0;
    }
-#else
-   // If TLS 1.2 is not available, we will never downgrade, the downgrade info
-   // won't even be created and `is_downgrading()` would always return false.
-   BOTAN_ASSERT_UNREACHABLE();
-#endif
 }
+
+#endif
 
 size_t Client::from_peer(std::span<const uint8_t> data) {
    auto read = m_impl->from_peer(data);
 
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
    if(m_impl->is_downgrading()) {
       read = downgrade();
    }
+#endif
 
    return read;
 }

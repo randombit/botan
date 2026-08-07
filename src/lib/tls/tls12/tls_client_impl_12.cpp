@@ -115,6 +115,8 @@ Client_Impl_12::Client_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
    send_client_hello(state, false, version, std::nullopt /* no a-priori session to resume */, next_protocols);
 }
 
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+
 Client_Impl_12::Client_Impl_12(const Channel_Impl::Downgrade_Information& downgrade_info) :
       Channel_Impl_12(downgrade_info.callbacks,
                       downgrade_info.session_manager,
@@ -151,6 +153,8 @@ Client_Impl_12::Client_Impl_12(const Channel_Impl::Downgrade_Information& downgr
                         downgrade_info.next_protocols);
    }
 }
+
+#endif
 
 std::unique_ptr<Handshake_State> Client_Impl_12::new_handshake_state(std::unique_ptr<Handshake_IO> io) {
    return std::make_unique<Client_Handshake_State_12>(std::move(io), callbacks());
