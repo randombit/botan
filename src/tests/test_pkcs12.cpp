@@ -714,7 +714,7 @@ class PKCS12_Tests final : public Test {
          auto creds = generate_credentials(*rng);
 
          // PKCS12_MAX_ITERATIONS + 1
-         const auto opts = Botan::PKCS12_Export_Options("test").with_iterations(1'000'001);
+         const auto opts = Botan::PKCS12_Export_Options("test").with_iterations(100'000'001);
 
          result.test_throws<Botan::Invalid_Argument>("max iterations exceeded throws", [&]() {
             Botan::PKCS12 bundle;
