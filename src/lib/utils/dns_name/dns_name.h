@@ -64,6 +64,9 @@ class BOTAN_PUBLIC_API(3, 13) DNSName final {
       * outside this form - multiple `"*"` or `"*"` not in the leftmost
       * label - are rejected at construction by `from_san_string`, so
       * any stored `"*"` is already in the leftmost label.
+      *
+      * TODO(Botan4) when RFC 9525 wildcards are used, this fn can change
+      * to just looking at the first character of m_name.
       */
       bool is_wildcard() const { return m_name.find('*') != std::string::npos; }
 

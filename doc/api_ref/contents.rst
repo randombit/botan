@@ -15,6 +15,7 @@ API Reference
    message_auth_codes
    cipher_modes
    pubkey
+   names
    x509
    pkcs12
    tls
