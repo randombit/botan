@@ -2,6 +2,7 @@
 * Threaded Fork
 * (C) 2013 Joel Low
 *     2013 Jack Lloyd
+*     2026 Kagan Can Sit
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,11 +11,12 @@
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
 
-   #include <botan/internal/barrier.h>
    #include <botan/internal/semaphore.h>
 
+   #include <barrier>
    #include <exception>
    #include <mutex>
+   #include <optional>
 
 namespace Botan {
 
@@ -28,8 +30,11 @@ struct Threaded_Fork_Data {
 
       /*
       * Synchronises all threads to complete processing data in lock-step.
+      * Constructed in set_next() once the number of ports is known; the
+      * expected count is total_ports() + 1 (workers plus the delegating
+      * thread). The barrier resets automatically after each phase.
       */
-      Barrier m_input_complete_barrier;
+      std::optional<std::barrier<>> m_input_complete_barrier;
 
       /*
       * The work that needs to be done. This should be only when the threads
@@ -103,6 +108,8 @@ void Threaded_Fork::set_next(Filter* f[], size_t n) {
    Fork::set_next(f, n);
    n = m_next.size();
 
+   const bool port_count_changed = (n != m_threads.size());
+
    if(n < m_threads.size()) {
       m_threads.resize(n);
    } else {
@@ -110,6 +117,10 @@ void Threaded_Fork::set_next(Filter* f[], size_t n) {
       for(size_t i = m_threads.size(); i != n; ++i) {
          m_threads.push_back(std::make_shared<std::thread>([this, next = m_next[i]] { thread_entry(next); }));
       }
+   }
+
+   if(port_count_changed || !m_thread_data->m_input_complete_barrier.has_value()) {
+      m_thread_data->m_input_complete_barrier.emplace(static_cast<std::ptrdiff_t>(n) + 1);
    }
 }
 
@@ -148,11 +159,10 @@ void Threaded_Fork::thread_delegate_work(const uint8_t input[], size_t length) {
    m_thread_data->m_input_length = length;
 
    //Let the workers start processing.
-   m_thread_data->m_input_complete_barrier.wait(total_ports() + 1);
    m_thread_data->m_input_ready_semaphore.release(total_ports());
 
    //Wait for all the filters to finish processing.
-   m_thread_data->m_input_complete_barrier.sync();
+   m_thread_data->m_input_complete_barrier->arrive_and_wait();
 
    const auto exception = m_thread_data->exception();
 
@@ -181,7 +191,7 @@ void Threaded_Fork::thread_entry(Filter* filter) {
             m_thread_data->capture_exception();
          }
       }
-      m_thread_data->m_input_complete_barrier.sync();
+      m_thread_data->m_input_complete_barrier->arrive_and_wait();
    }
 }
 
