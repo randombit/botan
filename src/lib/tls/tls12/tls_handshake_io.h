@@ -50,6 +50,10 @@ class Handshake_IO {
 
       virtual std::vector<uint8_t> send_under_epoch(const Handshake_Message& msg, uint16_t epoch) = 0;
 
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+      virtual std::vector<uint8_t> start_with_client_hello_from_downgrade(const Handshake_Message& client_hello) = 0;
+#endif
+
       virtual bool timeout_check() = 0;
 
       virtual std::optional<std::chrono::milliseconds> next_retransmission_timeout() const = 0;
@@ -101,6 +105,10 @@ class Stream_Handshake_IO final : public Handshake_IO {
 
       std::vector<uint8_t> send_under_epoch(const Handshake_Message& msg, uint16_t epoch) override;
 
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+      std::vector<uint8_t> start_with_client_hello_from_downgrade(const Handshake_Message& client_hello) override;
+#endif
+
       std::vector<uint8_t> format(const std::vector<uint8_t>& handshake_msg,
                                   Handshake_Type handshake_type) const override;
 
@@ -144,6 +152,10 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       std::vector<uint8_t> send(const Handshake_Message& msg) override;
 
       std::vector<uint8_t> send_under_epoch(const Handshake_Message& msg, uint16_t epoch) override;
+
+#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
+      std::vector<uint8_t> start_with_client_hello_from_downgrade(const Handshake_Message& client_hello) override;
+#endif
 
       std::vector<uint8_t> format(const std::vector<uint8_t>& handshake_msg,
                                   Handshake_Type handshake_type) const override;

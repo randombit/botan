@@ -53,7 +53,7 @@ Client_Impl_13::Client_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
 #endif
    }
 
-   auto msg = send_handshake_message(m_handshake->state.sending(
+   send_handshake_message(m_handshake->state.sending(
       Client_Hello_13(*policy,
                       *callbacks,
                       *rng,
@@ -61,12 +61,6 @@ Client_Impl_13::Client_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
                       next_protocols,
                       m_handshake->resumed_session,
                       creds->find_preshared_keys(m_info.hostname(), Connection_Side::Client))));
-
-#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
-   if(expects_downgrade()) {
-      preserve_client_hello(msg);
-   }
-#endif
 
    maybe_handle_compatibility_mode(Compat_Mode_Situation::AfterSendingFirstClientHello);
 
@@ -216,6 +210,7 @@ void Client_Impl_13::handle(const Server_Hello_12_Shim& server_hello_msg) {
       throw TLS_Exception(Alert::IllegalParameter, "Unexpected session ID during downgrade");
    }
 
+   preserve_client_hello(m_handshake->state.take_client_hello());
    request_downgrade();
 
    // After this, no further messages are expected here because this instance will be replaced

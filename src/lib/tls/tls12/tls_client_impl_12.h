@@ -58,7 +58,7 @@ class Client_Impl_12 final : public Channel_Impl_12 {
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
 
-      explicit Client_Impl_12(const Channel_Impl::Downgrade_Information& downgrade_info);
+      explicit Client_Impl_12(Channel_Impl::Downgrade_Information& downgrade_info);
 
 #endif
 

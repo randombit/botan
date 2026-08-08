@@ -21,10 +21,6 @@
 #include <string_view>
 #include <vector>
 
-#if defined(BOTAN_HAS_TLS_13) && defined(BOTAN_HAS_TLS_12)
-   #define BOTAN_HAS_TLS_DOWNGRADE_SUPPORT
-#endif
-
 namespace Botan {
 
 class Public_Key;

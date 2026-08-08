@@ -70,12 +70,9 @@ class Channel_Impl_13 : public Channel_Impl,
             ~AggregatedMessages() = default;
 
             /**
-             * Send the messages aggregated in the message buffer. The buffer
-             * is returned if the sender needs to also handle it somehow.
-             * Most notable use: book keeping for a potential protocol downgrade
-             * in the client implementation.
+             * Send the messages aggregated in the message buffer.
              */
-            std::vector<uint8_t> send();
+            void send() const;
 
             bool contains_messages() const { return !m_message_buffer.empty(); }
 
@@ -243,17 +240,17 @@ class Channel_Impl_13 : public Channel_Impl,
       void opportunistically_update_traffic_keys() { m_opportunistic_key_update = true; }
 
       template <typename... MsgTs>
-      std::vector<uint8_t> send_handshake_message(const std::variant<MsgTs...>& message) {
-         return aggregate_handshake_messages().add(generalize_to<Handshake_Message_13_Ref>(message)).send();
+      void send_handshake_message(const std::variant<MsgTs...>& message) {
+         aggregate_handshake_messages().add(generalize_to<Handshake_Message_13_Ref>(message)).send();
       }
 
       template <typename MsgT>
-      std::vector<uint8_t> send_handshake_message(std::reference_wrapper<MsgT> message) {
-         return send_handshake_message(generalize_to<Handshake_Message_13_Ref>(message));
+      void send_handshake_message(std::reference_wrapper<MsgT> message) {
+         send_handshake_message(generalize_to<Handshake_Message_13_Ref>(message));
       }
 
-      std::vector<uint8_t> send_post_handshake_message(Post_Handshake_Message_13 message) {
-         return aggregate_post_handshake_messages().add(std::move(message)).send();
+      void send_post_handshake_message(Post_Handshake_Message_13 message) {
+         aggregate_post_handshake_messages().add(std::move(message)).send();
       }
 
       void send_dummy_change_cipher_spec();

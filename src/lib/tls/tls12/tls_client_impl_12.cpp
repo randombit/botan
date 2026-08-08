@@ -117,7 +117,7 @@ Client_Impl_12::Client_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
 
-Client_Impl_12::Client_Impl_12(const Channel_Impl::Downgrade_Information& downgrade_info) :
+Client_Impl_12::Client_Impl_12(Channel_Impl::Downgrade_Information& downgrade_info) :
       Channel_Impl_12(downgrade_info.callbacks,
                       downgrade_info.session_manager,
                       downgrade_info.rng,
@@ -129,15 +129,12 @@ Client_Impl_12::Client_Impl_12(const Channel_Impl::Downgrade_Information& downgr
       m_info(downgrade_info.server_info) {
    Handshake_State& state = create_handshake_state(Protocol_Version::TLS_V12);
 
-   if(!downgrade_info.client_hello_message.empty()) {
+   if(downgrade_info.client_hello.has_value()) {
       // Downgrade detected after receiving a TLS 1.2 server hello. We need to
       // recreate the state as if this implementation issued the client hello.
-      const std::vector<uint8_t> client_hello_msg(
-         downgrade_info.client_hello_message.begin() + 4 /* handshake header length */,
-         downgrade_info.client_hello_message.end());
 
-      state.client_hello(std::make_unique<Client_Hello_12>(client_hello_msg));
-      state.hash().update(downgrade_info.client_hello_message);
+      state.client_hello(std::make_unique<Client_Hello_12>(
+         std::exchange(downgrade_info.client_hello, {}).value(), state.handshake_io(), state.hash()));
 
       secure_renegotiation_check(state.client_hello());
       state.set_expected_next(Handshake_Type::ServerHello);
