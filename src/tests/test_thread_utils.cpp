@@ -13,7 +13,6 @@
 
 namespace Botan_Tests {
 
-// TODO test Barrier
 // TODO test Semaphore
 
 namespace {
