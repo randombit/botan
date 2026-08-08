@@ -9,6 +9,10 @@
 
 #include <botan/internal/simd_4x32.h>
 
+#if defined(BOTAN_SIMD_USE_SSSE3)
+   #include <wmmintrin.h>
+#endif
+
 namespace Botan {
 
 // NOLINTBEGIN(portability-simd-intrinsics)

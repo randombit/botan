@@ -109,6 +109,14 @@ def main(args=None):
 
         remove_file(build_config['doc_stamp_file'])
 
+        pch_suffixes = ['pch', 'gch']
+
+        if 'pch_dir' in build_config:
+            for f in os.listdir(build_config['pch_dir']):
+                for suffix in pch_suffixes:
+                    if f.endswith(suffix):
+                        remove_file(os.path.join(build_config['pch_dir'], f))
+
     remove_file(build_config['cli_exe'])
     remove_file(build_config['test_exe'])
 

@@ -10,6 +10,7 @@
 #include <botan/internal/gfni_utils.h>
 #include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_4x32.h>
+#include <wmmintrin.h>
 
 namespace Botan {
 
