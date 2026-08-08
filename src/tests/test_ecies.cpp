@@ -53,10 +53,8 @@ void check_encrypt_decrypt(Test::Result& result,
       ecies_enc.set_other_key(
          Botan::EC_AffinePoint(other_private_key.domain(), other_private_key.raw_public_key_bits()));
       Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params, rng);
-      if(!iv.bits_of().empty()) {
-         ecies_enc.set_initialization_vector(iv);
-         ecies_dec.set_initialization_vector(iv);
-      }
+      ecies_enc.set_initialization_vector(iv);
+      ecies_dec.set_initialization_vector(iv);
       if(!label.empty()) {
          ecies_enc.set_label(label);
          ecies_dec.set_label(label);
