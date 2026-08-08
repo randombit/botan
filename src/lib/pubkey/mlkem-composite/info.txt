@@ -1,0 +1,23 @@
+<defines>
+MLKEM_COMPOSITE -> 20260615
+</defines>
+
+<module_info>
+name -> "mlkem_composite"
+</module_info>
+
+<header:public>
+mlkem_comp.h
+mlkem_comp_parameters.h
+</header:public>
+
+<header:internal>
+asymmetric_encryption_to_kem_adapter.h
+</header:internal>
+
+<requires>
+ml_kem
+rng
+sha3
+asn1
+</requires>
