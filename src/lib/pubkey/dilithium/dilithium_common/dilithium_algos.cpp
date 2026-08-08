@@ -137,8 +137,6 @@ void poly_pack_gamma1(const DilithiumPoly& p, BufferStuffer& stuffer, const Dili
    BOTAN_ASSERT_UNREACHABLE();
 }
 
-#if defined(BOTAN_NEEDS_DILITHIUM_PRIVATE_KEY_ENCODING)
-
 /**
  * NIST FIPS 204, Algorithm 17 (BitPack)
  * (for a = -eta, b = eta)
@@ -163,8 +161,6 @@ void poly_pack_t0(const DilithiumPoly& p, BufferStuffer& stuffer) {
    constexpr auto TwoToTheDminus1 = 1 << (DilithiumConstants::D - 1);
    poly_pack<TwoToTheDminus1 - 1, TwoToTheDminus1>(p, stuffer);
 }
-
-#endif
 
 /**
  * NIST FIPS 204, Algorithm 18 (SimpleBitUnpack)
@@ -196,8 +192,6 @@ void poly_unpack_gamma1(DilithiumPoly& p, ByteSourceT& byte_source, const Dilith
    BOTAN_ASSERT_UNREACHABLE();
 }
 
-#if defined(BOTAN_NEEDS_DILITHIUM_PRIVATE_KEY_ENCODING)
-
 /**
  * NIST FIPS 204, Algorithm 19 (BitUnpack)
  * (for a = -eta, b = eta)
@@ -222,8 +216,6 @@ void poly_unpack_t0(DilithiumPoly& p, BufferSlicer& slicer) {
    constexpr auto TwoToTheDminus1 = 1 << (DilithiumConstants::D - 1);
    poly_unpack<TwoToTheDminus1 - 1, TwoToTheDminus1>(p, slicer);
 }
-
-#endif
 
 /**
  * NIST FIPS 204, Algorithm 20 (HintBitPack)
@@ -363,8 +355,6 @@ std::pair<DilithiumSeedRho, DilithiumPolyVec> decode_public_key(StrongSpan<const
    return {std::move(rho), std::move(t1)};
 }
 
-#if defined(BOTAN_NEEDS_DILITHIUM_PRIVATE_KEY_ENCODING)
-
 /**
  * NIST FIPS 204, Algorithm 24 (skEncode)
  */
@@ -412,7 +402,9 @@ DilithiumSerializedPrivateKey encode_keypair(const DilithiumInternalKeypair& key
 DilithiumInternalKeypair decode_keypair(StrongSpan<const DilithiumSerializedPrivateKey> sk, DilithiumConstants mode) {
    auto scope = CT::scoped_poison(sk);
 
-   BOTAN_ASSERT_NOMSG(sk.size() == mode.private_key_bytes());
+   if(sk.size() != mode.private_key_bytes()) {
+      throw Decoding_Error("invalid size for expanded ML-DSA (or Dilithium) private key");
+   }
 
    BufferSlicer slicer(sk);
 
@@ -444,7 +436,23 @@ DilithiumInternalKeypair decode_keypair(StrongSpan<const DilithiumSerializedPriv
    CT::unpoison(rho);  // rho is public (used in rejection sampling of matrix A)
 
    const auto A = expand_A(rho, mode);
-   auto [t1, _] = compute_t1_and_t0(A, s1, s2);
+   auto [t1, t0_derived] = compute_t1_and_t0(A, s1, s2);
+
+   // The t0 vector is not covered by the public key hash check below, as only
+   // rho and t1 form the public key. An inconsistent t0 should be detected
+   // explicitly (see RFC 9881, Appendix C.4 for such malformed keys).
+   auto t0_consistent = CT::Mask<uint32_t>::set();
+   for(size_t i = 0; i < t0.size(); ++i) {
+      const auto stored = t0[i].coefficients();
+      const auto derived = t0_derived[i].coefficients();
+      for(size_t j = 0; j < stored.size(); ++j) {
+         t0_consistent &=
+            CT::Mask<uint32_t>::is_equal(static_cast<uint32_t>(stored[j]), static_cast<uint32_t>(derived[j]));
+      }
+   }
+   if(!t0_consistent.as_bool()) {
+      throw Decoding_Error("t0 in serialized Dilithium/ML-DSA private key is inconsistent with s1 and s2");
+   }
 
    CT::unpoison(t1);  // part of the public key
 
@@ -468,8 +476,6 @@ DilithiumInternalKeypair decode_keypair(StrongSpan<const DilithiumSerializedPriv
 
    return keypair;
 }
-
-#endif
 
 /**
  * NIST FIPS 204, Algorithm 26 (sigEncode)

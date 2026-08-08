@@ -2629,7 +2629,34 @@ def handle_mldsa_keygen(_header: dict, group: dict, test: dict, exp: dict) -> No
         raise TestFailure(
             {"Mode": mode, "PK": exp["pk"], "ComputedPK": pub.to_raw().hex()}
         )
-    # sk comparison skipped: priv.to_raw() is seed form.
+
+    # Botan cannot export the expanded form of a seed-loaded key, so the
+    # expected sk cannot be compared byte-wise. Instead, load the expected
+    # expanded sk as a second key and check that both keys agree on the
+    # public key and on a deterministic signature.
+    priv_from_sk = botan.PrivateKey.load_ml_dsa(mode, _from_hex(exp["sk"]))
+
+    def _det_sign(key: botan.PrivateKey) -> bytes:
+        signer = botan.PKSign(key, "Deterministic")
+        signer.update(b"ACVP ML-DSA keyGen sk consistency check")
+        return signer.finish(NullRNG())
+
+    if priv_from_sk.get_public_key().to_raw() != pub.to_raw():
+        raise TestFailure(
+            {
+                "Mode": mode,
+                "SK": exp["sk"],
+                "Note": "expected expanded sk derives a different public key",
+            }
+        )
+    if _det_sign(priv) != _det_sign(priv_from_sk):
+        raise TestFailure(
+            {
+                "Mode": mode,
+                "SK": exp["sk"],
+                "Note": "seed-loaded and sk-loaded keys produce different deterministic signatures on the same message",
+            }
+        )
 
 
 @register("ML-DSA-sigGen-FIPS204", "ML-DSA-sigGen-FIPS204-tr1")
@@ -2655,12 +2682,7 @@ def handle_mldsa_siggen(_header: dict, group: dict, test: dict, exp: dict) -> No
     sk = _from_hex(test["seed"]) if "seed" in test else _from_hex(test["sk"])
     msg = _from_hex(test["message"])
 
-    try:
-        priv = botan.PrivateKey.load_ml_dsa(mode, sk)
-    except botan.BotanException as e:
-        # ACVP provides expanded sk (2560/4032/4896 bytes); Botan only
-        # accepts seed-form (32 bytes).
-        raise TestSkip("ML-DSA expanded private key loading not supported") from e
+    priv = botan.PrivateKey.load_ml_dsa(mode, sk)
 
     deterministic = group.get("deterministic", True)
     if deterministic:
