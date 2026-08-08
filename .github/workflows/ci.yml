@@ -92,7 +92,7 @@ jobs:
             host_os: ubuntu-22.04
           - compiler: gcc
             target: amalgamation
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - compiler: gcc
             target: static
             host_os: ubuntu-22.04
@@ -164,7 +164,7 @@ jobs:
 
   acvp:
     name: "ACVP"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -182,7 +182,7 @@ jobs:
 
   clang-tidy:
     name: "Clang Tidy"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -218,25 +218,25 @@ jobs:
         include:
           - target: sanitizer
             compiler: clang
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: valgrind
             compiler: clang
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: fuzzers
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: lint
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: format
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: limbo
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: typos
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
 
     runs-on: ${{ matrix.host_os }}
 
@@ -277,37 +277,37 @@ jobs:
         include:
           - target: examples
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: minimized
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: no_tls12
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: no_tls13
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: policy-bsi
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: policy-fips140
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: policy-modern
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: docs
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: no_pcurves
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: optional-rngs
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: pkcs11
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
 
     runs-on: ${{ matrix.host_os }}
 
@@ -351,25 +351,25 @@ jobs:
             host_os: ubuntu-22.04
           - target: shared
             compiler: gcc
-            host_os: ubuntu-24.04-arm
+            host_os: ubuntu-26.04-arm
           - target: amalgamation
             compiler: gcc
-            host_os: ubuntu-24.04-arm
+            host_os: ubuntu-26.04-arm
           - target: shared
             compiler: clang
-            host_os: ubuntu-24.04-arm
+            host_os: ubuntu-26.04-arm
           - target: cross-ppc64
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: cross-mips64
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: cross-loongarch64
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: cross-android-arm64
             compiler: clang
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
           - target: static
             compiler: gcc
             host_os: windows-2022
@@ -379,7 +379,7 @@ jobs:
             host_os: macos-26
           - target: cross-arm32-baremetal
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-26.04
 
     runs-on: ${{ matrix.host_os }}
 

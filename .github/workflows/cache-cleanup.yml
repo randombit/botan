@@ -17,7 +17,7 @@ permissions:
 jobs:
   cleanup:
     name: Delete caches for closed PR
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       # Required for `gh cache delete`
       actions: write
