@@ -8,6 +8,7 @@ API Reference
    footguns
    versions
    secmem
+   encoding
    rng
    hash
    block_cipher
