@@ -1,0 +1,106 @@
+# Test vectors for X509_DN equality and strict weak ordering.
+#
+# Each test gives two DNs in the string form accepted by X509_DN::parse.
+# [Equal] pairs must compare equal, [Unequal] pairs must not, and in both
+# cases operator< must be consistent with the expected equality. Every DN
+# in this file is also included in whole-file transitivity and std::set
+# consistency checks.
+
+[Equal]
+
+# X.500 comparison is case-insensitive
+DN1 = CN="Test"
+DN2 = CN="test"
+
+DN1 = CN="Test"
+DN2 = CN="TEST"
+
+DN1 = CN="test"
+DN2 = CN="TEST"
+
+DN1 = CN="abc"
+DN2 = CN="ABC"
+
+DN1 = CN="abc"
+DN2 = CN="aBc"
+
+DN1 = CN="abe"
+DN2 = CN="ABE"
+
+# Leading/trailing whitespace is ignored, inner whitespace is collapsed
+DN1 = CN="hello world"
+DN2 = CN="  hello   world  "
+
+DN1 = CN="hello world"
+DN2 = CN="HELLO WORLD"
+
+DN1 = CN="  hello   world  "
+DN2 = CN="HELLO WORLD"
+
+DN1 = CN="foo bar"
+DN2 = CN="  FOO   BAR  "
+
+DN1 = CN="abc"
+DN2 = CN="  abc  "
+
+# Multi-attribute DNs: same fields, different case
+DN1 = C="US",O="Org",CN="Test"
+DN2 = C="us",O="ORG",CN="test"
+
+DN1 = CN="test",O="org"
+DN2 = CN="TEST",O="ORG"
+
+DN1 = CN="test",O="org"
+DN2 = CN="  Test  ",O="  Org  "
+
+DN1 = CN="abc",O="test"
+DN2 = CN="ABC",O="TEST"
+
+# Duplicate OIDs in the same order
+DN1 = CN="abc",CN="foo"
+DN2 = CN="ABC",CN="FOO"
+
+DN1 = CN="abc",CN="def"
+DN2 = CN="ABC",CN="DEF"
+
+# Empty DNs
+DN1 =
+DN2 =
+
+[Unequal]
+
+DN1 = CN="abc"
+DN2 = CN="ABE"
+
+DN1 = CN="ABC"
+DN2 = CN="ABE"
+
+DN1 = CN="abc"
+DN2 = CN="xyz"
+
+DN1 = CN="foo bar"
+DN2 = CN="foo baz"
+
+# Duplicate OIDs: the same values in a different order are a different DN
+DN1 = CN="abc",CN="foo"
+DN2 = CN="foo",CN="abc"
+
+DN1 = CN="abc",CN="foo"
+DN2 = CN="  FOO",CN="aBc"
+
+DN1 = CN="abc",CN="def"
+DN2 = CN="abc",CN="ghi"
+
+# Different attribute counts
+DN1 = CN="Test"
+DN2 = CN="Test",O="Org"
+
+# Same value under different OIDs
+DN1 = CN="Test"
+DN2 = O="Test"
+
+DN1 = CN="test",O="org"
+DN2 = CN="other"
+
+DN1 = CN="abc",O="test"
+DN2 = CN="abc",O="zzz"
