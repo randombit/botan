@@ -132,4 +132,16 @@ Base58 = abc:def
 Base58 = abc[def
 Base58 = `abcdef
 
+# Invalid characters inside or at the edge of a full 8 character block
+Base58 = 3yxU3u1igY8WkgtjK92fbJQCd4BZiiT1v25f0
+Base58 = 3yxU3u1igY8Wkgtj092fbJQCd4BZiiT1v25f
+Base58 = 3yxU3u1igY8WkgtjK92fbJQCd4BZiiTlv25f
+Base58 = IyxU3u1igY8WkgtjK92fbJQCd4BZiiT1v25f
+Base58 = 3yxU3u1OgY8WkgtjK92fbJQCd4BZiiT1v25f
+Base58 = 3yxU3u1igY8WkgtjK92fbJQCd4BZiiT1v25:
+Base58 = 3yxU3u1igY8WkgtjK92fbJQCd4BZiiT1v[5f
+Base58 = 3yxU3u1i`Y8WkgtjK92fbJQCd4BZiiT1v25f
+Base58 = 3yxU3u1igY8WkgtjK92fb@QCd4BZiiT1v25f
+Base58 = 3yxU3u1igY8WkgtjK92fbJQC{4BZiiT1v25f
+
 

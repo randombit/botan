@@ -9,7 +9,7 @@ brief -> "Base58 encoder and decoder"
 
 <requires>
 sha2_32
-bigint
+mp
 </requires>
 
 <header:public>
