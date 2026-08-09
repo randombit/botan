@@ -3,11 +3,8 @@ Project Goals
 ================================
 
 Botan seeks to be a broadly applicable library that can be used to implement a
-range of secure distributed systems.
-
-The library has the following project goals guiding changes. It does not succeed
-in all of these areas in every way just yet, but it describes the system that is
-the desired end result. Over time further progress is made in each.
+range of secure distributed systems. The library has the following project goals
+guiding changes.
 
 * Secure and reliable. The implementations must of course be correct and well
   tested, and attacks such as side channels and fault attacks should be
@@ -64,16 +61,14 @@ the desired end result. Over time further progress is made in each.
   system-specific details and allows the application to use whatever networking
   style they please.
 
-* Portability to modern systems. Botan does not run everywhere, and we actually
-  do not want it to (see non-goals below). But we do want it to run on anything
-  that someone is deploying new applications on. That includes both major
-  platforms like Windows, Linux, Android and iOS, and also promising new systems
-  such as Fuchsia.
+* Portability to all relevant platforms. Botan supports all major operating
+  systems and CPU architectures. Botan has also been used with great success on
+  baremetal systems and in operating system kernels.
 
 * Well documented. Ideally every public API would have some place in the manual
   describing its usage.
 
-* Useful command line utility. The botan command line tool should be flexible
+* Useful command line utility. The ``botan`` command line tool should be flexible
   and featured enough to replace similar tools such as ``openssl`` for everyday
   users.
 
@@ -83,38 +78,22 @@ Non-Goals
 There are goals some crypto libraries have, but which Botan actively does not
 seek to address.
 
-* Deep embedded support. Botan requires a heap, C++ exceptions, and RTTI, and at
-  least in terms of performance optimizations effectively assumes a 32 or 64 bit
-  processor. It is not suitable for deploying on, say FreeRTOS running on a
-  MSP430, or smartcard with an 8 bit CPU and 256 bytes RAM. A larger SoC, such
-  as a Cortex-A7 running Linux, is entirely within scope.
-
 * Implementing every crypto scheme in existence. The focus is on algorithms
   which are in practical use in systems deployed now, as well as promising
-  algorithms for future deployment. Many algorithms which were of interest
-  in the past but never saw widespread deployment and have no compelling
-  benefit over other designs have been removed to simplify the codebase.
+  algorithms for future deployment.
 
 * Portable to obsolete systems. There is no reason for crypto software to
-  support ancient OS platforms like SunOS or Windows 2000, since these unpatched
+  support ancient OS versions like SunOS or Windows 2000, since such unpatched
   systems are completely unsafe anyway. The additional complexity supporting
-  such platforms just creates more room for bugs.
+  such platforms just creates room for bugs.
 
 * Portable to every C++ compiler ever made. Over time Botan moves forward to
   both take advantage of new language/compiler features, and to shed workarounds
   for dealing with bugs in ancient compilers, allowing further simplifications
-  in the codebase. The set of supported compilers is fixed for each new release
-  branch, for example Botan 2.x will always support GCC 4.8. But a future 3.x
-  release version will likely increase the required versions for all compilers.
-
-* Educational purposes. The library code is intended to be easy to read and
-  review, and so might be useful in an educational context. However it does not
-  contain any toy ciphers (unless you count DES and RC4) nor any tools for
-  simple cryptanalysis. Generally the manual and source comments assume previous
-  knowledge on the basic concepts involved.
+  in the codebase. The set of supported compilers is fixed for each new major
+  release, for example Botan3 will always support GCC 11.
 
 * User proof. Some libraries provide a very high level API in an attempt to save
   the user from themselves. Occasionally they succeed. It would be appropriate
-  and useful to build such an API on top of Botan, but Botan itself wants to
-  cover a broad set of uses cases and some of these involve having pointy things
-  within reach.
+  and useful to include such an API, but covering a broad set of use cases
+  requires a relatively flexible approach.
