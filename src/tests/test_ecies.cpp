@@ -53,10 +53,8 @@ void check_encrypt_decrypt(Test::Result& result,
       ecies_enc.set_other_key(
          Botan::EC_AffinePoint(other_private_key.domain(), other_private_key.raw_public_key_bits()));
       Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params, rng);
-      if(!iv.bits_of().empty()) {
-         ecies_enc.set_initialization_vector(iv);
-         ecies_dec.set_initialization_vector(iv);
-      }
+      ecies_enc.set_initialization_vector(iv);
+      ecies_dec.set_initialization_vector(iv);
       if(!label.empty()) {
          ecies_enc.set_label(label);
          ecies_dec.set_label(label);
@@ -82,6 +80,9 @@ void check_encrypt_decrypt(Test::Result& result,
       std::vector<uint8_t> invalid_encrypted = encrypted;
       uint8_t& last_byte = invalid_encrypted[invalid_encrypted.size() - 1];
       last_byte = ~last_byte;
+
+      ecies_dec.set_initialization_vector(iv);
+
       result.test_throws("throw on invalid ciphertext",
                          [&ecies_dec, &invalid_encrypted] { ecies_dec.decrypt(invalid_encrypted); });
    } catch(Botan::Lookup_Error& e) {
