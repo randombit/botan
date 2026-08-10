@@ -1188,6 +1188,25 @@ class TLS_Unit_Tests final : public Test {
 
             test.go();
             results.push_back(test.results());
+
+            if(expect_version_mismatch) {
+               continue;
+            }
+
+            TLS_Handshake_Test test_resumption(c.name,
+                                               c.offer_version,
+                                               creds,
+                                               client_policy,
+                                               server_policy,
+                                               rng,
+                                               client_ses,
+                                               server_ses,
+                                               false,
+                                               c.expected_version);
+
+            test_resumption.expect_session_resumption();
+            test_resumption.go();
+            results.push_back(test_resumption.results());
          }
       }
 
