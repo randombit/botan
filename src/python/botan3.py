@@ -1751,7 +1751,7 @@ class PublicKey: # pylint: disable=invalid-name
         """Load an ML-DSA-Composite public key giving the mode as a string
         (like "MLDSA44-ECDSA-P256-SHA256") and the raw encoding of the public key."""
         pub = PublicKey()
-        _DLL.botan_pubkey_load_mldsa_composite(byref(pub.handle_()), key, len(key), _ctype_str(mldsa_composite_mode))
+        _DLL.botan_pubkey_load_mldsa_composite(byref(pub._handle()), key, len(key), _ctype_str(mldsa_composite_mode))
         return pub
 
     @classmethod
@@ -2033,7 +2033,7 @@ class PrivateKey:
     def load_mldsa_composite(cls, mldsa_composite_mode: str, key: bytes) -> PrivateKey:
         """Return a private ML-DSA-Composite key"""
         priv = PrivateKey()
-        _DLL.botan_privkey_load_mldsa_composite(byref(priv.handle_()), key, len(key), _ctype_str(mldsa_composite_mode))
+        _DLL.botan_privkey_load_mldsa_composite(byref(priv._handle()), key, len(key), _ctype_str(mldsa_composite_mode))
         return priv
 
     @classmethod
