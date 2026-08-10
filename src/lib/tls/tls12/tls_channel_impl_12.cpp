@@ -260,6 +260,10 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
       }
    }
 
+   // Read epochs at or below this one belong to the association already in place,
+   // so application data under them stays deliverable while this handshake runs.
+   // Anything above it is this handshake's own, unauthenticated until its
+   // Finished. See the application-data gate in from_peer.
    m_epochs_before_latest_renegotiation = Epochs_Before_Latest_Renegotiation{sequence_numbers().current_read_epoch(),
                                                                              sequence_numbers().current_write_epoch()};
 
@@ -618,7 +622,34 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
                throw TLS_Exception(Alert::UnexpectedMessage, "Received application data after connection closure");
             }
             if(pending_state() != nullptr) {
-               throw TLS_Exception(Alert::UnexpectedMessage, "Can't interleave application and handshake data");
+               /*
+               What matters is which epoch the record belongs to, not which role we
+               are playing.
+
+               RFC 6347 4.2.4: "Implementations MUST either discard or buffer all
+               application data packets for the new epoch until they have received
+               the Finished message for that epoch." Data under the epoch this
+               handshake installed is not authenticated until its Finished, so it
+               must not reach the application; equally it is not an error, because
+               ordinary reordering produces it whenever a peer writes immediately
+               after activating.
+
+               Data under an epoch the established association owns stays valid
+               while a renegotiation is in flight, per 4.1.
+
+               Epoch zero is neither: application data there is plaintext, so it is
+               never legitimate and no association is at stake.
+               */
+               if(m_is_datagram && record.epoch() > 0) {
+                  const uint16_t active_epoch =
+                     m_epochs_before_latest_renegotiation ? m_epochs_before_latest_renegotiation->read_epoch : 0;
+
+                  if(!m_active_state.has_value() || record.epoch() > active_epoch) {
+                     continue;  // this handshake's epoch, still unauthenticated
+                  }
+               } else {
+                  throw TLS_Exception(Alert::UnexpectedMessage, "Can't interleave application and handshake data");
+               }
             }
             process_application_data(record.sequence(), m_record_buf);
          } else if(record.type() == Record_Type::Alert) {
@@ -761,8 +792,20 @@ void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record) {
    //    no_renegotiation
    //       Sent by the client in response to a hello request or by the
    //       server in response to a client hello after initial handshaking.
+   //
+   // Both of those precede any ChangeCipherSpec from the refusing side, so a
+   // refusal arriving after one means the peer both refused the handshake and
+   // proceeded with it. Discarding the pending state is what implements the
+   // refusal, but past a CCS that state is the only thing keeping application
+   // data under the new, un-Finished keys from being delivered, and there is no
+   // rollback that would leave keys, identity and exporter describing the same
+   // handshake. End the association rather than open that gate.
    if(alert_msg.type() == Alert::NoRenegotiation && m_active_state.has_value()) {
-      m_pending_state.reset();
+      if(!pending_handshake_epochs_unmoved()) {
+         throw TLS_Exception(Alert::UnexpectedMessage, "Received no_renegotiation after ChangeCipherSpec");
+      }
+
+      clear_pending_handshake_state();
    }
 
    if(alert_msg.is_fatal()) {
@@ -858,8 +901,20 @@ void Channel_Impl_12::send_alert(const Alert& alert) {
       }
    }
 
+   // RFC 5246 7.2.2:
+   //    no_renegotiation
+   //       Sent by the client in response to a hello request or by the
+   //       server in response to a client hello after initial handshaking.
+   //
+   // In this case we are the peer sending the refusal, so there is no reason
+   // for our epochs to have moved. If they somehow did, clear the pending
+   // state. A strictly better approach here would be to simply throw
+   // Internal_Error, but send_alert is called from within catch handlers
+   // so this is not currently viable.
    if(alert.type() == Alert::NoRenegotiation && m_active_state.has_value()) {
-      m_pending_state.reset();
+      if(pending_handshake_epochs_unmoved()) {
+         clear_pending_handshake_state();
+      }
    }
 
    if(alert.is_fatal()) {
