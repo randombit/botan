@@ -93,6 +93,8 @@ class Processor_RNG_EntropySource final : public Entropy_Source {
 
 class Jitter_RNG_EntropySource final : public Entropy_Source {
    public:
+      Jitter_RNG_EntropySource(Jitter_RNG::Mode mode) : m_rng(mode) {}
+
       size_t poll(RandomNumberGenerator& rng) override {
          rng.reseed_from_rng(m_rng);
          return RandomNumberGenerator::DefaultPollBits;
@@ -143,7 +145,13 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(std::string_view name) {
 
 #if defined(BOTAN_HAS_JITTER_RNG)
    if(name == "jitter_rng") {
-      return std::make_unique<Jitter_RNG_EntropySource>();
+      return std::make_unique<Jitter_RNG_EntropySource>(Jitter_RNG::Mode::Default);
+   }
+   if(name == "jitter_rng_fips") {
+      return std::make_unique<Jitter_RNG_EntropySource>(Jitter_RNG::Mode::FIPS);
+   }
+   if(name == "jitter_rng_ntg1") {
+      return std::make_unique<Jitter_RNG_EntropySource>(Jitter_RNG::Mode::NTG1);
    }
 #endif
 

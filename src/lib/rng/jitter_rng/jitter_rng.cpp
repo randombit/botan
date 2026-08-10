@@ -10,14 +10,26 @@
 #include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/mutex.h>
+#include <botan/internal/int_utils.h>
 
 #include <jitterentropy.h>
+
+/*
+* BSI AIS 20/31 NTG.1 support (JENT_NTG1) was added in jitterentropy 3.7.0.
+* The version encoding used by JENT_VERSION and jent_version() is
+* major * 1000000 + minor * 10000 + patchlevel * 100.
+*/
+#define BOTAN_JITTER_RNG_NTG1_MIN_VERSION 3070000
+
+#if defined(JENT_NTG1) && JENT_VERSION >= BOTAN_JITTER_RNG_NTG1_MIN_VERSION
+   #define BOTAN_JITTER_RNG_HAS_NTG1
+#endif
 
 namespace Botan {
 
 class Jitter_RNG_Internal final {
    public:
-      Jitter_RNG_Internal();
+      Jitter_RNG_Internal(Jitter_RNG::Mode mode, size_t osr);
       ~Jitter_RNG_Internal();
       void collect_into_buffer(std::span<uint8_t> buf);
 
@@ -27,16 +39,64 @@ class Jitter_RNG_Internal final {
       Jitter_RNG_Internal& operator=(Jitter_RNG_Internal&& other) = delete;
 
    private:
+      static unsigned int flags_for_mode(Jitter_RNG::Mode mode);
+
       mutex_type m_mutex;
       rand_data* m_rand_data;
 };
 
-Jitter_RNG_Internal::Jitter_RNG_Internal() {
-   constexpr unsigned int oversampling_rate = 0;    // use default oversampling
-   constexpr unsigned int flags = JENT_FORCE_FIPS;  // enable health tests
+unsigned int Jitter_RNG_Internal::flags_for_mode(Jitter_RNG::Mode mode) {
+   switch(mode) {
+      case Jitter_RNG::Mode::Default:
+         return 0;
+      case Jitter_RNG::Mode::FIPS:
+         // enable the SP800-90B health tests
+         return JENT_FORCE_FIPS;
+      case Jitter_RNG::Mode::NTG1:
+#if defined(BOTAN_JITTER_RNG_HAS_NTG1)
+         /*
+         * An older runtime library would silently ignore the unknown flag bit
+         * and hand out an entropy collector which is not NTG.1 compliant, so
+         * the version the headers were taken from is not sufficient here.
+         */
+         if(jent_version() < BOTAN_JITTER_RNG_NTG1_MIN_VERSION) {
+            throw Not_Implemented("The linked jitterentropy library is too old to support NTG.1");
+         }
 
-   // if flags and osr are used, use the same values for init and alloc
-   static const int result = jent_entropy_init_ex(oversampling_rate, flags);
+         /*
+         * Enable BSI AIS 20/31 3.0 NTG.1 mode
+         * NTG.1 implies FIPS mode within jitterentropy
+         */
+         return JENT_NTG1;
+#else
+         throw Not_Implemented("Botan was built against a jitterentropy version without NTG.1 support");
+#endif
+   }
+
+   BOTAN_ASSERT_UNREACHABLE();
+}
+
+bool Jitter_RNG::ntg1_supported() {
+#if defined(BOTAN_JITTER_RNG_HAS_NTG1)
+   return jent_version() >= BOTAN_JITTER_RNG_NTG1_MIN_VERSION;
+#else
+   return false;
+#endif
+}
+
+Jitter_RNG_Internal::Jitter_RNG_Internal(Jitter_RNG::Mode mode, size_t osr) {
+   const auto oversampling_rate =
+      checked_cast_to_or_throw<unsigned int, Invalid_Argument>(osr, "Jitter_RNG oversampling rate is too large");
+   const unsigned int flags = flags_for_mode(mode);
+
+   /*
+   * This performs new health checks for the chosen osr and flags.
+   * It is safe to do this multiple times, it will not alter existing
+   * instances.
+   *
+   * If flags and osr are used, use the same values for init and alloc.
+   */
+   const int result = jent_entropy_init_ex(oversampling_rate, flags);
 
    // no further details documented regarding the return value
    if(result != 0) {
@@ -70,7 +130,7 @@ void Jitter_RNG_Internal::collect_into_buffer(std::span<uint8_t> buf) {
       const auto error_msg = [&]() -> std::string_view {
          switch(num_bytes) {
             case -1:  // should never happen because of the check above
-               return "JitterRNG: Uninitilialized";
+               return "JitterRNG: Uninitialized";
             case -2:
                return "JitterRNG: SP800-90B repetition count online health test failed";
             case -3:
@@ -80,11 +140,16 @@ void Jitter_RNG_Internal::collect_into_buffer(std::span<uint8_t> buf) {
             case -5:
                return "JitterRNG: LAG predictor health test failed";
             case -6:
-               return "JitterRNG: Repetitive count test (RCT) failed permanently";
+               return "JitterRNG: Repetition count test (RCT) failed permanently";
             case -7:
                return "JitterRNG: Adaptive proportion test (APT) failed permanently";
             case -8:
                return "JitterRNG: LAG prediction test failed permanently";
+            // the following are only returned by jitterentropy 3.7.0 and newer
+            case -9:
+               return "JitterRNG: Repetition count test with memory failed";
+            case -10:
+               return "JitterRNG: Repetition count test with memory failed permanently";
             default:
                return "JitterRNG: Error reading entropy";
          }
@@ -92,13 +157,13 @@ void Jitter_RNG_Internal::collect_into_buffer(std::span<uint8_t> buf) {
       throw Internal_Error(error_msg);
    }
 
-   // According to the docs, `jent_read_entropy` itself runs its logic as often
+   // According to the docs, `jent_read_entropy_safe` itself runs its logic as often
    // as necessary to gather the requested number of bytes,
    // so this should actually never happen.
    BOTAN_ASSERT(static_cast<size_t>(num_bytes) == buf.size(), "JitterRNG produced the expected number of bytes");
 }
 
-Jitter_RNG::Jitter_RNG() : m_jitter{std::make_unique<Jitter_RNG_Internal>()} {}
+Jitter_RNG::Jitter_RNG(Mode mode, size_t osr) : m_jitter{std::make_unique<Jitter_RNG_Internal>(mode, osr)} {}
 
 Jitter_RNG::~Jitter_RNG() = default;
 

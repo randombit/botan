@@ -242,6 +242,35 @@ This is an RNG based on low-level CPU timing jitter, using the
 Can be enabled with ``configure.py`` via ``--enable-modules="jitter_rng"``, provided
 you have the library installed and made available to the build, including headers.
 
+The constructor takes the compliance mode which should be requested from
+jitterentropy, as well as the oversampling rate:
+
+``Jitter_RNG::Mode::Default``
+   Leaves the library at its defaults. The SP800-90B health tests are then only
+   enforced if the system itself runs in FIPS mode.
+
+``Jitter_RNG::Mode::FIPS``
+   Forces full SP800-90B compliance including the online health tests
+   (``JENT_FORCE_FIPS``), independent of the state of the system.
+
+``Jitter_RNG::Mode::NTG1``
+   Requests AIS 20/31 NTG.1 compliance (``JENT_NTG1``). This implies FIPS mode
+   and additionally disables the internal timer of jitterentropy, so it is
+   unavailable on platforms without a usable high resolution timer. It requires
+   jitterentropy 3.7.0 or later, both at build and at run time; otherwise the
+   constructor throws ``Not_Implemented``. Use ``Jitter_RNG::ntg1_supported()``
+   to query this beforehand.
+
+The oversampling rate controls how many timing samples are collected per output
+bit. Higher values are more conservative but slower; the default of zero lets
+jitterentropy apply its own minimal rate. Rates the library rejects as out of
+range cause the constructor to throw.
+
+.. note::
+   Before 3.14.0, ``Jitter_RNG`` always requested ``JENT_FORCE_FIPS``. The
+   default is now ``Mode::Default``; pass ``Mode::FIPS`` explicitly to retain
+   the previous behavior.
+
 Entropy Sources
 ---------------------------------
 
@@ -304,7 +333,7 @@ not protect against PID wrap around. The process ID is usually
 implemented as a 16 bit integer. In this scenario, a process will
 spawn a new child process, which exits the parent process and
 spawns a new child process himself. If the PID wrapped around, the
-second child process may get assigned the process ID of it's 
+second child process may get assigned the process ID of it's
 grandparent and the fork safety can not be ensured.
 
 Therefore, it is strongly recommended to explicitly reseed any
