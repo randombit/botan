@@ -70,7 +70,7 @@ std::vector<uint8_t> XMSSMT_PublicKey::raw_public_key_bits() const {
 
 std::vector<uint8_t> XMSSMT_PublicKey::public_key_bits() const {
    // Contrary to the private key, the public key is not wrapped in an ASN.1
-   // OCTET STRING (see RFC 9802 Section 2.3)
+   // OCTET STRING (see RFC 9802 Section 5.3)
    return raw_public_key_bits();
 }
 
