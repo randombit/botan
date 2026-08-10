@@ -12,6 +12,7 @@
 #if defined(BOTAN_HAS_MLKEM_COMPOSITE)
    #include <botan/base64.h>
    #include <botan/ber_dec.h>
+   #include <botan/der_enc.h>
    #include <botan/exceptn.h>
    #include <botan/hash.h>
    #include <botan/hex.h>
@@ -454,6 +455,84 @@ class MLKEM_Composite_KAT_Invalid_Tests : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("pubkey", "mlkem_composite_kat_invalid", MLKEM_Composite_KAT_Invalid_Tests);
 
+   #endif
+
+   #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_OAEP)
+class MLKEM_Composite_RSA_Key_Size_Tests : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("MLKEM_Composite_RSA_Key_Size");
+         auto rng = Test::new_rng("mlkem_composite_rsa_key_size");
+         const auto param = Botan::MLKEM_Composite_Param::from_id_supported_or_throw(
+            Botan::MLKEM_Composite_Param::id_t::MLKEM768_RSA2048_SHA3_256);
+
+         const Botan::MLKEM_Composite_PrivateKey valid_key(*rng, param);
+         const auto rsa_1024 = Botan::create_private_key("RSA", *rng, "1024");
+
+         const auto valid_pub = valid_key.public_key_bits();
+         std::vector<uint8_t> pub_bits(valid_pub.begin(), valid_pub.begin() + param.mlkem_pubkey_size());
+         const auto rsa_pub_bits = rsa_1024->public_key()->public_key_bits();
+         pub_bits.insert(pub_bits.end(), rsa_pub_bits.begin(), rsa_pub_bits.end());
+         result.test_throws("public key with wrong RSA modulus size is rejected",
+                            [&]() { const Botan::MLKEM_Composite_PublicKey pub(param.id(), pub_bits); });
+
+         const auto valid_priv = valid_key.private_key_bits();
+         std::vector<uint8_t> priv_bits(valid_priv.begin(), valid_priv.begin() + param.mlkem_privkey_size());
+         const auto rsa_priv_bits = rsa_1024->private_key_bits();
+         priv_bits.insert(priv_bits.end(), rsa_priv_bits.begin(), rsa_priv_bits.end());
+         result.test_throws("private key with wrong RSA modulus size is rejected",
+                            [&]() { const Botan::MLKEM_Composite_PrivateKey priv(param.id(), priv_bits); });
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "mlkem_composite_rsa_key_size", MLKEM_Composite_RSA_Key_Size_Tests);
+   #endif
+
+   #if defined(BOTAN_HAS_ECDH) && (defined(BOTAN_HAS_PCURVES_GENERIC) || \
+                                   (defined(BOTAN_HAS_PCURVES_SECP256R1) && defined(BOTAN_HAS_PCURVES_SECP384R1)))
+class MLKEM_Composite_ECDH_Curve_Tests : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("MLKEM_Composite_ECDH_Curve");
+         auto rng = Test::new_rng("mlkem_composite_ecdh_curve");
+         const auto param = Botan::MLKEM_Composite_Param::from_id_supported_or_throw(
+            Botan::MLKEM_Composite_Param::id_t::MLKEM768_ECDH_P256_SHA3_256);
+
+         const Botan::MLKEM_Composite_PrivateKey valid_key(*rng, param);
+         const auto wrong_curve_key = Botan::create_private_key("ECDH", *rng, "secp384r1");
+
+         // wrong-curve component private key in the SEC1 ECPrivateKey encoding
+         // with the curve OID in the [0] parameters field
+         std::vector<uint8_t> trad_priv_bits;
+         Botan::DER_Encoder(trad_priv_bits)
+            .start_sequence()
+            .encode(static_cast<size_t>(1))
+            .encode(wrong_curve_key->raw_private_key_bits(), Botan::ASN1_Type::OctetString)
+            .start_explicit_context_specific(0)
+            .encode(Botan::OID::from_string("secp384r1"))
+            .end_cons()
+            .end_cons();
+
+         const auto valid_priv = valid_key.private_key_bits();
+         std::vector<uint8_t> priv_bits(valid_priv.begin(), valid_priv.begin() + param.mlkem_privkey_size());
+         priv_bits.insert(priv_bits.end(), trad_priv_bits.begin(), trad_priv_bits.end());
+         result.test_throws("private key with wrong ECDH curve is rejected",
+                            [&]() { const Botan::MLKEM_Composite_PrivateKey priv(param.id(), priv_bits); });
+
+         const auto valid_pub = valid_key.public_key_bits();
+         std::vector<uint8_t> pub_bits(valid_pub.begin(), valid_pub.begin() + param.mlkem_pubkey_size());
+         const auto wrong_pub_point = wrong_curve_key->public_key()->raw_public_key_bits();
+         pub_bits.insert(pub_bits.end(), wrong_pub_point.begin(), wrong_pub_point.end());
+         result.test_throws("public key with wrong ECDH curve point is rejected",
+                            [&]() { const Botan::MLKEM_Composite_PublicKey pub(param.id(), pub_bits); });
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "mlkem_composite_ecdh_curve", MLKEM_Composite_ECDH_Curve_Tests);
    #endif
 
    #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_OAEP) && defined(BOTAN_HAS_SHA2_32)

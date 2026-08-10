@@ -15,6 +15,9 @@
 #include <botan/pss_params.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/oid_map.h>
+#if defined(BOTAN_HAS_ECDH)
+   #include <botan/ec_group.h>
+#endif
 
 #include <cstring>
 #include <string_view>
@@ -233,6 +236,15 @@ AlgorithmIdentifier MLKEM_Composite_Param::get_traditional_algorithm_id() const 
    std::optional<OID> oid;
    if(this->m_traditional_algorithm == "ECDH") {
       oid = OID::from_name(std::string("ECDH"));
+#if defined(BOTAN_HAS_ECDH)
+      if(oid.has_value()) {
+         // Carry the curve mandated by the composite parameter set as the algorithm
+         // parameters. The EC key decoding routines check the curve encoded within
+         // a private key against these parameters, so that a component key on any
+         // other curve is rejected.
+         return AlgorithmIdentifier(oid.value(), EC_Group::from_name(m_curve).DER_encode());
+      }
+#endif
    } else {
       oid = OID::from_name(this->m_traditional_algorithm);
    }
