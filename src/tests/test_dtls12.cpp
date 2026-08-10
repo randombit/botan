@@ -467,6 +467,13 @@ std::vector<uint8_t> dtls_handshake_fragment(Botan::TLS::Handshake_Type type,
    return msg;
 }
 
+// A complete, unfragmented DTLS handshake message.
+std::vector<uint8_t> dtls_handshake_message(Botan::TLS::Handshake_Type type,
+                                            uint16_t message_sequence,
+                                            std::span<const uint8_t> body) {
+   return dtls_handshake_fragment(type, body.size(), message_sequence, 0, body);
+}
+
 // A record carrying only a handshake header: it declares `message_length` bytes
 // but delivers none of them.
 std::vector<uint8_t> empty_dtls_handshake_fragment(Botan::TLS::Handshake_Type type,
@@ -1022,6 +1029,68 @@ class DTLS_Core_Regression_Tests final : public Test {
             client.received_data(in.data(), in.size());
          });
          result.test_is_false("client is no longer active", client.is_active());
+
+         return result;
+      }
+
+      // A HelloVerifyRequest is unauthenticated and resets the retransmission
+      // counter, so without a bound a forged stream of them makes a client
+      // re-send its ClientHello forever.
+      static Test::Result test_hello_verify_request_flood_is_bounded() {
+         Test::Result result("DTLS HelloVerifyRequest flood is bounded");
+
+         auto rng = Test::new_shared_rng("dtls-core-hvr-flood");
+         auto policy = std::make_shared<DTLS_PSK_Policy>();
+         auto creds = std::make_shared<DTLS_PSK_Credentials>();
+
+         std::vector<uint8_t> c2s;
+         std::vector<uint8_t> client_recv;
+         // This client is expected to fail, so do not fail the test on its alert.
+         Test::Result ignored_alerts("ignored");
+         auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(ignored_alerts, c2s, client_recv);
+         Botan::TLS::Client client(client_callbacks,
+                                   std::make_shared<Botan::TLS::Session_Manager_Noop>(),
+                                   creds,
+                                   policy,
+                                   rng,
+                                   Botan::TLS::Server_Information("localhost"),
+                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         const size_t first_client_hello = c2s.size();
+         result.test_is_true("client sent an initial ClientHello", first_client_hello > 0);
+
+         const std::optional<size_t> max_hvr = policy->dtls_maximum_hello_verify_requests();
+         if(!result.test_is_true("policy bounds HelloVerifyRequests", max_hvr.has_value())) {
+            return result;
+         }
+         const size_t limit = max_hvr.value();
+
+         size_t answered = 0;
+         size_t emitted = 0;
+         for(size_t i = 0; i != limit + 20; ++i) {
+            // Body of a HelloVerifyRequest: version, then a cookie.
+            std::vector<uint8_t> body = {0xFE, 0xFD, 0x08};
+            body.insert(body.end(), 8, static_cast<uint8_t>(i));
+
+            const auto forged = unprotected_dtls_record(
+               Botan::TLS::Record_Type::Handshake,
+               1000 + i,
+               dtls_handshake_message(Botan::TLS::Handshake_Type::HelloVerifyRequest, static_cast<uint16_t>(i), body));
+            c2s.clear();
+            try {
+               client.received_data(forged.data(), forged.size());
+            } catch(const Botan::TLS::TLS_Exception&) {
+               break;
+            }
+            if(!c2s.empty()) {
+               answered += 1;
+               emitted += c2s.size();
+            }
+         }
+
+         result.test_sz_eq("client answered at most the configured number", answered, limit);
+         result.test_is_true("client abandoned the handshake", client.is_closed());
+         result.test_is_true("outbound traffic stayed bounded", emitted <= limit * 2 * first_client_hello);
 
          return result;
       }
@@ -2021,6 +2090,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_forged_epoch0_appdata_during_renegotiation(),
                  test_no_renegotiation_before_ccs_is_accepted(),
                  test_no_renegotiation_after_ccs_ends_the_association(),
+                 test_hello_verify_request_flood_is_bounded(),
                  test_epoch_retirement_does_not_outlive_a_restart(),
                  test_timed_out_initial_handshake_closes_the_channel(),
                  test_timed_out_renegotiation_keeps_the_association(),

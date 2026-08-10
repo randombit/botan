@@ -597,6 +597,21 @@ class BOTAN_PUBLIC_API(2, 0) Policy /* NOLINT(*-special-member-functions) */ {
       virtual std::optional<size_t> dtls_maximum_retransmissions() const;
 
       /**
+      * @return the number of HelloVerifyRequest messages a DTLS client will act
+      * on within one handshake before abandoning it. Return nullopt to accept
+      * them without limit; return 0 to reject any cookie exchange.
+      *
+      * RFC 6347 4.2.1 requires more than one to be tolerated: "This may result
+      * in clients receiving multiple HelloVerifyRequest messages with different
+      * cookies. Clients SHOULD handle this by sending a new ClientHello with a
+      * cookie in response to the new HelloVerifyRequest." A HelloVerifyRequest
+      * is unauthenticated and carries no retransmission state of its own, so
+      * without a bound a forged stream of them makes a client re-send its
+      * ClientHello indefinitely.
+      */
+      virtual std::optional<size_t> dtls_maximum_hello_verify_requests() const;
+
+      /**
       * @return the maximum size of a single handshake message, in bytes.
       * Messages larger than this will be rejected prior to processing.
       * Return 0 to disable this and accept any size.
@@ -907,6 +922,8 @@ class BOTAN_PUBLIC_API(2, 0) Text_Policy : public Policy {
       size_t dtls_initial_timeout() const override;
 
       size_t dtls_maximum_timeout() const override;
+
+      std::optional<size_t> dtls_maximum_hello_verify_requests() const override;
 
       bool require_cert_revocation_info() const override;
 
