@@ -344,7 +344,9 @@ AlgorithmIdentifier MLDSA_Composite_Param::get_mldsa_algorithm_id() const {
 AlgorithmIdentifier MLDSA_Composite_Param::get_traditional_algorithm_id() const {
    std::optional<OID> oid;
    if(0 == std::strcmp(this->m_traditional_algorithm, "ECDSA")) {
-      oid = OID::from_name(std::string("ECDSA/") + m_traditional_padding);
+      // Use the generic EC key OID (id-ecPublicKey): this algorithm identifier
+      // is consumed by the key loading routines, which reject signature OIDs.
+      oid = OID::from_name("ECDSA");
 #if defined(BOTAN_HAS_ECDSA)
       if(oid.has_value()) {
          // Carry the curve mandated by the composite parameter set as the algorithm
