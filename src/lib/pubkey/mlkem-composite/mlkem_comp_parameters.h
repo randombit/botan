@@ -95,6 +95,12 @@ class BOTAN_PUBLIC_API(3, 13) MLKEM_Composite_Param {
 
       std::string get_traditional_algo_param_str() const;
 
+      /**
+       * @brief The key size of the traditional component in bits as mandated by the
+       * composite parameter set, e.g. the RSA modulus bit length.
+       */
+      size_t traditional_key_size() const { return m_traditional_key_size; }
+
       size_t mlkem_privkey_size() const { return 64; }
 
    private:
