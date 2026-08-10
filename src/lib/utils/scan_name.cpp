@@ -7,6 +7,7 @@
 
 #include <botan/internal/scan_name.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/internal/parsing.h>
 
@@ -26,11 +27,15 @@ std::string make_arg(const std::vector<std::pair<size_t, std::string>>& name, si
       }
 
       if(name[i].first > level) {
-         output += "(" + name[i].second;
-         ++paren_depth;
+         for(size_t j = level; j < name[i].first; j++) {
+            output += "(";
+            ++paren_depth;
+         }
+         output += name[i].second;
       } else if(name[i].first < level) {
          for(size_t j = name[i].first; j < level; j++) {
             output += ")";
+            BOTAN_ASSERT_NOMSG(paren_depth != 0);
             --paren_depth;
          }
          output += "," + name[i].second;
@@ -53,18 +58,24 @@ std::string make_arg(const std::vector<std::pair<size_t, std::string>>& name, si
 
 }  // namespace
 
-SCAN_Name::SCAN_Name(const char* algo_spec) : SCAN_Name(std::string(algo_spec)) {}
-
 SCAN_Name::SCAN_Name(std::string_view algo_spec) : m_orig_algo_spec(algo_spec) {
    if(algo_spec.empty()) {
       throw Invalid_Argument("Expected algorithm name, got empty string");
+   }
+
+   // Fast path for a bare name with no arguments or modes (eg "SHA-256"),
+   // which is the common case. Equivalent to the general parse below, which
+   // for such input produces a single token and no args/modes.
+   if(algo_spec.find_first_of("(),/") == std::string_view::npos) {
+      m_alg_name = std::string(algo_spec);
+      return;
    }
 
    std::vector<std::pair<size_t, std::string>> name;
    size_t level = 0;
    std::pair<size_t, std::string> accum = std::make_pair(level, "");
 
-   const std::string decoding_error = "Bad SCAN name '" + m_orig_algo_spec + "': ";
+   bool expect_token = true;
 
    for(const char c : algo_spec) {
       if(c == '/' || c == ',' || c == '(' || c == ')') {
@@ -72,21 +83,27 @@ SCAN_Name::SCAN_Name(std::string_view algo_spec) : m_orig_algo_spec(algo_spec) {
             ++level;
          } else if(c == ')') {
             if(level == 0) {
-               throw Decoding_Error(decoding_error + "Mismatched parens");
+               throw Invalid_Algorithm_Name(m_orig_algo_spec);
             }
             --level;
          }
 
          if(c == '/' && level > 0) {
             accum.second.push_back(c);
+            expect_token = false;
          } else {
+            if(expect_token) {
+               throw Invalid_Algorithm_Name(m_orig_algo_spec);
+            }
             if(!accum.second.empty()) {
                name.push_back(accum);
             }
             accum = std::make_pair(level, "");
+            expect_token = (c != ')');
          }
       } else {
          accum.second.push_back(c);
+         expect_token = false;
       }
    }
 
@@ -95,11 +112,16 @@ SCAN_Name::SCAN_Name(std::string_view algo_spec) : m_orig_algo_spec(algo_spec) {
    }
 
    if(level != 0) {
-      throw Decoding_Error(decoding_error + "Missing close paren");
+      throw Invalid_Algorithm_Name(m_orig_algo_spec);
+   }
+
+   if(expect_token) {
+      // A trailing separator with no following token, eg "Foo/" or "Foo,"
+      throw Invalid_Algorithm_Name(m_orig_algo_spec);
    }
 
    if(name.empty()) {
-      throw Decoding_Error(decoding_error + "Empty name");
+      throw Invalid_Algorithm_Name(m_orig_algo_spec);
    }
 
    m_alg_name = name[0].second;

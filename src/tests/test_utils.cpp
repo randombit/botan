@@ -22,6 +22,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/rounding.h>
+#include <botan/internal/scan_name.h>
 #include <botan/internal/target_info.h>
 
 #include <bit>
@@ -790,6 +791,103 @@ class Utility_Function_Tests final : public Test {
 };
 
 BOTAN_REGISTER_SMOKE_TEST("utils", "util", Utility_Function_Tests);
+
+class SCAN_Name_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+
+         results.push_back(parse_bare_name());
+         results.push_back(parse_name_with_arg());
+         results.push_back(parse_nested_args());
+         results.push_back(parse_mode_name());
+         results.push_back(parse_nested_names());
+         results.push_back(parse_invalid_names());
+
+         return results;
+      }
+
+   private:
+      static Test::Result parse_bare_name() {
+         Test::Result result("SCAN_Name bare name parse");
+         const Botan::SCAN_Name n("SHA-256");
+         result.test_str_eq("algo name", n.algo_name(), "SHA-256");
+         result.test_sz_eq("no args", n.arg_count(), 0);
+         result.test_str_eq("orig", n.to_string(), "SHA-256");
+         return result;
+      }
+
+      static Test::Result parse_name_with_arg() {
+         Test::Result result("SCAN_Name parse with arg");
+         const Botan::SCAN_Name n("HMAC(SHA-256)");
+         result.test_str_eq("algo name", n.algo_name(), "HMAC");
+         result.test_sz_eq("one arg", n.arg_count(), 1);
+         result.test_str_eq("arg", n.arg(0), "SHA-256");
+         return result;
+      }
+
+      static Test::Result parse_nested_args() {
+         Test::Result result("SCAN_Name with nested argument");
+         const Botan::SCAN_Name n("Foo(A,B(C))");
+         result.test_str_eq("algo name", n.algo_name(), "Foo");
+         result.test_sz_eq("two args", n.arg_count(), 2);
+         result.test_str_eq("arg0", n.arg(0), "A");
+         result.test_str_eq("arg1", n.arg(1), "B(C)");
+         return result;
+      }
+
+      static Test::Result parse_mode_name() {
+         Test::Result result("SCAN_Name mode and padding");
+         const Botan::SCAN_Name n("AES-128/CBC/PKCS7");
+         result.test_str_eq("algo name", n.algo_name(), "AES-128");
+         result.test_str_eq("mode", n.cipher_mode(), "CBC");
+         result.test_str_eq("mode pad", n.cipher_mode_pad(), "PKCS7");
+         return result;
+      }
+
+      static Test::Result parse_nested_names() {
+         Test::Result result("SCAN_Name nesting accepted");
+         const Botan::SCAN_Name n("Foo(A(B),C)");
+         result.test_str_eq("algo name", n.algo_name(), "Foo");
+         result.test_sz_eq("two args", n.arg_count(), 2);
+         result.test_str_eq("arg0", n.arg(0), "A(B)");
+         result.test_str_eq("arg1", n.arg(1), "C");
+         return result;
+      }
+
+      static void verify_name_is_rejected(Test::Result& result, std::string_view name) {
+         result.test_throws<Botan::Invalid_Argument>(Botan::fmt("Invalid name '{}', rejected", name),
+                                                     [&] { const Botan::SCAN_Name _parsed(name); });
+      }
+
+      static Test::Result parse_invalid_names() {
+         Test::Result result("SCAN_Name invalid names rejected");
+
+         const std::vector<std::string> testcases = {
+            "",
+            "Foo((A))",
+            "Foo(A(((B))C))",
+            "Foo()",
+            "Foo,",
+            "Foo(",
+            "Foo)",
+            "Foo(,)",
+            "Foo(,A)",
+            "Foo(A,)",
+            "Foo(A,,B)",
+            "AES-128//CBC",
+            "/Foo",
+            "Foo/",
+         };
+
+         for(const auto& tc : testcases) {
+            verify_name_is_rejected(result, tc);
+         }
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("utils", "scan_name", SCAN_Name_Tests);
 
 class BitOps_Tests final : public Test {
    public:

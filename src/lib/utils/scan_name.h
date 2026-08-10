@@ -19,14 +19,8 @@ namespace Botan {
 A class encapsulating a SCAN name (similar to JCE conventions)
 http://www.users.zetnet.co.uk/hopwood/crypto/scan/
 */
-class SCAN_Name final {
+class BOTAN_TEST_API SCAN_Name final {
    public:
-      /**
-      * Create a SCAN_Name
-      * @param algo_spec A SCAN-format name
-      */
-      explicit SCAN_Name(const char* algo_spec);
-
       /**
       * Create a SCAN_Name
       * @param algo_spec A SCAN-format name
