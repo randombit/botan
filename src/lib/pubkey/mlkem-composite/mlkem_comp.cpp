@@ -74,6 +74,18 @@ std::span<const uint8_t> traditional_privkey_subspan(const MLKEM_Composite_Param
    return key_bits.subspan(offset);
 }
 
+// The composite parameter set mandates the RSA modulus bit length; a key with any
+// other modulus size is not a valid component key for this parameter set. All other
+// traditional algorithms have fixed key sizes enforced by their decoding routines.
+void validate_traditional_key_size(const MLKEM_Composite_Param& param, const Public_Key& trad_key) {
+   if(param.traditional_algorithm() == "RSA" && trad_key.key_length() != param.traditional_key_size()) {
+      throw Decoding_Error(fmt("RSA component key of {} must have a {} bit modulus, but the provided key has {} bits",
+                               param.id_str(),
+                               param.traditional_key_size(),
+                               trad_key.key_length()));
+   }
+}
+
 std::unique_ptr<Private_Key> maybe_wrap_traditional_private_key(const MLKEM_Composite_Param& param,
                                                                 std::unique_ptr<Private_Key> sk) {
    if(param.traditional_algorithm() == "RSA") {
@@ -108,7 +120,9 @@ std::unique_ptr<Public_Key> load_traditional_public_key(const MLKEM_Composite_Pa
       return std::make_unique<Botan::ECDH_PublicKey>(group, EC_AffinePoint(group, key_bits));
    }
 #endif
-   return load_public_key(param.get_traditional_algorithm_id(), key_bits);
+   std::unique_ptr<Public_Key> key = load_public_key(param.get_traditional_algorithm_id(), key_bits);
+   validate_traditional_key_size(param, *key);
+   return key;
 }
 
 PairOfPublicKeys load_public_keys(const MLKEM_Composite_Param& param, std::span<const uint8_t> key_bits) {
@@ -135,7 +149,9 @@ std::unique_ptr<Private_Key> load_traditional_private_key(MLKEM_Composite_Param 
    }
 #endif
 
-   return load_private_key(param.get_traditional_algorithm_id(), key_bits);
+   std::unique_ptr<Private_Key> key = load_private_key(param.get_traditional_algorithm_id(), key_bits);
+   validate_traditional_key_size(param, *key);
+   return key;
 }
 
 PairOfPrivateKeys load_private_keys(const MLKEM_Composite_Param& param, std::span<const uint8_t> key_bits) {
