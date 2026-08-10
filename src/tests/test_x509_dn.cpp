@@ -11,7 +11,9 @@
    #include <botan/hex.h>
    #include <botan/pkix_types.h>
    #include <botan/internal/charset.h>
+   #include <botan/internal/fmt.h>
    #include <algorithm>
+   #include <set>
    #include <sstream>
 #endif
 
@@ -320,6 +322,169 @@ class X509_DN_String_Tests final : public Test {
 };
 
 BOTAN_REGISTER_TEST("x509", "x509_dn_string", X509_DN_String_Tests);
+
+/*
+* Check that operator< and operator== are consistent for a pair of DNs:
+*   - if a == b, then !(a < b) && !(b < a)
+*   - if a != b, then exactly one of (a < b) or (b < a)
+*/
+void check_pairwise(
+   Test::Result& result, const std::string& desc, const Botan::X509_DN& a, const Botan::X509_DN& b, bool expect_equal) {
+   const bool eq = (a == b);
+   const bool lt_ab = (a < b);
+   const bool lt_ba = (b < a);
+
+   result.test_bool_eq(desc + " equality", expect_equal, eq);
+
+   if(eq) {
+      result.test_is_false(desc + " equal implies !(a<b)", lt_ab);
+      result.test_is_false(desc + " equal implies !(b<a)", lt_ba);
+   } else {
+      result.test_is_true(desc + " unequal implies one is less", lt_ab || lt_ba);
+      result.test_is_false(desc + " unequal implies not both less", lt_ab && lt_ba);
+   }
+}
+
+/*
+* Check transitivity implications for one ordered triple (a,b,c). The
+* caller iterates over all ordered triples, so each implication only
+* needs to be stated in one orientation here.
+*/
+void check_transitivity(Test::Result& result,
+                        const std::string& desc,
+                        const Botan::X509_DN& a,
+                        const Botan::X509_DN& b,
+                        const Botan::X509_DN& c) {
+   const bool ab = (a < b);
+   const bool ba = (b < a);
+   const bool bc = (b < c);
+   const bool cb = (c < b);
+   const bool ac = (a < c);
+   const bool ca = (c < a);
+
+   // If a < b and b < c, then a < c
+   if(ab && bc) {
+      result.test_is_true(desc + " a<b && b<c => a<c", ac);
+   }
+   if(ba && ac) {
+      result.test_is_true(desc + " b<a && a<c => b<c", bc);
+   }
+   if(ab && bc) {
+      result.test_is_false(desc + " a<b && b<c => !(c<a)", ca);
+   }
+
+   // Equivalence transitivity: if !(a<b) && !(b<a) and b<c, then a<c
+   if(!ab && !ba && bc) {
+      result.test_is_true(desc + " a~b && b<c => a<c", ac);
+   }
+   if(!ab && !ba && cb) {
+      result.test_is_true(desc + " a~b && c<b => c<a", ca);
+   }
+}
+
+class X509_DN_Ordering_Tests final : public Text_Based_Test {
+   public:
+      X509_DN_Ordering_Tests() : Text_Based_Test("x509/x509_dn_ordering.vec", "DN1,DN2") {}
+
+      Test::Result run_one_test(const std::string& type, const VarMap& vars) override {
+         Test::Result result("X509_DN strict weak ordering");
+
+         const std::string dn_str1 = vars.get_req_str("DN1");
+         const std::string dn_str2 = vars.get_req_str("DN2");
+         const bool expect_equal = (type == "Equal");
+
+         const auto dn1 = Botan::X509_DN::parse(dn_str1);
+         const auto dn2 = Botan::X509_DN::parse(dn_str2);
+
+         if(!result.test_is_true("DN1 parses", dn1.has_value()) ||
+            !result.test_is_true("DN2 parses", dn2.has_value())) {
+            return result;
+         }
+
+         check_pairwise(result, Botan::fmt("{} vs {}", dn_str1, dn_str2), *dn1, *dn2, expect_equal);
+
+         collect(dn_str1, *dn1);
+         collect(dn_str2, *dn2);
+
+         return result;
+      }
+
+      std::vector<Test::Result> run_final_tests() override {
+         std::vector<Test::Result> results;
+         results.push_back(test_all_pairs_consistency());
+         results.push_back(test_whole_file_transitivity());
+
+         // Handing std::set a comparator that is not a strict weak ordering
+         // is undefined behavior, so only run it once the direct checks passed
+         if(results[0].tests_failed() == 0 && results[1].tests_failed() == 0) {
+            results.push_back(test_set_consistency());
+         }
+         return results;
+      }
+
+   private:
+      void collect(const std::string& dn_str, const Botan::X509_DN& dn) {
+         if(m_seen.insert(dn_str).second) {
+            m_dns.push_back(dn);
+         }
+      }
+
+      Test::Result test_all_pairs_consistency() const {
+         Test::Result result("X509_DN ordering pairwise consistency");
+         for(size_t i = 0; i < m_dns.size(); ++i) {
+            for(size_t j = i; j < m_dns.size(); ++j) {
+               const bool lt = (m_dns[i] < m_dns[j]);
+               const bool gt = (m_dns[j] < m_dns[i]);
+               const bool eq = (m_dns[i] == m_dns[j]);
+
+               result.test_is_false(Botan::fmt("pair[{},{}] asymmetry", i, j), lt && gt);
+               result.test_bool_eq(Botan::fmt("pair[{},{}] == matches equivalence", i, j), eq, !lt && !gt);
+            }
+         }
+         return result;
+      }
+
+      Test::Result test_whole_file_transitivity() const {
+         Test::Result result("X509_DN ordering transitivity");
+         for(size_t i = 0; i < m_dns.size(); ++i) {
+            for(size_t j = 0; j < m_dns.size(); ++j) {
+               for(size_t k = 0; k < m_dns.size(); ++k) {
+                  check_transitivity(result, Botan::fmt("triple[{},{},{}]", i, j, k), m_dns[i], m_dns[j], m_dns[k]);
+               }
+            }
+         }
+         return result;
+      }
+
+      // If operator< isn't a proper SWO, set behavior is undefined. The set
+      // must deduplicate to exactly the operator== equivalence classes, and
+      // every DN must be findable in it afterwards.
+      Test::Result test_set_consistency() const {
+         Test::Result result("X509_DN ordering vs std::set");
+
+         const std::set<Botan::X509_DN> dns(m_dns.begin(), m_dns.end());
+
+         std::vector<Botan::X509_DN> classes;
+         for(const auto& dn : m_dns) {
+            if(std::none_of(classes.begin(), classes.end(), [&](const auto& c) { return c == dn; })) {
+               classes.push_back(dn);
+            }
+         }
+
+         result.test_sz_eq("set deduplicates equivalent DNs", dns.size(), classes.size());
+
+         for(size_t i = 0; i < m_dns.size(); ++i) {
+            result.test_is_true(Botan::fmt("set contains DN {}", i), dns.count(m_dns[i]) == 1);
+         }
+
+         return result;
+      }
+
+      std::set<std::string> m_seen;
+      std::vector<Botan::X509_DN> m_dns;
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_dn_ordering", X509_DN_Ordering_Tests);
 #endif
 
 }  // namespace
