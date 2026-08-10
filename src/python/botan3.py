@@ -1735,7 +1735,7 @@ class PublicKey: # pylint: disable=invalid-name
         """Load an ML-KEM-Composite public key giving the mode as a string
         (like "MLKEM768-X25519-SHA3-256") and the raw encoding of the public key."""
         pub = PublicKey()
-        _DLL.botan_pubkey_load_mlkem_composite(byref(pub.handle_()), key, len(key), _ctype_str(mlkem_composite_mode))
+        _DLL.botan_pubkey_load_mlkem_composite(byref(pub._handle()), key, len(key), _ctype_str(mlkem_composite_mode))
         return pub
 
     @classmethod
@@ -2026,7 +2026,7 @@ class PrivateKey:
     def load_mlkem_composite(cls, mlkem_composite_mode: str, key: bytes) -> PrivateKey:
         """Return a private ML-KEM-Composite key"""
         priv = PrivateKey()
-        _DLL.botan_privkey_load_mlkem_composite(byref(priv.handle_()), key, len(key), _ctype_str(mlkem_composite_mode))
+        _DLL.botan_privkey_load_mlkem_composite(byref(priv._handle()), key, len(key), _ctype_str(mlkem_composite_mode))
         return priv
 
     @classmethod
