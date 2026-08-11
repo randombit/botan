@@ -161,13 +161,19 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       }
 
       /**
-      * This calls `randomize_with_input` using some timestamps as extra input.
+      * This calls `randomize_with_input` using system specific values
       *
-      * For a stateful RNG using non-random but potentially unique data the
-      * extra input can help protect against problems with fork, VM state
-      * rollback, or other cases where somehow an RNG state is duplicated. If
-      * both of the duplicated RNG states later incorporate a timestamp (and the
-      * timestamps don't themselves repeat), their outputs will diverge.
+      * This first attempts to provide input to the underlying RNG from some system
+      * specific source. If a system RNG is available, it is queried and the output from
+      * the system RNG is used as the additional input. Otherwise 12 bytes consisting of
+      * the local clock plus the current process ID are used.
+      *
+      * For a stateful RNG that was already correctly seeded with sufficient
+      * cryptographically secure material, using non-random but potentially unique data
+      * as the extra input can help protect against problems with fork, VM state
+      * rollback, or other cases where somehow an RNG state is duplicated. If both of
+      * the duplicated RNG states later incorporate some input, even predictable input,
+      * their outputs will diverge.
       *
       * @param output buffer to hold the random output
       * @throws PRNG_Unseeded if the RNG fails because it has not enough entropy

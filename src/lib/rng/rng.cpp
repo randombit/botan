@@ -15,9 +15,7 @@
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    #include <botan/system_rng.h>
-#endif
-
-#if defined(BOTAN_HAS_OS_UTILS)
+#elif defined(BOTAN_HAS_OS_UTILS)
    #include <botan/internal/os_utils.h>
 #endif
 
@@ -27,23 +25,26 @@ namespace Botan {
 
 void RandomNumberGenerator::randomize_with_ts_input(std::span<uint8_t> output) {
    if(this->accepts_input()) {
-      std::array<uint8_t, 32> additional_input = {0};
-
-#if defined(BOTAN_HAS_OS_UTILS)
-      store_le(std::span{additional_input}.subspan<0, 8>(), OS::get_high_resolution_clock());
-      store_le(std::span{additional_input}.subspan<8, 4>(), OS::get_process_id());
-      constexpr size_t offset = 12;
-#else
-      constexpr size_t offset = 0;
-#endif
+      std::array<uint8_t, 16> additional_input = {0};
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-      system_rng().randomize(std::span{additional_input}.subspan<offset>());
+      // If we have a system RNG just read 128 bits from that
+      system_rng().randomize(additional_input);
+      constexpr size_t written = additional_input.size();
+#elif defined(BOTAN_HAS_OS_UTILS)
+      // Otherwise take clock + pid
+      const uint64_t clock = OS::get_high_resolution_clock();
+      const uint32_t pid = OS::get_process_id();  // 0 if no PIDs on this system
+
+      store_le(std::span{additional_input}.first<8>(), clock);
+      store_le(std::span{additional_input}.subspan<8, 4>(), pid);
+      const size_t written = 8 + (pid != 0) ? 4 : 0;
 #else
-      BOTAN_UNUSED(offset);
+      // Nothing to use in this case
+      constexpr size_t written = 0;
 #endif
 
-      this->fill_bytes_with_input(output, additional_input);
+      this->fill_bytes_with_input(output, std::span{additional_input}.first(written));
    } else {
       this->fill_bytes_with_input(output, {});
    }
