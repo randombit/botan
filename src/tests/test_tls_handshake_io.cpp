@@ -63,6 +63,7 @@ class Datagram_IO_Fixture {
                   if(type == Record_Type::Handshake) {
                      ++m_handshake_records_sent;
                      m_sent_record_sizes.push_back(record.size());
+                     m_last_handshake_record = record;
                   }
                },
                [this]() -> uint64_t { return m_clock_ms; },
@@ -107,6 +108,14 @@ class Datagram_IO_Fixture {
       // record framing and cipher expansion are added.
       const std::vector<size_t>& sent_record_sizes() const { return m_sent_record_sizes; }
 
+      // message_seq in the header of the most recently sent handshake record
+      size_t last_sent_message_seq() const {
+         if(m_last_handshake_record.size() < 12) {
+            throw Test_Error("No handshake record was sent");
+         }
+         return (static_cast<size_t>(m_last_handshake_record[4]) << 8) | m_last_handshake_record[5];
+      }
+
       void reset_send_counter() {
          m_handshake_records_sent = 0;
          m_sent_record_sizes.clear();
@@ -116,6 +125,7 @@ class Datagram_IO_Fixture {
       uint64_t m_clock_ms = 0;
       size_t m_handshake_records_sent = 0;
       std::vector<size_t> m_sent_record_sizes;
+      std::vector<uint8_t> m_last_handshake_record;
       Datagram_Sequence_Numbers m_seqs;
       Datagram_Handshake_IO m_io;
 };
@@ -348,6 +358,106 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
                result.test_sz_eq("released at completion", fix.io().pending_reassembly_bytes(), 0);
             }),
 
+      // A server cannot tell whether a ClientHello validates before checking its
+      // cookie, so ones that never validate still advance the sequence numbers
+      // it answers with. RFC 6347 4.2.4 (erratum 5186) has the HelloVerifyRequest
+      // and the initial ServerHello carry the message_seq of the ClientHello they
+      // answer, so a later ClientHello from an earlier sequence number seats the
+      // exchange at itself again.
+      CHECK("a ClientHello from an earlier sequence re-seats the cookie exchange",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               const Stub_Handshake_Message hvr(Handshake_Type::HelloVerifyRequest,
+                                                std::vector<uint8_t>{0xFE, 0xFD, 0x00});
+               const Stub_Handshake_Message server_hello(Handshake_Type::ServerHello, std::vector<uint8_t>(64, 0x11));
+
+               // Two ClientHellos at sequences 0 and 1 that do not validate, each answered
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 48, 0, 0, make_payload(48)));
+               result.test_enum_eq(
+                  "ClientHello at sequence 0 delivered", fix.next_message().first, Handshake_Type::ClientHello);
+               fix.io().send_under_epoch(hvr, 0);
+               result.test_sz_eq("its HelloVerifyRequest carries message_seq 0", fix.last_sent_message_seq(), 0);
+
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 48, 1, 0, make_payload(48)));
+               result.test_enum_eq(
+                  "ClientHello at sequence 1 delivered", fix.next_message().first, Handshake_Type::ClientHello);
+               fix.io().send_under_epoch(hvr, 0);
+               result.test_sz_eq("its HelloVerifyRequest carries message_seq 1", fix.last_sent_message_seq(), 1);
+
+               // A handshake beginning at sequence 0 again
+               const auto genuine = make_payload(60);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 60, 0, 0, genuine));
+               auto [t1, b1] = fix.next_message();
+               result.test_enum_eq("later ClientHello at sequence 0 delivered", t1, Handshake_Type::ClientHello);
+               result.test_bin_eq("its body is intact", b1, genuine);
+               fix.io().send_under_epoch(hvr, 0);
+               result.test_sz_eq("its HelloVerifyRequest carries message_seq 0", fix.last_sent_message_seq(), 0);
+
+               // Its cookie-bearing ClientHello at sequence 1 is the one expected,
+               // and the ServerHello answering it carries 1
+               const auto cookie_ch = make_payload(64);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 64, 1, 0, cookie_ch));
+               auto [t2, b2] = fix.next_message();
+               result.test_enum_eq("cookie-bearing ClientHello delivered", t2, Handshake_Type::ClientHello);
+               result.test_bin_eq("its body is intact", b2, cookie_ch);
+               fix.io().send(server_hello);
+               result.test_sz_eq("ServerHello carries message_seq 1", fix.last_sent_message_seq(), 1);
+               result.test_sz_eq("nothing left pending", fix.io().pending_reassembly_bytes(), 0);
+            }),
+
+      CHECK("a partial earlier ClientHello does not disturb the cookie exchange",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               const Stub_Handshake_Message hvr(Handshake_Type::HelloVerifyRequest,
+                                                std::vector<uint8_t>{0xFE, 0xFD, 0x00});
+
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 48, 0, 0, make_payload(48)));
+               fix.next_message();
+               fix.io().send_under_epoch(hvr, 0);
+
+               // The first byte of some ClientHello at sequence 0, declaring 100 bytes
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 100, 0, 0, std::vector<uint8_t>{0xAA}));
+               result.test_enum_eq(
+                  "nothing delivered for the partial ClientHello", fix.next_message().first, Handshake_Type::None);
+
+               const auto cookie_ch = make_payload(64);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 64, 1, 0, cookie_ch));
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("cookie-bearing ClientHello delivered", type, Handshake_Type::ClientHello);
+               result.test_bin_eq("its body is intact", bytes, cookie_ch);
+               result.test_sz_eq("the partial ClientHello was released", fix.io().pending_reassembly_bytes(), 0);
+            }),
+
+      // A ClientHello replacing unauthenticated data in its slot is a new message
+      // and has to fit the budget like any other, before anything is allocated.
+      CHECK("a superseding ClientHello is admitted against the ceiling",
+            [&](Test::Result& result) {
+               // Per-message cap disabled: the budget is the 16 MiB overall ceiling
+               Datagram_IO_Fixture fix(1000, 60000, std::nullopt, 1500, 0);
+               constexpr size_t ceiling = 16 * 1024 * 1024;
+               const std::vector<uint8_t> one = {0xAA};
+
+               // A future slot holding just under half the budget, and a small
+               // ClientHello fragment in the expected slot
+               fix.feed(dtls_hs_record(Handshake_Type::Certificate, ceiling / 2 - 1, 1, 0, one));
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 42, 0, 0, one));
+               result.test_sz_eq("both slots charged", fix.io().pending_reassembly_bytes(), ceiling / 2 - 1 + 42);
+
+               // A ClientHello declaring the 24-bit maximum replaces the small one
+               // but does not fit, so the slot is left empty
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 0xFFFFFF, 0, 0, one));
+               result.test_sz_eq("oversized replacement refused and the small slot released",
+                                 fix.io().pending_reassembly_bytes(),
+                                 ceiling / 2 - 1);
+
+               // One that fits is admitted and delivered
+               const auto genuine = make_payload(100);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 100, 0, 0, genuine));
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("fitting ClientHello delivered", type, Handshake_Type::ClientHello);
+               result.test_bin_eq("its body is intact", bytes, genuine);
+            }),
+
       CHECK("tiny future-seq fragments do not exhaust the reassembly budget",
             [&](Test::Result& result) {
                Datagram_IO_Fixture fix;
@@ -512,6 +622,85 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
                result.template test_throws<Botan::Decoding_Error>("overlap mismatch rejected", [&] {
                   fix.feed(dtls_hs_record(Handshake_Type::Certificate, 50, 0, 0, bad));
                });
+            }),
+
+      // A ClientHello is different: it begins a handshake, so nothing already in
+      // its slot belongs to the same one, and at epoch zero neither candidate is
+      // authenticated. Throwing would mean the ClientHello is what fails, so one
+      // planted fragment could deny every later handshake attempt. The newest
+      // ClientHello wins instead.
+      CHECK("a conflicting ClientHello supersedes an unauthenticated slot",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+
+               // A planted fragment claiming a large message, at a high offset.
+               const std::vector<uint8_t> planted = {0xAA};
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 65536, 0, 65535, planted));
+               result.test_is_true("planted fragment completes nothing",
+                                   fix.next_message().first == Handshake_Type::None);
+
+               // The genuine ClientHello declares a different length.
+               const auto genuine = make_payload(48);
+               result.test_no_throw("conflicting ClientHello is not an error",
+                                    [&] { fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 48, 0, 0, genuine)); });
+
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("genuine ClientHello delivered", type, Handshake_Type::ClientHello);
+               result.test_bin_eq("genuine body intact", bytes, genuine);
+            }),
+
+      // A supersede changes the slot's declared length, so the reassembly-budget
+      // charge has to move with it. The prior test covers large-to-small (which
+      // silently leaked quota); this covers small-to-large, which subtracted an
+      // uncharged length at release and underflowed the budget counter.
+      CHECK("a ClientHello supersede keeps the reassembly budget consistent",
+            [&](Test::Result& result) {
+               // max_pending = 4 * 512 = 2048.
+               Datagram_IO_Fixture fix(1000, 60000, std::nullopt, 1500, 512);
+
+               // A small, partial ClientHello, then a larger one superseding it.
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 64, 0, 0, make_payload(40)));
+               const auto genuine = make_payload(400);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 400, 0, 0, genuine));
+
+               std::pair<Handshake_Type, std::vector<uint8_t>> msg;
+               result.test_no_throw("delivering the superseded ClientHello does not underflow the budget",
+                                    [&] { msg = fix.next_message(); });
+               result.test_enum_eq("superseding ClientHello delivered", msg.first, Handshake_Type::ClientHello);
+               result.test_bin_eq("its body is intact", msg.second, genuine);
+
+               // The slot is fully released: a message filling the whole budget
+               // is admitted. A leaked charge would leave less than 512 free.
+               fix.feed(dtls_hs_record(Handshake_Type::Certificate, 512, 1, 0, make_payload(512)));
+               auto [t2, b2] = fix.next_message();
+               result.test_enum_eq("full-budget message admitted after supersede", t2, Handshake_Type::Certificate);
+               result.test_sz_eq("its body is intact", b2.size(), size_t(512));
+            }),
+
+      // Same reasoning for a byte-level conflict within a matching header.
+      CHECK("a ClientHello with conflicting overlap supersedes the slot",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               const auto base = make_payload(50);
+               const std::vector<uint8_t> first(base.begin(), base.begin() + 30);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 50, 0, 0, first));
+
+               auto conflicting = first;
+               conflicting[10] ^= 0xFF;
+               result.test_no_throw("conflicting overlap is not an error", [&] {
+                  fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 50, 0, 0, conflicting));
+               });
+
+               // The newest bytes are what remain, so completing from them works.
+               const std::vector<uint8_t> rest(base.begin() + 30, base.end());
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 50, 0, 30, rest));
+
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("delivered after restart", type, Handshake_Type::ClientHello);
+               result.test_sz_eq("full length reassembled", bytes.size(), size_t(50));
+               result.test_bin_eq("first 30 bytes are the newer copy",
+                                  std::vector<uint8_t>(bytes.begin(), bytes.begin() + 30),
+                                  conflicting);
             }),
 
       CHECK("consistent retransmits are tolerated",

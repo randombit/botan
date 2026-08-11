@@ -26,6 +26,12 @@ constexpr size_t DTLS_HANDSHAKE_HEADER_SIZE = 12;
 // count unlimited. Matches the default value of Policy::dtls_maximum_retransmissions.
 constexpr size_t DEFAULT_PEER_REPLAY_BUDGET = 12;
 
+// client_version(2) + random(32) + session_id length(1) + cookie length(1)
+// + cipher_suites length(2) + one suite(2) + compression_methods
+// length(1) + one method(1). RFC 6347 4.2.1 gives the DTLS ClientHello
+// layout. A shorter declared length cannot be a real ClientHello.
+constexpr size_t MIN_CLIENT_HELLO_SIZE = 42;
+
 inline size_t load_be24(const uint8_t q[3]) {
    return make_uint32(0, q[0], q[1], q[2]);
 }
@@ -322,7 +328,9 @@ void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx) {
 
 bool Datagram_Handshake_IO::have_more_data() const {
    // Future or incomplete fragments remain buffered, but only a complete
-   // next-in-sequence message is trailing handshake data.
+   // next-in-sequence message is trailing handshake data. A buffered duplicate
+   // ClientHello is not: it carries nothing the peer has not already sent, and
+   // get_next_record only reaches for it when there is no in-sequence message.
    const auto next = m_messages.find(m_in_message_seq);
    return next != m_messages.end() && next->second.complete();
 }
@@ -457,6 +465,17 @@ bool Datagram_Handshake_IO::charged_add_fragment(Handshake_Reassembly& reassembl
                                                  uint16_t epoch,
                                                  Handshake_Type msg_type,
                                                  size_t msg_length) {
+   // A ClientHello may replace unauthenticated data buffered in its slot (see
+   // Handshake_Reassembly::add_fragment). Where its header differs from what
+   // the slot holds it is a new message: release the slot and admit the
+   // ClientHello like any first fragment, so the budget check comes before
+   // the allocation.
+   if(reassembly.superseded_by_client_hello(epoch, msg_type) &&
+      (msg_type != reassembly.msg_type() || msg_length != reassembly.msg_length())) {
+      release_reassembly_bytes(reassembly);
+      reassembly = Handshake_Reassembly();
+   }
+
    // We allocate the entire block on the first fragment, so charge it against
    // the bound at that point. Later fragments must agree with the declared
    // length, so admission is decided once per slot and retransmissions are
@@ -496,6 +515,12 @@ bool Datagram_Handshake_IO::process_previous_handshake_fragment(const uint8_t fr
    // retransmitted initial ClientHello back to the server handshake logic so
    // it can recreate the stateless cookie response instead.
    if(msg_type == Handshake_Type::ClientHello) {
+      // A declared length this short cannot be a real ClientHello, so it cannot
+      // be a retransmission of one.
+      if(msg_length < MIN_CLIENT_HELLO_SIZE) {
+         return false;
+      }
+
       if(!retransmitted_flight && m_awaiting_cookie_client_hello) {
          if(!m_retransmitted_client_hello.has_value() || m_retransmitted_client_hello->first != message_seq) {
             if(m_retransmitted_client_hello.has_value()) {
@@ -788,18 +813,43 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::get_next_
       return std::make_pair(Handshake_Type::None, std::vector<uint8_t>());
    }
 
-   if(m_retransmitted_client_hello.has_value() && m_retransmitted_client_hello->second.complete()) {
-      auto result = m_retransmitted_client_hello->second.message();
-      release_reassembly_bytes(m_retransmitted_client_hello->second);
-      m_retransmitted_client_hello.reset();
-      m_recreating_hello_verify_request = true;
-      return result;
-   }
-
-   const auto i = m_messages.find(m_in_message_seq);
+   auto i = m_messages.find(m_in_message_seq);
 
    if(i == m_messages.end() || !i->second.complete()) {
-      return std::make_pair(Handshake_Type::None, std::vector<uint8_t>());
+      // Nothing in sequence to make progress with. A complete ClientHello
+      // buffered from an earlier sequence number is delivered only here, since
+      // delivering it ahead of an in-sequence message makes that message look
+      // like trailing data to the caller's have_more_data() check.
+      if(!m_retransmitted_client_hello.has_value() || !m_retransmitted_client_hello->second.complete()) {
+         return std::make_pair(Handshake_Type::None, std::vector<uint8_t>());
+      }
+
+      /*
+      This ClientHello is either a retransmission of the one the pending
+      HelloVerifyRequest answered or the start of another handshake. Nothing a
+      server has sent so far is retained (RFC 6347 3.2.1 keeps the
+      HelloVerifyRequest stateless), so the exchange simply begins again from
+      it: the sequence numbers are seated at this ClientHello, which also
+      recovers from ClientHellos that never validated having advanced them.
+      Only the slot after it can hold anything of the peer's, namely the
+      cookie-bearing ClientHello it may already be sending; everything else
+      buffered is stale.
+      */
+      const uint16_t seq = m_retransmitted_client_hello->first;
+
+      for(auto s = m_messages.begin(); s != m_messages.end();) {
+         if(s->first != static_cast<uint16_t>(seq + 1)) {
+            release_reassembly_bytes(s->second);
+            s = m_messages.erase(s);
+         } else {
+            ++s;
+         }
+      }
+
+      m_in_message_seq = seq;
+      m_recreating_hello_verify_request = true;
+      i = m_messages.insert_or_assign(seq, std::move(m_retransmitted_client_hello->second)).first;
+      m_retransmitted_client_hello.reset();
    }
 
    m_in_message_seq += 1;
@@ -815,7 +865,19 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::get_next_
 
    if(result.first == Handshake_Type::ClientHello) {
       m_awaiting_cookie_client_hello = false;
-      // An incomplete retransmission of the initial ClientHello is no longer needed
+
+      // RFC 6347 4.2.4 (as corrected by erratum 5186): "the server MUST use the
+      // message_seq in the ClientHello as the message_seq in the
+      // HelloVerifyRequest" and "the server MUST use the message_seq in the
+      // ClientHello as the message_seq in its initial ServerHello". Until a
+      // flight has been sent, the outgoing counter therefore follows the
+      // ClientHello just delivered.
+      if(m_flights.size() == 1 && m_flights.front().empty()) {
+         m_out_message_seq = static_cast<uint16_t>(m_in_message_seq - 1);
+      }
+
+      // The ClientHello we were waiting for arrived, so a buffered duplicate of
+      // an earlier one has nothing left to tell us.
       if(m_retransmitted_client_hello.has_value()) {
          release_reassembly_bytes(m_retransmitted_client_hello->second);
          m_retransmitted_client_hello.reset();
@@ -877,7 +939,24 @@ void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(const uint8_t fra
          // RFC 6347 4.2.3 permits overlapping retransmissions, but the
          // overlapping bytes must agree.
          if(m_message[off] != fragment[i]) {
-            throw Decoding_Error("Inconsistent overlapping DTLS handshake fragment");
+            /*
+            A ClientHello begins a handshake, so nothing already buffered in its
+            slot can belong to the same one. At epoch zero neither the buffered
+            bytes nor the ClientHello is authenticated, and throwing means the
+            *ClientHello* is what fails: one planted fragment would then sink
+            every later handshake attempt. Start the slot over from the
+            ClientHello instead, so a peer that retransmits can always make
+            progress. An authenticated peer contradicting itself is still an
+            error. A ClientHello whose header differs from the slot's replaces
+            it before this point, in charged_add_fragment.
+            */
+            if(!superseded_by_client_hello(epoch, msg_type)) {
+               throw Decoding_Error("Inconsistent overlapping DTLS handshake fragment");
+            }
+            m_bytes_received = 0;
+            std::fill(m_received_mask.begin(), m_received_mask.end(), 0);
+            add_fragment(fragment, fragment_length, fragment_offset, epoch, msg_type, msg_length);
+            return;
          }
       } else {
          m_message[off] = fragment[i];
@@ -951,10 +1030,14 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_under_epoch(const Handshake_Mes
       m_send_hs(epoch, Record_Type::ChangeCipherSpec, msg_bits);
       return {};  // not included in handshake hashes
    } else if(msg_type == Handshake_Type::HelloVerifyRequest) {
-      // RFC 6347 3.2.1 explicitly excludes HelloVerifyRequest from timeout
-      // retransmission. A repeated ClientHello recreates the response using
-      // the original message sequence number without retaining a flight.
-      const uint16_t msg_seq = m_recreating_hello_verify_request ? m_out_message_seq - 1 : m_out_message_seq++;
+      // RFC 6347 3.2.1: "Note that timeout and retransmission do not apply to
+      // the HelloVerifyRequest, because this would require creating state on
+      // the server." So it is not retained as a flight, and a repeated
+      // ClientHello simply produces it again. get_next_record seated the
+      // outgoing counter at the ClientHello being answered, so this carries
+      // that ClientHello's message_seq (RFC 6347 4.2.4, erratum 5186).
+      const uint16_t msg_seq = m_out_message_seq++;
+
       // A ClientHello carrying the cookie cannot have been sent yet, so
       // anything received so far is useless and must not stay allocated
       if(!m_recreating_hello_verify_request) {

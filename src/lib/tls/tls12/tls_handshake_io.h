@@ -259,7 +259,16 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
 
             bool complete() const;
 
+            // Whether a ClientHello fragment may replace what this slot holds:
+            // unauthenticated epoch-zero data of a message never completed.
+            bool superseded_by_client_hello(uint16_t epoch, Handshake_Type msg_type) const {
+               return msg_type == Handshake_Type::ClientHello && epoch == 0 && m_epoch == 0 && initialized() &&
+                      !complete();
+            }
+
             uint16_t epoch() const { return m_epoch; }
+
+            Handshake_Type msg_type() const { return m_msg_type; }
 
             // 0 until the first fragment has set the declared msg_length.
             size_t msg_length() const { return m_msg_length; }
@@ -320,6 +329,9 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
 
       std::optional<std::pair<uint16_t, Handshake_Reassembly>> m_retransmitted_client_hello;
       bool m_awaiting_cookie_client_hello = false;
+
+      // Set while answering a buffered duplicate ClientHello, so the reissued
+      // HelloVerifyRequest does not discard what the peer has sent since
       bool m_recreating_hello_verify_request = false;
       bool m_finished = false;
       bool m_retransmit_terminal_flight = false;

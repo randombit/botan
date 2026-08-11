@@ -580,6 +580,11 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
             pending_state.handshake_io().send(verify);
          }
 
+         // Reset the ClientHello state while keeping the Datagram_Handshake_IO
+         // object alive; it is needed to detect the cookie-bearing ClientHello
+         // expected at the next sequence number. A ClientHello that never
+         // validates cannot wedge the exchange: the IO seats its sequence
+         // numbers at whichever complete ClientHello it delivers next.
          pending_state.client_hello(nullptr);
          pending_state.set_expected_next(Handshake_Type::ClientHello);
 
