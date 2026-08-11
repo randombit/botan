@@ -750,6 +750,21 @@ class AutoSeeded_RNG_Tests final : public Test {
          rng.random_vec(16);  // generate and discard output
          result.test_is_true("AutoSeeded_RNG can be reseeded", rng.is_seeded());
 
+         Request_Counting_RNG counting_rng;
+         Botan::AutoSeeded_RNG counted_rng(counting_rng);
+         const size_t initial_reseed_count = counting_rng.randomize_count();
+
+         counted_rng.clear();
+         counted_rng.randomize(std::span<uint8_t>{});
+         result.test_is_false("Empty output does not seed AutoSeeded_RNG", counted_rng.is_seeded());
+         result.test_sz_eq(
+            "Empty output does not invoke underlying RNG", counting_rng.randomize_count(), initial_reseed_count);
+
+         counted_rng.random_vec(1);
+         result.test_is_true("Nonempty output reseeds AutoSeeded_RNG", counted_rng.is_seeded());
+         result.test_sz_eq(
+            "Nonempty output invokes underlying RNG", counting_rng.randomize_count(), initial_reseed_count + 1);
+
          for(size_t i = 0; i != 4096; ++i) {
             std::vector<uint8_t> buf(i);
             rng.randomize(buf.data(), buf.size());
