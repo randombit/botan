@@ -16,6 +16,8 @@
 namespace Botan::TLS {
 
 enum class Version_Code : uint16_t {
+   /// TLSv1.0 (no longer supported)
+   TLS_V10 = 0x0301,
    /// TLSv1.1 (no longer supported)
    TLS_V11 = 0x0302,
    /// TLSv1.2
