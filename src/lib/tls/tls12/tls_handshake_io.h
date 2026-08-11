@@ -139,7 +139,8 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
                             uint64_t initial_timeout_ms,
                             uint64_t max_timeout_ms,
                             std::optional<size_t> max_retransmissions,
-                            size_t max_handshake_msg_size);
+                            size_t max_handshake_msg_size,
+                            uint16_t initial_epoch = 0);
 
       Protocol_Version initial_record_version() const override;
 
@@ -202,6 +203,10 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
                                                size_t msg_length,
                                                uint16_t message_seq,
                                                bool retransmitted_flight);
+
+      // Drop buffered messages left over from an earlier handshake, identified
+      // by an epoch below the most recently delivered one.
+      void discard_stale_epoch_messages();
 
       void retransmit_flight(size_t flight);
       void retransmit_last_flight();
@@ -340,6 +345,14 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       // Set once m_in_message_seq wraps, after which all handshake input is
       // refused; see process_handshake_fragment.
       bool m_in_message_seq_wrapped = false;
+
+      // Epoch in force when this handshake began. Records from the previous one
+      // sit at or below it, and a Finished has to sit above it.
+      uint16_t m_initial_epoch;
+
+      // Epoch of the most recently delivered incoming handshake message. Used
+      // to reject records held over from a previous handshake.
+      uint16_t m_last_delivered_epoch = 0;
 
       writer_fn m_send_hs;
       steady_clock_fn m_steady_clock_ms;

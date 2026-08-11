@@ -149,6 +149,7 @@ struct DTLS_Policy_Options final {
       std::optional<size_t> max_retransmissions;
       std::optional<std::string> cipher;
       bool allow_epoch0_restart = true;
+      bool require_cookie_exchange = true;
       bool reuse_session_tickets = false;
       size_t initial_timeout_ms = 1;
       size_t maximum_timeout_ms = 8;
@@ -186,6 +187,8 @@ class DTLS_PSK_Policy final : public Botan::TLS::Policy {
 
       bool allow_dtls_epoch0_restart() const override { return m_opts.allow_epoch0_restart; }
 
+      bool dtls_server_require_cookie_exchange() const override { return m_opts.require_cookie_exchange; }
+
       bool allow_server_initiated_renegotiation() const override { return true; }
 
       bool allow_client_initiated_renegotiation() const override { return true; }
@@ -214,6 +217,14 @@ std::shared_ptr<DTLS_PSK_Policy> dtls_policy_with_max_retransmissions(size_t lim
 std::shared_ptr<DTLS_PSK_Policy> dtls_policy_without_epoch0_restart() {
    DTLS_Policy_Options opts;
    opts.allow_epoch0_restart = false;
+   return std::make_shared<DTLS_PSK_Policy>(std::move(opts));
+}
+
+// Without the cookie exchange the client's flight carries the same message
+// sequence numbers in the initial handshake as in a renegotiation.
+std::shared_ptr<DTLS_PSK_Policy> dtls_policy_without_cookie_exchange() {
+   DTLS_Policy_Options opts;
+   opts.require_cookie_exchange = false;
    return std::make_shared<DTLS_PSK_Policy>(std::move(opts));
 }
 
@@ -2208,6 +2219,144 @@ class DTLS_Reconnection_Test : public Test {
 };
 
 BOTAN_REGISTER_TEST("tls", "tls_dtls_reconnect", DTLS_Reconnection_Test);
+
+// End-to-end coverage for DTLS 1.2 renegotiation in both directions. RFC 6347
+// 4.2.2 restarts msg_seq at 0 for each handshake, so the message that opens a
+// renegotiation looks like a stray retransmit to a naive sequence check.
+//
+// BoGo does not exercise DTLS renegotiation at all (BoringSSL itself does not
+// support it), so this test is the only regression coverage.
+class DTLS_Renegotiation_Test : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+         results.push_back(run_one("client-initiated", false));
+         results.push_back(run_one("server-initiated", true));
+         return results;
+      }
+
+   private:
+      Test::Result run_one(const std::string& subtest, bool server_initiates) {
+         Test::Result result("DTLS renegotiation: " + subtest);
+
+         auto rng = Test::new_shared_rng(this->test_name() + "/" + subtest);
+         auto assoc = make_association(result, rng);
+
+         const auto sessions_established = [&](size_t n) {
+            return assoc->client_cb->sessions_established() == n && assoc->server_cb->sessions_established() == n &&
+                   assoc->both_active();
+         };
+
+         result.test_is_true("initial DTLS handshake completed",
+                             assoc->pump_until([&] { return sessions_established(1); }));
+
+         // App data must flow before and after the renegotiation, under each
+         // set of keys in turn.
+         const std::vector<uint8_t> ping(8, 0xAA);
+         const std::vector<uint8_t> pong(8, 0x55);
+
+         const auto exchange_app_data = [&](const std::string& label) {
+            assoc->server_recv.clear();
+            assoc->client_recv.clear();
+            assoc->client->send(ping);
+            assoc->server->send(pong);
+            result.test_is_true(
+               label, assoc->pump_until([&] { return assoc->server_recv == ping && assoc->client_recv == pong; }));
+         };
+
+         exchange_app_data("app data exchanged before renegotiation");
+
+         // If the receiver drops the initiator because msg_seq is below the
+         // active handshake's, this pump exhausts its rounds with one session.
+         if(server_initiates) {
+            assoc->server->renegotiate();
+         } else {
+            assoc->client->renegotiate();
+         }
+         result.test_is_true("renegotiation completed", assoc->pump_until([&] { return sessions_established(2); }));
+
+         exchange_app_data("app data exchanged after renegotiation");
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls_dtls_renegotiate", DTLS_Renegotiation_Test);
+
+// A delayed datagram carrying the previous handshake's client Finished must
+// not stall a renegotiation, even on a server whose policy permits epoch-zero
+// restarts. The reassembly floor that rejects it is keyed on a restart
+// actually occurring; policy-keyed, the floor would be zero here and the old
+// Finished would occupy the slot the renegotiation's real Finished needs.
+class DTLS_Renegotiation_Delayed_Finished_Test : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("DTLS renegotiation with delayed Finished from previous handshake");
+
+         auto rng = Test::new_shared_rng(this->test_name());
+
+         // Without the cookie exchange, both handshakes number the client's
+         // messages identically: ClientHello 0, ClientKeyExchange 1,
+         // Finished 2. The delayed Finished then lands exactly on the slot
+         // the renegotiation's own Finished needs.
+         auto assoc = make_association(result, rng, dtls_policy_without_cookie_exchange());
+
+         deliver(result, "client hello", assoc->c2s, *assoc->server);
+         deliver(result, "server handshake flight", assoc->s2c, *assoc->client);
+         deliver(result, "client final flight", assoc->c2s, *assoc->server);
+
+         if(!result.test_is_true("server is active", assoc->server->is_active())) {
+            return {result};
+         }
+
+         // Withhold the server's final flight so the client retransmits its
+         // own final flight (ClientKeyExchange, CCS, Finished) under fresh
+         // record sequence numbers. Held aside, the retransmission is a
+         // genuinely delayed datagram the replay window has never seen.
+         const auto timeout = assoc->client->next_retransmission_timeout();
+         if(!result.test_is_true("client retransmission timer is armed", timeout.has_value())) {
+            return {result};
+         }
+         assoc->client_cb->advance_clock_ms(static_cast<uint64_t>(timeout->count()));
+         result.test_is_true("client retransmitted its final flight", assoc->client->timeout_check());
+
+         std::vector<uint8_t> delayed_flight;
+         std::swap(delayed_flight, assoc->c2s);
+         if(!result.test_is_true("delayed flight captured", !delayed_flight.empty())) {
+            return {result};
+         }
+
+         deliver(result, "server final flight", assoc->s2c, *assoc->client);
+         result.test_is_true("initial handshake completed", assoc->both_active());
+
+         // Full renegotiation, so that the client's flight repeats the
+         // initial handshake's numbering; an abbreviated one has no
+         // ClientKeyExchange and numbers its Finished differently. The
+         // delayed flight has to arrive after the server has created its
+         // pending handshake, which is what sets the reassembly floor.
+         assoc->client->renegotiate(true /* force full renegotiation */);
+         deliver(result, "renegotiation client hello", assoc->c2s, *assoc->server);
+
+         deliver_copy(result, "delayed flight mid-renegotiation", delayed_flight, *assoc->server);
+
+         const auto sessions_established = [&](size_t n) {
+            return assoc->client_cb->sessions_established() == n && assoc->server_cb->sessions_established() == n &&
+                   assoc->both_active();
+         };
+         result.test_is_true("renegotiation completed", assoc->pump_until([&] { return sessions_established(2); }));
+         result.test_is_true("renegotiation was a full handshake",
+                             assoc->server_cb->session_was_resumption() == std::optional<bool>(false));
+
+         const std::vector<uint8_t> ping(8, 0xAA);
+         assoc->client->send(ping);
+         result.test_is_true("app data flows after renegotiation",
+                             assoc->pump_until([&] { return assoc->server_recv == ping; }));
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls_dtls_renegotiate_delayed_finished", DTLS_Renegotiation_Delayed_Finished_Test);
 
 // One unauthenticated epoch-0 record, from anyone able to target the
 // connection's 5-tuple, must not be able to end an established association.

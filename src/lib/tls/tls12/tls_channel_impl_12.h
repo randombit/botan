@@ -158,7 +158,7 @@ class Channel_Impl_12 : public Channel_Impl {
                                          const std::vector<uint8_t>& contents,
                                          bool epoch0_restart) = 0;
 
-      Handshake_State& create_handshake_state(Protocol_Version version);
+      Handshake_State& create_handshake_state(Protocol_Version version, bool epoch0_restart = false);
       virtual std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) = 0;
 
       void inspect_handshake_message(const Handshake_Message& msg);

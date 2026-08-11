@@ -237,7 +237,7 @@ std::optional<std::string> Channel_Impl_12::external_psk_identity() const {
    return std::nullopt;
 }
 
-Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version version) {
+Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version version, bool epoch0_restart) {
    if(pending_state() != nullptr) {
       throw Internal_Error("create_handshake_state called during handshake");
    }
@@ -267,6 +267,16 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
    m_epochs_before_latest_renegotiation = Epochs_Before_Latest_Renegotiation{sequence_numbers().current_read_epoch(),
                                                                              sequence_numbers().current_write_epoch()};
 
+   // Floor for the pending handshake's reassembly: a delayed record from the
+   // handshake arrives under a lower epoch and must be rejected. It would
+   // otherwise take the sequence slot the real message needs.
+   //
+   // Zero on an epoch-zero restart, because there the peer legitimately
+   // begins again at epoch zero and the floor would reject it. This is keyed
+   // on the restart actually occurring, not on the policy allowing it: an
+   // ordinary renegotiation needs the floor either way.
+   const uint16_t initial_epoch = epoch0_restart ? 0 : m_epochs_before_latest_renegotiation->read_epoch;
+
    using namespace std::placeholders;
 
    std::unique_ptr<Handshake_IO> io;
@@ -287,7 +297,8 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
                                                    initial_timeout_ms,
                                                    max_timeout_ms,
                                                    max_retransmissions,
-                                                   policy().maximum_handshake_message_size());
+                                                   policy().maximum_handshake_message_size(),
+                                                   initial_epoch);
    } else {
       auto send_record_f = [this](Record_Type rec_type, const std::vector<uint8_t>& record) {
          send_record(rec_type, record);
@@ -724,16 +735,16 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
                if(m_active_state.has_value() && !starts_new_handshake) {
                   process_retransmitted_record();
                } else {
-                  create_handshake_state(record_version);
+                  create_handshake_state(record_version, epoch0_restart);
                }
             } else if(current_epoch > 0 && epoch == current_epoch - 1) {
                process_retransmitted_record();
             }
          } else {
-            create_handshake_state(record_version);
+            create_handshake_state(record_version, epoch0_restart);
          }
       } else {
-         create_handshake_state(record_version);
+         create_handshake_state(record_version, epoch0_restart);
       }
    }
 
