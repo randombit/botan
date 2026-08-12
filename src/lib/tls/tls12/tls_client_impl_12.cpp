@@ -763,8 +763,8 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
 
       // Give the application a chance for a final veto before fully
       // establishing the connection.
-      callbacks().tls_session_established([&, this] {
-         Session_Summary summary(session_info, state.is_a_resumption(), external_psk_identity());
+      callbacks().tls_session_established([&] {
+         Session_Summary summary(session_info, state.is_a_resumption(), state.psk_identity());
          summary.set_session_id(state.server_hello()->session_id());
          if(const auto* nst = state.new_session_ticket()) {
             summary.set_session_ticket(nst->ticket());
