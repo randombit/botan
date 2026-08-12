@@ -1024,7 +1024,9 @@ def cli_cert_issuance_tests(tmp_dir, algos=None):
 def cli_cert_issuance_alternative_algos_tests(tmp_dir):
     for i, algo in enumerate([[("Dilithium", "Dilithium-8x7-AES-r3"), ("Dilithium", "Dilithium-8x7-AES-r3"), ("Dilithium", "Dilithium-8x7-AES-r3")],
                               [("ECDSA",     "secp256r1"),            ("ECDSA",     "secp384r1"),            ("ECDSA",     "secp256r1")],
-                              [("Dilithium", "Dilithium-6x5-r3"),     ("ECDSA",     "secp256r1"),            ("RSA",       "2048")]]):
+                              [("Dilithium", "Dilithium-6x5-r3"),     ("ECDSA",     "secp256r1"),            ("RSA",       "2048")],
+                              [("ML-DSA-Composite", "MLDSA65-ECDSA-P384-SHA512"), ("ML-DSA-Composite", "MLDSA44-ECDSA-P256-SHA256"), ("ML-DSA-Composite", "MLDSA44-Ed25519-SHA512")],
+                              [("ML-DSA-Composite", "MLDSA44-RSA2048-PSS-SHA256"), ("ECDSA", "secp256r1"), ("RSA", "2048")]]):
         sub_tmp_dir = os.path.join(tmp_dir, str(i))
         os.mkdir(sub_tmp_dir)
         cli_cert_issuance_tests(sub_tmp_dir, algo)
@@ -1790,7 +1792,7 @@ def cli_speed_pk_fast_tests(_tmp_dir):
 def cli_speed_pk_slow_tests(_tmp_dir):
     msec = 1
 
-    pk_algos = ["RSA", "RSA_keygen", "XMSS", "SLH-DSA"]
+    pk_algos = ["RSA", "RSA_keygen", "XMSS", "SLH-DSA", "MLDSA-Composite"]
 
     output = test_cli("speed", ["--msec=%d" % (msec)] + pk_algos, None).split('\n')
 
