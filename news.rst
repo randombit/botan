@@ -12,10 +12,14 @@ Version 3.13.0, Not Yet Released
 * The default policy for TLS now no longer lists finite field Diffie-Hellman.
   If required for compatibility it must be enabled by the application. (GH #5782)
 
-* Fix DTLS 1.2 handshake retransmission edge cases, including pacing of
-  repeated timeout checks, replay of final flights after local activation,
-  partial server-flight delivery, and delayed server-side flight handling.
-  (GH #5696 #2310 #2498 #4022 #4036)
+* DTLS 1.2 servers now must either set a DTLS cookie secret and provide the peer
+  network identity, or explicitly opt out of the cookie exchange by overriding
+  ``dtls_server_require_cookie_exchange`` to return false. (GH #5792)
+
+* Fix DTLS 1.2 handshake edge cases, including pacing of repeated timeout checks,
+  replay of final flights after local activation, partial server-flight delivery,
+  and delayed server-side flight handling. (GH #2310 #2498 #4022 #4036 #5696 #5790
+  #5791 #5792 #5793 #5800 #5801 #5802 #5803 #5811 #5829 #5834 #5835 #5836)
 
 * Add support for SPAKE2+ from RFC 9383 (GH #5711)
 
@@ -123,7 +127,7 @@ Version 3.13.0, Not Yet Released
 
 * Fix several issues in the compression wrappers (GH #5733)
 
-* Fix several errors in the Python binding (GH #5722)
+* Fix several errors in the Python binding (GH #5722 #5796 #5807 #5814)
 
 * Add getters for the RFC 3779 extensions to the FFI interface and Python binding
   (GH #5491)
