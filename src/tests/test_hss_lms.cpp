@@ -20,6 +20,10 @@
    #include <botan/internal/loadstor.h>
    #include <limits>
 
+   #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+      #include <botan/x509cert.h>
+   #endif
+
    #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
       #include <sys/wait.h>
       #include <unistd.h>
@@ -525,6 +529,23 @@ class HSS_LMS_Missing_API_Test final : public Test {
       }
 };
 
+   #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+/**
+ * @brief Test with the example certificate from RFC 9802 Appendix A.
+ */
+class HSS_LMS_X509_Test final : public Test {
+      std::vector<Test::Result> run() final {
+         Test::Result result("HSS-LMS X.509");
+
+         const Botan::X509_Certificate cert(Test::data_file("x509/hss-lms/hss-lms-rfc-9802-cert.pem"));
+         auto ver_res = cert.verify_signature(*cert.subject_public_key());
+         result.test_is_true("signature of certificate verifies", ver_res.first == Botan::Certificate_Status_Code::OK);
+
+         return {result};
+      }
+};
+   #endif
+
 BOTAN_REGISTER_TEST_FN("pubkey", "hss_lms_params_parsing", test_hss_lms_params_parsing);
 BOTAN_REGISTER_TEST("pubkey", "hss_lms_sign", HSS_LMS_Signature_Generation_Test);
 BOTAN_REGISTER_TEST("pubkey", "hss_lms_verify", HSS_LMS_Signature_Verify_Tests);
@@ -533,6 +554,10 @@ BOTAN_REGISTER_TEST("pubkey", "hss_lms_keygen", HSS_LMS_Key_Generation_Test);
 BOTAN_REGISTER_TEST("pubkey", "hss_lms_negative", HSS_LMS_Negative_Tests);
 BOTAN_REGISTER_TEST("pubkey", "hss_lms_state", HSS_LMS_Statefulness_Test);
 BOTAN_REGISTER_TEST("pubkey", "hss_lms_api", HSS_LMS_Missing_API_Test);
+
+   #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+BOTAN_REGISTER_TEST("pubkey", "hss_lms_x509", HSS_LMS_X509_Test);
+   #endif
 
 }  // namespace
 
