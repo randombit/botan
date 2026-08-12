@@ -113,8 +113,9 @@ Version 3.13.0, Not Yet Released
 * Add support for the Brainpool ECDH groups in TLS 1.3 as specified in RFC 8734
   (GH #5691)
 
-* Add ``TLS::Policy::minimum_record_size``, which allows padding TLS 1.3 records
-  out to a minimum plaintext size (GH #5752)
+* Add ``TLS::Policy::record_padding_bytes``, which allows padding TLS 1.3
+  records, for example out to a minimum plaintext size or to a multiple of
+  some block size (GH #5752)
 
 * TLS 1.3 handshake hardening and various minor TLS fixes (GH #5664 #5721 #5767)
 

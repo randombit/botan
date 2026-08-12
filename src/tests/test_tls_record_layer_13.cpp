@@ -21,6 +21,8 @@
    #include <botan/internal/tls_reader.h>
    #include <botan/internal/tls_record_layer_13.h>
    #include <array>
+   #include <functional>
+   #include <memory>
 
 namespace Botan_Tests {
 
@@ -32,19 +34,26 @@ using Records = std::vector<TLS::Record>;
 
 class Test_Policy : public Botan::TLS::Policy {
    public:
-      explicit Test_Policy(std::optional<uint16_t> minimum_record_size = std::nullopt) :
-            m_minimum_record_size(minimum_record_size) {}
+      explicit Test_Policy(std::function<size_t(size_t)> record_padding = {}) :
+            m_record_padding(std::move(record_padding)) {}
 
-      std::optional<uint16_t> minimum_record_size() const override { return m_minimum_record_size; }
+      size_t record_padding_bytes(size_t plaintext_bytes) const override {
+         return m_record_padding ? m_record_padding(plaintext_bytes) : 0;
+      }
 
    private:
-      std::optional<uint16_t> m_minimum_record_size;
+      std::function<size_t(size_t)> m_record_padding;
 };
 
+std::function<size_t(size_t)> pad_to_minimum_size(size_t minimum_record_size) {
+   return [=](size_t plaintext_bytes) {
+      return (plaintext_bytes < minimum_record_size) ? minimum_record_size - plaintext_bytes : 0;
+   };
+}
+
 TLS::Record_Layer record_layer_client(const bool skip_client_hello = false,
-                                      std::optional<uint16_t> minimum_record_size = {}) {
-   auto policy = Test_Policy(minimum_record_size);
-   auto rl = TLS::Record_Layer(TLS::Connection_Side::Client, policy);
+                                      std::function<size_t(size_t)> record_padding = {}) {
+   auto rl = TLS::Record_Layer(TLS::Connection_Side::Client, std::make_shared<Test_Policy>(std::move(record_padding)));
 
    // this is relevant for tests that rely on the legacy version in the record
    if(skip_client_hello) {
@@ -54,10 +63,8 @@ TLS::Record_Layer record_layer_client(const bool skip_client_hello = false,
    return rl;
 }
 
-TLS::Record_Layer record_layer_server(const bool skip_client_hello = false,
-                                      std::optional<uint16_t> minimum_record_size = {}) {
-   auto policy = Test_Policy(minimum_record_size);
-   auto rl = TLS::Record_Layer(TLS::Connection_Side::Server, policy);
+TLS::Record_Layer record_layer_server(const bool skip_client_hello = false) {
+   auto rl = TLS::Record_Layer(TLS::Connection_Side::Server, std::make_shared<Test_Policy>());
 
    // this is relevant for tests that rely on the legacy version in the record
    if(skip_client_hello) {
@@ -791,7 +798,7 @@ std::vector<Test::Result> write_encrypted_records() {
       CHECK("write a record with padding",
             [&](Test::Result& result) {
                std::vector<uint8_t> data(5);
-               auto rl = record_layer_client(true, 128);
+               auto rl = record_layer_client(true, pad_to_minimum_size(128));
 
                auto ct = rl.prepare_records(TLS::Record_Type::Handshake, data, cs.get());
 
@@ -1050,42 +1057,38 @@ std::vector<Test::Result> record_size_limits() {
                                   [&] { rls.next_record(css.get()); });
             }),
 
-      CHECK("record size limits incompatible with the padding size are rejected",
-            [&](Test::Result& result) {
-               constexpr uint16_t minimum_record_size = 1024;
-               auto rl = record_layer_client(true, minimum_record_size);
-
-               const uint16_t valid_record_size_limit = minimum_record_size;
-               const uint16_t invalid_record_size_limit = minimum_record_size - 1;
-
-               result.test_no_throw("padding size is compatible with record size limit", [&] {
-                  rl.set_record_size_limits(valid_record_size_limit, valid_record_size_limit);
-               });
-
-               result.test_throws(
-                  "padding size exceeds record size limit",
-                  "Configured minimum record size is not compatible with the negotiated outgoing record size limit",
-                  [&] { rl.set_record_size_limits(invalid_record_size_limit, invalid_record_size_limit); });
-
-               result.test_no_throw("incoming record size limit is not relevant", [&] {
-                  rl.set_record_size_limits(valid_record_size_limit, invalid_record_size_limit);
-               });
-
-               const uint16_t content_type_byte = 1;
-               const uint16_t absolute_plaintext_size_limit = Botan::TLS::MAX_PLAINTEXT_SIZE + content_type_byte;
-               const uint16_t invalid_plaintext_size_limit = absolute_plaintext_size_limit + 1;
-
-               result.test_no_throw("padding size exceeds record size limit",
-                                    [&] { record_layer_client(true, absolute_plaintext_size_limit); });
-               result.test_throws("padding size exceeds record size limit",
-                                  "Configured minimum record size is larger than the specified plaintext size limit",
-                                  [&] { record_layer_client(true, invalid_plaintext_size_limit); });
-            }),
-
-      CHECK("preparing a record where minimum_record_size == maximum_size_limit",
+      CHECK("padding requests are truncated to the negotiated record size limit",
             [&](Test::Result& result) {
                constexpr uint16_t limit = 1024;
-               auto rl = record_layer_client(true, /* minimum_record_size = */ limit);
+               auto rl = record_layer_client(true, pad_to_minimum_size(4096));
+               rl.set_record_size_limits(/* outgoing_limit = */ limit,
+                                         /* incoming_limit = */ limit);
+
+               auto cs = rfc8448_rtt1_handshake_traffic();
+               const std::array<uint8_t, 5> data = {0x01, 0x02, 0x03, 0x04, 0x05};
+               const auto ct = rl.prepare_records(TLS::Record_Type::ApplicationData, data, cs.get());
+
+               const auto expected_length = cs->encrypt_output_length(limit) + Botan::TLS::TLS_HEADER_SIZE;
+               result.test_sz_eq("record was padded to the limit only", ct.size(), expected_length);
+            }),
+
+      CHECK("padding requests are truncated to the protocol's plaintext size limit",
+            [&](Test::Result& result) {
+               auto rl = record_layer_client(true, [](size_t) -> size_t { return 100000; });
+
+               auto cs = rfc8448_rtt1_handshake_traffic();
+               const std::array<uint8_t, 5> data = {0x01, 0x02, 0x03, 0x04, 0x05};
+               const auto ct = rl.prepare_records(TLS::Record_Type::ApplicationData, data, cs.get());
+
+               const auto expected_length =
+                  cs->encrypt_output_length(Botan::TLS::MAX_PLAINTEXT_SIZE + 1) + Botan::TLS::TLS_HEADER_SIZE;
+               result.test_sz_eq("record was padded to the protocol limit only", ct.size(), expected_length);
+            }),
+
+      CHECK("preparing a record where the padded size == maximum_size_limit",
+            [&](Test::Result& result) {
+               constexpr uint16_t limit = 1024;
+               auto rl = record_layer_client(true, pad_to_minimum_size(limit));
                rl.set_record_size_limits(/* outgoing_limit = */ limit,
                                          /* incoming_limit = */ limit);
 
@@ -1095,6 +1098,37 @@ std::vector<Test::Result> record_size_limits() {
 
                const auto expected_length = cs->encrypt_output_length(limit) + Botan::TLS::TLS_HEADER_SIZE;
                result.test_sz_eq("encryption result has the correct length", ct.size(), expected_length);
+            }),
+
+      CHECK("pad records to a block boundary",
+            [&](Test::Result& result) {
+               auto rl = record_layer_client(true, [](size_t ptb) { return (32 - ptb % 32) % 32; });
+               auto cs = rfc8448_rtt1_handshake_traffic();
+
+               for(const size_t data_size : {0, 5, 31, 32, 100}) {
+                  const auto ct =
+                     rl.prepare_records(TLS::Record_Type::ApplicationData, std::vector<uint8_t>(data_size), cs.get());
+
+                  // plaintext is data plus one content type byte, rounded up
+                  // to the next multiple of 32
+                  const size_t padded_pt_size = (data_size + 1 + 31) / 32 * 32;
+                  const auto expected_length = cs->encrypt_output_length(padded_pt_size) + Botan::TLS::TLS_HEADER_SIZE;
+                  result.test_sz_eq("record is padded to a 32-byte boundary", ct.size(), expected_length);
+               }
+            }),
+
+      CHECK("only the final record of a multi-record write is padded",
+            [&](Test::Result& result) {
+               auto rl = record_layer_client(true, pad_to_minimum_size(1024));
+               auto cs = rfc8448_rtt1_handshake_traffic();
+
+               const std::vector<uint8_t> data(Botan::TLS::MAX_PLAINTEXT_SIZE + 10);
+               const auto ct = rl.prepare_records(TLS::Record_Type::ApplicationData, data, cs.get());
+
+               const auto expected_length = 2 * Botan::TLS::TLS_HEADER_SIZE +
+                                            cs->encrypt_output_length(Botan::TLS::MAX_PLAINTEXT_SIZE + 1) +
+                                            cs->encrypt_output_length(1024);
+               result.test_sz_eq("first record is full, trailing record is padded", ct.size(), expected_length);
             }),
    };
 }
