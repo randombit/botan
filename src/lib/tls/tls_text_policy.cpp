@@ -118,10 +118,11 @@ std::optional<uint16_t> Text_Policy::record_size_limit() const {
    return (limit > 0) ? std::make_optional(static_cast<uint16_t>(limit)) : std::nullopt;
 }
 
-std::optional<uint16_t> Text_Policy::minimum_record_size() const {
-   const auto limit = get_len("minimum_record_size", 0);
-   BOTAN_ARG_CHECK(limit <= record_size_limit().value_or(16385), "TLS 1.3 minimum record size too large");
-   return (limit > 0) ? std::make_optional(static_cast<uint16_t>(limit)) : std::nullopt;
+size_t Text_Policy::record_padding_bytes(size_t plaintext_bytes) const {
+   // Text policies can express the simplest padding scheme only: pad
+   // records to a fixed minimum size.
+   const auto minimum_record_size = get_len("minimum_record_size", 0);
+   return (plaintext_bytes < minimum_record_size) ? minimum_record_size - plaintext_bytes : 0;
 }
 
 bool Text_Policy::support_cert_status_message() const {

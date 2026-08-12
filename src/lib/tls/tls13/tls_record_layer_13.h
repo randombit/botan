@@ -11,6 +11,7 @@
 
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>
+#include <memory>
 #include <optional>
 #include <span>
 #include <variant>
@@ -46,7 +47,7 @@ class Policy;
  */
 class BOTAN_TEST_API Record_Layer {
    public:
-      Record_Layer(Connection_Side side, const Policy& policy);
+      Record_Layer(Connection_Side side, std::shared_ptr<const Policy> policy);
 
       template <typename ResT>
       using ReadResult = std::variant<BytesNeeded, ResT>;
@@ -109,13 +110,13 @@ class BOTAN_TEST_API Record_Layer {
       size_t m_read_offset = 0;
       Connection_Side m_side;
 
+      // Queried for Record Padding as defined in RFC 9846 5.4
+      std::shared_ptr<const Policy> m_policy;
+
       // Those are either the limits set by the TLS 1.3 specification (RFC 8446),
       // or the ones negotiated via the "record_size_limit" extension (RFC 8449).
       uint16_t m_outgoing_record_size_limit;
       uint16_t m_incoming_record_size_limit;
-
-      // For Record Padding as defined in RFC 9846 5.4
-      uint16_t m_outgoing_minimum_record_size;
 
       // Those status flags are required for version validation where the initial
       // records for sending and receiving is handled differently for backward

@@ -423,8 +423,9 @@ std::optional<uint16_t> Policy::record_size_limit() const {
    return std::nullopt;
 }
 
-std::optional<uint16_t> Policy::minimum_record_size() const {
-   return std::nullopt;
+size_t Policy::record_padding_bytes(size_t plaintext_bytes) const {
+   BOTAN_UNUSED(plaintext_bytes);
+   return 0;
 }
 
 bool Policy::support_cert_status_message() const {
@@ -787,9 +788,6 @@ void Policy::print(std::ostream& o) const {
    print_bool(o, "hash_hello_random", hash_hello_random());
    if(record_size_limit().has_value()) {
       o << "record_size_limit = " << record_size_limit().value() << '\n';
-   }
-   if(minimum_record_size().has_value()) {
-      o << "minimum_record_size = " << minimum_record_size().value() << '\n';
    }
    o << "maximum_session_tickets_per_client_hello = " << maximum_session_tickets_per_client_hello() << '\n';
    o << "session_ticket_lifetime = " << session_ticket_lifetime().count() << '\n';
