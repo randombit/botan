@@ -30,6 +30,7 @@ class BOTAN_TEST_API CPUFeature final {
          SM4 = (1U << 23),
 
          SIMD_4X32 = NEON,
+         SIMD_2X64 = NEON,
          HW_AES = AES,
          HW_CLMUL = PMULL,
       };
