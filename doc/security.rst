@@ -18,6 +18,102 @@ it is within the general threat model that the library operates under.
 2026
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* 2026-08-12: Blind SSRF due to OCSP redirect following
+
+  When making an OCSP request, the HTTP client was configured to allow a single
+  HTTP redirect from the responder. This allows a network attacker or malicious OCSP
+  responder to cause the application to redirect the request to an internal service.
+
+  No cookies or authorization credentials are forwarded to the redirected URL, and the
+  response from the internal service is not available to the attacker. Additionally, a
+  bug in the HTTP handler's redirect handling converted the redirected POST into a
+  bodyless GET. So the impact is primarily as a blind SSRF, which might affect
+  internal services with non-idempotent GET handlers.
+
+  Affected Versions: Introduced before 2.0.0, fixed in 3.13.0
+
+  Credit: Filipe Casal of Trail of Bits in collaboration with OpenAI
+
+* 2026-08-12: AutoSeeded_RNG can become reinitialized from predictable data after clearing state
+
+  An application which first calls ``AutoSeeded_RNG::clear()``, followed by a call to
+  ``randomize`` writing to an empty output buffer, causes the ``AutoSeeded_RNG`` to mark
+  itself as reseeded without consulting the application-specified underlying RNG or
+  entropy source. In contrast if the first draw from the RNG object is to a non-empty
+  buffer, the reseeding proceeds from the application-specified sources as expected.
+
+  On platforms and build configurations where a system random number generator is
+  available (``BOTAN_HAS_SYSTEM_RNG``) this internal reseeding is performed using
+  sufficient output drawn from the system RNG. However on systems without a system
+  provided random number generator the only input is a clock value and the process
+  ID. A subsequent non-empty request skips the configured entropy provider and can
+  produce output derived from predictable state.
+
+  Affected Versions: Introduced in 3.7.0, fixed in 3.13.0
+
+  Credit: Filipe Casal of Trail of Bits in collaboration with OpenAI
+
+* 2026-08-12: Scrypt heap overflow on 32-bit systems
+
+  An unchecked multiplication in Scrypt led to an integer overflow resulting in an
+  allocated buffer being shorter than expected. Only 32-bit platforms are affected by
+  this issue. This bug affects any system which uses Scrypt and which might accept
+  arbitrary parameters from a hostile source. Notably, decrypting a malicious private
+  key could be used as a vector. When exploited, the bug results in approximately 4
+  gigabytes of Scrypt output being written past the end of the allocated buffer. This
+  immediately leads to a crash and denial of service. Achieving arbitrary code
+  execution seems challenging, but cannot be ruled out.
+
+  Affected Versions: Introduced in 2.7.0, fixed in 3.13.0
+
+  Credit: The diff/ambidiff security research effort (afldl)
+
+* 2026-08-22 (CVE-2026-48057): Bypass of DN nameConstraint enforcement
+
+  The decoding of X509 distinguished names lost some relevant structure, which could
+  allow bypassing name constraint enforcement for DNs.
+
+  Affected Versions: Introduced before 2.0.0, fixed in 3.13.0
+
+  Credit: Haruki Oyama
+
+* 2026-08-22: Integer Overflow in FFI Block Size Reporting
+
+  The FFI interface ``botan_block_cipher_block_size`` reported the block size of a
+  cipher using ``int`` however this value can overflow when using the variable length
+  block cipher Lion. An application which accepts arbitrary algorithm specifiers from
+  untrusted parties and attempted to use the FFI ECB block cipher interface using them
+  would be exposed to possible memory corruption.
+
+  Affected Versions: Introduced in 2.1.0, fixed in 3.13.0
+
+  Credit: Filipe Casal of Trail of Bits in collaboration with OpenAI
+
+* 2026-08-22: Python bcrypt API truncates passwords containing NUL characters
+
+  The Python binding did not consistently detect the existence of a NUL (``U+0000``)
+  character in a Python string when converting it to a ``const char*`` before passing
+  it to C APIs which expect to receive a NUL terminated C-style string. In particular
+  this affected the Python functions ``bcrypt`` and ``check_bcrypt``. This makes it
+  possible to bypass application-specified password policies by using a weaker
+  equivalent password.
+
+  Affected Versions: Introduced before 2.0.0, fixed in 3.13.0
+
+  Credit: Filipe Casal of Trail of Bits in collaboration with OpenAI
+
+* 2026-08-22: The ``oscp_check`` cli utility accepted unauthenticated responses
+
+  The command line interface subcommand ``botan ocsp_check`` would request an OCSP
+  response from the URL specified in the certificate's AIA extension, without
+  verifying the response's signature or authorizing the signer. A malicious responder
+  or network attacker can therefore return a matching, timely GOOD response with
+  an invalid signature. Only the command line interface is affected by this issue.
+
+  Affected Versions: Introduced before 2.0.0, fixed in 3.13.0
+
+  Credit: Filipe Casal of Trail of Bits in collaboration with OpenAI
+
 * 2026-05-06 (CVE-2026-44378): BER decoding denial of service
 
   Certain patterns of indefinite length encodings in BER data could cause
