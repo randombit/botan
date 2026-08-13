@@ -11,6 +11,10 @@
 #include <botan/hash.h>
 #include <algorithm>
 
+#if defined(BOTAN_HAS_HASH_ENGINE_SHA2_32)
+   #include <botan/internal/hash_engine_sha2_32.h>
+#endif
+
 #if defined(BOTAN_HAS_THREAD_UTILS)
    #include <botan/internal/rounding.h>
    #include <botan/internal/thread_pool.h>
@@ -57,7 +61,11 @@ class Base_Hash_Engine final : public Hash_Engine {
 std::unique_ptr<Hash_Engine> make_base_engine(std::string_view hash_fn,
                                               std::span<const uint8_t> common_prefix,
                                               std::string_view provider) {
-   // SIMD specific dispatch added here later
+#if defined(BOTAN_HAS_HASH_ENGINE_SHA2_32)
+   if(auto engine = create_sha2_32_mb_engine(hash_fn, common_prefix, provider)) {
+      return engine;
+   }
+#endif
 
    if(provider.empty() || provider == "base") {
       if(auto hash = HashFunction::create(hash_fn)) {
@@ -90,6 +98,8 @@ class Threaded_Hash_Engine final : public Hash_Engine {
 
       size_t parallelism() const override { return std::max<size_t>(max_threads(), 1) * m_engines[0]->parallelism(); }
 
+      size_t uncached_prefix_bytes() const override { return m_engines[0]->uncached_prefix_bytes(); }
+
       void batch_hash(std::span<std::span<uint8_t>> outputs,
                       std::span<std::span<const uint8_t>> inputs1,
                       std::span<std::span<const uint8_t>> inputs2) override {
@@ -103,7 +113,7 @@ class Threaded_Hash_Engine final : public Hash_Engine {
          // Both inputs and outputs count towards the work estimate; for
          // XOFs with long outputs squeezing dominates. The +64 approximates
          // padding and finalization overhead.
-         const size_t per_hash_bytes = common_prefix().size() + inputs1[0].size() +
+         const size_t per_hash_bytes = m_engines[0]->uncached_prefix_bytes() + inputs1[0].size() +
                                        (inputs2.empty() ? 0 : inputs2[0].size()) + output_length() + 64;
 
          // Chunk work to not spread too thinly since just queuing the work
@@ -118,7 +128,10 @@ class Threaded_Hash_Engine final : public Hash_Engine {
             return;
          }
 
-         const size_t threads = std::min({max_threads(), count, by_bytes});
+         // A SIMD engine hashes a group of lanes at once, so there is no
+         // point in more threads than groups
+         const size_t lanes = m_engines[0]->parallelism();
+         const size_t threads = std::min({max_threads(), (count + lanes - 1) / lanes, by_bytes});
 
          if(threads <= 1) {
             m_engines[0]->batch_hash(outputs, inputs1, inputs2);
