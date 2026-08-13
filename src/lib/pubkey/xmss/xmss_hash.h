@@ -9,7 +9,9 @@
 #define BOTAN_XMSS_HASH_H_
 
 #include <botan/hash.h>
+#include <botan/internal/hash_engine.h>
 
+#include <algorithm>
 #include <span>
 
 namespace Botan {
@@ -144,11 +146,83 @@ class XMSS_Hash final {
        **/
       secure_vector<uint8_t> h_msg_final();
 
+      /**
+       * Batched variant of prf with a shared key: outputs[i] = prf(key, data[i])
+       **/
+      void prf_batch(std::span<std::span<uint8_t>> outputs,
+                     std::span<const uint8_t> key,
+                     std::span<std::span<const uint8_t>> data) {
+         keyed_engine(0x03, key, m_prf_engine).batch_hash(outputs, data);
+      }
+
+      /**
+       * Batched variant of prf_keygen with a shared key: outputs[i] = prf_keygen(key, data[i])
+       **/
+      void prf_keygen_batch(std::span<std::span<uint8_t>> outputs,
+                            std::span<const uint8_t> key,
+                            std::span<std::span<const uint8_t>> data) {
+         keyed_engine(0x04, key, m_prf_keygen_engine).batch_hash(outputs, data);
+      }
+
+      /**
+       * Batched variant of f: outputs[i] = f(keys[i], data[i])
+       **/
+      void f_batch(std::span<std::span<uint8_t>> outputs,
+                   std::span<std::span<const uint8_t>> keys,
+                   std::span<std::span<const uint8_t>> data) {
+         if(!m_f_engine) {
+            std::vector<uint8_t> prefix(m_zero_padding);
+            prefix.push_back(0x00);
+            m_f_engine = Hash_Engine::create_or_throw(m_hash->name(), prefix);
+         }
+         m_f_engine->batch_hash(outputs, keys, data);
+      }
+
+      /**
+       * Batched variant of h: outputs[i] = h(keys[i], data[i])
+       **/
+      void h_batch(std::span<std::span<uint8_t>> outputs,
+                   std::span<std::span<const uint8_t>> keys,
+                   std::span<std::span<const uint8_t>> data) {
+         if(!m_h_engine) {
+            std::vector<uint8_t> prefix(m_zero_padding);
+            prefix.push_back(0x01);
+            m_h_engine = Hash_Engine::create_or_throw(m_hash->name(), prefix);
+         }
+         m_h_engine->batch_hash(outputs, keys, data);
+      }
+
       size_t output_length() const { return m_hash->output_length(); }
 
    private:
+      /// A batch engine whose prefix bakes in the (usually fixed) key,
+      /// making the prefix exactly one hash block for the n=32 parameter
+      /// sets, which allows a precomputed midstate
+      struct Keyed_Engine {
+            secure_vector<uint8_t> key;
+            std::unique_ptr<Hash_Engine> engine;
+      };
+
+      Hash_Engine& keyed_engine(uint8_t hash_id, std::span<const uint8_t> key, Keyed_Engine& slot) {
+         if(!slot.engine || slot.key.size() != key.size() || !std::equal(key.begin(), key.end(), slot.key.begin())) {
+            secure_vector<uint8_t> prefix(m_zero_padding.begin(), m_zero_padding.end());
+            prefix.push_back(hash_id);
+            prefix.insert(prefix.end(), key.begin(), key.end());
+            slot.key.assign(key.begin(), key.end());
+            slot.engine = Hash_Engine::create_or_throw(m_hash->name(), prefix);
+         }
+         return *slot.engine;
+      }
+
       std::unique_ptr<HashFunction> m_hash;
       std::unique_ptr<HashFunction> m_msg_hash;
+
+      /// Batch engines for prf, prf_keygen, f and h, created on first use.
+      /// Note that these are not copied by the copy constructor.
+      Keyed_Engine m_prf_engine;
+      Keyed_Engine m_prf_keygen_engine;
+      std::unique_ptr<Hash_Engine> m_f_engine;
+      std::unique_ptr<Hash_Engine> m_h_engine;
 
       /// Hash id prefixes (for domain separation) prepended to the hash input
       /// are big-endian representations with `hash_id_length` bytes. See the

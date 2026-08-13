@@ -11,6 +11,7 @@
 #include <botan/secmem.h>
 #include <botan/xmss_parameters.h>
 #include <botan/internal/xmss_address.h>
+#include <span>
 #include <vector>
 
 namespace Botan {
@@ -68,11 +69,33 @@ class XMSS_Common_Ops {
        * @param[in] params parameters
       **/
       static void create_l_tree(secure_vector<uint8_t>& result,
-                                wots_keysig_t pk,
+                                const wots_keysig_t& pk,
                                 XMSS_Address adrs,
                                 const secure_vector<uint8_t>& seed,
                                 XMSS_Hash& hash,
                                 const XMSS_Parameters& params);
+
+      /**
+       * Algorithm 8: "ltree", applied to many WOTS+ public keys at once,
+       * batching the hash calls of each tree level across all keys.
+       *
+       * @param[out] leaves The compressed n-byte value of each key
+       * @param[in,out] pks The WOTS+ public keys, each len*n bytes,
+       *                contiguous. Destroyed by the computation.
+       * @param[in,out] addrs Per key, its L-tree address with the L-tree
+       *                address set. The tree height/index and key/mask
+       *                mode are modified.
+       * @param[in] seed The public seed
+       * @param[in] hash Instance of XMSS_Hash, that may only be used by the
+       *            thread executing create_l_trees.
+       * @param[in] params parameters
+      **/
+      static void create_l_trees(std::span<uint8_t> leaves,
+                                 std::span<uint8_t> pks,
+                                 std::span<XMSS_Address> addrs,
+                                 std::span<const uint8_t> seed,
+                                 XMSS_Hash& hash,
+                                 const XMSS_Parameters& params);
 };
 
 }  // namespace Botan

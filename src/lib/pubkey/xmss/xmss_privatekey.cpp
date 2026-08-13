@@ -31,14 +31,18 @@
 #include <botan/internal/xmss_common_ops.h>
 #include <botan/internal/xmss_hash.h>
 #include <botan/internal/xmss_signature_operation.h>
-
-#if defined(BOTAN_HAS_THREAD_UTILS)
-   #include <botan/internal/thread_pool.h>
-#endif
+#include <botan/internal/xmss_wots.h>
+#include <algorithm>
 
 namespace Botan {
 
 namespace {
+
+/**
+* Number of leaves whose WOTS+ keys and L-trees are computed at once,
+* so that the hash calls of each step are batched across all of them
+*/
+constexpr size_t LEAF_BATCH = 128;
 
 // fall back to raw decoding for previous versions, which did not encode an OCTET STRING
 secure_vector<uint8_t> extract_raw_private_key(std::span<const uint8_t> key_bits, const XMSS_Parameters& xmss_params) {
@@ -80,13 +84,6 @@ class XMSS_Tree_Builder final {
                                        const XMSS_Address& adrs,
                                        XMSS_Hash& hash) const;
 
-      void tree_hash_subtree(secure_vector<uint8_t>& result,
-                             size_t start_idx,
-                             size_t target_node_height,
-                             XMSS_Address& adrs,
-                             XMSS_Hash& hash) const;
-
-      XMSS_WOTS_PublicKey wots_public_key_for(const XMSS_Address& adrs, XMSS_Hash& hash) const;
       XMSS_WOTS_PrivateKey wots_private_key_for(const XMSS_Address& adrs, XMSS_Hash& hash) const;
 
       const XMSS_Parameters& xmss_parameters() const { return m_xmss_params; }
@@ -94,6 +91,18 @@ class XMSS_Tree_Builder final {
       const secure_vector<uint8_t>& public_seed() const { return m_public_seed; }
 
    private:
+      /**
+      * Compute the leaves [start_idx, start_idx + count) of the tree into
+      * leaves (count * n bytes)
+      */
+      void compute_leaves(std::span<uint8_t> leaves, size_t start_idx, size_t count, XMSS_Hash& hash) const;
+
+      /**
+      * Derive the WOTS+ private keys of addrs.size() / len leaves into
+      * sks; addrs holds the OTS hash address of every chain of every leaf
+      */
+      void wots_private_keys(std::span<uint8_t> sks, std::span<const XMSS_Address> addrs, XMSS_Hash& hash) const;
+
       const XMSS_Parameters& m_xmss_params;
       XMSS_WOTS_Parameters m_wots_params;
       WOTS_Derivation_Method m_wots_derivation_method;
@@ -310,135 +319,41 @@ namespace {
 
 secure_vector<uint8_t> XMSS_Tree_Builder::tree_hash(size_t start_idx,
                                                     size_t target_node_height,
-                                                    const XMSS_Address& adrs,
+                                                    const XMSS_Address& adrs_in,
                                                     XMSS_Hash& hash) const {
    BOTAN_ASSERT_NOMSG(target_node_height <= 30);
    BOTAN_ASSERT((start_idx % (static_cast<size_t>(1) << target_node_height)) == 0,
                 "Start index must be divisible by 2^{target node height}.");
 
-#if defined(BOTAN_HAS_THREAD_UTILS)
-   // determine number of parallel tasks to split the tree_hashing into.
-
-   Thread_Pool& thread_pool = Thread_Pool::global_instance();
-
-   const size_t split_level = std::min(target_node_height, thread_pool.worker_count());
-
-   // skip parallelization overhead for leaf nodes.
-   if(split_level == 0) {
-      secure_vector<uint8_t> result;
-      XMSS_Address subtree_addr(adrs);
-      tree_hash_subtree(result, start_idx, target_node_height, subtree_addr, hash);
-      return result;
-   }
-
-   const size_t subtrees = static_cast<size_t>(1) << split_level;
-   const size_t last_idx = (static_cast<size_t>(1) << (target_node_height)) + start_idx;
-   const size_t offs = (last_idx - start_idx) / subtrees;
-   // this cast cannot overflow because target_node_height is limited
-   uint8_t level = static_cast<uint8_t>(split_level);  // current level in the tree
-
-   BOTAN_ASSERT((last_idx - start_idx) % subtrees == 0,
-                "Number of worker threads in tree_hash need to divide range "
-                "of calculated nodes.");
-
-   std::vector<secure_vector<uint8_t>> nodes(subtrees, secure_vector<uint8_t>(xmss_parameters().element_size()));
-   std::vector<XMSS_Address> node_addresses(subtrees, adrs);
-   std::vector<XMSS_Hash> xmss_hash(subtrees, hash);
-   std::vector<std::future<void>> work;
-
-   // Calculate multiple subtrees in parallel.
-   for(size_t i = 0; i < subtrees; i++) {
-      using tree_hash_subtree_fn_t =
-         void (XMSS_Tree_Builder::*)(secure_vector<uint8_t>&, size_t, size_t, XMSS_Address&, XMSS_Hash&) const;
-
-      const tree_hash_subtree_fn_t work_fn = &XMSS_Tree_Builder::tree_hash_subtree;
-
-      work.push_back(thread_pool.run(work_fn,
-                                     this,
-                                     std::ref(nodes[i]),
-                                     start_idx + i * offs,
-                                     target_node_height - split_level,
-                                     std::ref(node_addresses[i]),
-                                     std::ref(xmss_hash[i])));
-   }
-
-   for(auto& w : work) {
-      w.get();
-   }
-   work.clear();
-
-   // Parallelize the top tree levels horizontally
-   while(level-- > 1) {
-      std::vector<secure_vector<uint8_t>> ro_nodes(nodes.begin(),
-                                                   nodes.begin() + (static_cast<size_t>(1) << (level + 1)));
-
-      for(size_t i = 0; i < (static_cast<size_t>(1) << level); i++) {
-         BOTAN_ASSERT_NOMSG(xmss_hash.size() > i);
-
-         node_addresses[i].set_tree_height(static_cast<uint32_t>(target_node_height - (level + 1)));
-         node_addresses[i].set_tree_index((node_addresses[2 * i + 1].get_tree_index() - 1) >> 1);
-
-         work.push_back(thread_pool.run(&XMSS_Common_Ops::randomize_tree_hash,
-                                        std::ref(nodes[i]),
-                                        std::cref(ro_nodes[2 * i]),
-                                        std::cref(ro_nodes[2 * i + 1]),
-                                        node_addresses[i],
-                                        std::cref(this->public_seed()),
-                                        std::ref(xmss_hash[i]),
-                                        std::cref(xmss_parameters())));
-      }
-
-      for(auto& w : work) {
-         w.get();
-      }
-      work.clear();
-   }
-
-   // Avoid creation an extra thread to calculate root node.
-   node_addresses[0].set_tree_height(static_cast<uint32_t>(target_node_height - 1));
-   node_addresses[0].set_tree_index((node_addresses[1].get_tree_index() - 1) >> 1);
-   XMSS_Common_Ops::randomize_tree_hash(
-      nodes[0], nodes[0], nodes[1], node_addresses[0], this->public_seed(), hash, xmss_parameters());
-   return nodes[0];
-#else
-   secure_vector<uint8_t> result;
-   XMSS_Address subtree_addr(adrs);
-   tree_hash_subtree(result, start_idx, target_node_height, subtree_addr, hash);
-   return result;
-#endif
-}
-
-void XMSS_Tree_Builder::tree_hash_subtree(secure_vector<uint8_t>& result,
-                                          size_t start_idx,
-                                          size_t target_node_height,
-                                          XMSS_Address& adrs,
-                                          XMSS_Hash& hash) const {
+   const size_t n = xmss_parameters().element_size();
    const secure_vector<uint8_t>& seed = this->public_seed();
+   const size_t last_idx = (static_cast<size_t>(1) << target_node_height) + start_idx;
 
-   std::vector<secure_vector<uint8_t>> nodes(target_node_height + 1,
-                                             secure_vector<uint8_t>(xmss_parameters().element_size()));
+   const size_t batch = std::min<size_t>(LEAF_BATCH, last_idx - start_idx);
+   secure_vector<uint8_t> leaves(batch * n);
 
    // node stack, holds all nodes on stack and one extra "pending" node. This
    // temporary node referred to as "node" in the XMSS standard document stays
    // a pending element, meaning it is not regarded as element on the stack
    // until level is increased.
+   std::vector<secure_vector<uint8_t>> nodes(target_node_height + 1, secure_vector<uint8_t>(n));
    std::vector<uint8_t> node_levels(target_node_height + 1);
 
    uint8_t level = 0;  // current level on the node stack.
-   const size_t last_idx = (static_cast<size_t>(1) << target_node_height) + start_idx;
+
+   XMSS_Address adrs(adrs_in);
+   adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
 
    for(size_t i = start_idx; i < last_idx; i++) {
-      adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
-      adrs.set_ots_address(static_cast<uint32_t>(i));
+      const size_t b = (i - start_idx) % batch;
+      if(b == 0) {
+         const size_t count = std::min(batch, last_idx - i);
+         compute_leaves(std::span(leaves).first(count * n), i, count, hash);
+      }
 
-      const XMSS_WOTS_PublicKey pk = this->wots_public_key_for(adrs, hash);
-
-      adrs.set_type(XMSS_Address::Type::LTree_Address);
-      adrs.set_ltree_address(static_cast<uint32_t>(i));
-      XMSS_Common_Ops::create_l_tree(nodes[level], pk.key_data(), adrs, seed, hash, xmss_parameters());
+      copy_mem(nodes[level], std::span(leaves).subspan(b * n, n));
       node_levels[level] = 0;
 
-      adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
       adrs.set_tree_height(0);
       adrs.set_tree_index(static_cast<uint32_t>(i));
 
@@ -452,12 +367,82 @@ void XMSS_Tree_Builder::tree_hash_subtree(secure_vector<uint8_t>& result,
       }
       level++;  //push temporary node to stack
    }
-   result = nodes[level - 1];
+   return nodes[level - 1];
 }
 
-XMSS_WOTS_PublicKey XMSS_Tree_Builder::wots_public_key_for(const XMSS_Address& adrs, XMSS_Hash& hash) const {
-   const auto private_key = wots_private_key_for(adrs, hash);
-   return XMSS_WOTS_PublicKey(m_wots_params, public_seed(), private_key, adrs, hash);
+void XMSS_Tree_Builder::compute_leaves(std::span<uint8_t> leaves,
+                                       size_t start_idx,
+                                       size_t count,
+                                       XMSS_Hash& hash) const {
+   const size_t n = xmss_parameters().element_size();
+   const size_t len = m_wots_params.len();
+
+   BOTAN_ASSERT_NOMSG(leaves.size() == count * n);
+
+   std::vector<XMSS_Address> ots_addrs(count * len, XMSS_Address(XMSS_Address::Type::OTS_Hash_Address));
+   for(size_t k = 0; k < count; ++k) {
+      for(size_t i = 0; i < len; ++i) {
+         ots_addrs[k * len + i].set_ots_address(static_cast<uint32_t>(start_idx + k));
+         ots_addrs[k * len + i].set_chain_address(static_cast<uint32_t>(i));
+      }
+   }
+
+   secure_vector<uint8_t> keys(count * len * n);
+   wots_private_keys(keys, ots_addrs, hash);
+
+   // Algorithm 4: "WOTS_genPK", transforming the private keys in place
+   const std::vector<uint8_t> from(count * len, 0);
+   const std::vector<uint8_t> to(count * len, static_cast<uint8_t>(m_wots_params.wots_parameter() - 1));
+   xmss_wots_chains(m_wots_params, keys, from, to, ots_addrs, public_seed(), hash);
+
+   std::vector<XMSS_Address> ltree_addrs(count, XMSS_Address(XMSS_Address::Type::LTree_Address));
+   for(size_t k = 0; k < count; ++k) {
+      ltree_addrs[k].set_ltree_address(static_cast<uint32_t>(start_idx + k));
+   }
+   XMSS_Common_Ops::create_l_trees(leaves, keys, ltree_addrs, public_seed(), hash, xmss_parameters());
+}
+
+void XMSS_Tree_Builder::wots_private_keys(std::span<uint8_t> sks,
+                                          std::span<const XMSS_Address> addrs,
+                                          XMSS_Hash& hash) const {
+   const size_t n = xmss_parameters().element_size();
+   const size_t len = m_wots_params.len();
+   const size_t count = addrs.size();
+
+   BOTAN_ASSERT_NOMSG(sks.size() == count * n && count % len == 0);
+
+   switch(m_wots_derivation_method) {
+      case WOTS_Derivation_Method::NIST_SP800_208: {
+         const size_t data_len = public_seed().size() + addrs[0].size();
+         std::vector<uint8_t> data_arena(count * data_len);
+
+         std::vector<std::span<uint8_t>> outputs(count);
+         std::vector<std::span<const uint8_t>> data(count);
+
+         for(size_t i = 0; i < count; ++i) {
+            const auto slot = std::span(data_arena).subspan(i * data_len, data_len);
+            copy_mem(slot.first(public_seed().size()), public_seed());
+            copy_mem(slot.subspan(public_seed().size()), addrs[i].bytes());
+
+            outputs[i] = sks.subspan(i * n, n);
+            data[i] = slot;
+         }
+
+         hash.prf_keygen_batch(outputs, m_private_seed, data);
+         return;
+      }
+      case WOTS_Derivation_Method::Botan2x: {
+         for(size_t k = 0; k < count / len; ++k) {
+            const XMSS_WOTS_PrivateKey sk(m_wots_params, m_private_seed, addrs[k * len], hash);
+            for(size_t i = 0; i < len; ++i) {
+               copy_mem(sks.subspan((k * len + i) * n, n), sk.key_data()[i]);
+            }
+         }
+         return;
+      }
+   }
+
+   throw Invalid_State("WOTS derivation method is out of the enum's range");
 }
 
 XMSS_WOTS_PrivateKey XMSS_Tree_Builder::wots_private_key_for(const XMSS_Address& adrs, XMSS_Hash& hash) const {

@@ -12,6 +12,7 @@
 #include <botan/secmem.h>
 #include <botan/xmss_parameters.h>
 #include <botan/internal/xmss_address.h>
+#include <span>
 #include <vector>
 
 namespace Botan {
@@ -41,29 +42,6 @@ class XMSS_WOTS_Base {
  **/
 class XMSS_WOTS_PublicKey : public XMSS_WOTS_Base {
    public:
-      /**
-       * Algorithm 4: "WOTS_genPK"
-       * Initializes a Winternitz One Time Signature+ (WOTS+) Public Key's
-       * key data, with passed-in private key data using the WOTS chaining
-       * function.
-       *
-       * This overload is used in multithreaded scenarios, where it is
-       * required to provide separate instances of XMSS_Hash to each
-       * thread.
-       *
-       * @param params      The WOTS parameters to use
-       * @param public_seed The public seed for the public key generation
-       * @param private_key The private key to derive the public key from
-       * @param adrs        The address of the key to retrieve.
-       * @param hash        Instance of XMSS_Hash, that may only be used by the
-       *                    thread executing at.
-       **/
-      XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters params,
-                          std::span<const uint8_t> public_seed,
-                          const XMSS_WOTS_PrivateKey& private_key,
-                          XMSS_Address adrs,
-                          XMSS_Hash& hash);
-
       /**
        * Creates a XMSS_WOTS_PublicKey from a message and signature using
        * Algorithm 6 WOTS_pkFromSig defined in the XMSS standard. This
@@ -156,6 +134,31 @@ class XMSS_WOTS_PrivateKey : public XMSS_WOTS_Base {
                          XMSS_Address adrs,
                          XMSS_Hash& hash);
 };
+
+/**
+ * Algorithm 2: Chaining Function, applied to many WOTS+ chains in lock-step.
+ *
+ * For each chain i the hash addresses [from[i], to[i]) are applied to
+ * the i'th n-byte node of nodes, batching the hash calls across all
+ * chains active in each step.
+ *
+ * @param params The WOTS parameters to use
+ * @param[in,out] nodes The chain nodes, transformed in place
+ * @param from Per chain, the first hash address to apply
+ * @param to Per chain, the hash address to stop at (exclusive)
+ * @param[in,out] addrs Per chain, its OTS hash address with the chain
+ *        address set. The hash address and key/mask mode are modified.
+ * @param seed The public seed
+ * @param hash Instance of XMSS_Hash, that may only be used by the thread
+ *        executing xmss_wots_chains.
+ **/
+void xmss_wots_chains(const XMSS_WOTS_Parameters& params,
+                      std::span<uint8_t> nodes,
+                      std::span<const uint8_t> from,
+                      std::span<const uint8_t> to,
+                      std::span<XMSS_Address> addrs,
+                      std::span<const uint8_t> seed,
+                      XMSS_Hash& hash);
 
 }  // namespace Botan
 
