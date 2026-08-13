@@ -13,12 +13,15 @@
 #include <botan/internal/target_info.h>
 #include <span>
 
-// TODO: extend this to support NEON / AltiVec / LSX
+// TODO: extend this to support AltiVec / LSX
 
 #if defined(BOTAN_TARGET_ARCH_SUPPORTS_SSSE3)
    #include <emmintrin.h>
    #include <tmmintrin.h>
    #define BOTAN_SIMD_USE_SSSE3
+#elif defined(BOTAN_TARGET_ARCH_SUPPORTS_NEON)
+   #include <arm_neon.h>
+   #define BOTAN_SIMD_USE_NEON
 #elif defined(BOTAN_TARGET_ARCH_SUPPORTS_SIMD128)
    #include <wasm_simd128.h>
    #define BOTAN_SIMD_USE_SIMD128
@@ -32,6 +35,8 @@ class SIMD_2x64 final {
    public:
 #if defined(BOTAN_SIMD_USE_SSSE3)
       using native_simd_type = __m128i;
+#elif defined(BOTAN_SIMD_USE_NEON)
+      using native_simd_type = uint64x2_t;
 #elif defined(BOTAN_SIMD_USE_SIMD128)
       using native_simd_type = v128_t;
 #endif
@@ -48,6 +53,8 @@ class SIMD_2x64 final {
       BOTAN_FN_ISA_SIMD_2X64 SIMD_2x64() :
 #if defined(BOTAN_SIMD_USE_SSSE3)
             m_simd(_mm_setzero_si128())
+#elif defined(BOTAN_SIMD_USE_NEON)
+            m_simd(vdupq_n_u64(0))
 #elif defined(BOTAN_SIMD_USE_SIMD128)
             m_simd(wasm_u64x2_const_splat(0))
 #endif
@@ -57,6 +64,8 @@ class SIMD_2x64 final {
       static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 splat(uint64_t v) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_2x64(_mm_set1_epi64x(v));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_2x64(vdupq_n_u64(v));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          return SIMD_2x64(wasm_u64x2_splat(v));
 #endif
@@ -65,6 +74,8 @@ class SIMD_2x64 final {
       static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 all_ones() {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_2x64(_mm_set1_epi8(-1));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_2x64(vdupq_n_u64(~uint64_t(0)));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          return SIMD_2x64(wasm_i8x16_splat(0xFF));
 #endif
@@ -73,6 +84,8 @@ class SIMD_2x64 final {
       BOTAN_FN_ISA_SIMD_2X64 SIMD_2x64(uint64_t low, uint64_t high) :
 #if defined(BOTAN_SIMD_USE_SSSE3)
             m_simd(_mm_set_epi64x(high, low))
+#elif defined(BOTAN_SIMD_USE_NEON)
+            m_simd(vcombine_u64(vcreate_u64(low), vcreate_u64(high)))
 #elif defined(BOTAN_SIMD_USE_SIMD128)
             m_simd(wasm_u64x2_make(low, high))
 #endif
@@ -82,6 +95,8 @@ class SIMD_2x64 final {
       static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 load_le(const void* in) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_2x64(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in)));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_2x64(vreinterpretq_u64_u8(vld1q_u8(reinterpret_cast<const uint8_t*>(in))));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          return SIMD_2x64(wasm_v128_load(in));
 #endif
@@ -101,6 +116,8 @@ class SIMD_2x64 final {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          const auto idx = _mm_set_epi8(8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7);
          return SIMD_2x64(_mm_shuffle_epi8(m_simd, idx));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_2x64(vreinterpretq_u64_u8(vrev64q_u8(vreinterpretq_u8_u64(m_simd))));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          return SIMD_2x64(wasm_i8x16_shuffle(m_simd, m_simd, 7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8));
 #endif
@@ -109,6 +126,8 @@ class SIMD_2x64 final {
       SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 swap_lanes() const {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_2x64(_mm_shuffle_epi32(m_simd, _MM_SHUFFLE(1, 0, 3, 2)));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_2x64(vextq_u64(m_simd, m_simd, 1));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          return SIMD_2x64(wasm_i64x2_shuffle(m_simd, m_simd, 1, 0));
 #endif
@@ -118,6 +137,8 @@ class SIMD_2x64 final {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          const auto idx = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
          return SIMD_2x64(_mm_shuffle_epi8(m_simd, idx));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return this->bswap().swap_lanes();
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          return SIMD_2x64(wasm_i8x16_shuffle(m_simd, m_simd, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0));
 #endif
@@ -128,6 +149,8 @@ class SIMD_2x64 final {
       void BOTAN_FN_ISA_SIMD_2X64 store_le(uint8_t out[]) const {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          _mm_storeu_si128(reinterpret_cast<__m128i*>(out), m_simd);
+#elif defined(BOTAN_SIMD_USE_NEON)
+         vst1q_u8(out, vreinterpretq_u8_u64(m_simd));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          wasm_v128_store(out, m_simd);
 #endif
@@ -153,9 +176,27 @@ class SIMD_2x64 final {
          return retval;
       }
 
+      SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 operator&(const SIMD_2x64& other) const {
+         SIMD_2x64 retval(*this);
+         retval &= other;
+         return retval;
+      }
+
+      void BOTAN_FN_ISA_SIMD_2X64 operator&=(const SIMD_2x64& other) {
+#if defined(BOTAN_SIMD_USE_SSSE3)
+         m_simd = _mm_and_si128(m_simd, other.m_simd);
+#elif defined(BOTAN_SIMD_USE_NEON)
+         m_simd = vandq_u64(m_simd, other.m_simd);
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         m_simd = wasm_v128_and(m_simd, other.m_simd);
+#endif
+      }
+
       void BOTAN_FN_ISA_SIMD_2X64 operator+=(const SIMD_2x64& other) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          m_simd = _mm_add_epi64(m_simd, other.m_simd);
+#elif defined(BOTAN_SIMD_USE_NEON)
+         m_simd = vaddq_u64(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          m_simd = wasm_i64x2_add(m_simd, other.m_simd);
 #endif
@@ -164,6 +205,8 @@ class SIMD_2x64 final {
       void BOTAN_FN_ISA_SIMD_2X64 operator^=(const SIMD_2x64& other) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          m_simd = _mm_xor_si128(m_simd, other.m_simd);
+#elif defined(BOTAN_SIMD_USE_NEON)
+         m_simd = veorq_u64(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          m_simd = wasm_v128_xor(m_simd, other.m_simd);
 #endif
@@ -172,6 +215,9 @@ class SIMD_2x64 final {
       SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 andc(const SIMD_2x64& other) const noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_2x64(_mm_andnot_si128(m_simd, other.m_simd));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         // NEON vbic is a & ~b
+         return SIMD_2x64(vbicq_u64(other.m_simd, m_simd));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          // SIMD128 is a & ~b
          return SIMD_2x64(wasm_v128_andnot(other.m_simd, m_simd));
@@ -199,6 +245,8 @@ class SIMD_2x64 final {
             return SIMD_2x64(_mm_or_si128(_mm_srli_epi64(m_simd, static_cast<int>(ROT)),
                                           _mm_slli_epi64(m_simd, static_cast<int>(64 - ROT))));
          }
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_2x64(vsriq_n_u64(vshlq_n_u64(m_simd, 64 - ROT), m_simd, ROT));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          if constexpr(ROT == 8) {
             return SIMD_2x64(wasm_i8x16_shuffle(m_simd, m_simd, 1, 2, 3, 4, 5, 6, 7, 0, 9, 10, 11, 12, 13, 14, 15, 8));
@@ -219,10 +267,34 @@ class SIMD_2x64 final {
          return this->rotr<64 - ROT>();
       }
 
+      SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 sigma0() const {
+         const SIMD_2x64 r1 = this->rotr<28>();
+         const SIMD_2x64 r2 = this->rotr<34>();
+         const SIMD_2x64 r3 = this->rotr<39>();
+         return r1 ^ r2 ^ r3;
+      }
+
+      SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 sigma1() const {
+         const SIMD_2x64 r1 = this->rotr<14>();
+         const SIMD_2x64 r2 = this->rotr<18>();
+         const SIMD_2x64 r3 = this->rotr<41>();
+         return r1 ^ r2 ^ r3;
+      }
+
+      static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 choose(const SIMD_2x64& mask, const SIMD_2x64& a, const SIMD_2x64& b) {
+         return (mask & a) ^ mask.andc(b);
+      }
+
+      static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 majority(const SIMD_2x64& x, const SIMD_2x64& y, const SIMD_2x64& z) {
+         return SIMD_2x64::choose(x ^ y, z, y);
+      }
+
       template <int SHIFT>
       SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 shr() const noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_2x64(_mm_srli_epi64(m_simd, SHIFT));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_2x64(vshrq_n_u64(m_simd, SHIFT));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          return SIMD_2x64(wasm_u64x2_shr(m_simd, SHIFT));
 #endif
@@ -232,6 +304,8 @@ class SIMD_2x64 final {
       SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 shl() const noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_2x64(_mm_slli_epi64(m_simd, SHIFT));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_2x64(vshlq_n_u64(m_simd, SHIFT));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          return SIMD_2x64(wasm_i64x2_shl(m_simd, SHIFT));
 #endif
@@ -240,6 +314,8 @@ class SIMD_2x64 final {
       static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 alignr8(const SIMD_2x64& a, const SIMD_2x64& b) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_2x64(_mm_alignr_epi8(a.m_simd, b.m_simd, 8));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_2x64(vextq_u64(b.m_simd, a.m_simd, 1));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          return SIMD_2x64(
             wasm_i8x16_shuffle(b.m_simd, a.m_simd, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23));
@@ -249,6 +325,8 @@ class SIMD_2x64 final {
       static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 interleave_low(const SIMD_2x64& a, const SIMD_2x64& b) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_2x64(_mm_unpacklo_epi64(a.m_simd, b.m_simd));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_2x64(vzip1q_u64(a.m_simd, b.m_simd));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          return SIMD_2x64(wasm_u64x2_extract_lane(a.m_simd, 0), wasm_u64x2_extract_lane(b.m_simd, 0));
 #endif
@@ -257,6 +335,8 @@ class SIMD_2x64 final {
       static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 interleave_high(const SIMD_2x64& a, const SIMD_2x64& b) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_2x64(_mm_unpackhi_epi64(a.m_simd, b.m_simd));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_2x64(vzip2q_u64(a.m_simd, b.m_simd));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          return SIMD_2x64(wasm_u64x2_extract_lane(a.m_simd, 1), wasm_u64x2_extract_lane(b.m_simd, 1));
 #endif
@@ -303,6 +383,9 @@ class SIMD_2x64 final {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          const __m128i m = _mm_mul_epu32(x.m_simd, y.m_simd);
          return SIMD_2x64(_mm_add_epi64(m, m));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         const uint64x2_t m = vmull_u32(vmovn_u64(x.m_simd), vmovn_u64(y.m_simd));
+         return SIMD_2x64(vaddq_u64(m, m));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          const auto m = wasm_u64x2_extmul_low_u32x4(wasm_i32x4_shuffle(x.m_simd, x.m_simd, 0, 2, 0, 2),
                                                     wasm_i32x4_shuffle(y.m_simd, y.m_simd, 0, 2, 0, 2));
