@@ -1,0 +1,16 @@
+<internal_defines>
+HASH_ENGINE_SHA2_64_AVX512 -> 20260705
+</internal_defines>
+
+<module_info>
+name -> "Multi-buffer SHA-512 using AVX-512"
+</module_info>
+
+<isa>
+avx512
+</isa>
+
+<requires>
+cpuid
+simd_8x64
+</requires>

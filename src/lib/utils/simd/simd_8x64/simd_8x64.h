@@ -61,6 +61,16 @@ class SIMD_8x64 final {
 
       static BOTAN_FN_ISA_SIMD_8X64 SIMD_8x64 load_be(const void* in) { return SIMD_8x64::load_le(in).bswap(); }
 
+      /**
+      * Load in big endian order from ptrs[i] + Stride * n + offset,
+      * gathering lane i's n'th block out of a set of per lane buffers
+      */
+      template <size_t Stride>
+      static BOTAN_FN_ISA_SIMD_8X64 SIMD_8x64
+      load_be(const uint8_t* const* ptrs, size_t i, size_t n, size_t offset = 0) {
+         return load_be(ptrs[i] + Stride * n + offset);
+      }
+
       SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 bswap() const {
          // clang-format off
          const auto idx = _mm512_set_epi8(

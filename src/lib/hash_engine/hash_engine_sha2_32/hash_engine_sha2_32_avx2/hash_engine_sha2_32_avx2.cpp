@@ -59,23 +59,22 @@ BOTAN_FN_ISA_AVX2 void sha2_32_mb_compress_x8(uint8_t* states, const uint8_t* co
    for(size_t n = 0; n != nblocks; ++n) {
       // Initialized directly from the loads, since default construction
       // would zero the whole array first
-      auto load_w = [&](size_t l, size_t off) { return SIMD_8x32::load_be(blocks[l] + 64 * n + off); };
-      SIMD_8x32 W[16] = {load_w(0, 0),
-                         load_w(1, 0),
-                         load_w(2, 0),
-                         load_w(3, 0),
-                         load_w(4, 0),
-                         load_w(5, 0),
-                         load_w(6, 0),
-                         load_w(7, 0),
-                         load_w(0, 32),
-                         load_w(1, 32),
-                         load_w(2, 32),
-                         load_w(3, 32),
-                         load_w(4, 32),
-                         load_w(5, 32),
-                         load_w(6, 32),
-                         load_w(7, 32)};
+      SIMD_8x32 W[16] = {SIMD_8x32::load_be<64>(blocks, 0, n, 0),
+                         SIMD_8x32::load_be<64>(blocks, 1, n, 0),
+                         SIMD_8x32::load_be<64>(blocks, 2, n, 0),
+                         SIMD_8x32::load_be<64>(blocks, 3, n, 0),
+                         SIMD_8x32::load_be<64>(blocks, 4, n, 0),
+                         SIMD_8x32::load_be<64>(blocks, 5, n, 0),
+                         SIMD_8x32::load_be<64>(blocks, 6, n, 0),
+                         SIMD_8x32::load_be<64>(blocks, 7, n, 0),
+                         SIMD_8x32::load_be<64>(blocks, 0, n, 32),
+                         SIMD_8x32::load_be<64>(blocks, 1, n, 32),
+                         SIMD_8x32::load_be<64>(blocks, 2, n, 32),
+                         SIMD_8x32::load_be<64>(blocks, 3, n, 32),
+                         SIMD_8x32::load_be<64>(blocks, 4, n, 32),
+                         SIMD_8x32::load_be<64>(blocks, 5, n, 32),
+                         SIMD_8x32::load_be<64>(blocks, 6, n, 32),
+                         SIMD_8x32::load_be<64>(blocks, 7, n, 32)};
       SIMD_8x32::transpose(W[0], W[1], W[2], W[3], W[4], W[5], W[6], W[7]);
       SIMD_8x32::transpose(W[8], W[9], W[10], W[11], W[12], W[13], W[14], W[15]);
 
