@@ -12,6 +12,9 @@ Version 3.13.0, Not Yet Released
 * The default policy for TLS now no longer lists finite field Diffie-Hellman.
   If required for compatibility it must be enabled by the application. (GH #5782)
 
+* By default OCSP no longer accepts soft-fail conditions such as network failure.
+  (GH #5785 #5804)
+
 * DTLS 1.2 servers now must either set a DTLS cookie secret and provide the peer
   network identity, or explicitly opt out of the cookie exchange by overriding
   ``dtls_server_require_cookie_exchange`` to return false. (GH #5792)
@@ -90,6 +93,10 @@ Version 3.13.0, Not Yet Released
 * Add hash to curve support for brainpool256r1, brainpool384r1, brainpool512r1,
   and numsp512d1 (GH #5754)
 
+* The hash to curve and and hash to scalar functions now enforce RFC 9380's rules
+  on hash function security, namely that the hash must have a security level at
+  least as strong as the curve itself. (GH #5758)
+
 * Improve the HTTP 1.0 client used for OCSP and CRL fetching (GH #5609)
 
 * Extend Blowfish to support keys up to 72 bytes in length (GH #5714)
@@ -110,21 +117,21 @@ Version 3.13.0, Not Yet Released
 
 * In the default TLS policy, prefer ECDSA over RSA signatures (GH #5727)
 
-* Add support for the Brainpool ECDH groups in TLS 1.3 as specified in RFC 8734
-  (GH #5691)
+* Add support for the Brainpool ECDH/ECDSA groups in TLS 1.3 as specified in RFC 8734
+  (GH #5691 #5771 #5772)
 
 * Add ``TLS::Policy::record_padding_bytes``, which allows padding TLS 1.3
   records, for example out to a minimum plaintext size or to a multiple of
-  some block size (GH #5752)
+  some block size (GH #5752 #5843)
 
-* TLS 1.3 handshake hardening and various minor TLS fixes (GH #5664 #5721 #5767)
+* TLS 1.3 handshake hardening and various minor TLS fixes (GH #5664 #5721 #5767 #5810)
 
 * Improve ``Database`` abstraction type and make it easier to support databases
   other than SQLite, and validate SQL table names. (GH #5607 #5673)
 
 * Fix various bugs in the PKCS #11 wrapper (GH #5602)
 
-* Fix various bugs in the Pipe/Filter library (GH #5724)
+* Fix various bugs in the Pipe/Filter library (GH #5724 #5809)
 
 * Fix several issues in the compression wrappers (GH #5733)
 
