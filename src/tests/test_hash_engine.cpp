@@ -36,7 +36,7 @@ class Hash_Engine_Tests final : public Test {
                   continue;
                }
 
-               result.test_str_eq("Hash_Engine::name", engine->name(), hash_fn);
+               result.test_str_eq("Hash_Engine::name", engine->name(), ref_hash->name());
                result.test_str_eq("Hash_Engine::provider", engine->provider(), provider);
 
                result.test_sz_eq("output_length", engine->output_length(), ref_hash->output_length());
@@ -285,7 +285,7 @@ class Hash_Engine_Tests final : public Test {
                "SHAKE-128(256)", "SHAKE-256(192)", "SHAKE-256(256)", "SHAKE-256(2400)",
    #endif
    #if defined(BOTAN_HAS_SHA3)
-               "SHA-3(256)", "SHA-3(512)",
+               "SHA-3", "SHA-3(256)", "SHA-3(512)",
    #endif
    #if defined(BOTAN_HAS_SM3)
                "SM3",

@@ -6,6 +6,7 @@
 
 #include <botan/internal/keccak_perm.h>
 
+#include <botan/internal/keccak_perm_round.h>
 #include <botan/internal/isa_extn.h>
 #include <immintrin.h>
 
@@ -123,13 +124,6 @@ inline void BOTAN_FN_ISA_AVX512 Keccak_Permutation_round_avx512(SIMD_5x64 A[5], 
 }  // namespace
 
 void BOTAN_FN_ISA_AVX512 Keccak_Permutation::permute_avx512() {
-   static const uint64_t RC[24] = {0x0000000000000001, 0x0000000000008082, 0x800000000000808A, 0x8000000080008000,
-                                   0x000000000000808B, 0x0000000080000001, 0x8000000080008081, 0x8000000000008009,
-                                   0x000000000000008A, 0x0000000000000088, 0x0000000080008009, 0x000000008000000A,
-                                   0x000000008000808B, 0x800000000000008B, 0x8000000000008089, 0x8000000000008003,
-                                   0x8000000000008002, 0x8000000000000080, 0x000000000000800A, 0x800000008000000A,
-                                   0x8000000080008081, 0x8000000000008080, 0x0000000080000001, 0x8000000080008008};
-
    auto& S = state();
 
    std::array<SIMD_5x64, 5> X{
@@ -142,7 +136,7 @@ void BOTAN_FN_ISA_AVX512 Keccak_Permutation::permute_avx512() {
 
    // NOLINTNEXTLINE(modernize-loop-convert)
    for(size_t i = 0; i != 24; ++i) {
-      Keccak_Permutation_round_avx512(X.data(), RC[i]);
+      Keccak_Permutation_round_avx512(X.data(), KECCAK_RC[i]);
    }
 
    for(size_t i = 0; i != 5; ++i) {

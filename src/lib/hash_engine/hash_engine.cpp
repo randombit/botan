@@ -19,6 +19,10 @@
    #include <botan/internal/hash_engine_sha2_64.h>
 #endif
 
+#if defined(BOTAN_HAS_HASH_ENGINE_KECCAK)
+   #include <botan/internal/hash_engine_keccak.h>
+#endif
+
 #if defined(BOTAN_HAS_THREAD_UTILS)
    #include <botan/internal/rounding.h>
    #include <botan/internal/thread_pool.h>
@@ -73,6 +77,12 @@ std::unique_ptr<Hash_Engine> make_base_engine(std::string_view hash_fn,
 
 #if defined(BOTAN_HAS_HASH_ENGINE_SHA2_64)
    if(auto engine = create_sha2_64_mb_engine(hash_fn, common_prefix, provider)) {
+      return engine;
+   }
+#endif
+
+#if defined(BOTAN_HAS_HASH_ENGINE_KECCAK)
+   if(auto engine = create_keccak_mb_engine(hash_fn, common_prefix, provider)) {
       return engine;
    }
 #endif

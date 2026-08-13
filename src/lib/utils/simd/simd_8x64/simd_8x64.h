@@ -139,6 +139,14 @@ class SIMD_8x64 final {
          return SIMD_8x64(_mm512_andnot_si512(m_simd, other.m_simd));
       }
 
+      /**
+      * The Keccak chi operation, x ^ (~y & z)
+      */
+      static BOTAN_FN_ISA_SIMD_8X64 SIMD_8x64 chi(const SIMD_8x64& x, const SIMD_8x64& y, const SIMD_8x64& z) {
+         constexpr uint8_t xor_not_and = 0b11010010;
+         return SIMD_8x64(_mm512_ternarylogic_epi64(x.m_simd, y.m_simd, z.m_simd, xor_not_and));
+      }
+
       template <size_t ROT>
       BOTAN_FN_ISA_SIMD_8X64 SIMD_8x64 rotr() const
          requires(ROT > 0 && ROT < 64)
