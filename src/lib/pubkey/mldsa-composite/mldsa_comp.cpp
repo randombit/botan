@@ -19,6 +19,7 @@
 #include <botan/oids.h>
 #include <botan/pk_algs.h>
 #include <botan/pk_ops.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/pk_ops_impl.h>
 
@@ -73,6 +74,21 @@ void validate_traditional_key_size(const MLDSA_Composite_Param& param, const Pub
                                param.traditional_key_size(),
                                trad_key.key_length()));
    }
+}
+
+/**
+ * Load the ML-DSA component of a composite private key.
+ *
+ * The seed is secret: it is poisoned while the component key is constructed, so
+ * that secret-dependent branching or memory access during the key expansion is
+ * flagged when running under valgrind. The ML-DSA implementation unpoisons all
+ * public artifacts it derives from the seed. The poison state of the input span
+ * itself is reverted before returning to the caller.
+ */
+std::shared_ptr<ML_DSA_PrivateKey> load_mldsa_private_key(const MLDSA_Composite_Param& param,
+                                                          std::span<const uint8_t> seed) {
+   const auto scope = CT::scoped_poison(seed);
+   return std::make_shared<ML_DSA_PrivateKey>(param.get_mldsa_algorithm_id(), seed);
 }
 }  // namespace
 
@@ -178,6 +194,10 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
          }
 #endif
          sig.insert(sig.end(), trad_sig.begin(), trad_sig.end());
+
+         // The signature is public by definition; make sure that no poison
+         // state introduced via the private key material sticks to it.
+         CT::unpoison(sig);
          return sig;
       }
 
@@ -293,6 +313,13 @@ std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_x509_ver
 
 std::shared_ptr<Private_Key> MLDSA_Composite_PrivateKey::load_traditional_private_key(
    const MLDSA_Composite_Param& param, std::span<const uint8_t> trad_key_bits) {
+   // Note that the traditional key bits are deliberately not poisoned here:
+   // for ECDSA and RSA they are a DER structure whose framing must remain
+   // "defined" for the BER decoder (the ECDSA scalar is poisoned inside the
+   // pcurves library during its use; the RSA implementation does not use
+   // valgrind-based constant-time checking). The Ed25519/Ed448 implementations
+   // carry no poison annotations, so poisoning their seeds would flag the
+   // public artifacts derived from them as false positives.
 #if defined(BOTAN_HAS_ED25519)
    if(param.traditional_algorithm() == "Ed25519") {
       return std::shared_ptr<Private_Key>(new Ed25519_PrivateKey(Ed25519_PrivateKey::from_seed(trad_key_bits)));
@@ -317,8 +344,7 @@ std::shared_ptr<Private_Key> MLDSA_Composite_PrivateKey::load_traditional_privat
 
 MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id_t id, std::span<const uint8_t> sk) :
       m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::from_id_supported_or_throw(id))),
-      m_mldsa_privkey(std::make_shared<ML_DSA_PrivateKey>(m_parameters->get_mldsa_algorithm_id(),
-                                                          mldsa_privkey_subspan(*m_parameters, sk))),
+      m_mldsa_privkey(load_mldsa_private_key(*m_parameters, mldsa_privkey_subspan(*m_parameters, sk))),
       m_traditional_privkey(
          load_traditional_private_key(*m_parameters, traditional_privkey_subspan(*m_parameters, sk))) {
    init_pubkey_members();
@@ -366,6 +392,11 @@ secure_vector<uint8_t> MLDSA_Composite_PrivateKey::private_key_bits() const {
          ->raw_private_key_bits();  // "raw_...()" should still return the raw seed even after fixing the PKCS#8 encoding format for ML-DSA
    secure_vector<uint8_t> trad_bytes = encode_traditional_private_key();
    result.insert(result.end(), trad_bytes.begin(), trad_bytes.end());
+
+   // The serialized encoding leaves the library's constant-time domain, e.g.
+   // it may be written into a PKCS#8 structure or to disk. Passing poisoned
+   // bytes to a syscall would be flagged by valgrind.
+   CT::unpoison(result);
    return result;
 }
 
@@ -397,8 +428,7 @@ MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(const AlgorithmIdentifier
                                                        std::span<const uint8_t> sk) :
 
       m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::from_algo_id_or_throw(algo_id))),
-      m_mldsa_privkey(std::make_shared<ML_DSA_PrivateKey>(m_parameters->get_mldsa_algorithm_id(),
-                                                          mldsa_privkey_subspan(*m_parameters, sk))),
+      m_mldsa_privkey(load_mldsa_private_key(*m_parameters, mldsa_privkey_subspan(*m_parameters, sk))),
       m_traditional_privkey(load_traditional_private_key(*m_parameters, traditional_privkey_subspan(*m_parameters, sk)))
 
 {
