@@ -21,6 +21,7 @@ namespace Botan {
 
 class BufferSlicer;
 class HashFunction;
+class Hash_Engine;
 
 /**
  * @brief Seed of the LMS tree, used to generate the LM-OTS private keys.
@@ -270,6 +271,16 @@ class BOTAN_TEST_API LMOTS_Private_Key final : public OTS_Instance {
                         const LMS_Seed& seed);
 
       /**
+       * @brief As above, but using a caller-provided hash engine, allowing
+       * its reuse over many key derivations
+       */
+      LMOTS_Private_Key(const LMOTS_Params& params,
+                        const LMS_Identifier& identifier,
+                        LMS_Tree_Node_Idx q,
+                        const LMS_Seed& seed,
+                        Hash_Engine& engine);
+
+      /**
        * @brief The secret chain input at a given chain index. (x[] in RFC 8554 4.2).
        */
       const LMOTS_Node& chain_input(uint16_t chain_idx) const { return m_ots_sk.at(chain_idx); }
@@ -315,6 +326,12 @@ class BOTAN_TEST_API LMOTS_Public_Key final : public OTS_Instance {
       explicit LMOTS_Public_Key(const LMOTS_Private_Key& lmots_sk);
 
       /**
+       * @brief As above, but using a caller-provided hash engine, allowing
+       * its reuse over many key derivations
+       */
+      LMOTS_Public_Key(const LMOTS_Private_Key& lmots_sk, Hash_Engine& engine);
+
+      /**
        * @brief Construct a new LMOTS public key object using the bytes.
        *
        * Note that the passed params, identifier and
@@ -333,6 +350,20 @@ class BOTAN_TEST_API LMOTS_Public_Key final : public OTS_Instance {
    private:
       LMOTS_K m_K;
 };
+
+/**
+ * @brief Compute the public key hash values K (RFC 8554 4.3) of @p count
+ * consecutive LM-OTS instances beginning at @p first_q, deriving the
+ * instances' secrets from @p seed. The hashing is batched across all
+ * instances' chains.
+ */
+BOTAN_TEST_API void lmots_compute_pubkeys(std::span<uint8_t> out_ks,
+                                          const LMOTS_Params& params,
+                                          const LMS_Identifier& identifier,
+                                          LMS_Tree_Node_Idx first_q,
+                                          size_t count,
+                                          const LMS_Seed& seed,
+                                          Hash_Engine& engine);
 
 /**
  * @brief Compute a public key candidate for an OTS-signature-message pair and the OTS instance parameters.

@@ -18,6 +18,7 @@ hss.h
 </header:internal>
 
 <requires>
+hash_engine
 rng
 sha2_32
 shake

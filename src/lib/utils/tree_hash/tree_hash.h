@@ -59,12 +59,11 @@ concept tree_hash_node_pair = concepts::tree_node_index<NodeIdx> && concepts::tr
                                  { func(out, address, a, b) };
                               };
 
-template <typename T, typename NodeIdx, typename LayerIdx, typename Address, typename NodeSS>
-concept tree_gen_leaf = concepts::tree_node_index<NodeIdx> && concepts::tree_layer_index<LayerIdx> &&
-                        concepts::tree_address<Address, LayerIdx, NodeIdx> && concepts::strong_span<NodeSS> &&
-                        requires(T func, NodeSS out, const Address& address) {
-                           { func(out, address) };
-                        };
+template <typename T, typename NodeIdx>
+concept tree_gen_leaves =
+   concepts::tree_node_index<NodeIdx> && requires(T func, std::span<uint8_t> out, NodeIdx first_idx, size_t count) {
+      { func(out, first_idx, count) };
+   };
 
 }  // namespace concepts
 
@@ -95,9 +94,11 @@ concept tree_gen_leaf = concepts::tree_node_index<NodeIdx> && concepts::tree_lay
  * @param total_tree_height The height of the merkle tree to construct.
  * @param idx_offset If we compute a subtree this marks the index of the leftmost leaf node in the bottom layer
  * @param node_pair_hash The function to process two child nodes to compute their parent node.
- * @param gen_leaf The logic to create a leaf node given the address in the tree. Probably this function
- *                 creates a one-time/few-time-signature's public key which is hashed to be the leaf node.
- * @param tree_address The address that is passed to gen_leaf or node_pair hash. This function will update the
+ * @param gen_leaves The logic to create a batch of consecutive leaf nodes, given the index of the
+ *                   first leaf (including the tree's index offset) and the leaf count. Probably this
+ *                   function creates one-time/few-time-signatures' public keys which are hashed to
+ *                   be the leaf nodes.
+ * @param tree_address The address that is passed to node_pair hash. This function will update the
  *                     address accordings to the currently processed node. This object may contain further
  *                     algorithm specific information, like the position of this merkle tree in a hypertree.
  */
@@ -115,7 +116,7 @@ inline void treehash(
    TreeLayerIndex total_tree_height,
    uint32_t idx_offset,
    concepts::tree_hash_node_pair<TreeNodeIndex, TreeLayerIndex, Address, StrongSpan<TreeNode>> auto node_pair_hash,
-   concepts::tree_gen_leaf<TreeNodeIndex, TreeLayerIndex, Address, StrongSpan<TreeNode>> auto gen_leaf,
+   concepts::tree_gen_leaves<TreeNodeIndex> auto gen_leaves,
    Address& tree_address) {
    BOTAN_ASSERT_NOMSG(out_root.size() == node_size);
    BOTAN_ASSERT(out_auth_path.has_value() == leaf_idx.has_value(),
@@ -129,12 +130,21 @@ inline void treehash(
 
    TreeNode current_node(node_size);  // Current logical node
 
+   // Leaves are created in batches to enable batched hashing. Both the
+   // batch size and the leaf count are powers of two, so batches are
+   // always full.
+   const uint32_t leaves_per_batch = std::min<uint32_t>(uint32_t(1) << total_tree_height.get(), 32);
+   std::vector<uint8_t> leaves(leaves_per_batch * node_size);
+
    // Traverse the tree from the left-most leaf, matching siblings and up until
    // the root (Post-order traversal). Collect the adjacent nodes to build
    // the authentication path along the way.
    for(TreeNodeIndex idx(0); true; ++idx) {
-      tree_address.set_address(TreeLayerIndex(0), idx + idx_offset);
-      gen_leaf(StrongSpan<TreeNode>(current_node), tree_address);
+      const uint32_t batch_pos = idx.get() % leaves_per_batch;
+      if(batch_pos == 0) {
+         gen_leaves(std::span(leaves), idx + idx_offset, leaves_per_batch);
+      }
+      copy_mem(current_node, std::span(leaves).subspan(batch_pos * node_size, node_size));
 
       // Now combine the freshly generated right node with previously generated
       // left ones

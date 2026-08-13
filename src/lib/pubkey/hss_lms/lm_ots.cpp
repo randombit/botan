@@ -14,6 +14,7 @@
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/hash_engine.h>
 #include <botan/internal/hss_lms_utils.h>
 #include <botan/internal/int_utils.h>
 
@@ -25,31 +26,55 @@ constexpr uint16_t D_MESG = 0x8181;
 /// For derivation of C as in https://github.com/cisco/hash-sigs
 constexpr uint16_t C_INDEX = 0xFFFD;
 
-class Chain_Generator {
+/**
+ * Steps many hash chains at once, computing for each selected lane
+ * Hash(identifier || u32str(q) || u16str(i) || u8str(j) || inputs[lane])
+ *
+ * The lanes cover the p chains of one or more consecutive LM-OTS
+ * instances, instance-major (all chains of first_q, then those of
+ * first_q + 1, ...).
+ */
+class Batch_Chain_Generator {
    public:
-      Chain_Generator(const LMS_Identifier& identifier, LMS_Tree_Node_Idx q) : m_gen(identifier) {
-         m_gen.set_q(q.get());
-      }
-
-      void process(HashFunction& hash,
-                   uint16_t chain_idx,
-                   uint8_t start,
-                   uint8_t end,
-                   std::span<const uint8_t> in,
-                   std::span<uint8_t> out) {
-         BOTAN_ARG_CHECK(start <= end, "Start value is bigger than end value");
-
-         copy_mem(out, in);
-         m_gen.set_i(chain_idx);
-
-         for(uint8_t j = start; j < end; ++j) {
-            m_gen.set_j(j);
-            m_gen.gen(out, hash, out);
+      Batch_Chain_Generator(
+         Hash_Engine& engine, const LMS_Identifier& identifier, LMS_Tree_Node_Idx first_q, size_t q_count, uint16_t p) :
+            m_engine(engine),
+            m_prefix_len(identifier.size() + sizeof(uint32_t) + sizeof(uint16_t) + sizeof(uint8_t)),
+            m_prefixes(q_count * p * m_prefix_len) {
+         for(size_t lane = 0; lane != q_count * p; ++lane) {
+            BufferStuffer prefix(chain_prefix(lane));
+            prefix.append(identifier);
+            prefix.append(store_be(LMS_Tree_Node_Idx(first_q.get() + static_cast<uint32_t>(lane / p))));
+            prefix.append(store_be(static_cast<uint16_t>(lane % p)));
+            prefix.next(1)[0] = 0;
          }
       }
 
+      Batch_Chain_Generator(Hash_Engine& engine, const LMS_Identifier& identifier, LMS_Tree_Node_Idx q, uint16_t p) :
+            Batch_Chain_Generator(engine, identifier, q, 1, p) {}
+
+      void process(std::span<const uint16_t> lanes,
+                   uint8_t j,
+                   std::span<std::span<uint8_t>> outputs,
+                   std::span<std::span<const uint8_t>> inputs) {
+         m_prefix_spans.resize(lanes.size());
+         for(size_t c = 0; c != lanes.size(); ++c) {
+            const auto prefix = chain_prefix(lanes[c]);
+            prefix[m_prefix_len - 1] = j;
+            m_prefix_spans[c] = prefix;
+         }
+         m_engine.batch_hash(outputs, m_prefix_spans, inputs);
+      }
+
    private:
-      PseudorandomKeyGeneration m_gen;
+      std::span<uint8_t> chain_prefix(size_t lane) {
+         return std::span(m_prefixes).subspan(lane * m_prefix_len, m_prefix_len);
+      }
+
+      Hash_Engine& m_engine;
+      size_t m_prefix_len;
+      std::vector<uint8_t> m_prefixes;
+      std::vector<std::span<const uint8_t>> m_prefix_spans;
 };
 
 // RFC 8554 3.1.1
@@ -266,17 +291,29 @@ LMOTS_Private_Key::LMOTS_Private_Key(const LMOTS_Params& params,
                                      const LMS_Identifier& identifier,
                                      LMS_Tree_Node_Idx q,
                                      const LMS_Seed& seed) :
+      LMOTS_Private_Key(params, identifier, q, seed, *Hash_Engine::create_or_throw(params.hash_name())) {}
+
+LMOTS_Private_Key::LMOTS_Private_Key(const LMOTS_Params& params,
+                                     const LMS_Identifier& identifier,
+                                     LMS_Tree_Node_Idx q,
+                                     const LMS_Seed& seed,
+                                     Hash_Engine& engine) :
       OTS_Instance(params, identifier, q), m_seed(seed) {
-   PseudorandomKeyGeneration gen(identifier);
-   const auto hash = params.hash();
+   const uint16_t p = params.p();
 
-   gen.set_q(q.get());
-   gen.set_j(0xff);
-
-   for(uint16_t i = 0; i < params.p(); ++i) {
-      gen.set_i(i);
-      m_ots_sk.push_back(gen.gen<LMOTS_Node>(*hash, seed));
+   m_ots_sk.reserve(p);
+   std::vector<uint16_t> chains(p);
+   std::vector<std::span<uint8_t>> outputs(p);
+   std::vector<std::span<const uint8_t>> inputs(p);
+   for(uint16_t i = 0; i < p; ++i) {
+      m_ots_sk.emplace_back(params.n());
+      chains[i] = i;
+      outputs[i] = std::span<uint8_t>(m_ots_sk.back().get());
+      inputs[i] = std::span<const uint8_t>(seed.get());
    }
+
+   Batch_Chain_Generator chain_gen(engine, identifier, q, p);
+   chain_gen.process(chains, 0xff, outputs, inputs);
 }
 
 void LMOTS_Private_Key::sign(StrongSpan<LMOTS_Signature_Bytes> out_sig, const LMS_Message& msg) const {
@@ -294,13 +331,45 @@ void LMOTS_Private_Key::sign(StrongSpan<LMOTS_Signature_Bytes> out_sig, const LM
 
    const auto Q_with_cksm = gen_Q_with_cksm(params(), identifier(), q(), C, msg);
 
-   Chain_Generator chain_gen(identifier(), q());
-   for(uint16_t i = 0; i < params().p(); ++i) {
-      const auto y_i = sig_stuffer.next(params().n());
-      const uint8_t a = coef(Q_with_cksm, i, params());
-      chain_gen.process(*hash, i, 0, a, chain_input(i), y_i);
-   }
+   const uint16_t p = params().p();
+   const size_t n = params().n();
+   const auto y = sig_stuffer.next(p * n);
    BOTAN_ASSERT_NOMSG(sig_stuffer.full());
+
+   std::vector<uint8_t> a(p);
+   for(uint16_t i = 0; i < p; ++i) {
+      a[i] = coef(Q_with_cksm, i, params());
+      copy_mem(y.subspan(i * n, n), chain_input(i));
+   }
+
+   const auto engine = Hash_Engine::create_or_throw(params().hash_name());
+   Batch_Chain_Generator chain_gen(*engine, identifier(), q(), p);
+
+   std::vector<uint16_t> active;
+   std::vector<std::span<uint8_t>> outputs;
+   std::vector<std::span<const uint8_t>> inputs;
+   active.reserve(p);
+   outputs.reserve(p);
+   inputs.reserve(p);
+
+   // Chain i takes a[i] steps in total; step all unfinished chains together
+   for(uint8_t j = 0;; ++j) {
+      active.clear();
+      outputs.clear();
+      inputs.clear();
+      for(uint16_t i = 0; i < p; ++i) {
+         if(j < a[i]) {
+            active.push_back(i);
+            const auto node = y.subspan(i * n, n);
+            outputs.push_back(node);
+            inputs.push_back(node);
+         }
+      }
+      if(active.empty()) {
+         break;
+      }
+      chain_gen.process(active, j, outputs, inputs);
+   }
 }
 
 void LMOTS_Private_Key::derive_random_C(std::span<uint8_t> out, HashFunction& hash) const {
@@ -313,21 +382,95 @@ void LMOTS_Private_Key::derive_random_C(std::span<uint8_t> out, HashFunction& ha
    gen.gen(out, hash, m_seed);
 }
 
-LMOTS_Public_Key::LMOTS_Public_Key(const LMOTS_Private_Key& lmots_sk) : /* NOLINT(*-slicing) */ OTS_Instance(lmots_sk) {
+LMOTS_Public_Key::LMOTS_Public_Key(const LMOTS_Private_Key& lmots_sk) :
+      LMOTS_Public_Key(lmots_sk, *Hash_Engine::create_or_throw(lmots_sk.params().hash_name())) {}
+
+LMOTS_Public_Key::LMOTS_Public_Key(const LMOTS_Private_Key& lmots_sk, Hash_Engine& engine) :
+      /* NOLINT(*-slicing) */ OTS_Instance(lmots_sk) {
+   const uint16_t p = lmots_sk.params().p();
+   const size_t n = lmots_sk.params().n();
+
+   // Walk all chains to the top in lock-step
+   secure_vector<uint8_t> nodes(p * n);
+   std::vector<uint16_t> chains(p);
+   std::vector<std::span<uint8_t>> outputs(p);
+   std::vector<std::span<const uint8_t>> inputs(p);
+   for(uint16_t i = 0; i < p; ++i) {
+      chains[i] = i;
+      const auto node = std::span(nodes).subspan(i * n, n);
+      copy_mem(node, lmots_sk.chain_input(i));
+      outputs[i] = node;
+      inputs[i] = node;
+   }
+
+   Batch_Chain_Generator chain_gen(engine, lmots_sk.identifier(), lmots_sk.q(), p);
+   for(uint8_t j = 0; j < lmots_sk.params().coef_max(); ++j) {
+      chain_gen.process(chains, j, outputs, inputs);
+   }
+
    const auto pk_hash = lmots_sk.params().hash();
    pk_hash->update(lmots_sk.identifier());
    pk_hash->update(store_be(lmots_sk.q()));
    pk_hash->update(store_be(D_PBLC));
+   pk_hash->update(nodes);
+   m_K = pk_hash->final<LMOTS_K>();
+}
 
-   Chain_Generator chain_gen(lmots_sk.identifier(), lmots_sk.q());
-   const auto hash = lmots_sk.params().hash();
-   LMOTS_Node tmp(lmots_sk.params().n());
-   for(uint16_t i = 0; i < lmots_sk.params().p(); ++i) {
-      chain_gen.process(*hash, i, 0, lmots_sk.params().coef_max(), lmots_sk.chain_input(i), tmp);
-      pk_hash->update(tmp);
+void lmots_compute_pubkeys(std::span<uint8_t> out_ks,
+                           const LMOTS_Params& params,
+                           const LMS_Identifier& identifier,
+                           LMS_Tree_Node_Idx first_q,
+                           size_t count,
+                           const LMS_Seed& seed,
+                           Hash_Engine& engine) {
+   BOTAN_ASSERT_NOMSG(out_ks.size() == count * params.n());
+
+   const uint16_t p = params.p();
+   const size_t n = params.n();
+   const size_t lanes = count * p;
+   BOTAN_ASSERT_NOMSG(lanes <= 0xFFFF);
+
+   secure_vector<uint8_t> nodes(lanes * n);
+
+   std::vector<uint16_t> lane_ids(lanes);
+   std::vector<std::span<uint8_t>> outputs(lanes);
+   std::vector<std::span<const uint8_t>> inputs(lanes);
+   for(size_t l = 0; l != lanes; ++l) {
+      lane_ids[l] = static_cast<uint16_t>(l);
+      outputs[l] = std::span(nodes).subspan(l * n, n);
+      inputs[l] = std::span<const uint8_t>(seed.get());
    }
 
-   m_K = pk_hash->final<LMOTS_K>();
+   Batch_Chain_Generator chain_gen(engine, identifier, first_q, count, p);
+
+   // Derive the secret chain inputs (x[] in RFC 8554 4.2)
+   chain_gen.process(lane_ids, 0xff, outputs, inputs);
+
+   // Walk all chains of all instances to the top in lock-step
+   for(size_t l = 0; l != lanes; ++l) {
+      inputs[l] = outputs[l];
+   }
+   for(uint8_t j = 0; j < params.coef_max(); ++j) {
+      chain_gen.process(lane_ids, j, outputs, inputs);
+   }
+
+   // Compute each instance's K over its chain ends (RFC 8554 4.3)
+   const size_t k_prefix_len = identifier.size() + sizeof(uint32_t) + sizeof(uint16_t);
+   std::vector<uint8_t> k_prefixes(count * k_prefix_len);
+   std::vector<std::span<uint8_t>> k_outs(count);
+   std::vector<std::span<const uint8_t>> k_prefix_spans(count);
+   std::vector<std::span<const uint8_t>> k_nodes(count);
+   for(size_t i = 0; i != count; ++i) {
+      const auto prefix_span = std::span(k_prefixes).subspan(i * k_prefix_len, k_prefix_len);
+      BufferStuffer prefix(prefix_span);
+      prefix.append(identifier);
+      prefix.append(store_be(LMS_Tree_Node_Idx(first_q.get() + static_cast<uint32_t>(i))));
+      prefix.append(store_be(D_PBLC));
+      k_prefix_spans[i] = prefix_span;
+      k_outs[i] = out_ks.subspan(i * n, n);
+      k_nodes[i] = std::span(nodes).subspan(i * p * n, p * n);
+   }
+   engine.batch_hash(k_outs, k_prefix_spans, k_nodes);
 }
 
 LMOTS_K lmots_compute_pubkey_from_sig(const LMOTS_Signature& sig,
@@ -340,20 +483,50 @@ LMOTS_K lmots_compute_pubkey_from_sig(const LMOTS_Signature& sig,
 
    const auto Q_with_cksm = gen_Q_with_cksm(params, identifier, q, sig.C(), msg);
 
+   const uint16_t p = params.p();
+   const size_t n = params.n();
+
+   secure_vector<uint8_t> nodes(p * n);
+   std::vector<uint8_t> a(p);
+   for(uint16_t i = 0; i < p; ++i) {
+      a[i] = coef(Q_with_cksm, i, params);
+      copy_mem(std::span(nodes).subspan(i * n, n), sig.y(i));
+   }
+
+   const auto engine = Hash_Engine::create_or_throw(params.hash_name());
+   Batch_Chain_Generator chain_gen(*engine, identifier, q, p);
+
+   std::vector<uint16_t> active;
+   std::vector<std::span<uint8_t>> outputs;
+   std::vector<std::span<const uint8_t>> inputs;
+   active.reserve(p);
+   outputs.reserve(p);
+   inputs.reserve(p);
+
+   // Chain i continues from position a[i] up to the top
+   for(uint8_t j = 0; j < params.coef_max(); ++j) {
+      active.clear();
+      outputs.clear();
+      inputs.clear();
+      for(uint16_t i = 0; i < p; ++i) {
+         if(a[i] <= j) {
+            active.push_back(i);
+            const auto node = std::span(nodes).subspan(i * n, n);
+            outputs.push_back(node);
+            inputs.push_back(node);
+         }
+      }
+      if(!active.empty()) {
+         chain_gen.process(active, j, outputs, inputs);
+      }
+   }
+
    // Prefill the final hash object
    const auto pk_hash = params.hash();
    pk_hash->update(identifier);
    pk_hash->update(store_be(q));
    pk_hash->update(store_be(D_PBLC));
-
-   Chain_Generator chain_gen(identifier, q);
-   const auto hash = params.hash();
-   LMOTS_Node tmp(params.n());
-   for(uint16_t i = 0; i < params.p(); ++i) {
-      const uint8_t a = coef(Q_with_cksm, i, params);
-      chain_gen.process(*hash, i, a, params.coef_max(), sig.y(i), tmp);
-      pk_hash->update(tmp);
-   }
+   pk_hash->update(nodes);
    // Alg. 4b 4.
    return pk_hash->final<LMOTS_K>();
 }
