@@ -6,4 +6,5 @@ type -> "Internal"
 
 <requires>
 sha2_32
+os_utils
 </requires>
