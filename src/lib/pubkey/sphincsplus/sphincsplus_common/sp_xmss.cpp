@@ -43,14 +43,31 @@ SphincsTreeNode xmss_sign_and_pkgen(StrongSpan<SphincsXmssSignature> out_sig,
 
    pk_addr.set_type(Sphincs_Address_Type::WotsPublicKeyCompression);
 
-   const GenerateLeafFunction xmss_gen_leaf = [&](StrongSpan<SphincsTreeNode> out_root, TreeNodeIndex address_index) {
-      wots_sign_and_pkgen(
-         wots_bytes_s, out_root, secret_seed, address_index, idx_leaf, steps, leaf_addr, pk_addr, params, hashes);
-   };
+   // Each leaf is a full WOTS+ key generation; the hashing is batched over
+   // all chains of a group of leaves at once. The group size bounds the
+   // WOTS public key scratch while still offering wide hash batches.
+   const GenerateLeavesFunction xmss_gen_leaves =
+      [&](std::span<uint8_t> out_leaves, TreeNodeIndex first_idx, uint32_t count) {
+         constexpr uint32_t leaf_group = 128;
+         for(uint32_t j = 0; j < count; j += leaf_group) {
+            const uint32_t leaves = std::min(leaf_group, count - j);
+            wots_sign_and_pkgen(wots_bytes_s,
+                                out_leaves.subspan(j * params.n(), leaves * params.n()),
+                                secret_seed,
+                                first_idx + j,
+                                leaves,
+                                idx_leaf,
+                                steps,
+                                leaf_addr,
+                                pk_addr,
+                                params,
+                                hashes);
+         }
+      };
 
    SphincsTreeNode next_root(params.n());
    BOTAN_ASSERT_NOMSG(tree_addr.get_type() == Sphincs_Address_Type::HashTree);
-   treehash(next_root, auth_path_s, params, hashes, idx_leaf, 0, params.xmss_tree_height(), xmss_gen_leaf, tree_addr);
+   treehash(next_root, auth_path_s, params, hashes, idx_leaf, 0, params.xmss_tree_height(), xmss_gen_leaves, tree_addr);
 
    return next_root;
 }

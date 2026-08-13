@@ -16,6 +16,8 @@
 
 namespace Botan {
 
+class Hash_Engine;
+
 /**
  * A collection of pseudorandom hash functions required for SLH-DSA
  * computations. See FIPS 205, Section 11.2.1 and 11.2.2.
@@ -75,6 +77,24 @@ class BOTAN_TEST_API Sphincs_Hash_Functions /* NOLINT(*-special-member-functions
          T(out, address, sk_seed);
       }
 
+      /**
+      * Batched variant of T with a single input buffer per lane
+      *
+      * Computes outputs[i] = T(addresses[i], inputs[i]). All inputs must
+      * have identical length. outputs[i] may alias inputs[i], as used for
+      * stepping WOTS+ chains in place.
+      */
+      void T_batch(std::span<std::span<uint8_t>> outputs,
+                   std::span<const Sphincs_Address> addresses,
+                   std::span<std::span<const uint8_t>> inputs);
+
+      /**
+      * Batched variant of PRF: outputs[i] = PRF(sk_seed, addresses[i])
+      */
+      void PRF_batch(std::span<std::span<uint8_t>> outputs,
+                     const SphincsSecretSeed& sk_seed,
+                     std::span<const Sphincs_Address> addresses);
+
       virtual std::string msg_hash_function_name() const = 0;
 
    protected:
@@ -95,12 +115,33 @@ class BOTAN_TEST_API Sphincs_Hash_Functions /* NOLINT(*-special-member-functions
        */
       virtual HashFunction& tweak_hash(const Sphincs_Address& address, size_t input_length) = 0;
 
+      /**
+      * @return engine for batched tweaked hashing of inputs of the given length
+      */
+      virtual Hash_Engine& tweak_hash_engine(size_t input_length) = 0;
+
+      /**
+      * @return byte length of the address encoding used for tweaked hashing
+      */
+      virtual size_t address_encoding_len() const = 0;
+
+      /**
+      * Write the encoding of @p address used for tweaked hashing to @p out
+      */
+      virtual void encode_address(std::span<uint8_t> out, const Sphincs_Address& address) const = 0;
+
       virtual std::vector<uint8_t> H_msg_digest(StrongSpan<const SphincsMessageRandomness> r,
                                                 const SphincsTreeNode& root,
                                                 const SphincsMessageInternal& message) = 0;
 
       const Sphincs_Parameters& m_sphincs_params;  // NOLINT(*non-private-member-variable*)
       const SphincsPublicSeed& m_pub_seed;         // NOLINT(*non-private-member-variable*)
+
+   private:
+      // Scratch space for batched hashing
+      std::vector<uint8_t> m_adrs_buf;
+      std::vector<std::span<const uint8_t>> m_adrs_spans;
+      std::vector<std::span<const uint8_t>> m_prf_inputs;
 };
 
 }  // namespace Botan

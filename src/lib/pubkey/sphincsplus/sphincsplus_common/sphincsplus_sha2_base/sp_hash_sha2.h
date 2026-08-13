@@ -12,6 +12,8 @@
 #include <botan/internal/sp_hash.h>
 
 #include <botan/internal/concat_util.h>
+#include <botan/internal/fmt.h>
+#include <botan/internal/hash_engine.h>
 #include <botan/internal/hmac.h>
 #include <botan/internal/mgf1.h>
 #include <botan/internal/sha2_32.h>
@@ -40,6 +42,18 @@ class Sphincs_Hash_Functions_Sha2 : public Sphincs_Hash_Functions {
          hash.update(padded_pub_seed);
          hash.update(address.to_bytes_compressed());
          return hash;
+      }
+
+      Hash_Engine& tweak_hash_engine(size_t input_length) override {
+         auto& engine = (input_length > m_sphincs_params.n()) ? m_engine_x : m_engine_256;
+         return *engine;
+      }
+
+      size_t address_encoding_len() const override { return 22; }
+
+      void encode_address(std::span<uint8_t> out, const Sphincs_Address& address) const override {
+         const auto adrs = address.to_bytes_compressed();
+         copy_mem(out.data(), adrs.data(), adrs.size());
       }
 
       std::vector<uint8_t> H_msg_digest(StrongSpan<const SphincsMessageRandomness> r,
@@ -86,6 +100,18 @@ class Sphincs_Hash_Functions_Sha2 : public Sphincs_Hash_Functions {
          } else {
             m_sha_256 = std::make_unique<SHA_256>();
          }
+
+         // Batch engines for the same tweaked hashes. The padded pub seed
+         // prefix is exactly one hash block, so the engines can precompute
+         // its midstate once.
+         const size_t n_bits = m_sphincs_params.n() * 8;
+
+         const std::string hash_256 = (m_sphincs_params.n() < 32) ? fmt("Truncated(SHA-256,{})", n_bits) : "SHA-256";
+         m_engine_256 = Hash_Engine::create_or_throw(hash_256, m_padded_pub_seed_256);
+
+         const std::string hash_x =
+            (m_sphincs_params.n() == 16) ? fmt("Truncated(SHA-256,{})", n_bits) : fmt("Truncated(SHA-512,{})", n_bits);
+         m_engine_x = Hash_Engine::create_or_throw(hash_x, m_padded_pub_seed_x);
       }
 
       void PRF_msg(StrongSpan<SphincsMessageRandomness> out,
@@ -110,6 +136,9 @@ class Sphincs_Hash_Functions_Sha2 : public Sphincs_Hash_Functions {
       std::unique_ptr<HashFunction> m_sha_x;
       /// Non truncated SHA-X hash
       std::unique_ptr<HashFunction> m_sha_x_full;
+
+      std::unique_ptr<Hash_Engine> m_engine_256;
+      std::unique_ptr<Hash_Engine> m_engine_x;
 
       std::vector<uint8_t> m_padded_pub_seed_256;
       std::vector<uint8_t> m_padded_pub_seed_x;

@@ -21,7 +21,7 @@ void treehash(StrongSpan<SphincsTreeNode> out_root,
               std::optional<TreeNodeIndex> leaf_idx,
               uint32_t idx_offset,
               uint32_t total_tree_height,
-              const GenerateLeafFunction& gen_leaf,
+              const GenerateLeavesFunction& gen_leaves,
               Sphincs_Address& tree_address) {
    BOTAN_ASSERT_NOMSG(out_root.size() == params.n());
    BOTAN_ASSERT_NOMSG(out_auth_path.size() == params.n() * total_tree_height);
@@ -29,7 +29,11 @@ void treehash(StrongSpan<SphincsTreeNode> out_root,
    const TreeNodeIndex max_idx(uint32_t((1 << total_tree_height) - 1));
 
    std::vector<uint8_t> stack(total_tree_height * params.n());
-   SphincsTreeNode current_node(params.n());  // Current logical node
+
+   // Leaves are created in batches to enable batched hashing. Both the batch
+   // size and the leaf count are powers of two, so batches are always full.
+   const uint32_t leaves_per_batch = std::min<uint32_t>(uint32_t(1) << total_tree_height, 128);
+   std::vector<uint8_t> leaves(leaves_per_batch * params.n());
 
    /* Traverse the tree from the left-most leaf, matching siblings and up until
    * the root (Post-order traversal). Collect the adjacent nodes (A) to build
@@ -42,8 +46,12 @@ void treehash(StrongSpan<SphincsTreeNode> out_root,
    *   1X  2A  4   5
    */
    for(TreeNodeIndex idx(0); true; ++idx) {
-      tree_address.set_tree_height(TreeLayerIndex(0));
-      gen_leaf(current_node, idx + idx_offset);
+      const uint32_t batch_pos = idx.get() % leaves_per_batch;
+      if(batch_pos == 0) {
+         gen_leaves(leaves, idx + idx_offset, leaves_per_batch);
+      }
+      // Current logical node, evolved in place as siblings are combined
+      const auto current_node = std::span(leaves).subspan(batch_pos * params.n(), params.n());
 
       // Now combine the freshly generated right node with previously generated
       // left ones

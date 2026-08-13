@@ -27,11 +27,17 @@ class Sphincs_Parameters;
  * (Winternitz OTS). It is meant to be used inside SLH-DSA and does not aim to
  * be applicable for other use cases. If this function is not used in a signing
  * operation (i.e. @p sign_leaf_idx is not set), @p wots_steps may be empty.
+ *
+ * Computes the WOTS public key leaves for @p leaf_count consecutive leaves
+ * starting at @p first_leaf_idx into @p leaves_out, batching the hash
+ * invocations across all leaves' chains. If @p sign_leaf_idx falls into
+ * this range, its WOTS signature is written to @p sig_out in passing.
  */
 BOTAN_TEST_API void wots_sign_and_pkgen(StrongSpan<WotsSignature> sig_out,
-                                        StrongSpan<SphincsTreeNode> leaf_out,
+                                        std::span<uint8_t> leaves_out,
                                         const SphincsSecretSeed& secret_seed,
-                                        TreeNodeIndex leaf_idx,
+                                        TreeNodeIndex first_leaf_idx,
+                                        size_t leaf_count,
                                         std::optional<TreeNodeIndex> sign_leaf_idx,
                                         const std::vector<WotsHashIndex>& wots_steps,
                                         Sphincs_Address& leaf_addr,
@@ -48,7 +54,7 @@ BOTAN_TEST_API void wots_sign_and_pkgen(StrongSpan<WotsSignature> sig_out,
  */
 BOTAN_TEST_API WotsPublicKey wots_public_key_from_signature(const SphincsTreeNode& hashed_message,
                                                             StrongSpan<const WotsSignature> signature,
-                                                            Sphincs_Address& address,
+                                                            const Sphincs_Address& address,
                                                             const Sphincs_Parameters& params,
                                                             Sphincs_Hash_Functions& hashes);
 

@@ -11,6 +11,8 @@
 
 #include <botan/internal/sp_hash.h>
 
+#include <botan/internal/fmt.h>
+#include <botan/internal/hash_engine.h>
 #include <botan/internal/shake.h>
 
 namespace Botan {
@@ -25,6 +27,18 @@ class Sphincs_Hash_Functions_Shake : public Sphincs_Hash_Functions {
          m_hash.update(m_pub_seed);
          m_hash.update(address.to_bytes());
          return m_hash;
+      }
+
+      Hash_Engine& tweak_hash_engine(size_t input_length) override {
+         BOTAN_UNUSED(input_length);
+         return *m_engine;
+      }
+
+      size_t address_encoding_len() const override { return 32; }
+
+      void encode_address(std::span<uint8_t> out, const Sphincs_Address& address) const override {
+         const auto adrs = address.to_bytes();
+         copy_mem(out.data(), adrs.data(), adrs.size());
       }
 
       std::vector<uint8_t> H_msg_digest(StrongSpan<const SphincsMessageRandomness> r,
@@ -43,7 +57,9 @@ class Sphincs_Hash_Functions_Shake : public Sphincs_Hash_Functions {
       Sphincs_Hash_Functions_Shake(const Sphincs_Parameters& sphincs_params, const SphincsPublicSeed& pub_seed) :
             Sphincs_Hash_Functions(sphincs_params, pub_seed),
             m_hash(sphincs_params.n() * 8),
-            m_h_msg_hash(8 * sphincs_params.h_msg_digest_bytes()) {}
+            m_h_msg_hash(8 * sphincs_params.h_msg_digest_bytes()),
+            m_engine(Hash_Engine::create_or_throw(fmt("SHAKE-256({})", sphincs_params.n() * 8),
+                                                  std::span<const uint8_t>(pub_seed.get()))) {}
 
       void PRF_msg(StrongSpan<SphincsMessageRandomness> out,
                    StrongSpan<const SphincsSecretPRF> sk_prf,
@@ -61,6 +77,7 @@ class Sphincs_Hash_Functions_Shake : public Sphincs_Hash_Functions {
    private:
       SHAKE_256 m_hash;
       SHAKE_256 m_h_msg_hash;
+      std::unique_ptr<Hash_Engine> m_engine;
 };
 
 }  // namespace Botan

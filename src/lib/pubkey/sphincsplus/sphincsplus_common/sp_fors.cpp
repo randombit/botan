@@ -78,9 +78,39 @@ SphincsTreeNode fors_sign_and_pkgen(StrongSpan<ForsSignature> sig_out,
    BufferStuffer roots(roots_buffer);
    BufferStuffer sig(sig_out);
 
-   // Buffer to hold the FORS leaves during tree traversal
-   // (Avoids a secure_vector allocation/deallocation in the hot path)
-   ForsLeafSecret fors_leaf_secret(params.n());
+   // Scratch space for batched leaf generation, reused across subtrees
+   std::vector<Sphincs_Address> leaf_addrs;
+   secure_vector<uint8_t> leaf_secrets;
+   std::vector<std::span<uint8_t>> secret_spans;
+   std::vector<std::span<const uint8_t>> csecret_spans;
+   std::vector<std::span<uint8_t>> leaf_spans;
+
+   // Each leaf is the hash of a secret derived from the leaf's address
+   const GenerateLeavesFunction fors_gen_leaves = [&](std::span<uint8_t> out, TreeNodeIndex first_idx, uint32_t count) {
+      leaf_addrs.assign(count, fors_tree_addr);
+      leaf_secrets.resize(count * params.n());
+      secret_spans.resize(count);
+      csecret_spans.resize(count);
+      leaf_spans.resize(count);
+
+      for(uint32_t j = 0; j != count; ++j) {
+         leaf_addrs[j]
+            .set_type(Sphincs_Address_Type::ForsKeyGeneration)
+            .set_tree_height(TreeLayerIndex(0))
+            .set_tree_index(first_idx + j);
+         secret_spans[j] = std::span(leaf_secrets).subspan(j * params.n(), params.n());
+         csecret_spans[j] = secret_spans[j];
+         leaf_spans[j] = out.subspan(j * params.n(), params.n());
+      }
+
+      hashes.PRF_batch(secret_spans, secret_seed, leaf_addrs);
+
+      for(uint32_t j = 0; j != count; ++j) {
+         leaf_addrs[j].set_type(Sphincs_Address_Type::ForsTree);
+      }
+
+      hashes.T_batch(leaf_spans, leaf_addrs, csecret_spans);
+   };
 
    // For each of the k FORS subtrees: Compute the secret leaf, the authentication path
    // and the trees' root and append the signature respectively
@@ -98,17 +128,6 @@ SphincsTreeNode fors_sign_and_pkgen(StrongSpan<ForsSignature> sig_out,
       // Compute the authentication path and root for this leaf node
       fors_tree_addr.set_type(Sphincs_Address_Type::ForsTree);
 
-      const GenerateLeafFunction fors_gen_leaf = [&](StrongSpan<SphincsTreeNode> out_root,
-                                                     TreeNodeIndex address_index) {
-         fors_tree_addr.set_tree_index(address_index);
-         fors_tree_addr.set_type(Sphincs_Address_Type::ForsKeyGeneration);
-
-         hashes.PRF(fors_leaf_secret, secret_seed, fors_tree_addr);
-
-         fors_tree_addr.set_type(Sphincs_Address_Type::ForsTree);
-         hashes.T(out_root, fors_tree_addr, fors_leaf_secret);
-      };
-
       treehash(roots.next<SphincsTreeNode>(params.n()),
                sig.next<SphincsAuthenticationPath>(params.a() * params.n()),
                params,
@@ -116,7 +135,7 @@ SphincsTreeNode fors_sign_and_pkgen(StrongSpan<ForsSignature> sig_out,
                indices[i],
                idx_offset,
                params.a(),
-               fors_gen_leaf,
+               fors_gen_leaves,
                fors_tree_addr);
    }
 
