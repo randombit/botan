@@ -18,6 +18,7 @@
 #include <botan/rng.h>
 #include <botan/internal/asymmetric_encryption_to_kem_adapter.h>
 #include <botan/internal/concat_util.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hybrid_kem_ops.h>
 #include <botan/internal/kex_to_kem_adapter.h>
@@ -137,6 +138,13 @@ PairOfPublicKeys load_public_keys(const MLKEM_Composite_Param& param, std::span<
 
 std::unique_ptr<Private_Key> load_traditional_private_key(MLKEM_Composite_Param param,
                                                           std::span<const uint8_t> key_bits) {
+   // Note that the traditional key bits are deliberately not poisoned here: for
+   // ECDH and RSA they are a DER structure whose framing must remain "defined"
+   // for the BER decoder (the ECDH scalar is poisoned inside the pcurves
+   // library during its use; the RSA implementation does not use valgrind-based
+   // constant-time checking). The X25519/X448 secret scalars are poisoned
+   // inside their curve arithmetic implementations.
+
    // X25519/X448 are encoded as raw values, hence the need special handling here.
 #if defined(BOTAN_HAS_X25519)
    if(param.traditional_algorithm() == "X25519") {
@@ -154,12 +162,26 @@ std::unique_ptr<Private_Key> load_traditional_private_key(MLKEM_Composite_Param 
    return key;
 }
 
+/**
+ * Load the ML-KEM component of a composite private key.
+ *
+ * The seed is secret: it is poisoned while the component key is constructed, so
+ * that secret-dependent branching or memory access during the key expansion is
+ * flagged when running under valgrind. The ML-KEM implementation unpoisons all
+ * public artifacts it derives from the seed. The poison state of the input span
+ * itself is reverted before returning to the caller.
+ */
+std::unique_ptr<Private_Key> load_mlkem_private_key(const MLKEM_Composite_Param& param, std::span<const uint8_t> seed) {
+   const auto scope = CT::scoped_poison(seed);
+   return load_private_key(param.get_mlkem_algorithm_id(), seed);
+}
+
 PairOfPrivateKeys load_private_keys(const MLKEM_Composite_Param& param, std::span<const uint8_t> key_bits) {
    const auto mlkem_privkey_bits = mlkem_privkey_subspan(param, key_bits);
    const auto trad_privkey_bits = traditional_privkey_subspan(param, key_bits);
 
    return {
-      load_private_key(param.get_mlkem_algorithm_id(), mlkem_privkey_bits),
+      load_mlkem_private_key(param, mlkem_privkey_bits),
       maybe_wrap_traditional_private_key(param, load_traditional_private_key(param, trad_privkey_bits)),
    };
 }
@@ -226,6 +248,11 @@ void combiner(std::span<uint8_t> out_shared_secret,
    sha3_256->update(traditional_pubkey_encoded);
    sha3_256->update(label);
    sha3_256->final(out_shared_secret);
+
+   // The shared secret leaves the library's constant-time domain at the KEM API
+   // boundary; make sure that no poison state introduced via the component
+   // shared secrets sticks to it (mirroring the component KEM operations).
+   CT::unpoison(out_shared_secret);
 }
 
 class MLKEM_Composite_Encapsulation_Operation final : public KEM_Encryption_with_Combiner {
@@ -370,8 +397,14 @@ MLKEM_Composite_PrivateKey::MLKEM_Composite_PrivateKey(MLKEM_Composite_Param::id
                                  load_private_keys(MLKEM_Composite_Param::from_id_supported_or_throw(id), sk)) {}
 
 secure_vector<uint8_t> MLKEM_Composite_PrivateKey::private_key_bits() const {
-   return concat(mlkem_private_key().private_key_bits_with_format(MlPrivateKeyFormat::Seed),
-                 encode_traditional_private_key(m_parameters, traditional_private_key()));
+   auto result = concat(mlkem_private_key().private_key_bits_with_format(MlPrivateKeyFormat::Seed),
+                        encode_traditional_private_key(m_parameters, traditional_private_key()));
+
+   // The serialized encoding leaves the library's constant-time domain, e.g.
+   // it may be written into a PKCS#8 structure or to disk. Passing poisoned
+   // bytes to a syscall would be flagged by valgrind.
+   CT::unpoison(result);
+   return result;
 }
 
 std::unique_ptr<Public_Key> MLKEM_Composite_PrivateKey::public_key() const {
