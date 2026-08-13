@@ -110,6 +110,11 @@ class SIMD_4x64 final {
 
       BOTAN_FN_ISA_SIMD_4X64 void operator|=(const SIMD_4x64& other) { m_simd = _mm256_or_si256(m_simd, other.m_simd); }
 
+      // (~reg) & other
+      SIMD_4x64 BOTAN_FN_ISA_SIMD_4X64 andc(const SIMD_4x64& other) const {
+         return SIMD_4x64(_mm256_andnot_si256(m_simd, other.m_simd));
+      }
+
       template <size_t ROT>
       BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 rotr() const
          requires(ROT > 0 && ROT < 64)
@@ -147,6 +152,51 @@ class SIMD_4x64 final {
       template <size_t ROT>
       SIMD_4x64 BOTAN_FN_ISA_SIMD_4X64 rotl() const {
          return this->rotr<64 - ROT>();
+      }
+
+      SIMD_4x64 BOTAN_FN_ISA_SIMD_4X64 sigma0() const {
+         const SIMD_4x64 r1 = this->rotr<28>();
+         const SIMD_4x64 r2 = this->rotr<34>();
+         const SIMD_4x64 r3 = this->rotr<39>();
+         return r1 ^ r2 ^ r3;
+      }
+
+      SIMD_4x64 BOTAN_FN_ISA_SIMD_4X64 sigma1() const {
+         const SIMD_4x64 r1 = this->rotr<14>();
+         const SIMD_4x64 r2 = this->rotr<18>();
+         const SIMD_4x64 r3 = this->rotr<41>();
+         return r1 ^ r2 ^ r3;
+      }
+
+      BOTAN_FN_ISA_SIMD_4X64
+      static SIMD_4x64 choose(const SIMD_4x64& mask, const SIMD_4x64& a, const SIMD_4x64& b) {
+#if defined(__AVX512VL__)
+         return SIMD_4x64(_mm256_ternarylogic_epi64(mask.raw(), a.raw(), b.raw(), 0xca));
+#else
+         return (mask & a) ^ mask.andc(b);
+#endif
+      }
+
+      BOTAN_FN_ISA_SIMD_4X64
+      static SIMD_4x64 majority(const SIMD_4x64& x, const SIMD_4x64& y, const SIMD_4x64& z) {
+#if defined(__AVX512VL__)
+         return SIMD_4x64(_mm256_ternarylogic_epi64(x.raw(), y.raw(), z.raw(), 0xe8));
+#else
+         return SIMD_4x64::choose(x ^ y, z, y);
+#endif
+      }
+
+      BOTAN_FN_ISA_SIMD_4X64
+      static void transpose(SIMD_4x64& B0, SIMD_4x64& B1, SIMD_4x64& B2, SIMD_4x64& B3) {
+         const __m256i T0 = _mm256_unpacklo_epi64(B0.m_simd, B1.m_simd);
+         const __m256i T1 = _mm256_unpackhi_epi64(B0.m_simd, B1.m_simd);
+         const __m256i T2 = _mm256_unpacklo_epi64(B2.m_simd, B3.m_simd);
+         const __m256i T3 = _mm256_unpackhi_epi64(B2.m_simd, B3.m_simd);
+
+         B0.m_simd = _mm256_permute2x128_si256(T0, T2, 0 + (2 << 4));
+         B1.m_simd = _mm256_permute2x128_si256(T1, T3, 0 + (2 << 4));
+         B2.m_simd = _mm256_permute2x128_si256(T0, T2, 1 + (3 << 4));
+         B3.m_simd = _mm256_permute2x128_si256(T1, T3, 1 + (3 << 4));
       }
 
       template <int SHIFT>
