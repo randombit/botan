@@ -1,8 +1,9 @@
-import os
-import sys
-import subprocess
-import re
 import multiprocessing
+import os
+import re
+import subprocess
+import sys
+
 
 class BuildError(Exception):
     pass

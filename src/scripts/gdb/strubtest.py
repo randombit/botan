@@ -20,6 +20,7 @@ This can be used in interactive GDB sessions for debugging and development.
 
 import gdb
 
+
 def stack_pointer(frame):
     return frame.read_register('sp')
 

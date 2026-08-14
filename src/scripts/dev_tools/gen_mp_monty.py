@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import sys
 import datetime
+import sys
 
 # (C) 2018,2023,2025 Jack Lloyd
 # Botan is released under the Simplified BSD License (see license.txt)
@@ -29,7 +29,7 @@ def monty_redc_code(n, p_dash1=False):
         lines.append("ws[0] = accum.monty_step(p[0], p_dash);")
 
     for i in range(1, n):
-        for j in range(0, i):
+        for j in range(i):
             lines.append("accum.mul(ws[%d], p[%d]);" % (j, i-j))
 
         lines.append("accum.add(z[%d]);" % (i))
@@ -38,7 +38,7 @@ def monty_redc_code(n, p_dash1=False):
         else:
             lines.append("ws[%d] = accum.monty_step(p[0], p_dash);" % (i))
 
-    for i in range(0, n - 1):
+    for i in range(n - 1):
         for j in range(i + 1, n):
             lines.append("accum.mul(ws[%d], p[%d]);" % (j, n + i-j))
 
@@ -81,8 +81,7 @@ namespace Botan {
     with open('./src/lib/math/mp/mp_monty_n.cpp', encoding='utf8', mode='w') as monty_n:
         monty_n.write(header)
 
-        for n in sizes:
-            monty_n.write(monty_redc_code(n))
+        monty_n.writelines(monty_redc_code(n) for n in sizes)
 
         monty_n.write(footer)
 

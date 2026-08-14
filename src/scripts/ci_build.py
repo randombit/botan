@@ -9,14 +9,15 @@ CI build script
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
+import multiprocessing
+import optparse  # pylint: disable=deprecated-module
 import os
 import platform
 import subprocess
 import sys
-import time
 import tempfile
-import optparse # pylint: disable=deprecated-module
-import multiprocessing
+import time
+
 
 def get_concurrency():
     def_concurrency = 2
@@ -459,10 +460,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             if target == 'sanitizer' and target_os == 'linux':
                 return True
 
-            if target == 'shared' and target_os != 'windows':
-                return True
-
-            return False
+            return target == 'shared' and target_os != 'windows'
 
         if add_boost_support(target, target_os):
             flags += ['--with-boost']
@@ -509,9 +507,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             flags += ['--with-tpm']
             test_cmd += ['--run-online-tests']
 
-        if target in ['coverage', 'pkcs11']:
-            if pkcs11_lib and os.access(pkcs11_lib, os.R_OK):
-                test_cmd += ['--pkcs11-lib=%s' % (pkcs11_lib)]
+        if target in ['coverage', 'pkcs11'] and pkcs11_lib and os.access(pkcs11_lib, os.R_OK):
+            test_cmd += ['--pkcs11-lib=%s' % (pkcs11_lib)]
 
     if target in ['coverage', 'sanitizer']:
         test_cmd += ['--run-long-tests']
@@ -700,10 +697,7 @@ def skip_tls_proxy_tests_for_this_target(ci_image):
 
     # The tls_proxy test seems to consistently fail on certain macOS images
     # See GH #5160
-    if ci_image in ['macos-15-intel', 'macos-26']:
-        return True
-
-    return False
+    return ci_image in ['macos-15-intel', 'macos-26']
 
 def main(args=None):
     """
@@ -737,9 +731,7 @@ def main(args=None):
         elif options.cc == 'gcc-14':
             options.cc = 'gcc' # Hack: 'gcc-14' is not a valid compiler identifier for ``./configure.py --cc``
             options.cc_bin = 'g++-14'
-        elif options.cc == 'clang':
-            options.cc_bin = 'clang++'
-        elif options.cc == 'xcode':
+        elif options.cc in ['clang', 'xcode']:
             options.cc_bin = 'clang++'
         elif options.cc == 'msvc':
             options.cc_bin = 'cl'
@@ -825,7 +817,7 @@ def main(args=None):
         # be able to annotate the correct files.
         cmds.append(["indir:%s" % root_dir, py_interp, '-m', 'pylint'] + pylint_flags + py_scripts)
 
-        ruff_flags = []
+        ruff_flags = ["--config", "%s/src/configs/ruff.toml" % (root_dir)]
         if is_running_in_github_actions():
             ruff_flags += ["--output-format=github"]
 

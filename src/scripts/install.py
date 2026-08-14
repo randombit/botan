@@ -11,11 +11,12 @@ Botan is released under the Simplified BSD License (see license.txt)
 import errno
 import json
 import logging
-import optparse # pylint: disable=deprecated-module
+import optparse  # pylint: disable=deprecated-module
 import os
 import shutil
 import sys
 import traceback
+
 
 def parse_command_line(args):
 
@@ -92,7 +93,7 @@ def makedirs(dirname, exist_ok=True):
         os.makedirs(dirname)
     except OSError as ex:
         if ex.errno != errno.EEXIST or not exist_ok:
-            raise ex
+            raise
 
 # Clear link and create new one
 def force_symlink(target, linkname):
@@ -100,7 +101,7 @@ def force_symlink(target, linkname):
         os.unlink(linkname)
     except OSError as ex:
         if ex.errno != errno.ENOENT:
-            raise ex
+            raise
     os.symlink(target, linkname)
 
 def calculate_exec_mode(options):
