@@ -345,16 +345,20 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption {
          // TODO: I'm not sure that TPM2_RC_FAILURE is the right error code for
          //       all cases here. It passed the test (with a faulty ciphertext),
          //       but I didn't find this to be clearly documented. :-(
-         auto rc = check_rc_expecting<TPM2_RC_FAILURE>("Esys_RSA_Decrypt",
-                                                       Esys_RSA_Decrypt(m_key_handle.context()->esys_context(),
-                                                                        m_key_handle.transient_handle(),
-                                                                        m_sessions[0],
-                                                                        m_sessions[1],
-                                                                        m_sessions[2],
-                                                                        &ciphertext,
-                                                                        &m_scheme,
-                                                                        &label,
-                                                                        out_ptr(plaintext)));
+         //
+         // It seems the TPM2 simulator in Ubuntu 26.04 returns some other (otherwise
+         // undocumented?) value. Since this situation is clearly a bit ambiguous we now
+         // just accept any error as "decryption failed", somewhat unfortunate in that
+         // logical errors may become hidden but no clear resolution otherwise.
+         auto rc = Esys_RSA_Decrypt(m_key_handle.context()->esys_context(),
+                                    m_key_handle.transient_handle(),
+                                    m_sessions[0],
+                                    m_sessions[1],
+                                    m_sessions[2],
+                                    &ciphertext,
+                                    &m_scheme,
+                                    &label,
+                                    out_ptr(plaintext));
 
          const auto success = CT::Mask<decltype(rc)>::is_equal(rc, TPM2_RC_SUCCESS).as_choice();
          valid_mask = CT::Mask<uint8_t>::from_choice(success).value();
