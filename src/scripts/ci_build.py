@@ -904,7 +904,7 @@ def main(args=None):
                     'ed25519_sign', 'elgamal_decrypt', 'elgamal_encrypt', 'elgamal_keygen',
                     'ffi_dh', 'ffi_dsa', 'ffi_elgamal', 'frodo_kat_tests', 'hash_nist_mc',
                     'hss_lms_keygen', 'hss_lms_sign', 'mce_keygen', 'passhash9', 'pbkdf',
-                    'pcurves_arith', 'pwdhash', 'rsa_encrypt', 'rsa_pss', 'rsa_pss_raw', 'scrypt',
+                    'pk_concurrent_ops', 'pwdhash', 'rsa_encrypt', 'rsa_pss', 'rsa_pss_raw', 'scrypt',
                     'sphincsplus', 'sphincsplus_fors', 'slh_dsa_keygen', 'slh_dsa', 'srp6_kat',
                     'srp6_rt', 'unit_tls', 'x509_path_bsi', 'x509_path_rsa_pss',
                     'xmss_keygen', 'xmss_keygen_reference', 'xmss_sign', 'xmss_unit_tests',
