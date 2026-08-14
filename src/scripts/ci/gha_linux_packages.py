@@ -20,6 +20,14 @@ def gha_linux_packages(target, compiler):
     if compiler in ['gcc-14']:
         packages.append('gcc-14')
 
+    if compiler in ['gcc-11']:
+        packages.append('g++-11')
+
+    if compiler in ['clang-14']:
+        packages.append('clang-14')
+        # provides the libstdc++-11 headers that clang-14 is pinned to
+        packages.append('libstdc++-11-dev')
+
     if target.startswith('valgrind'):
         packages.append('valgrind')
 
@@ -30,7 +38,10 @@ def gha_linux_packages(target, compiler):
         packages.append('clang')
 
     if target in ['cross-i386']:
-        packages.append('g++-multilib')
+        if compiler == 'gcc-11':
+            packages.append('g++-11-multilib')
+        else:
+            packages.append('g++-multilib')
         packages.append('linux-libc-dev')
         packages.append('libc6-dev-i386')
 

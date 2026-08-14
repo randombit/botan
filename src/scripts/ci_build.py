@@ -728,9 +728,19 @@ def main(args=None):
     if options.cc_bin is None:
         if options.cc == 'gcc':
             options.cc_bin = 'g++'
+        elif options.cc == 'gcc-11':
+            options.cc = 'gcc' # Hack: versioned ids are not valid for ``./configure.py --cc``
+            options.cc_bin = 'g++-11'
         elif options.cc == 'gcc-14':
-            options.cc = 'gcc' # Hack: 'gcc-14' is not a valid compiler identifier for ``./configure.py --cc``
+            options.cc = 'gcc'
             options.cc_bin = 'g++-14'
+        elif options.cc == 'clang-14':
+            # Clang 14 cannot parse the libstdc++-14 headers, pin to libstdc++-11
+            options.cc = 'clang'
+            options.cc_bin = 'clang++-14'
+            options.extra_cxxflags += ['-nostdinc++',
+                                       '-isystem/usr/include/c++/11',
+                                       '-isystem/usr/include/x86_64-linux-gnu/c++/11']
         elif options.cc in ['clang', 'xcode']:
             options.cc_bin = 'clang++'
         elif options.cc == 'msvc':
