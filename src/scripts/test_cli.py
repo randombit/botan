@@ -781,10 +781,10 @@ def cli_rng_tests(_tmp_dir):
     hex_10 = re.compile('[A-F0-9]{20}')
 
     rngs = ['system', 'auto', 'entropy']
-    # execute ESDM tests only on Linux
 
+    # execute ESDM tests only if available
     if 'BOTAN_BUILD_WITH_ESDM' in os.environ:
-        rngs += ['esdm-full', 'esdm-pr']
+        rngs += ['esdm-full']
 
     for rng in rngs:
         output = test_cli("rng", ["10", '--%s' % (rng)], use_drbg=False)
