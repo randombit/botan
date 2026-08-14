@@ -120,6 +120,7 @@ void validate_polynomial(const polyn_gf2m& polyn,
    }
 
    const int degree = polyn.get_degree();
+   // NOLINTNEXTLINE(modernize-use-integer-sign-comparison)
    if(degree >= 0 && static_cast<size_t>(degree) > max_degree) {
       throw_mceliece_validation_error(source, "McEliece polynomial degree is too large");
    }
