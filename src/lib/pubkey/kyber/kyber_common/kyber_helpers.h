@@ -66,7 +66,9 @@ constexpr KyberConstants::T decompress(std::make_unsigned_t<KyberConstants::T> x
 
    constexpr uint32_t offset = 1 << (d - 1);
    constexpr uint32_t mask = (1 << d) - 1;
-   return static_cast<KyberConstants::T>(((static_cast<uint32_t>(x) & mask) * KyberConstants::Q + offset) >> d);
+
+   const uint32_t xq = CT::value_barrier(static_cast<uint32_t>(x) & mask) * KyberConstants::Q;
+   return static_cast<KyberConstants::T>((xq + offset) >> d);
 }
 
 }  // namespace Botan::Kyber_Algos
