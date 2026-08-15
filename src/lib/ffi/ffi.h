@@ -673,8 +673,19 @@ BOTAN_FFI_EXPORT(2, 0) int botan_mac_destroy(botan_mac_t mac);
 */
 typedef struct botan_cipher_struct* botan_cipher_t;
 
+/**
+* Bitfield indicating the direction flag for `botan_cipher_init`
+*/
 #define BOTAN_CIPHER_INIT_FLAG_MASK_DIRECTION 1
+
+/**
+* Indicate to `botan_cipher_init` that encryption is desired
+*/
 #define BOTAN_CIPHER_INIT_FLAG_ENCRYPT 0
+
+/**
+* Indicate to `botan_cipher_init` that decryption is desired
+*/
 #define BOTAN_CIPHER_INIT_FLAG_DECRYPT 1
 
 /**
@@ -768,6 +779,9 @@ BOTAN_FFI_EXPORT(2, 0) int botan_cipher_set_associated_data(botan_cipher_t ciphe
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_cipher_start(botan_cipher_t cipher, const uint8_t* nonce, size_t nonce_len);
 
+/**
+* Flag to indicate the final input is being provided
+*/
 #define BOTAN_CIPHER_UPDATE_FLAG_FINAL (1U << 0)
 
 /**
@@ -1797,6 +1811,9 @@ int botan_privkey_create(botan_privkey_t* key, const char* algo_name, const char
 BOTAN_FFI_EXPORT(3, 8)
 int botan_ec_privkey_create(botan_privkey_t* key, const char* algo_name, botan_ec_group_t ec_group, botan_rng_t rng);
 
+/**
+* Flag to `botan_privkey_check_key` to run expensive tests
+*/
 #define BOTAN_CHECK_KEY_EXPENSIVE_TESTS 1
 
 /**
@@ -1916,8 +1933,19 @@ int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng, const uint8_t bits
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_destroy(botan_privkey_t key);
 
+/**
+* Flag to `botan_privkey_export` to output DER
+*/
 #define BOTAN_PRIVKEY_EXPORT_FLAG_DER 0
+
+/**
+* Flag to `botan_privkey_export` to output PEM
+*/
 #define BOTAN_PRIVKEY_EXPORT_FLAG_PEM 1
+
+/**
+* Flag to `botan_privkey_export` to output "raw" (algorithm specific encoding)
+*/
 #define BOTAN_PRIVKEY_EXPORT_FLAG_RAW 2
 
 /**
@@ -3120,6 +3148,9 @@ int botan_pk_op_decrypt(
 * Signature Generation
 */
 
+/**
+* Flag to request a DER-encoded signature (ECDSA specific)
+*/
 #define BOTAN_PUBKEY_DER_FORMAT_SIGNATURE 1
 
 /**
@@ -4501,6 +4532,9 @@ int botan_totp_check(botan_totp_t totp, uint32_t totp_code, uint64_t timestamp, 
 
 typedef struct botan_fpe_struct* botan_fpe_t;
 
+/**
+* Flag to request compat mode for FE1 (avoid if possible)
+*/
 #define BOTAN_FPE_FLAG_FE1_COMPAT_MODE 1
 
 /**
