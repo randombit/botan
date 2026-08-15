@@ -88,73 +88,88 @@ class RSA_SignMechanism final : public MechanismData {
       size_t m_salt_size;
 };
 
-struct RSA_CryptMechanism final : public MechanismData {
-   public:
-      RSA_CryptMechanism(MechanismType typ, size_t padding_size, MechanismType hash, MGF mgf) :
-            MechanismData(typ), m_hash(hash), m_mgf(mgf), m_padding_size(padding_size) {}
-
-      RSA_CryptMechanism(MechanismType typ, size_t padding_size) :
-            RSA_CryptMechanism(typ, padding_size, static_cast<MechanismType>(0), MGF::MgfUnused) {}
-
-      MechanismType hash() const { return m_hash; }
-
-      MGF mgf() const { return m_mgf; }
-
-      size_t padding_size() const { return m_padding_size; }
-
-   private:
-      // mechanism ID of the message digest algorithm used to calculate the digest of the encoding parameter
-      MechanismType m_hash;
-
-      // mask generation function to use on the encoded block
-      MGF m_mgf;
-
-      // number of bytes required for the padding
-      size_t m_padding_size;
-};
-
 }  // namespace
 
 MechanismWrapper::MechanismWrapper(MechanismType mechanism_type) :
       m_mechanism({static_cast<CK_MECHANISM_TYPE>(mechanism_type), nullptr, 0}), m_parameters(nullptr) {}
 
-MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(std::string_view padding) {
-   // note: when updating this map, update the documentation for `MechanismWrapper::create_rsa_crypt_mechanism`
-   static const std::map<std::string_view, RSA_CryptMechanism> CryptMechanisms = {
-      {"Raw", RSA_CryptMechanism(MechanismType::RsaX509, 0)},
-      // TODO(Botan4) Remove this
-      {"EME-PKCS1-v1_5", RSA_CryptMechanism(MechanismType::RsaPkcs, 11)},
-      {"PKCS1v15", RSA_CryptMechanism(MechanismType::RsaPkcs, 11)},
-      {"OAEP(SHA-1)", RSA_CryptMechanism(MechanismType::RsaPkcsOaep, 2 + 2 * 20, MechanismType::Sha1, MGF::Mgf1Sha1)},
-      {"OAEP(SHA-224)",
-       RSA_CryptMechanism(MechanismType::RsaPkcsOaep, 2 + 2 * 28, MechanismType::Sha224, MGF::Mgf1Sha224)},
-      {"OAEP(SHA-256)",
-       RSA_CryptMechanism(MechanismType::RsaPkcsOaep, 2 + 2 * 32, MechanismType::Sha256, MGF::Mgf1Sha256)},
-      {"OAEP(SHA-384)",
-       RSA_CryptMechanism(MechanismType::RsaPkcsOaep, 2 + 2 * 48, MechanismType::Sha384, MGF::Mgf1Sha384)},
-      {"OAEP(SHA-512)",
-       RSA_CryptMechanism(MechanismType::RsaPkcsOaep, 2 + 2 * 64, MechanismType::Sha512, MGF::Mgf1Sha512)}};
-
-   auto mechanism_info_it = CryptMechanisms.find(padding);
-   if(mechanism_info_it == CryptMechanisms.end()) {
-      // at this point it would be possible to support additional configurations that are not predefined above by parsing `padding`
-      throw Lookup_Error(fmt("PKCS#11 RSA encrypt/decrypt does not support padding with '{}'", padding));
+MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(const PK_Encryption_Options& options) {
+   if(!options.using_padding()) {
+      throw Lookup_Error("PKCS#11 RSA encrypt/decrypt requires specifying a padding scheme");
    }
-   const RSA_CryptMechanism mechanism_info = mechanism_info_it->second;
 
-   MechanismWrapper mech(mechanism_info.type());
-   if(mechanism_info.type() == MechanismType::RsaPkcsOaep) {
+   const std::string padding = options.padding().value();
+
+   if(padding == "Raw") {
+      MechanismWrapper mech(MechanismType::RsaX509);
+      mech.m_padding_size = 0;
+      return mech;
+   }
+
+   if(padding == "PKCS1v15") {
+      MechanismWrapper mech(MechanismType::RsaPkcs);
+      mech.m_padding_size = 11;
+      return mech;
+   }
+
+   if(padding == "OAEP") {
+      // note: when updating this map, update the documentation for `MechanismWrapper::create_rsa_crypt_mechanism`
+      struct OaepHash {
+            MechanismType hash;
+            MGF mgf;
+            size_t output_length;
+      };
+
+      static const std::map<std::string_view, OaepHash> OaepHashes = {
+         {"SHA-1", {MechanismType::Sha1, MGF::Mgf1Sha1, 20}},
+         {"SHA-224", {MechanismType::Sha224, MGF::Mgf1Sha224, 28}},
+         {"SHA-256", {MechanismType::Sha256, MGF::Mgf1Sha256, 32}},
+         {"SHA-384", {MechanismType::Sha384, MGF::Mgf1Sha384, 48}},
+         {"SHA-512", {MechanismType::Sha512, MGF::Mgf1Sha512, 64}},
+      };
+
+      if(!options.using_hash()) {
+         throw Lookup_Error("PKCS#11 RSA OAEP requires specifying a hash function");
+      }
+
+      const std::string hash_name = options.hash_function_name();
+      auto hash = OaepHashes.find(hash_name);
+      if(hash == OaepHashes.end()) {
+         throw Lookup_Error(fmt("PKCS#11 RSA OAEP does not support hash function '{}'", hash_name));
+      }
+
+      MGF mgf = hash->second.mgf;
+      if(options.using_mgf1_hash()) {
+         const std::string mgf1_hash_name = options.mgf1_hash_function().value();
+         auto mgf1_hash = OaepHashes.find(mgf1_hash_name);
+         if(mgf1_hash == OaepHashes.end()) {
+            throw Lookup_Error(fmt("PKCS#11 RSA OAEP does not support MGF1 hash function '{}'", mgf1_hash_name));
+         }
+         mgf = mgf1_hash->second.mgf;
+      }
+
+      MechanismWrapper mech(MechanismType::RsaPkcsOaep);
       mech.m_parameters = std::make_shared<MechanismParameters>();
-      mech.m_parameters->oaep_params.hashAlg = static_cast<CK_MECHANISM_TYPE>(mechanism_info.hash());
-      mech.m_parameters->oaep_params.mgf = static_cast<CK_RSA_PKCS_MGF_TYPE>(mechanism_info.mgf());
+      mech.m_parameters->oaep_params.hashAlg = static_cast<CK_MECHANISM_TYPE>(hash->second.hash);
+      mech.m_parameters->oaep_params.mgf = static_cast<CK_RSA_PKCS_MGF_TYPE>(mgf);
       mech.m_parameters->oaep_params.source = CKZ_DATA_SPECIFIED;
-      mech.m_parameters->oaep_params.pSourceData = nullptr;
-      mech.m_parameters->oaep_params.ulSourceDataLen = 0;
+
+      if(const auto& label = options.context(); label.has_value() && !label->empty()) {
+         mech.m_oaep_label = std::make_shared<const std::vector<uint8_t>>(*label);
+         mech.m_parameters->oaep_params.pSourceData = const_cast<uint8_t*>(mech.m_oaep_label->data());
+         mech.m_parameters->oaep_params.ulSourceDataLen = checked_ulong_cast(mech.m_oaep_label->size());
+      } else {
+         mech.m_parameters->oaep_params.pSourceData = nullptr;
+         mech.m_parameters->oaep_params.ulSourceDataLen = 0;
+      }
+
       mech.m_mechanism.pParameter = mech.m_parameters.get();
       mech.m_mechanism.ulParameterLen = sizeof(RsaPkcsOaepParams);
+      mech.m_padding_size = 2 + 2 * hash->second.output_length;
+      return mech;
    }
-   mech.m_padding_size = mechanism_info.padding_size();
-   return mech;
+
+   throw Lookup_Error(fmt("PKCS#11 RSA encrypt/decrypt does not support padding with '{}'", padding));
 }
 
 MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(const PK_Signature_Options& options) {

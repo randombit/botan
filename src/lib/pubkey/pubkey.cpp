@@ -94,11 +94,22 @@ secure_vector<uint8_t> PK_Decryptor::decrypt_or_random(const uint8_t in[],
 PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
                                    RandomNumberGenerator& rng,
                                    std::string_view padding,
-                                   std::string_view provider) {
-   m_op = key.create_encryption_op(rng, padding, provider);
+                                   std::string_view provider) :
+      PK_Encryptor_EME(key, rng, parse_legacy_enc_options(key, padding).with_provider(provider)) {}
+
+PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
+                                   RandomNumberGenerator& rng,
+                                   const PK_Encryption_Options& user_options) {
+   // Track option usage on a private copy, so the caller's object is never modified
+   const PK_Encryption_Options options(user_options);  // NOLINT(*-unnecessary-copy-initialization) clang-tidy bug
+   options.reset_examined();
+
+   m_op = key._create_encryption_op(rng, options);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support encryption", key.algo_name()));
    }
+
+   options.throw_if_unexamined(key.algo_name());
 }
 
 PK_Encryptor_EME::~PK_Encryptor_EME() = default;
@@ -121,11 +132,22 @@ size_t PK_Encryptor_EME::maximum_input_size() const {
 PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
                                    RandomNumberGenerator& rng,
                                    std::string_view padding,
-                                   std::string_view provider) {
-   m_op = key.create_decryption_op(rng, padding, provider);
+                                   std::string_view provider) :
+      PK_Decryptor_EME(key, rng, parse_legacy_enc_options(key, padding).with_provider(provider)) {}
+
+PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
+                                   RandomNumberGenerator& rng,
+                                   const PK_Encryption_Options& user_options) {
+   // Track option usage on a private copy, so the caller's object is never modified
+   const PK_Encryption_Options options(user_options);  // NOLINT(*-unnecessary-copy-initialization) clang-tidy bug
+   options.reset_examined();
+
+   m_op = key._create_decryption_op(rng, options);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support decryption", key.algo_name()));
    }
+
+   options.throw_if_unexamined(key.algo_name());
 }
 
 PK_Decryptor_EME::~PK_Decryptor_EME() = default;
@@ -145,11 +167,20 @@ secure_vector<uint8_t> PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask, const u
    return m_op->decrypt(valid_mask, {in, in_len});
 }
 
-PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, std::string_view param, std::string_view provider) {
-   m_op = key.create_kem_encryption_op(param, provider);
+PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, std::string_view param, std::string_view provider) :
+      PK_KEM_Encryptor(key, parse_legacy_kem_options(param).with_provider(provider)) {}
+
+PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, const PK_KEM_Options& user_options) {
+   // Track option usage on a private copy, so the caller's object is never modified
+   const PK_KEM_Options options(user_options);  // NOLINT(*-unnecessary-copy-initialization) clang-tidy bug
+   options.reset_examined();
+
+   m_op = key._create_kem_encryption_op(options);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support KEM encryption", key.algo_name()));
    }
+
+   options.throw_if_unexamined(key.algo_name());
 }
 
 PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key,
@@ -195,11 +226,22 @@ size_t PK_KEM_Decryptor::encapsulated_key_length() const {
 PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
                                    RandomNumberGenerator& rng,
                                    std::string_view param,
-                                   std::string_view provider) {
-   m_op = key.create_kem_decryption_op(rng, param, provider);
+                                   std::string_view provider) :
+      PK_KEM_Decryptor(key, rng, parse_legacy_kem_options(param).with_provider(provider)) {}
+
+PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
+                                   RandomNumberGenerator& rng,
+                                   const PK_KEM_Options& user_options) {
+   // Track option usage on a private copy, so the caller's object is never modified
+   const PK_KEM_Options options(user_options);  // NOLINT(*-unnecessary-copy-initialization) clang-tidy bug
+   options.reset_examined();
+
+   m_op = key._create_kem_decryption_op(rng, options);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support KEM decryption", key.algo_name()));
    }
+
+   options.throw_if_unexamined(key.algo_name());
 }
 
 PK_KEM_Decryptor::~PK_KEM_Decryptor() = default;
@@ -219,11 +261,22 @@ void PK_KEM_Decryptor::decrypt(std::span<uint8_t> out_shared_key,
 PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
                                    RandomNumberGenerator& rng,
                                    std::string_view kdf,
-                                   std::string_view provider) {
-   m_op = key.create_key_agreement_op(rng, kdf, provider);
+                                   std::string_view provider) :
+      PK_Key_Agreement(key, rng, parse_legacy_ka_options(kdf).with_provider(provider)) {}
+
+PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
+                                   RandomNumberGenerator& rng,
+                                   const PK_Key_Agreement_Options& user_options) {
+   // Track option usage on a private copy, so the caller's object is never modified
+   const PK_Key_Agreement_Options options(user_options);  // NOLINT(*-unnecessary-copy-initialization) clang-tidy bug
+   options.reset_examined();
+
+   m_op = key._create_key_agreement_op(rng, options);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support key agreement", key.algo_name()));
    }
+
+   options.throw_if_unexamined(key.algo_name());
 }
 
 PK_Key_Agreement::~PK_Key_Agreement() = default;

@@ -31,10 +31,10 @@ class Hybrid_PublicKey : public virtual Botan::Public_Key {
             throw std::runtime_error("Null arguments not allowed");
          }
 
-         if(m_kex_pk->supports_operation(Botan::PublicKeyOperation::KeyAgreement)) {
+         if(!m_kex_pk->supports_operation(Botan::PublicKeyOperation::KeyAgreement)) {
             throw std::runtime_error("The kex key must support key agreement");
          }
-         if(m_kex_pk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation)) {
+         if(!m_kem_pk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation)) {
             throw std::runtime_error("The kem key must support key encapsulation");
          }
       }
@@ -52,8 +52,8 @@ class Hybrid_PublicKey : public virtual Botan::Public_Key {
        * use the Botan::PK_KEM_Encryptor class, which in turn calls this method.
        * See the main() function below for an example.
        */
-      std::unique_ptr<Botan::PK_Ops::KEM_Encryption> create_kem_encryption_op(std::string_view params,
-                                                                              std::string_view provider) const override;
+      std::unique_ptr<Botan::PK_Ops::KEM_Encryption> _create_kem_encryption_op(
+         const Botan::PK_KEM_Options& options) const override;
 
       /**
        * In an actual implementation, when you want to use this key in a
@@ -130,9 +130,8 @@ class Hybrid_PrivateKey : public virtual Botan::Private_Key,
        * use the Botan::PK_KEM_Decryptor class, which in turn calls this method.
        * See the main() function below for an example.
        */
-      std::unique_ptr<Botan::PK_Ops::KEM_Decryption> create_kem_decryption_op(Botan::RandomNumberGenerator& rng,
-                                                                              std::string_view params,
-                                                                              std::string_view provider) const override;
+      std::unique_ptr<Botan::PK_Ops::KEM_Decryption> _create_kem_decryption_op(
+         Botan::RandomNumberGenerator& rng, const Botan::PK_KEM_Options& options) const override;
 
       /**
        * In an actual implementation, this should return a serialized
@@ -170,7 +169,7 @@ class Hybrid_Encryption_Operation : public Botan::PK_Ops::KEM_Encryption {
    public:
       Hybrid_Encryption_Operation(const Hybrid_PublicKey& hybrid_pk, std::string_view kdf) :
             m_hybrid_pk(hybrid_pk),
-            m_kem_encryptor(hybrid_pk.kem_public_key(), "Raw"),
+            m_kem_encryptor(hybrid_pk.kem_public_key(), Botan::PK_KEM_Options().with_raw_shared_key()),
             m_kdf(Botan::KDF::create_or_throw(kdf)) {}
 
       /**
@@ -286,7 +285,7 @@ class Hybrid_Decryption_Operation : public Botan::PK_Ops::KEM_Decryption {
                                   std::string_view kdf) :
             m_hybrid_sk(hybrid_sk),
             m_key_agreement(hybrid_sk.kex_private_key(), rng, "Raw"),
-            m_kem_decryptor(hybrid_sk.kem_private_key(), rng, "Raw"),
+            m_kem_decryptor(hybrid_sk.kem_private_key(), rng, Botan::PK_KEM_Options().with_raw_shared_key()),
             m_kdf(Botan::KDF::create_or_throw(kdf)) {}
 
       /**
@@ -366,14 +365,23 @@ class Hybrid_Decryption_Operation : public Botan::PK_Ops::KEM_Decryption {
 
 }  // namespace
 
-std::unique_ptr<Botan::PK_Ops::KEM_Encryption> Hybrid_PublicKey::create_kem_encryption_op(
-   std::string_view params, std::string_view /*provider*/) const {
-   return std::make_unique<Hybrid_Encryption_Operation>(*this, params);
+std::unique_ptr<Botan::PK_Ops::KEM_Encryption> Hybrid_PublicKey::_create_kem_encryption_op(
+   const Botan::PK_KEM_Options& options) const {
+   // This hybrid KEM always derives the shared key with a KDF, which the caller
+   // must specify. Any other option (eg a request for the raw shared key) is
+   // not examined here, and is therefore rejected by PK_KEM_Encryptor.
+   if(!options.using_kdf()) {
+      throw Botan::Invalid_Argument("Hybrid-KEM requires specifying a KDF");
+   }
+   return std::make_unique<Hybrid_Encryption_Operation>(*this, options.kdf().value());
 }
 
-std::unique_ptr<Botan::PK_Ops::KEM_Decryption> Hybrid_PrivateKey::create_kem_decryption_op(
-   Botan::RandomNumberGenerator& rng, std::string_view params, std::string_view /*provider*/) const {
-   return std::make_unique<Hybrid_Decryption_Operation>(*this, rng, params);
+std::unique_ptr<Botan::PK_Ops::KEM_Decryption> Hybrid_PrivateKey::_create_kem_decryption_op(
+   Botan::RandomNumberGenerator& rng, const Botan::PK_KEM_Options& options) const {
+   if(!options.using_kdf()) {
+      throw Botan::Invalid_Argument("Hybrid-KEM requires specifying a KDF");
+   }
+   return std::make_unique<Hybrid_Decryption_Operation>(*this, rng, options.kdf().value());
 }
 
 std::unique_ptr<Botan::Private_Key> Hybrid_PublicKey::generate_another(Botan::RandomNumberGenerator& rng) const {
@@ -395,12 +403,12 @@ int main() {
 
    // Bob uses Alice's public key to encapsulate a shared secret, and
    // derives a shared key from it using HKDF.
-   Botan::PK_KEM_Encryptor kem_enc(*public_key_of_alice, "HKDF(SHA-256)");
+   Botan::PK_KEM_Encryptor kem_enc(*public_key_of_alice, Botan::PK_KEM_Options().with_kdf("HKDF(SHA-256)"));
    const auto encapsulation_by_bob = kem_enc.encrypt(rng);
 
    // Alice decapsulates the shared secret from Bob's encapsulation using her
    // private key, and derives a matching shared key using HKDF.
-   Botan::PK_KEM_Decryptor kem_dec(*private_key_of_alice, rng, "HKDF(SHA-256)");
+   Botan::PK_KEM_Decryptor kem_dec(*private_key_of_alice, rng, Botan::PK_KEM_Options().with_kdf("HKDF(SHA-256)"));
    const auto shared_key = kem_dec.decrypt(encapsulation_by_bob.encapsulated_shared_key());
 
    // Check that Alice and Bob now share the same secret

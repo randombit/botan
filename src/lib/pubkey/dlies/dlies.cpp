@@ -30,7 +30,7 @@ DLIES_Encryptor::DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
                                  size_t mac_key_length) :
 
       m_own_pub_key(own_priv_key.public_value()),
-      m_ka(own_priv_key, rng, "Raw"),
+      m_ka(own_priv_key, rng, PK_Key_Agreement_Options().with_raw_shared_key()),
       m_kdf(std::move(kdf)),
       m_cipher(std::move(cipher)),
       m_cipher_key_len(cipher_key_len),
@@ -102,7 +102,7 @@ DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
                                  std::unique_ptr<MessageAuthenticationCode> mac,
                                  size_t mac_key_length) :
       m_pub_key_size(own_priv_key.public_value().size()),
-      m_ka(own_priv_key, rng, "Raw"),
+      m_ka(own_priv_key, rng, PK_Key_Agreement_Options().with_raw_shared_key()),
       m_kdf(std::move(kdf)),
       m_cipher(std::move(cipher)),
       m_cipher_key_len(cipher_key_len),

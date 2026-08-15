@@ -27,8 +27,10 @@ namespace Botan {
  */
 class BOTAN_TEST_API Classic_McEliece_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF {
    public:
-      Classic_McEliece_Encryptor(std::shared_ptr<const Classic_McEliece_PublicKeyInternal> key, std::string_view kdf) :
-            KEM_Encryption_with_KDF(kdf), m_key(std::move(key)) {}
+      // The shared secret is the output of SHAKE, so it can be used directly
+      Classic_McEliece_Encryptor(std::shared_ptr<const Classic_McEliece_PublicKeyInternal> key,
+                                 const PK_KEM_Options& options) :
+            KEM_Encryption_with_KDF(options, PK_Ops::RawKemSharedKey::IsUniform), m_key(std::move(key)) {}
 
       size_t raw_kem_shared_key_length() const override { return m_key->params().hash_out_bytes(); }
 

@@ -58,9 +58,8 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PublicKey : public virtual EC_PublicKey {
 
       std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const override;
 
-      std::unique_ptr<PK_Ops::Encryption> create_encryption_op(RandomNumberGenerator& rng,
-                                                               std::string_view params,
-                                                               std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Encryption> _create_encryption_op(RandomNumberGenerator& rng,
+                                                                const PK_Encryption_Options& options) const override;
 
    protected:
       SM2_PublicKey() = default;
@@ -113,9 +112,8 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PrivateKey final : public SM2_PublicKey,
       std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
                                                               const PK_Signature_Options& options) const override;
 
-      std::unique_ptr<PK_Ops::Decryption> create_decryption_op(RandomNumberGenerator& rng,
-                                                               std::string_view params,
-                                                               std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Decryption> _create_decryption_op(RandomNumberGenerator& rng,
+                                                                const PK_Encryption_Options& options) const override;
 
       // TODO(Botan4) remove this and the member variable
       BOTAN_DEPRECATED("Deprecated no replacement") const BigInt& get_da_inv() const { return m_da_inv_legacy; }

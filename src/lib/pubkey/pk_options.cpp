@@ -11,7 +11,9 @@
 #include <botan/hex.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mem_utils.h>
+#include <initializer_list>
 #include <sstream>
+#include <utility>
 
 namespace Botan {
 
@@ -169,25 +171,20 @@ uint32_t PK_Signature_Options::options_in_use() const {
    return in_use;
 }
 
-void PK_Signature_Options::throw_if_unexamined(std::string_view algo_name) const {
-   const uint32_t unexamined = options_in_use() & ~m_examined;
+namespace {
 
+/*
+* Shared by all of the option types: throw naming each option in the
+* unexamined bitmask, using the provided (bit, name) table.
+*/
+template <typename OptionEnum>
+void throw_for_unexamined_options(std::string_view algo_name,
+                                  std::string_view option_kind,
+                                  uint32_t unexamined,
+                                  std::initializer_list<std::pair<OptionEnum, std::string_view>> option_names) {
    if(unexamined == 0) {
       return;
    }
-
-   const std::vector<std::pair<Option, std::string_view>> option_names = {
-      {Option::Hash, "hash"},
-      {Option::Prehash, "prehash"},
-      {Option::Padding, "padding"},
-      {Option::Context, "context"},
-      {Option::Provider, "provider"},
-      {Option::SaltSize, "salt size"},
-      {Option::DerEncoded, "DER encoding"},
-      {Option::Deterministic, "deterministic"},
-      {Option::ExplicitTrailer, "explicit trailer field"},
-      {Option::ExternalPrehash, "externally computed prehash"},
-   };
 
    std::string names;
    for(const auto& [option, name] : option_names) {
@@ -199,7 +196,31 @@ void PK_Signature_Options::throw_if_unexamined(std::string_view algo_name) const
       }
    }
 
-   throw Invalid_Argument(fmt("{} does not support the signature option(s): {}", algo_name, names));
+   throw Invalid_Argument(fmt("{} does not support the {} option(s): {}", algo_name, option_kind, names));
+}
+
+}  // namespace
+
+void PK_Signature_Options::throw_if_unexamined(std::string_view algo_name) const {
+   const uint32_t unexamined = options_in_use() & ~m_examined;
+
+   if(unexamined != 0) {
+      throw_for_unexamined_options<Option>(algo_name,
+                                           "signature",
+                                           unexamined,
+                                           {
+                                              {Option::Hash, "hash"},
+                                              {Option::Prehash, "prehash"},
+                                              {Option::Padding, "padding"},
+                                              {Option::Context, "context"},
+                                              {Option::Provider, "provider"},
+                                              {Option::SaltSize, "salt size"},
+                                              {Option::DerEncoded, "DER encoding"},
+                                              {Option::Deterministic, "deterministic"},
+                                              {Option::ExplicitTrailer, "explicit trailer field"},
+                                              {Option::ExternalPrehash, "externally computed prehash"},
+                                           });
+   }
 }
 
 std::string PK_Signature_Options::to_string() const {
@@ -240,6 +261,302 @@ std::string PK_Signature_Options::to_string() const {
    }
    if(m_explicit_trailer_field) {
       out << "ExplicitTrailer ";
+   }
+
+   return out.str();
+}
+
+// PK_Encryption_Options
+
+PK_Encryption_Options::~PK_Encryption_Options() = default;
+
+PK_Encryption_Options PK_Encryption_Options::with_padding(std::string_view padding) {
+   BOTAN_STATE_CHECK_MSG(!m_padding.has_value(), "PK_Encryption_Options::with_padding cannot specify padding twice");
+   auto next = (*this);
+   if(!padding.empty()) {
+      next.m_padding = padding;
+   }
+   return next;
+}
+
+PK_Encryption_Options PK_Encryption_Options::with_hash(std::string_view hash) {
+   BOTAN_STATE_CHECK_MSG(!m_hash_fn.has_value(), "PK_Encryption_Options::with_hash cannot specify hash twice");
+   auto next = (*this);
+   if(!hash.empty()) {
+      next.m_hash_fn = hash;
+   }
+   return next;
+}
+
+PK_Encryption_Options PK_Encryption_Options::with_mgf1_hash(std::string_view hash) {
+   BOTAN_STATE_CHECK_MSG(!m_mgf1_hash_fn.has_value(),
+                         "PK_Encryption_Options::with_mgf1_hash cannot specify MGF1 hash twice");
+   auto next = (*this);
+   if(!hash.empty()) {
+      next.m_mgf1_hash_fn = hash;
+   }
+   return next;
+}
+
+PK_Encryption_Options PK_Encryption_Options::with_context(std::span<const uint8_t> context) {
+   BOTAN_STATE_CHECK_MSG(!m_context.has_value(), "PK_Encryption_Options::with_context cannot specify context twice");
+   auto next = (*this);
+   next.m_context = std::vector<uint8_t>(context.begin(), context.end());
+   return next;
+}
+
+PK_Encryption_Options PK_Encryption_Options::with_context(std::string_view context) {
+   return this->with_context(as_span_of_bytes(context));
+}
+
+PK_Encryption_Options PK_Encryption_Options::with_provider(std::string_view provider) {
+   BOTAN_STATE_CHECK_MSG(provider.empty() || !m_provider.has_value(),
+                         "PK_Encryption_Options::with_provider cannot specify provider twice");
+   auto next = (*this);
+   if(!provider.empty()) {
+      next.m_provider = provider;
+   }
+   return next;
+}
+
+bool PK_Encryption_Options::using_provider() const {
+   note_examined(Option::Provider);
+   return provider_is_in_use(m_provider);
+}
+
+std::string PK_Encryption_Options::hash_function_name() const {
+   note_examined(Option::Hash);
+
+   if(m_hash_fn.has_value()) {
+      return m_hash_fn.value();
+   }
+
+   throw Invalid_State("This encryption scheme requires specifying a hash function");
+}
+
+uint32_t PK_Encryption_Options::options_in_use() const {
+   uint32_t in_use = 0;
+
+   auto set_if = [&](bool cond, Option option) {
+      if(cond) {
+         in_use |= static_cast<uint32_t>(option);
+      }
+   };
+
+   set_if(m_padding.has_value(), Option::Padding);
+   set_if(m_hash_fn.has_value(), Option::Hash);
+   set_if(m_mgf1_hash_fn.has_value(), Option::Mgf1Hash);
+   set_if(m_context.has_value(), Option::Context);
+   set_if(provider_is_in_use(m_provider), Option::Provider);
+
+   return in_use;
+}
+
+void PK_Encryption_Options::throw_if_unexamined(std::string_view algo_name) const {
+   const uint32_t unexamined = options_in_use() & ~m_examined;
+
+   if(unexamined != 0) {
+      throw_for_unexamined_options<Option>(algo_name,
+                                           "encryption",
+                                           unexamined,
+                                           {
+                                              {Option::Padding, "padding"},
+                                              {Option::Hash, "hash"},
+                                              {Option::Mgf1Hash, "MGF1 hash"},
+                                              {Option::Context, "context"},
+                                              {Option::Provider, "provider"},
+                                           });
+   }
+}
+
+std::string PK_Encryption_Options::to_string() const {
+   std::ostringstream out;
+
+   auto print_str = [&](std::string_view name, const std::optional<std::string>& val) {
+      if(val.has_value()) {
+         out << name << "='" << val.value() << "' ";
+      }
+   };
+
+   // Reads the members directly since formatting does not count as examining
+
+   print_str("Padding", m_padding);
+   print_str("Hash", m_hash_fn);
+   print_str("MGF1Hash", m_mgf1_hash_fn);
+   print_str("Provider", m_provider);
+
+   if(m_context) {
+      out << "Context=" << hex_encode(*m_context) << " ";
+   }
+
+   return out.str();
+}
+
+// PK_KEM_Options
+
+PK_KEM_Options::~PK_KEM_Options() = default;
+
+PK_KEM_Options PK_KEM_Options::with_kdf(std::string_view kdf) {
+   BOTAN_STATE_CHECK_MSG(!m_kdf.has_value(), "PK_KEM_Options::with_kdf cannot specify KDF twice");
+   BOTAN_STATE_CHECK_MSG(!m_raw_shared_key, "PK_KEM_Options::with_kdf cannot be combined with with_raw_shared_key");
+   // Silently accepting an empty name would turn a request for a KDF into the raw shared key
+   BOTAN_ARG_CHECK(!kdf.empty(), "PK_KEM_Options::with_kdf requires a KDF name");
+   auto next = (*this);
+   next.m_kdf = kdf;
+   return next;
+}
+
+PK_KEM_Options PK_KEM_Options::with_raw_shared_key() {
+   BOTAN_STATE_CHECK_MSG(!m_raw_shared_key, "PK_KEM_Options::with_raw_shared_key cannot be specified twice");
+   BOTAN_STATE_CHECK_MSG(!m_kdf.has_value(), "PK_KEM_Options::with_raw_shared_key cannot be combined with with_kdf");
+   auto next = (*this);
+   next.m_raw_shared_key = true;
+   return next;
+}
+
+PK_KEM_Options PK_KEM_Options::with_provider(std::string_view provider) {
+   BOTAN_STATE_CHECK_MSG(provider.empty() || !m_provider.has_value(),
+                         "PK_KEM_Options::with_provider cannot specify provider twice");
+   auto next = (*this);
+   if(!provider.empty()) {
+      next.m_provider = provider;
+   }
+   return next;
+}
+
+bool PK_KEM_Options::using_provider() const {
+   note_examined(Option::Provider);
+   return provider_is_in_use(m_provider);
+}
+
+uint32_t PK_KEM_Options::options_in_use() const {
+   uint32_t in_use = 0;
+
+   auto set_if = [&](bool cond, Option option) {
+      if(cond) {
+         in_use |= static_cast<uint32_t>(option);
+      }
+   };
+
+   set_if(m_kdf.has_value(), Option::Kdf);
+   set_if(m_raw_shared_key, Option::RawSharedKey);
+   set_if(provider_is_in_use(m_provider), Option::Provider);
+
+   return in_use;
+}
+
+void PK_KEM_Options::throw_if_unexamined(std::string_view algo_name) const {
+   const uint32_t unexamined = options_in_use() & ~m_examined;
+
+   if(unexamined != 0) {
+      throw_for_unexamined_options<Option>(algo_name,
+                                           "KEM",
+                                           unexamined,
+                                           {
+                                              {Option::Kdf, "KDF"},
+                                              {Option::RawSharedKey, "raw shared key"},
+                                              {Option::Provider, "provider"},
+                                           });
+   }
+}
+
+std::string PK_KEM_Options::to_string() const {
+   std::ostringstream out;
+
+   if(m_kdf) {
+      out << "KDF='" << *m_kdf << "' ";
+   }
+   if(m_raw_shared_key) {
+      out << "RawSharedKey ";
+   }
+   if(m_provider) {
+      out << "Provider='" << *m_provider << "' ";
+   }
+
+   return out.str();
+}
+
+// PK_Key_Agreement_Options
+
+PK_Key_Agreement_Options::~PK_Key_Agreement_Options() = default;
+
+PK_Key_Agreement_Options PK_Key_Agreement_Options::with_kdf(std::string_view kdf) {
+   BOTAN_STATE_CHECK_MSG(!m_kdf.has_value(), "PK_Key_Agreement_Options::with_kdf cannot specify KDF twice");
+   BOTAN_STATE_CHECK_MSG(!m_raw_shared_key,
+                         "PK_Key_Agreement_Options::with_kdf cannot be combined with with_raw_shared_key");
+   // Silently accepting an empty name would turn a request for a KDF into the raw agreed value
+   BOTAN_ARG_CHECK(!kdf.empty(), "PK_Key_Agreement_Options::with_kdf requires a KDF name");
+   auto next = (*this);
+   next.m_kdf = kdf;
+   return next;
+}
+
+PK_Key_Agreement_Options PK_Key_Agreement_Options::with_raw_shared_key() {
+   BOTAN_STATE_CHECK_MSG(!m_raw_shared_key, "PK_Key_Agreement_Options::with_raw_shared_key cannot be specified twice");
+   BOTAN_STATE_CHECK_MSG(!m_kdf.has_value(),
+                         "PK_Key_Agreement_Options::with_raw_shared_key cannot be combined with with_kdf");
+   auto next = (*this);
+   next.m_raw_shared_key = true;
+   return next;
+}
+
+PK_Key_Agreement_Options PK_Key_Agreement_Options::with_provider(std::string_view provider) {
+   BOTAN_STATE_CHECK_MSG(provider.empty() || !m_provider.has_value(),
+                         "PK_Key_Agreement_Options::with_provider cannot specify provider twice");
+   auto next = (*this);
+   if(!provider.empty()) {
+      next.m_provider = provider;
+   }
+   return next;
+}
+
+bool PK_Key_Agreement_Options::using_provider() const {
+   note_examined(Option::Provider);
+   return provider_is_in_use(m_provider);
+}
+
+uint32_t PK_Key_Agreement_Options::options_in_use() const {
+   uint32_t in_use = 0;
+
+   auto set_if = [&](bool cond, Option option) {
+      if(cond) {
+         in_use |= static_cast<uint32_t>(option);
+      }
+   };
+
+   set_if(m_kdf.has_value(), Option::Kdf);
+   set_if(m_raw_shared_key, Option::RawSharedKey);
+   set_if(provider_is_in_use(m_provider), Option::Provider);
+
+   return in_use;
+}
+
+void PK_Key_Agreement_Options::throw_if_unexamined(std::string_view algo_name) const {
+   const uint32_t unexamined = options_in_use() & ~m_examined;
+
+   if(unexamined != 0) {
+      throw_for_unexamined_options<Option>(algo_name,
+                                           "key agreement",
+                                           unexamined,
+                                           {
+                                              {Option::Kdf, "KDF"},
+                                              {Option::RawSharedKey, "raw shared key"},
+                                              {Option::Provider, "provider"},
+                                           });
+   }
+}
+
+std::string PK_Key_Agreement_Options::to_string() const {
+   std::ostringstream out;
+
+   if(m_kdf) {
+      out << "KDF='" << *m_kdf << "' ";
+   }
+   if(m_raw_shared_key) {
+      out << "RawSharedKey ";
+   }
+   if(m_provider) {
+      out << "Provider='" << *m_provider << "' ";
    }
 
    return out.str();

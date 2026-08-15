@@ -894,10 +894,9 @@ class HardwareEcdhKey final : public Botan::PK_Key_Agreement_Key {
          return std::make_unique<HardwareEcdhKey>(m_group, rng, m_public_key_format);
       }
 
-      std::unique_ptr<Botan::PK_Ops::Key_Agreement> create_key_agreement_op(Botan::RandomNumberGenerator& rng,
-                                                                            std::string_view params,
-                                                                            std::string_view provider) const override {
-         return m_key->create_key_agreement_op(rng, params, provider);
+      std::unique_ptr<Botan::PK_Ops::Key_Agreement> _create_key_agreement_op(
+         Botan::RandomNumberGenerator& rng, const Botan::PK_Key_Agreement_Options& options) const override {
+         return m_key->_create_key_agreement_op(rng, options);
       }
 
    private:

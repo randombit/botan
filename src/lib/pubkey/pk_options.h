@@ -18,6 +18,11 @@ namespace Botan {
 
 class PK_Signer;
 class PK_Verifier;
+class PK_Encryptor_EME;
+class PK_Decryptor_EME;
+class PK_KEM_Encryptor;
+class PK_KEM_Decryptor;
+class PK_Key_Agreement;
 
 /**
 * Signature generation/verification options
@@ -300,6 +305,348 @@ class BOTAN_PUBLIC_API(3, 14) PK_Signature_Options final {
       bool m_use_der = false;
       bool m_deterministic_sig = false;
       bool m_explicit_trailer_field = false;
+      mutable uint32_t m_examined = 0;
+};
+
+/**
+* Public key encryption/decryption options
+*
+* The normal usage of this is in a builder style, eg
+*
+* PK_Encryption_Options()
+*   .with_padding("OAEP")
+*   .with_hash("SHA-256")
+*   .with_context(label)
+*
+* As with PK_Signature_Options, every option that is set must be understood by
+* the encryption scheme in use; constructing the PK_Encryptor_EME or
+* PK_Decryptor_EME throws an exception otherwise. An option is never silently
+* ignored.
+*/
+class BOTAN_PUBLIC_API(3, 14) PK_Encryption_Options final {
+   public:
+      PK_Encryption_Options() = default;
+
+      PK_Encryption_Options(PK_Encryption_Options&& other) = default;
+      PK_Encryption_Options& operator=(PK_Encryption_Options&& other) = default;
+
+      PK_Encryption_Options(const PK_Encryption_Options&) = default;
+      PK_Encryption_Options& operator=(const PK_Encryption_Options& other) = default;
+      ~PK_Encryption_Options();
+
+      /// Format this PK_Encryption_Options as a string
+      ///
+      /// This is primarily intended for debugging and error messages;
+      /// the format is not fixed
+      std::string to_string() const;
+
+      /// Specify the padding scheme
+      ///
+      /// For RSA (and ElGamal) this is required, and is one of "OAEP", "PKCS1v15"
+      /// or "Raw". Other schemes do not use padding.
+      PK_Encryption_Options with_padding(std::string_view padding);
+
+      /// Specify the hash function
+      ///
+      /// For OAEP this selects the hash used for the label and (unless
+      /// with_mgf1_hash is also used) for the mask generation function.
+      /// For SM2 it selects the KDF hash, and defaults to SM3.
+      PK_Encryption_Options with_hash(std::string_view hash);
+
+      /// Specify a different hash function for OAEP's MGF1
+      ///
+      /// Only OAEP supports this; by default MGF1 uses the same hash as OAEP
+      PK_Encryption_Options with_mgf1_hash(std::string_view hash);
+
+      /// Specify a context
+      ///
+      /// For OAEP this is the label ("L" in RFC 8017). Schemes without such
+      /// a parameter reject this option.
+      PK_Encryption_Options with_context(std::span<const uint8_t> context);
+
+      /// Specify a context as a string
+      ///
+      /// Equivalent to the version taking a span above; just uses the bytes
+      /// of the string instead.
+      PK_Encryption_Options with_context(std::string_view context);
+
+      /// Specify a provider that should be used
+      ///
+      /// This is rarely relevant
+      PK_Encryption_Options with_provider(std::string_view provider);
+
+      /// Return the name of the hash function to use
+      ///
+      /// This will throw an exception if no hash function was configured
+      std::string hash_function_name() const;
+
+      /*
+      * Getters; these are mostly for internal use
+      *
+      * Calling any of these records that the respective option was examined
+      * by the scheme, so a scheme should only read an option it will act on.
+      */
+
+      const std::optional<std::string>& padding() const {
+         note_examined(Option::Padding);
+         return m_padding;
+      }
+
+      const std::optional<std::string>& hash_function() const {
+         note_examined(Option::Hash);
+         return m_hash_fn;
+      }
+
+      const std::optional<std::string>& mgf1_hash_function() const {
+         note_examined(Option::Mgf1Hash);
+         return m_mgf1_hash_fn;
+      }
+
+      const std::optional<std::vector<uint8_t>>& context() const {
+         note_examined(Option::Context);
+         return m_context;
+      }
+
+      const std::optional<std::string>& provider() const {
+         note_examined(Option::Provider);
+         return m_provider;
+      }
+
+      bool using_padding() const { return padding().has_value(); }
+
+      bool using_hash() const { return hash_function().has_value(); }
+
+      bool using_mgf1_hash() const { return mgf1_hash_function().has_value(); }
+
+      bool using_context() const { return context().has_value(); }
+
+      bool using_provider() const;
+
+   private:
+      friend class PK_Encryptor_EME;
+      friend class PK_Decryptor_EME;
+
+      enum class Option : uint32_t /* NOLINT(*-enum-size) */ {
+         Padding = (1 << 0),
+         Hash = (1 << 1),
+         Mgf1Hash = (1 << 2),
+         Context = (1 << 3),
+         Provider = (1 << 4),
+      };
+
+      void note_examined(Option option) const { m_examined |= static_cast<uint32_t>(option); }
+
+      uint32_t options_in_use() const;
+
+      void reset_examined() const { m_examined = 0; }
+
+      void throw_if_unexamined(std::string_view algo_name) const;
+
+      std::optional<std::string> m_padding;
+      std::optional<std::string> m_hash_fn;
+      std::optional<std::string> m_mgf1_hash_fn;
+      std::optional<std::vector<uint8_t>> m_context;
+      std::optional<std::string> m_provider;
+      mutable uint32_t m_examined = 0;
+};
+
+/**
+* Key encapsulation options
+*
+* The normal usage of this is in a builder style, eg
+*
+* PK_KEM_Options().with_kdf("HKDF(SHA-256)")
+*
+* As with PK_Signature_Options, every option that is set must be understood by
+* the KEM in use; constructing the PK_KEM_Encryptor or PK_KEM_Decryptor throws
+* an exception otherwise.
+*/
+class BOTAN_PUBLIC_API(3, 14) PK_KEM_Options final {
+   public:
+      PK_KEM_Options() = default;
+
+      PK_KEM_Options(PK_KEM_Options&& other) = default;
+      PK_KEM_Options& operator=(PK_KEM_Options&& other) = default;
+
+      PK_KEM_Options(const PK_KEM_Options&) = default;
+      PK_KEM_Options& operator=(const PK_KEM_Options& other) = default;
+      ~PK_KEM_Options();
+
+      /// Format this PK_KEM_Options as a string
+      ///
+      /// This is primarily intended for debugging and error messages;
+      /// the format is not fixed
+      std::string to_string() const;
+
+      /// Specify a KDF used to derive the shared key from the KEM output
+      ///
+      /// The salt and desired length passed to the encrypt/decrypt operations
+      /// are inputs to this KDF.
+      ///
+      /// The name must not be empty; this cannot be combined with with_raw_shared_key
+      PK_KEM_Options with_kdf(std::string_view kdf);
+
+      /// Request the raw output of the KEM as the shared key
+      ///
+      /// If neither this nor with_kdf is used, KEMs whose output is already a
+      /// uniformly random key (for example ML-KEM) return that output directly,
+      /// while KEMs whose output is not (for example RSA-KEM or a key
+      /// agreement used as a KEM) reject the request.
+      ///
+      /// This cannot be combined with with_kdf
+      PK_KEM_Options with_raw_shared_key();
+
+      /// Specify a provider that should be used
+      ///
+      /// This is rarely relevant
+      PK_KEM_Options with_provider(std::string_view provider);
+
+      /*
+      * Getters; these are mostly for internal use
+      *
+      * Calling any of these records that the respective option was examined
+      * by the scheme, so a scheme should only read an option it will act on.
+      */
+
+      const std::optional<std::string>& kdf() const {
+         note_examined(Option::Kdf);
+         return m_kdf;
+      }
+
+      bool using_kdf() const { return kdf().has_value(); }
+
+      bool using_raw_shared_key() const {
+         note_examined(Option::RawSharedKey);
+         return m_raw_shared_key;
+      }
+
+      const std::optional<std::string>& provider() const {
+         note_examined(Option::Provider);
+         return m_provider;
+      }
+
+      bool using_provider() const;
+
+   private:
+      friend class PK_KEM_Encryptor;
+      friend class PK_KEM_Decryptor;
+
+      enum class Option : uint32_t /* NOLINT(*-enum-size) */ {
+         Kdf = (1 << 0),
+         RawSharedKey = (1 << 1),
+         Provider = (1 << 2),
+      };
+
+      void note_examined(Option option) const { m_examined |= static_cast<uint32_t>(option); }
+
+      uint32_t options_in_use() const;
+
+      void reset_examined() const { m_examined = 0; }
+
+      void throw_if_unexamined(std::string_view algo_name) const;
+
+      std::optional<std::string> m_kdf;
+      bool m_raw_shared_key = false;
+      std::optional<std::string> m_provider;
+      mutable uint32_t m_examined = 0;
+};
+
+/**
+* Key agreement options
+*
+* The normal usage of this is in a builder style, eg
+*
+* PK_Key_Agreement_Options().with_kdf("HKDF(SHA-256)")
+*
+* As with PK_Signature_Options, every option that is set must be understood by
+* the scheme in use; constructing the PK_Key_Agreement throws an exception
+* otherwise.
+*/
+class BOTAN_PUBLIC_API(3, 14) PK_Key_Agreement_Options final {
+   public:
+      PK_Key_Agreement_Options() = default;
+
+      PK_Key_Agreement_Options(PK_Key_Agreement_Options&& other) = default;
+      PK_Key_Agreement_Options& operator=(PK_Key_Agreement_Options&& other) = default;
+
+      PK_Key_Agreement_Options(const PK_Key_Agreement_Options&) = default;
+      PK_Key_Agreement_Options& operator=(const PK_Key_Agreement_Options& other) = default;
+      ~PK_Key_Agreement_Options();
+
+      /// Format this PK_Key_Agreement_Options as a string
+      ///
+      /// This is primarily intended for debugging and error messages;
+      /// the format is not fixed
+      std::string to_string() const;
+
+      /// Specify a KDF used to derive the shared key from the agreed value
+      ///
+      /// The salt and desired length passed to derive_key are inputs to
+      /// this KDF.
+      ///
+      /// The name must not be empty; this cannot be combined with with_raw_shared_key
+      PK_Key_Agreement_Options with_kdf(std::string_view kdf);
+
+      /// Request the raw agreed value as the shared key
+      ///
+      /// The agreed value (for example the x coordinate of an elliptic curve
+      /// point) is not a uniformly random key, so key agreement requires either
+      /// a KDF or this explicit request; the default options are rejected.
+      ///
+      /// This cannot be combined with with_kdf
+      PK_Key_Agreement_Options with_raw_shared_key();
+
+      /// Specify a provider that should be used
+      ///
+      /// This is rarely relevant
+      PK_Key_Agreement_Options with_provider(std::string_view provider);
+
+      /*
+      * Getters; these are mostly for internal use
+      *
+      * Calling any of these records that the respective option was examined
+      * by the scheme, so a scheme should only read an option it will act on.
+      */
+
+      const std::optional<std::string>& kdf() const {
+         note_examined(Option::Kdf);
+         return m_kdf;
+      }
+
+      bool using_kdf() const { return kdf().has_value(); }
+
+      bool using_raw_shared_key() const {
+         note_examined(Option::RawSharedKey);
+         return m_raw_shared_key;
+      }
+
+      const std::optional<std::string>& provider() const {
+         note_examined(Option::Provider);
+         return m_provider;
+      }
+
+      bool using_provider() const;
+
+   private:
+      friend class PK_Key_Agreement;
+
+      enum class Option : uint32_t /* NOLINT(*-enum-size) */ {
+         Kdf = (1 << 0),
+         RawSharedKey = (1 << 1),
+         Provider = (1 << 2),
+      };
+
+      void note_examined(Option option) const { m_examined |= static_cast<uint32_t>(option); }
+
+      uint32_t options_in_use() const;
+
+      void reset_examined() const { m_examined = 0; }
+
+      void throw_if_unexamined(std::string_view algo_name) const;
+
+      std::optional<std::string> m_kdf;
+      bool m_raw_shared_key = false;
+      std::optional<std::string> m_provider;
       mutable uint32_t m_examined = 0;
 };
 
