@@ -62,10 +62,16 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_In_Memory final : public Session_Ma
       size_t remove_internal(const Session_Handle& handle);
 
    private:
+      struct Stored_Session {
+            Session_with_Handle session_and_handle;
+            uint64_t sequence_number{};
+      };
+
       size_t m_max_sessions;
 
-      std::map<Session_ID, Session_with_Handle> m_sessions;
+      std::map<Session_ID, Stored_Session> m_sessions;
       std::optional<std::deque<Session_ID>> m_fifo;
+      uint64_t m_next_sequence_number = 0;
 };
 
 }  // namespace TLS

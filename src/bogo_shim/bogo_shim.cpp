@@ -20,6 +20,7 @@
 #include <botan/mem_ops.h>
 #include <botan/ocsp.h>
 #include <botan/pkcs8.h>
+#include <botan/system_rng.h>
 #include <botan/tls_algos.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_client.h>
@@ -2206,7 +2207,7 @@ int main(int /*argc*/, char* argv[]) {
       const bool is_datagram = args->flag_set("dtls");
       const size_t buf_size = args->get_int_opt_or_else("read-size", 18 * 1024);
 
-      auto rng = std::make_shared<Botan::ChaCha_RNG>(Botan::secure_vector<uint8_t>(64));
+      auto rng = std::make_shared<Botan::ChaCha_RNG>(Botan::system_rng().random_vec(64));
       auto creds = std::make_shared<Shim_Credentials>(*args);
       auto session_manager = [&]() -> std::shared_ptr<Botan::TLS::Session_Manager> {
          if(args->flag_set("no-ticket") || args->flag_set("on-resume-no-ticket")) {
