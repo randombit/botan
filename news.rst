@@ -1,6 +1,12 @@
 Release Notes
 ========================================
 
+Version 3.14.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Modify the bitsliced AES implementation to use the native word size of the
+  processor, instead of always 32 bits. (GH #5826)
+
 Version 3.13.0, 2026-08-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
