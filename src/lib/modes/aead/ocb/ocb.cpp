@@ -186,7 +186,7 @@ OCB_Mode::~OCB_Mode() = default;
 
 void OCB_Mode::clear() {
    m_cipher->clear();
-   m_L.reset();
+   m_L.reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
    zeroise(m_ad_hash);
    reset();
 }
@@ -199,7 +199,7 @@ void OCB_Mode::reset() {
    zeroise(m_nonce_buf);
    zeroise(m_offset);
    if(m_L) {
-      m_L->reset();
+      m_L->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
    }
 }
 

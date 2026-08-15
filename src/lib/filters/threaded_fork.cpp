@@ -46,19 +46,19 @@ struct Threaded_Fork_Data {
       // NOLINTEND(*-non-private-member-variables-in-classes)
 
       void clear_exception() {
-         const std::lock_guard lock(m_exception_mutex);
+         const std::scoped_lock lock(m_exception_mutex);
          m_exception = nullptr;
       }
 
       void capture_exception() {
-         const std::lock_guard lock(m_exception_mutex);
+         const std::scoped_lock lock(m_exception_mutex);
          if(!m_exception) {
             m_exception = std::current_exception();
          }
       }
 
       std::exception_ptr exception() {
-         const std::lock_guard lock(m_exception_mutex);
+         const std::scoped_lock lock(m_exception_mutex);
          return m_exception;
       }
 
