@@ -87,18 +87,19 @@ jobs:
 
       matrix:
         include:
-          - compiler: gcc
+          # gcc-11 and clang-14 are the minimum supported compilers (see doc/support.rst)
+          - compiler: gcc-11
             target: shared
-            host_os: ubuntu-22.04 # Testing old GCC
+            host_os: ubuntu-24.04
           - compiler: gcc
             target: amalgamation
             host_os: ubuntu-26.04
-          - compiler: gcc
+          - compiler: gcc-11
             target: static
-            host_os: ubuntu-22.04 # Testing old GCC
-          - compiler: clang
+            host_os: ubuntu-24.04
+          - compiler: clang-14
             target: shared
-            host_os: ubuntu-22.04 # Testing old Clang
+            host_os: ubuntu-24.04
 
     runs-on: ${{ matrix.host_os }}
 
