@@ -71,8 +71,7 @@ class BOTAN_PUBLIC_API(2, 0) McEliece_PublicKey : public virtual Public_Key /* N
          return (op == PublicKeyOperation::KeyEncapsulation);
       }
 
-      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(std::string_view params,
-                                                                       std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::KEM_Encryption> _create_kem_encryption_op(const PK_KEM_Options& options) const override;
 
    protected:
       McEliece_PublicKey() = default;
@@ -141,9 +140,8 @@ class BOTAN_PUBLIC_API(2, 0) McEliece_PrivateKey final : public virtual McEliece
 
       bool operator!=(const McEliece_PrivateKey& other) const { return !(*this == other); }
 
-      std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
-                                                                       std::string_view params,
-                                                                       std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::KEM_Decryption> _create_kem_decryption_op(RandomNumberGenerator& rng,
+                                                                        const PK_KEM_Options& options) const override;
 
    private:
       std::shared_ptr<const McEliece_PrivateKeyInternal> m_private;

@@ -11,7 +11,7 @@ int main() {
 
    // ec domain and KDF
    const auto domain = Botan::EC_Group::from_name("secp521r1");
-   const std::string kdf = "KDF2(SHA-256)";
+   const auto options = Botan::PK_Key_Agreement_Options().with_kdf("KDF2(SHA-256)");
 
    // the two parties generate ECDH keys
    const Botan::ECDH_PrivateKey key_a(rng, domain);
@@ -22,10 +22,10 @@ int main() {
    const auto key_bpub = key_b.public_value();
 
    // Construct key agreements and agree on a shared secret
-   const Botan::PK_Key_Agreement ka_a(key_a, rng, kdf);
+   const Botan::PK_Key_Agreement ka_a(key_a, rng, options);
    const auto sA = ka_a.derive_key(32, key_bpub).bits_of();
 
-   const Botan::PK_Key_Agreement ka_b(key_b, rng, kdf);
+   const Botan::PK_Key_Agreement ka_b(key_b, rng, options);
    const auto sB = ka_b.derive_key(32, key_apub).bits_of();
 
    if(sA != sB) {

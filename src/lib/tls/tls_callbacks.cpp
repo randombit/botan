@@ -454,7 +454,7 @@ secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(
    // This is done within the key agreement operation and throws
    // an Invalid_Argument exception if the shared secret is all-zero.
    try {
-      const PK_Key_Agreement ka(private_key, rng, "Raw");
+      const PK_Key_Agreement ka(private_key, rng, PK_Key_Agreement_Options().with_raw_shared_key());
       return ka.derive_key(0, kex_pub_key->raw_public_key_bits()).bits_of();
    } catch(const Invalid_Argument& ex) {
       throw TLS_Exception(Alert::IllegalParameter, ex.what());

@@ -12,7 +12,6 @@
 #include <botan/kdf.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
-#include <botan/internal/enc_padding.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/pk_options_impl.h>
@@ -21,14 +20,20 @@
    #include <botan/internal/raw_hash.h>
 #endif
 
+#if defined(BOTAN_HAS_RSA_ENCRYPTION_PADDING)
+   #include <botan/internal/enc_padding.h>
+#endif
+
 namespace Botan {
 
 AlgorithmIdentifier PK_Ops::Signature::algorithm_identifier() const {
    throw Not_Implemented("This signature scheme does not have an algorithm identifier available");
 }
 
-PK_Ops::Encryption_with_Padding::Encryption_with_Padding(std::string_view padding) :
-      m_padding(EncryptionPaddingScheme::create(padding)) {}
+#if defined(BOTAN_HAS_RSA_ENCRYPTION_PADDING)
+
+PK_Ops::Encryption_with_Padding::Encryption_with_Padding(const PK_Encryption_Options& options) :
+      m_padding(EncryptionPaddingScheme::create_or_throw(options)) {}
 
 PK_Ops::Encryption_with_Padding::~Encryption_with_Padding() = default;
 
@@ -47,8 +52,8 @@ std::vector<uint8_t> PK_Ops::Encryption_with_Padding::encrypt(std::span<const ui
    return raw_encrypt(std::span{padded_ptext}.first(written), rng);
 }
 
-PK_Ops::Decryption_with_Padding::Decryption_with_Padding(std::string_view padding) :
-      m_padding(EncryptionPaddingScheme::create(padding)) {}
+PK_Ops::Decryption_with_Padding::Decryption_with_Padding(const PK_Encryption_Options& options) :
+      m_padding(EncryptionPaddingScheme::create_or_throw(options)) {}
 
 PK_Ops::Decryption_with_Padding::~Decryption_with_Padding() = default;
 
@@ -74,9 +79,15 @@ secure_vector<uint8_t> PK_Ops::Decryption_with_Padding::decrypt(uint8_t& valid_m
    return ptext;
 }
 
-PK_Ops::Key_Agreement_with_KDF::Key_Agreement_with_KDF(std::string_view kdf) {
-   if(kdf != "Raw") {
-      m_kdf = KDF::create_or_throw(kdf);
+#endif
+
+PK_Ops::Key_Agreement_with_KDF::Key_Agreement_with_KDF(const PK_Key_Agreement_Options& options) {
+   if(options.using_kdf()) {
+      m_kdf = KDF::create_or_throw(options.kdf().value());
+   } else if(!options.using_raw_shared_key()) {
+      throw Invalid_Argument(
+         "Key agreement does not produce a uniform shared key, so a KDF must be specified (or the raw shared key "
+         "explicitly requested)");
    }
 }
 
@@ -233,11 +244,27 @@ void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(std::span<uint8_t> out_encapsu
    }
 }
 
-PK_Ops::KEM_Encryption_with_KDF::KEM_Encryption_with_KDF(std::string_view kdf) {
-   if(kdf != "Raw") {
-      m_kdf = KDF::create_or_throw(kdf);
+namespace {
+
+std::unique_ptr<KDF> kem_kdf_from_options(const PK_KEM_Options& options, PK_Ops::RawKemSharedKey raw_key) {
+   if(options.using_kdf()) {
+      return KDF::create_or_throw(options.kdf().value());
    }
+
+   if(!options.using_raw_shared_key() && raw_key == PK_Ops::RawKemSharedKey::RequiresKDF) {
+      throw Invalid_Argument(
+         "This KEM does not produce a uniform shared key, so a KDF must be specified (or the raw shared key "
+         "explicitly requested)");
+   }
+
+   // No KDF; the raw shared key is used directly
+   return nullptr;
 }
+
+}  // namespace
+
+PK_Ops::KEM_Encryption_with_KDF::KEM_Encryption_with_KDF(const PK_KEM_Options& options, RawKemSharedKey raw_key) :
+      m_kdf(kem_kdf_from_options(options, raw_key)) {}
 
 PK_Ops::KEM_Encryption_with_KDF::~KEM_Encryption_with_KDF() = default;
 
@@ -268,11 +295,8 @@ void PK_Ops::KEM_Decryption_with_KDF::kem_decrypt(std::span<uint8_t> out_shared_
    }
 }
 
-PK_Ops::KEM_Decryption_with_KDF::KEM_Decryption_with_KDF(std::string_view kdf) {
-   if(kdf != "Raw") {
-      m_kdf = KDF::create_or_throw(kdf);
-   }
-}
+PK_Ops::KEM_Decryption_with_KDF::KEM_Decryption_with_KDF(const PK_KEM_Options& options, RawKemSharedKey raw_key) :
+      m_kdf(kem_kdf_from_options(options, raw_key)) {}
 
 PK_Ops::KEM_Decryption_with_KDF::~KEM_Decryption_with_KDF() = default;
 

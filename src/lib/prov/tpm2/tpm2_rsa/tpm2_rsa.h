@@ -33,9 +33,8 @@ class BOTAN_PUBLIC_API(3, 6) RSA_PublicKey final : public virtual Botan::TPM2::P
 
       std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const override;
 
-      std::unique_ptr<PK_Ops::Encryption> create_encryption_op(Botan::RandomNumberGenerator& rng,
-                                                               std::string_view params,
-                                                               std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Encryption> _create_encryption_op(Botan::RandomNumberGenerator& rng,
+                                                                const PK_Encryption_Options& options) const override;
 
    protected:
       friend class TPM2::PublicKey;
@@ -98,9 +97,8 @@ class BOTAN_PUBLIC_API(3, 6) RSA_PrivateKey final : public virtual Botan::TPM2::
       std::unique_ptr<PK_Ops::Signature> _create_signature_op(Botan::RandomNumberGenerator& rng,
                                                               const PK_Signature_Options& options) const override;
 
-      std::unique_ptr<PK_Ops::Decryption> create_decryption_op(Botan::RandomNumberGenerator& rng,
-                                                               std::string_view params,
-                                                               std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Decryption> _create_decryption_op(Botan::RandomNumberGenerator& rng,
+                                                                const PK_Encryption_Options& options) const override;
 
    protected:
       friend class TPM2::PrivateKey;

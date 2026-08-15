@@ -77,9 +77,8 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_RSA_PublicKey : public Object,
          throw Not_Implemented("Cannot generate a new PKCS#11 RSA keypair from this public key");
       }
 
-      std::unique_ptr<PK_Ops::Encryption> create_encryption_op(RandomNumberGenerator& rng,
-                                                               std::string_view params,
-                                                               std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Encryption> _create_encryption_op(RandomNumberGenerator& rng,
+                                                                const PK_Encryption_Options& options) const override;
 
       std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const override;
 };
@@ -178,9 +177,8 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_RSA_PrivateKey final : public Object,
 
       std::unique_ptr<Public_Key> public_key() const override;
 
-      std::unique_ptr<PK_Ops::Decryption> create_decryption_op(RandomNumberGenerator& rng,
-                                                               std::string_view params,
-                                                               std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Decryption> _create_decryption_op(RandomNumberGenerator& rng,
+                                                                const PK_Encryption_Options& options) const override;
 
       std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
                                                               const PK_Signature_Options& options) const override;
