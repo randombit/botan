@@ -6,6 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 **/
 
+#include <botan/pk_options_readers.h>
 #include <botan/sphincsplus.h>
 
 #include <botan/rng.h>
@@ -254,15 +255,13 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification {
 }  // namespace
 
 std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   if(!options.using_provider()) {
-      auto op = std::make_unique<SphincsPlus_Verification_Operation>(m_public);
-      // The message hash depends on the parameter set, so check against what the operation reports
-      validate_for_hash_based_signature(options, "SPHINCS+", op->hash_function());
-      return op;
-   }
+   const PK_Signature_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
 
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   auto op = std::make_unique<SphincsPlus_Verification_Operation>(m_public);
+   // The message hash depends on the parameter set, so check against what the operation reports
+   validate_for_hash_based_signature(options, "SPHINCS+", op->hash_function());
+   return op;
 }
 
 std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::create_x509_verification_op(
@@ -468,20 +467,19 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
 }  // namespace
 
 std::unique_ptr<PK_Ops::Signature> SphincsPlus_PrivateKey::_create_signature_op(
-   RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
+   RandomNumberGenerator& rng, const PK_Signature_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
 
    // FIPS 205, Section 9.2
    //   The hedged variant is the default and should be used on platforms where
    //   side-channel attacks are a concern.
    const bool randomized = !options.using_deterministic_signature();
-   if(!options.using_provider()) {
-      auto op = std::make_unique<SphincsPlus_Signature_Operation>(m_private, m_public, randomized);
-      // The message hash depends on the parameter set, so check against what the operation reports
-      validate_for_hash_based_signature(options, "SPHINCS+", op->hash_function());
-      return op;
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   require_software_provider(options, algo_name());
+
+   auto op = std::make_unique<SphincsPlus_Signature_Operation>(m_private, m_public, randomized);
+   // The message hash depends on the parameter set, so check against what the operation reports
+   validate_for_hash_based_signature(options, "SPHINCS+", op->hash_function());
+   return op;
 }
 
 }  // namespace Botan

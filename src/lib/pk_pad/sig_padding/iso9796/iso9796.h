@@ -16,14 +16,14 @@
 namespace Botan {
 
 class HashFunction;
-class PK_Signature_Options;
+class PK_Signature_Options_Reader;
 
 /**
 * ISO-9796-2 - Digital signature scheme 2 (probabilistic)
 */
 class ISO_9796_DS2 final : public SignaturePaddingScheme {
    public:
-      explicit ISO_9796_DS2(const PK_Signature_Options& options);
+      explicit ISO_9796_DS2(const PK_Signature_Options_Reader& options);
 
       std::string hash_function() const override;
 
@@ -51,7 +51,7 @@ class ISO_9796_DS2 final : public SignaturePaddingScheme {
 */
 class ISO_9796_DS3 final : public SignaturePaddingScheme {
    public:
-      explicit ISO_9796_DS3(const PK_Signature_Options& options);
+      explicit ISO_9796_DS3(const PK_Signature_Options_Reader& options);
 
       std::string name() const override;
 

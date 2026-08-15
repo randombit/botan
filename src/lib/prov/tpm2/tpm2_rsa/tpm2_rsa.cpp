@@ -8,9 +8,10 @@
 
 #include <botan/tpm2_rsa.h>
 
-#include <botan/pk_options.h>
+#include <botan/pk_options_readers.h>
 #include <botan/pss_params.h>
 #include <botan/rsa.h>
+#include <botan/internal/pk_options_impl.h>
 
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
@@ -140,7 +141,7 @@ std::unique_ptr<TPM2::PrivateKey> RSA_PrivateKey::create_unrestricted_transient(
 
 namespace {
 
-SignatureAlgorithmSelection select_signature_algorithms(const PK_Signature_Options& options) {
+SignatureAlgorithmSelection select_signature_algorithms(const PK_Signature_Options_Reader& options) {
    if(!options.using_padding()) {
       throw Not_Implemented("TPM2 RSA signing without padding is not supported");
    }
@@ -154,7 +155,7 @@ SignatureAlgorithmSelection select_signature_algorithms(const PK_Signature_Optio
       throw Not_Implemented("TPM2 RSA signing does not support specifying the salt size");
    }
 
-   const std::string hash_name = options.hash_function_name();
+   const std::string& hash_name = options.hash_function_name();
    const std::string padding = fmt("{}({})", options.padding().value(), hash_name);
 
    // PKCS#1 v1.5 is deterministic, while the TPM generates the PSS salt itself
@@ -182,8 +183,11 @@ class RSA_Signature_Operation final : public Signature_Operation {
    public:
       RSA_Signature_Operation(const Object& object,
                               const SessionBundle& sessions,
-                              const PK_Signature_Options& options) :
-            Signature_Operation(object, sessions, select_signature_algorithms(options)), m_options(options) {}
+                              const PK_Signature_Options_Reader& options) :
+            Signature_Operation(object, sessions, select_signature_algorithms(options)),
+            // This EMSA object actually isn't required, we just need it to
+            // conveniently figure out the padding name for the algorithm identifier
+            m_padding_name(SignaturePaddingScheme::create_or_throw(options)->name()) {}
 
       size_t signature_length() const override { return signature_length_for_rsa_key_handle(sessions(), key_handle()); }
 
@@ -192,24 +196,20 @@ class RSA_Signature_Operation final : public Signature_Operation {
          //       in `rsa.h`. We should probably refactor this into a common
          //       function.
 
-         // This EMSA object actually isn't required, we just need it to
-         // conveniently figure out the algorithm identifier.
-         //
          // TODO: This is a hack, and we should clean this up.
-         const std::string padding_name = SignaturePaddingScheme::create_or_throw(m_options)->name();
 
          try {
-            const std::string full_name = "RSA/" + padding_name;
+            const std::string full_name = "RSA/" + m_padding_name;
             const OID oid = OID::from_string(full_name);
             return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_NULL_PARAM);
          } catch(Lookup_Error&) {}
 
-         if(padding_name.starts_with("PSS(")) {
-            auto parameters = PSS_Params::from_padding_name(padding_name).serialize();
+         if(m_padding_name.starts_with("PSS(")) {
+            auto parameters = PSS_Params::from_padding_name(m_padding_name).serialize();
             return AlgorithmIdentifier("RSA/PSS", parameters);
          }
 
-         throw Invalid_Argument(fmt("Signatures using RSA/{} are not supported", padding_name));
+         throw Invalid_Argument(fmt("Signatures using RSA/{} are not supported", m_padding_name));
       }
 
    private:
@@ -227,14 +227,14 @@ class RSA_Signature_Operation final : public Signature_Operation {
          return copy_into<std::vector<uint8_t>>(sig.sig);
       }
 
-      PK_Signature_Options m_options;
+      std::string m_padding_name;
 };
 
 class RSA_Verification_Operation final : public Verification_Operation {
    public:
       RSA_Verification_Operation(const Object& object,
                                  const SessionBundle& sessions,
-                                 const PK_Signature_Options& options) :
+                                 const PK_Signature_Options_Reader& options) :
             Verification_Operation(object, sessions, select_signature_algorithms(options)) {}
 
    private:
@@ -260,7 +260,31 @@ class RSA_Verification_Operation final : public Verification_Operation {
       }
 };
 
-TPMT_RSA_DECRYPT select_encryption_algorithms(std::string_view padding) {
+TPMT_RSA_DECRYPT select_encryption_algorithms(const PK_Encryption_Options_Reader& options) {
+   if(!options.using_padding()) {
+      throw Lookup_Error("TPM2 RSA encryption requires specifying a padding scheme");
+   }
+
+   std::string padding = options.padding().value();
+
+   if(padding == "OAEP") {
+      if(!options.using_hash()) {
+         throw Lookup_Error("TPM2 RSA OAEP requires specifying a hash function");
+      }
+      const std::string& hash_name = options.hash_function_name();
+
+      // The TPM always uses the OAEP hash for MGF1 as well
+      if(options.using_mgf1_hash() && options.mgf1_hash_function().value() != hash_name) {
+         throw Not_Implemented("TPM2 RSA OAEP does not support a distinct MGF1 hash function");
+      }
+
+      // TODO: support the OAEP label; note that the TPM includes a terminating
+      // null byte in the label it hashes, so this is not directly compatible
+      // with an RFC 8017 label of the same bytes
+
+      padding = fmt("OAEP({})", hash_name);
+   }
+
    auto scheme = rsa_encryption_scheme_botan_to_tss2(padding);
    if(!scheme) {
       throw Not_Implemented(Botan::fmt("RSA encryption with padding scheme {}", padding));
@@ -270,18 +294,15 @@ TPMT_RSA_DECRYPT select_encryption_algorithms(std::string_view padding) {
 
 class RSA_Encryption_Operation final : public PK_Ops::Encryption {
    public:
-      RSA_Encryption_Operation(const Object& object, const SessionBundle& sessions, std::string_view padding) :
-            m_key_handle(object), m_sessions(sessions), m_scheme(select_encryption_algorithms(padding)) {}
+      RSA_Encryption_Operation(const Object& object,
+                               const SessionBundle& sessions,
+                               const PK_Encryption_Options_Reader& options) :
+            m_key_handle(object), m_sessions(sessions), m_scheme(select_encryption_algorithms(options)) {}
 
       std::vector<uint8_t> encrypt(std::span<const uint8_t> msg, Botan::RandomNumberGenerator& /* rng */) override {
          const auto plaintext = copy_into<TPM2B_PUBLIC_KEY_RSA>(msg);
 
-         // TODO: Figure out what this is for. Given that I didn't see any other
-         //       way to pass an EME-OAEP label, I'm guessing that this is what
-         //       it is for. But I'm not sure.
-         //
-         // Again, a follow-up of https://github.com/randombit/botan/pull/4318
-         // that targets async encryption will probably be quite helpful here.
+         // The OAEP label; see the TODO in select_encryption_algorithms
          const auto label = init_empty<TPM2B_DATA>();
 
          unique_esys_ptr<TPM2B_PUBLIC_KEY_RSA> ciphertext;
@@ -353,12 +374,14 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption {
 
 class RSA_Decryption_Operation final : public PK_Ops::Decryption {
    public:
-      RSA_Decryption_Operation(const Object& object, const SessionBundle& sessions, std::string_view padding) :
-            m_key_handle(object), m_sessions(sessions), m_scheme(select_encryption_algorithms(padding)) {}
+      RSA_Decryption_Operation(const Object& object,
+                               const SessionBundle& sessions,
+                               const PK_Encryption_Options_Reader& options) :
+            m_key_handle(object), m_sessions(sessions), m_scheme(select_encryption_algorithms(options)) {}
 
       secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> input) override {
          const auto ciphertext = copy_into<TPM2B_PUBLIC_KEY_RSA>(input);
-         const auto label = init_empty<TPM2B_DATA>();  // TODO: implement? see encrypt operation
+         const auto label = init_empty<TPM2B_DATA>();  // see the TODO in select_encryption_algorithms
          unique_esys_ptr<TPM2B_PUBLIC_KEY_RSA> plaintext;
 
          // TODO: I'm not sure that TPM2_RC_FAILURE is the right error code for
@@ -417,34 +440,30 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption {
 }  // namespace
 
 std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   if(options.using_provider() && options.provider().value() != "tpm2") {
-      throw Provider_Not_Found(algo_name(), options.provider().value());
-   }
+   const PK_Signature_Options_Reader& options) const {
+   require_hardware_provider(options, algo_name(), "tpm2");
    return std::make_unique<RSA_Verification_Operation>(handles(), sessions(), options);
 }
 
-std::unique_ptr<PK_Ops::Signature> RSA_PrivateKey::_create_signature_op(Botan::RandomNumberGenerator& rng,
-                                                                        const PK_Signature_Options& options) const {
+std::unique_ptr<PK_Ops::Signature> RSA_PrivateKey::_create_signature_op(
+   Botan::RandomNumberGenerator& rng, const PK_Signature_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
-   if(options.using_provider() && options.provider().value() != "tpm2") {
-      throw Provider_Not_Found(algo_name(), options.provider().value());
-   }
+   require_hardware_provider(options, algo_name(), "tpm2");
    return std::make_unique<RSA_Signature_Operation>(handles(), sessions(), options);
 }
 
-std::unique_ptr<PK_Ops::Encryption> RSA_PublicKey::create_encryption_op(Botan::RandomNumberGenerator& rng,
-                                                                        std::string_view params,
-                                                                        std::string_view provider) const {
-   BOTAN_UNUSED(rng, provider);
-   return std::make_unique<RSA_Encryption_Operation>(handles(), sessions(), params);
+std::unique_ptr<PK_Ops::Encryption> RSA_PublicKey::_create_encryption_op(
+   Botan::RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const {
+   BOTAN_UNUSED(rng);
+   require_hardware_provider(options, algo_name(), "tpm2");
+   return std::make_unique<RSA_Encryption_Operation>(handles(), sessions(), options);
 }
 
-std::unique_ptr<PK_Ops::Decryption> RSA_PrivateKey::create_decryption_op(Botan::RandomNumberGenerator& rng,
-                                                                         std::string_view params,
-                                                                         std::string_view provider) const {
-   BOTAN_UNUSED(rng, provider);
-   return std::make_unique<RSA_Decryption_Operation>(handles(), sessions(), params);
+std::unique_ptr<PK_Ops::Decryption> RSA_PrivateKey::_create_decryption_op(
+   Botan::RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const {
+   BOTAN_UNUSED(rng);
+   require_hardware_provider(options, algo_name(), "tpm2");
+   return std::make_unique<RSA_Decryption_Operation>(handles(), sessions(), options);
 }
 
 }  // namespace Botan::TPM2

@@ -11,7 +11,7 @@
 #include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>
-#include <botan/pk_options.h>
+#include <botan/pk_options_readers.h>
 #include <botan/rng.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
@@ -240,7 +240,7 @@ bool iso9796_verification(std::span<const uint8_t> repr,
 
 }  // namespace
 
-ISO_9796_DS2::ISO_9796_DS2(const PK_Signature_Options& options) :
+ISO_9796_DS2::ISO_9796_DS2(const PK_Signature_Options_Reader& options) :
       m_hash(HashFunction::create_or_throw(options.hash_function_name())),
       m_implicit(!options.using_explicit_trailer_field()),
       m_salt_len(options.salt_size().value_or(m_hash->output_length())) {
@@ -296,7 +296,7 @@ std::string ISO_9796_DS2::name() const {
    return fmt("ISO_9796_DS2({},{},{})", m_hash->name(), (m_implicit ? "imp" : "exp"), m_salt_len);
 }
 
-ISO_9796_DS3::ISO_9796_DS3(const PK_Signature_Options& options) :
+ISO_9796_DS3::ISO_9796_DS3(const PK_Signature_Options_Reader& options) :
       m_hash(HashFunction::create_or_throw(options.hash_function_name())),
       m_implicit(!options.using_explicit_trailer_field()) {
    acknowledge_always_deterministic(options);

@@ -17,7 +17,7 @@
 namespace Botan {
 
 class HashFunction;
-class PK_Signature_Options;
+class PK_Signature_Options_Reader;
 
 /**
 * PKCS #1 v1.5 signature padding
@@ -26,7 +26,7 @@ class PK_Signature_Options;
 */
 class PKCS1v15_SignaturePaddingScheme final : public SignaturePaddingScheme {
    public:
-      explicit PKCS1v15_SignaturePaddingScheme(const PK_Signature_Options& options);
+      explicit PKCS1v15_SignaturePaddingScheme(const PK_Signature_Options_Reader& options);
 
       void update(const uint8_t input[], size_t length) override;
 
@@ -54,7 +54,7 @@ class PKCS1v15_SignaturePaddingScheme final : public SignaturePaddingScheme {
 */
 class PKCS1v15_Raw_SignaturePaddingScheme final : public SignaturePaddingScheme {
    public:
-      explicit PKCS1v15_Raw_SignaturePaddingScheme(const PK_Signature_Options& options);
+      explicit PKCS1v15_Raw_SignaturePaddingScheme(const PK_Signature_Options_Reader& options);
 
       void update(const uint8_t input[], size_t length) override;
 

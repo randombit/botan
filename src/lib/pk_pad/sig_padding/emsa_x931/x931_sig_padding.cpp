@@ -10,7 +10,7 @@
 #include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
-#include <botan/pk_options.h>
+#include <botan/pk_options_readers.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hash_id.h>
@@ -93,7 +93,7 @@ bool X931_SignaturePadding::verify(std::span<const uint8_t> coded, std::span<con
 /*
 * X931_SignaturePadding Constructor
 */
-X931_SignaturePadding::X931_SignaturePadding(const PK_Signature_Options& options) :
+X931_SignaturePadding::X931_SignaturePadding(const PK_Signature_Options_Reader& options) :
       m_hash(HashFunction::create_or_throw(options.hash_function_name())) {
    acknowledge_always_deterministic(options);
 

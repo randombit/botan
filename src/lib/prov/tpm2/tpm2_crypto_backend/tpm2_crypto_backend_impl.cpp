@@ -28,6 +28,7 @@
 #include <botan/internal/enc_padding.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mem_utils.h>
+#include <botan/internal/pk_options_impl.h>
 #include <botan/internal/tpm2_algo_mappings.h>
 #include <botan/internal/tpm2_util.h>
 
@@ -521,22 +522,24 @@ TSS2_RC rsa_pk_encrypt(TPM2B_PUBLIC* pub_tpm_key,
       #endif
       };
 
-      try {  // EncryptionPaddingScheme::create throws if algorithm is not available
+      try {  // EncryptionPaddingScheme::create_or_throw throws if algorithm is not available
          switch(scheme.scheme) {
             case TPM2_ALG_OAEP:
                return create_oaep();
             case TPM2_ALG_NULL:
-               return Botan::EncryptionPaddingScheme::create("Raw");
+               return Botan::EncryptionPaddingScheme::create_or_throw(
+                  Botan::PK_Options_Reader_Access::read(Botan::PK_Encryption_Options().with_padding("Raw")));
             case TPM2_ALG_RSAES:
-               return Botan::EncryptionPaddingScheme::create("PKCS1v15");
+               return Botan::EncryptionPaddingScheme::create_or_throw(
+                  Botan::PK_Options_Reader_Access::read(Botan::PK_Encryption_Options().with_padding("PKCS1v15")));
             default:
                return std::nullopt;  // -> not supported
          }
-      } catch(const Botan::Algorithm_Not_Found&) {
+      } catch(const Botan::Lookup_Error&) {
          /* ignore */
       }
 
-      return nullptr;  // -> not implemented (EncryptionPaddingScheme::create() threw)
+      return nullptr;  // -> not implemented (EncryptionPaddingScheme::create_or_throw() threw)
    };
 
    return thunk([&] {
@@ -661,7 +664,7 @@ TSS2_RC get_ecdh_point(TPM2B_PUBLIC* key,
       eph_pub_point.serialize_y_to(Botan::TPM2::as_span(Q->y, curve_order_byte_size));
 
       // 3: ECDH Key Agreement
-      const Botan::PK_Key_Agreement ecdh(eph_key, rng, "Raw" /*No KDF used here*/);
+      const Botan::PK_Key_Agreement ecdh(eph_key, rng, Botan::PK_Key_Agreement_Options().with_raw_shared_key());
       const auto shared_secret = ecdh.derive_key(0 /*Ignored for raw KDF*/, tpm_sw_pubkey.public_value()).bits_of();
 
       Botan::TPM2::copy_into(*Z, shared_secret);

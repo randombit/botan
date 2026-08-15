@@ -12,12 +12,14 @@
 #include <botan/ec_group.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
+#include <botan/pk_options_readers.h>
 #include <botan/rng.h>
 #include <botan/internal/concat_util.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -39,7 +41,7 @@ bool ECKCDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) cons
 
 namespace {
 
-std::unique_ptr<HashFunction> eckcdsa_signature_hash(const PK_Signature_Options& options) {
+std::unique_ptr<HashFunction> eckcdsa_signature_hash(const PK_Signature_Options_Reader& options) {
    // Prehashing could be supported, but it's not standard
 
    // intentionally not supporting Raw for ECKCDSA, since we need to know
@@ -108,7 +110,7 @@ void truncate_hash_if_needed(std::vector<uint8_t>& digest, size_t group_order_by
 */
 class ECKCDSA_Signature_Operation final : public PK_Ops::Signature {
    public:
-      ECKCDSA_Signature_Operation(const ECKCDSA_PrivateKey& eckcdsa, const PK_Signature_Options& options) :
+      ECKCDSA_Signature_Operation(const ECKCDSA_PrivateKey& eckcdsa, const PK_Signature_Options_Reader& options) :
             m_group(eckcdsa.domain()),
             m_x(eckcdsa._private_key()),
             m_hash(eckcdsa_signature_hash(options)),
@@ -179,7 +181,7 @@ std::vector<uint8_t> ECKCDSA_Signature_Operation::raw_sign(std::span<const uint8
 */
 class ECKCDSA_Verification_Operation final : public PK_Ops::Verification {
    public:
-      ECKCDSA_Verification_Operation(const ECKCDSA_PublicKey& eckcdsa, const PK_Signature_Options& options) :
+      ECKCDSA_Verification_Operation(const ECKCDSA_PublicKey& eckcdsa, const PK_Signature_Options_Reader& options) :
             m_group(eckcdsa.domain()),
             m_gy_mul(eckcdsa._public_ec_point()),
             m_hash(eckcdsa_signature_hash(options)),
@@ -261,11 +263,10 @@ std::unique_ptr<Private_Key> ECKCDSA_PublicKey::generate_another(RandomNumberGen
 }
 
 std::unique_ptr<PK_Ops::Verification> ECKCDSA_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<ECKCDSA_Verification_Operation>(*this, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   const PK_Signature_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<ECKCDSA_Verification_Operation>(*this, options);
 }
 
 std::unique_ptr<PK_Ops::Verification> ECKCDSA_PublicKey::create_x509_verification_op(
@@ -277,14 +278,13 @@ std::unique_ptr<PK_Ops::Verification> ECKCDSA_PublicKey::create_x509_verificatio
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> ECKCDSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
-                                                                            const PK_Signature_Options& options) const {
+std::unique_ptr<PK_Ops::Signature> ECKCDSA_PrivateKey::_create_signature_op(
+   RandomNumberGenerator& rng, const PK_Signature_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
 
-   if(!options.using_provider()) {
-      return std::make_unique<ECKCDSA_Signature_Operation>(*this, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<ECKCDSA_Signature_Operation>(*this, options);
 }
 
 }  // namespace Botan

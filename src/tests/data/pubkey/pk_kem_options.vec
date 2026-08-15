@@ -1,0 +1,33 @@
+# Tests for PK_KEM_Options validation
+#
+# For each KEM, a key is generated using KeyParams. Every KEM must accept both
+# with_kdf and with_raw_shared_key, and the two must produce different shared
+# keys (ie the option takes effect).
+#
+# RawSharedKeyByDefault states what happens if neither is specified: KEMs whose
+# raw output is already a uniform key return it directly, all others reject
+# the request.
+
+[ML-KEM]
+KeyParams = ML-KEM-512
+RawSharedKeyByDefault = true
+
+[Kyber]
+KeyParams = Kyber-512-r3
+RawSharedKeyByDefault = true
+
+[FrodoKEM]
+KeyParams = eFrodoKEM-640-SHAKE
+RawSharedKeyByDefault = true
+
+[ClassicMcEliece]
+KeyParams = 348864
+RawSharedKeyByDefault = true
+
+[RSA]
+KeyParams = 2048
+RawSharedKeyByDefault = false
+
+[McEliece]
+KeyParams = 1632,33
+RawSharedKeyByDefault = false

@@ -10,6 +10,7 @@ brief -> "Implementations of public key schemes"
 <header:public>
 pk_algs.h
 pk_options.h
+pk_options_readers.h
 pk_keys.h
 pk_ops_fwd.h
 pk_ops.h
@@ -27,7 +28,6 @@ workfactor.h
 <requires>
 asn1
 bigint
-enc_padding
 kdf
 pem
 numbertheory

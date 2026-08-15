@@ -9,11 +9,13 @@
 #include <botan/dsa.h>
 
 #include <botan/assert.h>
+#include <botan/pk_options_readers.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/dl_scheme.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    #include <botan/internal/rfc6979.h>
@@ -137,7 +139,7 @@ namespace {
 class DSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    public:
       DSA_Signature_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
-                              const PK_Signature_Options& options,
+                              const PK_Signature_Options_Reader& options,
                               RandomNumberGenerator& rng) :
             PK_Ops::Signature_with_Hash(options), m_key(key), m_deterministic(options.using_deterministic_signature()) {
 #if !defined(BOTAN_HAS_RFC6979_GENERATOR)
@@ -226,7 +228,8 @@ std::vector<uint8_t> DSA_Signature_Operation::raw_sign(std::span<const uint8_t> 
 */
 class DSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
-      DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, const PK_Signature_Options& options) :
+      DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key,
+                                 const PK_Signature_Options_Reader& options) :
             PK_Ops::Verification_with_Hash(options), m_key(key) {}
 
       DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, const AlgorithmIdentifier& alg_id) :
@@ -279,11 +282,10 @@ bool DSA_Verification_Operation::verify(std::span<const uint8_t> input, std::spa
 }  // namespace
 
 std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<DSA_Verification_Operation>(this->m_public_key, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   const PK_Signature_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<DSA_Verification_Operation>(this->m_public_key, options);
 }
 
 std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::create_x509_verification_op(
@@ -295,12 +297,11 @@ std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::create_x509_verification_op
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> DSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
-                                                                        const PK_Signature_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<DSA_Signature_Operation>(this->m_private_key, options, rng);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+std::unique_ptr<PK_Ops::Signature> DSA_PrivateKey::_create_signature_op(
+   RandomNumberGenerator& rng, const PK_Signature_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<DSA_Signature_Operation>(this->m_private_key, options, rng);
 }
 
 }  // namespace Botan

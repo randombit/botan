@@ -10,8 +10,6 @@
 
 #include <botan/pk_ops.h>
 
-#include <botan/pk_options.h>
-
 namespace Botan {
 
 class HashFunction;
@@ -22,7 +20,23 @@ class EncryptionPaddingScheme;
 
 namespace Botan::PK_Ops {
 
+/**
+* Describes the raw shared key produced by a KEM, ie the value returned when
+* no KDF is applied to it.
+*/
+enum class KemSharedKeyQuality : uint8_t {
+   /// The raw output is already a uniformly random key (eg ML-KEM), so it
+   /// is returned directly if the caller does not specify a KDF
+   IsUniform,
+   /// The raw output is not uniform (eg RSA-KEM, or a key agreement used as a
+   /// KEM), so the caller must either specify a KDF or explicitly request the
+   /// raw output
+   RequiresKDF,
+};
+
 // NOLINTBEGIN(*-special-member-functions)
+
+#if defined(BOTAN_HAS_RSA_ENCRYPTION_PADDING)
 
 class Encryption_with_Padding : public Encryption {
    public:
@@ -33,7 +47,7 @@ class Encryption_with_Padding : public Encryption {
       std::vector<uint8_t> encrypt(std::span<const uint8_t> ptext, RandomNumberGenerator& rng) override;
 
    protected:
-      explicit Encryption_with_Padding(std::string_view padding);
+      explicit Encryption_with_Padding(const PK_Encryption_Options_Reader& options);
 
    private:
       virtual size_t max_ptext_input_bits() const = 0;
@@ -49,12 +63,14 @@ class Decryption_with_Padding : public Decryption {
       secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) override;
 
    protected:
-      explicit Decryption_with_Padding(std::string_view padding);
+      explicit Decryption_with_Padding(const PK_Encryption_Options_Reader& options);
 
    private:
       virtual secure_vector<uint8_t> raw_decrypt(std::span<const uint8_t> ctext) = 0;
       std::unique_ptr<EncryptionPaddingScheme> m_padding;
 };
+
+#endif
 
 class Verification_with_Hash : public Verification {
    public:
@@ -66,7 +82,7 @@ class Verification_with_Hash : public Verification {
       std::string hash_function() const final;
 
    protected:
-      explicit Verification_with_Hash(const PK_Signature_Options& options);
+      explicit Verification_with_Hash(const PK_Signature_Options_Reader& options);
 
       explicit Verification_with_Hash(const AlgorithmIdentifier& alg_id,
                                       std::string_view pk_algo,
@@ -93,7 +109,7 @@ class Signature_with_Hash : public Signature {
       ~Signature_with_Hash() override;
 
    protected:
-      explicit Signature_with_Hash(const PK_Signature_Options& options);
+      explicit Signature_with_Hash(const PK_Signature_Options_Reader& options);
 
       std::string hash_function() const final;
 
@@ -116,7 +132,11 @@ class Key_Agreement_with_KDF : public Key_Agreement {
       ~Key_Agreement_with_KDF() override;
 
    protected:
-      explicit Key_Agreement_with_KDF(std::string_view kdf);
+      /**
+      * @param options must specify either a KDF or the raw shared key,
+      * since the agreed value is never a uniform key
+      */
+      explicit Key_Agreement_with_KDF(const PK_Key_Agreement_Options_Reader& options);
 
    private:
       virtual secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) = 0;
@@ -142,7 +162,11 @@ class KEM_Encryption_with_KDF : public KEM_Encryption {
 
       virtual size_t raw_kem_shared_key_length() const = 0;
 
-      explicit KEM_Encryption_with_KDF(std::string_view kdf);
+      /**
+      * @param options the KEM options; if these do not specify a KDF then
+      * whether the raw output can be used directly is decided by raw_key
+      */
+      KEM_Encryption_with_KDF(const PK_KEM_Options_Reader& options, KemSharedKeyQuality raw_key);
 
    private:
       std::unique_ptr<KDF> m_kdf;
@@ -165,7 +189,11 @@ class KEM_Decryption_with_KDF : public KEM_Decryption {
 
       virtual size_t raw_kem_shared_key_length() const = 0;
 
-      explicit KEM_Decryption_with_KDF(std::string_view kdf);
+      /**
+      * @param options the KEM options; if these do not specify a KDF then
+      * whether the raw output can be used directly is decided by raw_key
+      */
+      KEM_Decryption_with_KDF(const PK_KEM_Options_Reader& options, KemSharedKeyQuality raw_key);
 
    private:
       std::unique_ptr<KDF> m_kdf;

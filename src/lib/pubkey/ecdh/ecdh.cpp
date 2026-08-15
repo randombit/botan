@@ -12,6 +12,7 @@
 #include <botan/bigint.h>
 #include <botan/ec_group.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -26,8 +27,10 @@ namespace {
 */
 class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
    public:
-      ECDH_KA_Operation(const ECDH_PrivateKey& key, std::string_view kdf, RandomNumberGenerator& rng) :
-            PK_Ops::Key_Agreement_with_KDF(kdf),
+      ECDH_KA_Operation(const ECDH_PrivateKey& key,
+                        const PK_Key_Agreement_Options_Reader& options,
+                        RandomNumberGenerator& rng) :
+            PK_Ops::Key_Agreement_with_KDF(options),
             m_group(key.domain()),
             m_l_times_priv(mul_cofactor_inv(m_group, key._private_key())),
             m_rng(rng) {}
@@ -92,14 +95,11 @@ std::vector<uint8_t> ECDH_PublicKey::public_value(EC_Point_Format format) const 
    return _public_ec_point().serialize(format);
 }
 
-std::unique_ptr<PK_Ops::Key_Agreement> ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
-                                                                                std::string_view params,
-                                                                                std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<ECDH_KA_Operation>(*this, params, rng);
-   }
+std::unique_ptr<PK_Ops::Key_Agreement> ECDH_PrivateKey::_create_key_agreement_op(
+   RandomNumberGenerator& rng, const PK_Key_Agreement_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
 
-   throw Provider_Not_Found(algo_name(), provider);
+   return std::make_unique<ECDH_KA_Operation>(*this, options, rng);
 }
 
 }  // namespace Botan

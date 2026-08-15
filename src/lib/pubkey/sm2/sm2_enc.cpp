@@ -14,8 +14,10 @@
 #include <botan/kdf.h>
 #include <botan/mem_ops.h>
 #include <botan/pk_ops.h>
+#include <botan/pk_options_readers.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -203,34 +205,21 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Encryption> SM2_PublicKey::create_encryption_op(RandomNumberGenerator& rng,
-                                                                        std::string_view params,
-                                                                        std::string_view provider) const {
+std::unique_ptr<PK_Ops::Encryption> SM2_PublicKey::_create_encryption_op(
+   RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
 
-   if(provider == "base" || provider.empty()) {
-      if(params.empty()) {
-         return std::make_unique<SM2_Encryption_Operation>(*this, "SM3");
-      } else {
-         return std::make_unique<SM2_Encryption_Operation>(*this, params);
-      }
-   }
+   require_software_provider(options, algo_name());
 
-   throw Provider_Not_Found(algo_name(), provider);
+   // SM3 is the only hash specified for use with SM2, so it is the default
+   return std::make_unique<SM2_Encryption_Operation>(*this, options.hash_function().value_or("SM3"));
 }
 
-std::unique_ptr<PK_Ops::Decryption> SM2_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
-                                                                         std::string_view params,
-                                                                         std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      if(params.empty()) {
-         return std::make_unique<SM2_Decryption_Operation>(*this, rng, "SM3");
-      } else {
-         return std::make_unique<SM2_Decryption_Operation>(*this, rng, params);
-      }
-   }
+std::unique_ptr<PK_Ops::Decryption> SM2_PrivateKey::_create_decryption_op(
+   RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
 
-   throw Provider_Not_Found(algo_name(), provider);
+   return std::make_unique<SM2_Decryption_Operation>(*this, rng, options.hash_function().value_or("SM3"));
 }
 
 }  // namespace Botan
