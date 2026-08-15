@@ -168,6 +168,19 @@ std::vector<Test::Result> test_session_manager_in_memory() {
    Session_Manager_Callbacks cbs;
    Session_Manager_Policy plcy;
 
+   auto session_at = [](std::chrono::system_clock::time_point start_time) {
+      return Botan::TLS::Session(Botan::secure_vector<uint8_t>(48, 0x42),
+                                 Botan::TLS::Protocol_Version::TLS_V12,
+                                 0x009C,
+                                 Botan::TLS::Connection_Side::Client,
+                                 true,
+                                 true,
+                                 {},
+                                 server_info(),
+                                 0,
+                                 start_time);
+   };
+
    return {
       CHECK("creation", [&](auto&) { mgr.emplace(rng, 5); }),
 
@@ -337,6 +350,80 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                                  1);
                result.test_sz_eq(
                   "can find only one via server info", local_mgr.find(server_info(), cbs, plcy).size(), 1);
+            }),
+
+      CHECK("removing sessions stored under a long opaque handle",
+            [&](auto& result) {
+               // TLS 1.3 clients store their tickets as Opaque_Session_Handle,
+               // which is typically longer than a Session_ID could be
+               Botan::TLS::Session_Manager_In_Memory local_mgr(rng);
+
+               const auto handle1 = rng->random_vec<Botan::TLS::Opaque_Session_Handle>(128);
+               const auto handle2 = rng->random_vec<Botan::TLS::Opaque_Session_Handle>(128);
+               const auto handle3 = rng->random_vec<Botan::TLS::Opaque_Session_Handle>(128);
+
+               local_mgr.store(default_session(Botan::TLS::Connection_Side::Client, cbs), handle1);
+               local_mgr.store(default_session(Botan::TLS::Connection_Side::Client, cbs), handle2);
+               local_mgr.store(default_session(Botan::TLS::Connection_Side::Client, cbs), handle3);
+               result.test_sz_eq("can find them via server info", local_mgr.find(server_info(), cbs, plcy).size(), 3);
+
+               result.test_sz_eq("remove one session by opaque handle", local_mgr.remove(handle2), 1);
+               result.test_sz_eq("can find two via server info", local_mgr.find(server_info(), cbs, plcy).size(), 2);
+
+               result.test_sz_eq(
+                  "remove one session by ticket", local_mgr.remove(Botan::TLS::Session_Ticket(handle3.get())), 1);
+               result.test_sz_eq(
+                  "can find only one via server info", local_mgr.find(server_info(), cbs, plcy).size(), 1);
+
+               result.test_sz_eq("unknown handles remove nothing",
+                                 local_mgr.remove(rng->random_vec<Botan::TLS::Opaque_Session_Handle>(128)),
+                                 0);
+               result.test_sz_eq("remove_all clears the rest", local_mgr.remove_all(), 1);
+            }),
+
+      CHECK("find prefers the most recently established session",
+            [&](auto& result) {
+               Botan::TLS::Session_Manager_In_Memory local_mgr(rng);
+
+               const auto now = cbs.tls_current_timestamp();
+               const auto old_handle = rng->random_vec<Botan::TLS::Opaque_Session_Handle>(128);
+               const auto new_handle = rng->random_vec<Botan::TLS::Opaque_Session_Handle>(128);
+
+               // The newer session is stored first
+               local_mgr.store(session_at(now), new_handle);
+               local_mgr.store(session_at(now - std::chrono::minutes(1)), old_handle);
+
+               auto sessions = local_mgr.find(server_info(), cbs, plcy);
+               if(result.test_sz_eq("both sessions found", sessions.size(), 2)) {
+                  result.test_bin_eq("newest session first", sessions[0].handle.opaque_handle(), new_handle);
+                  result.test_bin_eq("older session second", sessions[1].handle.opaque_handle(), old_handle);
+               }
+               local_mgr.remove_all();
+
+               // Sessions with the same start time (e.g. multiple tickets from
+               // one connection) are preferred in reverse order of insertion.
+               // Sessions must not be reused, so each find() removes the
+               // session it returned.
+               Session_Manager_Policy no_reuse_policy;
+               no_reuse_policy.set_session_limit(1);
+               no_reuse_policy.set_allow_session_reuse(false);
+
+               std::vector<Botan::TLS::Opaque_Session_Handle> handles;
+               for(size_t i = 0; i < 3; ++i) {
+                  handles.push_back(rng->random_vec<Botan::TLS::Opaque_Session_Handle>(128));
+                  local_mgr.store(session_at(now), handles.back());
+               }
+
+               for(size_t i = handles.size(); i > 0; --i) {
+                  sessions = local_mgr.find(server_info(), cbs, no_reuse_policy);
+                  if(result.test_sz_eq("exactly one session found", sessions.size(), 1)) {
+                     result.test_bin_eq(
+                        "most recently stored session found", sessions[0].handle.opaque_handle(), handles[i - 1]);
+                  }
+               }
+
+               result.test_is_true("no sessions left", local_mgr.find(server_info(), cbs, no_reuse_policy).empty());
+               result.test_sz_eq("storage is empty", local_mgr.remove_all(), 0);
             }),
 
       CHECK(

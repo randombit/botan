@@ -10,6 +10,9 @@
 
 #include <botan/rng.h>
 #include <botan/internal/stl_util.h>
+#include <algorithm>
+#include <functional>
+#include <tuple>
 
 namespace Botan::TLS {
 
@@ -38,7 +41,7 @@ void Session_Manager_In_Memory::store(const Session& session, const Session_Hand
    // Generate a random session ID if the peer did not provide one. Note that
    // this ID is just for internal use and won't be returned on ::find().
    auto id = handle.id().value_or(m_rng->random_vec<Session_ID>(32));
-   m_sessions.emplace(id, Session_with_Handle{session, handle});
+   m_sessions.emplace(id, Stored_Session{Session_with_Handle{session, handle}, m_next_sequence_number++});
 
    if(m_fifo.has_value()) {
       m_fifo->emplace_back(std::move(id));
@@ -51,7 +54,7 @@ std::optional<Session> Session_Manager_In_Memory::retrieve_one(const Session_Han
    if(auto id = handle.id()) {
       const auto session = m_sessions.find(id.value());
       if(session != m_sessions.end()) {
-         return session->second.session;
+         return session->second.session_and_handle.session;
       }
    }
 
@@ -64,12 +67,26 @@ std::vector<Session_with_Handle> Session_Manager_In_Memory::find_some(const Serv
 
    const lock_guard_type<recursive_mutex_type> lk(mutex());
 
-   std::vector<Session_with_Handle> found_sessions;
-   // TODO: std::copy_if?
-   for(const auto& [_, session_and_handle] : m_sessions) {
-      if(session_and_handle.session.server_info() == info) {
-         found_sessions.emplace_back(session_and_handle);
+   std::vector<std::reference_wrapper<const Stored_Session>> matches;
+   for(const auto& [_, stored] : m_sessions) {
+      if(stored.session_and_handle.session.server_info() == info) {
+         matches.emplace_back(stored);
       }
+   }
+
+   // Prefer the most recently established session, i.e. the freshest ticket.
+   // Insertion order breaks ties, e.g. between tickets received within the
+   // same connection or from applications with a coarse-grained clock.
+   std::ranges::sort(matches, [](const Stored_Session& a, const Stored_Session& b) {
+      const auto a_start = a.session_and_handle.session.start_time();
+      const auto b_start = b.session_and_handle.session.start_time();
+      return std::tie(a_start, a.sequence_number) > std::tie(b_start, b.sequence_number);
+   });
+
+   std::vector<Session_with_Handle> found_sessions;
+   found_sessions.reserve(matches.size());
+   for(const Stored_Session& stored : matches) {
+      found_sessions.emplace_back(stored.session_and_handle);
    }
 
    return found_sessions;
@@ -90,9 +107,11 @@ size_t Session_Manager_In_Memory::remove_internal(const Session_Handle& handle) 
                            //       not contain a plethora of sessions and this should be fine. If
                            //       it's not, we'll need to consider another index on tickets.
                            return std::erase_if(m_sessions, [&](const auto& item) {
-                              const auto& [_unused1, session_and_handle] = item;
-                              const auto& [_unused2, this_handle] = session_and_handle;
-                              return this_handle.is_ticket() && this_handle.ticket().value() == ticket;
+                              const auto& [_unused1, stored] = item;
+                              const auto& [_unused2, this_handle] = stored.session_and_handle;
+                              // TLS 1.3 clients store their tickets as Opaque_Session_Handle
+                              const auto this_ticket = this_handle.ticket();
+                              return this_ticket.has_value() && this_ticket.value() == ticket;
                            });
                         },
                         [&](const Session_ID& id) -> size_t { return m_sessions.erase(id); },
