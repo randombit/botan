@@ -15,6 +15,26 @@ The versioning of the Python module follows the major versioning of
 the C++ library. So for Botan 2, the module is named ``botan2`` while
 for Botan 3 it is ``botan3``.
 
+Library Version Compatibility
+----------------------------------------
+
+The module loads any Botan 3.x shared library, preferring the newest it can
+find. It is written against the FFI API of the release it ships with, but the
+library does not need to match: functionality which the loaded library
+predates raises :class:`BotanFunctionUnavailable` when used, and everything
+else works as usual. This means an application can bundle the newest
+``botan3.py`` and run against whichever library the system provides.
+
+The library in use can be identified with :func:`version_string` or
+:func:`ffi_api_version`.
+
+.. autodata:: BOTAN_FFI_VERSION
+
+.. autodata:: BOTAN_MINIMUM_FFI_VERSION
+
+.. autoclass:: BotanFunctionUnavailable
+   :members:
+
 Versioning
 ----------------------------------------
 .. autofunction:: version_major
