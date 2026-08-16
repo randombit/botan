@@ -735,6 +735,56 @@ class OCSP_Tests final : public Test {
          return result;
       }
 
+   #if defined(BOTAN_HAS_ML_DSA) || defined(BOTAN_HAS_SLH_DSA_WITH_SHA2)
+      static Test::Result test_pqc_signed_ocsp_response(const std::string& algo, const std::string& prefix) {
+         Test::Result result("OCSP response signed with " + algo);
+
+         // The response is signed by the issuing CA itself. See
+         // `src/scripts/dev_tools/gen_pqc_ocsp_testdata.sh` for a helper script
+         // to recreate the test data.
+         auto ee = load_test_X509_cert("x509/ocsp/" + prefix + "_ee.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/" + prefix + "_root.pem");
+
+         auto ocsp = load_test_OCSP_resp("x509/ocsp/" + prefix + "_ocsp.der");
+         result.test_enum_eq("response parses", ocsp.status(), Botan::OCSP::Response_Status_Code::Successful);
+
+         test_arb_eq(result,
+                     "CA is returned as signing certificate",
+                     ocsp.find_signing_certificate(trust_root),
+                     std::optional(trust_root));
+
+         result.test_enum_eq("signature of the response verifies",
+                             ocsp.verify_signature(trust_root),
+                             Botan::Certificate_Status_Code::OCSP_SIGNATURE_OK);
+
+         // The signature BIT STRING is the last element of the response encoding
+         auto tampered_bytes = Test::read_binary_data_file("x509/ocsp/" + prefix + "_ocsp.der");
+         tampered_bytes.back() ^= 0x01;
+         const Botan::OCSP::Response tampered_ocsp(tampered_bytes);
+         result.test_enum_eq("tampered signature is rejected",
+                             tampered_ocsp.verify_signature(trust_root),
+                             Botan::Certificate_Status_Code::OCSP_SIGNATURE_ERROR);
+
+         const std::vector<Botan::X509_Certificate> cert_path = {ee, trust_root};
+
+         Botan::Certificate_Store_In_Memory certstore;
+         certstore.add_certificate(trust_root);
+
+         // Some arbitrary time within the validity period of the OCSP response
+         const auto valid_time = Botan::calendar_point(2026, 8, 13, 12, 0, 0).to_std_timepoint();
+         const auto ocsp_status =
+            Botan::PKIX::check_ocsp(cert_path, {ocsp}, {&certstore}, valid_time, Botan::Path_Validation_Restrictions());
+
+         if(result.test_sz_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
+            result.test_sz_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1)) {
+            result.test_is_true("Status good",
+                                ocsp_status[0].contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD));
+         }
+
+         return result;
+      }
+   #endif
+
       static Test::Result test_responder_cert_with_nocheck_extension() {
          Test::Result result("BDr's OCSP response contains certificate featuring NoCheck extension");
 
@@ -770,6 +820,13 @@ class OCSP_Tests final : public Test {
          results.push_back(test_forged_ocsp_signature_is_rejected());
          results.push_back(test_partial_stapling_preserves_per_slot_gap());
          results.push_back(test_responder_cert_with_nocheck_extension());
+
+   #if defined(BOTAN_HAS_ML_DSA)
+         results.push_back(test_pqc_signed_ocsp_response("ML-DSA", "mldsa"));
+   #endif
+   #if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2)
+         results.push_back(test_pqc_signed_ocsp_response("SLH-DSA", "slhdsa"));
+   #endif
 
    #if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
          if(Test::options().run_online_tests()) {
