@@ -16,10 +16,9 @@ std::map<std::string, std::string> read_kv(std::string_view kv) {
       return m;
    }
 
-   std::vector<std::string> parts;
-
    try {
-      parts = split_on(kv, ',');
+      // Validate input format before manual parsing
+      [[maybe_unused]] const auto _ = split_on(kv, ',');
    } catch(std::exception&) {
       throw Invalid_Argument("Bad KV spec");
    }
@@ -55,10 +54,7 @@ std::map<std::string, std::string> read_kv(std::string_view kv) {
          } else {
             cur_val += c;
          }
-
-         if(escaped) {
-            escaped = false;
-         }
+         escaped = false;
       }
    }
 
