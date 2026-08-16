@@ -172,7 +172,7 @@ word operator%(const BigInt& n, word mod) {
       const divide_precomp redc_mod(mod);
       const size_t sw = n.sig_words();
       for(size_t i = sw; i > 0; --i) {
-         remainder = redc_mod.vartime_mod_2to1(remainder, n.word_at(i - 1));
+         remainder = redc_mod.mod_2to1(remainder, n.word_at(i - 1));
       }
    }
 

@@ -280,7 +280,7 @@ BigInt vartime_divide_pow2k(size_t k, const BigInt& y_arg) {
       const word x_i1 = r.word_at(i - 1);
       const word x_i2 = r.word_at(i - 2);
 
-      word qit = (x_i0 == y_t0) ? WordInfo<word>::max : div_y_t0.vartime_div_2to1(x_i0, x_i1);
+      word qit = (x_i0 == y_t0) ? WordInfo<word>::max : div_y_t0.div_2to1(x_i0, x_i1);
 
       // Per HAC 14.23, this operation is required at most twice
       for(size_t j = 0; j != 2; ++j) {
@@ -383,7 +383,7 @@ void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt&
       const word x_i1 = r.word_at(i - 1);
       const word x_i2 = r.word_at(i - 2);
 
-      word qit = (x_i0 == y_t0) ? WordInfo<word>::max : div_y_t0.vartime_div_2to1(x_i0, x_i1);
+      word qit = (x_i0 == y_t0) ? WordInfo<word>::max : div_y_t0.div_2to1(x_i0, x_i1);
 
       // Per HAC 14.23, this operation is required at most twice
       for(size_t j = 0; j != 2; ++j) {
