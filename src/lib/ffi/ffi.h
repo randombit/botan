@@ -4030,6 +4030,8 @@ BOTAN_FFI_EXPORT(2, 8) const char* botan_x509_cert_validation_status(int code);
 
 typedef struct botan_x509_cert_builder_struct* botan_x509_cert_builder_t;
 typedef struct botan_x509_pkcs10_req_struct* botan_x509_pkcs10_req_t;
+typedef struct botan_x509_ext_ip_addr_blocks_struct* botan_x509_ext_ip_addr_blocks_t;
+typedef struct botan_x509_ext_as_blocks_struct* botan_x509_ext_as_blocks_t;
 
 /**
 * Frees all resources of the certificate builder object
@@ -4104,6 +4106,30 @@ int botan_x509_cert_builder_add_allowed_extended_usage(botan_x509_cert_builder_t
 */
 BOTAN_FFI_EXPORT(3, 13)
 int botan_x509_cert_builder_set_as_ca_certificate(botan_x509_cert_builder_t builder, size_t* limit);
+
+/**
+* Add the IP Address Blocks extension from RFC 3779, may only be called once
+* @param builder the builder to modify
+* @param ip_addr_blocks the extension to add
+* @param is_critical should be set to `1` if the extension should be marked as critical, else `0`
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_cert_builder_add_ext_ip_addr_blocks(botan_x509_cert_builder_t builder,
+                                                   botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
+                                                   int is_critical);
+
+/**
+* Add the AS Blocks extension from RFC 3779, may only be called once
+* @param builder the builder to modify
+* @param as_blocks the extension to add, must have at least one ASNum or RDI configured
+* @param is_critical should be set to `1` if the extension should be marked as critical, else `0`
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_cert_builder_add_ext_as_blocks(botan_x509_cert_builder_t builder,
+                                              botan_x509_ext_as_blocks_t as_blocks,
+                                              int is_critical);
 
 /**
 * Create a self-signed X.509 certificate
@@ -4306,6 +4332,55 @@ int botan_x509_ext_ip_addr_blocks_get_address(
    botan_x509_cert_t cert, int ipv6, size_t i, size_t entry, uint8_t min_out[], uint8_t max_out[], size_t* out_len);
 
 /**
+* Frees all resources of the IP Address Blocks extension object
+* @param ip_addr_blocks the extension to destroy
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_ip_addr_blocks_destroy(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks);
+
+/**
+* Create a new IP Address Blocks extension object
+* @param builder_obj the new object will be placed here
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_ip_addr_blocks_create(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks);
+
+/**
+* Add an IP address range to this extension (for the specified SAFI, if given)
+* @param ip_addr_blocks the extension to modify
+* @param min the minimum address of the range, 4 or 16 in length
+* @param max the maximum address of the range, 4 or 16 in length
+* @param ipv6 should be set to 1 if the range is an IPv6 range, 0 otherwise
+* @param safi the SAFI to assign to the range, may be `nullptr`
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_ip_addr_blocks_add_ip_addr(
+   botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, const uint8_t* min, const uint8_t* max, int ipv6, uint8_t* safi);
+
+/**
+* Make the extension contain no allowed IP adresses for the specified IP version (and SAFI, if given)
+* @param ip_addr_blocks the extension to modify
+* @param ipv6 should be set to 1 if the range is an IPv6 range, 0 otherwise
+* @param safi the SAFI to assign to the range, may be `nullptr`
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_ip_addr_blocks_restrict(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi);
+
+/**
+* Mark the specified IP version as 'inherit' (for the specified SAFI, if any)
+* @param ip_addr_blocks the extension to modify
+* @param ipv6 should be set to 1 if the range is an IPv6 range, 0 otherwise
+* @param safi the SAFI to assign to the range, may be `nullptr`
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_ip_addr_blocks_inherit(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi);
+
+/**
 * Get basic info about the AS Blocks extension from RFC 3779
 * @param cert the certificate to inspect
 * @param asnum must be set to 1 to get info about AS numbers, 0 for RDIs (the type)
@@ -4331,6 +4406,51 @@ int botan_x509_ext_as_blocks_get_info(botan_x509_cert_t cert, int asnum, int* pr
 */
 BOTAN_FFI_EXPORT(3, 13)
 int botan_x509_ext_as_blocks_get_entry_at(botan_x509_cert_t cert, int asnum, size_t i, uint32_t* min, uint32_t* max);
+
+/**
+* Frees all resources of the AS Blocks extension object
+* @param as_blocks the extension to destroy
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_as_blocks_destroy(botan_x509_ext_as_blocks_t as_blocks);
+
+/**
+* Create a new AS Blocks extension object
+* @param as_blocks the new object will be placed here
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_as_blocks_create(botan_x509_ext_as_blocks_t* as_blocks);
+
+/**
+* Add an ASNum or RDI range to the extension
+* @param as_blocks the extension to modify
+* @param asnum should be set to 1 to operate on ASNums, 0 for RDIs
+* @param min the minimum value of the range to add
+* @param max the maximum value of the range to add
+* @returns 0 on success, negative number on error
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_as_blocks_add_range(botan_x509_ext_as_blocks_t as_blocks, int asnum, uint32_t min, uint32_t max);
+
+/**
+* Make the extension contain no allowed ASNums or RDIs
+* @param as_blocks the extension to modify
+* @param asnum should be set to 1 to operate on ASNums, 0 for RDIs
+* @returns 0 on success, negative number on error
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_as_blocks_restrict(botan_x509_ext_as_blocks_t as_blocks, int asnum);
+
+/**
+* Mark the ASNum or RDI entry of the extension as 'inherit'
+* @param as_blocks the extension to modify
+* @param asnum should be set to 1 to operate on ASNums, 0 for RDIs
+* @returns 0 on success, negative number on error
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_as_blocks_inherit(botan_x509_ext_as_blocks_t as_blocks, int asnum);
 
 /*
 * X.509 CRL

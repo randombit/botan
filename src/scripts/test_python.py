@@ -1132,6 +1132,51 @@ ofvkP1EDmpx50fHLawIDAQAB
         cert = req_builder.into_cert(ca_cert, ca_key, cert_key, rng, not_before, not_after, botan.MPI("1"))
         self.assertEqual(cert.verify(None, [ca_cert]), 0)
 
+    def test_cert_creation_exts(self):
+        group = "secp256r1"
+        now = int(time.time())
+        not_before = now - 180
+        not_after = now + 86400
+
+        rng = botan.RandomNumberGenerator()
+        key = botan.PrivateKey.create("ECDSA", group, rng)
+        builder = botan.X509CertificateBuilder()
+
+        ip_addr_blocks = botan.X509ExtIPAddrBlocks()
+
+        ip_addr_blocks.add_addr([192, 168, 2, 1])
+        ip_addr_blocks.add_range([10, 0, 0, 1], [10, 0, 255, 255])
+        ip_addr_blocks.restrict(False, 42)
+
+        ip_addr_blocks.add_addr([0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01])
+        ip_addr_blocks.restrict(True, 234)
+
+        as_blocks = botan.X509ExtASBlocks()
+        as_blocks.add_asnum(30)
+        as_blocks.add_asnum_range(3000, 4999)
+        as_blocks.restrict_rdi()
+
+        builder.add_ext_ip_addr_blocks(ip_addr_blocks, True)
+        builder.add_ext_as_blocks(as_blocks, True)
+
+        cert = builder.into_self_signed_cert(key, rng, not_before, not_after)
+        self.assertEqual(cert.ext_ip_addr_blocks(), (
+            [
+                (None, [((10, 0, 0, 1), (10, 0, 255, 255)), ((192, 168, 2, 1), (192, 168, 2, 1))]),
+                (42, [])
+            ],
+            [
+                (None, [(
+                    (0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01),
+                    (0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01)
+                )], ),
+                (234, [])
+            ]
+        ))
+
+        self.assertEqual(cert.ext_as_blocks_asnum(), [(30, 30), (3000, 4999)])
+        self.assertEqual(cert.ext_as_blocks_rdi(), [])
+
     def test_crls(self):
         rng = botan.RandomNumberGenerator()
         now = int(time.time())

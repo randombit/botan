@@ -1986,6 +1986,160 @@ class FFI_Cert_Creation_Test final : public FFI_Test {
       }
 };
 
+class FFI_Cert_Creation_Exts_Test final : public FFI_Test {
+   public:
+      std::string name() const override { return "FFI Cert Creation with Extensions"; }
+
+      void ffi_test(Test::Result& result, botan_rng_t rng) override {
+         const std::string group{"secp256r1"};
+
+         botan_privkey_t key;
+         if(TEST_FFI_INIT(botan_privkey_create, (&key, "ECDSA", group.c_str(), rng))) {
+            uint64_t now =
+               std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
+                  .count();
+            uint64_t not_before = now - 180;
+            uint64_t not_after = now + 86400;
+
+            botan_x509_cert_builder_t builder;
+
+            size_t v4_count;
+            size_t v6_count;
+            int has_safi;
+            uint8_t safi;
+            int present;
+            size_t count;
+            std::vector<uint8_t> min_addr_v4(4);
+            std::vector<uint8_t> max_addr_v4(4);
+            std::vector<uint8_t> min_addr_v6(16);
+            std::vector<uint8_t> max_addr_v6(16);
+
+            TEST_FFI_OK(botan_x509_cert_builder_create, (&builder));
+            TEST_FFI_OK(botan_x509_cert_builder_add_dn_or_alt_name_value,
+                        (builder, BOTAN_X509_CERT_BUILDER_COMMON_NAME, "Certificate with Extensions"));
+
+            botan_x509_ext_ip_addr_blocks_t ip_addr_blocks;
+            TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_create, (&ip_addr_blocks));
+
+            min_addr_v4.assign({0xAC, 0, 0, 0});
+            max_addr_v4.assign({0xCA, 0, 0, 0});
+            TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_add_ip_addr,
+                        (ip_addr_blocks, min_addr_v4.data(), max_addr_v4.data(), 0, nullptr));
+
+            min_addr_v4.assign({0xFF, 0xAB, 0xCD, 0xEF});
+            max_addr_v4.assign({0xFF, 0xAB, 0xCD, 0xEF});
+            TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_add_ip_addr,
+                        (ip_addr_blocks, min_addr_v4.data(), max_addr_v4.data(), 0, nullptr));
+
+            safi = 42;
+            botan_x509_ext_ip_addr_blocks_restrict(ip_addr_blocks, 0, &safi);
+            safi = 123;
+            botan_x509_ext_ip_addr_blocks_inherit(ip_addr_blocks, 0, &safi);
+
+            min_addr_v6.assign({0xFF, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+            max_addr_v6.assign(
+               {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF});
+            TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_add_ip_addr,
+                        (ip_addr_blocks, min_addr_v6.data(), max_addr_v6.data(), 1, nullptr));
+
+            TEST_FFI_OK(botan_x509_cert_builder_add_ext_ip_addr_blocks, (builder, ip_addr_blocks, 1));
+
+            botan_x509_ext_as_blocks_t as_blocks;
+            TEST_FFI_OK(botan_x509_ext_as_blocks_create, (&as_blocks));
+
+            // the AS Blocks ext expects at least an ASNUM or RDI to be present
+            TEST_FFI_RC(
+               BOTAN_FFI_ERROR_INVALID_INPUT, botan_x509_cert_builder_add_ext_as_blocks, (builder, as_blocks, 1));
+
+            TEST_FFI_OK(botan_x509_ext_as_blocks_add_range, (as_blocks, 1, 42, 123));
+            TEST_FFI_OK(botan_x509_ext_as_blocks_add_range, (as_blocks, 1, 42000, 4294967295));
+            TEST_FFI_OK(botan_x509_ext_as_blocks_inherit, (as_blocks, 0));
+
+            TEST_FFI_OK(botan_x509_cert_builder_add_ext_as_blocks, (builder, as_blocks, 1));
+
+            botan_x509_cert_t cert;
+            TEST_FFI_OK(botan_x509_cert_builder_into_self_signed_cert,
+                        (&cert, builder, key, rng, not_before, not_after, nullptr, nullptr, nullptr));
+
+            TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_counts, (cert, &v4_count, &v6_count));
+            result.test_sz_eq("v4 count is correct", v4_count, 3);
+            result.test_sz_eq("v6 count is correct", v6_count, 1);
+
+            safi = 0;
+            TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_family, (cert, 0, 0, &has_safi, &safi, &present, &count));
+            result.test_is_true("IPv4 family 1 does not have a SAFI", has_safi == 0);
+            result.test_is_true("IPv4 family 1 is present", present == 1);
+            result.test_sz_eq("IPv4 family 1 has correct number of ranges", count, 2);
+
+            TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_family, (cert, 0, 1, &has_safi, &safi, &present, &count));
+            result.test_is_true("IPv4 family 2 has a SAFI", has_safi == 1);
+            result.test_u8_eq("IPv4 family 2 SAFI is correct", safi, 42);
+            result.test_is_true("IPv4 family 2 is present", present == 1);
+            result.test_sz_eq("IPv4 family 2 has no ranges", count, 0);
+
+            TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_family, (cert, 0, 2, &has_safi, &safi, &present, &count));
+            result.test_is_true("IPv4 family 3 has a SAFI", has_safi == 1);
+            result.test_u8_eq("IPv4 family 3 SAFI is correct", safi, 123);
+            result.test_is_true("IPv4 family 3 is not present", present == 0);
+
+            TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_family, (cert, 1, 0, &has_safi, &safi, &present, &count));
+            result.test_is_true("IPv6 family 1 has no SAFI", has_safi == 0);
+            result.test_is_true("IPv6 family 1 is present", present == 1);
+            result.test_u8_eq("IPv6 family 1 has correct number of ranges", count, 1);
+
+            size_t out_len = 4;
+            std::fill(min_addr_v4.begin(), min_addr_v4.end(), 0);
+            std::fill(max_addr_v4.begin(), max_addr_v4.end(), 0);
+            TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_address,
+                        (cert, 0, 0, 0, min_addr_v4.data(), max_addr_v4.data(), &out_len));
+            result.test_bin_eq("IPv4 family 1 range 1 min addr is correct", min_addr_v4, "AC000000");
+            result.test_bin_eq("IPv4 family 1 range 1 max addr is correct", max_addr_v4, "CA000000");
+
+            TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_address,
+                        (cert, 0, 0, 1, min_addr_v4.data(), max_addr_v4.data(), &out_len));
+            result.test_bin_eq("IPv4 family 1 range 2 min addr is correct", min_addr_v4, "FFABCDEF");
+            result.test_bin_eq("IPv4 family 1 range 2 max addr is correct", max_addr_v4, "FFABCDEF");
+
+            out_len = 16;
+            std::fill(min_addr_v6.begin(), min_addr_v6.end(), 0);
+            std::fill(max_addr_v6.begin(), max_addr_v6.end(), 0);
+            TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_address,
+                        (cert, 1, 0, 0, min_addr_v6.data(), max_addr_v6.data(), &out_len));
+
+            result.test_bin_eq(
+               "IPv6 family 1 range 1 min addr is correct", min_addr_v6, "FF000000000000000000000000000000");
+            result.test_bin_eq(
+               "IPv6 family 1 range 1 max addr is correct", max_addr_v6, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+
+            TEST_FFI_OK(botan_x509_ext_as_blocks_get_info, (cert, 1, &present, &count));
+            result.test_is_true("Cert has asnums", present == 1);
+            result.test_sz_eq("Cert has correct number of asnums", count, 2);
+
+            TEST_FFI_OK(botan_x509_ext_as_blocks_get_info, (cert, 0, &present, &count));
+            result.test_is_true("Cert has no RDIs", present == 0);
+
+            uint32_t min_as;
+            uint32_t max_as;
+
+            TEST_FFI_OK(botan_x509_ext_as_blocks_get_entry_at, (cert, 1, 0, &min_as, &max_as));
+            result.test_u32_eq("asnum range 1 has correct min", min_as, 42);
+            result.test_u32_eq("asnum range 1 has correct max", max_as, 123);
+
+            TEST_FFI_OK(botan_x509_ext_as_blocks_get_entry_at, (cert, 1, 1, &min_as, &max_as));
+            result.test_u32_eq("asnum range 2 has correct min", min_as, 42000);
+            result.test_u32_eq("asnum range 2 has correct max", max_as, 4294967295);
+
+            TEST_FFI_OK(botan_privkey_destroy, (key));
+            TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+            TEST_FFI_OK(botan_x509_cert_builder_destroy, (builder));
+            TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_destroy, (ip_addr_blocks));
+            TEST_FFI_OK(botan_x509_ext_as_blocks_destroy, (as_blocks));
+
+            // then go build the certs
+         }
+      }
+};
+
    #endif
 
 class FFI_PKCS_Hashid_Test final : public FFI_Test {
@@ -6365,6 +6519,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_cert_name_constraints", FFI_Cert_NameConstraints
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_aia", FFI_Cert_AuthorityInformationAccess_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_ext_rfc3779", FFI_Cert_ExtRFC3779_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_creation", FFI_Cert_Creation_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_cert_creation_exts", FFI_Cert_Creation_Exts_Test);
    #endif
 
 #endif

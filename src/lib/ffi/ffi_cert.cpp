@@ -1180,6 +1180,48 @@ int botan_x509_cert_builder_set_as_ca_certificate(botan_x509_cert_builder_t buil
 #endif
 }
 
+int botan_x509_cert_builder_add_ext_ip_addr_blocks(botan_x509_cert_builder_t builder,
+                                                   botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
+                                                   int is_critical) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      if(is_critical != 0 && is_critical != 1) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+      try {
+         safe_get(builder).add_extension(safe_get(ip_addr_blocks).copy(), static_cast<bool>(is_critical));
+      } catch(Botan::Invalid_Argument&) {
+         return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(builder, ip_addr_blocks, is_critical);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_builder_add_ext_as_blocks(botan_x509_cert_builder_t builder,
+                                              botan_x509_ext_as_blocks_t as_blocks,
+                                              int is_critical) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      if(is_critical != 0 && is_critical != 1) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+      try {
+         safe_get(builder).add_extension(safe_get(as_blocks).copy(), static_cast<bool>(is_critical));
+      } catch(Botan::Invalid_Argument&) {
+         return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(builder, as_blocks, is_critical);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_x509_cert_builder_into_self_signed_cert(botan_x509_cert_t* cert_obj,
                                                   botan_x509_cert_builder_t builder,
                                                   botan_privkey_t key,

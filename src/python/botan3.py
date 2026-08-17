@@ -585,9 +585,20 @@ def _set_prototypes(dll):
             [c_void_p, c_int, c_size_t, POINTER(c_int), POINTER(c_uint8), POINTER(c_int), POINTER(c_size_t)])
     ffi_api(dll.botan_x509_ext_ip_addr_blocks_get_address,
             [c_void_p, c_int, c_size_t, c_size_t, c_char_p, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_ext_ip_addr_blocks_destroy, [c_void_p])
+    ffi_api(dll.botan_x509_ext_ip_addr_blocks_create, [c_void_p])
+    ffi_api(dll.botan_x509_ext_ip_addr_blocks_add_ip_addr,
+            [c_void_p, c_char_p, c_char_p, c_int, POINTER(c_uint8)])
+    ffi_api(dll.botan_x509_ext_ip_addr_blocks_restrict, [c_void_p, c_int, POINTER(c_uint8)])
+    ffi_api(dll.botan_x509_ext_ip_addr_blocks_inherit, [c_void_p, c_int, POINTER(c_uint8)])
     ffi_api(dll.botan_x509_ext_as_blocks_get_info, [c_void_p, c_int, POINTER(c_int), POINTER(c_size_t)])
     ffi_api(dll.botan_x509_ext_as_blocks_get_entry_at,
             [c_void_p, c_int, c_size_t, POINTER(c_uint32), POINTER(c_uint32)])
+    ffi_api(dll.botan_x509_ext_as_blocks_destroy, [c_void_p])
+    ffi_api(dll.botan_x509_ext_as_blocks_create, [c_void_p])
+    ffi_api(dll.botan_x509_ext_as_blocks_add_range, [c_void_p, c_int, c_uint32, c_uint32])
+    ffi_api(dll.botan_x509_ext_as_blocks_restrict, [c_void_p, c_int])
+    ffi_api(dll.botan_x509_ext_as_blocks_inherit, [c_void_p, c_int])
 
     # X509 Cert Builder
     ffi_api(dll.botan_x509_cert_builder_destroy, [c_void_p])
@@ -596,6 +607,8 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_cert_builder_add_allowed_usage, [c_void_p, c_uint32])
     ffi_api(dll.botan_x509_cert_builder_add_allowed_extended_usage, [c_void_p, c_void_p])
     ffi_api(dll.botan_x509_cert_builder_set_as_ca_certificate, [c_void_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_builder_add_ext_ip_addr_blocks, [c_void_p, c_void_p, c_int])
+    ffi_api(dll.botan_x509_cert_builder_add_ext_as_blocks, [c_void_p, c_void_p, c_int])
     ffi_api(dll.botan_x509_cert_builder_into_self_signed_cert,
             [c_void_p, c_void_p, c_void_p, c_void_p, c_uint64, c_uint64, c_void_p, c_char_p, c_char_p])
     ffi_api(dll.botan_x509_cert_builder_into_cert,
@@ -2963,6 +2976,14 @@ class X509CertificateBuilder:
         May be called at most once."""
         _DLL.botan_x509_cert_builder_set_as_ca_certificate(self.__obj, c_size_t(limit) if limit is not None else None)
 
+    def add_ext_ip_addr_blocks(self, ip_addr_blocks: X509ExtIPAddrBlocks, is_critical: bool):
+        """Add the IP Address Blocks extension from RFC 3779 to this certificate"""
+        _DLL.botan_x509_cert_builder_add_ext_ip_addr_blocks(self.__obj, ip_addr_blocks._handle(), 1 if is_critical else 0)
+
+    def add_ext_as_blocks(self, as_blocks: X509ExtASBlocks, is_critical: bool):
+        """Add the AS Blocks extension from RFC 3779 to this certificate"""
+        _DLL.botan_x509_cert_builder_add_ext_as_blocks(self.__obj, as_blocks._handle(), 1 if is_critical else 0)
+
     def into_self_signed_cert(
         self,
         key: PrivateKey,
@@ -3039,6 +3060,104 @@ class X509CertificateBuilder:
             _ctype_str(challenge_password)
         )
         return req
+
+
+class X509ExtIPAddrBlocks:
+    """The IP Address Blocks extension from RFC 3779"""
+
+    def __init__(self):
+        self.__obj = c_void_p(0)
+        _DLL.botan_x509_ext_ip_addr_blocks_create(byref(self.__obj))
+
+    def __del__(self):
+        _DLL.botan_x509_ext_ip_addr_blocks_destroy(self.__obj)
+
+    def _handle(self):
+        return self.__obj
+
+    def add_addr(self, ip: list[int], safi: int | None = None):
+        """Add a single IP address to this extension (for the specified SAFI, if any)
+
+        ``ip`` is expected to be a list of size 4 or 16 for IPv4 or IPv6 respectively
+        """
+        self.add_range(ip, ip, safi)
+
+    def add_range(self, min_: list[int], max_: list[int], safi: int | None = None):
+        """Add an IP address range to this extension (for the specified SAFI, if any)
+
+        ``min_`` and ``max_``` are expected to be a lists of size 4 or 16 for IPv4 or IPv6 respectively
+        """
+        min_len = len(min_)
+        if min_len not in (4, 16) or len(max_) != min_len:
+            raise BotanException("Address must be 4 or 16 bytes long")
+
+        ipv6 = 1 if min_len == 16 else 0
+        safi = byref(c_uint8(safi)) if safi is not None else None
+        _DLL.botan_x509_ext_ip_addr_blocks_add_ip_addr(self.__obj, bytes(min_), bytes(max_), c_int(ipv6), safi)
+
+    def restrict(self, ipv6: bool, safi: int | None = None):
+        """Make the extension contain no allowed IP addresses for the specified IP version (and SAFI, if any)
+
+        Set ``ipv6`` to ``0`` to restrict for IPv4, ``1`` for IPv6
+        """
+        ipv6 = 1 if ipv6 else 0
+        safi = byref(c_uint8(safi)) if safi is not None else None
+        _DLL.botan_x509_ext_ip_addr_blocks_restrict(self.__obj, c_int(ipv6), safi)
+
+    def inherit(self, ipv6: bool, safi: int | None = None):
+        """Mark the specified IP version as 'inherit' (for the specified SAFI, if any)
+
+        Set ``ipv6`` to ``0`` to restrict for IPv4, ``1`` for IPv6
+        """
+        ipv6 = 1 if ipv6 else 0
+        safi = byref(c_uint8(safi)) if safi is not None else None
+        _DLL.botan_x509_ext_ip_addr_blocks_inherit(self.__obj, c_int(ipv6), safi)
+
+
+class X509ExtASBlocks:
+    """The AS Blocks extension from RFC 3779"""
+
+    def __init__(self):
+        self.__obj = c_void_p(0)
+        _DLL.botan_x509_ext_as_blocks_create(byref(self.__obj))
+
+    def __del__(self):
+        _DLL.botan_x509_ext_as_blocks_destroy(self.__obj)
+
+    def _handle(self):
+        return self.__obj
+
+    def add_asnum(self, asnum: int):
+        """Add a single asnum to this extension"""
+        self.add_asnum_range(asnum, asnum)
+
+    def add_asnum_range(self, min_: int, max_: int):
+        """Add an asnum range to this extension"""
+        _DLL.botan_x509_ext_as_blocks_add_range(self.__obj, 1, c_uint32(min_), c_uint32(max_))
+
+    def restrict_asnum(self):
+        """Make the extension contain no allowed asnum's"""
+        _DLL.botan_x509_ext_as_blocks_restrict(self.__obj, 1)
+
+    def inherit_asnum(self):
+        """Mark the asnum entry as 'inherit'"""
+        _DLL.botan_x509_ext_as_blocks_inherit(self.__obj, 1)
+
+    def add_rdi(self, rdi: int):
+        """Add a single rdi to this extension"""
+        self.add_rdi_range(rdi, rdi)
+
+    def add_rdi_range(self, min_: int, max_: int):
+        """Add an rdi range to this extension"""
+        _DLL.botan_x509_ext_as_blocks_add_range(self.__obj, 0, c_uint32(min_), c_uint32(max_))
+
+    def restrict_rdi(self):
+        """Make the extension contain no allowed rdi's"""
+        _DLL.botan_x509_ext_as_blocks_restrict(self.__obj, 0)
+
+    def inherit_rdi(self):
+        """Mark the rdi entry as 'inherit'"""
+        _DLL.botan_x509_ext_as_blocks_inherit(self.__obj, 0)
 
 
 class PKCS10Request:
