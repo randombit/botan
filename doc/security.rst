@@ -68,7 +68,7 @@ it is within the general threat model that the library operates under.
 
   Credit: The diff/ambidiff security research effort (afldl)
 
-* 2026-08-22 (CVE-2026-48057): Bypass of DN nameConstraint enforcement
+* 2026-08-12 (CVE-2026-48057): Bypass of DN nameConstraint enforcement
 
   The decoding of X509 distinguished names lost some relevant structure, which could
   allow bypassing name constraint enforcement for DNs.
@@ -77,7 +77,7 @@ it is within the general threat model that the library operates under.
 
   Credit: Haruki Oyama
 
-* 2026-08-22: Integer Overflow in FFI Block Size Reporting
+* 2026-08-12: Integer Overflow in FFI Block Size Reporting
 
   The FFI interface ``botan_block_cipher_block_size`` reported the block size of a
   cipher using ``int`` however this value can overflow when using the variable length
@@ -89,7 +89,7 @@ it is within the general threat model that the library operates under.
 
   Credit: Filipe Casal of Trail of Bits in collaboration with OpenAI
 
-* 2026-08-22: Python bcrypt API truncates passwords containing NUL characters
+* 2026-08-12: Python bcrypt API truncates passwords containing NUL characters
 
   The Python binding did not consistently detect the existence of a NUL (``U+0000``)
   character in a Python string when converting it to a ``const char*`` before passing
@@ -102,7 +102,7 @@ it is within the general threat model that the library operates under.
 
   Credit: Filipe Casal of Trail of Bits in collaboration with OpenAI
 
-* 2026-08-22: The ``oscp_check`` cli utility accepted unauthenticated responses
+* 2026-08-12: The ``oscp_check`` cli utility accepted unauthenticated responses
 
   The command line interface subcommand ``botan ocsp_check`` would request an OCSP
   response from the URL specified in the certificate's AIA extension, without
