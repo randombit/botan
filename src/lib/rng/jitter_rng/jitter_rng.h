@@ -17,14 +17,59 @@ namespace Botan {
 class Jitter_RNG_Internal;
 
 /**
-* RNG using libjitterentropy (https://github.com/smuellerDD/jitterentropy-library)
+* RNG using jitterentropy (https://github.com/smuellerDD/jitterentropy-library)
 */
 class BOTAN_PUBLIC_API(3, 6) Jitter_RNG final : public RandomNumberGenerator {
    public:
       /**
-      * Create a Jitter_RNG, throwing if libjitterentropy cannot be initialized
+      * The compliance mode requested from the underlying jitterentropy library
       */
-      Jitter_RNG();
+      enum class Mode : uint8_t {
+         /**
+         * Leave the library at its defaults. The SP800-90B health tests are
+         * then only enforced if the system itself runs in FIPS mode.
+         */
+         Default,
+
+         /**
+         * Force full SP800-90B compliance, including the online health tests,
+         * regardless of the state of the system (``JENT_FORCE_FIPS``).
+         */
+         FIPS,
+
+         /**
+         * Request AIS 20/31 NTG.1 compliance (``JENT_NTG1``). This implies
+         * FIPS mode and additionally disables the internal timer, so it is not
+         * available on platforms which have no usable high resolution timer.
+         *
+         * Requires jitterentropy 3.7.0 or later, both at build and at run
+         * time; the constructor throws Not_Implemented otherwise. See
+         * ntg1_supported().
+         */
+         NTG1,
+      };
+
+      /**
+      * Let jitterentropy pick the oversampling rate
+      */
+      static constexpr size_t default_osr = 0;
+
+      /**
+      * @return true if the linked jitterentropy supports Mode::NTG1
+      */
+      static bool ntg1_supported();
+
+      /**
+      * Create a Jitter_RNG, throwing if jitterentropy cannot be initialized
+      *
+      * @param mode the compliance mode to request from jitterentropy
+      * @param osr the oversampling rate to use. Higher values collect more
+      * timing samples per output bit, which is slower but more conservative.
+      * The default lets the library apply its own (minimal) rate. Values the
+      * library considers out of range cause the constructor to throw.
+      */
+      explicit Jitter_RNG(Mode mode = Mode::Default, size_t osr = default_osr);
+
       ~Jitter_RNG() override;
 
       Jitter_RNG(const Jitter_RNG& other) = delete;

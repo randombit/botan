@@ -7,6 +7,12 @@ Version 3.14.0, Not Yet Released
 * Modify the bitsliced AES implementation to use the native word size of the
   processor, instead of always 32 bits. (GH #5826)
 
+* ``Jitter_RNG`` now accepts the compliance mode and the oversampling rate which
+  should be used by the jitterentropy library. AIS 20/31 NTG.1 compliance can be
+  requested with ``Jitter_RNG::Mode::NTG1`` if jitterentropy 3.7.0 or later is
+  used. Note that ``Jitter_RNG`` no longer forces the FIPS mode of jitterentropy
+  by default; use ``Jitter_RNG::Mode::FIPS`` to retain the previous behavior.
+
 Version 3.13.0, 2026-08-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
