@@ -1,9 +1,9 @@
 <internal_defines>
-WHIRLPOOL_AVX2 -> 20260321
+WHIRLPOOL_SIMD8X32 -> 20260816
 </internal_defines>
 
 <module_info>
-name -> "Whirlpool AVX2"
+name -> "Whirlpool SIMD 8x32"
 </module_info>
 
 <isa>
