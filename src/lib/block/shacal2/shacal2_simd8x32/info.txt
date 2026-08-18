@@ -1,10 +1,10 @@
 <internal_defines>
-CTR_BE_AVX2 -> 20260321
+SHACAL2_SIMD8X32 -> 20260816
 </internal_defines>
 
 <module_info>
-name -> "CTR-BE AVX2"
-brief -> "AVX2-accelerated CTR-BE counter management and XOR"
+name -> "SHACAL-2 SIMD 8x32"
+brief -> "SHACAL-2 using 8x32 SIMD instructions"
 </module_info>
 
 <isa>
@@ -13,5 +13,5 @@ avx2
 
 <requires>
 cpuid
-simd_avx2
+simd_8x32
 </requires>

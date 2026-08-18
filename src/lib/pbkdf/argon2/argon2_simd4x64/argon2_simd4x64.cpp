@@ -14,7 +14,7 @@ namespace Botan {
 
 namespace {
 
-BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 void blamka_G(SIMD_4x64& A, SIMD_4x64& B, SIMD_4x64& C, SIMD_4x64& D) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SIMD_4X64 void blamka_G(SIMD_4x64& A, SIMD_4x64& B, SIMD_4x64& C, SIMD_4x64& D) {
    A += B + SIMD_4x64::mul2_32(A, B);
    D ^= A;
    D = D.rotr<32>();
@@ -32,7 +32,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 void blamka_G(SIMD_4x64& A, SIMD_4x64& B, S
    B = B.rotr<63>();
 }
 
-BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 void blamka_R(SIMD_4x64& A, SIMD_4x64& B, SIMD_4x64& C, SIMD_4x64& D) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SIMD_4X64 void blamka_R(SIMD_4x64& A, SIMD_4x64& B, SIMD_4x64& C, SIMD_4x64& D) {
    blamka_G(A, B, C, D);
 
    SIMD_4x64::twist(B, C, D);
@@ -42,7 +42,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 void blamka_R(SIMD_4x64& A, SIMD_4x64& B, S
 
 }  // namespace
 
-BOTAN_FN_ISA_AVX2 void Argon2::blamka_avx2(uint64_t N[128], uint64_t T[128]) {
+BOTAN_FN_ISA_SIMD_4X64 void Argon2::blamka_simd4x64(uint64_t N[128], uint64_t T[128]) {
    for(size_t i = 0; i != 8; ++i) {
       SIMD_4x64 A = SIMD_4x64::load_le(&N[16 * i + 4 * 0]);
       SIMD_4x64 B = SIMD_4x64::load_le(&N[16 * i + 4 * 1]);

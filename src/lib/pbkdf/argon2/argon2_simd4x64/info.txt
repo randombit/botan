@@ -1,10 +1,10 @@
 <internal_defines>
-SALSA20_AVX2 -> 20260726
+ARGON2_SIMD4X64 -> 20260816
 </internal_defines>
 
 <module_info>
-name -> "Salsa20 AVX2"
-brief -> "Salsa20 using AVX2 instructions"
+name -> "Argon2 SIMD 4x64"
+brief -> "Argon2 using 4x64 SIMD instructions"
 </module_info>
 
 <isa>
@@ -12,6 +12,6 @@ avx2
 </isa>
 
 <requires>
-simd_avx2
 cpuid
+simd_4x64
 </requires>

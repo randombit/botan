@@ -7,7 +7,7 @@
 #ifndef BOTAN_SIMD_AVX2_GFNI_H_
 #define BOTAN_SIMD_AVX2_GFNI_H_
 
-#include <botan/internal/simd_avx2.h>
+#include <botan/internal/simd_8x32.h>
 
 #include <botan/internal/gfni_utils.h>
 #include <botan/internal/isa_extn.h>

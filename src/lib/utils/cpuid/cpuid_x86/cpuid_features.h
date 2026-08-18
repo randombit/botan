@@ -44,6 +44,8 @@ class BOTAN_TEST_API CPUFeature final {
 
          SIMD_4X32 = SSSE3,
          SIMD_2X64 = SSSE3,
+         SIMD_8X32 = AVX2,
+         SIMD_4X64 = AVX2,
          HW_AES = AESNI,
          HW_CLMUL = CLMUL,
       };

@@ -1,10 +1,10 @@
 <internal_defines>
-SIMD_AVX2 -> 20180824
+SIMD_8X32 -> 20260816
 </internal_defines>
 
 <module_info>
-name -> "AVX2"
-brief -> "Helpers for working with AVX2 instructions"
+name -> "SIMD 8x32"
+brief -> "Lightweight wrappers for SIMD 8x32"
 </module_info>
 
 <isa>
@@ -12,6 +12,5 @@ avx2
 </isa>
 
 <header:internal>
-simd_avx2.h
-simd_avx2_gfni.h
+simd_8x32.h
 </header:internal>

@@ -634,7 +634,7 @@ used directly as the RNG.
 If you are building for x86, ARM, or POWER, it can be beneficial to enable
 hardware support for the relevant instruction sets with modules such as
 ``aes_ni`` and ``clmul`` for x86, or ``aes_armv8``, ``pmull``, and
-``sha2_32_armv8`` on ARMv8. SIMD optimizations such as ``chacha_avx2`` also can
+``sha2_32_armv8`` on ARMv8. SIMD optimizations such as ``chacha_simd8x32`` also can
 provide substantial performance improvements.
 
 .. note::

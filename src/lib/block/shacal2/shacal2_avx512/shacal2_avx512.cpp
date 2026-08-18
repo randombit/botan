@@ -6,7 +6,7 @@
 
 #include <botan/internal/shacal2.h>
 
-#include <botan/internal/simd_avx2.h>
+#include <botan/internal/simd_8x32.h>
 #include <botan/internal/simd_avx512.h>
 
 namespace Botan {

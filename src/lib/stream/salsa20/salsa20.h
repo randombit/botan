@@ -58,8 +58,8 @@ class Salsa20 final : public StreamCipher {
       static void salsa20_simd32_x4(uint8_t output[64 * 4], uint32_t state[16], size_t rounds);
 #endif
 
-#if defined(BOTAN_HAS_SALSA20_AVX2)
-      static void salsa20_avx2_x8(uint8_t output[64 * 8], uint32_t state[16], size_t rounds);
+#if defined(BOTAN_HAS_SALSA20_SIMD8X32)
+      static void salsa20_simd8x32_x8(uint8_t output[64 * 8], uint32_t state[16], size_t rounds);
 #endif
 
 #if defined(BOTAN_HAS_SALSA20_AVX512)

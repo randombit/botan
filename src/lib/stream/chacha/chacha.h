@@ -73,8 +73,8 @@ class ChaCha final : public StreamCipher {
       static void chacha_simd32_x4(uint8_t output[64 * 4], uint32_t state[16], size_t rounds);
 #endif
 
-#if defined(BOTAN_HAS_CHACHA_AVX2)
-      static void chacha_avx2_x8(uint8_t output[64 * 8], uint32_t state[16], size_t rounds);
+#if defined(BOTAN_HAS_CHACHA_SIMD8X32)
+      static void chacha_simd8x32_x8(uint8_t output[64 * 8], uint32_t state[16], size_t rounds);
 #endif
 
 #if defined(BOTAN_HAS_CHACHA_AVX512)

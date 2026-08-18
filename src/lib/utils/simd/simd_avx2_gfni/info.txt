@@ -1,0 +1,20 @@
+<internal_defines>
+SIMD_AVX2_GFNI -> 20260816
+</internal_defines>
+
+<module_info>
+name -> "AVX2 GFNI"
+brief -> "Helpers for working with AVX2 GFNI instructions"
+</module_info>
+
+<isa>
+gfni
+</isa>
+
+<requires>
+simd_8x32
+</requires>
+
+<header:internal>
+simd_avx2_gfni.h
+</header:internal>

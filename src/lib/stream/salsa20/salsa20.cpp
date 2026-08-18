@@ -133,8 +133,8 @@ size_t Salsa20::parallelism() {
    }
 #endif
 
-#if defined(BOTAN_HAS_SALSA20_AVX2)
-   if(CPUID::has(CPUID::Feature::AVX2)) {
+#if defined(BOTAN_HAS_SALSA20_SIMD8X32)
+   if(CPUID::has(CPUID::Feature::SIMD_8X32)) {
       return 8;
    }
 #endif
@@ -149,8 +149,8 @@ std::string Salsa20::provider() const {
    }
 #endif
 
-#if defined(BOTAN_HAS_SALSA20_AVX2)
-   if(auto feat = CPUID::check(CPUID::Feature::AVX2)) {
+#if defined(BOTAN_HAS_SALSA20_SIMD8X32)
+   if(auto feat = CPUID::check(CPUID::Feature::SIMD_8X32)) {
       return *feat;
    }
 #endif
@@ -178,10 +178,10 @@ void Salsa20::salsa20(uint8_t output[], size_t output_blocks, uint32_t state[16]
    }
 #endif
 
-#if defined(BOTAN_HAS_SALSA20_AVX2)
-   if(CPUID::has(CPUID::Feature::AVX2)) {
+#if defined(BOTAN_HAS_SALSA20_SIMD8X32)
+   if(CPUID::has(CPUID::Feature::SIMD_8X32)) {
       while(output_blocks >= 8) {
-         Salsa20::salsa20_avx2_x8(output, state, rounds);
+         Salsa20::salsa20_simd8x32_x8(output, state, rounds);
          output += 8 * 64;
          output_blocks -= 8;
       }

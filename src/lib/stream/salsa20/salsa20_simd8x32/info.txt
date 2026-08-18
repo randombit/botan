@@ -1,10 +1,10 @@
 <internal_defines>
-SERPENT_AVX2 -> 20180824
+SALSA20_SIMD8X32 -> 20260816
 </internal_defines>
 
 <module_info>
-name -> "Serpent AVX2"
-brief -> "Serpent using AVX2 instructions"
+name -> "Salsa20 SIMD 8x32"
+brief -> "Salsa20 using 8x32 SIMD instructions"
 </module_info>
 
 <isa>
@@ -12,6 +12,6 @@ avx2
 </isa>
 
 <requires>
+simd_8x32
 cpuid
-simd_avx2
 </requires>

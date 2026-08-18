@@ -173,9 +173,9 @@ void Argon2::blamka(uint64_t N[128], uint64_t T[128]) {
    }
 #endif
 
-#if defined(BOTAN_HAS_ARGON2_AVX2)
-   if(CPUID::has(CPUID::Feature::AVX2)) {
-      return Argon2::blamka_avx2(N, T);
+#if defined(BOTAN_HAS_ARGON2_SIMD4X64)
+   if(CPUID::has(CPUID::Feature::SIMD_4X64)) {
+      return Argon2::blamka_simd4x64(N, T);
    }
 #endif
 

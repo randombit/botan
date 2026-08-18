@@ -2738,9 +2738,9 @@ class ModulesChooser:
 
         # The AVX2 implementation of Argon2 fails when compiled by GCC in
         # amalgamation mode.
-        if 'argon2_avx2' in self._to_load and self._options.amalgamation and self._options.compiler == 'gcc':
-            self._to_load.remove('argon2_avx2')
-            self._not_using_because['disabled due to compiler bug'].add('argon2_avx2')
+        if 'argon2_simd4x64' in self._to_load and self._options.amalgamation and self._options.compiler == 'gcc':
+            self._to_load.remove('argon2_simd4x64')
+            self._not_using_because['disabled due to compiler bug'].add('argon2_simd4x64')
 
         self._resolve_dependencies_for_all_modules()
 
