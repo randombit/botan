@@ -7,11 +7,14 @@ name -> "Hybrid KEM"
 type -> "Internal"
 </module_info>
 
-<header:internal>
+<header:public>
 hybrid_kem.h
+</header:public>
+
+<header:internal>
 hybrid_kem_ops.h
 </header:internal>
 
 <requires>
-
+kex_to_kem_adapter
 </requires>
