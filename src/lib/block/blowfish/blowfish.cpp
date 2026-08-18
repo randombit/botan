@@ -7,6 +7,7 @@
 
 #include <botan/internal/blowfish.h>
 
+#include <botan/exceptn.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan {
@@ -337,8 +338,13 @@ void Blowfish::key_expansion(const uint8_t key[], size_t length, const uint8_t s
 /*
 * Modified key schedule used for bcrypt password hashing
 */
-void Blowfish::salted_set_key(
-   const uint8_t key[], size_t length, const uint8_t salt[], size_t salt_length, size_t workfactor, bool salt_first) {
+void Blowfish::salted_set_key(const uint8_t key[],
+                              size_t length,
+                              const uint8_t salt[],
+                              size_t salt_length,
+                              size_t workfactor,
+                              bool salt_first,
+                              const std::optional<std::stop_token>& stop_token) {
    BOTAN_ARG_CHECK(salt_length > 0 && salt_length % 4 == 0, "Invalid salt length for Blowfish salted key schedule");
 
    // Truncate longer passwords to the 72 char bcrypt limit
@@ -355,6 +361,9 @@ void Blowfish::salted_set_key(
       const size_t rounds = static_cast<size_t>(1) << workfactor;
 
       for(size_t r = 0; r != rounds; ++r) {
+         if(stop_token.has_value() && stop_token->stop_requested()) {
+            throw Botan::Operation_Canceled("blowfish_salted_set_key");
+         }
          if(salt_first) {
             key_expansion(salt, salt_length, nullptr, 0);
             key_expansion(key, length, nullptr, 0);

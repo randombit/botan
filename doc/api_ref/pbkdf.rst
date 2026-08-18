@@ -24,33 +24,39 @@ specified with all parameters (say "Scrypt" with ``N`` = 8192, ``r`` = 64, and
 
    .. cpp:function:: void hash(std::span<uint8_t> out, \
                                std::string_view password, \
-                               std::span<uint8> salt)
+                               std::span<uint8> salt, \
+                               const std::optional<std::stop_token>& stop_token = std::nullopt)
 
       Derive a key from the specified *password* and *salt*, placing it into *out*.
+      Optionally pass *stop_token* to enable cooperative cancellation (example below).
 
    .. cpp:function:: void hash(std::span<uint8_t> out, \
                                std::string_view password, \
                                std::span<const uint8> salt, \
                                std::span<const uint8> ad, \
-                               std::span<const uint8> key)
+                               std::span<const uint8> key, \
+                               const std::optional<std::stop_token>& stop_token = std::nullopt)
 
       Derive a key from the specified *password*, *salt*, associated data (*ad*), and
       secret *key*, placing it into *out*. The *ad* and *key* are both allowed
       to be empty. Currently non-empty AD/key is only supported with Argon2.
+      Optionally pass *stop_token* to enable cooperative cancellation (example below).
 
    .. cpp:function:: void derive_key(uint8_t out[], size_t out_len, \
                      const char* password, const size_t password_len, \
-                     const uint8_t salt[], size_t salt_len) const
+                     const uint8_t salt[], size_t salt_len, \
+                     const std::optional<std::stop_token>& stop_token = std::nullopt) const
 
-      Same functionality as the 3 argument variant of :cpp:func:`PasswordHash::hash`.
+      Same functionality as the 4 argument variant of :cpp:func:`PasswordHash::hash`.
 
    .. cpp:function:: void derive_key(uint8_t out[], size_t out_len, \
                      const char* password, const size_t password_len, \
                      const uint8_t salt[], size_t salt_len, \
                      const uint8_t ad[], size_t ad_len, \
-                     const uint8_t key[], size_t key_len) const
+                     const uint8_t key[], size_t key_len, \
+                     const std::optional<std::stop_token>& stop_token = std::nullopt) const
 
-       Same functionality as the 5 argument variant of :cpp:func:`PasswordHash::hash`.
+       Same functionality as the 6 argument variant of :cpp:func:`PasswordHash::hash`.
 
    .. cpp:function:: std::string to_string() const
 
@@ -155,6 +161,14 @@ a real application might want to include a version number of their file format
 as associated data. See :ref:`aead` for more information.
 
 .. literalinclude:: /../src/examples/password_encryption.cpp
+   :language: cpp
+
+To enable cooperative cancellation in a multi-threaded context, provide a ``std::stop_token``
+obtained from a ``std::jthread`` or manually constructed ``std::stop_source``.
+If cancellation is requested, the operation will terminate early by throwing an
+``Operation_Canceled`` exception.
+
+.. literalinclude:: /../src/examples/pbkdf_cooperative_cancellation.cpp
    :language: cpp
 
 Available Schemes
