@@ -87,6 +87,10 @@
    #include <botan/ml_dsa.h>
 #endif
 
+#if defined(BOTAN_HAS_MLDSA_COMPOSITE)
+   #include <botan/mldsa_comp.h>
+#endif
+
 #if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
    #include <botan/slh_dsa.h>
 #endif
@@ -1394,6 +1398,63 @@ int botan_pubkey_load_ml_dsa(botan_pubkey_t* key, const uint8_t pubkey[], size_t
    });
 #else
    BOTAN_UNUSED(key, key_len, pubkey, mldsa_mode);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+/*
+* Algorithm specific key operations: MLDSA-Composite
+*/
+
+int botan_privkey_load_mldsa_composite(botan_privkey_t* key,
+                                       const uint8_t privkey[],
+                                       size_t key_len,
+                                       const char* mldsa_composite_algo) {
+#if defined(BOTAN_HAS_MLDSA_COMPOSITE)
+   if(key == nullptr || privkey == nullptr || mldsa_composite_algo == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   *key = nullptr;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto param = Botan::MLDSA_Composite_Param::from_id_str(mldsa_composite_algo);
+      if(!param.has_value()) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+
+      auto mldsa_composite_key =
+         std::make_unique<Botan::MLDSA_Composite_PrivateKey>(param.value().id(), std::span{privkey, key_len});
+      return ffi_new_object(key, std::move(mldsa_composite_key));
+   });
+#else
+   BOTAN_UNUSED(key, key_len, privkey, mldsa_composite_algo);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_pubkey_load_mldsa_composite(botan_pubkey_t* key,
+                                      const uint8_t pubkey[],
+                                      size_t key_len,
+                                      const char* mldsa_composite_algo) {
+#if defined(BOTAN_HAS_MLDSA_COMPOSITE)
+   if(key == nullptr || pubkey == nullptr || mldsa_composite_algo == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   *key = nullptr;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto param = Botan::MLDSA_Composite_Param::from_id_str(mldsa_composite_algo);
+      if(!param.has_value()) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+
+      auto mldsa_composite_key =
+         std::make_unique<Botan::MLDSA_Composite_PublicKey>(param.value().id(), std::span{pubkey, key_len});
+      return ffi_new_object(key, std::move(mldsa_composite_key));
+   });
+#else
+   BOTAN_UNUSED(key, key_len, pubkey, mldsa_composite_algo);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }

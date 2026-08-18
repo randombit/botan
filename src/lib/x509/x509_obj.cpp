@@ -201,7 +201,8 @@ std::string x509_signature_padding_for(const std::string& algo_name,
       return user_specified_padding.empty() ? "Pure" : std::string(user_specified_padding);
    } else if(algo_name.starts_with("Dilithium-") || algo_name == "ML-DSA") {
       return user_specified_padding.empty() ? "Randomized" : std::string(user_specified_padding);
-   } else if(algo_name == "XMSS" || algo_name == "HSS-LMS" || algo_name == "SLH-DSA") {
+   } else if(algo_name == "XMSS" || algo_name == "HSS-LMS" || algo_name == "SLH-DSA" ||
+             algo_name == "ML-DSA-Composite") {
       // These algorithms do not take any padding, but if the user insists, we pass it along
       return std::string(user_specified_padding);
    } else {
