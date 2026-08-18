@@ -326,6 +326,23 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
          throw TLS_Exception(Alert::DecryptError, "PSK binder does not check out");
       }
 
+      // Skipping the certificate exchange on resumption must not bypass the
+      // current policy on client authentication. Checked only after binder
+      // validation, so an unauthenticated peer cannot probe for policy details.
+      if(m_handshake->resumed_session.has_value() && policy().require_client_certificate_authentication()) {
+         const auto credential_type = m_handshake->resumed_session->peer_credential_type();
+
+         if(!credential_type.has_value()) {
+            throw TLS_Exception(Alert::AccessDenied,
+                                "Resumed session does not contain mandatory authentication credential");
+         }
+
+         if(!value_exists(policy().accepted_client_certificate_types(), credential_type.value())) {
+            throw TLS_Exception(Alert::AccessDenied,
+                                "Resumed session does not contain an acceptable authentication credential type");
+         }
+      }
+
       // RFC 8446 4.2.10
       //   For PSKs provisioned via NewSessionTicket, a server MUST validate
       //   that the ticket age for the selected PSK identity [...] is within a
