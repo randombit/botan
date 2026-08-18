@@ -24,6 +24,7 @@
    #include <botan/internal/thread_pool.h>
 #endif
 
+#include <algorithm>
 #include <shared_mutex>
 
 namespace Botan_Tests {
