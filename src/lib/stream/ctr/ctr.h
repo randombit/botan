@@ -54,8 +54,8 @@ class CTR_BE final : public StreamCipher {
       void set_iv_bytes(const uint8_t iv[], size_t iv_len) override;
       void add_counter(uint64_t counter);
 
-#if defined(BOTAN_HAS_CTR_BE_AVX2)
-      size_t ctr_proc_bs16_ctr4_avx2(const uint8_t in[], uint8_t out[], size_t length);
+#if defined(BOTAN_HAS_CTR_BE_SIMD8X32)
+      size_t ctr_proc_bs16_ctr4_simd8x32(const uint8_t in[], uint8_t out[], size_t length);
 #endif
 
 #if defined(BOTAN_HAS_CTR_BE_SIMD32)

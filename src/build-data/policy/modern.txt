@@ -69,9 +69,9 @@ aes_vperm
 aes_armv8
 aes_power8
 serpent_simd
-serpent_avx2
+serpent_simd8x32
 chacha_simd32
-chacha_avx2
+chacha_simd8x32
 
 sha1_simd
 sha1_x86

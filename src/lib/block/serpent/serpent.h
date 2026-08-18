@@ -39,9 +39,9 @@ class Serpent final : public Block_Cipher_Fixed_Params<16, 16, 32, 8> {
       void simd_decrypt_4(const uint8_t in[16 * 4], uint8_t out[16 * 4]) const;
 #endif
 
-#if defined(BOTAN_HAS_SERPENT_AVX2)
-      void avx2_encrypt_8(const uint8_t in[16 * 8], uint8_t out[16 * 8]) const;
-      void avx2_decrypt_8(const uint8_t in[16 * 8], uint8_t out[16 * 8]) const;
+#if defined(BOTAN_HAS_SERPENT_SIMD8X32)
+      void simd8x32_encrypt_8(const uint8_t in[16 * 8], uint8_t out[16 * 8]) const;
+      void simd8x32_decrypt_8(const uint8_t in[16 * 8], uint8_t out[16 * 8]) const;
 #endif
 
 #if defined(BOTAN_HAS_SERPENT_AVX512)

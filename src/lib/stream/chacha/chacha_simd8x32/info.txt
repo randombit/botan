@@ -1,10 +1,10 @@
 <internal_defines>
-SHACAL2_AVX2 -> 20180826
+CHACHA_SIMD8X32 -> 20260816
 </internal_defines>
 
 <module_info>
-name -> "SHACAL-2 AVX2"
-brief -> "SHACAL-2 using AVX2 instructions"
+name -> "ChaCha20 SIMD 8x32"
+brief -> "ChaCha20 using 8x32 SIMD instructions"
 </module_info>
 
 <isa>
@@ -12,6 +12,6 @@ avx2
 </isa>
 
 <requires>
+simd_8x32
 cpuid
-simd_avx2
 </requires>

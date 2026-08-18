@@ -7,12 +7,12 @@
 #include <botan/internal/chacha.h>
 
 #include <botan/assert.h>
-#include <botan/internal/simd_avx2.h>
+#include <botan/internal/simd_8x32.h>
 
 namespace Botan {
 
 //static
-void BOTAN_FN_ISA_AVX2 ChaCha::chacha_avx2_x8(uint8_t output[64 * 8], uint32_t state[16], size_t rounds) {
+void BOTAN_FN_ISA_SIMD_8X32 ChaCha::chacha_simd8x32_x8(uint8_t output[64 * 8], uint32_t state[16], size_t rounds) {
    SIMD_8x32::reset_registers();
 
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");

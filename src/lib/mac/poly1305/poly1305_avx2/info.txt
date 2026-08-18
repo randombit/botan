@@ -12,6 +12,6 @@ avx2
 </isa>
 
 <requires>
-simd_avx2
+simd_8x32
 cpuid
 </requires>

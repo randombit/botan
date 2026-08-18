@@ -12,7 +12,7 @@ gfni
 </isa>
 
 <requires>
-simd_avx2
+simd_avx2_gfni
 simd_4x64
 cpuid
 </requires>

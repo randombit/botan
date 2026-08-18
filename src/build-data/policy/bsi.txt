@@ -133,7 +133,7 @@ rdseed
 win32_stats
 
 # pbkdf
-argon2_avx2
+argon2_simd4x64
 argon2_simd64
 
 # rng
@@ -162,11 +162,11 @@ noekeon
 noekeon_simd
 seed
 serpent
-serpent_avx2
+serpent_simd8x32
 serpent_simd
 shacal2
 shacal2_armv8
-shacal2_avx2
+shacal2_simd8x32
 shacal2_simd
 shacal2_x86
 sm4
@@ -184,7 +184,7 @@ cfb
 # stream
 chacha
 chacha_simd32
-chacha_avx2
+chacha_simd8x32
 ofb
 rc4
 salsa20

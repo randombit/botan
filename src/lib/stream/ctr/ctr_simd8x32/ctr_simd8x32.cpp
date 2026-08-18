@@ -7,12 +7,12 @@
 #include <botan/internal/ctr.h>
 
 #include <botan/assert.h>
-#include <botan/internal/simd_avx2.h>
+#include <botan/internal/simd_8x32.h>
 
 namespace Botan {
 
-BOTAN_FN_ISA_AVX2
-size_t CTR_BE::ctr_proc_bs16_ctr4_avx2(const uint8_t* in, uint8_t* out, size_t length) {
+BOTAN_FN_ISA_SIMD_8X32
+size_t CTR_BE::ctr_proc_bs16_ctr4_simd8x32(const uint8_t* in, uint8_t* out, size_t length) {
    BOTAN_ASSERT_NOMSG(m_pad.size() % 64 == 0);
    BOTAN_DEBUG_ASSERT(m_counter.size() == m_pad.size());
 

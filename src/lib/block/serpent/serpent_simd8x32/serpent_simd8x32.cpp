@@ -7,7 +7,7 @@
 #include <botan/internal/serpent.h>
 
 #include <botan/internal/serpent_sbox.h>
-#include <botan/internal/simd_avx2.h>
+#include <botan/internal/simd_8x32.h>
 
 namespace Botan {
 
@@ -48,7 +48,7 @@ namespace Botan {
 
 #endif
 
-void BOTAN_FN_ISA_AVX2 Serpent::avx2_encrypt_8(const uint8_t in[128], uint8_t out[128]) const {
+void BOTAN_FN_ISA_SIMD_8X32 Serpent::simd8x32_encrypt_8(const uint8_t in[128], uint8_t out[128]) const {
    using namespace Botan::Serpent_F;
 
    SIMD_8x32::reset_registers();
@@ -171,7 +171,7 @@ void BOTAN_FN_ISA_AVX2 Serpent::avx2_encrypt_8(const uint8_t in[128], uint8_t ou
    SIMD_8x32::zero_registers();
 }
 
-void BOTAN_FN_ISA_AVX2 Serpent::avx2_decrypt_8(const uint8_t in[128], uint8_t out[128]) const {
+void BOTAN_FN_ISA_SIMD_8X32 Serpent::simd8x32_decrypt_8(const uint8_t in[128], uint8_t out[128]) const {
    using namespace Botan::Serpent_F;
 
    SIMD_8x32::reset_registers();
