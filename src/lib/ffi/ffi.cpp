@@ -13,6 +13,8 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/ffi_util.h>
 #include <cstdio>
+#include <cstring>
+#include <type_traits>
 
 #if defined(BOTAN_HAS_OS_UTILS)
    #include <botan/internal/os_utils.h>
@@ -22,8 +24,12 @@ namespace Botan_FFI {
 
 namespace {
 
+constexpr size_t FFI_ERROR_BUFFER_SIZE = 512;
 // NOLINTNEXTLINE(*-avoid-non-const-global-variables)
-thread_local std::string g_last_exception_what;
+thread_local char g_last_exception_what[FFI_ERROR_BUFFER_SIZE] = {};
+
+// This object must remain writable even after destruction of global objects
+static_assert(std::is_trivially_destructible_v<decltype(g_last_exception_what)>);
 
 int ffi_map_error_type(Botan::ErrorType err) {
    switch(err) {
@@ -83,11 +89,19 @@ int ffi_map_error_type(Botan::ErrorType err) {
 }  // namespace
 
 void ffi_clear_last_exception() {
-   g_last_exception_what.clear();
+   g_last_exception_what[0] = 0;
 }
 
 int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc) {
-   g_last_exception_what.assign(exn);
+   constexpr char truncated[] = "...[truncated]";
+   const size_t exn_len = std::strlen(exn);
+   if(exn_len < FFI_ERROR_BUFFER_SIZE) {
+      std::memcpy(g_last_exception_what, exn, exn_len + 1);
+   } else {
+      constexpr size_t prefix_len = FFI_ERROR_BUFFER_SIZE - sizeof(truncated);
+      std::memcpy(g_last_exception_what, exn, prefix_len);
+      std::memcpy(g_last_exception_what + prefix_len, truncated, sizeof(truncated));
+   }
 
 #if defined(BOTAN_HAS_OS_UTILS)
    std::string val;
@@ -140,7 +154,7 @@ extern "C" {
 using namespace Botan_FFI;
 
 const char* botan_error_last_exception_message() {
-   return g_last_exception_what.c_str();
+   return g_last_exception_what;
 }
 
 const char* botan_error_description(int err) {
