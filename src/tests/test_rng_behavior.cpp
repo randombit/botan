@@ -617,7 +617,7 @@ BOTAN_REGISTER_TEST_FN("rng", "hmac_drbg_multi_request", hmac_drbg_multiple_requ
 
 #if defined(BOTAN_HAS_CHACHA_RNG)
 
-class ChaCha_RNG_Unit_Tests final : public Stateful_RNG_Tests {
+class ChaCha_RNG_Unit_Tests : public Stateful_RNG_Tests {
    public:
       std::string rng_name() const override { return "ChaCha_RNG"; }
 
@@ -660,7 +660,7 @@ class ChaCha_RNG_Unit_Tests final : public Stateful_RNG_Tests {
          Test::Result result("ChaCha_RNG Reseed KAT");
 
          Request_Counting_RNG counting_rng;
-         auto rng = make_rng(counting_rng, 2);
+         auto rng = make_rng(counting_rng, 3);
 
          const Botan::secure_vector<uint8_t> seed_input(32);
 
@@ -673,19 +673,92 @@ class ChaCha_RNG_Unit_Tests final : public Stateful_RNG_Tests {
          rng->randomize(out.data(), out.size());
          result.test_sz_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(0));
          result.test_bin_eq(
-            "out before reseed", out, "1F0E6F13429D5073B59C057C37CBE9587740A0A894D247E2596C393CE91DDC6F");
+            "out before reseed", out, "DEBC38FA382AF877C94999F25D460234F3EFED6D578C6C57EB8087999B337F3F");
+
+         rng->randomize(out.data(), out.size());
+         result.test_sz_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(0));
+         result.test_bin_eq(
+            "out before reseed", out, "3C450EA13C2CA57112805A7C7A76657DA7F19F2FCBA633A84CE816A296179C80");
 
          // reseed must happen here
          rng->randomize(out.data(), out.size());
          result.test_sz_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(1));
          result.test_bin_eq(
-            "out after reseed", out, "F2CAE73F22684D5D773290B48FDCDA0E6C0661EBA0A854AFEC922832BDBB9C49");
+            "out after reseed", out, "F913E2A2D9B7E0CB016D53B43C36595DB7B5A11A48EC1341433FF57EC313A867");
 
          return result;
       }
 };
 
 BOTAN_REGISTER_TEST("rng", "chacha_rng_unit", ChaCha_RNG_Unit_Tests);
+
+/**
+* Runs the same suite as ChaCha_RNG_Unit_Tests, but with fast key erasure enabled
+*/
+class ChaCha_RNG_FKE_Unit_Tests final : public ChaCha_RNG_Unit_Tests {
+   public:
+      std::string rng_name() const override { return "ChaCha_RNG(FKE)"; }
+
+      std::unique_ptr<Botan::Stateful_RNG> create_rng(Botan::RandomNumberGenerator* underlying_rng,
+                                                      Botan::Entropy_Sources* underlying_es,
+                                                      size_t reseed_interval) override {
+         constexpr auto fke = Botan::ChaCha_RNG::KeyErasure::WithKeyErasure;
+
+         if(underlying_rng != nullptr && underlying_es != nullptr) {
+            return std::make_unique<Botan::ChaCha_RNG>(*underlying_rng, *underlying_es, reseed_interval, fke);
+         } else if(underlying_rng != nullptr) {
+            return std::make_unique<Botan::ChaCha_RNG>(*underlying_rng, reseed_interval, fke);
+         } else if(underlying_es != nullptr) {
+            return std::make_unique<Botan::ChaCha_RNG>(*underlying_es, reseed_interval, fke);
+         } else if(reseed_interval == 0) {
+            return std::make_unique<Botan::ChaCha_RNG>(fke);
+         } else {
+            throw Test_Error("Invalid reseed interval in ChaCha_RNG(FKE) unit test");
+         }
+      }
+
+      Test::Result test_security_level() override {
+         Test::Result result("ChaCha_RNG(FKE) Security Level");
+         const Botan::ChaCha_RNG rng(Botan::ChaCha_RNG::KeyErasure::WithKeyErasure);
+         result.test_sz_eq("Expected security level", rng.security_level(), size_t(256));
+         return result;
+      }
+
+      Test::Result test_reseed_kat() override {
+         Test::Result result("ChaCha_RNG(FKE) Reseed KAT");
+
+         Request_Counting_RNG counting_rng;
+         auto rng = make_rng(counting_rng, 3);
+
+         const Botan::secure_vector<uint8_t> seed_input(32);
+
+         result.test_is_false("is_seeded", rng->is_seeded());
+
+         rng->initialize_with(seed_input.data(), seed_input.size());
+
+         Botan::secure_vector<uint8_t> out(32);
+
+         rng->randomize(out.data(), out.size());
+         result.test_sz_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(0));
+         result.test_bin_eq(
+            "out before reseed", out, "12805A7C7A76657DA7F19F2FCBA633A84CE816A296179C805EBDA300C1CA100C");
+
+         rng->randomize(out.data(), out.size());
+         result.test_sz_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(0));
+         result.test_bin_eq(
+            "out before reseed", out, "06998802D70DFC5D1141E4C39A6A5498EB4E75923B5E2F78D3C780542C19753E");
+
+         // reseed must happen here
+         rng->randomize(out.data(), out.size());
+         result.test_sz_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(1));
+         result.test_bin_eq(
+            "out after reseed", out, "D203EB11C3F14A0341C5A6D8F2FA7FAA10C1FD2162507CA679B45F2024E72890");
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("rng", "chacha_rng_fke_unit", ChaCha_RNG_FKE_Unit_Tests);
 
 #endif
 
