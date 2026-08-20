@@ -303,11 +303,16 @@ std::unique_ptr<PSK> PSK::select_offered_psk(std::string_view host,
          session_mgr.choose_from_offered_tickets(psk_identities, cipher.prf_algo(), callbacks, policy)) {
       auto& [session, psk_index] = selected_session.value();
 
+      // A session manager shared with our client role must not resume a session
+      // here that we stored as a client: its peer certificates are a remote
+      // server's, and this connection would adopt them as the client's.
+      const bool established_as_server = session.side() == Connection_Side::Server;
+
       // Refuse to resume a ticket across SNI: a session minted for one
       // virtual host must not be presentable against another. Treat as a
       // cache miss and fall through to the external PSK path rather than
       // failing the connection.
-      if(session.server_info().hostname() == host) {
+      if(established_as_server && session.server_info().hostname() == host) {
          // RFC 8446 4.6.1
          //    Any ticket MUST only be resumed with a cipher suite that has the
          //    same KDF hash algorithm as that used to establish the original

@@ -137,6 +137,11 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        * check fails, the default implementation calls Session_Manager::remove()
        * for the provided @p handle.
        *
+       * Sessions that were stored by a TLS client (via Session_Manager::store())
+       * are never returned, as applications may share a single manager between
+       * a client and a server role. Such sessions are not removed; they remain
+       * valid for the client role.
+       *
        * Applications that wish to implement their own Session_Manager may
        * override the default implementation to add further policy checks.
        * Though, typically implementing Session_Manager::retrieve_one() and
@@ -161,6 +166,11 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        * The default implementation will invoke Session_Manager::find_some() and
        * filter the result against a policy. Most notably an expiry check.
        * Expired sessions will be removed via Session_Manager::remove().
+       *
+       * Sessions that were established by a TLS server (via
+       * Session_Manager::establish()) are never returned, as applications may
+       * share a single manager between a client and a server role. Such
+       * sessions are not removed; they remain valid for the server role.
        *
        * The TLS client implementations will query the session manager exactly
        * once per handshake attempt. If no reuse is desired, the session manager

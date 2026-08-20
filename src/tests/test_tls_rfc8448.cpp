@@ -810,6 +810,27 @@ std::vector<MockSignature> make_mock_signatures(const VarMap& vars) {
 }
 
 /**
+ * RFC 8448 records resumption state from the client's point of view. A server
+ * would hold the same session under its own role, with the peer certificates
+ * being the client's (here: none, the client did not authenticate). Sessions do
+ * not cross the client/server boundary, so server tests need this variant.
+ */
+Botan::TLS::Session as_server_session(const Botan::TLS::Session& session) {
+   return Botan::TLS::Session(
+      session.master_secret(),
+      session.supports_early_data() ? std::optional(session.max_early_data_bytes()) : std::nullopt,
+      session.session_age_add(),
+      session.lifetime_hint(),
+      session.version(),
+      session.ciphersuite_code(),
+      Botan::TLS::Connection_Side::Server,
+      {},
+      nullptr,
+      session.server_info(),
+      session.start_time());
+}
+
+/**
  * Traffic transcripts and supporting data for the TLS RFC 8448 and TLS policy
  * configuration is kept in data files (accessible via `Test:::data_file()`).
  *
@@ -1779,7 +1800,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                         add_early_data_and_sort,
                         make_mock_signatures(vars),
                         false,
-                        std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")),
+                        std::pair{as_server_session(Botan::TLS::Session(vars.get_req_bin("Client_SessionData"))),
                                   Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
                      result.test_is_true("server not closed", !ctx->server.is_closed());
 
@@ -1950,7 +1971,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                         add_cookie_and_sort,
                         make_mock_signatures(vars),
                         false,
-                        std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")),
+                        std::pair{as_server_session(Botan::TLS::Session(vars.get_req_bin("Client_SessionData"))),
                                   Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
                      result.test_is_true("server not closed", !ctx->server.is_closed());
 
