@@ -147,6 +147,11 @@ def gha_linux_packages(target, compiler):
         packages.append('tpm2-abrmd')      # user-space resource manager for TPM 2.0
         packages.append('libtss2-tcti-tabrmd0') # TCTI (TPM Command Transmission Interface) for the user-space resource manager
 
+    if target in ['coverage', 'clang-tidy', 'optional-rngs']:
+        # build dependencies for ESDM
+        packages.append('libprotobuf-c-dev')
+        packages.append('meson')
+
     if target in ['docs']:
         packages.append('doxygen')
         packages.append('python3-docutils')

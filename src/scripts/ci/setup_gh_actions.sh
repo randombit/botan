@@ -33,11 +33,8 @@ if type -p "apt-get"; then
 
     sudo rm -f /var/lib/man-db/auto-update
 
-    # On GH Actions, occasionally apt-get seems to hang forever, run update with a timeout
-    # so the job stops after a reasonable interval
-    timeout 3m sudo apt-get -qq update
-    # shellcheck disable=SC2046
-    timeout 5m sudo apt-get -qq install $("${SCRIPT_LOCATION}"/gha_linux_packages.py "$TARGET" "$COMPILER")
+    "${SCRIPT_LOCATION}"/apt_get.py update
+    "${SCRIPT_LOCATION}"/apt_get.py install "$TARGET" "$COMPILER"
 
     if [ "$TARGET" = "sde" ]; then
         "${SCRIPT_LOCATION}"/download_ci_dep.py intel_sde --extract 'tar -xf {file}'

@@ -33,10 +33,8 @@ function build_and_install_jitterentropy() {
 }
 
 function build_and_install_esdm() {
-    # build dependencies
-    sudo apt-get -qq install libprotobuf-c-dev meson
-
     # download, build and install ESDM
+    # (build dependencies are installed via gha_linux_packages.py)
     "${SCRIPT_LOCATION}"/download_ci_dep.py esdm --extract 'tar -xz -f {file}'
     pushd "$(realpath esdm-*)"
     meson setup build -Dselinux=disabled -Dais2031=false -Dlinux-devfiles=disabled -Des_jent=disabled --prefix=/usr --libdir=lib
