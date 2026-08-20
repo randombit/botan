@@ -1100,6 +1100,38 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(asnum, None)
         self.assertEqual(rdi, [(0, 4294967295)])
 
+    def test_cert_creation(self):
+        group = "secp256r1"
+        now = int(time.time())
+        not_before = now - 180
+        not_after = now + 86400
+
+        rng = botan.RandomNumberGenerator()
+        ca_key = botan.PrivateKey.create("ECDSA", group, rng)
+        ca_builder = botan.X509CertificateBuilder()
+        ca_builder.add_common_name("Test CA")
+        ca_builder.add_country("US")
+        ca_builder.add_organization("Botan Project")
+        ca_builder.add_organizational_unit("Testing")
+        ca_builder.set_as_ca_certificate(1)
+        ca_cert = ca_builder.into_self_signed_cert(ca_key, rng, not_before, not_after)
+
+        cert_key = botan.PrivateKey.create("ECDSA", group, rng)
+        req_builder = botan.X509CertificateBuilder()
+        req_builder.add_allowed_usage([botan.X509KeyConstraints.DIGITAL_SIGNATURE])
+        req_builder.add_uri("https://botan.randombit.net")
+        for item in ["imaginary.botan.randombit.net", "botan.randombit.net", "randombit.net"]:
+            req_builder.add_dns(item)
+        req = req_builder.into_request(cert_key, rng)
+        self.assertTrue(req.verify(req.public_key()))
+        self.assertTrue(req.verify(cert_key.get_public_key()))
+
+        cert = req.sign(ca_cert, ca_key, rng, not_before, not_after)
+        self.assertEqual(cert.verify(None, [ca_cert]), 0)
+
+        cert = req_builder.into_cert(ca_cert, ca_key, cert_key, rng, not_before, not_after, botan.MPI("1"))
+        self.assertEqual(cert.verify(None, [ca_cert]), 0)
+
     def test_crls(self):
         rng = botan.RandomNumberGenerator()
         now = int(time.time())

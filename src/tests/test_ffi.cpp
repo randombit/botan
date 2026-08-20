@@ -1824,6 +1824,168 @@ class FFI_Cert_ExtRFC3779_Test final : public FFI_Test {
          TEST_FFI_OK(botan_x509_cert_destroy, (no_ext_cert));
       }
 };
+
+class FFI_Cert_Creation_Test final : public FFI_Test {
+   public:
+      std::string name() const override { return "FFI Cert Creation"; }
+
+      void ffi_test(Test::Result& result, botan_rng_t rng) override {
+         const std::string hash_fn{"SHA-256"};
+         const std::string group{"secp256r1"};
+
+         botan_privkey_t ca_key;
+         botan_pubkey_t ca_key_pub;
+         botan_privkey_t cert_key;
+         botan_pubkey_t cert_key_pub;
+
+         if(TEST_FFI_INIT(botan_privkey_create, (&ca_key, "ECDSA", group.c_str(), rng))) {
+            TEST_FFI_OK(botan_privkey_create, (&cert_key, "ECDSA", group.c_str(), rng));
+
+            TEST_FFI_OK(botan_privkey_export_pubkey, (&ca_key_pub, ca_key));
+            TEST_FFI_OK(botan_privkey_export_pubkey, (&cert_key_pub, cert_key));
+
+            uint64_t now =
+               std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
+                  .count();
+            uint64_t not_before = now - 180;
+            uint64_t not_after = now + 86400;
+
+            botan_x509_cert_builder_t ca_builder;
+            TEST_FFI_OK(botan_x509_cert_builder_create, (&ca_builder));
+            TEST_FFI_OK(botan_x509_cert_builder_add_dn_or_alt_name_value,
+                        (ca_builder, BOTAN_X509_CERT_BUILDER_COMMON_NAME, "Test CA"));
+            TEST_FFI_OK(botan_x509_cert_builder_add_dn_or_alt_name_value,
+                        (ca_builder, BOTAN_X509_CERT_BUILDER_STATE, "US"));
+            TEST_FFI_OK(botan_x509_cert_builder_add_dn_or_alt_name_value,
+                        (ca_builder, BOTAN_X509_CERT_BUILDER_ORGANIZATION, "Botan Project"));
+            TEST_FFI_OK(botan_x509_cert_builder_add_dn_or_alt_name_value,
+                        (ca_builder, BOTAN_X509_CERT_BUILDER_ORGANIZATIONAL_UNIT, "Testing"));
+            TEST_FFI_OK(botan_x509_cert_builder_set_as_ca_certificate, (ca_builder, nullptr));
+            TEST_FFI_OK(botan_x509_cert_builder_add_dn_or_alt_name_value,
+                        (ca_builder, BOTAN_X509_CERT_BUILDER_URI, "https://botan.randombit.net"));
+            const auto dns_names = {"imaginary.botan.randombit.net", "botan.randombit.net", "randombit.net"};
+            for(const auto* dns : dns_names) {
+               TEST_FFI_OK(botan_x509_cert_builder_add_dn_or_alt_name_value,
+                           (ca_builder, BOTAN_X509_CERT_BUILDER_DNS, dns));
+            }
+
+            botan_x509_cert_t ca_cert;
+            TEST_FFI_OK(botan_x509_cert_builder_into_self_signed_cert,
+                        (&ca_cert, ca_builder, ca_key, rng, not_before, not_after, nullptr, hash_fn.c_str(), ""));
+
+            size_t dn_count;
+            TEST_FFI_OK(botan_x509_cert_get_issuer_dn_count, (ca_cert, "Name", &dn_count));
+            result.test_sz_eq("issuer DN 'name' count", dn_count, 1);
+
+            size_t dn_len = 8;
+            std::vector<uint8_t> dn(dn_len);
+            TEST_FFI_OK(botan_x509_cert_get_issuer_dn, (ca_cert, "Name", 0, dn.data(), &dn_len));
+            result.test_sz_eq("issuer DN name length", dn_len, dn.size());
+            result.test_str_eq("issuer DN name", reinterpret_cast<const char*>(dn.data()), "Test CA");
+
+            size_t alt_name_count;
+            TEST_FFI_OK(botan_x509_cert_subject_alternative_names_count, (ca_cert, &alt_name_count));
+            result.test_sz_eq("subject alt name count", alt_name_count, 4);
+            for(size_t i = 0; i < alt_name_count; i++) {
+               botan_x509_general_name_t alt_name;
+               TEST_FFI_OK(botan_x509_cert_subject_alternative_names, (ca_cert, i, &alt_name));
+               unsigned int gn_type;
+               TEST_FFI_OK(botan_x509_general_name_get_type, (alt_name, &gn_type));
+               ViewStringSink str;
+               TEST_FFI_OK(botan_x509_general_name_view_string_value, (alt_name, str.delegate(), str.callback()));
+               if(static_cast<botan_x509_general_name_types>(gn_type) ==
+                  botan_x509_general_name_types::BOTAN_X509_URI) {
+                  result.test_str_eq("subject alt name URI", str.get(), "https://botan.randombit.net");
+               } else if(static_cast<botan_x509_general_name_types>(gn_type) ==
+                         botan_x509_general_name_types::BOTAN_X509_DNS_NAME) {
+                  result.test_is_true("subject alt name DNS",
+                                      std::find(dns_names.begin(), dns_names.end(), str.get()) != dns_names.end());
+               } else {
+                  result.test_failure("Encountered unexpected general name type");
+               }
+               TEST_FFI_OK(botan_x509_general_name_destroy, (alt_name));
+            }
+
+            botan_x509_cert_builder_t req_builder;
+            TEST_FFI_OK(botan_x509_cert_builder_create, (&req_builder));
+            TEST_FFI_OK(botan_x509_cert_builder_add_allowed_usage, (req_builder, 1 << 15));
+
+            botan_x509_pkcs10_req_t req;
+            TEST_FFI_OK(botan_x509_cert_builder_into_pkcs10_req,
+                        (&req, req_builder, cert_key, rng, hash_fn.c_str(), nullptr, nullptr));
+
+            TEST_FFI_RC(0, botan_x509_pkcs10_req_verify_signature, (req, ca_key_pub));
+            TEST_FFI_RC(1, botan_x509_pkcs10_req_verify_signature, (req, cert_key_pub));
+
+            botan_pubkey_t pubkey_from_req;
+            TEST_FFI_OK(botan_x509_pkcs10_req_get_public_key, (req, &pubkey_from_req));
+            TEST_FFI_RC(1, botan_x509_pkcs10_req_verify_signature, (req, pubkey_from_req));
+
+            ViewStringSink req_pem;
+            TEST_FFI_OK(botan_x509_pkcs10_req_view_pem, (req, req_pem.delegate(), req_pem.callback()));
+            std::string pem = {req_pem.get().begin(), req_pem.get().end()};
+
+            botan_x509_pkcs10_req_t req_from_pem;
+            TEST_FFI_OK(botan_x509_pkcs10_req_load,
+                        (&req_from_pem, reinterpret_cast<const uint8_t*>(pem.c_str()), pem.size()));
+
+            TEST_FFI_RC(1, botan_x509_pkcs10_req_verify_signature, (req_from_pem, cert_key_pub));
+
+            botan_mp_t serial;
+            TEST_FFI_OK(botan_mp_init, (&serial));
+            TEST_FFI_OK(botan_mp_set_from_str, (serial, "12345"));
+
+            botan_x509_cert_t cert;
+            TEST_FFI_OK(botan_x509_pkcs10_req_sign,
+                        (&cert, req, ca_cert, ca_key, rng, not_before, not_after, &serial, hash_fn.c_str(), ""));
+
+            std::vector<uint8_t> serial_out(5);
+            size_t out_len = 5;
+
+            botan_mp_t serial_from_cert;
+            TEST_FFI_OK(botan_mp_init, (&serial_from_cert));
+
+            TEST_FFI_OK(botan_x509_cert_get_serial_number, (cert, serial_out.data(), &out_len));
+            TEST_FFI_OK(botan_mp_from_bin, (serial_from_cert, serial_out.data(), out_len));
+            TEST_FFI_RC(1, botan_mp_equal, (serial, serial_from_cert));
+
+            TEST_FFI_RC(0, botan_x509_cert_verify, (nullptr, cert, nullptr, 0, &ca_cert, 1, nullptr, 0, nullptr, 0));
+
+            botan_x509_cert_t cert_without_req;
+            TEST_FFI_OK(botan_x509_cert_builder_into_cert,
+                        (&cert_without_req,
+                         req_builder,
+                         ca_cert,
+                         ca_key,
+                         cert_key,
+                         rng,
+                         not_before,
+                         not_after,
+                         &serial,
+                         hash_fn.c_str(),
+                         ""));
+
+            TEST_FFI_RC(
+               0, botan_x509_cert_verify, (nullptr, cert_without_req, nullptr, 0, &ca_cert, 1, nullptr, 0, nullptr, 0));
+
+            TEST_FFI_OK(botan_mp_destroy, (serial));
+            TEST_FFI_OK(botan_mp_destroy, (serial_from_cert));
+            TEST_FFI_OK(botan_x509_cert_builder_destroy, (ca_builder));
+            TEST_FFI_OK(botan_x509_cert_builder_destroy, (req_builder));
+            TEST_FFI_OK(botan_x509_pkcs10_req_destroy, (req));
+            TEST_FFI_OK(botan_x509_pkcs10_req_destroy, (req_from_pem));
+            TEST_FFI_OK(botan_x509_cert_destroy, (ca_cert));
+            TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+            TEST_FFI_OK(botan_x509_cert_destroy, (cert_without_req));
+            TEST_FFI_OK(botan_pubkey_destroy, (ca_key_pub));
+            TEST_FFI_OK(botan_pubkey_destroy, (cert_key_pub));
+            TEST_FFI_OK(botan_pubkey_destroy, (pubkey_from_req));
+            TEST_FFI_OK(botan_privkey_destroy, (ca_key));
+            TEST_FFI_OK(botan_privkey_destroy, (cert_key));
+         }
+      }
+};
+
    #endif
 
 class FFI_PKCS_Hashid_Test final : public FFI_Test {
@@ -6202,6 +6364,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_cert_alt_names", FFI_Cert_AlternativeNames_Test)
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_name_constraints", FFI_Cert_NameConstraints_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_aia", FFI_Cert_AuthorityInformationAccess_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_ext_rfc3779", FFI_Cert_ExtRFC3779_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_cert_creation", FFI_Cert_Creation_Test);
    #endif
 
 #endif
