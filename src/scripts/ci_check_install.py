@@ -86,7 +86,12 @@ def verify_cmake_package(build_config):
 
     def cmake_preset():
         if build_config['os'] == 'windows':
-            return 'windows_x86_64' if build_config['arch'] == 'x86_64' else 'windows_x86'
+            if build_config['arch'] == 'x86_64':
+                return 'windows_x86_64'
+            elif build_config['arch'] in ['arm64', 'aarch64']:
+                return 'windows_arm64'
+            else:
+                return 'windows_x86'
         return 'unix'
 
     def test_target():

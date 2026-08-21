@@ -15,6 +15,10 @@
             "architecture": "Win32"
         },
         {
+            "name": "windows_arm64",
+            "architecture": "ARM64"
+        },
+        {
             "name": "unix"
         }
     ]
