@@ -145,7 +145,16 @@ class SIMD_4x32 final {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_4x32(_mm_set1_epi8(B));
 #elif defined(BOTAN_SIMD_USE_NEON)
-         return SIMD_4x32(vreinterpretq_u32_u8(vdupq_n_u8(B)));
+         /*
+         * Do not use vdupq_n_u8 here. MSVC ARM64 (VS 17.13 through at least
+         * VS 18.6) can fold vand(vdupq_n_u8(k), vdupq_n_u32(x)) into a scalar
+         * and+dup which wrongly uses the 8-bit k as the 32-bit immediate,
+         * computing dup(x & k) instead of dup(x) & splat_u8(k). This
+         * miscompiled the SM4 key schedule. Broadcasting an explicitly
+         * replicated 32-bit value avoids the bad fold; GCC and Clang generate
+         * identical code either way.
+         */
+         return SIMD_4x32(vdupq_n_u32(static_cast<uint32_t>(B) * 0x01010101U));
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vreplgr2vr_b(B));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
