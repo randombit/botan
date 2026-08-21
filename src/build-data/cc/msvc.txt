@@ -69,6 +69,9 @@ rdseed -> ""
 sha    -> ""
 bmi2   -> ""
 gfni   -> ""
+
+arm64:armv8crypto -> ""
+arm64:neon        -> ""
 </isa_flags>
 
 <lib_flags>

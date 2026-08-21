@@ -145,7 +145,16 @@ class SIMD_4x32 final {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_4x32(_mm_set1_epi8(B));
 #elif defined(BOTAN_SIMD_USE_NEON)
-         return SIMD_4x32(vreinterpretq_u32_u8(vdupq_n_u8(B)));
+         /*
+         * Do not use vdupq_n_u8 here. MSVC ARM64 (VS 17.13 through at least
+         * VS 18.6) can fold vand(vdupq_n_u8(k), vdupq_n_u32(x)) into a scalar
+         * and+dup which wrongly uses the 8-bit k as the 32-bit immediate,
+         * computing dup(x & k) instead of dup(x) & splat_u8(k). This
+         * miscompiled the SM4 key schedule. Broadcasting an explicitly
+         * replicated 32-bit value avoids the bad fold; GCC and Clang generate
+         * identical code either way.
+         */
+         return SIMD_4x32(vdupq_n_u32(static_cast<uint32_t>(B) * 0x01010101U));
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vreplgr2vr_b(B));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
@@ -350,9 +359,7 @@ class SIMD_4x32 final {
          __vector unsigned int rot = {r, r, r, r};
          return SIMD_4x32(vec_rl(m_simd, rot));
 
-#elif defined(BOTAN_SIMD_USE_NEON)
-
-   #if defined(BOTAN_TARGET_ARCH_IS_ARM64)
+#elif defined(BOTAN_SIMD_USE_NEON) && defined(BOTAN_TARGET_ARCH_IS_ARM64)
 
          if constexpr(ROT == 8) {
             const uint8_t maskb[16] = {3, 0, 1, 2, 7, 4, 5, 6, 11, 8, 9, 10, 15, 12, 13, 14};
@@ -360,8 +367,11 @@ class SIMD_4x32 final {
             return SIMD_4x32(vreinterpretq_u32_u8(vqtbl1q_u8(vreinterpretq_u8_u32(m_simd), mask)));
          } else if constexpr(ROT == 16) {
             return SIMD_4x32(vreinterpretq_u32_u16(vrev32q_u16(vreinterpretq_u16_u32(m_simd))));
+         } else {
+            return SIMD_4x32(
+               vorrq_u32(vshlq_n_u32(m_simd, static_cast<int>(ROT)), vshrq_n_u32(m_simd, static_cast<int>(32 - ROT))));
          }
-   #endif
+#elif defined(BOTAN_SIMD_USE_NEON)
          return SIMD_4x32(
             vorrq_u32(vshlq_n_u32(m_simd, static_cast<int>(ROT)), vshrq_n_u32(m_simd, static_cast<int>(32 - ROT))));
 #elif defined(BOTAN_SIMD_USE_LSX)
