@@ -350,9 +350,7 @@ class SIMD_4x32 final {
          __vector unsigned int rot = {r, r, r, r};
          return SIMD_4x32(vec_rl(m_simd, rot));
 
-#elif defined(BOTAN_SIMD_USE_NEON)
-
-   #if defined(BOTAN_TARGET_ARCH_IS_ARM64)
+#elif defined(BOTAN_SIMD_USE_NEON) && defined(BOTAN_TARGET_ARCH_IS_ARM64)
 
          if constexpr(ROT == 8) {
             const uint8_t maskb[16] = {3, 0, 1, 2, 7, 4, 5, 6, 11, 8, 9, 10, 15, 12, 13, 14};
@@ -360,8 +358,11 @@ class SIMD_4x32 final {
             return SIMD_4x32(vreinterpretq_u32_u8(vqtbl1q_u8(vreinterpretq_u8_u32(m_simd), mask)));
          } else if constexpr(ROT == 16) {
             return SIMD_4x32(vreinterpretq_u32_u16(vrev32q_u16(vreinterpretq_u16_u32(m_simd))));
+         } else {
+            return SIMD_4x32(
+               vorrq_u32(vshlq_n_u32(m_simd, static_cast<int>(ROT)), vshrq_n_u32(m_simd, static_cast<int>(32 - ROT))));
          }
-   #endif
+#elif defined(BOTAN_SIMD_USE_NEON)
          return SIMD_4x32(
             vorrq_u32(vshlq_n_u32(m_simd, static_cast<int>(ROT)), vshrq_n_u32(m_simd, static_cast<int>(32 - ROT))));
 #elif defined(BOTAN_SIMD_USE_LSX)
