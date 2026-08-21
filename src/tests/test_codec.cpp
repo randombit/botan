@@ -117,6 +117,34 @@ class Base58_Tests final : public Text_Based_Test {
 
          return result;
       }
+
+      std::vector<Test::Result> run_final_tests() override {
+         Test::Result result("Base58");
+
+         // Whitespace is ignored wherever it appears, including inside a block of 8 characters
+         const std::vector<uint8_t> expected =
+            Botan::hex_decode("6162636465666768696a6b6c6d6e6f707172737475767778797a");
+
+         const std::vector<std::string> with_ws = {
+            "3yxU3u1igY8WkgtjK92fbJQCd4BZiiT1v25f\n",
+            " 3yxU3u1igY8WkgtjK92fbJQCd4BZiiT1v25f",
+            "3yxU 3u1igY8WkgtjK92fbJQCd4BZiiT1v25f",
+            "3yxU3u1i\ngY8Wkgtj\nK92fbJQC\nd4BZiiT1\nv25f",
+            "3yxU3u1igY8Wkgtj K92fbJQCd4BZiiT1v25f",
+            "3yxU3u1igY8WkgtjK92fbJ  QCd4BZiiT1v25f",
+            "3 y x U 3 u 1 i g Y 8 W k g t j K 9 2 f b J Q C d 4 B Z i i T 1 v 2 5 f",
+         };
+
+         for(const auto& b58 : with_ws) {
+            try {
+               result.test_bin_eq("base58 decoding with whitespace", Botan::base58_decode(b58), expected);
+            } catch(std::exception& e) {
+               result.test_failure("rejected valid base58 with whitespace", e.what());
+            }
+         }
+
+         return {result};
+      }
 };
 
 BOTAN_REGISTER_TEST("codec", "base58", Base58_Tests);

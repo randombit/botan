@@ -653,10 +653,10 @@ class divide_precomp final {
 
       // Return quotient and remainder of (n1 || n0) divided by d
       //
-      // This assumes n1 < d so that the quotient fits in a word
+      // This assumes n1 < d so that the quotient fits in a word and
+      // will produce incorrect output if n1 >= d, since in that case
+      // the quotient exceeds the word size.
       inline constexpr std::pair<W, W> divmod_2to1(W n1, W n0) const {
-         BOTAN_ASSERT_NOMSG(n1 < m_divisor);
-
          if(m_divisor == WordInfo<W>::max) {
             const W q = div_2to1_max_d(n1, n0);
             const W r = static_cast<W>(n0 + q);

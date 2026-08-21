@@ -6,14 +6,19 @@
 
 #include <botan/base58.h>
 
-#include <botan/bigint.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>
+#include <botan/mem_ops.h>
+#include <botan/secmem.h>
 #include <botan/internal/ct_utils.h>
-#include <botan/internal/divide.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
+#include <botan/internal/mp_core.h>
 #include <botan/internal/mul128.h>
+#include <algorithm>
+#include <bit>
+#include <optional>
 
 namespace Botan {
 
@@ -93,52 +98,127 @@ constexpr std::pair<uint8_t, word> divmod_58(word x) {
    return std::make_pair(r, q);
 }
 
-std::string base58_encode(BigInt v, size_t leading_zeros) {
-   constexpr word radix = base58_conversion_radix();
+/*
+* In-place constant time division of a little-endian word vector by the
+* base58 conversion radix, returning the remainder
+*/
+word ct_divmod_base58radix(std::span<word> x) {
+   constexpr divide_precomp<word> radix_div(base58_conversion_radix());
+
+   word rem = 0;
+
+   for(size_t i = x.size(); i > 0; --i) {
+      const auto [q, r] = radix_div.divmod_2to1(rem, x[i - 1]);
+      x[i - 1] = q;
+      rem = r;
+   }
+
+   return rem;
+}
+
+// v = v * mul + add; requires that the result fits in v
+void ct_mul_add_word(std::span<word> v, word mul, word add) {
+   word carry = add;
+
+   for(word& w : v) {
+      w = word_madd2(w, mul, &carry);
+   }
+
+   // The final carry is provably zero for in-range inputs
+   CT::unpoison(carry);
+   BOTAN_DEBUG_ASSERT(carry == 0);
+}
+
+// Count of leading bytes equal to c, without leaking which bytes matched
+size_t ct_count_leading_eq(std::span<const uint8_t> input, uint8_t c) {
+   constexpr uint64_t lo1 = 0x0101010101010101;
+   constexpr uint64_t hi1 = lo1 << 7;
+   constexpr uint64_t lo7 = ~hi1;
+
+   size_t count = 0;
+   auto all_eq = CT::Mask<uint64_t>::set();
+
+   while(input.size() >= 8) {
+      const uint64_t x = load_le<uint64_t>(input.first<8>()) ^ (lo1 * c);
+      // 0x80 in each byte of x which is zero
+      const uint64_t z = ~(((x & lo7) + lo7) | x) & hi1;
+      // 0x80 in each byte where it and all preceding bytes are zero
+      uint64_t p = z & ((z << 8) | 0x80);
+      p &= (p << 16) | 0x8080;
+      p &= (p << 32) | 0x80808080;
+      // Number of set bytes in p
+      const uint64_t n = ((p >> 7) * lo1) >> 56;
+      count += static_cast<size_t>(all_eq.if_set_return(n));
+      all_eq &= CT::Mask<uint64_t>::is_equal(p, hi1);
+      input = input.subspan(8);
+   }
+
+   for(const uint8_t b : input) {
+      all_eq &= CT::Mask<uint64_t>::is_equal(b, c);
+      count += static_cast<size_t>(all_eq.if_set_return(1));
+   }
+
+   return count;
+}
+
+size_t ct_count_trailing_zeros(std::span<const uint8_t> input) {
+   size_t count = 0;
+   auto all_zero = CT::Mask<uint8_t>::set();
+
+   for(size_t i = input.size(); i > 0; --i) {
+      all_zero &= CT::Mask<uint8_t>::is_zero(input[i - 1]);
+      count += all_zero.if_set_return(1);
+   }
+
+   return count;
+}
+
+// Load a big-endian byte string into a little-endian word vector
+secure_vector<word> to_le_words(std::span<const uint8_t> input) {
+   secure_vector<word> v((input.size() + sizeof(word) - 1) / sizeof(word));
+
+   for(size_t i = 0; i != input.size(); ++i) {
+      const uint8_t b = input[input.size() - 1 - i];
+      v[i / sizeof(word)] |= static_cast<word>(b) << (8 * (i % sizeof(word)));
+   }
+
+   return v;
+}
+
+std::string base58_encode(std::span<word> v, size_t leading_zeros) {
    constexpr size_t radix_digits = base58_conversion_radix_digits();
 
-   BigInt q;
-   std::vector<uint8_t> digits;
+   // Each division removes at least radix_bits bits, so after chunks
+   // divisions v is zero regardless of its value
+   constexpr size_t radix_bits = std::bit_width(base58_conversion_radix()) - 1;
+   const size_t chunks = (v.size() * WordInfo<word>::bits + radix_bits - 1) / radix_bits;
 
-   while(!v.is_zero()) {
-      word r = 0;
-      ct_divide_word(v, radix, q, r);
+   secure_vector<uint8_t> digits;
+   digits.reserve(chunks * radix_digits);
+
+   for(size_t c = 0; c != chunks; ++c) {
+      word r = ct_divmod_base58radix(v);
 
       for(size_t i = 0; i != radix_digits; ++i) {
          const auto [r58, q58] = divmod_58(r);
          digits.push_back(r58);
          r = q58;
       }
-      v.swap(q);
    }
 
-   // remove leading zeros
-   while(!digits.empty() && digits.back() == 0) {
-      digits.pop_back();
+   // Render all digits; leading zero digits become '1', same as leading zero bytes
+   std::string result(leading_zeros + digits.size(), '1');
+
+   for(size_t i = 0; i != digits.size(); ++i) {
+      result[result.size() - 1 - i] = lookup_base58_char(digits[i]);
    }
 
-   std::string result;
-
-   for(const uint8_t d : digits) {
-      result.push_back(lookup_base58_char(d));
-   }
-
-   for(size_t i = 0; i != leading_zeros; ++i) {
-      result.push_back('1');  // 'zero' byte
-   }
-
-   return std::string(result.rbegin(), result.rend());
-}
-
-template <typename T, typename Z>
-size_t count_leading_zeros(const T input[], size_t input_length, Z zero) {
-   size_t leading_zeros = 0;
-
-   while(leading_zeros < input_length && input[leading_zeros] == zero) {
-      leading_zeros += 1;
-   }
-
-   return leading_zeros;
+   // Remove leading zero digits; this reveals only the output length
+   const size_t zero_digits = ct_count_trailing_zeros(digits);
+   CT::unpoison(zero_digits);
+   CT::unpoison(result);
+   result.erase(0, zero_digits);
+   return result;
 }
 
 uint8_t base58_value_of(char input) {
@@ -178,64 +258,170 @@ uint8_t base58_value_of(char input) {
    return x + static_cast<uint8_t>(val_v >> (8 * index_of_first_set_byte(v_mask)));
 }
 
+/*
+* Decode 8 base58 characters at once
+*
+* Returns the digit value of each byte of @p w, in the same byte position, or
+* nullopt if any byte is not a valid base58 character.
+*/
+std::optional<uint64_t> base58_values_of_8(uint64_t w) {
+   constexpr uint64_t lo1 = 0x0101010101010101;
+   constexpr uint64_t hi1 = 0x8080808080808080;
+
+   // For each byte v (assumed < 0x80), 0x80 if v > c else 0x00
+   const uint64_t w80 = w | hi1;
+   auto gt = [w80](char c) { return (w80 - lo1 * static_cast<uint8_t>(c + 1)) & hi1; };
+
+   /*
+    * Alphabet: "123456789 ABCDEFGH JKLMN PQRSTUVWXYZ abcdefghijk mnopqrstuvwxyz"
+    *
+    * This is ASCII '1' through 'z' with gaps ':'-'@', 'I', 'O', '['-'`' and
+    * 'l'. The value of a character is its ASCII code minus '1' minus the total
+    * size of the gaps below it.
+    */
+   // NOLINTBEGIN(*-confusable-identifiers)
+   const uint64_t gt_0 = gt('0');
+   const uint64_t gt_9 = gt('9');
+   const uint64_t gt_at = gt('@');
+   const uint64_t gt_H = gt('H');
+   const uint64_t gt_I = gt('I');
+   const uint64_t gt_N = gt('N');
+   const uint64_t gt_O = gt('O');
+   const uint64_t gt_Z = gt('Z');
+   const uint64_t gt_bt = gt('`');
+   const uint64_t gt_k = gt('k');
+   const uint64_t gt_l = gt('l');
+   const uint64_t gt_z = gt('z');
+   // NOLINTEND(*-confusable-identifiers)
+
+   const uint64_t in_gap = (gt_9 & ~gt_at) | (gt_H & ~gt_I) | (gt_N & ~gt_O) | (gt_Z & ~gt_bt) | (gt_k & ~gt_l);
+   const uint64_t invalid = (w & hi1) | (~gt_0 & hi1) | gt_z | in_gap;
+
+   if(invalid != 0) {
+      return std::nullopt;
+   }
+
+   // Each byte is at most 65 and for valid input no byte of w is less than its
+   // offset, so neither the sum nor the subtraction carries between bytes
+   const uint64_t offsets = lo1 * 49 + 7 * (gt_at >> 7) + (gt_I >> 7) + (gt_O >> 7) + 6 * (gt_Z >> 7) + (gt_l >> 7);
+   return w - offsets;
+}
+
 }  // namespace
 
 std::string base58_encode(const uint8_t input[], size_t input_length) {
-   const BigInt v(input, input_length);
-   return base58_encode(v, count_leading_zeros(input, input_length, 0));
+   const auto in = std::span{input, input_length};
+   const auto poison_guard = CT::scoped_poison(in);
+
+   const size_t leading_zeros = ct_count_leading_eq(in, 0);
+   CT::unpoison(leading_zeros);
+
+   auto v = to_le_words(in);
+   return base58_encode(v, leading_zeros);
 }
 
 std::string base58_check_encode(const uint8_t input[], size_t input_length) {
-   BigInt v(input, input_length);
-   v <<= 32;
-   v += sha256_d_checksum(input, input_length);
-   return base58_encode(v, count_leading_zeros(input, input_length, 0));
+   const auto in = std::span{input, input_length};
+   const auto poison_guard = CT::scoped_poison(in);
+
+   const size_t leading_zeros = ct_count_leading_eq(in, 0);
+   CT::unpoison(leading_zeros);
+
+   secure_vector<uint8_t> buf(input_length + 4);
+   copy_mem(buf.data(), input, input_length);
+   store_be(sha256_d_checksum(input, input_length), buf.data() + input_length);
+
+   auto v = to_le_words(buf);
+   return base58_encode(v, leading_zeros);
 }
 
 std::vector<uint8_t> base58_decode(const char input[], size_t input_length) {
-   const size_t leading_zeros = count_leading_zeros(input, input_length, '1');
+   const auto in = as_span_of_bytes(input, input_length);
 
-   std::vector<uint8_t> digits;
+   const size_t leading_zeros = ct_count_leading_eq(in, static_cast<uint8_t>('1'));
 
-   for(size_t i = leading_zeros; i != input_length; ++i) {
-      const char c = input[i];
+   secure_vector<uint8_t> digits(input_length - leading_zeros);
+   size_t digit_count = 0;
 
-      if(c == ' ' || c == '\n') {
-         continue;
+   auto chars = in.subspan(leading_zeros);
+
+   while(!chars.empty()) {
+      if(chars.size() >= 8) {
+         if(auto values = base58_values_of_8(load_le<uint64_t>(chars.first<8>()))) {
+            store_le(std::span{digits}.subspan(digit_count).first<8>(), *values);
+            digit_count += 8;
+            chars = chars.subspan(8);
+            continue;
+         }
       }
 
-      const uint8_t idx = base58_value_of(c);
+      // Fewer than 8 characters remain, or the block contains whitespace or an invalid character
+      const size_t n = std::min<size_t>(chars.size(), 8);
+      for(size_t i = 0; i != n; ++i) {
+         const char c = static_cast<char>(chars[i]);
 
-      if(idx == 0xFF) {
-         throw Decoding_Error("Invalid base58");
+         if(c == ' ' || c == '\n') {
+            continue;
+         }
+
+         const uint8_t idx = base58_value_of(c);
+
+         if(idx == 0xFF) {
+            throw Decoding_Error("Invalid base58");
+         }
+
+         digits[digit_count++] = idx;
       }
-
-      digits.push_back(idx);
+      chars = chars.subspan(n);
    }
 
-   BigInt v;
+   digits.resize(digit_count);
 
-   constexpr word radix1 = 58;
-   constexpr word radix2 = 58 * 58;
-   constexpr word radix3 = 58 * 58 * 58;
-   constexpr word radix4 = 58 * 58 * 58 * 58;
+   // From here on the digit values are secret; only lengths are revealed
+   const auto poison_guard = CT::scoped_poison(digits);
 
-   std::span<uint8_t> remaining{digits};
+   constexpr size_t radix_digits = base58_conversion_radix_digits();
 
-   while(remaining.size() >= 4) {
-      const word accum = radix3 * remaining[0] + radix2 * remaining[1] + radix1 * remaining[2] + remaining[3];
-      v *= radix4;
-      v += accum;
-      remaining = remaining.subspan(4);
+   // Since 58 < 2^6, any value of digits.size() base58 digits fits in
+   // 6 bits per digit
+   secure_vector<word> v((6 * digits.size() + WordInfo<word>::bits - 1) / WordInfo<word>::bits);
+
+   // Combine up to radix_digits digits into a single word
+   auto accum_digits = [](std::span<const uint8_t> chunk) {
+      BOTAN_DEBUG_ASSERT(chunk.size() <= radix_digits);
+      word accum = 0;
+      for(const uint8_t d : chunk) {
+         accum = accum * 58 + d;
+      }
+      return accum;
+   };
+
+   std::span<const uint8_t> remaining{digits};
+
+   // Consume a leading partial chunk so that all remaining chunks are full;
+   // since v is zero at this point no multiplication is needed
+   if(const size_t partial = remaining.size() % radix_digits; partial > 0) {
+      v[0] = accum_digits(remaining.first(partial));
+      remaining = remaining.subspan(partial);
    }
 
    while(!remaining.empty()) {
-      v *= 58;
-      v += remaining[0];
-      remaining = remaining.subspan(1);
+      ct_mul_add_word(v, base58_conversion_radix(), accum_digits(remaining.first(radix_digits)));
+      remaining = remaining.subspan(radix_digits);
    }
 
-   return v.serialize(v.bytes() + leading_zeros);
+   secure_vector<uint8_t> vbytes(v.size() * sizeof(word));
+   for(size_t i = 0; i != v.size(); ++i) {
+      store_be(v[v.size() - 1 - i], vbytes.data() + i * sizeof(word));
+   }
+
+   const size_t sig_bytes = vbytes.size() - ct_count_leading_eq(vbytes, 0);
+   CT::unpoison(sig_bytes);
+
+   std::vector<uint8_t> output(leading_zeros + sig_bytes);
+   copy_mem(output.data() + leading_zeros, vbytes.data() + vbytes.size() - sig_bytes, sig_bytes);
+   CT::unpoison(output);
+   return output;
 }
 
 std::vector<uint8_t> base58_check_decode(const char input[], size_t input_length) {
