@@ -20,6 +20,12 @@
    #include <sys/types.h>
 #endif
 
+#if defined(BOTAN_TARGET_OS_HAS_WIN32)
+   #define NOMINMAX 1
+   #define _WINSOCKAPI_  // stop windows.h including winsock.h
+   #include <windows.h>
+#endif
+
 namespace Botan {
 
 namespace {
@@ -111,6 +117,35 @@ std::optional<uint32_t> aarch64_feat_using_mac_api(uint32_t allowed) {
 #endif
 }
 
+std::optional<uint32_t> aarch64_feat_using_win_api(uint32_t allowed) {
+#if defined(BOTAN_TARGET_OS_HAS_WIN32)
+   uint32_t feat = 0;
+
+   // The Windows Aarch64 ABI requires NEON
+   feat |= CPUFeature::Bit::NEON & allowed;
+
+   if((feat & CPUFeature::Bit::NEON) == CPUFeature::Bit::NEON) {
+      if(::IsProcessorFeaturePresent(PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE) != 0) {
+         feat |= CPUFeature::Bit::AES & allowed;
+         feat |= CPUFeature::Bit::PMULL & allowed;
+         feat |= CPUFeature::Bit::SHA1 & allowed;
+         feat |= CPUFeature::Bit::SHA2 & allowed;
+      }
+
+   #if defined(PF_ARM_SVE_INSTRUCTIONS_AVAILABLE)
+      if(::IsProcessorFeaturePresent(PF_ARM_SVE_INSTRUCTIONS_AVAILABLE) != 0) {
+         feat |= CPUFeature::Bit::SVE & allowed;
+      }
+   #endif
+   }
+
+   return feat;
+#else
+   BOTAN_UNUSED(allowed);
+   return {};
+#endif
+}
+
 std::optional<uint32_t> aarch64_feat_using_instr_probe(uint32_t allowed) {
 #if defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_HAS_OS_UTILS)
 
@@ -185,6 +220,8 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
       return feat_aux.value();
    } else if(auto feat_mac = aarch64_feat_using_mac_api(allowed)) {
       return feat_mac.value();
+   } else if(auto feat_win = aarch64_feat_using_win_api(allowed)) {
+      return feat_win.value();
    } else if(auto feat_instr = aarch64_feat_using_instr_probe(allowed)) {
       return feat_instr.value();
    } else {
