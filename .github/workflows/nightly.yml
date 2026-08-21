@@ -150,6 +150,19 @@ jobs:
 
       matrix:
         include:
+          # The Windows ARM targets here are not cross builds but its a convenient spot
+          - target: static
+            arch: arm64
+            host_os: windows-11-arm
+            compiler: msvc
+          - target: amalgamation
+            arch: arm64
+            host_os: windows-11-arm
+            compiler: msvc
+          - target: shared
+            arch: arm64
+            host_os: windows-11-arm
+            compiler: clangcl
           - target: cross-arm32
             compiler: gcc
             host_os: ubuntu-26.04
