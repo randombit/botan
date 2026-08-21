@@ -7,11 +7,21 @@ Version 3.14.0, Not Yet Released
 * Modify the bitsliced AES implementation to use the native word size of the
   processor, instead of always 32 bits. (GH #5826)
 
+* Enable support for NEON/ARMv8 codepaths on Windows aarch64 (GH #5863)
+
+* Use Möller-Granlund division where possible (GH #5849)
+
+* Optimize base58 encoding and decoding (GH #5858)
+
 * ``Jitter_RNG`` now accepts the compliance mode and the oversampling rate which
   should be used by the jitterentropy library. AIS 20/31 NTG.1 compliance can be
   requested with ``Jitter_RNG::Mode::NTG1`` if jitterentropy 3.7.0 or later is
   used. Note that ``Jitter_RNG`` no longer forces the FIPS mode of jitterentropy
   by default; use ``Jitter_RNG::Mode::FIPS`` to retain the previous behavior.
+  (GH #5832)
+
+* CI updates including moving most builds to Ubuntu 26.04, adding Windows Aarch64
+  builders, and updating dependencies used in CI (GH #5846 #5848 #5860 #5861)
 
 Version 3.13.0, 2026-08-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
