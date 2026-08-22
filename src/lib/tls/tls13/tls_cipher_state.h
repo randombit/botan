@@ -12,7 +12,9 @@
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>
 
+#include <botan/internal/tls_record_13.h>
 #include <botan/internal/tls_transcript_hash_13.h>
+#include <botan/internal/tls_types_13.h>
 
 namespace Botan {
 
@@ -116,24 +118,34 @@ class BOTAN_TEST_API Cipher_State {
       void advance_with_client_finished(const Transcript_Hash& transcript_hash);
 
       /**
-       * Encrypt a TLS record fragment (RFC 8446 5.2 -- TLSInnerPlaintext) using the
-       * currently available traffic secret keys and the current sequence number.
-       * This will internally increment the sequence number. Hence, multiple
-       * calls with the same input will not produce the same result.
+       * Protect a TLS record (RFC 9846 5.2 -- TLSInnerPlaintext) using the
+       * currently available traffic secret keys and the current sequence
+       * number. This will internally increment the sequence number. Hence,
+       * multiple calls with the same input will not produce the same result.
        *
-       * @returns  the sequence number of the encrypted record
+       * @param type           the record type to be protected
+       * @param plaintext      the record plaintext to be protected in-place
+       * @param padding_bytes  the number of padding zero-bytes to be added
+       *
+       * @returns the marshalled and protected record to be sent on the wire
        */
-      uint64_t encrypt_record_fragment(const std::vector<uint8_t>& header, secure_vector<uint8_t>& fragment);
+      [[nodiscard]] MarshalledRecord protect_record(Record_Type type,
+                                                    std::span<const uint8_t> plaintext,
+                                                    size_t padding_bytes);
 
       /**
-       * Decrypt a TLS record fragment (RFC 8446 5.2 -- TLSCiphertext.encrypted_record)
-       * using the currently available traffic secret keys and the current sequence number.
-       * This will internally increment the sequence number. Hence, multiple
-       * calls with the same input will not produce the same result.
+       * Deprotect a TLS record  (RFC 9846 5.2 --
+       * TLSCiphertext.encrypted_record) using the currently available traffic
+       * secret keys and the current sequence number. This will internally
+       * increment the sequence number. Hence, multiple calls with the same
+       * input will not produce the same result.
        *
-       * @returns  the sequence number of the decrypted record
+       * @param record                      the record to be deprotected in-place
+       * @param incoming_record_size_limit  the maximum allowed size for the incoming record
+       *
+       * @returns the record payload and deprotected content type
        */
-      uint64_t decrypt_record_fragment(const std::vector<uint8_t>& header, secure_vector<uint8_t>& encrypted_fragment);
+      [[nodiscard]] Record_Content deprotect_record(Record_TLS record, size_t incoming_record_size_limit);
 
       /**
        * @returns  number of bytes needed to encrypt \p input_length bytes
