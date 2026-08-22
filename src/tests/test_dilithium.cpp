@@ -9,16 +9,24 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
+#include "test_rng.h"
 #include "tests.h"
 
+#include <map>
+#include <memory>
+#include <vector>
+
 #if defined(BOTAN_HAS_DILITHIUM_COMMON)
+   #include <botan/data_src.h>
    #include <botan/dilithium.h>
    #include <botan/hash.h>
+   #include <botan/hex.h>
    #include <botan/pk_algs.h>
+   #include <botan/pk_keys.h>
+   #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
 
    #include "test_pubkey.h"
-   #include "test_rng.h"
 #endif
 
 namespace Botan_Tests {
@@ -50,8 +58,8 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
 
          const Botan::Dilithium_PrivateKey priv_key(*dilithium_test_rng, DerivedT::mode);
 
-         result.test_bin_eq(
-            "generated expected private key hash", sha3_256->process(priv_key.private_key_bits()), ref_sk_hash);
+         const auto sk_bytes = priv_key.is_mldsa() ? priv_key.raw_private_key_bits() : priv_key.private_key_bits();
+         result.test_bin_eq("generated expected private key hash", sha3_256->process(sk_bytes), ref_sk_hash);
 
          result.test_bin_eq(
             "generated expected public key hash", sha3_256->process(priv_key.public_key_bits()), ref_pk_hash);
@@ -287,5 +295,107 @@ BOTAN_REGISTER_TEST("pubkey", "dilithium_keygen", Dilithium_Keygen_Tests);
 #endif
 
 }  // namespace
+
+#if defined(BOTAN_HAS_ML_DSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+class MLDSA_Privkey_Tests : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         // Verbatim private key examples from RFC 9881: Appendix C.1 holds
+         // valid keys in all three CHOICE formats, all derived from the seed
+         // 000102...1e1f; Appendix C.4 holds keys with inconsistent seed
+         // and expanded representations that must be rejected.
+         struct TestFile {
+               std::string filename;
+               std::string algo_name;
+               bool valid;
+               bool has_seed;
+         };
+
+         const std::vector<TestFile> files{
+            {"rfc9881_mldsa44_seed.pem", "ML-DSA-4x4", true, true},
+            {"rfc9881_mldsa44_expanded.pem", "ML-DSA-4x4", true, false},
+            {"rfc9881_mldsa44_both.pem", "ML-DSA-4x4", true, true},
+            {"rfc9881_mldsa65_seed.pem", "ML-DSA-6x5", true, true},
+            {"rfc9881_mldsa65_expanded.pem", "ML-DSA-6x5", true, false},
+            {"rfc9881_mldsa65_both.pem", "ML-DSA-6x5", true, true},
+            {"rfc9881_mldsa87_seed.pem", "ML-DSA-8x7", true, true},
+            {"rfc9881_mldsa87_expanded.pem", "ML-DSA-8x7", true, false},
+            {"rfc9881_mldsa87_both.pem", "ML-DSA-8x7", true, true},
+            {"rfc9881_mldsa44_inconsistent_1.pem", "ML-DSA-4x4", false, false},
+            {"rfc9881_mldsa44_inconsistent_2.pem", "ML-DSA-4x4", false, false},
+            {"rfc9881_mldsa44_inconsistent_3.pem", "ML-DSA-4x4", false, false},
+         };
+         /* the same seed is used for all valid test vectors in RFC 9881 */
+         const auto rfc_seed = Botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
+
+         std::vector<Test::Result> results;
+         std::map<std::string, std::vector<uint8_t>> pubkey_by_mode;
+
+         for(const auto& file : files) {
+            Test::Result result("ML-DSA private key " + file.filename);
+
+            std::unique_ptr<Botan::Private_Key> priv_key;
+            try {
+               Botan::DataSource_Stream key_source(Test::data_file("pubkey", file.filename));
+               priv_key = Botan::PKCS8::load_key(key_source);
+            } catch(const Botan::Exception&) {
+               result.test_is_true("inconsistent ML-DSA key rejected", !file.valid);
+               results.push_back(result);
+               continue;
+            }
+            result.test_is_true("only valid keys are decodable", file.valid);
+            if(!file.valid) {
+               results.push_back(result);
+               continue;
+            }
+
+            result.test_str_eq("algorithm name", priv_key->algo_name(), "ML-DSA");
+            result.test_str_eq(
+               "parameter set", priv_key->algorithm_identifier().oid().to_formatted_string(), file.algo_name);
+
+            if(file.has_seed) {
+               result.test_bin_eq("seed matches the RFC 9881 example seed", priv_key->raw_private_key_bits(), rfc_seed);
+            } else {
+               result.test_throws("no seed available for an expanded-only key",
+                                  [&] { priv_key->raw_private_key_bits(); });
+            }
+
+            std::vector<uint8_t> ref_msg = {0, 1, 2, 4};
+            std::vector<uint8_t> rng_seed(48);
+            Botan_Tests::CTR_DRBG_AES256 rng(rng_seed);
+            auto signer = Botan::PK_Signer(*priv_key, rng, "Randomized");
+            auto signature = signer.sign_message(ref_msg.data(), ref_msg.size(), rng);
+
+            auto pub_key = priv_key->public_key();
+            auto verifier = Botan::PK_Verifier(*pub_key, "");
+            verifier.update(ref_msg.data(), ref_msg.size());
+            result.test_is_true("signature verifies", verifier.check_signature(signature.data(), signature.size()));
+
+            const auto reencoded_priv_key = Botan::PKCS8::BER_encode(*priv_key);
+            Botan::DataSource_Memory reencoded_source(reencoded_priv_key);
+            const auto redecoded_priv_key = Botan::PKCS8::load_key(reencoded_source);
+            result.test_bin_eq("PKCS#8 encoding roundtrip for private ML-DSA key yields same public key",
+                               priv_key->raw_public_key_bits(),
+                               redecoded_priv_key->raw_public_key_bits());
+
+            // All formats of one parameter set derive from the same seed and
+            // must therefore agree on the public key.
+            auto [it, inserted] = pubkey_by_mode.try_emplace(file.algo_name, priv_key->raw_public_key_bits());
+            if(!inserted) {
+               result.test_bin_eq("public key matches the other formats of " + file.algo_name,
+                                  priv_key->raw_public_key_bits(),
+                                  it->second);
+            }
+
+            results.push_back(result);
+         }
+
+         return results;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "mldsa_private_key", MLDSA_Privkey_Tests);
+
+#endif
 
 }  // namespace Botan_Tests

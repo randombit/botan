@@ -934,20 +934,15 @@ _MLDSA_MODE_MAP = {
 
 
 def _mldsa_sign_test(mldsa_mode: str, group: dict, test: dict) -> None:
-    priv = None
+    # seed vectors carry the 32-byte seed in "privateSeed", noseed vectors
+    # the raw FIPS 204 expanded private key in "privateKey"
+    sk = group["privateSeed"] if "privateSeed" in group else group["privateKey"]
     try:
-        if "privateSeed" in group:
-            priv = botan.PrivateKey.load_ml_dsa(
-                mldsa_mode, _from_hex(group["privateSeed"])
-            )
-        # TODO: implement loading from expanded private key
+        priv = botan.PrivateKey.load_ml_dsa(mldsa_mode, _from_hex(sk))
     except botan.BotanException:
         if test["result"] == "invalid":
             return
         raise
-
-    if priv is None:
-        raise TestSkip("ML-DSA noseed (expanded private key) not yet supported")
 
     pub = priv.get_public_key()
     if "publicKey" in group and group["publicKey"] is not None:
