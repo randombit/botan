@@ -342,6 +342,35 @@ class SIMD_8x32 final {
          return SIMD_8x32(_mm256_shuffle_epi8(tbl.raw(), idx.raw()));
       }
 
+      /**
+      * Byte shuffle with masking, performed within each half
+      *
+      * If the top bit of an index byte is set the output byte is zero,
+      * otherwise the low 4 bits select a byte from the same half of tbl.
+      */
+      static inline SIMD_8x32 BOTAN_FN_ISA_SIMD_8X32 masked_byte_shuffle(const SIMD_8x32& tbl, const SIMD_8x32& idx) {
+         return SIMD_8x32(_mm256_shuffle_epi8(tbl.raw(), idx.raw()));
+      }
+
+      /**
+      * Swap the two 128-bit halves of the register
+      */
+      SIMD_8x32 BOTAN_FN_ISA_SIMD_8X32 swap_halves() const noexcept {
+         return SIMD_8x32(_mm256_permute2x128_si256(raw(), raw(), 0x01));
+      }
+
+      /**
+      * Multiply each byte by x in GF(2^8) using the reduction polynomial
+      * given by POLY (which omits the implicit x^8 term)
+      */
+      template <uint8_t POLY>
+      SIMD_8x32 BOTAN_FN_ISA_SIMD_8X32 xtime() const noexcept {
+         const auto poly = _mm256_set1_epi8(static_cast<char>(POLY));
+         const auto shifted = _mm256_add_epi8(raw(), raw());
+         // blendv selects using the top bit of each byte of the mask argument
+         return SIMD_8x32(_mm256_blendv_epi8(shifted, _mm256_xor_si256(shifted, poly), raw()));
+      }
+
       BOTAN_FN_ISA_SIMD_8X32
       static void reset_registers() noexcept { _mm256_zeroupper(); }
 

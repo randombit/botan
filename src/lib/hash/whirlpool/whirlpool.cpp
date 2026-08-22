@@ -89,8 +89,8 @@ std::string Whirlpool::provider() const {
    }
 #endif
 
-#if defined(BOTAN_HAS_WHIRLPOOL_AVX2)
-   if(auto feat = CPUID::check(CPUID::Feature::AVX2)) {
+#if defined(BOTAN_HAS_WHIRLPOOL_SIMD8X32)
+   if(auto feat = CPUID::check(CPUID::Feature::SIMD_8X32)) {
       return *feat;
    }
 #endif
@@ -108,9 +108,9 @@ void Whirlpool::compress_n(digest_type& digest, std::span<const uint8_t> input, 
    }
 #endif
 
-#if defined(BOTAN_HAS_WHIRLPOOL_AVX2)
-   if(CPUID::has(CPUID::Feature::AVX2)) {
-      return compress_n_avx2(digest, input, blocks);
+#if defined(BOTAN_HAS_WHIRLPOOL_SIMD8X32)
+   if(CPUID::has(CPUID::Feature::SIMD_8X32)) {
+      return compress_n_simd8x32(digest, input, blocks);
    }
 #endif
 
