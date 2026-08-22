@@ -6,12 +6,15 @@
 
 #include <botan/internal/x931_sig_padding.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
+#include <botan/pk_options.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hash_id.h>
+#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -90,7 +93,10 @@ bool X931_SignaturePadding::verify(std::span<const uint8_t> coded, std::span<con
 /*
 * X931_SignaturePadding Constructor
 */
-X931_SignaturePadding::X931_SignaturePadding(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {
+X931_SignaturePadding::X931_SignaturePadding(const PK_Signature_Options& options) :
+      m_hash(HashFunction::create_or_throw(options.hash_function_name())) {
+   acknowledge_always_deterministic(options);
+
    m_empty_hash = m_hash->final_stdvec();
 
    m_hash_id = ieee1363_hash_id(m_hash->name());

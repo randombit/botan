@@ -10,6 +10,7 @@
    #include "test_pubkey.h"
    #include "test_rng.h"
    #include <botan/ec_group.h>
+   #include <botan/hash.h>
    #include <botan/pubkey.h>
    #include <botan/sm2.h>
 #endif
@@ -131,6 +132,43 @@ class SM2_Invalid_Ciphertexts : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("pubkey", "sm2_invalid_ctext", SM2_Invalid_Ciphertexts);
+
+class SM2_Default_Hash_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("SM2 signature default hash");
+
+         if(!Botan::EC_Group::supports_named_group("sm2p256v1")) {
+            result.test_note("Skipping - sm2p256v1 not available");
+            return {result};
+         }
+
+         const Botan::SM2_PrivateKey key(this->rng(), Botan::EC_Group::from_name("sm2p256v1"));
+         const std::vector<uint8_t> msg = {0x61, 0x62, 0x63};
+
+         Botan::PK_Signer signer(key, this->rng(), Botan::PK_Signature_Options());
+         const auto sig = signer.sign_message(msg, this->rng());
+         result.test_str_eq("Signer reports SM3", signer.hash_function(), "SM3");
+
+         Botan::PK_Verifier default_verifier(key, Botan::PK_Signature_Options());
+         result.test_is_true("Verifies with default hash", default_verifier.verify_message(msg, sig));
+
+         Botan::PK_Verifier sm3_verifier(key, Botan::PK_Signature_Options().with_hash("SM3"));
+         result.test_is_true("Verifies with explicit SM3", sm3_verifier.verify_message(msg, sig));
+
+         Botan::PK_Verifier legacy_verifier(key, "1234567812345678,SM3");
+         result.test_is_true("Verifies with legacy default userid and SM3", legacy_verifier.verify_message(msg, sig));
+
+         if(Botan::HashFunction::create("SHA-256")) {
+            Botan::PK_Verifier sha256_verifier(key, Botan::PK_Signature_Options().with_hash("SHA-256"));
+            result.test_is_false("Does not verify with SHA-256", sha256_verifier.verify_message(msg, sig));
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "sm2_default_hash", SM2_Default_Hash_Tests);
 
 #endif
 

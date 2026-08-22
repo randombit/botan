@@ -16,12 +16,12 @@
    #include <botan/hex.h>
    #include <botan/pk_algs.h>
    #include <botan/pk_keys.h>
+   #include <botan/pk_options.h>
    #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
    #include <botan/x509_key.h>
    #include <botan/internal/workfactor.h>
    #include <fstream>
-   #include <sstream>
 
    #if defined(BOTAN_HAS_DL_GROUP)
       #include <botan/dl_group.h>
@@ -96,29 +96,83 @@ BOTAN_REGISTER_COMMAND("keygen", PK_Keygen);
 
 namespace {
 
-std::string choose_sig_padding(const std::string& key, const std::string& padding, const std::string& hash) {
-   if(key == "RSA") {
-      std::ostringstream oss;
-      if(padding.empty()) {
-         oss << "PSS";
-      } else {
-         oss << padding;
-      }
-
-      oss << "(" << hash << ")";
-      return oss.str();
-   } else if(padding.empty()) {
-      return hash;
-   } else if(hash.empty()) {
-      return padding;
-   } else {
-      std::ostringstream oss;
-      oss << padding << "(" << hash << ")";
-      return oss.str();
-   }
+/*
+* Signature schemes for which the caller must select a hash function; the
+* other schemes either fix the hash by the key type or do not use one.
+*/
+bool signature_scheme_requires_hash(std::string_view algo_name) {
+   return algo_name == "RSA" || algo_name == "DSA" || algo_name == "ECDSA" || algo_name == "ECGDSA" ||
+          algo_name == "ECKCDSA" || algo_name.starts_with("GOST-34.10");
 }
 
 }  // namespace
+
+/*
+* Shared handling of the signature related options of the sign and verify commands
+*/
+class PK_Signature_Command : public Command {
+   protected:
+      using Command::Command;
+
+      Botan::PK_Signature_Options signature_options(const Botan::Public_Key& key) const {
+         const std::string algo_name = key.algo_name();
+
+         auto options = Botan::PK_Signature_Options();
+
+         const bool prehashed = flag_set("prehashed");
+
+         std::string hash_fn = get_arg("hash");
+         // With a prehashed input an unnamed hash means the digest is signed as is
+         if(hash_fn.empty() && !prehashed && signature_scheme_requires_hash(algo_name)) {
+            hash_fn = "SHA-256";
+         }
+         if(!hash_fn.empty() && !Botan::HashFunction::create(hash_fn)) {
+            throw CLI_Error_Unsupported("hashing", hash_fn);
+         }
+         options = options.with_hash(hash_fn);
+
+         if(prehashed) {
+            options = options.with_externally_computed_prehash();
+         }
+
+         std::string padding = get_arg("padding");
+         if(padding.empty() && algo_name == "RSA") {
+            padding = "PSS";
+         }
+         options = options.with_padding(padding);
+
+         if(const auto prehash = get_arg_maybe("prehash")) {
+            if(*prehash == "default") {
+               options = options.with_prehash();
+            } else {
+               options = options.with_prehash(prehash);
+            }
+         }
+
+         if(const auto context = get_arg_maybe("context")) {
+            options = options.with_context(*context);
+         }
+
+         if(get_arg_maybe("salt-size")) {
+            options = options.with_salt_size(get_arg_sz("salt-size"));
+         }
+
+         if(flag_set("deterministic")) {
+            options = options.with_deterministic_signature();
+         }
+
+         if(flag_set("der-format")) {
+            if(!key._signature_element_size_for_DER_encoding()) {
+               throw CLI_Usage_Error("Key type " + algo_name + " does not support DER formatting for signatures");
+            }
+            options = options.with_der_encoded_signature();
+         }
+
+         options = options.with_provider(get_arg_or("provider", ""));
+
+         return options;
+      }
+};
 
 class PK_Fingerprint final : public Command {
    public:
@@ -175,12 +229,12 @@ std::unique_ptr<Botan::Private_Key> load_private_key(const std::string& key_file
 
 }  // namespace
 
-class PK_Sign final : public Command {
+class PK_Sign final : public PK_Signature_Command {
    public:
       PK_Sign() :
-            Command(
-               "sign --der-format --passphrase= --hash=SHA-256 --padding= --provider= --rng-type= --drbg-seed= key file") {
-      }
+            PK_Signature_Command(
+               "sign --der-format --passphrase= --hash= --padding= --prehash= --prehashed --context= --salt-size= "
+               "--deterministic --provider= --rng-type= --drbg-seed= key file") {}
 
       std::string group() const override { return "pubkey"; }
 
@@ -192,27 +246,7 @@ class PK_Sign final : public Command {
 
          auto key = load_private_key(key_file, passphrase);
 
-         const std::string hash_fn = get_arg("hash");
-
-         if(!hash_fn.empty() && !Botan::HashFunction::create(hash_fn)) {
-            throw CLI_Error_Unsupported("hashing", hash_fn);
-         }
-
-         const std::string sig_padding = choose_sig_padding(key->algo_name(), get_arg("padding"), hash_fn);
-
-         auto format = Botan::Signature_Format::Standard;
-
-         if(flag_set("der-format")) {
-            if(!key->_signature_element_size_for_DER_encoding()) {
-               throw CLI_Usage_Error("Key type " + key->algo_name() +
-                                     " does not support DER formatting for signatures");
-            }
-            format = Botan::Signature_Format::DerSequence;
-         }
-
-         const std::string provider = get_arg("provider");
-
-         Botan::PK_Signer signer(*key, rng(), sig_padding, format, provider);
+         Botan::PK_Signer signer(*key, rng(), signature_options(*key));
 
          auto onData = [&signer](const uint8_t b[], size_t l) { signer.update(b, l); };
          Command::read_file(get_arg("file"), onData);
@@ -234,9 +268,12 @@ class PK_Sign final : public Command {
 
 BOTAN_REGISTER_COMMAND("sign", PK_Sign);
 
-class PK_Verify final : public Command {
+class PK_Verify final : public PK_Signature_Command {
    public:
-      PK_Verify() : Command("verify --der-format --hash=SHA-256 --padding= pubkey file signature") {}
+      PK_Verify() :
+            PK_Signature_Command(
+               "verify --der-format --hash= --padding= --prehash= --prehashed --context= --salt-size= pubkey file "
+               "signature") {}
 
       std::string group() const override { return "pubkey"; }
 
@@ -250,24 +287,7 @@ class PK_Verify final : public Command {
             throw CLI_Error("Unable to load public key");
          }
 
-         const std::string hash_fn = get_arg("hash");
-
-         if(!hash_fn.empty() && !Botan::HashFunction::create(hash_fn)) {
-            throw CLI_Error_Unsupported("hashing", hash_fn);
-         }
-
-         const std::string sig_padding = choose_sig_padding(key->algo_name(), get_arg("padding"), hash_fn);
-
-         auto format = Botan::Signature_Format::Standard;
-         if(flag_set("der-format")) {
-            if(key->message_parts() == 1) {
-               throw CLI_Usage_Error("Key type " + key->algo_name() +
-                                     " does not support DER formatting for signatures");
-            }
-            format = Botan::Signature_Format::DerSequence;
-         }
-
-         Botan::PK_Verifier verifier(*key, sig_padding, format);
+         Botan::PK_Verifier verifier(*key, signature_options(*key));
          auto onData = [&verifier](const uint8_t b[], size_t l) { verifier.update(b, l); };
          Command::read_file(get_arg("file"), onData);
 

@@ -15,6 +15,7 @@
    #include <botan/dilithium.h>
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
+   #include <botan/pk_options.h>
    #include <botan/pubkey.h>
 
    #include "test_pubkey.h"
@@ -65,7 +66,7 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
          }
 
          const Botan::Dilithium_PublicKey pub_key(priv_key.public_key_bits(), DerivedT::mode);
-         auto verifier = Botan::PK_Verifier(pub_key, "");
+         auto verifier = Botan::PK_Verifier(pub_key, Botan::PK_Signature_Options());
          verifier.update(ref_msg.data(), ref_msg.size());
          result.test_is_true("signature verifies", verifier.check_signature(signature.data(), signature.size()));
 
@@ -147,7 +148,7 @@ class DilithiumRoundtripTests final : public Test {
          };
 
          auto verify = [](const auto& public_key, const auto& msg, const auto& signature) {
-            auto verifier = Botan::PK_Verifier(public_key, "");
+            auto verifier = Botan::PK_Verifier(public_key, Botan::PK_Signature_Options());
             verifier.update(msg);
             return verifier.check_signature(signature);
          };
@@ -239,6 +240,63 @@ class DilithiumRoundtripTests final : public Test {
 };
 
 BOTAN_REGISTER_TEST("pubkey", "dilithium_roundtrips", DilithiumRoundtripTests);
+
+/*
+* The "salt" option names the size of the randomness drawn during hedged
+* signing, which differs between ML-DSA (32 byte rnd) and Dilithium round 3
+* (the full 64 byte rho')
+*/
+class Dilithium_Salt_Size_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("Dilithium salt size option");
+
+         auto check = [&](const std::string& algo, const std::string& mode, size_t expected_salt, size_t wrong_salt) {
+            std::unique_ptr<Botan::Private_Key> key;
+            try {
+               key = Botan::create_private_key(algo, this->rng(), mode);
+            } catch(const Botan::Lookup_Error&) {
+               /*ignore*/
+            } catch(const Botan::Not_Implemented&) {
+               /*ignore*/
+            }
+
+            if(key == nullptr) {
+               result.test_note("Skipping " + mode + " - not available");
+               return;
+            }
+
+            const auto pub = key->public_key();
+            const std::vector<uint8_t> msg = {0x61, 0x62, 0x63};
+
+            result.test_no_throw(mode + " accepts its randomness size as salt", [&] {
+               Botan::PK_Signer signer(*key, this->rng(), Botan::PK_Signature_Options().with_salt_size(expected_salt));
+               Botan::PK_Verifier verifier(*pub, Botan::PK_Signature_Options().with_salt_size(expected_salt));
+               result.test_is_true(mode + " sign/verify",
+                                   verifier.verify_message(msg, signer.sign_message(msg, this->rng())));
+            });
+
+            result.test_throws(mode + " rejects another salt size", [&] {
+               const Botan::PK_Signer signer(
+                  *key, this->rng(), Botan::PK_Signature_Options().with_salt_size(wrong_salt));
+            });
+
+            result.test_throws(mode + " rejects a salt when deterministic", [&] {
+               const Botan::PK_Signer signer(
+                  *key,
+                  this->rng(),
+                  Botan::PK_Signature_Options().with_salt_size(expected_salt).with_deterministic_signature());
+            });
+         };
+
+         check("ML-DSA", "ML-DSA-4x4", 32, 64);
+         check("Dilithium", "Dilithium-4x4-r3", 64, 32);
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "dilithium_salt_size", Dilithium_Salt_Size_Tests);
 
 class Dilithium_Keygen_Tests final : public PK_Key_Generation_Test {
    public:

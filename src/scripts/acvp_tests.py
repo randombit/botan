@@ -1474,6 +1474,10 @@ def _ecdsa_siggen_aft(group: dict, test: dict, *, deterministic: bool) -> None:
     else:
         padding = _map_hash(group["hashAlg"])
 
+    # ECDSA signatures are randomized unless RFC 6979 is explicitly requested
+    if deterministic:
+        padding += ",Deterministic"
+
     priv = _group_state(group, "priv")
     if priv is None:
         rng = botan.RandomNumberGenerator("system")
