@@ -49,13 +49,19 @@ from time import mktime, strptime
 from time import time as system_time
 from typing import Any, Callable, Union
 
-# This Python module requires the FFI API version introduced in Botan 3.13.0
+# This Python module is written against the FFI API version introduced in
+# Botan 3.13.0, but loads any library from Botan 3.0.0 onwards. Functionality
+# which the loaded library does not provide raises BotanFunctionUnavailable.
 #
-# 3.13.0 - botan_hash_security_level, SPAKE2+
+# 3.13.0 - botan_hash_security_level, SPAKE2+, RFC 3779 extensions
 # 3.12.0 - EcScalar/EcPoint, DRBG
-# 3.11.0 - XOF API
+# 3.11.0 - XOF API, CRL creation
 # 3.10.0 - introduced botan_pubkey_load_ec*_sec1()
-BOTAN_FFI_VERSION = 20260811  #: The minimum FFI API version this module requires of the library.
+BOTAN_FFI_VERSION = 20260811  #: The FFI API version this module was written against.
+
+BOTAN_MINIMUM_FFI_VERSION = 20230403  #: The oldest FFI API version (Botan 3.0.0) this module can load.
+
+_NOT_IMPLEMENTED_RC = -40  # BOTAN_FFI_ERROR_NOT_IMPLEMENTED
 
 
 class BotanException(Exception):
@@ -66,7 +72,7 @@ class BotanException(Exception):
         code, the description of that error plus the library's most recent exception
         message are appended."""
 
-        self.__rc = rc
+        self._rc = rc
 
         if rc == 0:
             super().__init__(message)
@@ -82,13 +88,34 @@ class BotanException(Exception):
 
     def error_code(self) -> int:
         """Returns the library error code associated with this exception, or zero if there is none"""
-        return self.__rc
+        return self._rc
+
+
+class BotanFunctionUnavailable(BotanException):
+    """Raised when the loaded Botan library predates an FFI function required
+    for the requested operation.
+
+    The error code is ``BOTAN_FFI_ERROR_NOT_IMPLEMENTED`` (-40), the same code
+    the library itself returns for functionality compiled out of the build, so
+    code which already handles that error will treat an older library the same
+    way. Catch this exception type to distinguish the two cases."""
+
+    def __init__(self, fn_name: str):
+        """Create an exception for the missing FFI function ``fn_name``"""
+        # The library never saw this call, so its last exception message does
+        # not apply; format the message here and set the error code directly
+        err_descr = _DLL.botan_error_description(_NOT_IMPLEMENTED_RC).decode('ascii')
+        lib_version = "%d.%d.%d" % (version_major(), version_minor(), version_patch())
+        super().__init__("%s failed: %d (%s): not available in the loaded Botan library (Botan %s)" %
+                         (fn_name, _NOT_IMPLEMENTED_RC, err_descr, lib_version))
+        self._rc = _NOT_IMPLEMENTED_RC
+        self.function_name = fn_name  #: Name of the FFI function the library does not provide
 
 #
 # Module initialization
 #
 
-def _load_botan_dll(expected_version):
+def _load_botan_dll(minimum_version):
 
     possible_dll_names = []
 
@@ -102,8 +129,8 @@ def _load_botan_dll(expected_version):
         # assumed to be some Unix/Linux system
         possible_dll_names.append('libbotan-3.so')
 
-        min_minor = 8 # minimum supported FFI
-        max_minor = 32 # arbitrary but probably large enough
+        min_minor = 0 # BOTAN_MINIMUM_FFI_VERSION corresponds to Botan 3.0
+        max_minor = 22 # 3.22 would be Q4 2028, likely Botan3 stops around 3.17
         possible_dll_names += ['libbotan-3.so.%d' % (v) for v in reversed(range(min_minor, max_minor))]
 
     for dll_name in possible_dll_names:
@@ -112,12 +139,48 @@ def _load_botan_dll(expected_version):
             if hasattr(dll, 'botan_ffi_supports_api'):
                 dll.botan_ffi_supports_api.argtypes = [c_uint32]
                 dll.botan_ffi_supports_api.restype = c_int
-                if dll.botan_ffi_supports_api(expected_version) == 0:
+                if dll.botan_ffi_supports_api(minimum_version) == 0:
                     return dll
         except OSError:
             pass
 
-    raise BotanException("Could not find a usable Botan shared object library")
+    raise BotanException("Could not find a usable Botan shared object library (FFI API %d or later)" % (minimum_version))
+
+class _UnavailableFunction:
+    """Stands in for an FFI function the loaded library does not export.
+
+    The stub is installed on the loaded library object under the function's
+    name, so callers are written against the full API without regard to which
+    library version is loaded; invoking it raises BotanFunctionUnavailable.
+
+    Destructors are the exception: an object whose constructor is unavailable
+    can only ever hold a null handle, and the library accepts destroying a null
+    handle, so a stubbed destructor likewise succeeds without complaint."""
+
+    def __init__(self, fn_name: str):
+        self.__name__ = fn_name
+
+    def __call__(self, *_args):
+        if self.__name__.endswith('_destroy'):
+            return 0
+        raise BotanFunctionUnavailable(self.__name__)
+
+class _FFISymbolResolver:
+    """Resolves FFI symbols in ``dll``, substituting an _UnavailableFunction
+    for any the library does not export and recording their names"""
+
+    def __init__(self, dll):
+        self.dll = dll
+        self.unavailable = []
+
+    def __getattr__(self, fn_name):
+        try:
+            return getattr(self.dll, fn_name)
+        except AttributeError:
+            stub = _UnavailableFunction(fn_name)
+            setattr(self.dll, fn_name, stub)
+            self.unavailable.append(fn_name)
+            return stub
 
 _VIEW_BIN_CALLBACK = CFUNCTYPE(c_int, c_void_p, POINTER(c_char), c_size_t)
 _VIEW_STR_CALLBACK = CFUNCTYPE(c_int, c_void_p, c_char_p, c_size_t)
@@ -698,9 +761,12 @@ def _set_prototypes(dll):
     return dll
 
 #
-# Load the DLL and set prototypes on it
+# Load the DLL and set prototypes on it. Any FFI function the library does
+# not export is replaced by a stub which raises BotanFunctionUnavailable.
 #
-_DLL = _set_prototypes(_load_botan_dll(BOTAN_FFI_VERSION))
+_DLL_RESOLVER = _FFISymbolResolver(_load_botan_dll(BOTAN_MINIMUM_FFI_VERSION))
+_set_prototypes(_DLL_RESOLVER)
+_DLL = _DLL_RESOLVER.dll
 
 #
 # Internal utilities
@@ -2974,11 +3040,22 @@ class MPI:
         return self.__obj
 
     def __int__(self):
-        hexv = _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_mp_view_hex(self.__obj, vc, vfn))
+        try:
+            hexv = _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_mp_view_hex(self.__obj, vc, vfn))
+        except BotanFunctionUnavailable:
+            # The view function requires Botan 3.10; older libraries write to a buffer
+            out = create_string_buffer(2*self.byte_count() + 5)
+            _DLL.botan_mp_to_hex(self.__obj, out)
+            hexv = out.value.decode('ascii')
         return int(hexv, 16)
 
     def __repr__(self):
-        return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_mp_view_str(self.__obj, 10, vc, vfn))
+        try:
+            return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_mp_view_str(self.__obj, 10, vc, vfn))
+        except BotanFunctionUnavailable:
+            # The view function requires Botan 3.10; older libraries write to a buffer
+            return _call_fn_returning_str(self.bit_count() + 2,
+                                          lambda out, out_len: _DLL.botan_mp_to_str(self.__obj, 10, out, out_len))
 
     def to_bytes(self) -> Array[c_char]:
         """Returns the big-endian binary encoding of this value"""

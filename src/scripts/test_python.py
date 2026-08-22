@@ -9,6 +9,8 @@ Botan is released under the Simplified BSD License (see license.txt)
 import argparse
 import binascii
 import copy
+import functools
+import gc
 import hashlib
 import os
 import platform
@@ -40,6 +42,36 @@ ARGS = None
 def test_data(relpath):
     return os.path.join(ARGS.test_data_dir, relpath)
 
+def library_at_least(major, minor):
+    """Return True if the loaded library is at least the given version"""
+    return (botan.version_major(), botan.version_minor()) >= (major, minor)
+
+# The module can be loaded against a library older than the one it was written
+# against; anything such a library does not provide should skip, not fail.
+LIBRARY_IS_OLDER_THAN_MODULE = botan.ffi_api_version() < botan.BOTAN_FFI_VERSION
+
+def skip_if_unsupported_by_older_library(cls):
+    """Class decorator: when running against an older library, turn 'not implemented'
+    errors (including FFI functions the library predates) into skips. Against a library
+    matching the module's API version, such errors remain failures."""
+
+    def wrap(test_fn):
+        @functools.wraps(test_fn)
+        def wrapper(self, *args, **kwargs):
+            try:
+                return test_fn(self, *args, **kwargs)
+            except botan.BotanException as e:
+                if LIBRARY_IS_OLDER_THAN_MODULE and e.error_code() == -40:
+                    self.skipTest("Not supported by the loaded library: %s" % (e))
+                raise
+        return wrapper
+
+    for name, fn in list(vars(cls).items()):
+        if name.startswith('test_') and callable(fn):
+            setattr(cls, name, wrap(fn))
+    return cls
+
+@skip_if_unsupported_by_older_library
 class BotanPythonTests(unittest.TestCase):
     def test_version(self):
         version_str = botan.version_string()
@@ -48,7 +80,45 @@ class BotanPythonTests(unittest.TestCase):
         self.assertEqual(botan.version_major(), 3)
         self.assertGreaterEqual(botan.version_minor(), 0)
 
-        self.assertGreaterEqual(botan.ffi_api_version(), 20180713)
+        self.assertGreaterEqual(botan.ffi_api_version(), botan.BOTAN_MINIMUM_FFI_VERSION)
+        self.assertLessEqual(botan.BOTAN_MINIMUM_FFI_VERSION, botan.BOTAN_FFI_VERSION)
+
+    def test_unavailable_functions(self):
+        # A library at (or beyond) the module's API version must provide every function
+        # the module binds; an older library lacks some, and each is a raising stub
+        unavailable = botan._DLL_RESOLVER.unavailable # pylint: disable=protected-access
+
+        if botan.ffi_api_version() >= botan.BOTAN_FFI_VERSION:
+            self.assertEqual(unavailable, [])
+        else:
+            self.assertNotEqual(unavailable, [])
+
+        # botan_hash_security_level was added in Botan 3.13
+        sha256 = botan.HashFunction('SHA-256')
+        if library_at_least(3, 13):
+            self.assertNotIn('botan_hash_security_level', unavailable)
+            self.assertEqual(sha256.security_level(), 128)
+        else:
+            self.assertIn('botan_hash_security_level', unavailable)
+            with self.assertRaises(botan.BotanFunctionUnavailable) as cm:
+                sha256.security_level()
+            self.assertIsInstance(cm.exception, botan.BotanException)
+            self.assertEqual(cm.exception.error_code(), -40)
+            self.assertEqual(cm.exception.function_name, 'botan_hash_security_level')
+            self.assertIn('botan_hash_security_level failed: -40 (Not implemented)', str(cm.exception))
+
+        # Even when a class cannot be constructed, its destructor must not complain
+        if not library_at_least(3, 11):
+            unraisable = []
+            prev_hook = sys.unraisablehook
+            sys.unraisablehook = unraisable.append
+            try:
+                with self.assertRaises(botan.BotanFunctionUnavailable):
+                    botan.XOF('SHAKE-128')
+                gc.collect()
+            finally:
+                sys.unraisablehook = prev_hook
+            self.assertEqual(unraisable, [])
 
     def test_compare(self):
 
@@ -184,7 +254,7 @@ class BotanPythonTests(unittest.TestCase):
         hmac = botan.MsgAuthCode('HMAC(SHA-256)')
         self.assertEqual(hmac.algo_name(), 'HMAC(SHA-256)')
         self.assertEqual(hmac.minimum_keylength(), 0)
-        self.assertEqual(hmac.maximum_keylength(), 8192)
+        self.assertEqual(hmac.maximum_keylength(), 8192 if library_at_least(3, 11) else 4096)
 
         expected = hex_decode('A21B1F5D4CF4F73A4DD939750F7A066A7F98CC131CB16A6692759021CFAB8181')
 
@@ -410,14 +480,10 @@ class BotanPythonTests(unittest.TestCase):
         except botan.BotanException as e:
             self.assertEqual(str(e), "botan_hash_init failed: -40 (Not implemented)")
 
-        sha1 = botan.HashFunction('SHA-1')
-        self.assertEqual(sha1.security_level(), 61)
-
         sha256 = botan.HashFunction('SHA-256')
         self.assertEqual(sha256.algo_name(), 'SHA-256')
         self.assertEqual(sha256.output_length(), 32)
         self.assertEqual(sha256.block_size(), 64)
-        self.assertEqual(sha256.security_level(), 128)
 
         sha256.update('ignore this please')
         sha256.clear()
@@ -442,13 +508,21 @@ class BotanPythonTests(unittest.TestCase):
         self.assertEqual(hex_encode(sha256.final()),
                          "08bfce15fd2406114825ee6f770a06b1b00c129cb48fcddc54ef58b5de48bdf5")
 
+    def test_hash_security_level(self):
+        sha1 = botan.HashFunction('SHA-1')
+        self.assertEqual(sha1.security_level(), 61)
+
+        sha256 = botan.HashFunction('SHA-256')
+        self.assertEqual(sha256.security_level(), 128)
+
     def test_xof(self):
+        shake128 = botan.XOF('SHAKE-128')
+
         try:
             _h = botan.XOF('NoSuchXof')
         except botan.BotanException as e:
             self.assertEqual(str(e), "botan_xof_init failed: -40 (Not implemented)")
 
-        shake128 = botan.XOF('SHAKE-128')
         self.assertEqual(shake128.algo_name(), 'SHAKE-128')
         self.assertEqual(shake128.block_size(), 168)
         self.assertTrue(shake128.accepts_input())
@@ -488,7 +562,7 @@ class BotanPythonTests(unittest.TestCase):
             elif mode == 'Serpent/GCM':
                 self.assertEqual(enc.algo_name(), 'Serpent/GCM(16)')
                 self.assertTrue(enc.is_authenticated())
-                self.assertEqual(enc.update_granularity(), 1)
+                self.assertEqual(enc.update_granularity(), 1 if library_at_least(3, 7) else 16)
                 self.assertGreater(enc.ideal_update_granularity(), 16)
             elif mode == 'ChaCha20Poly1305':
                 self.assertEqual(enc.algo_name(), 'ChaCha20Poly1305')
@@ -580,8 +654,9 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         rsapub = botan.PublicKey.load(rsa_pub_pem)
         self.assertEqual(rsapub.to_pem(), rsa_pub_pem)
-        with self.assertRaisesRegex(botan.BotanException, r".*Only ECC keys.*"):
-            rsapub.used_explicit_encoding()
+        if library_at_least(3, 2):
+            with self.assertRaisesRegex(botan.BotanException, r".*Only ECC keys.*"):
+                rsapub.used_explicit_encoding()
 
         n = 0xB5AD8818DCA1F256FF8FAB0888D0667D95DF2098B0D201A4C75590D3EBDFA159DD91C64AFDA082609EF885B2D1F4DC055C8FF9FA371C2F3398E0B612C603151131C81DB322C8D15E53EB56B4DF7325F05046889CB25021DE4282E16B9B28F5CBB2B8DDECE0F8E4E8A77F674F26AE92B7220920A1FBE43F51039A9C79D1F1CB6B
         e = 0x10001
@@ -655,7 +730,7 @@ ofvkP1EDmpx50fHLawIDAQAB
         try:
             rsapub = botan.PublicKey.load_rsa(n - 1, e)
         except botan.BotanException as e:
-            self.assertEqual(str(e), "botan_pubkey_load_rsa failed: -1 (Invalid input): Invalid RSA public key modulus")
+            self.assertRegex(str(e), r"botan_pubkey_load_rsa failed: -1 \(Invalid input\): Invalid RSA public key (modulus|parameters)")
 
     def _pksign_roundtrips(self, sk, pk, param_str):
         def verify_positive_and_negative(verifier, sig):
@@ -1068,17 +1143,33 @@ ofvkP1EDmpx50fHLawIDAQAB
 
     def test_x509_extensions(self):
         no_ext_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/x509test/root.pem"))
-
-        with self.assertRaisesRegex(botan.BotanException, r".*No value available.*"):
-            no_ext_cert.ext_as_blocks_asnum()
-
-        with self.assertRaisesRegex(botan.BotanException, r".*No value available.*"):
-            no_ext_cert.ext_as_blocks_rdi()
-
-        with self.assertRaisesRegex(botan.BotanException, r".*No value available.*"):
-            no_ext_cert.ext_ip_addr_blocks()
-
         ip_addr_blocks_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/x509test/IPAddrBlocksUnsorted.pem"))
+        as_blocks_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/x509test/ASNumberInherit.pem"))
+
+        rpki_accessors = [
+            lambda cert: cert.ext_as_blocks_asnum(),
+            lambda cert: cert.ext_as_blocks_rdi(),
+            lambda cert: cert.ext_ip_addr_blocks(),
+        ]
+
+        if not library_at_least(3, 13):
+            # The RFC 3779 FFI functions were added in Botan 3.13; against an older
+            # library every accessor must fail with the "not available" error
+            unavailable_msg = r"^botan_x509_ext_[a-z0-9_]+ failed: -40 \(Not implemented\): " \
+                              r"not available in the loaded Botan library \(Botan \d+\.\d+\.\d+\)$"
+
+            for cert in [no_ext_cert, ip_addr_blocks_cert, as_blocks_cert]:
+                for accessor in rpki_accessors:
+                    with self.assertRaisesRegex(botan.BotanFunctionUnavailable, unavailable_msg) as cm:
+                        accessor(cert)
+                    self.assertEqual(cm.exception.error_code(), -40)
+                    self.assertTrue(cm.exception.function_name.startswith('botan_x509_ext_'))
+            return
+
+        for accessor in rpki_accessors:
+            with self.assertRaisesRegex(botan.BotanException, r".*No value available.*"):
+                accessor(no_ext_cert)
+
         v4, v6 = ip_addr_blocks_cert.ext_ip_addr_blocks()
 
         self.assertEqual(v4, [
@@ -1093,7 +1184,7 @@ ofvkP1EDmpx50fHLawIDAQAB
             )]),
             (1, None)
         ])
-        as_blocks_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/x509test/ASNumberInherit.pem"))
+
         asnum = as_blocks_cert.ext_as_blocks_asnum()
         rdi = as_blocks_cert.ext_as_blocks_rdi()
 
