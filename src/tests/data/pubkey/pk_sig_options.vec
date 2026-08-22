@@ -1,0 +1,226 @@
+# Tests for PK_Signature_Options validation
+#
+# For each algorithm, a key is generated using KeyParams (if provided).
+# A baseline set of options is created using Hash and Padding (if non-empty).
+# The baseline is verified to produce working signatures.
+#
+# Each Supports* flag tests adding that option to the baseline:
+#   true  -> signer and verifier accept it, sign/verify succeeds, and the
+#            option takes effect (a verifier with conflicting options rejects)
+#   false -> signer and verifier both reject it with an exception
+#
+# For ExternalPrehash the input is the baseline hash of the message (if the
+# baseline names a hash); the signature must then also verify in the baseline
+# configuration over the original message.
+#
+# Every section must have a Supports* entry for each option (except for those
+# used in the baseline); the test fails otherwise.
+
+[ECDSA]
+KeyParams = secp256r1
+Hash = SHA-256
+SupportsPadding = false
+SupportsPrehash = false
+SupportsExternalPrehash = true
+SupportsContext = false
+SupportsDER = true
+SupportsSaltSize = false
+SupportsDeterministic = true
+SupportsExplicitTrailer = false
+
+[Ed25519]
+SupportsHash = false
+SupportsPadding = false
+SupportsPrehash = true
+SupportsExternalPrehash = false
+SupportsContext = false
+SupportsDER = false
+SupportsSaltSize = false
+SupportsDeterministic = true
+SupportsExplicitTrailer = false
+
+[Ed448]
+SupportsHash = false
+SupportsPadding = false
+SupportsPrehash = true
+SupportsExternalPrehash = false
+SupportsContext = false
+SupportsDER = false
+SupportsSaltSize = false
+SupportsDeterministic = true
+SupportsExplicitTrailer = false
+
+[ECKCDSA]
+KeyParams = secp256r1
+Hash = SHA-256
+SupportsPadding = false
+SupportsPrehash = false
+SupportsExternalPrehash = false
+SupportsContext = false
+SupportsDER = true
+SupportsSaltSize = false
+SupportsDeterministic = false
+SupportsExplicitTrailer = false
+
+# SM2 defaults to SM3 if no hash is specified
+[SM2]
+KeyParams = sm2p256v1
+SupportsHash = true
+SupportsPadding = false
+SupportsPrehash = false
+SupportsExternalPrehash = true
+SupportsContext = true
+SupportsDER = true
+SupportsSaltSize = false
+SupportsDeterministic = false
+SupportsExplicitTrailer = false
+
+[ECGDSA]
+KeyParams = brainpool256r1
+Hash = SHA-256
+SupportsPadding = false
+SupportsPrehash = false
+SupportsExternalPrehash = true
+SupportsContext = false
+SupportsDER = true
+SupportsSaltSize = false
+SupportsDeterministic = false
+SupportsExplicitTrailer = false
+
+[GOST-34.10]
+KeyParams = gost_256A
+Hash = Streebog-256
+SupportsPadding = false
+SupportsPrehash = false
+SupportsExternalPrehash = true
+SupportsContext = false
+SupportsDER = true
+SupportsSaltSize = false
+SupportsDeterministic = false
+SupportsExplicitTrailer = false
+
+# RSA with different padding schemes - each combination has different
+# valid options, so they are tested as separate sections.
+
+[RSA/PKCS1v15]
+KeyParams = 2048
+Hash = SHA-256
+Padding = PKCS1v15
+SupportsPrehash = false
+SupportsExternalPrehash = true
+SupportsContext = false
+SupportsDER = false
+SupportsSaltSize = false
+SupportsDeterministic = true
+SupportsExplicitTrailer = false
+
+[RSA/PSS]
+KeyParams = 2048
+Hash = SHA-256
+Padding = PSS
+SupportsPrehash = false
+SupportsExternalPrehash = false
+SupportsContext = false
+SupportsDER = false
+SupportsSaltSize = true
+SupportsDeterministic = false
+SupportsExplicitTrailer = false
+
+[RSA/ISO_9796_DS2]
+KeyParams = 2048
+Hash = SHA-256
+Padding = ISO_9796_DS2
+SupportsPrehash = false
+SupportsExternalPrehash = false
+SupportsContext = false
+SupportsDER = false
+SupportsSaltSize = true
+SupportsDeterministic = false
+SupportsExplicitTrailer = true
+
+[RSA/ISO_9796_DS3]
+KeyParams = 2048
+Hash = SHA-256
+Padding = ISO_9796_DS3
+SupportsPrehash = false
+SupportsExternalPrehash = false
+SupportsContext = false
+SupportsDER = false
+SupportsSaltSize = false
+SupportsDeterministic = true
+SupportsExplicitTrailer = true
+
+[RSA/X9.31]
+KeyParams = 2048
+Hash = SHA-256
+Padding = X9.31
+SupportsPrehash = false
+SupportsExternalPrehash = false
+SupportsContext = false
+SupportsDER = false
+SupportsSaltSize = false
+SupportsDeterministic = true
+SupportsExplicitTrailer = false
+
+# Hash-based signature schemes - the hash function is fixed by the key
+# parameters; the hash option is accepted only if it names that same hash.
+
+[SLH-DSA]
+KeyParams = SLH-DSA-SHA2-128s
+SupportsHash = true
+SupportsPadding = false
+SupportsPrehash = false
+SupportsExternalPrehash = false
+SupportsContext = false
+SupportsDER = false
+SupportsSaltSize = false
+SupportsDeterministic = true
+SupportsExplicitTrailer = false
+
+[XMSS]
+KeyParams = XMSS-SHA2_10_256
+SupportsHash = true
+SupportsPadding = false
+SupportsPrehash = false
+SupportsExternalPrehash = false
+SupportsContext = false
+SupportsDER = false
+SupportsSaltSize = false
+SupportsDeterministic = true
+SupportsExplicitTrailer = false
+
+[HSS-LMS]
+KeyParams = SHA-256,HW(5,1)
+SupportsHash = true
+SupportsPadding = false
+SupportsPrehash = false
+SupportsExternalPrehash = false
+SupportsContext = false
+SupportsDER = false
+SupportsSaltSize = false
+SupportsDeterministic = true
+SupportsExplicitTrailer = false
+
+[ML-DSA]
+KeyParams = ML-DSA-6x5
+SupportsHash = false
+SupportsPadding = false
+SupportsPrehash = false
+SupportsExternalPrehash = false
+SupportsContext = false
+SupportsDER = false
+SupportsSaltSize = true
+SupportsDeterministic = true
+SupportsExplicitTrailer = false
+
+[DSA]
+KeyParams = dsa/botan/2048
+Hash = SHA-256
+SupportsPadding = false
+SupportsPrehash = false
+SupportsExternalPrehash = true
+SupportsContext = false
+SupportsDER = true
+SupportsSaltSize = false
+SupportsDeterministic = true
+SupportsExplicitTrailer = false

@@ -14,6 +14,7 @@
 #include <botan/internal/concat_util.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 #include <botan/internal/sp_fors.h>
 #include <botan/internal/sp_hash.h>
 #include <botan/internal/sp_hypertree.h>
@@ -252,12 +253,16 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::create_verification_op(std::string_view /*params*/,
-                                                                                    std::string_view provider) const {
-   if(provider.empty() || provider == "base") {
-      return std::make_unique<SphincsPlus_Verification_Operation>(m_public);
+std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   if(!options.using_provider()) {
+      auto op = std::make_unique<SphincsPlus_Verification_Operation>(m_public);
+      // The message hash depends on the parameter set, so check against what the operation reports
+      validate_for_hash_based_signature(options, "SPHINCS+", op->hash_function());
+      return op;
    }
-   throw Provider_Not_Found(algo_name(), provider);
+
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::create_x509_verification_op(
@@ -462,21 +467,21 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Signature> SphincsPlus_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                                                               std::string_view params,
-                                                                               std::string_view provider) const {
+std::unique_ptr<PK_Ops::Signature> SphincsPlus_PrivateKey::_create_signature_op(
+   RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-   BOTAN_ARG_CHECK(params.empty() || params == "Deterministic" || params == "Randomized",
-                   "Unexpected parameters for signing with SLH-DSA (or SPHINCS+)");
 
    // FIPS 205, Section 9.2
    //   The hedged variant is the default and should be used on platforms where
    //   side-channel attacks are a concern.
-   const bool randomized = (params.empty() || params == "Randomized");
-   if(provider.empty() || provider == "base") {
-      return std::make_unique<SphincsPlus_Signature_Operation>(m_private, m_public, randomized);
+   const bool randomized = !options.using_deterministic_signature();
+   if(!options.using_provider()) {
+      auto op = std::make_unique<SphincsPlus_Signature_Operation>(m_private, m_public, randomized);
+      // The message hash depends on the parameter set, so check against what the operation reports
+      validate_for_hash_based_signature(options, "SPHINCS+", op->hash_function());
+      return op;
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan

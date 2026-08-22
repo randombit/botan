@@ -15,6 +15,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/ed25519_internal.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -246,12 +247,12 @@ class Ed25519_Pure_Verify_Operation final : public PK_Ops::Verification {
 /**
 * Ed25519 verifying operation with pre-hash
 */
-class Ed25519_Hashed_Verify_Operation final : public PK_Ops::Verification_with_Hash {
+class Ed25519_Hashed_Verify_Operation final : public PK_Ops::Verification {
    public:
       Ed25519_Hashed_Verify_Operation(std::shared_ptr<const Ed25519_PublicKey_Data> key,
                                       std::string_view hash,
                                       bool rfc8032) :
-            PK_Ops::Verification_with_Hash(hash), m_key(std::move(key)) {
+            m_hash(HashFunction::create_or_throw(hash)), m_key(std::move(key)) {
          if(rfc8032) {
             m_domain_sep = {0x53, 0x69, 0x67, 0x45, 0x64, 0x32, 0x35, 0x35, 0x31, 0x39, 0x20, 0x6E,
                             0x6F, 0x20, 0x45, 0x64, 0x32, 0x35, 0x35, 0x31, 0x39, 0x20, 0x63, 0x6F,
@@ -259,17 +260,26 @@ class Ed25519_Hashed_Verify_Operation final : public PK_Ops::Verification_with_H
          }
       }
 
-      bool verify(std::span<const uint8_t> ph, std::span<const uint8_t> sig) override {
+      void update(std::span<const uint8_t> msg) override { m_hash->update(msg); }
+
+      bool is_valid_signature(std::span<const uint8_t> sig) override {
+         std::vector<uint8_t> msg_hash(m_hash->output_length());
+         m_hash->final(msg_hash.data());
+
          if(sig.size() != 64) {
             return false;
          }
 
          const auto& key = m_key->key();
          BOTAN_ASSERT_EQUAL(key.size(), 32, "Expected size");
-         return ed25519_verify(ph.data(), ph.size(), sig.data(), key.data(), m_domain_sep.data(), m_domain_sep.size());
+         return ed25519_verify(
+            msg_hash.data(), msg_hash.size(), sig.data(), key.data(), m_domain_sep.data(), m_domain_sep.size());
       }
 
+      std::string hash_function() const override { return m_hash->name(); }
+
    private:
+      std::unique_ptr<HashFunction> m_hash;
       std::shared_ptr<const Ed25519_PublicKey_Data> m_key;
       std::vector<uint8_t> m_domain_sep;
 };
@@ -310,12 +320,12 @@ AlgorithmIdentifier Ed25519_Pure_Sign_Operation::algorithm_identifier() const {
 /**
 * Ed25519 signing operation with pre-hash
 */
-class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature_with_Hash {
+class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature {
    public:
       Ed25519_Hashed_Sign_Operation(std::shared_ptr<const Ed25519_PrivateKey_Data> key,
                                     std::string_view hash,
                                     bool rfc8032) :
-            PK_Ops::Signature_with_Hash(hash), m_key(std::move(key)) {
+            m_hash(HashFunction::create_or_throw(hash)), m_key(std::move(key)) {
          if(rfc8032) {
             m_domain_sep = std::vector<uint8_t>{0x53, 0x69, 0x67, 0x45, 0x64, 0x32, 0x35, 0x35, 0x31, 0x39, 0x20, 0x6E,
                                                 0x6F, 0x20, 0x45, 0x64, 0x32, 0x35, 0x35, 0x31, 0x39, 0x20, 0x63, 0x6F,
@@ -325,32 +335,44 @@ class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature_with_Hash {
 
       size_t signature_length() const override { return 64; }
 
-      std::vector<uint8_t> raw_sign(std::span<const uint8_t> ph, RandomNumberGenerator& /*rng*/) override {
+      void update(std::span<const uint8_t> msg) override { m_hash->update(msg); }
+
+      std::vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
          std::vector<uint8_t> sig(64);
+         std::vector<uint8_t> msg_hash(m_hash->output_length());
+         m_hash->final(msg_hash.data());
          const auto& key = m_key->key();
-         ed25519_sign(sig.data(), ph.data(), ph.size(), key.data(), m_domain_sep.data(), m_domain_sep.size());
+         ed25519_sign(
+            sig.data(), msg_hash.data(), msg_hash.size(), key.data(), m_domain_sep.data(), m_domain_sep.size());
          return sig;
       }
 
+      std::string hash_function() const override { return m_hash->name(); }
+
    private:
+      std::unique_ptr<HashFunction> m_hash;
       std::shared_ptr<const Ed25519_PrivateKey_Data> m_key;
       std::vector<uint8_t> m_domain_sep;
 };
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_verification_op(std::string_view params,
-                                                                                std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      if(params.empty() || params == "Identity" || params == "Pure") {
-         return std::make_unique<Ed25519_Pure_Verify_Operation>(m_public);
-      } else if(params == "Ed25519ph") {
-         return std::make_unique<Ed25519_Hashed_Verify_Operation>(m_public, "SHA-512", true);
+std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   if(!options.using_provider()) {
+      if(options.using_prehash()) {
+         if(options.prehash_function().has_value()) {
+            return std::make_unique<Ed25519_Hashed_Verify_Operation>(
+               m_public, options.prehash_function().value(), false);
+         } else {
+            return std::make_unique<Ed25519_Hashed_Verify_Operation>(m_public, "SHA-512", true);
+         }
       } else {
-         return std::make_unique<Ed25519_Hashed_Verify_Operation>(m_public, params, false);
+         return std::make_unique<Ed25519_Pure_Verify_Operation>(m_public);
       }
    }
-   throw Provider_Not_Found(algo_name(), provider);
+
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
@@ -365,19 +387,26 @@ std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_x509_verificatio
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> Ed25519_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                           std::string_view params,
-                                                                           std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      if(params.empty() || params == "Identity" || params == "Pure") {
-         return std::make_unique<Ed25519_Pure_Sign_Operation>(m_private);
-      } else if(params == "Ed25519ph") {
-         return std::make_unique<Ed25519_Hashed_Sign_Operation>(m_private, "SHA-512", true);
+std::unique_ptr<PK_Ops::Signature> Ed25519_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                            const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+
+   acknowledge_always_deterministic(options);
+
+   if(!options.using_provider()) {
+      if(options.using_prehash()) {
+         if(options.prehash_function().has_value()) {
+            return std::make_unique<Ed25519_Hashed_Sign_Operation>(
+               m_private, options.prehash_function().value(), false);
+         } else {
+            return std::make_unique<Ed25519_Hashed_Sign_Operation>(m_private, "SHA-512", true);
+         }
       } else {
-         return std::make_unique<Ed25519_Hashed_Sign_Operation>(m_private, params, false);
+         return std::make_unique<Ed25519_Pure_Sign_Operation>(m_private);
       }
    }
-   throw Provider_Not_Found(algo_name(), provider);
+
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan

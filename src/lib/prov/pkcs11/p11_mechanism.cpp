@@ -8,8 +8,10 @@
 
 #include <botan/p11_mechanism.h>
 
+#include <botan/pk_options.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/pk_options_impl.h>
 #include <botan/internal/scan_name.h>
 #include <botan/internal/stl_util.h>
 #include <tuple>
@@ -155,7 +157,7 @@ MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(std::string_view p
    return mech;
 }
 
-MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(std::string_view padding) {
+MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(const PK_Signature_Options& options) {
    // note: when updating this map, update the documentation for `MechanismWrapper::create_rsa_sign_mechanism`
    static const std::map<std::string_view, RSA_SignMechanism> SignMechanisms = {
       {"Raw", RSA_SignMechanism(MechanismType::RsaX509)},
@@ -165,6 +167,7 @@ MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(std::string_view pa
       {"X9.31(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaX931)},
 
       // RSASSA PKCS#1 v1.5
+      {"PKCS1v15(Raw)", RSA_SignMechanism(MechanismType::RsaPkcs)},
       {"PKCS1v15(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcs)},
       {"PKCS1v15(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcs)},
       {"PKCS1v15(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcs)},
@@ -228,12 +231,42 @@ MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(std::string_view pa
       {"PSSR(SHA-512,MGF1,64)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
    };
 
+   const std::string padding = [&]() {
+      if(!options.using_padding()) {
+         throw Invalid_Argument("PKCS#11 RSA signature requires a padding scheme");
+      }
+
+      const std::string scheme = options.padding().value();
+
+      if(options.using_externally_computed_prehash()) {
+         // The token pads the digest as given, so it cannot add a DigestInfo for a named hash
+         if(auto prehash = externally_computed_prehash_name(options)) {
+            throw Not_Implemented(fmt("PKCS#11 RSA {} signing of an externally computed {} prehash", scheme, *prehash));
+         }
+         return (scheme == "Raw") ? scheme : fmt("{}(Raw)", scheme);
+      }
+
+      if(options.using_hash()) {
+         if(options.using_salt_size()) {
+            return fmt("{}({},MGF1,{})", scheme, options.hash_function_name(), options.salt_size().value());
+         }
+         return fmt("{}({})", scheme, options.hash_function_name());
+      }
+
+      return scheme;  // NOLINT(*-no-automatic-move)
+   }();
+
    auto mechanism_info_it = SignMechanisms.find(padding);
    if(mechanism_info_it == SignMechanisms.end()) {
       // at this point it would be possible to support additional configurations that are not predefined above by parsing `padding`
       throw Lookup_Error(fmt("PKCS#11 RSA sign/verify does not support padding with '{}'", padding));
    }
    const RSA_SignMechanism mechanism_info = mechanism_info_it->second;
+
+   // Only PSS is randomized; the token generates the salt itself
+   if(options.using_deterministic_signature() && PssOptions().contains(mechanism_info.type())) {
+      throw Invalid_Argument(fmt("PKCS#11 RSA signing with {} cannot produce deterministic signatures", padding));
+   }
 
    MechanismWrapper mech(mechanism_info.type());
    if(PssOptions().contains(mechanism_info.type())) {

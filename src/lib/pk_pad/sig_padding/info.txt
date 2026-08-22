@@ -9,5 +9,6 @@ brief -> "Implementations of public key signature padding schemes"
 
 <requires>
 hash
+pubkey
 rng
 </requires>

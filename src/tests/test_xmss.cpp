@@ -15,6 +15,7 @@
    #include <botan/asn1_obj.h>
    #include <botan/hash.h>
    #include <botan/hex.h>
+   #include <botan/pk_options.h>
    #include <botan/pubkey.h>
    #include <botan/xmss.h>
    #include <botan/internal/buffer_slicer.h>
@@ -46,7 +47,11 @@ class XMSS_Signature_Tests final : public PK_Signature_Generation_Test {
          return false;
       }
 
-      std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Params"); }
+      std::string default_padding(const VarMap& /*vars*/) const override { return ""; }
+
+      std::string printed_params(const VarMap& vars, const std::string& /*padding*/) const override {
+         return vars.get_req_str("Params");
+      }
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override {
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PrivateKey");
@@ -61,7 +66,11 @@ class XMSS_Signature_Verify_Tests final : public PK_Signature_Verification_Test 
       XMSS_Signature_Verify_Tests() :
             PK_Signature_Verification_Test("XMSS", "pubkey/xmss_verify.vec", "Params,Msg,PublicKey,Signature") {}
 
-      std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Params"); }
+      std::string default_padding(const VarMap& /*vars*/) const override { return ""; }
+
+      std::string printed_params(const VarMap& vars, const std::string& /*padding*/) const override {
+         return vars.get_req_str("Params");
+      }
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PublicKey");
@@ -75,7 +84,11 @@ class XMSS_Signature_Verify_Invalid_Tests final : public PK_Signature_NonVerific
             PK_Signature_NonVerification_Test(
                "XMSS", "pubkey/xmss_invalid.vec", "Params,Msg,PublicKey,InvalidSignature") {}
 
-      std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Params"); }
+      std::string default_padding(const VarMap& /*vars*/) const override { return ""; }
+
+      std::string printed_params(const VarMap& vars, const std::string& /*padding*/) const override {
+         return vars.get_req_str("Params");
+      }
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PublicKey");
@@ -148,7 +161,7 @@ std::vector<Test::Result> xmss_statefulness() {
    auto sign_something = [&rng](auto& sk) {
       auto msg = Botan::hex_decode("deadbeef");
 
-      Botan::PK_Signer signer(sk, *rng, "SHA2_10_256");
+      Botan::PK_Signer signer(sk, *rng, Botan::PK_Signature_Options());
       return signer.sign_message(msg, *rng);
    };
 
@@ -310,34 +323,33 @@ std::vector<Test::Result> xmss_legacy_private_key() {
       Botan::XMSS_PublicKey(Botan::AlgorithmIdentifier(), legacy_xmss_public_key);
 
    const auto message = Botan::hex_decode("deadcafe");
-   const auto* const algo_name = "SHA2_10_256";
 
    auto rng = Test::new_rng(__func__);
 
    return {
       CHECK("Use a legacy private key to create a signature",
             [&](auto& result) {
-               Botan::PK_Signer signer(legacy_secret_key, *rng, algo_name);
+               Botan::PK_Signer signer(legacy_secret_key, *rng, Botan::PK_Signature_Options());
                auto signature = signer.sign_message(message, *rng);
 
-               Botan::PK_Verifier verifier(*public_key_from_secret_key, algo_name);
+               Botan::PK_Verifier verifier(*public_key_from_secret_key, Botan::PK_Signature_Options());
                result.test_is_true("legacy private key generates signatures that are still verifiable",
                                    verifier.verify_message(message, signature));
             }),
 
       CHECK("Verify a legacy signature",
             [&](auto& result) {
-               Botan::PK_Verifier verifier(*public_key_from_secret_key, algo_name);
+               Botan::PK_Verifier verifier(*public_key_from_secret_key, Botan::PK_Signature_Options());
                result.test_is_true("legacy private key generates signatures that are still verifiable",
                                    verifier.verify_message(message, legacy_signature));
             }),
 
       CHECK("Verify a new signature by a legacy private key with a legacy public key",
             [&](auto& result) {
-               Botan::PK_Signer signer(legacy_secret_key, *rng, algo_name);
+               Botan::PK_Signer signer(legacy_secret_key, *rng, Botan::PK_Signature_Options());
                auto signature = signer.sign_message(message, *rng);
 
-               Botan::PK_Verifier verifier(legacy_public_key, algo_name);
+               Botan::PK_Verifier verifier(legacy_public_key, Botan::PK_Signature_Options());
                result.test_is_true("legacy private key generates signatures that are still verifiable",
                                    verifier.verify_message(message, legacy_signature));
             }),

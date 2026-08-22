@@ -135,16 +135,50 @@ bool DilithiumMode::is_available() const {
    return false;
 }
 
+namespace {
+
+void validate_dilithium_options(const PK_Signature_Options& options, const DilithiumMode& mode) {
+   /*
+   * The "salt" is the randomness drawn during hedged signing. Its size is fixed
+   * by the scheme, so the option is accepted only if it names that size:
+   * ML-DSA hashes a 32 byte rnd (FIPS 204, Algorithm 2), while randomized
+   * Dilithium round 3 samples the entire 64 byte rho' (Figure 4, line 12).
+   */
+   if(options.using_salt_size()) {
+      BOTAN_ARG_CHECK(!options.using_deterministic_signature(),
+                      "Dilithium cannot support a salt while also being deterministic");
+
+      const size_t randomness_bytes =
+         mode.is_ml_dsa() ? DilithiumConstants::OPTIONAL_RANDOMNESS_BYTES : DilithiumConstants::SEED_RHOPRIME_BYTES;
+
+      if(options.salt_size().value() != randomness_bytes) {
+         throw Invalid_Argument(fmt("{} can only be used with a {} byte salt", mode.to_string(), randomness_bytes));
+      }
+   }
+}
+
+}  // namespace
+
+// The signature and verification operations should be in an anonymous namespace
+// as well, but cannot due to an apparent bug in MSVC
+
 class Dilithium_Signature_Operation final : public PK_Ops::Signature {
    public:
-      Dilithium_Signature_Operation(DilithiumInternalKeypair keypair, bool randomized) :
+      Dilithium_Signature_Operation(DilithiumInternalKeypair keypair, const PK_Signature_Options& options) :
             m_keypair(std::move(keypair)),
-            m_randomized(randomized),
+
+            // FIPS 204, Section 3.4
+            //   By default, this standard specifies the signing algorithm to use both
+            //   types of randomness [fresh from the RNG and a value in the private key].
+            //   This is referred to as the “hedged” variant of the signing procedure.
+            m_randomized(!options.using_deterministic_signature()),
             m_h(m_keypair.second->mode().symmetric_primitives().get_message_hash(m_keypair.first->tr())),
             m_s1(ntt(m_keypair.second->s1().clone())),
             m_s2(ntt(m_keypair.second->s2().clone())),
             m_t0(ntt(m_keypair.second->t0().clone())),
-            m_A(Dilithium_Algos::expand_A(m_keypair.first->rho(), m_keypair.second->mode())) {}
+            m_A(Dilithium_Algos::expand_A(m_keypair.first->rho(), m_keypair.second->mode())) {
+         validate_dilithium_options(options, m_keypair.second->mode().mode());
+      }
 
       void update(std::span<const uint8_t> input) override { m_h->update(input); }
 
@@ -393,13 +427,14 @@ std::unique_ptr<Private_Key> Dilithium_PublicKey::generate_another(RandomNumberG
    return std::make_unique<Dilithium_PrivateKey>(rng, m_public->mode().mode());
 }
 
-std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_verification_op(std::string_view params,
-                                                                                  std::string_view provider) const {
-   BOTAN_ARG_CHECK(params.empty() || params == "Pure", "Unexpected parameters for verifying with Dilithium");
-   if(provider.empty() || provider == "base") {
+std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   validate_dilithium_options(options, m_public->mode().mode());
+
+   if(!options.using_provider()) {
       return std::make_unique<Dilithium_Verification_Operation>(m_public);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_x509_verification_op(
@@ -452,23 +487,14 @@ secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const {
    return m_private->mode().keypair_codec().encode_keypair({m_public, m_private});
 }
 
-std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                                                             std::string_view params,
-                                                                             std::string_view provider) const {
+std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::_create_signature_op(
+   RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
 
-   BOTAN_ARG_CHECK(params.empty() || params == "Deterministic" || params == "Randomized",
-                   "Unexpected parameters for signing with ML-DSA/Dilithium");
-
-   // FIPS 204, Section 3.4
-   //   By default, this standard specifies the signing algorithm to use both
-   //   types of randomness [fresh from the RNG and a value in the private key].
-   //   This is referred to as the “hedged” variant of the signing procedure.
-   const bool randomized = (params.empty() || params == "Randomized");
-   if(provider.empty() || provider == "base") {
-      return std::make_unique<Dilithium_Signature_Operation>(DilithiumInternalKeypair{m_public, m_private}, randomized);
+   if(!options.using_provider()) {
+      return std::make_unique<Dilithium_Signature_Operation>(DilithiumInternalKeypair{m_public, m_private}, options);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 bool Dilithium_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
