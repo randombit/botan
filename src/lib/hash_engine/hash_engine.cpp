@@ -12,7 +12,10 @@
 #include <algorithm>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
+   #include <botan/internal/rounding.h>
    #include <botan/internal/thread_pool.h>
+   #include <atomic>
+   #include <exception>
 #endif
 
 namespace Botan {
@@ -147,22 +150,53 @@ class Threaded_Hash_Engine final : public Hash_Engine {
 
       template <typename F>
       void dispatch(size_t threads, size_t count, F work_fn) {
-         const size_t per_thread = count / threads;
-         const size_t remainder = count % threads;
+         const size_t lanes = m_engines[0]->parallelism();
+         const size_t chunk = std::max(lanes, round_up(count / (4 * threads), lanes));
 
+         std::atomic<size_t> next = 0;
+
+         auto claim_chunks = [&](size_t t) {
+            for(;;) {
+               const size_t offset = next.fetch_add(chunk);
+               if(offset >= count) {
+                  break;
+               }
+               work_fn(t, offset, std::min(chunk, count - offset));
+            }
+         };
+
+         // The calling thread works through chunks as well, using the
+         // last engine, rather than just waiting on the pool
          std::vector<std::future<void>> futures;
-         futures.reserve(threads);
+         futures.reserve(threads - 1);
 
-         size_t offset = 0;
-         for(size_t t = 0; t != threads; ++t) {
-            // First remainder threads get 1 extra hash over the main batch
-            const size_t n = per_thread + (t < remainder ? 1 : 0);
-            futures.push_back(m_pool->run(work_fn, t, offset, n));
-            offset += n;
+         for(size_t t = 0; t != threads - 1; ++t) {
+            futures.push_back(m_pool->run(claim_chunks, t));
+         }
+
+         // The workers reference this frame, so whatever happens every
+         // one of them must have finished before returning or unwinding
+         std::exception_ptr error;
+
+         try {
+            // Hash the last chunk in the current thread:
+            claim_chunks(threads - 1);
+         } catch(...) {
+            error = std::current_exception();
          }
 
          for(auto& f : futures) {
-            f.get();
+            try {
+               f.get();
+            } catch(...) {
+               if(!error) {
+                  error = std::current_exception();
+               }
+            }
+         }
+
+         if(error) {
+            std::rethrow_exception(error);
          }
       }
 
