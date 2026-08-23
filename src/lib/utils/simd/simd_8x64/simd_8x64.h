@@ -124,6 +124,11 @@ class SIMD_8x64 final {
 
       BOTAN_FN_ISA_SIMD_8X64 void operator|=(const SIMD_8x64& other) { m_simd = _mm512_or_si512(m_simd, other.m_simd); }
 
+      // (~reg) & other
+      SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 andc(const SIMD_8x64& other) const {
+         return SIMD_8x64(_mm512_andnot_si512(m_simd, other.m_simd));
+      }
+
       template <size_t ROT>
       BOTAN_FN_ISA_SIMD_8X64 SIMD_8x64 rotr() const
          requires(ROT > 0 && ROT < 64)
@@ -134,6 +139,67 @@ class SIMD_8x64 final {
       template <size_t ROT>
       BOTAN_FN_ISA_SIMD_8X64 SIMD_8x64 rotl() const {
          return this->rotr<64 - ROT>();
+      }
+
+      SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 sigma0() const {
+         const SIMD_8x64 r1 = this->rotr<28>();
+         const SIMD_8x64 r2 = this->rotr<34>();
+         const SIMD_8x64 r3 = this->rotr<39>();
+         return r1 ^ r2 ^ r3;
+      }
+
+      SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 sigma1() const {
+         const SIMD_8x64 r1 = this->rotr<14>();
+         const SIMD_8x64 r2 = this->rotr<18>();
+         const SIMD_8x64 r3 = this->rotr<41>();
+         return r1 ^ r2 ^ r3;
+      }
+
+      BOTAN_FN_ISA_SIMD_8X64
+      static SIMD_8x64 choose(const SIMD_8x64& mask, const SIMD_8x64& a, const SIMD_8x64& b) {
+         return SIMD_8x64(_mm512_ternarylogic_epi64(mask.raw(), a.raw(), b.raw(), 0xca));
+      }
+
+      BOTAN_FN_ISA_SIMD_8X64
+      static SIMD_8x64 majority(const SIMD_8x64& x, const SIMD_8x64& y, const SIMD_8x64& z) {
+         return SIMD_8x64(_mm512_ternarylogic_epi64(x.raw(), y.raw(), z.raw(), 0xe8));
+      }
+
+      BOTAN_FN_ISA_SIMD_8X64
+      static void transpose(SIMD_8x64& B0,
+                            SIMD_8x64& B1,
+                            SIMD_8x64& B2,
+                            SIMD_8x64& B3,
+                            SIMD_8x64& B4,
+                            SIMD_8x64& B5,
+                            SIMD_8x64& B6,
+                            SIMD_8x64& B7) {
+         const auto t0 = _mm512_unpacklo_epi64(B0.m_simd, B1.m_simd);
+         const auto t1 = _mm512_unpackhi_epi64(B0.m_simd, B1.m_simd);
+         const auto t2 = _mm512_unpacklo_epi64(B2.m_simd, B3.m_simd);
+         const auto t3 = _mm512_unpackhi_epi64(B2.m_simd, B3.m_simd);
+         const auto t4 = _mm512_unpacklo_epi64(B4.m_simd, B5.m_simd);
+         const auto t5 = _mm512_unpackhi_epi64(B4.m_simd, B5.m_simd);
+         const auto t6 = _mm512_unpacklo_epi64(B6.m_simd, B7.m_simd);
+         const auto t7 = _mm512_unpackhi_epi64(B6.m_simd, B7.m_simd);
+
+         const auto s0 = _mm512_shuffle_i64x2(t0, t2, 0x88);
+         const auto s1 = _mm512_shuffle_i64x2(t1, t3, 0x88);
+         const auto s2 = _mm512_shuffle_i64x2(t0, t2, 0xdd);
+         const auto s3 = _mm512_shuffle_i64x2(t1, t3, 0xdd);
+         const auto s4 = _mm512_shuffle_i64x2(t4, t6, 0x88);
+         const auto s5 = _mm512_shuffle_i64x2(t5, t7, 0x88);
+         const auto s6 = _mm512_shuffle_i64x2(t4, t6, 0xdd);
+         const auto s7 = _mm512_shuffle_i64x2(t5, t7, 0xdd);
+
+         B0.m_simd = _mm512_shuffle_i64x2(s0, s4, 0x88);
+         B1.m_simd = _mm512_shuffle_i64x2(s1, s5, 0x88);
+         B2.m_simd = _mm512_shuffle_i64x2(s2, s6, 0x88);
+         B3.m_simd = _mm512_shuffle_i64x2(s3, s7, 0x88);
+         B4.m_simd = _mm512_shuffle_i64x2(s0, s4, 0xdd);
+         B5.m_simd = _mm512_shuffle_i64x2(s1, s5, 0xdd);
+         B6.m_simd = _mm512_shuffle_i64x2(s2, s6, 0xdd);
+         B7.m_simd = _mm512_shuffle_i64x2(s3, s7, 0xdd);
       }
 
       template <int SHIFT>

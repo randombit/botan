@@ -52,6 +52,7 @@
 #if defined(BOTAN_TARGET_ARCH_IS_ARM64)
 
    #define BOTAN_FN_ISA_SIMD_4X32 BOTAN_FUNC_ISA("+simd")
+   #define BOTAN_FN_ISA_SIMD_2X64 BOTAN_FUNC_ISA("+simd")
    #define BOTAN_FN_ISA_CLMUL BOTAN_FUNC_ISA("+crypto+aes")
    #define BOTAN_FN_ISA_AES BOTAN_FUNC_ISA("+crypto+aes")
    #define BOTAN_FN_ISA_SHA2 BOTAN_FUNC_ISA("+crypto+sha2")
