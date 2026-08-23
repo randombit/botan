@@ -318,6 +318,14 @@ class PerfTest_MessageAuthenticationCode final : public PerfTest {
          const auto runtime = config.runtime();
          auto& rng = config.rng();
 
+         const auto nonce = [&]() -> Botan::secure_vector<uint8_t> {
+            if(mac.name().starts_with("GMAC(")) {
+               return rng.random_vec(16);
+            } else {
+               return {};
+            }
+         }();
+
          for(auto buf_size : config.buffer_sizes()) {
             Botan::secure_vector<uint8_t> buffer = rng.random_vec(buf_size);
             const size_t mult = std::max<size_t>(1, 65536 / buf_size);
@@ -331,7 +339,7 @@ class PerfTest_MessageAuthenticationCode final : public PerfTest {
                   if(mac.fresh_key_required_per_message()) {
                      mac.set_key(key);
                   }
-                  mac.start(nullptr, 0);
+                  mac.start(nonce);
                   mac.update(buffer);
                   mac.final(output.data());
                }
