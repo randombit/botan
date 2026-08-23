@@ -8,12 +8,15 @@
 
 #if defined(BOTAN_HAS_ED25519)
    #include "test_pubkey.h"
+   #include <botan/bigint.h>
    #include <botan/data_src.h>
    #include <botan/ed25519.h>
    #include <botan/pk_options.h>
    #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
+   #include <botan/rng.h>
    #include <botan/x509_key.h>
+   #include <botan/internal/ed25519_scalar.h>
 #endif
 
 namespace Botan_Tests {
@@ -115,6 +118,79 @@ class Ed25519_Keygen_Tests final : public PK_Key_Generation_Test {
       }
 };
 
+class Ed25519_Scalar_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("Ed25519_Scalar");
+
+         const Botan::BigInt order("0x1000000000000000000000000000000014DEF9DEA2F79CD65812631A5CF5D3ED");
+
+         auto to_bigint = [](const Botan::Ed25519_Scalar& s) {
+            const auto b = s.to_bytes();
+            std::vector<uint8_t> be(b.rbegin(), b.rend());
+            return Botan::BigInt::from_bytes(be);
+         };
+
+         for(size_t trial = 0; trial != 32; ++trial) {
+            std::array<uint8_t, 64> wide{};
+            this->rng().randomize(wide);
+
+            const auto s = Botan::Ed25519_Scalar::from_wide_bytes(wide);
+
+            std::vector<uint8_t> be(wide.rbegin(), wide.rend());
+            const auto ref = Botan::BigInt::from_bytes(be) % order;
+            result.test_bin_eq("wide reduction matches BigInt", to_bigint(s).serialize(), ref.serialize());
+
+            std::array<uint8_t, 32> narrow{};
+            this->rng().randomize(narrow);
+            const auto t = Botan::Ed25519_Scalar::from_bytes(narrow);
+
+            result.test_bin_eq(
+               "sum matches BigInt", to_bigint(s + t).serialize(), ((to_bigint(s) + to_bigint(t)) % order).serialize());
+
+            result.test_bin_eq("product matches BigInt",
+                               to_bigint(s * t).serialize(),
+                               ((to_bigint(s) * to_bigint(t)) % order).serialize());
+         }
+
+         auto le_bytes_of = [](const Botan::BigInt& v) {
+            std::array<uint8_t, 32> b{};
+            const auto be = v.serialize(32);
+            for(size_t i = 0; i != 32; ++i) {
+               b[i] = be[31 - i];
+            }
+            return b;
+         };
+
+         result.test_is_true("order - 1 is canonical",
+                             Botan::Ed25519_Scalar::from_canonical_bytes(le_bytes_of(order - 1)).has_value());
+         result.test_is_true("order is not canonical",
+                             !Botan::Ed25519_Scalar::from_canonical_bytes(le_bytes_of(order)).has_value());
+         result.test_is_true("order + 1 is not canonical",
+                             !Botan::Ed25519_Scalar::from_canonical_bytes(le_bytes_of(order + 1)).has_value());
+
+         std::array<uint8_t, 32> all_ones{};
+         all_ones.fill(0xFF);
+         result.test_is_true("2^256-1 is not canonical",
+                             !Botan::Ed25519_Scalar::from_canonical_bytes(all_ones).has_value());
+
+         const auto zero = Botan::Ed25519_Scalar::from_canonical_bytes(std::array<uint8_t, 32>{});
+         result.test_is_true("zero is canonical", zero.has_value());
+         result.test_bin_eq("zero round trips", zero->to_bytes(), std::array<uint8_t, 32>{});
+
+         result.test_bin_eq(
+            "negated one is order - 1", to_bigint(-Botan::Ed25519_Scalar::one()).serialize(), (order - 1).serialize());
+         result.test_bin_eq(
+            "negated zero is zero", (-Botan::Ed25519_Scalar::zero()).to_bytes(), std::array<uint8_t, 32>{});
+         result.test_bin_eq("one plus negated one is zero",
+                            (Botan::Ed25519_Scalar::one() + -Botan::Ed25519_Scalar::one()).to_bytes(),
+                            std::array<uint8_t, 32>{});
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "ed25519_scalar", Ed25519_Scalar_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_key_valid", Ed25519_Key_Validity_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_verify", Ed25519_Verification_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_sign", Ed25519_Signature_Tests);

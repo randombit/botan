@@ -19,6 +19,22 @@ Pubkey = 0100000000000000000000000000000000000000000000000000000000000080
 Msg = 41
 Signature = 01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 
+# Non-canonical y coordinate: y = p + 1, which reduces to 1 (the identity).
+# RFC 8032 5.1.3 requires decoding to fail unless y is already less than p.
+# Without that check it decodes to the identity and this signature (R =
+# identity, s = 0) forges for any message.
+Pubkey = EEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7F
+Msg = 41
+Signature = 01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
+# The order 2 point (0, -1), a canonical but low order public key. Under RFC
+# 8032 cofactored verification the identity/zero signature verifies here (the
+# challenge is even), but this key is outside the prime order subgroup and is
+# rejected by our public key validation.
+Pubkey = ECFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7F
+Msg = 01
+Signature = 01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
 # Wycheproof invalid tests
 # (Valid tests are test in both sign and verify direction)
 
