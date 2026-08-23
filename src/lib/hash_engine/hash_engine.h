@@ -74,6 +74,10 @@ class BOTAN_TEST_API Hash_Engine {
       *        implementations may precompute the resulting hash state
       * @param provider if set, use this specific implementation
       *
+      * The default provider splits sufficiently large batches over the
+      * global Thread_Pool, which is created on the first such batch. Do
+      * not call batch_hash from within a task running on that pool.
+      *
       * Throws Lookup_Error if the hash function or requested provider is
       * not available
       */
