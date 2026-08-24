@@ -178,6 +178,18 @@ class SIMD_4x64 final {
          return r1 ^ r2 ^ r3;
       }
 
+      /**
+      * The Keccak chi operation, x ^ (~y & z)
+      */
+      static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 chi(const SIMD_4x64& x, const SIMD_4x64& y, const SIMD_4x64& z) {
+#if defined(__AVX512VL__)
+         constexpr uint8_t xor_not_and = 0b11010010;
+         return SIMD_4x64(_mm256_ternarylogic_epi64(x.raw(), y.raw(), z.raw(), xor_not_and));
+#else
+         return x ^ y.andc(z);
+#endif
+      }
+
       BOTAN_FN_ISA_SIMD_4X64
       static SIMD_4x64 choose(const SIMD_4x64& mask, const SIMD_4x64& a, const SIMD_4x64& b) {
 #if defined(__AVX512VL__)

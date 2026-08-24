@@ -6,8 +6,8 @@
 
 #include <botan/internal/keccak_perm.h>
 
-#include <botan/internal/keccak_perm_round.h>
 #include <botan/internal/isa_extn.h>
+#include <botan/internal/keccak_perm_round.h>
 #include <immintrin.h>
 
 namespace Botan {
