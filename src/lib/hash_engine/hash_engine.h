@@ -40,6 +40,12 @@ class BOTAN_TEST_API Hash_Engine {
       virtual size_t parallelism() const = 0;
 
       /**
+      * @return bytes of the common prefix hashed again for each message,
+      * rather than being covered by a precomputed state
+      */
+      virtual size_t uncached_prefix_bytes() const { return common_prefix().size(); }
+
+      /**
       * Hash many inputs
       *
       * Computes H(common_prefix || inputs[i]) into outputs[i]. Each input
