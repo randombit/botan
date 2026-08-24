@@ -14,3 +14,10 @@ avx512
 cpuid
 simd_avx512
 </requires>
+
+# TODO(Botan4) this block is here just due to supporting older GCCs
+<cc>
+gcc:13
+clang
+msvc
+</cc>
