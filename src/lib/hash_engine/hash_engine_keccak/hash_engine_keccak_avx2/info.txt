@@ -1,0 +1,16 @@
+<internal_defines>
+HASH_ENGINE_KECCAK_AVX2 -> 20260705
+</internal_defines>
+
+<module_info>
+name -> "Multi-buffer Keccak using AVX2"
+</module_info>
+
+<isa>
+avx2
+</isa>
+
+<requires>
+cpuid
+simd_4x64
+</requires>
