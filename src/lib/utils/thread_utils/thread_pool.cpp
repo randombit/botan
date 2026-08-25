@@ -17,6 +17,9 @@ namespace Botan {
 
 namespace {
 
+/// The pool whose worker this thread is, if any
+thread_local Thread_Pool* g_pool_of_this_worker = nullptr;  // NOLINT(*-avoid-non-const-global-variables)
+
 std::optional<size_t> global_thread_pool_size() {
    std::string var;
    if(OS::read_env_variable(var, "BOTAN_THREAD_POOL_SIZE")) {
@@ -112,7 +115,15 @@ void Thread_Pool::queue_thunk(const std::function<void()>& work) {
       throw Invalid_State("Cannot add work after thread pool has shut down");
    }
 
-   if(m_workers.empty()) {
+   /*
+   * Immediately execute tasks which are queued from within one of the pool's
+   * own worker threads. Otherwise there is risk of deadlock.
+   *
+   * This could be improved, with a bit more complexity, by a "helping join";
+   * instead of just blocking, the thread runs any queued tasks until the one it
+   * is waiting on has completed.
+   */
+   if(m_workers.empty() || g_pool_of_this_worker == this) {
       lock.unlock();
       return work();
    }
@@ -122,6 +133,8 @@ void Thread_Pool::queue_thunk(const std::function<void()>& work) {
 }
 
 void Thread_Pool::worker_thread() {
+   g_pool_of_this_worker = this;
+
    for(;;) {
       std::function<void()> task;
 
