@@ -34,6 +34,15 @@ std::unique_ptr<Hash_Engine> create_sha2_64_mb_engine(std::string_view hash_fn,
 * digest of each lane, stored contiguously in lane order.
 */
 
+#if defined(BOTAN_HAS_HASH_ENGINE_SHA2_64_ARMV8)
+/// Number of interleaved streams; the SHA-512 instructions form a
+/// dependency chain per stream, which independent streams hide
+inline constexpr size_t SHA2_64_ARMV8_STREAMS = 2;
+
+void sha2_64_mb_compress_armv8(uint8_t* states, const uint8_t* const* blocks, size_t nblocks);
+void sha2_64_mb_extract_armv8(const uint8_t* states, uint8_t* digests);
+#endif
+
 #if defined(BOTAN_HAS_HASH_ENGINE_SHA2_64_AVX2)
 void sha2_64_mb_compress_x4(uint8_t* states, const uint8_t* const* blocks, size_t nblocks);
 void sha2_64_mb_extract_x4(const uint8_t* states, uint8_t* digests);

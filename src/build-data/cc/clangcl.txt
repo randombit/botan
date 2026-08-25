@@ -74,6 +74,7 @@ altivec -> "-maltivec"
 
 arm64:armv8crypto -> "-march=armv8+crypto"
 arm64:armv8sha512 -> "-march=armv8.2-a+sha3"
+arm64:armv8sha3 -> "-march=armv8.2-a+sha3"
 
 arm32:neon    -> "-mfpu=neon"
 arm64:neon    -> ""

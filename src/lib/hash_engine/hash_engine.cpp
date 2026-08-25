@@ -310,7 +310,7 @@ std::unique_ptr<Hash_Engine> Hash_Engine::create_or_throw(std::string_view hash_
 
 std::vector<std::string> Hash_Engine::possible_providers(std::string_view hash_fn) {
    BOTAN_UNUSED(hash_fn);
-   return {"base", "threads", "neon", "ssse3", "avx2", "avx512"};
+   return {"base", "threads", "armv8sha2", "armv8sha2_512", "armv8sha3", "avx2", "avx512"};
 }
 
 }  // namespace Botan

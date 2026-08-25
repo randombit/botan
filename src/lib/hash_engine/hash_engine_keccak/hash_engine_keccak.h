@@ -37,6 +37,11 @@ std::unique_ptr<Hash_Engine> create_keccak_mb_engine(std::string_view hash_fn,
 
 inline constexpr size_t KECCAK_MB_ABSORB_BLOCKS = 8;
 
+#if defined(BOTAN_HAS_HASH_ENGINE_KECCAK_ARMV8)
+void keccak_mb_permute_x2(uint64_t* states);
+void keccak_mb_absorb_x2(uint64_t* states, const uint8_t* const* blocks, size_t rate_words, size_t nblocks);
+#endif
+
 #if defined(BOTAN_HAS_HASH_ENGINE_KECCAK_AVX2)
 void keccak_mb_permute_x4(uint64_t* states);
 void keccak_mb_absorb_x4(uint64_t* states, const uint8_t* const* blocks, size_t rate_words, size_t nblocks);
