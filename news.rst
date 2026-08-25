@@ -4,6 +4,15 @@ Release Notes
 Version 3.14.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add new type ``PK_Signature_Options`` which allows precisely controlling how
+  signatures are created and verified. (GH #5849)
+
+* The Python binding now can adapt itself to any version of Botan3. (GH #5851)
+
+* Add support for parallel hash function invocations, including AVX2/AVX512
+  implementations of SHA-256, SHA-512, and SHAKE (GH #5865 #5867 #5869 #5871
+  #5872 #5873)
+
 * Modify the bitsliced AES implementation to use the native word size of the
   processor, instead of always 32 bits. (GH #5826)
 
