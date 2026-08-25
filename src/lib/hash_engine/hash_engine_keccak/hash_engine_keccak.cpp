@@ -14,7 +14,8 @@
 #include <botan/internal/scan_name.h>
 #include <algorithm>
 
-#if defined(BOTAN_HAS_HASH_ENGINE_KECCAK_AVX2) || defined(BOTAN_HAS_HASH_ENGINE_KECCAK_AVX512)
+#if defined(BOTAN_HAS_HASH_ENGINE_KECCAK_AVX2) || defined(BOTAN_HAS_HASH_ENGINE_KECCAK_AVX512) || \
+   defined(BOTAN_HAS_HASH_ENGINE_KECCAK_ARMV8)
    #define BOTAN_HASH_ENGINE_KECCAK_HAS_IMPL
    #include <botan/internal/cpuid.h>
 #endif
@@ -267,6 +268,15 @@ std::unique_ptr<Hash_Engine> create_keccak_mb_engine(std::string_view hash_fn,
    } else {
       return nullptr;
    }
+
+   #if defined(BOTAN_HAS_HASH_ENGINE_KECCAK_ARMV8)
+   if(auto feat = CPUID::check(CPUID::Feature::SHA3)) {
+      if(provider.empty() || provider == *feat) {
+         return std::make_unique<Keccak_MB_Engine>(
+            name, output_length, rate, suffix, common_prefix, *feat, 2, keccak_mb_permute_x2, keccak_mb_absorb_x2);
+      }
+   }
+   #endif
 
    #if defined(BOTAN_HAS_HASH_ENGINE_KECCAK_AVX512)
    if(auto feat = CPUID::check(CPUID::Feature::AVX512)) {

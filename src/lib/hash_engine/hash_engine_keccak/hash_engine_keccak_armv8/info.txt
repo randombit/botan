@@ -1,0 +1,16 @@
+<internal_defines>
+HASH_ENGINE_KECCAK_ARMV8 -> 20260825
+</internal_defines>
+
+<module_info>
+name -> "Multi-buffer Keccak using ARMv8 SHA-3 instructions"
+</module_info>
+
+<isa>
+armv8sha3
+</isa>
+
+<requires>
+cpuid
+keccak_perm
+</requires>

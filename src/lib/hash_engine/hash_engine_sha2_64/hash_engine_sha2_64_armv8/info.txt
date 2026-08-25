@@ -1,0 +1,16 @@
+<internal_defines>
+HASH_ENGINE_SHA2_64_ARMV8 -> 20260825
+</internal_defines>
+
+<module_info>
+name -> "Multi-buffer SHA-512 using ARMv8 crypto instructions"
+</module_info>
+
+<isa>
+armv8crypto
+armv8sha512
+</isa>
+
+<requires>
+cpuid
+</requires>
