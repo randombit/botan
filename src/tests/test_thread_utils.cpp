@@ -57,7 +57,44 @@ Test::Result thread_pool() {
    return result;
 }
 
+Test::Result thread_pool_nested() {
+   Test::Result result("Thread_Pool nested");
+
+   // A small pool, so that without the immediate execution of tasks
+   // queued by the pool's own workers, all workers would block in the
+   // inner get() with the inner tasks stuck behind them in the queue
+   Botan::Thread_Pool pool(2);
+
+   auto fan_out = [&pool](size_t i) -> size_t {
+      std::vector<std::future<size_t>> inner;
+      inner.reserve(4);
+      for(size_t j = 0; j != 4; ++j) {
+         inner.push_back(pool.run([i, j]() -> size_t { return i * 4 + j; }));
+      }
+
+      size_t sum = 0;
+      for(auto& fut : inner) {
+         sum += fut.get();
+      }
+      return sum;
+   };
+
+   std::vector<std::future<size_t>> outer;
+   for(size_t i = 0; i != 16; ++i) {
+      outer.push_back(pool.run(fan_out, i));
+   }
+
+   for(size_t i = 0; i != outer.size(); ++i) {
+      result.test_sz_eq("Expected nested sum", outer[i].get(), 16 * i + 6);
+   }
+
+   pool.shutdown();
+
+   return result;
+}
+
 BOTAN_REGISTER_TEST_FN("utils", "thread_pool", thread_pool);
+BOTAN_REGISTER_TEST_FN("utils", "thread_pool_nested", thread_pool_nested);
 
 }  // namespace
 
