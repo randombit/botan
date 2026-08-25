@@ -67,6 +67,15 @@ class SIMD_16x32 final {
       BOTAN_FN_ISA_AVX512
       static SIMD_16x32 load_be(const uint8_t* in) { return load_le(in).bswap(); }
 
+      /**
+      * Load in big endian order from ptrs[i] + Stride * n + offset,
+      * gathering lane i's n'th block out of a set of per lane buffers
+      */
+      template <size_t Stride>
+      static BOTAN_FN_ISA_AVX512 SIMD_16x32 load_be(const uint8_t* const* ptrs, size_t i, size_t n, size_t offset = 0) {
+         return load_be(ptrs[i] + Stride * n + offset);
+      }
+
       BOTAN_FN_ISA_AVX512
       void store_le(uint8_t out[]) const { _mm512_storeu_si512(reinterpret_cast<__m512i*>(out), m_avx512); }
 

@@ -49,6 +49,16 @@ class SIMD_4x64 final {
 
       static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 load_be(const void* in) { return SIMD_4x64::load_le(in).bswap(); }
 
+      /**
+      * Load in big endian order from ptrs[i] + Stride * n + offset,
+      * gathering lane i's n'th block out of a set of per lane buffers
+      */
+      template <size_t Stride>
+      static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64
+      load_be(const uint8_t* const* ptrs, size_t i, size_t n, size_t offset = 0) {
+         return load_be(ptrs[i] + Stride * n + offset);
+      }
+
       static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 broadcast_2x64(const uint64_t* in) {
          return SIMD_4x64(_mm256_broadcastsi128_si256(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in))));
       }

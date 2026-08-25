@@ -1,0 +1,23 @@
+<internal_defines>
+HASH_ENGINE_SHA2_64 -> 20260705
+</internal_defines>
+
+<module_info>
+name -> "Multi-buffer SHA-512 Hash Engine"
+</module_info>
+
+<requires>
+hash_engine
+sha2_64
+</requires>
+
+<header:internal>
+hash_engine_sha2_64.h
+</header:internal>
+
+# TODO(Botan4) this block is just to handle GCC 11 miscompilation
+<cc>
+gcc:13
+clang
+msvc
+</cc>

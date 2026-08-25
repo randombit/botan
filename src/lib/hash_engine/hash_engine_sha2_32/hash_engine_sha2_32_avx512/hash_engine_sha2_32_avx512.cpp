@@ -69,23 +69,22 @@ BOTAN_FN_ISA_AVX512 void sha2_32_mb_compress_x16(uint8_t* states, const uint8_t*
    for(size_t n = 0; n != nblocks; ++n) {
       // Initialized directly from the loads, since default construction
       // would zero the whole array first
-      auto load_w = [&](size_t l) { return SIMD_16x32::load_be(blocks[l] + 64 * n); };
-      SIMD_16x32 W[16] = {load_w(0),
-                          load_w(1),
-                          load_w(2),
-                          load_w(3),
-                          load_w(4),
-                          load_w(5),
-                          load_w(6),
-                          load_w(7),
-                          load_w(8),
-                          load_w(9),
-                          load_w(10),
-                          load_w(11),
-                          load_w(12),
-                          load_w(13),
-                          load_w(14),
-                          load_w(15)};
+      SIMD_16x32 W[16] = {SIMD_16x32::load_be<64>(blocks, 0, n),
+                          SIMD_16x32::load_be<64>(blocks, 1, n),
+                          SIMD_16x32::load_be<64>(blocks, 2, n),
+                          SIMD_16x32::load_be<64>(blocks, 3, n),
+                          SIMD_16x32::load_be<64>(blocks, 4, n),
+                          SIMD_16x32::load_be<64>(blocks, 5, n),
+                          SIMD_16x32::load_be<64>(blocks, 6, n),
+                          SIMD_16x32::load_be<64>(blocks, 7, n),
+                          SIMD_16x32::load_be<64>(blocks, 8, n),
+                          SIMD_16x32::load_be<64>(blocks, 9, n),
+                          SIMD_16x32::load_be<64>(blocks, 10, n),
+                          SIMD_16x32::load_be<64>(blocks, 11, n),
+                          SIMD_16x32::load_be<64>(blocks, 12, n),
+                          SIMD_16x32::load_be<64>(blocks, 13, n),
+                          SIMD_16x32::load_be<64>(blocks, 14, n),
+                          SIMD_16x32::load_be<64>(blocks, 15, n)};
       SIMD_16x32::transpose(
          W[0], W[1], W[2], W[3], W[4], W[5], W[6], W[7], W[8], W[9], W[10], W[11], W[12], W[13], W[14], W[15]);
 

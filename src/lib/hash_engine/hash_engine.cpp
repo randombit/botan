@@ -15,6 +15,10 @@
    #include <botan/internal/hash_engine_sha2_32.h>
 #endif
 
+#if defined(BOTAN_HAS_HASH_ENGINE_SHA2_64)
+   #include <botan/internal/hash_engine_sha2_64.h>
+#endif
+
 #if defined(BOTAN_HAS_THREAD_UTILS)
    #include <botan/internal/rounding.h>
    #include <botan/internal/thread_pool.h>
@@ -63,6 +67,12 @@ std::unique_ptr<Hash_Engine> make_base_engine(std::string_view hash_fn,
                                               std::string_view provider) {
 #if defined(BOTAN_HAS_HASH_ENGINE_SHA2_32)
    if(auto engine = create_sha2_32_mb_engine(hash_fn, common_prefix, provider)) {
+      return engine;
+   }
+#endif
+
+#if defined(BOTAN_HAS_HASH_ENGINE_SHA2_64)
+   if(auto engine = create_sha2_64_mb_engine(hash_fn, common_prefix, provider)) {
       return engine;
    }
 #endif
@@ -278,7 +288,7 @@ std::unique_ptr<Hash_Engine> Hash_Engine::create_or_throw(std::string_view hash_
 
 std::vector<std::string> Hash_Engine::possible_providers(std::string_view hash_fn) {
    BOTAN_UNUSED(hash_fn);
-   return {"base", "threads", "avx2", "avx512"};
+   return {"base", "threads", "neon", "ssse3", "avx2", "avx512"};
 }
 
 }  // namespace Botan
