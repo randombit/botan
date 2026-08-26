@@ -149,9 +149,21 @@ class Threaded_Hash_Engine final : public Hash_Engine {
          }
 
          // A SIMD engine hashes a group of lanes at once, so there is no
-         // point in more threads than groups
+         // point in more threads than groups, nor in threads that do not
+         // reduce the maximum number of groups any one thread must hash
          const size_t lanes = m_engines[0]->parallelism();
-         const size_t threads = std::min({max_threads(), (count + lanes - 1) / lanes, by_bytes});
+         const size_t groups = (count + lanes - 1) / lanes;
+
+         const size_t threads = [&]() {
+            const size_t t = std::min({max_threads(), groups, by_bytes});
+
+            if(t <= 1) {
+               return t;
+            } else {
+               const size_t rounds = (groups + t - 1) / t;
+               return (groups + rounds - 1) / rounds;
+            }
+         }();
 
          if(threads <= 1) {
             m_engines[0]->batch_hash(outputs, inputs1, inputs2);
