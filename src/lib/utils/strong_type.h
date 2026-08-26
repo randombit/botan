@@ -1085,6 +1085,14 @@ class StrongSpan final {
       /// @return reference to the element at index i
       decltype(auto) operator[](typename underlying_span::size_type i) const noexcept { return this->m_span[i]; }
 
+      /// Create a typed subspan of this span
+      /// @param offset the index of the first element of the subspan
+      /// @param count the number of elements in the subspan
+      /// @return a new StrongSpan<T> covering the subspan
+      StrongSpan<T> subspan(size_type offset, size_type count = std::dynamic_extent) const {
+         return StrongSpan<T>(m_span.subspan(offset, count));
+      }
+
    private:
       underlying_span m_span;
 };

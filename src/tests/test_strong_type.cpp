@@ -495,6 +495,12 @@ class Strong_Type_Tests final : public Test {
          result.test_is_true("strong span is not a contiguous strong type buffer",
                              !Botan::concepts::contiguous_strong_type<decltype(span)>);
 
+         const auto sub = span.subspan(1, 2);
+         result.test_is_true("subspan retains the strong type",
+                             std::is_same_v<decltype(sub), const Botan::StrongSpan<const Test_Foo>>);
+         result.test_bin_eq("subspan covers the requested range", sub, Botan::hex_decode("ADBE"));
+         result.test_bin_eq("subspan without count runs to the end", span.subspan(3), Botan::hex_decode("EF"));
+
          return result;
       }
 

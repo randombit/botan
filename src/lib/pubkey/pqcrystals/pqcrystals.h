@@ -478,6 +478,16 @@ class PolynomialVector {
 
       const Polynomial<Trait, D>& operator[](size_t i) const { return m_vec[i]; }
 
+      /// @returns pointers to the polynomials in this vector, in order
+      std::vector<Polynomial<Trait, D>*> polynomials() {
+         std::vector<Polynomial<Trait, D>*> result;
+         result.reserve(m_vec.size());
+         for(auto& p : m_vec) {
+            result.push_back(&p);
+         }
+         return result;
+      }
+
       decltype(auto) begin() { return m_vec.begin(); }
 
       decltype(auto) begin() const { return m_vec.begin(); }
