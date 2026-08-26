@@ -61,7 +61,7 @@ solaris -> "{cxx} -shared -fPIC -Wl,-h,{soname_abi}"
 aix     -> "{cxx} -shared -fPIC"
 openbsd -> "{cxx} -shared -fPIC"
 
-mingw   -> "{cxx} -shared -Wl,--out-implib,{shared_lib_name}.a"
+mingw   -> "{cxx} -shared -Wl,--out-implib,{out_dir}/{shared_lib_name}.a"
 </so_link_commands>
 
 <isa_flags>
