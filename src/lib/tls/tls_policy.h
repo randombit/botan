@@ -631,10 +631,20 @@ class BOTAN_PUBLIC_API(2, 0) Policy /* NOLINT(*-special-member-functions) */ {
       * @return the minimum number of milliseconds that must elapse between
       * two received KeyUpdate messages. If a KeyUpdate arrives sooner than
       * this interval after the previous one, the connection is terminated.
-      * Return 0 to disable rate limiting.
+      * A KeyUpdate reciprocating one we sent with "update_requested" is
+      * not counted. Return 0 to disable rate limiting.
       * @note Only applies to TLS 1.3 connections.
       */
       virtual uint64_t minimum_key_update_interval_ms() const;
+
+      /**
+      * @return the maximum number of records to encrypt with a single traffic
+      * key before the channel initiates a KeyUpdate on its own. Such automatic
+      * KeyUpdates request a reciprocal key update from the peer. Return 0 to
+      * disable automatic key updates.
+      * @note Only applies to TLS 1.3 connections.
+      */
+      virtual uint64_t records_per_traffic_key() const;
 
       /**
       * @return the maximum number of NewSessionTicket messages to accept
@@ -939,6 +949,8 @@ class BOTAN_PUBLIC_API(2, 0) Text_Policy : public Policy {
       bool reuse_session_tickets() const override;
 
       size_t new_session_tickets_upon_handshake_success() const override;
+
+      uint64_t records_per_traffic_key() const override;
 
       bool tls_13_middlebox_compatibility_mode() const override;
 

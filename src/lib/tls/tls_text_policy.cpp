@@ -229,6 +229,12 @@ size_t Text_Policy::new_session_tickets_upon_handshake_success() const {
    return get_len("new_session_tickets_upon_handshake_success", Policy::new_session_tickets_upon_handshake_success());
 }
 
+uint64_t Text_Policy::records_per_traffic_key() const {
+   const size_t default_records =
+      static_cast<size_t>(std::min<uint64_t>(Policy::records_per_traffic_key(), std::numeric_limits<size_t>::max()));
+   return get_len("records_per_traffic_key", default_records);
+}
+
 std::vector<uint16_t> Text_Policy::srtp_profiles() const {
    std::vector<uint16_t> r;
    for(const auto& p : get_list("srtp_profiles", std::vector<std::string>())) {

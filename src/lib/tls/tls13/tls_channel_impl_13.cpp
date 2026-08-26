@@ -16,9 +16,6 @@
 #include <botan/internal/concat_util.h>
 #include <botan/internal/tls_cipher_state.h>
 
-#include <array>
-#include <chrono>
-
 namespace {
 bool is_user_canceled_alert(const Botan::TLS::Alert& alert) {
    return alert.type() == Botan::TLS::Alert::UserCanceled;
@@ -54,6 +51,7 @@ Channel_Impl_13::Channel_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
       m_can_read(true),
       m_can_write(true),
       m_opportunistic_key_update(false),
+      m_key_update_requested(false),
       m_first_message_sent(false),
       m_first_message_received(false) {
    BOTAN_ASSERT_NONNULL(m_callbacks);
@@ -212,10 +210,15 @@ void Channel_Impl_13::handle(const Key_Update& key_update) {
       throw Unexpected_Message("Unexpected additional post-handshake message data found in record");
    }
 
-   if(const uint64_t min_interval = policy().minimum_key_update_interval_ms(); min_interval > 0) {
-      const uint64_t now =
-         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
-            .count();
+   // A non-requesting KeyUpdate received while our own request is outstanding
+   // is the reciprocation we solicited. It is exempt from rate limiting (and
+   // invisible to it), so that a peer whose own key update crossed ours in
+   // flight is not penalized for the resulting back to back KeyUpdates.
+   const bool solicited_reciprocation = m_key_update_requested && !key_update.expects_reciprocation();
+
+   if(const uint64_t min_interval = policy().minimum_key_update_interval_ms();
+      min_interval > 0 && !solicited_reciprocation) {
+      const uint64_t now = callbacks().tls_current_monotonic_clock_ms();
 
       if(m_last_key_update_ms != 0 && (now - m_last_key_update_ms) < min_interval) {
          throw TLS_Exception(Alert::UnexpectedMessage, "Peer is requesting KeyUpdates too frequently");
@@ -226,6 +229,13 @@ void Channel_Impl_13::handle(const Key_Update& key_update) {
 
    BOTAN_ASSERT_NONNULL(m_cipher_state);
    m_cipher_state->update_read_keys(*this);
+
+   // Only an actual reciprocation settles our outstanding request. RFC 9846
+   // 4.7.3 would allow requesting again after any KeyUpdate from the peer,
+   // but waiting for the reciprocation keeps the exemption above one-shot.
+   if(!key_update.expects_reciprocation()) {
+      m_key_update_requested = false;
+   }
 
    // RFC 8446 4.6.3
    //    If the request_update field is set to "update_requested", then the
@@ -287,6 +297,38 @@ void Channel_Impl_13::to_peer(std::span<const uint8_t> data) {
       throw Invalid_State("Data cannot be sent on inactive TLS connection");
    }
 
+   // RFC 9846 Section 5.5
+   //    Implementations MUST either close the connection or do a key update as
+   //    described in Section 4.7.3 prior to reaching these limits.
+   //
+   // [This is a SHOULD in RFC 8446]
+   //
+   // The ChaCha-based suites don't have any practical usage limit but we
+   // apply the limit for all suites for simplicity.
+   auto needs_traffic_based_key_update = [&]() {
+      const uint64_t limit = policy().records_per_traffic_key();
+
+      // Have to skip this if the handshake is not yet completed since we can't
+      // send a KeyUpdate in the (unlikely) case that the limit is hit with
+      // half-RTT data. If it is we just defer until the handshake completes.
+
+      if(limit == 0 || !is_handshake_complete()) {
+         return false;
+      }
+
+      if(m_cipher_state->records_encrypted_with_current_key() >= limit) {
+         return true;
+      }
+
+      // For the read side all we can do is ask the peer to update its keys,
+      // and only if no earlier request is still outstanding. The threshold is
+      // set above the write-side limit so that a peer which tracks its own
+      // write limit will normally have rotated its keys already, avoiding a
+      // redundant key update crossing ours in flight.
+      const uint64_t read_limit = limit + limit / 2;
+      return !m_key_update_requested && m_cipher_state->records_decrypted_with_current_key() >= read_limit;
+   };
+
    // RFC 8446 4.6.3
    //    If the request_update field [of a received KeyUpdate] is set to
    //    "update_requested", then the receiver MUST send a KeyUpdate of its own
@@ -298,6 +340,15 @@ void Channel_Impl_13::to_peer(std::span<const uint8_t> data) {
    if(m_opportunistic_key_update) {
       update_traffic_keys(false /* update_requested */);
       m_opportunistic_key_update = false;
+   } else if(needs_traffic_based_key_update()) {
+      // If approaching traffic limits request the peer update their own keys
+      // as well, unless an earlier request is still unanswered:
+      //
+      // RFC 9846 4.7.3
+      //    Until receiving a subsequent KeyUpdate from the peer, the sender
+      //    MUST NOT send another KeyUpdate with request_update set to
+      //    "update_requested".
+      update_traffic_keys(!m_key_update_requested);
    }
 
    send_record(Record_Type::ApplicationData, {data.begin(), data.end()});
@@ -347,6 +398,9 @@ void Channel_Impl_13::update_traffic_keys(bool request_peer_update) {
    BOTAN_ASSERT_NONNULL(m_cipher_state);
    send_post_handshake_message(Key_Update(request_peer_update));
    m_cipher_state->update_write_keys(*this);
+   if(request_peer_update) {
+      m_key_update_requested = true;
+   }
 }
 
 void Channel_Impl_13::send_record(Record_Type type, const std::vector<uint8_t>& record) {

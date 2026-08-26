@@ -311,6 +311,11 @@ available:
       After a successful handshake, this will update our traffic keys and
       may send a request to do the same to the peer.
 
+      Note that a TLS 1.3 channel initiates such a key update by itself
+      after encrypting ``Policy::records_per_traffic_key()`` records with
+      the same key. Applications only need to call this method to force a
+      key update at a specific point in time.
+
       Note that this is a TLS 1.3 feature and invocations on a channel
       using TLS 1.2 will throw.
 
@@ -998,6 +1003,22 @@ policy settings from a file.
      if TLS 1.2 is used or allowed.
 
      Default: no preference (use maximum allowed by the protocol)
+
+ .. cpp:function:: uint64_t records_per_traffic_key() const
+
+     The maximum number of records to encrypt with a single traffic key
+     before a TLS 1.3 channel initiates a KeyUpdate on its own. Such
+     automatic key updates request a reciprocal update from the peer, so
+     that a peer which never initiates key updates gets its keys rotated
+     as well. Return 0 to disable automatic key updates.
+
+     If 1.5 times this many records were received without the peer
+     updating its keys, the channel will also request a key update from
+     the peer, at most once until the peer complies.
+
+     This has no effect on TLS 1.2 connections.
+
+     Default: 2^23 records
 
  .. cpp:function:: bool tls_13_middlebox_compatibility_mode() const
 
