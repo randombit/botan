@@ -64,6 +64,12 @@ class Kyber_Modern_Symmetric_Primitives final : public Kyber_Symmetric_Primitive
          const std::array<uint8_t, 2> pos = {std::get<0>(matrix_position), std::get<1>(matrix_position)};
          xof.update(pos);
       }
+
+      void XOF_batch(std::span<std::span<uint8_t>> outputs,
+                     StrongSpan<const KyberSeedRho> seed,
+                     std::span<const std::tuple<uint8_t, uint8_t>> positions) const override {
+         shake_XOF_batch(outputs, seed, positions);
+      }
 };
 
 }  // namespace Botan

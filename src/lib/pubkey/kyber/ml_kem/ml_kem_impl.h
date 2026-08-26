@@ -102,6 +102,12 @@ class ML_KEM_Symmetric_Primitives final : public Kyber_Symmetric_Primitives {
          xof.update(seed);
          xof.update(store_be(make_uint16(std::get<0>(matrix_position), std::get<1>(matrix_position))));
       }
+
+      void XOF_batch(std::span<std::span<uint8_t>> outputs,
+                     StrongSpan<const KyberSeedRho> seed,
+                     std::span<const std::tuple<uint8_t, uint8_t>> positions) const override {
+         shake_XOF_batch(outputs, seed, positions);
+      }
 };
 
 }  // namespace Botan
