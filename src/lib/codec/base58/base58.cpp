@@ -103,12 +103,12 @@ constexpr std::pair<uint8_t, word> divmod_58(word x) {
 * base58 conversion radix, returning the remainder
 */
 word ct_divmod_base58radix(std::span<word> x) {
-   constexpr divide_precomp<word> radix_div(base58_conversion_radix());
+   constexpr auto radix58_div = divide_precomp<word>::setup(base58_conversion_radix());
 
    word rem = 0;
 
    for(size_t i = x.size(); i > 0; --i) {
-      const auto [q, r] = radix_div.divmod_2to1(rem, x[i - 1]);
+      const auto [q, r] = radix58_div.divmod_2to1_ct(rem, x[i - 1]);
       x[i - 1] = q;
       rem = r;
    }

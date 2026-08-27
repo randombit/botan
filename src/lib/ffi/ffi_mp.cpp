@@ -211,7 +211,7 @@ int botan_mp_mul(botan_mp_t result, const botan_mp_t x, const botan_mp_t y) {
 int botan_mp_div(botan_mp_t quotient, botan_mp_t remainder, const botan_mp_t x, const botan_mp_t y) {
    return BOTAN_FFI_VISIT(quotient, [=](auto& q) {
       Botan::BigInt r;
-      Botan::vartime_divide(safe_get(x), safe_get(y), q, r);
+      Botan::ct_divide(safe_get(x), safe_get(y), q, r);
       safe_get(remainder) = r;
    });
 }

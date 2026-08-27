@@ -246,7 +246,7 @@ word BigInt::operator%=(word mod) {
    if(is_power_of_2(mod)) {
       remainder = (word_at(0) & (mod - 1));
    } else {
-      const divide_precomp redc_mod(mod);
+      const auto redc_mod = divide_precomp<word>::setup_vartime(mod);
       const size_t sw = sig_words();
       for(size_t i = sw; i > 0; --i) {
          remainder = redc_mod.mod_2to1(remainder, word_at(i - 1));

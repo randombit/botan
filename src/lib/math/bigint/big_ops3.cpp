@@ -110,7 +110,7 @@ BigInt operator/(const BigInt& x, const BigInt& y) {
 
    BigInt q;
    BigInt r;
-   vartime_divide(x, y, q, r);
+   ct_divide(x, y, q, r);
    return q;
 }
 
@@ -148,7 +148,7 @@ BigInt operator%(const BigInt& n, const BigInt& mod) {
 
    BigInt q;
    BigInt r;
-   vartime_divide(n, mod, q, r);
+   ct_divide(n, mod, q, r);
    return r;
 }
 
@@ -169,7 +169,7 @@ word operator%(const BigInt& n, word mod) {
    if(n.signum() >= 0 && is_power_of_2(mod)) {
       remainder = (n.word_at(0) & (mod - 1));
    } else {
-      const divide_precomp redc_mod(mod);
+      const auto redc_mod = divide_precomp<word>::setup_vartime(mod);
       const size_t sw = n.sig_words();
       for(size_t i = sw; i > 0; --i) {
          remainder = redc_mod.mod_2to1(remainder, n.word_at(i - 1));

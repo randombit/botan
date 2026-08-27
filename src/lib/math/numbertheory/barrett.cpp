@@ -31,13 +31,7 @@ Barrett_Reduction Barrett_Reduction::for_secret_modulus(const BigInt& mod) {
 }
 
 Barrett_Reduction Barrett_Reduction::for_public_modulus(const BigInt& mod) {
-   BOTAN_ARG_CHECK(mod.signum() > 0, "Modulus must be positive");
-
-   const size_t mod_words = mod.sig_words();
-
-   // Compute mu = floor(2^{2k} / m)
-   const size_t mu_bits = 2 * WordInfo<word>::bits * mod_words;
-   return Barrett_Reduction(mod, vartime_divide_pow2k(mu_bits, mod), mod_words);
+   return Barrett_Reduction::for_secret_modulus(mod);
 }
 
 namespace {

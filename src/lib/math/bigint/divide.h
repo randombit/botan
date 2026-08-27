@@ -1,6 +1,6 @@
 /*
 * Division
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2026 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -13,20 +13,11 @@
 namespace Botan {
 
 /**
-* BigInt Division
-* @param x an integer
-* @param y a non-zero integer
-* @param q will be set to x / y
-* @param r will be set to x % y
-*/
-BOTAN_TEST_API
-void vartime_divide(const BigInt& x, const BigInt& y, BigInt& q, BigInt& r);
-
-/**
-* BigInt division, const time variant
+* BigInt division
 *
 * This runs with control flow independent of the values of x/y.
-* Warning: the loop bounds still leak the sizes of x and y.
+*
+* Warning: the sizes and signs of x and y still leak.
 *
 * @param x an integer
 * @param y a non-zero integer
@@ -37,7 +28,7 @@ BOTAN_TEST_API
 void ct_divide(const BigInt& x, const BigInt& y, BigInt& q, BigInt& r);
 
 /**
-* BigInt division, const time variant, 2^k variant
+* BigInt division, 2^k variant
 *
 * This runs with control flow independent of the value of y.
 * This function leaks the value of k and the length of y.
@@ -51,21 +42,7 @@ BOTAN_TEST_API
 BigInt ct_divide_pow2k(size_t k, const BigInt& y);
 
 /**
-* BigInt division, variable time, 2^k variant
-*
-* This is identical to ct_divide_pow2k in functionality,
-* but leaks both k and y to side channels, so it should only
-* be used with public inputs.
-*
-* @param k an integer
-* @param y a positive integer
-* @return q equal to 2**k / y
-*/
-BOTAN_TEST_API
-BigInt vartime_divide_pow2k(size_t k, const BigInt& y);
-
-/**
-* BigInt division, const time variant
+* BigInt division
 *
 * This runs with control flow independent of the values of x/y.
 * Warning: the loop bounds still leak the sizes of x and y.
@@ -84,8 +61,9 @@ inline BigInt ct_divide(const BigInt& x, const BigInt& y) {
 /**
 * Constant time division
 *
-* This runs with control flow independent of the values of x/y.
-* Warning: the loop bounds still leaks the size of x.
+* This runs with control flow independent of the value of x.
+* The divisor y is treated as a public value.
+* Warning: the loop bounds still leak the size of x.
 *
 * @param x an integer
 * @param y a non-zero integer
@@ -98,8 +76,9 @@ void ct_divide_word(const BigInt& x, word y, BigInt& q, word& r);
 /**
 * Constant time division
 *
-* This runs with control flow independent of the values of x/y.
-* Warning: the loop bounds still leaks the size of x.
+* This runs with control flow independent of the value of x.
+* The divisor y is treated as a public value.
+* Warning: the loop bounds still leak the size of x.
 *
 * @param x an integer
 * @param y a non-zero word
@@ -110,8 +89,9 @@ BigInt ct_divide_word(const BigInt& x, word y);
 /**
 * BigInt word modulo, const time variant
 *
-* This runs with control flow independent of the values of x/y.
-* Warning: the loop bounds still leaks the size of x.
+* This runs with control flow independent of the value of x.
+* The divisor y is treated as a public value.
+* Warning: the loop bounds still leak the size of x.
 *
 * @param x a positive integer
 * @param y a non-zero word

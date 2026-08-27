@@ -230,7 +230,7 @@ class MP_Unit_Tests final : public Test {
          }
 
          for(const W d : divisors) {
-            const Botan::divide_precomp<W> div(d);
+            const auto div = Botan::divide_precomp<W>::setup_vartime(d);
 
             std::vector<std::pair<W, W>> cases{{0, 0},
                                                {0, max},
@@ -263,7 +263,12 @@ class MP_Unit_Tests final : public Test {
             for(const auto& [n1, n0] : cases) {
                // Check that q * d + r == (n1:n0) and r < d
 
-               const auto [q, r] = div.divmod_2to1(n1, n0);
+               const auto [q_ct, r_ct] = div.divmod_2to1_ct(n1, n0);
+
+               const auto [q, r] = div.divmod_2to1_vartime(n1, n0);
+
+               result.test_u64_eq("divmod_2to1 vartime and ct q agree", q, q_ct);
+               result.test_u64_eq("divmod_2to1 vartime and ct q agree", r, r_ct);
 
                W hi = r;
                const W lo = Botan::word_madd2(q, d, &hi);
