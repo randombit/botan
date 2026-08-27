@@ -2822,6 +2822,7 @@ class AmalgamationHelper:
     # Only matches at the beginning of the line. By convention, this means that the include
     # is not wrapped by condition macros
     _unconditional_any_include = re.compile(r'^#include <(.*)>')
+    _unconditional_botan_include = re.compile(r'^#include <botan/(.*)>')
     # stddef.h is included in ffi.h
     _unconditional_std_include = re.compile(r'^#include <([^/\.]+|stddef.h)>')
 
@@ -2844,6 +2845,11 @@ class AmalgamationHelper:
         return match.group(1) if match else None
 
     @staticmethod
+    def is_unconditional_botan_include(cpp_source_line):
+        match = AmalgamationHelper._unconditional_botan_include.search(cpp_source_line)
+        return match.group(1) if match else None
+
+    @staticmethod
     def is_unconditional_std_include(cpp_source_line):
         match = AmalgamationHelper._unconditional_std_include.search(cpp_source_line)
         return match.group(1) if match else None
@@ -2862,7 +2868,8 @@ class AmalgamationHelper:
 class AmalgamationHeader:
     def __init__(self, input_filepaths):
 
-        self.included_already = set()
+        self.emitted_unconditionally = set()
+        self.in_progress = set()
         self.all_std_includes = set()
 
         self.file_contents = {}
@@ -2882,13 +2889,13 @@ class AmalgamationHeader:
             self.header_includes += '#include <%s>\n' % (std_header)
         self.header_includes += '\n'
 
-    def header_contents(self, name):
+    def header_contents(self, name, conditional=False):
         name = name.replace('internal/', '')
 
-        if name in self.included_already:
+        # Skip headers already emitted outside any preprocessor condition,
+        # and break include cycles the way the include guards would
+        if name in self.emitted_unconditionally or name in self.in_progress:
             return
-
-        self.included_already.add(name)
 
         if name not in self.file_contents:
             return
@@ -2898,10 +2905,20 @@ class AmalgamationHeader:
             logging.debug("Ignoring deprecated header %s", name)
             return
 
+        # Conditionally included headers (where the header inclusion is guarded
+        # by a #if/#ifdef preprocessor condition) do not count towards having
+        # been included, as since we cannot know if, when actually compiled by
+        # whatever compiler the application uses, the condition will fire or not
+        if not conditional:
+            self.emitted_unconditionally.add(name)
+
+        self.in_progress.add(name)
+
         for line in self.file_contents[name]:
             header = AmalgamationHelper.is_botan_include(line)
             if header:
-                yield from self.header_contents(header)
+                site_conditional = AmalgamationHelper.is_unconditional_botan_include(line) is None
+                yield from self.header_contents(header, conditional or site_conditional)
             else:
                 std_header = AmalgamationHelper.is_unconditional_std_include(line)
 
@@ -2909,6 +2926,8 @@ class AmalgamationHeader:
                     self.all_std_includes.add(std_header)
                 else:
                     yield line
+
+        self.in_progress.discard(name)
 
     def write_to_file(self, filepath, include_guard):
         with open(filepath, 'w', encoding='utf8') as f:
@@ -2948,13 +2967,13 @@ class AmalgamationGenerator:
         if end_header_guard_index is None:
             raise InternalError("No header guard end found in " + header_name)
 
-        lines = lines[start_header_guard_index+1 : end_header_guard_index]
+        if start_header_guard_index == 0 or not lines[start_header_guard_index-1].startswith('#ifndef'):
+            raise InternalError("No #ifndef guard line found in " + header_name)
 
-        # Strip leading and trailing empty lines
-        while lines[0].strip() == "":
-            lines = lines[1:]
-        while lines[-1].strip() == "":
-            lines = lines[0:-1]
+        # The include guard is retained: a header whose first expansion was
+        # inside a preprocessor condition is expanded again at a later
+        # include site, and the guards deduplicate the copies
+        lines = lines[start_header_guard_index-1 : end_header_guard_index+1]
 
         return lines
 
