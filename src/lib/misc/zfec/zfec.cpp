@@ -356,7 +356,7 @@ void ZFEC::linear_combination(uint8_t z[], const uint8_t* const x[], const uint8
 /*
 * ZFEC constructor
 */
-ZFEC::ZFEC(size_t K, size_t N) : m_K(K), m_N(N), m_enc_matrix(N * K) {
+ZFEC::ZFEC(size_t K, size_t N) : m_K(K), m_N(N) {
    if(m_K == 0 || m_N == 0 || m_K >= 256 || m_N >= 256 || m_K > N) {
       throw Invalid_Argument("ZFEC: violated 1 <= K <= N < 256");
    }
@@ -377,6 +377,7 @@ ZFEC::ZFEC(size_t K, size_t N) : m_K(K), m_N(N), m_enc_matrix(N * K) {
    /*
    * the upper part of the encoding matrix is I
    */
+   m_enc_matrix.resize(m_N * m_K);
    for(size_t i = 0; i != m_K; ++i) {
       m_enc_matrix[i * (m_K + 1)] = 1;
    }
