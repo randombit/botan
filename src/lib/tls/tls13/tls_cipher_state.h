@@ -121,7 +121,7 @@ class BOTAN_TEST_API Cipher_State {
        * This will internally increment the sequence number. Hence, multiple
        * calls with the same input will not produce the same result.
        *
-       * @returns  the sequence number of the encrypted record
+       * @returns the sequence number of the encrypted record
        */
       uint64_t encrypt_record_fragment(const std::vector<uint8_t>& header, secure_vector<uint8_t>& fragment);
 
@@ -131,22 +131,22 @@ class BOTAN_TEST_API Cipher_State {
        * This will internally increment the sequence number. Hence, multiple
        * calls with the same input will not produce the same result.
        *
-       * @returns  the sequence number of the decrypted record
+       * @returns the sequence number of the decrypted record
        */
       uint64_t decrypt_record_fragment(const std::vector<uint8_t>& header, secure_vector<uint8_t>& encrypted_fragment);
 
       /**
-       * @returns  number of bytes needed to encrypt \p input_length bytes
+       * @returns number of bytes needed to encrypt \p input_length bytes
        */
       size_t encrypt_output_length(size_t input_length) const;
 
       /**
-       * @returns  number of bytes needed to decrypt \p input_length bytes
+       * @returns number of bytes needed to decrypt \p input_length bytes
        */
       size_t decrypt_output_length(size_t input_length) const;
 
       /**
-       * @returns  the minimum ciphertext length for decryption
+       * @returns the minimum ciphertext length for decryption
        */
       size_t minimum_decryption_input_length() const;
 
@@ -227,8 +227,8 @@ class BOTAN_TEST_API Cipher_State {
       std::string hash_algorithm() const;
 
       /**
-       * @returns  true if the selected cipher primitives are compatible with
-       *           the \p cipher suite.
+       * @returns true if the selected cipher primitives are compatible with
+       *          the \p cipher suite.
        *
        * Note that cipher suites are considered "compatible" as long as the
        * already selected cipher primitives in this cipher state are compatible.
@@ -252,6 +252,16 @@ class BOTAN_TEST_API Cipher_State {
        * application traffic.
        */
       void update_write_keys(const Secret_Logger& channel);
+
+      /**
+       * @returns the number of records encrypted with the current write key
+       */
+      uint64_t records_encrypted_with_current_key() const { return m_write_seq_no; }
+
+      /**
+       * @returns the number of records decrypted with the current read key
+       */
+      uint64_t records_decrypted_with_current_key() const { return m_read_seq_no; }
 
       /**
        * Remove handshake/traffic secrets for decrypting data from peer

@@ -25,6 +25,11 @@
    #include <botan/tls_exceptn.h>
    #include <botan/tls_extensions.h>
    #include <botan/tls_external_psk.h>
+   #include <botan/tls_handshake_msg.h>
+
+   #if defined(BOTAN_HAS_TLS_13)
+      #include <botan/tls_messages_13.h>
+   #endif
    #include <botan/tls_policy.h>
    #include <botan/tls_server.h>
    #include <botan/tls_session_manager_memory.h>
@@ -1417,6 +1422,543 @@ class TLS_Unit_Tests final : public Test {
          results.push_back(test.results());
       }
 
+   #if defined(BOTAN_HAS_TLS_13)
+      class KeyUpdate_Counting_Callbacks final : public Botan::TLS::Callbacks {
+         public:
+            explicit KeyUpdate_Counting_Callbacks(std::vector<uint8_t>& outbound) : m_outbound(outbound) {}
+
+            void tls_emit_data(std::span<const uint8_t> bits) override {
+               m_outbound.insert(m_outbound.end(), bits.begin(), bits.end());
+            }
+
+            void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> bits) override {
+               m_received.insert(m_received.end(), bits.begin(), bits.end());
+            }
+
+            void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+
+            void tls_session_established(const Botan::TLS::Session_Summary& /*session*/) override {}
+
+            void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& message) override {
+               // This callback sees both sent and received handshake messages,
+               // but received KeyUpdates bypass it. Hence this counts the
+               // KeyUpdate messages sent by this side of the channel.
+               if(message.type() == Botan::TLS::Handshake_Type::KeyUpdate) {
+                  ++m_key_updates_sent;
+
+                  const auto* key_update = dynamic_cast<const Botan::TLS::Key_Update*>(&message);
+                  if(key_update != nullptr && key_update->expects_reciprocation()) {
+                     ++m_key_updates_requested;
+                  }
+               }
+            }
+
+            size_t key_updates_sent() const { return m_key_updates_sent; }
+
+            size_t key_updates_requested() const { return m_key_updates_requested; }
+
+            const std::vector<uint8_t>& received() const { return m_received; }
+
+         private:
+            std::vector<uint8_t>& m_outbound;
+            std::vector<uint8_t> m_received;
+            size_t m_key_updates_sent = 0;
+            size_t m_key_updates_requested = 0;
+      };
+
+      class KeyUpdate_Test_Policy final : public Botan::TLS::Text_Policy {
+         public:
+            explicit KeyUpdate_Test_Policy(uint64_t records_per_key, uint64_t min_key_update_interval_ms = 0) :
+                  Text_Policy(""), m_min_key_update_interval_ms(min_key_update_interval_ms) {
+               set("allow_tls12", "false");
+               set("allow_tls13", "true");
+               set("records_per_traffic_key", std::to_string(records_per_key));
+               set("minimum_rsa_bits", "1024");
+               set("minimum_signature_strength", "80");
+
+               // Session tickets would show up in the read-side record
+               // counters; disable them to keep the counts deterministic
+               set("new_session_tickets_upon_handshake_success", "0");
+            }
+
+            uint64_t minimum_key_update_interval_ms() const override { return m_min_key_update_interval_ms; }
+
+         private:
+            uint64_t m_min_key_update_interval_ms;
+      };
+
+      void test_tls13_automatic_key_updates(std::vector<Test::Result>& results,
+                                            const std::shared_ptr<Credentials_Manager_Test>& creds,
+                                            const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         Test::Result result("TLS 1.3 automatic key updates");
+
+         try {
+            std::vector<uint8_t> c2s;
+            std::vector<uint8_t> s2c;
+            auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
+            auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
+
+            // The client rekeys after 4 records and requests reciprocal
+            // updates; the server never rekeys of its own accord.
+            auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(4);
+            auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
+
+            auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+            Botan::TLS::Server server(server_cb, session_manager, creds, server_policy, rng);
+            Botan::TLS::Client client(client_cb,
+                                      session_manager,
+                                      creds,
+                                      client_policy,
+                                      rng,
+                                      Botan::TLS::Server_Information("server.example.com"),
+                                      Botan::TLS::Protocol_Version::TLS_V13);
+
+            auto pump = [&]() {
+               while(!c2s.empty() || !s2c.empty()) {
+                  if(!c2s.empty()) {
+                     std::vector<uint8_t> input;
+                     std::swap(c2s, input);
+                     server.received_data(input.data(), input.size());
+                  }
+                  if(!s2c.empty()) {
+                     std::vector<uint8_t> input;
+                     std::swap(s2c, input);
+                     client.received_data(input.data(), input.size());
+                  }
+               }
+            };
+
+            pump();
+            result.test_is_true("client is active", client.is_active());
+            result.test_is_true("server is active", server.is_active());
+
+            std::vector<uint8_t> client_msg(16);
+            rng->randomize(client_msg.data(), client_msg.size());
+            for(const uint8_t byte : client_msg) {
+               client.send(&byte, 1);
+            }
+            pump();
+
+            // With a limit of 4 records per key, 16 one-record sends cross the
+            // limit before the 5th, 9th and 13th record.
+            result.test_sz_eq("client initiated key updates", client_cb->key_updates_sent(), 3);
+            result.test_bin_eq("server received client data intact", server_cb->received(), client_msg);
+            result.test_sz_eq("server has not responded yet", server_cb->key_updates_sent(), 0);
+
+            // The server's reciprocal KeyUpdate is deferred until it sends
+            // application data, and multiple requests coalesce into one.
+            const std::vector<uint8_t> server_msg{'r', 'e', 'p', 'l', 'y'};
+            server.send(server_msg.data(), server_msg.size());
+            pump();
+
+            result.test_sz_eq("server sent a single reciprocal key update", server_cb->key_updates_sent(), 1);
+            result.test_bin_eq("client received server data intact", client_cb->received(), server_msg);
+
+            client.close();
+            pump();
+            result.test_is_true("client is closed", client.is_closed());
+            result.test_is_true("server is closed", server.is_closed());
+         } catch(const std::exception& e) {
+            result.test_failure("automatic key updates", e.what());
+         }
+
+         results.push_back(result);
+
+         Test::Result disabled_result("TLS 1.3 automatic key updates disabled");
+
+         try {
+            std::vector<uint8_t> c2s;
+            std::vector<uint8_t> s2c;
+            auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
+            auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
+
+            auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
+            auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
+
+            auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+            Botan::TLS::Server server(server_cb, session_manager, creds, server_policy, rng);
+            Botan::TLS::Client client(client_cb,
+                                      session_manager,
+                                      creds,
+                                      client_policy,
+                                      rng,
+                                      Botan::TLS::Server_Information("server.example.com"),
+                                      Botan::TLS::Protocol_Version::TLS_V13);
+
+            auto pump = [&]() {
+               while(!c2s.empty() || !s2c.empty()) {
+                  if(!c2s.empty()) {
+                     std::vector<uint8_t> input;
+                     std::swap(c2s, input);
+                     server.received_data(input.data(), input.size());
+                  }
+                  if(!s2c.empty()) {
+                     std::vector<uint8_t> input;
+                     std::swap(s2c, input);
+                     client.received_data(input.data(), input.size());
+                  }
+               }
+            };
+
+            pump();
+            disabled_result.test_is_true("client is active", client.is_active());
+
+            std::vector<uint8_t> client_msg(16);
+            rng->randomize(client_msg.data(), client_msg.size());
+            for(const uint8_t byte : client_msg) {
+               client.send(&byte, 1);
+            }
+            pump();
+
+            disabled_result.test_sz_eq("client sent no key updates", client_cb->key_updates_sent(), 0);
+            disabled_result.test_sz_eq("server sent no key updates", server_cb->key_updates_sent(), 0);
+            disabled_result.test_bin_eq("server received client data intact", server_cb->received(), client_msg);
+
+            client.close();
+            pump();
+         } catch(const std::exception& e) {
+            disabled_result.test_failure("automatic key updates disabled", e.what());
+         }
+
+         results.push_back(disabled_result);
+
+         Test::Result half_rtt_result("TLS 1.3 automatic key updates deferred during half-RTT");
+
+         try {
+            std::vector<uint8_t> c2s;
+            std::vector<uint8_t> s2c;
+            auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
+            auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
+
+            auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
+            auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(1);
+
+            auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+            Botan::TLS::Server server(server_cb, session_manager, creds, server_policy, rng);
+            Botan::TLS::Client client(client_cb,
+                                      session_manager,
+                                      creds,
+                                      client_policy,
+                                      rng,
+                                      Botan::TLS::Server_Information("server.example.com"),
+                                      Botan::TLS::Protocol_Version::TLS_V13);
+
+            auto deliver = [](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
+               std::vector<uint8_t> input;
+               std::swap(transport, input);
+               receiver.received_data(input.data(), input.size());
+            };
+
+            // Deliver the ClientHello; once the server responded with its
+            // flight up to Finished it may send half-RTT data. The default
+            // policy has the server request a PQ key share via a
+            // HelloRetryRequest first, hence the extra round trips.
+            deliver(c2s, server);
+            for(size_t round = 0; !server.is_active() && round < 2; ++round) {
+               deliver(s2c, client);
+               deliver(c2s, server);
+            }
+            half_rtt_result.test_is_true("server can send half-RTT data", server.is_active());
+            half_rtt_result.test_is_false("server handshake is not complete", server.is_handshake_complete());
+
+            const std::vector<uint8_t> half_rtt_data{'h', 'r', 't'};
+            for(const uint8_t byte : half_rtt_data) {
+               server.send(&byte, 1);
+            }
+
+            // Despite exceeding the record limit, no KeyUpdate may be sent
+            // before the handshake is complete.
+            half_rtt_result.test_sz_eq("no key update during half-RTT", server_cb->key_updates_sent(), 0);
+
+            // Deliver the server's flight (and half-RTT data) to the client,
+            // then the client's Finished back to the server.
+            deliver(s2c, client);
+            half_rtt_result.test_bin_eq("client received half-RTT data", client_cb->received(), half_rtt_data);
+            deliver(c2s, server);
+            half_rtt_result.test_is_true("server handshake is complete", server.is_handshake_complete());
+
+            // The next record sent is now over the limit and triggers the
+            // deferred key update.
+            const uint8_t final_byte = '!';
+            server.send(&final_byte, 1);
+            half_rtt_result.test_sz_eq("deferred key update was sent", server_cb->key_updates_sent(), 1);
+
+            deliver(s2c, client);
+            const std::vector<uint8_t> expected{'h', 'r', 't', '!'};
+            half_rtt_result.test_bin_eq("client received all server data", client_cb->received(), expected);
+
+            client.close();
+            while(!c2s.empty() || !s2c.empty()) {
+               deliver(c2s, server);
+               deliver(s2c, client);
+            }
+         } catch(const std::exception& e) {
+            half_rtt_result.test_failure("automatic key updates deferred during half-RTT", e.what());
+         }
+
+         results.push_back(half_rtt_result);
+
+         Test::Result read_result("TLS 1.3 read-side key update request");
+
+         try {
+            std::vector<uint8_t> c2s;
+            std::vector<uint8_t> s2c;
+            auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
+            auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
+
+            // Client rekeys after 4 records sent and requests a peer update
+            // after 6 records received; the server never rekeys on its own.
+            auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(4);
+            auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
+
+            auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+            Botan::TLS::Server server(server_cb, session_manager, creds, server_policy, rng);
+            Botan::TLS::Client client(client_cb,
+                                      session_manager,
+                                      creds,
+                                      client_policy,
+                                      rng,
+                                      Botan::TLS::Server_Information("server.example.com"),
+                                      Botan::TLS::Protocol_Version::TLS_V13);
+
+            auto pump = [&]() {
+               while(!c2s.empty() || !s2c.empty()) {
+                  if(!c2s.empty()) {
+                     std::vector<uint8_t> input;
+                     std::swap(c2s, input);
+                     server.received_data(input.data(), input.size());
+                  }
+                  if(!s2c.empty()) {
+                     std::vector<uint8_t> input;
+                     std::swap(s2c, input);
+                     client.received_data(input.data(), input.size());
+                  }
+               }
+            };
+
+            auto client_sends = [&](const std::vector<uint8_t>& bytes) {
+               for(const uint8_t byte : bytes) {
+                  client.send(&byte, 1);
+                  pump();
+               }
+            };
+
+            pump();
+            read_result.test_is_true("client is active", client.is_active());
+
+            // 5 records received stay below the read-side threshold of 6, so
+            // that a peer tracking its own write-side limit of 4 or 5 would
+            // have updated by itself before we ask it to
+            const std::vector<uint8_t> server_msg{'0', '1', '2', '3', '4'};
+            for(const uint8_t byte : server_msg) {
+               server.send(&byte, 1);
+            }
+            pump();
+            client_sends({'x'});
+            read_result.test_sz_eq("below read threshold, no key update", client_cb->key_updates_sent(), 0);
+
+            // Two more records cross the read threshold; the application-silent
+            // server processes everything but defers its reciprocal KeyUpdate
+            const std::vector<uint8_t> server_msg2{'5', '6'};
+            for(const uint8_t byte : server_msg2) {
+               server.send(&byte, 1);
+            }
+            pump();
+
+            // The first send requests a key update; the request stays
+            // outstanding so further sends must not request again. The 5th
+            // send crosses the client's own write limit, which still rekeys
+            // but without requesting.
+            client_sends({'a', 'b', 'c', 'd', 'e', 'f'});
+            read_result.test_sz_eq("two key updates were sent", client_cb->key_updates_sent(), 2);
+            read_result.test_sz_eq("only one requested reciprocation", client_cb->key_updates_requested(), 1);
+            read_result.test_sz_eq("server has not responded yet", server_cb->key_updates_sent(), 0);
+
+            // Once the server sends application data it must reciprocate,
+            // with a single KeyUpdate and without requesting
+            const uint8_t reply = 'R';
+            server.send(&reply, 1);
+            pump();
+            read_result.test_sz_eq("server reciprocated once", server_cb->key_updates_sent(), 1);
+            read_result.test_sz_eq("server did not request", server_cb->key_updates_requested(), 0);
+
+            // The peer's KeyUpdate reset the read-side counter; no new
+            // request until the threshold is crossed again
+            client_sends({'g'});
+            read_result.test_sz_eq("no further key update", client_cb->key_updates_sent(), 2);
+
+            const std::vector<uint8_t> client_total{'x', 'a', 'b', 'c', 'd', 'e', 'f', 'g'};
+            read_result.test_bin_eq("server received client data intact", server_cb->received(), client_total);
+            const std::vector<uint8_t> server_total{'0', '1', '2', '3', '4', '5', '6', 'R'};
+            read_result.test_bin_eq("client received server data intact", client_cb->received(), server_total);
+
+            client.close();
+            pump();
+         } catch(const std::exception& e) {
+            read_result.test_failure("read-side key update request", e.what());
+         }
+
+         results.push_back(read_result);
+
+         Test::Result crossed_result("TLS 1.3 key updates crossing in flight");
+
+         try {
+            std::vector<uint8_t> c2s;
+            std::vector<uint8_t> s2c;
+            auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
+            auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
+
+            // The client rate limits received KeyUpdates aggressively; the
+            // server rekeys after 3 records
+            auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(0, 60000);
+            auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(3);
+
+            auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+            Botan::TLS::Server server(server_cb, session_manager, creds, server_policy, rng);
+            Botan::TLS::Client client(client_cb,
+                                      session_manager,
+                                      creds,
+                                      client_policy,
+                                      rng,
+                                      Botan::TLS::Server_Information("server.example.com"),
+                                      Botan::TLS::Protocol_Version::TLS_V13);
+
+            auto deliver = [](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
+               std::vector<uint8_t> input;
+               std::swap(transport, input);
+               receiver.received_data(input.data(), input.size());
+            };
+
+            while(!c2s.empty() || !s2c.empty()) {
+               deliver(c2s, server);
+               deliver(s2c, client);
+            }
+            crossed_result.test_is_true("handshake complete",
+                                        client.is_handshake_complete() && server.is_handshake_complete());
+
+            // The client requests a key update while, still unaware of the
+            // request, the server's own write limit triggers a requesting
+            // KeyUpdate of its own: the two requests cross in flight
+            client.update_traffic_keys(true /* request_peer_update */);
+
+            const std::vector<uint8_t> server_msg{'0', '1', '2', '3'};
+            for(const uint8_t byte : server_msg) {
+               server.send(&byte, 1);
+            }
+
+            // Now the server learns of the client's request and reciprocates
+            // with its next record. The client ends up processing the server's
+            // own KeyUpdate and the reciprocation back to back.
+            deliver(c2s, server);
+            const uint8_t last_byte = '4';
+            server.send(&last_byte, 1);
+            deliver(s2c, client);
+
+            crossed_result.test_is_true("client survived back to back key updates", client.is_active());
+            const std::vector<uint8_t> expected{'0', '1', '2', '3', '4'};
+            crossed_result.test_bin_eq("client received server data intact", client_cb->received(), expected);
+            crossed_result.test_sz_eq("server sent two key updates", server_cb->key_updates_sent(), 2);
+            crossed_result.test_sz_eq("server requested once", server_cb->key_updates_requested(), 1);
+
+            // The client still owes the server a reciprocal KeyUpdate for the
+            // server's own request
+            const uint8_t client_byte = 'x';
+            client.send(&client_byte, 1);
+            deliver(c2s, server);
+            crossed_result.test_sz_eq("client sent two key updates", client_cb->key_updates_sent(), 2);
+            crossed_result.test_sz_eq("client requested once", client_cb->key_updates_requested(), 1);
+            crossed_result.test_bin_eq(
+               "server received client data intact", server_cb->received(), std::vector<uint8_t>{'x'});
+
+            client.close();
+            while(!c2s.empty() || !s2c.empty()) {
+               deliver(c2s, server);
+               deliver(s2c, client);
+            }
+         } catch(const std::exception& e) {
+            crossed_result.test_failure("key updates crossing in flight", e.what());
+         }
+
+         results.push_back(crossed_result);
+
+         Test::Result reversed_result("TLS 1.3 solicited reciprocation preceding a request");
+
+         try {
+            std::vector<uint8_t> c2s;
+            std::vector<uint8_t> s2c;
+            auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
+            auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
+
+            auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(0, 60000);
+            auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(3);
+
+            auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+            Botan::TLS::Server server(server_cb, session_manager, creds, server_policy, rng);
+            Botan::TLS::Client client(client_cb,
+                                      session_manager,
+                                      creds,
+                                      client_policy,
+                                      rng,
+                                      Botan::TLS::Server_Information("server.example.com"),
+                                      Botan::TLS::Protocol_Version::TLS_V13);
+
+            auto deliver = [](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
+               std::vector<uint8_t> input;
+               std::swap(transport, input);
+               receiver.received_data(input.data(), input.size());
+            };
+
+            while(!c2s.empty() || !s2c.empty()) {
+               deliver(c2s, server);
+               deliver(s2c, client);
+            }
+            reversed_result.test_is_true("handshake complete",
+                                         client.is_handshake_complete() && server.is_handshake_complete());
+
+            // This time the server sees the client's request right away and
+            // reciprocates with its first record; its own write limit then
+            // triggers a requesting KeyUpdate a few records later. The
+            // reciprocation must not count against the rate limit, or the
+            // server's own legitimate request would be rejected.
+            client.update_traffic_keys(true /* request_peer_update */);
+            deliver(c2s, server);
+
+            const std::vector<uint8_t> server_msg{'0', '1', '2', '3'};
+            for(const uint8_t byte : server_msg) {
+               server.send(&byte, 1);
+            }
+            deliver(s2c, client);
+
+            reversed_result.test_is_true("client survived back to back key updates", client.is_active());
+            reversed_result.test_bin_eq("client received server data intact", client_cb->received(), server_msg);
+            reversed_result.test_sz_eq("server sent two key updates", server_cb->key_updates_sent(), 2);
+            reversed_result.test_sz_eq("server requested once", server_cb->key_updates_requested(), 1);
+
+            const uint8_t client_byte = 'x';
+            client.send(&client_byte, 1);
+            deliver(c2s, server);
+            reversed_result.test_sz_eq("client sent two key updates", client_cb->key_updates_sent(), 2);
+            reversed_result.test_sz_eq("client requested once", client_cb->key_updates_requested(), 1);
+
+            client.close();
+            while(!c2s.empty() || !s2c.empty()) {
+               deliver(c2s, server);
+               deliver(s2c, client);
+            }
+         } catch(const std::exception& e) {
+            reversed_result.test_failure("solicited reciprocation preceding a request", e.what());
+         }
+
+         results.push_back(reversed_result);
+      }
+   #endif
+
    public:
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
@@ -1612,6 +2154,12 @@ class TLS_Unit_Tests final : public Test {
          // generation and tls_ephemeral_key_agreement() for performing the key agreement.
 
          test_custom_ecdh_provider(results, creds, rng);
+
+         // Automatic KeyUpdates after a policy-defined number of records
+
+   #if defined(BOTAN_HAS_TLS_13)
+         test_tls13_automatic_key_updates(results, creds, rng);
+   #endif
 
          // Test using a custom KDF instead of the original TLS 1.2 KDF
          // (this is a TLS 1.2 specific feature)

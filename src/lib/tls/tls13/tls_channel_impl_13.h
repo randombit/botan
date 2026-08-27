@@ -339,6 +339,13 @@ class Channel_Impl_13 : public Channel_Impl,
       bool m_can_write;
 
       bool m_opportunistic_key_update;
+
+      /**
+       * True while a KeyUpdate with "update_requested" is outstanding, i.e.
+       * the peer has not yet replied with a KeyUpdate of its own.
+       */
+      bool m_key_update_requested;
+
       bool m_first_message_sent;
       bool m_first_message_received;
 
