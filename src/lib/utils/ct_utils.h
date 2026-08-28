@@ -515,17 +515,17 @@ class Mask final {
       /**
       * AND-combine two masks
       */
-      friend Mask<T> operator&(Mask<T> x, Mask<T> y) { return Mask<T>(x.value() & y.value()); }
+      friend constexpr Mask<T> operator&(Mask<T> x, Mask<T> y) { return Mask<T>(x.value() & y.value()); }
 
       /**
       * XOR-combine two masks
       */
-      friend Mask<T> operator^(Mask<T> x, Mask<T> y) { return Mask<T>(x.value() ^ y.value()); }
+      friend constexpr Mask<T> operator^(Mask<T> x, Mask<T> y) { return Mask<T>(x.value() ^ y.value()); }
 
       /**
       * OR-combine two masks
       */
-      friend Mask<T> operator|(Mask<T> x, Mask<T> y) { return Mask<T>(x.value() | y.value()); }
+      friend constexpr Mask<T> operator|(Mask<T> x, Mask<T> y) { return Mask<T>(x.value() | y.value()); }
 
       /**
       * Negate this mask

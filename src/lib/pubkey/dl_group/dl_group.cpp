@@ -289,7 +289,7 @@ namespace {
 BigInt make_dsa_generator(const BigInt& p, const BigInt& q) {
    BigInt e;
    BigInt r;
-   vartime_divide(p - 1, q, e, r);
+   ct_divide(p - 1, q, e, r);
 
    if(e == 0 || r > 0) {
       throw Invalid_Argument("make_dsa_generator q does not divide p-1");

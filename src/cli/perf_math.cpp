@@ -75,35 +75,26 @@ class PerfTest_MpDiv final : public PerfTest {
             const std::string bit_descr = std::to_string(n_bits) + "/" + std::to_string(q_bits);
 
             auto div_timer = config.make_timer("BigInt div " + bit_descr);
-            auto ct_div_timer = config.make_timer("BigInt ct_div " + bit_descr);
 
             Botan::BigInt y;
             Botan::BigInt x;
-            const Botan::secure_vector<Botan::word> ws;
 
-            Botan::BigInt q1;
-            Botan::BigInt r1;
-            Botan::BigInt q2;
-            Botan::BigInt r2;
+            Botan::BigInt q;
+            Botan::BigInt r;
 
-            while(ct_div_timer->under(runtime_per_size)) {
+            while(div_timer->under(runtime_per_size)) {
                x.randomize(config.rng(), n_bits);
                y.randomize(config.rng(), q_bits);
 
                div_timer->start();
-               Botan::vartime_divide(x, y, q1, r1);
+               Botan::ct_divide(x, y, q, r);
                div_timer->stop();
 
-               ct_div_timer->start();
-               Botan::ct_divide(x, y, q2, r2);
-               ct_div_timer->stop();
-
-               BOTAN_ASSERT_EQUAL(q1, q2, "Quotient ok");
-               BOTAN_ASSERT_EQUAL(r1, r2, "Remainder ok");
+               BOTAN_ASSERT_NOMSG(r < y);
+               BOTAN_ASSERT_NOMSG(q * y + r == x);
             }
 
             config.record_result(*div_timer);
-            config.record_result(*ct_div_timer);
          }
       }
 };
@@ -119,10 +110,9 @@ class PerfTest_MpDiv10 final : public PerfTest {
             const std::string bit_descr = std::to_string(n_bits) + "/10";
 
             auto div_timer = config.make_timer("BigInt div " + bit_descr);
-            auto ct_div_timer = config.make_timer("BigInt ct_div " + bit_descr);
+            auto div_word_timer = config.make_timer("BigInt div_word " + bit_descr);
 
             Botan::BigInt x;
-            const Botan::secure_vector<Botan::word> ws;
 
             const auto ten = Botan::BigInt::from_word(10);
             Botan::BigInt q1;
@@ -130,23 +120,23 @@ class PerfTest_MpDiv10 final : public PerfTest {
             Botan::BigInt q2;
             Botan::word r2 = 0;
 
-            while(ct_div_timer->under(runtime_per_size)) {
+            while(div_timer->under(runtime_per_size)) {
                x.randomize(config.rng(), n_bits);
 
                div_timer->start();
-               Botan::vartime_divide(x, ten, q1, r1);
+               Botan::ct_divide(x, ten, q1, r1);
                div_timer->stop();
 
-               ct_div_timer->start();
+               div_word_timer->start();
                Botan::ct_divide_word(x, 10, q2, r2);
-               ct_div_timer->stop();
+               div_word_timer->stop();
 
                BOTAN_ASSERT_EQUAL(q1, q2, "Quotient ok");
                BOTAN_ASSERT_EQUAL(r1, r2, "Remainder ok");
             }
 
             config.record_result(*div_timer);
-            config.record_result(*ct_div_timer);
+            config.record_result(*div_word_timer);
          }
       }
 };
@@ -180,14 +170,14 @@ class PerfTest_BnRedc final : public PerfTest {
             auto mod_p = Botan::Barrett_Reduction::for_public_modulus(p);
 
             auto barrett_timer = config.make_timer(bit_str + "Barrett redc");
-            auto knuth_timer = config.make_timer(bit_str + "Knuth redc");
+            auto mod_op_timer = config.make_timer(bit_str + "operator% redc");
             auto ct_modulo_timer = config.make_timer(bit_str + "ct_modulo");
 
             while(ct_modulo_timer->under(runtime)) {
                const Botan::BigInt x(config.rng(), p.bits() * 2 - 1);
 
                const Botan::BigInt r1 = barrett_timer->run([&] { return mod_p.reduce(x); });
-               const Botan::BigInt r2 = knuth_timer->run([&] { return x % p; });
+               const Botan::BigInt r2 = mod_op_timer->run([&] { return x % p; });
                const Botan::BigInt r3 = ct_modulo_timer->run([&] { return Botan::ct_modulo(x, p); });
 
                BOTAN_ASSERT(r1 == r2, "Computed different results");
@@ -195,7 +185,7 @@ class PerfTest_BnRedc final : public PerfTest {
             }
 
             config.record_result(*barrett_timer);
-            config.record_result(*knuth_timer);
+            config.record_result(*mod_op_timer);
             config.record_result(*ct_modulo_timer);
          }
       }

@@ -17,9 +17,8 @@ void fuzz(std::span<const uint8_t> in) {
    static Botan::BigInt y;
    static Botan::BigInt q;
    static Botan::BigInt r;
-   static Botan::BigInt ct_q;
-   static Botan::BigInt ct_r;
    static Botan::BigInt z;
+   static Botan::BigInt ct_q;
 
    x = Botan::BigInt::from_bytes(in.subspan(0, in.size() / 2));
    y = Botan::BigInt::from_bytes(in.subspan(in.size() / 2, in.size() - in.size() / 2));
@@ -28,7 +27,7 @@ void fuzz(std::span<const uint8_t> in) {
       return;
    }
 
-   Botan::vartime_divide(x, y, q, r);
+   Botan::ct_divide(x, y, q, r);
 
    FUZZER_ASSERT_TRUE(r < y);
 
@@ -36,26 +35,24 @@ void fuzz(std::span<const uint8_t> in) {
 
    FUZZER_ASSERT_EQUAL(z, x);
 
-   Botan::ct_divide(x, y, ct_q, ct_r);
+   // Now divide by just low word of y, cross-checking the word division
+   // against the general division
 
-   FUZZER_ASSERT_EQUAL(q, ct_q);
-   FUZZER_ASSERT_EQUAL(r, ct_r);
-
-   // Now divide by just low word of y
-
-   y = y.word_at(0);
-   if(y == 0) {
+   const Botan::word yw = y.word_at(0);
+   if(yw == 0) {
       return;
    }
 
-   Botan::vartime_divide(x, y, q, r);
+   y = Botan::BigInt::from_word(yw);
+
+   Botan::ct_divide(x, y, q, r);
 
    FUZZER_ASSERT_TRUE(r < y);
    z = q * y + r;
    FUZZER_ASSERT_EQUAL(z, x);
 
    Botan::word rw = 0;
-   Botan::ct_divide_word(x, y.word_at(0), ct_q, rw);
+   Botan::ct_divide_word(x, yw, ct_q, rw);
    FUZZER_ASSERT_EQUAL(ct_q, q);
    FUZZER_ASSERT_EQUAL(rw, r.word_at(0));
 }

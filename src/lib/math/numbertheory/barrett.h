@@ -19,15 +19,15 @@ class BOTAN_TEST_API Barrett_Reduction final {
       /**
       * Setup for reduction where the modulus itself is public
       *
+      * Currently implemented identically to for_secret_modulus; the
+      * distinction documents the caller's intent
+      *
       * Requires that m > 0
       */
       static Barrett_Reduction for_public_modulus(const BigInt& m);
 
       /**
       * Setup for reduction where the modulus itself is secret.
-      *
-      * This is slower than for_public_modulus since it must avoid using
-      * variable time division.
       *
       * Requires that m > 0
       */

@@ -412,6 +412,79 @@ class BigInt_Div_Test final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("math", "bn_div", BigInt_Div_Test);
 
+class BigInt_CtDivide_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("BigInt ct_divide");
+
+         for(size_t y_bits = 1; y_bits <= 384; y_bits += 5) {
+            const BigInt y(rng(), y_bits, true);
+
+            const size_t x_bit_choices[] = {1, y_bits / 2 + 1, y_bits, y_bits + 1, y_bits + 65, 2 * y_bits + 3};
+
+            // Test some random inputs of varying sizes
+            for(const size_t x_bits : x_bit_choices) {
+               const BigInt x(rng(), x_bits, false);
+               check_divide(result, x, y);
+               check_divide(result, -x, y);
+               check_divide(result, x, -y);
+            }
+
+            const BigInt q(rng(), y_bits + 64, false);
+            check_divide(result, q * y, y);            // Exact multiple
+            check_divide(result, q * y + 1, y);        // Smallest non-zero remainder
+            check_divide(result, q * y + (y - 1), y);  // Largest possible remainder
+
+            // Cases where x and y are related
+            check_divide(result, (y << 64) - 1, y);
+            check_divide(result, (y << 128) - 1, y);
+            check_divide(result, y - 1, y);
+            check_divide(result, y, y);
+            check_divide(result, y + 1, y);
+
+            const BigInt x(rng(), y_bits + 130, false);
+
+            // Power of 2 and all-1s divisors
+            check_divide(result, x, BigInt::power_of_2(y_bits));
+            check_divide(result, x, BigInt::power_of_2(y_bits) - 1);
+
+            // Word sized divisors including 1 and the maximum word
+            check_divide(result, x, BigInt::one());
+            check_divide(result, x, BigInt::from_word(~static_cast<Botan::word>(0)));
+         }
+
+         return {result};
+      }
+
+   private:
+      static void check_divide(Test::Result& result, const BigInt& x, const BigInt& y) {
+         BigInt q;
+         BigInt r;
+         Botan::ct_divide(x, y, q, r);
+
+         result.test_bn_eq("ct_divide identity", q * y + r, x);
+         result.test_is_true("ct_divide r >= 0", r.signum() >= 0);
+         result.test_is_true("ct_divide r < |y|", r < y.abs());
+
+         if(y.sig_words() == 1 && y.signum() > 0) {
+            // Cross-check with ct_divide_word if possible
+            const Botan::word yw = y.word_at(0);
+
+            BigInt wq;
+            Botan::word wr = 0;
+            Botan::ct_divide_word(x, yw, wq, wr);
+            result.test_bn_eq("ct_divide_word q", wq, q);
+            result.test_bn_eq("ct_divide_word r", BigInt::from_word(wr), r);
+
+            if(x.signum() >= 0) {
+               result.test_bn_eq("ct_mod_word", BigInt::from_word(Botan::ct_mod_word(x, yw)), r);
+            }
+         }
+      }
+};
+
+BOTAN_REGISTER_TEST("math", "bn_ct_divide", BigInt_CtDivide_Test);
+
 class BigInt_DivPow2k_Test final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -441,12 +514,11 @@ class BigInt_DivPow2k_Test final : public Test {
 
    private:
       static void testcase(size_t k, const BigInt& y, Test::Result& result) {
-         const BigInt ct_pow2k = ct_divide_pow2k(k, y);
-         const BigInt vt_pow2k = vartime_divide_pow2k(k, y);
-         const BigInt ref = BigInt::power_of_2(k) / y;
+         const BigInt q = ct_divide_pow2k(k, y);
+         const BigInt r = BigInt::power_of_2(k) - q * y;
 
-         result.test_bn_eq("ct_divide_pow2k matches Knuth division", ct_pow2k, ref);
-         result.test_bn_eq("vartime_divide_pow2k matches Knuth division", vt_pow2k, ref);
+         result.test_is_true("ct_divide_pow2k r >= 0", r.signum() >= 0);
+         result.test_is_true("ct_divide_pow2k r < y", r < y);
       }
 };
 
