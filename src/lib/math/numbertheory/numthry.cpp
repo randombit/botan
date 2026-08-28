@@ -395,6 +395,20 @@ bool is_prime(const BigInt& n, RandomNumberGenerator& rng, size_t prob, bool is_
       return std::binary_search(PRIMES, PRIMES + PRIME_TABLE_SIZE, num);
    }
 
+   // Trial division, which is much cheaper than the Miller-Rabin setup below
+   const auto residues = mod_small_primes(n, std::min(n_bits, PRIME_TABLE_SIZE));
+
+   auto no_small_factor = CT::Mask<word>::set();
+   for(const word r : residues) {
+      // We've already checked above that n is not itself in the primes table, so any
+      // remainder of zero implies a factor rather than equality
+      no_small_factor &= CT::Mask<word>::expand(r);
+   }
+
+   if(!no_small_factor.as_bool()) {
+      return false;
+   }
+
    auto mod_n = Barrett_Reduction::for_secret_modulus(n);
    const Montgomery_Params monty_n(n, mod_n);
 

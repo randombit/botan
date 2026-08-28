@@ -791,6 +791,43 @@ class BigInt_IsPrime_Test final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("math", "bn_isprime", BigInt_IsPrime_Test);
 
+class BigInt_ModSmallPrimes_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("BigInt mod_small_primes");
+
+         result.start_timer();
+
+         for(const size_t bits : {1, 16, 17, 31, 64, 100, 256, 1024, 2048}) {
+            const Botan::BigInt n(this->rng(), bits);
+
+            for(const size_t num_primes : {100, 6541}) {
+               const auto residues = Botan::mod_small_primes(n, num_primes);
+
+               bool all_ok = result.test_sz_eq("expected number of residues", residues.size(), num_primes);
+
+               for(size_t i = 0; i != residues.size(); ++i) {
+                  const Botan::word ref = n % Botan::PRIMES[i];
+                  if(residues[i] != ref) {
+                     result.test_failure(Botan::fmt("Wrong residue of {} mod {}", n.to_hex_string(), Botan::PRIMES[i]));
+                     all_ok = false;
+                  }
+               }
+
+               if(all_ok) {
+                  result.test_success(Botan::fmt("Correct residues of a {} bit integer", bits));
+               }
+            }
+         }
+
+         result.end_timer();
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("math", "bn_mod_small_primes", BigInt_ModSmallPrimes_Test);
+
 class BigInt_IsSquare_Test final : public Text_Based_Test {
    public:
       BigInt_IsSquare_Test() : Text_Based_Test("bn/perfect_square.vec", "X,R") {}
