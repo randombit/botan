@@ -586,9 +586,12 @@ inline constexpr W divide_10(W x) {
 * Compute the reciprocal floor((2^(2b) - 1) / D) - 2^b of a normalized
 * divisor D (ie one with its top bit set)
 *
-* This is the same value as computed by Algorithms 2 and 3 of Möller and
-* Granlund "Improved Division by Invariant Integers", but in this context it is
-* simpler to just use compiler provided division instructions where available.
+* This is the same value as computed by Algorithms 2 and 3 of
+* Möller and Granlund "Improved Division by Invariant Integers".
+* (https://gmplib.org/~tege/division-paper.pdf)
+*
+* Uses compiler provided division instructions where available, and
+* Algorithm 2 as the portable 64-bit fallback.
 */
 template <WordType W>
 constexpr W reciprocal_word(W D) {
@@ -597,7 +600,8 @@ constexpr W reciprocal_word(W D) {
    /*
    * Subtracting 2^b*D from the numerator gives
    * v = floor(((~D)*2^b + (2^b - 1)) / D). Since D is normalized, ~D < D
-   * and the quotient fits in a word.
+   * and the quotient fits in a word. See the first part of Section III A
+   * in the paper.
    */
    if constexpr(sizeof(W) == 4) {
       const auto nD = ~D;  // Work around spurious MSVC warning
@@ -631,21 +635,27 @@ constexpr W reciprocal_word(W D) {
 #endif
       }
 
-      W remainder = static_cast<W>(~D);
-      W quotient = 0;
+      // Algorithm 2 of Möller and Granlund
+      const W d0 = D & 1;
+      const W d9 = D >> 55;
+      const W d40 = (D >> 24) + 1;
+      const W d63 = (D >> 1) + d0;  // ceil(D/2)
 
-      for(size_t i = 0; i != WordInfo<W>::bits; ++i) {
-         const W carry = remainder >> (WordInfo<W>::bits - 1);
-         remainder = static_cast<W>((remainder << 1) | 1);
-         quotient <<= 1;
+      // This division is done with a table lookup in the paper
+      const W v0 = ((W(1) << 19) - (W(3) << 8)) / d9;
+      const W v1 = (v0 << 11) - ((v0 * v0 * d40) >> 40) - 1;
+      const W v2 = (v1 << 13) + ((v1 * ((W(1) << 60) - v1 * d40)) >> 47);
 
-         if(carry != 0 || remainder >= D) {
-            remainder -= D;
-            quotient |= 1;
-         }
-      }
+      const W e = W(0) - v2 * d63 + (v2 >> 1) * d0;
 
-      return quotient;
+      W product_hi = 0;
+      word_madd2(v2, e, &product_hi);
+      const W v3 = (v2 << 31) + (product_hi >> 1);
+
+      // Compute floor((v3 + 2^64 + 1) * D / 2^64) modulo 2^64
+      product_hi = D;
+      word_madd2(v3, D, &product_hi);
+      return v3 - D - product_hi;
    }
 }
 
@@ -660,7 +670,7 @@ constexpr W reciprocal_word_ct(W D) {
    BOTAN_DEBUG_ASSERT((D & WordInfo<W>::top_bit) != 0);
 
    // Bit serial long division of ((~D) || (2^b - 1)) / D, with all of the
-   // conditional logic of the reciprocal_word fallback computed via masks
+   // conditional logic computed via masks
    W remainder = static_cast<W>(~D);
    W quotient = 0;
 
