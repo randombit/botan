@@ -7,6 +7,7 @@ name -> "FrodoKEM"
 </module_info>
 
 <requires>
-shake_xof
+hash_engine
+shake
 frodokem_common
 </requires>

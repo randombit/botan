@@ -11,7 +11,7 @@ type -> "Internal"
 <requires>
 pubkey
 rng
-shake_xof
+xof
 </requires>
 
 <header:public>
