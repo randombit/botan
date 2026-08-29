@@ -26,6 +26,7 @@ xmss_wots.h
 asn1
 rng
 hash
+hash_engine
 stateful_key_index
 trunc_hash
 </requires>
