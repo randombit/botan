@@ -12,11 +12,11 @@
 
 #include <botan/assert.h>
 #include <botan/types.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/mp_asmi.h>
 #include <array>
-#include <bit>
 #include <span>
 
 namespace Botan {
@@ -704,7 +704,7 @@ class divide_precomp final {
    public:
       // The caller must guarantee not to use divisor == 0
       static constexpr divide_precomp setup_vartime(W divisor) {
-         const size_t shift = WordInfo<W>::bits - std::bit_width(divisor);
+         const size_t shift = WordInfo<W>::bits - high_bit(divisor);
          const W norm_divisor = divisor << shift;
          const W reciprocal = reciprocal_word(norm_divisor);
          return divide_precomp(divisor, shift, norm_divisor, reciprocal);
@@ -712,7 +712,7 @@ class divide_precomp final {
 
       // The caller must guarantee not to use divisor == 0
       static constexpr divide_precomp setup(W divisor) {
-         const size_t shift = WordInfo<W>::bits - std::bit_width(divisor);
+         const size_t shift = WordInfo<W>::bits - high_bit(divisor);
          const W norm_divisor = divisor << shift;
          const W reciprocal = reciprocal_word_ct(norm_divisor);
          return divide_precomp(divisor, shift, norm_divisor, reciprocal);
@@ -753,20 +753,22 @@ class divide_precomp final {
          * Scale the numerator to match the normalized divisor; the scaling cancels
          * in the quotient and is removed from the remainder by the final shift.
          */
-         const auto [u1, u0] = [&]() {
-            if(m_shift == 0) {
-               // No scaling needed
-               return std::make_pair(n1, n0);
-            } else {
-               const size_t rshift = WordInfo<W>::bits - m_shift;
-               const W s_n1 = (n1 << m_shift) | (n0 >> rshift);
-               const W s_n0 = n0 << m_shift;
-               return std::make_pair(s_n1, s_n0);
-            }
-         }();
+         n1 <<= m_shift;
+         const size_t rshift = WordInfo<W>::bits - m_shift;
+         /*
+         * We can't just `n0 >> rshift` because m_shift may be 0 (high bit divisor)
+         * in which case rshift will be the maximum bit length, and >> by the maximum
+         * bitlength is undefined behavior despite having an entirely obvious meaning.
+         *
+         * However we know m_shift is not equal to the bit length of the word, because
+         * that would imply that the divisor is 0. Thus rshift must be >= 1. So split
+         * the shift into two phases (first rshift-1, then 1)
+         */
+         n1 |= (n0 >> 1) >> (rshift - 1);
+         n0 <<= m_shift;
 
-         const auto [q, rshift] = div2by1_preinv(u1, u0, m_norm_divisor, m_reciprocal);
-         const W r = rshift >> m_shift;
+         const auto [q, scaled_r] = div2by1_preinv(n1, n0, m_norm_divisor, m_reciprocal);
+         const W r = scaled_r >> m_shift;
          return std::make_pair(q, r);
       }
 

@@ -80,7 +80,7 @@ BOTAN_FORCE_INLINE constexpr size_t high_bit(T n) {
       n >>= z;
    }
 
-   hb += n;
+   hb += static_cast<size_t>(n);
 
    return hb;
 }
