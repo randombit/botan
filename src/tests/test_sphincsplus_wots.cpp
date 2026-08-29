@@ -93,9 +93,10 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test {
          Botan::WotsSignature sig_out(params.n() * params.wots_len());
          Botan::SphincsTreeNode hashed_pk_out(params.n());
          wots_sign_and_pkgen(Botan::StrongSpan<Botan::WotsSignature>(sig_out),
-                             Botan::StrongSpan<Botan::SphincsTreeNode>(hashed_pk_out),
+                             std::span<uint8_t>(hashed_pk_out.get()),
                              secret_seed,
                              leaf_idx,
+                             1 /* leaf_count */,
                              leaf_idx,
                              wots_steps,
                              leaf_addr,

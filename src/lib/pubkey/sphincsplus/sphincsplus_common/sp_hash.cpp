@@ -13,6 +13,7 @@
 #include <botan/hash.h>
 #include <botan/sp_parameters.h>
 #include <botan/internal/buffer_slicer.h>
+#include <botan/internal/hash_engine.h>
 #include <memory>
 
 #if defined(BOTAN_HAS_SPHINCS_PLUS_SHAKE_BASE)
@@ -28,6 +29,37 @@ namespace Botan {
 Sphincs_Hash_Functions::Sphincs_Hash_Functions(const Sphincs_Parameters& sphincs_params,
                                                const SphincsPublicSeed& pub_seed) :
       m_sphincs_params(sphincs_params), m_pub_seed(pub_seed) {}
+
+void Sphincs_Hash_Functions::T_batch(std::span<std::span<uint8_t>> outputs,
+                                     std::span<const Sphincs_Address> addresses,
+                                     std::span<std::span<const uint8_t>> inputs) {
+   BOTAN_ASSERT_NOMSG(outputs.size() == addresses.size() && addresses.size() == inputs.size());
+
+   if(addresses.empty()) {
+      return;
+   }
+
+   auto& engine = tweak_hash_engine(inputs[0].size());
+
+   const size_t adrs_len = address_encoding_len();
+   m_adrs_buf.resize(addresses.size() * adrs_len);
+   m_adrs_spans.resize(addresses.size());
+
+   for(size_t i = 0; i != addresses.size(); ++i) {
+      const auto adrs = std::span(m_adrs_buf).subspan(i * adrs_len, adrs_len);
+      encode_address(adrs, addresses[i]);
+      m_adrs_spans[i] = adrs;
+   }
+
+   engine.batch_hash(outputs, m_adrs_spans, inputs);
+}
+
+void Sphincs_Hash_Functions::PRF_batch(std::span<std::span<uint8_t>> outputs,
+                                       const SphincsSecretSeed& sk_seed,
+                                       std::span<const Sphincs_Address> addresses) {
+   m_prf_inputs.assign(addresses.size(), std::span<const uint8_t>(sk_seed.get()));
+   T_batch(outputs, addresses, m_prf_inputs);
+}
 
 std::unique_ptr<Sphincs_Hash_Functions> Sphincs_Hash_Functions::create(const Sphincs_Parameters& sphincs_params,
                                                                        const SphincsPublicSeed& pub_seed) {

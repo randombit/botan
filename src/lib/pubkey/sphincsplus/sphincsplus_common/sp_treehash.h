@@ -22,13 +22,19 @@ namespace Botan {
 class Sphincs_Address;
 class Sphincs_Hash_Functions;
 
-using GenerateLeafFunction = std::function<void(StrongSpan<SphincsTreeNode> /* leaf out parameter */, TreeNodeIndex)>;
+/**
+ * Creates the nodes of @p count consecutive leaves, starting at the leaf with
+ * address index @p first, into the output buffer. Implementations must fully
+ * specify the hash addresses used for the leaves.
+ */
+using GenerateLeavesFunction =
+   std::function<void(std::span<uint8_t> /* leaves out parameter */, TreeNodeIndex /* first */, uint32_t /* count */)>;
 
 /**
  * Implements a generic Merkle tree hash. Will be used for both FORS and XMSS
  * signatures.
- * @p gen_leaf is used to create leaf nodes in the respective trees.
- * Additionally XMSS uses the gen_leaf logic to store the WOTS Signature in the
+ * @p gen_leaves is used to create batches of leaf nodes in the respective trees.
+ * Additionally XMSS uses the gen_leaves logic to store the WOTS Signature in the
  * main SLH-DSA signature. The @p leaf_idx is the index of leaf to sign. If
  * only the root node must be computed (without a signature), the @p leaf_idx is
  * set to std::nullopt.
@@ -40,7 +46,7 @@ BOTAN_TEST_API void treehash(StrongSpan<SphincsTreeNode> out_root,
                              std::optional<TreeNodeIndex> leaf_idx,
                              uint32_t idx_offset,
                              uint32_t tree_height,
-                             const GenerateLeafFunction& gen_leaf,
+                             const GenerateLeavesFunction& gen_leaves,
                              Sphincs_Address& tree_address);
 
 /**

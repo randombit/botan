@@ -28,4 +28,5 @@ sp_xmss.h
 <requires>
 pubkey
 hash
+hash_engine
 </requires>
