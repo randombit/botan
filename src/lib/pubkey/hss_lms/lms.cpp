@@ -13,6 +13,7 @@
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/concat_util.h>
+#include <botan/internal/hash_engine.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tree_hash.h>
 
@@ -84,11 +85,35 @@ void lms_gen_leaf(StrongSpan<LMS_Tree_Node> out,
    hash.final(out);
 }
 
-auto lms_gen_leaf_func(const LMS_PrivateKey& lms_sk) {
-   return [hash = lms_sk.lms_params().hash(), lms_sk](StrongSpan<LMS_Tree_Node> out, const TreeAddress& tree_address) {
-      auto lmots_sk = LMOTS_Private_Key(lms_sk.lmots_params(), lms_sk.identifier(), tree_address.q(), lms_sk.seed());
-      auto lmots_pk = LMOTS_Public_Key(lmots_sk);
-      lms_gen_leaf(out, lmots_pk, tree_address, *hash);
+auto lms_gen_leaves_func(const LMS_PrivateKey& lms_sk) {
+   // The hash engine is created once here and reused for all leaves
+   return [engine = Hash_Engine::create_or_throw(lms_sk.lmots_params().hash_name()), lms_sk](
+             std::span<uint8_t> out, LMS_Tree_Node_Idx first_idx, size_t count) {
+      const size_t m = lms_sk.lms_params().m();
+      const auto& identifier = lms_sk.identifier();
+
+      // The OTS public key hashes of all requested leaves
+      std::vector<uint8_t> ks(count * m);
+      lmots_compute_pubkeys(ks, lms_sk.lmots_params(), identifier, first_idx, count, lms_sk.seed(), *engine);
+
+      // Leaf node hash: H(I || u32str(r) || u16str(D_LEAF) || K)
+      const size_t prefix_len = identifier.size() + sizeof(uint32_t) + sizeof(uint16_t);
+      std::vector<uint8_t> prefixes(count * prefix_len);
+      std::vector<std::span<uint8_t>> outs(count);
+      std::vector<std::span<const uint8_t>> prefix_spans(count);
+      std::vector<std::span<const uint8_t>> k_spans(count);
+      for(size_t i = 0; i != count; ++i) {
+         const uint32_t r = (uint32_t(1) << lms_sk.lms_params().h()) + first_idx.get() + static_cast<uint32_t>(i);
+         const auto prefix_span = std::span(prefixes).subspan(i * prefix_len, prefix_len);
+         BufferStuffer prefix(prefix_span);
+         prefix.append(identifier);
+         prefix.append(store_be(r));
+         prefix.append(store_be(D_LEAF));
+         prefix_spans[i] = prefix_span;
+         outs[i] = out.subspan(i * m, m);
+         k_spans[i] = std::span(ks).subspan(i * m, m);
+      }
+      engine->batch_hash(outs, prefix_spans, k_spans);
    };
 }
 
@@ -97,7 +122,7 @@ void lms_treehash(StrongSpan<LMS_Tree_Node> out_root,
                   std::optional<LMS_Tree_Node_Idx> leaf_idx,
                   const LMS_PrivateKey& lms_sk) {
    auto hash_pair_func = get_hash_pair_func_for_identifier(lms_sk.lms_params(), lms_sk.identifier());
-   auto gen_leaf = lms_gen_leaf_func(lms_sk);
+   auto gen_leaves = lms_gen_leaves_func(lms_sk);
    TreeAddress lms_tree_address(lms_sk.lms_params().h());
 
    treehash(out_root,
@@ -107,7 +132,7 @@ void lms_treehash(StrongSpan<LMS_Tree_Node> out_root,
             LMS_TreeLayerIndex(lms_sk.lms_params().h()),
             0,
             std::move(hash_pair_func),
-            std::move(gen_leaf),
+            std::move(gen_leaves),
             lms_tree_address);
 }
 
