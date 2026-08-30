@@ -18,6 +18,19 @@ class Montgomery_Params;
 class RandomNumberGenerator;
 
 /**
+* Compute the residues of n modulo the first num_primes small odd primes
+*
+* Returns a vector r of length num_primes where r[i] == n % PRIMES[i]
+*
+* This is constant time with respect to the value of n; the primes are
+* public, and num_primes and the word length of n are leaked.
+*
+* @param n a non-negative integer
+* @param num_primes number of primes to reduce by, at most PRIME_TABLE_SIZE
+*/
+std::vector<word> BOTAN_TEST_API mod_small_primes(const BigInt& n, size_t num_primes);
+
+/**
 * Perform Lucas primality test
 * @see FIPS 186-4 C.3.3
 *

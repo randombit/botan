@@ -7,9 +7,14 @@
 
 #include <botan/numthry.h>
 
+#include <botan/internal/mp_core.h>
+#include <botan/internal/primality.h>
+#include <algorithm>
+#include <array>
+
 namespace Botan {
 
-const uint16_t PRIMES[PRIME_TABLE_SIZE + 1] = {
+constexpr uint16_t PRIMES[PRIME_TABLE_SIZE + 1] = {
    3,     5,     7,     11,    13,    17,    19,    23,    29,    31,    37,    41,    43,    47,    53,    59,
    61,    67,    71,    73,    79,    83,    89,    97,    101,   103,   107,   109,   113,   127,   131,   137,
    139,   149,   151,   157,   163,   167,   173,   179,   181,   191,   193,   197,   199,   211,   223,   227,
@@ -420,4 +425,68 @@ const uint16_t PRIMES[PRIME_TABLE_SIZE + 1] = {
    65179, 65183, 65203, 65213, 65239, 65257, 65267, 65269, 65287, 65293, 65309, 65323, 65327, 65353, 65357, 65371,
    65381, 65393, 65407, 65413, 65419, 65423, 65437, 65447, 65449, 65479, 65497, 65519, 65521, 0};
 
+namespace {
+
+consteval auto compute_small_prime_groups() {
+   constexpr size_t small_prime_group_count = sizeof(word) == 8 ? 1577 : 3222;
+   std::array<std::pair<word, uint16_t>, small_prime_group_count> groups{};
+
+   size_t g = 0;
+   size_t i = 0;
+   while(i != PRIME_TABLE_SIZE) {
+      word product = PRIMES[i];
+      size_t run = 1;
+      while(i + run != PRIME_TABLE_SIZE && product <= WordInfo<word>::max / PRIMES[i + run]) {
+         product *= PRIMES[i + run];
+         ++run;
+      }
+      groups[g] = std::make_pair(product, static_cast<uint16_t>(run));
+      ++g;
+      i += run;
+   }
+
+   return groups;
 }
+
+/*
+* A group of consecutive small primes whose product fits in a word
+*/
+constexpr auto SMALL_PRIME_GROUPS = compute_small_prime_groups();
+
+}  // namespace
+
+std::vector<word> mod_small_primes(const BigInt& n, size_t num_primes) {
+   BOTAN_ARG_CHECK(num_primes > 0 && num_primes <= PRIME_TABLE_SIZE, "Invalid num_primes");
+   BOTAN_ARG_CHECK(n.signum() >= 0, "The argument n must be non-negative");
+
+   std::vector<word> residues(num_primes);
+
+   const size_t n_words = n.sig_words();
+
+   size_t i = 0;
+   for(const auto& group : SMALL_PRIME_GROUPS) {
+      if(i >= num_primes) {
+         break;
+      }
+
+      const auto div_product = divide_precomp<word>::setup_vartime(group.first);
+      const size_t group_end = std::min<size_t>(i + group.second, num_primes);
+
+      // First compute n modulo the group product
+      word n_mod_product = 0;
+      for(size_t w = n_words; w > 0; --w) {
+         n_mod_product = div_product.mod_2to1(n_mod_product, n._data()[w - 1]);
+      }
+
+      // Then extract the individual remainders using word arithmetic
+      while(i != group_end) {
+         const auto div_p = divide_precomp<word>::setup_vartime(PRIMES[i]);
+         residues[i] = div_p.mod_2to1(0, n_mod_product);
+         ++i;
+      }
+   }
+
+   return residues;
+}
+
+}  // namespace Botan

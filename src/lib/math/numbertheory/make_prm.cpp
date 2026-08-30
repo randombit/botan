@@ -13,7 +13,6 @@
 #include <botan/internal/barrett.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
-#include <botan/internal/divide.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/monty.h>
 #include <numeric>
@@ -25,11 +24,9 @@ namespace {
 class Prime_Sieve final {
    public:
       Prime_Sieve(const BigInt& init_value, size_t sieve_size, word step, bool check_2p1) :
-            m_sieve(std::min(sieve_size, PRIME_TABLE_SIZE)), m_step(step), m_check_2p1(check_2p1) {
-         for(size_t i = 0; i != m_sieve.size(); ++i) {
-            m_sieve[i] = ct_mod_word(init_value, PRIMES[i]);
-         }
-      }
+            m_sieve(mod_small_primes(init_value, std::min(sieve_size, PRIME_TABLE_SIZE))),
+            m_step(step),
+            m_check_2p1(check_2p1) {}
 
       size_t sieve_size() const { return m_sieve.size(); }
 
