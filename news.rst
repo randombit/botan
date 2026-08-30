@@ -45,6 +45,13 @@ Version 3.14.0, Not Yet Released
 * CI updates including moving most builds to Ubuntu 26.04, adding Windows Aarch64
   builders, and updating dependencies used in CI (GH #5846 #5848 #5860 #5861)
 
+* Rework ``ChaCha_RNG``: it now uses HMAC(SHA-512) instead of HMAC(SHA-256) and
+  also derives the ChaCha nonce from the key material. Optional fast key erasure
+  can be enabled with ``ChaCha_RNG::KeyErasure::WithKeyErasure`` to gain
+  backtracking resistance. As a result the output of ``ChaCha_RNG`` for a given
+  seed has changed; it was never guaranteed to be stable across versions and may
+  change again in the future. (GH #5121)
+
 Version 3.13.0, 2026-08-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
