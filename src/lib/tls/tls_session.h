@@ -19,6 +19,7 @@
 #include <botan/tls_version.h>
 #include <chrono>
 #include <memory>
+#include <optional>
 #include <span>
 
 namespace Botan {
@@ -114,6 +115,22 @@ class BOTAN_PUBLIC_API(3, 0) Session_Base {
        * Return the raw public key of the peer (possibly empty)
        */
       std::shared_ptr<const Public_Key> peer_raw_public_key() const { return m_peer_raw_public_key; }
+
+      /**
+       * Return the type of credential used by the peer, or std::nullopt
+       * if the peer did not authenticate itself
+       */
+      std::optional<Certificate_Type> peer_credential_type() const {
+         if(!m_peer_certs.empty()) {
+            return Certificate_Type::X509;
+         }
+
+         if(m_peer_raw_public_key) {
+            return Certificate_Type::RawPublicKey;
+         }
+
+         return std::nullopt;
+      }
 
       /**
        * Get information about the TLS server
