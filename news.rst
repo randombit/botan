@@ -7,18 +7,31 @@ Version 3.14.0, Not Yet Released
 * Add new type ``PK_Signature_Options`` which allows precisely controlling how
   signatures are created and verified. (GH #5849)
 
+* By default, ECDSA signatures are now randomized rather than deterministic even
+  when RFC 6979 support is available at build time. Deterministic signatures can
+  be requested using the API ``PK_Signature_Options::with_deterministic_signature``
+  or by appending ",Deterministic" to the normal hash specifier string. (GH #5849)
+
 * The Python binding now can adapt itself to any version of Botan3. (GH #5851)
 
 * Add support for parallel hash function invocations, including AVX2/AVX512
   implementations of SHA-256, SHA-512, and SHAKE (GH #5865 #5867 #5869 #5871
   #5872 #5873)
 
+* Optimize SLH-DSA, XMSS, HSS-LSM, FrodoKEM, and ML-KEM using parallel hash
+  function execution. (GH #5866 #5868 #5870 #5876 #5878)
+
+* In TLS 1.3 send KeyUpdate requests when the number of records sent or
+  received approaches a policy-set limit. (GH #5877)
+
 * Modify the bitsliced AES implementation to use the native word size of the
   processor, instead of always 32 bits. (GH #5826)
 
 * Enable support for NEON/ARMv8 codepaths on Windows aarch64 (GH #5863)
 
-* Use Möller-Granlund division where possible (GH #5849)
+* Optimize multiprecision integer division operations, and convert all
+  such divisions to be constant time with respect to their inputs.
+  (GH #5849 #5880 #5883 #5884)
 
 * Optimize base58 encoding and decoding (GH #5858)
 
