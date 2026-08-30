@@ -487,8 +487,8 @@ BER_Decoder& BER_Decoder::verify_end(std::string_view err) {
 */
 BER_Decoder& BER_Decoder::discard_remaining() {
    m_pushed = BER_Object();
-   uint8_t buf = 0;
-   while(m_source->read_byte(buf) != 0) {}
+   uint8_t buf[64];
+   while(m_source->read(buf, sizeof(buf)) != 0) {}
    return (*this);
 }
 
@@ -500,6 +500,11 @@ std::optional<uint8_t> BER_Decoder::read_next_byte() {
    } else {
       return {};
    }
+}
+
+size_t BER_Decoder::read_bytes(std::span<uint8_t> out) {
+   BOTAN_ASSERT_NOMSG(m_source != nullptr);
+   return m_source->read(out.data(), out.size());
 }
 
 const BER_Object& BER_Decoder::peek_next_object() {
