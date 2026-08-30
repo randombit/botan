@@ -272,6 +272,11 @@ void OID::decode_from(BER_Decoder& decoder) {
 
    BufferSlicer data(obj.data());
    std::vector<uint32_t> parts;
+
+   // Each byte of the DER encoding can result in at most one additional arc,
+   // except the first byte which always encodes two.
+   parts.reserve(obj.length() + 1);
+
    while(!data.empty()) {
       const uint32_t comp = consume(data);
 
@@ -296,7 +301,7 @@ void OID::decode_from(BER_Decoder& decoder) {
       }
    }
 
-   m_id = parts;
+   m_id = std::move(parts);
 }
 
 std::ostream& operator<<(std::ostream& out, const OID& oid) {
