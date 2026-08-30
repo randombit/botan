@@ -1047,10 +1047,8 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
             Extensions_Info(bool critical, std::unique_ptr<Certificate_Extension> ext) :
                   m_obj(std::move(ext)), m_bits(m_obj->encode_inner()), m_critical(critical) {}
 
-            Extensions_Info(bool critical,
-                            const std::vector<uint8_t>& encoding,
-                            std::unique_ptr<Certificate_Extension> ext) :
-                  m_obj(std::move(ext)), m_bits(encoding), m_critical(critical) {}
+            Extensions_Info(bool critical, std::vector<uint8_t> encoding, std::unique_ptr<Certificate_Extension> ext) :
+                  m_obj(std::move(ext)), m_bits(std::move(encoding)), m_critical(critical) {}
 
             bool is_critical() const { return m_critical; }
 

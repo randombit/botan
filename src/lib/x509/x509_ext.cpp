@@ -346,14 +346,15 @@ void Extensions::decode_from(BER_Decoder& from_source, std::optional<Extension_C
       if(critical && obj->oid_name().empty()) {
          m_has_unknown_critical_extension = true;
       }
-      Extensions_Info info(critical, bits, std::move(obj));
+      Extensions_Info info(critical, std::move(bits), std::move(obj));
+
+      m_extension_oids.push_back(oid);
 
       // RFC 5280 4.2: "A certificate MUST NOT include more than one
       // instance of a particular extension."
-      if(!m_extension_info.emplace(oid, info).second) {
+      if(!m_extension_info.emplace(std::move(oid), std::move(info)).second) {
          throw Decoding_Error("Duplicate certificate extension encountered");
       }
-      m_extension_oids.push_back(oid);
    }
    sequence.verify_end();
 }
