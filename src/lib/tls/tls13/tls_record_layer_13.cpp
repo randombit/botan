@@ -17,6 +17,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_cipher_state.h>
 #include <algorithm>
+#include <array>
 
 namespace Botan::TLS {
 
@@ -54,12 +55,12 @@ Record_Type read_record_type(const uint8_t type_byte) {
  */
 class TLSPlaintext_Header final {
    public:
-      TLSPlaintext_Header(std::vector<uint8_t> hdr, const bool check_tls13_version) {
+      TLSPlaintext_Header(std::span<const uint8_t, TLS_HEADER_SIZE> hdr, const bool check_tls13_version) {
          // NOLINTBEGIN(*-prefer-member-initializer)
          m_type = read_record_type(hdr[0]);
          m_legacy_version = Protocol_Version(make_uint16(hdr[1], hdr[2]));
          m_fragment_length = make_uint16(hdr[3], hdr[4]);
-         m_serialized = std::move(hdr);
+         copy_mem(m_serialized.data(), hdr.data(), hdr.size());
          // NOLINTEND(*-prefer-member-initializer)
 
          // If no full version check is requested, we just verify the practically
@@ -121,13 +122,13 @@ class TLSPlaintext_Header final {
             m_legacy_version(use_compatibility_version ? 0x0301 : 0x0303)  // RFC 8446 5.1
             ,
             m_fragment_length(static_cast<uint16_t>(frgmnt_length)),
-            m_serialized({
+            m_serialized({{
                static_cast<uint8_t>(m_type),
                m_legacy_version.major_version(),
                m_legacy_version.minor_version(),
                get_byte<0>(m_fragment_length),
                get_byte<1>(m_fragment_length),
-            }) {}
+            }}) {}
 
       Record_Type type() const { return m_type; }
 
@@ -135,13 +136,13 @@ class TLSPlaintext_Header final {
 
       Protocol_Version legacy_version() const { return m_legacy_version; }
 
-      const std::vector<uint8_t>& serialized() const { return m_serialized; }
+      const std::array<uint8_t, TLS_HEADER_SIZE>& serialized() const { return m_serialized; }
 
    private:
       Record_Type m_type;
       Protocol_Version m_legacy_version;
       uint16_t m_fragment_length;
-      std::vector<uint8_t> m_serialized;
+      std::array<uint8_t, TLS_HEADER_SIZE> m_serialized{};
 };
 
 }  // namespace
@@ -332,7 +333,9 @@ Record_Layer::ReadResult<Record> Record_Layer::next_record(Cipher_State* cipher_
    // The first received record(s) are likely a client or server hello. To be able to
    // perform protocol downgrades we must be less vigorous with the record's
    // legacy version. Hence, `check_tls13_version` is `false` for the first record(s).
-   const TLSPlaintext_Header plaintext_header({header_begin, header_end}, !m_receiving_compat_mode);
+   const TLSPlaintext_Header plaintext_header(
+      std::span<const uint8_t, TLS_HEADER_SIZE>(m_read_buffer.data() + m_read_offset, TLS_HEADER_SIZE),
+      !m_receiving_compat_mode);
 
    // After the key exchange phase of the handshake is completed and record protection is engaged,
    // cipher_state is set. At this point, only protected traffic (and CCS) is allowed.
@@ -364,10 +367,11 @@ Record_Layer::ReadResult<Record> Record_Layer::next_record(Cipher_State* cipher_
    Record record(plaintext_header.type(), secure_vector<uint8_t>(fragment_begin, fragment_end));
    m_read_offset += TLS_HEADER_SIZE + plaintext_header.fragment_length();
 
-   // If all buffered data has been consumed, release the buffer memory
-   // to avoid retaining peak allocation on idle connections.
+   // Once all buffered data is consumed, keep the buffer's capacity for the
+   // next record rather than reallocating it every time. The memory is
+   // released via clear_read_buffer() when the connection closes.
    if(m_read_offset == m_read_buffer.size()) {
-      zap(m_read_buffer);
+      m_read_buffer.clear();
       m_read_offset = 0;
    }
 
