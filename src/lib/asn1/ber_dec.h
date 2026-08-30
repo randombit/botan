@@ -13,6 +13,7 @@
 #include <cstring>
 #include <memory>
 #include <optional>
+#include <span>
 #include <type_traits>
 #include <utility>
 
@@ -337,12 +338,9 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       template <typename Alloc>
       BER_Decoder& raw_bytes(std::vector<uint8_t, Alloc>& out) {
          out.clear();
-         for(;;) {
-            if(auto next = this->read_next_byte()) {
-               out.push_back(*next);
-            } else {
-               break;
-            }
+         uint8_t buf[64];
+         while(const size_t got = this->read_bytes(std::span{buf})) {
+            out.insert(out.end(), buf, buf + got);
          }
          return (*this);
       }
@@ -809,6 +807,8 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       BER_Decoder(BER_Object&& obj, BER_Decoder* parent);
 
       std::optional<uint8_t> read_next_byte();
+
+      size_t read_bytes(std::span<uint8_t> out);
 
       BER_Object get_next_value(size_t sizeofT, ASN1_Type type_tag, ASN1_Class class_tag);
 
