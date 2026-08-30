@@ -159,9 +159,6 @@ jobs:
           - target: cross-hppa64
             compiler: gcc
             host_os: ubuntu-26.04
-          - target: cross-mips
-            compiler: gcc
-            host_os: ubuntu-24.04 # no MIPS cross compiler in 26.04
           - target: cross-ppc32
             compiler: gcc
             host_os: ubuntu-26.04
