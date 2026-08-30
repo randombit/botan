@@ -11,6 +11,8 @@
 #include <botan/data_src.h>
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
+#include <algorithm>
+#include <array>
 
 namespace Botan::PEM_Code {
 
@@ -143,28 +145,21 @@ secure_vector<uint8_t> decode(std::string_view pem, std::string& label) {
 bool matches(DataSource& source, std::string_view extra, size_t search_range) {
    const std::string PEM_HEADER = fmt("-----BEGIN {}", extra);
 
-   secure_vector<uint8_t> search_buf(search_range);
-   const size_t got = source.peek(search_buf.data(), search_buf.size(), 0);
+   std::array<uint8_t, 4096> stack_buf{};
+   std::vector<uint8_t> heap_buf;
+   uint8_t* search_buf = stack_buf.data();
+   if(search_range > stack_buf.size()) {
+      heap_buf.resize(search_range);
+      search_buf = heap_buf.data();
+   }
+
+   const size_t got = source.peek(search_buf, search_range, 0);
 
    if(got < PEM_HEADER.length()) {
       return false;
    }
 
-   size_t index = 0;
-
-   for(size_t j = 0; j != got; ++j) {
-      if(static_cast<char>(search_buf[j]) == PEM_HEADER[index]) {
-         ++index;
-      } else {
-         index = 0;
-      }
-
-      if(index == PEM_HEADER.size()) {
-         return true;
-      }
-   }
-
-   return false;
+   return std::search(search_buf, search_buf + got, PEM_HEADER.begin(), PEM_HEADER.end()) != search_buf + got;
 }
 
 }  // namespace Botan::PEM_Code
