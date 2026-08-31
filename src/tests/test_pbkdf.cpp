@@ -151,7 +151,7 @@ class Pwdhash_StopToken_Test final : public Test {
          std::vector<Test::Result> results;
 
          const std::vector<std::string> all_pwdhash = {
-            "Scrypt", "PBKDF2(SHA-256)", "Argon2d", "Argon2i", "Argon2id", "Bcrypt-PBKDF"};
+            "Scrypt", "PBKDF2(SHA-256)", "Argon2d", "Argon2i", "Argon2id", "Bcrypt-PBKDF", "PKCS12-KDF(SHA-256,2)"};
          // Private thread pool to guarantee thread availability for cancellation.
          // We need just 1 thread as the cancellation tests are executed serially.
          Botan::Thread_Pool thread_pool(1);
