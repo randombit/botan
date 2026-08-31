@@ -12,6 +12,8 @@
 #include <string>
 #include <string_view>
 
+BOTAN_FUTURE_INTERNAL_HEADER(pem.h)
+
 namespace Botan {
 
 class DataSource;
