@@ -137,7 +137,8 @@ void verify_mac(std::span<const uint8_t> auth_safe_data,
       pkcs12_kdf({mac_key.data(), mac_key_len}, {}, {mac_salt.data(), mac_salt.size()}, iterations, 3, *hash);
    } else {
       const PKCS12_KDF kdf(HashFunction::create_or_throw(hash_name), 3, iterations);
-      kdf.derive_key(mac_key.data(), mac_key_len, password.data(), password.size(), mac_salt.data(), mac_salt.size());
+      kdf.derive_key(
+         mac_key.data(), mac_key_len, password.data(), password.size(), mac_salt.data(), mac_salt.size(), std::nullopt);
    }
 
    hmac->set_key(mac_key);
@@ -911,7 +912,8 @@ std::vector<uint8_t> PKCS12::export_to(const PKCS12_Export_Options& options, Ran
                      options.password().data(),
                      options.password().size(),
                      mac_salt.data(),
-                     mac_salt.size());
+                     mac_salt.size(),
+                     std::nullopt);
 
       hmac->set_key(mac_key);
       hmac->update(auth_safe_content);
