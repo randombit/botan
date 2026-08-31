@@ -4028,6 +4028,257 @@ int botan_x509_cert_verify(int* validation_result,
 */
 BOTAN_FFI_EXPORT(2, 8) const char* botan_x509_cert_validation_status(int code);
 
+typedef struct botan_x509_cert_builder_struct* botan_x509_cert_builder_t;
+typedef struct botan_x509_pkcs10_req_struct* botan_x509_pkcs10_req_t;
+typedef struct botan_x509_ext_ip_addr_blocks_struct* botan_x509_ext_ip_addr_blocks_t;
+typedef struct botan_x509_ext_as_blocks_struct* botan_x509_ext_as_blocks_t;
+
+/**
+* Frees all resources of the certificate builder object
+* @param builder the builder to destroy
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_FFI_EXPORT(3, 13) int botan_x509_cert_builder_destroy(botan_x509_cert_builder_t builder);
+
+/**
+* Create a new X.509 certificate builder
+* @param builder_obj the new object will be placed here
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13) int botan_x509_cert_builder_create(botan_x509_cert_builder_t* builder_obj);
+
+/**
+* Types of values that can be added to a certificate builder, will be used in
+* the distinguished name or alternative name of the resulting cert
+*/
+enum botan_x509_cert_builder_dn_alt_name_types /* NOLINT(*-enum-size, *-use-enum-class) */ {
+   BOTAN_X509_CERT_BUILDER_COMMON_NAME = 0,
+   BOTAN_X509_CERT_BUILDER_COUNTRY = 1,
+   BOTAN_X509_CERT_BUILDER_ORGANIZATION = 2,
+   BOTAN_X509_CERT_BUILDER_ORGANIZATIONAL_UNIT = 3,
+   BOTAN_X509_CERT_BUILDER_LOCALITY = 4,
+   BOTAN_X509_CERT_BUILDER_STATE = 5,
+   BOTAN_X509_CERT_BUILDER_SERIAL_NUMBER = 6,
+   BOTAN_X509_CERT_BUILDER_EMAIL = 7,
+   BOTAN_X509_CERT_BUILDER_DNS = 8,
+   BOTAN_X509_CERT_BUILDER_URI = 9,
+   BOTAN_X509_CERT_BUILDER_IPV4 = 10,
+   BOTAN_X509_CERT_BUILDER_IPV6 = 11,
+   BOTAN_X509_CERT_BUILDER_XMPP = 12,
+};
+
+/**
+* Add a value to the certificate builders distinguished name or alternative name
+* @param builder the builder to modify
+* @param type the type of value to add, see `botan_x509_cert_builder_dn_alt_name_types`
+* @param value the actual value
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_cert_builder_add_dn_or_alt_name_value(botan_x509_cert_builder_t builder,
+                                                     unsigned int type,
+                                                     const char* value);
+
+/**
+* Add another allowed usage to the KeyUsage extension
+* Calls are cumulative, values are ORed together internally
+* @param builder the builder to modify
+* @param usage the usage to add, see `botan_x509_cert_key_constraints` for possible values
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_cert_builder_add_allowed_usage(botan_x509_cert_builder_t builder, uint32_t usage);
+
+/**
+* Add another allowed usage to the ExtendedKeyUsage extension
+* @param builder the builder to modify
+* @param oid the OID associated with the extended usage
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_cert_builder_add_allowed_extended_usage(botan_x509_cert_builder_t builder, botan_asn1_oid_t oid);
+
+/**
+* Set the builder to generate a CA certificate, may only be called once
+* @param builder the builder to operate on
+* @param limit the path limit to add to the extension, may be `nullptr`
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_cert_builder_set_as_ca_certificate(botan_x509_cert_builder_t builder, size_t* limit);
+
+/**
+* Add the IP Address Blocks extension from RFC 3779, may only be called once
+* @param builder the builder to modify
+* @param ip_addr_blocks the extension to add
+* @param is_critical should be set to `1` if the extension should be marked as critical, else `0`
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_cert_builder_add_ext_ip_addr_blocks(botan_x509_cert_builder_t builder,
+                                                   botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
+                                                   int is_critical);
+
+/**
+* Add the AS Blocks extension from RFC 3779, may only be called once
+* @param builder the builder to modify
+* @param as_blocks the extension to add, must have at least one ASNum or RDI configured
+* @param is_critical should be set to `1` if the extension should be marked as critical, else `0`
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_cert_builder_add_ext_as_blocks(botan_x509_cert_builder_t builder,
+                                              botan_x509_ext_as_blocks_t as_blocks,
+                                              int is_critical);
+
+/**
+* Create a self-signed X.509 certificate
+*
+* @param cert_obj the resulting certificate will be placed here
+* @param builder the builder to create the certificate from
+* @param key the private key
+* @param rng the rng to use
+* @param not_before the UNIX timestamp when the certificate first becomes valid, in seconds
+* @param not_after the UNIX timestamp after which the certificate is no longer valid, in seconds
+* @param serial_number the serial number to assign the generated certificate. If `nullptr` is passed, a random serial is generated
+* @param hash_fn the hash function to use, may be `nullptr`
+* @param padding the padding to use, may be `nullptr`
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_cert_builder_into_self_signed_cert(botan_x509_cert_t* cert_obj,
+                                                  botan_x509_cert_builder_t builder,
+                                                  botan_privkey_t key,
+                                                  botan_rng_t rng,
+                                                  uint64_t not_before,
+                                                  uint64_t not_after,
+                                                  const botan_mp_t* serial_number,
+                                                  const char* hash_fn,
+                                                  const char* padding);
+
+/**
+* Create a signed X.509 certificate
+*
+* @param cert_obj the resulting certificate will be placed here
+* @param builder the builder to create the certificate from
+* @param ca_cert the CA certificate
+* @param ca_key the CA certificate private key
+* @param key the private key
+* @param rng the rng to use
+* @param not_before the UNIX timestamp when the certificate first becomes valid, in seconds
+* @param not_after the UNIX timestamp after which the certificate is no longer valid, in seconds
+* @param serial_number the serial number to assign the generated certificate. If `nullptr` is passed, a random serial is generated
+* @param hash_fn the hash function to use, may be `nullptr`
+* @param padding the padding to use, may be `nullptr`
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_cert_builder_into_cert(botan_x509_cert_t* cert_obj,
+                                      botan_x509_cert_builder_t builder,
+                                      botan_x509_cert_t ca_cert,
+                                      botan_privkey_t ca_key,
+                                      botan_privkey_t key,
+                                      botan_rng_t rng,
+                                      uint64_t not_before,
+                                      uint64_t not_after,
+                                      const botan_mp_t* serial_number,
+                                      const char* hash_fn,
+                                      const char* padding);
+
+/**
+* Create a PKCS10 request
+*
+* @param req_obj the resulting PKCS10 request will be placed here
+* @param builder the builder to create the request from
+* @param rng the rng to use
+* @param hash_fn the hash function to use, may be `nullptr`
+* @param padding the padding to use, may be `nullptr`
+* @param challenge_password the challenge password included in the request, may be `nullptr`
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_cert_builder_into_pkcs10_req(botan_x509_pkcs10_req_t* req_obj,
+                                            botan_x509_cert_builder_t builder,
+                                            botan_privkey_t key,
+                                            botan_rng_t rng,
+                                            const char* hash_fn,
+                                            const char* padding,
+                                            const char* challenge_password);
+
+BOTAN_FFI_EXPORT(3, 13) int botan_x509_pkcs10_req_destroy(botan_x509_pkcs10_req_t req);
+
+/**
+* Load a PKCS10 request from a file containing a DER or PEM encoding
+* @param req_obj the new object will be placed here
+* @param req_path path of the file to read
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13) int botan_x509_pkcs10_req_load_file(botan_x509_pkcs10_req_t* req_obj, const char* req_path);
+
+/**
+* Load a PKCS10 request from a DER or PEM encoding
+* @param req_obj the new object will be placed here
+* @param req_bits the encoding to load
+* @param req_bits_len length of request in bytes
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_pkcs10_req_load(botan_x509_pkcs10_req_t* req_obj, const uint8_t req_bits[], size_t req_bits_len);
+
+/**
+* View the requests PEM encoding
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_pkcs10_req_view_pem(botan_x509_pkcs10_req_t req, botan_view_ctx ctx, botan_view_str_fn view);
+
+/**
+* View the requests DER encoding
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_pkcs10_req_view_der(botan_x509_pkcs10_req_t req, botan_view_ctx ctx, botan_view_bin_fn view);
+
+/**
+* Get the public key associated with the PKCS10 request
+* @param req the PKCS10 request
+* @param key the resulting public key will be placed here
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13) int botan_x509_pkcs10_req_get_public_key(botan_x509_pkcs10_req_t req, botan_pubkey_t* key);
+
+/**
+* Verify the request's signature against a public key
+* @param req the PKCS10 request to verify
+* @param key the public key to verify with
+* @return 1 if the signature is valid, 0 if it is not, negative on error
+*/
+BOTAN_FFI_EXPORT(3, 13) int botan_x509_pkcs10_req_verify_signature(botan_x509_pkcs10_req_t req, botan_pubkey_t key);
+
+/**
+* Sign a PKCS10 request
+* @param subject_cert the resulting certificate will be placed here
+* @param subject_req the PKCS10 request to sign
+* @param ca_cert the CA certificate
+* @param ca_key the CA certificate private key
+* @param rng the rng to use
+* @param not_before the UNIX timestamp when the certificate first becomes valid, in seconds
+* @param not_after the UNIX timestamp after which the certificate is no longer valid, in seconds
+* @param serial_number the serial number to assign the generated certificate. If `nullptr` is passed, a random serial is generated
+* @param hash_fn the hash function to use, may be `nullptr`
+* @param padding the padding to use, may be `nullptr`
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_pkcs10_req_sign(botan_x509_cert_t* subject_cert,
+                               botan_x509_pkcs10_req_t subject_req,
+                               botan_x509_cert_t issuing_cert,
+                               botan_privkey_t issuing_key,
+                               botan_rng_t rng,
+                               uint64_t not_before,
+                               uint64_t not_after,
+                               const botan_mp_t* serial_number,
+                               const char* hash_fn,
+                               const char* padding);
+
 /*
 * X.509 Extensions
 */
@@ -4081,6 +4332,55 @@ int botan_x509_ext_ip_addr_blocks_get_address(
    botan_x509_cert_t cert, int ipv6, size_t i, size_t entry, uint8_t min_out[], uint8_t max_out[], size_t* out_len);
 
 /**
+* Frees all resources of the IP Address Blocks extension object
+* @param ip_addr_blocks the extension to destroy
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_ip_addr_blocks_destroy(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks);
+
+/**
+* Create a new IP Address Blocks extension object
+* @param builder_obj the new object will be placed here
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_ip_addr_blocks_create(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks);
+
+/**
+* Add an IP address range to this extension (for the specified SAFI, if given)
+* @param ip_addr_blocks the extension to modify
+* @param min the minimum address of the range, 4 or 16 in length
+* @param max the maximum address of the range, 4 or 16 in length
+* @param ipv6 should be set to 1 if the range is an IPv6 range, 0 otherwise
+* @param safi the SAFI to assign to the range, may be `nullptr`
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_ip_addr_blocks_add_ip_addr(
+   botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, const uint8_t* min, const uint8_t* max, int ipv6, uint8_t* safi);
+
+/**
+* Make the extension contain no allowed IP adresses for the specified IP version (and SAFI, if given)
+* @param ip_addr_blocks the extension to modify
+* @param ipv6 should be set to 1 if the range is an IPv6 range, 0 otherwise
+* @param safi the SAFI to assign to the range, may be `nullptr`
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_ip_addr_blocks_restrict(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi);
+
+/**
+* Mark the specified IP version as 'inherit' (for the specified SAFI, if any)
+* @param ip_addr_blocks the extension to modify
+* @param ipv6 should be set to 1 if the range is an IPv6 range, 0 otherwise
+* @param safi the SAFI to assign to the range, may be `nullptr`
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_ip_addr_blocks_inherit(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi);
+
+/**
 * Get basic info about the AS Blocks extension from RFC 3779
 * @param cert the certificate to inspect
 * @param asnum must be set to 1 to get info about AS numbers, 0 for RDIs (the type)
@@ -4106,6 +4406,51 @@ int botan_x509_ext_as_blocks_get_info(botan_x509_cert_t cert, int asnum, int* pr
 */
 BOTAN_FFI_EXPORT(3, 13)
 int botan_x509_ext_as_blocks_get_entry_at(botan_x509_cert_t cert, int asnum, size_t i, uint32_t* min, uint32_t* max);
+
+/**
+* Frees all resources of the AS Blocks extension object
+* @param as_blocks the extension to destroy
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_as_blocks_destroy(botan_x509_ext_as_blocks_t as_blocks);
+
+/**
+* Create a new AS Blocks extension object
+* @param as_blocks the new object will be placed here
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_as_blocks_create(botan_x509_ext_as_blocks_t* as_blocks);
+
+/**
+* Add an ASNum or RDI range to the extension
+* @param as_blocks the extension to modify
+* @param asnum should be set to 1 to operate on ASNums, 0 for RDIs
+* @param min the minimum value of the range to add
+* @param max the maximum value of the range to add
+* @returns 0 on success, negative number on error
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_as_blocks_add_range(botan_x509_ext_as_blocks_t as_blocks, int asnum, uint32_t min, uint32_t max);
+
+/**
+* Make the extension contain no allowed ASNums or RDIs
+* @param as_blocks the extension to modify
+* @param asnum should be set to 1 to operate on ASNums, 0 for RDIs
+* @returns 0 on success, negative number on error
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_as_blocks_restrict(botan_x509_ext_as_blocks_t as_blocks, int asnum);
+
+/**
+* Mark the ASNum or RDI entry of the extension as 'inherit'
+* @param as_blocks the extension to modify
+* @param asnum should be set to 1 to operate on ASNums, 0 for RDIs
+* @returns 0 on success, negative number on error
+*/
+BOTAN_FFI_EXPORT(3, 13)
+int botan_x509_ext_as_blocks_inherit(botan_x509_ext_as_blocks_t as_blocks, int asnum);
 
 /*
 * X.509 CRL

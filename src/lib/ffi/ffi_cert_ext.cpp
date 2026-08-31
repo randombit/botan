@@ -11,10 +11,6 @@
 #include <botan/internal/ffi_cert.h>
 #include <botan/internal/ffi_util.h>
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-   #include <botan/x509_ext.h>
-#endif
-
 namespace {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 
@@ -62,6 +58,28 @@ int ip_addr_blocks_get_address(const Botan::Cert_Extension::IPAddressBlocks::IPA
    }
    return Botan_FFI::write_vec_output(max_out, out_len, entry_.max().value());
 }
+
+template <Botan::Cert_Extension::IPAddressBlocks::Version V>
+void ip_addr_blocks_ext_add_address(Botan::Cert_Extension::IPAddressBlocks& ext,
+                                    const uint8_t* min,
+                                    const uint8_t* max,
+                                    std::optional<uint8_t> safi) {
+   const size_t version_octets = static_cast<size_t>(V);
+
+   std::array<uint8_t, version_octets> min_{};
+   std::array<uint8_t, version_octets> max_{};
+   std::copy(min, min + version_octets, min_.begin());
+   std::copy(max, max + version_octets, max_.begin());
+   ext.add_address<V>(min_, max_, safi);
+}
+
+std::optional<uint8_t> optional_from_ptr(uint8_t* value) {
+   if(!Botan::any_null_pointers(value)) {
+      return *value;
+   }
+   return std::nullopt;
+}
+
 #endif
 }  // namespace
 
@@ -179,6 +197,103 @@ int botan_x509_ext_ip_addr_blocks_get_address(
 #endif
 }
 
+int botan_x509_ext_ip_addr_blocks_destroy(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_CHECKED_DELETE(ip_addr_blocks);
+#else
+   BOTAN_UNUSED(ip_addr_blocks);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_ext_ip_addr_blocks_create(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks) {
+   if(Botan::any_null_pointers(ip_addr_blocks)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined BOTAN_HAS_X509_CERTIFICATES
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto ext = std::make_unique<Botan::Cert_Extension::IPAddressBlocks>();
+      return ffi_new_object(ip_addr_blocks, std::move(ext));
+   });
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_ext_ip_addr_blocks_add_ip_addr(
+   botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, const uint8_t* min, const uint8_t* max, int ipv6, uint8_t* safi) {
+   if(Botan::any_null_pointers(min, max)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined BOTAN_HAS_X509_CERTIFICATES
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      if(ipv6 != 0 && ipv6 != 1) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+
+      auto& ext = safe_get(ip_addr_blocks);
+      const auto safi_ = optional_from_ptr(safi);
+
+      if(ipv6 == 0) {
+         ip_addr_blocks_ext_add_address<Botan::Cert_Extension::IPAddressBlocks::Version::IPv4>(ext, min, max, safi_);
+      } else {
+         ip_addr_blocks_ext_add_address<Botan::Cert_Extension::IPAddressBlocks::Version::IPv6>(ext, min, max, safi_);
+      }
+
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(ip_addr_blocks, ipv6, safi);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_ext_ip_addr_blocks_restrict(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi) {
+#if defined BOTAN_HAS_X509_CERTIFICATES
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      if(ipv6 != 0 && ipv6 != 1) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+
+      auto& ext = safe_get(ip_addr_blocks);
+      const auto safi_ = optional_from_ptr(safi);
+
+      if(ipv6 == 0) {
+         ext.restrict<Botan::Cert_Extension::IPAddressBlocks::Version::IPv4>(safi_);
+      } else {
+         ext.restrict<Botan::Cert_Extension::IPAddressBlocks::Version::IPv6>(safi_);
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(ip_addr_blocks, ipv6, safi);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_ext_ip_addr_blocks_inherit(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi) {
+#if defined BOTAN_HAS_X509_CERTIFICATES
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      if(ipv6 != 0 && ipv6 != 1) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+
+      auto& ext = safe_get(ip_addr_blocks);
+      const auto safi_ = optional_from_ptr(safi);
+
+      if(ipv6 == 0) {
+         ext.inherit<Botan::Cert_Extension::IPAddressBlocks::Version::IPv4>(safi_);
+      } else {
+         ext.inherit<Botan::Cert_Extension::IPAddressBlocks::Version::IPv6>(safi_);
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(ip_addr_blocks, ipv6, safi);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 // as blocks ext
 int botan_x509_ext_as_blocks_get_info(botan_x509_cert_t cert, int asnum, int* present, size_t* count) {
    if(Botan::any_null_pointers(present, count)) {
@@ -250,6 +365,89 @@ int botan_x509_ext_as_blocks_get_entry_at(botan_x509_cert_t cert, int asnum, siz
    });
 #else
    BOTAN_UNUSED(cert, asnum, i);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_ext_as_blocks_destroy(botan_x509_ext_as_blocks_t as_blocks) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_CHECKED_DELETE(as_blocks);
+#else
+   BOTAN_UNUSED(as_blocks);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_ext_as_blocks_create(botan_x509_ext_as_blocks_t* as_blocks) {
+   if(Botan::any_null_pointers(as_blocks)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined BOTAN_HAS_X509_CERTIFICATES
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto ext = std::make_unique<Botan::Cert_Extension::ASBlocks>();
+      return ffi_new_object(as_blocks, std::move(ext));
+   });
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_ext_as_blocks_add_range(botan_x509_ext_as_blocks_t as_blocks, int asnum, uint32_t min, uint32_t max) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      if(asnum != 0 && asnum != 1) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+      auto& ext = safe_get(as_blocks);
+      if(asnum == 1) {
+         ext.add_asnum(min, max);
+      } else {
+         ext.add_rdi(min, max);
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(as_blocks, asnum, min, max);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_ext_as_blocks_restrict(botan_x509_ext_as_blocks_t as_blocks, int asnum) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      if(asnum != 0 && asnum != 1) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+      auto& ext = safe_get(as_blocks);
+      if(asnum == 1) {
+         ext.restrict_asnum();
+      } else {
+         ext.restrict_rdi();
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(as_blocks, asnum);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_ext_as_blocks_inherit(botan_x509_ext_as_blocks_t as_blocks, int asnum) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      if(asnum != 0 && asnum != 1) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+      auto& ext = safe_get(as_blocks);
+      if(asnum == 1) {
+         ext.inherit_asnum();
+      } else {
+         ext.inherit_rdi();
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(as_blocks, asnum);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
