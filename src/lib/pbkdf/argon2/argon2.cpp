@@ -378,6 +378,11 @@ void process_blocks(secure_vector<uint64_t>& B,
                   process_block, std::ref(B), n, slice, lane, lanes, segments, threads, mode, memory, t, stop_token));
             }
 
+            // Keep B alive until every lane has finished, even if one of them throws.
+            for(auto& fut : fut_results) {
+               fut.wait();
+            }
+
             for(auto& fut : fut_results) {
                fut.get();
             }
