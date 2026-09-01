@@ -10,6 +10,7 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/hex.h>
 #include <botan/uri.h>
 #include <botan/x509cert.h>
 #include <botan/internal/concat_util.h>
@@ -382,6 +383,17 @@ GeneralName GeneralName::ipv6_address(const IPv6Subnet& subnet) {
    return {NameType::IPv6, subnet};
 }
 
+GeneralName GeneralName::other_name(const OID& type_id, std::span<const uint8_t> ber_value) {
+   return {NameType::Other, AlternativeName::OtherNameValue(type_id, ber_value)};
+}
+
+const AlternativeName::OtherNameValue& GeneralName::other_name_value() const {
+   if(m_type != NameType::Other) {
+      throw Invalid_State("GeneralName is not an otherName");
+   }
+   return std::get<AlternativeName::OtherNameValue>(m_name);
+}
+
 std::string GeneralName::name() const {
    return std::visit(
       Botan::overloaded{
@@ -391,6 +403,9 @@ std::string GeneralName::name() const {
          [](const X509_DN& dn) -> std::string { return dn.to_string(); },
          [](const IPv4Subnet& s) -> std::string { return s.is_host() ? s.address().to_string() : s.to_string(); },
          [](const IPv6Subnet& s) -> std::string { return s.is_host() ? s.address().to_string() : s.to_string(); },
+         [](const AlternativeName::OtherNameValue& o) -> std::string {
+            return fmt("{}:{}", o.oid().to_string(), hex_encode(o.value()));
+         },
       },
       m_name);
 }
@@ -456,20 +471,59 @@ void GeneralName::encode_into(DER_Encoder& to) const {
          to.add_object(ASN1_Type(7), ASN1_Class::ContextSpecific, addr_and_mask);
          return;
       }
-      case NameType::Other:
+      case NameType::Other: {
+         /*
+         OtherName ::= SEQUENCE {
+              type-id    OBJECT IDENTIFIER,
+              value      [0] EXPLICIT ANY DEFINED BY type-id }
+         */
+         const auto& other = std::get<AlternativeName::OtherNameValue>(m_name);
+         to.start_explicit(0)
+            .encode(other.oid())
+            .start_explicit(0)
+            .raw_bytes(other.value())
+            .end_explicit()
+            .end_explicit();
+         return;
+      }
       case NameType::Unknown:
-         // Decoding retains only the type tag for these forms, not the value
+         // Decoding retains only the type tag for this form, not the value
          break;
    }
 
-   throw Encoding_Error("Cannot encode GeneralName of Other or Unknown type");
+   throw Encoding_Error("Cannot encode GeneralName of Unknown type");
 }
 
 void GeneralName::decode_from(BER_Decoder& ber) {
    const BER_Object obj = ber.get_next_object();
 
    if(obj.is_a(0, ASN1_Class::ExplicitContextSpecific)) {
+      // Same structure as an otherName in AlternativeName::decode_from
+      BER_Decoder othername(obj, ber.limits());
+
+      OID oid;
+      othername.decode(oid);
+      const BER_Object value_outer = othername.get_next_object();
+      othername.verify_end();
+
+      if(!value_outer.is_a(0, ASN1_Class::ExplicitContextSpecific)) {
+         throw Decoding_Error("Invalid tags on otherName value");
+      }
+
+      BER_Decoder value_inner(value_outer, ber.limits());
+      const BER_Object value = value_inner.get_next_object();
+      value_inner.verify_end();
+
+      if(!value.is_set()) {
+         throw Decoding_Error("Missing otherName value");
+      }
+
+      // Retain the inner ANY value verbatim, regardless of its ASN.1 form
+      std::vector<uint8_t> raw_value;
+      DER_Encoder(raw_value).add_object(value.type_tag(), value.class_tag(), value.data());
+
       m_type = NameType::Other;
+      m_name = AlternativeName::OtherNameValue(oid, std::move(raw_value));
    } else if(obj.is_a(1, ASN1_Class::ContextSpecific)) {
       /*
       RFC 5280 4.2.1.10:
