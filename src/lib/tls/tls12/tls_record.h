@@ -14,8 +14,10 @@
 #include <botan/tls_algos.h>
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>
+#include <array>
 #include <functional>
 #include <memory>
+#include <span>
 #include <vector>
 
 namespace Botan {
@@ -60,11 +62,17 @@ class Connection_Cipher_State final {
          return *m_aead;
       }
 
-      std::vector<uint8_t> aead_nonce(uint64_t seq, RandomNumberGenerator& rng);
+      /**
+      * The returned nonce is valid only until the next aead_nonce call
+      */
+      std::span<const uint8_t> aead_nonce(uint64_t seq, RandomNumberGenerator& rng);
 
-      std::vector<uint8_t> aead_nonce(const uint8_t record[], size_t record_len, uint64_t seq);
+      std::span<const uint8_t> aead_nonce(const uint8_t record[], size_t record_len, uint64_t seq);
 
-      std::vector<uint8_t> format_ad(uint64_t seq, Record_Type type, Protocol_Version version, uint16_t ptext_length);
+      std::array<uint8_t, 13> format_ad(uint64_t seq,
+                                        Record_Type type,
+                                        Protocol_Version version,
+                                        uint16_t ptext_length);
 
       size_t nonce_bytes_from_handshake() const { return m_nonce_bytes_from_handshake; }
 
@@ -76,6 +84,7 @@ class Connection_Cipher_State final {
       std::unique_ptr<AEAD_Mode> m_aead;
 
       std::vector<uint8_t> m_nonce;
+      std::vector<uint8_t> m_nonce_scratch;
       Nonce_Format m_nonce_format;
       size_t m_nonce_bytes_from_handshake;
       size_t m_nonce_bytes_from_record;

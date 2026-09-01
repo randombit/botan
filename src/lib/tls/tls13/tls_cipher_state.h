@@ -123,7 +123,7 @@ class BOTAN_TEST_API Cipher_State {
        *
        * @returns the sequence number of the encrypted record
        */
-      uint64_t encrypt_record_fragment(const std::vector<uint8_t>& header, secure_vector<uint8_t>& fragment);
+      uint64_t encrypt_record_fragment(std::span<const uint8_t> header, secure_vector<uint8_t>& fragment);
 
       /**
        * Decrypt a TLS record fragment (RFC 8446 5.2 -- TLSCiphertext.encrypted_record)
@@ -133,7 +133,7 @@ class BOTAN_TEST_API Cipher_State {
        *
        * @returns the sequence number of the decrypted record
        */
-      uint64_t decrypt_record_fragment(const std::vector<uint8_t>& header, secure_vector<uint8_t>& encrypted_fragment);
+      uint64_t decrypt_record_fragment(std::span<const uint8_t> header, secure_vector<uint8_t>& encrypted_fragment);
 
       /**
        * @returns number of bytes needed to encrypt \p input_length bytes

@@ -245,7 +245,7 @@ auto current_nonce(const uint64_t seq_no, std::span<const uint8_t> iv) {
 
 }  // namespace
 
-uint64_t Cipher_State::encrypt_record_fragment(const std::vector<uint8_t>& header, secure_vector<uint8_t>& fragment) {
+uint64_t Cipher_State::encrypt_record_fragment(std::span<const uint8_t> header, secure_vector<uint8_t>& fragment) {
    BOTAN_ASSERT_NONNULL(m_encrypt);
 
    // RFC 8446 5.3
@@ -261,7 +261,7 @@ uint64_t Cipher_State::encrypt_record_fragment(const std::vector<uint8_t>& heade
    return m_write_seq_no++;
 }
 
-uint64_t Cipher_State::decrypt_record_fragment(const std::vector<uint8_t>& header,
+uint64_t Cipher_State::decrypt_record_fragment(std::span<const uint8_t> header,
                                                secure_vector<uint8_t>& encrypted_fragment) {
    BOTAN_ASSERT_NONNULL(m_decrypt);
    BOTAN_ARG_CHECK(encrypted_fragment.size() >= m_decrypt->minimum_final_size(), "fragment too short to decrypt");
