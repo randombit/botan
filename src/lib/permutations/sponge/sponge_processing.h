@@ -9,7 +9,6 @@
 #ifndef BOTAN_SPONGE_PROCESSING_H_
 #define BOTAN_SPONGE_PROCESSING_H_
 
-#include <botan/exceptn.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/loadstor.h>

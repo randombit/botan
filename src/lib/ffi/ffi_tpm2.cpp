@@ -8,13 +8,11 @@
 #include <botan/ffi.h>
 
 #include <botan/assert.h>
-#include <botan/internal/ffi_pkey.h>
 #include <botan/internal/ffi_rng.h>
 #include <botan/internal/ffi_util.h>
 
 #if defined(BOTAN_HAS_TPM2)
    #include <botan/tpm2_context.h>
-   #include <botan/tpm2_key.h>
    #include <botan/tpm2_rng.h>
    #include <botan/tpm2_session.h>
 

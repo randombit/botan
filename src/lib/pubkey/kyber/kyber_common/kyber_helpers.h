@@ -14,7 +14,6 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/kyber_constants.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/pqcrystals_helpers.h>
 
 namespace Botan::Kyber_Algos {
 

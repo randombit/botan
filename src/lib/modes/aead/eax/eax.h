@@ -11,7 +11,6 @@
 
 #include <botan/aead.h>
 
-#include <botan/assert.h>
 #include <botan/block_cipher.h>
 #include <botan/mac.h>
 #include <botan/stream_cipher.h>

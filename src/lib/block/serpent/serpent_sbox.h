@@ -10,7 +10,6 @@
 #ifndef BOTAN_SERPENT_SBOX_FN_H_
 #define BOTAN_SERPENT_SBOX_FN_H_
 
-#include <botan/types.h>
 #include <botan/internal/serpent_fn.h>
 
 namespace Botan::Serpent_F {

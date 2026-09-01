@@ -12,11 +12,8 @@
 #ifndef BOTAN_KYBER_POLYNOMIAL_H_
 #define BOTAN_KYBER_POLYNOMIAL_H_
 
-#include <botan/kyber.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/kyber_constants.h>
 #include <botan/internal/pqcrystals.h>
-#include <botan/internal/pqcrystals_helpers.h>
 
 namespace Botan {
 

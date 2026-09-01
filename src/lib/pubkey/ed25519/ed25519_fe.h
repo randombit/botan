@@ -12,7 +12,6 @@
 #ifndef BOTAN_ED25519_FE_H_
 #define BOTAN_ED25519_FE_H_
 
-#include <botan/exceptn.h>
 #include <botan/internal/ct_utils.h>
 #include <array>
 

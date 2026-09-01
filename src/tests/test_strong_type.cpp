@@ -10,7 +10,6 @@
 #include "test_rng.h"
 
 #include <botan/hex.h>
-#include <botan/rng.h>
 #include <botan/secmem.h>
 #include <botan/strong_type.h>
 #include <algorithm>

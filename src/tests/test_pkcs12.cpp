@@ -13,7 +13,6 @@
    #include <algorithm>
 
    #if defined(BOTAN_HAS_ECDSA)
-      #include <botan/asn1_time.h>
       #include <botan/ec_group.h>
       #include <botan/ecdsa.h>
       #include <botan/pkcs8.h>

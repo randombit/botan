@@ -21,7 +21,6 @@
    #include <botan/x509path.h>
    #include <botan/internal/ffi_mp.h>
    #include <botan/internal/ffi_oid.h>
-   #include <botan/internal/stl_util.h>
 #endif
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)

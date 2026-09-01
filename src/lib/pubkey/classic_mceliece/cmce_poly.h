@@ -11,7 +11,6 @@
 
 #include <botan/secmem.h>
 #include <botan/internal/cmce_gf.h>
-#include <botan/internal/loadstor.h>
 
 #include <optional>
 

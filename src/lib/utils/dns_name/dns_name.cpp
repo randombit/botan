@@ -6,8 +6,6 @@
 
 #include <botan/dns_name.h>
 
-#include <botan/exceptn.h>
-#include <botan/internal/parsing.h>
 #include <algorithm>
 
 namespace Botan {

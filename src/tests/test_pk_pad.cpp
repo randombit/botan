@@ -5,16 +5,9 @@
 */
 
 #include "tests.h"
-#include <botan/exceptn.h>
 
 #if defined(BOTAN_HAS_RSA_ENCRYPTION_PADDING)
    #include <botan/internal/enc_padding.h>
-#endif
-
-#if defined(BOTAN_HAS_RSA_SIGNATURE_PADDING)
-   #include <botan/pk_options.h>
-   #include <botan/internal/fmt.h>
-   #include <botan/internal/sig_padding.h>
 #endif
 
 namespace Botan_Tests {

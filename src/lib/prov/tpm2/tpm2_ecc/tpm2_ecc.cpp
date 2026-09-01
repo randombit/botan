@@ -11,7 +11,6 @@
 #include <botan/pk_options.h>
 #include <botan/internal/concat_util.h>
 #include <botan/internal/tpm2_algo_mappings.h>
-#include <botan/internal/tpm2_hash.h>
 #include <botan/internal/tpm2_pkops.h>
 #include <botan/internal/tpm2_util.h>
 

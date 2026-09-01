@@ -11,7 +11,6 @@
 
 #include <botan/aead.h>
 #include <botan/mac.h>
-#include <botan/tls_version.h>
 
 namespace Botan::TLS {
 

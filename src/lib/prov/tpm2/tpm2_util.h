@@ -16,8 +16,6 @@
 #include <botan/tpm2_error.h>
 #include <botan/tpm2_object.h>
 
-#include <botan/internal/fmt.h>
-
 #include <bit>
 #include <memory>
 #include <span>

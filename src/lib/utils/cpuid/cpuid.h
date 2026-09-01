@@ -9,7 +9,6 @@
 #define BOTAN_CPUID_H_
 
 #include <botan/types.h>
-#include <botan/internal/target_info.h>
 #include <optional>
 #include <string>
 

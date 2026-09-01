@@ -9,7 +9,6 @@
 #include <botan/internal/prf_tls.h>
 
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/concat_util.h>
 #include <botan/internal/fmt.h>

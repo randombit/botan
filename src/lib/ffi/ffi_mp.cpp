@@ -14,7 +14,6 @@
 #include <botan/internal/ffi_mp.h>
 #include <botan/internal/ffi_rng.h>
 #include <botan/internal/ffi_util.h>
-#include <botan/internal/mem_utils.h>
 #include <botan/internal/mod_inv.h>
 
 extern "C" {

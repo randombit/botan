@@ -8,7 +8,6 @@
 #ifndef BOTAN_CURVE448_SCALAR_H_
 #define BOTAN_CURVE448_SCALAR_H_
 
-#include <botan/strong_type.h>
 #include <botan/types.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/loadstor.h>

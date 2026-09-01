@@ -12,7 +12,6 @@
 
 #include <botan/tls_server_info.h>
 #include <botan/internal/tls_channel_impl_13.h>
-#include <botan/internal/tls_cipher_state.h>
 #include <botan/internal/tls_handshake_state_13.h>
 #include <botan/internal/tls_handshake_transitions.h>
 

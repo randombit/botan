@@ -10,7 +10,6 @@
 #include <botan/compiler.h>
 #include <botan/types.h>
 #include <botan/internal/rotate.h>
-#include <concepts>
 
 namespace Botan::Serpent_F {
 

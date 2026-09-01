@@ -13,8 +13,6 @@
 
 #include <botan/asn1_obj.h>
 
-#include <vector>
-
 namespace Botan {
 
 class BOTAN_PUBLIC_API(3, 3) FrodoKEMMode final {

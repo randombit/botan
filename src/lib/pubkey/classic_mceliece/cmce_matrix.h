@@ -10,7 +10,6 @@
 #ifndef BOTAN_CMCE_MATRIX_H_
 #define BOTAN_CMCE_MATRIX_H_
 
-#include <botan/internal/bitvector.h>
 #include <botan/internal/cmce_field_ordering.h>
 #include <botan/internal/cmce_parameters.h>
 #include <botan/internal/cmce_poly.h>

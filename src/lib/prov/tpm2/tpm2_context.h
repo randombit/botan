@@ -9,7 +9,6 @@
 #ifndef BOTAN_TPM2_CONTEXT_H_
 #define BOTAN_TPM2_CONTEXT_H_
 
-#include <botan/exceptn.h>
 #include <botan/rng.h>
 
 #include <memory>

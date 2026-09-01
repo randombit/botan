@@ -14,7 +14,6 @@
 
    #include <botan/data_src.h>
    #include <botan/exceptn.h>
-   #include <botan/hex.h>
    #include <botan/pk_algs.h>
    #include <botan/pkcs8.h>
    #include <botan/pubkey.h>

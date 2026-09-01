@@ -10,7 +10,6 @@
 #include <botan/asn1_obj.h>
 #include <botan/asn1_time.h>
 #include <botan/ber_dec.h>
-#include <botan/bigint.h>
 #include <botan/der_enc.h>
 #include <botan/x509_ext.h>
 #include <botan/x509cert.h>

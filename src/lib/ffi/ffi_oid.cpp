@@ -8,7 +8,6 @@
 #include <botan/ffi.h>
 
 #include <botan/internal/ffi_oid.h>
-#include <botan/internal/ffi_pkey.h>
 #include <botan/internal/ffi_util.h>
 
 extern "C" {

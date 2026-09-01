@@ -12,7 +12,6 @@
 #include "test_xml_reporter.h"
 
 #include <botan/hex.h>
-#include <botan/version.h>
 #include <botan/internal/loadstor.h>
 
 #if defined(BOTAN_HAS_CPUID)

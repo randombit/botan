@@ -7,7 +7,6 @@
 #include <botan/pk_options.h>
 
 #include <botan/assert.h>
-#include <botan/hash.h>
 #include <botan/hex.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mem_utils.h>

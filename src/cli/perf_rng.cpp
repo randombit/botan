@@ -9,10 +9,6 @@
 #include <botan/assert.h>
 #include <botan/rng.h>
 
-#if defined(BOTAN_HAS_COMPRESSION)
-   #include <botan/compression.h>
-#endif
-
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
    #include <botan/auto_rng.h>
 #endif
