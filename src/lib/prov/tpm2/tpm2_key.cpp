@@ -19,7 +19,6 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tpm2_algo_mappings.h>
-#include <botan/internal/tpm2_hash.h>
 #include <botan/internal/tpm2_util.h>
 
 #include <tss2/tss2_esys.h>

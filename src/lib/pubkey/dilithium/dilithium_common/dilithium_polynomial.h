@@ -12,10 +12,8 @@
 #ifndef BOTAN_DILITHIUM_POLYNOMIAL_H_
 #define BOTAN_DILITHIUM_POLYNOMIAL_H_
 
-#include <botan/mem_ops.h>
 #include <botan/internal/dilithium_constants.h>
 #include <botan/internal/pqcrystals.h>
-#include <botan/internal/pqcrystals_helpers.h>
 
 namespace Botan {
 

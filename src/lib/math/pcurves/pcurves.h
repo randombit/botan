@@ -7,7 +7,6 @@
 #ifndef BOTAN_PCURVES_H_
 #define BOTAN_PCURVES_H_
 
-#include <botan/concepts.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <array>

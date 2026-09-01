@@ -7,7 +7,6 @@
 
 #include <botan/ocsp.h>
 
-#include <botan/assert.h>
 #include <botan/base64.h>
 #include <botan/ber_dec.h>
 #include <botan/certstor.h>

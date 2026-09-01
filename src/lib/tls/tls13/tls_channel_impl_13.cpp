@@ -13,7 +13,6 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_messages_13.h>
 #include <botan/tls_policy.h>
-#include <botan/internal/concat_util.h>
 #include <botan/internal/tls_cipher_state.h>
 
 namespace {

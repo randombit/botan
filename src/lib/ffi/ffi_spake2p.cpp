@@ -11,7 +11,6 @@
 #include <botan/internal/ffi_util.h>
 
 #if defined(BOTAN_HAS_PAKE_SPAKE2PLUS)
-   #include <botan/rng.h>
    #include <botan/spake2p.h>
    #include <botan/internal/ffi_ec.h>
 #endif

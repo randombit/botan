@@ -8,8 +8,6 @@
 
 #include <botan/p11_object.h>
 
-#include <botan/assert.h>
-#include <cstring>
 #include <map>
 
 namespace Botan::PKCS11 {

@@ -14,7 +14,6 @@
 #include <botan/internal/keypair.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mem_utils.h>
-#include <botan/internal/parsing.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/pk_options_impl.h>
 

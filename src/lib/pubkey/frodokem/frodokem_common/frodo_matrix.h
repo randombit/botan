@@ -20,7 +20,6 @@
 #include <functional>
 #include <tuple>
 #include <utility>
-#include <vector>
 
 namespace Botan {
 

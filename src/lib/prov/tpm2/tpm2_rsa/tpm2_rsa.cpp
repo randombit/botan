@@ -8,7 +8,6 @@
 
 #include <botan/tpm2_rsa.h>
 
-#include <botan/hash.h>
 #include <botan/pk_options.h>
 #include <botan/pss_params.h>
 #include <botan/rsa.h>
@@ -18,7 +17,6 @@
 #include <botan/internal/sig_padding.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tpm2_algo_mappings.h>
-#include <botan/internal/tpm2_hash.h>
 #include <botan/internal/tpm2_pkops.h>
 #include <botan/internal/tpm2_util.h>
 

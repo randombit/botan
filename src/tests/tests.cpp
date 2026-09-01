@@ -31,10 +31,6 @@
    #include <botan/internal/cpuid.h>
 #endif
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-   #include <botan/ec_point.h>
-#endif
-
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    #include <stdlib.h>
    #include <unistd.h>

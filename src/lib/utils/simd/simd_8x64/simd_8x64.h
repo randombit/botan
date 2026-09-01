@@ -7,10 +7,8 @@
 #ifndef BOTAN_SIMD_8X64_H_
 #define BOTAN_SIMD_8X64_H_
 
-#include <botan/compiler.h>
 #include <botan/types.h>
 #include <botan/internal/isa_extn.h>
-#include <botan/internal/target_info.h>
 #include <immintrin.h>
 
 namespace Botan {

@@ -13,7 +13,6 @@
 #include <botan/internal/parsing.h>
 #include <botan/internal/pk_options_impl.h>
 #include <botan/internal/scan_name.h>
-#include <botan/internal/stl_util.h>
 #include <tuple>
 
 namespace Botan::PKCS11 {

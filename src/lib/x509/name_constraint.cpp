@@ -15,7 +15,6 @@
 #include <botan/internal/concat_util.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
-#include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/x509_utils.h>
 #include <span>

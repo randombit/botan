@@ -11,7 +11,6 @@
 
 #include <botan/aead.h>
 
-#include <botan/assert.h>
 #include <botan/internal/ascon_perm.h>
 
 #include <optional>

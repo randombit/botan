@@ -14,7 +14,6 @@
 #define BOTAN_BIT_VECTOR_H_
 
 #include <botan/concepts.h>
-#include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/secmem.h>
 #include <botan/strong_type.h>

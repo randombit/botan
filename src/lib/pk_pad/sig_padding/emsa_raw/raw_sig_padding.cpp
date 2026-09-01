@@ -6,7 +6,6 @@
 
 #include <botan/internal/raw_sig_padding.h>
 
-#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>

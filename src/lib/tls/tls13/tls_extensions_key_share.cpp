@@ -10,7 +10,6 @@
 
 #include <botan/tls_extensions_13.h>
 
-#include <botan/ecdh.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>

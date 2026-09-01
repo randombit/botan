@@ -10,7 +10,6 @@
 #define BOTAN_TLS_SESSION_STATE_H_
 
 #include <botan/secmem.h>
-#include <botan/strong_type.h>
 #include <botan/symkey.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_magic.h>

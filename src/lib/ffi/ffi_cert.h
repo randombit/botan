@@ -10,7 +10,6 @@
 #include <botan/internal/ffi_util.h>
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   #include <botan/data_src.h>
    #include <botan/x509_ca.h>
    #include <botan/x509_crl.h>
    #include <botan/x509cert.h>

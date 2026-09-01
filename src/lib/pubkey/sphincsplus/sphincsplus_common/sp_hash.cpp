@@ -10,7 +10,6 @@
 
 #include <botan/assert.h>
 #include <botan/exceptn.h>
-#include <botan/hash.h>
 #include <botan/sp_parameters.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/hash_engine.h>

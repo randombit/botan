@@ -9,7 +9,6 @@
 #define BOTAN_UTIL_COMPILER_FLAGS_H_
 
 #include <botan/api.h>
-#include <botan/build.h>
 
 // NOLINTBEGIN(*-macro-usage)
 

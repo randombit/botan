@@ -10,11 +10,9 @@
 #define BOTAN_CMCE_DECAPS_H_
 
 #include <botan/cmce.h>
-#include <botan/pk_ops.h>
 #include <botan/internal/bitvector.h>
 #include <botan/internal/cmce_field_ordering.h>
 #include <botan/internal/cmce_keys_internal.h>
-#include <botan/internal/cmce_matrix.h>
 #include <botan/internal/cmce_types.h>
 #include <botan/internal/pk_ops_impl.h>
 

@@ -11,7 +11,6 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/mem_utils.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/rounding.h>
 
