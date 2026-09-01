@@ -358,7 +358,7 @@ Random Number Generators
    "user": ``AutoSeeded_RNG``,
    "user-threadsafe": serialized ``AutoSeeded_RNG``,
    "null": ``Null_RNG`` (always fails),
-   "hwrnd" or "rdrand": ``Processor_RNG`` (if available)
+   "hwrng" or "rdrand": ``Processor_RNG`` (if available)
 
 .. cpp:function:: int botan_rng_init_custom(botan_rng_t* rng,\
                   const char* rng_name, void* context, \
