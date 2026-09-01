@@ -10,6 +10,12 @@
 #if defined(BOTAN_HAS_OS_UTILS)
    #include <botan/internal/os_utils.h>
    #include <botan/internal/target_info.h>
+   #include <botan/internal/time_utils.h>
+   #include <chrono>
+#endif
+
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+   #include <thread>
 #endif
 
 namespace Botan_Tests {
@@ -38,6 +44,8 @@ class OS_Utils_Tests final : public Test {
          results.push_back(test_get_high_resolution_clock());
          results.push_back(test_get_cpu_numbers());
          results.push_back(test_get_system_timestamp());
+         results.push_back(test_get_thread_cpu_time());
+         results.push_back(test_measure_cost());
          results.push_back(test_memory_locking());
          results.push_back(test_cpu_instruction_probe());
 
@@ -133,6 +141,89 @@ class OS_Utils_Tests final : public Test {
          const uint64_t sys_ts2 = Botan::OS::get_system_timestamp_ns();
 
          result.test_is_true("System time moves forward", sys_ts1 <= sys_ts2);
+
+         return result;
+      }
+
+      // A little CPU work whose result is observed so it cannot be optimized away
+      static uint64_t burn_cpu(uint64_t x, size_t rounds) {
+         for(size_t i = 0; i != rounds; ++i) {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+         }
+         return x;
+      }
+
+      static uint64_t steady_clock_ns() {
+         const auto now = std::chrono::steady_clock::now().time_since_epoch();
+         return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(now).count());
+      }
+
+      static Test::Result test_get_thread_cpu_time() {
+         Test::Result result("OS::get_thread_cpu_time_ns");
+
+         const auto cpu_ts1 = Botan::OS::get_thread_cpu_time_ns();
+
+         if(!cpu_ts1.has_value()) {
+            result.test_note("Thread CPU time not available on this platform");
+            return result;
+         }
+
+         const uint64_t wall_start = steady_clock_ns();
+         uint64_t state = 0x9E3779B97F4A7C15;
+         while(steady_clock_ns() - wall_start < 2000000) {
+            state = burn_cpu(state, 1000);
+         }
+         const uint64_t wall_elapsed = steady_clock_ns() - wall_start;
+         result.test_is_true("Work loop produced a value", state != 0);
+
+         const auto cpu_ts2 = Botan::OS::get_thread_cpu_time_ns();
+         result.test_is_true("Thread CPU time remains available", cpu_ts2.has_value());
+
+         if(cpu_ts2.has_value()) {
+            result.test_is_true("Thread CPU time advances while busy", *cpu_ts2 > *cpu_ts1);
+            result.test_is_true("Thread CPU time does not exceed wall time",
+                                (*cpu_ts2 - *cpu_ts1) <= wall_elapsed + 1000000);
+         }
+
+   #if defined(BOTAN_TARGET_OS_HAS_THREADS)
+         const auto cpu_ts3 = Botan::OS::get_thread_cpu_time_ns();
+         std::this_thread::sleep_for(std::chrono::milliseconds(20));
+         const auto cpu_ts4 = Botan::OS::get_thread_cpu_time_ns();
+
+         if(cpu_ts3.has_value() && cpu_ts4.has_value()) {
+            result.test_is_true("Thread CPU time barely advances while sleeping", (*cpu_ts4 - *cpu_ts3) < 5000000);
+         }
+   #endif
+
+         return result;
+      }
+
+      static Test::Result test_measure_cost() {
+         Test::Result result("measure_cost");
+
+         size_t calls = 0;
+         uint64_t state = 0x9E3779B97F4A7C15;
+         auto fn = [&]() {
+            calls += 1;
+            state = burn_cpu(state, 20000);
+         };
+
+         const uint64_t cost = Botan::measure_cost(0, fn);
+         result.test_sz_gte("Minimum number of samples taken even with no time budget", calls, 3);
+         result.test_is_true("Cost estimate is nonzero", cost > 0);
+
+         calls = 0;
+         const uint64_t wall_start = steady_clock_ns();
+         const uint64_t cost2 = Botan::measure_cost(5, fn);
+         const uint64_t wall_elapsed = steady_clock_ns() - wall_start;
+
+         result.test_is_true("Tuning loop ran for at least the requested time", wall_elapsed >= 5000000);
+         result.test_is_true("Several samples taken", calls >= 3);
+         result.test_is_true("Cost estimate is nonzero", cost2 > 0);
+         result.test_is_true("Cost estimate is below wall time of the loop", cost2 < wall_elapsed);
+         result.test_is_true("Work loop produced a value", state != 0);
 
          return result;
       }

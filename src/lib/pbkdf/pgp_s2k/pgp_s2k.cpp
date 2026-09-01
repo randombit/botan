@@ -15,6 +15,7 @@
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/time_utils.h>
 #include <algorithm>
+#include <array>
 
 namespace Botan {
 
@@ -97,12 +98,27 @@ std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune_params(size_t output_len,
                                                               uint64_t desired_msec,
                                                               std::optional<size_t> /*max_memory*/,
                                                               uint64_t tuning_msec) const {
-   constexpr size_t buf_size = 1024;
-   std::vector<uint8_t> buffer(buf_size);
+   // Benchmark the real S2K, since hashing the salt and password in small
+   // pieces has a large per-call cost that bulk hashing would not reflect
+   constexpr size_t tuning_iterations = 1024 * 1024;
+   constexpr std::string_view tuning_password = "password";
+   const std::array<uint8_t, 8> tuning_salt{};
 
-   const uint64_t measured_nsec = measure_cost(tuning_msec, [&]() { m_hash->update(buffer); });
+   auto tuning_hash = m_hash->new_object();
+   std::vector<uint8_t> tuning_out(tuning_hash->output_length());
 
-   const double hash_bytes_per_second = (buf_size * 1000000000.0) / measured_nsec;
+   const uint64_t measured_nsec = measure_cost(tuning_msec, [&]() {
+      pgp_s2k(*tuning_hash,
+              tuning_out.data(),
+              tuning_out.size(),
+              tuning_password.data(),
+              tuning_password.size(),
+              tuning_salt.data(),
+              tuning_salt.size(),
+              tuning_iterations);
+   });
+
+   const double hash_bytes_per_second = (tuning_iterations * 1000000000.0) / measured_nsec;
    const uint64_t desired_nsec = desired_msec * 1000000;
 
    const size_t hash_size = m_hash->output_length();

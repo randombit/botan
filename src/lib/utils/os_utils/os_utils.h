@@ -87,6 +87,15 @@ uint64_t BOTAN_TEST_API get_high_resolution_clock();
 uint64_t BOTAN_TEST_API get_system_timestamp_ns();
 
 /**
+* @return CPU time consumed by the calling thread, normalized to
+* nanoseconds resolution, or nullopt if the system does not support
+* it or if the reported resolution is too coarse.
+*
+* The epoch is arbitrary; only differences between calls are meaningful.
+*/
+std::optional<uint64_t> BOTAN_TEST_API get_thread_cpu_time_ns();
+
+/**
 * Format a time
 *
 * Converts the time_t to a local time representation,

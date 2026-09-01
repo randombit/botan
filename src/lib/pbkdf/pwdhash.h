@@ -232,7 +232,14 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily /* NOLINT(*-special-member-funct
       * This function works by running a short tuning loop to estimate the
       * performance of the algorithm, then scaling the parameters appropriately
       * to hit the target size. The length of time the tuning loop runs can be
-      * controlled using the @p tuning_msec parameter.
+      * controlled using the @p tuning_msec parameter, though it always runs at
+      * least a few iterations and so may take longer for expensive functions.
+      *
+      * The tuning loop measures the CPU time of the calling thread (where the
+      * platform supports this) and uses the fastest iteration observed, so the
+      * result reflects the capacity of the machine rather than its load at the
+      * moment of tuning. On a heavily loaded system the returned parameters
+      * may therefore take longer than requested.
       *
       * @param output_length how long the output length will be
       * @param desired_runtime_msec the desired execution time in milliseconds
@@ -264,7 +271,14 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily /* NOLINT(*-special-member-funct
       * This function works by running a short tuning loop to estimate the
       * performance of the algorithm, then scaling the parameters appropriately
       * to hit the target size. The length of time the tuning loop runs can be
-      * controlled using the @p tuning_msec parameter.
+      * controlled using the @p tuning_msec parameter, though it always runs at
+      * least a few iterations and so may take longer for expensive functions.
+      *
+      * The tuning loop measures the CPU time of the calling thread (where the
+      * platform supports this) and uses the fastest iteration observed, so the
+      * result reflects the capacity of the machine rather than its load at the
+      * moment of tuning. On a heavily loaded system the returned parameters
+      * may therefore take longer than requested.
       *
       * @param output_length how long the output length will be
       * @param msec the desired execution time in milliseconds
