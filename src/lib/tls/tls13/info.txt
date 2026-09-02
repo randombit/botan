@@ -21,9 +21,11 @@ tls_cipher_state.h
 tls_client_impl_13.h
 tls_handshake_layer_13.h
 tls_handshake_state_13.h
+tls_record_13.h
 tls_record_layer_13.h
 tls_server_impl_13.h
 tls_transcript_hash_13.h
+tls_types_13.h
 </header:internal>
 
 <requires>

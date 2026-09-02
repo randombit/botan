@@ -95,7 +95,7 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
             return std::get<BytesNeeded>(result);
          }
 
-         const auto& record = std::get<Record>(result);
+         const auto& record = std::get<Record_Content>(result);
 
          // RFC 8446 5.1
          //   Handshake messages MUST NOT be interleaved with other record types.
@@ -104,7 +104,7 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
          }
 
          if(record.type == Record_Type::Handshake) {
-            m_handshake_layer.copy_data(record.fragment);
+            m_handshake_layer.copy_data(record.payload);
 
             if(!is_handshake_complete()) {
                while(auto handshake_msg = m_handshake_layer.next_message(policy(), m_transcript_hash)) {
@@ -174,12 +174,12 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
             The record sequence number is set in Record_Layer::next_record only when
             the record contents are decrypted under the current set of traffic keys
             */
-            if(!record.seq_no.has_value()) {
+            if(!record.sequence_number.has_value()) {
                throw Unexpected_Message("Application data must have a sequence number");
             }
-            callbacks().tls_record_received(record.seq_no.value(), record.fragment);
+            callbacks().tls_record_received(record.sequence_number.value(), record.payload);
          } else if(record.type == Record_Type::Alert) {
-            process_alert(record.fragment);
+            process_alert(record.payload);
          } else {
             throw Unexpected_Message("Unexpected record type " + std::to_string(static_cast<size_t>(record.type)) +
                                      " from counterparty");

@@ -30,7 +30,7 @@ namespace {
 
 namespace TLS = Botan::TLS;
 
-using Records = std::vector<TLS::Record>;
+using Records = std::vector<TLS::Record_Content>;
 
 class Test_Policy : public Botan::TLS::Policy {
    public:
@@ -112,11 +112,11 @@ std::vector<Test::Result> read_full_records() {
 
                     rl.copy_data(ccs_record);
                     auto read = rl.next_record();
-                    result.require("received something", std::holds_alternative<TLS::Record>(read));
+                    result.require("received something", std::holds_alternative<TLS::Record_Content>(read));
 
-                    auto record = std::get<TLS::Record>(read);
+                    auto record = std::get<TLS::Record_Content>(read);
                     result.test_enum_eq("received CCS", record.type, TLS::Record_Type::ChangeCipherSpec);
-                    result.test_bin_eq("CCS byte is 0x01", record.fragment, "01");
+                    result.test_bin_eq("CCS byte is 0x01", record.payload, "01");
 
                     result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
                  }),
@@ -130,18 +130,18 @@ std::vector<Test::Result> read_full_records() {
                     rl.copy_data(two_ccs_records);
 
                     auto read = rl.next_record();
-                    result.require("received something", std::holds_alternative<TLS::Record>(read));
-                    auto record = std::get<TLS::Record>(read);
+                    result.require("received something", std::holds_alternative<TLS::Record_Content>(read));
+                    auto record = std::get<TLS::Record_Content>(read);
 
                     result.test_enum_eq("received CCS 1", record.type, TLS::Record_Type::ChangeCipherSpec);
-                    result.test_bin_eq("CCS byte is 0x01", record.fragment, "01");
+                    result.test_bin_eq("CCS byte is 0x01", record.payload, "01");
 
                     read = rl.next_record();
-                    result.require("received something", std::holds_alternative<TLS::Record>(read));
-                    record = std::get<TLS::Record>(read);
+                    result.require("received something", std::holds_alternative<TLS::Record_Content>(read));
+                    record = std::get<TLS::Record_Content>(read);
 
                     result.test_enum_eq("received CCS 2", record.type, TLS::Record_Type::ChangeCipherSpec);
-                    result.test_bin_eq("CCS byte is 0x01", record.fragment, "01");
+                    result.test_bin_eq("CCS byte is 0x01", record.payload, "01");
 
                     result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
                  }),
@@ -152,14 +152,14 @@ std::vector<Test::Result> read_full_records() {
                     rl.copy_data(client_hello_record);
 
                     auto read = rl.next_record();
-                    result.test_is_true("received something", std::holds_alternative<TLS::Record>(read));
+                    result.test_is_true("received something", std::holds_alternative<TLS::Record_Content>(read));
 
-                    auto rec = std::get<TLS::Record>(read);
+                    auto rec = std::get<TLS::Record_Content>(read);
                     result.test_is_true("received handshake record", rec.type == TLS::Record_Type::Handshake);
                     result.test_bin_eq("contains the full handshake message",
                                        Botan::secure_vector<uint8_t>(client_hello_record.begin() + TLS::TLS_HEADER_SIZE,
                                                                      client_hello_record.end()),
-                                       rec.fragment);
+                                       rec.payload);
 
                     result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
                  }),
@@ -171,21 +171,21 @@ std::vector<Test::Result> read_full_records() {
               rl.copy_data(payload);
 
               auto read = rl.next_record();
-              result.require("received something", std::holds_alternative<TLS::Record>(read));
+              result.require("received something", std::holds_alternative<TLS::Record_Content>(read));
 
-              auto rec = std::get<TLS::Record>(read);
+              auto rec = std::get<TLS::Record_Content>(read);
               result.test_is_true("received handshake record", rec.type == TLS::Record_Type::Handshake);
               result.test_bin_eq("contains the full handshake message",
                                  Botan::secure_vector<uint8_t>(client_hello_record.begin() + TLS::TLS_HEADER_SIZE,
                                                                client_hello_record.end()),
-                                 rec.fragment);
+                                 rec.payload);
 
               read = rl.next_record();
-              result.require("received something", std::holds_alternative<TLS::Record>(read));
+              result.require("received something", std::holds_alternative<TLS::Record_Content>(read));
 
-              rec = std::get<TLS::Record>(read);
+              rec = std::get<TLS::Record_Content>(read);
               result.test_enum_eq("received CCS record", rec.type, TLS::Record_Type::ChangeCipherSpec);
-              result.test_bin_eq("CCS byte is 0x01", rec.fragment, "01");
+              result.test_bin_eq("CCS byte is 0x01", rec.payload, "01");
 
               result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
            })};
@@ -243,7 +243,7 @@ std::vector<Test::Result> basic_sanitization_parse_records(TLS::Connection_Side 
                  [&](auto& result) {
                     std::vector<uint8_t> huge_record{'\x17', '\x03', '\x03', '\x41', '\x01'};
                     huge_record.resize(TLS::MAX_CIPHERTEXT_SIZE_TLS13 + TLS::TLS_HEADER_SIZE + 1);
-                    result.test_throws("record too big", "Received an encrypted record that exceeds maximum size", [&] {
+                    result.test_throws("record too big", "Received a protected record that exceeds maximum size", [&] {
                        parse_records(huge_record);
                     });
                  }),
@@ -274,7 +274,7 @@ std::vector<Test::Result> basic_sanitization_parse_records(TLS::Connection_Side 
 
            CHECK("invalid record type",
                  [&](auto& result) {
-                    const std::vector<uint8_t> invalid_record_type{'\x42', '\x03', '\x03', '\x41', '\x01'};
+                    const std::vector<uint8_t> invalid_record_type{'\x42', '\x03', '\x03', '\x39', '\x00'};
                     result.test_throws("invalid record type", "TLS record type had unexpected value", [&] {
                        parse_records(invalid_record_type);
                     });
@@ -355,11 +355,11 @@ std::vector<Test::Result> read_fragmented_records() {
 
                     rl.copy_data(std::vector<uint8_t>{'\x01'});
                     auto res1 = rl.next_record();
-                    result.require("received something 1", std::holds_alternative<TLS::Record>(res1));
+                    result.require("received something 1", std::holds_alternative<TLS::Record_Content>(res1));
 
-                    auto rec1 = std::get<TLS::Record>(res1);
+                    auto rec1 = std::get<TLS::Record_Content>(res1);
                     result.test_enum_eq("received CCS", rec1.type, TLS::Record_Type::ChangeCipherSpec);
-                    result.test_bin_eq("CCS byte is 0x01", rec1.fragment, "01");
+                    result.test_bin_eq("CCS byte is 0x01", rec1.payload, "01");
 
                     result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
                  }),
@@ -370,9 +370,9 @@ std::vector<Test::Result> read_fragmented_records() {
               rl.copy_data(std::vector<uint8_t>{'\x01', '\x01', /* second CCS starts here */ '\x14', '\x03'});
 
               auto res2 = rl.next_record();
-              result.require("received something 2", std::holds_alternative<TLS::Record>(res2));
+              result.require("received something 2", std::holds_alternative<TLS::Record_Content>(res2));
 
-              auto rec2 = std::get<TLS::Record>(res2);
+              auto rec2 = std::get<TLS::Record_Content>(res2);
               result.test_enum_eq("received CCS", rec2.type, TLS::Record_Type::ChangeCipherSpec);
               result.test_is_true("demands more bytes", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
 
@@ -380,9 +380,9 @@ std::vector<Test::Result> read_fragmented_records() {
 
               rl.copy_data(std::vector<uint8_t>{'\x00', '\x01', '\x01'});
               auto res3 = rl.next_record();
-              result.require("received something 3", std::holds_alternative<TLS::Record>(res3));
+              result.require("received something 3", std::holds_alternative<TLS::Record_Content>(res3));
 
-              auto rec3 = std::get<TLS::Record>(res3);
+              auto rec3 = std::get<TLS::Record_Content>(res3);
               result.test_enum_eq("received CCS", rec3.type, TLS::Record_Type::ChangeCipherSpec);
 
               result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
@@ -541,10 +541,10 @@ std::vector<Test::Result> read_encrypted_records() {
 
                auto res = rl.next_record(cs.get());
                result.require("some records decrypted", !std::holds_alternative<Botan::TLS::BytesNeeded>(res));
-               auto record = std::get<TLS::Record>(res);
+               auto record = std::get<TLS::Record_Content>(res);
 
                result.test_enum_eq("inner type was 'HANDSHAKE'", record.type, Botan::TLS::Record_Type::Handshake);
-               result.test_sz_eq("decrypted payload length", record.fragment.size(), 657 /* taken from RFC 8448 */);
+               result.test_sz_eq("decrypted payload length", record.payload.size(), 657 /* taken from RFC 8448 */);
 
                result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
             }),
@@ -589,7 +589,7 @@ std::vector<Test::Result> read_encrypted_records() {
                const auto protected_ccs = Botan::hex_decode("1703030012D8EBBBE055C8167D5690EC67DEA9A525B036");
 
                result.test_throws<Botan::TLS::TLS_Exception>(
-                  "illegal state causes TLS alert", "protected change cipher spec received", [&] {
+                  "illegal state causes TLS alert", "protected TLS record type had unexpected value", [&] {
                      auto cs = rfc8448_rtt1_handshake_traffic();
                      auto rl = parse_records(protected_ccs);
                      rl.next_record(cs.get());
@@ -680,19 +680,19 @@ std::vector<Test::Result> read_encrypted_records() {
 
                auto rl = parse_records(encrypted);
                auto res = rl.next_record(cs.get());
-               result.require("decrypted a record", std::holds_alternative<TLS::Record>(res));
-               auto records = std::get<TLS::Record>(res);
-               result.test_bin_eq("first record", records.fragment, plaintext_records.at(0));
+               result.require("decrypted a record", std::holds_alternative<TLS::Record_Content>(res));
+               auto records = std::get<TLS::Record_Content>(res);
+               result.test_bin_eq("first record", records.payload, plaintext_records.at(0));
 
                res = rl.next_record(cs.get());
-               result.require("decrypted a record", std::holds_alternative<TLS::Record>(res));
-               records = std::get<TLS::Record>(res);
-               result.test_bin_eq("second record", records.fragment, plaintext_records.at(1));
+               result.require("decrypted a record", std::holds_alternative<TLS::Record_Content>(res));
+               records = std::get<TLS::Record_Content>(res);
+               result.test_bin_eq("second record", records.payload, plaintext_records.at(1));
 
                res = rl.next_record(cs.get());
-               result.require("decrypted a record", std::holds_alternative<TLS::Record>(res));
-               records = std::get<TLS::Record>(res);
-               result.test_bin_eq("third record", records.fragment, plaintext_records.at(2));
+               result.require("decrypted a record", std::holds_alternative<TLS::Record_Content>(res));
+               records = std::get<TLS::Record_Content>(res);
+               result.test_bin_eq("third record", records.payload, plaintext_records.at(2));
 
                result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
             }),
@@ -707,15 +707,15 @@ std::vector<Test::Result> read_encrypted_records() {
                client.copy_data(coalesced);
 
                const auto srv_hello = client.next_record(nullptr);
-               result.test_is_true("read a record", std::holds_alternative<TLS::Record>(srv_hello));
+               result.test_is_true("read a record", std::holds_alternative<TLS::Record_Content>(srv_hello));
                result.test_is_true("is handshake record",
-                                   std::get<TLS::Record>(srv_hello).type == TLS::Record_Type::Handshake);
+                                   std::get<TLS::Record_Content>(srv_hello).type == TLS::Record_Type::Handshake);
 
                auto cs = rfc8448_rtt1_handshake_traffic();
                const auto enc_exts = client.next_record(cs.get());
-               result.test_is_true("read a record", std::holds_alternative<TLS::Record>(enc_exts));
+               result.test_is_true("read a record", std::holds_alternative<TLS::Record_Content>(enc_exts));
                result.test_is_true("is handshake record",
-                                   std::get<TLS::Record>(enc_exts).type == TLS::Record_Type::Handshake);
+                                   std::get<TLS::Record_Content>(enc_exts).type == TLS::Record_Type::Handshake);
             }),
 
       CHECK("read a padded record",
@@ -725,7 +725,7 @@ std::vector<Test::Result> read_encrypted_records() {
 
                auto cs = rfc8448_rtt1_handshake_traffic();
                const auto record = client.next_record(cs.get());
-               result.test_is_true("read a record with padding", std::holds_alternative<TLS::Record>(record));
+               result.test_is_true("read a record with padding", std::holds_alternative<TLS::Record_Content>(record));
             }),
 
       CHECK("read an empty encrypted record", [&](Test::Result& result) {
@@ -734,7 +734,7 @@ std::vector<Test::Result> read_encrypted_records() {
 
          auto cs = rfc8448_rtt1_handshake_traffic();
          const auto record = client.next_record(cs.get());
-         result.test_is_true("read an empty record", std::holds_alternative<TLS::Record>(record));
+         result.test_is_true("read an empty record", std::holds_alternative<TLS::Record_Content>(record));
       })};
 }
 
@@ -937,9 +937,9 @@ std::vector<Test::Result> record_size_limits() {
    };
 
    const auto record_length = [](auto& result, auto record) {
-      result.require("has record", std::holds_alternative<Botan::TLS::Record>(record));
-      const auto& r = std::get<Botan::TLS::Record>(record);
-      return r.fragment.size();
+      result.require("has record", std::holds_alternative<Botan::TLS::Record_Content>(record));
+      const auto& r = std::get<Botan::TLS::Record_Content>(record);
+      return r.payload.size();
    };
 
    return {
@@ -1133,6 +1133,218 @@ std::vector<Test::Result> record_size_limits() {
    };
 }
 
+std::vector<Test::Result> record_structure() {
+   namespace TLS = Botan::TLS;
+
+   const auto server_hello = Botan::hex_decode(
+      "16 03 03 00 5a 02 00 00 56 03 03 a6"
+      "af 06 a4 12 18 60 dc 5e 6e 60 24 9c d3 4c 95 93 0c 8a c5 cb 14"
+      "34 da c1 55 77 2e d3 e2 69 28 00 13 01 00 00 2e 00 33 00 24 00"
+      "1d 00 20 c9 82 88 76 11 20 95 fe 66 76 2b db f7 c6 72 e1 56 d6"
+      "cc 25 3b 83 3d f1 dd 69 b1 b0 4e 75 1f 0f 00 2b 00 02 03 04");
+
+   const auto encrypted =
+      Botan::hex_decode("17 03 03 00 1A 90 78 6D 7E 6F A8 F7 67 1F 6D 05 F7 24 18 F5 DB 43 F7 0B 9E 48 A6 96 B6 5B EC");
+
+   return {
+      CHECK("can read a full record",
+            [&](Test::Result& result) {
+               TLS::Record_TLS record;
+               record.append(server_hello);
+
+               result.test_is_true("is complete", record.complete());
+               result.test_sz_eq("has all bytes", record.missing_bytes_hint(), 0);
+               result.test_enum_eq("has correct type", record.type(), TLS::Record_Type::Handshake);
+               result.test_is_true("has correct version", record.legacy_version() == TLS::Protocol_Version(0x0303));
+               result.test_sz_eq("has correct payload length", record.payload_length(), 90);
+               result.test_sz_eq("has correct record size", record.stored_bytes(), 95);
+            }),
+
+      CHECK("can read a single header byte",
+            [&](Test::Result& result) {
+               TLS::Record_TLS record;
+               record.append(std::span{server_hello}.first(1));
+
+               result.test_is_false("is not complete", record.complete());
+               result.test_sz_eq("has missing bytes", record.missing_bytes_hint(), 4 /* to complete the header */);
+               result.test_sz_eq("has stored a single byte", record.stored_bytes(), 1);
+
+               result.test_throws("cannot read type", [&] { record.type(); });
+               result.test_throws("cannot read version", [&] { record.legacy_version(); });
+               result.test_throws("cannot read length", [&] { record.payload_length(); });
+            }),
+
+      CHECK("can read a full header",
+            [&](Test::Result& result) {
+               TLS::Record_TLS record;
+               record.append(std::span{server_hello}.first(TLS::TLS_HEADER_SIZE));
+
+               result.test_is_false("is not complete", record.complete());
+               result.test_sz_eq("has missing bytes", record.missing_bytes_hint(), 90 /* to complete the payload */);
+               result.test_sz_eq("has stored the header bytes", record.stored_bytes(), TLS::TLS_HEADER_SIZE);
+
+               result.test_enum_eq("has correct type", record.type(), TLS::Record_Type::Handshake);
+               result.test_is_true("has correct version", record.legacy_version() == TLS::Protocol_Version(0x0303));
+               result.test_sz_eq("has correct length", record.payload_length(), 90);
+            }),
+
+      CHECK("reads only one record from a larger buffer",
+            [&](Test::Result& result) {
+               TLS::Record_TLS record;
+               record.append(Botan::concat(server_hello, encrypted));
+
+               result.test_is_true("is complete", record.complete());
+               result.test_sz_eq("has all bytes", record.missing_bytes_hint(), 0);
+               result.test_sz_eq("has stored the header and payload bytes", record.stored_bytes(), 95);
+
+               result.test_enum_eq("has correct type", record.type(), TLS::Record_Type::Handshake);
+               result.test_is_true("has correct version", record.legacy_version() == TLS::Protocol_Version(0x0303));
+               result.test_sz_eq("has correct length", record.payload_length(), 90);
+            }),
+
+      CHECK("incomplete record can be extended",
+            [&](Test::Result& result) {
+               TLS::Record_TLS record;
+
+               result.test_is_false("is not complete", record.complete());
+               result.test_sz_eq("has missing bytes", record.missing_bytes_hint(), TLS::TLS_HEADER_SIZE);
+               result.test_sz_eq("has stored no bytes", record.stored_bytes(), 0);
+
+               // Read the record byte-by-byte
+               for(size_t i = 0; i < server_hello.size(); ++i) {
+                  const size_t consumed = record.append(std::span{server_hello}.subspan(i, 1));
+                  result.test_sz_eq("consumed one byte", consumed, 1);
+
+                  if(i < TLS::TLS_HEADER_SIZE - 1) {
+                     result.test_is_false("is not complete", record.complete());
+                     result.test_sz_eq("has missing bytes", record.missing_bytes_hint(), TLS::TLS_HEADER_SIZE - i - 1);
+                  } else if(i < server_hello.size() - 1) {
+                     result.test_is_false("is not complete", record.complete());
+                     result.test_sz_eq("has missing bytes", record.missing_bytes_hint(), server_hello.size() - i - 1);
+                  }
+               }
+
+               result.test_is_true("is complete", record.complete());
+               result.test_sz_eq("has all bytes", record.missing_bytes_hint(), 0);
+               result.test_sz_eq("has stored the header and payload bytes", record.stored_bytes(), 95);
+               result.test_enum_eq("has correct type", record.type(), TLS::Record_Type::Handshake);
+               result.test_is_true("has correct version", record.legacy_version() == TLS::Protocol_Version(0x0303));
+               result.test_sz_eq("has correct length", record.payload_length(), 90);
+            }),
+
+      CHECK("after reading only the header, the record completes given a larger buffer",
+            [&](Test::Result& result) {
+               const auto two_records = Botan::concat(server_hello, encrypted);
+               TLS::Record_TLS record;
+               record.append(std::span{two_records}.first(TLS::TLS_HEADER_SIZE));
+
+               result.test_is_false("is not complete", record.complete());
+               result.test_sz_eq("has missing bytes", record.missing_bytes_hint(), 90);
+               result.test_sz_eq("has stored the header bytes", record.stored_bytes(), TLS::TLS_HEADER_SIZE);
+
+               const size_t consumed = record.append(std::span{two_records}.subspan(TLS::TLS_HEADER_SIZE));
+               result.test_sz_eq("consumed payload bytes of the first record", consumed, 90);
+
+               result.test_is_true("is complete", record.complete());
+               result.test_sz_eq("has all bytes", record.missing_bytes_hint(), 0);
+               result.test_sz_eq("has stored the header and payload bytes", record.stored_bytes(), 95);
+               result.test_enum_eq("has correct type", record.type(), TLS::Record_Type::Handshake);
+               result.test_is_true("has correct version", record.legacy_version() == TLS::Protocol_Version(0x0303));
+               result.test_sz_eq("has correct length", record.payload_length(), 90);
+            }),
+
+      CHECK("after reading a partial header, the record completes given a larger buffer",
+            [&](Test::Result& result) {
+               const auto two_records = Botan::concat(server_hello, encrypted);
+               TLS::Record_TLS record;
+               record.append(std::span{two_records}.first(TLS::TLS_HEADER_SIZE - 1));
+
+               result.test_is_false("is not complete", record.complete());
+               result.test_sz_eq("has missing bytes", record.missing_bytes_hint(), 1 /* to complete the header*/);
+               result.test_sz_eq("has stored the header bytes", record.stored_bytes(), TLS::TLS_HEADER_SIZE - 1);
+
+               const size_t consumed = record.append(std::span{two_records}.subspan(TLS::TLS_HEADER_SIZE - 1));
+               result.test_sz_eq("consumed payload bytes of the first record", consumed, 91);
+
+               result.test_is_true("is complete", record.complete());
+               result.test_sz_eq("has all bytes", record.missing_bytes_hint(), 0);
+               result.test_sz_eq("has stored the header and payload bytes", record.stored_bytes(), 95);
+               result.test_enum_eq("has correct type", record.type(), TLS::Record_Type::Handshake);
+               result.test_is_true("has correct version", record.legacy_version() == TLS::Protocol_Version(0x0303));
+               result.test_sz_eq("has correct length", record.payload_length(), 90);
+            }),
+
+      CHECK("appending to an already-complete record is not allowed",
+            [&](Test::Result& result) {
+               TLS::Record_TLS record;
+               record.append(server_hello);
+               result.test_is_true("is complete", record.complete());
+               result.test_throws("cannot append to a complete record",
+                                  [&] { record.append(std::span{encrypted}.first(1)); });
+            }),
+
+      CHECK("overly large records are rejected early",
+            [&](Test::Result& result) {
+               result.test_no_throw("upper limit for plaintext records", [] {
+                  TLS::Record_TLS record;
+                  record.append(std::array<uint8_t, 5>{0x16 /* handshake */, 0x03, 0x03, 0x40, 0x00});
+               });
+               result.test_no_throw("upper limit for protected records", [] {
+                  TLS::Record_TLS record;
+                  record.append(std::array<uint8_t, 5>{0x17 /* appdata */, 0x03, 0x03, 0x41, 0x00});
+               });
+
+               result.test_throws("cannot create a plaintext record with a payload larger than 2^14 bytes", [&] {
+                  TLS::Record_TLS record;
+                  record.append(std::array<uint8_t, 5>{0x16 /* handshake */, 0x03, 0x03, 0x40, 0x01});
+               });
+               result.test_throws("cannot create a plaintext record with a payload larger than 2^14 + 256 bytes", [&] {
+                  TLS::Record_TLS record;
+                  record.append(std::array<uint8_t, 5>{0x17 /* appdata */, 0x03, 0x03, 0x41, 0x01});
+               });
+            }),
+
+      CHECK("records without any payload are rejected",
+            [&](Test::Result& result) {
+               result.test_throws("handshake", [&] {
+                  TLS::Record_TLS record;
+                  record.append(std::array<uint8_t, 5>{0x16 /* handshake */, 0x03, 0x03, 0x00, 0x00});
+               });
+               result.test_throws("appdata", [&] {
+                  TLS::Record_TLS record;
+                  record.append(std::array<uint8_t, 5>{0x17 /* appdata */, 0x03, 0x03, 0x00, 0x00});
+               });
+               result.test_throws("alert", [&] {
+                  TLS::Record_TLS record;
+                  record.append(std::array<uint8_t, 5>{0x15 /* alert */, 0x03, 0x03, 0x00, 0x00});
+               });
+               result.test_throws("change cipher spec", [&] {
+                  TLS::Record_TLS record;
+                  record.append(std::array<uint8_t, 5>{0x14 /* ccs */, 0x03, 0x03, 0x00, 0x00});
+               });
+            }),
+
+      CHECK("record with a bogus legacy version is rejected",
+            [&](Test::Result& result) {
+               result.test_throws("bogus legacy version", [&] {
+                  TLS::Record_TLS record;
+                  record.append(std::array<uint8_t, 5>{0x16, 0x02 /* ossified to 0x03 */, 0x01, 0x00, 0x01});
+               });
+            }),
+
+      CHECK("after completing a record, the payload can be extracted",
+            [&](Test::Result& result) {
+               TLS::Record_TLS record;
+               record.append(server_hello);
+
+               result.require("complete", record.complete());
+               auto payload = record.take_payload();
+               result.test_bin_eq("payload", payload, std::span{server_hello}.subspan(TLS::TLS_HEADER_SIZE));
+               result.test_is_false("not complete", record.complete());
+            }),
+   };
+}
+
 }  // namespace
 
 BOTAN_REGISTER_TEST_FN("tls",
@@ -1146,6 +1358,8 @@ BOTAN_REGISTER_TEST_FN("tls",
                        write_encrypted_records,
                        legacy_version_handling,
                        record_size_limits);
+
+BOTAN_REGISTER_TEST_FN("tls", "tls_record_13", record_structure);
 
 }  // namespace Botan_Tests
 

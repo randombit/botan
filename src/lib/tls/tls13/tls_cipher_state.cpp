@@ -96,11 +96,15 @@
 #include <botan/hash.h>
 #include <botan/secmem.h>
 #include <botan/tls_ciphersuite.h>
+#include <botan/tls_exceptn.h>
 #include <botan/tls_magic.h>
 
+#include <botan/internal/concat_util.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hkdf.h>
 #include <botan/internal/hmac.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_channel_impl_13.h>
 
@@ -116,6 +120,7 @@ namespace {
 //
 // N_MIN is 12 for AES_GCM and AES_CCM as per RFC 5116 and also 12 for ChaCha20 per RFC 8439.
 constexpr size_t NONCE_LENGTH = 12;
+
 }  // namespace
 
 std::unique_ptr<Cipher_State> Cipher_State::init_with_server_hello(const Connection_Side side,
@@ -245,7 +250,9 @@ auto current_nonce(const uint64_t seq_no, std::span<const uint8_t> iv) {
 
 }  // namespace
 
-uint64_t Cipher_State::encrypt_record_fragment(const std::vector<uint8_t>& header, secure_vector<uint8_t>& fragment) {
+MarshalledRecord Cipher_State::protect_record(Record_Type type,
+                                              std::span<const uint8_t> plaintext,
+                                              size_t padding_bytes) {
    BOTAN_ASSERT_NONNULL(m_encrypt);
 
    // RFC 8446 5.3
@@ -254,17 +261,83 @@ uint64_t Cipher_State::encrypt_record_fragment(const std::vector<uint8_t>& heade
       throw Invalid_State("TLS write sequence number overflow");
    }
 
-   m_encrypt->set_associated_data(header);
-   m_encrypt->start(current_nonce(m_write_seq_no, m_write_iv));
-   m_encrypt->finish(fragment);
+   const size_t plaintext_payload_length = plaintext.size() + padding_bytes + 1 /* content_type byte */;
+   const size_t encrypted_payload_length = encrypt_output_length(plaintext_payload_length);
+   const size_t unprotected_record_length = TLS_HEADER_SIZE + plaintext_payload_length;
+   const size_t protected_record_length = TLS_HEADER_SIZE + encrypted_payload_length;
 
-   return m_write_seq_no++;
+   MarshalledRecord result;
+   result.reserve(protected_record_length);
+
+   // RFC 9846 5.2
+   //    opaque_type: The outer opaque_type field of a TLSCiphertext record is
+   //                 always set to the value 23 (application_data) [...]
+   //    legacy_record_version: [...] is always 0x0303. TLS 1.3 TLSCiphertexts
+   //                           are not generated until after TLS 1.3 has been
+   //                           negotiated, so there are no historical
+   //                           compatibility concerns [...].
+   //    length: [...] of the following TLSCiphertext.encrypted_record, which is
+   //            the sum of the lengths of the content and the padding, plus one
+   //            for the inner content type, plus any expansion added by the
+   //            AEAD algorithm.
+   const auto header = Record_TLS::serialize_header(Record_Type::ApplicationData,
+                                                    Protocol_Version::TLS_V12 /* = 0x0303 */,
+                                                    checked_cast_to<uint16_t>(encrypted_payload_length));
+   result.get().insert(result.end(), header.begin(), header.end());
+
+   // RFC 9846 5.2
+   //    struct {
+   //        opaque content[TLSPlaintext.length];
+   //        ContentType type;
+   //        uint8 zeros[length_of_padding];
+   //    } TLSInnerPlaintext;
+   //
+   // RFC 9846 5.4
+   //    When generating a TLSCiphertext record, implementations MAY choose to
+   //    pad. [...] Implementations MUST set the padding octets to all zeros
+   //    before encrypting.
+   result.get().insert(result.end(), plaintext.begin(), plaintext.end());  // content
+   result.get().push_back(to_underlying(type));                            // type
+   result.get().insert(result.end(), padding_bytes, 0x00);                 // zeros (padding)
+
+   BOTAN_ASSERT_NOMSG(result.size() == unprotected_record_length);
+   m_encrypt->set_associated_data(std::span{result}.first<TLS_HEADER_SIZE>());
+   m_encrypt->start(current_nonce(m_write_seq_no++, m_write_iv));
+   m_encrypt->finish(result.get(), TLS_HEADER_SIZE /* skip header when protecting the payload */);
+   BOTAN_ASSERT_NOMSG(result.size() == protected_record_length);
+
+   return result;
 }
 
-uint64_t Cipher_State::decrypt_record_fragment(const std::vector<uint8_t>& header,
-                                               secure_vector<uint8_t>& encrypted_fragment) {
+Record_Content Cipher_State::deprotect_record(Record_TLS record, size_t incoming_record_size_limit) {
    BOTAN_ASSERT_NONNULL(m_decrypt);
-   BOTAN_ARG_CHECK(encrypted_fragment.size() >= m_decrypt->minimum_final_size(), "fragment too short to decrypt");
+   BOTAN_ARG_CHECK(record.type() == Record_Type::ApplicationData, "Record type must be ApplicationData");
+
+   // RFC 9846 5.2
+   //    length: The length (in bytes) [...], which is the sum of the lengths of
+   //            the content and the padding, plus one for the inner content
+   //            type, plus any expansion added by the AEAD algorithm.
+   //    [...]
+   //    If the decryption fails, the receiver MUST terminate the connection
+   //    with a "bad_record_mac" alert.
+   //
+   // If the protected record contains less bytes than the expected AEAD tag we
+   // can already fail early because the decryption will fail anyway.
+   if(record.payload().size() < m_decrypt->minimum_final_size()) {
+      throw TLS_Exception(Alert::BadRecordMac, "incomplete record mac received");
+   }
+
+   // RFC 9846 6.2
+   //    record_overflow: A TLSCiphertext record was received that had a length
+   //    more than 2^14 + 256 bytes, or a record decrypted to a TLSPlaintext
+   //    record with more than 214 bytes (or some other negotiated limit).
+   //
+   // RFC 8449 4.
+   //    A TLS endpoint that receives a record larger than its advertised limit
+   //    MUST generate a fatal "record_overflow" alert [...].
+   if(decrypt_output_length(record.payload().size()) > incoming_record_size_limit) {
+      throw TLS_Exception(Alert::RecordOverflow, "Received an encrypted record that exceeds maximum plaintext size");
+   }
 
    // RFC 8446 5.3
    //    Sequence numbers MUST NOT wrap.
@@ -272,12 +345,81 @@ uint64_t Cipher_State::decrypt_record_fragment(const std::vector<uint8_t>& heade
       throw Invalid_State("TLS read sequence number overflow");
    }
 
-   m_decrypt->set_associated_data(header);
-   m_decrypt->start(current_nonce(m_read_seq_no, m_read_iv));
+   auto result = Record_Content{
+      .type = Record_Type::Invalid,
+      .sequence_number = m_read_seq_no++,
+      .payload = record.take_payload(),
+   };
 
-   m_decrypt->finish(encrypted_fragment);
+   BOTAN_ASSERT_NOMSG(result.payload.size() <= MAX_CIPHERTEXT_SIZE_TLS13);
+   m_decrypt->set_associated_data(record.header());
+   m_decrypt->start(current_nonce(result.sequence_number.value(), m_read_iv));
+   m_decrypt->finish(result.payload);
+   BOTAN_ASSERT_NOMSG(result.payload.size() <= MAX_PLAINTEXT_SIZE + 1 /* content_type byte */);
 
-   return m_read_seq_no++;
+   // Remove record padding (RFC 9846 5.4). The TLSInnerPlaintext layout is
+   //   content || content_type || zero_padding
+   auto seen_nonzero = CT::Mask<uint8_t>::cleared();
+   uint8_t content_type_byte = 0;
+   size_t content_index = 0;
+   for(size_t i = result.payload.size(); i-- > 0;) {
+      const uint8_t b = result.payload[i];
+      const auto byte_is_nonzero = CT::Mask<uint8_t>::expand(b);
+      // Set on the first non-zero byte we encounter scanning right-to-left.
+      const auto first_nonzero = byte_is_nonzero & ~seen_nonzero;
+      content_type_byte = first_nonzero.select(b, content_type_byte);
+      content_index = CT::Mask<size_t>::expand(first_nonzero.value()).select(i, content_index);
+      seen_nonzero |= byte_is_nonzero;
+   }
+
+   // RFC 9846 5.4
+   //   If a receiving implementation does not find a non-zero octet in the
+   //   cleartext, it MUST terminate the connection with an
+   //   "unexpected_message" alert.
+   if(!seen_nonzero.as_bool()) {
+      throw TLS_Exception(Alert::UnexpectedMessage, "No content type found in encrypted record");
+   }
+
+   // hydrate the actual content type from TLSInnerPlaintext
+   result.type = static_cast<Record_Type>(content_type_byte);
+
+   // RFC 9846 5.
+   //    An implementation [...] which receives a protected change_cipher_spec
+   //    record MUST abort the handshake with an "unexpected_message" alert.
+   //    [....]
+   //    If a TLS implementation receives an unexpected record type, it MUST
+   //    terminate the connection with an "unexpected_message" alert.
+   //
+   // RFC 9846 5.1
+   //    enum {
+   //        invalid(0),
+   //        change_cipher_spec(20),
+   //        alert(21),
+   //        handshake(22),
+   //        application_data(23),
+   //        (255)
+   //    } ContentType;
+   if(result.type != Record_Type::ApplicationData &&  //
+      result.type != Record_Type::Handshake &&        //
+      result.type != Record_Type::Alert) {
+      throw TLS_Exception(Alert::UnexpectedMessage, "protected TLS record type had unexpected value");
+   }
+
+   // Truncate to drop the content_type byte and padding. resize() on a
+   // vector of trivially-destructible elements is bookkeeping-only and
+   // does not allocate or iterate over the dropped suffix.
+   result.payload.resize(content_index);
+
+   // RFC 9846 5.4
+   //    Implementations MUST NOT send Handshake and Alert records that have
+   //    a zero-length TLSInnerPlaintext.content; if such a message is
+   //    received, the receiving implementation MUST terminate the connection
+   //    with an "unexpected_message" alert.
+   if(result.payload.empty() && result.type != Record_Type::ApplicationData) {
+      throw TLS_Exception(Alert::UnexpectedMessage, "Received a protected record with empty TLSInnerPlaintext content");
+   }
+
+   return result;
 }
 
 size_t Cipher_State::encrypt_output_length(const size_t input_length) const {
