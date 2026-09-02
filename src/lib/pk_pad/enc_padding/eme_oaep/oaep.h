@@ -15,6 +15,8 @@
 
 namespace Botan {
 
+class PK_Encryption_Options;
+
 /**
 * OAEP (called EME1 in IEEE 1363 and in earlier versions of the library)
 * as specified in PKCS#1 v2.0 (RFC 2437) or PKCS#1 v2.1 (RFC 3447)
@@ -22,6 +24,12 @@ namespace Botan {
 class OAEP final : public EncryptionPaddingScheme {
    public:
       size_t maximum_input_size(size_t keybits) const override;
+
+      /**
+      * @param options must specify the hash; may specify a distinct MGF1 hash
+      * and a label (as the context)
+      */
+      explicit OAEP(const PK_Encryption_Options& options);
 
       /**
       * @param hash function to use for hashing (takes ownership)

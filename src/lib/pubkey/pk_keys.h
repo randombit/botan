@@ -23,6 +23,9 @@ namespace Botan {
 class BigInt;
 class RandomNumberGenerator;
 class PK_Signature_Options;
+class PK_Encryption_Options;
+class PK_KEM_Options;
+class PK_Key_Agreement_Options;
 
 /**
 * Enumeration specifying the signature format.
@@ -249,6 +252,21 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       * This is an internal library function exposed on key types.
       * In almost all cases applications should use wrappers in pubkey.h
       *
+      * Return an encryption operation for this key/options or throw
+      *
+      * @param rng a random number generator. The PK_Op may maintain a
+      * reference to the RNG and use it many times. The rng must outlive
+      * any operations which reference it.
+      * @param options which specify parameters of the encryption beyond those
+      * implicit to the public key itself
+      */
+      virtual std::unique_ptr<PK_Ops::Encryption> _create_encryption_op(RandomNumberGenerator& rng,
+                                                                        const PK_Encryption_Options& options) const;
+
+      /**
+      * This is an internal library function exposed on key types.
+      * In almost all cases applications should use wrappers in pubkey.h
+      *
       * Return an encryption operation for this key/params or throw
       *
       * @param rng a random number generator. The PK_Op may maintain a
@@ -257,9 +275,21 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       * @param params additional parameters
       * @param provider the provider to use
       */
-      virtual std::unique_ptr<PK_Ops::Encryption> create_encryption_op(RandomNumberGenerator& rng,
-                                                                       std::string_view params,
-                                                                       std::string_view provider) const;
+      BOTAN_DEPRECATED("Use PK_Encryptor_EME")
+      std::unique_ptr<PK_Ops::Encryption> create_encryption_op(RandomNumberGenerator& rng,
+                                                               std::string_view params,
+                                                               std::string_view provider) const;
+
+      /**
+      * This is an internal library function exposed on key types.
+      * In almost all cases applications should use wrappers in pubkey.h
+      *
+      * Return a KEM encryption operation for this key/options or throw
+      *
+      * @param options which specify parameters of the KEM beyond those
+      * implicit to the public key itself
+      */
+      virtual std::unique_ptr<PK_Ops::KEM_Encryption> _create_kem_encryption_op(const PK_KEM_Options& options) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -270,8 +300,9 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       * @param params additional parameters
       * @param provider the provider to use
       */
-      virtual std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(std::string_view params,
-                                                                               std::string_view provider) const;
+      BOTAN_DEPRECATED("Use PK_KEM_Encryptor")
+      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(std::string_view params,
+                                                                       std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -380,6 +411,21 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * This is an internal library function exposed on key types.
       * In all cases applications should use wrappers in pubkey.h
       *
+      * Return a decryption operation for this key/options or throw
+      *
+      * @param rng a random number generator. The PK_Op may maintain a
+      * reference to the RNG and use it many times. The rng must outlive
+      * any operations which reference it.
+      * @param options which specify parameters of the encryption beyond those
+      * implicit to the key itself
+      */
+      virtual std::unique_ptr<PK_Ops::Decryption> _create_decryption_op(RandomNumberGenerator& rng,
+                                                                        const PK_Encryption_Options& options) const;
+
+      /**
+      * This is an internal library function exposed on key types.
+      * In all cases applications should use wrappers in pubkey.h
+      *
       * Return an decryption operation for this key/params or throw
       *
       * @param rng a random number generator. The PK_Op may maintain a
@@ -389,9 +435,25 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * @param provider the provider to use
       *
       */
-      virtual std::unique_ptr<PK_Ops::Decryption> create_decryption_op(RandomNumberGenerator& rng,
-                                                                       std::string_view params,
-                                                                       std::string_view provider) const;
+      BOTAN_DEPRECATED("Use PK_Decryptor_EME")
+      std::unique_ptr<PK_Ops::Decryption> create_decryption_op(RandomNumberGenerator& rng,
+                                                               std::string_view params,
+                                                               std::string_view provider) const;
+
+      /**
+      * This is an internal library function exposed on key types.
+      * In all cases applications should use wrappers in pubkey.h
+      *
+      * Return a KEM decryption operation for this key/options or throw
+      *
+      * @param rng a random number generator. The PK_Op may maintain a
+      * reference to the RNG and use it many times. The rng must outlive
+      * any operations which reference it.
+      * @param options which specify parameters of the KEM beyond those
+      * implicit to the key itself
+      */
+      virtual std::unique_ptr<PK_Ops::KEM_Decryption> _create_kem_decryption_op(RandomNumberGenerator& rng,
+                                                                                const PK_KEM_Options& options) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -405,9 +467,10 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * @param params additional parameters
       * @param provider the provider to use
       */
-      virtual std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
-                                                                               std::string_view params,
-                                                                               std::string_view provider) const;
+      BOTAN_DEPRECATED("Use PK_KEM_Decryptor")
+      std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
+                                                                       std::string_view params,
+                                                                       std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -446,6 +509,21 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * This is an internal library function exposed on key types.
       * In all cases applications should use wrappers in pubkey.h
       *
+      * Return a key agreement operation for this key/options or throw
+      *
+      * @param rng a random number generator. The PK_Op may maintain a
+      * reference to the RNG and use it many times. The rng must outlive
+      * any operations which reference it.
+      * @param options which specify parameters of the key agreement beyond
+      * those implicit to the key itself
+      */
+      virtual std::unique_ptr<PK_Ops::Key_Agreement> _create_key_agreement_op(
+         RandomNumberGenerator& rng, const PK_Key_Agreement_Options& options) const;
+
+      /**
+      * This is an internal library function exposed on key types.
+      * In all cases applications should use wrappers in pubkey.h
+      *
       * Return a key agreement operation for this key/params or throw
       *
       * @param rng a random number generator. The PK_Op may maintain a
@@ -454,9 +532,10 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * @param params additional parameters
       * @param provider the provider to use
       */
-      virtual std::unique_ptr<PK_Ops::Key_Agreement> create_key_agreement_op(RandomNumberGenerator& rng,
-                                                                             std::string_view params,
-                                                                             std::string_view provider) const;
+      BOTAN_DEPRECATED("Use PK_Key_Agreement")
+      std::unique_ptr<PK_Ops::Key_Agreement> create_key_agreement_op(RandomNumberGenerator& rng,
+                                                                     std::string_view params,
+                                                                     std::string_view provider) const;
 };
 
 /**

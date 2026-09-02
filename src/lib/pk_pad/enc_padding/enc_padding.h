@@ -16,6 +16,7 @@
 namespace Botan {
 
 class RandomNumberGenerator;
+class PK_Encryption_Options;
 
 /**
 * Encoding Method for Encryption
@@ -27,10 +28,10 @@ class BOTAN_TEST_API EncryptionPaddingScheme /* NOLINT(*-special-member-function
       /**
       * Factory method for encryption padding schemes
       *
-      * @param algo_spec the name of the EncryptionPaddingScheme to create
-      * @return pointer to newly allocated object of that type
+      * @param options the padding scheme and its parameters
+      * @return pointer to newly allocated object of that type, or throws
       */
-      static std::unique_ptr<EncryptionPaddingScheme> create(std::string_view algo_spec);
+      static std::unique_ptr<EncryptionPaddingScheme> create_or_throw(const PK_Encryption_Options& options);
 
       /**
       * Return the maximum input size in bytes we can support

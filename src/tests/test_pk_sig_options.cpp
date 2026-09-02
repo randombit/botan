@@ -422,6 +422,25 @@ class PK_Signature_Options_Unexamined_Test final : public Test {
             check_message("PK_Verifier", e);
          }
 
+         // Every option must be named in the message, so the name table cannot
+         // silently fall out of sync with the set of options
+         try {
+            const Botan::PK_Verifier verifier(*pub,
+                                              Botan::PK_Signature_Options()
+                                                 .with_hash("SHA-256")
+                                                 .with_padding("PSS")
+                                                 .with_externally_computed_prehash()
+                                                 .with_context("ctx")
+                                                 .with_salt_size(16)
+                                                 .with_explicit_trailer_field());
+            result.test_failure("PK_Verifier accepted unexamined options");
+         } catch(Botan::Invalid_Argument& e) {
+            result.test_str_eq("All unexamined options are named",
+                               e.what(),
+                               "Ed25519 does not support the signature option(s): hash, padding, context, "
+                               "salt size, explicit trailer field, externally computed prehash");
+         }
+
          // The deterministic option is only meaningful for signing; verifiers accept it
          result.test_no_throw("Verifier ignores deterministic option", [&] {
             const Botan::PK_Verifier verifier(*pub, Botan::PK_Signature_Options().with_deterministic_signature());

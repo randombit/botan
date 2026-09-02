@@ -429,6 +429,14 @@ class BOTAN_PUBLIC_API(2, 0) PK_Key_Agreement final {
       * Construct a PK Key Agreement.
       * @param key the key to use
       * @param rng the random generator to use
+      * @param options controls the behavior of the key agreement, eg which KDF to use
+      */
+      PK_Key_Agreement(const Private_Key& key, RandomNumberGenerator& rng, const PK_Key_Agreement_Options& options);
+
+      /**
+      * Construct a PK Key Agreement.
+      * @param key the key to use
+      * @param rng the random generator to use
       * @param kdf name of the KDF to use (or 'Raw' for no KDF)
       * @param provider the algo provider to use (or empty for default)
       */
@@ -523,6 +531,17 @@ class BOTAN_PUBLIC_API(2, 0) PK_Encryptor_EME final : public PK_Encryptor {
       * Construct an instance.
       * @param key the key to use inside the encryptor
       * @param rng the RNG to use
+      * @param options controls the behavior of the encryption, eg which padding to use
+      *
+      * Note that RSA requires the options to specify at least a padding scheme,
+      * and for OAEP also a hash function.
+      */
+      PK_Encryptor_EME(const Public_Key& key, RandomNumberGenerator& rng, const PK_Encryption_Options& options);
+
+      /**
+      * Construct an instance.
+      * @param key the key to use inside the encryptor
+      * @param rng the RNG to use
       * @param padding the message encoding scheme to use (eg "OAEP(SHA-256)")
       * @param provider the provider to use
       */
@@ -558,6 +577,14 @@ class BOTAN_PUBLIC_API(2, 0) PK_Encryptor_EME final : public PK_Encryptor {
 */
 class BOTAN_PUBLIC_API(2, 0) PK_Decryptor_EME final : public PK_Decryptor {
    public:
+      /**
+      * Construct an instance.
+      * @param key the key to use inside the decryptor
+      * @param rng the random generator to use
+      * @param options controls the behavior of the decryption, eg which padding to use
+      */
+      PK_Decryptor_EME(const Private_Key& key, RandomNumberGenerator& rng, const PK_Encryption_Options& options);
+
       /**
       * Construct an instance.
       * @param key the key to use inside the decryptor
@@ -633,6 +660,13 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
       /**
       * Construct an instance.
       * @param key the key to encrypt to
+      * @param options controls the behavior of the KEM, eg which KDF to use
+      */
+      PK_KEM_Encryptor(const Public_Key& key, const PK_KEM_Options& options);
+
+      /**
+      * Construct an instance.
+      * @param key the key to encrypt to
       * @param kem_param additional KEM parameters
       * @param provider the provider to use
       */
@@ -668,10 +702,10 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
       * exactly the desired key length, because the output of the KEM
       * will be hashed by the KDF.
       *
-      * However if the KEM was used with "Raw" kdf, to request the
-      * algorithmic output of the KEM directly, then the desired key
-      * length will be ignored and a bytestring that depends on the
-      * algorithm is returned
+      * However if the KEM was used without a KDF (with_raw_shared_key, or
+      * the legacy "Raw" kdf string), to request the algorithmic output of
+      * the KEM directly, then the desired key length will be ignored and
+      * a bytestring that depends on the algorithm is returned
       *
       * @param desired_shared_key_len is the requested length
       */
@@ -773,6 +807,14 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Decryptor final {
       * Construct an instance.
       * @param key the key to use inside the decryptor
       * @param rng the RNG to use
+      * @param options controls the behavior of the KEM, eg which KDF to use
+      */
+      PK_KEM_Decryptor(const Private_Key& key, RandomNumberGenerator& rng, const PK_KEM_Options& options);
+
+      /**
+      * Construct an instance.
+      * @param key the key to use inside the decryptor
+      * @param rng the RNG to use
       * @param kem_param additional KEM parameters
       * @param provider the provider to use
       */
@@ -795,10 +837,10 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Decryptor final {
       * exactly the desired key length, because the output of the KEM
       * will be hashed by the KDF.
       *
-      * However if the KEM was used with "Raw" kdf, to request the
-      * algorithmic output of the KEM directly, then the desired key
-      * length will be ignored and a bytestring that depends on the
-      * algorithm is returned
+      * However if the KEM was used without a KDF (with_raw_shared_key, or
+      * the legacy "Raw" kdf string), to request the algorithmic output of
+      * the KEM directly, then the desired key length will be ignored and
+      * a bytestring that depends on the algorithm is returned
       *
       * @param desired_shared_key_len is the requested length.
       */

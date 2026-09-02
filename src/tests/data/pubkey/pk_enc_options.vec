@@ -1,0 +1,57 @@
+# Tests for PK_Encryption_Options validation
+#
+# For each algorithm, a key is generated using KeyParams (if provided).
+# A baseline set of options is created using Padding and Hash (if non-empty).
+# The baseline is verified to encrypt and decrypt.
+#
+# Each Supports* flag tests adding that option to the baseline:
+#   true  -> encryptor and decryptor accept it, encrypt/decrypt succeeds, and
+#            the option takes effect (a decryptor with conflicting options fails)
+#   false -> encryptor and decryptor both reject it with an exception
+#
+# Every section must have a Supports* entry for each option (except for those
+# used in the baseline); the test fails otherwise. SupportsContext must be the
+# last entry of each section.
+
+[RSA/OAEP]
+KeyParams = 2048
+Padding = OAEP
+Hash = SHA-256
+SupportsMGF1Hash = true
+SupportsContext = true
+
+[RSA/PKCS1v15]
+KeyParams = 2048
+Padding = PKCS1v15
+SupportsHash = false
+SupportsMGF1Hash = false
+SupportsContext = false
+
+[RSA/Raw]
+KeyParams = 2048
+Padding = Raw
+SupportsHash = false
+SupportsMGF1Hash = false
+SupportsContext = false
+
+[ElGamal/OAEP]
+KeyParams = modp/ietf/1024
+Padding = OAEP
+Hash = SHA-256
+SupportsMGF1Hash = true
+SupportsContext = true
+
+[ElGamal/PKCS1v15]
+KeyParams = modp/ietf/1024
+Padding = PKCS1v15
+SupportsHash = false
+SupportsMGF1Hash = false
+SupportsContext = false
+
+# SM2 takes only a hash, which defaults to SM3
+[SM2]
+KeyParams = sm2p256v1
+SupportsPadding = false
+SupportsHash = true
+SupportsMGF1Hash = false
+SupportsContext = false
