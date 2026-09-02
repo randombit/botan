@@ -67,6 +67,11 @@ uint64_t TLS::Callbacks::tls_current_monotonic_clock_ms() {
    return std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
 }
 
+void TLS::Callbacks::tls_register_deferred_operation(uint64_t monotonic_delay_ms,
+                                                     std::function<void()> op /* NOLINT(*-value-param) */) {
+   BOTAN_UNUSED(monotonic_delay_ms, op);  // no-op
+}
+
 void TLS::Callbacks::tls_modify_extensions(Extensions& /*unused*/,
                                            Connection_Side /*unused*/,
                                            Handshake_Type /*unused*/) {}
