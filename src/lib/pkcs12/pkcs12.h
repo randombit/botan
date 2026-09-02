@@ -206,6 +206,16 @@ class BOTAN_PUBLIC_API(3, 13) PKCS12 final {
       */
       const std::vector<OID>& unknown_bag_types() const { return m_unknown_bag_types; }
 
+      /**
+      * Whether the parsed PFX was integrity protected by a MAC.
+      *
+      * @return @c true if the file carried MacData (which was verified
+      *         during parsing), @c false if it carried none, and
+      *         @c nullopt for a bundle constructed in-memory rather than
+      *         parsed from a file.
+      */
+      std::optional<bool> mac_protected() const { return m_mac_protected; }
+
       /// Add a private key. PKCS#12 supports multiple keys per file.
       void add_key(std::shared_ptr<Private_Key> key);
 
@@ -245,6 +255,7 @@ class BOTAN_PUBLIC_API(3, 13) PKCS12 final {
       std::optional<std::string> m_friendly_name;
       std::optional<std::vector<uint8_t>> m_local_key_id;
       std::vector<OID> m_unknown_bag_types;
+      std::optional<bool> m_mac_protected;
 };
 
 }  // namespace Botan

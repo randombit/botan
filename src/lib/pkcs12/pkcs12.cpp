@@ -480,7 +480,10 @@ PKCS12::PKCS12(std::span<const uint8_t> data, std::string_view password) {
    // subsequent EncryptedData / PKCS8ShroudedKeyBag decryption.
    bool openssl_empty_pwd_compat = false;
 
-   if(pfx_seq.more_items()) {
+   const bool has_mac_data = pfx_seq.more_items();
+   m_mac_protected = has_mac_data;
+
+   if(has_mac_data) {
       BER_Decoder mac_data = pfx_seq.start_sequence();
 
       BER_Decoder digest_info = mac_data.start_sequence();
