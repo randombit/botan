@@ -138,6 +138,13 @@ PKCS12
       implementation (e.g. ``SecretBag``). Empty for normal PKCS#12 files
       and for bundles constructed in-memory.
 
+   .. cpp:function:: std::optional<bool> mac_protected() const
+
+      Whether the parsed file was integrity protected by a MAC: ``true``
+      if the PFX carried ``MacData`` (which was verified during parsing),
+      ``false`` if it carried none, and ``nullopt`` for a bundle
+      constructed in-memory rather than parsed from a file.
+
    Mutators
    ^^^^^^^^
 

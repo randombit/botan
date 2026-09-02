@@ -236,6 +236,7 @@ class PKCS12_Tests final : public Test {
 
          const Botan::PKCS12 parsed(pfx, "testpassword");
          verify_parsed_data(result, parsed, *creds.key, creds.cert, "Basic Test Key");
+         result.test_is_true("MAC protected", parsed.mac_protected() == true);
 
          return result;
       }
@@ -538,6 +539,8 @@ class PKCS12_Tests final : public Test {
             result.test_is_true("Has certificate", !parsed.certificates().empty() == has_cert);
             result.test_is_true("Has CA certificates", !parsed.ca_certificates().empty() == has_ca);
             result.test_is_true("Has friendly name", parsed.friendly_name().has_value() == has_friendly_name);
+            // Every external test file carries MacData
+            result.test_is_true("MAC protected", parsed.mac_protected() == true);
             if(has_key && !parsed.private_keys().empty()) {
                result.test_str_not_empty("Key algorithm", parsed.private_keys().front()->algo_name());
             }
@@ -615,6 +618,7 @@ class PKCS12_Tests final : public Test {
 
          const auto opts = Botan::PKCS12_Export_Options::legacy_compat("nomactest").without_mac();
          Botan::PKCS12 bundle;
+         result.test_is_false("Built bundle has no MAC status", bundle.mac_protected().has_value());
          bundle.add_key(creds.key);
          bundle.add_certificate(creds.cert);
          const auto pfx = bundle.export_to(opts, *rng);
@@ -622,6 +626,7 @@ class PKCS12_Tests final : public Test {
 
          const auto parsed = Botan::PKCS12(pfx, "nomactest");
 
+         result.test_is_true("Parsed without MAC", parsed.mac_protected() == false);
          result.test_is_true("Has private key", !parsed.private_keys().empty());
          result.test_is_true("Has certificate", parsed.end_entity_certificate().has_value());
 
@@ -765,6 +770,7 @@ class PKCS12_Tests final : public Test {
          const Botan::PKCS12 parsed(pfx, "");
          result.test_sz_eq("One private key", parsed.private_keys().size(), 1);
          result.test_is_true("End-entity present", parsed.end_entity_certificate().has_value());
+         result.test_is_true("No MAC", parsed.mac_protected() == false);
          return result;
       }
 
