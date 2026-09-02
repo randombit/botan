@@ -15,6 +15,7 @@
 #include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/target_info.h>
+#include <algorithm>
 #include <chrono>
 #include <deque>
 #include <fstream>

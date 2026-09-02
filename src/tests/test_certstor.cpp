@@ -12,6 +12,7 @@
    #include <botan/pkcs8.h>
    #include <botan/pkix_types.h>
    #include <botan/x509cert.h>
+   #include <algorithm>
 
    #if defined(BOTAN_HAS_CERTSTOR_SQLITE3)
       #include <botan/certstor_sqlite.h>
