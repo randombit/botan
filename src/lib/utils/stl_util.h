@@ -18,26 +18,6 @@
 namespace Botan {
 
 /**
- * Reduce the values of @p keys into an accumulator initialized with @p acc using
- * the reducer function @p reducer.
- *
- * The @p reducer is a function taking the accumulator and a single key to return the
- * new accumulator. Keys are consecutively reduced into the accumulator.
- *
- * @return the accumulator containing the reduction of @p keys
- */
-template <typename RetT, typename KeyT, typename ReducerT>
-RetT reduce(const std::vector<KeyT>& keys, RetT acc, ReducerT reducer)
-   requires std::invocable<ReducerT&, RetT, const KeyT&> &&
-            std::convertible_to<std::invoke_result_t<ReducerT&, RetT, const KeyT&>, RetT>
-{
-   for(const KeyT& key : keys) {
-      acc = reducer(std::move(acc), key);
-   }
-   return acc;
-}
-
-/**
 * Existence check for values
 */
 template <typename T, typename V>
