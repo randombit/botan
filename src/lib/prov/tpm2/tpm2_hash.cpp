@@ -59,7 +59,7 @@ size_t HashFunction::security_level() const {
       return 61;
    } else {
       // Otherwise just call the base class impl
-      return HashFunction::security_level();
+      return Botan::HashFunction::security_level();
    }
 }
 
