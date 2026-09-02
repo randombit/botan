@@ -1,6 +1,15 @@
 Release Notes
 ========================================
 
+Version 3.15.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* The FFI ``botan_x509_general_name_t`` API now provides access to otherName
+  entries of subject and issuer alternative names and of name constraints, for
+  example the Microsoft UPN, including the new function
+  ``botan_x509_general_name_other_name_type_id``. The Python binding gains
+  bindings for this API. (GH #5885)
+
 Version 3.14.1, 2026-11-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
