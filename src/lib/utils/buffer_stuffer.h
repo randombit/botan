@@ -57,13 +57,17 @@ class BufferStuffer final {
       constexpr uint8_t& next_byte() { return next(1)[0]; }
 
       constexpr void append(std::span<const uint8_t> buffer) {
-         auto sink = next(buffer.size());
-         std::copy(buffer.begin(), buffer.end(), sink.begin());
+         const size_t len = buffer.size();
+         auto sink = next(len);
+         for(size_t i = 0; i != len; ++i) {
+            sink[i] = buffer[i];
+         }
       }
 
-      constexpr void append(uint8_t b, size_t repeat = 1) {
-         auto sink = next(repeat);
-         std::fill(sink.begin(), sink.end(), b);
+      constexpr void append(uint8_t val, size_t repeat = 1) {
+         for(auto& b : next(repeat)) {
+            b = val;
+         }
       }
 
       constexpr bool full() const { return m_buffer.empty(); }

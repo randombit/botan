@@ -15,6 +15,7 @@ Each include is parsed for every test file which can get quite expensive
 */
 
 #include <botan/types.h>
+#include <exception>
 #include <functional>
 #include <memory>
 #include <optional>

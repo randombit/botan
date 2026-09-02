@@ -92,7 +92,9 @@ class XMSS_Address final {
        **/
       void set_type(Type type) {
          m_data[15] = static_cast<uint8_t>(type);
-         std::fill(m_data.begin() + 16, m_data.end(), static_cast<uint8_t>(0));
+         for(size_t i = 16; i != m_data.size(); ++i) {
+            m_data[i] = 0;
+         }
       }
 
       /**
