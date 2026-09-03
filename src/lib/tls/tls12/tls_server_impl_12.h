@@ -44,16 +44,42 @@ class Server_Impl_12 final : public Channel_Impl_12 {
       *        be preallocated for the read and write buffers. Smaller
       *        values just mean reallocations and copies are more likely.
       */
-      explicit Server_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
-                              const std::shared_ptr<Session_Manager>& session_manager,
-                              const std::shared_ptr<Credentials_Manager>& creds,
-                              const std::shared_ptr<const Policy>& policy,
-                              const std::shared_ptr<RandomNumberGenerator>& rng,
-                              bool is_datagram = false,
-                              size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE);
+      static std::shared_ptr<Server_Impl_12> create(const std::shared_ptr<Callbacks>& callbacks,
+                                                    const std::shared_ptr<Session_Manager>& session_manager,
+                                                    const std::shared_ptr<Credentials_Manager>& creds,
+                                                    const std::shared_ptr<const Policy>& policy,
+                                                    const std::shared_ptr<RandomNumberGenerator>& rng,
+                                                    bool is_datagram = false,
+                                                    size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE);
+
+      Server_Impl_12([[maybe_unused]] Private dont_call_me,
+                     const std::shared_ptr<Callbacks>& callbacks,
+                     const std::shared_ptr<Session_Manager>& session_manager,
+                     const std::shared_ptr<Credentials_Manager>& creds,
+                     const std::shared_ptr<const Policy>& policy,
+                     const std::shared_ptr<RandomNumberGenerator>& rng,
+                     bool is_datagram = false,
+                     size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE) :
+            Channel_Impl_12(callbacks, session_manager, rng, policy, true, is_datagram, reserved_io_buffer_size),
+            m_creds(creds) {}
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
-      explicit Server_Impl_12(const Channel_Impl::Downgrade_Information& downgrade_info);
+
+      static std::shared_ptr<Server_Impl_12> create_for_downgrade(
+         const Channel_Impl::Downgrade_Information& downgrade_info) {
+         return std::make_shared<Server_Impl_12>(Private{}, downgrade_info);
+      }
+
+      Server_Impl_12([[maybe_unused]] Private dont_call_me, const Channel_Impl::Downgrade_Information& downgrade_info) :
+            Channel_Impl_12(downgrade_info.callbacks,
+                            downgrade_info.session_manager,
+                            downgrade_info.rng,
+                            downgrade_info.policy,
+                            true /* is_server*/,
+                            false /* TLS 1.3 does not support DTLS yet */,
+                            downgrade_info.io_buffer_size),
+            m_creds(downgrade_info.creds) {}
+
 #endif
 
    private:

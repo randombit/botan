@@ -44,13 +44,24 @@ class Client_Impl_13 final : public Channel_Impl_13 {
       *
       * @param next_protocols specifies protocols to advertise with ALPN
       */
-      explicit Client_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
-                              const std::shared_ptr<Session_Manager>& session_manager,
-                              const std::shared_ptr<Credentials_Manager>& creds,
-                              const std::shared_ptr<const Policy>& policy,
-                              const std::shared_ptr<RandomNumberGenerator>& rng,
-                              Server_Information server_info = Server_Information(),
-                              const std::vector<std::string>& next_protocols = {});
+      static std::shared_ptr<Client_Impl_13> create(const std::shared_ptr<Callbacks>& callbacks,
+                                                    const std::shared_ptr<Session_Manager>& session_manager,
+                                                    const std::shared_ptr<Credentials_Manager>& creds,
+                                                    const std::shared_ptr<const Policy>& policy,
+                                                    const std::shared_ptr<RandomNumberGenerator>& rng,
+                                                    Server_Information server_info = Server_Information(),
+                                                    const std::vector<std::string>& next_protocols = {});
+
+      Client_Impl_13([[maybe_unused]] Private dont_call_me,
+                     const std::shared_ptr<Callbacks>& callbacks,
+                     const std::shared_ptr<Session_Manager>& session_manager,
+                     const std::shared_ptr<Credentials_Manager>& creds,
+                     const std::shared_ptr<const Policy>& policy,
+                     const std::shared_ptr<RandomNumberGenerator>& rng,
+                     Server_Information server_info = Server_Information()) :
+            Channel_Impl_13(callbacks, session_manager, creds, rng, policy, false /* is_server */),
+            m_info(std::move(server_info)),
+            m_handshake(std::make_unique<Pending_Handshake>()) {}
 
       /**
       * @return network protocol as advertised by the TLS server, if server sent the ALPN extension

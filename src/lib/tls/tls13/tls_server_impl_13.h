@@ -20,11 +20,20 @@ namespace Botan::TLS {
 */
 class Server_Impl_13 final : public Channel_Impl_13 {
    public:
-      explicit Server_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
-                              const std::shared_ptr<Session_Manager>& session_manager,
-                              const std::shared_ptr<Credentials_Manager>& credentials_manager,
-                              const std::shared_ptr<const Policy>& policy,
-                              const std::shared_ptr<RandomNumberGenerator>& rng);
+      static std::shared_ptr<Server_Impl_13> create(const std::shared_ptr<Callbacks>& callbacks,
+                                                    const std::shared_ptr<Session_Manager>& session_manager,
+                                                    const std::shared_ptr<Credentials_Manager>& credentials_manager,
+                                                    const std::shared_ptr<const Policy>& policy,
+                                                    const std::shared_ptr<RandomNumberGenerator>& rng);
+
+      Server_Impl_13([[maybe_unused]] Private dont_call_me,
+                     const std::shared_ptr<Callbacks>& callbacks,
+                     const std::shared_ptr<Session_Manager>& session_manager,
+                     const std::shared_ptr<Credentials_Manager>& credentials_manager,
+                     const std::shared_ptr<const Policy>& policy,
+                     const std::shared_ptr<RandomNumberGenerator>& rng) :
+            Channel_Impl_13(callbacks, session_manager, credentials_manager, rng, policy, true /* is_server */),
+            m_handshake(std::make_unique<Pending_Handshake>()) {}
 
       std::string application_protocol() const override;
       std::vector<X509_Certificate> peer_cert_chain() const override;

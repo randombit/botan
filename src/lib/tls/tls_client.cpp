@@ -41,8 +41,7 @@ Client::Client(const std::shared_ptr<Callbacks>& callbacks,
 
 #if defined(BOTAN_HAS_TLS_13)
    if(offer_version == Protocol_Version::TLS_V13) {
-      m_impl = std::make_unique<Client_Impl_13>(
-         callbacks, session_manager, creds, policy, rng, std::move(info), next_protocols);
+      m_impl = Client_Impl_13::create(callbacks, session_manager, creds, policy, rng, std::move(info), next_protocols);
 
    #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       if(m_impl->expects_downgrade()) {
@@ -62,15 +61,15 @@ Client::Client(const std::shared_ptr<Callbacks>& callbacks,
 
 #if defined(BOTAN_HAS_TLS_12)
    if(offer_version.is_pre_tls_13()) {
-      m_impl = std::make_unique<Client_Impl_12>(callbacks,
-                                                session_manager,
-                                                creds,
-                                                policy,
-                                                rng,
-                                                std::move(info),
-                                                offer_version.is_datagram_protocol(),
-                                                next_protocols,
-                                                io_buf_sz);
+      m_impl = Client_Impl_12::create(callbacks,
+                                      session_manager,
+                                      creds,
+                                      policy,
+                                      rng,
+                                      std::move(info),
+                                      offer_version.is_datagram_protocol(),
+                                      next_protocols,
+                                      io_buf_sz);
       return;
    }
 #endif
@@ -87,7 +86,7 @@ size_t Client::downgrade() {
    BOTAN_ASSERT_NOMSG(m_impl->is_downgrading());
 
    auto info = m_impl->extract_downgrade_info();
-   m_impl = std::make_unique<Client_Impl_12>(*info);
+   m_impl = Client_Impl_12::create_for_downgrade(*info);
 
    if(!info->peer_transcript.empty()) {
       // replay peer data received so far

@@ -130,7 +130,7 @@ class BOTAN_PUBLIC_API(2, 0) Server final : public Channel {
       Server& operator=(Server&& other) = delete;
 
    private:
-      std::unique_ptr<Channel_Impl> m_impl;
+      std::shared_ptr<Channel_Impl> m_impl;
 };
 }  // namespace Botan::TLS
 

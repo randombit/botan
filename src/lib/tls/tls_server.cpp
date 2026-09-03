@@ -38,7 +38,7 @@ Server::Server(const std::shared_ptr<Callbacks>& callbacks,
 
 #if defined(BOTAN_HAS_TLS_13)
    if(!max_version.is_pre_tls_13()) {
-      m_impl = std::make_unique<Server_Impl_13>(callbacks, session_manager, creds, policy, rng);
+      m_impl = Server_Impl_13::create(callbacks, session_manager, creds, policy, rng);
 
    #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       if(m_impl->expects_downgrade()) {
@@ -52,7 +52,7 @@ Server::Server(const std::shared_ptr<Callbacks>& callbacks,
 
 #if defined(BOTAN_HAS_TLS_12)
    if(max_version.is_pre_tls_13()) {
-      m_impl = std::make_unique<Server_Impl_12>(callbacks, session_manager, creds, policy, rng, is_datagram, io_buf_sz);
+      m_impl = Server_Impl_12::create(callbacks, session_manager, creds, policy, rng, is_datagram, io_buf_sz);
       return;
    }
 #endif
@@ -71,7 +71,7 @@ size_t Server::from_peer(std::span<const uint8_t> data) {
    // won't even be created and `is_downgrading()` would always return false.
    if(m_impl->is_downgrading()) {
       auto info = m_impl->extract_downgrade_info();
-      m_impl = std::make_unique<Server_Impl_12>(*info);
+      m_impl = Server_Impl_12::create_for_downgrade(*info);
 
       // replay peer data received so far
       read = m_impl->from_peer(info->peer_transcript);

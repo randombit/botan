@@ -97,40 +97,40 @@ class Client_Handshake_State_12 final : public Handshake_State {
 
 }  // namespace
 
-/*
-* TLS 1.2 Client  Constructor
-*/
-Client_Impl_12::Client_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
-                               const std::shared_ptr<Session_Manager>& session_manager,
-                               const std::shared_ptr<Credentials_Manager>& creds,
-                               const std::shared_ptr<const Policy>& policy,
-                               const std::shared_ptr<RandomNumberGenerator>& rng,
-                               Server_Information info,
-                               bool datagram,
-                               const std::vector<std::string>& next_protocols,
-                               size_t io_buf_sz) :
-      Channel_Impl_12(callbacks, session_manager, rng, policy, false, datagram, io_buf_sz),
-      m_creds(creds),
-      m_info(std::move(info)) {
-   BOTAN_ASSERT_NONNULL(m_creds);
+std::shared_ptr<Client_Impl_12> Client_Impl_12::create(const std::shared_ptr<Callbacks>& callbacks,
+                                                       const std::shared_ptr<Session_Manager>& session_manager,
+                                                       const std::shared_ptr<Credentials_Manager>& creds,
+                                                       const std::shared_ptr<const Policy>& policy,
+                                                       const std::shared_ptr<RandomNumberGenerator>& rng,
+                                                       Server_Information server_info,
+                                                       bool datagram,
+                                                       const std::vector<std::string>& next_protocols,
+                                                       size_t reserved_io_buffer_size) {
+   auto self = std::make_shared<Client_Impl_12>(Private{},
+                                                callbacks,
+                                                session_manager,
+                                                creds,
+                                                policy,
+                                                rng,
+                                                std::move(server_info),
+                                                datagram,
+                                                reserved_io_buffer_size);
+
+   BOTAN_ASSERT_NONNULL(self->m_creds);
    const auto version = datagram ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
-   Handshake_State& state = create_handshake_state(version);
-   send_client_hello(state, false, version, std::nullopt /* no a-priori session to resume */, next_protocols);
+   Handshake_State& state = self->create_handshake_state(version);
+   self->send_client_hello(state, false, version, std::nullopt /* no a-priori session to resume */, next_protocols);
+
+   return self;
 }
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
 
-Client_Impl_12::Client_Impl_12(Channel_Impl::Downgrade_Information& downgrade_info) :
-      Channel_Impl_12(downgrade_info.callbacks,
-                      downgrade_info.session_manager,
-                      downgrade_info.rng,
-                      downgrade_info.policy,
-                      false /* is_server */,
-                      false /* datagram -- not supported by Botan in TLS 1.3 */,
-                      downgrade_info.io_buffer_size),
-      m_creds(downgrade_info.creds),
-      m_info(downgrade_info.server_info) {
-   Handshake_State& state = create_handshake_state(Protocol_Version::TLS_V12);
+std::shared_ptr<Client_Impl_12> Client_Impl_12::create_for_downgrade(
+   Channel_Impl::Downgrade_Information& downgrade_info) {
+   auto self = std::make_shared<Client_Impl_12>(Private{}, downgrade_info);
+
+   Handshake_State& state = self->create_handshake_state(Protocol_Version::TLS_V12);
 
    if(downgrade_info.client_hello.has_value()) {
       // Downgrade detected after receiving a TLS 1.2 server hello. We need to
@@ -139,19 +139,21 @@ Client_Impl_12::Client_Impl_12(Channel_Impl::Downgrade_Information& downgrade_in
       state.client_hello(std::make_unique<Client_Hello_12>(
          std::exchange(downgrade_info.client_hello, {}).value(), state.handshake_io(), state.hash()));
 
-      secure_renegotiation_check(state.client_hello());
+      self->secure_renegotiation_check(state.client_hello());
       state.set_expected_next(Handshake_Type::ServerHello);
    } else {
       // Downgrade initiated after a TLS 1.2 session was found. No communication
       // has happened yet but the found session should be used for resumption.
       BOTAN_ASSERT_NOMSG(downgrade_info.tls12_session.has_value() &&
                          downgrade_info.tls12_session->session.version().is_pre_tls_13());
-      send_client_hello(state,
-                        false,
-                        downgrade_info.tls12_session->session.version(),
-                        downgrade_info.tls12_session,
-                        downgrade_info.next_protocols);
+      self->send_client_hello(state,
+                              false,
+                              downgrade_info.tls12_session->session.version(),
+                              downgrade_info.tls12_session,
+                              downgrade_info.next_protocols);
    }
+
+   return self;
 }
 
 #endif
