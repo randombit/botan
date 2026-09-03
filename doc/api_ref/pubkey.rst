@@ -1541,9 +1541,12 @@ ephemeral keys is not recommended.
 
 Botan's implementation covers the parameter sets of the `NIST round 4
 specification <https://classic.mceliece.org/mceliece-spec-20221023.pdf#page=15>`_
-and the `Classic McEliece ISO draft specification
-<https://classic.mceliece.org/iso-mceliece-20230419.pdf#page=13>`_.
-These are the following:
+and of ISO/IEC 18033-2:2006/Amd 2 (published June 2026), which standardized
+Classic McEliece. The ISO document itself is not freely available; the `official
+Classic McEliece specification <https://classic.mceliece.org/>`_, which the
+Classic McEliece team states is `compatible with the ISO standard
+<https://classic.mceliece.org/iso.html>`_, serves as a freely available
+reference. Botan implements the following parameter sets:
 
 +------------------+-------------------+-------------------+--------------------+-------------------+
 | Set without f/pc | Set with f        | Set with pc       | Set with pcf       | Public Key Size   |
@@ -1561,8 +1564,9 @@ These are the following:
 
 The instances with the suffix 'f' use a faster key generation algorithm that is more consistent in
 runtime. The instances with the suffix 'pc' use plaintext confirmation, which is only specified in
-the ISO document. The instances mceliece348864(f) and mceliece460896(f) are only defined in the
-NIST round 4 submission.
+the ISO standard. The instances mceliece348864(f) are only defined in the NIST round 4 submission.
+The ISO standard additionally defines the instances mceliece460896pc(f), which are not currently
+implemented by Botan.
 
 
 eXtended Merkle Signature Scheme (XMSS)
