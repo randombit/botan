@@ -9,7 +9,8 @@
 
 #include <botan/assert.h>
 #include <botan/exceptn.h>
-#include <botan/internal/scan_name.h>
+#include <botan/internal/algorithm_spec.h>
+#include <botan/internal/probe_providers.h>
 #include <memory>
 #include <utility>
 
@@ -230,18 +231,18 @@ std::unique_ptr<BlockCipher> BlockCipher::create(std::string_view algo, std::str
    }
 #endif
 
-   const SCAN_Name req(algo);
+   const AlgorithmSpec req(algo);
 
 #if defined(BOTAN_HAS_GOST_28147_89)
-   if(req.algo_name() == "GOST-28147-89") {
-      return std::make_unique<GOST_28147_89>(req.arg(0, "R3411_94_TestParam"));
+   if(auto m = req.match("GOST-28147-89({params:str=R3411_94_TestParam})")) {
+      return std::make_unique<GOST_28147_89>(m->str("params"));
    }
 #endif
 
 #if defined(BOTAN_HAS_CASCADE)
-   if(req.algo_name() == "Cascade" && req.arg_count() == 2) {
-      auto c1 = BlockCipher::create(req.arg(0));
-      auto c2 = BlockCipher::create(req.arg(1));
+   if(auto m = req.match("Cascade({cipher1},{cipher2})")) {
+      auto c1 = BlockCipher::create(m->str("cipher1"));
+      auto c2 = BlockCipher::create(m->str("cipher2"));
 
       if(c1 && c2) {
          return std::make_unique<Cascade_Cipher>(std::move(c1), std::move(c2));
@@ -250,13 +251,12 @@ std::unique_ptr<BlockCipher> BlockCipher::create(std::string_view algo, std::str
 #endif
 
 #if defined(BOTAN_HAS_LION)
-   if(req.algo_name() == "Lion" && req.arg_count_between(2, 3)) {
-      auto hash = HashFunction::create(req.arg(0));
-      auto stream = StreamCipher::create(req.arg(1));
+   if(auto m = req.match("Lion({hash},{stream},{block_size:int=1024})")) {
+      auto hash = HashFunction::create(m->str("hash"));
+      auto stream = StreamCipher::create(m->str("stream"));
 
       if(hash && stream) {
-         const size_t block_size = req.arg_as_integer(2, 1024);
-         return std::make_unique<Lion>(std::move(hash), std::move(stream), block_size);
+         return std::make_unique<Lion>(std::move(hash), std::move(stream), m->integer("block_size"));
       }
    }
 #endif

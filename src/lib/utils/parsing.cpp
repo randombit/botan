@@ -80,63 +80,6 @@ uint32_t to_u32bit(std::string_view input) {
    }
 }
 
-/*
-* Parse a SCAN-style algorithm name
-*/
-std::vector<std::string> parse_algorithm_name(std::string_view scan_name) {
-   if(scan_name.find('(') == std::string::npos && scan_name.find(')') == std::string::npos) {
-      return {std::string(scan_name)};
-   }
-
-   std::string name(scan_name);
-   std::string substring;
-   std::vector<std::string> elems;
-   size_t level = 0;
-
-   elems.push_back(name.substr(0, name.find('(')));
-   name = name.substr(name.find('('));
-
-   for(auto i = name.begin(); i != name.end(); ++i) {
-      const char c = *i;
-
-      if(c == '(') {
-         ++level;
-      }
-      if(c == ')') {
-         if(level == 1 && i == name.end() - 1) {
-            if(elems.size() == 1) {
-               elems.push_back(substring.substr(1));
-            } else {
-               elems.push_back(substring);
-            }
-            return elems;
-         }
-
-         if(level == 0 || (level == 1 && i != name.end() - 1)) {
-            throw Invalid_Algorithm_Name(scan_name);
-         }
-         --level;
-      }
-
-      if(c == ',' && level == 1) {
-         if(elems.size() == 1) {
-            elems.push_back(substring.substr(1));
-         } else {
-            elems.push_back(substring);
-         }
-         substring.clear();
-      } else {
-         substring += c;
-      }
-   }
-
-   if(!substring.empty()) {
-      throw Invalid_Algorithm_Name(scan_name);
-   }
-
-   return elems;
-}
-
 std::vector<std::string> split_on(std::string_view str, char delim) {
    std::vector<std::string> elems;
    if(str.empty()) {
