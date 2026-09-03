@@ -18,6 +18,7 @@ xmss_hash.h
 xmss_signature.h
 xmss_signature_operation.h
 xmss_tools.h
+xmss_tree_builder.h
 xmss_verification_operation.h
 xmss_wots.h
 </header:internal>
