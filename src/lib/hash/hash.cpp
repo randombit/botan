@@ -8,7 +8,8 @@
 #include <botan/hash.h>
 
 #include <botan/exceptn.h>
-#include <botan/internal/scan_name.h>
+#include <botan/internal/algorithm_spec.h>
+#include <botan/internal/probe_providers.h>
 
 #if defined(BOTAN_HAS_ADLER32)
    #include <botan/internal/adler32.h>
@@ -222,53 +223,53 @@ std::unique_ptr<HashFunction> HashFunction::create(std::string_view algo_spec, s
    }
 #endif
 
-   const SCAN_Name req(algo_spec);
+   const AlgorithmSpec req(algo_spec);
 
 #if defined(BOTAN_HAS_SKEIN_512)
-   if(req.algo_name() == "Skein-512") {
-      return std::make_unique<Skein_512>(req.arg_as_integer(0, 512), req.arg(1, ""));
+   if(auto m = req.match("Skein-512({bits:int=512},{personalization:str=})")) {
+      return std::make_unique<Skein_512>(m->integer("bits"), m->str("personalization"));
    }
 #endif
 
 #if defined(BOTAN_HAS_BLAKE2B)
-   if(req.algo_name() == "Blake2b" || req.algo_name() == "BLAKE2b") {
-      return std::make_unique<BLAKE2b>(req.arg_as_integer(0, 512));
+   if(auto m = req.match("BLAKE2b|Blake2b({bits:int=512})")) {
+      return std::make_unique<BLAKE2b>(m->integer("bits"));
    }
 #endif
 
 #if defined(BOTAN_HAS_BLAKE2S)
-   if(req.algo_name() == "Blake2s" || req.algo_name() == "BLAKE2s") {
-      return std::make_unique<BLAKE2s>(req.arg_as_integer(0, 256));
+   if(auto m = req.match("BLAKE2s|Blake2s({bits:int=256})")) {
+      return std::make_unique<BLAKE2s>(m->integer("bits"));
    }
 #endif
 
 #if defined(BOTAN_HAS_KECCAK)
-   if(req.algo_name() == "Keccak-1600") {
-      return std::make_unique<Keccak_1600>(req.arg_as_integer(0, 512));
+   if(auto m = req.match("Keccak-1600({bits:int=512})")) {
+      return std::make_unique<Keccak_1600>(m->integer("bits"));
    }
 #endif
 
 #if defined(BOTAN_HAS_SHA3)
-   if(req.algo_name() == "SHA-3") {
-      return std::make_unique<SHA_3>(req.arg_as_integer(0, 512));
+   if(auto m = req.match("SHA-3({bits:int=512})")) {
+      return std::make_unique<SHA_3>(m->integer("bits"));
    }
 #endif
 
 #if defined(BOTAN_HAS_SHAKE)
-   if(req.algo_name() == "SHAKE-128" && req.arg_count() == 1) {
-      return std::make_unique<SHAKE_128>(req.arg_as_integer(0));
+   if(auto m = req.match("SHAKE-128({bits:int})")) {
+      return std::make_unique<SHAKE_128>(m->integer("bits"));
    }
-   if(req.algo_name() == "SHAKE-256" && req.arg_count() == 1) {
-      return std::make_unique<SHAKE_256>(req.arg_as_integer(0));
+   if(auto m = req.match("SHAKE-256({bits:int})")) {
+      return std::make_unique<SHAKE_256>(m->integer("bits"));
    }
 #endif
 
 #if defined(BOTAN_HAS_PARALLEL_HASH)
-   if(req.algo_name() == "Parallel") {
+   if(auto m = req.match("Parallel({hash}...)")) {
       std::vector<std::unique_ptr<HashFunction>> hashes;
 
-      for(size_t i = 0; i != req.arg_count(); ++i) {
-         auto h = HashFunction::create(req.arg(i));
+      for(const auto& hash_spec : m->rest("hash")) {
+         auto h = HashFunction::create(hash_spec.to_string());
          if(!h) {
             return nullptr;
          }
@@ -280,26 +281,28 @@ std::unique_ptr<HashFunction> HashFunction::create(std::string_view algo_spec, s
 #endif
 
 #if defined(BOTAN_HAS_TRUNCATED_HASH)
-   if(req.algo_name() == "Truncated" && req.arg_count() == 2) {
-      auto hash = HashFunction::create(req.arg(0));
+   if(auto m = req.match("Truncated({hash},{bits:int})")) {
+      auto hash = HashFunction::create(m->str("hash"));
       if(!hash) {
          return nullptr;
       }
 
-      return std::make_unique<Truncated_Hash>(std::move(hash), req.arg_as_integer(1));
+      return std::make_unique<Truncated_Hash>(std::move(hash), m->integer("bits"));
    }
 #endif
 
 #if defined(BOTAN_HAS_COMB4P)
-   if(req.algo_name() == "Comb4P" && req.arg_count() == 2) {
-      auto h1 = HashFunction::create(req.arg(0));
-      auto h2 = HashFunction::create(req.arg(1));
+   if(auto m = req.match("Comb4P({hash1},{hash2})")) {
+      auto h1 = HashFunction::create(m->str("hash1"));
+      auto h2 = HashFunction::create(m->str("hash2"));
 
       if(h1 && h2) {
          return std::make_unique<Comb4P>(std::move(h1), std::move(h2));
       }
    }
 #endif
+
+   BOTAN_UNUSED(req);
 
    return nullptr;
 }

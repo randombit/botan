@@ -9,10 +9,12 @@
 #include "tests.h"
 
 #include "test_arb_eq.h"
+#include <botan/exceptn.h>
 #include <botan/hex.h>
 #include <botan/rng.h>
 #include <botan/strong_type.h>
 #include <botan/version.h>
+#include <botan/internal/algorithm_spec.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/calendar.h>
 #include <botan/internal/charset.h>
@@ -23,7 +25,6 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/rounding.h>
-#include <botan/internal/scan_name.h>
 #include <botan/internal/target_info.h>
 
 #include <bit>
@@ -793,102 +794,496 @@ class Utility_Function_Tests final : public Test {
 
 BOTAN_REGISTER_SMOKE_TEST("utils", "util", Utility_Function_Tests);
 
-class SCAN_Name_Tests final : public Test {
+class AlgorithmSpec_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
 
          results.push_back(parse_bare_name());
-         results.push_back(parse_name_with_arg());
-         results.push_back(parse_nested_args());
-         results.push_back(parse_mode_name());
-         results.push_back(parse_nested_names());
+         results.push_back(parse_name_with_args());
+         results.push_back(parse_cipher_mode_syntax());
          results.push_back(parse_invalid_names());
+         results.push_back(parse_nesting_depth());
+         results.push_back(match_exact());
+         results.push_back(match_head_alternatives());
+         results.push_back(match_wildcard_head());
+         results.push_back(match_int_placeholders());
+         results.push_back(match_optional_placeholders());
+         results.push_back(match_str_and_name_placeholders());
+         results.push_back(match_variadic());
+         results.push_back(match_literals());
+         results.push_back(match_optional_literals());
+         results.push_back(match_accessor_errors());
 
          return results;
       }
 
    private:
       static Test::Result parse_bare_name() {
-         Test::Result result("SCAN_Name bare name parse");
-         const Botan::SCAN_Name n("SHA-256");
-         result.test_str_eq("algo name", n.algo_name(), "SHA-256");
-         result.test_sz_eq("no args", n.arg_count(), 0);
-         result.test_str_eq("orig", n.to_string(), "SHA-256");
+         Test::Result result("AlgorithmSpec bare name");
+         const Botan::AlgorithmSpec spec("SHA-256");
+         result.test_str_eq("head", spec.head(), "SHA-256");
+         result.test_sz_eq("no args", spec.arg_count(), 0);
+         result.test_str_eq("text", spec.to_string(), "SHA-256");
+         result.test_str_eq("canonical", spec.canonical_form(), "SHA-256");
+
+         // Without the cipher mode syntax a slash is an ordinary character
+         const Botan::AlgorithmSpec slashed("AES-128/CBC/PKCS7");
+         result.test_str_eq("slash is not a separator", slashed.head(), "AES-128/CBC/PKCS7");
+         result.test_sz_eq("no args", slashed.arg_count(), 0);
          return result;
       }
 
-      static Test::Result parse_name_with_arg() {
-         Test::Result result("SCAN_Name parse with arg");
-         const Botan::SCAN_Name n("HMAC(SHA-256)");
-         result.test_str_eq("algo name", n.algo_name(), "HMAC");
-         result.test_sz_eq("one arg", n.arg_count(), 1);
-         result.test_str_eq("arg", n.arg(0), "SHA-256");
+      static Test::Result parse_name_with_args() {
+         Test::Result result("AlgorithmSpec with arguments");
+
+         const Botan::AlgorithmSpec hmac("HMAC(SHA-256)");
+         result.test_str_eq("head", hmac.head(), "HMAC");
+         result.test_sz_eq("one arg", hmac.arg_count(), 1);
+         result.test_str_eq("arg", hmac.arg(0).to_string(), "SHA-256");
+         result.test_throws<Botan::Invalid_Argument>("arg out of range", [&] { hmac.arg(1); });
+
+         const Botan::AlgorithmSpec nested("Foo(A,B(C,D),E)");
+         result.test_str_eq("head", nested.head(), "Foo");
+         result.test_sz_eq("three args", nested.arg_count(), 3);
+         result.test_str_eq("arg0", nested.arg(0).to_string(), "A");
+         result.test_str_eq("arg1", nested.arg(1).to_string(), "B(C,D)");
+         result.test_str_eq("arg1 head", nested.arg(1).head(), "B");
+         result.test_sz_eq("arg1 args", nested.arg(1).arg_count(), 2);
+         result.test_str_eq("arg1 arg1", nested.arg(1).arg(1).to_string(), "D");
+         result.test_str_eq("arg2", nested.arg(2).to_string(), "E");
+         result.test_str_eq("canonical", nested.canonical_form(), "Foo(A,B(C,D),E)");
+         result.test_str_eq("with_head", nested.with_head("Bar").to_string(), "Bar(A,B(C,D),E)");
+
          return result;
       }
 
-      static Test::Result parse_nested_args() {
-         Test::Result result("SCAN_Name with nested argument");
-         const Botan::SCAN_Name n("Foo(A,B(C))");
-         result.test_str_eq("algo name", n.algo_name(), "Foo");
-         result.test_sz_eq("two args", n.arg_count(), 2);
-         result.test_str_eq("arg0", n.arg(0), "A");
-         result.test_str_eq("arg1", n.arg(1), "B(C)");
-         return result;
-      }
+      static Test::Result parse_cipher_mode_syntax() {
+         Test::Result result("AlgorithmSpec cipher mode syntax");
 
-      static Test::Result parse_mode_name() {
-         Test::Result result("SCAN_Name mode and padding");
-         const Botan::SCAN_Name n("AES-128/CBC/PKCS7");
-         result.test_str_eq("algo name", n.algo_name(), "AES-128");
-         result.test_str_eq("mode", n.cipher_mode(), "CBC");
-         result.test_str_eq("mode pad", n.cipher_mode_pad(), "PKCS7");
-         return result;
-      }
+         using Syntax = Botan::AlgorithmSpec::Syntax;
 
-      static Test::Result parse_nested_names() {
-         Test::Result result("SCAN_Name nesting accepted");
-         const Botan::SCAN_Name n("Foo(A(B),C)");
-         result.test_str_eq("algo name", n.algo_name(), "Foo");
-         result.test_sz_eq("two args", n.arg_count(), 2);
-         result.test_str_eq("arg0", n.arg(0), "A(B)");
-         result.test_str_eq("arg1", n.arg(1), "C");
-         return result;
-      }
+         const Botan::AlgorithmSpec cbc("AES-128/CBC/PKCS7", Syntax::CipherMode);
+         result.test_str_eq("head", cbc.head(), "CBC");
+         result.test_sz_eq("two args", cbc.arg_count(), 2);
+         result.test_str_eq("cipher", cbc.arg(0).to_string(), "AES-128");
+         result.test_str_eq("padding", cbc.arg(1).to_string(), "PKCS7");
+         result.test_str_eq("text", cbc.to_string(), "AES-128/CBC/PKCS7");
+         result.test_str_eq("canonical", cbc.canonical_form(), "CBC(AES-128,PKCS7)");
 
-      static void verify_name_is_rejected(Test::Result& result, std::string_view name) {
-         result.test_throws<Botan::Invalid_Argument>(Botan::fmt("Invalid name '{}', rejected", name),
-                                                     [&] { const Botan::SCAN_Name _parsed(name); });
+         const Botan::AlgorithmSpec gcm("AES-128/GCM(12)", Syntax::CipherMode);
+         result.test_str_eq("head", gcm.head(), "GCM");
+         result.test_str_eq("canonical", gcm.canonical_form(), "GCM(AES-128,12)");
+
+         const Botan::AlgorithmSpec gcm_pad("AES-128/GCM(12)/Foo", Syntax::CipherMode);
+         result.test_str_eq("canonical", gcm_pad.canonical_form(), "GCM(AES-128,12,Foo)");
+
+         const Botan::AlgorithmSpec plain("GCM(AES-128,12)", Syntax::CipherMode);
+         result.test_str_eq("canonical", plain.canonical_form(), "GCM(AES-128,12)");
+
+         // A slash below the top level is an ordinary character
+         const Botan::AlgorithmSpec inner("AES-128/CBC(Foo/Bar)", Syntax::CipherMode);
+         result.test_str_eq("canonical", inner.canonical_form(), "CBC(AES-128,Foo/Bar)");
+
+         const Botan::AlgorithmSpec bare("SHA-256", Syntax::CipherMode);
+         result.test_str_eq("head", bare.head(), "SHA-256");
+         result.test_sz_eq("no args", bare.arg_count(), 0);
+
+         return result;
       }
 
       static Test::Result parse_invalid_names() {
-         Test::Result result("SCAN_Name invalid names rejected");
+         Test::Result result("AlgorithmSpec invalid names rejected");
 
-         const std::vector<std::string> testcases = {
-            "",
-            "Foo((A))",
-            "Foo(A(((B))C))",
-            "Foo()",
-            "Foo,",
-            "Foo(",
-            "Foo)",
-            "Foo(,)",
-            "Foo(,A)",
-            "Foo(A,)",
-            "Foo(A,,B)",
+         using Syntax = Botan::AlgorithmSpec::Syntax;
+
+         auto verify_rejected = [&](std::string_view name, Syntax syntax) {
+            result.test_throws<Botan::Invalid_Algorithm_Name>(Botan::fmt("Invalid name '{}' rejected", name), [&] {
+               const Botan::AlgorithmSpec _parsed(name, syntax);
+            });
+         };
+
+         const std::vector<std::string> invalid_in_any_syntax = {
+            "",        "(",       ")",         ",",        "Foo((A))",         "Foo(A(((B))C))", "Foo()",
+            "Foo,",    "Foo(",    "Foo)",      "Foo(,)",   "Foo(,A)",          "Foo(A,)",        "Foo(A,,B)",
+            "Foo(A)B", "Foo(A))", "Foo(A)(B)", "Foo(A),B", "HMAC(SHA-256)Foo",
+         };
+
+         for(const auto& tc : invalid_in_any_syntax) {
+            verify_rejected(tc, Syntax::Standard);
+            verify_rejected(tc, Syntax::CipherMode);
+         }
+
+         const std::vector<std::string> invalid_cipher_modes = {
             "AES-128//CBC",
             "/Foo",
             "Foo/",
+            "/",
+            "AES-128/CBC(",
+            "AES-128/CBC()",
+            "AES-128/CBC(A)/",
          };
 
-         for(const auto& tc : testcases) {
-            verify_name_is_rejected(result, tc);
+         for(const auto& tc : invalid_cipher_modes) {
+            verify_rejected(tc, Syntax::CipherMode);
          }
+
+         return result;
+      }
+
+      static Test::Result parse_nesting_depth() {
+         Test::Result result("AlgorithmSpec nesting depth");
+
+         auto nested = [](size_t depth) {
+            std::string s = "X";
+            for(size_t i = 0; i != depth; ++i) {
+               s = Botan::fmt("F({})", s);
+            }
+            return s;
+         };
+
+         result.test_no_throw("moderate nesting accepted", [&] { const Botan::AlgorithmSpec _parsed(nested(10)); });
+         result.test_throws<Botan::Invalid_Algorithm_Name>("excessive nesting rejected",
+                                                           [&] { const Botan::AlgorithmSpec _parsed(nested(40)); });
+
+         return result;
+      }
+
+      static Test::Result match_exact() {
+         Test::Result result("AlgorithmSpec exact match");
+
+         const Botan::AlgorithmSpec hmac("HMAC(SHA-512)");
+         if(const auto m = hmac.match("HMAC({hash})")) {
+            result.test_str_eq("head", m->head(), "HMAC");
+            result.test_is_true("hash bound", m->has("hash"));
+            result.test_str_eq("hash", m->str("hash"), "SHA-512");
+            result.test_str_eq("hash as name", m->name("hash").head(), "SHA-512");
+         } else {
+            result.test_failure("HMAC(SHA-512) did not match");
+         }
+
+         // Extra or missing arguments must not match
+         const Botan::AlgorithmSpec extra("HMAC(SHA-512,Foo)");
+         result.test_is_false("extra argument rejected", extra.matches("HMAC({hash})"));
+
+         const Botan::AlgorithmSpec none("HMAC");
+         result.test_is_false("missing argument rejected", none.matches("HMAC({hash})"));
+
+         const Botan::AlgorithmSpec other("CMAC(AES-128)");
+         result.test_is_false("other head rejected", other.matches("HMAC({hash})"));
+
+         // A pattern without elements only matches a bare name
+         const Botan::AlgorithmSpec bare("SHA-256");
+         result.test_is_true("bare name matches", bare.matches("SHA-256"));
+         const Botan::AlgorithmSpec with_arg("SHA-256(1)");
+         result.test_is_false("bare pattern rejects args", with_arg.matches("SHA-256"));
+
+         return result;
+      }
+
+      static Test::Result match_head_alternatives() {
+         Test::Result result("AlgorithmSpec head alternatives");
+
+         const Botan::AlgorithmSpec emsa4("EMSA4(SHA-256)");
+         if(const auto m = emsa4.match("PSS|EMSA-PSS|EMSA4({hash})")) {
+            result.test_str_eq("matched head", m->head(), "EMSA4");
+            result.test_str_eq("hash", m->str("hash"), "SHA-256");
+         } else {
+            result.test_failure("EMSA4(SHA-256) did not match");
+         }
+
+         const Botan::AlgorithmSpec sha2("SHA2-256");
+         result.test_is_true("bare alternative", sha2.matches("SHA-256|SHA2-256"));
+         const Botan::AlgorithmSpec sha3("SHA-3(256)");
+         result.test_is_false("other head", sha3.matches("SHA-256|SHA2-256"));
+
+         return result;
+      }
+
+      static Test::Result match_wildcard_head() {
+         Test::Result result("AlgorithmSpec wildcard head");
+
+         const Botan::AlgorithmPattern pattern("*({cipher})");
+
+         const Botan::AlgorithmSpec cbc("CBC(AES-128)");
+         if(const auto m = cbc.match(pattern)) {
+            result.test_str_eq("head", m->head(), "CBC");
+            result.test_str_eq("cipher", m->str("cipher"), "AES-128");
+         } else {
+            result.test_failure("CBC(AES-128) did not match");
+         }
+
+         const Botan::AlgorithmSpec other("Anything-At-All(AES-128)");
+         if(const auto m = other.match(pattern)) {
+            result.test_str_eq("head", m->head(), "Anything-At-All");
+         } else {
+            result.test_failure("Anything-At-All(AES-128) did not match");
+         }
+
+         // The elements are still enforced
+         const Botan::AlgorithmSpec bare("CBC");
+         result.test_is_false("missing argument rejected", bare.matches(pattern));
+         const Botan::AlgorithmSpec extra("CBC(AES-128,x)");
+         result.test_is_false("extra argument rejected", extra.matches(pattern));
+
+         const Botan::AlgorithmSpec name_only("SHA-256");
+         result.test_is_true("bare wildcard matches any bare name", name_only.matches("*"));
+         result.test_is_false("bare wildcard rejects arguments", cbc.matches("*"));
+
+         return result;
+      }
+
+      static Test::Result match_int_placeholders() {
+         Test::Result result("AlgorithmSpec int placeholders");
+
+         const Botan::AlgorithmPattern ccm("CCM({cipher},{tag_len:int=16},{L:int=3})");
+
+         const Botan::AlgorithmSpec defaults("CCM(AES-128)");
+         if(const auto m = defaults.match(ccm)) {
+            result.test_str_eq("cipher", m->str("cipher"), "AES-128");
+            result.test_is_true("tag_len has default", m->has("tag_len"));
+            result.test_sz_eq("tag_len default", m->integer("tag_len"), 16);
+            result.test_str_eq("tag_len default text", m->str("tag_len"), "16");
+            result.test_sz_eq("L default", m->integer("L"), 3);
+         } else {
+            result.test_failure("CCM(AES-128) did not match");
+         }
+
+         const Botan::AlgorithmSpec partial("CCM(AES-128,8)");
+         if(const auto m = partial.match(ccm)) {
+            result.test_sz_eq("tag_len", m->integer("tag_len"), 8);
+            result.test_sz_eq("L default", m->integer("L"), 3);
+         } else {
+            result.test_failure("CCM(AES-128,8) did not match");
+         }
+
+         const Botan::AlgorithmSpec full("CCM(AES-128,8,4)");
+         if(const auto m = full.match(ccm)) {
+            result.test_sz_eq("tag_len", m->integer("tag_len"), 8);
+            result.test_sz_eq("L", m->integer("L"), 4);
+         } else {
+            result.test_failure("CCM(AES-128,8,4) did not match");
+         }
+
+         const std::vector<std::string> rejected = {
+            "CCM(AES-128,08)",
+            "CCM(AES-128,+8)",
+            "CCM(AES-128,-8)",
+            "CCM(AES-128,8 )",
+            "CCM(AES-128,x)",
+            "CCM(AES-128,8(1))",
+            "CCM(AES-128,8,4,5)",
+            "CCM(AES-128,99999999999999999999999)",
+         };
+
+         for(const auto& tc : rejected) {
+            const Botan::AlgorithmSpec spec(tc);
+            result.test_is_false(Botan::fmt("'{}' rejected", tc), spec.matches(ccm));
+         }
+
+         return result;
+      }
+
+      static Test::Result match_optional_placeholders() {
+         Test::Result result("AlgorithmSpec optional placeholders");
+
+         const Botan::AlgorithmPattern cfb("CFB({cipher},{feedback_bits:int?})");
+
+         const Botan::AlgorithmSpec absent("CFB(AES-128)");
+         if(const auto m = absent.match(cfb)) {
+            result.test_str_eq("cipher", m->str("cipher"), "AES-128");
+            result.test_is_false("feedback_bits unbound", m->has("feedback_bits"));
+            result.test_throws<Botan::Internal_Error>("unbound integer() throws", [&] { m->integer("feedback_bits"); });
+            result.test_throws<Botan::Internal_Error>("unbound str() throws", [&] { m->str("feedback_bits"); });
+         } else {
+            result.test_failure("CFB(AES-128) did not match");
+         }
+
+         const Botan::AlgorithmSpec present("CFB(AES-128,8)");
+         if(const auto m = present.match(cfb)) {
+            result.test_is_true("feedback_bits bound", m->has("feedback_bits"));
+            result.test_sz_eq("feedback_bits", m->integer("feedback_bits"), 8);
+         } else {
+            result.test_failure("CFB(AES-128,8) did not match");
+         }
+
+         // An empty str default is permitted
+         const Botan::AlgorithmSpec no_pers("Skein-512(256)");
+         if(const auto m = no_pers.match("Skein-512({outbits:int=512},{personalization:str=})")) {
+            result.test_sz_eq("outbits", m->integer("outbits"), 256);
+            result.test_is_true("personalization bound to default", m->has("personalization"));
+            result.test_str_eq("personalization empty", m->str("personalization"), "");
+         } else {
+            result.test_failure("Skein-512(256) did not match");
+         }
+
+         return result;
+      }
+
+      static Test::Result match_str_and_name_placeholders() {
+         Test::Result result("AlgorithmSpec str and name placeholders");
+
+         const Botan::AlgorithmSpec spec("Foo(Bar(Baz,Qux),Quux(1))");
+         if(const auto m = spec.match("Foo({s:str},{n})")) {
+            result.test_str_eq("str binds verbatim", m->str("s"), "Bar(Baz,Qux)");
+            result.test_throws<Botan::Internal_Error>("name() on str placeholder throws", [&] { m->name("s"); });
+            result.test_throws<Botan::Internal_Error>("integer() on str placeholder throws", [&] { m->integer("s"); });
+
+            result.test_str_eq("name text", m->str("n"), "Quux(1)");
+            const auto& n = m->name("n");
+            result.test_str_eq("name head", n.head(), "Quux");
+            result.test_sz_eq("name args", n.arg_count(), 1);
+            result.test_is_true("name can be matched again", n.matches("Quux({x:int})"));
+         } else {
+            result.test_failure("Foo(Bar(Baz,Qux),Quux(1)) did not match");
+         }
+
+         return result;
+      }
+
+      static Test::Result match_variadic() {
+         Test::Result result("AlgorithmSpec variadic placeholders");
+
+         const Botan::AlgorithmPattern hss("HSS-LMS({hash},{layer}...)");
+
+         const Botan::AlgorithmSpec two("HSS-LMS(SHA-256,HW(5,1),HW(10,4))");
+         if(const auto m = two.match(hss)) {
+            result.test_str_eq("hash", m->str("hash"), "SHA-256");
+            const auto layers = m->rest("layer");
+            result.test_sz_eq("two layers", layers.size(), 2);
+            result.test_str_eq("layer 0", layers[0].to_string(), "HW(5,1)");
+            result.test_str_eq("layer 1", layers[1].to_string(), "HW(10,4)");
+            result.test_is_true("layer matches", layers[1].matches("HW({h:int},{w:int})"));
+            result.test_throws<Botan::Internal_Error>("str() on variadic throws", [&] { m->str("layer"); });
+            result.test_throws<Botan::Internal_Error>("rest() on non-variadic throws", [&] { m->rest("hash"); });
+         } else {
+            result.test_failure("HSS-LMS with two layers did not match");
+         }
+
+         const Botan::AlgorithmSpec one("HSS-LMS(SHA-256,HW(5,1))");
+         if(const auto m = one.match(hss)) {
+            result.test_sz_eq("one layer", m->rest("layer").size(), 1);
+         } else {
+            result.test_failure("HSS-LMS with one layer did not match");
+         }
+
+         // Variadic means one or more
+         const Botan::AlgorithmSpec zero("HSS-LMS(SHA-256)");
+         result.test_is_false("variadic requires at least one", zero.matches(hss));
+
+         return result;
+      }
+
+      static Test::Result match_literals() {
+         Test::Result result("AlgorithmSpec literals");
+
+         const Botan::AlgorithmPattern plain("Foo(Bar,{x})");
+         const Botan::AlgorithmSpec ok("Foo(Bar,A)");
+         if(const auto m = ok.match(plain)) {
+            result.test_str_eq("x", m->str("x"), "A");
+         } else {
+            result.test_failure("Foo(Bar,A) did not match");
+         }
+         const Botan::AlgorithmSpec wrong_literal("Foo(Baz,A)");
+         result.test_is_false("wrong literal rejected", wrong_literal.matches(plain));
+         const Botan::AlgorithmSpec literal_with_args("Foo(Bar(Z),A)");
+         result.test_is_false("literal with args rejected", literal_with_args.matches(plain));
+
+         const Botan::AlgorithmPattern nested("Foo(Bar({x}),{y})");
+         const Botan::AlgorithmSpec nested_ok("Foo(Bar(A),B)");
+         if(const auto m = nested_ok.match(nested)) {
+            result.test_str_eq("x", m->str("x"), "A");
+            result.test_str_eq("y", m->str("y"), "B");
+         } else {
+            result.test_failure("Foo(Bar(A),B) did not match");
+         }
+
+         const std::vector<std::string> rejected = {
+            "Foo(Bar,B)",
+            "Foo(Baz(A),B)",
+            "Foo(Bar(A,C),B)",
+            "Foo(Bar(A))",
+            "Foo(Bar(A),B,C)",
+         };
+         for(const auto& tc : rejected) {
+            const Botan::AlgorithmSpec spec(tc);
+            result.test_is_false(Botan::fmt("'{}' rejected", tc), spec.matches(nested));
+         }
+
+         return result;
+      }
+
+      static Test::Result match_optional_literals() {
+         Test::Result result("AlgorithmSpec optional literals");
+
+         const Botan::AlgorithmPattern pattern("Foo([Bar],{x?})");
+
+         const Botan::AlgorithmSpec bare("Foo");
+         if(const auto m = bare.match(pattern)) {
+            result.test_is_false("x unbound", m->has("x"));
+         } else {
+            result.test_failure("Foo did not match");
+         }
+
+         const Botan::AlgorithmSpec literal_only("Foo(Bar)");
+         if(const auto m = literal_only.match(pattern)) {
+            result.test_is_false("x unbound", m->has("x"));
+         } else {
+            result.test_failure("Foo(Bar) did not match");
+         }
+
+         const Botan::AlgorithmSpec both("Foo(Bar,A)");
+         if(const auto m = both.match(pattern)) {
+            result.test_str_eq("x", m->str("x"), "A");
+         } else {
+            result.test_failure("Foo(Bar,A) did not match");
+         }
+
+         // The literal is skipped if the argument is something else
+         const Botan::AlgorithmSpec skipped("Foo(A)");
+         if(const auto m = skipped.match(pattern)) {
+            result.test_str_eq("x", m->str("x"), "A");
+         } else {
+            result.test_failure("Foo(A) did not match");
+         }
+
+         // Including if it has the same head but carries arguments
+         const Botan::AlgorithmSpec same_head("Foo(Bar(Z))");
+         if(const auto m = same_head.match(pattern)) {
+            result.test_str_eq("x", m->str("x"), "Bar(Z)");
+         } else {
+            result.test_failure("Foo(Bar(Z)) did not match");
+         }
+
+         const Botan::AlgorithmSpec too_many("Foo(A,B)");
+         result.test_is_false("too many arguments rejected", too_many.matches(pattern));
+         const Botan::AlgorithmSpec too_many2("Foo(Bar,A,B)");
+         result.test_is_false("too many arguments rejected", too_many2.matches(pattern));
+
+         return result;
+      }
+
+      static Test::Result match_accessor_errors() {
+         Test::Result result("AlgorithmSpec accessor errors");
+
+         const Botan::AlgorithmSpec spec("HMAC(SHA-256)");
+         if(const auto m = spec.match("HMAC({hash})")) {
+            result.test_throws<Botan::Internal_Error>("has() unknown variable", [&] { m->has("nope"); });
+            result.test_throws<Botan::Internal_Error>("str() unknown variable", [&] { m->str("nope"); });
+            result.test_throws<Botan::Internal_Error>("integer() unknown variable", [&] { m->integer("nope"); });
+            result.test_throws<Botan::Internal_Error>("name() unknown variable", [&] { m->name("nope"); });
+            result.test_throws<Botan::Internal_Error>("rest() unknown variable", [&] { m->rest("nope"); });
+            result.test_throws<Botan::Internal_Error>("integer() on name placeholder", [&] { m->integer("hash"); });
+            result.test_throws<Botan::Internal_Error>("rest() on name placeholder", [&] { m->rest("hash"); });
+         } else {
+            result.test_failure("HMAC(SHA-256) did not match");
+         }
+
          return result;
       }
 };
 
-BOTAN_REGISTER_TEST("utils", "scan_name", SCAN_Name_Tests);
+BOTAN_REGISTER_TEST("utils", "algorithm_spec", AlgorithmSpec_Tests);
 
 class BitOps_Tests final : public Test {
    public:

@@ -8,11 +8,12 @@
 
 #include <botan/p11_mechanism.h>
 
+#include <botan/pk_options.h>
 #include <botan/pk_options_readers.h>
+#include <botan/internal/algorithm_spec.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/pk_options_impl.h>
-#include <botan/internal/scan_name.h>
 #include <tuple>
 
 namespace Botan::PKCS11 {
@@ -309,10 +310,10 @@ MechanismWrapper MechanismWrapper::create_ecdsa_mechanism(std::string_view hash_
       return MechanismWrapper(mechanism->second);
    }
 
-   const SCAN_Name req(hash_spec);
+   const AlgorithmSpec req(hash_spec);
 
-   if(req.algo_name() == "EMSA1" && req.arg_count() == 1) {
-      mechanism = EcdsaHash.find(req.arg(0));
+   if(auto m = req.match("EMSA1({hash})")) {
+      mechanism = EcdsaHash.find(std::string(m->str("hash")));
       if(mechanism != EcdsaHash.end()) {
          return MechanismWrapper(mechanism->second);
       }

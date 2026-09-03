@@ -8,11 +8,9 @@
 #include <botan/cipher_mode.h>
 
 #include <botan/exceptn.h>
-#include <botan/internal/parsing.h>
-#include <botan/internal/scan_name.h>
+#include <botan/internal/algorithm_spec.h>
 #include <botan/internal/stream_mode.h>
 #include <memory>
-#include <sstream>
 #include <utility>
 
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
@@ -68,8 +66,11 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(std::string_view algo,
       return nullptr;
    }
 
+   const AlgorithmSpec spec(algo, AlgorithmSpec::Syntax::CipherMode);
+
 #if defined(BOTAN_HAS_STREAM_CIPHER)
-   if(auto sc = StreamCipher::create(algo)) {
+   // Stream ciphers such as CTR and OFB are also accepted in mode form, eg "AES-128/CTR-BE"
+   if(auto sc = StreamCipher::create(spec.canonical_form())) {
       return std::make_unique<Stream_Cipher_Mode>(std::move(sc));
    }
 #endif
@@ -80,60 +81,19 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(std::string_view algo,
    }
 #endif
 
-   if(algo.find('/') != std::string::npos) {
-      const std::vector<std::string> algo_parts = split_on(algo, '/');
-      if(algo_parts.size() < 2) {
-         return std::unique_ptr<Cipher_Mode>();
-      }
-      const std::string_view cipher_name = algo_parts[0];
-      const std::vector<std::string> mode_info = parse_algorithm_name(algo_parts[1]);
-
-      if(mode_info.empty()) {
-         return std::unique_ptr<Cipher_Mode>();
-      }
-
-      std::ostringstream mode_name;
-
-      mode_name << mode_info[0] << '(' << cipher_name;
-      for(size_t i = 1; i < mode_info.size(); ++i) {
-         mode_name << ',' << mode_info[i];
-      }
-      for(size_t i = 2; i < algo_parts.size(); ++i) {
-         mode_name << ',' << algo_parts[i];
-      }
-      mode_name << ')';
-
-      return Cipher_Mode::create(mode_name.str(), direction, provider);
-   }
-
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
-
-   const SCAN_Name spec(algo);
-
-   if(spec.arg_count() == 0) {
-      return std::unique_ptr<Cipher_Mode>();
-   }
-
-   auto bc = BlockCipher::create(spec.arg(0), provider);
-
-   if(!bc) {
-      return std::unique_ptr<Cipher_Mode>();
-   }
-
    #if defined(BOTAN_HAS_MODE_CBC)
-   if(spec.algo_name() == "CBC") {
-      const std::string padding = spec.arg(1, "PKCS7");
+   if(auto m = spec.match("CBC({cipher},{padding:str=PKCS7})")) {
+      if(auto bc = BlockCipher::create(m->str("cipher"), provider)) {
+         const auto padding = m->str("padding");
 
-      if(padding == "CTS") {
-         if(direction == Cipher_Dir::Encryption) {
-            return std::make_unique<CTS_Encryption>(std::move(bc));
-         } else {
-            return std::make_unique<CTS_Decryption>(std::move(bc));
-         }
-      } else {
-         auto pad = BlockCipherModePaddingMethod::create(padding);
-
-         if(pad) {
+         if(padding == "CTS") {
+            if(direction == Cipher_Dir::Encryption) {
+               return std::make_unique<CTS_Encryption>(std::move(bc));
+            } else {
+               return std::make_unique<CTS_Decryption>(std::move(bc));
+            }
+         } else if(auto pad = BlockCipherModePaddingMethod::create(padding)) {
             if(direction == Cipher_Dir::Encryption) {
                return std::make_unique<CBC_Encryption>(std::move(bc), std::move(pad));
             } else {
@@ -145,27 +105,33 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(std::string_view algo,
    #endif
 
    #if defined(BOTAN_HAS_MODE_XTS)
-   if(spec.algo_name() == "XTS") {
-      if(direction == Cipher_Dir::Encryption) {
-         return std::make_unique<XTS_Encryption>(std::move(bc));
-      } else {
-         return std::make_unique<XTS_Decryption>(std::move(bc));
+   if(auto m = spec.match("XTS({cipher})")) {
+      if(auto bc = BlockCipher::create(m->str("cipher"), provider)) {
+         if(direction == Cipher_Dir::Encryption) {
+            return std::make_unique<XTS_Encryption>(std::move(bc));
+         } else {
+            return std::make_unique<XTS_Decryption>(std::move(bc));
+         }
       }
    }
    #endif
 
    #if defined(BOTAN_HAS_MODE_CFB)
-   if(spec.algo_name() == "CFB") {
-      const size_t feedback_bits = spec.arg_as_integer(1, 8 * bc->block_size());
-      if(direction == Cipher_Dir::Encryption) {
-         return std::make_unique<CFB_Encryption>(std::move(bc), feedback_bits);
-      } else {
-         return std::make_unique<CFB_Decryption>(std::move(bc), feedback_bits);
+   if(auto m = spec.match("CFB({cipher},{feedback_bits:int?})")) {
+      if(auto bc = BlockCipher::create(m->str("cipher"), provider)) {
+         const size_t feedback_bits = m->has("feedback_bits") ? m->integer("feedback_bits") : 8 * bc->block_size();
+         if(direction == Cipher_Dir::Encryption) {
+            return std::make_unique<CFB_Encryption>(std::move(bc), feedback_bits);
+         } else {
+            return std::make_unique<CFB_Decryption>(std::move(bc), feedback_bits);
+         }
       }
    }
    #endif
 
 #endif
+
+   BOTAN_UNUSED(spec);
 
    return std::unique_ptr<Cipher_Mode>();
 }

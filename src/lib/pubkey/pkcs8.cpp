@@ -14,8 +14,8 @@
 #include <botan/pem.h>
 #include <botan/pk_algs.h>
 #include <botan/rng.h>
+#include <botan/internal/algorithm_spec.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/scan_name.h>
 
 #if defined(BOTAN_HAS_PKCS5_PBES2)
    #include <botan/internal/pbes2.h>
@@ -148,13 +148,14 @@ std::pair<std::string, std::string> choose_pbe_params(std::string_view pbe_algo,
       return std::make_pair("AES-256/CBC", "SHA-256");
    }
 
-   const SCAN_Name request(pbe_algo);
+   const AlgorithmSpec request(pbe_algo);
 
-   if(request.arg_count() != 2 || (request.algo_name() != "PBE-PKCS5v20" && request.algo_name() != "PBES2")) {
+   const auto m = request.match("PBE-PKCS5v20|PBES2({cipher},{hash})");
+   if(!m) {
       throw Invalid_Argument(fmt("Unsupported PBE '{}'", pbe_algo));
    }
 
-   return std::make_pair(request.arg(0), request.arg(1));
+   return std::make_pair(std::string(m->str("cipher")), std::string(m->str("hash")));
 }
 
 }  // namespace

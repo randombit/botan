@@ -11,6 +11,7 @@
 #include <botan/der_enc.h>
 #include <botan/numthry.h>
 #include <botan/pss_params.h>
+#include <botan/internal/algorithm_spec.h>
 #include <botan/internal/barrett.h>
 #include <botan/internal/blinding.h>
 #include <botan/internal/divide.h>
@@ -23,7 +24,6 @@
 #include <botan/internal/parsing.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/pk_options_impl.h>
-#include <botan/internal/scan_name.h>
 #include <botan/internal/sig_padding.h>
 #include <botan/internal/target_info.h>
 #include <botan/internal/workfactor.h>
@@ -935,13 +935,14 @@ PK_Signature_Options parse_rsa_signature_algorithm(const AlgorithmIdentifier& al
 
       return PK_Signature_Options().with_padding("PSS").with_hash(*hash_algo).with_salt_size(pss_params.salt_length());
    } else {
-      const SCAN_Name scan(padding);
+      const AlgorithmSpec spec(padding);
 
-      if(scan.algo_name() != "PKCS1v15") {
+      const auto m = spec.match("PKCS1v15({hash})");
+      if(!m) {
          throw Decoding_Error("Unexpected OID for RSA signatures");
       }
 
-      return PK_Signature_Options().with_padding("PKCS1v15").with_hash(scan.arg(0));
+      return PK_Signature_Options().with_padding("PKCS1v15").with_hash(m->str("hash"));
    }
 }
 
