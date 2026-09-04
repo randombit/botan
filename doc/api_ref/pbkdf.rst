@@ -117,7 +117,14 @@ The ``PasswordHashFamily`` creates specific instances of ``PasswordHash``:
       This function works by running a short tuning loop to estimate the
       performance of the algorithm, then scaling the parameters appropriately to
       hit the target size. The length of time the tuning loop runs can be
-      controlled using the *tuning_msec* parameter.
+      controlled using the *tuning_msec* parameter, though it always runs at
+      least a few iterations and so may take longer for expensive functions.
+
+      The tuning loop measures the CPU time of the calling thread (where the
+      platform supports this) and uses the fastest iteration observed, so the
+      result reflects the capacity of the machine rather than its load at the
+      moment of tuning. On a heavily loaded system the returned parameters may
+      therefore take longer than requested.
 
    .. cpp:function:: std::unique_ptr<PasswordHash> tune( \
                      size_t output_len, \

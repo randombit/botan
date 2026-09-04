@@ -341,6 +341,27 @@ uint64_t OS::get_system_timestamp_ns() {
 #endif
 }
 
+std::optional<uint64_t> OS::get_thread_cpu_time_ns() {
+#if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME) && defined(CLOCK_THREAD_CPUTIME_ID)
+   // Tick-based accounting is useless for timing a single call, so only
+   // use this clock if it claims fine resolution
+   static const bool usable = []() {
+      struct timespec res {};
+      return ::clock_getres(CLOCK_THREAD_CPUTIME_ID, &res) == 0 && res.tv_sec == 0 && res.tv_nsec <= 10000;
+   }();
+
+   if(usable) {
+      struct timespec ts {};
+
+      if(::clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts) == 0) {
+         return (static_cast<uint64_t>(ts.tv_sec) * 1000000000) + static_cast<uint64_t>(ts.tv_nsec);
+      }
+   }
+#endif
+
+   return std::nullopt;
+}
+
 std::string OS::format_time(time_t time, const std::string& format) {
    std::tm tm{};
 

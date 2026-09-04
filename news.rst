@@ -7,6 +7,11 @@ Version 3.14.0, Not Yet Released
 * Add new type ``PK_Signature_Options`` which allows precisely controlling how
   signatures are created and verified. (GH #5849)
 
+* Password hash tuning (``PasswordHashFamily::tune_params``) now measures the
+  CPU time of the calling thread where available (falling back to a monotonic
+  clock), and uses the fastest of several samples rather than the mean. This
+  makes the result much less sensitive to concurrent load and clock adjustments.
+
 * By default, ECDSA signatures are now randomized rather than deterministic even
   when RFC 6979 support is available at build time. Deterministic signatures can
   be requested using the API ``PK_Signature_Options::with_deterministic_signature``
