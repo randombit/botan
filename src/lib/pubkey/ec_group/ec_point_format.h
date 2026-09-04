@@ -12,6 +12,8 @@
 /*
 * This header is public, but avoid including it directly. Instead
 * get the contents via ec_group.h.
+*
+* TODO(Botan4) move EC_Point_Format to ec_group.h and remove this header
 */
 
 namespace Botan {

@@ -434,14 +434,31 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
    const std::vector<uint8_t> mac_data(in + in_len - m_mac->output_length(), in + in_len);
 
    // ISO 18033: step a
-   auto other_public_key = EC_AffinePoint(m_params.group(), other_public_key_bin);
+   auto other_public_key =
+      [](const EC_Group& group, EC_Point_Format format, std::span<const uint8_t> key) -> std::optional<EC_AffinePoint> {
+      if(format == EC_Point_Format::Compressed) {
+         return EC_AffinePoint::deserialize_compressed(group, key);
+      } else if(format == EC_Point_Format::Uncompressed) {
+         return EC_AffinePoint::deserialize_uncompressed(group, key);
+      } else {
+         // TODO(Botan4) remove this branch
+         if(key.empty() || (key[0] != 0x06 && key[0] != 0x07)) {
+            return {};
+         } else {
+            return EC_AffinePoint::deserialize(group, key);
+         }
+      }
+   }(m_params.group(), m_params.point_format(), other_public_key_bin);
+
+   if(!other_public_key) {
+      throw Decoding_Error("Invalid ECIES public point");
+   }
 
    // ISO 18033: step b would check if other_public_key is on the curve iff check_mode is on
    // but we ignore this and always check if the point is on the curve
-
    // ISO 18033: step e (and step f because get_affine_x (called by ECDH_KA_Operation::raw_agree)
    // throws Illegal_Transformation if the point is zero)
-   const SymmetricKey secret_key = m_ka.derive_secret(other_public_key_bin, other_public_key);
+   const SymmetricKey secret_key = m_ka.derive_secret(other_public_key_bin, *other_public_key);
 
    BOTAN_ASSERT_NOMSG(secret_key.size() == m_params.dem_keylen() + m_params.mac_keylen());
 
