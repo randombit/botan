@@ -141,6 +141,11 @@ std::shared_ptr<Client_Impl_12> Client_Impl_12::create_for_downgrade(
 
       self->secure_renegotiation_check(state.client_hello());
       state.set_expected_next(Handshake_Type::ServerHello);
+
+      // The downgraded DTLS 1.3 session might have armed a retransmission timer
+      // before deciding to downgrade. We have no means to cancel this operation
+      // but it will notice that the DTLS 1.3 state is gone and act as no-op.
+      self->maybe_arm_dtls_retransmission_timer();
    } else {
       // Downgrade initiated after a TLS 1.2 session was found. No communication
       // has happened yet but the found session should be used for resumption.
@@ -232,6 +237,11 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
    }
 
    secure_renegotiation_check(state.client_hello());
+
+   // We just sent our first message that might get lost in transit. Hence, we
+   // kick-off a retransmission timer chain for users that implement the
+   // asynchronous timer callback introduced in Botan 3.14.0.
+   maybe_arm_dtls_retransmission_timer();
 }
 
 namespace {
@@ -319,6 +329,9 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
 
       const Hello_Verify_Request hello_verify_request(contents);
       state.hello_verify_request(hello_verify_request);
+
+      // Cookie ClientHello is a new outgoing flight with a fresh deadline.
+      maybe_arm_dtls_retransmission_timer();
    } else if(type == Handshake_Type::ServerHello) {
       state.server_hello(std::make_unique<Server_Hello_12>(contents));
 
@@ -684,6 +697,10 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       change_cipher_spec_writer(Connection_Side::Client);
 
       state.client_finished(std::make_unique<Finished_12>(state.handshake_io(), state, Connection_Side::Client));
+
+      // Flight is complete, we're now waiting for the peer to respond or for
+      // our timer to cause a retransmission.
+      maybe_arm_dtls_retransmission_timer();
 
       if(state.server_hello()->supports_session_ticket()) {
          state.set_expected_next(Handshake_Type::NewSessionTicket);
