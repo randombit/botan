@@ -14,10 +14,12 @@
 #include <botan/types.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/mp_asmi.h>
 #include <array>
 #include <span>
+#include <utility>
 
 namespace Botan {
 
@@ -1239,6 +1241,34 @@ constexpr std::array<W, N> redc_crandall(std::span<const W, 2 * N> z) {
    return r;
 }
 
+template <WordType W, size_t N, size_t L>
+inline constexpr auto bytes_to_words(std::span<const uint8_t, L> bytes) {
+   static_assert(L <= WordInfo<W>::bytes * N);
+
+   std::array<W, N> r = {};
+
+   constexpr size_t full_words = L / WordInfo<W>::bytes;
+   constexpr size_t extra_bytes = L % WordInfo<W>::bytes;
+
+   static_assert(full_words + (extra_bytes ? 1 : 0) <= N);
+
+   for(size_t i = 0; i != full_words; ++i) {
+      r[i] = load_be<W>(bytes.data(), full_words - 1 - i);
+   }
+
+   if constexpr(extra_bytes > 0) {
+      constexpr size_t shift = extra_bytes * 8;
+      shift_left<shift>(r);
+
+      for(size_t i = 0; i != extra_bytes; ++i) {
+         const W b0 = bytes[WordInfo<W>::bytes * full_words + i];
+         r[0] |= (b0 << (8 * (extra_bytes - 1 - i)));
+      }
+   }
+
+   return r;
+}
+
 // Extract a WindowBits sized window out of s, depending on offset.
 template <size_t WindowBits, typename W, size_t N>
 constexpr size_t read_window_bits(std::span<const W, N> words, size_t offset) {
@@ -1262,6 +1292,25 @@ constexpr size_t read_window_bits(std::span<const W, N> words, size_t offset) {
       const auto combined = ((w0 >> bit_shift) | (w1 << (W_bits - bit_shift)));
       return combined & WindowMask;
    }
+}
+
+/**
+* Booth signed digit recoding of a (window_bits + 1) bit window value,
+* in constant time. Returns the digit, in [0, 2^(window_bits-1)], and a
+* Choice which is set if the digit is to be negated.
+*/
+inline constexpr std::pair<size_t, CT::Choice> booth_recode(size_t x, size_t window_bits) {
+   const auto sign = CT::Mask<size_t>::expand(x >> window_bits);
+   const size_t neg_x = (static_cast<size_t>(1) << (window_bits + 1)) - x - 1;
+   size_t digit = sign.select(neg_x, x);
+   digit = (digit >> 1) + (digit & 1);
+   return {digit, sign.as_choice()};
+}
+
+template <size_t WindowBits, std::unsigned_integral T>
+constexpr std::pair<size_t, CT::Choice> booth_recode(T x) {
+   static_assert(WindowBits >= 1 && WindowBits <= 16);
+   return booth_recode(static_cast<size_t>(x), WindowBits);
 }
 
 }  // namespace Botan

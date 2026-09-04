@@ -35,6 +35,7 @@ API Reference
    tss
    ec_group
    ecc
+   bls12_381
    compression
    providers
    pkcs11

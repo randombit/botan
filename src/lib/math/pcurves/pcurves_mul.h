@@ -9,6 +9,7 @@
 
 #include <botan/types.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/mp_core.h>
 #include <botan/internal/pcurves_algos.h>
 #include <vector>
 
@@ -285,21 +286,6 @@ std::vector<typename C::AffinePoint> basemul_booth_setup(const typename C::Affin
 
    // Variable time batch conversion is fine since generator is public
    return to_affine_batch<C, true>(table);
-}
-
-/*
-* Booth recoding for base point multiplication
-*/
-template <size_t WindowBits, std::unsigned_integral T>
-constexpr std::pair<size_t, CT::Choice> booth_recode(T x) {
-   static_assert(WindowBits >= 1 && WindowBits <= 8);
-
-   auto s_mask = CT::Mask<T>::expand(x >> WindowBits);
-   const T neg_x = (1 << (WindowBits + 1)) - x - 1;
-   T d = s_mask.select(neg_x, x);
-   d = (d >> 1) + (d & 1);
-
-   return std::make_pair(static_cast<size_t>(d), s_mask.as_choice());
 }
 
 template <typename C, size_t WindowBits, typename BlindedScalar>
