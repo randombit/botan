@@ -23,48 +23,50 @@
 
 namespace Botan::TLS {
 
-Client_Impl_13::Client_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
-                               const std::shared_ptr<Session_Manager>& session_manager,
-                               const std::shared_ptr<Credentials_Manager>& creds,
-                               const std::shared_ptr<const Policy>& policy,
-                               const std::shared_ptr<RandomNumberGenerator>& rng,
-                               Server_Information info,
-                               const std::vector<std::string>& next_protocols) :
-      Channel_Impl_13(callbacks, session_manager, creds, rng, policy, false /* is_server */),
-      m_info(std::move(info)),
-      m_handshake(std::make_unique<Pending_Handshake>()) {
+std::shared_ptr<Client_Impl_13> Client_Impl_13::create(const std::shared_ptr<Callbacks>& callbacks,
+                                                       const std::shared_ptr<Session_Manager>& session_manager,
+                                                       const std::shared_ptr<Credentials_Manager>& creds,
+                                                       const std::shared_ptr<const Policy>& policy,
+                                                       const std::shared_ptr<RandomNumberGenerator>& rng,
+                                                       Server_Information server_info,
+                                                       const std::vector<std::string>& next_protocols) {
+   auto self = std::make_shared<Client_Impl_13>(
+      Private{}, callbacks, session_manager, creds, policy, rng, std::move(server_info));
+
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
    if(policy->allow_tls12()) {
-      expect_downgrade(m_info, next_protocols);
+      self->expect_downgrade(self->m_info, next_protocols);
    }
 #endif
 
-   if(auto session = find_session_for_resumption()) {
+   if(auto session = self->find_session_for_resumption()) {
       if(session->session.version().is_tls_13_or_later()) {
-         m_handshake->resumed_session = std::move(session);
+         self->m_handshake->resumed_session = std::move(session);
       }
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
-      else if(expects_downgrade()) {
+      else if(self->expects_downgrade()) {
          // If we found a session that was created with TLS 1.2, we downgrade
          // the implementation right away, before even issuing a Client Hello.
-         request_downgrade_for_resumption(std::move(session.value()));
-         return;
+         self->request_downgrade_for_resumption(std::move(session.value()));
+         return self;
       }
 #endif
    }
 
-   send_handshake_message(m_handshake->state.sending(
+   self->send_handshake_message(self->m_handshake->state.sending(
       Client_Hello_13(*policy,
                       *callbacks,
                       *rng,
-                      m_info.hostname(),
+                      self->m_info.hostname(),
                       next_protocols,
-                      m_handshake->resumed_session,
-                      creds->find_preshared_keys(m_info.hostname(), Connection_Side::Client))));
+                      self->m_handshake->resumed_session,
+                      creds->find_preshared_keys(self->m_info.hostname(), Connection_Side::Client))));
 
-   maybe_handle_compatibility_mode(Compat_Mode_Situation::AfterSendingFirstClientHello);
+   self->maybe_handle_compatibility_mode(Compat_Mode_Situation::AfterSendingFirstClientHello);
 
-   m_handshake->transitions.set_expected_next({Handshake_Type::ServerHello, Handshake_Type::HelloRetryRequest});
+   self->m_handshake->transitions.set_expected_next({Handshake_Type::ServerHello, Handshake_Type::HelloRetryRequest});
+
+   return self;
 }
 
 void Client_Impl_13::process_handshake_msg(Handshake_Message_13 message) {

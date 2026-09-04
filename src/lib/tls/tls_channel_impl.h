@@ -35,7 +35,16 @@ namespace TLS {
 class Client;
 class Server;
 
-class Channel_Impl {
+class Channel_Impl : public std::enable_shared_from_this<Channel_Impl> {
+   protected:
+      /**
+      * Sentinel object to make constructors of derived classes un-callable by
+      * other classes.
+      */
+      struct Private {
+            explicit Private() = default;
+      };
+
    public:
       virtual ~Channel_Impl() = default;
 

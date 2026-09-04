@@ -283,36 +283,26 @@ secure_vector<uint8_t> load_dtls_cookie_secret(Credentials_Manager& creds) {
 
 }  // namespace
 
-Server_Impl_12::Server_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
-                               const std::shared_ptr<Session_Manager>& session_manager,
-                               const std::shared_ptr<Credentials_Manager>& creds,
-                               const std::shared_ptr<const Policy>& policy,
-                               const std::shared_ptr<RandomNumberGenerator>& rng,
-                               bool is_datagram,
-                               size_t io_buf_sz) :
-      Channel_Impl_12(callbacks, session_manager, rng, policy, true, is_datagram, io_buf_sz), m_creds(creds) {
-   BOTAN_ASSERT_NONNULL(m_creds);
+std::shared_ptr<Server_Impl_12> Server_Impl_12::create(const std::shared_ptr<Callbacks>& callbacks,
+                                                       const std::shared_ptr<Session_Manager>& session_manager,
+                                                       const std::shared_ptr<Credentials_Manager>& creds,
+                                                       const std::shared_ptr<const Policy>& policy,
+                                                       const std::shared_ptr<RandomNumberGenerator>& rng,
+                                                       bool is_datagram,
+                                                       size_t reserved_io_buffer_size)  //
+{
+   auto self = std::make_shared<Server_Impl_12>(
+      Private{}, callbacks, session_manager, creds, policy, rng, is_datagram, reserved_io_buffer_size);
+   BOTAN_ASSERT_NONNULL(self->m_creds);
 
    // Try to load the cookie secret on initialization, rather than waiting to fail
    // until the first client connects.
    if(is_datagram && policy->dtls_server_require_cookie_exchange()) {
-      load_dtls_cookie_secret(*m_creds);
+      load_dtls_cookie_secret(*self->m_creds);
    }
+
+   return self;
 }
-
-#if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
-
-Server_Impl_12::Server_Impl_12(const Channel_Impl::Downgrade_Information& downgrade_info) :
-      Channel_Impl_12(downgrade_info.callbacks,
-                      downgrade_info.session_manager,
-                      downgrade_info.rng,
-                      downgrade_info.policy,
-                      true /* is_server*/,
-                      false /* TLS 1.3 does not support DTLS yet */,
-                      downgrade_info.io_buffer_size),
-      m_creds(downgrade_info.creds) {}
-
-#endif
 
 std::unique_ptr<Handshake_State> Server_Impl_12::new_handshake_state(std::unique_ptr<Handshake_IO> io) {
    auto state = std::make_unique<Server_Handshake_State>(std::move(io), callbacks());

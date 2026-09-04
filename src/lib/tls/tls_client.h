@@ -144,7 +144,7 @@ class BOTAN_PUBLIC_API(2, 0) Client final : public Channel {
 #endif
 
    private:
-      std::unique_ptr<Channel_Impl> m_impl;
+      std::shared_ptr<Channel_Impl> m_impl;
 };
 }  // namespace Botan::TLS
 

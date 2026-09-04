@@ -20,20 +20,23 @@
 
 namespace Botan::TLS {
 
-Server_Impl_13::Server_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
-                               const std::shared_ptr<Session_Manager>& session_manager,
-                               const std::shared_ptr<Credentials_Manager>& credentials_manager,
-                               const std::shared_ptr<const Policy>& policy,
-                               const std::shared_ptr<RandomNumberGenerator>& rng) :
-      Channel_Impl_13(callbacks, session_manager, credentials_manager, rng, policy, true /* is_server */),
-      m_handshake(std::make_unique<Pending_Handshake>()) {
+std::shared_ptr<Server_Impl_13> Server_Impl_13::create(const std::shared_ptr<Callbacks>& callbacks,
+                                                       const std::shared_ptr<Session_Manager>& session_manager,
+                                                       const std::shared_ptr<Credentials_Manager>& credentials_manager,
+                                                       const std::shared_ptr<const Policy>& policy,
+                                                       const std::shared_ptr<RandomNumberGenerator>& rng) {
+   auto self =
+      std::make_shared<Server_Impl_13>(Private{}, callbacks, session_manager, credentials_manager, policy, rng);
+
 #if defined(BOTAN_HAS_TLS_12)
    if(policy->allow_tls12()) {
-      expect_downgrade({}, {});
+      self->expect_downgrade({}, {});
    }
 #endif
 
-   m_handshake->transitions.set_expected_next(Handshake_Type::ClientHello);
+   self->m_handshake->transitions.set_expected_next(Handshake_Type::ClientHello);
+
+   return self;
 }
 
 std::string Server_Impl_13::application_protocol() const {
