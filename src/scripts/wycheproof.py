@@ -366,6 +366,7 @@ _AEAD_CIPHER_ALIASES = {
     "AEAD-AES-SIV-CMAC": "AES-SIV-CMAC",
     "ARIA-GCM": "ARIA",
     "ARIA-CCM": "ARIA",
+    "ASCON-AEAD128": "Ascon-AEAD128",
     "CAMELLIA-CCM": "Camellia",
     "SEED-GCM": "SEED",
     "SEED-CCM": "SEED",
@@ -383,6 +384,8 @@ def _aead_algorithm(
         return f"AES-{key_size_bits // 2}/SIV"
     if algorithm == "AES-EAX":
         return f"AES-{key_size_bits}/EAX"
+    if algorithm == "ASCON-AEAD128":
+        return "Ascon-AEAD128"
     if algorithm == "AES-GCM-SIV":
         if tag_size_bits is not None and tag_size_bits != 128:
             raise ValueError(f"AES-GCM-SIV requires a 128-bit tag not {tag_size_bits}")
@@ -427,6 +430,7 @@ def _aead_process(
     "AES-SIV-CMAC",
     "ARIA-GCM",
     "ARIA-CCM",
+    "ASCON-AEAD128",
     "CAMELLIA-CCM",
     "SEED-GCM",
     "SEED-CCM",
@@ -1770,6 +1774,8 @@ _registry.ignore(
     "ASCON128A",       # Pre-NIST Ascon not implemented
     "ASCON80PQ",       # Pre-NIST Ascon not implemented
     "BLS",             # Not implemented
+    "Cobblestone-128", # Not implemented
+    "Cobblestone-256", # Not implemented
     "PbeWithHmacSha1AndAes_128",  # PBES2 not directly exposed in API
     "PbeWithHmacSha1AndAes_192",
     "PbeWithHmacSha1AndAes_256",
