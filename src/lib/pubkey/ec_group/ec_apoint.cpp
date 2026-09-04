@@ -172,8 +172,9 @@ std::optional<EC_AffinePoint> EC_AffinePoint::deserialize(const EC_Group& group,
          // TODO(Botan4) remove this
          const bool hdr_y_is_even = bytes[0] == 0x06;
          const bool y_is_even = (bytes.back() & 0x01) == 0;
+         const size_t expected_len = 1 + 2 * group.get_p_bytes();
 
-         if(hdr_y_is_even == y_is_even) {
+         if(hdr_y_is_even == y_is_even && bytes.size() == expected_len) {
             std::vector<uint8_t> sec1(bytes.begin(), bytes.end());
             sec1[0] = 0x04;
             return EC_AffinePoint::deserialize_uncompressed(group, sec1);
