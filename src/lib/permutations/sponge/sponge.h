@@ -10,8 +10,10 @@
 #define BOTAN_SPONGE_CONSTRUCTION_H_
 
 #include <botan/assert.h>
+#include <botan/mem_ops.h>
 #include <botan/types.h>
 #include <array>
+#include <type_traits>
 
 namespace Botan {
 
@@ -40,6 +42,11 @@ class Sponge {
          BOTAN_ARG_CHECK(m_bit_rate % word_bits == 0 && m_bit_rate < words * word_bits, "Invalid sponge bit rate");
       }
 
+      constexpr Sponge(const Sponge&) = default;
+      constexpr Sponge& operator=(const Sponge&) = default;
+      constexpr Sponge(Sponge&&) = default;
+      constexpr Sponge& operator=(Sponge&&) = default;
+
       constexpr static size_t state_bytes() { return sizeof(state_t); }
 
       constexpr static size_t state_bits() { return state_bytes() * 8; }
@@ -60,6 +67,16 @@ class Sponge {
 
    protected:
       void reset_cursor() { m_S_cursor = 0; }
+
+      // This destructor is protected to prevent deletion through a polymorphic
+      // Sponge<>* pointer (hence the destructor doesn't need to be virtual).
+      // And it is constexpr to allow Sponge<> to be used in constexpr contexts,
+      // e.g. to define a constexpr initial sponge state.
+      constexpr ~Sponge() {
+         if(!std::is_constant_evaluated()) {
+            secure_scrub_memory(m_S);
+         }
+      }
 
    private:
       state_t m_S;
