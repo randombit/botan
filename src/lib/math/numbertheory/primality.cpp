@@ -34,7 +34,8 @@ bool is_lucas_probable_prime(const BigInt& C, const Barrett_Reduction& mod_C) {
          return false;
       }
 
-      if(j == -1) {
+      const BigInt Q = (BigInt::one() - D) / 4;
+      if(j == -1 && gcd(C, Q) == 1) {
          break;
       }
 
