@@ -536,6 +536,8 @@ EC_Group::EC_Group(const BigInt& p,
    BOTAN_ARG_CHECK(base_x >= 0 && base_x < p, "EC_Group base_x is invalid");
    BOTAN_ARG_CHECK(base_y >= 0 && base_y < p, "EC_Group base_y is invalid");
 
+   BOTAN_ARG_CHECK(cofactor >= 1 && cofactor < 16, "EC_Group cofactor is invalid");
+
    auto mod_p = Barrett_Reduction::for_public_modulus(p);
    BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(p, mod_p), "EC_Group p is not prime");
 
