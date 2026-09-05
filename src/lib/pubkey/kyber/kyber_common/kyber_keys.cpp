@@ -135,8 +135,7 @@ void Kyber_PublicKeyInternal::indcpa_encrypt(StrongSpan<KyberCompressedCiphertex
    // The nonce N is handled internally by the PolynomialSampler
    Kyber_Algos::PolynomialSampler ps(r, mode);
    const auto y = ntt(ps.sample_polynomial_vector_cbd_eta1());
-   const auto e1 = ps.sample_polynomial_vector_cbd_eta2();
-   const auto e2 = ps.sample_polynomial_cbd_eta2();
+   const auto [e1, e2] = ps.sample_polynomial_vector_and_poly_cbd_eta2();
 
    auto u = inverse_ntt(At * y);
    u += e1;
