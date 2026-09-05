@@ -475,6 +475,7 @@ class EC_Group_Registration_Tests final : public Test {
             results.push_back(test_ec_group_off_curve_generator());
             results.push_back(test_ec_group_duplicate_orders());
             results.push_back(test_ec_group_registration_with_custom_oid());
+            results.push_back(test_ec_group_registration_with_mismatched_custom_oid());
             results.push_back(test_ec_group_alias_oid_cache());
             results.push_back(test_ec_group_unregistration());
             results.push_back(test_supports_named_group_with_registration());
@@ -665,6 +666,37 @@ class EC_Group_Registration_Tests final : public Test {
             result.test_failure("Group with custom OID did not get a pcurve pointer");
          }
    #endif
+
+         return result;
+      }
+
+      Test::Result test_ec_group_registration_with_mismatched_custom_oid() {
+         Test::Result result("EC_Group registration of non-standard group with aliased OID");
+
+         Botan::EC_Group::clear_registered_curve_data();
+
+         const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
+         const Botan::OID custom_oid("1.3.6.1.4.1.25258.100.100");
+
+         Botan::OID::register_oid(custom_oid, "secp256r1");
+
+         // The next prime after secp256r1's order. This satisfies the constructor's
+         // structural checks, but it is not the order of secp256r1's generator.
+         const Botan::BigInt wrong_order(
+            "0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC6325EB");
+
+         const Botan::EC_Group reg_group(custom_oid,
+                                         secp256r1.get_p(),
+                                         secp256r1.get_a(),
+                                         secp256r1.get_b(),
+                                         secp256r1.get_g_x(),
+                                         secp256r1.get_g_y(),
+                                         wrong_order);
+
+         result.test_is_true("Mismatched parameters do not select the named curve implementation",
+                             reg_group.engine() != Botan::EC_Group_Engine::Optimized);
+         result.test_is_false("Group with incorrect generator order fails verification",
+                              reg_group.verify_group(this->rng()));
 
          return result;
       }
