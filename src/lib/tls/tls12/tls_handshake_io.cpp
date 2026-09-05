@@ -218,9 +218,20 @@ Protocol_Version Datagram_Handshake_IO::initial_record_version() const {
 }
 
 std::optional<size_t> Datagram_Handshake_IO::last_completed_flight_index() const {
-   // m_flights keeps an empty trailing slot while waiting for the peer, so the
-   // last completed flight is normally the one before it.
-   const size_t flight_idx = (m_flights.size() == 1) ? 0 : (m_flights.size() - 2);
+   BOTAN_DEBUG_ASSERT(!m_flights.empty());
+
+   // A non-empty current slot is the flight just compiled (the first ClientHello
+   // lives in m_flights[0] the same way). An empty trailing slot is the WAITING
+   // placeholder get_next_record() adds; retransmit the flight before it.
+   if(!m_flights.rbegin()->empty()) {
+      return m_flights.size() - 1;
+   }
+
+   if(m_flights.size() == 1) {
+      return std::nullopt;
+   }
+
+   const size_t flight_idx = m_flights.size() - 2;
 
    // A peer can ask us to replay a flight before we have sent one, eg
    // with a ClientHello whose message_seq is past the reassembly
@@ -350,9 +361,8 @@ std::optional<std::chrono::milliseconds> Datagram_Handshake_IO::next_retransmiss
       return std::nullopt;
    }
 
-   // Without an outgoing flight, or while constructing one, there is nothing
-   // complete that timeout_check() could retransmit.
-   if(!m_last_write.has_value() || (m_flights.size() > 1 && !m_flights.rbegin()->empty())) {
+   // Without an outgoing flight there is nothing timeout_check() could retransmit.
+   if(!m_last_write.has_value() || !last_completed_flight_index().has_value()) {
       return std::nullopt;
    }
 
