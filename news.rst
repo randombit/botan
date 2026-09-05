@@ -50,6 +50,12 @@ Version 3.14.0, Not Yet Released
 * CI updates including moving most builds to Ubuntu 26.04, adding Windows Aarch64
   builders, and updating dependencies used in CI (GH #5846 #5848 #5860 #5861)
 
+* The FFI ``botan_x509_general_name_t`` API now provides access to otherName
+  entries of subject and issuer alternative names and of name constraints, for
+  example the Microsoft UPN, including the new function
+  ``botan_x509_general_name_other_name_type_id``. The Python binding gains
+  bindings for this API. (GH #5885)
+
 Version 3.13.0, 2026-08-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

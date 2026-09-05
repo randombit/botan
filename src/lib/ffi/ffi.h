@@ -68,7 +68,7 @@ API follows a few simple rules:
 * that declaration is not visible here since this header is intentionally
 * free-standing, depending only on a few C standard library headers.
 */
-#define BOTAN_FFI_API_VERSION 20260811
+#define BOTAN_FFI_API_VERSION 20260901
 
 /**
 * BOTAN_FFI_EXPORT indicates public FFI functions.
@@ -3876,8 +3876,7 @@ typedef struct botan_x509_general_name_struct* botan_x509_general_name_t;
 
 /**
 * GeneralName type identifiers as defined in RFC 5280 A.2 (GeneralName ::= CHOICE)
-* Type identifiers that are omitted here are (currently) not supported. Also,
-* there is currently no way to access OTHER_NAME values via the FFI.
+* Type identifiers that are omitted here are (currently) not supported.
 */
 enum botan_x509_general_name_types /* NOLINT(*-enum-size,*-use-enum-class) */ {
    BOTAN_X509_OTHER_NAME = 0,
@@ -3900,7 +3899,11 @@ BOTAN_FFI_EXPORT(3, 11) int botan_x509_general_name_get_type(botan_x509_general_
 * if the contained GeneralName value cannot be represented as a string.
 *
 * The types BOTAN_X509_EMAIL_ADDRESS, BOTAN_X509_DNS_NAME, BOTAN_X509_URI,
-* BOTAN_X509_IP_ADDRESS may be viewed as "string".
+* BOTAN_X509_IP_ADDRESS may be viewed as "string". A BOTAN_X509_OTHER_NAME may
+* be viewed as "string" if its value is a UTF8String, IA5String,
+* PrintableString, VisibleString or NumericString whose content is valid for
+* that string type and contains no NUL character; the string is provided
+* as UTF-8.
 */
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_general_name_view_string_value(botan_x509_general_name_t name,
@@ -3912,12 +3915,25 @@ int botan_x509_general_name_view_string_value(botan_x509_general_name_t name,
 * if the contained GeneralName value cannot be represented as a binary string.
 *
 * The types BOTAN_X509_DIRECTORY_NAME, BOTAN_X509_IP_ADDRESS may be viewed as
-* "binary".
+* "binary". For BOTAN_X509_OTHER_NAME the raw BER encoding of the value is
+* viewed, i.e. the complete TLV contained in the EXPLICIT [0] tag of the
+* OtherName structure.
 */
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_general_name_view_binary_value(botan_x509_general_name_t name,
                                               botan_view_ctx ctx,
                                               botan_view_bin_fn view);
+
+/**
+* Retrieve the otherName type-id of @p name as a new OID object, or return
+* BOTAN_FFI_ERROR_INVALID_OBJECT_STATE if the name is not a
+* BOTAN_X509_OTHER_NAME.
+* @param oid the new object will be placed here
+* @param name the GeneralName to inspect
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 14)
+int botan_x509_general_name_other_name_type_id(botan_asn1_oid_t* oid, botan_x509_general_name_t name);
 
 /**
 * Frees all resources of the GeneralName object

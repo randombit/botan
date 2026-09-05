@@ -14,6 +14,7 @@
 #include <memory>
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
+   #include <botan/ber_dec.h>
    #include <botan/data_src.h>
    #include <botan/x509_crl.h>
    #include <botan/x509_ext.h>
@@ -79,6 +80,13 @@ std::optional<Botan::GeneralName> extract_general_name_at(const Botan::Alternati
       std::advance(itr, index);
       return Botan::GeneralName::ipv6_address(*itr);
    }
+   index -= altnames.ipv6_addresses().size();
+
+   if(index < altnames.other_name_values().size()) {
+      auto itr = altnames.other_name_values().begin();
+      std::advance(itr, index);
+      return Botan::GeneralName::other_name(itr->oid(), itr->value());
+   }
 
    return std::nullopt;
 }
@@ -92,7 +100,42 @@ std::optional<Botan::GeneralName> extract_general_name_at(const Botan::Alternati
  */
 size_t count_general_names_in(const Botan::AlternativeName& alt_names) {
    return alt_names.email_addresses().size() + alt_names.dns_names().size() + alt_names.directory_names().size() +
-          alt_names.uri_names().size() + alt_names.ipv4_addresses().size() + alt_names.ipv6_addresses().size();
+          alt_names.uri_names().size() + alt_names.ipv4_addresses().size() + alt_names.ipv6_addresses().size() +
+          alt_names.other_name_values().size();
+}
+
+/**
+ * Decodes the inner value of an otherName as a string if it is of a type that
+ * AlternativeName::decode_from() also exposes via AlternativeName::other_names():
+ * a UTF8String or one of the UTF-8 subset string types (IA5String,
+ * PrintableString, VisibleString, NumericString) with content that is valid
+ * for its type. Returns std::nullopt otherwise.
+ */
+std::optional<std::string> other_name_string_value(const Botan::AlternativeName::OtherNameValue& other) {
+   try {
+      Botan::BER_Decoder dec(other.value());
+      const Botan::BER_Object value = dec.get_next_object();
+      dec.verify_end();
+
+      if(!Botan::ASN1_String::is_string_type(value.type()) || value.get_class() != Botan::ASN1_Class::Universal) {
+         return std::nullopt;
+      }
+
+      // Throws Invalid_Argument for the wide string types and for content that
+      // is not valid for the string type
+      std::string str = Botan::ASN1_String(Botan::ASN1::to_string(value), value.type()).value();
+
+      // The string is handed to the application as a NUL-terminated C string
+      if(str.find('\0') != std::string::npos) {
+         return std::nullopt;
+      }
+
+      return str;
+   } catch(const Botan::Invalid_Argument&) {
+      return std::nullopt;
+   } catch(const Botan::Decoding_Error&) {
+      return std::nullopt;
+   }
 }
 
 std::optional<botan_x509_general_name_types> to_botan_x509_general_name_types(Botan::GeneralName::NameType gn_type) {
@@ -718,10 +761,6 @@ int botan_x509_general_name_get_type(botan_x509_general_name_t name, unsigned in
       }
 
       *type = mapped_type.value();
-      if(*type == BOTAN_X509_OTHER_NAME /* ... viewing of other-names not supported */) {
-         return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
-      }
-
       return BOTAN_FFI_SUCCESS;
    });
 #else
@@ -737,6 +776,13 @@ int botan_x509_general_name_view_string_value(botan_x509_general_name_t name,
    return BOTAN_FFI_VISIT(name, [=](const Botan::GeneralName& n) -> int {
       const auto type = to_botan_x509_general_name_types(n.type_code());
       if(!type) {
+         return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
+      }
+
+      if(type == BOTAN_X509_OTHER_NAME) {
+         if(const auto str = other_name_string_value(n.other_name_value())) {
+            return invoke_view_callback(view, ctx, *str);
+         }
          return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
       }
 
@@ -763,6 +809,10 @@ int botan_x509_general_name_view_binary_value(botan_x509_general_name_t name,
          return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
       }
 
+      if(type == BOTAN_X509_OTHER_NAME) {
+         return invoke_view_callback(view, ctx, n.other_name_value().value());
+      }
+
       if(type != BOTAN_X509_DIRECTORY_NAME && type != BOTAN_X509_IP_ADDRESS) {
          return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
       }
@@ -771,6 +821,25 @@ int botan_x509_general_name_view_binary_value(botan_x509_general_name_t name,
    });
 #else
    BOTAN_UNUSED(name, ctx, view);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_general_name_other_name_type_id(botan_asn1_oid_t* oid, botan_x509_general_name_t name) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(name, [=](const Botan::GeneralName& n) -> int {
+      if(Botan::any_null_pointers(oid)) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      if(n.type_code() != Botan::GeneralName::NameType::Other) {
+         return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
+      }
+
+      return ffi_new_object(oid, std::make_unique<Botan::OID>(n.other_name_value().oid()));
+   });
+#else
+   BOTAN_UNUSED(oid, name);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }

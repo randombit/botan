@@ -259,6 +259,7 @@ supported it.
 ============== ===================
 FFI Version    Supported Starting
 ============== ===================
+20260901       3.14.0
 20260811       3.13.0
 20260506       3.12.0
 20260303       3.11.0
@@ -1988,24 +1989,44 @@ X.509 Certificates
    optionally concatenated with the subnet mask.
    `BOTAN_X509_EMAIL_ADDRESS`, `BOTAN_X509_DNS_NAME`, and `BOTAN_X509_URI` are
    characters arrays.
-   Support for `BOTAN_X509_OTHER_NAME` is deprecated and cannot be viewed using
-   these functions.
+   `BOTAN_X509_OTHER_NAME` is an OtherName, consisting of a type-id (see
+   :cpp:func:`botan_x509_general_name_other_name_type_id`) and a value whose
+   type depends on the type-id. The value is available as its raw BER encoding
+   and, if it is a UTF8String, IA5String, PrintableString, VisibleString or
+   NumericString with content that is valid for that string type, also as a
+   string. For example, the Microsoft User Principal Name has the type-id
+   ``1.3.6.1.4.1.311.20.2.3`` (registered in Botan as "Microsoft UPN") and a
+   UTF8String value.
 
 .. cpp:function:: int botan_x509_general_name_view_string_value(botan_x509_general_name_t name, \
                                                                 botan_view_ctx ctx, \
                                                                 botan_view_str_fn view)
 
    Allows querying the value of GeneralName objects of type
-   `BOTAN_X509_EMAIL_ADDRESS`, `BOTAN_X509_DNS_NAME`, `BOTAN_X509_URI`, and
-   `BOTAN_X509_IP_ADDRESS`.
+   `BOTAN_X509_EMAIL_ADDRESS`, `BOTAN_X509_DNS_NAME`, `BOTAN_X509_URI`,
+   `BOTAN_X509_IP_ADDRESS`, and of `BOTAN_X509_OTHER_NAME` objects whose value
+   is a UTF8String, IA5String, PrintableString, VisibleString or NumericString
+   whose content is valid for that string type and contains no NUL character
+   (the string is provided as UTF-8). For any other object
+   :cpp:enumerator:`BOTAN_FFI_ERROR_INVALID_OBJECT_STATE` is returned.
 
 .. cpp:function:: int botan_x509_general_name_view_binary_value(botan_x509_general_name_t name, \
                                                                 botan_view_ctx ctx, \
                                                                 botan_view_bin_fn view)
 
    Allows querying the value of GeneralName objects of type
-   `BOTAN_X509_DIRECTORY_NAME` (as DER encoded distinguished name) and
-   `BOTAN_X509_IP_ADDRESS` (as big-endian encoded IP address + subnet mask).
+   `BOTAN_X509_DIRECTORY_NAME` (as DER encoded distinguished name),
+   `BOTAN_X509_IP_ADDRESS` (as big-endian encoded IP address + subnet mask) and
+   `BOTAN_X509_OTHER_NAME` (as the raw BER encoding of the value, i.e. the
+   complete TLV contained in the ``[0] EXPLICIT`` tag of the OtherName).
+
+.. cpp:function:: int botan_x509_general_name_other_name_type_id(botan_asn1_oid_t* oid, \
+                                                                 botan_x509_general_name_t name)
+
+   Get the type-id of a GeneralName object of type `BOTAN_X509_OTHER_NAME` as a
+   new OID object, which must be freed with :cpp:func:`botan_oid_destroy`. If
+   the object is of any other type,
+   :cpp:enumerator:`BOTAN_FFI_ERROR_INVALID_OBJECT_STATE` is returned.
 
 .. cpp:function:: int botan_x509_general_name_destroy(botan_x509_general_name_t alt_names)
 

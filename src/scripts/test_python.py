@@ -1191,6 +1191,155 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(asnum, None)
         self.assertEqual(rdi, [(0, 4294967295)])
 
+    def test_x509_general_names(self):
+        # Expected values are documented in src/tests/data/x509/othername/README.md
+        upn_oid = "1.3.6.1.4.1.311.20.2.3"
+        arc = "1.3.6.1.4.1.25258.10000"
+        gnt = botan.X509GeneralNameType
+
+        def other_name_cert(name):
+            return botan.X509Cert(filename=test_data("src/tests/data/x509/othername/" + name))
+
+        def other_names(names):
+            # (type-id, value, string or None) of every otherName, independent of order
+            out = []
+            for n in names:
+                if n.get_type() == gnt.OTHER_NAME:
+                    try:
+                        s = n.string_value()
+                    except botan.BotanException as e:
+                        self.assertEqual(e.error_code(), -35)
+                        s = None
+                    out.append((n.other_name_type_id().to_string(), hex_encode(n.binary_value()), s))
+            return sorted(out)
+
+        cert = other_name_cert("msupn-san.pem")
+
+        if not library_at_least(3, 14):
+            # Before Botan 3.14 the enumeration omits otherNames and there is no type-id getter
+            names = cert.subject_alternative_names()
+            self.assertEqual([n.get_type() for n in names], [gnt.EMAIL_ADDRESS, gnt.DNS_NAME])
+            with self.assertRaises(botan.BotanFunctionUnavailable) as cm:
+                names[0].other_name_type_id()
+            self.assertEqual(cm.exception.function_name, 'botan_x509_general_name_other_name_type_id')
+            return
+
+        # The Microsoft UPN is an otherName with a UTF8String value
+        names = cert.subject_alternative_names()
+        self.assertEqual([n.get_type() for n in names], [gnt.EMAIL_ADDRESS, gnt.DNS_NAME, gnt.OTHER_NAME])
+        self.assertEqual(names[0].string_value(), "alice@example.com")
+        self.assertEqual(names[1].string_value(), "www.example.com")
+
+        upn = names[2]
+        self.assertEqual(upn.other_name_type_id(), botan.OID.from_string("Microsoft UPN"))
+        self.assertEqual(upn.other_name_type_id().to_string(), upn_oid)
+        self.assertEqual(upn.other_name_type_id().to_name(), "Microsoft UPN")
+        self.assertEqual(hex_encode(upn.binary_value()), "0c16616c69636540636f72702e6578616d706c652e636f6d")
+        self.assertEqual(upn.string_value(), "alice@corp.example.com")
+
+        # Only an otherName has a type-id; a dNSName has no binary value
+        for fn in [names[1].other_name_type_id, names[1].binary_value]:
+            with self.assertRaises(botan.BotanException) as cm:
+                fn()
+            self.assertEqual(cm.exception.error_code(), -35)
+
+        # No name constraints in this certificate
+        self.assertEqual(cert.permitted_name_constraints(), [])
+        self.assertEqual(cert.excluded_name_constraints(), [])
+
+        # Every string type the library decodes into a string, and those it does not
+        string_cases = [
+            ("string-utf8.pem", arc + ".1", "0c134ac3bc7267656e406578616d706c652e636f6d", "J\u00fcrgen@example.com"),
+            ("string-ia5.pem", arc + ".2", "160f696135406578616d706c652e636f6d", "ia5@example.com"),
+            ("string-printable.pem", arc + ".3", "13115072696e7461626c65204e616d65203432", "Printable Name 42"),
+            ("string-visible.pem", arc + ".4", "1a0f56697369626c6520537472696e6721", "Visible String!"),
+            ("string-numeric.pem", arc + ".5", "120a30313233343536373839", "0123456789"),
+            ("string-bmp.pem", arc + ".6", "1e060062006d0070", None),
+            ("string-universal.pem", arc + ".7", "1c0c000000750000006e00000069", None),
+            ("string-teletex.pem", arc + ".8", "140774656c65746578", None),
+        ]
+        for (file, oid, value_hex, string) in string_cases:
+            names = other_name_cert(file).subject_alternative_names()
+            self.assertEqual(len(names), 1)
+            self.assertEqual(other_names(names), [(oid, value_hex, string)])
+
+        # Non-string values are available as bytes only
+        names = other_name_cert("non-string.pem").subject_alternative_names()
+        self.assertEqual(other_names(names),
+                         sorted([(arc + ".10", "300302012a", None), (arc + ".11", "0404deadbeef", None)]))
+
+        # An empty and a very long value
+        names = other_name_cert("edge-values.pem").subject_alternative_names()
+        self.assertEqual(other_names(names), sorted([
+            (arc + ".20", "0c00", ""),
+            (arc + ".21", "0c820bb8" + "78" * 3000, "x" * 3000),
+        ]))
+
+        # Several otherNames next to other name types
+        names = other_name_cert("multi.pem").subject_alternative_names()
+        self.assertEqual([n.get_type() for n in names],
+                         [gnt.EMAIL_ADDRESS, gnt.DNS_NAME, gnt.IP_ADDRESS] + [gnt.OTHER_NAME] * 4)
+        self.assertEqual(names[0].string_value(), "multi@example.com")
+        self.assertEqual(names[1].string_value(), "multi.example.com")
+        self.assertEqual(names[2].string_value(), "192.0.2.1")
+        self.assertEqual(names[2].binary_value(), bytes([192, 0, 2, 1]))
+        self.assertEqual(other_names(names), sorted([
+            (upn_oid, "0c166d756c746940636f72702e6578616d706c652e636f6d", "multi@corp.example.com"),
+            (arc + ".2", "160f696135406578616d706c652e636f6d", "ia5@example.com"),
+            (arc + ".6", "1e060062006d0070", None),
+            (arc + ".10", "300302012a", None),
+        ]))
+
+        # An otherName in the issuer alternative name
+        cert = other_name_cert("ian.pem")
+        self.assertEqual([n.get_type() for n in cert.subject_alternative_names()], [gnt.DNS_NAME])
+        names = cert.issuer_alternative_names()
+        self.assertEqual([n.get_type() for n in names], [gnt.DNS_NAME, gnt.OTHER_NAME])
+        self.assertEqual(names[0].string_value(), "ca.example.com")
+        self.assertEqual(other_names(names),
+                         [(upn_oid, "0c1769737375657240636f72702e6578616d706c652e636f6d", "issuer@corp.example.com")])
+
+        # otherNames in the permitted and excluded name constraints
+        cert = other_name_cert("nc-excluded.pem")
+        self.assertEqual(cert.subject_alternative_names(), [])
+        names = cert.permitted_name_constraints()
+        self.assertEqual([n.get_type() for n in names], [gnt.DNS_NAME, gnt.OTHER_NAME])
+        self.assertEqual(names[0].string_value(), "example.com")
+        self.assertEqual(other_names(names),
+                         [(arc + ".2", "16157065726d6974746564406578616d706c652e636f6d", "permitted@example.com")])
+        names = cert.excluded_name_constraints()
+        self.assertEqual([n.get_type() for n in names], [gnt.OTHER_NAME])
+        self.assertEqual(other_names(names),
+                         [(upn_oid, "0c196578636c7564656440636f72702e6578616d706c652e636f6d", "excluded@corp.example.com")])
+
+        # Certificates without these extensions
+        cert = botan.X509Cert(filename=test_data("src/tests/data/x509/misc/no_alternative_names.pem"))
+        self.assertEqual(cert.subject_alternative_names(), [])
+        self.assertEqual(cert.issuer_alternative_names(), [])
+
+        # The other name types
+        cert = botan.X509Cert(filename=test_data("src/tests/data/x509/misc/multiple_alternative_names.pem"))
+        names = cert.subject_alternative_names()
+        self.assertEqual(len(names), 11)
+        self.assertEqual(len(cert.issuer_alternative_names()), 9)
+        types = [n.get_type() for n in names]
+        self.assertEqual(types.count(gnt.EMAIL_ADDRESS), 2)
+        self.assertEqual(types.count(gnt.DNS_NAME), 3)
+        self.assertEqual(types.count(gnt.DIRECTORY_NAME), 3)
+        self.assertEqual(types.count(gnt.URI), 2)
+        self.assertEqual(types.count(gnt.IP_ADDRESS), 1)
+        self.assertEqual(types.count(gnt.OTHER_NAME), 0)
+        self.assertEqual(sorted(n.string_value() for n in names if n.get_type() == gnt.DNS_NAME),
+                         ["test.x509-labs.com", "trail.x509-labs.com", "versuch.x509-labs.com"])
+        ip = next(n for n in names if n.get_type() == gnt.IP_ADDRESS)
+        self.assertEqual(ip.string_value(), "127.0.0.1")
+        self.assertEqual(ip.binary_value(), bytes([127, 0, 0, 1]))
+        dn = next(n for n in names if n.get_type() == gnt.DIRECTORY_NAME)
+        self.assertEqual(dn.binary_value()[0], 0x30)
+        with self.assertRaises(botan.BotanException) as cm:
+            dn.string_value()
+        self.assertEqual(cm.exception.error_code(), -35)
+
     def test_crls(self):
         rng = botan.RandomNumberGenerator()
         now = int(time.time())

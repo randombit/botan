@@ -602,27 +602,111 @@ class Name_Constraint_Encoding_Tests final : public Test {
          return result;
       }
 
-      static Test::Result test_othername_encode_rejected() {
-         Test::Result result("X509v3 Name Constraints: encoder rejects otherName constraint");
+      static Test::Result test_othername() {
+         Test::Result result("X509v3 Name Constraints: otherName constraint");
 
          // otherName [0]: type-id 1.2.3.4 with a [0] UTF8String "abc" value.
-         // Decoding retains only the type tag, so re-encoding must refuse.
-         const auto der = Botan::hex_decode("A00C06032A0304A0050C03616263");
+         const std::string der_hex = "A00C06032A0304A0050C03616263";
+         const std::string inner_hex = "0C03616263";
+         const auto der = Botan::hex_decode(der_hex);
+         const auto inner = Botan::hex_decode(inner_hex);
+         const Botan::OID type_id{1, 2, 3, 4};
+
+         // The factory encodes to the same bytes and exposes the payload
+         const auto built = Botan::GeneralName::other_name(type_id, inner);
+         result.test_is_true("factory creates an otherName", built.type_code() == Botan::GeneralName::NameType::Other);
+         result.test_is_true("factory retains the type-id", built.other_name_value().oid() == type_id);
+         result.test_bin_eq("factory retains the value", built.other_name_value().value(), inner);
+         result.test_bin_eq("otherName encoding", der_encode_name(built), der_hex);
+         result.test_str_eq("otherName name()", built.name(), "1.2.3.4:" + inner_hex);
+
+         // Decoding retains the type-id and the raw inner value
          Botan::BER_Decoder dec(der, Botan::BER_Decoder::Limits::DER());
          Botan::GeneralName gn;
          gn.decode_from(dec);
          if(!result.test_is_true("decoded as otherName", gn.type_code() == Botan::GeneralName::NameType::Other)) {
             return result;
          }
+         result.test_is_true("decoded type-id", gn.other_name_value().oid() == type_id);
+         result.test_bin_eq("decoded value", gn.other_name_value().value(), inner);
+         result.test_bin_eq("re-encoding is byte identical", der_encode_name(gn), der);
 
+         // Not an otherName
+         result.test_throws<Botan::Invalid_State>("other_name_value on a dNSName throws Invalid_State",
+                                                  [] { Botan::GeneralName::dns("example.com").other_name_value(); });
+         result.test_throws<Botan::Invalid_State>("other_name_value on an unknown name throws Invalid_State", [] {
+            const Botan::GeneralName unknown;
+            unknown.other_name_value();
+         });
+
+         // An otherName constraint can now be encoded into the extension
          std::vector<Botan::GeneralSubtree> permitted;
          permitted.emplace_back(gn);
          Botan::Extensions exts;
-         result.test_throws("Extensions::add throws on otherName constraint", [&] {
-            exts.add(std::make_unique<Botan::Cert_Extension::Name_Constraints>(
-                        Botan::NameConstraints(std::move(permitted), {})),
-                     true);
+         exts.add(
+            std::make_unique<Botan::Cert_Extension::Name_Constraints>(Botan::NameConstraints(std::move(permitted), {})),
+            true);
+         result.test_bin_eq("NameConstraints extension body",
+                            exts.get_extension_bits(Botan::Cert_Extension::Name_Constraints::static_oid()),
+                            "3012A010300E" + der_hex);
+
+         return result;
+      }
+
+      static Test::Result test_othername_malformed_rejected() {
+         Test::Result result("X509v3 Name Constraints: malformed otherName constraint is rejected");
+
+         const std::vector<std::pair<std::string, std::string>> cases = {
+            // value is not wrapped in the EXPLICIT [0] tag
+            {"value without [0] tag", "A00A06032A03040C03616263"},
+            // two objects inside the EXPLICIT [0] tag
+            {"trailing object inside [0] tag", "A00E06032A0304A0070C036162630500"},
+            // trailing object after the value
+            {"trailing object after value", "A00E06032A0304A0050C036162630500"},
+            // type-id missing
+            {"missing type-id", "A007A0050C03616263"},
+            // value missing
+            {"missing value", "A00506032A0304"},
+            // EXPLICIT [0] tag is empty
+            {"empty [0] tag", "A00706032A0304A000"},
+         };
+
+         for(const auto& [name, hex] : cases) {
+            const auto der = Botan::hex_decode(hex);
+            result.test_throws<Botan::Decoding_Error>(name, [&] {
+               Botan::BER_Decoder dec(der, Botan::BER_Decoder::Limits::DER());
+               Botan::GeneralName gn;
+               gn.decode_from(dec);
+            });
+         }
+
+         return result;
+      }
+
+      static Test::Result test_othername_from_certificate() {
+         Test::Result result("X509v3 Name Constraints: otherName constraint from certificate");
+
+         // The CA carries a permitted otherName constraint with the Microsoft UPN
+         // type-id 1.3.6.1.4.1.311.20.2.3 and a UTF8String "alice@corp.example.com"
+         const auto chain =
+            load_chain(Test::data_file("x509/name_constraints/othername-msupn-constraint-no-upn-san-valid.pem"));
+         if(!result.test_sz_eq("chain length", chain.size(), 2)) {
+            return result;
+         }
+
+         const auto& permitted = chain[1].name_constraints().permitted();
+         const auto other = std::find_if(permitted.begin(), permitted.end(), [](const Botan::GeneralSubtree& s) {
+            return s.base().type_code() == Botan::GeneralName::NameType::Other;
          });
+         if(!result.test_is_true("otherName constraint present", other != permitted.end())) {
+            return result;
+         }
+
+         const auto& value = other->base().other_name_value();
+         result.test_is_true("type-id is Microsoft UPN", value.oid() == Botan::OID::from_string("Microsoft UPN"));
+         result.test_str_eq("type-id dotted", value.oid().to_string(), "1.3.6.1.4.1.311.20.2.3");
+         result.test_bin_eq("raw inner value", value.value(), "0C16616C69636540636F72702E6578616D706C652E636F6D");
+
          return result;
       }
 
@@ -632,7 +716,9 @@ class Name_Constraint_Encoding_Tests final : public Test {
                  test_extension_golden_bytes(),
                  test_roundtrip(),
                  test_empty_encode_rejected(),
-                 test_othername_encode_rejected()};
+                 test_othername(),
+                 test_othername_malformed_rejected(),
+                 test_othername_from_certificate()};
       }
 };
 
@@ -641,15 +727,13 @@ BOTAN_REGISTER_TEST("x509", "x509_name_constraint_encoding", Name_Constraint_Enc
 /*
 * Re-encode every NameConstraints extension in the validation corpus and
 * require byte-identical output. Constraint forms whose decode does not
-* retain a value (otherName, unrecognized tags) must instead be rejected
-* at encode time.
+* retain a value (unrecognized tags) must instead be rejected at encode time.
 */
 class Name_Constraint_Corpus_Reencode_Tests final : public Test {
    private:
       static bool has_unencodable_name(const std::vector<Botan::GeneralSubtree>& subtrees) {
          return std::any_of(subtrees.begin(), subtrees.end(), [](const Botan::GeneralSubtree& subtree) {
-            const auto type = subtree.base().type_code();
-            return type == Botan::GeneralName::NameType::Other || type == Botan::GeneralName::NameType::Unknown;
+            return subtree.base().type_code() == Botan::GeneralName::NameType::Unknown;
          });
       }
 
