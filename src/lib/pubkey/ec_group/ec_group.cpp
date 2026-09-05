@@ -323,6 +323,9 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::DER_decode_EC_group(st
       }
 
       // B must be > 0
+      //
+      // Technically this is not true but we have historically rejected this and
+      // nobody has noted it as an issue, so it is retained.
       if(b.signum() <= 0 || b >= p) {
          throw Decoding_Error("Invalid ECC b parameter");
       }
