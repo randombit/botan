@@ -147,6 +147,11 @@ class EC_Group_Data_Map final {
             }
          }();
 
+         if(new_group->source() != EC_Group_Source::Builtin) {
+            BOTAN_ARG_CHECK(EC_Group::verify_generator_order(new_group),
+                            "EC_Group generator does not have the claimed order");
+         }
+
          m_registered_curves.push_back(new_group);
          return new_group;
       }
@@ -217,6 +222,10 @@ class EC_Group_Data_Map final {
          * TODO(Botan4) remove this; throw an exception instead
          */
          auto new_group = EC_Group_Data::create(p, a, b, g_x, g_y, order, cofactor, OID(), source);
+
+         BOTAN_ARG_CHECK(EC_Group::verify_generator_order(new_group),
+                         "EC_Group generator does not have the claimed order");
+
          m_registered_curves.push_back(new_group);
          return new_group;
       }
@@ -323,12 +332,19 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::DER_decode_EC_group(st
       }
 
       // B must be > 0
+      //
+      // Technically this is not true but we have historically rejected this and
+      // nobody has noted it as an issue, so it is retained.
       if(b.signum() <= 0 || b >= p) {
          throw Decoding_Error("Invalid ECC b parameter");
       }
 
       if(order.signum() <= 0 || order >= 2 * p) {
          throw Decoding_Error("Invalid ECC group order");
+      }
+
+      if(p == order) {
+         throw Decoding_Error("Anomalous elliptic curves are not supported");
       }
 
       if(auto data = ec_group_data().lookup_from_params(p, a, b, base_pt, order, cofactor)) {
@@ -349,6 +365,16 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::DER_decode_EC_group(st
       auto mod_order = Barrett_Reduction::for_public_modulus(order);
       if(!is_bailie_psw_probable_prime(order, mod_order)) {
          throw Decoding_Error("Invalid ECC order parameter");
+      }
+
+      if((p - cofactor * order).abs().bits() > (p.bits() / 2) + 1) {
+         throw Decoding_Error("Invalid ECC Hasse bound");
+      }
+
+      const auto discriminant = mod_p.reduce(mod_p.multiply(BigInt::from_s32(4), mod_p.cube(a)) +
+                                             mod_p.multiply(BigInt::from_s32(27), mod_p.square(b)));
+      if(discriminant == 0) {
+         throw Decoding_Error("Invalid ECC curve discriminant");
       }
 
       const size_t p_bytes = p.bytes();
@@ -398,6 +424,11 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::DER_decode_EC_group(st
       * via the relevant EC_Group constructor
       */
       auto data = EC_Group_Data::create(p, a, b, g_x, g_y, order, cofactor, OID(), source);
+
+      if(!EC_Group::verify_generator_order(data)) {
+         throw Decoding_Error("ECC generator does not have the claimed order");
+      }
+
       return std::make_pair(data, true);
    } else if(next_obj_type == ASN1_Type::Null) {
       throw Decoding_Error("Decoding ImplicitCA ECC parameters is not supported");
@@ -417,6 +448,27 @@ EC_Group& EC_Group::operator=(const EC_Group&) = default;
 
 // Internal constructor
 EC_Group::EC_Group(std::shared_ptr<EC_Group_Data>&& data) : m_data(std::move(data)) {}
+
+//static
+bool EC_Group::verify_generator_order(std::shared_ptr<EC_Group_Data> data) {
+   const EC_Group group(std::move(data));
+
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+   if(group.engine() == EC_Group_Engine::Legacy) {
+      return (group.get_base_point() * group.get_order()).is_zero();
+   }
+#endif
+
+   auto g_pt = EC_AffinePoint::from_bigint_xy(group, group.get_g_x(), group.get_g_y());
+   if(!g_pt) {
+      return false;
+   }
+
+   Null_RNG null_rng;
+   const auto neg_one = EC_Scalar::one(group).negate();
+   const auto n_minus_one_g = EC_AffinePoint::g_mul(neg_one, null_rng);
+   return n_minus_one_g == g_pt->negate();
+}
 
 //static
 bool EC_Group::supports_named_group(std::string_view name) {
@@ -536,11 +588,17 @@ EC_Group::EC_Group(const BigInt& p,
    BOTAN_ARG_CHECK(base_x >= 0 && base_x < p, "EC_Group base_x is invalid");
    BOTAN_ARG_CHECK(base_y >= 0 && base_y < p, "EC_Group base_y is invalid");
 
+   BOTAN_ARG_CHECK(cofactor >= 1 && cofactor < 16, "EC_Group cofactor is invalid");
+
    auto mod_p = Barrett_Reduction::for_public_modulus(p);
    BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(p, mod_p), "EC_Group p is not prime");
 
    auto mod_order = Barrett_Reduction::for_public_modulus(order);
    BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(order, mod_order), "EC_Group order is not prime");
+
+   BOTAN_ARG_CHECK(p != order, "Anomalous elliptic curves are not supported");
+
+   BOTAN_ARG_CHECK((p - cofactor * order).abs().bits() <= (p.bits() / 2) + 1, "Hasse bound invalid");
 
    // Check that 4*a^3 + 27*b^2 != 0
    const auto discriminant = mod_p.reduce(mod_p.multiply(BigInt::from_s32(4), mod_p.cube(a)) +
@@ -612,6 +670,8 @@ EC_Group::EC_Group(const OID& oid,
 
    auto mod_order = Barrett_Reduction::for_public_modulus(order);
    BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(order, mod_order), "EC_Group order is not prime");
+
+   BOTAN_ARG_CHECK(p != order, "Anomalous elliptic curves are not supported");
 
    // This catches someone "ignoring" a cofactor and just trying to
    // provide the subgroup order
@@ -830,6 +890,9 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    if(p <= 3 || order <= 0) {
       return false;
    }
+   if(p == order) {
+      return false;
+   }
    if(a < 0 || a >= p) {
       return false;
    }
@@ -874,14 +937,8 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
       return false;
    }
 
-   // Check that the generator has the claimed order: [order]G == identity,
-   auto g_pt = EC_AffinePoint::from_bigint_xy(*this, get_g_x(), get_g_y());
-   if(!g_pt) {
-      return false;
-   }
-   const auto neg_one = EC_Scalar::one(*this).negate();
-   const auto n_minus_one_g = EC_AffinePoint::g_mul(neg_one, rng);
-   if(n_minus_one_g != g_pt->negate()) {
+   // Check that the generator has the claimed order: [order]G == identity
+   if(!EC_Group::verify_generator_order(m_data)) {
       return false;
    }
 

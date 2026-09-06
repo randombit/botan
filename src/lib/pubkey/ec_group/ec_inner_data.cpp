@@ -73,8 +73,25 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       der.encode(m_oid);
 
       if(const auto name = m_oid.registered_name()) {
-         // returns nullptr if unknown or not supported
-         m_pcurve = PCurve::PrimeOrderCurve::for_named_curve(*name);
+         if(auto pcurve = PCurve::PrimeOrderCurve::for_named_curve(*name)) {
+            const bool same_params = [&]() {
+               if(m_source == EC_Group_Source::Builtin) {
+                  return true;
+               }
+
+               if(const auto group_oid = OID::from_name(*name)) {
+                  if(const auto group_info = EC_Group::EC_group_info(*group_oid)) {
+                     return group_info->params_match(p, a, b, g_x, g_y, order, cofactor);
+                  }
+               }
+
+               return false;
+            }();
+
+            if(same_params) {
+               m_pcurve = std::move(pcurve);
+            }
+         }
       }
       if(m_pcurve) {
          m_engine = EC_Group_Engine::Optimized;

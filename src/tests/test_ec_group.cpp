@@ -11,6 +11,7 @@
 #if defined(BOTAN_HAS_ECC_GROUP)
    #include <botan/bigint.h>
    #include <botan/data_src.h>
+   #include <botan/der_enc.h>
    #include <botan/ec_group.h>
    #include <botan/hex.h>
    #include <botan/numthry.h>
@@ -30,6 +31,40 @@ namespace Botan_Tests {
 namespace {
 
 #if defined(BOTAN_HAS_ECC_GROUP)
+
+std::vector<uint8_t> encode_explicit_group(const Botan::BigInt& p,
+                                           const Botan::BigInt& a,
+                                           const Botan::BigInt& b,
+                                           const Botan::BigInt& base_x,
+                                           const Botan::BigInt& base_y,
+                                           const Botan::BigInt& order,
+                                           const Botan::BigInt& cofactor) {
+   const size_t p_bytes = p.bytes();
+   std::vector<uint8_t> base_point = {0x04};
+   const auto x_bytes = base_x.serialize(p_bytes);
+   const auto y_bytes = base_y.serialize(p_bytes);
+   base_point.insert(base_point.end(), x_bytes.begin(), x_bytes.end());
+   base_point.insert(base_point.end(), y_bytes.begin(), y_bytes.end());
+
+   std::vector<uint8_t> output;
+   Botan::DER_Encoder(output)
+      .start_sequence()
+      .encode(size_t(1))
+      .start_sequence()
+      .encode(Botan::OID("1.2.840.10045.1.1"))
+      .encode(p)
+      .end_cons()
+      .start_sequence()
+      .encode(a.serialize(p_bytes), Botan::ASN1_Type::OctetString)
+      .encode(b.serialize(p_bytes), Botan::ASN1_Type::OctetString)
+      .end_cons()
+      .encode(base_point, Botan::ASN1_Type::OctetString)
+      .encode(order)
+      .encode(cofactor)
+      .end_cons();
+
+   return output;
+}
 
    #if defined(BOTAN_HAS_LEGACY_EC_POINT)
 
@@ -474,7 +509,9 @@ class EC_Group_Registration_Tests final : public Test {
             results.push_back(test_ec_group_bad_registration());
             results.push_back(test_ec_group_off_curve_generator());
             results.push_back(test_ec_group_duplicate_orders());
+            results.push_back(test_ec_group_incorrect_order());
             results.push_back(test_ec_group_registration_with_custom_oid());
+            results.push_back(test_ec_group_registration_with_mismatched_custom_oid());
             results.push_back(test_ec_group_alias_oid_cache());
             results.push_back(test_ec_group_unregistration());
             results.push_back(test_supports_named_group_with_registration());
@@ -665,6 +702,131 @@ class EC_Group_Registration_Tests final : public Test {
             result.test_failure("Group with custom OID did not get a pcurve pointer");
          }
    #endif
+
+         return result;
+      }
+
+      Test::Result test_ec_group_incorrect_order() {
+         Test::Result result("EC_Group rejects incorrect generator order");
+
+         Botan::EC_Group::clear_registered_curve_data();
+
+         const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
+         const Botan::BigInt wrong_order("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC6325EB");
+
+         result.test_throws<Botan::Invalid_Argument>(
+            "Custom group with incorrect order is rejected", "generator does not have the claimed order", [&] {
+               static_cast<void>(Botan::EC_Group(Botan::OID("1.3.6.1.4.1.25258.100.101"),
+                                                 secp256r1.get_p(),
+                                                 secp256r1.get_a(),
+                                                 secp256r1.get_b(),
+                                                 secp256r1.get_g_x(),
+                                                 secp256r1.get_g_y(),
+                                                 wrong_order));
+            });
+
+         const auto wrong_order_der = encode_explicit_group(secp256r1.get_p(),
+                                                            secp256r1.get_a(),
+                                                            secp256r1.get_b(),
+                                                            secp256r1.get_g_x(),
+                                                            secp256r1.get_g_y(),
+                                                            wrong_order,
+                                                            1);
+         result.test_throws<Botan::Decoding_Error>("Explicit group with incorrect order is rejected",
+                                                   "generator does not have the claimed order",
+                                                   [&] { static_cast<void>(Botan::EC_Group(wrong_order_der)); });
+
+         result.test_throws<Botan::Invalid_Argument>(
+            "Custom anomalous group is rejected", "Anomalous elliptic curves are not supported", [&] {
+               static_cast<void>(Botan::EC_Group(Botan::OID("1.3.6.1.4.1.25258.100.102"),
+                                                 secp256r1.get_p(),
+                                                 secp256r1.get_a(),
+                                                 secp256r1.get_b(),
+                                                 secp256r1.get_g_x(),
+                                                 secp256r1.get_g_y(),
+                                                 secp256r1.get_p()));
+            });
+
+         result.test_throws<Botan::Invalid_Argument>(
+            "Deprecated constructor rejects anomalous group", "Anomalous elliptic curves are not supported", [&] {
+               static_cast<void>(Botan::EC_Group(secp256r1.get_p(),
+                                                 secp256r1.get_a(),
+                                                 secp256r1.get_b(),
+                                                 secp256r1.get_g_x(),
+                                                 secp256r1.get_g_y(),
+                                                 secp256r1.get_p(),
+                                                 1));
+            });
+
+         const auto anomalous_der = encode_explicit_group(secp256r1.get_p(),
+                                                          secp256r1.get_a(),
+                                                          secp256r1.get_b(),
+                                                          secp256r1.get_g_x(),
+                                                          secp256r1.get_g_y(),
+                                                          secp256r1.get_p(),
+                                                          1);
+         result.test_throws<Botan::Decoding_Error>("Explicit anomalous group is rejected",
+                                                   "Anomalous elliptic curves are not supported",
+                                                   [&] { static_cast<void>(Botan::EC_Group(anomalous_der)); });
+
+         const auto invalid_hasse_der = encode_explicit_group(
+            secp256r1.get_p(), secp256r1.get_a(), secp256r1.get_b(), secp256r1.get_g_x(), secp256r1.get_g_y(), 2, 1);
+         result.test_throws<Botan::Decoding_Error>("Explicit group outside the Hasse bound is rejected",
+                                                   "Invalid ECC Hasse bound",
+                                                   [&] { static_cast<void>(Botan::EC_Group(invalid_hasse_der)); });
+
+         const auto singular_der =
+            encode_explicit_group(secp256r1.get_p(), secp256r1.get_p() - 3, 2, 1, 0, secp256r1.get_order(), 1);
+         result.test_throws<Botan::Decoding_Error>("Explicit singular curve is rejected",
+                                                   "Invalid ECC curve discriminant",
+                                                   [&] { static_cast<void>(Botan::EC_Group(singular_der)); });
+
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
+         // y^2 = x^3 + 1 over this p has 6*q points. G generates the
+         // prime-order q subgroup and the differing bit lengths force use of
+         // the legacy backend.
+         const Botan::BigInt legacy_p("0x600000000000000000000000000005ED");
+         const Botan::BigInt legacy_q("0x100000000000000000000000000000FD");
+         const Botan::BigInt legacy_g_x("0x49140B0575E552D007C01F9A6464B5F3");
+         const Botan::BigInt legacy_g_y("0x234D45F598F8C9260BA56DB89BAB9D7B");
+
+         result.test_no_throw("Valid small cofactor group is accepted", [&] {
+            static_cast<void>(Botan::EC_Group(legacy_p, 0, 1, legacy_g_x, legacy_g_y, legacy_q, 6));
+         });
+         result.test_throws<Botan::Invalid_Argument>(
+            "Legacy group with incorrect order is rejected", "generator does not have the claimed order", [&] {
+               const Botan::BigInt wrong_legacy_q("0x100000000000000000000000000001E7");
+               static_cast<void>(Botan::EC_Group(legacy_p, 0, 1, legacy_g_x, legacy_g_y, wrong_legacy_q, 6));
+            });
+   #endif
+
+         return result;
+      }
+
+      Test::Result test_ec_group_registration_with_mismatched_custom_oid() {
+         Test::Result result("EC_Group registration of non-standard group with aliased OID");
+
+         Botan::EC_Group::clear_registered_curve_data();
+
+         const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
+         const Botan::OID custom_oid("1.3.6.1.4.1.25258.100.100");
+
+         Botan::OID::register_oid(custom_oid, "secp256r1");
+
+         // The next prime after secp256r1's order. This satisfies the constructor's
+         // structural checks, but it is not the order of secp256r1's generator.
+         const Botan::BigInt wrong_order("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC6325EB");
+
+         result.test_throws<Botan::Invalid_Argument>(
+            "Mismatched parameters are rejected", "generator does not have the claimed order", [&] {
+               static_cast<void>(Botan::EC_Group(custom_oid,
+                                                 secp256r1.get_p(),
+                                                 secp256r1.get_a(),
+                                                 secp256r1.get_b(),
+                                                 secp256r1.get_g_x(),
+                                                 secp256r1.get_g_y(),
+                                                 wrong_order));
+            });
 
          return result;
       }
