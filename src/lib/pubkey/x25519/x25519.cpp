@@ -161,8 +161,8 @@ namespace {
 */
 class X25519_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
    public:
-      X25519_KA_Operation(std::shared_ptr<const X25519_PrivateKey_Data> key, std::string_view kdf) :
-            PK_Ops::Key_Agreement_with_KDF(kdf), m_key(std::move(key)) {}
+      X25519_KA_Operation(std::shared_ptr<const X25519_PrivateKey_Data> key, const PK_Key_Agreement_Options& options) :
+            PK_Ops::Key_Agreement_with_KDF(options), m_key(std::move(key)) {}
 
       size_t agreed_value_size() const override { return 32; }
 
@@ -192,13 +192,12 @@ class X25519_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Key_Agreement> X25519_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
-                                                                                  std::string_view params,
-                                                                                  std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<X25519_KA_Operation>(m_private, params);
+std::unique_ptr<PK_Ops::Key_Agreement> X25519_PrivateKey::_create_key_agreement_op(
+   RandomNumberGenerator& /*rng*/, const PK_Key_Agreement_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<X25519_KA_Operation>(m_private, options);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan

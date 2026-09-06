@@ -7,6 +7,7 @@
 #ifndef BOTAN_PK_OPTIONS_IMPL_H_
 #define BOTAN_PK_OPTIONS_IMPL_H_
 
+#include <botan/exceptn.h>
 #include <botan/pk_options.h>
 #include <optional>
 #include <string>
@@ -17,6 +18,12 @@ namespace Botan {
 class Public_Key;
 
 PK_Signature_Options parse_legacy_sig_options(const Public_Key& key, std::string_view params);
+
+PK_Encryption_Options parse_legacy_enc_options(const Public_Key& key, std::string_view params);
+
+PK_KEM_Options parse_legacy_kem_options(std::string_view params);
+
+PK_Key_Agreement_Options parse_legacy_ka_options(std::string_view params);
 
 /**
 * For schemes where the hash function is fixed by the key (XMSS, SLH-DSA, ...)
@@ -37,6 +44,23 @@ void validate_for_hash_based_signature(const PK_Signature_Options& options,
 * Must only be called if using_externally_computed_prehash() is true.
 */
 std::optional<std::string> externally_computed_prehash_name(const PK_Signature_Options& options);
+
+/**
+* For keys held in hardware (PKCS #11, TPM)
+*
+* Such keys have exactly one implementation, so the provider option must be
+* unset or name that provider. In particular "base", which names the software
+* implementation, is not available for them.
+*
+* @throws Provider_Not_Found otherwise
+*/
+template <typename OptionsT>
+void require_hardware_provider(const OptionsT& options, std::string_view algo_name, std::string_view provider_name) {
+   const auto& provider = options.provider();
+   if(provider.has_value() && *provider != provider_name) {
+      throw Provider_Not_Found(algo_name, *provider);
+   }
+}
 
 /**
 * For schemes whose signatures are always deterministic

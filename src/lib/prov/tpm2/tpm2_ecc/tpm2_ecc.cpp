@@ -10,6 +10,7 @@
 
 #include <botan/pk_options.h>
 #include <botan/internal/concat_util.h>
+#include <botan/internal/pk_options_impl.h>
 #include <botan/internal/tpm2_algo_mappings.h>
 #include <botan/internal/tpm2_pkops.h>
 #include <botan/internal/tpm2_util.h>
@@ -247,18 +248,14 @@ class EC_Verification_Operation final : public Verification_Operation {
 }  // namespace
 
 std::unique_ptr<PK_Ops::Verification> EC_PublicKey::_create_verification_op(const PK_Signature_Options& options) const {
-   if(options.using_provider() && options.provider().value() != "tpm2") {
-      throw Provider_Not_Found(algo_name(), options.provider().value());
-   }
+   require_hardware_provider(options, algo_name(), "tpm2");
    return std::make_unique<EC_Verification_Operation>(handles(), sessions(), options);
 }
 
 std::unique_ptr<PK_Ops::Signature> EC_PrivateKey::_create_signature_op(Botan::RandomNumberGenerator& rng,
                                                                        const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-   if(options.using_provider() && options.provider().value() != "tpm2") {
-      throw Provider_Not_Found(algo_name(), options.provider().value());
-   }
+   require_hardware_provider(options, algo_name(), "tpm2");
    return std::make_unique<EC_Signature_Operation>(handles(), sessions(), options);
 }
 

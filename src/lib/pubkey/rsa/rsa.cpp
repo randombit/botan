@@ -703,8 +703,10 @@ AlgorithmIdentifier RSA_Signature_Operation::algorithm_identifier() const {
 class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_Padding,
                                        private RSA_Private_Operation {
    public:
-      RSA_Decryption_Operation(const RSA_PrivateKey& rsa, std::string_view padding, RandomNumberGenerator& rng) :
-            PK_Ops::Decryption_with_Padding(padding), RSA_Private_Operation(rsa, rng) {}
+      RSA_Decryption_Operation(const RSA_PrivateKey& rsa,
+                               const PK_Encryption_Options& options,
+                               RandomNumberGenerator& rng) :
+            PK_Ops::Decryption_with_Padding(options), RSA_Private_Operation(rsa, rng) {}
 
       size_t plaintext_length(size_t /*ctext_len*/) const override { return public_modulus_bytes(); }
 
@@ -729,8 +731,11 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_Padding,
 class RSA_KEM_Decryption_Operation final : public PK_Ops::KEM_Decryption_with_KDF,
                                            private RSA_Private_Operation {
    public:
-      RSA_KEM_Decryption_Operation(const RSA_PrivateKey& key, std::string_view kdf, RandomNumberGenerator& rng) :
-            PK_Ops::KEM_Decryption_with_KDF(kdf), RSA_Private_Operation(key, rng) {}
+      RSA_KEM_Decryption_Operation(const RSA_PrivateKey& key,
+                                   const PK_KEM_Options& options,
+                                   RandomNumberGenerator& rng) :
+            PK_Ops::KEM_Decryption_with_KDF(options, PK_Ops::RawKemSharedKey::RequiresKDF),
+            RSA_Private_Operation(key, rng) {}
 
       size_t raw_kem_shared_key_length() const override { return public_modulus_bytes(); }
 
@@ -782,8 +787,8 @@ class RSA_Public_Operation {
 class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_Padding,
                                        private RSA_Public_Operation {
    public:
-      RSA_Encryption_Operation(const RSA_PublicKey& rsa, std::string_view padding) :
-            PK_Ops::Encryption_with_Padding(padding), RSA_Public_Operation(rsa) {}
+      RSA_Encryption_Operation(const RSA_PublicKey& rsa, const PK_Encryption_Options& options) :
+            PK_Ops::Encryption_with_Padding(options), RSA_Public_Operation(rsa) {}
 
       size_t ciphertext_length(size_t /*ptext_len*/) const override { return public_modulus_bytes(); }
 
@@ -830,8 +835,8 @@ class RSA_Verify_Operation final : public PK_Ops::Verification,
 class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KDF,
                                            private RSA_Public_Operation {
    public:
-      RSA_KEM_Encryption_Operation(const RSA_PublicKey& key, std::string_view kdf) :
-            PK_Ops::KEM_Encryption_with_KDF(kdf), RSA_Public_Operation(key) {}
+      RSA_KEM_Encryption_Operation(const RSA_PublicKey& key, const PK_KEM_Options& options) :
+            PK_Ops::KEM_Encryption_with_KDF(options, PK_Ops::RawKemSharedKey::RequiresKDF), RSA_Public_Operation(key) {}
 
    private:
       size_t raw_kem_shared_key_length() const override { return public_modulus_bytes(); }
@@ -851,21 +856,20 @@ class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KD
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Encryption> RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
-                                                                        std::string_view params,
-                                                                        std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<RSA_Encryption_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Encryption> RSA_PublicKey::_create_encryption_op(RandomNumberGenerator& rng,
+                                                                         const PK_Encryption_Options& options) const {
+   BOTAN_UNUSED(rng);
+   if(!options.using_provider()) {
+      return std::make_unique<RSA_Encryption_Operation>(*this, options);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
-std::unique_ptr<PK_Ops::KEM_Encryption> RSA_PublicKey::create_kem_encryption_op(std::string_view params,
-                                                                                std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<RSA_KEM_Encryption_Operation>(*this, params);
+std::unique_ptr<PK_Ops::KEM_Encryption> RSA_PublicKey::_create_kem_encryption_op(const PK_KEM_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<RSA_KEM_Encryption_Operation>(*this, options);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::_create_verification_op(
@@ -952,24 +956,22 @@ std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::create_x509_verification_op
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Decryption> RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
-                                                                         std::string_view params,
-                                                                         std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<RSA_Decryption_Operation>(*this, params, rng);
+std::unique_ptr<PK_Ops::Decryption> RSA_PrivateKey::_create_decryption_op(RandomNumberGenerator& rng,
+                                                                          const PK_Encryption_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<RSA_Decryption_Operation>(*this, options, rng);
    }
 
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
-std::unique_ptr<PK_Ops::KEM_Decryption> RSA_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& rng,
-                                                                                 std::string_view params,
-                                                                                 std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<RSA_KEM_Decryption_Operation>(*this, params, rng);
+std::unique_ptr<PK_Ops::KEM_Decryption> RSA_PrivateKey::_create_kem_decryption_op(RandomNumberGenerator& rng,
+                                                                                  const PK_KEM_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<RSA_KEM_Decryption_Operation>(*this, options, rng);
    }
 
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Signature> RSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,

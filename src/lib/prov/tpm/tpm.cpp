@@ -377,9 +377,7 @@ class TPM_Signing_Operation final : public PK_Ops::Signature {
 std::unique_ptr<PK_Ops::Signature> TPM_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
                                                                         const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-   if(options.using_provider() && options.provider().value() != "tpm") {
-      throw Provider_Not_Found(algo_name(), options.provider().value());
-   }
+   require_hardware_provider(options, algo_name(), "tpm");
    // Historically only a hash was specified, in which case PKCS1v15 is implied
    if(options.using_padding() && options.padding().value() != "PKCS1v15") {
       throw Invalid_Argument("TPMv1 can only sign using PKCS1v15 padding");

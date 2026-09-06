@@ -104,9 +104,9 @@ namespace {
 class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
    public:
       DH_KA_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
-                      std::string_view kdf,
+                      const PK_Key_Agreement_Options& options,
                       RandomNumberGenerator& rng) :
-            PK_Ops::Key_Agreement_with_KDF(kdf),
+            PK_Ops::Key_Agreement_with_KDF(options),
             m_key(key),
             m_key_bits(m_key->private_key().bits()),
             m_blinder(
@@ -145,13 +145,12 @@ secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_le
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Key_Agreement> DH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
-                                                                              std::string_view params,
-                                                                              std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<DH_KA_Operation>(this->m_private_key, params, rng);
+std::unique_ptr<PK_Ops::Key_Agreement> DH_PrivateKey::_create_key_agreement_op(
+   RandomNumberGenerator& rng, const PK_Key_Agreement_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<DH_KA_Operation>(this->m_private_key, options, rng);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan

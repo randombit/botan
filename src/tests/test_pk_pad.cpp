@@ -24,10 +24,8 @@ class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
 
          Test::Result result("PKCSv15 Decoding");
 
-         auto pkcs = Botan::EncryptionPaddingScheme::create("PKCS1v15");
-         if(!pkcs) {
-            return result;
-         }
+         auto pkcs =
+            Botan::EncryptionPaddingScheme::create_or_throw(Botan::PK_Encryption_Options().with_padding("PKCS1v15"));
 
          const std::vector<uint8_t> ciphertext = vars.get_req_bin("RawCiphertext");
          const std::vector<uint8_t> plaintext = vars.get_opt_bin("Plaintext");

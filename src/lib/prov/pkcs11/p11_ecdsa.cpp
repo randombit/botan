@@ -216,18 +216,14 @@ class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification {
 
 std::unique_ptr<PK_Ops::Verification> PKCS11_ECDSA_PublicKey::_create_verification_op(
    const PK_Signature_Options& options) const {
-   if(options.using_provider() && options.provider().value() != "pkcs11") {
-      throw Provider_Not_Found(algo_name(), options.provider().value());
-   }
+   require_hardware_provider(options, algo_name(), "pkcs11");
    return std::make_unique<PKCS11_ECDSA_Verification_Operation>(*this, options);
 }
 
 std::unique_ptr<PK_Ops::Signature> PKCS11_ECDSA_PrivateKey::_create_signature_op(
    RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-   if(options.using_provider() && options.provider().value() != "pkcs11") {
-      throw Provider_Not_Found(algo_name(), options.provider().value());
-   }
+   require_hardware_provider(options, algo_name(), "pkcs11");
    return std::make_unique<PKCS11_ECDSA_Signature_Operation>(*this, options);
 }
 

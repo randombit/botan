@@ -1,0 +1,18 @@
+# Tests for PK_Key_Agreement_Options validation
+#
+# For each scheme, two keys are generated using KeyParams. The agreed value is
+# never a uniform key, so every scheme must reject the default options, and
+# must accept both with_kdf and with_raw_shared_key (which must produce
+# different shared keys, ie the option takes effect).
+
+[ECDH]
+KeyParams = secp256r1
+
+[DH]
+KeyParams = modp/ietf/2048
+
+[X25519]
+KeyParams =
+
+[X448]
+KeyParams =
