@@ -97,7 +97,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @warning Support for explicitly encoded curve parameters is deprecated.
       * An OID must be assigned.
       */
-      BOTAN_DEPRECATED("Use alternate constructor")
+      BOTAN_DEPRECATED("Use EC_Group::register_custom_group")
       EC_Group(const BigInt& p,
                const BigInt& a,
                const BigInt& b,
@@ -111,6 +111,12 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * Construct elliptic curve from the specified parameters
       *
       * This is used for example to create custom (application-specific) curves.
+      *
+      * This constructor registers these parameters within the persistent state
+      * of the library; for example once this call completes, an ECDSA key
+      * specifying its namedCurve matching the provided OID can be decoded, and
+      * this remains true even after the EC_Group created has been destroyed.
+      * If necessary you can unregister the group using EC_Group::unregister.
       *
       * Some build configurations do not support application specific curves, in
       * which case this constructor will throw an exception. You can check for
@@ -148,6 +154,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @param base_y the y coordinate of the group generator
       * @param order the order of the group
       */
+      BOTAN_DEPRECATED("Use EC_Group::register_custom_group")
       EC_Group(const OID& oid,
                const BigInt& p,
                const BigInt& a,
@@ -155,6 +162,61 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
                const BigInt& base_x,
                const BigInt& base_y,
                const BigInt& order);
+
+      /**
+      * Construct elliptic curve from the specified parameters
+      *
+      * This is used for example to create custom (application-specific) curves.
+      *
+      * This function registers these parameters within the persistent state
+      * of the library; for example once this call completes, an ECDSA key
+      * specifying its namedCurve matching the provided OID can be decoded, and
+      * this remains true even after the EC_Group returned here has been destroyed.
+      * If necessary you can unregister the group using EC_Group::unregister.
+      *
+      * Some build configurations do not support application specific curves, in
+      * which case this constructor will throw an exception. You can check for
+      * this situation beforehand using the function
+      * EC_Group::supports_application_specific_group()
+      *
+      * Unlike the deprecated constructor, this constructor imposes additional
+      * restrictions on the parameters, namely:
+      *
+      *  - An object identifier must be provided
+      *
+      *  - The prime must be at least 192 bits and at most 512 bits, and a multiple
+      *    of 32 bits. Currently, as long as BOTAN_DISABLE_DEPRECATED_FEATURES is not
+      *    set, this constructor accepts primes as small as 128 bits - this lower
+      *    bound will be removed in the next major release.
+      *
+      *  - As an extension of the above restriction, the prime can also be exactly
+      *    the 521-bit Mersenne prime (2**521-1) or exactly the 239-bit prime used in
+      *    X9.62 239 bit groups (2**239 - 2**143 - 2**95 + 2**47 - 1)
+      *
+      *  - The prime must be congruent to 3 modulo 4
+      *
+      *  - The group order must have the same bit length as the prime. It is allowed
+      *    for the order to be larger than p, but they must have the same bit length.
+      *
+      *  - Only prime order curves (with cofactor == 1) are allowed
+      *
+      * @warning use only elliptic curve parameters that you trust
+      *
+      * @param oid an object identifier used to identify this curve
+      * @param p the elliptic curve prime (at most 521 bits)
+      * @param a the elliptic curve a param
+      * @param b the elliptic curve b param
+      * @param base_x the x coordinate of the group generator
+      * @param base_y the y coordinate of the group generator
+      * @param order the order of the group
+      */
+      static EC_Group register_custom_group(const OID& oid,
+                                            const BigInt& p,
+                                            const BigInt& a,
+                                            const BigInt& b,
+                                            const BigInt& base_x,
+                                            const BigInt& base_y,
+                                            const BigInt& order);
 
       /**
       * Decode a DER encoded ECC domain parameter set

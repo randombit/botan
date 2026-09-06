@@ -61,7 +61,7 @@ int botan_ec_group_from_params(botan_ec_group_t* ec_group,
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
 
-      Botan::EC_Group group(
+      auto group = Botan::EC_Group::register_custom_group(
          safe_get(oid), safe_get(p), safe_get(a), safe_get(b), safe_get(base_x), safe_get(base_y), safe_get(order));
 
       auto group_ptr = std::make_unique<Botan::EC_Group>(std::move(group));

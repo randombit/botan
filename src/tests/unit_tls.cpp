@@ -2126,7 +2126,7 @@ class TLS_Unit_Tests final : public Test {
             Botan::OID::register_oid(oid, "numsp256d1");
 
             // Creating this object implicitly registers the curve for future use ...
-            const Botan::EC_Group reg_numsp256d1(oid, p, a, b, g_x, g_y, order);
+            const auto group = Botan::EC_Group::register_custom_group(oid, p, a, b, g_x, g_y, order);
 
             test_modern_versions("AES-256/GCM numsp256d1",
                                  results,

@@ -139,7 +139,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> c0 = vars.get_req_bin("C0");  // expected encoded (ephemeral) public key
          const std::vector<uint8_t> k = vars.get_req_bin("K");    // expected derived secret
 
-         const Botan::EC_Group domain(oid, p, a, b, gx, gy, order);
+         const auto domain = Botan::EC_Group::register_custom_group(oid, p, a, b, gx, gy, order);
 
          // keys of bob
          const Botan::ECDH_PrivateKey other_private_key(this->rng(), domain, x);

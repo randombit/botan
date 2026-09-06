@@ -237,13 +237,13 @@ class EC_Group_Tests : public Test {
             result.test_is_true("Same group is same", group == Botan::EC_Group::from_name(group_name));
 
             try {
-               const Botan::EC_Group copy(group.get_curve_oid(),
-                                          group.get_p(),
-                                          group.get_a(),
-                                          group.get_b(),
-                                          group.get_g_x(),
-                                          group.get_g_y(),
-                                          group.get_order());
+               const auto copy = Botan::EC_Group::register_custom_group(group.get_curve_oid(),
+                                                                        group.get_p(),
+                                                                        group.get_a(),
+                                                                        group.get_b(),
+                                                                        group.get_g_x(),
+                                                                        group.get_g_y(),
+                                                                        group.get_order());
 
                result.test_is_true("Same group is same even with copy", group == copy);
             } catch(Botan::Invalid_Argument&) {}
@@ -536,7 +536,7 @@ class EC_Group_Registration_Tests final : public Test {
          const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
 
          // Creating this object implicitly registers the curve for future use ...
-         const Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
+         const auto reg_group = Botan::EC_Group::register_custom_group(oid, p, a, b, g_x, g_y, order);
 
          auto group = Botan::EC_Group::from_OID(oid);
 
@@ -589,7 +589,7 @@ class EC_Group_Registration_Tests final : public Test {
          const Botan::OID oid("1.2.840.10045.3.1.7");
 
          try {
-            const Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
+            const auto reg_group = Botan::EC_Group::register_custom_group(oid, p, a, b, g_x, g_y, order);
             result.test_failure("Should have failed");
          } catch(Botan::Invalid_Argument&) {
             result.test_success("Got expected exception");
@@ -640,7 +640,7 @@ class EC_Group_Registration_Tests final : public Test {
 
          const Botan::OID oid("1.3.6.1.4.1.25258.100.0");  // some other random OID
 
-         const Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
+         const auto reg_group = Botan::EC_Group::register_custom_group(oid, p, a, b, g_x, g_y, order);
          result.test_success("Registration success");
          result.test_is_true("Group has correct OID", reg_group.get_curve_oid() == oid);
 
@@ -669,13 +669,13 @@ class EC_Group_Registration_Tests final : public Test {
 
          Botan::OID::register_oid(custom_oid, "secp256r1");
 
-         const Botan::EC_Group reg_group(custom_oid,
-                                         secp256r1.get_p(),
-                                         secp256r1.get_a(),
-                                         secp256r1.get_b(),
-                                         secp256r1.get_g_x(),
-                                         secp256r1.get_g_y(),
-                                         secp256r1.get_order());
+         const auto reg_group = Botan::EC_Group::register_custom_group(custom_oid,
+                                                                       secp256r1.get_p(),
+                                                                       secp256r1.get_a(),
+                                                                       secp256r1.get_b(),
+                                                                       secp256r1.get_g_x(),
+                                                                       secp256r1.get_g_y(),
+                                                                       secp256r1.get_order());
 
          result.test_success("Registration success");
          result.test_is_true("Group has correct OID", reg_group.get_curve_oid() == custom_oid);
@@ -854,7 +854,7 @@ class EC_Group_Registration_Tests final : public Test {
          const Botan::BigInt g_x("0x01");
          const Botan::BigInt g_y("0x696F1853C1E466D7FC82C96CCEEEDD6BD02C2F9375894EC10BF46306C2B56C77");
 
-         const Botan::EC_Group reg_group(custom_oid, p, a, b, g_x, g_y, order);
+         const auto reg_group = Botan::EC_Group::register_custom_group(custom_oid, p, a, b, g_x, g_y, order);
 
          result.test_is_true("After registration the custom name is supported",
                              Botan::EC_Group::supports_named_group(custom_name));
@@ -930,13 +930,13 @@ class EC_Group_Registration_Tests final : public Test {
          const Botan::OID custom_oid("1.3.6.1.4.1.25258.100.99");
          Botan::OID::register_oid(custom_oid, "secp256r1");
 
-         const Botan::EC_Group reg_group(custom_oid,
-                                         secp256r1.get_p(),
-                                         secp256r1.get_a(),
-                                         secp256r1.get_b(),
-                                         secp256r1.get_g_x(),
-                                         secp256r1.get_g_y(),
-                                         secp256r1.get_order());
+         const auto reg_group = Botan::EC_Group::register_custom_group(custom_oid,
+                                                                       secp256r1.get_p(),
+                                                                       secp256r1.get_a(),
+                                                                       secp256r1.get_b(),
+                                                                       secp256r1.get_g_x(),
+                                                                       secp256r1.get_g_y(),
+                                                                       secp256r1.get_order());
 
          const Botan::EC_Group group_from_oid = Botan::EC_Group::from_OID(custom_oid);
 

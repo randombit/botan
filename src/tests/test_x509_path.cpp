@@ -1903,7 +1903,7 @@ class CVE_2020_0601_Tests final : public Test {
 
          const auto& secp384r1 = Botan::EC_Group::from_name("secp384r1");
          const Botan::OID curveball_oid("1.3.6.1.4.1.25258.4.2020.0601");
-         const Botan::EC_Group curveball(
+         const auto curveball = Botan::EC_Group::register_custom_group(
             curveball_oid,
             secp384r1.get_p(),
             secp384r1.get_a(),

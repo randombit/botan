@@ -120,7 +120,7 @@ int main() {
    const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
 
    // create EC_Group object to register the curve
-   const Botan::EC_Group numsp256d1(oid, p, a, b, g_x, g_y, n);
+   const auto numsp256d1 = Botan::EC_Group::register_custom_group(oid, p, a, b, g_x, g_y, n);
 
    if(!numsp256d1.verify_group(*rng)) {
       return 1;
