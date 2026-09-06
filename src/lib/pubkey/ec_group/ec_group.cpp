@@ -625,7 +625,17 @@ EC_Group::EC_Group(const OID& oid,
                    const BigInt& b,
                    const BigInt& base_x,
                    const BigInt& base_y,
-                   const BigInt& order) {
+                   const BigInt& order) :
+      EC_Group(std::move(EC_Group::register_custom_group(oid, p, a, b, base_x, base_y, order).m_data)) {}
+
+//static
+EC_Group EC_Group::register_custom_group(const OID& oid,
+                                         const BigInt& p,
+                                         const BigInt& a,
+                                         const BigInt& b,
+                                         const BigInt& base_x,
+                                         const BigInt& base_y,
+                                         const BigInt& order) {
    BOTAN_ARG_CHECK(oid.has_value(), "An OID is required for creating an EC_Group");
 
    // TODO(Botan4) remove this and require 192 bits minimum
@@ -689,8 +699,8 @@ EC_Group::EC_Group(const OID& oid,
 
    const BigInt cofactor(1);
 
-   m_data =
-      ec_group_data().lookup_or_create(p, a, b, base_x, base_y, order, cofactor, oid, EC_Group_Source::ExternalSource);
+   return EC_Group(
+      ec_group_data().lookup_or_create(p, a, b, base_x, base_y, order, cofactor, oid, EC_Group_Source::ExternalSource));
 }
 
 EC_Group::EC_Group(std::span<const uint8_t> der) {

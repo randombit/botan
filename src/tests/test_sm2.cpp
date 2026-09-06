@@ -32,10 +32,10 @@ std::unique_ptr<Botan::Private_Key> load_sm2_private_key(const VarMap& vars) {
    const BigInt x = vars.get_req_bn("x");
    const Botan::OID oid = Botan::OID(vars.get_req_str("Oid"));
 
-   const Botan::EC_Group domain(oid, p, a, b, xG, yG, order);
+   const auto group = Botan::EC_Group::register_custom_group(oid, p, a, b, xG, yG, order);
 
    Botan::Null_RNG null_rng;
-   return std::make_unique<Botan::SM2_PrivateKey>(null_rng, domain, x);
+   return std::make_unique<Botan::SM2_PrivateKey>(null_rng, group, x);
 }
 
 class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
