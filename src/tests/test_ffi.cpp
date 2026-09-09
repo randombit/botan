@@ -22,12 +22,18 @@
    #include <botan/internal/loadstor.h>
    #include <botan/internal/stl_util.h>
    #include <botan/internal/target_info.h>
+   #include <algorithm>
    #include <set>
 #endif
 
 #if defined(BOTAN_HAS_X509)
+   #include <botan/pk_algs.h>
+   #include <botan/pk_keys.h>
    #include <botan/pkix_enums.h>
    #include <botan/pkix_types.h>
+   #include <botan/rng.h>
+   #include <botan/x509_ext.h>
+   #include <botan/x509self.h>
 #endif
 
 #if defined(BOTAN_HAS_TPM2)
@@ -1323,35 +1329,31 @@ auto read_distinguished_name(std::span<const uint8_t> bytes) {
    return dn;
 }
 
+template <std::invocable<botan_x509_cert_t, size_t, botan_x509_general_name_t*> EnumeratorT,
+          std::invocable<botan_x509_cert_t, size_t*> CountFnT,
+          std::invocable<botan_x509_general_name_t> VisitorT>
+void visit_general_names(
+   Test::Result& result, botan_x509_cert_t cert, EnumeratorT enumerator_fn, CountFnT count_fn, VisitorT visitor_fn) {
+   int rc = BOTAN_FFI_SUCCESS;
+   for(size_t i = 0; rc == BOTAN_FFI_SUCCESS; ++i) {
+      botan_x509_general_name_t gn;
+      rc = enumerator_fn(cert, i, &gn);
+      if(rc == BOTAN_FFI_SUCCESS) {
+         visitor_fn(gn);
+         TEST_FFI_OK(botan_x509_general_name_destroy, (gn));
+      } else if(rc == BOTAN_FFI_ERROR_OUT_OF_RANGE) {
+         // Now check we are at the expected index
+         size_t count;
+         TEST_FFI_OK(count_fn, (cert, &count));
+         result.test_sz_eq("enumerator reached end at expected index", i, count);
+      } else {
+         result.test_note(Botan::fmt("enumerator produced unexpected return code: {}", botan_error_description(rc)));
+      }
+   }
+}
+
 class FFI_Cert_AlternativeNames_Test final : public FFI_Test {
    private:
-      template <std::invocable<botan_x509_cert_t, size_t, botan_x509_general_name_t*> EnumeratorT,
-                std::invocable<botan_x509_cert_t, size_t*> CountFnT,
-                std::invocable<botan_x509_general_name_t> VisitorT>
-      static void visit_general_names(Test::Result& result,
-                                      botan_x509_cert_t cert,
-                                      EnumeratorT enumerator_fn,
-                                      CountFnT count_fn,
-                                      VisitorT visitor_fn) {
-         int rc = BOTAN_FFI_SUCCESS;
-         for(size_t i = 0; rc == BOTAN_FFI_SUCCESS; ++i) {
-            botan_x509_general_name_t gn;
-            rc = enumerator_fn(cert, i, &gn);
-            if(rc == BOTAN_FFI_SUCCESS) {
-               visitor_fn(gn);
-               TEST_FFI_OK(botan_x509_general_name_destroy, (gn));
-            } else if(rc == BOTAN_FFI_ERROR_OUT_OF_RANGE) {
-               // Now check we are at the expected index
-               size_t count;
-               TEST_FFI_OK(count_fn, (cert, &count));
-               result.test_sz_eq("enumerator reached end at expected index", i, count);
-            } else {
-               result.test_note(
-                  Botan::fmt("enumerator produced unexpected return code: {}", botan_error_description(rc)));
-            }
-         }
-      }
-
       template <typename EnumeratorT, typename CountFnT>
       static auto read_string_alternative_names(Test::Result& result,
                                                 botan_x509_cert_t cert,
@@ -1499,6 +1501,627 @@ class FFI_Cert_AlternativeNames_Test final : public FFI_Test {
       }
 };
 
+/*
+* otherName entries of subject/issuer alternative names and name constraints.
+* The expected values are documented in src/tests/data/x509/othername/README.md
+*/
+class FFI_Cert_OtherNames_Test final : public FFI_Test {
+   private:
+      // Not constexpr: the FFI functions are dllimport in Windows DLL builds,
+      // where their addresses are not constant expressions
+      static inline const auto subject_at = botan_x509_cert_subject_alternative_names;
+      static inline const auto subject_count = botan_x509_cert_subject_alternative_names_count;
+      static inline const auto issuer_at = botan_x509_cert_issuer_alternative_names;
+      static inline const auto issuer_count = botan_x509_cert_issuer_alternative_names_count;
+      static inline const auto permitted_at = botan_x509_cert_permitted_name_constraints;
+      static inline const auto permitted_count = botan_x509_cert_permitted_name_constraints_count;
+      static inline const auto excluded_at = botan_x509_cert_excluded_name_constraints;
+      static inline const auto excluded_count = botan_x509_cert_excluded_name_constraints_count;
+
+      static constexpr const char* upn_oid = "1.3.6.1.4.1.311.20.2.3";
+      static constexpr const char* arc = "1.3.6.1.4.1.25258.10000";
+
+      // Type-id (dotted), raw inner value (hex) and string value (if viewable) of an otherName
+      struct OtherName {
+            std::string oid;
+            std::string value_hex;
+            std::optional<std::string> str;
+      };
+
+      // Records the length semantics of a string view callback
+      struct StringViewLength {
+            size_t len = 0;
+            size_t strlen = 0;
+            bool nul_terminated = false;
+
+            static int callback(void* ctx, const char* str, size_t len) {
+               auto* self = static_cast<StringViewLength*>(ctx);
+               self->len = len;
+               // NOLINTNEXTLINE(*-pointer-arithmetic)
+               self->nul_terminated = (len > 0 && str[len - 1] == '\0');
+               if(self->nul_terminated) {
+                  self->strlen = std::string_view(str).size();
+               }
+               return BOTAN_FFI_SUCCESS;
+            }
+      };
+
+      static botan_x509_cert_t load_cert(Test::Result& result, const std::string& file) {
+         botan_x509_cert_t cert = nullptr;
+         if(!TEST_FFI_INIT(botan_x509_cert_load_file, (&cert, Test::data_file(file).c_str()))) {
+            return nullptr;
+         }
+         return cert;
+      }
+
+      // Loads the certificate with the given @p index from a PEM bundle
+      static botan_x509_cert_t load_cert_from_bundle(Test::Result& result, const std::string& file, size_t index) {
+         const auto bundle = Test::read_binary_data_file(file);
+         const std::string pem(bundle.begin(), bundle.end());
+         const std::string marker = "-----BEGIN CERTIFICATE-----";
+
+         size_t pos = 0;
+         for(size_t i = 0; i <= index; ++i) {
+            pos = pem.find(marker, (i == 0) ? 0 : pos + marker.size());
+            if(pos == std::string::npos) {
+               result.test_failure(Botan::fmt("no certificate {} in {}", index, file));
+               return nullptr;
+            }
+         }
+
+         botan_x509_cert_t cert = nullptr;
+         if(!TEST_FFI_INIT(botan_x509_cert_load, (&cert, bundle.data() + pos, bundle.size() - pos))) {
+            return nullptr;
+         }
+         return cert;
+      }
+
+      static OtherName read_other_name(Test::Result& result, botan_x509_general_name_t gn) {
+         OtherName out;
+
+         unsigned int type = 0;
+         TEST_FFI_OK(botan_x509_general_name_get_type, (gn, &type));
+         result.test_enum_eq("otherName type", static_cast<botan_x509_general_name_types>(type), BOTAN_X509_OTHER_NAME);
+
+         botan_asn1_oid_t oid = nullptr;
+         if(TEST_FFI_OK(botan_x509_general_name_other_name_type_id, (&oid, gn))) {
+            ViewStringSink oid_str;
+            TEST_FFI_OK(botan_oid_view_string, (oid, oid_str.delegate(), oid_str.callback()));
+            out.oid = oid_str.get();
+            TEST_FFI_OK(botan_oid_destroy, (oid));
+         }
+
+         ViewBytesSink bin;
+         TEST_FFI_OK(botan_x509_general_name_view_binary_value, (gn, bin.delegate(), bin.callback()));
+         out.value_hex = Botan::hex_encode(bin.get());
+
+         ViewStringSink str;
+         const int rc = botan_x509_general_name_view_string_value(gn, str.delegate(), str.callback());
+         if(rc == BOTAN_FFI_SUCCESS) {
+            out.str = str.get();
+         } else {
+            result.test_rc("botan_x509_general_name_view_string_value", rc, BOTAN_FFI_ERROR_INVALID_OBJECT_STATE);
+         }
+
+         return out;
+      }
+
+      template <typename EnumeratorT, typename CountFnT>
+      static std::vector<botan_x509_general_name_types> read_types(Test::Result& result,
+                                                                   botan_x509_cert_t cert,
+                                                                   EnumeratorT enumerator_fn,
+                                                                   CountFnT count_fn) {
+         std::vector<botan_x509_general_name_types> out;
+         visit_general_names(result, cert, enumerator_fn, count_fn, [&](botan_x509_general_name_t gn) {
+            unsigned int type = 0;
+            TEST_FFI_OK(botan_x509_general_name_get_type, (gn, &type));
+            out.push_back(static_cast<botan_x509_general_name_types>(type));
+         });
+         return out;
+      }
+
+      template <typename EnumeratorT, typename CountFnT>
+      static std::vector<OtherName> read_other_names(Test::Result& result,
+                                                     botan_x509_cert_t cert,
+                                                     EnumeratorT enumerator_fn,
+                                                     CountFnT count_fn) {
+         std::vector<OtherName> out;
+         visit_general_names(result, cert, enumerator_fn, count_fn, [&](botan_x509_general_name_t gn) {
+            unsigned int type = 0;
+            TEST_FFI_OK(botan_x509_general_name_get_type, (gn, &type));
+            if(static_cast<botan_x509_general_name_types>(type) == BOTAN_X509_OTHER_NAME) {
+               out.push_back(read_other_name(result, gn));
+            }
+         });
+         return out;
+      }
+
+      template <typename EnumeratorT>
+      static std::string read_string_at(Test::Result& result,
+                                        botan_x509_cert_t cert,
+                                        EnumeratorT enumerator_fn,
+                                        size_t index) {
+         std::string out;
+         botan_x509_general_name_t gn = nullptr;
+         if(TEST_FFI_OK(enumerator_fn, (cert, index, &gn))) {
+            ViewStringSink str;
+            TEST_FFI_OK(botan_x509_general_name_view_string_value, (gn, str.delegate(), str.callback()));
+            out = str.get();
+            TEST_FFI_OK(botan_x509_general_name_destroy, (gn));
+         }
+         return out;
+      }
+
+      // Compares the otherNames irrespective of their enumeration order
+      static void check_other_names(Test::Result& result,
+                                    const std::string& what,
+                                    const std::vector<OtherName>& produced,
+                                    const std::vector<OtherName>& expected) {
+         auto describe = [](const std::vector<OtherName>& names) {
+            std::vector<std::string> out;
+            out.reserve(names.size());
+            for(const auto& name : names) {
+               out.push_back(name.oid + " " + name.value_hex + " " + name.str.value_or("<not a string>"));
+            }
+            std::sort(out.begin(), out.end());
+            return out;
+         };
+
+         const auto p = describe(produced);
+         const auto e = describe(expected);
+         if(!result.test_is_true(what + ": otherNames", p == e)) {
+            for(const auto& s : p) {
+               result.test_note("produced: " + s);
+            }
+            for(const auto& s : e) {
+               result.test_note("expected: " + s);
+            }
+         }
+      }
+
+      static void test_msupn_san(Test::Result& result) {
+         botan_x509_cert_t cert = load_cert(result, "x509/othername/msupn-san.pem");
+         if(cert == nullptr) {
+            return;
+         }
+
+         size_t count = 0;
+         TEST_FFI_OK(subject_count, (cert, &count));
+         result.test_sz_eq("msupn-san: number of subject alternative names", count, 3);
+
+         // The otherName is enumerated after the other name types
+         const std::vector<botan_x509_general_name_types> expected_types = {
+            BOTAN_X509_EMAIL_ADDRESS, BOTAN_X509_DNS_NAME, BOTAN_X509_OTHER_NAME};
+         result.test_is_true("msupn-san: name types in enumeration order",
+                             read_types(result, cert, subject_at, subject_count) == expected_types);
+         result.test_str_eq("msupn-san: email", read_string_at(result, cert, subject_at, 0), "alice@example.com");
+         result.test_str_eq("msupn-san: DNS name", read_string_at(result, cert, subject_at, 1), "www.example.com");
+
+         botan_x509_general_name_t upn = nullptr;
+         if(TEST_FFI_OK(subject_at, (cert, 2, &upn))) {
+            unsigned int type = 0;
+            TEST_FFI_OK(botan_x509_general_name_get_type, (upn, &type));
+            result.test_enum_eq(
+               "msupn-san: type", static_cast<botan_x509_general_name_types>(type), BOTAN_X509_OTHER_NAME);
+
+            // The type-id is returned as an OID object
+            botan_asn1_oid_t oid = nullptr;
+            if(TEST_FFI_OK(botan_x509_general_name_other_name_type_id, (&oid, upn))) {
+               botan_asn1_oid_t expected_oid = nullptr;
+               TEST_FFI_OK(botan_oid_from_string, (&expected_oid, "Microsoft UPN"));
+               TEST_FFI_RC(1, botan_oid_equal, (oid, expected_oid));
+               TEST_FFI_OK(botan_oid_destroy, (expected_oid));
+
+               ViewStringSink oid_str;
+               TEST_FFI_OK(botan_oid_view_string, (oid, oid_str.delegate(), oid_str.callback()));
+               result.test_str_eq("msupn-san: type-id", oid_str.get(), upn_oid);
+               TEST_FFI_OK(botan_oid_view_name, (oid, oid_str.delegate(), oid_str.callback()));
+               result.test_str_eq("msupn-san: type-id name", oid_str.get(), "Microsoft UPN");
+               TEST_FFI_OK(botan_oid_destroy, (oid));
+            }
+
+            // The binary value is the raw BER encoding of the inner value
+            ViewBytesSink bin;
+            TEST_FFI_OK(botan_x509_general_name_view_binary_value, (upn, bin.delegate(), bin.callback()));
+            result.test_bin_eq("msupn-san: raw value", bin.get(), "0C16616C69636540636F72702E6578616D706C652E636F6D");
+
+            // A UTF8String value can be viewed as string
+            ViewStringSink str;
+            TEST_FFI_OK(botan_x509_general_name_view_string_value, (upn, str.delegate(), str.callback()));
+            result.test_str_eq("msupn-san: string value", str.get(), "alice@corp.example.com");
+
+            // The string view callback receives the length including the NUL terminator
+            StringViewLength len;
+            TEST_FFI_OK(botan_x509_general_name_view_string_value, (upn, &len, StringViewLength::callback));
+            result.test_sz_eq("msupn-san: string view length", len.len, 23);
+            result.test_is_true("msupn-san: string view is NUL terminated", len.nul_terminated);
+            result.test_sz_eq("msupn-san: string view has no embedded NUL", len.strlen, 22);
+
+            TEST_FFI_OK(botan_x509_general_name_destroy, (upn));
+         }
+
+         TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+      }
+
+      static void test_string_types(Test::Result& result) {
+         struct Case {
+               const char* file;
+               const char* oid_suffix;
+               const char* value_hex;
+               std::optional<std::string> str;
+         };
+
+         const std::vector<Case> cases = {
+            {"string-utf8.pem",
+             ".1",
+             "0C134AC3BC7267656E406578616D706C652E636F6D",
+             "J\xC3\xBC"
+             "rgen@example.com"},
+            {"string-ia5.pem", ".2", "160F696135406578616D706C652E636F6D", "ia5@example.com"},
+            {"string-printable.pem", ".3", "13115072696E7461626C65204E616D65203432", "Printable Name 42"},
+            {"string-visible.pem", ".4", "1A0F56697369626C6520537472696E6721", "Visible String!"},
+            {"string-numeric.pem", ".5", "120A30313233343536373839", "0123456789"},
+            // Neither UTF-8 nor a subset of it: not viewable as string
+            {"string-bmp.pem", ".6", "1E060062006D0070", std::nullopt},
+            {"string-universal.pem", ".7", "1C0C000000750000006E00000069", std::nullopt},
+            {"string-teletex.pem", ".8", "140774656C65746578", std::nullopt},
+         };
+
+         for(const auto& c : cases) {
+            botan_x509_cert_t cert = load_cert(result, std::string("x509/othername/") + c.file);
+            if(cert == nullptr) {
+               continue;
+            }
+
+            size_t count = 0;
+            TEST_FFI_OK(subject_count, (cert, &count));
+            result.test_sz_eq(std::string(c.file) + ": number of subject alternative names", count, 1);
+
+            check_other_names(result,
+                              c.file,
+                              read_other_names(result, cert, subject_at, subject_count),
+                              {{std::string(arc) + c.oid_suffix, c.value_hex, c.str}});
+
+            TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+         }
+      }
+
+      static void test_non_string_and_edge_values(Test::Result& result) {
+         if(botan_x509_cert_t cert = load_cert(result, "x509/othername/non-string.pem")) {
+            check_other_names(result,
+                              "non-string.pem",
+                              read_other_names(result, cert, subject_at, subject_count),
+                              {
+                                 // SEQUENCE { INTEGER 42 }
+                                 {std::string(arc) + ".10", "300302012A", std::nullopt},
+                                 // OCTET STRING
+                                 {std::string(arc) + ".11", "0404DEADBEEF", std::nullopt},
+                              });
+            TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+         }
+
+         if(botan_x509_cert_t cert = load_cert(result, "x509/othername/edge-values.pem")) {
+            // UTF8String of 3000 'x': tag, three length octets, content
+            std::vector<uint8_t> long_value = {0x0C, 0x82, 0x0B, 0xB8};
+            long_value.insert(long_value.end(), 3000, static_cast<uint8_t>('x'));
+
+            check_other_names(result,
+                              "edge-values.pem",
+                              read_other_names(result, cert, subject_at, subject_count),
+                              {
+                                 // empty UTF8String
+                                 {std::string(arc) + ".20", "0C00", std::string()},
+                                 {std::string(arc) + ".21", Botan::hex_encode(long_value), std::string(3000, 'x')},
+                              });
+            TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+         }
+      }
+
+      static void test_multiple_other_names(Test::Result& result) {
+         botan_x509_cert_t cert = load_cert(result, "x509/othername/multi.pem");
+         if(cert == nullptr) {
+            return;
+         }
+
+         size_t count = 0;
+         TEST_FFI_OK(subject_count, (cert, &count));
+         result.test_sz_eq("multi: number of subject alternative names", count, 7);
+
+         const std::vector<botan_x509_general_name_types> expected_types = {BOTAN_X509_EMAIL_ADDRESS,
+                                                                            BOTAN_X509_DNS_NAME,
+                                                                            BOTAN_X509_IP_ADDRESS,
+                                                                            BOTAN_X509_OTHER_NAME,
+                                                                            BOTAN_X509_OTHER_NAME,
+                                                                            BOTAN_X509_OTHER_NAME,
+                                                                            BOTAN_X509_OTHER_NAME};
+         result.test_is_true("multi: name types in enumeration order",
+                             read_types(result, cert, subject_at, subject_count) == expected_types);
+
+         // The other name types are unaffected
+         result.test_str_eq("multi: email", read_string_at(result, cert, subject_at, 0), "multi@example.com");
+         result.test_str_eq("multi: DNS name", read_string_at(result, cert, subject_at, 1), "multi.example.com");
+         result.test_str_eq("multi: IP address", read_string_at(result, cert, subject_at, 2), "192.0.2.1");
+
+         // Each otherName is enumerated with its own type-id and value
+         check_other_names(result,
+                           "multi.pem",
+                           read_other_names(result, cert, subject_at, subject_count),
+                           {
+                              {upn_oid, "0C166D756C746940636F72702E6578616D706C652E636F6D", "multi@corp.example.com"},
+                              {std::string(arc) + ".2", "160F696135406578616D706C652E636F6D", "ia5@example.com"},
+                              {std::string(arc) + ".6", "1E060062006D0070", std::nullopt},
+                              {std::string(arc) + ".10", "300302012A", std::nullopt},
+                           });
+
+         TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+      }
+
+      static void test_issuer_alternative_names(Test::Result& result) {
+         botan_x509_cert_t cert = load_cert(result, "x509/othername/ian.pem");
+         if(cert == nullptr) {
+            return;
+         }
+
+         size_t count = 0;
+         TEST_FFI_OK(subject_count, (cert, &count));
+         result.test_sz_eq("ian: number of subject alternative names", count, 1);
+         result.test_sz_eq(
+            "ian: no otherNames in subject", read_other_names(result, cert, subject_at, subject_count).size(), 0);
+
+         TEST_FFI_OK(issuer_count, (cert, &count));
+         result.test_sz_eq("ian: number of issuer alternative names", count, 2);
+         const std::vector<botan_x509_general_name_types> expected_types = {BOTAN_X509_DNS_NAME, BOTAN_X509_OTHER_NAME};
+         result.test_is_true("ian: name types in enumeration order",
+                             read_types(result, cert, issuer_at, issuer_count) == expected_types);
+         result.test_str_eq("ian: DNS name", read_string_at(result, cert, issuer_at, 0), "ca.example.com");
+
+         check_other_names(
+            result,
+            "ian.pem",
+            read_other_names(result, cert, issuer_at, issuer_count),
+            {{upn_oid, "0C1769737375657240636F72702E6578616D706C652E636F6D", "issuer@corp.example.com"}});
+
+         TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+      }
+
+      static void test_name_constraints(Test::Result& result) {
+         // The CA (second certificate in the bundle) permits a UPN otherName
+         if(botan_x509_cert_t cert = load_cert_from_bundle(
+               result, "x509/name_constraints/othername-msupn-constraint-no-upn-san-valid.pem", 1)) {
+            size_t count = 0;
+            TEST_FFI_OK(permitted_count, (cert, &count));
+            result.test_sz_eq("msupn constraint: number of permitted names", count, 2);
+            TEST_FFI_OK(excluded_count, (cert, &count));
+            result.test_sz_eq("msupn constraint: number of excluded names", count, 0);
+
+            const std::vector<botan_x509_general_name_types> expected_types = {BOTAN_X509_OTHER_NAME,
+                                                                               BOTAN_X509_DNS_NAME};
+            result.test_is_true("msupn constraint: name types in enumeration order",
+                                read_types(result, cert, permitted_at, permitted_count) == expected_types);
+            result.test_str_eq(
+               "msupn constraint: DNS name", read_string_at(result, cert, permitted_at, 1), "example.com");
+
+            check_other_names(
+               result,
+               "msupn constraint",
+               read_other_names(result, cert, permitted_at, permitted_count),
+               {{upn_oid, "0C16616C69636540636F72702E6578616D706C652E636F6D", "alice@corp.example.com"}});
+
+            TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+         }
+
+         // otherNames in both the permitted and the excluded subtrees
+         if(botan_x509_cert_t cert = load_cert(result, "x509/othername/nc-excluded.pem")) {
+            size_t count = 0;
+            TEST_FFI_OK(permitted_count, (cert, &count));
+            result.test_sz_eq("nc-excluded: number of permitted names", count, 2);
+            TEST_FFI_OK(excluded_count, (cert, &count));
+            result.test_sz_eq("nc-excluded: number of excluded names", count, 1);
+
+            const std::vector<botan_x509_general_name_types> expected_permitted = {BOTAN_X509_DNS_NAME,
+                                                                                   BOTAN_X509_OTHER_NAME};
+            result.test_is_true("nc-excluded: permitted name types in enumeration order",
+                                read_types(result, cert, permitted_at, permitted_count) == expected_permitted);
+            result.test_str_eq("nc-excluded: DNS name", read_string_at(result, cert, permitted_at, 0), "example.com");
+            check_other_names(
+               result,
+               "nc-excluded permitted",
+               read_other_names(result, cert, permitted_at, permitted_count),
+               {{std::string(arc) + ".2", "16157065726D6974746564406578616D706C652E636F6D", "permitted@example.com"}});
+
+            const std::vector<botan_x509_general_name_types> expected_excluded = {BOTAN_X509_OTHER_NAME};
+            result.test_is_true("nc-excluded: excluded name types",
+                                read_types(result, cert, excluded_at, excluded_count) == expected_excluded);
+            check_other_names(
+               result,
+               "nc-excluded excluded",
+               read_other_names(result, cert, excluded_at, excluded_count),
+               {{upn_oid, "0C196578636C7564656440636F72702E6578616D706C652E636F6D", "excluded@corp.example.com"}});
+
+            TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+         }
+      }
+
+      static void test_error_handling(Test::Result& result) {
+         botan_x509_cert_t cert = load_cert(result, "x509/othername/msupn-san.pem");
+         if(cert == nullptr) {
+            return;
+         }
+
+         botan_x509_general_name_t dns = nullptr;
+         botan_x509_general_name_t other = nullptr;
+         if(!TEST_FFI_OK(subject_at, (cert, 1, &dns)) || !TEST_FFI_OK(subject_at, (cert, 2, &other))) {
+            TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+            return;
+         }
+
+         botan_asn1_oid_t oid = nullptr;
+
+         // Not an otherName
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE, botan_x509_general_name_other_name_type_id, (&oid, dns));
+         result.test_is_true("no OID object created for a dNSName", oid == nullptr);
+
+         // Null arguments
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_x509_general_name_other_name_type_id, (nullptr, other));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_x509_general_name_other_name_type_id, (&oid, nullptr));
+         result.test_is_true("no OID object created for a null name", oid == nullptr);
+         TEST_FFI_RC(
+            BOTAN_FFI_ERROR_NULL_POINTER, botan_x509_general_name_view_string_value, (other, nullptr, nullptr));
+         TEST_FFI_RC(
+            BOTAN_FFI_ERROR_NULL_POINTER, botan_x509_general_name_view_binary_value, (other, nullptr, nullptr));
+
+         // A dNSName is still not viewable as binary
+         ViewBytesSink bin;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE,
+                     botan_x509_general_name_view_binary_value,
+                     (dns, bin.delegate(), bin.callback()));
+
+         // Error codes of the view callbacks are passed through
+         auto failing_str_view = [](void* /*ctx*/, const char* /*str*/, size_t /*len*/) -> int {
+            return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         };
+         auto failing_bin_view = [](void* /*ctx*/, const uint8_t* /*data*/, size_t /*len*/) -> int {
+            return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         };
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER,
+                     botan_x509_general_name_view_string_value,
+                     (other, nullptr, failing_str_view));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER,
+                     botan_x509_general_name_view_binary_value,
+                     (other, nullptr, failing_bin_view));
+
+         TEST_FFI_OK(botan_x509_general_name_destroy, (dns));
+         TEST_FFI_OK(botan_x509_general_name_destroy, (other));
+         TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+      }
+
+      static void test_existing_certificates(Test::Result& result) {
+         // Certificates without otherNames are enumerated as before
+         if(botan_x509_cert_t cert = load_cert(result, "x509/misc/multiple_alternative_names.pem")) {
+            size_t count = 0;
+            TEST_FFI_OK(subject_count, (cert, &count));
+            result.test_sz_eq("multiple_alternative_names: number of subject alternative names", count, 11);
+            TEST_FFI_OK(issuer_count, (cert, &count));
+            result.test_sz_eq("multiple_alternative_names: number of issuer alternative names", count, 9);
+            result.test_sz_eq("multiple_alternative_names: no otherNames in subject",
+                              read_other_names(result, cert, subject_at, subject_count).size(),
+                              0);
+            result.test_sz_eq("multiple_alternative_names: no otherNames in issuer",
+                              read_other_names(result, cert, issuer_at, issuer_count).size(),
+                              0);
+            TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+         }
+
+         struct Case {
+               const char* file;
+               std::vector<botan_x509_general_name_types> types;
+               std::vector<OtherName> other_names;
+         };
+
+         // Leaf certificates (first in the bundle) of the name constraint corpus
+         const std::vector<Case> cases = {
+            // SmtpUTF8Mailbox (RFC 9598) entries are otherNames with a UTF8String value
+            {"x509/name_constraints/othername-san-without-constraint-valid.pem",
+             {BOTAN_X509_DNS_NAME, BOTAN_X509_OTHER_NAME},
+             {{"1.3.6.1.5.5.7.8.9", "0C13616C69636540756E72656C617465642E636F6D", "alice@unrelated.com"}}},
+            // SRVName (RFC 4985) is an IA5String
+            {"x509/name_constraints/srvname-full-permit-valid.pem",
+             {BOTAN_X509_OTHER_NAME},
+             {{"1.3.6.1.5.5.7.8.7", "16115F6D61696C2E6578616D706C652E636F6D", "_mail.example.com"}}},
+            // permanentIdentifier, here with an IA5String value
+            {"x509/name_constraints/othername-known-oid-non-smtputf8-rejected.pem",
+             {BOTAN_X509_OTHER_NAME},
+             {{"1.3.6.1.5.5.7.8.3", "16076C6561662D6964", "leaf-id"}}},
+            // SIM (RFC 4683) is a SEQUENCE
+            {"x509/name_constraints/sim-othername-constraint-invalid.pem",
+             {BOTAN_X509_OTHER_NAME},
+             {{"1.3.6.1.5.5.7.8.6", "3019300B0609608648016503040201040401020304040405060708", std::nullopt}}},
+            // An empty SEQUENCE
+            {"x509/name_constraints/othername-san-non-string-inner-critical-permit-invalid.pem",
+             {BOTAN_X509_OTHER_NAME},
+             {{"1.3.6.1.4.1.99999.1", "3000", std::nullopt}}},
+         };
+
+         for(const auto& c : cases) {
+            botan_x509_cert_t cert = load_cert(result, c.file);
+            if(cert == nullptr) {
+               continue;
+            }
+            result.test_is_true(std::string(c.file) + ": name types in enumeration order",
+                                read_types(result, cert, subject_at, subject_count) == c.types);
+            check_other_names(result, c.file, read_other_names(result, cert, subject_at, subject_count), c.other_names);
+            TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+         }
+      }
+
+      #if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_SHA2_32)
+      /*
+      * String values that are not valid for their tag cannot be produced with
+      * OpenSSL, so this certificate is created here with the C++ API
+      */
+      static void test_invalid_string_content(Test::Result& result) {
+         const Botan::OID printable_oid{1, 3, 6, 1, 4, 1, 25258, 10000, 30};
+         const Botan::OID nul_oid{1, 3, 6, 1, 4, 1, 25258, 10000, 31};
+         const Botan::OID utf8_oid{1, 3, 6, 1, 4, 1, 25258, 10000, 32};
+         const Botan::OID ia5_oid{1, 3, 6, 1, 4, 1, 25258, 10000, 33};
+         const Botan::OID context_oid{1, 3, 6, 1, 4, 1, 25258, 10000, 34};
+
+         Botan::AlternativeName alt_name;
+         // PrintableString "not@printable", but '@' is not a printable character
+         alt_name.add_other_name_value(printable_oid, Botan::hex_decode("130D6E6F74407072696E7461626C65"));
+         // UTF8String "a\0b" with an embedded NUL
+         alt_name.add_other_name_value(nul_oid, Botan::hex_decode("0C03610062"));
+         // UTF8String with invalid UTF-8
+         alt_name.add_other_name_value(utf8_oid, Botan::hex_decode("0C02C328"));
+         // IA5String "ok"
+         alt_name.add_other_name_value(ia5_oid, Botan::hex_decode("16026F6B"));
+         // [19] IMPLICIT context-specific tag "abc": the tag number of PrintableString, but not a string
+         alt_name.add_other_name_value(context_oid, Botan::hex_decode("9303616263"));
+
+         auto rng = Test::new_rng(__func__);
+         const auto key = Botan::create_private_key("ECDSA", *rng, "secp256r1");
+         Botan::X509_Cert_Options opts("Invalid otherName strings/US/OtherName Tests/FFI");
+         opts.extensions.add(std::make_unique<Botan::Cert_Extension::Subject_Alternative_Name>(alt_name));
+         const auto cert_der = Botan::X509::create_self_signed_cert(opts, *key, "SHA-256", *rng).BER_encode();
+
+         botan_x509_cert_t cert = nullptr;
+         if(!TEST_FFI_INIT(botan_x509_cert_load, (&cert, cert_der.data(), cert_der.size()))) {
+            return;
+         }
+
+         check_other_names(result,
+                           "invalid string content",
+                           read_other_names(result, cert, subject_at, subject_count),
+                           {
+                              {printable_oid.to_string(), "130D6E6F74407072696E7461626C65", std::nullopt},
+                              {nul_oid.to_string(), "0C03610062", std::nullopt},
+                              {utf8_oid.to_string(), "0C02C328", std::nullopt},
+                              {ia5_oid.to_string(), "16026F6B", "ok"},
+                              {context_oid.to_string(), "9303616263", std::nullopt},
+                           });
+
+         TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+      }
+      #endif
+
+   public:
+      std::string name() const override { return "FFI X509 otherName"; }
+
+      void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
+         test_msupn_san(result);
+         test_string_types(result);
+         test_non_string_and_edge_values(result);
+         test_multiple_other_names(result);
+         test_issuer_alternative_names(result);
+         test_name_constraints(result);
+         test_error_handling(result);
+         test_existing_certificates(result);
+      #if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_SHA2_32)
+         test_invalid_string_content(result);
+      #endif
+      }
+};
+
 class FFI_Cert_NameConstraints_Test final : public FFI_Test {
    private:
       static auto read_constraints(Test::Result& result, botan_x509_cert_t cert, bool permitted) {
@@ -1535,9 +2158,14 @@ class FFI_Cert_NameConstraints_Test final : public FFI_Test {
                                     (constraint, bytes.delegate(), bytes.callback()));
                         out.emplace_back(gn_type, read_distinguished_name(bytes.get()).to_string());
                         break;
-                     case BOTAN_X509_OTHER_NAME:
-                        out.emplace_back(gn_type, "<not supported>");
+                     case BOTAN_X509_OTHER_NAME: {
+                        botan_asn1_oid_t oid = nullptr;
+                        TEST_FFI_OK(botan_x509_general_name_other_name_type_id, (&oid, constraint));
+                        TEST_FFI_OK(botan_oid_view_string, (oid, string.delegate(), string.callback()));
+                        TEST_FFI_OK(botan_oid_destroy, (oid));
+                        out.emplace_back(gn_type, string.get());
                         break;
+                     }
                   }
                } else {
                   result.test_note(
@@ -6199,6 +6827,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_spake2p", FFI_SPAKE2P_Test);
 
    #if defined(BOTAN_HAS_X509)
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_alt_names", FFI_Cert_AlternativeNames_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_cert_other_names", FFI_Cert_OtherNames_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_name_constraints", FFI_Cert_NameConstraints_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_aia", FFI_Cert_AuthorityInformationAccess_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_ext_rfc3779", FFI_Cert_ExtRFC3779_Test);

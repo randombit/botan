@@ -50,14 +50,15 @@ from time import time as system_time
 from typing import Any, Callable, Union
 
 # This Python module is written against the FFI API version introduced in
-# Botan 3.13.0, but loads any library from Botan 3.0.0 onwards. Functionality
+# Botan 3.14.0, but loads any library from Botan 3.0.0 onwards. Functionality
 # which the loaded library does not provide raises BotanFunctionUnavailable.
 #
+# 3.14.0 - botan_x509_general_name_other_name_type_id
 # 3.13.0 - botan_hash_security_level, SPAKE2+, RFC 3779 extensions
 # 3.12.0 - EcScalar/EcPoint, DRBG
 # 3.11.0 - XOF API, CRL creation
 # 3.10.0 - introduced botan_pubkey_load_ec*_sec1()
-BOTAN_FFI_VERSION = 20260811  #: The FFI API version this module was written against.
+BOTAN_FFI_VERSION = 20260901  #: The FFI API version this module was written against.
 
 BOTAN_MINIMUM_FFI_VERSION = 20230403  #: The oldest FFI API version (Botan 3.0.0) this module can load.
 
@@ -641,6 +642,21 @@ def _set_prototypes(dll):
 
     dll.botan_x509_cert_validation_status.argtypes = [c_int]
     dll.botan_x509_cert_validation_status.restype = c_char_p
+
+    # X509 GeneralName (alternative names and name constraints)
+    ffi_api(dll.botan_x509_general_name_get_type, [c_void_p, POINTER(c_uint)])
+    ffi_api(dll.botan_x509_general_name_view_string_value, [c_void_p, c_void_p, _VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_x509_general_name_view_binary_value, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_x509_general_name_other_name_type_id, [c_void_p, c_void_p])
+    ffi_api(dll.botan_x509_general_name_destroy, [c_void_p])
+    ffi_api(dll.botan_x509_cert_permitted_name_constraints, [c_void_p, c_size_t, c_void_p])
+    ffi_api(dll.botan_x509_cert_permitted_name_constraints_count, [c_void_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_excluded_name_constraints, [c_void_p, c_size_t, c_void_p])
+    ffi_api(dll.botan_x509_cert_excluded_name_constraints_count, [c_void_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_subject_alternative_names, [c_void_p, c_size_t, c_void_p])
+    ffi_api(dll.botan_x509_cert_subject_alternative_names_count, [c_void_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_issuer_alternative_names, [c_void_p, c_size_t, c_void_p])
+    ffi_api(dll.botan_x509_cert_issuer_alternative_names_count, [c_void_p, POINTER(c_size_t)])
 
     # X509 Extensions
     ffi_api(dll.botan_x509_ext_ip_addr_blocks_get_counts, [c_void_p, POINTER(c_size_t), POINTER(c_size_t)])
@@ -2483,6 +2499,76 @@ def _load_buf_or_file(filename, buf, file_fn, buf_fn):
 #
 # X.509 certificates
 #
+class X509GeneralNameType(IntEnum):
+    """The type of an X.509 GeneralName, as returned by ``X509GeneralName.get_type``"""
+
+    #: An otherName, identified by a type-id OID with a value whose type depends on the type-id.
+    OTHER_NAME = 0
+    #: An rfc822Name, i.e. an email address.
+    EMAIL_ADDRESS = 1
+    #: A dNSName.
+    DNS_NAME = 2
+    #: A directoryName, i.e. a distinguished name.
+    DIRECTORY_NAME = 4
+    #: A uniformResourceIdentifier.
+    URI = 6
+    #: An iPAddress, IPv4 or IPv6, followed by a subnet mask in a name constraint.
+    IP_ADDRESS = 7
+
+
+class X509GeneralName:
+    """An X.509 GeneralName, as contained in the subject and issuer alternative name
+    and the name constraints extensions of a certificate.
+
+    Applications obtain these from the methods of ``X509Cert``, for example
+    ``X509Cert.subject_alternative_names``."""
+
+    def __init__(self, obj: c_void_p):
+        """Create a GeneralName wrapping the given FFI handle"""
+        self.__obj = obj
+
+    def __del__(self):
+        _DLL.botan_x509_general_name_destroy(self.__obj)
+
+    def _handle(self):
+        return self.__obj
+
+    def get_type(self) -> X509GeneralNameType:
+        """Return the type of the name"""
+        gn_type = c_uint(0)
+        _DLL.botan_x509_general_name_get_type(self.__obj, byref(gn_type))
+        return X509GeneralNameType(gn_type.value)
+
+    def string_value(self) -> str:
+        """Return the value of the name as a string.
+
+        Available for names of type ``EMAIL_ADDRESS``, ``DNS_NAME``, ``URI`` and
+        ``IP_ADDRESS``, and for an ``OTHER_NAME`` whose value is a UTF8String,
+        IA5String, PrintableString, VisibleString or NumericString. Raises an
+        exception for any other name."""
+        return _call_fn_viewing_str(
+            lambda vc, vfn: _DLL.botan_x509_general_name_view_string_value(self.__obj, vc, vfn))
+
+    def binary_value(self) -> bytes:
+        """Return the value of the name as bytes.
+
+        Available for names of type ``DIRECTORY_NAME`` (the DER encoded distinguished
+        name), ``IP_ADDRESS`` (the big-endian address, followed by the subnet mask in a
+        name constraint) and ``OTHER_NAME`` (the raw BER encoding of the value, i.e. the
+        complete TLV contained in the ``[0] EXPLICIT`` tag of the OtherName). Raises
+        an exception for any other name."""
+        return _call_fn_viewing_vec(
+            lambda vc, vfn: _DLL.botan_x509_general_name_view_binary_value(self.__obj, vc, vfn))
+
+    def other_name_type_id(self) -> OID:
+        """Return the type-id of an ``OTHER_NAME`` as an ``OID``, for example
+        ``1.3.6.1.4.1.311.20.2.3`` ("Microsoft UPN") for a Microsoft User Principal
+        Name. Raises an exception for any other name."""
+        oid = OID()
+        _DLL.botan_x509_general_name_other_name_type_id(byref(oid._handle()), self.__obj)
+        return oid
+
+
 class X509Cert: # pylint: disable=invalid-name
     """Class representing an X.509 certificate.
 
@@ -2809,6 +2895,40 @@ class X509Cert: # pylint: disable=invalid-name
         """Check if the certificate (``self``) is revoked on the given ``crl``."""
         rc = _DLL.botan_x509_is_revoked(crl._handle(), self.__obj)
         return rc == 0
+
+    def __general_names(self, count_fn, at_fn) -> list[X509GeneralName]:
+        count = c_size_t(0)
+        count_fn(self.__obj, byref(count))
+        names = []
+        for i in range(count.value):
+            gn = c_void_p(0)
+            at_fn(self.__obj, c_size_t(i), byref(gn))
+            names.append(X509GeneralName(gn))
+        return names
+
+    def subject_alternative_names(self) -> list[X509GeneralName]:
+        """Return the entries of the subject alternative name extension as a list of
+        ``X509GeneralName``, or an empty list if the certificate has no such extension."""
+        return self.__general_names(_DLL.botan_x509_cert_subject_alternative_names_count,
+                                    _DLL.botan_x509_cert_subject_alternative_names)
+
+    def issuer_alternative_names(self) -> list[X509GeneralName]:
+        """Return the entries of the issuer alternative name extension as a list of
+        ``X509GeneralName``, or an empty list if the certificate has no such extension."""
+        return self.__general_names(_DLL.botan_x509_cert_issuer_alternative_names_count,
+                                    _DLL.botan_x509_cert_issuer_alternative_names)
+
+    def permitted_name_constraints(self) -> list[X509GeneralName]:
+        """Return the permitted subtrees of the name constraints extension as a list of
+        ``X509GeneralName``, or an empty list if there are none."""
+        return self.__general_names(_DLL.botan_x509_cert_permitted_name_constraints_count,
+                                    _DLL.botan_x509_cert_permitted_name_constraints)
+
+    def excluded_name_constraints(self) -> list[X509GeneralName]:
+        """Return the excluded subtrees of the name constraints extension as a list of
+        ``X509GeneralName``, or an empty list if there are none."""
+        return self.__general_names(_DLL.botan_x509_cert_excluded_name_constraints_count,
+                                    _DLL.botan_x509_cert_excluded_name_constraints)
 
 
 #
