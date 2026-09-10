@@ -96,16 +96,22 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager {
          return v;
       }
 
-      std::vector<Botan::X509_Certificate> find_cert_chain(const std::vector<std::string>& cert_key_types,
-                                                           const std::vector<Botan::AlgorithmIdentifier>& /*unused*/,
-                                                           const std::vector<Botan::X509_DN>& acceptable_CAs,
-                                                           const std::string& type,
-                                                           const std::string& context) override {
+      std::vector<Botan::X509_Certificate> find_cert_chain(
+         const std::vector<std::string>& cert_key_types,
+         const std::vector<Botan::AlgorithmIdentifier>& cert_signature_schemes,
+         const std::vector<Botan::X509_DN>& acceptable_CAs,
+         const std::string& type,
+         const std::string& context) override {
          BOTAN_UNUSED(context);
          std::vector<Botan::X509_Certificate> chain;
 
          if(m_acceptable_cas.empty()) {
             m_acceptable_cas = acceptable_CAs;
+         }
+
+         if(type == "tls-client" && m_provides_client_certs) {
+            m_last_client_cert_key_types = cert_key_types;
+            m_last_client_cert_sig_scheme_count = cert_signature_schemes.size();
          }
 
          if(type == "tls-server" || (type == "tls-client" && m_provides_client_certs)) {
@@ -175,6 +181,14 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager {
 
       const std::vector<Botan::X509_DN>& get_acceptable_cas() const { return m_acceptable_cas; }
 
+      // The cert_key_types and number of cert_signature_schemes passed to the
+      // most recent tls-client find_cert_chain() call, used to check that the
+      // TLS 1.2 client narrows its credential selection to the peer's
+      // CertificateRequest signature_algorithms.
+      const std::vector<std::string>& last_client_cert_key_types() const { return m_last_client_cert_key_types; }
+
+      size_t last_client_cert_sig_scheme_count() const { return m_last_client_cert_sig_scheme_count; }
+
    private:
       Botan::X509_Certificate m_rsa_cert, m_rsa_ca;
       std::shared_ptr<Botan::Private_Key> m_rsa_key;
@@ -185,6 +199,8 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager {
       std::vector<std::unique_ptr<Botan::Certificate_Store>> m_stores;
       bool m_provides_client_certs;
       std::vector<Botan::X509_DN> m_acceptable_cas;
+      std::vector<std::string> m_last_client_cert_key_types;
+      size_t m_last_client_cert_sig_scheme_count = 0;
 };
 
 std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenerator& rng,
@@ -1109,6 +1125,63 @@ class TLS_Unit_Tests final : public Test {
 
          return test_with_policy(test_descr, results, creds, versions, policy, rng, client_auth);
       }
+
+   #if defined(BOTAN_HAS_TLS_12)
+      /**
+       * A TLS 1.2 client holding several credentials must present the one whose
+       * key can sign under the CertificateRequest's signature_algorithms (RFC
+       * 5246 7.4.4 / 7.4.6), not merely the first matching certificate_type.
+       * Here the server requests client authentication but offers only ECDSA
+       * signature schemes, so the client -- which holds both an RSA and an ECDSA
+       * credential -- must select the ECDSA one and complete the handshake.
+       */
+      void test_tls12_client_cert_selection(std::vector<Test::Result>& results,
+                                            const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         using PV = Botan::TLS::Protocol_Version;
+
+         Test::Result result("TLS 1.2 client certificate selection honors signature_algorithms");
+
+         auto creds = create_creds(*rng, true /* with_client_certs */);
+         if(!creds) {
+            result.test_note("Skipped, no ECC group available in this build");
+            results.push_back(result);
+            return;
+         }
+
+         const std::array<PV, 1> tls12{PV::TLS_V12};
+
+         auto client_policy = std::make_shared<Test_Policy>();
+         client_policy->set("key_exchange_methods", "ECDH");
+         set_allowed_versions(client_policy, tls12);
+
+         auto server_policy = std::make_shared<Test_Policy>();
+         server_policy->set("key_exchange_methods", "ECDH");
+         set_allowed_versions(server_policy, tls12);
+         // The server's CertificateRequest offers ECDSA signature schemes only.
+         server_policy->set("acceptable_signature_schemes", "ECDSA_SHA256 ECDSA_SHA384 ECDSA_SHA512");
+
+         TLS_Handshake_Test test("TLS v1.2 ECDSA-only client-auth request",
+                                 PV::TLS_V12,
+                                 creds,
+                                 client_policy,
+                                 server_policy,
+                                 rng,
+                                 make_session_manager(rng),
+                                 make_session_manager(rng),
+                                 true /* expect_client_auth */);
+         test.go();
+         results.push_back(test.results());
+
+         const auto& key_types = creds->last_client_cert_key_types();
+         result.test_sz_eq("client narrowed cert selection to a single key type", key_types.size(), 1);
+         if(!key_types.empty()) {
+            result.test_str_eq("client selected its ECDSA credential", key_types[0], "ECDSA");
+         }
+         result.test_is_true("offered signature schemes were passed to the credentials manager",
+                             creds->last_client_cert_sig_scheme_count() > 0);
+         results.push_back(result);
+      }
+   #endif
 
       /**
        * Exercise asymmetric client/server version policies: successful TLS 1.3
@@ -2142,6 +2215,13 @@ class TLS_Unit_Tests final : public Test {
          // by throwing in Callbacks::tls_session_established()
 
          test_session_established_abort(results, creds, rng);
+
+         // TLS 1.2 client certificate selection honors the CertificateRequest's
+         // signature_algorithms (RFC 5246 7.4.4 / 7.4.6)
+
+   #if defined(BOTAN_HAS_TLS_12)
+         test_tls12_client_cert_selection(results, rng);
+   #endif
 
          // TLS version negotiation / downgrade (and mismatch failures)
 
