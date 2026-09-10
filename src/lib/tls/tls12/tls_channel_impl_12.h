@@ -161,6 +161,17 @@ class Channel_Impl_12 : public Channel_Impl {
       Handshake_State& create_handshake_state(Protocol_Version version, bool epoch0_restart = false);
       virtual std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) = 0;
 
+      enum class TimerGeneration : bool {
+         Advance,
+         Keep,
+      };
+
+      /**
+      * Ask the user to asynchronously and transparently invoke the time-based
+      * retransmission mechanism.
+      */
+      void maybe_arm_dtls_retransmission_timer(TimerGeneration generation_policy = TimerGeneration::Advance);
+
       void inspect_handshake_message(const Handshake_Message& msg);
 
       void activate_session();
@@ -250,6 +261,7 @@ class Channel_Impl_12 : public Channel_Impl {
 
       /* pending handshake state (null when no handshake is in progress) */
       std::unique_ptr<Handshake_State> m_pending_state;
+      size_t m_retransmission_timer_generation = 0;
 
       /* handle under which this connection's session is cached, if any */
       std::optional<Session_Handle> m_resumption_handle;
