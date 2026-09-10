@@ -41,6 +41,33 @@ void check_ecdh_uncompressed_format(Group_Params group, std::span<const uint8_t>
    }
 }
 
+// RFC 8446 4.2.8.1
+//    The opaque value contains the Diffie-Hellman public value (Y = g^X mod p)
+//    for the specified group (see [RFC7919] for group definitions) encoded as a
+//    big-endian integer and padded to the left with zeros to the size of p in bytes.
+void check_ffdhe_padding(Group_Params group, std::span<const uint8_t> bytes) {
+   const size_t p_bytes = [&]() -> size_t {
+      switch(group.code()) {
+         case Group_Params_Code::FFDHE_2048:
+            return 2048 / 8;
+         case Group_Params_Code::FFDHE_3072:
+            return 3072 / 8;
+         case Group_Params_Code::FFDHE_4096:
+            return 4096 / 8;
+         case Group_Params_Code::FFDHE_6144:
+            return 6144 / 8;
+         case Group_Params_Code::FFDHE_8192:
+            return 8192 / 8;
+         default:
+            return 0;
+      }
+   }();
+
+   if(p_bytes > 0 && bytes.size() != p_bytes) {
+      throw TLS_Exception(Alert::IllegalParameter, "TLS 1.3 FFDHE key share must be padded to the size of p");
+   }
+}
+
 class Key_Share_Entry {
    public:
       explicit Key_Share_Entry(TLS_Data_Reader& reader) {
@@ -84,6 +111,7 @@ class Key_Share_Entry {
                                          Callbacks& cb,
                                          RandomNumberGenerator& rng) {
          check_ecdh_uncompressed_format(m_group, client_share.m_key_exchange);
+         check_ffdhe_padding(m_group, client_share.m_key_exchange);
          auto [encapsulated_shared_key, shared_key] =
             KEM_Encapsulation::destructure(cb.tls_kem_encapsulate(m_group, client_share.m_key_exchange, rng, policy));
          m_key_exchange = std::move(encapsulated_shared_key);
@@ -104,6 +132,7 @@ class Key_Share_Entry {
          BOTAN_ASSERT_NOMSG(m_group == received.m_group);
          BOTAN_STATE_CHECK(m_private_key != nullptr);
          check_ecdh_uncompressed_format(m_group, received.m_key_exchange);
+         check_ffdhe_padding(m_group, received.m_key_exchange);
          return cb.tls_kem_decapsulate(m_group, *m_private_key, received.m_key_exchange, rng, policy);
       }
 
