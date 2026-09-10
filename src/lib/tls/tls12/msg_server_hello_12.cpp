@@ -12,6 +12,7 @@
 #include <botan/tls_callbacks.h>
 #include <botan/tls_extensions_12.h>
 #include <botan/tls_policy.h>
+#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_messages_internal.h>
@@ -137,6 +138,13 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
 
    if(client_hello.supports_session_ticket() && offer_session_ticket) {
       m_data->extensions().add(new Session_Ticket_Extension());
+   }
+
+   // Echo the SRTP profile from the resumed session when the client re-offers
+   // it, so the abbreviated handshake keeps DTLS-SRTP keying (RFC 5764).
+   if(m_data->legacy_version().is_datagram_protocol() && resumed_session.dtls_srtp_profile() != 0 &&
+      value_exists(client_hello.srtp_profiles(), resumed_session.dtls_srtp_profile())) {
+      m_data->extensions().add(new SRTP_Protection_Profiles(resumed_session.dtls_srtp_profile()));
    }
    // NOLINTEND(*-owning-memory)
 

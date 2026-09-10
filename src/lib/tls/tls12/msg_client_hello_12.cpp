@@ -257,6 +257,12 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
       m_data->extensions().add(new Application_Layer_Protocol_Notification(std::move(next_protocols)));
    }
 
+   // Re-offer the SRTP profile negotiated in the original session so the
+   // abbreviated handshake keeps DTLS-SRTP keying (RFC 5764).
+   if(m_data->legacy_version().is_datagram_protocol() && session.session.dtls_srtp_profile() != 0) {
+      m_data->extensions().add(new SRTP_Protection_Profiles(session.session.dtls_srtp_profile()));
+   }
+
    // NOLINTEND(*-owning-memory)
 
    cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Client, type());

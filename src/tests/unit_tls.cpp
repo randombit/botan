@@ -1181,6 +1181,74 @@ class TLS_Unit_Tests final : public Test {
                              creds->last_client_cert_sig_scheme_count() > 0);
          results.push_back(result);
       }
+
+      /**
+       * The DTLS-SRTP profile negotiated via the use_srtp extension (RFC 5764)
+       * is connection state that must survive session resumption: the
+       * abbreviated ClientHello and ServerHello have to carry use_srtp again so
+       * both peers still report the profile after the resumed handshake.
+       */
+      void test_dtls12_srtp_resumption(std::vector<Test::Result>& results,
+                                       const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         using PV = Botan::TLS::Protocol_Version;
+
+         Test::Result result("DTLS 1.2 SRTP profile survives session resumption");
+
+         auto creds = create_creds(*rng, false /* no client certs */);
+         if(!creds) {
+            result.test_note("Skipped, no ECC group available in this build");
+            results.push_back(result);
+            return;
+         }
+
+         const uint16_t expected_profile = 0x0001;  // srtp_aes128_cm_hmac_sha1_80
+
+         auto make_policy = [&] {
+            auto policy = std::make_shared<Test_Policy>();
+            policy->set("key_exchange_methods", "ECDH");
+            policy->set("srtp_profiles", "1");
+            set_allowed_versions(policy, std::array<PV, 1>{PV::DTLS_V12});
+            return policy;
+         };
+         auto client_policy = make_policy();
+         auto server_policy = make_policy();
+
+         auto client_ses = make_session_manager(rng);
+         auto server_ses = make_session_manager(rng);
+
+         auto run_phase = [&](const std::string& phase, bool resumption) {
+            TLS_Handshake_Test test("DTLS v1.2 SRTP " + phase,
+                                    PV::DTLS_V12,
+                                    creds,
+                                    client_policy,
+                                    server_policy,
+                                    rng,
+                                    client_ses,
+                                    server_ses,
+                                    false /* expect_client_auth */);
+
+            uint16_t client_profile = 0;
+            uint16_t server_profile = 0;
+            test.set_custom_client_tls_session_established_callback(
+               [&](const Botan::TLS::Session_Summary& s) { client_profile = s.dtls_srtp_profile(); });
+            test.set_custom_server_tls_session_established_callback(
+               [&](const Botan::TLS::Session_Summary& s) { server_profile = s.dtls_srtp_profile(); });
+            if(resumption) {
+               test.expect_session_resumption();
+            }
+
+            test.go();
+            results.push_back(test.results());
+
+            result.test_sz_eq(phase + ": client reports SRTP profile", client_profile, expected_profile);
+            result.test_sz_eq(phase + ": server reports SRTP profile", server_profile, expected_profile);
+         };
+
+         run_phase("initial handshake", false);
+         run_phase("resumed handshake", true);
+
+         results.push_back(result);
+      }
    #endif
 
       /**
@@ -2221,6 +2289,9 @@ class TLS_Unit_Tests final : public Test {
 
    #if defined(BOTAN_HAS_TLS_12)
          test_tls12_client_cert_selection(results, rng);
+
+         // DTLS-SRTP profile must survive session resumption (RFC 5764)
+         test_dtls12_srtp_resumption(results, rng);
    #endif
 
          // TLS version negotiation / downgrade (and mismatch failures)

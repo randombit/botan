@@ -761,9 +761,10 @@ SRTP_Protection_Profiles::SRTP_Protection_Profiles(TLS_Data_Reader& reader, uint
       throw Decoding_Error("Bad encoding for SRTP protection extension");
    }
 
-   if(!mki.empty()) {
-      throw Decoding_Error("Unhandled non-empty MKI for SRTP protection extension");
-   }
+   // Any srtp_mki the peer offers is ignored; serialize() always answers with an
+   // empty srtp_mki, per RFC 5764 4.1.3:
+   //    2.  return an empty "srtp_mki" value to indicate that it cannot make
+   //        use of the MKI.
 }
 
 std::vector<uint8_t> SRTP_Protection_Profiles::serialize(Connection_Side /*whoami*/) const {
