@@ -149,9 +149,19 @@ ML-DSA (FIPS 204)
 ~~~~~~~~~~~~~~~~~
 
 Post-quantum secure signature scheme based on (structured) lattices.
-This algorithm is standardized in FIPS 204. Signing keys are always stored and
-expanded from the 32-byte private random seed (`xi`), loading the expanded key
-format specified in FIPS 204 is explicitly not supported.
+This algorithm is standardized in FIPS 204.
+
+Private keys are encoded as the ``ML-DSA-PrivateKey`` structure of :rfc:`9881`
+in PKCS #8 containers. All three ``CHOICE`` alternatives of that structure are
+supported when loading a key: the 32-byte private random seed (``xi``), the
+expanded key specified in FIPS 204, or both. For backwards compatibility the
+raw seed and the raw expanded key without ASN.1 wrapping are accepted as well
+when loading a key. A loaded key retains the format it was loaded from and is
+serialized in that format again; newly generated keys are serialized in the
+``both`` format. Keys that contain the seed can be exported in any of the
+formats using the common :ref:`ml_private_key_formats` interface, keys loaded
+from the expanded key only cannot be exported as seed. Note that Botan versions
+prior to 3.13 only accepted the raw seed as private key encoding.
 
 Support for ML-DSA is implemented in the module ``ml_dsa``
 
@@ -176,8 +186,11 @@ algorithm is standardized in FIPS 203. New decapsulation keys are stored and
 expanded from the 64-byte private random seeds (``d || z``).
 Keys imported as seeds are always serialized as seeds, while keys imported in
 expanded format (as specified in FIPS 203) are serialized in expanded format.
-Exporting seeds as expanded keys is supported using ML-KEM private key-specific
-methods.
+Exporting seeds as expanded keys is supported using the common
+:ref:`ml_private_key_formats` interface. Note that the ASN.1 wrapping of the
+private key specified in :rfc:`9935` is not yet implemented; the content of the
+PKCS #8 ``privateKey`` field is currently the raw seed or the raw expanded key.
+This is expected to change in a future release.
 
 Support for ML-KEM is implemented in the module ``ml_kem``.
 
@@ -193,6 +206,78 @@ Currently two flavors of Kyber are implemented in separate Botan modules:
    usage by early adopters.
  * ``kyber_90s``, that uses AES/SHA-2 instead of Keccak-based primitives.
    This mode is deprecated and will be removed in a future release.
+
+.. _ml_private_key_formats:
+
+Private Key Formats of ML-KEM and ML-DSA
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. versionadded:: 3.13.0
+
+The private keys of the module-lattice schemes ML-KEM and ML-DSA (and their
+pre-standard variants Kyber and Dilithium) can be represented by their private
+seed, by the expanded key of FIPS 203/204, or (ML-DSA only) by both. Their key
+classes ``ML_KEM_PrivateKey`` and ``ML_DSA_PrivateKey`` implement the common
+interface ``Module_Lattice_PrivateKey`` declared in ``botan/module_lattice_keys.h``,
+which allows to query the format of a key and to encode it in a specific format.
+Given a generic ``Private_Key``, the interface is obtained with a
+``dynamic_cast<const Module_Lattice_PrivateKey*>``.
+
+.. cpp:enum-class:: MlPrivateKeyFormat
+
+   .. cpp:enumerator:: Seed
+
+      Only the private random seed (64 bytes ``d || z`` for ML-KEM, 32 bytes
+      ``xi`` for ML-DSA). Not available for Kyber and Dilithium round 3 keys.
+
+   .. cpp:enumerator:: Expanded
+
+      The expanded private key as specified in FIPS 203 or FIPS 204.
+
+   .. cpp:enumerator:: Both
+
+      Seed and expanded key together. Currently only supported for ML-DSA,
+      where it corresponds to the ``both`` alternative of :rfc:`9881`. There is
+      no raw (non-ASN.1) encoding of this format.
+
+.. cpp:class:: Module_Lattice_PrivateKey : public virtual Private_Key
+
+   .. cpp:function:: MlPrivateKeyFormat private_key_format() const
+
+      The format this key was loaded from or, for a freshly generated key, the
+      default format of the scheme (``Seed`` for ML-KEM, ``Both`` for ML-DSA).
+      This is the format used by ``private_key_bits()``, ``private_key_info()``
+      and ``raw_private_key_bits()``.
+
+   .. cpp:function:: secure_vector<uint8_t> formatted_raw_private_key_bits(MlPrivateKeyFormat format) const
+
+      The raw private key material in the given format without any ASN.1
+      wrapping, i.e. the bare seed or the expanded key. Throws
+      ``Encoding_Error`` if the key cannot be encoded in the requested format.
+      This is the case for ``Both``, which has no raw encoding, for ``Seed``
+      if the key was loaded from an expanded key, and for anything but
+      ``Expanded`` on Kyber and Dilithium round 3 keys.
+
+   .. cpp:function:: secure_vector<uint8_t> formatted_private_key_bits(MlPrivateKeyFormat format) const
+
+      The private key encoded in the given format as it appears in the
+      ``privateKey`` field of a PKCS #8 ``PrivateKeyInfo`` structure. For ML-DSA
+      this is the ``ML-DSA-PrivateKey`` encoding of :rfc:`9881`. For ML-KEM the
+      wrapping of :rfc:`9935` is not yet implemented and the same bytes as from
+      ``formatted_raw_private_key_bits()`` are returned. Throws
+      ``Encoding_Error`` if the key cannot be encoded in the requested format.
+
+   .. cpp:function:: secure_vector<uint8_t> private_key_bits() const
+
+      Equivalent to ``formatted_private_key_bits(private_key_format())``.
+
+   .. cpp:function:: secure_vector<uint8_t> raw_private_key_bits() const
+
+      Equivalent to ``formatted_raw_private_key_bits(private_key_format())``,
+      except that ML-DSA keys in the format ``Both`` return the seed.
+
+The method ``ML_KEM_PrivateKey::private_key_bits_with_format()`` is deprecated
+in favor of ``formatted_raw_private_key_bits()``.
 
 Ed25519 and Ed448
 ~~~~~~~~~~~~~~~~~

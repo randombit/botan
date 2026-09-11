@@ -23,6 +23,7 @@
    #include "test_pubkey.h"
    #include <botan/hex.h>
    #include <botan/kyber.h>
+   #include <botan/module_lattice_keys.h>
    #include <botan/pubkey.h>
    #include <botan/rng.h>
    #include <botan/internal/concat_util.h>
@@ -258,18 +259,45 @@ class Kyber_Encoding_Test : public Text_Based_Test {
             result.test_bin_eq("sk's encoding of sk", skr->private_key_bits(), sk_raw);
             result.test_bin_eq("pk's encoding of pk", pkr->public_key_bits(), pk_raw);
 
+            using Botan::MlPrivateKeyFormat;
+            const Botan::Private_Key* generic_sk = skr.get();
+            result.test_not_null("sk is an ML private key",
+                                 dynamic_cast<const Botan::Module_Lattice_PrivateKey*>(generic_sk));
+            result.test_bin_eq("private_key_bits() uses private_key_format()",
+                               skr->private_key_bits(),
+                               skr->formatted_private_key_bits(skr->private_key_format()));
+            result.test_bin_eq("raw_private_key_bits() uses private_key_format()",
+                               skr->raw_private_key_bits(),
+                               skr->formatted_raw_private_key_bits(skr->private_key_format()));
+            // ML-KEM does not yet implement the ASN.1 wrapping of RFC 9935
+            result.test_bin_eq("formatted_private_key_bits(Expanded) is raw",
+                               skr->formatted_private_key_bits(MlPrivateKeyFormat::Expanded),
+                               skr->formatted_raw_private_key_bits(MlPrivateKeyFormat::Expanded));
+            result.test_throws<Botan::Encoding_Error>(
+               "no raw encoding of Both", [&] { skr->formatted_raw_private_key_bits(MlPrivateKeyFormat::Both); });
+            result.test_throws<Botan::Encoding_Error>(
+               "no encoding of Both", [&] { skr->formatted_private_key_bits(MlPrivateKeyFormat::Both); });
+
             // expanded vs seed encoding
-            if(skr->private_key_format() == Botan::MlPrivateKeyFormat::Seed) {
-               result.test_bin_eq("sk's seed encoding of sk",
-                                  skr->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Seed),
+            if(skr->private_key_format() == MlPrivateKeyFormat::Seed) {
+               result.test_is_true("only ML-KEM supports the seed format", mode.is_ml_kem());
+               result.test_bin_eq(
+                  "sk's seed encoding of sk", skr->formatted_raw_private_key_bits(MlPrivateKeyFormat::Seed), sk_raw);
+               result.test_bin_eq("formatted_private_key_bits(Seed) is raw",
+                                  skr->formatted_private_key_bits(MlPrivateKeyFormat::Seed),
                                   sk_raw);
                const auto skr_expanded = std::make_unique<Botan::Kyber_PrivateKey>(
-                  skr->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Expanded), mode);
+                  skr->formatted_raw_private_key_bits(MlPrivateKeyFormat::Expanded), mode);
+               result.test_enum_eq(
+                  "expanded sk has format Expanded", skr_expanded->private_key_format(), MlPrivateKeyFormat::Expanded);
                result.test_bin_eq("sk's expanded encoding consistency",
-                                  skr->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Expanded),
-                                  skr_expanded->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Expanded));
+                                  skr->formatted_raw_private_key_bits(MlPrivateKeyFormat::Expanded),
+                                  skr_expanded->formatted_raw_private_key_bits(MlPrivateKeyFormat::Expanded));
                result.test_throws<Botan::Encoding_Error>("expect no seed in expanded sk", [&] {
-                  skr_expanded->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Seed);
+                  skr_expanded->formatted_raw_private_key_bits(MlPrivateKeyFormat::Seed);
+               });
+               result.test_throws<Botan::Encoding_Error>("expect no seed in expanded sk (formatted)", [&] {
+                  skr_expanded->formatted_private_key_bits(MlPrivateKeyFormat::Seed);
                });
 
                const auto encapsulation = Botan::PK_KEM_Encryptor(*pkr, "Raw").encrypt(rng());
@@ -280,8 +308,13 @@ class Kyber_Encoding_Test : public Text_Based_Test {
 
             } else {
                result.test_bin_eq("sk's expanded encoding of sk",
-                                  skr->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Expanded),
+                                  skr->formatted_raw_private_key_bits(MlPrivateKeyFormat::Expanded),
                                   sk_raw);
+               if(!mode.is_ml_kem()) {
+                  result.test_throws<Botan::Encoding_Error>("round 3 keys do not support the seed format", [&] {
+                     skr->formatted_raw_private_key_bits(MlPrivateKeyFormat::Seed);
+                  });
+               }
             }
          }
 

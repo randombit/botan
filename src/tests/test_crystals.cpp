@@ -8,7 +8,7 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_PQCRYSTALS)
+#if defined(BOTAN_HAS_MODULE_LATTICE)
    #include <botan/hex.h>
    #include <botan/rng.h>
 

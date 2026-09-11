@@ -461,6 +461,7 @@ std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_x509_verificat
 Dilithium_PrivateKey::Dilithium_PrivateKey(RandomNumberGenerator& rng, DilithiumMode m) {
    DilithiumConstants mode(m);
    BOTAN_ARG_CHECK(mode.mode().is_available(), "Dilithium/ML-DSA mode is not available in this build");
+   m_private_key_format = mode.is_ml_dsa() ? MlPrivateKeyFormat::Both : MlPrivateKeyFormat::Expanded;
    std::tie(m_public, m_private) = Dilithium_Algos::expand_keypair(
       rng.random_vec<DilithiumSeedRandomness>(DilithiumConstants::SEED_RANDOMNESS_BYTES), std::move(mode));
 }
@@ -476,20 +477,45 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(const AlgorithmIdentifier& alg_id, st
 Dilithium_PrivateKey::Dilithium_PrivateKey(std::span<const uint8_t> sk, DilithiumMode m) {
    DilithiumConstants mode(m);
    auto& codec = mode.keypair_codec();
-   std::tie(m_public, m_private) = codec.decode_keypair(sk, std::move(mode));
+   auto decoded = codec.decode_keypair(sk, std::move(mode));
+   m_public = std::move(decoded.keypair.first);
+   m_private = std::move(decoded.keypair.second);
+   m_private_key_format = decoded.format;
+}
+
+MlPrivateKeyFormat Dilithium_PrivateKey::private_key_format() const {
+   return m_private_key_format;
+}
+
+secure_vector<uint8_t> Dilithium_PrivateKey::formatted_raw_private_key_bits(MlPrivateKeyFormat format) const {
+   switch(format) {
+      case MlPrivateKeyFormat::Seed: {
+         if(is_dilithium_round3()) {
+            throw Encoding_Error("Dilithium round 3 private keys only support the expanded format");
+         }
+         const auto& seed = m_private->seed();
+         if(!seed.has_value()) {
+            throw Encoding_Error("ML-DSA private key does not contain the seed, cannot encode it in the seed format");
+         }
+         return seed.value().get();
+      }
+      case MlPrivateKeyFormat::Expanded:
+         return Dilithium_Algos::encode_keypair({m_public, m_private}).get();
+      case MlPrivateKeyFormat::Both:
+         throw Encoding_Error(
+            "there is no raw encoding of an ML-DSA private key containing both seed and expanded key");
+   }
+   BOTAN_ASSERT_UNREACHABLE();
+}
+
+secure_vector<uint8_t> Dilithium_PrivateKey::formatted_private_key_bits(MlPrivateKeyFormat format) const {
+   return m_private->mode().keypair_codec().encode_keypair({m_public, m_private}, format);
 }
 
 secure_vector<uint8_t> Dilithium_PrivateKey::raw_private_key_bits() const {
-   const auto& seed_opt = this->m_private->seed();
-   if(!seed_opt.has_value()) {
-      throw Invalid_State(
-         "cannot return Dilithium or ML-DSA private key raw bits, since the key does not contain the seed");
-   }
-   return seed_opt.value().get();
-}
-
-secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const {
-   return m_private->mode().keypair_codec().encode_keypair({m_public, m_private});
+   // The "both" format has no raw encoding; the seed is its minimal raw representation.
+   const auto format = private_key_format();
+   return formatted_raw_private_key_bits(format == MlPrivateKeyFormat::Both ? MlPrivateKeyFormat::Seed : format);
 }
 
 bool Dilithium_PrivateKey::is_mldsa() const {

@@ -14,6 +14,7 @@
 #ifndef BOTAN_KYBER_COMMON_H_
 #define BOTAN_KYBER_COMMON_H_
 
+#include <botan/module_lattice_keys.h>
 #include <botan/pk_keys.h>
 #include <span>
 
@@ -77,17 +78,6 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode final {
       Mode m_mode;
 };
 
-/// Byte encoding format of ML-KEM and ML-DSA the private key
-enum class MlPrivateKeyFormat : uint8_t {
-   /// Only supported for ML-KEM/ML-DSA keys:
-   /// - ML-KEM: 64-byte seed: d || z
-   /// - ML-DSA: 32-byte seed: xi (private_key_bits_with_format not yet
-   ///   yet supported for ML-DSA)
-   Seed,
-   /// The expanded format, i.e., the format specified in FIPS-203/204.
-   Expanded,
-};
-
 class Kyber_PublicKeyInternal;
 class Kyber_PrivateKeyInternal;
 
@@ -148,11 +138,12 @@ BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
 class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_PublicKey,
+                                                      public virtual Module_Lattice_PrivateKey,
                                                       public virtual Private_Key {
    public:
       /**
        * Create a new private key. The private key will be encoded as the 64 byte
-       * seed.
+       * seed (MlPrivateKeyFormat::Seed).
        */
       Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode mode);
 
@@ -176,10 +167,6 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
 
       std::unique_ptr<Public_Key> public_key() const override;
 
-      secure_vector<uint8_t> private_key_bits() const override;
-
-      secure_vector<uint8_t> raw_private_key_bits() const override;
-
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
@@ -188,23 +175,45 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
 
       /**
        * The private key format from which the key was loaded. It is the format
-       * used for the private_key_bits(), raw_private_key_bits() andFIPS
+       * used for the private_key_bits(), raw_private_key_bits() and
        * private_key_info() methods.
        *
+       * ML-KEM keys that were generated or loaded from a seed report
+       * MlPrivateKeyFormat::Seed, all other keys MlPrivateKeyFormat::Expanded.
        * Note that keys in Seed format can be serialized to Expanded format
-       * using the method private_key_bits_with_format but NOT the other way
-       * around.
+       * using formatted_raw_private_key_bits() but NOT the other way around.
        */
-      MlPrivateKeyFormat private_key_format() const;
+      MlPrivateKeyFormat private_key_format() const override;
 
       /**
-       * Encode the private key in the specified format. Note that the seed
-       * format is only available for new ML-KEM keys and those loaded from
-       * seeds.
+       * Encode the raw private key in the specified format, i.e. the 64-byte
+       * seed or the expanded key of FIPS 203. Note that the seed format is
+       * only available for new ML-KEM keys and those loaded from seeds.
+       *
+       * @throws Encoding_Error if the private key cannot be encoded in the
+       *         requested format. MlPrivateKeyFormat::Both is not supported
+       *         for ML-KEM.
+       */
+      secure_vector<uint8_t> formatted_raw_private_key_bits(MlPrivateKeyFormat format) const override;
+
+      /**
+       * Encode the private key in the specified format as content of the
+       * PKCS#8 privateKey field.
+       *
+       * @note The ASN.1 wrapping specified in RFC 9935 is not yet implemented
+       *       for ML-KEM. Currently this returns the same bytes as
+       *       formatted_raw_private_key_bits(). This is a known interim
+       *       limitation that will change in a future release.
+       *
        * @throws Encoding_Error if the private key cannot be encoded in the
        *         requested format.
        */
-      secure_vector<uint8_t> private_key_bits_with_format(MlPrivateKeyFormat format) const;
+      secure_vector<uint8_t> formatted_private_key_bits(MlPrivateKeyFormat format) const override;
+
+      BOTAN_DEPRECATED("Use formatted_raw_private_key_bits")
+      secure_vector<uint8_t> private_key_bits_with_format(MlPrivateKeyFormat format) const {
+         return formatted_raw_private_key_bits(format);
+      }
 
    private:
       friend class Kyber_KEM_Decryptor;

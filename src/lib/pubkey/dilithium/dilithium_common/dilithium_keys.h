@@ -15,19 +15,38 @@
 
 #include <botan/internal/dilithium_types.h>
 
+#include <botan/module_lattice_keys.h>
 #include <botan/internal/dilithium_algos.h>
 #include <botan/internal/dilithium_symmetric_primitives.h>
 
 namespace Botan {
+
+/// A decoded private key together with the encoding format it was found in
+struct DilithiumDecodedKeypair {
+      DilithiumInternalKeypair keypair;
+      MlPrivateKeyFormat format;
+};
 
 class Dilithium_Keypair_Codec /* NOLINT(*-special-member-functions) */ {
    public:
       static std::unique_ptr<Dilithium_Keypair_Codec> create(DilithiumMode mode);
 
       virtual ~Dilithium_Keypair_Codec() = default;
-      virtual secure_vector<uint8_t> encode_keypair(DilithiumInternalKeypair keypair) const = 0;
-      virtual DilithiumInternalKeypair decode_keypair(std::span<const uint8_t> private_key,
-                                                      DilithiumConstants mode) const = 0;
+
+      /**
+       * Encodes the private key in the given @p format as content of the
+       * PKCS#8 privateKey field.
+       * @throws Encoding_Error if the key cannot be encoded in @p format
+       */
+      virtual secure_vector<uint8_t> encode_keypair(const DilithiumInternalKeypair& keypair,
+                                                    MlPrivateKeyFormat format) const = 0;
+
+      /**
+       * Decodes any supported private key encoding and reports the format
+       * that was detected.
+       */
+      virtual DilithiumDecodedKeypair decode_keypair(std::span<const uint8_t> private_key,
+                                                     DilithiumConstants mode) const = 0;
 };
 
 class Dilithium_PublicKeyInternal final {
