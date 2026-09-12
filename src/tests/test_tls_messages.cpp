@@ -18,10 +18,12 @@
    #include <botan/tls_policy.h>
    #include <botan/tls_version.h>
    #include <botan/internal/loadstor.h>
+   #include <botan/internal/tls_reader.h>
    #include <algorithm>
    #include <exception>
 
    #if defined(BOTAN_HAS_TLS_12)
+      #include <botan/tls_extensions.h>
       #include <botan/tls_messages_12.h>
    #endif
 
@@ -29,7 +31,6 @@
       #include "test_rng.h"
       #include <botan/tls_extensions_13.h>
       #include <botan/tls_messages_13.h>
-      #include <botan/internal/tls_reader.h>
    #endif
 #endif
 
@@ -58,6 +59,28 @@ Test::Result test_hello_verify_request() {
    std::vector<uint8_t> test = hmac->final<std::vector<uint8_t>>();
 
    result.test_bin_eq("Cookie comparison", hfr.cookie(), test);
+   return result;
+}
+
+Test::Result test_srtp_extension_ignores_mki() {
+   Test::Result result("SRTP use_srtp extension ignores non-empty MKI");
+
+   // RFC 5764 use_srtp: one profile (srtp_aes128_cm_hmac_sha1_80 = 0x0001)
+   // followed by a non-empty srtp_mki ("bogus"). Parsing must accept and ignore
+   // the MKI rather than reject the extension.
+   const std::vector<uint8_t> ext = {0x00, 0x02, 0x00, 0x01, 0x05, 0x62, 0x6f, 0x67, 0x75, 0x73};
+
+   Botan::TLS::TLS_Data_Reader reader("test_srtp", ext);
+   const Botan::TLS::SRTP_Protection_Profiles srtp(reader, static_cast<uint16_t>(ext.size()));
+
+   result.test_sz_eq("one profile parsed", srtp.profiles().size(), 1);
+
+   // serialize() answers with an empty srtp_mki (trailing 0x00) regardless of the
+   // received MKI, per RFC 5764 4.1.3 option 2.
+   const std::vector<uint8_t> expected = {0x00, 0x02, 0x00, 0x01, 0x00};
+   result.test_bin_eq(
+      "re-serialized use_srtp carries an empty MKI", srtp.serialize(Botan::TLS::Connection_Side::Server), expected);
+
    return result;
 }
    #endif
@@ -209,6 +232,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
          std::vector<Test::Result> results;
 
          results.push_back(test_hello_verify_request());
+         results.push_back(test_srtp_extension_ignores_mki());
 
          return results;
       }

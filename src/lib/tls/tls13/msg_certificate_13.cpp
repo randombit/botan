@@ -17,7 +17,6 @@
 #include <botan/tls_extensions.h>
 #include <botan/tls_policy.h>
 #include <botan/x509_key.h>
-#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_reader.h>
 #include <algorithm>
 #include <iterator>
@@ -34,24 +33,6 @@ bool certificate_allows_signing(const X509_Certificate& cert) {
    }
 
    return constraints.includes_any(Key_Constraints::DigitalSignature, Key_Constraints::NonRepudiation);
-}
-
-std::vector<std::string> filter_signature_schemes(const std::vector<Signature_Scheme>& peer_scheme_preference) {
-   std::vector<std::string> compatible_schemes;
-   for(const auto& scheme : peer_scheme_preference) {
-      if(scheme.is_available() && scheme.is_compatible_with(Protocol_Version::TLS_V13)) {
-         const auto algo_name = scheme.algorithm_name();
-         if(!value_exists(compatible_schemes, algo_name)) {
-            compatible_schemes.push_back(algo_name);
-         }
-      }
-   }
-
-   if(compatible_schemes.empty()) {
-      throw TLS_Exception(Alert::HandshakeFailure, "Failed to agree on any signature algorithm");
-   }
-
-   return compatible_schemes;
 }
 
 }  // namespace
@@ -191,7 +172,10 @@ Certificate_13::Certificate_13(const Certificate_Request_13& cert_request,
                                Callbacks& callbacks,
                                Certificate_Type cert_type) :
       m_request_context(cert_request.context()), m_side(Connection_Side::Client) {
-   const auto key_types = filter_signature_schemes(cert_request.signature_schemes());
+   const auto key_types = filter_signature_schemes(cert_request.signature_schemes(), Protocol_Version::TLS_V13);
+   if(key_types.empty()) {
+      throw TLS_Exception(Alert::HandshakeFailure, "Failed to agree on any signature algorithm");
+   }
    const std::string op_type = "tls-client";
 
    if(cert_type == Certificate_Type::X509) {
@@ -242,7 +226,10 @@ Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
       throw TLS_Exception(Alert::MissingExtension, "Client Hello is missing required signature_algorithms extension");
    }
 
-   const auto key_types = filter_signature_schemes(client_hello.signature_schemes());
+   const auto key_types = filter_signature_schemes(client_hello.signature_schemes(), Protocol_Version::TLS_V13);
+   if(key_types.empty()) {
+      throw TLS_Exception(Alert::HandshakeFailure, "Failed to agree on any signature algorithm");
+   }
    const std::string op_type = "tls-server";
    const std::string context = client_hello.sni_hostname();
 

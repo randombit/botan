@@ -14,6 +14,7 @@
 #include <botan/tls_version.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan::TLS {
 
@@ -455,6 +456,20 @@ std::vector<AlgorithmIdentifier> to_algorithm_identifiers(const std::vector<Sign
       result.push_back(scheme.algorithm_identifier());
    }
    return result;
+}
+
+std::vector<std::string> filter_signature_schemes(const std::vector<Signature_Scheme>& schemes,
+                                                  const Protocol_Version& version) {
+   std::vector<std::string> key_types;
+   for(const auto& scheme : schemes) {
+      if(scheme.is_available() && scheme.is_compatible_with(version)) {
+         const auto algo_name = scheme.algorithm_name();
+         if(!value_exists(key_types, algo_name)) {
+            key_types.push_back(algo_name);
+         }
+      }
+   }
+   return key_types;
 }
 
 }  // namespace Botan::TLS

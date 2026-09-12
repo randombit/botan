@@ -646,10 +646,38 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       }
 
       if(state.received_handshake_msg(Handshake_Type::CertificateRequest)) {
-         const auto& types = state.cert_req()->acceptable_cert_types();
+         const auto& cert_req = *state.cert_req();
+
+         // RFC 5246 7.4.4
+         //    -  Any certificates provided by the client MUST be signed using a
+         //       hash/signature algorithm pair found in supported_signature_algorithms.
+         //
+         //    -  The end-entity certificate provided by the client MUST contain a
+         //       key that is compatible with certificate_types.  If the key is a
+         //       signature key, it MUST be usable with some hash/signature
+         //       algorithm pair in supported_signature_algorithms.
+         //
+         // TLS 1.2 has no signature_algorithms_cert analog, so the one list
+         // constrains both. If nothing survives the filter, pass the requested
+         // types through and let the credentials manager decide.
+         const auto usable_key_types = filter_signature_schemes(cert_req.signature_schemes(), state.version());
+
+         std::vector<std::string> key_types;
+         for(const auto& cert_type : cert_req.acceptable_cert_types()) {
+            if(value_exists(usable_key_types, cert_type)) {
+               key_types.push_back(cert_type);
+            }
+         }
+         if(key_types.empty()) {
+            key_types = cert_req.acceptable_cert_types();
+         }
 
          const std::vector<X509_Certificate> client_certs =
-            m_creds->find_cert_chain(types, {}, state.cert_req()->acceptable_CAs(), "tls-client", m_info.hostname());
+            m_creds->find_cert_chain(key_types,
+                                     to_algorithm_identifiers(cert_req.signature_schemes()),
+                                     cert_req.acceptable_CAs(),
+                                     "tls-client",
+                                     m_info.hostname());
 
          state.client_certs(std::make_unique<Certificate_12>(state.handshake_io(), state.hash(), client_certs));
       }

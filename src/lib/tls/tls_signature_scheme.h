@@ -143,6 +143,16 @@ class BOTAN_PUBLIC_API(3, 0) Signature_Scheme final {
 
 std::vector<AlgorithmIdentifier> to_algorithm_identifiers(const std::vector<Signature_Scheme>& schemes);
 
+/**
+* Reduce @p schemes to the distinct certificate key-algorithm names (e.g.
+* "RSA", "ECDSA") that are usable under @p version, preserving the order in
+* which they first appear. Schemes that are unavailable in this build, or not
+* compatible with @p version, are skipped. Used to narrow certificate
+* selection to the key types the peer's signature_algorithms permits.
+*/
+std::vector<std::string> filter_signature_schemes(const std::vector<Signature_Scheme>& schemes,
+                                                  const Protocol_Version& version);
+
 }  // namespace Botan::TLS
 
 #endif  // BOTAN_TLS_SIGNATURE_SCHEME_H_
