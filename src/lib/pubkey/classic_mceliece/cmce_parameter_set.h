@@ -15,12 +15,12 @@ namespace Botan {
 
 /**
  * All Classic McEliece parameter sets defined in the NIST Round 4
- * submission and the Classic McEliece ISO Draft.
+ * submission and the ISO standard (ISO/IEC 18033-2:2006/Amd 2).
  *
  * Instances are defined in the following format:
  * mceliece{n}{t}{[pc]}{[f]}
  *
- * Instance with 'pc' use plaintext confirmation as defined in the ISO Draft.
+ * Instance with 'pc' use plaintext confirmation as defined in the ISO standard.
  * Instance with 'f' use matrix reduction with the semi-systematic form.
  */
 class BOTAN_PUBLIC_API(3, 4) Classic_McEliece_Parameter_Set final {
@@ -29,8 +29,9 @@ class BOTAN_PUBLIC_API(3, 4) Classic_McEliece_Parameter_Set final {
          ClassicMcEliece_348864,   // NIST
          ClassicMcEliece_348864f,  // NIST
 
-         ClassicMcEliece_460896,   // NIST
-         ClassicMcEliece_460896f,  // NIST
+         ClassicMcEliece_460896,   // ISO + NIST
+         ClassicMcEliece_460896f,  // ISO + NIST
+         // Note: mceliece460896pc(f) are defined in the ISO standard but not implemented here
 
          ClassicMcEliece_6688128,     // ISO + NIST
          ClassicMcEliece_6688128f,    // ISO + NIST

@@ -19,10 +19,12 @@ class Classic_McEliece_PublicKeyInternal;
 class Classic_McEliece_PrivateKeyInternal;
 
 /**
- * Classic McEliece is a Code-Based KEM. It is a round 4 candidate in NIST's PQC competition.
- * It is endorsed by the German Federal Office for Information Security (BSI) for its conservative security
- * assumptions and a corresponding draft for an ISO standard has been prepared. Both NIST and ISO parameter
- * sets are implemented here. See https://classic.mceliece.org/ for the specifications and other details.
+ * Classic McEliece is a Code-Based KEM. It was a round 4 candidate in NIST's PQC competition and was
+ * standardized by ISO in June 2026 (ISO/IEC 18033-2:2006/Amd 2). It is endorsed by the German Federal
+ * Office for Information Security (BSI) for its conservative security assumptions. Both NIST and ISO
+ * parameter sets are implemented here. As the ISO document is not freely available, see
+ * https://classic.mceliece.org/ for the specification this implementation follows; the ISO standard
+ * is stated by the Classic McEliece team to be compatible with it.
  *
  * Advantages of Classic McEliece:
  * - Conservative post-quantum security assumptions
