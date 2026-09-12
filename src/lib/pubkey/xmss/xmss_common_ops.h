@@ -21,6 +21,18 @@ class XMSS_Hash;
 typedef std::vector<secure_vector<uint8_t>> wots_keysig_t;
 
 /**
+ * Bundles the WOTS+ signature and the authentication path of a single XMSS
+ * tree. For XMSS this makes up the entire signature (together with the leaf
+ * index and randomness), while an XMSS^MT signature contains one such
+ * "reduced signature" per hypertree layer.
+ **/
+struct XMSS_TreeSignature final {
+   public:
+      wots_keysig_t ots_signature;
+      wots_keysig_t authentication_path;
+};
+
+/**
  * Operations shared by XMSS signature generation and verification operations.
  **/
 class XMSS_Common_Ops {
@@ -41,7 +53,7 @@ class XMSS_Common_Ops {
         * @param[in] seed The seed for G.
         * @param[in] hash Instance of XMSS_Hash, that may only by the thread
         *            executing generate_public_key.
-        * @param[in] params parameters
+        * @param[in] element_size Size of each node in bytes, the parameter "n"
         **/
       static void randomize_tree_hash(secure_vector<uint8_t>& result,
                                       const secure_vector<uint8_t>& left,
@@ -49,7 +61,7 @@ class XMSS_Common_Ops {
                                       XMSS_Address adrs,
                                       const secure_vector<uint8_t>& seed,
                                       XMSS_Hash& hash,
-                                      const XMSS_Parameters& params);
+                                      size_t element_size);
 
       /**
        * Algorithm 8: "ltree"
@@ -66,14 +78,16 @@ class XMSS_Common_Ops {
        * @param[in] seed The seed generated during the public key generation.
        * @param[in] hash Instance of XMSS_Hash, that may only be used by the
        *            thread executing create_l_tree.
-       * @param[in] params parameters
+       * @param[in] element_size Size of each node in bytes, the parameter "n"
+       * @param[in] wots_len Number of WOTS+ chains, the parameter "len"
       **/
       static void create_l_tree(secure_vector<uint8_t>& result,
                                 const wots_keysig_t& pk,
                                 XMSS_Address adrs,
                                 const secure_vector<uint8_t>& seed,
                                 XMSS_Hash& hash,
-                                const XMSS_Parameters& params);
+                                size_t element_size,
+                                size_t wots_len);
 
       /**
        * Algorithm 8: "ltree", applied to many WOTS+ public keys at once,
@@ -88,14 +102,45 @@ class XMSS_Common_Ops {
        * @param[in] seed The public seed
        * @param[in] hash Instance of XMSS_Hash, that may only be used by the
        *            thread executing create_l_trees.
-       * @param[in] params parameters
+       * @param[in] element_size Size of each node in bytes, the parameter "n"
+       * @param[in] wots_len Number of WOTS+ chains, the parameter "len"
       **/
       static void create_l_trees(std::span<uint8_t> leaves,
                                  std::span<uint8_t> pks,
                                  std::span<XMSS_Address> addrs,
                                  std::span<const uint8_t> seed,
                                  XMSS_Hash& hash,
-                                 const XMSS_Parameters& params);
+                                 size_t element_size,
+                                 size_t wots_len);
+
+      /**
+       * Algorithm 13: "XMSS_rootFromSig"
+       * Computes a root node using a tree signature and a message.
+       *
+       * @param[in] idx_leaf Index of the WOTS+ key pair (the leaf) within the
+       *            tree.
+       * @param[in] tree_sig The WOTS+ signature and authentication path.
+       * @param[in] msg The signed message (for XMSS^MT layers above the
+       *            lowest: the root node of the tree below).
+       * @param[in] adrs Address of the tree. The caller presets the layer and
+       *            tree address fields (both zero for XMSS).
+       * @param[in] seed The public seed.
+       * @param[in] hash The hash instance to use.
+       * @param[in] wots_params The WOTS+ parameters.
+       * @param[in] tree_height Height of the tree, the parameter "h"
+       *            (for XMSS^MT: the height of a single layer's tree, "h/d").
+       *
+       * @return An n-byte string holding the value of the root of the tree
+       *         defined by the input parameters.
+       **/
+      static secure_vector<uint8_t> root_from_signature(uint32_t idx_leaf,
+                                                        const XMSS_TreeSignature& tree_sig,
+                                                        const secure_vector<uint8_t>& msg,
+                                                        XMSS_Address adrs,
+                                                        const secure_vector<uint8_t>& seed,
+                                                        XMSS_Hash& hash,
+                                                        const XMSS_WOTS_Parameters& wots_params,
+                                                        size_t tree_height);
 };
 
 }  // namespace Botan

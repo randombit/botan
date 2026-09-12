@@ -42,34 +42,44 @@ class XMSS_Address final {
       enum class Key_Mask : uint8_t { Key_Mode = 0, Mask_Mode = 1, Mask_MSB_Mode = 1, Mask_LSB_Mode = 2 };
 
       /**
-       * Layer Address for XMSS is constantly zero and can not be changed this
-       * property is only of relevance to XMSS_MT.
+       * retrieves the Layer Address. A call to this method is only required by XMSS_MT.
+       * The Layer Address is constantly zero for XMSS.
+       * For XMSS_MT it describes the height of the tree in the multi-tree structure.
        *
-       * @return Layer address, which is constant 0 for XMSS.
+       * @return Layer address.
        **/
-      uint8_t get_layer_addr() const { return 0; }
+      uint32_t get_layer_addr() const { return get_hi32(0); }
 
       /**
-       * Layer Address for XMSS is constantly zero and can not be changed this
-       * property is only of relevance to XMSS_MT. Calling this method for
-       * XMSS will result in an error.
+       * sets the Layer Address. A call to this method is only required by XMSS_MT.
+       * The Layer Address is constantly zero for XMSS.
+       * For XMSS_MT it describes the height of the tree in the multi-tree structure.
        **/
-      void set_layer_addr() { BOTAN_ASSERT(false, "Only available in XMSS_MT."); }
+      void set_layer_addr(uint32_t value) { set_hi32(0, value); }
 
       /**
-       * Tree Address for XMSS is constantly zero and can not be changed this
-       * property is only of relevance to XMSS_MT.
+       * retrieves the Tree Address. A call to this method is only required by XMSS_MT.
+       * The Tree Address is constantly zero for XMSS.
+       * For XMSS_MT it describes the position of the tree within its layer.
        *
-       * @return Tree address, which is constant 0 for XMSS.
+       * @return Tree address.
        **/
-      uint64_t get_tree_addr() const { return 0; }
+      uint64_t get_tree_addr() const {
+         const uint64_t high = static_cast<uint64_t>(get_lo32(0));
+         const uint64_t low = static_cast<uint64_t>(get_hi32(1));
+         return (high << 32) | low;
+      }
 
       /**
-       * Tree Address for XMSS is constantly zero and can not be changed this
-       * property is only of relevance to XMSS_MT. Calling this method for
-       * XMSS will result in an error.
+       * sets the Tree Address. A call to this method is only required by XMSS_MT.
+       * The Tree Address is constantly zero for XMSS.
+       * For XMSS_MT it describes the position of the tree within its layer.
+       *
        **/
-      void set_tree_addr() { BOTAN_ASSERT(false, "Only available in XMSS_MT."); }
+      void set_tree_addr(uint64_t value) {
+         set_lo32(0, static_cast<uint32_t>(value >> 32));
+         set_hi32(1, static_cast<uint32_t>(value));
+      }
 
       /**
        * retrieves the logical type currently assigned to the XMSS Address

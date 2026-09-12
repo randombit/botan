@@ -21,12 +21,14 @@ XMSS_Hash::XMSS_Hash(const XMSS_Hash& hash) :
       m_msg_hash(hash.m_msg_hash->new_object()),
       m_zero_padding(hash.m_zero_padding) {}
 
-XMSS_Hash::XMSS_Hash(const XMSS_Parameters& params) :
-      m_hash(HashFunction::create(params.hash_function_name())),
-      m_msg_hash(HashFunction::create(params.hash_function_name())),
-      m_zero_padding(params.hash_id_size() - 1 /* hash IDs are a single uint8_t */) {
+XMSS_Hash::XMSS_Hash(const XMSS_Parameters& params) : XMSS_Hash(params.hash_function_name(), params.hash_id_size()) {}
+
+XMSS_Hash::XMSS_Hash(std::string_view hash_function_name, size_t hash_id_size) :
+      m_hash(HashFunction::create(hash_function_name)),
+      m_msg_hash(HashFunction::create(hash_function_name)),
+      m_zero_padding(hash_id_size - 1 /* hash IDs are a single uint8_t */) {
    if(!m_hash || !m_msg_hash) {
-      throw Lookup_Error(fmt("XMSS cannot use hash {} because it is unavailable", params.hash_function_name()));
+      throw Lookup_Error(fmt("XMSS cannot use hash {} because it is unavailable", hash_function_name));
    }
 
    BOTAN_ASSERT(m_hash->output_length() > 0, "Hash output length of zero is invalid.");

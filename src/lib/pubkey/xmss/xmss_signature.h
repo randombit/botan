@@ -12,6 +12,7 @@
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <botan/xmss_parameters.h>
+#include <botan/internal/xmss_common_ops.h>
 #include <botan/internal/xmss_wots.h>
 
 namespace Botan {
@@ -21,11 +22,7 @@ namespace Botan {
  */
 class XMSS_Signature final {
    public:
-      struct TreeSignature final {
-         public:
-            wots_keysig_t ots_signature;
-            wots_keysig_t authentication_path;
-      };
+      using TreeSignature = XMSS_TreeSignature;
 
    public:
       /**
