@@ -20,8 +20,7 @@ namespace Botan {
 
 class AEAD_Mode;
 class HashFunction;
-class HKDF_Extract;
-class HKDF_Expand;
+class KDF;
 
 }  // namespace Botan
 
@@ -79,19 +78,23 @@ class BOTAN_TEST_API Cipher_State {
       /**
        * Construct a Cipher_State from a Pre-Shared-Key.
        */
-      static std::unique_ptr<Cipher_State> init_with_psk(Connection_Side side,
-                                                         PSK_Type type,
-                                                         secure_vector<uint8_t>&& psk,
-                                                         std::string_view prf_algo);
+      static std::unique_ptr<Cipher_State> init_with_psk(
+         Connection_Side side,
+         PSK_Type type,
+         secure_vector<uint8_t>&& psk,
+         std::string_view prf_algo,
+         std::shared_ptr<CryptoOperations> crypto = std::make_shared<CryptoOperations>());
 
       /**
        * Construct a Cipher_State after receiving a server hello message.
        */
-      static std::unique_ptr<Cipher_State> init_with_server_hello(Connection_Side side,
-                                                                  secure_vector<uint8_t>&& shared_secret,
-                                                                  const Ciphersuite& cipher,
-                                                                  const Transcript_Hash& transcript_hash,
-                                                                  const Secret_Logger& channel);
+      static std::unique_ptr<Cipher_State> init_with_server_hello(
+         Connection_Side side,
+         secure_vector<uint8_t>&& shared_secret,
+         const Ciphersuite& cipher,
+         const Transcript_Hash& transcript_hash,
+         const Secret_Logger& channel,
+         std::shared_ptr<CryptoOperations> crypto = std::make_shared<CryptoOperations>());
 
       /**
        * Transition internal secrets/keys for transporting early application data.
@@ -290,7 +293,7 @@ class BOTAN_TEST_API Cipher_State {
        * @param whoami         whether we play the Server or Client
        * @param hash_function  the negotiated hash function to be used
        */
-      Cipher_State(Connection_Side whoami, std::string_view hash_function);
+      Cipher_State(Connection_Side whoami, std::string_view hash_function, std::shared_ptr<CryptoOperations> crypto);
 
       void advance_with_psk(PSK_Type type, secure_vector<uint8_t>&& psk);
       void advance_without_psk();
@@ -332,14 +335,16 @@ class BOTAN_TEST_API Cipher_State {
       };
 
    private:
+      std::shared_ptr<CryptoOperations> m_crypto;
       State m_state;
       Connection_Side m_connection_side;
 
       std::unique_ptr<AEAD_Mode> m_encrypt;
       std::unique_ptr<AEAD_Mode> m_decrypt;
 
-      std::unique_ptr<HKDF_Extract> m_extract;
-      std::unique_ptr<HKDF_Expand> m_expand;
+      std::string m_cipher_algorithm;
+      std::unique_ptr<KDF> m_extract;
+      std::unique_ptr<KDF> m_expand;
       std::unique_ptr<HashFunction> m_hash;
 
       secure_vector<uint8_t> m_salt;

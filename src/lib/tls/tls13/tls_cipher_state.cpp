@@ -99,11 +99,11 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_magic.h>
 
+#include <botan/kdf.h>
+#include <botan/mac.h>
 #include <botan/internal/concat_util.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/hkdf.h>
-#include <botan/internal/hmac.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_channel_impl_13.h>
@@ -127,8 +127,9 @@ std::unique_ptr<Cipher_State> Cipher_State::init_with_server_hello(const Connect
                                                                    secure_vector<uint8_t>&& shared_secret,
                                                                    const Ciphersuite& cipher,
                                                                    const Transcript_Hash& transcript_hash,
-                                                                   const Secret_Logger& logger) {
-   auto cs = std::unique_ptr<Cipher_State>(new Cipher_State(side, cipher.prf_algo()));
+                                                                   const Secret_Logger& logger,
+                                                                   std::shared_ptr<CryptoOperations> crypto) {
+   auto cs = std::unique_ptr<Cipher_State>(new Cipher_State(side, cipher.prf_algo(), std::move(crypto)));
    cs->advance_without_psk();
    cs->advance_with_server_hello(cipher, std::move(shared_secret), transcript_hash, logger);
    return cs;
@@ -137,8 +138,9 @@ std::unique_ptr<Cipher_State> Cipher_State::init_with_server_hello(const Connect
 std::unique_ptr<Cipher_State> Cipher_State::init_with_psk(const Connection_Side side,
                                                           const Cipher_State::PSK_Type type,
                                                           secure_vector<uint8_t>&& psk,
-                                                          std::string_view prf_algo) {
-   auto cs = std::unique_ptr<Cipher_State>(new Cipher_State(side, prf_algo));
+                                                          std::string_view prf_algo,
+                                                          std::shared_ptr<CryptoOperations> crypto) {
+   auto cs = std::unique_ptr<Cipher_State>(new Cipher_State(side, prf_algo, std::move(crypto)));
    cs->advance_with_psk(type, std::move(psk));
    return cs;
 }
@@ -509,17 +511,8 @@ bool Cipher_State::is_compatible_with(const Ciphersuite& cipher) const {
    }
 
    BOTAN_ASSERT_NOMSG((m_encrypt == nullptr) == (m_decrypt == nullptr));
-   // Compare canonical AEAD names rather than substring-matching cipher_algo
-   // against m_encrypt->name(). starts_with() is both too permissive (an
-   // AES-128/CCM-8 instance starts with "AES-128/CCM" so it would accept the
-   // CCM-16 suite) and too restrictive (cipher_algo "AES-128/CCM(8)" does not
-   // prefix the canonical "AES-128/CCM(8,3)"). Re-instantiating the AEAD from
-   // cipher_algo yields the same canonical name() the suite would produce.
-   if(m_encrypt) {
-      auto canonical = AEAD_Mode::create(cipher.cipher_algo(), Cipher_Dir::Encryption);
-      if(!canonical || canonical->name() != m_encrypt->name()) {
-         return false;
-      }
+   if(m_encrypt && cipher.cipher_algo() != m_cipher_algorithm) {
+      return false;
    }
 
    return true;
@@ -529,10 +522,10 @@ std::vector<uint8_t> Cipher_State::psk_binder_mac(
    const Transcript_Hash& transcript_hash_with_truncated_client_hello) const {
    BOTAN_ASSERT_NOMSG(m_state == State::PskBinder);
 
-   auto hmac = HMAC(m_hash->new_object());
-   hmac.set_key(m_binder_key);
-   hmac.update(transcript_hash_with_truncated_client_hello);
-   return hmac.final_stdvec();
+   auto hmac = m_crypto->create_mac(fmt("HMAC({})", m_hash->name()));
+   hmac->set_key(m_binder_key);
+   hmac->update(transcript_hash_with_truncated_client_hello);
+   return hmac->final_stdvec();
 }
 
 std::vector<uint8_t> Cipher_State::finished_mac(const Transcript_Hash& transcript_hash) const {
@@ -540,10 +533,10 @@ std::vector<uint8_t> Cipher_State::finished_mac(const Transcript_Hash& transcrip
    BOTAN_ASSERT_NOMSG(m_connection_side != Connection_Side::Client || m_state == State::ServerApplicationTraffic);
    BOTAN_ASSERT_NOMSG(!m_finished_key.empty());
 
-   auto hmac = HMAC(m_hash->new_object());
-   hmac.set_key(m_finished_key);
-   hmac.update(transcript_hash);
-   return hmac.final_stdvec();
+   auto hmac = m_crypto->create_mac(fmt("HMAC({})", m_hash->name()));
+   hmac->set_key(m_finished_key);
+   hmac->update(transcript_hash);
+   return hmac->final_stdvec();
 }
 
 bool Cipher_State::verify_peer_finished_mac(const Transcript_Hash& transcript_hash,
@@ -552,10 +545,10 @@ bool Cipher_State::verify_peer_finished_mac(const Transcript_Hash& transcript_ha
    BOTAN_ASSERT_NOMSG(m_connection_side != Connection_Side::Client || m_state == State::HandshakeTraffic);
    BOTAN_ASSERT_NOMSG(!m_peer_finished_key.empty());
 
-   auto hmac = HMAC(m_hash->new_object());
-   hmac.set_key(m_peer_finished_key);
-   hmac.update(transcript_hash);
-   return hmac.verify_mac(peer_mac);
+   auto hmac = m_crypto->create_mac(fmt("HMAC({})", m_hash->name()));
+   hmac->set_key(m_peer_finished_key);
+   hmac->update(transcript_hash);
+   return hmac->verify_mac(peer_mac);
 }
 
 secure_vector<uint8_t> Cipher_State::psk(const Ticket_Nonce& nonce) const {
@@ -590,20 +583,15 @@ secure_vector<uint8_t> Cipher_State::export_key(std::string_view label, std::str
       derive_secret(m_exporter_master_secret, label, empty_hash()), "exporter", context_hash, length);
 }
 
-namespace {
-
-std::unique_ptr<MessageAuthenticationCode> create_hmac(std::string_view hash) {
-   return std::make_unique<HMAC>(HashFunction::create_or_throw(hash));
-}
-
-}  // namespace
-
-Cipher_State::Cipher_State(Connection_Side whoami, std::string_view hash_function) :
+Cipher_State::Cipher_State(Connection_Side whoami,
+                           std::string_view hash_function,
+                           std::shared_ptr<CryptoOperations> crypto) :
+      m_crypto(std::move(crypto)),
       m_state(State::Uninitialized),
       m_connection_side(whoami),
-      m_extract(std::make_unique<HKDF_Extract>(create_hmac(hash_function))),
-      m_expand(std::make_unique<HKDF_Expand>(create_hmac(hash_function))),
-      m_hash(HashFunction::create_or_throw(hash_function)),
+      m_extract(m_crypto->create_kdf(fmt("HKDF-Extract({})", hash_function))),
+      m_expand(m_crypto->create_kdf(fmt("HKDF-Expand({})", hash_function))),
+      m_hash(m_crypto->create_hash(hash_function)),
       m_salt(m_hash->output_length(), 0x00),
       m_write_seq_no(0),
       m_read_seq_no(0),
@@ -664,8 +652,9 @@ void Cipher_State::advance_with_server_hello(const Ciphersuite& cipher,
    BOTAN_ASSERT_NOMSG(!m_decrypt);
    BOTAN_STATE_CHECK(is_compatible_with(cipher));
 
-   m_encrypt = AEAD_Mode::create_or_throw(cipher.cipher_algo(), Cipher_Dir::Encryption);
-   m_decrypt = AEAD_Mode::create_or_throw(cipher.cipher_algo(), Cipher_Dir::Decryption);
+   m_cipher_algorithm = cipher.cipher_algo();
+   m_encrypt = m_crypto->create_aead(m_cipher_algorithm, Cipher_Dir::Encryption);
+   m_decrypt = m_crypto->create_aead(cipher.cipher_algo(), Cipher_Dir::Decryption);
 
    const auto handshake_secret = hkdf_extract(std::move(shared_secret));
 

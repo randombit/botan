@@ -10,6 +10,7 @@
 
 #include <botan/assert.h>
 #include <botan/tls_callbacks.h>
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_policy.h>
 #include <botan/x509cert.h>
 #include <botan/internal/target_info.h>
@@ -29,8 +30,7 @@ Certificate_Verify_12::Certificate_Verify_12(Handshake_IO& io,
 
    const std::pair<std::string, Signature_Format> format = state.choose_sig_format(*priv_key, m_scheme, true, policy);
 
-   m_signature =
-      state.callbacks().tls_sign_message(*priv_key, rng, format.first, format.second, state.hash().get_contents());
+   m_signature = state.crypto().sign_message(*priv_key, rng, format.first, format.second, state.hash().get_contents());
 
    state.hash().update(io.send(*this));
 }
@@ -38,7 +38,7 @@ Certificate_Verify_12::Certificate_Verify_12(Handshake_IO& io,
 bool Certificate_Verify_12::verify(const X509_Certificate& cert,
                                    const Handshake_State& state,
                                    const Policy& policy) const {
-   auto key = cert.subject_public_key();
+   auto key = state.crypto().load_public_key(cert.subject_public_key_info());
 
    policy.check_peer_key_acceptable(*key);
 
@@ -46,7 +46,7 @@ bool Certificate_Verify_12::verify(const X509_Certificate& cert,
       state.parse_sig_format(*key, m_scheme, state.client_hello()->signature_schemes(), true, policy);
 
    const bool signature_valid =
-      state.callbacks().tls_verify_message(*key, format.first, format.second, state.hash().get_contents(), m_signature);
+      state.crypto().verify_message(*key, format.first, format.second, state.hash().get_contents(), m_signature);
 
 #if defined(BOTAN_UNSAFE_FUZZER_MODE)
    BOTAN_UNUSED(signature_valid);

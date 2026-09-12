@@ -31,6 +31,7 @@ class KDF;
 namespace TLS {
 
 class Callbacks;
+class CryptoOperations;
 class Policy;
 class Signature_Scheme;
 
@@ -60,7 +61,7 @@ class Finished_12;
 */
 class Handshake_State {
    public:
-      Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& callbacks);
+      Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& callbacks, CryptoOperations& crypto);
       virtual ~Handshake_State();
 
       Handshake_State(const Handshake_State& other) = delete;
@@ -170,6 +171,8 @@ class Handshake_State {
 
       Callbacks& callbacks() const { return m_callbacks; }
 
+      CryptoOperations& crypto() const { return m_crypto; }
+
       void compute_session_keys();
 
       void compute_session_keys(const secure_vector<uint8_t>& resume_master_secret);
@@ -182,6 +185,7 @@ class Handshake_State {
 
    private:
       Callbacks& m_callbacks;
+      CryptoOperations& m_crypto;
 
       std::unique_ptr<Handshake_IO> m_handshake_io;
 

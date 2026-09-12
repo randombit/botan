@@ -32,7 +32,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
       Server_Hello_12(std::make_unique<Server_Hello_Internal>(
          server_settings.protocol_version(),
          server_settings.session_id(),
-         make_server_hello_random(rng, server_settings.protocol_version(), cb, policy),
+         make_server_hello_random(rng, server_settings.protocol_version(), cb, policy, hash.crypto()),
          server_settings.ciphersuite(),
          uint8_t(0))) {
    // NOLINTBEGIN(*-owning-memory)
@@ -105,12 +105,12 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
                                  const Session& resumed_session,
                                  bool offer_session_ticket,
                                  std::string_view next_protocol) :
-      Server_Hello_12(
-         std::make_unique<Server_Hello_Internal>(resumed_session.version(),
-                                                 client_hello.session_id(),
-                                                 make_server_hello_random(rng, resumed_session.version(), cb, policy),
-                                                 resumed_session.ciphersuite_code(),
-                                                 uint8_t(0))) {
+      Server_Hello_12(std::make_unique<Server_Hello_Internal>(
+         resumed_session.version(),
+         client_hello.session_id(),
+         make_server_hello_random(rng, resumed_session.version(), cb, policy, hash.crypto()),
+         resumed_session.ciphersuite_code(),
+         uint8_t(0))) {
    // NOLINTBEGIN(*-owning-memory)
    if(client_hello.supports_extended_master_secret()) {
       m_data->extensions().add(new Extended_Master_Secret);

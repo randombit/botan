@@ -27,6 +27,7 @@ class Credentials_Manager;
 namespace TLS {
 
 class Callbacks;
+class CryptoOperations;
 class Cipher_State;
 class Ciphersuite;
 class Policy;
@@ -170,7 +171,10 @@ class BOTAN_UNSTABLE_API PSK final : public Extension /* NOLINT(*-special-member
        *                           offered to the server
        * @param callbacks          the application's callbacks
        */
-      PSK(std::optional<Session_with_Handle>& session_to_resume, std::vector<ExternalPSK> psks, Callbacks& callbacks);
+      PSK(std::optional<Session_with_Handle>& session_to_resume,
+          std::vector<ExternalPSK> psks,
+          Callbacks& callbacks,
+          const std::shared_ptr<CryptoOperations>& crypto);
 
       ~PSK() override;
 
@@ -228,7 +232,7 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension /* NOLINT(*-special-
       static std::unique_ptr<Key_Share> create_as_encapsulation(Group_Params selected_group,
                                                                 const Key_Share& client_keyshare,
                                                                 const Policy& policy,
-                                                                Callbacks& cb,
+                                                                CryptoOperations& crypto,
                                                                 RandomNumberGenerator& rng);
 
       /**
@@ -241,7 +245,7 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension /* NOLINT(*-special-
        */
       secure_vector<uint8_t> decapsulate(const Key_Share& server_keyshare,
                                          const Policy& policy,
-                                         Callbacks& cb,
+                                         CryptoOperations& crypto,
                                          RandomNumberGenerator& rng);
 
       /**
@@ -251,7 +255,7 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension /* NOLINT(*-special-
        */
       void retry_offer(const Key_Share& retry_request_keyshare,
                        const std::vector<Named_Group>& supported_groups,
-                       Callbacks& cb,
+                       CryptoOperations& crypto,
                        RandomNumberGenerator& rng);
 
       /**
@@ -276,7 +280,7 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension /* NOLINT(*-special-
       Key_Share(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type message_type);
 
       // constructor used for ClientHello msg
-      Key_Share(const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng);
+      Key_Share(const Policy& policy, CryptoOperations& crypto, RandomNumberGenerator& rng);
 
       // constructor used for HelloRetryRequest msg
       explicit Key_Share(Named_Group selected_group);
@@ -290,7 +294,7 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension /* NOLINT(*-special-
       Key_Share(Group_Params selected_group,
                 const Key_Share& client_keyshare,
                 const Policy& policy,
-                Callbacks& cb,
+                CryptoOperations& crypto,
                 RandomNumberGenerator& rng);
 
    private:

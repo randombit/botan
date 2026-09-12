@@ -10,6 +10,7 @@
 
 #include <botan/database.h>
 #include <botan/symkey.h>
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_session_manager.h>
 
 namespace Botan {
@@ -40,7 +41,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_SQL : public Session_Manager {
       Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
                           std::string_view passphrase,
                           const std::shared_ptr<RandomNumberGenerator>& rng,
-                          size_t max_sessions = 1000);
+                          size_t max_sessions = 1000,
+                          std::shared_ptr<CryptoOperations> crypto = std::make_shared<CryptoOperations>());
 
       Session_Manager_SQL(const Session_Manager_SQL&) = delete;
       Session_Manager_SQL& operator=(const Session_Manager_SQL&) = delete;
@@ -88,6 +90,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_SQL : public Session_Manager {
       void prune_session_cache();
 
    private:
+      std::shared_ptr<CryptoOperations> m_crypto;
       std::shared_ptr<SQL_Database> m_db;
       SymmetricKey m_session_key;
       size_t m_max_sessions;

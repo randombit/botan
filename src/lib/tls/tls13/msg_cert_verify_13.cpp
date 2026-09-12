@@ -11,7 +11,7 @@
 
 #include <botan/credentials_manager.h>
 #include <botan/pk_keys.h>
-#include <botan/tls_callbacks.h>
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/stl_util.h>
@@ -60,7 +60,7 @@ Certificate_Verify_13::Certificate_Verify_13(const Certificate_13& certificate_m
                                              Connection_Side whoami,
                                              Credentials_Manager& creds_mgr,
                                              const Policy& policy,
-                                             Callbacks& callbacks,
+                                             CryptoOperations& crypto,
                                              RandomNumberGenerator& rng) :
       m_side(whoami) {
    BOTAN_ASSERT_NOMSG(!certificate_msg.empty());
@@ -79,7 +79,7 @@ Certificate_Verify_13::Certificate_Verify_13(const Certificate_13& certificate_m
    BOTAN_ASSERT_NOMSG(m_scheme.is_available());
    BOTAN_ASSERT_NOMSG(m_scheme.is_compatible_with(Protocol_Version::TLS_V13));
 
-   m_signature = callbacks.tls_sign_message(
+   m_signature = crypto.sign_message(
       *private_key, rng, m_scheme.padding_string(), m_scheme.format().value(), message(m_side, hash));
 }
 
@@ -98,7 +98,7 @@ Certificate_Verify_13::Certificate_Verify_13(std::span<const uint8_t> buf, const
 * Verify a Certificate Verify message
 */
 bool Certificate_Verify_13::verify(const Public_Key& public_key,
-                                   Callbacks& callbacks,
+                                   CryptoOperations& crypto,
                                    const Transcript_Hash& transcript_hash) const {
    BOTAN_ASSERT_NOMSG(m_scheme.is_available());
 
@@ -109,7 +109,7 @@ bool Certificate_Verify_13::verify(const Public_Key& public_key,
       throw TLS_Exception(Alert::IllegalParameter, "Signature algorithm does not match certificate's public key");
    }
 
-   const bool signature_valid = callbacks.tls_verify_message(
+   const bool signature_valid = crypto.verify_message(
       public_key, m_scheme.padding_string(), m_scheme.format().value(), message(m_side, transcript_hash), m_signature);
 
 #if defined(BOTAN_UNSAFE_FUZZER_MODE)

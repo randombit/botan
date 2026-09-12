@@ -9,6 +9,7 @@
 #ifndef BOTAN_TLS_SESSION_MANAGER_STATELESS_H_
 #define BOTAN_TLS_SESSION_MANAGER_STATELESS_H_
 
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_session_manager.h>
 
 namespace Botan {
@@ -39,7 +40,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Stateless final : public Session_Ma
        * Credentials_Manager to provide a suitable key for this purpose.
        */
       Session_Manager_Stateless(const std::shared_ptr<Credentials_Manager>& credentials_manager,
-                                const std::shared_ptr<RandomNumberGenerator>& rng);
+                                const std::shared_ptr<RandomNumberGenerator>& rng,
+                                std::shared_ptr<CryptoOperations> crypto = std::make_shared<CryptoOperations>());
 
       std::optional<Session_Handle> establish(const Session& session,
                                               const std::optional<Session_ID>& id = std::nullopt,
@@ -63,6 +65,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Stateless final : public Session_Ma
       std::optional<SymmetricKey> get_ticket_key() noexcept;
 
    private:
+      std::shared_ptr<CryptoOperations> m_crypto;
       std::shared_ptr<Credentials_Manager> m_credentials_manager;
 };
 

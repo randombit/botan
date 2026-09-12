@@ -127,7 +127,8 @@ void Certificate_13::verify_certificate_chain(Callbacks& callbacks,
 
 void Certificate_13::setup_entries(std::vector<X509_Certificate> cert_chain,
                                    const Certificate_Status_Request* csr,
-                                   Callbacks& callbacks) {
+                                   Callbacks& callbacks,
+                                   const CryptoOperations& crypto) {
    // RFC 8446 4.4.2.1
    //    A server MAY request that a client present an OCSP response with its
    //    certificate by sending an empty "status_request" extension in its
@@ -140,7 +141,7 @@ void Certificate_13::setup_entries(std::vector<X509_Certificate> cert_chain,
    }
 
    for(size_t i = 0; i < cert_chain.size(); ++i) {
-      auto& entry = m_entries.emplace_back(cert_chain[i]);
+      auto& entry = m_entries.emplace_back(cert_chain[i], crypto);
       if(!ocsp_responses[i].empty()) {
          entry.extensions().add(new Certificate_Status_Request(ocsp_responses[i]));  // NOLINT(*-owning-memory)
       }
@@ -170,7 +171,8 @@ Certificate_13::Certificate_13(const Certificate_Request_13& cert_request,
                                std::string_view hostname,
                                Credentials_Manager& credentials_manager,
                                Callbacks& callbacks,
-                               Certificate_Type cert_type) :
+                               Certificate_Type cert_type,
+                               const CryptoOperations& crypto) :
       m_request_context(cert_request.context()), m_side(Connection_Side::Client) {
    const auto key_types = filter_signature_schemes(cert_request.signature_schemes(), Protocol_Version::TLS_V13);
    if(key_types.empty()) {
@@ -186,7 +188,8 @@ Certificate_13::Certificate_13(const Certificate_Request_13& cert_request,
                                              op_type,
                                              std::string(hostname)),
          cert_request.extensions().get<Certificate_Status_Request>(),
-         callbacks);
+         callbacks,
+         crypto);
    } else if(cert_type == Certificate_Type::RawPublicKey) {
       auto raw_public_key = credentials_manager.find_raw_public_key(key_types, op_type, std::string(hostname));
 
@@ -209,7 +212,8 @@ Certificate_13::Certificate_13(const Certificate_Request_13& cert_request,
 Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
                                Credentials_Manager& credentials_manager,
                                Callbacks& callbacks,
-                               Certificate_Type cert_type) :
+                               Certificate_Type cert_type,
+                               const CryptoOperations& crypto) :
       // RFC 8446 4.4.2:
       //    [In the case of server authentication], the request context
       //    SHALL be zero length
@@ -243,7 +247,8 @@ Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
          throw TLS_Exception(Alert::HandshakeFailure, "No sufficient server certificate available");
       }
 
-      setup_entries(std::move(cert_chain), client_hello.extensions().get<Certificate_Status_Request>(), callbacks);
+      setup_entries(
+         std::move(cert_chain), client_hello.extensions().get<Certificate_Status_Request>(), callbacks, crypto);
    } else if(cert_type == Certificate_Type::RawPublicKey) {
       auto raw_public_key = credentials_manager.find_raw_public_key(key_types, op_type, context);
 
@@ -262,7 +267,8 @@ Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
 
 Certificate_13::Certificate_Entry::Certificate_Entry(TLS_Data_Reader& reader,
                                                      Connection_Side side,
-                                                     Certificate_Type cert_type) {
+                                                     Certificate_Type cert_type,
+                                                     const CryptoOperations& crypto) {
    if(cert_type == Certificate_Type::X509) {
       // RFC 8446 4.2.2
       //    [...] each CertificateEntry contains a DER-encoded X.509
@@ -270,7 +276,7 @@ Certificate_13::Certificate_Entry::Certificate_Entry(TLS_Data_Reader& reader,
       const auto cert_bytes = reader.get_tls_length_value(3);
       try {
          m_certificate = std::make_unique<X509_Certificate>(cert_bytes);
-         m_raw_public_key = m_certificate->subject_public_key();
+         m_raw_public_key = crypto.load_public_key(m_certificate->subject_public_key_info());
       } catch(Exception& e) {
          // bad_certificate would make more sense but BoGo expects decoding_error
          throw TLS_Exception(Alert::DecodeError, e.what());
@@ -281,7 +287,7 @@ Certificate_13::Certificate_Entry::Certificate_Entry(TLS_Data_Reader& reader,
       //    available encoding used in a PKIX certificate in the form of a
       //    SubjectPublicKeyInfo structure is reused.
       try {
-         m_raw_public_key = X509::load_key(reader.get_tls_length_value(3));
+         m_raw_public_key = crypto.load_public_key(reader.get_tls_length_value(3));
       } catch(Exception& e) {
          throw TLS_Exception(Alert::DecodeError, e.what());
       }
@@ -327,8 +333,9 @@ Certificate_13::Certificate_Entry::Certificate_Entry(Certificate_13::Certificate
 Certificate_13::Certificate_Entry& Certificate_13::Certificate_Entry::operator=(
    Certificate_13::Certificate_Entry&& other) noexcept = default;
 
-Certificate_13::Certificate_Entry::Certificate_Entry(const X509_Certificate& cert) :
-      m_certificate(std::make_unique<X509_Certificate>(cert)), m_raw_public_key(m_certificate->subject_public_key()) {}
+Certificate_13::Certificate_Entry::Certificate_Entry(const X509_Certificate& cert, const CryptoOperations& crypto) :
+      m_certificate(std::make_unique<X509_Certificate>(cert)),
+      m_raw_public_key(crypto.load_public_key(m_certificate->subject_public_key_info())) {}
 
 Certificate_13::Certificate_Entry::Certificate_Entry(std::shared_ptr<Public_Key> raw_public_key) :
       m_raw_public_key(std::move(raw_public_key)) {
@@ -355,7 +362,8 @@ std::vector<uint8_t> Certificate_13::Certificate_Entry::serialize() const {
 Certificate_13::Certificate_13(std::span<const uint8_t> buf,
                                const Policy& policy,
                                Connection_Side side,
-                               Certificate_Type cert_type) :
+                               Certificate_Type cert_type,
+                               const CryptoOperations& crypto) :
       m_side(side) {
    TLS_Data_Reader reader("cert message reader", buf);
 
@@ -379,7 +387,7 @@ Certificate_13::Certificate_13(std::span<const uint8_t> buf,
    }
 
    while(reader.has_remaining()) {
-      m_entries.emplace_back(reader, side, cert_type);
+      m_entries.emplace_back(reader, side, cert_type, crypto);
    }
 
    // RFC 8446 4.4.2

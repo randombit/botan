@@ -8,6 +8,7 @@
 #include <botan/internal/tls_handshake_hash.h>
 
 #include <botan/hash.h>
+#include <botan/tls_crypto_operations.h>
 
 namespace Botan::TLS {
 
@@ -20,7 +21,7 @@ secure_vector<uint8_t> Handshake_Hash::final(std::string_view mac_algo) const {
       hash_algo = "SHA-256";
    }
 
-   auto hash = HashFunction::create_or_throw(hash_algo);
+   auto hash = m_crypto.create_hash(hash_algo);
    hash->update(m_data);
    return hash->final();
 }

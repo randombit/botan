@@ -17,6 +17,7 @@
    #include <botan/credentials_manager.h>
    #include <botan/rng.h>
    #include <botan/tls_callbacks.h>
+   #include <botan/tls_crypto_operations.h>
    #include <botan/tls_policy.h>
    #include <botan/tls_server_info.h>
    #include <botan/tls_session_manager.h>
@@ -95,6 +96,9 @@ class BOTAN_PUBLIC_API(2, 11) Context {
 
       const Verify_Callback& get_verify_callback() const { return m_verify_callback; }
 
+      /** Set the cryptographic operations for subsequently created channels. */
+      void set_crypto_operations(std::shared_ptr<CryptoOperations> crypto) { m_crypto = std::move(crypto); }
+
       void set_server_info(Server_Information server_info) { m_server_info = std::move(server_info); }
 
       void set_app_protocols(std::vector<std::string> app_protocols = {}) {
@@ -111,6 +115,7 @@ class BOTAN_PUBLIC_API(2, 11) Context {
       std::shared_ptr<RandomNumberGenerator> m_rng;
       std::shared_ptr<Session_Manager> m_session_manager;
       std::shared_ptr<const Policy> m_policy;
+      std::shared_ptr<CryptoOperations> m_crypto;
 
       Server_Information m_server_info;
       Verify_Callback m_verify_callback;

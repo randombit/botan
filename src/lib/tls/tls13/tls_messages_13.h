@@ -40,14 +40,17 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello {
                       std::string_view hostname,
                       std::vector<std::string> next_protocols,
                       std::optional<Session_with_Handle>& session,
-                      std::vector<ExternalPSK> psks);
+                      std::vector<ExternalPSK> psks,
+                      const std::shared_ptr<CryptoOperations>& crypto);
 
-      static std::variant<Client_Hello_13, Client_Hello_12_Shim> parse(std::span<const uint8_t> buf);
+      static std::variant<Client_Hello_13, Client_Hello_12_Shim> parse(
+         std::span<const uint8_t> buf, const CryptoOperations& crypto = CryptoOperations());
 
       void retry(const Hello_Retry_Request& hrr,
                  const Transcript_Hash_State& transcript_hash_state,
                  Callbacks& cb,
-                 RandomNumberGenerator& rng);
+                 RandomNumberGenerator& rng,
+                 CryptoOperations& crypto);
 
       /**
       * Select the highest protocol version from the list of versions
@@ -111,7 +114,8 @@ class BOTAN_UNSTABLE_API Server_Hello_13 : public Server_Hello {
                       Credentials_Manager& credentials_mgr,
                       RandomNumberGenerator& rng,
                       Callbacks& cb,
-                      const Policy& policy);
+                      const Policy& policy,
+                      CryptoOperations& crypto);
 
       explicit Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data, Hello_Retry_Request_Creation_Tag tag);
 
@@ -122,7 +126,8 @@ class BOTAN_UNSTABLE_API Server_Hello_13 : public Server_Hello {
                                                                        Credentials_Manager& credentials_mgr,
                                                                        RandomNumberGenerator& rng,
                                                                        const Policy& policy,
-                                                                       Callbacks& cb);
+                                                                       Callbacks& cb,
+                                                                       CryptoOperations& crypto);
 
       static std::variant<Hello_Retry_Request, Server_Hello_13, Server_Hello_12_Shim> parse(
          std::span<const uint8_t> buf);
@@ -178,8 +183,11 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
    public:
       class Certificate_Entry {
          public:
-            Certificate_Entry(TLS_Data_Reader& reader, Connection_Side side, Certificate_Type cert_type);
-            explicit Certificate_Entry(const X509_Certificate& cert);
+            Certificate_Entry(TLS_Data_Reader& reader,
+                              Connection_Side side,
+                              Certificate_Type cert_type,
+                              const CryptoOperations& crypto = CryptoOperations());
+            Certificate_Entry(const X509_Certificate& cert, const CryptoOperations& crypto);
             explicit Certificate_Entry(std::shared_ptr<Public_Key> raw_public_key);
 
             bool has_certificate() const { return m_certificate != nullptr; }
@@ -232,7 +240,8 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
                      std::string_view hostname,
                      Credentials_Manager& credentials_manager,
                      Callbacks& callbacks,
-                     Certificate_Type cert_type);
+                     Certificate_Type cert_type,
+                     const CryptoOperations& crypto = CryptoOperations());
 
       /**
        * Create a Server Certificate message
@@ -242,7 +251,8 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
       Certificate_13(const Client_Hello_13& client_hello,
                      Credentials_Manager& credentials_manager,
                      Callbacks& callbacks,
-                     Certificate_Type cert_type);
+                     Certificate_Type cert_type,
+                     const CryptoOperations& crypto = CryptoOperations());
 
       /**
       * Deserialize a Certificate message
@@ -254,7 +264,8 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
       Certificate_13(std::span<const uint8_t> buf,
                      const Policy& policy,
                      Connection_Side side,
-                     Certificate_Type cert_type);
+                     Certificate_Type cert_type,
+                     const CryptoOperations& crypto = CryptoOperations());
 
       /**
       * Validate a Certificate message regarding what extensions are expected based on
@@ -282,7 +293,8 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
    private:
       void setup_entries(std::vector<X509_Certificate> cert_chain,
                          const Certificate_Status_Request* csr,
-                         Callbacks& callbacks);
+                         Callbacks& callbacks,
+                         const CryptoOperations& crypto);
       void setup_entry(std::shared_ptr<Public_Key> raw_public_key, Callbacks& callbacks);
 
       void verify_certificate_chain(Callbacks& callbacks,
@@ -348,10 +360,10 @@ class BOTAN_UNSTABLE_API Certificate_Verify_13 final : public Certificate_Verify
                             Connection_Side whoami,
                             Credentials_Manager& creds_mgr,
                             const Policy& policy,
-                            Callbacks& callbacks,
+                            CryptoOperations& crypto,
                             RandomNumberGenerator& rng);
 
-      bool verify(const Public_Key& public_key, Callbacks& callbacks, const Transcript_Hash& transcript_hash) const;
+      bool verify(const Public_Key& public_key, CryptoOperations& crypto, const Transcript_Hash& transcript_hash) const;
 
    private:
       Connection_Side m_side;

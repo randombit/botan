@@ -56,7 +56,9 @@ class BOTAN_TEST_API Handshake_Layer {
        *
        * @return the parsed handshake message, or nullopt if more data is needed to complete the message
        */
-      std::optional<Handshake_Message_13> next_message(const Policy& policy, Transcript_Hash_State& transcript_hash);
+      std::optional<Handshake_Message_13> next_message(const Policy& policy,
+                                                       Transcript_Hash_State& transcript_hash,
+                                                       const CryptoOperations& crypto = CryptoOperations());
 
       /**
        * Parses one post-handshake message off the internal buffer that is being filled using `copy_data`.
@@ -65,7 +67,8 @@ class BOTAN_TEST_API Handshake_Layer {
        *
        * @return the parsed post-handshake message, or nullopt if more data is needed to complete the message
        */
-      std::optional<Post_Handshake_Message_13> next_post_handshake_message(const Policy& policy);
+      std::optional<Post_Handshake_Message_13> next_post_handshake_message(
+         const Policy& policy, const CryptoOperations& crypto = CryptoOperations());
 
       /**
        * Marshals one handshake message for sending in an (encrypted) record and updates the

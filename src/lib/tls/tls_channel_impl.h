@@ -225,6 +225,7 @@ class Channel_Impl : public std::enable_shared_from_this<Channel_Impl> {
             size_t io_buffer_size;
 
             std::shared_ptr<Callbacks> callbacks;
+            std::shared_ptr<CryptoOperations> crypto;
             std::shared_ptr<Session_Manager> session_manager;
             std::shared_ptr<Credentials_Manager> creds;
             std::shared_ptr<RandomNumberGenerator> rng;

@@ -10,6 +10,7 @@
 
 #include <botan/tls_client.h>
 
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_policy.h>
 #include <botan/x509cert.h>
 #include <botan/internal/tls_channel_impl.h>
@@ -35,13 +36,36 @@ Client::Client(const std::shared_ptr<Callbacks>& callbacks,
                Server_Information info,
                Protocol_Version offer_version,
                const std::vector<std::string>& next_protocols,
+               size_t io_buf_sz) :
+      Client(callbacks,
+             std::make_shared<DefaultCryptoOperations>(*callbacks),
+             session_manager,
+             creds,
+             policy,
+             rng,
+             std::move(info),
+             offer_version,
+             next_protocols,
+             io_buf_sz) {}
+
+Client::Client(const std::shared_ptr<Callbacks>& callbacks,
+               const std::shared_ptr<CryptoOperations>& crypto,
+               const std::shared_ptr<Session_Manager>& session_manager,
+               const std::shared_ptr<Credentials_Manager>& creds,
+               const std::shared_ptr<const Policy>& policy,
+               const std::shared_ptr<RandomNumberGenerator>& rng,
+               Server_Information info,
+               Protocol_Version offer_version,
+               const std::vector<std::string>& next_protocols,
                size_t io_buf_sz) {
+   const auto operations = crypto ? crypto : std::make_shared<DefaultCryptoOperations>(*callbacks);
    BOTAN_ARG_CHECK(policy->acceptable_protocol_version(offer_version),
                    "Policy does not allow to offer requested protocol version");
 
 #if defined(BOTAN_HAS_TLS_13)
    if(offer_version == Protocol_Version::TLS_V13) {
-      m_impl = Client_Impl_13::create(callbacks, session_manager, creds, policy, rng, std::move(info), next_protocols);
+      m_impl = Client_Impl_13::create(
+         callbacks, operations, session_manager, creds, policy, rng, std::move(info), next_protocols);
 
    #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       if(m_impl->expects_downgrade()) {
@@ -62,6 +86,7 @@ Client::Client(const std::shared_ptr<Callbacks>& callbacks,
 #if defined(BOTAN_HAS_TLS_12)
    if(offer_version.is_pre_tls_13()) {
       m_impl = Client_Impl_12::create(callbacks,
+                                      operations,
                                       session_manager,
                                       creds,
                                       policy,
@@ -74,7 +99,7 @@ Client::Client(const std::shared_ptr<Callbacks>& callbacks,
    }
 #endif
 
-   BOTAN_UNUSED(callbacks, session_manager, creds, policy, rng, info, offer_version, next_protocols, io_buf_sz);
+   BOTAN_UNUSED(callbacks, crypto, session_manager, creds, policy, rng, info, offer_version, next_protocols, io_buf_sz);
    throw Not_Implemented("Requested TLS version to be offered is not available in this build");
 }
 

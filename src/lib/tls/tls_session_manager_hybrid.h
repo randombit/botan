@@ -9,6 +9,7 @@
 #ifndef BOTAN_TLS_SESSION_MANAGER_HYBRID_H_
 #define BOTAN_TLS_SESSION_MANAGER_HYBRID_H_
 
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_session_manager.h>
 #include <botan/tls_session_manager_stateless.h>
 
@@ -52,7 +53,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Hybrid final : public Session_Manag
       Session_Manager_Hybrid(std::unique_ptr<Session_Manager> stateful_manager,
                              const std::shared_ptr<Credentials_Manager>& credentials_manager,
                              const std::shared_ptr<RandomNumberGenerator>& rng,
-                             bool prefer_tickets = true);
+                             bool prefer_tickets = true,
+                             std::shared_ptr<CryptoOperations> crypto = std::make_shared<CryptoOperations>());
 
       std::optional<Session_Handle> establish(const Session& session,
                                               const std::optional<Session_ID>& id = std::nullopt,
