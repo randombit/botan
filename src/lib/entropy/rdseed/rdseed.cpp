@@ -87,7 +87,9 @@ size_t Intel_Rdseed::poll(RandomNumberGenerator& rng) {
       }
 
       if(!seed.empty()) {
-         rng.add_entropy(reinterpret_cast<const uint8_t*>(seed.data()), seed.size() * sizeof(uint32_t));
+         // RDSEED is used but not trusted, so its output is not credited
+         rng.add_entropy(
+            reinterpret_cast<const uint8_t*>(seed.data()), seed.size() * sizeof(uint32_t), Entropy_Estimate::Bits(0));
       }
    }
 

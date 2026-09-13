@@ -60,16 +60,23 @@ void Stateful_RNG::generate_batched_output(std::span<uint8_t> output, std::span<
    }
 }
 
+void Stateful_RNG::add_entropy_with_estimate(std::span<const uint8_t> input, Entropy_Estimate estimate) {
+   const lock_guard_type<recursive_mutex_type> lock(m_mutex);
+
+   this->update(input);
+
+   if(estimate.bits_for_input(input.size()) >= security_level()) {
+      reset_reseed_counter();
+   }
+}
+
 void Stateful_RNG::fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) {
    const lock_guard_type<recursive_mutex_type> lock(m_mutex);
 
    if(output.empty()) {
-      // Special case for exclusively adding entropy to the stateful RNG.
-      this->update(input);
-
-      if(8 * input.size() >= security_level()) {
-         reset_reseed_counter();
-      }
+      // Special case for exclusively adding entropy to the stateful RNG,
+      // eg via randomize_with_input with an empty output buffer
+      add_entropy_with_estimate(input, Entropy_Estimate::Full());
    } else {
       generate_batched_output(output, input);
    }

@@ -42,6 +42,15 @@ class BOTAN_PUBLIC_API(2, 0) Entropy_Source {
       * @param rng will be provided with entropy via calls to add_entropy
       * @return conservative estimate of actual entropy added to rng during poll
       *
+      * The data should be passed to add_entropy together with an
+      * Entropy_Estimate consistent with the estimate returned from this
+      * function. A source which should be used but not counted passes
+      * Entropy_Estimate::Bits(0) and returns zero; this mixes the data into the
+      * RNG state without marking the RNG as seeded. Note that add_entropy
+      * assumes full entropy by default, so an input of sufficient length
+      * would otherwise mark a stateful RNG as seeded regardless of the
+      * estimate returned here.
+      *
       * Any implementation of this function should be thread safe; it may be
       * called concurrently in multiple threads if multiple stateful RNGs reseed
       * across different threads.

@@ -76,8 +76,10 @@ class Processor_RNG_EntropySource final : public Entropy_Source {
          * may be tweaked if and when such conditions become publicly known.
          */
          const size_t poll_bits = 65536;
-         rng.reseed_from_rng(m_hwrng, poll_bits);
-         // Avoid trusting a black box, don't count this as contributing entropy:
+         if(rng.accepts_input()) {
+            // Avoid trusting a black box, don't count this as contributing entropy:
+            rng.add_entropy(m_hwrng.random_vec(poll_bits / 8), Entropy_Estimate::Bits(0));
+         }
          return 0;
       }
 

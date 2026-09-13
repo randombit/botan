@@ -1,8 +1,8 @@
 Release Notes
-========================================
+=============
 
 Version 3.14.0, Not Yet Released
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add new type ``PK_Signature_Options`` which allows precisely controlling how
   signatures are created and verified. (GH #5849)
@@ -60,8 +60,27 @@ Version 3.14.0, Not Yet Released
   eviction order of the certificate cache shared with the Windows store.
   (GH #5541)
 
+* Add an optional ``Entropy_Estimate`` parameter to
+  ``RandomNumberGenerator::add_entropy`` which allows mixing data into a
+  stateful RNG without crediting it towards the seeded state
+  (``Entropy_Estimate::Bits(0)``) or with an explicit estimate; the default
+  (full entropy) retains the previous behavior. The estimate is delivered
+  through a new virtual function
+  ``RandomNumberGenerator::add_entropy_with_estimate``, whose default
+  implementation forwards the input to ``fill_bytes_with_input`` and ignores the
+  estimate. Classes derived from ``Stateful_RNG`` inherit the new handling and
+  need no change; custom RNG implementations derived directly from
+  ``RandomNumberGenerator`` which track a seeded state of their own must
+  override ``add_entropy_with_estimate`` to receive the estimate. The RDSEED,
+  processor RNG and Windows system statistics entropy sources now pass an
+  estimate of zero. This fixes a bug where the data provided by these sources
+  marked a ``Stateful_RNG`` (``HMAC_DRBG``, ``ChaCha_RNG``, ``AutoSeeded_RNG``)
+  as seeded based only on its length, even though the sources report no entropy,
+  so that ``PRNG_Unseeded`` was not thrown when no counted entropy source was
+  available. (GH #5928)
+
 Version 3.13.0, 2026-08-13
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix a blind SSRF during OCSP request processing. A malicious OCSP responder or
   network attacker could cause the application to perform a blind GET to an
@@ -231,7 +250,7 @@ Version 3.13.0, 2026-08-13
 * Upgrade to TLS-Anvil 1.5 (GH #5630)
 
 Version 3.12.0, 2026-05-06
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * CVE-2026-44378: Resolve a CPU based denial of service when decoding
   BER encoded data.
@@ -307,7 +326,7 @@ Version 3.12.0, 2026-05-06
   headers without the ``botan-3/`` subdirectory (GH #5528)
 
 Version 3.11.1, 2026-03-31
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * CVE-2026-34580: Resolve certificate verification bypass bug introduced in 3.11.0 (GH #5500)
 
@@ -353,7 +372,7 @@ Version 3.11.1, 2026-03-31
 * Enable explicit_bzero, getentropy, getrandom on Hurd (GH #5488)
 
 Version 3.11.0, 2026-03-15
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * CVE-2026-32877: Fix a heap over-read during SM2 decryption (GH #5450)
 
@@ -462,7 +481,7 @@ Version 3.11.0, 2026-03-15
 * Fix various clang-tidy and cppcheck warnings (GH #5172 #5207 #5204 #5205)
 
 Version 3.10.0, 2025-11-06
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add support for Ascon AEAD, hash and XOF from NIST SP 800-232 (GH #5061 #5076 #5097)
 
@@ -517,7 +536,7 @@ Version 3.10.0, 2025-11-06
 * Add a ``.devcontainer`` setup (GH #5094)
 
 Version 3.9.0, 2025-08-05
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add SHA-1 implementation using AVX2/BMI2 (GH #4852)
 
@@ -578,7 +597,7 @@ Version 3.9.0, 2025-08-05
 * CI improvements (GH #4920 #4294 #4926 #4929)
 
 Version 3.8.1, 2025-05-07
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix a bug that prevented building using the ``fips140`` or ``modern`` module
   policies. (GH #4854 #4856)
@@ -587,7 +606,7 @@ Version 3.8.1, 2025-05-07
   (GH #4855 #4857)
 
 Version 3.8.0, 2025-05-06
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Discussion has started regarding plans for Botan4, current ETA 2027. Check the
   tracking ticket in https://github.com/randombit/botan/issues/4666 for the
@@ -710,13 +729,13 @@ Version 3.8.0, 2025-05-06
 * Update GHA CodeQL actions (GH #4644)
 
 Version 3.7.1, 2025-02-05
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Revert a change that prevented ``build.h`` from being usable from
   C applications. (GH #4636 #4637)
 
 Version 3.7.0, 2025-02-04
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add post-quantum scheme Classic McEliece (GH #3883 #4448 #4458 #4508 #4605)
 
@@ -823,7 +842,7 @@ Version 3.7.0, 2025-02-04
 * Address some new warnings from Clang 19 (GH #4544 #4545 #4548)
 
 Version 3.6.1, 2024-10-26
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Notice: Botan 3.7.0 will remove support for the currently supported
   experimental Kyber r3 TLS ciphersuites, leaving only the standardized
@@ -842,7 +861,7 @@ Version 3.6.1, 2024-10-26
   (GH #4381)
 
 Version 3.6.0, 2024-10-21
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fully integrate and further optimize the new ECC library first introduced in
   3.5.0. For common curves, operations are 2 to 3 times faster. This also
@@ -925,7 +944,7 @@ Version 3.6.0, 2024-10-21
 * Add compile time option to disable all use of inline assembly (GH #4273 #4265)
 
 Version 3.5.0, 2024-07-08
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * CVE-2024-34702: Fix a DoS caused by excessive name constraints. (GH #4186)
 
@@ -1049,7 +1068,7 @@ Version 3.5.0, 2024-07-08
 * Fix Roughtime to not reference a deprecated Cloudflare server. (GH #4002 #3937)
 
 Version 3.4.0, 2024-04-08
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add Ed448 signatures and X448 key exchange (GH #3933)
 
@@ -1096,7 +1115,7 @@ Version 3.4.0, 2024-04-08
   (GH #3935 #3910)
 
 Version 3.3.0, 2024-02-20
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * CVE-2024-34703 Fix a potential denial of service caused by accepting
   arbitrary length primes as potential elliptic curve parameters in
@@ -1228,7 +1247,7 @@ Version 3.3.0, 2024-02-20
   (GH #3783 #3833 #3888)
 
 Version 3.2.0, 2023-10-09
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add support for (experimental!) post-quantum secure key exchange
   in TLS 1.3 (GH #3609 #3732 #3733 #3739)
@@ -1324,14 +1343,14 @@ Version 3.2.0, 2023-10-09
   due to spurious warnings in that version. (GH #3711 #3709)
 
 Version 3.1.1, 2023-07-13
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix two tests which were insufficiently serialized. This would
   cause sporadic test failures, particularly on machines with
   many cores. (GH #3625 #3623)
 
 Version 3.1.0, 2023-07-11
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add SPHINCS+ post quantum hash based signature scheme (GH #3564 #3549)
 
@@ -1404,13 +1423,13 @@ Version 3.1.0, 2023-07-11
 * Remove the (undocumented, unsupported) support for CMake (GH #3501)
 
 Version 3.0.0, 2023-04-11
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Botan is now a C++20 codebase; compiler requirements have been
   increased to GCC 11, Clang 14, or MSVC 2022. (GH #2455 #3086)
 
 Breaking Changes
-----------------------------------------
+----------------
 
 * Remove many deprecated headers. In particular all algorithm specific
   headers (such as ``aes.h``) are no longer available; instead objects
@@ -1452,7 +1471,7 @@ Breaking Changes
   (GH #3186)
 
 TLS Changes
-----------------------------------------
+-----------
 
 * Added support for TLS v1.3
 
@@ -1465,7 +1484,7 @@ TLS Changes
   DHE_PSK suites (GH #2512), CECPQ1 ciphersuites (GH #3094)
 
 New Cryptographic Algorithms
-----------------------------------------
+----------------------------
 
 * Add support for Kyber post-quantum KEM (GH #2872 #2500)
 
@@ -1477,7 +1496,7 @@ New Cryptographic Algorithms
 * Add support for keyed BLAKE2b (GH #2524)
 
 New APIs
-----------------------------------------
+--------
 
 * Add new interface ``T::new_object`` which supplants ``T::clone``. The
   difference is that ``new_object`` returns a ``unique_ptr<T>`` instead of a raw
@@ -1504,7 +1523,7 @@ New APIs
 * Many new functions in the C89 interface; see the API reference for more details.
 
 Implementation Improvements
-----------------------------------------
+---------------------------
 
 * Add AVX2 implementation of Argon2 (GH #3205)
 
@@ -1527,7 +1546,7 @@ Implementation Improvements
   are always chosen to be 8-bit aligned. (GH #2545)
 
 Other Improvements
-----------------------------------------
+------------------
 
 * Changes to ``TLS::Stream`` to make it compatible with generic completion tokens.
   (GH #2667 #2648)
@@ -1539,7 +1558,7 @@ Other Improvements
   provided for each message. (GH #2908)
 
 Older Versions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 
 * The release notes for versions 2.0.0 through 2.19.5 can be found in
   ``doc/news_2x.rst``

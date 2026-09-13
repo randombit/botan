@@ -34,6 +34,82 @@ namespace Botan {
 class Entropy_Sources;
 
 /**
+* Estimate of the amount of entropy contained in an input passed to
+* RandomNumberGenerator::add_entropy
+*
+* Stateful RNGs such as HMAC_DRBG use this estimate to decide whether the
+* provided input is sufficient to consider the RNG as seeded. RNGs which do
+* not track a seeded state ignore the estimate.
+*/
+class BOTAN_PUBLIC_API(3, 14) Entropy_Estimate final {
+   public:
+      /**
+      * Specifies that the input is assumed to contain full entropy, ie as
+      * many bits of entropy as it has bits. This is the default used by
+      * add_entropy.
+      */
+      class Full final {};
+
+      /**
+      * A number of bits of entropy
+      *
+      * Entropy_Estimate is constructed from this type rather than from a
+      * plain integer so that the unit is explicit at the call site, eg
+      * Entropy_Estimate::Bits(128).
+      */
+      class Bits final {
+         public:
+            constexpr explicit Bits(size_t bits) : m_bits(bits) {}
+
+            constexpr size_t value() const { return m_bits; }
+
+         private:
+            size_t m_bits;
+      };
+
+      /**
+      * The input is assumed to contain full entropy.
+      *
+      * The conversion from Full is implicit so that Entropy_Estimate::Full()
+      * can be passed directly to add_entropy.
+      */
+      constexpr Entropy_Estimate(Full /*unused*/) : m_full(true), m_bits(0) {}  // NOLINT(*-explicit-conversions)
+
+      /**
+      * The input is estimated to contain the given number of bits of entropy.
+      *
+      * An estimate of zero bits means that the input is mixed into the RNG
+      * state but is not credited towards the RNG being considered seeded.
+      *
+      * The conversion from Bits is implicit so that Entropy_Estimate::Bits(n)
+      * can be passed directly to add_entropy.
+      */
+      constexpr Entropy_Estimate(Bits bits) : m_full(false), m_bits(bits.value()) {}  // NOLINT(*-explicit-conversions)
+
+      /**
+      * @return true if this estimate assumes full entropy
+      */
+      constexpr bool is_full() const { return m_full; }
+
+      /**
+      * @return the number of bits of entropy credited for an input of
+      * @p input_len bytes. A numeric estimate is capped at the bit length
+      * of the input.
+      */
+      constexpr size_t bits_for_input(size_t input_len) const {
+         const size_t input_bits = 8 * input_len;
+         if(is_full() || m_bits > input_bits) {
+            return input_bits;
+         }
+         return m_bits;
+      }
+
+   private:
+      bool m_full;
+      size_t m_bits;
+};
+
+/**
 * An interface to a cryptographic random number generator
 */
 class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
@@ -108,25 +184,40 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       * A few RNG types do not accept any externally provided input,
       * in which case this function is a no-op.
       *
+      * By default the input is assumed to contain full entropy; for a
+      * stateful RNG such as HMAC_DRBG an input of at least security_level()
+      * bits then marks the RNG as seeded. Pass an explicit Entropy_Estimate
+      * to credit the input differently. In particular Entropy_Estimate::Bits(0)
+      * mixes the input into the RNG state without affecting the seeded state,
+      * which is appropriate for data of unknown or untrusted quality.
+      *
       * @param input a byte array containing the entropy to be added
+      * @param estimate the amount of entropy assumed to be contained in input
       * @throws Exception may throw if the RNG accepts input, but adding the entropy failed.
       */
-      void add_entropy(std::span<const uint8_t> input) { this->fill_bytes_with_input({}, input); }
+      void add_entropy(std::span<const uint8_t> input, Entropy_Estimate estimate = Entropy_Estimate::Full()) {
+         this->add_entropy_with_estimate(input, estimate);
+      }
 
       /**
       * Incorporate some additional data into the RNG state
       * @param input a byte array containing the entropy to be added
       * @param length the number of bytes in input
+      * @param estimate the amount of entropy assumed to be contained in input
       */
-      void add_entropy(const uint8_t input[], size_t length) { this->add_entropy(std::span(input, length)); }
+      void add_entropy(const uint8_t input[], size_t length, Entropy_Estimate estimate = Entropy_Estimate::Full()) {
+         this->add_entropy(std::span(input, length), estimate);
+      }
 
       /**
       * Incorporate some additional data into the RNG state.
+      * @param t the object whose representation is added to the RNG state
+      * @param estimate the amount of entropy assumed to be contained in t
       */
       template <typename T>
          requires std::is_standard_layout_v<T> && std::is_trivial_v<T>
-      void add_entropy_T(const T& t) {
-         this->add_entropy(reinterpret_cast<const uint8_t*>(&t), sizeof(T));
+      void add_entropy_T(const T& t, Entropy_Estimate estimate = Entropy_Estimate::Full()) {
+         this->add_entropy(reinterpret_cast<const uint8_t*>(&t), sizeof(T), estimate);
       }
 
       /**
@@ -351,6 +442,22 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       */
       virtual size_t reseed_from_sources(Entropy_Sources& srcs,
                                          size_t poll_bits = RandomNumberGenerator::DefaultPollBits);
+
+      /**
+      * Incorporate the provided input into the RNG state, crediting it with
+      * the given entropy estimate.
+      *
+      * The default implementation ignores the estimate and forwards the input
+      * to fill_bytes_with_input with an empty output buffer. This is the
+      * correct behavior for RNGs which do not track whether they are seeded,
+      * such as system or hardware RNGs. RNGs which do track a seeded state
+      * should override this function and credit the input according to the
+      * estimate.
+      *
+      * @param input the data to incorporate
+      * @param estimate the amount of entropy assumed to be contained in input
+      */
+      virtual void add_entropy_with_estimate(std::span<const uint8_t> input, Entropy_Estimate estimate);
 
       /**
       * Generic interface to provide entropy to a concrete implementation and to

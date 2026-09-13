@@ -15,31 +15,34 @@
 namespace Botan {
 
 size_t Win32_EntropySource::poll(RandomNumberGenerator& rng) {
-   rng.add_entropy_T(::GetTickCount());
-   rng.add_entropy_T(::GetMessagePos());
-   rng.add_entropy_T(::GetMessageTime());
-   rng.add_entropy_T(::GetInputState());
+   // We assume all of the below is basically junk, so none of it is credited
+   constexpr Entropy_Estimate uncounted(Entropy_Estimate::Bits(0));
 
-   rng.add_entropy_T(::GetCurrentProcessId());
-   rng.add_entropy_T(::GetCurrentThreadId());
+   rng.add_entropy_T(::GetTickCount(), uncounted);
+   rng.add_entropy_T(::GetMessagePos(), uncounted);
+   rng.add_entropy_T(::GetMessageTime(), uncounted);
+   rng.add_entropy_T(::GetInputState(), uncounted);
+
+   rng.add_entropy_T(::GetCurrentProcessId(), uncounted);
+   rng.add_entropy_T(::GetCurrentThreadId(), uncounted);
 
    SYSTEM_INFO sys_info{};
    ::GetSystemInfo(&sys_info);  // no return value
-   rng.add_entropy_T(sys_info);
+   rng.add_entropy_T(sys_info, uncounted);
 
    MEMORYSTATUSEX mem_info{};
    mem_info.dwLength = sizeof(mem_info);
    if(::GlobalMemoryStatusEx(&mem_info) != 0) {
-      rng.add_entropy_T(mem_info);
+      rng.add_entropy_T(mem_info, uncounted);
    }
 
    POINT point{};
    if(::GetCursorPos(&point) != 0) {
-      rng.add_entropy_T(point);
+      rng.add_entropy_T(point, uncounted);
    }
 
    if(::GetCaretPos(&point) != 0) {
-      rng.add_entropy_T(point);
+      rng.add_entropy_T(point, uncounted);
    }
 
    /*

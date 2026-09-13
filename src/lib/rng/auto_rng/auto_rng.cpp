@@ -103,6 +103,10 @@ size_t AutoSeeded_RNG::reseed_from_sources(Entropy_Sources& srcs, size_t poll_bi
    return m_rng->reseed_from_sources(srcs, poll_bits);
 }
 
+void AutoSeeded_RNG::add_entropy_with_estimate(std::span<const uint8_t> input, Entropy_Estimate estimate) {
+   m_rng->add_entropy(input, estimate);
+}
+
 void AutoSeeded_RNG::fill_bytes_with_input(std::span<uint8_t> out, std::span<const uint8_t> in) {
    if(out.empty() && in.empty()) {
       return;
