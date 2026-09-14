@@ -161,7 +161,8 @@ serialized in that format again; newly generated keys are serialized in the
 ``both`` format. Keys that contain the seed can be exported in any of the
 formats using the common :ref:`ml_private_key_formats` interface, keys loaded
 from the expanded key only cannot be exported as seed. Note that Botan versions
-prior to 3.14 only accepted the raw seed as private key encoding.
+prior to 3.14 only accepted the raw seed as private key encoding; see
+:ref:`ml_private_key_formats` for the consequences.
 
 Support for ML-DSA is implemented in the module ``ml_dsa``
 
@@ -197,7 +198,8 @@ newly generated keys are serialized in the ``both`` format. Keys that contain
 the seed can be exported in any of the formats using the common
 :ref:`ml_private_key_formats` interface, keys loaded from the expanded key only
 cannot be exported as seed. Note that Botan versions prior to 3.14 wrote the raw
-seed or the raw expanded key into the PKCS #8 container.
+seed or the raw expanded key into the PKCS #8 container and accept only those;
+see :ref:`ml_private_key_formats` for the consequences.
 
 Support for ML-KEM is implemented in the module ``ml_kem``.
 
@@ -284,6 +286,21 @@ Given a generic ``Private_Key``, the interface is obtained with a
 
       Equivalent to ``formatted_raw_private_key_bits(private_key_format())``,
       except that keys in the format ``Both`` return the seed.
+
+Newly generated keys use the ``Both`` format: it retains the seed, and it is
+readable by implementations that support only one of the alternatives (it is
+also the default of OpenSSL). Note the consequences for interoperability with
+earlier versions of Botan: versions prior to 3.14 accept only the raw seed
+(ML-DSA) or the raw seed or raw expanded key (ML-KEM) as content of the PKCS #8
+``privateKey`` field and cannot read any of the RFC 9881/9935 structures.
+Botan 3.14 now instead produces PKCS #8 containers compliant to the respecitve RFC.
+To transfer an RCF-compliant key to an earlier Botan version, export the raw key material with
+``raw_private_key_bits()`` or ``formatted_raw_private_key_bits()`` and load it
+with the algorithm specific constructor (or ``botan_privkey_load_ml_kem``
+/ ``botan_privkey_load_ml_dsa`` in the FFI) in pre-3.14 Botan. Also note that
+``Private_Key::fingerprint_private()`` covers the encoded private key and thus
+depends on the key's format: a freshly generated key and the same key reloaded
+from a seed-only encoding have different fingerprints.
 
 The method ``ML_KEM_PrivateKey::private_key_bits_with_format()`` is deprecated
 in favor of ``formatted_raw_private_key_bits()``.
