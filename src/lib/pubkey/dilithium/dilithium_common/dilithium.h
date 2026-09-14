@@ -172,13 +172,6 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithi
        */
       secure_vector<uint8_t> formatted_private_key_bits(MlPrivateKeyFormat format) const override;
 
-      /**
-       * The seed for keys in the formats MlPrivateKeyFormat::Seed and
-       * MlPrivateKeyFormat::Both, the expanded key of FIPS 204 for keys in the
-       * format MlPrivateKeyFormat::Expanded.
-       */
-      secure_vector<uint8_t> raw_private_key_bits() const override;
-
       std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
                                                               const PK_Signature_Options& options) const override;
 

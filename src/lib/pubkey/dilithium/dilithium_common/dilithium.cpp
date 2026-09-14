@@ -512,12 +512,6 @@ secure_vector<uint8_t> Dilithium_PrivateKey::formatted_private_key_bits(MlPrivat
    return m_private->mode().keypair_codec().encode_keypair({m_public, m_private}, format);
 }
 
-secure_vector<uint8_t> Dilithium_PrivateKey::raw_private_key_bits() const {
-   // The "both" format has no raw encoding; the seed is its minimal raw representation.
-   const auto format = private_key_format();
-   return formatted_raw_private_key_bits(format == MlPrivateKeyFormat::Both ? MlPrivateKeyFormat::Seed : format);
-}
-
 bool Dilithium_PrivateKey::is_mldsa() const {
    return m_private->mode().is_ml_dsa();
 }

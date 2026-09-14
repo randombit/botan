@@ -16,7 +16,9 @@ secure_vector<uint8_t> Module_Lattice_PrivateKey::private_key_bits() const {
 }
 
 secure_vector<uint8_t> Module_Lattice_PrivateKey::raw_private_key_bits() const {
-   return formatted_raw_private_key_bits(private_key_format());
+   // The "both" format has no raw encoding; the seed is its minimal raw representation.
+   const auto format = private_key_format();
+   return formatted_raw_private_key_bits(format == MlPrivateKeyFormat::Both ? MlPrivateKeyFormat::Seed : format);
 }
 
 }  // namespace Botan
