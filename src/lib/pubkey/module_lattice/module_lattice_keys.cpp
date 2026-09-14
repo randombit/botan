@@ -2,7 +2,7 @@
  * Common private key interface for the module-lattice schemes ML-KEM and ML-DSA
  *
  * (C) 2026 Jack Lloyd
- * (C) 2026 Falko Strenzke - cryptosource GmbH
+ * (C) 2026 Falko Strenzke - MTG AG
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */
