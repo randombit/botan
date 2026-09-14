@@ -65,8 +65,6 @@ enum class MlPrivateKeyFormat : uint8_t {
  */
 class BOTAN_PUBLIC_API(3, 14) Module_Lattice_PrivateKey : public virtual Private_Key {
    public:
-      ~Module_Lattice_PrivateKey() override;
-
       /**
        * The private key format this key was loaded from or, for a freshly
        * generated key, the default format of the scheme. This is the format

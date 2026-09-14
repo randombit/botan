@@ -11,8 +11,6 @@
 
 namespace Botan {
 
-Module_Lattice_PrivateKey::~Module_Lattice_PrivateKey() = default;
-
 secure_vector<uint8_t> Module_Lattice_PrivateKey::private_key_bits() const {
    return formatted_private_key_bits(private_key_format());
 }
