@@ -22,26 +22,31 @@ enum class MlPrivateKeyFormat : uint8_t {
     * Only the private random seed from which the key pair is expanded.
     *
     *  - ML-KEM: the 64-byte seed d || z (FIPS 203)
-    *  - ML-DSA: the 32-byte seed xi (FIPS 204); as content of the PKCS#8
-    *    privateKey field this is the RFC 9881 "seed" CHOICE alternative
-    *    ([0] IMPLICIT OCTET STRING)
+    *  - ML-DSA: the 32-byte seed xi (FIPS 204)
+    *
+    * As content of the PKCS#8 privateKey field this is the "seed" CHOICE
+    * alternative ([0] IMPLICIT OCTET STRING) of RFC 9935 (ML-KEM) or
+    * RFC 9881 (ML-DSA).
     *
     * Not available for the pre-standard Kyber and Dilithium round 3 variants.
     */
    Seed,
    /**
     * The expanded private key as specified in FIPS 203 (ML-KEM) or FIPS 204
-    * (ML-DSA). For ML-DSA the content of the PKCS#8 privateKey field is the
-    * RFC 9881 "expandedKey" CHOICE alternative (OCTET STRING).
+    * (ML-DSA). As content of the PKCS#8 privateKey field this is the
+    * "expandedKey" CHOICE alternative (OCTET STRING) of RFC 9935 (ML-KEM) or
+    * RFC 9881 (ML-DSA).
     *
     * This is the only format supported by the pre-standard Kyber and
     * Dilithium round 3 variants.
     */
    Expanded,
    /**
-    * Seed and expanded key together. Currently only supported for ML-DSA, where
-    * the content of the PKCS#8 privateKey field is the RFC 9881 "both" CHOICE
-    * alternative (SEQUENCE { seed OCTET STRING, expandedKey OCTET STRING }).
+    * Seed and expanded key together. As content of the PKCS#8 privateKey
+    * field this is the "both" CHOICE alternative
+    * (SEQUENCE { seed OCTET STRING, expandedKey OCTET STRING }) of RFC 9935
+    * (ML-KEM) or RFC 9881 (ML-DSA). This is the format of newly generated
+    * ML-KEM and ML-DSA keys.
     *
     * There is no raw (non-ASN.1) encoding of this format.
     */
@@ -53,7 +58,7 @@ enum class MlPrivateKeyFormat : uint8_t {
  * ML-KEM/Kyber (Kyber_PrivateKey) and ML-DSA/Dilithium (Dilithium_PrivateKey).
  *
  * Such keys can be represented by their private seed, by the expanded key of
- * FIPS 203/204, or (ML-DSA only) by both. A key remembers the format it was
+ * FIPS 203/204, or by both. A key remembers the format it was
  * loaded from, or the scheme's default format when it was freshly generated;
  * private_key_bits(), private_key_info() and raw_private_key_bits() use that
  * format. Keys that contain the seed can additionally be exported in any other
@@ -91,11 +96,8 @@ class BOTAN_PUBLIC_API(3, 14) Module_Lattice_PrivateKey : public virtual Private
        * what private_key_bits() returns for a key whose private_key_format()
        * is @p format.
        *
+       *  - ML-KEM: the ML-KEM-PrivateKey CHOICE encoding of RFC 9935
        *  - ML-DSA: the ML-DSA-PrivateKey CHOICE encoding of RFC 9881
-       *  - ML-KEM: the ASN.1 wrapping of RFC 9935 is not yet implemented.
-       *    Currently the same bytes as formatted_raw_private_key_bits() are
-       *    returned. This is a known interim limitation that will change in a
-       *    future release.
        *  - Kyber and Dilithium round 3: the raw expanded key
        *
        * @throws Encoding_Error if the key cannot be encoded in @p format

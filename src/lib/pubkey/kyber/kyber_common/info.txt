@@ -9,6 +9,7 @@ type -> "Internal"
 </module_info>
 
 <requires>
+asn1
 hash_engine
 module_lattice
 pubkey

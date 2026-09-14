@@ -12,6 +12,14 @@ Version 3.14.0, Not Yet Released
   In this course, add the interface ``Module_Lattice_PrivateKey`` which is
   implemented by ``ML_DSA_PrivateKey`` and ``ML_KEM_PrivateKey``. (GH #5002 #5307)
 
+* Fix the ML-KEM private key encoding in PKCS #8 containers to conform to
+  RFC 9935. All three encodings of the RFC (seed, expanded key, both) are
+  supported via the ``Module_Lattice_PrivateKey`` interface; a key loaded from
+  one of them is re-encoded in the same format, newly generated keys are encoded
+  in the "both" format. Previously the raw 64-byte seed or the raw expanded key
+  was written, both of which are still accepted when loading a key. Loading an
+  expanded ML-KEM key now also performs a pairwise consistency check. (GH #TODO)
+
 * Add new type ``PK_Signature_Options`` which allows precisely controlling how
   signatures are created and verified. (GH #5849)
 

@@ -142,26 +142,27 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
                                                       public virtual Private_Key {
    public:
       /**
-       * Create a new private key. The private key will be encoded as the 64 byte
-       * seed (MlPrivateKeyFormat::Seed).
+       * Create a new private key.
+       *
+       * New ML-KEM keys are encoded in the format MlPrivateKeyFormat::Both,
+       * new Kyber round 3 keys in MlPrivateKeyFormat::Expanded.
        */
       Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode mode);
 
       /**
-       * Import a private key using its key bytes. Supported are key bytes as
-       * 64-byte seeds (not supported for Kyber Round 3 instances),
-       * as well as the expanded encoding specified by FIPS 203. Note that the
-       * encoding used in this constructor is reflected by the calls for
-       * private_key_bits, private_key_info, etc.
+       * Import a private key using its key bytes.
+       *
+       * ML-KEM keys are accepted in all three CHOICE alternatives of RFC 9935
+       * (seed, expanded key, or both) and, for backwards compatibility, as the
+       * raw 64-byte seed d || z or the raw expanded key of FIPS 203. Kyber
+       * round 3 keys are accepted as the raw expanded key only. The detected
+       * format is retained, see private_key_format().
        */
       Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode mode);
 
       /**
-       * Import a private key using its key bytes. Supported are key bytes as
-       * 64-byte seeds (not supported for Kyber Round 3 instances),
-       * as well as the expanded encoding specified by FIPS 203. Note that the
-       * encoding used in this constructor is reflected by the calls for
-       * private_key_bits, private_key_info, etc.
+       * Import a private key using its key bytes. See the constructor above
+       * for the accepted encodings.
        */
       Kyber_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
 
@@ -173,41 +174,45 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
          RandomNumberGenerator& rng, const PK_KEM_Options_Reader& options) const override;
 
       /**
-       * The private key format from which the key was loaded. It is the format
-       * used for the private_key_bits(), raw_private_key_bits() and
-       * private_key_info() methods.
+       * The format this key was loaded from, or the default format of a newly
+       * generated key (MlPrivateKeyFormat::Both for ML-KEM). It is the format
+       * used for private_key_bits(), private_key_info() and
+       * raw_private_key_bits().
        *
-       * ML-KEM keys that were generated or loaded from a seed report
-       * MlPrivateKeyFormat::Seed, all other keys MlPrivateKeyFormat::Expanded.
-       * Note that keys in Seed format can be serialized to Expanded format
-       * using formatted_raw_private_key_bits() but NOT the other way around.
+       * Note that keys that contain the seed can be serialized in any format
+       * using the formatted_*() methods, whereas keys loaded from an expanded
+       * key can NOT be serialized as seed.
        */
       MlPrivateKeyFormat private_key_format() const override;
 
       /**
-       * Encode the raw private key in the specified format, i.e. the 64-byte
-       * seed or the expanded key of FIPS 203. Note that the seed format is
-       * only available for new ML-KEM keys and those loaded from seeds.
+       * The raw key material in the given @p format: the 64-byte seed d || z
+       * or the expanded key of FIPS 203, without ASN.1 wrapping.
        *
-       * @throws Encoding_Error if the private key cannot be encoded in the
-       *         requested format. MlPrivateKeyFormat::Both is not supported
-       *         for ML-KEM.
+       * @throws Encoding_Error for MlPrivateKeyFormat::Both (no raw encoding
+       *         exists), for MlPrivateKeyFormat::Seed if the key was loaded
+       *         from an expanded key (and thus holds no seed), and for
+       *         anything but MlPrivateKeyFormat::Expanded on Kyber round 3 keys.
        */
       secure_vector<uint8_t> formatted_raw_private_key_bits(MlPrivateKeyFormat format) const override;
 
       /**
-       * Encode the private key in the specified format as content of the
-       * PKCS#8 privateKey field.
+       * The ML-KEM-PrivateKey CHOICE encoding of RFC 9935 in the given
+       * @p format, i.e. the content of the PKCS#8 privateKey field. Kyber
+       * round 3 keys are encoded as the raw expanded key
+       * (MlPrivateKeyFormat::Expanded only).
        *
-       * @note The ASN.1 wrapping specified in RFC 9935 is not yet implemented
-       *       for ML-KEM. Currently this returns the same bytes as
-       *       formatted_raw_private_key_bits(). This is a known interim
-       *       limitation that will change in a future release.
-       *
-       * @throws Encoding_Error if the private key cannot be encoded in the
-       *         requested format.
+       * @throws Encoding_Error if the key cannot be encoded in @p format
+       *         (see formatted_raw_private_key_bits())
        */
       secure_vector<uint8_t> formatted_private_key_bits(MlPrivateKeyFormat format) const override;
+
+      /**
+       * The seed for keys in the formats MlPrivateKeyFormat::Seed and
+       * MlPrivateKeyFormat::Both, the expanded key of FIPS 203 for keys in the
+       * format MlPrivateKeyFormat::Expanded.
+       */
+      secure_vector<uint8_t> raw_private_key_bits() const override;
 
       BOTAN_DEPRECATED("Use formatted_raw_private_key_bits")
       secure_vector<uint8_t> private_key_bits_with_format(MlPrivateKeyFormat format) const {
@@ -218,6 +223,7 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
       friend class Kyber_KEM_Decryptor;
 
       std::shared_ptr<const Kyber_PrivateKeyInternal> m_private;
+      MlPrivateKeyFormat m_private_key_format;
 };
 
 BOTAN_DIAGNOSTIC_POP
