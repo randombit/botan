@@ -350,6 +350,65 @@ class Kyber_Encoding_Test : public Text_Based_Test {
 BOTAN_REGISTER_TEST("pubkey", "kyber_encodings", Kyber_Encoding_Test);
 
 /**
+ * ML-KEM private key encodings (RFC 9935 CHOICE alternatives and the raw
+ * legacy encodings) as content of the PKCS#8 privateKey field: valid vectors
+ * must decode to the given format and raw key and re-encode as expected,
+ * malformed vectors must be rejected with the given error.
+ */
+class ML_KEM_Privkey_Encoding_Test final : public Text_Based_Test {
+   public:
+      ML_KEM_Privkey_Encoding_Test() :
+            Text_Based_Test("pubkey/ml_kem_privkey_encodings.vec", "PrivateKey", "Format,PrivateRaw,Encoded,Error") {}
+
+      bool skip_this_test(const std::string& algo_name, const VarMap& /*vars*/) override {
+         return !Botan::KyberMode(algo_name).is_available();
+      }
+
+      Test::Result run_one_test(const std::string& algo_name, const VarMap& vars) override {
+         Test::Result result("ml_kem_privkey_encodings");
+
+         const auto mode = Botan::KyberMode(algo_name);
+         const auto sk = Botan::hex_decode_locked(vars.get_req_str("PrivateKey"));
+         const auto error = vars.get_opt_str("Error", "");
+
+         if(!error.empty()) {
+            result.test_throws("malformed encoding rejected", error, [&] { Botan::Kyber_PrivateKey(sk, mode); });
+            return result;
+         }
+
+         const auto expected_format = [&]() -> Botan::MlPrivateKeyFormat {
+            const auto format = vars.get_req_str("Format");
+            if(format == "Seed") {
+               return Botan::MlPrivateKeyFormat::Seed;
+            }
+            if(format == "Expanded") {
+               return Botan::MlPrivateKeyFormat::Expanded;
+            }
+            if(format == "Both") {
+               return Botan::MlPrivateKeyFormat::Both;
+            }
+            throw Test_Error("unknown private key format in test vector: " + format);
+         }();
+         const auto expected_raw = vars.get_req_bin("PrivateRaw");
+         // The raw legacy encodings are re-encoded as the corresponding RFC 9935
+         // alternative (given in Encoded), all others re-encode identically.
+         const auto expected_encoding = [&]() -> Botan::secure_vector<uint8_t> {
+            const auto encoded = vars.get_opt_bin("Encoded");
+            return encoded.empty() ? sk : Botan::secure_vector<uint8_t>(encoded.begin(), encoded.end());
+         }();
+
+         const Botan::Kyber_PrivateKey skr(sk, mode);
+         result.test_enum_eq("detected private key format", skr.private_key_format(), expected_format);
+         result.test_bin_eq("raw private key", skr.raw_private_key_bits(), expected_raw);
+         result.test_bin_eq("re-encoding in the detected format", skr.private_key_bits(), expected_encoding);
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "ml_kem_privkey_encodings", ML_KEM_Privkey_Encoding_Test);
+
+/**
  * Tests the private key format handling (Module_Lattice_PrivateKey interface)
  * with freshly generated keys for all available modes.
  */
@@ -548,7 +607,7 @@ class MLKEM_Privkey_Tests final : public Test {
             try {
                Botan::DataSource_Stream key_source(Test::data_file("pubkey", file.filename));
                priv_key = Botan::PKCS8::load_key(key_source);
-            } catch(const Botan::Exception& e) {
+            } catch(const Botan::Decoding_Error& e) {
                result.test_is_true(std::string("inconsistent ML-KEM key rejected: ") + e.what(), !file.valid);
                results.push_back(result);
                continue;

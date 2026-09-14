@@ -67,13 +67,14 @@ KyberInternalKeypair Expanded_Keypair_Codec::decode_keypair(std::span<const uint
    };
 
    BOTAN_ASSERT(keypair.first && keypair.second, "reading private key encoding");
-   BOTAN_ARG_CHECK(keypair.first->H_public_key_bits_raw().size() == puk_key_hash.size() &&
-                      std::equal(keypair.first->H_public_key_bits_raw().begin(),
-                                 keypair.first->H_public_key_bits_raw().end(),
-                                 puk_key_hash.begin()),
-                   "public key's hash does not match the stored hash");
+   if(keypair.first->H_public_key_bits_raw().size() != puk_key_hash.size() ||
+      !std::equal(keypair.first->H_public_key_bits_raw().begin(),
+                  keypair.first->H_public_key_bits_raw().end(),
+                  puk_key_hash.begin())) {
+      throw Decoding_Error("public key's hash does not match the stored hash");
+   }
 
-   if(keypair.first->mode().mode().is_ml_kem()) {
+   {
       // Pairwise consistency check: the hash check above does not detect a
       // secret vector s that does not belong to the public key (see RFC 9935,
       // Appendix C.4, example 2). A deterministic K-PKE encryption of an
