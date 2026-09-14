@@ -130,6 +130,14 @@ Security and Hardening
 Behavior Changes
 ----------------------------------------
 
+* XMSS keys and certificates now use the object identifier and public key
+  encoding specified in RFC 9802: the algorithm identifier is
+  ``1.3.6.1.5.5.7.6.34`` and the raw public key is placed in the
+  SubjectPublicKeyInfo without an OCTET STRING wrapper. Keys and certificates
+  using the previous OID (``0.4.0.127.0.15.1.1.13.0``) and encoding from
+  draft-vangeest-x509-hash-sigs are still accepted for loading and signature
+  verification. The RFC 9802 OID for XMSS^MT is registered as well.
+
 * By default, ECDSA signatures are now randomized rather than deterministic even
   when RFC 6979 support is available at build time. Deterministic signatures can
   be requested using the API ``PK_Signature_Options::with_deterministic_signature``
