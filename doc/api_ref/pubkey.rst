@@ -161,7 +161,7 @@ serialized in that format again; newly generated keys are serialized in the
 ``both`` format. Keys that contain the seed can be exported in any of the
 formats using the common :ref:`ml_private_key_formats` interface, keys loaded
 from the expanded key only cannot be exported as seed. Note that Botan versions
-prior to 3.13 only accepted the raw seed as private key encoding.
+prior to 3.14 only accepted the raw seed as private key encoding.
 
 Support for ML-DSA is implemented in the module ``ml_dsa``
 
@@ -212,7 +212,7 @@ Currently two flavors of Kyber are implemented in separate Botan modules:
 Private Key Formats of ML-KEM and ML-DSA
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. versionadded:: 3.13.0
+.. versionadded:: 3.14.0
 
 The private keys of the module-lattice schemes ML-KEM and ML-DSA (and their
 pre-standard variants Kyber and Dilithium) can be represented by their private

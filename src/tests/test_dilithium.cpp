@@ -625,11 +625,11 @@ class MLDSA_Privkey_Tests : public Test {
             std::vector<uint8_t> ref_msg = {0, 1, 2, 4};
             std::vector<uint8_t> rng_seed(48);
             Botan_Tests::CTR_DRBG_AES256 rng(rng_seed);
-            auto signer = Botan::PK_Signer(*priv_key, rng, "Randomized");
+            auto signer = Botan::PK_Signer(*priv_key, rng, Botan::PK_Signature_Options());
             auto signature = signer.sign_message(ref_msg.data(), ref_msg.size(), rng);
 
             auto pub_key = priv_key->public_key();
-            auto verifier = Botan::PK_Verifier(*pub_key, "");
+            auto verifier = Botan::PK_Verifier(*pub_key, Botan::PK_Signature_Options());
             verifier.update(ref_msg.data(), ref_msg.size());
             result.test_is_true("signature verifies", verifier.check_signature(signature.data(), signature.size()));
 

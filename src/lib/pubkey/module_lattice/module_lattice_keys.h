@@ -63,7 +63,7 @@ enum class MlPrivateKeyFormat : uint8_t {
  * Given a generic Private_Key, this interface is obtained via
  * dynamic_cast<const Module_Lattice_PrivateKey*>(&key).
  */
-class BOTAN_PUBLIC_API(3, 13) Module_Lattice_PrivateKey : public virtual Private_Key {
+class BOTAN_PUBLIC_API(3, 14) Module_Lattice_PrivateKey : public virtual Private_Key {
    public:
       ~Module_Lattice_PrivateKey() override;
 
