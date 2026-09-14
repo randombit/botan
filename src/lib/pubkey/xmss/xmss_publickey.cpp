@@ -1,13 +1,18 @@
 /*
  * XMSS Public Key
  * An XMSS: Extended Hash-Based Signature public key.
- * The XMSS public key does not support the X509 standard. Instead the
- * raw format described in [1] is used.
+ * The raw key format described in [1] is used. When embedded in a
+ * SubjectPublicKeyInfo, the raw key is placed in the BIT STRING without
+ * any further ASN.1 wrapping, as specified in [2].
  *
  * [1] XMSS: Extended Hash-Based Signatures,
  *     Request for Comments: 8391
  *     Release: May 2018.
  *     https://datatracker.ietf.org/doc/rfc8391/
+ * [2] Use of the HSS and XMSS Hash-Based Signature Algorithms in
+ *     Internet X.509 Public Key Infrastructure,
+ *     Request for Comments: 9802
+ *     https://datatracker.ietf.org/doc/rfc9802/
  *
  * (C) 2016,2017 Matthias Gierlings
  *
@@ -17,7 +22,6 @@
 #include <botan/xmss.h>
 
 #include <botan/ber_dec.h>
-#include <botan/der_enc.h>
 #include <botan/pk_options.h>
 #include <botan/rng.h>
 #include <botan/internal/buffer_slicer.h>
@@ -44,7 +48,9 @@ XMSS_Parameters::xmss_algorithm_t deserialize_xmss_oid(std::span<const uint8_t> 
    return static_cast<XMSS_Parameters::xmss_algorithm_t>(raw_id);
 }
 
-// fall back to raw decoding for previous versions, which did not encode an OCTET STRING
+// RFC 9802 places the raw XMSS public key directly into the SubjectPublicKeyInfo
+// BIT STRING. Earlier Botan versions (following draft-vangeest-x509-hash-sigs)
+// wrapped the raw key in an OCTET STRING; such keys are still accepted here.
 std::vector<uint8_t> extract_raw_public_key(std::span<const uint8_t> key_bits) {
    std::vector<uint8_t> raw_key;
    try {
@@ -180,7 +186,10 @@ std::unique_ptr<PK_Ops::Verification> XMSS_PublicKey::_create_verification_op(
 std::unique_ptr<PK_Ops::Verification> XMSS_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
                                                                                   std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
-      if(alg_id != this->algorithm_identifier()) {
+      // Signatures created with the legacy OID from draft-vangeest-x509-hash-sigs
+      // remain verifiable
+      const AlgorithmIdentifier legacy_alg_id("XMSS-draft-vangeest", AlgorithmIdentifier::USE_EMPTY_PARAM);
+      if(alg_id != this->algorithm_identifier() && alg_id != legacy_alg_id) {
          throw Decoding_Error("Unexpected AlgorithmIdentifier for XMSS X509 signature");
       }
       return std::make_unique<XMSS_Verification_Operation>(*this);
@@ -193,9 +202,8 @@ std::vector<uint8_t> XMSS_PublicKey::raw_public_key_bits() const {
 }
 
 std::vector<uint8_t> XMSS_PublicKey::public_key_bits() const {
-   std::vector<uint8_t> output;
-   DER_Encoder(output).encode(raw_public_key_bits(), ASN1_Type::OctetString);
-   return output;
+   // RFC 9802 Section 5.2: the raw XMSS public key is used without ASN.1 wrapping
+   return raw_public_key_bits();
 }
 
 std::vector<uint8_t> XMSS_PublicKey::raw_public_key() const {
