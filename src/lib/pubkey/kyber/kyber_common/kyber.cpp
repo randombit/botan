@@ -360,10 +360,4 @@ secure_vector<uint8_t> Kyber_PrivateKey::formatted_private_key_bits(MlPrivateKey
    return formatted_raw_private_key_bits(format);
 }
 
-secure_vector<uint8_t> Kyber_PrivateKey::raw_private_key_bits() const {
-   // The "both" format has no raw encoding; the seed is its minimal raw representation.
-   const auto format = private_key_format();
-   return formatted_raw_private_key_bits(format == MlPrivateKeyFormat::Both ? MlPrivateKeyFormat::Seed : format);
-}
-
 }  // namespace Botan
