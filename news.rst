@@ -22,8 +22,11 @@ Version 3.14.0, Not Yet Released
   supported via the ``Module_Lattice_PrivateKey`` interface; a key loaded from
   one of them is re-encoded in the same format, newly generated keys are encoded
   in the "both" format. Previously the raw 64-byte seed or the raw expanded key
-  was written, both of which are still accepted when loading a key. Loading an
-  expanded ML-KEM key now also performs a pairwise consistency check. (GH #TODO)
+  was written, both of which are still accepted when loading a key; earlier
+  versions of Botan cannot read the new encoding. Loading an expanded ML-KEM or
+  Kyber private key now also performs a pairwise consistency check, and all
+  malformed private key encodings (including raw keys of wrong length) are
+  rejected with ``Decoding_Error``. (GH #TODO)
 
 * Add new type ``PK_Signature_Options`` which allows precisely controlling how
   signatures are created and verified. (GH #5849)
