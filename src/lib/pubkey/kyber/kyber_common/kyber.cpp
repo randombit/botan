@@ -262,14 +262,6 @@ std::unique_ptr<Public_Key> Kyber_PrivateKey::public_key() const {
    return std::make_unique<Kyber_PublicKey>(*this);
 }
 
-secure_vector<uint8_t> Kyber_PrivateKey::raw_private_key_bits() const {
-   return this->private_key_bits();
-}
-
-secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const {
-   return private_key_bits_with_format(private_key_format());
-}
-
 bool Kyber_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    // As we do not support loading a private key in extended format but rather
    // always extract it from a 64-byte seed, these checks (as described in
@@ -340,7 +332,7 @@ MlPrivateKeyFormat Kyber_PrivateKey::private_key_format() const {
    return MlPrivateKeyFormat::Expanded;
 }
 
-secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits_with_format(MlPrivateKeyFormat format) const {
+secure_vector<uint8_t> Kyber_PrivateKey::formatted_raw_private_key_bits(MlPrivateKeyFormat format) const {
    if(format == MlPrivateKeyFormat::Seed && private_key_format() != MlPrivateKeyFormat::Seed) {
       throw Encoding_Error("Expanded private keys do not support the seed format");
    }
@@ -350,9 +342,18 @@ secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits_with_format(MlPrivateK
             return std::make_unique<Seed_Expanding_Keypair_Codec>();
          case MlPrivateKeyFormat::Expanded:
             return std::make_unique<Expanded_Keypair_Codec>();
+         case MlPrivateKeyFormat::Both:
+            throw Encoding_Error("ML-KEM private keys have no raw encoding containing both seed and expanded key");
       }
       BOTAN_ASSERT_UNREACHABLE();
    }();
    return codec->encode_keypair({m_public, m_private});
 }
+
+secure_vector<uint8_t> Kyber_PrivateKey::formatted_private_key_bits(MlPrivateKeyFormat format) const {
+   // TODO: The ASN.1 wrapping of RFC 9935 is not yet implemented for ML-KEM,
+   //       the PKCS#8 privateKey content is currently the raw key material.
+   return formatted_raw_private_key_bits(format);
+}
+
 }  // namespace Botan
