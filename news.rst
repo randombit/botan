@@ -4,6 +4,30 @@ Release Notes
 Version 3.14.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix the ML-DSA private key encoding in PKCS #8 containers to conform to
+  RFC 9881. All three encodings of the RFC (seed, expanded key, both) are
+  supported; a key loaded from one of them is re-encoded in the same format,
+  newly generated keys are encoded in the "both" format. Previously the raw
+  32-byte seed was written, which is still accepted when loading a key.
+  Add the interface ``Module_Lattice_PrivateKey`` (``botan/module_lattice_keys.h``)
+  implemented by ``ML_DSA_PrivateKey`` and ``ML_KEM_PrivateKey`` to query the
+  private key format and to encode a key in a specific format; the enum
+  ``MlPrivateKeyFormat`` moved to that header and gained the value ``Both``.
+  ``Kyber_PrivateKey::private_key_bits_with_format`` is deprecated in favor of
+  ``formatted_raw_private_key_bits``. The internal module ``pqcrystals`` was
+  renamed to ``module_lattice``. (GH #5002 #5307)
+
+* Fix the ML-KEM private key encoding in PKCS #8 containers to conform to
+  RFC 9935. All three encodings of the RFC (seed, expanded key, both) are
+  supported via the ``Module_Lattice_PrivateKey`` interface; a key loaded from
+  one of them is re-encoded in the same format, newly generated keys are encoded
+  in the "both" format. Previously the raw 64-byte seed or the raw expanded key
+  was written, both of which are still accepted when loading a key; earlier
+  versions of Botan cannot read the new encoding. Loading an expanded ML-KEM or
+  Kyber private key now also performs a pairwise consistency check, and all
+  malformed private key encodings (including raw keys of wrong length) are
+  rejected with ``Decoding_Error``. (GH #TODO)
+
 * Add new type ``PK_Signature_Options`` which allows precisely controlling how
   signatures are created and verified. (GH #5849)
 
