@@ -16,6 +16,7 @@
    #include <botan/der_enc.h>
    #include <botan/hex.h>
    #include <botan/pss_params.h>
+   #include <botan/strong_type.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/parsing.h>
 #endif
@@ -25,6 +26,8 @@ namespace Botan_Tests {
 namespace {
 
 #if defined(BOTAN_HAS_ASN1)
+
+using Asn1StrongBuffer = Botan::Strong<std::vector<uint8_t>, struct Asn1ByteBuffer_>;
 
 class ASN1_Test_Sequence final : public Botan::ASN1_Object {
    public:
@@ -208,6 +211,10 @@ Test::Result test_ber_constructed_string_decoding() {
    std::vector<uint8_t> bits_out;
    Botan::BER_Decoder(cons_bits, ber).decode(bits_out, ASN1_Type::BitString).verify_end();
    result.test_bin_eq("constructed BIT STRING via vector decode", bits_out, std::vector<uint8_t>{0xAA, 0xB0});
+
+   Asn1StrongBuffer st_bits_out;
+   Botan::BER_Decoder(cons_bits, ber).decode(st_bits_out, ASN1_Type::BitString).verify_end();
+   result.test_bin_eq("constructed BIT STRING via strong type decode", st_bits_out, std::vector<uint8_t>{0xAA, 0xB0});
 
    // A constructed string with no segments is an empty string
    const std::vector<uint8_t> cons_empty = {0x24, 0x00};
@@ -681,6 +688,12 @@ Test::Result test_asn1_bitstring_helpers() {
       .verify_end();
    const std::vector<uint8_t> expected_octets = {0xAA};
    result.test_bin_eq("octet-aligned BIT STRING decodes as bytes", octets, expected_octets);
+
+   Asn1StrongBuffer st_octets;
+   Botan::BER_Decoder(octet_aligned_der, Botan::BER_Decoder::Limits::DER())
+      .decode_octet_aligned_bitstring(st_octets)
+      .verify_end();
+   result.test_bin_eq("octet-aligned BIT STRING decodes as strong type", st_octets, expected_octets);
 
    const std::vector<uint8_t> non_octet_aligned_der = {0x03, 0x02, 0x01, 0x80};
    result.test_throws<Botan::Decoding_Error>("octet-aligned BIT STRING rejects unused bits", [&] {
