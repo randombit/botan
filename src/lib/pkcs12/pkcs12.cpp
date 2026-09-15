@@ -181,6 +181,41 @@ void parse_bag_attributes(BER_Decoder& decoder, std::string& friendly_name, std:
    attrs.end_cons();
 }
 
+/*
+* Load a PKCS#8 private key from a KeyBag or a decrypted PKCS8ShroudedKeyBag
+* and verify that it is internally consistent.
+*
+* The PKCS#12 MAC is optional, and the PBE schemes provide no authentication
+* of their own. In a file without a MAC (or with a MAC computed under a
+* password known to the attacker) the CBC encrypted key is malleable: a
+* modification that lands inside the private scalar of an EC key produces a
+* key that still decodes, still carries the original public point, and still
+* matches the end-entity certificate, but signs with a different scalar.
+* Private_Key::check_key (non-strong) detects this class of corruption for
+* all key types that can verify the private/public relation; for EC keys it
+* costs one fixed-base multiplication.
+*
+* No RNG is available in this context. The non-strong checks of the common
+* key types do not require randomness (primality tests fall back to fixed
+* bases when the RNG is unseeded). A key type whose check demands randomness
+* reports PRNG_Unseeded and is accepted without the check.
+*/
+std::shared_ptr<Private_Key> load_checked_private_key(DataSource& src) {
+   std::shared_ptr<Private_Key> key(PKCS8::load_key(src));
+
+   Null_RNG null_rng;
+   try {
+      if(!key->check_key(null_rng, false)) {
+         throw Decoding_Error("PKCS#12: private key failed consistency check");
+      }
+   } catch(const PRNG_Unseeded&) {
+      // check_key for this algorithm requires randomness which we cannot
+      // supply here; the key is accepted as decoded.
+   }
+
+   return key;
+}
+
 // Helper bag carrying a parsed private key with its attributes.
 struct ParsedKey {
       std::shared_ptr<Private_Key> key;
@@ -249,14 +284,14 @@ void parse_safe_contents(BER_Decoder& decoder,
 
          auto decrypted = pkcs12_pbe_decrypt(encrypted_key, password, pbe_algo, openssl_empty_pwd_compat);
          DataSource_Memory src(decrypted);
-         key_entries.push_back({std::shared_ptr<Private_Key>(PKCS8::load_key(src)), {}, {}});
+         key_entries.push_back({load_checked_private_key(src), {}, {}});
          pushed_key = true;
       } else if(bag_type == key_bag_oid) {
          secure_vector<uint8_t> key_data;
          bag_value.raw_bytes(key_data);
          bag_value.verify_end();
          DataSource_Memory src(key_data);
-         key_entries.push_back({std::shared_ptr<Private_Key>(PKCS8::load_key(src)), {}, {}});
+         key_entries.push_back({load_checked_private_key(src), {}, {}});
          pushed_key = true;
       } else if(bag_type == safe_contents_bag_oid) {
          BER_Decoder nested_sc = bag_value.start_sequence();
