@@ -13,6 +13,8 @@
 #include <botan/hash.h>
 #include <botan/xof.h>
 #include <botan/internal/buffer_slicer.h>
+#include <botan/internal/fmt.h>
+#include <botan/internal/hash_engine.h>
 #include <botan/internal/kyber_constants.h>
 #include <botan/internal/kyber_types.h>
 
@@ -100,6 +102,35 @@ class Kyber_Symmetric_Primitives /* NOLINT(*-special-member-functions) */ {
          }
       }
 
+      /// Batched variant of setup_XOF + output: outputs[i] receives the
+      /// leading XOF output for positions[i]. All outputs are equally sized.
+      virtual void XOF_batch(std::span<std::span<uint8_t>> outputs,
+                             StrongSpan<const KyberSeedRho> seed,
+                             std::span<const std::tuple<uint8_t, uint8_t>> positions) const {
+         BOTAN_ASSERT_NOMSG(outputs.size() == positions.size());
+         std::unique_ptr<Botan::XOF> xof;
+         for(size_t i = 0; i < outputs.size(); ++i) {
+            BOTAN_DEBUG_ASSERT(outputs[i].size() == outputs[0].size());
+            setup_XOF(xof, seed, positions[i]);
+            xof->output(outputs[i]);
+         }
+      }
+
+      /// Batched variant of setup_PRF + output using consecutive nonces.
+      /// All outputs are equally sized.
+      ///
+      /// Each PRF output fits in a single Keccak block, so a multi-buffer
+      /// hash engine (whose setup is bound to the per-operation seed)
+      /// cannot amortize its creation cost here and scalar XOFs are used.
+      void PRF_batch(std::span<std::span<uint8_t>> outputs, std::span<const uint8_t> seed, uint8_t first_nonce) const {
+         std::unique_ptr<Botan::XOF> xof;
+         for(size_t i = 0; i < outputs.size(); ++i) {
+            BOTAN_DEBUG_ASSERT(outputs[i].size() == outputs[0].size());
+            setup_PRF(xof, seed, static_cast<uint8_t>(first_nonce + i));
+            xof->output(outputs[i]);
+         }
+      }
+
    private:
       template <concepts::contiguous_strong_type T1,
                 concepts::contiguous_strong_type T2,
@@ -118,6 +149,30 @@ class Kyber_Symmetric_Primitives /* NOLINT(*-special-member-functions) */ {
       }
 
    protected:
+      /// Batch implementations for the SHAKE-based instantiations (used by
+      /// the ML-KEM and Kyber round 3 specializations)
+      static void shake_XOF_batch(std::span<std::span<uint8_t>> outputs,
+                                  StrongSpan<const KyberSeedRho> seed,
+                                  std::span<const std::tuple<uint8_t, uint8_t>> positions) {
+         BOTAN_ASSERT_NOMSG(outputs.size() == positions.size());
+         if(outputs.empty()) {
+            return;
+         }
+
+         auto engine = Hash_Engine::create_or_throw(fmt("SHAKE-128({})", 8 * outputs[0].size()), seed);
+
+         std::vector<uint8_t> pos_bytes(2 * positions.size());
+         std::vector<std::span<const uint8_t>> inputs(positions.size());
+         for(size_t i = 0; i < positions.size(); ++i) {
+            BOTAN_DEBUG_ASSERT(outputs[i].size() == outputs[0].size());
+            pos_bytes[2 * i] = std::get<0>(positions[i]);
+            pos_bytes[2 * i + 1] = std::get<1>(positions[i]);
+            inputs[i] = std::span(pos_bytes).subspan(2 * i, 2);
+         }
+
+         engine->batch_hash(outputs, inputs);
+      }
+
       virtual std::optional<std::array<uint8_t, 1>> seed_expansion_domain_separator(
          const KyberConstants& mode) const = 0;
 
