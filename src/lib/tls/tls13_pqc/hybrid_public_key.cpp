@@ -10,8 +10,10 @@
 
 #include <botan/internal/hybrid_public_key.h>
 
+#include <botan/assert.h>
 #include <botan/ec_group.h>
 #include <botan/pk_algs.h>
+#include <botan/pk_options.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/concat_util.h>
@@ -302,12 +304,17 @@ std::unique_ptr<Private_Key> Hybrid_KEM_PublicKey::generate_another(RandomNumber
    return std::make_unique<Hybrid_KEM_PrivateKey>(generate_other_sks_from_pks(rng));
 }
 
-std::unique_ptr<Botan::PK_Ops::KEM_Encryption> Hybrid_KEM_PublicKey::create_kem_encryption_op(
-   std::string_view params, std::string_view provider) const {
-   if(params != "Raw" && !params.empty()) {
+std::unique_ptr<Botan::PK_Ops::KEM_Encryption> Hybrid_KEM_PublicKey::_create_kem_encryption_op(
+   const PK_KEM_Options& options) const {
+   if(options.using_kdf()) {
       throw Botan::Invalid_Argument("Hybrid KEM encryption does not support KDFs");
    }
-   return std::make_unique<Hybrid_TLS_KEM_Encryptor>(public_keys(), provider);
+   // TLS uses the concatenated raw secrets directly, but they are not a
+   // uniform key, so this must be requested explicitly
+   if(!options.using_raw_shared_key()) {
+      throw Botan::Invalid_Argument("Hybrid KEM encryption requires explicitly requesting the raw shared key");
+   }
+   return std::make_unique<Hybrid_TLS_KEM_Encryptor>(public_keys(), options.provider().value_or(""));
 }
 
 std::unique_ptr<Hybrid_KEM_PrivateKey> Hybrid_KEM_PrivateKey::generate_from_group(Group_Params group,
@@ -321,12 +328,15 @@ std::unique_ptr<Hybrid_KEM_PrivateKey> Hybrid_KEM_PrivateKey::generate_from_grou
    return std::make_unique<Hybrid_KEM_PrivateKey>(std::move(private_keys));
 }
 
-std::unique_ptr<Botan::PK_Ops::KEM_Decryption> Hybrid_KEM_PrivateKey::create_kem_decryption_op(
-   RandomNumberGenerator& rng, std::string_view params, std::string_view provider) const {
-   if(params != "Raw" && !params.empty()) {
+std::unique_ptr<Botan::PK_Ops::KEM_Decryption> Hybrid_KEM_PrivateKey::_create_kem_decryption_op(
+   RandomNumberGenerator& rng, const PK_KEM_Options& options) const {
+   if(options.using_kdf()) {
       throw Botan::Invalid_Argument("Hybrid KEM decryption does not support KDFs");
    }
-   return std::make_unique<Hybrid_TLS_KEM_Decryptor>(private_keys(), rng, provider);
+   if(!options.using_raw_shared_key()) {
+      throw Botan::Invalid_Argument("Hybrid KEM decryption requires explicitly requesting the raw shared key");
+   }
+   return std::make_unique<Hybrid_TLS_KEM_Decryptor>(private_keys(), rng, options.provider().value_or(""));
 }
 
 }  // namespace Botan::TLS

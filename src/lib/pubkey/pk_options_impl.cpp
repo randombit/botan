@@ -10,6 +10,7 @@
 #include <botan/exceptn.h>
 #include <botan/pk_options.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/parsing.h>
 #include <botan/internal/scan_name.h>
 
 namespace Botan {
@@ -241,6 +242,81 @@ PK_Signature_Options parse_legacy_sig_options(const Public_Key& key, std::string
    }();
 
    return PK_Signature_Options().with_hash(hash).with_deterministic_signature(deterministic);
+}
+
+PK_Encryption_Options parse_legacy_enc_options(const Public_Key& key, std::string_view params) {
+   /*
+   * As with parse_legacy_sig_options, this handles the padding strings accepted
+   * prior to the introduction of PK_Encryption_Options.
+   */
+
+   if(key.algo_name() == "SM2") {
+      // The only parameter is the hash function, which defaults to SM3
+      return PK_Encryption_Options().with_hash(params);
+   }
+
+   /*
+   * Everything else (RSA, ElGamal, and the RSA implementations of the hardware
+   * providers) takes an EME specification:
+   *
+   * Raw
+   * PKCS1v15 (or the alias EME-PKCS1-v1_5)
+   * OAEP(hash), OAEP(hash,MGF1), OAEP(hash,MGF1,label), OAEP(hash,MGF1(mgf_hash)),
+   * OAEP(hash,MGF1(mgf_hash),label) (or the aliases EME-OAEP and EME1)
+   */
+
+   // TODO(Botan4) Remove all but "PKCS1v15"
+   if(params == "PKCS1v15" || params == "EME-PKCS1-v1_5") {
+      return PK_Encryption_Options().with_padding("PKCS1v15");
+   }
+
+   const SCAN_Name req(params);
+
+   // TODO(Botan4) Remove all but "OAEP"
+   if(req.algo_name() == "OAEP" || req.algo_name() == "EME-OAEP" || req.algo_name() == "EME1") {
+      if(req.arg_count_between(1, 3)) {
+         auto options = PK_Encryption_Options().with_padding("OAEP").with_hash(req.arg(0));
+
+         if(req.arg_count() >= 2 && req.arg(1) != "MGF1") {
+            const auto mgf_params = parse_algorithm_name(req.arg(1));
+            if(mgf_params.size() != 2 || mgf_params[0] != "MGF1") {
+               throw Lookup_Error(fmt("Unknown OAEP mask generation function {}", req.arg(1)));
+            }
+            options = options.with_mgf1_hash(mgf_params[1]);
+         }
+
+         if(req.arg_count() == 3) {
+            options = options.with_context(req.arg(2));
+         }
+
+         return options;
+      }
+   }
+
+   // Anything else, including "Raw", is treated as the name of a padding scheme
+   return PK_Encryption_Options().with_padding(params);
+}
+
+PK_KEM_Options parse_legacy_kem_options(std::string_view params) {
+   // The string interface has always required naming a KDF (or "Raw")
+   if(params.empty()) {
+      throw Invalid_Argument("KEM requires specifying a KDF, or Raw to use the shared key directly");
+   } else if(params == "Raw") {
+      return PK_KEM_Options().with_raw_shared_key();
+   } else {
+      return PK_KEM_Options().with_kdf(params);
+   }
+}
+
+PK_Key_Agreement_Options parse_legacy_ka_options(std::string_view params) {
+   // The string interface has always required naming a KDF (or "Raw")
+   if(params.empty()) {
+      throw Invalid_Argument("Key agreement requires specifying a KDF, or Raw to use the agreed value directly");
+   } else if(params == "Raw") {
+      return PK_Key_Agreement_Options().with_raw_shared_key();
+   } else {
+      return PK_Key_Agreement_Options().with_kdf(params);
+   }
 }
 
 void validate_for_hash_based_signature(const PK_Signature_Options& options,

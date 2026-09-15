@@ -111,10 +111,13 @@ std::unique_ptr<Public_Key> maybe_get_public_key(const std::unique_ptr<Private_K
 
 class KEX_to_KEM_Adapter_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KDF {
    public:
+      // The raw shared secret of a key agreement is a group element, not a uniform key
       KEX_to_KEM_Adapter_Encryption_Operation(std::shared_ptr<const Public_Key> key,
-                                              std::string_view kdf,
+                                              const PK_KEM_Options& options,
                                               std::string_view provider) :
-            PK_Ops::KEM_Encryption_with_KDF(kdf), m_provider(provider), m_public_key(std::move(key)) {}
+            PK_Ops::KEM_Encryption_with_KDF(options, PK_Ops::RawKemSharedKey::RequiresKDF),
+            m_provider(provider),
+            m_public_key(std::move(key)) {}
 
       size_t raw_kem_shared_key_length() const override { return kex_shared_key_length(*m_public_key); }
 
@@ -131,9 +134,10 @@ class KEX_to_KEM_Adapter_Encryption_Operation final : public PK_Ops::KEM_Encrypt
                            std::span<uint8_t> raw_shared_key,
                            Botan::RandomNumberGenerator& rng) override {
          const auto sk = generate_key_agreement_private_key(*m_public_key, rng);
-         const auto shared_key = PK_Key_Agreement(*sk, rng, "Raw", m_provider)
-                                    .derive_key(0 /* no KDF */, m_public_key->raw_public_key_bits())
-                                    .bits_of();
+         const auto shared_key =
+            PK_Key_Agreement(*sk, rng, PK_Key_Agreement_Options().with_raw_shared_key().with_provider(m_provider))
+               .derive_key(0 /* no KDF */, m_public_key->raw_public_key_bits())
+               .bits_of();
 
          const auto public_value = sk->public_value();
 
@@ -158,10 +162,10 @@ class KEX_to_KEM_Decryption_Operation final : public PK_Ops::KEM_Decryption_with
    public:
       KEX_to_KEM_Decryption_Operation(const PK_Key_Agreement_Key& key,
                                       RandomNumberGenerator& rng,
-                                      const std::string_view kdf,
+                                      const PK_KEM_Options& options,
                                       const std::string_view provider) :
-            PK_Ops::KEM_Decryption_with_KDF(kdf),
-            m_operation(key, rng, "Raw", provider),
+            PK_Ops::KEM_Decryption_with_KDF(options, PK_Ops::RawKemSharedKey::RequiresKDF),
+            m_operation(key, rng, PK_Key_Agreement_Options().with_raw_shared_key().with_provider(provider)),
             m_encapsulated_key_length(key.public_value().size()) {}
 
       void raw_kem_decrypt(std::span<uint8_t> out_shared_key, std::span<const uint8_t> encap_key) override {
@@ -259,14 +263,17 @@ bool KEX_to_KEM_Adapter_PrivateKey::check_key(RandomNumberGenerator& rng, bool s
    return m_private_key->check_key(rng, strong);
 }
 
-std::unique_ptr<PK_Ops::KEM_Encryption> KEX_to_KEM_Adapter_PublicKey::create_kem_encryption_op(
-   std::string_view kdf, std::string_view provider) const {
-   return std::make_unique<KEX_to_KEM_Adapter_Encryption_Operation>(m_public_key, kdf, provider);
+std::unique_ptr<PK_Ops::KEM_Encryption> KEX_to_KEM_Adapter_PublicKey::_create_kem_encryption_op(
+   const PK_KEM_Options& options) const {
+   // The provider selects the implementation of the underlying key agreement
+   return std::make_unique<KEX_to_KEM_Adapter_Encryption_Operation>(
+      m_public_key, options, options.provider().value_or(""));
 }
 
-std::unique_ptr<PK_Ops::KEM_Decryption> KEX_to_KEM_Adapter_PrivateKey::create_kem_decryption_op(
-   RandomNumberGenerator& rng, std::string_view kdf, std::string_view provider) const {
-   return std::make_unique<KEX_to_KEM_Decryption_Operation>(*m_private_key, rng, kdf, provider);
+std::unique_ptr<PK_Ops::KEM_Decryption> KEX_to_KEM_Adapter_PrivateKey::_create_kem_decryption_op(
+   RandomNumberGenerator& rng, const PK_KEM_Options& options) const {
+   return std::make_unique<KEX_to_KEM_Decryption_Operation>(
+      *m_private_key, rng, options, options.provider().value_or(""));
 }
 
 }  // namespace Botan

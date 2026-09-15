@@ -18,6 +18,7 @@
 namespace Botan {
 
 class PK_Signature_Options;
+class PK_Encryption_Options;
 
 }  // namespace Botan
 
@@ -35,9 +36,11 @@ class BOTAN_PUBLIC_API(3, 7) MechanismWrapper final {
 
       /**
       * Creates the CK_MECHANISM data for RSA encryption/decryption
-      * @param padding supported paddings are Raw (X.509), EME-PKCS1-v1_5 (PKCS#1 v1.5) and OAEP (PKCS#1 OAEP)
+      * @param options supported paddings are Raw (X.509), PKCS1v15 (PKCS#1 v1.5) and OAEP (PKCS#1 OAEP);
+      * for OAEP the hash (SHA-1, SHA-224, SHA-256, SHA-384 or SHA-512), an optional distinct MGF1 hash,
+      * and an optional label (the context) are used
       */
-      static MechanismWrapper create_rsa_crypt_mechanism(std::string_view padding);
+      static MechanismWrapper create_rsa_crypt_mechanism(const PK_Encryption_Options& options);
 
       /**
       * Creates the CK_MECHANISM data for RSA signature/verification
@@ -108,6 +111,8 @@ class BOTAN_PUBLIC_API(3, 7) MechanismWrapper final {
    private:
       Mechanism m_mechanism;
       std::shared_ptr<MechanismParameters> m_parameters;
+      // Storage for the OAEP label referenced from oaep_params.pSourceData
+      std::shared_ptr<const std::vector<uint8_t>> m_oaep_label;
       size_t m_padding_size = 0;
 };
 

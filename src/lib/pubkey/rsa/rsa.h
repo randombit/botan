@@ -70,12 +70,10 @@ class BOTAN_PUBLIC_API(2, 0) RSA_PublicKey : public virtual Public_Key {
       // internal functions:
       std::shared_ptr<const RSA_Public_Data> public_data() const;
 
-      std::unique_ptr<PK_Ops::Encryption> create_encryption_op(RandomNumberGenerator& rng,
-                                                               std::string_view params,
-                                                               std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Encryption> _create_encryption_op(RandomNumberGenerator& rng,
+                                                                const PK_Encryption_Options& options) const override;
 
-      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(std::string_view params,
-                                                                       std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::KEM_Encryption> _create_kem_encryption_op(const PK_KEM_Options& options) const override;
 
       std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const override;
 
@@ -165,13 +163,11 @@ class BOTAN_PUBLIC_API(2, 0) RSA_PrivateKey final : public virtual Private_Key,
       // internal functions:
       std::shared_ptr<const RSA_Private_Data> private_data() const;
 
-      std::unique_ptr<PK_Ops::Decryption> create_decryption_op(RandomNumberGenerator& rng,
-                                                               std::string_view params,
-                                                               std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Decryption> _create_decryption_op(RandomNumberGenerator& rng,
+                                                                const PK_Encryption_Options& options) const override;
 
-      std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
-                                                                       std::string_view params,
-                                                                       std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::KEM_Decryption> _create_kem_decryption_op(RandomNumberGenerator& rng,
+                                                                        const PK_KEM_Options& options) const override;
 
       std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
                                                               const PK_Signature_Options& options) const override;

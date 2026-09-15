@@ -50,9 +50,8 @@ class ECIES_PrivateKey final : public virtual EC_PrivateKey,
          return m_key.generate_another(rng);
       }
 
-      std::unique_ptr<PK_Ops::Key_Agreement> create_key_agreement_op(RandomNumberGenerator& rng,
-                                                                     std::string_view params,
-                                                                     std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Key_Agreement> _create_key_agreement_op(
+         RandomNumberGenerator& rng, const PK_Key_Agreement_Options& options) const override;
 
    private:
       ECDH_PrivateKey m_key;
@@ -67,8 +66,10 @@ BOTAN_DIAGNOSTIC_POP
 */
 class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
    public:
-      ECIES_ECDH_KA_Operation(const ECIES_PrivateKey& private_key, RandomNumberGenerator& rng) :
-            PK_Ops::Key_Agreement_with_KDF("Raw"), m_key(private_key), m_rng(rng) {}
+      ECIES_ECDH_KA_Operation(const ECIES_PrivateKey& private_key,
+                              const PK_Key_Agreement_Options& options,
+                              RandomNumberGenerator& rng) :
+            PK_Ops::Key_Agreement_with_KDF(options), m_key(private_key), m_rng(rng) {}
 
       size_t agreed_value_size() const override { return m_key.domain().get_p_bytes(); }
 
@@ -86,10 +87,12 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
       RandomNumberGenerator& m_rng;
 };
 
-std::unique_ptr<PK_Ops::Key_Agreement> ECIES_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
-                                                                                 std::string_view /*params*/,
-                                                                                 std::string_view /*provider*/) const {
-   return std::make_unique<ECIES_ECDH_KA_Operation>(*this, rng);
+std::unique_ptr<PK_Ops::Key_Agreement> ECIES_PrivateKey::_create_key_agreement_op(
+   RandomNumberGenerator& rng, const PK_Key_Agreement_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<ECIES_ECDH_KA_Operation>(*this, options, rng);
+   }
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 /**
@@ -120,10 +123,11 @@ PK_Key_Agreement create_key_agreement(const PK_Key_Agreement_Key& private_key,
 
    if(ecdh_key != nullptr && (for_encryption || !ecies_params.cofactor_mode())) {
       // ECDH_KA_Operation uses cofactor mode: use own key agreement method if cofactor should not be used.
-      return PK_Key_Agreement(ECIES_PrivateKey(*ecdh_key), rng, "Raw");
+      return PK_Key_Agreement(ECIES_PrivateKey(*ecdh_key), rng, PK_Key_Agreement_Options().with_raw_shared_key());
    }
 
-   return PK_Key_Agreement(private_key, rng, "Raw");  // use default implementation
+   // use default implementation
+   return PK_Key_Agreement(private_key, rng, PK_Key_Agreement_Options().with_raw_shared_key());
 }
 }  // namespace
 

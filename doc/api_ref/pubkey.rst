@@ -668,6 +668,110 @@ the underlying mathematical properties of the algorithm.  Additionally, they
 will add randomness, so encrypting the same plaintext twice produces two
 different ciphertexts.
 
+The padding scheme and its parameters are specified using a
+:cpp:class:`PK_Encryption_Options` object.
+
+.. _pk_encryption_options:
+
+Encryption Options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. versionadded:: 3.14.0
+
+.. cpp:class:: PK_Encryption_Options
+
+   Describes how a message is to be encrypted or decrypted. As with
+   :cpp:class:`PK_Signature_Options`, the object is built up in a builder
+   style; each ``with_xxx`` function returns a new options object with that
+   option added::
+
+      auto opts = Botan::PK_Encryption_Options()
+                     .with_padding("OAEP")
+                     .with_hash("SHA-256");
+
+      Botan::PK_Encryptor_EME enc(pub_key, rng, opts);
+      Botan::PK_Decryptor_EME dec(priv_key, rng, opts);
+
+   Every option that is set must be understood and acted upon by the scheme in
+   use; if it is not (for example a context with ``PKCS1v15`` padding, or any
+   padding scheme with SM2) then constructing the :cpp:class:`PK_Encryptor_EME`
+   or :cpp:class:`PK_Decryptor_EME` throws an exception naming the offending
+   option(s). An option is never silently ignored. Each option can be set at
+   most once; setting one a second time throws ``Invalid_State``.
+
+   The encryptor and decryptor must be configured identically, since every
+   option affects the ciphertext format.
+
+   .. cpp:function:: PK_Encryption_Options()
+
+      Creates an empty set of options. This is sufficient only for SM2; RSA and
+      ElGamal require a padding scheme.
+
+   .. cpp:function:: PK_Encryption_Options with_padding(std::string_view padding)
+
+      Specify the padding scheme. RSA and ElGamal require this; the available
+      schemes are ``OAEP``, ``PKCS1v15`` and ``Raw``, described in
+      :ref:`eme`. Encrypting without padding is dangerous, so there is no
+      default. SM2 does not use padding and rejects this option.
+
+      An empty string is ignored.
+
+   .. cpp:function:: PK_Encryption_Options with_hash(std::string_view hash)
+
+      Specify the hash function. ``OAEP`` requires this; the hash is used for
+      the label and, unless :cpp:func:`PK_Encryption_Options::with_mgf1_hash`
+      is also given, for the mask generation function. For SM2 it selects the
+      hash used within the scheme, and defaults to SM3 if not given.
+      ``PKCS1v15`` and ``Raw`` padding do not use a hash and reject this
+      option.
+
+      An empty string is ignored.
+
+   .. cpp:function:: PK_Encryption_Options with_mgf1_hash(std::string_view hash)
+
+      Use a different hash function for OAEP's MGF1 than for the label. This
+      is rarely needed, but some protocols (and some implementations, by
+      default) use for example SHA-256 for OAEP with SHA-1 for MGF1. Only
+      ``OAEP`` supports this option.
+
+      An empty string is ignored.
+
+   .. cpp:function:: PK_Encryption_Options with_context(std::span<const uint8_t> context)
+   .. cpp:function:: PK_Encryption_Options with_context(std::string_view context)
+
+      Specify a context which is bound into the ciphertext. Currently this is
+      only supported by ``OAEP``, where it is the label (``L`` in RFC 8017).
+      The label defaults to the empty string. A ciphertext created with one
+      label will not decrypt with another.
+
+   .. cpp:function:: PK_Encryption_Options with_provider(std::string_view provider)
+
+      Request a specific implementation. This is rarely needed; the main use is
+      with keys held in hardware (providers ``pkcs11``, ``tpm2``), which accept
+      only their own provider name. The default (an empty string) selects
+      whatever implementation the key has; ``base`` names the software
+      implementation explicitly, and is therefore rejected for hardware keys.
+
+      The hardware providers support ``OAEP`` and ``PKCS1v15`` (PKCS#11 also
+      ``Raw``). The TPM2 provider does not support an OAEP label, nor an MGF1
+      hash differing from the OAEP hash.
+
+   .. cpp:function:: std::string to_string() const
+
+      Formats the options as a string, for debugging and error messages. The
+      format is not fixed.
+
+Encryption Options Accepted by Each Scheme
+""""""""""""""""""""""""""""""""""""""""""""""""
+
+- **RSA** and **ElGamal**: require a padding scheme. With ``OAEP`` a hash is
+  also required, and an MGF1 hash and a context (the label) are accepted.
+  ``PKCS1v15`` and ``Raw`` take no further options.
+- **SM2**: accepts a hash (default SM3) and nothing else.
+
+Encrypting and Decrypting
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 The primary interface for encryption is
 
 .. cpp:class:: PK_Encryptor
@@ -706,18 +810,32 @@ support it directly, such as RSA or ElGamal; these use the EME class:
 
    .. cpp:function:: PK_Encryptor_EME(const Public_Key& key, \
          RandomNumberGenerator& rng, \
+         const PK_Encryption_Options& options)
+
+     With *key* being the key you want to encrypt messages to, configured as
+     described by *options* (see :ref:`pk_encryption_options`).
+
+     If you are not sure what padding to use, use
+     ``PK_Encryption_Options().with_padding("OAEP").with_hash("SHA-256")``.
+     If you need compatibility with protocols using the PKCS #1 v1.5 standard,
+     you can also use ``with_padding("PKCS1v15")``.
+
+     For SM2 encryption, only a hash may be specified; normally it is left at
+     the default of SM3.
+
+   .. cpp:function:: PK_Encryptor_EME(const Public_Key& key, \
+         RandomNumberGenerator& rng, \
          std::string_view padding, \
          std::string_view provider = "")
 
-     With *key* being the key you want to encrypt messages to. The padding
-     method to use is specified in *padding*.
+     The padding method to use is specified by the string *padding*, which is
+     the interface available in previous versions of Botan. The string is
+     translated into the equivalent :cpp:class:`PK_Encryption_Options`; new
+     code should prefer to construct the options directly.
 
-     If you are not sure what padding to use, use "OAEP(SHA-256)". If you need
-     compatibility with protocols using the PKCS #1 v1.5 standard, you can also
-     use "PKCS1v15".
-
-     For SM2 encryption, the padding string specifies which hash function to
-     use; normally this would be "SM3".
+     For RSA and ElGamal the string names a :ref:`padding scheme <eme>`, for
+     example "OAEP(SHA-256)" or "PKCS1v15". For SM2 encryption, the padding
+     string specifies which hash function to use; normally this would be "SM3".
 
 .. cpp:class:: DLIES_Encryptor
 
@@ -827,7 +945,30 @@ support it directly, such as RSA or ElGamal; these use the EME class:
          usage. If any of the required values are incorrect, then again a
          randomly generated key is returned to hide the PKCS1v1.5 oracle.
 
-Botan implements the following encryption algorithms:
+.. cpp:class:: PK_Decryptor_EME
+
+   The decryption counterpart of :cpp:class:`PK_Encryptor_EME`, for RSA,
+   ElGamal and SM2.
+
+   .. cpp:function:: PK_Decryptor_EME(const Private_Key& key, \
+         RandomNumberGenerator& rng, \
+         const PK_Encryption_Options& options)
+
+      Construct a decryptor for *key*. The *options* must be the same as those
+      used to create the ciphertext (see :ref:`pk_encryption_options`).
+
+   .. cpp:function:: PK_Decryptor_EME(const Private_Key& key, \
+         RandomNumberGenerator& rng, \
+         std::string_view padding, \
+         std::string_view provider = "")
+
+      Construct a decryptor using a padding string, which is translated into
+      the equivalent :cpp:class:`PK_Encryption_Options` exactly as for
+      :cpp:class:`PK_Encryptor_EME`.
+
+Botan implements the following encryption algorithms. The string parameter
+each accepts in the string based constructors is described below; the
+equivalent options are listed in :ref:`pk_encryption_options`.
 
 1. RSA. Requires a :ref:`padding scheme <eme>` as parameter.
 #. DLIES (deprecated)
@@ -881,6 +1022,10 @@ as specified in PKCS#1 v2.0 (RFC 2437) or PKCS#1 v2.1 (RFC 3447).
   ``OAEP(SHA-256,MGF1)``,
   ``OAEP(SHA-256,MGF1(SHA-512))``,
   ``OAEP(SHA-512,MGF1(SHA-512),TCPA)``
+- With :cpp:class:`PK_Encryption_Options` the hash, MGF1 hash and label are
+  given using ``with_hash``, ``with_mgf1_hash`` and ``with_context``
+  respectively; ``OAEP(SHA-512,MGF1(SHA-512),TCPA)`` is equivalent to
+  ``with_padding("OAEP").with_hash("SHA-512").with_context("TCPA")``.
 
 PKCS #1 v1.5 Type 2 (encryption)
 """"""""""""""""""""""""""""""""
@@ -1101,8 +1246,9 @@ Signature Options
 
       Request a specific implementation. This is rarely needed; the main use is
       with keys held in hardware (providers ``pkcs11``, ``tpm2``), which accept
-      only their own provider name. The default (an empty string, or ``base``)
-      selects the software implementation.
+      only their own provider name. The default (an empty string) selects
+      whatever implementation the key has; ``base`` names the software
+      implementation explicitly, and is therefore rejected for hardware keys.
 
       Hardware providers support a subset of the options described here. For
       RSA they require a padding scheme and a hash (PKCS#11 additionally
@@ -1117,8 +1263,8 @@ Signature Options
       Formats the options as a string, for debugging and error messages. The
       format is not fixed.
 
-Options Accepted by Each Scheme
-""""""""""""""""""""""""""""""""""""
+Signature Options Accepted by Each Scheme
+""""""""""""""""""""""""""""""""""""""""""""""""
 
 The following summarizes which options each signature scheme accepts; any
 option not listed is rejected when the signer or verifier is constructed.
@@ -1581,16 +1727,111 @@ produce an output of the desired length.
 #. ECDH over x25519 or x448
 #. DH over prime fields
 
+How the agreed value is turned into the shared key is specified using a
+:cpp:class:`PK_Key_Agreement_Options` object.
+
+.. _pk_key_agreement_options:
+
+Key Agreement Options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. versionadded:: 3.14.0
+
+.. cpp:class:: PK_Key_Agreement_Options
+
+   Describes how the shared key is derived from the agreed value. As with
+   :cpp:class:`PK_Signature_Options`, the object is built up in a builder
+   style; each ``with_xxx`` function returns a new options object with that
+   option added::
+
+      auto opts = Botan::PK_Key_Agreement_Options().with_kdf("HKDF(SHA-256)");
+
+      Botan::PK_Key_Agreement ka(priv_key, rng, opts);
+
+   Every option that is set must be understood by the scheme in use, otherwise
+   constructing the :cpp:class:`PK_Key_Agreement` throws an exception naming
+   the offending option(s). Each option can be set at most once. Both parties
+   must use the same options to arrive at the same shared key.
+
+   The agreed value is never a uniformly random key: for ECDH it is the x
+   coordinate of a curve point, for DH a group element, and for X25519/X448 the
+   output of the Montgomery ladder. So, unlike :cpp:class:`PK_KEM_Options`,
+   there is no usable default; the caller must either specify a KDF or
+   explicitly ask for the raw value, and the default options are rejected.
+
+   .. cpp:function:: PK_Key_Agreement_Options()
+
+      Creates an empty set of options. These are always rejected; see above.
+
+   .. cpp:function:: PK_Key_Agreement_Options with_kdf(std::string_view kdf)
+
+      Derive the shared key from the agreed value using the named
+      :ref:`key derivation function <key_derivation_function>`. The salt and
+      the key length passed to :cpp:func:`PK_Key_Agreement::derive_key` are
+      inputs to the KDF, so any length of key can be requested. The name must
+      not be empty.
+
+      For keys held in a PKCS#11 token the derivation is performed by the
+      token, and this instead names the PKCS#11 key derivation function by its
+      hash (``SHA-256`` and so on), optionally followed by ``,Cofactor`` to
+      select the cofactor variant of the mechanism; see :doc:`pkcs11`. Naming
+      ``Raw`` here is rejected; the raw value is requested with
+      :cpp:func:`PK_Key_Agreement_Options::with_raw_shared_key` as for any
+      other key.
+
+      This cannot be combined with
+      :cpp:func:`PK_Key_Agreement_Options::with_raw_shared_key`.
+
+   .. cpp:function:: PK_Key_Agreement_Options with_raw_shared_key()
+
+      Return the agreed value itself as the shared key, without applying a
+      KDF. The key length passed to :cpp:func:`PK_Key_Agreement::derive_key` is
+      then ignored (the result has length :cpp:func:`PK_Key_Agreement::agreed_value_size`)
+      and no salt may be given. This acknowledges that the application will
+      process the raw value itself, as for example TLS does in its key
+      schedule.
+
+      This cannot be combined with :cpp:func:`PK_Key_Agreement_Options::with_kdf`.
+
+   .. cpp:function:: PK_Key_Agreement_Options with_provider(std::string_view provider)
+
+      Request a specific implementation. This is rarely needed; keys held in a
+      PKCS#11 token accept only their own provider name (``pkcs11``). The
+      default (an empty string) selects whatever implementation the key has;
+      ``base`` names the software implementation explicitly, and is therefore
+      rejected for hardware keys.
+
+   .. cpp:function:: std::string to_string() const
+
+      Formats the options as a string, for debugging and error messages. The
+      format is not fixed.
+
+Deriving Keys
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. cpp:class:: PK_Key_Agreement
 
   .. cpp:function:: PK_Key_Agreement(const Private_Key& key, \
                     RandomNumberGenerator& rng, \
-                    const std::string& kdf, \
-                    const std::string& provider = "")
+                    const PK_Key_Agreement_Options& options)
 
-      Set up to perform key derivation using the given private key and specified KDF.
+      Set up to perform key derivation using the given private key, configured
+      as described by *options* (see :ref:`pk_key_agreement_options`).
 
-  .. size_t agreed_value_size() const
+  .. cpp:function:: PK_Key_Agreement(const Private_Key& key, \
+                    RandomNumberGenerator& rng, \
+                    std::string_view kdf, \
+                    std::string_view provider = "")
+
+      Set up to perform key derivation using the given private key and the
+      KDF named by the string *kdf*, which is the interface available in
+      previous versions of Botan. The string must either name a KDF (equivalent
+      to :cpp:func:`PK_Key_Agreement_Options::with_kdf`) or be "Raw" (equivalent
+      to :cpp:func:`PK_Key_Agreement_Options::with_raw_shared_key`); an empty
+      string is rejected, as it always has been. New code should prefer to
+      construct the options directly.
+
+  .. cpp:function:: size_t agreed_value_size() const
 
       Return the byte length of what the underlying key agreement outputs.
       For example ECDH with secp256r1 will return 32, while finite field
@@ -1620,13 +1861,14 @@ produce an output of the desired length.
 
      The shared key will be of length *key_len*. If the KDF cannot accommodate
      outputs of this size (only likely for very large values, or if using KDF1),
-     an exception will be thrown. If a KDF is not in use ("Raw" KDF), *key_len*
-     is ignored and this function will always return directly what the agreement
-     scheme output, of length equal to :cpp:func:`agreed_value_size`.
+     an exception will be thrown. If a KDF is not in use (the raw shared key was
+     requested), *key_len* is ignored and this function will always return
+     directly what the agreement scheme output, of length equal to
+     :cpp:func:`agreed_value_size`.
 
      The *salt* will be hashed along with the shared secret by the KDF; this can
      be useful to bind the shared secret to a specific usage. If a KDF is not
-     being used ("Raw" KDF) then any non-empty salt will be rejected.
+     being used then any non-empty salt will be rejected.
 
 .. _ecdh_example:
 
@@ -1649,13 +1891,105 @@ typical public key encryption, a KEM encryption takes no inputs and produces two
 the shared secret and the encapsulated key. The decryption operation takes in the
 encapsulated key and returns the shared secret.
 
+How the shared secret is turned into the shared key returned to the
+application is specified using a :cpp:class:`PK_KEM_Options` object.
+
+.. _pk_kem_options:
+
+KEM Options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. versionadded:: 3.14.0
+
+.. cpp:class:: PK_KEM_Options
+
+   Describes how the shared key is derived from the KEM's output. As with
+   :cpp:class:`PK_Signature_Options`, the object is built up in a builder
+   style; each ``with_xxx`` function returns a new options object with that
+   option added::
+
+      auto opts = Botan::PK_KEM_Options().with_kdf("HKDF(SHA-256)");
+
+      Botan::PK_KEM_Encryptor enc(pub_key, opts);
+      Botan::PK_KEM_Decryptor dec(priv_key, rng, opts);
+
+   Every option that is set must be understood by the scheme in use, otherwise
+   constructing the :cpp:class:`PK_KEM_Encryptor` or
+   :cpp:class:`PK_KEM_Decryptor` throws an exception naming the offending
+   option(s). Each option can be set at most once. The encryptor and decryptor
+   must be configured identically.
+
+   The raw output of a KEM is not always suitable for direct use as a key. For
+   schemes such as ML-KEM, FrodoKEM and Classic McEliece the output is already a
+   uniformly random string of the right size, and it is returned directly unless
+   a KDF is requested. For others it is not: the output of RSA-KEM or HyMES
+   McEliece is a random group element, and a key agreement scheme used as a KEM
+   (as in the hybrid KEMs used by TLS) produces a group element or a
+   concatenation of secrets. Such schemes reject the default options; the
+   caller must either specify a KDF or explicitly ask for the raw output.
+
+   .. cpp:function:: PK_KEM_Options()
+
+      Creates an empty set of options. For KEMs whose output is a uniform key
+      this returns that output; all other KEMs reject it.
+
+   .. cpp:function:: PK_KEM_Options with_kdf(std::string_view kdf)
+
+      Derive the shared key from the KEM output using the named
+      :ref:`key derivation function <key_derivation_function>`. The salt and
+      the desired key length passed to the encapsulation and decapsulation
+      functions are inputs to the KDF, so any length of key can be requested.
+      The name must not be empty.
+
+      This cannot be combined with
+      :cpp:func:`PK_KEM_Options::with_raw_shared_key`.
+
+   .. cpp:function:: PK_KEM_Options with_raw_shared_key()
+
+      Return the raw output of the KEM as the shared key, without applying a
+      KDF. The desired key length passed to the encapsulation and decapsulation
+      functions is then ignored (the key has the KEM's fixed output length,
+      see ``shared_key_length``), and no salt may be given.
+
+      For KEMs with a uniform output this is the same as the default; for the
+      others it acknowledges that the application will process the raw value
+      itself. The TLS hybrid KEMs support only this option, as TLS hashes the
+      concatenated secrets in its own key schedule.
+
+      This cannot be combined with :cpp:func:`PK_KEM_Options::with_kdf`.
+
+   .. cpp:function:: PK_KEM_Options with_provider(std::string_view provider)
+
+      Request a specific implementation. This is rarely needed. The default
+      (an empty string) selects whatever implementation the key has; ``base``
+      names the software implementation explicitly.
+
+   .. cpp:function:: std::string to_string() const
+
+      Formats the options as a string, for debugging and error messages. The
+      format is not fixed.
+
+Encapsulating and Decapsulating
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. cpp:class:: PK_KEM_Encryptor
 
   .. cpp:function:: PK_KEM_Encryptor(const Public_Key& key, \
-                       const std::string& kdf = "", \
-                       const std::string& provider = "")
+                       const PK_KEM_Options& options)
 
-     Create a KEM encryptor
+     Create a KEM encryptor, configured as described by *options* (see
+     :ref:`pk_kem_options`).
+
+  .. cpp:function:: PK_KEM_Encryptor(const Public_Key& key, \
+                       std::string_view kdf = "", \
+                       std::string_view provider = "")
+
+     Create a KEM encryptor using a string parameter, which is the interface
+     available in previous versions of Botan. The string must either name a
+     KDF (equivalent to :cpp:func:`PK_KEM_Options::with_kdf`) or be "Raw"
+     (equivalent to :cpp:func:`PK_KEM_Options::with_raw_shared_key`); an
+     empty string is rejected, as it always has been. New code should prefer
+     to construct the options directly.
 
   .. cpp:function:: size_t shared_key_length(size_t desired_shared_key_len) const
 
@@ -1699,11 +2033,21 @@ encapsulated key and returns the shared secret.
 
 .. cpp:class:: PK_KEM_Decryptor
 
-  .. cpp:function:: PK_KEM_Decryptor(const Public_Key& key, \
-                       const std::string& kdf = "", \
-                       const std::string& provider = "")
+  .. cpp:function:: PK_KEM_Decryptor(const Private_Key& key, \
+                       RandomNumberGenerator& rng, \
+                       const PK_KEM_Options& options)
 
-     Create a KEM decryptor
+     Create a KEM decryptor. The *options* must be the same as those used by
+     the encryptor (see :ref:`pk_kem_options`).
+
+  .. cpp:function:: PK_KEM_Decryptor(const Private_Key& key, \
+                       RandomNumberGenerator& rng, \
+                       std::string_view kdf = "", \
+                       std::string_view provider = "")
+
+     Create a KEM decryptor using a string parameter, translated into the
+     equivalent :cpp:class:`PK_KEM_Options` exactly as for
+     :cpp:class:`PK_KEM_Encryptor`.
 
   .. cpp:function:: size_t encapsulated_key_length() const
 
@@ -1729,11 +2073,12 @@ encapsulated key and returns the shared secret.
 
 Botan implements the following KEM schemes:
 
-1. RSA
-#. ML-KEM (formerly known as Kyber)
-#. FrodoKEM
-#. Classic McEliece
-#. HyMES McEliece (deprecated)
+1. RSA (RSA-KEM). The raw output is not a uniform key, so a KDF (or the raw
+   shared key) must be requested explicitly.
+#. ML-KEM (formerly known as Kyber). The raw output is a uniform 32 byte key.
+#. FrodoKEM. The raw output is a uniform key.
+#. Classic McEliece. The raw output is a uniform key.
+#. HyMES McEliece (deprecated). The raw output is not a uniform key.
 
 .. _mlkem_example:
 
