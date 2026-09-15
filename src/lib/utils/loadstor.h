@@ -12,7 +12,7 @@
 
 #include <botan/mem_ops.h>
 #include <botan/range_concepts.h>
-#include <botan/strong_type.h>
+#include <botan/strong_type_helpers.h>
 #include <botan/types.h>
 #include <botan/internal/bswap.h>
 #include <bit>

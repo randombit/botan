@@ -19,6 +19,7 @@ mutex.h
 # TODO(Botan4) move this to internal
 range_concepts.h
 strong_type.h
+strong_type_helpers.h
 types.h
 version.h
 </header:public>
