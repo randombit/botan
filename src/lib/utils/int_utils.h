@@ -9,7 +9,7 @@
 
 #include <botan/concepts.h>
 #include <botan/exceptn.h>
-#include <botan/strong_type.h>
+#include <botan/strong_type_helpers.h>
 #include <botan/types.h>
 #include <optional>
 

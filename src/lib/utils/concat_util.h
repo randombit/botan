@@ -10,7 +10,7 @@
 #include <botan/assert.h>
 #include <botan/concepts.h>
 #include <botan/range_concepts.h>
-#include <botan/strong_type.h>
+#include <botan/strong_type_helpers.h>
 #include <array>
 #include <iterator>
 #include <ranges>
