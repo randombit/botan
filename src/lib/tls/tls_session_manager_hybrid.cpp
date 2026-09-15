@@ -17,10 +17,11 @@ namespace Botan::TLS {
 Session_Manager_Hybrid::Session_Manager_Hybrid(std::unique_ptr<Session_Manager> stateful,
                                                const std::shared_ptr<Credentials_Manager>& credentials_manager,
                                                const std::shared_ptr<RandomNumberGenerator>& rng,
-                                               bool prefer_tickets) :
+                                               bool prefer_tickets,
+                                               std::shared_ptr<CryptoOperations> crypto) :
       Session_Manager(rng),
       m_stateful(std::move(stateful)),
-      m_stateless(credentials_manager, rng),
+      m_stateless(credentials_manager, rng, std::move(crypto)),
       m_prefer_tickets(prefer_tickets) {
    BOTAN_ASSERT_NONNULL(m_stateful);
 }

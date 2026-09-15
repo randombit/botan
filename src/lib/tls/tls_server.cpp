@@ -10,6 +10,7 @@
 
 #include <botan/tls_server.h>
 
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_policy.h>
 #include <botan/x509cert.h>
 #include <botan/internal/tls_channel_impl.h>
@@ -33,12 +34,30 @@ Server::Server(const std::shared_ptr<Callbacks>& callbacks,
                const std::shared_ptr<const Policy>& policy,
                const std::shared_ptr<RandomNumberGenerator>& rng,
                bool is_datagram,
+               size_t io_buf_sz) :
+      Server(callbacks,
+             std::make_shared<DefaultCryptoOperations>(*callbacks),
+             session_manager,
+             creds,
+             policy,
+             rng,
+             is_datagram,
+             io_buf_sz) {}
+
+Server::Server(const std::shared_ptr<Callbacks>& callbacks,
+               const std::shared_ptr<CryptoOperations>& crypto,
+               const std::shared_ptr<Session_Manager>& session_manager,
+               const std::shared_ptr<Credentials_Manager>& creds,
+               const std::shared_ptr<const Policy>& policy,
+               const std::shared_ptr<RandomNumberGenerator>& rng,
+               bool is_datagram,
                size_t io_buf_sz) {
+   const auto operations = crypto ? crypto : std::make_shared<DefaultCryptoOperations>(*callbacks);
    const auto max_version = policy->latest_supported_version(is_datagram);
 
 #if defined(BOTAN_HAS_TLS_13)
    if(!max_version.is_pre_tls_13()) {
-      m_impl = Server_Impl_13::create(callbacks, session_manager, creds, policy, rng);
+      m_impl = Server_Impl_13::create(callbacks, operations, session_manager, creds, policy, rng);
 
    #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       if(m_impl->expects_downgrade()) {
@@ -52,12 +71,13 @@ Server::Server(const std::shared_ptr<Callbacks>& callbacks,
 
 #if defined(BOTAN_HAS_TLS_12)
    if(max_version.is_pre_tls_13()) {
-      m_impl = Server_Impl_12::create(callbacks, session_manager, creds, policy, rng, is_datagram, io_buf_sz);
+      m_impl =
+         Server_Impl_12::create(callbacks, operations, session_manager, creds, policy, rng, is_datagram, io_buf_sz);
       return;
    }
 #endif
 
-   BOTAN_UNUSED(max_version, callbacks, session_manager, creds, policy, rng, is_datagram, io_buf_sz);
+   BOTAN_UNUSED(max_version, callbacks, crypto, session_manager, creds, policy, rng, is_datagram, io_buf_sz);
    throw Not_Implemented("Requested TLS server version is not available in this build");
 }
 

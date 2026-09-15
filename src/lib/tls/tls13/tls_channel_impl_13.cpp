@@ -34,13 +34,16 @@ bool is_error_alert(const Botan::TLS::Alert& alert) {
 namespace Botan::TLS {
 
 Channel_Impl_13::Channel_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
+                                 const std::shared_ptr<CryptoOperations>& crypto,
                                  const std::shared_ptr<Session_Manager>& session_manager,
                                  const std::shared_ptr<Credentials_Manager>& credentials_manager,
                                  const std::shared_ptr<RandomNumberGenerator>& rng,
                                  const std::shared_ptr<const Policy>& policy,
                                  bool is_server) :
       m_side(is_server ? Connection_Side::Server : Connection_Side::Client),
+      m_transcript_hash(crypto),
       m_callbacks(callbacks),
+      m_crypto(crypto),
       m_session_manager(session_manager),
       m_credentials_manager(credentials_manager),
       m_rng(rng),
@@ -54,6 +57,7 @@ Channel_Impl_13::Channel_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
       m_first_message_sent(false),
       m_first_message_received(false) {
    BOTAN_ASSERT_NONNULL(m_callbacks);
+   BOTAN_ASSERT_NONNULL(m_crypto);
    BOTAN_ASSERT_NONNULL(m_session_manager);
    BOTAN_ASSERT_NONNULL(m_credentials_manager);
    BOTAN_ASSERT_NONNULL(m_rng);
@@ -107,7 +111,7 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
             m_handshake_layer.copy_data(record.payload);
 
             if(!is_handshake_complete()) {
-               while(auto handshake_msg = m_handshake_layer.next_message(policy(), m_transcript_hash)) {
+               while(auto handshake_msg = m_handshake_layer.next_message(policy(), m_transcript_hash, crypto())) {
                   // RFC 8446 5.1
                   //    Handshake messages MUST NOT span key changes.  Implementations
                   //    MUST verify that all messages immediately preceding a key change
@@ -159,7 +163,7 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
                   }
                }
             } else {
-               while(auto handshake_msg = m_handshake_layer.next_post_handshake_message(policy())) {
+               while(auto handshake_msg = m_handshake_layer.next_post_handshake_message(policy(), crypto())) {
                   process_post_handshake_msg(std::move(handshake_msg.value()));
                }
             }
@@ -496,6 +500,7 @@ void Channel_Impl_13::expect_downgrade(const Server_Information& server_info,
       next_protocols,
       Botan::TLS::Channel::IO_BUF_DEFAULT_SIZE,
       m_callbacks,
+      m_crypto,
       m_session_manager,
       m_credentials_manager,
       m_rng,

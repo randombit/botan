@@ -12,6 +12,7 @@
 #include <botan/credentials_manager.h>
 #include <botan/hash.h>
 #include <botan/tls_callbacks.h>
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_psk_identity_13.h>
 #include <botan/tls_session.h>
@@ -37,20 +38,24 @@ decltype(auto) calculate_age(std::chrono::system_clock::time_point then, std::ch
 
 class Client_PSK {
    public:
-      Client_PSK(Session_with_Handle& session_to_resume, std::chrono::system_clock::time_point timestamp) :
+      Client_PSK(Session_with_Handle& session_to_resume,
+                 std::chrono::system_clock::time_point timestamp,
+                 const std::shared_ptr<CryptoOperations>& crypto) :
             Client_PSK(PskIdentity(session_to_resume.handle.opaque_handle(),
                                    calculate_age(session_to_resume.session.start_time(), timestamp),
                                    session_to_resume.session.session_age_add()),
                        session_to_resume.session.ciphersuite().prf_algo(),
                        session_to_resume.session.extract_master_secret(),
-                       Cipher_State::PSK_Type::Resumption) {}
+                       Cipher_State::PSK_Type::Resumption,
+                       crypto) {}
 
       // NOLINTNEXTLINE(*-rvalue-reference-param-not-moved)
-      explicit Client_PSK(ExternalPSK&& psk) :
+      explicit Client_PSK(ExternalPSK&& psk, const std::shared_ptr<CryptoOperations>& crypto) :
             Client_PSK(PskIdentity(PresharedKeyID(psk.identity())),
                        psk.prf_algo(),
                        psk.extract_master_secret(),
-                       psk.is_imported() ? Cipher_State::PSK_Type::Imported : Cipher_State::PSK_Type::External) {}
+                       psk.is_imported() ? Cipher_State::PSK_Type::Imported : Cipher_State::PSK_Type::External,
+                       crypto) {}
 
       Client_PSK(PskIdentity id, std::vector<uint8_t> bndr) :
             m_identity(std::move(id)), m_binder(std::move(bndr)), m_is_resumption(false) {}
@@ -58,7 +63,8 @@ class Client_PSK {
       Client_PSK(PskIdentity id,
                  std::string_view prf_algo,
                  secure_vector<uint8_t>&& master_secret,
-                 Cipher_State::PSK_Type psk_type) :
+                 Cipher_State::PSK_Type psk_type,
+                 const std::shared_ptr<CryptoOperations>& crypto) :
             m_identity(std::move(id)),
 
             // RFC 8446 4.2.11.2
@@ -74,10 +80,10 @@ class Client_PSK {
             // Hence, we fill the binders with dummy values of the correct length and use
             // `Client_Hello_13::truncate()` to split them off before calculating the
             // transcript hash that underpins the PSK binders. S.a. `calculate_binders()`
-            m_binder(HashFunction::create_or_throw(prf_algo)->output_length()),
+            m_binder(crypto->create_hash(prf_algo)->output_length()),
             m_is_resumption(psk_type == Cipher_State::PSK_Type::Resumption),
-            m_cipher_state(
-               Cipher_State::init_with_psk(Connection_Side::Client, psk_type, std::move(master_secret), prf_algo)) {}
+            m_cipher_state(Cipher_State::init_with_psk(
+               Connection_Side::Client, psk_type, std::move(master_secret), prf_algo, crypto)) {}
 
       const PskIdentity& identity() const { return m_identity; }
 
@@ -208,15 +214,18 @@ PSK::PSK(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type messag
    }
 }
 
-PSK::PSK(std::optional<Session_with_Handle>& session_to_resume, std::vector<ExternalPSK> psks, Callbacks& callbacks) {
+PSK::PSK(std::optional<Session_with_Handle>& session_to_resume,
+         std::vector<ExternalPSK> psks,
+         Callbacks& callbacks,
+         const std::shared_ptr<CryptoOperations>& crypto) {
    std::vector<Client_PSK> cpsk;
 
    if(session_to_resume.has_value()) {
-      cpsk.emplace_back(session_to_resume.value(), callbacks.tls_current_timestamp());
+      cpsk.emplace_back(session_to_resume.value(), callbacks.tls_current_timestamp(), crypto);
    }
 
    for(auto&& psk : psks) {
-      cpsk.emplace_back(std::move(psk));
+      cpsk.emplace_back(std::move(psk), crypto);
    }
 
    m_impl = std::make_unique<PSK_Internal>(std::move(cpsk));

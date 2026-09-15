@@ -320,6 +320,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        * @param msg the input data for the signature
        *
        * @return the signature
+       *
+       * New applications should override CryptoOperations::sign_message().
        */
       virtual std::vector<uint8_t> tls_sign_message(const Private_Key& key,
                                                     RandomNumberGenerator& rng,
@@ -340,6 +342,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        * @param sig the signature to be checked
        *
        * @return true if the signature is valid, false otherwise
+       *
+       * New applications should override CryptoOperations::verify_message().
        */
       virtual bool tls_verify_message(const Public_Key& key,
                                       std::string_view padding,
@@ -363,6 +367,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        * @param key_bits the serialized public key
        *
        * @return the deserialized and ready-to-use public key
+       *
+       * New applications should override CryptoOperations::deserialize_peer_public_key().
        */
       virtual std::unique_ptr<Public_Key> tls_deserialize_peer_public_key(
          const std::variant<TLS::Group_Params, DL_Group>& group, std::span<const uint8_t> key_bits);
@@ -389,6 +395,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        * @returns a keypair whose public key will be provided to the peer and
        *          the private key will be provided to tls_kem_decapsulate later
        *          in the handshake.
+       *
+       * New applications should override CryptoOperations::kem_generate_key().
        */
       virtual std::unique_ptr<Private_Key> tls_kem_generate_key(TLS::Group_Params group, RandomNumberGenerator& rng);
 
@@ -421,6 +429,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        * TODO(Botan4) change this return type to something else so the pubkey.h
        * dependency is removed
        * TODO(Botan4) change encoded_public_key to a span
+       *
+       * New applications should override CryptoOperations::kem_encapsulate().
        */
       virtual KEM_Encapsulation tls_kem_encapsulate(TLS::Group_Params group,
                                                     const std::vector<uint8_t>& encoded_public_key,
@@ -453,6 +463,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        *          decapsulation with @p private_key.
        *
        * TODO(Botan4) change encapsulated_bytes to a std::span
+       *
+       * New applications should override CryptoOperations::kem_decapsulate().
        */
       virtual secure_vector<uint8_t> tls_kem_decapsulate(TLS::Group_Params group,
                                                          const Private_Key& private_key,
@@ -480,6 +492,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        * @param rng a random number generator
        *
        * @return a private key of an algorithm usable for key agreement
+       *
+       * New applications should override CryptoOperations::generate_ephemeral_key().
        */
       virtual std::unique_ptr<PK_Key_Agreement_Key> tls_generate_ephemeral_key(
          const std::variant<TLS::Group_Params, DL_Group>& group, RandomNumberGenerator& rng);
@@ -510,6 +524,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        * @param tls12_ecc_pubkey_encoding_format the key's serialization format
        *
        * @return an ECDH private key of an algorithm usable for key agreement
+       *
+       * New applications should override CryptoOperations::tls12_generate_ephemeral_ecdh_key().
        */
       virtual std::unique_ptr<PK_Key_Agreement_Key> tls12_generate_ephemeral_ecdh_key(
          TLS::Group_Params group, RandomNumberGenerator& rng, EC_Point_Format tls12_ecc_pubkey_encoding_format);
@@ -539,6 +555,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        * @return the shared secret derived from public_value and private_key
        *
        * TODO(Botan4) change public_value to a std::span
+       *
+       * New applications should override CryptoOperations::ephemeral_key_agreement().
        */
       virtual secure_vector<uint8_t> tls_ephemeral_key_agreement(const std::variant<TLS::Group_Params, DL_Group>& group,
                                                                  const PK_Key_Agreement_Key& private_key,
@@ -731,6 +749,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        * @param prf_algo  name of the hash function (e.g. "SHA-256")
        *
        * @return  TLS 1.2 KDF implementation
+       *
+       * New applications should override CryptoOperations::tls12_protocol_specific_kdf().
        */
       virtual std::unique_ptr<KDF> tls12_protocol_specific_kdf(std::string_view prf_algo) const;
 };

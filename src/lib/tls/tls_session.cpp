@@ -5,6 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_session.h>
 
 #include <botan/aead.h>
@@ -308,9 +309,14 @@ Session::Session(const secure_vector<uint8_t>& session_psk,
 
 #endif
 
-Session::Session(std::string_view pem) : Session(PEM_Code::decode_check_label(pem, "TLS SESSION")) {}
+Session::Session(std::string_view pem) : Session(pem, CryptoOperations()) {}
 
-Session::Session(std::span<const uint8_t> ber_data) /* NOLINT(*-member-init) */ {
+Session::Session(std::string_view pem, const CryptoOperations& crypto) :
+      Session(PEM_Code::decode_check_label(pem, "TLS SESSION"), crypto) {}
+
+Session::Session(std::span<const uint8_t> ber_data) : Session(ber_data, CryptoOperations()) {}
+
+Session::Session(std::span<const uint8_t> ber_data, const CryptoOperations& crypto) /* NOLINT(*-member-init) */ {
    uint8_t side_code = 0;
 
    std::vector<uint8_t> raw_pubkey_or_empty;
@@ -379,7 +385,7 @@ Session::Session(std::span<const uint8_t> ber_data) /* NOLINT(*-member-init) */ 
       Server_Information(server_hostname.value(), server_service.value(), static_cast<uint16_t>(server_port));
 
    if(!raw_pubkey_or_empty.empty()) {
-      m_peer_raw_public_key = X509::load_key(raw_pubkey_or_empty);
+      m_peer_raw_public_key = crypto.load_public_key(raw_pubkey_or_empty);
    }
 
    m_lifetime_hint = std::chrono::seconds(lifetime_hint);
@@ -449,7 +455,13 @@ const size_t TLS_SESSION_CRYPT_OVERHEAD = TLS_SESSION_CRYPT_HDR_LEN + TLS_SESSIO
 }  // namespace
 
 std::vector<uint8_t> Session::encrypt(const SymmetricKey& key, RandomNumberGenerator& rng) const {
-   auto hmac = MessageAuthenticationCode::create_or_throw(TLS_SESSION_CRYPT_HMAC);
+   return encrypt(key, rng, CryptoOperations());
+}
+
+std::vector<uint8_t> Session::encrypt(const SymmetricKey& key,
+                                      RandomNumberGenerator& rng,
+                                      const CryptoOperations& crypto) const {
+   auto hmac = crypto.create_mac(TLS_SESSION_CRYPT_HMAC);
    hmac->set_key(key);
 
    // First derive the "key name"
@@ -478,7 +490,7 @@ std::vector<uint8_t> Session::encrypt(const SymmetricKey& key, RandomNumberGener
    buf += key_seed;
    buf += aead_nonce;
 
-   auto aead = AEAD_Mode::create_or_throw(TLS_SESSION_CRYPT_AEAD, Cipher_Dir::Encryption);
+   auto aead = crypto.create_aead(TLS_SESSION_CRYPT_AEAD, Cipher_Dir::Encryption);
    BOTAN_ASSERT_NOMSG(aead->valid_nonce_length(TLS_SESSION_CRYPT_AEAD_NONCE_LEN));
    BOTAN_ASSERT_NOMSG(aead->tag_size() == TLS_SESSION_CRYPT_AEAD_TAG_SIZE);
    aead->set_key(aead_key);
@@ -492,6 +504,10 @@ std::vector<uint8_t> Session::encrypt(const SymmetricKey& key, RandomNumberGener
 }
 
 Session Session::decrypt(std::span<const uint8_t> in, const SymmetricKey& key) {
+   return decrypt(in, key, CryptoOperations());
+}
+
+Session Session::decrypt(std::span<const uint8_t> in, const SymmetricKey& key, const CryptoOperations& crypto) {
    try {
       const size_t min_session_size = 48 + 4;  // serious under-estimate
       if(in.size() < TLS_SESSION_CRYPT_OVERHEAD + min_session_size) {
@@ -509,7 +525,7 @@ Session Session::decrypt(std::span<const uint8_t> in, const SymmetricKey& key) {
          throw Decoding_Error("Missing expected magic numbers");
       }
 
-      auto hmac = MessageAuthenticationCode::create_or_throw(TLS_SESSION_CRYPT_HMAC);
+      auto hmac = crypto.create_mac(TLS_SESSION_CRYPT_HMAC);
       hmac->set_key(key);
 
       // First derive and check the "key name"
@@ -524,12 +540,12 @@ Session Session::decrypt(std::span<const uint8_t> in, const SymmetricKey& key) {
       hmac->update(key_seed, TLS_SESSION_CRYPT_AEAD_KEY_SEED_LEN);
       const secure_vector<uint8_t> aead_key = hmac->final();
 
-      auto aead = AEAD_Mode::create_or_throw(TLS_SESSION_CRYPT_AEAD, Cipher_Dir::Decryption);
+      auto aead = crypto.create_aead(TLS_SESSION_CRYPT_AEAD, Cipher_Dir::Decryption);
       aead->set_key(aead_key);
       aead->set_associated_data(in.data(), TLS_SESSION_CRYPT_HDR_LEN);
       aead->start(aead_nonce, TLS_SESSION_CRYPT_AEAD_NONCE_LEN);
       aead->finish(ctext, 0);
-      return Session(ctext);
+      return Session(ctext, crypto);
    } catch(std::exception& e) {
       throw Decoding_Error("Failed to decrypt serialized TLS session: " + std::string(e.what()));
    }

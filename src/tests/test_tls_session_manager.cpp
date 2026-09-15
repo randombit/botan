@@ -9,11 +9,20 @@
 
 #if defined(BOTAN_HAS_TLS)
 
+   #include <botan/aead.h>
    #include <botan/assert.h>
    #include <botan/credentials_manager.h>
+   #include <botan/hash.h>
    #include <botan/hex.h>
+   #include <botan/kdf.h>
+   #include <botan/mac.h>
+   #if defined(BOTAN_HAS_PASSWORD_HASHING)
+      #include <botan/pwdhash.h>
+   #endif
    #include <botan/rng.h>
+   #include <botan/symkey.h>
    #include <botan/tls_callbacks.h>
+   #include <botan/tls_crypto_operations.h>
    #include <botan/tls_policy.h>
    #include <botan/tls_session_manager_hybrid.h>
    #include <botan/tls_session_manager_memory.h>
@@ -28,6 +37,7 @@
    #endif
 
    #if defined(BOTAN_HAS_TLS_13)
+      #include <botan/tls_psk_13.h>
       #include <botan/tls_psk_identity_13.h>
    #endif
 
@@ -1263,6 +1273,116 @@ std::vector<Test::Result> tls_session_manager_expiry() {
    });
 }
 
+class Session_Crypto_Operations final : public Botan::TLS::CryptoOperations {
+   public:
+      std::unique_ptr<Botan::MessageAuthenticationCode> create_mac(std::string_view algorithm) const override {
+         ++m_mac_calls;
+         return CryptoOperations::create_mac(algorithm);
+      }
+
+      std::unique_ptr<Botan::AEAD_Mode> create_aead(std::string_view algorithm,
+                                                    Botan::Cipher_Dir direction) const override {
+         ++m_aead_calls;
+         return CryptoOperations::create_aead(algorithm, direction);
+      }
+
+   #if defined(BOTAN_HAS_PASSWORD_HASHING)
+      std::unique_ptr<Botan::PasswordHashFamily> create_password_hash_family(
+         std::string_view algorithm) const override {
+         ++m_password_hash_calls;
+         return CryptoOperations::create_password_hash_family(algorithm);
+      }
+   #endif
+
+      std::unique_ptr<Botan::HashFunction> create_hash(std::string_view algorithm) const override {
+         ++m_hash_calls;
+         return CryptoOperations::create_hash(algorithm);
+      }
+
+      std::unique_ptr<Botan::KDF> create_kdf(std::string_view algorithm) const override {
+         ++m_kdf_calls;
+         return CryptoOperations::create_kdf(algorithm);
+      }
+
+      size_t mac_calls() const { return m_mac_calls; }
+
+      size_t aead_calls() const { return m_aead_calls; }
+
+      size_t password_hash_calls() const { return m_password_hash_calls; }
+
+      size_t hash_calls() const { return m_hash_calls; }
+
+      size_t kdf_calls() const { return m_kdf_calls; }
+
+   private:
+      mutable size_t m_mac_calls = 0;
+      mutable size_t m_aead_calls = 0;
+      mutable size_t m_password_hash_calls = 0;
+      mutable size_t m_hash_calls = 0;
+      mutable size_t m_kdf_calls = 0;
+};
+
+std::vector<Test::Result> test_session_crypto_operations() {
+   Test::Result result("Custom session cryptographic operations");
+   auto rng = Test::new_shared_rng(__func__);
+   auto crypto = std::make_shared<Session_Crypto_Operations>();
+   Session_Manager_Callbacks callbacks;
+   Session_Manager_Policy policy;
+   const auto session = default_session(Botan::TLS::Connection_Side::Server, callbacks);
+   const Botan::SymmetricKey key(rng->random_vec(32));
+
+   const auto encrypted = session.encrypt(key, *rng, *crypto);
+   const auto decrypted = Botan::TLS::Session::decrypt(encrypted, key, *crypto);
+   result.test_bin_eq("custom session encryption roundtrip", decrypted.DER_encode(), session.DER_encode());
+   result.test_sz_eq("session MACs use provider", crypto->mac_calls(), 2);
+   result.test_sz_eq("session AEADs use provider", crypto->aead_calls(), 2);
+   // Existing callers interoperate in both directions.
+   result.test_bin_eq("default decrypts custom encryption",
+                      Botan::TLS::Session::decrypt(encrypted, key).DER_encode(),
+                      session.DER_encode());
+   result.test_bin_eq("custom decrypts default encryption",
+                      Botan::TLS::Session::decrypt(session.encrypt(key, *rng), key, *crypto).DER_encode(),
+                      session.DER_encode());
+
+   auto credentials = std::make_shared<Test_Credentials_Manager>();
+   Botan::TLS::Session_Manager_Stateless stateless(credentials, rng, crypto);
+   const auto ticket = stateless.establish(session);
+   result.require("custom session ticket issued", ticket.has_value());
+   const auto recovered = stateless.retrieve(*ticket, callbacks, policy);
+   result.require("custom session ticket recovered", recovered.has_value());
+   result.test_bin_eq("custom ticket roundtrip", recovered->DER_encode(), session.DER_encode());
+   result.test_sz_gte("ticket operations use custom MACs", crypto->mac_calls(), 5);
+   result.test_sz_gte("ticket operations use custom AEADs", crypto->aead_calls(), 5);
+
+   #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
+   Botan::TLS::Session_Manager_SQLite sql("password", rng, ":memory:", 5, crypto);
+   result.test_sz_gt("SQL key derivation uses provider", crypto->password_hash_calls(), 0);
+   const auto id = random_id(*rng);
+   const auto aeads_before = crypto->aead_calls();
+   const auto client_session = default_session(Botan::TLS::Connection_Side::Client, callbacks);
+   sql.store(client_session, id);
+   const auto from_sql = sql.retrieve(id, callbacks, policy);
+   result.require("custom SQL session recovered", from_sql.has_value());
+   result.test_bin_eq("custom SQL roundtrip", from_sql->DER_encode(), client_session.DER_encode());
+   result.test_sz_gte("SQL session encryption uses provider", crypto->aead_calls(), aeads_before + 2);
+   const auto before_find = crypto->aead_calls();
+   result.test_sz_eq("custom SQL lookup finds session", sql.find(server_info(), callbacks, policy).size(), 1);
+   result.test_sz_gt("SQL lookup decryption uses provider", crypto->aead_calls(), before_find);
+   #endif
+
+   #if defined(BOTAN_HAS_TLS_13)
+   const auto identity = Botan::hex_decode("112233");
+   const Botan::TLS::PSKImporter importer(key.bits_of(), identity, {});
+   auto expected = importer.derive_imported_psk(Botan::TLS::Protocol_Version::TLS_V13, "SHA-384");
+   auto actual = importer.derive_imported_psk(Botan::TLS::Protocol_Version::TLS_V13, "SHA-384", *crypto);
+   result.test_bin_eq("custom PSK import matches", actual.extract_master_secret(), expected.extract_master_secret());
+   result.test_sz_gt("PSK import uses custom hashes", crypto->hash_calls(), 0);
+   result.test_sz_gt("PSK import uses custom KDFs", crypto->kdf_calls(), 0);
+   #endif
+
+   return {result};
+}
+
 BOTAN_REGISTER_TEST_FN("tls",
                        "tls_session_manager",
                        test_session_manager_in_memory,
@@ -1270,7 +1390,8 @@ BOTAN_REGISTER_TEST_FN("tls",
                        test_session_manager_stateless,
                        test_session_manager_hybrid,
                        test_session_manager_sqlite,
-                       tls_session_manager_expiry);
+                       tls_session_manager_expiry,
+                       test_session_crypto_operations);
 
 }  // namespace
 

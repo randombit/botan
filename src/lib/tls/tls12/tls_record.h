@@ -27,6 +27,7 @@ class RandomNumberGenerator;
 
 namespace Botan::TLS {
 
+class CryptoOperations;
 class Ciphersuite;
 class Session_Keys;
 
@@ -45,7 +46,8 @@ class Connection_Cipher_State final {
                               bool is_our_side,
                               const Ciphersuite& suite,
                               const Session_Keys& keys,
-                              bool uses_encrypt_then_mac);
+                              bool uses_encrypt_then_mac,
+                              CryptoOperations& crypto);
 
       ~Connection_Cipher_State();
 

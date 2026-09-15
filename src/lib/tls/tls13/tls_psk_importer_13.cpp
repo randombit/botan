@@ -4,6 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_psk_13.h>
 
 #include <botan/assert.h>
@@ -42,6 +43,12 @@ PSKImporter::PSKImporter(std::span<const uint8_t> key,
 }
 
 ExternalPSK PSKImporter::derive_imported_psk(Protocol_Version version, std::string_view target_hash) const {
+   return derive_imported_psk(version, target_hash, CryptoOperations());
+}
+
+ExternalPSK PSKImporter::derive_imported_psk(Protocol_Version version,
+                                             std::string_view target_hash,
+                                             const CryptoOperations& crypto) const {
    BOTAN_ARG_CHECK(version == Protocol_Version::TLS_V13, "PSK importer is only defined for TLS 1.3");
    BOTAN_ARG_CHECK(target_hash == "SHA-256" || target_hash == "SHA-384",
                    "PSK importer target hash must be SHA-256 or SHA-384");
@@ -63,13 +70,13 @@ ExternalPSK PSKImporter::derive_imported_psk(Protocol_Version version, std::stri
    // RFC 9258 5.1: "The hash function used for HKDF is that which is
    // associated with the EPSK. It is not the hash function associated
    // with ImportedIdentity.target_kdf."
-   auto hash_fn = HashFunction::create_or_throw(m_hash);
+   auto hash_fn = crypto.create_hash(m_hash);
    hash_fn->update(imported_identity);
    const auto identity_hash = hash_fn->final_stdvec();
 
    // HKDF-Extract(0, epsk) -- using the EPSK's hash per above
    const size_t psk_hash_len = hash_fn->output_length();
-   auto hkdf_extract = KDF::create_or_throw("HKDF-Extract(" + m_hash + ")");
+   auto hkdf_extract = crypto.create_kdf("HKDF-Extract(" + m_hash + ")");
 
    const std::vector<uint8_t> salt(psk_hash_len, 0);
    const auto epskx = hkdf_extract->derive_key(psk_hash_len, m_key, salt, {});
@@ -92,11 +99,11 @@ ExternalPSK PSKImporter::derive_imported_psk(Protocol_Version version, std::stri
    // So e.g. a SHA-256 EPSK imported for a SHA-384 target cipher suite runs
    // HKDF-SHA-256 (driven by m_hash) and emits 48 bytes (driven by target_hash).
    const std::string target_hash_str(target_hash);
-   auto target_hash_fn = HashFunction::create_or_throw(target_hash_str);
+   auto target_hash_fn = crypto.create_hash(target_hash_str);
    const size_t target_hash_len = target_hash_fn->output_length();
    const auto expand_out_len = static_cast<uint16_t>(target_hash_len);
 
-   auto hkdf_expand = KDF::create_or_throw("HKDF-Expand(" + m_hash + ")");
+   auto hkdf_expand = crypto.create_kdf("HKDF-Expand(" + m_hash + ")");
    // "tls13 derived psk" as bytes
    const std::array<uint8_t, 17> prefixed_label = {
       't', 'l', 's', '1', '3', ' ', 'd', 'e', 'r', 'i', 'v', 'e', 'd', ' ', 'p', 's', 'k'};

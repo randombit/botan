@@ -13,6 +13,7 @@
 #include <botan/rng.h>
 #include <botan/rsa.h>
 #include <botan/tls_callbacks.h>
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_extensions.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/ct_utils.h>
@@ -136,9 +137,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
             }
          }();
 
-         const auto private_key = state.callbacks().tls_generate_ephemeral_key(group, rng);
+         const auto private_key = state.crypto().generate_ephemeral_key(group, rng);
          m_pre_master = CT::strip_leading_zeros(
-            state.callbacks().tls_ephemeral_key_agreement(group, *private_key, peer_public_value, rng, policy));
+            state.crypto().ephemeral_key_agreement(group, *private_key, peer_public_value, rng, policy));
          append_tls_length_value(m_key_material, private_key->public_value(), 2);
       } else if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK) {
          const uint8_t curve_type = reader.get_byte();
@@ -172,9 +173,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
                const auto pubkey_point_format = state.server_hello()->prefers_compressed_ec_points()
                                                    ? EC_Point_Format::Compressed
                                                    : EC_Point_Format::Uncompressed;
-               return state.callbacks().tls12_generate_ephemeral_ecdh_key(curve_id, rng, pubkey_point_format);
+               return state.crypto().tls12_generate_ephemeral_ecdh_key(curve_id, rng, pubkey_point_format);
             } else {
-               return state.callbacks().tls_generate_ephemeral_key(curve_id, rng);
+               return state.crypto().generate_ephemeral_key(curve_id, rng);
             }
          }();
 
@@ -183,7 +184,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          }
 
          auto shared_secret =
-            state.callbacks().tls_ephemeral_key_agreement(curve_id, *private_key, peer_public_value, rng, policy);
+            state.crypto().ephemeral_key_agreement(curve_id, *private_key, peer_public_value, rng, policy);
 
          if(kex_algo == Kex_Algo::ECDH) {
             m_pre_master = std::move(shared_secret);
@@ -212,16 +213,16 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          throw Internal_Error("No server public key for RSA exchange");
       }
 
-      if(const auto* rsa_pub = dynamic_cast<const RSA_PublicKey*>(server_public_key)) {
+      if(server_public_key->algo_name() == "RSA") {
          const Protocol_Version offered_version = state.client_hello()->legacy_version();
 
          rng.random_vec(m_pre_master, 48);
          m_pre_master[0] = offered_version.major_version();
          m_pre_master[1] = offered_version.minor_version();
 
-         const PK_Encryptor_EME encryptor(*rsa_pub, rng, "PKCS1v15");
+         const auto encryptor = state.crypto().create_rsa_encryptor(*server_public_key, rng);
 
-         const std::vector<uint8_t> encrypted_key = encryptor.encrypt(m_pre_master, rng);
+         const std::vector<uint8_t> encrypted_key = encryptor->encrypt(m_pre_master, rng);
 
          append_tls_length_value(m_key_material, encrypted_key, 2);
       } else {
@@ -261,7 +262,7 @@ Client_Key_Exchange::Client_Key_Exchange(std::span<const uint8_t> contents,
       const std::vector<uint8_t> encrypted_pre_master = reader.get_range<uint8_t>(2, 1, 65535);
       reader.assert_done();
 
-      const PK_Decryptor_EME decryptor(*server_rsa_kex_key, rng, "PKCS1v15");
+      const auto decryptor = state.crypto().create_rsa_decryptor(*server_rsa_kex_key, rng);
 
       const uint8_t client_major = state.client_hello()->legacy_version().major_version();
       const uint8_t client_minor = state.client_hello()->legacy_version().minor_version();
@@ -277,13 +278,13 @@ Client_Key_Exchange::Client_Key_Exchange(std::span<const uint8_t> contents,
       const uint8_t expected_content_bytes[expected_content_size] = {client_major, client_minor};
       const uint8_t expected_content_pos[expected_content_size] = {0, 1};
 
-      m_pre_master = decryptor.decrypt_or_random(encrypted_pre_master.data(),
-                                                 encrypted_pre_master.size(),
-                                                 expected_plaintext_size,
-                                                 rng,
-                                                 expected_content_bytes,
-                                                 expected_content_pos,
-                                                 expected_content_size);
+      m_pre_master = decryptor->decrypt_or_random(encrypted_pre_master.data(),
+                                                  encrypted_pre_master.size(),
+                                                  expected_plaintext_size,
+                                                  rng,
+                                                  expected_content_bytes,
+                                                  expected_content_pos,
+                                                  expected_content_size);
    } else {
       TLS_Data_Reader reader("ClientKeyExchange", contents);
 
@@ -325,7 +326,7 @@ Client_Key_Exchange::Client_Key_Exchange(std::span<const uint8_t> contents,
 
          try {
             auto shared_secret =
-               state.callbacks().tls_ephemeral_key_agreement(shared_group.value(), ka_key, client_pubkey, rng, policy);
+               state.crypto().ephemeral_key_agreement(shared_group.value(), ka_key, client_pubkey, rng, policy);
 
             if(ka_key.algo_name() == "DH") {
                shared_secret = CT::strip_leading_zeros(shared_secret);

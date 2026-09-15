@@ -9,6 +9,7 @@
 #ifndef BOTAN_TLS_TRANSCRIPT_HASH_13_H_
 #define BOTAN_TLS_TRANSCRIPT_HASH_13_H_
 
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_magic.h>
 #include <memory>
 #include <span>
@@ -32,7 +33,9 @@ namespace Botan::TLS {
 class BOTAN_TEST_API Transcript_Hash_State {
    public:
       Transcript_Hash_State();
-      explicit Transcript_Hash_State(std::string_view algo_spec);
+      explicit Transcript_Hash_State(std::shared_ptr<CryptoOperations> crypto);
+      explicit Transcript_Hash_State(std::string_view algo_spec,
+                                     std::shared_ptr<CryptoOperations> crypto = std::make_shared<CryptoOperations>());
       ~Transcript_Hash_State();
 
       /**
@@ -87,6 +90,7 @@ class BOTAN_TEST_API Transcript_Hash_State {
       Transcript_Hash_State(const Transcript_Hash_State& other);
 
    private:
+      std::shared_ptr<CryptoOperations> m_crypto;
       std::unique_ptr<HashFunction> m_hash;
 
       // This buffer is filled with the data that is passed into

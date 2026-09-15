@@ -75,7 +75,8 @@ template <typename Msg_Type>
 std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader,
                                       const Policy& policy,
                                       const Connection_Side peer_side,
-                                      const Certificate_Type cert_type) {
+                                      const Certificate_Type cert_type,
+                                      const CryptoOperations& crypto) {
    // read the message header
    if(reader.remaining_bytes() < HEADER_LENGTH) {
       return std::nullopt;
@@ -101,7 +102,7 @@ std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader,
          // from non-TLS 1.3 peers. Hence, their parsing is somewhat different.
          case Handshake_Type::ClientHello:
             // ... might be TLS 1.2 Client Hello or TLS 1.3 Client Hello
-            return generalize_to<Handshake_Message_13>(Client_Hello_13::parse(msg));
+            return generalize_to<Handshake_Message_13>(Client_Hello_13::parse(msg, crypto));
          case Handshake_Type::ServerHello:
             // ... might be TLS 1.2 Server Hello or TLS 1.3 Server Hello or
             // a TLS 1.3 Hello Retry Request disguising as a Server Hello
@@ -111,7 +112,7 @@ std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader,
          case Handshake_Type::EncryptedExtensions:
             return Encrypted_Extensions(msg);
          case Handshake_Type::Certificate:
-            return Certificate_13(msg, policy, peer_side, cert_type);
+            return Certificate_13(msg, policy, peer_side, cert_type, crypto);
          case Handshake_Type::CertificateRequest:
             return Certificate_Request_13(msg, peer_side);
          case Handshake_Type::CertificateVerify:
@@ -138,12 +139,13 @@ std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader,
 }  // namespace
 
 std::optional<Handshake_Message_13> Handshake_Layer::next_message(const Policy& policy,
-                                                                  Transcript_Hash_State& transcript_hash) {
+                                                                  Transcript_Hash_State& transcript_hash,
+                                                                  const CryptoOperations& crypto) {
    BOTAN_ASSERT_NOMSG(m_read_offset <= m_read_buffer.size());
    auto pending = std::span<const uint8_t>{m_read_buffer}.subspan(m_read_offset);
    TLS::TLS_Data_Reader reader("handshake message", pending);
 
-   auto msg = parse_message<Handshake_Message_13>(reader, policy, m_peer, m_certificate_type);
+   auto msg = parse_message<Handshake_Message_13>(reader, policy, m_peer, m_certificate_type, crypto);
    if(msg.has_value()) {
       transcript_hash.update(pending.first(reader.read_so_far()));
       m_read_offset += reader.read_so_far();
@@ -158,12 +160,13 @@ std::optional<Handshake_Message_13> Handshake_Layer::next_message(const Policy& 
    return msg;
 }
 
-std::optional<Post_Handshake_Message_13> Handshake_Layer::next_post_handshake_message(const Policy& policy) {
+std::optional<Post_Handshake_Message_13> Handshake_Layer::next_post_handshake_message(const Policy& policy,
+                                                                                      const CryptoOperations& crypto) {
    BOTAN_ASSERT_NOMSG(m_read_offset <= m_read_buffer.size());
    auto pending = std::span<const uint8_t>{m_read_buffer}.subspan(m_read_offset);
    TLS::TLS_Data_Reader reader("post handshake message", pending);
 
-   auto msg = parse_message<Post_Handshake_Message_13>(reader, policy, m_peer, m_certificate_type);
+   auto msg = parse_message<Post_Handshake_Message_13>(reader, policy, m_peer, m_certificate_type, crypto);
    if(msg.has_value()) {
       m_read_offset += reader.read_so_far();
       BOTAN_ASSERT_NOMSG(m_read_offset <= m_read_buffer.size());

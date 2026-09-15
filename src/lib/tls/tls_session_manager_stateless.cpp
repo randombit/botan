@@ -17,8 +17,10 @@
 namespace Botan::TLS {
 
 Session_Manager_Stateless::Session_Manager_Stateless(const std::shared_ptr<Credentials_Manager>& creds,
-                                                     const std::shared_ptr<RandomNumberGenerator>& rng) :
-      Session_Manager(rng), m_credentials_manager(creds) {
+                                                     const std::shared_ptr<RandomNumberGenerator>& rng,
+                                                     std::shared_ptr<CryptoOperations> crypto) :
+      Session_Manager(rng), m_crypto(std::move(crypto)), m_credentials_manager(creds) {
+   BOTAN_ASSERT_NONNULL(m_crypto);
    BOTAN_ASSERT_NONNULL(m_credentials_manager);
 }
 
@@ -40,7 +42,7 @@ std::optional<Session_Handle> Session_Manager_Stateless::establish(const Session
       return std::nullopt;
    }
 
-   return Session_Handle(Session_Ticket{session.encrypt(key.value(), *m_rng)});
+   return Session_Handle(Session_Ticket{session.encrypt(key.value(), *m_rng, *m_crypto)});
 }
 
 void Session_Manager_Stateless::store(const Session& /*session*/, const Session_Handle& /*handle*/) {
@@ -59,7 +61,7 @@ std::optional<Session> Session_Manager_Stateless::retrieve_one(const Session_Han
    }
 
    try {
-      return Session::decrypt(ticket.value(), key.value());
+      return Session::decrypt(ticket.value(), key.value(), *m_crypto);
    } catch(const std::exception&) {
       // RFC 8446 4.2.11
       //    Any unknown PSKs (e.g., ones not in the PSK database or encrypted

@@ -17,11 +17,14 @@
 
 namespace Botan::TLS {
 
-Transcript_Hash_State::Transcript_Hash_State(std::string_view algo_spec) {
+Transcript_Hash_State::Transcript_Hash_State(std::string_view algo_spec, std::shared_ptr<CryptoOperations> crypto) :
+      m_crypto(std::move(crypto)) {
    set_algorithm(algo_spec);
 }
 
-Transcript_Hash_State::Transcript_Hash_State() = default;
+Transcript_Hash_State::Transcript_Hash_State() : Transcript_Hash_State(std::make_shared<CryptoOperations>()) {}
+
+Transcript_Hash_State::Transcript_Hash_State(std::shared_ptr<CryptoOperations> crypto) : m_crypto(std::move(crypto)) {}
 
 Transcript_Hash_State::~Transcript_Hash_State() = default;
 
@@ -29,6 +32,7 @@ Transcript_Hash_State::Transcript_Hash_State(Transcript_Hash_State&& other) noex
 Transcript_Hash_State& Transcript_Hash_State::operator=(Transcript_Hash_State&& other) noexcept = default;
 
 Transcript_Hash_State::Transcript_Hash_State(const Transcript_Hash_State& other) :
+      m_crypto(other.m_crypto),
       m_hash((other.m_hash != nullptr) ? other.m_hash->copy_state() : nullptr),
       m_unprocessed_transcript(other.m_unprocessed_transcript),
       m_current(other.m_current),
@@ -42,7 +46,7 @@ Transcript_Hash_State Transcript_Hash_State::recreate_after_hello_retry_request(
    BOTAN_STATE_CHECK(prev_transcript_hash_state.m_hash == nullptr);
    BOTAN_STATE_CHECK(prev_transcript_hash_state.m_unprocessed_transcript.size() == 2);
 
-   Transcript_Hash_State transcript_hash(algo_spec);
+   Transcript_Hash_State transcript_hash(algo_spec, prev_transcript_hash_state.m_crypto);
 
    const auto& client_hello_1 = prev_transcript_hash_state.m_unprocessed_transcript.front();
    const auto& hello_retry_request = prev_transcript_hash_state.m_unprocessed_transcript.back();
@@ -201,7 +205,7 @@ void Transcript_Hash_State::set_algorithm(std::string_view algo_spec) {
       return;
    }
 
-   m_hash = HashFunction::create_or_throw(algo_spec);
+   m_hash = m_crypto->create_hash(algo_spec);
    for(const auto& msg : m_unprocessed_transcript) {
       update(msg);
    }

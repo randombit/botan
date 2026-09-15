@@ -129,6 +129,7 @@ class Channel_Impl_13 : public Channel_Impl,
       * @param is_server whether this is a server session or not
       */
       explicit Channel_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
+                               const std::shared_ptr<CryptoOperations>& crypto,
                                const std::shared_ptr<Session_Manager>& session_manager,
                                const std::shared_ptr<Credentials_Manager>& credentials_manager,
                                const std::shared_ptr<RandomNumberGenerator>& rng,
@@ -265,6 +266,10 @@ class Channel_Impl_13 : public Channel_Impl,
 
       Callbacks& callbacks() const { return *m_callbacks; }
 
+      CryptoOperations& crypto() const { return *m_crypto; }
+
+      const std::shared_ptr<CryptoOperations>& crypto_ptr() const { return m_crypto; }
+
       Session_Manager& session_manager() { return *m_session_manager; }
 
       Credentials_Manager& credentials_manager() { return *m_credentials_manager; }
@@ -324,6 +329,7 @@ class Channel_Impl_13 : public Channel_Impl,
    private:
       /* callbacks */
       std::shared_ptr<Callbacks> m_callbacks;
+      std::shared_ptr<CryptoOperations> m_crypto;
 
       /* external state */
       std::shared_ptr<Session_Manager> m_session_manager;

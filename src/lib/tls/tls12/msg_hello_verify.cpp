@@ -32,8 +32,9 @@ Hello_Verify_Request::Hello_Verify_Request(std::span<const uint8_t> buf) {
 
 Hello_Verify_Request::Hello_Verify_Request(std::span<const uint8_t> client_hello_bits,
                                            std::string_view client_identity,
-                                           std::span<const uint8_t> cookie_secret) {
-   auto hmac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
+                                           std::span<const uint8_t> cookie_secret,
+                                           const CryptoOperations& crypto) {
+   auto hmac = crypto.create_mac("HMAC(SHA-256)");
    hmac->set_key(cookie_secret);
 
    hmac->update_be(static_cast<uint64_t>(client_hello_bits.size()));

@@ -47,6 +47,7 @@ class Client_Impl_12 final : public Channel_Impl_12 {
       *        values just mean reallocations and copies are more likely.
       */
       static std::shared_ptr<Client_Impl_12> create(const std::shared_ptr<Callbacks>& callbacks,
+                                                    const std::shared_ptr<CryptoOperations>& crypto,
                                                     const std::shared_ptr<Session_Manager>& session_manager,
                                                     const std::shared_ptr<Credentials_Manager>& creds,
                                                     const std::shared_ptr<const Policy>& policy,
@@ -58,6 +59,7 @@ class Client_Impl_12 final : public Channel_Impl_12 {
 
       Client_Impl_12([[maybe_unused]] Private dont_call_me,
                      const std::shared_ptr<Callbacks>& callbacks,
+                     const std::shared_ptr<CryptoOperations>& crypto,
                      const std::shared_ptr<Session_Manager>& session_manager,
                      const std::shared_ptr<Credentials_Manager>& creds,
                      const std::shared_ptr<const Policy>& policy,
@@ -65,7 +67,7 @@ class Client_Impl_12 final : public Channel_Impl_12 {
                      Server_Information server_info,
                      bool datagram,
                      size_t reserved_io_buffer_size) :
-            Channel_Impl_12(callbacks, session_manager, rng, policy, false, datagram, reserved_io_buffer_size),
+            Channel_Impl_12(callbacks, crypto, session_manager, rng, policy, false, datagram, reserved_io_buffer_size),
             m_creds(creds),
             m_info(std::move(server_info)) {}
 
@@ -75,6 +77,7 @@ class Client_Impl_12 final : public Channel_Impl_12 {
 
       Client_Impl_12([[maybe_unused]] Private dont_call_me, Channel_Impl::Downgrade_Information& downgrade_info) :
             Channel_Impl_12(downgrade_info.callbacks,
+                            downgrade_info.crypto,
                             downgrade_info.session_manager,
                             downgrade_info.rng,
                             downgrade_info.policy,
