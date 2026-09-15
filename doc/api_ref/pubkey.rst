@@ -293,8 +293,8 @@ also the default of OpenSSL). Note the consequences for interoperability with
 earlier versions of Botan: versions prior to 3.14 accept only the raw seed
 (ML-DSA) or the raw seed or raw expanded key (ML-KEM) as content of the PKCS #8
 ``privateKey`` field and cannot read any of the RFC 9881/9935 structures.
-Botan 3.14 now instead produces PKCS #8 containers compliant to the respecitve RFC.
-To transfer an RCF-compliant key to an earlier Botan version, export the raw key material with
+Botan 3.14 now instead produces PKCS #8 containers compliant to the respective RFC.
+To transfer an RFC-compliant key to an earlier Botan version, export the raw key material with
 ``raw_private_key_bits()`` or ``formatted_raw_private_key_bits()`` and load it
 with the algorithm specific constructor (or ``botan_privkey_load_ml_kem``
 / ``botan_privkey_load_ml_dsa`` in the FFI) in pre-3.14 Botan. Also note that

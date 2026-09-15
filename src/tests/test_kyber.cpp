@@ -284,15 +284,21 @@ class Kyber_Encoding_Test : public Text_Based_Test {
                Botan::secure_vector<uint8_t> unwrapped;
                if(format == MlPrivateKeyFormat::Seed) {
                   Botan::BER_Decoder(skr->private_key_bits())
-                     .decode(unwrapped, Botan::ASN1_Type::OctetString, Botan::ASN1_Type(0), Botan::ASN1_Class::ContextSpecific)
+                     .decode(unwrapped,
+                             Botan::ASN1_Type::OctetString,
+                             Botan::ASN1_Type(0),
+                             Botan::ASN1_Class::ContextSpecific)
                      .verify_end();
                } else {
-                  Botan::BER_Decoder(skr->private_key_bits()).decode(unwrapped, Botan::ASN1_Type::OctetString).verify_end();
+                  Botan::BER_Decoder(skr->private_key_bits())
+                     .decode(unwrapped, Botan::ASN1_Type::OctetString)
+                     .verify_end();
                }
                result.test_bin_eq("RFC 9935 encoding wraps the raw key", unwrapped, sk_raw);
 
                const Botan::Kyber_PrivateKey reloaded(skr->private_key_bits(), mode);
-               result.test_enum_eq("format is retained by the RFC 9935 encoding", reloaded.private_key_format(), format);
+               result.test_enum_eq(
+                  "format is retained by the RFC 9935 encoding", reloaded.private_key_format(), format);
                result.test_bin_eq("RFC 9935 encoding round trip", reloaded.raw_private_key_bits(), sk_raw);
             } else {
                result.test_bin_eq("round 3 sk's encoding of sk", skr->private_key_bits(), sk_raw);
@@ -307,7 +313,8 @@ class Kyber_Encoding_Test : public Text_Based_Test {
                   "sk's seed encoding of sk", skr->formatted_raw_private_key_bits(MlPrivateKeyFormat::Seed), sk_raw);
 
                const Botan::Kyber_PrivateKey skr_both(skr->formatted_private_key_bits(MlPrivateKeyFormat::Both), mode);
-               result.test_enum_eq("both encoding decodes as Both", skr_both.private_key_format(), MlPrivateKeyFormat::Both);
+               result.test_enum_eq(
+                  "both encoding decodes as Both", skr_both.private_key_format(), MlPrivateKeyFormat::Both);
                result.test_bin_eq("both encoding retains the seed", skr_both.raw_private_key_bits(), sk_raw);
 
                const auto skr_expanded = std::make_unique<Botan::Kyber_PrivateKey>(
@@ -424,7 +431,8 @@ class Kyber_Privkey_Format_Tests final : public Test {
          auto rng = Test::new_rng(test_name);
 
          const Botan::Kyber_PrivateKey priv_key(*rng, mode);
-         result.test_enum_eq("generated ML-KEM key has format Both", priv_key.private_key_format(), MlPrivateKeyFormat::Both);
+         result.test_enum_eq(
+            "generated ML-KEM key has format Both", priv_key.private_key_format(), MlPrivateKeyFormat::Both);
 
          const auto seed = priv_key.formatted_raw_private_key_bits(MlPrivateKeyFormat::Seed);
          result.test_sz_eq("seed has 64 bytes", seed.size(), 64);
@@ -438,7 +446,8 @@ class Kyber_Privkey_Format_Tests final : public Test {
          result.test_bin_eq("PKCS#8 round trip is byte-identical", Botan::PKCS8::BER_encode(*reloaded), pkcs8);
          const auto* reloaded_ml = dynamic_cast<const Botan::Module_Lattice_PrivateKey*>(reloaded.get());
          if(result.test_not_null("reloaded key is an ML private key", reloaded_ml)) {
-            result.test_enum_eq("reloaded key has format Both", reloaded_ml->private_key_format(), MlPrivateKeyFormat::Both);
+            result.test_enum_eq(
+               "reloaded key has format Both", reloaded_ml->private_key_format(), MlPrivateKeyFormat::Both);
          }
 
          for(const auto format : {MlPrivateKeyFormat::Seed, MlPrivateKeyFormat::Expanded, MlPrivateKeyFormat::Both}) {
@@ -452,8 +461,9 @@ class Kyber_Privkey_Format_Tests final : public Test {
 
          const auto raw_expanded = priv_key.formatted_raw_private_key_bits(MlPrivateKeyFormat::Expanded);
          const Botan::Kyber_PrivateKey from_raw_expanded(raw_expanded, mode);
-         result.test_enum_eq(
-            "raw expanded key is decoded as Expanded", from_raw_expanded.private_key_format(), MlPrivateKeyFormat::Expanded);
+         result.test_enum_eq("raw expanded key is decoded as Expanded",
+                             from_raw_expanded.private_key_format(),
+                             MlPrivateKeyFormat::Expanded);
          result.test_bin_eq(
             "raw_private_key_bits() of an Expanded key", from_raw_expanded.raw_private_key_bits(), raw_expanded);
          result.test_bin_eq("private_key_bits() of an Expanded key",
@@ -468,7 +478,8 @@ class Kyber_Privkey_Format_Tests final : public Test {
          }
 
          const Botan::Kyber_PrivateKey from_raw_seed(seed, mode);
-         result.test_enum_eq("raw seed is decoded as Seed", from_raw_seed.private_key_format(), MlPrivateKeyFormat::Seed);
+         result.test_enum_eq(
+            "raw seed is decoded as Seed", from_raw_seed.private_key_format(), MlPrivateKeyFormat::Seed);
          result.test_bin_eq("private_key_bits() of a Seed key",
                             from_raw_seed.private_key_bits(),
                             priv_key.formatted_private_key_bits(MlPrivateKeyFormat::Seed));
@@ -632,9 +643,8 @@ class MLKEM_Privkey_Tests final : public Test {
             // The re-encoded PKCS#8 structure must be byte-identical to the RFC example.
             const auto rfc_der =
                Botan::PEM_Code::decode_check_label(Test::read_data_file("pubkey/" + file.filename), "PRIVATE KEY");
-            result.test_bin_eq("PKCS#8 re-encoding is identical to the RFC 9935 example",
-                               Botan::PKCS8::BER_encode(*priv_key),
-                               rfc_der);
+            result.test_bin_eq(
+               "PKCS#8 re-encoding is identical to the RFC 9935 example", Botan::PKCS8::BER_encode(*priv_key), rfc_der);
 
             const bool has_seed = file.format != MlPrivateKeyFormat::Expanded;
             if(has_seed) {
@@ -658,7 +668,8 @@ class MLKEM_Privkey_Tests final : public Test {
             result.test_throws<Botan::Encoding_Error>(
                "no raw encoding of Both", [&] { ml_key->formatted_raw_private_key_bits(MlPrivateKeyFormat::Both); });
 
-            for(const auto format : {MlPrivateKeyFormat::Seed, MlPrivateKeyFormat::Expanded, MlPrivateKeyFormat::Both}) {
+            for(const auto format :
+                {MlPrivateKeyFormat::Seed, MlPrivateKeyFormat::Expanded, MlPrivateKeyFormat::Both}) {
                const std::string desc = "formatted_private_key_bits(" + format_suffix(format) + ")";
                if(has_seed || format == MlPrivateKeyFormat::Expanded) {
                   result.test_bin_eq(desc + " matches the RFC 9935 example",
@@ -697,7 +708,8 @@ class MLKEM_Privkey_Tests final : public Test {
             const Botan::KyberMode mode(algo_name);
 
             const Botan::Kyber_PrivateKey from_raw_seed(rfc_seed, mode);
-            result.test_enum_eq("raw seed is decoded as Seed", from_raw_seed.private_key_format(), MlPrivateKeyFormat::Seed);
+            result.test_enum_eq(
+               "raw seed is decoded as Seed", from_raw_seed.private_key_format(), MlPrivateKeyFormat::Seed);
             result.test_bin_eq("raw seed re-encodes as RFC 9935 seed format",
                                from_raw_seed.private_key_bits(),
                                rfc_private_key_bits(algo_name, MlPrivateKeyFormat::Seed));
