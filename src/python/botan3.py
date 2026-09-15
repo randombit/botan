@@ -223,6 +223,12 @@ def _set_prototypes(dll):
     dll.botan_ffi_api_version.argtypes = []
     dll.botan_ffi_api_version.restype = c_uint32
 
+    dll.botan_ffi_tls_api_version.argtypes = []
+    dll.botan_ffi_tls_api_version.restype = c_uint32
+
+    dll.botan_ffi_tls_supports_api.argtypes = [c_uint32]
+    dll.botan_ffi_tls_supports_api.restype = c_int
+
     dll.botan_error_description.argtypes = [c_int]
     dll.botan_error_description.restype = c_char_p
 
@@ -758,6 +764,12 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_tpm2_unauthenticated_session_init, [c_void_p, c_void_p])
     ffi_api(dll.botan_tpm2_session_destroy, [c_void_p])
 
+    # TLS (ffi_tls.h; experimental, only exported by libraries built with the ffi_tls module)
+    ffi_api(dll.botan_tls_policy_init, [c_void_p, c_char_p])
+    ffi_api(dll.botan_tls_policy_init_from_text, [c_void_p, c_char_p])
+    ffi_api(dll.botan_tls_policy_view_text, [c_void_p, c_void_p, _VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_tls_policy_destroy, [c_void_p])
+
     return dll
 
 #
@@ -892,6 +904,15 @@ def version_patch() -> int:
 def ffi_api_version() -> int:
     """Returns the version of the FFI API provided by the library"""
     return int(_DLL.botan_ffi_api_version())
+
+def ffi_tls_api_version() -> int:
+    """Returns the version of the experimental TLS FFI API provided by the
+    library, or 0 if the library does not provide it (either because it was
+    built without the ``ffi_tls`` module or because it predates the TLS API)"""
+    try:
+        return int(_DLL.botan_ffi_tls_api_version())
+    except BotanFunctionUnavailable:
+        return 0
 
 def version_string() -> str:
     """Returns a free form version string for the library"""
@@ -4116,3 +4137,54 @@ def zfec_decode(k: int, n: int, indexes: list[int], inputs: list[bytes]) -> list
         c_size_t(k), c_size_t(n), c_indexes, c_inputs, c_size_t(share_size), c_outputs
     )
     return [output.raw for output in outputs]
+
+#
+# TLS (experimental)
+#
+class TLSPolicy:
+    """A TLS policy (``Botan::TLS::Policy``), controlling which protocol
+    versions, ciphersuites and parameters a TLS channel accepts.
+
+    This is part of the experimental TLS FFI API and is only available if the
+    loaded library was built with the ``ffi_tls`` module; see
+    :func:`ffi_tls_api_version`."""
+
+    def __init__(self, name: str | None = 'default'):
+        """Create one of the library's stock policies ("default", "strict" or
+        "bsi_tr_02102_2"). Passing None creates an empty object; applications
+        should use ``from_text`` instead of doing so."""
+        self.__obj = c_void_p(0)
+        if name is not None:
+            _DLL.botan_tls_policy_init(byref(self.__obj), _ctype_str(name))
+
+    @classmethod
+    def from_text(cls, text: str) -> TLSPolicy:
+        """Create a policy from text in the ``Text_Policy`` format: one ``key = value``
+        setting per line, ``#`` starts a comment, and every key that is not mentioned
+        keeps the value of the default policy"""
+        policy = cls(None)
+        _DLL.botan_tls_policy_init_from_text(byref(policy._handle()), _ctype_str(text))
+        return policy
+
+    def __del__(self):
+        obj = getattr(self, '_TLSPolicy__obj', None)
+        self.__obj = c_void_p(0)
+        if obj:
+            _DLL.botan_tls_policy_destroy(obj)
+
+    def __copy__(self):
+        raise TypeError('TLSPolicy objects cannot be copied')
+
+    def __deepcopy__(self, _memo):
+        raise TypeError('TLSPolicy objects cannot be copied')
+
+    def _handle(self):
+        return self.__obj
+
+    def to_string(self) -> str:
+        """Returns the main settings of the policy as text, one ``key = value``
+        line per setting, using the key names of ``Text_Policy``"""
+        return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_tls_policy_view_text(self.__obj, vc, vfn))
+
+    def __str__(self) -> str:
+        return self.to_string()

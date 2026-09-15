@@ -1768,6 +1768,39 @@ iWtHjIcunpiq6+IiB8IVu7Ncu6uPKoFS/mWzTvjgdNusmgNle9p3OAbE
         self.assertTrue(result == botan.ECPoint.from_bytes(group, result.to_uncompressed()))
         self.assertTrue(result == botan.ECPoint.from_bytes(group, result.to_compressed()))
 
+    def test_tls_policy(self):
+        if botan.ffi_tls_api_version() == 0:
+            self.skipTest("No TLS FFI support in this build")
+
+        self.assertGreaterEqual(botan.ffi_tls_api_version(), 20260911)
+
+        default = botan.TLSPolicy()
+        self.assertIn("minimum_signature_strength = ", str(default))
+        self.assertEqual(str(botan.TLSPolicy("default")), str(default))
+
+        strict = botan.TLSPolicy("strict")
+        self.assertNotEqual(strict.to_string(), default.to_string())
+        self.assertIn("signature_hashes = SHA-512 SHA-384\n", strict.to_string())
+
+        bsi = botan.TLSPolicy("bsi_tr_02102_2")
+        self.assertIn("signature_hashes = SHA-512 SHA-384 SHA-256\n", bsi.to_string())
+
+        with self.assertRaises(botan.BotanException) as cm:
+            botan.TLSPolicy("nsa_suite_b_192")
+        self.assertEqual(cm.exception.error_code(), -32) # Bad parameter
+
+        self.assertIn("hash_hello_random = true\n", str(default))
+        text = botan.TLSPolicy.from_text("hash_hello_random = false\nminimum_signature_strength = 128 # bits\n")
+        self.assertIn("hash_hello_random = false\n", str(text))
+        self.assertIn("minimum_signature_strength = 128\n", str(text))
+
+        with self.assertRaises(botan.BotanException) as cm:
+            botan.TLSPolicy.from_text("not a policy\n")
+        self.assertEqual(cm.exception.error_code(), -1) # Invalid input
+
+        with self.assertRaises(TypeError):
+            copy.copy(default)
+
 
 class BotanPythonZfecTests(unittest.TestCase):
     """
