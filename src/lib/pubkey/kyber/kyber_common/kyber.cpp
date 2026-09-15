@@ -346,7 +346,8 @@ secure_vector<uint8_t> Kyber_PrivateKey::formatted_raw_private_key_bits(MlPrivat
       case MlPrivateKeyFormat::Expanded:
          return Expanded_Keypair_Codec().encode_keypair({m_public, m_private});
       case MlPrivateKeyFormat::Both:
-         throw Encoding_Error("there is no raw encoding of an ML-KEM private key containing both seed and expanded key");
+         throw Encoding_Error(
+            "there is no raw encoding of an ML-KEM private key containing both seed and expanded key");
    }
    BOTAN_ASSERT_UNREACHABLE();
 }
