@@ -11,6 +11,7 @@
 
 #include <botan/types.h>
 #include <concepts>
+#include <vector>
 
 namespace Botan {
 
@@ -85,6 +86,11 @@ concept reservable_container = container<T> && requires(T& c, typename T::size_t
 template <typename T>
 concept resizable_byte_buffer =
    contiguous_container<T> && resizable_container<T> && std::same_as<typename T::value_type, uint8_t>;
+
+/// The concept of a std::vector<uint8_t> with an arbitrary allocator. In our
+/// context, that's usually std::vector<uint8_t> or secure_vector<uint8_t>.
+template <typename T>
+concept ordinary_byte_vector = std::same_as<T, std::vector<uint8_t, typename T::allocator_type>>;
 
 }  // namespace concepts
 
