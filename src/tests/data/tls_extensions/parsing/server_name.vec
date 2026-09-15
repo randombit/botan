@@ -1,0 +1,138 @@
+# Server_Name_Indicator (RFC 6066 3) wire format:
+#     - server_name_list length (2 bytes)
+#     - sequence of ServerName:
+#         - name_type (1 byte, 0 = host_name)
+#         - HostName length (2 bytes)
+#         - HostName bytes
+#
+# Buffers are parsed as if received by a server from a ClientHello.
+# The host_name must be a valid DNS name; Expected_Content holds the
+# canonical form the parser exposes.
+
+[server_name]
+Buffer = 000e00000b6578616d706c652e636f6d
+Expected_Content = example.com
+Exception =
+
+# single label (RFC 8448 example)
+Buffer = 0009000006736572766572
+Expected_Content = server
+Exception =
+
+# canonicalized to lowercase
+Buffer = 000e00000b4578616d706c652e434f4d
+Expected_Content = example.com
+Exception =
+
+# IDNA A-label
+Buffer = 0017000014786e2d2d6e7861736d7136622e6578616d706c65
+Expected_Content = xn--nxasmq6b.example
+Exception =
+
+# LDH labels with digits and hyphens
+Buffer = 001300001061312d62322e63332e6578616d706c65
+Expected_Content = a1-b2.c3.example
+Exception =
+
+# 63 octet label is the maximum
+Buffer = 004a0000476161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161612e6578616d706c65
+Expected_Content = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.example
+Exception =
+
+# 253 octets is the maximum name length (three 63 octet labels plus a 61 octet label)
+Buffer = 01000000fd6161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161612e6161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161612e6161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161612e61616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161
+Expected_Content = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Exception =
+
+# 254 octet name (three 63 octet labels plus a 62 octet label)
+Buffer = 01010000fe6161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161612e6161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161612e6161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161612e6161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# unknown name_type entry is skipped, host_name still parsed
+Buffer = 0019010008776861746576657200000b6578616d706c652e636f6d
+Expected_Content = example.com
+Exception =
+
+# IPv4 literal
+Buffer = 000c0000093139322e302e322e31
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# IPv6 literal
+Buffer = 000e00000b323030313a6462383a3a31
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# bracketed IPv6 literal
+Buffer = 001000000d5b323030313a6462383a3a315d
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# IPv6 loopback
+Buffer = 00060000033a3a31
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# trailing dot
+Buffer = 000f00000c6578616d706c652e636f6d2e
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# leading dot
+Buffer = 000f00000c2e6578616d706c652e636f6d
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# empty label
+Buffer = 000f00000c6578616d706c652e2e636f6d
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# leading hyphen
+Buffer = 000f00000c2d6578616d706c652e636f6d
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# trailing hyphen
+Buffer = 000f00000c6578616d706c652d2e636f6d
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# space
+Buffer = 000f00000c657861206d706c652e636f6d
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# underscore
+Buffer = 000f00000c6578615f6d706c652e636f6d
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# wildcard
+Buffer = 001000000d2a2e6578616d706c652e636f6d
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# trailing NUL
+Buffer = 000f00000c6578616d706c652e636f6d00
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# embedded NUL
+Buffer = 000f00000c657861006d706c652e636f6d
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# non-ASCII
+Buffer = 001200000f62c3bc636865722e6578616d706c65
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# 64 octet label
+Buffer = 004b000048616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161612e6578616d706c65
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# entirely numeric name
+Buffer = 000c000009312e322e332e342e35
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# URL rather than a host name
+Buffer = 001600001368747470733a2f2f6578616d706c652e636f6d
+Exception = TLS ServerNameIndicator host_name is not a valid DNS name
+
+# empty host_name
+Buffer = 0003000000
+Exception = Bad encoding of SNI extension
+
+# two host_name entries
+Buffer = 001c00000b6578616d706c652e636f6d00000b6578616d706c652e6f7267
+Exception = TLS ServerNameIndicator contains more than one host_name
+
+# server_name_list length mismatch
+Buffer = 000b00000b6578616d706c652e636f6d
+Exception = Bad encoding of SNI extension

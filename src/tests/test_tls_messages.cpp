@@ -417,6 +417,12 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
                      protocols_joined += p;
                   }
                   result.test_str_eq("alpn protocols", protocols_joined, vars.get_req_str("Expected_Content"));
+               } else if(extension == "server_name") {
+                  Botan::TLS::TLS_Data_Reader tls_data_reader("ClientHello", buffer);
+                  const Botan::TLS::Server_Name_Indicator sni(
+                     tls_data_reader, static_cast<uint16_t>(buffer.size()), Botan::TLS::Connection_Side::Client);
+
+                  result.test_str_eq("server_name host_name", sni.host_name(), vars.get_req_str("Expected_Content"));
                } else {
                   throw Test_Error("Unknown extension type " + extension + " in TLS parsing tests");
                }
@@ -465,6 +471,12 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
                result.test_throws("invalid alpn extension input", exception, [&buffer]() {
                   Botan::TLS::TLS_Data_Reader tls_data_reader("ClientHello", buffer);
                   const Botan::TLS::Application_Layer_Protocol_Notification alpn(
+                     tls_data_reader, static_cast<uint16_t>(buffer.size()), Botan::TLS::Connection_Side::Client);
+               });
+            } else if(extension == "server_name") {
+               result.test_throws("invalid server_name extension input", exception, [&buffer]() {
+                  Botan::TLS::TLS_Data_Reader tls_data_reader("ClientHello", buffer);
+                  const Botan::TLS::Server_Name_Indicator sni(
                      tls_data_reader, static_cast<uint16_t>(buffer.size()), Botan::TLS::Connection_Side::Client);
                });
             } else {

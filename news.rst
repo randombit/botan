@@ -7,6 +7,12 @@ Version 3.14.0, Not Yet Released
 * Add new type ``PK_Signature_Options`` which allows precisely controlling how
   signatures are created and verified. (GH #5849)
 
+* The TLS server now validates that the host name received in the server_name
+  (SNI) extension is a syntactically valid DNS name, as required by RFC 6066,
+  rejecting the handshake with an illegal_parameter alert otherwise. The name
+  passed to the ``Credentials_Manager`` and other callbacks is now the
+  canonical (lowercased) form.
+
 * Fix a bug introduced in 3.13.0 where, in builds without the system RNG,
   ``RandomNumberGenerator::randomize_with_ts_input`` passed only the low 32 bits
   of the timestamp, and never the process id, as additional input. (GH #5924)
