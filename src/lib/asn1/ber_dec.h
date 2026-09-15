@@ -10,6 +10,7 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/secmem.h>
+#include <botan/strong_type_helpers.h>
 #include <cstring>
 #include <memory>
 #include <optional>
@@ -333,10 +334,12 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       /**
       * Save all the bytes remaining in the source
       *
-      * @param out where the remaining bytes are written
+      * @param out_wrapped where the remaining bytes are written
       */
-      template <typename Alloc>
-      BER_Decoder& raw_bytes(std::vector<uint8_t, Alloc>& out) {
+      template <typename T>
+         requires concepts::ordinary_byte_vector<strong_type_wrapped_type<T>>
+      BER_Decoder& raw_bytes(T& out_wrapped) {
+         auto& out = unwrap_strong_type(out_wrapped);
          out.clear();
          uint8_t buf[64];
          while(const size_t got = this->read_bytes(std::span{buf})) {
@@ -380,9 +383,10 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       * @param out where the contents are written
       * @param real_type either ASN1_Type::OctetString or ASN1_Type::BitString
       */
-      template <typename Alloc>
-      BER_Decoder& decode(std::vector<uint8_t, Alloc>& out, ASN1_Type real_type) {
-         return decode(out, real_type, real_type, ASN1_Class::Universal);
+      template <typename T>
+         requires concepts::ordinary_byte_vector<strong_type_wrapped_type<T>>
+      BER_Decoder& decode(T& out, ASN1_Type real_type) {
+         return decode(unwrap_strong_type(out), real_type, real_type, ASN1_Class::Universal);
       }
 
       /**
@@ -452,14 +456,16 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       /**
       * Decode a BIT STRING, throwing unless it has no unused bits
       *
-      * @param out where the bits are written
+      * @param out_wrapped where the bits are written
       * @param type_tag the expected type tag
       * @param class_tag the expected class tag
       */
-      template <typename Alloc>
-      BER_Decoder& decode_octet_aligned_bitstring(std::vector<uint8_t, Alloc>& out,
+      template <typename T>
+         requires concepts::ordinary_byte_vector<strong_type_wrapped_type<T>>
+      BER_Decoder& decode_octet_aligned_bitstring(T& out_wrapped,
                                                   ASN1_Type type_tag = ASN1_Type::BitString,
                                                   ASN1_Class class_tag = ASN1_Class::Universal) {
+         auto& out = unwrap_strong_type(out_wrapped);
          ASN1_BitString bits;
          decode_bitstring(bits, type_tag, class_tag);
 
@@ -710,17 +716,19 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       /**
       * Decode an OPTIONAL string type, clearing @p out if it is absent
       *
-      * @param out where the contents are written
+      * @param out_wrapped where the contents are written
       * @param real_type the type tag the contents should be parsed as
       * @param expected_tag the expected tag number
       * @param class_tag the expected class tag
       */
-      template <typename Alloc>
-      BER_Decoder& decode_optional_string(std::vector<uint8_t, Alloc>& out,
+      template <typename T>
+         requires concepts::ordinary_byte_vector<strong_type_wrapped_type<T>>
+      BER_Decoder& decode_optional_string(T& out_wrapped,
                                           ASN1_Type real_type,
                                           uint32_t expected_tag,
                                           ASN1_Class class_tag = ASN1_Class::ContextSpecific) {
          BER_Object obj = get_next_object();
+         auto& out = unwrap_strong_type(out_wrapped);
 
          const ASN1_Type type_tag = static_cast<ASN1_Type>(expected_tag);
 
@@ -747,8 +755,9 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       * @param expected_tag the expected type tag
       * @param class_tag the expected class tag
       */
-      template <typename Alloc>
-      BER_Decoder& decode_optional_string(std::vector<uint8_t, Alloc>& out,
+      template <typename T>
+         requires concepts::ordinary_byte_vector<strong_type_wrapped_type<T>>
+      BER_Decoder& decode_optional_string(T& out,
                                           ASN1_Type real_type,
                                           ASN1_Type expected_tag,
                                           ASN1_Class class_tag = ASN1_Class::ContextSpecific) {
@@ -759,15 +768,17 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       * Decode an OPTIONAL BIT STRING with no unused bits, clearing @p out if it
       * is absent
       *
-      * @param out where the bits are written
+      * @param out_wrapped where the bits are written
       * @param expected_tag the expected tag number
       * @param class_tag the expected class tag
       */
-      template <typename Alloc>
-      BER_Decoder& decode_optional_octet_aligned_bitstring(std::vector<uint8_t, Alloc>& out,
+      template <typename T>
+         requires concepts::ordinary_byte_vector<strong_type_wrapped_type<T>>
+      BER_Decoder& decode_optional_octet_aligned_bitstring(T& out_wrapped,
                                                            uint32_t expected_tag,
                                                            ASN1_Class class_tag = ASN1_Class::ContextSpecific) {
          BER_Object obj = get_next_object();
+         auto& out = unwrap_strong_type(out_wrapped);
 
          const ASN1_Type type_tag = static_cast<ASN1_Type>(expected_tag);
 
@@ -794,8 +805,9 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       * @param expected_tag the expected type tag
       * @param class_tag the expected class tag
       */
-      template <typename Alloc>
-      BER_Decoder& decode_optional_octet_aligned_bitstring(std::vector<uint8_t, Alloc>& out,
+      template <typename T>
+         requires concepts::ordinary_byte_vector<strong_type_wrapped_type<T>>
+      BER_Decoder& decode_optional_octet_aligned_bitstring(T& out,
                                                            ASN1_Type expected_tag,
                                                            ASN1_Class class_tag = ASN1_Class::ContextSpecific) {
          return decode_optional_octet_aligned_bitstring(out, static_cast<uint32_t>(expected_tag), class_tag);
