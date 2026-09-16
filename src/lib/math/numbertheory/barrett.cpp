@@ -66,7 +66,7 @@ BigInt barrett_reduce(
    * Algorithm 14.42 "Barrett modular reduction", page 604
    * <https://cacr.uwaterloo.ca/hac/about/chap14.pdf>
    *
-   * Using `mu` for μ in the code
+   * Using `mu` for µ in the code
    */
 
    // Compute q1 = floor(x / 2^(k - 1)) which is equivalent to ignoring the low (k-1) words
@@ -76,7 +76,7 @@ BigInt barrett_reduce(
 
    copy_mem(r.data(), x_words.data() + (mod_words - 1), mod_words + 1);
 
-   // Now compute q2 = q1 * μ
+   // Now compute q2 = q1 * µ
 
    // We allocate more size than required since this allows Karatsuba more often;
    // just `mu_words + (mod_words + 1)` is sufficient
@@ -124,7 +124,7 @@ BigInt barrett_reduce(
    CT::Mask<word>::is_equal(static_cast<word>(relative_size), 1).select_n(r.data(), ws.data(), r.data(), mod_words + 2);
 
    /*
-   * Per HAC Note 14.44 (ii) "step 4 is repeated at most twice since 0 ≤ r < 3m"
+   * Per HAC Note 14.44 (ii) "step 4 is repeated at most twice since 0 <= r < 3m"
    */
    const size_t bound = 2;
 

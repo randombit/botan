@@ -2224,7 +2224,7 @@ def handle_kdf_components_tls(
 def handle_rsa_sigver_fips186_2(
     header: dict, group: dict, test: dict, exp: dict
 ) -> None:
-    # Same handler as RSA-SigVer-FIPS186-5 — reuses the same padding logic
+    # Same handler as RSA-SigVer-FIPS186-5 - reuses the same padding logic
     # and the same X9.31 skip.
     handle_rsa_sigver(header, group, test, exp)
 

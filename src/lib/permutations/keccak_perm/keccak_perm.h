@@ -44,11 +44,11 @@ struct KeccakPadding {
 * submission version of the Keccak submission in the SHA-3 contest, possibly
 * what is released by NIST under the name "KECCAK - Final Algorithm Package" [2].
 * See also the file keccak.h for the details how the keccak hash function is defined
-* in terms of the Keccak[c] – a detail which cannot be found in [1].
+* in terms of the Keccak[c] - a detail which cannot be found in [1].
 *
 *
 *
-* [1] FIPS PUB 202 – FEDERAL INFORMATION PROCESSING STANDARDS PUBLICATION – SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions
+* [1] FIPS PUB 202 - FEDERAL INFORMATION PROCESSING STANDARDS PUBLICATION - SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions
 *       https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf#page=28
 * [2] https://csrc.nist.gov/projects/hash-functions/sha-3-project
 */

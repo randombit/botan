@@ -1573,7 +1573,7 @@ class Shim_Credentials final : public Botan::Credentials_Manager {
             load_credential(cred);
          }
 
-         // Legacy default cert/key (no `-new-*-credential` block) — only honored
+         // Legacy default cert/key (no `-new-*-credential` block) - only honored
          // when no X509/RPK credential blocks were provided.
          const bool has_block_cert = std::any_of(m_credentials.begin(), m_credentials.end(), [](const auto& c) {
             return c.kind == Shim_Credential::Kind::X509 || c.kind == Shim_Credential::Kind::RPK;

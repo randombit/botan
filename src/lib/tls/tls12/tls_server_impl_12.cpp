@@ -230,8 +230,8 @@ uint16_t choose_ciphersuite(const Policy& policy,
 
    // RFC 7919 Section 4.
    //   If the [Supported Groups] extension is present
-   //   with FFDHE groups, none of the client’s offered groups are acceptable
-   //   by the server, and none of the client’s proposed non-FFDHE cipher
+   //   with FFDHE groups, none of the client's offered groups are acceptable
+   //   by the server, and none of the client's proposed non-FFDHE cipher
    //   suites are acceptable to the server, the server MUST end the
    //   connection with a fatal TLS alert of type insufficient_security(71).
    if(client_supports_ffdhe_groups && !have_shared_dh_group) {

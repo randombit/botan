@@ -440,7 +440,7 @@ bool verify_signature(std::span<const uint8_t, ED448_LEN> pk,
    //    key A, with F being 0 for Ed448 and 1 for Ed448ph, first split
    //    the signature into two 57-octet halves. Decode the first half as
    //    a point R, and the second half as an integer S, in the range 0 <=
-   //    s < L. Decode the public key A as point A’. If any of the
+   //    s < L. Decode the public key A as point A'. If any of the
    //    decodings fail (including S being out of range), the signature is
    //    invalid.
    if(sig.size() != 2 * ED448_LEN) {
@@ -457,9 +457,9 @@ bool verify_signature(std::span<const uint8_t, ED448_LEN> pk,
    // 2. Compute SHAKE256(dom4(F, C) || R || A || PH(M), 114), and
    //    interpret the 114-octet digest as a little-endian integer k.
    const Scalar448 k(shake(phflag, context, big_r_bytes, pk, msg));
-   // 3. Check the group equation [4][S]B = [4]R + [4][k]A’. It’s
-   //    sufficient, but not required, to instead check [S]B = R + [k]A’.
-   //    Rearranged as [S]B + [k](-A’) = R, computed via Shamir’s trick.
+   // 3. Check the group equation [4][S]B = [4]R + [4][k]A'. It's
+   //    sufficient, but not required, to instead check [S]B = R + [k]A'.
+   //    Rearranged as [S]B + [k](-A') = R, computed via Shamir's trick.
    const auto neg_A = Ed448Point::decode(pk).negate();
    return Ed448Point::double_scalar_mul_vartime(big_s, Ed448Point::base_point(), k, neg_A) == big_r;
 }

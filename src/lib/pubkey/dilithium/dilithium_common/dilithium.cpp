@@ -170,7 +170,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
             // FIPS 204, Section 3.4
             //   By default, this standard specifies the signing algorithm to use both
             //   types of randomness [fresh from the RNG and a value in the private key].
-            //   This is referred to as the “hedged” variant of the signing procedure.
+            //   This is referred to as the "hedged" variant of the signing procedure.
             m_randomized(!options.using_deterministic_signature()),
             m_h(m_keypair.second->mode().symmetric_primitives().get_message_hash(m_keypair.first->tr())),
             m_s1(ntt(m_keypair.second->s1().clone())),
