@@ -1,29 +1,32 @@
 /**
- * Adapter that allows using a KEX key as a KEM, using an ephemeral
- * key in the KEM encapsulation.
+ * Adapter that allows using an asymmetric encryption key (typically RSA) as a
+ * KEM by encrypting a symmetric key.
  *
- * (C) 2023 Jack Lloyd
- *     2023,2024 Fabian Albert, René Meusel - Rohde & Schwarz Cybersecurity
+ * (C) 2026 Jack Lloyd
+ *     2026 René Meusel
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
-#ifndef BOTAN_TLS_13_KEX_TO_KEM_ADAPTER_H_
-#define BOTAN_TLS_13_KEX_TO_KEM_ADAPTER_H_
+#ifndef BOTAN_ASYMMETRIC_ENCRYPTION_TO_KEM_ADAPTER_H_
+#define BOTAN_ASYMMETRIC_ENCRYPTION_TO_KEM_ADAPTER_H_
 
 #include <botan/pubkey.h>
 
 #include <memory>
+#include <string_view>
 
 namespace Botan {
 
 /**
- * Adapter to use a key agreement key pair (e.g. ECDH) as a key encapsulation
- * mechanism.
+ * Adapter to use an asymmetric encryption key (typically RSA) as a key
+ * encapsulation mechanism (KEM). This works by encrypting a random symmetric
+ * key using the asymmetric encryption operation.
  */
-class BOTAN_TEST_API KEX_to_KEM_Adapter_PublicKey : public virtual Public_Key {
+class BOTAN_TEST_API Asymmetric_Encryption_to_KEM_Adapter_PublicKey : public virtual Public_Key {
    public:
-      explicit KEX_to_KEM_Adapter_PublicKey(std::unique_ptr<Public_Key> public_key);
+      explicit Asymmetric_Encryption_to_KEM_Adapter_PublicKey(std::unique_ptr<Public_Key> public_key,
+                                                              std::string_view padding);
 
       std::string algo_name() const override;
       size_t estimated_strength() const override;
@@ -41,36 +44,28 @@ class BOTAN_TEST_API KEX_to_KEM_Adapter_PublicKey : public virtual Public_Key {
 
       const Public_Key& inner() const { return *m_public_key; }
 
+   protected:
+      const std::string& padding() const { return m_padding; }
+
    private:
       std::shared_ptr<const Public_Key> m_public_key;
+      std::string m_padding;
 };
 
 BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
 /**
- * Adapter to use a key agreement key pair (e.g. ECDH) as a key encapsulation
- * mechanism. This works by generating an ephemeral key pair during the
- * encapsulation. The following Botan key types are supported:
- * ECDH, DH, X25519 and X448.
- *
- * The abstract interface of a key exchange mechanism (KEX) is mapped like so:
- *
- *  * KEM-generate(rng) -> tuple[PublicKey, PrivateKey]
- *       => KEX-generate(rng) -> tuple[PublicKey, PrivateKey]
- *
- *  * KEM-encapsulate(PublicKey, rng) -> tuple[SharedSecret, EncapsulatedSharedSecret]
- *       => eph_pk, eph_sk = KEX-generate(rng)
- *          secret         = KEX-agree(eph_sk, PublicKey)
- *          [secret, eph_pk]
- *
- *  * KEM-decapsulate(PrivateKey, EncapsulatedSharedSecret) -> SharedSecret
- *       => KEX-agree(PrivateKey, EncapsulatedSharedSecret)
+ * Adapter to use an asymmetric encryption key (typically RSA) as a key
+ * encapsulation mechanism (KEM). This works by encrypting a random symmetric
+ * key using the asymmetric encryption operation.
  */
-class BOTAN_TEST_API KEX_to_KEM_Adapter_PrivateKey final : public KEX_to_KEM_Adapter_PublicKey,
-                                                           public virtual Private_Key {
+class BOTAN_TEST_API Asymmetric_Encryption_to_KEM_Adapter_PrivateKey final
+      : public Asymmetric_Encryption_to_KEM_Adapter_PublicKey,
+        public virtual Private_Key {
    public:
-      explicit KEX_to_KEM_Adapter_PrivateKey(std::unique_ptr<Private_Key> private_key);
+      explicit Asymmetric_Encryption_to_KEM_Adapter_PrivateKey(std::unique_ptr<Private_Key> private_key,
+                                                               std::string_view padding);
 
       secure_vector<uint8_t> private_key_bits() const override;
 
@@ -86,7 +81,7 @@ class BOTAN_TEST_API KEX_to_KEM_Adapter_PrivateKey final : public KEX_to_KEM_Ada
       const Private_Key& inner() const { return *m_private_key; }
 
    private:
-      std::unique_ptr<PK_Key_Agreement_Key> m_private_key;
+      std::unique_ptr<Private_Key> m_private_key;
 };
 
 BOTAN_DIAGNOSTIC_POP

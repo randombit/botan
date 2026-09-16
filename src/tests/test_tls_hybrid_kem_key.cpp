@@ -12,9 +12,9 @@
 
    #include <botan/pk_algs.h>
    #include <botan/rng.h>
-   #include <botan/internal/hybrid_public_key.h>
    #include <botan/internal/kex_to_kem_adapter.h>
    #include <botan/internal/stl_util.h>
+   #include <botan/internal/tls_hybrid_kem.h>
    #include <algorithm>
 
 namespace Botan_Tests {
@@ -69,13 +69,6 @@ std::unique_ptr<Botan::Private_Key> sig() {
    return Botan::load_private_key(sig_key->algorithm_identifier(), sig_key->private_key_bits());
 }
 
-template <typename... KeyTs>
-auto keys(KeyTs... keys) {
-   std::vector<std::unique_ptr<Botan::Private_Key>> vec;
-   (vec.push_back(std::forward<KeyTs>(keys)), ...);
-   return vec;
-}
-
 template <typename T>
 std::unique_ptr<Botan::Public_Key> as_public_key(T private_key) {
    if constexpr(std::is_same_v<T, std::nullptr_t>) {
@@ -85,74 +78,72 @@ std::unique_ptr<Botan::Public_Key> as_public_key(T private_key) {
    }
 }
 
-template <typename... KeyTs>
-auto pubkeys(KeyTs... keys) {
-   std::vector<std::unique_ptr<Botan::Public_Key>> vec;
-   (vec.push_back(as_public_key(std::forward<KeyTs>(keys))), ...);
-   return vec;
+size_t length_of_hybrid_shared_key(const Botan::PairOfPrivateKeys& private_keys) {
+   auto shared_secret_length = [](const std::unique_ptr<Botan::Private_Key>& key) {
+      if(key->supports_operation(Botan::PublicKeyOperation::KeyAgreement)) {
+         const Botan::PK_Key_Agreement ka(*key, global_test_rng(), "Raw");
+         return ka.agreed_value_size();
+      } else {
+         const Botan::PK_KEM_Encryptor enc(*key, "Raw");
+         return enc.shared_key_length(0);
+      }
+   };
+
+   return (shared_secret_length(private_keys.first) + shared_secret_length(private_keys.second));
 }
 
-template <typename... Ts>
-size_t length_of_hybrid_shared_key(Ts... kex_kem_fn) {
-   const Botan::overloaded f{[](const Botan::PK_Key_Agreement_Key& kex_key) {
-                                const Botan::PK_Key_Agreement ka(kex_key, global_test_rng(), "Raw");
-                                return ka.agreed_value_size();
-                             },
-                             [](const Botan::Private_Key& kem_key) {
-                                const Botan::PK_KEM_Encryptor enc(kem_key, "Raw");
-                                return enc.shared_key_length(0);
-                             }};
+size_t length_of_hybrid_ciphertext(const Botan::PairOfPrivateKeys& private_keys) {
+   auto ciphertext_length = [](const std::unique_ptr<Botan::Private_Key>& key) {
+      if(key->supports_operation(Botan::PublicKeyOperation::KeyAgreement)) {
+         const auto* kex_key = dynamic_cast<const Botan::PK_Key_Agreement_Key*>(key.get());
+         BOTAN_ASSERT_NONNULL(kex_key);
+         return kex_key->public_value().size();
+      } else {
+         const Botan::PK_KEM_Encryptor enc(*key, "Raw");
+         return enc.encapsulated_key_length();
+      }
+   };
 
-   return (f(*kex_kem_fn()) + ...);
+   return (ciphertext_length(private_keys.first) + ciphertext_length(private_keys.second));
 }
 
-template <typename... Ts>
-size_t length_of_hybrid_ciphertext(Ts... kex_kem_fn) {
-   const Botan::overloaded f{[](const Botan::PK_Key_Agreement_Key& kex_key) { return kex_key.public_value().size(); },
-                             [](const Botan::Private_Key& kem_key) {
-                                const Botan::PK_KEM_Encryptor enc(kem_key, "Raw");
-                                return enc.encapsulated_key_length();
-                             }};
+size_t length_of_hybrid_public_value(const Botan::PairOfPrivateKeys& private_keys) {
+   auto public_value_length = [](const std::unique_ptr<Botan::Private_Key>& key) {
+      if(key->supports_operation(Botan::PublicKeyOperation::KeyAgreement)) {
+         const auto* kex_key = dynamic_cast<const Botan::PK_Key_Agreement_Key*>(key.get());
+         BOTAN_ASSERT_NONNULL(kex_key);
+         return kex_key->public_value().size();
+      } else {
+         return key->public_key_bits().size();
+      }
+   };
 
-   return (f(*kex_kem_fn()) + ...);
-}
-
-template <typename... Ts>
-size_t length_of_hybrid_public_value(Ts... kex_kem_fn) {
-   const Botan::overloaded f{[](const Botan::PK_Key_Agreement_Key& kex_key) { return kex_key.public_value().size(); },
-                             [](const Botan::Private_Key& kem_key) { return kem_key.public_key_bits().size(); }};
-
-   return (f(*kex_kem_fn()) + ...);
+   return (public_value_length(private_keys.first) + public_value_length(private_keys.second));
 }
 
 /// Public_Key::key_length()
-template <typename... Ts>
-size_t key_length_of_hybrid_public_key(Ts... kex_kem_fn) {
-   std::vector<size_t> key_lengths = {kex_kem_fn()->key_length()...};
-   return *std::max_element(key_lengths.begin(), key_lengths.end());
+size_t key_length_of_hybrid_public_key(const Botan::PairOfPrivateKeys& private_keys) {
+   return std::max(private_keys.first->key_length(), private_keys.second->key_length());
 }
 
-template <typename... Ts>
-size_t estimated_strength_of_hybrid_public_key(Ts... kex_kem_fn) {
-   std::vector<size_t> strengths = {kex_kem_fn()->estimated_strength()...};
-   return *std::max_element(strengths.begin(), strengths.end());
+size_t estimated_strength_of_hybrid_public_key(const Botan::PairOfPrivateKeys& private_keys) {
+   return std::max(private_keys.first->estimated_strength(), private_keys.second->estimated_strength());
 }
 
-template <typename... Ts>
-void roundtrip_test(Test::Result& result, Ts... kex_kem_fn) {
-   const Botan::TLS::Hybrid_KEM_PrivateKey hybrid_key(keys(kex_kem_fn()...));
-   const Botan::TLS::Hybrid_KEM_PublicKey hybrid_public_key(pubkeys(kex_kem_fn()...));
+void roundtrip_test(Test::Result& result, Botan::PairOfPrivateKeys private_keys) {
+   const auto expected_shared_secret_length = length_of_hybrid_shared_key(private_keys);
+   const auto expected_ciphertext_length = length_of_hybrid_ciphertext(private_keys);
+   const auto expected_public_key_length = length_of_hybrid_public_value(private_keys);
+   const auto expected_key_length = key_length_of_hybrid_public_key(private_keys);
+   const auto expected_strength = estimated_strength_of_hybrid_public_key(private_keys);
+
+   const Botan::TLS::Hybrid_TLS_KEM_PrivateKey hybrid_key(std::move(private_keys));
+   const auto hybrid_public_key = hybrid_key.public_key();
 
    auto& rng = global_test_rng();
 
-   Botan::PK_KEM_Encryptor encryptor(hybrid_public_key, "Raw");
+   Botan::PK_KEM_Encryptor encryptor(*hybrid_public_key, "Raw");
    const auto kem_result = encryptor.encrypt(rng);
-
-   const auto expected_shared_secret_length = length_of_hybrid_shared_key(kex_kem_fn...);
-   const auto expected_ciphertext_length = length_of_hybrid_ciphertext(kex_kem_fn...);
-   const auto expected_public_key_length = length_of_hybrid_public_value(kex_kem_fn...);
-   const auto expected_key_length = key_length_of_hybrid_public_key(kex_kem_fn...);
-   const auto expected_strength = estimated_strength_of_hybrid_public_key(kex_kem_fn...);
 
    result.test_sz_eq(
       "ciphertext has expected length", kem_result.encapsulated_shared_key().size(), expected_ciphertext_length);
@@ -172,78 +163,75 @@ void roundtrip_test(Test::Result& result, Ts... kex_kem_fn) {
    result.test_sz_eq("shared secret has expected length", decaps_shared_secret.size(), expected_shared_secret_length);
 
    result.test_sz_eq("public key bits is the sum of its parts",
-                     hybrid_public_key.raw_public_key_bits().size(),
+                     hybrid_public_key->raw_public_key_bits().size(),
                      expected_public_key_length);
 
    result.test_sz_eq(
-      "Public_Key::key_length is the maximum of its parts", hybrid_public_key.key_length(), expected_key_length);
+      "Public_Key::key_length is the maximum of its parts", hybrid_public_key->key_length(), expected_key_length);
    result.test_sz_eq("Public_Key::estimated_strength is the maximum of its parts",
-                     hybrid_public_key.estimated_strength(),
+                     hybrid_public_key->estimated_strength(),
                      expected_strength);
 }
 
 std::vector<Test::Result> hybrid_kem_keypair() {
    return {
-      Botan_Tests::CHECK("public handles empty list",
-                         [](auto& result) {
-                            result.test_throws("hybrid KEM key does not accept an empty list of keys", [] {
-                               Botan::TLS::Hybrid_KEM_PublicKey(std::vector<std::unique_ptr<Botan::Public_Key>>(0));
-                            });
-                         }),
-
-      Botan_Tests::CHECK("private handles empty list",
-                         [](auto& result) {
-                            result.test_throws("hybrid KEM key does not accept an empty list of keys", [] {
-                               Botan::TLS::Hybrid_KEM_PrivateKey(std::vector<std::unique_ptr<Botan::Private_Key>>(0));
-                            });
-                         }),
-
       CHECK("public key handles nullptr",
             [&](auto& result) {
-               result.test_throws("hybrid KEM key does not accept nullptr keys",
-                                  [] { Botan::TLS::Hybrid_KEM_PublicKey(pubkeys(nullptr)); });
-               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEM",
-                                  [&] { Botan::TLS::Hybrid_KEM_PublicKey(pubkeys(nullptr, kem())); });
-               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEX",
-                                  [&] { Botan::TLS::Hybrid_KEM_PublicKey(pubkeys(nullptr, kex_dh())); });
+               result.test_throws("hybrid KEM key does not accept nullptr keys", [] {
+                  Botan::TLS::Hybrid_TLS_KEM_PublicKey({nullptr, nullptr});
+               });
+               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEM", [&] {
+                  Botan::TLS::Hybrid_TLS_KEM_PublicKey({nullptr, as_public_key(kem())});
+               });
+               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEX", [&] {
+                  Botan::TLS::Hybrid_TLS_KEM_PublicKey({as_public_key(kex_dh()), nullptr});
+               });
             }),
 
       CHECK("private key handles nullptr",
             [&](auto& result) {
-               result.test_throws("hybrid KEM key does not accept nullptr keys",
-                                  [] { Botan::TLS::Hybrid_KEM_PrivateKey(keys(nullptr)); });
-               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEM",
-                                  [&] { Botan::TLS::Hybrid_KEM_PrivateKey(keys(nullptr, kem())); });
-               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEX",
-                                  [&] { Botan::TLS::Hybrid_KEM_PrivateKey(keys(nullptr, kex_dh())); });
+               result.test_throws("hybrid KEM key does not accept nullptr keys", [] {
+                  Botan::TLS::Hybrid_TLS_KEM_PrivateKey({nullptr, nullptr});
+               });
+               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEM", [&] {
+                  Botan::TLS::Hybrid_TLS_KEM_PrivateKey({nullptr, kem()});
+               });
+               result.test_throws("hybrid KEM key does not accept nullptr keys along with KEX", [&] {
+                  Botan::TLS::Hybrid_TLS_KEM_PrivateKey({kex_dh(), nullptr});
+               });
             }),
 
       CHECK("handles incompatible keys (non-KEM, non-KEX)",
             [&](auto& result) {
-               result.test_throws("hybrid KEM key does not accept signature keys",
-                                  [&] { Botan::TLS::Hybrid_KEM_PrivateKey(keys(sig())); });
-               result.test_throws("signature keys aren't allowed along with KEM keys",
-                                  [&] { Botan::TLS::Hybrid_KEM_PrivateKey(keys(sig(), kem())); });
-               result.test_throws("signature keys aren't allowed along with KEX keys",
-                                  [&] { Botan::TLS::Hybrid_KEM_PrivateKey(keys(sig(), kex_dh())); });
+               result.test_throws("hybrid KEM key does not accept signature keys", [&] {
+                  Botan::TLS::Hybrid_TLS_KEM_PrivateKey({sig(), sig()});
+               });
+               result.test_throws("signature keys aren't allowed along with KEM keys", [&] {
+                  Botan::TLS::Hybrid_TLS_KEM_PrivateKey({sig(), kem()});
+               });
+               result.test_throws("signature keys aren't allowed along with KEX keys", [&] {
+                  Botan::TLS::Hybrid_TLS_KEM_PrivateKey({kex_dh(), sig()});
+               });
             }),
 
-      CHECK("single KEM key",
-            [&](auto& result) { result.test_throws("need at least two keys", [&] { roundtrip_test(result, kem); }); }),
-      CHECK("dual KEM key", [&](auto& result) { roundtrip_test(result, kem, kem); }),
-      CHECK(
-         "single KEX key",
-         [&](auto& result) { result.test_throws("need at least two keys", [&] { roundtrip_test(result, kex_dh); }); }),
-      CHECK("dual KEX key", [&](auto& result) { roundtrip_test(result, kex_dh, kex_ecdh); }),
-      CHECK("hybrid KEX/KEM key", [&](auto& result) { roundtrip_test(result, kex_dh, kem); }),
-      CHECK("hybrid triple key", [&](auto& result) { roundtrip_test(result, kex_dh, kem, kex_ecdh); }),
+      CHECK("dual KEM key",
+            [&](auto& result) {
+               roundtrip_test(result, {kem(), kem()});
+            }),
+      CHECK("dual KEX key",
+            [&](auto& result) {
+               roundtrip_test(result, {kex_dh(), kex_ecdh()});
+            }),
+      CHECK("hybrid KEX/KEM key",
+            [&](auto& result) {
+               roundtrip_test(result, {kex_dh(), kem()});
+            }),
    };
 }
 
-void kex_to_kem_roundtrip(Test::Result& result,
-                          const std::function<std::unique_ptr<Botan::PK_Key_Agreement_Key>()>& kex_fn) {
-   const Botan::KEX_to_KEM_Adapter_PrivateKey kexkem_key(kex_fn());
-   const Botan::KEX_to_KEM_Adapter_PublicKey kexkem_public_key(kex_fn());
+void kex_to_kem_roundtrip(Test::Result& result, std::unique_ptr<Botan::PK_Key_Agreement_Key> kex_private_key) {
+   const Botan::KEX_to_KEM_Adapter_PublicKey kexkem_public_key(kex_private_key->public_key());
+   const Botan::KEX_to_KEM_Adapter_PrivateKey kexkem_key(std::move(kex_private_key));
 
    auto& rng = global_test_rng();
 
@@ -286,8 +274,8 @@ std::vector<Test::Result> kex_to_kem_adapter() {
                                                [] { Botan::KEX_to_KEM_Adapter_PublicKey{kem()}; });
                          }),
 
-      CHECK("Diffie-Hellman roundtrip", [](auto& result) { kex_to_kem_roundtrip(result, kex_dh); }),
-      CHECK("ECDH roundtrip", [](auto& result) { kex_to_kem_roundtrip(result, kex_ecdh); }),
+      CHECK("Diffie-Hellman roundtrip", [](auto& result) { kex_to_kem_roundtrip(result, kex_dh()); }),
+      CHECK("ECDH roundtrip", [](auto& result) { kex_to_kem_roundtrip(result, kex_ecdh()); }),
    };
 }
 

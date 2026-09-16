@@ -3,80 +3,108 @@
 *
 * (C) 2024 Jack Lloyd
 *     2024 Fabian Albert, René Meusel - Rohde & Schwarz Cybersecurity
+*     2026 René Meusel
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
-#include <botan/internal/hybrid_kem.h>
+
+#include <botan/hybrid_kem.h>
 
 #include <botan/internal/concat_util.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/kex_to_kem_adapter.h>
 #include <botan/internal/stl_util.h>
 
 namespace Botan {
 
-Hybrid_PublicKey::Hybrid_PublicKey(std::vector<std::unique_ptr<Public_Key>> pks) :
-      m_pks(std::move(pks)), m_key_length(0), m_estimated_strength(0) {
-   BOTAN_ARG_CHECK(m_pks.size() >= 2, "List of public keys must include at least two keys");
-   for(const auto& pk : m_pks) {
-      BOTAN_ARG_CHECK(pk != nullptr, "List of public keys contains a nullptr");
-      BOTAN_ARG_CHECK(pk->supports_operation(PublicKeyOperation::KeyEncapsulation),
-                      fmt("Public key type '{}' does not support key encapsulation", pk->algo_name()).c_str());
-      m_key_length = std::max(m_key_length, pk->key_length());
-      m_estimated_strength = std::max(m_estimated_strength, pk->estimated_strength());
+namespace {
+
+void maybe_wrap_into_kex_adapter(std::unique_ptr<Public_Key>& pk) {
+   if(pk->supports_operation(PublicKeyOperation::KeyAgreement) &&
+      !pk->supports_operation(PublicKeyOperation::KeyEncapsulation)) {
+      pk = std::make_unique<KEX_to_KEM_Adapter_PublicKey>(std::move(pk));
    }
 }
 
-bool Hybrid_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const {
-   return reduce(public_keys(), true, [&](bool ckr, const auto& key) { return ckr && key->check_key(rng, strong); });
+void maybe_wrap_into_kex_adapter(std::unique_ptr<Private_Key>& pk) {
+   if(pk->supports_operation(PublicKeyOperation::KeyAgreement) &&
+      !pk->supports_operation(PublicKeyOperation::KeyEncapsulation)) {
+      pk = std::make_unique<KEX_to_KEM_Adapter_PrivateKey>(std::move(pk));
+   }
 }
 
-std::vector<uint8_t> Hybrid_PublicKey::raw_public_key_bits() const {
-   return reduce(public_keys(), std::vector<uint8_t>(), [](auto pkb, const auto& key) {
-      return concat(pkb, key->raw_public_key_bits());
-   });
+}  // namespace
+
+Hybrid_KEM_PublicKey::Hybrid_KEM_PublicKey(PairOfPublicKeys pks) {
+   BOTAN_ARG_CHECK(pks.first != nullptr, "Hybrid_KEM_PublicKey: First public key is a nullptr");
+   BOTAN_ARG_CHECK(pks.second != nullptr, "Hybrid_KEM_PublicKey: Second public key is a nullptr");
+
+   maybe_wrap_into_kex_adapter(pks.first);
+   maybe_wrap_into_kex_adapter(pks.second);
+
+   BOTAN_ARG_CHECK(pks.first->supports_operation(PublicKeyOperation::KeyEncapsulation),
+                   "Hybrid_KEM_PublicKey: First public key is not compatible with this hybrid wrapper");
+   BOTAN_ARG_CHECK(pks.second->supports_operation(PublicKeyOperation::KeyEncapsulation),
+                   "Hybrid_KEM_PublicKey: Second public key is not compatible with this hybrid wrapper");
+
+   m_pks = std::move(pks);
 }
 
-bool Hybrid_PublicKey::supports_operation(PublicKeyOperation op) const {
+size_t Hybrid_KEM_PublicKey::estimated_strength() const {
+   return std::max(m_pks.first->estimated_strength(), m_pks.second->estimated_strength());
+}
+
+size_t Hybrid_KEM_PublicKey::key_length() const {
+   return std::max(m_pks.first->key_length(), m_pks.second->key_length());
+}
+
+bool Hybrid_KEM_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const {
+   return m_pks.first->check_key(rng, strong) && m_pks.second->check_key(rng, strong);
+}
+
+std::vector<uint8_t> Hybrid_KEM_PublicKey::raw_public_key_bits() const {
+   return concat(m_pks.first->raw_public_key_bits(), m_pks.second->raw_public_key_bits());
+}
+
+std::vector<uint8_t> Hybrid_KEM_PublicKey::public_key_bits() const {
+   return concat(m_pks.first->public_key_bits(), m_pks.second->public_key_bits());
+}
+
+bool Hybrid_KEM_PublicKey::supports_operation(PublicKeyOperation op) const {
    return PublicKeyOperation::KeyEncapsulation == op;
 }
 
-std::vector<std::unique_ptr<Private_Key>> Hybrid_PublicKey::generate_other_sks_from_pks(
-   RandomNumberGenerator& rng) const {
-   std::vector<std::unique_ptr<Private_Key>> new_private_keys;
-   new_private_keys.reserve(public_keys().size());
-   for(const auto& pk : public_keys()) {
-      new_private_keys.push_back(pk->generate_another(rng));
-   }
-   return new_private_keys;
+Hybrid_KEM_PrivateKey::Hybrid_KEM_PrivateKey(PairOfPrivateKeys private_keys) {
+   BOTAN_ARG_CHECK(private_keys.first != nullptr, "Hybrid_KEM_PrivateKey: First private key is a nullptr");
+   BOTAN_ARG_CHECK(private_keys.second != nullptr, "Hybrid_KEM_PrivateKey: Second private key is a nullptr");
+
+   maybe_wrap_into_kex_adapter(private_keys.first);
+   maybe_wrap_into_kex_adapter(private_keys.second);
+
+   BOTAN_ARG_CHECK(private_keys.first->supports_operation(PublicKeyOperation::KeyEncapsulation),
+                   "Hybrid_KEM_PrivateKey: First private key is not compatible with this hybrid wrapper");
+   BOTAN_ARG_CHECK(private_keys.second->supports_operation(PublicKeyOperation::KeyEncapsulation),
+                   "Hybrid_KEM_PrivateKey: Second private key is not compatible with this hybrid wrapper");
+
+   m_sks = std::move(private_keys);
 }
 
-Hybrid_PrivateKey::Hybrid_PrivateKey(std::vector<std::unique_ptr<Private_Key>> private_keys) :
-      m_sks(std::move(private_keys)) {
-   BOTAN_ARG_CHECK(m_sks.size() >= 2, "List of secret keys must include at least two keys");
-   for(const auto& sk : m_sks) {
-      BOTAN_ARG_CHECK(sk != nullptr, "List of secret keys contains a nullptr");
-      BOTAN_ARG_CHECK(sk->supports_operation(PublicKeyOperation::KeyEncapsulation),
-                      "Some provided secret key is not compatible with this hybrid wrapper");
-   }
-}
-
-secure_vector<uint8_t> Hybrid_PrivateKey::private_key_bits() const {
+secure_vector<uint8_t> Hybrid_KEM_PrivateKey::private_key_bits() const {
    throw Not_Implemented("Hybrid private keys cannot be serialized");
 }
 
-bool Hybrid_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
-   return reduce(private_keys(), true, [&](bool ckr, const auto& key) { return ckr && key->check_key(rng, strong); });
+bool Hybrid_KEM_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
+   return m_sks.first->check_key(rng, strong) && m_sks.second->check_key(rng, strong);
 }
 
-std::vector<std::unique_ptr<Public_Key>> Hybrid_PrivateKey::extract_public_keys(
-   const std::vector<std::unique_ptr<Private_Key>>& private_keys) {
-   std::vector<std::unique_ptr<Public_Key>> public_keys;
-   public_keys.reserve(private_keys.size());
-   for(const auto& sk : private_keys) {
-      BOTAN_ARG_CHECK(sk != nullptr, "List of private keys contains a nullptr");
-      public_keys.push_back(sk->public_key());
-   }
-   return public_keys;
+PairOfPublicKeys Hybrid_KEM_PrivateKey::extract_public_keys(const PairOfPrivateKeys& private_keys) {
+   BOTAN_ARG_CHECK(private_keys.first != nullptr, "Hybrid_KEM_PrivateKey: First private key is a nullptr");
+   BOTAN_ARG_CHECK(private_keys.second != nullptr, "Hybrid_KEM_PrivateKey: Second private key is a nullptr");
+
+   return PairOfPublicKeys{
+      private_keys.first->public_key(),
+      private_keys.second->public_key(),
+   };
 }
 
 }  // namespace Botan
