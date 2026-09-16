@@ -720,7 +720,7 @@ void OS::set_thread_name(std::thread& thread, const std::string& name) {
          }
       }
    }
-   #elif defined(BOTAN_TARGET_OS_IF_HAIKU)
+   #elif defined(BOTAN_TARGET_OS_IS_HAIKU)
    auto thread_id = get_pthread_thread_id(thread.native_handle());
    static_cast<void>(rename_thread(thread_id, name.c_str()));
    #else

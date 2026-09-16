@@ -2143,7 +2143,7 @@ std::vector<std::string> get_sig_paddings(const std::string& sig_algo, const std
    #if defined(BOTAN_HAS_EMSA_PKCS1)
          "PKCS1v15(" + hash + ")",
    #endif
-   #if defined(BOTAN_HAS_EMSA_PSS)
+   #if defined(BOTAN_HAS_PSS)
             "PSS(" + hash + ")",
    #endif
       };
