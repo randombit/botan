@@ -769,6 +769,16 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_tls_policy_init_from_text, [c_void_p, c_char_p])
     ffi_api(dll.botan_tls_policy_view_text, [c_void_p, c_void_p, _VIEW_STR_CALLBACK])
     ffi_api(dll.botan_tls_policy_destroy, [c_void_p])
+    ffi_api(dll.botan_tls_credentials_init, [c_void_p])
+    ffi_api(dll.botan_tls_credentials_add_trusted_cert, [c_void_p, c_void_p])
+    ffi_api(dll.botan_tls_credentials_add_crl, [c_void_p, c_void_p])
+    ffi_api(dll.botan_tls_credentials_add_trusted_dir, [c_void_p, c_char_p])
+    ffi_api(dll.botan_tls_credentials_use_system_store, [c_void_p], [-40])
+    ffi_api(dll.botan_tls_credentials_add_cert_chain, [c_void_p, POINTER(c_void_p), c_size_t, c_void_p])
+    ffi_api(dll.botan_tls_credentials_destroy, [c_void_p])
+    ffi_api(dll.botan_tls_session_manager_init_memory, [c_void_p, c_void_p, c_size_t])
+    ffi_api(dll.botan_tls_session_manager_init_noop, [c_void_p])
+    ffi_api(dll.botan_tls_session_manager_destroy, [c_void_p])
 
     return dll
 
@@ -4198,3 +4208,117 @@ class TLSPolicy:
 
     def __str__(self) -> str:
         return self.to_string()
+
+class TLSCredentials:
+    """The credentials of a TLS endpoint (an internal ``Botan::Credentials_Manager``):
+    the trust anchors and CRLs used to verify the peer, and the certificate chains
+    with private keys used to authenticate this side, as a server or as a client
+    when the server requests a client certificate.
+
+    Everything passed to the setters is copied. Configure the object before passing
+    it to a channel and do not call its setters afterwards.
+
+    This is part of the experimental TLS FFI API and is only available if the
+    loaded library was built with the ``ffi_tls`` module; see
+    :func:`ffi_tls_api_version`."""
+
+    def __init__(self):
+        """Create an empty credentials object with no trust anchors and no certificate chains"""
+        self.__obj = c_void_p(0)
+        _DLL.botan_tls_credentials_init(byref(self.__obj))
+
+    def __del__(self):
+        obj = getattr(self, '_TLSCredentials__obj', None)
+        self.__obj = c_void_p(0)
+        if obj:
+            _DLL.botan_tls_credentials_destroy(obj)
+
+    def __copy__(self):
+        raise TypeError('TLSCredentials objects cannot be copied')
+
+    def __deepcopy__(self, _memo):
+        raise TypeError('TLSCredentials objects cannot be copied')
+
+    def _handle(self):
+        return self.__obj
+
+    def add_trusted_cert(self, cert: X509Cert):
+        """Add a certificate as a trust anchor for verifying the peer"""
+        _DLL.botan_tls_credentials_add_trusted_cert(self.__obj, cert._handle())
+
+    def add_crl(self, crl: X509CRL):
+        """Add a CRL to the revocation data consulted when verifying the peer"""
+        _DLL.botan_tls_credentials_add_crl(self.__obj, crl._handle())
+
+    def add_trusted_dir(self, path: str):
+        """Add every certificate found in the files below ``path`` (searched recursively)
+        as a trust anchor. Raises BotanException if no certificate was found there,
+        which includes a directory that does not exist."""
+        _DLL.botan_tls_credentials_add_trusted_dir(self.__obj, _ctype_str(path))
+
+    def use_system_store(self) -> bool:
+        """Also trust the certificates in the operating system's certificate store.
+        Returns False if the library was built without a system certificate store."""
+        rc = _DLL.botan_tls_credentials_use_system_store(self.__obj)
+        return rc == 0
+
+    def add_cert_chain(self, chain: list[X509Cert], key: PrivateKey):
+        """Add a certificate chain (leaf first, at least one certificate) with the
+        private key of the leaf certificate. Raises BotanException if the key does not
+        belong to the leaf certificate. Several chains may be added, for instance one
+        with an RSA and one with an ECDSA key."""
+        c_chain = len(chain) * c_void_p
+        arr_chain = c_chain()
+        for i, cert in enumerate(chain):
+            arr_chain[i] = cert._handle()
+        _DLL.botan_tls_credentials_add_cert_chain(self.__obj, arr_chain, c_size_t(len(chain)), key._handle())
+
+
+class TLSSessionManager:
+    """A store for TLS session resumption information (``Botan::TLS::Session_Manager``).
+    Create one with :meth:`in_memory` or :meth:`noop`.
+
+    This is part of the experimental TLS FFI API and is only available if the
+    loaded library was built with the ``ffi_tls`` module; see
+    :func:`ffi_tls_api_version`."""
+
+    def __init__(self, handle: c_void_p, rng: RandomNumberGenerator | None = None):
+        """Wrap the non-null FFI handle of an existing session manager, as ``in_memory``
+        and ``noop`` do. ``rng`` is the RNG object the library borrows for the manager,
+        if any; it is kept alive together with this object."""
+        if not isinstance(handle, c_void_p):
+            raise TypeError('TLSSessionManager expects an FFI handle')
+        if not handle:
+            raise ValueError('TLSSessionManager requires a non-null handle')
+        self.__obj = handle
+        self._rng = rng
+
+    @classmethod
+    def in_memory(cls, rng: RandomNumberGenerator | None = None, max_sessions: int = 0) -> TLSSessionManager:
+        """Create a session manager that keeps at most ``max_sessions`` sessions in
+        memory (0 for no limit), using ``rng`` or an internal system RNG if None"""
+        obj = c_void_p(0)
+        _DLL.botan_tls_session_manager_init_memory(byref(obj), rng._handle() if rng else None, c_size_t(max_sessions))
+        return cls(obj, rng)
+
+    @classmethod
+    def noop(cls) -> TLSSessionManager:
+        """Create a session manager that stores nothing, which disables session resumption"""
+        obj = c_void_p(0)
+        _DLL.botan_tls_session_manager_init_noop(byref(obj))
+        return cls(obj)
+
+    def __del__(self):
+        obj = getattr(self, '_TLSSessionManager__obj', None)
+        self.__obj = c_void_p(0)
+        if obj:
+            _DLL.botan_tls_session_manager_destroy(obj)
+
+    def __copy__(self):
+        raise TypeError('TLSSessionManager objects cannot be copied')
+
+    def __deepcopy__(self, _memo):
+        raise TypeError('TLSSessionManager objects cannot be copied')
+
+    def _handle(self):
+        return self.__obj
