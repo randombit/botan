@@ -10,6 +10,7 @@
 
 #include <botan/dilithium.h>
 #include <botan/exceptn.h>
+#include <botan/pk_options.h>
 #include <botan/types.h>
 
 namespace Botan {
@@ -80,7 +81,11 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
 
       OID object_identifier() const;
 
-      std::string mldsa_param_str() const;
+      /**
+       * The signature options for the inner ML-DSA operation: the composite
+       * label is passed as the FIPS 204 context string (hedged signing).
+       */
+      PK_Signature_Options mldsa_sig_options() const;
 
       DilithiumMode get_mldsa_mode() const { return m_mldsa_variant; }
 

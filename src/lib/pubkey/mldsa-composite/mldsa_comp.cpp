@@ -22,6 +22,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 
 #include <cstring>
 #include <memory>
@@ -97,10 +98,11 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
       explicit MLDSA_Composite_Verification_Operation(const MLDSA_Composite_Param& param,
                                                       const ML_DSA_PublicKey& mldsa_pubkey,
                                                       const Public_Key* trad_pubkey) :
-            PK_Ops::Verification_with_Hash(param.prehash_func()),
+            PK_Ops::Verification_with_Hash(PK_Signature_Options().with_hash(param.prehash_func())),
             m_parameters(param),
-            m_mldsa_ver_op(mldsa_pubkey.create_verification_op(param.mldsa_param_str(), "")),
-            m_traditional_ver_op(trad_pubkey->create_verification_op(param.traditional_padding(), "")) {}
+            m_mldsa_ver_op(mldsa_pubkey._create_verification_op(param.mldsa_sig_options())),
+            m_traditional_ver_op(trad_pubkey->_create_verification_op(
+               parse_legacy_sig_options(*trad_pubkey, param.traditional_padding()))) {}
 
       bool verify(std::span<const uint8_t> ph, std::span<const uint8_t> sig) override {
          const size_t mldsa_sig_size = m_parameters.mldsa_signature_size();
@@ -163,10 +165,11 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
                                           const Private_Key* trad_privkey,
                                           RandomNumberGenerator& rng) :
 
-            PK_Ops::Signature_with_Hash(param.prehash_func()),
+            PK_Ops::Signature_with_Hash(PK_Signature_Options().with_hash(param.prehash_func())),
             m_parameters(param),
-            m_mldsa_sig_op(mldsa_privkey.create_signature_op(rng, param.mldsa_param_str(), "")),
-            m_traditional_sig_op(trad_privkey->create_signature_op(rng, param.traditional_padding(), "")) {}
+            m_mldsa_sig_op(mldsa_privkey._create_signature_op(rng, param.mldsa_sig_options())),
+            m_traditional_sig_op(trad_privkey->_create_signature_op(
+               rng, parse_legacy_sig_options(*trad_privkey, param.traditional_padding()))) {}
 
       std::vector<uint8_t> raw_sign(std::span<const uint8_t> ph, RandomNumberGenerator& rng) override {
          //  M' = Prefix || Label || len(ctx) || ctx || PH( M )
@@ -286,17 +289,15 @@ std::unique_ptr<Private_Key> MLDSA_Composite_PublicKey::generate_another(RandomN
    return std::make_unique<MLDSA_Composite_PrivateKey>(rng, *m_parameters);
 }
 
-// ALLOW NON-EMPTY CTX VIA PARAMS?
-std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_verification_op(
-   std::string_view params_for_ctx, std::string_view provider) const {
-   if(!params_for_ctx.empty()) {
-      throw Botan::Invalid_Argument("signature parameters not supported for MLDSA composite signatures");
-   }
-   if(provider.empty() || provider == "base") {
+std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   // No options beyond the provider are supported; anything else is rejected
+   // by PK_Verifier as an unexamined option.
+   if(!options.using_provider()) {
       return std::make_unique<MLDSA_Composite_Verification_Operation>(
          *this->m_parameters, *this->m_mldsa_pubkey, this->m_traditional_pubkey.get());
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_x509_verification_op(
@@ -411,17 +412,15 @@ std::unique_ptr<Public_Key> MLDSA_Composite_PrivateKey::public_key() const {
 /**
        * Create a signature operation that produces a MLDSA_Composite signature.
        */
-std::unique_ptr<PK_Ops::Signature> MLDSA_Composite_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                                                                   std::string_view params_for_ctx,
-                                                                                   std::string_view provider) const {
-   if(!params_for_ctx.empty()) {
-      throw Botan::Invalid_Argument("signature parameters not supported for MLDSA composite signatures");
-   }
-   if(provider.empty() || provider == "base") {
+std::unique_ptr<PK_Ops::Signature> MLDSA_Composite_PrivateKey::_create_signature_op(
+   RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
+   // No options beyond the provider are supported; anything else is rejected
+   // by PK_Signer as an unexamined option.
+   if(!options.using_provider()) {
       return std::make_unique<MLDSA_Composite_Signature_Operation>(
          *this->m_parameters, *this->m_mldsa_privkey, this->m_traditional_privkey.get(), rng);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(const AlgorithmIdentifier& algo_id,

@@ -9,7 +9,6 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/exceptn.h>
-#include <botan/hex.h>
 #include <botan/oids.h>
 #include <botan/pss_params.h>
 #include <botan/internal/fmt.h>
@@ -310,10 +309,8 @@ size_t MLDSA_Composite_Param::mldsa_pubkey_size() const {
    return 2592;  // must be ML-DSA-87
 }
 
-std::string MLDSA_Composite_Param::mldsa_param_str() const {
-   std::string label_str(m_label);
-   std::vector<uint8_t> label_vec(label_str.begin(), label_str.end());
-   return std::string("Pure,Randomized,ctx_hex=") + hex_encode(label_vec);
+PK_Signature_Options MLDSA_Composite_Param::mldsa_sig_options() const {
+   return PK_Signature_Options().with_context(std::string_view(m_label));
 }
 
 size_t MLDSA_Composite_Param::mldsa_signature_size() const {
