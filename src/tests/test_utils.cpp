@@ -11,6 +11,7 @@
 #include "test_arb_eq.h"
 #include <botan/hex.h>
 #include <botan/rng.h>
+#include <botan/strong_type.h>
 #include <botan/version.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/calendar.h>

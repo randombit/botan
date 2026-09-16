@@ -7,6 +7,7 @@
 #include "tests.h"
 
 #include <botan/hex.h>
+#include <botan/strong_type.h>
 #include <botan/internal/bswap.h>
 #include <botan/internal/concat_util.h>
 #include <botan/internal/isa_extn.h>
