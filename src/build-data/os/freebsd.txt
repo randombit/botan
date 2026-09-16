@@ -10,7 +10,6 @@ clock_gettime
 dev_random
 arc4random
 explicit_bzero
-cap_enter
 elf_aux_info
 getentropy
 getrandom # since freebsd 12

@@ -8,7 +8,6 @@
 */
 
 #include "cli.h"
-#include "sandbox.h"
 
 #include <botan/internal/target_info.h>
 
@@ -170,11 +169,6 @@ class TLS_Server final : public Command {
          auto creds =
             std::make_shared<Basic_Credentials_Manager>(server_cred, server_key, std::move(psk), psk_identity, psk_prf);
          auto callbacks = std::make_shared<Callbacks>(*this);
-
-         if(!m_sandbox.init()) {
-            error_output() << "Failed sandboxing\n";
-            return;
-         }
 
          const socket_type server_fd = make_server_socket(port);
          size_t clients_served = 0;
@@ -365,7 +359,6 @@ class TLS_Server final : public Command {
       bool m_is_tcp = false;
       uint32_t m_socket_id = 0;
       std::list<std::string> m_pending_output;
-      Sandbox m_sandbox;
 };
 
 namespace {
