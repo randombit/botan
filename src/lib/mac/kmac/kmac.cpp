@@ -35,7 +35,7 @@ size_t KMAC::output_length() const {
 }
 
 Key_Length_Specification KMAC::key_spec() const {
-   // KMAC supports key lengths from zero up to 2²⁰⁴⁰ (2^(2040)) bits:
+   // KMAC supports key lengths from zero up to 2^2040 bits:
    // https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf#page=28
    //
    // However, we restrict the key length to 192 bytes in order to avoid allocation of overly

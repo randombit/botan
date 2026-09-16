@@ -74,7 +74,7 @@ using KyberInternalKeypair =
    std::pair<std::shared_ptr<const Kyber_PublicKeyInternal>, std::shared_ptr<const Kyber_PrivateKeyInternal>>;
 
 /// NIST FIPS 203, Section 3
-///   The seed (𝑑,𝑧) generated in steps 1 and 2 of ML-KEM.KeyGen can be stored
+///   The seed (d,z) generated in steps 1 and 2 of ML-KEM.KeyGen can be stored
 ///   for later expansion using ML-KEM.KeyGen_internal.
 struct KyberPrivateKeySeed {
       std::optional<KyberSeedRandomness> d;

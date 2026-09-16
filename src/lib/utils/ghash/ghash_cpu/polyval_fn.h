@@ -136,11 +136,11 @@ BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FN_ISA_CLMUL polyval_reduce(const SIMD_4x32& 
    /*
    Montgomery reduction
    Input: 256-bit operand [X3 : X2 : X1 : X0]
-   [A1 : A0] = X0 • 0xc200000000000000
-   [B1 : B0] = [X0 ⨁ A1 : X1 ⨁ A0]
-   [C1 : C0] = B0 • 0xc200000000000000
-   [D1 : D0] = [B0 ⨁ C1 : B1 ⨁ C0]
-   Output: [D1 ⨁ X3 : D0 ⨁ X2]
+   [A1 : A0] = X0 * 0xc200000000000000
+   [B1 : B0] = [X0 + A1 : X1 + A0]
+   [C1 : C0] = B0 * 0xc200000000000000
+   [D1 : D0] = [B0 + C1 : B1 + C0]
+   Output: [D1 + X3 : D0 + X2]
    */
 
    const auto A = clmul<0x00>(lo, V);

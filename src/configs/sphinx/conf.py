@@ -109,7 +109,7 @@ try:
     html_theme = "furo"
 
     # Add a small edit button to each document to allow visitors to easily
-    # propose changes to that document using the repository’s source control system.
+    # propose changes to that document using the repository's source control system.
     html_theme_options = {
         'source_repository': 'https://github.com/randombit/botan/',
         'source_branch': 'master',

@@ -48,7 +48,7 @@ void kdm_internal(std::span<uint8_t> output_buffer,
    const size_t h_output_len = hash_or_mac.output_length();
    const size_t reps = ceil_division(output_len, h_output_len);
 
-   // 2. If reps > (2^32 − 1), then output an error indicator and exit this
+   // 2. If reps > (2^32 - 1), then output an error indicator and exit this
    //    process without performing the remaining actions
    //    (i.e., omit steps 3 through 8).
    BOTAN_ARG_CHECK(reps <= 0xFFFFFFFF, "Too large KDM output length");
@@ -77,7 +77,7 @@ void kdm_internal(std::span<uint8_t> output_buffer,
       hash_or_mac.update(z);
       hash_or_mac.update(fixed_info);
 
-      // 6.3. Set Result(i) = Result(i−1) || K(i).
+      // 6.3. Set Result(i) = Result(i-1) || K(i).
       if(k.remaining_capacity() >= h_output_len) {
          hash_or_mac.final(k.next(h_output_len));
       } else {
@@ -159,7 +159,7 @@ void SP800_56A_One_Step_KMAC_Abstract::perform_kdf(std::span<uint8_t> key,
       if(salt.empty()) {
          // 4.1 Implementation-Dependent Parameters 3
          //     If H(x) = KMAC128[or 256](salt, x, H_outputBits, "KDF"),
-         //     then – in the absence of an agreed-upon alternative –
+         //     then - in the absence of an agreed-upon alternative -
          //     the default_salt shall be an all - zero string of
          //     164 bytes [or 132 bytes]
          kdf_mac.set_key(std::vector<uint8_t>(default_salt_length(), 0));

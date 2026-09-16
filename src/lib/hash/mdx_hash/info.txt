@@ -3,8 +3,8 @@ MDX_HASH_FUNCTION -> 20131128
 </internal_defines>
 
 <module_info>
-name -> "Merkle-Damgård Helper"
-brief -> "Helper class for implementing Merkle-Damgård hashes"
+name -> "Merkle-Damgard Helper"
+brief -> "Helper class for implementing Merkle-Damgard hashes"
 type -> "Internal"
 </module_info>
 
