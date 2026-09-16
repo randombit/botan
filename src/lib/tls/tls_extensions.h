@@ -126,8 +126,17 @@ class BOTAN_UNSTABLE_API Server_Name_Indicator final : public Extension {
 
       explicit Server_Name_Indicator(std::string_view host_name) : m_sni_host_name(host_name) {}
 
+      /**
+      * Decode a server_name extension. On the server side the host_name
+      * must be a valid DNS name (RFC 6066 3) or the handshake is rejected
+      * with an illegal_parameter alert.
+      */
       Server_Name_Indicator(TLS_Data_Reader& reader, uint16_t extension_size, Connection_Side from);
 
+      /**
+      * Return the host_name. When decoded from a ClientHello this is the
+      * canonical (lowercased) form of the name.
+      */
       std::string host_name() const { return m_sni_host_name; }
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
