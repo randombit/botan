@@ -72,9 +72,9 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
    Therefore, the first byte can always be skipped safely.
    */
 
-   const auto leading_0 = CT::Mask<uint8_t>::is_zero(in[0]);
+   const uint8_t skip_first = CT::Mask<uint8_t>::is_zero(in[0]).if_set_return(1);
 
-   secure_vector<uint8_t> input(in + 1, in + in_length);
+   secure_vector<uint8_t> input = CT::copy_output(CT::Mask<uint8_t>::cleared(), in, in_length, skip_first);
 
    const size_t hlen = m_Phash.size();
 
@@ -86,9 +86,7 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
              input.data(), hlen,
              &input[hlen], input.size() - hlen);
 
-   auto unpadded = oaep_find_delim(valid_mask, input.data(), input.size(), m_Phash);
-   valid_mask &= leading_0.unpoisoned_value();
-   return unpadded;
+   return oaep_find_delim(valid_mask, input.data(), input.size(), m_Phash);
    }
 
 secure_vector<uint8_t>
