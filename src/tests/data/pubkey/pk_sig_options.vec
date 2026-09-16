@@ -224,3 +224,15 @@ SupportsDER = true
 SupportsSaltSize = false
 SupportsDeterministic = true
 SupportsExplicitTrailer = false
+
+[ML-DSA-Composite]
+KeyParams = MLDSA44-ECDSA-P256-SHA256
+SupportsHash = false
+SupportsPadding = false
+SupportsPrehash = false
+SupportsExternalPrehash = false
+SupportsContext = true
+SupportsDER = false
+SupportsSaltSize = false
+SupportsDeterministic = false
+SupportsExplicitTrailer = false

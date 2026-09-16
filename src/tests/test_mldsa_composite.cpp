@@ -27,6 +27,7 @@
    #include <botan/mldsa_comp_parameters.h>
    #include <botan/pk_algs.h>
    #include <botan/pk_keys.h>
+   #include <botan/pk_options.h>
    #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
    #include <botan/rng.h>
@@ -277,9 +278,8 @@ class MLDSA_Composite_RSA_Key_Size_Tests : public Test {
 BOTAN_REGISTER_TEST("pubkey", "mldsa_composite_rsa_key_size", MLDSA_Composite_RSA_Key_Size_Tests);
    #endif
 
-   #if defined(BOTAN_HAS_ECDSA) && \
-      (defined(BOTAN_HAS_PCURVES_GENERIC) || \
-       (defined(BOTAN_HAS_PCURVES_SECP256R1) && defined(BOTAN_HAS_PCURVES_SECP384R1)))
+   #if defined(BOTAN_HAS_ECDSA) && (defined(BOTAN_HAS_PCURVES_GENERIC) || \
+                                    (defined(BOTAN_HAS_PCURVES_SECP256R1) && defined(BOTAN_HAS_PCURVES_SECP384R1)))
 class MLDSA_Composite_ECDSA_Curve_Tests : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -493,6 +493,74 @@ std::vector<uint8_t> decode_var_base64(const VarMap& vars, std::string_view var)
 }
 }  // namespace
 
+/**
+ * The application context string of draft-ietf-lamps-pq-composite-sigs
+ * (Section 3.2), passed via PK_Signature_Options::with_context().
+ */
+class MLDSA_Composite_Context_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("ML-DSA composite signature context");
+         const auto params = Botan::MLDSA_Composite_Param::all_supported_param_sets();
+         if(params.empty()) {
+            result.note_missing("ML-DSA composite parameter sets");
+            return {result};
+         }
+         const auto& param = params.front();
+         auto rng = Test::new_rng("ML-DSA composite signature context");
+
+         const auto priv_key =
+            Botan::create_private_key(Botan::MLDSA_Composite_Param::generic_algo_name, *rng, param.id_str());
+         if(!result.test_not_null("generated private key", priv_key)) {
+            return {result};
+         }
+         const auto pub_key = priv_key->public_key();
+         const std::vector<uint8_t> msgvec = {0x61, 0x62, 0x63};
+
+         auto sign = [&](const Botan::PK_Signature_Options& options) {
+            Botan::PK_Signer signer(*priv_key, *rng, options);
+            return signer.sign_message(msgvec, *rng);
+         };
+         auto verify = [&](const Botan::PK_Signature_Options& options, const std::vector<uint8_t>& signature) {
+            Botan::PK_Verifier verifier(*pub_key, options);
+            return verifier.verify_message(msgvec, signature);
+         };
+
+         const auto ctx_a = Botan::PK_Signature_Options().with_context("application A");
+         const auto ctx_b = Botan::PK_Signature_Options().with_context("application B");
+         const auto no_ctx = Botan::PK_Signature_Options();
+         const auto empty_ctx = Botan::PK_Signature_Options().with_context(std::span<const uint8_t>{});
+
+         const auto sig_a = sign(ctx_a);
+         result.test_is_true("verifies with the same context", verify(ctx_a, sig_a));
+         result.test_is_false("fails with a different context", verify(ctx_b, sig_a));
+         result.test_is_false("fails without the context", verify(no_ctx, sig_a));
+
+         const auto sig_none = sign(no_ctx);
+         result.test_is_true("no context verifies without context", verify(no_ctx, sig_none));
+         result.test_is_true("no context equals the empty context", verify(empty_ctx, sig_none));
+         result.test_is_false("no context fails with a context", verify(ctx_a, sig_none));
+
+         const std::vector<uint8_t> max_ctx(255, 0x42);
+         result.test_no_throw("a 255-byte context is accepted", [&] {
+            const auto sig = sign(Botan::PK_Signature_Options().with_context(max_ctx));
+            result.test_is_true("255-byte context verifies",
+                                verify(Botan::PK_Signature_Options().with_context(max_ctx), sig));
+         });
+         const std::vector<uint8_t> too_long_ctx(256, 0x42);
+         result.test_throws<Botan::Invalid_Argument>("a 256-byte context is rejected when signing", [&] {
+            const Botan::PK_Signer signer(*priv_key, *rng, Botan::PK_Signature_Options().with_context(too_long_ctx));
+         });
+         result.test_throws<Botan::Invalid_Argument>("a 256-byte context is rejected when verifying", [&] {
+            const Botan::PK_Verifier verifier(*pub_key, Botan::PK_Signature_Options().with_context(too_long_ctx));
+         });
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "mldsa_composite_context", MLDSA_Composite_Context_Tests);
+
 class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
    public:
       MLDSA_Composite_KAT_Tests() :
@@ -549,6 +617,20 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          verifier.update(message);
          result.test_bool_eq("verification of correct signature", verifier.check_signature(sig_bin), true);
 
+         // The draft's second signature of each test case uses this context string
+         const std::string_view kat_context = "The lethargic, colorless dog sat beneath the energetic, stationary fox.";
+         const auto ctx_sig_bin = Botan::base64_decode(vars.get_req_str("sWithContext"));
+         Botan::PK_Verifier ctx_verifier(*pubkey, Botan::PK_Signature_Options().with_context(kat_context));
+         ctx_verifier.update(message);
+         result.test_bool_eq(
+            "verification of correct signature with context", ctx_verifier.check_signature(ctx_sig_bin), true);
+         verifier.update(message);
+         result.test_bool_eq(
+            "signature with context does not verify without context", verifier.check_signature(ctx_sig_bin), false);
+         ctx_verifier.update(message);
+         result.test_bool_eq(
+            "signature without context does not verify with context", ctx_verifier.check_signature(sig_bin), false);
+
          try {
             privkey = std::make_unique<Botan::MLDSA_Composite_PrivateKey>(comp_parm.id(), sk_bin);
          } catch(const Botan::Exception&) {
@@ -559,6 +641,20 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
             return result;
          }
          sign_and_verify(*privkey, *pubkey, *rng, result, "produced by decoded private key");
+
+         // round trip with the draft's context string
+         {
+            Botan::PK_Signer ctx_signer(*privkey, *rng, Botan::PK_Signature_Options().with_context(kat_context));
+            ctx_signer.update(message);
+            const auto own_ctx_sig = ctx_signer.signature(*rng);
+            ctx_verifier.update(message);
+            result.test_bool_eq(
+               "own signature with context verifies with context", ctx_verifier.check_signature(own_ctx_sig), true);
+            verifier.update(message);
+            result.test_bool_eq("own signature with context does not verify without context",
+                                verifier.check_signature(own_ctx_sig),
+                                false);
+         }
          return result;
       }
 };

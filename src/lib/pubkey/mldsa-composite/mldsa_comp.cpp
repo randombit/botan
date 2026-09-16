@@ -91,15 +91,44 @@ std::shared_ptr<ML_DSA_PrivateKey> load_mldsa_private_key(const MLDSA_Composite_
    const auto scope = CT::scoped_poison(seed);
    return std::make_shared<ML_DSA_PrivateKey>(param.get_mldsa_algorithm_id(), seed);
 }
+
+/**
+ * M' = Prefix || Label || len(ctx) || ctx || PH(M)
+ * (draft-ietf-lamps-pq-composite-sigs-19, Sections 3.2 and 3.3)
+ */
+std::vector<uint8_t> composite_message_representative(const MLDSA_Composite_Param& param,
+                                                      std::span<const uint8_t> context,
+                                                      std::span<const uint8_t> ph) {
+   BOTAN_ASSERT_NOMSG(context.size() <= 255);
+   const std::string_view prefix = "CompositeAlgorithmSignatures2025";
+   const std::string label = param.label();
+   std::vector<uint8_t> msg;
+   msg.reserve(prefix.size() + label.size() + 1 + context.size() + ph.size());
+   msg.insert(msg.end(), prefix.begin(), prefix.end());
+   msg.insert(msg.end(), label.begin(), label.end());
+   msg.push_back(static_cast<uint8_t>(context.size()));
+   msg.insert(msg.end(), context.begin(), context.end());
+   msg.insert(msg.end(), ph.begin(), ph.end());
+   return msg;
+}
+
+std::vector<uint8_t> composite_context_from_options(const PK_Signature_Options& options) {
+   auto context = options.context().value_or(std::vector<uint8_t>{});
+   BOTAN_ARG_CHECK(context.size() <= 255, "ML-DSA composite context must not exceed 255 bytes");
+   return context;
+}
+
 }  // namespace
 
 class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
-      explicit MLDSA_Composite_Verification_Operation(const MLDSA_Composite_Param& param,
-                                                      const ML_DSA_PublicKey& mldsa_pubkey,
-                                                      const Public_Key* trad_pubkey) :
+      MLDSA_Composite_Verification_Operation(const MLDSA_Composite_Param& param,
+                                             const ML_DSA_PublicKey& mldsa_pubkey,
+                                             const Public_Key* trad_pubkey,
+                                             std::vector<uint8_t> context) :
             PK_Ops::Verification_with_Hash(PK_Signature_Options().with_hash(param.prehash_func())),
             m_parameters(param),
+            m_context(std::move(context)),
             m_mldsa_ver_op(mldsa_pubkey._create_verification_op(param.mldsa_sig_options())),
             m_traditional_ver_op(trad_pubkey->_create_verification_op(
                parse_legacy_sig_options(*trad_pubkey, param.traditional_padding()))) {}
@@ -111,12 +140,7 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
             // return early before the state of the component verification OPs is affected
             return false;
          }
-         //  M' = Prefix || Label || len(ctx) || ctx || PH( M )
-         std::string msg_str = "CompositeAlgorithmSignatures2025";
-         msg_str += m_parameters.label();
-         std::vector<uint8_t> msg(msg_str.begin(), msg_str.end());
-         msg.push_back(0);  // ctx = empty
-         msg.insert(msg.end(), ph.begin(), ph.end());
+         const auto msg = composite_message_representative(m_parameters, m_context, ph);
 
          const std::span<const uint8_t> mldsa_sig(sig.begin(), sig.begin() + mldsa_sig_size);
          std::span<const uint8_t> trad_sig(sig.begin() + mldsa_sig_size, sig.end());
@@ -153,6 +177,7 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
 
    private:
       MLDSA_Composite_Param m_parameters;
+      std::vector<uint8_t> m_context;
 
       std::unique_ptr<PK_Ops::Verification> m_mldsa_ver_op;
       std::unique_ptr<PK_Ops::Verification> m_traditional_ver_op;
@@ -163,21 +188,17 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
       MLDSA_Composite_Signature_Operation(const MLDSA_Composite_Param& param,
                                           const ML_DSA_PrivateKey& mldsa_privkey,
                                           const Private_Key* trad_privkey,
-                                          RandomNumberGenerator& rng) :
-
+                                          RandomNumberGenerator& rng,
+                                          std::vector<uint8_t> context) :
             PK_Ops::Signature_with_Hash(PK_Signature_Options().with_hash(param.prehash_func())),
             m_parameters(param),
+            m_context(std::move(context)),
             m_mldsa_sig_op(mldsa_privkey._create_signature_op(rng, param.mldsa_sig_options())),
             m_traditional_sig_op(trad_privkey->_create_signature_op(
                rng, parse_legacy_sig_options(*trad_privkey, param.traditional_padding()))) {}
 
       std::vector<uint8_t> raw_sign(std::span<const uint8_t> ph, RandomNumberGenerator& rng) override {
-         //  M' = Prefix || Label || len(ctx) || ctx || PH( M )
-         std::string msg_str = "CompositeAlgorithmSignatures2025";
-         msg_str += m_parameters.label();
-         std::vector<uint8_t> msg(msg_str.begin(), msg_str.end());
-         msg.push_back(0);  // ctx = empty
-         msg.insert(msg.end(), ph.begin(), ph.end());
+         const auto msg = composite_message_representative(m_parameters, m_context, ph);
          m_mldsa_sig_op->update(msg);
          m_traditional_sig_op->update(msg);
          auto sig = m_mldsa_sig_op->sign(rng);
@@ -219,6 +240,7 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
 
    private:
       MLDSA_Composite_Param m_parameters;
+      std::vector<uint8_t> m_context;
       std::unique_ptr<PK_Ops::Signature> m_mldsa_sig_op;
       std::unique_ptr<PK_Ops::Signature> m_traditional_sig_op;
 };
@@ -291,11 +313,12 @@ std::unique_ptr<Private_Key> MLDSA_Composite_PublicKey::generate_another(RandomN
 
 std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::_create_verification_op(
    const PK_Signature_Options& options) const {
-   // No options beyond the provider are supported; anything else is rejected
-   // by PK_Verifier as an unexamined option.
+   // Besides the provider only the application context (at most 255 bytes) is
+   // supported; anything else is rejected by PK_Verifier as an unexamined option.
+   auto context = composite_context_from_options(options);
    if(!options.using_provider()) {
       return std::make_unique<MLDSA_Composite_Verification_Operation>(
-         *this->m_parameters, *this->m_mldsa_pubkey, this->m_traditional_pubkey.get());
+         *this->m_parameters, *this->m_mldsa_pubkey, this->m_traditional_pubkey.get(), std::move(context));
    }
    throw Provider_Not_Found(algo_name(), options.provider().value());
 }
@@ -306,8 +329,9 @@ std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_x509_ver
       if(alg_id != this->algorithm_identifier()) {
          throw Decoding_Error("Unexpected AlgorithmIdentifier for MLDSA-Composite X.509 signature");
       }
+      // X.509 signatures are always computed with an empty context
       return std::make_unique<MLDSA_Composite_Verification_Operation>(
-         *this->m_parameters, *this->m_mldsa_pubkey, this->m_traditional_pubkey.get());
+         *this->m_parameters, *this->m_mldsa_pubkey, this->m_traditional_pubkey.get(), std::vector<uint8_t>{});
    }
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -365,7 +389,7 @@ secure_vector<uint8_t> MLDSA_Composite_PrivateKey::encode_traditional_private_ke
         *   OBJECT IDENTIFIER prime256v1 (1 2 840 10045 3 1 7)
         *   }
         * } */
-      auto oid_opt =  OID::from_name(m_parameters->curve());
+      auto oid_opt = OID::from_name(m_parameters->curve());
       BOTAN_ASSERT(oid_opt.has_value(), "lookup of MLDSA-composite curve OID");
       trad_bytes = DER_Encoder()
                       .start_sequence()
@@ -414,11 +438,12 @@ std::unique_ptr<Public_Key> MLDSA_Composite_PrivateKey::public_key() const {
        */
 std::unique_ptr<PK_Ops::Signature> MLDSA_Composite_PrivateKey::_create_signature_op(
    RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
-   // No options beyond the provider are supported; anything else is rejected
-   // by PK_Signer as an unexamined option.
+   // Besides the provider only the application context (at most 255 bytes) is
+   // supported; anything else is rejected by PK_Signer as an unexamined option.
+   auto context = composite_context_from_options(options);
    if(!options.using_provider()) {
       return std::make_unique<MLDSA_Composite_Signature_Operation>(
-         *this->m_parameters, *this->m_mldsa_privkey, this->m_traditional_privkey.get(), rng);
+         *this->m_parameters, *this->m_mldsa_privkey, this->m_traditional_privkey.get(), rng, std::move(context));
    }
    throw Provider_Not_Found(algo_name(), options.provider().value());
 }

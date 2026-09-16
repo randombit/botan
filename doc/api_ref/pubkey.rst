@@ -182,6 +182,13 @@ due to variability in the encoded signature, the signature size returned by the
 signature or verification operation instance is only an upper bound, and not the
 exact size.
 
+The composite signature binds an optional application context string of at most
+255 bytes into the signed message representative (draft Section 3.2). It is
+passed via ``PK_Signature_Options::with_context`` and must be given identically
+for verification; by default the context is empty. This context is independent
+of the ML-DSA context, which the composite scheme fixes to its per-algorithm
+label.
+
 ML-KEM (FIPS 203)
 ~~~~~~~~~~~~~~~~~
 
@@ -1340,6 +1347,8 @@ equivalent options are listed in :ref:`pk_signature_options`.
    round 3 variants do not support a context.
 
 #. ML-DSA-composite (draft-ietf-lamps-pq-composite-sigs-19).
+   Accepts an application context string of at most 255 bytes via
+   ``PK_Signature_Options::with_context``; no other signature options.
    The algorithm is identified by the generic algorithm name "ML-DSA-Composite".
    It requires a parameter identifying the specific algorithm combination. The
    following
