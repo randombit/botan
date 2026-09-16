@@ -27,7 +27,6 @@ system_clock
 threads
 thread_local
 filesystem
-sandbox_proc
 </target_features>
 
 <aliases>
