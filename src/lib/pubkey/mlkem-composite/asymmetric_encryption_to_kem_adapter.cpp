@@ -21,7 +21,7 @@ namespace {
 
 constexpr size_t shared_secret_length = 32;
 
-std::unique_ptr<Public_Key> maybe_get_public_key(const std::unique_ptr<Private_Key>& private_key) {
+std::unique_ptr<Public_Key> public_key_of_or_throw(const std::unique_ptr<Private_Key>& private_key) {
    BOTAN_ARG_CHECK(private_key != nullptr, "Asymmetric-Encryption-to-KEM Adapter: private key is a nullptr");
    return private_key->public_key();
 }
@@ -146,7 +146,7 @@ bool Asymmetric_Encryption_to_KEM_Adapter_PublicKey::supports_operation(PublicKe
 
 Asymmetric_Encryption_to_KEM_Adapter_PrivateKey::Asymmetric_Encryption_to_KEM_Adapter_PrivateKey(
    std::unique_ptr<Private_Key> private_key, std::string_view padding) :
-      Asymmetric_Encryption_to_KEM_Adapter_PublicKey(maybe_get_public_key(private_key), padding),
+      Asymmetric_Encryption_to_KEM_Adapter_PublicKey(public_key_of_or_throw(private_key), padding),
       m_private_key(std::move(private_key)) {}
 
 secure_vector<uint8_t> Asymmetric_Encryption_to_KEM_Adapter_PrivateKey::private_key_bits() const {
