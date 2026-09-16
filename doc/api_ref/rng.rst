@@ -19,6 +19,12 @@ Random Number Generators
       parameterizes this request. Not all RNG types accept additional inputs,
       the value will be silently ignored when not supported.
 
+      The additional input is never credited as entropy. Calling this function
+      with an empty output buffer mixes the input into the state of a stateful
+      RNG (such as ``HMAC_DRBG``) without affecting whether it is considered
+      seeded. This is the right way to opportunistically mix in data of unknown
+      quality, such as nonces or timestamps from a peer's protocol message.
+
    .. cpp:function:: void randomize_with_ts_input(uint8_t* data, size_t length)
 
       Creates a buffer with some timestamp values and calls ``randomize_with_input``
@@ -36,10 +42,15 @@ Random Number Generators
 
    .. cpp:function:: void add_entropy(const uint8_t* data, size_t length)
 
-      Incorporates provided data into the state of the PRNG, if at all possible.
-      This works for most RNG types, including the system and TPM RNGs. But if
-      the RNG doesn't support this operation, the data is dropped, no error is
-      indicated.
+      Provides seed material to the RNG, if at all possible. This works for most
+      RNG types, including the system and TPM RNGs. But if the RNG doesn't
+      support this operation, the data is dropped, no error is indicated.
+
+      The caller asserts that the data is full entropy seed material. A stateful
+      RNG such as ``HMAC_DRBG`` considers itself seeded once a single call
+      provides at least ``security_level()`` bits. To mix in data which should
+      not be credited use :cpp:func:`RandomNumberGenerator::randomize_with_input`
+      with an empty output buffer instead.
 
    .. cpp:function:: bool accepts_input() const
 
@@ -210,7 +221,7 @@ An explicit reseeding (:cpp:func:`RandomNumberGenerator::add_entropy`) or
 providing any input to the RNG
 (:cpp:func:`RandomNumberGenerator::randomize_with_ts_input`,
 :cpp:func:`RandomNumberGenerator::randomize_with_input`) is sufficient to cause
-a reseeding. Or, if a RNG or entropy source was provided to the ``ChaCha_RNG``
+a rekey. Or, if a RNG or entropy source was provided to the ``ChaCha_RNG``
 constructor, then reseeding will be performed automatically after a certain
 interval of requests.
 
@@ -280,19 +291,35 @@ gather "real" entropy. This tends to be very system dependent. The
 that will extract entropy from it -- never use the output directly for
 any kind of key or nonce generation!
 
-``EntropySource`` has a single function which is called at runtime, ``poll`,
-which is passed the ``RandomNumberGenerator`` that it should be seeding. The
-source can perform polling and pass whatever it gathers to the RNG using the
-object's ``add_entropy`` function. The source then returns a best estimate of
-the number of bits of entropy gathered; this can be zero if the source should be
-used but not counted.
+``EntropySource`` has a single function which is called at runtime, ``gather``,
+which is passed an ``Entropy_Accumulator``. The source performs its polling and
+contributes whatever it gathers to the accumulator using ``add``. The second
+parameter to ``add`` is a conservative estimate of the number of bits of entropy
+that data contains. The estimate can be zero, if the data should be used but not
+counted. A source which gathers many small samples, each worth less than a bit,
+should batch several samples and credit the batch with a conservatively rounded
+estimate. The accumulator's ``goal_reached`` function tells a source when it may
+stop early.
 
-Note for writers of ``EntropySource`` subclasses: it isn't necessary
-to use any kind of cryptographic hash on your output. The data
-produced by an EntropySource is only used by an application after it
-has been hashed by the ``RandomNumberGenerator`` that asked for the
-entropy, thus any hashing you do will be wasteful of both CPU cycles
-and entropy.
+The RNG which initiated the poll considers itself seeded once the total reaches
+its security level. Estimates are summed over the poll, and if sufficient data
+is available in that poll then the RNG is considered seeded. A failed/incomplete
+poll on an unseeded RNG leaves it in an unseeded state; entropy estimates do not
+carry over between polls.
+
+.. versionadded:: 3.14.0
+   ``gather`` and ``Entropy_Accumulator``. Sources implementing the previous
+   interface, ``size_t poll(RandomNumberGenerator&)``, continue to work: the
+   data they provide via ``add_entropy`` is contributed uncounted, and the
+   estimate they return is credited for the poll as a whole.
+
+   The ``poll`` interface will be removed in Botan4.
+
+Note for writers of ``EntropySource`` subclasses: it isn't necessary to use any
+kind of cryptographic hash on your output. The data produced by an EntropySource
+is only used by an application after it has been hashed by the ``RandomNumberGenerator``
+that asked for the entropy, thus any hashing you do will be wasteful of both CPU
+cycles and entropy.
 
 The following entropy sources are currently included in the library:
 
