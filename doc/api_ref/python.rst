@@ -297,3 +297,9 @@ The TLS classes are only usable with a library built with the experimental
 
 .. autoclass:: TLSPolicy
    :members:
+
+.. autoclass:: TLSCredentials
+   :members:
+
+.. autoclass:: TLSSessionManager
+   :members:
