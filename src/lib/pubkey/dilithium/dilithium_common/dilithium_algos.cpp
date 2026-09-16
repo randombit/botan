@@ -445,6 +445,7 @@ DilithiumInternalKeypair decode_keypair(StrongSpan<const DilithiumSerializedPriv
    for(size_t i = 0; i < t0.size(); ++i) {
       const auto stored = t0[i].coefficients();
       const auto derived = t0_derived[i].coefficients();
+      BOTAN_ASSERT_NOMSG(stored.size() == derived.size());
       for(size_t j = 0; j < stored.size(); ++j) {
          t0_consistent &=
             CT::Mask<uint32_t>::is_equal(static_cast<uint32_t>(stored[j]), static_cast<uint32_t>(derived[j]));

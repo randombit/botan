@@ -106,7 +106,7 @@ class BOTAN_PUBLIC_API(3, 14) Module_Lattice_PrivateKey : public virtual Private
       /**
        * Equivalent to formatted_private_key_bits(private_key_format())
        */
-      secure_vector<uint8_t> private_key_bits() const override;
+      secure_vector<uint8_t> private_key_bits() const final;
 
       /**
        * Equivalent to formatted_raw_private_key_bits(private_key_format()).
@@ -114,7 +114,7 @@ class BOTAN_PUBLIC_API(3, 14) Module_Lattice_PrivateKey : public virtual Private
        * @note Keys in the format MlPrivateKeyFormat::Both, which has no raw
        *       encoding, return the seed instead.
        */
-      secure_vector<uint8_t> raw_private_key_bits() const override;
+      secure_vector<uint8_t> raw_private_key_bits() const final;
 };
 
 }  // namespace Botan

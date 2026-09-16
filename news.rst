@@ -9,13 +9,8 @@ Version 3.14.0, Not Yet Released
   supported; a key loaded from one of them is re-encoded in the same format,
   newly generated keys are encoded in the "both" format. Previously the raw
   32-byte seed was written, which is still accepted when loading a key.
-  Add the interface ``Module_Lattice_PrivateKey`` (``botan/module_lattice_keys.h``)
-  implemented by ``ML_DSA_PrivateKey`` and ``ML_KEM_PrivateKey`` to query the
-  private key format and to encode a key in a specific format; the enum
-  ``MlPrivateKeyFormat`` moved to that header and gained the value ``Both``.
-  ``Kyber_PrivateKey::private_key_bits_with_format`` is deprecated in favor of
-  ``formatted_raw_private_key_bits``. The internal module ``pqcrystals`` was
-  renamed to ``module_lattice``. (GH #5002 #5307)
+  In this course, add the interface ``Module_Lattice_PrivateKey`` which is
+  implemented by ``ML_DSA_PrivateKey`` and ``ML_KEM_PrivateKey``. (GH #5002 #5307)
 
 * Add new type ``PK_Signature_Options`` which allows precisely controlling how
   signatures are created and verified. (GH #5849)

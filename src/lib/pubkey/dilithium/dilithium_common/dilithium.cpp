@@ -497,7 +497,7 @@ secure_vector<uint8_t> Dilithium_PrivateKey::formatted_raw_private_key_bits(MlPr
          if(!seed.has_value()) {
             throw Encoding_Error("ML-DSA private key does not contain the seed, cannot encode it in the seed format");
          }
-         return seed.value().get();
+         return seed->get();
       }
       case MlPrivateKeyFormat::Expanded:
          return Dilithium_Algos::encode_keypair({m_public, m_private}).get();

@@ -29,8 +29,10 @@ DilithiumDecodedKeypair Dilithium_Expanded_Keypair_Codec::decode_keypair(std::sp
    BOTAN_ARG_CHECK(private_key.size() == mode.private_key_bytes(),
                    "dilithium private key does not have the correct byte count");
    return {
-      Dilithium_Algos::decode_keypair(StrongSpan<const DilithiumSerializedPrivateKey>(private_key), std::move(mode)),
-      MlPrivateKeyFormat::Expanded};
+      .keypair = Dilithium_Algos::decode_keypair(StrongSpan<const DilithiumSerializedPrivateKey>(private_key),
+                                                 std::move(mode)),
+      .format = MlPrivateKeyFormat::Expanded,
+   };
 }
 
 }  // namespace Botan

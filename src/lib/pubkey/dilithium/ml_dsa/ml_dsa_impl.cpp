@@ -28,7 +28,7 @@ Botan::DilithiumInternalKeypair decode_seed_only(std::span<const uint8_t> key_bi
    if(seed.size() != Botan::DilithiumConstants::SEED_RANDOMNESS_BYTES) {
       throw Botan::Decoding_Error("invalid length of ML-DSA private key seed");
    }
-   return Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(seed), std::move(mode));
+   return Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(std::move(seed)), std::move(mode));
 }
 
 Botan::DilithiumInternalKeypair decode_expanded_only(std::span<const uint8_t> key_bits,
@@ -38,9 +38,8 @@ Botan::DilithiumInternalKeypair decode_expanded_only(std::span<const uint8_t> ke
    if(expanded.size() != mode.private_key_bytes()) {
       throw Botan::Decoding_Error("invalid length of ML-DSA (or Dilithium) expanded private key byte string");
    }
-   Botan::DilithiumInternalKeypair key_pair =
-      Botan::Dilithium_Algos::decode_keypair(Botan::DilithiumSerializedPrivateKey(expanded), std::move(mode));
-   return key_pair;
+   return Botan::Dilithium_Algos::decode_keypair(Botan::DilithiumSerializedPrivateKey(std::move(expanded)),
+                                                 std::move(mode));
 }
 
 Botan::DilithiumInternalKeypair decode_seed_plus_expanded(std::span<const uint8_t> key_bits,
@@ -53,10 +52,11 @@ Botan::DilithiumInternalKeypair decode_seed_plus_expanded(std::span<const uint8_
       .decode(expanded, Botan::ASN1_Type::OctetString)
       .end_cons()
       .verify_end();
+   // expanded is still needed for the consistency check below, hence no std::move
    const Botan::DilithiumInternalKeypair key_pair =
       Botan::Dilithium_Algos::decode_keypair(Botan::DilithiumSerializedPrivateKey(expanded), mode);
    const Botan::DilithiumInternalKeypair key_pair_from_seed =
-      Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(seed), std::move(mode));
+      Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(std::move(seed)), std::move(mode));
 
    DilithiumSerializedPrivateKey expanded_from_seed = Dilithium_Algos::encode_keypair(key_pair_from_seed);
 
@@ -91,7 +91,7 @@ secure_vector<uint8_t> ML_DSA_Expanding_Keypair_Codec::encode_keypair(const Dili
           * Note: The previous, non-standard format, which only contained the
           * seed as a raw byte string, is still accepted by decode_keypair().
           */
-         der_enc.encode(seed.value().get(), ASN1_Type::OctetString, ASN1_Type(0), ASN1_Class::ContextSpecific);
+         der_enc.encode(seed->get(), ASN1_Type::OctetString, ASN1_Type(0), ASN1_Class::ContextSpecific);
          break;
       case MlPrivateKeyFormat::Expanded:
          // RFC 9881 "expandedKey" CHOICE alternative: OCTET STRING
@@ -101,7 +101,7 @@ secure_vector<uint8_t> ML_DSA_Expanding_Keypair_Codec::encode_keypair(const Dili
          // RFC 9881 "both" CHOICE alternative:
          // SEQUENCE { seed OCTET STRING, expandedKey OCTET STRING }
          der_enc.start_sequence()
-            .encode(seed.value().get(), ASN1_Type::OctetString)
+            .encode(seed->get(), ASN1_Type::OctetString)
             .encode(Dilithium_Algos::encode_keypair(keypair).get(), ASN1_Type::OctetString)
             .end_cons();
          break;
@@ -114,28 +114,41 @@ DilithiumDecodedKeypair ML_DSA_Expanding_Keypair_Codec::decode_keypair(std::span
                                                                        DilithiumConstants mode) const {
    if(private_key_bits.size() == DilithiumConstants::SEED_RANDOMNESS_BYTES) {
       // backwards compatibility (not RFC 9881 conforming) to the raw seed format
-      return {Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(private_key_bits), std::move(mode)),
-              MlPrivateKeyFormat::Seed};
+      return {
+         .keypair = Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(private_key_bits), std::move(mode)),
+         .format = MlPrivateKeyFormat::Seed,
+      };
    }
    if(private_key_bits.size() == mode.private_key_bytes()) {
       // raw expanded key in the FIPS 204 sk encoding without ASN.1 wrapping (not RFC 9881 conforming),
       // as used e.g. by the NIST ACVP and Wycheproof test vectors. The length cannot collide with any
       // of the RFC 9881 encodings.
-      return {Dilithium_Algos::decode_keypair(StrongSpan<const DilithiumSerializedPrivateKey>(private_key_bits),
-                                              std::move(mode)),
-              MlPrivateKeyFormat::Expanded};
+      return {
+         .keypair = Dilithium_Algos::decode_keypair(StrongSpan<const DilithiumSerializedPrivateKey>(private_key_bits),
+                                                    std::move(mode)),
+         .format = MlPrivateKeyFormat::Expanded,
+      };
    }
    // "seed-only" format from RFC 9881
    BER_Decoder ber_dec(private_key_bits);
    auto obj = ber_dec.peek_next_object();
    if(obj.type() == ASN1_Type(0) && obj.class_tag() == ASN1_Class::ContextSpecific) {
-      return {decode_seed_only(private_key_bits, std::move(mode)), MlPrivateKeyFormat::Seed};
+      return {
+         .keypair = decode_seed_only(private_key_bits, std::move(mode)),
+         .format = MlPrivateKeyFormat::Seed,
+      };
    }
    // now it could still be "expanded-only" or "both"
    if(obj.type() == ASN1_Type::OctetString && obj.class_tag() == ASN1_Class::Universal) {
-      return {decode_expanded_only(private_key_bits, std::move(mode)), MlPrivateKeyFormat::Expanded};
+      return {
+         .keypair = decode_expanded_only(private_key_bits, std::move(mode)),
+         .format = MlPrivateKeyFormat::Expanded,
+      };
    }
-   return {decode_seed_plus_expanded(private_key_bits, std::move(mode)), MlPrivateKeyFormat::Both};
+   return {
+      .keypair = decode_seed_plus_expanded(private_key_bits, std::move(mode)),
+      .format = MlPrivateKeyFormat::Both,
+   };
 }
 
 }  // namespace Botan
