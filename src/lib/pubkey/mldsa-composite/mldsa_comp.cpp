@@ -365,14 +365,14 @@ secure_vector<uint8_t> MLDSA_Composite_PrivateKey::encode_traditional_private_ke
         *   OBJECT IDENTIFIER prime256v1 (1 2 840 10045 3 1 7)
         *   }
         * } */
-      const OID oid = OIDS::str2oid_or_empty(m_parameters->curve());
-      BOTAN_ASSERT(!oid.empty(), "lookup of MLDSA-composite curve OID");
+      auto oid_opt =  OID::from_name(m_parameters->curve());
+      BOTAN_ASSERT(oid_opt.has_value(), "lookup of MLDSA-composite curve OID");
       trad_bytes = DER_Encoder()
                       .start_sequence()
                       .encode(static_cast<size_t>(1))
                       .encode(m_traditional_privkey->raw_private_key_bits(), ASN1_Type::OctetString)
                       .start_explicit_context_specific(0)
-                      .encode(oid)
+                      .encode(oid_opt.value())
                       .end_cons()
                       .end_cons()
                       .get_contents();
