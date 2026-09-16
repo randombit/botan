@@ -227,10 +227,10 @@ SupportsExplicitTrailer = false
 
 [ML-DSA-Composite]
 KeyParams = MLDSA44-ECDSA-P256-SHA256
-SupportsHash = false
+Hash = SHA-256
 SupportsPadding = false
 SupportsPrehash = false
-SupportsExternalPrehash = false
+SupportsExternalPrehash = true
 SupportsContext = true
 SupportsDER = false
 SupportsSaltSize = false

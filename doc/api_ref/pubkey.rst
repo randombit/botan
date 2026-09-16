@@ -189,6 +189,12 @@ for verification; by default the context is empty. This context is independent
 of the ML-DSA context, which the composite scheme fixes to its per-algorithm
 label.
 
+The message is always pre-hashed with the function fixed by the parameter set
+(``PH`` in the draft). Applications that compute this digest themselves can
+pass it instead of the message using
+``PK_Signature_Options::with_externally_computed_prehash``, optionally naming
+the function, which must be the parameter set's one.
+
 ML-KEM (FIPS 203)
 ~~~~~~~~~~~~~~~~~
 
@@ -1348,7 +1354,10 @@ equivalent options are listed in :ref:`pk_signature_options`.
 
 #. ML-DSA-composite (draft-ietf-lamps-pq-composite-sigs-19).
    Accepts an application context string of at most 255 bytes via
-   ``PK_Signature_Options::with_context``; no other signature options.
+   ``PK_Signature_Options::with_context``. The pre-hash function is fixed by the
+   parameter set; ``with_hash`` may only name that function, and
+   ``with_externally_computed_prehash`` allows to pass its digest of the message
+   instead of the message. No other signature options are supported.
    The algorithm is identified by the generic algorithm name "ML-DSA-Composite".
    It requires a parameter identifying the specific algorithm combination. The
    following

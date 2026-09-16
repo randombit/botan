@@ -19,4 +19,5 @@ dilithium
 rng
 hash
 asn1
+raw_hash
 </requires>

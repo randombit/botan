@@ -561,6 +561,83 @@ class MLDSA_Composite_Context_Tests final : public Test {
 
 BOTAN_REGISTER_TEST("pubkey", "mldsa_composite_context", MLDSA_Composite_Context_Tests);
 
+/**
+ * Externally computed prehash: the caller supplies PH(M), computed with the
+ * parameter set's prehash function, instead of M.
+ */
+class MLDSA_Composite_Prehash_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("ML-DSA composite externally computed prehash");
+         const auto params = Botan::MLDSA_Composite_Param::all_supported_param_sets();
+         if(params.empty()) {
+            result.note_missing("ML-DSA composite parameter sets");
+            return {result};
+         }
+         const auto& param = params.front();
+         auto rng = Test::new_rng("ML-DSA composite externally computed prehash");
+
+         const auto priv_key =
+            Botan::create_private_key(Botan::MLDSA_Composite_Param::generic_algo_name, *rng, param.id_str());
+         if(!result.test_not_null("generated private key", priv_key)) {
+            return {result};
+         }
+         const auto pub_key = priv_key->public_key();
+
+         const std::vector<uint8_t> msg = {0x61, 0x62, 0x63};
+         const auto ph = Botan::HashFunction::create_or_throw(param.prehash_func())->process<std::vector<uint8_t>>(msg);
+         const std::string other_hash = (param.prehash_func() == "SHA-256") ? "SHA-512" : "SHA-256";
+
+         auto sign = [&](const Botan::PK_Signature_Options& options, const std::vector<uint8_t>& input) {
+            Botan::PK_Signer signer(*priv_key, *rng, options);
+            return signer.sign_message(input, *rng);
+         };
+         auto verify =
+            [&](const Botan::PK_Signature_Options& options, const std::vector<uint8_t>& input, const auto& sig) {
+               Botan::PK_Verifier verifier(*pub_key, options);
+               return verifier.verify_message(input, sig);
+            };
+
+         const auto plain = Botan::PK_Signature_Options();
+         const auto ext_unnamed = Botan::PK_Signature_Options().with_externally_computed_prehash();
+         const auto ext_named = Botan::PK_Signature_Options().with_externally_computed_prehash(param.prehash_func());
+         const auto with_hash = Botan::PK_Signature_Options().with_hash(param.prehash_func());
+
+         const auto sig_ext = sign(ext_unnamed, ph);
+         result.test_is_true("signature over PH(M) verifies over M", verify(plain, msg, sig_ext));
+         result.test_is_true("signature over PH(M) verifies over PH(M) with the option",
+                             verify(ext_named, ph, sig_ext));
+         const auto sig_plain = sign(plain, msg);
+         result.test_is_true("signature over M verifies over PH(M) with the option",
+                             verify(ext_unnamed, ph, sig_plain));
+         result.test_is_true("signature with the named prehash verifies over M",
+                             verify(plain, msg, sign(ext_named, ph)));
+         result.test_is_true("with_hash naming the prehash function is accepted",
+                             verify(with_hash, msg, sign(with_hash, msg)));
+
+         const auto ctx = Botan::PK_Signature_Options().with_context("application A");
+         const auto ctx_ext =
+            Botan::PK_Signature_Options().with_context("application A").with_externally_computed_prehash();
+         result.test_is_true("external prehash combined with a context", verify(ctx, msg, sign(ctx_ext, ph)));
+
+         result.test_throws<Botan::Invalid_Argument>("a differently named prehash is rejected", [&] {
+            const Botan::PK_Signer signer(
+               *priv_key, *rng, Botan::PK_Signature_Options().with_externally_computed_prehash(other_hash));
+         });
+         result.test_throws<Botan::Invalid_Argument>("with_hash of another function is rejected", [&] {
+            const Botan::PK_Verifier verifier(*pub_key, Botan::PK_Signature_Options().with_hash(other_hash));
+         });
+         result.test_throws<Botan::Invalid_Argument>("a digest of wrong length is rejected", [&] {
+            const std::vector<uint8_t> short_digest(ph.begin(), ph.end() - 1);
+            sign(ext_unnamed, short_digest);
+         });
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "mldsa_composite_prehash", MLDSA_Composite_Prehash_Tests);
+
 class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
    public:
       MLDSA_Composite_KAT_Tests() :

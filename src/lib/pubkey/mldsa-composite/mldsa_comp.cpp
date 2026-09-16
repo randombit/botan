@@ -14,6 +14,7 @@
    #include <botan/ed448.h>
 #endif
 #include <botan/exceptn.h>
+#include <botan/hash.h>
 #include <botan/hex.h>
 #include <botan/ml_dsa.h>
 #include <botan/oids.h>
@@ -118,6 +119,42 @@ std::vector<uint8_t> composite_context_from_options(const PK_Signature_Options& 
    return context;
 }
 
+/**
+ * The options for the hash-based operation base class. The pre-hash function
+ * PH is fixed by the parameter set: a hash named by the caller (via
+ * with_hash() or as externally computed prehash) must be that function. With
+ * an externally computed prehash the caller supplies PH(M) instead of M.
+ */
+PK_Signature_Options composite_hash_options(const MLDSA_Composite_Param& param, const PK_Signature_Options& options) {
+   const std::string prehash = param.prehash_func();
+
+   auto check_hash_name = [&](const std::string& name, std::string_view what) {
+      const auto canonical = HashFunction::create_or_throw(name)->name();
+      if(canonical != prehash) {
+         throw Invalid_Argument(fmt("{} {} must be {} for {}, not {}",
+                                    MLDSA_Composite_Param::generic_algo_name,
+                                    what,
+                                    prehash,
+                                    param.id_str(),
+                                    name));
+      }
+   };
+
+   if(const auto& hash = options.hash_function()) {
+      check_hash_name(*hash, "hash function");
+   }
+
+   auto inner = PK_Signature_Options().with_hash(prehash);
+   if(options.using_externally_computed_prehash()) {
+      if(const auto& named = options.externally_computed_prehash_function()) {
+         check_hash_name(*named, "externally computed prehash");
+      }
+      // naming the prehash lets the base class check the digest length
+      inner = inner.with_externally_computed_prehash(prehash);
+   }
+   return inner;
+}
+
 }  // namespace
 
 class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification_with_Hash {
@@ -125,10 +162,10 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
       MLDSA_Composite_Verification_Operation(const MLDSA_Composite_Param& param,
                                              const ML_DSA_PublicKey& mldsa_pubkey,
                                              const Public_Key* trad_pubkey,
-                                             std::vector<uint8_t> context) :
-            PK_Ops::Verification_with_Hash(PK_Signature_Options().with_hash(param.prehash_func())),
+                                             const PK_Signature_Options& options) :
+            PK_Ops::Verification_with_Hash(composite_hash_options(param, options)),
             m_parameters(param),
-            m_context(std::move(context)),
+            m_context(composite_context_from_options(options)),
             m_mldsa_ver_op(mldsa_pubkey._create_verification_op(param.mldsa_sig_options())),
             m_traditional_ver_op(trad_pubkey->_create_verification_op(
                parse_legacy_sig_options(*trad_pubkey, param.traditional_padding()))) {}
@@ -189,10 +226,10 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
                                           const ML_DSA_PrivateKey& mldsa_privkey,
                                           const Private_Key* trad_privkey,
                                           RandomNumberGenerator& rng,
-                                          std::vector<uint8_t> context) :
-            PK_Ops::Signature_with_Hash(PK_Signature_Options().with_hash(param.prehash_func())),
+                                          const PK_Signature_Options& options) :
+            PK_Ops::Signature_with_Hash(composite_hash_options(param, options)),
             m_parameters(param),
-            m_context(std::move(context)),
+            m_context(composite_context_from_options(options)),
             m_mldsa_sig_op(mldsa_privkey._create_signature_op(rng, param.mldsa_sig_options())),
             m_traditional_sig_op(trad_privkey->_create_signature_op(
                rng, parse_legacy_sig_options(*trad_privkey, param.traditional_padding()))) {}
@@ -313,12 +350,12 @@ std::unique_ptr<Private_Key> MLDSA_Composite_PublicKey::generate_another(RandomN
 
 std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::_create_verification_op(
    const PK_Signature_Options& options) const {
-   // Besides the provider only the application context (at most 255 bytes) is
-   // supported; anything else is rejected by PK_Verifier as an unexamined option.
-   auto context = composite_context_from_options(options);
+   // Besides the provider, the application context (at most 255 bytes) and the
+   // hash options handled by composite_hash_options() are supported; anything
+   // else is rejected by PK_Verifier as an unexamined option.
    if(!options.using_provider()) {
       return std::make_unique<MLDSA_Composite_Verification_Operation>(
-         *this->m_parameters, *this->m_mldsa_pubkey, this->m_traditional_pubkey.get(), std::move(context));
+         *this->m_parameters, *this->m_mldsa_pubkey, this->m_traditional_pubkey.get(), options);
    }
    throw Provider_Not_Found(algo_name(), options.provider().value());
 }
@@ -329,9 +366,9 @@ std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_x509_ver
       if(alg_id != this->algorithm_identifier()) {
          throw Decoding_Error("Unexpected AlgorithmIdentifier for MLDSA-Composite X.509 signature");
       }
-      // X.509 signatures are always computed with an empty context
+      // X.509 signatures are always computed with an empty context over the message itself
       return std::make_unique<MLDSA_Composite_Verification_Operation>(
-         *this->m_parameters, *this->m_mldsa_pubkey, this->m_traditional_pubkey.get(), std::vector<uint8_t>{});
+         *this->m_parameters, *this->m_mldsa_pubkey, this->m_traditional_pubkey.get(), PK_Signature_Options());
    }
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -438,12 +475,12 @@ std::unique_ptr<Public_Key> MLDSA_Composite_PrivateKey::public_key() const {
        */
 std::unique_ptr<PK_Ops::Signature> MLDSA_Composite_PrivateKey::_create_signature_op(
    RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
-   // Besides the provider only the application context (at most 255 bytes) is
-   // supported; anything else is rejected by PK_Signer as an unexamined option.
-   auto context = composite_context_from_options(options);
+   // Besides the provider, the application context (at most 255 bytes) and the
+   // hash options handled by composite_hash_options() are supported; anything
+   // else is rejected by PK_Signer as an unexamined option.
    if(!options.using_provider()) {
       return std::make_unique<MLDSA_Composite_Signature_Operation>(
-         *this->m_parameters, *this->m_mldsa_privkey, this->m_traditional_privkey.get(), rng, std::move(context));
+         *this->m_parameters, *this->m_mldsa_privkey, this->m_traditional_privkey.get(), rng, options);
    }
    throw Provider_Not_Found(algo_name(), options.provider().value());
 }
