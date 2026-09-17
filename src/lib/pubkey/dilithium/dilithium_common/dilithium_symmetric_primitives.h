@@ -27,7 +27,7 @@ class RandomNumberGenerator;
  */
 class DilithiumMessageHash /* NOLINT(*-special-member-functions) */ {
    public:
-      explicit DilithiumMessageHash(DilithiumHashedPublicKey tr);
+      explicit DilithiumMessageHash(DilithiumHashedPublicKey tr, std::span<const uint8_t> user_context = {});
 
       virtual ~DilithiumMessageHash();
 
@@ -65,12 +65,13 @@ class DilithiumMessageHash /* NOLINT(*-special-member-functions) */ {
       void ensure_started() {
          if(!m_was_started) {
             // FIPS 204, page 17, footnote 4: By default, the context is the empty string [...]
-            start({});
+            start(m_user_context);
          }
       }
 
    private:
       DilithiumHashedPublicKey m_tr;
+      std::vector<uint8_t> m_user_context;
       bool m_was_started = false;
       std::unique_ptr<XOF> m_shake;
 };
@@ -106,8 +107,9 @@ class Dilithium_Symmetric_Primitives_Base {
       Dilithium_Symmetric_Primitives_Base(Dilithium_Symmetric_Primitives_Base&&) = delete;
       Dilithium_Symmetric_Primitives_Base& operator=(Dilithium_Symmetric_Primitives_Base&&) = delete;
 
-      virtual std::unique_ptr<DilithiumMessageHash> get_message_hash(DilithiumHashedPublicKey tr) const {
-         return std::make_unique<DilithiumMessageHash>(std::move(tr));
+      virtual std::unique_ptr<DilithiumMessageHash> get_message_hash(DilithiumHashedPublicKey tr,
+                                                                     std::span<const uint8_t> user_context) const {
+         return std::make_unique<DilithiumMessageHash>(std::move(tr), user_context);
       }
 
       /// Computes the private random seed rho prime used for signing

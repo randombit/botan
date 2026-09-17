@@ -168,6 +168,33 @@ Currently two flavors of Dilithium are implemented in separate Botan modules:
  * ``dilithium_aes``, that uses AES instead of Keccak-based primitives.
    This mode is deprecated and will be removed in a future release.
 
+ML-DSA-composite (draft-ietf-lamps-pq-composite-sigs-19)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Composite signature algorithms combining ML-DSA with a traditional signature
+algorithm. All variants defined in draft-ietf-lamps-pq-composite-sigs-19 are
+supported. Each is modelled as a specific parameter value of the generic
+algorithm ``MLDSA-Composite``. The module for the composite algorithms is given
+by `mldsa-composite`, but note that naturally only those algorithm combinations
+are available for which the respective module support is compiled.
+
+One specific trait of these algorithms is that for the combinations with ECDSA,
+due to variability in the encoded signature, the signature size returned by the
+signature or verification operation instance is only an upper bound, and not the
+exact size.
+
+The composite signature binds an optional application context string of at most
+255 bytes into the signed message representative (draft Section 3.2). It is
+passed via ``PK_Signature_Options::with_context`` and must be given identically
+for verification; by default the context is empty. This context is independent
+of the ML-DSA context, which the composite scheme fixes to its per-algorithm
+label.
+
+The message is always pre-hashed with the function fixed by the parameter set
+(``PH`` in the draft). Applications that compute this digest themselves can
+pass it instead of the message using
+``PK_Signature_Options::with_externally_computed_prehash``, optionally naming
+the function, which must be the parameter set's one.
+
 ML-KEM (FIPS 203)
 ~~~~~~~~~~~~~~~~~
 
@@ -1320,6 +1347,27 @@ equivalent options are listed in :ref:`pk_signature_options`.
 
 #. ML-DSA (Dilithium).
    Takes the optional parameter ``Deterministic`` (default) or ``Randomized``.
+   ML-DSA additionally accepts an application context string of at most 255
+   bytes via ``PK_Signature_Options::with_context`` (FIPS 204, Algorithm 2);
+   the same context must be given for verification. The pre-standard Dilithium
+   round 3 variants do not support a context.
+
+#. ML-DSA-composite (draft-ietf-lamps-pq-composite-sigs-19).
+   Accepts an application context string of at most 255 bytes via
+   ``PK_Signature_Options::with_context``. The pre-hash function is fixed by the
+   parameter set; ``with_hash`` may only name that function, and
+   ``with_externally_computed_prehash`` allows to pass its digest of the message
+   instead of the message. No other signature options are supported.
+   The algorithm is identified by the generic algorithm name "ML-DSA-Composite".
+   It requires a parameter identifying the specific algorithm combination. The
+   following
+   parameter sets are principally available: MLDSA44-RSA2048-PKCS15-SHA256, MLDSA65-RSA3072-PKCS15-SHA512,
+   MLDSA65-RSA4096-PKCS15-SHA512, MLDSA44-RSA2048-PSS-SHA256, MLDSA65-RSA3072-PSS-SHA512,
+   MLDSA65-RSA4096-PSS-SHA512, MLDSA87-RSA3072-PSS-SHA512, MLDSA87-RSA4096-PSS-SHA512,
+   MLDSA44-ECDSA-P256-SHA256, MLDSA65-ECDSA-P256-SHA512, MLDSA65-ECDSA-P384-SHA512,
+   MLDSA65-ECDSA-brainpoolP256r1-SHA512, MLDSA87-ECDSA-P384-SHA512,
+   MLDSA87-ECDSA-brainpoolP384r1-SHA512, MLDSA87-ECDSA-P521-SHA512, MLDSA44-Ed25519-SHA512,
+   MLDSA65-Ed25519-SHA512, MLDSA87-Ed448-SHAKE256
 #. SLH-DSA.
    Takes the optional parameter ``Deterministic`` (default) or ``Randomized``.
 #. XMSS. Takes no parameter.

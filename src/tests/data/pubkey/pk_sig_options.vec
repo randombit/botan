@@ -207,7 +207,7 @@ SupportsHash = false
 SupportsPadding = false
 SupportsPrehash = false
 SupportsExternalPrehash = false
-SupportsContext = false
+SupportsContext = true
 SupportsDER = false
 SupportsSaltSize = true
 SupportsDeterministic = true
@@ -223,4 +223,16 @@ SupportsContext = false
 SupportsDER = true
 SupportsSaltSize = false
 SupportsDeterministic = true
+SupportsExplicitTrailer = false
+
+[ML-DSA-Composite]
+KeyParams = MLDSA44-ECDSA-P256-SHA256
+Hash = SHA-256
+SupportsPadding = false
+SupportsPrehash = false
+SupportsExternalPrehash = true
+SupportsContext = true
+SupportsDER = false
+SupportsSaltSize = false
+SupportsDeterministic = false
 SupportsExplicitTrailer = false
