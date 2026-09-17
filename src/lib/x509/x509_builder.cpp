@@ -8,6 +8,7 @@
 
 #include <botan/asn1_time.h>
 #include <botan/assert.h>
+#include <botan/bigint.h>
 #include <botan/dns_name.h>
 #include <botan/email.h>
 #include <botan/ipv4_address.h>
@@ -194,6 +195,7 @@ X509_Certificate CertificateParametersBuilder::into_self_signed_cert(const ASN1_
                                                                      const ASN1_Time& not_after,
                                                                      const Private_Key& key,
                                                                      RandomNumberGenerator& rng,
+                                                                     std::optional<const BigInt> serial_number,
                                                                      std::optional<std::string_view> hash_fn,
                                                                      std::optional<std::string_view> padding) const {
    auto signer_p = X509_Object::choose_sig_format(key, rng, hash_fn.value_or(""), padding.value_or(""));
@@ -212,7 +214,77 @@ X509_Certificate CertificateParametersBuilder::into_self_signed_cert(const ASN1_
 
    const auto& subject_dn = m_state->subject_dn();
 
-   return X509_CA::make_cert(signer, rng, sig_algo, pub_key, not_before, not_after, subject_dn, subject_dn, extensions);
+   if(serial_number.has_value()) {
+      return X509_CA::make_cert(signer,
+                                rng,
+                                serial_number.value(),
+                                sig_algo,
+                                pub_key,
+                                X509_Time(not_before),
+                                X509_Time(not_after),
+                                subject_dn,
+                                subject_dn,
+                                extensions);
+   } else {
+      return X509_CA::make_cert(signer,
+                                rng,
+                                sig_algo,
+                                pub_key,
+                                X509_Time(not_before),
+                                X509_Time(not_after),
+                                subject_dn,
+                                subject_dn,
+                                extensions);
+   }
+}
+
+X509_Certificate CertificateParametersBuilder::into_cert(const ASN1_Time& not_before,
+                                                         const ASN1_Time& not_after,
+                                                         const X509_Certificate& ca_cert,
+                                                         const Private_Key& ca_key,
+                                                         const Public_Key& pubkey,
+                                                         RandomNumberGenerator& rng,
+                                                         std::optional<const BigInt> serial_number,
+                                                         std::optional<std::string_view> hash_fn,
+                                                         std::optional<std::string_view> padding) const {
+   auto signer_p = X509_Object::choose_sig_format(ca_key, rng, hash_fn.value_or(""), padding.value_or(""));
+   auto& signer = *signer_p;
+
+   const AlgorithmIdentifier sig_algo = signer.algorithm_identifier();
+   BOTAN_ASSERT_NOMSG(sig_algo.oid().has_value());
+
+   Extensions extensions = m_state->finalize_extensions(pubkey);
+
+   const std::vector<uint8_t> pub_key = pubkey.subject_public_key();
+   auto skid = std::make_unique<Cert_Extension::Subject_Key_ID>(pubkey);
+
+   extensions.add_new(std::make_unique<Cert_Extension::Authority_Key_ID>(ca_cert.subject_key_id()));
+   extensions.add_new(std::move(skid));
+
+   const auto& subject_dn = m_state->subject_dn();
+
+   if(serial_number.has_value()) {
+      return X509_CA::make_cert(signer,
+                                rng,
+                                serial_number.value(),
+                                sig_algo,
+                                pub_key,
+                                X509_Time(not_before),
+                                X509_Time(not_after),
+                                ca_cert.subject_dn(),
+                                subject_dn,
+                                extensions);
+   } else {
+      return X509_CA::make_cert(signer,
+                                rng,
+                                sig_algo,
+                                pub_key,
+                                X509_Time(not_before),
+                                X509_Time(not_after),
+                                ca_cert.subject_dn(),
+                                subject_dn,
+                                extensions);
+   }
 }
 
 PKCS10_Request CertificateParametersBuilder::into_pkcs10_request(
