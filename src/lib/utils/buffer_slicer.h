@@ -10,7 +10,7 @@
 #include <botan/assert.h>
 #include <botan/concepts.h>
 #include <botan/secmem.h>
-#include <botan/strong_type_helpers.h>
+#include <botan/strong_type.h>
 #include <botan/types.h>
 #include <span>
 #include <vector>
