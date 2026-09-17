@@ -62,8 +62,8 @@ class PerfTest_ASN1_Parsing final : public PerfTest {
          const auto not_before = Botan::ASN1_Time::current_time();
          const auto not_after = Botan::ASN1_Time::from_seconds_since_epoch(not_before.time_since_epoch() + 86400);
 
-         auto root_cert =
-            root_cert_params.into_self_signed_cert(not_before, not_after, *root_key, rng, get_hash_function());
+         auto root_cert = root_cert_params.into_self_signed_cert(
+            not_before, not_after, *root_key, rng, std::nullopt, get_hash_function());
          auto ca = Botan::X509_CA(root_cert, *root_key, get_hash_function(), rng);
 
          return CA{
