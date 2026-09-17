@@ -1769,7 +1769,7 @@ iWtHjIcunpiq6+IiB8IVu7Ncu6uPKoFS/mWzTvjgdNusmgNle9p3OAbE
         self.assertTrue(result == botan.ECPoint.from_bytes(group, result.to_compressed()))
 
     def test_tls_policy(self):
-        if botan.ffi_tls_api_version() == 0:
+        if not botan.tls_available():
             self.skipTest("No TLS FFI support in this build")
 
         self.assertGreaterEqual(botan.ffi_tls_api_version(), 20260911)
@@ -1800,6 +1800,11 @@ iWtHjIcunpiq6+IiB8IVu7Ncu6uPKoFS/mWzTvjgdNusmgNle9p3OAbE
 
         with self.assertRaises(TypeError):
             copy.copy(default)
+
+        with self.assertRaises(TypeError):
+            botan.TLSPolicy(None)
+        with self.assertRaises(ValueError):
+            botan.TLSPolicy(botan.c_void_p(0))
 
 
 class BotanPythonZfecTests(unittest.TestCase):

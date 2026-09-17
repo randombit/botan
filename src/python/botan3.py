@@ -914,6 +914,10 @@ def ffi_tls_api_version() -> int:
     except BotanFunctionUnavailable:
         return 0
 
+def tls_available() -> bool:
+    """Returns True if the library provides the experimental TLS FFI API"""
+    return ffi_tls_api_version() > 0
+
 def version_string() -> str:
     """Returns a free form version string for the library"""
     return _DLL.botan_version_string().decode('ascii')
@@ -4149,22 +4153,28 @@ class TLSPolicy:
     loaded library was built with the ``ffi_tls`` module; see
     :func:`ffi_tls_api_version`."""
 
-    def __init__(self, name: str | None = 'default'):
-        """Create one of the library's stock policies ("default", "strict" or
-        "bsi_tr_02102_2"). Passing None creates an empty object; applications
-        should use ``from_text`` instead of doing so."""
-        self.__obj = c_void_p(0)
-        if name is not None:
-            _DLL.botan_tls_policy_init(byref(self.__obj), _ctype_str(name))
+    def __init__(self, policy: str | c_void_p = 'default'):
+        """Create one of the library's stock policies by name ("default", "strict"
+        or "bsi_tr_02102_2"), or wrap the non-null FFI handle of an existing policy
+        (as ``from_text`` does)"""
+        if isinstance(policy, c_void_p):
+            if not policy:
+                raise ValueError('TLSPolicy requires a non-null handle')
+            self.__obj = policy
+        elif isinstance(policy, str):
+            self.__obj = c_void_p(0)
+            _DLL.botan_tls_policy_init(byref(self.__obj), _ctype_str(policy))
+        else:
+            raise TypeError('TLSPolicy expects a policy name or an FFI handle')
 
     @classmethod
     def from_text(cls, text: str) -> TLSPolicy:
         """Create a policy from text in the ``Text_Policy`` format: one ``key = value``
         setting per line, ``#`` starts a comment, and every key that is not mentioned
         keeps the value of the default policy"""
-        policy = cls(None)
-        _DLL.botan_tls_policy_init_from_text(byref(policy._handle()), _ctype_str(text))
-        return policy
+        obj = c_void_p(0)
+        _DLL.botan_tls_policy_init_from_text(byref(obj), _ctype_str(text))
+        return cls(obj)
 
     def __del__(self):
         obj = getattr(self, '_TLSPolicy__obj', None)

@@ -40,7 +40,7 @@ int new_policy_object(botan_tls_policy_t* policy, std::shared_ptr<const Botan::T
 extern "C" {
 
 int botan_tls_policy_init(botan_tls_policy_t* policy, const char* name) {
-   if(policy == nullptr) {
+   if(any_null_pointers(policy)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 

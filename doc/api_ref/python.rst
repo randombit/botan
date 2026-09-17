@@ -47,6 +47,8 @@ Versioning
 
 .. autofunction:: ffi_tls_api_version
 
+.. autofunction:: tls_available
+
 .. autofunction:: version_string
 
 
