@@ -17,6 +17,7 @@
 #include <botan/internal/concat_util.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -51,7 +52,7 @@ class ECIES_PrivateKey final : public virtual EC_PrivateKey,
       }
 
       std::unique_ptr<PK_Ops::Key_Agreement> _create_key_agreement_op(
-         RandomNumberGenerator& rng, const PK_Key_Agreement_Options& options) const override;
+         RandomNumberGenerator& rng, const PK_Key_Agreement_Options_Reader& options) const override;
 
    private:
       ECDH_PrivateKey m_key;
@@ -67,7 +68,7 @@ BOTAN_DIAGNOSTIC_POP
 class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
    public:
       ECIES_ECDH_KA_Operation(const ECIES_PrivateKey& private_key,
-                              const PK_Key_Agreement_Options& options,
+                              const PK_Key_Agreement_Options_Reader& options,
                               RandomNumberGenerator& rng) :
             PK_Ops::Key_Agreement_with_KDF(options), m_key(private_key), m_rng(rng) {}
 
@@ -88,11 +89,10 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 };
 
 std::unique_ptr<PK_Ops::Key_Agreement> ECIES_PrivateKey::_create_key_agreement_op(
-   RandomNumberGenerator& rng, const PK_Key_Agreement_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<ECIES_ECDH_KA_Operation>(*this, options, rng);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   RandomNumberGenerator& rng, const PK_Key_Agreement_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<ECIES_ECDH_KA_Operation>(*this, options, rng);
 }
 
 /**

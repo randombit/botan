@@ -13,7 +13,7 @@
 #include <botan/assert.h>
 #include <botan/ec_group.h>
 #include <botan/pk_algs.h>
-#include <botan/pk_options.h>
+#include <botan/pk_options_readers.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/concat_util.h>
@@ -305,7 +305,7 @@ std::unique_ptr<Private_Key> Hybrid_KEM_PublicKey::generate_another(RandomNumber
 }
 
 std::unique_ptr<Botan::PK_Ops::KEM_Encryption> Hybrid_KEM_PublicKey::_create_kem_encryption_op(
-   const PK_KEM_Options& options) const {
+   const PK_KEM_Options_Reader& options) const {
    if(options.using_kdf()) {
       throw Botan::Invalid_Argument("Hybrid KEM encryption does not support KDFs");
    }
@@ -329,7 +329,7 @@ std::unique_ptr<Hybrid_KEM_PrivateKey> Hybrid_KEM_PrivateKey::generate_from_grou
 }
 
 std::unique_ptr<Botan::PK_Ops::KEM_Decryption> Hybrid_KEM_PrivateKey::_create_kem_decryption_op(
-   RandomNumberGenerator& rng, const PK_KEM_Options& options) const {
+   RandomNumberGenerator& rng, const PK_KEM_Options_Reader& options) const {
    if(options.using_kdf()) {
       throw Botan::Invalid_Argument("Hybrid KEM decryption does not support KDFs");
    }

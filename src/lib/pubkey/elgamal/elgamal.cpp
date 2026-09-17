@@ -13,6 +13,7 @@
 #include <botan/internal/keypair.h>
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -109,7 +110,7 @@ namespace {
 class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_Padding {
    public:
       ElGamal_Encryption_Operation(const std::shared_ptr<const DL_PublicKey>& key,
-                                   const PK_Encryption_Options& options) :
+                                   const PK_Encryption_Options_Reader& options) :
             PK_Ops::Encryption_with_Padding(options), m_key(key) {
          const size_t powm_window = 4;
          m_monty_y_p = monty_precompute(m_key->group()._monty_params_p(), m_key->public_key(), powm_window);
@@ -164,7 +165,7 @@ std::vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(std::span<const u
 class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_Padding {
    public:
       ElGamal_Decryption_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
-                                   const PK_Encryption_Options& options,
+                                   const PK_Encryption_Options_Reader& options,
                                    RandomNumberGenerator& rng) :
             PK_Ops::Decryption_with_Padding(options),
             m_key(key),
@@ -217,20 +218,18 @@ secure_vector<uint8_t> ElGamal_Decryption_Operation::raw_decrypt(std::span<const
 }  // namespace
 
 std::unique_ptr<PK_Ops::Encryption> ElGamal_PublicKey::_create_encryption_op(
-   RandomNumberGenerator& rng, const PK_Encryption_Options& options) const {
+   RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
-   if(!options.using_provider()) {
-      return std::make_unique<ElGamal_Encryption_Operation>(this->m_public_key, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<ElGamal_Encryption_Operation>(this->m_public_key, options);
 }
 
 std::unique_ptr<PK_Ops::Decryption> ElGamal_PrivateKey::_create_decryption_op(
-   RandomNumberGenerator& rng, const PK_Encryption_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<ElGamal_Decryption_Operation>(this->m_private_key, options, rng);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<ElGamal_Decryption_Operation>(this->m_private_key, options, rng);
 }
 
 }  // namespace Botan

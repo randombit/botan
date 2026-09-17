@@ -12,6 +12,7 @@
 #include <botan/bigint.h>
 #include <botan/ec_group.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -27,7 +28,7 @@ namespace {
 class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
    public:
       ECDH_KA_Operation(const ECDH_PrivateKey& key,
-                        const PK_Key_Agreement_Options& options,
+                        const PK_Key_Agreement_Options_Reader& options,
                         RandomNumberGenerator& rng) :
             PK_Ops::Key_Agreement_with_KDF(options),
             m_group(key.domain()),
@@ -95,12 +96,10 @@ std::vector<uint8_t> ECDH_PublicKey::public_value(EC_Point_Format format) const 
 }
 
 std::unique_ptr<PK_Ops::Key_Agreement> ECDH_PrivateKey::_create_key_agreement_op(
-   RandomNumberGenerator& rng, const PK_Key_Agreement_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<ECDH_KA_Operation>(*this, options, rng);
-   }
+   RandomNumberGenerator& rng, const PK_Key_Agreement_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
 
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   return std::make_unique<ECDH_KA_Operation>(*this, options, rng);
 }
 
 }  // namespace Botan

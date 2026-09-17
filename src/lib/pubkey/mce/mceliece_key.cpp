@@ -21,6 +21,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mce_internal.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 #include <botan/internal/polyn_gf2m.h>
 
 #include <array>
@@ -566,8 +567,8 @@ namespace {
 class MCE_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF {
    public:
       // The raw shared key is the plaintext and error mask, which is not uniform
-      MCE_KEM_Encryptor(std::shared_ptr<const McEliece_PublicKeyInternal> key, const PK_KEM_Options& options) :
-            KEM_Encryption_with_KDF(options, PK_Ops::RawKemSharedKey::RequiresKDF), m_key(std::move(key)) {}
+      MCE_KEM_Encryptor(std::shared_ptr<const McEliece_PublicKeyInternal> key, const PK_KEM_Options_Reader& options) :
+            KEM_Encryption_with_KDF(options, PK_Ops::KemSharedKeyQuality::RequiresKDF), m_key(std::move(key)) {}
 
    private:
       size_t raw_kem_shared_key_length() const override {
@@ -602,8 +603,8 @@ class MCE_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF {
 
 class MCE_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
    public:
-      MCE_KEM_Decryptor(std::shared_ptr<const McEliece_PrivateKeyInternal> key, const PK_KEM_Options& options) :
-            KEM_Decryption_with_KDF(options, PK_Ops::RawKemSharedKey::RequiresKDF), m_key(std::move(key)) {}
+      MCE_KEM_Decryptor(std::shared_ptr<const McEliece_PrivateKeyInternal> key, const PK_KEM_Options_Reader& options) :
+            KEM_Decryption_with_KDF(options, PK_Ops::KemSharedKeyQuality::RequiresKDF), m_key(std::move(key)) {}
 
    private:
       size_t raw_kem_shared_key_length() const override {
@@ -636,20 +637,18 @@ std::unique_ptr<Private_Key> McEliece_PublicKey::generate_another(RandomNumberGe
 }
 
 std::unique_ptr<PK_Ops::KEM_Encryption> McEliece_PublicKey::_create_kem_encryption_op(
-   const PK_KEM_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<MCE_KEM_Encryptor>(m_public, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   const PK_KEM_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<MCE_KEM_Encryptor>(m_public, options);
 }
 
 std::unique_ptr<PK_Ops::KEM_Decryption> McEliece_PrivateKey::_create_kem_decryption_op(
-   RandomNumberGenerator& rng, const PK_KEM_Options& options) const {
+   RandomNumberGenerator& rng, const PK_KEM_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
-   if(!options.using_provider()) {
-      return std::make_unique<MCE_KEM_Decryptor>(m_private, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<MCE_KEM_Decryptor>(m_private, options);
 }
 
 }  // namespace Botan

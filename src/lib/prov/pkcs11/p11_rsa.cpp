@@ -14,6 +14,7 @@
 
    #include <botan/numthry.h>
    #include <botan/p11_mechanism.h>
+   #include <botan/pk_options_readers.h>
    #include <botan/pubkey.h>
    #include <botan/rng.h>
    #include <botan/internal/blinding.h>
@@ -123,7 +124,7 @@ namespace {
 class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
    public:
       PKCS11_RSA_Decryption_Operation(const PKCS11_RSA_PrivateKey& key,
-                                      const PK_Encryption_Options& options,
+                                      const PK_Encryption_Options_Reader& options,
                                       RandomNumberGenerator& rng) :
             m_key(key),
             m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(options)),
@@ -203,9 +204,10 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
 class PKCS11_RSA_Decryption_Operation_Software_EME final : public PK_Ops::Decryption_with_Padding {
    public:
       PKCS11_RSA_Decryption_Operation_Software_EME(const PKCS11_RSA_PrivateKey& key,
-                                                   const PK_Encryption_Options& options,
+                                                   const PK_Encryption_Options_Reader& options,
                                                    RandomNumberGenerator& rng) :
-            PK_Ops::Decryption_with_Padding(options), m_raw_op(key, PK_Encryption_Options().with_padding("Raw"), rng) {}
+            PK_Ops::Decryption_with_Padding(options),
+            m_raw_op(key, PK_Options_Reader_Access::read(PK_Encryption_Options().with_padding("Raw")), rng) {}
 
       size_t plaintext_length(size_t ctext_len) const override { return m_raw_op.plaintext_length(ctext_len); }
 
@@ -226,7 +228,7 @@ class PKCS11_RSA_Decryption_Operation_Software_EME final : public PK_Ops::Decryp
 // are not supported (PK_Ops::Encryption does not provide an `update` method)
 class PKCS11_RSA_Encryption_Operation final : public PK_Ops::Encryption {
    public:
-      PKCS11_RSA_Encryption_Operation(const PKCS11_RSA_PublicKey& key, const PK_Encryption_Options& options) :
+      PKCS11_RSA_Encryption_Operation(const PKCS11_RSA_PublicKey& key, const PK_Encryption_Options_Reader& options) :
             m_key(key), m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(options)) {
          const size_t k = key.get_n().bytes();
          const size_t pad = m_mechanism.padding_size();
@@ -260,7 +262,7 @@ class PKCS11_RSA_Encryption_Operation final : public PK_Ops::Encryption {
 
 class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature {
    public:
-      PKCS11_RSA_Signature_Operation(const PKCS11_RSA_PrivateKey& key, const PK_Signature_Options& options) :
+      PKCS11_RSA_Signature_Operation(const PKCS11_RSA_PrivateKey& key, const PK_Signature_Options_Reader& options) :
             m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(options)) {}
 
       size_t signature_length() const override { return m_key.get_n().bytes(); }
@@ -387,7 +389,7 @@ AlgorithmIdentifier PKCS11_RSA_Signature_Operation::algorithm_identifier() const
 
 class PKCS11_RSA_Verification_Operation final : public PK_Ops::Verification {
    public:
-      PKCS11_RSA_Verification_Operation(const PKCS11_RSA_PublicKey& key, const PK_Signature_Options& options) :
+      PKCS11_RSA_Verification_Operation(const PKCS11_RSA_PublicKey& key, const PK_Signature_Options_Reader& options) :
             m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(options)) {}
 
       void update(std::span<const uint8_t> input) override {
@@ -460,20 +462,20 @@ std::string PKCS11_RSA_Verification_Operation::hash_function() const {
 }  // namespace
 
 std::unique_ptr<PK_Ops::Encryption> PKCS11_RSA_PublicKey::_create_encryption_op(
-   RandomNumberGenerator& rng, const PK_Encryption_Options& options) const {
+   RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
    require_hardware_provider(options, algo_name(), "pkcs11");
    return std::make_unique<PKCS11_RSA_Encryption_Operation>(*this, options);
 }
 
 std::unique_ptr<PK_Ops::Verification> PKCS11_RSA_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
+   const PK_Signature_Options_Reader& options) const {
    require_hardware_provider(options, algo_name(), "pkcs11");
    return std::make_unique<PKCS11_RSA_Verification_Operation>(*this, options);
 }
 
 std::unique_ptr<PK_Ops::Decryption> PKCS11_RSA_PrivateKey::_create_decryption_op(
-   RandomNumberGenerator& rng, const PK_Encryption_Options& options) const {
+   RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const {
    require_hardware_provider(options, algo_name(), "pkcs11");
    if(m_use_software_padding && options.padding().value_or("Raw") != "Raw") {
       return std::make_unique<PKCS11_RSA_Decryption_Operation_Software_EME>(*this, options, rng);
@@ -483,7 +485,7 @@ std::unique_ptr<PK_Ops::Decryption> PKCS11_RSA_PrivateKey::_create_decryption_op
 }
 
 std::unique_ptr<PK_Ops::Signature> PKCS11_RSA_PrivateKey::_create_signature_op(
-   RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
+   RandomNumberGenerator& rng, const PK_Signature_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
    require_hardware_provider(options, algo_name(), "pkcs11");
    return std::make_unique<PKCS11_RSA_Signature_Operation>(*this, options);

@@ -8,7 +8,7 @@
 #define BOTAN_PK_OPTIONS_IMPL_H_
 
 #include <botan/exceptn.h>
-#include <botan/pk_options.h>
+#include <botan/pk_options_readers.h>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -26,11 +26,41 @@ PK_KEM_Options parse_legacy_kem_options(std::string_view params);
 PK_Key_Agreement_Options parse_legacy_ka_options(std::string_view params);
 
 /**
+* Creates option readers for library code which builds its own options,
+* for example when verifying an X.509 signature
+*/
+class PK_Options_Reader_Access final {
+   public:
+      static PK_Signature_Options_Reader for_signing(const PK_Signature_Options& options) {
+         return PK_Signature_Options_Reader(options, PK_Signature_Options_Reader::Usage::Signing);
+      }
+
+      static PK_Signature_Options_Reader for_verification(const PK_Signature_Options& options) {
+         return PK_Signature_Options_Reader(options, PK_Signature_Options_Reader::Usage::Verification);
+      }
+
+      static PK_Encryption_Options_Reader read(const PK_Encryption_Options& options) {
+         return PK_Encryption_Options_Reader(options);
+      }
+
+      static PK_KEM_Options_Reader read(const PK_KEM_Options& options) { return PK_KEM_Options_Reader(options); }
+
+      static PK_Key_Agreement_Options_Reader read(const PK_Key_Agreement_Options& options) {
+         return PK_Key_Agreement_Options_Reader(options);
+      }
+
+      template <typename ReaderT>
+      static void throw_if_unexamined(const ReaderT& reader, std::string_view algo_name) {
+         reader.throw_if_unexamined(algo_name);
+      }
+};
+
+/**
 * For schemes where the hash function is fixed by the key (XMSS, SLH-DSA, ...)
 *
 * Accepts the hash option only if it names the hash the key already uses.
 */
-void validate_for_hash_based_signature(const PK_Signature_Options& options,
+void validate_for_hash_based_signature(const PK_Signature_Options_Reader& options,
                                        std::string_view algo_name,
                                        std::string_view hash_fn);
 
@@ -43,7 +73,22 @@ void validate_for_hash_based_signature(const PK_Signature_Options& options,
 *
 * Must only be called if using_externally_computed_prehash() is true.
 */
-std::optional<std::string> externally_computed_prehash_name(const PK_Signature_Options& options);
+std::optional<std::string> externally_computed_prehash_name(const PK_Signature_Options_Reader& options);
+
+/**
+* For keys implemented in software
+*
+* Such keys have only the "base" provider, so any other provider request is
+* rejected. Reading the option here also acknowledges it.
+*
+* @throws Provider_Not_Found if a different provider was requested
+*/
+template <typename OptionsT>
+void require_software_provider(const OptionsT& options, std::string_view algo_name) {
+   if(options.using_provider()) {
+      throw Provider_Not_Found(algo_name, options.provider().value());
+   }
+}
 
 /**
 * For keys held in hardware (PKCS #11, TPM)
@@ -68,7 +113,7 @@ void require_hardware_provider(const OptionsT& options, std::string_view algo_na
 * Any request for a deterministic signature is trivially satisfied, so this
 * just examines (and thereby acknowledges) the option.
 */
-void acknowledge_always_deterministic(const PK_Signature_Options& options);
+void acknowledge_always_deterministic(const PK_Signature_Options_Reader& options);
 
 }  // namespace Botan
 

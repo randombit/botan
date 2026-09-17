@@ -25,6 +25,7 @@
 #endif
 
 #if defined(BOTAN_HAS_X25519)
+   #include <botan/pk_options_readers.h>
    #include <botan/x25519.h>
 #endif
 
@@ -113,9 +114,9 @@ class KEX_to_KEM_Adapter_Encryption_Operation final : public PK_Ops::KEM_Encrypt
    public:
       // The raw shared secret of a key agreement is a group element, not a uniform key
       KEX_to_KEM_Adapter_Encryption_Operation(std::shared_ptr<const Public_Key> key,
-                                              const PK_KEM_Options& options,
+                                              const PK_KEM_Options_Reader& options,
                                               std::string_view provider) :
-            PK_Ops::KEM_Encryption_with_KDF(options, PK_Ops::RawKemSharedKey::RequiresKDF),
+            PK_Ops::KEM_Encryption_with_KDF(options, PK_Ops::KemSharedKeyQuality::RequiresKDF),
             m_provider(provider),
             m_public_key(std::move(key)) {}
 
@@ -162,9 +163,9 @@ class KEX_to_KEM_Decryption_Operation final : public PK_Ops::KEM_Decryption_with
    public:
       KEX_to_KEM_Decryption_Operation(const PK_Key_Agreement_Key& key,
                                       RandomNumberGenerator& rng,
-                                      const PK_KEM_Options& options,
+                                      const PK_KEM_Options_Reader& options,
                                       const std::string_view provider) :
-            PK_Ops::KEM_Decryption_with_KDF(options, PK_Ops::RawKemSharedKey::RequiresKDF),
+            PK_Ops::KEM_Decryption_with_KDF(options, PK_Ops::KemSharedKeyQuality::RequiresKDF),
             m_operation(key, rng, PK_Key_Agreement_Options().with_raw_shared_key().with_provider(provider)),
             m_encapsulated_key_length(key.public_value().size()) {}
 
@@ -264,14 +265,14 @@ bool KEX_to_KEM_Adapter_PrivateKey::check_key(RandomNumberGenerator& rng, bool s
 }
 
 std::unique_ptr<PK_Ops::KEM_Encryption> KEX_to_KEM_Adapter_PublicKey::_create_kem_encryption_op(
-   const PK_KEM_Options& options) const {
+   const PK_KEM_Options_Reader& options) const {
    // The provider selects the implementation of the underlying key agreement
    return std::make_unique<KEX_to_KEM_Adapter_Encryption_Operation>(
       m_public_key, options, options.provider().value_or(""));
 }
 
 std::unique_ptr<PK_Ops::KEM_Decryption> KEX_to_KEM_Adapter_PrivateKey::_create_kem_decryption_op(
-   RandomNumberGenerator& rng, const PK_KEM_Options& options) const {
+   RandomNumberGenerator& rng, const PK_KEM_Options_Reader& options) const {
    return std::make_unique<KEX_to_KEM_Decryption_Operation>(
       *m_private_key, rng, options, options.provider().value_or(""));
 }

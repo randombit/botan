@@ -23,6 +23,13 @@ class PK_Decryptor_EME;
 class PK_KEM_Encryptor;
 class PK_KEM_Decryptor;
 class PK_Key_Agreement;
+class PK_Options_Reader_Access;
+
+// Defined in pk_options_readers.h; only implementations of key types use them
+class PK_Signature_Options_Reader;
+class PK_Encryption_Options_Reader;
+class PK_KEM_Options_Reader;
+class PK_Key_Agreement_Options_Reader;
 
 /**
 * Signature generation/verification options
@@ -177,121 +184,8 @@ class BOTAN_PUBLIC_API(3, 14) PK_Signature_Options final {
       /// This is rarely relevant
       PK_Signature_Options with_provider(std::string_view provider);
 
-      /// Return the name of the hash function to use
-      ///
-      /// This will throw an exception if no hash function was configured
-      std::string hash_function_name() const;
-
-      /*
-      * Getters; these are mostly for internal use
-      *
-      * Calling any of these records that the respective option was examined by
-      * the signature scheme (see PK_Signature_Options::Option below), so a scheme
-      * should only read an option that it will actually act on.
-      */
-
-      const std::optional<std::string>& hash_function() const {
-         note_examined(Option::Hash);
-         return m_hash_fn;
-      }
-
-      const std::optional<std::string>& prehash_function() const {
-         note_examined(Option::Prehash);
-         return m_prehash;
-      }
-
-      const std::optional<std::string>& externally_computed_prehash_function() const {
-         note_examined(Option::ExternalPrehash);
-         return m_external_prehash;
-      }
-
-      const std::optional<std::string>& padding() const {
-         note_examined(Option::Padding);
-         return m_padding;
-      }
-
-      const std::optional<std::vector<uint8_t>>& context() const {
-         note_examined(Option::Context);
-         return m_context;
-      }
-
-      const std::optional<std::string>& provider() const {
-         note_examined(Option::Provider);
-         return m_provider;
-      }
-
-      const std::optional<size_t>& salt_size() const {
-         note_examined(Option::SaltSize);
-         return m_salt_size;
-      }
-
-      bool using_der_encoded_signature() const {
-         note_examined(Option::DerEncoded);
-         return m_use_der;
-      }
-
-      bool using_deterministic_signature() const {
-         note_examined(Option::Deterministic);
-         return m_deterministic_sig;
-      }
-
-      bool using_explicit_trailer_field() const {
-         note_examined(Option::ExplicitTrailer);
-         return m_explicit_trailer_field;
-      }
-
-      bool using_hash() const { return hash_function().has_value(); }
-
-      bool using_context() const { return context().has_value(); }
-
-      bool using_prehash() const {
-         note_examined(Option::Prehash);
-         return m_using_prehash;
-      }
-
-      bool using_externally_computed_prehash() const {
-         note_examined(Option::ExternalPrehash);
-         return m_using_external_prehash;
-      }
-
-      bool using_padding() const { return padding().has_value(); }
-
-      bool using_salt_size() const { return salt_size().has_value(); }
-
-      bool using_provider() const;
-
    private:
-      friend class PK_Signer;
-      friend class PK_Verifier;
-
-      /*
-      * Each option a caller sets must be examined by whatever creates the
-      * signature operation, otherwise the option would be silently ignored.
-      * The getters above record which options were examined; PK_Signer and
-      * PK_Verifier then reject any option that was set but never examined.
-      */
-      enum class Option : uint32_t /* NOLINT(*-enum-size) */ {
-         Hash = (1 << 0),
-         Prehash = (1 << 1),
-         Padding = (1 << 2),
-         Context = (1 << 3),
-         Provider = (1 << 4),
-         SaltSize = (1 << 5),
-         DerEncoded = (1 << 6),
-         Deterministic = (1 << 7),
-         ExplicitTrailer = (1 << 8),
-         ExternalPrehash = (1 << 9),
-      };
-
-      void note_examined(Option option) const { m_examined |= static_cast<uint32_t>(option); }
-
-      /// Return the bitmask of options which were set to a non-default value
-      uint32_t options_in_use() const;
-
-      void reset_examined() const { m_examined = 0; }
-
-      /// Throw Invalid_Argument if any option in use has not been examined
-      void throw_if_unexamined(std::string_view algo_name) const;
+      friend class PK_Signature_Options_Reader;
 
       std::optional<std::string> m_hash_fn;
       std::optional<std::string> m_prehash;
@@ -305,7 +199,6 @@ class BOTAN_PUBLIC_API(3, 14) PK_Signature_Options final {
       bool m_use_der = false;
       bool m_deterministic_sig = false;
       bool m_explicit_trailer_field = false;
-      mutable uint32_t m_examined = 0;
 };
 
 /**
@@ -375,79 +268,14 @@ class BOTAN_PUBLIC_API(3, 14) PK_Encryption_Options final {
       /// This is rarely relevant
       PK_Encryption_Options with_provider(std::string_view provider);
 
-      /// Return the name of the hash function to use
-      ///
-      /// This will throw an exception if no hash function was configured
-      std::string hash_function_name() const;
-
-      /*
-      * Getters; these are mostly for internal use
-      *
-      * Calling any of these records that the respective option was examined
-      * by the scheme, so a scheme should only read an option it will act on.
-      */
-
-      const std::optional<std::string>& padding() const {
-         note_examined(Option::Padding);
-         return m_padding;
-      }
-
-      const std::optional<std::string>& hash_function() const {
-         note_examined(Option::Hash);
-         return m_hash_fn;
-      }
-
-      const std::optional<std::string>& mgf1_hash_function() const {
-         note_examined(Option::Mgf1Hash);
-         return m_mgf1_hash_fn;
-      }
-
-      const std::optional<std::vector<uint8_t>>& context() const {
-         note_examined(Option::Context);
-         return m_context;
-      }
-
-      const std::optional<std::string>& provider() const {
-         note_examined(Option::Provider);
-         return m_provider;
-      }
-
-      bool using_padding() const { return padding().has_value(); }
-
-      bool using_hash() const { return hash_function().has_value(); }
-
-      bool using_mgf1_hash() const { return mgf1_hash_function().has_value(); }
-
-      bool using_context() const { return context().has_value(); }
-
-      bool using_provider() const;
-
    private:
-      friend class PK_Encryptor_EME;
-      friend class PK_Decryptor_EME;
-
-      enum class Option : uint32_t /* NOLINT(*-enum-size) */ {
-         Padding = (1 << 0),
-         Hash = (1 << 1),
-         Mgf1Hash = (1 << 2),
-         Context = (1 << 3),
-         Provider = (1 << 4),
-      };
-
-      void note_examined(Option option) const { m_examined |= static_cast<uint32_t>(option); }
-
-      uint32_t options_in_use() const;
-
-      void reset_examined() const { m_examined = 0; }
-
-      void throw_if_unexamined(std::string_view algo_name) const;
+      friend class PK_Encryption_Options_Reader;
 
       std::optional<std::string> m_padding;
       std::optional<std::string> m_hash_fn;
       std::optional<std::string> m_mgf1_hash_fn;
       std::optional<std::vector<uint8_t>> m_context;
       std::optional<std::string> m_provider;
-      mutable uint32_t m_examined = 0;
 };
 
 /**
@@ -501,54 +329,12 @@ class BOTAN_PUBLIC_API(3, 14) PK_KEM_Options final {
       /// This is rarely relevant
       PK_KEM_Options with_provider(std::string_view provider);
 
-      /*
-      * Getters; these are mostly for internal use
-      *
-      * Calling any of these records that the respective option was examined
-      * by the scheme, so a scheme should only read an option it will act on.
-      */
-
-      const std::optional<std::string>& kdf() const {
-         note_examined(Option::Kdf);
-         return m_kdf;
-      }
-
-      bool using_kdf() const { return kdf().has_value(); }
-
-      bool using_raw_shared_key() const {
-         note_examined(Option::RawSharedKey);
-         return m_raw_shared_key;
-      }
-
-      const std::optional<std::string>& provider() const {
-         note_examined(Option::Provider);
-         return m_provider;
-      }
-
-      bool using_provider() const;
-
    private:
-      friend class PK_KEM_Encryptor;
-      friend class PK_KEM_Decryptor;
-
-      enum class Option : uint32_t /* NOLINT(*-enum-size) */ {
-         Kdf = (1 << 0),
-         RawSharedKey = (1 << 1),
-         Provider = (1 << 2),
-      };
-
-      void note_examined(Option option) const { m_examined |= static_cast<uint32_t>(option); }
-
-      uint32_t options_in_use() const;
-
-      void reset_examined() const { m_examined = 0; }
-
-      void throw_if_unexamined(std::string_view algo_name) const;
+      friend class PK_KEM_Options_Reader;
 
       std::optional<std::string> m_kdf;
       bool m_raw_shared_key = false;
       std::optional<std::string> m_provider;
-      mutable uint32_t m_examined = 0;
 };
 
 /**
@@ -601,53 +387,12 @@ class BOTAN_PUBLIC_API(3, 14) PK_Key_Agreement_Options final {
       /// This is rarely relevant
       PK_Key_Agreement_Options with_provider(std::string_view provider);
 
-      /*
-      * Getters; these are mostly for internal use
-      *
-      * Calling any of these records that the respective option was examined
-      * by the scheme, so a scheme should only read an option it will act on.
-      */
-
-      const std::optional<std::string>& kdf() const {
-         note_examined(Option::Kdf);
-         return m_kdf;
-      }
-
-      bool using_kdf() const { return kdf().has_value(); }
-
-      bool using_raw_shared_key() const {
-         note_examined(Option::RawSharedKey);
-         return m_raw_shared_key;
-      }
-
-      const std::optional<std::string>& provider() const {
-         note_examined(Option::Provider);
-         return m_provider;
-      }
-
-      bool using_provider() const;
-
    private:
-      friend class PK_Key_Agreement;
-
-      enum class Option : uint32_t /* NOLINT(*-enum-size) */ {
-         Kdf = (1 << 0),
-         RawSharedKey = (1 << 1),
-         Provider = (1 << 2),
-      };
-
-      void note_examined(Option option) const { m_examined |= static_cast<uint32_t>(option); }
-
-      uint32_t options_in_use() const;
-
-      void reset_examined() const { m_examined = 0; }
-
-      void throw_if_unexamined(std::string_view algo_name) const;
+      friend class PK_Key_Agreement_Options_Reader;
 
       std::optional<std::string> m_kdf;
       bool m_raw_shared_key = false;
       std::optional<std::string> m_provider;
-      mutable uint32_t m_examined = 0;
 };
 
 }  // namespace Botan

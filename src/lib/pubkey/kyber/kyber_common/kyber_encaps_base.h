@@ -52,8 +52,8 @@ class Kyber_KEM_Encryptor_Base : public PK_Ops::KEM_Encryption_with_KDF,
       // The shared secret is a uniform value produced by hashing (Kyber) or is a
       // pseudorandom key derived from the encapsulation seed (ML-KEM), so it can
       // be used directly without a KDF
-      Kyber_KEM_Encryptor_Base(const PK_KEM_Options& options, const Kyber_PublicKeyInternal& pk) :
-            PK_Ops::KEM_Encryption_with_KDF(options, PK_Ops::RawKemSharedKey::IsUniform),
+      Kyber_KEM_Encryptor_Base(const PK_KEM_Options_Reader& options, const Kyber_PublicKeyInternal& pk) :
+            PK_Ops::KEM_Encryption_with_KDF(options, PK_Ops::KemSharedKeyQuality::IsUniform),
             Kyber_KEM_Operation_Base(pk) {}
 
       virtual void encapsulate(StrongSpan<KyberCompressedCiphertext> out_encapsulated_key,
@@ -74,8 +74,8 @@ class Kyber_KEM_Decryptor_Base : public PK_Ops::KEM_Decryption_with_KDF,
       }
 
    protected:
-      Kyber_KEM_Decryptor_Base(const PK_KEM_Options& options, const Kyber_PublicKeyInternal& pk) :
-            PK_Ops::KEM_Decryption_with_KDF(options, PK_Ops::RawKemSharedKey::IsUniform),
+      Kyber_KEM_Decryptor_Base(const PK_KEM_Options_Reader& options, const Kyber_PublicKeyInternal& pk) :
+            PK_Ops::KEM_Decryption_with_KDF(options, PK_Ops::KemSharedKeyQuality::IsUniform),
             Kyber_KEM_Operation_Base(pk) {}
 
       virtual void decapsulate(StrongSpan<KyberSharedSecret> out_shared_key,

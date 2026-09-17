@@ -126,7 +126,8 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key {
          return (op == PublicKeyOperation::KeyEncapsulation);
       }
 
-      std::unique_ptr<PK_Ops::KEM_Encryption> _create_kem_encryption_op(const PK_KEM_Options& options) const override;
+      std::unique_ptr<PK_Ops::KEM_Encryption> _create_kem_encryption_op(
+         const PK_KEM_Options_Reader& options) const override;
 
       KyberMode mode() const;
 
@@ -181,8 +182,8 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
-      std::unique_ptr<PK_Ops::KEM_Decryption> _create_kem_decryption_op(RandomNumberGenerator& rng,
-                                                                        const PK_KEM_Options& options) const override;
+      std::unique_ptr<PK_Ops::KEM_Decryption> _create_kem_decryption_op(
+         RandomNumberGenerator& rng, const PK_KEM_Options_Reader& options) const override;
 
       /**
        * The private key format from which the key was loaded. It is the format

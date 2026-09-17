@@ -14,9 +14,8 @@
    #include <botan/ec_apoint.h>
    #include <botan/p11_mechanism.h>
    #include <botan/pk_ops.h>
-   #include <botan/pk_options.h>
+   #include <botan/pk_options_readers.h>
    #include <botan/rng.h>
-   #include <botan/internal/parsing.h>
    #include <botan/internal/pk_options_impl.h>
    #include <botan/internal/scoped_cleanup.h>
 
@@ -121,7 +120,7 @@ class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement {
 }  // namespace
 
 std::unique_ptr<PK_Ops::Key_Agreement> PKCS11_ECDH_PrivateKey::_create_key_agreement_op(
-   RandomNumberGenerator& /*rng*/, const PK_Key_Agreement_Options& options) const {
+   RandomNumberGenerator& /*rng*/, const PK_Key_Agreement_Options_Reader& options) const {
    require_hardware_provider(options, algo_name(), "pkcs11");
 
    /*
@@ -129,16 +128,18 @@ std::unique_ptr<PK_Ops::Key_Agreement> PKCS11_ECDH_PrivateKey::_create_key_agree
    * derivation function (a hash name, optionally with ",Cofactor") rather
    * than a Botan KDF; see MechanismWrapper::create_ecdh_mechanism
    *
+   * The raw agreed value is requested via with_raw_shared_key as for any
+   * other key, so "Raw" alone is rejected here. The only exception is the
+   * cofactor variant with raw output ("Raw,Cofactor"), which the options
+   * cannot otherwise express.
+   *
    * TODO(Botan4) remove the cofactor variant along with the rest
    */
    const std::string params = [&]() -> std::string {
       if(options.using_kdf()) {
          const std::string& kdf = options.kdf().value();
-         // The raw agreed value can only be requested via with_raw_shared_key
-         for(const auto& part : split_on(kdf, ',')) {
-            if(part == "Raw") {
-               throw Invalid_Argument("PKCS#11 ECDH does not accept Raw as a KDF; request the raw shared key instead");
-            }
+         if(kdf == "Raw") {
+            throw Invalid_Argument("PKCS#11 ECDH does not accept Raw as a KDF; request the raw shared key instead");
          }
          return kdf;
       }

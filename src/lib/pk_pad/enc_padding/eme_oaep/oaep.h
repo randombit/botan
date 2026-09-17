@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-class PK_Encryption_Options;
+class PK_Encryption_Options_Reader;
 
 /**
 * OAEP (called EME1 in IEEE 1363 and in earlier versions of the library)
@@ -29,7 +29,7 @@ class OAEP final : public EncryptionPaddingScheme {
       * @param options must specify the hash; may specify a distinct MGF1 hash
       * and a label (as the context)
       */
-      explicit OAEP(const PK_Encryption_Options& options);
+      explicit OAEP(const PK_Encryption_Options_Reader& options);
 
       /**
       * @param hash function to use for hashing (takes ownership)

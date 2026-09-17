@@ -17,8 +17,8 @@
 
 namespace Botan {
 
-class PK_Signature_Options;
-class PK_Encryption_Options;
+class PK_Signature_Options_Reader;
+class PK_Encryption_Options_Reader;
 
 }  // namespace Botan
 
@@ -40,14 +40,14 @@ class BOTAN_PUBLIC_API(3, 7) MechanismWrapper final {
       * for OAEP the hash (SHA-1, SHA-224, SHA-256, SHA-384 or SHA-512), an optional distinct MGF1 hash,
       * and an optional label (the context) are used
       */
-      static MechanismWrapper create_rsa_crypt_mechanism(const PK_Encryption_Options& options);
+      static MechanismWrapper create_rsa_crypt_mechanism(const PK_Encryption_Options_Reader& options);
 
       /**
       * Creates the CK_MECHANISM data for RSA signature/verification
       * @param options supported paddings are Raw (X.509), PKCS1v15 (PKCS#1 v1.5), PSS (PKCS#1 PSS),
       * X9.31 (ANSI X9.31) and ISO9796 (ISO/IEC 9796)
       */
-      static MechanismWrapper create_rsa_sign_mechanism(const PK_Signature_Options& options);
+      static MechanismWrapper create_rsa_sign_mechanism(const PK_Signature_Options_Reader& options);
 
       /**
       * Creates the CK_MECHANISM data for ECDSA signature/verification

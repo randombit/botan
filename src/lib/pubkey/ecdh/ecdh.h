@@ -121,7 +121,7 @@ class BOTAN_PUBLIC_API(2, 0) ECDH_PrivateKey final : public ECDH_PublicKey,
       std::vector<uint8_t> public_value(EC_Point_Format type) const { return ECDH_PublicKey::public_value(type); }
 
       std::unique_ptr<PK_Ops::Key_Agreement> _create_key_agreement_op(
-         RandomNumberGenerator& rng, const PK_Key_Agreement_Options& options) const override;
+         RandomNumberGenerator& rng, const PK_Key_Agreement_Options_Reader& options) const override;
 };
 
 BOTAN_DIAGNOSTIC_POP

@@ -3,6 +3,7 @@
 #include <botan/kdf.h>
 #include <botan/pk_algs.h>
 #include <botan/pk_ops.h>
+#include <botan/pk_options_readers.h>
 #include <botan/pubkey.h>
 
 #include <iostream>
@@ -53,7 +54,7 @@ class Hybrid_PublicKey : public virtual Botan::Public_Key {
        * See the main() function below for an example.
        */
       std::unique_ptr<Botan::PK_Ops::KEM_Encryption> _create_kem_encryption_op(
-         const Botan::PK_KEM_Options& options) const override;
+         const Botan::PK_KEM_Options_Reader& options) const override;
 
       /**
        * In an actual implementation, when you want to use this key in a
@@ -131,7 +132,7 @@ class Hybrid_PrivateKey : public virtual Botan::Private_Key,
        * See the main() function below for an example.
        */
       std::unique_ptr<Botan::PK_Ops::KEM_Decryption> _create_kem_decryption_op(
-         Botan::RandomNumberGenerator& rng, const Botan::PK_KEM_Options& options) const override;
+         Botan::RandomNumberGenerator& rng, const Botan::PK_KEM_Options_Reader& options) const override;
 
       /**
        * In an actual implementation, this should return a serialized
@@ -366,7 +367,7 @@ class Hybrid_Decryption_Operation : public Botan::PK_Ops::KEM_Decryption {
 }  // namespace
 
 std::unique_ptr<Botan::PK_Ops::KEM_Encryption> Hybrid_PublicKey::_create_kem_encryption_op(
-   const Botan::PK_KEM_Options& options) const {
+   const Botan::PK_KEM_Options_Reader& options) const {
    // This hybrid KEM always derives the shared key with a KDF, which the caller
    // must specify. Any other option (eg a request for the raw shared key) is
    // not examined here, and is therefore rejected by PK_KEM_Encryptor.
@@ -377,7 +378,7 @@ std::unique_ptr<Botan::PK_Ops::KEM_Encryption> Hybrid_PublicKey::_create_kem_enc
 }
 
 std::unique_ptr<Botan::PK_Ops::KEM_Decryption> Hybrid_PrivateKey::_create_kem_decryption_op(
-   Botan::RandomNumberGenerator& rng, const Botan::PK_KEM_Options& options) const {
+   Botan::RandomNumberGenerator& rng, const Botan::PK_KEM_Options_Reader& options) const {
    if(!options.using_kdf()) {
       throw Botan::Invalid_Argument("Hybrid-KEM requires specifying a KDF");
    }

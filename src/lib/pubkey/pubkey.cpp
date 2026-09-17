@@ -10,7 +10,7 @@
 #include <botan/bigint.h>
 #include <botan/der_enc.h>
 #include <botan/pk_ops.h>
-#include <botan/pk_options.h>
+#include <botan/pk_options_readers.h>
 #include <botan/rng.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/ct_utils.h>
@@ -99,17 +99,15 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
 
 PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
                                    RandomNumberGenerator& rng,
-                                   const PK_Encryption_Options& user_options) {
-   // Track option usage on a private copy, so the caller's object is never modified
-   const PK_Encryption_Options options(user_options);  // NOLINT(*-unnecessary-copy-initialization) clang-tidy bug
-   options.reset_examined();
+                                   const PK_Encryption_Options& options) {
+   const PK_Encryption_Options_Reader reader(options);
 
-   m_op = key._create_encryption_op(rng, options);
+   m_op = key._create_encryption_op(rng, reader);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support encryption", key.algo_name()));
    }
 
-   options.throw_if_unexamined(key.algo_name());
+   reader.throw_if_unexamined(key.algo_name());
 }
 
 PK_Encryptor_EME::~PK_Encryptor_EME() = default;
@@ -137,17 +135,15 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
 
 PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
                                    RandomNumberGenerator& rng,
-                                   const PK_Encryption_Options& user_options) {
-   // Track option usage on a private copy, so the caller's object is never modified
-   const PK_Encryption_Options options(user_options);  // NOLINT(*-unnecessary-copy-initialization) clang-tidy bug
-   options.reset_examined();
+                                   const PK_Encryption_Options& options) {
+   const PK_Encryption_Options_Reader reader(options);
 
-   m_op = key._create_decryption_op(rng, options);
+   m_op = key._create_decryption_op(rng, reader);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support decryption", key.algo_name()));
    }
 
-   options.throw_if_unexamined(key.algo_name());
+   reader.throw_if_unexamined(key.algo_name());
 }
 
 PK_Decryptor_EME::~PK_Decryptor_EME() = default;
@@ -170,17 +166,15 @@ secure_vector<uint8_t> PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask, const u
 PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, std::string_view param, std::string_view provider) :
       PK_KEM_Encryptor(key, parse_legacy_kem_options(param).with_provider(provider)) {}
 
-PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, const PK_KEM_Options& user_options) {
-   // Track option usage on a private copy, so the caller's object is never modified
-   const PK_KEM_Options options(user_options);  // NOLINT(*-unnecessary-copy-initialization) clang-tidy bug
-   options.reset_examined();
+PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, const PK_KEM_Options& options) {
+   const PK_KEM_Options_Reader reader(options);
 
-   m_op = key._create_kem_encryption_op(options);
+   m_op = key._create_kem_encryption_op(reader);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support KEM encryption", key.algo_name()));
    }
 
-   options.throw_if_unexamined(key.algo_name());
+   reader.throw_if_unexamined(key.algo_name());
 }
 
 PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key,
@@ -229,19 +223,15 @@ PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
                                    std::string_view provider) :
       PK_KEM_Decryptor(key, rng, parse_legacy_kem_options(param).with_provider(provider)) {}
 
-PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
-                                   RandomNumberGenerator& rng,
-                                   const PK_KEM_Options& user_options) {
-   // Track option usage on a private copy, so the caller's object is never modified
-   const PK_KEM_Options options(user_options);  // NOLINT(*-unnecessary-copy-initialization) clang-tidy bug
-   options.reset_examined();
+PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key, RandomNumberGenerator& rng, const PK_KEM_Options& options) {
+   const PK_KEM_Options_Reader reader(options);
 
-   m_op = key._create_kem_decryption_op(rng, options);
+   m_op = key._create_kem_decryption_op(rng, reader);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support KEM decryption", key.algo_name()));
    }
 
-   options.throw_if_unexamined(key.algo_name());
+   reader.throw_if_unexamined(key.algo_name());
 }
 
 PK_KEM_Decryptor::~PK_KEM_Decryptor() = default;
@@ -266,17 +256,15 @@ PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
 
 PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
                                    RandomNumberGenerator& rng,
-                                   const PK_Key_Agreement_Options& user_options) {
-   // Track option usage on a private copy, so the caller's object is never modified
-   const PK_Key_Agreement_Options options(user_options);  // NOLINT(*-unnecessary-copy-initialization) clang-tidy bug
-   options.reset_examined();
+                                   const PK_Key_Agreement_Options& options) {
+   const PK_Key_Agreement_Options_Reader reader(options);
 
-   m_op = key._create_key_agreement_op(rng, options);
+   m_op = key._create_key_agreement_op(rng, reader);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support key agreement", key.algo_name()));
    }
 
-   options.throw_if_unexamined(key.algo_name());
+   reader.throw_if_unexamined(key.algo_name());
 }
 
 PK_Key_Agreement::~PK_Key_Agreement() = default;
@@ -318,24 +306,22 @@ PK_Signer::PK_Signer(const Private_Key& key,
                    .with_der_encoded_signature(format == Signature_Format::DerSequence)
                    .with_provider(provider)) {}
 
-PK_Signer::PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, const PK_Signature_Options& user_options) {
-   // Track option usage on a private copy, so the caller's object is never modified
-   const PK_Signature_Options options(user_options);  // NOLINT(*-unnecessary-copy-initialization) clang-tidy bug
-   options.reset_examined();
+PK_Signer::PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, const PK_Signature_Options& options) {
+   const PK_Signature_Options_Reader reader(options, PK_Signature_Options_Reader::Usage::Signing);
 
-   m_op = key._create_signature_op(rng, options);
+   m_op = key._create_signature_op(rng, reader);
 
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature generation", key.algo_name()));
    }
-   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
+   m_sig_format = reader.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
    m_sig_element_size = key._signature_element_size_for_DER_encoding();
 
    if(m_sig_format == Signature_Format::DerSequence && !m_sig_element_size.has_value()) {
       throw Invalid_Argument(fmt("Key type {} does not support DER encoded signatures", key.algo_name()));
    }
 
-   options.throw_if_unexamined(key.algo_name());
+   reader.throw_if_unexamined(key.algo_name());
 }
 
 AlgorithmIdentifier PK_Signer::algorithm_identifier() const {
@@ -446,30 +432,23 @@ PK_Verifier::PK_Verifier(const Public_Key& pub_key,
                      .with_der_encoded_signature(format == Signature_Format::DerSequence)
                      .with_provider(provider)) {}
 
-PK_Verifier::PK_Verifier(const Public_Key& key, const PK_Signature_Options& user_options) {
-   // Track option usage on a private copy, so the caller's object is never modified
-   PK_Signature_Options options(user_options);
+PK_Verifier::PK_Verifier(const Public_Key& key, const PK_Signature_Options& options) {
+   const PK_Signature_Options_Reader reader(options, PK_Signature_Options_Reader::Usage::Verification);
 
-   // The deterministic option only affects signature generation, so remove it
-   // here rather than have every verification operation know to ignore it
-   options.m_deterministic_sig = false;
-
-   options.reset_examined();
-
-   m_op = key._create_verification_op(options);
+   m_op = key._create_verification_op(reader);
 
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature verification", key.algo_name()));
    }
 
    m_sig_element_size = key._signature_element_size_for_DER_encoding();
-   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
+   m_sig_format = reader.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
 
    if(m_sig_format == Signature_Format::DerSequence && !m_sig_element_size.has_value()) {
       throw Invalid_Argument(fmt("Key type {} does not support DER encoded signatures", key.algo_name()));
    }
 
-   options.throw_if_unexamined(key.algo_name());
+   reader.throw_if_unexamined(key.algo_name());
 }
 
 PK_Verifier::PK_Verifier(const Public_Key& key,

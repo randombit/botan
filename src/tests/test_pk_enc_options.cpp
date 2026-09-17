@@ -313,6 +313,13 @@ class PK_Encryption_Options_RSA_Explicit_Test final : public Test {
                std::string(e.what()).find("does not support the encryption option(s): context") != std::string::npos);
          }
 
+         // Legacy strings which name no padding, or a malformed MGF, are rejected
+         result.test_throws<Botan::Lookup_Error>("Legacy empty padding string rejected",
+                                                 [&] { const Botan::PK_Encryptor_EME enc(*pub, rng(), ""); });
+         result.test_throws<Botan::Invalid_Argument>("Legacy OAEP string with empty MGF1 hash rejected", [&] {
+            const Botan::PK_Encryptor_EME enc(*pub, rng(), "OAEP(SHA-256,MGF1())");
+         });
+
          // Legacy strings still work and map onto the same options
          result.test_no_throw("Legacy OAEP string with label", [&] {
             const Botan::PK_Encryptor_EME enc(*pub, rng(), "OAEP(SHA-256,MGF1,label)");
@@ -501,6 +508,8 @@ class PK_Options_Hardware_Provider_Test final : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("Hardware provider selection");
 
+         using Access = Botan::PK_Options_Reader_Access;
+
          auto check = [&](const auto& options, bool expect_ok, const std::string& what) {
             if(expect_ok) {
                result.test_no_throw(what + " accepted",
@@ -511,13 +520,18 @@ class PK_Options_Hardware_Provider_Test final : public Test {
             }
          };
 
-         check(Botan::PK_Signature_Options(), true, "Unset provider");
-         check(Botan::PK_Signature_Options().with_provider("pkcs11"), true, "Own provider");
-         check(Botan::PK_Signature_Options().with_provider("base"), false, "Software provider");
-         check(Botan::PK_Signature_Options().with_provider("tpm2"), false, "Other hardware provider");
-         check(Botan::PK_Encryption_Options().with_provider("base"), false, "Software provider for encryption");
-         check(Botan::PK_KEM_Options().with_provider("base"), false, "Software provider for KEM");
-         check(Botan::PK_Key_Agreement_Options().with_provider("base"), false, "Software provider for key agreement");
+         check(Access::for_signing(Botan::PK_Signature_Options()), true, "Unset provider");
+         check(Access::for_signing(Botan::PK_Signature_Options().with_provider("pkcs11")), true, "Own provider");
+         check(Access::for_signing(Botan::PK_Signature_Options().with_provider("base")), false, "Software provider");
+         check(
+            Access::for_signing(Botan::PK_Signature_Options().with_provider("tpm2")), false, "Other hardware provider");
+         check(Access::read(Botan::PK_Encryption_Options().with_provider("base")),
+               false,
+               "Software provider for encryption");
+         check(Access::read(Botan::PK_KEM_Options().with_provider("base")), false, "Software provider for KEM");
+         check(Access::read(Botan::PK_Key_Agreement_Options().with_provider("base")),
+               false,
+               "Software provider for key agreement");
 
          return {result};
       }

@@ -10,6 +10,7 @@
 #include <botan/internal/blinding.h>
 #include <botan/internal/dl_scheme.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -104,7 +105,7 @@ namespace {
 class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
    public:
       DH_KA_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
-                      const PK_Key_Agreement_Options& options,
+                      const PK_Key_Agreement_Options_Reader& options,
                       RandomNumberGenerator& rng) :
             PK_Ops::Key_Agreement_with_KDF(options),
             m_key(key),
@@ -146,11 +147,10 @@ secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_le
 }  // namespace
 
 std::unique_ptr<PK_Ops::Key_Agreement> DH_PrivateKey::_create_key_agreement_op(
-   RandomNumberGenerator& rng, const PK_Key_Agreement_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<DH_KA_Operation>(this->m_private_key, options, rng);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   RandomNumberGenerator& rng, const PK_Key_Agreement_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<DH_KA_Operation>(this->m_private_key, options, rng);
 }
 
 }  // namespace Botan

@@ -1263,6 +1263,16 @@ Signature Options
       Formats the options as a string, for debugging and error messages. The
       format is not fixed.
 
+   The options object itself has no accessors. When a :cpp:class:`PK_Signer`
+   or :cpp:class:`PK_Verifier` is constructed the library wraps the options in
+   a ``PK_Signature_Options_Reader`` and passes that to the key's
+   ``_create_signature_op`` or ``_create_verification_op``, so only an
+   implementation of a new key type ever sees one. Reading an option through
+   the reader records that the scheme examined it, which is how an option the
+   scheme does not support is detected. The reader types live in a separate
+   header ``pk_options_readers.h``, are unstable API, and have counterparts for
+   the other option types described below.
+
 Signature Options Accepted by Each Scheme
 """"""""""""""""""""""""""""""""""""""""""""""""
 
@@ -1777,7 +1787,8 @@ Key Agreement Options
       select the cofactor variant of the mechanism; see :doc:`pkcs11`. Naming
       ``Raw`` here is rejected; the raw value is requested with
       :cpp:func:`PK_Key_Agreement_Options::with_raw_shared_key` as for any
-      other key.
+      other key. The one exception is ``Raw,Cofactor``, the cofactor variant
+      with raw output, which cannot otherwise be expressed.
 
       This cannot be combined with
       :cpp:func:`PK_Key_Agreement_Options::with_raw_shared_key`.

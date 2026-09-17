@@ -8,7 +8,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/hash.h>
-#include <botan/pk_options.h>
+#include <botan/pk_options_readers.h>
 #include <botan/internal/fmt.h>
 
 #if defined(BOTAN_HAS_X931_SIGNATURE_PADDING)
@@ -33,7 +33,8 @@
 
 namespace Botan {
 
-std::unique_ptr<SignaturePaddingScheme> SignaturePaddingScheme::create_or_throw(const PK_Signature_Options& options) {
+std::unique_ptr<SignaturePaddingScheme> SignaturePaddingScheme::create_or_throw(
+   const PK_Signature_Options_Reader& options) {
    // Signing without padding is dangerous, so it must be requested explicitly
    if(!options.using_padding()) {
       throw Lookup_Error("RSA signatures require specifying a padding scheme");
@@ -58,7 +59,7 @@ std::unique_ptr<SignaturePaddingScheme> SignaturePaddingScheme::create_or_throw(
          throw Lookup_Error(fmt("RSA/{} signatures require specifying a hash function", padding));
       }
 
-      const std::string hash_fn = options.hash_function_name();
+      const std::string& hash_fn = options.hash_function_name();
       const bool hash_available = HashFunction::create(hash_fn) != nullptr;
 
 #if defined(BOTAN_HAS_EMSA_PKCS1)

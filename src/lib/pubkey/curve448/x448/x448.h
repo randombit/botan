@@ -103,7 +103,7 @@ class BOTAN_PUBLIC_API(3, 4) X448_PrivateKey final : public X448_PublicKey,
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       std::unique_ptr<PK_Ops::Key_Agreement> _create_key_agreement_op(
-         RandomNumberGenerator& rng, const PK_Key_Agreement_Options& options) const override;
+         RandomNumberGenerator& rng, const PK_Key_Agreement_Options_Reader& options) const override;
 
    private:
       std::shared_ptr<const X448_PrivateKey_Data> m_private;

@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/pk_options.h>
+#include <botan/pk_options_readers.h>
 
 #include <botan/assert.h>
 #include <botan/hex.h>
@@ -132,22 +132,22 @@ bool provider_is_in_use(const std::optional<std::string>& provider) {
 
 }  // namespace
 
-bool PK_Signature_Options::using_provider() const {
+bool PK_Signature_Options_Reader::using_provider() const {
    note_examined(Option::Provider);
-   return provider_is_in_use(m_provider);
+   return provider_is_in_use(m_options.m_provider);
 }
 
-std::string PK_Signature_Options::hash_function_name() const {
+const std::string& PK_Signature_Options_Reader::hash_function_name() const {
    note_examined(Option::Hash);
 
-   if(m_hash_fn.has_value()) {
-      return m_hash_fn.value();
+   if(m_options.m_hash_fn.has_value()) {
+      return m_options.m_hash_fn.value();
    }
 
    throw Invalid_State("This signature scheme requires specifying a hash function");
 }
 
-uint32_t PK_Signature_Options::options_in_use() const {
+uint32_t PK_Signature_Options_Reader::options_in_use() const {
    uint32_t in_use = 0;
 
    auto set_if = [&](bool cond, Option option) {
@@ -156,16 +156,18 @@ uint32_t PK_Signature_Options::options_in_use() const {
       }
    };
 
-   set_if(m_hash_fn.has_value(), Option::Hash);
-   set_if(m_using_prehash, Option::Prehash);
-   set_if(m_using_external_prehash, Option::ExternalPrehash);
-   set_if(m_padding.has_value(), Option::Padding);
-   set_if(m_context.has_value(), Option::Context);
-   set_if(provider_is_in_use(m_provider), Option::Provider);
-   set_if(m_salt_size.has_value(), Option::SaltSize);
-   set_if(m_use_der, Option::DerEncoded);
-   set_if(m_deterministic_sig, Option::Deterministic);
-   set_if(m_explicit_trailer_field, Option::ExplicitTrailer);
+   const auto& o = m_options;
+
+   set_if(o.m_hash_fn.has_value(), Option::Hash);
+   set_if(o.m_using_prehash, Option::Prehash);
+   set_if(o.m_using_external_prehash, Option::ExternalPrehash);
+   set_if(o.m_padding.has_value(), Option::Padding);
+   set_if(o.m_context.has_value(), Option::Context);
+   set_if(provider_is_in_use(o.m_provider), Option::Provider);
+   set_if(o.m_salt_size.has_value(), Option::SaltSize);
+   set_if(o.m_use_der, Option::DerEncoded);
+   set_if(o.m_deterministic_sig && m_usage == Usage::Signing, Option::Deterministic);
+   set_if(o.m_explicit_trailer_field, Option::ExplicitTrailer);
 
    return in_use;
 }
@@ -200,7 +202,7 @@ void throw_for_unexamined_options(std::string_view algo_name,
 
 }  // namespace
 
-void PK_Signature_Options::throw_if_unexamined(std::string_view algo_name) const {
+void PK_Signature_Options_Reader::throw_if_unexamined(std::string_view algo_name) const {
    const uint32_t unexamined = options_in_use() & ~m_examined;
 
    if(unexamined != 0) {
@@ -230,9 +232,6 @@ std::string PK_Signature_Options::to_string() const {
          out << name << "='" << val.value() << "' ";
       }
    };
-
-   // This reads the members directly since formatting the options does not
-   // count as the signature scheme having examined them
 
    print_str("Hash", m_hash_fn);
    print_str("Padding", m_padding);
@@ -318,22 +317,22 @@ PK_Encryption_Options PK_Encryption_Options::with_provider(std::string_view prov
    return next;
 }
 
-bool PK_Encryption_Options::using_provider() const {
+bool PK_Encryption_Options_Reader::using_provider() const {
    note_examined(Option::Provider);
-   return provider_is_in_use(m_provider);
+   return provider_is_in_use(m_options.m_provider);
 }
 
-std::string PK_Encryption_Options::hash_function_name() const {
+const std::string& PK_Encryption_Options_Reader::hash_function_name() const {
    note_examined(Option::Hash);
 
-   if(m_hash_fn.has_value()) {
-      return m_hash_fn.value();
+   if(m_options.m_hash_fn.has_value()) {
+      return m_options.m_hash_fn.value();
    }
 
    throw Invalid_State("This encryption scheme requires specifying a hash function");
 }
 
-uint32_t PK_Encryption_Options::options_in_use() const {
+uint32_t PK_Encryption_Options_Reader::options_in_use() const {
    uint32_t in_use = 0;
 
    auto set_if = [&](bool cond, Option option) {
@@ -342,16 +341,18 @@ uint32_t PK_Encryption_Options::options_in_use() const {
       }
    };
 
-   set_if(m_padding.has_value(), Option::Padding);
-   set_if(m_hash_fn.has_value(), Option::Hash);
-   set_if(m_mgf1_hash_fn.has_value(), Option::Mgf1Hash);
-   set_if(m_context.has_value(), Option::Context);
-   set_if(provider_is_in_use(m_provider), Option::Provider);
+   const auto& o = m_options;
+
+   set_if(o.m_padding.has_value(), Option::Padding);
+   set_if(o.m_hash_fn.has_value(), Option::Hash);
+   set_if(o.m_mgf1_hash_fn.has_value(), Option::Mgf1Hash);
+   set_if(o.m_context.has_value(), Option::Context);
+   set_if(provider_is_in_use(o.m_provider), Option::Provider);
 
    return in_use;
 }
 
-void PK_Encryption_Options::throw_if_unexamined(std::string_view algo_name) const {
+void PK_Encryption_Options_Reader::throw_if_unexamined(std::string_view algo_name) const {
    const uint32_t unexamined = options_in_use() & ~m_examined;
 
    if(unexamined != 0) {
@@ -376,8 +377,6 @@ std::string PK_Encryption_Options::to_string() const {
          out << name << "='" << val.value() << "' ";
       }
    };
-
-   // Reads the members directly since formatting does not count as examining
 
    print_str("Padding", m_padding);
    print_str("Hash", m_hash_fn);
@@ -423,12 +422,12 @@ PK_KEM_Options PK_KEM_Options::with_provider(std::string_view provider) {
    return next;
 }
 
-bool PK_KEM_Options::using_provider() const {
+bool PK_KEM_Options_Reader::using_provider() const {
    note_examined(Option::Provider);
-   return provider_is_in_use(m_provider);
+   return provider_is_in_use(m_options.m_provider);
 }
 
-uint32_t PK_KEM_Options::options_in_use() const {
+uint32_t PK_KEM_Options_Reader::options_in_use() const {
    uint32_t in_use = 0;
 
    auto set_if = [&](bool cond, Option option) {
@@ -437,14 +436,14 @@ uint32_t PK_KEM_Options::options_in_use() const {
       }
    };
 
-   set_if(m_kdf.has_value(), Option::Kdf);
-   set_if(m_raw_shared_key, Option::RawSharedKey);
-   set_if(provider_is_in_use(m_provider), Option::Provider);
+   set_if(m_options.m_kdf.has_value(), Option::Kdf);
+   set_if(m_options.m_raw_shared_key, Option::RawSharedKey);
+   set_if(provider_is_in_use(m_options.m_provider), Option::Provider);
 
    return in_use;
 }
 
-void PK_KEM_Options::throw_if_unexamined(std::string_view algo_name) const {
+void PK_KEM_Options_Reader::throw_if_unexamined(std::string_view algo_name) const {
    const uint32_t unexamined = options_in_use() & ~m_examined;
 
    if(unexamined != 0) {
@@ -509,12 +508,12 @@ PK_Key_Agreement_Options PK_Key_Agreement_Options::with_provider(std::string_vie
    return next;
 }
 
-bool PK_Key_Agreement_Options::using_provider() const {
+bool PK_Key_Agreement_Options_Reader::using_provider() const {
    note_examined(Option::Provider);
-   return provider_is_in_use(m_provider);
+   return provider_is_in_use(m_options.m_provider);
 }
 
-uint32_t PK_Key_Agreement_Options::options_in_use() const {
+uint32_t PK_Key_Agreement_Options_Reader::options_in_use() const {
    uint32_t in_use = 0;
 
    auto set_if = [&](bool cond, Option option) {
@@ -523,14 +522,14 @@ uint32_t PK_Key_Agreement_Options::options_in_use() const {
       }
    };
 
-   set_if(m_kdf.has_value(), Option::Kdf);
-   set_if(m_raw_shared_key, Option::RawSharedKey);
-   set_if(provider_is_in_use(m_provider), Option::Provider);
+   set_if(m_options.m_kdf.has_value(), Option::Kdf);
+   set_if(m_options.m_raw_shared_key, Option::RawSharedKey);
+   set_if(provider_is_in_use(m_options.m_provider), Option::Provider);
 
    return in_use;
 }
 
-void PK_Key_Agreement_Options::throw_if_unexamined(std::string_view algo_name) const {
+void PK_Key_Agreement_Options_Reader::throw_if_unexamined(std::string_view algo_name) const {
    const uint32_t unexamined = options_in_use() & ~m_examined;
 
    if(unexamined != 0) {

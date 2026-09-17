@@ -24,6 +24,7 @@
 #include <botan/internal/frodo_matrix.h>
 #include <botan/internal/frodo_types.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 
 #include <memory>
 #include <tuple>
@@ -84,8 +85,8 @@ namespace {
 class Frodo_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF {
    public:
       // The shared secret is the output of SHAKE, so it can be used directly
-      Frodo_KEM_Encryptor(std::shared_ptr<const FrodoKEM_PublicKeyInternal> key, const PK_KEM_Options& options) :
-            KEM_Encryption_with_KDF(options, PK_Ops::RawKemSharedKey::IsUniform), m_public_key(std::move(key)) {}
+      Frodo_KEM_Encryptor(std::shared_ptr<const FrodoKEM_PublicKeyInternal> key, const PK_KEM_Options_Reader& options) :
+            KEM_Encryption_with_KDF(options, PK_Ops::KemSharedKeyQuality::IsUniform), m_public_key(std::move(key)) {}
 
       size_t raw_kem_shared_key_length() const override { return m_public_key->constants().len_sec_bytes(); }
 
@@ -155,8 +156,8 @@ class Frodo_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
    public:
       Frodo_KEM_Decryptor(std::shared_ptr<const FrodoKEM_PublicKeyInternal> public_key,
                           std::shared_ptr<const FrodoKEM_PrivateKeyInternal> private_key,
-                          const PK_KEM_Options& options) :
-            KEM_Decryption_with_KDF(options, PK_Ops::RawKemSharedKey::IsUniform),
+                          const PK_KEM_Options_Reader& options) :
+            KEM_Decryption_with_KDF(options, PK_Ops::KemSharedKeyQuality::IsUniform),
             m_public_key(std::move(public_key)),
             m_private_key(std::move(private_key)) {}
 
@@ -321,11 +322,10 @@ std::unique_ptr<Private_Key> FrodoKEM_PublicKey::generate_another(RandomNumberGe
 }
 
 std::unique_ptr<PK_Ops::KEM_Encryption> FrodoKEM_PublicKey::_create_kem_encryption_op(
-   const PK_KEM_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<Frodo_KEM_Encryptor>(m_public, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   const PK_KEM_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<Frodo_KEM_Encryptor>(m_public, options);
 }
 
 //
@@ -429,12 +429,11 @@ secure_vector<uint8_t> FrodoKEM_PrivateKey::raw_private_key_bits() const {
 }
 
 std::unique_ptr<PK_Ops::KEM_Decryption> FrodoKEM_PrivateKey::_create_kem_decryption_op(
-   RandomNumberGenerator& rng, const PK_KEM_Options& options) const {
+   RandomNumberGenerator& rng, const PK_KEM_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
-   if(!options.using_provider()) {
-      return std::make_unique<Frodo_KEM_Decryptor>(m_public, m_private, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<Frodo_KEM_Decryptor>(m_public, m_private, options);
 }
 
 }  // namespace Botan

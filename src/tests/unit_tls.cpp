@@ -916,7 +916,7 @@ class HardwareEcdhKey final : public Botan::PK_Key_Agreement_Key {
       }
 
       std::unique_ptr<Botan::PK_Ops::Key_Agreement> _create_key_agreement_op(
-         Botan::RandomNumberGenerator& rng, const Botan::PK_Key_Agreement_Options& options) const override {
+         Botan::RandomNumberGenerator& rng, const Botan::PK_Key_Agreement_Options_Reader& options) const override {
          return m_key->_create_key_agreement_op(rng, options);
       }
 

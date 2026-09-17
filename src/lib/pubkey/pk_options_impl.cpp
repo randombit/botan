@@ -8,7 +8,7 @@
 
 #include <botan/assert.h>
 #include <botan/exceptn.h>
-#include <botan/pk_options.h>
+#include <botan/pk_options_readers.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/scan_name.h>
@@ -270,6 +270,11 @@ PK_Encryption_Options parse_legacy_enc_options(const Public_Key& key, std::strin
       return PK_Encryption_Options().with_padding("PKCS1v15");
    }
 
+   // Schemes which require a padding reject this when the operation is created
+   if(params.empty()) {
+      return PK_Encryption_Options();
+   }
+
    const SCAN_Name req(params);
 
    // TODO(Botan4) Remove all but "OAEP"
@@ -279,7 +284,7 @@ PK_Encryption_Options parse_legacy_enc_options(const Public_Key& key, std::strin
 
          if(req.arg_count() >= 2 && req.arg(1) != "MGF1") {
             const auto mgf_params = parse_algorithm_name(req.arg(1));
-            if(mgf_params.size() != 2 || mgf_params[0] != "MGF1") {
+            if(mgf_params.size() != 2 || mgf_params[0] != "MGF1" || mgf_params[1].empty()) {
                throw Lookup_Error(fmt("Unknown OAEP mask generation function {}", req.arg(1)));
             }
             options = options.with_mgf1_hash(mgf_params[1]);
@@ -319,7 +324,7 @@ PK_Key_Agreement_Options parse_legacy_ka_options(std::string_view params) {
    }
 }
 
-void validate_for_hash_based_signature(const PK_Signature_Options& options,
+void validate_for_hash_based_signature(const PK_Signature_Options_Reader& options,
                                        std::string_view algo_name,
                                        std::string_view hash_fn) {
    if(options.using_hash() && options.hash_function_name() != hash_fn) {
@@ -328,7 +333,7 @@ void validate_for_hash_based_signature(const PK_Signature_Options& options,
    }
 }
 
-std::optional<std::string> externally_computed_prehash_name(const PK_Signature_Options& options) {
+std::optional<std::string> externally_computed_prehash_name(const PK_Signature_Options_Reader& options) {
    BOTAN_STATE_CHECK(options.using_externally_computed_prehash());
 
    const auto& prehash = options.externally_computed_prehash_function();
@@ -342,7 +347,7 @@ std::optional<std::string> externally_computed_prehash_name(const PK_Signature_O
    return prehash.has_value() ? prehash : hash;
 }
 
-void acknowledge_always_deterministic(const PK_Signature_Options& options) {
+void acknowledge_always_deterministic(const PK_Signature_Options_Reader& options) {
    BOTAN_UNUSED(options.using_deterministic_signature());
 }
 

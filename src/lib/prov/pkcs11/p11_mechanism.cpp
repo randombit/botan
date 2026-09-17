@@ -8,7 +8,7 @@
 
 #include <botan/p11_mechanism.h>
 
-#include <botan/pk_options.h>
+#include <botan/pk_options_readers.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/pk_options_impl.h>
@@ -92,12 +92,12 @@ class RSA_SignMechanism final : public MechanismData {
 MechanismWrapper::MechanismWrapper(MechanismType mechanism_type) :
       m_mechanism({static_cast<CK_MECHANISM_TYPE>(mechanism_type), nullptr, 0}), m_parameters(nullptr) {}
 
-MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(const PK_Encryption_Options& options) {
+MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(const PK_Encryption_Options_Reader& options) {
    if(!options.using_padding()) {
       throw Lookup_Error("PKCS#11 RSA encrypt/decrypt requires specifying a padding scheme");
    }
 
-   const std::string padding = options.padding().value();
+   const std::string& padding = options.padding().value();
 
    if(padding == "Raw") {
       MechanismWrapper mech(MechanismType::RsaX509);
@@ -131,7 +131,7 @@ MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(const PK_Encryptio
          throw Lookup_Error("PKCS#11 RSA OAEP requires specifying a hash function");
       }
 
-      const std::string hash_name = options.hash_function_name();
+      const std::string& hash_name = options.hash_function_name();
       auto hash = OaepHashes.find(hash_name);
       if(hash == OaepHashes.end()) {
          throw Lookup_Error(fmt("PKCS#11 RSA OAEP does not support hash function '{}'", hash_name));
@@ -171,7 +171,7 @@ MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(const PK_Encryptio
    throw Lookup_Error(fmt("PKCS#11 RSA encrypt/decrypt does not support padding with '{}'", padding));
 }
 
-MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(const PK_Signature_Options& options) {
+MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(const PK_Signature_Options_Reader& options) {
    // note: when updating this map, update the documentation for `MechanismWrapper::create_rsa_sign_mechanism`
    static const std::map<std::string_view, RSA_SignMechanism> SignMechanisms = {
       {"Raw", RSA_SignMechanism(MechanismType::RsaX509)},

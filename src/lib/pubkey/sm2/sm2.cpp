@@ -6,6 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/pk_options_readers.h>
 #include <botan/sm2.h>
 
 #include <botan/ec_group.h>
@@ -173,7 +174,7 @@ std::vector<uint8_t> sm2_default_userid() {
 }
 
 // SM3 is the only hash specified for use with SM2, so it is the default
-std::string sm2_hash_function(const PK_Signature_Options& options) {
+std::string sm2_hash_function(const PK_Signature_Options_Reader& options) {
    return options.hash_function().value_or("SM3");
 }
 
@@ -184,7 +185,9 @@ std::string sm2_hash_function(const PK_Signature_Options& options) {
 */
 class SM2_Signature_Input final {
    public:
-      SM2_Signature_Input(const PK_Signature_Options& options, const EC_Group& group, const EC_AffinePoint& pubkey) :
+      SM2_Signature_Input(const PK_Signature_Options_Reader& options,
+                          const EC_Group& group,
+                          const EC_AffinePoint& pubkey) :
             m_group(group) {
          if(options.using_externally_computed_prehash()) {
             if(auto prehash = externally_computed_prehash_name(options)) {
@@ -251,7 +254,7 @@ class SM2_Signature_Input final {
 */
 class SM2_Signature_Operation final : public PK_Ops::Signature {
    public:
-      SM2_Signature_Operation(const SM2_PrivateKey& sm2, const PK_Signature_Options& options) :
+      SM2_Signature_Operation(const SM2_PrivateKey& sm2, const PK_Signature_Options_Reader& options) :
             m_group(sm2.domain()),
             m_x(sm2._private_key()),
             m_da_inv(sm2._get_da_inv()),
@@ -295,7 +298,7 @@ std::vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng) {
 */
 class SM2_Verification_Operation final : public PK_Ops::Verification {
    public:
-      SM2_Verification_Operation(const SM2_PublicKey& sm2, const PK_Signature_Options& options) :
+      SM2_Verification_Operation(const SM2_PublicKey& sm2, const PK_Signature_Options_Reader& options) :
             m_group(sm2.domain()),
             m_gy_mul(sm2._public_ec_point()),
             m_input(options, m_group, sm2._public_ec_point()) {}
@@ -336,21 +339,19 @@ std::unique_ptr<Private_Key> SM2_PublicKey::generate_another(RandomNumberGenerat
 }
 
 std::unique_ptr<PK_Ops::Verification> SM2_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<SM2_Verification_Operation>(*this, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   const PK_Signature_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<SM2_Verification_Operation>(*this, options);
 }
 
-std::unique_ptr<PK_Ops::Signature> SM2_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
-                                                                        const PK_Signature_Options& options) const {
+std::unique_ptr<PK_Ops::Signature> SM2_PrivateKey::_create_signature_op(
+   RandomNumberGenerator& rng, const PK_Signature_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
 
-   if(!options.using_provider()) {
-      return std::make_unique<SM2_Signature_Operation>(*this, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<SM2_Signature_Operation>(*this, options);
 }
 
 }  // namespace Botan

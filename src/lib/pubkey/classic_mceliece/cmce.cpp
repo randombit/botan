@@ -14,6 +14,7 @@
 #include <botan/internal/cmce_keys_internal.h>
 #include <botan/internal/cmce_matrix.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -79,11 +80,10 @@ std::unique_ptr<Private_Key> Classic_McEliece_PublicKey::generate_another(Random
 }
 
 std::unique_ptr<PK_Ops::KEM_Encryption> Classic_McEliece_PublicKey::_create_kem_encryption_op(
-   const PK_KEM_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<Classic_McEliece_Encryptor>(this->m_public, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   const PK_KEM_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<Classic_McEliece_Encryptor>(this->m_public, options);
 }
 
 Classic_McEliece_PrivateKey::Classic_McEliece_PrivateKey(RandomNumberGenerator& rng,
@@ -137,12 +137,11 @@ bool Classic_McEliece_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool
 }
 
 std::unique_ptr<PK_Ops::KEM_Decryption> Classic_McEliece_PrivateKey::_create_kem_decryption_op(
-   RandomNumberGenerator& rng, const PK_KEM_Options& options) const {
+   RandomNumberGenerator& rng, const PK_KEM_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
-   if(!options.using_provider()) {
-      return std::make_unique<Classic_McEliece_Decryptor>(this->m_private, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<Classic_McEliece_Decryptor>(this->m_private, options);
 }
 
 }  // namespace Botan

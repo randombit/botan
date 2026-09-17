@@ -10,8 +10,6 @@
 
 #include <botan/pk_ops.h>
 
-#include <botan/pk_options.h>
-
 namespace Botan {
 
 class HashFunction;
@@ -26,7 +24,7 @@ namespace Botan::PK_Ops {
 * Describes the raw shared key produced by a KEM, ie the value returned when
 * no KDF is applied to it.
 */
-enum class RawKemSharedKey : uint8_t {
+enum class KemSharedKeyQuality : uint8_t {
    /// The raw output is already a uniformly random key (eg ML-KEM), so it
    /// is returned directly if the caller does not specify a KDF
    IsUniform,
@@ -49,7 +47,7 @@ class Encryption_with_Padding : public Encryption {
       std::vector<uint8_t> encrypt(std::span<const uint8_t> ptext, RandomNumberGenerator& rng) override;
 
    protected:
-      explicit Encryption_with_Padding(const PK_Encryption_Options& options);
+      explicit Encryption_with_Padding(const PK_Encryption_Options_Reader& options);
 
    private:
       virtual size_t max_ptext_input_bits() const = 0;
@@ -65,7 +63,7 @@ class Decryption_with_Padding : public Decryption {
       secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) override;
 
    protected:
-      explicit Decryption_with_Padding(const PK_Encryption_Options& options);
+      explicit Decryption_with_Padding(const PK_Encryption_Options_Reader& options);
 
    private:
       virtual secure_vector<uint8_t> raw_decrypt(std::span<const uint8_t> ctext) = 0;
@@ -84,7 +82,7 @@ class Verification_with_Hash : public Verification {
       std::string hash_function() const final;
 
    protected:
-      explicit Verification_with_Hash(const PK_Signature_Options& options);
+      explicit Verification_with_Hash(const PK_Signature_Options_Reader& options);
 
       explicit Verification_with_Hash(const AlgorithmIdentifier& alg_id,
                                       std::string_view pk_algo,
@@ -111,7 +109,7 @@ class Signature_with_Hash : public Signature {
       ~Signature_with_Hash() override;
 
    protected:
-      explicit Signature_with_Hash(const PK_Signature_Options& options);
+      explicit Signature_with_Hash(const PK_Signature_Options_Reader& options);
 
       std::string hash_function() const final;
 
@@ -138,7 +136,7 @@ class Key_Agreement_with_KDF : public Key_Agreement {
       * @param options must specify either a KDF or the raw shared key,
       * since the agreed value is never a uniform key
       */
-      explicit Key_Agreement_with_KDF(const PK_Key_Agreement_Options& options);
+      explicit Key_Agreement_with_KDF(const PK_Key_Agreement_Options_Reader& options);
 
    private:
       virtual secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) = 0;
@@ -168,7 +166,7 @@ class KEM_Encryption_with_KDF : public KEM_Encryption {
       * @param options the KEM options; if these do not specify a KDF then
       * whether the raw output can be used directly is decided by raw_key
       */
-      KEM_Encryption_with_KDF(const PK_KEM_Options& options, RawKemSharedKey raw_key);
+      KEM_Encryption_with_KDF(const PK_KEM_Options_Reader& options, KemSharedKeyQuality raw_key);
 
    private:
       std::unique_ptr<KDF> m_kdf;
@@ -195,7 +193,7 @@ class KEM_Decryption_with_KDF : public KEM_Decryption {
       * @param options the KEM options; if these do not specify a KDF then
       * whether the raw output can be used directly is decided by raw_key
       */
-      KEM_Decryption_with_KDF(const PK_KEM_Options& options, RawKemSharedKey raw_key);
+      KEM_Decryption_with_KDF(const PK_KEM_Options_Reader& options, KemSharedKeyQuality raw_key);
 
    private:
       std::unique_ptr<KDF> m_kdf;

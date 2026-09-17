@@ -597,9 +597,10 @@ class PK_Signature_Options_Duplicate_Test final : public Test {
                                  .with_deterministic_signature()
                                  .with_explicit_trailer_field(false)
                                  .with_explicit_trailer_field();
-            result.test_is_true("DER flag set", opts.using_der_encoded_signature());
-            result.test_is_true("deterministic flag set", opts.using_deterministic_signature());
-            result.test_is_true("explicit trailer flag set", opts.using_explicit_trailer_field());
+            const std::string desc = opts.to_string();
+            result.test_is_true("DER flag set", desc.find("DerSignature") != std::string::npos);
+            result.test_is_true("deterministic flag set", desc.find("Deterministic") != std::string::npos);
+            result.test_is_true("explicit trailer flag set", desc.find("ExplicitTrailer") != std::string::npos);
          });
 
          return {result};

@@ -28,6 +28,7 @@
 #include <botan/internal/enc_padding.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mem_utils.h>
+#include <botan/internal/pk_options_impl.h>
 #include <botan/internal/tpm2_algo_mappings.h>
 #include <botan/internal/tpm2_util.h>
 
@@ -527,10 +528,10 @@ TSS2_RC rsa_pk_encrypt(TPM2B_PUBLIC* pub_tpm_key,
                return create_oaep();
             case TPM2_ALG_NULL:
                return Botan::EncryptionPaddingScheme::create_or_throw(
-                  Botan::PK_Encryption_Options().with_padding("Raw"));
+                  Botan::PK_Options_Reader_Access::read(Botan::PK_Encryption_Options().with_padding("Raw")));
             case TPM2_ALG_RSAES:
                return Botan::EncryptionPaddingScheme::create_or_throw(
-                  Botan::PK_Encryption_Options().with_padding("PKCS1v15"));
+                  Botan::PK_Options_Reader_Access::read(Botan::PK_Encryption_Options().with_padding("PKCS1v15")));
             default:
                return std::nullopt;  // -> not supported
          }

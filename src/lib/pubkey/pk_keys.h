@@ -22,10 +22,10 @@ namespace Botan {
 
 class BigInt;
 class RandomNumberGenerator;
-class PK_Signature_Options;
-class PK_Encryption_Options;
-class PK_KEM_Options;
-class PK_Key_Agreement_Options;
+class PK_Signature_Options_Reader;
+class PK_Encryption_Options_Reader;
+class PK_KEM_Options_Reader;
+class PK_Key_Agreement_Options_Reader;
 
 /**
 * Enumeration specifying the signature format.
@@ -260,8 +260,8 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       * @param options which specify parameters of the encryption beyond those
       * implicit to the public key itself
       */
-      virtual std::unique_ptr<PK_Ops::Encryption> _create_encryption_op(RandomNumberGenerator& rng,
-                                                                        const PK_Encryption_Options& options) const;
+      virtual std::unique_ptr<PK_Ops::Encryption> _create_encryption_op(
+         RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -289,7 +289,8 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       * @param options which specify parameters of the KEM beyond those
       * implicit to the public key itself
       */
-      virtual std::unique_ptr<PK_Ops::KEM_Encryption> _create_kem_encryption_op(const PK_KEM_Options& options) const;
+      virtual std::unique_ptr<PK_Ops::KEM_Encryption> _create_kem_encryption_op(
+         const PK_KEM_Options_Reader& options) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -313,7 +314,8 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       * @param options which specify parameters of the signature beyond those
       * implicit to the public key itself
       */
-      virtual std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const;
+      virtual std::unique_ptr<PK_Ops::Verification> _create_verification_op(
+         const PK_Signature_Options_Reader& options) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -419,8 +421,8 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * @param options which specify parameters of the encryption beyond those
       * implicit to the key itself
       */
-      virtual std::unique_ptr<PK_Ops::Decryption> _create_decryption_op(RandomNumberGenerator& rng,
-                                                                        const PK_Encryption_Options& options) const;
+      virtual std::unique_ptr<PK_Ops::Decryption> _create_decryption_op(
+         RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -452,8 +454,8 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * @param options which specify parameters of the KEM beyond those
       * implicit to the key itself
       */
-      virtual std::unique_ptr<PK_Ops::KEM_Decryption> _create_kem_decryption_op(RandomNumberGenerator& rng,
-                                                                                const PK_KEM_Options& options) const;
+      virtual std::unique_ptr<PK_Ops::KEM_Decryption> _create_kem_decryption_op(
+         RandomNumberGenerator& rng, const PK_KEM_Options_Reader& options) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -485,7 +487,7 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * @param options allow controlling behavior
       */
       virtual std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
-                                                                      const PK_Signature_Options& options) const;
+                                                                      const PK_Signature_Options_Reader& options) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -518,7 +520,7 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * those implicit to the key itself
       */
       virtual std::unique_ptr<PK_Ops::Key_Agreement> _create_key_agreement_op(
-         RandomNumberGenerator& rng, const PK_Key_Agreement_Options& options) const;
+         RandomNumberGenerator& rng, const PK_Key_Agreement_Options_Reader& options) const;
 
       /**
       * This is an internal library function exposed on key types.

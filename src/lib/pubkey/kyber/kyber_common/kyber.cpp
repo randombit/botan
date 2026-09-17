@@ -23,6 +23,7 @@
 #include <botan/internal/kyber_constants.h>
 #include <botan/internal/kyber_keys.h>
 #include <botan/internal/kyber_types.h>
+#include <botan/internal/pk_options_impl.h>
 
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
    #include <botan/internal/kyber_round3_impl.h>
@@ -292,44 +293,42 @@ bool Kyber_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const 
 }
 
 std::unique_ptr<PK_Ops::KEM_Encryption> Kyber_PublicKey::_create_kem_encryption_op(
-   const PK_KEM_Options& options) const {
-   if(!options.using_provider()) {
+   const PK_KEM_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
+
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
-      if(mode().is_kyber_round3()) {
-         return std::make_unique<Kyber_KEM_Encryptor>(m_public, options);
-      }
+   if(mode().is_kyber_round3()) {
+      return std::make_unique<Kyber_KEM_Encryptor>(m_public, options);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ML_KEM)
-      if(mode().is_ml_kem()) {
-         return std::make_unique<ML_KEM_Encryptor>(m_public, options);
-      }
+   if(mode().is_ml_kem()) {
+      return std::make_unique<ML_KEM_Encryptor>(m_public, options);
+   }
 #endif
 
-      BOTAN_ASSERT_UNREACHABLE();
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   BOTAN_ASSERT_UNREACHABLE();
 }
 
 std::unique_ptr<PK_Ops::KEM_Decryption> Kyber_PrivateKey::_create_kem_decryption_op(
-   RandomNumberGenerator& rng, const PK_KEM_Options& options) const {
+   RandomNumberGenerator& rng, const PK_KEM_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
-   if(!options.using_provider()) {
+   require_software_provider(options, algo_name());
+
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
-      if(mode().is_kyber_round3()) {
-         return std::make_unique<Kyber_KEM_Decryptor>(m_private, m_public, options);
-      }
+   if(mode().is_kyber_round3()) {
+      return std::make_unique<Kyber_KEM_Decryptor>(m_private, m_public, options);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ML_KEM)
-      if(mode().is_ml_kem()) {
-         return std::make_unique<ML_KEM_Decryptor>(m_private, m_public, options);
-      }
+   if(mode().is_ml_kem()) {
+      return std::make_unique<ML_KEM_Decryptor>(m_private, m_public, options);
+   }
 #endif
 
-      BOTAN_ASSERT_UNREACHABLE();
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   BOTAN_ASSERT_UNREACHABLE();
 }
 
 MlPrivateKeyFormat Kyber_PrivateKey::private_key_format() const {

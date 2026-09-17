@@ -7,7 +7,7 @@
 #include <botan/internal/enc_padding.h>
 
 #include <botan/exceptn.h>
-#include <botan/pk_options.h>
+#include <botan/pk_options_readers.h>
 
 #if defined(BOTAN_HAS_EME_OAEP)
    #include <botan/internal/oaep.h>
@@ -24,13 +24,13 @@
 namespace Botan {
 
 std::unique_ptr<EncryptionPaddingScheme> EncryptionPaddingScheme::create_or_throw(
-   const PK_Encryption_Options& options) {
+   const PK_Encryption_Options_Reader& options) {
    // Encrypting without padding is dangerous, so it must be requested explicitly
    if(!options.using_padding()) {
       throw Lookup_Error("Public key encryption requires specifying a padding scheme");
    }
 
-   const std::string padding = options.padding().value();
+   const std::string& padding = options.padding().value();
 
    // Any option not examined by the selected scheme is rejected by the caller
 

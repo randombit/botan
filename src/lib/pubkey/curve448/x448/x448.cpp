@@ -14,6 +14,7 @@
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 #include <botan/internal/x448_internal.h>
 
 namespace Botan {
@@ -153,7 +154,8 @@ namespace {
 */
 class X448_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
    public:
-      X448_KA_Operation(std::shared_ptr<const X448_PrivateKey_Data> key, const PK_Key_Agreement_Options& options) :
+      X448_KA_Operation(std::shared_ptr<const X448_PrivateKey_Data> key,
+                        const PK_Key_Agreement_Options_Reader& options) :
             PK_Ops::Key_Agreement_with_KDF(options), m_key(std::move(key)) {}
 
       size_t agreed_value_size() const override { return X448_LEN; }
@@ -197,11 +199,10 @@ class X448_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 }  // namespace
 
 std::unique_ptr<PK_Ops::Key_Agreement> X448_PrivateKey::_create_key_agreement_op(
-   RandomNumberGenerator& /*rng*/, const PK_Key_Agreement_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<X448_KA_Operation>(m_private, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   RandomNumberGenerator& /*rng*/, const PK_Key_Agreement_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<X448_KA_Operation>(m_private, options);
 }
 
 }  // namespace Botan

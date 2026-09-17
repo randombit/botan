@@ -308,18 +308,16 @@ std::unique_ptr<Public_Key> XMSS_PrivateKey::public_key() const {
    return std::make_unique<XMSS_PublicKey>(xmss_parameters().oid(), root(), public_seed());
 }
 
-std::unique_ptr<PK_Ops::Signature> XMSS_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
-                                                                         const PK_Signature_Options& options) const {
+std::unique_ptr<PK_Ops::Signature> XMSS_PrivateKey::_create_signature_op(
+   RandomNumberGenerator& rng, const PK_Signature_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
 
    validate_for_hash_based_signature(options, "XMSS", xmss_parameters().hash_function_name());
    acknowledge_always_deterministic(options);
 
-   if(!options.using_provider()) {
-      return std::make_unique<XMSS_Signature_Operation>(*this);
-   }
+   require_software_provider(options, algo_name());
 
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   return std::make_unique<XMSS_Signature_Operation>(*this);
 }
 
 }  // namespace Botan
