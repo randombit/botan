@@ -12,6 +12,7 @@
 #ifndef BOTAN_KYBER_INTERNAL_KEYS_H_
 #define BOTAN_KYBER_INTERNAL_KEYS_H_
 
+#include <botan/module_lattice_keys.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/kyber_algos.h>
 #include <botan/internal/kyber_constants.h>
@@ -39,6 +40,27 @@ class Seed_Expanding_Keypair_Codec final : public Kyber_Keypair_Codec {
       KyberInternalKeypair decode_keypair(std::span<const uint8_t> buffer, KyberConstants mode) const override;
       secure_vector<uint8_t> encode_keypair(KyberInternalKeypair keypair) const override;
 };
+
+/// A decoded private key together with the encoding format it was found in
+struct KyberDecodedKeypair {
+      KyberInternalKeypair keypair;
+      MlPrivateKeyFormat format;
+};
+
+/**
+ * Decodes an ML-KEM private key from any of the three CHOICE alternatives of
+ * the ML-KEM-PrivateKey structure specified in RFC 9935, Section 6. For
+ * backwards compatibility, also the raw 64-byte seed and the raw expanded key
+ * of FIPS 203 (without any ASN.1 wrapping) are accepted.
+ */
+KyberDecodedKeypair decode_ml_kem_private_key(std::span<const uint8_t> private_key, KyberConstants mode);
+
+/**
+ * Encodes an ML-KEM private key as the CHOICE alternative of the
+ * ML-KEM-PrivateKey structure of RFC 9935 selected by @p format.
+ * @throws Encoding_Error if @p format requires the seed but the key pair does not contain it
+ */
+secure_vector<uint8_t> encode_ml_kem_private_key(const KyberInternalKeypair& keypair, MlPrivateKeyFormat format);
 
 class Kyber_PublicKeyInternal final {
    public:
