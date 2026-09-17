@@ -801,6 +801,7 @@ def main(args=None):
             'src/scripts/ci_build.py',
             'src/scripts/install.py',
             'src/scripts/ci_check_generated_files.py',
+            'src/scripts/ci_check_feature_macros.py',
             'src/scripts/ci_check_headers.py',
             'src/scripts/ci_check_install.py',
             'src/scripts/dist.py',
@@ -840,6 +841,9 @@ def main(args=None):
 
         cmds.append(["indir:%s" % (root_dir), py_interp,
                      os.path.join(root_dir, 'src/scripts/ci_check_generated_files.py')])
+
+        cmds.append(["indir:%s" % (root_dir), py_interp,
+                     os.path.join(root_dir, 'src/scripts/ci_check_feature_macros.py')])
 
     elif target == 'typos':
         cmds.append(['indir:%s' % (root_dir), 'typos', '-c', 'src/configs/typos.toml', '.'])
