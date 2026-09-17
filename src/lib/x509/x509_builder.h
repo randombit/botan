@@ -8,6 +8,7 @@
 #define BOTAN_X509_CERT_PARAM_BUILDER_H_
 
 #include <botan/api.h>
+#include <botan/bigint.h>
 #include <botan/pkcs10.h>
 #include <botan/x509cert.h>
 #include <memory>
@@ -52,18 +53,52 @@ class BOTAN_PUBLIC_API(3, 14) CertificateParametersBuilder final {
       * @param not_after the final validity time of the generated certificate
       * @param key the private key
       * @param rng the rng to use
+      * @param serial_number the serial number assigned to the created certificate;
+      *        randomly generated if unset
       * @param hash_fn the hash function to use; if unset a reasonable default is used
       * @param padding optional padding scheme (for specifying RSA-PSS vs RSA-PKCS1,
       *        otherwise not necessary)
       *
       * @return newly created self-signed certificate
+      *
+      * TODO(C++26) Use std::optional<const BigInt&> instead
       */
       X509_Certificate into_self_signed_cert(const ASN1_Time& not_before,
                                              const ASN1_Time& not_after,
                                              const Private_Key& key,
                                              RandomNumberGenerator& rng,
+                                             std::optional<const BigInt> serial_number = std::nullopt,
                                              std::optional<std::string_view> hash_fn = {},
                                              std::optional<std::string_view> padding = {}) const;
+
+      /**
+      * Create a X.509 certificate signed by a certificate authority from these parameters.
+      *
+      * @param not_before the initial validity time of the generated certificate
+      * @param not_after the final validity time of the generated certificate
+      * @param ca_cert the CA certificate
+      * @param ca_key the CA certificate private key
+      * @param pubkey the private key
+      * @param rng the rng to use
+      * @param serial_number the serial number assigned to the created certificate;
+      *        randomly generated if unset
+      * @param hash_fn the hash function to use; if unset a reasonable default is used
+      * @param padding optional padding scheme (for specifying RSA-PSS vs RSA-PKCS1,
+      *        otherwise not necessary)
+      *
+      * @return newly created certificate
+      *
+      * TODO(C++26) Use std::optional<const BigInt&> instead
+      */
+      X509_Certificate into_cert(const ASN1_Time& not_before,
+                                 const ASN1_Time& not_after,
+                                 const X509_Certificate& ca_cert,
+                                 const Private_Key& ca_key,
+                                 const Public_Key& pubkey,
+                                 RandomNumberGenerator& rng,
+                                 std::optional<const BigInt> serial_number = std::nullopt,
+                                 std::optional<std::string_view> hash_fn = {},
+                                 std::optional<std::string_view> padding = {}) const;
 
       /**
       * Create a PKCS10 request
