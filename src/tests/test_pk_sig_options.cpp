@@ -677,6 +677,11 @@ class PK_Signature_Options_Fixed_Hash_Test final : public Test {
             {"XMSS", "XMSS-SHA2_10_192", "Truncated(SHA-256,192)"},
             {"XMSS", "XMSS-SHAKE_10_256", "SHAKE-128(256)"},
    #endif
+   #if defined(BOTAN_HAS_XMSSMT_RFC8391)
+            {"XMSSMT", "XMSSMT-SHA2_20/4_256", "SHA-256"},
+            {"XMSSMT", "XMSSMT-SHA2_20/4_192", "Truncated(SHA-256,192)"},
+            {"XMSSMT", "XMSSMT-SHAKE_20/4_256", "SHAKE-128(256)"},
+   #endif
    #if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2)
             {"SLH-DSA", "SLH-DSA-SHA2-128s", "SHA-256"},
             // For n > 16 the SHA-2 parameter sets hash the message with SHA-512
