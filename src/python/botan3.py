@@ -6,7 +6,7 @@ https://botan.randombit.net
 (C) 2015 Uri  Blumenthal (extensions and patches)
 (C) 2024 Amos Treiber - Rohde & Schwarz Cybersecurity
 (C) 2024,2026 René Meusel - Rohde & Schwarz Cybersecurity
-(C) 2025 Dominik Schricker
+(C) 2025,2026 Dominik Schricker
 
 Botan is released under the Simplified BSD License (see license.txt)
 
@@ -651,6 +651,30 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_ext_as_blocks_get_info, [c_void_p, c_int, POINTER(c_int), POINTER(c_size_t)])
     ffi_api(dll.botan_x509_ext_as_blocks_get_entry_at,
             [c_void_p, c_int, c_size_t, POINTER(c_uint32), POINTER(c_uint32)])
+
+    # X509 Cert Builder
+    ffi_api(dll.botan_x509_cert_builder_destroy, [c_void_p])
+    ffi_api(dll.botan_x509_cert_builder_create, [c_void_p])
+    ffi_api(dll.botan_x509_cert_builder_add_dn_or_alt_name_value, [c_void_p, c_uint, c_char_p])
+    ffi_api(dll.botan_x509_cert_builder_add_allowed_usage, [c_void_p, c_uint32])
+    ffi_api(dll.botan_x509_cert_builder_add_allowed_extended_usage, [c_void_p, c_void_p])
+    ffi_api(dll.botan_x509_cert_builder_set_as_ca_certificate, [c_void_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_builder_into_self_signed_cert,
+            [c_void_p, c_void_p, c_void_p, c_void_p, c_uint64, c_uint64, c_void_p, c_char_p, c_char_p])
+    ffi_api(dll.botan_x509_cert_builder_into_cert,
+            [c_void_p, c_void_p, c_void_p, c_void_p, c_void_p, c_void_p, c_uint64, c_uint64, c_void_p, c_char_p, c_char_p])
+    ffi_api(dll.botan_x509_cert_builder_into_pkcs10_req,
+            [c_void_p, c_void_p, c_void_p, c_void_p, c_char_p, c_char_p, c_char_p])
+
+    ffi_api(dll.botan_x509_pkcs10_req_destroy, [c_void_p])
+    ffi_api(dll.botan_x509_pkcs10_req_load_file, [c_void_p, c_char_p])
+    ffi_api(dll.botan_x509_pkcs10_req_load, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_x509_pkcs10_req_view_pem, [c_void_p, c_void_p, _VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_x509_pkcs10_req_view_der, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_x509_pkcs10_req_get_public_key, [c_void_p, c_void_p])
+    ffi_api(dll.botan_x509_pkcs10_req_verify_signature, [c_void_p, c_void_p])
+    ffi_api(dll.botan_x509_pkcs10_req_sign,
+            [c_void_p, c_void_p, c_void_p, c_void_p, c_void_p, c_uint64, c_uint64, c_void_p, c_char_p, c_char_p])
 
     # X509 CRL
     ffi_api(dll.botan_x509_crl_load, [c_void_p, c_char_p, c_size_t])
@@ -2483,6 +2507,62 @@ def _load_buf_or_file(filename, buf, file_fn, buf_fn):
 #
 # X.509 certificates
 #
+class X509KeyConstraints(IntEnum):
+    NO_CONSTRAINTS = 0
+    DIGITAL_SIGNATURE = 1 << 15
+    NON_REPUDIATION = 1 << 14
+    KEY_ENCIPHERMENT = 1 << 13
+    DATA_ENCIPHERMENT = 1 << 12
+    KEY_AGREEMENT = 1 << 11
+    KEY_CERT_SIGN = 1 << 10
+    CRL_SIGN = 1 << 9
+    ENCIPHER_ONLY = 1 << 8
+    DECIPHER_ONLY = 1 << 7
+
+    @classmethod
+    def to_bits(cls, constraints: list[X509KeyConstraints]) -> int:
+        con = 0
+        for constraint in constraints:
+            con |= constraint.value
+        return con
+
+    @classmethod
+    def from_bits(cls, bits: int) -> list[X509KeyConstraints]:
+        if bits == 0:
+            return X509KeyConstraints.NO_CONSTRAINTS
+        all_constraints = [
+            X509KeyConstraints.DIGITAL_SIGNATURE,
+            X509KeyConstraints.NON_REPUDIATION,
+            X509KeyConstraints.KEY_ENCIPHERMENT,
+            X509KeyConstraints.DATA_ENCIPHERMENT,
+            X509KeyConstraints.KEY_AGREEMENT,
+            X509KeyConstraints.KEY_CERT_SIGN,
+            X509KeyConstraints.CRL_SIGN,
+            X509KeyConstraints.ENCIPHER_ONLY,
+            X509KeyConstraints.DECIPHER_ONLY,
+        ]
+
+        constraints = []
+        for constraint in all_constraints:
+            if bits & constraint.value != 0:
+                constraints.append(constraint)
+        return constraints
+
+    # TODO deprecate this in a future version
+    @classmethod
+    def from_string(cls, constraint: str) -> X509KeyConstraints:
+        try:
+            if isinstance(constraint, X509KeyConstraints):
+                return constraint
+            return cls[constraint]
+        except KeyError as exc:
+            raise BotanException("Not a valid key constraint") from exc
+
+    @classmethod
+    def to_string(cls, constraint: X509KeyConstraints) -> str:
+        return constraint.name
+
+
 class X509Cert: # pylint: disable=invalid-name
     """Class representing an X.509 certificate.
 
@@ -2491,8 +2571,10 @@ class X509Cert: # pylint: disable=invalid-name
 
     def __init__(self, filename: str | None = None, buf: bytes | None = None):
         """Load a certificate from either a file or a bytestring, but not both"""
-        self.__obj = c_void_p(0)
-        self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_cert_load_file, _DLL.botan_x509_cert_load)
+        if not filename and not buf:
+            self.__obj = c_void_p(0)
+        else:
+            self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_cert_load_file, _DLL.botan_x509_cert_load)
 
     def __del__(self):
         _DLL.botan_x509_cert_destroy(self.__obj)
@@ -2605,22 +2687,7 @@ class X509Cert: # pylint: disable=invalid-name
         """Return True if the certificates Key Usage extension contains all constraints given in ``usage_list``.
         Also return True if the certificate doesn't have this extension.
         Example usage constraints are: ``"DIGITAL_SIGNATURE"``, ``"KEY_CERT_SIGN"``, ``"CRL_SIGN"``."""
-        usage_values = {"NO_CONSTRAINTS": 0,
-                        "DIGITAL_SIGNATURE": 32768,
-                        "NON_REPUDIATION": 16384,
-                        "KEY_ENCIPHERMENT": 8192,
-                        "DATA_ENCIPHERMENT": 4096,
-                        "KEY_AGREEMENT": 2048,
-                        "KEY_CERT_SIGN": 1024,
-                        "CRL_SIGN": 512,
-                        "ENCIPHER_ONLY": 256,
-                        "DECIPHER_ONLY": 128}
-        usage = 0
-        for u in usage_list:
-            if u not in usage_values:
-                return False
-            usage += usage_values[u]
-
+        usage = X509KeyConstraints.to_bits([X509KeyConstraints.from_string(x) for x in usage_list])
         rc = _DLL.botan_x509_cert_allowed_usage(self.__obj, c_uint(usage))
         return rc == 0
 
@@ -2809,6 +2876,293 @@ class X509Cert: # pylint: disable=invalid-name
         """Check if the certificate (``self``) is revoked on the given ``crl``."""
         rc = _DLL.botan_x509_is_revoked(crl._handle(), self.__obj)
         return rc == 0
+
+
+class _X509CertificateBuilderDNAltNameTypes(IntEnum):
+    BOTAN_X509_CERT_BUILDER_COMMON_NAME = 0
+    BOTAN_X509_CERT_BUILDER_COUNTRY = 1
+    BOTAN_X509_CERT_BUILDER_ORGANIZATION = 2
+    BOTAN_X509_CERT_BUILDER_ORGANIZATIONAL_UNIT = 3
+    BOTAN_X509_CERT_BUILDER_LOCALITY = 4
+    BOTAN_X509_CERT_BUILDER_STATE = 5
+    BOTAN_X509_CERT_BUILDER_SERIAL_NUMBER = 6
+    BOTAN_X509_CERT_BUILDER_EMAIL = 7
+    BOTAN_X509_CERT_BUILDER_DNS = 8
+    BOTAN_X509_CERT_BUILDER_URI = 9
+    BOTAN_X509_CERT_BUILDER_IPV4 = 10
+    BOTAN_X509_CERT_BUILDER_IPV6 = 11
+    BOTAN_X509_CERT_BUILDER_XMPP = 12
+
+
+class X509CertificateBuilder:
+    def __init__(self):
+        self.__obj = c_void_p(0)
+        _DLL.botan_x509_cert_builder_create(byref(self.__obj))
+
+    def __del__(self):
+        _DLL.botan_x509_cert_builder_destroy(self.__obj)
+
+    def _handle(self):
+        return self.__obj
+
+    def add_common_name(self, name: str):
+        """Add an additional common name to the certificate metadata"""
+        _DLL.botan_x509_cert_builder_add_dn_or_alt_name_value(
+            self.__obj,
+            _X509CertificateBuilderDNAltNameTypes.BOTAN_X509_CERT_BUILDER_COMMON_NAME,
+            _ctype_str(name)
+        )
+
+    def add_country(self, country: str):
+        """Add an additional country name to the certificate metadata"""
+        _DLL.botan_x509_cert_builder_add_dn_or_alt_name_value(
+            self.__obj,
+            _X509CertificateBuilderDNAltNameTypes.BOTAN_X509_CERT_BUILDER_COUNTRY,
+            _ctype_str(country)
+        )
+
+    def add_organization(self, organization: str):
+        """Add an additional organization name to the certificate metadata"""
+        _DLL.botan_x509_cert_builder_add_dn_or_alt_name_value(
+            self.__obj,
+            _X509CertificateBuilderDNAltNameTypes.BOTAN_X509_CERT_BUILDER_ORGANIZATION,
+            _ctype_str(organization)
+        )
+
+    def add_organizational_unit(self, org_unit: str):
+        """Add an additional organization unit name to the certificate metadata"""
+        _DLL.botan_x509_cert_builder_add_dn_or_alt_name_value(
+            self.__obj,
+            _X509CertificateBuilderDNAltNameTypes.BOTAN_X509_CERT_BUILDER_ORGANIZATIONAL_UNIT,
+            _ctype_str(org_unit)
+        )
+
+    def add_locality(self, locality: str):
+        """Add an additional locality name to the certificate metadata"""
+        _DLL.botan_x509_cert_builder_add_dn_or_alt_name_value(
+            self.__obj,
+            _X509CertificateBuilderDNAltNameTypes.BOTAN_X509_CERT_BUILDER_LOCALITY,
+            _ctype_str(locality)
+        )
+
+    def add_state(self, state: str):
+        """Add an additional state name to the certificate metadata"""
+        _DLL.botan_x509_cert_builder_add_dn_or_alt_name_value(
+            self.__obj,
+            _X509CertificateBuilderDNAltNameTypes.BOTAN_X509_CERT_BUILDER_STATE,
+            _ctype_str(state)
+        )
+
+    def add_serial_number(self, serial_number: str):
+        """Add an additional serial number to the certificate metadata
+
+        Note this is the X.520 serial number included in the DN, and has nothing
+        to do with the serial number of the issued certificate."""
+        _DLL.botan_x509_cert_builder_add_dn_or_alt_name_value(
+            self.__obj,
+            _X509CertificateBuilderDNAltNameTypes.BOTAN_X509_CERT_BUILDER_SERIAL_NUMBER,
+            _ctype_str(serial_number)
+        )
+
+    def add_email(self, email: str):
+        """Add an additional email address to the certificate metadata"""
+        _DLL.botan_x509_cert_builder_add_dn_or_alt_name_value(
+            self.__obj,
+            _X509CertificateBuilderDNAltNameTypes.BOTAN_X509_CERT_BUILDER_EMAIL,
+            _ctype_str(email)
+        )
+
+    def add_uri(self, uri: str):
+        """Add an additional URI to the certificate metadata"""
+        _DLL.botan_x509_cert_builder_add_dn_or_alt_name_value(
+            self.__obj,
+            _X509CertificateBuilderDNAltNameTypes.BOTAN_X509_CERT_BUILDER_URI,
+            _ctype_str(uri)
+        )
+
+    def add_dns(self, dns: str):
+        """Add an additional DNS name to the certificate metadata"""
+        _DLL.botan_x509_cert_builder_add_dn_or_alt_name_value(
+            self.__obj,
+            _X509CertificateBuilderDNAltNameTypes.BOTAN_X509_CERT_BUILDER_DNS,
+            _ctype_str(dns)
+        )
+
+    def add_ipv4(self, ipv4: str):
+        """Add an additional IPv4 address to the certificate metadata"""
+        _DLL.botan_x509_cert_builder_add_dn_or_alt_name_value(
+            self.__obj,
+            _X509CertificateBuilderDNAltNameTypes.BOTAN_X509_CERT_BUILDER_IPV4,
+            _ctype_str(ipv4)
+        )
+
+    def add_ipv6(self, ipv6: str):
+        """Add an additional IPv6 address to the certificate metadata"""
+        _DLL.botan_x509_cert_builder_add_dn_or_alt_name_value(
+            self.__obj,
+            _X509CertificateBuilderDNAltNameTypes.BOTAN_X509_CERT_BUILDER_IPV6,
+            _ctype_str(ipv6)
+        )
+
+    def add_xmpp(self, xmpp: str):
+        """Add a XMPP name to the certificate metadata"""
+        _DLL.botan_x509_cert_builder_add_dn_or_alt_name_value(
+            self.__obj,
+            _X509CertificateBuilderDNAltNameTypes.BOTAN_X509_CERT_BUILDER_XMPP,
+            _ctype_str(xmpp)
+        )
+
+    def add_allowed_usage(self, usage_list: list[X509KeyConstraints]):
+        """Add another allowed usage to the KeyUsage extension
+
+        Repeated invocations are cumulative"""
+        usage = X509KeyConstraints.to_bits(usage_list)
+        _DLL.botan_x509_cert_builder_add_allowed_usage(self.__obj, c_uint32(usage))
+
+    def add_allowed_extended_usage(self, oid: OID):
+        """Add another allowed usage to the ExtendedKeyUsage extension"""
+        _DLL.botan_x509_cert_builder_add_allowed_extended_usage(self.__obj, oid._handle())
+
+    def set_as_ca_certificate(self, limit: int | None = None):
+        """Set the parameters as being for a CA certificate
+
+        May be called at most once."""
+        _DLL.botan_x509_cert_builder_set_as_ca_certificate(self.__obj, c_size_t(limit) if limit is not None else None)
+
+    def into_self_signed_cert(
+        self,
+        key: PrivateKey,
+        rng: RandomNumberGenerator,
+        not_before: int,
+        not_after: int,
+        serial_number: MPI | None = None,
+        hash_fn: str | None = None,
+        padding: str | None = None
+    ) -> X509Cert:
+        """Create a self-signed X.509 certificate"""
+        cert = X509Cert()
+        serial = byref(serial_number._handle()) if serial_number is not None else None
+        _DLL.botan_x509_cert_builder_into_self_signed_cert(
+            byref(cert._handle()),
+            self.__obj,
+            key._handle(),
+            rng._handle(),
+            not_before,
+            not_after,
+            serial,
+            _ctype_str(hash_fn),
+            _ctype_str(padding),
+        )
+        return cert
+
+    def into_cert(
+        self,
+        ca_cert: X509Cert,
+        ca_key: PrivateKey,
+        key: PrivateKey,
+        rng: RandomNumberGenerator,
+        not_before: int,
+        not_after: int,
+        serial_number: MPI | None = None,
+        hash_fn: str | None = None,
+        padding: str | None = None
+    ) -> X509Cert:
+        """Create a X.509 certificate signed by a certificate authority"""
+        cert = X509Cert()
+        serial = byref(serial_number._handle()) if serial_number is not None else None
+        _DLL.botan_x509_cert_builder_into_cert(
+            byref(cert._handle()),
+            self.__obj,
+            ca_cert._handle(),
+            ca_key._handle(),
+            key._handle(),
+            rng._handle(),
+            not_before,
+            not_after,
+            serial,
+            _ctype_str(hash_fn),
+            _ctype_str(padding),
+        )
+        return cert
+
+    def into_request(
+        self,
+        key: PrivateKey,
+        rng: RandomNumberGenerator,
+        hash_fn: str | None = None,
+        padding: str | None = None,
+        challenge_password: str | None = None
+    ) -> PKCS10Request:
+        """Create a PKCS10 request"""
+        req = PKCS10Request()
+        _DLL.botan_x509_cert_builder_into_pkcs10_req(
+            byref(req._handle()),
+            self.__obj,
+            key._handle(),
+            rng._handle(),
+            _ctype_str(hash_fn),
+            _ctype_str(padding),
+            _ctype_str(challenge_password)
+        )
+        return req
+
+
+class PKCS10Request:
+    def __init__(self, filename: str | None = None, buf: bytes | None = None):
+        if not filename and not buf:
+            self.__obj = c_void_p(0)
+        else:
+            self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_pkcs10_req_load_file, _DLL.botan_x509_pkcs10_req_load)
+
+    def __del__(self):
+        _DLL.botan_x509_pkcs10_req_destroy(self.__obj)
+
+    def _handle(self):
+        return self.__obj
+
+    def public_key(self) -> PublicKey:
+        """Get the public key associated with this request"""
+        pub = c_void_p(0)
+        _DLL.botan_x509_pkcs10_req_get_public_key(self.__obj, byref(pub))
+        return PublicKey(pub)
+
+    def verify(self, key: PublicKey) -> bool:
+        rc = _DLL.botan_x509_pkcs10_req_verify_signature(self.__obj, key._handle())
+        return rc == 1
+
+    def sign(
+        self,
+        issuing_cert: X509Cert,
+        issuing_key: PrivateKey,
+        rng: RandomNumberGenerator,
+        not_before: int,
+        not_after: int,
+        serial_number: MPI | None = None,
+        hash_fn: str | None = None,
+        padding: str | None = None
+    ) -> X509Cert:
+        """Sign this PKCS#10 request"""
+        cert = X509Cert()
+        serial_no = byref(serial_number._handle()) if serial_number is not None else None
+        _DLL.botan_x509_pkcs10_req_sign(
+            byref(cert._handle()),
+            self.__obj,
+            issuing_cert._handle(),
+            issuing_key._handle(),
+            rng._handle(),
+            not_before,
+            not_after,
+            serial_no,
+            _ctype_str(hash_fn),
+            _ctype_str(padding)
+        )
+        return cert
+
+    def to_pem(self) -> str:
+        return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_x509_pkcs10_req_view_pem(self.__obj, vc, vfn))
+
+    def to_der(self) -> bytes:
+        return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_x509_pkcs10_req_view_der(self.__obj, vc, vfn))
 
 
 #
