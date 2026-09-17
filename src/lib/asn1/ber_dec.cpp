@@ -1020,10 +1020,10 @@ uint8_t asn1_bitstring_unused_bits(const BER_Object& obj, ASN1_Type type_tag, AS
 /*
 * BER decode a BIT STRING or OCTET STRING
 */
-BER_Decoder& BER_Decoder::decode(secure_vector<uint8_t>& buffer,
-                                 ASN1_Type real_type,
-                                 ASN1_Type type_tag,
-                                 ASN1_Class class_tag) {
+BER_Decoder& BER_Decoder::decode_into_byte_vector(secure_vector<uint8_t>& buffer,
+                                                  ASN1_Type real_type,
+                                                  ASN1_Type type_tag,
+                                                  ASN1_Class class_tag) {
    if(real_type != ASN1_Type::OctetString && real_type != ASN1_Type::BitString) {
       throw BER_Bad_Tag("Bad tag for {BIT,OCTET} STRING", static_cast<uint32_t>(real_type));
    }
@@ -1032,10 +1032,10 @@ BER_Decoder& BER_Decoder::decode(secure_vector<uint8_t>& buffer,
    return (*this);
 }
 
-BER_Decoder& BER_Decoder::decode(std::vector<uint8_t>& buffer,
-                                 ASN1_Type real_type,
-                                 ASN1_Type type_tag,
-                                 ASN1_Class class_tag) {
+BER_Decoder& BER_Decoder::decode_into_byte_vector(std::vector<uint8_t>& buffer,
+                                                  ASN1_Type real_type,
+                                                  ASN1_Type type_tag,
+                                                  ASN1_Class class_tag) {
    if(real_type != ASN1_Type::OctetString && real_type != ASN1_Type::BitString) {
       throw BER_Bad_Tag("Bad tag for {BIT,OCTET} STRING", static_cast<uint32_t>(real_type));
    }
