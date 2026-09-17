@@ -390,6 +390,23 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       }
 
       /**
+      * Decode a BIT STRING or OCTET STRING with an IMPLICIT tagging
+      *
+      * @param v where the contents are written
+      * @param real_type either ASN1_Type::OctetString or ASN1_Type::BitString
+      * @param type_tag the expected type tag
+      * @param class_tag the expected class tag
+      */
+      template <typename T>
+         requires concepts::ordinary_byte_vector<strong_type_wrapped_type<T>>
+      BER_Decoder& decode(T& v,
+                          ASN1_Type real_type,
+                          ASN1_Type type_tag,
+                          ASN1_Class class_tag = ASN1_Class::ContextSpecific) {
+         return decode_into_byte_vector(unwrap_strong_type(v), real_type, type_tag, class_tag);
+      }
+
+      /**
       * Decode a BOOLEAN with an IMPLICIT tagging
       *
       * @param v where the value is written
@@ -415,32 +432,6 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       * @param class_tag the expected class tag
       */
       BER_Decoder& decode(BigInt& v, ASN1_Type type_tag, ASN1_Class class_tag = ASN1_Class::ContextSpecific);
-
-      /**
-      * Decode a BIT STRING or OCTET STRING with an IMPLICIT tagging
-      *
-      * @param v where the contents are written
-      * @param real_type either ASN1_Type::OctetString or ASN1_Type::BitString
-      * @param type_tag the expected type tag
-      * @param class_tag the expected class tag
-      */
-      BER_Decoder& decode(std::vector<uint8_t>& v,
-                          ASN1_Type real_type,
-                          ASN1_Type type_tag,
-                          ASN1_Class class_tag = ASN1_Class::ContextSpecific);
-
-      /**
-      * Decode a BIT STRING or OCTET STRING with an IMPLICIT tagging
-      *
-      * @param v where the contents are written
-      * @param real_type either ASN1_Type::OctetString or ASN1_Type::BitString
-      * @param type_tag the expected type tag
-      * @param class_tag the expected class tag
-      */
-      BER_Decoder& decode(secure_vector<uint8_t>& v,
-                          ASN1_Type real_type,
-                          ASN1_Type type_tag,
-                          ASN1_Class class_tag = ASN1_Class::ContextSpecific);
 
       /**
       * Decode a BIT STRING, retaining the count of unused bits
@@ -823,6 +814,16 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       size_t read_bytes(std::span<uint8_t> out);
 
       BER_Object get_next_value(size_t sizeofT, ASN1_Type type_tag, ASN1_Class class_tag);
+
+      BER_Decoder& decode_into_byte_vector(std::vector<uint8_t>& v,
+                                           ASN1_Type real_type,
+                                           ASN1_Type type_tag,
+                                           ASN1_Class class_tag = ASN1_Class::ContextSpecific);
+
+      BER_Decoder& decode_into_byte_vector(secure_vector<uint8_t>& v,
+                                           ASN1_Type real_type,
+                                           ASN1_Type type_tag,
+                                           ASN1_Class class_tag = ASN1_Class::ContextSpecific);
 
       Limits m_limits;
       BER_Decoder* m_parent = nullptr;
