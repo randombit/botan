@@ -17,20 +17,6 @@ namespace Botan {
 
 // NOLINTBEGIN(portability-simd-intrinsics)
 
-BOTAN_FORCE_INLINE BOTAN_FN_ISA_SIMD_4X32 SIMD_4x32 reverse_vector(const SIMD_4x32& in) {
-#if defined(BOTAN_SIMD_USE_SSSE3)
-   const __m128i BSWAP_MASK = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-   return SIMD_4x32(_mm_shuffle_epi8(in.raw(), BSWAP_MASK));
-#elif defined(BOTAN_SIMD_USE_NEON)
-   const uint8_t maskb[16] = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
-   const uint8x16_t mask = vld1q_u8(maskb);
-   return SIMD_4x32(vreinterpretq_u32_u8(vqtbl1q_u8(vreinterpretq_u8_u32(in.raw()), mask)));
-#elif defined(BOTAN_SIMD_USE_ALTIVEC)
-   const __vector unsigned char mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
-   return SIMD_4x32(vec_perm(in.raw(), in.raw(), mask));
-#endif
-}
-
 template <int M>
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_CLMUL SIMD_4x32 clmul(const SIMD_4x32& H, const SIMD_4x32& x) {
    static_assert(M == 0x00 || M == 0x01 || M == 0x10 || M == 0x11, "Valid clmul mode");
@@ -56,8 +42,8 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_CLMUL SIMD_4x32 clmul(const SIMD_4x32& H, const 
    SIMD_4x32 i2 = H;
 
    if constexpr(std::endian::native == std::endian::big) {
-      i1 = reverse_vector(i1).bswap();
-      i2 = reverse_vector(i2).bswap();
+      i1 = i1.reverse_all_bytes().bswap();
+      i2 = i2.reverse_all_bytes().bswap();
    }
 
    if constexpr(M == (0x11 ^ flip)) {
@@ -84,7 +70,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_CLMUL SIMD_4x32 clmul(const SIMD_4x32& H, const 
    auto z = SIMD_4x32(reinterpret_cast<__vector unsigned int>(rv));
 
    if constexpr(std::endian::native == std::endian::big) {
-      z = reverse_vector(z).bswap();
+      z = z.reverse_all_bytes().bswap();
    }
 
    return z;
@@ -100,7 +86,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_CLMUL SIMD_4x32 clmul(const SIMD_4x32& H, const 
 template <bool BSWAP>
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_SIMD_4X32 SIMD_4x32 load_block(const uint8_t in[]) {
    if constexpr(BSWAP) {
-      return reverse_vector(SIMD_4x32::load_le(in));
+      return SIMD_4x32::load_le(in).reverse_all_bytes();
    } else {
       return SIMD_4x32::load_le(in);
    }
@@ -109,7 +95,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_SIMD_4X32 SIMD_4x32 load_block(const uint8_t in[
 template <bool BSWAP>
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_SIMD_4X32 void store_block(const SIMD_4x32& b, uint8_t out[]) {
    if constexpr(BSWAP) {
-      reverse_vector(b).store_le(out);
+      b.reverse_all_bytes().store_le(out);
    } else {
       b.store_le(out);
    }

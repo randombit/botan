@@ -141,6 +141,14 @@ class SIMD_4X32_Tests final : public Test {
                  Botan::reverse_bytes(pat3),
                  Botan::reverse_bytes(pat4));
 
+         test_eq(result,
+                 "reverse_all_bytes",
+                 Botan::SIMD_4x32(0x00010203, 0x04050607, 0x08090A0B, 0x0C0D0E0F).reverse_all_bytes(),
+                 0x0F0E0D0C,
+                 0x0B0A0908,
+                 0x07060504,
+                 0x03020100);
+
          Botan::SIMD_4x32 t1(pat1, pat2, pat3, pat4);
          Botan::SIMD_4x32 t2(pat1 + 1, pat2 + 1, pat3 + 1, pat4 + 1);
          Botan::SIMD_4x32 t3(pat1 + 2, pat2 + 2, pat3 + 2, pat4 + 2);
