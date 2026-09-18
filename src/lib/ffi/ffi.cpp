@@ -6,6 +6,7 @@
 
 #include <botan/ffi.h>
 
+#include <botan/assert.h>
 #include <botan/base64.h>
 #include <botan/hex.h>
 #include <botan/mem_ops.h>
@@ -315,6 +316,26 @@ int botan_ffi_supports_api(uint32_t api_version) {
    }
 
    // Something else:
+   return -1;
+}
+
+uint32_t botan_ffi_tls_api_version() {
+#if defined(BOTAN_HAS_FFI_TLS)
+   return BOTAN_HAS_FFI_TLS;
+#else
+   return 0;
+#endif
+}
+
+int botan_ffi_tls_supports_api(uint32_t api_version) {
+#if defined(BOTAN_HAS_FFI_TLS)
+   if(api_version == BOTAN_HAS_FFI_TLS) {
+      return BOTAN_FFI_SUCCESS;
+   }
+#else
+   BOTAN_UNUSED(api_version);
+#endif
+
    return -1;
 }
 
