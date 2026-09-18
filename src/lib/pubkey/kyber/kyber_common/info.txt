@@ -9,7 +9,7 @@ type -> "Internal"
 </module_info>
 
 <requires>
-pqcrystals
+module_lattice
 pubkey
 hash
 rng
