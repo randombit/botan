@@ -107,6 +107,10 @@ std::optional<EC_AffinePoint> EC_AffinePoint::from_bigint_xy(const EC_Group& gro
    return EC_AffinePoint::deserialize_uncompressed(group, sec1);
 }
 
+EC_Group EC_AffinePoint::group() const {
+   return EC_Group(inner().group());
+}
+
 size_t EC_AffinePoint::field_element_bytes() const {
    return inner().field_element_bytes();
 }

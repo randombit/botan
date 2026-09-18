@@ -447,10 +447,10 @@ EC_Group::EC_Group(const EC_Group&) = default;
 EC_Group& EC_Group::operator=(const EC_Group&) = default;
 
 // Internal constructor
-EC_Group::EC_Group(std::shared_ptr<EC_Group_Data>&& data) : m_data(std::move(data)) {}
+EC_Group::EC_Group(std::shared_ptr<const EC_Group_Data> data) : m_data(std::move(data)) {}
 
 //static
-bool EC_Group::verify_generator_order(std::shared_ptr<EC_Group_Data> data) {
+bool EC_Group::verify_generator_order(std::shared_ptr<const EC_Group_Data> data) {
    const EC_Group group(std::move(data));
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
