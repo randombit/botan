@@ -24,8 +24,9 @@ namespace Botan::TLS {
 std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
                                               Protocol_Version offered_version,
                                               Callbacks& cb,
-                                              const Policy& policy) {
-   auto random = make_hello_random(rng, cb, policy);
+                                              const Policy& policy,
+                                              const CryptoOperations& crypto) {
+   auto random = make_hello_random(rng, cb, policy, crypto);
 
    // RFC 8446 4.1.3
    //    TLS 1.3 has a downgrade protection mechanism embedded in the server's

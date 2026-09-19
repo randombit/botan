@@ -31,7 +31,8 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
                                                                            Credentials_Manager& credentials_mgr,
                                                                            RandomNumberGenerator& rng,
                                                                            const Policy& policy,
-                                                                           Callbacks& cb) {
+                                                                           Callbacks& cb,
+                                                                           CryptoOperations& crypto) {
    const auto& exts = ch.extensions();
 
    // RFC 8446 4.2.9
@@ -77,7 +78,7 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
       BOTAN_STATE_CHECK(hello_retry_request_allowed);
       return Hello_Retry_Request(ch, selected_group, policy, cb);
    } else {
-      return Server_Hello_13(ch, selected_group, session_mgr, credentials_mgr, rng, cb, policy);
+      return Server_Hello_13(ch, selected_group, session_mgr, credentials_mgr, rng, cb, policy, crypto);
    }
 }
 
@@ -279,11 +280,12 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
                                  Credentials_Manager& credentials_mgr,
                                  RandomNumberGenerator& rng,
                                  Callbacks& cb,
-                                 const Policy& policy) :
+                                 const Policy& policy,
+                                 CryptoOperations& crypto) :
       Server_Hello(std::make_unique<Server_Hello_Internal>(
          Protocol_Version::TLS_V12,
          ch.session_id(),
-         make_server_hello_random(rng, Protocol_Version::TLS_V13, cb, policy),
+         make_server_hello_random(rng, Protocol_Version::TLS_V13, cb, policy, crypto),
          choose_ciphersuite(ch, policy),
          uint8_t(0) /* compression method */
          )) {
@@ -300,7 +302,7 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
    if(key_exchange_group.has_value()) {
       BOTAN_ASSERT_NOMSG(ch.extensions().has<Key_Share>());
       m_data->extensions().add(Key_Share::create_as_encapsulation(
-         key_exchange_group.value(), *ch.extensions().get<Key_Share>(), policy, cb, rng));
+         key_exchange_group.value(), *ch.extensions().get<Key_Share>(), policy, crypto, rng));
    }
 
    const auto& ch_exts = ch.extensions();

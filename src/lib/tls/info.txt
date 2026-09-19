@@ -14,6 +14,7 @@ tls.h
 tls_alert.h
 tls_algos.h
 tls_callbacks.h
+tls_crypto_operations.h
 tls_channel.h
 tls_ciphersuite.h
 tls_client.h

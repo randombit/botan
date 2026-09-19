@@ -266,7 +266,8 @@ class TLS_Key_Share_CH_Generation_Test final : public Text_Based_Test {
          Fixed_Output_RNG rng;
          rng.add_entropy(rng_data.data(), rng_data.size());
 
-         const Botan::TLS::Key_Share share(policy, cb, rng);
+         Botan::TLS::DefaultCryptoOperations crypto(cb);
+         const Botan::TLS::Key_Share share(policy, crypto, rng);
          const auto serialized_buffer = share.serialize(Botan::TLS::Connection_Side::Client);
 
          result.test_bin_eq("key_share_CH_offers test", serialized_buffer, expected_key_share);

@@ -24,6 +24,7 @@
 namespace Botan::TLS {
 
 std::shared_ptr<Client_Impl_13> Client_Impl_13::create(const std::shared_ptr<Callbacks>& callbacks,
+                                                       const std::shared_ptr<CryptoOperations>& crypto,
                                                        const std::shared_ptr<Session_Manager>& session_manager,
                                                        const std::shared_ptr<Credentials_Manager>& creds,
                                                        const std::shared_ptr<const Policy>& policy,
@@ -31,7 +32,7 @@ std::shared_ptr<Client_Impl_13> Client_Impl_13::create(const std::shared_ptr<Cal
                                                        Server_Information server_info,
                                                        const std::vector<std::string>& next_protocols) {
    auto self = std::make_shared<Client_Impl_13>(
-      Private{}, callbacks, session_manager, creds, policy, rng, std::move(server_info));
+      Private{}, callbacks, crypto, session_manager, creds, policy, rng, std::move(server_info));
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
    if(policy->allow_tls12()) {
@@ -60,7 +61,8 @@ std::shared_ptr<Client_Impl_13> Client_Impl_13::create(const std::shared_ptr<Cal
                       self->m_info.hostname(),
                       next_protocols,
                       self->m_handshake->resumed_session,
-                      creds->find_preshared_keys(self->m_info.hostname(), Connection_Side::Client))));
+                      creds->find_preshared_keys(self->m_info.hostname(), Connection_Side::Client),
+                      crypto)));
 
    self->maybe_handle_compatibility_mode(Compat_Mode_Situation::AfterSendingFirstClientHello);
 
@@ -326,7 +328,7 @@ void Client_Impl_13::handle(const Server_Hello_13& sh) {
    }
 
    auto* my_keyshare = ch.extensions().get<Key_Share>();
-   auto shared_secret = my_keyshare->decapsulate(*sh.extensions().get<Key_Share>(), policy(), callbacks(), rng());
+   auto shared_secret = my_keyshare->decapsulate(*sh.extensions().get<Key_Share>(), policy(), crypto(), rng());
 
    m_transcript_hash.set_algorithm(cipher.value().prf_algo());
 
@@ -350,7 +352,7 @@ void Client_Impl_13::handle(const Server_Hello_13& sh) {
    } else {
       m_handshake->resumed_session.reset();  // might have been set if we attempted a resumption
       m_cipher_state = Cipher_State::init_with_server_hello(
-         m_side, std::move(shared_secret), cipher.value(), m_transcript_hash.current(), *this);
+         m_side, std::move(shared_secret), cipher.value(), m_transcript_hash.current(), *this, crypto_ptr());
    }
 
    callbacks().tls_examine_extensions(sh.extensions(), Connection_Side::Server, Handshake_Type::ServerHello);
@@ -391,7 +393,7 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr) {
    m_transcript_hash =
       Transcript_Hash_State::recreate_after_hello_retry_request(cipher.value().prf_algo(), m_transcript_hash);
 
-   ch.retry(hrr, m_transcript_hash, callbacks(), rng());
+   ch.retry(hrr, m_transcript_hash, callbacks(), rng(), crypto());
 
    callbacks().tls_examine_extensions(hrr.extensions(), Connection_Side::Server, Handshake_Type::HelloRetryRequest);
 
@@ -538,7 +540,7 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
    }
 
    const bool sig_valid = certificate_verify_msg.verify(
-      *m_handshake->state.server_certificate().public_key(), callbacks(), m_transcript_hash.previous());
+      *m_handshake->state.server_certificate().public_key(), crypto(), m_transcript_hash.previous());
 
    if(!sig_valid) {
       throw TLS_Exception(Alert::DecryptError, "Server certificate verification failed");
@@ -582,7 +584,7 @@ void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedHands
    //       CertificateRequest, the value of certificate_request_context in
    //       that message.
    flight.add(m_handshake->state.sending(
-      Certificate_13(cert_request, m_info.hostname(), credentials_manager(), callbacks(), cert_type)));
+      Certificate_13(cert_request, m_info.hostname(), credentials_manager(), callbacks(), cert_type, crypto())));
 
    // RFC 8446 4.4.2
    //    If the server requests client authentication but no suitable certificate
@@ -598,7 +600,7 @@ void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedHands
                                                                   Connection_Side::Client,
                                                                   credentials_manager(),
                                                                   policy(),
-                                                                  callbacks(),
+                                                                  crypto(),
                                                                   rng())));
    }
 }
@@ -691,7 +693,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
    }
 
    m_handshake.reset();
-   m_transcript_hash = Transcript_Hash_State();
+   m_transcript_hash = Transcript_Hash_State(crypto_ptr());
    callbacks().tls_session_activated();
 }
 

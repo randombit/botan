@@ -12,6 +12,7 @@
 #include <botan/credentials_manager.h>
 #include <botan/dl_group.h>
 #include <botan/tls_callbacks.h>
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/target_info.h>
@@ -78,7 +79,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       // A possible implementation strategy in case one would ever need that:
       // `Policy::default_dh_group()` could return a `std::variant<Group_Params,
       // DL_Group>`, allowing it to define arbitrary groups.
-      m_kex_key = state.callbacks().tls_generate_ephemeral_key(m_shared_group.value(), rng);
+      m_kex_key = state.crypto().generate_ephemeral_key(m_shared_group.value(), rng);
       auto* dh = dynamic_cast<DH_PrivateKey*>(m_kex_key.get());
       if(dh == nullptr) {
          throw TLS_Exception(Alert::InternalError, "Application did not provide a Diffie-Hellman key");
@@ -105,9 +106,9 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
             const auto pubkey_point_format = state.client_hello()->prefers_compressed_ec_points()
                                                 ? EC_Point_Format::Compressed
                                                 : EC_Point_Format::Uncompressed;
-            return state.callbacks().tls12_generate_ephemeral_ecdh_key(*m_shared_group, rng, pubkey_point_format);
+            return state.crypto().tls12_generate_ephemeral_ecdh_key(*m_shared_group, rng, pubkey_point_format);
          } else {
-            return state.callbacks().tls_generate_ephemeral_key(*m_shared_group, rng);
+            return state.crypto().generate_ephemeral_key(*m_shared_group, rng);
          }
       }();
 
@@ -139,7 +140,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       buf += state.server_hello()->random();
       buf += params();
 
-      m_signature = state.callbacks().tls_sign_message(*signing_key, rng, format.first, format.second, buf);
+      m_signature = state.crypto().sign_message(*signing_key, rng, format.first, format.second, buf);
    }
 
    state.hash().update(io.send(*this));
@@ -226,7 +227,7 @@ bool Server_Key_Exchange::verify(const Public_Key& server_key,
    buf += params();
 
    const bool signature_valid =
-      state.callbacks().tls_verify_message(server_key, format.first, format.second, buf, m_signature);
+      state.crypto().verify_message(server_key, format.first, format.second, buf, m_signature);
 
 #if defined(BOTAN_UNSAFE_FUZZER_MODE)
    BOTAN_UNUSED(signature_valid);

@@ -38,7 +38,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_SQLite final : public Session_Manag
       Session_Manager_SQLite(std::string_view passphrase,
                              const std::shared_ptr<RandomNumberGenerator>& rng,
                              std::string_view db_filename,
-                             size_t max_sessions = 1000);
+                             size_t max_sessions = 1000,
+                             std::shared_ptr<CryptoOperations> crypto = std::make_shared<CryptoOperations>());
 };
 
 }  // namespace TLS

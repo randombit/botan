@@ -13,11 +13,15 @@
 
 namespace Botan::TLS {
 
+class CryptoOperations;
+
 /**
 * TLS Handshake Hash
 */
 class Handshake_Hash final {
    public:
+      explicit Handshake_Hash(CryptoOperations& crypto) : m_crypto(crypto) {}
+
       void update(const uint8_t in[], size_t length) { m_data += std::make_pair(in, length); }
 
       void update(const std::vector<uint8_t>& in) { m_data += in; }
@@ -28,7 +32,10 @@ class Handshake_Hash final {
 
       void reset() { m_data.clear(); }
 
+      CryptoOperations& crypto() const { return m_crypto; }
+
    private:
+      CryptoOperations& m_crypto;
       std::vector<uint8_t> m_data;
 };
 

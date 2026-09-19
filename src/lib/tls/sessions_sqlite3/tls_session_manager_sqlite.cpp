@@ -14,7 +14,9 @@ namespace Botan::TLS {
 Session_Manager_SQLite::Session_Manager_SQLite(std::string_view passphrase,
                                                const std::shared_ptr<RandomNumberGenerator>& rng,
                                                std::string_view db_filename,
-                                               size_t max_sessions) :
-      Session_Manager_SQL(std::make_shared<Sqlite3_Database>(db_filename), passphrase, rng, max_sessions) {}
+                                               size_t max_sessions,
+                                               std::shared_ptr<CryptoOperations> crypto) :
+      Session_Manager_SQL(
+         std::make_shared<Sqlite3_Database>(db_filename), passphrase, rng, max_sessions, std::move(crypto)) {}
 
 }  // namespace Botan::TLS

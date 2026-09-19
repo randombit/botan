@@ -23,6 +23,7 @@
 namespace Botan::TLS {
 
 class Callbacks;
+class CryptoOperations;
 class Session_Manager;
 class Channel_Impl;
 class Policy;
@@ -78,6 +79,18 @@ class BOTAN_PUBLIC_API(2, 0) Client final : public Channel {
       * The TLS 1.3 implementation ignores this.
       */
       Client(const std::shared_ptr<Callbacks>& callbacks,
+             const std::shared_ptr<Session_Manager>& session_manager,
+             const std::shared_ptr<Credentials_Manager>& creds,
+             const std::shared_ptr<const Policy>& policy,
+             const std::shared_ptr<RandomNumberGenerator>& rng,
+             Server_Information server_info = Server_Information(),
+             Protocol_Version offer_version = Protocol_Version::latest_tls_version(),
+             const std::vector<std::string>& next_protocols = {},
+             size_t reserved_io_buffer_size = TLS::Client::IO_BUF_DEFAULT_SIZE);
+
+      /** Construct a channel with explicit cryptographic operations. */
+      Client(const std::shared_ptr<Callbacks>& callbacks,
+             const std::shared_ptr<CryptoOperations>& crypto,
              const std::shared_ptr<Session_Manager>& session_manager,
              const std::shared_ptr<Credentials_Manager>& creds,
              const std::shared_ptr<const Policy>& policy,

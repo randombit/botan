@@ -12,6 +12,7 @@
 #define BOTAN_TLS_MESSAGES_H_
 
 #include <botan/tls_algos.h>
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_handshake_msg.h>
 #include <botan/tls_session_id.h>
 #include <botan/tls_signature_scheme.h>
@@ -64,7 +65,8 @@ class BOTAN_UNSTABLE_API Hello_Verify_Request final : public Handshake_Message {
 
       Hello_Verify_Request(std::span<const uint8_t> client_hello_bits,
                            std::string_view client_identity,
-                           std::span<const uint8_t> cookie_secret);
+                           std::span<const uint8_t> cookie_secret,
+                           const CryptoOperations& crypto = CryptoOperations());
 
    private:
       std::vector<uint8_t> m_cookie;

@@ -350,6 +350,96 @@ available:
       Per :rfc:`5705`, *label* should begin with "EXPERIMENTAL" unless
       the label has been standardized in an RFC.
 
+.. _tls_crypto_operations:
+
+Custom Cryptographic Operations
+----------------------------------------
+
+.. versionadded:: 3.14
+
+``TLS::CryptoOperations`` provides the cryptographic operations and object
+factories used by TLS. Applications can subclass it to implement selected
+operations using an external device or another implementation. All methods have
+Botan defaults, so a subclass only needs to override the operations it replaces.
+
+The interface includes:
+
+* Signature generation and verification; ephemeral key generation, public key
+  decoding, key agreement, and KEM encapsulation and decapsulation.
+* Factories for hashes, MACs, KDFs, block ciphers, and AEAD modes. These cover
+  transcript hashing, PSK binders, Finished messages, key derivation, record
+  encryption, and DTLS cookies.
+* TLS 1.2 PRF and RSA key transport factories, and a factory for TLS 1.2 record
+  protection, including CBC/HMAC and NULL/HMAC.
+* SubjectPublicKeyInfo decoding, session encryption, and the password hash
+  family used by the SQL session managers.
+
+For example, to choose a particular Botan provider for TLS's hash objects::
+
+   #include <botan/hash.h>
+   #include <botan/tls_crypto_operations.h>
+
+   class MyCryptoOperations : public Botan::TLS::CryptoOperations {
+      public:
+         std::unique_ptr<Botan::HashFunction>
+         create_hash(std::string_view algorithm) const override {
+            if(algorithm == "SHA-256") {
+               return std::make_unique<MyCustomSha256Impl>();
+            } else {
+               return Botan::HashFunction::create_or_throw(algorithm);
+            }
+         }
+   };
+
+Pass the operations object immediately after the callbacks argument in the new
+``TLS::Client`` or ``TLS::Server`` constructor overload::
+
+   auto crypto = std::make_shared<MyCryptoOperations>();
+   Botan::TLS::Client client(callbacks, crypto, sessions, credentials, policy, rng,
+                             Botan::TLS::Server_Information("example.com"));
+
+The channel retains shared ownership of this object throughout its lifetime,
+including TLS version downgrade, resumption, retries, and traffic key updates.
+For ASIO streams, call ``TLS::Context::set_crypto_operations(crypto)`` before
+starting a handshake. The policy still determines the permitted algorithms;
+the RNG and credentials manager are supplied separately as before.
+
+Factories must return a usable object or throw an exception. A factory returning
+an algorithm also selects that algorithm's internal implementation: overriding
+``create_hash`` does not change the hash inside a MAC or KDF returned by another
+factory. Override ``create_mac`` and ``create_kdf`` as appropriate. Hash objects
+must implement ``copy_state`` and ``new_object`` with their usual semantics,
+because TLS clones transcript state. If an operations object is shared across
+concurrent channels, its overrides must support concurrent calls.
+
+Session storage and PSK importing can run independently of a channel. Configure
+the operations object separately for those uses:
+
+* The stateless, SQL, SQLite, and hybrid session manager constructors accept a
+  final ``std::shared_ptr<CryptoOperations>`` argument. For a hybrid manager this
+  configures its stateless component; configure the supplied stateful manager
+  separately.
+* ``Session::encrypt``, ``Session::decrypt``, the DER and PEM ``Session``
+  constructors, and ``PSKImporter::derive_imported_psk`` have overloads taking a
+  final ``const CryptoOperations&`` argument.
+
+Existing application code continues to work. The original channel constructors
+create a ``TLS::DefaultCryptoOperations`` adapter which forwards cryptographic
+operations to the channel's ``TLS::Callbacks``. This preserves existing overrides,
+including callbacks invoked by another callback's default implementation.
+Passing a null operations pointer to a channel selects the same adapter.
+
+New applications should derive directly from ``CryptoOperations``. An explicitly
+supplied operations object handles the channel's cryptography; the old crypto
+callbacks are used only if that object delegates to them. Applications migrating
+incrementally can use ``DefaultCryptoOperations(callbacks)`` and override selected
+operations. Nested calls made by a forwarded callback remain on the callbacks
+object; derive directly from ``CryptoOperations`` to customize those nested
+operations through the new interface. Its referenced callbacks must outlive the
+adapter. Certificate and
+raw-public-key trust decisions, OCSP handling, I/O, and connection notifications
+remain in ``Callbacks``.
+
 .. _tls_client:
 
 TLS Clients
