@@ -114,6 +114,54 @@ void sample_ntt_uniform(KyberPolyNTT& p, XOF& xof) {
 }
 
 /**
+ * As above, but sampling from a pre-squeezed XOF output buffer. Returns
+ * false if the buffer did not contain enough accepted candidates.
+ */
+bool sample_ntt_uniform_from_buffer(KyberPolyNTT& p, std::span<const uint8_t> buf) {
+   auto sample = [in = buf, stashed_coeff = std::optional<uint16_t>{}]() mutable -> std::optional<uint16_t> {
+      auto lowerthan_q = [](uint32_t d) -> std::optional<uint16_t> {
+         if(d < KyberConstants::Q) {
+            return static_cast<uint16_t>(d);
+         } else {
+            return std::nullopt;
+         }
+      };
+
+      if(auto stashed = std::exchange(stashed_coeff, std::nullopt)) {
+         return stashed;
+      }
+
+      while(in.size() >= 3) {
+         const auto x = load_le3(in.first<3>());
+         in = in.subspan(3);
+
+         const auto d1 = lowerthan_q(x & 0x0FFF);
+         const auto d2 = lowerthan_q(x >> 12);
+
+         if(d1.has_value()) {
+            stashed_coeff = d2;  // keep candidate d2 for the next invocation
+            return d1;
+         } else if(d2.has_value()) {
+            // d1 was invalid, d2 is valid, nothing to stash
+            return d2;
+         }
+      }
+
+      return std::nullopt;  // not enough candidates left in the buffer
+   };
+
+   for(auto& coeff : p) {
+      if(auto c = sample()) {
+         coeff = *c;
+      } else {
+         return false;  // buffer exhausted before all coefficients could be sampled
+      }
+   }
+
+   return true;
+}
+
+/**
  * NIST FIPS 203, Algorithm 8 (SamplePolyCBD)
  *
  * Implementations for eta = 2 and eta = 3 are provided separately as template
@@ -334,8 +382,9 @@ KyberInternalKeypair expand_keypair(KyberPrivateKeySeed seed, KyberConstants mod
 
    // The nonce N is handled internally by the PolynomialSampler
    Kyber_Algos::PolynomialSampler ps(sigma, mode);
-   auto s = ntt(ps.sample_polynomial_vector_cbd_eta1());
-   const auto e = ntt(ps.sample_polynomial_vector_cbd_eta1());
+   auto [s_std, e_std] = ps.sample_polynomial_vector_pair_cbd_eta1();
+   auto s = ntt(std::move(s_std));
+   const auto e = ntt(std::move(e_std));
 
    auto t = montgomery(A * s);
    t += e;
@@ -390,13 +439,35 @@ KyberPolyMat sample_matrix(StrongSpan<const KyberSeedRho> seed, bool transposed,
    KyberPolyMat mat(mode.k(), mode.k());
 
    const auto& sym = mode.symmetric_primitives();
-   std::unique_ptr<Botan::XOF> xof;
+
+   // Pre-squeeze the XOFs of all matrix entries at once, sized so that
+   // the rejection sampling loop rarely (under 1% of the time) needs more.
+   constexpr size_t buffered_bytes = 3 * 168;  // 3 SHAKE-128 blocks
+
+   const size_t lanes = static_cast<size_t>(mode.k()) * mode.k();
+   std::vector<uint8_t> buffer(lanes * buffered_bytes);
+   std::vector<std::tuple<uint8_t, uint8_t>> positions;
+   std::vector<std::span<uint8_t>> outputs;
+   positions.reserve(lanes);
+   outputs.reserve(lanes);
 
    for(uint8_t i = 0; i < mode.k(); ++i) {
       for(uint8_t j = 0; j < mode.k(); ++j) {
-         const auto pos = (transposed) ? std::tuple(i, j) : std::tuple(j, i);
-         sym.setup_XOF(xof, seed, pos);
-         sample_ntt_uniform(mat[i][j], *xof);
+         positions.push_back((transposed) ? std::tuple(i, j) : std::tuple(j, i));
+         outputs.push_back(std::span(buffer).subspan(outputs.size() * buffered_bytes, buffered_bytes));
+      }
+   }
+
+   sym.XOF_batch(outputs, seed, positions);
+
+   std::unique_ptr<Botan::XOF> xof;
+   size_t lane = 0;
+   for(uint8_t i = 0; i < mode.k(); ++i) {
+      for(uint8_t j = 0; j < mode.k(); ++j, ++lane) {
+         if(!sample_ntt_uniform_from_buffer(mat[i][j], outputs[lane])) {
+            sym.setup_XOF(xof, seed, positions[lane]);
+            sample_ntt_uniform(mat[i][j], *xof);
+         }
       }
    }
 
@@ -411,7 +482,7 @@ KyberPolyMat sample_matrix(StrongSpan<const KyberSeedRho> seed, bool transposed,
  */
 void sample_polynomial_from_cbd(KyberPoly& poly,
                                 KyberConstants::KyberEta eta,
-                                const KyberSamplingRandomness& randomness) {
+                                StrongSpan<const KyberSamplingRandomness> randomness) {
    switch(eta) {
       case KyberConstants::KyberEta::_2:
          return sample_poly_cbd<KyberConstants::KyberEta::_2>(poly, randomness);
