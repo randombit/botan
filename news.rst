@@ -29,6 +29,10 @@ Version 3.14.0, Not Yet Released
 
 * The Python binding now can adapt itself to any version of Botan3. (GH #5851)
 
+* Add a ``--one-shot`` flag to the ``speed`` command which causes the public key
+  benchmarks to create a new operation object (``PK_Signer``, ``PK_Verifier``,
+  etc) for each measured operation, rather than creating one and reusing it.
+
 * Add support for parallel hash function invocations, including AVX2/AVX512
   implementations of SHA-256, SHA-512, and SHAKE (GH #5865 #5867 #5869 #5871
   #5872 #5873)

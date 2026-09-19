@@ -6,6 +6,8 @@
 
 #include "perf.h"
 
+#include <optional>
+
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
@@ -65,8 +67,21 @@ class PerfTest_PKSig : public PerfTest {
             std::vector<uint8_t> signature;
             std::vector<uint8_t> bad_signature;
 
-            Botan::PK_Signer sig(*sk, rng, padding, Botan::Signature_Format::Standard, provider);
-            Botan::PK_Verifier ver(*pk, padding, Botan::Signature_Format::Standard, provider);
+            const bool one_shot = config.one_shot();
+
+            auto make_signer = [&]() {
+               return Botan::PK_Signer(*sk, rng, padding, Botan::Signature_Format::Standard, provider);
+            };
+            auto make_verifier = [&]() {
+               return Botan::PK_Verifier(*pk, padding, Botan::Signature_Format::Standard, provider);
+            };
+
+            std::optional<Botan::PK_Signer> sig;
+            std::optional<Botan::PK_Verifier> ver;
+            if(!one_shot) {
+               sig.emplace(make_signer());
+               ver.emplace(make_verifier());
+            }
 
             auto sig_timer = config.make_timer(nm, 1, "sign");
             auto ver_timer = config.make_timer(nm, 1, "verify");
@@ -81,20 +96,38 @@ class PerfTest_PKSig : public PerfTest {
                   */
                   rng.random_vec(message, 48);
 
-                  signature = sig_timer->run([&]() { return sig.sign_message(message, rng); });
+                  signature = sig_timer->run([&]() {
+                     if(one_shot) {
+                        return make_signer().sign_message(message, rng);
+                     } else {
+                        return sig->sign_message(message, rng);
+                     }
+                  });
 
                   bad_signature = signature;
                   bad_signature[rng.next_byte() % bad_signature.size()] ^= rng.next_nonzero_byte();
                }
 
                if(ver_timer->under(msec)) {
-                  const bool verified = ver_timer->run([&] { return ver.verify_message(message, signature); });
+                  const bool verified = ver_timer->run([&] {
+                     if(one_shot) {
+                        return make_verifier().verify_message(message, signature);
+                     } else {
+                        return ver->verify_message(message, signature);
+                     }
+                  });
 
                   if(!verified) {
                      invalid_sigs += 1;
                   }
 
-                  const bool verified_bad = ver_timer->run([&] { return ver.verify_message(message, bad_signature); });
+                  const bool verified_bad = ver_timer->run([&] {
+                     if(one_shot) {
+                        return make_verifier().verify_message(message, bad_signature);
+                     } else {
+                        return ver->verify_message(message, bad_signature);
+                     }
+                  });
 
                   if(verified_bad) {
                      config.error_output() << "Bad signature accepted in " << nm << " signature bench\n";

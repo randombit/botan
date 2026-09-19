@@ -6,6 +6,8 @@
 
 #include "perf.h"
 
+#include <optional>
+
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
@@ -61,8 +63,17 @@ class PerfTest_PKKa : public PerfTest {
             const Botan::PK_Key_Agreement_Key& ka_key1 = dynamic_cast<const Botan::PK_Key_Agreement_Key&>(*key1);
             const Botan::PK_Key_Agreement_Key& ka_key2 = dynamic_cast<const Botan::PK_Key_Agreement_Key&>(*key2);
 
-            Botan::PK_Key_Agreement ka1(ka_key1, rng, kdf, provider);
-            Botan::PK_Key_Agreement ka2(ka_key2, rng, kdf, provider);
+            const bool one_shot = config.one_shot();
+
+            auto make_ka1 = [&]() { return Botan::PK_Key_Agreement(ka_key1, rng, kdf, provider); };
+            auto make_ka2 = [&]() { return Botan::PK_Key_Agreement(ka_key2, rng, kdf, provider); };
+
+            std::optional<Botan::PK_Key_Agreement> ka1;
+            std::optional<Botan::PK_Key_Agreement> ka2;
+            if(!one_shot) {
+               ka1.emplace(make_ka1());
+               ka2.emplace(make_ka2());
+            }
 
             const std::vector<uint8_t> ka1_pub = ka_key1.public_value();
             const std::vector<uint8_t> ka2_pub = ka_key2.public_value();
@@ -70,8 +81,20 @@ class PerfTest_PKKa : public PerfTest {
             auto ka_timer = config.make_timer(nm, 1, "key agreements");
 
             while(ka_timer->under(msec)) {
-               auto k1 = ka_timer->run([&]() { return ka1.derive_key(32, ka2_pub); });
-               auto k2 = ka_timer->run([&]() { return ka2.derive_key(32, ka1_pub); });
+               auto k1 = ka_timer->run([&]() {
+                  if(one_shot) {
+                     return make_ka1().derive_key(32, ka2_pub);
+                  } else {
+                     return ka1->derive_key(32, ka2_pub);
+                  }
+               });
+               auto k2 = ka_timer->run([&]() {
+                  if(one_shot) {
+                     return make_ka2().derive_key(32, ka1_pub);
+                  } else {
+                     return ka2->derive_key(32, ka1_pub);
+                  }
+               });
 
                if(k1 != k2) {
                   config.error_output() << "Key agreement mismatch in PK bench\n";

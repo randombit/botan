@@ -6,6 +6,7 @@
 
 #include "perf.h"
 
+#include <optional>
 #include <ostream>
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
@@ -58,8 +59,17 @@ class PerfTest_PK_KEM : public PerfTest {
 
             auto pk = sk->public_key();
 
-            Botan::PK_KEM_Decryptor dec(*sk, rng, kdf, provider);
-            Botan::PK_KEM_Encryptor enc(*pk, kdf, provider);
+            const bool one_shot = config.one_shot();
+
+            auto make_enc = [&]() { return Botan::PK_KEM_Encryptor(*pk, kdf, provider); };
+            auto make_dec = [&]() { return Botan::PK_KEM_Decryptor(*sk, rng, kdf, provider); };
+
+            std::optional<Botan::PK_KEM_Encryptor> enc;
+            std::optional<Botan::PK_KEM_Decryptor> dec;
+            if(!one_shot) {
+               enc.emplace(make_enc());
+               dec.emplace(make_dec());
+            }
 
             auto kem_enc_timer = config.make_timer(nm, 1, "KEM encrypt");
             auto kem_dec_timer = config.make_timer(nm, 1, "KEM decrypt");
@@ -67,14 +77,21 @@ class PerfTest_PK_KEM : public PerfTest {
             while(kem_enc_timer->under(msec) && kem_dec_timer->under(msec)) {
                Botan::secure_vector<uint8_t> salt = rng.random_vec(16);
 
-               kem_enc_timer->start();
-               const auto kem_result = enc.encrypt(rng, 64, salt);
-               kem_enc_timer->stop();
+               const auto kem_result = kem_enc_timer->run([&]() {
+                  if(one_shot) {
+                     return make_enc().encrypt(rng, 64, salt);
+                  } else {
+                     return enc->encrypt(rng, 64, salt);
+                  }
+               });
 
-               kem_dec_timer->start();
-               const Botan::secure_vector<uint8_t> dec_shared_key =
-                  dec.decrypt(kem_result.encapsulated_shared_key(), 64, salt);
-               kem_dec_timer->stop();
+               const auto dec_shared_key = kem_dec_timer->run([&]() {
+                  if(one_shot) {
+                     return make_dec().decrypt(kem_result.encapsulated_shared_key(), 64, salt);
+                  } else {
+                     return dec->decrypt(kem_result.encapsulated_shared_key(), 64, salt);
+                  }
+               });
 
                if(kem_result.shared_key() != dec_shared_key) {
                   config.error_output() << "KEM mismatch in PK bench\n";
