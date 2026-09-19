@@ -97,6 +97,13 @@ PKCS12
       is malformed, or ``Invalid_Authentication_Tag`` if MAC verification
       fails.
 
+      Every private key found in the file is verified for internal
+      consistency with ``Private_Key::check_key`` (non-strong variant) and
+      the file is rejected with ``Decoding_Error`` if a key fails. The MAC is
+      optional in PKCS#12 and the key encryption is not authenticated, so
+      without this check a modification of a MAC-less file could yield a key
+      whose private scalar no longer matches its public point.
+
    Accessors
    ^^^^^^^^^
 

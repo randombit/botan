@@ -12,10 +12,16 @@
    #include <botan/rng.h>
    #include <algorithm>
 
+   #include <botan/data_src.h>
+   #include <botan/pkcs8.h>
+   #include <botan/pubkey.h>
+   #include <botan/x509_key.h>
+   #include <botan/internal/fmt.h>
+   #include <botan/internal/target_info.h>
+
    #if defined(BOTAN_HAS_ECDSA)
       #include <botan/ec_group.h>
       #include <botan/ecdsa.h>
-      #include <botan/pkcs8.h>
       #include <botan/x509_ca.h>
       #include <botan/x509self.h>
    #endif
@@ -50,6 +56,15 @@ class PKCS12_Tests final : public Test {
          // therefore only compiled when ECDSA is available in this build.
 
          results.push_back(test_key_cert_mismatch());
+         results.push_back(test_inconsistent_private_key_rejected());
+   #endif
+   #if defined(BOTAN_HAS_RSA)
+         results.push_back(test_inconsistent_rsa_key_rejected());
+   #endif
+   #if defined(BOTAN_HAS_ML_KEM)
+         results.push_back(test_ml_kem_key_accepted());
+   #endif
+   #if defined(BOTAN_HAS_ECDSA)
          results.push_back(test_zero_iterations());
          results.push_back(test_max_iterations_exceeded());
          results.push_back(test_wrong_password());
@@ -727,6 +742,200 @@ class PKCS12_Tests final : public Test {
             (void)bundle.export_to(opts, *rng);
          });
 
+         return result;
+      }
+   #endif
+
+      /*
+      * Test inputs for the private key consistency check (all passwords are
+      * "password"):
+      *
+      * key_inconsistent_ec.der: PKCS#8 of an OpenSSL generated P-256 key
+      *   ("scalar owner") whose ECPrivateKey publicKey [1] field was replaced
+      *   by the point of a second OpenSSL generated P-256 key ("point owner").
+      *   key_inconsistent_ec_pubkey.pem is the scalar owner's public key.
+      * key_inconsistent_ec_{pbes2,3des,keybag}.pfx: the above key with the
+      *   point owner's self-signed certificate, produced by
+      *   "openssl pkcs12 -export" with the defaults (PBES2 AES-256, SHA-256
+      *   MAC), with "-keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES -macalg sha1",
+      *   and with "-keypbe NONE -certpbe NONE" (unencrypted KeyBag).
+      * key_inconsistent_rsa.der and key_inconsistent_rsa_*.pfx: the same for
+      *   an OpenSSL generated RSA-2048 key whose CRT exponent dP had its lowest
+      *   bit flipped; n, e, d, p and q are intact.
+      * key_ec_3des_nomac.pfx: a consistent OpenSSL generated P-256 key with
+      *   its self-signed certificate, "-keypbe PBE-SHA1-3DES -certpbe NONE
+      *   -nomac".
+      *
+      * OpenSSL's own "pkey -check" rejects both inconsistent keys.
+      */
+
+   #if defined(BOTAN_HAS_ECDSA)
+      Test::Result test_inconsistent_private_key_rejected() {
+         Test::Result result("PKCS12 private key with mismatched public point");
+
+         auto rng = Test::new_rng("PKCS12_inconsistent_key");
+
+         // 1. The PKCS#8 decoder itself accepts the inconsistent key and the
+         //    ordinary signing API uses it: signatures are made with the
+         //    scalar, so they verify under the scalar owner's public key and
+         //    not under the point the key object claims as its own.
+         const auto pkcs8 = Test::read_binary_data_file("pkcs12/key_inconsistent_ec.der");
+         Botan::DataSource_Memory key_src(pkcs8);
+         const std::shared_ptr<Botan::Private_Key> corrupted(Botan::PKCS8::load_key(key_src));
+
+         const auto pubkey_pem = Test::read_binary_data_file("pkcs12/key_inconsistent_ec_pubkey.pem");
+         Botan::DataSource_Memory pub_src(pubkey_pem);
+         const auto scalar_owner_pub = Botan::X509::load_key(pub_src);
+
+         result.test_is_true("PKCS#8 decoder accepts inconsistent key", corrupted != nullptr);
+         result.test_str_eq("key algorithm", corrupted->algo_name(), "ECDSA");
+         result.test_is_true("key object reports a foreign public point",
+                             corrupted->public_key_bits() != scalar_owner_pub->public_key_bits());
+         result.test_is_false("check_key detects the inconsistency", corrupted->check_key(*rng, false));
+
+         const std::vector<uint8_t> msg = {'m', 's', 'g'};
+         Botan::PK_Signer signer(*corrupted, *rng, "SHA-256");
+         const auto sig = signer.sign_message(msg, *rng);
+         result.test_is_true("corrupted key signs without error", !sig.empty());
+
+         Botan::PK_Verifier under_own_point(*corrupted->public_key(), "SHA-256");
+         result.test_is_false("signature does not verify under the key's own public point",
+                              under_own_point.verify_message(msg, sig));
+         Botan::PK_Verifier under_scalar_owner(*scalar_owner_pub, "SHA-256");
+         result.test_is_true("signature verifies under the scalar owner's key",
+                             under_scalar_owner.verify_message(msg, sig));
+
+         // 2. The PKCS#12 parser refuses such a key in every bag form. The
+         //    files carry a valid MAC and a certificate matching the claimed
+         //    point, so the consistency check is the only reason to fail.
+         for(const auto* file :
+             {"key_inconsistent_ec_pbes2.pfx", "key_inconsistent_ec_3des.pfx", "key_inconsistent_ec_keybag.pfx"}) {
+            const auto pfx = Test::read_binary_data_file(std::string("pkcs12/") + file);
+            result.test_throws<Botan::Decoding_Error>(std::string("parser rejects ") + file,
+                                                      [&]() { const Botan::PKCS12 parsed(pfx, "password"); });
+         }
+
+         // 3. Control: a consistent key in the same encodings loads and passes
+         //    the check (key_ec_3des_nomac.pfx below; PBES2 form via the
+         //    existing cert-key-aes256cbc.p12).
+         {
+            const auto pfx = Test::read_binary_data_file("pkcs12/cert-key-aes256cbc.p12");
+            const Botan::PKCS12 parsed(pfx, "cryptography");
+            result.test_sz_eq("consistent shrouded key loads", parsed.private_keys().size(), 1);
+            result.test_is_true("loaded key passes check_key", parsed.private_keys().front()->check_key(*rng, false));
+         }
+
+         // 4. Regression sweep: flip one bit in every byte of a MAC-less file.
+         //    Whatever still parses and still contains a key must return the
+         //    original key. (A flip in the bag type OID makes the key bag an
+         //    unknown bag type, which is skipped: such files parse without a
+         //    key, which is visible to the caller and not a corruption.)
+         {
+            const auto pfx = Test::read_binary_data_file("pkcs12/key_ec_3des_nomac.pfx");
+            const Botan::PKCS12 reference(pfx, "password");
+            result.test_sz_eq("MAC-less reference file has one key", reference.private_keys().size(), 1);
+            const auto original_bits = reference.private_keys().front()->private_key_bits();
+            size_t parsed_ok = 0;
+            size_t parsed_without_key = 0;
+            size_t altered_keys = 0;
+            for(size_t i = 0; i < pfx.size(); ++i) {
+               std::vector<uint8_t> mod = pfx;
+               mod[i] ^= 0x01;
+               try {
+                  const Botan::PKCS12 parsed(mod, "password");
+                  ++parsed_ok;
+                  if(parsed.private_keys().empty()) {
+                     ++parsed_without_key;
+                  } else if(parsed.private_keys().front()->private_key_bits() != original_bits) {
+                     ++altered_keys;
+                  }
+               } catch(const Botan::Exception&) {
+                  // expected for nearly every position
+               }
+            }
+            result.test_note(Botan::fmt("{} single-bit modifications, {} still parsed, {} of those without a key",
+                                        pfx.size(),
+                                        parsed_ok,
+                                        parsed_without_key));
+            result.test_sz_eq("no modification yields an altered key", altered_keys, 0);
+         }
+
+         return result;
+      }
+   #endif
+
+   #if defined(BOTAN_HAS_RSA)
+      Test::Result test_inconsistent_rsa_key_rejected() {
+         Test::Result result("PKCS12 RSA private key with corrupted CRT exponent");
+
+         auto rng = Test::new_rng("PKCS12_inconsistent_rsa");
+
+         const auto pkcs8 = Test::read_binary_data_file("pkcs12/key_inconsistent_rsa.der");
+         Botan::DataSource_Memory key_src(pkcs8);
+         const std::shared_ptr<Botan::Private_Key> corrupted(Botan::PKCS8::load_key(key_src));
+         result.test_is_true("PKCS#8 decoder accepts corrupted RSA key", corrupted != nullptr);
+         result.test_str_eq("key algorithm", corrupted->algo_name(), "RSA");
+         result.test_is_false("check_key detects the corruption", corrupted->check_key(*rng, false));
+
+      #if !defined(BOTAN_TERMINATE_ON_ASSERTS)
+         // RSA signing re-verifies the CRT result against (n, e) and refuses
+         // to emit a faulty signature, so the corruption is not silent at
+         // signing time either; it surfaces as an exception. (The check is a
+         // BOTAN_ASSERT, which aborts instead of throwing in builds with
+         // --unsafe-terminate-on-asserts.)
+         const std::vector<uint8_t> msg = {'m', 's', 'g'};
+         result.test_throws("RSA signing with corrupted CRT exponent throws", [&]() {
+            Botan::PK_Signer signer(*corrupted, *rng, "PKCS1v15(SHA-256)");
+            (void)signer.sign_message(msg, *rng);
+         });
+      #endif
+
+         for(const auto* file :
+             {"key_inconsistent_rsa_pbes2.pfx", "key_inconsistent_rsa_3des.pfx", "key_inconsistent_rsa_keybag.pfx"}) {
+            const auto pfx = Test::read_binary_data_file(std::string("pkcs12/") + file);
+            result.test_throws<Botan::Decoding_Error>(std::string("parser rejects ") + file,
+                                                      [&]() { const Botan::PKCS12 parsed(pfx, "password"); });
+         }
+
+         // Control: a consistent RSA key loads and passes the check.
+         {
+            const auto pfx = Test::read_binary_data_file("pkcs12/openssl_aes256.p12");
+            const Botan::PKCS12 parsed(pfx, "test123");
+            result.test_sz_eq("consistent RSA key loads", parsed.private_keys().size(), 1);
+            result.test_str_eq("control key algorithm", parsed.private_keys().front()->algo_name(), "RSA");
+            result.test_is_true("loaded RSA key passes check_key",
+                                parsed.private_keys().front()->check_key(*rng, false));
+         }
+         return result;
+      }
+   #endif
+
+   #if defined(BOTAN_HAS_ML_KEM)
+      /*
+      * ML-KEM's check_key always performs a randomized encapsulation round
+      * trip. The parser has no RNG, so its consistency check cannot run for
+      * this key type and the key must still be accepted (fallback path).
+      *
+      * key_mlkem512_{pbes2,3des}.pfx are key-only bundles (password
+      * "password") generated with Botan, since OpenSSL cannot produce ML-KEM
+      * keys in the seed-only PKCS#8 encoding Botan reads.
+      */
+      Test::Result test_ml_kem_key_accepted() {
+         Test::Result result("PKCS12 ML-KEM key loads despite randomized check_key");
+
+         auto rng = Test::new_rng("PKCS12_ml_kem");
+         for(const auto* file : {"key_mlkem512_pbes2.pfx", "key_mlkem512_3des.pfx"}) {
+            const auto pfx = Test::read_binary_data_file(std::string("pkcs12/") + file);
+            result.test_no_throw(std::string("ML-KEM bundle parses: ") + file, [&]() {
+               const Botan::PKCS12 parsed(pfx, "password");
+               if(parsed.private_keys().size() != 1 || parsed.private_keys().front()->algo_name() != "ML-KEM") {
+                  throw Botan::Internal_Error("ML-KEM key missing after parse");
+               }
+               if(!parsed.private_keys().front()->check_key(*rng, false)) {
+                  throw Botan::Internal_Error("ML-KEM key fails check_key with a real RNG");
+               }
+            });
+         }
          return result;
       }
    #endif
