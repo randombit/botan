@@ -566,11 +566,11 @@ template <WordType W, W div>
 consteval std::pair<W, size_t> div_magic()
    requires(div == 10)
 {
-   if constexpr(div == 10 && std::same_as<W, uint32_t>) {
+   if constexpr(std::same_as<W, uint32_t>) {
       constexpr W magic = 0xCCCCCCCD;
       constexpr size_t shift = 35;
       return std::make_pair(magic, shift);
-   } else if constexpr(div == 10 && std::same_as<W, uint64_t>) {
+   } else if constexpr(std::same_as<W, uint64_t>) {
       constexpr W magic = 0xCCCCCCCCCCCCCCCD;
       constexpr size_t shift = 67;
       return std::make_pair(magic, shift);
