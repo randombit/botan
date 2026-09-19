@@ -12,15 +12,18 @@
 #include <botan/assert.h>
 
 #if defined(BOTAN_HAS_X509)
+   #include <botan/asn1_time.h>
    #include <botan/ber_dec.h>
    #include <botan/bigint.h>
    #include <botan/der_enc.h>
+   #include <botan/dns_name.h>
+   #include <botan/email.h>
    #include <botan/pk_algs.h>
    #include <botan/pk_keys.h>
    #include <botan/rng.h>
+   #include <botan/x509_builder.h>
    #include <botan/x509_ca.h>
    #include <botan/x509_ext.h>
-   #include <botan/x509self.h>
 #endif
 
 namespace Botan_CLI {
@@ -44,14 +47,23 @@ class PerfTest_ASN1_Parsing final : public PerfTest {
       }
 
       static CA create_ca(Botan::RandomNumberGenerator& rng) {
-         auto root_cert_options = Botan::X509_Cert_Options("Benchmark Root/DE/RS/CS");
-         root_cert_options.dns = "unobtainium.example.com";
-         root_cert_options.email = "idont@exist.com";
-         root_cert_options.is_CA = true;
-
          auto root_key = create_private_key(rng);
          BOTAN_ASSERT_NONNULL(root_key);
-         auto root_cert = Botan::X509::create_self_signed_cert(root_cert_options, *root_key, get_hash_function(), rng);
+
+         Botan::CertificateParametersBuilder root_cert_params;
+         root_cert_params.add_common_name("Benchmark Root")
+            .add_country("DE")
+            .add_organization("RS")
+            .add_organizational_unit("CS")
+            .add_dns(Botan::DNSName::from_string("unobtainium.example.com").value())
+            .add_email(Botan::EmailAddress::from_string("idont@exist.com").value())
+            .set_as_ca_certificate();
+
+         const auto not_before = Botan::ASN1_Time::current_time();
+         const auto not_after = Botan::ASN1_Time::from_seconds_since_epoch(not_before.time_since_epoch() + 86400);
+
+         auto root_cert = root_cert_params.into_self_signed_cert(
+            not_before, not_after, *root_key, rng, std::nullopt, get_hash_function());
          auto ca = Botan::X509_CA(root_cert, *root_key, get_hash_function(), rng);
 
          return CA{
@@ -81,9 +93,9 @@ class PerfTest_ASN1_Parsing final : public PerfTest {
          BOTAN_ASSERT_NONNULL(cert_key);
          const auto cert_req = Botan::PKCS10_Request::create(*cert_key, subject, exts, get_hash_function(), rng);
 
-         const auto now = std::chrono::system_clock::now();
-         using namespace std::chrono_literals;
-         return ca.ca.sign_request(cert_req, rng, Botan::X509_Time(now), Botan::X509_Time(now + 24h * 365));
+         const auto not_before = Botan::ASN1_Time::current_time();
+         const auto not_after = Botan::ASN1_Time::from_seconds_since_epoch(not_before.time_since_epoch() + 31556926);
+         return ca.ca.sign_request(cert_req, rng, not_before, not_after);
       }
 
       static Botan::X509_CRL make_revocation_list(size_t entries, CA& ca, Botan::RandomNumberGenerator& rng) {
@@ -101,7 +113,7 @@ class PerfTest_ASN1_Parsing final : public PerfTest {
             Botan::DER_Encoder(crl_entry_buffer)
                .start_sequence()
                .encode(Botan::BigInt::from_bytes(rng.random_array<16>()))
-               .encode(Botan::X509_Time(std::chrono::system_clock::now()))
+               .encode(Botan::X509_Time::current_time())
                .start_sequence()
                .encode(exts)
                .end_cons()
