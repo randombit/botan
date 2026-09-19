@@ -1899,13 +1899,15 @@ def cli_speed_pk_fast_tests(_tmp_dir):
                 "ML-KEM", "ML-DSA", "Ed25519", "Ed448", "X25519", "X448",
                 "DH", "DSA", "ElGamal"]
 
-    output = test_cli("speed", ["--msec=%d" % (msec)] + pk_algos, None).split('\n')
-
     # ECDSA-secp256r1 106 keygen/sec; 9.35 ms/op 37489733 cycles/op (1 op in 9 ms)
     format_re = re.compile(r'^.* [0-9]+ ([A-Za-z0-9 ]+)/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9\.]+ ms\)')
-    for line in output:
-        if format_re.match(line) is None:
-            logging.error("Unexpected line %s", line)
+
+    for extra_args in [[], ["--one-shot"]]:
+        output = test_cli("speed", ["--msec=%d" % (msec)] + extra_args + pk_algos, None).split('\n')
+
+        for line in output:
+            if format_re.match(line) is None:
+                logging.error("Unexpected line %s", line)
 
 def cli_speed_pk_slow_tests(_tmp_dir):
     msec = 1
@@ -2005,7 +2007,7 @@ def cli_speed_table_tests(_tmp_dir):
         logging.error("Unexpected trailing message got %s", output[10])
 
 def cli_speed_invalid_option_tests(_tmp_dir):
-    speed_usage = "Usage: speed --msec=500 --format=default --time-unit=ms --ecc-groups= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos"
+    speed_usage = "Usage: speed --msec=500 --format=default --time-unit=ms --ecc-groups= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 --one-shot *algos"
 
     test_cli("speed", ["--buf-size=0", "--msec=1", "AES-128"],
              expected_stderr="Usage error: Cannot have a zero-sized buffer\n%s" % (speed_usage))

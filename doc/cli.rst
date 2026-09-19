@@ -453,7 +453,7 @@ Miscellaneous Commands
 ``http_get --redirects=1 --timeout=3000 url``
   Retrieve resource from the passed http *url*.
 
-``speed --msec=500 --format=default --ecc-groups= --provider= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos``
+``speed --msec=500 --format=default --ecc-groups= --provider= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 --one-shot *algos``
   Measures the speed of the passed *algos*. If no *algos* are passed all
   available speed tests are executed. *msec* (in milliseconds) sets the period
   of measurement for each algorithm. The *buf-size* option allows testing the
@@ -461,6 +461,11 @@ Miscellaneous Commands
   ``speed --buf-size=136,1500 AES-128/GCM`` tests the performance of GCM for
   small and large packet sizes.
   *format* can be "default", "table" or "json".
+  By default public key benchmarks create the operation object (``PK_Signer``,
+  ``PK_Verifier``, etc) once and reuse it, so any precomputation performed by
+  the constructor is amortized over all operations. If ``--one-shot`` is set,
+  the object is instead created anew for each timed operation. This flag has
+  no effect on other benchmarks.
 
 ``timing_test test_type --test-data-file= --test-data-dir=src/tests/data/timing --warmup-runs=1000 --measurement-runs=10000``
   Run various timing side channel tests.

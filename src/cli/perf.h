@@ -32,6 +32,7 @@ class PerfConfig final {
                  uint64_t runtime,
                  const std::vector<std::string>& ecc_groups,
                  const std::vector<size_t>& buffer_sizes,
+                 bool one_shot,
                  std::ostream& error_output,
                  Botan::RandomNumberGenerator& rng) :
             m_record_result(std::move(record_result)),
@@ -40,6 +41,7 @@ class PerfConfig final {
             m_runtime(runtime),
             m_ecc_groups(ecc_groups),
             m_buffer_sizes(buffer_sizes),
+            m_one_shot(one_shot),
             m_error_output(error_output),
             m_rng(rng) {}
 
@@ -48,6 +50,13 @@ class PerfConfig final {
       const std::vector<std::string>& ecc_groups() const { return m_ecc_groups; }
 
       uint64_t runtime() const { return m_runtime; }
+
+      /**
+      * If set, public key benchmarks should include the cost of creating the
+      * operation object (PK_Signer, PK_Verifier, etc) in each timed operation,
+      * rather than creating it once and amortizing any precomputation.
+      */
+      bool one_shot() const { return m_one_shot; }
 
       std::ostream& error_output() const { return m_error_output; }
 
@@ -70,6 +79,7 @@ class PerfConfig final {
       uint64_t m_runtime;
       std::vector<std::string> m_ecc_groups;
       std::vector<size_t> m_buffer_sizes;
+      bool m_one_shot;
       std::ostream& m_error_output;
       Botan::RandomNumberGenerator& m_rng;
 };

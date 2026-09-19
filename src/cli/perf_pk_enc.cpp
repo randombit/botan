@@ -6,6 +6,8 @@
 
 #include "perf.h"
 
+#include <optional>
+
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
@@ -61,8 +63,19 @@ class PerfTest_PKEnc : public PerfTest {
             // TODO this would have to be generalized for anything but RSA/ElGamal
             const std::string padding = "PKCS1v15";
 
-            Botan::PK_Encryptor_EME enc(*pk, rng, padding, provider);
-            Botan::PK_Decryptor_EME dec(*sk, rng, padding, provider);
+            const bool one_shot = config.one_shot();
+
+            auto make_enc = [&]() { return Botan::PK_Encryptor_EME(*pk, rng, padding, provider); };
+            auto make_dec = [&]() { return Botan::PK_Decryptor_EME(*sk, rng, padding, provider); };
+
+            std::optional<Botan::PK_Encryptor_EME> enc;
+            std::optional<Botan::PK_Decryptor_EME> dec;
+            if(!one_shot) {
+               enc.emplace(make_enc());
+               dec.emplace(make_dec());
+            }
+
+            const size_t max_input_size = make_enc().maximum_input_size();
 
             auto enc_timer = config.make_timer(nm + " " + padding, 1, "encrypt");
             auto dec_timer = config.make_timer(nm + " " + padding, 1, "decrypt");
@@ -70,12 +83,24 @@ class PerfTest_PKEnc : public PerfTest {
             while(enc_timer->under(msec) || dec_timer->under(msec)) {
                // Generate a new random ciphertext to decrypt
                if(ciphertext.empty() || enc_timer->under(msec)) {
-                  rng.random_vec(plaintext, enc.maximum_input_size());
-                  ciphertext = enc_timer->run([&]() { return enc.encrypt(plaintext, rng); });
+                  rng.random_vec(plaintext, max_input_size);
+                  ciphertext = enc_timer->run([&]() {
+                     if(one_shot) {
+                        return make_enc().encrypt(plaintext, rng);
+                     } else {
+                        return enc->encrypt(plaintext, rng);
+                     }
+                  });
                }
 
                if(dec_timer->under(msec)) {
-                  const auto dec_pt = dec_timer->run([&]() { return dec.decrypt(ciphertext); });
+                  const auto dec_pt = dec_timer->run([&]() {
+                     if(one_shot) {
+                        return make_dec().decrypt(ciphertext);
+                     } else {
+                        return dec->decrypt(ciphertext);
+                     }
+                  });
 
                   // sanity check
                   if(!(Botan::unlock(dec_pt) == plaintext)) {

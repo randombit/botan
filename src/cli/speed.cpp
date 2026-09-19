@@ -304,7 +304,7 @@ class Speed final : public Command {
    public:
       Speed() :
             Command(
-               "speed --msec=500 --format=default --time-unit=ms --ecc-groups= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos") {
+               "speed --msec=500 --format=default --time-unit=ms --ecc-groups= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 --one-shot *algos") {
       }
 
       static std::vector<std::string> default_benchmark_list() {
@@ -491,6 +491,7 @@ class Speed final : public Command {
                                       milliseconds,
                                       ecc_groups,
                                       buf_sizes,
+                                      flag_set("one-shot"),
                                       this->error_output(),
                                       this->rng());
 
