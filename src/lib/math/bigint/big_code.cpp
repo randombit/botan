@@ -65,13 +65,14 @@ std::string BigInt::to_dec_string() const {
    // Extract digits from the groups
    std::vector<uint8_t> digits(digit_blocks * radix_digits);
 
+   constexpr auto div_10 = divide_precomp<word>::setup(10);
+
    for(size_t i = 0; i != digit_blocks; ++i) {
       word remainder = digit_groups[i];
       for(size_t j = 0; j != radix_digits; ++j) {
-         const word new_remainder = divide_10(remainder);
-         const word digit = remainder - new_remainder * 10;
+         const auto [q, digit] = div_10.divmod_2to1_ct(0, remainder);
          digits[radix_digits * i + j] = static_cast<uint8_t>(digit);
-         remainder = new_remainder;
+         remainder = q;
       }
    }
 
