@@ -253,6 +253,14 @@ release, or where a backwards incompatible change is expected.
   "PSSR", "EMSA-PSS", "PSS-MGF1", "EMSA4": Use "PSS"
   "EMSA_X931", "EMSA2": Use "X9.31"
 
+- ``RandomNumberGenerator::random_vec(std::span<uint8_t>)`` is deprecated
+  in favor of ``RandomNumberGenerator::randomize(std::span<uint8_t>)``.
+  Unlike the other ``random_vec`` overloads it performs no resizing or
+  allocation, and is functionally identical to ``randomize``. Both take
+  the same ``std::span<uint8_t>`` parameter, so any contiguous byte range
+  that binds to one binds to the other. The remaining ``random_vec``
+  overloads are unaffected.
+
 Deprecated Headers
 ^^^^^^^^^^^^^^^^^^^^^^
 

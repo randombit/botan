@@ -236,12 +236,14 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       /**
       * Fill a given byte container with @p bytes random bytes
       *
-      * @todo deprecate this overload (in favor of randomize())
-      *
       * @param  v     the container to be filled with @p bytes random bytes
       * @throws Exception if RNG fails
+      *
+      * TODO(Botan4) remove this function
       */
-      void random_vec(std::span<uint8_t> v) { this->randomize(v); }
+      BOTAN_DEPRECATED("Use randomize(std::span<uint8_t>) instead") void random_vec(std::span<uint8_t> v) {
+         this->randomize(v);
+      }
 
       /**
       * Resize a given byte container to @p bytes and fill it with random bytes
@@ -254,7 +256,7 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       template <concepts::resizable_byte_buffer T>
       void random_vec(T& v, size_t bytes) {
          v.resize(bytes);
-         random_vec(v);
+         randomize(v);
       }
 
       /**
@@ -279,7 +281,7 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       template <size_t bytes>
       std::array<uint8_t, bytes> random_array() {
          std::array<uint8_t, bytes> result{};
-         random_vec(result);
+         randomize(result);
          return result;
       }
 
