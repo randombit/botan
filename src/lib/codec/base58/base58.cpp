@@ -15,7 +15,6 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/mp_core.h>
-#include <botan/internal/mul128.h>
 #include <algorithm>
 #include <bit>
 #include <optional>
@@ -71,31 +70,6 @@ consteval size_t base58_conversion_radix_digits() {
    } else {
       return 5;
    }
-}
-
-constexpr std::pair<uint8_t, word> divmod_58(word x) {
-   BOTAN_DEBUG_ASSERT(x < base58_conversion_radix());
-
-   word q = 0;
-
-   // Division by constant 58
-   //
-   // Compilers will *usually* convert an expression like `x / 58` into
-   // exactly this kind of operation, but not necessarily always...
-   if constexpr(sizeof(word) == 4) {
-      const uint64_t magic = 2369637129;  // ceil(2**36 / 29)
-      const uint64_t z = magic * x;
-      q = z >> 37;
-   } else {
-      const uint64_t magic = 5088756985850910791;  // ceil(2**67 / 29)
-      uint64_t lo = 0;                             // unused
-      uint64_t hi = 0;
-      mul64x64_128(magic, x >> 1, &lo, &hi);
-      q = static_cast<word>(hi >> 3);
-   }
-
-   const uint8_t r = static_cast<uint8_t>(x - q * 58);
-   return std::make_pair(r, q);
 }
 
 /*
@@ -196,12 +170,14 @@ std::string base58_encode(std::span<word> v, size_t leading_zeros) {
    secure_vector<uint8_t> digits;
    digits.reserve(chunks * radix_digits);
 
+   constexpr auto div_58 = divide_precomp<word>::setup(58);
+
    for(size_t c = 0; c != chunks; ++c) {
       word r = ct_divmod_base58radix(v);
 
       for(size_t i = 0; i != radix_digits; ++i) {
-         const auto [r58, q58] = divmod_58(r);
-         digits.push_back(r58);
+         const auto [q58, r58] = div_58.divmod_2to1_ct(0, r);
+         digits.push_back(static_cast<uint8_t>(r58));
          r = q58;
       }
    }
