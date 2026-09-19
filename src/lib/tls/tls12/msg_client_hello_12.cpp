@@ -208,10 +208,6 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
                            " but our own policy does not accept it");
    }
 
-   if(!value_exists(m_data->ciphersuites(), session.session.ciphersuite_code())) {
-      m_data->m_suites.push_back(session.session.ciphersuite_code());
-   }
-
    /*
     * As EMS must always be used with TLS 1.2, add it even if it wasn't used
     * in the original session. If the server understands it and follows the
