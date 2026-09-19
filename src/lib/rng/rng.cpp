@@ -66,6 +66,11 @@ size_t RandomNumberGenerator::reseed_from_sources(Entropy_Sources& srcs, size_t 
    return 0;
 }
 
+void RandomNumberGenerator::add_entropy_with_estimate(std::span<const uint8_t> input, Entropy_Estimate estimate) {
+   BOTAN_UNUSED(estimate);
+   this->fill_bytes_with_input({}, input);
+}
+
 void RandomNumberGenerator::reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits) {
    if(this->accepts_input()) {
       this->add_entropy(rng.random_vec(poll_bits / 8));

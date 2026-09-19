@@ -34,12 +34,27 @@ Random Number Generators
       function several times is much slower than calling ``randomize`` once to
       produce multiple bytes at a time.
 
-   .. cpp:function:: void add_entropy(const uint8_t* data, size_t length)
+   .. cpp:function:: void add_entropy(const uint8_t* data, size_t length, \
+                     Entropy_Estimate estimate = Entropy_Estimate::Full())
 
       Incorporates provided data into the state of the PRNG, if at all possible.
       This works for most RNG types, including the system and TPM RNGs. But if
       the RNG doesn't support this operation, the data is dropped, no error is
       indicated.
+
+      The ``estimate`` describes how much entropy the caller assumes the data to
+      contain. By default the data is assumed to have full entropy, in which
+      case a stateful RNG such as ``HMAC_DRBG`` considers itself seeded if at
+      least ``security_level()`` bits are provided in a single call. Passing an
+      explicit ``Entropy_Estimate::Bits(n)`` credits the data with ``n`` bits
+      instead (capped at the length of the data; estimates are not accumulated
+      across calls). In particular ``Entropy_Estimate::Bits(0)`` mixes the data into
+      the RNG state without affecting whether the RNG is considered seeded,
+      which is the appropriate choice for data of unknown or untrusted quality.
+      RNGs which do not track a seeded state ignore the estimate.
+
+      .. versionadded:: 3.14.0
+         The ``estimate`` parameter
 
    .. cpp:function:: bool accepts_input() const
 
@@ -286,6 +301,16 @@ source can perform polling and pass whatever it gathers to the RNG using the
 object's ``add_entropy`` function. The source then returns a best estimate of
 the number of bits of entropy gathered; this can be zero if the source should be
 used but not counted.
+
+The estimate passed to ``add_entropy`` should be consistent with the value
+returned from ``poll``. A source which should be used but not counted passes
+``Entropy_Estimate::Bits(0)`` to ``add_entropy`` and returns zero; the data is then
+mixed into the RNG state without marking the RNG as seeded. Note that
+``add_entropy`` assumes full entropy by default, so a source passing data of
+sufficient length without an explicit estimate would mark a stateful RNG as
+seeded regardless of the value it returns from ``poll``. A stateful RNG which
+polls its entropy sources considers itself seeded once the estimates returned
+by the polled sources sum up to at least its security level.
 
 Note for writers of ``EntropySource`` subclasses: it isn't necessary
 to use any kind of cryptographic hash on your output. The data

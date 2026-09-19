@@ -168,6 +168,8 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
 
       void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) final;
 
+      void add_entropy_with_estimate(std::span<const uint8_t> input, Entropy_Estimate estimate) final;
+
       void reset_reseed_counter();
 
       mutable recursive_mutex_type m_mutex;

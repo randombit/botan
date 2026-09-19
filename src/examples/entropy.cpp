@@ -46,10 +46,13 @@ class Hardware_RNG_Entropy_Source final : public Botan::Entropy_Source {
 
          uint8_t buf[poll_goal / 8];
          const size_t written = call_hardware_specific_rng(buf, sizeof(buf));
-         rng.add_entropy(buf, written);
 
-         // return estimate of bits of entropy written to rng state
-         return written * 8;
+         // estimate of bits of entropy written to rng state
+         const size_t entropy_bits = written * 8;
+
+         rng.add_entropy(buf, written, Botan::Entropy_Estimate::Bits(entropy_bits));
+
+         return entropy_bits;
       }
 };
 
@@ -118,8 +121,10 @@ class Timer_Entropy_Source final : public Botan::Entropy_Source {
             // Examine the output of this approach on your system before trusting it!
             // printf("%016lX %016X\n", timer, counter);
 
-            rng.add_entropy_T(timer);
-            rng.add_entropy_T(counter);
+            // The individual values are not credited with any entropy here;
+            // the overall estimate for the poll is returned below instead.
+            rng.add_entropy_T(timer, Botan::Entropy_Estimate::Bits(0));
+            rng.add_entropy_T(counter, Botan::Entropy_Estimate::Bits(0));
          }
 
          // return estimate of entropy written to rng state

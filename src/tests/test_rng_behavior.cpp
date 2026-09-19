@@ -70,6 +70,8 @@ class Stateful_RNG_Tests : public Test {
          results.push_back(test_reseed_interval_limits());
          results.push_back(test_max_number_of_bytes_per_request());
          results.push_back(test_broken_entropy_input());
+         results.push_back(test_add_entropy_estimate());
+         results.push_back(test_entropy_source_estimate());
          results.push_back(test_check_nonce());
          results.push_back(test_prediction_resistance());
          results.push_back(test_randomize_with_ts_input());
@@ -227,6 +229,220 @@ class Stateful_RNG_Tests : public Test {
          result.test_throws("underlying rng and entropy sources broken", [&rng_with_broken_rng_and_broken_es]() {
             rng_with_broken_rng_and_broken_es->random_vec(16);
          });
+   #endif
+
+         return result;
+      }
+
+      Test::Result test_add_entropy_estimate() {
+         Test::Result result(rng_name() + " Entropy Estimate");
+
+         auto rng = create_rng(nullptr, nullptr, 0);
+         const size_t sec_level = rng->security_level();
+         const std::vector<uint8_t> input(64, 0x42);
+
+         rng->clear();
+         result.test_is_false("not seeded", rng->is_seeded());
+
+         rng->add_entropy(input, Botan::Entropy_Estimate::Bits(0));
+         result.test_is_false("uncounted input does not seed", rng->is_seeded());
+         result.test_throws<Botan::PRNG_Unseeded>("no output after uncounted input", [&]() { rng->random_vec(16); });
+
+         rng->add_entropy(input, Botan::Entropy_Estimate::Bits(sec_level / 2));
+         result.test_is_false("insufficient estimate does not seed", rng->is_seeded());
+         rng->add_entropy(input, Botan::Entropy_Estimate::Bits(sec_level / 2));
+         result.test_is_false("estimates are not accumulated", rng->is_seeded());
+
+         rng->add_entropy(std::vector<uint8_t>(8, 0x42), Botan::Entropy_Estimate::Bits(sec_level));
+         result.test_is_false("estimate is capped at the input length", rng->is_seeded());
+
+         rng->add_entropy(std::vector<uint8_t>(sec_level / 8, 0x42), Botan::Entropy_Estimate::Bits(sec_level));
+         result.test_is_true("sufficient estimate seeds", rng->is_seeded());
+         result.test_no_throw("output after seeding", [&]() { rng->random_vec(16); });
+
+         rng->clear();
+         rng->add_entropy(input);
+         result.test_is_true("full entropy is the default", rng->is_seeded());
+
+         // uncounted input is nonetheless mixed into the state
+         {
+            const std::vector<uint8_t> seed(sec_level / 8, 0xA5);
+
+            auto rng1 = create_rng(nullptr, nullptr, 0);
+            auto rng2 = create_rng(nullptr, nullptr, 0);
+            auto rng3 = create_rng(nullptr, nullptr, 0);
+
+            rng1->initialize_with(seed);
+            rng2->initialize_with(seed);
+            rng3->initialize_with(seed);
+
+            rng2->add_entropy(input, Botan::Entropy_Estimate::Bits(0));
+
+            const auto out1 = rng1->random_vec(32);
+            const auto out2 = rng2->random_vec(32);
+            const auto out3 = rng3->random_vec(32);
+
+            result.test_is_true("same seed produces same output", out1 == out3);
+            result.test_is_true("uncounted input changes the output", out1 != out2);
+         }
+
+         // uncounted input does not reset the reseed interval, full entropy input does
+         {
+            Request_Counting_RNG counting_rng;
+            auto rng4 = make_rng(counting_rng, 4);
+
+            rng4->random_vec(1);
+            rng4->random_vec(1);
+            result.test_sz_eq("initial seeding", counting_rng.randomize_count(), 1);
+
+            rng4->add_entropy(input, Botan::Entropy_Estimate::Bits(0));
+            result.test_is_true("still seeded", rng4->is_seeded());
+
+            rng4->random_vec(1);
+            rng4->random_vec(1);
+            result.test_sz_eq("no reseed within interval", counting_rng.randomize_count(), 1);
+            rng4->random_vec(1);
+            result.test_sz_eq("uncounted input did not reset the reseed interval", counting_rng.randomize_count(), 2);
+
+            rng4->random_vec(1);
+            rng4->add_entropy(input);
+
+            rng4->random_vec(1);
+            rng4->random_vec(1);
+            rng4->random_vec(1);
+            result.test_sz_eq("full entropy input reset the reseed interval", counting_rng.randomize_count(), 2);
+            rng4->random_vec(1);
+            result.test_sz_eq("reseed after reset interval", counting_rng.randomize_count(), 3);
+         }
+
+         return result;
+      }
+
+      Test::Result test_entropy_source_estimate() {
+         Test::Result result(rng_name() + " Entropy Source Estimate");
+
+   #if defined(BOTAN_HAS_ENTROPY_SOURCE)
+         // Provides a fixed amount of data and claims a fixed entropy estimate for it
+         class Fixed_Estimate_Entropy_Source final : public Botan::Entropy_Source {
+            public:
+               Fixed_Estimate_Entropy_Source(size_t bytes, size_t estimate) : m_bytes(bytes), m_estimate(estimate) {}
+
+               std::string name() const override { return "Fixed Estimate Entropy Source"; }
+
+               size_t poll(Botan::RandomNumberGenerator& rng) override {
+                  m_polls++;
+                  const std::vector<uint8_t> buf(m_bytes, 0x42);
+                  rng.add_entropy(buf, Botan::Entropy_Estimate::Bits(m_estimate));
+                  return m_estimate;
+               }
+
+               size_t polls() const { return m_polls; }
+
+            private:
+               size_t m_bytes;
+               size_t m_estimate;
+               size_t m_polls = 0;
+         };
+
+         // Like a timer based source: many small inputs, credited only via the poll estimate
+         class Chunked_Entropy_Source final : public Botan::Entropy_Source {
+            public:
+               explicit Chunked_Entropy_Source(size_t estimate) : m_estimate(estimate) {}
+
+               std::string name() const override { return "Chunked Entropy Source"; }
+
+               size_t poll(Botan::RandomNumberGenerator& rng) override {
+                  for(uint64_t i = 0; i != 64; ++i) {
+                     rng.add_entropy_T(i, Botan::Entropy_Estimate::Bits(0));
+                  }
+                  return m_estimate;
+               }
+
+            private:
+               size_t m_estimate;
+         };
+
+         const size_t sec_level = create_rng(nullptr, nullptr, 0)->security_level();
+         // well above the length at which add_entropy would by default consider the RNG seeded
+         const size_t big = 2 * sec_level / 8;
+
+         // a source providing plenty of data but claiming no entropy does not seed the RNG
+         {
+            Botan::Entropy_Sources srcs;
+            auto src = std::make_unique<Fixed_Estimate_Entropy_Source>(big, 0);
+            const auto* src_ptr = src.get();
+            srcs.add_source(std::move(src));
+
+            auto rng = make_rng(srcs);
+            result.test_throws<Botan::PRNG_Unseeded>("uncounted source does not seed", [&]() { rng->random_vec(16); });
+            result.test_sz_gte("source was polled", src_ptr->polls(), 1);
+            result.test_is_false("not seeded after uncounted poll", rng->is_seeded());
+            result.test_throws<Botan::PRNG_Unseeded>("still not seeded", [&]() { rng->random_vec(16); });
+         }
+
+         // a source providing small chunks is credited via its poll estimate
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Chunked_Entropy_Source>(sec_level));
+
+            auto rng = make_rng(srcs);
+            result.test_no_throw("chunked source seeds", [&]() { rng->random_vec(16); });
+            result.test_is_true("seeded via poll estimate", rng->is_seeded());
+         }
+
+         // a counted source seeds the RNG
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Fixed_Estimate_Entropy_Source>(sec_level / 8, sec_level));
+
+            auto rng = make_rng(srcs);
+            result.test_no_throw("counted source seeds", [&]() { rng->random_vec(16); });
+            result.test_is_true("seeded", rng->is_seeded());
+         }
+
+         // an uncounted source followed by a counted source seeds the RNG
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Fixed_Estimate_Entropy_Source>(big, 0));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Entropy_Source>(sec_level / 8, sec_level));
+
+            auto rng = make_rng(srcs);
+            result.test_no_throw("mixed sources seed", [&]() { rng->random_vec(16); });
+            result.test_is_true("seeded", rng->is_seeded());
+         }
+
+         // an insufficient estimate does not seed the RNG
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Fixed_Estimate_Entropy_Source>(big, sec_level / 2));
+
+            auto rng = make_rng(srcs);
+            result.test_throws<Botan::PRNG_Unseeded>("insufficient estimate does not seed",
+                                                     [&]() { rng->random_vec(16); });
+         }
+
+         // explicitly reseeding from an uncounted source keeps the RNG seeded
+         // but does not reset the reseed interval
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Fixed_Estimate_Entropy_Source>(big, 0));
+
+            Request_Counting_RNG counting_rng;
+            auto rng = make_rng(counting_rng, 4);
+
+            rng->random_vec(1);
+            rng->random_vec(1);
+            result.test_sz_eq("initial seeding", counting_rng.randomize_count(), 1);
+
+            result.test_sz_eq("no entropy reported", rng->reseed_from_sources(srcs, sec_level), 0);
+            result.test_is_true("remains seeded", rng->is_seeded());
+
+            rng->random_vec(1);
+            rng->random_vec(1);
+            result.test_sz_eq("no reseed within interval", counting_rng.randomize_count(), 1);
+            rng->random_vec(1);
+            result.test_sz_eq("uncounted poll did not reset the reseed interval", counting_rng.randomize_count(), 2);
+         }
    #endif
 
          return result;
