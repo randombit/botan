@@ -13,7 +13,7 @@
    #include <botan/assert.h>
    #include <botan/p11_mechanism.h>
    #include <botan/pk_ops.h>
-   #include <botan/pk_options.h>
+   #include <botan/pk_options_readers.h>
    #include <botan/rng.h>
    #include <botan/internal/keypair.h>
    #include <botan/internal/pk_options_impl.h>
@@ -54,14 +54,14 @@ namespace {
 * The mechanism hashes the input itself, unless the caller provides the
 * digest, in which case the plain CKM_ECDSA mechanism is used
 */
-std::string p11_ecdsa_mechanism_hash(const PK_Signature_Options& options) {
+std::string p11_ecdsa_mechanism_hash(const PK_Signature_Options_Reader& options) {
    if(options.using_externally_computed_prehash()) {
       return "Raw";
    }
    return options.hash_function_name();
 }
 
-std::string p11_ecdsa_hash_name(const PK_Signature_Options& options) {
+std::string p11_ecdsa_hash_name(const PK_Signature_Options_Reader& options) {
    if(options.using_externally_computed_prehash()) {
       return externally_computed_prehash_name(options).value_or("Raw");
    }
@@ -70,7 +70,7 @@ std::string p11_ecdsa_hash_name(const PK_Signature_Options& options) {
 
 class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature {
    public:
-      PKCS11_ECDSA_Signature_Operation(const PKCS11_ECDSA_PrivateKey& key, const PK_Signature_Options& options) :
+      PKCS11_ECDSA_Signature_Operation(const PKCS11_ECDSA_PrivateKey& key, const PK_Signature_Options_Reader& options) :
             PK_Ops::Signature(),
             m_key(key),
             m_order_bytes(key.domain().get_order_bytes()),
@@ -142,7 +142,8 @@ AlgorithmIdentifier PKCS11_ECDSA_Signature_Operation::algorithm_identifier() con
 
 class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification {
    public:
-      PKCS11_ECDSA_Verification_Operation(const PKCS11_ECDSA_PublicKey& key, const PK_Signature_Options& options) :
+      PKCS11_ECDSA_Verification_Operation(const PKCS11_ECDSA_PublicKey& key,
+                                          const PK_Signature_Options_Reader& options) :
             PK_Ops::Verification(),
             m_key(key),
             m_mechanism(MechanismWrapper::create_ecdsa_mechanism(p11_ecdsa_mechanism_hash(options))),
@@ -215,19 +216,15 @@ class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification {
 }  // namespace
 
 std::unique_ptr<PK_Ops::Verification> PKCS11_ECDSA_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   if(options.using_provider() && options.provider().value() != "pkcs11") {
-      throw Provider_Not_Found(algo_name(), options.provider().value());
-   }
+   const PK_Signature_Options_Reader& options) const {
+   require_hardware_provider(options, algo_name(), "pkcs11");
    return std::make_unique<PKCS11_ECDSA_Verification_Operation>(*this, options);
 }
 
 std::unique_ptr<PK_Ops::Signature> PKCS11_ECDSA_PrivateKey::_create_signature_op(
-   RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
+   RandomNumberGenerator& rng, const PK_Signature_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
-   if(options.using_provider() && options.provider().value() != "pkcs11") {
-      throw Provider_Not_Found(algo_name(), options.provider().value());
-   }
+   require_hardware_provider(options, algo_name(), "pkcs11");
    return std::make_unique<PKCS11_ECDSA_Signature_Operation>(*this, options);
 }
 

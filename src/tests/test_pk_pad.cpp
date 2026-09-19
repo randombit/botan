@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_RSA_ENCRYPTION_PADDING)
    #include <botan/internal/enc_padding.h>
+   #include <botan/internal/pk_options_impl.h>
 #endif
 
 namespace Botan_Tests {
@@ -24,10 +25,8 @@ class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
 
          Test::Result result("PKCSv15 Decoding");
 
-         auto pkcs = Botan::EncryptionPaddingScheme::create("PKCS1v15");
-         if(!pkcs) {
-            return result;
-         }
+         auto pkcs = Botan::EncryptionPaddingScheme::create_or_throw(
+            Botan::PK_Options_Reader_Access::read(Botan::PK_Encryption_Options().with_padding("PKCS1v15")));
 
          const std::vector<uint8_t> ciphertext = vars.get_req_bin("RawCiphertext");
          const std::vector<uint8_t> plaintext = vars.get_opt_bin("Plaintext");

@@ -102,13 +102,12 @@ class HSS_LMS_Verification_Operation final : public PK_Ops::Verification {
 }  // namespace
 
 std::unique_ptr<PK_Ops::Verification> HSS_LMS_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
+   const PK_Signature_Options_Reader& options) const {
    validate_for_hash_based_signature(options, "HSS-LMS", m_public->lms_pub_key().lms_params().hash_name());
 
-   if(!options.using_provider()) {
-      return std::make_unique<HSS_LMS_Verification_Operation>(m_public);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<HSS_LMS_Verification_Operation>(m_public);
 }
 
 std::unique_ptr<PK_Ops::Verification> HSS_LMS_PublicKey::create_x509_verification_op(
@@ -226,17 +225,16 @@ class HSS_LMS_Signature_Operation final : public PK_Ops::Signature {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Signature> HSS_LMS_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
-                                                                            const PK_Signature_Options& options) const {
+std::unique_ptr<PK_Ops::Signature> HSS_LMS_PrivateKey::_create_signature_op(
+   RandomNumberGenerator& rng, const PK_Signature_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
 
    validate_for_hash_based_signature(options, "HSS-LMS", m_public->lms_pub_key().lms_params().hash_name());
    acknowledge_always_deterministic(options);
 
-   if(!options.using_provider()) {
-      return std::make_unique<HSS_LMS_Signature_Operation>(m_private, m_public);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<HSS_LMS_Signature_Operation>(m_private, m_public);
 }
 
 }  // namespace Botan

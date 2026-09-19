@@ -10,7 +10,7 @@
 #include <botan/bigint.h>
 #include <botan/der_enc.h>
 #include <botan/pk_ops.h>
-#include <botan/pk_options.h>
+#include <botan/pk_options_readers.h>
 #include <botan/rng.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/ct_utils.h>
@@ -94,11 +94,20 @@ secure_vector<uint8_t> PK_Decryptor::decrypt_or_random(const uint8_t in[],
 PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
                                    RandomNumberGenerator& rng,
                                    std::string_view padding,
-                                   std::string_view provider) {
-   m_op = key.create_encryption_op(rng, padding, provider);
+                                   std::string_view provider) :
+      PK_Encryptor_EME(key, rng, parse_legacy_enc_options(key, padding).with_provider(provider)) {}
+
+PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
+                                   RandomNumberGenerator& rng,
+                                   const PK_Encryption_Options& options) {
+   const PK_Encryption_Options_Reader reader(options);
+
+   m_op = key._create_encryption_op(rng, reader);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support encryption", key.algo_name()));
    }
+
+   reader.throw_if_unexamined(key.algo_name());
 }
 
 PK_Encryptor_EME::~PK_Encryptor_EME() = default;
@@ -121,11 +130,20 @@ size_t PK_Encryptor_EME::maximum_input_size() const {
 PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
                                    RandomNumberGenerator& rng,
                                    std::string_view padding,
-                                   std::string_view provider) {
-   m_op = key.create_decryption_op(rng, padding, provider);
+                                   std::string_view provider) :
+      PK_Decryptor_EME(key, rng, parse_legacy_enc_options(key, padding).with_provider(provider)) {}
+
+PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
+                                   RandomNumberGenerator& rng,
+                                   const PK_Encryption_Options& options) {
+   const PK_Encryption_Options_Reader reader(options);
+
+   m_op = key._create_decryption_op(rng, reader);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support decryption", key.algo_name()));
    }
+
+   reader.throw_if_unexamined(key.algo_name());
 }
 
 PK_Decryptor_EME::~PK_Decryptor_EME() = default;
@@ -145,11 +163,18 @@ secure_vector<uint8_t> PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask, const u
    return m_op->decrypt(valid_mask, {in, in_len});
 }
 
-PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, std::string_view param, std::string_view provider) {
-   m_op = key.create_kem_encryption_op(param, provider);
+PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, std::string_view param, std::string_view provider) :
+      PK_KEM_Encryptor(key, parse_legacy_kem_options(param).with_provider(provider)) {}
+
+PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, const PK_KEM_Options& options) {
+   const PK_KEM_Options_Reader reader(options);
+
+   m_op = key._create_kem_encryption_op(reader);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support KEM encryption", key.algo_name()));
    }
+
+   reader.throw_if_unexamined(key.algo_name());
 }
 
 PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key,
@@ -195,11 +220,18 @@ size_t PK_KEM_Decryptor::encapsulated_key_length() const {
 PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
                                    RandomNumberGenerator& rng,
                                    std::string_view param,
-                                   std::string_view provider) {
-   m_op = key.create_kem_decryption_op(rng, param, provider);
+                                   std::string_view provider) :
+      PK_KEM_Decryptor(key, rng, parse_legacy_kem_options(param).with_provider(provider)) {}
+
+PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key, RandomNumberGenerator& rng, const PK_KEM_Options& options) {
+   const PK_KEM_Options_Reader reader(options);
+
+   m_op = key._create_kem_decryption_op(rng, reader);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support KEM decryption", key.algo_name()));
    }
+
+   reader.throw_if_unexamined(key.algo_name());
 }
 
 PK_KEM_Decryptor::~PK_KEM_Decryptor() = default;
@@ -219,11 +251,20 @@ void PK_KEM_Decryptor::decrypt(std::span<uint8_t> out_shared_key,
 PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
                                    RandomNumberGenerator& rng,
                                    std::string_view kdf,
-                                   std::string_view provider) {
-   m_op = key.create_key_agreement_op(rng, kdf, provider);
+                                   std::string_view provider) :
+      PK_Key_Agreement(key, rng, parse_legacy_ka_options(kdf).with_provider(provider)) {}
+
+PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
+                                   RandomNumberGenerator& rng,
+                                   const PK_Key_Agreement_Options& options) {
+   const PK_Key_Agreement_Options_Reader reader(options);
+
+   m_op = key._create_key_agreement_op(rng, reader);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support key agreement", key.algo_name()));
    }
+
+   reader.throw_if_unexamined(key.algo_name());
 }
 
 PK_Key_Agreement::~PK_Key_Agreement() = default;
@@ -265,24 +306,22 @@ PK_Signer::PK_Signer(const Private_Key& key,
                    .with_der_encoded_signature(format == Signature_Format::DerSequence)
                    .with_provider(provider)) {}
 
-PK_Signer::PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, const PK_Signature_Options& user_options) {
-   // Track option usage on a private copy, so the caller's object is never modified
-   const PK_Signature_Options options(user_options);  // NOLINT(*-unnecessary-copy-initialization) clang-tidy bug
-   options.reset_examined();
+PK_Signer::PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, const PK_Signature_Options& options) {
+   const PK_Signature_Options_Reader reader(options, PK_Signature_Options_Reader::Usage::Signing);
 
-   m_op = key._create_signature_op(rng, options);
+   m_op = key._create_signature_op(rng, reader);
 
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature generation", key.algo_name()));
    }
-   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
+   m_sig_format = reader.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
    m_sig_element_size = key._signature_element_size_for_DER_encoding();
 
    if(m_sig_format == Signature_Format::DerSequence && !m_sig_element_size.has_value()) {
       throw Invalid_Argument(fmt("Key type {} does not support DER encoded signatures", key.algo_name()));
    }
 
-   options.throw_if_unexamined(key.algo_name());
+   reader.throw_if_unexamined(key.algo_name());
 }
 
 AlgorithmIdentifier PK_Signer::algorithm_identifier() const {
@@ -393,30 +432,23 @@ PK_Verifier::PK_Verifier(const Public_Key& pub_key,
                      .with_der_encoded_signature(format == Signature_Format::DerSequence)
                      .with_provider(provider)) {}
 
-PK_Verifier::PK_Verifier(const Public_Key& key, const PK_Signature_Options& user_options) {
-   // Track option usage on a private copy, so the caller's object is never modified
-   PK_Signature_Options options(user_options);
+PK_Verifier::PK_Verifier(const Public_Key& key, const PK_Signature_Options& options) {
+   const PK_Signature_Options_Reader reader(options, PK_Signature_Options_Reader::Usage::Verification);
 
-   // The deterministic option only affects signature generation, so remove it
-   // here rather than have every verification operation know to ignore it
-   options.m_deterministic_sig = false;
-
-   options.reset_examined();
-
-   m_op = key._create_verification_op(options);
+   m_op = key._create_verification_op(reader);
 
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature verification", key.algo_name()));
    }
 
    m_sig_element_size = key._signature_element_size_for_DER_encoding();
-   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
+   m_sig_format = reader.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
 
    if(m_sig_format == Signature_Format::DerSequence && !m_sig_element_size.has_value()) {
       throw Invalid_Argument(fmt("Key type {} does not support DER encoded signatures", key.algo_name()));
    }
 
-   options.throw_if_unexamined(key.algo_name());
+   reader.throw_if_unexamined(key.algo_name());
 }
 
 PK_Verifier::PK_Verifier(const Public_Key& key,

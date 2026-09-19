@@ -12,6 +12,7 @@
 #include <botan/der_enc.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
+#include <botan/pk_options_readers.h>
 #include <botan/pubkey.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
@@ -458,21 +459,18 @@ class Ed25519_Hashed_Sign_Operation final : public Ed25519_Sign_Operation_Base {
 }  // namespace
 
 std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   if(!options.using_provider()) {
-      if(options.using_prehash()) {
-         if(options.prehash_function().has_value()) {
-            return std::make_unique<Ed25519_Hashed_Verify_Operation>(
-               m_public, options.prehash_function().value(), false);
-         } else {
-            return std::make_unique<Ed25519_Hashed_Verify_Operation>(m_public, "SHA-512", true);
-         }
-      } else {
-         return std::make_unique<Ed25519_Pure_Verify_Operation>(m_public);
-      }
-   }
+   const PK_Signature_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
 
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   if(options.using_prehash()) {
+      if(options.prehash_function().has_value()) {
+         return std::make_unique<Ed25519_Hashed_Verify_Operation>(m_public, options.prehash_function().value(), false);
+      } else {
+         return std::make_unique<Ed25519_Hashed_Verify_Operation>(m_public, "SHA-512", true);
+      }
+   } else {
+      return std::make_unique<Ed25519_Pure_Verify_Operation>(m_public);
+   }
 }
 
 std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
@@ -487,26 +485,23 @@ std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_x509_verificatio
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> Ed25519_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
-                                                                            const PK_Signature_Options& options) const {
+std::unique_ptr<PK_Ops::Signature> Ed25519_PrivateKey::_create_signature_op(
+   RandomNumberGenerator& rng, const PK_Signature_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
 
    acknowledge_always_deterministic(options);
 
-   if(!options.using_provider()) {
-      if(options.using_prehash()) {
-         if(options.prehash_function().has_value()) {
-            return std::make_unique<Ed25519_Hashed_Sign_Operation>(
-               m_private, options.prehash_function().value(), false);
-         } else {
-            return std::make_unique<Ed25519_Hashed_Sign_Operation>(m_private, "SHA-512", true);
-         }
-      } else {
-         return std::make_unique<Ed25519_Pure_Sign_Operation>(m_private);
-      }
-   }
+   require_software_provider(options, algo_name());
 
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   if(options.using_prehash()) {
+      if(options.prehash_function().has_value()) {
+         return std::make_unique<Ed25519_Hashed_Sign_Operation>(m_private, options.prehash_function().value(), false);
+      } else {
+         return std::make_unique<Ed25519_Hashed_Sign_Operation>(m_private, "SHA-512", true);
+      }
+   } else {
+      return std::make_unique<Ed25519_Pure_Sign_Operation>(m_private);
+   }
 }
 
 /*

@@ -8,6 +8,7 @@
 #include <botan/internal/oaep.h>
 
 #include <botan/exceptn.h>
+#include <botan/pk_options_readers.h>
 #include <botan/rng.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
@@ -144,6 +145,26 @@ size_t OAEP::maximum_input_size(size_t keybits) const {
    } else {
       return 0;
    }
+}
+
+OAEP::OAEP(const PK_Encryption_Options_Reader& options) {
+   if(!options.using_hash()) {
+      throw Lookup_Error("OAEP requires specifying a hash function");
+   }
+
+   auto hash = HashFunction::create_or_throw(options.hash_function_name());
+
+   if(options.using_mgf1_hash()) {
+      m_mgf1_hash = HashFunction::create_or_throw(options.mgf1_hash_function().value());
+   } else {
+      m_mgf1_hash = hash->new_object();
+   }
+
+   // The label is optional and defaults to empty
+   if(const auto& label = options.context()) {
+      hash->update(*label);
+   }
+   m_Phash = hash->final();
 }
 
 OAEP::OAEP(std::unique_ptr<HashFunction> hash, std::string_view P) : m_mgf1_hash(std::move(hash)) {

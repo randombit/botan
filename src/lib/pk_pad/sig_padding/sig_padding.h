@@ -16,7 +16,7 @@
 namespace Botan {
 
 class RandomNumberGenerator;
-class PK_Signature_Options;
+class PK_Signature_Options_Reader;
 
 /**
 * RSA Signature Padding Scheme
@@ -33,7 +33,7 @@ class BOTAN_TEST_API SignaturePaddingScheme /* NOLINT(*-special-member-functions
       * @param options the algorithm parameters
       * @return pointer to newly allocated object of that type, or throws
       */
-      static std::unique_ptr<SignaturePaddingScheme> create_or_throw(const PK_Signature_Options& options);
+      static std::unique_ptr<SignaturePaddingScheme> create_or_throw(const PK_Signature_Options_Reader& options);
 
       /**
       * Add more data to the signature computation

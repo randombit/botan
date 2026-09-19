@@ -13,6 +13,7 @@
 #include <botan/internal/keypair.h>
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -108,8 +109,9 @@ namespace {
 */
 class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_Padding {
    public:
-      ElGamal_Encryption_Operation(const std::shared_ptr<const DL_PublicKey>& key, std::string_view padding) :
-            PK_Ops::Encryption_with_Padding(padding), m_key(key) {
+      ElGamal_Encryption_Operation(const std::shared_ptr<const DL_PublicKey>& key,
+                                   const PK_Encryption_Options_Reader& options) :
+            PK_Ops::Encryption_with_Padding(options), m_key(key) {
          const size_t powm_window = 4;
          m_monty_y_p = monty_precompute(m_key->group()._monty_params_p(), m_key->public_key(), powm_window);
       }
@@ -163,9 +165,9 @@ std::vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(std::span<const u
 class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_Padding {
    public:
       ElGamal_Decryption_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
-                                   std::string_view padding,
+                                   const PK_Encryption_Options_Reader& options,
                                    RandomNumberGenerator& rng) :
-            PK_Ops::Decryption_with_Padding(padding),
+            PK_Ops::Decryption_with_Padding(options),
             m_key(key),
             m_blinder(
                m_key->group()._reducer_mod_p(),
@@ -215,22 +217,19 @@ secure_vector<uint8_t> ElGamal_Decryption_Operation::raw_decrypt(std::span<const
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Encryption> ElGamal_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
-                                                                            std::string_view params,
-                                                                            std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<ElGamal_Encryption_Operation>(this->m_public_key, params);
-   }
-   throw Provider_Not_Found(algo_name(), provider);
+std::unique_ptr<PK_Ops::Encryption> ElGamal_PublicKey::_create_encryption_op(
+   RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const {
+   BOTAN_UNUSED(rng);
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<ElGamal_Encryption_Operation>(this->m_public_key, options);
 }
 
-std::unique_ptr<PK_Ops::Decryption> ElGamal_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
-                                                                             std::string_view params,
-                                                                             std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<ElGamal_Decryption_Operation>(this->m_private_key, params, rng);
-   }
-   throw Provider_Not_Found(algo_name(), provider);
+std::unique_ptr<PK_Ops::Decryption> ElGamal_PrivateKey::_create_decryption_op(
+   RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<ElGamal_Decryption_Operation>(this->m_private_key, options, rng);
 }
 
 }  // namespace Botan

@@ -167,14 +167,12 @@ bool XMSS_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) 
 }
 
 std::unique_ptr<PK_Ops::Verification> XMSS_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
+   const PK_Signature_Options_Reader& options) const {
    validate_for_hash_based_signature(options, "XMSS", xmss_parameters().hash_function_name());
 
-   if(!options.using_provider()) {
-      return std::make_unique<XMSS_Verification_Operation>(*this);
-   }
+   require_software_provider(options, algo_name());
 
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   return std::make_unique<XMSS_Verification_Operation>(*this);
 }
 
 std::unique_ptr<PK_Ops::Verification> XMSS_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,

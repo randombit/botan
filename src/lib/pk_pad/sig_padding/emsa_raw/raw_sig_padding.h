@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-class PK_Signature_Options;
+class PK_Signature_Options_Reader;
 class RandomNumberGenerator;
 
 /**
@@ -23,7 +23,7 @@ class RandomNumberGenerator;
 */
 class SignRawBytes final : public SignaturePaddingScheme {
    public:
-      explicit SignRawBytes(const PK_Signature_Options& options);
+      explicit SignRawBytes(const PK_Signature_Options_Reader& options);
 
       std::string hash_function() const override { return "Raw"; }
 
