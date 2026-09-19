@@ -82,6 +82,13 @@ std::optional<Session> check_for_resume(const Session_Handle& handle_to_resume,
       return std::nullopt;
    }
 
+   // A session manager shared with our client role must not resume a session
+   // here that we stored as a client: its peer certificates are a remote
+   // server's, and this connection would adopt them as the client's.
+   if(session->side() != Connection_Side::Server) {
+      return std::nullopt;
+   }
+
    // wrong version
    if(client_hello->legacy_version() != session->version()) {
       return std::nullopt;

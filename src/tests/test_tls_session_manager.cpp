@@ -123,6 +123,33 @@ const Botan::TLS::Server_Information& server_info() {
    return si;
 }
 
+using Named_Session_Manager = std::pair<std::string, std::unique_ptr<Botan::TLS::Session_Manager>>;
+
+/**
+ * A freshly constructed instance of every Session_Manager that can both store
+ * and look up sessions in this build. Session_Manager_Stateless is omitted as
+ * it can do neither.
+ */
+std::vector<Named_Session_Manager> all_available_session_managers(
+   const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+   std::vector<Named_Session_Manager> managers;
+
+   managers.emplace_back("In Memory", std::make_unique<Botan::TLS::Session_Manager_In_Memory>(rng, 10));
+
+   managers.emplace_back("Hybrid",
+                         std::make_unique<Botan::TLS::Session_Manager_Hybrid>(
+                            std::make_unique<Botan::TLS::Session_Manager_In_Memory>(rng, 10),
+                            std::make_shared<Test_Credentials_Manager>(),
+                            rng));
+
+   #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
+   managers.emplace_back("SQLite",
+                         std::make_unique<Botan::TLS::Session_Manager_SQLite>("secure_pw", rng, ":memory:", 10));
+   #endif
+
+   return managers;
+}
+
 decltype(auto) default_session(Botan::TLS::Connection_Side side,
                                Botan::TLS::Callbacks& cbs,
                                Botan::TLS::Protocol_Version version = Botan::TLS::Protocol_Version::TLS_V12) {
@@ -208,17 +235,11 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                }
             }),
 
-      CHECK(
-         "obtain session from server info",
-         [&](auto& result) {
-            auto sessions = mgr->find(server_info(), cbs, plcy);
-            if(result.test_is_true("session was found successfully", sessions.size() == 1)) {
-               result.test_u16_eq("protocol version was echoed", sessions[0].session.version().version_code(), 0x0303);
-               result.test_u16_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
-               result.test_bin_eq("ID was echoed", sessions[0].handle.id().value(), default_id);
-               result.test_is_true("not a ticket", !sessions[0].handle.ticket().has_value());
-            }
-         }),
+      CHECK("server-side session is not offered to the client role",
+            [&](auto& result) {
+               result.test_is_true("session established as a server is not found via server info",
+                                   mgr->find(server_info(), cbs, plcy).empty());
+            }),
 
       CHECK("obtain session from ID",
             [&](auto& result) {
@@ -268,7 +289,8 @@ std::vector<Test::Result> test_session_manager_in_memory() {
             const Botan::TLS::Session_ID new_id = random_id(*rng);
 
             mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs), new_id);
-            result.require("obtain via ID", mgr->retrieve(new_id, cbs, plcy).has_value());
+            result.test_is_true("client-side session is not retrievable by the server role",
+                                !mgr->retrieve(new_id, cbs, plcy).has_value());
 
             auto sessions = mgr->find(server_info(), cbs, plcy);
             if(result.test_is_true("found via server info", sessions.size() == 1)) {
@@ -314,12 +336,15 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                   "saving worked",
                   new_session2.has_value() && new_session2->id().has_value() && !new_session2->ticket().has_value());
 
-               result.test_sz_eq("can find via server info", local_mgr.find(server_info(), cbs, plcy).size(), 2);
+               result.test_is_true("can obtain both via ID",
+                                   local_mgr.retrieve(default_id, cbs, plcy).has_value() &&
+                                      local_mgr.retrieve(new_session2->id().value(), cbs, plcy).has_value());
 
                result.test_sz_eq("one was deleted", local_mgr.remove(default_id), 1);
                result.test_is_true("cannot obtain via default ID anymore",
                                    !local_mgr.retrieve(default_id, cbs, plcy).has_value());
-               result.test_sz_eq("can find less via server info", local_mgr.find(server_info(), cbs, plcy).size(), 1);
+               result.test_is_true("the other one is still there",
+                                   local_mgr.retrieve(new_session2->id().value(), cbs, plcy).has_value());
 
                result.test_sz_eq("last one was deleted",
                                  local_mgr.remove(Botan::TLS::Opaque_Session_Handle(new_session2->id().value())),
@@ -1087,6 +1112,106 @@ std::vector<Test::Result> test_session_manager_sqlite() {
    #endif
 }
 
+// Applications may share a single Session_Manager between a TLS client and a
+// TLS server role. A session must never cross that boundary.
+
+std::vector<Test::Result> tls_session_manager_client_session_not_for_server() {
+   auto rng = Test::new_shared_rng(__func__);
+   Session_Manager_Callbacks cbs;
+   Session_Manager_Policy plcy;
+
+   std::vector<Test::Result> results;
+   for(auto& [name, mgr] : all_available_session_managers(rng)) {
+      Test::Result result(Botan::fmt("TLS client session cannot be resumed by the server role ({})", name));
+
+      const auto handle = random_id(*rng);
+      mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs), handle);
+
+      result.test_is_true("not retrievable by ID", !mgr->retrieve(handle, cbs, plcy).has_value());
+      result.test_is_true("not retrievable by handle",
+                          !mgr->retrieve(Botan::TLS::Opaque_Session_Handle(handle.get()), cbs, plcy).has_value());
+
+      result.test_is_true("client can still find it", !mgr->find(server_info(), cbs, plcy).empty());
+
+      results.push_back(result);
+   }
+
+   return results;
+}
+
+std::vector<Test::Result> tls_session_manager_server_session_not_for_client() {
+   auto rng = Test::new_shared_rng(__func__);
+   Session_Manager_Callbacks cbs;
+   Session_Manager_Policy plcy;
+
+   std::vector<Test::Result> results;
+   for(auto& [name, mgr] : all_available_session_managers(rng)) {
+      Test::Result result(Botan::fmt("TLS server session is not offered by the client role ({})", name));
+      const auto handle = mgr->establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
+      result.require("establishment worked", handle.has_value());
+
+      result.test_is_true("not found via server info", mgr->find(server_info(), cbs, plcy).empty());
+      result.test_is_true("the server can still find it", mgr->retrieve(handle.value(), cbs, plcy).has_value());
+      results.push_back(result);
+   }
+
+   return results;
+}
+
+std::vector<Test::Result> tls_session_manager_wrong_role_lookup_does_not_evict() {
+   auto rng = Test::new_shared_rng(__func__);
+   Session_Manager_Callbacks cbs;
+   Session_Manager_Policy plcy;
+
+   std::vector<Test::Result> results;
+   for(auto& [name, mgr] : all_available_session_managers(rng)) {
+      Test::Result result(Botan::fmt("TLS wrong-role session lookup does not evict ({})", name));
+
+      const auto client_handle = random_id(*rng);
+      mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs), client_handle);
+      const auto server_handle = mgr->establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
+      result.require("establishment worked", server_handle.has_value());
+
+      result.test_is_true("server role rejects a client session", !mgr->retrieve(client_handle, cbs, plcy).has_value());
+
+      auto found = mgr->find(server_info(), cbs, plcy);
+      if(result.test_sz_eq("client role finds only its own session", found.size(), 1)) {
+         result.test_bin_eq("it is the client session", found.front().handle.id().value(), client_handle);
+      }
+      result.test_is_true("server session still exists", mgr->retrieve(server_handle.value(), cbs, plcy).has_value());
+
+      results.push_back(result);
+   }
+
+   return results;
+}
+
+std::vector<Test::Result> tls_session_manager_client_session_not_chosen_as_psk() {
+   std::vector<Test::Result> results;
+
+   #if defined(BOTAN_HAS_TLS_13)
+   auto rng = Test::new_shared_rng(__func__);
+   Session_Manager_Callbacks cbs;
+   Session_Manager_Policy plcy;
+
+   for(auto& [name, mgr] : all_available_session_managers(rng)) {
+      Test::Result result(Botan::fmt("a client session is not chosen for PSK resumption ({})", name));
+
+      const auto handle = random_id(*rng);
+      mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs, Botan::TLS::Version_Code::TLS_V13), handle);
+
+      const auto offered =
+         std::vector{Botan::TLS::PskIdentity(Botan::TLS::Opaque_Session_Handle(handle.get()).get(), 0)};
+      result.test_is_true("no PSK chosen",
+                          !mgr->choose_from_offered_tickets(offered, "SHA-256", cbs, plcy).has_value());
+
+      results.push_back(result);
+   }
+   #endif
+
+   return results;
+}
+
 std::vector<Test::Result> tls_session_manager_expiry() {
    auto rng = Test::new_shared_rng(__func__);
    Session_Manager_Callbacks cbs;
@@ -1147,12 +1272,10 @@ std::vector<Test::Result> tls_session_manager_expiry() {
 
                       auto handle_old = random_id(*rng);
                       mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs), handle_old);
-                      result.require("session was found", mgr->retrieve(handle_old, cbs, plcy).has_value());
 
                       cbs.tick();
                       auto handle_new = random_id(*rng);
                       mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs), handle_new);
-                      result.require("session was found", mgr->retrieve(handle_new, cbs, plcy).has_value());
 
                       auto sessions_and_handles = mgr->find(server_info(), cbs, plcy);
                       result.require("sessions are found", !sessions_and_handles.empty());
@@ -1270,6 +1393,10 @@ BOTAN_REGISTER_TEST_FN("tls",
                        test_session_manager_stateless,
                        test_session_manager_hybrid,
                        test_session_manager_sqlite,
+                       tls_session_manager_client_session_not_for_server,
+                       tls_session_manager_server_session_not_for_client,
+                       tls_session_manager_wrong_role_lookup_does_not_evict,
+                       tls_session_manager_client_session_not_chosen_as_psk,
                        tls_session_manager_expiry);
 
 }  // namespace

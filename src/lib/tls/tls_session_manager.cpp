@@ -52,6 +52,14 @@ std::optional<Session> Session_Manager::retrieve(const Session_Handle& handle,
       return std::nullopt;
    }
 
+   // A session stored while acting as a TLS client must never be resumed in the
+   // server role. Its peer certificates are a remote *server's*, so accepting it
+   // here would present them as this connection's client certificates. The
+   // session is left in storage; it remains valid for the client role.
+   if(session->side() != Connection_Side::Server) {
+      return std::nullopt;
+   }
+
    // A value of '0' means: No policy restrictions.
    const std::chrono::seconds policy_lifetime =
       (policy.session_ticket_lifetime().count() > 0) ? policy.session_ticket_lifetime() : std::chrono::seconds::max();
@@ -108,6 +116,16 @@ std::vector<Session_with_Handle> Session_Manager::find_and_filter(const Server_I
       sessions_and_handles = find_some(info, max_sessions_hint);
 
       // ... underlying implementation didn't find anything. Early exit.
+      if(sessions_and_handles.empty()) {
+         break;
+      }
+
+      // The counterpart to the role check in retrieve(): a session established
+      // while acting as a TLS server must not be offered for resumption as a
+      // client. These are left in storage as they remain valid for the server
+      // role, so a retry would just yield them again.
+      std::erase_if(sessions_and_handles,
+                    [](const auto& session) { return session.session.side() != Connection_Side::Client; });
       if(sessions_and_handles.empty()) {
          break;
       }
