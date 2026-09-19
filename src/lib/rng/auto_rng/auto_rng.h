@@ -117,6 +117,8 @@ class BOTAN_PUBLIC_API(2, 0) AutoSeeded_RNG final : public RandomNumberGenerator
    private:
       void fill_bytes_with_input(std::span<uint8_t> out, std::span<const uint8_t> in) override;
 
+      void accept_seed_material(std::span<const uint8_t> input) override;
+
    private:
       std::unique_ptr<Stateful_RNG> m_rng;
 };

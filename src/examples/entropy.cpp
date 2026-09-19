@@ -40,16 +40,15 @@ class Hardware_RNG_Entropy_Source final : public Botan::Entropy_Source {
    public:
       std::string name() const override { return "hw_rng"; }
 
-      size_t poll(Botan::RandomNumberGenerator& rng) override {
+      void gather(Botan::Entropy_Accumulator& acc) override {
          // the amount of entropy we desire (in bits)
          constexpr size_t poll_goal = 256;
 
          uint8_t buf[poll_goal / 8];
          const size_t written = call_hardware_specific_rng(buf, sizeof(buf));
-         rng.add_entropy(buf, written);
 
-         // return estimate of bits of entropy written to rng state
-         return written * 8;
+         // contribute the data along with an estimate of the entropy it contains
+         acc.add(std::span(buf, written), written * 8);
       }
 };
 
@@ -67,7 +66,7 @@ class Timer_Entropy_Source final : public Botan::Entropy_Source {
    public:
       std::string name() const override { return "timer_hack"; }
 
-      size_t poll(Botan::RandomNumberGenerator& rng) override {
+      void gather(Botan::Entropy_Accumulator& acc) override {
          // the amount of entropy we desire (in bits)
          constexpr size_t poll_goal = 256;
 
@@ -118,12 +117,11 @@ class Timer_Entropy_Source final : public Botan::Entropy_Source {
             // Examine the output of this approach on your system before trusting it!
             // printf("%016lX %016X\n", timer, counter);
 
-            rng.add_entropy_T(timer);
-            rng.add_entropy_T(counter);
+            // Each sample is credited with a single bit of entropy; the
+            // accumulator sums these up over the whole poll.
+            acc.add_T(timer, 1);
+            acc.add_T(counter, 0);
          }
-
-         // return estimate of entropy written to rng state
-         return poll_goal;
       }
 
    private:

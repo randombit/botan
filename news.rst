@@ -17,6 +17,19 @@ Version 3.14.0, Not Yet Released
   ``RandomNumberGenerator::randomize_with_ts_input`` passed only the low 32 bits
   of the timestamp, and never the process id, as additional input. (GH #5924)
 
+* Rework how stateful RNGs decide that they are seeded. Previously a call of
+  ``randomize_with_input`` with an empty output and a non-empty input of
+  sufficient length was treated as sufficient for seeding. Now only an explicit
+  call of ``initialize_with`` or ``add_entropy`` is treated as a possible seeding
+  event. (GH #5928 #5945)
+
+* Introduce a new design for entropy sources. The new ``Entropy_Source::gather``
+  interface only allows producing output rather than free interaction with the
+  RNG object being seeded. The previous ``poll`` interface is retained for
+  compatibility but will be removed in Botan4. In addition, the entropy source's
+  self-reported entropy estimate is taken into account when deciding if the
+  RNG is seeded. (GH #5928 #5945)
+
 * Password hash tuning (``PasswordHashFamily::tune_params``) now measures the
   CPU time of the calling thread where available (falling back to a monotonic
   clock), and uses the fastest of several samples rather than the mean. This

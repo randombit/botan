@@ -64,7 +64,7 @@ BOTAN_FUNC_ISA("rdseed,sse2") bool read_rdseed(secure_vector<uint32_t>& seed) {
 
 }  // namespace
 
-size_t Intel_Rdseed::poll(RandomNumberGenerator& rng) {
+void Intel_Rdseed::gather(Entropy_Accumulator& acc) {
    const size_t RDSEED_BYTES = 1024;
    static_assert(RDSEED_BYTES % 4 == 0, "Bad RDSEED configuration");
 
@@ -87,12 +87,10 @@ size_t Intel_Rdseed::poll(RandomNumberGenerator& rng) {
       }
 
       if(!seed.empty()) {
-         rng.add_entropy(reinterpret_cast<const uint8_t*>(seed.data()), seed.size() * sizeof(uint32_t));
+         // RDSEED is used but not trusted
+         acc.add(std::span(reinterpret_cast<const uint8_t*>(seed.data()), seed.size() * sizeof(uint32_t)), 0);
       }
    }
-
-   // RDSEED is used but not trusted
-   return 0;
 }
 
 }  // namespace Botan

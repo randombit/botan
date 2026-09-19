@@ -8,8 +8,11 @@
 #include <botan/entropy_src.h>
 
 #include <botan/assert.h>
+#include <botan/exceptn.h>
 #include <botan/rng.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/target_info.h>
+#include <algorithm>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    #include <botan/system_rng.h>
@@ -39,14 +42,49 @@ namespace Botan {
 
 namespace {
 
+/*
+* Stand-in RNG handed to sources which implement the legacy
+* Entropy_Source::poll interface. It forwards any input to the accumulator
+* and refuses to produce output, so the source cannot affect the RNG which
+* is actually being seeded.
+*
+* TODO(Botan4) this can be removed when Entropy_Source::poll is
+*/
+class Legacy_Poll_RNG final : public RandomNumberGenerator {
+   public:
+      explicit Legacy_Poll_RNG(Entropy_Accumulator& acc) : m_acc(acc) {}
+
+      bool accepts_input() const override { return true; }
+
+      bool is_seeded() const override { return false; }
+
+      void clear() override {}
+
+      std::string name() const override { return "Legacy_Poll_RNG"; }
+
+   private:
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override {
+         if(!output.empty()) {
+            throw Invalid_State("An entropy source cannot draw output from the RNG being seeded");
+         }
+         // Credit is assigned from the return value of poll once it completes
+         m_acc.add(input, 0);
+      }
+
+      Entropy_Accumulator& m_acc;
+};
+
+Entropy_Accumulator::Sink additional_input_sink(RandomNumberGenerator& rng) {
+   return [&rng](std::span<const uint8_t> in) { rng.randomize_with_input({}, in); };
+}
+
 #if defined(BOTAN_HAS_SYSTEM_RNG)
 
 class System_RNG_EntropySource final : public Entropy_Source {
    public:
-      size_t poll(RandomNumberGenerator& rng) override {
+      void gather(Entropy_Accumulator& acc) override {
          const size_t poll_bits = RandomNumberGenerator::DefaultPollBits;
-         rng.reseed_from_rng(system_rng(), poll_bits);
-         return poll_bits;
+         acc.add(system_rng().random_vec(poll_bits / 8), poll_bits);
       }
 
       std::string name() const override { return "system_rng"; }
@@ -58,7 +96,7 @@ class System_RNG_EntropySource final : public Entropy_Source {
 
 class Processor_RNG_EntropySource final : public Entropy_Source {
    public:
-      size_t poll(RandomNumberGenerator& rng) override {
+      void gather(Entropy_Accumulator& acc) override {
          /*
          * Intel's documentation for RDRAND at
          * https://software.intel.com/en-us/articles/intel-digital-random-number-generator-drng-software-implementation-guide
@@ -76,9 +114,8 @@ class Processor_RNG_EntropySource final : public Entropy_Source {
          * may be tweaked if and when such conditions become publicly known.
          */
          const size_t poll_bits = 65536;
-         rng.reseed_from_rng(m_hwrng, poll_bits);
          // Avoid trusting a black box, don't count this as contributing entropy:
-         return 0;
+         acc.add(m_hwrng.random_vec(poll_bits / 8), 0);
       }
 
       std::string name() const override { return m_hwrng.name(); }
@@ -95,9 +132,9 @@ class Jitter_RNG_EntropySource final : public Entropy_Source {
    public:
       Jitter_RNG_EntropySource(Jitter_RNG::Mode mode) : m_rng(mode) {}
 
-      size_t poll(RandomNumberGenerator& rng) override {
-         rng.reseed_from_rng(m_rng);
-         return RandomNumberGenerator::DefaultPollBits;
+      void gather(Entropy_Accumulator& acc) override {
+         const size_t poll_bits = RandomNumberGenerator::DefaultPollBits;
+         acc.add(m_rng.random_vec(poll_bits / 8), poll_bits);
       }
 
       std::string name() const override { return m_rng.name(); }
@@ -109,6 +146,45 @@ class Jitter_RNG_EntropySource final : public Entropy_Source {
 #endif
 
 }  // namespace
+
+Entropy_Accumulator::Entropy_Accumulator(size_t goal_bits, Sink sink) :
+      m_sink(std::move(sink)), m_goal_bits(goal_bits) {
+   BOTAN_ARG_CHECK(m_sink != nullptr, "Entropy_Accumulator requires a sink");
+}
+
+void Entropy_Accumulator::add(std::span<const uint8_t> data, size_t estimated_entropy_bits) {
+   if(data.empty()) {
+      return;
+   }
+
+   m_sink(data);
+   m_bytes_contributed += data.size();
+   credit(estimated_entropy_bits, data.size());
+}
+
+void Entropy_Accumulator::credit(size_t estimated_entropy_bits, size_t data_bytes) {
+   // Never credit more entropy than the data could possibly contain
+   m_bits_collected += std::min(estimated_entropy_bits, 8 * data_bytes);
+}
+
+void Entropy_Source::gather(Entropy_Accumulator& acc) {
+   Legacy_Poll_RNG rng(acc);
+   const size_t bytes_before = acc.bytes_contributed();
+   const size_t bits = this->poll(rng);
+   // Only the data provided during this poll can back the reported estimate
+   acc.credit(bits, acc.bytes_contributed() - bytes_before);
+}
+
+size_t Entropy_Source::poll(RandomNumberGenerator& rng) {
+   // A source implementing neither interface would otherwise recurse forever
+   if(dynamic_cast<Legacy_Poll_RNG*>(&rng) != nullptr) {
+      throw Not_Implemented(fmt("Entropy source {} does not implement gather", name()));
+   }
+
+   Entropy_Accumulator acc(RandomNumberGenerator::DefaultPollBits, additional_input_sink(rng));
+   this->gather(acc);
+   return acc.bits_collected();
+}
 
 std::unique_ptr<Entropy_Source> Entropy_Source::create(std::string_view name) {
 #if defined(BOTAN_HAS_SYSTEM_RNG)
@@ -174,6 +250,32 @@ std::vector<std::string> Entropy_Sources::enabled_sources() const {
    return sources;
 }
 
+size_t Entropy_Sources::_gather(Entropy_Accumulator& acc) {
+   const size_t bits_before = acc.bits_collected();
+
+   for(auto& src : m_srcs) {
+      if(acc.goal_reached()) {
+         break;
+      }
+
+      src->gather(acc);
+   }
+
+   return acc.bits_collected() - bits_before;
+}
+
+size_t Entropy_Sources::_gather_just(Entropy_Accumulator& acc, std::string_view the_src) {
+   for(auto& src : m_srcs) {
+      if(src->name() == the_src) {
+         const size_t bits_before = acc.bits_collected();
+         src->gather(acc);
+         return acc.bits_collected() - bits_before;
+      }
+   }
+
+   return 0;
+}
+
 size_t Entropy_Sources::poll(RandomNumberGenerator& rng, size_t poll_bits, std::chrono::milliseconds timeout) {
 #if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
    typedef std::chrono::system_clock clock;
@@ -182,41 +284,27 @@ size_t Entropy_Sources::poll(RandomNumberGenerator& rng, size_t poll_bits, std::
    auto timeout_expired = [] { return false; };
 #endif
 
-   size_t bits_collected = 0;
+   Entropy_Accumulator acc(poll_bits, additional_input_sink(rng));
 
    for(auto& src : m_srcs) {
-      bits_collected += src->poll(rng);
+      src->gather(acc);
 
-      if(bits_collected >= poll_bits || timeout_expired()) {
+      if(acc.goal_reached() || timeout_expired()) {
          break;
       }
    }
 
-   return bits_collected;
+   return acc.bits_collected();
 }
 
 size_t Entropy_Sources::poll(RandomNumberGenerator& rng, size_t poll_bits) {
-   size_t bits_collected = 0;
-
-   for(auto& src : m_srcs) {
-      bits_collected += src->poll(rng);
-
-      if(bits_collected >= poll_bits) {
-         break;
-      }
-   }
-
-   return bits_collected;
+   Entropy_Accumulator acc(poll_bits, additional_input_sink(rng));
+   return this->_gather(acc);
 }
 
 size_t Entropy_Sources::poll_just(RandomNumberGenerator& rng, std::string_view the_src) {
-   for(auto& src : m_srcs) {
-      if(src->name() == the_src) {
-         return src->poll(rng);
-      }
-   }
-
-   return 0;
+   Entropy_Accumulator acc(RandomNumberGenerator::DefaultPollBits, additional_input_sink(rng));
+   return this->_gather_just(acc, the_src);
 }
 
 Entropy_Sources::Entropy_Sources(const std::vector<std::string>& sources) {

@@ -6,6 +6,7 @@
 
 #include <botan/rng.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/internal/loadstor.h>
 
@@ -22,6 +23,10 @@
 #include <array>
 
 namespace Botan {
+
+void RandomNumberGenerator::accept_seed_material(std::span<const uint8_t> input) {
+   this->fill_bytes_with_input({}, input);
+}
 
 void RandomNumberGenerator::randomize_with_ts_input(std::span<uint8_t> output) {
    if(this->accepts_input()) {
@@ -57,7 +62,9 @@ void RandomNumberGenerator::randomize_with_ts_input(std::span<uint8_t> output) {
 size_t RandomNumberGenerator::reseed_from_sources(Entropy_Sources& srcs, size_t poll_bits) {
    if(this->accepts_input()) {
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
-      return srcs.poll(*this, poll_bits);
+      Entropy_Accumulator acc(poll_bits, [this](std::span<const uint8_t> in) { this->fill_bytes_with_input({}, in); });
+      srcs._gather(acc);
+      return acc.bits_collected();
 #else
       BOTAN_UNUSED(srcs, poll_bits);
 #endif

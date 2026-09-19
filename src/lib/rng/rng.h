@@ -102,26 +102,33 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       virtual bool accepts_input() const = 0;
 
       /**
-      * Incorporate some additional data into the RNG state. For
-      * example adding nonces or timestamps from a peer's protocol
-      * message can help hedge against VM state rollback attacks.
+      * Provide seed material to the RNG.
+      *
+      * The caller asserts that the input is full entropy seed material. For a
+      * stateful RNG such as HMAC_DRBG, an input of at least security_level()
+      * bits marks the RNG as seeded.
+      *
+      * To mix in data of unknown quality (nonces, timestamps, values from a
+      * peer's protocol message) without affecting the seeded state, instead
+      * call randomize_with_input with an empty output buffer.
+      *
       * A few RNG types do not accept any externally provided input,
       * in which case this function is a no-op.
       *
       * @param input a byte array containing the entropy to be added
       * @throws Exception may throw if the RNG accepts input, but adding the entropy failed.
       */
-      void add_entropy(std::span<const uint8_t> input) { this->fill_bytes_with_input({}, input); }
+      void add_entropy(std::span<const uint8_t> input) { this->accept_seed_material(input); }
 
       /**
-      * Incorporate some additional data into the RNG state
+      * Provide seed material to the RNG, see add_entropy
       * @param input a byte array containing the entropy to be added
       * @param length the number of bytes in input
       */
       void add_entropy(const uint8_t input[], size_t length) { this->add_entropy(std::span(input, length)); }
 
       /**
-      * Incorporate some additional data into the RNG state.
+      * Provide seed material to the RNG, see add_entropy
       */
       template <typename T>
          requires std::is_standard_layout_v<T> && std::is_trivial_v<T>
@@ -130,14 +137,17 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       }
 
       /**
-      * Incorporate entropy into the RNG state then produce output.
-      * Some RNG types implement this using a single operation, default
-      * calls add_entropy + randomize in sequence.
+      * Incorporate additional input into the RNG state then produce output.
       *
       * Use this to further bind the outputs to your current
       * process/protocol state. For instance if generating a new key
       * for use in a session, include a session ID or other such
       * value. See NIST SP 800-90 A, B, C series for more ideas.
+      *
+      * The input is never credited as entropy: if the output buffer is
+      * empty, the input is mixed into the state of a stateful RNG without
+      * affecting whether it is considered seeded. Use add_entropy to
+      * provide seed material.
       *
       * @param output buffer to hold the random output
       * @param input entropy buffer to incorporate
@@ -351,6 +361,17 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       */
       virtual size_t reseed_from_sources(Entropy_Sources& srcs,
                                          size_t poll_bits = RandomNumberGenerator::DefaultPollBits);
+
+      /**
+      * Consume seed material provided via add_entropy
+      *
+      * This is the only path through which application provided input may
+      * mark an RNG as seeded. The default implementation forwards the input
+      * to fill_bytes_with_input with an empty output buffer, which is
+      * appropriate for RNGs which do not track a seeded state. RNGs which do
+      * track a seeded state must override this function.
+      */
+      virtual void accept_seed_material(std::span<const uint8_t> input);
 
       /**
       * Generic interface to provide entropy to a concrete implementation and to
