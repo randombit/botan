@@ -10,6 +10,7 @@
 
 #include <botan/pk_options_readers.h>
 #include <botan/internal/concat_util.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/pk_options_impl.h>
 #include <botan/internal/tpm2_algo_mappings.h>
 #include <botan/internal/tpm2_pkops.h>
