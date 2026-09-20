@@ -57,7 +57,8 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_ECDSA_PublicKey final : public PKCS11_EC_Pub
          throw Not_Implemented("Cannot generate a new PKCS#11 ECDSA keypair from this public key");
       }
 
-      std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const override;
+      std::unique_ptr<PK_Ops::Verification> _create_verification_op(
+         const PK_Signature_Options_Reader& options) const override;
 };
 
 BOTAN_DIAGNOSTIC_POP
@@ -116,8 +117,8 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_ECDSA_PrivateKey final : public PKCS11_EC_Pr
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
-      std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
-                                                              const PK_Signature_Options& options) const override;
+      std::unique_ptr<PK_Ops::Signature> _create_signature_op(
+         RandomNumberGenerator& rng, const PK_Signature_Options_Reader& options) const override;
 };
 
 using PKCS11_ECDSA_KeyPair = std::pair<PKCS11_ECDSA_PublicKey, PKCS11_ECDSA_PrivateKey>;

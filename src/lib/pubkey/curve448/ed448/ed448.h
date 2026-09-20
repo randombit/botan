@@ -60,7 +60,8 @@ class BOTAN_PUBLIC_API(3, 4) Ed448_PublicKey : public virtual Public_Key {
       */
       BOTAN_FUTURE_EXPLICIT Ed448_PublicKey(std::span<const uint8_t> key_bits);
 
-      std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const override;
+      std::unique_ptr<PK_Ops::Verification> _create_verification_op(
+         const PK_Signature_Options_Reader& options) const override;
 
       std::unique_ptr<PK_Ops::Verification> create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
                                                                         std::string_view provider) const override;
@@ -115,8 +116,8 @@ class BOTAN_PUBLIC_API(3, 4) Ed448_PrivateKey final : public Ed448_PublicKey,
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
-      std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
-                                                              const PK_Signature_Options& options) const override;
+      std::unique_ptr<PK_Ops::Signature> _create_signature_op(
+         RandomNumberGenerator& rng, const PK_Signature_Options_Reader& options) const override;
 
    private:
       std::shared_ptr<const Ed448_PrivateKey_Data> m_private;

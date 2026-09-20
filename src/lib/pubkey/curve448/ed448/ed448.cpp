@@ -11,6 +11,7 @@
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/hash.h>
+#include <botan/pk_options_readers.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/ed448_internal.h>
@@ -268,17 +269,14 @@ AlgorithmIdentifier Ed448_Sign_Operation::algorithm_identifier() const {
 }  // namespace
 
 std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   if(!options.using_provider()) {
-      if(options.using_prehash()) {
-         return std::make_unique<Ed448_Verify_Operation>(m_public,
-                                                         options.prehash_function().value_or("SHAKE-256(512)"));
-      } else {
-         return std::make_unique<Ed448_Verify_Operation>(m_public);
-      }
-   }
+   const PK_Signature_Options_Reader& options) const {
+   require_software_provider(options, algo_name());
 
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   if(options.using_prehash()) {
+      return std::make_unique<Ed448_Verify_Operation>(m_public, options.prehash_function().value_or("SHAKE-256(512)"));
+   } else {
+      return std::make_unique<Ed448_Verify_Operation>(m_public);
+   }
 }
 
 std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
@@ -293,21 +291,20 @@ std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::create_x509_verification_
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> Ed448_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
-                                                                          const PK_Signature_Options& options) const {
+std::unique_ptr<PK_Ops::Signature> Ed448_PrivateKey::_create_signature_op(
+   RandomNumberGenerator& rng, const PK_Signature_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
 
    acknowledge_always_deterministic(options);
 
-   if(!options.using_provider()) {
-      if(options.using_prehash()) {
-         return std::make_unique<Ed448_Sign_Operation>(
-            m_public, m_private, options.prehash_function().value_or("SHAKE-256(512)"));
-      } else {
-         return std::make_unique<Ed448_Sign_Operation>(m_public, m_private);
-      }
+   require_software_provider(options, algo_name());
+
+   if(options.using_prehash()) {
+      return std::make_unique<Ed448_Sign_Operation>(
+         m_public, m_private, options.prehash_function().value_or("SHAKE-256(512)"));
+   } else {
+      return std::make_unique<Ed448_Sign_Operation>(m_public, m_private);
    }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan

@@ -15,6 +15,7 @@
 #include <botan/dilithium.h>
 
 #include <botan/exceptn.h>
+#include <botan/pk_options_readers.h>
 #include <botan/rng.h>
 
 #include <botan/internal/dilithium_algos.h>
@@ -24,6 +25,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 #include <botan/internal/stl_util.h>
 
 namespace Botan {
@@ -137,7 +139,7 @@ bool DilithiumMode::is_available() const {
 
 namespace {
 
-void validate_dilithium_options(const PK_Signature_Options& options, const DilithiumMode& mode) {
+void validate_dilithium_options(const PK_Signature_Options_Reader& options, const DilithiumMode& mode) {
    /*
    * The "salt" is the randomness drawn during hedged signing. Its size is fixed
    * by the scheme, so the option is accepted only if it names that size:
@@ -164,7 +166,7 @@ void validate_dilithium_options(const PK_Signature_Options& options, const Dilit
 
 class Dilithium_Signature_Operation final : public PK_Ops::Signature {
    public:
-      Dilithium_Signature_Operation(DilithiumInternalKeypair keypair, const PK_Signature_Options& options) :
+      Dilithium_Signature_Operation(DilithiumInternalKeypair keypair, const PK_Signature_Options_Reader& options) :
             m_keypair(std::move(keypair)),
 
             // FIPS 204, Section 3.4
@@ -428,13 +430,12 @@ std::unique_ptr<Private_Key> Dilithium_PublicKey::generate_another(RandomNumberG
 }
 
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
+   const PK_Signature_Options_Reader& options) const {
    validate_dilithium_options(options, m_public->mode().mode());
 
-   if(!options.using_provider()) {
-      return std::make_unique<Dilithium_Verification_Operation>(m_public);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<Dilithium_Verification_Operation>(m_public);
 }
 
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_x509_verification_op(
@@ -488,13 +489,12 @@ secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const {
 }
 
 std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::_create_signature_op(
-   RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
+   RandomNumberGenerator& rng, const PK_Signature_Options_Reader& options) const {
    BOTAN_UNUSED(rng);
 
-   if(!options.using_provider()) {
-      return std::make_unique<Dilithium_Signature_Operation>(DilithiumInternalKeypair{m_public, m_private}, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   require_software_provider(options, algo_name());
+
+   return std::make_unique<Dilithium_Signature_Operation>(DilithiumInternalKeypair{m_public, m_private}, options);
 }
 
 bool Dilithium_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {

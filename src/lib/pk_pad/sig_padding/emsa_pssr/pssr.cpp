@@ -10,7 +10,7 @@
 #include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>
-#include <botan/pk_options.h>
+#include <botan/pk_options_readers.h>
 #include <botan/rng.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
@@ -148,7 +148,7 @@ bool pss_verify(HashFunction& hash,
 
 }  // namespace
 
-PSSR::PSSR(const PK_Signature_Options& options) :
+PSSR::PSSR(const PK_Signature_Options_Reader& options) :
       m_hash(HashFunction::create_or_throw(options.hash_function_name())),
       m_salt_size(options.salt_size().value_or(m_hash->output_length())),
       m_required_salt_len(options.using_salt_size()) {
@@ -198,7 +198,7 @@ std::string PSSR::name() const {
    return fmt("PSS({},MGF1,{})", m_hash->name(), m_salt_size);
 }
 
-PSS_Raw::PSS_Raw(const PK_Signature_Options& options) :
+PSS_Raw::PSS_Raw(const PK_Signature_Options_Reader& options) :
       m_hash(HashFunction::create_or_throw(options.hash_function_name())),
       m_salt_size(options.salt_size().value_or(m_hash->output_length())),
       m_required_salt_len(options.using_salt_size()) {

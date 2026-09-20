@@ -11,7 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
-#include <botan/pk_options.h>
+#include <botan/pk_options_readers.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hash_id.h>
@@ -78,7 +78,7 @@ bool PKCS1v15_SignaturePaddingScheme::verify(std::span<const uint8_t> coded,
    }
 }
 
-PKCS1v15_SignaturePaddingScheme::PKCS1v15_SignaturePaddingScheme(const PK_Signature_Options& options) :
+PKCS1v15_SignaturePaddingScheme::PKCS1v15_SignaturePaddingScheme(const PK_Signature_Options_Reader& options) :
       m_hash(HashFunction::create_or_throw(options.hash_function_name())) {
    acknowledge_always_deterministic(options);
    m_hash_id = pkcs_hash_id(m_hash->name());
@@ -100,7 +100,7 @@ std::string PKCS1v15_Raw_SignaturePaddingScheme::name() const {
    }
 }
 
-PKCS1v15_Raw_SignaturePaddingScheme::PKCS1v15_Raw_SignaturePaddingScheme(const PK_Signature_Options& options) {
+PKCS1v15_Raw_SignaturePaddingScheme::PKCS1v15_Raw_SignaturePaddingScheme(const PK_Signature_Options_Reader& options) {
    acknowledge_always_deterministic(options);
 
    BOTAN_ARG_CHECK(options.using_externally_computed_prehash(),

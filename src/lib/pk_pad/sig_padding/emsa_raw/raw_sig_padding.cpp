@@ -9,14 +9,14 @@
 #include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
-#include <botan/pk_options.h>
+#include <botan/pk_options_readers.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
-SignRawBytes::SignRawBytes(const PK_Signature_Options& options) :
+SignRawBytes::SignRawBytes(const PK_Signature_Options_Reader& options) :
       m_expected_size([&]() -> size_t {
          acknowledge_always_deterministic(options);
 

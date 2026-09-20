@@ -145,6 +145,14 @@ void roundtrip_test(Test::Result& result, Ts... kex_kem_fn) {
 
    auto& rng = global_test_rng();
 
+   // The concatenated shared secret is not a uniform key, so it must be asked for explicitly
+   result.test_throws<Botan::Invalid_Argument>("default options rejected by encryptor", [&] {
+      const Botan::PK_KEM_Encryptor enc(hybrid_public_key, Botan::PK_KEM_Options());
+   });
+   result.test_throws<Botan::Invalid_Argument>("default options rejected by decryptor", [&] {
+      const Botan::PK_KEM_Decryptor dec(hybrid_key, rng, Botan::PK_KEM_Options());
+   });
+
    Botan::PK_KEM_Encryptor encryptor(hybrid_public_key, "Raw");
    const auto kem_result = encryptor.encrypt(rng);
 

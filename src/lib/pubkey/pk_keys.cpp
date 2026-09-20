@@ -104,18 +104,20 @@ std::string Private_Key::fingerprint_private(std::string_view hash_algo) const {
    return create_hex_fingerprint(private_key_bits(), hash_algo);
 }
 
-std::unique_ptr<PK_Ops::Encryption> Public_Key::create_encryption_op(RandomNumberGenerator& /*rng*/,
-                                                                     std::string_view /*params*/,
-                                                                     std::string_view /*provider*/) const {
+std::unique_ptr<PK_Ops::Encryption> Public_Key::_create_encryption_op(
+   RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const {
+   BOTAN_UNUSED(rng, options);
    throw Lookup_Error(fmt("{} does not support encryption", algo_name()));
 }
 
-std::unique_ptr<PK_Ops::KEM_Encryption> Public_Key::create_kem_encryption_op(std::string_view /*params*/,
-                                                                             std::string_view /*provider*/) const {
+std::unique_ptr<PK_Ops::KEM_Encryption> Public_Key::_create_kem_encryption_op(
+   const PK_KEM_Options_Reader& options) const {
+   BOTAN_UNUSED(options);
    throw Lookup_Error(fmt("{} does not support KEM encryption", algo_name()));
 }
 
-std::unique_ptr<PK_Ops::Verification> Public_Key::_create_verification_op(const PK_Signature_Options& options) const {
+std::unique_ptr<PK_Ops::Verification> Public_Key::_create_verification_op(
+   const PK_Signature_Options_Reader& options) const {
    BOTAN_UNUSED(options);
    throw Lookup_Error(fmt("{} does not support verification", algo_name()));
 }
@@ -125,27 +127,27 @@ std::unique_ptr<PK_Ops::Verification> Public_Key::create_x509_verification_op(co
    throw Lookup_Error(fmt("{} does not support X.509 verification", algo_name()));
 }
 
-std::unique_ptr<PK_Ops::Decryption> Private_Key::create_decryption_op(RandomNumberGenerator& /*rng*/,
-                                                                      std::string_view /*params*/,
-                                                                      std::string_view /*provider*/) const {
+std::unique_ptr<PK_Ops::Decryption> Private_Key::_create_decryption_op(
+   RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const {
+   BOTAN_UNUSED(rng, options);
    throw Lookup_Error(fmt("{} does not support decryption", algo_name()));
 }
 
-std::unique_ptr<PK_Ops::KEM_Decryption> Private_Key::create_kem_decryption_op(RandomNumberGenerator& /*rng*/,
-                                                                              std::string_view /*params*/,
-                                                                              std::string_view /*provider*/) const {
+std::unique_ptr<PK_Ops::KEM_Decryption> Private_Key::_create_kem_decryption_op(
+   RandomNumberGenerator& rng, const PK_KEM_Options_Reader& options) const {
+   BOTAN_UNUSED(rng, options);
    throw Lookup_Error(fmt("{} does not support KEM decryption", algo_name()));
 }
 
 std::unique_ptr<PK_Ops::Signature> Private_Key::_create_signature_op(RandomNumberGenerator& rng,
-                                                                     const PK_Signature_Options& options) const {
+                                                                     const PK_Signature_Options_Reader& options) const {
    BOTAN_UNUSED(rng, options);
    throw Lookup_Error(fmt("{} does not support signatures", algo_name()));
 }
 
-std::unique_ptr<PK_Ops::Key_Agreement> Private_Key::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
-                                                                            std::string_view /*params*/,
-                                                                            std::string_view /*provider*/) const {
+std::unique_ptr<PK_Ops::Key_Agreement> Private_Key::_create_key_agreement_op(
+   RandomNumberGenerator& rng, const PK_Key_Agreement_Options_Reader& options) const {
+   BOTAN_UNUSED(rng, options);
    throw Lookup_Error(fmt("{} does not support key agreement", algo_name()));
 }
 
@@ -153,13 +155,70 @@ std::unique_ptr<PK_Ops::Key_Agreement> Private_Key::create_key_agreement_op(Rand
 
 std::unique_ptr<PK_Ops::Verification> Public_Key::create_verification_op(std::string_view params,
                                                                          std::string_view provider) const {
-   return this->_create_verification_op(parse_legacy_sig_options(*this, params).with_provider(provider));
+   const auto options = parse_legacy_sig_options(*this, params).with_provider(provider);
+   const auto reader = PK_Options_Reader_Access::for_verification(options);
+   auto op = this->_create_verification_op(reader);
+   PK_Options_Reader_Access::throw_if_unexamined(reader, algo_name());
+   return op;
 }
 
 std::unique_ptr<PK_Ops::Signature> Private_Key::create_signature_op(RandomNumberGenerator& rng,
                                                                     std::string_view params,
                                                                     std::string_view provider) const {
-   return this->_create_signature_op(rng, parse_legacy_sig_options(*this, params).with_provider(provider));
+   const auto options = parse_legacy_sig_options(*this, params).with_provider(provider);
+   const auto reader = PK_Options_Reader_Access::for_signing(options);
+   auto op = this->_create_signature_op(rng, reader);
+   PK_Options_Reader_Access::throw_if_unexamined(reader, algo_name());
+   return op;
+}
+
+std::unique_ptr<PK_Ops::Encryption> Public_Key::create_encryption_op(RandomNumberGenerator& rng,
+                                                                     std::string_view params,
+                                                                     std::string_view provider) const {
+   const auto options = parse_legacy_enc_options(*this, params).with_provider(provider);
+   const auto reader = PK_Options_Reader_Access::read(options);
+   auto op = this->_create_encryption_op(rng, reader);
+   PK_Options_Reader_Access::throw_if_unexamined(reader, algo_name());
+   return op;
+}
+
+std::unique_ptr<PK_Ops::Decryption> Private_Key::create_decryption_op(RandomNumberGenerator& rng,
+                                                                      std::string_view params,
+                                                                      std::string_view provider) const {
+   const auto options = parse_legacy_enc_options(*this, params).with_provider(provider);
+   const auto reader = PK_Options_Reader_Access::read(options);
+   auto op = this->_create_decryption_op(rng, reader);
+   PK_Options_Reader_Access::throw_if_unexamined(reader, algo_name());
+   return op;
+}
+
+std::unique_ptr<PK_Ops::KEM_Encryption> Public_Key::create_kem_encryption_op(std::string_view params,
+                                                                             std::string_view provider) const {
+   const auto options = parse_legacy_kem_options(params).with_provider(provider);
+   const auto reader = PK_Options_Reader_Access::read(options);
+   auto op = this->_create_kem_encryption_op(reader);
+   PK_Options_Reader_Access::throw_if_unexamined(reader, algo_name());
+   return op;
+}
+
+std::unique_ptr<PK_Ops::KEM_Decryption> Private_Key::create_kem_decryption_op(RandomNumberGenerator& rng,
+                                                                              std::string_view params,
+                                                                              std::string_view provider) const {
+   const auto options = parse_legacy_kem_options(params).with_provider(provider);
+   const auto reader = PK_Options_Reader_Access::read(options);
+   auto op = this->_create_kem_decryption_op(rng, reader);
+   PK_Options_Reader_Access::throw_if_unexamined(reader, algo_name());
+   return op;
+}
+
+std::unique_ptr<PK_Ops::Key_Agreement> Private_Key::create_key_agreement_op(RandomNumberGenerator& rng,
+                                                                            std::string_view params,
+                                                                            std::string_view provider) const {
+   const auto options = parse_legacy_ka_options(params).with_provider(provider);
+   const auto reader = PK_Options_Reader_Access::read(options);
+   auto op = this->_create_key_agreement_op(rng, reader);
+   PK_Options_Reader_Access::throw_if_unexamined(reader, algo_name());
+   return op;
 }
 
 }  // namespace Botan
