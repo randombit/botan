@@ -19,7 +19,7 @@ using namespace Botan_FFI;
 
 #if defined(BOTAN_HAS_HOTP)
 
-BOTAN_FFI_DECLARE_STRUCT(botan_hotp_struct, Botan::HOTP, 0x89CBF191);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_hotp_struct, Botan::HOTP, 0x89CBF191);
 
 #endif
 

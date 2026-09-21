@@ -24,7 +24,7 @@ extern "C" {
 using namespace Botan_FFI;
 
 #if defined(BOTAN_HAS_SRP6)
-BOTAN_FFI_DECLARE_STRUCT(botan_srp6_server_session_struct, Botan::SRP6_Server_Session, 0x44F7425F);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_srp6_server_session_struct, Botan::SRP6_Server_Session, 0x44F7425F);
 #else
 BOTAN_FFI_DECLARE_DUMMY_STRUCT(botan_srp6_server_session_struct, 0x44F7425F);
 #endif

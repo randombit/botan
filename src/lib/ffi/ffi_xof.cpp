@@ -14,7 +14,7 @@ extern "C" {
 
 using namespace Botan_FFI;
 
-BOTAN_FFI_DECLARE_STRUCT(botan_xof_struct, Botan::XOF, 0x0f1303a0);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_xof_struct, Botan::XOF, 0x0f1303a0);
 
 int botan_xof_init(botan_xof_t* this_xof, const char* xof_name, uint32_t flags) {
    return ffi_guard_thunk(__func__, [=]() -> int {

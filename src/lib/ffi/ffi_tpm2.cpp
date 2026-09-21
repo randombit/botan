@@ -39,11 +39,11 @@ struct botan_tpm2_session_wrapper {
       std::shared_ptr<Botan::TPM2::Session> session;
 };
 
-BOTAN_FFI_DECLARE_STRUCT(botan_tpm2_ctx_struct, botan_tpm2_ctx_wrapper, 0xD2B95E15);
-BOTAN_FFI_DECLARE_STRUCT(botan_tpm2_session_struct, botan_tpm2_session_wrapper, 0x9ACCAB52);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_tpm2_ctx_struct, botan_tpm2_ctx_wrapper, 0xD2B95E15);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_tpm2_session_struct, botan_tpm2_session_wrapper, 0x9ACCAB52);
 
    #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
-BOTAN_FFI_DECLARE_STRUCT(botan_tpm2_crypto_backend_state_struct, Botan::TPM2::CryptoCallbackState, 0x1AC84DE5);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_tpm2_crypto_backend_state_struct, Botan::TPM2::CryptoCallbackState, 0x1AC84DE5);
    #endif
 
 }  // extern "C"

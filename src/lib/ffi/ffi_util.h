@@ -33,19 +33,19 @@ class BOTAN_UNSTABLE_API FFI_Error final : public Botan::Exception {
 };
 
 template <typename T, uint32_t MAGIC>
-struct botan_struct {
+struct botan_ffi_unique_obj {
    public:
-      explicit botan_struct(std::unique_ptr<T> obj) : m_magic(MAGIC), m_obj(std::move(obj)) {}
+      explicit botan_ffi_unique_obj(std::unique_ptr<T> obj) : m_magic(MAGIC), m_obj(std::move(obj)) {}
 
-      virtual ~botan_struct() {
+      virtual ~botan_ffi_unique_obj() {
          m_magic = 0;
          m_obj.reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
       }
 
-      botan_struct(const botan_struct& other) = delete;
-      botan_struct(botan_struct&& other) = delete;
-      botan_struct& operator=(const botan_struct& other) = delete;
-      botan_struct& operator=(botan_struct&& other) = delete;
+      botan_ffi_unique_obj(const botan_ffi_unique_obj& other) = delete;
+      botan_ffi_unique_obj(botan_ffi_unique_obj&& other) = delete;
+      botan_ffi_unique_obj& operator=(const botan_ffi_unique_obj& other) = delete;
+      botan_ffi_unique_obj& operator=(botan_ffi_unique_obj&& other) = delete;
 
       bool magic_ok() const { return (m_magic == MAGIC); }
 
@@ -58,13 +58,13 @@ struct botan_struct {
 
 // NOLINTBEGIN(*-macro-usage)
 
-#define BOTAN_FFI_DECLARE_STRUCT(NAME, TYPE, MAGIC)                             \
-   struct NAME final : public Botan_FFI::botan_struct<TYPE, MAGIC> {            \
-         explicit NAME(std::unique_ptr<TYPE> x) : botan_struct(std::move(x)) {} \
+#define BOTAN_FFI_DECLARE_UNIQUE_STRUCT(NAME, TYPE, MAGIC)                              \
+   struct NAME final : public Botan_FFI::botan_ffi_unique_obj<TYPE, MAGIC> {            \
+         explicit NAME(std::unique_ptr<TYPE> x) : botan_ffi_unique_obj(std::move(x)) {} \
    }
 
 #define BOTAN_FFI_DECLARE_DUMMY_STRUCT(NAME, MAGIC) \
-   struct NAME final : public Botan_FFI::botan_struct<int, MAGIC> {}
+   struct NAME final : public Botan_FFI::botan_ffi_unique_obj<int, MAGIC> {}
 
 // NOLINTEND(*-macro-usage)
 
@@ -76,7 +76,7 @@ int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc);
 int ffi_error_exception_thrown(const char* func_name, const char* exn, Botan::ErrorType err);
 
 template <typename T, uint32_t M>
-T& safe_get(botan_struct<T, M>* p) {
+T& safe_get(botan_ffi_unique_obj<T, M>* p) {
    if(!p) {
       throw FFI_Error("Null pointer argument", BOTAN_FFI_ERROR_NULL_POINTER);
    }
@@ -111,7 +111,7 @@ int ffi_guard_thunk(const char* func_name, T thunk) {
 }
 
 template <typename T, uint32_t M, typename F>
-int botan_ffi_visit(botan_struct<T, M>* o, F func, const char* func_name) {
+int botan_ffi_visit(botan_ffi_unique_obj<T, M>* o, F func, const char* func_name) {
    using RetT = std::invoke_result_t<F, T&>;
    static_assert(std::is_void_v<RetT> || std::is_same_v<RetT, BOTAN_FFI_ERROR> || std::is_same_v<RetT, int>,
                  "BOTAN_FFI_DO must be used with a block that returns either nothing, int or BOTAN_FFI_ERROR");
@@ -144,7 +144,7 @@ int botan_ffi_visit(botan_struct<T, M>* o, F func, const char* func_name) {
 //       that makes use of std::source_location like so:
 //
 //   template<typename T, uint32_t M, typename F>
-//   int botan_ffi_visit(botan_struct<T, M>* obj, F func,
+//   int botan_ffi_visit(botan_ffi_unique_obj<T, M>* obj, F func,
 //                       const std::source_location sl = std::source_location::current())
 //      {
 //      // [...]
@@ -158,7 +158,7 @@ int botan_ffi_visit(botan_struct<T, M>* o, F func, const char* func_name) {
 #define BOTAN_FFI_VISIT(obj, lambda) botan_ffi_visit(obj, lambda, __func__)
 
 template <typename T, uint32_t M>
-int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name) {
+int ffi_delete_object(botan_ffi_unique_obj<T, M>* obj, const char* func_name) {
    return ffi_guard_thunk(func_name, [=]() -> int {
       // ignore delete of null objects
       if(obj == nullptr) {

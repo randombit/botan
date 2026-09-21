@@ -21,7 +21,7 @@ using namespace Botan_FFI;
 
 #if defined(BOTAN_HAS_FPE_FE1)
 
-BOTAN_FFI_DECLARE_STRUCT(botan_fpe_struct, Botan::FPE_FE1, 0xD49FB820);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_fpe_struct, Botan::FPE_FE1, 0xD49FB820);
 
 #endif
 

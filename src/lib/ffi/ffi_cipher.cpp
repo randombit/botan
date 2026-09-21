@@ -20,12 +20,12 @@ extern "C" {
 
 using namespace Botan_FFI;
 
-struct botan_cipher_struct final : public botan_struct<Botan::Cipher_Mode, 0xB4A2BF9C> {
+struct botan_cipher_struct final : public botan_ffi_unique_obj<Botan::Cipher_Mode, 0xB4A2BF9C> {
    public:
       explicit botan_cipher_struct(std::unique_ptr<Botan::Cipher_Mode> x,
                                    size_t update_size,
                                    size_t ideal_update_size) :
-            botan_struct(std::move(x)), m_update_size(update_size), m_ideal_update_size(ideal_update_size) {
+            botan_ffi_unique_obj(std::move(x)), m_update_size(update_size), m_ideal_update_size(ideal_update_size) {
          BOTAN_DEBUG_ASSERT(ideal_update_size >= update_size);
          m_buf.reserve(m_ideal_update_size);
       }
