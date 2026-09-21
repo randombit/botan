@@ -14,7 +14,7 @@ extern "C" {
 
 using namespace Botan_FFI;
 
-BOTAN_FFI_DECLARE_STRUCT(botan_block_cipher_struct, Botan::BlockCipher, 0x64C29716);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_block_cipher_struct, Botan::BlockCipher, 0x64C29716);
 
 int botan_block_cipher_init(botan_block_cipher_t* bc, const char* bc_name) {
    return ffi_guard_thunk(__func__, [=]() -> int {

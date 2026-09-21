@@ -13,7 +13,7 @@
 
 extern "C" {
 
-BOTAN_FFI_DECLARE_STRUCT(botan_asn1_oid_struct, Botan::OID, 0x9217DA20);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_asn1_oid_struct, Botan::OID, 0x9217DA20);
 }
 
 #endif

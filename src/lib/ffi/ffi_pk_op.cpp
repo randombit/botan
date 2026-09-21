@@ -16,14 +16,14 @@ extern "C" {
 
 using namespace Botan_FFI;
 
-BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_encrypt_struct, Botan::PK_Encryptor, 0x891F3FC3);
-BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_decrypt_struct, Botan::PK_Decryptor, 0x912F3C37);
-BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_sign_struct, Botan::PK_Signer, 0x1AF0C39F);
-BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_verify_struct, Botan::PK_Verifier, 0x2B91F936);
-BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_ka_struct, Botan::PK_Key_Agreement, 0x2939CAB1);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_pk_op_encrypt_struct, Botan::PK_Encryptor, 0x891F3FC3);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_pk_op_decrypt_struct, Botan::PK_Decryptor, 0x912F3C37);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_pk_op_sign_struct, Botan::PK_Signer, 0x1AF0C39F);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_pk_op_verify_struct, Botan::PK_Verifier, 0x2B91F936);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_pk_op_ka_struct, Botan::PK_Key_Agreement, 0x2939CAB1);
 
-BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_kem_encrypt_struct, Botan::PK_KEM_Encryptor, 0x1D13A446);
-BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_kem_decrypt_struct, Botan::PK_KEM_Decryptor, 0x1743D8E6);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_pk_op_kem_encrypt_struct, Botan::PK_KEM_Encryptor, 0x1D13A446);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_pk_op_kem_decrypt_struct, Botan::PK_KEM_Decryptor, 0x1743D8E6);
 
 int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op, botan_pubkey_t key_obj, const char* padding, uint32_t flags) {
    if(Botan::any_null_pointers(op, padding)) {

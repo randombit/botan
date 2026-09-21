@@ -19,7 +19,7 @@ using namespace Botan_FFI;
 
 #if defined(BOTAN_HAS_TOTP)
 
-BOTAN_FFI_DECLARE_STRUCT(botan_totp_struct, Botan::TOTP, 0x3D9D2CD1);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_totp_struct, Botan::TOTP, 0x3D9D2CD1);
 
 #endif
 

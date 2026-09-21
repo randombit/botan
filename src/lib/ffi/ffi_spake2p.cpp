@@ -55,9 +55,9 @@ extern "C" {
 using namespace Botan_FFI;
 
 #if defined(BOTAN_HAS_PAKE_SPAKE2PLUS)
-BOTAN_FFI_DECLARE_STRUCT(botan_spake2p_params_struct, Botan::SPAKE2p::SystemParameters, 0x2E1B4A96);
-BOTAN_FFI_DECLARE_STRUCT(botan_spake2p_prover_struct, Botan::SPAKE2p::ProverContext, 0x9F337C29);
-BOTAN_FFI_DECLARE_STRUCT(botan_spake2p_verifier_struct, Botan::SPAKE2p::VerifierContext, 0xD70A9E13);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_spake2p_params_struct, Botan::SPAKE2p::SystemParameters, 0x2E1B4A96);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_spake2p_prover_struct, Botan::SPAKE2p::ProverContext, 0x9F337C29);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_spake2p_verifier_struct, Botan::SPAKE2p::VerifierContext, 0xD70A9E13);
 #else
 BOTAN_FFI_DECLARE_DUMMY_STRUCT(botan_spake2p_params_struct, 0x2E1B4A96);
 BOTAN_FFI_DECLARE_DUMMY_STRUCT(botan_spake2p_prover_struct, 0x9F337C29);

@@ -13,7 +13,7 @@ extern "C" {
 
 using namespace Botan_FFI;
 
-BOTAN_FFI_DECLARE_STRUCT(botan_hash_struct, Botan::HashFunction, 0x1F0A4F84);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_hash_struct, Botan::HashFunction, 0x1F0A4F84);
 
 int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags) {
    return ffi_guard_thunk(__func__, [=]() -> int {

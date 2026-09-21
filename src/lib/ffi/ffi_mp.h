@@ -12,7 +12,7 @@
 
 extern "C" {
 
-BOTAN_FFI_DECLARE_STRUCT(botan_mp_struct, Botan::BigInt, 0xC828B9D2);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_mp_struct, Botan::BigInt, 0xC828B9D2);
 }
 
 #endif

@@ -33,19 +33,19 @@ class BOTAN_UNSTABLE_API FFI_Error final : public Botan::Exception {
 };
 
 template <typename T, uint32_t MAGIC>
-struct botan_struct {
+struct botan_ffi_unique_obj {
    public:
-      explicit botan_struct(std::unique_ptr<T> obj) : m_magic(MAGIC), m_obj(std::move(obj)) {}
+      explicit botan_ffi_unique_obj(std::unique_ptr<T> obj) : m_magic(MAGIC), m_obj(std::move(obj)) {}
 
-      virtual ~botan_struct() {
+      virtual ~botan_ffi_unique_obj() {
          m_magic = 0;
          m_obj.reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
       }
 
-      botan_struct(const botan_struct& other) = delete;
-      botan_struct(botan_struct&& other) = delete;
-      botan_struct& operator=(const botan_struct& other) = delete;
-      botan_struct& operator=(botan_struct&& other) = delete;
+      botan_ffi_unique_obj(const botan_ffi_unique_obj& other) = delete;
+      botan_ffi_unique_obj(botan_ffi_unique_obj&& other) = delete;
+      botan_ffi_unique_obj& operator=(const botan_ffi_unique_obj& other) = delete;
+      botan_ffi_unique_obj& operator=(botan_ffi_unique_obj&& other) = delete;
 
       bool magic_ok() const { return (m_magic == MAGIC); }
 
@@ -56,15 +56,49 @@ struct botan_struct {
       std::unique_ptr<T> m_obj;
 };
 
+template <typename T, uint32_t MAGIC>
+struct botan_ffi_shared_obj {
+   public:
+      explicit botan_ffi_shared_obj(std::shared_ptr<T> obj) : m_magic(MAGIC), m_obj(std::move(obj)) {}
+
+      virtual ~botan_ffi_shared_obj() {
+         m_magic = 0;
+         m_obj.reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+      }
+
+      botan_ffi_shared_obj(const botan_ffi_shared_obj& other) = delete;
+      botan_ffi_shared_obj(botan_ffi_shared_obj&& other) = delete;
+      botan_ffi_shared_obj& operator=(const botan_ffi_shared_obj& other) = delete;
+      botan_ffi_shared_obj& operator=(botan_ffi_shared_obj&& other) = delete;
+
+      bool magic_ok() const { return (m_magic == MAGIC); }
+
+      std::shared_ptr<T> unsafe_get_sp() const { return m_obj; }
+
+   private:
+      uint32_t m_magic = 0;
+      std::shared_ptr<T> m_obj;
+};
+
+template <typename T>
+concept ffi_object = requires(const T& obj) {
+   { obj.magic_ok() } -> std::same_as<bool>;
+};
+
 // NOLINTBEGIN(*-macro-usage)
 
-#define BOTAN_FFI_DECLARE_STRUCT(NAME, TYPE, MAGIC)                             \
-   struct NAME final : public Botan_FFI::botan_struct<TYPE, MAGIC> {            \
-         explicit NAME(std::unique_ptr<TYPE> x) : botan_struct(std::move(x)) {} \
+#define BOTAN_FFI_DECLARE_UNIQUE_STRUCT(NAME, TYPE, MAGIC)                              \
+   struct NAME final : public Botan_FFI::botan_ffi_unique_obj<TYPE, MAGIC> {            \
+         explicit NAME(std::unique_ptr<TYPE> x) : botan_ffi_unique_obj(std::move(x)) {} \
+   }
+
+#define BOTAN_FFI_DECLARE_SHARED_STRUCT(NAME, TYPE, MAGIC)                              \
+   struct NAME final : public Botan_FFI::botan_ffi_shared_obj<TYPE, MAGIC> {            \
+         explicit NAME(std::shared_ptr<TYPE> x) : botan_ffi_shared_obj(std::move(x)) {} \
    }
 
 #define BOTAN_FFI_DECLARE_DUMMY_STRUCT(NAME, MAGIC) \
-   struct NAME final : public Botan_FFI::botan_struct<int, MAGIC> {}
+   struct NAME final : public Botan_FFI::botan_ffi_unique_obj<int, MAGIC> {}
 
 // NOLINTEND(*-macro-usage)
 
@@ -76,7 +110,7 @@ int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc);
 int ffi_error_exception_thrown(const char* func_name, const char* exn, Botan::ErrorType err);
 
 template <typename T, uint32_t M>
-T& safe_get(botan_struct<T, M>* p) {
+T& safe_get(botan_ffi_unique_obj<T, M>* p) {
    if(!p) {
       throw FFI_Error("Null pointer argument", BOTAN_FFI_ERROR_NULL_POINTER);
    }
@@ -86,6 +120,22 @@ T& safe_get(botan_struct<T, M>* p) {
 
    if(T* t = p->unsafe_get()) {
       return *t;
+   }
+
+   throw FFI_Error("Invalid object pointer", BOTAN_FFI_ERROR_INVALID_OBJECT);
+}
+
+template <typename T, uint32_t M>
+std::shared_ptr<T> safe_get(botan_ffi_shared_obj<T, M>* p) {
+   if(!p) {
+      throw FFI_Error("Null pointer argument", BOTAN_FFI_ERROR_NULL_POINTER);
+   }
+   if(!p->magic_ok()) {
+      throw FFI_Error("Bad magic in ffi object", BOTAN_FFI_ERROR_INVALID_OBJECT);
+   }
+
+   if(auto sp = p->unsafe_get_sp()) {
+      return sp;
    }
 
    throw FFI_Error("Invalid object pointer", BOTAN_FFI_ERROR_INVALID_OBJECT);
@@ -111,7 +161,7 @@ int ffi_guard_thunk(const char* func_name, T thunk) {
 }
 
 template <typename T, uint32_t M, typename F>
-int botan_ffi_visit(botan_struct<T, M>* o, F func, const char* func_name) {
+int botan_ffi_visit(botan_ffi_unique_obj<T, M>* o, F func, const char* func_name) {
    using RetT = std::invoke_result_t<F, T&>;
    static_assert(std::is_void_v<RetT> || std::is_same_v<RetT, BOTAN_FFI_ERROR> || std::is_same_v<RetT, int>,
                  "BOTAN_FFI_DO must be used with a block that returns either nothing, int or BOTAN_FFI_ERROR");
@@ -139,12 +189,41 @@ int botan_ffi_visit(botan_struct<T, M>* o, F func, const char* func_name) {
    }
 }
 
+template <typename T, uint32_t M, typename F>
+int botan_ffi_visit(botan_ffi_shared_obj<T, M>* o, F func, const char* func_name) {
+   using RetT = std::invoke_result_t<F, const std::shared_ptr<T>&>;
+   static_assert(std::is_void_v<RetT> || std::is_same_v<RetT, BOTAN_FFI_ERROR> || std::is_same_v<RetT, int>,
+                 "BOTAN_FFI_DO must be used with a block that returns either nothing, int or BOTAN_FFI_ERROR");
+
+   if(!o) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   if(!o->magic_ok()) {
+      return BOTAN_FFI_ERROR_INVALID_OBJECT;
+   }
+
+   const std::shared_ptr<T> p = o->unsafe_get_sp();
+   if(p == nullptr) {
+      return BOTAN_FFI_ERROR_INVALID_OBJECT;
+   }
+
+   if constexpr(std::is_void_v<RetT>) {
+      return ffi_guard_thunk(func_name, [&] {
+         func(p);
+         return BOTAN_FFI_SUCCESS;
+      });
+   } else {
+      return ffi_guard_thunk(func_name, [&] { return func(p); });
+   }
+}
+
 // TODO: C++20 introduces std::source_location which will allow to eliminate this
 //       macro altogether. Instead, using code would just call the C++ function
 //       that makes use of std::source_location like so:
 //
 //   template<typename T, uint32_t M, typename F>
-//   int botan_ffi_visit(botan_struct<T, M>* obj, F func,
+//   int botan_ffi_visit(botan_ffi_unique_obj<T, M>* obj, F func,
 //                       const std::source_location sl = std::source_location::current())
 //      {
 //      // [...]
@@ -157,8 +236,8 @@ int botan_ffi_visit(botan_struct<T, M>* o, F func, const char* func_name) {
 // NOLINTNEXTLINE(*-macro-usage)
 #define BOTAN_FFI_VISIT(obj, lambda) botan_ffi_visit(obj, lambda, __func__)
 
-template <typename T, uint32_t M>
-int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name) {
+template <ffi_object T>
+int ffi_delete_object(T* obj, const char* func_name) {
    return ffi_guard_thunk(func_name, [=]() -> int {
       // ignore delete of null objects
       if(obj == nullptr) {

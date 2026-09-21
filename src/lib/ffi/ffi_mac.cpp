@@ -13,7 +13,7 @@ extern "C" {
 
 using namespace Botan_FFI;
 
-BOTAN_FFI_DECLARE_STRUCT(botan_mac_struct, Botan::MessageAuthenticationCode, 0xA06E8FC1);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_mac_struct, Botan::MessageAuthenticationCode, 0xA06E8FC1);
 
 int botan_mac_init(botan_mac_t* mac, const char* mac_name, uint32_t flags) {
    return ffi_guard_thunk(__func__, [=]() -> int {
