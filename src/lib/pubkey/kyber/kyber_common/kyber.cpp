@@ -230,7 +230,8 @@ std::unique_ptr<Private_Key> Kyber_PublicKey::generate_another(RandomNumberGener
 /**
  * NIST FIPS 203, Algorithms 19 (ML-KEM.KeyGen)
  */
-Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode mode) {
+Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode mode) :
+      m_private_key_format(mode.is_ml_kem() ? MlPrivateKeyFormat::Both : MlPrivateKeyFormat::Expanded) {
    std::tie(m_public, m_private) =
       Kyber_Algos::expand_keypair({rng.random_vec<KyberSeedRandomness>(KyberConstants::SEED_BYTES),
                                    rng.random_vec<KyberImplicitRejectionValue>(KyberConstants::SEED_BYTES)},
@@ -245,14 +246,18 @@ Kyber_PrivateKey::Kyber_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<
    }
 }
 
-Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) {
+Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) :
+      m_private_key_format(MlPrivateKeyFormat::Expanded) {
    KyberConstants mode(m);
 
-   if(mode.mode().is_ml_kem() && sk.size() == mode.seed_private_key_bytes()) {
-      std::tie(m_public, m_private) = Seed_Expanding_Keypair_Codec().decode_keypair(sk, std::move(mode));
+   if(mode.mode().is_ml_kem()) {
+      auto decoded = decode_ml_kem_private_key(sk, std::move(mode));
+      m_public = std::move(decoded.keypair.first);
+      m_private = std::move(decoded.keypair.second);
+      m_private_key_format = decoded.format;
    } else if(sk.size() == mode.expanded_private_key_bytes()) {
       std::tie(m_public, m_private) = Expanded_Keypair_Codec().decode_keypair(sk, std::move(mode));
-   } else if(!mode.mode().is_ml_kem() && sk.size() == mode.seed_private_key_bytes()) {
+   } else if(sk.size() == mode.seed_private_key_bytes()) {
       throw Invalid_Argument("Kyber round 3 private keys do not support the seed format");
    } else {
       throw Invalid_Argument("Private key does not have the correct byte count");
@@ -263,21 +268,12 @@ std::unique_ptr<Public_Key> Kyber_PrivateKey::public_key() const {
    return std::make_unique<Kyber_PublicKey>(*this);
 }
 
-secure_vector<uint8_t> Kyber_PrivateKey::raw_private_key_bits() const {
-   return this->private_key_bits();
-}
-
-secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const {
-   return private_key_bits_with_format(private_key_format());
-}
-
 bool Kyber_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
-   // As we do not support loading a private key in extended format but rather
-   // always extract it from a 64-byte seed, these checks (as described in
-   // FIPS 203, Section 7.1) should never fail. Particularly, the length checks
-   // and the hash consistency check described in Section 7.2 and 7.3 are
-   // trivial when the private key is always extracted from a seed. The encaps/
-   // decaps roundtrip test is added for completeness.
+   // The length checks and the hash consistency check described in FIPS 203,
+   // Sections 7.2 and 7.3, as well as a pairwise consistency check are already
+   // performed when decoding an expanded private key, and are trivially
+   // fulfilled for keys expanded from a seed. The encaps/decaps roundtrip test
+   // below is added for completeness.
 
    if(!Kyber_PublicKey::check_key(rng, strong)) {
       return false;
@@ -332,25 +328,37 @@ std::unique_ptr<PK_Ops::KEM_Decryption> Kyber_PrivateKey::_create_kem_decryption
 }
 
 MlPrivateKeyFormat Kyber_PrivateKey::private_key_format() const {
-   if(mode().is_ml_kem() && m_private->seed().d.has_value()) {
-      return MlPrivateKeyFormat::Seed;
-   }
-   return MlPrivateKeyFormat::Expanded;
+   return m_private_key_format;
 }
 
-secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits_with_format(MlPrivateKeyFormat format) const {
-   if(format == MlPrivateKeyFormat::Seed && private_key_format() != MlPrivateKeyFormat::Seed) {
-      throw Encoding_Error("Expanded private keys do not support the seed format");
+secure_vector<uint8_t> Kyber_PrivateKey::formatted_raw_private_key_bits(MlPrivateKeyFormat format) const {
+   switch(format) {
+      case MlPrivateKeyFormat::Seed:
+         if(mode().is_kyber_round3()) {
+            throw Encoding_Error("Kyber round 3 private keys only support the expanded format");
+         }
+         if(!m_private->seed().d.has_value()) {
+            throw Encoding_Error("Expanded private keys do not support the seed format");
+         }
+         return Seed_Expanding_Keypair_Codec().encode_keypair({m_public, m_private});
+      case MlPrivateKeyFormat::Expanded:
+         return Expanded_Keypair_Codec().encode_keypair({m_public, m_private});
+      case MlPrivateKeyFormat::Both:
+         throw Encoding_Error(
+            "there is no raw encoding of an ML-KEM private key containing both seed and expanded key");
    }
-   const auto codec = [&]() -> std::unique_ptr<Kyber_Keypair_Codec> {
-      switch(format) {
-         case MlPrivateKeyFormat::Seed:
-            return std::make_unique<Seed_Expanding_Keypair_Codec>();
-         case MlPrivateKeyFormat::Expanded:
-            return std::make_unique<Expanded_Keypair_Codec>();
-      }
-      BOTAN_ASSERT_UNREACHABLE();
-   }();
-   return codec->encode_keypair({m_public, m_private});
+   BOTAN_ASSERT_UNREACHABLE();
 }
+
+secure_vector<uint8_t> Kyber_PrivateKey::formatted_private_key_bits(MlPrivateKeyFormat format) const {
+   if(mode().is_ml_kem()) {
+      return encode_ml_kem_private_key({m_public, m_private}, format);
+   }
+   // Kyber round 3 has no ASN.1 wrapping, the raw expanded key is the PKCS#8 content
+   if(format != MlPrivateKeyFormat::Expanded) {
+      throw Encoding_Error("Kyber round 3 private keys only support the expanded format");
+   }
+   return formatted_raw_private_key_bits(format);
+}
+
 }  // namespace Botan

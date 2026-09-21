@@ -9,8 +9,9 @@ type -> "Internal"
 </module_info>
 
 <requires>
+asn1
 hash_engine
-pqcrystals
+module_lattice
 pubkey
 hash
 rng
