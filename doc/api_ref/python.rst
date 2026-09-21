@@ -45,6 +45,10 @@ Versioning
 
 .. autofunction:: ffi_api_version
 
+.. autofunction:: ffi_tls_api_version
+
+.. autofunction:: tls_available
+
 .. autofunction:: version_string
 
 
@@ -280,8 +284,13 @@ X509CRL
 .. autoclass:: X509CRL
    :members:
 
+TLS (Experimental)
+-------------------------------------
 
+.. versionadded:: 3.14.0
 
+The TLS classes are only usable with a library built with the experimental
+``ffi_tls`` module; :func:`ffi_tls_api_version` returns 0 otherwise.
 
-
-
+.. autoclass:: TLSPolicy
+   :members:

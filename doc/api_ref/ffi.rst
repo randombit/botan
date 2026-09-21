@@ -2619,3 +2619,73 @@ ZFEC (Forward Error Correction)
   The `indexes` array specifies which shares are presented in `inputs`.
   Each input must be of length `shareSize`. The output is written to the
   `K` buffers in `outputs`, each buffer must be `shareSize` long.
+
+TLS (Experimental)
+----------------------------------------
+
+.. versionadded:: 3.14.0
+
+.. warning::
+
+   The TLS C API is experimental. It is provided by the module ``ffi_tls``,
+   which is not part of a default build; configure with
+   ``--enable-modules=ffi_tls`` or ``--enable-experimental-features`` to
+   build it. Its functions may change incompatibly in a future release until
+   the module is marked stable.
+
+The TLS functions are declared in a separate header ``botan/ffi_tls.h``, which
+includes ``botan/ffi.h``. C code can detect the module at compile time by
+testing ``BOTAN_HAS_FFI_TLS`` from ``botan/build.h``. Two functions declared in
+``botan/ffi.h`` are always available and allow detecting it at runtime:
+
+.. cpp:function:: uint32_t botan_ffi_tls_api_version()
+
+   Returns the version of the TLS FFI API provided by the library, in the form
+   YYYYMMDD, or 0 if the library was built without the ``ffi_tls`` module. The
+   same value is available at compile time as ``BOTAN_FFI_TLS_API_VERSION`` in
+   ``botan/ffi_tls.h``.
+
+.. cpp:function:: int botan_ffi_tls_supports_api(uint32_t version)
+
+   Returns 0 iff the TLS FFI API version specified is supported by this
+   library, otherwise -1 (also whenever the ``ffi_tls`` module is not built).
+
+TLS Policies
+^^^^^^^^^^^^^
+
+.. cpp:type:: opaque* botan_tls_policy_t
+
+   An opaque data type for a TLS policy (``Botan::TLS::Policy``), which
+   controls which protocol versions, ciphersuites and parameters a TLS channel
+   accepts. A policy is immutable after creation and may be shared between
+   several channels. Don't mess with it.
+
+.. cpp:function:: int botan_tls_policy_init(botan_tls_policy_t* policy, const char* name)
+
+   Create one of the library's stock policies. Valid names are ``"default"``
+   (``Botan::TLS::Policy``), ``"strict"`` (``Strict_Policy``) and
+   ``"bsi_tr_02102_2"`` (``BSI_TR_02102_2``); a NULL name selects the default
+   policy. Returns ``BOTAN_FFI_ERROR_BAD_PARAMETER`` for an unknown name.
+
+.. cpp:function:: int botan_tls_policy_init_from_text(botan_tls_policy_t* policy, const char* text)
+
+   Create a policy from text in the format of ``Botan::TLS::Text_Policy``: one
+   ``key = value`` setting per line, ``#`` starts a comment, and any key that
+   is not mentioned keeps the value of the default policy. See
+   :ref:`api_ref/tls:TLS Policies` for the available keys.
+
+   A line that is not of the form ``key = value`` is rejected with
+   ``BOTAN_FFI_ERROR_INVALID_INPUT``. Values are checked only when the policy
+   is consulted, so an invalid value is reported by a later call that uses the
+   policy, not by this function.
+
+.. cpp:function:: int botan_tls_policy_view_text(botan_tls_policy_t policy, \
+                  botan_view_ctx ctx, botan_view_str_fn view)
+
+   View the main settings of the policy as text (``Policy::to_string``), one
+   ``key = value`` line per setting, using the key names of ``Text_Policy``.
+   Not every setting is included.
+
+.. cpp:function:: int botan_tls_policy_destroy(botan_tls_policy_t policy)
+
+   Destroy the object.
