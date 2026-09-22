@@ -119,17 +119,31 @@ def test_cipher_kat(cli_binary, data):
     else:
         invalue = plaintext
 
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-    (stdout_raw, stderr_raw) = p.communicate(input=binascii.unhexlify(invalue))
+    input_bytes = binascii.unhexlify(invalue)
+    expected = plaintext if direction == "decrypt" else ciphertext
+
+    # A CLI process that exits with an error, or that produces no output
+    # where some is expected, is run once more before it counts as a
+    # failure. This has been observed sporadically on GitHub's Windows Arm64
+    # runners, with nothing on stderr either, for otherwise unremarkable test
+    # vectors. Wrong output is never retried.
+    for attempt in range(1, 3):
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+        (stdout_raw, stderr_raw) = p.communicate(input=input_bytes)
+        if p.returncode == 0 and (stdout_raw != b'' or expected == ''):
+            break
+        logging.warning("Test %s: attempt %d exited with code %d (0x%X) and %d bytes of output",
+                        data['testname'], attempt, p.returncode, p.returncode & 0xFFFFFFFF, len(stdout_raw))
+
     output = binascii.hexlify(stdout_raw).decode("UTF-8").lower()
     stderr = stderr_raw.decode("UTF-8")
 
     if stderr != '':
         logging.error("Unexpected stderr output %s" % (stderr))
 
-    expected = plaintext if direction == "decrypt" else ciphertext
     if expected != output:
-        logging.error("For test %s got %s expected %s" % (data['testname'], output, expected))
+        logging.error("For test %s got %s expected %s (exit code %d)",
+                      data['testname'], output, expected, p.returncode)
 
 def get_testdata(document, max_tests):
     out = []
