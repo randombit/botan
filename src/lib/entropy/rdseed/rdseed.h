@@ -20,7 +20,7 @@ class Intel_Rdseed final : public Entropy_Source {
    public:
       std::string name() const override { return "rdseed"; }
 
-      size_t poll(RandomNumberGenerator& rng) override;
+      void gather(Entropy_Accumulator& acc) override;
 };
 
 }  // namespace Botan

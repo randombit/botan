@@ -4,8 +4,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "test_rng.h"
 #include "tests.h"
+
+#include <botan/rng.h>
 
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
    #include <botan/entropy_src.h>
@@ -20,6 +21,26 @@ namespace Botan_Tests {
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
 
 namespace {
+
+class Capturing_Accumulator final {
+   public:
+      Capturing_Accumulator() :
+            m_acc(Botan::RandomNumberGenerator::DefaultPollBits, [this](std::span<const uint8_t> in) {
+               m_samples++;
+               m_seed.insert(m_seed.end(), in.begin(), in.end());
+            }) {}
+
+      Botan::Entropy_Accumulator& acc() { return m_acc; }
+
+      size_t samples() const { return m_samples; }
+
+      const std::vector<uint8_t>& seed_material() const { return m_seed; }
+
+   private:
+      std::vector<uint8_t> m_seed;
+      size_t m_samples = 0;
+      Botan::Entropy_Accumulator m_acc;
+};
 
 class Entropy_Source_Tests final : public Test {
    public:
@@ -36,9 +57,11 @@ class Entropy_Source_Tests final : public Test {
             result.start_timer();
 
             try {
-               SeedCapturing_RNG rng;
+               Capturing_Accumulator rng;
 
-               const size_t bits = srcs.poll_just(rng, src_name);
+               const size_t bits = srcs._gather_just(rng.acc(), src_name);
+
+               result.test_sz_eq("Accumulator agrees", rng.acc().bits_collected(), bits);
 
                result.test_sz_gte("Entropy estimate", rng.seed_material().size() * 8, bits);
 
@@ -75,9 +98,9 @@ class Entropy_Source_Tests final : public Test {
                            result.test_failure(comp_algo + " exception while compressing", e.what());
                         }
 
-                        SeedCapturing_RNG rng2;
+                        Capturing_Accumulator rng2;
 
-                        const size_t bits2 = srcs.poll_just(rng2, src_name);
+                        const size_t bits2 = srcs._gather_just(rng2.acc(), src_name);
 
                         result.test_note("poll 2 result", rng2.seed_material());
 

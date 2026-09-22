@@ -22,15 +22,12 @@ namespace Botan {
 * buffer size is limited to 256 bytes.  On OpenBSD this does neither
 * block nor fail.
 */
-size_t Getentropy::poll(RandomNumberGenerator& rng) {
+void Getentropy::gather(Entropy_Accumulator& acc) {
    secure_vector<uint8_t> buf(256);
 
    if(::getentropy(buf.data(), buf.size()) == 0) {
-      rng.add_entropy(buf.data(), buf.size());
-      return buf.size() * 8;
+      acc.add(buf, buf.size() * 8);
    }
-
-   return 0;
 }
 
 }  // namespace Botan

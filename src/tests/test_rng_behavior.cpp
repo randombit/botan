@@ -70,6 +70,8 @@ class Stateful_RNG_Tests : public Test {
          results.push_back(test_reseed_interval_limits());
          results.push_back(test_max_number_of_bytes_per_request());
          results.push_back(test_broken_entropy_input());
+         results.push_back(test_seed_material_vs_additional_input());
+         results.push_back(test_entropy_accumulation());
          results.push_back(test_check_nonce());
          results.push_back(test_prediction_resistance());
          results.push_back(test_randomize_with_ts_input());
@@ -165,7 +167,7 @@ class Stateful_RNG_Tests : public Test {
             public:
                std::string name() const override { return "Broken Entropy Source"; }
 
-               size_t poll(Botan::RandomNumberGenerator& /*rng*/) override {
+               void gather(Botan::Entropy_Accumulator& /*acc*/) override {
                   throw Botan::Not_Implemented("polling not available");
                }
          };
@@ -174,7 +176,7 @@ class Stateful_RNG_Tests : public Test {
             public:
                std::string name() const override { return "Insufficient Entropy Source"; }
 
-               size_t poll(Botan::RandomNumberGenerator& /*rng*/) override { return 0; }
+               void gather(Botan::Entropy_Accumulator& /*acc*/) override {}
          };
    #endif
 
@@ -227,6 +229,350 @@ class Stateful_RNG_Tests : public Test {
          result.test_throws("underlying rng and entropy sources broken", [&rng_with_broken_rng_and_broken_es]() {
             rng_with_broken_rng_and_broken_es->random_vec(16);
          });
+   #endif
+
+         return result;
+      }
+
+      Test::Result test_seed_material_vs_additional_input() {
+         Test::Result result(rng_name() + " Seed Material vs Additional Input");
+
+         auto rng = create_rng(nullptr, nullptr, 0);
+         const size_t seed_bytes = rng->security_level() / 8;
+         const std::vector<uint8_t> input(2 * seed_bytes, 0x42);
+
+         result.test_is_false("not seeded initially", rng->is_seeded());
+
+         rng->randomize_with_input({}, input);
+         result.test_is_false("additional input does not seed", rng->is_seeded());
+
+         rng->randomize_with_ts_input({});
+         result.test_is_false("timestamp input does not seed", rng->is_seeded());
+
+         result.test_throws<Botan::PRNG_Unseeded>("no output after additional input", [&]() { rng->random_vec(16); });
+
+         rng->add_entropy(std::vector<uint8_t>(seed_bytes - 1, 0x42));
+         result.test_is_false("short seed material does not seed", rng->is_seeded());
+
+         rng->add_entropy(std::vector<uint8_t>(seed_bytes, 0x42));
+         result.test_is_true("seed material of security_level bits seeds", rng->is_seeded());
+         result.test_no_throw("output after seeding", [&]() { rng->random_vec(16); });
+
+         // additional input is nonetheless mixed into the state
+         {
+            const std::vector<uint8_t> seed(seed_bytes, 0xA5);
+
+            auto rng1 = create_rng(nullptr, nullptr, 0);
+            auto rng2 = create_rng(nullptr, nullptr, 0);
+            auto rng3 = create_rng(nullptr, nullptr, 0);
+
+            rng1->initialize_with(seed);
+            rng2->initialize_with(seed);
+            rng3->initialize_with(seed);
+
+            rng2->randomize_with_input({}, input);
+
+            const auto out1 = rng1->random_vec(32);
+            const auto out2 = rng2->random_vec(32);
+            const auto out3 = rng3->random_vec(32);
+
+            result.test_is_true("same seed produces same output", out1 == out3);
+            result.test_is_true("additional input changes the output", out1 != out2);
+         }
+
+         // additional input does not reset the reseed interval, seed material does
+         {
+            Request_Counting_RNG counting_rng;
+            auto rng4 = make_rng(counting_rng, 4);
+
+            rng4->random_vec(1);
+            rng4->random_vec(1);
+            result.test_sz_eq("initial seeding", counting_rng.randomize_count(), 1);
+
+            rng4->randomize_with_input({}, input);
+            result.test_is_true("still seeded", rng4->is_seeded());
+
+            rng4->random_vec(1);
+            rng4->random_vec(1);
+            result.test_sz_eq("no reseed within interval", counting_rng.randomize_count(), 1);
+            rng4->random_vec(1);
+            result.test_sz_eq("additional input did not reset the reseed interval", counting_rng.randomize_count(), 2);
+
+            rng4->random_vec(1);
+            rng4->add_entropy(input);
+
+            rng4->random_vec(1);
+            rng4->random_vec(1);
+            rng4->random_vec(1);
+            result.test_sz_eq("seed material reset the reseed interval", counting_rng.randomize_count(), 2);
+            rng4->random_vec(1);
+            result.test_sz_eq("reseed after reset interval", counting_rng.randomize_count(), 3);
+         }
+
+         return result;
+      }
+
+      Test::Result test_entropy_accumulation() {
+         Test::Result result(rng_name() + " Entropy Accumulation");
+
+   #if defined(BOTAN_HAS_ENTROPY_SOURCE)
+         // Provides a fixed amount of data with a fixed entropy estimate
+         class Fixed_Estimate_Source final : public Botan::Entropy_Source {
+            public:
+               Fixed_Estimate_Source(size_t bytes, size_t estimate) : m_bytes(bytes), m_estimate(estimate) {}
+
+               std::string name() const override { return "Fixed Estimate Source"; }
+
+               void gather(Botan::Entropy_Accumulator& acc) override {
+                  m_polls++;
+                  acc.add(std::vector<uint8_t>(m_bytes, 0x42), m_estimate);
+               }
+
+               size_t polls() const { return m_polls; }
+
+            private:
+               size_t m_bytes;
+               size_t m_estimate;
+               size_t m_polls = 0;
+         };
+
+         // Like a timer based source: many small samples, each with a small estimate
+         class Chunked_Source final : public Botan::Entropy_Source {
+            public:
+               explicit Chunked_Source(size_t bits_per_chunk) : m_bits_per_chunk(bits_per_chunk) {}
+
+               std::string name() const override { return "Chunked Source"; }
+
+               void gather(Botan::Entropy_Accumulator& acc) override {
+                  for(uint64_t i = 0; i != 64; ++i) {
+                     acc.add_T(i, m_bits_per_chunk);
+                  }
+               }
+
+            private:
+               size_t m_bits_per_chunk;
+         };
+
+         // Implements only the legacy poll interface
+         class Legacy_Source final : public Botan::Entropy_Source {
+            public:
+               Legacy_Source(size_t bytes, size_t estimate) : m_bytes(bytes), m_estimate(estimate) {}
+
+               std::string name() const override { return "Legacy Source"; }
+
+               size_t poll(Botan::RandomNumberGenerator& rng) override {
+                  rng.add_entropy(std::vector<uint8_t>(m_bytes, 0x42));
+                  return m_estimate;
+               }
+
+            private:
+               size_t m_bytes;
+               size_t m_estimate;
+         };
+
+         // A legacy source which misuses the RNG it is handed
+         class Hostile_Legacy_Source final : public Botan::Entropy_Source {
+            public:
+               std::string name() const override { return "Hostile Legacy Source"; }
+
+               size_t poll(Botan::RandomNumberGenerator& rng) override {
+                  rng.clear();
+                  rng.add_entropy(std::vector<uint8_t>(64, 0x42));
+                  rng.randomize_with_ts_input({});
+                  try {
+                     rng.random_vec(1);
+                     m_drew_output = true;
+                  } catch(Botan::Invalid_State&) {}
+                  return 0;
+               }
+
+               bool drew_output() const { return m_drew_output; }
+
+            private:
+               bool m_drew_output = false;
+         };
+
+         // Implements neither interface
+         class Neither_Source final : public Botan::Entropy_Source {
+            public:
+               std::string name() const override { return "Neither Source"; }
+         };
+
+         const size_t sec_level = create_rng(nullptr, nullptr, 0)->security_level();
+         // well above the length at which add_entropy would consider the RNG seeded
+         const size_t big = 2 * sec_level / 8;
+
+         // a source providing plenty of data but claiming no entropy does not seed the RNG
+         {
+            Botan::Entropy_Sources srcs;
+            auto src = std::make_unique<Fixed_Estimate_Source>(big, 0);
+            const auto* src_ptr = src.get();
+            srcs.add_source(std::move(src));
+
+            auto rng = make_rng(srcs);
+            result.test_throws<Botan::PRNG_Unseeded>("uncounted source does not seed", [&]() { rng->random_vec(16); });
+            result.test_sz_gte("source was polled", src_ptr->polls(), 1);
+            result.test_is_false("not seeded after uncounted poll", rng->is_seeded());
+         }
+
+         // small estimates accumulate over a poll
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Chunked_Source>((sec_level + 63) / 64));
+
+            auto rng = make_rng(srcs);
+            result.test_no_throw("chunked source seeds", [&]() { rng->random_vec(16); });
+            result.test_is_true("seeded via accumulated estimates", rng->is_seeded());
+         }
+
+         // but not if the total is insufficient
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Chunked_Source>(1));
+
+            auto rng = make_rng(srcs);
+            result.test_throws<Botan::PRNG_Unseeded>("insufficient chunked source does not seed",
+                                                     [&]() { rng->random_vec(16); });
+         }
+
+         // a counted source seeds the RNG
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 8, sec_level));
+
+            auto rng = make_rng(srcs);
+            result.test_no_throw("counted source seeds", [&]() { rng->random_vec(16); });
+            result.test_is_true("seeded", rng->is_seeded());
+         }
+
+         // an uncounted source followed by a counted source seeds the RNG
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(big, 0));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 8, sec_level));
+
+            auto rng = make_rng(srcs);
+            result.test_no_throw("mixed sources seed", [&]() { rng->random_vec(16); });
+            result.test_is_true("seeded", rng->is_seeded());
+         }
+
+         // an estimate exceeding the data is capped
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 16, sec_level));
+
+            auto rng = make_rng(srcs);
+            result.test_throws<Botan::PRNG_Unseeded>("overstated estimate is capped", [&]() { rng->random_vec(16); });
+         }
+
+         // a legacy source providing plenty of data but reporting no entropy does not seed the RNG
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Legacy_Source>(8192, 0));
+
+            auto rng = make_rng(srcs);
+            result.test_throws<Botan::PRNG_Unseeded>("uncounted legacy source does not seed",
+                                                     [&]() { rng->random_vec(16); });
+         }
+
+         // a legacy source is credited with what it reports
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Legacy_Source>(sec_level / 8, sec_level));
+
+            auto rng = make_rng(srcs);
+            result.test_no_throw("counted legacy source seeds", [&]() { rng->random_vec(16); });
+            result.test_is_true("seeded", rng->is_seeded());
+         }
+
+         // but never with more than it provided
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Legacy_Source>(sec_level / 16, sec_level));
+
+            auto rng = make_rng(srcs);
+            result.test_throws<Botan::PRNG_Unseeded>("overstated legacy estimate is capped",
+                                                     [&]() { rng->random_vec(16); });
+         }
+
+         // and it cannot borrow capacity from data provided by an earlier source
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(big, 0));
+            srcs.add_source(std::make_unique<Legacy_Source>(sec_level / 16, sec_level));
+
+            auto rng = make_rng(srcs);
+            result.test_throws<Botan::PRNG_Unseeded>("legacy estimate cannot borrow from earlier data",
+                                                     [&]() { rng->random_vec(16); });
+         }
+
+         // a legacy source cannot affect the RNG being seeded
+         {
+            Botan::Entropy_Sources hostile_srcs;
+            auto hostile = std::make_unique<Hostile_Legacy_Source>();
+            const auto* hostile_ptr = hostile.get();
+            hostile_srcs.add_source(std::move(hostile));
+
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Hostile_Legacy_Source>());
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 8, sec_level));
+
+            auto rng = make_rng(srcs);
+            result.test_no_throw("hostile source followed by good source", [&]() { rng->random_vec(16); });
+            result.test_is_true("seeded", rng->is_seeded());
+
+            result.test_sz_eq("hostile source reports nothing", rng->reseed_from(hostile_srcs), 0);
+            result.test_is_false("hostile source could not draw output", hostile_ptr->drew_output());
+            result.test_is_true("clear from hostile source did not reach the RNG", rng->is_seeded());
+            result.test_no_throw("still produces output", [&]() { rng->random_vec(16); });
+         }
+
+         // a source implementing neither interface is detected
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Neither_Source>());
+
+            auto rng = make_rng(srcs);
+            result.test_throws<Botan::Not_Implemented>("neither interface", [&]() { rng->random_vec(16); });
+         }
+
+         // the legacy Entropy_Sources::poll interface mixes data in without seeding
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 8, sec_level));
+
+            auto rng = create_rng(nullptr, nullptr, 0);
+            result.test_sz_eq("legacy poll reports estimate", srcs.poll(*rng, sec_level), sec_level);
+            result.test_is_false("legacy poll does not seed", rng->is_seeded());
+            result.test_sz_eq(
+               "legacy poll_just reports estimate", srcs.poll_just(*rng, "Fixed Estimate Source"), sec_level);
+            result.test_is_false("legacy poll_just does not seed", rng->is_seeded());
+            result.test_sz_eq("reseed_from seeds", rng->reseed_from(srcs), sec_level);
+            result.test_is_true("seeded", rng->is_seeded());
+         }
+
+         // explicitly reseeding from an uncounted source keeps the RNG seeded
+         // but does not reset the reseed interval
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(big, 0));
+
+            Request_Counting_RNG counting_rng;
+            auto rng = make_rng(counting_rng, 4);
+
+            rng->random_vec(1);
+            rng->random_vec(1);
+            result.test_sz_eq("initial seeding", counting_rng.randomize_count(), 1);
+
+            result.test_sz_eq("no entropy reported", rng->reseed_from(srcs), 0);
+            result.test_is_true("remains seeded", rng->is_seeded());
+
+            rng->random_vec(1);
+            rng->random_vec(1);
+            result.test_sz_eq("no reseed within interval", counting_rng.randomize_count(), 1);
+            rng->random_vec(1);
+            result.test_sz_eq("uncounted poll did not reset the reseed interval", counting_rng.randomize_count(), 2);
+         }
    #endif
 
          return result;
@@ -955,6 +1301,66 @@ class RNG_TS_Input_Tests final : public Test {
 };
 
 BOTAN_REGISTER_TEST("rng", "rng_ts_input", RNG_TS_Input_Tests);
+
+#if defined(BOTAN_HAS_ENTROPY_SOURCE)
+
+Test::Result test_entropy_accumulator() {
+   Test::Result result("Entropy_Accumulator");
+
+   std::vector<uint8_t> seen;
+   size_t calls = 0;
+
+   Botan::Entropy_Accumulator acc(64, [&](std::span<const uint8_t> in) {
+      calls++;
+      seen.insert(seen.end(), in.begin(), in.end());
+   });
+
+   result.test_sz_eq("goal", acc.goal_bits(), 64);
+   result.test_sz_eq("nothing collected", acc.bits_collected(), 0);
+   result.test_is_false("goal not reached", acc.goal_reached());
+
+   acc.add({}, 1000);
+   result.test_sz_eq("empty input is not credited", acc.bits_collected(), 0);
+   result.test_sz_eq("empty input is not forwarded", calls, 0);
+
+   acc.add(std::vector<uint8_t>(4, 1), 16);
+   result.test_sz_eq("estimate credited", acc.bits_collected(), 16);
+   result.test_sz_eq("input forwarded", calls, 1);
+   result.test_sz_eq("input forwarded intact", seen.size(), 4);
+
+   acc.add(std::vector<uint8_t>(1, 2), 100);
+   result.test_sz_eq("estimate capped at the length of its own data", acc.bits_collected(), 24);
+
+   acc.add(std::vector<uint8_t>(2, 3), 0);
+   result.test_sz_eq("uncounted input", acc.bits_collected(), 24);
+   result.test_is_false("goal still not reached", acc.goal_reached());
+
+   acc.add(std::vector<uint8_t>(8, 4), 24);
+   result.test_sz_eq("estimates accumulate", acc.bits_collected(), 48);
+   result.test_is_false("goal not yet reached", acc.goal_reached());
+
+   const uint32_t v = 0x01020304;
+   acc.add_T(v, 32);
+   result.test_sz_eq("add_T credited", acc.bits_collected(), 80);
+   result.test_is_true("goal reached", acc.goal_reached());
+   result.test_sz_eq("add_T forwarded", seen.size(), 19);
+   result.test_sz_eq("all inputs forwarded", calls, 5);
+
+   // an overstated estimate cannot borrow capacity from earlier uncounted data
+   Botan::Entropy_Accumulator acc2(64, [](std::span<const uint8_t> /*in*/) {});
+   acc2.add(std::vector<uint8_t>(32, 5), 0);
+   acc2.add(std::vector<uint8_t>(1, 6), 256);
+   result.test_sz_eq("no borrowing from uncounted data", acc2.bits_collected(), 8);
+
+   result.test_throws<Botan::Invalid_Argument>("null sink rejected",
+                                               [] { const Botan::Entropy_Accumulator bad(64, nullptr); });
+
+   return result;
+}
+
+BOTAN_REGISTER_TEST_FN("rng", "entropy_accumulator", test_entropy_accumulator);
+
+#endif
 
 }  // namespace
 

@@ -10,6 +10,10 @@
 #include <botan/exceptn.h>
 #include <botan/internal/os_utils.h>
 
+#if defined(BOTAN_HAS_ENTROPY_SOURCE)
+   #include <botan/entropy_src.h>
+#endif
+
 namespace Botan {
 
 void Stateful_RNG::clear() {
@@ -60,41 +64,57 @@ void Stateful_RNG::generate_batched_output(std::span<uint8_t> output, std::span<
    }
 }
 
+void Stateful_RNG::accept_seed_material(std::span<const uint8_t> input) {
+   const lock_guard_type<recursive_mutex_type> lock(m_mutex);
+
+   this->update(input);
+
+   // The contract of add_entropy is that the caller asserts full entropy
+   if(8 * input.size() >= security_level()) {
+      reset_reseed_counter();
+   }
+}
+
 void Stateful_RNG::fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) {
    const lock_guard_type<recursive_mutex_type> lock(m_mutex);
 
    if(output.empty()) {
-      // Special case for exclusively adding entropy to the stateful RNG.
+      // Additional input without output is mixed in but never credited
       this->update(input);
-
-      if(8 * input.size() >= security_level()) {
-         reset_reseed_counter();
-      }
    } else {
       generate_batched_output(output, input);
    }
 }
 
-size_t Stateful_RNG::reseed_from_sources(Entropy_Sources& srcs, size_t poll_bits) {
-   const lock_guard_type<recursive_mutex_type> lock(m_mutex);
-
-   const size_t bits_collected = RandomNumberGenerator::reseed_from_sources(srcs, poll_bits);
-
+size_t Stateful_RNG::finish_reseed(size_t bits_collected) {
+   // Lock is held whenever this function is called
    if(bits_collected >= security_level()) {
       reset_reseed_counter();
    }
-
    return bits_collected;
+}
+
+size_t Stateful_RNG::reseed_from_sources(Entropy_Sources& srcs, size_t poll_bits) {
+   const lock_guard_type<recursive_mutex_type> lock(m_mutex);
+
+#if defined(BOTAN_HAS_ENTROPY_SOURCE)
+   Entropy_Accumulator acc(poll_bits, [this](std::span<const uint8_t> in) { this->update(in); });
+   srcs._gather(acc);
+   return finish_reseed(acc.bits_collected());
+#else
+   BOTAN_UNUSED(srcs, poll_bits);
+   return finish_reseed(0);
+#endif
 }
 
 void Stateful_RNG::reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits) {
    const lock_guard_type<recursive_mutex_type> lock(m_mutex);
 
-   RandomNumberGenerator::reseed_from_rng(rng, poll_bits);
+   const auto seed = rng.random_vec(poll_bits / 8);
+   this->update(seed);
 
-   if(poll_bits >= security_level()) {
-      reset_reseed_counter();
-   }
+   // The caller designated this RNG as a seed source, so its output is credited in full
+   finish_reseed(8 * seed.size());
 }
 
 void Stateful_RNG::reset_reseed_counter() {
