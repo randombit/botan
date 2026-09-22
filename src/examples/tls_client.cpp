@@ -43,9 +43,10 @@ class Client_Credentials : public Botan::Credentials_Manager {
          return {&m_cert_store};
       }
 
-      std::vector<Botan::X509_Certificate> cert_chain(
+      std::vector<Botan::X509_Certificate> find_cert_chain(
          [[maybe_unused]] const std::vector<std::string>& cert_key_types,
          [[maybe_unused]] const std::vector<Botan::AlgorithmIdentifier>& cert_signature_schemes,
+         [[maybe_unused]] const std::vector<Botan::X509_DN>& acceptable_CAs,
          [[maybe_unused]] const std::string& type,
          [[maybe_unused]] const std::string& context) override {
          // when using tls client authentication (optional), return
@@ -57,7 +58,7 @@ class Client_Credentials : public Botan::Credentials_Manager {
       std::shared_ptr<Botan::Private_Key> private_key_for([[maybe_unused]] const Botan::X509_Certificate& cert,
                                                           [[maybe_unused]] const std::string& type,
                                                           [[maybe_unused]] const std::string& context) override {
-         // when returning a chain in cert_chain(), return the private key
+         // when returning a chain in find_cert_chain(), return the private key
          // associated with the leaf certificate here
          return nullptr;
       }

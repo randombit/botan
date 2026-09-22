@@ -69,9 +69,10 @@ class Server_Credential : public Botan::Credentials_Manager {
          return {&m_cert_store};
       }
 
-      std::vector<Botan::X509_Certificate> cert_chain(
+      std::vector<Botan::X509_Certificate> find_cert_chain(
          [[maybe_unused]] const std::vector<std::string>& cert_key_types,
          [[maybe_unused]] const std::vector<Botan::AlgorithmIdentifier>& cert_signature_schemes,
+         [[maybe_unused]] const std::vector<Botan::X509_DN>& acceptable_CAs,
          [[maybe_unused]] const std::string& type,
          [[maybe_unused]] const std::string& context) override {
          // return the certificate chain being sent to the tls client
