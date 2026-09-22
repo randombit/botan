@@ -87,7 +87,7 @@ void StdoutReporter::render_summary() const {
       m_out << "all tests ok";
    }
 
-   m_out << "\n";
+   m_out << "\n" << std::flush;
 }
 
 }  // namespace Botan_Tests
