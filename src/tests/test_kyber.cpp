@@ -29,6 +29,8 @@
    #include <botan/internal/fmt.h>
    #include <botan/internal/kyber_constants.h>
    #include <botan/internal/kyber_helpers.h>
+   #include <botan/internal/kyber_polynomial.h>
+   #include <algorithm>
 #endif
 
 namespace Botan_Tests {
@@ -416,9 +418,89 @@ std::vector<Test::Result> test_kyber_helpers() {
    };
 }
 
+/**
+ * Checks the ML-KEM NTT and basemul computations
+ */
+std::vector<Test::Result> test_kyber_ntt() {
+   using Traits = Botan::KyberPolyTraits;
+   using Poly = std::array<int16_t, Botan::KyberConstants::N>;
+   constexpr int32_t q = Botan::KyberConstants::Q;
+   constexpr int32_t R = 65536 % q;  // inverse_ntt leaves this Montgomery factor in
+
+   auto modq = [](int64_t x) { return static_cast<int32_t>(((x % q) + q) % q); };
+
+   auto random_poly = [](Botan::RandomNumberGenerator& rng) {
+      Poly p;
+      for(auto& c : p) {
+         c = static_cast<int16_t>(Botan::load_le<uint16_t>(rng.random_array<2>()) % q);
+      }
+      return p;
+   };
+
+   auto in_range = [](const Poly& p, int32_t lo, int32_t hi) {
+      return std::all_of(p.begin(), p.end(), [&](int16_t c) { return c >= lo && c < hi; });
+   };
+
+   auto rng = Test::new_rng(__func__);
+   Test::Result result("Kyber NTT computation");
+
+   constexpr size_t runs = 1000;
+
+   for(size_t i = 0; i != runs; ++i) {
+      const auto p = random_poly(*rng);
+      Poly c = p;
+      Traits::ntt(c);
+      // Note: Unlike the reference impl, our NTT's Barrett reduction does not completely reduce
+      result.test_is_true("ntt output is in [0, q]", in_range(c, 0, q + 1));
+      Traits::inverse_ntt(c);
+      result.test_is_true("inverse_ntt output is in (-q, q)", in_range(c, -q + 1, q));
+
+      bool ok = true;
+      for(size_t j = 0; j < p.size(); ++j) {
+         ok &= (modq(c[j]) == modq(static_cast<int64_t>(p[j]) * R));
+      }
+      result.test_is_true("inverse_ntt(ntt(p)) == p * R", ok);
+   }
+
+   for(size_t i = 0; i != runs; ++i) {
+      const auto a = random_poly(*rng);
+      const auto b = random_poly(*rng);
+
+      // Schoolbook multiplication in Z_q[X] / (X^256 + 1)
+      std::array<int64_t, Botan::KyberConstants::N> expected{};
+      for(size_t j = 0; j < a.size(); ++j) {
+         for(size_t k = 0; k < b.size(); ++k) {
+            const int64_t prod = static_cast<int64_t>(a[j]) * b[k];
+            if(j + k < a.size()) {
+               expected[j + k] += prod;
+            } else {
+               expected[j + k - a.size()] -= prod;
+            }
+         }
+      }
+
+      Poly na = a;
+      Poly nb = b;
+      Traits::ntt(na);
+      Traits::ntt(nb);
+      Poly nc{};
+      Traits::poly_pointwise_montgomery(nc, na, nb);
+      Traits::inverse_ntt(nc);
+
+      bool ok = true;
+      for(size_t j = 0; j < nc.size(); ++j) {
+         ok &= (modq(nc[j]) == modq(expected[j]));
+      }
+      result.test_is_true("inverse_ntt(ntt(a) * ntt(b)) == a * b", ok);
+   }
+
+   return {result};
+}
+
 }  // namespace
 
 BOTAN_REGISTER_TEST_FN("pubkey", "kyber_helpers", test_kyber_helpers);
+BOTAN_REGISTER_TEST_FN("pubkey", "kyber_ntt", test_kyber_ntt);
 
 #endif
 
