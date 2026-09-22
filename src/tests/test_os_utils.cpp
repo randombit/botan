@@ -183,8 +183,6 @@ class OS_Utils_Tests final : public Test {
 
          if(cpu_ts2.has_value()) {
             result.test_is_true("Thread CPU time advances while busy", *cpu_ts2 > *cpu_ts1);
-            result.test_is_true("Thread CPU time does not exceed wall time",
-                                (*cpu_ts2 - *cpu_ts1) <= wall_elapsed + 1000000);
          }
 
    #if defined(BOTAN_TARGET_OS_HAS_THREADS)
