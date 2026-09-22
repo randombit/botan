@@ -198,6 +198,22 @@ BOTAN_FFI_EXPORT(2, 0) uint32_t botan_ffi_api_version(void);
 BOTAN_FFI_EXPORT(2, 0) int botan_ffi_supports_api(uint32_t api_version);
 
 /**
+* Return the version of the TLS FFI API (declared in ffi_tls.h) provided by
+* this library, in the form YYYYMMDD, or 0 if the library was built without
+* the experimental ffi_tls module. This function is always available, so
+* applications can detect the TLS API at runtime.
+*/
+BOTAN_FFI_EXPORT(3, 14) uint32_t botan_ffi_tls_api_version(void);
+
+/**
+* Return 0 (ok) if this library supports the given version of the TLS FFI
+* API, otherwise -1 (also whenever the ffi_tls module is not built).
+* botan_ffi_tls_supports_api(botan_ffi_tls_api_version()) returns 0 if
+* botan_ffi_tls_api_version() is nonzero.
+*/
+BOTAN_FFI_EXPORT(3, 14) int botan_ffi_tls_supports_api(uint32_t api_version);
+
+/**
 * Return a free-form version string, e.g., 2.0.0
 */
 BOTAN_FFI_EXPORT(2, 0) const char* botan_version_string(void);
