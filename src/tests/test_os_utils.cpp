@@ -175,7 +175,6 @@ class OS_Utils_Tests final : public Test {
          while(steady_clock_ns() - wall_start < 2000000) {
             state = burn_cpu(state, 1000);
          }
-         const uint64_t wall_elapsed = steady_clock_ns() - wall_start;
          result.test_is_true("Work loop produced a value", state != 0);
 
          const auto cpu_ts2 = Botan::OS::get_thread_cpu_time_ns();
