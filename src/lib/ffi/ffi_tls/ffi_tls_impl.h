@@ -28,8 +28,8 @@ namespace Botan_FFI {
 * Trust anchors and CRLs live in an in-memory certificate store; further
 * stores (a directory, the system store) are kept as separate objects. The
 * certificate chains are used for server and for client authentication
-* alike. All setters copy their input; the object is configured once and
-* then only read, so it can be shared between channels.
+* alike. All setters copy their input. The object is not synchronized, but
+* otherwise it may be modified at any time and shared between channels.
 */
 class BOTAN_TEST_API FFI_TLS_Credentials final : public Botan::Credentials_Manager {
    public:

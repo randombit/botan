@@ -97,9 +97,10 @@ BOTAN_FFI_EXPORT(3, 14) int botan_tls_policy_destroy(botan_tls_policy_t policy);
 * certificate).
 *
 * Everything passed to the setters is copied, so the certificate, CRL and
-* key handles may be destroyed after the call. Configure the object before
-* passing it to a channel and do not call its setters afterwards; it may
-* then be shared by any number of channels, which keep it alive.
+* key handles may be destroyed after the call. The object may be shared by
+* any number of channels, which keep it alive, and its setters may be called
+* at any time; later handshakes see the change. It is not synchronized, so
+* modifying it while a channel on another thread uses it is a data race.
 */
 typedef struct botan_tls_credentials_struct* botan_tls_credentials_t;
 

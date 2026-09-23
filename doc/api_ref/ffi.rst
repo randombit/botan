@@ -2701,9 +2701,11 @@ TLS Credentials
    (as a server, or as a client when the server requests a client certificate).
 
    Everything passed to the setters is copied, so the certificate, CRL and key
-   handles may be destroyed after the call. Configure the object before passing
-   it to a channel and do not call its setters afterwards; it may then be shared
-   by any number of channels. Don't mess with it.
+   handles may be destroyed after the call. The object may be shared by any
+   number of channels, which keep it alive, and its setters may be called at any
+   time; later handshakes see the change. It is not synchronized, so modifying
+   it while a channel on another thread uses it is a data race. Don't mess with
+   it.
 
 .. cpp:function:: int botan_tls_credentials_init(botan_tls_credentials_t* creds)
 
