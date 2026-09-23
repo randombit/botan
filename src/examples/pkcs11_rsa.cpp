@@ -79,25 +79,29 @@ int main() {
    const Botan::PKCS11::PKCS11_RSA_KeyPair rsa_keypair =
       Botan::PKCS11::generate_rsa_keypair(session, pub_generate_props, priv_generate_props);
 
+   /************ RSA operation options *************/
+   const auto enc_options = Botan::PK_Encryption_Options().with_padding("OAEP").with_hash("SHA-256");
+   const auto sig_options = Botan::PK_Signature_Options().with_padding("PSS").with_hash("SHA-256");
+
    /************ RSA encrypt *************/
 
    Botan::secure_vector<uint8_t> plaintext = {0x00, 0x01, 0x02, 0x03};
-   const Botan::PK_Encryptor_EME encryptor(rsa_keypair.first, rng, "Raw");
+   const Botan::PK_Encryptor_EME encryptor(rsa_keypair.first, rng, enc_options);
    auto ciphertext = encryptor.encrypt(plaintext, rng);
 
    /************ RSA decrypt *************/
 
-   const Botan::PK_Decryptor_EME decryptor(rsa_keypair.second, rng, "Raw");
+   const Botan::PK_Decryptor_EME decryptor(rsa_keypair.second, rng, enc_options);
    plaintext = decryptor.decrypt(ciphertext);
 
    /************ RSA sign *************/
 
-   Botan::PK_Signer signer(rsa_keypair.second, rng, "PSS(SHA-256)", Botan::Signature_Format::Standard);
+   Botan::PK_Signer signer(rsa_keypair.second, rng, sig_options);
    auto signature = signer.sign_message(plaintext, rng);
 
    /************ RSA verify *************/
 
-   Botan::PK_Verifier verifier(rsa_keypair.first, "PSS(SHA-256)", Botan::Signature_Format::Standard);
+   Botan::PK_Verifier verifier(rsa_keypair.first, sig_options);
    auto ok = verifier.verify_message(plaintext, signature);
 
    return ok ? 0 : 1;

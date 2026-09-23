@@ -21,12 +21,15 @@ int main(int argc, char* argv[]) {
    Botan::DataSource_Stream in(argv[1]);
    auto kp = Botan::PKCS8::load_key(in);
 
+   // set up the encryption options
+   const auto enc_options = Botan::PK_Encryption_Options().with_padding("OAEP").with_hash("SHA-256");
+
    // encrypt with pk
-   const Botan::PK_Encryptor_EME enc(*kp, rng, "OAEP(SHA-256)");
+   const Botan::PK_Encryptor_EME enc(*kp, rng, enc_options);
    const auto ct = enc.encrypt(pt, rng);
 
    // decrypt with sk
-   const Botan::PK_Decryptor_EME dec(*kp, rng, "OAEP(SHA-256)");
+   const Botan::PK_Decryptor_EME dec(*kp, rng, enc_options);
    const auto pt2 = dec.decrypt(ct);
 
    std::cout << "\nenc: " << Botan::hex_encode(ct) << "\ndec: " << Botan::hex_encode(pt2);
