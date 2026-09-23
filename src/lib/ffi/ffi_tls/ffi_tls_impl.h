@@ -97,6 +97,12 @@ struct FFI_TLS_Callbacks_Table {
 */
 class FFI_TLS_Callbacks final : public Botan::TLS::Callbacks {
    public:
+      struct Last_Alert {
+            uint16_t code;
+            bool fatal;
+            bool from_peer;
+      };
+
       /**
       * Increments the channel's callback depth while a channel function that
       * may run callbacks is executing.
@@ -132,6 +138,10 @@ class FFI_TLS_Callbacks final : public Botan::TLS::Callbacks {
 
       const std::optional<Botan::TLS::Session_Summary>& session_summary() const { return m_summary; }
 
+      const std::optional<Last_Alert>& last_alert() const { return m_last_alert; }
+
+      void record_sent_alert(Botan::TLS::AlertType type, bool fatal);
+
       /// True after an emit_data callback failed; the channel is unusable then
       bool failed() const { return m_failed; }
 
@@ -146,6 +156,7 @@ class FFI_TLS_Callbacks final : public Botan::TLS::Callbacks {
       void* m_ctx;
       std::vector<std::string> m_server_protocols;
       std::optional<Botan::TLS::Session_Summary> m_summary;
+      std::optional<Last_Alert> m_last_alert;
       bool m_failed = false;
       bool m_in_emit = false;
       size_t m_depth = 0;
