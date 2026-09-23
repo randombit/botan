@@ -4210,13 +4210,13 @@ class TLSPolicy:
         return self.to_string()
 
 class TLSCredentials:
-    """The credentials of a TLS endpoint (an internal ``Botan::Credentials_Manager``):
-    the trust anchors and CRLs used to verify the peer, and the certificate chains
-    with private keys used to authenticate this side, as a server or as a client
-    when the server requests a client certificate.
+    """The credentials of a TLS endpoint: the trust anchors and CRLs used to verify
+    the peer, and the certificate chains with private keys used to authenticate this
+    side, as a server or as a client when the server requests a client certificate.
 
-    Everything passed to the setters is copied. Configure the object before passing
-    it to a channel and do not call its setters afterwards.
+    Everything passed to the setters is copied. The object may be shared by any
+    number of channels and modified at any time, but it is not synchronized: do not
+    modify it while a channel on another thread uses it.
 
     This is part of the experimental TLS FFI API and is only available if the
     loaded library was built with the ``ffi_tls`` module; see
