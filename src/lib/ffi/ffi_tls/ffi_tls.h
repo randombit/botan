@@ -274,6 +274,76 @@ BOTAN_FFI_EXPORT(3, 14) int botan_tls_version_is_available(uint16_t version_code
 BOTAN_FFI_EXPORT(3, 14)
 int botan_tls_ciphersuite_view_name(uint16_t ciphersuite_code, botan_view_ctx ctx, botan_view_str_fn view);
 
+/*
+* TLS callbacks
+*
+* A callbacks object is the table of functions through which a channel talks
+* to the application. It carries no application state: the context pointer
+* given to botan_tls_channel_init_client or _init_server is passed as the
+* first argument of every callback, so one callbacks object can serve any
+* number of channels. A channel copies the table when it is created, so the
+* object may be destroyed or modified afterwards without affecting existing
+* channels.
+*
+* All callbacks run synchronously on the thread that called the channel
+* function, and the data pointers they receive are valid only during the
+* call. A callback returns 0 to continue; any other value aborts the
+* connection (see the channel functions for the exact consequences).
+*/
+typedef struct botan_tls_callbacks_struct* botan_tls_callbacks_t;
+
+/**
+* Ciphertext to be sent to the peer, in order. The buffer is overwritten
+* after the callback returns, so copy it if it cannot be written at once.
+*/
+typedef int (*botan_tls_emit_data_fn)(void* ctx, const uint8_t data[], size_t len);
+
+/**
+* Application data received from the peer. seq_no is the record layer's
+* sequence number; it restarts at zero when the keys change (TLS 1.3 key
+* update, TLS 1.2 renegotiation). A TLS 1.3 peer may send empty records;
+* they are delivered with len 0.
+*/
+typedef int (*botan_tls_record_received_fn)(void* ctx, uint64_t seq_no, const uint8_t data[], size_t len);
+
+/**
+* An alert was received from the peer: alert_code is the alert's code (a
+* BOTAN_TLS_ALERT value, or whatever the peer sent) and is_fatal its level.
+* When a fatal alert arrives the channel has already been closed. A received
+* close_notify is answered with a close_notify after this callback returns.
+* Alerts received before the handshake completed are not authenticated.
+*/
+typedef int (*botan_tls_alert_received_fn)(void* ctx, uint16_t alert_code, int is_fatal);
+
+/**
+* The handshake completed and application data may be exchanged
+* (Botan::TLS::Callbacks::tls_session_activated): once per connection in
+* TLS 1.3, once per (re)negotiation in TLS 1.2. botan_tls_channel_send and
+* the channel's getters may be called from inside this callback.
+*/
+typedef int (*botan_tls_handshake_complete_fn)(void* ctx);
+
+/**
+* Create a callbacks object with the three mandatory callbacks; none of them
+* may be NULL.
+*/
+BOTAN_FFI_EXPORT(3, 14)
+int botan_tls_callbacks_init(botan_tls_callbacks_t* cb,
+                             botan_tls_emit_data_fn emit_data,
+                             botan_tls_record_received_fn record_received,
+                             botan_tls_alert_received_fn alert_received);
+
+/**
+* Set or (with NULL) remove the handshake completion callback.
+*/
+BOTAN_FFI_EXPORT(3, 14)
+int botan_tls_callbacks_set_handshake_complete(botan_tls_callbacks_t cb, botan_tls_handshake_complete_fn fn);
+
+/**
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_FFI_EXPORT(3, 14) int botan_tls_callbacks_destroy(botan_tls_callbacks_t cb);
+
 /* NOLINTEND(*-macro-usage) */
 
 #ifdef __cplusplus

@@ -2846,3 +2846,45 @@ use the values of the wire encoding.
    IANA name without the ``TLS_`` prefix, for example ``AES_128_GCM_SHA256`` for
    0x1301. Returns ``BOTAN_FFI_ERROR_NO_VALUE`` for an unknown code.
 
+TLS Callbacks
+^^^^^^^^^^^^^^
+
+.. cpp:type:: opaque* botan_tls_callbacks_t
+
+   The table of functions through which a channel talks to the application. It
+   carries no application state: the context pointer given to the channel
+   constructor is passed as the first argument of every callback, so one
+   callbacks object can serve any number of channels. A channel copies the table
+   when it is created. All callbacks run synchronously on the thread that called
+   the channel function, the data pointers they receive are valid only during
+   the call, and a callback returns 0 to continue or any other value to abort
+   the connection (see the channel functions for the consequences). Don't mess
+   with it.
+
+   The callback types are:
+
+   * ``int (*botan_tls_emit_data_fn)(void* ctx, const uint8_t data[], size_t len)``:
+     ciphertext to send to the peer, in order.
+   * ``int (*botan_tls_record_received_fn)(void* ctx, uint64_t seq_no, const uint8_t data[], size_t len)``:
+     application data received from the peer.
+   * ``int (*botan_tls_alert_received_fn)(void* ctx, uint16_t alert_code, int is_fatal)``:
+     an alert received from the peer; after a fatal alert the channel is closed.
+   * ``int (*botan_tls_handshake_complete_fn)(void* ctx)``: the handshake completed
+     (``Botan::TLS::Callbacks::tls_session_activated``); ``botan_tls_channel_send``
+     may be called from inside it.
+
+.. cpp:function:: int botan_tls_callbacks_init(botan_tls_callbacks_t* cb, botan_tls_emit_data_fn emit_data, \
+                  botan_tls_record_received_fn record_received, botan_tls_alert_received_fn alert_received)
+
+   Create a callbacks object with the three mandatory callbacks, none of which
+   may be NULL.
+
+.. cpp:function:: int botan_tls_callbacks_set_handshake_complete(botan_tls_callbacks_t cb, \
+                  botan_tls_handshake_complete_fn fn)
+
+   Set or (with NULL) remove the handshake completion callback.
+
+.. cpp:function:: int botan_tls_callbacks_destroy(botan_tls_callbacks_t cb)
+
+   Destroy the object. Channels created from it are unaffected.
+
