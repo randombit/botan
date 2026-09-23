@@ -14,6 +14,10 @@ struct EncryptedData {
 
 namespace {
 
+Botan::PK_Encryption_Options encryption_options() {
+   return Botan::PK_Encryption_Options().with_padding("OAEP").with_hash("SHA-256");
+}
+
 std::unique_ptr<Botan::Private_Key> generate_keypair(const size_t bits, Botan::RandomNumberGenerator& rng) {
    return std::make_unique<Botan::RSA_PrivateKey>(rng, bits);
 }
@@ -36,7 +40,7 @@ EncryptedData encrypt(std::span<const uint8_t> data,
    sym_cipher->finish(d.ciphertext);
 
    // encrypt the symmetric key using RSA with a secure padding scheme
-   const Botan::PK_Encryptor_EME asym_cipher(*pubkey, rng, "EME-OAEP(SHA-256,MGF1)");
+   const Botan::PK_Encryptor_EME asym_cipher(*pubkey, rng, encryption_options());
    d.encryptedKey = asym_cipher.encrypt(key, rng);
 
    return d;
@@ -48,7 +52,7 @@ Botan::secure_vector<uint8_t> decrypt(const EncryptedData& encdata,
    Botan::secure_vector<uint8_t> plaintext = encdata.ciphertext;
 
    // decrypt the symmetric key
-   const Botan::PK_Decryptor_EME asym_cipher(privkey, rng, "EME-OAEP(SHA-256,MGF1)");
+   const Botan::PK_Decryptor_EME asym_cipher(privkey, rng, encryption_options());
    const auto key = asym_cipher.decrypt(encdata.encryptedKey);
 
    // decrypt the data symmetrically
