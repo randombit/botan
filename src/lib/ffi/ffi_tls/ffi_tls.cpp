@@ -139,11 +139,7 @@ namespace {
 
 using namespace Botan_FFI;
 
-/*
-* A NULL rng selects an internal system RNG. Otherwise the object using the
-* RNG shares ownership with the caller's handle, which may be destroyed
-* afterwards.
-*/
+// NULL selects an internal system RNG
 std::shared_ptr<Botan::RandomNumberGenerator> rng_for(botan_rng_t rng) {
    if(rng != nullptr) {
       return safe_get_sp(rng);
@@ -344,6 +340,37 @@ int botan_tls_ciphersuite_view_name(uint16_t ciphersuite_code, botan_view_ctx ct
       }
       return invoke_view_callback(view, ctx, suite->to_string());
    });
+}
+
+/*
+* Callbacks
+*/
+
+int botan_tls_callbacks_init(botan_tls_callbacks_t* cb,
+                             botan_tls_emit_data_fn emit_data,
+                             botan_tls_record_received_fn record_received,
+                             botan_tls_alert_received_fn alert_received) {
+   if(any_null_pointers(cb, emit_data, record_received, alert_received)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   *cb = nullptr;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto table = std::make_unique<FFI_TLS_Callbacks_Table>();
+      table->emit_data = emit_data;
+      table->record_received = record_received;
+      table->alert_received = alert_received;
+      return ffi_new_object(cb, std::move(table));
+   });
+}
+
+int botan_tls_callbacks_set_handshake_complete(botan_tls_callbacks_t cb, botan_tls_handshake_complete_fn fn) {
+   return BOTAN_FFI_VISIT(cb, [=](auto& t) { t.handshake_complete = fn; });
+}
+
+int botan_tls_callbacks_destroy(botan_tls_callbacks_t cb) {
+   return BOTAN_FFI_CHECKED_DELETE(cb);
 }
 
 }  // extern "C"

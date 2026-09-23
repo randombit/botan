@@ -16,6 +16,7 @@
 #include <botan/tls_session_manager.h>
 #include <botan/x509cert.h>
 #include <botan/internal/ffi_util.h>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -70,6 +71,17 @@ class BOTAN_TEST_API FFI_TLS_Credentials final : public Botan::Credentials_Manag
       std::vector<Chain> m_chains;
 };
 
+/**
+* The callbacks behind botan_tls_callbacks_t; the context pointer belongs to
+* the channel.
+*/
+struct FFI_TLS_Callbacks_Table {
+      botan_tls_emit_data_fn emit_data = nullptr;
+      botan_tls_record_received_fn record_received = nullptr;
+      botan_tls_alert_received_fn alert_received = nullptr;
+      botan_tls_handshake_complete_fn handshake_complete = nullptr;
+};
+
 }  // namespace Botan_FFI
 
 extern "C" {
@@ -79,6 +91,7 @@ extern "C" {
 BOTAN_FFI_DECLARE_SHARED_STRUCT(botan_tls_policy_struct, const Botan::TLS::Policy, 0x19781017);
 BOTAN_FFI_DECLARE_SHARED_STRUCT(botan_tls_credentials_struct, Botan_FFI::FFI_TLS_Credentials, 0x5C3A9E41);
 BOTAN_FFI_DECLARE_SHARED_STRUCT(botan_tls_session_manager_struct, Botan::TLS::Session_Manager, 0xB7D2E60C);
+BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_tls_callbacks_struct, Botan_FFI::FFI_TLS_Callbacks_Table, 0x3F8A2D57);
 
 }  // extern "C"
 
