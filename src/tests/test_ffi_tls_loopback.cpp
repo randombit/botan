@@ -65,6 +65,24 @@ namespace {
 
 // NOLINTEND(*-macro-usage)
 
+int view_bytes_fn(void* ctx, const uint8_t* buf, size_t len) {
+   if(ctx == nullptr || buf == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   static_cast<std::vector<uint8_t>*>(ctx)->assign(buf, buf + len);
+   return BOTAN_FFI_SUCCESS;
+}
+
+int view_string_fn(void* ctx, const char* str, size_t len) {
+   if(ctx == nullptr || str == nullptr || len == 0) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   // discard the null terminator
+   *static_cast<std::string*>(ctx) = std::string(str, len - 1);
+   return BOTAN_FFI_SUCCESS;
+}
+
 /*
 * Loopback tests: a client and a server channel connected through in-memory
 * queues, with certificates generated at runtime and loaded through the FFI.
@@ -427,6 +445,17 @@ std::vector<uint16_t> offered_versions() {
    return versions;
 }
 
+uint16_t expected_version(uint16_t offered) {
+   if(offered != 0) {
+      return offered;
+   }
+   #if defined(BOTAN_HAS_TLS_13)
+   return BOTAN_TLS_VERSION_TLS_13;
+   #else
+   return BOTAN_TLS_VERSION_TLS_12;
+   #endif
+}
+
 const char* version_name(uint16_t offered) {
    if(offered == BOTAN_TLS_VERSION_TLS_13) {
       return "TLS 1.3";
@@ -443,7 +472,9 @@ class FFI_TLS_Loopback_Test final : public Test {
          std::vector<Test::Result> results;
          results.push_back(test_init_errors());
          for(const uint16_t version : offered_versions()) {
-            results.push_back(test_basic_handshake(version));
+            results.push_back(test_handshake(version));
+            results.push_back(test_resumption(version));
+            results.push_back(test_chain_selection(version));
          }
          return results;
       }
@@ -628,7 +659,7 @@ class FFI_TLS_Loopback_Test final : public Test {
          return result;
       }
 
-      static Test::Result test_basic_handshake(uint16_t version) {
+      static Test::Result test_handshake(uint16_t version) {
          Test::Result result(std::string("FFI TLS loopback handshake ") + version_name(version));
          Handles h;
          Endpoint client;
@@ -641,17 +672,28 @@ class FFI_TLS_Loopback_Test final : public Test {
 
          server.send_from_handshake = "hello from the server";
 
-         if(!result.test_rc_ok("init_server", h.server(server, cb, policy, server_creds, nullptr))) {
+         if(!result.test_rc_ok("init_server",
+                               h.server(server, cb, policy, server_creds, nullptr, {"test/1", "test/2"}))) {
             return result;
          }
          result.test_sz_eq("Server emits nothing at creation", server.emit_calls, 0);
+
+         // Before the handshake
+         uint16_t code = 0;
+         TEST_FFI_RC(
+            BOTAN_FFI_ERROR_INVALID_OBJECT_STATE, botan_tls_channel_get_protocol_version, (server.chan, &code));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE, botan_tls_channel_was_resumed, (server.chan));
+         TEST_FFI_RC(
+            BOTAN_FFI_ERROR_NO_VALUE, botan_tls_channel_get_last_alert, (server.chan, nullptr, nullptr, nullptr));
          result.test_i32_eq("Server not active before handshake", botan_tls_channel_is_active(server.chan), 0);
          result.test_i32_eq("Server not closed before handshake", botan_tls_channel_is_closed(server.chan), 0);
          const uint8_t hello[] = {'h', 'i'};
          TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE, botan_tls_channel_send, (server.chan, hello, sizeof(hello)));
 
-         if(!result.test_rc_ok("init_client",
-                               h.client(client, cb, policy, client_creds, nullptr, "server.example.com", version))) {
+         if(!result.test_rc_ok(
+               "init_client",
+               h.client(
+                  client, cb, policy, client_creds, nullptr, "server.example.com", version, {"test/2", "test/1"}))) {
             return result;
          }
          result.test_is_true("ClientHello emitted during init", !client.out.empty());
@@ -674,6 +716,42 @@ class FFI_TLS_Loopback_Test final : public Test {
                             "hello from the server");
          result.test_is_true("No alerts so far", client.alerts.empty() && server.alerts.empty());
 
+         TEST_FFI_OK(botan_tls_channel_get_protocol_version, (client.chan, &code));
+         result.test_u16_eq("Negotiated version", code, expected_version(version));
+         TEST_FFI_OK(botan_tls_channel_get_protocol_version, (server.chan, &code));
+         result.test_u16_eq("Server agrees on the version", code, expected_version(version));
+
+         uint16_t suite = 0;
+         TEST_FFI_OK(botan_tls_channel_get_ciphersuite, (client.chan, &suite));
+         result.test_is_true("Ciphersuite code set", suite != 0);
+         std::string suite_name;
+         TEST_FFI_OK(botan_tls_ciphersuite_view_name, (suite, &suite_name, view_string_fn));
+         result.test_str_not_empty("Ciphersuite name", suite_name);
+
+         result.test_i32_eq("Not resumed", botan_tls_channel_was_resumed(client.chan), 0);
+
+         std::string alpn;
+         TEST_FFI_OK(botan_tls_channel_view_application_protocol, (client.chan, &alpn, view_string_fn));
+         result.test_str_eq("Server preference decides ALPN", alpn, "test/1");
+         TEST_FFI_OK(botan_tls_channel_view_application_protocol, (server.chan, &alpn, view_string_fn));
+         result.test_str_eq("Server sees the same protocol", alpn, "test/1");
+
+         size_t count = 0;
+         TEST_FFI_OK(botan_tls_channel_peer_cert_count, (client.chan, &count));
+         result.test_sz_eq("Client sees the server chain", count, 2);
+         botan_x509_cert_t peer = nullptr;
+         TEST_FFI_OK(botan_tls_channel_peer_cert, (client.chan, 0, &peer));
+         if(peer != nullptr) {
+            std::vector<uint8_t> key_bits;
+            TEST_FFI_OK(botan_x509_cert_view_public_key_bits, (peer, &key_bits, view_bytes_fn));
+            result.test_is_true("Peer certificate is the server certificate", key_bits == fixture().server_key_bits);
+            TEST_FFI_OK(botan_x509_cert_destroy, (peer));
+         }
+         TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE, botan_tls_channel_peer_cert, (client.chan, 2, &peer));
+         TEST_FFI_OK(botan_tls_channel_peer_cert_count, (server.chan, &count));
+         result.test_sz_eq("Server saw no client certificate", count, 0);
+         TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE, botan_tls_channel_peer_cert, (server.chan, 0, &peer));
+
          // Application data in both directions, including a multi-record message
          client.received.clear();
          const std::string small = "ping";
@@ -690,24 +768,131 @@ class FFI_TLS_Loopback_Test final : public Test {
          pump(client, server);
          result.test_is_true("Client received the large message", client.received == big);
          TEST_FFI_OK(botan_tls_channel_send, (client.chan, nullptr, 0));
+         TEST_FFI_OK(botan_tls_channel_send, (client.chan, big.data(), 0));
 
          // Orderly shutdown started by the client
          TEST_FFI_OK(botan_tls_channel_close, (client.chan));
          result.test_i32_eq("Client closed for writing", botan_tls_channel_is_closed_for_writing(client.chan), 1);
+         if(expected_version(version) == BOTAN_TLS_VERSION_TLS_13) {
+            result.test_i32_eq("TLS 1.3 client still reads", botan_tls_channel_is_closed_for_reading(client.chan), 0);
+            result.test_i32_eq("TLS 1.3 client not fully closed yet", botan_tls_channel_is_closed(client.chan), 0);
+         } else {
+            result.test_i32_eq("TLS 1.2 client closed at once", botan_tls_channel_is_closed(client.chan), 1);
+         }
+         uint16_t alert_code = 0;
+         int fatal = -1;
+         int from_peer = -1;
+         TEST_FFI_OK(botan_tls_channel_get_last_alert, (client.chan, &alert_code, &fatal, &from_peer));
+         result.test_u16_eq("Client sent close_notify", alert_code, BOTAN_TLS_ALERT_CLOSE_NOTIFY);
+         result.test_i32_eq("close_notify is a warning", fatal, 0);
+         result.test_i32_eq("close_notify was sent by us", from_peer, 0);
          pump(client, server);
          result.test_sz_eq("Server got one alert", server.alerts.size(), 1);
          if(!server.alerts.empty()) {
             result.test_u16_eq("Server got close_notify", server.alerts[0].first, BOTAN_TLS_ALERT_CLOSE_NOTIFY);
             result.test_i32_eq("as a warning", server.alerts[0].second, 0);
          }
+         TEST_FFI_OK(botan_tls_channel_get_last_alert, (server.chan, &alert_code, &fatal, &from_peer));
+         result.test_i32_eq("Server's last alert came from the peer", from_peer, 1);
          result.test_i32_eq("Server closed for reading", botan_tls_channel_is_closed_for_reading(server.chan), 1);
+         // The peer answers close_notify with its own, so both sides end up closed
          result.test_sz_eq("Client got the server's close_notify", client.alerts.size(), 1);
          result.test_i32_eq("Client closed", botan_tls_channel_is_closed(client.chan), 1);
          result.test_i32_eq("Server closed", botan_tls_channel_is_closed(server.chan), 1);
          result.test_i32_eq(
             "Handshake state survives the close", botan_tls_channel_is_handshake_complete(client.chan), 1);
          TEST_FFI_OK(botan_tls_channel_close, (client.chan));
+         TEST_FFI_OK(botan_tls_channel_close, (server.chan));
+         result.test_sz_eq("Closing again emits nothing", server.out.size() + client.out.size(), 0);
          TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE, botan_tls_channel_send, (client.chan, hello, sizeof(hello)));
+
+         // Data arriving after the orderly close: TLS 1.3 ignores it, TLS 1.2
+         // still decodes records and reports damaged ones
+         const uint8_t junk[] = {0x17, 0x03, 0x03, 0x00, 0x01, 0x00};
+         size_t needed = 99;
+         if(expected_version(version) == BOTAN_TLS_VERSION_TLS_13) {
+            TEST_FFI_OK(botan_tls_channel_received_data, (server.chan, junk, sizeof(junk), &needed));
+            result.test_sz_eq("No more bytes wanted", needed, 0);
+         } else {
+            result.test_is_true("TLS 1.2 reports the damaged record",
+                                botan_tls_channel_received_data(server.chan, junk, sizeof(junk), &needed) < 0);
+         }
+
+         return result;
+      }
+
+      static Test::Result test_resumption(uint16_t version) {
+         Test::Result result(std::string("FFI TLS loopback resumption ") + version_name(version));
+         Handles h;
+
+         auto* cb = h.callbacks_with(ep_handshake);
+         auto* policy = h.policy("default");
+         auto* client_creds = h.trust_ca();
+         auto* server_creds = h.server_creds();
+         auto* client_sessions = h.memory_manager();
+         auto* server_sessions = h.memory_manager();
+
+         for(int connection = 0; connection != 2; ++connection) {
+            Endpoint client;
+            Endpoint server;
+            if(!result.test_rc_ok("init_server", h.server(server, cb, policy, server_creds, server_sessions)) ||
+               !result.test_rc_ok(
+                  "init_client",
+                  h.client(client, cb, policy, client_creds, client_sessions, "server.example.com", version))) {
+               return result;
+            }
+            pump(client, server);
+            result.test_i32_eq("Handshake complete", botan_tls_channel_is_handshake_complete(client.chan), 1);
+            const int expected = (connection == 0) ? 0 : 1;
+            result.test_i32_eq("Client resumption state", botan_tls_channel_was_resumed(client.chan), expected);
+            result.test_i32_eq("Server resumption state", botan_tls_channel_was_resumed(server.chan), expected);
+
+            const std::string msg = "data on connection " + std::to_string(connection);
+            TEST_FFI_OK(botan_tls_channel_send,
+                        (client.chan, reinterpret_cast<const uint8_t*>(msg.data()), msg.size()));
+            pump(client, server);
+            result.test_str_eq("Data arrives", std::string(server.received.begin(), server.received.end()), msg);
+
+            TEST_FFI_OK(botan_tls_channel_close, (client.chan));
+            pump(client, server);
+            TEST_FFI_OK(botan_tls_channel_close, (server.chan));
+            pump(client, server);
+            result.test_i32_eq("Closed", botan_tls_channel_is_closed(client.chan), 1);
+         }
+
+         return result;
+      }
+
+      static Test::Result test_chain_selection(uint16_t version) {
+         Test::Result result(std::string("FFI TLS loopback chain selection ") + version_name(version));
+         Handles h;
+
+         auto* cb = h.callbacks_with(nullptr);
+         auto* policy = h.policy("default");
+         auto* server_creds = h.server_creds(true);
+         auto* trusted = h.trust_ca();
+
+         // The server has an ECDSA chain for server.example.com and an RSA
+         // chain for rsa.example.com; the name the client asks for decides
+         for(const auto& [name, expected_key] : std::vector<std::pair<std::string, const std::vector<uint8_t>*>>{
+                {"server.example.com", &fixture().server_key_bits},
+                {"rsa.example.com", &fixture().rsa_server_key_bits},
+             }) {
+            Endpoint client;
+            Endpoint server;
+            if(result.test_rc_ok("init", h.server(server, cb, policy, server_creds, nullptr)) &&
+               result.test_rc_ok("init", h.client(client, cb, policy, trusted, nullptr, name.c_str(), version))) {
+               pump(client, server);
+               result.test_i32_eq("Handshake for " + name, botan_tls_channel_is_handshake_complete(client.chan), 1);
+               botan_x509_cert_t peer = nullptr;
+               if(TEST_FFI_OK(botan_tls_channel_peer_cert, (client.chan, 0, &peer))) {
+                  std::vector<uint8_t> key_bits;
+                  TEST_FFI_OK(botan_x509_cert_view_public_key_bits, (peer, &key_bits, view_bytes_fn));
+                  result.test_is_true("Chain matching " + name + " was selected", key_bits == *expected_key);
+                  TEST_FFI_OK(botan_x509_cert_destroy, (peer));
+               }
+            }
+         }
 
          return result;
       }

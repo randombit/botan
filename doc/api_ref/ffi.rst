@@ -2900,7 +2900,7 @@ TLS Channels
    receives plaintext through the record_received callback. Don't mess with it.
 
    Callbacks run from inside ``botan_tls_channel_init_client`` (which emits the
-   ClientHello), ``received_data``, ``send`` and ``close``. The
+   ClientHello), ``received_data``, ``send``, ``send_alert`` and ``close``. The
    library also emits records of its own (key updates, session tickets,
    alerts), so emit_data may run inside any ``received_data`` or ``send`` call.
 
@@ -2910,11 +2910,11 @@ TLS Channels
    emit_data callback returning nonzero marks the channel as failed: the
    function in progress returns ``BOTAN_FFI_ERROR_TLS_ERROR``,
    ``botan_tls_channel_is_closed`` returns 1 and further ``send``,
-   ``received_data`` and ``close`` calls return
+   ``send_alert``, ``received_data`` and ``close`` calls return
    ``BOTAN_FFI_ERROR_INVALID_OBJECT_STATE``.
 
    From inside record_received and handshake_complete the application may call
-   ``botan_tls_channel_send`` and the query functions on the same
+   ``botan_tls_channel_send``, ``send_alert`` and the query functions on the same
    channel. It must not call ``received_data``, ``close`` or ``destroy`` from
    inside any callback of the channel, and nothing at all from inside emit_data;
    these cases return ``BOTAN_FFI_ERROR_INVALID_OBJECT_STATE``.
@@ -2968,7 +2968,7 @@ TLS Channels
    returns. ``bytes_needed`` (may be NULL) receives a hint how many more bytes
    complete the current record. Returns ``BOTAN_FFI_ERROR_TLS_ERROR`` if the
    peer's data or a callback caused a fatal alert (the alert was emitted and the
-   channel is closed),
+   channel is closed; see ``botan_tls_channel_get_last_alert``),
    ``BOTAN_FFI_ERROR_INVALID_INPUT`` or ``BOTAN_FFI_ERROR_BAD_MAC`` for
    undecodable or unauthentic records. After a fatal alert the channel ignores
    further data; after an orderly close_notify exchange a TLS 1.2 channel still
@@ -2979,7 +2979,12 @@ TLS Channels
    Encrypt and emit application data. Requires ``botan_tls_channel_is_active``,
    otherwise returns ``BOTAN_FFI_ERROR_INVALID_OBJECT_STATE``.
 
+.. cpp:function:: int botan_tls_channel_send_alert(botan_tls_channel_t chan, uint16_t alert_code, int is_fatal)
+
    Send an alert with the given code and level. A fatal alert closes the channel.
+   Before its first ``received_data`` call a server whose policy allows only TLS
+   1.2 emits nothing (see ``botan_tls_channel_close``); a fatal alert closes the
+   channel all the same.
 
 .. cpp:function:: int botan_tls_channel_close(botan_tls_channel_t chan)
 
@@ -3014,27 +3019,48 @@ TLS Channels
 
    Returns 1 if no more data may be sent.
 
+The following getters describe the negotiated session and return
+``BOTAN_FFI_ERROR_INVALID_OBJECT_STATE`` until the handshake completed.
+
+.. cpp:function:: int botan_tls_channel_get_protocol_version(botan_tls_channel_t chan, uint16_t* version_code)
+
    The negotiated protocol version.
 
+.. cpp:function:: int botan_tls_channel_get_ciphersuite(botan_tls_channel_t chan, uint16_t* ciphersuite_code)
+
    The negotiated ciphersuite code (see ``botan_tls_ciphersuite_view_name``).
+
+.. cpp:function:: int botan_tls_channel_was_resumed(botan_tls_channel_t chan)
 
    Returns 1 if the session was resumed from an earlier one, 0 after a full
    handshake.
 
+.. cpp:function:: int botan_tls_channel_view_application_protocol(botan_tls_channel_t chan, \
+                  botan_view_ctx ctx, botan_view_str_fn view)
+
    View the application protocol negotiated via ALPN, or
    ``BOTAN_FFI_ERROR_NO_VALUE`` if none was negotiated.
 
+.. cpp:function:: int botan_tls_channel_peer_cert_count(botan_tls_channel_t chan, size_t* count)
+
    The number of certificates in the peer's chain, 0 if the peer sent none.
+
+.. cpp:function:: int botan_tls_channel_peer_cert(botan_tls_channel_t chan, size_t index, botan_x509_cert_t* cert)
 
    A copy of the index-th certificate of the peer's chain (0 = the peer's own
    certificate), owned by the caller. Returns ``BOTAN_FFI_ERROR_OUT_OF_RANGE``
    past the end.
 
+.. cpp:function:: int botan_tls_channel_get_last_alert(botan_tls_channel_t chan, uint16_t* alert_code, \
+                  int* was_fatal, int* from_peer)
+
    The last alert sent or received on this channel: its code, whether it was
    fatal and whether it came from the peer (1) or was sent by this channel (0),
    including alerts the library sent because of a protocol error or a failing
-   callback. Returns ``BOTAN_FFI_ERROR_NO_VALUE`` if no alert occurred. Any
-   output pointer may be NULL. Usable at any time.
+   callback. An alert requested through ``botan_tls_channel_send_alert`` or
+   ``botan_tls_channel_close`` counts as sent even if the channel could not emit
+   it (see ``botan_tls_channel_close``). Returns ``BOTAN_FFI_ERROR_NO_VALUE`` if
+   no alert occurred. Any output pointer may be NULL. Usable at any time.
 
 .. cpp:function:: int botan_tls_channel_destroy(botan_tls_channel_t chan)
 
