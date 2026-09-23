@@ -4,18 +4,41 @@ Release Notes
 Version 3.14.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add new type ``PK_Signature_Options`` which allows precisely controlling how
-  signatures are created and verified. (GH #5849)
+* Add types ``PK_Signature_Options`` ``PK_Encryption_Options``, ``PK_KEM_Options``,
+  and ``PK_Key_Agreement_Options`` which allow an application to precisely control
+  how public key operations (signature, encryption, decryption, KEM, etc) are
+  performed. (GH #5489 #5864)
 
-* The TLS server now validates that the host name received in the server_name
-  (SNI) extension is a syntactically valid DNS name, as required by RFC 6066,
-  rejecting the handshake with an illegal_parameter alert otherwise. The name
-  passed to the ``Credentials_Manager`` and other callbacks is now the
-  canonical (lowercased) form.
+* Add an implementation of the BLS12-381 pairing friendly curve, including the
+  groups G1, G2, and Gt and the pairing operation. (GH #5718)
 
-* Fix a bug introduced in 3.13.0 where, in builds without the system RNG,
-  ``RandomNumberGenerator::randomize_with_ts_input`` passed only the low 32 bits
-  of the timestamp, and never the process id, as additional input. (GH #5924)
+* Rewrite the Ed25519 implementation to use dense field arithmetic and to
+  compute the basepoint multiplication tables at runtime, rather than embedding
+  them in the source. On 64-bit platforms signing is about 50% faster and
+  verification about 33% faster. (GH #5893)
+
+* Add support for parallel hash function invocations, including AVX2/AVX512
+  implementations of SHA-256, SHA-512, and SHAKE (GH #5493 #5865 #5867 #5869
+  #5871 #5872 #5873)
+
+* Optimize SLH-DSA, XMSS, HSS-LSM, FrodoKEM, and ML-KEM using parallel hash
+  function execution. (GH #5866 #5868 #5870 #5876 #5878)
+
+* Add a certificate cache to the macOS system certificate store, implement
+  ``contains()`` directly, and query the keychain by issuer DN and serial
+  number instead of scanning all certificates of an issuer. (GH #5541 #5929)
+
+* The Python binding now can adapt itself to any version of Botan3. (GH #5851)
+
+* Add an experimental C API for TLS in the new ``ffi_tls`` module. Experimental
+  modules are not built by default and not covered by SemVer. (GH #2492 #5941)
+
+* Improve the performance of X.509 certificate parsing, including PEM decoding,
+  OID decoding, and extension handling. (GH #5888 #5889 #5890 #5891)
+
+* Optimize multiprecision integer division operations, and convert all
+  such divisions to be constant time with respect to their inputs.
+  (GH #5849 #5880 #5883 #5884)
 
 * Rework how stateful RNGs decide that they are seeded. Previously a call of
   ``randomize_with_input`` with an empty output and a non-empty input of
@@ -30,28 +53,78 @@ Version 3.14.0, Not Yet Released
   self-reported entropy estimate is taken into account when deciding if the
   RNG is seeded. (GH #5928 #5945)
 
+* The TLS server now validates that the host name received in the server_name
+  (SNI) extension is a syntactically valid DNS name, as required by RFC 6066.
+  The name passed to the ``Credentials_Manager`` and other callbacks is now the
+  canonical (lowercased) form. (GH #5937)
+
+* Fix a bug where a TLS 1.2 client configured with multiple certificate chains
+  selected among them arbitrarily, without considering the server's
+  signature_algorithms extension. (GH #5932)
+
+* Fix the in-memory TLS session manager, which ordered stored sessions by
+  session ID rather than by recency, so the wrong session could be evicted or
+  returned. (GH #5847)
+
+* Fix a bug introduced in 3.13.0 where, in builds without the system RNG,
+  ``RandomNumberGenerator::randomize_with_ts_input`` passed only the low 32 bits
+  of the timestamp, and never the process id, as additional input. (GH #5924 #5926)
+
+* Fix various bugs in decoding the RFC 3779 IP address and AS identifier
+  extensions. The decoder now rejects encodings which are not in the canonical
+  form required by RFC 3779 (unsorted, overlapping, or unmerged ranges, or
+  ranges which should have been encoded as a prefix) rather than silently
+  sorting and merging the decoded ranges. (GH #5957)
+
+* All paths which decode or construct an ``EC_Group`` now verify the complete
+  set of group parameters, including generator validity, the Hasse bound, and
+  the curve discriminant. Anomalous curves (where the order equals the field
+  prime) are now rejected, and the deprecated ``EC_Group`` constructor rejects
+  cofactors of zero or greater than 16. (GH #5921)
+
+* Add ``EC_Group::register_custom_group``, which makes explicit the registration
+  behavior previously only available as a side effect of the ``EC_Group``
+  constructor taking the curve parameters. (GH #5922)
+
+* Add ``group`` functions returning the associated ``EC_Group`` to ``EC_Scalar``
+  and ``EC_AffinePoint``. (GH #5948)
+
 * Password hash tuning (``PasswordHashFamily::tune_params``) now measures the
   CPU time of the calling thread where available (falling back to a monotonic
   clock), and uses the fastest of several samples rather than the mean. This
   makes the result much less sensitive to concurrent load and clock adjustments.
+  (GH #5898)
 
 * By default, ECDSA signatures are now randomized rather than deterministic even
   when RFC 6979 support is available at build time. Deterministic signatures can
   be requested using the API ``PK_Signature_Options::with_deterministic_signature``
-  or by appending ",Deterministic" to the normal hash specifier string. (GH #5849)
+  or by appending ",Deterministic" to the normal hash specifier string. (GH #5489)
 
-* The Python binding now can adapt itself to any version of Botan3. (GH #5851)
+* Add ``PKCS12::mac_protected`` which indicates if the PKCS #12 file was
+  protected using a MAC. (GH #5902)
+
+* ``BER_Decoder::decode`` can now decode directly into byte-oriented strong
+  types. (GH #5935 #5946)
+
+* Deprecate the public header ``pem.h``; it will become internal in Botan4.
+  (GH #5891)
+
+* Optimize primality testing by performing trial division by small primes
+  before running Miller-Rabin. (GH #5886)
+
+* ECIES now verifies that the peer's public point is encoded using the point
+  format specified in the ECIES parameters. Also, ``EC_AffinePoint::deserialize``
+  now rejects hybrid encoded points of the wrong length. (GH #5913 #5920)
 
 * Add a ``--one-shot`` flag to the ``speed`` command which causes the public key
   benchmarks to create a new operation object (``PK_Signer``, ``PK_Verifier``,
   etc) for each measured operation, rather than creating one and reusing it.
+  (GH #5951)
 
-* Add support for parallel hash function invocations, including AVX2/AVX512
-  implementations of SHA-256, SHA-512, and SHAKE (GH #5865 #5867 #5869 #5871
-  #5872 #5873)
-
-* Optimize SLH-DSA, XMSS, HSS-LSM, FrodoKEM, and ML-KEM using parallel hash
-  function execution. (GH #5866 #5868 #5870 #5876 #5878)
+* Remove the sandboxing support (``sandbox_init``, ``pledge``, Capsicum) from
+  the command line tool. Recent versions of macOS kill any process which calls
+  ``sandbox_init``, and the other implementations were dead or untested code.
+  (GH #5940 #5942)
 
 * In TLS 1.3 send KeyUpdate requests when the number of records sent or
   received approaches a policy-set limit. (GH #5877)
@@ -59,11 +132,9 @@ Version 3.14.0, Not Yet Released
 * Modify the bitsliced AES implementation to use the native word size of the
   processor, instead of always 32 bits. (GH #5826)
 
-* Enable support for NEON/ARMv8 codepaths on Windows aarch64 (GH #5863)
+* Optimize the Whirlpool compression function on x86-64 and aarch64. (GH #5857 #5892)
 
-* Optimize multiprecision integer division operations, and convert all
-  such divisions to be constant time with respect to their inputs.
-  (GH #5849 #5880 #5883 #5884)
+* Enable support for NEON/ARMv8 codepaths on Windows aarch64 (GH #5863)
 
 * Optimize base58 encoding and decoding (GH #5858)
 
@@ -74,14 +145,31 @@ Version 3.14.0, Not Yet Released
   by default; use ``Jitter_RNG::Mode::FIPS`` to retain the previous behavior.
   (GH #5832)
 
-* CI updates including moving most builds to Ubuntu 26.04, adding Windows Aarch64
-  builders, and updating dependencies used in CI (GH #5846 #5848 #5860 #5861)
+* Fix a latent deadlock in ``Thread_Pool`` which would trigger if a task running
+  in the pool itself queued further work on the same pool. (GH #5874)
 
-* Add a certificate cache to the macOS system certificate store, implement
-  ``contains()`` directly, and query the keychain by issuer DN and serial
-  number instead of scanning all certificates of an issuer. Fix the
-  eviction order of the certificate cache shared with the Windows store.
-  (GH #5541)
+* Fix a race in the FFI layer where the thread-local storage for the last
+  exception message could be accessed after its destruction during process
+  shutdown. (GH #5859)
+
+* Fix a latent bug in the amalgamation generator, where a header which was
+  conditionally included in one file and unconditionally included in another
+  could vanish from the amalgamation depending on include ordering. (GH #5881)
+
+* Add support for precompiled headers with GCC and Clang, enabled using
+  ``--enable-pch``. (GH #5298)
+
+* Various build fixes, including for MinGW with libc++ 20 or later, the import
+  library output directory with GCC on MinGW, and Clang on Aarch64.
+  (GH #5850 #5854 #5875 #5901 #5953 #5954)
+
+* Remove many unused header includes, including from public headers.
+  Applications which relied on transitive includes may need to add explicit
+  includes. (GH #5897)
+
+* CI updates including moving most builds to Ubuntu 26.04, adding Windows Aarch64
+  builders, dropping the 32-bit MIPS cross build, and updating dependencies used
+  in CI (GH #5768 #5846 #5848 #5860 #5861)
 
 Version 3.13.0, 2026-08-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -99,6 +187,7 @@ Version 3.13.0, 2026-08-13
   (GH #5820 #5629)
 
 * Fix a bug where certain DN name constraints were not correctly enforced.
+  (GH #5618)
 
 * Fix an integer overflow in the FFI interface which might be exploitable
   in unusual scenarios involving attacker-control cipher specifiers and
