@@ -1804,6 +1804,56 @@ void IPAddressBlocks::IPAddressFamily::decode_from(Botan::BER_Decoder& from) {
    seq_dec.end_cons();
 }
 
+namespace {
+
+template <IPAddressBlocks::Version V>
+IPAddressBlocks::IPAddressFamily merge(std::vector<IPAddressBlocks::IPAddressFamily>& blocks) {
+   // Merge IPAddressFamilies that have the same afi/safi combination
+   //
+   // see: https://www.rfc-editor.org/rfc/rfc3779.html#section-2.2.3.3
+
+   BOTAN_ASSERT(!blocks.empty(), "Cannot merge an empty set of IP address blocks into a single family");
+
+   // nothing to merge
+   if(blocks.size() == 1) {
+      return blocks[0];
+   }
+
+   bool all_inherit = true;
+   bool none_inherit = true;
+   for(const IPAddressBlocks::IPAddressFamily& block : blocks) {
+      const auto choice = std::get<IPAddressBlocks::IPAddressChoice<V>>(block.addr_choice());
+      all_inherit = !choice.ranges().has_value() && all_inherit;  // all the blocks have the 'inherit' value
+      none_inherit = choice.ranges().has_value() && none_inherit;
+   }
+
+   // they are all 'inherit', short-circuit using default constructor for nullopt
+   if(all_inherit) {
+      return IPAddressBlocks::IPAddressFamily(IPAddressBlocks::IPAddressChoice<V>(), blocks[0].safi());
+   }
+
+   // some are inherit, and some have values - no sensible way to merge them
+   if(!all_inherit && !none_inherit) {
+      throw Decoding_Error("Invalid IPAddressBlocks: Only one of 'inherit' or 'do not inherit' is allowed per family");
+   }
+
+   std::vector<IPAddressBlocks::IPAddressOrRange<V>> merged_ranges;
+   for(const auto& block : blocks) {
+      const auto choice = std::get<IPAddressBlocks::IPAddressChoice<V>>(block.addr_choice());
+      const auto ranges = choice.ranges().value();
+      for(const auto& r : ranges) {
+         merged_ranges.push_back(r);
+      }
+   }
+
+   // we have extracted all the ranges, and now rely on the constructor of IPAddressChoice to merge them
+   IPAddressBlocks::IPAddressChoice<V> choice(merged_ranges);
+   IPAddressBlocks::IPAddressFamily fam(choice, blocks[0].safi());
+   return fam;
+}
+
+}  // namespace
+
 void IPAddressBlocks::sort_and_merge() {
    // Sort IPAddressFamilies by afi/safi values
    //
@@ -1845,52 +1895,6 @@ void IPAddressBlocks::sort_and_merge() {
    m_ip_addr_blocks = merged_blocks;
    m_v4_count = v4_count;
    m_v6_count = v6_count;
-}
-
-template <IPAddressBlocks::Version V>
-IPAddressBlocks::IPAddressFamily IPAddressBlocks::merge(std::vector<IPAddressFamily>& blocks) {
-   // Merge IPAddressFamilies that have the same afi/safi combination
-   //
-   // see: https://www.rfc-editor.org/rfc/rfc3779.html#section-2.2.3.3
-
-   BOTAN_ASSERT(!blocks.empty(), "Cannot merge an empty set of IP address blocks into a single family");
-
-   // nothing to merge
-   if(blocks.size() == 1) {
-      return blocks[0];
-   }
-
-   bool all_inherit = true;
-   bool none_inherit = true;
-   for(const IPAddressFamily& block : blocks) {
-      const IPAddressChoice<V> choice = std::get<IPAddressChoice<V>>(block.addr_choice());
-      all_inherit = !choice.ranges().has_value() && all_inherit;  // all the blocks have the 'inherit' value
-      none_inherit = choice.ranges().has_value() && none_inherit;
-   }
-
-   // they are all 'inherit', short-circuit using default constructor for nullopt
-   if(all_inherit) {
-      return IPAddressFamily(IPAddressChoice<V>(), blocks[0].safi());
-   }
-
-   // some are inherit, and some have values - no sensible way to merge them
-   if(!all_inherit && !none_inherit) {
-      throw Decoding_Error("Invalid IPAddressBlocks: Only one of 'inherit' or 'do not inherit' is allowed per family");
-   }
-
-   std::vector<IPAddressOrRange<V>> merged_ranges;
-   for(const IPAddressFamily& block : blocks) {
-      const IPAddressChoice<V> choice = std::get<IPAddressChoice<V>>(block.addr_choice());
-      const std::vector<IPAddressOrRange<V>> ranges = choice.ranges().value();
-      for(const IPAddressOrRange<V>& r : ranges) {
-         merged_ranges.push_back(r);
-      }
-   }
-
-   // we have extracted all the ranges, and now rely on the constructor of IPAddressChoice to merge them
-   IPAddressChoice<V> choice(merged_ranges);
-   IPAddressFamily fam(choice, blocks[0].safi());
-   return fam;
 }
 
 namespace {
