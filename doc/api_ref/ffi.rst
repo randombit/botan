@@ -2825,3 +2825,24 @@ TLS Session Managers
 .. cpp:function:: int botan_tls_session_manager_destroy(botan_tls_session_manager_t mgr)
 
    Destroy the object.
+
+TLS Versions and Alerts
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The protocol version codes ``BOTAN_TLS_VERSION_TLS_12`` (0x0303) and
+``BOTAN_TLS_VERSION_TLS_13`` (0x0304) and the alert codes ``BOTAN_TLS_ALERT_*``
+(for example ``BOTAN_TLS_ALERT_CLOSE_NOTIFY``, ``BOTAN_TLS_ALERT_BAD_CERTIFICATE``)
+use the values of the wire encoding.
+
+.. cpp:function:: int botan_tls_version_is_available(uint16_t version_code)
+
+   Returns 1 if the protocol version is compiled into the library (modules
+   ``tls12`` and ``tls13`` respectively), 0 for any other value. Never fails.
+
+.. cpp:function:: int botan_tls_ciphersuite_view_name(uint16_t ciphersuite_code, \
+                  botan_view_ctx ctx, botan_view_str_fn view)
+
+   View the name of a ciphersuite code as the library spells it, which is the
+   IANA name without the ``TLS_`` prefix, for example ``AES_128_GCM_SHA256`` for
+   0x1301. Returns ``BOTAN_FFI_ERROR_NO_VALUE`` for an unknown code.
+

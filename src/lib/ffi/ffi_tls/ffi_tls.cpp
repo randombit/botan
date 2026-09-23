@@ -9,9 +9,11 @@
 #include <botan/assert.h>
 #include <botan/certstor.h>
 #include <botan/system_rng.h>
+#include <botan/tls_ciphersuite.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_session_manager_memory.h>
 #include <botan/tls_session_manager_noop.h>
+#include <botan/tls_version.h>
 #include <botan/x509_crl.h>
 #include <botan/x509cert.h>
 #include <botan/internal/ffi_cert.h>
@@ -132,6 +134,24 @@ std::shared_ptr<Botan::Private_Key> FFI_TLS_Credentials::private_key_for(const B
 }
 
 }  // namespace Botan_FFI
+
+namespace {
+
+using namespace Botan_FFI;
+
+/*
+* A NULL rng selects an internal system RNG. Otherwise the object using the
+* RNG shares ownership with the caller's handle, which may be destroyed
+* afterwards.
+*/
+std::shared_ptr<Botan::RandomNumberGenerator> rng_for(botan_rng_t rng) {
+   if(rng != nullptr) {
+      return safe_get_sp(rng);
+   }
+   return std::make_shared<Botan::System_RNG>();
+}
+
+}  // namespace
 
 extern "C" {
 
@@ -286,15 +306,7 @@ int botan_tls_session_manager_init_memory(botan_tls_session_manager_t* mgr, bota
    *mgr = nullptr;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      const auto rng_ptr = [&]() -> std::shared_ptr<Botan::RandomNumberGenerator> {
-         if(rng != nullptr) {
-            return safe_get_sp(rng);
-         } else {
-            return std::make_shared<Botan::System_RNG>();
-         }
-      }();
-
-      return ffi_new_object(mgr, std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng_ptr, max_sessions));
+      return ffi_new_object(mgr, std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng_for(rng), max_sessions));
    });
 }
 
@@ -311,6 +323,27 @@ int botan_tls_session_manager_init_noop(botan_tls_session_manager_t* mgr) {
 
 int botan_tls_session_manager_destroy(botan_tls_session_manager_t mgr) {
    return BOTAN_FFI_CHECKED_DELETE(mgr);
+}
+
+/*
+* Versions and ciphersuites
+*/
+
+int botan_tls_version_is_available(uint16_t version_code) {
+   if(version_code == BOTAN_TLS_VERSION_TLS_12 || version_code == BOTAN_TLS_VERSION_TLS_13) {
+      return Botan::TLS::Protocol_Version(version_code).known_version() ? 1 : 0;
+   }
+   return 0;
+}
+
+int botan_tls_ciphersuite_view_name(uint16_t ciphersuite_code, botan_view_ctx ctx, botan_view_str_fn view) {
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const auto suite = Botan::TLS::Ciphersuite::by_id(ciphersuite_code);
+      if(!suite.has_value()) {
+         return BOTAN_FFI_ERROR_NO_VALUE;
+      }
+      return invoke_view_callback(view, ctx, suite->to_string());
+   });
 }
 
 }  // extern "C"

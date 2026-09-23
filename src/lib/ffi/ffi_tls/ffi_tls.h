@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+/* NOLINTBEGIN(*-macro-usage) */
+
 /*
 * This header is provided by the experimental module ffi_tls, which is not
 * part of a default build (configure with --enable-modules=ffi_tls or
@@ -35,8 +37,7 @@ extern "C" {
 * The compile time version of the TLS FFI API (YYYYMMDD). Matches the value
 * returned by botan_ffi_tls_api_version() and BOTAN_HAS_FFI_TLS in build.h.
 */
-/* NOLINTNEXTLINE(*-macro-usage) */
-#define BOTAN_FFI_TLS_API_VERSION 20260916
+#define BOTAN_FFI_TLS_API_VERSION 20260919
 
 /*
 * TLS policies
@@ -209,6 +210,71 @@ BOTAN_FFI_EXPORT(3, 14) int botan_tls_session_manager_init_noop(botan_tls_sessio
 * @return 0 if success, error if invalid object handle
 */
 BOTAN_FFI_EXPORT(3, 14) int botan_tls_session_manager_destroy(botan_tls_session_manager_t mgr);
+
+/*
+* Protocol versions and alerts
+*/
+
+/**
+* Protocol version codes as used on the wire (Botan::TLS::Protocol_Version).
+*/
+#define BOTAN_TLS_VERSION_TLS_12 0x0303
+#define BOTAN_TLS_VERSION_TLS_13 0x0304
+
+/**
+* Alert codes (RFC 8446 section 6, RFC 5246 section 7.2). The values match
+* the wire encoding and Botan::TLS::AlertType. A received alert may carry
+* any other value as well, because received alert codes are not validated.
+*/
+/* NOLINTNEXTLINE(*-use-enum-class) */
+enum BOTAN_TLS_ALERT {
+   BOTAN_TLS_ALERT_CLOSE_NOTIFY = 0,
+   BOTAN_TLS_ALERT_UNEXPECTED_MESSAGE = 10,
+   BOTAN_TLS_ALERT_BAD_RECORD_MAC = 20,
+   BOTAN_TLS_ALERT_RECORD_OVERFLOW = 22,
+   BOTAN_TLS_ALERT_HANDSHAKE_FAILURE = 40,
+   BOTAN_TLS_ALERT_BAD_CERTIFICATE = 42,
+   BOTAN_TLS_ALERT_UNSUPPORTED_CERTIFICATE = 43,
+   BOTAN_TLS_ALERT_CERTIFICATE_REVOKED = 44,
+   BOTAN_TLS_ALERT_CERTIFICATE_EXPIRED = 45,
+   BOTAN_TLS_ALERT_CERTIFICATE_UNKNOWN = 46,
+   BOTAN_TLS_ALERT_ILLEGAL_PARAMETER = 47,
+   BOTAN_TLS_ALERT_UNKNOWN_CA = 48,
+   BOTAN_TLS_ALERT_ACCESS_DENIED = 49,
+   BOTAN_TLS_ALERT_DECODE_ERROR = 50,
+   BOTAN_TLS_ALERT_DECRYPT_ERROR = 51,
+   BOTAN_TLS_ALERT_PROTOCOL_VERSION = 70,
+   BOTAN_TLS_ALERT_INSUFFICIENT_SECURITY = 71,
+   BOTAN_TLS_ALERT_INTERNAL_ERROR = 80,
+   BOTAN_TLS_ALERT_INAPPROPRIATE_FALLBACK = 86,
+   BOTAN_TLS_ALERT_USER_CANCELED = 90,
+   BOTAN_TLS_ALERT_NO_RENEGOTIATION = 100,
+   BOTAN_TLS_ALERT_MISSING_EXTENSION = 109,
+   BOTAN_TLS_ALERT_UNSUPPORTED_EXTENSION = 110,
+   BOTAN_TLS_ALERT_UNRECOGNIZED_NAME = 112,
+   BOTAN_TLS_ALERT_BAD_CERTIFICATE_STATUS_RESPONSE = 113,
+   BOTAN_TLS_ALERT_UNKNOWN_PSK_IDENTITY = 115,
+   BOTAN_TLS_ALERT_CERTIFICATE_REQUIRED = 116,
+   BOTAN_TLS_ALERT_NO_APPLICATION_PROTOCOL = 120 /* NOLINT(*-trailing-comma) */
+};
+
+/**
+* Return 1 if the protocol version (BOTAN_TLS_VERSION_TLS_12 or
+* BOTAN_TLS_VERSION_TLS_13) is compiled into this library (modules tls12
+* and tls13 respectively), 0 for any other value. Never fails.
+*/
+BOTAN_FFI_EXPORT(3, 14) int botan_tls_version_is_available(uint16_t version_code);
+
+/**
+* View the name of a ciphersuite code as the library spells it, which is the
+* IANA name without the "TLS_" prefix (for example "AES_128_GCM_SHA256" for
+* 0x1301). Returns BOTAN_FFI_ERROR_NO_VALUE for a code the library does not
+* know.
+*/
+BOTAN_FFI_EXPORT(3, 14)
+int botan_tls_ciphersuite_view_name(uint16_t ciphersuite_code, botan_view_ctx ctx, botan_view_str_fn view);
+
+/* NOLINTEND(*-macro-usage) */
 
 #ifdef __cplusplus
 }
