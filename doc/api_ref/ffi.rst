@@ -2699,7 +2699,6 @@ TLS Credentials
    peer and itself: trust anchors and CRLs for verifying the peer's certificate
    chain, and certificate chains with private keys for authenticating this side
    (as a server, or as a client when the server requests a client certificate).
-   It is implemented by an internal ``Botan::Credentials_Manager``.
 
    Everything passed to the setters is copied, so the certificate, CRL and key
    handles may be destroyed after the call. Configure the object before passing
