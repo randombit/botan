@@ -9,8 +9,13 @@
 #include <botan/assert.h>
 #include <botan/certstor.h>
 #include <botan/system_rng.h>
+#include <botan/tls_alert.h>
 #include <botan/tls_ciphersuite.h>
+#include <botan/tls_client.h>
+#include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
+#include <botan/tls_server.h>
+#include <botan/tls_server_info.h>
 #include <botan/tls_session_manager_memory.h>
 #include <botan/tls_session_manager_noop.h>
 #include <botan/tls_version.h>
@@ -24,6 +29,8 @@
 #include <botan/internal/stl_util.h>
 #include <algorithm>
 #include <memory>
+#include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -133,6 +140,77 @@ std::shared_ptr<Botan::Private_Key> FFI_TLS_Credentials::private_key_for(const B
    return nullptr;
 }
 
+/*
+* Alert enumerators are spelled AlertType::X here: GCC 11 crashes on the
+* using-enum spelling Alert::X inside templates and generic lambdas.
+*/
+FFI_TLS_Callbacks::FFI_TLS_Callbacks(const FFI_TLS_Callbacks_Table& table,
+                                     void* ctx,
+                                     std::vector<std::string> server_protocols) :
+      m_table(table), m_ctx(ctx), m_server_protocols(std::move(server_protocols)) {}
+
+void FFI_TLS_Callbacks::tls_emit_data(std::span<const uint8_t> data) {
+   if(m_failed) {
+      throw Botan::TLS::TLS_Exception(Botan::TLS::AlertType::InternalError, "TLS transport failed earlier");
+   }
+
+   m_in_emit = true;
+   const int rc = m_table.emit_data(m_ctx, data.data(), data.size());
+   m_in_emit = false;
+
+   if(rc != 0) {
+      m_failed = true;
+      throw Botan::TLS::TLS_Exception(Botan::TLS::AlertType::InternalError,
+                                      "TLS emit_data callback failed with rc=" + std::to_string(rc));
+   }
+}
+
+void FFI_TLS_Callbacks::tls_record_received(uint64_t seq_no, std::span<const uint8_t> data) {
+   const int rc = m_table.record_received(m_ctx, seq_no, data.data(), data.size());
+   if(rc != 0) {
+      throw Botan::TLS::TLS_Exception(Botan::TLS::AlertType::InternalError,
+                                      "TLS record_received callback failed with rc=" + std::to_string(rc));
+   }
+}
+
+void FFI_TLS_Callbacks::tls_alert(Botan::TLS::Alert alert) {
+   const auto code = static_cast<uint16_t>(alert.type());
+   const int rc = m_table.alert_received(m_ctx, code, alert.is_fatal() ? 1 : 0);
+   if(rc != 0) {
+      throw Botan::TLS::TLS_Exception(Botan::TLS::AlertType::InternalError,
+                                      "TLS alert_received callback failed with rc=" + std::to_string(rc));
+   }
+}
+
+void FFI_TLS_Callbacks::tls_session_established(const Botan::TLS::Session_Summary& summary) {
+   m_summary = summary;
+}
+
+void FFI_TLS_Callbacks::tls_session_activated() {
+   if(m_table.handshake_complete != nullptr) {
+      const int rc = m_table.handshake_complete(m_ctx);
+      if(rc != 0) {
+         throw Botan::TLS::TLS_Exception(Botan::TLS::AlertType::InternalError,
+                                         "TLS handshake_complete callback failed with rc=" + std::to_string(rc));
+      }
+   }
+}
+
+std::string FFI_TLS_Callbacks::tls_server_choose_app_protocol(const std::vector<std::string>& client_protos) {
+   if(m_server_protocols.empty() || client_protos.empty()) {
+      return "";
+   }
+
+   for(const auto& proto : m_server_protocols) {
+      if(Botan::value_exists(client_protos, proto)) {
+         return proto;
+      }
+   }
+
+   throw Botan::TLS::TLS_Exception(Botan::TLS::AlertType::NoApplicationProtocol,
+                                   "No application protocol in common with the client");
+}
+
 }  // namespace Botan_FFI
 
 namespace {
@@ -145,6 +223,92 @@ std::shared_ptr<Botan::RandomNumberGenerator> rng_for(botan_rng_t rng) {
       return safe_get_sp(rng);
    }
    return std::make_shared<Botan::System_RNG>();
+}
+
+std::shared_ptr<Botan::TLS::Session_Manager> session_manager_for(botan_tls_session_manager_t sessions) {
+   if(sessions != nullptr) {
+      return safe_get_sp(sessions);
+   }
+   return std::make_shared<Botan::TLS::Session_Manager_Noop>();
+}
+
+std::vector<std::string> protocol_list(const char* const* protocols, size_t count) {
+   std::vector<std::string> list;
+   list.reserve(count);
+   for(size_t i = 0; i != count; ++i) {
+      if(protocols[i] == nullptr) {
+         throw FFI_Error("Null pointer argument", BOTAN_FFI_ERROR_NULL_POINTER);
+      }
+      list.emplace_back(protocols[i]);
+   }
+   return list;
+}
+
+// The stock policies reject a version whose module is not compiled in as
+// an invalid argument (BAD_PARAMETER); report NOT_IMPLEMENTED instead.
+int check_offer_version(uint16_t offer_version) {
+   if(offer_version == 0) {
+      return BOTAN_FFI_SUCCESS;
+   }
+   if(offer_version == BOTAN_TLS_VERSION_TLS_12) {
+#if defined(BOTAN_HAS_TLS_12)
+      return BOTAN_FFI_SUCCESS;
+#else
+      return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+   if(offer_version == BOTAN_TLS_VERSION_TLS_13) {
+#if defined(BOTAN_HAS_TLS_13)
+      return BOTAN_FFI_SUCCESS;
+#else
+      return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+   return BOTAN_FFI_ERROR_BAD_PARAMETER;
+}
+
+int init_channel(botan_tls_channel_t* chan,
+                 botan_tls_callbacks_t callbacks,
+                 void* ctx,
+                 botan_tls_policy_t policy,
+                 botan_tls_credentials_t creds,
+                 botan_tls_session_manager_t sessions,
+                 botan_rng_t rng,
+                 const char* const* alpn_protocols,
+                 size_t alpn_count,
+                 const char* server_name,
+                 uint16_t server_port,
+                 uint16_t offer_version,
+                 bool is_client) {
+   const auto& table = safe_get(callbacks);
+   const auto protocols = protocol_list(alpn_protocols, alpn_count);
+
+   auto state = std::make_unique<FFI_TLS_Channel>();
+   state->callbacks =
+      std::make_shared<FFI_TLS_Callbacks>(table, ctx, is_client ? std::vector<std::string>() : protocols);
+
+   const auto session_manager = session_manager_for(sessions);
+   const std::shared_ptr<Botan::Credentials_Manager> credentials = safe_get_sp(creds);
+   const auto policy_ptr = safe_get_sp(policy);
+   const auto rng_ptr = rng_for(rng);
+
+   if(is_client) {
+      const auto version = (offer_version == 0) ? Botan::TLS::Protocol_Version::latest_tls_version()
+                                                : Botan::TLS::Protocol_Version(offer_version);
+      state->channel = std::make_unique<Botan::TLS::Client>(state->callbacks,
+                                                            session_manager,
+                                                            credentials,
+                                                            policy_ptr,
+                                                            rng_ptr,
+                                                            Botan::TLS::Server_Information(server_name, server_port),
+                                                            version,
+                                                            protocols);
+   } else {
+      state->channel =
+         std::make_unique<Botan::TLS::Server>(state->callbacks, session_manager, credentials, policy_ptr, rng_ptr);
+   }
+
+   return ffi_new_object(chan, std::move(state));
 }
 
 }  // namespace
@@ -371,6 +535,176 @@ int botan_tls_callbacks_set_handshake_complete(botan_tls_callbacks_t cb, botan_t
 
 int botan_tls_callbacks_destroy(botan_tls_callbacks_t cb) {
    return BOTAN_FFI_CHECKED_DELETE(cb);
+}
+
+/*
+* Channels
+*/
+
+int botan_tls_channel_init_client(botan_tls_channel_t* chan,
+                                  botan_tls_callbacks_t callbacks,
+                                  void* ctx,
+                                  botan_tls_policy_t policy,
+                                  botan_tls_credentials_t creds,
+                                  botan_tls_session_manager_t sessions,
+                                  botan_rng_t rng,
+                                  const char* server_name,
+                                  uint16_t server_port,
+                                  uint16_t offer_version,
+                                  const char* const* alpn_protocols,
+                                  size_t alpn_count,
+                                  uint32_t flags) {
+   if(any_null_pointers(chan, callbacks, policy, creds, server_name)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   if(alpn_protocols == nullptr && alpn_count > 0) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   *chan = nullptr;
+
+   if(flags != 0) {
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
+
+   if(*server_name == '\0') {
+      return BOTAN_FFI_ERROR_BAD_PARAMETER;
+   }
+
+   if(const int rc = check_offer_version(offer_version); rc != BOTAN_FFI_SUCCESS) {
+      return rc;
+   }
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      return init_channel(chan,
+                          callbacks,
+                          ctx,
+                          policy,
+                          creds,
+                          sessions,
+                          rng,
+                          alpn_protocols,
+                          alpn_count,
+                          server_name,
+                          server_port,
+                          offer_version,
+                          true);
+   });
+}
+
+int botan_tls_channel_init_server(botan_tls_channel_t* chan,
+                                  botan_tls_callbacks_t callbacks,
+                                  void* ctx,
+                                  botan_tls_policy_t policy,
+                                  botan_tls_credentials_t creds,
+                                  botan_tls_session_manager_t sessions,
+                                  botan_rng_t rng,
+                                  const char* const* alpn_protocols,
+                                  size_t alpn_count,
+                                  uint32_t flags) {
+   if(any_null_pointers(chan, callbacks, policy, creds)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   if(alpn_protocols == nullptr && alpn_count > 0) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   *chan = nullptr;
+
+   if(flags != 0) {
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      return init_channel(
+         chan, callbacks, ctx, policy, creds, sessions, rng, alpn_protocols, alpn_count, "", 0, 0, false);
+   });
+}
+
+int botan_tls_channel_received_data(botan_tls_channel_t chan, const uint8_t data[], size_t len, size_t* bytes_needed) {
+   if(data == nullptr && len > 0) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   return BOTAN_FFI_VISIT(chan, [=](auto& c) -> int {
+      if(c.callbacks->depth() > 0 || c.callbacks->failed()) {
+         return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
+      }
+
+      const FFI_TLS_Callbacks::Depth_Guard guard(*c.callbacks);
+      const size_t needed = c.channel->received_data(data, len);
+      if(bytes_needed != nullptr) {
+         *bytes_needed = needed;
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+}
+
+int botan_tls_channel_send(botan_tls_channel_t chan, const uint8_t data[], size_t len) {
+   if(data == nullptr && len > 0) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   return BOTAN_FFI_VISIT(chan, [=](auto& c) -> int {
+      if(c.callbacks->in_emit() || c.callbacks->failed() || !c.channel->is_active()) {
+         return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
+      }
+
+      const FFI_TLS_Callbacks::Depth_Guard guard(*c.callbacks);
+      c.channel->send(data, len);
+      return c.callbacks->failed() ? BOTAN_FFI_ERROR_TLS_ERROR : BOTAN_FFI_SUCCESS;
+   });
+}
+
+int botan_tls_channel_close(botan_tls_channel_t chan) {
+   return BOTAN_FFI_VISIT(chan, [=](auto& c) -> int {
+      if(c.callbacks->depth() > 0 || c.callbacks->failed()) {
+         return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
+      }
+
+      const FFI_TLS_Callbacks::Depth_Guard guard(*c.callbacks);
+      c.channel->close();
+      if(c.callbacks->failed()) {
+         return BOTAN_FFI_ERROR_TLS_ERROR;
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+}
+
+int botan_tls_channel_is_handshake_complete(botan_tls_channel_t chan) {
+   return BOTAN_FFI_VISIT(chan, [](const auto& c) -> int { return c.channel->is_handshake_complete() ? 1 : 0; });
+}
+
+int botan_tls_channel_is_active(botan_tls_channel_t chan) {
+   return BOTAN_FFI_VISIT(
+      chan, [](const auto& c) -> int { return (!c.callbacks->failed() && c.channel->is_active()) ? 1 : 0; });
+}
+
+int botan_tls_channel_is_closed(botan_tls_channel_t chan) {
+   return BOTAN_FFI_VISIT(
+      chan, [](const auto& c) -> int { return (c.callbacks->failed() || c.channel->is_closed()) ? 1 : 0; });
+}
+
+int botan_tls_channel_is_closed_for_reading(botan_tls_channel_t chan) {
+   return BOTAN_FFI_VISIT(
+      chan, [](const auto& c) -> int { return (c.callbacks->failed() || c.channel->is_closed_for_reading()) ? 1 : 0; });
+}
+
+int botan_tls_channel_is_closed_for_writing(botan_tls_channel_t chan) {
+   return BOTAN_FFI_VISIT(
+      chan, [](const auto& c) -> int { return (c.callbacks->failed() || c.channel->is_closed_for_writing()) ? 1 : 0; });
+}
+
+int botan_tls_channel_destroy(botan_tls_channel_t chan) {
+   if(chan != nullptr && chan->magic_ok()) {
+      const auto* state = chan->unsafe_get();
+      if(state != nullptr && state->callbacks != nullptr && state->callbacks->depth() > 0) {
+         return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
+      }
+   }
+   return BOTAN_FFI_CHECKED_DELETE(chan);
 }
 
 }  // extern "C"
