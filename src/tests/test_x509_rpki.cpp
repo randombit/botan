@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    #include <botan/ber_dec.h>
    #include <botan/certstor.h>
+   #include <botan/hex.h>
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
    #include <botan/rng.h>
@@ -147,13 +148,19 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
    using Botan::Cert_Extension::IPAddressBlocks;
 
    {
-      const std::string filename("IPAddrBlocksAll.pem");
-      const Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
+      const std::string filename("ip_canonical.pem");
+      const Botan::X509_Certificate cert(Test::data_file("x509/rfc3779/" + filename));
       const auto* ip_addr_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
 
+      if(ip_addr_blocks == nullptr) {
+         result.test_failure("cert is missing the IPAddrBlocks extension");
+         return result;
+      }
+
       const auto& addr_blocks = ip_addr_blocks->addr_blocks();
-      result.test_is_true("cert has IPAddrBlocks extension", ip_addr_blocks != nullptr);
       result.test_sz_eq("cert has two IpAddrBlocks", addr_blocks.size(), 2);
+      result.test_sz_eq("cert has one IPv4 family", ip_addr_blocks->v4_count(), 1);
+      result.test_sz_eq("cert has one IPv6 family", ip_addr_blocks->v6_count(), 1);
 
       const auto& ipv4block = std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(addr_blocks[0].addr_choice());
       const auto& ipv6block = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(addr_blocks[1].addr_choice());
@@ -180,61 +187,41 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
       const auto& v6_blocks = ipv6block.ranges().value();
 
       // cert contains (in this order)
-      // fa80::/65
-      // fe20::/37
       // 2003:0:6829:3435:420:10c5:0:c4/128
       // ab01:0:0:0:0:0:0:1-cd02:0:0:0:0:0:0:2
+      // fa80::/65
+      // fe20::/37
 
-      result.test_bin_eq(
-         "ipv6 block 0 min",
-         v6_blocks[0].min().value(),
-         {0x20, 0x03, 0x00, 0x00, 0x68, 0x29, 0x34, 0x35, 0x04, 0x20, 0x10, 0xc5, 0x00, 0x00, 0x00, 0xc4});
-      result.test_bin_eq(
-         "ipv6 block 0 max",
-         v6_blocks[0].max().value(),
-         {0x20, 0x03, 0x00, 0x00, 0x68, 0x29, 0x34, 0x35, 0x04, 0x20, 0x10, 0xc5, 0x00, 0x00, 0x00, 0xc4});
-      result.test_bin_eq(
-         "ipv6 block 1 min",
-         v6_blocks[1].min().value(),
-         {0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01});
-      result.test_bin_eq(
-         "ipv6 block 1 max",
-         v6_blocks[1].max().value(),
-         {0xcd, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02});
-      result.test_bin_eq(
-         "ipv6 block 2 min",
-         v6_blocks[2].min().value(),
-         {0xfa, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
-      result.test_bin_eq(
-         "ipv6 block 2 max",
-         v6_blocks[2].max().value(),
-         {0xfa, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
-      result.test_bin_eq(
-         "ipv6 block 3 min",
-         v6_blocks[3].min().value(),
-         {0xfe, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
-      result.test_bin_eq(
-         "ipv6 block 3 max",
-         v6_blocks[3].max().value(),
-         {0xfe, 0x20, 0x00, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
+      result.test_bin_eq("ipv6 block 0 min", v6_blocks[0].min().value(), "2003000068293435042010C5000000C4");
+      result.test_bin_eq("ipv6 block 0 max", v6_blocks[0].max().value(), "2003000068293435042010C5000000C4");
+      result.test_bin_eq("ipv6 block 1 min", v6_blocks[1].min().value(), "AB010000000000000000000000000001");
+      result.test_bin_eq("ipv6 block 1 max", v6_blocks[1].max().value(), "CD020000000000000000000000000002");
+      result.test_bin_eq("ipv6 block 2 min", v6_blocks[2].min().value(), "FA800000000000000000000000000000");
+      result.test_bin_eq("ipv6 block 2 max", v6_blocks[2].max().value(), "FA800000000000007FFFFFFFFFFFFFFF");
+      result.test_bin_eq("ipv6 block 3 min", v6_blocks[3].min().value(), "FE200000000000000000000000000000");
+      result.test_bin_eq("ipv6 block 3 max", v6_blocks[3].max().value(), "FE20000007FFFFFFFFFFFFFFFFFFFFFF");
    }
    {
-      const std::string filename("IPAddrBlocksUnsorted.pem");
-      const Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
+      const std::string filename("ip_safi.pem");
+      const Botan::X509_Certificate cert(Test::data_file("x509/rfc3779/" + filename));
       const auto* ip_addr_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
 
-      // cert contains (in this order)
-      // IPv6 (1) inherit
-      // IPv6 0xff....0xff
-      // IPv4 (2) inherit
-      // IPv4 (1) 192.168.0.0 - 192.168.2.1
-      // IPv4 (1) 192.168.2.2 - 200.0.0.0
-      // IPv4 inherit
+      if(ip_addr_blocks == nullptr) {
+         result.test_failure("cert is missing the IPAddrBlocks extension");
+         return result;
+      }
 
-      // IPv4 ranges should be merged, IPv4 should come before IPv6, all should be sorted by safi
+      // cert contains (in this order)
+      // IPv4 inherit
+      // IPv4 (1) 192.168.0.0 - 200.0.0.0
+      // IPv4 (2) inherit
+      // IPv6 0xff....0xff
+      // IPv6 (1) inherit
 
       const auto& addr_blocks = ip_addr_blocks->addr_blocks();
-      result.test_sz_eq("cert has two IpAddrBlocks", addr_blocks.size(), 5);
+      result.test_sz_eq("cert has five IpAddrBlocks", addr_blocks.size(), 5);
+      result.test_sz_eq("cert has three IPv4 families", ip_addr_blocks->v4_count(), 3);
+      result.test_sz_eq("cert has two IPv6 families", ip_addr_blocks->v6_count(), 2);
 
       result.test_opt_u8_eq("block 0 has no safi", addr_blocks[0].safi(), std::nullopt);
       result.test_is_true(
@@ -259,30 +246,25 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
          std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(addr_blocks[3].addr_choice()).ranges().value();
 
       result.test_sz_eq("block 3 has correct size", block_3.size(), 1);
-      result.test_bin_eq(
-         "block 3 min is correct",
-         block_3[0].min().value(),
-         {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
-      result.test_bin_eq(
-         "block 3 max is correct",
-         block_3[0].max().value(),
-         {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
+      result.test_bin_eq("block 3 min is correct", block_3[0].min().value(), "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+      result.test_bin_eq("block 3 max is correct", block_3[0].max().value(), "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
 
       result.test_opt_u8_eq("block 24 has correct safi", addr_blocks[4].safi(), 1);
       result.test_is_true(
          "block 4 is inherited",
          !std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(addr_blocks[4].addr_choice()).ranges().has_value());
    }
-   {
-      const std::string filename("InvalidIPAddrBlocks.pem");
+   // InvalidIPAddrBlocks contains the 10.0.32.0/20 prefix, but with a 9 for the unused bits
+   // IPAddrBlocksAll has its IPv6 entries in non-canonical (unsorted) order
+   // IPAddrBlocksUnsorted has unsorted and repeated families plus unmerged adjacent ranges
+   for(const std::string filename : {"InvalidIPAddrBlocks.pem", "IPAddrBlocksAll.pem", "IPAddrBlocksUnsorted.pem"}) {
       const Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
 
-      // cert contains the 10.0.32.0/20 prefix, but with a 9 for the unused bits
-
-      result.test_is_true("extension is present", cert.v3_extensions().extension_set(IPAddressBlocks::static_oid()));
+      result.test_is_true("extension is present in " + filename,
+                          cert.v3_extensions().extension_set(IPAddressBlocks::static_oid()));
 
       const auto* ext = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
-      result.test_is_true("extension is not decoded", ext == nullptr);
+      result.test_is_true("extension is not decoded in " + filename, ext == nullptr);
    }
 
    result.end_timer();
@@ -294,73 +276,64 @@ Test::Result test_x509_as_blocks_extension_decode() {
    result.start_timer();
    using Botan::Cert_Extension::ASBlocks;
 
-   {
-      const std::string filename("ASNumberCert.pem");
-      const Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
-
+   auto with_as_identifiers = [&](const std::string& filename, auto&& fn) {
+      const Botan::X509_Certificate cert(Test::data_file("x509/rfc3779/" + filename));
       const auto* as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
+      if(as_blocks == nullptr) {
+         result.test_failure(filename + " is missing the ASBlocks extension");
+      } else {
+         fn(as_blocks->as_identifiers());
+      }
+   };
 
-      const auto& identifier = as_blocks->as_identifiers();
-      result.test_is_true("cert has ASBlock extension", as_blocks != nullptr);
+   auto check_rdi = [&](const std::vector<ASBlocks::ASIdOrRange>& rdi) {
+      // contains 1234-5678, 32768
+      result.test_sz_eq("rdi entry count", rdi.size(), 2);
+      result.test_u32_eq("rdi entry 0 min", rdi[0].min(), 1234);
+      result.test_u32_eq("rdi entry 0 max", rdi[0].max(), 5678);
+      result.test_u32_eq("rdi entry 1 min", rdi[1].min(), 32768);
+      result.test_u32_eq("rdi entry 1 max", rdi[1].max(), 32768);
+   };
 
-      const auto& asnum = identifier.asnum().value().ranges().value();
-      const auto& rdi = identifier.rdi().value().ranges().value();
-
-      // cert contains asnum 0-999, 5042, 0-4294967295
+   auto check_asnum = [&](const std::vector<ASBlocks::ASIdOrRange>& asnum) {
+      // contains 0-999, 5042
+      result.test_sz_eq("asnum entry count", asnum.size(), 2);
       result.test_u32_eq("asnum entry 0 min", asnum[0].min(), 0);
-      result.test_u32_eq("asnum entry 0 max", asnum[0].max(), 4294967295);
+      result.test_u32_eq("asnum entry 0 max", asnum[0].max(), 999);
+      result.test_u32_eq("asnum entry 1 min", asnum[1].min(), 5042);
+      result.test_u32_eq("asnum entry 1 max", asnum[1].max(), 5042);
+   };
 
-      // and rdi 1234-5678, 32768, 0-4294967295
-      result.test_u32_eq("rdi entry 0 min", rdi[0].min(), 0);
-      result.test_u32_eq("rdi entry 0 max", rdi[0].max(), 4294967295);
-   }
-   {
-      const std::string filename("ASNumberOnly.pem");
-      const Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
+   with_as_identifiers("as_canonical.pem", [&](const ASBlocks::ASIdentifiers& identifier) {
+      check_asnum(identifier.asnum().value().ranges().value());
+      check_rdi(identifier.rdi().value().ranges().value());
+   });
 
-      const auto* as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
-
-      const auto& identifier = as_blocks->as_identifiers();
-      result.test_is_true("cert has ASBlock extension", as_blocks != nullptr);
-
-      const auto& asnum = identifier.asnum().value().ranges().value();
+   with_as_identifiers("as_asnum_only.pem", [&](const ASBlocks::ASIdentifiers& identifier) {
       result.test_is_false("cert has no RDI entries", identifier.rdi().has_value());
+      check_asnum(identifier.asnum().value().ranges().value());
+   });
 
-      // contains 0-999, 0-4294967295
-      result.test_u32_eq("asnum entry 0 min", asnum[0].min(), 0);
-      result.test_u32_eq("asnum entry 0 max", asnum[0].max(), 4294967295);
-   }
-   {
-      const std::string filename("ASRdiOnly.pem");
-      const Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
-
-      const auto* as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
-
-      const auto& identifier = as_blocks->as_identifiers();
-      result.test_is_true("cert has ASBlock extension", as_blocks != nullptr);
-
+   with_as_identifiers("as_rdi_only.pem", [&](const ASBlocks::ASIdentifiers& identifier) {
       result.test_is_false("cert has no ASNUM entries", identifier.asnum().has_value());
-      const auto& rdi = identifier.rdi().value().ranges().value();
+      check_rdi(identifier.rdi().value().ranges().value());
+   });
 
-      // contains 1234-5678, 0-4294967295
-      result.test_u32_eq("rdi entry 0 min", rdi[0].min(), 0);
-      result.test_u32_eq("rdi entry 0 max", rdi[0].max(), 4294967295);
-   }
-   {
-      const std::string filename("ASNumberInherit.pem");
+   with_as_identifiers("as_inherit.pem", [&](const ASBlocks::ASIdentifiers& identifier) {
+      result.test_is_false("asnum has no entries", identifier.asnum().value().ranges().has_value());
+      check_rdi(identifier.rdi().value().ranges().value());
+   });
+
+   // These all contain a full 0-4294967295 entry overlapping the other asnum/rdi
+   // entries, which strict decoding rejects
+   for(const std::string filename : {"ASNumberCert.pem", "ASNumberOnly.pem", "ASRdiOnly.pem", "ASNumberInherit.pem"}) {
       const Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
 
-      const auto* as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
+      result.test_is_true("extension is present in " + filename,
+                          cert.v3_extensions().extension_set(ASBlocks::static_oid()));
 
-      const auto& identifier = as_blocks->as_identifiers();
-      result.test_is_true("cert has ASBlock extension", as_blocks != nullptr);
-
-      result.test_is_false("asnum has no entries", identifier.asnum().value().ranges().has_value());
-      const auto& rdi = identifier.rdi().value().ranges().value();
-
-      // contains 1234-5678, 0-4294967295
-      result.test_u32_eq("rdi entry 0 min", rdi[0].min(), 0);
-      result.test_u32_eq("rdi entry 0 max", rdi[0].max(), 4294967295);
+      const auto* ext = cert.v3_extensions().get_extension_object_as<ASBlocks>();
+      result.test_is_true("extension is not decoded in " + filename, ext == nullptr);
    }
 
    result.end_timer();
@@ -378,31 +351,184 @@ Test::Result test_x509_as_blocks_extension_decode_malformed() {
    // overwrite by calling decode_from on hand-crafted BER.
    const auto dummy_choice = ASBlocks::ASIdentifierChoice(std::vector<ASBlocks::ASIdOrRange>{ASBlocks::ASIdOrRange(1)});
 
-   auto try_decode = [&](const std::string& what, const std::vector<uint8_t>& bytes) {
+   auto try_decode = [&](const std::string& what, std::string_view hex) {
       result.test_throws(what, [&]() {
          ASBlocks::ASIdentifiers ident(dummy_choice, std::nullopt);
-         Botan::BER_Decoder dec(bytes);
+         Botan::BER_Decoder dec(Botan::hex_decode(hex));
          dec.decode(ident).verify_end();
       });
    };
 
    // SEQUENCE { [0] EXPLICIT { NULL with non-zero contents } }
-   try_decode("ASIdentifiers rejects asnum NULL with non-zero length", {0x30, 0x05, 0xA0, 0x03, 0x05, 0x01, 0x00});
+   try_decode("ASIdentifiers rejects asnum NULL with non-zero length", "3005A003050100");
 
    // SEQUENCE { [0] EXPLICIT { NULL, trailing INTEGER } }
-   try_decode("ASIdentifiers rejects trailing data after asnum NULL",
-              {0x30, 0x07, 0xA0, 0x05, 0x05, 0x00, 0x02, 0x01, 0x00});
+   try_decode("ASIdentifiers rejects trailing data after asnum NULL", "3007A0050500020100");
 
    // SEQUENCE { [0] EXPLICIT { SEQUENCE { INTEGER 5042 }, trailing INTEGER } }
-   try_decode("ASIdentifiers rejects trailing data after asnum SEQUENCE",
-              {0x30, 0x0B, 0xA0, 0x09, 0x30, 0x04, 0x02, 0x02, 0x13, 0xB2, 0x02, 0x01, 0x00});
+   try_decode("ASIdentifiers rejects trailing data after asnum SEQUENCE", "300BA0093004020213B2020100");
 
    // SEQUENCE { [1] EXPLICIT { NULL with non-zero contents } }
-   try_decode("ASIdentifiers rejects rdi NULL with non-zero length", {0x30, 0x05, 0xA1, 0x03, 0x05, 0x01, 0x00});
+   try_decode("ASIdentifiers rejects rdi NULL with non-zero length", "3005A103050100");
 
    // SEQUENCE { [1] EXPLICIT { SEQUENCE { INTEGER 5042 }, trailing INTEGER } }
-   try_decode("ASIdentifiers rejects trailing data after rdi SEQUENCE",
-              {0x30, 0x0B, 0xA1, 0x09, 0x30, 0x04, 0x02, 0x02, 0x13, 0xB2, 0x02, 0x01, 0x00});
+   try_decode("ASIdentifiers rejects trailing data after rdi SEQUENCE", "300BA1093004020213B2020100");
+
+   // SEQUENCE { }
+   try_decode("ASIdentifiers rejects empty SEQUENCE", "3000");
+
+   // SEQUENCE { [0] primitive (not constructed) { NULL } }
+   try_decode("ASIdentifiers rejects primitive tag where EXPLICIT is required", "300480020500");
+
+   // SEQUENCE { [0] EXPLICIT { SEQUENCE { INTEGER 5042, SEQUENCE { INTEGER 1, INTEGER 999 } } } }
+   try_decode("ASIdentifiers rejects unsorted asnum entries", "3011A00F300D020213B23007020101020203E7");
+
+   // SEQUENCE { [0] EXPLICIT { SEQUENCE { SEQUENCE { INTEGER 1, INTEGER 999 }, INTEGER 500 } } }
+   try_decode("ASIdentifiers rejects overlapping asnum entries", "3011A00F300D3007020101020203E7020201F4");
+
+   // SEQUENCE { [0] EXPLICIT { SEQUENCE { SEQUENCE { INTEGER 1, INTEGER 999 }, INTEGER 1000 } } }
+   try_decode("ASIdentifiers rejects contiguous unmerged asnum entries", "3011A00F300D3007020101020203E7020203E8");
+
+   {
+      // SEQUENCE { [0] EXPLICIT { SEQUENCE { INTEGER 1, INTEGER 5042 } } } is canonical
+      ASBlocks::ASIdentifiers ident(dummy_choice, std::nullopt);
+      Botan::BER_Decoder dec(Botan::hex_decode("300BA0093007020101020213B2"));
+      dec.decode(ident).verify_end();
+      const auto& asnum = ident.asnum().value().ranges().value();
+      result.test_sz_eq("canonical asnum entry count", asnum.size(), 2);
+      result.test_u32_eq("canonical asnum entry 0", asnum[0].min(), 1);
+      result.test_u32_eq("canonical asnum entry 1", asnum[1].min(), 5042);
+   }
+
+   result.end_timer();
+   return result;
+}
+
+Test::Result test_x509_ip_addr_blocks_extension_decode_malformed() {
+   Test::Result result("X509 IP Address Block decode malformed");
+   result.start_timer();
+   using Botan::Cert_Extension::IPAddressBlocks;
+
+   auto decode_choice = [](std::string_view hex) {
+      IPAddressBlocks::IPAddressChoice<IPv4> choice;
+      Botan::BER_Decoder dec(Botan::hex_decode(hex), Botan::BER_Decoder::Limits::DER());
+      dec.decode(choice).verify_end();
+      return choice;
+   };
+
+   auto reject_choice = [&](const std::string& what, std::string_view hex) {
+      result.test_throws(what, [&]() { decode_choice(hex); });
+   };
+
+   // SEQUENCE { 11.0.0.0/8, 10.0.0.0/8 }
+   reject_choice("unsorted prefixes are rejected", "30080302000B0302000A");
+
+   // SEQUENCE { 10.0.0.0/8, 10.64.0.0/12 }
+   reject_choice("overlapping prefixes are rejected", "30090302000A0303040A40");
+
+   // SEQUENCE { 10.0.0.0/8, 11.0.0.0/8 }
+   reject_choice("contiguous unmerged prefixes are rejected", "30080302000A0302000B");
+
+   // SEQUENCE { SEQUENCE { min 10.0.32.0, max 10.0.47.255 } }, which is the prefix 10.0.32.0/20
+   reject_choice("range expressible as a prefix is rejected", "300E300C0304050A00200304040A0020");
+
+   // SEQUENCE { SEQUENCE { min 10.0.32.0, max 10.0.32.0 } }, a single address encoded as a range
+   reject_choice("single address range is rejected", "300F300D0304050A00200305000A002000");
+
+   // SEQUENCE { SEQUENCE { min 10.0.32.0 without its trailing zero bits removed, max 10.0.48.0 } }
+   reject_choice("minimum with retained trailing zero bits is rejected", "3010300E0305000A0020000305000A003000");
+
+   // SEQUENCE { SEQUENCE { min 10.0.32.1, max 10.0.47.255 without its trailing one bits removed } }
+   reject_choice("maximum with retained trailing one bits is rejected", "3010300E0305000A0020010305000A002FFF");
+
+   // SEQUENCE { 10.0.32.0/20 with a non-zero unused bit }
+   reject_choice("prefix with non-zero unused bits is rejected", "30060304040A0021");
+
+   // SEQUENCE { SEQUENCE { min 10.0.32.1, max 10.0.63.255 with a non-zero unused bit } }
+   reject_choice("range maximum with non-zero unused bits is rejected", "300F300D0305000A0020010304060A0001");
+
+   {
+      // SEQUENCE { SEQUENCE { min 10.0.32.1, max 10.0.63.255 } }
+      const auto choice = decode_choice("300F300D0305000A0020010304060A0000");
+      const auto& ranges = choice.ranges().value();
+      result.test_sz_eq("unaligned range decodes", ranges.size(), 1);
+      result.test_bin_eq("unaligned range min", ranges[0].min().value(), "0A002001");
+      result.test_bin_eq("unaligned range max", ranges[0].max().value(), "0A003FFF");
+   }
+
+   {
+      // SEQUENCE { 10.0.0.0/8, 12.0.0.0/8 } is canonical (11.0.0.0/8 lies in between)
+      const auto choice = decode_choice("30080302000A0302000C");
+      const auto& ranges = choice.ranges().value();
+      result.test_sz_eq("canonical prefixes decode", ranges.size(), 2);
+      result.test_bin_eq("entry 0 min", ranges[0].min().value(), "0A000000");
+      result.test_bin_eq("entry 0 max", ranges[0].max().value(), "0AFFFFFF");
+      result.test_bin_eq("entry 1 min", ranges[1].min().value(), "0C000000");
+      result.test_bin_eq("entry 1 max", ranges[1].max().value(), "0CFFFFFF");
+   }
+
+   {
+      // SEQUENCE { SEQUENCE { min 10.0.32.1, max 10.0.48.0 } } is a canonical range
+      const auto choice = decode_choice("3010300E0305000A0020010305000A003000");
+      const auto& ranges = choice.ranges().value();
+      result.test_sz_eq("canonical range decodes", ranges.size(), 1);
+      result.test_bin_eq("range min", ranges[0].min().value(), "0A002001");
+      result.test_bin_eq("range max", ranges[0].max().value(), "0A003000");
+   }
+
+   {
+      // An empty addressesOrRanges SEQUENCE decodes to zero entries (as produced by restrict())
+      const auto choice = decode_choice("3000");
+      result.test_sz_eq("empty sequence decodes", choice.ranges().value().size(), 0);
+   }
+
+   // For checks applied across the whole extension, wrap an IPAddrBlocks value
+   // into Extensions ::= SEQUENCE { SEQUENCE { OID sbgp-ipAddrBlock, BOOLEAN TRUE, OCTET STRING { value } } }
+   auto decode_as_extension = [](std::string_view hex) {
+      const auto ext_value = Botan::hex_decode(hex);
+
+      std::vector<uint8_t> inner = Botan::hex_decode("06082B060105050701070101FF04");
+      inner.push_back(static_cast<uint8_t>(ext_value.size()));
+      inner.insert(inner.end(), ext_value.begin(), ext_value.end());
+      std::vector<uint8_t> wrapped = {
+         0x30, static_cast<uint8_t>(inner.size() + 2), 0x30, static_cast<uint8_t>(inner.size())};
+      wrapped.insert(wrapped.end(), inner.begin(), inner.end());
+
+      Botan::Extensions exts;
+      Botan::BER_Decoder(wrapped).decode(exts);
+      return exts;
+   };
+
+   {
+      // SEQUENCE { family { IPv4, 10.0.0.0/8 }, family { IPv4, 12.0.0.0/8 } }
+      const auto exts = decode_as_extension("3018300A0402000130040302000A300A0402000130040302000C");
+      result.test_is_true("repeated family is rejected", exts.get_extension_object_as<IPAddressBlocks>() == nullptr);
+   }
+
+   {
+      // SEQUENCE { family { IPv6, inherit }, family { IPv4, inherit } }
+      const auto exts = decode_as_extension("301030060402000205003006040200010500");
+      result.test_is_true("families not sorted by AFI are rejected",
+                          exts.get_extension_object_as<IPAddressBlocks>() == nullptr);
+   }
+
+   {
+      // SEQUENCE { family { IPv4 SAFI 1, inherit }, family { IPv4, inherit } }
+      const auto exts = decode_as_extension("30113007040300010105003006040200010500");
+      result.test_is_true("SAFI-less family sorted after SAFI family is rejected",
+                          exts.get_extension_object_as<IPAddressBlocks>() == nullptr);
+   }
+
+   {
+      // SEQUENCE { family { IPv4, inherit }, family { IPv4 SAFI 1, inherit }, family { IPv6, inherit } }
+      const auto exts = decode_as_extension("301930060402000105003007040300010105003006040200020500");
+      const auto* ext = exts.get_extension_object_as<IPAddressBlocks>();
+      if(ext == nullptr) {
+         result.test_failure("canonical families failed to decode");
+      } else {
+         result.test_sz_eq("canonical families decode", ext->addr_blocks().size(), 3);
+      }
+   }
 
    result.end_timer();
    return result;
@@ -2455,6 +2581,7 @@ class X509_RPKI_Tests final : public Test {
          results.push_back(test_x509_as_blocks_extension_decode());
    #endif
          results.push_back(test_x509_as_blocks_extension_decode_malformed());
+         results.push_back(test_x509_ip_addr_blocks_extension_decode_malformed());
          results.push_back(test_x509_ip_addr_blocks_rfc3779_example());
          results.push_back(test_x509_ip_addr_blocks_encode_builder());
          results.push_back(test_x509_ip_addr_blocks_extension_encode_ctor());

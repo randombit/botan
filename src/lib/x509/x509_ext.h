@@ -1126,8 +1126,6 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
       size_t m_v6_count = 0;
 
       void sort_and_merge();
-      template <Version V>
-      IPAddressFamily merge(std::vector<IPAddressFamily>& blocks);
 };
 
 /**
