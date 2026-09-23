@@ -206,6 +206,10 @@ release, or where a backwards incompatible change is expected.
 - The ``PBKDF`` class is deprecated in favor of ``PasswordHash`` and
   ``PasswordHashFamily``.
 
+- ``Kyber_PrivateKey::private_key_bits_with_format`` is deprecated in favor of
+  ``formatted_raw_private_key_bits`` of the common ``Module_Lattice_PrivateKey``
+  interface.
+
 - Implicit conversion of a private key into a public key. Currently
   ``Private_Key`` derives from ``Public_Key`` (and likewise for each of the
   algorithm specific classes, eg ``RSA_PrivateKey`` derives from
