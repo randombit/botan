@@ -49,7 +49,10 @@ void FFI_TLS_Credentials::add_cert_chain(std::vector<Botan::X509_Certificate> ch
                                          std::shared_ptr<Botan::Private_Key> key) {
    BOTAN_ARG_CHECK(!chain.empty(), "Certificate chain must not be empty");
    BOTAN_ARG_CHECK(key != nullptr, "Private key must not be null");
-   m_chains.push_back(Chain{std::move(chain), std::move(key)});
+   m_chains.push_back({
+      .certs = std::move(chain),
+      .key = std::move(key),
+   });
 }
 
 std::vector<Botan::Certificate_Store*> FFI_TLS_Credentials::trusted_certificate_authorities(
@@ -75,13 +78,17 @@ std::vector<Botan::X509_Certificate> FFI_TLS_Credentials::find_cert_chain(
    // not be offered under a different key type when a matching one exists.
    // Among the usable chains the first one issued by a certificate authority
    // the peer named wins, otherwise the first usable chain is used, since the
-   // peer may still accept it.
+   // peer may still accept it. The names the peer sends may be those of trust
+   // anchors as well as of subordinate CAs (RFC 8446 4.2.4); a Botan server for
+   // instance sends the subjects of its trust stores. A root's name matches the
+   // issuer of the last certificate of a chain, not the issuer of the leaf, so
+   // every certificate of the chain is checked.
    const bool restrict_to_hostname = type == "tls-server" && !context.empty() &&
                                      std::any_of(m_chains.begin(), m_chains.end(), [&](const Chain& chain) {
                                         return chain.certs.front().matches_dns_name(context);
                                      });
 
-   const Chain* first_usable = nullptr;
+   std::vector<Botan::X509_Certificate> result;
 
    for(const auto& chain : m_chains) {
       if(!cert_key_types.empty() &&
@@ -102,19 +109,16 @@ std::vector<Botan::X509_Certificate> FFI_TLS_Credentials::find_cert_chain(
       }
 
       if(preferred) {
-         return chain.certs;
+         result = chain.certs;
+         break;
       }
 
-      if(first_usable == nullptr) {
-         first_usable = &chain;
+      if(result.empty()) {
+         result = chain.certs;
       }
    }
 
-   if(first_usable != nullptr) {
-      return first_usable->certs;
-   }
-
-   return {};
+   return result;
 }
 
 std::shared_ptr<Botan::Private_Key> FFI_TLS_Credentials::private_key_for(const Botan::X509_Certificate& cert,
