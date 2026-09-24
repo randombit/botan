@@ -49,19 +49,21 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PublicKey : public virtual Public_Key {
       /**
        * Loads a public key from an X.509 SubjectPublicKeyInfo.
        *
-       * Public key must be encoded as in draft-vangeest-x509-hash-sigs-03.
+       * The OID of @p alg_id selects the encoding of @p key_bits: the raw
+       * public key for the RFC 9802 OID, or the raw public key wrapped in an
+       * OCTET STRING for the OID of draft-vangeest-x509-hash-sigs-03, which
+       * Botan versions before 3.14 emitted. An AlgorithmIdentifier without an
+       * OID denotes the raw public key.
        *
        * @param alg_id the X.509 AlgorithmIdentifier
-       * @param key_bits DER encoded public key bits
+       * @param key_bits the public key bits
        */
       XMSS_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
 
       /**
        * Loads a public key.
        *
-       * Public key must be encoded as in draft-vangeest-x509-hash-sigs-03.
-       *
-       * @param key_bits DER encoded public key bits
+       * @param key_bits the raw public key as returned by raw_public_key_bits()
        */
       BOTAN_DEPRECATED("Use the constructor taking an AlgorithmIdentifier")
       BOTAN_FUTURE_EXPLICIT XMSS_PublicKey(std::span<const uint8_t> key_bits);
@@ -188,8 +190,13 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
       /**
        * Loads a private key from a PKCS #8 PrivateKeyInfo.
        *
+       * With the RFC 9802 OID or the OID of draft-vangeest-x509-hash-sigs-03,
+       * @p key_bits is the private key serialized using raw_private_key() and
+       * wrapped in an OCTET STRING. An AlgorithmIdentifier without an OID
+       * denotes the raw private key.
+       *
        * @param alg_id the PKCS #8 AlgorithmIdentifier
-       * @param key_bits An XMSS private key serialized using raw_private_key().
+       * @param key_bits the private key bits
        **/
       XMSS_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
 
@@ -271,6 +278,11 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
       // generation, used to construct the (immutable) public key before the
       // derived private key body runs.
       struct Keygen_Material;
+
+      struct RawKeyTag {};
+
+      /// Constructs the key from the already unwrapped raw private key
+      XMSS_PrivateKey(secure_vector<uint8_t> raw_key, RawKeyTag tag);
 
       XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                       WOTS_Derivation_Method wots_derivation_method,
