@@ -14,8 +14,10 @@
 #include <botan/tls_algos.h>
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>
+#include <array>
 #include <functional>
 #include <memory>
+#include <span>
 #include <vector>
 
 namespace Botan {
@@ -31,6 +33,27 @@ class Ciphersuite;
 class Session_Keys;
 
 class Connection_Sequence_Numbers;
+
+/**
+* A TLS record nonce, stored inline to avoid an allocation per record
+*/
+class Record_Nonce final {
+   public:
+      // The largest nonce is the 16 byte AES block for CBC mode suites
+      static constexpr size_t MAX_NONCE_LEN = 16;
+
+      Record_Nonce() = default;
+
+      explicit Record_Nonce(size_t len) : m_len(len) { BOTAN_ARG_CHECK(len <= MAX_NONCE_LEN, "Nonce is too long"); }
+
+      std::span<uint8_t> get() { return std::span{m_nonce}.first(m_len); }
+
+      std::span<const uint8_t> get() const { return std::span{m_nonce}.first(m_len); }
+
+   private:
+      std::array<uint8_t, MAX_NONCE_LEN> m_nonce{};
+      size_t m_len = 0;
+};
 
 /**
 * TLS Cipher State
@@ -60,11 +83,14 @@ class Connection_Cipher_State final {
          return *m_aead;
       }
 
-      std::vector<uint8_t> aead_nonce(uint64_t seq, RandomNumberGenerator& rng);
+      Record_Nonce aead_nonce(uint64_t seq, RandomNumberGenerator& rng) const;
 
-      std::vector<uint8_t> aead_nonce(const uint8_t record[], size_t record_len, uint64_t seq);
+      Record_Nonce aead_nonce(const uint8_t record[], size_t record_len, uint64_t seq) const;
 
-      std::vector<uint8_t> format_ad(uint64_t seq, Record_Type type, Protocol_Version version, uint16_t ptext_length);
+      std::array<uint8_t, 13> format_ad(uint64_t seq,
+                                        Record_Type type,
+                                        Protocol_Version version,
+                                        uint16_t ptext_length);
 
       size_t nonce_bytes_from_handshake() const { return m_nonce_bytes_from_handshake; }
 
