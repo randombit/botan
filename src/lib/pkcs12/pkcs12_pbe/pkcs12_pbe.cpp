@@ -74,10 +74,11 @@ std::pair<secure_vector<uint8_t>, secure_vector<uint8_t>> pkcs12_derive_key_iv(s
       pkcs12_kdf({iv.data(), iv_len}, {}, {salt.data(), salt.size()}, iterations, 2, *hash);
    } else {
       const PKCS12_KDF kdf_key(hash->new_object(), 1, iterations);
-      kdf_key.derive_key(key.data(), params.key_len, password.data(), password.size(), salt.data(), salt.size());
+      kdf_key.derive_key(
+         key.data(), params.key_len, password.data(), password.size(), salt.data(), salt.size(), std::nullopt);
 
       const PKCS12_KDF kdf_iv(hash->new_object(), 2, iterations);
-      kdf_iv.derive_key(iv.data(), iv_len, password.data(), password.size(), salt.data(), salt.size());
+      kdf_iv.derive_key(iv.data(), iv_len, password.data(), password.size(), salt.data(), salt.size(), std::nullopt);
    }
 
    if(params.key_len == 16) {  // 2DES: expand to 24 bytes by repeating the first key

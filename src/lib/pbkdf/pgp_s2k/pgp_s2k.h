@@ -94,7 +94,8 @@ class BOTAN_PUBLIC_API(2, 8) RFC4880_S2K final : public PasswordHash {
                       const char* password,
                       size_t password_len,
                       const uint8_t salt[],
-                      size_t salt_len) const override;
+                      size_t salt_len,
+                      const std::optional<std::stop_token>& stop_token) const override;
 
    private:
       std::unique_ptr<HashFunction> m_hash;
