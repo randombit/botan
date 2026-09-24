@@ -52,9 +52,9 @@ std::vector<uint8_t> decode_var_base64(const VarMap& vars, std::string_view var)
    return std::vector<uint8_t>(var_sv.begin(), var_sv.end());
 }
 
-enum mlkem_comp_artifact_e : uint8_t { Publickey, Privatekey, Ciphertext };
+enum class mlkem_comp_artifact_e : uint8_t { Publickey, Privatekey, Ciphertext };
 
-enum artifact_modification_e : uint8_t {
+enum class artifact_modification_e : uint8_t {
    truncate_before_boundary,
    truncate_on_boundary,
    truncate_after_boundary,
@@ -75,10 +75,10 @@ std::vector<uint8_t> manipulate_mlkem_comp_artifact(std::span<const uint8_t> in,
       index = 64;
    } else if(id_str.find("MLKEM768") != std::string::npos) {
       switch(artifact_type) {
-         case Publickey:
+         case mlkem_comp_artifact_e::Publickey:
             index = 1184;
             break;
-         case Ciphertext:
+         case mlkem_comp_artifact_e::Ciphertext:
             index = 1088;
             break;
          default:
@@ -90,16 +90,16 @@ std::vector<uint8_t> manipulate_mlkem_comp_artifact(std::span<const uint8_t> in,
    const size_t truncation_offset = index_offset_for_manipulation;
    std::vector<uint8_t> result(in.begin(), in.end());
    switch(mod_type) {
-      case truncate_before_boundary:
+      case artifact_modification_e::truncate_before_boundary:
          return std::vector<uint8_t>(in.begin(), in.begin() + index - truncation_offset);
-      case truncate_on_boundary:
+      case artifact_modification_e::truncate_on_boundary:
          return std::vector<uint8_t>(in.begin(), in.begin() + index);
-      case truncate_after_boundary:
+      case artifact_modification_e::truncate_after_boundary:
          return std::vector<uint8_t>(in.begin(), in.begin() + index + truncation_offset);
-      case manipulate_mlkem:
+      case artifact_modification_e::manipulate_mlkem:
          result[10] ^= xor_for_manipulation;
          return result;
-      case manipulate_traditional:
+      case artifact_modification_e::manipulate_traditional:
          result[index + 10] ^= xor_for_manipulation;
          return result;
    }
@@ -110,11 +110,11 @@ std::vector<std::vector<uint8_t>> some_manipulations(std::span<const uint8_t> in
                                                      mlkem_comp_artifact_e artifact_type,
                                                      const Botan::MLKEM_Composite_Param& param,
                                                      bool run_long_tests) {
-   static const artifact_modification_e list_of_mods[] = {truncate_before_boundary,
-                                                          truncate_on_boundary,
-                                                          truncate_after_boundary,
-                                                          manipulate_mlkem,
-                                                          manipulate_traditional};
+   static const artifact_modification_e list_of_mods[] = {artifact_modification_e::truncate_before_boundary,
+                                                          artifact_modification_e::truncate_on_boundary,
+                                                          artifact_modification_e::truncate_after_boundary,
+                                                          artifact_modification_e::manipulate_mlkem,
+                                                          artifact_modification_e::manipulate_traditional};
    std::vector<std::vector<uint8_t>> result;
    for(auto mod : list_of_mods) {
       result.push_back(manipulate_mlkem_comp_artifact(in, artifact_type, param, mod, 10, 2));
@@ -574,8 +574,8 @@ std::vector<Test::Result> test_asymmetric_encryption_to_kem_adapter() {
          [&](Test::Result& result) {
             auto rsa = Botan::create_private_key("RSA", *rng);
 
-            Botan::Asymmetric_Encryption_to_KEM_Adapter_PublicKey rsa_kem_pk(rsa->public_key(), oaep);
-            Botan::Asymmetric_Encryption_to_KEM_Adapter_PrivateKey rsa_kem_sk(std::move(rsa), oaep);
+            const Botan::Asymmetric_Encryption_to_KEM_Adapter_PublicKey rsa_kem_pk(rsa->public_key(), oaep);
+            const Botan::Asymmetric_Encryption_to_KEM_Adapter_PrivateKey rsa_kem_sk(std::move(rsa), oaep);
 
             Botan::PK_KEM_Encryptor encryptor(rsa_kem_pk, "Raw" /* no KDF */);
             Botan::PK_KEM_Decryptor decryptor(rsa_kem_sk, *rng, "Raw" /* no KDF */);
