@@ -100,7 +100,7 @@ class Fixed_Output_Position_RNG final : public Fixed_Output_RNG {
             Fixed_Output_RNG::fill_bytes_with_input(output, input);
          } else {
             // return random
-            m_rng.random_vec(output);
+            m_rng.randomize(output);
          }
       }
 
