@@ -65,7 +65,7 @@ class BOTAN_TEST_API Classic_McEliece_Parameters final {
       /**
        * @returns true iff the instance is a fast (F) instance, i.e. if the semi-systematic
        * matrix creation is used.
-`       */
+       */
       bool is_f() const {
          return (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_348864f) ||
                 (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_460896f) ||
