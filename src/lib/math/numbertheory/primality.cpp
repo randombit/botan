@@ -52,6 +52,24 @@ bool is_lucas_probable_prime(const BigInt& C, const Barrett_Reduction& mod_C) {
       }
    }
 
+   // FIPS 186-5 B.3.3 additional check: GCD(C, (1-D)/4) = 1
+   BigInt Q_abs;
+   if(D.signum() == BigInt::Positive) {
+      // 1 - D where D is positive results in a negative value.
+      // Absolute value: |1 - D| = D - 1
+      Q_abs = (D - 1) / 4;
+   } else {
+      // 1 - D where D is negative results in 1 + |D|
+      // Absolute value: |1 - (-|D|)| = |D| + 1
+      Q_abs = (D.abs() + 1) / 4;
+   }
+
+   // If the GCD of C and Q_abs is not 1, C has a common factor with Q_abs
+   // and is therefore composite.
+   if(gcd(C, Q_abs) != 1) {
+      return false;
+   }
+
    if(D.signum() < 0) {
       D += C;
    }
