@@ -27,8 +27,16 @@ API follows a few simple rules:
 - All interactions are via pointers to opaque structs. No need to worry about
   structure padding issues and the like.
 
-- All functions return an int error code (except the version calls, which are
-  assumed to always have something to say).
+- All functions return an int error code where BOTAN_FFI_SUCCESS = 0 indicates
+  successful completion. Negative values indicate errors, with specific meanings
+  defined in the BOTAN_FFI_ERROR enum.
+
+  There are two exceptions to this rule:
+
+   - version calls (botan_version_*) as well as error translation functions
+     (botan_error_*), which are guaranteed to always produce valid output, and
+   - boolean predicates, which return 1 for true, 0 for false and negative
+     values for errors.
 
 - Use simple types: size_t for lengths, const char* NULL terminated strings,
   uint8_t for binary.
