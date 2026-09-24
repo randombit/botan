@@ -1,5 +1,5 @@
 <defines>
-CHACHA_RNG -> 20170728
+CHACHA_RNG -> 20260817
 </defines>
 
 <module_info>
@@ -8,7 +8,7 @@ name -> "ChaCha RNG"
 
 <requires>
 hmac
-sha2_32
+sha2_64
 chacha
 stateful_rng
 </requires>
