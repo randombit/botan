@@ -15,6 +15,13 @@
 #include <botan/internal/kyber_constants.h>
 #include <botan/internal/pqcrystals.h>
 
+#if defined(BOTAN_HAS_KYBER_AVX2)
+   #include <botan/internal/cpuid.h>
+   #include <botan/internal/kyber_avx2.h>
+#endif
+
+#include <type_traits>
+
 namespace Botan {
 
 class Kyber_Symmetric_Primitives;
@@ -32,12 +39,18 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
       }
 
       constexpr static T barrett_reduce_coefficient(T a) {
-         constexpr T2 v = ((1U << 26) + Q / 2) / Q;
-         const T t = static_cast<T>(((v * a) >> 26) * Q);
+         const T t = static_cast<T>(((BARRETT_V * a) >> 26) * Q);
          return static_cast<T>(a - t);
       }
 
    public:
+      /// Constants shared with the SIMD kernels
+      static constexpr const std::array<T, N / 2>& zeta_table() { return zetas; }
+
+      static constexpr T q_inverse() { return Q_inverse; }
+
+      static constexpr T inverse_ntt_scale() { return F_WITH_MONTY_SQUARED; }
+
       /**
        * NIST FIPS 203, Algorithm 9 (NTT)
        *
@@ -46,6 +59,12 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
        * zetas array. The zeta values contain the montgomery factor 2^16 mod q.
        */
       constexpr static void ntt(std::span<T, N> p) {
+#if defined(BOTAN_HAS_KYBER_AVX2)
+         if(!std::is_constant_evaluated() && CPUID::has(CPUID::Feature::AVX2)) {
+            return Kyber_AVX2::ntt(p);
+         }
+#endif
+
          for(size_t len = N / 2, i = 0; len >= 2; len /= 2) {
             for(size_t start = 0, j = 0; start < N; start = j + len) {
                const auto zeta = zetas[++i];
@@ -72,6 +91,12 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
        * factor of (2^16 mod q) added (!). See above.
        */
       static constexpr void inverse_ntt(std::span<T, N> p) {
+#if defined(BOTAN_HAS_KYBER_AVX2)
+         if(!std::is_constant_evaluated() && CPUID::has(CPUID::Feature::AVX2)) {
+            return Kyber_AVX2::inverse_ntt(p);
+         }
+#endif
+
          for(size_t len = 2, i = 127; len <= N / 2; len *= 2) {
             for(size_t start = 0, j = 0; start < N; start = j + len) {
                const auto zeta = zetas[i--];
@@ -97,6 +122,12 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
       static constexpr void poly_pointwise_montgomery(std::span<T, N> result,
                                                       std::span<const T, N> lhs,
                                                       std::span<const T, N> rhs) {
+#if defined(BOTAN_HAS_KYBER_AVX2)
+         if(!std::is_constant_evaluated() && CPUID::has(CPUID::Feature::AVX2)) {
+            return Kyber_AVX2::poly_pointwise_montgomery(result, lhs, rhs);
+         }
+#endif
+
          /**
           * NIST FIPS 203, Algorithm 12 (BaseCaseMultiply)
           */

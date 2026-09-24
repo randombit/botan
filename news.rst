@@ -40,6 +40,8 @@ Version 3.14.0, Not Yet Released
   such divisions to be constant time with respect to their inputs.
   (GH #5849 #5880 #5883 #5884)
 
+* Add AVX2 implementation of the ML-KEM NTT, inverse NTT, and pointwise multiplication.
+
 * Rework how stateful RNGs decide that they are seeded. Previously a call of
   ``randomize_with_input`` with an empty output and a non-empty input of
   sufficient length was treated as sufficient for seeding. Now only an explicit
