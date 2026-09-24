@@ -45,6 +45,19 @@ class BOTAN_PUBLIC_API(3, 13) MLKEM_Composite_PublicKey : public virtual Hybrid_
 
       OID object_identifier() const override;
 
+      /**
+       * The composite public key is the concatenation of the ML-KEM public key and
+       * the traditional public key, each in the encoding it uses inside a
+       * SubjectPublicKeyInfo. The composite adds no encoding of its own, so its raw
+       * form is identical to public_key_bits().
+       *
+       * This overrides Hybrid_KEM_PublicKey, which concatenates the components'
+       * raw_public_key_bits() instead. That is not the encoding the composite draft
+       * specifies for RSA (RSAPublicKey DER), and RSA_PublicKey::raw_public_key_bits()
+       * throws Not_Implemented since RSA has no raw form.
+       */
+      std::vector<uint8_t> raw_public_key_bits() const override { return public_key_bits(); }
+
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
 
       std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(std::string_view params,

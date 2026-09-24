@@ -10,7 +10,6 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/exceptn.h>
-#include <botan/hex.h>
 #include <botan/oids.h>
 #include <botan/pss_params.h>
 #include <botan/internal/fmt.h>

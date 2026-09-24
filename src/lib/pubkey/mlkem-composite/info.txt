@@ -16,6 +16,8 @@ asymmetric_encryption_to_kem_adapter.h
 </header:internal>
 
 <requires>
+hybrid_kem
+kex_to_kem_adapter
 ml_kem
 rng
 sha3

@@ -51,7 +51,7 @@ class PerfTest_PK_KEM : public PerfTest {
          auto& rng = config.rng();
 
          std::string kdf = "KDF2(SHA-256)";  // arbitrary choice
-   #if BOTAN_HAS_MLKEM_COMPOSITE
+   #if defined(BOTAN_HAS_MLKEM_COMPOSITE)
          if(algo == Botan::MLKEM_Composite_Param::generic_algo_name) {
             kdf = "";
          }

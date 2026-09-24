@@ -1,5 +1,5 @@
 /**
- * Asymmetric-Encrypiton-to-KEM Adapter
+ * Asymmetric-Encryption-to-KEM Adapter
  *
  * (C) 2026 Jack Lloyd
  *     2026 René Meusel
