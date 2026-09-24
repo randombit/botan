@@ -19,7 +19,10 @@ Version 3.14.0, Not Yet Released
   SubjectPublicKeyInfo without an OCTET STRING wrapper. Keys and certificates
   using the previous OID (``0.4.0.127.0.15.1.1.13.0``) and encoding from
   draft-vangeest-x509-hash-sigs are still accepted for loading and signature
-  verification. The RFC 9802 OID for XMSS^MT is registered as well.
+  verification. The encoding of the key bits is now selected by the OID; keys
+  that combine the RFC 9802 OID with the OCTET STRING wrapper, or the previous
+  OID with an unwrapped key, are rejected. The RFC 9802 OID for XMSS^MT is
+  registered as well.
 
 * Fix a bug introduced in 3.13.0 where, in builds without the system RNG,
   ``RandomNumberGenerator::randomize_with_ts_input`` passed only the low 32 bits
