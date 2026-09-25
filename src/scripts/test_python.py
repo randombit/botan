@@ -1806,6 +1806,67 @@ iWtHjIcunpiq6+IiB8IVu7Ncu6uPKoFS/mWzTvjgdNusmgNle9p3OAbE
         with self.assertRaises(ValueError):
             botan.TLSPolicy(botan.c_void_p(0))
 
+    def test_tls_credentials(self):
+        if botan.ffi_tls_api_version() < 20260916:
+            self.skipTest("No TLS credentials support in this build")
+
+        creds = botan.TLSCredentials()
+        creds.add_trusted_cert(botan.X509Cert(test_data("src/tests/data/x509/nist/root.crt")))
+        creds.add_crl(botan.X509CRL(test_data("src/tests/data/x509/nist/root.crl")))
+        creds.add_trusted_dir(test_data("src/tests/data/x509/crl"))
+
+        with self.assertRaises(botan.BotanException) as cm:
+            creds.add_trusted_dir(test_data("src/tests/data/x509/does-not-exist"))
+        self.assertEqual(cm.exception.error_code(), -32) # Bad parameter
+
+        try:
+            creds.use_system_store()
+        except botan.BotanException as e:
+            # The library may lack a system certificate store (-40), or the system
+            # may not provide one; either way the call must fail cleanly
+            self.assertLess(e.error_code(), 0)
+
+        cert1 = botan.X509Cert(test_data("src/tests/data/x509/certstor/cert1.crt"))
+        with open(test_data("src/tests/data/x509/certstor/key01.pem"), "rb") as f:
+            key01 = botan.PrivateKey.load(f.read())
+        with open(test_data("src/tests/data/x509/certstor/key03.pem"), "rb") as f:
+            key03 = botan.PrivateKey.load(f.read())
+
+        with self.assertRaises(botan.BotanException) as cm:
+            creds.add_cert_chain([cert1], key03)
+        self.assertEqual(cm.exception.error_code(), -32) # Bad parameter
+
+        with self.assertRaises(botan.BotanException) as cm:
+            creds.add_cert_chain([], key01)
+        self.assertEqual(cm.exception.error_code(), -32) # Bad parameter
+
+        creds.add_cert_chain([cert1], key01)
+
+        with self.assertRaises(TypeError):
+            copy.copy(creds)
+
+    def test_tls_session_manager(self):
+        if botan.ffi_tls_api_version() < 20260916:
+            self.skipTest("No TLS session manager support in this build")
+
+        mgr = botan.TLSSessionManager.in_memory()
+        self.assertIsNotNone(mgr)
+
+        rng = botan.RandomNumberGenerator("user")
+        mgr = botan.TLSSessionManager.in_memory(rng, 10)
+        self.assertIsNotNone(mgr)
+
+        mgr = botan.TLSSessionManager.noop()
+        self.assertIsNotNone(mgr)
+
+        with self.assertRaises(TypeError):
+            copy.copy(mgr)
+
+        with self.assertRaises(TypeError):
+            botan.TLSSessionManager(None)
+        with self.assertRaises(ValueError):
+            botan.TLSSessionManager(botan.c_void_p(0))
+
 
 class BotanPythonZfecTests(unittest.TestCase):
     """
