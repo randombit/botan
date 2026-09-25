@@ -317,6 +317,10 @@ void Server_Impl_12::initiate_handshake(Handshake_State& state, bool force_full_
    dynamic_cast<Server_Handshake_State&>(state).set_allow_session_resumption(!force_full_renegotiation);
 
    const Hello_Request hello_req(state.handshake_io());
+
+   // If the HelloRequest above gets lost (or if the peer ignores it), we
+   // retransmit it to ensure that server-initiated renegotiations are reliable.
+   maybe_arm_dtls_retransmission_timer();
 }
 
 namespace {
@@ -469,6 +473,15 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
 
          pending_state.client_hello(nullptr);
          pending_state.set_expected_next(Handshake_Type::ClientHello);
+
+         // RFC 6346 3.2.1
+         //    Note that timeout and retransmission do not apply to the
+         //    HelloVerifyRequest, because this would require creating state on
+         //    the server.
+         //
+         // We don't kick-off a retransmission timer for a HelloVerifyRequest,
+         // if it gets lost in transit the client will retransmit the initial
+         // ClientHello anyway.
          return;
       }
    }
@@ -532,6 +545,11 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
       // new session
       this->session_create(pending_state);
    }
+
+   // We just sent our first flight that might get lost in transit. Hence, we
+   // kick-off a retransmission timer chain for users that implement the
+   // asynchronous timer callback introduced in Botan 3.14.0.
+   maybe_arm_dtls_retransmission_timer();
 }
 
 void Server_Impl_12::process_certificate_msg(Server_Handshake_State& pending_state,

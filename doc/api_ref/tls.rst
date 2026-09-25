@@ -192,6 +192,37 @@ additional information about the connection.
      This callback is optional, and can be used to examine extensions sent by
      the peer.
 
+ .. cpp:function:: void tls_register_deferred_operation(uint64_t monotonic_delay_ms, \
+                                                        std::function<void()> op)
+
+     Optional, but recommended for DTLS. This callback is used to schedule a
+     deferred operation to be invoked after a specified number of milliseconds.
+     This is used by DTLS to schedule retransmissions of handshake messages that
+     are considered lost in transit.
+
+     If this is not used, the application must call ``Channel::timeout_check()``
+     independently and regularly whenever a DTLS handshake is in progress. In
+     contrast, if it is implemented by the application, make sure to never call
+     ``Channel::timeout_check()`` directly.
+
+     The TLS implementation is not re-entrant. The ``op`` must be invoked in a
+     thread-safe manner when no other thread is concurrently interacting with
+     the respective instance of the TLS channel.
+
+     Invoking ``op`` might throw an exception. Typically this indicates that the
+     maximum number of retransmission attempts has been reached (see also
+     ``Policy::dtls_maximum_retransmissions()``) and the association is being
+     abandoned.
+
+     During an invocation of ``op`` the DTLS implementation might call
+     ``tls_register_deferred_operation()`` again to schedule another operation.
+     This must be supported by the user implementation.
+
+     Since its introduction in Botan 3.14.0, this is the recommended approach to
+     handle DTLS retransmissions, as it allows the library to transparently and
+     asynchronously invoke the deferred operations without relying on the down-
+     stream application.
+
  .. cpp:function:: void tls_log_error(const char* msg)
 
      Optional logging for an error message. (Not currently used)
@@ -286,6 +317,11 @@ available:
       This function does nothing unless the channel represents a DTLS
       connection with a handshake in progress. Returns true if a timeout
       condition occurred and handshake packets were retransmitted.
+
+      Consider using ``Callbacks::tls_register_deferred_operation`` to
+      handle retransmission timers transparently instead of polling this
+      function at regular intervals. Never do both, either implement the
+      callback or poll this function, but not both.
 
    .. cpp:function:: void renegotiate(bool force_full_renegotiation = false)
 
