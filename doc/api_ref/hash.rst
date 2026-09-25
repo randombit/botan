@@ -440,8 +440,10 @@ e.g. ``Truncated(SHAKE-128(256),42)``
 Checksums
 ----------------
 
-.. note:: Checksums are not suitable for cryptographic use, but can be used for
-          error checking purposes.
+.. note::
+
+   Checksums are not suitable for cryptographic use, but can be used for
+   error checking purposes.
 
 Adler32
 ^^^^^^^^^^^

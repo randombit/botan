@@ -16,6 +16,3 @@ linking against a potentially incompatible version at runtime.
 
 If you are concerned about long-term ABI issues, considering using the C API
 instead; this subset *is* ABI stable.
-
-You can review a report on ABI changes to Botan at
-https://abi-laboratory.pro/tracker/timeline/botan/

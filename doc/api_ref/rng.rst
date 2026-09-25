@@ -105,17 +105,16 @@ RNG is itself thread safe due to being serialized by a mutex in the kernel itsel
 AutoSeeded_RNG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-AutoSeeded_RNG is type naming a 'best available' userspace PRNG. The
-exact definition of this has changed over time and may change again in the
-future. Fortunately there is no compatibility concerns when changing
-any RNG since the only expectation is it produces bits
-indistinguishable from random.
+AutoSeeded_RNG is type naming a 'best available' userspace PRNG. The exact
+definition of this has changed over time and may change again in the future.
 
-.. note:: Starting in 2.16.0, AutoSeeded_RNG uses an internal lock and so is
-          safe to share among threads. However if possible it is still better to
-          use a RNG per thread as otherwise the RNG object needlessly creates a
-          point of contention. In previous versions, the RNG does not have an
-          internal lock and all access to it must be serialized.
+.. note::
+
+   Starting in 2.16.0, AutoSeeded_RNG uses an internal lock and so is safe to
+   share among threads. However if possible it is still better to use a RNG per
+   thread as otherwise the RNG object needlessly creates a point of contention.
+   In previous versions, the RNG does not have an internal lock and all access
+   to it must be serialized.
 
 The current version uses HMAC_DRBG with either SHA-384 or SHA-256. The
 initial seed is generated either by the system PRNG (if available) or

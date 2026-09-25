@@ -134,7 +134,9 @@ optional parameters, and a string specifying the provider to be used.
 For example, the following code signs a message using an RSA key with the
 *CommonCrypto* provider:
 
-.. note:: No integrated provider currently supports using any public key algorithm
+.. note::
+
+    No integrated provider currently supports using any public key algorithm
     in the way described above, so the example is purely for illustrative purposes.
 
 .. code:: cpp
@@ -157,7 +159,9 @@ To create a key object, use ``Botan::create_private_key()``, which takes
 a string specifying the algorithm and the provider to be used. For example, to
 create a 3072 bit RSA key with the *CommonCrypto* provider:
 
-.. note:: No integrated provider currently supports creating any private key
+.. note::
+
+    No integrated provider currently supports creating any private key
     in the way described above, so the example is purely for illustrative purposes.
 
 .. code:: cpp

@@ -1063,7 +1063,7 @@ TLS Ciphersuites
 
      Allows an application to reject any ciphersuites, which are
      undesirable for whatever reason without having to reimplement
-     :cpp:func:`TLS::Ciphersuite::ciphersuite_list`
+     :cpp:func:`ciphersuite_list`
 
  .. cpp:function:: std::vector<uint16_t> ciphersuite_list(Protocol_Version version) const
 
