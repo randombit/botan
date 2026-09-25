@@ -9,10 +9,9 @@
 
 #include <botan/cipher_mode.h>
 #include <botan/mem_ops.h>
+#include <botan/internal/algorithm_spec.h>
 #include <botan/internal/commoncrypto_utils.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/parsing.h>
-#include <botan/internal/scan_name.h>
 
 namespace Botan {
 
@@ -94,15 +93,25 @@ CommonCryptor_Opts commoncrypto_opts_from_algo_name(std::string_view algo_name) 
 }
 
 CommonCryptor_Opts commoncrypto_opts_from_algo(std::string_view algo) {
-   SCAN_Name spec(algo);
+   const AlgorithmSpec spec(algo, AlgorithmSpec::Syntax::CipherMode);
 
-   std::string algo_name = spec.algo_name();
-   std::string cipher_mode = spec.cipher_mode();
-   std::string cipher_mode_padding = spec.cipher_mode_pad();
+   std::string_view algo_name = spec.head();
+   std::string_view cipher_mode;
+   std::string_view cipher_mode_padding;
+
+   //TODO add CFB and XTS support
+   if(auto m = spec.match("*({cipher},{padding:str?})")) {
+      algo_name = m->str("cipher");
+      cipher_mode = m->head();
+      if(m->has("padding")) {
+         cipher_mode_padding = m->str("padding");
+      }
+   } else if(spec.arg_count() != 0) {
+      throw CommonCrypto_Error("Unsupported cipher mode!");
+   }
 
    CommonCryptor_Opts opts = commoncrypto_opts_from_algo_name(algo_name);
 
-   //TODO add CFB and XTS support
    if(cipher_mode.empty() || cipher_mode == "ECB") {
       opts.mode = kCCModeECB;
    } else if(cipher_mode == "CBC") {

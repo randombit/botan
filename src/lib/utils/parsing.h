@@ -19,13 +19,6 @@
 namespace Botan {
 
 /**
-* Parse a SCAN-style algorithm name
-* @param scan_name the name
-* @return the name components
-*/
-std::vector<std::string> parse_algorithm_name(std::string_view scan_name);
-
-/**
 * Split a string
 * @param str the input string
 * @param delim the delimiter

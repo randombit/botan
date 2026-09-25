@@ -8,10 +8,8 @@
 
 #include <botan/assert.h>
 #include <botan/exceptn.h>
-#include <botan/pk_options_readers.h>
+#include <botan/internal/algorithm_spec.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/parsing.h>
-#include <botan/internal/scan_name.h>
 
 namespace Botan {
 
@@ -91,10 +89,8 @@ PK_Signature_Options parse_legacy_sig_options(const Public_Key& key, std::string
    }
 
    if(algo == "RSA") {
-      const SCAN_Name req(params);
-
       // handling various deprecated aliases that have accumulated over the years ...
-      auto padding = [](std::string_view alg) -> std::string_view {
+      auto canonical_padding = [](std::string_view alg) -> std::string_view {
          // TODO(Botan4) Remove all but "PKCSv15"
          if(alg == "EMSA_PKCS1" || alg == "EMSA-PKCS1-v1_5" || alg == "EMSA3") {
             return "PKCS1v15";
@@ -116,87 +112,90 @@ PK_Signature_Options parse_legacy_sig_options(const Public_Key& key, std::string
          }
 
          return alg;
-      }(req.algo_name());
+      };
 
-      if(padding == "Raw") {
-         if(req.arg_count() == 0) {
-            return PK_Signature_Options().with_padding(padding);
-         } else if(req.arg_count() == 1) {
-            return PK_Signature_Options().with_padding(padding).with_externally_computed_prehash(req.arg(0));
+      const AlgorithmSpec given(params);
+      const AlgorithmSpec req = given.with_head(canonical_padding(given.head()));
+
+      if(auto m = req.match("Raw({hash?})")) {
+         if(m->has("hash")) {
+            return PK_Signature_Options().with_padding("Raw").with_externally_computed_prehash(
+               std::string(m->str("hash")));
          }
+         return PK_Signature_Options().with_padding("Raw");
       }
 
-      if(padding == "PKCS1v15") {
-         if(req.arg_count() == 2 && req.arg(0) == "Raw") {
-            return PK_Signature_Options().with_padding(padding).with_externally_computed_prehash(req.arg(1));
-         } else if(req.arg_count() == 1 && req.arg(0) == "Raw") {
-            return PK_Signature_Options().with_padding(padding).with_externally_computed_prehash();
-         } else if(req.arg_count() == 1) {
-            return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
+      if(auto m = req.match("PKCS1v15(Raw,{hash?})")) {
+         if(m->has("hash")) {
+            return PK_Signature_Options()
+               .with_padding("PKCS1v15")
+               .with_externally_computed_prehash(std::string(m->str("hash")));
          }
+         return PK_Signature_Options().with_padding("PKCS1v15").with_externally_computed_prehash();
+      }
+
+      if(auto m = req.match("PKCS1v15({hash})")) {
+         return PK_Signature_Options().with_padding("PKCS1v15").with_hash(m->str("hash"));
       }
 
       // Only supported by PKCS#11 (CKM_RSA_9796)
-      if(padding == "ISO9796" && req.arg_count() == 0) {
-         return PK_Signature_Options().with_padding(padding);
+      if(req.matches("ISO9796")) {
+         return PK_Signature_Options().with_padding("ISO9796");
       }
 
-      if(padding == "PSS" && req.arg_count() == 1 && req.arg(0) == "Raw") {
-         return PK_Signature_Options().with_padding(padding).with_externally_computed_prehash();
+      if(req.matches("PSS(Raw)")) {
+         return PK_Signature_Options().with_padding("PSS").with_externally_computed_prehash();
       }
 
-      if(padding == "PSS_Raw" || padding == "PSS") {
-         if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1") {
-            auto pss_opt = PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
+      if(auto m = req.match("PSS|PSS_Raw({hash})")) {
+         return PK_Signature_Options().with_padding(m->head()).with_hash(m->str("hash"));
+      }
 
-            if(req.arg_count() == 3) {
-               return std::move(pss_opt).with_salt_size(req.arg_as_integer(2));
-            } else {
-               return pss_opt;
-            }
+      if(auto m = req.match("PSS|PSS_Raw({hash},MGF1,{salt_len:int?})")) {
+         auto pss_opt = PK_Signature_Options().with_padding(m->head()).with_hash(m->str("hash"));
+
+         if(m->has("salt_len")) {
+            return std::move(pss_opt).with_salt_size(m->integer("salt_len"));
          }
+         return pss_opt;
       }
 
-      if(padding == "ISO_9796_DS2") {
-         if(req.arg_count_between(1, 3)) {
-            const std::string trailer = req.arg(1, "exp");
-            if(trailer != "imp" && trailer != "exp") {
-               throw Invalid_Argument(fmt("Unexpected parameters '{}' for signing with {}", params, algo));
-            }
-
-            auto opt = PK_Signature_Options()
-                          .with_padding(padding)
-                          .with_hash(req.arg(0))
-                          .with_explicit_trailer_field(trailer == "exp");
-
-            if(req.arg_count() == 3) {
-               return std::move(opt).with_salt_size(req.arg_as_integer(2));
-            } else {
-               return opt;
-            }
+      if(auto m = req.match("ISO_9796_DS2({hash},{trailer:str=exp},{salt_len:int?})")) {
+         const auto trailer = m->str("trailer");
+         if(trailer != "imp" && trailer != "exp") {
+            throw Invalid_Argument(fmt("Unexpected parameters '{}' for signing with {}", params, algo));
          }
+
+         auto opt = PK_Signature_Options()
+                       .with_padding("ISO_9796_DS2")
+                       .with_hash(m->str("hash"))
+                       .with_explicit_trailer_field(trailer == "exp");
+
+         if(m->has("salt_len")) {
+            return std::move(opt).with_salt_size(m->integer("salt_len"));
+         }
+         return opt;
       }
 
       //ISO-9796-2 DS 3 is deterministic and DS2 without a salt
-      if(padding == "ISO_9796_DS3") {
-         if(req.arg_count_between(1, 2)) {
-            const std::string trailer = req.arg(1, "exp");
-            if(trailer != "imp" && trailer != "exp") {
-               throw Invalid_Argument(fmt("Unexpected parameters '{}' for signing with {}", params, algo));
-            }
-
-            return PK_Signature_Options()
-               .with_padding(padding)
-               .with_hash(req.arg(0))
-               .with_explicit_trailer_field(trailer == "exp");
+      if(auto m = req.match("ISO_9796_DS3({hash},{trailer:str=exp})")) {
+         const auto trailer = m->str("trailer");
+         if(trailer != "imp" && trailer != "exp") {
+            throw Invalid_Argument(fmt("Unexpected parameters '{}' for signing with {}", params, algo));
          }
+
+         return PK_Signature_Options()
+            .with_padding("ISO_9796_DS3")
+            .with_hash(m->str("hash"))
+            .with_explicit_trailer_field(trailer == "exp");
       }
 
-      if(padding == "X9.31" && req.arg_count() == 1) {
-         if(req.arg(0) == "Raw") {
-            return PK_Signature_Options().with_padding(padding).with_externally_computed_prehash();
-         }
-         return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
+      if(req.matches("X9.31(Raw)")) {
+         return PK_Signature_Options().with_padding("X9.31").with_externally_computed_prehash();
+      }
+
+      if(auto m = req.match("X9.31({hash})")) {
+         return PK_Signature_Options().with_padding("X9.31").with_hash(m->str("hash"));
       }
    }  // RSA block
 
@@ -218,24 +217,26 @@ PK_Signature_Options parse_legacy_sig_options(const Public_Key& key, std::string
 
    // "Raw" or "Raw(hash)" means the caller provides the digest
    if(hash_params.starts_with("Raw")) {
-      const SCAN_Name req(hash_params);
-      if(req.algo_name() != "Raw" || req.arg_count() > 1) {
+      const AlgorithmSpec req(hash_params);
+      const auto m = req.match("Raw({hash?})");
+      if(!m) {
          throw Invalid_Argument(fmt("Unexpected parameters '{}' for signing with {}", params, algo));
       }
       auto raw_opt = PK_Signature_Options().with_deterministic_signature(deterministic);
-      if(req.arg_count() == 1) {
-         return std::move(raw_opt).with_externally_computed_prehash(req.arg(0));
+      if(m->has("hash")) {
+         return std::move(raw_opt).with_externally_computed_prehash(std::string(m->str("hash")));
       }
       return std::move(raw_opt).with_externally_computed_prehash();
    }
 
    auto hash = [&]() -> std::string {
       if(hash_params.starts_with("EMSA1")) {
-         const SCAN_Name req(hash_params);
-         if(req.algo_name() != "EMSA1" || req.arg_count() != 1) {
+         const AlgorithmSpec req(hash_params);
+         const auto m = req.match("EMSA1({hash})");
+         if(!m) {
             throw Invalid_Argument(fmt("Unexpected parameters '{}' for signing with {}", params, algo));
          }
-         return req.arg(0);
+         return std::string(m->str("hash"));
       } else {
          return std::string(hash_params);
       }
@@ -275,26 +276,22 @@ PK_Encryption_Options parse_legacy_enc_options(const Public_Key& key, std::strin
       return PK_Encryption_Options();
    }
 
-   const SCAN_Name req(params);
+   // TODO(Botan4) Remove all but "OAEP" here
+   if(params.starts_with("OAEP") || params.starts_with("EME-OAEP") || params.starts_with("EME1")) {
+      const AlgorithmSpec req(params);
 
-   // TODO(Botan4) Remove all but "OAEP"
-   if(req.algo_name() == "OAEP" || req.algo_name() == "EME-OAEP" || req.algo_name() == "EME1") {
-      if(req.arg_count_between(1, 3)) {
-         auto options = PK_Encryption_Options().with_padding("OAEP").with_hash(req.arg(0));
+      auto oaep_opt = PK_Encryption_Options().with_padding("OAEP");
 
-         if(req.arg_count() >= 2 && req.arg(1) != "MGF1") {
-            const auto mgf_params = parse_algorithm_name(req.arg(1));
-            if(mgf_params.size() != 2 || mgf_params[0] != "MGF1" || mgf_params[1].empty()) {
-               throw Lookup_Error(fmt("Unknown OAEP mask generation function {}", req.arg(1)));
-            }
-            options = options.with_mgf1_hash(mgf_params[1]);
-         }
+      if(auto m = req.match("OAEP|EME-OAEP|EME1({hash})")) {
+         return oaep_opt.with_hash(m->str("hash"));
+      }
 
-         if(req.arg_count() == 3) {
-            options = options.with_context(req.arg(2));
-         }
+      if(auto m = req.match("OAEP|EME-OAEP|EME1({hash},MGF1,{label:str=})")) {
+         return oaep_opt.with_hash(m->str("hash")).with_context(m->str("label"));
+      }
 
-         return options;
+      if(auto m = req.match("OAEP|EME-OAEP|EME1({hash},MGF1({mgf_hash}),{label:str=})")) {
+         return oaep_opt.with_hash(m->str("hash")).with_mgf1_hash(m->str("mgf_hash")).with_context(m->str("label"));
       }
    }
 

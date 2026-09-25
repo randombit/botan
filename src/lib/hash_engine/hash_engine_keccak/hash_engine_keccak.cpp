@@ -8,10 +8,10 @@
 
 #include <botan/assert.h>
 #include <botan/mem_ops.h>
+#include <botan/internal/algorithm_spec.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/scan_name.h>
 #include <algorithm>
 
 #if defined(BOTAN_HAS_HASH_ENGINE_KECCAK_AVX2) || defined(BOTAN_HAS_HASH_ENGINE_KECCAK_AVX512)
@@ -245,18 +245,18 @@ std::unique_ptr<Hash_Engine> create_keccak_mb_engine(std::string_view hash_fn,
    uint8_t suffix = 0;
    std::string name;
 
-   const SCAN_Name req(hash_fn);
-   if((req.algo_name() == "SHAKE-128" || req.algo_name() == "SHAKE-256") && req.arg_count() == 1) {
-      const size_t bits = req.arg_as_integer(0);
+   const AlgorithmSpec req(hash_fn);
+   if(auto shake = req.match("SHAKE-128|SHAKE-256({bits:int})")) {
+      const size_t bits = shake->integer("bits");
       if(bits == 0 || bits % 8 != 0) {
          return nullptr;
       }
       output_length = bits / 8;
-      rate = (req.algo_name() == "SHAKE-128") ? 168 : 136;
+      rate = (shake->head() == "SHAKE-128") ? 168 : 136;
       suffix = 0x1F;
-      name = fmt("{}({})", req.algo_name(), bits);
-   } else if(req.algo_name() == "SHA-3" && req.arg_count() <= 1) {
-      const size_t bits = req.arg_as_integer(0, 512);
+      name = fmt("{}({})", shake->head(), bits);
+   } else if(auto sha3 = req.match("SHA-3({bits:int=512})")) {
+      const size_t bits = sha3->integer("bits");
       if(bits != 224 && bits != 256 && bits != 384 && bits != 512) {
          return nullptr;
       }

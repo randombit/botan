@@ -8,7 +8,9 @@
 
 #include <botan/assert.h>
 #include <botan/exceptn.h>
-#include <botan/internal/scan_name.h>
+#include <botan/internal/algorithm_spec.h>
+#include <botan/internal/fmt.h>
+#include <botan/internal/probe_providers.h>
 
 #if defined(BOTAN_HAS_PBKDF2)
    #include <botan/pbkdf2.h>
@@ -56,16 +58,17 @@ void PasswordHash::derive_key(uint8_t out[],
 }
 
 std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(std::string_view algo_spec, std::string_view provider) {
-   const SCAN_Name req(algo_spec);
+   const AlgorithmSpec req(algo_spec);
 
 #if defined(BOTAN_HAS_PBKDF2)
-   if(req.algo_name() == "PBKDF2") {
+   if(auto m = req.match("PBKDF2({prf})")) {
       if(provider.empty() || provider == "base") {
-         if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")")) {
+         const auto prf = m->str("prf");
+         if(auto mac = MessageAuthenticationCode::create(fmt("HMAC({})", prf))) {
             return std::make_unique<PBKDF2_Family>(std::move(mac));
          }
 
-         if(auto mac = MessageAuthenticationCode::create(req.arg(0))) {
+         if(auto mac = MessageAuthenticationCode::create(prf)) {
             return std::make_unique<PBKDF2_Family>(std::move(mac));
          }
       }
@@ -75,40 +78,39 @@ std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(std::string_view 
 #endif
 
 #if defined(BOTAN_HAS_SCRYPT)
-   if(req.algo_name() == "Scrypt") {
+   if(req.matches("Scrypt")) {
       return std::make_unique<Scrypt_Family>();
    }
 #endif
 
 #if defined(BOTAN_HAS_ARGON2)
-   if(req.algo_name() == "Argon2d") {
+   if(req.matches("Argon2d")) {
       return std::make_unique<Argon2_Family>(static_cast<uint8_t>(0));
-   } else if(req.algo_name() == "Argon2i") {
+   } else if(req.matches("Argon2i")) {
       return std::make_unique<Argon2_Family>(static_cast<uint8_t>(1));
-   } else if(req.algo_name() == "Argon2id") {
+   } else if(req.matches("Argon2id")) {
       return std::make_unique<Argon2_Family>(static_cast<uint8_t>(2));
    }
 #endif
 
 #if defined(BOTAN_HAS_PBKDF_BCRYPT)
-   if(req.algo_name() == "Bcrypt-PBKDF") {
+   if(req.matches("Bcrypt-PBKDF")) {
       return std::make_unique<Bcrypt_PBKDF_Family>();
    }
 #endif
 
 #if defined(BOTAN_HAS_PGP_S2K)
-   if(req.algo_name() == "OpenPGP-S2K" && req.arg_count() == 1) {
-      if(auto hash = HashFunction::create(req.arg(0))) {
+   if(auto m = req.match("OpenPGP-S2K({hash})")) {
+      if(auto hash = HashFunction::create(m->str("hash"))) {
          return std::make_unique<RFC4880_S2K_Family>(std::move(hash));
       }
    }
 #endif
 
 #if defined(BOTAN_HAS_PKCS12_KDF)
-   if(req.algo_name() == "PKCS12-KDF" && req.arg_count() == 2) {
-      if(auto hash = HashFunction::create(req.arg(0))) {
-         const auto id_param = req.arg_as_integer(1);
-         return std::make_unique<PKCS12_KDF_Family>(std::move(hash), id_param);
+   if(auto m = req.match("PKCS12-KDF({hash},{id:int})")) {
+      if(auto hash = HashFunction::create(m->str("hash"))) {
+         return std::make_unique<PKCS12_KDF_Family>(std::move(hash), m->integer("id"));
       }
    }
 #endif

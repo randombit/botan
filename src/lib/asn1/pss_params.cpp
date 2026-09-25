@@ -10,23 +10,21 @@
 #include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/internal/algorithm_spec.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/scan_name.h>
 
 namespace Botan {
 
 //static
 PSS_Params PSS_Params::from_padding_name(std::string_view padding_name) {
-   const SCAN_Name scanner(padding_name);
+   const AlgorithmSpec spec(padding_name);
 
-   if((scanner.algo_name() != "PSS" && scanner.algo_name() != "PSS_Raw") || scanner.arg_count() != 3) {
+   const auto m = spec.match("PSS|PSS_Raw({hash},MGF1,{salt_len:int})");
+   if(!m) {
       throw Invalid_Argument(fmt("PSS_Params::from_padding_name unexpected param '{}'", padding_name));
    }
 
-   const std::string hash_fn = scanner.arg(0);
-   BOTAN_ARG_CHECK(scanner.arg(1) == "MGF1", "PSS requires MGF1");
-   const size_t salt_len = scanner.arg_as_integer(2);
-   return PSS_Params(hash_fn, salt_len);
+   return PSS_Params(m->str("hash"), m->integer("salt_len"));
 }
 
 PSS_Params::PSS_Params(std::string_view hash_fn, size_t salt_len) :
