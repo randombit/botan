@@ -321,6 +321,7 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
 
          private:
             friend class AlternativeName;
+            friend class GeneralName;
 
             OtherNameValue(const OID& oid, std::vector<uint8_t> value) : m_oid(oid), m_value(std::move(value)) {}
 
@@ -575,6 +576,12 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
       static GeneralName ipv6_address(const IPv6Subnet& subnet);
 
       /**
+      * Create an otherName from its type-id and the raw BER encoding of the
+      * inner value, i.e. the complete TLV contained in the EXPLICIT [0] tag
+      */
+      static GeneralName other_name(const OID& type_id, std::span<const uint8_t> ber_value);
+
+      /**
       * Wrap a URI SAN in a GeneralName, this is used for ffi
       * @warning internal function that may be removed at any time
       */
@@ -594,6 +601,12 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
       * @return Type of the name expressed in this restriction
       */
       NameType type_code() const { return m_type; }
+
+      /**
+      * @return the type-id and raw inner value of an otherName
+      * @throws Invalid_State if this GeneralName is not an otherName
+      */
+      const AlternativeName::OtherNameValue& other_name_value() const;
 
       /**
       * @return Type of the name. Can be DN, DNS, IP, RFC822 or URI.
@@ -686,10 +699,16 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
       };
 
       /*
-      TODO: consider adding OtherConstraint and UnknownConstraint types here and eliminating m_type,
+      TODO: consider adding an UnknownConstraint type here and eliminating m_type,
       using m_name variant choice as the single source of the constraint type
       */
-      using NameVariant = std::variant<EmailConstraint, DNSConstraint, URIConstraint, X509_DN, IPv4Subnet, IPv6Subnet>;
+      using NameVariant = std::variant<EmailConstraint,
+                                       DNSConstraint,
+                                       URIConstraint,
+                                       X509_DN,
+                                       IPv4Subnet,
+                                       IPv6Subnet,
+                                       AlternativeName::OtherNameValue>;
 
       GeneralName(NameType type, NameVariant name) : m_type(type), m_name(std::move(name)) {}
 
