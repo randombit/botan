@@ -175,6 +175,25 @@ BOTAN_REGISTER_PERF_TEST("FrodoKEM", PerfTest_FrodoKEM);
 
 #endif
 
+#if defined(BOTAN_HAS_HQC)
+
+class PerfTest_HQC final : public PerfTest_PK_KEM {
+   public:
+      std::string algo() const override { return "HQC"; }
+
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
+         return {
+            "HQC-1",
+            "HQC-3",
+            "HQC-5",
+         };
+      }
+};
+
+BOTAN_REGISTER_PERF_TEST("HQC", PerfTest_HQC);
+
+#endif
+
 #if defined(BOTAN_HAS_CLASSICMCELIECE)
 
 class PerfTest_Classic_McEliece final : public PerfTest_PK_KEM {

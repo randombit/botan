@@ -5,7 +5,7 @@ Version 3.14.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 General Notes
-----------------------------------------
+-------------
 
 * Botan4 is expected to be released in May 2027. This new major release will
   remove significant deprecated functionality.  Please consult the deprecation

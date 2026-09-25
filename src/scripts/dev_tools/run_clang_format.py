@@ -75,7 +75,10 @@ def check_clang_format(clang_format, style_file, source_file):
 def list_source_files_in(directory):
     excluded = ['pkcs11.h']
 
-    for (dirpath, _, filenames) in os.walk(directory):
+    for (dirpath, dirnames, filenames) in os.walk(directory):
+        # Do not descend into Rust crates (e.g. the rust-hqc submodule)
+        dirnames[:] = [d for d in dirnames if not os.path.exists(os.path.join(dirpath, d, 'Cargo.toml'))]
+
         for filename in filenames:
             if filename.endswith(('.cpp', '.h')) and filename not in excluded:
                 yield os.path.join(dirpath, filename)

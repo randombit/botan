@@ -1,0 +1,4 @@
+[submodule "src/lib/pubkey/hqc/rust-hqc"]
+	path = src/lib/pubkey/hqc/rust-hqc
+	url = https://github.com/falko-strenzke/Rust-HQC-fork.git
+	branch = for-botan-integration

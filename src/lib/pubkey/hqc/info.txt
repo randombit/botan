@@ -1,0 +1,33 @@
+<defines>
+HQC -> 20260925
+</defines>
+
+<module_info>
+name -> "HQC"
+brief -> "HQC KEM, backed by the Rust crate rust-hqc via its C API"
+</module_info>
+
+load_on vendor
+
+<warning>
+The HQC module links against the Rust static library librust_hqc.a of the git submodule src/lib/pubkey/hqc/rust-hqc. Build it beforehand with cargo build --release in src/lib/pubkey/hqc/rust-hqc/rust-hqc and pass --with-external-includedir=<crate>/include and --with-external-libdir=<crate>/target/release to configure.py. On systems with glibc older than 2.34 whose linker defaults to --as-needed, additionally pass --ldflags=-Wl,--no-as-needed.
+</warning>
+
+<requires>
+pubkey
+rng
+</requires>
+
+<libs>
+all -> rust_hqc
+linux -> dl,pthread,m
+</libs>
+
+<header:public>
+hqc.h
+hqc_mode.h
+</header:public>
+
+<header:internal>
+hqc_ffi.h
+</header:internal>

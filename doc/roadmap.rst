@@ -21,7 +21,7 @@ The following major feature work is currently planned for Botan3:
 * DTLS 1.3
 * CMS (RFC 5562 et al)
 * XMSS^MT
-* HQC, possibly implemented using Rust
+* HQC (an opt-in module wrapping a Rust implementation exists; build integration and upstreaming are pending)
 
 Along with the usual optimizations, bug fixes, and refinements.
 

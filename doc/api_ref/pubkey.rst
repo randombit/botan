@@ -285,8 +285,38 @@ Post-quantum secure, code-based key encapsulation scheme.
    hybrid scheme, paired with either a classical EC algorithm or a lattice-based
    scheme such as ML-KEM.
 
+HQC
+~~~
+
+Post-quantum secure, code-based key encapsulation scheme (Hamming Quasi-Cyclic),
+selected by NIST in March 2025 for standardization as a backup to ML-KEM. The
+implementation follows the HQC specification of 2025-08-22 and supports the
+parameter sets ``HQC-1``, ``HQC-3`` and ``HQC-5``.
+
+The cryptographic core is implemented in Rust in the crate ``rust-hqc``, which
+is included as a git submodule in ``src/lib/pubkey/hqc/rust-hqc``. The Botan
+module ``hqc`` wraps the crate's C API and is not built by default. To enable it,
+build the crate first and point ``configure.py`` to its header and static library::
+
+  git submodule update --init src/lib/pubkey/hqc/rust-hqc
+  (cd src/lib/pubkey/hqc/rust-hqc/rust-hqc && cargo build --release)
+  ./configure.py --enable-modules=hqc \
+     --with-external-includedir=src/lib/pubkey/hqc/rust-hqc/rust-hqc/include \
+     --with-external-libdir=src/lib/pubkey/hqc/rust-hqc/rust-hqc/target/release
+
+The Rust standard library needs ``libdl``, ``libpthread`` and ``libm``, which the
+module adds to the link line on Linux. On distributions with glibc older than
+2.34 whose linker defaults to ``--as-needed`` (for example Ubuntu 20.04) these
+have to be kept explicitly by passing ``--ldflags=-Wl,--no-as-needed`` to
+``configure.py``. Building on Windows is untested; the libraries required there
+are listed by ``cargo rustc -- --print native-static-libs``.
+
+Keys are encoded as the raw byte strings defined by the specification (there is
+no ASN.1 structure for HQC keys yet), and the algorithm identifiers use OIDs from
+Botan's private arc. The public key format is not yet stable.
+
 ElGamal
-~~~~~~~~
+~~~~~~~
 
 Encryption scheme based on the discrete logarithm problem. Generally unused
 except in PGP.

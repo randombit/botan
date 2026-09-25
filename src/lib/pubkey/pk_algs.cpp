@@ -89,6 +89,10 @@
    #include <botan/frodokem.h>
 #endif
 
+#if defined(BOTAN_HAS_HQC)
+   #include <botan/hqc.h>
+#endif
+
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
    #include <botan/kyber.h>
 #endif
@@ -168,6 +172,12 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_FRODOKEM)
    if(alg_name == "FrodoKEM" || alg_name.starts_with("FrodoKEM-") || alg_name.starts_with("eFrodoKEM-")) {
       return std::make_unique<FrodoKEM_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_HQC)
+   if(alg_name == "HQC" || alg_name.starts_with("HQC-")) {
+      return std::make_unique<HQC_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -353,6 +363,12 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_FRODOKEM)
    if(alg_name == "FrodoKEM" || alg_name.starts_with("FrodoKEM-") || alg_name.starts_with("eFrodoKEM-")) {
       return std::make_unique<FrodoKEM_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_HQC)
+   if(alg_name == "HQC" || alg_name.starts_with("HQC-")) {
+      return std::make_unique<HQC_PrivateKey>(alg_id, key_bits);
    }
 #endif
 
@@ -566,6 +582,13 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
    if(alg_name == "FrodoKEM") {
       const auto mode = params.empty() ? FrodoKEMMode::FrodoKEM976_SHAKE : FrodoKEMMode(params);
       return std::make_unique<FrodoKEM_PrivateKey>(rng, mode);
+   }
+#endif
+
+#if defined(BOTAN_HAS_HQC)
+   if(alg_name == "HQC") {
+      const auto mode = params.empty() ? HQC_Mode::HQC_3 : HQC_Mode(params);
+      return std::make_unique<HQC_PrivateKey>(rng, mode);
    }
 #endif
 
