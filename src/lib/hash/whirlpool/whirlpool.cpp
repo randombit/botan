@@ -13,6 +13,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/target_info.h>
+#include <botan/internal/whirlpool_consts.h>
 #include <array>
 
 #if defined(BOTAN_HAS_CPUID)
@@ -22,27 +23,6 @@
 namespace Botan {
 
 namespace {
-
-// Derive the 256-byte S-box from the Whirlpool E and R mini-boxes
-consteval std::array<uint8_t, 256> whirlpool_sbox() noexcept {
-   constexpr uint8_t Ebox[16] = {1, 11, 9, 12, 13, 6, 15, 3, 14, 8, 7, 4, 10, 2, 5, 0};
-   constexpr uint8_t Rbox[16] = {7, 12, 11, 13, 14, 4, 9, 15, 6, 3, 8, 10, 2, 5, 1, 0};
-
-   // Derive the inverse of the E table
-   uint8_t Eibox[16] = {};
-   for(size_t i = 0; i != 16; ++i) {
-      Eibox[Ebox[i]] = static_cast<uint8_t>(i);
-   }
-
-   std::array<uint8_t, 256> S = {};
-   for(size_t i = 0; i != 256; ++i) {
-      const uint8_t L = Ebox[i >> 4];
-      const uint8_t R = Eibox[i & 0x0F];
-      const uint8_t T = Rbox[L ^ R];
-      S[i] = static_cast<uint8_t>((Ebox[L ^ T] << 4) | Eibox[R ^ T]);
-   }
-   return S;
-}
 
 #if defined(BOTAN_TARGET_ARCH_IS_ARM64) || defined(BOTAN_TARGET_ARCH_IS_X86_64) || defined(BOTAN_TARGET_ARCH_IS_PPC64)
 constexpr bool WhirlpoolUnalignedTables = true;
@@ -76,15 +56,6 @@ constexpr size_t WHIRL_U_STRIDE = 2 * sizeof(uint64_t);
       }
    }
    return U;
-}
-
-// Round constants are from the first 64 elements of the sbox
-consteval std::array<uint64_t, 10> whirlpool_rc(const std::array<uint8_t, 256>& S) noexcept {
-   std::array<uint64_t, 10> RC = {};
-   for(size_t r = 0; r != 10; ++r) {
-      RC[r] = load_be<uint64_t>(S.data(), r);
-   }
-   return RC;
 }
 
 constexpr auto WHIRL_S = whirlpool_sbox();
