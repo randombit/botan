@@ -13,12 +13,18 @@
    #include "test_pubkey.h"
    #include "test_rng.h"
    #include <botan/asn1_obj.h>
+   #include <botan/ber_dec.h>
+   #include <botan/data_src.h>
    #include <botan/hash.h>
    #include <botan/hex.h>
+   #include <botan/pem.h>
    #include <botan/pk_options.h>
+   #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
+   #include <botan/x509_key.h>
    #include <botan/xmss.h>
    #include <botan/internal/buffer_slicer.h>
+   #include <botan/internal/filesystem.h>
    #include <botan/internal/loadstor.h>
 #endif
 
@@ -316,8 +322,10 @@ std::vector<Test::Result> xmss_legacy_private_key() {
       "6B250DBD1599FBB09A7F148A7AEFEAB26ADB728A330DD3F616C8A736D1BF4EA17F2C3BF"
       "A5E22C249FA9D1E7DA08DB351709C4");
 
-   Botan::XMSS_PrivateKey legacy_secret_key =
-      Botan::XMSS_PrivateKey(Botan::AlgorithmIdentifier(), legacy_xmss_private_key);
+   // The private key above is the OCTET STRING wrapped PKCS #8 payload of that
+   // Botan version, which used the OID of draft-vangeest-x509-hash-sigs
+   const Botan::AlgorithmIdentifier legacy_alg_id("XMSS-draft-vangeest", Botan::AlgorithmIdentifier::USE_EMPTY_PARAM);
+   Botan::XMSS_PrivateKey legacy_secret_key = Botan::XMSS_PrivateKey(legacy_alg_id, legacy_xmss_private_key);
    auto public_key_from_secret_key = legacy_secret_key.public_key();
    Botan::XMSS_PublicKey legacy_public_key =
       Botan::XMSS_PublicKey(Botan::AlgorithmIdentifier(), legacy_xmss_public_key);
@@ -356,12 +364,141 @@ std::vector<Test::Result> xmss_legacy_private_key() {
    };
 }
 
+std::vector<Test::Result> xmss_x509_encoding() {
+   auto rng = Test::new_rng(__func__);
+
+   const Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, *rng);
+   const auto pk = sk.public_key();
+   const auto raw_pk = pk->raw_public_key_bits();
+
+   return {
+      CHECK("SubjectPublicKeyInfo encoding follows RFC 9802",
+            [&](auto& result) {
+               const auto spki = pk->subject_public_key();
+
+               Botan::AlgorithmIdentifier alg_id;
+               std::vector<uint8_t> key_bits;
+               Botan::BER_Decoder(spki)
+                  .start_sequence()
+                  .decode(alg_id)
+                  .decode(key_bits, Botan::ASN1_Type::BitString)
+                  .end_cons()
+                  .verify_end();
+
+               result.test_str_eq("id-alg-xmss-hashsig OID", alg_id.oid().to_string(), "1.3.6.1.5.5.7.6.34");
+               result.test_is_true("AlgorithmIdentifier parameters are absent", alg_id.parameters_are_empty());
+               result.test_bin_eq("BIT STRING holds the raw public key without ASN.1 wrapping", key_bits, raw_pk);
+
+               const auto loaded = Botan::X509::load_key(spki);
+               result.test_str_eq("reloaded key algorithm", loaded->algo_name(), "XMSS");
+               result.test_bin_eq("reloaded key matches", loaded->raw_public_key_bits(), raw_pk);
+            }),
+
+      CHECK("Legacy SubjectPublicKeyInfo with draft OID and OCTET STRING wrapping is accepted",
+            [&](auto& result) {
+               if(!Botan::has_filesystem_impl()) {
+                  result.test_note("Skipping due to missing filesystem access");
+                  return;
+               }
+
+               // The public key of the ISARA test certificate, encoded as specified in
+               // draft-vangeest-x509-hash-sigs-03: legacy OID and OCTET STRING wrapped key
+               const auto legacy_spki = Botan::PEM_Code::decode_check_label(
+                  Test::read_data_file("x509/xmss/xmss_isara_root_legacy_pubkey.pem"), "PUBLIC KEY");
+
+               Botan::AlgorithmIdentifier alg_id;
+               std::vector<uint8_t> key_bits;
+               Botan::BER_Decoder(legacy_spki)
+                  .start_sequence()
+                  .decode(alg_id)
+                  .decode(key_bits, Botan::ASN1_Type::BitString)
+                  .end_cons()
+                  .verify_end();
+               result.test_str_eq("test data uses the legacy OID", alg_id.oid().to_string(), "0.4.0.127.0.15.1.1.13.0");
+
+               std::vector<uint8_t> wrapped_raw_pk;
+               Botan::BER_Decoder(key_bits).decode(wrapped_raw_pk, Botan::ASN1_Type::OctetString).verify_end();
+
+               const auto loaded = Botan::X509::load_key(legacy_spki);
+               result.test_str_eq("legacy key algorithm", loaded->algo_name(), "XMSS");
+               result.test_bin_eq(
+                  "legacy key matches the OCTET STRING content", loaded->raw_public_key_bits(), wrapped_raw_pk);
+               result.test_str_eq("re-encoding a legacy key uses the RFC 9802 OID",
+                                  loaded->object_identifier().to_string(),
+                                  "1.3.6.1.5.5.7.6.34");
+               result.test_bin_eq(
+                  "re-encoding a legacy key drops the OCTET STRING wrapper", loaded->public_key_bits(), wrapped_raw_pk);
+            }),
+
+      CHECK("Key encoding is selected by the OID",
+            [&](auto& result) {
+               if(!Botan::has_filesystem_impl()) {
+                  result.test_note("Skipping due to missing filesystem access");
+                  return;
+               }
+
+               // Test data generated by src/scripts/dev_tools/gen_xmss_encoding_testdata.py
+               auto read_pem = [](const std::string& file, const std::string& label) {
+                  return Botan::PEM_Code::decode_check_label(Test::read_data_file("x509/xmss/" + file), label);
+               };
+               auto load_pkcs8 = [&](const std::string& file) {
+                  const auto der = read_pem(file, "PRIVATE KEY");
+                  Botan::DataSource_Memory source(der);
+                  return Botan::PKCS8::load_key(source);
+               };
+
+               // RFC 9802 OID: the SubjectPublicKeyInfo carries the raw public key
+               const auto rfc_pk = Botan::X509::load_key(read_pem("xmss_rfc9802_pubkey.pem", "PUBLIC KEY"));
+               result.test_str_eq("RFC 9802 public key algorithm", rfc_pk->algo_name(), "XMSS");
+               const auto expected_raw_pk = rfc_pk->raw_public_key_bits();
+
+               result.template test_throws<Botan::Decoding_Error>(
+                  "RFC 9802 OID with OCTET STRING wrapped key is rejected",
+                  [&] { Botan::X509::load_key(read_pem("xmss_rfc9802_pubkey_wrapped_invalid.pem", "PUBLIC KEY")); });
+
+               // draft-vangeest OID: the key must be wrapped in an OCTET STRING
+               result.template test_throws<Botan::Decoding_Error>("legacy OID with raw key is rejected", [&] {
+                  Botan::X509::load_key(read_pem("xmss_legacy_pubkey_raw_invalid.pem", "PUBLIC KEY"));
+               });
+
+               // The private arc OID of Botan versions before 2.13 is not an XMSS key anymore
+               result.template test_throws<Botan::Decoding_Error>("pre-2.13 OID is rejected", [&] {
+                  Botan::X509::load_key(read_pem("xmss_unknown_oid_pubkey_invalid.pem", "PUBLIC KEY"));
+               });
+               result.template test_throws<Botan::Decoding_Error>("constructor rejects a foreign OID", [&] {
+                  const Botan::AlgorithmIdentifier foreign("XMSS-draft12", Botan::AlgorithmIdentifier::USE_EMPTY_PARAM);
+                  const Botan::XMSS_PublicKey pk_with_foreign_oid(foreign, expected_raw_pk);
+               });
+
+               // PKCS #8: the payload is the OCTET STRING wrapped raw private key under both OIDs
+               const auto rfc_sk = load_pkcs8("xmss_rfc9802_privkey.pem");
+               result.test_str_eq("RFC 9802 private key algorithm", rfc_sk->algo_name(), "XMSS");
+               result.test_bin_eq("RFC 9802 private key matches the public key",
+                                  rfc_sk->public_key()->raw_public_key_bits(),
+                                  expected_raw_pk);
+
+               result.template test_throws<Botan::Decoding_Error>(
+                  "RFC 9802 OID with raw private key payload is rejected",
+                  [&] { load_pkcs8("xmss_rfc9802_privkey_raw_invalid.pem"); });
+
+               const auto legacy_sk = load_pkcs8("xmss_legacy_privkey.pem");
+               result.test_str_eq("legacy private key algorithm", legacy_sk->algo_name(), "XMSS");
+               result.test_bin_eq("legacy private key matches the public key",
+                                  legacy_sk->public_key()->raw_public_key_bits(),
+                                  expected_raw_pk);
+               result.test_str_eq("re-encoding a legacy private key uses the RFC 9802 OID",
+                                  legacy_sk->pkcs8_algorithm_identifier().oid().to_string(),
+                                  "1.3.6.1.5.5.7.6.34");
+            }),
+   };
+}
+
 BOTAN_REGISTER_TEST("pubkey", "xmss_sign", XMSS_Signature_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_verify", XMSS_Signature_Verify_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_verify_invalid", XMSS_Signature_Verify_Invalid_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_keygen", XMSS_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_keygen_reference", XMSS_Keygen_Reference_Test);
-BOTAN_REGISTER_TEST_FN("pubkey", "xmss_unit_tests", xmss_statefulness, xmss_legacy_private_key);
+BOTAN_REGISTER_TEST_FN("pubkey", "xmss_unit_tests", xmss_statefulness, xmss_legacy_private_key, xmss_x509_encoding);
 
 #endif
 
