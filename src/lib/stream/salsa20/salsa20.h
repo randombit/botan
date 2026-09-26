@@ -27,6 +27,12 @@ class Salsa20 final : public StreamCipher {
       bool has_keying_material() const override;
       void seek(uint64_t offset) override;
 
+      /**
+      * Seek to the start of the specified 64-byte block. Unlike seek, this
+      * can reach the entire 64-bit counter space.
+      */
+      void seek_block(uint64_t block);
+
       bool supports_seek() const override { return true; }
 
       // Salsa uses a 64-bit counter which we consider sufficient

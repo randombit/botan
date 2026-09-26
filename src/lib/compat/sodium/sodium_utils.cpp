@@ -11,6 +11,8 @@
 #include <botan/internal/chacha.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
+#include <algorithm>
+#include <cstddef>
 #include <cstdlib>
 
 namespace Botan {
@@ -24,9 +26,14 @@ uint32_t Sodium::randombytes_uniform(uint32_t upper_bound) {
       return 0;
    }
 
-   // Not completely uniform
-   uint64_t x = 0;
-   randombytes_buf(&x, sizeof(x));
+   // Reject values below 2^32 mod upper_bound to avoid modulo bias
+   const uint32_t min = (~upper_bound + 1) % upper_bound;
+
+   uint32_t x = 0;
+   do {
+      randombytes_buf(&x, sizeof(x));
+   } while(x < min);
+
    return x % upper_bound;
 }
 
@@ -102,20 +109,27 @@ void Sodium::sodium_add(uint8_t a[], const uint8_t b[], size_t len) {
    }
 }
 
+namespace {
+
+// The length prefix is padded so the returned pointer keeps calloc's alignment
+constexpr size_t sodium_malloc_prefix = std::max(sizeof(uint64_t), alignof(std::max_align_t));
+
+}  // namespace
+
 void* Sodium::sodium_malloc(size_t size) {
    const uint64_t len = size;
 
-   if(size + sizeof(len) < size) {
+   if(size + sodium_malloc_prefix < size) {
       return nullptr;
    }
 
    // NOLINTNEXTLINE(*-no-malloc,*-owning-memory,*-const-correctness)
-   uint8_t* p = static_cast<uint8_t*>(std::calloc(size + sizeof(len), 1));
+   uint8_t* p = static_cast<uint8_t*>(std::calloc(size + sodium_malloc_prefix, 1));
    if(p == nullptr) {
       return nullptr;
    }
    store_le(len, p);
-   return p + 8;
+   return p + sodium_malloc_prefix;
 }
 
 void Sodium::sodium_free(void* ptr) {
@@ -123,7 +137,7 @@ void Sodium::sodium_free(void* ptr) {
       return;
    }
 
-   uint8_t* p = static_cast<uint8_t*>(ptr) - 8;
+   uint8_t* p = static_cast<uint8_t*>(ptr) - sodium_malloc_prefix;
    const uint64_t len = load_le<uint64_t>(p, 0);
    secure_scrub_memory(ptr, static_cast<size_t>(len));
    // NOLINTNEXTLINE(*-no-malloc,*-owning-memory)
