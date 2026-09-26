@@ -160,7 +160,7 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
       template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
       T output(size_t bytes) {
          T out(bytes);
-         generate_bytes(out);
+         generate_output(out);
          return out;
       }
 
@@ -171,7 +171,7 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
       template <size_t count>
       std::array<uint8_t, count> output() {
          std::array<uint8_t, count> out;  // NOLINT(*-member-init)
-         generate_bytes(out);
+         generate_output(out);
          return out;
       }
 
@@ -188,7 +188,7 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
        * Fill @p output with the next output bytes. The number of bytes
        * depends on the size of @p output.
        */
-      void output(std::span<uint8_t> output) { generate_bytes(output); }
+      void output(std::span<uint8_t> output) { generate_output(output); }
 
       /**
        * Generate a single output byte
@@ -196,11 +196,19 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
        */
       uint8_t output_next_byte() {
          uint8_t out = 0;
-         generate_bytes({&out, 1});
+         generate_output({&out, 1});
          return out;
       }
 
    private:
+      void generate_output(std::span<uint8_t> output) {
+         if(!m_xof_started) {
+            // As in update(), enforce start() with a default value
+            start();
+         }
+         generate_bytes(output);
+      }
+
       /**
        * Take @p salt and/or @p key to pre-parameterize the XOF. This must be called
        * before calling XOF::update().
