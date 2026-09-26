@@ -11,6 +11,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/target_info.h>
 #include <sstream>
+#include <utility>
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    #include <dlfcn.h>
@@ -64,12 +65,34 @@ void* open_shared_library(const std::string& library) {
 Dynamically_Loaded_Library::Dynamically_Loaded_Library(std::string_view library) :
       m_lib_name(library), m_lib(open_shared_library(m_lib_name)) {}
 
+Dynamically_Loaded_Library::Dynamically_Loaded_Library(Dynamically_Loaded_Library&& other) noexcept :
+      m_lib_name(std::move(other.m_lib_name)), m_lib(std::exchange(other.m_lib, nullptr)) {}
+
+Dynamically_Loaded_Library& Dynamically_Loaded_Library::operator=(Dynamically_Loaded_Library&& other) noexcept {
+   if(this != &other) {
+      close();
+      m_lib_name = std::move(other.m_lib_name);
+      m_lib = std::exchange(other.m_lib, nullptr);
+   }
+   return *this;
+}
+
 Dynamically_Loaded_Library::~Dynamically_Loaded_Library() {
+   close();
+}
+
+void Dynamically_Loaded_Library::close() {
+   if(m_lib == nullptr) {
+      return;
+   }
+
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    ::dlclose(m_lib);
 #elif defined(BOTAN_TARGET_OS_HAS_WIN32)
    ::FreeLibrary(reinterpret_cast<HMODULE>(m_lib));
 #endif
+
+   m_lib = nullptr;
 }
 
 void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol) const {
@@ -81,6 +104,10 @@ void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol) cons
 }
 
 void* Dynamically_Loaded_Library::resolve_symbol_internal(const std::string& symbol) const {
+   if(m_lib == nullptr) {
+      throw Invalid_State("Dynamically_Loaded_Library: library handle was moved from");
+   }
+
    // NOLINTNEXTLINE(*-const-correctness) bug in clang-tidy
    void* addr = nullptr;
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
