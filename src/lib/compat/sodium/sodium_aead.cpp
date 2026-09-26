@@ -52,12 +52,12 @@ int sodium_aead_chacha20poly1305_decrypt(uint8_t ptext[],
                                          const uint8_t nonce[],
                                          size_t nonce_len,
                                          const uint8_t key[]) {
-   if(ctext_len < 16) {
-      return -1;
-   }
-
    if(ptext_len != nullptr) {
       *ptext_len = 0;
+   }
+
+   if(ctext_len < 16) {
+      return -1;
    }
 
    auto chacha20poly1305 = AEAD_Mode::create_or_throw("ChaCha20Poly1305", Cipher_Dir::Decryption);
@@ -73,6 +73,9 @@ int sodium_aead_chacha20poly1305_decrypt(uint8_t ptext[],
    try {
       chacha20poly1305->finish(buf);
    } catch(Invalid_Authentication_Tag&) {
+      if(ptext != nullptr) {
+         clear_mem(ptext, ctext_len - 16);
+      }
       return -1;
    }
 
@@ -80,7 +83,9 @@ int sodium_aead_chacha20poly1305_decrypt(uint8_t ptext[],
       *ptext_len = ctext_len - 16;
    }
 
-   copy_mem(ptext, buf.data(), buf.size());
+   if(ptext != nullptr) {
+      copy_mem(ptext, buf.data(), buf.size());
+   }
    return 0;
 }
 
@@ -135,10 +140,15 @@ int sodium_aead_chacha20poly1305_decrypt_detached(uint8_t ptext[],
    try {
       chacha20poly1305->finish(buf);
    } catch(Invalid_Authentication_Tag&) {
+      if(ptext != nullptr) {
+         clear_mem(ptext, ctext_len);
+      }
       return -1;
    }
 
-   copy_mem(ptext, buf.data(), buf.size());
+   if(ptext != nullptr) {
+      copy_mem(ptext, buf.data(), buf.size());
+   }
    return 0;
 }
 

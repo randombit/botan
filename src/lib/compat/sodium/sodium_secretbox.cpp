@@ -11,8 +11,19 @@
 #include <botan/secmem.h>
 #include <botan/stream_cipher.h>
 #include <botan/internal/ct_utils.h>
+#include <cstring>
 
 namespace Botan {
+
+namespace {
+
+bool partially_overlaps(const uint8_t x[], const uint8_t y[], size_t len) {
+   const auto xi = reinterpret_cast<uintptr_t>(x);
+   const auto yi = reinterpret_cast<uintptr_t>(y);
+   return (xi > yi && xi - yi < len) || (yi > xi && yi - xi < len);
+}
+
+}  // namespace
 
 int Sodium::crypto_secretbox_xsalsa20poly1305(
    uint8_t ctext[], const uint8_t ptext[], size_t ptext_len, const uint8_t nonce[], const uint8_t key[]) {
@@ -79,6 +90,12 @@ int Sodium::crypto_secretbox_detached(uint8_t ctext[],
    secure_vector<uint8_t> auth_key(32);
    salsa->write_keystream(auth_key.data(), auth_key.size());
 
+   // The easy API places the ciphertext 16 bytes after the plaintext when used in-place
+   if(partially_overlaps(ctext, ptext, ptext_len)) {
+      std::memmove(ctext, ptext, ptext_len);
+      ptext = ctext;
+   }
+
    salsa->cipher(ptext, ctext, ptext_len);
 
    auto poly1305 = MessageAuthenticationCode::create_or_throw("Poly1305");
@@ -109,6 +126,16 @@ int Sodium::crypto_secretbox_open_detached(uint8_t ptext[],
 
    if(!CT::is_equal(mac, computed_mac.data(), computed_mac.size()).as_bool()) {
       return -1;
+   }
+
+   // Verification only
+   if(ptext == nullptr) {
+      return 0;
+   }
+
+   if(partially_overlaps(ptext, ctext, ctext_len)) {
+      std::memmove(ptext, ctext, ctext_len);
+      ctext = ptext;
    }
 
    salsa->cipher(ctext, ptext, ctext_len);
