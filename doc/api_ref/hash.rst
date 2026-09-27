@@ -421,6 +421,10 @@ This combines two cryptographic hashes in such a way that preimage and collision
 attacks are provably at least as hard as a preimage or collision attack on the
 strongest hash.
 
+.. warning::
+
+   This combiner is deprecated and will be removed in a future major release.
+
 Algorithm specification name:
 ``Comb4P(<HashFunction>,<HashFunction>)``,
 e.g. ``Comb4P(SHA-1,RIPEMD-160)``

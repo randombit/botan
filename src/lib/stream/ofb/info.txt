@@ -5,6 +5,7 @@ OFB -> 20131128
 <module_info>
 name -> "OFB"
 brief -> "OFB block cipher mode"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>
