@@ -2168,6 +2168,37 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
       // cookie path throws and every DTLS server test fails.
       std::string tls_peer_network_identity() override { return "bogo-shim-peer"; }
 
+      // Botan registers DTLS retransmission timers here. They are only queued:
+      // the runner must not see packets between AdvanceClock ('T') and its 't'
+      // ACK, so ops are invoked from fire_due_deferred_operations() after the
+      // ACK, never from this callback (also not for a zero delay).
+      void tls_register_deferred_operation(uint64_t monotonic_delay_ms, std::function<void()> op) override {
+         const uint64_t deadline_ms = tls_current_monotonic_clock_ms() + monotonic_delay_ms;
+         m_deferred_operations.emplace_back(Deferred_Operation{deadline_ms, std::move(op)});
+      }
+
+      // Invoke every queued operation whose deadline is within the fudge
+      // interval of the current virtual clock time, earliest first. BoGo's
+      // DTLS-Retransmit-Fudge test advances the clock to timeout-10ms and
+      // expects a retransmit; the library's next_retransmission_timeout()
+      // already treats a <=15ms remainder as expired, so firing the op a
+      // bit early makes the retransmission happen.
+      void fire_due_deferred_operations() {
+         const uint64_t now_ms = tls_current_monotonic_clock_ms();
+         const uint64_t fudge_ms = std::min<uint64_t>(15, m_policy.dtls_initial_timeout() / 2);
+
+         std::stable_sort(m_deferred_operations.begin(), m_deferred_operations.end());
+
+         while(!m_deferred_operations.empty() && m_deferred_operations.front().deadline_ms <= now_ms + fudge_ms) {
+            // Pop the operation from the queue only, then invoke it. op() might
+            // throw an exception or register new deferred operations. Both of
+            // which must happen only after m_deferred_operations got updated.
+            auto op = std::move(m_deferred_operations.front().op);
+            m_deferred_operations.erase(m_deferred_operations.begin());
+            op();
+         }
+      }
+
       void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& msg) override {
          if(msg.type() == Botan::TLS::Handshake_Type::HelloRetryRequest) {
             m_hello_retry_request = true;
@@ -2175,6 +2206,15 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
       }
 
    private:
+      struct Deferred_Operation {
+            uint64_t deadline_ms;
+            std::function<void()> op;
+
+            friend auto operator<=>(const Deferred_Operation& lhs, const Deferred_Operation& rhs) {
+               return lhs.deadline_ms <=> rhs.deadline_ms;
+            }
+      };
+
       Botan::TLS::Channel* m_channel;
       const Shim_Arguments& m_args;
       Shim_Policy& m_policy;
@@ -2189,6 +2229,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
       // Virtual clock for the DTLS retransmit timer. Tracked in nanoseconds
       // (BoGo's wire unit) to avoid rounding errors
       uint64_t m_dtls_timer_ns = 0;
+      std::vector<Deferred_Operation> m_deferred_operations;
 };
 
 }  // namespace
@@ -2295,11 +2336,10 @@ int main(int /*argc*/, char* argv[]) {
                      chan->received_data(buf.data(), packet_len);
                   } else if(opcode == 'T') {
                      // AdvanceClock: bump the virtual DTLS timer, ACK, and
-                     // THEN fire timeout_check. Any packets emitted during
-                     // the AdvanceClock window (between 'T' and 't' ACK) are
-                     // treated by the runner as unexpected; the retransmit
-                     // packets must arrive only after the ACK, where the
-                     // runner's ReadRetransmit picks them up.
+                     // THEN fire any deferred retransmission ops. Packets
+                     // emitted between 'T' and the 't' ACK are treated by the
+                     // runner as unexpected; retransmits must arrive only
+                     // after the ACK, where ReadRetransmit picks them up.
                      uint8_t timeout_bytes[8];
                      socket.read_exactly(timeout_bytes, sizeof(timeout_bytes));
                      const uint64_t nsec = Botan::load_be<uint64_t>(timeout_bytes, 0);
@@ -2307,7 +2347,7 @@ int main(int /*argc*/, char* argv[]) {
                      callbacks->advance_dtls_timer_ns(nsec);
                      const uint8_t timeout_ack = 't';
                      socket.write(&timeout_ack, 1);
-                     chan->timeout_check();
+                     callbacks->fire_due_deferred_operations();
                   } else if(opcode == 'E') {
                      // ExpectNextTimeout: runner-side self-check that the next
                      // timeout matches its model. Botan doesn't expose the

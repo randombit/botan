@@ -205,6 +205,10 @@ class BOTAN_PUBLIC_API(2, 0) Channel {
       * This function does nothing unless the channel represents a DTLS connection with
       * a handshake in progress.
       *
+      * Consider using ``Callbacks::tls_register_deferred_operation`` introduced
+      * in Botan 3.14.0 to handle retransmission timers transparently instead of
+      * polling this function at regular intervals. Never do both, though!
+      *
       * By default after a certain interval where no progress has been made in the
       * handshake (controlled by the policy values `TLS::Policy::dtls_initial_timeout`,
       * `TLS::Policy::dtls_maximum_timeout`, and `TLS::Policy::dtls_maximum_retransmissions`),
