@@ -394,15 +394,18 @@ void Salsa20::clear() {
 }
 
 void Salsa20::seek(uint64_t offset) {
+   seek_block(offset / 64);
+   m_position = offset % 64;
+}
+
+void Salsa20::seek_block(uint64_t block) {
    assert_key_material_set();
 
-   const uint64_t counter = offset / 64;
-
-   m_state[8] = static_cast<uint32_t>(counter);
-   m_state[9] = static_cast<uint32_t>(counter >> 32);
+   m_state[8] = static_cast<uint32_t>(block);
+   m_state[9] = static_cast<uint32_t>(block >> 32);
 
    salsa20(m_buffer.data(), m_buffer.size() / 64, m_state.data(), 20);
 
-   m_position = offset % 64;
+   m_position = 0;
 }
 }  // namespace Botan

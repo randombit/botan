@@ -8,8 +8,12 @@
 
 #if defined(BOTAN_HAS_SODIUM_API)
    #include <botan/hex.h>
+   #include <botan/mem_ops.h>
    #include <botan/sodium.h>
+   #include <algorithm>
+   #include <cstddef>
    #include <cstring>
+   #include <span>
 #endif
 
 namespace Botan_Tests {
@@ -36,6 +40,8 @@ class Sodium_API_Tests : public Test {
          results.push_back(randombytes_buf_deterministic());
          results.push_back(secretbox_xsalsa20poly1305());
          results.push_back(secretbox_xsalsa20poly1305_detached());
+         results.push_back(secretbox_easy_overlap());
+         results.push_back(secretbox_open_detached_verify_only());
          results.push_back(shorthash_siphash24());
          results.push_back(stream_chacha20());
          results.push_back(stream_chacha20_ietf());
@@ -45,6 +51,8 @@ class Sodium_API_Tests : public Test {
          results.push_back(sign_ed25519());
          results.push_back(sodium_malloc());
          results.push_back(sodium_utils());
+         results.push_back(randombytes_uniform());
+         results.push_back(aead_decrypt_edge_cases());
 
          return results;
       }
@@ -58,6 +66,18 @@ class Sodium_API_Tests : public Test {
 
          Botan::Sodium::sodium_free(p);
          Botan::Sodium::sodium_free(nullptr);
+
+         for(const size_t len : {1, 16, 64, 1000}) {
+            void* q = Botan::Sodium::sodium_malloc(len);
+            result.test_is_true("sodium_malloc returns aligned pointer",
+                                reinterpret_cast<uintptr_t>(q) % alignof(std::max_align_t) == 0);
+            Botan::Sodium::sodium_free(q);
+
+            void* r = Botan::Sodium::sodium_allocarray(len, 3);
+            result.test_is_true("sodium_allocarray returns aligned pointer",
+                                reinterpret_cast<uintptr_t>(r) % alignof(std::max_align_t) == 0);
+            Botan::Sodium::sodium_free(r);
+         }
 
          result.test_success("Didn't crash");
 
@@ -98,6 +118,113 @@ class Sodium_API_Tests : public Test {
          result.test_bin_eq("sodium_add", a, "3230303030");
          Botan::Sodium::sodium_add(b.data(), a.data(), a.size());
          result.test_bin_eq("sodium_add", b, "5350505050");
+
+         return result;
+      }
+
+      static Test::Result randombytes_uniform() {
+         Test::Result result("randombytes_uniform");
+
+         result.test_u32_eq("bound 0", Botan::Sodium::randombytes_uniform(0), 0);
+         result.test_u32_eq("bound 1", Botan::Sodium::randombytes_uniform(1), 0);
+
+         for(const uint32_t bound : {2U, 3U, 10U, 0x80000001U, 0xFFFFFFFFU}) {
+            for(size_t i = 0; i != 100; ++i) {
+               result.test_is_true("output within bound", Botan::Sodium::randombytes_uniform(bound) < bound);
+            }
+         }
+
+         return result;
+      }
+
+      static Test::Result aead_decrypt_edge_cases() {
+         Test::Result result("crypto_aead decrypt edge cases");
+
+         const std::vector<uint8_t> key(32);
+         const std::vector<uint8_t> nonce(Botan::Sodium::crypto_aead_chacha20poly1305_ietf_npubbytes());
+         const std::vector<uint8_t> ptext(15, 0x42);
+
+         std::vector<uint8_t> ctext(ptext.size() + 16);
+         unsigned long long ctext_len = 0;
+         result.test_rc_ok(
+            "encrypt",
+            Botan::Sodium::crypto_aead_chacha20poly1305_ietf_encrypt(
+               ctext.data(), &ctext_len, ptext.data(), ptext.size(), nullptr, 0, nullptr, nonce.data(), key.data()));
+
+         unsigned long long ptext_len = 12345;
+         result.test_rc_ok(
+            "verify only combined",
+            Botan::Sodium::crypto_aead_chacha20poly1305_ietf_decrypt(
+               nullptr, &ptext_len, nullptr, ctext.data(), ctext.size(), nullptr, 0, nonce.data(), key.data()));
+         result.test_sz_eq("ptext_len", static_cast<size_t>(ptext_len), ptext.size());
+
+         result.test_rc_ok("verify only detached",
+                           Botan::Sodium::crypto_aead_chacha20poly1305_ietf_decrypt_detached(nullptr,
+                                                                                             nullptr,
+                                                                                             ctext.data(),
+                                                                                             ptext.size(),
+                                                                                             &ctext[ptext.size()],
+                                                                                             nullptr,
+                                                                                             0,
+                                                                                             nonce.data(),
+                                                                                             key.data()));
+
+         ctext[0] ^= 1;
+         result.test_rc_fail("verify only detached",
+                             "reject invalid",
+                             Botan::Sodium::crypto_aead_chacha20poly1305_ietf_decrypt_detached(nullptr,
+                                                                                               nullptr,
+                                                                                               ctext.data(),
+                                                                                               ptext.size(),
+                                                                                               &ctext[ptext.size()],
+                                                                                               nullptr,
+                                                                                               0,
+                                                                                               nonce.data(),
+                                                                                               key.data()));
+
+         std::vector<uint8_t> recovered(ptext.size(), 0xFF);
+         result.test_rc_fail("decrypt detached",
+                             "reject invalid",
+                             Botan::Sodium::crypto_aead_chacha20poly1305_ietf_decrypt_detached(recovered.data(),
+                                                                                               nullptr,
+                                                                                               ctext.data(),
+                                                                                               ptext.size(),
+                                                                                               &ctext[ptext.size()],
+                                                                                               nullptr,
+                                                                                               0,
+                                                                                               nonce.data(),
+                                                                                               key.data()));
+         result.test_bin_eq("output zeroed on failure", recovered, std::vector<uint8_t>(ptext.size()));
+
+         std::fill(recovered.begin(), recovered.end(), 0xFF);
+         result.test_rc_fail("decrypt",
+                             "reject invalid",
+                             Botan::Sodium::crypto_aead_chacha20poly1305_ietf_decrypt(recovered.data(),
+                                                                                      &ptext_len,
+                                                                                      nullptr,
+                                                                                      ctext.data(),
+                                                                                      ctext.size(),
+                                                                                      nullptr,
+                                                                                      0,
+                                                                                      nonce.data(),
+                                                                                      key.data()));
+         result.test_bin_eq("output zeroed on failure", recovered, std::vector<uint8_t>(ptext.size()));
+
+         for(size_t short_len = 0; short_len != 16; ++short_len) {
+            ptext_len = 12345;
+            result.test_rc_fail("decrypt",
+                                "reject short ciphertext",
+                                Botan::Sodium::crypto_aead_chacha20poly1305_ietf_decrypt(recovered.data(),
+                                                                                         &ptext_len,
+                                                                                         nullptr,
+                                                                                         ctext.data(),
+                                                                                         short_len,
+                                                                                         nullptr,
+                                                                                         0,
+                                                                                         nonce.data(),
+                                                                                         key.data()));
+            result.test_sz_eq("ptext_len cleared", static_cast<size_t>(ptext_len), 0);
+         }
 
          return result;
       }
@@ -630,6 +757,73 @@ class Sodium_API_Tests : public Test {
          return result;
       }
 
+      static Test::Result secretbox_easy_overlap() {
+         Test::Result result("crypto_secretbox_easy in-place");
+
+         const std::vector<uint8_t> nonce(Botan::Sodium::crypto_secretbox_noncebytes(), 0x01);
+         const std::vector<uint8_t> key(Botan::Sodium::crypto_secretbox_keybytes(), 0x02);
+         const size_t mac_len = Botan::Sodium::crypto_secretbox_macbytes();
+
+         for(const size_t len : {0, 1, 15, 16, 17, 31, 32, 33, 48, 63, 64, 65, 100, 200}) {
+            std::vector<uint8_t> ptext(len);
+            for(size_t i = 0; i != len; ++i) {
+               ptext[i] = static_cast<uint8_t>(i + 1);
+            }
+
+            std::vector<uint8_t> expected(len + mac_len);
+            result.test_rc_ok(
+               "encrypt",
+               Botan::Sodium::crypto_secretbox_easy(expected.data(), ptext.data(), len, nonce.data(), key.data()));
+
+            std::vector<uint8_t> buf(len + mac_len);
+            Botan::copy_mem(buf.data(), ptext.data(), len);
+            result.test_rc_ok(
+               "encrypt in-place",
+               Botan::Sodium::crypto_secretbox_easy(buf.data(), buf.data(), len, nonce.data(), key.data()));
+            result.test_bin_eq("in-place ciphertext", buf, expected);
+
+            result.test_rc_ok(
+               "decrypt in-place",
+               Botan::Sodium::crypto_secretbox_open_easy(buf.data(), buf.data(), buf.size(), nonce.data(), key.data()));
+            result.test_bin_eq("in-place plaintext", std::span{buf}.first(len), ptext);
+
+            std::vector<uint8_t> box_buf(len + mac_len);
+            Botan::copy_mem(box_buf.data(), ptext.data(), len);
+            result.test_rc_ok(
+               "box encrypt in-place",
+               Botan::Sodium::crypto_box_easy_afternm(box_buf.data(), box_buf.data(), len, nonce.data(), key.data()));
+            result.test_bin_eq("box in-place ciphertext", box_buf, expected);
+         }
+
+         return result;
+      }
+
+      static Test::Result secretbox_open_detached_verify_only() {
+         Test::Result result("crypto_secretbox_open_detached verify only");
+
+         const std::vector<uint8_t> ptext(40, 0x42);
+         const std::vector<uint8_t> nonce(Botan::Sodium::crypto_secretbox_noncebytes());
+         const std::vector<uint8_t> key(Botan::Sodium::crypto_secretbox_keybytes());
+         std::vector<uint8_t> ctext(ptext.size());
+         std::vector<uint8_t> mac(16);
+
+         result.test_rc_ok("encrypt detached",
+                           Botan::Sodium::crypto_secretbox_detached(
+                              ctext.data(), mac.data(), ptext.data(), ptext.size(), nonce.data(), key.data()));
+
+         result.test_rc_ok("verify only",
+                           Botan::Sodium::crypto_secretbox_open_detached(
+                              nullptr, ctext.data(), mac.data(), ctext.size(), nonce.data(), key.data()));
+
+         mac[0] ^= 1;
+         result.test_rc_fail("verify only",
+                             "reject invalid",
+                             Botan::Sodium::crypto_secretbox_open_detached(
+                                nullptr, ctext.data(), mac.data(), ctext.size(), nonce.data(), key.data()));
+
+         return result;
+      }
+
       static Test::Result sign_ed25519() {
          Test::Result result("crypto_sign_ed25519");
 
@@ -690,6 +884,25 @@ class Sodium_API_Tests : public Test {
             xor_output.data(), output.data(), output.size(), nonce.data(), key.data());
          result.test_bin_eq("stream", xor_output, std::vector<uint8_t>(32));  // all zeros
 
+         const std::vector<uint8_t> zeros(80);
+         std::vector<uint8_t> ic_output(80);
+         result.test_rc_ok(
+            "xor_ic 2^58",
+            Botan::Sodium::crypto_stream_salsa20_xor_ic(
+               ic_output.data(), zeros.data(), zeros.size(), nonce.data(), uint64_t(1) << 58, key.data()));
+         result.test_bin_eq(
+            "xor_ic 2^58",
+            ic_output,
+            "133DF51534049BC3A9E7B53B0F075FB9B3BC582DE0262393D6253BAB47AD30C2D1087CBA26D27E312EA55AA9FA6D41DF00539160E1134D8EEAF490DB7F63A5308D1DCACFD328CC2B7203356118B23E74");
+
+         result.test_rc_ok("xor_ic 2^64-1",
+                           Botan::Sodium::crypto_stream_salsa20_xor_ic(
+                              ic_output.data(), zeros.data(), zeros.size(), nonce.data(), ~uint64_t(0), key.data()));
+         result.test_bin_eq(
+            "xor_ic 2^64-1",
+            ic_output,
+            "49BD3E7F780D22623B8AB7D6DEC208ABF49A68FD40C83761A0BEA7AFF17066A66BB86A673CCB7141187B9E7D40DFD6576269268CAA58CE797474901F32B28C375E5E71F90199340304ABB22A37B6625B");
+
          return result;
       }
 
@@ -710,6 +923,25 @@ class Sodium_API_Tests : public Test {
          Botan::Sodium::crypto_stream_xsalsa20_xor(
             xor_output.data(), output.data(), output.size(), nonce.data(), key.data());
          result.test_bin_eq("stream", xor_output, std::vector<uint8_t>(32));  // all zeros
+
+         const std::vector<uint8_t> zeros(80);
+         std::vector<uint8_t> ic_output(80);
+         result.test_rc_ok(
+            "xor_ic 2^58",
+            Botan::Sodium::crypto_stream_xsalsa20_xor_ic(
+               ic_output.data(), zeros.data(), zeros.size(), nonce.data(), uint64_t(1) << 58, key.data()));
+         result.test_bin_eq(
+            "xor_ic 2^58",
+            ic_output,
+            "DF5056B53879AFBC8839D01FC21C385BCF69EB4BEC440C529877C6BF42810F9C27E546CB253DF85F737832BBAE7499579ACEF0F6C2A2FAAD5C33E21846748F98572C407EB512B558B937E36174110BED");
+
+         result.test_rc_ok("xor_ic 2^64-1",
+                           Botan::Sodium::crypto_stream_xsalsa20_xor_ic(
+                              ic_output.data(), zeros.data(), zeros.size(), nonce.data(), ~uint64_t(0), key.data()));
+         result.test_bin_eq(
+            "xor_ic 2^64-1",
+            ic_output,
+            "DB5072AE8CE138A2BF427196096279793F4CE8F1CBB660B2366E5EE9A393D6D9DECDAFB29926EA550806AE2A3AC90C33F49237E5687FCF349DC48E20BE39205AEEA6A7251C1E72916D11C2CB214D3C25");
 
          return result;
       }
