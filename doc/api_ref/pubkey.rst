@@ -813,6 +813,8 @@ support it directly, such as RSA or ElGamal; these use the EME class:
      With *key* being the key you want to encrypt messages to, configured as
      described by *options* (see :ref:`pk_encryption_options`).
 
+     The passed *rng* object must outlive any PK operations object created using it.
+
      If you are not sure what padding to use, use
      ``PK_Encryption_Options().with_padding("OAEP").with_hash("SHA-256")``.
      If you need compatibility with protocols using the PKCS #1 v1.5 standard,
@@ -955,6 +957,8 @@ support it directly, such as RSA or ElGamal; these use the EME class:
       Construct a decryptor for *key*. The *options* must be the same as those
       used to create the ciphertext (see :ref:`pk_encryption_options`).
 
+      The passed *rng* object must outlive any PK operations object created using it.
+
    .. cpp:function:: PK_Decryptor_EME(const Private_Key& key, \
          RandomNumberGenerator& rng, \
          std::string_view padding, \
@@ -963,6 +967,8 @@ support it directly, such as RSA or ElGamal; these use the EME class:
       Construct a decryptor using a padding string, which is translated into
       the equivalent :cpp:class:`PK_Encryption_Options` exactly as for
       :cpp:class:`PK_Encryptor_EME`.
+
+      The passed *rng* object must outlive any PK operations object created using it.
 
 Botan implements the following encryption algorithms. The string parameter
 each accepts in the string based constructors is described below; the
@@ -1292,6 +1298,8 @@ Signature generation is performed using
       support signature operations. In the current version of the library, this
       includes RSA, ECDSA, ML-DSA, ECKCDSA, ECGDSA, SM2, and others.
 
+      The passed *rng* object must outlive any PK operations object created using it.
+
       Most common algorithms, including RSA and ECDSA, require the options to
       specify at least a hash function (and for RSA, a padding scheme). Schemes
       without any parameters, such as Ed25519, ML-DSA or XMSS, can be used with
@@ -1310,6 +1318,8 @@ Signature generation is performed using
       Botan. The string is translated into the equivalent
       :cpp:class:`PK_Signature_Options`; new code should prefer to construct
       the options directly.
+
+      The passed *rng* object must outlive any PK operations object created using it.
 
       The proper value of *padding* depends on the algorithm. For many signature
       schemes including ECDSA and DSA, simply naming a hash function like

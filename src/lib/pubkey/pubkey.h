@@ -164,7 +164,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
       * Construct a PK signer
       *
       * @param key the key to use to generate signatures
-      * @param rng the random generator to use
+      * @param rng a RNG object which must outlive this operation object
       * @param options controls the behavior of the signature generation, eg which hash function to use
       *
       * Note that most common algorithms (eg RSA or ECDSA) require an options
@@ -178,7 +178,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
       /**
       * Construct a PK Signer.
       * @param key the key to use inside this signer
-      * @param rng the random generator to use
+      * @param rng a RNG object which must outlive this operation object
       * @param padding the padding/hash to use, eg "SHA-512" or "PSS(SHA-256)"
       * @param format the signature format to use
       * @param provider the provider to use
@@ -428,7 +428,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Key_Agreement final {
       /**
       * Construct a PK Key Agreement.
       * @param key the key to use
-      * @param rng the random generator to use
+      * @param rng a RNG object which must outlive this operation object
       * @param options controls the behavior of the key agreement, eg which KDF to use
       */
       PK_Key_Agreement(const Private_Key& key, RandomNumberGenerator& rng, const PK_Key_Agreement_Options& options);
@@ -436,7 +436,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Key_Agreement final {
       /**
       * Construct a PK Key Agreement.
       * @param key the key to use
-      * @param rng the random generator to use
+      * @param rng a RNG object which must outlive this operation object
       * @param kdf name of the KDF to use (or 'Raw' for no KDF)
       * @param provider the algo provider to use (or empty for default)
       */
@@ -530,7 +530,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Encryptor_EME final : public PK_Encryptor {
       /**
       * Construct an instance.
       * @param key the key to use inside the encryptor
-      * @param rng the RNG to use
+      * @param rng a RNG object which must outlive this operation object
       * @param options controls the behavior of the encryption, eg which padding to use
       *
       * Note that RSA requires the options to specify at least a padding scheme,
@@ -541,7 +541,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Encryptor_EME final : public PK_Encryptor {
       /**
       * Construct an instance.
       * @param key the key to use inside the encryptor
-      * @param rng the RNG to use
+      * @param rng a RNG object which must outlive this operation object
       * @param padding the message encoding scheme to use (eg "OAEP(SHA-256)")
       * @param provider the provider to use
       */
@@ -580,7 +580,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Decryptor_EME final : public PK_Decryptor {
       /**
       * Construct an instance.
       * @param key the key to use inside the decryptor
-      * @param rng the random generator to use
+      * @param rng a RNG object which must outlive this operation object
       * @param options controls the behavior of the decryption, eg which padding to use
       */
       PK_Decryptor_EME(const Private_Key& key, RandomNumberGenerator& rng, const PK_Encryption_Options& options);
@@ -588,7 +588,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Decryptor_EME final : public PK_Decryptor {
       /**
       * Construct an instance.
       * @param key the key to use inside the decryptor
-      * @param rng the random generator to use
+      * @param rng a RNG object which must outlive this operation object
       * @param padding the padding scheme to use
       * @param provider the provider to use
       */
@@ -677,7 +677,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
       /**
       * Construct an instance.
       * @param key the key to encrypt to
-      * @param rng the RNG to use
+      * @param rng a RNG object which must outlive this operation object
       * @param kem_param additional KEM parameters
       * @param provider the provider to use
       */
@@ -806,7 +806,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Decryptor final {
       /**
       * Construct an instance.
       * @param key the key to use inside the decryptor
-      * @param rng the RNG to use
+      * @param rng a RNG object which must outlive this operation object
       * @param options controls the behavior of the KEM, eg which KDF to use
       */
       PK_KEM_Decryptor(const Private_Key& key, RandomNumberGenerator& rng, const PK_KEM_Options& options);
@@ -814,7 +814,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Decryptor final {
       /**
       * Construct an instance.
       * @param key the key to use inside the decryptor
-      * @param rng the RNG to use
+      * @param rng a RNG object which must outlive this operation object
       * @param kem_param additional KEM parameters
       * @param provider the provider to use
       */
