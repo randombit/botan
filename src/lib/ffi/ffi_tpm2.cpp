@@ -65,15 +65,8 @@ int botan_tpm2_ctx_init(botan_tpm2_ctx_t* ctx_out, const char* tcti_nameconf) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
 
-      auto tcti = [=]() -> std::optional<std::string> {
-         if(tcti_nameconf == nullptr) {
-            return {};
-         } else {
-            return std::string(tcti_nameconf);
-         }
-      }();
-
-      auto ctx = Botan::TPM2::Context::create(std::move(tcti));
+      auto ctx = (tcti_nameconf == nullptr) ? Botan::TPM2::Context::create()
+                                            : Botan::TPM2::Context::create(std::string(tcti_nameconf));
       return ffi_new_object(ctx_out, std::move(ctx));
    });
 #else
