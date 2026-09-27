@@ -73,16 +73,33 @@ class BOTAN_TEST_API Dynamically_Loaded_Library final {
       }
 
       Dynamically_Loaded_Library(const Dynamically_Loaded_Library&) = delete;
-      Dynamically_Loaded_Library(Dynamically_Loaded_Library&&) = default;
       Dynamically_Loaded_Library& operator=(const Dynamically_Loaded_Library&) = delete;
-      Dynamically_Loaded_Library& operator=(Dynamically_Loaded_Library&&) = default;
+
+      /**
+      * Take ownership of the library handle held by @p other
+      *
+      * Any use of the moved-from object, other than destroying it or
+      * assigning to it, throws Invalid_State.
+      */
+      Dynamically_Loaded_Library(Dynamically_Loaded_Library&& other) noexcept;
+
+      /**
+      * Unload the currently held library (if any) and take ownership of the
+      * library handle held by @p other
+      *
+      * Any use of the moved-from object, other than destroying it or
+      * assigning to it, throws Invalid_State.
+      */
+      Dynamically_Loaded_Library& operator=(Dynamically_Loaded_Library&& other) noexcept;
 
    private:
+      void close();
+
       /// Returns a pointer to the symbol or nullptr if the symbol is not found.
       void* resolve_symbol_internal(const std::string& symbol) const;
 
       std::string m_lib_name;
-      void* m_lib;
+      void* m_lib = nullptr;
 };
 
 }  // namespace Botan
