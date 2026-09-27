@@ -7,6 +7,7 @@
 
 #include <botan/sqlite3.h>
 
+#include <botan/assert.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
@@ -65,6 +66,7 @@ std::shared_ptr<SQL_Database::Statement> Sqlite3_Database::upsert(
 }
 
 size_t Sqlite3_Database::row_count(std::string_view table_name) {
+   BOTAN_ARG_CHECK(is_valid_table_name(table_name), "Invalid table name");
    auto stmt = new_statement(fmt("select count(*) from {}", table_name));
 
    if(stmt->step()) {

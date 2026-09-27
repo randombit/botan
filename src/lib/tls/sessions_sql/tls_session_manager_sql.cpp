@@ -7,6 +7,7 @@
 
 #include <botan/tls_session_manager_sql.h>
 
+#include <botan/assert.h>
 #include <botan/database.h>
 #include <botan/hex.h>
 #include <botan/pwdhash.h>
@@ -21,6 +22,7 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
                                          const std::shared_ptr<RandomNumberGenerator>& rng,
                                          size_t max_sessions) :
       Session_Manager(rng), m_db(std::move(db)), m_max_sessions(max_sessions) {
+   BOTAN_ARG_CHECK(m_db != nullptr, "Database must not be null");
    create_or_migrate_and_open(passphrase);
 }
 
