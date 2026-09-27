@@ -301,10 +301,6 @@ class DeterministicXOF : public Botan::XOF {
 
       size_t block_size() const override { return 1; }
 
-      void start_msg(std::span<const uint8_t> /*unused*/, std::span<const uint8_t> /*unused*/) override {
-         throw Botan_Tests::Test_Error("start_msg not implemented");
-      }
-
       void add_data(std::span<const uint8_t> /*unused*/) override {
          throw Botan_Tests::Test_Error("add_data not implemented");
       }

@@ -210,8 +210,37 @@ class XOF_Tests final : public Text_Based_Test {
                         result.test_is_true("cSHAKE without a name requests at least one byte of salt",
                                             cshake->valid_salt_length(1));
                         result.test_throws("cSHAKE without a name throws without salt", [&]() { cshake->start({}); });
+                        cshake->clear();
+                        result.test_throws("cSHAKE without a name throws on direct output",
+                                           [&]() { cshake->output_stdvec(0); });
                      }
                   }),
+               CHECK("cSHAKE direct output absorbs the function name",
+                     [](Test::Result& result) {
+                        auto check = [&]<typename cSHAKE>() {
+                           cSHAKE a("A");
+                           cSHAKE b("B");
+                           const auto a_out = a.output_stdvec(32);
+                           const auto b_out = b.output_stdvec(32);
+                           result.test_bin_ne("distinct names produce distinct output", a_out, b_out);
+
+                           cSHAKE a2("A");
+                           a2.start();
+                           result.test_bin_eq("direct output equals output after start()", a2.output_stdvec(32), a_out);
+
+                           cSHAKE a3("A");
+                           std::array<uint8_t, 32> a3_out{};
+                           a3.output(std::span<uint8_t>{a3_out}.first(0));
+                           a3.output(a3_out);
+                           result.test_bin_eq("zero-length first output also starts", a3_out, a_out);
+
+                           cSHAKE a4("A");
+                           result.test_u8_eq("output_next_byte starts", a4.output_next_byte(), a_out[0]);
+                        };
+
+                        check.template operator()<Botan::cSHAKE_128_XOF>();
+                        check.template operator()<Botan::cSHAKE_256_XOF>();
+                     }),
    #endif
    #if defined(BOTAN_HAS_AES_CRYSTALS_XOF)
                CHECK("AES-256/CTR XOF failure modes", [](Test::Result& result) {
