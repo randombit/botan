@@ -5,6 +5,7 @@ PASSHASH9 -> 20131128
 <module_info>
 name -> "Passhash 9"
 brief -> "Passhash 9 password hash function"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>

@@ -6,6 +6,7 @@ CODEC_FILTERS -> 20131128
 <module_info>
 name -> "Filters"
 brief -> "Filter/Pipe API for data transformations"
+lifecycle -> "Deprecated"
 </module_info>
 
 <header:public>
