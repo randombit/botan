@@ -47,7 +47,9 @@ std::set<std::string> Encrypted_PSK_Database::list_names() const {
 
          const auto pt_name = bytes_to_string(name_bits);
          names.insert(pt_name);
-      } catch(Invalid_Authentication_Tag&) {}
+      } catch(Exception&) {
+         // wrong master key or possibly simply malformed data
+      }
    }
 
    return names;

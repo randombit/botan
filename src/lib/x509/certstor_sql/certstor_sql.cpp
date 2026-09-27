@@ -34,6 +34,7 @@ Certificate_Store_In_SQL::Certificate_Store_In_SQL(std::shared_ptr<SQL_Database>
    const auto blob = DB::Column_Type::Blob;
    const auto integer = DB::Column_Type::Integer;
 
+   BOTAN_ARG_CHECK(m_database != nullptr, "Database must not be null");
    BOTAN_ARG_CHECK(m_database->is_valid_table_name(m_db_cert_table), "Invalid table name");
    BOTAN_ARG_CHECK(m_database->is_valid_table_name(m_db_keys_table), "Invalid table name");
    BOTAN_ARG_CHECK(m_database->is_valid_table_name(m_db_crls_table), "Invalid table name");
