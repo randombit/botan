@@ -523,6 +523,12 @@ class FFI_RNG_Test final : public FFI_Test {
                TEST_FFI_OK(botan_tpm2_ctx_destroy, (tpm2_ctx));
             }
 
+            const std::string tcti_nameconf = tcti_conf.empty() ? tcti_name : tcti_name + ":" + tcti_conf;
+            if(TEST_FFI_INIT(botan_tpm2_ctx_init, (&tpm2_ctx, tcti_nameconf.c_str()))) {
+               tpm2_test_rng(tpm2_ctx);
+               TEST_FFI_OK(botan_tpm2_ctx_destroy, (tpm2_ctx));
+            }
+
    #if defined(BOTAN_HAS_TPM2)
             TSS2_TCTI_CONTEXT* tcti_ctx;
             ESYS_CONTEXT* esys_ctx;

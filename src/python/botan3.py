@@ -541,20 +541,20 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pubkey_load_x448, [c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_x448_get_privkey, [c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_x448_get_pubkey, [c_void_p, c_char_p])
-    ffi_api(dll.botan_privkey_load_ml_dsa, [c_void_p, c_void_p, c_int, c_char_p])
-    ffi_api(dll.botan_pubkey_load_ml_dsa, [c_void_p, c_void_p, c_int, c_char_p])
-    ffi_api(dll.botan_privkey_load_slh_dsa, [c_void_p, c_void_p, c_int, c_char_p])
-    ffi_api(dll.botan_pubkey_load_slh_dsa, [c_void_p, c_void_p, c_int, c_char_p])
-    ffi_api(dll.botan_privkey_load_kyber, [c_void_p, c_char_p, c_int])
-    ffi_api(dll.botan_pubkey_load_kyber, [c_void_p, c_char_p, c_int])
+    ffi_api(dll.botan_privkey_load_ml_dsa, [c_void_p, c_void_p, c_size_t, c_char_p])
+    ffi_api(dll.botan_pubkey_load_ml_dsa, [c_void_p, c_void_p, c_size_t, c_char_p])
+    ffi_api(dll.botan_privkey_load_slh_dsa, [c_void_p, c_void_p, c_size_t, c_char_p])
+    ffi_api(dll.botan_pubkey_load_slh_dsa, [c_void_p, c_void_p, c_size_t, c_char_p])
+    ffi_api(dll.botan_privkey_load_kyber, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_pubkey_load_kyber, [c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_privkey_view_kyber_raw_key, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_pubkey_view_kyber_raw_key, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
-    ffi_api(dll.botan_privkey_load_ml_kem, [c_void_p, c_void_p, c_int, c_char_p])
-    ffi_api(dll.botan_pubkey_load_ml_kem, [c_void_p, c_void_p, c_int, c_char_p])
-    ffi_api(dll.botan_privkey_load_frodokem, [c_void_p, c_void_p, c_int, c_char_p])
-    ffi_api(dll.botan_pubkey_load_frodokem, [c_void_p, c_void_p, c_int, c_char_p])
-    ffi_api(dll.botan_privkey_load_classic_mceliece, [c_void_p, c_void_p, c_int, c_char_p])
-    ffi_api(dll.botan_pubkey_load_classic_mceliece, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_privkey_load_ml_kem, [c_void_p, c_void_p, c_size_t, c_char_p])
+    ffi_api(dll.botan_pubkey_load_ml_kem, [c_void_p, c_void_p, c_size_t, c_char_p])
+    ffi_api(dll.botan_privkey_load_frodokem, [c_void_p, c_void_p, c_size_t, c_char_p])
+    ffi_api(dll.botan_pubkey_load_frodokem, [c_void_p, c_void_p, c_size_t, c_char_p])
+    ffi_api(dll.botan_privkey_load_classic_mceliece, [c_void_p, c_void_p, c_size_t, c_char_p])
+    ffi_api(dll.botan_pubkey_load_classic_mceliece, [c_void_p, c_void_p, c_size_t, c_char_p])
     ffi_api(dll.botan_privkey_load_ecdsa, [c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_load_ecdsa, [c_void_p, c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_load_ecdsa_sec1, [c_void_p, c_void_p, c_size_t, c_char_p])
@@ -878,6 +878,15 @@ def _ctype_bits(s: str | bytes) -> bytes:
     else:
         raise TypeError("Internal error - unexpected type %s provided to _ctype_bits" % (type(s).__name__))
 
+def _handle_array(objs):
+    """Returns objs as a tuple, which must be kept alive while the array is in
+    use, along with a ctypes array of their handles and its length"""
+    if objs is None:
+        return (), c_void_p(0), c_size_t(0)
+    objs = tuple(objs)
+    arr = (len(objs) * c_void_p)(*[obj._handle() for obj in objs])
+    return objs, arr, c_size_t(len(objs))
+
 def _ctype_bufout(buf):
     return buf.raw
 
@@ -941,12 +950,25 @@ def const_time_compare(x: str | bytes, y: str | bytes) -> bool:
 
 MPILike = Union[str, "MPI", Any, None]  #: Alias for parameters that get turned into an MPI.
 
+class _NonCopyable:
+    """Base for wrappers owning a native handle, which a Python copy would alias"""
+
+    def __copy__(self):
+        raise TypeError(f'{type(self).__name__} objects cannot be copied')
+
+    def __deepcopy__(self, _memo):
+        raise TypeError(f'{type(self).__name__} objects cannot be copied')
+
 #
 # TPM2
 #
 
-class TPM2Object:
+class TPM2Object(_NonCopyable):
     """Base class for objects that own a handle to a TPM 2.0 resource"""
+
+    # Defaults in case __init__ never ran to completion
+    __obj: c_void_p | None = None
+    __destroyer: Callable[[c_void_p], None] | None = None
 
     def __init__(self, obj: c_void_p, destroyer: Callable[[c_void_p], None]):
         """Take ownership of ``obj``, invoking ``destroyer`` on it during destruction"""
@@ -954,8 +976,9 @@ class TPM2Object:
         self.__destroyer = destroyer
 
     def __del__(self):
-        if hasattr(self, '__obj') and hasattr(self, '__destroyer'):
-            self.__destroyer(self.__obj)
+        obj, self.__obj = self.__obj, None
+        if obj and self.__destroyer is not None:
+            self.__destroyer(obj)  # pylint: disable=not-callable
 
     def _handle(self):
         return self.__obj
@@ -1028,6 +1051,8 @@ class TPM2UnauthenticatedSession(TPM2Session):
         """Create a new unauthenticated session within the given TPM 2.0 context"""
         obj = c_void_p(0)
         _DLL.botan_tpm2_unauthenticated_session_init(byref(obj), ctx._handle())
+        # Keeps alive the RNG of the context's crypto backend
+        self._tpm2_ctx = ctx
         super().__init__(obj)
 
 class _CustomRngContext:
@@ -1081,7 +1106,7 @@ class _CustomRngContext:
 #
 # RNG
 #
-class RandomNumberGenerator:
+class RandomNumberGenerator(_NonCopyable):
     """Previously ``rng``
 
     Type 'user' also allowed (userspace HMAC_DRBG seeded from system
@@ -1145,6 +1170,8 @@ class RandomNumberGenerator:
             if kwargs:
                 raise BotanException("Unexpected arguments for TPM2 RNG: %s" % (", ".join(kwargs.keys())))
             _DLL.botan_tpm2_rng_init(byref(self.__obj), ctx._handle(), *sessions)
+            # Keeps alive the RNG of the context's crypto backend
+            self._tpm2_ctx = ctx
         else:
             if kwargs:
                 raise BotanException("Unexpected arguments for RNG type %s: %s" % (rng_type, ", ".join(kwargs.keys())))
@@ -1196,7 +1223,7 @@ class RandomNumberGenerator:
 #
 # Block cipher
 #
-class BlockCipher:
+class BlockCipher(_NonCopyable):
     """A raw block cipher, eg 'AES-128' or 'Threefish-512'
 
     This is a low level interface which does not provide any confidentiality
@@ -1304,6 +1331,12 @@ class HashFunction:
         _DLL.botan_hash_copy_state(byref(copy), self.__obj)
         return HashFunction(copy)
 
+    def __copy__(self) -> HashFunction:
+        return self.copy_state()
+
+    def __deepcopy__(self, _memo) -> HashFunction:
+        return self.copy_state()
+
     def algo_name(self) -> str:
         """Returns the name of this algorithm"""
         return _call_fn_returning_str(32, lambda b, bl: _DLL.botan_hash_name(self.__obj, b, bl))
@@ -1359,6 +1392,12 @@ class XOF:
         _DLL.botan_xof_copy_state(byref(copy), self.__obj)
         return XOF(copy)
 
+    def __copy__(self) -> XOF:
+        return self.copy_state()
+
+    def __deepcopy__(self, _memo) -> XOF:
+        return self.copy_state()
+
     def clear(self):
         """Clear state"""
         _DLL.botan_xof_clear(self.__obj)
@@ -1391,7 +1430,7 @@ class XOF:
 #
 # Message authentication codes
 #
-class MsgAuthCode:
+class MsgAuthCode(_NonCopyable):
     """Previously ``message_authentication_code``
 
     The constructor `algo` param is a string (eg 'HMAC(SHA-256)', 'Poly1305', 'CMAC(AES-256)')"""
@@ -1461,7 +1500,7 @@ class MsgAuthCode:
         _DLL.botan_mac_final(self.__obj, out)
         return _ctype_bufout(out)
 
-class SymmetricCipher:
+class SymmetricCipher(_NonCopyable):
     """Previously ``cipher``
 
     The algorithm is specified as a string (eg 'AES-128/GCM', 'Serpent/OCB(12)', 'Threefish-512/EAX').
@@ -1713,7 +1752,7 @@ def kdf(algo: str, secret: bytes, out_len: int, salt: bytes, label: bytes) -> by
 #
 # Public key
 #
-class PublicKey: # pylint: disable=invalid-name
+class PublicKey(_NonCopyable): # pylint: disable=invalid-name
     """Previously ``public_key``"""
 
     def __init__(self, obj: c_void_p | None = None):
@@ -1762,14 +1801,13 @@ class PublicKey: # pylint: disable=invalid-name
         return pub
 
     @classmethod
-    def load_elgamal(cls, p: MPILike, q: MPILike, g: MPILike, y: MPILike) -> PublicKey:
+    def load_elgamal(cls, p: MPILike, g: MPILike, y: MPILike) -> PublicKey:
         """Load an ElGamal public key giving the parameters and public value as integers."""
         pub = PublicKey()
         p = MPI(p)
-        q = MPI(q)
         g = MPI(g)
         y = MPI(y)
-        _DLL.botan_pubkey_load_elgamal(byref(pub._handle()), p._handle(), q._handle(), g._handle(), y._handle())
+        _DLL.botan_pubkey_load_elgamal(byref(pub._handle()), p._handle(), g._handle(), y._handle())
         return pub
 
     @classmethod
@@ -1787,7 +1825,8 @@ class PublicKey: # pylint: disable=invalid-name
         """Load an ECDSA public key giving the curve as a string (like "secp256r1")
         and the public point in SEC1 format."""
         pub = PublicKey()
-        _DLL.botan_pubkey_load_ecdsa_sec1(byref(pub._handle()), _ctype_bits(sec1_encoding), len(sec1_encoding), _ctype_str(curve))
+        bits = _ctype_bits(sec1_encoding)
+        _DLL.botan_pubkey_load_ecdsa_sec1(byref(pub._handle()), bits, len(bits), _ctype_str(curve))
         return pub
 
     @classmethod
@@ -1805,7 +1844,8 @@ class PublicKey: # pylint: disable=invalid-name
         """Load an ECDH public key giving the curve as a string (like "secp256r1")
         and the public point in SEC1 format."""
         pub = PublicKey()
-        _DLL.botan_pubkey_load_ecdh_sec1(byref(pub._handle()), _ctype_bits(sec1_encoding), len(sec1_encoding), _ctype_str(curve))
+        bits = _ctype_bits(sec1_encoding)
+        _DLL.botan_pubkey_load_ecdh_sec1(byref(pub._handle()), bits, len(bits), _ctype_str(curve))
         return pub
 
     @classmethod
@@ -1823,7 +1863,8 @@ class PublicKey: # pylint: disable=invalid-name
         """Load a SM2 public key giving the curve as a string (like "sm2p256v1")
         and the public point in SEC1 format."""
         pub = PublicKey()
-        _DLL.botan_pubkey_load_sm2_sec1(byref(pub._handle()), _ctype_bits(sec1_encoding), len(sec1_encoding), _ctype_str(curve))
+        bits = _ctype_bits(sec1_encoding)
+        _DLL.botan_pubkey_load_sm2_sec1(byref(pub._handle()), bits, len(bits), _ctype_str(curve))
         return pub
 
     @classmethod
@@ -1987,7 +2028,7 @@ class PublicKey: # pylint: disable=invalid-name
 #
 # Private Key
 #
-class PrivateKey:
+class PrivateKey(_NonCopyable):
     """Previously ``private_key``"""
 
     def __init__(self, obj: c_void_p | None = None):
@@ -2077,14 +2118,13 @@ class PrivateKey:
         return priv
 
     @classmethod
-    def load_elgamal(cls, p: MPILike, q: MPILike, g: MPILike, x: MPILike) -> PrivateKey:
+    def load_elgamal(cls, p: MPILike, g: MPILike, x: MPILike) -> PrivateKey:
         """Return a private ElGamal key"""
         priv = PrivateKey()
         p = MPI(p)
-        q = MPI(q)
         g = MPI(g)
         x = MPI(x)
-        _DLL.botan_privkey_load_elgamal(byref(priv._handle()), p._handle(), q._handle(), g._handle(), x._handle())
+        _DLL.botan_privkey_load_elgamal(byref(priv._handle()), p._handle(), g._handle(), x._handle())
         return priv
 
     @classmethod
@@ -2278,7 +2318,7 @@ class PrivateKey:
         return group
 
 
-class PKEncrypt:
+class PKEncrypt(_NonCopyable):
     """Previously ``pk_op_encrypt``"""
 
     def __init__(self, key: PublicKey, padding: str):
@@ -2299,7 +2339,7 @@ class PKEncrypt:
         return outbuf.raw[0:int(outbuf_sz.value)]
 
 
-class PKDecrypt:
+class PKDecrypt(_NonCopyable):
     """Previously ``pk_op_decrypt``"""
 
     def __init__(self, key: PrivateKey, padding: str):
@@ -2320,7 +2360,7 @@ class PKDecrypt:
         _DLL.botan_pk_op_decrypt(self.__obj, outbuf, byref(outbuf_sz), bits, len(bits))
         return outbuf.raw[0:int(outbuf_sz.value)]
 
-class PKSign: # pylint: disable=invalid-name
+class PKSign(_NonCopyable): # pylint: disable=invalid-name
     """Previously ``pk_op_sign``"""
 
     def __init__(self, key: PrivateKey, padding: str, der: bool = False):
@@ -2346,7 +2386,7 @@ class PKSign: # pylint: disable=invalid-name
         _DLL.botan_pk_op_sign_finish(self.__obj, rng_obj._handle(), outbuf, byref(outbuf_sz))
         return outbuf.raw[0:int(outbuf_sz.value)]
 
-class PKVerify:
+class PKVerify(_NonCopyable):
     """Previously ``pk_op_verify``"""
 
     def __init__(self, key: PublicKey, padding: str, der: bool = False):
@@ -2371,7 +2411,7 @@ class PKVerify:
         rc = _DLL.botan_pk_op_verify_finish(self.__obj, bits, len(bits))
         return rc == 0
 
-class PKKeyAgreement:
+class PKKeyAgreement(_NonCopyable):
     """Previously ``pk_op_key_agreement``"""
 
     def __init__(self, key: PrivateKey, kdf_name: str):
@@ -2406,7 +2446,7 @@ class PKKeyAgreement:
                                                                      other, len(other),
                                                                      salt, len(salt)))
 
-class KemEncrypt:
+class KemEncrypt(_NonCopyable):
     """Key encapsulation using a public key"""
 
     def __init__(self, key: PublicKey, params: str):
@@ -2454,7 +2494,7 @@ class KemEncrypt:
 
         return (shared_key, encapsulated_key)
 
-class KemDecrypt:
+class KemDecrypt(_NonCopyable):
     """Key decapsulation using a private key"""
 
     def __init__(self, key: PrivateKey, params: str):
@@ -2508,7 +2548,7 @@ def _load_buf_or_file(filename, buf, file_fn, buf_fn):
 #
 # X.509 certificates
 #
-class X509Cert: # pylint: disable=invalid-name
+class X509Cert(_NonCopyable): # pylint: disable=invalid-name
     """Class representing an X.509 certificate.
 
     A certificate in PEM or DER format can be loaded from a file, with the ``filename``
@@ -2778,35 +2818,9 @@ class X509Cert: # pylint: disable=invalid-name
 
         ``crls`` is a list of CRLs issued by either trusted or untrusted authorities."""
 
-        if intermediates is not None:
-            c_intermediates = len(intermediates) * c_void_p
-            arr_intermediates = c_intermediates()
-            for i, ca in enumerate(intermediates):
-                arr_intermediates[i] = ca._handle()
-            len_intermediates = c_size_t(len(intermediates))
-        else:
-            arr_intermediates = c_void_p(0)
-            len_intermediates = c_size_t(0)
-
-        if trusted is not None:
-            c_trusted = len(trusted) * c_void_p
-            arr_trusted = c_trusted()
-            for i, ca in enumerate(trusted):
-                arr_trusted[i] = ca._handle()
-            len_trusted = c_size_t(len(trusted))
-        else:
-            arr_trusted = c_void_p(0)
-            len_trusted = c_size_t(0)
-
-        if crls is not None:
-            c_crls = len(crls) * c_void_p
-            arr_crls = c_crls()
-            for i, crl in enumerate(crls):
-                arr_crls[i] = crl._handle()
-            len_crls = c_size_t(len(crls))
-        else:
-            arr_crls = c_void_p(0)
-            len_crls = c_size_t(0)
+        intermediates, arr_intermediates, len_intermediates = _handle_array(intermediates)
+        trusted, arr_trusted, len_trusted = _handle_array(trusted)
+        crls, arr_crls, len_crls = _handle_array(crls)
 
         error_code = c_int(0)
 
@@ -2875,7 +2889,7 @@ class X509CRLReason(IntEnum):
         return cls(reason)
 
 
-class X509CRLEntry:
+class X509CRLEntry(_NonCopyable):
     """A single revoked certificate, as recorded in a CRL"""
 
     def __init__(self):
@@ -2914,7 +2928,7 @@ class X509CRLEntry:
         return X509CRLReason.from_bits(reason.value)
 
 
-class X509CRL:
+class X509CRL(_NonCopyable):
     """Class representing an X.509 Certificate Revocation List.
 
     A CRL in PEM or DER format can be loaded from a file, with the ``filename`` argument,
@@ -2977,11 +2991,7 @@ class X509CRL:
         """Returns a new CRL, again issued by ``ca_cert`` and signed using ``ca_key``,
         containing the entries of ``self`` plus ``new_entries``."""
         crl = X509CRL()
-        c_revoked = len(new_entries) * c_void_p
-        arr_new_entries = c_revoked()
-        for i, entry in enumerate(new_entries):
-            arr_new_entries[i] = entry._handle()
-        new_entries_len = c_size_t(len(new_entries))
+        new_entries, arr_new_entries, new_entries_len = _handle_array(new_entries)
 
         _DLL.botan_x509_crl_update(
             byref(crl._handle()),
@@ -3060,6 +3070,12 @@ class MPI:
 
     def __del__(self):
         _DLL.botan_mp_destroy(self.__obj)
+
+    def __copy__(self) -> MPI:
+        return MPI(self)
+
+    def __deepcopy__(self, _memo) -> MPI:
+        return MPI(self)
 
     def _handle(self):
         return self.__obj
@@ -3274,7 +3290,7 @@ class MPI:
         _DLL.botan_mp_set_bit(self.__obj, c_size_t(bit))
 
 
-class OID:
+class OID(_NonCopyable):
     """An ASN.1 object identifier"""
 
     def __init__(self, obj: c_void_p | None = None):
@@ -3353,7 +3369,7 @@ class OID:
             return False
 
 
-class ECGroup:
+class ECGroup(_NonCopyable):
     """An elliptic curve group"""
 
     def __init__(self, obj: c_void_p | None = None):
@@ -3502,7 +3518,7 @@ class ECGroup:
         return not self == other
 
 
-class ECScalar:
+class ECScalar(_NonCopyable):
     """An integer modulo the order of an elliptic curve group"""
 
     def __init__(self, obj: c_void_p | None = None):
@@ -3539,7 +3555,7 @@ class ECScalar:
         return MPI(obj)
 
 
-class ECPoint:
+class ECPoint(_NonCopyable):
     """A point on an elliptic curve"""
 
     def __init__(self, obj: c_void_p | None = None):
@@ -3635,7 +3651,7 @@ class ECPoint:
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_ec_point_view_compressed(self.__obj, vc, vfn))
 
 
-class FormatPreservingEncryptionFE1:
+class FormatPreservingEncryptionFE1(_NonCopyable):
     """Initialize an instance for format preserving encryption"""
 
     def __init__(self, modulus: MPI, key: bytes, rounds: int = 5, compat_mode: bool = False):
@@ -3661,7 +3677,7 @@ class FormatPreservingEncryptionFE1:
         _DLL.botan_fpe_decrypt(self.__obj, r._handle(), bits, len(bits))
         return r
 
-class HOTP:
+class HOTP(_NonCopyable):
     """Counter based one time passwords (RFC 4226)"""
 
     def __init__(self, key: bytes, digest: str = "SHA-1", digits: int = 6):
@@ -3696,7 +3712,7 @@ class HOTP:
         else:
             return (False, counter)
 
-class TOTP:
+class TOTP(_NonCopyable):
     """Time based one time passwords (RFC 6238)"""
 
     def __init__(self, key: bytes, digest: str = "SHA-1", digits: int = 6, timestep: int = 30):
@@ -3777,7 +3793,7 @@ def nist_key_unwrap_padded(kek: bytes, wrapped: bytes, cipher: str | None = None
                            output, byref(out_len))
     return bytes(output[0:int(out_len.value)])
 
-class Srp6ServerSession:
+class Srp6ServerSession(_NonCopyable):
     """The server side of the SRP-6a password authenticated key exchange"""
 
     def __init__(self, group: str):
@@ -3793,12 +3809,6 @@ class Srp6ServerSession:
         self.__obj = c_void_p(0)
         if obj:
             _DLL.botan_srp6_server_session_destroy(obj)
-
-    def __copy__(self):
-        raise TypeError('Srp6ServerSession objects cannot be copied')
-
-    def __deepcopy__(self, _memo):
-        raise TypeError('Srp6ServerSession objects cannot be copied')
 
     def step1(self, verifier: bytes, hsh: str, rng: RandomNumberGenerator) -> bytes:
         """Given the verifier stored for this user, returns the value B to send to the client"""
@@ -3847,7 +3857,7 @@ def srp6_client_agree(username: str, password: str, group: str, hsh: str, salt: 
                                                                     a, al,
                                                                     k, kl))
 
-class Spake2pParams:
+class Spake2pParams(_NonCopyable):
     """
     SPAKE2+ (RFC 9383) system parameters, selecting the elliptic curve
     group, the SPAKE2+ M/N group elements, and the hash function.
@@ -3921,7 +3931,7 @@ def spake2p_registration_record(params: Spake2pParams, secret: bytes, rng: Rando
                                                                        secret, len(secret),
                                                                        vc, vf))
 
-class Spake2pProver:
+class Spake2pProver(_NonCopyable):
     """
     SPAKE2+ (RFC 9383) prover: the side which knows the password secret.
 
@@ -3979,7 +3989,7 @@ class Spake2pProver:
         return _call_fn_viewing_vec(lambda vc, vf:
                                     _DLL.botan_spake2p_prover_shared_secret(self.__obj, vc, vf))
 
-class Spake2pVerifier:
+class Spake2pVerifier(_NonCopyable):
     """
     SPAKE2+ (RFC 9383) verifier: the side which stores only the registration
     record derived from the password. See Spake2pProver for the message flow.
@@ -4145,7 +4155,7 @@ def zfec_decode(k: int, n: int, indexes: list[int], inputs: list[bytes]) -> list
 #
 # TLS (experimental)
 #
-class TLSPolicy:
+class TLSPolicy(_NonCopyable):
     """A TLS policy (``Botan::TLS::Policy``), controlling which protocol
     versions, ciphersuites and parameters a TLS channel accepts.
 
@@ -4181,12 +4191,6 @@ class TLSPolicy:
         self.__obj = c_void_p(0)
         if obj:
             _DLL.botan_tls_policy_destroy(obj)
-
-    def __copy__(self):
-        raise TypeError('TLSPolicy objects cannot be copied')
-
-    def __deepcopy__(self, _memo):
-        raise TypeError('TLSPolicy objects cannot be copied')
 
     def _handle(self):
         return self.__obj
