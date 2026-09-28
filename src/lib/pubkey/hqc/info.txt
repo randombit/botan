@@ -16,6 +16,8 @@ The HQCr4 module links against the Rust static library librust_hqc.a of the git 
 <requires>
 pubkey
 rng
+sha3
+shake_xof
 </requires>
 
 <libs>
