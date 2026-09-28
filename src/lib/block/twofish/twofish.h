@@ -36,8 +36,8 @@ class Twofish final : public Block_Cipher_Fixed_Params<16, 16, 32, 8> {
       void key_schedule(std::span<const uint8_t> key) override;
 
 #if defined(BOTAN_HAS_TWOFISH_AVX512)
-      void avx512_encrypt_16(const uint8_t in[16 * 16], uint8_t out[16 * 16]) const;
-      void avx512_decrypt_16(const uint8_t in[16 * 16], uint8_t out[16 * 16]) const;
+      void avx512_encrypt(const uint8_t in[], uint8_t out[], size_t blocks) const;
+      void avx512_decrypt(const uint8_t in[], uint8_t out[], size_t blocks) const;
 #endif
 
       secure_vector<uint32_t> m_SB;

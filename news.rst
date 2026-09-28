@@ -132,6 +132,10 @@ Version 3.14.0, Not Yet Released
 * Modify the bitsliced AES implementation to use the native word size of the
   processor, instead of always 32 bits. (GH #5826)
 
+* The AVX-512/GFNI Twofish implementation is now used for all blocks, including
+  any tail of fewer than 16 blocks, so the table based implementation is never
+  used on processors which support these extensions.
+
 * Optimize the Whirlpool compression function on x86-64 and aarch64. (GH #5857 #5892)
 
 * Enable support for NEON/ARMv8 codepaths on Windows aarch64 (GH #5863)

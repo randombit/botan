@@ -192,7 +192,8 @@ class BlockCipher_ParallelOp_Test final : public Test {
                                                    "SEED",
                                                    "Serpent",
                                                    "SHACAL2",
-                                                   "SM4"};
+                                                   "SM4",
+                                                   "Twofish"};
 
          std::vector<Test::Result> results;
          results.reserve(ciphers.size());
