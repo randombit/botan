@@ -5,7 +5,7 @@ Name Types
 
 Botan provides a small set of strongly-typed value classes for names that appear in
 network protocols and PKI artifacts: DNS host names, email addresses, IP addresses
-(v4 and v6), and URIs.
+(v4 and v6), URIs, and telephone numbers.
 
 Although these types were introduced to model the ``GeneralName`` alternatives of an
 X.509 certificate (RFC 5280 4.2.1.6), they are not specifically tied to X.509 and are
@@ -487,3 +487,58 @@ Declared in ``botan/uri.h``.
       The ``userinfo`` component, or ``std::nullopt`` if no ``"@"`` was present. Note
       that a present-but-empty userinfo (``"https://@example.com/"``) is represented as
       an empty string, which allows it to be distinguished from the absent case.
+
+.. _telephone_number:
+
+Telephone Numbers
+----------------------------------------
+
+.. versionadded:: 3.14
+
+Declared in ``botan/telephone_number.h``.
+
+.. cpp:class:: TelephoneNumber
+
+   A telephone number in the dialed form used by RFC 8226 STIR certificates: 1 to 15
+   characters from ``0123456789#*``. This is not E.164: ``*`` and ``#`` may appear, and
+   leading zeros are significant, so ``0123`` and ``123`` are distinct numbers. No
+   canonicalization is applied.
+
+   .. cpp:function:: static std::optional<TelephoneNumber> from_string(std::string_view tn)
+
+      Parse a number, returning an empty optional if it is not of the form above.
+
+   .. cpp:function:: const std::string& to_string() const
+
+   .. cpp:function:: bool is_wildcard() const
+
+      True if the number contains ``*`` or ``#``.
+
+   .. cpp:function:: size_t length() const
+
+   .. cpp:function:: std::optional<uint64_t> numeric_value() const
+
+      The number as an integer, or an empty optional for a wildcard.
+
+.. cpp:class:: TelephoneNumberRange
+
+   A block of consecutive telephone numbers of the same length, given by its first
+   number and a count. This models the type of the same name in RFC 8226.
+
+   .. cpp:function:: static std::optional<TelephoneNumberRange> from(const TelephoneNumber& start, uint64_t count)
+
+      Returns an empty optional if ``start`` is a wildcard, ``count`` is less
+      than 2, or the block would run past the last number with the same length
+      as ``start``, which RFC 8226 Section 9 forbids.
+
+   .. cpp:function:: const TelephoneNumber& start() const
+
+   .. cpp:function:: uint64_t count() const
+
+   .. cpp:function:: TelephoneNumber last() const
+
+   .. cpp:function:: bool contains(const TelephoneNumber& tn) const
+
+      True if ``tn`` has the same length as this range and lies within it.
+
+   .. cpp:function:: bool contains(const TelephoneNumberRange& other) const
