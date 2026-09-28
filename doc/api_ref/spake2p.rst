@@ -109,7 +109,8 @@ Registration
       Creates a prover secret from already derived scalars, for applications which
       require a password hashing scheme other than the default one.  The scalars must be
       derived from the password in a way that produces uniformly random values modulo
-      the group order; see RFC 9383 section 3.2 for the requirements.
+      the group order; see RFC 9383 section 3.2 for the requirements. Throws
+      ``Invalid_Argument`` if either scalar is zero.
 
    .. cpp:function:: RegistrationRecord registration_record(RandomNumberGenerator& rng) const
 
@@ -178,6 +179,7 @@ Online Authentication
       key confirmation (``confirmP``), which is sent to the verifier. Throws
       ``Decoding_Error`` if the message is malformed, or ``Invalid_Authentication_Tag``
       if the key confirmation is wrong (typically meaning the passwords do not match).
+      After any failure the context cannot be used further.
 
    .. cpp:function:: secure_vector<uint8_t> shared_secret() const
 
@@ -200,7 +202,8 @@ Online Authentication
 
       Consumes the prover's key share (``shareP``) and returns the verifier's response
       (``shareV || confirmV``), which is sent to the prover. Can be called only
-      once. Throws ``Decoding_Error`` if the key share is malformed.
+      once. Throws ``Decoding_Error`` if the key share is malformed, after which the
+      context cannot be used further.
 
    .. cpp:function:: void verify_confirmation(std::span<const uint8_t> confirmation)
 
