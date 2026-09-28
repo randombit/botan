@@ -239,7 +239,9 @@ handling.
 
  - Subject Key Identifier: No problems known.
 
- - Name Constraints: No problems known (though encoding is not supported).
+ - Name Constraints: No problems known.
+
+ - TN Authorization List (RFC 8226): No problems known.
 
 Any unknown critical extension in a certificate will lead to an
 exception during path validation.

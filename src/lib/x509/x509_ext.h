@@ -13,11 +13,13 @@
 #include <botan/ipv4_address.h>
 #include <botan/ipv6_address.h>
 #include <botan/pkix_types.h>
+#include <botan/telephone_number.h>
 
 #include <array>
 #include <memory>
 #include <optional>
 #include <set>
+#include <span>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -858,46 +860,113 @@ class BOTAN_PUBLIC_API(3, 13) NoRevocationAvailable final : public Certificate_E
 /**
 * TNAuthList extension
 *
-* RFC8226 Secure Telephone Identity Credentials
-*   https://www.rfc-editor.org/rfc/rfc8226#section-9
+* RFC 8226 Secure Telephone Identity Credentials: Certificates, Section 9
+*
+* The extension is a list of entries, each of which is a service provider
+* code, a contiguous range of telephone numbers, or a single telephone number.
 */
 class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
    public:
       class BOTAN_PUBLIC_API(3, 5) Entry final : public ASN1_Object {
          public:
-            /* TNEntry choice values
-             * see: https://datatracker.ietf.org/doc/html/rfc8226#section-9 */
+            /**
+            * The TNEntry CHOICE alternative; the values are the context specific tags
+            */
             enum Type : uint8_t /* NOLINT(*-use-enum-class) */ {
                ServiceProviderCode = 0,
                TelephoneNumberRange = 1,
                TelephoneNumber = 2
             };
 
+            /**
+            * Retained for the deprecated telephone_number_range accessor
+            */
             struct TelephoneNumberRangeData {
-                  ASN1_String start;  //TelephoneNumber (IA5String)
-                  size_t count{};     //2..MAX
+                  ASN1_String start;
+                  size_t count{};
             };
 
             using RangeContainer = std::vector<TelephoneNumberRangeData>;
             using DataContainer = std::variant<ASN1_String, RangeContainer>;
 
+            /**
+            * Create a service provider code entry, for instance an OCN or SPID
+            *
+            * Throws Invalid_Argument if @p spc is empty or not IA5
+            */
+            static Entry from_service_provider_code(std::string_view spc);
+
+            /**
+            * Create a telephone number range entry
+            *
+            * Throws Invalid_Argument if @p range holds fewer than two numbers
+            */
+            static Entry from_telephone_number_range(const Botan::TelephoneNumberRange& range);
+
+            /**
+            * Create a single telephone number entry
+            */
+            static Entry from_telephone_number(const Botan::TelephoneNumber& tn);
+
+            /**
+            * Default constructor; the entry is only meaningful once decoded
+            */
+            Entry() = default;
+
             void encode_into(DER_Encoder& to) const override;
-            void decode_from(class BER_Decoder& from) override;
+            void decode_from(BER_Decoder& from) override;
 
             Type type() const { return m_type; }
 
+            /**
+            * Return the service provider code; throws unless type() is ServiceProviderCode
+            */
             const std::string& service_provider_code() const;
 
-            const RangeContainer& telephone_number_range() const;
+            /**
+            * Return the range; throws unless type() is TelephoneNumberRange
+            */
+            const Botan::TelephoneNumberRange& range() const;
 
-            const std::string& telephone_number() const;
+            /**
+            * Return the telephone number; throws unless type() is TelephoneNumber
+            */
+            const Botan::TelephoneNumber& number() const;
+
+            /**
+            * Return the range as a single element list; throws unless type() is TelephoneNumberRange
+            */
+            BOTAN_DEPRECATED("Use range()") const RangeContainer& telephone_number_range() const;
+
+            /**
+            * Return the telephone number as a string; throws unless type() is TelephoneNumber
+            */
+            BOTAN_DEPRECATED("Use number()") const std::string& telephone_number() const;
 
          private:
-            Type m_type{};
-            DataContainer m_data;
+            void set_range(Botan::TelephoneNumberRange range);
+
+            Type m_type = ServiceProviderCode;
+            std::variant<std::string, Botan::TelephoneNumber, Botan::TelephoneNumberRange> m_data;
+            // TODO(Botan4) remove along with telephone_number_range()
+            RangeContainer m_legacy_range;
       };
 
+      /**
+      * Create an empty extension; only useful as a decoding target
+      */
       TNAuthList() = default;
+
+      /**
+      * Create an extension from a list of entries; throws if @p entries is empty
+      */
+      explicit TNAuthList(std::vector<Entry> entries);
+
+      /**
+      * Decode a bare DER encoded TNAuthorizationList, such as one retrieved
+      * via an id-ad-stirTNList access description (RFC 8226 Section 10.1)
+      */
+      static TNAuthList from_der(std::span<const uint8_t> der);
 
       std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<TNAuthList>(*this); }
 
@@ -907,12 +976,35 @@ class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
 
       const std::vector<Entry>& entries() const { return m_tn_entries; }
 
+      /**
+      * Return true if every entry of @p delegate lies within the authority of
+      * this list, following RFC 9060 Section 4. Service provider codes must
+      * appear in this list verbatim. If this list contains a service provider
+      * code, all numbers and ranges are accepted, including numbers containing
+      * '*' or '#': the numbers behind a code are not known locally, so the
+      * issuer's assignment checks are trusted. Otherwise, numbers containing
+      * '*' or '#' must appear in this list verbatim, and numeric numbers and
+      * ranges must fall within this list's numbers and ranges.
+      */
+      bool encompasses(const TNAuthList& delegate) const;
+
+      /**
+      * Checks this list against the list of every CA above it in the path,
+      * adding TN_AUTH_LIST_ERROR to this certificate's status if any of
+      * them does not encompass it.
+      */
+      void validate(const X509_Certificate& subject,
+                    const std::optional<X509_Certificate>& issuer,
+                    const std::vector<X509_Certificate>& cert_path,
+                    std::vector<std::set<Certificate_Status_Code>>& cert_status,
+                    size_t pos) const override;
+
    private:
       std::string oid_name() const override { return "PKIX.TNAuthList"; }
 
       bool is_appropriate_context(Extension_Context context) const override;
 
-      bool should_encode() const override { return true; }
+      bool should_encode() const override { return !m_tn_entries.empty(); }
 
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>& in) override;

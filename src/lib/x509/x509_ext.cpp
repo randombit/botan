@@ -23,8 +23,11 @@
 #include <algorithm>
 #include <bit>
 #include <concepts>
+#include <optional>
 #include <set>
 #include <span>
+#include <tuple>
+#include <utility>
 
 namespace Botan {
 
@@ -108,21 +111,6 @@ std::unique_ptr<Certificate_Extension> extension_from_oid(const OID& oid) {
    }
 
    return nullptr;  // unknown
-}
-
-bool is_valid_telephone_number(const ASN1_String& tn) {
-   //TelephoneNumber ::= IA5String (SIZE (1..15)) (FROM ("0123456789#*"))
-   const std::string valid_tn_chars("0123456789#*");
-
-   if(tn.empty() || (tn.size() > 15)) {
-      return false;
-   }
-
-   if(tn.value().find_first_not_of(valid_tn_chars) != std::string::npos) {
-      return false;
-   }
-
-   return true;
 }
 
 }  // namespace
@@ -1625,70 +1613,149 @@ void CRL_Issuing_Distribution_Point::decode_inner(const std::vector<uint8_t>& bu
    }
 }
 
-void TNAuthList::Entry::encode_into(DER_Encoder& /*to*/) const {
-   throw Not_Implemented("TNAuthList extension entry serialization is not supported");
+TNAuthList::Entry TNAuthList::Entry::from_service_provider_code(std::string_view spc) {
+   if(spc.empty()) {
+      throw Invalid_Argument("TNAuthList service provider code cannot be empty");
+   }
+   Entry entry;
+   entry.m_type = ServiceProviderCode;
+   // Constructing the ASN1_String checks that the code is valid IA5
+   entry.m_data = ASN1_String(spc, ASN1_Type::Ia5String).value();
+   return entry;
 }
 
-void TNAuthList::Entry::decode_from(class BER_Decoder& ber) {
+TNAuthList::Entry TNAuthList::Entry::from_telephone_number_range(const Botan::TelephoneNumberRange& range) {
+   // count INTEGER (2..MAX)
+   if(range.count() < 2) {
+      throw Invalid_Argument("TNAuthList range must contain at least two numbers");
+   }
+   Entry entry;
+   entry.set_range(range);
+   return entry;
+}
+
+TNAuthList::Entry TNAuthList::Entry::from_telephone_number(const Botan::TelephoneNumber& tn) {
+   Entry entry;
+   entry.m_type = TelephoneNumber;
+   entry.m_data = tn;
+   return entry;
+}
+
+void TNAuthList::Entry::encode_into(DER_Encoder& to) const {
+   switch(m_type) {
+      case ServiceProviderCode:
+         to.start_explicit(ServiceProviderCode)
+            .encode(ASN1_String(service_provider_code(), ASN1_Type::Ia5String))
+            .end_cons();
+         return;
+      case TelephoneNumberRange:
+         to.start_explicit(TelephoneNumberRange)
+            .start_sequence()
+            .encode(ASN1_String(range().start().to_string(), ASN1_Type::Ia5String))
+            .encode(BigInt::from_u64(range().count()))
+            .end_cons()
+            .end_cons();
+         return;
+      case TelephoneNumber:
+         to.start_explicit(TelephoneNumber).encode(ASN1_String(number().to_string(), ASN1_Type::Ia5String)).end_cons();
+         return;
+   }
+
+   throw Invalid_State("TNAuthList::Entry has an invalid type");
+}
+
+void TNAuthList::Entry::decode_from(BER_Decoder& ber) {
+   const auto decode_ia5_string = [](BER_Decoder& from, std::string_view what) {
+      ASN1_String str;
+      from.decode(str);
+      if(str.tagging() != ASN1_Type::Ia5String) {
+         throw Decoding_Error(fmt("TNAuthList {} must be an IA5String", what));
+      }
+      return str.value();
+   };
+
    const BER_Object obj = ber.get_next_object();
 
+   // The TNEntry alternatives are explicitly tagged so each is constructed
    if(obj.get_class() != (ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
       throw Decoding_Error(fmt("Unexpected TNEntry class tag {}", static_cast<uint32_t>(obj.get_class())));
    }
 
    const uint32_t type_tag = static_cast<uint32_t>(obj.type_tag());
+   BER_Decoder inner(obj, ber.limits());
 
    if(type_tag == ServiceProviderCode) {
       m_type = ServiceProviderCode;
-      ASN1_String spc_string;
-      BER_Decoder(obj, ber.limits()).decode(spc_string).verify_end();
-      m_data = std::move(spc_string);
+      m_data = decode_ia5_string(inner, "ServiceProviderCode");
    } else if(type_tag == TelephoneNumberRange) {
-      m_type = TelephoneNumberRange;
-      m_data = RangeContainer();
-      auto& range_items = std::get<RangeContainer>(m_data);
-      BER_Decoder outer(obj, ber.limits());
-      BER_Decoder list = outer.start_sequence();
-      while(list.more_items()) {
-         TelephoneNumberRangeData entry;
+      BER_Decoder range = inner.start_sequence();
 
-         list.decode(entry.start);
-         if(!is_valid_telephone_number(entry.start)) {
-            throw Decoding_Error(fmt("Invalid TelephoneNumberRange start {}", entry.start.value()));
-         }
-
-         list.decode(entry.count);
-         if(entry.count < 2) {
-            throw Decoding_Error(fmt("Invalid TelephoneNumberRange count {}", entry.count));
-         }
-
-         range_items.emplace_back(std::move(entry));
+      const auto start = Botan::TelephoneNumber::from_string(decode_ia5_string(range, "TelephoneNumberRange start"));
+      if(!start.has_value()) {
+         throw Decoding_Error("Invalid TelephoneNumberRange start");
       }
-      list.end_cons();
-      outer.verify_end();
 
-      if(range_items.empty()) {
-         throw Decoding_Error("TelephoneNumberRange is empty");
+      BigInt count;
+      range.decode(count);
+      // count INTEGER (2..MAX), but no value over 64 bits fits within a 15 digit number
+      if(count.is_negative() || count.bits() > 64) {
+         throw Decoding_Error("Invalid TelephoneNumberRange count");
       }
+      uint64_t count_value = 0;
+      for(size_t i = 0; i != 8; ++i) {
+         count_value = (count_value << 8) | count.byte_at(7 - i);
+      }
+      if(count_value < 2) {
+         throw Decoding_Error("Invalid TelephoneNumberRange count");
+      }
+
+      auto tn_range = Botan::TelephoneNumberRange::from(*start, count_value);
+      if(!tn_range.has_value()) {
+         throw Decoding_Error("Invalid TelephoneNumberRange");
+      }
+
+      // TelephoneNumberRange is extensible; skip any additions following count
+      while(range.more_items()) {
+         range.get_next_object();
+      }
+      range.end_cons();
+
+      set_range(std::move(*tn_range));
    } else if(type_tag == TelephoneNumber) {
       m_type = TelephoneNumber;
-      ASN1_String one_string;
-      BER_Decoder(obj, ber.limits()).decode(one_string).verify_end();
-      if(!is_valid_telephone_number(one_string)) {
-         throw Decoding_Error(fmt("Invalid TelephoneNumber {}", one_string.value()));
+      auto tn = Botan::TelephoneNumber::from_string(decode_ia5_string(inner, "TelephoneNumber"));
+      if(!tn.has_value()) {
+         throw Decoding_Error("Invalid TelephoneNumber");
       }
-      m_data = std::move(one_string);
+      m_data = std::move(*tn);
    } else {
       throw Decoding_Error(fmt("Unexpected TNEntry type code {}", type_tag));
-   };
+   }
+
+   inner.verify_end();
+}
+
+TNAuthList::TNAuthList(std::vector<Entry> entries) : m_tn_entries(std::move(entries)) {
+   if(m_tn_entries.empty()) {
+      throw Invalid_Argument("TNAuthList requires at least one entry");
+   }
+}
+
+TNAuthList TNAuthList::from_der(std::span<const uint8_t> der) {
+   TNAuthList list;
+   list.decode_inner(std::vector<uint8_t>(der.begin(), der.end()));
+   return list;
 }
 
 std::vector<uint8_t> TNAuthList::encode_inner() const {
-   throw Not_Implemented("TNAuthList extension serialization is not supported");
+   std::vector<uint8_t> output;
+   DER_Encoder(output).start_sequence().encode_list(m_tn_entries).end_cons();
+   return output;
 }
 
 void TNAuthList::decode_inner(const std::vector<uint8_t>& in) {
    /* RFC 8226 Section 9 - TNAuthorizationList ::= SEQUENCE SIZE (1..MAX) OF TNEntry */
+   m_tn_entries.clear();
    BER_Decoder(in, BER_Decoder::Limits::DER()).decode_list(m_tn_entries).verify_end();
    if(m_tn_entries.empty()) {
       throw Decoding_Error("TNAuthorizationList is empty");
@@ -1697,17 +1764,181 @@ void TNAuthList::decode_inner(const std::vector<uint8_t>& in) {
 
 const std::string& TNAuthList::Entry::service_provider_code() const {
    BOTAN_STATE_CHECK(type() == Type::ServiceProviderCode);
-   return std::get<ASN1_String>(m_data).value();
+   return std::get<std::string>(m_data);
+}
+
+const Botan::TelephoneNumberRange& TNAuthList::Entry::range() const {
+   BOTAN_STATE_CHECK(type() == Type::TelephoneNumberRange);
+   return std::get<Botan::TelephoneNumberRange>(m_data);
+}
+
+const Botan::TelephoneNumber& TNAuthList::Entry::number() const {
+   BOTAN_STATE_CHECK(type() == Type::TelephoneNumber);
+   return std::get<Botan::TelephoneNumber>(m_data);
+}
+
+void TNAuthList::Entry::set_range(Botan::TelephoneNumberRange range) {
+   m_type = TelephoneNumberRange;
+   m_legacy_range.clear();
+   if(std::in_range<size_t>(range.count())) {
+      m_legacy_range.push_back(TelephoneNumberRangeData{ASN1_String(range.start().to_string(), ASN1_Type::Ia5String),
+                                                        static_cast<size_t>(range.count())});
+   }
+   m_data = std::move(range);
 }
 
 const TNAuthList::Entry::RangeContainer& TNAuthList::Entry::telephone_number_range() const {
    BOTAN_STATE_CHECK(type() == Type::TelephoneNumberRange);
-   return std::get<RangeContainer>(m_data);
+   if(m_legacy_range.empty()) {
+      throw Invalid_State("TNAuthList range count does not fit in size_t, use range() instead");
+   }
+   return m_legacy_range;
 }
 
 const std::string& TNAuthList::Entry::telephone_number() const {
-   BOTAN_STATE_CHECK(type() == Type::TelephoneNumber);
-   return std::get<ASN1_String>(m_data).value();
+   return number().to_string();
+}
+
+/*
+* RFC 9060 Section 4:
+* "each delegate certificate MUST have a TNAuthList scope that is equal to or
+*  a subset of its parent certificate's scope: it must be "encompassed"."
+*
+* RFC 9060 Section 4.1:
+* "this specification explicitly permits SPC-only parent certificates to
+*  delegate individual telephone numbers or ranges to a child certificate"
+*/
+bool TNAuthList::encompasses(const TNAuthList& delegate) const {
+   // A block of numbers as (length, first, last); a number of another length is a
+   // different number even if its value falls inside
+   class TN_Interval final {
+      public:
+         explicit TN_Interval(const TelephoneNumber& tn) :
+               m_length(tn.length()), m_first(tn.numeric_value().value()), m_last(m_first) {}
+
+         explicit TN_Interval(const TelephoneNumberRange& range) :
+               m_length(range.start().length()),
+               m_first(range.start().numeric_value().value()),
+               m_last(m_first + range.count() - 1) {}
+
+         size_t length() const { return m_length; }
+
+         uint64_t first() const { return m_first; }
+
+         uint64_t last() const { return m_last; }
+
+         void update_last(uint64_t last) { m_last = last; }
+
+         bool operator<(const TN_Interval& other) const {
+            return std::tie(m_length, m_first) < std::tie(other.m_length, other.m_first);
+         }
+
+      private:
+         size_t m_length;
+         uint64_t m_first;
+         uint64_t m_last;
+   };
+
+   // Sort by (length, first) and coalesce overlapping or adjacent blocks of the same length
+   const auto merge_intervals = [](std::vector<TN_Interval> intervals) {
+      std::sort(intervals.begin(), intervals.end());
+      std::vector<TN_Interval> merged;
+      for(const auto& interval : intervals) {
+         if(!merged.empty() && merged.back().length() == interval.length() &&
+            interval.first() <= merged.back().last() + 1) {
+            merged.back().update_last(std::max(merged.back().last(), interval.last()));
+         } else {
+            merged.push_back(interval);
+         }
+      }
+      return merged;
+   };
+
+   const auto is_covered = [](const TN_Interval& child, std::span<const TN_Interval> merged) {
+      // The blocks are disjoint and sorted, so the only candidate is the last one starting at or before the child
+      const auto after = std::upper_bound(merged.begin(), merged.end(), child);
+      if(after == merged.begin()) {
+         return false;
+      }
+      const TN_Interval& block = *(after - 1);
+      return block.length() == child.length() && block.first() <= child.first() && child.last() <= block.last();
+   };
+
+   std::set<std::string> spcs;
+   std::set<TelephoneNumber> wildcards;
+   std::vector<TN_Interval> intervals;
+
+   for(const auto& entry : m_tn_entries) {
+      switch(entry.type()) {
+         case Entry::ServiceProviderCode:
+            spcs.insert(entry.service_provider_code());
+            break;
+         case Entry::TelephoneNumber:
+            if(entry.number().is_wildcard()) {
+               wildcards.insert(entry.number());
+            } else {
+               intervals.emplace_back(entry.number());
+            }
+            break;
+         case Entry::TelephoneNumberRange:
+            intervals.emplace_back(entry.range());
+            break;
+      }
+   }
+
+   const std::vector<TN_Interval> merged = merge_intervals(std::move(intervals));
+
+   for(const auto& entry : delegate.entries()) {
+      switch(entry.type()) {
+         case Entry::ServiceProviderCode:
+            if(!spcs.contains(entry.service_provider_code())) {
+               return false;
+            }
+            break;
+         case Entry::TelephoneNumber:
+            if(!spcs.empty()) {
+               break;
+            }
+            if(entry.number().is_wildcard()) {
+               if(!wildcards.contains(entry.number())) {
+                  return false;
+               }
+            } else if(!is_covered(TN_Interval(entry.number()), merged)) {
+               return false;
+            }
+            break;
+         case Entry::TelephoneNumberRange:
+            if(!spcs.empty()) {
+               break;
+            }
+            if(!is_covered(TN_Interval(entry.range()), merged)) {
+               return false;
+            }
+            break;
+      }
+   }
+
+   return true;
+}
+
+/*
+* RFC 8226 Section 9:
+* "In a CA certificate, the TN Authorization List limits the set of TNs for
+*  certification paths that include this certificate."
+*/
+void TNAuthList::validate(const X509_Certificate& /*subject*/,
+                          const std::optional<X509_Certificate>& /*issuer*/,
+                          const std::vector<X509_Certificate>& cert_path,
+                          std::vector<std::set<Certificate_Status_Code>>& cert_status,
+                          size_t pos) const {
+   for(size_t i = pos + 1; i < cert_path.size(); ++i) {
+      // A CA list that failed to decode is reported against the CA by Unknown_Extension
+      const auto* ancestor = cert_path[i].v3_extensions().get_extension_object_as<TNAuthList>();
+      if(ancestor != nullptr && !ancestor->encompasses(*this)) {
+         cert_status.at(pos).insert(Certificate_Status_Code::TN_AUTH_LIST_ERROR);
+         return;
+      }
+   }
 }
 
 std::vector<uint8_t> IPAddressBlocks::encode_inner() const {
