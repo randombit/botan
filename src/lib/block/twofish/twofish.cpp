@@ -179,6 +179,8 @@ void Twofish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    }
 #endif
 
+   BOTAN_ASSERT_NOMSG(!m_SB.empty());
+
    while(blocks >= 2) {
       uint32_t A0 = 0;
       uint32_t B0 = 0;
@@ -261,6 +263,8 @@ void Twofish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    }
 #endif
 
+   BOTAN_ASSERT_NOMSG(!m_SB.empty());
+
    while(blocks >= 2) {
       uint32_t A0 = 0;
       uint32_t B0 = 0;
@@ -332,7 +336,7 @@ void Twofish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 }
 
 bool Twofish::has_keying_material() const {
-   return !m_SB.empty();
+   return !m_RK.empty();
 }
 
 std::string Twofish::provider() const {
@@ -462,6 +466,15 @@ void Twofish::key_schedule(std::span<const uint8_t> key) {
       }
    }
 
+#if defined(BOTAN_HAS_TWOFISH_AVX512)
+   if(CPUID::has(CPUID::Feature::AVX512, CPUID::Feature::GFNI)) {
+      m_QS = std::move(QS);
+      // AVX512 needs QS but not the expanded sbox values in SB
+      return;
+   }
+#endif
+
+   // m_SB is unused in the AVX-512 path so don't bother computing it
    m_SB.resize(1024);
    for(size_t i = 0; i != 256; ++i) {
       m_SB[i] = mds0(QS[i]);
@@ -469,12 +482,6 @@ void Twofish::key_schedule(std::span<const uint8_t> key) {
       m_SB[512 + i] = mds2(QS[512 + i]);
       m_SB[768 + i] = mds3(QS[768 + i]);
    }
-
-#if defined(BOTAN_HAS_TWOFISH_AVX512)
-   if(CPUID::has(CPUID::Feature::AVX512, CPUID::Feature::GFNI)) {
-      m_QS = std::move(QS);
-   }
-#endif
 }
 
 /*
