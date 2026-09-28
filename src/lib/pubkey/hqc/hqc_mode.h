@@ -15,7 +15,9 @@ namespace Botan {
 
 /**
  * The HQC parameter sets as defined in the HQC specification of 2025-08-22
- * (NIST security categories 1, 3 and 5).
+ * (NIST security categories 1, 3 and 5). They are named "HQCr4-1", "HQCr4-3"
+ * and "HQCr4-5": the "r4" marks the round-4 submission, since HQC is not yet
+ * standardized and the final standard will be a different algorithm.
  */
 class BOTAN_PUBLIC_API(3, 14) HQC_Mode final {
    public:

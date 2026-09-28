@@ -16,17 +16,17 @@ namespace Botan {
 namespace {
 
 HQC_Mode::Mode hqc_mode_from_string(std::string_view str) {
-   if(str == "HQC-1") {
+   if(str == "HQCr4-1") {
       return HQC_Mode::HQC_1;
    }
-   if(str == "HQC-3") {
+   if(str == "HQCr4-3") {
       return HQC_Mode::HQC_3;
    }
-   if(str == "HQC-5") {
+   if(str == "HQCr4-5") {
       return HQC_Mode::HQC_5;
    }
 
-   throw Invalid_Argument(fmt("'{}' is not a valid HQC mode name", str));
+   throw Invalid_Argument(fmt("'{}' is not a valid HQCr4 mode name", str));
 }
 
 HQC_Mode::Mode hqc_mode_from_oid(const OID& oid) {
@@ -34,7 +34,7 @@ HQC_Mode::Mode hqc_mode_from_oid(const OID& oid) {
       return hqc_mode_from_string(*name);
    }
 
-   throw Invalid_Argument(fmt("OID '{}' is not registered as an HQC mode", oid));
+   throw Invalid_Argument(fmt("OID '{}' is not registered as an HQCr4 mode", oid));
 }
 
 }  // anonymous namespace
@@ -52,11 +52,11 @@ OID HQC_Mode::object_identifier() const {
 std::string HQC_Mode::to_string() const {
    switch(m_mode) {
       case HQC_1:
-         return "HQC-1";
+         return "HQCr4-1";
       case HQC_3:
-         return "HQC-3";
+         return "HQCr4-3";
       case HQC_5:
-         return "HQC-5";
+         return "HQCr4-5";
    }
 
    BOTAN_ASSERT_UNREACHABLE();

@@ -22,16 +22,16 @@ void check_rc(int32_t rc, std::string_view operation) {
       case HQC_OK:
          return;
       case HQC_ERR_BUFFER_LENGTH:
-         throw Invalid_Argument(fmt("HQC {}: a buffer has the wrong length for the parameter set", operation));
+         throw Invalid_Argument(fmt("HQCr4 {}: a buffer has the wrong length for the parameter set", operation));
       case HQC_ERR_INVALID_KEY:
-         throw Invalid_Argument(fmt("HQC {}: invalid key", operation));
+         throw Invalid_Argument(fmt("HQCr4 {}: invalid key", operation));
       case HQC_ERR_INVALID_CIPHERTEXT:
-         throw Invalid_Argument(fmt("HQC {}: invalid ciphertext", operation));
+         throw Invalid_Argument(fmt("HQCr4 {}: invalid ciphertext", operation));
       default:
          // HQC_ERR_RANDOMNESS, HQC_ERR_INTERNAL, HQC_ERR_BAD_PARAMETER_SET,
          // HQC_ERR_NULL_POINTER and unknown codes: all indicate a bug on the
          // calling side or inside the crate, not bad user input
-         throw Internal_Error(fmt("HQC {}: rust-hqc returned error code {}", operation, rc));
+         throw Internal_Error(fmt("HQCr4 {}: rust-hqc returned error code {}", operation, rc));
    }
 }
 

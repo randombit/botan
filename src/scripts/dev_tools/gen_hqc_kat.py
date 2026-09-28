@@ -30,9 +30,9 @@ import os
 import sys
 
 PARAMETER_SETS = [
-    ("HQC-1", "hqc-1", "PQCkemKAT_2321.rsp"),
-    ("HQC-3", "hqc-3", "PQCkemKAT_4602.rsp"),
-    ("HQC-5", "hqc-5", "PQCkemKAT_7333.rsp"),
+    ("HQCr4-1", "hqc-1", "PQCkemKAT_2321.rsp"),
+    ("HQCr4-3", "hqc-3", "PQCkemKAT_4602.rsp"),
+    ("HQCr4-5", "hqc-5", "PQCkemKAT_7333.rsp"),
 ]
 
 HEADER = """# This file was auto-generated from the HQC reference implementation's KATs

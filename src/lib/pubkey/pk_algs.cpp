@@ -176,7 +176,7 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #endif
 
 #if defined(BOTAN_HAS_HQC)
-   if(alg_name == "HQC" || alg_name.starts_with("HQC-")) {
+   if(alg_name == "HQCr4" || alg_name.starts_with("HQCr4-")) {
       return std::make_unique<HQC_PublicKey>(alg_id, key_bits);
    }
 #endif
@@ -367,7 +367,7 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #endif
 
 #if defined(BOTAN_HAS_HQC)
-   if(alg_name == "HQC" || alg_name.starts_with("HQC-")) {
+   if(alg_name == "HQCr4" || alg_name.starts_with("HQCr4-")) {
       return std::make_unique<HQC_PrivateKey>(alg_id, key_bits);
    }
 #endif
@@ -586,7 +586,7 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 #endif
 
 #if defined(BOTAN_HAS_HQC)
-   if(alg_name == "HQC") {
+   if(alg_name == "HQCr4") {
       const auto mode = params.empty() ? HQC_Mode::HQC_3 : HQC_Mode(params);
       return std::make_unique<HQC_PrivateKey>(rng, mode);
    }

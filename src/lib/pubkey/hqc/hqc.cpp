@@ -32,7 +32,7 @@ class HQC_PublicKeyInternal final {
       HQC_PublicKeyInternal(HQC_Mode mode, std::vector<uint8_t> ek) :
             m_mode(mode), m_sizes(HQC_FFI::sizes(mode)), m_ek(std::move(ek)) {
          if(m_ek.size() != m_sizes.ek) {
-            throw Invalid_Argument("HQC public key does not have the correct byte count");
+            throw Invalid_Argument("HQCr4 public key does not have the correct byte count");
          }
 
          // ek = seed || s, where s is a vector of n bits packed least
@@ -45,7 +45,7 @@ class HQC_PublicKeyInternal final {
          if(valid_bits_in_last_byte != 0) {
             const auto padding_mask = static_cast<uint8_t>(0xFF << valid_bits_in_last_byte);
             if((m_ek.back() & padding_mask) != 0) {
-               throw Invalid_Argument("HQC public key has non-zero padding bits");
+               throw Invalid_Argument("HQCr4 public key has non-zero padding bits");
             }
          }
       }
@@ -122,7 +122,7 @@ class HQC_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
 
       void raw_kem_decrypt(std::span<uint8_t> out_shared_key, std::span<const uint8_t> encapsulated_key) override {
          if(encapsulated_key.size() != m_public_key->sizes().ct) {
-            throw Invalid_Argument("HQC ciphertext does not have the correct byte count");
+            throw Invalid_Argument("HQCr4 ciphertext does not have the correct byte count");
          }
 
          auto scope = CT::scoped_poison(*m_private_key);
@@ -152,7 +152,7 @@ HQC_PublicKey::HQC_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const 
       HQC_PublicKey(key_bits, HQC_Mode(alg_id.oid())) {
    // The parameter set is identified by the OID; no parameters are defined.
    if(!alg_id.parameters_are_empty()) {
-      throw Decoding_Error("Unexpected parameters for HQC public key");
+      throw Decoding_Error("Unexpected parameters for HQCr4 public key");
    }
 }
 
@@ -225,7 +225,7 @@ HQC_PrivateKey::HQC_PrivateKey(std::span<const uint8_t> sk, HQC_Mode mode) {
    const auto sizes = HQC_FFI::sizes(mode);
 
    if(sk.size() != sizes.dk) {
-      throw Invalid_Argument("HQC private key does not have the correct byte count");
+      throw Invalid_Argument("HQCr4 private key does not have the correct byte count");
    }
 
    // The decapsulation key starts with the encapsulation key
@@ -239,7 +239,7 @@ HQC_PrivateKey::HQC_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<cons
       HQC_PrivateKey(key_bits, HQC_Mode(alg_id.oid())) {
    // The parameter set is identified by the OID; no parameters are defined.
    if(!alg_id.parameters_are_empty()) {
-      throw Decoding_Error("Unexpected parameters for HQC private key");
+      throw Decoding_Error("Unexpected parameters for HQCr4 private key");
    }
 }
 

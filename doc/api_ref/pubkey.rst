@@ -285,13 +285,16 @@ Post-quantum secure, code-based key encapsulation scheme.
    hybrid scheme, paired with either a classical EC algorithm or a lattice-based
    scheme such as ML-KEM.
 
-HQC
-~~~
+HQCr4
+~~~~~
 
 Post-quantum secure, code-based key encapsulation scheme (Hamming Quasi-Cyclic),
 selected by NIST in March 2025 for standardization as a backup to ML-KEM. The
-implementation follows the HQC specification of 2025-08-22 and supports the
-parameter sets ``HQC-1``, ``HQC-3`` and ``HQC-5``.
+implementation follows the HQC specification of 2025-08-22, i.e. the round-4
+submission, and supports the parameter sets ``HQCr4-1``, ``HQCr4-3`` and
+``HQCr4-5``. The algorithm name ``HQCr4`` carries the round number because HQC
+is not yet standardized; the standardized scheme will be added under a
+different name.
 
 The cryptographic core is implemented in Rust in the crate ``rust-hqc``, which
 is included as a git submodule in ``src/lib/pubkey/hqc/rust-hqc``. The Botan

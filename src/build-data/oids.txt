@@ -122,10 +122,11 @@
 1.3.6.1.4.1.25258.1.18.5 = ClassicMcEliece_8192128pc
 1.3.6.1.4.1.25258.1.18.6 = ClassicMcEliece_8192128pcf
 
-# HQC OIDs are currently in Botan's private arc
-1.3.6.1.4.1.25258.1.19.1 = HQC-1
-1.3.6.1.4.1.25258.1.19.3 = HQC-3
-1.3.6.1.4.1.25258.1.19.5 = HQC-5
+# HQCr4 OIDs are currently in Botan's private arc; the leaves 1, 3 and 5
+# are reserved for the final (standardized) version of HQC
+1.3.6.1.4.1.25258.1.19.101 = HQCr4-1
+1.3.6.1.4.1.25258.1.19.103 = HQCr4-3
+1.3.6.1.4.1.25258.1.19.105 = HQCr4-5
 
 # XMSS
 1.3.6.1.4.1.25258.1.5 = XMSS-draft6

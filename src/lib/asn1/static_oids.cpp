@@ -297,12 +297,12 @@ std::optional<std::string_view> OID_Map::lookup_static_oid(const OID& oid) {
          return if_match(oid, {1, 3, 6, 1, 4, 1, 25258, 1, 18, 5}, "ClassicMcEliece_8192128pc");
       case 0x6F497:
          return if_match(oid, {1, 3, 6, 1, 4, 1, 25258, 1, 18, 6}, "ClassicMcEliece_8192128pcf");
-      case 0x6F553:
-         return if_match(oid, {1, 3, 6, 1, 4, 1, 25258, 1, 19, 1}, "HQC-1");
-      case 0x6F555:
-         return if_match(oid, {1, 3, 6, 1, 4, 1, 25258, 1, 19, 3}, "HQC-3");
-      case 0x6F557:
-         return if_match(oid, {1, 3, 6, 1, 4, 1, 25258, 1, 19, 5}, "HQC-5");
+      case 0x6F5B7:
+         return if_match(oid, {1, 3, 6, 1, 4, 1, 25258, 1, 19, 101}, "HQCr4-1");
+      case 0x6F5B9:
+         return if_match(oid, {1, 3, 6, 1, 4, 1, 25258, 1, 19, 103}, "HQCr4-3");
+      case 0x6F5BB:
+         return if_match(oid, {1, 3, 6, 1, 4, 1, 25258, 1, 19, 105}, "HQCr4-5");
       case 0x6F79D:
          return if_match(oid, {2, 16, 840, 1, 113730, 1, 13}, "Certificate Comment");
       case 0x701A0:
@@ -1209,6 +1209,12 @@ std::optional<OID> OID_Map::lookup_static_oid_name(std::string_view req) {
          return if_match(req, "AES-256/CCM", {2, 16, 840, 1, 101, 3, 4, 1, 47});
       case 0x80E71:
          return if_match(req, "PKIX.STIRTNList", {1, 3, 6, 1, 5, 5, 7, 48, 14});
+      case 0x811A1:
+         return if_match(req, "HQCr4-1", {1, 3, 6, 1, 4, 1, 25258, 1, 19, 101});
+      case 0x811A3:
+         return if_match(req, "HQCr4-3", {1, 3, 6, 1, 4, 1, 25258, 1, 19, 103});
+      case 0x811A5:
+         return if_match(req, "HQCr4-5", {1, 3, 6, 1, 4, 1, 25258, 1, 19, 105});
       case 0x811F7:
          return if_match(req, "HMAC(SHA-256)", {1, 2, 840, 113549, 2, 9});
       case 0x82434:
@@ -1339,12 +1345,6 @@ std::optional<OID> OID_Map::lookup_static_oid_name(std::string_view req) {
          return if_match(req, "X520.Title", {2, 5, 4, 12});
       case 0xA323F:
          return if_match(req, "X509v3.NameConstraints", {2, 5, 29, 30});
-      case 0xA373F:
-         return if_match(req, "HQC-1", {1, 3, 6, 1, 4, 1, 25258, 1, 19, 1});
-      case 0xA3741:
-         return if_match(req, "HQC-3", {1, 3, 6, 1, 4, 1, 25258, 1, 19, 3});
-      case 0xA3743:
-         return if_match(req, "HQC-5", {1, 3, 6, 1, 4, 1, 25258, 1, 19, 5});
       case 0xA3C55:
          return if_match(req, "X520.Pseudonym", {2, 5, 4, 65});
       case 0xA4809:

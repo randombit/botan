@@ -26,7 +26,9 @@ class HQC_PrivateKeyInternal;
 /**
  * HQC (Hamming Quasi-Cyclic) is a code-based post-quantum secure KEM that was
  * selected by NIST in March 2025 for standardization as a backup to ML-KEM.
- * This implementation follows the HQC specification of 2025-08-22.
+ * This implementation follows the HQC specification of 2025-08-22 (the round-4
+ * submission), hence the algorithm name "HQCr4"; the standardized version will
+ * be added under a different name once NIST publishes it.
  *
  * The cryptographic core is implemented in Rust (crate rust-hqc) and linked as
  * a static library; this module is not built by default.
@@ -44,7 +46,7 @@ class BOTAN_PUBLIC_API(3, 14) HQC_PublicKey : public virtual Public_Key {
 
       ~HQC_PublicKey() override = default;
 
-      std::string algo_name() const override { return "HQC"; }
+      std::string algo_name() const override { return "HQCr4"; }
 
       AlgorithmIdentifier algorithm_identifier() const override;
 

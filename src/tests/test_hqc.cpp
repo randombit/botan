@@ -37,7 +37,7 @@ namespace {
  */
 class HQC_KAT_KeyGen_Tests final : public PK_PQC_KEM_ACVP_KAT_KeyGen_Test {
    public:
-      HQC_KAT_KeyGen_Tests() : PK_PQC_KEM_ACVP_KAT_KeyGen_Test("HQC", "pubkey/hqc_kat_keygen.vec", "Seed") {}
+      HQC_KAT_KeyGen_Tests() : PK_PQC_KEM_ACVP_KAT_KeyGen_Test("HQCr4", "pubkey/hqc_kat_keygen.vec", "Seed") {}
 
    private:
       bool is_available(const std::string& /*params*/) const final { return true; }
@@ -53,11 +53,11 @@ class HQC_KAT_KeyGen_Tests final : public PK_PQC_KEM_ACVP_KAT_KeyGen_Test {
  */
 class HQC_KAT_Decap_Tests final : public PK_Test {
    public:
-      HQC_KAT_Decap_Tests() : PK_Test("HQC", "pubkey/hqc_kat_decap.vec", "Seed,CT,SS") {}
+      HQC_KAT_Decap_Tests() : PK_Test("HQCr4", "pubkey/hqc_kat_decap.vec", "Seed,CT,SS") {}
 
    private:
       Test::Result run_one_test(const std::string& params, const VarMap& vars) final {
-         Test::Result result(Botan::fmt("HQC decapsulation KAT with parameters {}", params));
+         Test::Result result(Botan::fmt("HQCr4 decapsulation KAT with parameters {}", params));
 
          Fixed_Output_RNG rng_keygen(vars.get_req_bin("Seed"));
          const Botan::HQC_PrivateKey sk(rng_keygen, Botan::HQC_Mode(params));
@@ -80,7 +80,7 @@ std::vector<Test::Result> test_hqc_roundtrips() {
    std::vector<Test::Result> results;
    for(const auto mode : modes) {
       const Botan::HQC_Mode m(mode);
-      Test::Result& result = results.emplace_back("HQC roundtrip: " + m.to_string());
+      Test::Result& result = results.emplace_back("HQCr4 roundtrip: " + m.to_string());
 
       const Botan::HQC_PrivateKey sk1(*rng, mode);
       const Botan::HQC_PublicKey pk1(sk1.public_key_bits(), mode);
@@ -114,12 +114,12 @@ std::vector<Test::Result> test_hqc_roundtrips() {
       result.test_bin_ne("decryption failure bitflip", ss_mismatch, enc_res.shared_key());
 
       // Decryption failure: malformed encapsulation value
-      result.test_throws("short encapsulation value", "HQC ciphertext does not have the correct byte count", [&] {
+      result.test_throws("short encapsulation value", "HQCr4 ciphertext does not have the correct byte count", [&] {
          auto short_encaps_value = enc_res.encapsulated_shared_key();
          short_encaps_value.pop_back();
          dec1.decrypt(short_encaps_value, 0);
       });
-      result.test_throws("long encapsulation value", "HQC ciphertext does not have the correct byte count", [&] {
+      result.test_throws("long encapsulation value", "HQCr4 ciphertext does not have the correct byte count", [&] {
          auto long_encaps_value = enc_res.encapsulated_shared_key();
          long_encaps_value.push_back(0);
          dec1.decrypt(long_encaps_value, 0);
@@ -129,7 +129,7 @@ std::vector<Test::Result> test_hqc_roundtrips() {
       const auto pk_loaded = Botan::load_public_key(pk1.algorithm_identifier(), pk1.public_key_bits());
       result.test_not_null("public key loaded from encoding", pk_loaded);
       result.test_bin_eq("public key encoding roundtrip", pk_loaded->public_key_bits(), pk1.public_key_bits());
-      result.test_str_eq("loaded public key algorithm name", pk_loaded->algo_name(), "HQC");
+      result.test_str_eq("loaded public key algorithm name", pk_loaded->algo_name(), "HQCr4");
 
       const auto sk_loaded = Botan::load_private_key(sk1.algorithm_identifier(), sk1.private_key_bits());
       result.test_not_null("private key loaded from encoding", sk_loaded);
@@ -137,19 +137,19 @@ std::vector<Test::Result> test_hqc_roundtrips() {
       result.test_bin_eq(
          "public key of loaded private key", sk_loaded->public_key()->public_key_bits(), pk1.public_key_bits());
 
-      result.test_throws("short public key", "HQC public key does not have the correct byte count", [&] {
+      result.test_throws("short public key", "HQCr4 public key does not have the correct byte count", [&] {
          auto short_pk = pk1.public_key_bits();
          short_pk.pop_back();
          const Botan::HQC_PublicKey pk(short_pk, mode);
       });
-      result.test_throws("public key with non-zero padding bits", "HQC public key has non-zero padding bits", [&] {
+      result.test_throws("public key with non-zero padding bits", "HQCr4 public key has non-zero padding bits", [&] {
          // For all parameter sets n mod 8 != 0, so the most significant bit
          // of the last byte is a padding bit
          auto padded_pk = pk1.public_key_bits();
          padded_pk.back() |= 0x80;
          const Botan::HQC_PublicKey pk(padded_pk, mode);
       });
-      result.test_throws("short private key", "HQC private key does not have the correct byte count", [&] {
+      result.test_throws("short private key", "HQCr4 private key does not have the correct byte count", [&] {
          auto short_sk = sk1.private_key_bits();
          short_sk.pop_back();
          const Botan::HQC_PrivateKey sk(short_sk, mode);
@@ -165,9 +165,9 @@ std::vector<Test::Result> test_hqc_roundtrips() {
 
 class HQC_Keygen_Tests final : public PK_Key_Generation_Test {
    public:
-      std::vector<std::string> keygen_params() const override { return {"HQC-1", "HQC-3", "HQC-5"}; }
+      std::vector<std::string> keygen_params() const override { return {"HQCr4-1", "HQCr4-3", "HQCr4-5"}; }
 
-      std::string algo_name() const override { return "HQC"; }
+      std::string algo_name() const override { return "HQCr4"; }
 
       std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view keygen_params,
                                                              std::string_view /* provider */,
