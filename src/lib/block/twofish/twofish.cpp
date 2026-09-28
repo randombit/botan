@@ -175,12 +175,7 @@ void Twofish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 
 #if defined(BOTAN_HAS_TWOFISH_AVX512)
    if(!m_QS.empty()) {
-      while(blocks >= 16) {
-         avx512_encrypt_16(in, out);
-         in += 16 * BLOCK_SIZE;
-         out += 16 * BLOCK_SIZE;
-         blocks -= 16;
-      }
+      return avx512_encrypt(in, out, blocks);
    }
 #endif
 
@@ -262,12 +257,7 @@ void Twofish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 
 #if defined(BOTAN_HAS_TWOFISH_AVX512)
    if(!m_QS.empty()) {
-      while(blocks >= 16) {
-         avx512_decrypt_16(in, out);
-         in += 16 * BLOCK_SIZE;
-         out += 16 * BLOCK_SIZE;
-         blocks -= 16;
-      }
+      return avx512_decrypt(in, out, blocks);
    }
 #endif
 
