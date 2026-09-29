@@ -886,6 +886,25 @@ Test::Result test_rsa_sign_verify() {
    sign_and_verify("PKCS1v15(SHA-256)", true);
    sign_and_verify("PSS(SHA-256)", true);
 
+   // empty message, both without any update and with an empty update
+   auto sign_and_verify_empty = [&](const std::string& padding, bool empty_update) {
+      Botan::PK_Signer signer(keypair.second, *rng, padding, Botan::Signature_Format::Standard);
+      if(empty_update) {
+         signer.update(std::span<const uint8_t>{});
+      }
+      const auto signature = signer.signature(*rng);
+
+      Botan::PK_Verifier verifier(keypair.first, padding, Botan::Signature_Format::Standard);
+      if(empty_update) {
+         verifier.update(std::span<const uint8_t>{});
+      }
+      result.test_is_true("RSA PKCS11 sign and verify empty message: " + padding, verifier.check_signature(signature));
+   };
+
+   sign_and_verify_empty("PKCS1v15(SHA-256)", false);
+   sign_and_verify_empty("PKCS1v15(SHA-256)", true);
+   sign_and_verify_empty("PSS(SHA-256)", false);
+
    keypair.first.destroy();
    keypair.second.destroy();
 

@@ -1646,6 +1646,10 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
                        const std::vector<uint8_t, TAlloc>& so_pin,
                        std::string_view label,
                        ReturnValue* return_value = ThrowException) const {
+         if(label.size() > 32) {
+            throw Invalid_Argument("PKCS #11 token label must be at most 32 bytes");
+         }
+
          std::string padded_label(label);
          if(label.size() < 32) {
             padded_label.insert(padded_label.end(), 32 - label.size(), ' ');
@@ -2146,11 +2150,24 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
             i++;
          }
 
-         return C_GetAttributeValue(session,
-                                    object,
-                                    const_cast<Attribute*>(getter_template.data()),
-                                    checked_ulong_cast(getter_template.size()),
-                                    return_value);
+         if(!C_GetAttributeValue(session,
+                                 object,
+                                 const_cast<Attribute*>(getter_template.data()),
+                                 checked_ulong_cast(getter_template.size()),
+                                 return_value)) {
+            return false;
+         }
+
+         // The final lengths may be shorter than the ones reported by the sizing call
+         i = 0;
+         for(auto& entry : attribute_values) {
+            const Ulong final_len = getter_template.at(i).ulValueLen;
+            if(final_len < entry.second.size()) {
+               entry.second.resize(final_len);
+            }
+            i++;
+         }
+         return true;
       }
 
       /**

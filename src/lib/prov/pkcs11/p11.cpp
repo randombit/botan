@@ -13,6 +13,7 @@
 #include <botan/p11_types.h>
 #include <botan/internal/dyn_load.h>
 
+#include <algorithm>
 #include <string>
 
 namespace Botan::PKCS11 {
@@ -37,6 +38,22 @@ bool LowLevel::handle_return_value(const CK_RV function_result, ReturnValue* ret
 
    return static_cast<ReturnValue>(function_result) == ReturnValue::OK;
 }
+
+namespace {
+
+/*
+* Some modules reject a null data pointer even if the length is zero, which
+* is what an empty std::vector or std::span usually provides.
+*/
+Byte* nonnull_input(const Byte* ptr, Ulong len) {
+   if(ptr == nullptr && len == 0) {
+      static constexpr Byte empty_input = 0;
+      return const_cast<Byte*>(&empty_input);
+   }
+   return const_cast<Byte*>(ptr);
+}
+
+}  // namespace
 
 void initialize_token(Slot& slot, std::string_view label, const secure_string& so_pin, const secure_string& pin) {
    slot.initialize(label, so_pin);
@@ -153,7 +170,12 @@ bool LowLevel::C_GetSlotList(bool token_present, std::vector<SlotId>& slot_ids, 
 
    // get actual slot ids
    slot_ids.resize(number_slots);
-   return C_GetSlotList(static_cast<Bbool>(token_present), slot_ids.data(), &number_slots, return_value);
+   if(!C_GetSlotList(static_cast<Bbool>(token_present), slot_ids.data(), &number_slots, return_value)) {
+      return false;
+   }
+   // the count may have shrunk between the calls
+   slot_ids.resize(std::min<size_t>(slot_ids.size(), number_slots));
+   return true;
 }
 
 bool LowLevel::C_GetSlotInfo(SlotId slot_id, SlotInfo* info_ptr, ReturnValue* return_value) const {
@@ -194,8 +216,13 @@ bool LowLevel::C_GetMechanismList(SlotId slot_id,
 
    // get actual mechanisms
    mechanisms.resize(number_mechanisms);
-   return C_GetMechanismList(
-      slot_id, reinterpret_cast<MechanismType*>(mechanisms.data()), &number_mechanisms, return_value);
+   if(!C_GetMechanismList(
+         slot_id, reinterpret_cast<MechanismType*>(mechanisms.data()), &number_mechanisms, return_value)) {
+      return false;
+   }
+   // the count may have shrunk between the calls
+   mechanisms.resize(std::min<size_t>(mechanisms.size(), number_mechanisms));
+   return true;
 }
 
 bool LowLevel::C_GetMechanismInfo(SlotId slot_id,
@@ -416,7 +443,7 @@ bool LowLevel::C_Encrypt(SessionHandle session,
                          ReturnValue* return_value) const {
    return handle_return_value(
       m_interface_wrapper.func_2_40().C_Encrypt(
-         session, const_cast<Byte*>(data_ptr), data_len, encrypted_data_ptr, encrypted_data_len_ptr),
+         session, nonnull_input(data_ptr, data_len), data_len, encrypted_data_ptr, encrypted_data_len_ptr),
       return_value);
 }
 
@@ -682,9 +709,10 @@ bool LowLevel::C_Sign(SessionHandle session,
                       Byte* signature_ptr,
                       Ulong* signature_len_ptr,
                       ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper.func_2_40().C_Sign(
-                                 session, const_cast<Byte*>(data_ptr), data_len, signature_ptr, signature_len_ptr),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper.func_2_40().C_Sign(
+         session, nonnull_input(data_ptr, data_len), data_len, signature_ptr, signature_len_ptr),
+      return_value);
 }
 
 bool LowLevel::C_SignUpdate(SessionHandle session,
@@ -692,7 +720,7 @@ bool LowLevel::C_SignUpdate(SessionHandle session,
                             Ulong part_len,
                             ReturnValue* return_value) const {
    return handle_return_value(
-      m_interface_wrapper.func_2_40().C_SignUpdate(session, const_cast<Byte*>(part_ptr), part_len), return_value);
+      m_interface_wrapper.func_2_40().C_SignUpdate(session, nonnull_input(part_ptr, part_len), part_len), return_value);
 }
 
 bool LowLevel::C_SignFinal(SessionHandle session,
@@ -801,7 +829,7 @@ bool LowLevel::C_Verify(SessionHandle session,
                         ReturnValue* return_value) const {
    return handle_return_value(
       m_interface_wrapper.func_2_40().C_Verify(
-         session, const_cast<Byte*>(data_ptr), data_len, const_cast<Byte*>(signature_ptr), signature_len),
+         session, nonnull_input(data_ptr, data_len), data_len, const_cast<Byte*>(signature_ptr), signature_len),
       return_value);
 }
 
@@ -810,7 +838,8 @@ bool LowLevel::C_VerifyUpdate(SessionHandle session,
                               Ulong part_len,
                               ReturnValue* return_value) const {
    return handle_return_value(
-      m_interface_wrapper.func_2_40().C_VerifyUpdate(session, const_cast<Byte*>(part_ptr), part_len), return_value);
+      m_interface_wrapper.func_2_40().C_VerifyUpdate(session, nonnull_input(part_ptr, part_len), part_len),
+      return_value);
 }
 
 bool LowLevel::C_VerifyFinal(SessionHandle session,
