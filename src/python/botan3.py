@@ -4213,7 +4213,7 @@ class TLSPolicy(_NonCopyable):
     def __str__(self) -> str:
         return self.to_string()
 
-class TLSCredentials:
+class TLSCredentials(_NonCopyable):
     """The credentials of a TLS endpoint: the trust anchors and CRLs used to verify
     the peer, and the certificate chains with private keys used to authenticate this
     side, as a server or as a client when the server requests a client certificate.
@@ -4236,12 +4236,6 @@ class TLSCredentials:
         self.__obj = c_void_p(0)
         if obj:
             _DLL.botan_tls_credentials_destroy(obj)
-
-    def __copy__(self):
-        raise TypeError('TLSCredentials objects cannot be copied')
-
-    def __deepcopy__(self, _memo):
-        raise TypeError('TLSCredentials objects cannot be copied')
 
     def _handle(self):
         return self.__obj
@@ -4278,7 +4272,7 @@ class TLSCredentials:
         _DLL.botan_tls_credentials_add_cert_chain(self.__obj, arr_chain, c_size_t(len(chain)), key._handle())
 
 
-class TLSSessionManager:
+class TLSSessionManager(_NonCopyable):
     """A store for TLS session resumption information (``Botan::TLS::Session_Manager``).
     Create one with :meth:`in_memory` or :meth:`noop`.
 
@@ -4317,12 +4311,6 @@ class TLSSessionManager:
         self.__obj = c_void_p(0)
         if obj:
             _DLL.botan_tls_session_manager_destroy(obj)
-
-    def __copy__(self):
-        raise TypeError('TLSSessionManager objects cannot be copied')
-
-    def __deepcopy__(self, _memo):
-        raise TypeError('TLSSessionManager objects cannot be copied')
 
     def _handle(self):
         return self.__obj
