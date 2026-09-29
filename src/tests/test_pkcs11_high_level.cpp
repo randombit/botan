@@ -1638,6 +1638,8 @@ Test::Result test_ecdh_generate_keypair() {
 
    result.test_bin_eq(
       "private key has the public value", keypair.second.public_value(), keypair.first.raw_public_key_bits());
+   result.test_bin_eq(
+      "raw_public_key_bits matches public_value", keypair.second.raw_public_key_bits(), keypair.second.public_value());
    result.test_bin_eq("private key has the public key",
                       keypair.second.public_key()->public_key_bits(),
                       keypair.first.public_key_bits());
@@ -1703,6 +1705,55 @@ Test::Result test_ecdh_derive() {
    return result;
 }
 
+Test::Result test_ecdh_cofactor_group() {
+   Test::Result result("PKCS11 ECDH with cofactor group");
+
+   if(!EC_Group::supports_application_specific_group_with_cofactor()) {
+      result.test_note("Skipping test; groups with a cofactor are not supported");
+      return result;
+   }
+
+   const TestSession test_session(true);
+   auto rng = Test::new_rng(__func__);
+
+   // secp128r2, which has cofactor 4
+   const EC_Group group(BigInt::from_string("0xFFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFF"),
+                        BigInt::from_string("0xD6031998D1B3BBFEBF59CC9BBFF9AEE1"),
+                        BigInt::from_string("0x5EEEFCA380D02919DC2C6558BB6D8A5D"),
+                        BigInt::from_string("0x7B6AA5D85E572983E6FB32A7CDEBC140"),
+                        BigInt::from_string("0x27B6916A894D3AEE7106FE805FC34B44"),
+                        BigInt::from_string("0x3FFFFFFF7FFFFFFFBE0024720613B5A3"),
+                        BigInt::from_word(4));
+
+   const ECDH_PrivateKey priv_key(*rng, group);
+   EC_PrivateKeyImportProperties props(group.DER_encode(EC_Group_Encoding::Explicit), priv_key.private_value());
+   props.set_token(false);
+   props.set_private(true);
+   props.set_derive(true);
+
+   const PKCS11_ECDH_PrivateKey pk(test_session.session(), props);
+   const Botan::PK_Key_Agreement ka(pk, *rng, "Raw");
+
+   // A peer point in the prime order subgroup agrees with software ECDH
+   const ECDH_PrivateKey peer_key(*rng, group);
+   const Botan::PK_Key_Agreement peer_ka(peer_key, *rng, "Raw");
+   result.test_bin_eq("agreement with software ECDH",
+                      ka.derive_key(0, peer_key.public_value()).bits_of(),
+                      peer_ka.derive_key(0, priv_key.public_value()).bits_of());
+
+   // (x, 0) where x is a root of x^3 + ax + b is a point of order 2
+   std::vector<uint8_t> small_order_point(1 + 2 * 16);
+   small_order_point[0] = 0x04;
+   BigInt::from_string("0xEA1E91CC9229E872D1E910CE3EDCB319").serialize_to(std::span{small_order_point}.subspan(1, 16));
+
+   result.test_throws<Botan::Decoding_Error>("small order point is rejected",
+                                             [&]() { ka.derive_key(0, small_order_point); });
+
+   pk.destroy();
+
+   return result;
+}
+
 class PKCS11_ECDH_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -1714,7 +1765,8 @@ class PKCS11_ECDH_Tests final : public Test {
             {STRING_AND_FUNCTION(test_ecdh_generate_private_key)},
             {STRING_AND_FUNCTION(test_ecdh_generate_keypair)},
             {STRING_AND_FUNCTION(test_ecdh_generate_unregistered_curve)},
-            {STRING_AND_FUNCTION(test_ecdh_derive)}};
+            {STRING_AND_FUNCTION(test_ecdh_derive)},
+            {STRING_AND_FUNCTION(test_ecdh_cofactor_group)}};
 
          return run_pkcs11_tests("PKCS11 ECDH", fns);
       }

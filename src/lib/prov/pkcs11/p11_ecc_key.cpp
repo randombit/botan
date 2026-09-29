@@ -120,8 +120,8 @@ size_t PKCS11_EC_PrivateKey::key_length() const {
 }
 
 std::vector<uint8_t> PKCS11_EC_PrivateKey::raw_public_key_bits() const {
-   // It seems odd that this serializes compressed without ability to control
-   return public_ec_point().serialize_compressed();
+   // Matches the default of software EC keys, and public_value() for ECDH
+   return public_ec_point().serialize_uncompressed();
 }
 
 std::vector<uint8_t> PKCS11_EC_PrivateKey::public_key_bits() const {
