@@ -172,6 +172,8 @@ void Object::set_attribute_value(AttributeType attribute, const secure_vector<ui
 
 void Object::destroy() const {
    module()->C_DestroyObject(m_session.get().handle(), m_handle);
+   // Prevent later calls from acting on an object which may reuse this handle
+   m_handle = CK_INVALID_HANDLE;
 }
 
 ObjectHandle Object::copy(const AttributeContainer& modified_attributes) const {

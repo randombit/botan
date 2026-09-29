@@ -16,6 +16,7 @@
    #include <botan/pk_options_readers.h>
    #include <botan/rng.h>
    #include <botan/internal/keypair.h>
+   #include <botan/internal/p11_object_guard.h>
    #include <botan/internal/p11_sig_stream.h>
    #include <botan/internal/pk_options_impl.h>
 
@@ -180,8 +181,16 @@ PKCS11_ECDSA_KeyPair generate_ecdsa_keypair(Session& session,
                                        &pub_key_handle,
                                        &priv_key_handle);
 
-   return std::make_pair(PKCS11_ECDSA_PublicKey(session, pub_key_handle),
-                         PKCS11_ECDSA_PrivateKey(session, priv_key_handle));
+   Object_Creation_Guard guard(session, {pub_key_handle, priv_key_handle});
+   PKCS11_ECDSA_PublicKey public_key(session, pub_key_handle);  // NOLINT(*-const-correctness) clang-tidy bug
+   PKCS11_ECDSA_PrivateKey private_key(session, priv_key_handle);
+   // The private key object does not include the public point. Rebind it to
+   // the private key's domain since unregistered explicit groups are decoded
+   // independently for the two token objects.
+   const EC_AffinePoint public_point(private_key.domain(), public_key.raw_public_key_bits());
+   private_key.set_public_point(public_point, private_key.point_encoding());
+   guard.release();
+   return std::make_pair(std::move(public_key), std::move(private_key));
 }
 
 }  // namespace Botan::PKCS11

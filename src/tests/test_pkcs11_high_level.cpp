@@ -19,6 +19,7 @@
    #include <cstring>
    #include <memory>
    #include <numeric>
+   #include <optional>
    #include <sstream>
    #include <string>
    #include <vector>
@@ -95,6 +96,12 @@ namespace {
 
 using namespace Botan;
 using namespace PKCS11;
+
+size_t count_objects_with_label(Session& session, const std::string& label) {
+   AttributeContainer search_template;
+   search_template.add_string(AttributeType::Label, label);
+   return Object::search<Object>(session, search_template.attributes()).size();
+}
 
 class TestSession {
    public:
@@ -545,8 +552,19 @@ Test::Result test_create_destroy_data_object() {
    const Object data_obj(test_session.session(), data_obj_props);
    result.test_success("Data object creation was successful");
 
+   const Object copy_before_destroy(data_obj);
+
    data_obj.destroy();
    result.test_success("Data object deletion  was successful");
+
+   result.test_u64_eq("handle is invalidated by destroy", data_obj.handle(), CK_INVALID_HANDLE);
+   result.test_throws("destroyed object can no longer be used",
+                      [&]() { data_obj.get_attribute_value(AttributeType::Label); });
+   result.test_throws("destroyed object can not be destroyed again", [&]() { data_obj.destroy(); });
+   result.test_sz_eq("object is gone", count_objects_with_label(test_session.session(), label), 0);
+
+   // copies made before destroy() keep the old handle
+   result.test_sz_ne("copy retains the old handle", copy_before_destroy.handle(), CK_INVALID_HANDLE);
 
    return result;
 }
@@ -1039,6 +1057,59 @@ std::vector<uint8_t> encode_ec_point_in_octet_str(const Botan::EC_PublicKey& pk)
    DER_Encoder(enc).encode(pk._public_ec_point().serialize_uncompressed(), ASN1_Type::OctetString);
    return enc;
 }
+
+std::vector<uint8_t> unregistered_ec_params() {
+   // Negating P-256's generator gives valid parameters that do not match a
+   // registered group. Encode directly: constructing a group from its integer
+   // parameters would register it and hide bugs caused by separate DER decodes.
+   const auto group = EC_Group::from_name("secp256r1");
+   const auto generator = EC_AffinePoint::generator(group).negate().serialize_uncompressed();
+   std::vector<uint8_t> params;
+   DER_Encoder(params)
+      .start_sequence()
+      .encode(size_t(1))
+      .start_sequence()
+      .encode(OID({1, 2, 840, 10045, 1, 1}))
+      .encode(group.get_p())
+      .end_cons()
+      .start_sequence()
+      .encode(group.get_a().serialize(group.get_p_bytes()), ASN1_Type::OctetString)
+      .encode(group.get_b().serialize(group.get_p_bytes()), ASN1_Type::OctetString)
+      .end_cons()
+      .encode(generator, ASN1_Type::OctetString)
+      .encode(group.get_order())
+      .encode(group.get_cofactor())
+      .end_cons();
+   return params;
+}
+
+// OpenSSL 4 rejects explicit curve parameters unless built with
+// enable-ec_explicit_curves, which SoftHSM reports as CKR_GENERAL_ERROR
+template <typename KeyPair, typename GenFn>
+std::optional<KeyPair> generate_unregistered_curve_keypair(Test::Result& result, GenFn gen) {
+   try {
+      return gen();
+   } catch(PKCS11_ReturnError& e) {
+      if(e.get_return_value() != ReturnValue::GeneralError) {
+         throw;
+      }
+      result.test_note("Skipping test; token rejected explicit curve parameters");
+      return std::nullopt;
+   }
+}
+
+void check_ec_private_key_public_point(Test::Result& result,
+                                       const PKCS11_EC_PrivateKey& key,
+                                       RandomNumberGenerator& rng) {
+   // Serializing a point alone cannot detect a mismatched group instance.
+   // Exercise the software public key with a scalar from its own domain.
+   const auto public_key = key.public_key();
+   const auto& ec_public = dynamic_cast<const EC_PublicKey&>(*public_key);
+   const auto point = ec_public._public_ec_point().mul(EC_Scalar::one(ec_public.domain()), rng);
+   result.test_bin_eq("public point belongs to the private key's domain",
+                      point.serialize_uncompressed(),
+                      key.public_ec_point().serialize_uncompressed());
+}
    #endif
 
    #if defined(BOTAN_HAS_ECDSA)
@@ -1134,6 +1205,25 @@ Test::Result test_ecdsa_pubkey_import() {
    result.test_success("ECDSA public key import was successful");
 
    pk.destroy();
+
+   // A point that fails to decode must not leave an object on the token
+   std::vector<uint8_t> bad_point(65);
+   bad_point[0] = 0x04;
+   std::vector<uint8_t> enc_bad_point;
+   DER_Encoder(enc_bad_point).encode(bad_point, ASN1_Type::OctetString);
+
+   EC_PublicKeyImportProperties bad_props(priv_key.DER_domain(), enc_bad_point);
+   bad_props.set_token(true);
+   bad_props.set_verify(true);
+   bad_props.set_private(false);
+   const std::string bad_label = "Botan test ecdsa invalid pub key";
+   bad_props.set_label(bad_label);
+
+   result.test_throws("invalid public key import fails",
+                      [&]() { const PKCS11_ECDSA_PublicKey bad(test_session.session(), bad_props); });
+   result.test_sz_eq(
+      "no object left after failed import", count_objects_with_label(test_session.session(), bad_label), 0);
+
    return result;
 }
 
@@ -1219,11 +1309,43 @@ Test::Result test_ecdsa_generate_keypair() {
    for(const auto& curve : curves) {
       const PKCS11_ECDSA_KeyPair keypair = generate_ecdsa_keypair(test_session, curve, EC_Group_Encoding::NamedCurve);
 
+      result.test_bin_eq("private key has the public key",
+                         keypair.second.public_key()->public_key_bits(),
+                         keypair.first.public_key_bits());
+
       keypair.first.destroy();
       keypair.second.destroy();
    }
    result.test_success("ECDSA key pair generation was successful");
 
+   return result;
+}
+
+Test::Result test_ecdsa_generate_unregistered_curve() {
+   Test::Result result("PKCS11 ECDSA key pair with unregistered curve");
+   if(!EC_Group::supports_application_specific_group()) {
+      result.test_note("Skipping test; application specific groups are not supported");
+      return result;
+   }
+
+   const TestSession test_session(true);
+   auto rng = Test::new_rng(__func__);
+   EC_PublicKeyGenerationProperties pub_props(unregistered_ec_params());
+   pub_props.set_verify(true);
+   EC_PrivateKeyGenerationProperties priv_props;
+   priv_props.set_sign(true);
+
+   const auto keypair = generate_unregistered_curve_keypair<PKCS11_ECDSA_KeyPair>(
+      result, [&] { return PKCS11::generate_ecdsa_keypair(test_session.session(), pub_props, priv_props); });
+   if(!keypair) {
+      return result;
+   }
+
+   result.test_is_true("group has no registered OID", keypair->second.domain().get_curve_oid().empty());
+   check_ec_private_key_public_point(result, keypair->second, *rng);
+
+   keypair->first.destroy();
+   keypair->second.destroy();
    return result;
 }
 
@@ -1336,6 +1458,7 @@ class PKCS11_ECDSA_Tests final : public Test {
             {STRING_AND_FUNCTION(test_ecdsa_pubkey_export)},
             {STRING_AND_FUNCTION(test_ecdsa_generate_private_key)},
             {STRING_AND_FUNCTION(test_ecdsa_generate_keypair)},
+            {STRING_AND_FUNCTION(test_ecdsa_generate_unregistered_curve)},
             {STRING_AND_FUNCTION(test_ecdsa_sign_verify)},
             {STRING_AND_FUNCTION(test_ecdsa_curve_import)}};
 
@@ -1513,9 +1636,43 @@ Test::Result test_ecdh_generate_keypair() {
    const PKCS11_ECDH_KeyPair keypair = generate_ecdh_keypair(test_session, "Botan test ECDH key1");
    result.test_success("ECDH key pair generation was successful");
 
+   result.test_bin_eq(
+      "private key has the public value", keypair.second.public_value(), keypair.first.raw_public_key_bits());
+   result.test_bin_eq("private key has the public key",
+                      keypair.second.public_key()->public_key_bits(),
+                      keypair.first.public_key_bits());
+
    keypair.first.destroy();
    keypair.second.destroy();
 
+   return result;
+}
+
+Test::Result test_ecdh_generate_unregistered_curve() {
+   Test::Result result("PKCS11 ECDH key pair with unregistered curve");
+   if(!EC_Group::supports_application_specific_group()) {
+      result.test_note("Skipping test; application specific groups are not supported");
+      return result;
+   }
+
+   const TestSession test_session(true);
+   auto rng = Test::new_rng(__func__);
+   EC_PublicKeyGenerationProperties pub_props(unregistered_ec_params());
+   pub_props.set_derive(true);
+   EC_PrivateKeyGenerationProperties priv_props;
+   priv_props.set_derive(true);
+
+   const auto keypair = generate_unregistered_curve_keypair<PKCS11_ECDH_KeyPair>(
+      result, [&] { return PKCS11::generate_ecdh_keypair(test_session.session(), pub_props, priv_props); });
+   if(!keypair) {
+      return result;
+   }
+
+   result.test_is_true("group has no registered OID", keypair->second.domain().get_curve_oid().empty());
+   check_ec_private_key_public_point(result, keypair->second, *rng);
+
+   keypair->first.destroy();
+   keypair->second.destroy();
    return result;
 }
 
@@ -1556,6 +1713,7 @@ class PKCS11_ECDH_Tests final : public Test {
             {STRING_AND_FUNCTION(test_ecdh_pubkey_export)},
             {STRING_AND_FUNCTION(test_ecdh_generate_private_key)},
             {STRING_AND_FUNCTION(test_ecdh_generate_keypair)},
+            {STRING_AND_FUNCTION(test_ecdh_generate_unregistered_curve)},
             {STRING_AND_FUNCTION(test_ecdh_derive)}};
 
          return run_pkcs11_tests("PKCS11 ECDH", fns);
@@ -1748,6 +1906,17 @@ Test::Result test_x509_import() {
    result.test_is_true("X509 certificate by handle", pkcs11_cert == pkcs11_cert2);
 
    pkcs11_cert.destroy();
+
+   // A certificate that fails to parse must not leave an object on the token
+   const std::string bad_label = "Botan PKCS#11 test invalid certificate";
+   X509_CertificateProperties bad_props(root.raw_subject_dn(), std::vector<uint8_t>{0x30, 0x03, 0x02, 0x01, 0x00});
+   bad_props.set_label(bad_label);
+   bad_props.set_private(false);
+   bad_props.set_token(true);
+   result.test_throws("invalid certificate import fails",
+                      [&]() { const PKCS11_X509_Certificate cert(test_session.session(), bad_props); });
+   result.test_sz_eq(
+      "no object left after failed import", count_objects_with_label(test_session.session(), bad_label), 0);
       #endif
 
    return result;

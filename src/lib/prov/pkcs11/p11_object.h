@@ -535,7 +535,12 @@ class BOTAN_PUBLIC_API(2, 0) Object {
       /// Sets the given value for the attribute (using `C_SetAttributeValue`)
       void set_attribute_value(AttributeType attribute, const secure_vector<uint8_t>& value) const;
 
-      /// Destroys the object
+      /**
+      * Destroys the object
+      *
+      * Afterwards handle() returns CK_INVALID_HANDLE. Copies of this object
+      * made earlier still hold the old handle and must no longer be used.
+      */
       void destroy() const;
 
       /**
@@ -565,7 +570,8 @@ class BOTAN_PUBLIC_API(2, 0) Object {
 
    private:
       const std::reference_wrapper<Session> m_session;
-      ObjectHandle m_handle = CK_INVALID_HANDLE;
+      // mutable since destroy() is const
+      mutable ObjectHandle m_handle = CK_INVALID_HANDLE;
 };
 
 template <typename T>

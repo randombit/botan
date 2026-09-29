@@ -12,6 +12,7 @@
 
 #if defined(BOTAN_HAS_RSA)
 
+   #include <botan/assert.h>
    #include <botan/numthry.h>
    #include <botan/p11_mechanism.h>
    #include <botan/pk_options_readers.h>
@@ -22,10 +23,10 @@
    #include <botan/internal/mod_inv.h>
    #include <botan/internal/monty.h>
    #include <botan/internal/monty_exp.h>
+   #include <botan/internal/p11_object_guard.h>
    #include <botan/internal/p11_sig_stream.h>
    #include <botan/internal/pk_ops_impl.h>
    #include <botan/internal/pk_options_impl.h>
-   #include <botan/internal/scoped_cleanup.h>
 
 namespace Botan::PKCS11 {
 
@@ -44,8 +45,20 @@ PKCS11_RSA_PublicKey::PKCS11_RSA_PublicKey(Session& session, ObjectHandle handle
       RSA_PublicKey(BigInt::from_bytes(get_attribute_value(AttributeType::Modulus)),
                     BigInt::from_bytes(get_attribute_value(AttributeType::PublicExponent))) {}
 
+namespace {
+
+// Validate before creating the token object, so invalid input leaves nothing behind
+const RSA_PublicKeyImportProperties& check_rsa_public_key(const RSA_PublicKeyImportProperties& props) {
+   const RSA_PublicKey key(props.modulus(), props.pub_exponent());
+   BOTAN_UNUSED(key);
+   return props;
+}
+
+}  // namespace
+
 PKCS11_RSA_PublicKey::PKCS11_RSA_PublicKey(Session& session, const RSA_PublicKeyImportProperties& pubkey_props) :
-      Object(session, pubkey_props), RSA_PublicKey(pubkey_props.modulus(), pubkey_props.pub_exponent()) {}
+      Object(session, check_rsa_public_key(pubkey_props)),
+      RSA_PublicKey(pubkey_props.modulus(), pubkey_props.pub_exponent()) {}
 
 RSA_PrivateKeyImportProperties::RSA_PrivateKeyImportProperties(const BigInt& modulus, const BigInt& priv_exponent) :
       PrivateKeyProperties(KeyType::Rsa), m_modulus(modulus), m_priv_exponent(priv_exponent) {
@@ -59,8 +72,13 @@ PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, ObjectHandle hand
                     BigInt::from_bytes(get_attribute_value(AttributeType::PublicExponent))) {}
 
 PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, const RSA_PrivateKeyImportProperties& priv_key_props) :
-      Object(session, priv_key_props),
-      RSA_PublicKey(priv_key_props.modulus(), BigInt::from_bytes(get_attribute_value(AttributeType::PublicExponent))) {}
+      Object(session, priv_key_props) {
+   Object_Creation_Guard guard(session, {handle()});
+   BigInt n = priv_key_props.modulus();
+   BigInt e = BigInt::from_bytes(get_attribute_value(AttributeType::PublicExponent));
+   RSA_PublicKey::init(std::move(n), std::move(e));
+   guard.release();
+}
 
 PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session,
                                              uint32_t bits,
@@ -83,18 +101,16 @@ PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session,
                                        &pub_key_handle,
                                        &priv_key_handle);
 
+   // The public key object is only needed temporarily
+   const Object_Creation_Guard destroy_public(session, {pub_key_handle});
+   Object_Creation_Guard guard(session, {priv_key_handle});
+
    this->reset_handle(priv_key_handle);
-   const Object public_key(session, pub_key_handle);
-   auto destroy_public = scoped_cleanup([&]() noexcept {
-      try {
-         public_key.destroy();
-      } catch(...) {  // NOLINT(*-empty-catch)
-      }
-   });
 
    BigInt n = BigInt::from_bytes(get_attribute_value(AttributeType::Modulus));
    BigInt e = BigInt::from_bytes(get_attribute_value(AttributeType::PublicExponent));
    RSA_PublicKey::init(std::move(n), std::move(e));
+   guard.release();
 }
 
 RSA_PrivateKey PKCS11_RSA_PrivateKey::export_key() const {
@@ -444,8 +460,11 @@ PKCS11_RSA_KeyPair generate_rsa_keypair(Session& session,
                                        &pub_key_handle,
                                        &priv_key_handle);
 
-   return std::make_pair(PKCS11_RSA_PublicKey(session, pub_key_handle),
-                         PKCS11_RSA_PrivateKey(session, priv_key_handle));
+   Object_Creation_Guard guard(session, {pub_key_handle, priv_key_handle});
+   auto keypair =
+      std::make_pair(PKCS11_RSA_PublicKey(session, pub_key_handle), PKCS11_RSA_PrivateKey(session, priv_key_handle));
+   guard.release();
+   return keypair;
 }
 
 }  // namespace Botan::PKCS11

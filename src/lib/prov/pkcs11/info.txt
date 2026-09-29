@@ -18,6 +18,7 @@ pkcs11.h
 </header:external>
 
 <header:internal>
+p11_object_guard.h
 p11_sig_stream.h
 </header:internal>
 
