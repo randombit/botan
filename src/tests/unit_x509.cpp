@@ -1796,7 +1796,8 @@ Test::Result test_x509_wrong_context_crl_extensions() {
       result.test_is_true("CRL records the unknown critical extension", crl.has_unknown_critical_extension());
 
       const std::vector<std::optional<Botan::X509_CRL>> crls = {crl};
-      const auto crl_status = Botan::PKIX::check_crl(cert_path, crls, validation_time);
+      const auto crl_status =
+         Botan::PKIX::check_crl(cert_path, crls, validation_time, Botan::Path_Validation_Restrictions());
 
       const bool contains_expected_code =
          !crl_status.empty() &&
