@@ -10,6 +10,7 @@
    #include "test_rng.h"
    #include <botan/exceptn.h>
    #include <botan/spake2p.h>
+   #include <algorithm>
 #endif
 
 namespace Botan_Tests {
@@ -190,7 +191,9 @@ class SPAKE2p_RT_Tests final : public Test {
          const std::vector<uint8_t> verifier_id = {'s', 'e', 'r', 'v', 'e', 'r'};
          const auto context = this->rng().random_vec(16);
 
-         const auto secret = random_secret(params);
+         const auto w0 = Botan::EC_Scalar::random(params.group(), this->rng());
+         const auto w1 = Botan::EC_Scalar::random(params.group(), this->rng());
+         const auto secret = Botan::SPAKE2p::ProverSecret::from_prehashed(w0, w1);
          const auto record = secret.registration_record(this->rng());
 
          // Test that serialization of the secret and record round trips
@@ -295,34 +298,88 @@ class SPAKE2p_RT_Tests final : public Test {
                                                      [&]() { verifier.skip_confirmation(); });
          }
 
-         // Malformed key shares are rejected
+         // Malformed key shares are rejected by the verifier, and the failure is terminal
          {
             Botan::SPAKE2p::ProverContext prover(params, secret, prover_id, verifier_id, context);
-            Botan::SPAKE2p::VerifierContext verifier(params, record, prover_id, verifier_id, context);
-
-            auto share_p = prover.generate_message(this->rng());
+            const auto share_p = prover.generate_message(this->rng());
 
             auto truncated = share_p;
-            truncated.pop_back();
-            result.test_throws<Botan::Decoding_Error>("Truncated share is rejected",
-                                                      [&]() { verifier.process_message(truncated, this->rng()); });
+            if(!truncated.empty()) {  // working around a GCC false positive warning
+               truncated.pop_back();
+            }
 
             auto compressed_hdr = share_p;
             compressed_hdr[0] = 0x02;
-            result.test_throws<Botan::Decoding_Error>("Share without uncompressed header is rejected",
-                                                      [&]() { verifier.process_message(compressed_hdr, this->rng()); });
 
             auto off_curve = share_p;
             off_curve[share_p.size() - 1] ^= 0x01;
-            result.test_throws<Botan::Decoding_Error>("Share not on the curve is rejected",
-                                                      [&]() { verifier.process_message(off_curve, this->rng()); });
 
-            const auto verifier_msg = verifier.process_message(share_p, this->rng());
+            // With X = w0*M the verifier computes Z as the identity
+            const auto identity_z = params.spake2p_m().mul(w0, this->rng()).serialize_uncompressed();
 
-            auto bad_verifier_msg = verifier_msg;
-            bad_verifier_msg.pop_back();
-            result.test_throws<Botan::Decoding_Error>("Truncated verifier message is rejected",
-                                                      [&]() { prover.process_message(bad_verifier_msg, this->rng()); });
+            const std::vector<std::pair<std::string, std::vector<uint8_t>>> bad_shares = {
+               {"Truncated share", truncated},
+               {"Share without uncompressed header", compressed_hdr},
+               {"Share not on the curve", off_curve},
+               {"Share leading to identity Z", identity_z},
+            };
+
+            for(const auto& bad : bad_shares) {
+               // Clang 14 cannot capture structured bindings in lambdas
+               const auto& desc = bad.first;
+               const auto& bad_share = bad.second;
+
+               Botan::SPAKE2p::VerifierContext verifier(params, record, prover_id, verifier_id, context);
+               result.test_throws<Botan::Decoding_Error>(desc + " is rejected",
+                                                         [&]() { verifier.process_message(bad_share, this->rng()); });
+               result.test_throws<Botan::Invalid_State>(desc + " is terminal",
+                                                        [&]() { verifier.process_message(share_p, this->rng()); });
+               result.test_throws<Botan::Invalid_State>(desc + " leaves no secret",
+                                                        [&]() { verifier.skip_confirmation(); });
+            }
+         }
+
+         // Malformed verifier messages are rejected by the prover, and the failure is terminal
+         {
+            Botan::SPAKE2p::ProverContext prover(params, secret, prover_id, verifier_id, context);
+            Botan::SPAKE2p::VerifierContext verifier(params, record, prover_id, verifier_id, context);
+            const auto verifier_msg = verifier.process_message(prover.generate_message(this->rng()), this->rng());
+
+            auto truncated = verifier_msg;
+            if(!truncated.empty()) {  // working around a GCC false positive warning
+               truncated.pop_back();
+            }
+
+            auto compressed_hdr = verifier_msg;
+            compressed_hdr[0] = 0x02;
+
+            auto off_curve = verifier_msg;
+            off_curve[params.share_size() - 1] ^= 0x01;
+
+            // With Y = w0*N the prover computes Z as the identity
+            auto identity_z = verifier_msg;
+            const auto w0_n = params.spake2p_n().mul(w0, this->rng()).serialize_uncompressed();
+            std::copy(w0_n.begin(), w0_n.end(), identity_z.begin());
+
+            const std::vector<std::pair<std::string, std::vector<uint8_t>>> bad_msgs = {
+               {"Truncated verifier message", truncated},
+               {"Verifier message without uncompressed header", compressed_hdr},
+               {"Verifier message not on the curve", off_curve},
+               {"Verifier message leading to identity Z", identity_z},
+            };
+
+            for(const auto& bad : bad_msgs) {
+               const auto& desc = bad.first;
+               const auto& bad_msg = bad.second;
+
+               Botan::SPAKE2p::ProverContext prover2(params, secret, prover_id, verifier_id, context);
+               prover2.generate_message(this->rng());
+               result.test_throws<Botan::Decoding_Error>(desc + " is rejected",
+                                                         [&]() { prover2.process_message(bad_msg, this->rng()); });
+               result.test_throws<Botan::Invalid_State>(desc + " is terminal",
+                                                        [&]() { prover2.process_message(verifier_msg, this->rng()); });
+               result.test_throws<Botan::Invalid_State>(desc + " leaves no secret", [&]() { prover2.shared_secret(); });
+            }
          }
 
          // Malformed registration records are rejected
@@ -331,6 +388,29 @@ class SPAKE2p_RT_Tests final : public Test {
             record_bytes.pop_back();
             result.test_throws<Botan::Decoding_Error>("Truncated record is rejected", [&]() {
                Botan::SPAKE2p::RegistrationRecord::deserialize(params, record_bytes);
+            });
+         }
+
+         // Zero scalars are rejected, since they cannot be serialized or used
+         {
+            const auto zero = w0 - w0;  // NOLINT(*-redundant-expression)
+            result.test_throws<Botan::Invalid_Argument>(
+               "Zero w0 is rejected", [&]() { Botan::SPAKE2p::ProverSecret::from_prehashed(zero, w1); });
+            result.test_throws<Botan::Invalid_Argument>(
+               "Zero w1 is rejected", [&]() { Botan::SPAKE2p::ProverSecret::from_prehashed(w0, zero); });
+
+            const auto zero_bytes = zero.serialize();
+            result.test_throws<Botan::Decoding_Error>("Secret with zero w0 is rejected", [&]() {
+               Botan::SPAKE2p::ProverSecret::deserialize(params, cat_bin(zero_bytes, w1.serialize()));
+            });
+            result.test_throws<Botan::Decoding_Error>("Secret with zero w1 is rejected", [&]() {
+               Botan::SPAKE2p::ProverSecret::deserialize(params, cat_bin(w0.serialize(), zero_bytes));
+            });
+
+            auto zero_w0_record = record.serialize();
+            std::copy(zero_bytes.begin(), zero_bytes.end(), zero_w0_record.begin());
+            result.test_throws<Botan::Decoding_Error>("Record with zero w0 is rejected", [&]() {
+               Botan::SPAKE2p::RegistrationRecord::deserialize(params, zero_w0_record);
             });
          }
 

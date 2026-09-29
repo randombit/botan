@@ -280,6 +280,10 @@ secure_vector<uint8_t> RegistrationRecord::serialize() const {
    return concat<secure_vector<uint8_t>>(m_w0.serialize(), m_l.serialize_uncompressed());
 }
 
+ProverSecret::ProverSecret(EC_Scalar w0, EC_Scalar w1) : m_w0(std::move(w0)), m_w1(std::move(w1)) {
+   BOTAN_ARG_CHECK(m_w0.is_nonzero() && m_w1.is_nonzero(), "SPAKE2+ scalars w0 and w1 must be nonzero");
+}
+
 ProverSecret ProverSecret::from_password(const SystemParameters& params,
                                          std::string_view password,
                                          std::span<const uint8_t> prover_id,
@@ -338,7 +342,13 @@ std::vector<uint8_t> ProverContext::generate_message(RandomNumberGenerator& rng)
 }
 
 std::vector<uint8_t> ProverContext::process_message(std::span<const uint8_t> peer_message, RandomNumberGenerator& rng) {
-   BOTAN_STATE_CHECK(m_state == State::ShareGenerated);
+   BOTAN_STATE_CHECK(m_state == State::ShareGenerated && m_our_message.has_value());
+
+   // Any failure from here on is terminal, and destroys our ephemeral scalar x
+   m_state = State::Failed;
+   const auto our_message = std::exchange(m_our_message, std::nullopt);
+   const auto& share_p = our_message->first;
+   const auto& x = our_message->second;
 
    const size_t share_size = m_params.share_size();
    const size_t confirm_size = m_params.confirmation_size();
@@ -358,7 +368,6 @@ std::vector<uint8_t> ProverContext::process_message(std::span<const uint8_t> pee
    const auto& w0 = m_secret.m_w0;
    const auto& w1 = m_secret.m_w1;
    const auto& n = m_params.spake2p_n();
-   const auto& x = m_our_message->second;
 
    // RFC 9383 Section 3.3: Z = h*x*(Y - w0*N), V = h*w1*(Y - w0*N)
    const auto z = EC_AffinePoint::mul_px_qy(*y, x, n, (x * w0).negate(), rng);
@@ -368,17 +377,13 @@ std::vector<uint8_t> ProverContext::process_message(std::span<const uint8_t> pee
       throw Decoding_Error("Invalid SPAKE2+ key share");
    }
 
-   auto keys =
-      spake2p_key_schedule(m_params, m_context, m_prover_id, m_verifier_id, m_our_message->first, share_v, *z, *v, w0);
+   auto keys = spake2p_key_schedule(m_params, m_context, m_prover_id, m_verifier_id, share_p, share_v, *z, *v, w0);
 
    if(!constant_time_compare(keys.confirm_v, confirm_v)) {
-      m_our_message.reset();
-      m_state = State::Failed;
       throw Invalid_Authentication_Tag("SPAKE2+ key confirmation failed");
    }
 
    m_shared_secret = std::move(keys.shared_key);
-   m_our_message.reset();
    m_state = State::Complete;
 
    return keys.confirm_p;
@@ -403,6 +408,9 @@ VerifierContext::VerifierContext(const SystemParameters& params,
 std::vector<uint8_t> VerifierContext::process_message(std::span<const uint8_t> peer_message,
                                                       RandomNumberGenerator& rng) {
    BOTAN_STATE_CHECK(m_state == State::Initial);
+
+   // Any failure from here on is terminal
+   m_state = State::Failed;
 
    const auto x = EC_AffinePoint::deserialize_uncompressed(m_params.group(), peer_message);
    if(!x) {
