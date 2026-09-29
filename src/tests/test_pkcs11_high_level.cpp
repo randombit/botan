@@ -42,6 +42,7 @@
 
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_PKCS11)
    #include <botan/p11_rsa.h>
+   #include <botan/pss_params.h>
    #include <botan/rsa.h>
 #endif
 
@@ -865,6 +866,36 @@ Test::Result test_rsa_encrypt_decrypt() {
    encrypt_and_decrypt(plaintext, "OAEP(SHA-1)", false);
    encrypt_and_decrypt(plaintext, "OAEP(SHA-1)", true);
 
+   /*
+   * A ciphertext whose leading byte is zero has the same integer value with
+   * that byte removed, but RFC 8017 requires the ciphertext be exactly k bytes
+   */
+   auto test_short_ciphertext = [&](const std::string& padding) {
+      const Botan::RSA_PublicKey soft_pubkey(keypair.first.get_n(), keypair.first.get_e());
+      const Botan::PK_Encryptor_EME encryptor(soft_pubkey, *rng, padding);
+
+      std::vector<uint8_t> ctext;
+      for(size_t i = 0; i != 100000; ++i) {
+         ctext = encryptor.encrypt(plaintext, *rng);
+         if(ctext[0] == 0) {
+            break;
+         }
+      }
+
+      if(!result.test_u8_eq("found ciphertext with leading zero byte", ctext[0], 0)) {
+         return;
+      }
+
+      keypair.second.set_use_software_padding(true);
+      const Botan::PK_Decryptor_EME decryptor(keypair.second, *rng, padding);
+      result.test_bin_eq("full length ciphertext decrypts", decryptor.decrypt(ctext), plaintext);
+      result.test_throws("short ciphertext is rejected: " + padding,
+                         [&]() { decryptor.decrypt(std::span{ctext}.subspan(1)); });
+   };
+
+   test_short_ciphertext("EME-PKCS1-v1_5");
+   test_short_ciphertext("OAEP(SHA-1)");
+
    keypair.first.destroy();
    keypair.second.destroy();
 
@@ -927,6 +958,21 @@ Test::Result test_rsa_sign_verify() {
 
    // single part only mechanisms, with the input split over several updates
    sign_and_verify("Raw", true);
+
+   // PSS AlgorithmIdentifier, checked by the software verifier
+   {
+      Botan::PK_Signer signer(keypair.second, *rng, "PSS(SHA-256)");
+      const auto alg_id = signer.algorithm_identifier();
+      result.test_is_true(
+         "PSS AlgorithmIdentifier",
+         alg_id == Botan::AlgorithmIdentifier("RSA/PSS", Botan::PSS_Params("SHA-256", 32).serialize()));
+
+      const auto signature = signer.sign_message(plaintext, *rng);
+      const Botan::RSA_PublicKey soft_pubkey(keypair.first.get_n(), keypair.first.get_e());
+      Botan::PK_Verifier verifier(soft_pubkey, alg_id);
+      result.test_is_true("PSS signature verifies using AlgorithmIdentifier",
+                          verifier.verify_message(plaintext, signature));
+   }
 
    // abandoned multi-part operations must not leave the session unusable
    {

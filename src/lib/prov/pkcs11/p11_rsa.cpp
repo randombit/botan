@@ -15,6 +15,7 @@
    #include <botan/numthry.h>
    #include <botan/p11_mechanism.h>
    #include <botan/pk_options_readers.h>
+   #include <botan/pss_params.h>
    #include <botan/pubkey.h>
    #include <botan/rng.h>
    #include <botan/internal/blinding.h>
@@ -159,7 +160,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
          if(use_blinding) {
             // RFC 8017 5.1.2: ciphertext representative must be in [0, n-1];
             // check before blinding (which reduces mod n).
-            if(encrypted_data.size() > modulus_bytes) {
+            if(encrypted_data.size() != modulus_bytes) {
                return secure_vector<uint8_t>{};
             }
             const BigInt input_bn = BigInt::from_bytes(encrypted_data);
@@ -215,6 +216,16 @@ class PKCS11_RSA_Decryption_Operation_Software_EME final : public PK_Ops::Decryp
       size_t ciphertext_length(size_t ptext_len) const override { return m_raw_op.ciphertext_length(ptext_len); }
 
       secure_vector<uint8_t> raw_decrypt(std::span<const uint8_t> input) override {
+         /*
+         * RFC 8017 7.1.2 and 7.2.2
+         *
+         *  If the length of the ciphertext C is not k octets, output
+         *  "decryption error" and stop.
+         */
+         if(input.size() != m_raw_op.ciphertext_length(0)) {
+            throw Decoding_Error("RSA ciphertext is an incorrect size for this public key");
+         }
+
          // Returns the fixed-width RSA encoded message (I2OSP(m, k)); the outer
          // PKCS#1 / OAEP unpadder relies on the leading 0x00 byte being preserved.
          uint8_t valid_mask = 0;
@@ -349,8 +360,12 @@ AlgorithmIdentifier PKCS11_RSA_Signature_Operation::algorithm_identifier() const
       case MechanismType::Sha224RsaPkcsPss:
       case MechanismType::Sha256RsaPkcsPss:
       case MechanismType::Sha384RsaPkcsPss:
-      case MechanismType::Sha512RsaPkcsPss:
-         throw Not_Implemented("RSA-PSS identifier encoding missing for PKCS11");
+      case MechanismType::Sha512RsaPkcsPss: {
+         // The hashed PSS mechanisms always use MGF1 with the message hash
+         const auto* pss = static_cast<const RsaPkcsPssParams*>(m_mechanism.data()->pParameter);
+         BOTAN_ASSERT_NONNULL(pss);
+         return AlgorithmIdentifier("RSA/PSS", PSS_Params(hash, pss->sLen).serialize());
+      }
 
       default:
          throw Not_Implemented("No algorithm identifier defined for RSA with this PKCS11 mechanism");
