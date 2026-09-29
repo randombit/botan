@@ -744,6 +744,13 @@ CertificatePathStatusCodes PKIX::check_ocsp(const std::vector<X509_Certificate>&
 CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
                                            const std::vector<std::optional<X509_CRL>>& crls,
                                            std::chrono::system_clock::time_point ref_time) {
+   return PKIX::check_crl(cert_path, crls, ref_time, Path_Validation_Restrictions());
+}
+
+CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
+                                           const std::vector<std::optional<X509_CRL>>& crls,
+                                           std::chrono::system_clock::time_point ref_time,
+                                           const Path_Validation_Restrictions& restrictions) {
    if(cert_path.empty()) {
       throw Invalid_Argument("PKIX::check_crl cert_path empty");
    }
@@ -785,8 +792,13 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
          }
 
          auto ca_key = ca.subject_public_key();
-         if(crls[i]->check_signature(*ca_key) == false) {
+         const auto sig_status = crls[i]->verify_signature(*ca_key);
+         const auto& trusted_hashes = restrictions.trusted_hashes();
+
+         if(sig_status.first != Certificate_Status_Code::VERIFIED) {
             status.insert(Certificate_Status_Code::CRL_BAD_SIGNATURE);
+         } else if(!trusted_hashes.empty() && !trusted_hashes.contains(sig_status.second)) {
+            status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
          } else {
             /*
             RFC 5280 5.2 "If a CRL contains a critical extension that the
@@ -830,6 +842,13 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
 CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
                                            const std::vector<Certificate_Store*>& certstores,
                                            std::chrono::system_clock::time_point ref_time) {
+   return PKIX::check_crl(cert_path, certstores, ref_time, Path_Validation_Restrictions());
+}
+
+CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
+                                           const std::vector<Certificate_Store*>& certstores,
+                                           std::chrono::system_clock::time_point ref_time,
+                                           const Path_Validation_Restrictions& restrictions) {
    if(cert_path.empty()) {
       throw Invalid_Argument("PKIX::check_crl cert_path empty");
    }
@@ -852,7 +871,7 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
       }
    }
 
-   return PKIX::check_crl(cert_path, crls, ref_time);
+   return PKIX::check_crl(cert_path, crls, ref_time, restrictions);
 }
 
 #if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
@@ -942,6 +961,15 @@ CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certifi
                                                   Certificate_Store_In_Memory* crl_store,
                                                   std::chrono::system_clock::time_point ref_time,
                                                   std::chrono::milliseconds timeout) {
+   return PKIX::check_crl_online(cert_path, certstores, crl_store, ref_time, timeout, Path_Validation_Restrictions());
+}
+
+CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certificate>& cert_path,
+                                                  const std::vector<Certificate_Store*>& certstores,
+                                                  Certificate_Store_In_Memory* crl_store,
+                                                  std::chrono::system_clock::time_point ref_time,
+                                                  std::chrono::milliseconds timeout,
+                                                  const Path_Validation_Restrictions& restrictions) {
    if(cert_path.empty()) {
       throw Invalid_Argument("PKIX::check_crl_online cert_path empty");
    }
@@ -1008,7 +1036,7 @@ CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certifi
       }
    }
 
-   auto crl_status = PKIX::check_crl(cert_path, crls, ref_time);
+   auto crl_status = PKIX::check_crl(cert_path, crls, ref_time, restrictions);
 
    if(crl_store != nullptr) {
       for(size_t i = 0; i != crl_status.size(); ++i) {
@@ -1215,7 +1243,8 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
 
       // Skip revocation checks if the chain already has fatal errors.
       if(PKIX::overall_status(status) < Certificate_Status_Code::FIRST_ERROR_STATUS_TO_SKIP_REVOCATION) {
-         const CertificatePathStatusCodes crl_status = PKIX::check_crl(*cert_path, trusted_roots, ref_time);
+         const CertificatePathStatusCodes crl_status =
+            PKIX::check_crl(*cert_path, trusted_roots, ref_time, restrictions);
 
          CertificatePathStatusCodes ocsp_status;
 

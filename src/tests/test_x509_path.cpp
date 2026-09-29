@@ -398,10 +398,8 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run() {
          // CRL test
          const std::vector<Botan::X509_Certificate> cert_path = {*end, *root};
          const std::vector<std::optional<Botan::X509_CRL>> crls = {crl};
-         auto crl_status = Botan::PKIX::check_crl(
-            cert_path,
-            crls,
-            validation_time);  // alternatively we could just call crl.check_signature( root_pubkey )
+         const Botan::Path_Validation_Restrictions restrictions(false, 80);  // SHA-1 is used
+         auto crl_status = Botan::PKIX::check_crl(cert_path, crls, validation_time, restrictions);
 
          result.test_str_eq(test_name + " check_crl result",
                             Botan::Path_Validation_Result::status_string(Botan::PKIX::overall_status(crl_status)),
@@ -2034,6 +2032,84 @@ class Path_Validation_With_Immortal_CRL final : public Test {
 };
 
 BOTAN_REGISTER_TEST("x509", "x509_path_immortal_crl", Path_Validation_With_Immortal_CRL);
+
+class Path_Validation_CRL_Trusted_Hash_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("CRL signatures are subject to trusted hashes");
+
+         if(Botan::has_filesystem_impl() == false) {
+            result.test_note("Skipping due to missing filesystem access");
+            return {result};
+         }
+
+         const Botan::X509_Certificate ca(Test::data_file("x509/crl_hash/ca.pem"));
+         const Botan::X509_Certificate leaf(Test::data_file("x509/crl_hash/leaf.pem"));
+         const Botan::X509_CRL crl_sha256(Test::data_file("x509/crl_hash/crl_sha256.pem"));
+         const Botan::X509_CRL crl_sha1(Test::data_file("x509/crl_hash/crl_sha1.pem"));
+
+         const auto validation_time = Botan::calendar_point(2027, 1, 1, 0, 0, 0).to_std_timepoint();
+         const std::vector<Botan::X509_Certificate> cert_path = {leaf, ca};
+
+         const Botan::Path_Validation_Restrictions default_restrictions(true /* require revocation info */);
+         const Botan::Path_Validation_Restrictions sha1_restrictions(true /* require revocation info */, 80);
+
+         const auto crl_status = [&](const Botan::X509_CRL& crl, const Botan::Path_Validation_Restrictions& r) {
+            const std::vector<std::optional<Botan::X509_CRL>> crls = {crl};
+            const auto status = Botan::PKIX::check_crl(cert_path, crls, validation_time, r);
+            return status.empty() ? std::set<Botan::Certificate_Status_Code>() : status[0];
+         };
+
+         const auto path_validate = [&](const Botan::X509_CRL& crl, const Botan::Path_Validation_Restrictions& r) {
+            Botan::Certificate_Store_In_Memory trusted;
+            trusted.add_certificate(ca);
+            trusted.add_crl(crl);
+            return Botan::x509_path_validate(leaf, r, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
+         };
+
+         result.test_is_true(
+            "SHA-256 CRL accepted",
+            crl_status(crl_sha256, default_restrictions).contains(Botan::Certificate_Status_Code::VALID_CRL_CHECKED));
+
+         const auto sha256_result = path_validate(crl_sha256, default_restrictions);
+         if(!result.test_is_true("Path validation with SHA-256 CRL", sha256_result.successful_validation())) {
+            result.test_note(sha256_result.result_string());
+         }
+
+         const auto sha1_default = crl_status(crl_sha1, default_restrictions);
+         result.test_is_true("SHA-1 CRL rejected by default",
+                             sha1_default.contains(Botan::Certificate_Status_Code::UNTRUSTED_HASH));
+         result.test_is_false("SHA-1 CRL not used by default",
+                              sha1_default.contains(Botan::Certificate_Status_Code::VALID_CRL_CHECKED));
+
+         const auto sha1_default_result = path_validate(crl_sha1, default_restrictions);
+         result.test_is_false("Path validation with SHA-1 CRL fails by default",
+                              sha1_default_result.successful_validation());
+         result.test_enum_eq("Path validation with SHA-1 CRL has no revocation data",
+                             sha1_default_result.result(),
+                             Botan::Certificate_Status_Code::NO_REVOCATION_DATA);
+         result.test_is_true(
+            "Path validation with SHA-1 CRL reports untrusted hash",
+            !sha1_default_result.all_statuses().empty() &&
+               sha1_default_result.all_statuses()[0].contains(Botan::Certificate_Status_Code::UNTRUSTED_HASH));
+
+      #if defined(BOTAN_HAS_SHA1)
+         result.test_is_true(
+            "SHA-1 CRL accepted when SHA-1 is trusted",
+            crl_status(crl_sha1, sha1_restrictions).contains(Botan::Certificate_Status_Code::VALID_CRL_CHECKED));
+
+         const auto sha1_allowed_result = path_validate(crl_sha1, sha1_restrictions);
+         if(!result.test_is_true("Path validation with SHA-1 CRL when SHA-1 is trusted",
+                                 sha1_allowed_result.successful_validation())) {
+            result.test_note(sha1_allowed_result.result_string());
+         }
+      #endif
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_path_crl_trusted_hash", Path_Validation_CRL_Trusted_Hash_Test);
 
    #endif
 
