@@ -21,6 +21,7 @@
    #include <botan/internal/mod_inv.h>
    #include <botan/internal/monty.h>
    #include <botan/internal/monty_exp.h>
+   #include <botan/internal/p11_sig_stream.h>
    #include <botan/internal/pk_ops_impl.h>
    #include <botan/internal/pk_options_impl.h>
    #include <botan/internal/scoped_cleanup.h>
@@ -263,48 +264,19 @@ class PKCS11_RSA_Encryption_Operation final : public PK_Ops::Encryption {
 class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature {
    public:
       PKCS11_RSA_Signature_Operation(const PKCS11_RSA_PrivateKey& key, const PK_Signature_Options_Reader& options) :
-            m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(options)) {}
+            m_key(key),
+            m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(options)),
+            m_stream(Signature_Stream::Direction::Sign, m_key, m_mechanism) {}
 
       size_t signature_length() const override { return m_key.get_n().bytes(); }
 
-      void update(std::span<const uint8_t> input) override {
-         if(!m_initialized) {
-            // first call to update: initialize and cache message because we can not determine yet whether a single- or multiple-part operation will be performed
-            m_key.module()->C_SignInit(m_key.session().handle(), m_mechanism.data(), m_key.handle());
-            m_initialized = true;
-            m_first_message.assign(input.begin(), input.end());
-            m_has_first_message = true;
-            return;
-         }
-
-         if(m_has_first_message) {
-            // second call to update: start multiple-part operation
-            m_key.module()->C_SignUpdate(m_key.session().handle(), m_first_message);
-            m_first_message.clear();
-            m_has_first_message = false;
-         }
-
-         m_key.module()->C_SignUpdate(m_key.session().handle(), input.data(), checked_ulong_cast(input.size()));
-      }
+      void update(std::span<const uint8_t> input) override { m_stream.update(input); }
 
       std::vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
-         if(!m_initialized) {
-            // sign() called with no prior update(): treat as a single-part operation over the empty message
-            m_key.module()->C_SignInit(m_key.session().handle(), m_mechanism.data(), m_key.handle());
-            m_initialized = true;
-            m_has_first_message = true;
+         auto signature = m_stream.sign();
+         if(signature.size() != signature_length()) {
+            throw PKCS11_Error("PKCS #11 module returned an RSA signature of unexpected length");
          }
-         std::vector<uint8_t> signature;
-         if(m_has_first_message) {
-            // single call to update: perform single-part operation
-            m_key.module()->C_Sign(m_key.session().handle(), m_first_message, signature);
-            m_first_message.clear();
-            m_has_first_message = false;
-         } else {
-            // multiple calls to update: finish multiple-part operation
-            m_key.module()->C_SignFinal(m_key.session().handle(), signature);
-         }
-         m_initialized = false;
          return signature;
       }
 
@@ -314,10 +286,8 @@ class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature {
 
    private:
       PKCS11_RSA_PrivateKey m_key;
-      bool m_initialized = false;
-      bool m_has_first_message = false;
-      secure_vector<uint8_t> m_first_message;
       MechanismWrapper m_mechanism;
+      Signature_Stream m_stream;
 };
 
 namespace {
@@ -390,69 +360,20 @@ AlgorithmIdentifier PKCS11_RSA_Signature_Operation::algorithm_identifier() const
 class PKCS11_RSA_Verification_Operation final : public PK_Ops::Verification {
    public:
       PKCS11_RSA_Verification_Operation(const PKCS11_RSA_PublicKey& key, const PK_Signature_Options_Reader& options) :
-            m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(options)) {}
+            m_key(key),
+            m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(options)),
+            m_stream(Signature_Stream::Direction::Verify, m_key, m_mechanism) {}
 
-      void update(std::span<const uint8_t> input) override {
-         if(!m_initialized) {
-            // first call to update: initialize and cache message because we can not determine yet whether a single- or multiple-part operation will be performed
-            m_key.module()->C_VerifyInit(m_key.session().handle(), m_mechanism.data(), m_key.handle());
-            m_initialized = true;
-            m_first_message.assign(input.begin(), input.end());
-            m_has_first_message = true;
-            return;
-         }
+      void update(std::span<const uint8_t> input) override { m_stream.update(input); }
 
-         if(m_has_first_message) {
-            // second call to update: start multiple-part operation
-            m_key.module()->C_VerifyUpdate(m_key.session().handle(), m_first_message);
-            m_first_message.clear();
-            m_has_first_message = false;
-         }
-
-         m_key.module()->C_VerifyUpdate(m_key.session().handle(), input.data(), checked_ulong_cast(input.size()));
-      }
-
-      bool is_valid_signature(std::span<const uint8_t> sig) override {
-         if(!m_initialized) {
-            // is_valid_signature() called with no prior update(): treat as a single-part operation over the empty message
-            m_key.module()->C_VerifyInit(m_key.session().handle(), m_mechanism.data(), m_key.handle());
-            m_initialized = true;
-            m_has_first_message = true;
-         }
-         ReturnValue return_value = ReturnValue::SignatureInvalid;
-         if(m_has_first_message) {
-            // single call to update: perform single-part operation
-            m_key.module()->C_Verify(m_key.session().handle(),
-                                     m_first_message.data(),
-                                     checked_ulong_cast(m_first_message.size()),
-                                     sig.data(),
-                                     checked_ulong_cast(sig.size()),
-                                     &return_value);
-            m_first_message.clear();
-            m_has_first_message = false;
-         } else {
-            // multiple calls to update: finish multiple-part operation
-            m_key.module()->C_VerifyFinal(
-               m_key.session().handle(), sig.data(), checked_ulong_cast(sig.size()), &return_value);
-         }
-         m_initialized = false;
-         if(return_value == ReturnValue::SignatureInvalid || return_value == ReturnValue::SignatureLenRange) {
-            return false;
-         } else if(return_value == ReturnValue::OK) {
-            return true;
-         } else {
-            throw PKCS11_ReturnError(return_value);
-         }
-      }
+      bool is_valid_signature(std::span<const uint8_t> sig) override { return m_stream.verify(sig); }
 
       std::string hash_function() const override;
 
    private:
       const PKCS11_RSA_PublicKey m_key;
-      bool m_initialized = false;
-      bool m_has_first_message = false;
-      secure_vector<uint8_t> m_first_message;
       MechanismWrapper m_mechanism;
+      Signature_Stream m_stream;
 };
 
 std::string PKCS11_RSA_Verification_Operation::hash_function() const {

@@ -17,6 +17,10 @@ pubkey
 pkcs11.h
 </header:external>
 
+<header:internal>
+p11_sig_stream.h
+</header:internal>
+
 <header:public>
 p11.h
 p11_ecc_key.h

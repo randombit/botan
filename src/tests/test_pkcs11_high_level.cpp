@@ -885,25 +885,35 @@ Test::Result test_rsa_sign_verify() {
 
    auto sign_and_verify = [&](const std::string& padding, bool multipart) {
       Botan::PK_Signer signer(keypair.second, *rng, padding, Botan::Signature_Format::Standard);
-      std::vector<uint8_t> signature;
-      if(multipart) {
-         signer.update(plaintext.data(), plaintext.size() / 2);
-         signature = signer.sign_message(plaintext.data() + plaintext.size() / 2, plaintext.size() / 2, *rng);
-      } else {
-         signature = signer.sign_message(plaintext, *rng);
-      }
-
       Botan::PK_Verifier verifier(keypair.first, padding, Botan::Signature_Format::Standard);
-      bool rsa_ok = false;
-      if(multipart) {
-         verifier.update(plaintext.data(), plaintext.size() / 2);
-         rsa_ok = verifier.verify_message(
-            plaintext.data() + plaintext.size() / 2, plaintext.size() / 2, signature.data(), signature.size());
-      } else {
-         rsa_ok = verifier.verify_message(plaintext, signature);
-      }
+      const Botan::RSA_PublicKey soft_pubkey(keypair.first.get_n(), keypair.first.get_e());
+      Botan::PK_Verifier soft_verifier(soft_pubkey, padding, Botan::Signature_Format::Standard);
 
-      result.test_is_true("RSA PKCS11 sign and verify: " + padding, rsa_ok);
+      // Reuse the operations with different messages and switch between single
+      // and multiple part input to ensure both buffer and token state are reset.
+      auto message = plaintext;
+      for(const bool use_multipart : {multipart, !multipart, multipart}) {
+         message.back() ^= 0x80;
+         const auto first_part = std::span{message}.first(use_multipart ? message.size() / 2 : message.size());
+         const auto last_part = std::span{message}.subspan(first_part.size());
+
+         // Empty updates before, between, and after data must have no effect.
+         signer.update(std::span<const uint8_t>{});
+         signer.update(first_part);
+         signer.update(std::span<const uint8_t>{});
+         signer.update(last_part);
+         signer.update(std::span<const uint8_t>{});
+         const auto signature = signer.signature(*rng);
+
+         verifier.update(std::span<const uint8_t>{});
+         verifier.update(first_part);
+         verifier.update(std::span<const uint8_t>{});
+         verifier.update(last_part);
+         verifier.update(std::span<const uint8_t>{});
+         result.test_is_true("RSA PKCS11 sign and verify: " + padding, verifier.check_signature(signature));
+         result.test_is_true("RSA PKCS11 signature verifies in software: " + padding,
+                             soft_verifier.verify_message(message, signature));
+      }
    };
 
    // single-part sign
@@ -914,6 +924,22 @@ Test::Result test_rsa_sign_verify() {
    // multi-part sign
    sign_and_verify("PKCS1v15(SHA-256)", true);
    sign_and_verify("PSS(SHA-256)", true);
+
+   // single part only mechanisms, with the input split over several updates
+   sign_and_verify("Raw", true);
+
+   // abandoned multi-part operations must not leave the session unusable
+   {
+      Botan::PK_Signer abandoned(keypair.second, *rng, "PKCS1v15(SHA-256)");
+      abandoned.update(plaintext.data(), 16);
+      abandoned.update(plaintext.data() + 16, 16);
+   }
+   {
+      Botan::PK_Verifier abandoned(keypair.first, "PKCS1v15(SHA-256)");
+      abandoned.update(plaintext.data(), 16);
+      abandoned.update(plaintext.data() + 16, 16);
+   }
+   sign_and_verify("PKCS1v15(SHA-256)", true);
 
    // empty message, both without any update and with an empty update
    auto sign_and_verify_empty = [&](const std::string& padding, bool empty_update) {
@@ -1204,6 +1230,38 @@ Test::Result test_ecdsa_sign_verify_core(EC_Group_Encoding enc, const std::strin
       #else
       sign_and_verify("Raw", Botan::Signature_Format::Standard, false);
       #endif
+
+      // CKM_ECDSA is single part only, so input split over several updates must be buffered
+      {
+         Botan::PK_Signer signer(keypair.second, *rng, "Raw");
+         Botan::PK_Verifier verifier(keypair.first, "Raw");
+         // Reuse the same signer and verifier to ensure each buffered message
+         // is consumed exactly once, regardless of how it was split into parts.
+         auto message = plaintext;
+         for(const size_t first_size : {size_t(7), message.size(), size_t(5)}) {
+            message.back() ^= 0x80;
+            signer.update(std::span<const uint8_t>{});
+            signer.update(std::span{message}.first(first_size));
+            signer.update(std::span<const uint8_t>{});
+            signer.update(std::span{message}.subspan(first_size));
+            const auto signature = signer.signature(*rng);
+            result.test_sz_eq("ECDSA PKCS11 signature length", signature.size(), signer.signature_length());
+
+            verifier.update(std::span<const uint8_t>{});
+            verifier.update(std::span{message}.first(first_size));
+            verifier.update(std::span<const uint8_t>{});
+            verifier.update(std::span{message}.subspan(first_size));
+            result.test_is_true("ECDSA PKCS11 multi-update sign and verify: Raw", verifier.check_signature(signature));
+            result.test_is_true("ECDSA PKCS11 verify of single update: Raw",
+                                Botan::PK_Verifier(keypair.first, "Raw").verify_message(message, signature));
+         }
+      }
+
+      // Aliases accepted for the mechanism are reported under the canonical hash name
+      {
+         const Botan::PK_Signer signer(keypair.second, *rng, Botan::PK_Signature_Options().with_hash("EMSA1(SHA-256)"));
+         result.test_str_eq("ECDSA PKCS11 EMSA1 alias hash name", signer.hash_function(), "SHA-256");
+      }
 
       keypair.first.destroy();
       keypair.second.destroy();
