@@ -2157,6 +2157,50 @@ class Path_Building_Tests final : public Test {
 
 BOTAN_REGISTER_TEST("x509", "x509_path_building", Path_Building_Tests);
 
+/**
+* Test that the certificate path verification fails fast on invalid signatures
+*/
+class Verification_Exits_Early_For_Signature_Error_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("X509 path signature verification order");
+
+         const std::string base_dir = "x509/sig_verify_order";
+
+         auto load = [&](std::string_view label) {
+            return Botan::X509_Certificate(Test::data_file(Botan::fmt("{}/{}.pem", base_dir, label)));
+         };
+
+         // Both int1 and leaf have invalid signatures
+         const std::vector<Botan::X509_Certificate> path = {load("leaf"), load("int2"), load("int1"), load("root")};
+
+         const auto validation_time = Botan::calendar_point(2026, 6, 1, 0, 0, 0).to_std_timepoint();
+         const Botan::Path_Validation_Restrictions restrictions;
+
+         const auto status =
+            Botan::PKIX::check_chain(path, validation_time, "", Botan::Usage_Type::UNSPECIFIED, restrictions);
+
+         result.test_sz_eq("status size", status.size(), path.size());
+
+         result.test_is_true("root has no errors", status[3].empty());
+         result.test_is_true("int1 has signature error",
+                             status[2].contains(Botan::Certificate_Status_Code::SIGNATURE_ERROR));
+         // Verification stops at int1, so int2 and the leaf are never examined
+         result.test_is_true("int2 was not checked", status[1].empty());
+         result.test_is_true("leaf was not checked", status[0].empty());
+
+         result.test_str_eq("overall status",
+                            Botan::to_string(Botan::PKIX::overall_status(status)),
+                            Botan::to_string(Botan::Certificate_Status_Code::SIGNATURE_ERROR));
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("x509",
+                    "x509_path_verify_exits_early_on_bad_sig",
+                    Verification_Exits_Early_For_Signature_Error_Test);
+
    #endif
 
 #endif
