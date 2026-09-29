@@ -60,6 +60,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_EC_PublicKey : public virtual EC_PublicKey,
                                                    public Object {
    public:
       static const ObjectClass Class = ObjectClass::PublicKey;
+      static const KeyType Key_Type = KeyType::Ec;
 
       /**
       * Creates a PKCS11_EC_PublicKey object from an existing PKCS#11 EC public key
@@ -109,6 +110,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_EC_PrivateKey : public virtual Private_Key,
                                                     public Object {
    public:
       static const ObjectClass Class = ObjectClass::PrivateKey;
+      static const KeyType Key_Type = KeyType::Ec;
 
       /**
       * Creates a PKCS11_EC_PrivateKey object from an existing PKCS#11 EC private key

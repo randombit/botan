@@ -1448,6 +1448,41 @@ Test::Result test_ecdsa_curve_import() {
    return test_ecdsa_sign_verify_core(EC_Group_Encoding::Explicit, "PKCS11 ECDSA sign and verify with imported curve");
 }
 
+      #if defined(BOTAN_HAS_RSA)
+Test::Result test_typed_key_search() {
+   Test::Result result("PKCS11 typed key search");
+   const TestSession test_session(true);
+
+   // RSA and EC keys share the same object classes
+   const PKCS11_RSA_KeyPair rsa_keypair = generate_rsa_keypair(test_session);
+   const PKCS11_ECDSA_KeyPair ecdsa_keypair =
+      generate_ecdsa_keypair(test_session, "secp256r1", EC_Group_Encoding::NamedCurve);
+
+   auto check_search = [&]<typename T>(const std::string& what, ObjectHandle expected) {
+      try {
+         const auto found = Object::search<T>(test_session.session());
+         const bool contains_expected =
+            std::any_of(found.begin(), found.end(), [&](const auto& obj) { return obj.handle() == expected; });
+         result.test_is_true(what + " finds the key", contains_expected);
+      } catch(std::exception& e) {
+         result.test_failure(what, e.what());
+      }
+   };
+
+   check_search.operator()<PKCS11_RSA_PublicKey>("RSA public key search", rsa_keypair.first.handle());
+   check_search.operator()<PKCS11_RSA_PrivateKey>("RSA private key search", rsa_keypair.second.handle());
+   check_search.operator()<PKCS11_ECDSA_PublicKey>("ECDSA public key search", ecdsa_keypair.first.handle());
+   check_search.operator()<PKCS11_ECDSA_PrivateKey>("ECDSA private key search", ecdsa_keypair.second.handle());
+
+   rsa_keypair.first.destroy();
+   rsa_keypair.second.destroy();
+   ecdsa_keypair.first.destroy();
+   ecdsa_keypair.second.destroy();
+
+   return result;
+}
+      #endif
+
 class PKCS11_ECDSA_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -1460,7 +1495,11 @@ class PKCS11_ECDSA_Tests final : public Test {
             {STRING_AND_FUNCTION(test_ecdsa_generate_keypair)},
             {STRING_AND_FUNCTION(test_ecdsa_generate_unregistered_curve)},
             {STRING_AND_FUNCTION(test_ecdsa_sign_verify)},
-            {STRING_AND_FUNCTION(test_ecdsa_curve_import)}};
+            {STRING_AND_FUNCTION(test_ecdsa_curve_import)},
+      #if defined(BOTAN_HAS_RSA)
+            {STRING_AND_FUNCTION(test_typed_key_search)},
+      #endif
+         };
 
          return run_pkcs11_tests("PKCS11 ECDSA", fns);
       }
