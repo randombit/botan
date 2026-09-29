@@ -298,8 +298,10 @@ different name.
 
 The cryptographic core is implemented in Rust in the crate ``rust-hqc``, which
 is included as a git submodule in ``src/lib/pubkey/hqc/rust-hqc``. The crate
-contains no hash function of its own: Botan's SHA-3 and SHAKE-256
-implementations are handed to it through callbacks on every call. The Botan
+contains no hash function and no allocator for secrets of its own: Botan's
+SHA-3 and SHAKE-256 implementations and Botan's secure allocator (locked
+memory pool for small secrets, scrubbed on release) are handed to it through
+callbacks on every call. The Botan
 module ``hqc`` wraps the crate's C API and is not built by default. To enable it,
 build the crate first and point ``configure.py`` to its header and static library::
 

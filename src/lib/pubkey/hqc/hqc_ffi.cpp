@@ -8,6 +8,7 @@
 
 #include <botan/internal/hqc_ffi.h>
 
+#include <botan/allocator.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/xof.h>
@@ -90,6 +91,24 @@ extern "C" void botan_hqc_shake256_free(void* /*ctx*/, hqc_xof_t* xof) {
    delete xof;  // NOLINT(*-owning-memory)
 }
 
+/*
+ * Secure memory callbacks: the crate keeps its secrets in memory from Botan's
+ * allocator, i.e. in the mlock'ed pool for small requests and in calloc
+ * memory otherwise, scrubbed on release either way.
+ */
+
+extern "C" void* botan_hqc_secure_alloc(void* /*ctx*/, size_t len) {
+   try {
+      return allocate_memory(len, 1);
+   } catch(...) {
+      return nullptr;
+   }
+}
+
+extern "C" void botan_hqc_secure_free(void* /*ctx*/, void* ptr, size_t len) {
+   deallocate_memory(ptr, len, 1);
+}
+
 const hqc_callbacks_t* botan_callbacks() {
    static const hqc_callbacks_t callbacks = {
       .version = HQC_CALLBACKS_VERSION,
@@ -101,6 +120,12 @@ const hqc_callbacks_t* botan_callbacks() {
             .shake256_init = botan_hqc_shake256_init,
             .shake256_squeeze = botan_hqc_shake256_squeeze,
             .shake256_free = botan_hqc_shake256_free,
+         },
+      .alloc =
+         {
+            .ctx = nullptr,
+            .secure_alloc = botan_hqc_secure_alloc,
+            .secure_free = botan_hqc_secure_free,
          },
    };
    return &callbacks;
@@ -118,9 +143,10 @@ void check_rc(int32_t rc, std::string_view operation) {
          throw Invalid_Argument(fmt("HQCr4 {}: invalid ciphertext", operation));
       default:
          // HQC_ERR_RANDOMNESS, HQC_ERR_INTERNAL, HQC_ERR_BAD_PARAMETER_SET,
-         // HQC_ERR_NULL_POINTER, HQC_ERR_HASH_CALLBACK, HQC_ERR_BAD_CALLBACKS
-         // and unknown codes: all indicate a bug on the calling side or
-         // inside the crate, not bad user input
+         // HQC_ERR_NULL_POINTER, HQC_ERR_HASH_CALLBACK, HQC_ERR_BAD_CALLBACKS,
+         // HQC_ERR_ALLOC and unknown codes: all indicate a bug on the calling
+         // side or inside the crate, not bad user input (Botan's allocator
+         // throws instead of returning null, so HQC_ERR_ALLOC cannot occur here)
          throw Internal_Error(fmt("HQCr4 {}: rust-hqc returned error code {}", operation, rc));
    }
 }
