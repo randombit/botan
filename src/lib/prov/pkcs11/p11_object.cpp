@@ -17,9 +17,12 @@ AttributeContainer::AttributeContainer(ObjectClass object_class) {
 }
 
 void AttributeContainer::add_class(ObjectClass object_class) {
-   m_numerics.emplace_back(static_cast<uint64_t>(object_class));
-   add_attribute(
-      AttributeType::Class, reinterpret_cast<uint8_t*>(&m_numerics.back()), static_cast<Ulong>(sizeof(ObjectClass)));
+   add_ulong(AttributeType::Class, static_cast<CK_OBJECT_CLASS>(object_class));
+}
+
+void AttributeContainer::add_ulong(AttributeType attribute, Ulong value) {
+   m_numerics.push_back(value);
+   add_attribute(attribute, reinterpret_cast<uint8_t*>(&m_numerics.back()), sizeof(Ulong));
 }
 
 void AttributeContainer::add_string(AttributeType attribute, std::string_view value) {
@@ -34,8 +37,8 @@ void AttributeContainer::add_binary(AttributeType attribute, const uint8_t* valu
 }
 
 void AttributeContainer::add_bool(AttributeType attribute, bool value) {
-   m_numerics.push_back(value ? True : False);
-   add_attribute(attribute, reinterpret_cast<uint8_t*>(&m_numerics.back()), sizeof(Bbool));
+   m_bools.push_back(value ? True : False);
+   add_attribute(attribute, &m_bools.back(), sizeof(Bbool));
 }
 
 void AttributeContainer::add_attribute(AttributeType attribute, const uint8_t* value, Ulong size) {
@@ -47,8 +50,9 @@ void AttributeContainer::add_attribute(AttributeType attribute, const uint8_t* v
          m_strings.remove_if(
             [&existing_attribute](std::string_view data) { return data.data() == existing_attribute.pValue; });
 
-         m_numerics.remove_if(
-            [&existing_attribute](const uint64_t& data) { return &data == existing_attribute.pValue; });
+         m_numerics.remove_if([&existing_attribute](const Ulong& data) { return &data == existing_attribute.pValue; });
+
+         m_bools.remove_if([&existing_attribute](const Bbool& data) { return &data == existing_attribute.pValue; });
 
          m_vectors.remove_if([&existing_attribute](const secure_vector<uint8_t>& data) {
             return data.data() == existing_attribute.pValue;

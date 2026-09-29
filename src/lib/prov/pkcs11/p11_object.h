@@ -17,6 +17,7 @@
 #include <functional>
 #include <list>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Botan::PKCS11 {
@@ -89,13 +90,16 @@ class BOTAN_PUBLIC_API(2, 0) AttributeContainer {
 
       /**
       * Add a numeric attribute (e.g. CKA_MODULUS_BITS / AttributeType::ModulusBits).
+      * The value is always passed to the module as a CK_ULONG.
       * @param attribute attribute type
       * @param value numeric value to add
       */
       template <std::integral T>
       void add_numeric(AttributeType attribute, T value) {
-         m_numerics.push_back(static_cast<uint64_t>(value));
-         add_attribute(attribute, reinterpret_cast<uint8_t*>(&m_numerics.back()), sizeof(T));
+         if(!std::in_range<Ulong>(value)) {
+            throw Invalid_Argument("PKCS #11 numeric attribute value exceeds CK_ULONG range");
+         }
+         add_ulong(attribute, static_cast<Ulong>(value));
       }
 
    protected:
@@ -103,8 +107,11 @@ class BOTAN_PUBLIC_API(2, 0) AttributeContainer {
       void add_attribute(AttributeType attribute, const uint8_t* value, Ulong size);
 
    private:
+      void add_ulong(AttributeType attribute, Ulong value);
+
       std::vector<Attribute> m_attributes;
-      std::list<uint64_t> m_numerics;
+      std::list<Ulong> m_numerics;
+      std::list<Bbool> m_bools;
       std::list<std::string> m_strings;
       std::list<secure_vector<uint8_t>> m_vectors;
 };

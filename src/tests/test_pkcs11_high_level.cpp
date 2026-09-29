@@ -16,6 +16,7 @@
    #include <botan/p11_randomgenerator.h>
    #include <botan/internal/fmt.h>
    #include <algorithm>
+   #include <cstring>
    #include <memory>
    #include <numeric>
    #include <sstream>
@@ -448,17 +449,36 @@ Test::Result test_attribute_container() {
    result.test_sz_eq("8 elements in attribute container", attributes.count(), 8);
 
    const std::vector<Botan::PKCS11::Attribute>& storedAttributes = attributes.attributes();
-   result.test_u64_eq(
-      "ObjectId type", storedAttributes.at(4).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::ObjectId));
-   result.test_u64_eq("ObjectId value", *reinterpret_cast<uint64_t*>(storedAttributes.at(4).pValue), 10);
-   result.test_u64_eq("Id type", storedAttributes.at(5).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Id));
-   result.test_u64_eq("Id value", *reinterpret_cast<uint64_t*>(storedAttributes.at(5).pValue), 21);
-   result.test_u64_eq(
-      "PixelX type", storedAttributes.at(6).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::PixelX));
-   result.test_u64_eq("PixelX value", *reinterpret_cast<uint64_t*>(storedAttributes.at(6).pValue), 30);
-   result.test_u64_eq(
-      "PixelY type", storedAttributes.at(7).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::PixelY));
-   result.test_u64_eq("PixelY value", *reinterpret_cast<uint64_t*>(storedAttributes.at(7).pValue), 40);
+
+   // Compare the exact bytes the module would read, independent of host endianness
+   auto published_ulong = [&](const std::string& what, size_t idx, AttributeType type, Ulong expected) {
+      const auto& attr = storedAttributes.at(idx);
+      result.test_u64_eq(what + " type", attr.type, static_cast<CK_ATTRIBUTE_TYPE>(type));
+      result.test_u64_eq(what + " length", attr.ulValueLen, sizeof(Ulong));
+      Ulong value = 0;
+      std::memcpy(&value, attr.pValue, sizeof(Ulong));
+      result.test_u64_eq(what + " value", value, expected);
+   };
+
+   published_ulong("Class", 0, AttributeType::Class, static_cast<CK_OBJECT_CLASS>(ObjectClass::PrivateKey));
+
+   const auto& sensitive = storedAttributes.at(3);
+   result.test_u64_eq("Sensitive type", sensitive.type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Sensitive));
+   result.test_u64_eq("Sensitive length", sensitive.ulValueLen, sizeof(Bbool));
+   result.test_u64_eq("Sensitive value", *static_cast<const Bbool*>(sensitive.pValue), CK_TRUE);
+
+   published_ulong("ObjectId", 4, AttributeType::ObjectId, 10);
+   published_ulong("Id", 5, AttributeType::Id, 21);
+   published_ulong("PixelX", 6, AttributeType::PixelX, 30);
+   published_ulong("PixelY", 7, AttributeType::PixelY, 40);
+
+   // Overwriting a bool must not disturb the numerics or vice versa
+   attributes.add_bool(AttributeType::Sensitive, false);
+   result.test_u64_eq("Sensitive overwritten", *static_cast<const Bbool*>(storedAttributes.at(3).pValue), CK_FALSE);
+   published_ulong("PixelY after bool overwrite", 7, AttributeType::PixelY, 40);
+
+   result.test_throws<Botan::Invalid_Argument>("negative numeric rejected",
+                                               [&]() { attributes.add_numeric(AttributeType::PixelX, -1); });
 
    return result;
 }
