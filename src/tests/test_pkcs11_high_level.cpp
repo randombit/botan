@@ -143,6 +143,34 @@ Test::Result test_module_reload() {
    return result;
 }
 
+Test::Result test_module_reload_failure() {
+   Test::Result result("Module reload failure");
+
+   Module module(Test::pkcs11_lib());
+   Slot slot(module, Slot::get_available_slots(module, true).at(0));
+
+   {
+      const Session session(slot, true);
+
+      // pReserved must be NULL, so C_Initialize fails
+      uint8_t reserved = 0;
+      const C_InitializeArgs bad_args = {
+         nullptr, nullptr, nullptr, nullptr, static_cast<CK_FLAGS>(Flag::OsLockingOk), &reserved};
+      result.test_throws("reload with invalid arguments fails", [&]() { module.reload(bad_args); });
+
+      result.test_throws<Botan::Invalid_State>("module is unusable after failed reload", [&]() { module.get_info(); });
+
+      // the session destructor runs against the uninitialized module
+   }
+   result.test_success("Session destructor did not crash after failed reload");
+
+   module.reload();
+   module.get_info();
+   result.test_success("Module can be reloaded after a failed reload");
+
+   return result;
+}
+
 Test::Result test_multiple_modules() {
    Test::Result result("Module copy");
    const Module first_module(Test::pkcs11_lib());
@@ -171,7 +199,8 @@ class Module_Tests final : public Test {
             {STRING_AND_FUNCTION(test_module_ctor)},
             {STRING_AND_FUNCTION(test_multiple_modules)},
             {STRING_AND_FUNCTION(test_module_get_info)},
-            {STRING_AND_FUNCTION(test_module_reload)}};
+            {STRING_AND_FUNCTION(test_module_reload)},
+            {STRING_AND_FUNCTION(test_module_reload_failure)}};
 
          return run_pkcs11_tests("Module", fns);
       }
