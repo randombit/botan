@@ -22,6 +22,7 @@
 #include <botan/internal/x509_utils.h>
 #include <algorithm>
 #include <bit>
+#include <concepts>
 #include <set>
 #include <span>
 
@@ -1910,6 +1911,25 @@ using IPRangeVec = std::vector<IPAddressBlocks::IPAddressOrRange<V>>;
 template <IPAddressBlocks::Version V>
 using IPValidationMap = std::map<uint32_t, std::pair<bool, const IPRangeVec<V>*>>;
 
+// The next address/AS number, wrapping to zero after the maximum value
+template <IPAddressBlocks::Version V>
+IPAddressBlocks::IPAddress<V> successor(const IPAddressBlocks::IPAddress<V>& addr) {
+   auto bytes = addr.to_bytes();
+   for(auto it = bytes.rbegin(); it != bytes.rend(); ++it) {
+      (*it)++;
+      if(*it != 0) {
+         break;
+      }
+   }
+   using Address = std::conditional_t<V == IPv4, IPv4Address, IPv6Address>;
+   return IPAddressBlocks::IPAddress<V>(Address(bytes));
+}
+
+template <std::unsigned_integral T>
+T successor(T x) {
+   return static_cast<T>(x + 1);
+}
+
 template <typename T>
 std::optional<std::vector<T>> sort_and_merge_ranges(std::optional<std::span<const T>> ranges) {
    // Sort and merge overlapping/adjacent IPAddressOrRange or ASIdOrRange objects.
@@ -1937,7 +1957,7 @@ std::optional<std::vector<T>> sort_and_merge_ranges(std::optional<std::span<cons
    for(size_t i = 1; i < sorted.size(); ++i) {
       auto& back = merged.back();
       // they either overlap or are adjacent
-      if(sorted[i].min() <= back.max() || sorted[i].min() == (back.max() + 1)) {
+      if(sorted[i].min() <= back.max() || sorted[i].min() == successor(back.max())) {
          back = T(back.min(), std::max(back.max(), sorted[i].max()));
       } else {
          merged.push_back(sorted[i]);
@@ -1959,19 +1979,19 @@ bool ranges_are_sorted_and_merged(const std::vector<T>& ranges) {
       }
       // Contiguous entries were required to be combined by the issuer. The
       // increment cannot wrap since max() < min() <= the all-ones value.
-      if(ranges[i - 1].max() + 1 == ranges[i].min()) {
+      if(successor(ranges[i - 1].max()) == ranges[i].min()) {
          return false;
       }
    }
    return true;
 }
 
-// True if [min,max] covers exactly the address set of some prefix
+// If [min,max] covers exactly the address set of some prefix, return its length
 template <IPAddressBlocks::Version V>
-bool range_is_expressible_as_prefix(const IPAddressBlocks::IPAddress<V>& min_addr,
-                                    const IPAddressBlocks::IPAddress<V>& max_addr) {
-   const auto min = min_addr.value();
-   const auto max = max_addr.value();
+std::optional<size_t> range_prefix_length(const IPAddressBlocks::IPAddress<V>& min_addr,
+                                          const IPAddressBlocks::IPAddress<V>& max_addr) {
+   const auto min = min_addr.to_bytes();
+   const auto max = max_addr.to_bytes();
 
    size_t i = 0;
    while(i < min.size() && min[i] == max[i]) {
@@ -1979,20 +1999,27 @@ bool range_is_expressible_as_prefix(const IPAddressBlocks::IPAddress<V>& min_add
    }
    if(i == min.size()) {
       // min == max is a single address, ie a full length prefix
-      return true;
+      return 8 * min.size();
    }
 
    // From the first differing bit on, min must be all zero bits and max all one bits
-   const uint8_t diff_mask = static_cast<uint8_t>(0xFF >> std::countl_zero(static_cast<uint8_t>(min[i] ^ max[i])));
+   const size_t common_bits = std::countl_zero(static_cast<uint8_t>(min[i] ^ max[i]));
+   const uint8_t diff_mask = static_cast<uint8_t>(0xFF >> common_bits);
    if((min[i] & diff_mask) != 0 || (max[i] & diff_mask) != diff_mask) {
-      return false;
+      return std::nullopt;
    }
    for(size_t j = i + 1; j < min.size(); j++) {
       if(min[j] != 0x00 || max[j] != 0xFF) {
-         return false;
+         return std::nullopt;
       }
    }
-   return true;
+   return 8 * i + common_bits;
+}
+
+template <IPAddressBlocks::Version V>
+bool range_is_expressible_as_prefix(const IPAddressBlocks::IPAddress<V>& min_addr,
+                                    const IPAddressBlocks::IPAddress<V>& max_addr) {
+   return range_prefix_length<V>(min_addr, max_addr).has_value();
 }
 
 template <typename T>
@@ -2122,8 +2149,8 @@ void IPAddressBlocks::IPAddressOrRange<V>::encode_into(Botan::DER_Encoder& into)
 
    const size_t version_octets = static_cast<size_t>(V);
 
-   std::array<uint8_t, version_octets> min = m_min.value();
-   std::array<uint8_t, version_octets> max = m_max.value();
+   std::array<uint8_t, version_octets> min = m_min.to_bytes();
+   std::array<uint8_t, version_octets> max = m_max.to_bytes();
 
    uint8_t zeros = 0;
    uint8_t ones = 0;
@@ -2290,18 +2317,34 @@ IPAddressBlocks::IPAddress<V> IPAddressBlocks::IPAddressOrRange<V>::decode_singl
    // pad to version length with 0's for min addresses, 255's (0xff) for max addresses
    address.resize(version_octets, min ? 0x00 : 0xFF);
 
-   return IPAddressBlocks::IPAddress<V>(address);
+   return IPAddressBlocks::IPAddress<V>::from_bytes(address);
 }
 
 template <IPAddressBlocks::Version V>
-IPAddressBlocks::IPAddress<V>::IPAddress(std::span<const uint8_t> v) {
+auto IPAddressBlocks::IPAddressOrRange<V>::as_subnet() const -> std::optional<Subnet> {
+   if(auto prefix_len = range_prefix_length<V>(m_min, m_max)) {
+      return Subnet(m_min, *prefix_len);
+   }
+   return std::nullopt;
+}
+
+template <IPAddressBlocks::Version V>
+IPAddressBlocks::IPAddress<V>::IPAddress(std::span<const uint8_t> v) : m_value(from_bytes(v).m_value) {}
+
+template <IPAddressBlocks::Version V>
+IPAddressBlocks::IPAddress<V> IPAddressBlocks::IPAddress<V>::successor() const {
+   return Cert_Extension::successor(*this);
+}
+
+template <IPAddressBlocks::Version V>
+IPAddressBlocks::IPAddress<V> IPAddressBlocks::IPAddress<V>::from_bytes(std::span<const uint8_t> v) {
    if(v.size() != Length) {
       throw Decoding_Error("number of bytes does not match IP version used");
    }
 
-   for(size_t i = 0; i < Length; i++) {
-      m_value[i] = v[i];
-   }
+   IPAddress<V> addr{};
+   std::copy(v.begin(), v.end(), addr.m_value.begin());
+   return addr;
 }
 
 void IPAddressBlocks::validate(const X509_Certificate& /* unused */,

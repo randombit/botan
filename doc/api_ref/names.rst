@@ -178,6 +178,13 @@ IPv4
 
       Construct from a 32-bit big-endian integer representation.
 
+   .. cpp:function:: explicit IPv4Address(std::array<uint8_t, 4> ip)
+   .. cpp:function:: explicit IPv4Address(std::span<const uint8_t, 4> ip)
+
+      Construct from a 4-byte network-byte-order representation.
+
+      .. versionadded:: 3.14
+
    .. cpp:function:: static std::optional<IPv4Address> from_string(std::string_view str)
 
       Parse a dotted-decimal address (e.g. ``"10.0.0.1"``). Returns ``std::nullopt``
@@ -261,6 +268,13 @@ IPv4
 
       Accessors. ``to_string`` returns the CIDR form.
 
+   .. cpp:function:: IPv4Address last_address() const
+
+      The last address in the subnet; that is, the network address with all host
+      bits set.
+
+      .. versionadded:: 3.14
+
    .. cpp:function:: std::vector<uint8_t> serialize() const
 
       Bytes for use in a DER-encoded ``GeneralName`` ``iPAddress`` field. If
@@ -299,6 +313,12 @@ IPv6
    .. cpp:function:: std::array<uint8_t, 16> address() const
 
       Returns the 16 bytes of the address, in network-byte-order.
+
+   .. cpp:function:: std::array<uint8_t, 16> to_bytes() const
+
+      Returns the 16 bytes of the address, in network-byte-order.
+
+      .. versionadded:: 3.14
 
    .. cpp:function:: std::string to_string() const
 
@@ -341,6 +361,13 @@ IPv6
       input: the address must be in :rfc:`5952` form with host bits clear, and in
       particular the IPv4-mapped dotted form (``"::ffff:1.2.3.4/120"``) is rejected
       even though :cpp:func:`IPv6Address::from_string` accepts that address.
+
+   .. cpp:function:: IPv6Address last_address() const
+
+      The last address in the subnet; that is, the network address with all host
+      bits set.
+
+      .. versionadded:: 3.14
 
    .. cpp:function:: std::vector<uint8_t> serialize() const
 

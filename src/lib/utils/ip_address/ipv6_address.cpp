@@ -348,6 +348,15 @@ bool IPv6Subnet::contains(const IPv6Address& ip) const {
    return (ip & IPv6Address::netmask(m_prefix_length)) == m_address;
 }
 
+IPv6Address IPv6Subnet::last_address() const {
+   auto last = m_address.to_bytes();
+   const auto mask = IPv6Address::netmask(m_prefix_length).to_bytes();
+   for(size_t i = 0; i != 16; ++i) {
+      last[i] |= static_cast<uint8_t>(~mask[i]);
+   }
+   return IPv6Address(last);
+}
+
 std::string IPv6Subnet::to_string() const {
    return fmt("{}/{}", m_address.to_string(), static_cast<size_t>(m_prefix_length));
 }

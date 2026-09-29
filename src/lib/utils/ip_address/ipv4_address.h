@@ -29,6 +29,18 @@ class BOTAN_PUBLIC_API(3, 12) IPv4Address final {
       explicit IPv4Address(uint32_t ip) : m_ip(ip) {}
 
       /**
+      * Create an address from its 4 byte big-endian encoding
+      * @param ip the bytes of the address
+      */
+      explicit IPv4Address(std::span<const uint8_t, 4> ip);
+
+      /**
+      * Create an address from its 4 byte big-endian encoding
+      * @param ip the bytes of the address
+      */
+      explicit IPv4Address(std::array<uint8_t, 4> ip) : IPv4Address(std::span<const uint8_t, 4>(ip)) {}
+
+      /**
       * Convert a dotted-decimal string to an IPv4Address
       * @param str the address to parse
       * @return the parsed address, or nullopt if str is not a valid IPv4 address
@@ -139,6 +151,9 @@ class BOTAN_PUBLIC_API(3, 12) IPv4Subnet final {
 
       /// True iff @p ip falls within this subnet.
       bool contains(const IPv4Address& ip) const;
+
+      /// The last address in this subnet (all host bits set)
+      IPv4Address last_address() const;
 
       /// CIDR-style "10.0.0.0/8".
       std::string to_string() const;
