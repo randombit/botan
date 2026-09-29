@@ -34,22 +34,33 @@ class MockServer final {
       Botan::HTTP::Response handle(std::string_view hostname,
                                    std::string_view service,
                                    std::string_view message,
-                                   std::optional<size_t> max_body_size) {
+                                   std::chrono::milliseconds timeout,
+                                   size_t max_body_size) {
          m_hostnames.emplace_back(hostname);
          m_services.emplace_back(service);
          m_messages.emplace_back(message);
+         m_timeouts.push_back(timeout);
          m_max_body_sizes.push_back(max_body_size);
          if(m_call_count >= m_responses.size()) {
             throw Botan::HTTP::HTTP_Error("MockServer: no canned response for call");
          }
+
+         // Simulate a slow server; spin rather than sleep to avoid needing threads
+         const auto until = std::chrono::steady_clock::now() + m_delay;
+         while(std::chrono::steady_clock::now() < until) {}
+
          return m_responses[m_call_count++];
       }
 
       Botan::HTTP::http_exch_fn as_exch_fn() {
-         return [this](std::string_view h, std::string_view s, std::string_view m, std::optional<size_t> mbs) {
-            return handle(h, s, m, mbs);
-         };
+         return
+            [this](
+               std::string_view h, std::string_view s, std::string_view m, std::chrono::milliseconds t, size_t mbs) {
+               return handle(h, s, m, t, mbs);
+            };
       }
+
+      void set_delay(std::chrono::milliseconds delay) { m_delay = delay; }
 
       size_t calls() const { return m_call_count; }
 
@@ -59,14 +70,18 @@ class MockServer final {
 
       const std::string& service(size_t i) const { return m_services.at(i); }
 
-      std::optional<size_t> max_body_size(size_t i) const { return m_max_body_sizes.at(i); }
+      size_t max_body_size(size_t i) const { return m_max_body_sizes.at(i); }
+
+      std::chrono::milliseconds timeout(size_t i) const { return m_timeouts.at(i); }
 
    private:
       std::vector<Botan::HTTP::Response> m_responses;
       std::vector<std::string> m_hostnames;
       std::vector<std::string> m_services;
       std::vector<std::string> m_messages;
-      std::vector<std::optional<size_t>> m_max_body_sizes;
+      std::vector<std::chrono::milliseconds> m_timeouts;
+      std::vector<size_t> m_max_body_sizes;
+      std::chrono::milliseconds m_delay{0};
       size_t m_call_count = 0;
 };
 
@@ -103,7 +118,7 @@ inline std::chrono::milliseconds parse_test_timeout() {
 }
 
 Botan::HTTP::Response parse_via_socket(std::string raw,
-                                       std::optional<size_t> max_body_size = std::nullopt,
+                                       size_t max_body_size = Botan::HTTP::RequestLimits().max_body_size(),
                                        size_t chunk_size = 64 * 1024) {
    MockSocket socket(std::move(raw), chunk_size);
    return Botan::HTTP::read_response_from_socket(socket, parse_test_timeout(), max_body_size);
@@ -306,6 +321,23 @@ class HTTP_Parse_Tests final : public Test {
          return result;
       }
 
+      static Test::Result test_huge_content_length_default_limit() {
+         Test::Result result("HTTP response parser huge Content-Length with default limit");
+         const std::string raw =
+            "HTTP/1.0 200 OK\r\n"
+            "Content-Length: 18446744073709551615\r\n"
+            "\r\n";
+         result.test_throws<Botan::HTTP::HTTP_Error>("huge CL rejected", [&] { (void)parse_via_socket(raw); });
+
+         const std::string over_default =
+            "HTTP/1.0 200 OK\r\n"
+            "Content-Length: 8388609\r\n"
+            "\r\n";
+         result.test_throws<Botan::HTTP::HTTP_Error>("CL just over 8 MiB rejected",
+                                                     [&] { (void)parse_via_socket(over_default); });
+         return result;
+      }
+
       static Test::Result test_body_without_cl_exceeds_max() {
          Test::Result result("HTTP response parser body without CL exceeds max");
          const std::string raw =
@@ -336,6 +368,40 @@ class HTTP_Parse_Tests final : public Test {
          raw.append(20 * 1024, 'a');
          raw += "\r\n\r\n";
          result.test_throws<Botan::HTTP::HTTP_Error>("header section > 16 KB", [&] { (void)parse_via_socket(raw); });
+         return result;
+      }
+
+      static Test::Result test_control_chars_in_value_rejected() {
+         Test::Result result("HTTP response parser rejects control characters in field values");
+
+         const std::vector<std::pair<std::string, std::string>> bad = {
+            {"bare LF", std::string("X-Foo: a\nb")},
+            {"bare CR", std::string("X-Foo: a\rb")},
+            {"NUL", std::string("X-Foo: a\0b", 10)},
+            {"DEL",
+             std::string("X-Foo: a\x7F"
+                         "b")},
+            {"other C0",
+             std::string("X-Foo: a\x01"
+                         "b")},
+            {"escape", std::string("X-Foo: \x1B[2Jb")},
+         };
+
+         for(const auto& [what, line] : bad) {
+            const std::string raw = "HTTP/1.0 200 OK\r\n" + line + "\r\n\r\n";
+            result.test_throws<Botan::HTTP::HTTP_Error>(what, [&] { (void)parse_via_socket(raw); });
+         }
+
+         const std::string status_lf = "HTTP/1.0 200 O\nK\r\n\r\n";
+         result.test_throws<Botan::HTTP::HTTP_Error>("bare LF in status line",
+                                                     [&] { (void)parse_via_socket(status_lf); });
+
+         const std::string ok =
+            "HTTP/1.0 200 OK\r\n"
+            "X-Foo: a\tb \x80\xFF~\r\n"
+            "\r\n";
+         const auto resp = parse_via_socket(ok);
+         result.test_str_eq("HTAB, SP and obs-text accepted", resp.headers().at("X-Foo"), "a\tb \x80\xFF~");
          return result;
       }
 
@@ -388,7 +454,7 @@ class HTTP_Parse_Tests final : public Test {
             "\r\n"
             "hello";
          MockSocket socket(raw, 1);  // worst-case chunking
-         const auto resp = Botan::HTTP::read_response_from_socket(socket, parse_test_timeout(), std::nullopt);
+         const auto resp = Botan::HTTP::read_response_from_socket(socket, parse_test_timeout(), 1024);
          result.test_u32_eq("status code", resp.status_code(), 200);
          result.test_str_eq("body", body_as_string(resp), "hello");
          result.test_str_eq("Server header", resp.headers().find("Server")->second, "tiny");
@@ -404,7 +470,7 @@ class HTTP_Parse_Tests final : public Test {
             "abc";
          // Choose a chunk size that places the "\r\n\r\n" boundary across two reads.
          MockSocket socket(raw, 19);
-         const auto resp = Botan::HTTP::read_response_from_socket(socket, parse_test_timeout(), std::nullopt);
+         const auto resp = Botan::HTTP::read_response_from_socket(socket, parse_test_timeout(), 1024);
          result.test_str_eq("body", body_as_string(resp), "abc");
          return result;
       }
@@ -439,8 +505,10 @@ class HTTP_Parse_Tests final : public Test {
             test_duplicate_header_rejected(),
             test_empty_header_name_rejected(),
             test_invalid_header_name_char_rejected(),
+            test_control_chars_in_value_rejected(),
             test_content_length_mismatch(),
             test_content_length_exceeds_max(),
+            test_huge_content_length_default_limit(),
             test_body_without_cl_exceeds_max(),
             test_body_within_max(),
             test_header_lookup_is_case_insensitive(),
@@ -565,8 +633,44 @@ class HTTP_Request_Tests final : public Test {
          const auto uri = Botan::URI::from_string("http://example.com/").value();
          (void)Botan::HTTP::http_sync(
             mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits().set_max_body_size(8192));
-         result.test_is_true("max_body_size present", mock.max_body_size(0).has_value());
-         result.test_sz_eq("max_body_size value", *mock.max_body_size(0), 8192);
+         result.test_sz_eq("max_body_size value", mock.max_body_size(0), 8192);
+         return result;
+      }
+
+      static Test::Result test_default_max_body_size() {
+         Test::Result result("HTTP max_body_size defaults to 8 MiB");
+         MockServer mock({make_response(200)});
+         const auto uri = Botan::URI::from_string("http://example.com/").value();
+         (void)Botan::HTTP::http_sync(mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits());
+         result.test_sz_eq("max_body_size value", mock.max_body_size(0), 8 * 1024 * 1024);
+         return result;
+      }
+
+      static Test::Result test_timeout_propagated() {
+         Test::Result result("HTTP timeout reaches the transact callback");
+         MockServer mock({make_response(200)});
+         const auto uri = Botan::URI::from_string("http://example.com/").value();
+         const auto timeout = std::chrono::milliseconds(60000);
+         (void)Botan::HTTP::http_sync(
+            mock.as_exch_fn(), "GET", uri, "", {}, Botan::HTTP::RequestLimits().set_timeout(timeout));
+         result.test_is_true("timeout positive", mock.timeout(0) > std::chrono::milliseconds::zero());
+         result.test_is_true("timeout at most configured", mock.timeout(0) <= timeout);
+         return result;
+      }
+
+      static Test::Result test_zero_timeout_rejected() {
+         Test::Result result("HTTP zero timeout fails before connecting");
+         MockServer mock({make_response(200)});
+         const auto uri = Botan::URI::from_string("http://example.com/").value();
+         result.test_throws<Botan::HTTP::HTTP_Error>("zero timeout", [&] {
+            (void)Botan::HTTP::http_sync(mock.as_exch_fn(),
+                                         "GET",
+                                         uri,
+                                         "",
+                                         {},
+                                         Botan::HTTP::RequestLimits().set_timeout(std::chrono::milliseconds(0)));
+         });
+         result.test_sz_eq("never called", mock.calls(), 0);
          return result;
       }
 
@@ -581,6 +685,9 @@ class HTTP_Request_Tests final : public Test {
             test_ipv6_host_header_bracketed(),
             test_https_scheme_rejected(),
             test_max_body_size_propagated(),
+            test_default_max_body_size(),
+            test_timeout_propagated(),
+            test_zero_timeout_rejected(),
          };
       }
 };
@@ -786,10 +893,53 @@ class HTTP_Redirect_Tests final : public Test {
          return result;
       }
 
+      static Test::Result test_redirects_share_one_deadline() {
+         Test::Result result("HTTP redirects share the caller's deadline");
+         MockServer mock({
+            make_response(301, "Moved", {{"Location", "http://other.example/1"}}),
+            make_response(301, "Moved", {{"Location", "http://other.example/2"}}),
+            make_response(200, "OK"),
+         });
+         const auto delay = std::chrono::milliseconds(20);
+         mock.set_delay(delay);
+         const auto uri = Botan::URI::from_string("http://example.com/").value();
+         const auto limits =
+            Botan::HTTP::RequestLimits().set_max_redirects(5).set_timeout(std::chrono::milliseconds(60000));
+
+         const auto resp = Botan::HTTP::http_sync(mock.as_exch_fn(), "GET", uri, "", {}, limits);
+         result.test_u32_eq("final status", resp.status_code(), 200);
+         result.test_sz_eq("all hops attempted", mock.calls(), 3);
+         // Each hop spins for at least `delay`, so the next hop's budget must shrink by at least that much
+         result.test_is_true("second hop budget reduced", mock.timeout(1) <= mock.timeout(0) - delay);
+         result.test_is_true("third hop budget reduced", mock.timeout(2) <= mock.timeout(1) - delay);
+         return result;
+      }
+
+      static Test::Result test_redirect_after_deadline_not_attempted() {
+         Test::Result result("HTTP redirect is not followed once the deadline has passed");
+         MockServer mock({
+            make_response(301, "Moved", {{"Location", "http://other.example/1"}}),
+            make_response(200, "OK"),
+         });
+         // The first hop spins for the entire budget, so the deadline has passed when it returns
+         const auto timeout = std::chrono::milliseconds(100);
+         mock.set_delay(timeout);
+         const auto uri = Botan::URI::from_string("http://example.com/").value();
+         const auto limits = Botan::HTTP::RequestLimits().set_max_redirects(5).set_timeout(timeout);
+
+         result.test_throws<Botan::HTTP::HTTP_Error>("redirect chain exceeds total timeout", [&] {
+            (void)Botan::HTTP::http_sync(mock.as_exch_fn(), "GET", uri, "", {}, limits);
+         });
+         result.test_sz_eq("second hop never attempted", mock.calls(), 1);
+         return result;
+      }
+
    public:
       std::vector<Test::Result> run() override {
          return {
             test_redirects_disabled_by_default(),
+            test_redirects_share_one_deadline(),
+            test_redirect_after_deadline_not_attempted(),
             test_301_preserves_method_for_get(),
             test_303_post_downgrades_to_get(),
             test_307_post_preserves_method_and_body(),
