@@ -1163,6 +1163,107 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertFalse(int04_1.is_revoked(rootcrl))
         self.assertTrue(end21.is_revoked(int21crl))
 
+    def test_x509_generic_values(self):
+        vt = botan.X509ValueType
+        cert = botan.X509Cert(filename=test_data("src/tests/data/x509/ecc/isrg-root-x2.pem"))
+        crl = botan.X509CRL(filename=test_data("src/tests/data/x509/nist/root.crl"))
+
+        if not library_at_least(3, 11):
+            # The generic getters were added to the FFI in Botan 3.11
+            for getter in [cert.binary_values, cert.string_values, crl.binary_values, crl.string_values]:
+                with self.assertRaises(botan.BotanFunctionUnavailable):
+                    getter(vt.DER_ENCODING)
+            return
+
+        # Singleton values of a self-signed root certificate
+        self.assertEqual(cert.binary_values(vt.SERIAL_NUMBER), [cert.serial_number()])
+        self.assertEqual(hex_encode(cert.binary_values(vt.SERIAL_NUMBER)[0]), "41d29dd172eaeea780c12c6ce92f8752")
+        self.assertEqual(cert.binary_values(vt.SUBJECT_KEY_IDENTIFIER), [cert.subject_key_id()])
+        self.assertEqual(cert.binary_values(vt.AUTHORITY_KEY_IDENTIFIER), [])
+
+        [subject_dn] = cert.binary_values(vt.SUBJECT_DN_BITS)
+        self.assertEqual(len(subject_dn), 81)
+        self.assertEqual(subject_dn[0], 0x30)
+        self.assertEqual(cert.binary_values(vt.ISSUER_DN_BITS), [subject_dn])
+
+        # The "PKCS#8" value is the SubjectPublicKeyInfo, i.e. the public key bits in a SEQUENCE
+        self.assertEqual(cert.binary_values(vt.PUBLIC_KEY_PKCS8_BITS), [b"\x30\x76" + cert.subject_public_key_bits()])
+
+        # TBS data, signature algorithm and signature tile the DER encoding
+        [tbs] = cert.binary_values(vt.TBS_DATA_BITS)
+        [sig_scheme] = cert.binary_values(vt.SIGNATURE_SCHEME_BITS)
+        [sig] = cert.binary_values(vt.SIGNATURE_BITS)
+        [der] = cert.binary_values(vt.DER_ENCODING)
+        self.assertEqual(hex_encode(sig_scheme), "300a06082a8648ce3d040303") # ecdsa-with-SHA384
+        self.assertEqual(len(der), 543)
+        self.assertEqual(der[4:4 + len(tbs)], tbs)
+        self.assertEqual(der[4 + len(tbs):4 + len(tbs) + len(sig_scheme)], sig_scheme)
+        self.assertTrue(der.endswith(sig))
+        self.assertEqual(4 + len(tbs) + len(sig_scheme) + 3 + len(sig), len(der))
+
+        # The PEM encoding matches the input file and decodes to the DER encoding
+        [pem] = cert.string_values(vt.PEM_ENCODING)
+        with open(test_data("src/tests/data/x509/ecc/isrg-root-x2.pem"), encoding='utf8') as pem_file:
+            self.assertEqual(pem, pem_file.read())
+        self.assertEqual(binascii.a2b_base64(''.join(pem.splitlines()[1:-1])), der)
+        self.assertEqual(botan.X509Cert(buf=pem.encode()).fingerprint(), cert.fingerprint())
+
+        # Values that are not available in the requested form, or not present at all
+        self.assertEqual(cert.string_values(vt.SERIAL_NUMBER), [])
+        self.assertEqual(cert.binary_values(vt.PEM_ENCODING), [])
+        for url_type in [vt.CRL_DISTRIBUTION_URLS, vt.OCSP_RESPONDER_URLS, vt.CA_ISSUERS_URLS]:
+            self.assertEqual(cert.string_values(url_type), [])
+            self.assertEqual(cert.binary_values(url_type), [])
+
+        # Multi-valued URL lists
+        aia = botan.X509Cert(filename=test_data("src/tests/data/x509/misc/contains_authority_info_access.pem"))
+        self.assertEqual(aia.string_values(vt.CRL_DISTRIBUTION_URLS), ["http://gp.symcb.com/gp.crl"])
+        self.assertEqual(aia.string_values(vt.OCSP_RESPONDER_URLS), ["http://gp.symcd.com"])
+        self.assertEqual(aia.string_values(vt.CA_ISSUERS_URLS), ["http://gp.symcb.com/gp.crt"])
+        self.assertEqual(aia.binary_values(vt.CA_ISSUERS_URLS), [])
+
+        aia2 = botan.X509Cert(
+            filename=test_data("src/tests/data/x509/misc/contains_authority_info_access_with_two_ca_issuers.pem"))
+        ldap_dn = "ldap://directory.d-trust.net/CN=Bdrive%20Test%20CA%201-2%202017,O=Bundesdruckerei%20GmbH,C=DE"
+        self.assertEqual(aia2.string_values(vt.CRL_DISTRIBUTION_URLS), [
+            "http://crl.d-trust.net/crl/bdrive_test_ca_1-2_2017.crl",
+            ldap_dn + "?certificaterevocationlist",
+        ])
+        self.assertEqual(aia2.string_values(vt.OCSP_RESPONDER_URLS), ["http://staging.ocsp.d-trust.net"])
+        self.assertEqual(aia2.string_values(vt.CA_ISSUERS_URLS), [
+            "http://www.d-trust.net/cgi-bin/Bdrive_Test_CA_1-2_2017.crt",
+            ldap_dn + "?cACertificate?base?",
+        ])
+
+        # CRL values; SERIAL_NUMBER is the CRL number, in as few bytes as it needs
+        self.assertEqual(crl.binary_values(vt.SERIAL_NUMBER), [b"\x01"])
+        self.assertEqual(hex_encode(crl.binary_values(vt.AUTHORITY_KEY_IDENTIFIER)[0]), "ab9aebf9c2e7548f")
+        [issuer_dn] = crl.binary_values(vt.ISSUER_DN_BITS)
+        self.assertEqual(len(issuer_dn), 96)
+        self.assertEqual(issuer_dn[0], 0x30)
+        for absent in [vt.SUBJECT_DN_BITS, vt.SUBJECT_KEY_IDENTIFIER, vt.PUBLIC_KEY_PKCS8_BITS]:
+            self.assertEqual(crl.binary_values(absent), [])
+        self.assertEqual(hex_encode(crl.binary_values(vt.SIGNATURE_SCHEME_BITS)[0]),
+                         "300d06092a864886f70d0101050500") # sha1WithRSAEncryption
+        [crl_der] = crl.binary_values(vt.DER_ENCODING)
+        self.assertEqual(len(crl_der), 371)
+        [crl_pem] = crl.string_values(vt.PEM_ENCODING)
+        self.assertTrue(crl_pem.startswith("-----BEGIN X509 CRL-----"))
+        self.assertEqual(binascii.a2b_base64(''.join(crl_pem.splitlines()[1:-1])), crl_der)
+        self.assertEqual(len(botan.X509CRL(buf=crl_pem.encode()).revoked()), 1)
+        self.assertEqual(crl.string_values(vt.SERIAL_NUMBER), [])
+        for url_type in [vt.CRL_DISTRIBUTION_URLS, vt.OCSP_RESPONDER_URLS, vt.CA_ISSUERS_URLS]:
+            self.assertEqual(crl.string_values(url_type), [])
+
+        # A CRL without a CRL number or an authority key identifier
+        bare_crl = botan.X509CRL(
+            filename=test_data("src/tests/data/x509/misc/crl_without_nextupdate/valid_forever.crl"))
+        self.assertEqual(bare_crl.binary_values(vt.SERIAL_NUMBER), [])
+        self.assertEqual(bare_crl.binary_values(vt.AUTHORITY_KEY_IDENTIFIER), [])
+        self.assertEqual(hex_encode(bare_crl.binary_values(vt.SIGNATURE_SCHEME_BITS)[0]),
+                         "300a06082a8648ce3d040304") # ecdsa-with-SHA512
+        self.assertEqual(len(bare_crl.binary_values(vt.DER_ENCODING)[0]), 271)
+
     def test_x509_rejects_embedded_nul_strings(self):
         cert = botan.X509Cert(filename=test_data("src/tests/data/x509/ecc/isrg-root-x2.pem"))
 
