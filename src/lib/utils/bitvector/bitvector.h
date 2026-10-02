@@ -1415,13 +1415,13 @@ class Strong_Adapter<T> : public Container_Strong_Adapter_Base<T> {
 
       auto at(size_type i) { return this->get().at(i); }
 
-      auto set(size_type i) { return this->get().set(i); }
+      decltype(auto) set(size_type i) { return this->get().set(i); }
 
-      auto unset(size_type i) { return this->get().unset(i); }
+      decltype(auto) unset(size_type i) { return this->get().unset(i); }
 
-      auto flip(size_type i) { return this->get().flip(i); }
+      decltype(auto) flip(size_type i) { return this->get().flip(i); }
 
-      auto flip() { return this->get().flip(); }
+      decltype(auto) flip() { return this->get().flip(); }
 
       template <typename OutT>
       auto as() const {
