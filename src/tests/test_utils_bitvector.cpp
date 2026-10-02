@@ -13,6 +13,7 @@
    #include <botan/internal/bitvector.h>
    #include <botan/internal/fmt.h>
    #include <algorithm>
+   #include <limits>
    #include <numeric>
    #include <set>
 #endif
@@ -582,6 +583,23 @@ std::vector<Test::Result> test_bitvector_subvector(Botan::RandomNumberGenerator&
                check_bitpattern(result, bv8, 33);
             }),
 
+      CHECK("unaligned copy at the exact end of the buffer",
+            [&](auto& result) {
+               // Regression test: the block-wise processing must not read past
+               // the underlying buffer when the copied range ends exactly at
+               // the buffer's end. Best checked with a sanitizer build.
+               Botan::bitvector bv1(64);
+               make_bitpattern(bv1);
+
+               auto bv2 = bv1.subvector(3, 61);
+               result.test_sz_eq("size is as requested", bv2.size(), size_t(61));
+               check_bitpattern(result, bv2, 3);
+
+               auto bv3 = bv1.subvector(1, 63);
+               result.test_sz_eq("size is as requested", bv3.size(), size_t(63));
+               check_bitpattern(result, bv3, 1);
+            }),
+
       CHECK("byte-aligned unsigned integer subvector",
             [&](auto& result) {
                Botan::bitvector bv1(100);
@@ -878,6 +896,382 @@ std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates(Botan::
                bv.pop_back();
                result.test_sz_eq("hamming weight", bv.hamming_weight(), size_t(34));
                result.test_sz_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
+            }),
+   };
+}
+
+std::vector<Test::Result> test_bitvector_set_range(Botan::RandomNumberGenerator& /*rng*/) {
+   auto check_set_range = [](auto& result, const auto& bitvector, size_t offset, size_t length) {
+      for(size_t i = 0; i < bitvector.size(); ++i) {
+         const bool in_range = (offset <= i && i < offset + length);
+         result.test_bool_eq(Botan::fmt("bit {} is as expected", i), bitvector[i], in_range);
+      }
+   };
+
+   auto check_set_range_in_pattern = [](auto& result, const auto& bitvector, size_t offset, size_t length) {
+      auto next = pattern_generator<3>();
+      for(size_t i = 0; i < bitvector.size(); ++i) {
+         const bool in_range = (offset <= i && i < offset + length);
+         const bool pattern_bit = next();  // must be evaluated unconditionally
+         result.test_bool_eq(Botan::fmt("bit {} is as expected", i), bitvector[i], in_range || pattern_bit);
+      }
+   };
+
+   auto make_bitpattern = [](auto& bitvector) {
+      auto next = pattern_generator<3>();
+      for(auto& i : bitvector) {
+         i = next();
+      }
+   };
+
+   return {
+      CHECK("set_range with zero length is a no-op",
+            [&](auto& result) {
+               Botan::bitvector bv(100);
+               make_bitpattern(bv);
+               const auto before = bv;
+
+               result.test_no_throw("empty range at the beginning", [&] { bv.set_range(0, 0); });
+               result.test_no_throw("empty range in the middle", [&] { bv.set_range(50, 0); });
+               result.test_no_throw("empty range at the end", [&] { bv.set_range(100, 0); });
+               result.test_is_true("bitvector was not modified", bv.equals(before));
+            }),
+
+      CHECK("set_range on empty bitvector",
+            [](auto& result) {
+               Botan::bitvector bv;
+               result.test_no_throw("empty range", [&] { bv.set_range(0, 0); });
+               result.template test_throws<Botan::Invalid_Argument>("non-empty range", [&] { bv.set_range(0, 1); });
+            }),
+
+      CHECK("byte-aligned set_range",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               bv1.set_range(8, 16);
+               check_set_range(result, bv1, 8, 16);
+
+               Botan::bitvector bv2(100);
+               bv2.set_range(16, 64);
+               check_set_range(result, bv2, 16, 64);
+
+               Botan::bitvector bv3(100);
+               bv3.set_range(0, 8);
+               check_set_range(result, bv3, 0, 8);
+
+               Botan::bitvector bv4(100);
+               bv4.set_range(96, 4);
+               check_set_range(result, bv4, 96, 4);
+            }),
+
+      CHECK("unaligned set_range",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               bv1.set_range(3, 5);
+               check_set_range(result, bv1, 3, 5);
+
+               Botan::bitvector bv2(100);
+               bv2.set_range(13, 47);
+               check_set_range(result, bv2, 13, 47);
+
+               Botan::bitvector bv3(100);
+               bv3.set_range(1, 99);
+               check_set_range(result, bv3, 1, 99);
+
+               Botan::bitvector bv4(100);
+               bv4.set_range(99, 1);
+               check_set_range(result, bv4, 99, 1);
+            }),
+
+      CHECK("set_range over the entire bitvector",
+            [&](auto& result) {
+               Botan::bitvector bv(100);
+               bv.set_range(0, 100);
+               result.test_is_true("all bits are set", bv.all_vartime());
+               result.test_sz_eq("hamming weight is 100", bv.hamming_weight(), size_t(100));
+            }),
+
+      CHECK("set_range spanning many blocks",
+            [&](auto& result) {
+               Botan::bitvector bv1(1000);
+               bv1.set_range(0, 1000);
+               result.test_is_true("all bits are set", bv1.all_vartime());
+
+               Botan::bitvector bv2(1000);
+               bv2.set_range(64, 512);
+               check_set_range(result, bv2, 64, 512);
+
+               Botan::bitvector bv3(1000);
+               bv3.set_range(7, 913);
+               check_set_range(result, bv3, 7, 913);
+            }),
+
+      CHECK("set_range at the exact end of the buffer",
+            [&](auto& result) {
+               // Regression test: the block-wise processing must not read or
+               // write past the underlying buffer when a range ends exactly at
+               // the buffer's end. Best checked with a sanitizer build.
+               Botan::bitvector bv16(16);
+               bv16.set_range(0, 16);
+               result.test_is_true("all bits set (16 bits)", bv16.all_vartime());
+
+               Botan::bitvector bv32(32);
+               bv32.set_range(0, 32);
+               result.test_is_true("all bits set (32 bits)", bv32.all_vartime());
+
+               Botan::bitvector bv64(64);
+               bv64.set_range(0, 64);
+               result.test_is_true("all bits set (64 bits)", bv64.all_vartime());
+
+               Botan::bitvector bv128(128);
+               bv128.set_range(64, 64);
+               check_set_range(result, bv128, 64, 64);
+
+               Botan::bitvector bvu1(64);
+               bvu1.set_range(3, 61);
+               check_set_range(result, bvu1, 3, 61);
+
+               Botan::bitvector bvu2(64);
+               bvu2.set_range(0, 61);
+               check_set_range(result, bvu2, 0, 61);
+
+               Botan::bitvector bvu3(32);
+               bvu3.set_range(5, 27);
+               check_set_range(result, bvu3, 5, 27);
+            }),
+
+      CHECK("set_range preserves bits outside the range",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               make_bitpattern(bv1);
+               bv1.set_range(16, 32);
+               check_set_range_in_pattern(result, bv1, 16, 32);
+
+               Botan::bitvector bv2(100);
+               make_bitpattern(bv2);
+               bv2.set_range(19, 43);
+               check_set_range_in_pattern(result, bv2, 19, 43);
+
+               Botan::bitvector bv3(100);
+               make_bitpattern(bv3);
+               bv3.set_range(1, 98);
+               check_set_range_in_pattern(result, bv3, 1, 98);
+            }),
+
+      CHECK(
+         "set_range validates its arguments",
+         [&](auto& result) {
+            Botan::bitvector bv(100);
+            make_bitpattern(bv);
+            const auto before = bv;
+
+            result.template test_throws<Botan::Invalid_Argument>("offset out of range", [&] { bv.set_range(101, 0); });
+            result.template test_throws<Botan::Invalid_Argument>("range end out of range",
+                                                                 [&] { bv.set_range(100, 1); });
+            result.template test_throws<Botan::Invalid_Argument>("length out of range", [&] { bv.set_range(0, 101); });
+            result.template test_throws<Botan::Invalid_Argument>("offset + length out of range",
+                                                                 [&] { bv.set_range(90, 11); });
+            result.template test_throws<Botan::Invalid_Argument>(
+               "offset + length overflowing", [&] { bv.set_range(1, std::numeric_limits<size_t>::max()); });
+
+            result.test_is_true("bitvector was not modified", bv.equals(before));
+         }),
+   };
+}
+
+std::vector<Test::Result> test_bitvector_unset_range(Botan::RandomNumberGenerator& /*rng*/) {
+   auto check_unset_range = [](auto& result, const auto& bitvector, size_t offset, size_t length) {
+      for(size_t i = 0; i < bitvector.size(); ++i) {
+         const bool in_range = (offset <= i && i < offset + length);
+         result.test_bool_eq(Botan::fmt("bit {} is as expected", i), bitvector[i], !in_range);
+      }
+   };
+
+   auto check_unset_range_in_pattern = [](auto& result, const auto& bitvector, size_t offset, size_t length) {
+      auto next = pattern_generator<3>();
+      for(size_t i = 0; i < bitvector.size(); ++i) {
+         const bool in_range = (offset <= i && i < offset + length);
+         const bool pattern_bit = next();  // must be evaluated unconditionally
+         result.test_bool_eq(Botan::fmt("bit {} is as expected", i), bitvector[i], !in_range && pattern_bit);
+      }
+   };
+
+   auto make_bitpattern = [](auto& bitvector) {
+      auto next = pattern_generator<3>();
+      for(auto& i : bitvector) {
+         i = next();
+      }
+   };
+
+   return {
+      CHECK("unset_range with zero length is a no-op",
+            [&](auto& result) {
+               Botan::bitvector bv(100);
+               make_bitpattern(bv);
+               const auto before = bv;
+
+               result.test_no_throw("empty range at the beginning", [&] { bv.unset_range(0, 0); });
+               result.test_no_throw("empty range in the middle", [&] { bv.unset_range(50, 0); });
+               result.test_no_throw("empty range at the end", [&] { bv.unset_range(100, 0); });
+               result.test_is_true("bitvector was not modified", bv.equals(before));
+            }),
+
+      CHECK("unset_range on empty bitvector",
+            [](auto& result) {
+               Botan::bitvector bv;
+               result.test_no_throw("empty range", [&] { bv.unset_range(0, 0); });
+               result.template test_throws<Botan::Invalid_Argument>("non-empty range", [&] { bv.unset_range(0, 1); });
+            }),
+
+      CHECK("byte-aligned unset_range",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               bv1.set();
+               bv1.unset_range(8, 16);
+               check_unset_range(result, bv1, 8, 16);
+
+               Botan::bitvector bv2(100);
+               bv2.set();
+               bv2.unset_range(16, 64);
+               check_unset_range(result, bv2, 16, 64);
+
+               Botan::bitvector bv3(100);
+               bv3.set();
+               bv3.unset_range(0, 8);
+               check_unset_range(result, bv3, 0, 8);
+
+               Botan::bitvector bv4(100);
+               bv4.set();
+               bv4.unset_range(96, 4);
+               check_unset_range(result, bv4, 96, 4);
+            }),
+
+      CHECK("unaligned unset_range",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               bv1.set();
+               bv1.unset_range(3, 5);
+               check_unset_range(result, bv1, 3, 5);
+
+               Botan::bitvector bv2(100);
+               bv2.set();
+               bv2.unset_range(13, 47);
+               check_unset_range(result, bv2, 13, 47);
+
+               Botan::bitvector bv3(100);
+               bv3.set();
+               bv3.unset_range(1, 99);
+               check_unset_range(result, bv3, 1, 99);
+
+               Botan::bitvector bv4(100);
+               bv4.set();
+               bv4.unset_range(99, 1);
+               check_unset_range(result, bv4, 99, 1);
+            }),
+
+      CHECK("unset_range over the entire bitvector",
+            [&](auto& result) {
+               Botan::bitvector bv(100);
+               bv.set();
+               bv.unset_range(0, 100);
+               result.test_is_true("no bits are set", bv.none_vartime());
+               result.test_sz_eq("hamming weight is 0", bv.hamming_weight(), size_t(0));
+            }),
+
+      CHECK("unset_range spanning many blocks",
+            [&](auto& result) {
+               Botan::bitvector bv1(1000);
+               bv1.set();
+               bv1.unset_range(0, 1000);
+               result.test_is_true("no bits are set", bv1.none_vartime());
+
+               Botan::bitvector bv2(1000);
+               bv2.set();
+               bv2.unset_range(64, 512);
+               check_unset_range(result, bv2, 64, 512);
+
+               Botan::bitvector bv3(1000);
+               bv3.set();
+               bv3.unset_range(7, 913);
+               check_unset_range(result, bv3, 7, 913);
+            }),
+
+      CHECK("unset_range at the exact end of the buffer",
+            [&](auto& result) {
+               // Regression test: the block-wise processing must not read or
+               // write past the underlying buffer when a range ends exactly at
+               // the buffer's end. Best checked with a sanitizer build.
+               Botan::bitvector bv16(16);
+               bv16.set();
+               bv16.unset_range(0, 16);
+               result.test_is_true("no bits set (16 bits)", bv16.none_vartime());
+
+               Botan::bitvector bv32(32);
+               bv32.set();
+               bv32.unset_range(0, 32);
+               result.test_is_true("no bits set (32 bits)", bv32.none_vartime());
+
+               Botan::bitvector bv64(64);
+               bv64.set();
+               bv64.unset_range(0, 64);
+               result.test_is_true("no bits set (64 bits)", bv64.none_vartime());
+
+               Botan::bitvector bv128(128);
+               bv128.set();
+               bv128.unset_range(64, 64);
+               check_unset_range(result, bv128, 64, 64);
+
+               Botan::bitvector bvu1(64);
+               bvu1.set();
+               bvu1.unset_range(3, 61);
+               check_unset_range(result, bvu1, 3, 61);
+
+               Botan::bitvector bvu2(64);
+               bvu2.set();
+               bvu2.unset_range(0, 61);
+               check_unset_range(result, bvu2, 0, 61);
+
+               Botan::bitvector bvu3(32);
+               bvu3.set();
+               bvu3.unset_range(5, 27);
+               check_unset_range(result, bvu3, 5, 27);
+            }),
+
+      CHECK("unset_range preserves bits outside the range",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               make_bitpattern(bv1);
+               bv1.unset_range(16, 32);
+               check_unset_range_in_pattern(result, bv1, 16, 32);
+
+               Botan::bitvector bv2(100);
+               make_bitpattern(bv2);
+               bv2.unset_range(19, 43);
+               check_unset_range_in_pattern(result, bv2, 19, 43);
+
+               Botan::bitvector bv3(100);
+               make_bitpattern(bv3);
+               bv3.unset_range(1, 98);
+               check_unset_range_in_pattern(result, bv3, 1, 98);
+            }),
+
+      CHECK("unset_range validates its arguments",
+            [&](auto& result) {
+               Botan::bitvector bv(100);
+               make_bitpattern(bv);
+               const auto before = bv;
+
+               result.template test_throws<Botan::Invalid_Argument>("offset out of range",
+                                                                    [&] { bv.unset_range(101, 0); });
+               result.template test_throws<Botan::Invalid_Argument>("range end out of range",
+                                                                    [&] { bv.unset_range(100, 1); });
+               result.template test_throws<Botan::Invalid_Argument>("length out of range",
+                                                                    [&] { bv.unset_range(0, 101); });
+               result.template test_throws<Botan::Invalid_Argument>("offset + length out of range",
+                                                                    [&] { bv.unset_range(90, 11); });
+               result.template test_throws<Botan::Invalid_Argument>(
+                  "offset + length overflowing", [&] { bv.unset_range(1, std::numeric_limits<size_t>::max()); });
+
+               result.test_is_true("bitvector was not modified", bv.equals(before));
             }),
    };
 }
@@ -1385,6 +1779,8 @@ class BitVector_Tests final : public Test {
             test_bitvector_capacity,
             test_bitvector_subvector,
             test_bitvector_global_modifiers_and_predicates,
+            test_bitvector_set_range,
+            test_bitvector_unset_range,
             test_bitvector_binary_operators,
             test_bitvector_serialization,
             test_bitvector_constant_time_operations,
