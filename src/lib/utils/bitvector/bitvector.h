@@ -655,6 +655,58 @@ class bitvector_base final {
       }
 
       /**
+       * Sets all bits in the range [`offset`, `offset + length`). Bits outside
+       * of this range remain unchanged.
+       *
+       * @param offset  the position of the first bit to be set
+       * @param length  the number of bits to be set
+       * @throws Botan::Invalid_Argument if the range is out of range
+       */
+      bitvector_base& set_range(size_type offset, size_type length) {
+         BOTAN_ARG_CHECK(offset <= size() && length <= size() - offset, "Out of range");
+
+         if(length > 0) {
+            const BitRangeOperator<bitvector_base<AllocatorT>, BitRangeAlignment::no_alignment> op(
+               *this, offset, length);
+            range_operation(
+               []<std::unsigned_integral BlockT>(BlockT block, BlockT mask) -> BlockT {
+                  // Note: Bits outside of `mask` (i.e. before/after the range
+                  //       in the first/last block) must remain unchanged.
+                  return static_cast<BlockT>(block | mask);
+               },
+               op);
+         }
+
+         return *this;
+      }
+
+      /**
+       * Unsets all bits in the range [`offset`, `offset + length`). Bits outside
+       * of this range remain unchanged.
+       *
+       * @param offset  the position of the first bit to be unset
+       * @param length  the number of bits to be unset
+       * @throws Botan::Invalid_Argument if the range is out of range
+       */
+      bitvector_base& unset_range(size_type offset, size_type length) {
+         BOTAN_ARG_CHECK(offset <= size() && length <= size() - offset, "Out of range");
+
+         if(length > 0) {
+            const BitRangeOperator<bitvector_base<AllocatorT>, BitRangeAlignment::no_alignment> op(
+               *this, offset, length);
+            range_operation(
+               []<std::unsigned_integral BlockT>(BlockT block, BlockT mask) -> BlockT {
+                  // Note: Bits outside of `mask` (i.e. before/after the range
+                  //       in the first/last block) must remain unchanged.
+                  return static_cast<BlockT>(block & static_cast<BlockT>(~mask));
+               },
+               op);
+         }
+
+         return *this;
+      }
+
+      /**
        * Unsets the bit at position @p pos.
        * @throws Botan::Invalid_Argument if @p pos is out of range
        */
@@ -1431,6 +1483,10 @@ class Strong_Adapter<T> : public Container_Strong_Adapter_Base<T> {
       auto at(size_type i) { return this->get().at(i); }
 
       decltype(auto) set(size_type i) { return this->get().set(i); }
+
+      decltype(auto) set_range(size_type offset, size_type length) { return this->get().set_range(offset, length); }
+
+      decltype(auto) unset_range(size_type offset, size_type length) { return this->get().unset_range(offset, length); }
 
       decltype(auto) unset(size_type i) { return this->get().unset(i); }
 
