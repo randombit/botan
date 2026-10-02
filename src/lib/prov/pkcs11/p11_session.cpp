@@ -56,7 +56,11 @@ SessionHandle Session::release() {
 
 void Session::login(UserType user_type, const secure_string& pin) {
    module()->C_Login(m_handle, user_type, pin);
-   m_logged_in = true;
+   // A context specific login only authorizes the next operation, and
+   // logging out would end the token wide login of the user
+   if(user_type != UserType::ContextSpecific) {
+      m_logged_in = true;
+   }
 }
 
 void Session::logoff() {

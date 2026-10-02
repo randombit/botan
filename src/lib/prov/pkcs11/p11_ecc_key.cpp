@@ -12,9 +12,10 @@
 
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
 
+   #include <botan/assert.h>
    #include <botan/ber_dec.h>
    #include <botan/internal/ec_key_data.h>
-   #include <botan/internal/scoped_cleanup.h>
+   #include <botan/internal/p11_object_guard.h>
    #include <botan/internal/workfactor.h>
 
 namespace Botan::PKCS11 {
@@ -27,6 +28,13 @@ EC_AffinePoint decode_public_point(const EC_Group& group, std::span<const uint8_
    BER_Decoder(ec_point_data, BER_Decoder::Limits::DER()).decode(ec_point, ASN1_Type::OctetString).verify_end();
    // Throws if invalid
    return EC_AffinePoint(group, ec_point);
+}
+
+// Validate before creating the token object, so invalid input leaves nothing behind
+const EC_PrivateKeyImportProperties& check_ec_params(const EC_PrivateKeyImportProperties& props) {
+   const EC_Group group(props.ec_params());
+   BOTAN_UNUSED(group);
+   return props;
 }
 
 }  // namespace
@@ -54,9 +62,11 @@ PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, ObjectHandle handle) 
 
 PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, const EC_PublicKeyImportProperties& props) :
       Object(session, props) {
+   Object_Creation_Guard guard(session, {handle()});
    EC_Group group(props.ec_params());
    auto pt = decode_public_point(group, props.ec_point());
    m_public_key = std::make_shared<EC_PublicKey_Data>(std::move(group), std::move(pt));
+   guard.release();
 }
 
 EC_PrivateKeyImportProperties::EC_PrivateKeyImportProperties(const std::vector<uint8_t>& ec_params,
@@ -70,7 +80,7 @@ PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, ObjectHandle handle
       Object(session, handle), m_domain_params(get_attribute_value(AttributeType::EcParams)) {}
 
 PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, const EC_PrivateKeyImportProperties& props) :
-      Object(session, props), m_domain_params(EC_Group(props.ec_params())) {}
+      Object(session, check_ec_params(props)), m_domain_params(EC_Group(props.ec_params())) {}
 
 PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session,
                                            const std::vector<uint8_t>& ec_params,
@@ -93,17 +103,16 @@ PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session,
                                        &pub_key_handle,
                                        &priv_key_handle);
 
+   // The public key object is only needed temporarily
+   const Object_Creation_Guard destroy_public(session, {pub_key_handle});
+   Object_Creation_Guard guard(session, {priv_key_handle});
+
    this->reset_handle(priv_key_handle);
    const Object public_key(session, pub_key_handle);
-   auto destroy_public = scoped_cleanup([&]() noexcept {
-      try {
-         public_key.destroy();
-      } catch(...) {  // NOLINT(*-empty-catch)
-      }
-   });
 
    auto pt_bytes = public_key.get_attribute_value(AttributeType::EcPoint);
    m_public_key = decode_public_point(m_domain_params, pt_bytes);
+   guard.release();
 }
 
 size_t PKCS11_EC_PrivateKey::key_length() const {
@@ -111,8 +120,8 @@ size_t PKCS11_EC_PrivateKey::key_length() const {
 }
 
 std::vector<uint8_t> PKCS11_EC_PrivateKey::raw_public_key_bits() const {
-   // It seems odd that this serializes compressed without ability to control
-   return public_ec_point().serialize_compressed();
+   // Matches the default of software EC keys, and public_value() for ECDH
+   return public_ec_point().serialize_uncompressed();
 }
 
 std::vector<uint8_t> PKCS11_EC_PrivateKey::public_key_bits() const {

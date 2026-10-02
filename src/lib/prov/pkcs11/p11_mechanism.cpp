@@ -18,17 +18,17 @@
 namespace Botan::PKCS11 {
 
 namespace {
-using PSS_Params = std::tuple<size_t, MechanismType, MGF>;
+using PKCS11_PSS_Params = std::tuple<size_t, MechanismType, MGF>;
 
 // maps a PSS mechanism type to the number of bytes used for the salt, the mechanism type of the underlying hash algorithm and the MGF
-const std::map<MechanismType, PSS_Params>& PssOptions() {
-   static const std::map<MechanismType, PSS_Params> pss_options = {
-      {MechanismType::RsaPkcsPss, PSS_Params(0, MechanismType::Sha1, MGF::Mgf1Sha1)},
-      {MechanismType::Sha1RsaPkcsPss, PSS_Params(20, MechanismType::Sha1, MGF::Mgf1Sha1)},
-      {MechanismType::Sha224RsaPkcsPss, PSS_Params(28, MechanismType::Sha224, MGF::Mgf1Sha224)},
-      {MechanismType::Sha256RsaPkcsPss, PSS_Params(32, MechanismType::Sha256, MGF::Mgf1Sha256)},
-      {MechanismType::Sha384RsaPkcsPss, PSS_Params(48, MechanismType::Sha384, MGF::Mgf1Sha384)},
-      {MechanismType::Sha512RsaPkcsPss, PSS_Params(64, MechanismType::Sha512, MGF::Mgf1Sha512)}};
+const std::map<MechanismType, PKCS11_PSS_Params>& PssOptions() {
+   static const std::map<MechanismType, PKCS11_PSS_Params> pss_options = {
+      {MechanismType::RsaPkcsPss, PKCS11_PSS_Params(0, MechanismType::Sha1, MGF::Mgf1Sha1)},
+      {MechanismType::Sha1RsaPkcsPss, PKCS11_PSS_Params(20, MechanismType::Sha1, MGF::Mgf1Sha1)},
+      {MechanismType::Sha224RsaPkcsPss, PKCS11_PSS_Params(28, MechanismType::Sha224, MGF::Mgf1Sha224)},
+      {MechanismType::Sha256RsaPkcsPss, PKCS11_PSS_Params(32, MechanismType::Sha256, MGF::Mgf1Sha256)},
+      {MechanismType::Sha384RsaPkcsPss, PKCS11_PSS_Params(48, MechanismType::Sha384, MGF::Mgf1Sha384)},
+      {MechanismType::Sha512RsaPkcsPss, PKCS11_PSS_Params(64, MechanismType::Sha512, MGF::Mgf1Sha512)}};
 
    return pss_options;
 }

@@ -10,7 +10,20 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 
+   #include <botan/assert.h>
+
 namespace Botan::PKCS11 {
+
+namespace {
+
+// Parse before creating the token object, so invalid input leaves nothing behind
+const X509_CertificateProperties& check_certificate(const X509_CertificateProperties& props) {
+   const X509_Certificate cert(props.value());
+   BOTAN_UNUSED(cert);
+   return props;
+}
+
+}  // namespace
 
 const X509_Certificate& PKCS11_X509_Certificate::certificate() const {
    // TODO(Botan4) this should instead return a ref to a member variable
@@ -28,7 +41,7 @@ PKCS11_X509_Certificate::PKCS11_X509_Certificate(Session& session, ObjectHandle 
       Object(session, handle), X509_Certificate(unlock(get_attribute_value(AttributeType::Value))) {}
 
 PKCS11_X509_Certificate::PKCS11_X509_Certificate(Session& session, const X509_CertificateProperties& props) :
-      Object(session, props), X509_Certificate(props.value()) {}
+      Object(session, check_certificate(props)), X509_Certificate(props.value()) {}
 
 }  // namespace Botan::PKCS11
 

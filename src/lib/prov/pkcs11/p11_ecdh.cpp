@@ -16,8 +16,13 @@
    #include <botan/pk_ops.h>
    #include <botan/pk_options_readers.h>
    #include <botan/rng.h>
+   #include <botan/internal/p11_object_guard.h>
    #include <botan/internal/pk_options_impl.h>
    #include <botan/internal/scoped_cleanup.h>
+
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
+      #include <botan/ec_point.h>
+   #endif
 
 namespace Botan::PKCS11 {
 
@@ -59,6 +64,22 @@ class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement {
          }
          if(peer_point->is_identity()) {
             throw Decoding_Error("ECDH - Invalid elliptic curve point: identity");
+         }
+
+         /*
+         * CKM_ECDH1_DERIVE does not clear the cofactor, so a point with a small
+         * order component would reveal the private scalar modulo that order.
+         * CKM_ECDH1_COFACTOR_DERIVE is not an alternative, since it computes a
+         * different value than ECDH in software does.
+         */
+         if(m_key.domain().has_cofactor()) {
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
+            if(!(m_key.domain().get_order() * peer_point->to_legacy_point()).is_zero()) {
+               throw Decoding_Error("ECDH - Invalid elliptic curve point: not in the prime order subgroup");
+            }
+   #else
+            throw Not_Implemented("PKCS#11 ECDH with a cofactor is not available in this build configuration");
+   #endif
          }
 
          std::vector<uint8_t> der_encoded_other_key;
@@ -170,8 +191,16 @@ PKCS11_ECDH_KeyPair generate_ecdh_keypair(Session& session,
                                        &pub_key_handle,
                                        &priv_key_handle);
 
-   return std::make_pair(PKCS11_ECDH_PublicKey(session, pub_key_handle),
-                         PKCS11_ECDH_PrivateKey(session, priv_key_handle));
+   Object_Creation_Guard guard(session, {pub_key_handle, priv_key_handle});
+   PKCS11_ECDH_PublicKey public_key(session, pub_key_handle);  // NOLINT(*-const-correctness) clang-tidy bug
+   PKCS11_ECDH_PrivateKey private_key(session, priv_key_handle);
+   // The private key object does not include the public point. Rebind it to
+   // the private key's domain since unregistered explicit groups are decoded
+   // independently for the two token objects.
+   const EC_AffinePoint public_point(private_key.domain(), public_key.raw_public_key_bits());
+   private_key.set_public_point(public_point, private_key.point_encoding());
+   guard.release();
+   return std::make_pair(std::move(public_key), std::move(private_key));
 }
 
 }  // namespace Botan::PKCS11

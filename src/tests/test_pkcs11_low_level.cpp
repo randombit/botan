@@ -396,7 +396,14 @@ Test::Result test_c_init_token() {
       std::ref(label_view),
       std::placeholders::_1);
 
-   return test_function("C_InitToken", sec_vec_binder);
+   Test::Result result = test_function("C_InitToken", sec_vec_binder);
+
+   const std::string long_label(33, 'L');
+   result.test_throws<Botan::Invalid_Argument>("C_InitToken rejects labels longer than 32 bytes", [&]() {
+      p11_low_level.get()->C_InitToken(slot_vec.at(0), SO_PIN(), long_label);
+   });
+
+   return result;
 }
 
 Test::Result test_open_close_session() {
