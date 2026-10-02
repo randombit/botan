@@ -43,6 +43,15 @@ std::vector<Test::Result> test_buffer_slicer() {
                result.test_sz_eq("non-empty slicer has remaining bytes", s.remaining(), buffer.size());
                result.test_is_true("non-empty slicer is not empty()", !s.empty());
 
+               const auto peeked = s.peek(5);
+               result.require("has 5 bytes", peeked.size() == 5);
+               result.test_u8_eq("peeked hello", peeked[0], uint8_t('h'));
+               result.test_u8_eq("peeked hello", peeked[1], uint8_t('e'));
+               result.test_u8_eq("peeked hello", peeked[2], uint8_t('l'));
+               result.test_u8_eq("peeked hello", peeked[3], uint8_t('l'));
+               result.test_u8_eq("peeked hello", peeked[4], uint8_t('o'));
+               result.test_sz_eq("no bytes consumed", s.remaining(), buffer.size());
+
                const auto hello = s.take(5);
                result.require("has 5 bytes", hello.size() == 5);
                result.test_u8_eq("took hello", hello[0], uint8_t('h'));
