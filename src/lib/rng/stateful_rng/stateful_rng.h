@@ -64,15 +64,18 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       Stateful_RNG() : m_reseed_interval(0) {}
 
       /**
-      * Consume this input and mark the RNG as initialized regardless
-      * of the length of the input or the current seeded state of
-      * the RNG.
+      * Reset the RNG then consume this input as seed material
+      *
+      * The RNG is marked as seeded only if the input is at least
+      * security_level() bits long.
       */
       void initialize_with(std::span<const uint8_t> input);
 
       /**
-      * Consume this input and mark the RNG as initialized regardless
-      * of the length of the input or the current seeded state of the RNG.
+      * Reset the RNG then consume this input as seed material
+      *
+      * The RNG is marked as seeded only if the input is at least
+      * security_level() bits long.
       * @param input the seed material
       * @param length the number of bytes in input
       */

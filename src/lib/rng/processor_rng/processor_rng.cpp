@@ -20,30 +20,6 @@ namespace Botan {
 
 namespace {
 
-#if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
-/*
-   * According to Intel, RDRAND is guaranteed to generate a random
-   * number within 10 retries on a working CPU
-   */
-const size_t HWRNG_RETRIES = 10;
-
-#elif defined(BOTAN_TARGET_ARCH_IS_PPC_FAMILY)
-/**
-    * PowerISA 3.0 p.78:
-    *    When the error value is obtained, software is expected to repeat the
-    *    operation. [...] The recommended number of attempts may be
-    *    implementation specific. In the absence of other guidance, ten attempts
-    *    should be adequate.
-    */
-const size_t HWRNG_RETRIES = 10;
-
-#else
-/*
-   * Lacking specific guidance we give the CPU quite a bit of leeway
-   */
-const size_t HWRNG_RETRIES = 512;
-#endif
-
 #if defined(BOTAN_TARGET_ARCH_IS_X86_32)
 typedef uint32_t hwrng_output;
 #else
@@ -63,7 +39,9 @@ hwrng_output BOTAN_FN_ISA_RNG read_hwrng(bool& success) {
    #elif defined(BOTAN_TARGET_ARCH_IS_X86_32)
    cf = _rdrand32_step(&output);
    #else
-   cf = _rdrand64_step(reinterpret_cast<unsigned long long*>(&output));
+   unsigned long long outputll;
+   cf = _rdrand64_step(&outputll);
+   output = static_cast<uint64_t>(outputll);
    #endif
    success = (1 == cf);
 
@@ -94,6 +72,23 @@ hwrng_output BOTAN_FN_ISA_RNG read_hwrng(bool& success) {
 }
 
 hwrng_output read_hwrng() {
+   /*
+   * Intel DRNG Software Implementation Guide, Section 5.2.1
+   *    It is recommended that applications attempt 10 retries in a tight loop
+   *    in the unlikely event that the RDRAND instruction does not return a
+   *    random number. This number is based on a binomial probability argument:
+   *    given the design margins of the DRNG, the odds of ten failures in a row
+   *    are astronomically small and would in fact be an indication of a larger
+   *    CPU issue.
+   *
+   * PowerISA 3.0 p.78:
+   *    When the error value is obtained, software is expected to repeat the
+   *    operation. [...] The recommended number of attempts may be
+   *    implementation specific. In the absence of other guidance, ten attempts
+   *    should be adequate.
+   */
+   constexpr size_t HWRNG_RETRIES = 10;
+
    for(size_t i = 0; i < HWRNG_RETRIES; ++i) {
       bool success = false;
       const hwrng_output output = read_hwrng(success);

@@ -551,6 +551,23 @@ class Stateful_RNG_Tests : public Test {
             result.test_is_true("seeded", rng->is_seeded());
          }
 
+         // the legacy poll with a timeout must not stop early for very large timeouts
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 16, sec_level / 2));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 16, sec_level / 2));
+
+            auto rng = create_rng(nullptr, nullptr, 0);
+            result.test_sz_eq("legacy poll with max timeout polls all sources",
+                              srcs.poll(*rng, sec_level, std::chrono::milliseconds::max()),
+                              sec_level);
+      #if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
+            result.test_sz_eq("legacy poll with expired timeout stops after first source",
+                              srcs.poll(*rng, sec_level, std::chrono::milliseconds(-1)),
+                              sec_level / 2);
+      #endif
+         }
+
          // explicitly reseeding from an uncounted source keeps the RNG seeded
          // but does not reset the reseed interval
          {
@@ -1127,6 +1144,20 @@ class AutoSeeded_RNG_Tests final : public Test {
          }
 
          rng.clear();
+
+         Botan::AutoSeeded_RNG moved_to(std::move(rng));
+         result.test_is_true("moved-to AutoSeeded_RNG works", moved_to.random_vec(16).size() == 16);
+
+         // NOLINTBEGIN(bugprone-use-after-move,clang-analyzer-cplusplus.Move)
+         result.test_is_false("moved-from AutoSeeded_RNG is not seeded", rng.is_seeded());
+         result.test_throws<Botan::Invalid_State>("moved-from AutoSeeded_RNG randomize", [&]() { rng.random_vec(16); });
+         result.test_throws<Botan::Invalid_State>("moved-from AutoSeeded_RNG add_entropy",
+                                                  [&]() { rng.add_entropy(std::vector<uint8_t>(32)); });
+         result.test_throws<Botan::Invalid_State>("moved-from AutoSeeded_RNG name", [&]() { rng.name(); });
+         result.test_throws<Botan::Invalid_State>("moved-from AutoSeeded_RNG clear", [&]() { rng.clear(); });
+         result.test_throws<Botan::Invalid_State>("moved-from AutoSeeded_RNG force_reseed",
+                                                  [&]() { rng.force_reseed(); });
+         // NOLINTEND(bugprone-use-after-move,clang-analyzer-cplusplus.Move)
 
          return result;
       }

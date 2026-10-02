@@ -460,6 +460,19 @@ class FFI_RNG_Test final : public FFI_Test {
             result.test_sz_eq("custom_destroy_cb called", cb_counter, 5);
          }
 
+   #if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_32)
+         botan_rng_t drbg = nullptr;
+         std::vector<uint8_t> drbg_seed(32, 0xAB);
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER,
+                     botan_rng_init_drbg,
+                     (&drbg, "HMAC_DRBG(SHA-256)", drbg_seed.data(), drbg_seed.size() - 1));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_rng_init_drbg, (&drbg, "HMAC_DRBG(SHA-256)", nullptr, 0));
+         if(TEST_FFI_OK(botan_rng_init_drbg, (&drbg, "HMAC_DRBG(SHA-256)", drbg_seed.data(), drbg_seed.size()))) {
+            TEST_FFI_OK(botan_rng_get, (drbg, outbuf.data(), outbuf.size()));
+            TEST_FFI_OK(botan_rng_destroy, (drbg));
+         }
+   #endif
+
    #ifdef BOTAN_HAS_JITTER_RNG
          botan_rng_t jitter_rng;
          if(TEST_FFI_OK(botan_rng_init, (&jitter_rng, "jitter"))) {

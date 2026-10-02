@@ -621,8 +621,14 @@ std::vector<void*> OS::allocate_locked_pages(size_t count) {
 
       std::memset(ptr, 0, 3 * page_size);  // zero data page and both guard pages
 
-      // Attempts to name the data page
-      page_named(ptr, 3 * page_size);
+   #if defined(BOTAN_TARGET_OS_HAS_PRCTL) && defined(PR_SET_VMA) && defined(PR_SET_VMA_ANON_NAME)
+      // Attempt to name the data page
+      static constexpr char page_name[] = "Botan mlock pool";
+      // NOLINTNEXTLINE(*-vararg)
+      const int rc = ::prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, ptr, 3 * page_size, page_name);
+      BOTAN_UNUSED(rc);
+   #endif
+
       // Make guard page preceding the data page
       page_prohibit_access(static_cast<uint8_t*>(ptr));
       // Make guard page following the data page
@@ -683,17 +689,6 @@ void OS::free_locked_pages(const std::vector<void*>& pages) {
       ::VirtualFree(static_cast<uint8_t*>(ptr) - page_size, 0, MEM_RELEASE);
 #endif
    }
-}
-
-void OS::page_named(const void* page, size_t size) {
-#if defined(BOTAN_TARGET_OS_HAS_PRCTL) && defined(PR_SET_VMA) && defined(PR_SET_VMA_ANON_NAME)
-   static constexpr char name[] = "Botan mlock pool";
-   // NOLINTNEXTLINE(*-vararg)
-   const int r = prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, reinterpret_cast<uintptr_t>(page), size, name);
-   BOTAN_UNUSED(r);
-#else
-   BOTAN_UNUSED(page, size);
-#endif
 }
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)

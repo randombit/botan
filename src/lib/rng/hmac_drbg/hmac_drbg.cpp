@@ -122,6 +122,8 @@ void HMAC_DRBG::clear_state() {
 
    std::fill(m_V.begin(), m_V.end(), 0x01);
    m_mac->set_key(std::vector<uint8_t>(m_V.size(), 0x00));
+
+   std::fill(m_T.begin(), m_T.end(), 0x00);
 }
 
 std::string HMAC_DRBG::name() const {
