@@ -24,6 +24,11 @@ Version 3.14.0, Not Yet Released
 * Optimize SLH-DSA, XMSS, HSS-LSM, FrodoKEM, and ML-KEM using parallel hash
   function execution. (GH #5866 #5868 #5870 #5876 #5878)
 
+* Add interoperability between the RFC 3779 ``IPAddressBlocks`` address types
+  and ``IPv4Address``/``IPv6Address``/``IPv4Subnet``/``IPv6Subnet``, and
+  deprecate the parts of the RFC 3779 API which will not survive merging the
+  two sets of types in a future major release.
+
 * Add a certificate cache to the macOS system certificate store, implement
   ``contains()`` directly, and query the keychain by issuer DN and serial
   number instead of scanning all certificates of an issuer. (GH #5541 #5929)

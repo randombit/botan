@@ -86,6 +86,8 @@ std::optional<uint32_t> string_to_ipv4(std::string_view str) {
 
 }  // namespace
 
+IPv4Address::IPv4Address(std::span<const uint8_t, 4> ip) : m_ip(load_be<uint32_t>(ip)) {}
+
 //static
 std::optional<IPv4Address> IPv4Address::from_string(std::string_view str) {
    if(auto ipv4 = string_to_ipv4(str)) {
@@ -196,6 +198,10 @@ std::optional<IPv4Subnet> IPv4Subnet::from_string(std::string_view str) {
 
 bool IPv4Subnet::contains(const IPv4Address& ip) const {
    return (ip & IPv4Address::netmask(m_prefix_length)) == m_address;
+}
+
+IPv4Address IPv4Subnet::last_address() const {
+   return IPv4Address(m_address.address() | ~IPv4Address::netmask(m_prefix_length).address());
 }
 
 std::string IPv4Subnet::to_string() const {

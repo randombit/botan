@@ -246,6 +246,17 @@ release, or where a backwards incompatible change is expected.
   allowed bitlengths of new RSA keys will be restricted to 2048 bits
   or higher, and the bitlength must be a multiple of 1024 bits.
 
+- The RFC 3779 address type ``Cert_Extension::IPAddressBlocks::IPAddress<V>``
+  will become an alias of ``IPv4Address`` or ``IPv6Address``. Use ``to_bytes``
+  in place of the deprecated ``value``, construct it from an ``IPv4Address`` or
+  ``IPv6Address`` rather than from a span of bytes, and use its implicit
+  conversion to ``IPv4Address`` or ``IPv6Address`` rather than relying on any
+  other functionality of the class (such as ``operator+``). Similarly
+  ``IPAddressBlocks::add_address`` taking ``std::array`` arguments is
+  deprecated in favor of the overloads taking ``IPv4Address``,
+  ``IPv6Address``, ``IPv4Subnet``, or ``IPv6Subnet``, and ``IPAddressOrRange``
+  can be constructed directly from these types.
+
 - Currently some public key padding mechanisms can be used with several
   different names. This is deprecated.
   "EMSA_PKCS1", "EMSA-PKCS1-v1_5", "EMSA3": Use "PKCS1v15"

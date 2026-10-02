@@ -10,6 +10,8 @@
 #define BOTAN_X509_EXTENSIONS_H_
 
 #include <botan/bigint.h>
+#include <botan/ipv4_address.h>
+#include <botan/ipv6_address.h>
 #include <botan/pkix_types.h>
 
 #include <array>
@@ -18,6 +20,7 @@
 #include <set>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <variant>
 #include <vector>
 
@@ -930,43 +933,69 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
          IPv6 = 16,
       };
 
+      /**
+      * An IP address of the given version
+      *
+      * In a future major release this will become an alias of IPv4Address or
+      * IPv6Address. Use to_bytes and the conversions to/from IPv4Address and
+      * IPv6Address to write code that works with both.
+      *
+      * TODO(Botan4) remove this type
+      */
       template <Version V>
       class BOTAN_PUBLIC_API(3, 9) IPAddress final {
             static constexpr size_t Length = static_cast<size_t>(V);
 
+            using Address = std::conditional_t<V == Version::IPv4, IPv4Address, IPv6Address>;
+
          public:
+            BOTAN_DEPRECATED("Construct from an IPv4Address or IPv6Address")
             explicit IPAddress(std::span<const uint8_t> v);
 
-            std::array<uint8_t, Length> value() const { return m_value; }
+            /**
+            * Create from an IPv4Address (for IPv4) or IPv6Address (for IPv6)
+            */
+            explicit IPAddress(const Address& addr) : m_value(addr.to_bytes()) {}
+
+            /**
+            * Return the address as bytes, network-byte-order
+            */
+            BOTAN_DEPRECATED("Use to_bytes") std::array<uint8_t, Length> value() const { return m_value; }
+
+            /**
+            * Return the address as bytes, network-byte-order
+            */
+            std::array<uint8_t, Length> to_bytes() const { return m_value; }
+
+            /**
+            * Convert to IPv4Address or IPv6Address
+            */
+            // NOLINTNEXTLINE(*-explicit-conversions)
+            operator Address() const { return Address(m_value); }
 
          private:
             friend class IPAddressBlocks;
             IPAddress() = default;
 
-            void next() {
-               for(auto it = m_value.rbegin(); it != m_value.rend(); it++) {
-                  // we increment the current octet
-                  (*it)++;
-                  // if it did not wrap around we are done, else look at the next octet
-                  if(*it != 0) {
-                     break;
-                  }
-               }
-            }
+            static IPAddress<V> from_bytes(std::span<const uint8_t> v);
 
+            // The next address, wrapping to zero after the maximum value
+            IPAddress<V> successor() const;
+
+            BOTAN_DEPRECATED("Will be removed in a future major release")
             friend IPAddress<V> operator+(IPAddress<V> lhs, size_t rhs) {
                // we only really need to be able to compute +1, so this is fine
                for(size_t i = 0; i < rhs; i++) {
-                  lhs.next();
+                  lhs = lhs.successor();
                }
-               return IPAddress<V>(lhs);
+               return lhs;
             }
 
             friend std::strong_ordering operator<=>(const IPAddress<V> lhs, const IPAddress<V>& rhs) {
                for(size_t i = 0; i < Length; i++) {
-                  if(lhs.value()[i] < rhs.value()[i]) {
+                  if(lhs.m_value[i] < rhs.m_value[i]) {
                      return std::strong_ordering::less;
-                  } else if(lhs.value()[i] > rhs.value()[i]) {
+                  } else if(lhs.m_value[i] > rhs.m_value[i]) {
                      return std::strong_ordering::greater;
                   }
                }
@@ -974,14 +1003,20 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
             }
 
             friend bool operator==(const IPAddress<V>& lhs, const IPAddress<V>& rhs) {
-               return lhs.value() == rhs.value();
+               return lhs.m_value == rhs.m_value;
             }
 
             std::array<uint8_t, Length> m_value;
       };
 
+      /*
+      * TODO(Botan4) remove this type
+      */
       template <Version V>
       class BOTAN_PUBLIC_API(3, 9) IPAddressOrRange final : public ASN1_Object {
+            using Address = std::conditional_t<V == Version::IPv4, IPv4Address, IPv6Address>;
+            using Subnet = std::conditional_t<V == Version::IPv4, IPv4Subnet, IPv6Subnet>;
+
          public:
             void encode_into(DER_Encoder& to) const override;
             void decode_from(BER_Decoder& from) override;
@@ -996,9 +1031,32 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
                }
             }
 
+            /**
+            * Create a range containing a single address (IPv4Address or IPv6Address)
+            */
+            explicit IPAddressOrRange(const Address& addr) : IPAddressOrRange(addr, addr) {}
+
+            /**
+            * Create a range of addresses (IPv4Address or IPv6Address) from min to max (inclusive)
+            */
+            IPAddressOrRange(const Address& min, const Address& max) :
+                  IPAddressOrRange(IPAddress<V>(min), IPAddress<V>(max)) {}
+
+            /**
+            * Create a range covering exactly the addresses of a subnet (IPv4Subnet or IPv6Subnet)
+            */
+            explicit IPAddressOrRange(const Subnet& subnet) :
+                  IPAddressOrRange(subnet.address(), subnet.last_address()) {}
+
             IPAddress<V> min() const { return m_min; }
 
             IPAddress<V> max() const { return m_max; }
+
+            /**
+            * If this range covers exactly the addresses of some subnet, return it.
+            * Otherwise return nullopt.
+            */
+            std::optional<Subnet> as_subnet() const;
 
          private:
             IPAddress<V> m_min{};
@@ -1071,21 +1129,51 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
                     size_t pos) const override;
 
+      /// Add a single IPv4 address to this extension (for the specified SAFI, if any)
+      void add_address(const IPv4Address& address, std::optional<uint8_t> safi = std::nullopt) {
+         add_address(address, address, safi);
+      }
+
+      /// Add a single IPv6 address to this extension (for the specified SAFI, if any)
+      void add_address(const IPv6Address& address, std::optional<uint8_t> safi = std::nullopt) {
+         add_address(address, address, safi);
+      }
+
+      /// Add an IPv4 address range to this extension (for the specified SAFI, if any)
+      void add_address(const IPv4Address& min, const IPv4Address& max, std::optional<uint8_t> safi = std::nullopt) {
+         add_range(IPAddressOrRange<Version::IPv4>(min, max), safi);
+      }
+
+      /// Add an IPv6 address range to this extension (for the specified SAFI, if any)
+      void add_address(const IPv6Address& min, const IPv6Address& max, std::optional<uint8_t> safi = std::nullopt) {
+         add_range(IPAddressOrRange<Version::IPv6>(min, max), safi);
+      }
+
+      /// Add an IPv4 subnet to this extension (for the specified SAFI, if any)
+      void add_address(const IPv4Subnet& subnet, std::optional<uint8_t> safi = std::nullopt) {
+         add_range(IPAddressOrRange<Version::IPv4>(subnet), safi);
+      }
+
+      /// Add an IPv6 subnet to this extension (for the specified SAFI, if any)
+      void add_address(const IPv6Subnet& subnet, std::optional<uint8_t> safi = std::nullopt) {
+         add_range(IPAddressOrRange<Version::IPv6>(subnet), safi);
+      }
+
       /// Add a single IP address to this extension (for the specified SAFI, if any)
       template <Version V>
+      BOTAN_DEPRECATED("Use add_address taking an IPv4Address or IPv6Address")
       void add_address(const std::array<uint8_t, static_cast<size_t>(V)>& address,
                        std::optional<uint8_t> safi = std::nullopt) {
-         add_address<V>(address, address, safi);
+         add_range(IPAddressOrRange<V>(IPAddress<V>::from_bytes(address)), safi);
       }
 
       /// Add an IP address range to this extension (for the specified SAFI, if any)
       template <Version V>
+      BOTAN_DEPRECATED("Use add_address taking an IPv4Address or IPv6Address")
       void add_address(const std::array<uint8_t, static_cast<std::size_t>(V)>& min,
                        const std::array<uint8_t, static_cast<std::size_t>(V)>& max,
                        std::optional<uint8_t> safi = std::nullopt) {
-         std::vector<IPAddressOrRange<V>> addresses = {IPAddressOrRange<V>(IPAddress<V>(min), IPAddress<V>(max))};
-         m_ip_addr_blocks.push_back(IPAddressFamily(IPAddressChoice<V>(addresses), safi));
-         sort_and_merge();
+         add_range(IPAddressOrRange<V>(IPAddress<V>::from_bytes(min), IPAddress<V>::from_bytes(max)), safi);
       }
 
       /// Make the extension contain no allowed IP addresses for the specified IP version (and SAFI, if any)
@@ -1124,6 +1212,13 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
       std::vector<IPAddressFamily> m_ip_addr_blocks;
       size_t m_v4_count = 0;
       size_t m_v6_count = 0;
+
+      template <Version V>
+      void add_range(const IPAddressOrRange<V>& range, std::optional<uint8_t> safi) {
+         std::vector<IPAddressOrRange<V>> addresses = {range};
+         m_ip_addr_blocks.push_back(IPAddressFamily(IPAddressChoice<V>(addresses), safi));
+         sort_and_merge();
+      }
 
       void sort_and_merge();
 };

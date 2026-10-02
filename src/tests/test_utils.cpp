@@ -1270,7 +1270,7 @@ BOTAN_REGISTER_TEST("utils", "ipv4_parse", IPv4_Parsing_Tests);
 
 class IPv4_Subnet_Parsing_Tests final : public Text_Based_Test {
    public:
-      IPv4_Subnet_Parsing_Tests() : Text_Based_Test("utils/ipv4_subnet.vec", "IPv4Subnet") {}
+      IPv4_Subnet_Parsing_Tests() : Text_Based_Test("utils/ipv4_subnet.vec", "IPv4Subnet", "LastAddress") {}
 
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override {
          Test::Result result("IPv4 subnet parsing");
@@ -1285,6 +1285,12 @@ class IPv4_Subnet_Parsing_Tests final : public Text_Based_Test {
          if(subnet) {
             result.test_str_eq(
                "IPv4Subnet::from_string and IPv4Subnet::to_string round trip", subnet->to_string(), input);
+
+            const auto last = Botan::IPv4Address::from_string(vars.get_req_str("LastAddress"));
+            result.test_is_true("LastAddress parses", last.has_value());
+            if(last) {
+               result.test_str_eq("IPv4Subnet::last_address", subnet->last_address().to_string(), last->to_string());
+            }
          }
 
          return result;
@@ -1351,7 +1357,7 @@ BOTAN_REGISTER_TEST("utils", "ipv6_parse_non_canonical", IPv6_Noncanonical_Parsi
 
 class IPv6_Subnet_Parsing_Tests final : public Text_Based_Test {
    public:
-      IPv6_Subnet_Parsing_Tests() : Text_Based_Test("utils/ipv6_subnet.vec", "IPv6Subnet") {}
+      IPv6_Subnet_Parsing_Tests() : Text_Based_Test("utils/ipv6_subnet.vec", "IPv6Subnet", "LastAddress") {}
 
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override {
          Test::Result result("IPv6 subnet parsing");
@@ -1366,6 +1372,12 @@ class IPv6_Subnet_Parsing_Tests final : public Text_Based_Test {
          if(subnet) {
             result.test_str_eq(
                "IPv6Subnet::from_string and IPv6Subnet::to_string round trip", subnet->to_string(), input);
+
+            const auto last = Botan::IPv6Address::from_string(vars.get_req_str("LastAddress"));
+            result.test_is_true("LastAddress parses", last.has_value());
+            if(last) {
+               result.test_str_eq("IPv6Subnet::last_address", subnet->last_address().to_string(), last->to_string());
+            }
          }
 
          return result;
