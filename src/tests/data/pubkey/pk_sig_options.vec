@@ -189,6 +189,18 @@ SupportsSaltSize = false
 SupportsDeterministic = true
 SupportsExplicitTrailer = false
 
+[XMSSMT]
+KeyParams = XMSSMT-SHA2_20/4_256
+SupportsHash = true
+SupportsPadding = false
+SupportsPrehash = false
+SupportsExternalPrehash = false
+SupportsContext = false
+SupportsDER = false
+SupportsSaltSize = false
+SupportsDeterministic = true
+SupportsExplicitTrailer = false
+
 [HSS-LMS]
 KeyParams = SHA-256,HW(5,1)
 SupportsHash = true

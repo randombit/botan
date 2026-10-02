@@ -162,6 +162,7 @@ frodokem
 frodokem_aes
 frodokem_common
 xmss
+xmssmt
 sm2
 
 # pk_pad
