@@ -59,7 +59,7 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
          return std::make_unique<Signature_Algorithms_Cert>(reader, size);
 
       case Extension_Code::UseSrtp:
-         return std::make_unique<SRTP_Protection_Profiles>(reader, size);
+         return std::make_unique<SRTP_Protection_Profiles>(reader, size, from);
 
       case Extension_Code::ApplicationLayerProtocolNegotiation:
          return std::make_unique<Application_Layer_Protocol_Notification>(reader, size, from);
@@ -758,7 +758,9 @@ std::vector<uint8_t> Signature_Algorithms_Cert::serialize(Connection_Side /*whoa
 Signature_Algorithms_Cert::Signature_Algorithms_Cert(TLS_Data_Reader& reader, uint16_t extension_size) :
       m_schemes(parse_signature_algorithms(reader, extension_size)) {}
 
-SRTP_Protection_Profiles::SRTP_Protection_Profiles(TLS_Data_Reader& reader, uint16_t extension_size) {
+SRTP_Protection_Profiles::SRTP_Protection_Profiles(TLS_Data_Reader& reader,
+                                                   uint16_t extension_size,
+                                                   Connection_Side from) {
    // RFC 5764 4.1.1: UseSRTPData consists of
    //    SRTPProtectionProfile SRTPProtectionProfiles<2..2^16-1>;
    //    opaque srtp_mki<0..255>;
@@ -773,6 +775,14 @@ SRTP_Protection_Profiles::SRTP_Protection_Profiles(TLS_Data_Reader& reader, uint
 
    if(m_pp.size() * 2 + mki.size() + 3 != extension_size) {
       throw Decoding_Error("Bad encoding for SRTP protection extension");
+   }
+
+   // RFC 5764 4.1.1
+   //    The extension_data field MUST contain a [...] single
+   //    SRTPProtectionProfile value that the server has chosen for use with
+   //    this connection.
+   if(from == Connection_Side::Server && (m_pp.size() != 1 || m_pp.front() == 0)) {
+      throw TLS_Exception(Alert::DecodeError, "Server sent malformed DTLS-SRTP extension");
    }
 
    // Any srtp_mki the peer offers is ignored; serialize() always answers with an
