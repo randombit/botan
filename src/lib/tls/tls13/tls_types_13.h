@@ -11,8 +11,11 @@
 
 #include <botan/secmem.h>
 #include <botan/strong_type.h>
+#include <functional>
 
 namespace Botan::TLS {
+
+using SecretLoggerFn = std::function<void(std::string_view label, std::span<const uint8_t> secret)>;
 
 /// Holds the serialization of a single TLS 1.3 record along with the record
 /// protocol header. Protected records hold the encrypted payload and AEAD tag.

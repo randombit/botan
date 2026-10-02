@@ -26,9 +26,17 @@ namespace {
 using namespace Botan;
 using namespace Botan::TLS;
 
-class Journaling_Secret_Logger : public Secret_Logger {
+class Journaling_Secret_Logger : public std::enable_shared_from_this<Journaling_Secret_Logger> {
    public:
-      void maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const override {
+      Botan::TLS::SecretLoggerFn get_secret_logger() {
+         return [self = weak_from_this()](std::string_view label, std::span<const uint8_t> secret) {
+            if(auto s = self.lock()) {
+               s->maybe_log_secret(label, secret);
+            }
+         };
+      }
+
+      void maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const {
          secrets[std::string(label)] = std::vector<uint8_t>(secret.begin(), secret.end());
       }
 
@@ -324,14 +332,20 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
    auto cipher = Ciphersuite::from_name("AES_128_GCM_SHA256").value();
 
    // initialize Cipher_State with client_hello...server_hello
-   Journaling_Secret_Logger sl_client;
-   Journaling_Secret_Logger sl_server;
-   auto cs_client = Cipher_State::init_with_server_hello(
-      Connection_Side::Client, secure_vector<uint8_t>(shared_secret), cipher, th_server_hello, sl_client);
-   auto cs_server = Cipher_State::init_with_server_hello(
-      Connection_Side::Server, secure_vector<uint8_t>(shared_secret), cipher, th_server_hello, sl_server);
+   auto sl_client = std::make_shared<Journaling_Secret_Logger>();
+   auto sl_server = std::make_shared<Journaling_Secret_Logger>();
+   auto cs_client = Cipher_State::init_with_server_hello(Connection_Side::Client,
+                                                         secure_vector<uint8_t>(shared_secret),
+                                                         cipher,
+                                                         th_server_hello,
+                                                         sl_client->get_secret_logger());
+   auto cs_server = Cipher_State::init_with_server_hello(Connection_Side::Server,
+                                                         secure_vector<uint8_t>(shared_secret),
+                                                         cipher,
+                                                         th_server_hello,
+                                                         sl_server->get_secret_logger());
 
-   auto CHECK_both = make_CHECK_both(cs_client.get(), &sl_client, cs_server.get(), &sl_server);
+   auto CHECK_both = make_CHECK_both(cs_client.get(), sl_client.get(), cs_server.get(), sl_server.get());
 
    return Test::flatten_result_lists(
       {CHECK_both(
@@ -397,7 +411,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
              // advance Cipher_State with client_hello...server_Finished
              // (allows receiving of application data, but does not yet allow such sending)
              result.test_no_throw("state advancement is legal",
-                                  [&] { cs->advance_with_server_finished(th_server_finished, *sl); });
+                                  [&] { cs->advance_with_server_finished(th_server_finished); });
 
              if(side == Connection_Side::Client) {
                 result.test_is_true("can read application data", cs->can_decrypt_application_traffic());
@@ -498,11 +512,11 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
                      const auto* const write_label =
                         side == Connection_Side::Client ? "CLIENT_TRAFFIC_SECRET_1" : "SERVER_TRAFFIC_SECRET_1";
 
-                     cs->update_read_keys(*sl);
+                     cs->update_read_keys();
                      result.test_sz_eq("read secret update is here", sl->secrets.size(), 6);
                      result.require("has new read traffic secret", sl->secrets.contains(read_label));
 
-                     cs->update_write_keys(*sl);
+                     cs->update_write_keys();
                      result.test_sz_eq("write secret update is here", sl->secrets.size(), 7);
                      result.require("has new write traffic secret", sl->secrets.contains(write_label));
 
@@ -674,8 +688,8 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
 
    auto cipher = Ciphersuite::from_name("AES_128_GCM_SHA256").value();
 
-   Journaling_Secret_Logger sl_client;
-   Journaling_Secret_Logger sl_server;
+   auto sl_client = std::make_shared<Journaling_Secret_Logger>();
+   auto sl_server = std::make_shared<Journaling_Secret_Logger>();
 
    auto cs_client = Cipher_State::init_with_psk(Connection_Side::Client,
                                                 Cipher_State::PSK_Type::Resumption,
@@ -686,7 +700,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                                                 secure_vector<uint8_t>(psk.begin(), psk.end()),
                                                 cipher.prf_algo());
 
-   auto CHECK_both = make_CHECK_both(cs_client.get(), &sl_client, cs_server.get(), &sl_server);
+   auto CHECK_both = make_CHECK_both(cs_client.get(), sl_client.get(), cs_server.get(), sl_server.get());
 
    return Test::flatten_result_lists(
       {CHECK_both("no secrets logged for PSK initialization",
@@ -715,9 +729,15 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                            !cs->is_compatible_with(Ciphersuite::from_name("AES_256_GCM_SHA384").value()));
                   }),
 
+       CHECK_both("before calculating any traffic secrets, set the secret logger",
+                  [&](Cipher_State* cs, Journaling_Secret_Logger* sl, Connection_Side, Test::Result& result) {
+                     cs->set_secret_logger(sl->get_secret_logger());
+                     result.test_sz_eq("no secrets logged", sl->secrets.size(), 0);
+                  }),
+
        CHECK_both("calculate the early traffic secrets",
                   [&](Cipher_State* cs, Journaling_Secret_Logger* sl, Connection_Side side, Test::Result& result) {
-                     cs->advance_with_client_hello(th_client_hello, *sl);
+                     cs->advance_with_client_hello(th_client_hello);
                      result.require("early key export is possible", cs->can_export_keys());
                      result.test_bin_eq("early key export produces expected result",
                                         cs->export_key(early_export_label, early_export_context, 16),
@@ -745,7 +765,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
 
        CHECK_both("handshake traffic after PSK",
                   [&](Cipher_State* cs, Journaling_Secret_Logger* sl, Connection_Side side, Test::Result& result) {
-                     cs->advance_with_server_hello(cipher, secure_vector<uint8_t>(shared_secret), th_server_hello, *sl);
+                     cs->advance_with_server_hello(cipher, secure_vector<uint8_t>(shared_secret), th_server_hello);
 
                      // decrypt encrypted extensions from server
                      encrypted_extensions.xxcrypt(result, cs, side);
@@ -788,7 +808,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                      // advance Cipher_State with client_hello...server_Finished
                      // (allows receiving of application data, but no such sending)
                      result.test_no_throw("state advancement is legal",
-                                          [&] { cs->advance_with_server_finished(th_server_finished, *sl); });
+                                          [&] { cs->advance_with_server_finished(th_server_finished); });
 
                      if(side == Connection_Side::Client) {
                         result.test_is_true("can read application data", cs->can_decrypt_application_traffic());
@@ -867,16 +887,14 @@ std::vector<Test::Result> test_record_padding() {
       "86 0c 06 ed c0 78 58 ee 8e 78 f0 e7 42 8c 58 ed"
       "d6 b4 3f 2c a3 e6 e9 5f 02 ed 06 3c f0 e1 ca d8");
 
-   const Journaling_Secret_Logger sl_client;
-
    const auto cipher = Ciphersuite::from_name("AES_128_GCM_SHA256").value();
 
    // Create a Cipher_State for the client side, that is capable of
    // protecting and deprotecting records.
-   auto cs_client = Cipher_State::init_with_server_hello(
-      Connection_Side::Client, shared_secret(), cipher, th_server_hello, sl_client);
-   auto cs_server = Cipher_State::init_with_server_hello(
-      Connection_Side::Server, shared_secret(), cipher, th_server_hello, sl_client);
+   auto cs_client =
+      Cipher_State::init_with_server_hello(Connection_Side::Client, shared_secret(), cipher, th_server_hello, {});
+   auto cs_server =
+      Cipher_State::init_with_server_hello(Connection_Side::Server, shared_secret(), cipher, th_server_hello, {});
 
    const auto plaintext = Botan::hex_decode_locked("01 02 03 04 05 06 07 08");
    const auto ciphertext_42_bytes_padding = Botan::hex_decode_locked(
