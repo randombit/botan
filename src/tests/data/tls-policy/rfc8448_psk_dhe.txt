@@ -4,6 +4,7 @@ allow_tls12 = false
 allow_tls13 = true
 allow_dtls10 = false
 allow_dtls12 = false
+allow_ssl_key_log_file = true
 ciphers = AES-128/GCM ChaCha20Poly1305 AES-256/GCM
 macs = AEAD
 signature_schemes = RSA_PSS_SHA384 RSA_PSS_SHA256 RSA_PSS_SHA512 RSA_PKCS1_SHA384 RSA_PKCS1_SHA512 RSA_PKCS1_SHA256 ECDSA_SECP384R1_TLS13_SHA384 ECDSA_SECP521R1_TLS13_SHA512 ECDSA_SECP256R1_TLS13_SHA256

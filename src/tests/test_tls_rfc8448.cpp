@@ -335,6 +335,12 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks {
          return m_timestamp;
       }
 
+      void tls_ssl_key_log_data(std::string_view /* label */,
+                                std::span<const uint8_t> /* client_random */,
+                                std::span<const uint8_t> /* secret */) const override {
+         count_callback_invocation("tls_ssl_key_log_data");
+      }
+
       std::vector<uint8_t> pull_send_buffer() { return std::exchange(send_buffer, std::vector<uint8_t>()); }
 
       std::vector<uint8_t> pull_receive_buffer() { return std::exchange(receive_buffer, std::vector<uint8_t>()); }
@@ -989,7 +995,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                      "server hello received",
                                                      {"tls_inspect_handshake_msg_server_hello",
                                                       "tls_examine_extensions_server_hello",
-                                                      "tls_ephemeral_key_agreement"});
+                                                      "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data"});
 
                      result.test_is_true("client is not yet active", !ctx->client.is_active());
                      result.test_is_true("handshake is not yet complete", !ctx->client.is_handshake_complete());
@@ -1012,6 +1019,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                       "tls_current_timestamp",
                                                       "tls_session_established",
                                                       "tls_session_activated",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_verify_cert_chain",
                                                       "tls_verify_message"});
                      result.require("certificate exists", !ctx->certs_verified().empty());
@@ -1230,6 +1238,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_inspect_handshake_msg_server_hello",
                                                         "tls_examine_extensions_server_hello",
                                                         "tls_ephemeral_key_agreement",
+                                                        "tls_ssl_key_log_data",
                                                      });
                   }),
 
@@ -1250,6 +1259,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                       "tls_current_timestamp",
                                                       "tls_session_established",
                                                       "tls_session_activated",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_verify_cert_chain",
                                                       "tls_verify_message"});
 
@@ -1329,6 +1339,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_examine_extensions_server_hello",
                                                         "tls_inspect_handshake_msg_server_hello",
                                                         "tls_ephemeral_key_agreement",
+                                                        "tls_ssl_key_log_data",
                                                      });
                   }),
 
@@ -1354,6 +1365,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_current_timestamp",
                                                         "tls_session_established",
                                                         "tls_session_activated",
+                                                        "tls_ssl_key_log_data",
                                                         "tls_verify_cert_chain",
                                                         "tls_verify_message",
                                                      });
@@ -1450,6 +1462,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_current_timestamp",
                                                         "tls_session_established",
                                                         "tls_session_activated",
+                                                        "tls_ssl_key_log_data",
                                                         "tls_verify_cert_chain",
                                                         "tls_verify_message",
                                                         "tls_ephemeral_key_agreement",
@@ -1546,7 +1559,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                      "server hello received",
                                                      {"tls_inspect_handshake_msg_server_hello",
                                                       "tls_examine_extensions_server_hello",
-                                                      "tls_ephemeral_key_agreement"});
+                                                      "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data"});
 
                      result.test_is_true("client is not yet active", !ctx->client.is_active());
                      result.test_is_true("handshake is not yet complete", !ctx->client.is_handshake_complete());
@@ -1566,7 +1580,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                    "tls_emit_data",
                                                    "tls_current_timestamp",
                                                    "tls_session_established",
-                                                   "tls_session_activated"});
+                                                   "tls_session_activated",
+                                                   "tls_ssl_key_log_data"});
                   result.require("PSK negotiated", ctx->psk_identity_negotiated() == vars.get_req_str("PskIdentity"));
                   result.require("client is active", ctx->client.is_active());
                   result.test_is_true("handshake is complete", ctx->client.is_handshake_complete());
@@ -1682,6 +1697,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_examine_extensions_server_hello",
                                                         "tls_inspect_handshake_msg_server_hello",
                                                         "tls_ephemeral_key_agreement",
+                                                        "tls_ssl_key_log_data",
                                                      });
                   }),
 
@@ -1707,6 +1723,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_current_timestamp",
                                                         "tls_session_established",
                                                         "tls_session_activated",
+                                                        "tls_ssl_key_log_data",
                                                         "tls_verify_raw_public_key",
                                                         "tls_verify_message",
                                                      });
@@ -1794,6 +1811,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_sign_message",
                                                       "tls_generate_ephemeral_key",
                                                       "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_inspect_handshake_msg_client_hello",
                                                       "tls_inspect_handshake_msg_server_hello",
                                                       "tls_inspect_handshake_msg_encrypted_extensions",
@@ -1969,6 +1987,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                         "tls_inspect_handshake_msg_server_hello",
                                                         "tls_inspect_handshake_msg_encrypted_extensions",
                                                         "tls_inspect_handshake_msg_finished",
+                                                        "tls_ssl_key_log_data",
                                                      });
                   }),
 
@@ -2072,6 +2091,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_sign_message",
                                                       "tls_generate_ephemeral_key",
                                                       "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_inspect_handshake_msg_client_hello",
                                                       "tls_inspect_handshake_msg_server_hello",
                                                       "tls_inspect_handshake_msg_encrypted_extensions",
@@ -2189,6 +2209,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_sign_message",
                                                       "tls_generate_ephemeral_key",
                                                       "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_inspect_handshake_msg_client_hello",
                                                       "tls_inspect_handshake_msg_server_hello",
                                                       "tls_inspect_handshake_msg_encrypted_extensions",
@@ -2323,6 +2344,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_sign_message",
                                                       "tls_generate_ephemeral_key",
                                                       "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_inspect_handshake_msg_client_hello",
                                                       "tls_inspect_handshake_msg_server_hello",
                                                       "tls_inspect_handshake_msg_encrypted_extensions",
@@ -2463,6 +2485,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_modify_extensions_encrypted_extensions",
                                                       "tls_generate_ephemeral_key",
                                                       "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_inspect_handshake_msg_client_hello",
                                                       "tls_inspect_handshake_msg_server_hello",
                                                       "tls_inspect_handshake_msg_encrypted_extensions",
@@ -2604,6 +2627,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_sign_message",
                                                       "tls_generate_ephemeral_key",
                                                       "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_inspect_handshake_msg_client_hello",
                                                       "tls_inspect_handshake_msg_server_hello",
                                                       "tls_inspect_handshake_msg_encrypted_extensions",
