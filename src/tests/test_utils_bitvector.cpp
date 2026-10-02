@@ -582,6 +582,23 @@ std::vector<Test::Result> test_bitvector_subvector(Botan::RandomNumberGenerator&
                check_bitpattern(result, bv8, 33);
             }),
 
+      CHECK("unaligned copy at the exact end of the buffer",
+            [&](auto& result) {
+               // Regression test: the block-wise processing must not read past
+               // the underlying buffer when the copied range ends exactly at
+               // the buffer's end. Best checked with a sanitizer build.
+               Botan::bitvector bv1(64);
+               make_bitpattern(bv1);
+
+               auto bv2 = bv1.subvector(3, 61);
+               result.test_sz_eq("size is as requested", bv2.size(), size_t(61));
+               check_bitpattern(result, bv2, 3);
+
+               auto bv3 = bv1.subvector(1, 63);
+               result.test_sz_eq("size is as requested", bv3.size(), size_t(63));
+               check_bitpattern(result, bv3, 1);
+            }),
+
       CHECK("byte-aligned unsigned integer subvector",
             [&](auto& result) {
                Botan::bitvector bv1(100);

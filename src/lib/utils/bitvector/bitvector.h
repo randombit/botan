@@ -23,6 +23,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>
 
+#include <array>
 #include <memory>
 #include <optional>
 #include <span>
@@ -1004,7 +1005,7 @@ class bitvector_base final {
                                       .bits_to_byte_alignment = static_cast<uint8_t>(8 - (start_bitoffset % 8))}),
                   m_read_bitpos(start_bitoffset),
                   m_write_bitpos(start_bitoffset) {
-               BOTAN_ASSERT(is_byte_aligned() == (m_start_bitoffset % 8 == 0), "byte alignment guarantee");
+               BOTAN_ASSERT(!is_byte_aligned() || (m_start_bitoffset % 8 == 0), "byte alignment guarantee");
                BOTAN_ASSERT(m_source.size() >= m_start_bitoffset + m_bitlength, "enough bytes in underlying source");
             }
 
@@ -1044,16 +1045,21 @@ class bitvector_base final {
                } else {
                   const size_type byte_pos = read_bytepos();
                   const size_type bits_to_collect = std::min(block_bits, bits_to_read());
+                  const size_type bytes_to_load = ceil_tobytes(m_unaligned_helper.padding_bits + bits_to_collect);
 
-                  const uint8_t first_byte = m_source.as_byte_span()[byte_pos];
+                  // Copy only the bytes that actually contain bits of the range
+                  // into a zero-padded scratch buffer to avoid an overread when
+                  // the range ends near the underlying buffer's end.
+                  std::array<uint8_t, block_size + 1> bytes{};
+                  copy_mem(std::span{bytes}.first(bytes_to_load),
+                           m_source.as_byte_span().subspan(byte_pos, bytes_to_load));
 
                   // Initialize the left-most bits from the first byte.
-                  result_block = BlockT(first_byte) >> m_unaligned_helper.padding_bits;
+                  result_block = BlockT(bytes[0]) >> m_unaligned_helper.padding_bits;
 
-                  // If more bits are needed, we pull them from the remaining bytes.
+                  // If more bits are needed, we pull them from the scratch buffer.
                   if(m_unaligned_helper.bits_to_byte_alignment < bits_to_collect) {
-                     const BlockT block =
-                        load_le(m_source.as_byte_span().subspan(byte_pos + 1).template first<block_size>());
+                     const BlockT block = load_le(std::span{bytes}.template subspan<1, block_size>());
                      result_block |= block << m_unaligned_helper.bits_to_byte_alignment;
                   }
                }
@@ -1089,12 +1095,21 @@ class bitvector_base final {
 
                   // If more bits are provided, we store them in the remaining bytes.
                   if(m_unaligned_helper.bits_to_byte_alignment < bits_to_store) {
-                     const auto remaining_bytes =
-                        m_source.as_byte_span().subspan(byte_pos + 1).template first<block_size>();
+                     const size_type bytes_to_store = ceil_tobytes(m_unaligned_helper.padding_bits + bits_to_store) - 1;
+                     const auto remaining_bytes = m_source.as_byte_span().subspan(byte_pos + 1, bytes_to_store);
+
+                     // Put the relevant bytes into a zero-padded scratch buffer
+                     // to avoid reaching past the underlying buffer's end when
+                     // the range ends near the end of the buffer.
+                     std::array<uint8_t, block_size> bytes{};
+                     copy_mem(std::span{bytes}.first(bytes_to_store), remaining_bytes);
+
                      const BlockT padding_mask = ~(BlockT(-1) >> m_unaligned_helper.bits_to_byte_alignment);
                      const BlockT new_bytes =
-                        (load_le(remaining_bytes) & padding_mask) | block >> m_unaligned_helper.bits_to_byte_alignment;
-                     store_le(remaining_bytes, new_bytes);
+                        (load_le(bytes) & padding_mask) | block >> m_unaligned_helper.bits_to_byte_alignment;
+                     store_le(bytes, new_bytes);
+
+                     copy_mem(remaining_bytes, std::span{bytes}.first(bytes_to_store));
                   }
                }
 
