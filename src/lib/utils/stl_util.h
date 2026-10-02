@@ -126,6 +126,21 @@ constexpr std::optional<SpecificVariantT> specialize_to(GeneralVariantT&& v) {
       std::forward<GeneralVariantT>(v));
 }
 
+template <typename Variant, typename T>
+struct variant_append;
+
+template <typename... Ts, typename T>
+struct variant_append<std::variant<Ts...>, T> {
+      using type = std::variant<Ts..., T>;
+};
+
+/**
+ * @brief Converts a given variant into another variant with all its alternative
+ *        types and an additional alternative type T.
+ */
+template <typename Variant, typename T>
+using variant_append_t = typename variant_append<Variant, T>::type;
+
 // This is a helper utility to emulate pattern matching with std::visit.
 // See https://en.cppreference.com/w/cpp/utility/variant/visit for more info.
 template <class... Ts>

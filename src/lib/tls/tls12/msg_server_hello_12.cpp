@@ -187,10 +187,8 @@ bool Server_Hello_12::supports_session_ticket() const {
 
 uint16_t Server_Hello_12::srtp_profile() const {
    if(auto* srtp = m_data->extensions().get<SRTP_Protection_Profiles>()) {
-      auto prof = srtp->profiles();
-      if(prof.size() != 1 || prof[0] == 0) {
-         throw Decoding_Error("Server sent malformed DTLS-SRTP extension");
-      }
+      const auto& prof = srtp->profiles();
+      BOTAN_ASSERT_NOMSG(!prof.empty());
       return prof[0];
    }
 
