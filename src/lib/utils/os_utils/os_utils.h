@@ -96,6 +96,13 @@ uint64_t BOTAN_TEST_API get_system_timestamp_ns();
 std::optional<uint64_t> BOTAN_TEST_API get_thread_cpu_time_ns();
 
 /**
+* @return an integer which increments every time the process forks.
+*
+* If the system does not have any notion of fork() this returns constant 0
+*/
+uint64_t BOTAN_TEST_API get_fork_generation();
+
+/**
 * Format a time
 *
 * Converts the time_t to a local time representation,

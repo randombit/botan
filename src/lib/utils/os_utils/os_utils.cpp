@@ -25,6 +25,7 @@
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    #include <errno.h>
+   #include <mutex>
    #include <pthread.h>
    #include <setjmp.h>
    #include <signal.h>
@@ -668,6 +669,43 @@ void OS::page_prohibit_access(void* page) {
    BOTAN_UNUSED(old_perms);
 #else
    BOTAN_UNUSED(page);
+#endif
+}
+
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+namespace {
+
+// NOLINTNEXTLINE(*-avoid-non-const-global-variables,*-static-definition-in-anon*)
+static uint64_t g_fork_generation = 1;
+
+void atfork_in_child() {
+   g_fork_generation += 1;
+   // Leave generation 0 reserved for "no forks possible on this system"
+   if(g_fork_generation == 0) {
+      g_fork_generation = 1;
+   }
+}
+
+void setup_atfork() {
+   const int rc = ::pthread_atfork(/*prepare=*/nullptr,
+                                   /*parent=*/nullptr,
+                                   /*child=*/atfork_in_child);
+
+   if(rc != 0) {
+      throw Internal_Error("Failed to setup pthread_atfork handler");
+   }
+}
+
+}  // namespace
+#endif
+
+uint64_t OS::get_fork_generation() {
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   static std::once_flag g_atfork_initialized;
+   std::call_once(g_atfork_initialized, setup_atfork);
+   return g_fork_generation;
+#else
+   return 0;
 #endif
 }
 
