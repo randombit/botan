@@ -357,7 +357,11 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
    CertificatePathStatusCodes cert_status(cert_path.size());
 
    // Before anything else verify the entire chain of signatures
-   for(size_t i = 0; i != cert_path.size(); ++i) {
+   // starting from the root certificate and working towards the
+   // leaf. This precludes denial of service attacks based on long
+   // certificate chains which are valid except for the final
+   // forged (invalid) signature purportedly by the trust root.
+   for(size_t i = cert_path.size(); i-- > 0;) {
       std::set<Certificate_Status_Code>& status = cert_status.at(i);
 
       const bool at_trust_anchor = (i == cert_path.size() - 1);
@@ -408,19 +412,16 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
             }
          }
       }
-   }
 
-   // If any of the signatures were invalid, return immediately; we know the
-   // chain is invalid and signature failure is always considered the most
-   // critical result. This does mean other problems in the certificate (eg
-   // expired) will not be reported, but we'd have to assume any such data is
-   // anyway arbitrary considering we couldn't verify the signature chain
-
-   for(size_t i = 0; i != cert_path.size(); ++i) {
-      for(auto status : cert_status.at(i)) {
+      // If any of the signatures were invalid, return immediately; we know the
+      // chain is invalid and signature failure is always considered the most
+      // critical result. This does mean other problems in the certificate (eg
+      // expired) will not be reported, but we'd have to assume any such data is
+      // anyway arbitrary considering we couldn't verify the signature chain
+      for(auto s : status) {
          // This ignores errors relating to the key or hash being weak since
          // these are somewhat advisory
-         if(static_cast<uint32_t>(status) >= 5000) {
+         if(static_cast<uint32_t>(s) >= 5000) {
             return cert_status;
          }
       }
