@@ -61,7 +61,12 @@ enum class Record_Type : uint8_t {
    Handshake = 22,
    ApplicationData = 23,
 
-   Heartbeat = 24,  // RFC 6520 (TLS 1.3)
+   Heartbeat = 24,  // RFC 6520
+};
+
+enum class TLS_Flavor : bool {
+   TLS,
+   DTLS,
 };
 
 enum class Handshake_Type : uint8_t {
@@ -121,7 +126,7 @@ constexpr uint64_t DOWNGRADE_TLS11 = 0x444F574E47524400;
  */
 constexpr uint64_t DOWNGRADE_TLS12 = 0x444F574E47524401;
 
-/** 
+/**
  * RFC 8446 4.1.3:
  *   For reasons of backward compatibility with middleboxes, the
  *   HelloRetryRequest message uses the same structure as the ServerHello, but
