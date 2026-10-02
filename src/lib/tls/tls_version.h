@@ -24,6 +24,8 @@ enum class Version_Code : uint16_t {
    TLS_V12 = 0x0303,
    /// TLSv1.3
    TLS_V13 = 0x0304,
+   /// DTLSv1.0 (never supported)
+   DTLS_V10 = 0xFEFF,
    /// DTLSv1.2
    DTLS_V12 = 0xFEFD,
    /// DTLSv1.3 (not supported yet)
