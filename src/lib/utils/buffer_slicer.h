@@ -56,6 +56,13 @@ class BufferSlicer final {
 
       uint8_t take_byte() { return take(1)[0]; }
 
+      std::span<const uint8_t> peek(const size_t count) const {
+         BOTAN_STATE_CHECK(remaining() >= count);
+         return m_remaining.first(count);
+      }
+
+      uint8_t peek_byte() const { return peek(1)[0]; }
+
       void copy_into(std::span<uint8_t> sink) {
          const auto data = take(sink.size());
          std::copy(data.begin(), data.end(), sink.begin());
