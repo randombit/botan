@@ -22,9 +22,9 @@ enum class AlertType : uint16_t {
    CloseNotify = 0,
    UnexpectedMessage = 10,
    BadRecordMac = 20,
-   DecryptionFailed = 21,
+   DecryptionFailed = 21,  // Not specified in TLS 1.3 (RFC 9846)
    RecordOverflow = 22,
-   DecompressionFailure = 30,
+   DecompressionFailure = 30,  // Not specified in TLS 1.3 (RFC 9846)
    HandshakeFailure = 40,
    NoCertificate = 41,  // SSLv3 only
    BadCertificate = 42,
@@ -37,22 +37,22 @@ enum class AlertType : uint16_t {
    AccessDenied = 49,
    DecodeError = 50,
    DecryptError = 51,
-   ExportRestriction = 60,
+   ExportRestriction = 60,  // Not specified in TLS 1.3 (RFC 9846)
    ProtocolVersion = 70,
    InsufficientSecurity = 71,
    InternalError = 80,
    InappropriateFallback = 86,
    UserCanceled = 90,
-   NoRenegotiation = 100,
-   MissingExtension = 109,  // RFC 8446
+   NoRenegotiation = 100,  // Not specified in TLS 1.3 (RFC 9846)
+   MissingExtension = 109,
    UnsupportedExtension = 110,
-   CertificateUnobtainable = 111,
+   CertificateUnobtainable = 111,  // Not specified in TLS 1.3 (RFC 9846)
    UnrecognizedName = 112,
    BadCertificateStatusResponse = 113,
-   BadCertificateHashValue = 114,
+   BadCertificateHashValue = 114,  // Not specified in TLS 1.3 (RFC 9846)
    UnknownPSKIdentity = 115,
-   CertificateRequired = 116,    // RFC 8446
-   NoApplicationProtocol = 120,  // RFC 7301
+   CertificateRequired = 116,
+   NoApplicationProtocol = 120,
 
    // pseudo alert values
    None = 256,
