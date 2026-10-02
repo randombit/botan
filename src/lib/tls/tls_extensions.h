@@ -354,7 +354,7 @@ class BOTAN_UNSTABLE_API SRTP_Protection_Profiles final : public Extension {
 
       explicit SRTP_Protection_Profiles(uint16_t pp) : m_pp(1, pp) {}
 
-      SRTP_Protection_Profiles(TLS_Data_Reader& reader, uint16_t extension_size);
+      SRTP_Protection_Profiles(TLS_Data_Reader& reader, uint16_t extension_size, Connection_Side from);
 
    private:
       std::vector<uint16_t> m_pp;
