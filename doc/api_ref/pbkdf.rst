@@ -74,7 +74,7 @@ specified with all parameters (say "Scrypt" with ``N`` = 8192, ``r`` = 64, and
 
       Return a guesstimate of the total number of bytes of memory consumed when
       running this algorithm. If the function is not intended to be memory-hard
-      and uses an effictively fixed amount of memory when running, this function
+      and uses an effectively fixed amount of memory when running, this function
       returns 0.
 
    .. cpp:function:: bool supports_keyed_operation() const
