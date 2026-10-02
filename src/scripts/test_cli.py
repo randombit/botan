@@ -712,40 +712,40 @@ def cli_xmss_sign_tests(tmp_dir):
     test_cli("hash", ["--no-fsname", msg], "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855")
 
     test_cli("keygen", ["--algo=XMSS", "--params=XMSS-SHA2_10_256", "--output=%s" % (priv_key)], "")
-    test_cli("hash", ["--no-fsname", priv_key], "737368AB8BFC6B0CDA0DF7FB6BD1DE48C2ABA81236F65E4E227920CECCC5F259")
+    test_cli("hash", ["--no-fsname", priv_key], "3CA672BD3F2B8A5EEFEF26D9B6918B30B6BA6BB40C1CE4FFB3AB8573EB1EEDE9")
 
     test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key, priv_key), "")
     test_cli("fingerprint", ['--no-fsname', pub_key],
-             "7B:9F:20:23:A8:FC:A7:BD:BA:F4:DE:58:3C:D8:68:52:D1:8E:16:C8:B4:33:B0:34:FE:42:37:16:AE:95:7B:83")
+             "8D:27:70:6E:20:D8:64:3C:F3:FD:54:B8:87:3C:01:32:7B:BA:54:7D:AD:A0:ED:B9:8C:F3:5B:A2:64:74:2B:EE")
 
     # verify the key is updated after each signature:
     test_cli("sign", [priv_key, msg, "--output=%s" % (sig1)], "")
     test_cli("verify", [pub_key, msg, sig1], "Signature is valid")
     test_cli("hash", ["--no-fsname", sig1], "A37241040C0C7044DD502D92B69E8B931FF43FBC91CF4E3C869B23206EBFABF6")
-    test_cli("hash", ["--no-fsname", priv_key], "748E63766E8805A4CED94B7BC52F0A5EB2D6F8CECFD2CFC27C61DFA2C7DC1328")
+    test_cli("hash", ["--no-fsname", priv_key], "355810826B6982F71A5C30936799D46D905C13D6274758C720A1E5ECC78BB7C5")
 
     test_cli("sign", [priv_key, msg, "--output=%s" % (sig2)], "")
     test_cli("verify", [pub_key, msg, sig2], "Signature is valid")
     test_cli("hash", ["--no-fsname", sig2], "D593C1D0ADED11422248AE16CA77828CD2161CA3FCE3D0118A78D188C637D883")
-    test_cli("hash", ["--no-fsname", priv_key], "745903AC3BB7F55A6003BB59B13FC3BB48F4ACCAC7FE5888DD38031C55785B70")
+    test_cli("hash", ["--no-fsname", priv_key], "945139EB17D50F50721B4982BE0650D43EC1DF3C69E1F8CA75BECE68A94880D1")
 
     # private key updates, public key is unchanged:
     test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key2, priv_key), "")
     test_cli("fingerprint", ['--no-fsname', pub_key2],
-             "7B:9F:20:23:A8:FC:A7:BD:BA:F4:DE:58:3C:D8:68:52:D1:8E:16:C8:B4:33:B0:34:FE:42:37:16:AE:95:7B:83")
+             "8D:27:70:6E:20:D8:64:3C:F3:FD:54:B8:87:3C:01:32:7B:BA:54:7D:AD:A0:ED:B9:8C:F3:5B:A2:64:74:2B:EE")
 
     # verify that key is updated when creating a self-signed certificate
     test_cli("gen_self_signed",
              [priv_key, "Root", "--ca", "--path-limit=2", "--output="+root_crt], "")
-    test_cli("hash", ["--no-fsname", priv_key], "364744707707A05F9348848EF473CCCE600D337E9715EB5D899EE392E1B49FD7")
+    test_cli("hash", ["--no-fsname", priv_key], "E7984333BB658654913582B1A35FDF8C2C37FEE90CFFF13C51AA2DCB333269B9")
 
     # verify that key is updated after signing a certificate request
     test_cli("gen_pkcs10", "%s Intermediate --ca --output=%s" % (priv_key, int_csr))
-    test_cli("hash", ["--no-fsname", priv_key], "C460DC6B4BAC18360C61F93F8E33762AECEDBC864E0D9EA7A2561A8B8CC04A89")
+    test_cli("hash", ["--no-fsname", priv_key], "4E0EA25F95FA1FCDA5C3E6EAFF51AE50425823718B2F5B1F849BD5EC3B66C086")
 
     # verify that key is updated after issuing a certificate
     test_cli("sign_cert", "%s %s %s --output=%s" % (root_crt, priv_key, int_csr, int_crt))
-    test_cli("hash", ["--no-fsname", priv_key], "DDFC14EADFC7EDCC569D038F6BCBBC359D035B1CBB7BB0814E134AA5BB8FB8C8")
+    test_cli("hash", ["--no-fsname", priv_key], "5AE02AFA27FB0347CEF0B65F88BCFACE6D7B8C2F05C31799B7E0FA30B04802D3")
 
     test_cli("cert_verify", "%s %s" % (int_crt, root_crt), "Certificate passes validation checks")
 
