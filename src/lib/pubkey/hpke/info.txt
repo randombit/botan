@@ -1,0 +1,23 @@
+<defines>
+HPKE -> 20260706
+</defines>
+
+<module_info>
+name -> "HPKE"
+brief -> "Hybrid Public Key Encryption (RFC 9180)"
+</module_info>
+
+<requires>
+aead
+ecdh
+hkdf
+hmac
+</requires>
+
+<header:public>
+hpke.h
+</header:public>
+
+<header:internal>
+hpke_kem.h
+</header:internal>
