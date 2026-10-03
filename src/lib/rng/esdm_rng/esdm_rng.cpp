@@ -32,11 +32,12 @@ class ESDM_Context final {
 
       [[nodiscard]] std::shared_ptr<void> acquire() {
          std::scoped_lock lk(m_mutex);
-         if(m_refs++ == 0) {
+         if(m_refs == 0) {
             if(esdm_rpcc_init_unpriv_service(nullptr) != 0) {
                throw Botan::System_Error("unable to initialize ESDM unprivileged service");
             }
          }
+         m_refs++;
          return std::shared_ptr<void>{nullptr, [this](void*) { this->release(); }};
       }
 

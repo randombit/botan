@@ -107,6 +107,9 @@ class BOTAN_PUBLIC_API(2, 0) AutoSeeded_RNG final : public RandomNumberGenerator
       AutoSeeded_RNG(const AutoSeeded_RNG& other) = delete;
       /**
       * Move constructor
+      *
+      * The moved-from object reports itself as unseeded and all other
+      * operations on it throw Invalid_State.
       */
       AutoSeeded_RNG(AutoSeeded_RNG&& other) noexcept;
       AutoSeeded_RNG& operator=(const AutoSeeded_RNG& other) = delete;

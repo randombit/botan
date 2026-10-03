@@ -78,25 +78,51 @@ Entropy_Accumulator::Sink additional_input_sink(RandomNumberGenerator& rng) {
    return [&rng](std::span<const uint8_t> in) { rng.randomize_with_input({}, in); };
 }
 
+#if defined(BOTAN_HAS_SYSTEM_RNG) || defined(BOTAN_HAS_PROCESSOR_RNG) || defined(BOTAN_HAS_JITTER_RNG)
+
+class RNG_Based_EntropySource : public Entropy_Source {
+   public:
+      void gather(Entropy_Accumulator& acc) final;
+
+   protected:
+      virtual size_t poll_bits() const { return RandomNumberGenerator::DefaultPollBits; }
+
+      virtual bool trusted() const { return true; }
+
+      virtual RandomNumberGenerator& rng() = 0;
+};
+
+void RNG_Based_EntropySource::gather(Entropy_Accumulator& acc) {
+   secure_vector<uint8_t> buf(poll_bits() / 8);
+   try {
+      rng().randomize(buf);
+   } catch(...) {
+      /* ignore all errors from the RNG and simply return */
+      return;
+   }
+
+   const size_t estimated_entropy_bits = trusted() ? (buf.size() * 8) : (0);
+   acc.add(buf, estimated_entropy_bits);
+}
+
+#endif
+
 #if defined(BOTAN_HAS_SYSTEM_RNG)
 
-class System_RNG_EntropySource final : public Entropy_Source {
+class System_RNG_EntropySource final : public RNG_Based_EntropySource {
    public:
-      void gather(Entropy_Accumulator& acc) override {
-         const size_t poll_bits = RandomNumberGenerator::DefaultPollBits;
-         acc.add(system_rng().random_vec(poll_bits / 8), poll_bits);
-      }
-
       std::string name() const override { return "system_rng"; }
+
+      RandomNumberGenerator& rng() override { return system_rng(); }
 };
 
 #endif
 
 #if defined(BOTAN_HAS_PROCESSOR_RNG)
 
-class Processor_RNG_EntropySource final : public Entropy_Source {
+class Processor_RNG_EntropySource final : public RNG_Based_EntropySource {
    public:
-      void gather(Entropy_Accumulator& acc) override {
+      size_t poll_bits() const override {
          /*
          * Intel's documentation for RDRAND at
          * https://software.intel.com/en-us/articles/intel-digital-random-number-generator-drng-software-implementation-guide
@@ -113,10 +139,15 @@ class Processor_RNG_EntropySource final : public Entropy_Source {
          * but probably work in a somewhat similar manner. The exact amount requested
          * may be tweaked if and when such conditions become publicly known.
          */
-         const size_t poll_bits = 65536;
-         // Avoid trusting a black box, don't count this as contributing entropy:
-         acc.add(m_hwrng.random_vec(poll_bits / 8), 0);
+         return 65536;
       }
+
+      bool trusted() const override {
+         // Avoid trusting a black box, don't count this as contributing entropy:
+         return false;
+      }
+
+      RandomNumberGenerator& rng() override { return m_hwrng; }
 
       std::string name() const override { return m_hwrng.name(); }
 
@@ -128,19 +159,16 @@ class Processor_RNG_EntropySource final : public Entropy_Source {
 
 #if defined(BOTAN_HAS_JITTER_RNG)
 
-class Jitter_RNG_EntropySource final : public Entropy_Source {
+class Jitter_RNG_EntropySource final : public RNG_Based_EntropySource {
    public:
-      Jitter_RNG_EntropySource(Jitter_RNG::Mode mode) : m_rng(mode) {}
+      explicit Jitter_RNG_EntropySource(Jitter_RNG::Mode mode) : m_jitter(mode) {}
 
-      void gather(Entropy_Accumulator& acc) override {
-         const size_t poll_bits = RandomNumberGenerator::DefaultPollBits;
-         acc.add(m_rng.random_vec(poll_bits / 8), poll_bits);
-      }
+      std::string name() const override { return m_jitter.name(); }
 
-      std::string name() const override { return m_rng.name(); }
+      RandomNumberGenerator& rng() override { return m_jitter; }
 
    private:
-      Jitter_RNG m_rng;
+      Jitter_RNG m_jitter;
 };
 
 #endif
@@ -278,8 +306,11 @@ size_t Entropy_Sources::_gather_just(Entropy_Accumulator& acc, std::string_view 
 
 size_t Entropy_Sources::poll(RandomNumberGenerator& rng, size_t poll_bits, std::chrono::milliseconds timeout) {
 #if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
-   typedef std::chrono::system_clock clock;
-   const auto timeout_expired = [to = clock::now() + timeout] { return clock::now() > to; };
+   typedef std::chrono::steady_clock clock;
+   // Compare elapsed time in milliseconds to avoid overflow for very large timeouts
+   const auto timeout_expired = [start = clock::now(), timeout] {
+      return std::chrono::duration_cast<std::chrono::milliseconds>(clock::now() - start) > timeout;
+   };
 #else
    auto timeout_expired = [] { return false; };
 #endif
