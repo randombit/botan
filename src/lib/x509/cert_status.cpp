@@ -95,6 +95,8 @@ const char* to_string(Certificate_Status_Code code) {
          return "IP Address Blocks extension invalid";
       case Certificate_Status_Code::AS_BLOCKS_ERROR:
          return "AS Number Blocks extension invalid";
+      case Certificate_Status_Code::TN_AUTH_LIST_ERROR:
+         return "TN Authorization List not encompassed by a CA in the path";
       case Certificate_Status_Code::NO_REV_AVAIL_INVALID_USE:
          return "noRevAvail extension used in an invalid manner";
       case Certificate_Status_Code::INVALID_OCSP_NOCHECK:

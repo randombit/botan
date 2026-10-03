@@ -105,6 +105,13 @@ Version 3.14.0, Not Yet Released
   be requested using the API ``PK_Signature_Options::with_deterministic_signature``
   or by appending ",Deterministic" to the normal hash specifier string. (GH #5489)
 
+* Add ``TelephoneNumber`` and ``TelephoneNumberRange`` types modeling the
+  telephone numbers and number ranges used in RFC 8226 STIR certificates.
+  (GH #5979)
+
+* Fix lenient decoding of the RFC 8226 TNAuthList extension, and add
+  support for encoding it. (GH #5977)
+
 * Add ``PKCS12::mac_protected`` which indicates if the PKCS #12 file was
   protected using a MAC. (GH #5902)
 

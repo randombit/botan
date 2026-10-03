@@ -1064,6 +1064,23 @@ std::string X509_Certificate::to_string() const {
       out << "CRL " << cdp.original_input() << "\n";
    }
 
+   if(const auto* tn_auth = v3_extensions().get_extension_object_as<Cert_Extension::TNAuthList>()) {
+      out << "TN Authorization List:\n";
+      for(const auto& entry : tn_auth->entries()) {
+         switch(entry.type()) {
+            case Cert_Extension::TNAuthList::Entry::ServiceProviderCode:
+               out << "   SPC: " << escape_control_chars(entry.service_provider_code()) << "\n";
+               break;
+            case Cert_Extension::TNAuthList::Entry::TelephoneNumberRange:
+               out << "   Range: " << entry.range().start().to_string() << " count " << entry.range().count() << "\n";
+               break;
+            case Cert_Extension::TNAuthList::Entry::TelephoneNumber:
+               out << "   TN: " << entry.number().to_string() << "\n";
+               break;
+         }
+      }
+   }
+
    out << "Signature algorithm: " << this->signature_algorithm().oid().to_formatted_string() << "\n";
 
    out << "Serial number: " << this->serial().to_string() << "\n";
