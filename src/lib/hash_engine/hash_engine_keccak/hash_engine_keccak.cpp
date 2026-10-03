@@ -115,7 +115,7 @@ class Keccak_MB_Engine final : public Hash_Engine {
 
          for(size_t base = 0; base < count; base += m_lanes) {
             // Excess lanes of the last batch just recompute the final message
-            auto lane_idx = [&](size_t l) { return std::min(base + l, count - 1); };
+            const auto lane_idx = [&](size_t l) { return std::min(base + l, count - 1); };
 
             for(size_t w = 0; w != 25; ++w) {
                for(size_t l = 0; l != m_lanes; ++l) {

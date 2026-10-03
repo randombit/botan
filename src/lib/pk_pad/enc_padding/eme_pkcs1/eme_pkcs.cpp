@@ -62,7 +62,7 @@ CT::Option<size_t> EME_PKCS1v15::unpad(std::span<uint8_t> output, std::span<cons
       return {};
    }
 
-   auto scope = CT::scoped_poison(input);
+   const auto scope = CT::scoped_poison(input);
 
    CT::Mask<uint8_t> bad_input_m = CT::Mask<uint8_t>::cleared();
    CT::Mask<uint8_t> seen_zero_m = CT::Mask<uint8_t>::cleared();

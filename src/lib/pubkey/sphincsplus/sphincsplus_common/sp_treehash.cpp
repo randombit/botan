@@ -70,13 +70,13 @@ void treehash(StrongSpan<SphincsTreeNode> out_root,
          // it is, write it out. The XOR sum of both nodes (at internal_idx and internal_leaf)
          // is 1 iff they have the same parent node in the FORS tree
          if(internal_leaf.has_value() && (internal_idx ^ internal_leaf.value()) == 0x01U) {
-            auto auth_path_location = out_auth_path.get().subspan(h.get() * params.n(), params.n());
+            const auto auth_path_location = out_auth_path.get().subspan(h.get() * params.n(), params.n());
             copy_mem(auth_path_location, current_node);
          }
 
          // At this point we know that we'll need to use the stack. Get a
          // reference to the correct location.
-         auto stack_location = std::span(stack).subspan(h.get() * params.n(), params.n());
+         const auto stack_location = std::span(stack).subspan(h.get() * params.n(), params.n());
 
          // Check if we're at a left child; if so, stop going up the stack
          // Exception: if we've reached the end of the tree, keep on going (so

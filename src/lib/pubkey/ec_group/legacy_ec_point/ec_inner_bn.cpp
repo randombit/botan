@@ -142,7 +142,7 @@ secure_vector<uint8_t> EC_AffinePoint_Data_BN::mul_x_only(const EC_Scalar_Data& 
    // See https://github.com/randombit/botan/issues/3800
 
    const auto order = m_group->order() * m_group->cofactor();
-   auto pt = mul.mul(bn.value(), rng, order, ws);
+   const auto pt = mul.mul(bn.value(), rng, order, ws);
    return pt.x_bytes();
 }
 

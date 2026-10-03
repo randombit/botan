@@ -119,7 +119,7 @@ std::vector<OID> Extensions::critical_extensions() const {
    std::vector<OID> crit;
 
    for(const auto& oid : m_extension_oids) {
-      auto ext_info = m_extension_info.find(oid);
+      const auto ext_info = m_extension_info.find(oid);
       BOTAN_ASSERT_NOMSG(ext_info != m_extension_info.end());
       if(ext_info->second.is_critical()) {
          crit.push_back(oid);
@@ -227,7 +227,7 @@ bool Extensions::extension_set(const OID& oid) const {
 }
 
 bool Extensions::critical_extension_set(const OID& oid) const {
-   auto i = m_extension_info.find(oid);
+   const auto i = m_extension_info.find(oid);
    if(i != m_extension_info.end()) {
       return i->second.is_critical();
    }
@@ -235,7 +235,7 @@ bool Extensions::critical_extension_set(const OID& oid) const {
 }
 
 std::vector<uint8_t> Extensions::get_extension_bits(const OID& oid) const {
-   auto i = m_extension_info.find(oid);
+   const auto i = m_extension_info.find(oid);
    if(i == m_extension_info.end()) {
       throw Invalid_Argument("Extensions::get_extension_bits no such extension set");
    }
@@ -244,7 +244,7 @@ std::vector<uint8_t> Extensions::get_extension_bits(const OID& oid) const {
 }
 
 const Certificate_Extension* Extensions::get_extension_object(const OID& oid) const {
-   auto extn = m_extension_info.find(oid);
+   const auto extn = m_extension_info.find(oid);
    if(extn == m_extension_info.end()) {
       return nullptr;
    }
@@ -1508,7 +1508,7 @@ std::vector<uint8_t> CRL_Issuing_Distribution_Point::encode_inner() const {
          "At most one of onlyContainsUserCerts, onlyContainsCACerts, onlyContainsAttributeCerts may be TRUE");
    }
 
-   auto emit_optional_boolean_implicit = [](DER_Encoder& der, uint32_t tag, bool value) {
+   const auto emit_optional_boolean_implicit = [](DER_Encoder& der, uint32_t tag, bool value) {
       // All of the values encoded here are DEFAULT FALSE so skip encoding if false
       if(value == true) {
          // Encode a BOOLEAN TRUE (0xFF) as [tag] IMPLICIT BOOLEAN
@@ -2099,7 +2099,7 @@ void IPAddressBlocks::sort_and_merge() {
    // std::map is ordered, so using a pair (afi, optional(safi)) here works - std::nullopt is sorted before any actual values
    std::map<std::pair<uint16_t, std::optional<uint8_t>>, std::vector<IPAddressFamily>> afam_map;
    for(const IPAddressFamily& block : m_ip_addr_blocks) {
-      auto key = std::make_pair(block.afi(), block.safi());
+      const auto key = std::make_pair(block.afi(), block.safi());
       std::vector<IPAddressFamily>& fams = afam_map[key];
       fams.push_back(block);
    }
@@ -2124,7 +2124,7 @@ void IPAddressBlocks::sort_and_merge() {
       }
    }
    BOTAN_ASSERT_NOMSG(v4_count + v6_count == merged_blocks.size());
-   m_ip_addr_blocks = merged_blocks;
+   m_ip_addr_blocks = std::move(merged_blocks);
    m_v4_count = v4_count;
    m_v6_count = v6_count;
 }
@@ -2304,7 +2304,7 @@ std::pair<IPValidationMap<IPv4>, IPValidationMap<IPv6>> create_validation_map(
    for(const IPAddressBlocks::IPAddressFamily& block : addr_blocks) {
       uint32_t afam = block.afi();
       if(block.safi().has_value()) {
-         afam = static_cast<uint32_t>(afam << 8) | block.safi().value();
+         afam = (afam << 8) | block.safi().value();
       }
 
       const IPAddressBlocks::IPAddressFamily::AddrChoice& a_choice = block.addr_choice();
@@ -2588,7 +2588,7 @@ void IPAddressBlocks::validate(const X509_Certificate& /* unused */,
 
    if(pos == cert_path.size() - 1) {
       // checks if any range / family has 'inherit' as a value somewhere, not allowed for the root cert
-      auto validate_root_cert_ext = [&](const auto& map) {
+      const auto validate_root_cert_ext = [&](const auto& map) {
          // check if any range has a value of 'false', indicating 'inherit'
          return std::any_of(map.begin(), map.end(), [&](const auto& it) {
             const auto& [_1, validation_info] = it;
@@ -2612,7 +2612,7 @@ void IPAddressBlocks::validate(const X509_Certificate& /* unused */,
       }
       auto [issuer_v4, issuer_v6] = create_validation_map(parent_ip->addr_blocks());
 
-      auto validate_against_issuer = [&](auto& subject_map, const auto& issuer_map) {
+      const auto validate_against_issuer = [&](auto& subject_map, const auto& issuer_map) {
          for(auto map_it = subject_map.begin(); map_it != subject_map.end(); map_it++) {
             auto& [afam, validation_info] = *map_it;
 
@@ -2643,7 +2643,7 @@ void IPAddressBlocks::validate(const X509_Certificate& /* unused */,
          return;
       }
 
-      auto validate_no_checks_left = [&](const auto& map) {
+      const auto validate_no_checks_left = [&](const auto& map) {
          // check if all ranges have been checked, either by comparing their ranges if they have any,
          // or if they are inherit, their parent(s) will be validated later
          return std::all_of(map.begin(), map.end(), [&](const auto& it) {

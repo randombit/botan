@@ -162,7 +162,7 @@ bool OID::matches(std::initializer_list<uint32_t> other) const {
 uint64_t OID::hash_code() const {
    // If this is changed also update gen_oids.py to match
    uint64_t hash = 0x621F302327D9A49A;
-   for(auto id : m_id) {
+   for(const auto id : m_id) {
       hash *= 193;
       hash += id;
    }
@@ -187,7 +187,7 @@ void OID::encode_into(DER_Encoder& der) const {
       throw Invalid_Argument("OID::encode_into: OID is invalid");
    }
 
-   auto append = [](std::vector<uint8_t>& encoding, uint32_t z) {
+   const auto append = [](std::vector<uint8_t>& encoding, uint32_t z) {
       if(z <= 0x7F) {
          encoding.push_back(static_cast<uint8_t>(z));
       } else {
@@ -232,7 +232,7 @@ void OID::decode_from(BER_Decoder& decoder) {
       throw BER_Decoding_Error("OID encoding is too short");
    }
 
-   auto consume = [](BufferSlicer& data) -> uint32_t {
+   const auto consume = [](BufferSlicer& data) -> uint32_t {
       BOTAN_ASSERT_NOMSG(!data.empty());
       uint32_t b = data.take_byte();
 

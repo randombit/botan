@@ -238,7 +238,7 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification {
          Sphincs_Address fors_addr(Sphincs_Address_Type::ForsTree);
          fors_addr.set_tree_address(tree_idx).set_keypair_address(leaf_idx);
          const auto fors_sig_s = s.take<ForsSignature>(p.fors_signature_bytes());
-         auto fors_root = fors_public_key_from_signature(mhash, fors_sig_s, fors_addr, p, *m_hashes);
+         const auto fors_root = fors_public_key_from_signature(mhash, fors_sig_s, fors_addr, p, *m_hashes);
 
          // Verify the hypertree signature
          const auto ht_sig_s = s.take<SphincsHypertreeSignature>(p.ht_signature_bytes());
@@ -400,7 +400,7 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
          if(m_randomized) {
             addrnd = rng.random_vec<SphincsOptionalRandomness>(m_public->parameters().n());
          }
-         auto internal_msg = prepare_message(std::exchange(m_msg_buffer, {}), m_public->parameters(), m_context);
+         const auto internal_msg = prepare_message(std::exchange(m_msg_buffer, {}), m_public->parameters(), m_context);
 
          return slh_sign_internal(internal_msg, addrnd);
       }
@@ -427,7 +427,7 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
          const auto opt_rand =
             (addrnd.has_value()) ? addrnd.value() : StrongSpan<const SphincsOptionalRandomness>(m_public->seed());
 
-         auto msg_random_s = sphincs_sig.next<SphincsMessageRandomness>(p.n());
+         const auto msg_random_s = sphincs_sig.next<SphincsMessageRandomness>(p.n());
          m_hashes->PRF_msg(msg_random_s, m_private->prf(), opt_rand, message);
 
          // Derive the message digest and leaf index from R, PK and M.
@@ -436,12 +436,12 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
          // Compute and append the FORS signature
          Sphincs_Address fors_addr(Sphincs_Address_Type::ForsTree);
          fors_addr.set_tree_address(tree_idx).set_keypair_address(leaf_idx);
-         auto fors_root = fors_sign_and_pkgen(sphincs_sig.next<ForsSignature>(p.fors_signature_bytes()),
-                                              mhash,
-                                              m_private->seed(),
-                                              fors_addr,
-                                              p,
-                                              *m_hashes);
+         const auto fors_root = fors_sign_and_pkgen(sphincs_sig.next<ForsSignature>(p.fors_signature_bytes()),
+                                                    mhash,
+                                                    m_private->seed(),
+                                                    fors_addr,
+                                                    p,
+                                                    *m_hashes);
 
          // Compute and append the XMSS hypertree signature
          ht_sign(sphincs_sig.next<SphincsHypertreeSignature>(p.ht_signature_bytes()),

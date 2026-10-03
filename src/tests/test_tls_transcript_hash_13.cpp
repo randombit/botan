@@ -152,7 +152,7 @@ std::vector<Test::Result> transcript_hash() {
                h1.update(std::array<uint8_t, 4>{0xba, 0xad, 0xbe, 0xef});
                h1.update(std::array<uint8_t, 4>{0x60, 0x0d, 0xf0, 0x0d});
 
-               auto h2 = h1.clone();
+               const auto h2 = h1.clone();
                result.test_bin_eq("c1 = SHA-256(baadbeef | goodfood)", h1.current(), sha256("baadbeef600df00d"));
                result.test_bin_eq("c2 = SHA-256(baadbeef | goodfood)", h2.current(), sha256("baadbeef600df00d"));
 
@@ -169,7 +169,7 @@ std::vector<Test::Result> transcript_hash() {
                h1.update(std::array<uint8_t, 4>{0xc0, 0xca, 0xc0, 0x1a} /* client hello 1 */);
                h1.update(std::array<uint8_t, 4>{0xc0, 0x01, 0xf0, 0x0d} /* hello retry request */);
 
-               auto h2 = Transcript_Hash_State::recreate_after_hello_retry_request("SHA-256", h1);
+               const auto h2 = Transcript_Hash_State::recreate_after_hello_retry_request("SHA-256", h1);
 
                // RFC 8446 4.4.1
                const std::string hash_of_client_hello = Botan::hex_encode(sha256("c0cac01a"));

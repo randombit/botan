@@ -69,7 +69,7 @@ class PerfTest_Rng final : public PerfTest {
 
    private:
       void bench_rng(const PerfConfig& config, Botan::RandomNumberGenerator& rng, const std::string& rng_name) {
-         for(auto buf_size : config.buffer_sizes()) {
+         for(const auto buf_size : config.buffer_sizes()) {
             Botan::secure_vector<uint8_t> buffer(buf_size);
             const size_t mult = std::max<size_t>(1, 65536 / buf_size);
 

@@ -210,7 +210,7 @@ int botan_rng_init_drbg(botan_rng_t* rng_out, const char* drbg_name, const uint8
       const std::string name(drbg_name);
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
-      if(name.starts_with("HMAC_DRBG(") && name.ends_with(")") && name.size() > 12) {
+      if(name.starts_with("HMAC_DRBG(") && name.ends_with(')') && name.size() > 12) {
          const std::string hash = name.substr(10, name.size() - 11);
          drbg = std::make_unique<Botan::HMAC_DRBG>(hash);
       }

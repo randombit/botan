@@ -447,8 +447,8 @@ void Client_Impl_13::handle(const Encrypted_Extensions& encrypted_extensions_msg
       //
       // Hence, the "outgoing" limit is what the server requested and the
       // "incoming" limit is what we requested in the Client Hello.
-      auto* const outgoing_limit = exts.get<Record_Size_Limit>();
-      auto* const incoming_limit = m_handshake->state.client_hello().extensions().get<Record_Size_Limit>();
+      const auto* const outgoing_limit = exts.get<Record_Size_Limit>();
+      const auto* const incoming_limit = m_handshake->state.client_hello().extensions().get<Record_Size_Limit>();
       set_record_size_limits(outgoing_limit->limit(), incoming_limit->limit());
    }
 
@@ -660,7 +660,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
    // After this point, only m_active_state should be consulted
    // for connection properties.
    {
-      auto extract_certs = [&]() -> std::vector<X509_Certificate> {
+      const auto extract_certs = [&]() -> std::vector<X509_Certificate> {
          if(m_handshake->state.has_server_certificate_msg() &&
             m_handshake->state.server_certificate().has_certificate_chain()) {
             return m_handshake->state.server_certificate().cert_chain();
@@ -671,7 +671,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
          return {};
       };
 
-      auto extract_raw_pk = [&]() -> std::shared_ptr<const Public_Key> {
+      const auto extract_raw_pk = [&]() -> std::shared_ptr<const Public_Key> {
          if(m_handshake->state.has_server_certificate_msg() &&
             m_handshake->state.server_certificate().is_raw_public_key()) {
             return m_handshake->state.server_certificate().public_key();

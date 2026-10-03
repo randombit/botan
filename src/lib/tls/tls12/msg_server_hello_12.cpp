@@ -74,8 +74,8 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
       if(!server_srtp.empty() && !client_srtp.empty()) {
          uint16_t shared = 0;
          // always using server preferences for now
-         for(auto s_srtp : server_srtp) {
-            for(auto c_srtp : client_srtp) {
+         for(const auto s_srtp : server_srtp) {
+            for(const auto c_srtp : client_srtp) {
                if(shared == 0 && s_srtp == c_srtp) {
                   shared = s_srtp;
                }
@@ -186,7 +186,7 @@ bool Server_Hello_12::supports_session_ticket() const {
 }
 
 uint16_t Server_Hello_12::srtp_profile() const {
-   if(auto* srtp = m_data->extensions().get<SRTP_Protection_Profiles>()) {
+   if(const auto* srtp = m_data->extensions().get<SRTP_Protection_Profiles>()) {
       auto prof = srtp->profiles();
       if(prof.size() != 1 || prof[0] == 0) {
          throw Decoding_Error("Server sent malformed DTLS-SRTP extension");
@@ -198,14 +198,14 @@ uint16_t Server_Hello_12::srtp_profile() const {
 }
 
 std::string Server_Hello_12::next_protocol() const {
-   if(auto* alpn = m_data->extensions().get<Application_Layer_Protocol_Notification>()) {
+   if(const auto* alpn = m_data->extensions().get<Application_Layer_Protocol_Notification>()) {
       return alpn->single_protocol();
    }
    return "";
 }
 
 bool Server_Hello_12::prefers_compressed_ec_points() const {
-   if(auto* ecc_formats = m_data->extensions().get<Supported_Point_Formats>()) {
+   if(const auto* ecc_formats = m_data->extensions().get<Supported_Point_Formats>()) {
       return ecc_formats->prefers_compressed();
    }
    return false;

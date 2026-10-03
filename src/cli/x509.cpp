@@ -131,13 +131,13 @@ class Sign_Cert final : public Command {
 
          const std::string hash = get_arg("hash");
 
-         auto key = load_private_key(key_file, pass);
+         const auto key = load_private_key(key_file, pass);
 
          const Botan::X509_CA ca(ca_cert, *key, hash, padding, rng());
 
          const Botan::PKCS10_Request req(get_arg("pkcs10_req"));
 
-         auto now = std::chrono::system_clock::now();
+         const auto now = std::chrono::system_clock::now();
 
          const Botan::X509_Time start_time(now);
 
@@ -284,7 +284,7 @@ class Gen_Self_Signed final : public Command {
       void go() override {
          const std::string key_file = get_arg("key");
          const std::string passphrase = get_passphrase_arg("Passphrase for " + key_file, "key-pass");
-         auto key = load_private_key(key_file, passphrase);
+         const auto key = load_private_key(key_file, passphrase);
 
          const uint32_t lifetime = static_cast<uint32_t>(get_arg_sz("days") * 24 * 60 * 60);
 
@@ -347,7 +347,7 @@ class Generate_PKCS10 final : public Command {
          const std::string key_file = get_arg("key");
          const std::string passphrase = get_passphrase_arg("Passphrase for " + key_file, "key-pass");
 
-         auto key = load_private_key(key_file, passphrase);
+         const auto key = load_private_key(key_file, passphrase);
 
          Botan::X509_Cert_Options opts;
 

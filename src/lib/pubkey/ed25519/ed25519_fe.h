@@ -57,7 +57,7 @@ class Ed25519_FieldElement final {
       constexpr void fold_carry(W carry) {
          for(size_t fold = 0; fold != 2; ++fold) {
             W c = 0;
-            m_val[0] = word_add(m_val[0], static_cast<W>(carry * 38), &c);
+            m_val[0] = word_add(m_val[0], carry * 38, &c);
             for(size_t i = 1; i != N; ++i) {
                m_val[i] = word_add(m_val[i], static_cast<W>(0), &c);
             }
@@ -71,7 +71,7 @@ class Ed25519_FieldElement final {
       constexpr void fold_borrow(W borrow) {
          for(size_t fold = 0; fold != 2; ++fold) {
             W b = 0;
-            m_val[0] = word_sub(m_val[0], static_cast<W>(borrow * 38), &b);
+            m_val[0] = word_sub(m_val[0], borrow * 38, &b);
             for(size_t i = 1; i != N; ++i) {
                m_val[i] = word_sub(m_val[i], static_cast<W>(0), &b);
             }
@@ -193,7 +193,7 @@ class Ed25519_FieldElement final {
       constexpr bool is_zero() const {
          const auto w = canonical();
          if(std::is_constant_evaluated()) {
-            for(auto x : w) {
+            for(const auto x : w) {
                if(x != 0) {
                   return false;
                }

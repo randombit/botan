@@ -56,7 +56,7 @@ class RSA_SignMechanism final : public MechanismData {
    public:
       explicit RSA_SignMechanism(MechanismType typ) :
             MechanismData(typ), m_hash(static_cast<MechanismType>(0)), m_mgf(MGF::MgfUnused), m_salt_size(0) {
-         auto pss_option = PssOptions().find(type());
+         const auto pss_option = PssOptions().find(type());
          if(pss_option != PssOptions().end()) {
             m_hash = std::get<1>(pss_option->second);
             m_mgf = std::get<2>(pss_option->second);
@@ -132,7 +132,7 @@ MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(const PK_Encryptio
       }
 
       const std::string& hash_name = options.hash_function_name();
-      auto hash = OaepHashes.find(hash_name);
+      const auto hash = OaepHashes.find(hash_name);
       if(hash == OaepHashes.end()) {
          throw Lookup_Error(fmt("PKCS#11 RSA OAEP does not support hash function '{}'", hash_name));
       }
@@ -140,7 +140,7 @@ MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(const PK_Encryptio
       MGF mgf = hash->second.mgf;
       if(options.using_mgf1_hash()) {
          const std::string mgf1_hash_name = options.mgf1_hash_function().value();
-         auto mgf1_hash = OaepHashes.find(mgf1_hash_name);
+         const auto mgf1_hash = OaepHashes.find(mgf1_hash_name);
          if(mgf1_hash == OaepHashes.end()) {
             throw Lookup_Error(fmt("PKCS#11 RSA OAEP does not support MGF1 hash function '{}'", mgf1_hash_name));
          }
@@ -270,7 +270,7 @@ MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(const PK_Signature_
       return scheme;  // NOLINT(*-no-automatic-move)
    }();
 
-   auto mechanism_info_it = SignMechanisms.find(padding);
+   const auto mechanism_info_it = SignMechanisms.find(padding);
    if(mechanism_info_it == SignMechanisms.end()) {
       // at this point it would be possible to support additional configurations that are not predefined above by parsing `padding`
       throw Lookup_Error(fmt("PKCS#11 RSA sign/verify does not support padding with '{}'", padding));
@@ -357,7 +357,7 @@ MechanismWrapper MechanismWrapper::create_ecdh_mechanism(std::string_view params
       throw Invalid_Argument(fmt("PKCS #11 ECDH key derivation bad params {}", params));
    }
 
-   auto kdf = EcdhHash.find(kdf_name);
+   const auto kdf = EcdhHash.find(kdf_name);
    if(kdf == EcdhHash.end()) {
       throw Lookup_Error("PKCS#11 ECDH key derivation does not support KDF " + kdf_name);
    }

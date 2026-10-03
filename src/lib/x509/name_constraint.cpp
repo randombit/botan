@@ -419,7 +419,7 @@ void GeneralName::encode_into(DER_Encoder& to) const {
         iPAddress                       [7]     OCTET STRING,
         registeredID                    [8]     OBJECT IDENTIFIER }
    */
-   auto emit_ia5_implicit = [&](uint32_t tag, std::string_view value) {
+   const auto emit_ia5_implicit = [&](uint32_t tag, std::string_view value) {
       const ASN1_String str(value, ASN1_Type::Ia5String);
       to.add_object(ASN1_Type(tag), ASN1_Class::ContextSpecific, str.value());
    };
@@ -896,7 +896,7 @@ bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unk
       }
    }
 
-   auto is_permitted_dn = [&](const X509_DN& dn) {
+   const auto is_permitted_dn = [&](const X509_DN& dn) {
       // If no restrictions, then immediate accept
       if(!m_permitted_name_types.contains(GeneralName::NameType::DN)) {
          return true;
@@ -912,7 +912,7 @@ bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unk
       return false;
    };
 
-   auto is_permitted_dns_name = [&](const DNSName& name) {
+   const auto is_permitted_dns_name = [&](const DNSName& name) {
       // If no restrictions, then immediate accept
       if(!m_permitted_name_types.contains(GeneralName::NameType::DNS)) {
          return true;
@@ -938,7 +938,7 @@ bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unk
    const bool ip_form_restricted = m_permitted_name_types.contains(GeneralName::NameType::IPv4) ||
                                    m_permitted_name_types.contains(GeneralName::NameType::IPv6);
 
-   auto is_permitted_ipv4 = [&](const IPv4Address& ipv4) {
+   const auto is_permitted_ipv4 = [&](const IPv4Address& ipv4) {
       if(!ip_form_restricted) {
          return true;
       }
@@ -957,7 +957,7 @@ bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unk
       return false;
    };
 
-   auto is_permitted_ipv6 = [&](const IPv6Address& ipv6) {
+   const auto is_permitted_ipv6 = [&](const IPv6Address& ipv6) {
       if(!ip_form_restricted) {
          return true;
       }
@@ -972,7 +972,7 @@ bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unk
       return false;
    };
 
-   auto is_permitted_uri = [&](const URI& uri) {
+   const auto is_permitted_uri = [&](const URI& uri) {
       // If no URI restrictions, accept.
       if(!m_permitted_name_types.contains(GeneralName::NameType::URI)) {
          return true;
@@ -1003,7 +1003,7 @@ bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unk
       return false;
    };
 
-   auto is_permitted_email = [&](const EmailAddress& addr) {
+   const auto is_permitted_email = [&](const EmailAddress& addr) {
       // If no email restrictions, accept.
       if(!m_permitted_name_types.contains(GeneralName::NameType::RFC822)) {
          return true;
@@ -1020,7 +1020,7 @@ bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unk
    // SAN entries (id-on-SmtpUTF8Mailbox otherNames). When rfc822Name
    // constraints are in effect, every SmtpUTF8Mailbox SAN must match
    // at least one permitted entry.
-   auto is_permitted_smtp_utf8 = [&](const SmtpUtf8Mailbox& mailbox) {
+   const auto is_permitted_smtp_utf8 = [&](const SmtpUtf8Mailbox& mailbox) {
       if(!m_permitted_name_types.contains(GeneralName::NameType::RFC822)) {
          return true;
       }
@@ -1155,7 +1155,7 @@ bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unkn
       }
    }
 
-   auto is_excluded_dn = [&](const X509_DN& dn) {
+   const auto is_excluded_dn = [&](const X509_DN& dn) {
       // If no restrictions, then immediate accept
       if(!m_excluded_name_types.contains(GeneralName::NameType::DN)) {
          return false;
@@ -1171,7 +1171,7 @@ bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unkn
       return false;
    };
 
-   auto is_excluded_dns_name = [&](const DNSName& name) {
+   const auto is_excluded_dns_name = [&](const DNSName& name) {
       // If no restrictions, then immediate accept
       if(!m_excluded_name_types.contains(GeneralName::NameType::DNS)) {
          return false;
@@ -1203,7 +1203,7 @@ bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unkn
       return false;
    };
 
-   auto is_excluded_ipv4 = [&](const IPv4Address& ipv4) {
+   const auto is_excluded_ipv4 = [&](const IPv4Address& ipv4) {
       if(m_excluded_name_types.contains(GeneralName::NameType::IPv4)) {
          for(const auto& c : m_excluded_subtrees) {
             if(c.base().matches_ipv4(ipv4)) {
@@ -1216,7 +1216,7 @@ bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unkn
       return false;
    };
 
-   auto is_excluded_ipv6 = [&](const IPv6Address& ipv6) {
+   const auto is_excluded_ipv6 = [&](const IPv6Address& ipv6) {
       if(m_excluded_name_types.contains(GeneralName::NameType::IPv6)) {
          for(const auto& c : m_excluded_subtrees) {
             if(c.base().matches_ipv6(ipv6)) {
@@ -1241,7 +1241,7 @@ bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unkn
       return false;
    };
 
-   auto is_excluded_uri = [&](const URI& uri) {
+   const auto is_excluded_uri = [&](const URI& uri) {
       if(!m_excluded_name_types.contains(GeneralName::NameType::URI)) {
          return false;
       }
@@ -1300,7 +1300,7 @@ bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unkn
       return at != std::string::npos && san_domain.to_string() == constraint.substr(at + 1);
    };
 
-   auto is_excluded_email = [&](const EmailAddress& addr) {
+   const auto is_excluded_email = [&](const EmailAddress& addr) {
       if(m_excluded_name_types.contains(GeneralName::NameType::RFC822)) {
          for(const auto& c : m_excluded_subtrees) {
             if(c.base().matches_email(addr)) {
@@ -1318,7 +1318,7 @@ bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unkn
 
    // RFC 9598 Section 6: rfc822Name name constraints also apply to
    // SmtpUTF8Mailbox SAN entries. See is_permitted_smtp_utf8.
-   auto is_excluded_smtp_utf8 = [&](const SmtpUtf8Mailbox& mailbox) {
+   const auto is_excluded_smtp_utf8 = [&](const SmtpUtf8Mailbox& mailbox) {
       if(m_excluded_name_types.contains(GeneralName::NameType::RFC822)) {
          for(const auto& c : m_excluded_subtrees) {
             if(c.base().matches_email(mailbox)) {

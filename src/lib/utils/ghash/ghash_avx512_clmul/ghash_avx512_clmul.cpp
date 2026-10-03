@@ -44,8 +44,8 @@ BOTAN_FORCE_INLINE __m512i BOTAN_FN_ISA_AVX512_CLMUL fold(__m512i H) {
 }
 
 BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FN_ISA_AVX512_CLMUL reduce_xor(__m512i z) {
-   auto y = _mm256_xor_si256(_mm512_castsi512_si256(z), _mm512_extracti64x4_epi64(z, 0x1));
-   auto x = _mm_xor_si128(_mm256_castsi256_si128(y), _mm256_extracti32x4_epi32(y, 0x1));
+   const auto y = _mm256_xor_si256(_mm512_castsi512_si256(z), _mm512_extracti64x4_epi64(z, 0x1));
+   const auto x = _mm_xor_si128(_mm256_castsi256_si128(y), _mm256_extracti32x4_epi32(y, 0x1));
    return SIMD_4x32(x);
 }
 
@@ -186,9 +186,9 @@ multiply_avx512(uint8_t x[16], const uint64_t H_pow[16 * 2], const uint8_t input
          __m512i M = load_blocks<BSWAP>(input);
          M = insert_a(M, a);
 
-         auto lo = _mm512_clmulepi64_epi128(H1, M, 0x00);
-         auto hi = _mm512_clmulepi64_epi128(H1, M, 0x11);
-         auto mid = _mm512_clmulepi64_epi128(H1_fold, fold(M), 0x00);
+         const auto lo = _mm512_clmulepi64_epi128(H1, M, 0x00);
+         const auto hi = _mm512_clmulepi64_epi128(H1, M, 0x11);
+         const auto mid = _mm512_clmulepi64_epi128(H1_fold, fold(M), 0x00);
 
          a = ghash_reduce(lo, hi, mid);
 

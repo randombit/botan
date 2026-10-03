@@ -130,7 +130,7 @@ std::vector<Test::Result> test_buffer_stuffer() {
                result.test_sz_eq("has some capacity", s.remaining_capacity(), sink.size());
                result.test_is_true("is not full", !s.full());
 
-               auto n1 = s.next(5);
+               const auto n1 = s.next(5);
                result.require("got requested bytes", n1.size() == 5);
                n1[0] = 'h';
                n1[1] = 'e';
@@ -152,7 +152,7 @@ std::vector<Test::Result> test_buffer_stuffer() {
 
                result.test_sz_eq("has 2 bytes remaining", s.remaining_capacity(), 2);
 
-               auto n3 = s.next<2>();
+               const auto n3 = s.next<2>();
                result.require("got requested bytes", n3.size() == 2);
                result.require("is static extent", decltype(n3)::extent != std::dynamic_extent);
                result.require("static extent is 2", decltype(n3)::extent == 2);

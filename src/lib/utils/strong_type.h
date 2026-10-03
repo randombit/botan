@@ -995,7 +995,7 @@ class StrongSpan final {
 
       /// Create a span covering the contents of a strong type
       /// @param strong the strong type to view
-      // NOLINTNEXTLINE(*-explicit-conversions)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
       StrongSpan(T& strong) : m_span(strong) {}
 
       // Allows implicit conversion from `StrongSpan<T>` to `StrongSpan<const T>`.
@@ -1011,7 +1011,7 @@ class StrongSpan final {
       /// Convert a StrongSpan<T> to a StrongSpan<const T>
       /// @param other the span to convert
       template <concepts::contiguous_strong_type T2>
-      // NOLINTNEXTLINE(*-explicit-conversions)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
       StrongSpan(const StrongSpan<T2>& other)
          requires(std::is_same_v<T2, std::remove_const_t<T>>)
             : m_span(other.get()) {}

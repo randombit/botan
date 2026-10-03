@@ -33,7 +33,7 @@ class BOTAN_PUBLIC_API(3, 0) DilithiumMode final {
       };
 
    public:
-      // NOLINTNEXTLINE(*-explicit-conversions)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
       DilithiumMode(Mode mode) : m_mode(mode) {}
 
       explicit DilithiumMode(const OID& oid);

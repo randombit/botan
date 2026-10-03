@@ -40,7 +40,7 @@ void Kyber_KEM_Encryptor::encapsulate(StrongSpan<KyberCompressedCiphertext> out_
  */
 void Kyber_KEM_Decryptor::decapsulate(StrongSpan<KyberSharedSecret> out_shared_key,
                                       StrongSpan<const KyberCompressedCiphertext> encapsulated_key) {
-   auto scope = CT::scoped_poison(*m_private_key);
+   const auto scope = CT::scoped_poison(*m_private_key);
 
    const auto& sym = mode().symmetric_primitives();
 

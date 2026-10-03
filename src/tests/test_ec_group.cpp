@@ -75,7 +75,7 @@ Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, const
    */
    Botan::BigInt x = 0;
 
-   auto flip_prob = [](size_t i) -> double {
+   const auto flip_prob = [](size_t i) -> double {
       if(i % 64 == 0) {
          return .5;
       }
@@ -120,7 +120,7 @@ Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, const
 
 Botan::EC_Point create_random_point(Botan::RandomNumberGenerator& rng, const Botan::EC_Group& group) {
    const Botan::BigInt& p = group.get_p();
-   auto mod_p = Botan::Barrett_Reduction::for_public_modulus(p);
+   const auto mod_p = Botan::Barrett_Reduction::for_public_modulus(p);
 
    for(;;) {
       const Botan::BigInt x = Botan::BigInt::random_integer(rng, 1, p);
@@ -148,7 +148,7 @@ std::vector<Test::Result> ECC_Randomized_Tests::run() {
 
       result.start_timer();
 
-      auto group = Botan::EC_Group::from_name(group_name);
+      const auto group = Botan::EC_Group::from_name(group_name);
 
       const Botan::EC_Point pt = create_random_point(this->rng(), group);
 
@@ -313,9 +313,9 @@ class EC_Group_Tests : public Test {
          const Botan::EC_Point pt = create_random_point(this->rng(), group);
          const Botan::EC_Point zero = group.zero_point();
 
-         for(auto scheme : {Botan::EC_Point_Format::Uncompressed,
-                            Botan::EC_Point_Format::Compressed,
-                            Botan::EC_Point_Format::Hybrid}) {
+         for(const auto scheme : {Botan::EC_Point_Format::Uncompressed,
+                                  Botan::EC_Point_Format::Compressed,
+                                  Botan::EC_Point_Format::Hybrid}) {
             try {
                result.test_bin_eq("encoded/decode rt works", group.OS2ECP(pt.encode(scheme)).xy_bytes(), pt.xy_bytes());
             } catch(Botan::Exception& e) {
@@ -399,9 +399,9 @@ class EC_Group_Tests : public Test {
          result.test_bin_eq("addition of zero does nothing", p1.xy_bytes(), (p1 - zero).xy_bytes());
          result.test_is_true("zero times anything is the zero point", (zero * 39193).is_zero());
 
-         for(auto scheme : {Botan::EC_Point_Format::Uncompressed,
-                            Botan::EC_Point_Format::Compressed,
-                            Botan::EC_Point_Format::Hybrid}) {
+         for(const auto scheme : {Botan::EC_Point_Format::Uncompressed,
+                                  Botan::EC_Point_Format::Compressed,
+                                  Botan::EC_Point_Format::Hybrid}) {
             const std::vector<uint8_t> v = zero.encode(scheme);
             result.test_is_true("encoded/decode rt works", group.OS2ECP(v).is_zero());
          }
@@ -445,7 +445,7 @@ Test::Result test_mixed_points() {
 
       const auto p1 = Botan::EC_AffinePoint::generator(secp256r1);
       const auto p2 = Botan::EC_AffinePoint::generator(secp384r1);
-      result.test_throws("Mixing points from different groups", [&] { auto p3 = p1.add(p2); });
+      result.test_throws("Mixing points from different groups", [&] { const auto p3 = p1.add(p2); });
    }
 
    return result;
@@ -561,7 +561,7 @@ class EC_Group_Registration_Tests final : public Test {
          // Creating this object implicitly registers the curve for future use ...
          const auto reg_group = Botan::EC_Group::register_custom_group(oid, p, a, b, g_x, g_y, order);
 
-         auto group = Botan::EC_Group::from_OID(oid);
+         const auto group = Botan::EC_Group::from_OID(oid);
 
          result.test_bn_eq("Group registration worked", group.get_p(), p);
 
@@ -1162,7 +1162,7 @@ class EC_Point_Arithmetic_Tests final : public Test {
             auto moved_from = Botan::EC_Scalar::from_bigint(group, 1);
             const auto replacement = Botan::EC_Scalar::from_bigint(group, 2);
             auto moved_to = std::move(moved_from);
-            auto as_rvalue = [](auto& x) -> decltype(auto) { return std::move(x); };
+            const auto as_rvalue = [](auto& x) -> decltype(auto) { return std::move(x); };
             moved_from = as_rvalue(moved_from);
             moved_from = replacement;
             result.test_is_true("copy assignment into moved-from EC_Scalar", moved_from == replacement);
@@ -1234,7 +1234,7 @@ class EC_Point_Arithmetic_Tests final : public Test {
             }
 
             for(size_t i = 0; i != 64; ++i) {
-               auto h = [&]() {
+               const auto h = [&]() {
                   const auto s = [&]() {
                      if(i == 0) {
                         // Test the identity case

@@ -20,7 +20,7 @@ namespace {
 const X509_CertificateProperties& check_certificate(const X509_CertificateProperties& props) {
    const X509_Certificate cert(props.value());
    BOTAN_UNUSED(cert);
-   return props;
+   return props;  // NOLINT(*-return-const-ref-from-parameter)
 }
 
 }  // namespace

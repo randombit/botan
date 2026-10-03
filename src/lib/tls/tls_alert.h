@@ -122,7 +122,7 @@ class BOTAN_PUBLIC_API(2, 0) Alert final {
       * @param type_code the type of alert
       * @param fatal specifies if this is a fatal alert
       */
-      Alert(Type type_code, bool fatal = false) :  // NOLINT(*-explicit-conversions)
+      Alert(Type type_code, bool fatal = false) :  // NOLINT(*-explicit-conversions,*-explicit-constructor)
             m_fatal(fatal), m_type_code(type_code) {}
 
       Alert() : m_fatal(false), m_type_code(AlertType::None) {}

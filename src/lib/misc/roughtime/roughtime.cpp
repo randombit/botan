@@ -89,7 +89,7 @@ std::map<std::string, std::vector<uint8_t>> unpack_roughtime_packet(T bytes) {
       }
       const char* label_ptr = cast_uint8_ptr_to_char(buf) + (num_tags + i) * 4;
       const char label[] = {label_ptr[0], label_ptr[1], label_ptr[2], label_ptr[3], 0};
-      auto ret = tags.emplace(label, std::vector<uint8_t>(buf + start, buf + end));
+      const auto ret = tags.emplace(label, std::vector<uint8_t>(buf + start, buf + end));
       if(!ret.second) {
          throw Roughtime::Roughtime_Error(std::string("Map has duplicated tag: ") + label);
       }

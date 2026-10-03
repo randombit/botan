@@ -264,7 +264,7 @@ DL_Group::DL_Group(std::string_view str) {
 }
 
 DL_Group DL_Group::from_name(std::string_view name) {
-   auto data = DL_group_info(name);
+   const auto data = DL_group_info(name);
 
    if(!data) {
       throw Invalid_Argument(fmt("DL_Group: Unknown group '{}'", name));
@@ -296,7 +296,7 @@ BigInt make_dsa_generator(const BigInt& p, const BigInt& q) {
    }
 
    // TODO we compute these, then throw them away and recompute in DL_Group_Data
-   auto mod_p = Barrett_Reduction::for_public_modulus(p);
+   const auto mod_p = Barrett_Reduction::for_public_modulus(p);
    const Montgomery_Params params(p, mod_p);
 
    for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i) {

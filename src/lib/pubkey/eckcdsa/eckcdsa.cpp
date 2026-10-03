@@ -234,7 +234,7 @@ bool ECKCDSA_Verification_Operation::verify(std::span<const uint8_t> msg, std::s
       return false;
    }
 
-   auto r = sig.first(size_r);
+   const auto r = sig.first(size_r);
 
    if(auto s = EC_Scalar::deserialize(m_group, sig.last(order_bytes))) {
       std::vector<uint8_t> r_xor_e(r.size());

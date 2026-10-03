@@ -51,10 +51,10 @@ std::unique_ptr<Hash_Engine> create_sha2_64_mb_engine(std::string_view hash_fn,
       SHA_512::compress_digest(midstate, common_prefix.first(full_bytes), full_bytes / SHA_512::block_bytes);
    }
 
-   auto make_engine = [&](std::string_view feat,
-                          size_t lanes,
-                          MDx_MB_Engine<uint64_t>::compress_fn compress,
-                          MDx_MB_Engine<uint64_t>::extract_fn extract) {
+   const auto make_engine = [&](std::string_view feat,
+                                size_t lanes,
+                                MDx_MB_Engine<uint64_t>::compress_fn compress,
+                                MDx_MB_Engine<uint64_t>::extract_fn extract) {
       return std::make_unique<MDx_MB_Engine<uint64_t>>(hash_fn,
                                                        output_length,
                                                        common_prefix,

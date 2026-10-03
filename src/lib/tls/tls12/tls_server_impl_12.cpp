@@ -155,7 +155,7 @@ uint16_t choose_ciphersuite(const Policy& policy,
    const std::unordered_set<std::string> client_sig_algs = [&] {
       std::unordered_set<uint16_t> allowed_codes;
       allowed_codes.reserve(allowed_sig_schemes.size());
-      for(auto s : allowed_sig_schemes) {
+      for(const auto s : allowed_sig_schemes) {
          allowed_codes.insert(static_cast<uint16_t>(s.wire_code()));
       }
       std::unordered_set<std::string> result;
@@ -179,12 +179,12 @@ uint16_t choose_ciphersuite(const Policy& policy,
    */
    const std::vector<uint16_t>& pref_list = our_choice ? server_suites : client_suites;
 
-   auto in_other_list = [&](uint16_t suite_id) {
+   const auto in_other_list = [&](uint16_t suite_id) {
       // server_suites is small and policy-controlled
       return our_choice ? client_suite_set.contains(suite_id) : value_exists(server_suites, suite_id);
    };
 
-   for(auto suite_id : pref_list) {
+   for(const auto suite_id : pref_list) {
       if(!in_other_list(suite_id)) {
          continue;
       }
@@ -624,7 +624,7 @@ void Server_Impl_12::process_certificate_verify_msg(Server_Handshake_State& pend
 
    try {
       const std::string sni_hostname = pending_state.client_hello()->sni_hostname();
-      auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-server", sni_hostname);
+      const auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-server", sni_hostname);
 
       callbacks().tls_verify_cert_chain(client_certs,
                                         {},  // ocsp
@@ -893,7 +893,7 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
          std::make_unique<Certificate_12>(pending_state.handshake_io(), pending_state.hash(), cert_chains[algo_used]));
 
       if(pending_state.client_hello()->supports_cert_status_message() && pending_state.is_a_resumption() == false) {
-         auto* csr = pending_state.client_hello()->extensions().get<Certificate_Status_Request>();
+         const auto* csr = pending_state.client_hello()->extensions().get<Certificate_Status_Request>();
          // csr is non-null if client_hello()->supports_cert_status_message()
          BOTAN_ASSERT_NOMSG(csr != nullptr);
          const auto resp_bytes = callbacks().tls_provide_cert_status(cert_chains[algo_used], *csr);
@@ -917,11 +917,11 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
          pending_state.handshake_io(), pending_state, policy(), *m_creds, rng(), private_key.get()));
    }
 
-   auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-server", sni_hostname);
+   const auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-server", sni_hostname);
 
    std::vector<X509_DN> client_auth_CAs;
 
-   for(auto* store : trusted_CAs) {
+   for(const auto* store : trusted_CAs) {
       auto subjects = store->all_subjects();
       client_auth_CAs.insert(client_auth_CAs.end(), subjects.begin(), subjects.end());
    }

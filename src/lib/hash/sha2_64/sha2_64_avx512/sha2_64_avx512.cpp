@@ -26,11 +26,11 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX512_BMI2 SIMD_2x64 avx512_sigma(SIMD_2x64 v) 
 }
 
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX512_BMI2 SIMD_2x64 sha512_next_w_avx512(SIMD_2x64 x[8]) {
-   auto t0 = SIMD_2x64::alignr8(x[1], x[0]);
-   auto t1 = SIMD_2x64::alignr8(x[5], x[4]);
+   const auto t0 = SIMD_2x64::alignr8(x[1], x[0]);
+   const auto t1 = SIMD_2x64::alignr8(x[5], x[4]);
 
-   auto s0 = avx512_sigma<1, 8, 7>(t0);
-   auto s1 = avx512_sigma<19, 61, 6>(x[7]);
+   const auto s0 = avx512_sigma<1, 8, 7>(t0);
+   const auto s1 = avx512_sigma<19, 61, 6>(x[7]);
 
    auto nx = x[0] + s0 + s1 + t1;
 
@@ -107,7 +107,7 @@ BOTAN_FN_ISA_AVX512_BMI2 void SHA_512::compress_digest_x86_avx512(digest_type& d
 
       for(size_t i = 0; i < 8; i++) {
          WS[i] = SIMD_2x64::load_be(&data[16 * i]);
-         auto WK = WS[i] + SIMD_2x64::load_le(&SHA512_K[2 * i]);
+         const auto WK = WS[i] + SIMD_2x64::load_le(&SHA512_K[2 * i]);
          WK.store_le(&W[2 * i]);
       }
 

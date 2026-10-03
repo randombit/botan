@@ -54,7 +54,7 @@ PK_Signature_Options parse_legacy_sig_options(const Public_Key& key, std::string
       */
       std::string userid;
       std::string hash = "SM3";
-      auto comma = params.find(',');
+      const auto comma = params.find(',');
       if(comma == std::string::npos) {
          userid = params;
       } else {
@@ -94,7 +94,7 @@ PK_Signature_Options parse_legacy_sig_options(const Public_Key& key, std::string
       const SCAN_Name req(params);
 
       // handling various deprecated aliases that have accumulated over the years ...
-      auto padding = [](std::string_view alg) -> std::string_view {
+      const auto padding = [](std::string_view alg) -> std::string_view {
          // TODO(Botan4) Remove all but "PKCSv15"
          if(alg == "EMSA_PKCS1" || alg == "EMSA-PKCS1-v1_5" || alg == "EMSA3") {
             return "PKCS1v15";
@@ -229,7 +229,7 @@ PK_Signature_Options parse_legacy_sig_options(const Public_Key& key, std::string
       return std::move(raw_opt).with_externally_computed_prehash();
    }
 
-   auto hash = [&]() -> std::string {
+   const auto hash = [&]() -> std::string {
       if(hash_params.starts_with("EMSA1")) {
          const SCAN_Name req(hash_params);
          if(req.algo_name() != "EMSA1" || req.arg_count() != 1) {

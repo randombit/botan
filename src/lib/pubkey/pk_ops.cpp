@@ -62,7 +62,7 @@ secure_vector<uint8_t> PK_Ops::Decryption_with_Padding::decrypt(uint8_t& valid_m
    const secure_vector<uint8_t> raw = raw_decrypt(ctext);
 
    secure_vector<uint8_t> ptext(raw.size());
-   auto len = m_padding->unpad(ptext, raw);
+   const auto len = m_padding->unpad(ptext, raw);
 
    valid_mask = CT::Mask<uint8_t>::from_choice(len.has_value()).if_set_return(0xFF);
 

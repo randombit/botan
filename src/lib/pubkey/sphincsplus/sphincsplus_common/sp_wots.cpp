@@ -69,8 +69,8 @@ void wots_checksum(std::span<WotsHashIndex> output,
 std::vector<WotsHashIndex> chain_lengths(const SphincsTreeNode& msg, const Sphincs_Parameters& params) {
    std::vector<WotsHashIndex> result(params.wots_len_1() + params.wots_len_2());
 
-   auto msg_base_w = std::span(result).first(params.wots_len_1());
-   auto checksum_base_w = std::span(result).last(params.wots_len_2());
+   const auto msg_base_w = std::span(result).first(params.wots_len_1());
+   const auto checksum_base_w = std::span(result).last(params.wots_len_2());
 
    base_2_b(msg_base_w, msg.get(), params);
    wots_checksum(checksum_base_w, msg_base_w, params);

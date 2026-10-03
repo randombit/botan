@@ -75,8 +75,8 @@ class X25519_Roundtrip_Test final : public Test {
             Botan::DataSource_Memory a_priv_ds(a_priv_pem);
             Botan::DataSource_Memory b_priv_ds(b_priv_pem);
 
-            auto a_priv = Botan::PKCS8::load_key(a_priv_ds, [a_pass]() { return std::string(a_pass); });
-            auto b_priv = Botan::PKCS8::load_key(b_priv_ds, b_pass);
+            const auto a_priv = Botan::PKCS8::load_key(a_priv_ds, [a_pass]() { return std::string(a_pass); });
+            const auto b_priv = Botan::PKCS8::load_key(b_priv_ds, b_pass);
    #else
             const std::string a_priv_pem = Botan::PKCS8::PEM_encode(a_priv_gen);
             const std::string b_priv_pem = Botan::PKCS8::PEM_encode(b_priv_gen);
@@ -96,8 +96,8 @@ class X25519_Roundtrip_Test final : public Test {
             Botan::DataSource_Memory a_pub_ds(a_pub_pem);
             Botan::DataSource_Memory b_pub_ds(b_pub_pem);
 
-            auto a_pub = Botan::X509::load_key(a_pub_ds);
-            auto b_pub = Botan::X509::load_key(b_pub_ds);
+            const auto a_pub = Botan::X509::load_key(a_pub_ds);
+            const auto b_pub = Botan::X509::load_key(b_pub_ds);
 
             const Botan::X25519_PublicKey* a_pub_key = dynamic_cast<Botan::X25519_PublicKey*>(a_pub.get());
             const Botan::X25519_PublicKey* b_pub_key = dynamic_cast<Botan::X25519_PublicKey*>(b_pub.get());

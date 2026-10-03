@@ -176,8 +176,8 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_HWAES SIMD_4x32 FLINV_2(SIMD_4x32 v, uint64_t K)
 }
 
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_HWAES void load_and_deinterleave(const uint8_t in[], SIMD_4x32& L, SIMD_4x32& R) {
-   auto A = load_be64(in);       // block 0: [L0, R0]
-   auto B = load_be64(in + 16);  // block 1: [L1, R1]
+   const auto A = load_be64(in);       // block 0: [L0, R0]
+   const auto B = load_be64(in + 16);  // block 1: [L1, R1]
    const auto mask_upper = SIMD_4x32(0x00000000, 0x00000000, 0xFFFFFFFF, 0xFFFFFFFF);
    L = SIMD_4x32::byte_blend(mask_upper, B.swap_halves(), A);  // [L0, L1]
    R = SIMD_4x32::byte_blend(mask_upper, B, A.swap_halves());  // [R0, R1]
@@ -186,8 +186,8 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_HWAES void load_and_deinterleave(const uint8_t i
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_HWAES void interleave_and_store(uint8_t out[], SIMD_4x32 L, SIMD_4x32 R) {
    // Camellia output swaps L and R
    const auto mask_upper = SIMD_4x32(0x00000000, 0x00000000, 0xFFFFFFFF, 0xFFFFFFFF);
-   auto A = SIMD_4x32::byte_blend(mask_upper, L.swap_halves(), R);  // [R0, L0]
-   auto B = SIMD_4x32::byte_blend(mask_upper, L, R.swap_halves());  // [R1, L1]
+   const auto A = SIMD_4x32::byte_blend(mask_upper, L.swap_halves(), R);  // [R0, L0]
+   const auto B = SIMD_4x32::byte_blend(mask_upper, L, R.swap_halves());  // [R1, L1]
    store_be64(out, A);
    store_be64(out + 16, B);
 }

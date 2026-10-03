@@ -73,7 +73,7 @@ secure_vector<uint8_t> PK_Decryptor::decrypt_or_random(const uint8_t in[],
       // We know off is in range because we already checked it when creating the fake premaster above
       const uint8_t off = required_content_offsets[i];
 
-      auto eq = CT::Mask<uint8_t>::is_equal(decoded[off], exp);
+      const auto eq = CT::Mask<uint8_t>::is_equal(decoded[off], exp);
 
       valid_mask &= eq;
    }

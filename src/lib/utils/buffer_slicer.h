@@ -36,7 +36,7 @@ class BufferSlicer final {
 
       std::span<const uint8_t> take(const size_t count) {
          BOTAN_STATE_CHECK(remaining() >= count);
-         auto result = m_remaining.first(count);
+         const auto result = m_remaining.first(count);
          m_remaining = m_remaining.subspan(count);
          return result;
       }
@@ -44,7 +44,7 @@ class BufferSlicer final {
       template <size_t count>
       std::span<const uint8_t, count> take() {
          BOTAN_STATE_CHECK(remaining() >= count);
-         auto result = m_remaining.first<count>();
+         const auto result = m_remaining.first<count>();
          m_remaining = m_remaining.subspan(count);
          return result;
       }

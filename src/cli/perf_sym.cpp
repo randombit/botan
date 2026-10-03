@@ -211,7 +211,7 @@ class PerfTest_StreamCipher final : public PerfTest {
          const auto runtime = config.runtime();
          const auto provider = cipher.provider();
 
-         for(auto buf_size : config.buffer_sizes()) {
+         for(const auto buf_size : config.buffer_sizes()) {
             const Botan::SymmetricKey key(rng, cipher.maximum_keylength());
             cipher.set_key(key);
 
@@ -274,7 +274,7 @@ class PerfTest_HashFunction final : public PerfTest {
          const auto provider = hash.provider();
          const auto runtime = config.runtime();
 
-         for(auto buf_size : config.buffer_sizes()) {
+         for(const auto buf_size : config.buffer_sizes()) {
             const auto buffer = config.rng().random_vec(buf_size);
 
             const size_t mult = std::max<size_t>(1, 65536 / buf_size);
@@ -326,7 +326,7 @@ class PerfTest_MessageAuthenticationCode final : public PerfTest {
             }
          }();
 
-         for(auto buf_size : config.buffer_sizes()) {
+         for(const auto buf_size : config.buffer_sizes()) {
             Botan::secure_vector<uint8_t> buffer = rng.random_vec(buf_size);
             const size_t mult = std::max<size_t>(1, 65536 / buf_size);
 

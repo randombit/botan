@@ -36,10 +36,10 @@ void compare_and_swap_pair(std::span<std::pair<T1, T2>> a, size_t i, size_t k, s
    static_assert(sizeof(T1) <= sizeof(uint64_t) && sizeof(T2) <= sizeof(uint64_t),
                  "Types T1 and T2 must be at most 64 bits wide");
    if((i & k) == 0) {  // i and k do not depend on secret data
-      auto swap_required_mask = CT::Mask<uint64_t>::is_lt(a[l].first, a[i].first);
+      const auto swap_required_mask = CT::Mask<uint64_t>::is_lt(a[l].first, a[i].first);
       cond_swap_pair(swap_required_mask, a[i], a[l]);
    } else {
-      auto swap_required_mask = CT::Mask<uint64_t>::is_gt(a[l].first, a[i].first);
+      const auto swap_required_mask = CT::Mask<uint64_t>::is_gt(a[l].first, a[i].first);
       cond_swap_pair(swap_required_mask, a[i], a[l]);
    }
 }
@@ -64,7 +64,7 @@ void bitonic_sort_pair(std::span<std::pair<T1, T2>> a) {
 
 template <std::unsigned_integral T>
 T min(const T& a, const T& b) {
-   auto mask = CT::Mask<T>::is_lt(a, b);
+   const auto mask = CT::Mask<T>::is_lt(a, b);
    return mask.select(a, b);
 }
 
@@ -305,7 +305,7 @@ Classic_McEliece_Field_Ordering Classic_McEliece_Field_Ordering::create_from_con
       const size_t gap = size_t(1) << std::min(i, 2 * params.m() - 2 - i);
       for(size_t j = 0; j < size_t(n) / 2; ++j) {
          const size_t pos = (j % gap) + 2 * gap * (j / gap);
-         auto mask = CT::Mask<uint16_t>::expand_bool(control_bits[i * n / 2 + j]);
+         const auto mask = CT::Mask<uint16_t>::expand_bool(control_bits[i * n / 2 + j]);
          mask.conditional_swap(pi[pos], pi[pos + gap]);
       }
    }
@@ -320,9 +320,9 @@ void Classic_McEliece_Field_Ordering::permute_with_pivots(const Classic_McEliece
    for(size_t p_idx = 1; p_idx <= Classic_McEliece_Parameters::mu(); ++p_idx) {
       size_t p_counter = 0;
       for(size_t col = 0; col < Classic_McEliece_Parameters::nu(); ++col) {
-         auto mask_is_pivot_set = CT::Mask<size_t>::expand_bool(pivots.at(col));
+         const auto mask_is_pivot_set = CT::Mask<size_t>::expand_bool(pivots.at(col));
          p_counter += mask_is_pivot_set.if_set_return(1);
-         auto mask_is_current_pivot = CT::Mask<size_t>::is_equal(p_idx, p_counter);
+         const auto mask_is_current_pivot = CT::Mask<size_t>::is_equal(p_idx, p_counter);
          (mask_is_pivot_set & mask_is_current_pivot)
             .conditional_swap(m_pi.get().at(col_offset + col), m_pi.get().at(col_offset + p_idx - 1));
       }

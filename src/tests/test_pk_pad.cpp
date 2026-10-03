@@ -36,7 +36,7 @@ class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
          }
 
          std::vector<uint8_t> decoded(ciphertext.size());
-         auto len = pkcs->unpad(decoded, ciphertext);
+         const auto len = pkcs->unpad(decoded, ciphertext);
 
          result.test_bool_eq("EME decoding valid/invalid matches", len.has_value().as_bool(), is_valid);
 

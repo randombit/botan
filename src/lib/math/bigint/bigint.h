@@ -79,7 +79,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        *
        * Prefer BigInt::from_u64
        */
-      BigInt(uint64_t n);  // NOLINT(*-explicit-conversions) TODO(Botan4) make this explicit
+      BigInt(uint64_t n);  // NOLINT(*-explicit-conversions,*-explicit-constructor) TODO(Botan4) make this explicit
 
       /**
        * Copy Constructor

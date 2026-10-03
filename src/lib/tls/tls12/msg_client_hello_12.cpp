@@ -49,7 +49,7 @@ bool Client_Hello_12::supports_session_ticket() const {
 }
 
 Session_Ticket Client_Hello_12::session_ticket() const {
-   if(auto* ticket = m_data->extensions().get<Session_Ticket_Extension>()) {
+   if(const auto* ticket = m_data->extensions().get<Session_Ticket_Extension>()) {
       return ticket->contents();
    }
    return {};
@@ -60,7 +60,7 @@ std::optional<Session_Handle> Client_Hello_12::session_handle() const {
    //    If a ticket is presented by the client, the server MUST NOT attempt
    //    to use the Session ID in the ClientHello for stateful session
    //    resumption.
-   if(auto ticket = session_ticket(); !ticket.empty()) {
+   if(const auto ticket = session_ticket(); !ticket.empty()) {
       return Session_Handle(ticket);
    } else if(const auto& id = session_id(); !id.empty()) {
       return Session_Handle(id);

@@ -173,7 +173,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
                         Flags flags = ecies_flags(cofactor_mode, old_cofactor_mode, check_mode, single_hash_mode);
 
                         if(size_t(cofactor_mode) + size_t(check_mode) + size_t(old_cofactor_mode) > 1) {
-                           auto onThrow = [&]() {
+                           const auto onThrow = [&]() {
                               Botan::ECIES_System_Params(eph_private_key.domain(),
                                                          "KDF2(SHA-1)",
                                                          "AES-256/CBC",
@@ -221,14 +221,14 @@ class ECIES_Tests final : public Text_Based_Test {
          // In order to test cofactor handling flags some of the tests use secp112r2 which has a cofactor of 4
          // TODO(Botan4) kill it with fire
          if(Botan::EC_Group::supports_application_specific_group_with_cofactor()) {
-            auto p = Botan::BigInt::from_string("0xDB7C2ABF62E35E668076BEAD208B");
-            auto a = Botan::BigInt::from_string("0x6127C24C05F38A0AAAF65C0EF02C");
-            auto b = Botan::BigInt::from_string("0x51DEF1815DB5ED74FCC34C85D709");
+            const auto p = Botan::BigInt::from_string("0xDB7C2ABF62E35E668076BEAD208B");
+            const auto a = Botan::BigInt::from_string("0x6127C24C05F38A0AAAF65C0EF02C");
+            const auto b = Botan::BigInt::from_string("0x51DEF1815DB5ED74FCC34C85D709");
 
-            auto g_x = Botan::BigInt::from_string("0x4BA30AB5E892B4E1649DD0928643");
-            auto g_y = Botan::BigInt::from_string("0xADCD46F5882E3747DEF36E956E97");
-            auto order = Botan::BigInt::from_string("0x36DF0AAFD8B8D7597CA10520D04B");
-            auto cofactor = Botan::BigInt::from_u64(4);
+            const auto g_x = Botan::BigInt::from_string("0x4BA30AB5E892B4E1649DD0928643");
+            const auto g_y = Botan::BigInt::from_string("0xADCD46F5882E3747DEF36E956E97");
+            const auto order = Botan::BigInt::from_string("0x36DF0AAFD8B8D7597CA10520D04B");
+            const auto cofactor = Botan::BigInt::from_u64(4);
             m_secp112r2 = std::make_unique<Botan::EC_Group>(p, a, b, g_x, g_y, order, cofactor);
          }
       }

@@ -143,8 +143,8 @@ BigInt barrett_reduce(
 }
 
 CT::Choice acceptable_barrett_input(const BigInt& x, const BigInt& modulus) {
-   auto x_is_positive = CT::Choice::from_int(static_cast<uint32_t>(x.signum() >= 0));
-   auto x_lt_mod = bigint_ct_is_lt(x._data(), x.size(), modulus._data(), modulus.sig_words()).as_choice();
+   const auto x_is_positive = CT::Choice::from_int(static_cast<uint32_t>(x.signum() >= 0));
+   const auto x_lt_mod = bigint_ct_is_lt(x._data(), x.size(), modulus._data(), modulus.sig_words()).as_choice();
    return x_is_positive && x_lt_mod;
 }
 

@@ -247,7 +247,7 @@ void parse_safe_contents(BER_Decoder& decoder,
          shrouded.decode(encrypted_key, ASN1_Type::OctetString);
          shrouded.verify_end();
 
-         auto decrypted = pkcs12_pbe_decrypt(encrypted_key, password, pbe_algo, openssl_empty_pwd_compat);
+         const auto decrypted = pkcs12_pbe_decrypt(encrypted_key, password, pbe_algo, openssl_empty_pwd_compat);
          DataSource_Memory src(decrypted);
          key_entries.push_back({std::shared_ptr<Private_Key>(PKCS8::load_key(src)), {}, {}});
          pushed_key = true;
@@ -770,7 +770,7 @@ std::vector<uint8_t> PKCS12::export_to(const PKCS12_Export_Options& options, Ran
       DER_Encoder cert_bags(cert_safe_contents);
       cert_bags.start_sequence();
 
-      auto add_cert_bag = [&](const X509_Certificate& c, bool add_attrs) {
+      const auto add_cert_bag = [&](const X509_Certificate& c, bool add_attrs) {
          cert_bags.start_sequence();
          cert_bags.encode(cert_bag_oid);
 

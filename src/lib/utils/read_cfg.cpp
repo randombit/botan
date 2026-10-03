@@ -16,8 +16,8 @@ namespace {
 
 std::string clean_ws(std::string_view s) {
    const char* ws = " \t\n";
-   auto start = s.find_first_not_of(ws);
-   auto end = s.find_last_not_of(ws);
+   const auto start = s.find_first_not_of(ws);
+   const auto end = s.find_last_not_of(ws);
 
    if(start == std::string::npos) {
       return "";
@@ -53,7 +53,7 @@ std::map<std::string, std::string> read_cfg(std::istream& is) {
          continue;
       }
 
-      auto eq = s.find('=');
+      const auto eq = s.find('=');
 
       if(eq == std::string::npos || eq == 0 || eq == s.size() - 1) {
          throw Decoding_Error("Bad read_cfg input '" + s + "' on line " + std::to_string(line));

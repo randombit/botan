@@ -767,7 +767,7 @@ class Test_Registry {
       }
 
       std::unique_ptr<Test> get_test(const std::string& test_name) const {
-         auto i = m_tests.find(test_name);
+         const auto i = m_tests.find(test_name);
          if(i != m_tests.end()) {
             return i->second();
          }
@@ -797,7 +797,7 @@ class Test_Registry {
 
          std::set<std::string> to_be_skipped_set(to_be_skipped.begin(), to_be_skipped.end());
          // TODO: this is O(n^2), but we have a relatively small number of tests.
-         auto insert_if_not_exists_and_not_skipped = [&](const std::string& test_name) {
+         const auto insert_if_not_exists_and_not_skipped = [&](const std::string& test_name) {
             if(!Botan::value_exists(result, test_name) && !to_be_skipped_set.contains(test_name)) {
                result.push_back(test_name);
             }
@@ -859,7 +859,7 @@ void Test::register_test(const std::string& category,
 
 //static
 uint64_t Test::timestamp() {
-   auto now = std::chrono::system_clock::now().time_since_epoch();
+   const auto now = std::chrono::system_clock::now().time_since_epoch();
    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
 }
 
@@ -1126,7 +1126,7 @@ bool VarMap::has_key(std::string_view key) const {
 }
 
 void VarMap::add(std::string_view key, std::string_view value) {
-   auto i = std::lower_bound(m_vars.begin(), m_vars.end(), key, varmap_pair_lt);
+   const auto i = std::lower_bound(m_vars.begin(), m_vars.end(), key, varmap_pair_lt);
 
    if(i != m_vars.end() && i->first == key) {
       i->second = value;
@@ -1136,7 +1136,7 @@ void VarMap::add(std::string_view key, std::string_view value) {
 }
 
 std::optional<std::string> VarMap::get_opt_var(std::string_view key) const {
-   auto i = std::lower_bound(m_vars.begin(), m_vars.end(), key, varmap_pair_lt);
+   const auto i = std::lower_bound(m_vars.begin(), m_vars.end(), key, varmap_pair_lt);
 
    if(i != m_vars.end() && i->first == key) {
       return i->second;
@@ -1146,7 +1146,7 @@ std::optional<std::string> VarMap::get_opt_var(std::string_view key) const {
 }
 
 const std::string& VarMap::get_req_var(std::string_view key) const {
-   auto i = std::lower_bound(m_vars.begin(), m_vars.end(), key, varmap_pair_lt);
+   const auto i = std::lower_bound(m_vars.begin(), m_vars.end(), key, varmap_pair_lt);
 
    if(i != m_vars.end() && i->first == key) {
       return i->second;
@@ -1492,7 +1492,7 @@ std::vector<Test::Result> Text_Based_Test::run() {
 
       const std::string test_id = "test " + std::to_string(test_cnt);
 
-      auto equal_i = line.find_first_of('=');
+      const auto equal_i = line.find_first_of('=');
 
       if(equal_i == std::string::npos) {
          results.push_back(Test::Result::Failure(header_or_name, "invalid input '" + line + "'"));
@@ -1503,7 +1503,7 @@ std::vector<Test::Result> Text_Based_Test::run() {
       const std::string val = strip_ws(std::string(line.begin() + equal_i + 1, line.end()));
 
       if(!m_data->known_key(key)) {
-         auto r = Test::Result::Failure(header_or_name, Botan::fmt("{} failed unknown key {}", test_id, key));
+         const auto r = Test::Result::Failure(header_or_name, Botan::fmt("{} failed unknown key {}", test_id, key));
          results.push_back(r);
       }
 
@@ -1513,7 +1513,7 @@ std::vector<Test::Result> Text_Based_Test::run() {
          try {
             for(const auto& req_key : m_data->required_keys()) {
                if(!vars.has_key(req_key)) {
-                  auto r =
+                  const auto r =
                      Test::Result::Failure(header_or_name, Botan::fmt("{} missing required key {}", test_id, req_key));
                   results.push_back(r);
                }

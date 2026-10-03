@@ -71,8 +71,8 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_PKCS11)
 
-std::vector<Test::Result> run_pkcs11_tests(const std::string& name,
-                                           std::vector<std::pair<std::string, std::function<Test::Result()>>>& fns) {
+std::vector<Test::Result> run_pkcs11_tests(
+   const std::string& name, const std::vector<std::pair<std::string, std::function<Test::Result()>>>& fns) {
    std::vector<Test::Result> results;
 
    for(const auto& [fn_name, fn] : fns) {
@@ -203,7 +203,7 @@ Test::Result test_module_get_info() {
 class Module_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
+         const std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_module_ctor)},
             {STRING_AND_FUNCTION(test_multiple_modules)},
             {STRING_AND_FUNCTION(test_module_get_info)},
@@ -325,7 +325,7 @@ Test::Result test_get_mechanisms_info() {
 class Slot_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
+         const std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_slot_get_available_slots)},
             {STRING_AND_FUNCTION(test_slot_ctor)},
             {STRING_AND_FUNCTION(test_get_slot_info)},
@@ -448,7 +448,7 @@ Test::Result test_session_info() {
 class Session_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
+         const std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_session_ctor)},
             {STRING_AND_FUNCTION(test_session_ctor_invalid_slot)},
             {STRING_AND_FUNCTION(test_session_release)},
@@ -488,7 +488,7 @@ Test::Result test_attribute_container() {
    const std::vector<Botan::PKCS11::Attribute>& storedAttributes = attributes.attributes();
 
    // Compare the exact bytes the module would read, independent of host endianness
-   auto published_ulong = [&](const std::string& what, size_t idx, AttributeType type, Ulong expected) {
+   const auto published_ulong = [&](const std::string& what, size_t idx, AttributeType type, Ulong expected) {
       const auto& attr = storedAttributes.at(idx);
       result.test_u64_eq(what + " type", attr.type, static_cast<CK_ATTRIBUTE_TYPE>(type));
       result.test_u64_eq(what + " length", attr.ulValueLen, sizeof(Ulong));
@@ -548,11 +548,11 @@ Test::Result test_create_destroy_data_object() {
    const TestSession test_session(true);
 
    const std::string label = "Botan test data object";
-   auto data_obj_props = make_test_object(label);
+   const auto data_obj_props = make_test_object(label);
    const Object data_obj(test_session.session(), data_obj_props);
    result.test_success("Data object creation was successful");
 
-   const Object copy_before_destroy(data_obj);
+   const Object copy_before_destroy(data_obj);  // NOLINT(*-unnecessary-copy-initialization)
 
    data_obj.destroy();
    result.test_success("Data object deletion  was successful");
@@ -576,7 +576,7 @@ Test::Result test_get_set_attribute_values() {
 
    // create object
    const std::string label = "Botan test data object";
-   auto data_obj_props = make_test_object(label);
+   const auto data_obj_props = make_test_object(label);
    const Object data_obj(test_session.session(), data_obj_props);
 
    // get attribute
@@ -605,7 +605,7 @@ Test::Result test_object_finder() {
 
    // create object
    const std::string label = "Botan test data object";
-   auto data_obj_props = make_test_object(label);
+   const auto data_obj_props = make_test_object(label);
    const Object data_obj(test_session.session(), data_obj_props);
 
    // search created object
@@ -638,7 +638,7 @@ Test::Result test_object_copy() {
 
    // create object
    const std::string label = "Botan test data object";
-   auto data_obj_props = make_test_object(label);
+   const auto data_obj_props = make_test_object(label);
    const Object data_obj(test_session.session(), data_obj_props);
 
    // copy created object
@@ -647,7 +647,7 @@ Test::Result test_object_copy() {
    const ObjectHandle copied_obj_handle = data_obj.copy(copy_attributes);
 
    const ObjectFinder searcher(test_session.session(), copy_attributes.attributes());
-   auto search_result = searcher.find();
+   const auto search_result = searcher.find();
    result.test_sz_eq("one object found", search_result.size(), 1);
 
    data_obj.destroy();
@@ -661,7 +661,7 @@ Test::Result test_object_copy() {
 class Object_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
+         const std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_attribute_container)}
    #if defined(BOTAN_HAS_ASN1)
             ,
@@ -836,7 +836,7 @@ Test::Result test_rsa_encrypt_decrypt() {
 
    auto rng = Test::new_rng(__func__);
 
-   auto encrypt_and_decrypt =
+   const auto encrypt_and_decrypt =
       [&](const std::vector<uint8_t>& plaintext, const std::string& padding, const bool blinding) {
          std::vector<uint8_t> encrypted;
 
@@ -888,7 +888,7 @@ Test::Result test_rsa_encrypt_decrypt() {
    * A ciphertext whose leading byte is zero has the same integer value with
    * that byte removed, but RFC 8017 requires the ciphertext be exactly k bytes
    */
-   auto test_short_ciphertext = [&](const std::string& padding) {
+   const auto test_short_ciphertext = [&](const std::string& padding) {
       const Botan::RSA_PublicKey soft_pubkey(keypair.first.get_n(), keypair.first.get_e());
       const Botan::PK_Encryptor_EME encryptor(soft_pubkey, *rng, padding);
 
@@ -932,7 +932,7 @@ Test::Result test_rsa_sign_verify() {
    std::vector<uint8_t> plaintext(256);
    std::iota(std::begin(plaintext), std::end(plaintext), static_cast<uint8_t>(0));
 
-   auto sign_and_verify = [&](const std::string& padding, bool multipart) {
+   const auto sign_and_verify = [&](const std::string& padding, bool multipart) {
       Botan::PK_Signer signer(keypair.second, *rng, padding, Botan::Signature_Format::Standard);
       Botan::PK_Verifier verifier(keypair.first, padding, Botan::Signature_Format::Standard);
       const Botan::RSA_PublicKey soft_pubkey(keypair.first.get_n(), keypair.first.get_e());
@@ -1006,7 +1006,7 @@ Test::Result test_rsa_sign_verify() {
    sign_and_verify("PKCS1v15(SHA-256)", true);
 
    // empty message, both without any update and with an empty update
-   auto sign_and_verify_empty = [&](const std::string& padding, bool empty_update) {
+   const auto sign_and_verify_empty = [&](const std::string& padding, bool empty_update) {
       Botan::PK_Signer signer(keypair.second, *rng, padding, Botan::Signature_Format::Standard);
       if(empty_update) {
          signer.update(std::span<const uint8_t>{});
@@ -1033,7 +1033,7 @@ Test::Result test_rsa_sign_verify() {
 class PKCS11_RSA_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
+         const std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_rsa_privkey_import)},
             {STRING_AND_FUNCTION(test_rsa_pubkey_import)},
             {STRING_AND_FUNCTION(test_rsa_privkey_export)},
@@ -1369,23 +1369,24 @@ Test::Result test_ecdsa_sign_verify_core(EC_Group_Encoding enc, const std::strin
 
       std::vector<uint8_t> plaintext(20, 0x01);
 
-      auto sign_and_verify = [&](const std::string& padding, const Botan::Signature_Format format, bool check_soft) {
-         Botan::PK_Signer signer(keypair.second, *rng, padding, format);
-         auto signature = signer.sign_message(plaintext, *rng);
+      const auto sign_and_verify =
+         [&](const std::string& padding, const Botan::Signature_Format format, bool check_soft) {
+            Botan::PK_Signer signer(keypair.second, *rng, padding, format);
+            auto signature = signer.sign_message(plaintext, *rng);
 
-         Botan::PK_Verifier token_verifier(keypair.first, padding, format);
-         const bool ecdsa_ok = token_verifier.verify_message(plaintext, signature);
+            Botan::PK_Verifier token_verifier(keypair.first, padding, format);
+            const bool ecdsa_ok = token_verifier.verify_message(plaintext, signature);
 
-         result.test_is_true("ECDSA PKCS11 sign and verify: " + padding, ecdsa_ok);
+            result.test_is_true("ECDSA PKCS11 sign and verify: " + padding, ecdsa_ok);
 
-         // test against software implementation if available
-         if(check_soft) {
-            Botan::PK_Verifier soft_verifier(keypair.first, padding, format);
-            const bool soft_ecdsa_ok = soft_verifier.verify_message(plaintext, signature);
+            // test against software implementation if available
+            if(check_soft) {
+               Botan::PK_Verifier soft_verifier(keypair.first, padding, format);
+               const bool soft_ecdsa_ok = soft_verifier.verify_message(plaintext, signature);
 
-            result.test_is_true("ECDSA PKCS11 verify (in software): " + padding, soft_ecdsa_ok);
-         }
-      };
+               result.test_is_true("ECDSA PKCS11 verify (in software): " + padding, soft_ecdsa_ok);
+            }
+         };
 
       // SoftHSMv2 until now only supports "Raw"
       if(manufacturer.find("SoftHSM project") == std::string::npos) {
@@ -1458,7 +1459,7 @@ Test::Result test_typed_key_search() {
    const PKCS11_ECDSA_KeyPair ecdsa_keypair =
       generate_ecdsa_keypair(test_session, "secp256r1", EC_Group_Encoding::NamedCurve);
 
-   auto check_search = [&]<typename T>(const std::string& what, ObjectHandle expected) {
+   const auto check_search = [&]<typename T>(const std::string& what, ObjectHandle expected) {
       try {
          const auto found = Object::search<T>(test_session.session());
          const bool contains_expected =
@@ -1486,7 +1487,7 @@ Test::Result test_typed_key_search() {
 class PKCS11_ECDSA_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
+         const std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_ecdsa_privkey_import)},
             {STRING_AND_FUNCTION(test_ecdsa_privkey_export)},
             {STRING_AND_FUNCTION(test_ecdsa_pubkey_import)},
@@ -1796,7 +1797,7 @@ Test::Result test_ecdh_cofactor_group() {
 class PKCS11_ECDH_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
+         const std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_ecdh_privkey_import)},
             {STRING_AND_FUNCTION(test_ecdh_privkey_export)},
             {STRING_AND_FUNCTION(test_ecdh_pubkey_import)},
@@ -1882,7 +1883,7 @@ Test::Result test_pkcs11_hmac_drbg() {
 class PKCS11_RNG_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
+         const std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
    #if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_64)
             {STRING_AND_FUNCTION(test_pkcs11_hmac_drbg)},
    #endif
@@ -1962,7 +1963,7 @@ Test::Result test_change_so_pin() {
 class PKCS11_Token_Management_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
+         const std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_set_pin)},
             {STRING_AND_FUNCTION(test_initialize)},
             {STRING_AND_FUNCTION(test_change_pin)},
@@ -2016,7 +2017,7 @@ Test::Result test_x509_import() {
 class PKCS11_X509_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
+         const std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_x509_import)}};
 
          return run_pkcs11_tests("PKCS11 X509", fns);

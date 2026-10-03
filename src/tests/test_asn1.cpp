@@ -149,7 +149,7 @@ Test::Result test_ber_max_object_size() {
    // OCTET STRING with 5 content bytes
    const std::vector<uint8_t> obj = {0x04, 0x05, 0x01, 0x02, 0x03, 0x04, 0x05};
 
-   auto decode = [&](const char* what, Botan::BER_Decoder::Limits limits, bool expect_ok) {
+   const auto decode = [&](const char* what, Botan::BER_Decoder::Limits limits, bool expect_ok) {
       try {
          Botan::BER_Decoder(obj, limits).get_next_object();
          result.test_bool_eq(what, true, expect_ok);
@@ -378,7 +378,7 @@ Test::Result test_asn1_ucs4_parsing() {
 Test::Result test_asn1_ucs_invalid_codepoint_rejection() {
    Test::Result result("ASN.1 UCS-2/UCS-4 invalid codepoint rejection");
 
-   auto expect_decode_throws = [&](const char* what, const std::vector<uint8_t>& wire) {
+   const auto expect_decode_throws = [&](const char* what, const std::vector<uint8_t>& wire) {
       result.test_throws(what, [&]() {
          Botan::DataSource_Memory input(wire.data(), wire.size());
          Botan::BER_Decoder dec(input);
@@ -387,7 +387,7 @@ Test::Result test_asn1_ucs_invalid_codepoint_rejection() {
       });
    };
 
-   auto expect_decode_ok = [&](const char* what, const std::vector<uint8_t>& wire) {
+   const auto expect_decode_ok = [&](const char* what, const std::vector<uint8_t>& wire) {
       try {
          Botan::DataSource_Memory input(wire.data(), wire.size());
          Botan::BER_Decoder dec(input);
@@ -595,7 +595,7 @@ Test::Result test_der_constructed_tag_17_not_sorted() {
    const std::vector<uint8_t> first = {0x02, 0x01, 0x02};   // INTEGER 2
    const std::vector<uint8_t> second = {0x02, 0x01, 0x01};  // INTEGER 1
 
-   auto encode_with = [&](auto starter) {
+   const auto encode_with = [&](auto starter) {
       Botan::DER_Encoder enc;
       starter(enc).raw_bytes(first).raw_bytes(second).end_cons();
       return enc.get_contents_unlocked();
@@ -837,7 +837,7 @@ Test::Result test_ber_find_eoc() {
 Test::Result test_asn1_string_zero_length_roundtrip() {
    Test::Result result("ASN.1 String zero-length round-trip");
 
-   auto roundtrip = [&](const char* what, const std::vector<uint8_t>& wire) {
+   const auto roundtrip = [&](const char* what, const std::vector<uint8_t>& wire) {
       try {
          Botan::DataSource_Memory input(wire.data(), wire.size());
          Botan::BER_Decoder dec(input);
@@ -866,7 +866,7 @@ Test::Result test_pss_params_rejects_trailing_data_in_mgf1_params() {
    const Botan::AlgorithmIdentifier sha256_alg_id("SHA-256", Botan::AlgorithmIdentifier::USE_NULL_PARAM);
    const auto sha256_der = sha256_alg_id.BER_encode();
 
-   auto encode_pss_params = [&](const std::vector<uint8_t>& mgf_params) {
+   const auto encode_pss_params = [&](const std::vector<uint8_t>& mgf_params) {
       const Botan::AlgorithmIdentifier mgf("MGF1", mgf_params);
       Botan::DER_Encoder enc;
       enc.start_sequence()
@@ -911,7 +911,7 @@ Test::Result test_alg_id_parameter_validation() {
       Botan::BER_Decoder(wire).decode(alg_id).verify_end();
    };
 
-   auto verify_params_accepted = [&](const std::string& label, std::string_view hex) {
+   const auto verify_params_accepted = [&](const std::string& label, std::string_view hex) {
       try {
          decode_alg_id(hex);
          result.test_success(Botan::fmt("{} parameters accepted", label));
@@ -920,7 +920,7 @@ Test::Result test_alg_id_parameter_validation() {
       }
    };
 
-   auto verify_params_rejected = [&](const std::string& label, std::string_view hex) {
+   const auto verify_params_rejected = [&](const std::string& label, std::string_view hex) {
       result.test_throws<Botan::Decoding_Error>(Botan::fmt("{} parameters rejected", label),
                                                 [&]() { decode_alg_id(hex); });
    };

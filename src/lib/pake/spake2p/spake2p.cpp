@@ -44,7 +44,7 @@ std::pair<EC_Scalar, EC_Scalar> derive_w0_w1(const SystemParameters& params,
    secure_vector<uint8_t> pbkdf_input(3 * 8 + password.size() + prover_id.size() + verifier_id.size());
    BufferStuffer stuffer(pbkdf_input);
 
-   auto append_with_le64_length = [&](std::span<const uint8_t> data) {
+   const auto append_with_le64_length = [&](std::span<const uint8_t> data) {
       stuffer.append(le64_length(data));
       stuffer.append(data);
    };
@@ -97,7 +97,7 @@ SessionKeys spake2p_key_schedule(const SystemParameters& params,
                                  const EC_Scalar& w0) {
    auto hash = HashFunction::create_or_throw(params.hash_function());
 
-   auto hash_with_le64_length = [&](std::span<const uint8_t> data) {
+   const auto hash_with_le64_length = [&](std::span<const uint8_t> data) {
       hash->update(le64_length(data));
       hash->update(data);
    };

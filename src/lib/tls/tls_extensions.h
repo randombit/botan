@@ -571,7 +571,7 @@ class BOTAN_UNSTABLE_API Extensions final {
        *          if the extension was not present or was added programmatically.
        */
       std::optional<std::vector<uint8_t>> extension_raw_bytes(Extension_Code type) const {
-         auto it = m_raw_extension_data.find(type);
+         const auto it = m_raw_extension_data.find(type);
          if(it != m_raw_extension_data.end()) {
             return it->second;
          }

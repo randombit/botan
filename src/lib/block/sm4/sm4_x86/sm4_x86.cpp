@@ -41,7 +41,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_SM4 void sm4_x86_encrypt_x8(uint8_t out[8 *
    auto B3 = SIMD_8x32::load_be(inp + 96);
 
    for(size_t i = 0; i != 8; ++i) {
-      auto RK_i = SIMD_8x32::load_le128(&RK[4 * i]);
+      const auto RK_i = SIMD_8x32::load_le128(&RK[4 * i]);
       B0 = sm4_x86_rnds4(B0, RK_i);
       B1 = sm4_x86_rnds4(B1, RK_i);
       B2 = sm4_x86_rnds4(B2, RK_i);
@@ -60,7 +60,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_SM4 void sm4_x86_decrypt_x2(uint8_t out[2 *
    auto B0 = SIMD_8x32::load_be(inp);
 
    for(size_t i = 0; i != 8; ++i) {
-      auto RK_i = SIMD_8x32::load_le128(&RK[28 - 4 * i]).rev_words();
+      const auto RK_i = SIMD_8x32::load_le128(&RK[28 - 4 * i]).rev_words();
       B0 = sm4_x86_rnds4(B0, RK_i);
    }
 
@@ -76,7 +76,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_SM4 void sm4_x86_decrypt_x8(uint8_t out[8 *
    auto B3 = SIMD_8x32::load_be(inp + 96);
 
    for(size_t i = 0; i != 8; ++i) {
-      auto RK_i = SIMD_8x32::load_le128(&RK[28 - 4 * i]).rev_words();
+      const auto RK_i = SIMD_8x32::load_le128(&RK[28 - 4 * i]).rev_words();
       B0 = sm4_x86_rnds4(B0, RK_i);
       B1 = sm4_x86_rnds4(B1, RK_i);
       B2 = sm4_x86_rnds4(B2, RK_i);

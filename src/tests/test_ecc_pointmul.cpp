@@ -240,7 +240,7 @@ class ECC_Point_Addition_Tests final : public Test {
 
             const auto g_bytes = g.serialize_uncompressed();
 
-            auto check_expr_is_g = [&](const char* msg, const Botan::EC_AffinePoint& pt) {
+            const auto check_expr_is_g = [&](const char* msg, const Botan::EC_AffinePoint& pt) {
                result.test_bin_eq(Botan::fmt("{} is g", msg), pt.serialize_uncompressed(), g_bytes);
             };
 
@@ -354,7 +354,7 @@ class ECC_Scalar_Arithmetic_Tests final : public Test {
             result.test_bin_eq("a * b / b = a", (ab * b_inv).serialize(), a.serialize());
             result.test_bin_eq("a * b / a = b", (ab * a_inv).serialize(), b.serialize());
 
-            auto a_plus_b = a + b;
+            const auto a_plus_b = a + b;
             result.test_bin_eq("(a + b) - b == a", (a_plus_b - b).serialize(), a.serialize());
             result.test_bin_eq("(a + b) - a == b", (a_plus_b - a).serialize(), b.serialize());
             result.test_bin_eq("b - (a + b) == -a", (b - a_plus_b).serialize(), a.negate().serialize());

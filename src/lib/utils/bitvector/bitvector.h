@@ -280,7 +280,7 @@ class bitvector_base final {
             ~bitref_base() = default;
 
          public:
-            // NOLINTNEXTLINE(*-explicit-conversions)
+            // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
             constexpr operator bool() const noexcept { return is_set(); }
 
             constexpr bool is_set() const noexcept { return (m_block & m_mask) > 0; }
@@ -411,7 +411,7 @@ class bitvector_base final {
        * @param bits  The number of bits to be loaded. This must not be more
        *              than the number of bytes in @p bytes.
        */
-      bitvector_base(std::span<const uint8_t> bytes, /* NOLINT(*-explicit-conversions) */
+      bitvector_base(std::span<const uint8_t> bytes, /* NOLINT(*-explicit-conversions,*-explicit-constructor) */
                      std::optional<size_type> bits = std::nullopt) :
             m_bits() {
          from_bytes(bytes, bits);
@@ -956,7 +956,7 @@ class bitvector_base final {
          BOTAN_ASSERT_NOMSG(m_bits == other.m_bits);
          BOTAN_ASSERT_NOMSG(m_blocks.size() == other.m_blocks.size());
 
-         auto maybe_xor = overloaded{
+         const auto maybe_xor = overloaded{
             [m = CT::Mask<uint64_t>::from_choice(condition)](uint64_t lhs, uint64_t rhs) -> uint64_t {
                return lhs ^ m.if_set_return(rhs);
             },
@@ -1133,7 +1133,7 @@ class bitvector_base final {
                constexpr size_type block_bits = block_size * 8;
 
                if constexpr(is_byte_aligned()) {
-                  auto sink = m_source.as_byte_span().subspan(write_bytepos()).template first<block_size>();
+                  const auto sink = m_source.as_byte_span().subspan(write_bytepos()).template first<block_size>();
                   store_le(sink, block);
                } else {
                   const size_type byte_pos = write_bytepos();

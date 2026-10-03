@@ -129,7 +129,7 @@ class XMSS_Keygen_Reference_Test final : public Text_Based_Test {
          Test::Result result(vars.get_req_str("Params"));
 
          Fixed_Output_RNG fixed_rng;
-         auto add_entropy = [&](auto v) { fixed_rng.add_entropy(v.data(), v.size()); };
+         const auto add_entropy = [&](auto v) { fixed_rng.add_entropy(v.data(), v.size()); };
 
          // The order of the RNG values is dependent on the order they are pulled
          // from the RNG in the production implementation.
@@ -347,7 +347,7 @@ std::vector<Test::Result> xmss_legacy_private_key() {
       CHECK("Verify a new signature by a legacy private key with a legacy public key",
             [&](auto& result) {
                Botan::PK_Signer signer(legacy_secret_key, *rng, Botan::PK_Signature_Options());
-               auto signature = signer.sign_message(message, *rng);
+               const auto signature = signer.sign_message(message, *rng);
 
                Botan::PK_Verifier verifier(legacy_public_key, Botan::PK_Signature_Options());
                result.test_is_true("legacy private key generates signatures that are still verifiable",

@@ -383,8 +383,8 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          }
       }
 
-      auto client_extn = state.client_hello()->extension_types();
-      auto server_extn = state.server_hello()->extension_types();
+      const auto client_extn = state.client_hello()->extension_types();
+      const auto server_extn = state.server_hello()->extension_types();
 
       std::vector<Extension_Code> diff;
 
@@ -591,7 +591,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          state.set_expected_next(Handshake_Type::CertificateStatus);  // optional
       } else {
          try {
-            auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-client", m_info.hostname());
+            const auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-client", m_info.hostname());
 
             callbacks().tls_verify_cert_chain(
                server_certs, {}, trusted_CAs, Usage_Type::TLS_SERVER_AUTH, m_info.hostname(), policy());
@@ -638,7 +638,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
 
       if(state.server_certs() != nullptr && state.server_hello()->supports_certificate_status_message()) {
          try {
-            auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-client", m_info.hostname());
+            const auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-client", m_info.hostname());
 
             std::vector<std::optional<OCSP::Response>> ocsp;
             if(state.server_cert_status() != nullptr) {
@@ -709,7 +709,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       }
 
       if(state.received_handshake_msg(Handshake_Type::CertificateRequest) && !state.client_certs()->empty()) {
-         auto private_key =
+         const auto private_key =
             m_creds->private_key_for(state.client_certs()->cert_chain()[0], "tls-client", m_info.hostname());
 
          if(!private_key) {

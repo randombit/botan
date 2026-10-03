@@ -128,7 +128,7 @@ class Key_Share_Entry {
                                          const Policy& policy,
                                          Callbacks& cb,
                                          RandomNumberGenerator& rng) {
-         auto scope = scoped_cleanup([&] { m_private_key.reset(); });
+         const auto scope = scoped_cleanup([&] { m_private_key.reset(); });
          BOTAN_ASSERT_NOMSG(m_group == received.m_group);
          BOTAN_STATE_CHECK(m_private_key != nullptr);
          check_ecdh_uncompressed_format(m_group, received.m_key_exchange);
@@ -304,7 +304,7 @@ class Key_Share_ClientHello {
          auto& server_selected = server_share.get_singleton_entry();
 
          // find the client offer that matches the server offer
-         auto match = std::find_if(m_client_shares.begin(), m_client_shares.end(), [&](const auto& offered) {
+         const auto match = std::find_if(m_client_shares.begin(), m_client_shares.end(), [&](const auto& offered) {
             return offered.group() == server_selected.group();
          });
 
@@ -323,7 +323,7 @@ class Key_Share_ClientHello {
          const auto& server_selected = server_share.get_singleton_entry();
 
          // find the client offer that matches the server offer
-         auto match = std::find_if(m_client_shares.begin(), m_client_shares.end(), [&](const auto& offered) {
+         const auto match = std::find_if(m_client_shares.begin(), m_client_shares.end(), [&](const auto& offered) {
             return offered.group() == server_selected.group();
          });
 
@@ -489,7 +489,7 @@ void Key_Share::retry_offer(const Key_Share& retry_request_keyshare,
                             Callbacks& cb,
                             RandomNumberGenerator& rng) {
    std::visit(overloaded{[&](Key_Share_ClientHello& ch, const Key_Share_HelloRetryRequest& hrr) {
-                            auto selected = hrr.selected_group();
+                            const auto selected = hrr.selected_group();
                             // RFC 8446 4.2.8
                             //    [T]he selected_group field [MUST correspond] to a group which was provided in
                             //    the "supported_groups" extension in the original ClientHello

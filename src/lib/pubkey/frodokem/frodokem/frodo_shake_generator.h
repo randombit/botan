@@ -38,7 +38,7 @@ inline auto create_shake_row_generator(const FrodoKEMConstants& constants, Stron
          std::vector<std::span<const uint8_t>> seeds(nrows);
 
          for(size_t r = 0; r != nrows; ++r) {
-            auto id_span = std::span(row_ids).subspan(sizeof(uint16_t) * r).first<sizeof(uint16_t)>();
+            const auto id_span = std::span(row_ids).subspan(sizeof(uint16_t) * r).first<sizeof(uint16_t)>();
             store_le(static_cast<uint16_t>(first_row + r), id_span);
             ids[r] = id_span;
             seeds[r] = a;

@@ -141,7 +141,7 @@ class XOF_Tests final : public Text_Based_Test {
             result.test_bin_eq("generated singlebyte output", singlebyte_out, expected);
 
             // input and output blocksize-ish wise
-            auto process_as_blocks = [&](const std::string& id, size_t block_size) {
+            const auto process_as_blocks = [&](const std::string& id, size_t block_size) {
                auto new_xof = xof->new_object();
                result.test_bool_eq(Botan::fmt("reconstructed XOF may accept input ({})", id),
                                    new_xof->accepts_input(),
@@ -217,7 +217,7 @@ class XOF_Tests final : public Text_Based_Test {
                   }),
                CHECK("cSHAKE direct output absorbs the function name",
                      [](Test::Result& result) {
-                        auto check = [&]<typename cSHAKE>() {
+                        const auto check = [&]<typename cSHAKE>() {
                            cSHAKE a("A");
                            cSHAKE b("B");
                            const auto a_out = a.output_stdvec(32);

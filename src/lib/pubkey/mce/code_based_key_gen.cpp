@@ -191,7 +191,7 @@ McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator& rng, size_t ext
    }
 
    const size_t codimension = params.codimension;
-   auto sp_field = std::make_shared<GF2m_Field>(params.ext_deg);
+   const auto sp_field = std::make_shared<GF2m_Field>(params.ext_deg);
 
    //pick the support.........
    std::vector<gf2m> L(code_length);

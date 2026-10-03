@@ -106,7 +106,7 @@ int botan_privkey_load(
       if(password == nullptr) {
          pkcs8 = Botan::PKCS8::load_key(src);
       } else {
-         pkcs8 = Botan::PKCS8::load_key(src, std::string(password));
+         pkcs8 = Botan::PKCS8::load_key(src, password);
       }
 
       if(pkcs8) {
@@ -316,7 +316,7 @@ int botan_privkey_view_encrypted_pem_timed(botan_privkey_t key,
       const std::string cipher = (maybe_cipher ? maybe_cipher : "");
       const std::string pbkdf_algo = (maybe_pbkdf_algo ? maybe_pbkdf_algo : "");
 
-      auto pkcs8 =
+      const auto pkcs8 =
          Botan::PKCS8::PEM_encode_encrypted_pbkdf_msec(k, rng, passphrase, pbkdf_time, nullptr, cipher, pbkdf_algo);
 
       return invoke_view_callback(view, ctx, pkcs8);
@@ -387,7 +387,8 @@ int botan_privkey_view_encrypted_pem(botan_privkey_t key,
       const std::string pbkdf_algo = (maybe_pbkdf_algo ? maybe_pbkdf_algo : "");
       const size_t pbkdf_iter = (maybe_pbkdf_iterations ? maybe_pbkdf_iterations : 100000);
 
-      auto pkcs8 = Botan::PKCS8::PEM_encode_encrypted_pbkdf_iter(k, rng, passphrase, pbkdf_iter, cipher, pbkdf_algo);
+      const auto pkcs8 =
+         Botan::PKCS8::PEM_encode_encrypted_pbkdf_iter(k, rng, passphrase, pbkdf_iter, cipher, pbkdf_algo);
 
       return invoke_view_callback(view, ctx, pkcs8);
    });

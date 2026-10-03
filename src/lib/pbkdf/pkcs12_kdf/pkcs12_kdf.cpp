@@ -97,7 +97,7 @@ void pkcs12_kdf_with_hash(std::span<uint8_t> out,
 
    // Round len up to a multiple of v, checking for overflow. Dividing before
    // the multiply avoids overflow when computing the number of blocks.
-   auto round_up_to_v = [v](size_t len) -> size_t {
+   const auto round_up_to_v = [v](size_t len) -> size_t {
       if(len == 0) {
          return 0;
       }

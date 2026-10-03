@@ -196,7 +196,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
        *       application defined and "empty" by default and <= 255 bytes long.
        */
       std::vector<uint8_t> sign(RandomNumberGenerator& rng) override {
-         auto scope = CT::scoped_poison(*m_keypair.second);
+         const auto scope = CT::scoped_poison(*m_keypair.second);
 
          const auto mu = m_h->final();
          const auto& mode = m_keypair.second->mode();
@@ -476,7 +476,7 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(const AlgorithmIdentifier& alg_id, st
 
 Dilithium_PrivateKey::Dilithium_PrivateKey(std::span<const uint8_t> sk, DilithiumMode m) {
    DilithiumConstants mode(m);
-   auto& codec = mode.keypair_codec();
+   const auto& codec = mode.keypair_codec();
    std::tie(m_public, m_private) = codec.decode_keypair(sk, std::move(mode));
 }
 

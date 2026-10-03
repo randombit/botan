@@ -184,7 +184,7 @@ void TLS_CBC_HMAC_AEAD_Encryption::cbc_encrypt_record(secure_vector<uint8_t>& bu
    const size_t last_block_starts = buffer.size() - block_size();
    const size_t padding_starts = buffer.size() - padding_length;
    for(size_t i = last_block_starts; i != buffer.size(); ++i) {
-      auto add_padding = CT::Mask<uint8_t>(CT::Mask<size_t>::is_gte(i, padding_starts));
+      const auto add_padding = CT::Mask<uint8_t>(CT::Mask<size_t>::is_gte(i, padding_starts));
       buffer[i] = add_padding.select(padding_val, buffer[i]);
    }
 

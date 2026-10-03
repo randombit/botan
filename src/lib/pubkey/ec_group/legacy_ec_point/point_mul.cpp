@@ -319,7 +319,7 @@ EC_Point_Multi_Point_Precompute::EC_Point_Multi_Point_Precompute(const EC_Point&
    m_M.push_back(y3.plus(x3, ws));
 
    bool no_infinity = true;
-   for(auto& pt : m_M) {
+   for(const auto& pt : m_M) {
       if(pt.is_zero()) {
          no_infinity = false;
       }

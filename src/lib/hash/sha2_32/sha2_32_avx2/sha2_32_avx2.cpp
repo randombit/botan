@@ -117,7 +117,7 @@ BOTAN_FN_ISA_AVX2_BMI2 BOTAN_SCRUB_STACK_AFTER_RETURN void SHA_256::compress_dig
 
       for(size_t i = 0; i < 4; i++) {
          WS[i] = SIMD_8x32::load_be128(&data[16 * i], &data[64 + 16 * i]);
-         auto WK = WS[i] + SIMD_8x32::load_le128(&SHA256_K[4 * i]);
+         const auto WK = WS[i] + SIMD_8x32::load_le128(&SHA256_K[4 * i]);
          WK.store_le128(&W[4 * i], &W2[4 * i]);
       }
 
@@ -272,7 +272,7 @@ BOTAN_FN_ISA_AVX2_BMI2 BOTAN_SCRUB_STACK_AFTER_RETURN void SHA_256::compress_dig
 
       for(size_t i = 0; i < 4; i++) {
          WS[i] = SIMD_4x32::load_be(&data[16 * i]);
-         auto WK = WS[i] + SIMD_4x32::load_le(&SHA256_K[4 * i]);
+         const auto WK = WS[i] + SIMD_4x32::load_le(&SHA256_K[4 * i]);
          WK.store_le(&W[4 * i]);
       }
 

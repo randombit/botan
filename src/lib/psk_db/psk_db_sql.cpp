@@ -29,13 +29,13 @@ Encrypted_PSK_Database_SQL::Encrypted_PSK_Database_SQL(const secure_vector<uint8
 Encrypted_PSK_Database_SQL::~Encrypted_PSK_Database_SQL() = default;
 
 void Encrypted_PSK_Database_SQL::kv_del(std::string_view name) {
-   auto stmt = m_db->new_statement("delete from " + m_table_name + " where psk_name=?1");
+   const auto stmt = m_db->new_statement("delete from " + m_table_name + " where psk_name=?1");
    stmt->bind(1, name);
    stmt->spin();
 }
 
 void Encrypted_PSK_Database_SQL::kv_set(std::string_view name, std::string_view value) {
-   auto stmt = m_db->upsert(m_table_name, {"psk_name", "psk_value"});
+   const auto stmt = m_db->upsert(m_table_name, {"psk_name", "psk_value"});
 
    stmt->bind(1, name);
    stmt->bind(2, value);
@@ -44,7 +44,7 @@ void Encrypted_PSK_Database_SQL::kv_set(std::string_view name, std::string_view 
 }
 
 std::string Encrypted_PSK_Database_SQL::kv_get(std::string_view name) const {
-   auto stmt = m_db->select("psk_value", m_table_name, "psk_name = ?1");
+   const auto stmt = m_db->select("psk_value", m_table_name, "psk_name = ?1");
 
    stmt->bind(1, name);
 
@@ -57,7 +57,7 @@ std::string Encrypted_PSK_Database_SQL::kv_get(std::string_view name) const {
 std::set<std::string> Encrypted_PSK_Database_SQL::kv_get_all() const {
    std::set<std::string> names;
 
-   auto stmt = m_db->select("psk_name", m_table_name);
+   const auto stmt = m_db->select("psk_name", m_table_name);
 
    while(stmt->step()) {
       // A NULL name can only come from external modification of the table

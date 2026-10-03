@@ -30,7 +30,7 @@ class Journaling_Secret_Logger : public std::enable_shared_from_this<Journaling_
    public:
       Botan::TLS::SecretLoggerFn get_secret_logger() {
          return [self = weak_from_this()](std::string_view label, std::span<const uint8_t> secret) {
-            if(auto s = self.lock()) {
+            if(const auto s = self.lock()) {
                s->maybe_log_secret(label, secret);
             }
          };
@@ -332,20 +332,20 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
    auto cipher = Ciphersuite::from_name("AES_128_GCM_SHA256").value();
 
    // initialize Cipher_State with client_hello...server_hello
-   auto sl_client = std::make_shared<Journaling_Secret_Logger>();
-   auto sl_server = std::make_shared<Journaling_Secret_Logger>();
-   auto cs_client = Cipher_State::init_with_server_hello(Connection_Side::Client,
-                                                         secure_vector<uint8_t>(shared_secret),
-                                                         cipher,
-                                                         th_server_hello,
-                                                         sl_client->get_secret_logger());
-   auto cs_server = Cipher_State::init_with_server_hello(Connection_Side::Server,
-                                                         secure_vector<uint8_t>(shared_secret),
-                                                         cipher,
-                                                         th_server_hello,
-                                                         sl_server->get_secret_logger());
+   const auto sl_client = std::make_shared<Journaling_Secret_Logger>();
+   const auto sl_server = std::make_shared<Journaling_Secret_Logger>();
+   const auto cs_client = Cipher_State::init_with_server_hello(Connection_Side::Client,
+                                                               secure_vector<uint8_t>(shared_secret),
+                                                               cipher,
+                                                               th_server_hello,
+                                                               sl_client->get_secret_logger());
+   const auto cs_server = Cipher_State::init_with_server_hello(Connection_Side::Server,
+                                                               secure_vector<uint8_t>(shared_secret),
+                                                               cipher,
+                                                               th_server_hello,
+                                                               sl_server->get_secret_logger());
 
-   auto CHECK_both = make_CHECK_both(cs_client.get(), sl_client.get(), cs_server.get(), sl_server.get());
+   const auto CHECK_both = make_CHECK_both(cs_client.get(), sl_client.get(), cs_server.get(), sl_server.get());
 
    return Test::flatten_result_lists(
       {CHECK_both(
@@ -688,19 +688,19 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
 
    auto cipher = Ciphersuite::from_name("AES_128_GCM_SHA256").value();
 
-   auto sl_client = std::make_shared<Journaling_Secret_Logger>();
-   auto sl_server = std::make_shared<Journaling_Secret_Logger>();
+   const auto sl_client = std::make_shared<Journaling_Secret_Logger>();
+   const auto sl_server = std::make_shared<Journaling_Secret_Logger>();
 
-   auto cs_client = Cipher_State::init_with_psk(Connection_Side::Client,
-                                                Cipher_State::PSK_Type::Resumption,
-                                                secure_vector<uint8_t>(psk.begin(), psk.end()),
-                                                cipher.prf_algo());
-   auto cs_server = Cipher_State::init_with_psk(Connection_Side::Server,
-                                                Cipher_State::PSK_Type::Resumption,
-                                                secure_vector<uint8_t>(psk.begin(), psk.end()),
-                                                cipher.prf_algo());
+   const auto cs_client = Cipher_State::init_with_psk(Connection_Side::Client,
+                                                      Cipher_State::PSK_Type::Resumption,
+                                                      secure_vector<uint8_t>(psk.begin(), psk.end()),
+                                                      cipher.prf_algo());
+   const auto cs_server = Cipher_State::init_with_psk(Connection_Side::Server,
+                                                      Cipher_State::PSK_Type::Resumption,
+                                                      secure_vector<uint8_t>(psk.begin(), psk.end()),
+                                                      cipher.prf_algo());
 
-   auto CHECK_both = make_CHECK_both(cs_client.get(), sl_client.get(), cs_server.get(), sl_server.get());
+   const auto CHECK_both = make_CHECK_both(cs_client.get(), sl_client.get(), cs_server.get(), sl_server.get());
 
    return Test::flatten_result_lists(
       {CHECK_both("no secrets logged for PSK initialization",
@@ -877,7 +877,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
 }
 
 std::vector<Test::Result> test_record_padding() {
-   auto shared_secret = [] {
+   const auto shared_secret = [] {
       return Botan::hex_decode_locked(
          "8b d4 05 4f b5 5b 9d 63 fd fb ac f9 f0 4b 9f 0d"
          "35 e6 d6 3f 53 75 63 ef d4 62 72 90 0f 89 49 2d");

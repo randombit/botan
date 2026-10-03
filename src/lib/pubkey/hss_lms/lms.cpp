@@ -301,7 +301,7 @@ LMS_PublicKey LMS_PublicKey::from_bytes_or_throw(BufferSlicer& slicer) {
       throw Decoding_Error("Too few bytes while parsing LMS public key.");
    }
    // Alg. 6. 2.a.
-   auto lms_type = load_be<LMS_Algorithm_Type>(slicer.take<sizeof(LMS_Algorithm_Type)>());
+   const auto lms_type = load_be<LMS_Algorithm_Type>(slicer.take<sizeof(LMS_Algorithm_Type)>());
    // Alg. 6. 2.c.
    auto lms_params = LMS_Params::create_or_throw(lms_type);
    // Alg. 6. 2.d.
@@ -309,7 +309,7 @@ LMS_PublicKey LMS_PublicKey::from_bytes_or_throw(BufferSlicer& slicer) {
       throw Decoding_Error("Too few bytes while parsing LMS public key.");
    }
    // Alg. 6. 2.b.
-   auto lmots_type = load_be<LMOTS_Algorithm_Type>(slicer.take<sizeof(LMOTS_Algorithm_Type)>());
+   const auto lmots_type = load_be<LMOTS_Algorithm_Type>(slicer.take<sizeof(LMOTS_Algorithm_Type)>());
    auto lmots_params = LMOTS_Params::create_or_throw(lmots_type);
 
    if(lms_params.hash_name() != lmots_params.hash_name()) {
@@ -354,7 +354,7 @@ LMS_Signature LMS_Signature::from_bytes_or_throw(BufferSlicer& slicer) {
       throw Decoding_Error("Too few signature bytes while parsing LMS signature.");
    }
    // Alg. 6a 2.a.
-   auto q = load_be<LMS_Tree_Node_Idx>(slicer.take<sizeof(LMS_Tree_Node_Idx)>());
+   const auto q = load_be<LMS_Tree_Node_Idx>(slicer.take<sizeof(LMS_Tree_Node_Idx)>());
 
    // Alg. 6a 2.b.-e.
    auto lmots_sig = LMOTS_Signature::from_bytes_or_throw(slicer);
@@ -364,7 +364,7 @@ LMS_Signature LMS_Signature::from_bytes_or_throw(BufferSlicer& slicer) {
       throw Decoding_Error("Too few signature bytes while parsing LMS signature.");
    }
    // Alg. 6a 2.f.
-   auto lms_type = load_be<LMS_Algorithm_Type>(slicer.take<sizeof(LMS_Algorithm_Type)>());
+   const auto lms_type = load_be<LMS_Algorithm_Type>(slicer.take<sizeof(LMS_Algorithm_Type)>());
    // Alg. 6a 2.h.
    const LMS_Params lms_params = LMS_Params::create_or_throw(lms_type);
    // Alg. 6a 2.i. (signature is not exactly [...] bytes long)

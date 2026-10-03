@@ -376,7 +376,7 @@ bool Text_Policy::get_bool(const std::string& key, bool def) const {
 }
 
 std::string Text_Policy::get_str(const std::string& key, const std::string& def) const {
-   auto i = m_kv.find(key);
+   const auto i = m_kv.find(key);
    if(i == m_kv.end()) {
       return def;
    }
@@ -385,7 +385,7 @@ std::string Text_Policy::get_str(const std::string& key, const std::string& def)
 }
 
 bool Text_Policy::set_value(const std::string& key, std::string_view val, bool overwrite) {
-   auto i = m_kv.find(key);
+   const auto i = m_kv.find(key);
 
    if(overwrite == false && i != m_kv.end()) {
       return false;

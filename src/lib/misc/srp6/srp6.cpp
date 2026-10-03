@@ -52,7 +52,7 @@ std::string srp6_group_identifier(const BigInt& N, const BigInt& g) {
    try {
       const std::string group_name = "modp/srp/" + std::to_string(N.bits());
 
-      auto group = DL_Group::from_name(group_name);
+      const auto group = DL_Group::from_name(group_name);
 
       if(group.get_p() == N && group.get_g() == g) {
          return group_name;
@@ -70,7 +70,7 @@ std::pair<BigInt, SymmetricKey> srp6_client_agree(std::string_view identifier,
                                                   const std::vector<uint8_t>& salt,
                                                   const BigInt& B,
                                                   RandomNumberGenerator& rng) {
-   auto group = DL_Group::from_name(group_id);
+   const auto group = DL_Group::from_name(group_id);
    const size_t a_bits = group.exponent_bits();
 
    return srp6_client_agree(identifier, password, group, hash_id, salt, B, a_bits, rng);
@@ -134,7 +134,7 @@ BigInt srp6_generate_verifier(std::string_view identifier,
                               const std::vector<uint8_t>& salt,
                               std::string_view group_id,
                               std::string_view hash_id) {
-   auto group = DL_Group::from_name(group_id);
+   const auto group = DL_Group::from_name(group_id);
    return srp6_generate_verifier(identifier, password, salt, group, hash_id);
 }
 
@@ -156,7 +156,7 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
                                   std::string_view group_id,
                                   std::string_view hash_id,
                                   RandomNumberGenerator& rng) {
-   auto group = DL_Group::from_name(group_id);
+   const auto group = DL_Group::from_name(group_id);
    const size_t b_bits = group.exponent_bits();
    return this->step1(v, group, hash_id, b_bits, rng);
 }

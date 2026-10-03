@@ -148,7 +148,7 @@ class RNG final : public Command {
          }
 
          const std::string drbg_seed = get_arg("drbg-seed");
-         auto rng = cli_make_rng(type, drbg_seed);
+         const auto rng = cli_make_rng(type, drbg_seed);
 
          for(const std::string& req : get_arg_list("bytes")) {
             const size_t req_len = Botan::to_u32bit(req);

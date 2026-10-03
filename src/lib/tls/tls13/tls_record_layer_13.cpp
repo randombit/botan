@@ -169,7 +169,7 @@ std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
 
       const size_t ct_size = (!protect) ? pt_size : cipher_state->encrypt_output_length(pt_size_with_type_and_padding);
 
-      auto pt_fragment = data.subspan(pt_offset, pt_size);
+      const auto pt_fragment = data.subspan(pt_offset, pt_size);
       if(protect) {
          const auto record =
             cipher_state->protect_record(type, pt_fragment, pt_size_with_type_and_padding - pt_size_with_type);

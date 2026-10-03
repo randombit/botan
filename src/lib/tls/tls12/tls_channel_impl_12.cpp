@@ -189,7 +189,7 @@ Connection_Sequence_Numbers& Channel_Impl_12::sequence_numbers() const {
 }
 
 std::shared_ptr<Connection_Cipher_State> Channel_Impl_12::read_cipher_state_epoch(uint16_t epoch) const {
-   auto i = m_read_cipher_states.find(epoch);
+   const auto i = m_read_cipher_states.find(epoch);
    if(i == m_read_cipher_states.end()) {
       throw Internal_Error("TLS::Channel_Impl_12 No read cipherstate for epoch " + std::to_string(epoch));
    }
@@ -213,7 +213,7 @@ std::shared_ptr<Connection_Cipher_State> Channel_Impl_12::read_cipher_state_epoc
 }
 
 std::shared_ptr<Connection_Cipher_State> Channel_Impl_12::write_cipher_state_epoch(uint16_t epoch) const {
-   auto i = m_write_cipher_states.find(epoch);
+   const auto i = m_write_cipher_states.find(epoch);
    if(i == m_write_cipher_states.end()) {
       throw Internal_Error("TLS::Channel_Impl_12 No write cipherstate for epoch " + std::to_string(epoch));
    }
@@ -286,10 +286,10 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
       const size_t max_timeout_ms = policy().dtls_maximum_timeout();
       const std::optional<size_t> max_retransmissions = policy().dtls_maximum_retransmissions();
 
-      auto send_record_f = [this](uint16_t epoch, Record_Type record_type, const std::vector<uint8_t>& record) {
+      const auto send_record_f = [this](uint16_t epoch, Record_Type record_type, const std::vector<uint8_t>& record) {
          send_record_under_epoch(epoch, record_type, record);
       };
-      auto clock_f = [this]() { return callbacks().tls_current_monotonic_clock_ms(); };
+      const auto clock_f = [this]() { return callbacks().tls_current_monotonic_clock_ms(); };
       io = std::make_unique<Datagram_Handshake_IO>(send_record_f,
                                                    clock_f,
                                                    sequence_numbers(),
@@ -300,7 +300,7 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
                                                    policy().maximum_handshake_message_size(),
                                                    initial_epoch);
    } else {
-      auto send_record_f = [this](Record_Type rec_type, const std::vector<uint8_t>& record) {
+      const auto send_record_f = [this](Record_Type rec_type, const std::vector<uint8_t>& record) {
          send_record(rec_type, record);
       };
       io = std::make_unique<Stream_Handshake_IO>(send_record_f);
@@ -388,11 +388,11 @@ void Channel_Impl_12::maybe_arm_dtls_retransmission_timer(TimerGeneration genera
    }
 
    // The actual asynchronous operation:
-   auto on_timer = [self = weak_from_this(), generation = m_retransmission_timer_generation]() mutable {
+   const auto on_timer = [self = weak_from_this(), generation = m_retransmission_timer_generation]() mutable {
       // If this operation is called after the channel implementation is gone,
       // the channel magically became some other type, or the operation was
       // called more than once (see below) just return.
-      auto channel = std::dynamic_pointer_cast<Channel_Impl_12>(self.lock());
+      const auto channel = std::dynamic_pointer_cast<Channel_Impl_12>(self.lock());
       if(!channel) {
          return;
       }
@@ -470,7 +470,7 @@ void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side) {
    BOTAN_ASSERT(!m_read_cipher_states.contains(epoch), "No read cipher state currently set for next epoch");
 
    // flip side as we are reading
-   auto read_state = std::make_shared<Connection_Cipher_State>(
+   const auto read_state = std::make_shared<Connection_Cipher_State>(
       pending->version(),
       (side == Connection_Side::Client) ? Connection_Side::Server : Connection_Side::Client,
       false,
@@ -482,7 +482,8 @@ void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side) {
    // clock now (see read_cipher_state_epoch). Epoch 0 is the plaintext
    // placeholder and holds no keys, so the window does not apply to it.
    if(m_is_datagram && epoch > 1) {
-      if(auto prev = m_read_cipher_states.find(static_cast<uint16_t>(epoch - 1)); prev != m_read_cipher_states.end()) {
+      if(const auto prev = m_read_cipher_states.find(static_cast<uint16_t>(epoch - 1));
+         prev != m_read_cipher_states.end()) {
          prev->second.retired_at = callbacks().tls_current_monotonic_clock_ms();
       }
    }
@@ -506,12 +507,13 @@ void Channel_Impl_12::change_cipher_spec_writer(Connection_Side side) {
 
    BOTAN_ASSERT(!m_write_cipher_states.contains(epoch), "No write cipher state currently set for next epoch");
 
-   auto write_state = std::make_shared<Connection_Cipher_State>(pending->version(),
-                                                                side,
-                                                                true,
-                                                                pending->ciphersuite(),
-                                                                pending->session_keys(),
-                                                                pending->server_hello()->supports_encrypt_then_mac());
+   const auto write_state =
+      std::make_shared<Connection_Cipher_State>(pending->version(),
+                                                side,
+                                                true,
+                                                pending->ciphersuite(),
+                                                pending->session_keys(),
+                                                pending->server_hello()->supports_encrypt_then_mac());
 
    m_write_cipher_states[epoch] = write_state;
    prune_old_cipher_states(m_write_cipher_states);
@@ -594,7 +596,7 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
 
          size_t consumed = 0;
 
-         auto get_epoch = [this](uint16_t epoch) { return read_cipher_state_epoch(epoch); };
+         const auto get_epoch = [this](uint16_t epoch) { return read_cipher_state_epoch(epoch); };
 
          const Record_Header record = read_record(m_is_datagram,
                                                   m_readbuf,
@@ -823,7 +825,7 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
          m_pending_state->handshake_io().add_record(record.data(), record.size(), record_type, record_sequence);
 
          while(auto* pending = m_pending_state.get()) {
-            auto msg = pending->get_next_handshake_msg(policy().maximum_handshake_message_size());
+            const auto msg = pending->get_next_handshake_msg(policy().maximum_handshake_message_size());
 
             if(msg.first == Handshake_Type::None) {  // no full handshake yet
                break;
@@ -932,7 +934,7 @@ void Channel_Impl_12::send_record_array(uint16_t epoch, Record_Type type, const 
       return;
    }
 
-   auto cipher_state = write_cipher_state_epoch(epoch);
+   const auto cipher_state = write_cipher_state_epoch(epoch);
 
    while(length > 0) {
       const size_t sending = std::min<size_t>(length, MAX_PLAINTEXT_SIZE);

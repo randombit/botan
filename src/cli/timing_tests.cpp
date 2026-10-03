@@ -104,7 +104,7 @@ class TimingTestTimer final {
    private:
       static uint64_t get_high_resolution_clock() {
          // TODO use cpu clock where possible/relevant incl serializing instructions
-         auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+         const auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
          return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
       }
 
@@ -744,13 +744,13 @@ class MARVIN_Test_Command final : public Command {
       }
 
       static size_t parse_runs_arg(const std::string& param) {
-         if(param.starts_with("-")) {
+         if(param.starts_with('-')) {
             throw CLI_Usage_Error("Cannot have a negative run count");
          }
 
-         if(param.ends_with("m") || param.ends_with("M")) {
+         if(param.ends_with('m') || param.ends_with('M')) {
             return parse_runs_arg(param.substr(0, param.size() - 1)) * 1'000'000;
-         } else if(param.ends_with("k") || param.ends_with("K")) {
+         } else if(param.ends_with('k') || param.ends_with('K')) {
             return parse_runs_arg(param.substr(0, param.size() - 1)) * 1'000;
          } else {
             if(const auto val = Botan::parse_sz(param)) {

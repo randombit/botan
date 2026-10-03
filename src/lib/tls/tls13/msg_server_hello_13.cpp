@@ -238,7 +238,7 @@ uint16_t choose_ciphersuite(const Client_Hello_13& ch, const Policy& policy) {
       std::swap(pref_list, other_list);
    }
 
-   for(auto suite_id : pref_list) {
+   for(const auto suite_id : pref_list) {
       // TODO: take potentially available PSKs into account to select a
       //       compatible ciphersuite.
       //
@@ -314,7 +314,7 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
       //    offers a "pre_shared_key" extension.
       //
       // Note: Client_Hello_13 constructor already performed a graceful check.
-      auto* const psk_modes = ch_exts.get<PSK_Key_Exchange_Modes>();
+      const auto* const psk_modes = ch_exts.get<PSK_Key_Exchange_Modes>();
       BOTAN_ASSERT_NONNULL(psk_modes);
 
       // TODO: also support PSK_Key_Exchange_Mode::PSK_KE
@@ -351,7 +351,7 @@ std::optional<Protocol_Version> Server_Hello_13::random_signals_downgrade() cons
 }
 
 Protocol_Version Server_Hello_13::selected_version() const {
-   auto* const versions_ext = m_data->extensions().get<Supported_Versions>();
+   const auto* const versions_ext = m_data->extensions().get<Supported_Versions>();
    BOTAN_ASSERT_NOMSG(versions_ext);
    const auto& versions = versions_ext->versions();
    BOTAN_ASSERT_NOMSG(versions.size() == 1);

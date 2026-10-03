@@ -120,7 +120,7 @@ std::string IPv4Address::to_string() const {
 
    for(size_t i = 0; i != 4; ++i) {
       if(i > 0) {
-         str += ".";
+         str += '.';
       }
       str += std::to_string(addr[i]);
    }

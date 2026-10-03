@@ -70,7 +70,7 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune_params(size_t /*output_length*
    // (very slightly) to memory consumption, but N is the driving factor.
    // Including p leads to using an N half as large as what the user would expect.
 
-   auto scrypt_parameters_acceptable = [&](size_t N, size_t r) -> bool {
+   const auto scrypt_parameters_acceptable = [&](size_t N, size_t r) -> bool {
       if(N > MAX_SCRYPT_N) {
          return false;
       }

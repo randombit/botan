@@ -119,7 +119,7 @@ class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement {
                                      &secret_handle);
 
          const Object secret_object(m_key.session(), secret_handle);
-         auto destroy_secret = scoped_cleanup([&]() noexcept {
+         const auto destroy_secret = scoped_cleanup([&]() noexcept {
             try {
                secret_object.destroy();
             } catch(...) {  // NOLINT(*-empty-catch)

@@ -68,7 +68,7 @@ int botan_hotp_check(
    botan_hotp_t hotp, uint64_t* next_hotp_counter, uint32_t hotp_code, uint64_t hotp_counter, size_t resync_range) {
 #if defined(BOTAN_HAS_HOTP)
    return BOTAN_FFI_VISIT(hotp, [=](auto& h) {
-      auto resp = h.verify_hotp(hotp_code, hotp_counter, resync_range);
+      const auto resp = h.verify_hotp(hotp_code, hotp_counter, resync_range);
 
       if(next_hotp_counter) {
          *next_hotp_counter = resp.second;

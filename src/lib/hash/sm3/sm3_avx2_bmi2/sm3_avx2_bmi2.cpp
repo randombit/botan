@@ -25,13 +25,13 @@ BOTAN_FN_ISA_AVX2_BMI2 inline SIMD_4x32 alignr12(const SIMD_4x32& a, const SIMD_
 
 template <typename SIMD_T>
 BOTAN_FN_ISA_AVX2_BMI2 inline void next_SM3_W(SIMD_T& W0, const SIMD_T& W1, const SIMD_T& W2, const SIMD_T& W3) {
-   auto X3 = alignr12(W1, W0);                     // W[3..6]
-   auto X7 = alignr12(W2, W1);                     // W[7..10]
-   auto X10 = SIMD_T::alignr8(W3, W2);             // W[10..13]
-   auto X13 = W3.template shift_elems_right<1>();  // W[13..15] || 0
+   const auto X3 = alignr12(W1, W0);                     // W[3..6]
+   const auto X7 = alignr12(W2, W1);                     // W[7..10]
+   const auto X10 = SIMD_T::alignr8(W3, W2);             // W[10..13]
+   const auto X13 = W3.template shift_elems_right<1>();  // W[13..15] || 0
 
-   auto P1_I = W0 ^ X7 ^ X13.template rotl<15>();
-   auto P1_O = P1_I ^ P1_I.template rotl<15>() ^ P1_I.template rotl<23>();
+   const auto P1_I = W0 ^ X7 ^ X13.template rotl<15>();
+   const auto P1_O = P1_I ^ P1_I.template rotl<15>() ^ P1_I.template rotl<23>();
    auto T = P1_O ^ X3.template rotl<7>() ^ X10;
 
    /*
@@ -40,10 +40,10 @@ BOTAN_FN_ISA_AVX2_BMI2 inline void next_SM3_W(SIMD_T& W0, const SIMD_T& W1, cons
    */
 
    // Extract W[0] into T2 in position 3
-   auto T2 = T.template shift_elems_left<3>();
+   const auto T2 = T.template shift_elems_left<3>();
 
    // Compute P1(rotl<15>(W[0])) [combining the rotation values]
-   auto P1_T2 = T2.template rotl<15>() ^ T2.template rotl<30>() ^ T2.template rotl<6>();
+   const auto P1_T2 = T2.template rotl<15>() ^ T2.template rotl<30>() ^ T2.template rotl<6>();
 
    // XOR in
    T ^= P1_T2;

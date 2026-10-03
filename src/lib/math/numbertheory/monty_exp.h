@@ -47,12 +47,12 @@ inline Montgomery_Int monty_exp(const Montgomery_Params& params_p,
                                 const BigInt& g,
                                 const BigInt& k,
                                 size_t max_k_bits) {
-   auto precomputed = monty_precompute(params_p, g, 4, true);
+   const auto precomputed = monty_precompute(params_p, g, 4, true);
    return monty_execute(*precomputed, k, max_k_bits);
 }
 
 inline Montgomery_Int monty_exp_vartime(const Montgomery_Params& params_p, const BigInt& g, const BigInt& k) {
-   auto precomputed = monty_precompute(params_p, g, 4, false);
+   const auto precomputed = monty_precompute(params_p, g, 4, false);
    return monty_execute_vartime(*precomputed, k);
 }
 

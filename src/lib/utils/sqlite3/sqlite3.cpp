@@ -60,14 +60,14 @@ std::shared_ptr<SQL_Database::Statement> Sqlite3_Database::upsert(
       }
       sql += fmt("?{}", i);
    }
-   sql += ")";
+   sql += ')';
 
    return new_statement(sql);
 }
 
 size_t Sqlite3_Database::row_count(std::string_view table_name) {
    BOTAN_ARG_CHECK(is_valid_table_name(table_name), "Invalid table name");
-   auto stmt = new_statement(fmt("select count(*) from {}", table_name));
+   const auto stmt = new_statement(fmt("select count(*) from {}", table_name));
 
    if(stmt->step()) {
       return stmt->get_size_t(0);
@@ -115,7 +115,7 @@ void Sqlite3_Database::create_table(const Table_Schema& schema) {
       }
       first = false;
    }
-   sql += ")";
+   sql += ')';
 
    char* errmsg = nullptr;
    const int rc = ::sqlite3_exec(m_db.get(), sql.c_str(), nullptr, nullptr, &errmsg);

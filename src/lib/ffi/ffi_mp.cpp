@@ -264,7 +264,7 @@ int botan_mp_mod_inverse(botan_mp_t out, const botan_mp_t in, const botan_mp_t m
 
 int botan_mp_mod_mul(botan_mp_t out, const botan_mp_t x, const botan_mp_t y, const botan_mp_t modulus) {
    return BOTAN_FFI_VISIT(out, [=](auto& o) {
-      auto reducer = Botan::Barrett_Reduction::for_secret_modulus(safe_get(modulus));
+      const auto reducer = Botan::Barrett_Reduction::for_secret_modulus(safe_get(modulus));
       o = reducer.multiply(safe_get(x), safe_get(y));
    });
 }

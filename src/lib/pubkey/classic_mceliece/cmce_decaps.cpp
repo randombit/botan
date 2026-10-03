@@ -27,10 +27,10 @@ Classic_McEliece_Polynomial Classic_McEliece_Decryptor::compute_goppa_syndrome(
    auto alphas = ordering.alphas(params.n());
 
    for(size_t i = 0; i < params.n(); ++i) {
-      auto g_alpha = goppa_poly(alphas[i]);
+      const auto g_alpha = goppa_poly(alphas[i]);
       auto r = (g_alpha * g_alpha).inv();
 
-      auto c_mask = GF_Mask::expand(code_word.at(i).as_choice());
+      const auto c_mask = GF_Mask::expand(code_word.at(i).as_choice());
 
       for(size_t j = 0; j < 2 * params.t(); ++j) {
          syndrome[j] += c_mask.if_set_return(r);
@@ -60,14 +60,14 @@ Classic_McEliece_Polynomial Classic_McEliece_Decryptor::berlekamp_massey(
       }
 
       // Pseudocode branch if (d == 0)
-      auto d_not_zero = GF_Mask::expand(d);
+      const auto d_not_zero = GF_Mask::expand(d);
 
       // Pseudocode branch else if (2* L <= N)
       auto adjust_big_c = GF_Mask(CT::Mask<uint16_t>::is_lte(uint16_t(2 * big_l), uint16_t(big_n)));
       adjust_big_c &= d_not_zero;
 
       auto big_t = big_c;  // Copy
-      auto f = d / b;
+      const auto f = d / b;
 
       for(size_t i = 0; i <= params.t(); ++i) {
          // Occurs for all other d!=0 branches in the pseudocode
@@ -130,13 +130,13 @@ void Classic_McEliece_Decryptor::raw_kem_decrypt(std::span<uint8_t> out_shared_k
    BOTAN_ARG_CHECK(out_shared_key.size() == m_key->params().hash_out_bytes(), "Invalid shared key output size");
    BOTAN_ARG_CHECK(encapsulated_key.size() == m_key->params().ciphertext_size(), "Invalid ciphertext size");
 
-   auto scope = CT::scoped_poison(*m_key);
+   const auto scope = CT::scoped_poison(*m_key);
 
    auto [ct, c1] = [&]() -> std::pair<CmceCodeWord, std::span<const uint8_t>> {
       if(m_key->params().is_pc()) {
          BufferSlicer encaps_key_slicer(encapsulated_key);
-         auto c0_ret = encaps_key_slicer.take(m_key->params().encode_out_size());
-         auto c1_ret = encaps_key_slicer.take(m_key->params().hash_out_bytes());
+         const auto c0_ret = encaps_key_slicer.take(m_key->params().encode_out_size());
+         const auto c1_ret = encaps_key_slicer.take(m_key->params().hash_out_bytes());
          BOTAN_ASSERT_NOMSG(encaps_key_slicer.empty());
          return {CmceCodeWord(secure_bitvector(c0_ret, m_key->params().m() * m_key->params().t())), c1_ret};
       } else {

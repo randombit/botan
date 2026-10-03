@@ -76,13 +76,13 @@ class GroupOps final {
          than leaking their presence by falling back to serial conversion.
          */
 
-         auto masked_z = [](const Projective& pt) {
+         const auto masked_z = [](const Projective& pt) {
             auto z = Group::load(pt.m_z);
             z.conditional_assign(z.is_zero(), FE::one());
             return z;
          };
 
-         auto affine_from = [](const Projective& pt, const FE& z_inv) {
+         const auto affine_from = [](const Projective& pt, const FE& z_inv) {
             const auto inf = Group::load(pt.m_z).is_zero();
 
             auto x = Group::load(pt.m_x) * z_inv;

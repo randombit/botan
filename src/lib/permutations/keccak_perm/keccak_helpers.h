@@ -106,13 +106,13 @@ size_t keccak_absorb_padded_strings_encoding(T& sink, size_t padding_mod, Ts... 
    };
 
    // encodes a given string and absorbs it into the XOF straight away
-   auto encode_string_and_absorb = [&](std::span<const uint8_t> bytes) {
+   const auto encode_string_and_absorb = [&](std::span<const uint8_t> bytes) {
       absorb(keccak_int_left_encode(int_encoding_buffer, bytes.size() * 8));
       absorb(bytes);
    };
 
    // absorbs as many zero-bytes as requested into the XOF
-   auto absorb_padding = [&](size_t padding_bytes) {
+   const auto absorb_padding = [&](size_t padding_bytes) {
       for(size_t i = 0; i < padding_bytes; ++i) {
          const uint8_t zero_byte = 0;
          absorb({&zero_byte, 1});

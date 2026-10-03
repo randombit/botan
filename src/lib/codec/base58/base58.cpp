@@ -246,7 +246,7 @@ std::optional<uint64_t> base58_values_of_8(uint64_t w) {
 
    // For each byte v (assumed < 0x80), 0x80 if v > c else 0x00
    const uint64_t w80 = w | hi1;
-   auto gt = [w80](char c) { return (w80 - lo1 * static_cast<uint8_t>(c + 1)) & hi1; };
+   const auto gt = [w80](char c) { return (w80 - lo1 * static_cast<uint8_t>(c + 1)) & hi1; };
 
    /*
     * Alphabet: "123456789 ABCDEFGH JKLMN PQRSTUVWXYZ abcdefghijk mnopqrstuvwxyz"
@@ -363,7 +363,7 @@ std::vector<uint8_t> base58_decode(const char input[], size_t input_length) {
    secure_vector<word> v((6 * digits.size() + WordInfo<word>::bits - 1) / WordInfo<word>::bits);
 
    // Combine up to radix_digits digits into a single word
-   auto accum_digits = [](std::span<const uint8_t> chunk) {
+   const auto accum_digits = [](std::span<const uint8_t> chunk) {
       BOTAN_DEBUG_ASSERT(chunk.size() <= radix_digits);
       word accum = 0;
       for(const uint8_t d : chunk) {

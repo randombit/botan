@@ -114,7 +114,7 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers {
       uint16_t current_write_epoch() const override { return m_write_epoch; }
 
       uint64_t next_write_sequence(uint16_t epoch) override {
-         auto i = m_write_seqs.find(epoch);
+         const auto i = m_write_seqs.find(epoch);
          if(i == m_write_seqs.end()) {
             throw Invalid_State("DTLS epoch not found");
          }

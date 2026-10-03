@@ -194,7 +194,7 @@ BerDecodedLength decode_length(DataSource* ber, size_t allow_indef, bool der_mod
 * Peek a tag from the source at the given offset without consuming any data.
 * Returns the number of bytes consumed by the tag, or 0 on EOF.
 */
-size_t peek_tag(DataSource* src, size_t offset, ASN1_Type& type_tag, ASN1_Class& class_tag) {
+size_t peek_tag(const DataSource* src, size_t offset, ASN1_Type& type_tag, ASN1_Class& class_tag) {
    uint8_t b = 0;
    if(src->peek(&b, 1, offset) == 0) {
       type_tag = ASN1_Type::NoObject;

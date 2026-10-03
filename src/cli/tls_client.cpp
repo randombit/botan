@@ -73,7 +73,7 @@ class Callbacks : public Botan::TLS::Callbacks {
                                                                 /* require_self_signed_trust_anchors */ true,
                                                                 /* accept_ocsp_softfail */ true);
 
-         auto ocsp_timeout = std::chrono::milliseconds(1000);
+         const auto ocsp_timeout = std::chrono::milliseconds(1000);
 
          const std::string checked_name = flag_set("skip-hostname-check") ? "" : std::string(hostname);
 
@@ -214,7 +214,7 @@ class TLS_Client final : public Command {
       void go() override {
          std::shared_ptr<Botan::TLS::Session_Manager> session_mgr;
 
-         auto callbacks = std::make_shared<Callbacks>(*this);
+         const auto callbacks = std::make_shared<Callbacks>(*this);
 
          const std::string sessions_db = get_arg("session-db");
          const std::string host = get_arg("host");
@@ -280,13 +280,13 @@ class TLS_Client final : public Command {
          const std::optional<std::string> psk_identity = get_arg_maybe("psk-identity");
          const std::optional<std::string> psk_prf = get_arg_maybe("psk-prf");
 
-         auto creds = std::make_shared<Basic_Credentials_Manager>(use_system_cert_store,
-                                                                  trusted_CAs,
-                                                                  client_crt_path,
-                                                                  client_key_path,
-                                                                  std::move(psk),
-                                                                  psk_identity,
-                                                                  psk_prf);
+         const auto creds = std::make_shared<Basic_Credentials_Manager>(use_system_cert_store,
+                                                                        trusted_CAs,
+                                                                        client_crt_path,
+                                                                        client_key_path,
+                                                                        std::move(psk),
+                                                                        psk_identity,
+                                                                        psk_prf);
 
          Botan::TLS::Client client(callbacks,
                                    session_mgr,
@@ -318,6 +318,7 @@ class TLS_Client final : public Command {
 
             struct timeval timeout = {1, 0};
 
+            // NOLINTNEXTLINE(*-redundant-casting) socket_type is not int on all platforms
             ::select(static_cast<int>(m_sockfd + 1), &readfds, nullptr, nullptr, &timeout);
 
             if(FD_ISSET(m_sockfd, &readfds)) {
@@ -446,7 +447,7 @@ class TLS_Client final : public Command {
       }
 
       static void dgram_socket_write(int sockfd, const uint8_t buf[], size_t length) {
-         auto r = ::send(sockfd, buf, length, MSG_NOSIGNAL);
+         const auto r = ::send(sockfd, buf, length, MSG_NOSIGNAL);
 
          if(r == -1) {
             throw CLI_Error("Socket write failed errno=" + std::to_string(errno));

@@ -90,7 +90,7 @@ class AffinePointTable final {
          auto result = AffinePoint::identity(m_table[0]);
 
          // Intentionally wrapping; set to maximum size_t if idx == 0
-         const size_t idx1 = static_cast<size_t>(idx - 1);
+         const size_t idx1 = idx - 1;
          for(size_t i = 0; i != m_table.size(); ++i) {
             const auto found = CT::Mask<size_t>::is_equal(idx1, i).as_choice();
             result.conditional_assign(found, m_table[i]);
@@ -112,7 +112,7 @@ class AffinePointTable final {
          auto result = AffinePoint::identity(m_table[R * iter]);
 
          // Intentionally wrapping; set to maximum size_t if idx == 0
-         const size_t idx1 = static_cast<size_t>(idx - 1);
+         const size_t idx1 = idx - 1;
          for(size_t i = 0; i != R; ++i) {
             const auto found = CT::Mask<size_t>::is_equal(idx1, i).as_choice();
             result.conditional_assign(found, m_table[R * iter + i]);
@@ -450,7 +450,7 @@ std::vector<typename C::ProjectivePoint> mul2_setup(const typename C::AffinePoin
       // Conditionals ok: all based on t_i/p_i/q_i which in turn are derived from public i
 
       // Returns x_i * x + y_i * y
-      auto next_tbl_e = [&]() {
+      const auto next_tbl_e = [&]() {
          if(p_i % 2 == 0 && q_i % 2 == 0) {
             // Where possible using doubling (eg indices 1, 7, 9 in
             // the table above)

@@ -477,7 +477,7 @@ class Filter_Tests final : public Test {
          pipe.write(input_str);
          pipe.end_msg();
 
-         auto compr = pipe.read_all(0);
+         const auto compr = pipe.read_all(0);
          // Can't do equality check on compression because output may differ
          result.test_sz_lt("Compressed is shorter", compr.size(), input_str.size());
 
@@ -511,7 +511,7 @@ class Filter_Tests final : public Test {
          pipe.write(input_str);
          pipe.end_msg();
 
-         auto compr = pipe.read_all(0);
+         const auto compr = pipe.read_all(0);
          // Here the output is actually longer than the input as input is so short
 
          auto decomp_f = std::make_unique<Botan::Decompression_Filter>("bzip2");

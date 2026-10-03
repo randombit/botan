@@ -85,7 +85,7 @@ void check_invalid_signatures(Test::Result& result,
 
 // Exposed for DLIES tests
 void check_invalid_ciphertexts(Test::Result& result,
-                               Botan::PK_Decryptor& decryptor,
+                               const Botan::PK_Decryptor& decryptor,
                                const std::vector<uint8_t>& plaintext,
                                const std::vector<uint8_t>& ciphertext,
                                Botan::RandomNumberGenerator& rng) {
@@ -284,7 +284,7 @@ Test::Result PK_Signature_Verification_Test::run_one_test(const std::string& pad
 Test::Result PK_Signature_NonVerification_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars) {
    const std::string padding = choose_padding(vars, pad_hdr);
    const std::vector<uint8_t> message = vars.get_req_bin("Msg");
-   auto pubkey = load_public_key(vars);
+   const auto pubkey = load_public_key(vars);
 
    const std::vector<uint8_t> invalid_signature = vars.get_req_bin("InvalidSignature");
 
@@ -313,7 +313,7 @@ std::vector<Test::Result> PK_Sign_Verify_DER_Test::run() {
    if(!privkey) {
       return {};
    }
-   auto pubkey = privkey->public_key();
+   const auto pubkey = privkey->public_key();
 
    Test::Result result(algo_name() + "/" + padding + " signature sign/verify using DER format");
 
@@ -397,7 +397,7 @@ Test::Result PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_
    result.test_is_true("private key claims to support encryption",
                        privkey->supports_operation(Botan::PublicKeyOperation::Encryption));
 
-   auto pubkey = privkey->public_key();
+   const auto pubkey = privkey->public_key();
 
    std::vector<std::unique_ptr<Botan::PK_Decryptor>> decryptors;
 
@@ -475,7 +475,7 @@ Test::Result PK_Decryption_Test::run_one_test(const std::string& pad_hdr, const 
 
    Test::Result result(algo_name() + (padding.empty() ? padding : "/" + padding) + " decryption");
 
-   auto privkey = load_private_key(vars);
+   const auto privkey = load_private_key(vars);
 
    for(const auto& dec_provider : possible_providers(algo_name())) {
       std::unique_ptr<Botan::PK_Decryptor> decryptor;
@@ -515,7 +515,7 @@ Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarM
    result.test_is_true("private key claims to support KEM",
                        privkey->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
 
-   auto pubkey = privkey->public_key();
+   const auto pubkey = privkey->public_key();
 
    const size_t desired_key_len = K.size();
 
@@ -619,7 +619,7 @@ void test_pbe_roundtrip(Test::Result& result,
                         Botan::RandomNumberGenerator& rng) {
    const auto pkcs8 = key.private_key_info();
 
-   auto passphrase = Test::random_password(rng);
+   const auto passphrase = Test::random_password(rng);
 
    try {
       Botan::DataSource_Memory data_src(
@@ -668,7 +668,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
 
       result.start_timer();
       for(auto&& prov : providers) {
-         auto key_p = Botan::create_private_key(algorithm_name, this->rng(), param, prov);
+         const auto key_p = Botan::create_private_key(algorithm_name, this->rng(), param, prov);
 
          if(key_p == nullptr) {
             continue;
@@ -1020,7 +1020,7 @@ class PK_Key_Decoding_Test : public Text_Based_Test {
          Test::Result result("PK Key Decoding");
 
          try {
-            auto k = Botan::PKCS8::load_key(key);
+            const auto k = Botan::PKCS8::load_key(key);
             result.test_success("Was able to deserialize the key");
          } catch(Botan::Not_Implemented&) {
             result.test_note("Skipping test due to to algorithm being unavailable");

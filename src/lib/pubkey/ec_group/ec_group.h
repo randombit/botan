@@ -654,9 +654,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       BOTAN_DEPRECATED("Use EC_Group::Mul2Table")
       EC_Point point_multiply(const BigInt& x_bn, const EC_Point& h_pt, const BigInt& y_bn) const {
-         auto x = EC_Scalar::from_bigint(*this, x_bn);
-         auto y = EC_Scalar::from_bigint(*this, y_bn);
-         auto h = EC_AffinePoint(*this, h_pt);
+         const auto x = EC_Scalar::from_bigint(*this, x_bn);
+         const auto y = EC_Scalar::from_bigint(*this, y_bn);
+         const auto h = EC_AffinePoint(*this, h_pt);
 
          const Mul2Table gh_mul(h);
 
@@ -677,8 +677,8 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       EC_Point blinded_base_point_multiply(const BigInt& k_bn,
                                            RandomNumberGenerator& rng,
                                            std::vector<BigInt>& /*ws*/) const {
-         auto k = EC_Scalar::from_bigint(*this, k_bn);
-         auto pt = EC_AffinePoint::g_mul(k, rng);
+         const auto k = EC_Scalar::from_bigint(*this, k_bn);
+         const auto pt = EC_AffinePoint::g_mul(k, rng);
          return pt.to_legacy_point();
       }
 
@@ -694,7 +694,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       BigInt blinded_base_point_multiply_x(const BigInt& k_bn,
                                            RandomNumberGenerator& rng,
                                            std::vector<BigInt>& /*ws*/) const {
-         auto k = EC_Scalar::from_bigint(*this, k_bn);
+         const auto k = EC_Scalar::from_bigint(*this, k_bn);
          return BigInt(EC_AffinePoint::g_mul(k, rng).x_bytes());
       }
 
@@ -710,8 +710,8 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
                                           const BigInt& k_bn,
                                           RandomNumberGenerator& rng,
                                           std::vector<BigInt>& /*ws*/) const {
-         auto k = EC_Scalar::from_bigint(*this, k_bn);
-         auto pt = EC_AffinePoint(*this, point);
+         const auto k = EC_Scalar::from_bigint(*this, k_bn);
+         const auto pt = EC_AffinePoint(*this, point);
          return pt.mul(k, rng).to_legacy_point();
       }
 
@@ -742,8 +742,8 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
                              const uint8_t domain_sep[],
                              size_t domain_sep_len,
                              bool random_oracle = true) const {
-         auto inp = std::span{input, input_len};
-         auto dst = std::span{domain_sep, domain_sep_len};
+         const auto inp = std::span{input, input_len};
+         const auto dst = std::span{domain_sep, domain_sep_len};
 
          if(random_oracle) {
             return EC_AffinePoint::hash_to_curve_ro(*this, hash_fn, inp, dst).to_legacy_point();
@@ -770,7 +770,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
                              size_t input_len,
                              std::string_view domain_sep,
                              bool random_oracle = true) const {
-         auto inp = std::span{input, input_len};
+         const auto inp = std::span{input, input_len};
 
          if(random_oracle) {
             return EC_AffinePoint::hash_to_curve_ro(*this, hash_fn, inp, domain_sep).to_legacy_point();
@@ -844,8 +844,8 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @return (x*y) reduced modulo the group order
       */
       BOTAN_DEPRECATED("Use EC_Scalar") BigInt multiply_mod_order(const BigInt& x, const BigInt& y) const {
-         auto xs = EC_Scalar::from_bigint(*this, x);
-         auto ys = EC_Scalar::from_bigint(*this, y);
+         const auto xs = EC_Scalar::from_bigint(*this, x);
+         const auto ys = EC_Scalar::from_bigint(*this, y);
          return (xs * ys).to_bigint();
       }
 
@@ -858,9 +858,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       BOTAN_DEPRECATED("Use EC_Scalar")
       BigInt multiply_mod_order(const BigInt& x, const BigInt& y, const BigInt& z) const {
-         auto xs = EC_Scalar::from_bigint(*this, x);
-         auto ys = EC_Scalar::from_bigint(*this, y);
-         auto zs = EC_Scalar::from_bigint(*this, z);
+         const auto xs = EC_Scalar::from_bigint(*this, x);
+         const auto ys = EC_Scalar::from_bigint(*this, y);
+         const auto zs = EC_Scalar::from_bigint(*this, z);
          return (xs * ys * zs).to_bigint();
       }
 
@@ -870,7 +870,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @return (x*x*x) reduced modulo the group order
       */
       BOTAN_DEPRECATED("Deprecated no replacement") BigInt cube_mod_order(const BigInt& x) const {
-         auto xs = EC_Scalar::from_bigint(*this, x);
+         const auto xs = EC_Scalar::from_bigint(*this, x);
          return (xs * xs * xs).to_bigint();
       }
 

@@ -208,7 +208,7 @@ class Factor final : public Command {
          }
 
          for(size_t j = 0; j != Botan::PRIME_TABLE_SIZE; j++) {
-            auto prime = Botan::BigInt::from_s32(Botan::PRIMES[j]);
+            const auto prime = Botan::BigInt::from_s32(Botan::PRIMES[j]);
             if(n < prime) {
                break;
             }

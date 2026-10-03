@@ -142,6 +142,7 @@ secure_vector<uint8_t> decode(std::string_view pem, std::string& label) {
 /*
 * Search for a PEM signature
 */
+// NOLINTNEXTLINE(*-const-correctness) TODO(Botan4) take a const DataSource&
 bool matches(DataSource& source, std::string_view extra, size_t search_range) {
    const std::string PEM_HEADER = fmt("-----BEGIN {}", extra);
 

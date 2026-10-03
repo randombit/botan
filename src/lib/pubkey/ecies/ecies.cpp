@@ -194,7 +194,7 @@ SymmetricKey ECIES_KA_Operation::derive_secret(std::span<const uint8_t> eph_publ
    // TODO(Botan4) remove when cofactor support is removed
    if(m_params.old_cofactor_mode() && group.has_cofactor()) {
       Null_RNG null_rng;
-      auto cofactor = EC_Scalar::from_bigint(group, group.get_cofactor());
+      const auto cofactor = EC_Scalar::from_bigint(group, group.get_cofactor());
       other_point = other_point.mul(cofactor, null_rng);
    }
 

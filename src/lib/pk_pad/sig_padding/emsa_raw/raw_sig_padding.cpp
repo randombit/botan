@@ -80,8 +80,8 @@ bool SignRawBytes::verify(std::span<const uint8_t> coded, std::span<const uint8_
    if(raw.size() > coded.size()) {
       // handle zero padding differences
       const size_t expected_lz = raw.size() - coded.size();
-      auto zeros_ok = CT::all_zeros(raw.data(), expected_lz);
-      auto contents_ok = CT::is_equal(coded.data(), raw.data() + expected_lz, coded.size());
+      const auto zeros_ok = CT::all_zeros(raw.data(), expected_lz);
+      const auto contents_ok = CT::is_equal(coded.data(), raw.data() + expected_lz, coded.size());
       return (zeros_ok & contents_ok).as_bool();
    }
 

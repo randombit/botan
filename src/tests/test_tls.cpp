@@ -502,7 +502,7 @@ class Test_TLS_Alert_Strings : public Test {
 
          std::set<std::string> seen;
 
-         for(auto alert : alert_types) {
+         for(const auto alert : alert_types) {
             const std::string str = Botan::TLS::Alert(alert).type_string();
             result.test_sz_eq("No duplicate strings", seen.count(str), 0);
             seen.insert(str);
@@ -547,11 +547,11 @@ class Test_TLS12_NoRenegotiation_During_Initial_Handshake : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("TLS 1.2 NoRenegotiation alert during initial handshake");
 
-         auto rng = Test::new_shared_rng(this->test_name());
-         auto callbacks = std::make_shared<Capture_Callbacks>();
-         auto sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto creds = std::make_shared<Botan::Credentials_Manager>();
-         auto policy = std::make_shared<Botan::TLS::Policy>();
+         const auto rng = Test::new_shared_rng(this->test_name());
+         const auto callbacks = std::make_shared<Capture_Callbacks>();
+         const auto sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto creds = std::make_shared<Botan::Credentials_Manager>();
+         const auto policy = std::make_shared<Botan::TLS::Policy>();
 
          Botan::TLS::Client client(callbacks,
                                    sessions,
@@ -741,7 +741,7 @@ class Test_TLS_Algo_Strings : public Test {
          Test::Result result("TLS::Signature_Scheme");
 
          std::set<std::string> scheme_strs;
-         for(auto scheme : Botan::TLS::Signature_Scheme::all_available_schemes()) {
+         for(const auto scheme : Botan::TLS::Signature_Scheme::all_available_schemes()) {
             const std::string scheme_str = scheme.to_string();
 
             result.test_sz_eq("Scheme strings unique", scheme_strs.count(scheme_str), 0);

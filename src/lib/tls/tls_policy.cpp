@@ -223,7 +223,7 @@ std::vector<Group_Params> Policy::key_exchange_groups_to_offer() const {
    * group, since these shares are small and PQ support is still not
    * that widespread.
    */
-   for(auto group : key_exchange_groups()) {
+   for(const auto group : key_exchange_groups()) {
       if(group.is_pure_ecc_group()) {
          groups_to_offer.push_back(group);
          break;
@@ -724,7 +724,7 @@ void print_vec(std::ostream& o, const char* key, const std::vector<std::string>&
 void print_vec(std::ostream& o, const char* key, const std::vector<Group_Params>& params) {
    // first filter out any groups we don't have a name for:
    std::vector<std::string> names;
-   for(auto p : params) {
+   for(const auto p : params) {
       if(auto name = p.to_string()) {
          names.push_back(name.value());
       }

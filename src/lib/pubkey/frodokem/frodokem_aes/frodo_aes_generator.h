@@ -22,7 +22,7 @@ namespace Botan {
 inline auto create_aes_row_generator(const FrodoKEMConstants& constants, StrongSpan<const FrodoSeedA> seed_a) {
    BOTAN_ASSERT_NOMSG(constants.mode().is_aes());
 
-   auto setup_aes = [](StrongSpan<const FrodoSeedA> seed) {
+   const auto setup_aes = [](StrongSpan<const FrodoSeedA> seed) {
       AES_128 aes;
       aes.set_key(seed);
       return aes;

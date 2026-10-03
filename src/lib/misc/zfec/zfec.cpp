@@ -154,10 +154,7 @@ void invert_matrix(uint8_t matrix[], size_t K) {
    std::vector<size_t> indxr(K);
 
    for(size_t col = 0; col != K; ++col) {
-      const auto icolrow = pivot_search(col, matrix);
-
-      const size_t icol = icolrow.first;
-      const size_t irow = icolrow.second;
+      const auto [icol, irow] = pivot_search(col, matrix);
 
       /*
       * swap rows irow and icol, so afterwards the diagonal

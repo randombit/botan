@@ -51,7 +51,7 @@ class BOTAN_PUBLIC_API(3, 4) Classic_McEliece_Parameter_Set final {
 
       using enum Code;
 
-      // NOLINTNEXTLINE(*-explicit-conversions)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
       Classic_McEliece_Parameter_Set(Code code) : m_code(code) {}
 
       /**

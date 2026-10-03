@@ -46,7 +46,7 @@ std::vector<Test::Result> test_hss_lms_params_parsing() {
 
                   test_arb_eq(result, "hss levels", hss_params.L(), Botan::HSS_Level(2));
                   const auto& top_lms_params = hss_params.params_at_level(Botan::HSS_Level(0));
-                  result.test_str_eq("hash name", top_lms_params.lms_params().hash_name(), std::string("SHA-256"));
+                  result.test_str_eq("hash name", top_lms_params.lms_params().hash_name(), "SHA-256");
                   result.test_enum_eq("top level - lms type",
                                       top_lms_params.lms_params().algorithm_type(),
                                       Botan::LMS_Algorithm_Type::SHA256_M32_H5);
@@ -139,7 +139,7 @@ class HSS_LMS_Negative_Tests final : public Test {
       Test::Result test_flipped_signature_bits() {
          Test::Result result("HSS-LMS - flipped signature bits");
 
-         auto sk = Botan::create_private_key("HSS-LMS", Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
+         const auto sk = Botan::create_private_key("HSS-LMS", Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
 
          Botan::PK_Signer signer(*sk, Test::rng(), Botan::PK_Signature_Options());
          Botan::PK_Verifier verifier(*sk, Botan::PK_Signature_Options());
@@ -166,7 +166,7 @@ class HSS_LMS_Negative_Tests final : public Test {
       Test::Result test_too_short_signature() {
          Test::Result result("HSS-LMS");
 
-         auto sk = Botan::create_private_key("HSS-LMS", Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
+         const auto sk = Botan::create_private_key("HSS-LMS", Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
 
          Botan::PK_Signer signer(*sk, Test::rng(), Botan::PK_Signature_Options());
          Botan::PK_Verifier verifier(*sk, Botan::PK_Signature_Options());
@@ -243,7 +243,7 @@ class HSS_LMS_Negative_Tests final : public Test {
  */
 class HSS_LMS_Statefulness_Test final : public Test {
       Botan::HSS_LMS_PrivateKey create_private_key_with_idx(uint64_t idx) {
-         auto sk = Botan::HSS_LMS_PrivateKey(Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
+         const auto sk = Botan::HSS_LMS_PrivateKey(Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
          auto bytes = sk.private_key_bits();
          // The index is store after the level (uint32_t)
          Botan::store_be(idx, bytes.data() + sizeof(uint32_t));
@@ -253,7 +253,7 @@ class HSS_LMS_Statefulness_Test final : public Test {
       Test::Result test_sig_changes_state() {
          Test::Result result("HSS-LMS");
 
-         auto sk = Botan::HSS_LMS_PrivateKey(Test::rng(), "Truncated(SHA-256,192),HW(5,8),HW(5,8)");
+         const auto sk = Botan::HSS_LMS_PrivateKey(Test::rng(), "Truncated(SHA-256,192),HW(5,8),HW(5,8)");
          Botan::PK_Signer signer(sk, Test::rng(), Botan::PK_Signature_Options());
          std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
          auto sk_bytes_begin = sk.private_key_bits();
@@ -287,11 +287,11 @@ class HSS_LMS_Statefulness_Test final : public Test {
          Test::Result result("HSS-LMS");
 
          const uint64_t total_sig_count = 32;
-         auto sk = create_private_key_with_idx(total_sig_count - 1);
+         const auto sk = create_private_key_with_idx(total_sig_count - 1);
 
          Botan::PK_Signer signer(sk, Test::rng(), Botan::PK_Signature_Options());
          std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
-         auto sk_bytes_begin = sk.private_key_bits();
+         const auto sk_bytes_begin = sk.private_key_bits();
 
          result.test_opt_u64_eq("One remaining signature.", sk.remaining_operations(), 1);
          result.test_no_throw("Use last signature index.", [&]() { signer.sign_message(mes, Test::rng()); });
@@ -308,7 +308,7 @@ class HSS_LMS_Statefulness_Test final : public Test {
          // create_private_key_with_idx uses a single HW(5,8) layer, so the
          // maximum signature count is 32
          result.test_no_throw("Index == max_sig_count is accepted on load", [&]() {
-            auto sk = create_private_key_with_idx(32);
+            const auto sk = create_private_key_with_idx(32);
             result.test_opt_u64_eq("Exhausted key loads with no remaining signatures", sk.remaining_operations(), 0);
             Botan::PK_Signer signer(sk, Test::rng(), "");
             const std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
@@ -330,11 +330,12 @@ class HSS_LMS_Statefulness_Test final : public Test {
 
          // With a total tree height >= 64 the maximum signature count is
          // clamped to 2^64 - 1, so an index of 2^64 - 1 is accepted on load
-         auto sk = Botan::HSS_LMS_PrivateKey(Test::rng(), "Truncated(SHA-256,192),HW(5,8),HW(25,8),HW(25,8),HW(25,8)");
+         const auto sk =
+            Botan::HSS_LMS_PrivateKey(Test::rng(), "Truncated(SHA-256,192),HW(5,8),HW(25,8),HW(25,8),HW(25,8)");
          auto bytes = sk.private_key_bits();
          Botan::store_be(std::numeric_limits<uint64_t>::max(), bytes.data() + sizeof(uint32_t));
 
-         auto exhausted_sk = Botan::HSS_LMS_PrivateKey(Botan::AlgorithmIdentifier(), bytes);
+         const auto exhausted_sk = Botan::HSS_LMS_PrivateKey(Botan::AlgorithmIdentifier(), bytes);
          result.test_opt_u64_eq("Exhausted key has no remaining signatures", exhausted_sk.remaining_operations(), 0);
 
          Botan::PK_Signer signer(exhausted_sk, Test::rng(), "");
@@ -539,7 +540,7 @@ class HSS_LMS_X509_Test final : public Test {
          Test::Result result("HSS-LMS X.509");
 
          const Botan::X509_Certificate cert(Test::data_file("x509/hss-lms/hss-lms-rfc-9802-cert.pem"));
-         auto ver_res = cert.verify_signature(*cert.subject_public_key());
+         const auto ver_res = cert.verify_signature(*cert.subject_public_key());
          result.test_is_true("signature of certificate verifies", ver_res.first == Botan::Certificate_Status_Code::OK);
 
          return {result};

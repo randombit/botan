@@ -149,7 +149,7 @@ class FEC_Encode final : public Command {
             input_data.push_back(0x00);
          }
 
-         auto encoder_fn = [&](size_t share, const uint8_t bits[], size_t len) {
+         const auto encoder_fn = [&](size_t share, const uint8_t bits[], size_t len) {
             std::ostringstream output_fsname;
 
             if(!output_dir.empty()) {
@@ -198,7 +198,7 @@ class FEC_Decode final : public Command {
             const auto share_bits = slurp_file(share_fsname);
 
             try {
-               auto share = FEC_Share::deserialize(share_bits.data(), share_bits.size(), *hash);
+               const auto share = FEC_Share::deserialize(share_bits.data(), share_bits.size(), *hash);
                shares.push_back(share);
             } catch(std::exception& e) {
                error_output() << "Ignoring invalid share '" << share_fsname << "': " << e.what() << "\n";
@@ -252,13 +252,13 @@ class FEC_Decode final : public Command {
 
          std::vector<uint8_t> decoded(decoded_len);
 
-         auto decoder_fn = [&](size_t share, const uint8_t bits[], size_t len) {
+         const auto decoder_fn = [&](size_t share, const uint8_t bits[], size_t len) {
             std::memcpy(&decoded[share * share_size], bits, len);
          };
 
          std::map<size_t, const uint8_t*> share_ptrs;
 
-         for(auto& share : shares) {
+         for(const auto& share : shares) {
             share_ptrs[share.share_id()] = share.share_data();
          }
 
@@ -298,7 +298,7 @@ class FEC_Info final : public Command {
          const auto share_bits = slurp_file(share_fsname);
 
          try {
-            auto share = FEC_Share::deserialize(share_bits.data(), share_bits.size(), *hash);
+            const auto share = FEC_Share::deserialize(share_bits.data(), share_bits.size(), *hash);
             output() << "FEC share " << share.share_id() + 1 << "/" << share.n() << " with " << share.k()
                      << " needed for recovery\n";
          } catch(std::exception& e) {

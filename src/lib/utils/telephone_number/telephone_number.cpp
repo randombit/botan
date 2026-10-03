@@ -46,7 +46,7 @@ std::optional<uint64_t> TelephoneNumber::numeric_value() const {
 * checks that the last number in the range (start + count - 1) has D digits.
 */
 std::optional<TelephoneNumberRange> TelephoneNumberRange::from(const TelephoneNumber& start, uint64_t count) {
-   auto pow10 = [](size_t n) -> uint64_t {
+   const auto pow10 = [](size_t n) -> uint64_t {
       // Always in range since the input length is at most 15
       uint64_t v = 1;
       for(size_t i = 0; i != n; ++i) {
@@ -66,7 +66,7 @@ std::optional<TelephoneNumberRange> TelephoneNumberRange::from(const TelephoneNu
 }
 
 TelephoneNumber TelephoneNumberRange::last() const {
-   uint64_t value = *m_start.numeric_value() + m_count - 1;
+   uint64_t value = m_start.numeric_value().value() + m_count - 1;
    std::string digits(m_start.length(), '0');
    for(size_t i = digits.size(); i > 0; --i) {
       digits[i - 1] = static_cast<char>('0' + (value % 10));
@@ -82,7 +82,7 @@ bool TelephoneNumberRange::contains(const TelephoneNumber& tn) const {
    if(!value.has_value() || tn.length() != m_start.length()) {
       return false;
    }
-   const uint64_t first = *m_start.numeric_value();
+   const uint64_t first = m_start.numeric_value().value();
    return *value >= first && (*value - first) < m_count;
 }
 
@@ -90,8 +90,8 @@ bool TelephoneNumberRange::contains(const TelephoneNumberRange& other) const {
    if(other.m_start.length() != m_start.length()) {
       return false;
    }
-   const uint64_t first = *m_start.numeric_value();
-   const uint64_t other_first = *other.m_start.numeric_value();
+   const uint64_t first = m_start.numeric_value().value();
+   const uint64_t other_first = other.m_start.numeric_value().value();
    return other_first >= first && (other_first - first) + other.m_count <= m_count;
 }
 

@@ -115,7 +115,7 @@ std::optional<size_t> validate_response_headers(const Headers& headers, std::opt
    }
 
    std::optional<size_t> content_length;
-   if(auto it = headers.find("Content-Length"); it != headers.end()) {
+   if(const auto it = headers.find("Content-Length"); it != headers.end()) {
       // RFC 9110 8.6: Content-Length = 1*DIGIT
       if(const auto cl = parse_sz(it->second)) {
          content_length = cl;
@@ -174,7 +174,7 @@ std::optional<URI> resolve_location(const URI& base, std::string_view location) 
    if(auto absolute = URI::from_string(location)) {
       return absolute;
    }
-   if(location.starts_with("/") && !location.starts_with("//")) {
+   if(location.starts_with('/') && !location.starts_with("//")) {
       const auto raw_authority = base.raw_authority();
       if(!raw_authority.has_value()) {
          return std::nullopt;
@@ -387,7 +387,7 @@ Response http_sync(std::string_view verb,
                    std::string_view content_type,
                    const std::vector<uint8_t>& body,
                    const RequestLimits& limits) {
-   auto transact_with_timeout =
+   const auto transact_with_timeout =
       [timeout = limits.timeout()](
          std::string_view hostname, std::string_view service, std::string_view message, std::optional<size_t> mbs) {
          return http_transact(hostname, service, message, timeout, mbs);

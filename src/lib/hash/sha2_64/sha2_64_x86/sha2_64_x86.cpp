@@ -25,8 +25,8 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHA512 SIMD_4x64 sha512_msg2(const SIMD_4x64& x,
    return SIMD_4x64(_mm256_sha512msg2_epi64(x.raw(), y.raw()));
 }
 
-BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHA512 void sha512_msg_expand(SIMD_4x64& m0,
-                                                              SIMD_4x64& m1,
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHA512 void sha512_msg_expand(const SIMD_4x64& m0,
+                                                              const SIMD_4x64& m1,
                                                               SIMD_4x64& m2,
                                                               SIMD_4x64& m3) {
    m3 = sha512_msg1(m3, m0);

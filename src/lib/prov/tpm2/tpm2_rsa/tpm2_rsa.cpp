@@ -205,7 +205,7 @@ class RSA_Signature_Operation final : public Signature_Operation {
          } catch(Lookup_Error&) {}
 
          if(m_padding_name.starts_with("PSS(")) {
-            auto parameters = PSS_Params::from_padding_name(m_padding_name).serialize();
+            const auto parameters = PSS_Params::from_padding_name(m_padding_name).serialize();
             return AlgorithmIdentifier("RSA/PSS", parameters);
          }
 
@@ -392,17 +392,17 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption {
          // undocumented?) value. Since this situation is clearly a bit ambiguous we now
          // just accept any error as "decryption failed", somewhat unfortunate in that
          // logical errors may become hidden but no clear resolution otherwise.
-         auto rc = Esys_RSA_Decrypt(m_key_handle.context()->esys_context(),
-                                    m_key_handle.transient_handle(),
-                                    m_sessions[0],
-                                    m_sessions[1],
-                                    m_sessions[2],
-                                    &ciphertext,
-                                    &m_scheme,
-                                    &label,
-                                    out_ptr(plaintext));
+         const auto rc = Esys_RSA_Decrypt(m_key_handle.context()->esys_context(),
+                                          m_key_handle.transient_handle(),
+                                          m_sessions[0],
+                                          m_sessions[1],
+                                          m_sessions[2],
+                                          &ciphertext,
+                                          &m_scheme,
+                                          &label,
+                                          out_ptr(plaintext));
 
-         const auto success = CT::Mask<decltype(rc)>::is_equal(rc, TPM2_RC_SUCCESS).as_choice();
+         const auto success = CT::Mask<TSS2_RC>::is_equal(rc, TPM2_RC_SUCCESS).as_choice();
          valid_mask = CT::Mask<uint8_t>::from_choice(success).value();
 
          // A "typical" payload size for RSA encryption, assuming that we usually

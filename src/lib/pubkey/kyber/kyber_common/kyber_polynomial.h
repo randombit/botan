@@ -100,14 +100,14 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
          /**
           * NIST FIPS 203, Algorithm 12 (BaseCaseMultiply)
           */
-         auto basemul = [](const auto a, const auto b, const T zeta) -> std::tuple<T, T> {
+         const auto basemul = [](const auto a, const auto b, const T zeta) -> std::tuple<T, T> {
             return {static_cast<T>(fqmul(a[0], b[0]) + fqmul(fqmul(a[1], b[1]), zeta)),
                     static_cast<T>(fqmul(a[0], b[1]) + fqmul(a[1], b[0]))};
          };
 
-         auto Tq_elem_count = [](auto p) { return p.size() / 2; };
+         const auto Tq_elem_count = [](auto p) { return p.size() / 2; };
 
-         auto Tq_elem = [](auto p, size_t i) {
+         const auto Tq_elem = [](auto p, size_t i) {
             if constexpr(std::is_const_v<typename decltype(p)::element_type>) {
                return std::array<T, 2>{p[2 * i], p[2 * i + 1]};
             } else {

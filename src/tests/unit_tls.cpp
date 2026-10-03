@@ -218,10 +218,10 @@ std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenera
    const auto ecdsa_params = Botan::EC_Group::from_name(*ec_group);
    const size_t rsa_params = 1024;
 
-   auto rsa_ca_key = std::make_unique<Botan::RSA_PrivateKey>(rng, rsa_params);
+   const auto rsa_ca_key = std::make_unique<Botan::RSA_PrivateKey>(rng, rsa_params);
    auto rsa_srv_key = std::make_unique<Botan::RSA_PrivateKey>(rng, rsa_params);
 
-   auto ecdsa_ca_key = std::make_unique<Botan::ECDSA_PrivateKey>(rng, ecdsa_params);
+   const auto ecdsa_ca_key = std::make_unique<Botan::ECDSA_PrivateKey>(rng, ecdsa_params);
    auto ecdsa_srv_key = std::make_unique<Botan::ECDSA_PrivateKey>(rng, ecdsa_params);
 
    Botan::X509_Cert_Options rsa_ca_opts("RSA Test CA/VT");
@@ -243,7 +243,7 @@ std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenera
    const Botan::X509_CA ecdsa_ca(ecdsa_ca_cert, *ecdsa_ca_key, "SHA-256", rng);
 
    typedef std::chrono::duration<int, std::ratio<31556926>> years;
-   auto now = std::chrono::system_clock::now();
+   const auto now = std::chrono::system_clock::now();
 
    const Botan::X509_Time start_time(now);
    const Botan::X509_Time end_time(now + years(1));
@@ -451,7 +451,7 @@ class TLS_Handshake_Test final {
                }
 
                // Insert an unsupported signature scheme as highest prio, to ensure we are tolerant of this
-               if(auto* sig_algs = extn.get<Botan::TLS::Signature_Algorithms>()) {
+               if(const auto* sig_algs = extn.get<Botan::TLS::Signature_Algorithms>()) {
                   std::vector<Botan::TLS::Signature_Scheme> schemes = sig_algs->supported_schemes();
                   // 0x0301 is RSA PKCS1/SHA-224, which is not supported anymore
                   // NOLINTNEXTLINE(*.EnumCastOutOfRange)
@@ -1014,8 +1014,8 @@ class TLS_Unit_Tests final : public Test {
                                    bool client_auth = false) {
          try {
             for(const auto& version : versions) {
-               auto client_ses = make_session_manager(rng);
-               auto server_ses = make_session_manager(rng);
+               const auto client_ses = make_session_manager(rng);
+               const auto server_ses = make_session_manager(rng);
 
                TLS_Handshake_Test test(version.to_string() + " " + test_descr,
                                        version,
@@ -1061,7 +1061,7 @@ class TLS_Unit_Tests final : public Test {
                                        const std::string& mac_policy = "AEAD",
                                        bool etm_policy = true,
                                        bool client_auth = false) {
-         auto policy = std::make_shared<Test_Policy>();
+         const auto policy = std::make_shared<Test_Policy>();
          policy->set("ciphers", cipher_policy);
          policy->set("macs", mac_policy);
          policy->set("key_exchange_methods", kex_policy);
@@ -1105,7 +1105,7 @@ class TLS_Unit_Tests final : public Test {
                                        const std::string& mac_policy,
                                        const std::map<std::string, std::string>& extra_policies,
                                        bool client_auth = false) {
-         auto policy = std::make_shared<Test_Policy>();
+         const auto policy = std::make_shared<Test_Policy>();
          policy->set("ciphers", cipher_policy);
          policy->set("macs", mac_policy);
          policy->set("key_exchange_methods", kex_policy);
@@ -1140,7 +1140,7 @@ class TLS_Unit_Tests final : public Test {
 
          Test::Result result("TLS 1.2 client certificate selection honors signature_algorithms");
 
-         auto creds = create_creds(*rng, true /* with_client_certs */);
+         const auto creds = create_creds(*rng, true /* with_client_certs */);
          if(!creds) {
             result.test_note("Skipped, no ECC group available in this build");
             results.push_back(result);
@@ -1149,11 +1149,11 @@ class TLS_Unit_Tests final : public Test {
 
          const std::array<PV, 1> tls12{PV::TLS_V12};
 
-         auto client_policy = std::make_shared<Test_Policy>();
+         const auto client_policy = std::make_shared<Test_Policy>();
          client_policy->set("key_exchange_methods", "ECDH");
          set_allowed_versions(client_policy, tls12);
 
-         auto server_policy = std::make_shared<Test_Policy>();
+         const auto server_policy = std::make_shared<Test_Policy>();
          server_policy->set("key_exchange_methods", "ECDH");
          set_allowed_versions(server_policy, tls12);
          // The server's CertificateRequest offers ECDSA signature schemes only.
@@ -1202,7 +1202,7 @@ class TLS_Unit_Tests final : public Test {
 
          const uint16_t expected_profile = 0x0001;  // srtp_aes128_cm_hmac_sha1_80
 
-         auto make_policy = [&] {
+         const auto make_policy = [&] {
             auto policy = std::make_shared<Test_Policy>();
             policy->set("key_exchange_methods", "ECDH");
             policy->set("srtp_profiles", "1");
@@ -1215,7 +1215,7 @@ class TLS_Unit_Tests final : public Test {
          auto client_ses = make_session_manager(rng);
          auto server_ses = make_session_manager(rng);
 
-         auto run_phase = [&](const std::string& phase, bool resumption) {
+         const auto run_phase = [&](const std::string& phase, bool resumption) {
             TLS_Handshake_Test test("DTLS v1.2 SRTP " + phase,
                                     PV::DTLS_V12,
                                     creds,
@@ -1299,7 +1299,7 @@ class TLS_Unit_Tests final : public Test {
             },
          };
 
-         auto make_policy = [&](std::span<const PV> versions) {
+         const auto make_policy = [&](std::span<const PV> versions) {
             auto policy = std::make_shared<Test_Policy>();
             policy->set("ciphers", "AES-128/GCM");
             policy->set("macs", "AEAD");
@@ -1309,10 +1309,10 @@ class TLS_Unit_Tests final : public Test {
          };
 
          for(const auto& c : cases) {
-            auto client_policy = make_policy(c.client_versions);
-            auto server_policy = make_policy(c.server_versions);
-            auto client_ses = make_session_manager(rng);
-            auto server_ses = make_session_manager(rng);
+            const auto client_policy = make_policy(c.client_versions);
+            const auto server_policy = make_policy(c.server_versions);
+            const auto client_ses = make_session_manager(rng);
+            const auto server_ses = make_session_manager(rng);
 
             TLS_Handshake_Test test(c.name,
                                     c.offer_version,
@@ -1361,7 +1361,7 @@ class TLS_Unit_Tests final : public Test {
          auto policy = std::make_shared<Test_Policy>();
          auto noop_session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
 
-         auto client_aborts = [&](const std::exception_ptr& ex, Botan::TLS::Alert expected_server_alert) {
+         const auto client_aborts = [&](const std::exception_ptr& ex, Botan::TLS::Alert expected_server_alert) {
             for(const auto version : available_versions()) {
                TLS_Handshake_Test test("Client aborts in tls_session_established with " +
                                           expected_server_alert.type_string() + ": " + version.to_string(),
@@ -1383,7 +1383,7 @@ class TLS_Unit_Tests final : public Test {
             }
          };
 
-         auto server_aborts = [&](const std::exception_ptr& ex, Botan::TLS::Alert expected_server_alert) {
+         const auto server_aborts = [&](const std::exception_ptr& ex, Botan::TLS::Alert expected_server_alert) {
             for(const auto version : available_versions()) {
                TLS_Handshake_Test test("Server aborts in tls_session_established with " +
                                           expected_server_alert.type_string() + ": " + version.to_string(),
@@ -1426,7 +1426,7 @@ class TLS_Unit_Tests final : public Test {
       void test_custom_ecdh_provider(std::vector<Test::Result>& results,
                                      const std::shared_ptr<Credentials_Manager_Test>& creds,
                                      const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
-         auto noop_session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+         const auto noop_session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
 
          const auto groups = {
             Botan::TLS::Group_Params::SECP256R1,
@@ -1451,7 +1451,7 @@ class TLS_Unit_Tests final : public Test {
                continue;
             }
 
-            auto policy = std::make_shared<Test_Policy>();
+            const auto policy = std::make_shared<Test_Policy>();
             policy->set("groups", "0x" + Botan::hex_encode(Botan::store_be(ecdh_group.wire_code())));
 
             TLS_Handshake_Test test("Client uses a custom ECDH provider for " + ecdh_group.to_string().value() +
@@ -1528,9 +1528,9 @@ class TLS_Unit_Tests final : public Test {
       void test_custom_kdf_provider(std::vector<Test::Result>& results,
                                     const std::shared_ptr<Credentials_Manager_Test>& creds,
                                     const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
-         auto noop_session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+         const auto noop_session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
 
-         auto policy = std::make_shared<Test_Policy>();
+         const auto policy = std::make_shared<Test_Policy>();
 
          TLS_Handshake_Test test("Client and Server use a custom KDF provider in TLS 1.2",
                                  Botan::TLS::Protocol_Version::TLS_V12,
@@ -1635,15 +1635,15 @@ class TLS_Unit_Tests final : public Test {
          try {
             std::vector<uint8_t> c2s;
             std::vector<uint8_t> s2c;
-            auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
-            auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
+            const auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
+            const auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
 
             // The client rekeys after 4 records and requests reciprocal
             // updates; the server never rekeys of its own accord.
-            auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(4);
-            auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
+            const auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(4);
+            const auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
 
-            auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+            const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
 
             Botan::TLS::Server server(server_cb, session_manager, creds, server_policy, rng);
             Botan::TLS::Client client(client_cb,
@@ -1654,7 +1654,7 @@ class TLS_Unit_Tests final : public Test {
                                       Botan::TLS::Server_Information("server.example.com"),
                                       Botan::TLS::Protocol_Version::TLS_V13);
 
-            auto pump = [&]() {
+            const auto pump = [&]() {
                while(!c2s.empty() || !s2c.empty()) {
                   if(!c2s.empty()) {
                      std::vector<uint8_t> input;
@@ -1710,13 +1710,13 @@ class TLS_Unit_Tests final : public Test {
          try {
             std::vector<uint8_t> c2s;
             std::vector<uint8_t> s2c;
-            auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
-            auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
+            const auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
+            const auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
 
-            auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
-            auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
+            const auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
+            const auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
 
-            auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+            const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
 
             Botan::TLS::Server server(server_cb, session_manager, creds, server_policy, rng);
             Botan::TLS::Client client(client_cb,
@@ -1727,7 +1727,7 @@ class TLS_Unit_Tests final : public Test {
                                       Botan::TLS::Server_Information("server.example.com"),
                                       Botan::TLS::Protocol_Version::TLS_V13);
 
-            auto pump = [&]() {
+            const auto pump = [&]() {
                while(!c2s.empty() || !s2c.empty()) {
                   if(!c2s.empty()) {
                      std::vector<uint8_t> input;
@@ -1769,13 +1769,13 @@ class TLS_Unit_Tests final : public Test {
          try {
             std::vector<uint8_t> c2s;
             std::vector<uint8_t> s2c;
-            auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
-            auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
+            const auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
+            const auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
 
-            auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
-            auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(1);
+            const auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
+            const auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(1);
 
-            auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+            const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
 
             Botan::TLS::Server server(server_cb, session_manager, creds, server_policy, rng);
             Botan::TLS::Client client(client_cb,
@@ -1786,7 +1786,7 @@ class TLS_Unit_Tests final : public Test {
                                       Botan::TLS::Server_Information("server.example.com"),
                                       Botan::TLS::Protocol_Version::TLS_V13);
 
-            auto deliver = [](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
+            const auto deliver = [](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
                std::vector<uint8_t> input;
                std::swap(transport, input);
                receiver.received_data(input.data(), input.size());
@@ -1846,15 +1846,15 @@ class TLS_Unit_Tests final : public Test {
          try {
             std::vector<uint8_t> c2s;
             std::vector<uint8_t> s2c;
-            auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
-            auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
+            const auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
+            const auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
 
             // Client rekeys after 4 records sent and requests a peer update
             // after 6 records received; the server never rekeys on its own.
-            auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(4);
-            auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
+            const auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(4);
+            const auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
 
-            auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+            const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
 
             Botan::TLS::Server server(server_cb, session_manager, creds, server_policy, rng);
             Botan::TLS::Client client(client_cb,
@@ -1880,7 +1880,7 @@ class TLS_Unit_Tests final : public Test {
                }
             };
 
-            auto client_sends = [&](const std::vector<uint8_t>& bytes) {
+            const auto client_sends = [&](const std::vector<uint8_t>& bytes) {
                for(const uint8_t byte : bytes) {
                   client.send(&byte, 1);
                   pump();
@@ -1949,15 +1949,15 @@ class TLS_Unit_Tests final : public Test {
          try {
             std::vector<uint8_t> c2s;
             std::vector<uint8_t> s2c;
-            auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
-            auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
+            const auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
+            const auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
 
             // The client rate limits received KeyUpdates aggressively; the
             // server rekeys after 3 records
-            auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(0, 60000);
-            auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(3);
+            const auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(0, 60000);
+            const auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(3);
 
-            auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+            const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
 
             Botan::TLS::Server server(server_cb, session_manager, creds, server_policy, rng);
             Botan::TLS::Client client(client_cb,
@@ -1968,7 +1968,7 @@ class TLS_Unit_Tests final : public Test {
                                       Botan::TLS::Server_Information("server.example.com"),
                                       Botan::TLS::Protocol_Version::TLS_V13);
 
-            auto deliver = [](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
+            const auto deliver = [](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
                std::vector<uint8_t> input;
                std::swap(transport, input);
                receiver.received_data(input.data(), input.size());
@@ -2031,13 +2031,13 @@ class TLS_Unit_Tests final : public Test {
          try {
             std::vector<uint8_t> c2s;
             std::vector<uint8_t> s2c;
-            auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
-            auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
+            const auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
+            const auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
 
-            auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(0, 60000);
-            auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(3);
+            const auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(0, 60000);
+            const auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(3);
 
-            auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+            const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
 
             Botan::TLS::Server server(server_cb, session_manager, creds, server_policy, rng);
             Botan::TLS::Client client(client_cb,
@@ -2048,7 +2048,7 @@ class TLS_Unit_Tests final : public Test {
                                       Botan::TLS::Server_Information("server.example.com"),
                                       Botan::TLS::Protocol_Version::TLS_V13);
 
-            auto deliver = [](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
+            const auto deliver = [](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
                std::vector<uint8_t> input;
                std::swap(transport, input);
                receiver.received_data(input.data(), input.size());
@@ -2105,7 +2105,7 @@ class TLS_Unit_Tests final : public Test {
 
          auto rng = Test::new_shared_rng(this->test_name());
 
-         auto creds = create_creds(*rng);
+         const auto creds = create_creds(*rng);
          if(!creds) {
             // Credentials manager creation failed, likely no EC group available
             // Skip this test entirely
@@ -2131,11 +2131,11 @@ class TLS_Unit_Tests final : public Test {
          test_legacy_versions("NULL PSK", results, creds, rng, "PSK", "NULL", "SHA-256");
    #endif
 
-         auto strict_policy = std::make_shared<Botan::TLS::Strict_Policy>();
+         const auto strict_policy = std::make_shared<Botan::TLS::Strict_Policy>();
          test_with_policy("Strict policy", results, creds, available_versions(), strict_policy, rng);
 
    #if defined(BOTAN_HAS_TLS_12)
-         auto suiteb_128 = std::make_shared<Botan::TLS::NSA_Suite_B_128>();
+         const auto suiteb_128 = std::make_shared<Botan::TLS::NSA_Suite_B_128>();
          test_with_policy("Suite B", results, creds, {Botan::TLS::Protocol_Version::TLS_V12}, suiteb_128, rng);
    #endif
 
@@ -2212,7 +2212,7 @@ class TLS_Unit_Tests final : public Test {
                               "AEAD",
                               {{"minimum_record_size", "2048"}});
 
-         auto creds_with_client_cert = create_creds(*rng, true);
+         const auto creds_with_client_cert = create_creds(*rng, true);
          if(creds_with_client_cert) {
             test_modern_versions(
                "AES-256/GCM client certs", results, creds_with_client_cert, rng, "ECDH", "AES-256/GCM", "AEAD", true);

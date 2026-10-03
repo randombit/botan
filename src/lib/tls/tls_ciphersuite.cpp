@@ -115,7 +115,7 @@ bool Ciphersuite::is_certificate_required() const {
 
 std::optional<Ciphersuite> Ciphersuite::by_id(uint16_t suite) {
    const std::vector<Ciphersuite>& all_suites = all_known_ciphersuites();
-   auto s = std::lower_bound(all_suites.begin(), all_suites.end(), suite);
+   const auto s = std::lower_bound(all_suites.begin(), all_suites.end(), suite);
 
    if(s != all_suites.end() && s->ciphersuite_code() == suite) {
       return *s;

@@ -279,13 +279,13 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::DER_decode_EC_group(st
                                                                               EC_Group_Source source) {
    BER_Decoder dec(der, BER_Decoder::Limits::DER());
 
-   auto next_obj_type = dec.peek_next_object().type_tag();
+   const auto next_obj_type = dec.peek_next_object().type_tag();
 
    if(next_obj_type == ASN1_Type::ObjectId) {
       OID oid;
       dec.decode(oid).verify_end();
 
-      auto data = ec_group_data().lookup(oid);
+      const auto data = ec_group_data().lookup(oid);
       if(!data) {
          throw Decoding_Error(fmt("Unknown namedCurve OID '{}'", oid.to_string()));
       }
@@ -347,7 +347,7 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::DER_decode_EC_group(st
          throw Decoding_Error("Anomalous elliptic curves are not supported");
       }
 
-      if(auto data = ec_group_data().lookup_from_params(p, a, b, base_pt, order, cofactor)) {
+      if(const auto data = ec_group_data().lookup_from_params(p, a, b, base_pt, order, cofactor)) {
          return std::make_pair(data, true);
       }
 
@@ -357,12 +357,12 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::DER_decode_EC_group(st
       It can all be removed and replaced with a throw
       */
 
-      auto mod_p = Barrett_Reduction::for_public_modulus(p);
+      const auto mod_p = Barrett_Reduction::for_public_modulus(p);
       if(!is_bailie_psw_probable_prime(p, mod_p)) {
          throw Decoding_Error("ECC p parameter is not a prime");
       }
 
-      auto mod_order = Barrett_Reduction::for_public_modulus(order);
+      const auto mod_order = Barrett_Reduction::for_public_modulus(order);
       if(!is_bailie_psw_probable_prime(order, mod_order)) {
          throw Decoding_Error("Invalid ECC order parameter");
       }
@@ -411,8 +411,8 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::DER_decode_EC_group(st
       }();
 
       // TODO(Botan4) we can remove this check since we'll only accept pre-registered groups
-      auto y2 = mod_p.square(g_y);
-      auto x3_ax_b = mod_p.reduce(mod_p.cube(g_x) + mod_p.multiply(a, g_x) + b);
+      const auto y2 = mod_p.square(g_y);
+      const auto x3_ax_b = mod_p.reduce(mod_p.cube(g_x) + mod_p.multiply(a, g_x) + b);
       if(y2 != x3_ax_b) {
          throw Decoding_Error("Invalid ECC base point");
       }
@@ -423,7 +423,7 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::DER_decode_EC_group(st
       * Applications that need persistent custom groups should register them
       * via the relevant EC_Group constructor
       */
-      auto data = EC_Group_Data::create(p, a, b, g_x, g_y, order, cofactor, OID(), source);
+      const auto data = EC_Group_Data::create(p, a, b, g_x, g_y, order, cofactor, OID(), source);
 
       if(!EC_Group::verify_generator_order(data)) {
          throw Decoding_Error("ECC generator does not have the claimed order");
@@ -558,7 +558,7 @@ EC_Group::EC_Group(std::string_view str) {
          // OK try it as PEM ...
          const auto der = PEM_Code::decode_check_label(str, "EC PARAMETERS");
 
-         auto data = DER_decode_EC_group(der, EC_Group_Source::ExternalSource);
+         const auto data = DER_decode_EC_group(der, EC_Group_Source::ExternalSource);
          this->m_data = data.first;
          this->m_explicit_encoding = data.second;
       }
@@ -590,10 +590,10 @@ EC_Group::EC_Group(const BigInt& p,
 
    BOTAN_ARG_CHECK(cofactor >= 1 && cofactor < 16, "EC_Group cofactor is invalid");
 
-   auto mod_p = Barrett_Reduction::for_public_modulus(p);
+   const auto mod_p = Barrett_Reduction::for_public_modulus(p);
    BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(p, mod_p), "EC_Group p is not prime");
 
-   auto mod_order = Barrett_Reduction::for_public_modulus(order);
+   const auto mod_order = Barrett_Reduction::for_public_modulus(order);
    BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(order, mod_order), "EC_Group order is not prime");
 
    BOTAN_ARG_CHECK(p != order, "Anomalous elliptic curves are not supported");
@@ -606,8 +606,8 @@ EC_Group::EC_Group(const BigInt& p,
    BOTAN_ARG_CHECK(discriminant != 0, "EC_Group discriminant is invalid");
 
    // Check that the generator (base_x,base_y) is on the curve; y^2 = x^3 + a*x + b
-   auto y2 = mod_p.square(base_y);
-   auto x3_ax_b = mod_p.reduce(mod_p.cube(base_x) + mod_p.multiply(a, base_x) + b);
+   const auto y2 = mod_p.square(base_y);
+   const auto x3_ax_b = mod_p.reduce(mod_p.cube(base_x) + mod_p.multiply(a, base_x) + b);
    BOTAN_ARG_CHECK(y2 == x3_ax_b, "EC_Group generator is not on the curve");
 
    if(oid.has_value()) {
@@ -675,10 +675,10 @@ EC_Group EC_Group::register_custom_group(const OID& oid,
    BOTAN_ARG_CHECK(base_y >= 0 && base_y < p, "EC_Group base_y is invalid");
    BOTAN_ARG_CHECK(p.bits() == order.bits(), "EC_Group p and order must have the same number of bits");
 
-   auto mod_p = Barrett_Reduction::for_public_modulus(p);
+   const auto mod_p = Barrett_Reduction::for_public_modulus(p);
    BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(p, mod_p), "EC_Group p is not prime");
 
-   auto mod_order = Barrett_Reduction::for_public_modulus(order);
+   const auto mod_order = Barrett_Reduction::for_public_modulus(order);
    BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(order, mod_order), "EC_Group order is not prime");
 
    BOTAN_ARG_CHECK(p != order, "Anomalous elliptic curves are not supported");
@@ -693,8 +693,8 @@ EC_Group EC_Group::register_custom_group(const OID& oid,
    BOTAN_ARG_CHECK(discriminant != 0, "EC_Group discriminant is invalid");
 
    // Check that the generator (base_x,base_y) is on the curve; y^2 = x^3 + a*x + b
-   auto y2 = mod_p.square(base_y);
-   auto x3_ax_b = mod_p.reduce(mod_p.cube(base_x) + mod_p.multiply(a, base_x) + b);
+   const auto y2 = mod_p.square(base_y);
+   const auto x3_ax_b = mod_p.reduce(mod_p.cube(base_x) + mod_p.multiply(a, base_x) + b);
    BOTAN_ARG_CHECK(y2 == x3_ax_b, "EC_Group generator is not on the curve");
 
    const BigInt cofactor(1);
@@ -704,7 +704,7 @@ EC_Group EC_Group::register_custom_group(const OID& oid,
 }
 
 EC_Group::EC_Group(std::span<const uint8_t> der) {
-   auto data = DER_decode_EC_group(der, EC_Group_Source::ExternalSource);
+   const auto data = DER_decode_EC_group(der, EC_Group_Source::ExternalSource);
    m_data = data.first;
    m_explicit_encoding = data.second;
 }
@@ -924,7 +924,7 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    }
 
    //compute the discriminant: 4*a^3 + 27*b^2 which must be nonzero
-   auto mod_p = Barrett_Reduction::for_public_modulus(p);
+   const auto mod_p = Barrett_Reduction::for_public_modulus(p);
 
    const BigInt discriminant = mod_p.reduce(mod_p.multiply(BigInt::from_s32(4), mod_p.cube(a)) +
                                             mod_p.multiply(BigInt::from_s32(27), mod_p.square(b)));

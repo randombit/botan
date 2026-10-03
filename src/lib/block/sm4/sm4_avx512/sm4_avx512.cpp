@@ -47,7 +47,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX512_GFNI SIMD_T sm4_sbox(const SIMD_T& x) {
 
    constexpr uint8_t post_c = 0b11010011;
 
-   auto y = gf2p8affine<pre_a, pre_c>(x);
+   const auto y = gf2p8affine<pre_a, pre_c>(x);
    return gf2p8affineinv<post_a, post_c>(y);
 }
 

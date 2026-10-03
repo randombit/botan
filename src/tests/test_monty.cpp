@@ -31,15 +31,15 @@ class Montgomery_Integer_Tests : public Test {
             Test::Result result("Montgomery_Int");
 
             const size_t p_bits = (3 * i + 5);
-            auto p = Botan::random_prime(*rng, p_bits);
+            const auto p = Botan::random_prime(*rng, p_bits);
 
             const Botan::Montgomery_Params params(p);
 
-            auto x = Botan::BigInt::random_integer(*rng, 1, p);
-            auto y = Botan::BigInt::random_integer(*rng, 1, p);
+            const auto x = Botan::BigInt::random_integer(*rng, 1, p);
+            const auto y = Botan::BigInt::random_integer(*rng, 1, p);
 
-            auto monty_x = Botan::Montgomery_Int(params, x, true);
-            auto monty_y = Botan::Montgomery_Int(params, y, true);
+            const auto monty_x = Botan::Montgomery_Int(params, x, true);
+            const auto monty_y = Botan::Montgomery_Int(params, y, true);
 
             result.test_bn_eq("Montgomery addition", (monty_x + monty_y).value(), (x + y) % p);
             result.test_bn_eq("Montgomery subtraction", (monty_x - monty_y).value(), (x - y) % p);

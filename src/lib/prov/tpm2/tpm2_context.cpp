@@ -153,7 +153,7 @@ uint32_t get_tpm_property(ESYS_CONTEXT* ctx, TPM2_PT property) {
 
 template <TPM2_CAP capability, typename ReturnT>
 [[nodiscard]] std::vector<ReturnT> get_tpm_property_list(ESYS_CONTEXT* ctx, TPM2_PT property, uint32_t count) {
-   auto extract = [](const TPMU_CAPABILITIES& caps, uint32_t max_count) {
+   const auto extract = [](const TPMU_CAPABILITIES& caps, uint32_t max_count) {
       std::vector<ReturnT> result;
       if constexpr(capability == TPM2_CAP_HANDLES) {
          const auto to_read = std::min(caps.handles.count, max_count);
@@ -214,7 +214,7 @@ std::string Context::vendor() const {
 
    // The vendor name is transported in several uint32_t fields that are
    // loaded as big-endian bytes and concatenated to form the vendor string.
-   for(auto prop : properties) {
+   for(const auto prop : properties) {
       bs.append(store_be(get_tpm_property(m_impl->m_ctx, prop)));
    }
 

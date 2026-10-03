@@ -356,7 +356,7 @@ inline constexpr void load_any(OutR&& out /* NOLINT(*-std-forward) */, const InR
    ranges::assert_equal_byte_lengths(out, in);
    using element_type = std::ranges::range_value_t<OutR>;
 
-   auto load_elementwise = [&] {
+   const auto load_elementwise = [&] {
       constexpr size_t bytes_per_element = sizeof(element_type);
       std::span<const uint8_t> in_s(in);
       for(auto& out_elem : out) {
@@ -604,10 +604,10 @@ inline constexpr void store_any(OutR&& out /* NOLINT(*-std-forward) */, const In
    ranges::assert_equal_byte_lengths(out, in);
    using element_type = std::ranges::range_value_t<InR>;
 
-   auto store_elementwise = [&] {
+   const auto store_elementwise = [&] {
       constexpr size_t bytes_per_element = sizeof(element_type);
       std::span<uint8_t> out_s(out);
-      for(auto in_elem : in) {
+      for(const auto in_elem : in) {
          store_any<endianness, element_type>(out_s.template first<bytes_per_element>(), in_elem);
          out_s = out_s.subspan(bytes_per_element);
       }

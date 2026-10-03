@@ -29,7 +29,7 @@ class HOTP_KAT_Tests final : public Text_Based_Test {
       Test::Result run_one_test(const std::string& hash_algo, const VarMap& vars) override {
          Test::Result result("HOTP " + hash_algo);
 
-         auto hash_test = Botan::HashFunction::create(hash_algo);
+         const auto hash_test = Botan::HashFunction::create(hash_algo);
          if(!hash_test) {
             return {result};
          }
@@ -78,7 +78,7 @@ class TOTP_KAT_Tests final : public Text_Based_Test {
       Test::Result run_one_test(const std::string& hash_algo, const VarMap& vars) override {
          Test::Result result("TOTP " + hash_algo);
 
-         auto hash_test = Botan::HashFunction::create(hash_algo);
+         const auto hash_test = Botan::HashFunction::create(hash_algo);
          if(!hash_test) {
             return {result};
          }

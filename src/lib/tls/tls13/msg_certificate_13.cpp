@@ -421,7 +421,7 @@ Certificate_13::Certificate_13(std::span<const uint8_t> buf,
    }
 
    // Validate the provided (certificate) public key against our policy
-   auto pubkey = public_key();
+   const auto pubkey = public_key();
    policy.check_peer_key_acceptable(*pubkey);
 
    if(!policy.allowed_signature_method(pubkey->algo_name())) {
@@ -448,7 +448,7 @@ std::vector<uint8_t> Certificate_13::serialize() const {
       //
       // TODO: look into this issue more generally when overhauling the
       //       message marshalling.
-      auto extensions = entry.extensions().serialize(m_side);
+      const auto extensions = entry.extensions().serialize(m_side);
       entries += (!extensions.empty()) ? extensions : std::vector<uint8_t>{0, 0};
    }
 

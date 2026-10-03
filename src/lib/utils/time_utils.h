@@ -48,7 +48,7 @@ uint64_t measure_cost(uint64_t trial_msec, F func) {
 
    bool use_cpu_time = thread_cpu_ns().has_value();
 
-   auto sample_ns = [&]() -> uint64_t {
+   const auto sample_ns = [&]() -> uint64_t {
       if(use_cpu_time) {
          return thread_cpu_ns().value_or(0);
       }

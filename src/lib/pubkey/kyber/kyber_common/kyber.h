@@ -48,7 +48,7 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode final {
          Kyber1024_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated") = 8,
       };
 
-      // NOLINTNEXTLINE(*-explicit-conversions)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
       KyberMode(Mode mode);
 
       explicit KyberMode(const OID& oid);

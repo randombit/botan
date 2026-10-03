@@ -130,7 +130,7 @@ bool passes_miller_rabin_test(const BigInt& n,
 
    const size_t powm_window = 4;
 
-   auto powm_a_n = monty_precompute(monty_n, a, powm_window);
+   const auto powm_a_n = monty_precompute(monty_n, a, powm_window);
 
    BigInt y = monty_execute(*powm_a_n, nm1_s, n_bits).value();
 

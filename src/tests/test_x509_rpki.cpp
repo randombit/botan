@@ -123,7 +123,7 @@ CA_Creation_Result make_ca(std::unique_ptr<Botan::RandomNumberGenerator>& rng,
 
 std::pair<Botan::X509_Certificate, Botan::X509_CA> make_and_sign_ca(
    std::unique_ptr<Botan::Certificate_Extension> ext,
-   Botan::X509_CA& parent_ca,
+   const Botan::X509_CA& parent_ca,
    std::unique_ptr<Botan::RandomNumberGenerator>& rng) {
    auto [sig_algo, padding_method, hash_fn, key] = get_sig_algo_padding_and_generate_key(*rng);
 
@@ -298,7 +298,7 @@ Test::Result test_x509_as_blocks_extension_decode() {
    result.start_timer();
    using Botan::Cert_Extension::ASBlocks;
 
-   auto with_as_identifiers = [&](const std::string& filename, auto&& fn) {
+   const auto with_as_identifiers = [&](const std::string& filename, auto&& fn) {
       const Botan::X509_Certificate cert(Test::data_file("x509/rfc3779/" + filename));
       const auto* as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
       if(as_blocks == nullptr) {
@@ -373,7 +373,7 @@ Test::Result test_x509_as_blocks_extension_decode_malformed() {
    // overwrite by calling decode_from on hand-crafted BER.
    const auto dummy_choice = ASBlocks::ASIdentifierChoice(std::vector<ASBlocks::ASIdOrRange>{ASBlocks::ASIdOrRange(1)});
 
-   auto try_decode = [&](const std::string& what, std::string_view hex) {
+   const auto try_decode = [&](const std::string& what, std::string_view hex) {
       result.test_throws(what, [&]() {
          ASBlocks::ASIdentifiers ident(dummy_choice, std::nullopt);
          Botan::BER_Decoder dec(Botan::hex_decode(hex));
@@ -438,7 +438,7 @@ Test::Result test_x509_ip_addr_blocks_extension_decode_malformed() {
       return choice;
    };
 
-   auto reject_choice = [&](const std::string& what, std::string_view hex) {
+   const auto reject_choice = [&](const std::string& what, std::string_view hex) {
       result.test_throws(what, [&]() { decode_choice(hex); });
    };
 
@@ -506,7 +506,7 @@ Test::Result test_x509_ip_addr_blocks_extension_decode_malformed() {
 
    // For checks applied across the whole extension, wrap an IPAddrBlocks value
    // into Extensions ::= SEQUENCE { SEQUENCE { OID sbgp-ipAddrBlock, BOOLEAN TRUE, OCTET STRING { value } } }
-   auto decode_as_extension = [](std::string_view hex) {
+   const auto decode_as_extension = [](std::string_view hex) {
       const auto ext_value = Botan::hex_decode(hex);
 
       std::vector<uint8_t> inner = Botan::hex_decode("06082B060105050701070101FF04");
@@ -576,7 +576,7 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
    Botan::X509_Cert_Options opts_1 = ca_opts();
    opts_1.extensions.add(std::move(blocks_1));
 
-   auto cert_1 = make_self_signed(rng, opts_1);
+   const auto cert_1 = make_self_signed(rng, opts_1);
 
    auto bits_1 = cert_1.v3_extensions().get_extension_bits(IPAddressBlocks::static_oid());
 
@@ -587,7 +587,7 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
 
    const auto* ext_1 = cert_1.v3_extensions().get_extension_object_as<IPAddressBlocks>();
 
-   auto ext_1_addr_fam_1 = ext_1->addr_blocks()[0];
+   const auto ext_1_addr_fam_1 = ext_1->addr_blocks()[0];
    result.test_opt_u8_eq("extension 1 ipv4 safi", ext_1_addr_fam_1.safi(), 1);
    auto ext_1_ranges =
       std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(ext_1_addr_fam_1.addr_choice()).ranges().value();
@@ -623,7 +623,7 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
    Botan::X509_Cert_Options opts_2 = ca_opts();
    opts_2.extensions.add(std::move(blocks_2));
 
-   auto cert_2 = make_self_signed(rng, opts_2);
+   const auto cert_2 = make_self_signed(rng, opts_2);
 
    auto bits_2 = cert_2.v3_extensions().get_extension_bits(IPAddressBlocks::static_oid());
 
@@ -634,7 +634,7 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
 
    const auto* ext_2 = cert_2.v3_extensions().get_extension_object_as<IPAddressBlocks>();
 
-   auto ext_2_addr_fam_1 = ext_2->addr_blocks()[0];
+   const auto ext_2_addr_fam_1 = ext_2->addr_blocks()[0];
    result.test_opt_u8_eq("extension 2 ipv4 1 safi", ext_2_addr_fam_1.safi(), 1);
    auto ext_2_ranges_1 =
       std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(ext_2_addr_fam_1.addr_choice()).ranges().value();
@@ -649,7 +649,7 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
       "extension 2 ipv4 2 inherited",
       !std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(ext_2->addr_blocks()[1].addr_choice()).ranges().has_value());
 
-   auto ext_2_addr_fam_3 = ext_2->addr_blocks()[2];
+   const auto ext_2_addr_fam_3 = ext_2->addr_blocks()[2];
    result.test_opt_u8_eq("extension 2 ipv4 1 safi", ext_2_addr_fam_3.safi(), std::nullopt);
    auto ext_2_ranges_3 =
       std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(ext_2_addr_fam_3.addr_choice()).ranges().value();
@@ -690,7 +690,7 @@ Test::Result test_x509_ip_addr_blocks_encode_builder() {
    Botan::X509_Cert_Options opts = ca_opts();
    opts.extensions.add(std::move(blocks));
 
-   auto cert = make_self_signed(rng, opts);
+   const auto cert = make_self_signed(rng, opts);
    auto bits = cert.v3_extensions().get_extension_bits(IPAddressBlocks::static_oid());
 
    // hand validated with https://lapo.it/asn1js/
@@ -737,49 +737,49 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_ctor() {
       Botan::X509_Cert_Options opts = req_opts(sig_algo);
 
       std::vector<uint8_t> a = {123, 123, 2, 1};
-      auto ipv4_1 = rpki_v4(a);
+      const auto ipv4_1 = rpki_v4(a);
       a = {255, 255, 255, 255};
-      auto ipv4_2 = rpki_v4(a);
+      const auto ipv4_2 = rpki_v4(a);
 
       // encoded as min, max
       a = {127, 0, 0, 1};
-      auto ipv4_range_1_min = rpki_v4(a);
+      const auto ipv4_range_1_min = rpki_v4(a);
       a = {189, 5, 7, 255};
-      auto ipv4_range_1_max = rpki_v4(a);
+      const auto ipv4_range_1_max = rpki_v4(a);
 
       // encoded as prefix
       a = {190, 5, 0, 0};
-      auto ipv4_range_2_min = rpki_v4(a);
+      const auto ipv4_range_2_min = rpki_v4(a);
       a = {190, 5, 127, 255};
-      auto ipv4_range_2_max = rpki_v4(a);
+      const auto ipv4_range_2_max = rpki_v4(a);
 
       a = {0xAB, 0xCD, 0xDE, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-      auto ipv6_1 = rpki_v6(a);
+      const auto ipv6_1 = rpki_v6(a);
       a = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-      auto ipv6_2 = rpki_v6(a);
+      const auto ipv6_2 = rpki_v6(a);
 
       // encoded as min, max
       a = {0xAF, 0x23, 0x34, 0x45, 0x67, 0x2A, 0x7A, 0xEF, 0x8C, 0x00, 0x00, 0x00, 0x66, 0x00, 0x52, 0x00};
-      auto ipv6_range_1_min = rpki_v6(a);
+      const auto ipv6_range_1_min = rpki_v6(a);
 
       a = {0xAF, 0xCD, 0xDE, 0xF0, 0x00, 0x0F, 0xEE, 0x00, 0xBB, 0x4A, 0x9B, 0x00, 0x00, 0x4C, 0x00, 0xCC};
-      auto ipv6_range_1_max = rpki_v6(a);
+      const auto ipv6_range_1_max = rpki_v6(a);
 
       // encoded as prefix
       a = {0xBF, 0xCD, 0xDE, 0xF0, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-      auto ipv6_range_2_min = rpki_v6(a);
+      const auto ipv6_range_2_min = rpki_v6(a);
       a = {0xBF, 0xCD, 0xDE, 0xF0, 0x00, 0x00, 0x00, 0x07, 0x1F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-      auto ipv6_range_2_max = rpki_v6(a);
+      const auto ipv6_range_2_max = rpki_v6(a);
 
-      auto ipv4_range_1 = IPAddressBlocks::IPAddressOrRange<IPv4>(ipv4_1);
-      auto ipv4_range_2 = IPAddressBlocks::IPAddressOrRange<IPv4>(ipv4_range_1_min, ipv4_range_1_max);
-      auto ipv4_range_3 = IPAddressBlocks::IPAddressOrRange<IPv4>(ipv4_range_2_min, ipv4_range_2_max);
-      auto ipv4_range_4 = IPAddressBlocks::IPAddressOrRange<IPv4>(ipv4_2);
+      const auto ipv4_range_1 = IPAddressBlocks::IPAddressOrRange<IPv4>(ipv4_1);
+      const auto ipv4_range_2 = IPAddressBlocks::IPAddressOrRange<IPv4>(ipv4_range_1_min, ipv4_range_1_max);
+      const auto ipv4_range_3 = IPAddressBlocks::IPAddressOrRange<IPv4>(ipv4_range_2_min, ipv4_range_2_max);
+      const auto ipv4_range_4 = IPAddressBlocks::IPAddressOrRange<IPv4>(ipv4_2);
 
-      auto ipv6_range_1 = IPAddressBlocks::IPAddressOrRange<IPv6>(ipv6_1);
-      auto ipv6_range_2 = IPAddressBlocks::IPAddressOrRange<IPv6>(ipv6_range_1_min, ipv6_range_1_max);
-      auto ipv6_range_3 = IPAddressBlocks::IPAddressOrRange<IPv6>(ipv6_range_2_min, ipv6_range_2_max);
-      auto ipv6_range_4 = IPAddressBlocks::IPAddressOrRange<IPv6>(ipv6_2);
+      const auto ipv6_range_1 = IPAddressBlocks::IPAddressOrRange<IPv6>(ipv6_1);
+      const auto ipv6_range_2 = IPAddressBlocks::IPAddressOrRange<IPv6>(ipv6_range_1_min, ipv6_range_1_max);
+      const auto ipv6_range_3 = IPAddressBlocks::IPAddressOrRange<IPv6>(ipv6_range_2_min, ipv6_range_2_max);
+      const auto ipv6_range_4 = IPAddressBlocks::IPAddressOrRange<IPv6>(ipv6_2);
 
       std::vector<IPAddressBlocks::IPAddressOrRange<IPv4>> ipv4_ranges;
       if(push_ipv4_ranges) {
@@ -807,8 +807,8 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_ctor() {
          ipv6_addr_choice = IPAddressBlocks::IPAddressChoice<IPv6>(ipv6_ranges);
       }
 
-      auto ipv4_addr_family = IPAddressBlocks::IPAddressFamily(ipv4_addr_choice);
-      auto ipv6_addr_family = IPAddressBlocks::IPAddressFamily(ipv6_addr_choice);
+      const auto ipv4_addr_family = IPAddressBlocks::IPAddressFamily(ipv4_addr_choice);
+      const auto ipv6_addr_family = IPAddressBlocks::IPAddressFamily(ipv6_addr_choice);
 
       std::vector<IPAddressBlocks::IPAddressFamily> addr_blocks;
       if(push_ipv4_family) {
@@ -835,10 +835,10 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_ctor() {
          }
 
          if(push_ipv4_family) {
-            auto family = dec_addr_blocks[0];
+            const auto family = dec_addr_blocks[0];
             result.test_u16_eq("ipv4 family afi", ipv4_addr_family.afi(), family.afi());
             result.test_opt_u8_eq("ipv4 family safi", ipv4_addr_family.safi(), family.safi());
-            auto choice = std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(family.addr_choice());
+            const auto choice = std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(family.addr_choice());
 
             if(!inherit_ipv4) {
                auto ranges = choice.ranges().value();
@@ -860,10 +860,10 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_ctor() {
          }
 
          if(push_ipv6_family) {
-            auto family = dec_addr_blocks[dec_addr_blocks.size() - 1];
+            const auto family = dec_addr_blocks[dec_addr_blocks.size() - 1];
             result.test_u16_eq("ipv6 family afi", ipv6_addr_family.afi(), family.afi());
             result.test_opt_u8_eq("ipv6 family safi", ipv6_addr_family.safi(), family.safi());
-            auto choice = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(family.addr_choice());
+            const auto choice = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(family.addr_choice());
             if(!inherit_ipv6) {
                auto ranges = choice.ranges().value();
                if(push_ipv6_ranges) {
@@ -927,17 +927,17 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_edge_cases_ctor() {
                max_bytes[15 - (k > 15 ? 15 : k)] = edge_values[i];
             }
 
-            auto address_min = rpki_v6(min_bytes);
-            auto address_max = rpki_v6(max_bytes);
+            const auto address_min = rpki_v6(min_bytes);
+            const auto address_max = rpki_v6(max_bytes);
 
-            auto ipv6_range = IPAddressBlocks::IPAddressOrRange<IPv6>(address_min, address_max);
+            const auto ipv6_range = IPAddressBlocks::IPAddressOrRange<IPv6>(address_min, address_max);
 
             std::vector<IPAddressBlocks::IPAddressOrRange<IPv6>> ipv6_ranges;
             ipv6_ranges.push_back(ipv6_range);
 
             auto ipv6_addr_choice = IPAddressBlocks::IPAddressChoice<IPv6>(ipv6_ranges);
 
-            auto ipv6_addr_family = IPAddressBlocks::IPAddressFamily(ipv6_addr_choice);
+            const auto ipv6_addr_family = IPAddressBlocks::IPAddressFamily(ipv6_addr_choice);
 
             std::vector<IPAddressBlocks::IPAddressFamily> addr_blocks;
             addr_blocks.push_back(ipv6_addr_family);
@@ -953,10 +953,10 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_edge_cases_ctor() {
                const auto* ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
                result.test_not_null("cert has IPAddrBlocks extension", ip_blocks);
                const auto& dec_addr_blocks = ip_blocks->addr_blocks();
-               auto family = dec_addr_blocks[0];
+               const auto family = dec_addr_blocks[0];
                result.test_u16_eq("ipv6 family afi", ipv6_addr_family.afi(), family.afi());
                result.test_opt_u8_eq("ipv6 family safi", ipv6_addr_family.safi(), family.safi());
-               auto choice = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(family.addr_choice());
+               const auto choice = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(family.addr_choice());
                auto ranges = choice.ranges().value();
 
                result.test_bin_eq("ipv6 edge case min", ranges[0].min().to_bytes(), ipv6_range.min().to_bytes());
@@ -994,14 +994,14 @@ Test::Result test_x509_ip_addr_blocks_range_merge() {
 
    std::vector<IPAddressBlocks::IPAddressOrRange<IPv4>> ipv6_ranges;
    for(auto pair : addresses) {
-      auto address_min = rpki_v4(pair[0]);
-      auto address_max = rpki_v4(pair[1]);
-      auto range = IPAddressBlocks::IPAddressOrRange<IPv4>(address_min, address_max);
+      const auto address_min = rpki_v4(pair[0]);
+      const auto address_max = rpki_v4(pair[1]);
+      const auto range = IPAddressBlocks::IPAddressOrRange<IPv4>(address_min, address_max);
       ipv6_ranges.push_back(range);
    }
 
    auto ipv6_addr_choice = IPAddressBlocks::IPAddressChoice<IPv4>(ipv6_ranges);
-   auto ipv6_addr_family = IPAddressBlocks::IPAddressFamily(ipv6_addr_choice);
+   const auto ipv6_addr_family = IPAddressBlocks::IPAddressFamily(ipv6_addr_choice);
 
    std::vector<IPAddressBlocks::IPAddressFamily> addr_blocks;
    addr_blocks.push_back(ipv6_addr_family);
@@ -1016,8 +1016,8 @@ Test::Result test_x509_ip_addr_blocks_range_merge() {
       const auto* ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
       result.test_not_null("cert has IPAddrBlocks extension", ip_blocks);
       const auto& dec_addr_blocks = ip_blocks->addr_blocks();
-      auto family = dec_addr_blocks[0];
-      auto choice = std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(family.addr_choice());
+      const auto family = dec_addr_blocks[0];
+      const auto choice = std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(family.addr_choice());
       auto ranges = choice.ranges().value();
 
       const std::array<uint8_t, 4> expected_min = {5, 0, 0, 0};
@@ -1113,16 +1113,16 @@ Test::Result test_x509_ip_addr_blocks_family_merge() {
 
       uint32_t afam_a = a.afi();
       if(a.safi().has_value()) {
-         afam_a = static_cast<uint32_t>(afam_a << 8) | a.safi().value();
+         afam_a = (afam_a << 8) | a.safi().value();
       } else {
-         afam_a = static_cast<uint32_t>(afam_a << 8);
+         afam_a <<= 8;
       }
 
       uint32_t afam_b = b.afi();
       if(b.safi().has_value()) {
-         afam_b = static_cast<uint32_t>(afam_b << 8) | b.safi().value();
+         afam_b = (afam_b << 8) | b.safi().value();
       } else {
-         afam_b = static_cast<uint32_t>(afam_b << 8);
+         afam_b <<= 8;
       }
 
       if(afam_a > afam_b) {
@@ -1141,8 +1141,8 @@ Test::Result test_x509_ip_addr_blocks_family_merge() {
       result.test_opt_u8_eq("blocks match push order by safi at index " + std::to_string(i), dec.safi(), exp.safi());
 
       if((exp.afi() == 1) && (dec.afi() == 1)) {
-         auto dec_choice = std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(dec.addr_choice());
-         auto exp_choice = std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(exp.addr_choice());
+         const auto dec_choice = std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(dec.addr_choice());
+         const auto exp_choice = std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(exp.addr_choice());
 
          if(!exp_choice.ranges().has_value()) {
             result.test_is_false("block ranges should inherit at index " + std::to_string(i),
@@ -1177,8 +1177,8 @@ Test::Result test_x509_ip_addr_blocks_family_merge() {
             }
          }
       } else if((exp.afi() == 2) && (dec.afi() == 2)) {
-         auto dec_choice = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(dec.addr_choice());
-         auto exp_choice = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(exp.addr_choice());
+         const auto dec_choice = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(dec.addr_choice());
+         const auto exp_choice = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(exp.addr_choice());
 
          if(!exp_choice.ranges().has_value()) {
             result.test_is_false("block ranges should inherit at index " + std::to_string(i),
@@ -1328,104 +1328,104 @@ Test::Result test_x509_ip_addr_blocks_path_validation_success_ctor() {
 
    // Root cert
    std::vector<uint8_t> a = {120, 0, 0, 1};
-   auto root_ipv4_range_1_min = IPAddressBlocks::IPAddress<IPv4>{a};
+   const auto root_ipv4_range_1_min = IPAddressBlocks::IPAddress<IPv4>{a};
    a = {130, 140, 150, 160};
-   auto root_ipv4_range_1_max = IPAddressBlocks::IPAddress<IPv4>{a};
+   const auto root_ipv4_range_1_max = IPAddressBlocks::IPAddress<IPv4>{a};
 
    a = {10, 0, 0, 1};
-   auto root_ipv4_range_2_min = rpki_v4(a);
+   const auto root_ipv4_range_2_min = rpki_v4(a);
    a = {10, 255, 255, 255};
-   auto root_ipv4_range_2_max = rpki_v4(a);
+   const auto root_ipv4_range_2_max = rpki_v4(a);
 
    a = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-   auto root_ipv6_range_1_min = rpki_v6(a);
+   const auto root_ipv6_range_1_min = rpki_v6(a);
    a = {0xA0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-   auto root_ipv6_range_1_max = rpki_v6(a);
+   const auto root_ipv6_range_1_max = rpki_v6(a);
 
    a = {0xA2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-   auto root_ipv6_range_2_min = rpki_v6(a);
+   const auto root_ipv6_range_2_min = rpki_v6(a);
    a = {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-   auto root_ipv6_range_2_max = rpki_v6(a);
+   const auto root_ipv6_range_2_max = rpki_v6(a);
 
-   auto root_ipv4_range_1 = IPAddressBlocks::IPAddressOrRange<IPv4>(root_ipv4_range_1_min, root_ipv4_range_1_max);
-   auto root_ipv4_range_2 = IPAddressBlocks::IPAddressOrRange<IPv4>(root_ipv4_range_2_min, root_ipv4_range_2_max);
-   auto root_ipv6_range_1 = IPAddressBlocks::IPAddressOrRange<IPv6>(root_ipv6_range_1_min, root_ipv6_range_1_max);
-   auto root_ipv6_range_2 = IPAddressBlocks::IPAddressOrRange<IPv6>(root_ipv6_range_2_min, root_ipv6_range_2_max);
+   const auto root_ipv4_range_1 = IPAddressBlocks::IPAddressOrRange<IPv4>(root_ipv4_range_1_min, root_ipv4_range_1_max);
+   const auto root_ipv4_range_2 = IPAddressBlocks::IPAddressOrRange<IPv4>(root_ipv4_range_2_min, root_ipv4_range_2_max);
+   const auto root_ipv6_range_1 = IPAddressBlocks::IPAddressOrRange<IPv6>(root_ipv6_range_1_min, root_ipv6_range_1_max);
+   const auto root_ipv6_range_2 = IPAddressBlocks::IPAddressOrRange<IPv6>(root_ipv6_range_2_min, root_ipv6_range_2_max);
 
-   auto root_ipv4_ranges = {root_ipv4_range_1, root_ipv4_range_2};
-   auto root_ipv6_ranges = {root_ipv6_range_1, root_ipv6_range_2};
+   const auto root_ipv4_ranges = {root_ipv4_range_1, root_ipv4_range_2};
+   const auto root_ipv6_ranges = {root_ipv6_range_1, root_ipv6_range_2};
 
    auto root_ipv4_choice = IPAddressBlocks::IPAddressChoice<IPv4>(root_ipv4_ranges);
    auto root_ipv6_choice = IPAddressBlocks::IPAddressChoice<IPv6>(root_ipv6_ranges);
 
-   auto root_ipv4_family = IPAddressBlocks::IPAddressFamily(root_ipv4_choice, 42);
-   auto root_ipv6_family = IPAddressBlocks::IPAddressFamily(root_ipv6_choice);
+   const auto root_ipv4_family = IPAddressBlocks::IPAddressFamily(root_ipv4_choice, 42);
+   const auto root_ipv6_family = IPAddressBlocks::IPAddressFamily(root_ipv6_choice);
 
-   auto root_addr_blocks = {root_ipv4_family, root_ipv6_family};
+   const auto root_addr_blocks = {root_ipv4_family, root_ipv6_family};
    std::unique_ptr<IPAddressBlocks> root_blocks = std::make_unique<IPAddressBlocks>(root_addr_blocks);
 
    // Inherit cert
    auto inherit_ipv4_choice = IPAddressBlocks::IPAddressChoice<IPv4>();
    auto inherit_ipv6_choice = IPAddressBlocks::IPAddressChoice<IPv6>();
 
-   auto inherit_ipv4_family = IPAddressBlocks::IPAddressFamily(inherit_ipv4_choice, 42);
-   auto inherit_ipv6_family = IPAddressBlocks::IPAddressFamily(inherit_ipv6_choice);
+   const auto inherit_ipv4_family = IPAddressBlocks::IPAddressFamily(inherit_ipv4_choice, 42);
+   const auto inherit_ipv6_family = IPAddressBlocks::IPAddressFamily(inherit_ipv6_choice);
 
-   auto inherit_addr_blocks = {inherit_ipv4_family, inherit_ipv6_family};
+   const auto inherit_addr_blocks = {inherit_ipv4_family, inherit_ipv6_family};
    std::unique_ptr<IPAddressBlocks> inherit_blocks = std::make_unique<IPAddressBlocks>(inherit_addr_blocks);
 
    // Dynamic Cert
    a = {122, 0, 0, 255};
-   auto dyn_ipv4_range_1_min = rpki_v4(a);
+   const auto dyn_ipv4_range_1_min = rpki_v4(a);
    a = {128, 255, 255, 255};
-   auto dyn_ipv4_range_1_max = rpki_v4(a);
+   const auto dyn_ipv4_range_1_max = rpki_v4(a);
    a = {10, 0, 0, 255};
-   auto dyn_ipv4_range_2_min = rpki_v4(a);
+   const auto dyn_ipv4_range_2_min = rpki_v4(a);
    a = {10, 255, 0, 1};
-   auto dyn_ipv4_range_2_max = rpki_v4(a);
+   const auto dyn_ipv4_range_2_max = rpki_v4(a);
 
    a = {0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-   auto dyn_ipv6_range_1_min = rpki_v6(a);
+   const auto dyn_ipv6_range_1_min = rpki_v6(a);
    a = {0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-   auto dyn_ipv6_range_1_max = rpki_v6(a);
+   const auto dyn_ipv6_range_1_max = rpki_v6(a);
 
-   auto dyn_ipv4_range_1 = IPAddressBlocks::IPAddressOrRange<IPv4>(dyn_ipv4_range_1_min, dyn_ipv4_range_1_max);
-   auto dyn_ipv4_range_2 = IPAddressBlocks::IPAddressOrRange<IPv4>(dyn_ipv4_range_2_min, dyn_ipv4_range_2_max);
-   auto dyn_ipv6_range = IPAddressBlocks::IPAddressOrRange<IPv6>(dyn_ipv6_range_1_min, dyn_ipv6_range_1_max);
+   const auto dyn_ipv4_range_1 = IPAddressBlocks::IPAddressOrRange<IPv4>(dyn_ipv4_range_1_min, dyn_ipv4_range_1_max);
+   const auto dyn_ipv4_range_2 = IPAddressBlocks::IPAddressOrRange<IPv4>(dyn_ipv4_range_2_min, dyn_ipv4_range_2_max);
+   const auto dyn_ipv6_range = IPAddressBlocks::IPAddressOrRange<IPv6>(dyn_ipv6_range_1_min, dyn_ipv6_range_1_max);
 
-   auto dyn_ipv4_ranges = {dyn_ipv4_range_1, dyn_ipv4_range_2};
-   auto dyn_ipv6_ranges = {dyn_ipv6_range};
+   const auto dyn_ipv4_ranges = {dyn_ipv4_range_1, dyn_ipv4_range_2};
+   const auto dyn_ipv6_ranges = {dyn_ipv6_range};
 
    // Subject cert
    a = {124, 0, 255, 0};
-   auto sub_ipv4_range_1_min = rpki_v4(a);
+   const auto sub_ipv4_range_1_min = rpki_v4(a);
    a = {126, 0, 0, 1};
-   auto sub_ipv4_range_1_max = rpki_v4(a);
+   const auto sub_ipv4_range_1_max = rpki_v4(a);
 
    a = {10, 0, 2, 1};
-   auto sub_ipv4_range_2_min = rpki_v4(a);
+   const auto sub_ipv4_range_2_min = rpki_v4(a);
    a = {10, 42, 0, 255};
-   auto sub_ipv4_range_2_max = rpki_v4(a);
+   const auto sub_ipv4_range_2_max = rpki_v4(a);
 
    a = {0x00, 0x00, 0x00, 0xAB, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-   auto sub_ipv6_range_1_min = rpki_v6(a);
+   const auto sub_ipv6_range_1_min = rpki_v6(a);
    a = {0x0D, 0x00, 0x00, 0xAB, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-   auto sub_ipv6_range_1_max = rpki_v6(a);
+   const auto sub_ipv6_range_1_max = rpki_v6(a);
 
-   auto sub_ipv4_range_1 = IPAddressBlocks::IPAddressOrRange<IPv4>(sub_ipv4_range_1_min, sub_ipv4_range_1_max);
-   auto sub_ipv4_range_2 = IPAddressBlocks::IPAddressOrRange<IPv4>(sub_ipv4_range_2_min, sub_ipv4_range_2_max);
-   auto sub_ipv6_range = IPAddressBlocks::IPAddressOrRange<IPv6>(sub_ipv6_range_1_min, sub_ipv6_range_1_max);
+   const auto sub_ipv4_range_1 = IPAddressBlocks::IPAddressOrRange<IPv4>(sub_ipv4_range_1_min, sub_ipv4_range_1_max);
+   const auto sub_ipv4_range_2 = IPAddressBlocks::IPAddressOrRange<IPv4>(sub_ipv4_range_2_min, sub_ipv4_range_2_max);
+   const auto sub_ipv6_range = IPAddressBlocks::IPAddressOrRange<IPv6>(sub_ipv6_range_1_min, sub_ipv6_range_1_max);
 
-   auto sub_ipv4_ranges = {sub_ipv4_range_1, sub_ipv4_range_2};
-   auto sub_ipv6_ranges = {sub_ipv6_range};
+   const auto sub_ipv4_ranges = {sub_ipv4_range_1, sub_ipv4_range_2};
+   const auto sub_ipv6_ranges = {sub_ipv6_range};
 
    auto sub_ipv4_choice = IPAddressBlocks::IPAddressChoice<IPv4>(sub_ipv4_ranges);
    auto sub_ipv6_choice = IPAddressBlocks::IPAddressChoice<IPv6>(sub_ipv6_ranges);
 
-   auto sub_ipv4_family = IPAddressBlocks::IPAddressFamily(sub_ipv4_choice, 42);
-   auto sub_ipv6_family = IPAddressBlocks::IPAddressFamily(sub_ipv6_choice);
+   const auto sub_ipv4_family = IPAddressBlocks::IPAddressFamily(sub_ipv4_choice, 42);
+   const auto sub_ipv6_family = IPAddressBlocks::IPAddressFamily(sub_ipv6_choice);
 
-   auto sub_addr_blocks = {sub_ipv4_family, sub_ipv6_family};
+   const auto sub_addr_blocks = {sub_ipv4_family, sub_ipv6_family};
    std::unique_ptr<IPAddressBlocks> sub_blocks = std::make_unique<IPAddressBlocks>(sub_addr_blocks);
 
    Botan::X509_Cert_Options root_opts = ca_opts();
@@ -1447,10 +1447,10 @@ Test::Result test_x509_ip_addr_blocks_path_validation_success_ctor() {
       auto dyn_ipv6_choice =
          IPAddressBlocks::IPAddressChoice<IPv6>(include_v6 ? std::optional(dyn_ipv6_ranges) : std::nullopt);
 
-      auto dyn_ipv4_family = IPAddressBlocks::IPAddressFamily(dyn_ipv4_choice, 42);
-      auto dyn_ipv6_family = IPAddressBlocks::IPAddressFamily(dyn_ipv6_choice);
+      const auto dyn_ipv4_family = IPAddressBlocks::IPAddressFamily(dyn_ipv4_choice, 42);
+      const auto dyn_ipv6_family = IPAddressBlocks::IPAddressFamily(dyn_ipv6_choice);
 
-      auto dyn_addr_blocks = {dyn_ipv4_family, dyn_ipv6_family};
+      const auto dyn_addr_blocks = {dyn_ipv4_family, dyn_ipv6_family};
       std::unique_ptr<IPAddressBlocks> dyn_blocks = std::make_unique<IPAddressBlocks>(dyn_addr_blocks);
 
       auto [dyn_cert, dyn_ca] = make_and_sign_ca(std::move(dyn_blocks), inherit_ca, rng);
@@ -1572,16 +1572,16 @@ Test::Result test_x509_ip_addr_blocks_path_validation_failure_ctor() {
 
       // Root cert
       std::vector<uint8_t> a = {120, 0, 0, 1};
-      auto root_range_1_min = IPAddressBlocks::IPAddress<IPv4>{a};
+      const auto root_range_1_min = IPAddressBlocks::IPAddress<IPv4>{a};
       a = {130, 140, 150, 160};
-      auto root_range_1_max = IPAddressBlocks::IPAddress<IPv4>{a};
+      const auto root_range_1_max = IPAddressBlocks::IPAddress<IPv4>{a};
 
-      auto root_range_1 = IPAddressBlocks::IPAddressOrRange<IPv4>(root_range_1_min, root_range_1_max);
-      auto root_ranges = {root_range_1};
+      const auto root_range_1 = IPAddressBlocks::IPAddressOrRange<IPv4>(root_range_1_min, root_range_1_max);
+      const auto root_ranges = {root_range_1};
       auto root_choice =
          IPAddressBlocks::IPAddressChoice<IPv4>(all_inherit ? std::nullopt : std::optional(root_ranges));
-      auto root_family = IPAddressBlocks::IPAddressFamily(root_choice, 42);
-      auto root_addr_blocks = {root_family};
+      const auto root_family = IPAddressBlocks::IPAddressFamily(root_choice, 42);
+      const auto root_addr_blocks = {root_family};
       std::unique_ptr<IPAddressBlocks> root_blocks = std::make_unique<IPAddressBlocks>(root_addr_blocks);
 
       Botan::X509_Cert_Options root_opts = ca_opts();
@@ -1592,10 +1592,10 @@ Test::Result test_x509_ip_addr_blocks_path_validation_failure_ctor() {
 
       // Issuer Cert
       a = {122, 0, 0, 255};
-      auto iss_range_1_min = rpki_v4(a);
+      const auto iss_range_1_min = rpki_v4(a);
       a = {128, 255, 255, 255};
-      auto iss_range_1_max = rpki_v4(a);
-      auto iss_range_1 = IPAddressBlocks::IPAddressOrRange<IPv4>(iss_range_1_min, iss_range_1_max);
+      const auto iss_range_1_max = rpki_v4(a);
+      const auto iss_range_1 = IPAddressBlocks::IPAddressOrRange<IPv4>(iss_range_1_min, iss_range_1_max);
 
       std::vector<IPAddressBlocks::IPAddressOrRange<IPv4>> iss_ranges;
 
@@ -1604,8 +1604,8 @@ Test::Result test_x509_ip_addr_blocks_path_validation_failure_ctor() {
       }
 
       auto iss_choice = IPAddressBlocks::IPAddressChoice<IPv4>(all_inherit ? std::nullopt : std::optional(iss_ranges));
-      auto iss_family = IPAddressBlocks::IPAddressFamily(iss_choice, 42);
-      auto iss_addr_blocks = {iss_family};
+      const auto iss_family = IPAddressBlocks::IPAddressFamily(iss_choice, 42);
+      const auto iss_addr_blocks = {iss_family};
       std::unique_ptr<IPAddressBlocks> iss_blocks = std::make_unique<IPAddressBlocks>(iss_addr_blocks);
       auto [iss_cert, iss_ca] = make_and_sign_ca(std::move(iss_blocks), root_ca, rng);
 
@@ -1618,7 +1618,7 @@ Test::Result test_x509_ip_addr_blocks_path_validation_failure_ctor() {
          a = {124, 0, 255, 0};
       }
 
-      auto sub_range_1_min = rpki_v4(a);
+      const auto sub_range_1_min = rpki_v4(a);
       if(too_large_subrange) {
          a = {134, 0, 0, 1};
       } else if(no_more_issuer_ranges) {
@@ -1626,14 +1626,14 @@ Test::Result test_x509_ip_addr_blocks_path_validation_failure_ctor() {
       } else {
          a = {126, 0, 0, 1};
       }
-      auto sub_range_1_max = rpki_v4(a);
+      const auto sub_range_1_max = rpki_v4(a);
 
-      auto sub_range_1 = IPAddressBlocks::IPAddressOrRange<IPv4>(sub_range_1_min, sub_range_1_max);
-      auto sub_ranges = {sub_range_1};
+      const auto sub_range_1 = IPAddressBlocks::IPAddressOrRange<IPv4>(sub_range_1_min, sub_range_1_max);
+      const auto sub_ranges = {sub_range_1};
       auto sub_choice = IPAddressBlocks::IPAddressChoice<IPv4>(all_inherit ? std::nullopt : std::optional(sub_ranges));
-      auto sub_family = IPAddressBlocks::IPAddressFamily(sub_choice, different_safi ? 41 : 42);
+      const auto sub_family = IPAddressBlocks::IPAddressFamily(sub_choice, different_safi ? 41 : 42);
 
-      auto sub_addr_blocks = {sub_family};
+      const auto sub_addr_blocks = {sub_family};
       std::unique_ptr<IPAddressBlocks> sub_blocks = std::make_unique<IPAddressBlocks>(sub_addr_blocks);
 
       Botan::X509_Cert_Options sub_opts = req_opts(sig_algo);
@@ -1674,13 +1674,13 @@ Test::Result test_x509_as_blocks_rfc3779_example() {
    Botan::X509_Cert_Options opts = ca_opts();
    opts.extensions.add(std::move(blocks));
 
-   auto cert = make_self_signed(rng, opts);
+   const auto cert = make_self_signed(rng, opts);
    auto bits = cert.v3_extensions().get_extension_bits(ASBlocks::static_oid());
 
    result.test_bin_eq(
       "extension is encoded as specified", bits, "301AA014301202020087300802020BB802020F9F02021389A1020500");
 
-   auto as_idents = cert.v3_extensions().get_extension_object_as<ASBlocks>()->as_identifiers();
+   const auto as_idents = cert.v3_extensions().get_extension_object_as<ASBlocks>()->as_identifiers();
    auto as_ids = as_idents.asnum().value().ranges().value();
 
    result.test_u32_eq("extension has correct data", as_ids[0].min(), 135);
@@ -1711,7 +1711,7 @@ Test::Result test_x509_as_blocks_encode_builder() {
    Botan::X509_Cert_Options opts = ca_opts();
    opts.extensions.add(std::move(blocks));
 
-   auto cert = make_self_signed(rng, opts);
+   const auto cert = make_self_signed(rng, opts);
    auto bits = cert.v3_extensions().get_extension_bits(ASBlocks::static_oid());
 
    result.test_bin_eq("extension is encoded as specified", bits, "3011A0023000A10B300930070201090202012D");
@@ -2613,7 +2613,7 @@ Test::Result test_x509_ip_addr_blocks_address_interop() {
    const Botan::IPv6Address back_v6 = rpki_v6;
    result.test_is_true("IPAddress<IPv6> converts to IPv6Address", back_v6 == ipv6);
 
-   auto check_v4_subnet = [&](std::string_view cidr, std::string_view min, std::string_view max) {
+   const auto check_v4_subnet = [&](std::string_view cidr, std::string_view min, std::string_view max) {
       const auto subnet = Botan::IPv4Subnet::from_string(cidr).value();
       const IPAddressBlocks::IPAddressOrRange<IPv4> range(subnet);
       result.test_bin_eq("range min", range.min().to_bytes(), min);

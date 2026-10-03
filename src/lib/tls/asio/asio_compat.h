@@ -33,8 +33,12 @@
    *
    * as of Botan 3.3.0
    *   1.73.0 - first version supporting the C++20 concepts syntax
+   *
+   * as of Botan 3.14.0
+   *   1.79.0 - oldest version tested in CI; previous Boost versions no longer compile
+   *
    */
-   #define BOTAN_MINIMUM_SUPPORTED_BOOST_ASIO_VERSION 107300
+   #define BOTAN_MINIMUM_SUPPORTED_BOOST_ASIO_VERSION 107900
 
    #if BOOST_VERSION >= BOTAN_MINIMUM_SUPPORTED_BOOST_ASIO_VERSION
 

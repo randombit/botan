@@ -243,7 +243,7 @@ bool EC_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
 
    // Verify that the public key is consistent with the private key.
    // For ECKCDSA/ECGDSA the derivation is g^(x^-1), for all others it is g^x.
-   auto expected = m_private_key->public_key(m_with_modular_inverse);
+   const auto expected = m_private_key->public_key(m_with_modular_inverse);
    return expected->public_key() == _public_ec_point();
 }
 

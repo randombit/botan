@@ -920,7 +920,7 @@ constexpr auto hex_to_words(const char (&s)[N]) {
 
    static_assert(S > 0, "Input too small");
 
-   auto hex2int = [](char c) -> int8_t {
+   const auto hex2int = [](char c) -> int8_t {
       if(c >= '0' && c <= '9') {
          return static_cast<int8_t>(c - '0');
       } else if(c >= 'a' && c <= 'f') {

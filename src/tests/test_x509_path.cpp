@@ -140,7 +140,7 @@ class X509test_Path_Validation_Tests final : public Test {
          Botan::Certificate_Store_In_Memory trusted;
          trusted.add_certificate(root);
 
-         auto validation_time = Botan::calendar_point(2016, 10, 21, 4, 20, 0).to_std_timepoint();
+         const auto validation_time = Botan::calendar_point(2016, 10, 21, 4, 20, 0).to_std_timepoint();
 
          for(const auto& [filename, expected_result] : read_results(Test::data_file("x509/x509test/expected.txt"))) {
             Test::Result result("X509test path validation");
@@ -314,7 +314,7 @@ std::vector<Test::Result> Extended_Path_Validation_Tests::run() {
 
    std::vector<Test::Result> results;
 
-   auto validation_time = Botan::calendar_point(2017, 9, 1, 9, 30, 33).to_std_timepoint();
+   const auto validation_time = Botan::calendar_point(2017, 9, 1, 9, 30, 33).to_std_timepoint();
 
    for(const auto& [test_name, expected_result] : read_results(Test::data_file("x509/extended/expected.txt"))) {
       Test::Result result("Extended X509 path validation");
@@ -399,7 +399,7 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run() {
          const std::vector<Botan::X509_Certificate> cert_path = {*end, *root};
          const std::vector<std::optional<Botan::X509_CRL>> crls = {crl};
          const Botan::Path_Validation_Restrictions restrictions(false, 80);  // SHA-1 is used
-         auto crl_status = Botan::PKIX::check_crl(cert_path, crls, validation_time, restrictions);
+         const auto crl_status = Botan::PKIX::check_crl(cert_path, crls, validation_time, restrictions);
 
          result.test_str_eq(test_name + " check_crl result",
                             Botan::Path_Validation_Result::status_string(Botan::PKIX::overall_status(crl_status)),
@@ -415,12 +415,12 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run() {
          result.test_str_eq(test_name + " path validation result", validation_result.result_string(), expected_result);
       } else if(end && !root) {
          // CRT self signed test
-         auto pubkey = end->subject_public_key();
+         const auto pubkey = end->subject_public_key();
          const bool accept = expected_result == "Verified";
          result.test_bool_eq(test_name + " verify signature", end->check_signature(*pubkey), accept);
       } else if(csr) {
          // PKCS#10 Request test
-         auto pubkey = csr->subject_public_key();
+         const auto pubkey = csr->subject_public_key();
          const bool accept = expected_result == "Verified";
          result.test_bool_eq(test_name + " verify signature", csr->check_signature(*pubkey), accept);
       }
@@ -452,7 +452,7 @@ std::vector<Test::Result> Validate_V1Cert_Test::run() {
    const std::string int_crt = Test::data_file("x509/misc/v1ca/int.pem");
    const std::string ee_crt = Test::data_file("x509/misc/v1ca/ee.pem");
 
-   auto validation_time = Botan::calendar_point(2019, 4, 19, 23, 0, 0).to_std_timepoint();
+   const auto validation_time = Botan::calendar_point(2019, 4, 19, 23, 0, 0).to_std_timepoint();
 
    const Botan::X509_Certificate root(root_crt);
    const Botan::X509_Certificate intermediate(int_crt);
@@ -500,7 +500,7 @@ std::vector<Test::Result> Validate_V2Uid_in_V1_Test::run() {
    const std::string int_crt = Test::data_file("x509/v2-in-v1/int.pem");
    const std::string ee_crt = Test::data_file("x509/v2-in-v1/leaf.pem");
 
-   auto validation_time = Botan::calendar_point(2020, 1, 1, 1, 0, 0).to_std_timepoint();
+   const auto validation_time = Botan::calendar_point(2020, 1, 1, 1, 0, 0).to_std_timepoint();
 
    const Botan::X509_Certificate root(root_crt);
    const Botan::X509_Certificate intermediate(int_crt);
@@ -540,7 +540,7 @@ std::vector<Test::Result> Validate_NoRevAvail_Test::run() {
    const std::string ee_crt = Test::data_file("x509/short_lived/leaf.pem");
 
    // Leaf is valid Mar 23 12:02:41 - Mar 24 12:02:40 2026 UTC
-   auto validation_time = Botan::calendar_point(2026, 3, 23, 13, 0, 0).to_std_timepoint();
+   const auto validation_time = Botan::calendar_point(2026, 3, 23, 13, 0, 0).to_std_timepoint();
 
    const Botan::X509_Certificate root(root_crt);
    const Botan::X509_Certificate intermediate(int_crt);
@@ -607,7 +607,7 @@ std::vector<Test::Result> Cross_Signed_Mesh_Path_Test::run() {
       chain.push_back(Botan::X509_Certificate(Test::data_file("x509/cross_signed_mesh/cross_" + cross + ".pem")));
    }
 
-   auto validation_time = Botan::calendar_point(2030, 1, 1, 0, 0, 0).to_std_timepoint();
+   const auto validation_time = Botan::calendar_point(2030, 1, 1, 0, 0, 0).to_std_timepoint();
 
    Botan::Certificate_Store_In_Memory trusted;
    trusted.add_certificate(root);
@@ -699,7 +699,7 @@ std::vector<Test::Result> Validate_Invalid_OCSP_NoCheck_Test::run() {
    const std::string root_crt = Test::data_file("x509/invalid_ocsp_nocheck/root.pem");
    const std::string ee_crt = Test::data_file("x509/invalid_ocsp_nocheck/leaf.pem");
 
-   auto validation_time = Botan::calendar_point(2026, 5, 19, 4, 58, 33).to_std_timepoint();
+   const auto validation_time = Botan::calendar_point(2026, 5, 19, 4, 58, 33).to_std_timepoint();
 
    const Botan::X509_Certificate root(root_crt);
    const Botan::X509_Certificate ee_cert(ee_crt);
@@ -745,7 +745,7 @@ std::vector<Test::Result> Validate_Name_Constraint_CaseInsensitive::run() {
    const std::string int_crt = Test::data_file("x509/misc/name_constraint_ci/int.pem");
    const std::string ee_crt = Test::data_file("x509/misc/name_constraint_ci/leaf.pem");
 
-   auto validation_time = Botan::calendar_point(2021, 5, 8, 1, 0, 0).to_std_timepoint();
+   const auto validation_time = Botan::calendar_point(2021, 5, 8, 1, 0, 0).to_std_timepoint();
 
    const Botan::X509_Certificate root(root_crt);
    const Botan::X509_Certificate intermediate(int_crt);
@@ -784,7 +784,7 @@ std::vector<Test::Result> Validate_Name_Constraint_NoCheckSelf::run() {
    const std::string int_crt = Test::data_file("x509/misc/nc_skip_self/int.pem");
    const std::string ee_crt = Test::data_file("x509/misc/nc_skip_self/leaf.pem");
 
-   auto validation_time = Botan::calendar_point(2021, 5, 8, 1, 0, 0).to_std_timepoint();
+   const auto validation_time = Botan::calendar_point(2021, 5, 8, 1, 0, 0).to_std_timepoint();
 
    const Botan::X509_Certificate root(root_crt);
    const Botan::X509_Certificate intermediate(int_crt);
@@ -827,12 +827,12 @@ class Root_Cert_Time_Check_Test final : public Test {
 
          Test::Result result("Root cert time check");
 
-         auto assert_path_validation_result = [&](std::string_view descr,
-                                                  bool ignore_trusted_root_time_range,
-                                                  uint32_t year,
-                                                  Botan::Certificate_Status_Code exp_status,
-                                                  std::optional<Botan::Certificate_Status_Code> exp_warning =
-                                                     std::nullopt) {
+         const auto assert_path_validation_result = [&](std::string_view descr,
+                                                        bool ignore_trusted_root_time_range,
+                                                        uint32_t year,
+                                                        Botan::Certificate_Status_Code exp_status,
+                                                        std::optional<Botan::Certificate_Status_Code> exp_warning =
+                                                           std::nullopt) {
             const Botan::Path_Validation_Restrictions restrictions(
                false,
                110,
@@ -1196,7 +1196,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run_with_restrictions(
       const bool has_md5 = false;
       #endif
 
-      auto validation_time = Botan::calendar_point(2017, 8, 19, 12, 0, 0).to_std_timepoint();
+      const auto validation_time = Botan::calendar_point(2017, 8, 19, 12, 0, 0).to_std_timepoint();
 
       // By convention: if CRL is a substring if the test name,
       // we need to check the CRLs
@@ -1331,17 +1331,17 @@ class Path_Validation_With_OCSP_Tests final : public Test {
 
          auto restrictions = Botan::Path_Validation_Restrictions(false, 110, false);
 
-         auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/identrust.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/identrust.pem");
          trusted.add_certificate(trust_root);
 
          const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
 
          std::optional<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
 
-         auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
-                               const Botan::Certificate_Status_Code expected_status) {
+         const auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
+                                     const Botan::Certificate_Status_Code expected_status) {
             const auto path_result = Botan::x509_path_validate(cert_path,
                                                                restrictions,
                                                                trusted,
@@ -1373,17 +1373,17 @@ class Path_Validation_With_OCSP_Tests final : public Test {
 
          auto restrictions = Botan::Path_Validation_Restrictions(false, 110, false, std::chrono::minutes(59));
 
-         auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/identrust.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/identrust.pem");
          trusted.add_certificate(trust_root);
 
          const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
 
          auto ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
 
-         auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
-                               const Botan::Certificate_Status_Code expected) {
+         const auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
+                                     const Botan::Certificate_Status_Code expected) {
             const auto path_result = Botan::x509_path_validate(cert_path,
                                                                restrictions,
                                                                trusted,
@@ -1417,9 +1417,9 @@ class Path_Validation_With_OCSP_Tests final : public Test {
          // max_age=0 means unbounded (the default is now finite)
          auto restrictions = Botan::Path_Validation_Restrictions(false, 110, false, std::chrono::seconds(0));
 
-         auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
 
          trusted.add_certificate(trust_root);
 
@@ -1427,8 +1427,8 @@ class Path_Validation_With_OCSP_Tests final : public Test {
 
          auto ocsp = load_test_OCSP_resp("x509/ocsp/patrickschmidt_ocsp.der");
 
-         auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
-                               const Botan::Certificate_Status_Code expected) {
+         const auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
+                                     const Botan::Certificate_Status_Code expected) {
             const auto path_result = Botan::x509_path_validate(cert_path,
                                                                restrictions,
                                                                trusted,
@@ -1461,9 +1461,9 @@ class Path_Validation_With_OCSP_Tests final : public Test {
 
          auto restrictions = Botan::Path_Validation_Restrictions(false, 110, false);
 
-         auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
 
          trusted.add_certificate(trust_root);
 
@@ -1471,8 +1471,8 @@ class Path_Validation_With_OCSP_Tests final : public Test {
 
          auto ocsp = load_test_OCSP_resp("x509/ocsp/patrickschmidt_ocsp.der");
 
-         auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
-                               const Botan::Certificate_Status_Code expected) {
+         const auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
+                                     const Botan::Certificate_Status_Code expected) {
             const auto path_result = Botan::x509_path_validate(cert_path,
                                                                restrictions,
                                                                trusted,
@@ -1501,9 +1501,9 @@ class Path_Validation_With_OCSP_Tests final : public Test {
 
          auto restrictions = Botan::Path_Validation_Restrictions(false, 110, false, std::chrono::minutes(59));
 
-         auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
 
          trusted.add_certificate(trust_root);
 
@@ -1511,8 +1511,8 @@ class Path_Validation_With_OCSP_Tests final : public Test {
 
          auto ocsp = load_test_OCSP_resp("x509/ocsp/patrickschmidt_ocsp.der");
 
-         auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
-                               const Botan::Certificate_Status_Code expected) {
+         const auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
+                                     const Botan::Certificate_Status_Code expected) {
             const auto path_result = Botan::x509_path_validate(cert_path,
                                                                restrictions,
                                                                trusted,
@@ -1545,9 +1545,9 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                                                  110,    // minimum key strength
                                                                  true);  // OCSP for all intermediates
 
-         auto ee = load_test_X509_cert("x509/ocsp/bdr.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/bdr-int.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/bdr-root.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/bdr.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/bdr-int.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/bdr-root.pem");
 
          // These OCSP responses are signed by an authorized OCSP responder
          // certificate issued by `ca` and `trust_root` respectively. Note that
@@ -1559,8 +1559,8 @@ class Path_Validation_With_OCSP_Tests final : public Test {
          trusted.add_certificate(trust_root);
          const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
 
-         auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
-                               const Botan::Certificate_Status_Code expected) {
+         const auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
+                                     const Botan::Certificate_Status_Code expected) {
             const auto path_result = Botan::x509_path_validate(cert_path,
                                                                restrictions,
                                                                trusted,
@@ -1595,21 +1595,21 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                                                  false);  // OCSP for all intermediates
 
          // See `src/scripts/mychain_creater.sh` if you need to recreate those
-         auto ee = load_test_X509_cert("x509/ocsp/mychain_ee.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/mychain_int.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/mychain_root.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/mychain_ee.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/mychain_int.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/mychain_root.pem");
 
-         auto ocsp_ee_delegate = load_test_OCSP_resp("x509/ocsp/mychain_ocsp_for_ee_delegate_signed.der").value();
-         auto ocsp_ee_delegate_malformed =
+         const auto ocsp_ee_delegate = load_test_OCSP_resp("x509/ocsp/mychain_ocsp_for_ee_delegate_signed.der").value();
+         const auto ocsp_ee_delegate_malformed =
             load_test_OCSP_resp("x509/ocsp/mychain_ocsp_for_ee_delegate_signed_malformed.der").value();
 
          trusted.add_certificate(trust_root);
          const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
 
-         auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
-                               const Botan::OCSP::Response& ocsp_ee,
-                               const Botan::Certificate_Status_Code expected,
-                               const std::optional<Botan::Certificate_Status_Code> also_expected = std::nullopt) {
+         const auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
+                                     const Botan::OCSP::Response& ocsp_ee,
+                                     const Botan::Certificate_Status_Code expected,
+                                     const std::optional<Botan::Certificate_Status_Code> also_expected = std::nullopt) {
             const auto path_result = Botan::x509_path_validate(cert_path,
                                                                restrictions,
                                                                trusted,
@@ -1651,17 +1651,17 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                                                  110,     // minimum key strength
                                                                  false);  // OCSP for all intermediates
 
-         auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/identrust.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/identrust.pem");
          trusted.add_certificate(trust_root);
 
          const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
 
-         auto check_path = [&](const std::string& forged_ocsp,
-                               const Botan::Certificate_Status_Code expected,
-                               const Botan::Certificate_Status_Code also_expected) {
-            auto ocsp = load_test_OCSP_resp(forged_ocsp);
+         const auto check_path = [&](const std::string& forged_ocsp,
+                                     const Botan::Certificate_Status_Code expected,
+                                     const Botan::Certificate_Status_Code also_expected) {
+            const auto ocsp = load_test_OCSP_resp(forged_ocsp);
             const auto path_result =
                Botan::x509_path_validate(cert_path,
                                          restrictions,
@@ -1697,20 +1697,20 @@ class Path_Validation_With_OCSP_Tests final : public Test {
             "path check with ocsp response for intermediate that is (maliciously) self-signed by the intermediate");
          Botan::Certificate_Store_In_Memory trusted;
 
-         auto restrictions = Botan::Path_Validation_Restrictions(true,   // require revocation info
-                                                                 110,    // minimum key strength
-                                                                 true);  // OCSP for all intermediates
+         const auto restrictions = Botan::Path_Validation_Restrictions(true,   // require revocation info
+                                                                       110,    // minimum key strength
+                                                                       true);  // OCSP for all intermediates
 
          // See `src/scripts/mychain_creater.sh` if you need to recreate those
-         auto ee = load_test_X509_cert("x509/ocsp/mychain_ee.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/mychain_int.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/mychain_root.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/mychain_ee.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/mychain_int.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/mychain_root.pem");
 
          // this OCSP response for EE is valid (signed by intermediate cert)
-         auto ocsp_ee = load_test_OCSP_resp("x509/ocsp/mychain_ocsp_for_ee.der");
+         const auto ocsp_ee = load_test_OCSP_resp("x509/ocsp/mychain_ocsp_for_ee.der");
 
          // this OCSP response for Intermediate is malicious (signed by intermediate itself)
-         auto ocsp_ca = load_test_OCSP_resp("x509/ocsp/mychain_ocsp_for_int_self_signed.der");
+         const auto ocsp_ca = load_test_OCSP_resp("x509/ocsp/mychain_ocsp_for_int_self_signed.der");
 
          trusted.add_certificate(trust_root);
          const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
@@ -1735,9 +1735,9 @@ class Path_Validation_With_OCSP_Tests final : public Test {
          Test::Result result("path check with OCSP softfail statuses");
          Botan::Certificate_Store_In_Memory trusted;
 
-         auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/identrust.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/identrust.pem");
          trusted.add_certificate(trust_root);
 
          const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
@@ -1745,9 +1745,9 @@ class Path_Validation_With_OCSP_Tests final : public Test {
          // A time when all certificates in the chain are valid
          const auto valid_time = Botan::calendar_point(2016, 11, 18, 12, 30, 0).to_std_timepoint();
 
-         auto check_path = [&](const Botan::Path_Validation_Restrictions& restrictions,
-                               const Botan::OCSP::Response& dummy_ocsp,
-                               const Botan::Certificate_Status_Code expected) {
+         const auto check_path = [&](const Botan::Path_Validation_Restrictions& restrictions,
+                                     const Botan::OCSP::Response& dummy_ocsp,
+                                     const Botan::Certificate_Status_Code expected) {
             const auto path_result = Botan::x509_path_validate(cert_path,
                                                                restrictions,
                                                                trusted,
@@ -1810,9 +1810,9 @@ class Path_Validation_With_OCSP_Tests final : public Test {
 
          // Chain of (ee, intermediate, root) with a softfail OCSP status for
          // both the ee and the intermediate
-         auto run_merge = [](const Botan::Certificate_Status_Code softfail,
-                             const Botan::Path_Validation_Restrictions& restrictions,
-                             const Botan::CertificatePathStatusCodes& crl_status = {}) {
+         const auto run_merge = [](const Botan::Certificate_Status_Code softfail,
+                                   const Botan::Path_Validation_Restrictions& restrictions,
+                                   const Botan::CertificatePathStatusCodes& crl_status = {}) {
             Botan::CertificatePathStatusCodes chain_status(3);
             const Botan::CertificatePathStatusCodes ocsp_status = {{softfail}, {softfail}};
             Botan::PKIX::merge_revocation_status(chain_status, crl_status, ocsp_status, restrictions);
@@ -1912,9 +1912,9 @@ class CVE_2020_0601_Tests final : public Test {
                "0x0CB090DE23BAC8D13E67E019A91B86311E5F342DEE17FD15FB7E278A32A1EAC98FC97E18CB2F3B2C487A7DA6F40107AC"),
             secp384r1.get_order());
 
-         auto ca_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/ca.pem"));
-         auto fake_ca_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/fake_ca.pem"));
-         auto ee_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/ee.pem"));
+         const auto ca_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/ca.pem"));
+         const auto fake_ca_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/fake_ca.pem"));
+         const auto ee_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/ee.pem"));
 
          Botan::Certificate_Store_In_Memory trusted;
          trusted.add_certificate(ca_crt);
@@ -1990,7 +1990,7 @@ class Path_Validation_With_Immortal_CRL final : public Test {
          const Botan::X509_Certificate valid_subject(Test::data_file("x509/misc/crl_without_nextupdate/42.pem"));
 
          // Check that a CRL without nextUpdate is parsable
-         auto crl = Botan::X509_CRL(Test::data_file("x509/misc/crl_without_nextupdate/valid_forever.crl"));
+         const auto crl = Botan::X509_CRL(Test::data_file("x509/misc/crl_without_nextupdate/valid_forever.crl"));
          result.test_is_true("this update is set", crl.this_update().time_is_set());
          result.test_is_true("next update is not set", !crl.next_update().time_is_set());
          result.test_is_true("CRL is not empty", !crl.get_revoked().empty());
@@ -2007,7 +2007,7 @@ class Path_Validation_With_Immortal_CRL final : public Test {
 
          // Just before the CA and subject certificates expire
          // (validity from 01 March 2025 to 24 February 2026)
-         auto valid_time = Botan::calendar_point(2026, 2, 23, 0, 0, 0).to_std_timepoint();
+         const auto valid_time = Botan::calendar_point(2026, 2, 23, 0, 0, 0).to_std_timepoint();
 
          const Botan::Path_Validation_Restrictions restrictions(true /* require revocation info */);
 
@@ -2121,12 +2121,12 @@ class XMSS_Path_Validation_Tests final : public Test {
          Test::Result result(name);
 
          const Botan::Path_Validation_Restrictions restrictions;
-         auto self_signed = Botan::X509_Certificate(Test::data_file("x509/xmss/" + file));
+         const auto self_signed = Botan::X509_Certificate(Test::data_file("x509/xmss/" + file));
 
-         auto cert_path = std::vector<Botan::X509_Certificate>{self_signed};
-         auto valid_time = Botan::calendar_point(2019, 10, 8, 4, 45, 0).to_std_timepoint();
+         const auto cert_path = std::vector<Botan::X509_Certificate>{self_signed};
+         const auto valid_time = Botan::calendar_point(2019, 10, 8, 4, 45, 0).to_std_timepoint();
 
-         auto status = Botan::PKIX::overall_status(
+         const auto status = Botan::PKIX::overall_status(
             Botan::PKIX::check_chain(cert_path, valid_time, "", Botan::Usage_Type::UNSPECIFIED, restrictions));
          result.test_str_eq("Cert validation status", Botan::to_string(status), "Verified");
          return result;
@@ -2157,10 +2157,10 @@ class CVE_2026_35580_Test final : public Test {
 
          const Botan::Path_Validation_Restrictions restrictions;
 
-         auto end_entity = Botan::X509_Certificate(Test::data_file("x509/cve_2026_35580/end_entity.pem"));
-         auto trusted_root = Botan::X509_Certificate(Test::data_file("x509/cve_2026_35580/root.pem"));
+         const auto end_entity = Botan::X509_Certificate(Test::data_file("x509/cve_2026_35580/end_entity.pem"));
+         const auto trusted_root = Botan::X509_Certificate(Test::data_file("x509/cve_2026_35580/root.pem"));
 
-         auto validation_time = Botan::calendar_point(2026, 3, 29, 0, 0, 0).to_std_timepoint();
+         const auto validation_time = Botan::calendar_point(2026, 3, 29, 0, 0, 0).to_std_timepoint();
 
          Botan::Certificate_Store_In_Memory trusted;
          trusted.add_certificate(trusted_root);
@@ -2193,7 +2193,7 @@ class Path_Building_Tests final : public Test {
          }
 
          const std::string base_dir = "x509/path_building";
-         auto validation_time = Botan::calendar_point(2026, 4, 1, 4, 20, 0).to_std_timepoint();
+         const auto validation_time = Botan::calendar_point(2026, 4, 1, 4, 20, 0).to_std_timepoint();
 
          // Load root into trust store
          Botan::Certificate_Store_In_Memory trust_store;
@@ -2243,7 +2243,7 @@ class Verification_Exits_Early_For_Signature_Error_Test final : public Test {
 
          const std::string base_dir = "x509/sig_verify_order";
 
-         auto load = [&](std::string_view label) {
+         const auto load = [&](std::string_view label) {
             return Botan::X509_Certificate(Test::data_file(Botan::fmt("{}/{}.pem", base_dir, label)));
          };
 

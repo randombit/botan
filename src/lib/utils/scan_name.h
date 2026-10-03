@@ -100,7 +100,7 @@ std::vector<std::string> probe_providers_of(std::string_view algo_spec,
                                             const std::vector<std::string>& possible = {"base"}) {
    std::vector<std::string> providers;
    for(auto&& prov : possible) {
-      auto o = T::create(algo_spec, prov);
+      const auto o = T::create(algo_spec, prov);
       if(o) {
          providers.push_back(prov);  // available
       }

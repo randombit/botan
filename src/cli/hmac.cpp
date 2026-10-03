@@ -48,7 +48,7 @@ class HMAC final : public Command {
 
          for(const std::string& fsname : files) {
             try {
-               auto update_hmac = [&](const uint8_t b[], size_t l) { hmac->update(b, l); };
+               const auto update_hmac = [&](const uint8_t b[], size_t l) { hmac->update(b, l); };
                read_file(fsname, update_hmac, buf_size);
                output() << Botan::hex_encode(hmac->final());
 

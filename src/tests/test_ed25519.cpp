@@ -86,11 +86,11 @@ class Ed25519_Curdle_Format_Tests final : public Test {
          Test::Result result("Ed25519 CURDLE format");
 
          Botan::DataSource_Memory priv_data(priv_key_str);
-         auto priv_key = Botan::PKCS8::load_key(priv_data);
+         const auto priv_key = Botan::PKCS8::load_key(priv_data);
          result.test_is_true("Private key loaded", priv_key != nullptr);
 
          Botan::DataSource_Memory pub_data(pub_key_str);
-         auto pub_key = Botan::X509::load_key(pub_data);
+         const auto pub_key = Botan::X509::load_key(pub_data);
          result.test_is_true("Public key loaded", pub_key != nullptr);
 
          Botan::PK_Signer signer(*priv_key, this->rng(), Botan::PK_Signature_Options());
@@ -125,7 +125,7 @@ class Ed25519_Scalar_Tests final : public Test {
 
          const Botan::BigInt order("0x1000000000000000000000000000000014DEF9DEA2F79CD65812631A5CF5D3ED");
 
-         auto to_bigint = [](const Botan::Ed25519_Scalar& s) {
+         const auto to_bigint = [](const Botan::Ed25519_Scalar& s) {
             const auto b = s.to_bytes();
             std::vector<uint8_t> be(b.rbegin(), b.rend());
             return Botan::BigInt::from_bytes(be);
@@ -153,7 +153,7 @@ class Ed25519_Scalar_Tests final : public Test {
                                ((to_bigint(s) * to_bigint(t)) % order).serialize());
          }
 
-         auto le_bytes_of = [](const Botan::BigInt& v) {
+         const auto le_bytes_of = [](const Botan::BigInt& v) {
             std::array<uint8_t, 32> b{};
             const auto be = v.serialize(32);
             for(size_t i = 0; i != 32; ++i) {

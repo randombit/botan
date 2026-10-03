@@ -170,7 +170,7 @@ class DL_Named_Group_Tests final : public Test {
 
          for(const std::string& name : dl_named) {
             // Confirm we can load every group we expect
-            auto group = Botan::DL_Group::from_name(name);
+            const auto group = Botan::DL_Group::from_name(name);
 
             result.test_bn_ne("DL_Group p is set", group.get_p(), 0);
             result.test_bn_ne("DL_Group g is set", group.get_g(), 0);
