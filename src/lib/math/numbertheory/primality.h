@@ -32,7 +32,7 @@ std::vector<word> BOTAN_TEST_API mod_small_primes(const BigInt& n, size_t num_pr
 
 /**
 * Perform Lucas primality test
-* @see FIPS 186-4 C.3.3
+* @see FIPS 186-5 B.3.3
 *
 * @warning it is possible to construct composite integers which pass
 * this test alone.
