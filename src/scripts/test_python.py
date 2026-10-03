@@ -1235,8 +1235,12 @@ ofvkP1EDmpx50fHLawIDAQAB
             ldap_dn + "?cACertificate?base?",
         ])
 
-        # CRL values; SERIAL_NUMBER is the CRL number, in as few bytes as it needs
-        self.assertEqual(crl.binary_values(vt.SERIAL_NUMBER), [b"\x01"])
+        # CRL values; SERIAL_NUMBER is the CRL number. Since Botan 3.13 it is encoded
+        # in as few bytes as it needs, earlier libraries used a fixed uint32
+        if library_at_least(3, 13):
+            self.assertEqual(crl.binary_values(vt.SERIAL_NUMBER), [b"\x01"])
+        else:
+            self.assertEqual(crl.binary_values(vt.SERIAL_NUMBER), [b"\x00\x00\x00\x01"])
         self.assertEqual(hex_encode(crl.binary_values(vt.AUTHORITY_KEY_IDENTIFIER)[0]), "ab9aebf9c2e7548f")
         [issuer_dn] = crl.binary_values(vt.ISSUER_DN_BITS)
         self.assertEqual(len(issuer_dn), 96)
@@ -1255,10 +1259,14 @@ ofvkP1EDmpx50fHLawIDAQAB
         for url_type in [vt.CRL_DISTRIBUTION_URLS, vt.OCSP_RESPONDER_URLS, vt.CA_ISSUERS_URLS]:
             self.assertEqual(crl.string_values(url_type), [])
 
-        # A CRL without a CRL number or an authority key identifier
+        # A CRL without a CRL number or an authority key identifier. Since Botan 3.13 a
+        # missing number is reported as no value, earlier libraries returned a zero uint32
         bare_crl = botan.X509CRL(
             filename=test_data("src/tests/data/x509/misc/crl_without_nextupdate/valid_forever.crl"))
-        self.assertEqual(bare_crl.binary_values(vt.SERIAL_NUMBER), [])
+        if library_at_least(3, 13):
+            self.assertEqual(bare_crl.binary_values(vt.SERIAL_NUMBER), [])
+        else:
+            self.assertEqual(bare_crl.binary_values(vt.SERIAL_NUMBER), [b"\x00\x00\x00\x00"])
         self.assertEqual(bare_crl.binary_values(vt.AUTHORITY_KEY_IDENTIFIER), [])
         self.assertEqual(hex_encode(bare_crl.binary_values(vt.SIGNATURE_SCHEME_BITS)[0]),
                          "300a06082a8648ce3d040304") # ecdsa-with-SHA512
