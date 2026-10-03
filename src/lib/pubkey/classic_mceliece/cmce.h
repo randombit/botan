@@ -35,6 +35,13 @@ class Classic_McEliece_PrivateKeyInternal;
  * - Very large public keys (0.26 MB - 1.36 MB)
  * - Relatively slow key generation
  * - Algorithm is complex and hard to implement side-channel resistant
+ *
+ * Note that recent research suggests that the security of code-based schemes
+ * including Classic McEliece may be significantly lower than what was
+ * previously thought. As of Sep 2026, BSI recommends that Classic McEliece
+ * "should currently no longer be used in new developments or when planning new
+ * cryptographic applications" and that any usage of it be done as a hybrid KEM,
+ * paired with some other algorithm, such as an EC or lattice-based scheme.
  */
 class BOTAN_PUBLIC_API(3, 7) Classic_McEliece_PublicKey : public virtual Public_Key {
    public:
