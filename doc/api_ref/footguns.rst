@@ -49,6 +49,9 @@ of external serialization or locking.
 There are a few exceptions to this rule, where the type itself maintains an
 internal mutexes. This will be noted in the respective documentation for that type.
 
+Some operations run part of their work on a thread pool internal to the
+library. See :ref:`thread_pool` for how to control or replace it.
+
 Use of `fork`
 ----------------------
 

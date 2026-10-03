@@ -103,7 +103,7 @@ class Threaded_Hash_Engine final : public Hash_Engine {
       Threaded_Hash_Engine(std::string_view hash_fn,
                            std::unique_ptr<Hash_Engine> first_engine,
                            std::span<const uint8_t> common_prefix) :
-            Hash_Engine(common_prefix), m_hash_fn(hash_fn) {
+            Hash_Engine(common_prefix), m_hash_fn(hash_fn), m_pool(Thread_Pool::global_instance()) {
          // Engines beyond the first are only instantiated once a batch is
          // actually large enough to be worth splitting over threads
          BOTAN_ASSERT_NONNULL(first_engine);
@@ -116,7 +116,9 @@ class Threaded_Hash_Engine final : public Hash_Engine {
 
       size_t output_length() const override { return m_engines[0]->output_length(); }
 
-      size_t parallelism() const override { return std::max<size_t>(max_threads(), 1) * m_engines[0]->parallelism(); }
+      size_t parallelism() const override {
+         return std::max<size_t>(m_pool.worker_count(), 1) * m_engines[0]->parallelism();
+      }
 
       size_t uncached_prefix_bytes() const override { return m_engines[0]->uncached_prefix_bytes(); }
 
@@ -141,8 +143,6 @@ class Threaded_Hash_Engine final : public Hash_Engine {
          constexpr size_t MIN_BYTES_PER_THREAD = 32 * 1024;
          const size_t by_bytes = (count * per_hash_bytes) / MIN_BYTES_PER_THREAD;
 
-         // Checked before consulting the pool, so that it is not created
-         // until there is a batch actually worth splitting
          if(count < 2 || by_bytes < 2) {
             m_engines[0]->batch_hash(outputs, inputs1, inputs2);
             return;
@@ -155,7 +155,7 @@ class Threaded_Hash_Engine final : public Hash_Engine {
          const size_t groups = (count + lanes - 1) / lanes;
 
          const size_t threads = [&]() {
-            const size_t t = std::min({max_threads(), groups, by_bytes});
+            const size_t t = std::min({m_pool.worker_count(), groups, by_bytes});
 
             if(t <= 1) {
                return t;
@@ -183,16 +183,6 @@ class Threaded_Hash_Engine final : public Hash_Engine {
       }
 
    private:
-      // Touching the global pool creates its threads, so defer that until
-      // the worker count is actually needed
-      size_t max_threads() const {
-         if(m_pool == nullptr) {
-            m_pool = &Thread_Pool::global_instance();
-            m_max_threads = m_pool->worker_count();
-         }
-         return m_max_threads;
-      }
-
       template <typename F>
       void dispatch(size_t threads, size_t count, F work_fn) {
          const size_t lanes = m_engines[0]->parallelism();
@@ -212,11 +202,11 @@ class Threaded_Hash_Engine final : public Hash_Engine {
 
          // The calling thread works through chunks as well, using the
          // last engine, rather than just waiting on the pool
-         std::vector<std::future<void>> futures;
+         std::vector<Joining_Future<void>> futures;
          futures.reserve(threads - 1);
 
          for(size_t t = 0; t != threads - 1; ++t) {
-            futures.push_back(m_pool->run(claim_chunks, t));
+            futures.push_back(m_pool.run(claim_chunks, t));
          }
 
          // The workers reference this frame, so whatever happens every
@@ -246,8 +236,7 @@ class Threaded_Hash_Engine final : public Hash_Engine {
       }
 
       std::string m_hash_fn;
-      mutable Thread_Pool* m_pool = nullptr;
-      mutable size_t m_max_threads = 0;
+      Thread_Pool& m_pool;
       std::vector<std::unique_ptr<Hash_Engine>> m_engines;
 };
 
@@ -281,8 +270,8 @@ std::unique_ptr<Hash_Engine> Hash_Engine::create_or_null(std::string_view hash_f
 #if defined(BOTAN_HAS_THREAD_UTILS)
    if(provider.empty() || provider == "threads") {
       // An explicit request for threads fails if the pool is disabled. The
-      // default does not consult the pool here, since doing so creates its
-      // threads; the engine only does that once a batch is worth splitting.
+      // default still wraps the engine, since an executor may be installed
+      // later; the wrapper checks the worker count on each batch.
       if(provider == "threads" && Thread_Pool::global_instance().worker_count() < 2) {
          return nullptr;
       }
