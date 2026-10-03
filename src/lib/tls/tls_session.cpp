@@ -215,13 +215,13 @@ Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
 
    std::optional<Named_Group> group = [&]() -> std::optional<Named_Group> {
       if(psk_used() || was_resumption()) {
-         if(auto* const keyshare = server_hello.extensions().get<Key_Share>()) {
+         if(const auto* const keyshare = server_hello.extensions().get<Key_Share>()) {
             return keyshare->selected_group();
          } else {
             return {};
          }
       } else {
-         auto* const keyshare = server_hello.extensions().get<Key_Share>();
+         const auto* const keyshare = server_hello.extensions().get<Key_Share>();
          BOTAN_ASSERT_NONNULL(keyshare);
          return keyshare->selected_group();
       }

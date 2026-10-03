@@ -108,10 +108,10 @@ BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 mulx_polyval(const SIMD_4x32
    const auto mask = h.top_bit_mask();
 
    // Extract the top bits of the words and move them into place as the low bit of the next word
-   auto top_bits = h.shr<31>().shift_elems_left<1>();
+   const auto top_bits = h.shr<31>().shift_elems_left<1>();
 
    // The main shift, adding back in the top bits that are otherwise lost
-   auto shifted_h = h.shl<1>() | top_bits;
+   const auto shifted_h = h.shl<1>() | top_bits;
 
    return shifted_h ^ (mask & V);
 }

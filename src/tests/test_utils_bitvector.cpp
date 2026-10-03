@@ -36,13 +36,13 @@ size_t rand_in_range(Botan::RandomNumberGenerator& rng, size_t min, size_t max) 
 
 /// Returns @p n integers smaller than @p upper_bound in random order
 std::vector<size_t> rand_indices(Botan::RandomNumberGenerator& rng, size_t n, size_t upper_bound) {
-   auto shuffle = [&](std::vector<size_t>& v) {
+   const auto shuffle = [&](std::vector<size_t>& v) {
       // Fisher-Yates shuffle
       if(v.size() < 2) {
          return;
       }
       for(size_t i = 0; i < v.size() - 1; ++i) {
-         auto j = rand_in_range(rng, i, v.size());
+         const auto j = rand_in_range(rng, i, v.size());
          std::swap(v[i], v[j]);
       }
    };
@@ -486,11 +486,11 @@ std::vector<Test::Result> test_bitvector_subvector(Botan::RandomNumberGenerator&
       CHECK("empty copy is allowed",
             [&](auto& result) {
                const Botan::bitvector bv1(100);
-               auto bv2 = bv1.subvector(0, 0);
+               const auto bv2 = bv1.subvector(0, 0);
                result.test_sz_eq("empty at 0", bv2.size(), size_t(0));
-               auto bv3 = bv1.subvector(10, 0);
+               const auto bv3 = bv1.subvector(10, 0);
                result.test_sz_eq("empty at 10", bv3.size(), size_t(0));
-               auto bv4 = bv1.subvector(100, 0);
+               const auto bv4 = bv1.subvector(100, 0);
                result.test_sz_eq("empty at 100", bv3.size(), size_t(0));
             }),
 
@@ -868,7 +868,7 @@ std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates(Botan::
 
       CHECK("hamming weight",
             [](auto& result) {
-               auto naive_count = [](const auto& v) {
+               const auto naive_count = [](const auto& v) {
                   size_t weight = 0;
                   for(const auto& bit : v) {
                      weight += bit.template as<size_t>();
@@ -1377,27 +1377,27 @@ std::vector<Test::Result> test_bitvector_binary_operators(Botan::RandomNumberGen
                Botan::bitvector unary(20);
                unary.set(8).set(16);
 
-               auto res1 = lhs | rhs;
+               const auto res1 = lhs | rhs;
                is_secure_allocator(result, res1);
                check_set(result, res1, {0, 1, 4, 15, 16, 17, 18});
 
-               auto res2 = rhs | lhs;
+               const auto res2 = rhs | lhs;
                is_secure_allocator(result, res2);
                check_set(result, res2, {0, 1, 4, 15, 16, 17, 18});
 
-               auto res3 = lhs & rhs;
+               const auto res3 = lhs & rhs;
                is_secure_allocator(result, res3);
                check_set(result, res3, {4, 16, 18});
 
-               auto res4 = rhs & lhs;
+               const auto res4 = rhs & lhs;
                is_secure_allocator(result, res4);
                check_set(result, res4, {4, 16, 18});
 
-               auto res5 = lhs ^ rhs;
+               const auto res5 = lhs ^ rhs;
                is_secure_allocator(result, res5);
                check_set(result, res5, {0, 1, 15, 17});
 
-               auto res6 = rhs ^ lhs;
+               const auto res6 = rhs ^ lhs;
                is_secure_allocator(result, res6);
                check_set(result, res6, {0, 1, 15, 17});
             }),
@@ -1435,7 +1435,7 @@ std::vector<Test::Result> test_bitvector_serialization(Botan::RandomNumberGenera
                const Botan::bitvector bv(bytes);
                result.test_is_true("empty bit vector", bv.empty());
 
-               auto rendered = bv.to_bytes();
+               const auto rendered = bv.to_bytes();
                result.test_is_true("empty bit vector renders an empty buffer", rendered.empty());
             }),
 
@@ -1444,8 +1444,8 @@ std::vector<Test::Result> test_bitvector_serialization(Botan::RandomNumberGenera
                const Botan::bitvector bv;
                const Botan::secure_bitvector sbv;
 
-               auto rbv = bv.to_bytes();
-               auto rsbv = sbv.to_bytes();
+               auto rbv = bv.to_bytes();    // NOLINT(*-const-correctness) decltype is under test
+               auto rsbv = sbv.to_bytes();  // NOLINT(*-const-correctness) decltype is under test
 
                result.test_is_true("ordinary bitvector uses ordinary std::vector",
                                    std::is_same_v<std::vector<uint8_t>, decltype(rbv)>);
@@ -1598,7 +1598,7 @@ std::vector<Test::Result> test_bitvector_iterators(Botan::RandomNumberGenerator&
                Botan::bitvector bv(6);
                bv.set(0).set(3).set(4);
 
-               for(size_t i = 0; auto& ref : bv) {
+               for(size_t i = 0; const auto& ref : bv) {
                   const bool expected = i == 0 || i == 3 || i == 4;
                   result.test_bool_eq(Botan::fmt("bit {} is as expected", i), ref, expected);
                   ++i;
@@ -1689,8 +1689,8 @@ std::vector<Test::Result> test_bitvector_iterators(Botan::RandomNumberGenerator&
       CHECK("Iterators: satiesfies C++20 concepts",
             [](auto& result) {
                Botan::secure_bitvector bv(42);
-               auto ro_itr = bv.cbegin();
-               auto rw_itr = bv.begin();
+               auto ro_itr = bv.cbegin();  // NOLINT(*-const-correctness) decltype is under test
+               auto rw_itr = bv.begin();   // NOLINT(*-const-correctness) decltype is under test
 
                using ro = decltype(ro_itr);
                using rw = decltype(rw_itr);
@@ -1736,7 +1736,7 @@ std::vector<Test::Result> test_bitvector_strongtype_adapter(Botan::RandomNumberG
 
    result.test_is_true("hamming weight of bv1", bv1.has_odd_hamming_weight().as_bool());
 
-   for(size_t i = 0; auto bit : bv1) {
+   for(size_t i = 0; const bool bit : bv1) {
       const bool expected = (i == 0 || i == 1 || i == 2 || i == 4 || i == 33);
       result.test_is_true(Botan::fmt("bv1 bit {} is set", i), bit == expected);
       ++i;
@@ -1744,18 +1744,18 @@ std::vector<Test::Result> test_bitvector_strongtype_adapter(Botan::RandomNumberG
 
    bv1.flip();
 
-   for(size_t i = 0; auto bit : bv1) {
+   for(size_t i = 0; const bool bit : bv1) {
       const bool expected = (i == 0 || i == 1 || i == 2 || i == 4 || i == 33);
       result.test_is_true(Botan::fmt("bv1 bit {} is set", i), bit != expected);
       ++i;
    }
 
-   auto bv2 = bv1.as<TestSecureBitvector>();
+   const auto bv2 = bv1.as<TestSecureBitvector>();
 
-   auto bv3 = bv1 | bv2;
+   auto bv3 = bv1 | bv2;  // NOLINT(*-const-correctness) decltype is under test
    result.test_is_true("bv3 is a secure_bitvector", std::same_as<Botan::secure_bitvector, decltype(bv3)>);
 
-   auto bv4 = bv2.subvector<TestSecureBitvector>(0, 5);
+   auto bv4 = bv2.subvector<TestSecureBitvector>(0, 5);  // NOLINT(*-const-correctness) decltype is under test
    result.test_is_true("bv4 is a TestSecureBitvector", std::same_as<TestSecureBitvector, decltype(bv4)>);
 
    auto bv5 = bv2.subvector<TestUInt32>(1);

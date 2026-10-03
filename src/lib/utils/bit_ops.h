@@ -237,7 +237,7 @@ BOTAN_FORCE_INLINE constexpr T majority(T a, T b, T c) {
  */
 template <std::unsigned_integral T>
 inline constexpr T ct_reverse_bits(T b) {
-   auto extend = [](uint8_t m) -> T {
+   const auto extend = [](uint8_t m) -> T {
       T mask = 0;
       for(size_t i = 0; i < sizeof(T); ++i) {
          mask |= T(m) << i * 8;

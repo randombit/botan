@@ -49,7 +49,7 @@ Extensions X509_CA::choose_extensions(const PKCS10_Request& req,
 Extensions X509_CA::choose_extensions(const PKCS10_Request& req, const X509_Certificate& ca_cert) {
    const auto constraints = req.is_CA() ? Key_Constraints::ca_constraints() : req.constraints();
 
-   auto key = req.subject_public_key();
+   const auto key = req.subject_public_key();
    if(!constraints.compatible_with(*key)) {
       throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
    }
@@ -78,7 +78,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
                                        const BigInt& serial_number,
                                        const X509_Time& not_before,
                                        const X509_Time& not_after) const {
-   auto extensions = choose_extensions(req, m_ca_cert);
+   const auto extensions = choose_extensions(req, m_ca_cert);
 
    return make_cert(*m_signer,
                     rng,
@@ -99,7 +99,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
                                        RandomNumberGenerator& rng,
                                        const X509_Time& not_before,
                                        const X509_Time& not_after) const {
-   auto extensions = choose_extensions(req, m_ca_cert);
+   const auto extensions = choose_extensions(req, m_ca_cert);
 
    return make_cert(*m_signer,
                     rng,
@@ -221,7 +221,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
                            std::chrono::seconds next_update) const {
    const size_t X509_CRL_VERSION = 2;
 
-   auto expire_time = issue_time + next_update;
+   const auto expire_time = issue_time + next_update;
 
    Extensions extensions;
    extensions.add(std::make_unique<Cert_Extension::Authority_Key_ID>(m_ca_cert.subject_key_id()));

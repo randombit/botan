@@ -65,7 +65,7 @@ SHA_256::compress_digest_x86_simd(digest_type& digest, std::span<const uint8_t> 
 
       for(size_t i = 0; i < 4; i++) {
          WS[i] = SIMD_4x32::load_be(&data[16 * i]);
-         auto WK = WS[i] + SIMD_4x32::load_le(&SHA256_K[4 * i]);
+         const auto WK = WS[i] + SIMD_4x32::load_le(&SHA256_K[4 * i]);
          WK.store_le(&W[4 * i]);
       }
 

@@ -72,7 +72,7 @@ Test::Result find_cert_by_subject_dn() {
    Test::Result result("Flatfile Certificate Store - Find Certificate by subject DN");
 
    try {
-      auto dn = get_dn();
+      const auto dn = get_dn();
 
       result.start_timer();
       const Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
@@ -95,7 +95,7 @@ Test::Result find_cert_by_utf8_subject_dn() {
    Test::Result result("Flatfile Certificate Store - Find Certificate by UTF8 subject DN");
 
    try {
-      auto dn = get_utf8_dn();
+      const auto dn = get_utf8_dn();
 
       result.start_timer();
       const Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
@@ -119,7 +119,7 @@ Test::Result find_cert_by_subject_dn_and_key_id() {
    Test::Result result("Flatfile Certificate Store - Find Certificate by subject DN and key ID");
 
    try {
-      auto dn = get_dn();
+      const auto dn = get_dn();
 
       result.start_timer();
       const Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
@@ -142,7 +142,7 @@ Test::Result find_certs_by_subject_dn_and_key_id() {
    Test::Result result("Flatfile Certificate Store - Find Certificates by subject DN and key ID");
 
    try {
-      auto dn = get_dn();
+      const auto dn = get_dn();
 
       result.start_timer();
       const Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
@@ -172,8 +172,8 @@ Test::Result find_all_subjects() {
       result.end_timer();
 
       if(result.test_is_true("result not empty", !subjects.empty())) {
-         auto dn = get_dn();
-         auto needle = std::find_if(
+         const auto dn = get_dn();
+         const auto needle = std::find_if(
             subjects.cbegin(), subjects.cend(), [=](const Botan::X509_DN& subject) { return subject == dn; });
 
          if(result.test_is_true("found expected certificate", needle != subjects.end())) {
@@ -191,15 +191,15 @@ Test::Result no_certificate_matches() {
    Test::Result result("Flatfile Certificate Store - can deal with no matches (regression test)");
 
    try {
-      auto dn = get_unknown_dn();
-      auto kid = get_unknown_key_id();
+      const auto dn = get_unknown_dn();
+      const auto kid = get_unknown_key_id();
 
       result.start_timer();
       const Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
 
-      auto certs = certstore.find_all_certs(dn, kid);
-      auto cert = certstore.find_cert(dn, kid);
-      auto pubk_cert = certstore.find_cert_by_pubkey_sha1(kid);
+      const auto certs = certstore.find_all_certs(dn, kid);
+      const auto cert = certstore.find_cert(dn, kid);
+      const auto pubk_cert = certstore.find_cert_by_pubkey_sha1(kid);
       result.end_timer();
 
       result.test_is_true("find_all_certs did not find the dummy", certs.empty());

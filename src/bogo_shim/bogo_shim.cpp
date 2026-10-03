@@ -82,7 +82,7 @@ void shim_log(std::string_view s) {
          return {};
       }
 
-      auto log_file_path = std::string(env);
+      const auto log_file_path = std::string(env);
       if(log_file_path.empty() || log_file_path == "1") {
          return "/tmp/bogo_shim.log";
       }
@@ -389,7 +389,7 @@ std::string map_to_bogo_error(const std::string& e) noexcept {
       {"Application did not provide a means to validate the raw public key", ":CERTIFICATE_VERIFY_FAILED:"},
    };
 
-   auto err_map_i = err_map.find(e);
+   const auto err_map_i = err_map.find(e);
    if(err_map_i != err_map.end()) {
       return err_map_i->second;
    }
@@ -648,7 +648,7 @@ class Shim_Arguments final {
             throw Shim_Exception("Unknown int vec key " + key);
          }
 
-         auto i = m_parsed_int_vec_opts.find(key);
+         const auto i = m_parsed_int_vec_opts.find(key);
          if(i == m_parsed_int_vec_opts.end()) {
             return std::vector<size_t>();
          } else {
@@ -684,7 +684,7 @@ class Shim_Arguments final {
 
    private:
       std::string get_opt(const std::string& key) const {
-         auto i = m_parsed_opts.find(key);
+         const auto i = m_parsed_opts.find(key);
          if(i == m_parsed_opts.end()) {
             throw Shim_Exception("Option " + key + " was not provided");
          }
@@ -741,7 +741,7 @@ std::vector<Shim_Credential> parse_credential_blocks(const std::vector<std::stri
    for(size_t i = 1; i < argv.size(); ++i) {
       const auto& arg = argv[i];
 
-      auto start_block = [&](Shim_Credential::Kind k) {
+      const auto start_block = [&](Shim_Credential::Kind k) {
          flush();
          Shim_Credential block;
          block.kind = k;
@@ -758,7 +758,7 @@ std::vector<Shim_Credential> parse_credential_blocks(const std::vector<std::stri
          // Unsupported credential block kind (resume, SPAKE2+, delegated, etc.).
          flush();
       } else if(current.has_value()) {
-         auto take_arg = [&]() -> std::optional<std::string> {
+         const auto take_arg = [&]() -> std::optional<std::string> {
             if(i + 1 < argv.size()) {
                return argv[++i];
             }
@@ -813,7 +813,7 @@ void Shim_Arguments::parse_args(char* argv[]) {
    while(argv[i] != nullptr) {
       const std::string param(argv[i]);
 
-      if(param.starts_with("-")) {
+      if(param.starts_with('-')) {
          const std::string flag_name = param.substr(1, std::string::npos);
 
          if(m_flags.contains(flag_name)) {
@@ -1228,7 +1228,7 @@ class Shim_Policy final : public Botan::TLS::Policy {
          bool have_classical = false;
          bool have_pq = false;
 
-         for(auto g : groups) {
+         for(const auto g : groups) {
             if(g.is_post_quantum()) {
                if(!have_pq) {
                   to_offer.push_back(g);
@@ -1701,7 +1701,7 @@ class Shim_Credentials final : public Botan::Credentials_Manager {
             return Botan::Credentials_Manager::find_preshared_keys(host, whoami, identities, prf);
          }
 
-         auto id_matches =
+         const auto id_matches =
             identities.empty() || std::find(identities.begin(), identities.end(), m_psk_identity) != identities.end();
 
          if(!id_matches) {
@@ -1918,7 +1918,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
          }
 
          if(!cert_chain.empty() && cert_chain.front().is_self_signed()) {
-            for(auto* const roots : trusted_roots) {
+            for(const auto* const roots : trusted_roots) {
                if(roots->contains(cert_chain.front())) {
                   shim_log("Trusting self-signed certificate");
                   return;
@@ -2151,7 +2151,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
          // is frozen on first access and rounded to the last full second. E.g.
          // storage of sessions does store the timestamp with second-resolution.
          using sec = std::chrono::seconds;
-         static auto g_now = std::chrono::floor<sec>(std::chrono::system_clock::now());
+         static const auto g_now = std::chrono::floor<sec>(std::chrono::system_clock::now());
          return g_now + m_clock_skew;
       }
 
@@ -2193,7 +2193,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
             // Pop the operation from the queue only, then invoke it. op() might
             // throw an exception or register new deferred operations. Both of
             // which must happen only after m_deferred_operations got updated.
-            auto op = std::move(m_deferred_operations.front().op);
+            const auto op = std::move(m_deferred_operations.front().op);
             m_deferred_operations.erase(m_deferred_operations.begin());
             op();
          }
@@ -2269,7 +2269,7 @@ int main(int /*argc*/, char* argv[]) {
       }
 
       for(size_t i = 0; i != resume_count + 1; ++i) {
-         auto execute_test = [&](const std::string& hostname) {
+         const auto execute_test = [&](const std::string& hostname) {
             Shim_Socket socket(hostname, port, args->flag_set("ipv6"));
 
             shim_log("Connection " + std::to_string(i + 1) + "/" + std::to_string(resume_count + 1));
@@ -2282,8 +2282,8 @@ int main(int /*argc*/, char* argv[]) {
             Botan::store_le(static_cast<uint64_t>(args->get_int_opt("shim-id")), shim_id.data());
             socket.write(shim_id.data(), shim_id.size());
 
-            auto policy = std::make_shared<Shim_Policy>(*args);
-            auto callbacks = std::make_shared<Shim_Callbacks>(*args, socket, *policy);
+            const auto policy = std::make_shared<Shim_Policy>(*args);
+            const auto callbacks = std::make_shared<Shim_Callbacks>(*args, socket, *policy);
 
             if(args->option_used("resumption-delay") && i > 0) {
                shim_log("skewing the clock by " + std::to_string(args->get_int_opt("resumption-delay")) + " seconds");

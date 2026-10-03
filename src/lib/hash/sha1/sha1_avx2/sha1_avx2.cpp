@@ -123,7 +123,7 @@ BOTAN_FN_ISA_AVX2_BMI2 BOTAN_FORCE_INLINE SIMD_8x32 sha1_avx2_next_w2(SIMD_8x32&
    WN ^= permute_words<2, 3, 4, 5, 6, 7, -1, -1>(W0);
 
    // Extract W[j...j+2], rotate, and XOR into W[j+3...j+5]
-   auto T0 = permute_words<-1, -1, -1, 0, 1, 2, -1, -1>(WN).rotl<2>();
+   const auto T0 = permute_words<-1, -1, -1, 0, 1, 2, -1, -1>(WN).rotl<2>();
    WN = WN.rotl<1>();  // main block rotation
 
    WN ^= T0;

@@ -121,13 +121,13 @@ bool Stateful_Key_Index_Registry::fork_detected(const KeyId& key_id) {
 
 uint64_t Stateful_Key_Index_Registry::current_index(const KeyId& key_id) {
    const lock_guard_type<mutex_type> lock(m_mutex);
-   auto idx = this->lookup(key_id);
+   const auto idx = this->lookup(key_id);
    return idx->second;
 }
 
 std::optional<uint64_t> Stateful_Key_Index_Registry::reserve_next_index(const KeyId& key_id) {
    const lock_guard_type<mutex_type> lock(m_mutex);
-   auto idx = this->lookup(key_id);
+   const auto idx = this->lookup(key_id);
    const uint64_t cur = idx->second;
    if(cur >= key_id.max_operations()) {
       return std::nullopt;
@@ -139,7 +139,7 @@ std::optional<uint64_t> Stateful_Key_Index_Registry::reserve_next_index(const Ke
 void Stateful_Key_Index_Registry::set_index_lower_bound(const KeyId& key_id, uint64_t min) {
    BOTAN_ARG_CHECK(min <= key_id.max_operations(), "Index lower bound exceeds maximum operation count");
    const lock_guard_type<mutex_type> lock(m_mutex);
-   auto idx = this->lookup(key_id);
+   const auto idx = this->lookup(key_id);
    idx->second = std::max(idx->second, min);
 }
 

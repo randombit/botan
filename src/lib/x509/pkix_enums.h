@@ -159,7 +159,7 @@ class BOTAN_PUBLIC_API(3, 0) Key_Constraints final {
       Key_Constraints& operator=(Key_Constraints&& other) = default;
       ~Key_Constraints() = default;
 
-      // NOLINTNEXTLINE(*-explicit-conversions)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
       Key_Constraints(Key_Constraints::Bits bits) : m_value(bits) {}
 
       explicit Key_Constraints(uint32_t bits) : m_value(bits) {}
@@ -242,7 +242,7 @@ class BOTAN_PUBLIC_API(3, 13) ReasonFlags final {
                                                     CessationOfOperation | CertificateHold | PrivilegeWithdrawn |
                                                     AaCompromise;
 
-      // NOLINTNEXTLINE(*-explicit-conversions)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
       ReasonFlags(ReasonFlags::Bits bits) : ReasonFlags(static_cast<uint16_t>(bits)) {}
 
       explicit ReasonFlags(uint16_t bits) : m_value(bits) {

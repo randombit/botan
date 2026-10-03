@@ -200,7 +200,7 @@ class Threaded_Hash_Engine final : public Hash_Engine {
 
          std::atomic<size_t> next = 0;
 
-         auto claim_chunks = [&](size_t t) {
+         const auto claim_chunks = [&](size_t t) {
             for(;;) {
                const size_t offset = next.fetch_add(chunk);
                if(offset >= count) {

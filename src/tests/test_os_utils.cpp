@@ -202,7 +202,7 @@ class OS_Utils_Tests final : public Test {
 
          size_t calls = 0;
          uint64_t state = 0x9E3779B97F4A7C15;
-         auto fn = [&]() {
+         const auto fn = [&]() {
             calls += 1;
             state = burn_cpu(state, 20000);
          };

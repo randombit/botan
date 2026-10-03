@@ -60,7 +60,7 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       m_order_is_less_than_p(m_order < p),
       m_source(source) {
    // Verify the generator (x, y) satisfies y^2 = x^3 + a*x + b (mod p)
-   auto mod_p = Barrett_Reduction::for_public_modulus(p);
+   const auto mod_p = Barrett_Reduction::for_public_modulus(p);
    const BigInt y2 = mod_p.square(g_y);
    const BigInt x3_ax_b = mod_p.reduce(mod_p.cube(g_x) + mod_p.multiply(a, g_x) + b);
    if(y2 != x3_ax_b) {
@@ -352,7 +352,7 @@ std::unique_ptr<EC_Scalar_Data> EC_Group_Data::gk_x_mod_order(const EC_Scalar_Da
                                                               RandomNumberGenerator& rng) const {
    if(m_pcurve) {
       const auto& k = EC_Scalar_Data_PC::checked_ref(scalar);
-      auto gk_x_mod_order = m_pcurve->base_point_mul_x_mod_order(k.value(), rng);
+      const auto gk_x_mod_order = m_pcurve->base_point_mul_x_mod_order(k.value(), rng);
       return std::make_unique<EC_Scalar_Data_PC>(shared_from_this(), gk_x_mod_order);
    } else {
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
@@ -534,7 +534,7 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_hash_to_curve_ro(std::
                                                                            std::span<const uint8_t> input,
                                                                            std::span<const uint8_t> domain_sep) const {
    if(m_pcurve && m_pcurve->supports_hash_to_curve()) {
-      auto pt = m_pcurve->hash_to_curve_ro(h2c_expand_message(hash_fn, order_bits(), input, domain_sep));
+      const auto pt = m_pcurve->hash_to_curve_ro(h2c_expand_message(hash_fn, order_bits(), input, domain_sep));
       return std::make_unique<EC_AffinePoint_Data_PC>(shared_from_this(), m_pcurve->point_to_affine(pt));
    } else {
       throw Not_Implemented("Hash to curve is not implemented for this curve");
@@ -601,8 +601,8 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::mul_px_qy(const EC_AffinePoi
 
       const auto order = group->order() * group->cofactor();  // See #3800
 
-      auto px = p_mul.mul(EC_Scalar_Data_BN::checked_ref(x).value(), rng, order, ws);
-      auto qy = q_mul.mul(EC_Scalar_Data_BN::checked_ref(y).value(), rng, order, ws);
+      const auto px = p_mul.mul(EC_Scalar_Data_BN::checked_ref(x).value(), rng, order, ws);
+      const auto qy = q_mul.mul(EC_Scalar_Data_BN::checked_ref(y).value(), rng, order, ws);
 
       auto px_qy = px + qy;
 
@@ -621,8 +621,8 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::mul_px_qy(const EC_AffinePoi
 std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::affine_add(const EC_AffinePoint_Data& p,
                                                                const EC_AffinePoint_Data& q) const {
    if(m_pcurve) {
-      auto pt = m_pcurve->point_add(EC_AffinePoint_Data_PC::checked_ref(p).value(),
-                                    EC_AffinePoint_Data_PC::checked_ref(q).value());
+      const auto pt = m_pcurve->point_add(EC_AffinePoint_Data_PC::checked_ref(p).value(),
+                                          EC_AffinePoint_Data_PC::checked_ref(q).value());
 
       return std::make_unique<EC_AffinePoint_Data_PC>(shared_from_this(), m_pcurve->point_to_affine(pt));
    } else {
@@ -637,7 +637,7 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::affine_add(const EC_AffinePo
 
 std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::affine_neg(const EC_AffinePoint_Data& p) const {
    if(m_pcurve) {
-      auto pt = m_pcurve->point_negate(EC_AffinePoint_Data_PC::checked_ref(p).value());
+      const auto pt = m_pcurve->point_negate(EC_AffinePoint_Data_PC::checked_ref(p).value());
       return std::make_unique<EC_AffinePoint_Data_PC>(shared_from_this(), pt);
    } else {
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)

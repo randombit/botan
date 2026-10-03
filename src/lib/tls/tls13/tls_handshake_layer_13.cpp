@@ -140,7 +140,7 @@ std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader,
 std::optional<Handshake_Message_13> Handshake_Layer::next_message(const Policy& policy,
                                                                   Transcript_Hash_State& transcript_hash) {
    BOTAN_ASSERT_NOMSG(m_read_offset <= m_read_buffer.size());
-   auto pending = std::span<const uint8_t>{m_read_buffer}.subspan(m_read_offset);
+   const auto pending = std::span<const uint8_t>{m_read_buffer}.subspan(m_read_offset);
    TLS::TLS_Data_Reader reader("handshake message", pending);
 
    auto msg = parse_message<Handshake_Message_13>(reader, policy, m_peer, m_certificate_type);
@@ -160,7 +160,7 @@ std::optional<Handshake_Message_13> Handshake_Layer::next_message(const Policy& 
 
 std::optional<Post_Handshake_Message_13> Handshake_Layer::next_post_handshake_message(const Policy& policy) {
    BOTAN_ASSERT_NOMSG(m_read_offset <= m_read_buffer.size());
-   auto pending = std::span<const uint8_t>{m_read_buffer}.subspan(m_read_offset);
+   const auto pending = std::span<const uint8_t>{m_read_buffer}.subspan(m_read_offset);
    TLS::TLS_Data_Reader reader("post handshake message", pending);
 
    auto msg = parse_message<Post_Handshake_Message_13>(reader, policy, m_peer, m_certificate_type);

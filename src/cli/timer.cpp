@@ -50,7 +50,7 @@ void Timer::start() {
 }
 
 uint64_t Timer::timestamp_ns() {
-   auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+   const auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
 }
 

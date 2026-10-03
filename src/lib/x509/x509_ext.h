@@ -1062,7 +1062,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
             /**
             * Convert to IPv4Address or IPv6Address
             */
-            // NOLINTNEXTLINE(*-explicit-conversions)
+            // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
             operator Address() const { return Address(m_value); }
 
          private:

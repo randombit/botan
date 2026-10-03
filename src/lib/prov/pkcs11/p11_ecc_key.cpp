@@ -34,7 +34,7 @@ EC_AffinePoint decode_public_point(const EC_Group& group, std::span<const uint8_
 const EC_PrivateKeyImportProperties& check_ec_params(const EC_PrivateKeyImportProperties& props) {
    const EC_Group group(props.ec_params());
    BOTAN_UNUSED(group);
-   return props;
+   return props;  // NOLINT(*-return-const-ref-from-parameter)
 }
 
 }  // namespace

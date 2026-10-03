@@ -188,7 +188,7 @@ class PerfTest_FpeFe1 final : public PerfTest {
          Botan::FPE_FE1 fpe_fe1(n);
          fpe_fe1.set_key(key);
 
-         auto runtime = config.runtime();
+         const auto runtime = config.runtime();
 
          while(enc_timer->under(runtime)) {
             enc_timer->start();

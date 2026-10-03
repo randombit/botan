@@ -39,7 +39,7 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
             Text_Based_Test(std::string(kat_path), "SphincsParameterSet,seed,pk,sk,msg,HashSigRand", "HashSigDet") {}
 
       bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
-         auto params = Botan::Sphincs_Parameters::create(vars.get_req_str("SphincsParameterSet"));
+         const auto params = Botan::Sphincs_Parameters::create(vars.get_req_str("SphincsParameterSet"));
 
          if(!params.is_available()) {
             return true;
@@ -92,7 +92,7 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
          // Depending on the SLH-DSA configuration the resulting signature is
          // hashed either with SHA-3 or SHA-256 to reduce the inner dependencies
          // on other hash function modules.
-         auto hash_algo_spec = [&]() -> std::string {
+         const auto hash_algo_spec = [&]() -> std::string {
             if(params.hash_type() == Botan::Sphincs_Hash_Type::Shake256) {
                return "SHA-3(256)";
             } else {
@@ -146,7 +146,7 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
 
             result.test_bin_eq("signature creation deterministic", hash->process(signature_det), *sig_det_hash);
 
-            auto verify_success_det =
+            const auto verify_success_det =
                verifier.verify_message(msg_ref.data(), msg_ref.size(), signature_det.data(), signature_det.size());
             result.test_is_true("verification of valid deterministic signature", verify_success_det);
          }
@@ -309,7 +309,7 @@ class SLH_DSA_X509_Tests : public Test {
       static Test::Result test_cert_verifies() {
          Test::Result result("SLH-DSA-X.509");
          const Botan::X509_Certificate cert(Test::data_file("x509/slh-dsa/slh-dsa-rfc-9909-cert.pem"));
-         auto ver_res = cert.verify_signature(*cert.subject_public_key());
+         const auto ver_res = cert.verify_signature(*cert.subject_public_key());
          result.test_is_true("signature of certificate verifies", ver_res.first == Botan::Certificate_Status_Code::OK);
          return result;
       }

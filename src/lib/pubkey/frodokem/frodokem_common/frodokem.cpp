@@ -97,12 +97,12 @@ class Frodo_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF {
                            RandomNumberGenerator& rng) override {
          const auto& constants = m_public_key->constants();
          auto shake = constants.create_xof();
-         auto sample_generator = FrodoMatrix::make_sample_generator(constants, *shake);
+         const auto sample_generator = FrodoMatrix::make_sample_generator(constants, *shake);
 
          BufferStuffer out_ct_bs(out_encapsulated_key);
 
-         auto c_1 = out_ct_bs.next<FrodoPackedMatrix>(constants.len_packed_b_bytes());
-         auto c_2 = out_ct_bs.next<FrodoPackedMatrix>(constants.len_packed_c_bytes());
+         const auto c_1 = out_ct_bs.next<FrodoPackedMatrix>(constants.len_packed_b_bytes());
+         const auto c_2 = out_ct_bs.next<FrodoPackedMatrix>(constants.len_packed_c_bytes());
          auto salt = out_ct_bs.next<FrodoSalt>(constants.len_salt_bytes());
 
          BOTAN_ASSERT_NOMSG(out_ct_bs.full());
@@ -166,19 +166,19 @@ class Frodo_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
       size_t encapsulated_key_length() const override { return m_public_key->constants().len_ct_bytes(); }
 
       void raw_kem_decrypt(std::span<uint8_t> out_shared_key, std::span<const uint8_t> encapsulated_key) override {
-         auto scope = CT::scoped_poison(*m_private_key);
+         const auto scope = CT::scoped_poison(*m_private_key);
 
          const auto& constants = m_public_key->constants();
          auto shake = constants.create_xof();
-         auto sample_generator = FrodoMatrix::make_sample_generator(constants, *shake);
+         const auto sample_generator = FrodoMatrix::make_sample_generator(constants, *shake);
 
          if(encapsulated_key.size() != constants.len_ct_bytes()) {
             throw Invalid_Argument("FrodoKEM ciphertext does not have the correct byte count");
          }
 
          BufferSlicer ct_bs(encapsulated_key);
-         auto c_1 = ct_bs.take<FrodoPackedMatrix>(constants.len_packed_b_bytes());
-         auto c_2 = ct_bs.take<FrodoPackedMatrix>(constants.len_packed_c_bytes());
+         const auto c_1 = ct_bs.take<FrodoPackedMatrix>(constants.len_packed_b_bytes());
+         const auto c_2 = ct_bs.take<FrodoPackedMatrix>(constants.len_packed_c_bytes());
          auto salt = ct_bs.take<FrodoSalt>(constants.len_salt_bytes());
          BOTAN_ASSERT_NOMSG(ct_bs.empty());
 
@@ -349,9 +349,9 @@ FrodoKEM_PrivateKey::FrodoKEM_PrivateKey(RandomNumberGenerator& rng, FrodoKEMMod
    shake->update(constants.keygen_domain_separator());
    shake->update(seed_se);
 
-   auto sample_generator = FrodoMatrix::make_sample_generator(constants, *shake);
+   const auto sample_generator = FrodoMatrix::make_sample_generator(constants, *shake);
    auto s_trans = sample_generator(std::tuple(constants.n_bar(), constants.n()));
-   auto e = sample_generator(std::tuple(constants.n(), constants.n_bar()));
+   const auto e = sample_generator(std::tuple(constants.n(), constants.n_bar()));
    shake->clear();
 
    auto b = FrodoMatrix::mul_add_as_plus_e(constants, s_trans, e, seed_a);

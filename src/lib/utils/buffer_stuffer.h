@@ -32,7 +32,7 @@ class BufferStuffer final {
       constexpr std::span<uint8_t> next(size_t bytes) {
          BOTAN_STATE_CHECK(m_buffer.size() >= bytes);
 
-         auto result = m_buffer.first(bytes);
+         const auto result = m_buffer.first(bytes);
          m_buffer = m_buffer.subspan(bytes);
          return result;
       }
@@ -41,7 +41,7 @@ class BufferStuffer final {
       constexpr std::span<uint8_t, bytes> next() {
          BOTAN_STATE_CHECK(m_buffer.size() >= bytes);
 
-         auto result = m_buffer.first<bytes>();
+         const auto result = m_buffer.first<bytes>();
          m_buffer = m_buffer.subspan(bytes);
          return result;
       }
@@ -58,7 +58,7 @@ class BufferStuffer final {
 
       constexpr void append(std::span<const uint8_t> buffer) {
          const size_t len = buffer.size();
-         auto sink = next(len);
+         const auto sink = next(len);
          for(size_t i = 0; i != len; ++i) {
             sink[i] = buffer[i];
          }

@@ -51,7 +51,7 @@ namespace {
 const RSA_PublicKeyImportProperties& check_rsa_public_key(const RSA_PublicKeyImportProperties& props) {
    const RSA_PublicKey key(props.modulus(), props.pub_exponent());
    BOTAN_UNUSED(key);
-   return props;
+   return props;  // NOLINT(*-return-const-ref-from-parameter)
 }
 
 }  // namespace
@@ -154,7 +154,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
                rng,
                [this](const BigInt& k) {
                   const size_t powm_window = 1;
-                  auto powm_m_n = monty_precompute(m_monty_n, k, powm_window, false);
+                  const auto powm_m_n = monty_precompute(m_monty_n, k, powm_window, false);
                   return monty_execute_vartime(*powm_m_n, m_key.get_e()).value();
                },
                [this](const BigInt& k) { return inverse_mod_rsa_public_modulus(k, m_key.get_n()); }) {}

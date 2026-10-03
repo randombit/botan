@@ -43,7 +43,7 @@ class WhirlpoolState final {
 
       BOTAN_FN_ISA_SIMD_8X32
       void store_be(uint64_t dst[8]) const {
-         auto s = bswap();
+         const auto s = bswap();
          s.m_lo.store_le(reinterpret_cast<uint8_t*>(dst));
          s.m_hi.store_le(reinterpret_cast<uint8_t*>(dst + 4));
       }

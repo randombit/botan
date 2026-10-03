@@ -110,10 +110,10 @@ void Base64::encode(char out[4], const uint8_t in[3]) noexcept {
 
 //static
 uint8_t Base64::lookup_binary_value(char input) noexcept {
-   auto has_zero_byte = [](uint64_t v) { return ((v - 0x0101010101010101) & ~(v) & 0x8080808080808080); };
+   const auto has_zero_byte = [](uint64_t v) { return ((v - 0x0101010101010101) & ~(v) & 0x8080808080808080); };
 
    // Assumes each byte is either 0x00 or 0x80
-   auto index_of_first_set_byte = [](uint64_t v) {
+   const auto index_of_first_set_byte = [](uint64_t v) {
       return ((((v - 1) & 0x0101010101010101) * 0x0101010101010101) >> 56) - 1;
    };
 
@@ -129,7 +129,7 @@ uint8_t Base64::lookup_binary_value(char input) noexcept {
 
    // If x is in one of the ranges return a mask. Otherwise we xor in at the
    // high word which will be our invalid marker
-   auto v_mask = swar_in_range<uint64_t>(x8, val_l, val_u) ^ 0x80000000;
+   const auto v_mask = swar_in_range<uint64_t>(x8, val_l, val_u) ^ 0x80000000;
 
    // This is the offset added to x to get the value
    const uint64_t val_v = 0xbfb904 ^ (0xFF000000 - (x << 24));

@@ -36,6 +36,7 @@ constexpr OutR concatenate(Rs&&... ranges)
    // Prepare and validate the output range and construct a lambda that does the
    // actual filling of the result buffer.
    // (if no input ranges are given, GCC claims that fill_fn is unused)
+   // NOLINTNEXTLINE(*-const-correctness) the fixed-size branch returns a mutable lambda
    [[maybe_unused]] auto fill_fn = [&] {
       if constexpr(concepts::reservable_container<OutR>) {
          // dynamically allocate the correct result byte length

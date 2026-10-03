@@ -394,7 +394,7 @@ class RSA_DecryptOrRandom_Tests : public Test {
          for(size_t i = 0; i != trials; ++i) {
             auto bad_ctext = (BigInt::from_bytes(mutate_vec(ctext, rng, false, 0)) % modulus).serialize(modulus_bytes);
 
-            auto rec = dec.decrypt_or_random(bad_ctext.data(), bad_ctext.size(), pt_len, rng);
+            const auto rec = dec.decrypt_or_random(bad_ctext.data(), bad_ctext.size(), pt_len, rng);
 
             result.test_sz_eq("Returns a ciphertext of expected length", rec.size(), pt_len);
          }

@@ -89,7 +89,7 @@ class Trait_Base {
       static constexpr std::span<U, N> poly_in_polyvec(std::span<U> polyvec, size_t index) {
          BOTAN_DEBUG_ASSERT(polyvec.size() % N == 0);
          BOTAN_DEBUG_ASSERT(polyvec.size() / N > index);
-         auto polyspan = polyvec.subspan(index * N, N);
+         const auto polyspan = polyvec.subspan(index * N, N);
          return std::span<U, N>{polyspan.data(), polyspan.size()};
       }
 
@@ -180,7 +180,7 @@ constexpr static bool ct_all_within_range(std::span<const T, N> range, T min, T 
    BOTAN_DEBUG_ASSERT(min < max);
 
    using unsigned_T = std::make_unsigned_t<T>;
-   auto map = [](T v) -> unsigned_T {
+   const auto map = [](T v) -> unsigned_T {
       if constexpr(std::signed_integral<T>) {
          constexpr int64_t offset = -static_cast<int64_t>(std::numeric_limits<T>::min());
          return static_cast<unsigned_T>(static_cast<int64_t>(v) + offset);

@@ -165,7 +165,7 @@ void PKCS10_Request::force_decode() {
 
    m_data = decode_pkcs10(signed_body());
 
-   auto key = this->subject_public_key();
+   const auto key = this->subject_public_key();
    if(!this->check_signature(*key)) {
       throw Decoding_Error("PKCS #10 request: Bad signature detected");
    }

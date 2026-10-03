@@ -117,22 +117,22 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_GFNI SIMD_4x64 camellia_f(SIMD_4x64 x) {
 }
 
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 void load_and_deinterleave(const uint8_t in[], SIMD_4x64& L, SIMD_4x64& R) {
-   auto A = SIMD_4x64::load_be(in);
-   auto B = SIMD_4x64::load_be(in + 32);
+   const auto A = SIMD_4x64::load_be(in);
+   const auto B = SIMD_4x64::load_be(in + 32);
 
-   auto Ap = _mm256_permute4x64_epi64(A.raw(), 0b11'01'10'00);  // [L[0], L[1], R[0], R[1]]
-   auto Bp = _mm256_permute4x64_epi64(B.raw(), 0b11'01'10'00);  // [L[2], L[3], R[2], R[3]]
+   const auto Ap = _mm256_permute4x64_epi64(A.raw(), 0b11'01'10'00);  // [L[0], L[1], R[0], R[1]]
+   const auto Bp = _mm256_permute4x64_epi64(B.raw(), 0b11'01'10'00);  // [L[2], L[3], R[2], R[3]]
 
    L = SIMD_4x64(_mm256_permute2x128_si256(Ap, Bp, 0x20));  // [L[0], L[1], L[2], L[3]]
    R = SIMD_4x64(_mm256_permute2x128_si256(Ap, Bp, 0x31));  // [R[0], R[1], R[2], R[3]]
 }
 
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 void interleave_and_store(uint8_t out[], SIMD_4x64 L, SIMD_4x64 R) {
-   auto T1 = _mm256_permute2x128_si256(R.raw(), L.raw(), 0x20);  // [R[0], R[1], L[0], L[1]]
-   auto T2 = _mm256_permute2x128_si256(R.raw(), L.raw(), 0x31);  // [R[2], R[3], L[2], L[3]]
+   const auto T1 = _mm256_permute2x128_si256(R.raw(), L.raw(), 0x20);  // [R[0], R[1], L[0], L[1]]
+   const auto T2 = _mm256_permute2x128_si256(R.raw(), L.raw(), 0x31);  // [R[2], R[3], L[2], L[3]]
 
-   auto A = SIMD_4x64(_mm256_permute4x64_epi64(T1, 0b11'01'10'00));  // [R[0], L[0], R[1], L[1]]
-   auto B = SIMD_4x64(_mm256_permute4x64_epi64(T2, 0b11'01'10'00));  // [R[2], L[2], R[3], L[3]]
+   const auto A = SIMD_4x64(_mm256_permute4x64_epi64(T1, 0b11'01'10'00));  // [R[0], L[0], R[1], L[1]]
+   const auto B = SIMD_4x64(_mm256_permute4x64_epi64(T2, 0b11'01'10'00));  // [R[2], L[2], R[3], L[3]]
 
    A.store_be(out);
    B.store_be(out + 32);

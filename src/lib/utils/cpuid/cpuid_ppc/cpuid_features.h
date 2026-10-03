@@ -27,7 +27,7 @@ class BOTAN_TEST_API CPUFeature final {
          HW_CLMUL = POWER_CRYPTO,
       };
 
-      CPUFeature(Bit b) : m_bit(b) {}  // NOLINT(*-explicit-conversions)
+      CPUFeature(Bit b) : m_bit(b) {}  // NOLINT(*-explicit-conversions,*-explicit-constructor)
 
       uint32_t as_u32() const { return static_cast<uint32_t>(m_bit); }
 

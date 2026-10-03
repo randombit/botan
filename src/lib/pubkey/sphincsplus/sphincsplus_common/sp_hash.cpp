@@ -113,12 +113,12 @@ std::tuple<SphincsHashedMessage, XmssTreeIndexInLayer, TreeNodeIndex> Sphincs_Ha
    const auto& p = m_sphincs_params;
    BufferSlicer s(digest);
    auto msg_hash = s.copy<SphincsHashedMessage>(p.fors_message_bytes());
-   auto tree_index_bytes = s.take(p.tree_digest_bytes());
-   auto leaf_index_bytes = s.take(p.leaf_digest_bytes());
+   const auto tree_index_bytes = s.take(p.tree_digest_bytes());
+   const auto leaf_index_bytes = s.take(p.leaf_digest_bytes());
    BOTAN_ASSERT_NOMSG(s.empty());
 
-   auto tree_index = from_first_n_bits<XmssTreeIndexInLayer>(p.h() - p.xmss_tree_height(), tree_index_bytes);
-   auto leaf_index = from_first_n_bits<TreeNodeIndex>(p.xmss_tree_height(), leaf_index_bytes);
+   const auto tree_index = from_first_n_bits<XmssTreeIndexInLayer>(p.h() - p.xmss_tree_height(), tree_index_bytes);
+   const auto leaf_index = from_first_n_bits<TreeNodeIndex>(p.xmss_tree_height(), leaf_index_bytes);
    return {std::move(msg_hash), tree_index, leaf_index};
 }
 

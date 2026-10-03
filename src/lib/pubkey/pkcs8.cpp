@@ -348,7 +348,7 @@ std::unique_ptr<Private_Key> load_key(DataSource& source, std::string_view pass)
 * Extract an unencrypted private key and return it
 */
 std::unique_ptr<Private_Key> load_key(DataSource& source) {
-   auto fail_fn = []() -> std::string {
+   const auto fail_fn = []() -> std::string {
       throw PKCS8_Exception("Internal error: Attempt to read password for unencrypted key");
    };
 

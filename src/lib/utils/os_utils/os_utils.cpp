@@ -137,7 +137,7 @@ std::optional<std::pair<unsigned long, unsigned long>> OS::get_auxval_hwcap() {
    if(const auto hwcap = get_auxval(auxval_hwcap())) {
       // If hwcap worked/was valid, we don't require hwcap2 to also
       // succeed but instead will return zeros if it failed.
-      auto hwcap2 = get_auxval(auxval_hwcap2()).value_or(0);
+      const auto hwcap2 = get_auxval(auxval_hwcap2()).value_or(0);
       return std::make_pair(*hwcap, hwcap2);
    } else {
       return {};
@@ -152,7 +152,7 @@ namespace {
 */
 bool running_in_privileged_state() {
 #if defined(AT_SECURE)
-   if(auto at_secure = get_auxval(AT_SECURE)) {
+   if(const auto at_secure = get_auxval(AT_SECURE)) {
       return at_secure != 0;
    }
 #endif
@@ -317,7 +317,7 @@ uint64_t OS::get_high_resolution_clock() {
 
 #if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
    // Plain C++11 fallback
-   auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+   const auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
 #else
    return 0;
@@ -334,7 +334,7 @@ uint64_t OS::get_system_timestamp_ns() {
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
-   auto now = std::chrono::system_clock::now().time_since_epoch();
+   const auto now = std::chrono::system_clock::now().time_since_epoch();
    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
 #else
    throw Not_Implemented("OS::get_system_timestamp_ns this system does not support a clock");
@@ -685,7 +685,7 @@ void OS::free_locked_pages(const std::vector<void*>& pages) {
    }
 }
 
-void OS::page_named(void* page, size_t size) {
+void OS::page_named(const void* page, size_t size) {
 #if defined(BOTAN_TARGET_OS_HAS_PRCTL) && defined(PR_SET_VMA) && defined(PR_SET_VMA_ANON_NAME)
    static constexpr char name[] = "Botan mlock pool";
    // NOLINTNEXTLINE(*-vararg)

@@ -27,7 +27,7 @@ X509_Certificate X509_Certificate_Cache::find_or_insert(std::span<const uint8_t>
    // Check for a cache hit
    {
       const lock_guard_type<mutex_type> lock(m_mutex);
-      if(auto it = m_cache.find(hash); it != m_cache.end()) {
+      if(const auto it = m_cache.find(hash); it != m_cache.end()) {
          return it->second;
       }
    }
@@ -39,7 +39,7 @@ X509_Certificate X509_Certificate_Cache::find_or_insert(std::span<const uint8_t>
    const lock_guard_type<mutex_type> lock(m_mutex);
 
    // Check for a cache hit (possibly racing with another thread)
-   if(auto it = m_cache.find(hash); it != m_cache.end()) {
+   if(const auto it = m_cache.find(hash); it != m_cache.end()) {
       return it->second;
    }
 
@@ -60,7 +60,7 @@ X509_Certificate X509_Certificate_Cache::find_or_insert(std::span<const uint8_t>
    }
 
    // Add the newly deserialized cert to the cache
-   auto it = m_cache.emplace(hash, std::move(cert)).first;
+   const auto it = m_cache.emplace(hash, std::move(cert)).first;
    return it->second;
 }
 

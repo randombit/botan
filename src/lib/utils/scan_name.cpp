@@ -28,20 +28,20 @@ std::string make_arg(const std::vector<std::pair<size_t, std::string>>& name, si
 
       if(name[i].first > level) {
          for(size_t j = level; j < name[i].first; j++) {
-            output += "(";
+            output += '(';
             ++paren_depth;
          }
          output += name[i].second;
       } else if(name[i].first < level) {
          for(size_t j = name[i].first; j < level; j++) {
-            output += ")";
+            output += ')';
             BOTAN_ASSERT_NOMSG(paren_depth != 0);
             --paren_depth;
          }
          output += "," + name[i].second;
       } else {
          if(output[output.size() - 1] != '(') {
-            output += ",";
+            output += ',';
          }
          output += name[i].second;
       }
@@ -50,7 +50,7 @@ std::string make_arg(const std::vector<std::pair<size_t, std::string>>& name, si
    }
 
    for(size_t i = 0; i != paren_depth; ++i) {
-      output += ")";
+      output += ')';
    }
 
    return output;

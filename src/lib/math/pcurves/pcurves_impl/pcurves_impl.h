@@ -29,7 +29,7 @@ namespace Botan {
 template <size_t N>
 class StringLiteral final {
    public:
-      // NOLINTNEXTLINE(*-explicit-conversions)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
       consteval StringLiteral(const char (&str)[N]) : value() {
          for(size_t i = 0; i != N; ++i) {
             value[i] = str[i];
@@ -411,8 +411,8 @@ class IntMod final {
          const W mask = cond.into_bitmask<W>();
 
          for(size_t i = 0; i != N; ++i) {
-            auto nx = Botan::choose(mask, y.m_val[i], x.m_val[i]);
-            auto ny = Botan::choose(mask, x.m_val[i], y.m_val[i]);
+            const auto nx = Botan::choose(mask, y.m_val[i], x.m_val[i]);
+            const auto ny = Botan::choose(mask, x.m_val[i], y.m_val[i]);
             x.m_val[i] = nx;
             y.m_val[i] = ny;
          }
@@ -625,7 +625,7 @@ class IntMod final {
                return r;
             }
 
-            auto nx = x + y;
+            const auto nx = x + y;
 
             /*
             * Otherwise either b > a or a > b
@@ -882,7 +882,7 @@ class IntMod final {
       static consteval Self constant(int8_t x) {
          std::array<W, 1> v{};
          v[0] = (x >= 0) ? x : -x;
-         auto s = Self::from_words(v);
+         const auto s = Self::from_words(v);
          return (x >= 0) ? s : s.negate();
       }
 
@@ -956,7 +956,7 @@ class AffineCurvePoint final {
          auto result = Self::identity(pts[0]);
 
          // Intentionally wrapping; set to maximum size_t if idx == 0
-         const size_t idx1 = static_cast<size_t>(idx - 1);
+         const size_t idx1 = idx - 1;
          for(size_t i = 0; i != pts.size(); ++i) {
             const auto found = CT::Mask<size_t>::is_equal(idx1, i).as_choice();
             result.conditional_assign(found, pts[i]);
@@ -1023,7 +1023,7 @@ class ProjectiveCurvePoint final {
          * affine point is the identity.
          */
 
-         auto x = pt.x();
+         const auto x = pt.x();
          auto y = pt.y();
          auto z = FieldElement::one();
 
@@ -1145,10 +1145,10 @@ class ProjectiveCurvePoint final {
 
          // Conditional ok: caller's RNG state (seeded vs not) is presumed public
          if(rng.is_seeded()) {
-            auto r = FieldElement::random(rng);
+            const auto r = FieldElement::random(rng);
 
-            auto r2 = r.square();
-            auto r3 = r2 * r;
+            const auto r2 = r.square();
+            const auto r3 = r2 * r;
 
             m_x *= r2;
             m_y *= r3;
@@ -1687,8 +1687,9 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
 
    const auto use_y1 = y1.has_value();
 
-   auto x = C::FieldElement::choose(use_y1, x1, x2);
-   auto y = C::FieldElement::choose(use_y1, y1.value_or(C::FieldElement::zero()), y2.value_or(C::FieldElement::zero()));
+   const auto x = C::FieldElement::choose(use_y1, x1, x2);
+   const auto y =
+      C::FieldElement::choose(use_y1, y1.value_or(C::FieldElement::zero()), y2.value_or(C::FieldElement::zero()));
 
    auto pt = typename C::AffinePoint(x, y.correct_sign(u.is_even()));
 

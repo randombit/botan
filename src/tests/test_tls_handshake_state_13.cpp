@@ -68,7 +68,7 @@ std::vector<Test::Result> finished_message_handling() {
 
                Botan::TLS::Finished_13 server_finished(server_finished_message);
 
-               auto server_fin = state.received(std::move(server_finished));
+               const auto server_fin = state.received(std::move(server_finished));
                result.require("client can receive server finished",
                               std::holds_alternative<std::reference_wrapper<Botan::TLS::Finished_13>>(server_fin));
                result.test_bin_eq(
@@ -113,7 +113,7 @@ std::vector<Test::Result> handshake_message_filtering() {
             auto server_hello =
                std::get<Botan::TLS::Server_Hello_13>(Botan::TLS::Server_Hello_13::parse(server_hello_message));
 
-            auto filtered = state.received(std::move(server_hello));
+            const auto filtered = state.received(std::move(server_hello));
             result.test_is_true("client can receive server hello",
                                 std::holds_alternative<std::reference_wrapper<Botan::TLS::Server_Hello_13>>(filtered));
 

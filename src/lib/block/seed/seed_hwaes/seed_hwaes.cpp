@@ -79,10 +79,10 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_HWAES SIMD_4x32 seed_g(SIMD_4x32 X) {
    const auto SHUF2 = SIMD_4x32(0x02020202, 0x06060606, 0x0A0A0A0A, 0x0E0E0E0E);
    const auto SHUF3 = SIMD_4x32(0x03030303, 0x07070707, 0x0B0B0B0B, 0x0F0F0F0F);
 
-   auto b0 = SIMD_4x32::byte_shuffle(sbox, SHUF0);
-   auto b1 = SIMD_4x32::byte_shuffle(sbox, SHUF1);
-   auto b2 = SIMD_4x32::byte_shuffle(sbox, SHUF2);
-   auto b3 = SIMD_4x32::byte_shuffle(sbox, SHUF3);
+   const auto b0 = SIMD_4x32::byte_shuffle(sbox, SHUF0);
+   const auto b1 = SIMD_4x32::byte_shuffle(sbox, SHUF1);
+   const auto b2 = SIMD_4x32::byte_shuffle(sbox, SHUF2);
+   const auto b3 = SIMD_4x32::byte_shuffle(sbox, SHUF3);
 
    return (b0 & M0) ^ (b1 & M1) ^ (b2 & M2) ^ (b3 & M3);
 }

@@ -53,7 +53,7 @@ void BlockCipherModePaddingMethod::add_padding(std::span<uint8_t> buffer, size_t
    BOTAN_ASSERT_NOMSG(buffer.size() % BS == 0);
    BOTAN_ASSERT_NOMSG(buffer.size() >= BS);
 
-   auto poison = CT::scoped_poison(last_byte_pos, buffer);
+   const auto poison = CT::scoped_poison(last_byte_pos, buffer);
    apply_padding(buffer.last(BS), last_byte_pos);
 }
 
@@ -62,7 +62,7 @@ size_t BlockCipherModePaddingMethod::unpad(std::span<const uint8_t> last_block) 
       return last_block.size();
    }
 
-   auto poison = CT::scoped_poison(last_block);
+   const auto poison = CT::scoped_poison(last_block);
    return CT::driveby_unpoison(remove_padding(last_block));
 }
 
@@ -81,7 +81,7 @@ void PKCS7_Padding::apply_padding(std::span<uint8_t> last_block, size_t padding_
    const uint8_t start_pos = static_cast<uint8_t>(padding_start_pos);
    const uint8_t padding_len = BS - start_pos;
    for(uint8_t i = 0; i < BS; ++i) {
-      auto needs_padding = CT::Mask<uint8_t>::is_gte(i, start_pos);
+      const auto needs_padding = CT::Mask<uint8_t>::is_gte(i, start_pos);
       last_block[i] = needs_padding.select(padding_len, last_block[i]);
    }
 }
@@ -128,7 +128,7 @@ void ANSI_X923_Padding::apply_padding(std::span<uint8_t> last_block, size_t padd
    const uint8_t start_pos = static_cast<uint8_t>(padding_start_pos);
    const uint8_t padding_len = BS - start_pos;
    for(uint8_t i = 0; i != BS - 1; ++i) {
-      auto needs_padding = CT::Mask<uint8_t>::is_gte(i, start_pos);
+      const auto needs_padding = CT::Mask<uint8_t>::is_gte(i, start_pos);
       last_block[i] = needs_padding.select(0, last_block[i]);
    }
 
@@ -168,8 +168,8 @@ void OneAndZeros_Padding::apply_padding(std::span<uint8_t> last_block, size_t pa
    ...
    */
    for(size_t i = 0; i != last_block.size(); ++i) {
-      auto needs_80 = CT::Mask<uint8_t>(CT::Mask<size_t>::is_equal(i, padding_start_pos));
-      auto needs_00 = CT::Mask<uint8_t>(CT::Mask<size_t>::is_gt(i, padding_start_pos));
+      const auto needs_80 = CT::Mask<uint8_t>(CT::Mask<size_t>::is_equal(i, padding_start_pos));
+      const auto needs_00 = CT::Mask<uint8_t>(CT::Mask<size_t>::is_gt(i, padding_start_pos));
       last_block[i] = needs_00.select(0x00, needs_80.select(0x80, last_block[i]));
    }
 }
@@ -213,7 +213,7 @@ void ESP_Padding::apply_padding(std::span<uint8_t> last_block, size_t padding_st
 
    uint8_t pad_ctr = 0x01;
    for(uint8_t i = 0; i != BS; ++i) {
-      auto needs_padding = CT::Mask<uint8_t>::is_gte(i, start_pos);
+      const auto needs_padding = CT::Mask<uint8_t>::is_gte(i, start_pos);
       last_block[i] = needs_padding.select(pad_ctr, last_block[i]);
       pad_ctr = needs_padding.select(pad_ctr + 1, pad_ctr);
    }

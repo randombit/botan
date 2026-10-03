@@ -78,7 +78,7 @@ class Kyber_Symmetric_Primitives /* NOLINT(*-special-member-functions) */ {
       KyberSamplingRandomness PRF(KyberSigmaOrEncryptionRandomness seed,
                                   const uint8_t nonce,
                                   const size_t outlen) const {
-         auto bare_seed_span = std::visit([&](const auto s) { return s.get(); }, seed);
+         const auto bare_seed_span = std::visit([&](const auto s) { return s.get(); }, seed);
          return create_PRF(bare_seed_span, nonce)->output<KyberSamplingRandomness>(outlen);
       }
 

@@ -24,11 +24,11 @@ Test::Result thread_pool() {
    // Using lots of threads since here the works spend most of the time sleeping
    Botan::Thread_Pool pool(16);
 
-   auto sleep_or_throw = [](size_t x) -> size_t {
+   const auto sleep_or_throw = [](size_t x) -> size_t {
       std::this_thread::sleep_for(std::chrono::milliseconds((x * 97) % 127));
 
       if(x % 2 == 0) {
-         throw x;  // NOLINT(hicpp-exception-baseclass)
+         throw x;  // NOLINT(*-exception-baseclass)
       }
       return x;
    };
@@ -65,7 +65,7 @@ Test::Result thread_pool_nested() {
    // inner get() with the inner tasks stuck behind them in the queue
    Botan::Thread_Pool pool(2);
 
-   auto fan_out = [&pool](size_t i) -> size_t {
+   const auto fan_out = [&pool](size_t i) -> size_t {
       std::vector<std::future<size_t>> inner;
       inner.reserve(4);
       for(size_t j = 0; j != 4; ++j) {

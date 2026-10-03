@@ -766,7 +766,7 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::get_next_
       return result;
    }
 
-   auto i = m_messages.find(m_in_message_seq);
+   const auto i = m_messages.find(m_in_message_seq);
 
    if(i == m_messages.end() || !i->second.complete()) {
       return std::make_pair(Handshake_Type::None, std::vector<uint8_t>());

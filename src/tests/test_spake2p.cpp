@@ -324,8 +324,9 @@ class SPAKE2p_RT_Tests final : public Test {
                {"Share leading to identity Z", identity_z},
             };
 
+            // Clang 14 cannot capture structured bindings in lambdas
+            // NOLINTNEXTLINE(*-use-structured-binding)
             for(const auto& bad : bad_shares) {
-               // Clang 14 cannot capture structured bindings in lambdas
                const auto& desc = bad.first;
                const auto& bad_share = bad.second;
 
@@ -368,6 +369,8 @@ class SPAKE2p_RT_Tests final : public Test {
                {"Verifier message leading to identity Z", identity_z},
             };
 
+            // Clang 14 cannot capture structured bindings in lambdas
+            // NOLINTNEXTLINE(*-use-structured-binding)
             for(const auto& bad : bad_msgs) {
                const auto& desc = bad.first;
                const auto& bad_msg = bad.second;

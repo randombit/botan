@@ -54,7 +54,7 @@ Point448 x448(const ScalarX448& k, const Point448& u) {
    auto swap = CT::Mask<uint64_t>::cleared();
 
    for(int16_t t = 448 - 1; t >= 0; --t) {
-      auto k_t = CT::Mask<uint64_t>::expand(get_bit(k, t));
+      const auto k_t = CT::Mask<uint64_t>::expand(get_bit(k, t));
       swap ^= k_t;
 
       x_2.ct_cond_swap(swap, x_3);

@@ -69,7 +69,7 @@ class DLIES_KAT_Tests final : public Text_Based_Test {
             cipher_key_len = enc->key_spec().maximum_keylength();
          }
 
-         auto group = Botan::DL_Group::from_name(group_name);
+         const auto group = Botan::DL_Group::from_name(group_name);
 
          const Botan::DH_PrivateKey from(group, x1);
          const Botan::DH_PrivateKey to(group, x2);
@@ -117,7 +117,7 @@ Test::Result test_xor() {
 
    auto rng = Test::new_rng("dlies_xor");
 
-   auto group = Botan::DL_Group::from_name("modp/ietf/2048");
+   const auto group = Botan::DL_Group::from_name("modp/ietf/2048");
 
    const Botan::DH_PrivateKey alice(*rng, group);
    const Botan::DH_PrivateKey bob(*rng, group);

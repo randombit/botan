@@ -26,7 +26,7 @@ std::optional<uint16_t> parse_port(std::string_view s) {
 }
 
 bool is_valid_percent_escape(char c1, char c2) {
-   auto is_hex_digit = [](char c) {
+   const auto is_hex_digit = [](char c) {
       return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
    };
 

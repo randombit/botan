@@ -487,7 +487,7 @@ TSS2_RC rsa_pk_encrypt(TPM2B_PUBLIC* pub_tpm_key,
       // OAEP is more complex by requiring a hash function and an optional
       // label. To avoid marshalling this into Botan's algorithm descriptor
       // we create an OAEP instance manually.
-      auto create_oaep = [&]() -> std::optional<std::unique_ptr<Botan::EncryptionPaddingScheme>> {
+      const auto create_oaep = [&]() -> std::optional<std::unique_ptr<Botan::EncryptionPaddingScheme>> {
       #if defined(BOTAN_HAS_EME_OAEP)
          // TPM Library, Part 1: Architecture, Annex B.4
          //    The RSA key's scheme hash algorithm (or, if it is TPM_ALG_NULL,
@@ -680,6 +680,9 @@ TSS2_RC get_ecdh_point(TPM2B_PUBLIC* key,
    #endif
 }
 
+// The signatures of these callbacks are dictated by the TSS2 crypto callback interface
+// NOLINTBEGIN(*-const-correctness)
+
 /** Encrypt data with AES.
  *
  * @param[in] key key used for AES.
@@ -742,7 +745,11 @@ TSS2_RC aes_decrypt(uint8_t* key,
    return symmetric_algo(Botan::Cipher_Dir::Decryption, key, tpm_sym_alg, key_bits, tpm_mode, buffer, buffer_size, iv);
 }
 
+// NOLINTEND(*-const-correctness)
+
    #if defined(BOTAN_TSS2_SUPPORTS_SM4_IN_CRYPTO_CALLBACKS)
+
+// NOLINTBEGIN(*-const-correctness)
 
 /** Encrypt data with SM4.
  *
@@ -805,6 +812,8 @@ TSS2_RC sm4_decrypt(uint8_t* key,
 
    return symmetric_algo(Botan::Cipher_Dir::Decryption, key, tpm_sym_alg, key_bits, tpm_mode, buffer, buffer_size, iv);
 }
+
+   // NOLINTEND(*-const-correctness)
 
    #endif /* TPM2_ALG_SM4 */
 

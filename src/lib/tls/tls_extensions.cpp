@@ -216,7 +216,7 @@ bool Extensions::contains_other_than(const std::set<Extension_Code>& allowed_ext
 }
 
 bool Extensions::remove_extension(Extension_Code type) {
-   auto i = m_extensions.find(type);
+   const auto i = m_extensions.find(type);
 
    if(i == m_extensions.end()) {
       return false;
@@ -289,7 +289,7 @@ void Extensions::reorder(std::span<const Extension_Code> order) {
    new_codes.reserve(m_extension_codes.size());
 
    // First: extensions not mentioned in the order (preserving their relative order)
-   for(auto code : m_extension_codes) {
+   for(const auto code : m_extension_codes) {
       if(!in_order.contains(code)) {
          new_codes.push_back(code);
       }
@@ -300,7 +300,7 @@ void Extensions::reorder(std::span<const Extension_Code> order) {
    // serialized twice (which would also break peers that reject duplicate
    // extension codes per RFC 8446 4.2 / RFC 5246 7.4.1.4).
    std::unordered_set<Extension_Code> already_pushed;
-   for(auto code : order) {
+   for(const auto code : order) {
       if(m_extensions.contains(code) && already_pushed.insert(code).second) {
          new_codes.push_back(code);
       }
@@ -427,15 +427,15 @@ bool Server_Name_Indicator::hostname_acceptable_for_sni(std::string_view hostnam
       return false;
    }
 
-   if(auto ipv4 = IPv4Address::from_string(hostname)) {
+   if(const auto ipv4 = IPv4Address::from_string(hostname)) {
       return false;
    }
 
-   if(auto ipv6 = IPv6Address::from_string(hostname)) {
+   if(const auto ipv6 = IPv6Address::from_string(hostname)) {
       return false;
    }
 
-   if(auto dns = DNSName::from_string(hostname)) {
+   if(const auto dns = DNSName::from_string(hostname)) {
       return true;
    } else {
       return false;
@@ -639,7 +639,7 @@ const std::vector<Group_Params>& Supported_Groups::groups() const {
 
 std::vector<Group_Params> Supported_Groups::ec_groups() const {
    std::vector<Group_Params> ec;
-   for(auto g : m_groups) {
+   for(const auto g : m_groups) {
       if(g.is_pure_ecc_group()) {
          ec.push_back(g);
       }
@@ -649,7 +649,7 @@ std::vector<Group_Params> Supported_Groups::ec_groups() const {
 
 std::vector<Group_Params> Supported_Groups::dh_groups() const {
    std::vector<Group_Params> dh;
-   for(auto g : m_groups) {
+   for(const auto g : m_groups) {
       if(g.is_in_ffdhe_range()) {
          dh.push_back(g);
       }
@@ -660,7 +660,7 @@ std::vector<Group_Params> Supported_Groups::dh_groups() const {
 std::vector<uint8_t> Supported_Groups::serialize(Connection_Side /*whoami*/) const {
    std::vector<uint8_t> buf(2);
 
-   for(auto g : m_groups) {
+   for(const auto g : m_groups) {
       const uint16_t id = g.wire_code();
 
       if(id > 0) {
@@ -861,9 +861,9 @@ Supported_Versions::Supported_Versions(TLS_Data_Reader& reader, uint16_t extensi
       }
       m_versions.push_back(Protocol_Version(reader.get_uint16_t()));
    } else {
-      auto versions = reader.get_range<uint16_t>(1, 1, 127);
+      const auto versions = reader.get_range<uint16_t>(1, 1, 127);
 
-      for(auto v : versions) {
+      for(const auto v : versions) {
          m_versions.push_back(Protocol_Version(v));
       }
 
@@ -874,7 +874,7 @@ Supported_Versions::Supported_Versions(TLS_Data_Reader& reader, uint16_t extensi
 }
 
 bool Supported_Versions::supports(Protocol_Version version) const {
-   for(auto v : m_versions) {
+   for(const auto v : m_versions) {
       if(version == v) {
          return true;
       }

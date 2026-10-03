@@ -114,7 +114,7 @@ std::vector<uint8_t> gen_Q_with_cksm(const LMOTS_Params& params,
    hash->update(store_be(D_MESG));
    hash->update(C);
    hash->update(msg);
-   auto Q_span = qwc_stuffer.next(params.n());
+   const auto Q_span = qwc_stuffer.next(params.n());
    hash->final(Q_span);
 
    qwc_stuffer.append(store_be(checksum(params, Q_span)));
@@ -244,8 +244,9 @@ LMOTS_Params::LMOTS_Params(LMOTS_Algorithm_Type algorithm_type, std::string_view
    const auto hash = HashFunction::create_or_throw(m_hash_name);
    m_n = hash->output_length();
    // RFC 8553 Appendix B - Parameter Computation
-   auto u = ceil_division<size_t>(8 * m_n, m_w);                         // ceil(8*n/w)
-   auto v = ceil_division<size_t>(high_bit(((1 << m_w) - 1) * u), m_w);  // ceil((floor(lg[(2^w - 1) * u]) + 1) / w)
+   const auto u = ceil_division<size_t>(8 * m_n, m_w);  // ceil(8*n/w)
+   const auto v =
+      ceil_division<size_t>(high_bit(((1 << m_w) - 1) * u), m_w);  // ceil((floor(lg[(2^w - 1) * u]) + 1) / w)
    m_ls = checked_cast_to<uint8_t>(16 - (v * w));
    m_p = checked_cast_to<uint16_t>(u + v);
 }
@@ -270,7 +271,7 @@ LMOTS_Signature LMOTS_Signature::from_bytes_or_throw(BufferSlicer& slicer) {
       throw Decoding_Error("Too few signature bytes while parsing LMOTS signature.");
    }
    // Alg. 6a. 2.b. / Alg. 4b. 2.a.
-   auto algorithm_type = load_be<LMOTS_Algorithm_Type>(slicer.take<sizeof(LMOTS_Algorithm_Type)>());
+   const auto algorithm_type = load_be<LMOTS_Algorithm_Type>(slicer.take<sizeof(LMOTS_Algorithm_Type)>());
 
    // Alg. 6a. 2.d. / Alg. 4b. 2.c.
    const LMOTS_Params params = LMOTS_Params::create_or_throw(algorithm_type);
@@ -477,7 +478,7 @@ LMOTS_K lmots_compute_pubkey_from_sig(const LMOTS_Signature& sig,
                                       const LMS_Message& msg,
                                       const LMS_Identifier& identifier,
                                       LMS_Tree_Node_Idx q) {
-   auto params = LMOTS_Params::create_or_throw(sig.algorithm_type());
+   const auto params = LMOTS_Params::create_or_throw(sig.algorithm_type());
 
    // Alg. 4b 3.
 

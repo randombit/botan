@@ -84,18 +84,18 @@ CT::Option<size_t> OAEP::unpad(std::span<uint8_t> output, std::span<const uint8_
       return {};
    }
 
-   auto scope = CT::scoped_poison(input);
+   const auto scope = CT::scoped_poison(input);
 
    const auto has_leading_0 = CT::Mask<uint8_t>::is_zero(input[0]).as_choice();
 
    secure_vector<uint8_t> decoded(input.begin() + 1, input.end());
-   auto buf = std::span{decoded};
+   const auto buf = std::span{decoded};
 
    mgf1_mask(*m_mgf1_hash, buf.subspan(hlen), buf.first(hlen));
 
    mgf1_mask(*m_mgf1_hash, buf.first(hlen), buf.subspan(hlen));
 
-   auto delim = oaep_find_delim(buf, m_Phash);
+   const auto delim = oaep_find_delim(buf, m_Phash);
 
    return CT::copy_output(delim.has_value() && has_leading_0, output, buf, delim.value_or(0));
 }

@@ -46,7 +46,7 @@ class RSA_Public_Data final {
 
       BigInt public_op(const BigInt& m) const {
          const size_t powm_window = 1;
-         auto powm_m_n = monty_precompute(m_monty_n, m, powm_window, false);
+         const auto powm_m_n = monty_precompute(m_monty_n, m, powm_window, false);
          return monty_execute_vartime(*powm_m_n, m_e).value();
       }
 
@@ -617,7 +617,8 @@ class RSA_Private_Operation {
          auto future_j1 = Thread_Pool::global_instance().run([this, &m, &d1_mask]() {
 #endif
             const BigInt masked_d1 = m_private->blinded_d1(d1_mask);
-            auto powm_d1_p = monty_precompute(Montgomery_Int::from_wide_int(m_private->monty_p(), m), powm_window);
+            const auto powm_d1_p =
+               monty_precompute(Montgomery_Int::from_wide_int(m_private->monty_p(), m), powm_window);
             auto j1 = monty_execute(*powm_d1_p, masked_d1, m_max_d1_bits);
 
 #if defined(BOTAN_RSA_USE_ASYNC)
@@ -627,11 +628,11 @@ class RSA_Private_Operation {
 
          const BigInt d2_mask(m_blinder.rng(), m_blinding_bits);
          const BigInt masked_d2 = m_private->blinded_d2(d2_mask);
-         auto powm_d2_q = monty_precompute(Montgomery_Int::from_wide_int(m_private->monty_q(), m), powm_window);
+         const auto powm_d2_q = monty_precompute(Montgomery_Int::from_wide_int(m_private->monty_q(), m), powm_window);
          const auto j2 = monty_execute(*powm_d2_q, masked_d2, m_max_d2_bits).value();
 
 #if defined(BOTAN_RSA_USE_ASYNC)
-         auto j1 = future_j1.get();
+         const auto j1 = future_j1.get();
 #endif
 
          // Reduce j2 modulo p
@@ -694,7 +695,7 @@ AlgorithmIdentifier RSA_Signature_Operation::algorithm_identifier() const {
    } catch(Lookup_Error&) {}
 
    if(padding_name.starts_with("PSS(")) {
-      auto parameters = PSS_Params::from_padding_name(m_padding->name()).serialize();
+      const auto parameters = PSS_Params::from_padding_name(m_padding->name()).serialize();
       return AlgorithmIdentifier("RSA/PSS", parameters);
    }
 

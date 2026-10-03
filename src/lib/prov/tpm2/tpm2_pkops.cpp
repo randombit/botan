@@ -68,7 +68,7 @@ std::vector<uint8_t> Signature_Operation::sign(Botan::RandomNumberGenerator& rng
       return signature;
    };
 
-   auto signature = [&] {
+   const auto signature = [&] {
       if(auto* h = dynamic_cast<HashFunction*>(hash())) {
          // This is a TPM2-based hash object that calculated the digest on
          // the TPM. We can use the validation ticket to create the signature.

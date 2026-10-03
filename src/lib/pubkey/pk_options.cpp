@@ -84,7 +84,7 @@ PK_Signature_Options PK_Signature_Options::with_context(std::span<const uint8_t>
 PK_Signature_Options PK_Signature_Options::with_context(std::string_view context) {
    BOTAN_STATE_CHECK_MSG(!m_context.has_value(), "PK_Signature_Options::with_context cannot specify context twice");
    auto next = (*this);
-   auto contextb = as_span_of_bytes(context);
+   const auto contextb = as_span_of_bytes(context);
    next.m_context = std::vector<uint8_t>(contextb.begin(), contextb.end());
    return next;
 }
@@ -150,7 +150,7 @@ const std::string& PK_Signature_Options_Reader::hash_function_name() const {
 uint32_t PK_Signature_Options_Reader::options_in_use() const {
    uint32_t in_use = 0;
 
-   auto set_if = [&](bool cond, Option option) {
+   const auto set_if = [&](bool cond, Option option) {
       if(cond) {
          in_use |= static_cast<uint32_t>(option);
       }
@@ -227,7 +227,7 @@ void PK_Signature_Options_Reader::throw_if_unexamined(std::string_view algo_name
 std::string PK_Signature_Options::to_string() const {
    std::ostringstream out;
 
-   auto print_str = [&](std::string_view name, std::optional<std::string> val) {
+   const auto print_str = [&](std::string_view name, std::optional<std::string> val) {
       if(val.has_value()) {
          out << name << "='" << val.value() << "' ";
       }
@@ -335,7 +335,7 @@ const std::string& PK_Encryption_Options_Reader::hash_function_name() const {
 uint32_t PK_Encryption_Options_Reader::options_in_use() const {
    uint32_t in_use = 0;
 
-   auto set_if = [&](bool cond, Option option) {
+   const auto set_if = [&](bool cond, Option option) {
       if(cond) {
          in_use |= static_cast<uint32_t>(option);
       }
@@ -372,7 +372,7 @@ void PK_Encryption_Options_Reader::throw_if_unexamined(std::string_view algo_nam
 std::string PK_Encryption_Options::to_string() const {
    std::ostringstream out;
 
-   auto print_str = [&](std::string_view name, const std::optional<std::string>& val) {
+   const auto print_str = [&](std::string_view name, const std::optional<std::string>& val) {
       if(val.has_value()) {
          out << name << "='" << val.value() << "' ";
       }
@@ -430,7 +430,7 @@ bool PK_KEM_Options_Reader::using_provider() const {
 uint32_t PK_KEM_Options_Reader::options_in_use() const {
    uint32_t in_use = 0;
 
-   auto set_if = [&](bool cond, Option option) {
+   const auto set_if = [&](bool cond, Option option) {
       if(cond) {
          in_use |= static_cast<uint32_t>(option);
       }
@@ -516,7 +516,7 @@ bool PK_Key_Agreement_Options_Reader::using_provider() const {
 uint32_t PK_Key_Agreement_Options_Reader::options_in_use() const {
    uint32_t in_use = 0;
 
-   auto set_if = [&](bool cond, Option option) {
+   const auto set_if = [&](bool cond, Option option) {
       if(cond) {
          in_use |= static_cast<uint32_t>(option);
       }

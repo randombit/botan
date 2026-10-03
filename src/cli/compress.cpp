@@ -29,7 +29,7 @@ class Compress final : public Command {
             {"lzma", "xz"},
          };
 
-         auto suffix_info = suffixes.find(comp_type);
+         const auto suffix_info = suffixes.find(comp_type);
          if(!suffixes.contains(comp_type)) {
             throw CLI_Error_Unsupported("Compressing", comp_type);
          }
@@ -92,7 +92,7 @@ class Decompress final : public Command {
       Decompress() : Command("decompress --buf-size=8192 file") {}
 
       static void parse_extension(const std::string& in_file, std::string& out_file, std::string& suffix) {
-         auto last_dot = in_file.find_last_of('.');
+         const auto last_dot = in_file.find_last_of('.');
          if(last_dot == std::string::npos || last_dot == 0) {
             throw CLI_Error("No extension detected in filename '" + in_file + "'");
          }

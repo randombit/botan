@@ -301,7 +301,7 @@ class GenericScalar final {
 
          auto words = bytes_to_words<2 * N>(std::span{padded_bytes});
          if(words) {
-            auto in_rep = wide_to_rep(curve, words.value());
+            const auto in_rep = wide_to_rep(curve, words.value());
             return GenericScalar(curve, in_rep);
          } else {
             return {};
@@ -406,7 +406,7 @@ class GenericScalar final {
       }
 
       GenericScalar pow_vartime(const StorageUnit& exp) const {
-         auto one = GenericScalar::one(curve());
+         const auto one = GenericScalar::one(curve());
          auto bits = curve()->_params().order_bits();
          auto words = curve()->_params().words();
          return impl_pow_vartime(*this, one, bits, std::span{exp}.last(words));
@@ -471,13 +471,13 @@ class GenericScalar final {
             // Conditional ok: this function is variable time
             if(a.m_val == b.m_val) {
                // At this point it should be that a == b == 1
-               auto r = y.negate();
+               const auto r = y.negate();
 
                // Convert back to Montgomery
                return GenericScalar(curve(), to_rep(curve(), r.m_val));
             }
 
-            auto nx = x + y;
+            const auto nx = x + y;
 
             /*
             * Otherwise either b > a or a > b
@@ -583,7 +583,7 @@ class GenericScalar final {
       }
 
       static StorageUnit wide_to_rep(const GenericPrimeOrderCurve* curve, std::array<W, 2 * N> x) {
-         auto redc_x = redc(curve, x);
+         const auto redc_x = redc(curve, x);
          std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          curve->_params().mul(z, redc_x, curve->_params().order_monty_r3());
          return redc(curve, z);
@@ -741,7 +741,7 @@ class GenericField final {
       }
 
       GenericField pow_vartime(const StorageUnit& exp) const {
-         auto one = GenericField::one(curve());
+         const auto one = GenericField::one(curve());
          auto bits = curve()->_params().field_bits();
          auto words = curve()->_params().words();
          return impl_pow_vartime(*this, one, bits, std::span{exp}.last(words));
@@ -818,8 +818,8 @@ class GenericField final {
          const W mask = cond.into_bitmask<W>();
 
          for(size_t i = 0; i != N; ++i) {
-            auto nx = choose(mask, y.m_val[i], x.m_val[i]);
-            auto ny = choose(mask, x.m_val[i], y.m_val[i]);
+            const auto nx = choose(mask, y.m_val[i], x.m_val[i]);
+            const auto ny = choose(mask, x.m_val[i], y.m_val[i]);
             x.m_val[i] = nx;
             y.m_val[i] = ny;
          }
@@ -965,7 +965,7 @@ class GenericAffinePoint final {
          auto result = GenericAffinePoint::identity(pts[0].curve());
 
          // Intentionally wrapping; set to maximum size_t if idx == 0
-         const size_t idx1 = static_cast<size_t>(idx - 1);
+         const size_t idx1 = idx - 1;
          for(size_t i = 0; i != pts.size(); ++i) {
             const auto found = CT::Mask<size_t>::is_equal(idx1, i).as_choice();
             result.conditional_assign(found, pts[i]);
@@ -1066,7 +1066,7 @@ class GenericProjectivePoint final {
       * Convert a point from affine to projective form
       */
       static Self from_affine(const GenericAffinePoint& pt) {
-         auto x = pt.x();
+         const auto x = pt.x();
          auto y = pt.y();
          auto z = GenericField::one(x.curve());
 
@@ -1182,10 +1182,10 @@ class GenericProjectivePoint final {
          // caller is accepting that randomization will not occur
 
          if(rng.is_seeded()) {
-            auto r = GenericField::random(curve(), rng);
+            const auto r = GenericField::random(curve(), rng);
 
-            auto r2 = r.square();
-            auto r3 = r2 * r;
+            const auto r2 = r.square();
+            const auto r3 = r2 * r;
 
             m_x *= r2;
             m_y *= r3;
@@ -1464,7 +1464,7 @@ PrimeOrderCurve::ProjectivePoint GenericPrimeOrderCurve::mul_by_g(const Scalar& 
 PrimeOrderCurve::Scalar GenericPrimeOrderCurve::base_point_mul_x_mod_order(const Scalar& scalar,
                                                                            RandomNumberGenerator& rng) const {
    BOTAN_STATE_CHECK(m_basemul != nullptr);
-   auto pt_s = m_basemul->mul(from_stash(scalar), rng);
+   const auto pt_s = m_basemul->mul(from_stash(scalar), rng);
    BOTAN_STATE_CHECK(!pt_s.is_identity().as_bool());
    const auto x_bytes = to_affine_x<GenericCurve>(pt_s).serialize<secure_vector<uint8_t>>();
    if(auto s = GenericScalar::from_wide_bytes(this, x_bytes)) {
@@ -1485,7 +1485,7 @@ secure_vector<uint8_t> GenericPrimeOrderCurve::mul_x_only(const AffinePoint& pt,
                                                           const Scalar& scalar,
                                                           RandomNumberGenerator& rng) const {
    GenericWindowedMul pt_table(from_stash(pt));
-   auto pt_s = pt_table.mul(from_stash(scalar), rng);
+   const auto pt_s = pt_table.mul(from_stash(scalar), rng);
    BOTAN_STATE_CHECK(!pt_s.is_identity().as_bool());
    return to_affine_x<GenericCurve>(pt_s).serialize<secure_vector<uint8_t>>();
 }
@@ -1499,7 +1499,7 @@ std::optional<PrimeOrderCurve::ProjectivePoint> GenericPrimeOrderCurve::mul2_var
                                                                                      const Scalar& s1,
                                                                                      const Scalar& s2) const {
    const auto& tbl = dynamic_cast<const GenericVartimeWindowedMul2&>(tableb);
-   auto pt = tbl.mul2_vartime(from_stash(s1), from_stash(s2));
+   const auto pt = tbl.mul2_vartime(from_stash(s1), from_stash(s2));
    if(pt.is_identity().as_bool()) {
       return {};
    } else {
@@ -1510,7 +1510,7 @@ std::optional<PrimeOrderCurve::ProjectivePoint> GenericPrimeOrderCurve::mul2_var
 std::optional<PrimeOrderCurve::ProjectivePoint> GenericPrimeOrderCurve::mul_px_qy(
    const AffinePoint& p, const Scalar& x, const AffinePoint& q, const Scalar& y, RandomNumberGenerator& rng) const {
    const GenericWindowedMul2 table(from_stash(p), from_stash(q));
-   auto pt = table.mul2(from_stash(x), from_stash(y), rng);
+   const auto pt = table.mul2(from_stash(x), from_stash(y), rng);
    if(pt.is_identity().as_bool()) {
       return {};
    } else {
@@ -1523,7 +1523,7 @@ bool GenericPrimeOrderCurve::mul2_vartime_x_mod_order_eq(const PrecomputedMul2Ta
                                                          const Scalar& s1,
                                                          const Scalar& s2) const {
    const auto& tbl = dynamic_cast<const GenericVartimeWindowedMul2&>(tableb);
-   auto pt = tbl.mul2_vartime(from_stash(s1), from_stash(s2));
+   const auto pt = tbl.mul2_vartime(from_stash(s1), from_stash(s2));
 
    if(!pt.is_identity().as_bool()) {
       const auto z2 = pt.z().square();
@@ -1559,7 +1559,7 @@ PrimeOrderCurve::AffinePoint GenericPrimeOrderCurve::point_identity() const {
 }
 
 PrimeOrderCurve::AffinePoint GenericPrimeOrderCurve::point_to_affine(const ProjectivePoint& pt) const {
-   auto affine = to_affine<GenericCurve>(from_stash(pt));
+   const auto affine = to_affine<GenericCurve>(from_stash(pt));
 
    const auto y2 = affine.y().square();
    const auto x3_ax_b = GenericCurve::AffinePoint::x3_ax_b(affine.x());
@@ -1683,30 +1683,30 @@ GenericScalar GenericPrimeOrderCurve::from_stash(const PrimeOrderCurve::Scalar& 
 }
 
 PrimeOrderCurve::AffinePoint GenericPrimeOrderCurve::stash(const GenericAffinePoint& pt) const {
-   auto x_w = pt.x().stash_value();
-   auto y_w = pt.y().stash_value();
+   const auto x_w = pt.x().stash_value();
+   const auto y_w = pt.y().stash_value();
    return AffinePoint::_create(shared_from_this(), x_w, y_w);
 }
 
 GenericAffinePoint GenericPrimeOrderCurve::from_stash(const PrimeOrderCurve::AffinePoint& pt) const {
    BOTAN_ARG_CHECK(pt._curve().get() == this, "Curve mismatch");
-   auto x = GenericField(this, pt._x());
-   auto y = GenericField(this, pt._y());
+   const auto x = GenericField(this, pt._x());
+   const auto y = GenericField(this, pt._y());
    return GenericAffinePoint(x, y);
 }
 
 PrimeOrderCurve::ProjectivePoint GenericPrimeOrderCurve::stash(const GenericProjectivePoint& pt) const {
-   auto x_w = pt.x().stash_value();
-   auto y_w = pt.y().stash_value();
-   auto z_w = pt.z().stash_value();
+   const auto x_w = pt.x().stash_value();
+   const auto y_w = pt.y().stash_value();
+   const auto z_w = pt.z().stash_value();
    return ProjectivePoint::_create(shared_from_this(), x_w, y_w, z_w);
 }
 
 GenericProjectivePoint GenericPrimeOrderCurve::from_stash(const PrimeOrderCurve::ProjectivePoint& pt) const {
    BOTAN_ARG_CHECK(pt._curve().get() == this, "Curve mismatch");
-   auto x = GenericField(this, pt._x());
-   auto y = GenericField(this, pt._y());
-   auto z = GenericField(this, pt._z());
+   const auto x = GenericField(this, pt._x());
+   const auto y = GenericField(this, pt._y());
+   const auto z = GenericField(this, pt._z());
    return GenericProjectivePoint(x, y, z);
 }
 
@@ -1760,7 +1760,7 @@ std::shared_ptr<const PrimeOrderCurve> PCurveInstance::from_params(
    }
 
    // Check that the (x,y) generator point is on the curve
-   auto mod_p = Barrett_Reduction::for_public_modulus(p);
+   const auto mod_p = Barrett_Reduction::for_public_modulus(p);
    const BigInt y2 = mod_p.square(base_y);
    const BigInt x3_ax_b = mod_p.reduce(mod_p.cube(base_x) + mod_p.multiply(a, base_x) + b);
    if(y2 != x3_ax_b) {

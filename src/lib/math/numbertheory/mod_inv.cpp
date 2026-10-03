@@ -321,7 +321,7 @@ uint64_t barrett_mod_65537(uint64_t x) {
    const uint64_t q = (x * c) >> s;
    const uint64_t r = x - q * mod;
 
-   auto r_gt_mod = CT::Mask<uint64_t>::is_gte(r, mod);
+   const auto r_gt_mod = CT::Mask<uint64_t>::is_gte(r, mod);
    return r - r_gt_mod.if_set_return(mod);
 }
 

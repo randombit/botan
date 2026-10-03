@@ -145,7 +145,7 @@ BigInt random_prime_with_sieve(RandomNumberGenerator& rng,
 
          BOTAN_DEBUG_ASSERT(no_small_multiples(p, sieve));
 
-         auto mod_p = Barrett_Reduction::for_secret_modulus(p);
+         const auto mod_p = Barrett_Reduction::for_secret_modulus(p);
          const Montgomery_Params monty_p(p, mod_p);
 
          if(coprime > 1) {
@@ -267,7 +267,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
    while(true) {
       BigInt p(keygen_rng, bits);
 
-      auto scope = CT::scoped_poison(p);
+      const auto scope = CT::scoped_poison(p);
 
       /*
       Force high two bits so multiplication always results in expected n bit integer
@@ -295,7 +295,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
 
          BOTAN_DEBUG_ASSERT(no_small_multiples(p, sieve));
 
-         auto mod_p = Barrett_Reduction::for_secret_modulus(p);
+         const auto mod_p = Barrett_Reduction::for_secret_modulus(p);
          const Montgomery_Params monty_p(p, mod_p);
 
          /*

@@ -101,7 +101,7 @@ AlgorithmIdentifier gost_private_key_alg_id(const AlgorithmIdentifier& alg_id) {
       ecc_param_id = decode_gost_key_parameters(alg_id);
    }
 
-   auto group = check_domain(EC_Group::from_OID(ecc_param_id));
+   const auto group = check_domain(EC_Group::from_OID(ecc_param_id));
    check_gost_key_oid_matches_group(alg_id.oid(), group);
 
    return AlgorithmIdentifier(alg_id.oid(), group.DER_encode());
@@ -155,7 +155,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id, std:
 
    const OID ecc_param_id = decode_gost_key_parameters(alg_id);
 
-   auto group = check_domain(EC_Group::from_OID(ecc_param_id));
+   const auto group = check_domain(EC_Group::from_OID(ecc_param_id));
    check_gost_key_oid_matches_group(alg_id.oid(), group);
 
    std::vector<uint8_t> bits;
@@ -174,7 +174,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id, std:
    encoding.insert(encoding.end(), bits.rbegin() + part_size, bits.rend());
    encoding.insert(encoding.end(), bits.rbegin(), bits.rend() - part_size);
 
-   m_public_key = std::make_shared<EC_PublicKey_Data>(std::move(group), encoding);
+   m_public_key = std::make_shared<EC_PublicKey_Data>(group, encoding);
 }
 
 GOST_3410_PrivateKey::GOST_3410_PrivateKey(const EC_Group& domain, const BigInt& x) :

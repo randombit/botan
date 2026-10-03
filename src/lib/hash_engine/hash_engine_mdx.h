@@ -124,9 +124,9 @@ class MDx_MB_Engine final : public Hash_Engine {
             Step& step = steps[nsteps++];
 
             if(b >= d1_lo && b < d1_hi) {
-               step = Step{Step::Direct1, b, d1_hi, 0};
+               step = Step{Step::Kind::Direct1, b, d1_hi, 0};
             } else if(b >= d2_lo && b < d2_hi) {
-               step = Step{Step::Direct2, b, d2_hi, 0};
+               step = Step{Step::Kind::Direct2, b, d2_hi, 0};
             } else {
                size_t e = blocks;
                if(b < d1_lo && d1_lo < d1_hi) {
@@ -135,7 +135,7 @@ class MDx_MB_Engine final : public Hash_Engine {
                if(b < d2_lo && d2_lo < d2_hi) {
                   e = std::min(e, d2_lo);
                }
-               step = Step{Step::Scratch, b, e, scratch_blocks};
+               step = Step{Step::Kind::Scratch, b, e, scratch_blocks};
                scratch_blocks += e - b;
             }
 
@@ -146,7 +146,7 @@ class MDx_MB_Engine final : public Hash_Engine {
          if(m_scratch.size() < m_lanes * lane_stride) {
             m_scratch.resize(m_lanes * lane_stride);
          }
-         auto scratch = [&](size_t lane, const Step& step) {
+         const auto scratch = [&](size_t lane, const Step& step) {
             return &m_scratch[lane * lane_stride + step.slot * m_block_bytes];
          };
 
@@ -154,7 +154,7 @@ class MDx_MB_Engine final : public Hash_Engine {
          // prefix remainder, the padding byte, zeros and the counter
          for(size_t i = 0; i != nsteps; ++i) {
             const Step& step = steps[i];
-            if(step.kind != Step::Scratch) {
+            if(step.kind != Step::Kind::Scratch) {
                continue;
             }
             const size_t lo = step.lo * m_block_bytes;
@@ -176,7 +176,7 @@ class MDx_MB_Engine final : public Hash_Engine {
 
          for(size_t base = 0; base < count; base += m_lanes) {
             // Excess lanes of the last batch just recompute the final message
-            auto lane_idx = [&](size_t l) { return std::min(base + l, count - 1); };
+            const auto lane_idx = [&](size_t l) { return std::min(base + l, count - 1); };
 
             copy_mem(m_states, m_initial_states);
 
@@ -185,11 +185,11 @@ class MDx_MB_Engine final : public Hash_Engine {
                const size_t lo = step.lo * m_block_bytes;
                const size_t hi = step.hi * m_block_bytes;
 
-               if(step.kind == Step::Direct1) {
+               if(step.kind == Step::Kind::Direct1) {
                   for(size_t l = 0; l != m_lanes; ++l) {
                      m_ptrs[l] = inputs1[lane_idx(l)].data() + (lo - r);
                   }
-               } else if(step.kind == Step::Direct2) {
+               } else if(step.kind == Step::Kind::Direct2) {
                   for(size_t l = 0; l != m_lanes; ++l) {
                      m_ptrs[l] = inputs2[lane_idx(l)].data() + (lo - r - len1);
                   }
@@ -226,7 +226,7 @@ class MDx_MB_Engine final : public Hash_Engine {
       * slot onwards
       */
       struct Step {
-            enum Kind : uint8_t { Direct1, Direct2, Scratch };
+            enum class Kind : uint8_t { Direct1, Direct2, Scratch };
 
             Kind kind;
             size_t lo;

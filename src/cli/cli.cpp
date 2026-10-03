@@ -179,7 +179,7 @@ std::ostream& Command::error_output() {
 //static
 std::vector<uint8_t> Command::slurp_file(const std::string& input_file, size_t buf_size) {
    std::vector<uint8_t> buf;
-   auto insert_fn = [&](const uint8_t b[], size_t l) { buf.insert(buf.end(), b, b + l); };
+   const auto insert_fn = [&](const uint8_t b[], size_t l) { buf.insert(buf.end(), b, b + l); };
    Command::read_file(input_file, insert_fn, buf_size);
    return buf;
 }
@@ -187,7 +187,7 @@ std::vector<uint8_t> Command::slurp_file(const std::string& input_file, size_t b
 //static
 std::string Command::slurp_file_as_str(const std::string& input_file, size_t buf_size) {
    std::string str;
-   auto insert_fn = [&](const uint8_t b[], size_t l) { str.append(reinterpret_cast<const char*>(b), l); };
+   const auto insert_fn = [&](const uint8_t b[], size_t l) { str.append(reinterpret_cast<const char*>(b), l); };
    Command::read_file(input_file, insert_fn, buf_size);
    return str;
 }
@@ -247,7 +247,7 @@ namespace {
 
 bool echo_suppression_supported() {
 #if defined(BOTAN_HAS_OS_UTILS)
-   auto echo = Botan::OS::suppress_echo_on_terminal();
+   const auto echo = Botan::OS::suppress_echo_on_terminal();
    return (echo != nullptr);
 #else
    return false;
@@ -265,7 +265,7 @@ std::string Command::get_passphrase(const std::string& prompt) {
    std::string pass;
 
 #if defined(BOTAN_HAS_OS_UTILS)
-   auto echo_suppress = Botan::OS::suppress_echo_on_terminal();
+   const auto echo_suppress = Botan::OS::suppress_echo_on_terminal();
 #endif
 
    std::getline(std::cin, pass);
@@ -321,7 +321,7 @@ std::map<std::string, Command::cmd_maker_fn>& Command::global_registry() {
 //static
 std::vector<std::string> Command::registered_cmds() {
    std::vector<std::string> cmds;
-   for(auto& cmd : Command::global_registry()) {
+   for(const auto& cmd : Command::global_registry()) {
       cmds.push_back(cmd.first);
    }
    return cmds;
@@ -331,7 +331,7 @@ std::vector<std::string> Command::registered_cmds() {
 std::unique_ptr<Command> Command::get_cmd(const std::string& name) {
    const auto& reg = Command::global_registry();
 
-   auto i = reg.find(name);
+   const auto i = reg.find(name);
    if(i != reg.end()) {
       return i->second();
    }

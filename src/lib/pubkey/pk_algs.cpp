@@ -556,8 +556,8 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 #endif
 #if defined(BOTAN_HAS_CLASSICMCELIECE)
    if(alg_name == "ClassicMcEliece") {
-      auto cmce_params_set = params.empty() ? Classic_McEliece_Parameter_Set::ClassicMcEliece_6960119f
-                                            : Classic_McEliece_Parameter_Set::from_string(params);
+      const auto cmce_params_set = params.empty() ? Classic_McEliece_Parameter_Set::ClassicMcEliece_6960119f
+                                                  : Classic_McEliece_Parameter_Set::from_string(params);
       return std::make_unique<Classic_McEliece_PrivateKey>(rng, cmce_params_set);
    }
 #endif
@@ -636,7 +636,7 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 
 #if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
    if(alg_name == "SPHINCS+" || alg_name == "SphincsPlus") {
-      auto sphincs_params = Sphincs_Parameters::create(params);
+      const auto sphincs_params = Sphincs_Parameters::create(params);
 
       return std::make_unique<SphincsPlus_PrivateKey>(rng, sphincs_params);
    }
@@ -644,7 +644,7 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 
 #if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
    if(alg_name == "SLH-DSA") {
-      auto slh_dsa_params = SLH_DSA_Parameters::create(params);
+      const auto slh_dsa_params = SLH_DSA_Parameters::create(params);
 
       return std::make_unique<SLH_DSA_PrivateKey>(rng, slh_dsa_params);
    }
@@ -701,7 +701,7 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
       }();
 
       if(EC_Group::supports_named_group(group_id)) {
-         auto ec_group = EC_Group::from_name(group_id);
+         const auto ec_group = EC_Group::from_name(group_id);
          return create_ec_private_key(alg_name, ec_group, rng);
       } else {
          return {};
@@ -722,7 +722,7 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
          return "modp/ietf/2048";
       }();
 
-      auto modp_group = DL_Group::from_name(group_id);
+      const auto modp_group = DL_Group::from_name(group_id);
 
    #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
       if(alg_name == "DH") {

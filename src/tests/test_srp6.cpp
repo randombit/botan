@@ -56,7 +56,7 @@ class SRP6_KAT_Tests final : public Text_Based_Test {
             return result;
          }
 
-         auto group = Botan::DL_Group::from_name(group_id);
+         const auto group = Botan::DL_Group::from_name(group_id);
 
          const Botan::BigInt v = Botan::srp6_generate_verifier(username, password, salt, group_id, hash);
          result.test_bn_eq("SRP verifier", v, exp_v);
@@ -118,7 +118,7 @@ class SRP6_RT_Tests final : public Test {
 
                const Botan::BigInt B = server.step1(verifier, group_id, hash_id, this->rng());
 
-               auto client = srp6_client_agree(username, password, group_id, hash_id, salt, B, this->rng());
+               const auto client = srp6_client_agree(username, password, group_id, hash_id, salt, B, this->rng());
 
                const Botan::SymmetricKey server_K = server.step2(client.first);
 

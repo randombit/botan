@@ -53,8 +53,8 @@ inline Botan::PKCS11::secure_string TEST_SO_PIN() {
    return to_sec_string(PKCS11_TEST_SO_PIN);
 }
 
-std::vector<Test::Result> run_pkcs11_tests(const std::string& name,
-                                           std::vector<std::pair<std::string, std::function<Test::Result()>>>& fns);
+std::vector<Test::Result> run_pkcs11_tests(
+   const std::string& name, const std::vector<std::pair<std::string, std::function<Test::Result()>>>& fns);
 
 #endif
 }  // namespace Botan_Tests

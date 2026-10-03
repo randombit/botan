@@ -223,7 +223,7 @@ void SP800_108_Pipeline::perform_kdf(std::span<uint8_t> key,
    secure_vector<uint8_t> scratch;
 
    params.generate_blocks([&](auto counter_encoded, auto outlen_encoded) {
-      auto incorporate_constant_input = [label, salt, outlen_encoded](MessageAuthenticationCode* prf) {
+      const auto incorporate_constant_input = [label, salt, outlen_encoded](MessageAuthenticationCode* prf) {
          prf->update(label);
          prf->update(delim);
          prf->update(salt);

@@ -467,7 +467,7 @@ McEliece_PrivateKey::McEliece_PrivateKey(const AlgorithmIdentifier& alg_id, std:
    const McEliece_Params params = mceliece_validate_key_encoding_params(n, t);
    validate_public_matrix(public_matrix, params, McEliece_Key_Source::Encoded);
 
-   auto sp_field = std::make_shared<GF2m_Field>(params.ext_deg);
+   const auto sp_field = std::make_shared<GF2m_Field>(params.ext_deg);
    std::vector<polyn_gf2m> g = {polyn_gf2m(enc_g, sp_field)};
    std::vector<polyn_gf2m> sqrtmod;
    BER_Decoder dec2 = dec.start_sequence();

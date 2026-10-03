@@ -119,7 +119,7 @@ void sample_ntt_uniform(KyberPolyNTT& p, XOF& xof) {
  */
 bool sample_ntt_uniform_from_buffer(KyberPolyNTT& p, std::span<const uint8_t> buf) {
    auto sample = [in = buf, stashed_coeff = std::optional<uint16_t>{}]() mutable -> std::optional<uint16_t> {
-      auto lowerthan_q = [](uint32_t d) -> std::optional<uint16_t> {
+      const auto lowerthan_q = [](uint32_t d) -> std::optional<uint16_t> {
          if(d < KyberConstants::Q) {
             return static_cast<uint16_t>(d);
          } else {
@@ -378,7 +378,7 @@ KyberInternalKeypair expand_keypair(KyberPrivateKeySeed seed, KyberConstants mod
 
    // Algorithm 13 (K-PKE.KeyGen) ----------------
 
-   auto A = Kyber_Algos::sample_matrix(rho, false /* not transposed */, mode);
+   const auto A = Kyber_Algos::sample_matrix(rho, false /* not transposed */, mode);
 
    // The nonce N is handled internally by the PolynomialSampler
    Kyber_Algos::PolynomialSampler ps(sigma, mode);
@@ -426,8 +426,8 @@ std::pair<KyberPolyVec, KyberPoly> decompress_ciphertext(StrongSpan<const KyberC
    }
 
    BufferSlicer bs(ct);
-   auto pv = bs.take(pvb);
-   auto p = bs.take(pcb);
+   const auto pv = bs.take(pvb);
+   const auto p = bs.take(pcb);
    BOTAN_ASSERT_NOMSG(bs.empty());
 
    return {decompress_polynomial_vector(pv, mode), decompress_polynomial(p, mode)};

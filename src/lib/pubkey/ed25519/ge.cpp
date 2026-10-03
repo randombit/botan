@@ -89,9 +89,9 @@ class Ed25519_Point_Projective final {
       }
 
       void serialize_to(std::span<uint8_t, 32> s) const {
-         auto recip = this->Z.invert();
-         auto x = this->X * recip;
-         auto y = this->Y * recip;
+         const auto recip = this->Z.invert();
+         const auto x = this->X * recip;
+         const auto y = this->Y * recip;
          y.serialize_to(s);
          s[31] ^= x.is_negative() ? 0x80 : 0x00;
       }
@@ -101,15 +101,15 @@ class Ed25519_Point_Projective final {
 
 constexpr Ed25519_Point_Completed Ed25519_Point_Projective::dbl() const {
    Ed25519_Point_Completed r;
-   r.X = X.sqr();        // XX=X1^2
-   r.Z = Y.sqr();        // YY=Y1^2
-   r.T = Z.sqr2();       // B=2*Z1^2
-   r.Y = X + Y;          // A=X1+Y1
-   auto t0 = r.Y.sqr();  // AA=A^2
-   r.Y = r.Z + r.X;      // Y3=YY+XX
-   r.Z = r.Z - r.X;      // Z3=YY-XX
-   r.X = t0 - r.Y;       // X3=AA-Y3
-   r.T = r.T - r.Z;      // T3=B-Z3
+   r.X = X.sqr();              // XX=X1^2
+   r.Z = Y.sqr();              // YY=Y1^2
+   r.T = Z.sqr2();             // B=2*Z1^2
+   r.Y = X + Y;                // A=X1+Y1
+   const auto t0 = r.Y.sqr();  // AA=A^2
+   r.Y = r.Z + r.X;            // Y3=YY+XX
+   r.Z = r.Z - r.X;            // Z3=YY-XX
+   r.X = t0 - r.Y;             // X3=AA-Y3
+   r.T = r.T - r.Z;            // T3=B-Z3
    return r;
 }
 
@@ -155,9 +155,9 @@ class Ed25519_Point_Extended final {
       }
 
       void serialize_to(std::span<uint8_t, 32> out) const {
-         auto recip = this->Z.invert();
-         auto x = this->X * recip;
-         auto y = this->Y * recip;
+         const auto recip = this->Z.invert();
+         const auto x = this->X * recip;
+         const auto y = this->Y * recip;
          y.serialize_to(out);
          out[31] ^= x.is_negative() ? 0x80 : 0x00;
       }
@@ -217,17 +217,17 @@ class Ed25519_Point_Cached final {
 */
 inline constexpr Ed25519_Point_Completed operator+(const Ed25519_Point_Extended& p, const Ed25519_Point_Cached& q) {
    Ed25519_Point_Completed r;
-   r.X = p.Y + p.X;        // YpX1 = Y1+X1
-   r.Y = p.Y - p.X;        // YmX1 = Y1-X1
-   r.Z = r.X * q.YplusX;   // A = YpX1*YpX2
-   r.Y = r.Y * q.YminusX;  // B = YmX1*YmX2
-   r.T = q.T2d * p.T;      // C = T2d2*T1
-   r.X = p.Z * q.Z;        // ZZ = Z1*Z2
-   auto t0 = r.X + r.X;    // D = 2*ZZ
-   r.X = r.Z - r.Y;        // X3 = A-B
-   r.Y = r.Z + r.Y;        // Y3 = A+B
-   r.Z = t0 + r.T;         // Z3 = D+C
-   r.T = t0 - r.T;         // T3 = D-C
+   r.X = p.Y + p.X;            // YpX1 = Y1+X1
+   r.Y = p.Y - p.X;            // YmX1 = Y1-X1
+   r.Z = r.X * q.YplusX;       // A = YpX1*YpX2
+   r.Y = r.Y * q.YminusX;      // B = YmX1*YmX2
+   r.T = q.T2d * p.T;          // C = T2d2*T1
+   r.X = p.Z * q.Z;            // ZZ = Z1*Z2
+   const auto t0 = r.X + r.X;  // D = 2*ZZ
+   r.X = r.Z - r.Y;            // X3 = A-B
+   r.Y = r.Z + r.Y;            // Y3 = A+B
+   r.Z = t0 + r.T;             // Z3 = D+C
+   r.T = t0 - r.T;             // T3 = D-C
    return r;
 }
 
@@ -236,16 +236,16 @@ inline constexpr Ed25519_Point_Completed operator+(const Ed25519_Point_Extended&
 */
 inline constexpr Ed25519_Point_Completed operator+(const Ed25519_Point_Extended& p, const Ed25519_Point_Niels& q) {
    Ed25519_Point_Completed r;
-   r.X = p.Y + p.X;        // YpX1 = Y1+X1
-   r.Y = p.Y - p.X;        // YmX1 = Y1-X1
-   r.Z = r.X * q.yplusx;   // A = YpX1*ypx2
-   r.Y = r.Y * q.yminusx;  // B = YmX1*ymx2
-   r.T = q.xy2d * p.T;     // C = xy2d2*T1
-   auto t0 = p.Z + p.Z;    // D = 2*Z1
-   r.X = r.Z - r.Y;        // X3 = A-B
-   r.Y = r.Z + r.Y;        // Y3 = A+B
-   r.Z = t0 + r.T;         // Z3 = D+C
-   r.T = t0 - r.T;         // T3 = D-C
+   r.X = p.Y + p.X;            // YpX1 = Y1+X1
+   r.Y = p.Y - p.X;            // YmX1 = Y1-X1
+   r.Z = r.X * q.yplusx;       // A = YpX1*ypx2
+   r.Y = r.Y * q.yminusx;      // B = YmX1*ymx2
+   r.T = q.xy2d * p.T;         // C = xy2d2*T1
+   const auto t0 = p.Z + p.Z;  // D = 2*Z1
+   r.X = r.Z - r.Y;            // X3 = A-B
+   r.Y = r.Z + r.Y;            // Y3 = A+B
+   r.Z = t0 + r.T;             // Z3 = D+C
+   r.T = t0 - r.T;             // T3 = D-C
    return r;
 }
 
@@ -254,16 +254,16 @@ inline constexpr Ed25519_Point_Completed operator+(const Ed25519_Point_Extended&
 */
 inline constexpr Ed25519_Point_Completed operator-(const Ed25519_Point_Extended& p, const Ed25519_Point_Niels& q) {
    Ed25519_Point_Completed r;
-   r.X = p.Y + p.X;        // YpX1 = Y1+X1
-   r.Y = p.Y - p.X;        // YmX1 = Y1-X1
-   r.Z = r.X * q.yminusx;  // A = YpX1*ymx2
-   r.Y = r.Y * q.yplusx;   // B = YmX1*ypx2
-   r.T = q.xy2d * p.T;     // C = xy2d2*T1
-   auto t0 = p.Z + p.Z;    // D = 2*Z1
-   r.X = r.Z - r.Y;        // X3 = A-B
-   r.Y = r.Z + r.Y;        // Y3 = A+B
-   r.Z = t0 - r.T;         // Z3 = D-C
-   r.T = t0 + r.T;         // T3 = D+C
+   r.X = p.Y + p.X;            // YpX1 = Y1+X1
+   r.Y = p.Y - p.X;            // YmX1 = Y1-X1
+   r.Z = r.X * q.yminusx;      // A = YpX1*ymx2
+   r.Y = r.Y * q.yplusx;       // B = YmX1*ypx2
+   r.T = q.xy2d * p.T;         // C = xy2d2*T1
+   const auto t0 = p.Z + p.Z;  // D = 2*Z1
+   r.X = r.Z - r.Y;            // X3 = A-B
+   r.Y = r.Z + r.Y;            // Y3 = A+B
+   r.Z = t0 - r.T;             // Z3 = D-C
+   r.T = t0 + r.T;             // T3 = D+C
    return r;
 }
 
@@ -272,17 +272,17 @@ inline constexpr Ed25519_Point_Completed operator-(const Ed25519_Point_Extended&
 */
 inline constexpr Ed25519_Point_Completed operator-(const Ed25519_Point_Extended& p, const Ed25519_Point_Cached& q) {
    Ed25519_Point_Completed r;
-   r.X = p.Y + p.X;        // YpX1 = Y1+X1
-   r.Y = p.Y - p.X;        // YmX1 = Y1-X1
-   r.Z = r.X * q.YminusX;  // A = YpX1*YmX2
-   r.Y = r.Y * q.YplusX;   // B = YmX1*YpX2
-   r.T = q.T2d * p.T;      // C = T2d2*T1
-   r.X = p.Z * q.Z;        // ZZ = Z1*Z2
-   auto t0 = r.X + r.X;    // D = 2*ZZ
-   r.X = r.Z - r.Y;        // X3 = A-B
-   r.Y = r.Z + r.Y;        // Y3 = A+B
-   r.Z = t0 - r.T;         // Z3 = D-C
-   r.T = t0 + r.T;         // T3 = D+C
+   r.X = p.Y + p.X;            // YpX1 = Y1+X1
+   r.Y = p.Y - p.X;            // YmX1 = Y1-X1
+   r.Z = r.X * q.YminusX;      // A = YpX1*YmX2
+   r.Y = r.Y * q.YplusX;       // B = YmX1*YpX2
+   r.T = q.T2d * p.T;          // C = T2d2*T1
+   r.X = p.Z * q.Z;            // ZZ = Z1*Z2
+   const auto t0 = r.X + r.X;  // D = 2*ZZ
+   r.X = r.Z - r.Y;            // X3 = A-B
+   r.Y = r.Z + r.Y;            // Y3 = A+B
+   r.Z = t0 - r.T;             // Z3 = D-C
+   r.T = t0 + r.T;             // T3 = D+C
    return r;
 }
 
@@ -452,7 +452,7 @@ std::optional<Ed25519_Point_Extended> frombytes_negate_vartime(std::span<const u
    u = u - h.Z; /* u = y^2-1 */
    v = v + h.Z; /* v = dy^2+1 */
 
-   auto v3 = v.sqr() * v;
+   const auto v3 = v.sqr() * v;
    h.X = v3.sqr();
    h.X = h.X * v;
    h.X = h.X * u; /* x = uv^7 */

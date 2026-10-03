@@ -109,7 +109,7 @@ XmlReporter::XmlReporter(const Test_Options& opts, std::string output_dir) :
    set_property("compiler", full_compiler_name_string());
    set_property("compiler_version", full_compiler_version_string());
    set_property("timestamp", format(std::chrono::system_clock::now()));
-   auto custom_props = parse_report_properties(opts.report_properties());
+   const auto custom_props = parse_report_properties(opts.report_properties());
    for(const auto& prop : custom_props) {
       set_property(prop.first, prop.second);
    }

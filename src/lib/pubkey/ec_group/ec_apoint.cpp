@@ -63,8 +63,8 @@ bool EC_AffinePoint::operator==(const EC_AffinePoint& other) const {
       return false;
    }
 
-   auto a_is_id = this->is_identity();
-   auto b_is_id = other.is_identity();
+   const auto a_is_id = this->is_identity();
+   const auto b_is_id = other.is_identity();
 
    if(a_is_id || b_is_id) {
       return (a_is_id == b_is_id);

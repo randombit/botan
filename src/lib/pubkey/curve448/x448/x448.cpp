@@ -46,8 +46,8 @@ secure_vector<uint8_t> X448_PrivateKey::raw_private_key_bits() const {
 
 namespace {
 void x448_basepoint_from_data(std::span<uint8_t, X448_LEN> mypublic, std::span<const uint8_t, X448_LEN> secret) {
-   auto bp = x448_basepoint(decode_scalar(secret));
-   auto bp_bytes = encode_point(bp);
+   const auto bp = x448_basepoint(decode_scalar(secret));
+   const auto bp_bytes = encode_point(bp);
    copy_mem(mypublic, bp_bytes);
 }
 
@@ -68,7 +68,7 @@ void load_x448_keypair(secure_vector<uint8_t> secret,
    BOTAN_ASSERT_NOMSG(secret.size() == X448_LEN);
    std::array<uint8_t, X448_LEN> pub{};
    {
-      auto scope = CT::scoped_poison(secret);
+      const auto scope = CT::scoped_poison(secret);
       x448_basepoint_from_data(pub, std::span(secret).first<X448_LEN>());
       CT::unpoison(pub);
    }
@@ -142,7 +142,7 @@ bool X448_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/)
    const auto& pub = m_public->key();
    std::array<uint8_t, X448_LEN> public_point{};
    BOTAN_ASSERT_NOMSG(sk.size() == X448_LEN);
-   auto scope = CT::scoped_poison(sk);
+   const auto scope = CT::scoped_poison(sk);
    x448_basepoint_from_data(public_point, std::span(sk).first<X448_LEN>());
    return CT::is_equal(public_point.data(), pub.data(), pub.size()).as_bool();
 }
@@ -163,7 +163,7 @@ class X448_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
       secure_vector<uint8_t> raw_agree(const uint8_t w_data[], size_t w_len) override {
          const auto& sk = m_key->key();
          BOTAN_ASSERT_NOMSG(sk.size() == X448_LEN);
-         auto scope = CT::scoped_poison(sk);
+         const auto scope = CT::scoped_poison(sk);
 
          const std::span<const uint8_t> w(w_data, w_len);
          if(w.size() != X448_LEN) {

@@ -155,7 +155,7 @@ Botan::PK_Signature_Options ecdsa_kat_options(const std::string& hash) {
    if(hash == "Raw") {
       return Botan::PK_Signature_Options().with_externally_computed_prehash();
    }
-   if(hash.starts_with("Raw(") && hash.ends_with(")")) {
+   if(hash.starts_with("Raw(") && hash.ends_with(')')) {
       return Botan::PK_Signature_Options().with_externally_computed_prehash(hash.substr(4, hash.size() - 5));
    }
    return Botan::PK_Signature_Options().with_hash(hash);
@@ -319,7 +319,7 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test {
          const Botan::BigInt x = vars.get_req_bn("InvalidKeyX");
          const Botan::BigInt y = vars.get_req_bn("InvalidKeyY");
 
-         if(auto pt = Botan::EC_AffinePoint::from_bigint_xy(group, x, y)) {
+         if(const auto pt = Botan::EC_AffinePoint::from_bigint_xy(group, x, y)) {
             result.test_failure("Invalid public key was deserialized");
          } else {
             result.test_success("Invalid public key was rejected");
@@ -401,7 +401,7 @@ class ECDSA_ExplicitCurveKey_Test : public Text_Based_Test {
          try {
             const auto expected_oid = Botan::OID::from_name(group_name).value();
 
-            auto key = Botan::PKCS8::load_key(key_bytes);
+            const auto key = Botan::PKCS8::load_key(key_bytes);
             const auto* ecdsa = dynamic_cast<const Botan::ECDSA_PrivateKey*>(key.get());
             if(ecdsa != nullptr) {
                result.test_success("Returned key was ECDSA");

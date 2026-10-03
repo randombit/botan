@@ -279,7 +279,7 @@ size_t Entropy_Sources::_gather_just(Entropy_Accumulator& acc, std::string_view 
 size_t Entropy_Sources::poll(RandomNumberGenerator& rng, size_t poll_bits, std::chrono::milliseconds timeout) {
 #if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
    typedef std::chrono::system_clock clock;
-   auto timeout_expired = [to = clock::now() + timeout] { return clock::now() > to; };
+   const auto timeout_expired = [to = clock::now() + timeout] { return clock::now() > to; };
 #else
    auto timeout_expired = [] { return false; };
 #endif

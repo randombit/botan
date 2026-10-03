@@ -66,8 +66,8 @@ class BOTAN_TEST_API Thread_Pool final {
       auto run(F&& f, Args&&... args) -> std::future<std::invoke_result_t<F, Args...>> {
          using return_type = std::invoke_result_t<F, Args...>;
 
-         auto future_work = std::bind(std::forward<F>(f), std::forward<Args>(args)...);  // NOLINT(*-avoid-bind)
-         auto task = std::make_shared<std::packaged_task<return_type()>>(future_work);
+         const auto future_work = std::bind(std::forward<F>(f), std::forward<Args>(args)...);  // NOLINT(*-avoid-bind)
+         const auto task = std::make_shared<std::packaged_task<return_type()>>(future_work);
          auto future_result = task->get_future();
          queue_thunk([task]() { (*task)(); });
          return future_result;

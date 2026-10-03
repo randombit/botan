@@ -479,7 +479,7 @@ class Mask final {
       static constexpr Mask<T> is_any_of(T v, std::initializer_list<T> accepted) {
          T accept = 0;
 
-         for(auto a : accepted) {
+         for(const auto a : accepted) {
             const T diff = a ^ v;
             const T eq_zero = value_barrier<T>(~diff & (diff - 1));
             accept |= eq_zero;
@@ -585,7 +585,7 @@ class Mask final {
       void conditional_swap(U& x, U& y) const
          requires(sizeof(U) <= sizeof(T))
       {
-         auto cnd = Mask<U>(*this);
+         const auto cnd = Mask<U>(*this);
          U t0 = cnd.select(y, x);
          U t1 = cnd.select(x, y);
          x = t0;
@@ -699,7 +699,7 @@ class Option final {
       constexpr T value_or(T other) const
          requires std::unsigned_integral<T>
       {
-         auto mask = CT::Mask<T>::from_choice(m_has_value);
+         const auto mask = CT::Mask<T>::from_choice(m_has_value);
          return mask.select(m_value, other);
       }
 

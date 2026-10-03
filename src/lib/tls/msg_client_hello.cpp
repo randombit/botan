@@ -267,7 +267,7 @@ bool Client_Hello::sent_signature_algorithms() const {
 }
 
 std::vector<std::string> Client_Hello::next_protocols() const {
-   if(auto* alpn = m_data->extensions().get<Application_Layer_Protocol_Notification>()) {
+   if(const auto* alpn = m_data->extensions().get<Application_Layer_Protocol_Notification>()) {
       return alpn->protocols();
    }
    return {};

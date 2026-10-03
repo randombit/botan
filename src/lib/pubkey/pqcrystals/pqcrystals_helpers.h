@@ -112,7 +112,7 @@ consteval static auto precompute_zetas(T q, T monty, T root_of_unity) {
 
    std::array<T, degree> result = {0};
 
-   auto bitreverse = [](size_t k) -> size_t {
+   const auto bitreverse = [](size_t k) -> size_t {
       size_t r = 0;
       const auto l = ceil_log2(degree);
       for(size_t i = 0; i < l; ++i) {
@@ -121,7 +121,7 @@ consteval static auto precompute_zetas(T q, T monty, T root_of_unity) {
       return r;
    };
 
-   auto pow = [q](T base, size_t exp) -> T2 {
+   const auto pow = [q](T base, size_t exp) -> T2 {
       T2 res = 1;
       for(size_t i = 0; i < exp; ++i) {
          res = (res * base) % q;
@@ -129,7 +129,7 @@ consteval static auto precompute_zetas(T q, T monty, T root_of_unity) {
       return res;
    };
 
-   auto csubq = [q](T a) -> T { return a <= q / 2 ? a : a - q; };
+   const auto csubq = [q](T a) -> T { return a <= q / 2 ? a : a - q; };
 
    for(size_t i = 0; i < result.size(); ++i) {
       result[i] = csubq(pow(root_of_unity, bitreverse(i)) * monty % q);
@@ -194,7 +194,7 @@ class Bounded_XOF final {
       constexpr auto next(const MapFnT& transformer = default_transformer<bytes>,
                           const PredicateFnT& predicate = default_predicate<bytes, MappedValueT<bytes, MapFnT>>) {
          while(true) {
-            auto output = transformer(take<bytes>());
+            const auto output = transformer(take<bytes>());
             if(predicate(output)) {
                return output;
             }

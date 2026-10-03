@@ -93,7 +93,7 @@ EC_PrivateKey_Data::~EC_PrivateKey_Data() {
 
 std::shared_ptr<EC_PublicKey_Data> EC_PrivateKey_Data::public_key(RandomNumberGenerator& rng,
                                                                   bool with_modular_inverse) const {
-   auto public_point = [&] {
+   const auto public_point = [&] {
       if(with_modular_inverse) {
          return EC_AffinePoint::g_mul(m_scalar.invert(), rng);
       } else {

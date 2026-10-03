@@ -141,13 +141,13 @@ class DilithiumRoundtripTests final : public Test {
 
          auto rng = Test::new_rng(test_name);
 
-         auto sign = [randomized, &rng](const auto& private_key, const auto& msg) {
+         const auto sign = [randomized, &rng](const auto& private_key, const auto& msg) {
             const std::string param = (randomized) ? "Randomized" : "Deterministic";
             auto signer = Botan::PK_Signer(private_key, *rng, param);
             return signer.sign_message(msg, *rng);
          };
 
-         auto verify = [](const auto& public_key, const auto& msg, const auto& signature) {
+         const auto verify = [](const auto& public_key, const auto& msg, const auto& signature) {
             auto verifier = Botan::PK_Verifier(public_key, Botan::PK_Signature_Options());
             verifier.update(msg);
             return verifier.check_signature(signature);
@@ -251,43 +251,45 @@ class Dilithium_Salt_Size_Tests final : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("Dilithium salt size option");
 
-         auto check = [&](const std::string& algo, const std::string& mode, size_t expected_salt, size_t wrong_salt) {
-            std::unique_ptr<Botan::Private_Key> key;
-            try {
-               key = Botan::create_private_key(algo, this->rng(), mode);
-            } catch(const Botan::Lookup_Error&) {
-               /*ignore*/
-            } catch(const Botan::Not_Implemented&) {
-               /*ignore*/
-            }
+         const auto check =
+            [&](const std::string& algo, const std::string& mode, size_t expected_salt, size_t wrong_salt) {
+               std::unique_ptr<Botan::Private_Key> key;
+               try {
+                  key = Botan::create_private_key(algo, this->rng(), mode);
+               } catch(const Botan::Lookup_Error&) {
+                  /*ignore*/
+               } catch(const Botan::Not_Implemented&) {
+                  /*ignore*/
+               }
 
-            if(key == nullptr) {
-               result.test_note("Skipping " + mode + " - not available");
-               return;
-            }
+               if(key == nullptr) {
+                  result.test_note("Skipping " + mode + " - not available");
+                  return;
+               }
 
-            const auto pub = key->public_key();
-            const std::vector<uint8_t> msg = {0x61, 0x62, 0x63};
+               const auto pub = key->public_key();
+               const std::vector<uint8_t> msg = {0x61, 0x62, 0x63};
 
-            result.test_no_throw(mode + " accepts its randomness size as salt", [&] {
-               Botan::PK_Signer signer(*key, this->rng(), Botan::PK_Signature_Options().with_salt_size(expected_salt));
-               Botan::PK_Verifier verifier(*pub, Botan::PK_Signature_Options().with_salt_size(expected_salt));
-               result.test_is_true(mode + " sign/verify",
-                                   verifier.verify_message(msg, signer.sign_message(msg, this->rng())));
-            });
+               result.test_no_throw(mode + " accepts its randomness size as salt", [&] {
+                  Botan::PK_Signer signer(
+                     *key, this->rng(), Botan::PK_Signature_Options().with_salt_size(expected_salt));
+                  Botan::PK_Verifier verifier(*pub, Botan::PK_Signature_Options().with_salt_size(expected_salt));
+                  result.test_is_true(mode + " sign/verify",
+                                      verifier.verify_message(msg, signer.sign_message(msg, this->rng())));
+               });
 
-            result.test_throws(mode + " rejects another salt size", [&] {
-               const Botan::PK_Signer signer(
-                  *key, this->rng(), Botan::PK_Signature_Options().with_salt_size(wrong_salt));
-            });
+               result.test_throws(mode + " rejects another salt size", [&] {
+                  const Botan::PK_Signer signer(
+                     *key, this->rng(), Botan::PK_Signature_Options().with_salt_size(wrong_salt));
+               });
 
-            result.test_throws(mode + " rejects a salt when deterministic", [&] {
-               const Botan::PK_Signer signer(
-                  *key,
-                  this->rng(),
-                  Botan::PK_Signature_Options().with_salt_size(expected_salt).with_deterministic_signature());
-            });
-         };
+               result.test_throws(mode + " rejects a salt when deterministic", [&] {
+                  const Botan::PK_Signer signer(
+                     *key,
+                     this->rng(),
+                     Botan::PK_Signature_Options().with_salt_size(expected_salt).with_deterministic_signature());
+               });
+            };
 
          check("ML-DSA", "ML-DSA-4x4", 32, 64);
          check("Dilithium", "Dilithium-4x4-r3", 64, 32);

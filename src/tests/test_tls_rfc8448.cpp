@@ -569,7 +569,7 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager {
       }
 
       std::optional<Session> retrieve_one(const Session_Handle& handle) override {
-         auto itr = std::find_if(m_sessions.begin(), m_sessions.end(), find_by_handle(handle));
+         const auto itr = std::find_if(m_sessions.begin(), m_sessions.end(), find_by_handle(handle));
          if(itr == m_sessions.end()) {
             return std::nullopt;
          } else {
@@ -802,7 +802,7 @@ std::vector<uint8_t> strip_message_header(const std::vector<uint8_t>& msg) {
 std::vector<MockSignature> make_mock_signatures(const VarMap& vars) {
    std::vector<MockSignature> result;
 
-   auto mock = [&](const std::string& msg, const std::string& sig) {
+   const auto mock = [&](const std::string& msg, const std::string& sig) {
       if(vars.has_key(msg) && vars.has_key(sig)) {
          result.push_back({vars.get_opt_bin(msg), vars.get_opt_bin(sig)});
       }
@@ -1779,9 +1779,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
          return {
             CHECK("Send Client Hello",
                   [&](Test::Result& result) {
-                     auto add_early_data_and_sort = [&](Botan::TLS::Extensions& exts,
-                                                        Botan::TLS::Connection_Side side,
-                                                        Botan::TLS::Handshake_Type type) {
+                     const auto add_early_data_and_sort = [&](Botan::TLS::Extensions& exts,
+                                                              Botan::TLS::Connection_Side side,
+                                                              Botan::TLS::Handshake_Type type) {
                         if(type == Handshake_Type::NewSessionTicket) {
                            exts.add(new EarlyDataIndication(1024));  // NOLINT(*-owning-memory)
                         }
@@ -1951,9 +1951,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
          return {
             CHECK("Receive Client Hello",
                   [&](Test::Result& result) {
-                     auto add_cookie_and_sort = [&](Botan::TLS::Extensions& exts,
-                                                    Botan::TLS::Connection_Side side,
-                                                    Botan::TLS::Handshake_Type type) {
+                     const auto add_cookie_and_sort = [&](Botan::TLS::Extensions& exts,
+                                                          Botan::TLS::Connection_Side side,
+                                                          Botan::TLS::Handshake_Type type) {
                         if(type == Handshake_Type::EncryptedExtensions) {
                            exts.add(new EarlyDataIndication());  // NOLINT(*-owning-memory)
                         }
@@ -2037,9 +2037,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
          return {
             CHECK("Receive Client Hello",
                   [&](Test::Result& result) {
-                     auto add_cookie_and_sort = [&](Botan::TLS::Extensions& exts,
-                                                    Botan::TLS::Connection_Side side,
-                                                    Botan::TLS::Handshake_Type type) {
+                     const auto add_cookie_and_sort = [&](Botan::TLS::Extensions& exts,
+                                                          Botan::TLS::Connection_Side side,
+                                                          Botan::TLS::Handshake_Type type) {
                         if(type == Handshake_Type::HelloRetryRequest) {
                            // This cookie needs to be mocked into the HRR since RFC 8448 contains it.
                            exts.add(
@@ -2442,9 +2442,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
          return {
             CHECK("Send Client Hello",
                   [&](Test::Result& result) {
-                     auto sort_our_extensions = [&](Botan::TLS::Extensions& exts,
-                                                    Botan::TLS::Connection_Side /* side */,
-                                                    Botan::TLS::Handshake_Type type) {
+                     const auto sort_our_extensions = [&](Botan::TLS::Extensions& exts,
+                                                          Botan::TLS::Connection_Side /* side */,
+                                                          Botan::TLS::Handshake_Type type) {
                         // This is the order of extensions when we first introduced the PSK
                         // implementation and generated the transcript. To stay compatible
                         // with the now hard-coded transcript, we pin the extension order.

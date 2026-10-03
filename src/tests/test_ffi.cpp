@@ -474,7 +474,7 @@ class FFI_RNG_Test final : public FFI_Test {
          if(tcti_name.empty() || tcti_name == "disabled") {
             result.test_note("TPM2 tests are disabled.");
          } else {
-            auto tpm2_test_rng = [&](botan_tpm2_ctx_t tpm2_context) {
+            const auto tpm2_test_rng = [&](botan_tpm2_ctx_t tpm2_context) {
                // Create and use an RNG without a TPM2 session
                // (communication between application and TPM won't be encrypted)
                if(TEST_FFI_INIT(botan_tpm2_rng_init, (&tpm2_rng, tpm2_context, nullptr, nullptr, nullptr))) {
@@ -811,7 +811,7 @@ class FFI_CRL_Test final : public FFI_Test {
          TEST_FFI_OK(botan_x509_crl_view_string_values_count, (bytecrl, BOTAN_X509_PEM_ENCODING, &pem_count));
          result.test_sz_eq("one PEM encoding", pem_count, 1);
 
-         auto remove_newlines = [](std::string_view str) {
+         const auto remove_newlines = [](std::string_view str) {
             auto out = std::string(str);
             std::erase(out, '\n');
             std::erase(out, '\r');
@@ -2435,15 +2435,15 @@ class FFI_AEAD_Test final : public FFI_Test {
                size_t output_written = 0;
                size_t input_consumed = 0;
 
-               auto pt_chunk = pt_slicer.first(ideal_granularity);
+               const auto pt_chunk = pt_slicer.first(ideal_granularity);
 
                // The existing implementation won't consume any bytes from the
                // input if there is no space in the output buffer. Even when
                // the cipher is a mode that won't produce any output until the
                // entire message is processed. Hence, give it some dummy buffer.
                BOTAN_ASSERT_NOMSG(dummy_buffer.size() > ideal_granularity);
-               auto ct_chunk = (requires_entire_message) ? std::span(dummy_buffer).first(ideal_granularity)
-                                                         : ct_stuffer.first(ideal_granularity);
+               const auto ct_chunk = (requires_entire_message) ? std::span(dummy_buffer).first(ideal_granularity)
+                                                               : ct_stuffer.first(ideal_granularity);
 
                TEST_FFI_OK(botan_cipher_update,
                            (cipher_encrypt,
@@ -2489,7 +2489,7 @@ class FFI_AEAD_Test final : public FFI_Test {
             result.test_sz_eq(
                "required buffer size is written in bogus final", final_output_written, expected_final_size);
 
-            auto final_ct_chunk = ct_stuffer.first(expected_final_size);
+            const auto final_ct_chunk = ct_stuffer.first(expected_final_size);
 
             TEST_FFI_OK(botan_cipher_update,
                         (cipher_encrypt,
@@ -2533,14 +2533,14 @@ class FFI_AEAD_Test final : public FFI_Test {
                size_t output_written = 42;
                size_t input_consumed = 1337;
 
-               auto ct_chunk = ct_slicer.first(ideal_granularity);
+               const auto ct_chunk = ct_slicer.first(ideal_granularity);
 
                // The existing implementation won't consume any bytes from the
                // input if there is no space in the output buffer. Even when
                // the cipher is a mode that won't produce any output until the
                // entire message is processed. Hence, give it some dummy buffer.
-               auto pt_chunk = (requires_entire_message) ? std::span(dummy_buffer).first(ideal_granularity)
-                                                         : pt_stuffer.first(ideal_granularity);
+               const auto pt_chunk = (requires_entire_message) ? std::span(dummy_buffer).first(ideal_granularity)
+                                                               : pt_stuffer.first(ideal_granularity);
 
                TEST_FFI_OK(botan_cipher_update,
                            (cipher_decrypt,
@@ -2565,7 +2565,7 @@ class FFI_AEAD_Test final : public FFI_Test {
             }
 
             const size_t expected_final_size_dec = requires_entire_message ? plaintext.size() : pt_stuffer.size();
-            auto pt_chunk = pt_stuffer.first(expected_final_size_dec);
+            const auto pt_chunk = pt_stuffer.first(expected_final_size_dec);
 
             size_t final_output_written_dec = 42;
             size_t final_input_consumed_dec = 1337;
@@ -3178,7 +3178,7 @@ class FFI_MP_Test final : public FFI_Test {
 
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (x, 10, str_buf, &str_len));
-         result.test_str_eq("botan_mp_add", std::string(str_buf), "80");
+         result.test_str_eq("botan_mp_add", str_buf, "80");
 
          botan_mp_sub_u32(x, x, 80);
          TEST_FFI_RC(1, botan_mp_is_zero, (x));
@@ -3188,7 +3188,7 @@ class FFI_MP_Test final : public FFI_Test {
 
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (x, 10, str_buf, &str_len));
-         result.test_str_eq("botan_mp_add", std::string(str_buf), "259");
+         result.test_str_eq("botan_mp_add", str_buf, "259");
 
          TEST_FFI_RC(1, botan_mp_is_odd, (x));
          TEST_FFI_RC(0, botan_mp_is_even, (x));
@@ -3248,7 +3248,7 @@ class FFI_MP_Test final : public FFI_Test {
          result.test_sz_eq("botan_mp_num_bits", x_bits, 9);
 
          TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
-         result.test_str_eq("botan_mp_to_hex", std::string(str_buf), "0x0103");
+         result.test_str_eq("botan_mp_to_hex", str_buf, "0x0103");
 
          ViewStringSink hex_sink;
          TEST_FFI_OK(botan_mp_view_hex, (x, hex_sink.delegate(), hex_sink.callback()));
@@ -3271,11 +3271,11 @@ class FFI_MP_Test final : public FFI_Test {
          TEST_FFI_OK(botan_mp_set_bit, (x, 87));
          TEST_FFI_RC(1, botan_mp_get_bit, (x, 87));
          TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
-         result.test_str_eq("botan_mp_set_bit", std::string(str_buf), "0x8000000000000000000103");
+         result.test_str_eq("botan_mp_set_bit", str_buf, "0x8000000000000000000103");
 
          TEST_FFI_OK(botan_mp_clear_bit, (x, 87));
          TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
-         result.test_str_eq("botan_mp_set_bit", std::string(str_buf), "0x0103");
+         result.test_str_eq("botan_mp_set_bit", str_buf, "0x0103");
 
          botan_mp_t y;
          TEST_FFI_OK(botan_mp_init, (&y));
@@ -3287,12 +3287,12 @@ class FFI_MP_Test final : public FFI_Test {
          TEST_FFI_OK(botan_mp_add, (r, x, y));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_str_eq("botan_mp_add", std::string(str_buf), "19089002");
+         result.test_str_eq("botan_mp_add", str_buf, "19089002");
 
          TEST_FFI_OK(botan_mp_mul, (r, x, y));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_str_eq("botan_mp_mul", std::string(str_buf), "4943984437");
+         result.test_str_eq("botan_mp_mul", str_buf, "4943984437");
          TEST_FFI_RC(0, botan_mp_is_negative, (r));
 
          botan_mp_t q;
@@ -3301,33 +3301,33 @@ class FFI_MP_Test final : public FFI_Test {
 
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (q, 10, str_buf, &str_len));
-         result.test_str_eq("botan_mp_div_q", std::string(str_buf), "73701");
+         result.test_str_eq("botan_mp_div_q", str_buf, "73701");
 
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_str_eq("botan_mp_div_r", std::string(str_buf), "184");
+         result.test_str_eq("botan_mp_div_r", str_buf, "184");
 
          TEST_FFI_OK(botan_mp_set_from_str, (y, "4943984437"));
          TEST_FFI_OK(botan_mp_sub, (r, x, y));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_str_eq("botan_mp_sub", std::string(str_buf), "-4943984178");
+         result.test_str_eq("botan_mp_sub", str_buf, "-4943984178");
          TEST_FFI_RC(1, botan_mp_is_negative, (r));
 
          TEST_FFI_OK(botan_mp_lshift, (r, x, 39));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_str_eq("botan_mp_lshift", std::string(str_buf), "142386755796992");
+         result.test_str_eq("botan_mp_lshift", str_buf, "142386755796992");
 
          TEST_FFI_OK(botan_mp_rshift, (r, r, 3));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_str_eq("botan_mp_rshift", std::string(str_buf), "17798344474624");
+         result.test_str_eq("botan_mp_rshift", str_buf, "17798344474624");
 
          TEST_FFI_OK(botan_mp_gcd, (r, x, y));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_str_eq("botan_mp_gcd", std::string(str_buf), "259");
+         result.test_str_eq("botan_mp_gcd", str_buf, "259");
 
          botan_mp_t p;
          botan_mp_init(&p);
@@ -3343,12 +3343,12 @@ class FFI_MP_Test final : public FFI_Test {
          TEST_FFI_OK(botan_mp_mod_inverse, (r, x, p));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_str_eq("botan_mp_mod_inverse", std::string(str_buf), "40728777507911553541948312086427855425");
+         result.test_str_eq("botan_mp_mod_inverse", str_buf, "40728777507911553541948312086427855425");
 
          TEST_FFI_OK(botan_mp_powmod, (r, x, r, p));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_str_eq("botan_mp_powmod", std::string(str_buf), "40550417419160441638948180641668117560");
+         result.test_str_eq("botan_mp_powmod", str_buf, "40550417419160441638948180641668117560");
 
          TEST_FFI_OK(botan_mp_num_bytes, (r, &bn_bytes));
          result.test_sz_eq("botan_mp_num_bytes", bn_bytes, 16);
@@ -3362,7 +3362,7 @@ class FFI_MP_Test final : public FFI_Test {
          TEST_FFI_OK(botan_mp_mod_mul, (r, x, y, p));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_str_eq("botan_mp_mod_mul", std::string(str_buf), "123945920473931248854653259523111998693");
+         result.test_str_eq("botan_mp_mod_mul", str_buf, "123945920473931248854653259523111998693");
 
          str_len = 0;
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_mp_to_str, (r, 10, str_buf, &str_len));
@@ -5898,7 +5898,7 @@ class FFI_SPAKE2P_Test final : public FFI_Test {
                      (params, rng, secret.data(), secret.size(), record.delegate(), record.callback()));
          result.test_sz_eq("record length", record.size(), 32 + 65);
 
-         auto init_prover = [&](botan_spake2p_prover_t* prover) {
+         const auto init_prover = [&](botan_spake2p_prover_t* prover) {
             TEST_FFI_OK(botan_spake2p_prover_init,
                         (prover,
                          params,
@@ -5912,7 +5912,7 @@ class FFI_SPAKE2P_Test final : public FFI_Test {
                          context.size()));
          };
 
-         auto init_verifier = [&](botan_spake2p_verifier_t* verifier) {
+         const auto init_verifier = [&](botan_spake2p_verifier_t* verifier) {
             TEST_FFI_OK(botan_spake2p_verifier_init,
                         (verifier,
                          params,

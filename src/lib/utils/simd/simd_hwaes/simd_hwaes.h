@@ -25,9 +25,9 @@ inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_sbox(SIMD_4x32 x) {
    const auto inv_sr = SIMD_4x32(0x070A0D00, 0x0B0E0104, 0x0F020508, 0x0306090C);
 
 #if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
-   auto enc = SIMD_4x32(_mm_aesenclast_si128(x.raw(), _mm_setzero_si128()));
+   const auto enc = SIMD_4x32(_mm_aesenclast_si128(x.raw(), _mm_setzero_si128()));
 #elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
-   auto enc = SIMD_4x32(vreinterpretq_u32_u8(vaeseq_u8(vreinterpretq_u8_u32(x.raw()), vdupq_n_u8(0))));
+   const auto enc = SIMD_4x32(vreinterpretq_u32_u8(vaeseq_u8(vreinterpretq_u8_u32(x.raw()), vdupq_n_u8(0))));
 #else
    #error "hw_aes_sbox not implemented for this architecture"
 #endif
@@ -43,9 +43,9 @@ inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_inv_sbox(SIMD_4x32 x) {
    const auto sr = SIMD_4x32(0x0F0A0500, 0x030E0904, 0x07020D08, 0x0B06010C);
 
 #if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
-   auto dec = SIMD_4x32(_mm_aesdeclast_si128(x.raw(), _mm_setzero_si128()));
+   const auto dec = SIMD_4x32(_mm_aesdeclast_si128(x.raw(), _mm_setzero_si128()));
 #elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
-   auto dec = SIMD_4x32(vreinterpretq_u32_u8(vaesdq_u8(vreinterpretq_u8_u32(x.raw()), vdupq_n_u8(0))));
+   const auto dec = SIMD_4x32(vreinterpretq_u32_u8(vaesdq_u8(vreinterpretq_u8_u32(x.raw()), vdupq_n_u8(0))));
 #else
    #error "hw_aes_inv_sbox not implemented for this architecture"
 #endif

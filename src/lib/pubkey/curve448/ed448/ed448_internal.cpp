@@ -45,8 +45,8 @@ std::array<uint8_t, 2 * ED448_LEN> shake(bool f, std::span<const uint8_t> contex
 
 std::pair<std::span<const uint8_t, 57>, std::span<const uint8_t, 57>> split(std::span<const uint8_t, 114> arr) {
    BufferSlicer bs(arr);
-   auto lhs = bs.take<57>();
-   auto rhs = bs.take<57>();
+   const auto lhs = bs.take<57>();
+   const auto rhs = bs.take<57>();
    return {lhs, rhs};
 }
 

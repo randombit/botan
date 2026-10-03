@@ -408,7 +408,7 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
    }
 
    // Otherwise, decrypt, check MAC, return plaintext
-   auto cs = get_cipherstate(epoch);
+   const auto cs = get_cipherstate(epoch);
 
    BOTAN_ASSERT(cs, "Have cipherstate for this epoch");
 
@@ -487,7 +487,7 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
 
    try {
       // Otherwise, decrypt, check MAC, return plaintext
-      auto cs = get_cipherstate(epoch);
+      const auto cs = get_cipherstate(epoch);
 
       BOTAN_ASSERT(cs, "Have cipherstate for this epoch");
 

@@ -63,33 +63,33 @@ class Frodo_KAT_Tests final : public PK_PQC_KEM_KAT_Test {
 std::vector<Test::Result> test_frodo_roundtrips() {
    auto rng = Test::new_rng("frodokem_roundtrip");
 
-   auto modes = std::vector{Botan::FrodoKEMMode::eFrodoKEM1344_SHAKE,
-                            Botan::FrodoKEMMode::eFrodoKEM976_SHAKE,
-                            Botan::FrodoKEMMode::eFrodoKEM640_SHAKE,
-                            Botan::FrodoKEMMode::FrodoKEM1344_SHAKE,
-                            Botan::FrodoKEMMode::FrodoKEM976_SHAKE,
-                            Botan::FrodoKEMMode::FrodoKEM640_SHAKE,
-                            Botan::FrodoKEMMode::eFrodoKEM1344_AES,
-                            Botan::FrodoKEMMode::eFrodoKEM976_AES,
-                            Botan::FrodoKEMMode::eFrodoKEM640_AES,
-                            Botan::FrodoKEMMode::FrodoKEM1344_AES,
-                            Botan::FrodoKEMMode::FrodoKEM976_AES,
-                            Botan::FrodoKEMMode::FrodoKEM640_AES};
+   const auto modes = std::vector{Botan::FrodoKEMMode::eFrodoKEM1344_SHAKE,
+                                  Botan::FrodoKEMMode::eFrodoKEM976_SHAKE,
+                                  Botan::FrodoKEMMode::eFrodoKEM640_SHAKE,
+                                  Botan::FrodoKEMMode::FrodoKEM1344_SHAKE,
+                                  Botan::FrodoKEMMode::FrodoKEM976_SHAKE,
+                                  Botan::FrodoKEMMode::FrodoKEM640_SHAKE,
+                                  Botan::FrodoKEMMode::eFrodoKEM1344_AES,
+                                  Botan::FrodoKEMMode::eFrodoKEM976_AES,
+                                  Botan::FrodoKEMMode::eFrodoKEM640_AES,
+                                  Botan::FrodoKEMMode::FrodoKEM1344_AES,
+                                  Botan::FrodoKEMMode::FrodoKEM976_AES,
+                                  Botan::FrodoKEMMode::FrodoKEM640_AES};
 
-   auto get_decryption_error_value = [](const Botan::FrodoKEMConstants& constants,
-                                        std::span<const uint8_t> encaps_value,
-                                        const Botan::FrodoKEM_PrivateKey& sk) {
+   const auto get_decryption_error_value = [](const Botan::FrodoKEMConstants& constants,
+                                              std::span<const uint8_t> encaps_value,
+                                              const Botan::FrodoKEM_PrivateKey& sk) {
       // Extracts the `S` value from the encoded private key
       auto shake = constants.create_xof();
       const auto sk_bytes = sk.raw_private_key_bits();
-      auto sk_s = std::span<const uint8_t>(sk_bytes.data(), constants.len_sec_bytes());
+      const auto sk_s = std::span<const uint8_t>(sk_bytes.data(), constants.len_sec_bytes());
       shake->update(encaps_value);
       shake->update(sk_s);
       return shake->output(constants.len_sec_bytes());
    };
 
    std::vector<Test::Result> results;
-   for(auto mode : modes) {
+   for(const auto mode : modes) {
       const Botan::FrodoKEMMode m(mode);
       if(!m.is_available()) {
          continue;

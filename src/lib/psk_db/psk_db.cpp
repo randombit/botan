@@ -20,7 +20,7 @@ std::string PSK_Database::get_str(std::string_view name) const {
 }
 
 void PSK_Database::set_str(std::string_view name, std::string_view psk) {
-   auto pskb = as_span_of_bytes(psk);
+   const auto pskb = as_span_of_bytes(psk);
    this->set(name, pskb.data(), pskb.size());
 }
 

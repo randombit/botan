@@ -175,10 +175,10 @@ class SIMD_4X32_Tests final : public Test {
          const auto simd_le_array_in = Botan::concat(simd_le_in, simd_be_in);
          const auto simd_be_array_in = Botan::concat(simd_be_in, simd_le_in);
 
-         auto simd_le = Botan::load_le<Botan::SIMD_4x32>(simd_le_in);
-         auto simd_be = Botan::load_be<Botan::SIMD_4x32>(simd_be_in);
-         auto simd_le_array = Botan::load_le<std::array<Botan::SIMD_4x32, 2>>(simd_le_array_in);
-         auto simd_be_array = Botan::load_be<std::array<Botan::SIMD_4x32, 2>>(simd_be_array_in);
+         const auto simd_le = Botan::load_le<Botan::SIMD_4x32>(simd_le_in);
+         const auto simd_be = Botan::load_be<Botan::SIMD_4x32>(simd_be_in);
+         const auto simd_le_array = Botan::load_le<std::array<Botan::SIMD_4x32, 2>>(simd_le_array_in);
+         const auto simd_be_array = Botan::load_be<std::array<Botan::SIMD_4x32, 2>>(simd_be_array_in);
 
          auto simd_le_vec = Botan::store_le<std::vector<uint8_t>>(simd_le);
          auto simd_be_vec = Botan::store_be(simd_be);
@@ -349,10 +349,10 @@ class SIMD_2X64_Tests final : public Test {
          const auto simd_le_array_in = Botan::concat(simd_le_in, simd_be_in);
          const auto simd_be_array_in = Botan::concat(simd_be_in, simd_le_in);
 
-         auto simd_le = Botan::load_le<Botan::SIMD_2x64>(simd_le_in);
-         auto simd_be = Botan::load_be<Botan::SIMD_2x64>(simd_be_in);
-         auto simd_le_array = Botan::load_le<std::array<Botan::SIMD_2x64, 2>>(simd_le_array_in);
-         auto simd_be_array = Botan::load_be<std::array<Botan::SIMD_2x64, 2>>(simd_be_array_in);
+         const auto simd_le = Botan::load_le<Botan::SIMD_2x64>(simd_le_in);
+         const auto simd_be = Botan::load_be<Botan::SIMD_2x64>(simd_be_in);
+         const auto simd_le_array = Botan::load_le<std::array<Botan::SIMD_2x64, 2>>(simd_le_array_in);
+         const auto simd_be_array = Botan::load_be<std::array<Botan::SIMD_2x64, 2>>(simd_be_array_in);
 
          auto simd_le_vec = Botan::store_le<std::vector<uint8_t>>(simd_le);
          auto simd_be_vec = Botan::store_be(simd_be);

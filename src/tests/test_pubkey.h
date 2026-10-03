@@ -236,7 +236,7 @@ class PK_Key_Validity_Test : public PK_Test {
 };
 
 void check_invalid_ciphertexts(Test::Result& result,
-                               Botan::PK_Decryptor& decryptor,
+                               const Botan::PK_Decryptor& decryptor,
                                const std::vector<uint8_t>& plaintext,
                                const std::vector<uint8_t>& ciphertext,
                                Botan::RandomNumberGenerator& rng);

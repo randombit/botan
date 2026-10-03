@@ -78,7 +78,7 @@ class Utility_Function_Tests final : public Test {
          for(int si = -15; si != 15; ++si) {
             const size_t i = static_cast<size_t>(si);
             auto sum1 = Botan::checked_add<size_t>(i, zero, zero, zero, large);
-            auto sum2 = Botan::checked_add<size_t>(large, zero, zero, zero, i);
+            const auto sum2 = Botan::checked_add<size_t>(large, zero, zero, zero, i);
 
             result.test_is_true("checked_add looks at all args", sum1 == sum2);
 
@@ -989,7 +989,7 @@ class BitOps_Tests final : public Test {
 
       template <typename T>
       auto random_pc(Test::Result& result) {
-         auto n = Botan::load_le<T>(Test::rng().random_array<sizeof(T)>());
+         const auto n = Botan::load_le<T>(Test::rng().random_array<sizeof(T)>());
          result.test_sz_eq(Botan::fmt("popcount({}) == {}", n, std::popcount(n)), pc(n), std::popcount(n));
       }
 
@@ -1081,11 +1081,11 @@ class Version_Tests final : public Test {
 
          const char* version_cstr = Botan::version_cstr();
          const std::string version_str = Botan::version_string();
-         result.test_str_eq("Same version string", version_str, std::string(version_cstr));
+         result.test_str_eq("Same version string", version_str, version_cstr);
 
          const char* sversion_cstr = Botan::short_version_cstr();
          const std::string sversion_str = Botan::short_version_string();
-         result.test_str_eq("Same short version string", sversion_str, std::string(sversion_cstr));
+         result.test_str_eq("Same short version string", sversion_str, sversion_cstr);
 
          const auto expected_sversion =
             Botan::fmt("{}.{}.{}", BOTAN_VERSION_MAJOR, BOTAN_VERSION_MINOR, BOTAN_VERSION_PATCH);
@@ -1441,7 +1441,7 @@ class ReadKV_Tests final : public Text_Based_Test {
          }
 
          for(size_t i = 0; i != expected.size(); i += 2) {
-            auto j = kv.find(expected[i]);
+            const auto j = kv.find(expected[i]);
             if(result.test_is_true("Found key", j != kv.end())) {
                result.test_str_eq("Matching value", j->second, expected[i + 1]);
             }
@@ -1612,7 +1612,7 @@ class ScopedCleanup_Tests : public Test {
                   [](Test::Result& result) {
                      bool ran = false;
                      {
-                        auto clean = Botan::scoped_cleanup([&] { ran = true; });
+                        const auto clean = Botan::scoped_cleanup([&] { ran = true; });
                      }
                      result.test_is_true("cleanup ran", ran);
                   }),
@@ -1621,8 +1621,8 @@ class ScopedCleanup_Tests : public Test {
                   [](Test::Result& result) {
                      bool ran = false;
                      bool fn_called = false;
-                     auto fn = [&] {
-                        auto clean = Botan::scoped_cleanup([&] { ran = true; });
+                     const auto fn = [&] {
+                        const auto clean = Botan::scoped_cleanup([&] { ran = true; });
                         fn_called = true;
                      };
 
@@ -1637,8 +1637,8 @@ class ScopedCleanup_Tests : public Test {
                      bool ran = false;
                      bool fn_called = false;
                      bool exception_caught = false;
-                     auto fn = [&] {
-                        auto clean = Botan::scoped_cleanup([&] { ran = true; });
+                     const auto fn = [&] {
+                        const auto clean = Botan::scoped_cleanup([&] { ran = true; });
                         fn_called = true;
                         throw std::runtime_error("test");
                      };

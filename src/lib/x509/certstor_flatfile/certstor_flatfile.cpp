@@ -113,7 +113,7 @@ std::optional<X509_Certificate> Flatfile_Certificate_Store::find_cert_by_pubkey_
       throw Invalid_Argument("Flatfile_Certificate_Store::find_cert_by_pubkey_sha1 invalid hash");
    }
 
-   auto found_cert = m_pubkey_sha1_to_cert.find(key_hash);
+   const auto found_cert = m_pubkey_sha1_to_cert.find(key_hash);
 
    if(found_cert != m_pubkey_sha1_to_cert.end()) {
       return found_cert->second;
@@ -128,7 +128,7 @@ std::optional<X509_Certificate> Flatfile_Certificate_Store::find_cert_by_raw_sub
       throw Invalid_Argument("Flatfile_Certificate_Store::find_cert_by_raw_subject_dn_sha256 invalid hash");
    }
 
-   auto found_cert = m_subject_dn_sha256_to_cert.find(subject_hash);
+   const auto found_cert = m_subject_dn_sha256_to_cert.find(subject_hash);
 
    if(found_cert != m_subject_dn_sha256_to_cert.end()) {
       return found_cert->second;

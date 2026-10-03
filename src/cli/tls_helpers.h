@@ -38,7 +38,7 @@ inline bool value_exists(const std::vector<std::string>& vec, const std::string&
 }
 
 inline std::string maybe_hex_encode(std::string_view v) {
-   auto is_printable_char = [](uint8_t c) { return c >= 32 && c < 127; };
+   const auto is_printable_char = [](uint8_t c) { return c >= 32 && c < 127; };
 
    for(const char c : v) {
       if(!is_printable_char(c)) {

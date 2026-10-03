@@ -43,7 +43,7 @@ class Hash final : public Command {
 
          for(const std::string& fsname : files) {
             try {
-               auto update_hash = [&](const uint8_t b[], size_t l) { hash_fn->update(b, l); };
+               const auto update_hash = [&](const uint8_t b[], size_t l) { hash_fn->update(b, l); };
                read_file(fsname, update_hash, buf_size);
 
                const std::string digest = format_blob(format, hash_fn->final());

@@ -70,7 +70,7 @@ consteval std::array<uint8_t, 256> L_table(bool forward) noexcept {
       }
    }
 
-   auto sqr_matrix = [](std::span<const uint8_t, 256> mat) {
+   const auto sqr_matrix = [](std::span<const uint8_t, 256> mat) {
       std::array<uint8_t, 256> res = {};
       for(size_t i = 0; i != 16; ++i) {
          for(size_t j = 0; j != 16; ++j) {

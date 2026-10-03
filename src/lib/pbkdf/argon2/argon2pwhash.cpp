@@ -94,7 +94,7 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune_params(size_t /*output_length*
 
    auto pwhash = this->from_params(tune_M, t, p);
 
-   auto tune_fn = [&]() {
+   const auto tune_fn = [&]() {
       uint8_t output[64] = {0};
       pwhash->derive_key(output, sizeof(output), "test", 4, nullptr, 0);
    };

@@ -71,7 +71,7 @@ void GHASH::ghash_multiply_base(std::span<uint8_t, GCM_BS> x,
                                 const secure_vector<uint64_t>& HM,
                                 std::span<const uint8_t> input,
                                 size_t blocks) {
-   auto scope = CT::scoped_poison(x);
+   const auto scope = CT::scoped_poison(x);
 
    auto X = load_be<std::array<uint64_t, 2>>(x);
 

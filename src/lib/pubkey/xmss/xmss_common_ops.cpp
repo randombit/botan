@@ -104,7 +104,7 @@ void XMSS_Common_Ops::create_l_trees(std::span<uint8_t> leaves,
    std::vector<std::span<const uint8_t>> h_keys(max_pairs);
    std::vector<std::span<const uint8_t>> h_ins(max_pairs);
 
-   auto node = [&](size_t k, size_t i) { return pks.subspan(k * stride + i * n, n); };
+   const auto node = [&](size_t k, size_t i) { return pks.subspan(k * stride + i * n, n); };
 
    size_t l = wots_len;
 
