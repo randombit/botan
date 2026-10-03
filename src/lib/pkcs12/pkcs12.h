@@ -153,7 +153,10 @@ class BOTAN_PUBLIC_API(3, 13) PKCS12 final {
       *
       * @param data the PFX file contents
       * @param password the password to decrypt the file
-      * @throws Decoding_Error if parsing fails
+      * @throws Decoding_Error if parsing fails, or if a private key in the
+      *         file fails its consistency check (Private_Key::check_key);
+      *         such keys can result from tampering with a file that carries
+      *         no MAC, since the key encryption itself is unauthenticated.
       * @throws Invalid_Authentication_Tag if MAC verification fails
       */
       PKCS12(std::span<const uint8_t> data, std::string_view password);
