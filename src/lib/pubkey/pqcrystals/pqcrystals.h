@@ -52,6 +52,8 @@ class Trait_Base {
       static constexpr T N = ConstantsT::N;
       static constexpr T Q = ConstantsT::Q;
 
+      static constexpr T BARRETT_V = ((1U << 26) + Q / 2) / Q;
+
    protected:
       using T2 = next_longer_int_t<T>;
 
