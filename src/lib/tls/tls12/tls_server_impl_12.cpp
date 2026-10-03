@@ -92,8 +92,20 @@ std::optional<Session> check_for_resume(const Session_Handle& handle_to_resume,
       return std::nullopt;
    }
 
+   // the current policy no longer allows the session's ciphersuite
+   if(!value_exists(policy.ciphersuite_list(session->version()), session->ciphersuite_code())) {
+      return std::nullopt;
+   }
+
    // client sent a different SNI hostname
    if(!client_hello->sni_hostname().empty() && client_hello->sni_hostname() != session->server_info().hostname()) {
+      return std::nullopt;
+   }
+
+   // An abbreviated handshake cannot authenticate the client; fall back to a
+   // full handshake if the current policy requires client authentication but
+   // the session does not contain a client credential
+   if(policy.require_client_certificate_authentication() && !session->peer_credential_type().has_value()) {
       return std::nullopt;
    }
 
