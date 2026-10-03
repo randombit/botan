@@ -193,7 +193,11 @@ std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& h
 
       while(stmt->step()) {
          try {
-            return Session::decrypt(stmt->get_blob(0), m_session_key);
+            auto session = Session::decrypt(stmt->get_blob(0), m_session_key);
+            // Sessions stored by the client role are not subject to server-side lookup
+            if(session.side() == Connection_Side::Server) {
+               return session;
+            }
          } catch(...) {}
       }
    }
@@ -208,18 +212,18 @@ std::vector<Session_with_Handle> Session_Manager_SQL::find_some(const Server_Inf
       lk.emplace(mutex());
    }
 
+   // Sessions established by the server role are skipped below, so the limit
+   // cannot be applied in SQL. Rows are stepped only as far as needed.
    auto stmt = m_db->new_statement(
       "SELECT session_id, session_ticket, session FROM tls_sessions"
       " WHERE hostname = ?1 AND hostport = ?2"
-      " ORDER BY session_start DESC"
-      " LIMIT ?3");
+      " ORDER BY session_start DESC");
 
    stmt->bind(1, info.hostname());
    stmt->bind(2, info.port());
-   stmt->bind(3, max_sessions_hint);
 
    std::vector<Session_with_Handle> found_sessions;
-   while(stmt->step()) {
+   while(found_sessions.size() < max_sessions_hint && stmt->step()) {
       auto handle = [&]() -> Session_Handle {
          const auto ticket_blob = stmt->get_blob(1);
          if(!ticket_blob.empty()) {
@@ -230,8 +234,10 @@ std::vector<Session_with_Handle> Session_Manager_SQL::find_some(const Server_Inf
       }();
 
       try {
-         found_sessions.emplace_back(
-            Session_with_Handle{Session::decrypt(stmt->get_blob(2), m_session_key), std::move(handle)});
+         auto session = Session::decrypt(stmt->get_blob(2), m_session_key);
+         if(session.side() == Connection_Side::Client) {
+            found_sessions.emplace_back(Session_with_Handle{std::move(session), std::move(handle)});
+         }
       } catch(...) {}
    }
 
