@@ -148,6 +148,10 @@ OFB
 Another stream cipher based on a block cipher. Unlike CTR mode, it does not
 allow parallel execution or seeking within the output stream. Prefer CTR.
 
+.. warning::
+
+   Support for OFB is deprecated and will be removed in a future major release.
+
 Available if ``BOTAN_HAS_OFB`` is defined.
 
 Algorithm specification name:
@@ -218,7 +222,8 @@ algorithms like ChaCha20, it is also quite slow.
 .. warning::
 
    RC4 is prone to numerous attacks. **Avoid in new code** and use only if
-   required for compatibility with existing systems.
+   required for compatibility with existing systems. RC4 support is deprecated
+   and will be removed in a future major release.
 
 Available if ``BOTAN_HAS_RC4`` is defined.
 

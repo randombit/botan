@@ -4,6 +4,10 @@ Release Notes
 Version 3.14.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Botan4 is expected next year, which will remove significant deprecated functionality.
+  Please consult ``doc/deprecated.rst`` and if your usage would be impacted by any
+  such deprecations, please comment in GH #4666
+
 * Add types ``PK_Signature_Options`` ``PK_Encryption_Options``, ``PK_KEM_Options``,
   and ``PK_Key_Agreement_Options`` which allow an application to precisely control
   how public key operations (signature, encryption, decryption, KEM, etc) are
