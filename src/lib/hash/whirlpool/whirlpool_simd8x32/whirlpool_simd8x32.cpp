@@ -8,6 +8,7 @@
 
 #include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_8x32.h>
+#include <botan/internal/whirlpool_consts.h>
 
 namespace Botan {
 
@@ -205,6 +206,8 @@ BOTAN_FN_ISA_SIMD_8X32
 void Whirlpool::compress_n_simd8x32(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
    using WhirlpoolSIMD8x32::WhirlpoolState;
 
+   constexpr auto WHIRL_RC = whirlpool_rc<true>(whirlpool_sbox());
+
    auto H = WhirlpoolState::load_be(digest.data());
 
    for(size_t i = 0; i != blocks; ++i) {
@@ -214,35 +217,10 @@ void Whirlpool::compress_n_simd8x32(digest_type& digest, std::span<const uint8_t
       H ^= M;
       auto B = H;  // B = M ^ K
 
-      K = K.round() ^ 0x4F01B887E8C62318;
-      B = B.round() ^ K;
-
-      K = K.round() ^ 0x52916F79F5D2A636;
-      B = B.round() ^ K;
-
-      K = K.round() ^ 0x357B0CA38E9BBC60;
-      B = B.round() ^ K;
-
-      K = K.round() ^ 0x57FE4B2EC2D7E01D;
-      B = B.round() ^ K;
-
-      K = K.round() ^ 0xDA4AF09FE5377715;
-      B = B.round() ^ K;
-
-      K = K.round() ^ 0x856BA0B10A29C958;
-      B = B.round() ^ K;
-
-      K = K.round() ^ 0x67053ECBF4105DBD;
-      B = B.round() ^ K;
-
-      K = K.round() ^ 0xD8957DA78B4127E4;
-      B = B.round() ^ K;
-
-      K = K.round() ^ 0x9E4717DD667CEEFB;
-      B = B.round() ^ K;
-
-      K = K.round() ^ 0x33835AAD07BF2DCA;
-      B = B.round() ^ K;
+      for(size_t r = 0; r != 10; ++r) {
+         K = K.round() ^ WHIRL_RC[r];
+         B = B.round() ^ K;
+      }
 
       H ^= B;
    }
