@@ -25,6 +25,7 @@ version.h
 </header:public>
 
 <header:internal>
+algorithm_spec.h
 alignment_buffer.h
 bit_ops.h
 bswap.h
@@ -46,9 +47,9 @@ mul128.h
 mem_utils.h
 parsing.h
 prefetch.h
+probe_providers.h
 rotate.h
 rounding.h
-scan_name.h
 scoped_cleanup.h
 stack_scrubbing.h
 stl_util.h

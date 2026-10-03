@@ -10,6 +10,7 @@
 #define BOTAN_TPM2_ALGORITHM_MAPPINGS_H_
 
 #include <botan/types.h>
+
 #include <optional>
 #include <string>
 #include <string_view>
