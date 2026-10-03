@@ -1155,7 +1155,7 @@ constexpr std::array<W, N> redc_crandall(std::span<const W, 2 * N> z) {
    }
 
    // hi += carry * C
-   word carry_c[2] = {0};
+   W carry_c[2] = {0};
    carry_c[0] = word_madd2(carry, C, &carry_c[1]);
 
    carry = bigint_add2(hi.data(), N, carry_c, 2);
