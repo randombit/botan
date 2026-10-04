@@ -211,16 +211,9 @@ size_t Kyber_PublicKey::key_length() const {
 }
 
 bool Kyber_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
-   // The length checks described in FIPS 203, Section 7.2 are already performed
-   // while decoding the public key. See constructor of Kyber_PublicKeyInternal.
-   // The decoding function KyberAlgos::byte_decode() also checks the range of
-   // the decoded values. The check below is added for completeness.
-
-   std::vector<uint8_t> test(m_public->mode().polynomial_vector_bytes());
-   Kyber_Algos::encode_polynomial_vector(test, m_public->t());
-
-   const auto& serialized_pubkey = m_public->public_key_bits_raw();
-   return test.size() < serialized_pubkey.size() && std::equal(test.begin(), test.end(), serialized_pubkey.begin());
+   // Every possible check (length, coefficient range of t) is already performed
+   // when the key is decoded; see Kyber_PublicKeyInternal.
+   return true;
 }
 
 std::unique_ptr<Private_Key> Kyber_PublicKey::generate_another(RandomNumberGenerator& rng) const {
@@ -253,9 +246,9 @@ Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) {
    } else if(sk.size() == mode.expanded_private_key_bytes()) {
       std::tie(m_public, m_private) = Expanded_Keypair_Codec().decode_keypair(sk, std::move(mode));
    } else if(!mode.mode().is_ml_kem() && sk.size() == mode.seed_private_key_bytes()) {
-      throw Invalid_Argument("Kyber round 3 private keys do not support the seed format");
+      throw Decoding_Error("Kyber round 3 private keys do not support the seed format");
    } else {
-      throw Invalid_Argument("Private key does not have the correct byte count");
+      throw Decoding_Error("Private key does not have the correct byte count");
    }
 }
 
@@ -272,15 +265,17 @@ secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const {
 }
 
 bool Kyber_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
-   // As we do not support loading a private key in extended format but rather
-   // always extract it from a 64-byte seed, these checks (as described in
-   // FIPS 203, Section 7.1) should never fail. Particularly, the length checks
-   // and the hash consistency check described in Section 7.2 and 7.3 are
-   // trivial when the private key is always extracted from a seed. The encaps/
-   // decaps roundtrip test is added for completeness.
+   // The expanded encoding embeds ek and H(ek); their lengths, the coefficient
+   // ranges and the hash are all verified when the key is decoded. Whether s is
+   // actually consistent with ek can only be tested by an encaps/decaps
+   // round trip, which is reserved for the strong check.
 
    if(!Kyber_PublicKey::check_key(rng, strong)) {
       return false;
+   }
+
+   if(!strong) {
+      return true;
    }
 
    PK_KEM_Encryptor enc(*this, "Raw");

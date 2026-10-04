@@ -21,7 +21,7 @@ namespace {
 
 KyberSerializedPublicKey validate_public_key_length(KyberSerializedPublicKey public_key, size_t expected_length) {
    if(public_key.size() != expected_length) {
-      throw Invalid_Argument("Public key does not have the correct byte count");
+      throw Decoding_Error("Public key does not have the correct byte count");
    }
    return public_key;
 }
@@ -62,11 +62,12 @@ KyberInternalKeypair Expanded_Keypair_Codec::decode_keypair(std::span<const uint
    };
 
    BOTAN_ASSERT(keypair.first && keypair.second, "reading private key encoding");
-   BOTAN_ARG_CHECK(keypair.first->H_public_key_bits_raw().size() == puk_key_hash.size() &&
-                      std::equal(keypair.first->H_public_key_bits_raw().begin(),
-                                 keypair.first->H_public_key_bits_raw().end(),
-                                 puk_key_hash.begin()),
-                   "public key's hash does not match the stored hash");
+
+   const auto& computed_hash = keypair.first->H_public_key_bits_raw();
+   if(computed_hash.size() != puk_key_hash.size() ||
+      !std::equal(computed_hash.begin(), computed_hash.end(), puk_key_hash.begin())) {
+      throw Decoding_Error("Public key hash does not match the hash stored in the private key");
+   }
 
    return keypair;
 }
