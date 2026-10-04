@@ -443,7 +443,7 @@ bool DL_Group::verify_private_element(const BigInt& x) const {
       return false;
    }
 
-   if(q > 0 && x > q) {
+   if(q > 0 && x >= q) {
       return false;
    }
 
@@ -482,7 +482,7 @@ bool DL_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
       return false;
    }
 
-   const size_t test_prob = 128;
+   const size_t test_prob = strong ? 128 : 12;
    const bool is_randomly_generated = (source() != DL_Group_Source::ExternalSource);
 
    if(!is_prime(p, rng, test_prob, is_randomly_generated)) {
