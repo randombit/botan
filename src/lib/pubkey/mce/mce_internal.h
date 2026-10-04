@@ -29,7 +29,7 @@ struct McEliece_Params final {
 };
 
 McEliece_Params mceliece_validate_keygen_params(size_t code_length, size_t t);
-McEliece_Params mceliece_validate_key_encoding_params(size_t code_length, size_t t);
+McEliece_Params mceliece_validate_key_params(size_t code_length, size_t t);
 
 class McEliece_PublicKeyInternal final {
    public:
