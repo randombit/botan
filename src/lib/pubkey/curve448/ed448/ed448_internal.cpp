@@ -140,16 +140,21 @@ Ed448Point Ed448Point::base_point() {
 std::array<uint8_t, ED448_LEN> Ed448Point::encode() const {
    std::array<uint8_t, ED448_LEN> res_buf = {0};
 
+   // A single inversion of Z yields both affine coordinates
+   const auto z_inv = Gf448Elem::one() / m_z;
+   const auto x = m_x * z_inv;
+   const auto y = m_y * z_inv;
+
    // RFC 8032 5.2.2
    //    All values are coded as octet strings, and integers are coded using
    //    little-endian convention. [...]
    //    First, encode the y-coordinate as a little-endian string of 57 octets.
    //    The final octet is always zero.
-   y().to_bytes(std::span(res_buf).first<56>());
+   y.to_bytes(std::span(res_buf).first<56>());
 
    //    To form the encoding of the point, copy the least significant bit of
    //    the x-coordinate to the most significant bit of the final octet.
-   res_buf.back() = (static_cast<uint8_t>(x().is_odd()) << 7);
+   res_buf.back() = (static_cast<uint8_t>(x.is_odd()) << 7);
 
    return res_buf;
 }
