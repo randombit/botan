@@ -107,7 +107,12 @@ XMSS_PublicKey::XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid, Rando
 
 XMSS_PublicKey::XMSS_PublicKey(std::span<const uint8_t> key_bits) : XMSS_PublicKey(AlgorithmIdentifier(), key_bits) {}
 
-XMSS_PublicKey::XMSS_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
+XMSS_PublicKey::XMSS_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
+      XMSS_PublicKey(alg_id, key_bits, Key_Encoding::PublicKey) {}
+
+XMSS_PublicKey::XMSS_PublicKey(const AlgorithmIdentifier& alg_id,
+                               std::span<const uint8_t> key_bits,
+                               Key_Encoding encoding) {
    // The XMSS parameter set is carried in the key bits; no AlgorithmIdentifier parameters are defined
    if(!alg_id.parameters_are_empty()) {
       throw Decoding_Error("Unexpected parameters for XMSS public key");
@@ -117,10 +122,13 @@ XMSS_PublicKey::XMSS_PublicKey(const AlgorithmIdentifier& alg_id, std::span<cons
    const auto xmss_oid = deserialize_xmss_oid(raw_key);
    const auto params = XMSS_Parameters::from_id(xmss_oid);
 
-   // XMSS_PrivateKey passes its complete encoding to this constructor
-   if(raw_key.size() != params.raw_public_key_size() && raw_key.size() != params.raw_private_key_size() &&
-      raw_key.size() != params.raw_legacy_private_key_size()) {
-      throw Decoding_Error("Invalid XMSS public key size detected");
+   if(encoding == Key_Encoding::PublicKey) {
+      if(raw_key.size() != params.raw_public_key_size()) {
+         throw Decoding_Error("Invalid XMSS public key size detected");
+      }
+   } else if(raw_key.size() != params.raw_private_key_size() &&
+             raw_key.size() != params.raw_legacy_private_key_size()) {
+      throw Decoding_Error("Invalid XMSS private key size");
    }
 
    BufferSlicer s(raw_key);
