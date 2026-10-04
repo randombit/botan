@@ -153,7 +153,14 @@ secure_vector<uint8_t> ed25519_expand_seed(std::span<const uint8_t> seed) {
 
 Ed25519_PrivateKey::Ed25519_PrivateKey(std::span<const uint8_t> secret_key) {
    if(secret_key.size() == 64) {
-      load_ed25519_keypair(secure_vector<uint8_t>(secret_key.begin(), secret_key.end()), m_public, m_private);
+      // Signing hashes the stored public key into the challenge, so a public
+      // key other than the one derived from the seed would leak the secret
+      // scalar. Regenerate it and reject any mismatch.
+      auto expanded = ed25519_expand_seed(secret_key.first(32));
+      if(!CT::is_equal(expanded.data() + 32, secret_key.data() + 32, 32).as_bool()) {
+         throw Decoding_Error("Ed25519 public key does not match the private key");
+      }
+      load_ed25519_keypair(std::move(expanded), m_public, m_private);
    } else if(secret_key.size() == 32) {
       load_ed25519_keypair(ed25519_expand_seed(secret_key), m_public, m_private);
    } else {
@@ -185,7 +192,7 @@ Ed25519_PrivateKey::Ed25519_PrivateKey(const AlgorithmIdentifier& alg_id, std::s
    }
 
    secure_vector<uint8_t> bits;
-   BER_Decoder(key_bits, BER_Decoder::Limits::DER()).decode(bits, ASN1_Type::OctetString).discard_remaining();
+   BER_Decoder(key_bits, BER_Decoder::Limits::DER()).decode(bits, ASN1_Type::OctetString).verify_end();
 
    if(bits.size() != 32) {
       throw Decoding_Error("Invalid size for Ed25519 private key");

@@ -98,9 +98,10 @@ std::string Public_Key::fingerprint_public(std::string_view hash_algo) const {
 }
 
 /*
-* Hash of the PKCS #8 encoding for this key object
+* Hash of the algorithm specific private key encoding
 */
 std::string Private_Key::fingerprint_private(std::string_view hash_algo) const {
+   // TODO(Botan4) instead hash the PKCS #8 encoding from private_key_info()
    return create_hex_fingerprint(private_key_bits(), hash_algo);
 }
 

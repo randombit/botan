@@ -80,11 +80,6 @@ Ed448Point Ed448Point::decode(std::span<const uint8_t, ED448_LEN> enc) {
    if((enc.back() & 0x7F) != 0) {  // last byte is either 0x00 or 0x80
       throw Decoding_Error("Ed448 point has unacceptable x-distinguisher");
    }
-   std::array<uint8_t, ED448_LEN> identity_element{};
-   identity_element[0] = 1;
-   if(CT::is_equal(enc.data(), identity_element.data(), ED448_LEN).as_bool()) {
-      throw Decoding_Error("Ed448 point is the identity element");
-   }
    const bool x_distinguisher = enc.back() != 0;
    const auto y_data = std::span(enc).first<56>();
    if(!Gf448Elem::bytes_are_canonical_representation(y_data)) {
@@ -145,16 +140,21 @@ Ed448Point Ed448Point::base_point() {
 std::array<uint8_t, ED448_LEN> Ed448Point::encode() const {
    std::array<uint8_t, ED448_LEN> res_buf = {0};
 
+   // A single inversion of Z yields both affine coordinates
+   const auto z_inv = Gf448Elem::one() / m_z;
+   const auto x = m_x * z_inv;
+   const auto y = m_y * z_inv;
+
    // RFC 8032 5.2.2
    //    All values are coded as octet strings, and integers are coded using
    //    little-endian convention. [...]
    //    First, encode the y-coordinate as a little-endian string of 57 octets.
    //    The final octet is always zero.
-   y().to_bytes(std::span(res_buf).first<56>());
+   y.to_bytes(std::span(res_buf).first<56>());
 
    //    To form the encoding of the point, copy the least significant bit of
    //    the x-coordinate to the most significant bit of the final octet.
-   res_buf.back() = (static_cast<uint8_t>(x().is_odd()) << 7);
+   res_buf.back() = (static_cast<uint8_t>(x.is_odd()) << 7);
 
    return res_buf;
 }
@@ -448,7 +448,6 @@ bool verify_signature(std::span<const uint8_t, ED448_LEN> pk,
       throw Decoding_Error("Ed448 signature has wrong size");
    }
    const auto [big_r_bytes, big_s_bytes] = split(sig.first<2 * ED448_LEN>());
-   const auto big_r = Ed448Point::decode(big_r_bytes);
    if(!Scalar448::bytes_are_reduced(big_s_bytes)) {
       // S not in range 0 <= s < L
       throw Decoding_Error("Ed448 signature has invalid S");
@@ -460,8 +459,38 @@ bool verify_signature(std::span<const uint8_t, ED448_LEN> pk,
    // 3. Check the group equation [4][S]B = [4]R + [4][k]A'. It's
    //    sufficient, but not required, to instead check [S]B = R + [k]A'.
    //    Rearranged as [S]B + [k](-A') = R, computed via Shamir's trick.
+   //
+   // Rather than decoding R, the result is encoded and compared with R
+   // directly. Encodings are canonical, so any R that would fail to decode
+   // (and the valid encoding of any other point) compares unequal.
    const auto neg_A = Ed448Point::decode(pk).negate();
-   return Ed448Point::double_scalar_mul_vartime(big_s, Ed448Point::base_point(), k, neg_A) == big_r;
+   const auto lhs = Ed448Point::double_scalar_mul_vartime(big_s, Ed448Point::base_point(), k, neg_A).encode();
+   return CT::is_equal(lhs.data(), big_r_bytes.data(), ED448_LEN).as_bool();
+}
+
+bool ed448_valid_public_key_point(std::span<const uint8_t, ED448_LEN> pk) {
+   try {
+      const auto A = Ed448Point::decode(pk);
+
+      if(A.is_identity()) {
+         return false;
+      }
+
+      /*
+      * Check that the point is in the prime order subgroup, ie that
+      * [L]A == O, by checking that [L-1]A == -A. Since L is odd this also
+      * rejects the points of order 2 and 4.
+      */
+      constexpr std::array<uint8_t, 56> L_minus_1 = {
+         0xf2, 0x44, 0x58, 0xab, 0x92, 0xc2, 0x78, 0x23, 0x55, 0x8f, 0xc5, 0x8d, 0x72, 0xc2,
+         0x6c, 0x21, 0x90, 0x36, 0xd6, 0xae, 0x49, 0xdb, 0x4e, 0xc4, 0xe9, 0x23, 0xca, 0x7c,
+         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x3f};
+
+      return (Scalar448(L_minus_1) * A) == A.negate();
+   } catch(Decoding_Error&) {
+      return false;
+   }
 }
 
 }  // namespace Botan
