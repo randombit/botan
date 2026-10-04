@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_RSA)
    #include "test_pubkey.h"
    #include "test_rng.h"
+   #include <botan/der_enc.h>
    #include <botan/numthry.h>
    #include <botan/pk_options.h>
    #include <botan/pubkey.h>
@@ -452,6 +453,100 @@ class RSA_DecryptOrRandom_Tests : public Test {
       }
 };
 
+class RSA_Key_Validation_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("RSA private key validation");
+
+         // 1024 bit primes where 65537 divides p-1 but not q-1
+         const Botan::BigInt p(
+            "0xf1b1af255213508dd961691d25047b97ff9fd7619ad159b6f884afc52e2a885c"
+            "00a0fbe9666382faf5cf504a6fd2d11fa5d5058b22028aaf5d2bce64d2dfcbfc"
+            "e5bdfebce48ce400fe16f305783a54fb7edcd7e5e5c7da1be5ba1ec88e51c0cc"
+            "1aa46682d832dc3a0913fef98a64f56103113b1a6a30c635c177d8770583b5ef");
+
+         const Botan::BigInt q(
+            "0xd7904462a109946096a44637f08bea8d404bcc88aee03225f9b024a255f11587"
+            "02c24b44bb133865e5d067a1f3afee30092ef1bc811c3170cac9982b8348ba65"
+            "a1ddba64929fe08091481e292a2ddfba61f5ebc737cf1fd1eb54969aea924a46"
+            "77a784c60f1aa938e92ff65c0eb7bdb36f6fd2c62fc5f1b19f968deac60f2ec3");
+
+         const Botan::BigInt e65537 = Botan::BigInt::from_u64(65537);
+
+         result.test_throws<Botan::Decoding_Error>("e dividing p-1 is rejected",
+                                                   [&]() { const Botan::RSA_PrivateKey key(p, q, e65537); });
+
+         // gcd(17, p-1) == gcd(17, q-1) == 1 so these primes are usable with e = 17
+         const Botan::BigInt e = Botan::BigInt::from_u64(17);
+         const Botan::RSA_PrivateKey key(p, q, e);
+         result.test_is_true("Key with coprime exponent passes strong check", key.check_key(this->rng(), true));
+
+         const Botan::BigInt& n = key.get_n();
+         const Botan::BigInt& d = key.get_d();
+
+         result.test_no_throw("Consistent d is accepted", [&]() { const Botan::RSA_PrivateKey ok(p, q, e, d, n); });
+
+         result.test_throws<Botan::Decoding_Error>("Inconsistent d is rejected",
+                                                   [&]() { const Botan::RSA_PrivateKey bad(p, q, e, d + 1, n); });
+
+         result.test_throws<Botan::Decoding_Error>("Wrong modulus is rejected",
+                                                   [&]() { const Botan::RSA_PrivateKey bad(p, q, e, d, n + 2); });
+
+         // PKCS #1 RSAPrivateKey encoding with the given CRT components
+         auto encode = [&](const Botan::BigInt& d_v,
+                           const Botan::BigInt& d1_v,
+                           const Botan::BigInt& d2_v,
+                           const Botan::BigInt& c_v) -> std::vector<uint8_t> {
+            std::vector<uint8_t> out;
+            Botan::DER_Encoder(out)
+               .start_sequence()
+               .encode(static_cast<size_t>(0))
+               .encode(n)
+               .encode(e)
+               .encode(d_v)
+               .encode(p)
+               .encode(q)
+               .encode(d1_v)
+               .encode(d2_v)
+               .encode(c_v)
+               .end_cons();
+            return out;
+         };
+
+         const Botan::AlgorithmIdentifier alg_id("RSA", Botan::AlgorithmIdentifier::USE_NULL_PARAM);
+
+         result.test_no_throw("Consistent encoding is accepted", [&]() {
+            const Botan::RSA_PrivateKey ok(alg_id, encode(d, key.get_d1(), key.get_d2(), key.get_c()));
+         });
+
+         result.test_throws<Botan::Decoding_Error>("Encoding with altered d is rejected", [&]() {
+            const Botan::RSA_PrivateKey bad(alg_id, encode(d + 1, key.get_d1(), key.get_d2(), key.get_c()));
+         });
+
+         result.test_throws<Botan::Decoding_Error>("Encoding with d >= n is rejected", [&]() {
+            const Botan::RSA_PrivateKey bad(alg_id, encode(d + n, key.get_d1(), key.get_d2(), key.get_c()));
+         });
+
+         result.test_throws<Botan::Decoding_Error>("Encoding with zero d1 is rejected", [&]() {
+            const Botan::RSA_PrivateKey bad(alg_id, encode(d, Botan::BigInt::zero(), key.get_d2(), key.get_c()));
+         });
+
+         result.test_throws<Botan::Decoding_Error>("Encoding with d2 >= q is rejected", [&]() {
+            const Botan::RSA_PrivateKey bad(alg_id, encode(d, key.get_d1(), q, key.get_c()));
+         });
+
+         result.test_throws<Botan::Decoding_Error>("Encoding with c >= p is rejected", [&]() {
+            const Botan::RSA_PrivateKey bad(alg_id, encode(d, key.get_d1(), key.get_d2(), p));
+         });
+
+         result.test_throws<Botan::Decoding_Error>("Encoding with negative c is rejected", [&]() {
+            const Botan::RSA_PrivateKey bad(alg_id, encode(d, key.get_d1(), key.get_d2(), -key.get_c()));
+         });
+
+         return {result};
+      }
+};
+
 BOTAN_REGISTER_TEST("pubkey", "rsa_encrypt", RSA_ES_KAT_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_decrypt", RSA_Decryption_KAT_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_sign", RSA_Signature_KAT_Tests);
@@ -466,6 +561,7 @@ BOTAN_REGISTER_TEST("pubkey", "rsa_keygen_badrng", RSA_Keygen_Bad_RNG_Test);
 BOTAN_REGISTER_TEST("pubkey", "rsa_blinding", RSA_Blinding_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_iso9796_roundtrip", RSA_ISO9796_Roundtrip_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_decrypt_or_random", RSA_DecryptOrRandom_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rsa_key_validation", RSA_Key_Validation_Tests);
 
 #endif
 

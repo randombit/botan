@@ -338,13 +338,14 @@ word inverse_mod_65537(word x) {
 
 }  // namespace
 
-BigInt compute_rsa_secret_exponent(const BigInt& e, const BigInt& phi_n, const BigInt& p, const BigInt& q) {
-   /*
-   * Both p - 1 and q - 1 are chosen to be relatively prime to e. Thus
-   * phi(n), the least common multiple of p - 1 and q - 1, is also
-   * relatively prime to e.
-   */
-   BOTAN_DEBUG_ASSERT(gcd(e, phi_n) == 1);
+std::optional<BigInt> compute_rsa_secret_exponent(const BigInt& e,
+                                                  const BigInt& phi_n,
+                                                  const BigInt& p,
+                                                  const BigInt& q) {
+   BOTAN_ARG_CHECK(e > 0 && phi_n > 0, "RSA exponent and lcm(p-1, q-1) must be positive");
+
+   // TODO possibly do something else taking advantage of the special structure here
+   BOTAN_UNUSED(p, q);
 
    if(e == 65537) {
       /*
@@ -361,20 +362,24 @@ BigInt compute_rsa_secret_exponent(const BigInt& e, const BigInt& phi_n, const B
       constexpr word e_w = 65537;
 
       const word phi_mod_e = ct_mod_word(phi_n, e_w);
-      const word inv_phi_mod_e = inverse_mod_65537(phi_mod_e);
-      BOTAN_DEBUG_ASSERT((inv_phi_mod_e * phi_mod_e) % e_w == 1);
-      const word neg_inv_phi_mod_e = (e_w - inv_phi_mod_e);
-      return ct_divide_word((phi_n * neg_inv_phi_mod_e) + 1, e_w);
-   } else {
-      // TODO possibly do something else taking advantage of the special structure here
 
-      BOTAN_UNUSED(p, q);
-      if(auto d = inverse_mod_general(e, phi_n)) {
-         return *d;
-      } else {
-         throw Internal_Error("Failed to compute RSA secret exponent");
+      // If e divides phi_n there is no inverse, which the general path below reports
+      if(phi_mod_e != 0) {
+         const word inv_phi_mod_e = inverse_mod_65537(phi_mod_e);
+         BOTAN_DEBUG_ASSERT((inv_phi_mod_e * phi_mod_e) % e_w == 1);
+         const word neg_inv_phi_mod_e = (e_w - inv_phi_mod_e);
+         return ct_divide_word((phi_n * neg_inv_phi_mod_e) + 1, e_w);
       }
    }
+
+   // inverse_mod_general requires its argument to be reduced
+   const BigInt e_mod_phi = ct_modulo(e, phi_n);
+
+   if(e_mod_phi.is_zero()) {
+      return std::nullopt;
+   }
+
+   return inverse_mod_general(e_mod_phi, phi_n);
 }
 
 BigInt inverse_mod(const BigInt& n, const BigInt& mod) {

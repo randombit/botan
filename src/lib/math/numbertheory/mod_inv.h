@@ -104,12 +104,14 @@ BigInt inverse_mod_rsa_public_modulus(const BigInt& x, const BigInt& n);
 * @param phi_n is lcm(p-1, q-1)
 * @param p is the first secret prime
 * @param q is the second secret prime
-* @return d inverse of e modulo phi_n
+* @return d inverse of e modulo phi_n, or nullopt if gcd(e, phi_n) != 1
+*
+* Throws Invalid_Argument if e or phi_n are not positive
 */
-BigInt BOTAN_TEST_API compute_rsa_secret_exponent(const BigInt& e,
-                                                  const BigInt& phi_n,
-                                                  const BigInt& p,
-                                                  const BigInt& q);
+std::optional<BigInt> BOTAN_TEST_API compute_rsa_secret_exponent(const BigInt& e,
+                                                                 const BigInt& phi_n,
+                                                                 const BigInt& p,
+                                                                 const BigInt& q);
 
 }  // namespace Botan
 
