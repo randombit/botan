@@ -67,11 +67,17 @@ std::optional<Classic_McEliece_KeyPair_Internal> try_generate_keypair(std::span<
 
 Classic_McEliece_PrivateKeyInternal Classic_McEliece_PrivateKeyInternal::from_bytes(
    const Classic_McEliece_Parameters& params, std::span<const uint8_t> sk_bytes) {
-   BOTAN_ASSERT(sk_bytes.size() == params.sk_size_bytes(), "Valid private key size");
+   if(sk_bytes.size() != params.sk_size_bytes()) {
+      throw Decoding_Error("Invalid Classic McEliece private key length");
+   }
    BufferSlicer sk_slicer(sk_bytes);
 
    auto delta = sk_slicer.copy<CmceKeyGenSeed>(params.seed_len());
    auto c = CmceColumnSelection(sk_slicer.take(params.sk_c_bytes()));
+   // c selects exactly the 32 pivot columns of the semi-systematic form
+   if(CT::driveby_unpoison(c.hamming_weight() != 32)) {
+      throw Decoding_Error("Invalid Classic McEliece private key column selection");
+   }
    auto g = Classic_McEliece_Minimal_Polynomial::from_bytes(sk_slicer.take(params.sk_poly_g_bytes()), params.poly_f());
    auto field_ordering = Classic_McEliece_Field_Ordering::create_from_control_bits(
       params, secure_bitvector(sk_slicer.take(params.sk_alpha_control_bytes())));

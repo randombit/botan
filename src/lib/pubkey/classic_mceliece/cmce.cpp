@@ -30,7 +30,9 @@ Classic_McEliece_PublicKey::Classic_McEliece_PublicKey(const AlgorithmIdentifier
 Classic_McEliece_PublicKey::Classic_McEliece_PublicKey(std::span<const uint8_t> key_bits,
                                                        Classic_McEliece_Parameter_Set param_set) {
    const auto params = Classic_McEliece_Parameters::create(param_set);
-   BOTAN_ARG_CHECK(key_bits.size() == params.pk_size_bytes(), "Wrong public key length");
+   if(key_bits.size() != params.pk_size_bytes()) {
+      throw Decoding_Error("Invalid Classic McEliece public key length");
+   }
    m_public = std::make_shared<Classic_McEliece_PublicKeyInternal>(
       params, Classic_McEliece_Matrix(params, {key_bits.begin(), key_bits.end()}));
 }
@@ -132,8 +134,10 @@ secure_vector<uint8_t> Classic_McEliece_PrivateKey::raw_private_key_bits() const
    return m_private->serialize();
 }
 
-bool Classic_McEliece_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
-   return m_private->check_key();
+bool Classic_McEliece_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool strong) const {
+   // Loading verified the key's structure (including that the public matrix it
+   // yields is systematic); re-deriving s, g and alpha from delta is expensive
+   return !strong || m_private->check_key();
 }
 
 std::unique_ptr<PK_Ops::KEM_Decryption> Classic_McEliece_PrivateKey::_create_kem_decryption_op(

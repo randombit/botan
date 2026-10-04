@@ -11,6 +11,7 @@
 
 #include <botan/internal/cmce_poly.h>
 
+#include <botan/exceptn.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/concat_util.h>
 #include <botan/internal/ct_utils.h>
@@ -147,6 +148,17 @@ Classic_McEliece_Minimal_Polynomial Classic_McEliece_Minimal_Polynomial::from_by
                                                                                     CmceGfMod poly_f) {
    BOTAN_ASSERT_NOMSG(bytes.size() % 2 == 0);
    const auto coef_vec = load_le<std::vector<CmceGfElem>>(bytes);
+
+   // Each coefficient is an element of GF(2^m); the unused high bits must be clear
+   const auto q_minus_1 = static_cast<uint16_t>((uint16_t(1) << Classic_McEliece_GF::log_q_from_mod(poly_f)) - 1);
+   auto in_range = CT::Mask<uint16_t>::set();
+   for(const auto& coeff : coef_vec) {
+      in_range &= CT::Mask<uint16_t>::is_lte(coeff.get(), q_minus_1);
+   }
+   if(!in_range.as_bool()) {
+      throw Decoding_Error("Classic McEliece polynomial coefficient is out of range");
+   }
+
    std::vector<Classic_McEliece_GF> coeff_vec_gf;
    std::transform(coef_vec.begin(), coef_vec.end(), std::back_inserter(coeff_vec_gf), [poly_f](auto& coeff) {
       return Classic_McEliece_GF(coeff, poly_f);
