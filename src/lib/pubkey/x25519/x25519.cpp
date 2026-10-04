@@ -58,10 +58,25 @@ void size_check(size_t size, const char* thing) {
    }
 }
 
-secure_vector<uint8_t> curve25519(const secure_vector<uint8_t>& secret, const uint8_t pubval[32]) {
-   secure_vector<uint8_t> out(32);
-   curve25519_donna(out.data(), secret.data(), pubval);
-   return out;
+// X25519 agreement, shared by agree() and the PK_Key_Agreement operation
+secure_vector<uint8_t> x25519_agree(const secure_vector<uint8_t>& secret, const uint8_t pubval[32]) {
+   secure_vector<uint8_t> shared_key(32);
+   curve25519_donna(shared_key.data(), secret.data(), pubval);
+
+   // RFC 7748 Section 6.1
+   //    Both [parties] MAY check, without leaking extra information about
+   //    the value of K, whether K is the all-zero value and abort if so.
+   //
+   // TODO: once the generic Key Agreement operation creation is equipped
+   //       with a more flexible parameterization, this check could be
+   //       made optional.
+   //       For instance: `sk->agree().with_optional_sanity_checks(true)`.
+   //       See also:     https://github.com/randombit/botan/pull/4318
+   if(CT::all_zeros(shared_key.data(), shared_key.size()).as_bool()) {
+      throw Invalid_Argument("X25519 public point appears to be of low order");
+   }
+
+   return shared_key;
 }
 
 // Given a 32-byte secret key compute the public value and build the immutable
@@ -83,7 +98,15 @@ AlgorithmIdentifier X25519_PublicKey::algorithm_identifier() const {
 }
 
 bool X25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
-   return true;  // no tests possible?
+   /*
+   * Every clamped scalar is a multiple of the cofactor, so multiplying by one
+   * sends exactly the points of low order to the identity (all zero output).
+   * Nothing else can be checked for a Montgomery u-coordinate.
+   */
+   const std::array<uint8_t, 32> scalar{};  // clamped to 2^254 by curve25519_donna
+   std::vector<uint8_t> out(32);
+   curve25519_donna(out.data(), scalar.data(), m_public->key().data());
+   return !CT::all_zeros(out.data(), out.size()).as_bool();
 }
 
 X25519_PublicKey::X25519_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
@@ -130,7 +153,7 @@ X25519_PrivateKey::X25519_PrivateKey(const AlgorithmIdentifier& alg_id, std::spa
    }
 
    secure_vector<uint8_t> secret_key;
-   BER_Decoder(key_bits, BER_Decoder::Limits::DER()).decode(secret_key, ASN1_Type::OctetString).discard_remaining();
+   BER_Decoder(key_bits, BER_Decoder::Limits::DER()).decode(secret_key, ASN1_Type::OctetString).verify_end();
 
    size_check(secret_key.size(), "private key");
    load_x25519_keypair(std::move(secret_key), m_public, m_private);
@@ -152,7 +175,7 @@ bool X25519_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*
 
 secure_vector<uint8_t> X25519_PrivateKey::agree(const uint8_t w[], size_t w_len) const {
    size_check(w_len, "public value");
-   return curve25519(m_private->key(), w);
+   return x25519_agree(m_private->key(), w);
 }
 
 namespace {
@@ -170,22 +193,7 @@ class X25519_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override {
          size_check(w_len, "public value");
-         auto shared_key = curve25519(m_key->key(), w);
-
-         // RFC 7748 Section 6.1
-         //    Both [parties] MAY check, without leaking extra information about
-         //    the value of K, whether K is the all-zero value and abort if so.
-         //
-         // TODO: once the generic Key Agreement operation creation is equipped
-         //       with a more flexible parameterization, this check could be
-         //       made optional.
-         //       For instance: `sk->agree().with_optional_sanity_checks(true)`.
-         //       See also:     https://github.com/randombit/botan/pull/4318
-         if(CT::all_zeros(shared_key.data(), shared_key.size()).as_bool()) {
-            throw Invalid_Argument("X25519 public point appears to be of low order");
-         }
-
-         return shared_key;
+         return x25519_agree(m_key->key(), w);
       }
 
    private:

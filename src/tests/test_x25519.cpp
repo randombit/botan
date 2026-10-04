@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_X25519)
    #include "test_pubkey.h"
    #include <botan/data_src.h>
+   #include <botan/hex.h>
    #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
    #include <botan/x25519.h>
@@ -49,6 +50,60 @@ class X25519_Agreement_Tests final : public PK_Key_Agreement_Test {
 };
 
 BOTAN_REGISTER_TEST("pubkey", "x25519_agreement", X25519_Agreement_Tests);
+
+class X25519_Key_Validity_Tests final : public PK_Key_Validity_Test {
+   public:
+      X25519_Key_Validity_Tests() : PK_Key_Validity_Test("X25519", "pubkey/x25519_key_valid.vec", "PublicKey") {}
+
+      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
+         const std::vector<uint8_t> pk = vars.get_req_bin("PublicKey");
+         return std::make_unique<Botan::X25519_PublicKey>(pk);
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "x25519_key_valid", X25519_Key_Validity_Tests);
+
+class X25519_Direct_Agree_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("X25519 direct agreement");
+
+         // RFC 7748 Section 6.1 test vector
+         const auto a = Botan::hex_decode_locked("77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a");
+         const auto k_b = Botan::hex_decode("de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f");
+
+         const Botan::X25519_PrivateKey key(a);
+         result.test_bin_eq("public value",
+                            key.raw_public_key_bits(),
+                            "8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a");
+         result.test_bin_eq("shared secret",
+                            key.agree(k_b.data(), k_b.size()),
+                            "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742");
+
+         // Points of low order give an all zero secret and are rejected
+         const std::vector<uint8_t> zero(32);
+         result.test_throws<Botan::Invalid_Argument>("u = 0 is rejected",
+                                                     [&]() { key.agree(zero.data(), zero.size()); });
+         const auto low_order = Botan::hex_decode("e0eb7a7c3b41b8ae1656e3faf19fc46ada098deb9c32b1fd866205165f49b800");
+         result.test_throws<Botan::Invalid_Argument>("order 8 point is rejected",
+                                                     [&]() { key.agree(low_order.data(), low_order.size()); });
+
+         // The PKCS #8 CurvePrivateKey is a single OCTET STRING; trailing data is rejected
+         const auto alg_id = key.algorithm_identifier();
+         std::vector<uint8_t> inner = {0x04, 0x20};
+         inner.insert(inner.end(), a.begin(), a.end());
+         result.test_bin_eq("PKCS #8 key loads",
+                            Botan::X25519_PrivateKey(alg_id, inner).raw_public_key_bits(),
+                            key.raw_public_key_bits());
+         inner.push_back(0x00);
+         result.test_throws<Botan::Decoding_Error>("PKCS #8 trailing data is rejected",
+                                                   [&]() { const Botan::X25519_PrivateKey rejected(alg_id, inner); });
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "x25519_direct_agree", X25519_Direct_Agree_Tests);
 
 class X25519_Roundtrip_Test final : public Test {
    public:
