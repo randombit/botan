@@ -90,9 +90,9 @@ const EC_AffinePoint& EC_PublicKey::_public_ec_point() const {
    return m_public_key->public_key();
 }
 
-bool EC_PublicKey::check_key(RandomNumberGenerator& rng, bool /*strong*/) const {
+bool EC_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    // We already checked when deserializing that the point was on the curve
-   return domain().verify_group(rng) && !_public_ec_point().is_identity();
+   return domain().verify_group(rng, strong) && !_public_ec_point().is_identity();
 }
 
 AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const {
@@ -210,23 +210,25 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
    if(!key_parameters.empty()) {
       if(group) {
          if(EC_Group(key_parameters) != *group) {
-            throw Invalid_Argument(
-               "Domain parameters supplied AlgorithmIdentifier does not match the ECC private key's domain parameters in EC_PrivateKey construction");
+            throw Decoding_Error("ECPrivateKey parameters do not match the AlgorithmIdentifier parameters");
          }
       } else {
          group = std::make_unique<EC_Group>(key_parameters);
       }
    }
    if(!group) {
-      throw Invalid_Argument("Domain parameters are not supplied in EC_PrivateKey construction");
+      throw Decoding_Error("ECPrivateKey has no domain parameters");
    }
 
    m_private_key = std::make_shared<EC_PrivateKey_Data>(*group, private_key_bits);
+   m_public_key = m_private_key->public_key(with_modular_inverse);
 
-   if(public_key_bits.empty()) {
-      m_public_key = m_private_key->public_key(with_modular_inverse);
-   } else {
-      m_public_key = std::make_shared<EC_PublicKey_Data>(*group, public_key_bits);
+   // If the encoding carried a public key it must agree with the derived one
+   if(!public_key_bits.empty()) {
+      const EC_PublicKey_Data encoded_public_key(*group, public_key_bits);
+      if(encoded_public_key.public_key() != m_public_key->public_key()) {
+         throw Decoding_Error("ECPrivateKey public key does not match the private key");
+      }
    }
 
    m_domain_encoding = default_encoding_for(domain());

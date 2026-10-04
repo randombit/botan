@@ -22,7 +22,11 @@
    #include <botan/internal/ec_inner_data.h>
    #include <array>
    #if defined(BOTAN_HAS_ECDSA)
+      #include <botan/ecdsa.h>
+      #include <botan/hash.h>
       #include <botan/pk_algs.h>
+      #include <botan/pk_options.h>
+      #include <botan/pubkey.h>
    #endif
 #endif
 
@@ -538,6 +542,9 @@ class EC_Group_Registration_Tests final : public Test {
             results.push_back(test_ec_group_alias_oid_cache());
             results.push_back(test_ec_group_unregistration());
             results.push_back(test_supports_named_group_with_registration());
+   #if defined(BOTAN_HAS_ECDSA)
+            results.push_back(test_ec_key_with_equivalent_group());
+   #endif
          }
 
          return results;
@@ -594,6 +601,87 @@ class EC_Group_Registration_Tests final : public Test {
 
          return result;
       }
+
+   #if defined(BOTAN_HAS_ECDSA)
+      Test::Result test_ec_key_with_equivalent_group() {
+         Test::Result result("EC key construction with equivalent but distinct EC_Group");
+
+         // numsp384d1 is not a builtin group, so decoding it does not register it
+         const Botan::BigInt p(
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEC3");
+         const Botan::BigInt a(
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEC0");
+         const Botan::BigInt b(
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF77BB");
+         const Botan::BigInt g_x("0x02");
+         const Botan::BigInt g_y(
+            "0x3C9F82CB4B87B4DC71E763E0663E5DBD8034ED422F04F82673330DC58D15FFA2B4A3D0BAD5D30F865BCBBF503EA66F43");
+         const Botan::BigInt order(
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD61EAF1EEB5D6881BEDA9D3D4C37E27A604D81F67B0E61B9");
+
+         const auto der = encode_explicit_group(p, a, b, g_x, g_y, order, 1);
+
+         const Botan::EC_Group group1(der);
+         const Botan::EC_Group group2(der);
+
+         result.test_is_true("Groups compare equal", group1 == group2);
+         result.test_is_true("Groups have distinct inner data", group1._data() != group2._data());
+
+         const Botan::ECDSA_PrivateKey sk1(rng(), group1);
+
+         // Keys created with the equivalent group adopt it, rebinding the key material
+         const Botan::ECDSA_PrivateKey sk2(group2, sk1._private_key());
+         const Botan::ECDSA_PublicKey pk2(group2, sk1._public_ec_point());
+
+         result.test_is_true("Private key uses the specified group", sk2.domain()._data() == group2._data());
+         result.test_is_true("Private scalar was rebound", sk2._private_key().group()._data() == group2._data());
+         result.test_is_true("Public key uses the specified group", pk2.domain()._data() == group2._data());
+         result.test_is_true("Public point was rebound", pk2._public_ec_point()._group() == group2._data());
+         result.test_bin_eq(
+            "Rebound private key has the same encoding", sk2.private_key_bits(), sk1.private_key_bits());
+         result.test_bin_eq("Rebound public key has the same encoding", pk2.public_key_bits(), sk1.public_key_bits());
+
+         if(Botan::HashFunction::create("SHA-256")) {
+            const auto msg = rng().random_vec(32);
+            Botan::PK_Signer signer(sk2, rng(), Botan::PK_Signature_Options().with_hash("SHA-256"));
+            Botan::PK_Verifier verifier(pk2, Botan::PK_Signature_Options().with_hash("SHA-256"));
+            result.test_is_true("Signature from rebound keys verifies",
+                                verifier.verify_message(msg, signer.sign_message(msg, rng())));
+         }
+
+         if(Botan::EC_Group::supports_named_group("secp256r1")) {
+            const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
+
+            result.test_throws<Botan::Decoding_Error>("Point from a different group is rejected", [&] {
+               static_cast<void>(Botan::ECDSA_PublicKey(secp256r1, sk1._public_ec_point()));
+            });
+            result.test_throws<Botan::Decoding_Error>("Scalar from a different group is rejected", [&] {
+               static_cast<void>(Botan::ECDSA_PrivateKey(secp256r1, sk1._private_key()));
+            });
+
+            // Clearing the registry causes builtin groups to get fresh inner data as well
+            const Botan::ECDSA_PrivateKey sk3(rng(), secp256r1);
+            Botan::EC_Group::clear_registered_curve_data();
+            const auto secp256r1_again = Botan::EC_Group::from_name("secp256r1");
+            result.test_is_true("Builtin group has distinct inner data after registry clear",
+                                secp256r1_again._data() != secp256r1._data());
+
+            const Botan::ECDSA_PublicKey pk3(secp256r1_again, sk3._public_ec_point());
+            result.test_is_true("Builtin point was rebound",
+                                pk3._public_ec_point()._group() == secp256r1_again._data());
+
+            if(Botan::HashFunction::create("SHA-256")) {
+               const auto msg = rng().random_vec(32);
+               Botan::PK_Signer signer(sk3, rng(), Botan::PK_Signature_Options().with_hash("SHA-256"));
+               Botan::PK_Verifier verifier(pk3, Botan::PK_Signature_Options().with_hash("SHA-256"));
+               result.test_is_true("Signature verifies across registry clear",
+                                   verifier.verify_message(msg, signer.sign_message(msg, rng())));
+            }
+         }
+
+         return result;
+      }
+   #endif
 
       Test::Result test_ec_group_bad_registration() {
          Test::Result result("EC_Group registering non-match");
