@@ -405,7 +405,12 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       // Declarations for internal library functions not covered by SemVer follow
 
       /**
-       * @return Hash of the PKCS #8 encoding for this key object
+       * @return Hash of the algorithm specific private key encoding
+       *
+       * @warning This hashes private_key_bits(), which does not include the
+       * algorithm identifier; keys of different algorithms with identical raw
+       * encodings (such as an Ed25519 and an X25519 key built from the same 32
+       * bytes) share a fingerprint.
        */
       std::string fingerprint_private(std::string_view alg) const;
 
