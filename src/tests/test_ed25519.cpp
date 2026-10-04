@@ -26,13 +26,27 @@ namespace {
 
 #if defined(BOTAN_HAS_ED25519)
 
-class Ed25519_Key_Validity_Tests : public PK_Key_Validity_Test {
+class Ed25519_Key_Validity_Tests final : public Text_Based_Test {
    public:
-      Ed25519_Key_Validity_Tests() : PK_Key_Validity_Test("Ed25519", "pubkey/ed25519_key_valid.vec", "Pubkey") {}
+      Ed25519_Key_Validity_Tests() : Text_Based_Test("pubkey/ed25519_key_valid.vec", "Pubkey") {}
 
-      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override {
+         Test::Result result("Ed25519 key validity");
+
          const std::vector<uint8_t> pubkey = vars.get_req_bin("Pubkey");
-         return std::make_unique<Botan::Ed25519_PublicKey>(pubkey);
+
+         if(header == "Valid") {
+            const Botan::Ed25519_PublicKey key(pubkey);
+            result.test_is_true("valid key passes check_key", key.check_key(this->rng(), true));
+         } else if(header == "Invalid") {
+            // All checks are performed when the key is decoded
+            result.test_throws<Botan::Decoding_Error>("invalid key is rejected when decoded",
+                                                      [&]() { const Botan::Ed25519_PublicKey key(pubkey); });
+         } else {
+            throw Test_Error("Unexpected header in ed25519_key_valid.vec");
+         }
+
+         return result;
       }
 };
 

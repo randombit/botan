@@ -122,11 +122,16 @@ bool verify_signature(const std::array<uint8_t, 32>& pk,
                       const std::vector<uint8_t>& payload,
                       const std::array<uint8_t, 64>& signature) {
    constexpr std::string_view context("RoughTime v1 response signature\0", 32);
-   const Ed25519_PublicKey key(std::vector<uint8_t>(pk.data(), pk.data() + pk.size()));
-   PK_Verifier verifier(key, "Pure");
-   verifier.update(context);
-   verifier.update(payload);
-   return verifier.check_signature(signature.data(), signature.size());
+   try {
+      const Ed25519_PublicKey key(std::vector<uint8_t>(pk.data(), pk.data() + pk.size()));
+      PK_Verifier verifier(key, "Pure");
+      verifier.update(context);
+      verifier.update(payload);
+      return verifier.check_signature(signature.data(), signature.size());
+   } catch(Decoding_Error&) {
+      // An invalid public key cannot have signed anything
+      return false;
+   }
 }
 
 std::array<uint8_t, 64> hashLeaf(const std::array<uint8_t, 64>& leaf) {
