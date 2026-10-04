@@ -263,6 +263,11 @@ class Ed448_Sign_Operation final : public PK_Ops::Signature {
 };
 
 AlgorithmIdentifier Ed448_Sign_Operation::algorithm_identifier() const {
+   // RFC 8410 Section 3 defines the OIDs for "the algorithms being ECDH and
+   // EdDSA in pure mode"; there is no identifier for Ed448ph
+   if(m_prehash_function) {
+      throw Not_Implemented("Ed448ph signatures do not have an algorithm identifier");
+   }
    return AlgorithmIdentifier(OID::from_string("Ed448"), AlgorithmIdentifier::USE_EMPTY_PARAM);
 }
 
