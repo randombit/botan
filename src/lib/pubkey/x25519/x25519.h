@@ -86,7 +86,15 @@ class BOTAN_PUBLIC_API(2, 0) X25519_PrivateKey final : public X25519_PublicKey,
 
       std::vector<uint8_t> public_value() const override { return raw_public_key_bits(); }
 
-      secure_vector<uint8_t> agree(const uint8_t w[], size_t w_len) const;
+      /**
+      * Perform X25519 with the peer's 32-byte public value
+      *
+      * Throws Invalid_Argument if the peer's value is a point of low order
+      * (that is, if the result would be all zeros).
+      *
+      * Prefer PK_Key_Agreement, which also derives a key from the result.
+      */
+      BOTAN_DEPRECATED("Use PK_Key_Agreement") secure_vector<uint8_t> agree(const uint8_t w[], size_t w_len) const;
 
       secure_vector<uint8_t> raw_private_key_bits() const override;
 

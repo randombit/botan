@@ -60,25 +60,30 @@ AlgorithmIdentifier Ed25519_PublicKey::algorithm_identifier() const {
 }
 
 bool Ed25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
-   const std::vector<uint8_t>& pub = m_public->key();
-
-   if(pub.size() != 32) {
-      return false;
-   }
-
-   /*
-   * This rejects the identity in either its canonical or non-canonical
-   * encoding (the latter fails to decode), points of small order, and
-   * points outside the prime order subgroup.
-   */
-   return ed25519_valid_public_key_point(std::span<const uint8_t, 32>{pub.data(), 32});
+   // All possible checks are performed when the key is decoded
+   return true;
 }
 
-Ed25519_PublicKey::Ed25519_PublicKey(const uint8_t pub_key[], size_t pub_len) {
-   if(pub_len != 32) {
-      throw Decoding_Error("Invalid length for Ed25519 key");
+namespace {
+
+std::shared_ptr<const Ed25519_PublicKey_Data> load_ed25519_public_key(std::span<const uint8_t> key_bits) {
+   if(key_bits.size() != 32) {
+      throw Decoding_Error("Invalid size for Ed25519 public key");
    }
-   m_public = std::make_shared<const Ed25519_PublicKey_Data>(std::vector<uint8_t>(pub_key, pub_key + pub_len));
+
+   // Rejects the identity, other points of small order, and points outside
+   // the prime order subgroup, so that no later check is needed
+   if(!ed25519_valid_public_key_point(key_bits.first<32>())) {
+      throw Decoding_Error("Invalid Ed25519 public key");
+   }
+
+   return std::make_shared<const Ed25519_PublicKey_Data>(std::vector<uint8_t>(key_bits.begin(), key_bits.end()));
+}
+
+}  // namespace
+
+Ed25519_PublicKey::Ed25519_PublicKey(const uint8_t pub_key[], size_t pub_len) {
+   m_public = load_ed25519_public_key(std::span<const uint8_t>{pub_key, pub_len});
 }
 
 Ed25519_PublicKey::Ed25519_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
@@ -87,11 +92,7 @@ Ed25519_PublicKey::Ed25519_PublicKey(const AlgorithmIdentifier& alg_id, std::spa
       throw Decoding_Error("Unexpected parameters for Ed25519 public key");
    }
 
-   if(key_bits.size() != 32) {
-      throw Decoding_Error("Invalid size for Ed25519 public key");
-   }
-
-   m_public = std::make_shared<const Ed25519_PublicKey_Data>(std::vector<uint8_t>(key_bits.begin(), key_bits.end()));
+   m_public = load_ed25519_public_key(key_bits);
 }
 
 std::vector<uint8_t> Ed25519_PublicKey::raw_public_key_bits() const {
@@ -153,7 +154,14 @@ secure_vector<uint8_t> ed25519_expand_seed(std::span<const uint8_t> seed) {
 
 Ed25519_PrivateKey::Ed25519_PrivateKey(std::span<const uint8_t> secret_key) {
    if(secret_key.size() == 64) {
-      load_ed25519_keypair(secure_vector<uint8_t>(secret_key.begin(), secret_key.end()), m_public, m_private);
+      // Signing hashes the stored public key into the challenge, so a public
+      // key other than the one derived from the seed would leak the secret
+      // scalar. Regenerate it and reject any mismatch.
+      auto expanded = ed25519_expand_seed(secret_key.first(32));
+      if(!CT::is_equal(expanded.data() + 32, secret_key.data() + 32, 32).as_bool()) {
+         throw Decoding_Error("Ed25519 public key does not match the private key");
+      }
+      load_ed25519_keypair(std::move(expanded), m_public, m_private);
    } else if(secret_key.size() == 32) {
       load_ed25519_keypair(ed25519_expand_seed(secret_key), m_public, m_private);
    } else {
@@ -163,13 +171,17 @@ Ed25519_PrivateKey::Ed25519_PrivateKey(std::span<const uint8_t> secret_key) {
 
 //static
 Ed25519_PrivateKey Ed25519_PrivateKey::from_seed(std::span<const uint8_t> seed) {
-   BOTAN_ARG_CHECK(seed.size() == 32, "Ed25519 seed must be exactly 32 bytes long");
+   if(seed.size() != 32) {
+      throw Decoding_Error("Ed25519 seed must be exactly 32 bytes long");
+   }
    return Ed25519_PrivateKey(seed);
 }
 
 //static
 Ed25519_PrivateKey Ed25519_PrivateKey::from_bytes(std::span<const uint8_t> bytes) {
-   BOTAN_ARG_CHECK(bytes.size() == 64, "Ed25519 private key must be exactly 64 bytes long");
+   if(bytes.size() != 64) {
+      throw Decoding_Error("Ed25519 private key must be exactly 64 bytes long");
+   }
    return Ed25519_PrivateKey(bytes);
 }
 
@@ -185,7 +197,7 @@ Ed25519_PrivateKey::Ed25519_PrivateKey(const AlgorithmIdentifier& alg_id, std::s
    }
 
    secure_vector<uint8_t> bits;
-   BER_Decoder(key_bits, BER_Decoder::Limits::DER()).decode(bits, ASN1_Type::OctetString).discard_remaining();
+   BER_Decoder(key_bits, BER_Decoder::Limits::DER()).decode(bits, ASN1_Type::OctetString).verify_end();
 
    if(bits.size() != 32) {
       throw Decoding_Error("Invalid size for Ed25519 private key");
@@ -194,7 +206,7 @@ Ed25519_PrivateKey::Ed25519_PrivateKey(const AlgorithmIdentifier& alg_id, std::s
 }
 
 std::unique_ptr<Public_Key> Ed25519_PrivateKey::public_key() const {
-   return std::make_unique<Ed25519_PublicKey>(raw_public_key_bits());
+   return std::unique_ptr<Ed25519_PublicKey>(new Ed25519_PublicKey(m_public));
 }
 
 secure_vector<uint8_t> Ed25519_PrivateKey::private_key_bits() const {
@@ -236,19 +248,9 @@ class Ed25519_Verify_Operation_Base : public PK_Ops::Verification {
                                     std::vector<uint8_t> domain_sep) :
             m_key(std::move(key)), m_domain_sep(std::move(domain_sep)) {
          BOTAN_ASSERT_EQUAL(m_key->key().size(), 32, "Expected size");
-
-         // Reject the identity, low order points, and points outside the prime
-         // order subgroup up front.
-         //
-         // TODO(Botan4) instead check and reject such keys during deserialization
-         m_key_is_valid = ed25519_valid_public_key_point(std::span<const uint8_t, 32>{m_key->key().data(), 32});
       }
 
       bool verify_signature(std::span<const uint8_t> msg, std::span<const uint8_t, 64> sig) const {
-         if(!m_key_is_valid) {
-            return false;
-         }
-
          const auto& pk = m_key->key();
 
          // RFC 8032 adds the requirement that we verify that s < order in
@@ -275,7 +277,6 @@ class Ed25519_Verify_Operation_Base : public PK_Ops::Verification {
    private:
       std::shared_ptr<const Ed25519_PublicKey_Data> m_key;
       std::vector<uint8_t> m_domain_sep;
-      bool m_key_is_valid;
 };
 
 /**
@@ -550,17 +551,22 @@ bool ed25519_verify(const uint8_t msg[],
                     const uint8_t pk[32],
                     const uint8_t domain_sep[],
                     size_t domain_sep_len) {
-   const Ed25519_PublicKey key(std::span<const uint8_t>{pk, 32});
+   try {
+      const Ed25519_PublicKey key(std::span<const uint8_t>{pk, 32});
 
-   if(domain_sep_len == 0) {
-      PK_Verifier verifier(key, PK_Signature_Options());
-      verifier.update(std::span<const uint8_t>{msg, msg_len});
-      return verifier.check_signature(std::span<const uint8_t>{sig, 64});
-   } else {
-      Ed25519_Pure_Verify_Operation op(std::make_shared<Ed25519_PublicKey_Data>(key.raw_public_key_bits()),
-                                       std::vector<uint8_t>(domain_sep, domain_sep + domain_sep_len));
-      op.update(std::span<const uint8_t>{msg, msg_len});
-      return op.is_valid_signature(std::span<const uint8_t>{sig, 64});
+      if(domain_sep_len == 0) {
+         PK_Verifier verifier(key, PK_Signature_Options());
+         verifier.update(std::span<const uint8_t>{msg, msg_len});
+         return verifier.check_signature(std::span<const uint8_t>{sig, 64});
+      } else {
+         Ed25519_Pure_Verify_Operation op(std::make_shared<Ed25519_PublicKey_Data>(key.raw_public_key_bits()),
+                                          std::vector<uint8_t>(domain_sep, domain_sep + domain_sep_len));
+         op.update(std::span<const uint8_t>{msg, msg_len});
+         return op.is_valid_signature(std::span<const uint8_t>{sig, 64});
+      }
+   } catch(Decoding_Error&) {
+      // An invalid public key cannot have signed anything
+      return false;
    }
 }
 

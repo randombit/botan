@@ -83,7 +83,14 @@ AlgorithmIdentifier X448_PublicKey::algorithm_identifier() const {
 }
 
 bool X448_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
-   return true;  // no tests possible?
+   /*
+   * Every clamped scalar is a multiple of the cofactor, so multiplying by one
+   * sends exactly the points of low order to the identity (all zero output).
+   * Nothing else can be checked for a Montgomery u-coordinate.
+   */
+   const std::array<uint8_t, X448_LEN> scalar{};  // clamped to 2^447 by decode_scalar
+   const auto out = encode_point(x448(decode_scalar(scalar), decode_point(m_public->key())));
+   return !CT::all_zeros(out.data(), out.size()).as_bool();
 }
 
 std::vector<uint8_t> X448_PublicKey::raw_public_key_bits() const {
@@ -108,7 +115,9 @@ X448_PublicKey::X448_PublicKey(const AlgorithmIdentifier& alg_id, std::span<cons
 }
 
 X448_PublicKey::X448_PublicKey(std::span<const uint8_t> pub) {
-   BOTAN_ARG_CHECK(pub.size() == X448_LEN, "Invalid size for X448 public key");
+   if(pub.size() != X448_LEN) {
+      throw Decoding_Error("Invalid size for X448 public key");
+   }
    std::array<uint8_t, X448_LEN> pub_arr{};
    copy_mem(pub_arr, pub);
    m_public = std::make_shared<const X448_PublicKey_Data>(pub_arr);
@@ -123,7 +132,9 @@ X448_PrivateKey::X448_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<co
 }
 
 X448_PrivateKey::X448_PrivateKey(std::span<const uint8_t> secret_key) {
-   BOTAN_ARG_CHECK(secret_key.size() == X448_LEN, "Invalid size for X448 private key");
+   if(secret_key.size() != X448_LEN) {
+      throw Decoding_Error("Invalid size for X448 private key");
+   }
    load_x448_keypair(secure_vector<uint8_t>(secret_key.begin(), secret_key.end()), m_public, m_private);
 }
 

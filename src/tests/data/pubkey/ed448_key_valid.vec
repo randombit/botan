@@ -1,0 +1,37 @@
+[Valid]
+# RFC 8032 Section 7.4 and Wycheproof public keys
+PublicKey = 5fd7449b59b461fd2ce787ec616ad46a1da1342485a70e1f8a0ea75d80e96778edf124769b46c7061bd6783df1e50f6cd1fa1abeafe8256180
+PublicKey = 43ba28f430cdff456ae531545f7ecd0ac834a55d9358c0372bfa0c6c6798c0866aea01eb00742802b8438ea4cb82169c235160627b4c3a9480
+PublicKey = 419610a534af127f583b04818cdb7f0ff300b025f2e01682bcae33fd691cee039511df0cddc690ee978426e8b38e50ce5af7dcfba50f704c00
+
+# The base point
+PublicKey = 14fa30f25b790898adc8d74e2c13bdfdc4397ce61cffd33ad7c2a0051e9c78874098a36c7373ea4b62c7c9563720768824bcb66e71463f6900
+
+[Invalid]
+# The identity element
+PublicKey = 010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
+# Non-canonical encoding of the identity element (x = 0 with the sign bit set)
+PublicKey = 010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080
+
+# The point of order 2, (0, -1), and the points of order 4, (1, 0) and (-1, 0).
+# Under the uncofactored verification equation [S]B = R + [k]A the signature
+# (R = A, S = 0) would verify for half (order 2) or a quarter (order 4) of all
+# messages with no private key involved, so these keys must be rejected.
+PublicKey = fefffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+PublicKey = 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080
+PublicKey = 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
+# B + T where T is the point of order 2: on the curve but outside the prime
+# order subgroup. Whoever chose it knows the discrete log of its prime order
+# component, and (R = B, S = 1 + k) would verify whenever k is even.
+PublicKey = eb05cf0da486f767523728b1d3ec42023bc68319e3002cc5283d5ffae0638778bf675c938c8c15b49d3836a9c8df8977db4349918eb9c09680
+
+# y = p is not a canonical field element
+PublicKey = fffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+
+# y = 2 has no corresponding x on the curve
+PublicKey = 020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
+# Bits other than the sign bit set in the final octet
+PublicKey = 010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001

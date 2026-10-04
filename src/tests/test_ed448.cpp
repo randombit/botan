@@ -12,6 +12,7 @@
    #include "test_pubkey.h"
    #include <botan/bigint.h>
    #include <botan/ed448.h>
+   #include <botan/pubkey.h>
    #include <botan/internal/curve448_scalar.h>
    #include <botan/internal/ed448_internal.h>
    #include <algorithm>
@@ -71,6 +72,61 @@ class Ed448_Verification_Tests : public PK_Signature_Verification_Test {
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
          const std::vector<uint8_t> pk = vars.get_req_bin("PublicKey");
          return std::make_unique<Botan::Ed448_PublicKey>(pk);
+      }
+};
+
+class Ed448_Verification_Only_Tests final : public PK_Signature_Verification_Test {
+   public:
+      Ed448_Verification_Only_Tests() :
+            PK_Signature_Verification_Test("Ed448", "pubkey/ed448_verify.vec", "PublicKey,Msg,Signature", "Valid") {}
+
+      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
+         const std::vector<uint8_t> pk = vars.get_req_bin("PublicKey");
+         return std::make_unique<Botan::Ed448_PublicKey>(pk);
+      }
+};
+
+class Ed448_Key_Validity_Tests final : public Text_Based_Test {
+   public:
+      Ed448_Key_Validity_Tests() : Text_Based_Test("pubkey/ed448_key_valid.vec", "PublicKey") {}
+
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override {
+         Test::Result result("Ed448 key validity");
+
+         const std::vector<uint8_t> pk = vars.get_req_bin("PublicKey");
+
+         if(header == "Valid") {
+            const Botan::Ed448_PublicKey key(pk);
+            result.test_is_true("valid key passes check_key", key.check_key(this->rng(), true));
+         } else if(header == "Invalid") {
+            // All checks are performed when the key is decoded
+            result.test_throws<Botan::Decoding_Error>("invalid key is rejected when decoded",
+                                                      [&]() { const Botan::Ed448_PublicKey key(pk); });
+         } else {
+            throw Test_Error("Unexpected header in ed448_key_valid.vec");
+         }
+
+         return result;
+      }
+};
+
+class Ed448_Algorithm_Identifier_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("Ed448 signature algorithm identifier");
+
+         const Botan::Ed448_PrivateKey key(this->rng());
+
+         const Botan::PK_Signer pure(key, this->rng(), "Pure");
+         result.test_is_true("Pure Ed448 uses the key's identifier",
+                             pure.algorithm_identifier() == key.algorithm_identifier());
+
+         // There is no X.509 algorithm identifier for Ed448ph
+         const Botan::PK_Signer prehashed(key, this->rng(), "Ed448ph");
+         result.test_throws<Botan::Not_Implemented>("Ed448ph has no algorithm identifier",
+                                                    [&]() { prehashed.algorithm_identifier(); });
+
+         return {result};
       }
 };
 
@@ -153,6 +209,9 @@ class Ed448_Utils_Test final : public Test {
 BOTAN_REGISTER_TEST("ed448", "ed448_keygen", Ed448_Keygen_Tests);
 BOTAN_REGISTER_TEST("ed448", "ed448_sign", Ed448_Signature_Tests);
 BOTAN_REGISTER_TEST("ed448", "ed448_verify", Ed448_Verification_Tests);
+BOTAN_REGISTER_TEST("ed448", "ed448_verify_only", Ed448_Verification_Only_Tests);
+BOTAN_REGISTER_TEST("ed448", "ed448_key_valid", Ed448_Key_Validity_Tests);
+BOTAN_REGISTER_TEST("ed448", "ed448_alg_id", Ed448_Algorithm_Identifier_Tests);
 BOTAN_REGISTER_TEST("ed448", "ed448_general", Ed448_General_Test);
 BOTAN_REGISTER_TEST("ed448", "ed448_utils", Ed448_Utils_Test);
 

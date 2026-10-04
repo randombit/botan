@@ -17,6 +17,7 @@
    #include <botan/rng.h>
    #include <botan/x509_key.h>
    #include <botan/internal/ed25519_scalar.h>
+   #include <algorithm>
 #endif
 
 namespace Botan_Tests {
@@ -25,13 +26,27 @@ namespace {
 
 #if defined(BOTAN_HAS_ED25519)
 
-class Ed25519_Key_Validity_Tests : public PK_Key_Validity_Test {
+class Ed25519_Key_Validity_Tests final : public Text_Based_Test {
    public:
-      Ed25519_Key_Validity_Tests() : PK_Key_Validity_Test("Ed25519", "pubkey/ed25519_key_valid.vec", "Pubkey") {}
+      Ed25519_Key_Validity_Tests() : Text_Based_Test("pubkey/ed25519_key_valid.vec", "Pubkey") {}
 
-      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override {
+         Test::Result result("Ed25519 key validity");
+
          const std::vector<uint8_t> pubkey = vars.get_req_bin("Pubkey");
-         return std::make_unique<Botan::Ed25519_PublicKey>(pubkey);
+
+         if(header == "Valid") {
+            const Botan::Ed25519_PublicKey key(pubkey);
+            result.test_is_true("valid key passes check_key", key.check_key(this->rng(), true));
+         } else if(header == "Invalid") {
+            // All checks are performed when the key is decoded
+            result.test_throws<Botan::Decoding_Error>("invalid key is rejected when decoded",
+                                                      [&]() { const Botan::Ed25519_PublicKey key(pubkey); });
+         } else {
+            throw Test_Error("Unexpected header in ed25519_key_valid.vec");
+         }
+
+         return result;
       }
 };
 
@@ -66,6 +81,43 @@ class Ed25519_Signature_Tests final : public PK_Signature_Generation_Test {
          }
 
          return key;
+      }
+};
+
+class Ed25519_Keypair_Loading_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("Ed25519 keypair loading");
+
+         const Botan::Ed25519_PrivateKey key(this->rng());
+         const Botan::Ed25519_PrivateKey other(this->rng());
+
+         const auto bytes = key.raw_private_key_bits();
+         result.test_sz_eq("expanded key length", bytes.size(), 64);
+
+         const auto reloaded = Botan::Ed25519_PrivateKey::from_bytes(bytes);
+         result.test_bin_eq("reloaded public key", reloaded.raw_public_key_bits(), key.raw_public_key_bits());
+
+         // Splice in the public key of a different keypair. Signing with such a
+         // key would leak the secret scalar, so loading it must fail.
+         auto mismatched = bytes;
+         const auto other_pk = other.raw_public_key_bits();
+         std::copy(other_pk.begin(), other_pk.end(), mismatched.begin() + 32);
+         result.test_throws<Botan::Decoding_Error>("mismatched public key is rejected",
+                                                   [&]() { Botan::Ed25519_PrivateKey::from_bytes(mismatched); });
+
+         // The PKCS #8 CurvePrivateKey is a single OCTET STRING; trailing data is rejected
+         const auto alg_id = key.algorithm_identifier();
+         std::vector<uint8_t> inner = {0x04, 0x20};
+         inner.insert(inner.end(), bytes.begin(), bytes.begin() + 32);
+         result.test_bin_eq("PKCS #8 key loads",
+                            Botan::Ed25519_PrivateKey(alg_id, inner).raw_public_key_bits(),
+                            key.raw_public_key_bits());
+         inner.push_back(0x00);
+         result.test_throws<Botan::Decoding_Error>("PKCS #8 trailing data is rejected",
+                                                   [&]() { const Botan::Ed25519_PrivateKey rejected(alg_id, inner); });
+
+         return {result};
       }
 };
 
@@ -194,6 +246,7 @@ BOTAN_REGISTER_TEST("pubkey", "ed25519_scalar", Ed25519_Scalar_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_key_valid", Ed25519_Key_Validity_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_verify", Ed25519_Verification_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_sign", Ed25519_Signature_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ed25519_keypair", Ed25519_Keypair_Loading_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_curdle", Ed25519_Curdle_Format_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_keygen", Ed25519_Keygen_Tests);
 
