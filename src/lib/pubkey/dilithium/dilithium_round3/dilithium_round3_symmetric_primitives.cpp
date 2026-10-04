@@ -10,6 +10,7 @@
 
 #include <botan/internal/dilithium_round3_symmetric_primitives.h>
 
+#include <botan/exceptn.h>
 #include <botan/internal/dilithium_algos.h>
 
 namespace Botan {
@@ -21,8 +22,9 @@ secure_vector<uint8_t> Dilithium_Expanded_Keypair_Codec::encode_keypair(Dilithiu
 DilithiumInternalKeypair Dilithium_Expanded_Keypair_Codec::decode_keypair(std::span<const uint8_t> private_key,
                                                                           DilithiumConstants mode) const {
    BOTAN_ARG_CHECK(mode.mode().is_available(), "Dilithium/ML-DSA mode is not available in this build");
-   BOTAN_ARG_CHECK(private_key.size() == mode.private_key_bytes(),
-                   "dilithium private key does not have the correct byte count");
+   if(private_key.size() != mode.private_key_bytes()) {
+      throw Decoding_Error("Dilithium: Invalid private key length");
+   }
    return Dilithium_Algos::decode_keypair(StrongSpan<const DilithiumSerializedPrivateKey>(private_key),
                                           std::move(mode));
 }

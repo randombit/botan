@@ -484,6 +484,108 @@ class MLDSA_Context_Tests final : public Test {
 BOTAN_REGISTER_TEST("pubkey", "mldsa_context", MLDSA_Context_Tests);
 #endif
 
+#if defined(BOTAN_HAS_DILITHIUM_COMMON)
+
+class Dilithium_Key_Validation_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override { return {round3_expanded_private_key(), ml_dsa_seed()}; }
+
+   private:
+      static Test::Result round3_expanded_private_key() {
+         Test::Result result("Dilithium round 3 expanded private key validation");
+
+         const Botan::DilithiumMode mode(Botan::DilithiumMode::Dilithium6x5);
+         if(!mode.is_available()) {
+            result.note_missing(mode.to_string());
+            return result;
+         }
+
+         auto rng = Test::new_rng(__func__);
+         const Botan::Dilithium_PrivateKey sk(*rng, mode);
+         const auto sk_bits = sk.private_key_bits();
+         const auto pk_bits = sk.public_key_bits();
+
+         // Layout: rho (32) || K (32) || tr (32) || s1 || s2 || t0
+         // Dilithium-6x5 has k = 6, l = 5, eta = 4: s1 and s2 take 128 bytes
+         // per polynomial, t0 takes 416 bytes per polynomial.
+         constexpr size_t tr_offset = 64;
+         constexpr size_t s1_offset = 96;
+         constexpr size_t t0_offset = s1_offset + (5 + 6) * 128;
+         result.test_sz_eq("private key length", sk_bits.size(), t0_offset + 6 * 416);
+
+         {
+            const Botan::Dilithium_PrivateKey loaded(sk_bits, mode);
+            result.test_is_true("valid key passes weak check", loaded.check_key(*rng, false));
+            result.test_is_true("valid key passes strong check", loaded.check_key(*rng, true));
+         }
+
+         // Any 13 bit value is a valid t0 coefficient, so a corrupted t0 is only
+         // detectable by recomputing it from (rho, s1, s2)
+         result.test_throws<Botan::Decoding_Error>("corrupted first byte of t0", [&] {
+            auto corrupted = sk_bits;
+            corrupted[t0_offset] ^= 0x01;
+            Botan::Dilithium_PrivateKey(corrupted, mode);
+         });
+
+         result.test_throws<Botan::Decoding_Error>("corrupted last byte of t0", [&] {
+            auto corrupted = sk_bits;
+            corrupted.back() ^= 0x80;
+            Botan::Dilithium_PrivateKey(corrupted, mode);
+         });
+
+         result.test_throws<Botan::Decoding_Error>("corrupted tr", [&] {
+            auto corrupted = sk_bits;
+            corrupted[tr_offset] ^= 0x01;
+            Botan::Dilithium_PrivateKey(corrupted, mode);
+         });
+
+         result.test_throws<Botan::Decoding_Error>("out of range s1 coefficient", [&] {
+            auto corrupted = sk_bits;
+            corrupted[s1_offset] = 0xFF;  // eta = 4 uses 4 bits per coefficient; 0xF is out of range
+            Botan::Dilithium_PrivateKey(corrupted, mode);
+         });
+
+         result.test_throws<Botan::Decoding_Error>("truncated private key", [&] {
+            auto truncated = sk_bits;
+            truncated.pop_back();
+            Botan::Dilithium_PrivateKey(truncated, mode);
+         });
+
+         result.test_throws<Botan::Decoding_Error>("truncated public key", [&] {
+            auto truncated = pk_bits;
+            truncated.pop_back();
+            Botan::Dilithium_PublicKey(truncated, mode);
+         });
+
+         result.test_throws<Botan::Decoding_Error>("empty public key",
+                                                   [&] { Botan::Dilithium_PublicKey(std::vector<uint8_t>(), mode); });
+
+         return result;
+      }
+
+      static Test::Result ml_dsa_seed() {
+         Test::Result result("ML-DSA private key seed validation");
+
+         const Botan::DilithiumMode mode(Botan::DilithiumMode::ML_DSA_6x5);
+         if(!mode.is_available()) {
+            result.note_missing(mode.to_string());
+            return result;
+         }
+
+         for(const size_t len : {size_t(0), size_t(31), size_t(33), size_t(64)}) {
+            result.test_throws<Botan::Decoding_Error>("seed of " + std::to_string(len) + " bytes", [&] {
+               Botan::Dilithium_PrivateKey(std::vector<uint8_t>(len), mode);
+            });
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "dilithium_key_validation", Dilithium_Key_Validation_Tests);
+
+#endif
+
 }  // namespace
 
 }  // namespace Botan_Tests
