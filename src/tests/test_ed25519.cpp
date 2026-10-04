@@ -17,6 +17,7 @@
    #include <botan/rng.h>
    #include <botan/x509_key.h>
    #include <botan/internal/ed25519_scalar.h>
+   #include <algorithm>
 #endif
 
 namespace Botan_Tests {
@@ -66,6 +67,43 @@ class Ed25519_Signature_Tests final : public PK_Signature_Generation_Test {
          }
 
          return key;
+      }
+};
+
+class Ed25519_Keypair_Loading_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("Ed25519 keypair loading");
+
+         const Botan::Ed25519_PrivateKey key(this->rng());
+         const Botan::Ed25519_PrivateKey other(this->rng());
+
+         const auto bytes = key.raw_private_key_bits();
+         result.test_sz_eq("expanded key length", bytes.size(), 64);
+
+         const auto reloaded = Botan::Ed25519_PrivateKey::from_bytes(bytes);
+         result.test_bin_eq("reloaded public key", reloaded.raw_public_key_bits(), key.raw_public_key_bits());
+
+         // Splice in the public key of a different keypair. Signing with such a
+         // key would leak the secret scalar, so loading it must fail.
+         auto mismatched = bytes;
+         const auto other_pk = other.raw_public_key_bits();
+         std::copy(other_pk.begin(), other_pk.end(), mismatched.begin() + 32);
+         result.test_throws<Botan::Decoding_Error>("mismatched public key is rejected",
+                                                   [&]() { Botan::Ed25519_PrivateKey::from_bytes(mismatched); });
+
+         // The PKCS #8 CurvePrivateKey is a single OCTET STRING; trailing data is rejected
+         const auto alg_id = key.algorithm_identifier();
+         std::vector<uint8_t> inner = {0x04, 0x20};
+         inner.insert(inner.end(), bytes.begin(), bytes.begin() + 32);
+         result.test_bin_eq("PKCS #8 key loads",
+                            Botan::Ed25519_PrivateKey(alg_id, inner).raw_public_key_bits(),
+                            key.raw_public_key_bits());
+         inner.push_back(0x00);
+         result.test_throws<Botan::Decoding_Error>("PKCS #8 trailing data is rejected",
+                                                   [&]() { const Botan::Ed25519_PrivateKey rejected(alg_id, inner); });
+
+         return {result};
       }
 };
 
@@ -194,6 +232,7 @@ BOTAN_REGISTER_TEST("pubkey", "ed25519_scalar", Ed25519_Scalar_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_key_valid", Ed25519_Key_Validity_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_verify", Ed25519_Verification_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_sign", Ed25519_Signature_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ed25519_keypair", Ed25519_Keypair_Loading_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_curdle", Ed25519_Curdle_Format_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ed25519_keygen", Ed25519_Keygen_Tests);
 
