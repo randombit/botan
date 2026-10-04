@@ -52,11 +52,7 @@ AlgorithmIdentifier Ed448_PublicKey::algorithm_identifier() const {
 }
 
 bool Ed448_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
-   try {
-      Ed448Point::decode(m_public->key());
-   } catch(Decoding_Error&) {
-      return false;
-   }
+   // All possible checks are performed when the key is decoded
    return true;
 }
 
@@ -74,6 +70,11 @@ Ed448_PublicKey::Ed448_PublicKey(std::span<const uint8_t> key_bits) {
    }
    std::array<uint8_t, ED448_LEN> pub{};
    copy_mem(pub, key_bits.first<ED448_LEN>());
+
+   // Rejects the identity, other points of small order, and points outside
+   // the prime order subgroup, so that no later check is needed
+   ed448_validate_public_key_point(pub);
+
    m_public = std::make_shared<const Ed448_PublicKey_Data>(pub);
 }
 
@@ -125,7 +126,7 @@ Ed448_PrivateKey::Ed448_PrivateKey(std::span<const uint8_t> key_bits) {
 }
 
 std::unique_ptr<Public_Key> Ed448_PrivateKey::public_key() const {
-   return std::make_unique<Ed448_PublicKey>(raw_public_key_bits());
+   return std::unique_ptr<Ed448_PublicKey>(new Ed448_PublicKey(m_public));
 }
 
 secure_vector<uint8_t> Ed448_PrivateKey::private_key_bits() const {

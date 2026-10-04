@@ -80,11 +80,6 @@ Ed448Point Ed448Point::decode(std::span<const uint8_t, ED448_LEN> enc) {
    if((enc.back() & 0x7F) != 0) {  // last byte is either 0x00 or 0x80
       throw Decoding_Error("Ed448 point has unacceptable x-distinguisher");
    }
-   std::array<uint8_t, ED448_LEN> identity_element{};
-   identity_element[0] = 1;
-   if(CT::is_equal(enc.data(), identity_element.data(), ED448_LEN).as_bool()) {
-      throw Decoding_Error("Ed448 point is the identity element");
-   }
    const bool x_distinguisher = enc.back() != 0;
    const auto y_data = std::span(enc).first<56>();
    if(!Gf448Elem::bytes_are_canonical_representation(y_data)) {
@@ -448,6 +443,7 @@ bool verify_signature(std::span<const uint8_t, ED448_LEN> pk,
       throw Decoding_Error("Ed448 signature has wrong size");
    }
    const auto [big_r_bytes, big_s_bytes] = split(sig.first<2 * ED448_LEN>());
+   // The identity is a valid R; small order checks apply to the public key only
    const auto big_r = Ed448Point::decode(big_r_bytes);
    if(!Scalar448::bytes_are_reduced(big_s_bytes)) {
       // S not in range 0 <= s < L
@@ -462,6 +458,28 @@ bool verify_signature(std::span<const uint8_t, ED448_LEN> pk,
    //    Rearranged as [S]B + [k](-A') = R, computed via Shamir's trick.
    const auto neg_A = Ed448Point::decode(pk).negate();
    return Ed448Point::double_scalar_mul_vartime(big_s, Ed448Point::base_point(), k, neg_A) == big_r;
+}
+
+void ed448_validate_public_key_point(std::span<const uint8_t, ED448_LEN> pk) {
+   const auto A = Ed448Point::decode(pk);
+
+   if(A.is_identity()) {
+      throw Decoding_Error("Ed448 public key is the identity element");
+   }
+
+   /*
+   * Check that the point is in the prime order subgroup, ie that
+   * [L]A == O, by checking that [L-1]A == -A. Since L is odd this also
+   * rejects the points of order 2 and 4.
+   */
+   constexpr std::array<uint8_t, 56> L_minus_1 = {
+      0xf2, 0x44, 0x58, 0xab, 0x92, 0xc2, 0x78, 0x23, 0x55, 0x8f, 0xc5, 0x8d, 0x72, 0xc2, 0x6c, 0x21, 0x90, 0x36, 0xd6,
+      0xae, 0x49, 0xdb, 0x4e, 0xc4, 0xe9, 0x23, 0xca, 0x7c, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x3f};
+
+   if((Scalar448(L_minus_1) * A) != A.negate()) {
+      throw Decoding_Error("Ed448 public key is not in the prime order subgroup");
+   }
 }
 
 }  // namespace Botan
