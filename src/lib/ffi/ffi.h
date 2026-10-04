@@ -2222,6 +2222,12 @@ BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_estimated_strength(botan_pubkey_t key, s
 
 /**
 * Compute a fingerprint (hash of the public key encoding)
+*
+* @warning This hashes the algorithm specific public key encoding (the contents
+* of the subjectPublicKey BIT STRING). Unlike Public_Key::fingerprint_public in
+* the C++ API the algorithm identifier is not included, so keys of different
+* algorithms with identical raw encodings share a fingerprint.
+*
 * @param key the public key to fingerprint
 * @param hash the name of the hash to use, eg "SHA-256"
 * @param out output buffer

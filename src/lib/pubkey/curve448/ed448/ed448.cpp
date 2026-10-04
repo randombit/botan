@@ -52,12 +52,12 @@ AlgorithmIdentifier Ed448_PublicKey::algorithm_identifier() const {
 }
 
 bool Ed448_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
-   try {
-      Ed448Point::decode(m_public->key());
-   } catch(Decoding_Error&) {
-      return false;
-   }
-   return true;
+   /*
+   * This rejects the identity in either its canonical or non-canonical
+   * encoding, points of small order, and points outside the prime order
+   * subgroup.
+   */
+   return ed448_valid_public_key_point(m_public->key());
 }
 
 Ed448_PublicKey::Ed448_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
@@ -194,12 +194,21 @@ class Ed448_Verify_Operation final : public PK_Ops::Verification {
          } else {
             m_message = std::make_unique<Pure_Ed448_Message>();
          }
+
+         // Reject the identity, low order points, and points outside the prime
+         // order subgroup up front.
+         //
+         // TODO(Botan4) instead check and reject such keys during deserialization
+         m_key_is_valid = ed448_valid_public_key_point(m_public_key->key());
       }
 
       void update(std::span<const uint8_t> input) override { m_message->update(input); }
 
       bool is_valid_signature(std::span<const uint8_t> sig) override {
          const auto msg = m_message->get_and_clear();
+         if(!m_key_is_valid) {
+            return false;
+         }
          try {
             return verify_signature(
                std::span(m_public_key->key()).first<ED448_LEN>(), m_prehash_function.has_value(), {}, sig, msg);
@@ -214,6 +223,7 @@ class Ed448_Verify_Operation final : public PK_Ops::Verification {
       std::shared_ptr<const Ed448_PublicKey_Data> m_public_key;
       std::unique_ptr<Ed448_Message> m_message;
       std::optional<std::string> m_prehash_function;
+      bool m_key_is_valid;
 };
 
 /**
@@ -263,6 +273,11 @@ class Ed448_Sign_Operation final : public PK_Ops::Signature {
 };
 
 AlgorithmIdentifier Ed448_Sign_Operation::algorithm_identifier() const {
+   // RFC 8410 Section 3 defines the OIDs for "the algorithms being ECDH and
+   // EdDSA in pure mode"; there is no identifier for Ed448ph
+   if(m_prehash_function) {
+      throw Not_Implemented("Ed448ph signatures do not have an algorithm identifier");
+   }
    return AlgorithmIdentifier(OID::from_string("Ed448"), AlgorithmIdentifier::USE_EMPTY_PARAM);
 }
 

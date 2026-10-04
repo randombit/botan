@@ -110,7 +110,8 @@ class BOTAN_PUBLIC_API(2, 2) Ed25519_PrivateKey final : public Ed25519_PublicKey
       * Decode the Ed25519_PrivateKey from the provided 64-byte value
       *
       * The first 32 bytes are the private key and the last 32 bytes
-      * are the precomputed public key.
+      * are the precomputed public key. Throws Decoding_Error if the
+      * public key does not match the one derived from the private key.
       */
       static Ed25519_PrivateKey from_bytes(std::span<const uint8_t> bytes);
 
