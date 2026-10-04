@@ -39,20 +39,50 @@ EC_PublicKey_Data::EC_PublicKey_Data(const EC_Group& group, std::span<const uint
 
 EC_PublicKey_Data::EC_PublicKey_Data(EC_Group group, EC_AffinePoint pt) :
       m_group(std::move(group)), m_point(std::move(pt)) {
+   // Checking that the point lies on the curve is done in the deserialization
+   // of EC_AffinePoint.
+   if(m_point.is_identity()) {
+      throw Decoding_Error("ECC public key cannot be point at infinity");
+   }
+
+   if(m_point._group() != m_group._data()) {
+      if(m_point.group() != m_group) {
+         throw Decoding_Error("ECC public key point is not an element of the specified group");
+      }
+
+      // Same curve but a distinct EC_Group_Data (eg an unregistered explicit
+      // group decoded twice); point arithmetic requires a shared representation
+      if(auto rebound = EC_AffinePoint::deserialize_uncompressed(m_group, m_point.serialize_uncompressed())) {
+         m_point = std::move(rebound).value();
+      } else {
+         throw Decoding_Error("ECC public key point is not an element of the specified group");
+      }
+   }
+
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
    m_legacy_point = m_point.to_legacy_point();
 #endif
-
-   // Checking that the point lies on the curve is done in the deserialization
-   // of EC_AffinePoint.
-   BOTAN_ARG_CHECK(!m_point.is_identity(), "ECC public key cannot be point at infinity");
 }
 
 EC_PrivateKey_Data::EC_PrivateKey_Data(EC_Group group, EC_Scalar x) :
       m_group(std::move(group)), m_scalar(std::move(x)), m_legacy_x(m_scalar.to_bigint()) {
+   if(m_scalar.group()._data() != m_group._data()) {
+      if(m_scalar.group() != m_group) {
+         throw Decoding_Error("ECC private key scalar is not an element of the specified group");
+      }
+
+      if(auto rebound = EC_Scalar::deserialize(m_group, m_scalar.serialize<secure_vector<uint8_t>>())) {
+         m_scalar = std::move(rebound).value();
+      } else {
+         throw Decoding_Error("ECC private key scalar is not an element of the specified group");
+      }
+   }
+
    // Checking that the scalar is lower than the group order is ensured in the
    // deserialization of the EC_Scalar or during the random generation respectively.
-   BOTAN_ARG_CHECK(m_scalar.is_nonzero(), "ECC private key cannot be zero");
+   if(m_scalar.is_zero()) {
+      throw Decoding_Error("ECC private key cannot be zero");
+   }
 }
 
 namespace {
