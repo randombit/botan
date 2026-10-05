@@ -1494,22 +1494,26 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
             # We track OQS's code point allocations for FrodoKEM and hybrids thereof.
             # All are defined in TLS's private code point section (0xFE00 - 0xFFFF)
             # and may change in the future.
-            TestConfig("test.openquantumsafe.org", "eFrodoKEM-640-SHAKE", port=oqsp['frodo640shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "eFrodoKEM-976-SHAKE", port=oqsp['frodo976shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "eFrodoKEM-1344-SHAKE", port=oqsp['frodo1344shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "eFrodoKEM-640-AES", port=oqsp['frodo640aes'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "eFrodoKEM-976-AES", port=oqsp['frodo976aes'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "eFrodoKEM-1344-AES", port=oqsp['frodo1344aes'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "x25519/eFrodoKEM-640-SHAKE", port=oqsp['x25519_frodo640shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "x25519/eFrodoKEM-640-AES", port=oqsp['x25519_frodo640aes'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "x448/eFrodoKEM-976-SHAKE", port=oqsp['x448_frodo976shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "x448/eFrodoKEM-976-AES", port=oqsp['x448_frodo976aes'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp256r1/eFrodoKEM-640-SHAKE", port=oqsp['p256_frodo640shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp256r1/eFrodoKEM-640-AES", port=oqsp['p256_frodo640aes'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp384r1/eFrodoKEM-976-SHAKE", port=oqsp['p384_frodo976shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp384r1/eFrodoKEM-976-AES", port=oqsp['p384_frodo976aes'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp521r1/eFrodoKEM-1344-SHAKE", port=oqsp['p521_frodo1344shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp521r1/eFrodoKEM-1344-AES", port=oqsp['p521_frodo1344aes'], ca=oqs_test_ca),
+            #
+            # OQS's 'efrodo*' ports serve the ephemeral variant implemented by Botan's
+            # TLS stack; the 'frodo*' ports serve salted FrodoKEM (as of liboqs 0.16.0),
+            # which Botan's TLS does not currently support.
+            TestConfig("test.openquantumsafe.org", "eFrodoKEM-640-SHAKE", port=oqsp['efrodo640shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "eFrodoKEM-976-SHAKE", port=oqsp['efrodo976shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "eFrodoKEM-1344-SHAKE", port=oqsp['efrodo1344shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "eFrodoKEM-640-AES", port=oqsp['efrodo640aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "eFrodoKEM-976-AES", port=oqsp['efrodo976aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "eFrodoKEM-1344-AES", port=oqsp['efrodo1344aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "x25519/eFrodoKEM-640-SHAKE", port=oqsp['x25519_efrodo640shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "x25519/eFrodoKEM-640-AES", port=oqsp['x25519_efrodo640aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "x448/eFrodoKEM-976-SHAKE", port=oqsp['x448_efrodo976shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "x448/eFrodoKEM-976-AES", port=oqsp['x448_efrodo976aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "secp256r1/eFrodoKEM-640-SHAKE", port=oqsp['p256_efrodo640shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "secp256r1/eFrodoKEM-640-AES", port=oqsp['p256_efrodo640aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "secp384r1/eFrodoKEM-976-SHAKE", port=oqsp['p384_efrodo976shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "secp384r1/eFrodoKEM-976-AES", port=oqsp['p384_efrodo976aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "secp521r1/eFrodoKEM-1344-SHAKE", port=oqsp['p521_efrodo1344shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "secp521r1/eFrodoKEM-1344-AES", port=oqsp['p521_efrodo1344aes'], ca=oqs_test_ca),
         ]
     else:
         logging.info("failed to pull OQS port assignment, skipping OQS...")
