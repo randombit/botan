@@ -7,8 +7,8 @@
 #include <botan/internal/hash_engine_sha2_64.h>
 
 #include <botan/assert.h>
+#include <botan/internal/algorithm_spec.h>
 #include <botan/internal/hash_engine_mdx.h>
-#include <botan/internal/scan_name.h>
 #include <botan/internal/sha2_64.h>
 
 #if defined(BOTAN_HAS_HASH_ENGINE_SHA2_64_AVX2) || defined(BOTAN_HAS_HASH_ENGINE_SHA2_64_AVX512)
@@ -25,18 +25,18 @@ std::unique_ptr<Hash_Engine> create_sha2_64_mb_engine(std::string_view hash_fn,
    size_t output_length = 0;
    SHA_512::digest_type midstate;
 
-   const SCAN_Name req(hash_fn);
-   if(req.algo_name() == "SHA-512" && req.arg_count() == 0) {
+   const AlgorithmSpec req(hash_fn);
+   if(req.matches("SHA-512")) {
       output_length = SHA_512::output_bytes;
       SHA_512::init(midstate);
-   } else if(req.algo_name() == "SHA-384" && req.arg_count() == 0) {
+   } else if(req.matches("SHA-384")) {
       output_length = SHA_384::output_bytes;
       SHA_384::init(midstate);
-   } else if(req.algo_name() == "SHA-512-256" && req.arg_count() == 0) {
+   } else if(req.matches("SHA-512-256")) {
       output_length = SHA_512_256::output_bytes;
       SHA_512_256::init(midstate);
-   } else if(req.algo_name() == "Truncated" && req.arg_count() == 2 && req.arg(0) == "SHA-512") {
-      const size_t bits = req.arg_as_integer(1);
+   } else if(auto m = req.match("Truncated(SHA-512,{bits:int})")) {
+      const size_t bits = m->integer("bits");
       if(bits == 0 || bits % 8 != 0 || bits > 512) {
          return nullptr;
       }

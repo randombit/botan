@@ -9,7 +9,9 @@
 
 #include <botan/assert.h>
 #include <botan/exceptn.h>
-#include <botan/internal/scan_name.h>
+#include <botan/internal/algorithm_spec.h>
+#include <botan/internal/fmt.h>
+#include <botan/internal/probe_providers.h>
 
 #if defined(BOTAN_HAS_PBKDF2)
    #include <botan/pbkdf2.h>
@@ -22,16 +24,17 @@
 namespace Botan {
 
 std::unique_ptr<PBKDF> PBKDF::create(std::string_view algo_spec, std::string_view provider) {
-   const SCAN_Name req(algo_spec);
+   const AlgorithmSpec req(algo_spec);
 
 #if defined(BOTAN_HAS_PBKDF2)
-   if(req.algo_name() == "PBKDF2") {
+   if(auto m = req.match("PBKDF2({prf})")) {
       if(provider.empty() || provider == "base") {
-         if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")")) {
+         const auto prf = m->str("prf");
+         if(auto mac = MessageAuthenticationCode::create(fmt("HMAC({})", prf))) {
             return std::make_unique<PKCS5_PBKDF2>(std::move(mac));
          }
 
-         if(auto mac = MessageAuthenticationCode::create(req.arg(0))) {
+         if(auto mac = MessageAuthenticationCode::create(prf)) {
             return std::make_unique<PKCS5_PBKDF2>(std::move(mac));
          }
       }
@@ -41,8 +44,8 @@ std::unique_ptr<PBKDF> PBKDF::create(std::string_view algo_spec, std::string_vie
 #endif
 
 #if defined(BOTAN_HAS_PGP_S2K)
-   if(req.algo_name() == "OpenPGP-S2K" && req.arg_count() == 1) {
-      if(auto hash = HashFunction::create(req.arg(0))) {
+   if(auto m = req.match("OpenPGP-S2K({hash})")) {
+      if(auto hash = HashFunction::create(m->str("hash"))) {
          return std::make_unique<OpenPGP_S2K>(std::move(hash));
       }
    }
