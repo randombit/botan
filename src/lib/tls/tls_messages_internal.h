@@ -50,6 +50,18 @@ std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
                                               const Policy& policy);
 
 /**
+ * Compute a cookie value from the ClientHello and the client's identity. Used
+ * by both the DTLS 1.2 HelloVerifyRequest and the DTLS 1.3 HelloRetryRequest
+ * cookie extension.
+ *
+ * Note: Currently, Botan does not support proper stateless handling of
+ *       HelloVerifyRequest/HelloRetryRequest messages using Cookies.
+ */
+std::vector<uint8_t> calculate_cookie(std::span<const uint8_t> client_hello_bits,
+                                      std::string_view client_identity,
+                                      std::span<const uint8_t> cookie_secret);
+
+/**
  * Version-agnostic internal client hello data container that allows
  * parsing Client_Hello messages without prior knowledge of the contained
  * protocol version.
