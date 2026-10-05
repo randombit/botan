@@ -546,6 +546,36 @@ BigInt crt_recombine(const Montgomery_Int& j1,
    return BigInt::_from_words(r);
 }
 
+// k^e mod n via the CRT; e is public so variable time exponentiation is fine
+BigInt crt_public_op(const RSA_Private_Data& priv, const BigInt& e, const BigInt& k) {
+   const size_t powm_window = 1;
+   const auto powm_kp = monty_precompute(Montgomery_Int::from_wide_int(priv.monty_p(), k), powm_window, false);
+   const auto powm_kq = monty_precompute(Montgomery_Int::from_wide_int(priv.monty_q(), k), powm_window, false);
+
+   const auto j1 = monty_execute_vartime(*powm_kp, e);
+   const auto j2 = monty_execute_vartime(*powm_kq, e).value();
+   const auto j2_p = Montgomery_Int::from_wide_int(priv.monty_p(), j2);
+
+   return crt_recombine(j1, j2_p, j2, priv.get_c_monty(), priv.get_p(), priv.get_q());
+}
+
+// k^-1 mod n via the CRT; two half-size inversions are ~2x cheaper than one modulo n
+BigInt crt_inverse(const RSA_Private_Data& priv, const BigInt& k) {
+   const BigInt kp = Montgomery_Int::from_wide_int(priv.monty_p(), k).value();
+   const BigInt kq = Montgomery_Int::from_wide_int(priv.monty_q(), k).value();
+
+   // k is random and less than n, so this means we stumbled onto a factor of n
+   if(kp.is_zero() || kq.is_zero()) {
+      throw Internal_Error("Accidentally factored the public modulus");
+   }
+
+   const Montgomery_Int j1(priv.monty_p(), inverse_mod_secret_prime(kp, priv.get_p()));
+   const BigInt j2 = inverse_mod_secret_prime(kq, priv.get_q());
+   const auto j2_p = Montgomery_Int::from_wide_int(priv.monty_p(), j2);
+
+   return crt_recombine(j1, j2_p, j2, priv.get_c_monty(), priv.get_p(), priv.get_q());
+}
+
 /**
 * RSA private (decrypt/sign) operation
 */
@@ -561,8 +591,8 @@ class RSA_Private_Operation {
             m_blinder(
                m_public->reducer_mod_n(),
                rng,
-               [this](const BigInt& k) { return m_public->public_op(k); },
-               [this](const BigInt& k) { return inverse_mod_rsa_public_modulus(k, m_public->get_n()); }),
+               [this](const BigInt& k) { return blinding_fwd(k); },
+               [this](const BigInt& k) { return blinding_inv(k); }),
             m_blinding_bits(64),
             m_max_d1_bits(m_private->p_bits() + m_blinding_bits),
             m_max_d2_bits(m_private->q_bits() + m_blinding_bits) {}
@@ -588,6 +618,20 @@ class RSA_Private_Operation {
       }
 
    private:
+      BigInt blinding_fwd(const BigInt& k) const {
+         if(m_private->primes_imbalanced()) {
+            return m_public->public_op(k);
+         }
+         return crt_public_op(*m_private, m_public->get_e(), k);
+      }
+
+      BigInt blinding_inv(const BigInt& k) const {
+         if(m_private->primes_imbalanced()) {
+            return inverse_mod_rsa_public_modulus(k, m_public->get_n());
+         }
+         return crt_inverse(*m_private, k);
+      }
+
       BigInt rsa_private_op(const BigInt& m) const {
          /*
          All normal implementations generate p/q of the same bitlength,
