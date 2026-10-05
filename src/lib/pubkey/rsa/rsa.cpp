@@ -32,6 +32,10 @@
    #include <botan/internal/thread_pool.h>
 #endif
 
+#if defined(BOTAN_HAS_THREAD_UTILS) && !defined(BOTAN_HAS_VALGRIND)
+   #define BOTAN_RSA_USE_ASYNC
+#endif
+
 namespace Botan {
 
 class RSA_Public_Data final {
@@ -191,8 +195,9 @@ class RSA_Private_Data final {
             // TODO the fresh pair could be computed ahead of time (eg in the thread
             // pool) so that no operation has to wait for it
             const BigInt k(rng, m_public->public_modulus_bits() - 1);
-            m_blinding_fwd = blinding_fwd(k);
-            m_blinding_inv = blinding_inv(k);
+            auto [fwd, inv] = fresh_blinding_pair(k);
+            m_blinding_fwd = std::move(fwd);
+            m_blinding_inv = std::move(inv);
             m_blinding_uses = 0;
          } else {
             const auto& mod_n = m_public->reducer_mod_n();
@@ -207,50 +212,60 @@ class RSA_Private_Data final {
    private:
       static constexpr size_t BlindingReinitInterval = 64;
 
-      // k^e mod n
-      BigInt blinding_fwd(const BigInt& k) const {
+      // (k^e mod n, k^-1 mod n) for a fresh blinding nonce k
+      std::pair<BigInt, BigInt> fresh_blinding_pair(const BigInt& k) const {
          if(primes_imbalanced()) {
-            return m_public->public_op(k);
+            return {m_public->public_op(k), inverse_mod_rsa_public_modulus(k, m_public->get_n())};
          }
-         return crt_public_op(m_public->get_e(), k);
+         return crt_blinding_pair(m_public->get_e(), k);
       }
 
-      // k^-1 mod n
-      BigInt blinding_inv(const BigInt& k) const {
-         if(primes_imbalanced()) {
-            return inverse_mod_rsa_public_modulus(k, m_public->get_n());
-         }
-         return crt_inverse(k);
-      }
-
-      // k^e mod n via the CRT; e is public so variable time exponentiation is fine
-      BigInt crt_public_op(const BigInt& e, const BigInt& k) const {
-         const size_t powm_window = 1;
-         const auto powm_kp = monty_precompute(Montgomery_Int::from_wide_int(m_monty_p, k), powm_window, false);
-         const auto powm_kq = monty_precompute(Montgomery_Int::from_wide_int(m_monty_q, k), powm_window, false);
-
-         const auto j1 = monty_execute_vartime(*powm_kp, e);
-         const auto j2 = monty_execute_vartime(*powm_kq, e).value();
-         const auto j2_p = Montgomery_Int::from_wide_int(m_monty_p, j2);
-
-         return crt_recombine(j1, j2_p, j2, m_c_monty, m_p, m_q);
-      }
-
-      // k^-1 mod n via the CRT; two half-size inversions are ~2x cheaper than one modulo n
-      BigInt crt_inverse(const BigInt& k) const {
-         const BigInt kp = Montgomery_Int::from_wide_int(m_monty_p, k).value();
-         const BigInt kq = Montgomery_Int::from_wide_int(m_monty_q, k).value();
+      /*
+      * (k^e mod n, k^-1 mod n) via the CRT, with the two halves computed in
+      * parallel when possible. The exponent e is public so variable time
+      * exponentiation is fine; the two half-size inversions are ~2x cheaper
+      * than a single inversion modulo n.
+      */
+      std::pair<BigInt, BigInt> crt_blinding_pair(const BigInt& e, const BigInt& k) const {
+         const auto kp_monty = Montgomery_Int::from_wide_int(m_monty_p, k);
+         const auto kq_monty = Montgomery_Int::from_wide_int(m_monty_q, k);
+         const BigInt kp = kp_monty.value();
+         const BigInt kq = kq_monty.value();
 
          // k is random and less than n, so this means we stumbled onto a factor of n
          if(kp.is_zero() || kq.is_zero()) {
             throw Internal_Error("Accidentally factored the public modulus");
          }
 
-         const Montgomery_Int j1(m_monty_p, inverse_mod_secret_prime(kp, m_p));
-         const BigInt j2 = inverse_mod_secret_prime(kq, m_q);
-         const auto j2_p = Montgomery_Int::from_wide_int(m_monty_p, j2);
+         // Returns (k^e, k^-1) modulo the prime, the former still in Montgomery form
+         auto half = [&e](const Montgomery_Int& k_monty, const BigInt& k_mod, const BigInt& prime) {
+            const size_t powm_window = 1;
+            auto fwd = monty_execute_vartime(*monty_precompute(k_monty, powm_window, false), e);
+            auto inv = inverse_mod_secret_prime(k_mod, prime);
+            return std::make_pair(std::move(fwd), std::move(inv));
+         };
 
-         return crt_recombine(j1, j2_p, j2, m_c_monty, m_p, m_q);
+#if defined(BOTAN_RSA_USE_ASYNC)
+         // Precompute e.sig_words in the main thread, see rsa_private_op
+         e.sig_words();
+
+         auto future_p = Thread_Pool::global_instance().run([&]() { return half(kp_monty, kp, m_p); });
+#endif
+
+         const auto [fwd_q, inv_q] = half(kq_monty, kq, m_q);
+
+#if defined(BOTAN_RSA_USE_ASYNC)
+         const auto [fwd_p, inv_p] = future_p.get();
+#else
+         const auto [fwd_p, inv_p] = half(kp_monty, kp, m_p);
+#endif
+
+         const BigInt fwd_q_v = fwd_q.value();
+         const Montgomery_Int inv_p_monty(m_monty_p, inv_p);
+
+         return {
+            crt_recombine(fwd_p, Montgomery_Int::from_wide_int(m_monty_p, fwd_q_v), fwd_q_v, m_c_monty, m_p, m_q),
+            crt_recombine(inv_p_monty, Montgomery_Int::from_wide_int(m_monty_p, inv_q), inv_q, m_c_monty, m_p, m_q)};
       }
 
       std::shared_ptr<const RSA_Public_Data> m_public;
@@ -689,10 +704,6 @@ class RSA_Private_Operation {
 
          // Compute this in main thread to avoid racing on the rng
          const BigInt d1_mask(m_rng, m_blinding_bits);
-
-#if defined(BOTAN_HAS_THREAD_UTILS) && !defined(BOTAN_HAS_VALGRIND)
-   #define BOTAN_RSA_USE_ASYNC
-#endif
 
 #if defined(BOTAN_RSA_USE_ASYNC)
          /*
