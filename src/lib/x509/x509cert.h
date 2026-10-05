@@ -227,9 +227,9 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
       const std::vector<uint8_t>& subject_key_id() const;
 
       /**
-      * Check whether this certificate is self signed.
-      * If the DN issuer and subject agree,
-      * @return true if this certificate is self signed
+      * Check whether this certificate appears to be self signed, based on
+      * the issuer/subject names and key identifiers. The signature is not checked.
+      * @return true if this certificate appears to be self signed
       */
       bool is_self_signed() const;
 

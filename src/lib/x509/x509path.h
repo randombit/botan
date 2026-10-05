@@ -52,9 +52,10 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       *        of trusted OCSP responders (additionally to the CA's responders)
       * @param ignore_trusted_root_time_range if true, validity checks on the
       *        time range of the trusted root certificate only produce warnings
-      * @param require_self_signed_trust_anchors if true, only self-signed certificates
-      *        are allowed as trust anchors. Trust anchors based on intermediate
-      *        and leaf certificates are forbidden in this case.
+      * @param require_self_signed_trust_anchors if true, only certificates which
+      *        appear to be self-signed are allowed as trust anchors. Trust anchors
+      *        based on intermediate and leaf certificates are forbidden in this case.
+      *        The self-signature itself is not verified.
       * @param accept_ocsp_softfail if true then soft fail conditions (the OCSP
       *        responder being unavailable or returning an error status, no
       *        responder URL, or the library being built without HTTP support)
@@ -87,9 +88,10 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       *        of trusted OCSP responders (additionally to the CA's responders)
       * @param ignore_trusted_root_time_range if true, validity checks on the
       *        time range of the trusted root certificate only produce warnings
-      * @param require_self_signed_trust_anchors if true, only self-signed certificates
-      *        are allowed as trust anchors. Trust anchors based on intermediate
-      *        and leaf certificates are forbidden in this case.
+      * @param require_self_signed_trust_anchors if true, only certificates which
+      *        appear to be self-signed are allowed as trust anchors. Trust anchors
+      *        based on intermediate and leaf certificates are forbidden in this case.
+      *        The self-signature itself is not verified.
       * @param accept_ocsp_softfail if true then soft fail conditions (the OCSP
       *        responder being unavailable or returning an error status, no
       *        responder URL, or the library being built without HTTP support)
@@ -163,7 +165,8 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       bool ignore_trusted_root_time_range() const { return m_ignore_trusted_root_time_range; }
 
       /**
-       * By default Botan requires trust anchors to be self-signed.
+       * By default Botan requires trust anchors to appear self-signed; the
+       * self-signature itself is not verified.
        * This prevents using intermediate CA certificates and leaf certificates
        * as trust anchors, even if they are included in the Certificate Store.
        * This restriction can be removed by setting
@@ -419,7 +422,8 @@ Certificate_Status_Code BOTAN_PUBLIC_API(2, 0)
 *
 * @param cert_path path built by build_certificate_path with OK result.
 * The first element is the end entity certificate, the last element is
-* the trusted root certificate.
+* the trusted root certificate. The signature on the trusted root is
+* not verified; it is trusted because it was provided as a trust anchor.
 * @param ref_time whatever time you want to perform the validation
 * against (normally current system clock)
 * @param hostname the hostname
