@@ -48,7 +48,7 @@ class Channel_Impl_12 : public Channel_Impl {
       * @param rng a random number generator
       * @param policy specifies other connection policy information
       * @param is_server whether this is a server session or not
-      * @param is_datagram whether this is a DTLS session
+      * @param flavor specifies the TLS flavor (TLS or DTLS)
       * @param io_buf_sz This many bytes of memory will
       *        be preallocated for the read and write buffers. Smaller
       *        values just mean reallocations and copies are more likely.
@@ -58,7 +58,7 @@ class Channel_Impl_12 : public Channel_Impl {
                                const std::shared_ptr<RandomNumberGenerator>& rng,
                                const std::shared_ptr<const Policy>& policy,
                                bool is_server,
-                               bool is_datagram,
+                               TLS_Flavor flavor,
                                size_t io_buf_sz = TLS::Channel::IO_BUF_DEFAULT_SIZE);
 
       Channel_Impl_12(const Channel_Impl_12& other) = delete;
@@ -196,6 +196,8 @@ class Channel_Impl_12 : public Channel_Impl {
 
       Callbacks& callbacks() const { return *m_callbacks; }
 
+      TLS_Flavor flavor() const { return m_flavor; }
+
       void reset_active_association_state();
 
       /**
@@ -246,7 +248,7 @@ class Channel_Impl_12 : public Channel_Impl {
       void process_alert(const secure_vector<uint8_t>& record);
 
       const bool m_is_server;
-      const bool m_is_datagram;
+      const TLS_Flavor m_flavor;
 
       /* callbacks */
       std::shared_ptr<Callbacks> m_callbacks;

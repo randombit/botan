@@ -157,7 +157,7 @@ typedef std::function<std::shared_ptr<Connection_Cipher_State>(uint16_t)> get_ci
 * Decode a TLS record
 * @return zero if full message, else number of bytes still needed
 */
-Record_Header read_record(bool is_datagram,
+Record_Header read_record(TLS_Flavor flavor,
                           secure_vector<uint8_t>& read_buffer,
                           const uint8_t input[],
                           size_t input_len,

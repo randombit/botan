@@ -103,7 +103,7 @@ std::shared_ptr<Client_Impl_12> Client_Impl_12::create(const std::shared_ptr<Cal
                                                        const std::shared_ptr<const Policy>& policy,
                                                        const std::shared_ptr<RandomNumberGenerator>& rng,
                                                        Server_Information server_info,
-                                                       bool datagram,
+                                                       TLS_Flavor flavor,
                                                        const std::vector<std::string>& next_protocols,
                                                        size_t reserved_io_buffer_size) {
    auto self = std::make_shared<Client_Impl_12>(Private{},
@@ -113,11 +113,11 @@ std::shared_ptr<Client_Impl_12> Client_Impl_12::create(const std::shared_ptr<Cal
                                                 policy,
                                                 rng,
                                                 std::move(server_info),
-                                                datagram,
+                                                flavor,
                                                 reserved_io_buffer_size);
 
    BOTAN_ASSERT_NONNULL(self->m_creds);
-   const auto version = datagram ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
+   const auto version = (flavor == TLS_Flavor::DTLS) ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
    Handshake_State& state = self->create_handshake_state(version);
    self->send_client_hello(state, false, version, std::nullopt /* no a-priori session to resume */, next_protocols);
 
