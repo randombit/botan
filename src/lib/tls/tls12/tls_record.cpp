@@ -95,28 +95,28 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
    m_aead->set_key(aead_key);
 }
 
-std::vector<uint8_t> Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNumberGenerator& rng) {
+Record_Nonce Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNumberGenerator& rng) const {
    switch(m_nonce_format) {
       case Nonce_Format::NULL_CIPHER: {
-         return std::vector<uint8_t>{};
+         return Record_Nonce();
       }
       case Nonce_Format::CBC_MODE: {
-         std::vector<uint8_t> nonce(nonce_bytes_from_record());
-         rng.randomize(nonce.data(), nonce.size());
+         Record_Nonce nonce(nonce_bytes_from_record());
+         rng.randomize(nonce.get());
          return nonce;
       }
       case Nonce_Format::AEAD_XOR_12: {
          BOTAN_ASSERT_NOMSG(m_nonce.size() == 12);
-         std::vector<uint8_t> nonce(12);
-         store_be(seq, nonce.data() + 4);
-         xor_buf(nonce, m_nonce.data(), m_nonce.size());
+         Record_Nonce nonce(12);
+         store_be(seq, nonce.get().last<sizeof(seq)>());
+         xor_buf(nonce.get(), m_nonce);
          return nonce;
       }
       case Nonce_Format::AEAD_IMPLICIT_4: {
          BOTAN_ASSERT_NOMSG(m_nonce.size() == 4);
-         std::vector<uint8_t> nonce(12);
-         copy_mem(&nonce[0], m_nonce.data(), 4);  // NOLINT(*container-data-pointer)
-         store_be(seq, &nonce[nonce_bytes_from_handshake()]);
+         Record_Nonce nonce(12);
+         copy_mem(nonce.get().first<4>(), m_nonce);
+         store_be(seq, nonce.get().last<sizeof(seq)>());
          return nonce;
       }
    }
@@ -124,23 +124,24 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNum
    throw Invalid_State("Unknown nonce format specified");
 }
 
-std::vector<uint8_t> Connection_Cipher_State::aead_nonce(const uint8_t record[], size_t record_len, uint64_t seq) {
+Record_Nonce Connection_Cipher_State::aead_nonce(const uint8_t record[], size_t record_len, uint64_t seq) const {
    switch(m_nonce_format) {
       case Nonce_Format::NULL_CIPHER: {
-         return std::vector<uint8_t>{};
+         return Record_Nonce();
       }
       case Nonce_Format::CBC_MODE: {
          if(record_len < nonce_bytes_from_record()) {
             throw Decoding_Error("Invalid CBC packet too short to be valid");
          }
-         std::vector<uint8_t> nonce(record, record + nonce_bytes_from_record());
+         Record_Nonce nonce(nonce_bytes_from_record());
+         copy_mem(nonce.get(), std::span(record, nonce_bytes_from_record()));
          return nonce;
       }
       case Nonce_Format::AEAD_XOR_12: {
          BOTAN_ASSERT_NOMSG(m_nonce.size() == 12);
-         std::vector<uint8_t> nonce(12);
-         store_be(seq, nonce.data() + 4);
-         xor_buf(nonce, m_nonce.data(), m_nonce.size());
+         Record_Nonce nonce(12);
+         store_be(seq, nonce.get().last<sizeof(seq)>());
+         xor_buf(nonce.get(), m_nonce);
          return nonce;
       }
       case Nonce_Format::AEAD_IMPLICIT_4: {
@@ -148,9 +149,9 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(const uint8_t record[],
          if(record_len < nonce_bytes_from_record()) {
             throw Decoding_Error("Invalid AEAD packet too short to be valid");
          }
-         std::vector<uint8_t> nonce(12);
-         copy_mem(&nonce[0], m_nonce.data(), 4);  // NOLINT(*container-data-pointer)
-         copy_mem(&nonce[nonce_bytes_from_handshake()], record, nonce_bytes_from_record());
+         Record_Nonce nonce(12);
+         copy_mem(nonce.get().first<4>(), m_nonce);
+         copy_mem(nonce.get().subspan(nonce_bytes_from_handshake()), std::span(record, nonce_bytes_from_record()));
          return nonce;
       }
    }
@@ -158,13 +159,13 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(const uint8_t record[],
    throw Invalid_State("Unknown nonce format specified");
 }
 
-std::vector<uint8_t> Connection_Cipher_State::format_ad(uint64_t msg_sequence,
-                                                        Record_Type msg_type,
-                                                        Protocol_Version version,
-                                                        uint16_t msg_length) {
-   std::vector<uint8_t> ad(13);
+std::array<uint8_t, 13> Connection_Cipher_State::format_ad(uint64_t msg_sequence,
+                                                           Record_Type msg_type,
+                                                           Protocol_Version version,
+                                                           uint16_t msg_length) {
+   std::array<uint8_t, 13> ad{};
 
-   store_be(msg_sequence, &ad[0]);  // NOLINT(*container-data-pointer)
+   store_be(msg_sequence, ad.data());
    ad[8] = static_cast<uint8_t>(msg_type);
    ad[9] = version.major_version();
    ad[10] = version.minor_version();
@@ -227,7 +228,7 @@ void write_record(secure_vector<uint8_t>& output,
    write_record_header(output, record_type, version, record_sequence);
 
    AEAD_Mode& aead = cs.aead();
-   std::vector<uint8_t> aad = cs.format_ad(record_sequence, record_type, version, static_cast<uint16_t>(message_len));
+   const auto aad = cs.format_ad(record_sequence, record_type, version, static_cast<uint16_t>(message_len));
 
    const size_t ctext_size = aead.output_length(message_len);
 
@@ -235,22 +236,22 @@ void write_record(secure_vector<uint8_t>& output,
 
    aead.set_associated_data(aad);
 
-   const std::vector<uint8_t> nonce = cs.aead_nonce(record_sequence, rng);
+   const auto nonce = cs.aead_nonce(record_sequence, rng);
 
    append_u16_len(output, rec_size);
 
    if(cs.nonce_bytes_from_record() > 0) {
       if(cs.nonce_format() == Nonce_Format::CBC_MODE) {
-         output += nonce;
+         output += nonce.get();
       } else {
-         output += std::make_pair(&nonce[cs.nonce_bytes_from_handshake()], cs.nonce_bytes_from_record());
+         output += nonce.get().subspan(cs.nonce_bytes_from_handshake(), cs.nonce_bytes_from_record());
       }
    }
 
    const size_t header_size = output.size();
    output += std::make_pair(message, message_len);
 
-   aead.start(nonce);
+   aead.start(nonce.get());
    aead.finish(output, header_size);
 
    BOTAN_ASSERT(output.size() < MAX_CIPHERTEXT_SIZE, "Produced ciphertext larger than protocol allows");
@@ -283,7 +284,7 @@ void decrypt_record(secure_vector<uint8_t>& output,
                     Connection_Cipher_State& cs) {
    AEAD_Mode& aead = cs.aead();
 
-   const std::vector<uint8_t> nonce = cs.aead_nonce(record_contents, record_len, record_sequence);
+   const auto nonce = cs.aead_nonce(record_contents, record_len, record_sequence);
    const size_t nonce_from_record = cs.nonce_bytes_from_record();
    if(record_len <= nonce_from_record) {
       throw TLS_Exception(Alert::BadRecordMac, "AEAD packet too short to be valid");
@@ -307,7 +308,7 @@ void decrypt_record(secure_vector<uint8_t>& output,
    aead.set_associated_data(
       cs.format_ad(record_sequence, record_type, record_version, static_cast<uint16_t>(ptext_size)));
 
-   aead.start(nonce);
+   aead.start(nonce.get());
 
    output.assign(msg, msg + msg_length);
    aead.finish(output, 0);
