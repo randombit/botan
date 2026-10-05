@@ -237,7 +237,10 @@ std::optional<std::string> Channel_Impl_12::external_psk_identity() const {
    return std::nullopt;
 }
 
-Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version version, bool epoch0_restart) {
+Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version version,
+                                                         bool epoch0_restart,
+                                                         std::optional<uint64_t> read_sequence_number,
+                                                         std::optional<uint64_t> write_sequence_number) {
    if(pending_state() != nullptr) {
       throw Internal_Error("create_handshake_state called during handshake");
    }
@@ -254,8 +257,11 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
 
    if(!m_sequence_numbers) {
       if(version.is_datagram_protocol()) {
-         m_sequence_numbers = std::make_unique<Datagram_Sequence_Numbers>();
+         m_sequence_numbers = std::make_unique<Datagram_Sequence_Numbers>(read_sequence_number.value_or(0),
+                                                                          write_sequence_number.value_or(0));
       } else {
+         BOTAN_ARG_CHECK(!read_sequence_number.has_value() && !write_sequence_number.has_value(),
+                         "TLS does not support externally provided sequence numbers");
          m_sequence_numbers = std::make_unique<Stream_Sequence_Numbers>();
       }
    }

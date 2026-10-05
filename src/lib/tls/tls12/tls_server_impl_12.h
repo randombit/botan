@@ -75,7 +75,7 @@ class Server_Impl_12 final : public Channel_Impl_12 {
                             downgrade_info.rng,
                             downgrade_info.policy,
                             true /* is_server*/,
-                            TLS_Flavor::TLS /* TLS 1.3 does not support DTLS yet */,
+                            downgrade_info.flavor,
                             downgrade_info.io_buffer_size),
             m_creds(downgrade_info.creds) {}
 

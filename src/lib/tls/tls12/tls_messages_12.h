@@ -134,7 +134,8 @@ class BOTAN_UNSTABLE_API Server_Hello_12 final : public Server_Hello_12_Shim {
                       std::vector<uint8_t> secure_reneg_info,
                       const Client_Hello_12& client_hello,
                       const Settings& settings,
-                      std::string_view next_protocol);
+                      std::string_view next_protocol,
+                      TLS_Flavor flavor);
 
       Server_Hello_12(Handshake_IO& io,
                       Handshake_Hash& hash,
@@ -145,7 +146,8 @@ class BOTAN_UNSTABLE_API Server_Hello_12 final : public Server_Hello_12_Shim {
                       const Client_Hello_12& client_hello,
                       const Session& resumed_session,
                       bool offer_session_ticket,
-                      std::string_view next_protocol);
+                      std::string_view next_protocol,
+                      TLS_Flavor flavor);
 
       explicit Server_Hello_12(std::span<const uint8_t> buf);
 

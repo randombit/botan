@@ -118,6 +118,8 @@ class BOTAN_UNSTABLE_API Client_Hello : public Handshake_Message {
 
       std::string sni_hostname() const;
 
+      bool offered_tls13() const;
+
       bool supports_alpn() const;
 
       bool sent_signature_algorithms() const;

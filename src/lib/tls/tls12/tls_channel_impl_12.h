@@ -158,7 +158,10 @@ class Channel_Impl_12 : public Channel_Impl {
                                          const std::vector<uint8_t>& contents,
                                          bool epoch0_restart) = 0;
 
-      Handshake_State& create_handshake_state(Protocol_Version version, bool epoch0_restart = false);
+      Handshake_State& create_handshake_state(Protocol_Version version,
+                                              bool epoch0_restart = false,
+                                              std::optional<uint64_t> read_sequence_number = std::nullopt,
+                                              std::optional<uint64_t> write_sequence_number = std::nullopt);
       virtual std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) = 0;
 
       enum class TimerGeneration : bool {

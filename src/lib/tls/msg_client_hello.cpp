@@ -266,6 +266,20 @@ std::string Client_Hello::sni_hostname() const {
    return "";
 }
 
+bool Client_Hello::offered_tls13() const {
+   // RFC 9846 4.2.2
+   //    TLS 1.3 ClientHellos are identified as having a legacy_version of
+   //    0x0303 and a "supported_versions" extension present with 0x0304 as the
+   //    highest version indicated therein.
+   const auto* versions = m_data->extensions().get<Supported_Versions>();
+   if(versions == nullptr) {
+      return false;
+   }
+
+   return versions->supports(Protocol_Version::TLS_V13) ||  //
+          versions->supports(Protocol_Version::DTLS_V13);
+}
+
 std::vector<Protocol_Version> Client_Hello::supported_versions() const {
    if(const Supported_Versions* versions = m_data->extensions().get<Supported_Versions>()) {
       return versions->versions();

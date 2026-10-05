@@ -24,7 +24,10 @@ namespace Botan::TLS {
 std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
                                               Protocol_Version offered_version,
                                               Callbacks& cb,
-                                              const Policy& policy) {
+                                              const Policy& policy,
+                                              TLS_Flavor flavor) {
+   BOTAN_UNUSED(flavor);
+
    auto random = make_hello_random(rng, cb, policy);
 
    // RFC 8446 4.1.3

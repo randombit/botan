@@ -21,6 +21,15 @@ using SecretLoggerFn = std::function<void(std::string_view label, std::span<cons
 /// protocol header. Protected records hold the encrypted payload and AEAD tag.
 using MarshalledRecord = Strong<secure_vector<uint8_t>, struct MarshalledRecord_>;
 
+/**
+ * Wraps the epoch0 (unprotected) sequence numbers that are being handed down
+ * from a DTLS 1.3 handshake to a DTLS 1.2 handshake during protocol downgrade.
+ */
+struct Epoch0_SequenceNumbers {
+      uint64_t read;
+      uint64_t write;
+};
+
 }  // namespace Botan::TLS
 
 #endif

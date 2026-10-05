@@ -503,11 +503,13 @@ void Channel_Impl_13::expect_downgrade(const Server_Information& server_info,
       server_info,
       next_protocols,
       Botan::TLS::Channel::IO_BUF_DEFAULT_SIZE,
+      {},
       m_callbacks,
       m_session_manager,
       m_credentials_manager,
       m_rng,
       m_policy,
+      TLS_Flavor::TLS,
       false,  // received_tls_13_error_alert
       false   // will_downgrade
    };

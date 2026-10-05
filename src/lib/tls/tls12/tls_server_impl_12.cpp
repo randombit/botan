@@ -773,7 +773,8 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state, const
                                                                 *pending_state.client_hello(),
                                                                 session.session,
                                                                 offer_new_session_ticket,
-                                                                m_next_protocol));
+                                                                m_next_protocol,
+                                                                flavor()));
 
    secure_renegotiation_check(pending_state.server_hello());
 
@@ -876,7 +877,8 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
                                                                 secure_renegotiation_data_for_server_hello(),
                                                                 *pending_state.client_hello(),
                                                                 srv_settings,
-                                                                m_next_protocol));
+                                                                m_next_protocol,
+                                                                flavor()));
 
    secure_renegotiation_check(pending_state.server_hello());
 
