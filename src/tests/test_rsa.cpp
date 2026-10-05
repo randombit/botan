@@ -13,7 +13,6 @@
    #include <botan/pk_options.h>
    #include <botan/pubkey.h>
    #include <botan/rsa.h>
-   #include <botan/internal/blinding.h>
    #include <botan/internal/fmt.h>
 #endif
 
@@ -194,15 +193,17 @@ class RSA_Blinding_Tests final : public Test {
          }
 
    #if defined(BOTAN_HAS_EMSA_RAW) || defined(BOTAN_HAS_EME_RAW)
-         const Botan::RSA_PrivateKey rsa(this->rng(), 1024);
+         // Must match the interval used in rsa.cpp
+         constexpr size_t blinding_reinit_interval = 64;
          Botan::Null_RNG null_rng;
    #endif
 
    #if defined(BOTAN_HAS_EMSA_RAW)
+         const Botan::RSA_PrivateKey rsa(this->rng(), 1024);
 
          /*
-         * The blinder chooses a new starting point Blinder::ReinitInterval
-         * so sign several times that with a single key.
+         * A new blinding starting point is chosen every blinding_reinit_interval
+         * operations, so sign several times that with a single key.
          *
          * Very small values (padding/hashing disabled, only low byte set on input)
          * are used as an additional test on the blinders.
@@ -212,7 +213,7 @@ class RSA_Blinding_Tests final : public Test {
          Botan::PK_Signer signer(rsa, this->rng(), Botan::PK_Signature_Options().with_padding("Raw"));
          Botan::PK_Verifier verifier(rsa, Botan::PK_Signature_Options().with_padding("Raw"));
 
-         for(size_t i = 1; i <= Botan::Blinder::ReinitInterval * 6; ++i) {
+         for(size_t i = 1; i <= blinding_reinit_interval * 6; ++i) {
             std::vector<uint8_t> input(16);
             input[input.size() - 1] = static_cast<uint8_t>(i | 1);
 
@@ -223,19 +224,44 @@ class RSA_Blinding_Tests final : public Test {
 
             result.test_is_true("Signature verifies", verifier.verify_message(input, signature));
          }
+
+         /*
+         * The blinding sequence is shared by all operations using the same key, so
+         * once a sequence has been started a new signer only needs the RNG for the
+         * exponent blinding masks (2*64 bits per operation).
+         */
+         {
+            const Botan::RSA_PrivateKey shared_key(this->rng(), 1024);
+            const std::vector<uint8_t> input{1, 2, 3, 4, 5, 6, 7, 8};
+
+            Botan::PK_Signer first_signer(shared_key, this->rng(), Botan::PK_Signature_Options().with_padding("Raw"));
+            first_signer.sign_message(input, null_rng);
+
+            Fixed_Output_RNG masks_only(this->rng(), 2 * 8);
+            Botan::PK_Signer second_signer(shared_key, masks_only, Botan::PK_Signature_Options().with_padding("Raw"));
+            const std::vector<uint8_t> signature = second_signer.sign_message(input, null_rng);
+
+            Botan::PK_Verifier shared_verifier(shared_key, Botan::PK_Signature_Options().with_padding("Raw"));
+            result.test_is_true("Signature from second signer verifies",
+                                shared_verifier.verify_message(input, signature));
+            result.test_is_false("Second signer reused the blinding sequence", masks_only.is_seeded());
+         }
    #endif
 
    #if defined(BOTAN_HAS_EME_RAW)
 
          /*
-         * The blinder chooses a new starting point Blinder::ReinitInterval
-         * so decrypt several times that with a single key.
+         * A new blinding starting point is chosen every blinding_reinit_interval
+         * operations, so decrypt several times that with a single key.
          *
          * Very small values (padding/hashing disabled, only low byte set on input)
          * are used as an additional test on the blinders.
          */
 
-         Botan::PK_Encryptor_EME encryptor(rsa, this->rng(), "Raw", "base");  // don't try this at home
+         // A fresh key, so that the first decryption starts a new blinding sequence
+         const Botan::RSA_PrivateKey rsa_dec(this->rng(), 1024);
+
+         Botan::PK_Encryptor_EME encryptor(rsa_dec, this->rng(), "Raw", "base");  // don't try this at home
 
          /*
          Test blinding reinit interval
@@ -244,12 +270,12 @@ class RSA_Blinding_Tests final : public Test {
          blinder initialization plus the exponent blinding bits which
          is 2*64 bits per operation.
          */
-         const size_t rng_bytes = rsa.get_n().bytes() + (2 * 8 * Botan::Blinder::ReinitInterval);
+         const size_t rng_bytes = rsa_dec.get_n().bytes() + (2 * 8 * blinding_reinit_interval);
 
          Fixed_Output_RNG fixed_rng(this->rng(), rng_bytes);
-         Botan::PK_Decryptor_EME decryptor(rsa, fixed_rng, "Raw", "base");
+         Botan::PK_Decryptor_EME decryptor(rsa_dec, fixed_rng, "Raw", "base");
 
-         for(size_t i = 1; i <= Botan::Blinder::ReinitInterval; ++i) {
+         for(size_t i = 1; i <= blinding_reinit_interval; ++i) {
             std::vector<uint8_t> input(16);
             input[input.size() - 1] = static_cast<uint8_t>(i);
 
