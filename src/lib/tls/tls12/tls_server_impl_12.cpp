@@ -288,16 +288,16 @@ std::shared_ptr<Server_Impl_12> Server_Impl_12::create(const std::shared_ptr<Cal
                                                        const std::shared_ptr<Credentials_Manager>& creds,
                                                        const std::shared_ptr<const Policy>& policy,
                                                        const std::shared_ptr<RandomNumberGenerator>& rng,
-                                                       bool is_datagram,
+                                                       TLS_Flavor flavor,
                                                        size_t reserved_io_buffer_size)  //
 {
    auto self = std::make_shared<Server_Impl_12>(
-      Private{}, callbacks, session_manager, creds, policy, rng, is_datagram, reserved_io_buffer_size);
+      Private{}, callbacks, session_manager, creds, policy, rng, flavor, reserved_io_buffer_size);
    BOTAN_ASSERT_NONNULL(self->m_creds);
 
    // Try to load the cookie secret on initialization, rather than waiting to fail
    // until the first client connects.
-   if(is_datagram && policy->dtls_server_require_cookie_exchange()) {
+   if(flavor == TLS_Flavor::DTLS && policy->dtls_server_require_cookie_exchange()) {
       load_dtls_cookie_secret(*self->m_creds);
    }
 
@@ -773,7 +773,8 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state, const
                                                                 *pending_state.client_hello(),
                                                                 session.session,
                                                                 offer_new_session_ticket,
-                                                                m_next_protocol));
+                                                                m_next_protocol,
+                                                                flavor()));
 
    secure_renegotiation_check(pending_state.server_hello());
 
@@ -876,7 +877,8 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
                                                                 secure_renegotiation_data_for_server_hello(),
                                                                 *pending_state.client_hello(),
                                                                 srv_settings,
-                                                                m_next_protocol));
+                                                                m_next_protocol,
+                                                                flavor()));
 
    secure_renegotiation_check(pending_state.server_hello());
 

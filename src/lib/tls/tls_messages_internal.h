@@ -47,7 +47,8 @@ std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng, Callbacks& cb
 std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
                                               Protocol_Version offered_version,
                                               Callbacks& cb,
-                                              const Policy& policy);
+                                              const Policy& policy,
+                                              TLS_Flavor flavor);
 
 /**
  * Compute a cookie value from the ClientHello and the client's identity. Used

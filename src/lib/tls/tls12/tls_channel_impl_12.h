@@ -48,7 +48,7 @@ class Channel_Impl_12 : public Channel_Impl {
       * @param rng a random number generator
       * @param policy specifies other connection policy information
       * @param is_server whether this is a server session or not
-      * @param is_datagram whether this is a DTLS session
+      * @param flavor specifies the TLS flavor (TLS or DTLS)
       * @param io_buf_sz This many bytes of memory will
       *        be preallocated for the read and write buffers. Smaller
       *        values just mean reallocations and copies are more likely.
@@ -58,7 +58,7 @@ class Channel_Impl_12 : public Channel_Impl {
                                const std::shared_ptr<RandomNumberGenerator>& rng,
                                const std::shared_ptr<const Policy>& policy,
                                bool is_server,
-                               bool is_datagram,
+                               TLS_Flavor flavor,
                                size_t io_buf_sz = TLS::Channel::IO_BUF_DEFAULT_SIZE);
 
       Channel_Impl_12(const Channel_Impl_12& other) = delete;
@@ -158,7 +158,10 @@ class Channel_Impl_12 : public Channel_Impl {
                                          const std::vector<uint8_t>& contents,
                                          bool epoch0_restart) = 0;
 
-      Handshake_State& create_handshake_state(Protocol_Version version, bool epoch0_restart = false);
+      Handshake_State& create_handshake_state(Protocol_Version version,
+                                              bool epoch0_restart = false,
+                                              std::optional<uint64_t> read_sequence_number = std::nullopt,
+                                              std::optional<uint64_t> write_sequence_number = std::nullopt);
       virtual std::unique_ptr<Handshake_State> new_handshake_state(std::unique_ptr<Handshake_IO> io) = 0;
 
       enum class TimerGeneration : bool {
@@ -195,6 +198,8 @@ class Channel_Impl_12 : public Channel_Impl {
       const Policy& policy() const { return *m_policy; }
 
       Callbacks& callbacks() const { return *m_callbacks; }
+
+      TLS_Flavor flavor() const { return m_flavor; }
 
       void reset_active_association_state();
 
@@ -246,7 +251,7 @@ class Channel_Impl_12 : public Channel_Impl {
       void process_alert(const secure_vector<uint8_t>& record);
 
       const bool m_is_server;
-      const bool m_is_datagram;
+      const TLS_Flavor m_flavor;
 
       /* callbacks */
       std::shared_ptr<Callbacks> m_callbacks;

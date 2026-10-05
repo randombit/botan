@@ -23,6 +23,7 @@
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
    #include <botan/tls_messages_13.h>
+   #include <botan/internal/tls_types_13.h>
 #endif
 
 namespace Botan {
@@ -223,12 +224,14 @@ class Channel_Impl : public std::enable_shared_from_this<Channel_Impl> {
             Server_Information server_info;
             std::vector<std::string> next_protocols;
             size_t io_buffer_size;
+            std::optional<Epoch0_SequenceNumbers> epoch0_sequence_numbers;  // only relevant in DTLS
 
             std::shared_ptr<Callbacks> callbacks;
             std::shared_ptr<Session_Manager> session_manager;
             std::shared_ptr<Credentials_Manager> creds;
             std::shared_ptr<RandomNumberGenerator> rng;
             std::shared_ptr<const Policy> policy;
+            TLS_Flavor flavor;
 
             bool received_tls_13_error_alert;
             bool will_downgrade;

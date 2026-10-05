@@ -283,7 +283,7 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
       Server_Hello(std::make_unique<Server_Hello_Internal>(
          Protocol_Version::TLS_V12,
          ch.session_id(),
-         make_server_hello_random(rng, Protocol_Version::TLS_V13, cb, policy),
+         make_server_hello_random(rng, Protocol_Version::TLS_V13, cb, policy, TLS_Flavor::TLS),
          choose_ciphersuite(ch, policy),
          uint8_t(0) /* compression method */
          )) {

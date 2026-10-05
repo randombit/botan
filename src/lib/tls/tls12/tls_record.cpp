@@ -507,7 +507,7 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
 
 }  // namespace
 
-Record_Header read_record(bool is_datagram,
+Record_Header read_record(TLS_Flavor flavor,
                           secure_vector<uint8_t>& readbuf,
                           const uint8_t input[],
                           size_t input_len,
@@ -516,7 +516,7 @@ Record_Header read_record(bool is_datagram,
                           Connection_Sequence_Numbers* sequence_numbers,
                           const get_cipherstate_fn& get_cipherstate,
                           bool allow_epoch0_restart) {
-   if(is_datagram) {
+   if(flavor == TLS_Flavor::DTLS) {
       return read_dtls_record(
          readbuf, input, input_len, consumed, recbuf, sequence_numbers, get_cipherstate, allow_epoch0_restart);
    } else {
