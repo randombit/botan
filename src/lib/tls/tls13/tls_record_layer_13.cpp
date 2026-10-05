@@ -13,7 +13,6 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_version.h>
-#include <botan/internal/ct_utils.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_cipher_state.h>

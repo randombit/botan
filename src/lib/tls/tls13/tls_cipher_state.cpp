@@ -87,6 +87,7 @@
  * application data and no further cipher state advances are possible.
  */
 
+#include <algorithm>
 #include <limits>
 #include <utility>
 
@@ -101,7 +102,6 @@
 #include <botan/tls_magic.h>
 
 #include <botan/internal/concat_util.h>
-#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hkdf.h>
 #include <botan/internal/hmac.h>
@@ -361,29 +361,26 @@ Record_Content Cipher_State::deprotect_record(Record_TLS record, size_t incoming
 
    // Remove record padding (RFC 9846 5.4). The TLSInnerPlaintext layout is
    //   content || content_type || zero_padding
-   auto seen_nonzero = CT::Mask<uint8_t>::cleared();
-   uint8_t content_type_byte = 0;
-   size_t content_index = 0;
-   for(size_t i = result.payload.size(); i-- > 0;) {
-      const uint8_t b = result.payload[i];
-      const auto byte_is_nonzero = CT::Mask<uint8_t>::expand(b);
-      // Set on the first non-zero byte we encounter scanning right-to-left.
-      const auto first_nonzero = byte_is_nonzero & ~seen_nonzero;
-      content_type_byte = first_nonzero.select(b, content_type_byte);
-      content_index = CT::Mask<size_t>::expand(first_nonzero.value()).select(i, content_index);
-      seen_nonzero |= byte_is_nonzero;
-   }
+   //
+   // This is intentionally not constant time. Checking it in constant time
+   // requires scanning the entire record which significantly impacts receive
+   // throughput, and in any case doing so seems pointless since the same
+   // information (namely the length of the unpadded record) still leaks to the
+   // same side channels later on during processing, when the application
+   // actually receives and looks at the record.
+   const auto end_of_content =
+      std::find_if(result.payload.crbegin(), result.payload.crend(), [](auto byte) { return byte != 0x00; });
 
    // RFC 9846 5.4
    //   If a receiving implementation does not find a non-zero octet in the
    //   cleartext, it MUST terminate the connection with an
    //   "unexpected_message" alert.
-   if(!seen_nonzero.as_bool()) {
+   if(end_of_content == result.payload.crend()) {
       throw TLS_Exception(Alert::UnexpectedMessage, "No content type found in encrypted record");
    }
 
    // hydrate the actual content type from TLSInnerPlaintext
-   result.type = static_cast<Record_Type>(content_type_byte);
+   result.type = static_cast<Record_Type>(*end_of_content);
 
    // RFC 9846 5.
    //    An implementation [...] which receives a protected change_cipher_spec
@@ -407,10 +404,8 @@ Record_Content Cipher_State::deprotect_record(Record_TLS record, size_t incoming
       throw TLS_Exception(Alert::UnexpectedMessage, "protected TLS record type had unexpected value");
    }
 
-   // Truncate to drop the content_type byte and padding. resize() on a
-   // vector of trivially-destructible elements is bookkeeping-only and
-   // does not allocate or iterate over the dropped suffix.
-   result.payload.resize(content_index);
+   // erase content type and padding
+   result.payload.erase((end_of_content + 1).base(), result.payload.cend());
 
    // RFC 9846 5.4
    //    Implementations MUST NOT send Handshake and Alert records that have
