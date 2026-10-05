@@ -116,10 +116,13 @@ definition of this has changed over time and may change again in the future.
    In previous versions, the RNG does not have an internal lock and all access
    to it must be serialized.
 
-The current version uses HMAC_DRBG with either SHA-384 or SHA-256. The
-initial seed is generated either by the system PRNG (if available) or
-a default set of entropy sources. These are also used for periodic
-reseeding of the RNG state.
+The current version uses HMAC_DRBG with either SHA-256 or SHA-512, with the
+choice made between which should be the faster hash on the currently running
+system.
+
+The initial seed is generated either by the system PRNG (if available) or a
+default set of entropy sources.  These are also used for periodic reseeding of
+the RNG state.
 
 HMAC_DRBG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
