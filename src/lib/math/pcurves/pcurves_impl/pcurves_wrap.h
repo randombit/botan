@@ -40,15 +40,13 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       }
 
       ProjectivePoint mul(const AffinePoint& pt, const Scalar& scalar, RandomNumberGenerator& rng) const override {
-         const auto tbl = WindowedBoothMulTable<C, VarPointWindowBits>(from_stash(pt));
-         return stash(tbl.mul(from_stash(scalar), rng));
+         return stash(varpoint_mul<C, VarPointWindowBits>(from_stash(pt), from_stash(scalar), rng));
       }
 
       secure_vector<uint8_t> mul_x_only(const AffinePoint& pt,
                                         const Scalar& scalar,
                                         RandomNumberGenerator& rng) const override {
-         const auto tbl = WindowedBoothMulTable<C, VarPointWindowBits>(from_stash(pt));
-         const auto result = tbl.mul(from_stash(scalar), rng);
+         const auto result = varpoint_mul<C, VarPointWindowBits>(from_stash(pt), from_stash(scalar), rng);
          BOTAN_STATE_CHECK(!result.is_identity().as_bool());
          const auto pt_x = to_affine_x<C>(result);
          secure_vector<uint8_t> x_bytes(C::FieldElement::BYTES);
@@ -91,8 +89,8 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
                                                const AffinePoint& q,
                                                const Scalar& y,
                                                RandomNumberGenerator& rng) const override {
-         const WindowedMul2Table<C, Mul2WindowBits> tbl(from_stash(p), from_stash(q));
-         const auto pt = tbl.mul2(from_stash(x), from_stash(y), rng);
+         const auto pt =
+            varpoint_mul2<C, Mul2WindowBits>(from_stash(p), from_stash(x), from_stash(q), from_stash(y), rng);
          if(pt.is_identity().as_bool()) {
             return {};
          } else {
