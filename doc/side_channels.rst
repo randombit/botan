@@ -219,11 +219,15 @@ the computation of ``s``, normally ``((x * r) + m)/k``, is computed instead as
 x25519
 ----------------------
 
-The x25519 code is independent of the main Weierstrass form ECC code, instead
-based on curve25519-donna-c64.c by Adam Langley. The code seems immune to cache
-based side channels. It does make use of integer multiplications; on some old
-CPUs these multiplications take variable time and might allow a side channel
-attack. This is not considered a problem on modern processors.
+The x25519 code is independent of the main Weierstrass form ECC code. Key
+agreement uses a Montgomery ladder with field arithmetic based on
+curve25519-donna-c64.c by Adam Langley. Key generation instead computes the
+public key on the Ed25519 curve using the Ed25519 fixed-base tables (table
+entries are selected by scanning the whole table with masked loads) and maps the
+result to Curve25519. The code seems immune to cache based side channels. It
+does make use of integer multiplications; on some old CPUs these multiplications
+take variable time and might allow a side channel attack. This is not considered
+a problem on modern processors.
 
 The x25519 implementation does not currently include blinding or point
 rerandomization.
