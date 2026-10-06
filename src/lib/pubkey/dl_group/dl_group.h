@@ -155,8 +155,13 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
 
       /**
       * Perform validity checks on the group.
+      *
+      * Builtin groups are accepted immediately unless strong is set. Otherwise
+      * p (and q, if set) are tested for primality, using many more rounds when
+      * strong is set, and it is checked that q divides p-1 and g has order q.
+      *
       * @param rng the rng to use
-      * @param strong whether to perform stronger by lengthier tests
+      * @param strong whether to perform stronger but lengthier tests
       * @return true if the object is consistent, false otherwise
       */
       bool verify_group(RandomNumberGenerator& rng, bool strong = true) const;
@@ -164,7 +169,7 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       /**
       * Verify a public element, ie check if y = g^x for some x.
       *
-      * This is not a perfect test. It verifies that 1 < y < p and (if q is set)
+      * This is not a perfect test. It verifies that 1 < y < p-1 and (if q is set)
       * that y is in the subgroup of size q.
       */
       bool verify_public_element(const BigInt& y) const;

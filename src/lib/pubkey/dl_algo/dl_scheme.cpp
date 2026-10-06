@@ -6,9 +6,9 @@
 
 #include <botan/internal/dl_scheme.h>
 
-#include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
@@ -29,23 +29,30 @@ BigInt generate_private_dl_key(const DL_Group& group, RandomNumberGenerator& rng
 }
 
 BigInt check_dl_private_key_input(const BigInt& x, const DL_Group& group) {
-   BOTAN_ARG_CHECK(group.verify_private_element(x), "Invalid discrete logarithm private key value");
+   if(!group.verify_private_element(x)) {
+      throw Decoding_Error("Invalid DL private key");
+   }
    return x;
+}
+
+BigInt check_dl_public_key_input(const BigInt& y, const DL_Group& group) {
+   // The subgroup check (y^q == 1 mod p) is deferred to check_key() since it can be expensive
+   if(y <= 1 || y >= group.get_p() - 1) {
+      throw Decoding_Error("Invalid DL public key");
+   }
+   return y;
 }
 
 }  // namespace
 
-DL_PublicKey::DL_PublicKey(const DL_Group& group, const BigInt& public_key) : m_group(group), m_public_key(public_key) {
-   // The subgroup check (y^q == 1 mod p) is deferred to check_key() since it can be expensive
-   BOTAN_ARG_CHECK(m_public_key > 1 && m_public_key < m_group.get_p(), "Invalid DL public key");
-}
+DL_PublicKey::DL_PublicKey(const DL_Group& group, const BigInt& public_key) :
+      m_group(group), m_public_key(check_dl_public_key_input(public_key, m_group)) {}
 
 DL_PublicKey::DL_PublicKey(const AlgorithmIdentifier& alg_id,
                            std::span<const uint8_t> key_bits,
                            DL_Group_Format format) :
-      m_group(alg_id.parameters(), format), m_public_key(decode_single_bigint(key_bits)) {
-   BOTAN_ARG_CHECK(m_public_key > 1 && m_public_key < m_group.get_p(), "Invalid DL public key");
-}
+      m_group(alg_id.parameters(), format),
+      m_public_key(check_dl_public_key_input(decode_single_bigint(key_bits), m_group)) {}
 
 std::vector<uint8_t> DL_PublicKey::public_key_as_bytes() const {
    return m_public_key.serialize(m_group.p_bytes());
