@@ -16,6 +16,7 @@
    #include <botan/tls_magic.h>
    #include <botan/tls_policy.h>
    #include <botan/internal/concat_util.h>
+   #include <botan/internal/stl_util.h>
    #include <botan/internal/tls_channel_impl_13.h>
    #include <botan/internal/tls_cipher_state.h>
    #include <botan/internal/tls_reader.h>
@@ -106,9 +107,9 @@ std::vector<Test::Result> read_full_records() {
 
                     rl.copy_data(ccs_record);
                     auto read = rl.next_record();
-                    result.require("received something", std::holds_alternative<TLS::Record_Content>(read));
+                    result.require("received something", !std::holds_alternative<TLS::BytesNeeded>(read));
 
-                    auto record = std::get<TLS::Record_Content>(read);
+                    auto record = std::get<TLS::ChangeCipherSpec_Record>(read);
                     result.test_enum_eq("received CCS", record.type, TLS::Record_Type::ChangeCipherSpec);
                     result.test_bin_eq("CCS byte is 0x01", record.payload, "01");
 
@@ -124,15 +125,15 @@ std::vector<Test::Result> read_full_records() {
                     rl.copy_data(two_ccs_records);
 
                     auto read = rl.next_record();
-                    result.require("received something", std::holds_alternative<TLS::Record_Content>(read));
-                    auto record = std::get<TLS::Record_Content>(read);
+                    result.require("received something", std::holds_alternative<TLS::ChangeCipherSpec_Record>(read));
+                    auto record = std::get<TLS::ChangeCipherSpec_Record>(read);
 
                     result.test_enum_eq("received CCS 1", record.type, TLS::Record_Type::ChangeCipherSpec);
                     result.test_bin_eq("CCS byte is 0x01", record.payload, "01");
 
                     read = rl.next_record();
-                    result.require("received something", std::holds_alternative<TLS::Record_Content>(read));
-                    record = std::get<TLS::Record_Content>(read);
+                    result.require("received something", std::holds_alternative<TLS::ChangeCipherSpec_Record>(read));
+                    record = std::get<TLS::ChangeCipherSpec_Record>(read);
 
                     result.test_enum_eq("received CCS 2", record.type, TLS::Record_Type::ChangeCipherSpec);
                     result.test_bin_eq("CCS byte is 0x01", record.payload, "01");
@@ -146,9 +147,9 @@ std::vector<Test::Result> read_full_records() {
                     rl.copy_data(client_hello_record);
 
                     auto read = rl.next_record();
-                    result.test_is_true("received something", std::holds_alternative<TLS::Record_Content>(read));
+                    result.test_is_true("received something", std::holds_alternative<TLS::Handshake_Record>(read));
 
-                    auto rec = std::get<TLS::Record_Content>(read);
+                    auto rec = std::get<TLS::Handshake_Record>(read);
                     result.test_is_true("received handshake record", rec.type == TLS::Record_Type::Handshake);
                     result.test_bin_eq("contains the full handshake message",
                                        Botan::secure_vector<uint8_t>(client_hello_record.begin() + TLS::TLS_HEADER_SIZE,
@@ -165,9 +166,9 @@ std::vector<Test::Result> read_full_records() {
               rl.copy_data(payload);
 
               auto read = rl.next_record();
-              result.require("received something", std::holds_alternative<TLS::Record_Content>(read));
+              result.require("received something", std::holds_alternative<TLS::Handshake_Record>(read));
 
-              auto rec = std::get<TLS::Record_Content>(read);
+              const auto rec = std::get<TLS::Handshake_Record>(read);
               result.test_is_true("received handshake record", rec.type == TLS::Record_Type::Handshake);
               result.test_bin_eq("contains the full handshake message",
                                  Botan::secure_vector<uint8_t>(client_hello_record.begin() + TLS::TLS_HEADER_SIZE,
@@ -175,11 +176,11 @@ std::vector<Test::Result> read_full_records() {
                                  rec.payload);
 
               read = rl.next_record();
-              result.require("received something", std::holds_alternative<TLS::Record_Content>(read));
+              result.require("received something", std::holds_alternative<TLS::ChangeCipherSpec_Record>(read));
 
-              rec = std::get<TLS::Record_Content>(read);
-              result.test_enum_eq("received CCS record", rec.type, TLS::Record_Type::ChangeCipherSpec);
-              result.test_bin_eq("CCS byte is 0x01", rec.payload, "01");
+              const auto ccs_rec = std::get<TLS::ChangeCipherSpec_Record>(read);
+              result.test_enum_eq("received CCS record", ccs_rec.type, TLS::Record_Type::ChangeCipherSpec);
+              result.test_bin_eq("CCS byte is 0x01", ccs_rec.payload, "01");
 
               result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
            })};
@@ -349,9 +350,9 @@ std::vector<Test::Result> read_fragmented_records() {
 
                     rl.copy_data(std::vector<uint8_t>{'\x01'});
                     auto res1 = rl.next_record();
-                    result.require("received something 1", std::holds_alternative<TLS::Record_Content>(res1));
+                    result.require("received something 1", std::holds_alternative<TLS::ChangeCipherSpec_Record>(res1));
 
-                    auto rec1 = std::get<TLS::Record_Content>(res1);
+                    const auto rec1 = std::get<TLS::ChangeCipherSpec_Record>(res1);
                     result.test_enum_eq("received CCS", rec1.type, TLS::Record_Type::ChangeCipherSpec);
                     result.test_bin_eq("CCS byte is 0x01", rec1.payload, "01");
 
@@ -364,9 +365,9 @@ std::vector<Test::Result> read_fragmented_records() {
               rl.copy_data(std::vector<uint8_t>{'\x01', '\x01', /* second CCS starts here */ '\x14', '\x03'});
 
               auto res2 = rl.next_record();
-              result.require("received something 2", std::holds_alternative<TLS::Record_Content>(res2));
+              result.require("received something 2", std::holds_alternative<TLS::ChangeCipherSpec_Record>(res2));
 
-              const auto rec2 = std::get<TLS::Record_Content>(res2);
+              const auto rec2 = std::get<TLS::ChangeCipherSpec_Record>(res2);
               result.test_enum_eq("received CCS", rec2.type, TLS::Record_Type::ChangeCipherSpec);
               result.test_is_true("demands more bytes", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
 
@@ -374,9 +375,9 @@ std::vector<Test::Result> read_fragmented_records() {
 
               rl.copy_data(std::vector<uint8_t>{'\x00', '\x01', '\x01'});
               auto res3 = rl.next_record();
-              result.require("received something 3", std::holds_alternative<TLS::Record_Content>(res3));
+              result.require("received something 3", std::holds_alternative<TLS::ChangeCipherSpec_Record>(res3));
 
-              const auto rec3 = std::get<TLS::Record_Content>(res3);
+              const auto rec3 = std::get<TLS::ChangeCipherSpec_Record>(res3);
               result.test_enum_eq("received CCS", rec3.type, TLS::Record_Type::ChangeCipherSpec);
 
               result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
@@ -536,7 +537,7 @@ std::vector<Test::Result> read_encrypted_records() {
 
                auto res = rl.next_record(cs.get());
                result.require("some records decrypted", !std::holds_alternative<Botan::TLS::BytesNeeded>(res));
-               const auto record = std::get<TLS::Record_Content>(res);
+               const auto record = std::get<TLS::Handshake_Record>(res);
 
                result.test_enum_eq("inner type was 'HANDSHAKE'", record.type, Botan::TLS::Record_Type::Handshake);
                result.test_sz_eq("decrypted payload length", record.payload.size(), 657 /* taken from RFC 8448 */);
@@ -674,18 +675,18 @@ std::vector<Test::Result> read_encrypted_records() {
 
                auto rl = parse_records(encrypted);
                auto res = rl.next_record(cs.get());
-               result.require("decrypted a record", std::holds_alternative<TLS::Record_Content>(res));
-               auto records = std::get<TLS::Record_Content>(res);
+               result.require("decrypted a record", std::holds_alternative<TLS::ApplicationData_Record>(res));
+               auto records = std::get<TLS::ApplicationData_Record>(res);
                result.test_bin_eq("first record", records.payload, plaintext_records.at(0));
 
                res = rl.next_record(cs.get());
-               result.require("decrypted a record", std::holds_alternative<TLS::Record_Content>(res));
-               records = std::get<TLS::Record_Content>(res);
+               result.require("decrypted a record", std::holds_alternative<TLS::ApplicationData_Record>(res));
+               records = std::get<TLS::ApplicationData_Record>(res);
                result.test_bin_eq("second record", records.payload, plaintext_records.at(1));
 
                res = rl.next_record(cs.get());
-               result.require("decrypted a record", std::holds_alternative<TLS::Record_Content>(res));
-               records = std::get<TLS::Record_Content>(res);
+               result.require("decrypted a record", std::holds_alternative<TLS::ApplicationData_Record>(res));
+               records = std::get<TLS::ApplicationData_Record>(res);
                result.test_bin_eq("third record", records.payload, plaintext_records.at(2));
 
                result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
@@ -701,15 +702,15 @@ std::vector<Test::Result> read_encrypted_records() {
                client.copy_data(coalesced);
 
                const auto srv_hello = client.next_record(nullptr);
-               result.test_is_true("read a record", std::holds_alternative<TLS::Record_Content>(srv_hello));
+               result.test_is_true("read a record", std::holds_alternative<TLS::Handshake_Record>(srv_hello));
                result.test_is_true("is handshake record",
-                                   std::get<TLS::Record_Content>(srv_hello).type == TLS::Record_Type::Handshake);
+                                   std::get<TLS::Handshake_Record>(srv_hello).type == TLS::Record_Type::Handshake);
 
                const auto cs = rfc8448_rtt1_handshake_traffic();
                const auto enc_exts = client.next_record(cs.get());
-               result.test_is_true("read a record", std::holds_alternative<TLS::Record_Content>(enc_exts));
+               result.test_is_true("read a record", std::holds_alternative<TLS::Handshake_Record>(enc_exts));
                result.test_is_true("is handshake record",
-                                   std::get<TLS::Record_Content>(enc_exts).type == TLS::Record_Type::Handshake);
+                                   std::get<TLS::Handshake_Record>(enc_exts).type == TLS::Record_Type::Handshake);
             }),
 
       CHECK("read a padded record",
@@ -719,7 +720,7 @@ std::vector<Test::Result> read_encrypted_records() {
 
                const auto cs = rfc8448_rtt1_handshake_traffic();
                const auto record = client.next_record(cs.get());
-               result.test_is_true("read a record with padding", std::holds_alternative<TLS::Record_Content>(record));
+               result.test_is_true("read a record with padding", std::holds_alternative<TLS::Handshake_Record>(record));
             }),
 
       CHECK("read an empty encrypted record", [&](Test::Result& result) {
@@ -728,7 +729,7 @@ std::vector<Test::Result> read_encrypted_records() {
 
          const auto cs = rfc8448_rtt1_handshake_traffic();
          const auto record = client.next_record(cs.get());
-         result.test_is_true("read an empty record", std::holds_alternative<TLS::Record_Content>(record));
+         result.test_is_true("read an empty record", std::holds_alternative<TLS::ApplicationData_Record>(record));
       })};
 }
 
@@ -930,10 +931,17 @@ std::vector<Test::Result> record_size_limits() {
       return record_count;
    };
 
-   const auto record_length = [](auto& result, auto record) {
-      result.require("has record", std::holds_alternative<Botan::TLS::Record_Content>(record));
-      const auto& r = std::get<Botan::TLS::Record_Content>(record);
-      return r.payload.size();
+   const auto record_length = [](auto& result, const auto& record) {
+      using namespace Botan;
+      return std::visit(  //
+         overloaded{
+            [&](const TLS::BytesNeeded&) -> size_t {
+               result.test_failure("no record was provided");
+               return 0;
+            },
+            [&](const auto& r) -> size_t { return r.payload.size(); },
+         },
+         record);
    };
 
    return {

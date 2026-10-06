@@ -1,6 +1,7 @@
 /*
 * (C) 2021 Jack Lloyd
 * (C) 2021 Hannes Rantzsch, René Meusel - neXenio
+* (C) 2026 Amos Treiber, René Meusel - Rohde & Schwarz Networks and Cybersecurity GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -59,6 +60,22 @@ decltype(auto) make_CHECK_both(Cipher_State* cs_client,
    };
 }
 
+template <typename RecordT>
+   requires std::constructible_from<Record, RecordT>
+bool record_type_matches_type_field(const RecordT& record) {
+   if constexpr(std::is_same_v<RecordT, Handshake_Record>) {
+      return record.type == Record_Type::Handshake;
+   } else if constexpr(std::is_same_v<RecordT, ApplicationData_Record>) {
+      return record.type == Record_Type::ApplicationData;
+   } else if constexpr(std::is_same_v<RecordT, Alert_Record>) {
+      return record.type == Record_Type::Alert;
+   } else if constexpr(std::is_same_v<RecordT, ChangeCipherSpec_Record>) {
+      return record.type == Record_Type::ChangeCipherSpec;
+   } else {
+      return false;
+   }
+}
+
 class RFC8448_TestData {
    private:
       const std::string name;
@@ -103,13 +120,19 @@ class RFC8448_TestData {
          record.append(encrypted_fragment);
          result.require("record is complete for " + name, record.complete());
 
-         std::optional<Record_Content> plaintext;
+         std::optional<Record> plaintext;
          result.test_no_throw("deprotection is successful for " + name, [&] {
             plaintext = cs->deprotect_record(std::move(record), Botan::TLS::MAX_PLAINTEXT_SIZE);
          });
 
-         result.test_bin_eq("plaintext for " + name, plaintext->payload, plaintext_fragment);
-         result.test_enum_eq("record type for " + name, plaintext->type, record_type);
+         result.test_opt_not_null("deprotection successful for " + name, plaintext);
+         std::visit(
+            [&](const auto& r) {
+               result.test_bin_eq("plaintext for " + name, r.payload, plaintext_fragment);
+               result.test_enum_eq("record type for " + name, r.type, record_type);
+               result.test_is_true("record type matches record type field", record_type_matches_type_field(r));
+            },
+            *plaintext);
       }
 
       void xxcrypt(Test::Result& result, Cipher_State* cs, Connection_Side side) const {
@@ -119,6 +142,8 @@ class RFC8448_TestData {
             decrypt(result, cs);
          }
       }
+
+   private:
 };
 
 std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
@@ -926,10 +951,15 @@ std::vector<Test::Result> test_record_padding() {
                record.append(ciphertext_42_bytes_padding);
                result.require("record is complete", record.complete());
 
-               auto pt = cs_server->deprotect_record(std::move(record), MAX_PLAINTEXT_SIZE + 1);
+               auto deprotected_record = cs_server->deprotect_record(std::move(record), MAX_PLAINTEXT_SIZE + 1);
 
-               result.test_bin_eq("pt", pt.payload, plaintext);
-               result.test_enum_eq("inner content type", pt.type, Record_Type::Handshake);
+               std::visit(
+                  [&](const auto& pt) {
+                     result.test_bin_eq("pt", pt.payload, plaintext);
+                     result.test_enum_eq("inner content type", pt.type, Record_Type::Handshake);
+                     result.test_is_true("record type matches record type field", record_type_matches_type_field(pt));
+                  },
+                  deprotected_record);
             }),
 
       CHECK("reject a record that is too long",

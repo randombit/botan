@@ -11,6 +11,7 @@
 
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>
+#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_record_13.h>
 #include <deque>
 #include <memory>
@@ -19,8 +20,6 @@
 #include <vector>
 
 namespace Botan::TLS {
-
-using BytesNeeded = size_t;
 
 class Cipher_State;
 class Policy;
@@ -41,8 +40,7 @@ class BOTAN_TEST_API Record_Layer {
       Record_Layer(Record_Layer&&) noexcept = default;
       Record_Layer& operator=(Record_Layer&&) noexcept = default;
 
-      template <typename ResT>
-      using ReadResult = std::variant<BytesNeeded, ResT>;
+      using ReadResult = variant_append_t<Record, BytesNeeded>;
 
       /**
        * Reads data that was received by the peer and stores it internally for further
@@ -63,7 +61,7 @@ class BOTAN_TEST_API Record_Layer {
        *                      cipher_state should be ready to decrypt data. Pass nullptr to
        *                      process plaintext data.
        */
-      ReadResult<Record_Content> next_record(Cipher_State* cipher_state = nullptr);
+      ReadResult next_record(Cipher_State* cipher_state = nullptr);
 
       std::vector<uint8_t> prepare_records(Record_Type type,
                                            std::span<const uint8_t> data,

@@ -144,7 +144,7 @@ class BOTAN_TEST_API Cipher_State {
        *
        * @returns the record payload and deprotected content type
        */
-      [[nodiscard]] Record_Content deprotect_record(Record_TLS record, size_t incoming_record_size_limit);
+      [[nodiscard]] Record deprotect_record(Record_TLS record, size_t incoming_record_size_limit);
 
       /**
        * @returns number of bytes needed to encrypt \p input_length bytes

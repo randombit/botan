@@ -95,7 +95,18 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
             return std::get<BytesNeeded>(result);
          }
 
-         const auto& record = std::get<Record_Content>(result);
+         // Currently, this is just unpacking the strong-typed records into their
+         // common base type. In the future, we will handle the different record
+         // types based on the strong type itself.
+         const auto& record = std::visit(
+            []<typename T>(const T& r) -> const Record_Content& {
+               if constexpr(!std::same_as<T, BytesNeeded>) {
+                  return r;
+               } else {
+                  throw Internal_Error("Unexpected BytesNeeded variant in record visitation");
+               }
+            },
+            result);
 
          // RFC 8446 5.1
          //   Handshake messages MUST NOT be interleaved with other record types.

@@ -15,6 +15,8 @@
 
 namespace Botan::TLS {
 
+using BytesNeeded = size_t;
+
 using SecretLoggerFn = std::function<void(std::string_view label, std::span<const uint8_t> secret)>;
 
 /// Holds the serialization of a single TLS 1.3 record along with the record
