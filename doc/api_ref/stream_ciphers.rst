@@ -220,6 +220,13 @@ algorithms like ChaCha20, it is also quite slow.
    RC4 is prone to numerous attacks. **Avoid in new code** and use only if
    required for compatibility with existing systems.
 
+.. warning::
+
+   The RC4 state is a 256 byte table which is indexed by key and data dependent
+   values, so the implementation is likely vulnerable to cache based side
+   channel attacks. This is inherent to the design; no constant time
+   implementation is available.
+
 Available if ``BOTAN_HAS_RC4`` is defined.
 
 Algorithm specification names:
