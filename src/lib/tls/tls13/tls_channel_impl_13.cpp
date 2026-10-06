@@ -275,33 +275,6 @@ void Channel_Impl_13::handle(const Key_Update& key_update) {
    }
 }
 
-Channel_Impl_13::AggregatedMessages::AggregatedMessages(Channel_Impl_13& channel, Handshake_Layer& handshake_layer) :
-      m_channel(channel), m_handshake_layer(handshake_layer) {}
-
-Channel_Impl_13::AggregatedHandshakeMessages::AggregatedHandshakeMessages(Channel_Impl_13& channel,
-                                                                          Handshake_Layer& handshake_layer,
-                                                                          Transcript_Hash_State& transcript_hash) :
-      AggregatedMessages(channel, handshake_layer), m_transcript_hash(transcript_hash) {}
-
-Channel_Impl_13::AggregatedHandshakeMessages& Channel_Impl_13::AggregatedHandshakeMessages::add(
-   const Handshake_Message_13_Ref message) {
-   std::visit([&](const auto msg) { m_channel.callbacks().tls_inspect_handshake_msg(msg.get()); }, message);
-   m_message_buffer += m_handshake_layer.prepare_message(message, m_transcript_hash).get();
-   return *this;
-}
-
-Channel_Impl_13::AggregatedPostHandshakeMessages& Channel_Impl_13::AggregatedPostHandshakeMessages::add(
-   Post_Handshake_Message_13 message) {
-   std::visit([&](const auto& msg) { m_channel.callbacks().tls_inspect_handshake_msg(msg); }, message);
-   m_message_buffer += m_handshake_layer.prepare_post_handshake_message(message).get();
-   return *this;
-}
-
-void Channel_Impl_13::AggregatedMessages::send() const {
-   BOTAN_STATE_CHECK(contains_messages());
-   m_channel.send_record(Record_Type::Handshake, m_message_buffer);
-}
-
 void Channel_Impl_13::send_dummy_change_cipher_spec() {
    // RFC 9846 5.
    //    The change_cipher_spec record is used only for compatibility purposes
@@ -313,7 +286,15 @@ void Channel_Impl_13::send_dummy_change_cipher_spec() {
    //    before the peer's Finished message has been received.
    BOTAN_STATE_CHECK(!is_handshake_complete());
 
-   send_record(Record_Type::ChangeCipherSpec, {0x01});
+   // RFC 9846 5.
+   //    An implementation which [...] receives a protected change_cipher_spec
+   //    record MUST abort the handshake [...].
+   //
+   // I.e. Change Cipher Spec records must always be sent unprotected, even if
+   // the cipher state is already set up for handshake message encryption.
+   send_record(Record_Type::ChangeCipherSpec, {0x01}, nullptr);
+
+   m_dummy_ccs_emitted = true;
 }
 
 void Channel_Impl_13::to_peer(std::span<const uint8_t> data) {
@@ -375,14 +356,32 @@ void Channel_Impl_13::to_peer(std::span<const uint8_t> data) {
       update_traffic_keys(!m_key_update_requested);
    }
 
-   send_record(Record_Type::ApplicationData, {data.begin(), data.end()});
+   send_record(Record_Type::ApplicationData, {data.begin(), data.end()}, m_cipher_state.get());
 }
 
 void Channel_Impl_13::send_alert(const Alert& alert) {
    if(alert.is_valid() && m_can_write) {
       try {
-         maybe_handle_compatibility_mode(Compat_Mode_Situation::BeforeSendingAlert);
-         send_record(Record_Type::Alert, alert.serialize());
+         // RFC 9846 E.4
+         //    [...] the client sends a dummy change_cipher_spec record [...]
+         //    immediately before its second flight. [...]
+         //    The server sends a dummy change_cipher_spec record immediately
+         //    after its first handshake message.
+         //
+         // For the client, the "second flight" might be an alert that aborts
+         // the handshake (e.g., from a failing certificate verification or a
+         // throwing callback). The server isn't expected to emit an alert
+         // immediately after its first handshake message, hence it is not
+         // handled here.
+         //
+         // Also, the dummy CCS is only sent if the handshake actually produced
+         // a cipher state: i.e., only if we would actually encrypt now.
+         if(compat_mode_ccs_requested() && !m_dummy_ccs_emitted && m_side == Connection_Side::Client &&
+            m_cipher_state != nullptr) {
+            send_dummy_change_cipher_spec();
+         }
+
+         send_record(Record_Type::Alert, alert.serialize(), m_cipher_state.get());
       } catch(...) { /* swallow it */
       }
    }
@@ -420,7 +419,11 @@ SymmetricKey Channel_Impl_13::key_material_export(std::string_view label,
 void Channel_Impl_13::update_traffic_keys(bool request_peer_update) {
    BOTAN_STATE_CHECK(!is_downgrading() && is_handshake_complete() && is_active());
    BOTAN_ASSERT_NONNULL(m_cipher_state);
-   send_post_handshake_message(Key_Update(request_peer_update));
+
+   send_flight(PostHandshakeFlight(callbacks())  //
+                  .add(Key_Update(request_peer_update))
+                  .commit());
+
    m_cipher_state->update_write_keys();
    if(request_peer_update) {
       m_key_update_requested = true;
@@ -435,17 +438,50 @@ SecretLoggerFn Channel_Impl_13::secret_logger() const {
    };
 }
 
-void Channel_Impl_13::send_record(Record_Type type, const std::vector<uint8_t>& record) {
+// NOLINTNEXTLINE(*-unnecessary-value-param): TODO: will be removed later
+void Channel_Impl_13::send_flight(std::vector<Flight::Message> flight) {
+   BOTAN_STATE_CHECK(!flight.empty());
    BOTAN_STATE_CHECK(!is_downgrading());
    BOTAN_STATE_CHECK(m_can_write);
 
-   // RFC 9846 5.
-   //    An implementation which [...] receives a protected change_cipher_spec
-   //    record MUST abort the handshake [...].
+   auto msgs = MarshalledHandshakeMessageFlight();
+
+   // This isn't very efficient or elegant, but it is a simple way to send the
+   // collected messages and dummy CCSs in as little records as possible. It
+   // will be replaced with a more efficient implementation with upcoming
+   // patches towards DTLS 1.3 support anyway.
    //
-   // I.e. Change Cipher Spec records must always be sent unprotected, even if
-   // the cipher state is already set up for handshake message encryption.
-   auto* cipher_state = (type != Record_Type::ChangeCipherSpec) ? m_cipher_state.get() : nullptr;
+   // TODO: Replace this with a more efficient implementation
+
+   for(const auto& msg_info : flight) {
+      std::visit(  //
+         overloaded{
+            [&](const Flight::Dummy_ChangeCipherSpec&) {
+               // Flush pending (unprotected) handshake messages, then send
+               // the dummy CCS record.
+               if(!msgs.get().empty()) {
+                  send_record(Record_Type::Handshake, msgs.get(), m_cipher_state.get());
+                  msgs.get().clear();
+               }
+               send_dummy_change_cipher_spec();
+            },
+            [&](const Flight::Message_Info& info) {
+               // Collect marshalled messages into the flight's buffer.
+               msgs.get().insert(msgs.get().end(), info.header.begin(), info.header.end());
+               msgs.get().insert(msgs.get().end(), info.serialized.begin(), info.serialized.end());
+            },
+         },
+         msg_info);
+   }
+
+   if(!msgs.get().empty()) {
+      send_record(Record_Type::Handshake, msgs.get(), m_cipher_state.get());
+   }
+}
+
+void Channel_Impl_13::send_record(Record_Type type, const std::vector<uint8_t>& record, Cipher_State* cipher_state) {
+   BOTAN_STATE_CHECK(!is_downgrading());
+   BOTAN_STATE_CHECK(m_can_write);
 
    auto to_write = m_record_layer.prepare_records(type, record, cipher_state);
 
