@@ -158,7 +158,7 @@ bool Test_Runner::run_tests_multithreaded(const std::vector<std::string>& tests_
    Botan::Thread_Pool pool(test_threads);
    Botan::RWLock rwlock;
 
-   std::vector<std::future<std::vector<Test::Result>>> fut_results;
+   std::vector<Botan::Joining_Future<std::vector<Test::Result>>> fut_results;
 
    const auto run_test_exclusive = [&](const std::string& test_name) {
       const std::unique_lock lk(rwlock);

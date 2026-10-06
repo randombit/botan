@@ -45,5 +45,6 @@ API Reference
    sodium
    zfec
    ffi
+   thread_pool
    env_vars
    python
