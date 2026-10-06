@@ -274,8 +274,9 @@ void OID::decode_from(BER_Decoder& decoder) {
    std::vector<uint32_t> parts;
 
    // Each byte of the DER encoding can result in at most one additional arc,
-   // except the first byte which always encodes two.
-   parts.reserve(obj.length() + 1);
+   // except the first byte which always encodes two. Don't reserve for more than
+   // 16 arcs though; the longest OID in our current table has just 13 arcs.
+   parts.reserve(std::min<size_t>(16, obj.length() + 1));
 
    while(!data.empty()) {
       const uint32_t comp = consume(data);
