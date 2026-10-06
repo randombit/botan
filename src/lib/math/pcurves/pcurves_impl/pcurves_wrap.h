@@ -60,15 +60,14 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          public:
             const auto& table() const { return m_table; }
 
-            explicit PrecomputedMul2TableC(const typename C::AffinePoint& x, const typename C::AffinePoint& y) :
-                  m_table(x, y) {}
+            explicit PrecomputedMul2TableC(const typename C::AffinePoint& q) : m_table(q) {}
 
          private:
-            VartimeMul2Table<C, Mul2PrecompWindowBits> m_table;
+            VartimeMul2Table<C, Mul2VartimeWindowBits> m_table;
       };
 
       std::unique_ptr<const PrecomputedMul2Table> mul2_setup_g(const AffinePoint& q) const override {
-         return std::make_unique<PrecomputedMul2TableC>(C::G, from_stash(q));
+         return std::make_unique<PrecomputedMul2TableC>(from_stash(q));
       }
 
       std::optional<ProjectivePoint> mul2_vartime(const PrecomputedMul2Table& tableb,
@@ -76,7 +75,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
                                                   const Scalar& y) const override {
          try {
             const auto& table = dynamic_cast<const PrecomputedMul2TableC&>(tableb);
-            const auto pt = table.table().mul2_vartime(from_stash(x), from_stash(y));
+            const auto pt = table.table().mul2_vartime(m_mul_by_g, from_stash(x), from_stash(y));
             if(pt.is_identity().as_bool()) {
                return {};
             } else {
@@ -107,7 +106,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
                                        const Scalar& y) const override {
          try {
             const auto& table = dynamic_cast<const PrecomputedMul2TableC&>(tableb);
-            const auto pt = table.table().mul2_vartime(from_stash(x), from_stash(y));
+            const auto pt = table.table().mul2_vartime(m_mul_by_g, from_stash(x), from_stash(y));
             // Variable time here, so the early return is fine
             if(pt.is_identity().as_bool()) {
                return false;

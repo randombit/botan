@@ -1359,6 +1359,69 @@ class EC_Point_Arithmetic_Tests final : public Test {
                }
             }
 
+            // Edge cases for the variable time 2-ary multiplication: zero
+            // scalars, cancellation, and partial sums which coincide with
+            // table entries (forcing the exceptional addition paths)
+            {
+               auto check_mul2 = [&](const std::string& what,
+                                     const Botan::EC_AffinePoint& h,
+                                     const Botan::EC_Group::Mul2Table& tbl,
+                                     const Botan::EC_Scalar& s1,
+                                     const Botan::EC_Scalar& s2) {
+                  const auto ref = Botan::EC_AffinePoint::g_mul(s1, rng).add(h.mul(s2, rng));
+                  if(auto mul2pt = tbl.mul2_vartime(s1, s2)) {
+                     result.test_bin_eq(what, mul2pt->serialize_uncompressed(), ref.serialize_uncompressed());
+                  } else {
+                     result.test_is_true(what + " is identity", ref.is_identity());
+                  }
+               };
+
+               auto scalar_of = [&](const Botan::BigInt& v) { return Botan::EC_Scalar::from_bigint(group, v); };
+
+               const auto r1 = Botan::EC_Scalar::random(group, rng);
+               const auto r2 = Botan::EC_Scalar::random(group, rng);
+               const auto zero_s = r1 - r1;  // NOLINT(*-redundant-expression)
+
+               const auto h = Botan::EC_AffinePoint::g_mul(Botan::EC_Scalar::random(group, rng), rng);
+               const Botan::EC_Group::Mul2Table h_table(h);
+
+               check_mul2("mul2 s1=0", h, h_table, zero_s, r2);
+               check_mul2("mul2 s2=0", h, h_table, r1, zero_s);
+               check_mul2("mul2 s1=s2=0", h, h_table, zero_s, zero_s);
+
+               // Small and near-order scalars exercise the digit recoding boundaries
+               for(uint64_t i = 1; i != 70; ++i) {
+                  const auto si = scalar_of(Botan::BigInt::from_u64(i));
+                  check_mul2("mul2 small s2", h, h_table, r1, si);
+                  check_mul2("mul2 small s1", h, h_table, si, r2);
+                  check_mul2("mul2 small -s2", h, h_table, r1, si.negate());
+                  check_mul2("mul2 small -s1", h, h_table, si.negate(), r2);
+               }
+
+               for(size_t i = 1; i < group.get_order_bits(); i += 7) {
+                  const auto si = scalar_of(Botan::BigInt::power_of_2(i));
+                  check_mul2("mul2 s2=2^i", h, h_table, r1, si);
+                  check_mul2("mul2 s2=-2^i", h, h_table, r1, si.negate());
+               }
+
+               // With h = G (or -G) the two halves can cancel or coincide
+               const Botan::EC_Group::Mul2Table g_table(g);
+               const Botan::EC_Group::Mul2Table neg_g_table(g.negate());
+
+               check_mul2("mul2 g s1=s2", g, g_table, r1, r1);
+               check_mul2("mul2 g s1=-s2", g, g_table, r1, r1.negate());
+               check_mul2("mul2 -g s1=s2", g.negate(), neg_g_table, r1, r1);
+
+               for(size_t k = 0; 6 * k + 6 < group.get_order_bits(); k += 5) {
+                  for(const uint64_t m : {1, 5, 31, 32, 33, 63}) {
+                     const auto si = scalar_of(Botan::BigInt::from_u64(m) << (6 * k));
+                     check_mul2("mul2 g coincident", g, g_table, si, si);
+                     check_mul2("mul2 g coincident neg", g, g_table, si, si.negate());
+                     check_mul2("mul2 -g coincident", g.negate(), neg_g_table, si, si);
+                  }
+               }
+            }
+
             result.end_timer();
 
             results.push_back(result);
