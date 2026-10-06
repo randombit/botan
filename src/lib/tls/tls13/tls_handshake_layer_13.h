@@ -10,10 +10,10 @@
 #define BOTAN_TLS_HANDSHAKE_LAYER_13_H_
 
 #include <optional>
-#include <vector>
 
 #include <botan/tls_magic.h>
 #include <botan/tls_messages_13.h>
+#include <botan/internal/tls_types_13.h>
 
 namespace Botan::TLS {
 
@@ -80,8 +80,8 @@ class BOTAN_TEST_API Handshake_Layer {
        *
        * @return the marshalled handshake message
        */
-      static std::vector<uint8_t> prepare_message(Handshake_Message_13_Ref message,
-                                                  Transcript_Hash_State& transcript_hash);
+      static MarshalledHandshakeMessage prepare_message(Handshake_Message_13_Ref message,
+                                                        Transcript_Hash_State& transcript_hash);
 
       /**
        * Marshals one post-handshake message for sending in an (encrypted) record.
@@ -90,7 +90,7 @@ class BOTAN_TEST_API Handshake_Layer {
        *
        * @return the marshalled post-handshake message
        */
-      static std::vector<uint8_t> prepare_post_handshake_message(const Post_Handshake_Message_13& message);
+      static MarshalledHandshakeMessage prepare_post_handshake_message(const Post_Handshake_Message_13& message);
 
       /**
        * Check if the Handshake_Layer has stored a partial message in its internal buffer.

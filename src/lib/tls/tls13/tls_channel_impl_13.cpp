@@ -286,14 +286,14 @@ Channel_Impl_13::AggregatedHandshakeMessages::AggregatedHandshakeMessages(Channe
 Channel_Impl_13::AggregatedHandshakeMessages& Channel_Impl_13::AggregatedHandshakeMessages::add(
    const Handshake_Message_13_Ref message) {
    std::visit([&](const auto msg) { m_channel.callbacks().tls_inspect_handshake_msg(msg.get()); }, message);
-   m_message_buffer += m_handshake_layer.prepare_message(message, m_transcript_hash);
+   m_message_buffer += m_handshake_layer.prepare_message(message, m_transcript_hash).get();
    return *this;
 }
 
 Channel_Impl_13::AggregatedPostHandshakeMessages& Channel_Impl_13::AggregatedPostHandshakeMessages::add(
    Post_Handshake_Message_13 message) {
    std::visit([&](const auto& msg) { m_channel.callbacks().tls_inspect_handshake_msg(msg); }, message);
-   m_message_buffer += m_handshake_layer.prepare_post_handshake_message(message);
+   m_message_buffer += m_handshake_layer.prepare_post_handshake_message(message).get();
    return *this;
 }
 

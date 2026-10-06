@@ -201,7 +201,7 @@ const T& get(const T& v) {
 }
 
 template <typename T>
-std::vector<uint8_t> marshall_message(const T& message) {
+auto marshall_message(const T& message) {
    auto [type, serialized] =
       std::visit([](const auto& msg) { return std::pair(get(msg).wire_type(), get(msg).serialize()); }, message);
 
@@ -211,20 +211,20 @@ std::vector<uint8_t> marshall_message(const T& message) {
    std::vector<uint8_t> header{
       static_cast<uint8_t>(type), get_byte<1>(msg_size), get_byte<2>(msg_size), get_byte<3>(msg_size)};
 
-   return concat(header, serialized);
+   return concat<MarshalledHandshakeMessage>(header, serialized);
 }
 
 }  //namespace
 
-std::vector<uint8_t> Handshake_Layer::prepare_message(const Handshake_Message_13_Ref message,
-                                                      Transcript_Hash_State& transcript_hash) {
+MarshalledHandshakeMessage Handshake_Layer::prepare_message(const Handshake_Message_13_Ref message,
+                                                            Transcript_Hash_State& transcript_hash) {
    auto msg = marshall_message(message);
    const auto [header, serialized] = split(msg);
    transcript_hash.update(header, serialized);
    return msg;
 }
 
-std::vector<uint8_t> Handshake_Layer::prepare_post_handshake_message(const Post_Handshake_Message_13& message) {
+MarshalledHandshakeMessage Handshake_Layer::prepare_post_handshake_message(const Post_Handshake_Message_13& message) {
    return marshall_message(message);
 }
 
