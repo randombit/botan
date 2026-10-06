@@ -137,15 +137,16 @@ std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader,
 
 }  // namespace
 
-std::optional<Handshake_Message_13> Handshake_Layer::next_message(const Policy& policy,
-                                                                  Transcript_Hash_State& transcript_hash) {
+std::optional<Handshake_Message_13> Handshake_Layer::next_message(
+   const Policy& policy, std::optional<std::reference_wrapper<Transcript_Hash_State>> transcript_hash) {
    BOTAN_ASSERT_NOMSG(m_read_offset <= m_read_buffer.size());
    const auto pending = std::span<const uint8_t>{m_read_buffer}.subspan(m_read_offset);
    TLS::TLS_Data_Reader reader("handshake message", pending);
 
    auto msg = parse_message<Handshake_Message_13>(reader, policy, m_peer, m_certificate_type);
    if(msg.has_value()) {
-      transcript_hash.update(pending.first(reader.read_so_far()));
+      BOTAN_STATE_CHECK(transcript_hash.has_value());
+      transcript_hash->get().update(pending.first(reader.read_so_far()));
       m_read_offset += reader.read_so_far();
       BOTAN_ASSERT_NOMSG(m_read_offset <= m_read_buffer.size());
 

@@ -290,7 +290,8 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
    const auto cipher_opt = Ciphersuite::by_id(server_hello.ciphersuite());
    BOTAN_ASSERT_NOMSG(cipher_opt.has_value());
    const auto& cipher = cipher_opt.value();
-   m_transcript_hash.set_algorithm(cipher.prf_algo());
+   BOTAN_ASSERT_NOMSG(m_transcript_hash.has_value());
+   m_transcript_hash->set_algorithm(cipher.prf_algo());
 
    std::unique_ptr<Cipher_State> psk_cipher_state;
    if(uses_psk) {
@@ -326,7 +327,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
       // Note: PSK selection was performed earlier, resulting in the existence
       //       of this extension in the first place.
       if(!exts.get<PSK>()->validate_binder(*psk_extension,
-                                           psk_cipher_state->psk_binder_mac(m_transcript_hash.truncated()))) {
+                                           psk_cipher_state->psk_binder_mac(m_transcript_hash->truncated()))) {
          throw TLS_Exception(Alert::DecryptError, "PSK binder does not check out");
       }
 
@@ -361,14 +362,14 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
 
       if(uses_psk) {
          BOTAN_ASSERT_NONNULL(psk_cipher_state);
-         psk_cipher_state->advance_with_client_hello(m_transcript_hash.previous());
+         psk_cipher_state->advance_with_client_hello(m_transcript_hash->previous());
          psk_cipher_state->advance_with_server_hello(
-            cipher, my_keyshare->take_shared_secret(), m_transcript_hash.current());
+            cipher, my_keyshare->take_shared_secret(), m_transcript_hash->current());
 
          return std::move(psk_cipher_state);
       } else {
          return Cipher_State::init_with_server_hello(
-            m_side, my_keyshare->take_shared_secret(), cipher, m_transcript_hash.current(), secret_logger());
+            m_side, my_keyshare->take_shared_secret(), cipher, m_transcript_hash->current(), secret_logger());
       }
    }();
 
@@ -426,7 +427,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
          .add(m_handshake->state.sending(Certificate_Verify_13(m_handshake->state.server_certificate(),
                                                                client_hello.signature_schemes(),
                                                                client_hello.sni_hostname(),
-                                                               m_transcript_hash.current(),
+                                                               m_transcript_hash->current(),
                                                                Connection_Side::Server,
                                                                credentials_manager(),
                                                                policy(),
@@ -434,7 +435,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
                                                                rng())));
    }
 
-   flight.add(m_handshake->state.sending(Finished_13(m_cipher_state.get(), m_transcript_hash.current())));
+   flight.add(m_handshake->state.sending(Finished_13(m_cipher_state.get(), m_transcript_hash->current())));
 
    if(client_hello.extensions().has<Record_Size_Limit>() &&
       m_handshake->state.encrypted_extensions().extensions().has<Record_Size_Limit>()) {
@@ -461,7 +462,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
 
    flight.send();
 
-   m_cipher_state->advance_with_server_finished(m_transcript_hash.current());
+   m_cipher_state->advance_with_server_finished(m_transcript_hash->current());
 
    if(m_handshake->state.has_certificate_request()) {
       // RFC 8446 4.4.2
@@ -477,13 +478,16 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
 }
 
 void Server_Impl_13::handle_reply_to_client_hello(Hello_Retry_Request hello_retry_request) {
+   BOTAN_ASSERT_NOMSG(m_transcript_hash.has_value());
+
    auto cipher = Ciphersuite::by_id(hello_retry_request.ciphersuite());
    BOTAN_ASSERT_NOMSG(cipher.has_value());  // should work, since we chose that suite
 
    send_handshake_message(m_handshake->state.sending(std::move(hello_retry_request)));
    maybe_handle_compatibility_mode(Compat_Mode_Situation::AfterSendingHelloRetryRequest);
 
-   m_transcript_hash = Transcript_Hash_State::recreate_after_hello_retry_request(cipher->prf_algo(), m_transcript_hash);
+   m_transcript_hash =
+      Transcript_Hash_State::recreate_after_hello_retry_request(cipher->prf_algo(), *m_transcript_hash);
 
    m_handshake->transitions.set_expected_next(Handshake_Type::ClientHello);
 }
@@ -629,6 +633,7 @@ void Server_Impl_13::handle(const Certificate_13& certificate_msg) {
 
 void Server_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg) {
    BOTAN_ASSERT_NONNULL(m_handshake);
+   BOTAN_ASSERT_NOMSG(m_transcript_hash.has_value());
 
    // RFC 8446 4.4.3
    //    If sent by a client, the signature algorithm used in the signature
@@ -645,7 +650,7 @@ void Server_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
    BOTAN_ASSERT_NOMSG(m_handshake->state.has_client_certificate_msg() &&
                       !m_handshake->state.client_certificate().empty());
    const bool sig_valid = certificate_verify_msg.verify(
-      *m_handshake->state.client_certificate().public_key(), callbacks(), m_transcript_hash.previous());
+      *m_handshake->state.client_certificate().public_key(), callbacks(), m_transcript_hash->previous());
 
    // RFC 8446 4.4.3
    //   If the verification fails, the receiver MUST terminate the handshake
@@ -659,12 +664,13 @@ void Server_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
 
 void Server_Impl_13::handle(const Finished_13& finished_msg) {
    BOTAN_ASSERT_NONNULL(m_handshake);
+   BOTAN_ASSERT_NOMSG(m_transcript_hash.has_value());
 
    // RFC 8446 4.4.4
    //    Recipients of Finished messages MUST verify that the contents are
    //    correct and if incorrect MUST terminate the connection with a
    //    "decrypt_error" alert.
-   if(!finished_msg.verify(m_cipher_state.get(), m_transcript_hash.previous())) {
+   if(!finished_msg.verify(m_cipher_state.get(), m_transcript_hash->previous())) {
       throw TLS_Exception(Alert::DecryptError, "Finished message didn't verify");
    }
 
@@ -682,7 +688,7 @@ void Server_Impl_13::handle(const Finished_13& finished_msg) {
                       Server_Information(m_handshake->state.client_hello().sni_hostname()),
                       callbacks().tls_current_timestamp()));
 
-   m_cipher_state->advance_with_client_finished(m_transcript_hash.current());
+   m_cipher_state->advance_with_client_finished(m_transcript_hash->current());
 
    // no more handshake messages expected
    m_handshake->transitions.set_expected_next({});
@@ -725,7 +731,7 @@ void Server_Impl_13::handle(const Finished_13& finished_msg) {
    }
 
    m_handshake.reset();
-   m_transcript_hash = Transcript_Hash_State();
+   m_transcript_hash.reset();
    callbacks().tls_session_activated();
 
    if(new_session_ticket_supported()) {

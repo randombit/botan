@@ -51,12 +51,16 @@ class BOTAN_TEST_API Handshake_Layer {
       /**
        * Parses one handshake message off the internal buffer that is being filled using `copy_data`.
        *
+       * TODO: remove the std::optional<std::reference_wrapper<>> shenanigan
+       *       when integrating the re-vamped DTLS-enabled data influx routine.
+       *
        * @param policy the TLS policy
        * @param transcript_hash the transcript hash state to be updated
        *
        * @return the parsed handshake message, or nullopt if more data is needed to complete the message
        */
-      std::optional<Handshake_Message_13> next_message(const Policy& policy, Transcript_Hash_State& transcript_hash);
+      std::optional<Handshake_Message_13> next_message(
+         const Policy& policy, std::optional<std::reference_wrapper<Transcript_Hash_State>> transcript_hash);
 
       /**
        * Parses one post-handshake message off the internal buffer that is being filled using `copy_data`.
