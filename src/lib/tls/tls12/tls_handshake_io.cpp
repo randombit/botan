@@ -35,6 +35,7 @@ void verify_is_expected_wire_handshake_type(Handshake_Type type) {
    switch(type) {
       case Handshake_Type::HelloRetryRequest:
       case Handshake_Type::HandshakeCCS:
+      case Handshake_Type::MessageHash:
       case Handshake_Type::None:
          throw TLS_Exception(Alert::UnexpectedMessage, "Invalid handshake message type");
       default:
