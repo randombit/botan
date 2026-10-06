@@ -906,6 +906,50 @@ class BigInt_InvMod_Test final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("math", "bn_invmod", BigInt_InvMod_Test);
 
+class BigInt_InvMod_Random_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("BigInt InvMod random");
+
+         for(const size_t bits : {8,   31,  32,  33,  63,   64,   65,   127,  128,  129,  255, 256,
+                                  257, 511, 512, 513, 1023, 1024, 1025, 2047, 2048, 3072, 4096}) {
+            for(size_t trial = 0; trial != 8; ++trial) {
+               Botan::BigInt mod(rng(), bits);
+               if(trial % 2 == 0) {
+                  mod.set_bit(0);
+               } else {
+                  mod.clear_bit(0);
+               }
+               if(mod < 3) {
+                  mod = 3;
+               }
+
+               const std::vector<Botan::BigInt> inputs = {
+                  Botan::BigInt::one(),
+                  mod - 1,
+                  mod >> 1,
+                  Botan::BigInt(rng(), bits) % mod,
+               };
+
+               for(const auto& a : inputs) {
+                  const Botan::BigInt inv = Botan::inverse_mod(a, mod);
+
+                  if(Botan::gcd(a, mod) == 1) {
+                     result.test_bn_eq("inverse works", (inv * a) % mod, Botan::BigInt::one());
+                     result.test_is_true("inverse in range", inv > 0 && inv < mod);
+                  } else {
+                     result.test_bn_eq("no inverse exists", inv, Botan::BigInt::zero());
+                  }
+               }
+            }
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("math", "bn_invmod_random", BigInt_InvMod_Random_Test);
+
 class BigInt_Rand_Test final : public Text_Based_Test {
    public:
       BigInt_Rand_Test() : Text_Based_Test("bn/random.vec", "Seed,Min,Max,Output") {}
