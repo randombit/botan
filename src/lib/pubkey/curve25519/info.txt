@@ -1,23 +1,15 @@
-<defines>
-ED25519 -> 20170607
-</defines>
-
 <module_info>
-name -> "Ed25519"
+name -> "Curve25519 Arithmetic"
+brief -> "X25519 and Ed25519 Arithmetic"
+type -> "Internal"
 </module_info>
 
 <requires>
 mp
-sha2_64
 </requires>
-
-<header:public>
-ed25519.h
-</header:public>
 
 <header:internal>
 ed25519_fe.h
 ed25519_internal.h
 ed25519_scalar.h
 </header:internal>
-

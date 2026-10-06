@@ -1,0 +1,16 @@
+<defines>
+ED25519 -> 20170607
+</defines>
+
+<module_info>
+name -> "Ed25519"
+brief -> "Ed25519 signature algorithm"
+</module_info>
+
+<requires>
+sha2_64
+</requires>
+
+<header:public>
+ed25519.h
+</header:public>

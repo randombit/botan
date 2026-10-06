@@ -5,6 +5,7 @@ X25519 -> 20240412
 
 <module_info>
 name -> "X25519"
+brief -> "X25519 key agreement algorithm"
 </module_info>
 
 <header:public>
