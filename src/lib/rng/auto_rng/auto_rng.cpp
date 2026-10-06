@@ -19,20 +19,41 @@
    #include <botan/system_rng.h>
 #endif
 
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
+#endif
+
 namespace Botan {
 
 namespace {
 
 std::unique_ptr<MessageAuthenticationCode> auto_rng_hmac() {
-   const std::string possible_auto_rng_hmacs[] = {
-      "HMAC(SHA-512)",
-      "HMAC(SHA-256)",
-   };
+   const bool has_hardware_sha256_support = []() {
+#if defined(BOTAN_HAS_SHA2_32_X86)
+      if(CPUID::has(CPUID::Feature::SHA)) {
+         return true;
+      }
+#endif
 
-   for(const auto& hmac : possible_auto_rng_hmacs) {
-      if(auto mac = MessageAuthenticationCode::create(hmac)) {
+#if defined(BOTAN_HAS_SHA2_32_ARMV8)
+      if(CPUID::has(CPUID::Feature::SHA2)) {
+         return true;
+      }
+#endif
+
+      return false;
+   }();
+
+   // On 64-bit systems prefer SHA-512, unless there is support for SHA-256 instructions
+   if(!has_hardware_sha256_support && HasNative64BitRegisters) {
+      if(auto mac = MessageAuthenticationCode::create("HMAC(SHA-512)")) {
          return mac;
       }
+   }
+
+   // Either SHA-512 is unavailable, or SHA-256 is preferable
+   if(auto mac = MessageAuthenticationCode::create("HMAC(SHA-256)")) {
+      return mac;
    }
 
    // This shouldn't happen since this module has a dependency on sha2_32
