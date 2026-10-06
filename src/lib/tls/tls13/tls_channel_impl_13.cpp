@@ -40,7 +40,7 @@ Channel_Impl_13::Channel_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
                                  const std::shared_ptr<const Policy>& policy,
                                  bool is_server) :
       m_side(is_server ? Connection_Side::Server : Connection_Side::Client),
-      m_transcript_hash(std::in_place),
+      m_transcript_hash(TLS_Flavor::TLS),
       m_callbacks(callbacks),
       m_session_manager(session_manager),
       m_credentials_manager(credentials_manager),

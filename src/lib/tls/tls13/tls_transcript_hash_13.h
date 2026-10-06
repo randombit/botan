@@ -10,6 +10,7 @@
 #define BOTAN_TLS_TRANSCRIPT_HASH_13_H_
 
 #include <botan/tls_magic.h>
+#include <botan/internal/tls_types_13.h>
 #include <memory>
 #include <span>
 #include <string_view>
@@ -31,8 +32,8 @@ namespace Botan::TLS {
  */
 class BOTAN_TEST_API Transcript_Hash_State {
    public:
-      Transcript_Hash_State();
-      explicit Transcript_Hash_State(std::string_view algo_spec);
+      explicit Transcript_Hash_State(TLS_Flavor flavor);
+      Transcript_Hash_State(TLS_Flavor flavor, std::string_view algo_spec);
       ~Transcript_Hash_State();
 
       /**
@@ -52,7 +53,13 @@ class BOTAN_TEST_API Transcript_Hash_State {
       Transcript_Hash_State(Transcript_Hash_State&& other) noexcept;
       Transcript_Hash_State& operator=(Transcript_Hash_State&& other) noexcept;
 
-      void update(std::span<const uint8_t> serialized_message_s);
+      /**
+       * Updates the transcript hash with a new handshake message where
+       * @p tls_message_header is the 4-byte handshake message header and
+       * @p serialized_message_s is the serialized handshake message.
+       */
+      void update(HandshakeProtocolHeader tls_message_header,
+                  StrongSpan<const SerializedHandshakeMessage> serialized_message);
 
       /**
        * returns the latest transcript hash
@@ -87,11 +94,12 @@ class BOTAN_TEST_API Transcript_Hash_State {
       Transcript_Hash_State(const Transcript_Hash_State& other);
 
    private:
+      TLS_Flavor m_flavor;
       std::unique_ptr<HashFunction> m_hash;
 
       // This buffer is filled with the data that is passed into
       // `update()` before `set_algorithm()` was called.
-      std::vector<std::vector<uint8_t>> m_unprocessed_transcript;
+      std::vector<std::pair<HandshakeProtocolHeader, SerializedHandshakeMessage>> m_unprocessed_transcript;
 
       Transcript_Hash m_current;
       Transcript_Hash m_previous;

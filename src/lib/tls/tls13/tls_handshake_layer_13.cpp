@@ -135,6 +135,14 @@ std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader,
    }
 }
 
+// This is a shim that will be replaced soon when working towards DTLS 1.3 support.
+std::pair<HandshakeProtocolHeader, StrongSpan<const SerializedHandshakeMessage>> split(std::span<const uint8_t> msg) {
+   BOTAN_ASSERT_NOMSG(msg.size() >= HEADER_LENGTH);
+   const auto header = typecast_copy<HandshakeProtocolHeader>(msg.first<HEADER_LENGTH>());
+   const auto serialized = StrongSpan<const SerializedHandshakeMessage>(msg.subspan(HEADER_LENGTH));
+   return {header, serialized};
+}
+
 }  // namespace
 
 std::optional<Handshake_Message_13> Handshake_Layer::next_message(
@@ -146,7 +154,8 @@ std::optional<Handshake_Message_13> Handshake_Layer::next_message(
    auto msg = parse_message<Handshake_Message_13>(reader, policy, m_peer, m_certificate_type);
    if(msg.has_value()) {
       BOTAN_STATE_CHECK(transcript_hash.has_value());
-      transcript_hash->get().update(pending.first(reader.read_so_far()));
+      const auto [header, serialized] = split(pending.first(reader.read_so_far()));
+      transcript_hash->get().update(header, serialized);
       m_read_offset += reader.read_so_far();
       BOTAN_ASSERT_NOMSG(m_read_offset <= m_read_buffer.size());
 
@@ -210,7 +219,8 @@ std::vector<uint8_t> marshall_message(const T& message) {
 std::vector<uint8_t> Handshake_Layer::prepare_message(const Handshake_Message_13_Ref message,
                                                       Transcript_Hash_State& transcript_hash) {
    auto msg = marshall_message(message);
-   transcript_hash.update(msg);
+   const auto [header, serialized] = split(msg);
+   transcript_hash.update(header, serialized);
    return msg;
 }
 

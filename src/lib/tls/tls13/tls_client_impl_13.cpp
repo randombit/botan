@@ -60,7 +60,8 @@ std::shared_ptr<Client_Impl_13> Client_Impl_13::create(const std::shared_ptr<Cal
                       self->m_info.hostname(),
                       next_protocols,
                       self->m_handshake->resumed_session,
-                      creds->find_preshared_keys(self->m_info.hostname(), Connection_Side::Client))));
+                      creds->find_preshared_keys(self->m_info.hostname(), Connection_Side::Client),
+                      TLS_Flavor::TLS)));
 
    self->maybe_handle_compatibility_mode(Compat_Mode_Situation::AfterSendingFirstClientHello);
 

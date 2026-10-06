@@ -30,6 +30,8 @@ enum Size_Limits : size_t /* NOLINT(*-enum-size,*-use-enum-class) */ {
    TLS_HEADER_SIZE = 5,
    DTLS_HEADER_SIZE = TLS_HEADER_SIZE + 8,
 
+   TLS_HANDSHAKE_HEADER_LENGTH = 4,
+
    // The "TLSInnerPlaintext" length, i.e. the maximum amount of plaintext
    // application data that can be transmitted in a single TLS record.
    MAX_PLAINTEXT_SIZE = 16 * 1024,
