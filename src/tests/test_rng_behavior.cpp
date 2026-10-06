@@ -87,6 +87,7 @@ class Stateful_RNG_Tests : public Test {
          */
          if(Test::options().test_threads() == 1) {
             results.push_back(test_fork_safety());
+            results.push_back(test_fork_then_add_entropy());
          }
 
          return results;
@@ -551,6 +552,23 @@ class Stateful_RNG_Tests : public Test {
             result.test_is_true("seeded", rng->is_seeded());
          }
 
+         // the legacy poll with a timeout must not stop early for very large timeouts
+         {
+            Botan::Entropy_Sources srcs;
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 16, sec_level / 2));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 16, sec_level / 2));
+
+            auto rng = create_rng(nullptr, nullptr, 0);
+            result.test_sz_eq("legacy poll with max timeout polls all sources",
+                              srcs.poll(*rng, sec_level, std::chrono::milliseconds::max()),
+                              sec_level);
+      #if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
+            result.test_sz_eq("legacy poll with expired timeout stops after first source",
+                              srcs.poll(*rng, sec_level, std::chrono::milliseconds(-1)),
+                              sec_level / 2);
+      #endif
+         }
+
          // explicitly reseeding from an uncounted source keeps the RNG seeded
          // but does not reset the reseed interval
          {
@@ -701,6 +719,183 @@ class Stateful_RNG_Tests : public Test {
             */
             ::execl("/bin/true", "true", NULL);  // NOLINT(*-vararg)
             ::_exit(0);                          // just in case /bin/true isn't available (sandbox?)
+         }
+   #endif
+         return result;
+      }
+
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+      /*
+      * Run fn in a forked child process and return its output to the parent
+      */
+      static std::vector<uint8_t> run_in_child(Test::Result& result, const std::function<std::vector<uint8_t>()>& fn) {
+         int fd[2];
+         if(::pipe(fd) != 0) {
+            result.test_failure("failed to create pipe");
+            return {};
+         }
+
+         const pid_t pid = ::fork();
+         if(pid == -1) {
+            ::close(fd[0]);
+            ::close(fd[1]);
+      #if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
+            result.test_note("failed to fork process");
+      #else
+            result.test_failure("failed to fork process");
+      #endif
+            return {};
+         }
+
+         if(pid == 0) {
+            ::close(fd[0]);
+            try {
+               const auto output = fn();
+               [[maybe_unused]] const ssize_t written = ::write(fd[1], output.data(), output.size());
+            } catch(std::exception& e) {
+               static_cast<void>(fprintf(stderr, "%s", e.what()));  // NOLINT(*-vararg)
+            }
+            ::close(fd[1]);
+
+            // See test_fork_safety for why exit/_exit are avoided
+            ::execl("/bin/true", "true", NULL);  // NOLINT(*-vararg)
+            ::_exit(0);
+         }
+
+         ::close(fd[1]);
+         std::vector<uint8_t> output;
+         uint8_t buf[64];
+         for(;;) {
+            const ssize_t got = ::read(fd[0], buf, sizeof(buf));
+            if(got <= 0) {
+               break;
+            }
+            output.insert(output.end(), buf, buf + got);
+         }
+         ::close(fd[0]);
+
+         int status = 0;
+         ::waitpid(pid, &status, 0);
+         return output;
+      }
+   #endif
+
+      Test::Result test_fork_then_add_entropy() {
+         Test::Result result(rng_name() + " Fork Then Add Entropy");
+
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+         const size_t output_len = 16;
+         const std::vector<uint8_t> seed(create_rng(nullptr, nullptr, 0)->security_level() / 8, 0x42);
+
+         // Parent and child both add the same full entropy input after the fork;
+         // the child must still detect the fork and reseed
+         {
+            Request_Counting_RNG counting_rng;
+            auto rng = make_rng(counting_rng);
+            rng->random_vec(output_len);
+
+            const auto child = run_in_child(result, [&]() {
+               rng->add_entropy(seed);
+               auto out = rng->random_vec<std::vector<uint8_t>>(output_len);
+               out.push_back(static_cast<uint8_t>(counting_rng.randomize_count()));
+               return out;
+            });
+
+            rng->add_entropy(seed);
+            const auto parent_out = rng->random_vec<std::vector<uint8_t>>(output_len);
+
+            if(result.test_sz_eq("child output length", child.size(), output_len + 1)) {
+               result.test_sz_eq("child reseeded", child[output_len], 2);
+               result.test_bin_ne("parent and child output differ", parent_out, std::span{child}.first(output_len));
+            }
+            result.test_sz_eq("parent not reseeded", counting_rng.randomize_count(), 1);
+         }
+
+         // If the reseed after a fork fails, adding entropy must not clear the pending fork
+         {
+            class Failable_RNG final : public Botan::RandomNumberGenerator {
+               public:
+                  bool accepts_input() const override { return false; }
+
+                  bool is_seeded() const override { return true; }
+
+                  void clear() override {}
+
+                  std::string name() const override { return "Failable_RNG"; }
+
+                  void set_failing() { m_failing = true; }
+
+               private:
+                  void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /*input*/) override {
+                     if(m_failing) {
+                        throw Botan::Internal_Error("Failable_RNG failure");
+                     }
+                     std::fill(output.begin(), output.end(), 0x80);
+                  }
+
+                  bool m_failing = false;
+            };
+
+            Failable_RNG failable_rng;
+            auto rng = make_rng(failable_rng);
+            rng->random_vec(output_len);
+
+            const auto child = run_in_child(result, [&]() {
+               failable_rng.set_failing();
+
+               std::vector<uint8_t> threw;
+               auto request_throws = [&]() {
+                  try {
+                     rng->random_vec(output_len);
+                     return false;
+                  } catch(std::exception&) {
+                     return true;
+                  }
+               };
+
+               threw.push_back(request_throws() ? 1 : 0);
+               rng->add_entropy(seed);
+               threw.push_back(request_throws() ? 1 : 0);
+               return threw;
+            });
+
+            if(result.test_sz_eq("child output length", child.size(), 2)) {
+               result.test_is_true("first request in child fails", child[0] == 1);
+               result.test_is_true("request after add_entropy in child fails", child[1] == 1);
+            }
+         }
+
+         // Without a source to reseed from, add_entropy is the only way to recover after fork
+         {
+            auto rng = create_rng(nullptr, nullptr, 0);
+            rng->add_entropy(seed);
+            rng->random_vec(output_len);
+
+            const std::vector<uint8_t> child_seed(seed.size(), 0x23);
+
+            const auto child = run_in_child(result, [&]() {
+               rng->add_entropy(child_seed);
+               return rng->random_vec<std::vector<uint8_t>>(output_len);
+            });
+
+            result.test_sz_eq("unsourced RNG usable after add_entropy in child", child.size(), output_len);
+         }
+
+         // Explicit initialization must remain deterministic
+         {
+            auto rng = create_rng(nullptr, nullptr, 0);
+            rng->initialize_with(seed);
+            rng->random_vec(output_len);
+
+            const auto child = run_in_child(result, [&]() {
+               rng->initialize_with(seed);
+               return rng->random_vec<std::vector<uint8_t>>(output_len);
+            });
+
+            rng->initialize_with(seed);
+            const auto parent_out = rng->random_vec<std::vector<uint8_t>>(output_len);
+
+            result.test_bin_eq("initialize_with output identical in parent and child", parent_out, child);
          }
    #endif
          return result;
@@ -1127,6 +1322,20 @@ class AutoSeeded_RNG_Tests final : public Test {
          }
 
          rng.clear();
+
+         Botan::AutoSeeded_RNG moved_to(std::move(rng));
+         result.test_is_true("moved-to AutoSeeded_RNG works", moved_to.random_vec(16).size() == 16);
+
+         // NOLINTBEGIN(*-use-after-move,clang-analyzer-cplusplus.Move,*-invalid-access-moved)
+         result.test_is_false("moved-from AutoSeeded_RNG is not seeded", rng.is_seeded());
+         result.test_throws<Botan::Invalid_State>("moved-from AutoSeeded_RNG randomize", [&]() { rng.random_vec(16); });
+         result.test_throws<Botan::Invalid_State>("moved-from AutoSeeded_RNG add_entropy",
+                                                  [&]() { rng.add_entropy(std::vector<uint8_t>(32)); });
+         result.test_throws<Botan::Invalid_State>("moved-from AutoSeeded_RNG name", [&]() { rng.name(); });
+         result.test_throws<Botan::Invalid_State>("moved-from AutoSeeded_RNG clear", [&]() { rng.clear(); });
+         result.test_throws<Botan::Invalid_State>("moved-from AutoSeeded_RNG force_reseed",
+                                                  [&]() { rng.force_reseed(); });
+         // NOLINTEND(*-use-after-move,clang-analyzer-cplusplus.Move,*-invalid-access-moved)
 
          return result;
       }

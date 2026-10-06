@@ -79,35 +79,38 @@ AutoSeeded_RNG::AutoSeeded_RNG(size_t reseed_interval) {
 }
 
 void AutoSeeded_RNG::force_reseed() {
+   BOTAN_STATE_CHECK(m_rng);
    m_rng->force_reseed();
    m_rng->next_byte();
-
-   if(!m_rng->is_seeded()) {
-      throw Internal_Error("AutoSeeded_RNG reseeding failed");
-   }
 }
 
 bool AutoSeeded_RNG::is_seeded() const {
-   return m_rng->is_seeded();
+   return m_rng && m_rng->is_seeded();
 }
 
 void AutoSeeded_RNG::clear() {
+   BOTAN_STATE_CHECK(m_rng);
    m_rng->clear();
 }
 
 std::string AutoSeeded_RNG::name() const {
+   BOTAN_STATE_CHECK(m_rng);
    return m_rng->name();
 }
 
 size_t AutoSeeded_RNG::reseed_from_sources(Entropy_Sources& srcs, size_t poll_bits) {
+   BOTAN_STATE_CHECK(m_rng);
    return m_rng->reseed_from_sources(srcs, poll_bits);
 }
 
 void AutoSeeded_RNG::accept_seed_material(std::span<const uint8_t> input) {
+   BOTAN_STATE_CHECK(m_rng);
    m_rng->add_entropy(input);
 }
 
 void AutoSeeded_RNG::fill_bytes_with_input(std::span<uint8_t> out, std::span<const uint8_t> in) {
+   BOTAN_STATE_CHECK(m_rng);
+
    if(out.empty() && in.empty()) {
       return;
    } else if(in.empty()) {

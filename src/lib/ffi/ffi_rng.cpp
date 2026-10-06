@@ -221,6 +221,11 @@ int botan_rng_init_drbg(botan_rng_t* rng_out, const char* drbg_name, const uint8
       }
 
       drbg->initialize_with(std::span(seed, seed_len));
+
+      if(!drbg->is_seeded()) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+
       // Upcast to RandomNumberGenerator for the FFI object
       std::unique_ptr<Botan::RandomNumberGenerator> rng(std::move(drbg));
       return ffi_new_object(rng_out, std::move(rng));

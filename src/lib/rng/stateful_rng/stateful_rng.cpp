@@ -20,6 +20,7 @@ void Stateful_RNG::clear() {
    const lock_guard_type<recursive_mutex_type> lock(m_mutex);
    m_reseed_counter = 0;
    m_last_pid = 0;
+   m_fork_generation = 0;
    clear_state();
 }
 
@@ -71,7 +72,15 @@ void Stateful_RNG::accept_seed_material(std::span<const uint8_t> input) {
 
    // The contract of add_entropy is that the caller asserts full entropy
    if(8 * input.size() >= security_level()) {
-      reset_reseed_counter();
+      const bool can_reseed = (m_underlying_rng != nullptr || m_entropy_sources != nullptr);
+
+      if(can_reseed && fork_detected()) {
+         // The input may be identical in parent and child, so leave the
+         // fork pending for reseed_check to handle
+         m_reseed_counter = 1;
+      } else {
+         reset_reseed_counter();
+      }
    }
 }
 
@@ -121,18 +130,26 @@ void Stateful_RNG::reset_reseed_counter() {
    // Lock is held whenever this function is called
    m_reseed_counter = 1;
    m_last_pid = OS::get_process_id();
+   m_fork_generation = OS::get_fork_generation();
+}
+
+bool Stateful_RNG::fork_detected() const {
+   // Lock is held whenever this function is called
+   if(m_last_pid == 0) {
+      return false;
+   }
+
+   return (OS::get_process_id() != m_last_pid || OS::get_fork_generation() != m_fork_generation);
 }
 
 void Stateful_RNG::reseed_check() {
    // Lock is held whenever this function is called
 
-   const uint32_t cur_pid = OS::get_process_id();
-
-   const bool fork_detected = (m_last_pid > 0) && (cur_pid != m_last_pid);
+   const bool fork_detected = this->fork_detected();
 
    if(is_seeded() == false || fork_detected || (m_reseed_interval > 0 && m_reseed_counter >= m_reseed_interval)) {
+      // The fork baselines are only updated by a successful reseed
       m_reseed_counter = 0;
-      m_last_pid = cur_pid;
 
       if(m_underlying_rng != nullptr) {
          reseed_from_rng(*m_underlying_rng, security_level());

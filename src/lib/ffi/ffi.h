@@ -390,7 +390,8 @@ BOTAN_FFI_EXPORT(2, 8) int botan_rng_add_entropy(botan_rng_t rng, const uint8_t*
 * @param rng_out the new DRBG object
 * @param drbg_name the name of the DRBG (e.g. "HMAC_DRBG(SHA-256)")
 * @param seed the seed material (entropy || nonce || personalization_string)
-* @param seed_len length of seed in bytes
+* @param seed_len length of seed in bytes which should be at least the security
+*        level of the RNG (eg 32 bytes for SHA-256 based HMAC_DRBG)
 * @return 0 on success, negative on failure
 */
 BOTAN_FFI_EXPORT(3, 12)
