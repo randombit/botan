@@ -30,6 +30,8 @@ enum Size_Limits : size_t /* NOLINT(*-enum-size,*-use-enum-class) */ {
    TLS_HEADER_SIZE = 5,
    DTLS_HEADER_SIZE = TLS_HEADER_SIZE + 8,
 
+   TLS_HANDSHAKE_HEADER_LENGTH = 4,
+
    // The "TLSInnerPlaintext" length, i.e. the maximum amount of plaintext
    // application data that can be transmitted in a single TLS record.
    MAX_PLAINTEXT_SIZE = 16 * 1024,
@@ -92,8 +94,9 @@ enum class Handshake_Type : uint8_t {
 
    KeyUpdate = 24,  // RFC 8446 (TLS 1.3)
 
+   HandshakeCCS = 252,       // Not a wire value
    HelloRetryRequest = 253,  // Not a wire value (HRR appears as an ordinary Server Hello)
-   HandshakeCCS = 254,       // Not a wire value (TLS 1.3 uses this value for 'message_hash' -- RFC 8446 4.4.1)
+   MessageHash = 254,        // Not a wire value (RFC 9846 4.1)
    None = 255                // Null value
 };
 

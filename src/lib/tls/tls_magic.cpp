@@ -59,6 +59,9 @@ const char* handshake_type_to_string(Handshake_Type type) {
       case Handshake_Type::HandshakeCCS:
          return "change_cipher_spec";
 
+      case Handshake_Type::MessageHash:
+         return "message_hash";
+
       case Handshake_Type::Finished:
          return "finished";
 

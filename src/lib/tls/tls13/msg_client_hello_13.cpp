@@ -157,7 +157,8 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
                                  std::string_view hostname,
                                  std::vector<std::string> next_protocols,
                                  std::optional<Session_with_Handle>& session,
-                                 std::vector<ExternalPSK> psks) {
+                                 std::vector<ExternalPSK> psks,
+                                 TLS_Flavor flavor) {
    // RFC 8446 4.1.2
    //    In TLS 1.3, the client indicates its version preferences in the
    //    "supported_versions" extension (Section 4.2.1) and the
@@ -279,7 +280,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
          throw TLS_Exception(Alert::InternalError,
                              "Application modified extensions of Client Hello, PSK is not last anymore");
       }
-      calculate_psk_binders({});
+      calculate_psk_binders(Transcript_Hash_State(flavor));
    }
 }
 

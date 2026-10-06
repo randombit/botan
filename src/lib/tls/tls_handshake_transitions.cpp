@@ -75,6 +75,9 @@ uint32_t bitmask_for_handshake_type(Handshake_Type type) {
       case Handshake_Type::HelloRetryRequest:  // RFC 8446
          return (1 << 18);
 
+      case Handshake_Type::MessageHash:  // RFC 9846
+         return (1 << 19);
+
       // allow explicitly disabling new handshakes
       case Handshake_Type::None:
          return 0;
@@ -99,6 +102,7 @@ std::string handshake_mask_to_string(uint32_t mask, char combiner) {
                                    Handshake_Type::ClientKeyExchange,
                                    Handshake_Type::NewSessionTicket,
                                    Handshake_Type::HandshakeCCS,
+                                   Handshake_Type::MessageHash,
                                    Handshake_Type::Finished,
                                    Handshake_Type::EndOfEarlyData,
                                    Handshake_Type::EncryptedExtensions,

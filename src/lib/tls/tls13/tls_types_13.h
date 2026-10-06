@@ -12,10 +12,24 @@
 #include <botan/secmem.h>
 #include <botan/strong_type.h>
 #include <functional>
+#include <vector>
 
 namespace Botan::TLS {
 
+using BytesNeeded = size_t;
+
 using SecretLoggerFn = std::function<void(std::string_view label, std::span<const uint8_t> secret)>;
+
+/// Holds the serialization of a single TLS 1.3 handshake message without the
+/// handshake protocol header.
+using SerializedHandshakeMessage = Strong<std::vector<uint8_t>, struct SerializedHandshakeMessage_>;
+
+/// Holds the serialization of a TLS 1.3 handshake protocol header.
+using HandshakeProtocolHeader = Strong<std::array<uint8_t, 4>, struct HandshakeProtocolHeader_>;
+
+/// Holds the serialization of a single TLS 1.3 handshake message along
+/// with the handshake protocol header.
+using MarshalledHandshakeMessage = Strong<std::vector<uint8_t>, struct MarshalledHandshakeMessage_>;
 
 /// Holds the serialization of a single TLS 1.3 record along with the record
 /// protocol header. Protected records hold the encrypted payload and AEAD tag.

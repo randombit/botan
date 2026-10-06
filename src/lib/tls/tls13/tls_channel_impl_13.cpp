@@ -40,6 +40,7 @@ Channel_Impl_13::Channel_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
                                  const std::shared_ptr<const Policy>& policy,
                                  bool is_server) :
       m_side(is_server ? Connection_Side::Server : Connection_Side::Client),
+      m_transcript_hash(TLS_Flavor::TLS),
       m_callbacks(callbacks),
       m_session_manager(session_manager),
       m_credentials_manager(credentials_manager),
@@ -95,7 +96,18 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
             return std::get<BytesNeeded>(result);
          }
 
-         const auto& record = std::get<Record_Content>(result);
+         // Currently, this is just unpacking the strong-typed records into their
+         // common base type. In the future, we will handle the different record
+         // types based on the strong type itself.
+         const auto& record = std::visit(
+            []<typename T>(const T& r) -> const Record_Content& {
+               if constexpr(!std::same_as<T, BytesNeeded>) {
+                  return r;
+               } else {
+                  throw Internal_Error("Unexpected BytesNeeded variant in record visitation");
+               }
+            },
+            result);
 
          // RFC 8446 5.1
          //   Handshake messages MUST NOT be interleaved with other record types.
@@ -106,8 +118,21 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
          if(record.type == Record_Type::Handshake) {
             m_handshake_layer.copy_data(record.payload);
 
+            // This is a temporary shim to allow the predicate of the while-loop
+            // below to run after the transcript hash state has been destroyed
+            // at the end of the handshake.
+            //
+            // TODO: remove when integrating the re-vamped data influx routine.
+            auto transcript_hash_reference = [&]() -> std::optional<std::reference_wrapper<Transcript_Hash_State>> {
+               if(m_transcript_hash.has_value()) {
+                  return *m_transcript_hash;
+               } else {
+                  return std::nullopt;
+               }
+            };
+
             if(!is_handshake_complete()) {
-               while(auto handshake_msg = m_handshake_layer.next_message(policy(), m_transcript_hash)) {
+               while(auto handshake_msg = m_handshake_layer.next_message(policy(), transcript_hash_reference())) {
                   // RFC 8446 5.1
                   //    Handshake messages MUST NOT span key changes.  Implementations
                   //    MUST verify that all messages immediately preceding a key change
@@ -261,14 +286,14 @@ Channel_Impl_13::AggregatedHandshakeMessages::AggregatedHandshakeMessages(Channe
 Channel_Impl_13::AggregatedHandshakeMessages& Channel_Impl_13::AggregatedHandshakeMessages::add(
    const Handshake_Message_13_Ref message) {
    std::visit([&](const auto msg) { m_channel.callbacks().tls_inspect_handshake_msg(msg.get()); }, message);
-   m_message_buffer += m_handshake_layer.prepare_message(message, m_transcript_hash);
+   m_message_buffer += m_handshake_layer.prepare_message(message, m_transcript_hash).get();
    return *this;
 }
 
 Channel_Impl_13::AggregatedPostHandshakeMessages& Channel_Impl_13::AggregatedPostHandshakeMessages::add(
    Post_Handshake_Message_13 message) {
    std::visit([&](const auto& msg) { m_channel.callbacks().tls_inspect_handshake_msg(msg); }, message);
-   m_message_buffer += m_handshake_layer.prepare_post_handshake_message(message);
+   m_message_buffer += m_handshake_layer.prepare_post_handshake_message(message).get();
    return *this;
 }
 

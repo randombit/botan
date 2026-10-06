@@ -311,7 +311,7 @@ MarshalledRecord Cipher_State::protect_record(Record_Type type,
    return result;
 }
 
-Record_Content Cipher_State::deprotect_record(Record_TLS record, size_t incoming_record_size_limit) {
+Record Cipher_State::deprotect_record(Record_TLS record, size_t incoming_record_size_limit) {
    BOTAN_ASSERT_NONNULL(m_decrypt);
    BOTAN_ARG_CHECK(record.type() == Record_Type::ApplicationData, "Record type must be ApplicationData");
 
@@ -416,7 +416,7 @@ Record_Content Cipher_State::deprotect_record(Record_TLS record, size_t incoming
       throw TLS_Exception(Alert::UnexpectedMessage, "Received a protected record with empty TLSInnerPlaintext content");
    }
 
-   return result;
+   return annotate_record_type(std::move(result));
 }
 
 size_t Cipher_State::encrypt_output_length(const size_t input_length) const {

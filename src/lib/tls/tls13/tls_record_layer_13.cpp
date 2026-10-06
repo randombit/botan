@@ -206,7 +206,7 @@ std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
    return output;
 }
 
-Record_Layer::ReadResult<Record_Content> Record_Layer::next_record(Cipher_State* cipher_state) {
+Record_Layer::ReadResult Record_Layer::next_record(Cipher_State* cipher_state) {
    // Special case: on the record boundary we don't actually need any more data
    // and we also don't want to be the know-it-all that now demands exactly
    // enough bytes to start parsing the next record header.
@@ -257,11 +257,11 @@ Record_Layer::ReadResult<Record_Content> Record_Layer::next_record(Cipher_State*
    }
 
    if(record.type() != Record_Type::ApplicationData) {
-      return Record_Content{
+      return generalize_to<ReadResult>(annotate_record_type({
          .type = record.type(),
          .sequence_number = std::nullopt,
          .payload = record.take_payload(),
-      };
+      }));
    } else {
       if(cipher_state == nullptr) {
          // This could also mean a misuse of the interface, i.e. failing to
@@ -270,7 +270,7 @@ Record_Layer::ReadResult<Record_Content> Record_Layer::next_record(Cipher_State*
          throw TLS_Exception(Alert::UnexpectedMessage, "premature Application Data received");
       }
 
-      return cipher_state->deprotect_record(std::move(record), m_incoming_record_size_limit);
+      return generalize_to<ReadResult>(cipher_state->deprotect_record(std::move(record), m_incoming_record_size_limit));
    }
 }
 

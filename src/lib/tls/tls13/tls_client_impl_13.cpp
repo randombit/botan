@@ -60,7 +60,8 @@ std::shared_ptr<Client_Impl_13> Client_Impl_13::create(const std::shared_ptr<Cal
                       self->m_info.hostname(),
                       next_protocols,
                       self->m_handshake->resumed_session,
-                      creds->find_preshared_keys(self->m_info.hostname(), Connection_Side::Client))));
+                      creds->find_preshared_keys(self->m_info.hostname(), Connection_Side::Client),
+                      TLS_Flavor::TLS)));
 
    self->maybe_handle_compatibility_mode(Compat_Mode_Situation::AfterSendingFirstClientHello);
 
@@ -255,6 +256,7 @@ void Client_Impl_13::handle(const Server_Hello_13& sh) {
    // Note: Basic checks (that do not require contextual information) were already
    //       performed during the construction of the Server_Hello_13 object.
    BOTAN_ASSERT_NONNULL(m_handshake);
+   BOTAN_ASSERT_NOMSG(m_transcript_hash.has_value());
 
    const auto& ch = m_handshake->state.client_hello();
 
@@ -328,7 +330,7 @@ void Client_Impl_13::handle(const Server_Hello_13& sh) {
    auto* my_keyshare = ch.extensions().get<Key_Share>();
    auto shared_secret = my_keyshare->decapsulate(*sh.extensions().get<Key_Share>(), policy(), callbacks(), rng());
 
-   m_transcript_hash.set_algorithm(cipher.value().prf_algo());
+   m_transcript_hash->set_algorithm(cipher.value().prf_algo());
 
    if(sh.extensions().has<PSK>()) {
       std::tie(m_handshake->psk_identity, m_cipher_state) =
@@ -345,12 +347,12 @@ void Client_Impl_13::handle(const Server_Hello_13& sh) {
       // TODO: When implementing early data, `advance_with_client_hello` must
       //       happen _before_ encrypting any early application data.
       //       Same when we want to support early key export.
-      m_cipher_state->advance_with_client_hello(m_transcript_hash.previous());
-      m_cipher_state->advance_with_server_hello(cipher.value(), std::move(shared_secret), m_transcript_hash.current());
+      m_cipher_state->advance_with_client_hello(m_transcript_hash->previous());
+      m_cipher_state->advance_with_server_hello(cipher.value(), std::move(shared_secret), m_transcript_hash->current());
    } else {
       m_handshake->resumed_session.reset();  // might have been set if we attempted a resumption
       m_cipher_state = Cipher_State::init_with_server_hello(
-         m_side, std::move(shared_secret), cipher.value(), m_transcript_hash.current(), secret_logger());
+         m_side, std::move(shared_secret), cipher.value(), m_transcript_hash->current(), secret_logger());
    }
 
    callbacks().tls_examine_extensions(sh.extensions(), Connection_Side::Server, Handshake_Type::ServerHello);
@@ -363,6 +365,7 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr) {
    //       performed during the construction of the Hello_Retry_Request object as
    //       a subclass of Server_Hello_13.
    BOTAN_ASSERT_NONNULL(m_handshake);
+   BOTAN_ASSERT_NOMSG(m_transcript_hash.has_value());
 
    auto& ch = m_handshake->state.client_hello();
 
@@ -389,9 +392,9 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr) {
    }
 
    m_transcript_hash =
-      Transcript_Hash_State::recreate_after_hello_retry_request(cipher.value().prf_algo(), m_transcript_hash);
+      Transcript_Hash_State::recreate_after_hello_retry_request(cipher.value().prf_algo(), *m_transcript_hash);
 
-   ch.retry(hrr, m_transcript_hash, callbacks(), rng());
+   ch.retry(hrr, *m_transcript_hash, callbacks(), rng());
 
    callbacks().tls_examine_extensions(hrr.extensions(), Connection_Side::Server, Handshake_Type::HelloRetryRequest);
 
@@ -521,6 +524,7 @@ void Client_Impl_13::handle(const Certificate_13& certificate_msg) {
 
 void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg) {
    BOTAN_ASSERT_NONNULL(m_handshake);
+   BOTAN_ASSERT_NOMSG(m_transcript_hash.has_value());
 
    // RFC 8446 4.4.3
    //    If the CertificateVerify message is sent by a server, the signature
@@ -538,7 +542,7 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
    }
 
    const bool sig_valid = certificate_verify_msg.verify(
-      *m_handshake->state.server_certificate().public_key(), callbacks(), m_transcript_hash.previous());
+      *m_handshake->state.server_certificate().public_key(), callbacks(), m_transcript_hash->previous());
 
    if(!sig_valid) {
       throw TLS_Exception(Alert::DecryptError, "Server certificate verification failed");
@@ -548,6 +552,8 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
 }
 
 void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedHandshakeMessages& flight) {
+   BOTAN_ASSERT_NONNULL(m_handshake);
+   BOTAN_ASSERT_NOMSG(m_transcript_hash.has_value());
    BOTAN_ASSERT_NOMSG(m_handshake->state.has_certificate_request());
    const auto& cert_request = m_handshake->state.certificate_request();
 
@@ -594,7 +600,7 @@ void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedHands
       flight.add(m_handshake->state.sending(Certificate_Verify_13(m_handshake->state.client_certificate(),
                                                                   cert_request.signature_schemes(),
                                                                   m_info.hostname(),
-                                                                  m_transcript_hash.current(),
+                                                                  m_transcript_hash->current(),
                                                                   Connection_Side::Client,
                                                                   credentials_manager(),
                                                                   policy(),
@@ -605,12 +611,13 @@ void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedHands
 
 void Client_Impl_13::handle(const Finished_13& finished_msg) {
    BOTAN_ASSERT_NONNULL(m_handshake);
+   BOTAN_ASSERT_NOMSG(m_transcript_hash.has_value());
 
    // RFC 8446 4.4.4
    //    Recipients of Finished messages MUST verify that the contents are
    //    correct and if incorrect MUST terminate the connection with a
    //    "decrypt_error" alert.
-   if(!finished_msg.verify(m_cipher_state.get(), m_transcript_hash.previous())) {
+   if(!finished_msg.verify(m_cipher_state.get(), m_transcript_hash->previous())) {
       throw TLS_Exception(Alert::DecryptError, "Finished message didn't verify");
    }
 
@@ -629,7 +636,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
 
    // Derives the secrets for receiving application data but defers
    // the derivation of sending application data.
-   m_cipher_state->advance_with_server_finished(m_transcript_hash.current());
+   m_cipher_state->advance_with_server_finished(m_transcript_hash->current());
 
    auto flight = aggregate_handshake_messages();
 
@@ -641,13 +648,13 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
    }
 
    // send client finished handshake message (still using handshake traffic secrets)
-   flight.add(m_handshake->state.sending(Finished_13(m_cipher_state.get(), m_transcript_hash.current())));
+   flight.add(m_handshake->state.sending(Finished_13(m_cipher_state.get(), m_transcript_hash->current())));
 
    maybe_handle_compatibility_mode(Compat_Mode_Situation::BeforeSendingEncryptedClientFlight);
    flight.send();
 
    // derives the sending application traffic secrets
-   m_cipher_state->advance_with_client_finished(m_transcript_hash.current());
+   m_cipher_state->advance_with_client_finished(m_transcript_hash->current());
 
    // TODO: Create a dummy session object and invoke tls_session_established.
    //       Alternatively, consider changing the expectations described in the
@@ -691,7 +698,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
    }
 
    m_handshake.reset();
-   m_transcript_hash = Transcript_Hash_State();
+   m_transcript_hash.reset();
    callbacks().tls_session_activated();
 }
 

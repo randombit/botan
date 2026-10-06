@@ -40,7 +40,8 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello {
                       std::string_view hostname,
                       std::vector<std::string> next_protocols,
                       std::optional<Session_with_Handle>& session,
-                      std::vector<ExternalPSK> psks);
+                      std::vector<ExternalPSK> psks,
+                      TLS_Flavor flavor);
 
       static std::variant<Client_Hello_13, Client_Hello_12_Shim> parse(std::span<const uint8_t> buf);
 

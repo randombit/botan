@@ -235,7 +235,8 @@ class Channel_Impl_13 : public Channel_Impl {
       void send_dummy_change_cipher_spec();
 
       AggregatedHandshakeMessages aggregate_handshake_messages() {
-         return AggregatedHandshakeMessages(*this, m_handshake_layer, m_transcript_hash);
+         BOTAN_STATE_CHECK(m_transcript_hash.has_value());
+         return AggregatedHandshakeMessages(*this, m_handshake_layer, *m_transcript_hash);
       }
 
       AggregatedPostHandshakeMessages aggregate_post_handshake_messages() {
@@ -267,7 +268,7 @@ class Channel_Impl_13 : public Channel_Impl {
 
    protected:
       const Connection_Side m_side;                              // NOLINT(*non-private-member-variable*)
-      Transcript_Hash_State m_transcript_hash;                   // NOLINT(*non-private-member-variable*)
+      std::optional<Transcript_Hash_State> m_transcript_hash;    // NOLINT(*non-private-member-variable*)
       std::unique_ptr<Cipher_State> m_cipher_state;              // NOLINT(*non-private-member-variable*)
       std::optional<Active_Connection_State_13> m_active_state;  // NOLINT(*non-private-member-variable*)
 

@@ -11,17 +11,19 @@
 #include <botan/hash.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
+#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_reader.h>
 
 #include <utility>
 
 namespace Botan::TLS {
 
-Transcript_Hash_State::Transcript_Hash_State(std::string_view algo_spec) {
+Transcript_Hash_State::Transcript_Hash_State(TLS_Flavor flavor) : m_flavor(flavor) {}
+
+Transcript_Hash_State::Transcript_Hash_State(TLS_Flavor flavor, std::string_view algo_spec) :
+      Transcript_Hash_State(flavor) {
    set_algorithm(algo_spec);
 }
-
-Transcript_Hash_State::Transcript_Hash_State() = default;
 
 Transcript_Hash_State::~Transcript_Hash_State() = default;
 
@@ -29,6 +31,7 @@ Transcript_Hash_State::Transcript_Hash_State(Transcript_Hash_State&& other) noex
 Transcript_Hash_State& Transcript_Hash_State::operator=(Transcript_Hash_State&& other) noexcept = default;
 
 Transcript_Hash_State::Transcript_Hash_State(const Transcript_Hash_State& other) :
+      m_flavor(other.m_flavor),
       m_hash((other.m_hash != nullptr) ? other.m_hash->copy_state() : nullptr),
       m_unprocessed_transcript(other.m_unprocessed_transcript),
       m_current(other.m_current),
@@ -42,28 +45,27 @@ Transcript_Hash_State Transcript_Hash_State::recreate_after_hello_retry_request(
    BOTAN_STATE_CHECK(prev_transcript_hash_state.m_hash == nullptr);
    BOTAN_STATE_CHECK(prev_transcript_hash_state.m_unprocessed_transcript.size() == 2);
 
-   Transcript_Hash_State transcript_hash(algo_spec);
+   Transcript_Hash_State transcript_hash(prev_transcript_hash_state.m_flavor, algo_spec);
 
    const auto& client_hello_1 = prev_transcript_hash_state.m_unprocessed_transcript.front();
    const auto& hello_retry_request = prev_transcript_hash_state.m_unprocessed_transcript.back();
 
-   const size_t hash_length = transcript_hash.m_hash->output_length();
-   BOTAN_ASSERT_NOMSG(hash_length < 256);
+   const auto hash_length = transcript_hash.m_hash->output_length();
+   BOTAN_DEBUG_ASSERT(hash_length <= 0xFF);
 
-   // RFC 8446 4.4.1
+   // RFC 9846 4.1
    //    [...], when the server responds to a ClientHello with a HelloRetryRequest,
    //    the value of ClientHello1 is replaced with a special synthetic handshake
-   //    message of handshake type "message_hash" [(0xFE)] containing:
-   std::vector<uint8_t> message_hash;
-   message_hash.reserve(4 + hash_length);
-   message_hash.push_back(0xFE /* message type 'message_hash' RFC 8446 4. */);
-   message_hash.push_back(0x00);
-   message_hash.push_back(0x00);
-   message_hash.push_back(static_cast<uint8_t>(hash_length));
-   message_hash += transcript_hash.m_hash->process(client_hello_1);
+   //    message of handshake type "message_hash" [...]:
+   const auto message_hash_header =
+      HandshakeProtocolHeader({to_underlying(Handshake_Type::MessageHash), 0, 0, static_cast<uint8_t>(hash_length)});
 
-   transcript_hash.update(message_hash);
-   transcript_hash.update(hello_retry_request);
+   transcript_hash.m_hash->update(client_hello_1.first);
+   transcript_hash.m_hash->update(client_hello_1.second);
+   const auto message_hash_msg = transcript_hash.m_hash->final<SerializedHandshakeMessage>();
+
+   transcript_hash.update(message_hash_header, message_hash_msg);
+   transcript_hash.update(hello_retry_request.first, hello_retry_request.second);
 
    return transcript_hash;
 }
@@ -81,14 +83,11 @@ namespace {
 //
 // Finds the truncation offset in a serialization of Client Hello as defined in
 // RFC 8446 4.2.11.2 used for the calculation of PSK binder MACs.
-size_t find_client_hello_truncation_mark(std::span<const uint8_t> client_hello) {
+// Returns std::nullopt if the Client Hello does not contain a PSK extension.
+std::optional<size_t> find_client_hello_truncation_mark(std::span<const uint8_t> client_hello, TLS_Flavor flavor) {
+   BOTAN_UNUSED(flavor);
+
    TLS_Data_Reader reader("Client Hello Truncation", client_hello);
-
-   // handshake message type
-   BOTAN_ASSERT_NOMSG(reader.get_byte() == static_cast<uint8_t>(Handshake_Type::ClientHello));
-
-   // message length
-   reader.discard_next(3);
 
    // legacy version
    reader.discard_next(2);
@@ -99,9 +98,6 @@ size_t find_client_hello_truncation_mark(std::span<const uint8_t> client_hello) 
    // session ID
    const auto session_id_length = reader.get_byte();
    reader.discard_next(session_id_length);
-
-   // TODO: DTLS contains a hello_cookie in this location
-   //       Currently we don't support DTLS 1.3
 
    // cipher suites
    const auto ciphersuites_length = reader.get_uint16_t();
@@ -136,11 +132,11 @@ size_t find_client_hello_truncation_mark(std::span<const uint8_t> client_hello) 
       }
 
       // the reader now points to the truncation point
-      break;
+      return reader.read_so_far();
    }
 
-   // if no PSK extension was found, this will point to the end of the buffer
-   return reader.read_so_far();
+   // if no PSK extension was found, no truncation is necessary
+   return std::nullopt;
 }
 
 std::vector<uint8_t> read_hash_state(std::unique_ptr<HashFunction>& hash) {
@@ -152,31 +148,31 @@ std::vector<uint8_t> read_hash_state(std::unique_ptr<HashFunction>& hash) {
 
 }  // namespace
 
-void Transcript_Hash_State::update(std::span<const uint8_t> serialized_message_s) {
-   const auto* serialized_message = serialized_message_s.data();
-   const auto serialized_message_length = serialized_message_s.size();
+void Transcript_Hash_State::update(HandshakeProtocolHeader tls_message_header,
+                                   StrongSpan<const SerializedHandshakeMessage> serialized_message_s) {
    if(m_hash != nullptr) {
-      auto truncation_mark = serialized_message_length;
+      m_hash->update(tls_message_header);
 
       // Check whether we should generate a truncated hash for supporting PSK
-      // binder calculation or verification. See RFC 8446 4.2.11.2.
-      if(serialized_message_length > 0 && *serialized_message == static_cast<uint8_t>(Handshake_Type::ClientHello)) {
-         truncation_mark = find_client_hello_truncation_mark(serialized_message_s);
-      }
-
-      if(truncation_mark < serialized_message_length) {
-         m_hash->update(serialized_message, truncation_mark);
-         m_truncated = read_hash_state(m_hash);
-         m_hash->update(serialized_message + truncation_mark, serialized_message_length - truncation_mark);
+      // binder calculation or verification. See RFC 9846 4.3.11.2.
+      const auto message_type = static_cast<Handshake_Type>(tls_message_header[0]);
+      if(message_type == Handshake_Type::ClientHello) {
+         const auto truncation_mark = find_client_hello_truncation_mark(serialized_message_s, m_flavor);
+         if(truncation_mark.has_value()) {
+            m_hash->update(serialized_message_s.get().first(*truncation_mark));
+            m_truncated = read_hash_state(m_hash);
+            m_hash->update(serialized_message_s.get().subspan(*truncation_mark));
+         } else {
+            m_hash->update(serialized_message_s);
+         }
       } else {
          m_truncated.clear();
-         m_hash->update(serialized_message, serialized_message_length);
+         m_hash->update(serialized_message_s);
       }
 
       m_previous = std::exchange(m_current, read_hash_state(m_hash));
    } else {
-      m_unprocessed_transcript.push_back(
-         std::vector(serialized_message, serialized_message + serialized_message_length));
+      m_unprocessed_transcript.emplace_back(tls_message_header, serialized_message_s);
    }
 }
 
@@ -202,8 +198,8 @@ void Transcript_Hash_State::set_algorithm(std::string_view algo_spec) {
    }
 
    m_hash = HashFunction::create_or_throw(algo_spec);
-   for(const auto& msg : m_unprocessed_transcript) {
-      update(msg);
+   for(const auto& [header, msg] : m_unprocessed_transcript) {
+      update(header, msg);
    }
    m_unprocessed_transcript.clear();
 }

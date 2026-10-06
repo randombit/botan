@@ -27,7 +27,7 @@ void fuzz(std::span<const uint8_t> in) {
 
    try {
       auto hl1 = prepare(in);
-      Botan::TLS::Transcript_Hash_State transcript_hash("SHA-256");
+      Botan::TLS::Transcript_Hash_State transcript_hash(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
       while(hl1.next_message(policy, transcript_hash).has_value()) {};
 
       auto hl2 = prepare(in);

@@ -149,7 +149,7 @@ std::vector<Test::Result> read_handshake_messages() {
       CHECK("empty read",
             [&](auto& result) {
                Handshake_Layer hl(Connection_Side::Client);
-               Transcript_Hash_State th("SHA-256");
+               Transcript_Hash_State th(TLS_Flavor::TLS, "SHA-256");
                result.test_is_true("needs header bytes", !hl.next_message(Policy(), th));
                check_transcript_hash_empty(result, th);
             }),
@@ -157,7 +157,7 @@ std::vector<Test::Result> read_handshake_messages() {
       CHECK("read incomplete header",
             [&](auto& result) {
                Handshake_Layer hl(Connection_Side::Client);
-               Transcript_Hash_State th("SHA-256");
+               Transcript_Hash_State th(TLS_Flavor::TLS, "SHA-256");
                hl.copy_data(std::vector<uint8_t>{0x00, 0x01, 0x02});
                result.test_is_true("needs more bytes", !hl.next_message(Policy(), th));
                check_transcript_hash_empty(result, th);
@@ -166,7 +166,7 @@ std::vector<Test::Result> read_handshake_messages() {
       CHECK("read client hello",
             [&](auto& result) {
                Handshake_Layer hl(Connection_Side::Client);
-               Transcript_Hash_State th("SHA-256");
+               Transcript_Hash_State th(TLS_Flavor::TLS, "SHA-256");
                hl.copy_data(client_hello_message);
                result.test_is_true("is a client hello",
                                    has_message<Client_Hello_13>(result, hl.next_message(Policy(), th)));
@@ -176,7 +176,7 @@ std::vector<Test::Result> read_handshake_messages() {
       CHECK("read server hello",
             [&](auto& result) {
                Handshake_Layer hl(Connection_Side::Client);
-               Transcript_Hash_State th("SHA-256");
+               Transcript_Hash_State th(TLS_Flavor::TLS, "SHA-256");
                hl.copy_data(server_hello_message);
                result.test_is_true("is a server hello",
                                    has_message<Server_Hello_13>(result, hl.next_message(Policy(), th)));
@@ -186,7 +186,7 @@ std::vector<Test::Result> read_handshake_messages() {
       CHECK("read legacy server hello",
             [&](auto& result) {
                Handshake_Layer hl(Connection_Side::Client);
-               Transcript_Hash_State th("SHA-256");
+               Transcript_Hash_State th(TLS_Flavor::TLS, "SHA-256");
                hl.copy_data(server_hello_12_message);
                result.test_is_true("is a legacy server hello",
                                    has_message<Server_Hello_12_Shim>(result, hl.next_message(Policy(), th)));
@@ -196,7 +196,7 @@ std::vector<Test::Result> read_handshake_messages() {
       CHECK("read client hello in two steps",
             [&](auto& result) {
                Handshake_Layer hl(Connection_Side::Client);
-               Transcript_Hash_State th("SHA-256");
+               Transcript_Hash_State th(TLS_Flavor::TLS, "SHA-256");
 
                const Botan::secure_vector<uint8_t> partial_client_hello_message(client_hello_message.cbegin(),
                                                                                 client_hello_message.cend() - 15);
@@ -216,7 +216,7 @@ std::vector<Test::Result> read_handshake_messages() {
       CHECK("read multiple messages",
             [&](auto& result) {
                Handshake_Layer hl(Connection_Side::Client);
-               Transcript_Hash_State th("SHA-256");
+               Transcript_Hash_State th(TLS_Flavor::TLS, "SHA-256");
                hl.copy_data(Botan::concat(server_hello_message, encrypted_extensions));
                result.test_is_true("is a server hello",
                                    has_message<Server_Hello_13>(result, hl.next_message(Policy(), th)));
@@ -229,7 +229,7 @@ std::vector<Test::Result> read_handshake_messages() {
             [&](auto& result) {
                for(const auto& msg : tls_12_only_messages) {
                   Handshake_Layer hl(Connection_Side::Client);
-                  Transcript_Hash_State th("SHA-256");
+                  Transcript_Hash_State th(TLS_Flavor::TLS, "SHA-256");
 
                   hl.copy_data(msg);
                   result.template test_throws<TLS_Exception>("message is rejected",
@@ -251,7 +251,7 @@ std::vector<Test::Result> read_handshake_messages() {
                // data from the bogo test --          ~~~~~~ <- length
                //                                   ~~ <- bogus message type
                Handshake_Layer hl(Connection_Side::Client);
-               Transcript_Hash_State th("SHA-256");
+               Transcript_Hash_State th(TLS_Flavor::TLS, "SHA-256");
                hl.copy_data(data);
                result.template test_throws<TLS_Exception>(
                   "message is rejected", "Unknown handshake message received", [&] { hl.next_message(Policy(), th); });
@@ -266,7 +266,7 @@ std::vector<Test::Result> prepare_message() {
                auto hello = std::get<Client_Hello_13>(
                   Client_Hello_13::parse({client_hello_message.cbegin() + 4, client_hello_message.cend()}));
                const Handshake_Layer hl(Connection_Side::Client);
-               Transcript_Hash_State th("SHA-256");
+               Transcript_Hash_State th(TLS_Flavor::TLS, "SHA-256");
                result.test_bin_eq("produces the same message", hl.prepare_message(hello, th), client_hello_message);
                check_transcript_hash_filled(result, th);
             }),
@@ -276,7 +276,7 @@ std::vector<Test::Result> prepare_message() {
                auto hello = std::get<Server_Hello_13>(
                   Server_Hello_13::parse({server_hello_message.cbegin() + 4, server_hello_message.cend()}));
                const Handshake_Layer hl(Connection_Side::Server);
-               Transcript_Hash_State th("SHA-256");
+               Transcript_Hash_State th(TLS_Flavor::TLS, "SHA-256");
                result.test_bin_eq("produces the same message", hl.prepare_message(hello, th), server_hello_message);
                check_transcript_hash_filled(result, th);
             }),
@@ -285,7 +285,7 @@ std::vector<Test::Result> prepare_message() {
 
 std::vector<Test::Result> full_client_handshake() {
    Handshake_Layer hl(Connection_Side::Client);
-   Transcript_Hash_State th;
+   Transcript_Hash_State th(TLS_Flavor::TLS);
 
    Text_Policy policy("minimum_rsa_bits = 1024");
 
@@ -358,7 +358,7 @@ std::vector<Test::Result> full_client_handshake() {
 
 std::vector<Test::Result> hello_retry_request_handshake() {
    Handshake_Layer hl(Connection_Side::Client);
-   Transcript_Hash_State th;
+   Transcript_Hash_State th(TLS_Flavor::TLS);
 
    Text_Policy policy("minimum_rsa_bits = 1024");
 
