@@ -80,6 +80,17 @@ class X25519_Direct_Agree_Tests final : public Test {
                             key.agree(k_b.data(), k_b.size()),
                             "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742");
 
+         // The deprecated free functions are no longer used by the library itself
+         BOTAN_DIAGNOSTIC_PUSH
+         BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
+         std::vector<uint8_t> pub(32);
+         Botan::curve25519_basepoint(pub.data(), a.data());
+         result.test_bin_eq("curve25519_basepoint", pub, key.raw_public_key_bits());
+         std::vector<uint8_t> ss(32);
+         Botan::curve25519_donna(ss.data(), a.data(), k_b.data());
+         result.test_bin_eq("curve25519_donna", ss, "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742");
+         BOTAN_DIAGNOSTIC_POP
+
          // Points of low order give an all zero secret and are rejected
          const std::vector<uint8_t> zero(32);
          result.test_throws<Botan::Invalid_Argument>("u = 0 is rejected",

@@ -12,3 +12,8 @@ brief -> "X25519 key agreement algorithm"
 x25519.h
 curve25519.h
 </header:public>
+
+<header:internal>
+x25519_fe.h
+x25519_internal.h
+</header:internal>

@@ -116,8 +116,15 @@ class BOTAN_PUBLIC_API(2, 0) X25519_PrivateKey final : public X25519_PublicKey,
 BOTAN_DIAGNOSTIC_POP
 
 /*
-* The types above are just wrappers for curve25519_donna, plus defining
-* encodings for public and private keys.
+* The following functions are deprecated and no longer used within the
+* library itself; use X25519_PrivateKey instead.
+*/
+
+/**
+* Compute the X25519 scalar multiplication of secret and basepoint
+* @param mypublic output value
+* @param secret random scalar
+* @param basepoint the u-coordinate of the point to multiply
 */
 BOTAN_DEPRECATED_API("Use X25519_PrivateKey or Sodium::crypto_scalarmult_curve25519")
 void curve25519_donna(uint8_t mypublic[32], const uint8_t secret[32], const uint8_t basepoint[32]);
