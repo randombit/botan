@@ -645,6 +645,13 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_cert_verify,
             [POINTER(c_int), c_void_p, c_void_p, c_size_t, c_void_p, c_size_t, c_char_p, c_size_t, c_char_p, c_uint64])
 
+    ffi_api(dll.botan_x509_cert_view_binary_values,
+            [c_void_p, c_int, c_size_t, c_void_p, _VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_x509_cert_view_binary_values_count, [c_void_p, c_int, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_view_string_values,
+            [c_void_p, c_int, c_size_t, c_void_p, _VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_x509_cert_view_string_values_count, [c_void_p, c_int, POINTER(c_size_t)])
+
     dll.botan_x509_cert_validation_status.argtypes = [c_int]
     dll.botan_x509_cert_validation_status.restype = c_char_p
 
@@ -678,6 +685,12 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_crl_entry_serial_number, [c_void_p, c_void_p])
     ffi_api(dll.botan_x509_crl_entry_view_serial_number, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_x509_crl_entry_destroy, [c_void_p])
+    ffi_api(dll.botan_x509_crl_view_binary_values,
+            [c_void_p, c_int, c_size_t, c_void_p, _VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_x509_crl_view_binary_values_count, [c_void_p, c_int, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_crl_view_string_values,
+            [c_void_p, c_int, c_size_t, c_void_p, _VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_x509_crl_view_string_values_count, [c_void_p, c_int, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_verify_with_crl,
             [POINTER(c_int), c_void_p, c_void_p, c_size_t, c_void_p, c_size_t, c_void_p, c_size_t, c_char_p, c_size_t, c_char_p, c_uint64])
 
@@ -858,6 +871,15 @@ def _call_fn_viewing_str(fn) -> str:
     if not output:
         raise BotanException('View callback was not invoked')
     return output[0].decode('utf8')
+
+def _x509_values(handle, value_type, count_fn, view_fn, viewer) -> list:
+    # Enumerate the values of a generic X.509 getter. The count function already
+    # reports zero when the object does not provide the value at all, so the
+    # view function is only ever called for indices that exist.
+    count = c_size_t(0)
+    count_fn(handle, value_type, byref(count))
+    return [viewer(lambda vc, vfn, i=i: view_fn(handle, value_type, i, vc, vfn))
+            for i in range(count.value)]
 
 def _ctype_str(s: str | None) -> bytes | None:
     if s is None:
@@ -2548,6 +2570,45 @@ def _load_buf_or_file(filename, buf, file_fn, buf_fn):
 #
 # X.509 certificates
 #
+class X509ValueType(IntEnum):
+    """Values that can be retrieved from a certificate or CRL through the generic
+    getters ``binary_values()`` and ``string_values()`` of :class:`X509Cert` and
+    :class:`X509CRL`.
+
+    Most values are singletons that are only available in binary form, while the
+    URL lists are multi-valued and only available as strings. A getter returns an
+    empty list when the object does not carry the value, or does not provide it in
+    the requested form."""
+
+    #: The big-endian encoded serial number of a certificate, or the CRL number of a CRL
+    SERIAL_NUMBER = 0
+    #: The DER encoded subject distinguished name of a certificate
+    SUBJECT_DN_BITS = 1
+    #: The DER encoded issuer distinguished name of a certificate or CRL
+    ISSUER_DN_BITS = 2
+    #: The subject key identifier of a certificate, usually a hash of its public key
+    SUBJECT_KEY_IDENTIFIER = 3
+    #: The authority key identifier of a certificate or CRL, usually a hash of the issuer's public key
+    AUTHORITY_KEY_IDENTIFIER = 4
+    #: The DER encoded public key of a certificate, as a SubjectPublicKeyInfo structure
+    PUBLIC_KEY_PKCS8_BITS = 200
+    #: The DER encoded "to be signed" part of a certificate or CRL
+    TBS_DATA_BITS = 201
+    #: The DER encoded signature algorithm identifier of a certificate or CRL
+    SIGNATURE_SCHEME_BITS = 202
+    #: The raw signature of a certificate or CRL; the encoding depends on the signature algorithm
+    SIGNATURE_BITS = 203
+    #: The DER encoding of the entire certificate or CRL
+    DER_ENCODING = 300
+    #: The PEM encoding of the entire certificate or CRL, as a string
+    PEM_ENCODING = 301
+    #: The CRL distribution point URLs of a certificate, as strings
+    CRL_DISTRIBUTION_URLS = 400
+    #: The OCSP responder URLs of a certificate, as strings
+    OCSP_RESPONDER_URLS = 401
+    #: The URLs where the certificate of the issuing CA can be retrieved, as strings
+    CA_ISSUERS_URLS = 402
+
 class X509Cert(_NonCopyable): # pylint: disable=invalid-name
     """Class representing an X.509 certificate.
 
@@ -2648,6 +2709,29 @@ class X509Cert(_NonCopyable): # pylint: disable=invalid-name
         ``key`` specifies a value to get, for instance ``"Name"`` or ``"Country"``."""
         return _call_fn_returning_str(
             0, lambda b, bl: _DLL.botan_x509_cert_get_issuer_dn(self.__obj, _ctype_str(key), index, b, bl))
+
+    def binary_values(self, value_type: X509ValueType) -> list[bytes]:
+        """Return the binary values of the given type contained in this certificate.
+
+        See :class:`X509ValueType` for the available values. A singleton value is
+        returned as a list with one element. The list is empty if the certificate
+        does not carry the value, or does not provide it in binary form."""
+        return _x509_values(self.__obj, value_type,
+                            _DLL.botan_x509_cert_view_binary_values_count,
+                            _DLL.botan_x509_cert_view_binary_values,
+                            _call_fn_viewing_vec)
+
+    def string_values(self, value_type: X509ValueType) -> list[str]:
+        """Return the string values of the given type contained in this certificate.
+
+        See :class:`X509ValueType` for the available values. Multi-valued entries
+        such as the CRL distribution points are returned in the order in which the
+        certificate lists them. The list is empty if the certificate does not carry
+        the value, or does not provide it in string form."""
+        return _x509_values(self.__obj, value_type,
+                            _DLL.botan_x509_cert_view_string_values_count,
+                            _DLL.botan_x509_cert_view_string_values,
+                            _call_fn_viewing_str)
 
     def hostname_match(self, hostname: str) -> bool:
         """Return True if the Common Name (CN) field of the certificate matches a given ``hostname``."""
@@ -3018,6 +3102,28 @@ class X509CRL(_NonCopyable):
             _DLL.botan_x509_crl_entries(self.__obj, c_size_t(i), byref(entry._handle()))
             revoked.append(entry)
         return revoked
+
+    def binary_values(self, value_type: X509ValueType) -> list[bytes]:
+        """Return the binary values of the given type contained in this CRL.
+
+        See :class:`X509ValueType` for the available values; ``SERIAL_NUMBER``
+        refers to the CRL number here. A singleton value is returned as a list
+        with one element. The list is empty if the CRL does not carry the value,
+        or does not provide it in binary form."""
+        return _x509_values(self.__obj, value_type,
+                            _DLL.botan_x509_crl_view_binary_values_count,
+                            _DLL.botan_x509_crl_view_binary_values,
+                            _call_fn_viewing_vec)
+
+    def string_values(self, value_type: X509ValueType) -> list[str]:
+        """Return the string values of the given type contained in this CRL.
+
+        Currently only ``PEM_ENCODING`` is available as a string; the list is
+        empty for every other value type."""
+        return _x509_values(self.__obj, value_type,
+                            _DLL.botan_x509_crl_view_string_values_count,
+                            _DLL.botan_x509_crl_view_string_values,
+                            _call_fn_viewing_str)
 
     def verify(self, key: PublicKey) -> bool:
         """Returns True if the signature on this CRL is valid for the given public key"""
