@@ -76,8 +76,8 @@ class Client_PSK {
             // transcript hash that underpins the PSK binders. S.a. `calculate_binders()`
             m_binder(HashFunction::create_or_throw(prf_algo)->output_length()),
             m_is_resumption(psk_type == Cipher_State::PSK_Type::Resumption),
-            m_cipher_state(
-               Cipher_State::init_with_psk(Connection_Side::Client, psk_type, std::move(master_secret), prf_algo)) {}
+            m_cipher_state(Cipher_State::init_with_psk(
+               Connection_Side::Client, TLS_Flavor::TLS, psk_type, std::move(master_secret), prf_algo)) {}
 
       const PskIdentity& identity() const { return m_identity; }
 

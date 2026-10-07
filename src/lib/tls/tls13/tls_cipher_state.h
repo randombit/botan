@@ -10,6 +10,7 @@
 #ifndef BOTAN_TLS_CIPHER_STATE_H_
 #define BOTAN_TLS_CIPHER_STATE_H_
 
+#include <botan/assert.h>
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>
 
@@ -31,7 +32,7 @@ namespace Botan::TLS {
 class Ciphersuite;
 
 /**
- * This class implements the key schedule for TLS 1.3 as described in RFC 8446 7.1.
+ * This class implements the key schedule for (D)TLS 1.3 as described in RFC 9846 7.1.
  *
  * Internally, it reflects the state machine pictured in the same RFC section.
  * It provides the following entry points and state advancement methods that
@@ -51,14 +52,16 @@ class Ciphersuite;
  * * advance_with_client_finished()
  *   allows negotiation of resumption PSKs
  *
- * While encrypting and decrypting records (RFC 8446 5.2) Cipher_State
- * internally keeps track of the current sequence numbers (RFC 8446 5.3) to
+ * This is an abstract base class that implements the key schedule and leaves
+ * the actual record protection to concrete subclasses for TLS and DTLS.
+ *
+ * While encrypting and decrypting records (RFC 9846 5.2) Cipher_State
+ * internally keeps track of the current sequence numbers (RFC 9846 5.3) to
  * calculate the correct Per-Record Nonce. Sequence numbers are reset
  * appropriately, whenever traffic secrets change.
  *
- * Handshake finished MAC calculation and verification is described in RFC 8446 4.4.4.
- *
- * PSKs calculation is described in RFC 8446 4.6.1.
+ * Handshake finished MAC calculation and verification is described in RFC 9846 4.5.3.
+ * PSKs calculation is described in RFC 9846 4.7.1
  */
 class BOTAN_TEST_API Cipher_State {
    public:
@@ -68,8 +71,13 @@ class BOTAN_TEST_API Cipher_State {
          Imported,    // RFC 9258 PSK importer - uses "imp binder" label
       };
 
+      using ExpansionLabelPrefix = std::array<uint8_t, 6>;
+
+   private:
+      static std::unique_ptr<Cipher_State> create(Connection_Side side, TLS_Flavor flavor, std::string_view prf_algo);
+
    public:
-      ~Cipher_State();
+      virtual ~Cipher_State();
 
       Cipher_State(const Cipher_State& other) = delete;
       Cipher_State(Cipher_State&& other) = delete;
@@ -80,6 +88,7 @@ class BOTAN_TEST_API Cipher_State {
        * Construct a Cipher_State from a Pre-Shared-Key.
        */
       static std::unique_ptr<Cipher_State> init_with_psk(Connection_Side side,
+                                                         TLS_Flavor flavor,
                                                          PSK_Type type,
                                                          secure_vector<uint8_t>&& psk,
                                                          std::string_view prf_algo);
@@ -88,6 +97,7 @@ class BOTAN_TEST_API Cipher_State {
        * Construct a Cipher_State after receiving a server hello message.
        */
       static std::unique_ptr<Cipher_State> init_with_server_hello(Connection_Side side,
+                                                                  TLS_Flavor flavor,
                                                                   secure_vector<uint8_t>&& shared_secret,
                                                                   const Ciphersuite& cipher,
                                                                   const Transcript_Hash& transcript_hash,
@@ -115,36 +125,6 @@ class BOTAN_TEST_API Cipher_State {
        * Transition to the final internal state allowing to create resumptions.
        */
       void advance_with_client_finished(const Transcript_Hash& transcript_hash);
-
-      /**
-       * Protect a TLS record (RFC 9846 5.2 -- TLSInnerPlaintext) using the
-       * currently available traffic secret keys and the current sequence
-       * number. This will internally increment the sequence number. Hence,
-       * multiple calls with the same input will not produce the same result.
-       *
-       * @param type           the record type to be protected
-       * @param plaintext      the record plaintext to be protected in-place
-       * @param padding_bytes  the number of padding zero-bytes to be added
-       *
-       * @returns the marshalled and protected record to be sent on the wire
-       */
-      [[nodiscard]] MarshalledRecord protect_record(Record_Type type,
-                                                    std::span<const uint8_t> plaintext,
-                                                    size_t padding_bytes);
-
-      /**
-       * Deprotect a TLS record  (RFC 9846 5.2 --
-       * TLSCiphertext.encrypted_record) using the currently available traffic
-       * secret keys and the current sequence number. This will internally
-       * increment the sequence number. Hence, multiple calls with the same
-       * input will not produce the same result.
-       *
-       * @param record                      the record to be deprotected in-place
-       * @param incoming_record_size_limit  the maximum allowed size for the incoming record
-       *
-       * @returns the record payload and deprotected content type
-       */
-      [[nodiscard]] Record deprotect_record(Record_TLS record, size_t incoming_record_size_limit);
 
       /**
        * @returns number of bytes needed to encrypt \p input_length bytes
@@ -296,13 +276,15 @@ class BOTAN_TEST_API Cipher_State {
        */
       void set_secret_logger(SecretLoggerFn secret_logger) { m_secret_logger = std::move(secret_logger); }
 
-   private:
+   protected:
       /**
        * @param whoami         whether we play the Server or Client
        * @param hash_function  the negotiated hash function to be used
+       * @param expand_prefix  the prefix to be used for HKDF-Expand-Label
        */
-      Cipher_State(Connection_Side whoami, std::string_view hash_function);
+      Cipher_State(Connection_Side whoami, std::string_view hash_function, ExpansionLabelPrefix expand_prefix);
 
+   private:
       void advance_with_psk(PSK_Type type, secure_vector<uint8_t>&& psk);
       void advance_without_psk();
 
@@ -353,25 +335,18 @@ class BOTAN_TEST_API Cipher_State {
       Connection_Side m_connection_side;
       SecretLoggerFn m_secret_logger;
 
-      std::unique_ptr<AEAD_Mode> m_encrypt;
-      std::unique_ptr<AEAD_Mode> m_decrypt;
-
       std::unique_ptr<HKDF_Extract> m_extract;
       std::unique_ptr<HKDF_Expand> m_expand;
       std::unique_ptr<HashFunction> m_hash;
 
+      ExpansionLabelPrefix m_expansion_label_prefix;
       secure_vector<uint8_t> m_salt;
 
       secure_vector<uint8_t> m_write_application_traffic_secret;
       secure_vector<uint8_t> m_read_application_traffic_secret;
 
       secure_vector<uint8_t> m_write_key;
-      secure_vector<uint8_t> m_write_iv;
       secure_vector<uint8_t> m_read_key;
-      secure_vector<uint8_t> m_read_iv;
-
-      uint64_t m_write_seq_no;
-      uint64_t m_read_seq_no;
 
       uint32_t m_write_key_update_count;
       uint32_t m_read_key_update_count;
@@ -386,7 +361,72 @@ class BOTAN_TEST_API Cipher_State {
 
       secure_vector<uint8_t> m_early_secret;
       secure_vector<uint8_t> m_binder_key;
+
+   protected:
+      // The traffic state that is needed by the subclasses for record protection
+      std::unique_ptr<AEAD_Mode> m_encrypt;
+      std::unique_ptr<AEAD_Mode> m_decrypt;
+
+      secure_vector<uint8_t> m_write_iv;
+      secure_vector<uint8_t> m_read_iv;
+
+      uint64_t m_write_seq_no;
+      uint64_t m_read_seq_no;
 };
+
+/**
+ * Cipher State implementation for TLS 1.3 (RFC 9846).
+ *
+ * This re-uses the key schedule implementation in the Cipher_State base class
+ * and implements record (de)protection for TLS 1.3.
+ */
+class BOTAN_TEST_API TLS_Cipher_State final : public Cipher_State {
+   public:
+      TLS_Cipher_State(Connection_Side side, std::string_view prf_algo);
+
+      ~TLS_Cipher_State() override;
+      TLS_Cipher_State(const TLS_Cipher_State&) = delete;
+      TLS_Cipher_State& operator=(const TLS_Cipher_State&) = delete;
+      TLS_Cipher_State(TLS_Cipher_State&&) = delete;
+      TLS_Cipher_State& operator=(TLS_Cipher_State&&) = delete;
+
+      /**
+       * Protect a TLS record (RFC 9846 5.2 -- TLSInnerPlaintext) using the
+       * currently available traffic secret keys and the current sequence
+       * number. This will internally increment the sequence number. Hence,
+       * multiple calls with the same input will not produce the same result.
+       *
+       * @param type           the record type to be protected
+       * @param plaintext      the record plaintext to be protected in-place
+       * @param padding_bytes  the number of padding zero-bytes to be added
+       *
+       * @returns the marshalled and protected record to be sent on the wire
+       */
+      [[nodiscard]] MarshalledRecord protect_record(Record_Type type,
+                                                    std::span<const uint8_t> plaintext,
+                                                    size_t padding_bytes);
+
+      /**
+       * Deprotect a TLS record (RFC 9846 5.2 -- TLSCiphertext.encrypted_record)
+       * using the currently available traffic secret keys and the current
+       * sequence number. This will internally increment the sequence number.
+       * Hence, multiple calls with the same input will not produce the same
+       * result.
+       *
+       * @param record                      the record to be deprotected in-place
+       * @param incoming_record_size_limit  the maximum allowed size for the incoming record
+       *
+       * @returns the record payload and deprotected content type
+       */
+      [[nodiscard]] Record deprotect_record(Record_TLS record, size_t incoming_record_size_limit);
+};
+
+inline TLS_Cipher_State* as_tls_cipher_state(Cipher_State* cs) {
+   auto* tls_cs = dynamic_cast<TLS_Cipher_State*>(cs);
+   BOTAN_ASSERT_IMPLICATION(
+      tls_cs == nullptr, cs == nullptr, "If the cipher state is not a TLS_Cipher_State, it must be null");
+   return tls_cs;
+}
 
 }  // namespace Botan::TLS
 
