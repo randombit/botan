@@ -270,13 +270,50 @@ const BigInt& RSA_PrivateKey::get_d2() const {
    return m_private->get_d2();
 }
 
-void RSA_PrivateKey::init(BigInt&& d, BigInt&& p, BigInt&& q, BigInt&& d1, BigInt&& d2, BigInt&& c) {
-   if(d < 2 || p < 3 || q < 3 || p == q) {
+namespace {
+
+void check_rsa_private_key_params(const BigInt& n, const BigInt& p, const BigInt& q) {
+   if(p < 3 || q < 3 || p == q) {
       throw Decoding_Error("Invalid RSA private key parameters");
    }
-   if(p * q != get_n()) {
+   if(p * q != n) {
       throw Decoding_Error("Invalid RSA private key: p * q != n");
    }
+}
+
+/*
+* Verify e*d == 1 mod lcm(p-1, q-1). Checking modulo p-1 and q-1 separately
+* is equivalent and avoids the (costly, constant time) gcd needed for the lcm.
+*/
+void check_rsa_secret_exponent(const BigInt& e, const BigInt& d, const BigInt& p, const BigInt& q) {
+   const BigInt ed = e * d;
+   if(ct_modulo(ed, p - 1) != 1 || ct_modulo(ed, q - 1) != 1) {
+      throw Decoding_Error("Invalid RSA private key: e * d != 1 mod lcm(p-1, q-1)");
+   }
+}
+
+}  // namespace
+
+void RSA_PrivateKey::init(BigInt&& d, BigInt&& p, BigInt&& q, BigInt&& d1, BigInt&& d2, BigInt&& c) {
+   check_rsa_private_key_params(get_n(), p, q);
+
+   /*
+   * RFC 8017 Section 3.2
+   *
+   *    The RSA private exponent d is a positive integer less than n
+   *    [...]
+   *    the CRT exponents dP and dQ are positive integers less than p and q,
+   *    respectively,
+   *    [...]
+   *    the CRT coefficient qInv is a positive integer less than p
+   */
+   if(d < 2 || d >= get_n()) {
+      throw Decoding_Error("Invalid RSA private key exponent");
+   }
+   if(d1 < 1 || d1 >= p || d2 < 1 || d2 >= q || c < 1 || c >= p) {
+      throw Decoding_Error("Invalid RSA private key CRT parameters");
+   }
+
    m_private = std::make_shared<RSA_Private_Data>(
       std::move(d), std::move(p), std::move(q), std::move(d1), std::move(d2), std::move(c));
 }
@@ -312,6 +349,8 @@ RSA_PrivateKey::RSA_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<cons
    RSA_PublicKey::init(std::move(n), std::move(e));
 
    RSA_PrivateKey::init(std::move(d), std::move(p), std::move(q), std::move(d1), std::move(d2), std::move(c));
+
+   check_rsa_secret_exponent(get_e(), get_d(), get_p(), get_q());
 }
 
 RSA_PrivateKey::RSA_PrivateKey(
@@ -325,21 +364,35 @@ RSA_PrivateKey::RSA_PrivateKey(
 
    BigInt e = exp;
 
-   BigInt d = d_exp;
+   RSA_PublicKey::init(std::move(n), std::move(e));
+
+   // Validated early since the arithmetic below depends on it
+   check_rsa_private_key_params(get_n(), p, q);
 
    const BigInt p_minus_1 = p - 1;
    const BigInt q_minus_1 = q - 1;
 
+   BigInt d = d_exp;
+
    if(d.is_zero()) {
       const BigInt phi_n = lcm(p_minus_1, q_minus_1);
-      d = compute_rsa_secret_exponent(e, phi_n, p, q);
+      if(auto d_inv = compute_rsa_secret_exponent(get_e(), phi_n, p, q)) {
+         d = std::move(*d_inv);
+      } else {
+         throw Decoding_Error("Invalid RSA private key: e has no inverse modulo lcm(p-1, q-1)");
+      }
+   } else {
+      check_rsa_secret_exponent(get_e(), d, p, q);
    }
 
    BigInt d1 = ct_modulo(d, p_minus_1);
    BigInt d2 = ct_modulo(d, q_minus_1);
-   BigInt c = inverse_mod_secret_prime(ct_modulo(q, p), p);
 
-   RSA_PublicKey::init(std::move(n), std::move(e));
+   const BigInt q_mod_p = ct_modulo(q, p);
+   if(q_mod_p.is_zero()) {
+      throw Decoding_Error("Invalid RSA private key: p divides q");
+   }
+   BigInt c = inverse_mod_secret_prime(q_mod_p, p);
 
    RSA_PrivateKey::init(std::move(d), std::move(p), std::move(q), std::move(d1), std::move(d2), std::move(c));
 }
@@ -404,14 +457,17 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng, size_t bits, size_t e
    // This is guaranteed because p,q == 3 mod 4
    BOTAN_DEBUG_ASSERT(low_zero_bits(phi_n) == 1);
 
-   BigInt d = compute_rsa_secret_exponent(e, phi_n, p, q);
-   BigInt d1 = ct_modulo(d, p_minus_1);
-   BigInt d2 = ct_modulo(d, q_minus_1);
+   // generate_rsa_prime ensures gcd(e, p-1) == gcd(e, q-1) == 1 so the inverse exists
+   auto d = compute_rsa_secret_exponent(e, phi_n, p, q);
+   BOTAN_ASSERT_NOMSG(d.has_value());
+
+   BigInt d1 = ct_modulo(*d, p_minus_1);
+   BigInt d2 = ct_modulo(*d, q_minus_1);
    BigInt c = inverse_mod_secret_prime(ct_modulo(q, p), p);
 
    RSA_PublicKey::init(std::move(n), std::move(e));
 
-   RSA_PrivateKey::init(std::move(d), std::move(p), std::move(q), std::move(d1), std::move(d2), std::move(c));
+   RSA_PrivateKey::init(std::move(*d), std::move(p), std::move(q), std::move(d1), std::move(d2), std::move(c));
 }
 
 const BigInt& RSA_PrivateKey::get_int_field(std::string_view field) const {

@@ -1049,7 +1049,11 @@ class RSA_Compute_Exp_Test : public Test {
 
             const auto d = Botan::compute_rsa_secret_exponent(e, phi_n, p, q);
 
-            const auto ed_mod_phi_n = (e * d) % phi_n;
+            if(!result.test_is_true("compute_rsa_secret_exponent found an inverse", d.has_value())) {
+               continue;
+            }
+
+            const auto ed_mod_phi_n = (e * *d) % phi_n;
 
             result.test_bn_eq("compute_rsa_secret_exponent returned inverse", ed_mod_phi_n, Botan::BigInt::one());
          }
