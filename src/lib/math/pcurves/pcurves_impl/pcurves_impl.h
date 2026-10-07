@@ -1377,6 +1377,8 @@ class UnblindedScalarBits final {
 
       explicit UnblindedScalarBits(const typename C::Scalar& scalar) { scalar.serialize_to(std::span{m_bytes}); }
 
+      size_t bits() const { return Bits; }
+
       size_t get_window(size_t offset) const {
          // Extract a WindowBits sized window out of s, depending on offset.
          return read_window_bits<WindowBits>(std::span{m_bytes}, offset);
@@ -1384,6 +1386,96 @@ class UnblindedScalarBits final {
 
    private:
       std::array<uint8_t, C::Scalar::BYTES> m_bytes;
+};
+
+/**
+* Width W non-adjacent form of a public scalar
+*
+* Each digit is either zero or an odd integer with absolute value less
+* than 2^(W-1). The recoding is variable time and the digits are stored
+* in plain memory, so this is only usable when the scalar is public.
+*/
+template <typename C, size_t W>
+class WnafScalar final {
+   public:
+      static_assert(W >= 2 && W <= 7);
+
+      // A wNAF has at most one more digit than the scalar has bits
+      static constexpr size_t MaxDigits = C::Scalar::BITS + 1;
+
+      explicit WnafScalar(const typename C::Scalar& scalar) : m_digits{}, m_len(0) {
+         using Word = typename C::W;
+         constexpr size_t WordBits = WordInfo<Word>::bits;
+         constexpr Word WindowMask = (static_cast<Word>(1) << W) - 1;
+         constexpr Word HalfWindow = static_cast<Word>(1) << (W - 1);
+
+         // One extra word so that subtracting a negative digit cannot overflow
+         std::array<Word, C::Words + 1> k = {};
+         const auto sw = scalar.to_words();
+         std::copy(sw.begin(), sw.end(), k.begin());
+
+         // Conditionals ok: this function is variable time
+         size_t i = 0;
+         for(;;) {
+            bool k_is_zero = true;
+            for(const auto w : k) {
+               k_is_zero = k_is_zero && (w == 0);
+            }
+            if(k_is_zero) {
+               break;
+            }
+
+            size_t shift = 1;
+
+            if((k[0] & 1) == 1) {
+               BOTAN_DEBUG_ASSERT(i < MaxDigits);
+
+               const Word d = k[0] & WindowMask;
+
+               if(d >= HalfWindow) {
+                  // Negative digit (d - 2^W); subtracting it adds 2^W - d to k
+                  m_digits[i] = static_cast<int8_t>(static_cast<int>(d) - (1 << W));
+                  Word carry = (static_cast<Word>(1) << W) - d;
+                  for(size_t j = 0; j != k.size() && carry > 0; ++j) {
+                     const Word t = k[j] + carry;
+                     carry = (t < k[j]) ? 1 : 0;
+                     k[j] = t;
+                  }
+               } else {
+                  m_digits[i] = static_cast<int8_t>(d);
+                  Word borrow = d;
+                  for(size_t j = 0; j != k.size() && borrow > 0; ++j) {
+                     const Word t = k[j] - borrow;
+                     borrow = (k[j] < borrow) ? 1 : 0;
+                     k[j] = t;
+                  }
+               }
+
+               m_len = i + 1;
+
+               // k is now a multiple of 2^W, so the next W-1 digits are zero
+               shift = W;
+            }
+
+            for(size_t j = 0; j != k.size(); ++j) {
+               k[j] >>= shift;
+               if(j + 1 != k.size()) {
+                  k[j] |= k[j + 1] << (WordBits - shift);
+               }
+            }
+
+            i += shift;
+         }
+      }
+
+      /// Return the number of digits, ie one more than the index of the top nonzero digit
+      size_t length() const { return m_len; }
+
+      int8_t digit(size_t i) const { return m_digits[i]; }
+
+   private:
+      std::array<int8_t, MaxDigits> m_digits;
+      size_t m_len;
 };
 
 template <typename C, size_t W>
@@ -1407,6 +1499,16 @@ class PrecomputedBaseMulTable final {
       ProjectivePoint mul(const Scalar& s, RandomNumberGenerator& rng) const {
          const BlindedScalar scalar(s, rng);
          return basemul_booth_exec<C, WindowBits>(m_table, scalar, rng);
+      }
+
+      /**
+      * Variable time multiplication, returning accum + s*P
+      *
+      * Only for use with public scalars, eg during signature verification
+      */
+      ProjectivePoint mul_vartime(const Scalar& s, const ProjectivePoint& accum) const {
+         const UnblindedScalarBits<C, WindowBits + 1> scalar(s);
+         return basemul_booth_exec_vartime<C, WindowBits>(m_table, scalar, accum);
       }
 
    private:
@@ -1561,79 +1663,84 @@ class WindowedMul2Table final {
       AffinePointTable<C> m_table;
 };
 
+/**
+* Variable time 2-ary multiplication x*G + y*Q
+*
+* A common use of 2-ary multiplication is when verifying the commitments
+* of an elliptic curve signature. Since in this case the inputs are all
+* public, there is no problem with variable time computation.
+*
+* The generator half is read out of the precomputed base point table and
+* so needs no doublings. The variable point half uses a small table of odd
+* multiples of Q, indexed by the width W non-adjacent form of y.
+*/
 template <typename C, size_t W>
 class VartimeMul2Table final {
    public:
-      // We look at W bits of each scalar per iteration
-      static_assert(W >= 1 && W <= 4);
-
-      static constexpr size_t WindowBits = W;
+      static_assert(W >= 2 && W <= 7);
 
       using Scalar = typename C::Scalar;
       using AffinePoint = typename C::AffinePoint;
       using ProjectivePoint = typename C::ProjectivePoint;
 
-      VartimeMul2Table(const AffinePoint& p, const AffinePoint& q) :
-            m_table(to_affine_batch<C, true>(mul2_setup<C, W>(p, q))) {}
+      explicit VartimeMul2Table(const AffinePoint& q) : m_table(odd_multiples_setup_vartime<C, W>(q)) {}
 
-      /**
-      * Variable time 2-ary multiplication
-      *
-      * A common use of 2-ary multiplication is when verifying the commitments
-      * of an elliptic curve signature. Since in this case the inputs are all
-      * public, there is no problem with variable time computation.
-      *
-      * TODO in the future we could use joint sparse form here.
-      */
-      ProjectivePoint mul2_vartime(const Scalar& s1, const Scalar& s2) const {
-         constexpr size_t Windows = (Scalar::BITS + WindowBits - 1) / WindowBits;
-
-         const UnblindedScalarBits<C, W> bits1(s1);
-         const UnblindedScalarBits<C, W> bits2(s2);
-
-         const bool s1_is_zero = s1.is_zero().as_bool();
-         const bool s2_is_zero = s2.is_zero().as_bool();
-
+      template <size_t GW>
+      ProjectivePoint mul2_vartime(const PrecomputedBaseMulTable<C, GW>& g_table,
+                                   const Scalar& x,
+                                   const Scalar& y) const {
          // Conditional ok: this function is variable time
-         if(s1_is_zero && s2_is_zero) {
+         if(x.is_zero().as_bool() && y.is_zero().as_bool()) {
             return ProjectivePoint::identity();
          }
 
-         auto [w_0, first_nonempty_window] = [&]() {
-            for(size_t i = 0; i != Windows; ++i) {
-               const size_t w_1 = bits1.get_window((Windows - i - 1) * WindowBits);
-               const size_t w_2 = bits2.get_window((Windows - i - 1) * WindowBits);
-               const size_t window = w_1 + (w_2 << WindowBits);
-               // Conditional ok: this function is variable time
-               if(window > 0) {
-                  return std::make_pair(window, i);
-               }
+         return g_table.mul_vartime(x, this->mul_vartime(y));
+      }
+
+   private:
+      // Returns s*Q
+      ProjectivePoint mul_vartime(const Scalar& s) const {
+         const WnafScalar<C, W> naf(s);
+
+         size_t i = naf.length();
+
+         // Conditional ok: this function is variable time
+         if(i == 0) {
+            return ProjectivePoint::identity();
+         }
+
+         auto lookup = [&](int8_t d) -> const AffinePoint& {
+            const size_t mag = static_cast<size_t>((d < 0) ? -d : d);
+            return m_table[(mag - 1) / 2];
+         };
+
+         --i;
+         auto accum = ProjectivePoint::from_affine(lookup(naf.digit(i)));
+         if(naf.digit(i) < 0) {
+            accum = accum.negate();
+         }
+
+         size_t pending_dbl = 0;
+
+         while(i > 0) {
+            --i;
+            pending_dbl += 1;
+
+            const int8_t d = naf.digit(i);
+            if(d != 0) {
+               accum = accum.dbl_n(pending_dbl);
+               pending_dbl = 0;
+               accum = ProjectivePoint::add_or_sub(accum, lookup(d), CT::Choice::from_int(static_cast<uint8_t>(d < 0)));
             }
-            // We checked for s1 == s2 == 0 above, so we must see a window eventually
-            BOTAN_ASSERT_UNREACHABLE();
-         }();
+         }
 
-         BOTAN_ASSERT_NOMSG(w_0 > 0);
-         auto accum = ProjectivePoint::from_affine(m_table[w_0 - 1]);
-
-         for(size_t i = first_nonempty_window + 1; i < Windows; ++i) {
-            accum = accum.dbl_n(WindowBits);
-
-            const size_t w_1 = bits1.get_window((Windows - i - 1) * WindowBits);
-            const size_t w_2 = bits2.get_window((Windows - i - 1) * WindowBits);
-
-            const size_t window = w_1 + (w_2 << WindowBits);
-
-            // Conditional ok: this function is variable time
-            if(window > 0) {
-               accum += m_table[window - 1];
-            }
+         if(pending_dbl > 0) {
+            accum = accum.dbl_n(pending_dbl);
          }
 
          return accum;
       }
 
-   private:
       std::vector<AffinePoint> m_table;
 };
 

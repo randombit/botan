@@ -23,6 +23,7 @@ class RandomNumberGenerator;
 
 static constexpr size_t BasePointWindowBits = 6;
 static constexpr size_t VarPointWindowBits = 4;
+static constexpr size_t Mul2VartimeWindowBits = 5;
 static constexpr size_t Mul2PrecompWindowBits = 3;
 static constexpr size_t Mul2WindowBits = 2;
 
@@ -331,6 +332,39 @@ typename C::ProjectivePoint basemul_booth_exec(std::span<const typename C::Affin
 }
 
 /*
+* Variable time base point multiplication using the Booth table
+*
+* Returns accum + s*P. The scalar is read directly, without blinding or
+* constant time table lookups, so this is only usable when s is public
+* (eg during signature verification).
+*/
+template <typename C, size_t WindowBits, typename ScalarBits>
+typename C::ProjectivePoint basemul_booth_exec_vartime(std::span<const typename C::AffinePoint> table,
+                                                       const ScalarBits& scalar,
+                                                       typename C::ProjectivePoint accum) {
+   static constexpr size_t WindowElements = 1 << (WindowBits - 1);
+
+   const size_t windows = (scalar.bits() + WindowBits) / WindowBits;
+   BOTAN_DEBUG_ASSERT(windows * WindowElements <= table.size());
+
+   for(size_t i = 0; i != windows; ++i) {
+      // Extract W+1 bits overlapping by 1 with the previous window; the
+      // first window has an implicit carry in of zero
+      const size_t raw =
+         (i == 0) ? ((scalar.get_window(0) & ((1 << WindowBits) - 1)) << 1) : scalar.get_window(WindowBits * i - 1);
+
+      const auto [tidx, tneg] = booth_recode<WindowBits>(raw);
+
+      // Conditional ok: this function is variable time
+      if(tidx > 0) {
+         accum = C::ProjectivePoint::add_or_sub(accum, table[WindowElements * i + tidx - 1], tneg);
+      }
+   }
+
+   return accum;
+}
+
+/*
 * Variable point table mul setup and online phase
 */
 template <typename C, size_t TableSize>
@@ -407,6 +441,32 @@ typename C::ProjectivePoint varpoint_exec(const AffinePointTable<C>& table,
 
    CT::unpoison(accum);
    return accum;
+}
+
+/*
+* Variable time table of odd multiples of a point
+*
+* Returns [P, 3*P, 5*P, ..., (2^(W-1) - 1)*P], which covers the digits of a
+* width W non-adjacent form.
+*/
+template <typename C, size_t W>
+std::vector<typename C::AffinePoint> odd_multiples_setup_vartime(const typename C::AffinePoint& p) {
+   static_assert(W >= 2 && W <= 7);
+
+   constexpr size_t TableSize = 1 << (W - 2);
+
+   std::vector<typename C::ProjectivePoint> table;
+   table.reserve(TableSize);
+
+   const auto p2 = C::ProjectivePoint::from_affine(p).dbl();
+
+   table.push_back(C::ProjectivePoint::from_affine(p));
+   for(size_t i = 1; i != TableSize; ++i) {
+      table.push_back(table[i - 1] + p2);
+   }
+
+   // Variable time batch conversion is fine since the point is public
+   return to_affine_batch<C, true>(table);
 }
 
 /*
