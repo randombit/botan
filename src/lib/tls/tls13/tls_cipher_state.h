@@ -11,12 +11,16 @@
 #define BOTAN_TLS_CIPHER_STATE_H_
 
 #include <botan/assert.h>
+#include <botan/cipher_mode.h>
 #include <botan/secmem.h>
+#include <botan/tls_ciphersuite.h>
 #include <botan/tls_magic.h>
 
 #include <botan/internal/tls_record_13.h>
 #include <botan/internal/tls_transcript_hash_13.h>
 #include <botan/internal/tls_types_13.h>
+
+#include <optional>
 
 namespace Botan {
 
@@ -53,12 +57,13 @@ class Ciphersuite;
  *   allows negotiation of resumption PSKs
  *
  * This is an abstract base class that implements the key schedule and leaves
- * the actual record protection to concrete subclasses for TLS and DTLS.
+ * the management of the resulting traffic epochs (as well as record
+ * protection) to concrete subclasses for TLS and DTLS.
  *
- * While encrypting and decrypting records (RFC 9846 5.2) Cipher_State
- * internally keeps track of the current sequence numbers (RFC 9846 5.3) to
- * calculate the correct Per-Record Nonce. Sequence numbers are reset
- * appropriately, whenever traffic secrets change.
+ * While encrypting and decrypting records (RFC 9846 5.2) the concrete
+ * subclasses internally keep track of the current sequence numbers
+ * (RFC 9846 5.3) to calculate the correct Per-Record Nonce. Sequence numbers
+ * are reset appropriately, whenever traffic secrets change.
  *
  * Handshake finished MAC calculation and verification is described in RFC 9846 4.5.3.
  * PSKs calculation is described in RFC 9846 4.7.1
@@ -69,6 +74,24 @@ class BOTAN_TEST_API Cipher_State {
          Resumption,  // RFC 8446
          External,    // RFC 8446
          Imported,    // RFC 9258 PSK importer - uses "imp binder" label
+      };
+
+   public:
+      /**
+       * The cryptographic state required to protect or deprotect records in
+       * one direction. Concrete subclasses manage the available epochs, e.g.
+       * a single current epoch per direction for TLS 1.3.
+       */
+      struct Epoch {
+            std::unique_ptr<AEAD_Mode> cipher;
+            secure_vector<uint8_t> iv;
+            uint64_t sequence_number;
+
+            secure_vector<uint8_t> traffic_secret;
+
+            /// only relevant in the handshake traffic epoch to
+            /// calculate and verify the handshake's Finished MACs
+            std::optional<secure_vector<uint8_t>> finished_key;
       };
 
       using ExpansionLabelPrefix = std::array<uint8_t, 6>;
@@ -253,22 +276,22 @@ class BOTAN_TEST_API Cipher_State {
       /**
        * @returns the number of records encrypted with the current write key
        */
-      uint64_t records_encrypted_with_current_key() const { return m_write_seq_no; }
+      uint64_t records_encrypted_with_current_key() const;
 
       /**
        * @returns the number of records decrypted with the current read key
        */
-      uint64_t records_decrypted_with_current_key() const { return m_read_seq_no; }
+      uint64_t records_decrypted_with_current_key() const;
 
       /**
        * Remove handshake/traffic secrets for decrypting data from peer
        */
-      void clear_read_keys();
+      virtual void clear_read_keys() = 0;
 
       /**
        * Remove handshake/traffic secrets for encrypting data
        */
-      void clear_write_keys();
+      virtual void clear_write_keys() = 0;
 
       /**
        * Register an optional callback function to extract secrets bound for a
@@ -276,34 +299,14 @@ class BOTAN_TEST_API Cipher_State {
        */
       void set_secret_logger(SecretLoggerFn secret_logger) { m_secret_logger = std::move(secret_logger); }
 
-   protected:
-      /**
-       * @param whoami         whether we play the Server or Client
-       * @param hash_function  the negotiated hash function to be used
-       * @param expand_prefix  the prefix to be used for HKDF-Expand-Label
-       */
-      Cipher_State(Connection_Side whoami, std::string_view hash_function, ExpansionLabelPrefix expand_prefix);
-
    private:
       void advance_with_psk(PSK_Type type, secure_vector<uint8_t>&& psk);
       void advance_without_psk();
-
-      void derive_write_traffic_key(const secure_vector<uint8_t>& traffic_secret,
-                                    bool handshake_traffic_secret = false);
-      void derive_read_traffic_key(const secure_vector<uint8_t>& traffic_secret, bool handshake_traffic_secret = false);
 
       /**
        * HKDF-Extract from RFC 8446 7.1
        */
       secure_vector<uint8_t> hkdf_extract(std::span<const uint8_t> ikm) const;
-
-      /**
-       * HKDF-Expand-Label from RFC 8446 7.1
-       */
-      secure_vector<uint8_t> hkdf_expand_label(const secure_vector<uint8_t>& secret,
-                                               std::string_view label,
-                                               const std::vector<uint8_t>& context,
-                                               size_t length) const;
 
       /**
        * Derive-Secret from RFC 8446 7.1
@@ -320,6 +323,38 @@ class BOTAN_TEST_API Cipher_State {
 
       std::vector<uint8_t> empty_hash() const;
 
+   protected:
+      /**
+       * @param whoami         whether we play the Server or Client
+       * @param hash_function  the negotiated hash function to be used
+       * @param expand_prefix  the prefix to be used for HKDF-Expand-Label
+       */
+      Cipher_State(Connection_Side whoami, std::string_view hash_function, ExpansionLabelPrefix expand_prefix);
+
+      /**
+       * HKDF-Expand-Label from RFC 8446 7.1
+       */
+      secure_vector<uint8_t> hkdf_expand_label(const secure_vector<uint8_t>& secret,
+                                               std::string_view label,
+                                               const std::vector<uint8_t>& context,
+                                               size_t length) const;
+
+      Cipher_State::Epoch create_epoch(Cipher_Dir direction,
+                                       const secure_vector<uint8_t>& traffic_secret,
+                                       bool handshake_epoch) const;
+
+      const Ciphersuite& ciphersuite() const;
+
+      virtual void advance_write_epoch(const secure_vector<uint8_t>& traffic_secret, bool handshake_epoch = false) = 0;
+      virtual void advance_read_epoch(const secure_vector<uint8_t>& traffic_secret, bool handshake_epoch = false) = 0;
+
+      virtual bool has_write_epoch() const = 0;
+      virtual bool has_read_epoch() const = 0;
+      virtual Epoch& latest_write_epoch() = 0;
+      virtual const Epoch& latest_write_epoch() const = 0;
+      virtual Epoch& latest_read_epoch() = 0;
+      virtual const Epoch& latest_read_epoch() const = 0;
+
    private:
       enum class State : uint8_t {
          Uninitialized,
@@ -333,6 +368,7 @@ class BOTAN_TEST_API Cipher_State {
    private:
       State m_state;
       Connection_Side m_connection_side;
+      std::optional<Ciphersuite> m_ciphersuite;
       SecretLoggerFn m_secret_logger;
 
       std::unique_ptr<HKDF_Extract> m_extract;
@@ -341,44 +377,28 @@ class BOTAN_TEST_API Cipher_State {
 
       ExpansionLabelPrefix m_expansion_label_prefix;
       secure_vector<uint8_t> m_salt;
+      secure_vector<uint8_t> m_client_application_traffic_secret_0;
 
-      secure_vector<uint8_t> m_write_application_traffic_secret;
-      secure_vector<uint8_t> m_read_application_traffic_secret;
-
-      secure_vector<uint8_t> m_write_key;
-      secure_vector<uint8_t> m_read_key;
-
-      uint32_t m_write_key_update_count;
-      uint32_t m_read_key_update_count;
+      uint32_t m_write_key_update_count = 0;
+      uint32_t m_read_key_update_count = 0;
 
       uint16_t m_ticket_nonce;
       bool m_ticket_nonce_exhausted = false;
 
-      secure_vector<uint8_t> m_finished_key;
-      secure_vector<uint8_t> m_peer_finished_key;
       secure_vector<uint8_t> m_exporter_master_secret;
       secure_vector<uint8_t> m_resumption_master_secret;
 
       secure_vector<uint8_t> m_early_secret;
       secure_vector<uint8_t> m_binder_key;
-
-   protected:
-      // The traffic state that is needed by the subclasses for record protection
-      std::unique_ptr<AEAD_Mode> m_encrypt;
-      std::unique_ptr<AEAD_Mode> m_decrypt;
-
-      secure_vector<uint8_t> m_write_iv;
-      secure_vector<uint8_t> m_read_iv;
-
-      uint64_t m_write_seq_no;
-      uint64_t m_read_seq_no;
 };
 
 /**
  * Cipher State implementation for TLS 1.3 (RFC 9846).
  *
  * This re-uses the key schedule implementation in the Cipher_State base class
- * and implements record (de)protection for TLS 1.3.
+ * and implements record (de)protection and epoch management for TLS 1.3. Epochs
+ * in TLS 1.3 are simply rolled over whenever necessary. No historic epochs are
+ * kept.
  */
 class BOTAN_TEST_API TLS_Cipher_State final : public Cipher_State {
    public:
@@ -419,6 +439,42 @@ class BOTAN_TEST_API TLS_Cipher_State final : public Cipher_State {
        * @returns the record payload and deprotected content type
        */
       [[nodiscard]] Record deprotect_record(Record_TLS record, size_t incoming_record_size_limit);
+
+      void clear_write_keys() override;
+
+      void clear_read_keys() override;
+
+   private:
+      void advance_write_epoch(const secure_vector<uint8_t>& traffic_secret, bool handshake_epoch = false) override;
+      void advance_read_epoch(const secure_vector<uint8_t>& traffic_secret, bool handshake_epoch = false) override;
+
+      bool has_write_epoch() const override { return m_write_epoch.has_value(); }
+
+      bool has_read_epoch() const override { return m_read_epoch.has_value(); }
+
+      Epoch& latest_write_epoch() override {
+         BOTAN_ASSERT_NOMSG(has_write_epoch());
+         return *m_write_epoch;
+      }
+
+      const Epoch& latest_write_epoch() const override {
+         BOTAN_ASSERT_NOMSG(has_write_epoch());
+         return *m_write_epoch;
+      }
+
+      Epoch& latest_read_epoch() override {
+         BOTAN_ASSERT_NOMSG(has_read_epoch());
+         return *m_read_epoch;
+      }
+
+      const Epoch& latest_read_epoch() const override {
+         BOTAN_ASSERT_NOMSG(has_read_epoch());
+         return *m_read_epoch;
+      }
+
+   private:
+      std::optional<Epoch> m_write_epoch;
+      std::optional<Epoch> m_read_epoch;
 };
 
 inline TLS_Cipher_State* as_tls_cipher_state(Cipher_State* cs) {
