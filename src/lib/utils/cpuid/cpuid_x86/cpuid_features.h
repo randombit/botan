@@ -29,6 +29,7 @@ class BOTAN_TEST_API CPUFeature final {
          GFNI = (1U << 9),
          RDRAND = (1U << 10),
          RDSEED = (1U << 11),
+         POPCNT = (1U << 12),
 
          // Crypto-specific ISAs
          AESNI = (1U << 16),
