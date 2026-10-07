@@ -99,15 +99,18 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
          // Currently, this is just unpacking the strong-typed records into their
          // common base type. In the future, we will handle the different record
          // types based on the strong type itself.
-         const auto& record = std::visit(
-            []<typename T>(const T& r) -> const Record_Content& {
-               if constexpr(!std::same_as<T, BytesNeeded>) {
-                  return r;
-               } else {
-                  throw Internal_Error("Unexpected BytesNeeded variant in record visitation");
-               }
-            },
-            result);
+         //
+         // The visitor is a named object rather than a temporary, since GCC 13's
+         // -Wdangling-reference misfires on reference-returning calls with any
+         // temporary argument, including a stateless closure.
+         const auto as_record_content = []<typename T>(const T& r) -> const Record_Content& {
+            if constexpr(!std::same_as<T, BytesNeeded>) {
+               return r;
+            } else {
+               throw Internal_Error("Unexpected BytesNeeded variant in record visitation");
+            }
+         };
+         const auto& record = std::visit(as_record_content, result);
 
          // RFC 8446 5.1
          //   Handshake messages MUST NOT be interleaved with other record types.
