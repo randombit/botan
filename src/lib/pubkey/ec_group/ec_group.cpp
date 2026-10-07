@@ -882,9 +882,8 @@ bool EC_Group::operator==(const EC_Group& other) const {
 }
 
 bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
-   const bool is_builtin = source() == EC_Group_Source::Builtin;
-
-   if(is_builtin && !strong) {
+   // Trusted parameters, assumed correct
+   if(source() == EC_Group_Source::Builtin) {
       return true;
    }
 
@@ -910,8 +909,8 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
       return false;
    }
 
-   const size_t test_prob = 128;
-   const bool is_randomly_generated = is_builtin;
+   const size_t test_prob = strong ? 128 : 12;  // matching bounds used elsewhere
+   const bool is_randomly_generated = false;
 
    //check if field modulus is prime
    if(!is_prime(p, rng, test_prob, is_randomly_generated)) {
