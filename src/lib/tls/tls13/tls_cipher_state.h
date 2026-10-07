@@ -331,6 +331,17 @@ class BOTAN_TEST_API Cipher_State {
        */
       Cipher_State(Connection_Side whoami, std::string_view hash_function, ExpansionLabelPrefix expand_prefix);
 
+      static size_t protected_record_length(Epoch& epoch, size_t payload_length, size_t padding_bytes);
+      static MarshalledRecord marshall_and_protect(Epoch& epoch,
+                                                   std::span<const uint8_t> header,
+                                                   std::span<const uint8_t> payload,
+                                                   Record_Type type,
+                                                   size_t padding_bytes);
+      void deprotect_and_hydrate_content_type(Epoch& epoch,
+                                              std::span<const uint8_t> header,
+                                              Record_Content& protected_record,
+                                              size_t incoming_record_size_limit) const;
+
       /**
        * HKDF-Expand-Label from RFC 8446 7.1
        */
@@ -417,13 +428,13 @@ class BOTAN_TEST_API TLS_Cipher_State final : public Cipher_State {
        * multiple calls with the same input will not produce the same result.
        *
        * @param type           the record type to be protected
-       * @param plaintext      the record plaintext to be protected in-place
+       * @param payload        the record plaintext to be protected in-place
        * @param padding_bytes  the number of padding zero-bytes to be added
        *
        * @returns the marshalled and protected record to be sent on the wire
        */
       [[nodiscard]] MarshalledRecord protect_record(Record_Type type,
-                                                    std::span<const uint8_t> plaintext,
+                                                    std::span<const uint8_t> payload,
                                                     size_t padding_bytes);
 
       /**

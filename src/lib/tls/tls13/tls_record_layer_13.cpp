@@ -170,9 +170,8 @@ std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
 
       const auto pt_fragment = data.subspan(pt_offset, pt_size);
       if(protect) {
-         const auto record =
-            as_tls_cipher_state(cipher_state)
-               ->protect_record(type, pt_fragment, pt_size_with_type_and_padding - pt_size_with_type);
+         const auto record = as_tls_cipher_state(cipher_state)
+                                ->protect_record(type, pt_fragment, pt_size_with_type_and_padding - pt_size_with_type);
          BOTAN_ASSERT_NOMSG(record.size() == ct_size + TLS_HEADER_SIZE);
 
          // TODO: avoid this copy
