@@ -194,10 +194,6 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
          } else if(record.type == Record_Type::ChangeCipherSpec) {
             process_dummy_change_cipher_spec();
          } else if(record.type == Record_Type::ApplicationData) {
-            BOTAN_ASSERT_NONNULL(m_cipher_state);
-            if(!m_cipher_state->can_decrypt_application_traffic()) {
-               throw Unexpected_Message("Application data received before handshake completion");
-            }
             /*
             The record sequence number is set in Record_Layer::next_record only when
             the record contents are decrypted under the current set of traffic keys

@@ -256,6 +256,8 @@ MarshalledRecord Cipher_State::protect_record(Record_Type type,
                                               std::span<const uint8_t> plaintext,
                                               size_t padding_bytes) {
    BOTAN_ASSERT_NONNULL(m_encrypt);
+   BOTAN_STATE_CHECK_MSG(type != Record_Type::ApplicationData || can_encrypt_application_traffic(),
+                         "Application data must not be encrypted before handshake completion");
 
    // RFC 8446 5.3
    //    Sequence numbers MUST NOT wrap.
@@ -406,6 +408,17 @@ Record Cipher_State::deprotect_record(Record_TLS record, size_t incoming_record_
 
    // erase content type and padding
    result.payload.erase((end_of_content + 1).base(), result.payload.cend());
+
+   // RFC 9846 4.5.3
+   //    Once a side has sent its Finished message and has received and
+   //    validated the Finished message from its peer, it may begin to send and
+   //    receive Application Data over the connection.
+   //
+   // See also:
+   //  * https://github.com/randombit/botan/security/advisories/GHSA-pxcj-9ppx-g86g (CVE-2026-34582)
+   if(result.type == Record_Type::ApplicationData && !can_decrypt_application_traffic()) {
+      throw TLS_Exception(Alert::UnexpectedMessage, "Application data received before handshake completion");
+   }
 
    // RFC 9846 5.4
    //    Implementations MUST NOT send Handshake and Alert records that have

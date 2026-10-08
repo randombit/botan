@@ -573,6 +573,25 @@ std::vector<Test::Result> read_encrypted_records() {
                   [&] { const auto res = rl.next_record(nullptr); });
             }),
 
+      // Regression test for CVE-2026-34582
+      // https://github.com/randombit/botan/security/advisories/GHSA-pxcj-9ppx-g86g
+      CHECK("application data is not allowed before handshake is complete",
+            [&](Test::Result& result) {
+               // This is a record containing application data protected with a
+               // handshake secret. This must be detected and rejected.
+               const auto appdata_protected_with_handshake_secret = Botan::hex_decode(
+                  "17030300299aa9764364e78dca746d33ebbf9aa05d4c686c3d90ee8e862c"
+                  "db061d7d1dfbe687dc5708d5e95f51e5");
+
+               const auto cs = rfc8448_rtt1_handshake_traffic();
+               auto rl = parse_records(appdata_protected_with_handshake_secret);
+
+               result.test_throws<Botan::TLS::TLS_Exception>(
+                  "Reject incoming protected application data before handshake is complete",
+                  "Application data received before handshake completion",
+                  [&] { const auto res = rl.next_record(cs.get()); });
+            }),
+
       CHECK("decryption fails due to bad MAC",
             [&](Test::Result& result) {
                auto tampered_encrypted_record = encrypted_record;
