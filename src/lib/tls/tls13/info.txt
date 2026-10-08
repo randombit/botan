@@ -16,6 +16,7 @@ tls_psk_identity_13.h
 
 <header:internal>
 tls_channel_impl_13.h
+tls_channel_io.h
 tls_connection_state_13.h
 tls_cipher_state.h
 tls_client_impl_13.h
