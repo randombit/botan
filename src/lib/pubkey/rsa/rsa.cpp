@@ -9,11 +9,11 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/mutex.h>
 #include <botan/numthry.h>
 #include <botan/pss_params.h>
 #include <botan/internal/algorithm_spec.h>
 #include <botan/internal/barrett.h>
-#include <botan/internal/blinding.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/keypair.h>
@@ -30,6 +30,10 @@
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
    #include <botan/internal/thread_pool.h>
+#endif
+
+#if defined(BOTAN_HAS_THREAD_UTILS) && !defined(BOTAN_HAS_VALGRIND)
+   #define BOTAN_RSA_USE_ASYNC
 #endif
 
 namespace Botan {
@@ -71,9 +75,72 @@ class RSA_Public_Data final {
       size_t m_public_modulus_bytes;
 };
 
+namespace {
+
+/*
+* To recover the final value from the CRT representation (j1,j2)
+* we use Garner's algorithm:
+* c = q^-1 mod p (this is precomputed)
+* h = c*(j1-j2) mod p
+* r = h*q + j2
+*/
+BigInt crt_recombine(const Montgomery_Int& j1,
+                     const Montgomery_Int& j2_p,
+                     const BigInt& j2,
+                     const Montgomery_Int& c_monty,
+                     const BigInt& p,
+                     const BigInt& q) {
+   // We skip CRT entirely if the primes are not balanced (same bitlength) so q is also of this size
+   const size_t p_words = p.sig_words();
+   BOTAN_ASSERT_NOMSG(p_words == q.sig_words());
+
+   const size_t n_words = 2 * p_words;
+
+   // Ensure sufficient storage
+   BOTAN_ASSERT_NOMSG(j1.repr().size() >= p_words);
+   BOTAN_ASSERT_NOMSG(j2_p.repr().size() >= p_words);
+   BOTAN_ASSERT_NOMSG(j2.size() >= p_words);
+
+   /*
+   * Compute h = (j1 - j2) * c mod p
+   *
+   * This doesn't quite match up with the "Smooth-CRT" proposal; there we would
+   * multiply by a precomputed c * R2, which would have the effect of both
+   * multiplying by c and immediately converting from Montgomery to standard form.
+   */
+   secure_vector<word> ws(2 * p_words);
+
+   const Montgomery_Int h_monty = (j1 - j2_p).mul(c_monty, ws);
+
+   const BigInt h = h_monty.value();
+   // Montgomery_Int always returns values sized to the modulus
+   BOTAN_ASSERT_NOMSG(h.size() >= p_words);
+   BOTAN_DEBUG_ASSERT(h.sig_words() <= p_words);
+
+   // Compute r = h * q
+   secure_vector<word> r(2 * p_words);
+
+   bigint_mul(r.data(), r.size(), h._data(), h.size(), p_words, q._data(), q.size(), p_words, ws.data(), ws.size());
+
+   // r += j2
+   const word carry = bigint_add2(r.data(), n_words, j2._data(), p_words);
+   BOTAN_ASSERT_NOMSG(carry == 0);  // should not be possible since it would imply r > the public modulus
+
+   return BigInt::_from_words(r);
+}
+
+}  // namespace
+
 class RSA_Private_Data final {
    public:
-      RSA_Private_Data(BigInt&& d, BigInt&& p, BigInt&& q, BigInt&& d1, BigInt&& d2, BigInt&& c) :
+      RSA_Private_Data(std::shared_ptr<const RSA_Public_Data> pub,
+                       BigInt&& d,
+                       BigInt&& p,
+                       BigInt&& q,
+                       BigInt&& d1,
+                       BigInt&& d2,
+                       BigInt&& c) :
+            m_public(std::move(pub)),
             m_d(std::move(d)),
             m_p(std::move(p)),
             m_q(std::move(q)),
@@ -114,7 +181,94 @@ class RSA_Private_Data final {
 
       bool primes_imbalanced() const { return p_bits() != q_bits(); }
 
+      /**
+      * Return the next pair of base blinding values (k^e mod n, k^-1 mod n)
+      *
+      * The blinding sequence is shared by all private key operations using this
+      * key. Each pair is the square of the previous one; after BlindingReinitInterval
+      * uses a fresh random k is chosen.
+      */
+      std::pair<BigInt, BigInt> next_blinding_pair(RandomNumberGenerator& rng) const {
+         const lock_guard_type<mutex_type> lock(m_blinding_mutex);
+
+         if(m_blinding_uses == 0 || m_blinding_uses >= BlindingReinitInterval) {
+            // TODO the fresh pair could be computed ahead of time (eg in the thread
+            // pool) so that no operation has to wait for it
+            const BigInt k(rng, m_public->public_modulus_bits() - 1);
+            auto [fwd, inv] = fresh_blinding_pair(k);
+            m_blinding_fwd = std::move(fwd);
+            m_blinding_inv = std::move(inv);
+            m_blinding_uses = 0;
+         } else {
+            const auto& mod_n = m_public->reducer_mod_n();
+            m_blinding_fwd = mod_n.square(m_blinding_fwd);
+            m_blinding_inv = mod_n.square(m_blinding_inv);
+         }
+
+         m_blinding_uses += 1;
+         return {m_blinding_fwd, m_blinding_inv};
+      }
+
    private:
+      static constexpr size_t BlindingReinitInterval = 64;
+
+      // (k^e mod n, k^-1 mod n) for a fresh blinding nonce k
+      std::pair<BigInt, BigInt> fresh_blinding_pair(const BigInt& k) const {
+         if(primes_imbalanced()) {
+            return {m_public->public_op(k), inverse_mod_rsa_public_modulus(k, m_public->get_n())};
+         }
+         return crt_blinding_pair(m_public->get_e(), k);
+      }
+
+      /*
+      * (k^e mod n, k^-1 mod n) via the CRT, with the two halves computed in
+      * parallel when possible. The exponent e is public so variable time
+      * exponentiation is fine; the two half-size inversions are ~2x cheaper
+      * than a single inversion modulo n.
+      */
+      std::pair<BigInt, BigInt> crt_blinding_pair(const BigInt& e, const BigInt& k) const {
+         const auto kp_monty = Montgomery_Int::from_wide_int(m_monty_p, k);
+         const auto kq_monty = Montgomery_Int::from_wide_int(m_monty_q, k);
+         const BigInt kp = kp_monty.value();
+         const BigInt kq = kq_monty.value();
+
+         // k is random and less than n, so this means we stumbled onto a factor of n
+         if(kp.is_zero() || kq.is_zero()) {
+            throw Internal_Error("Accidentally factored the public modulus");
+         }
+
+         // Returns (k^e, k^-1) modulo the prime, the former still in Montgomery form
+         auto half = [&e](const Montgomery_Int& k_monty, const BigInt& k_mod, const BigInt& prime) {
+            const size_t powm_window = 1;
+            auto fwd = monty_execute_vartime(*monty_precompute(k_monty, powm_window, false), e);
+            auto inv = inverse_mod_secret_prime(k_mod, prime);
+            return std::make_pair(std::move(fwd), std::move(inv));
+         };
+
+#if defined(BOTAN_RSA_USE_ASYNC)
+         // Precompute e.sig_words in the main thread, see rsa_private_op
+         e.sig_words();
+
+         auto future_p = Thread_Pool::global_instance().run([&]() { return half(kp_monty, kp, m_p); });
+#endif
+
+         const auto [fwd_q, inv_q] = half(kq_monty, kq, m_q);
+
+#if defined(BOTAN_RSA_USE_ASYNC)
+         const auto [fwd_p, inv_p] = future_p.get();
+#else
+         const auto [fwd_p, inv_p] = half(kp_monty, kp, m_p);
+#endif
+
+         const BigInt fwd_q_v = fwd_q.value();
+         const Montgomery_Int inv_p_monty(m_monty_p, inv_p);
+
+         return {
+            crt_recombine(fwd_p, Montgomery_Int::from_wide_int(m_monty_p, fwd_q_v), fwd_q_v, m_c_monty, m_p, m_q),
+            crt_recombine(inv_p_monty, Montgomery_Int::from_wide_int(m_monty_p, inv_q), inv_q, m_c_monty, m_p, m_q)};
+      }
+
+      std::shared_ptr<const RSA_Public_Data> m_public;
       BigInt m_d;
       BigInt m_p;
       BigInt m_q;
@@ -127,6 +281,11 @@ class RSA_Private_Data final {
       Montgomery_Int m_c_monty;
       size_t m_p_bits;
       size_t m_q_bits;
+
+      mutable mutex_type m_blinding_mutex;
+      mutable BigInt m_blinding_fwd;
+      mutable BigInt m_blinding_inv;
+      mutable size_t m_blinding_uses = 0;
 };
 
 std::shared_ptr<const RSA_Public_Data> RSA_PublicKey::public_data() const {
@@ -315,7 +474,7 @@ void RSA_PrivateKey::init(BigInt&& d, BigInt&& p, BigInt&& q, BigInt&& d1, BigIn
    }
 
    m_private = std::make_shared<RSA_Private_Data>(
-      std::move(d), std::move(p), std::move(q), std::move(d1), std::move(d2), std::move(c));
+      m_public, std::move(d), std::move(p), std::move(q), std::move(d1), std::move(d2), std::move(c));
 }
 
 RSA_PrivateKey::RSA_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
@@ -550,58 +709,6 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
 
 namespace {
 
-/*
-* To recover the final value from the CRT representation (j1,j2)
-* we use Garner's algorithm:
-* c = q^-1 mod p (this is precomputed)
-* h = c*(j1-j2) mod p
-* r = h*q + j2
-*/
-BigInt crt_recombine(const Montgomery_Int& j1,
-                     const Montgomery_Int& j2_p,
-                     const BigInt& j2,
-                     const Montgomery_Int& c_monty,
-                     const BigInt& p,
-                     const BigInt& q) {
-   // We skip CRT entirely if the primes are not balanced (same bitlength) so q is also of this size
-   const size_t p_words = p.sig_words();
-   BOTAN_ASSERT_NOMSG(p_words == q.sig_words());
-
-   const size_t n_words = 2 * p_words;
-
-   // Ensure sufficient storage
-   BOTAN_ASSERT_NOMSG(j1.repr().size() >= p_words);
-   BOTAN_ASSERT_NOMSG(j2_p.repr().size() >= p_words);
-   BOTAN_ASSERT_NOMSG(j2.size() >= p_words);
-
-   /*
-   * Compute h = (j1 - j2) * c mod p
-   *
-   * This doesn't quite match up with the "Smooth-CRT" proposal; there we would
-   * multiply by a precomputed c * R2, which would have the effect of both
-   * multiplying by c and immediately converting from Montgomery to standard form.
-   */
-   secure_vector<word> ws(2 * p_words);
-
-   const Montgomery_Int h_monty = (j1 - j2_p).mul(c_monty, ws);
-
-   const BigInt h = h_monty.value();
-   // Montgomery_Int always returns values sized to the modulus
-   BOTAN_ASSERT_NOMSG(h.size() >= p_words);
-   BOTAN_DEBUG_ASSERT(h.sig_words() <= p_words);
-
-   // Compute r = h * q
-   secure_vector<word> r(2 * p_words);
-
-   bigint_mul(r.data(), r.size(), h._data(), h.size(), p_words, q._data(), q.size(), p_words, ws.data(), ws.size());
-
-   // r += j2
-   const word carry = bigint_add2(r.data(), n_words, j2._data(), p_words);
-   BOTAN_ASSERT_NOMSG(carry == 0);  // should not be possible since it would imply r > the public modulus
-
-   return BigInt::_from_words(r);
-}
-
 /**
 * RSA private (decrypt/sign) operation
 */
@@ -614,11 +721,7 @@ class RSA_Private_Operation {
       explicit RSA_Private_Operation(const RSA_PrivateKey& rsa, RandomNumberGenerator& rng) :
             m_public(rsa.public_data()),
             m_private(rsa.private_data()),
-            m_blinder(
-               m_public->reducer_mod_n(),
-               rng,
-               [this](const BigInt& k) { return m_public->public_op(k); },
-               [this](const BigInt& k) { return inverse_mod_rsa_public_modulus(k, m_public->get_n()); }),
+            m_rng(rng),
             m_blinding_bits(64),
             m_max_d1_bits(m_private->p_bits() + m_blinding_bits),
             m_max_d2_bits(m_private->q_bits() + m_blinding_bits) {}
@@ -634,10 +737,10 @@ class RSA_Private_Operation {
             throw Decoding_Error("RSA input is not in the valid range");
          }
 
-         // TODO: This should be a function on blinder
-         // BigInt Blinder::run_blinded_function(std::function<BigInt, BigInt> fn, const BigInt& input);
+         const auto [blind_fwd, blind_inv] = m_private->next_blinding_pair(m_rng);
+         const auto& mod_n = m_public->reducer_mod_n();
 
-         const BigInt recovered = m_blinder.unblind(rsa_private_op(m_blinder.blind(input_bn)));
+         const BigInt recovered = mod_n.multiply(rsa_private_op(mod_n.multiply(input_bn, blind_fwd)), blind_inv);
          BOTAN_ASSERT(input_bn == m_public->public_op(recovered), "RSA consistency check");
          BOTAN_ASSERT(m_public->public_modulus_bytes() == out.size(), "output size check");
          recovered.serialize_to(out);
@@ -656,11 +759,7 @@ class RSA_Private_Operation {
          static constexpr size_t powm_window = 4;
 
          // Compute this in main thread to avoid racing on the rng
-         const BigInt d1_mask(m_blinder.rng(), m_blinding_bits);
-
-#if defined(BOTAN_HAS_THREAD_UTILS) && !defined(BOTAN_HAS_VALGRIND)
-   #define BOTAN_RSA_USE_ASYNC
-#endif
+         const BigInt d1_mask(m_rng, m_blinding_bits);
 
 #if defined(BOTAN_RSA_USE_ASYNC)
          /*
@@ -682,7 +781,7 @@ class RSA_Private_Operation {
          });
 #endif
 
-         const BigInt d2_mask(m_blinder.rng(), m_blinding_bits);
+         const BigInt d2_mask(m_rng, m_blinding_bits);
          const BigInt masked_d2 = m_private->blinded_d2(d2_mask);
          const auto powm_d2_q = monty_precompute(Montgomery_Int::from_wide_int(m_private->monty_q(), m), powm_window);
          const auto j2 = monty_execute(*powm_d2_q, masked_d2, m_max_d2_bits).value();
@@ -700,8 +799,7 @@ class RSA_Private_Operation {
       std::shared_ptr<const RSA_Public_Data> m_public;
       std::shared_ptr<const RSA_Private_Data> m_private;
 
-      // XXX could the blinder starting pair be shared?
-      Blinder m_blinder;
+      RandomNumberGenerator& m_rng;
       const size_t m_blinding_bits;
       const size_t m_max_d1_bits;
       const size_t m_max_d2_bits;
