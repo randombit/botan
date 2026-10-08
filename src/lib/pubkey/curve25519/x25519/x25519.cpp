@@ -14,6 +14,8 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/pk_options_impl.h>
+#include <botan/internal/x25519_internal.h>
+#include <array>
 
 namespace Botan {
 
@@ -45,11 +47,6 @@ secure_vector<uint8_t> X25519_PrivateKey::raw_private_key_bits() const {
    return m_private->key();
 }
 
-void curve25519_basepoint(uint8_t mypublic[32], const uint8_t secret[32]) {
-   const uint8_t basepoint[32] = {9};
-   curve25519_donna(mypublic, secret, basepoint);
-}
-
 namespace {
 
 void size_check(size_t size, const char* thing) {
@@ -60,8 +57,11 @@ void size_check(size_t size, const char* thing) {
 
 // X25519 agreement, shared by agree() and the PK_Key_Agreement operation
 secure_vector<uint8_t> x25519_agree(const secure_vector<uint8_t>& secret, const uint8_t pubval[32]) {
+   BOTAN_ASSERT_NOMSG(secret.size() == 32);
    secure_vector<uint8_t> shared_key(32);
-   curve25519_donna(shared_key.data(), secret.data(), pubval);
+   x25519_scalarmult(std::span<uint8_t, 32>(shared_key.data(), 32),
+                     std::span<const uint8_t, 32>(secret.data(), 32),
+                     std::span<const uint8_t, 32>(pubval, 32));
 
    // RFC 7748 Section 6.1
    //    Both [parties] MAY check, without leaking extra information about
@@ -86,7 +86,7 @@ void load_x25519_keypair(secure_vector<uint8_t> secret,
                          std::shared_ptr<const X25519_PrivateKey_Data>& sk_out) {
    BOTAN_ASSERT_NOMSG(secret.size() == 32);
    std::vector<uint8_t> pub(32);
-   curve25519_basepoint(pub.data(), secret.data());
+   x25519_basepoint(std::span<uint8_t, 32>(pub.data(), 32), std::span<const uint8_t, 32>(secret.data(), 32));
    pk_out = std::make_shared<const X25519_PublicKey_Data>(std::move(pub));
    sk_out = std::make_shared<const X25519_PrivateKey_Data>(std::move(secret));
 }
@@ -103,9 +103,9 @@ bool X25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/
    * sends exactly the points of low order to the identity (all zero output).
    * Nothing else can be checked for a Montgomery u-coordinate.
    */
-   const std::array<uint8_t, 32> scalar{};  // clamped to 2^254 by curve25519_donna
-   std::vector<uint8_t> out(32);
-   curve25519_donna(out.data(), scalar.data(), m_public->key().data());
+   const std::array<uint8_t, 32> scalar{};  // clamped to 2^254 by x25519_scalarmult
+   std::array<uint8_t, 32> out{};
+   x25519_scalarmult(out, scalar, std::span<const uint8_t, 32>(m_public->key().data(), 32));
    return !CT::all_zeros(out.data(), out.size()).as_bool();
 }
 
@@ -169,7 +169,8 @@ secure_vector<uint8_t> X25519_PrivateKey::private_key_bits() const {
 
 bool X25519_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
    std::vector<uint8_t> public_point(32);
-   curve25519_basepoint(public_point.data(), m_private->key().data());
+   x25519_basepoint(std::span<uint8_t, 32>(public_point.data(), 32),
+                    std::span<const uint8_t, 32>(m_private->key().data(), 32));
    return public_point == m_public->key();
 }
 
@@ -207,6 +208,18 @@ std::unique_ptr<PK_Ops::Key_Agreement> X25519_PrivateKey::_create_key_agreement_
    require_software_provider(options, algo_name());
 
    return std::make_unique<X25519_KA_Operation>(m_private, options);
+}
+
+// Deprecated free functions, not used by the library itself
+
+void curve25519_donna(uint8_t mypublic[32], const uint8_t secret[32], const uint8_t basepoint[32]) {
+   x25519_scalarmult(std::span<uint8_t, 32>(mypublic, 32),
+                     std::span<const uint8_t, 32>(secret, 32),
+                     std::span<const uint8_t, 32>(basepoint, 32));
+}
+
+void curve25519_basepoint(uint8_t mypublic[32], const uint8_t secret[32]) {
+   x25519_basepoint(std::span<uint8_t, 32>(mypublic, 32), std::span<const uint8_t, 32>(secret, 32));
 }
 
 }  // namespace Botan

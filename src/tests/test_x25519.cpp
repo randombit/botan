@@ -12,6 +12,7 @@
    #include <botan/hex.h>
    #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
+   #include <botan/rng.h>
    #include <botan/x25519.h>
    #include <botan/x509_key.h>
 #endif
@@ -80,6 +81,17 @@ class X25519_Direct_Agree_Tests final : public Test {
                             key.agree(k_b.data(), k_b.size()),
                             "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742");
 
+         // The deprecated free functions are no longer used by the library itself
+         BOTAN_DIAGNOSTIC_PUSH
+         BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
+         std::vector<uint8_t> pub(32);
+         Botan::curve25519_basepoint(pub.data(), a.data());
+         result.test_bin_eq("curve25519_basepoint", pub, key.raw_public_key_bits());
+         std::vector<uint8_t> ss(32);
+         Botan::curve25519_donna(ss.data(), a.data(), k_b.data());
+         result.test_bin_eq("curve25519_donna", ss, "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742");
+         BOTAN_DIAGNOSTIC_POP
+
          // Points of low order give an all zero secret and are rejected
          const std::vector<uint8_t> zero(32);
          result.test_throws<Botan::Invalid_Argument>("u = 0 is rejected",
@@ -104,6 +116,42 @@ class X25519_Direct_Agree_Tests final : public Test {
 };
 
 BOTAN_REGISTER_TEST("pubkey", "x25519_direct_agree", X25519_Direct_Agree_Tests);
+
+/*
+* The public key is computed on the Ed25519 curve using the fixed-base tables,
+* while key agreement uses the Montgomery ladder. Check that the two agree on
+* the base point multiplication.
+*/
+class X25519_Keygen_Consistency_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("X25519 keygen consistency");
+
+         std::vector<uint8_t> basepoint(32);
+         basepoint[0] = 9;
+
+         auto check = [&](std::span<const uint8_t> secret) {
+            const Botan::X25519_PrivateKey key(secret);
+            const Botan::PK_Key_Agreement ka(key, this->rng(), "Raw");
+            const auto via_ladder = ka.derive_key(32, basepoint).bits_of();
+            result.test_bin_eq("public key matches ladder on base point", key.public_value(), via_ladder);
+         };
+
+         // Scalars at the clamping boundaries
+         check(std::vector<uint8_t>(32, 0x00));
+         check(std::vector<uint8_t>(32, 0xFF));
+         check(std::vector<uint8_t>(32, 0x80));
+         check(std::vector<uint8_t>(32, 0x07));
+
+         for(size_t i = 0; i != 64; ++i) {
+            check(this->rng().random_vec(32));
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "x25519_keygen_consistency", X25519_Keygen_Consistency_Test);
 
 class X25519_Roundtrip_Test final : public Test {
    public:

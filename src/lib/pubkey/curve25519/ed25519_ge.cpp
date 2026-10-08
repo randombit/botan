@@ -571,8 +571,6 @@ Ed25519_Point_Niels select(const Ed25519_Point_Niels base[8], int8_t b) {
    return t;
 }
 
-}  // namespace
-
 /*
 h = a * B
 where a = a[0]+256*a[1]+...+256^31 a[31]
@@ -581,7 +579,7 @@ B is the Ed25519 base point (x,4/5) with x positive.
 Preconditions:
   a[31] <= 127
 */
-void ed25519_basepoint_mul(std::span<uint8_t, 32> out, const Ed25519_Scalar& scalar) {
+Ed25519_Point_Extended basepoint_mul(const Ed25519_Scalar& scalar) {
    static const std::array<std::array<Ed25519_Point_Niels, 8>, 32> B_precomp = ed25519_base_precomp();
 
    const auto a = scalar.to_bytes();
@@ -620,9 +618,36 @@ void ed25519_basepoint_mul(std::span<uint8_t, 32> out, const Ed25519_Scalar& sca
       h = Ed25519_Point_Extended::from(h + select(B_precomp[i / 2].data(), e[i]));
    }
 
-   h.serialize_to(out);
-
    CT::unpoison(a.data(), a.size());
+
+   return h;
+}
+
+}  // namespace
+
+void ed25519_basepoint_mul(std::span<uint8_t, 32> out, const Ed25519_Scalar& scalar) {
+   const auto h = basepoint_mul(scalar);
+   h.serialize_to(out);
+   CT::unpoison(out);
+}
+
+void ed25519_basepoint_mul_to_x25519(std::span<uint8_t, 32> out, const Ed25519_Scalar& scalar) {
+   const auto h = basepoint_mul(scalar);
+
+   /*
+   * The birational map from the twisted Edwards curve to Curve25519 sends
+   * (x, y) to u = (1 + y) / (1 - y) (RFC 7748 Section 4.1), which for a
+   * projective point (X : Y : Z) is (Z + Y) / (Z - Y). The map sends the
+   * Ed25519 base point to u = 9, so this is the X25519 public key for the
+   * scalar.
+   *
+   * The only point with Z == Y is the identity, where the inversion of zero
+   * returns zero and so u == 0, matching what the Montgomery ladder produces
+   * for the identity. A clamped X25519 scalar is never zero mod l so this
+   * cannot happen for X25519 anyway.
+   */
+   const auto u = (h.Z + h.Y) * (h.Z - h.Y).invert();
+   u.serialize_to(out);
    CT::unpoison(out);
 }
 
