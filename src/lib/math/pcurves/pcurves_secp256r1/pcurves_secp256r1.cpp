@@ -1,5 +1,5 @@
 /*
-* (C) 2024 Jack Lloyd
+* (C) 2024,2026 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -14,7 +14,7 @@ namespace Botan::PCurve {
 namespace {
 
 template <typename Params>
-class Secp256r1Rep final {
+class Secp256r1SolinasRep final {
    public:
       static constexpr auto P = Params::P;
       static constexpr size_t N = Params::N;
@@ -109,6 +109,125 @@ class Secp256r1Rep final {
       }
 };
 
+/*
+* Montgomery arithmetic specialized for P-256
+*
+* Word-serial Montgomery reduction adds m*p to the accumulator in each step,
+* with m chosen so that the low word becomes zero. For P-256 the Montgomery
+* p' value is 1, so m is always exactly equal to the low word.
+*
+* Writing m*p as m*(p+1)-m: the -m is what zeros the low word, which is never
+* read again and so is not even written, while m*(p+1) is a multiple of 2^64.
+* We can ignore the implicit low zero word and (shifting the index one word up)
+* add m*(p+1)/2^64, which for P-256 is m*(2^192 - 2^160 + 2^128 + 2^32). That
+* value can be formed with shifts and subtractions rather than a multiplication.
+*/
+template <typename Params>
+class Secp256r1MontgomeryRep final {
+   public:
+      static constexpr auto P = Params::P;
+      static constexpr size_t N = Params::N;
+      typedef typename Params::W W;
+
+      static_assert(WordInfo<W>::bits == 64 && N == 4);
+
+      static constexpr auto R1 = montygomery_r(P);
+      static constexpr auto R2 = mul_mod(R1, R1, P);
+      static constexpr auto R3 = mul_mod(R1, R2, P);
+
+      constexpr static std::array<W, N> one() { return R1; }
+
+      constexpr static BOTAN_FORCE_INLINE std::array<W, N> redc(const std::array<W, 2 * N>& z) {
+         std::array<W, 2 * N> t = z;
+
+         // The carry out from the previous loop iteration
+         W pending = 0;
+
+         for(size_t i = 0; i != N; ++i) {
+            auto [q0, q1, q2, q3] = p256_m_p1_64(t[i]);
+
+            // q3 is at most 2^64 - 2^32, leaving room to add the carry from the
+            // previous iteration without worrying about creating a new carry
+            q3 += pending;
+
+            W carry = 0;
+            t[i + 1] = word_add(t[i + 1], q0, &carry);
+            t[i + 2] = word_add(t[i + 2], q1, &carry);
+            t[i + 3] = word_add(t[i + 3], q2, &carry);
+            t[i + 4] = word_add(t[i + 4], q3, &carry);
+            pending = carry;
+         }
+
+         return final_sub(pending, {t[4], t[5], t[6], t[7]});
+      }
+
+      constexpr static std::array<W, N> to_rep(const std::array<W, N>& x) {
+         std::array<W, 2 * N> z;  // NOLINT(*-member-init)
+         comba_mul<N>(z.data(), x.data(), R2.data());
+         return redc(z);
+      }
+
+      constexpr static std::array<W, N> wide_to_rep(const std::array<W, 2 * N>& x) {
+         auto redc_x = redc(x);
+         std::array<W, 2 * N> z;  // NOLINT(*-member-init)
+         comba_mul<N>(z.data(), redc_x.data(), R3.data());
+         return redc(z);
+      }
+
+      constexpr static std::array<W, N> from_rep(const std::array<W, N>& z) {
+         std::array<W, 2 * N> ze = {};
+         copy_mem(std::span{ze}.template first<N>(), z);
+         return redc(ze);
+      }
+
+   private:
+      /**
+      * Return the 4 words of m*(p+1)/2^64, which is what remains above the
+      * low word after adding m*p to an accumulator whose low word is m
+      */
+      constexpr static BOTAN_FORCE_INLINE std::array<W, N> p256_m_p1_64(W m) {
+         const W m_lo = m << 32;
+         const W m_hi = m >> 32;
+
+         /*
+         * m*(p+1)/2^64 = m*2^32 + m*2^128 + m*2^192 - m*2^160, laid out as
+         *
+         *   m*2^32   -> word 0 gets m << 32, word 1 gets m >> 32
+         *   m*2^128  -> word 2 gets m
+         *   m*2^192  -> word 3 gets m
+         *   -m*2^160 -> word 2 loses m << 32, word 3 loses m >> 32 plus the borrow
+         *
+         * The total is non-negative and below 2^256, so the final borrow is zero
+         */
+         W borrow = 0;
+         const W q2 = word_sub(m, m_lo, &borrow);
+         const W q3 = word_sub(m, m_hi, &borrow);
+
+         return {m_lo, m_hi, q2, q3};
+      }
+
+      /**
+      * Given (top || t) < 2*p return it reduced modulo p
+      */
+      constexpr static BOTAN_FORCE_INLINE std::array<W, N> final_sub(W top, const std::array<W, N>& t) {
+         W borrow = 0;
+         const W r0 = word_sub(t[0], P[0], &borrow);
+         const W r1 = word_sub(t[1], P[1], &borrow);
+         const W r2 = word_sub(t[2], P[2], &borrow);
+         const W r3 = word_sub(t[3], P[3], &borrow);
+
+         // t is only < p if the subtraction underflowed and top (the 257th bit) is zero
+         const W t_lt_p = CT::value_barrier<W>(static_cast<W>(0) - (borrow & (top ^ 1)));
+
+         return {
+            choose(t_lt_p, t[0], r0),
+            choose(t_lt_p, t[1], r1),
+            choose(t_lt_p, t[2], r2),
+            choose(t_lt_p, t[3], r3),
+         };
+      }
+};
+
 namespace secp256r1 {
 
 // clang-format off
@@ -125,7 +244,11 @@ class Params final : public EllipticCurveParameters<
 
 // clang-format on
 
-class Curve final : public EllipticCurve<Params, Secp256r1Rep> {
+using Secp256r1Base = std::conditional_t<WordInfo<word>::bits == 64,
+                                         EllipticCurve<Params, Secp256r1MontgomeryRep>,
+                                         EllipticCurve<Params, Secp256r1SolinasRep>>;
+
+class Curve final : public Secp256r1Base {
    public:
       // Return the square of the inverse of x
       static constexpr FieldElement fe_invert2(const FieldElement& x) {
