@@ -12,10 +12,10 @@ Pipe/Filter Message Processing
     output (if any!), and so on), whereas using say a HashFunction or AEAD_Mode
     provides a much better idea in the code of what operation is occurring.
 
-    This filter interface is no longer used within the library itself
-    (outside a few dusty corners) and will likely not see any further major
-    development. However it will remain included because the API is often
-    convenient and many applications use it.
+.. warning::
+
+   This interface is officially deprecated and may be removed in a future
+   major release.
 
 Many common uses of cryptography involve processing one or more
 streams of data. Botan provides services that make setting up data

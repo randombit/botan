@@ -195,6 +195,11 @@ being a widely used password hash. Prefer bcrypt or Argon2.
 
 .. warning::
 
+   Support for this password hashing scheme is deprecated, and will be removed
+   in a future major release.
+
+.. warning::
+
    This password format string ("$9$") conflicts with the format used
    for scrypt password hashes on Cisco systems.
 
