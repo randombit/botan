@@ -118,6 +118,7 @@ class GenericCurveParams final {
             m_field_minus_2(bn_to_fixed_rev(p - 2)),
             m_field_monty_r1(bn_to_fixed(m_monty_field.R1())),
             m_field_monty_r2(bn_to_fixed(m_monty_field.R2())),
+            m_field_monty_r3(bn_to_fixed(m_monty_field.R3())),
             m_field_p_plus_1_over_4(bn_to_fixed_rev((p + 1) / 4)),
             m_field_inv_2(bn_to_fixed((p / 2) + 1)),
             m_field_p_dash(m_monty_field.p_dash()),
@@ -162,6 +163,8 @@ class GenericCurveParams final {
       const StorageUnit& field_monty_r1() const { return m_field_monty_r1; }
 
       const StorageUnit& field_monty_r2() const { return m_field_monty_r2; }
+
+      const StorageUnit& field_monty_r3() const { return m_field_monty_r3; }
 
       const StorageUnit& field_p_plus_1_over_4() const { return m_field_p_plus_1_over_4; }
 
@@ -259,6 +262,7 @@ class GenericCurveParams final {
       StorageUnit m_field_minus_2;
       StorageUnit m_field_monty_r1;
       StorageUnit m_field_monty_r2;
+      StorageUnit m_field_monty_r3;
       StorageUnit m_field_p_plus_1_over_4;
       StorageUnit m_field_inv_2;
       word m_field_p_dash;
@@ -644,6 +648,24 @@ class GenericField final {
          return GenericField(curve, curve->_params().monty_curve_b());
       }
 
+      /**
+      * Modular reduce a larger input
+      *
+      * This takes a bytestring that is at most twice the length of the modulus, and
+      * modular reduces it.
+      */
+      static GenericField from_wide_bytes(const GenericPrimeOrderCurve* curve, std::span<const uint8_t> bytes) {
+         BOTAN_ARG_CHECK(bytes.size() <= 2 * curve->_params().field_bytes(), "Input too large");
+
+         std::array<uint8_t, 2 * sizeof(word) * N> padded_bytes{};
+         copy_mem(std::span{padded_bytes}.last(bytes.size()), bytes);
+
+         // Cannot fail since the padded input is exactly 2*N words
+         const auto words = bytes_to_words<2 * N>(std::span{padded_bytes});
+         BOTAN_ASSERT_NOMSG(words.has_value());
+         return GenericField(curve, wide_to_rep(curve, words.value()));
+      }
+
       static GenericField random(const GenericPrimeOrderCurve* curve, RandomNumberGenerator& rng) {
          constexpr size_t MAX_ATTEMPTS = 1000;
 
@@ -913,6 +935,13 @@ class GenericField final {
          return redc(curve, z);
       }
 
+      static StorageUnit wide_to_rep(const GenericPrimeOrderCurve* curve, std::array<W, 2 * N> x) {
+         const auto redc_x = redc(curve, x);
+         std::array<W, 2 * N> z{};
+         curve->_params().mul(z, redc_x, curve->_params().field_monty_r3());
+         return redc(curve, z);
+      }
+
       const GenericPrimeOrderCurve* m_curve;
       StorageUnit m_val;
 };
@@ -1177,20 +1206,13 @@ class GenericProjectivePoint final {
       * Projective coordinates are redundant; if (x,y,z) is a projective
       * point then so is (x*r^2,y*r^3,z*r) for any non-zero r.
       */
-      void randomize_rep(RandomNumberGenerator& rng) {
-         // In certain contexts we may be called with a Null_RNG; in that case the
-         // caller is accepting that randomization will not occur
+      void randomize_rep(const GenericField& r) {
+         const auto r2 = r.square();
+         const auto r3 = r2 * r;
 
-         if(rng.is_seeded()) {
-            const auto r = GenericField::random(curve(), rng);
-
-            const auto r2 = r.square();
-            const auto r3 = r2 * r;
-
-            m_x *= r2;
-            m_y *= r3;
-            m_z *= r;
-         }
+         m_x *= r2;
+         m_y *= r3;
+         m_z *= r;
       }
 
       /**
@@ -1232,9 +1254,82 @@ class GenericCurve final {
       typedef word WordType;
 };
 
+/**
+* The randomness consumed by one blinded scalar multiplication
+*
+* The scalar masks and the projective re-randomizations are drawn from the
+* RNG with a single request, since each request has a fixed cost that
+* dominates for small outputs.
+*
+* If the provided RNG is not seeded, no randomness is drawn and blinding is
+* skipped.
+*/
+class GenericBlindingRandomness final {
+   public:
+      /// Each multiplication re-randomizes the accumulator this many times
+      static constexpr size_t Rerandomizations = 4;
+
+      GenericBlindingRandomness(const GenericPrimeOrderCurve* curve, RandomNumberGenerator& rng, size_t scalars) :
+            m_seeded(rng.is_seeded()), m_scalars(scalars), m_mask_bytes(mask_bytes(curve->_params().order_bits())) {
+         // Conditional ok: caller's RNG state (seeded vs not) is presumed public
+         if(m_seeded) {
+            // Reducing 64 extra bits mod p leaves a negligible bias
+            const size_t wide_bytes = curve->_params().field_bytes() + 8;
+
+            secure_vector<uint8_t> buf(m_scalars * m_mask_bytes + Rerandomizations * wide_bytes);
+            rng.randomize(buf);
+
+            m_masks.assign(buf.begin(), buf.begin() + m_scalars * m_mask_bytes);
+
+            m_rerandomizers.reserve(Rerandomizations);
+            for(size_t i = 0; i != Rerandomizations; ++i) {
+               const auto bytes = std::span{buf}.subspan(m_scalars * m_mask_bytes + i * wide_bytes, wide_bytes);
+               m_rerandomizers.push_back(GenericField::from_wide_bytes(curve, bytes));
+            }
+         }
+      }
+
+      bool seeded() const { return m_seeded; }
+
+      std::span<const uint8_t> mask(size_t idx) const {
+         BOTAN_ASSERT_NOMSG(idx < m_scalars);
+         return std::span{m_masks}.subspan(idx * m_mask_bytes, m_mask_bytes);
+      }
+
+      /**
+      * Randomize the projective representation of pt using the idx'th element
+      */
+      void randomize_rep(GenericProjectivePoint& pt, size_t idx) const {
+         BOTAN_ASSERT_NOMSG(idx < Rerandomizations);
+         // Conditional ok: caller's RNG state (seeded vs not) is presumed public
+         if(m_seeded) {
+            pt.randomize_rep(m_rerandomizers[idx]);
+         }
+      }
+
+   private:
+      static size_t mask_bytes(size_t order_bits) {
+         const size_t blinder_bits = scalar_blinding_bits(order_bits);
+         const size_t mask_words = (blinder_bits + WordInfo<word>::bits - 1) / WordInfo<word>::bits;
+         return mask_words * WordInfo<word>::bytes;
+      }
+
+      bool m_seeded;
+      size_t m_scalars;
+      size_t m_mask_bytes;
+      secure_vector<uint8_t> m_masks;
+      std::vector<GenericField> m_rerandomizers;
+};
+
 class GenericBlindedScalarBits final {
    public:
-      GenericBlindedScalarBits(const GenericScalar& scalar, RandomNumberGenerator& rng, size_t wb) {
+      /**
+      * Blind the scalar using the idx'th mask of the provided GenericBlindingRandomness
+      */
+      GenericBlindedScalarBits(const GenericScalar& scalar,
+                               const GenericBlindingRandomness& randomness,
+                               size_t idx,
+                               size_t wb) {
          BOTAN_ASSERT_NOMSG(wb == 1 || wb == 2 || wb == 3 || wb == 4 || wb == 5 || wb == 6 || wb == 7);
 
          const auto& params = scalar.curve()->_params();
@@ -1244,14 +1339,14 @@ class GenericBlindedScalarBits final {
 
          const size_t blinder_bits = scalar_blinding_bits(order_bits);
 
-         if(blinder_bits > 0 && rng.is_seeded()) {
+         // Conditional ok: caller's RNG state (seeded vs not) is presumed public
+         if(blinder_bits > 0 && randomness.seeded()) {
             const size_t mask_words = (blinder_bits + WordInfo<word>::bits - 1) / WordInfo<word>::bits;
-            const size_t mask_bytes = mask_words * WordInfo<word>::bytes;
 
             const size_t words = params.words();
 
-            secure_vector<uint8_t> maskb(mask_bytes);
-            rng.randomize(maskb);
+            const auto maskb = randomness.mask(idx);
+            BOTAN_ASSERT_NOMSG(maskb.size() == mask_words * WordInfo<word>::bytes);
 
             std::array<word, PrimeOrderCurve::StorageWords> mask{};
             load_le(mask.data(), maskb.data(), mask_words);
@@ -1325,9 +1420,10 @@ class GenericWindowedMul final {
             m_table(varpoint_setup<GenericCurve, TableSize>(pt)) {}
 
       GenericProjectivePoint mul(const GenericScalar& s, RandomNumberGenerator& rng) {
-         const GenericBlindedScalarBits bits(s, rng, WindowBits);
+         const GenericBlindingRandomness blinding(s.curve(), rng, 1);
+         const GenericBlindedScalarBits bits(s, blinding, 0, WindowBits);
 
-         return varpoint_exec<GenericCurve, WindowBits>(m_table, bits, rng);
+         return varpoint_exec<GenericCurve, WindowBits>(m_table, bits, blinding);
       }
 
    private:
@@ -1345,9 +1441,10 @@ class GenericBaseMulTable final {
             m_table(basemul_booth_setup<GenericCurve, WindowBits>(pt, blinded_scalar_bits(*pt.curve()) + 1)) {}
 
       GenericProjectivePoint mul(const GenericScalar& s, RandomNumberGenerator& rng) {
+         const GenericBlindingRandomness blinding(s.curve(), rng, 1);
          // W+1 bit windows for Booth recoding overlap
-         const GenericBlindedScalarBits scalar(s, rng, WindowBits + 1);
-         return basemul_booth_exec<GenericCurve, WindowBits>(m_table, scalar, rng);
+         const GenericBlindedScalarBits scalar(s, blinding, 0, WindowBits + 1);
+         return basemul_booth_exec<GenericCurve, WindowBits>(m_table, scalar, blinding);
       }
 
    private:
@@ -1376,9 +1473,10 @@ class GenericWindowedMul2 final {
             m_table(mul2_setup<GenericCurve, WindowBits>(p, q)) {}
 
       GenericProjectivePoint mul2(const GenericScalar& x, const GenericScalar& y, RandomNumberGenerator& rng) const {
-         const GenericBlindedScalarBits x_bits(x, rng, WindowBits);
-         const GenericBlindedScalarBits y_bits(y, rng, WindowBits);
-         return mul2_exec<GenericCurve, WindowBits>(m_table, x_bits, y_bits, rng);
+         const GenericBlindingRandomness blinding(x.curve(), rng, 2);
+         const GenericBlindedScalarBits x_bits(x, blinding, 0, WindowBits);
+         const GenericBlindedScalarBits y_bits(y, blinding, 1, WindowBits);
+         return mul2_exec<GenericCurve, WindowBits>(m_table, x_bits, y_bits, blinding);
       }
 
    private:
