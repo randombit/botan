@@ -1139,21 +1139,13 @@ class ProjectiveCurvePoint final {
       * Projective coordinates are redundant; if (x,y,z) is a projective
       * point then so is (x*r^2,y*r^3,z*r) for any non-zero r.
       */
-      void randomize_rep(RandomNumberGenerator& rng) {
-         // In certain contexts we may be called with a Null_RNG; in that case the
-         // caller is accepting that randomization will not occur
+      void randomize_rep(const FieldElement& r) {
+         const auto r2 = r.square();
+         const auto r3 = r2 * r;
 
-         // Conditional ok: caller's RNG state (seeded vs not) is presumed public
-         if(rng.is_seeded()) {
-            const auto r = FieldElement::random(rng);
-
-            const auto r2 = r.square();
-            const auto r3 = r2 * r;
-
-            m_x *= r2;
-            m_y *= r3;
-            m_z *= r;
-         }
+         m_x *= r2;
+         m_y *= r3;
+         m_z *= r;
       }
 
       /**
@@ -1299,23 +1291,27 @@ class BlindedScalarBits final {
       static_assert(BlindingBits < C::Scalar::BITS);
 
    public:
+      using Curve = C;
+
       // Maximum number of bits (used for table sizing)
       static constexpr size_t Bits = C::Scalar::BITS + BlindingBits;
 
+      static constexpr size_t MaskWords = (BlindingBits + WordInfo<W>::bits - 1) / WordInfo<W>::bits;
+      static constexpr size_t MaskBytes = MaskWords * WordInfo<W>::bytes;
+
       size_t bits() const { return m_bits; }
 
-      BlindedScalarBits(const typename C::Scalar& scalar, RandomNumberGenerator& rng) {
-         if(BlindingBits > 0 && rng.is_seeded()) {
-            constexpr size_t MaskWords = (BlindingBits + WordInfo<W>::bits - 1) / WordInfo<W>::bits;
-            constexpr size_t MaskBytes = MaskWords * WordInfo<W>::bytes;
-
+      /**
+      * Blind the scalar using the idx'th mask of the provided BlindingRandomness
+      */
+      template <typename Randomness>
+      BlindedScalarBits(const typename C::Scalar& scalar, const Randomness& randomness, size_t idx = 0) {
+         // Conditional ok: caller's RNG state (seeded vs not) is presumed public
+         if(BlindingBits > 0 && randomness.seeded()) {
             constexpr size_t n_words = C::Words;
 
-            uint8_t maskb[MaskBytes + (BlindingBits == 0 ? 1 : 0)] = {0};
-            rng.randomize(maskb, MaskBytes);
-
             W mask[n_words] = {0};
-            load_le(mask, maskb, MaskWords);
+            load_le(mask, randomness.mask(idx).data(), MaskWords);
 
             // Mask to exactly BlindingBits
             constexpr size_t ExcessBits = MaskWords * WordInfo<W>::bits - BlindingBits;
@@ -1368,6 +1364,73 @@ class BlindedScalarBits final {
    private:
       std::vector<uint8_t> m_bytes;
       size_t m_bits;
+};
+
+/**
+* The randomness consumed by one blinded scalar multiplication
+*
+* The scalar masks and the projective re-randomizations are drawn from the
+* RNG with a single request, since each request has a fixed cost that
+* dominates for small outputs.
+*
+* If the provided RNG is not seeded, no randomness is drawn and blinding is
+* skipped.
+*/
+template <typename BlindedScalar, size_t Scalars = 1>
+class BlindingRandomness final {
+   public:
+      /// Each multiplication re-randomizes the accumulator this many times
+      static constexpr size_t Rerandomizations = 4;
+
+   private:
+      using C = typename BlindedScalar::Curve;
+      using FieldElement = typename C::FieldElement;
+
+      static constexpr size_t MaskBytes = BlindedScalar::MaskBytes;
+
+      // Reducing 64 extra bits mod p leaves a negligible bias
+      static constexpr size_t WideBytes = FieldElement::BYTES + 8;
+
+   public:
+      explicit BlindingRandomness(RandomNumberGenerator& rng) : m_seeded(rng.is_seeded()) {
+         // Conditional ok: caller's RNG state (seeded vs not) is presumed public
+         if(m_seeded) {
+            std::array<uint8_t, Scalars * MaskBytes + Rerandomizations * WideBytes> buf{};
+            rng.randomize(buf);
+
+            const std::span<const uint8_t> bytes(buf);
+
+            copy_mem(m_masks, bytes.first<Scalars * MaskBytes>());
+
+            for(size_t i = 0; i != Rerandomizations; ++i) {
+               const auto wide = bytes.subspan(Scalars * MaskBytes + i * WideBytes).first<WideBytes>();
+               m_rerandomizers[i] = FieldElement::from_wide_bytes(wide);
+            }
+         }
+      }
+
+      bool seeded() const { return m_seeded; }
+
+      std::span<const uint8_t, MaskBytes> mask(size_t idx) const {
+         BOTAN_ASSERT_NOMSG(idx < Scalars);
+         return std::span{m_masks}.subspan(idx * MaskBytes).template first<MaskBytes>();
+      }
+
+      /**
+      * Randomize the projective representation of pt using the idx'th element
+      */
+      void randomize_rep(typename C::ProjectivePoint& pt, size_t idx) const {
+         BOTAN_ASSERT_NOMSG(idx < Rerandomizations);
+         // Conditional ok: caller's RNG state (seeded vs not) is presumed public
+         if(m_seeded) {
+            pt.randomize_rep(m_rerandomizers[idx]);
+         }
+      }
+
+   private:
+      bool m_seeded;
+      std::array<uint8_t, Scalars * MaskBytes> m_masks{};
+      std::array<FieldElement, Rerandomizations> m_rerandomizers{};
 };
 
 template <typename C, size_t WindowBits>
@@ -1497,8 +1560,9 @@ class PrecomputedBaseMulTable final {
             m_table(basemul_booth_setup<C, WindowBits>(p, BlindedScalar::Bits + 1)) {}
 
       ProjectivePoint mul(const Scalar& s, RandomNumberGenerator& rng) const {
-         const BlindedScalar scalar(s, rng);
-         return basemul_booth_exec<C, WindowBits>(m_table, scalar, rng);
+         const BlindingRandomness<BlindedScalar> blinding(rng);
+         const BlindedScalar scalar(s, blinding);
+         return basemul_booth_exec<C, WindowBits>(m_table, scalar, blinding);
       }
 
       /**
@@ -1542,8 +1606,9 @@ class WindowedMulTable final {
       explicit WindowedMulTable(const AffinePoint& p) : m_table(varpoint_setup<C, TableSize>(p)) {}
 
       ProjectivePoint mul(const Scalar& s, RandomNumberGenerator& rng) const {
-         const BlindedScalar bits(s, rng);
-         return varpoint_exec<C, WindowBits>(m_table, bits, rng);
+         const BlindingRandomness<BlindedScalar> blinding(rng);
+         const BlindedScalar bits(s, blinding);
+         return varpoint_exec<C, WindowBits>(m_table, bits, blinding);
       }
 
    private:
@@ -1589,7 +1654,8 @@ class WindowedBoothMulTable final {
       explicit WindowedBoothMulTable(const AffinePoint& p) : m_table(varpoint_setup<C, TableSize>(p)) {}
 
       ProjectivePoint mul(const Scalar& s, RandomNumberGenerator& rng) const {
-         const BlindedScalar bits(s, rng);
+         const BlindingRandomness<BlindedScalar> blinding(rng);
+         const BlindedScalar bits(s, blinding);
 
          const size_t scalar_bits = bits.bits();
          const size_t full_windows = compute_full_windows(scalar_bits + 1, WindowBits);
@@ -1618,8 +1684,8 @@ class WindowedBoothMulTable final {
             accum = accum.dbl_n(WindowBits);
 
             // Conditional ok: loop iteration count is public
-            if(i <= 3) {
-               accum.randomize_rep(rng);
+            if(i < BlindingRandomness<BlindedScalar>::Rerandomizations) {
+               blinding.randomize_rep(accum, i);
             }
          }
 
@@ -1653,10 +1719,11 @@ class WindowedMul2Table final {
       */
       ProjectivePoint mul2(const Scalar& s1, const Scalar& s2, RandomNumberGenerator& rng) const {
          using BlindedScalar = BlindedScalarBits<C, W>;
-         const BlindedScalar bits1(s1, rng);
-         const BlindedScalar bits2(s2, rng);
+         const BlindingRandomness<BlindedScalar, 2> blinding(rng);
+         const BlindedScalar bits1(s1, blinding, 0);
+         const BlindedScalar bits2(s2, blinding, 1);
 
-         return mul2_exec<C, W>(m_table, bits1, bits2, rng);
+         return mul2_exec<C, W>(m_table, bits1, bits2, blinding);
       }
 
    private:
