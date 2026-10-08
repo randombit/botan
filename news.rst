@@ -4,6 +4,9 @@ Release Notes
 Version 3.14.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+New APIs and Features
+----------------------------------------
+
 * Add types ``PK_Signature_Options`` ``PK_Encryption_Options``, ``PK_KEM_Options``,
   and ``PK_Key_Agreement_Options`` which allow an application to precisely control
   how public key operations (signature, encryption, decryption, KEM, etc) are
@@ -12,10 +15,126 @@ Version 3.14.0, Not Yet Released
 * Add an implementation of the BLS12-381 pairing friendly curve, including the
   groups G1, G2, and Gt and the pairing operation. (GH #5718)
 
-* Rewrite the Ed25519 implementation to use dense field arithmetic and to
-  compute the basepoint multiplication tables at runtime, rather than embedding
-  them in the source. On 64-bit platforms signing is about 50% faster and
-  verification about 33% faster. (GH #5893)
+* Add ``Work_Executor``, which allows an application to replace the library's
+  internal thread pool with its own executor. (GH #5990)
+
+* Add an experimental C API for TLS in the new ``ffi_tls`` module. Experimental
+  modules are not built by default and not covered by SemVer. (GH #2492 #5941)
+
+* The Python binding now can adapt itself to any version of Botan3. (GH #5851)
+
+* Introduce a new design for entropy sources. (GH #5928 #5945)
+
+* Add ``EC_Group::register_custom_group``, which makes explicit the registration
+  behavior previously only available as a side effect of the ``EC_Group``
+  constructor taking the curve parameters. (GH #5922)
+
+* Add ``group`` functions returning the associated ``EC_Group`` to ``EC_Scalar``
+  and ``EC_AffinePoint``. (GH #5948)
+
+* Add ``TLS::Callbacks::tls_register_deferred_operation``, which gives the
+  library explicit control over DTLS retransmission timers, as an alternative
+  to polling ``Channel::timeout_check``. (GH #5915)
+
+* In TLS 1.3 send KeyUpdate requests when the number of records sent or
+  received approaches a policy-set limit. (GH #5877)
+
+* Add ``TelephoneNumber`` and ``TelephoneNumberRange`` types modeling the
+  telephone numbers and number ranges used in RFC 8226 STIR certificates.
+  (GH #5979)
+
+* Add ``PKCS12::mac_protected`` which indicates if the PKCS #12 file was
+  protected using a MAC. (GH #5902)
+
+* ``BER_Decoder::decode`` can now decode directly into byte-oriented strong
+  types. (GH #5935 #5946)
+
+* ``Jitter_RNG`` now accepts the compliance mode and the oversampling rate which
+  should be used by the jitterentropy library. AIS 20/31 NTG.1 compliance can be
+  requested with ``Jitter_RNG::Mode::NTG1`` if jitterentropy 3.7.0 or later is
+  used. Note that ``Jitter_RNG`` no longer forces the FIPS mode of jitterentropy
+  by default; use ``Jitter_RNG::Mode::FIPS`` to retain the previous behavior.
+  (GH #5832)
+
+* Add support for reference counted objects in the FFI layer. (GH #5959)
+
+* Add ``X509Cert.binary_values``/``string_values`` and the equivalents on
+  ``X509CRL`` to the Python binding. (GH #5984)
+
+* Add a ``--one-shot`` flag to the ``speed`` command which causes the public key
+  benchmarks to create a new operation object (``PK_Signer``, ``PK_Verifier``, ...)
+  for each measured operation, rather than creating one and reusing it. (GH #5951)
+
+Security and Hardening
+----------------------------------------
+
+* During X.509 path validation, signatures are now verified starting from the
+  trust anchor down to the leaf, stopping at the first invalid signature.
+  (GH #5982)
+
+* CRL signatures are now checked against the trusted hashes policy, as already
+  done for certificate signatures. (GH #5981)
+
+* Ed25519, Ed448, X25519, and X448 public keys are now fully validated
+  on deserialization, rejecting points of low order. (GH #5594)
+
+* Harden EC, RSA, DL, and Ed25519 private key loading, rejecting various invalid
+  encodings and parameters. (GH #5994 #5995 #5996 #5997 #6009)
+
+* All paths which decode or construct an ``EC_Group`` now verify the complete
+  set of group parameters, including generator validity, the Hasse bound, and
+  the curve discriminant. Anomalous curves (where the order equals the field
+  prime) are now rejected, and the deprecated ``EC_Group`` constructor rejects
+  cofactors of zero or greater than 16. (GH #5921)
+
+* ECIES now verifies that the peer's public point is encoded using the point
+  format specified in the ECIES parameters. Also, ``EC_AffinePoint::deserialize``
+  now rejects hybrid encoded points of the wrong length. (GH #5913 #5920)
+
+* Rework how stateful RNGs decide that they are seeded. Previously a call of
+  ``randomize_with_input`` with an empty output and a non-empty input of
+  sufficient length was treated as sufficient for seeding. Now only an explicit
+  call of ``initialize_with`` or ``add_entropy`` is treated as a possible seeding
+  event. (GH #5928 #5945)
+
+* The TLS server now validates that the host name received in the server_name
+  (SNI) extension is a syntactically valid DNS name, as required by RFC 6066.
+  The name passed to the ``Credentials_Manager`` and other callbacks is now the
+  canonical (lowercased) form. (GH #5937)
+
+* Fix various bugs in decoding the RFC 3779 IP address and AS identifier
+  extensions. The decoder now rejects encodings which are not in the canonical
+  form required by RFC 3779 (unsorted, overlapping, or unmerged ranges, or
+  ranges which should have been encoded as a prefix) rather than silently
+  sorting and merging the decoded ranges. Add interop between ``IPAddressBlocks``
+  and the IPv4/IPv6 name types. (GH #5957 #5978)
+
+* Fix lenient decoding of the RFC 8226 TNAuthList extension, and add
+  support for encoding it. (GH #5977)
+
+* Replace the algorithm name parser with a stricter and faster one. Previously,
+  invalid or trailing parameters were sometimes silently ignored, for example
+  ``HMAC(SHA-512,Foo)`` was accepted. (GH #5956)
+
+Behavior Changes
+----------------------------------------
+
+* By default, ECDSA signatures are now randomized rather than deterministic even
+  when RFC 6979 support is available at build time. Deterministic signatures can
+  be requested using the API ``PK_Signature_Options::with_deterministic_signature``
+  or by appending ",Deterministic" to the normal hash specifier string. (GH #5489)
+
+* ``AutoSeeded_RNG`` now uses HMAC_DRBG with SHA-256 rather than SHA-512 when
+  hardware support for SHA-256 is available. (GH #6003)
+
+* Password hash tuning (``PasswordHashFamily::tune_params``) now measures the
+  CPU time of the calling thread where available (falling back to a monotonic
+  clock), and uses the fastest of several samples rather than the mean. This
+  makes the result much less sensitive to concurrent load and clock adjustments.
+  (GH #5898)
+
+Optimizations
+----------------------------------------
 
 * Add support for parallel hash function invocations, including AVX2/AVX512
   implementations of SHA-256, SHA-512, and SHAKE (GH #5493 #5865 #5867 #5869
@@ -24,44 +143,51 @@ Version 3.14.0, Not Yet Released
 * Optimize SLH-DSA, XMSS, HSS-LSM, FrodoKEM, and ML-KEM using parallel hash
   function execution. (GH #5866 #5868 #5870 #5876 #5878)
 
-* Add interoperability between the RFC 3779 ``IPAddressBlocks`` address types
-  and ``IPv4Address``/``IPv6Address``/``IPv4Subnet``/``IPv6Subnet``, and
-  deprecate the parts of the RFC 3779 API which will not survive merging the
-  two sets of types in a future major release.
+* Refactor and optimize Ed25519 (GH #5893)
 
-* Add a certificate cache to the macOS system certificate store, implement
-  ``contains()`` directly, and query the keychain by issuer DN and serial
-  number instead of scanning all certificates of an issuer. (GH #5541 #5929)
+* Refactor and optimize X25519 key agreement, especially key generation (GH #6010)
 
-* The Python binding now can adapt itself to any version of Botan3. (GH #5851)
+* Elliptic curve optimizations, especially improving P-256 and SM2.
+  (GH #6012 #6013)
 
-* Add an experimental C API for TLS in the new ``ffi_tls`` module. Experimental
-  modules are not built by default and not covered by SemVer. (GH #2492 #5941)
-
-* Improve the performance of X.509 certificate parsing, including PEM decoding,
-  OID decoding, and extension handling. (GH #5888 #5889 #5890 #5891)
+* Improve the performance of one-shot RSA private key operations (GH #6004)
 
 * Optimize multiprecision integer division operations, and convert all
   such divisions to be constant time with respect to their inputs.
   (GH #5849 #5880 #5883 #5884)
 
-* Rework how stateful RNGs decide that they are seeded. Previously a call of
-  ``randomize_with_input`` with an empty output and a non-empty input of
-  sufficient length was treated as sufficient for seeding. Now only an explicit
-  call of ``initialize_with`` or ``add_entropy`` is treated as a possible seeding
-  event. (GH #5928 #5945)
+* Optimize primality testing by performing trial division by small primes
+  before running Miller-Rabin. (GH #5886)
 
-* Introduce a new design for entropy sources. The new ``Entropy_Source::gather``
-  interface only allows producing output rather than free interaction with the
-  RNG object being seeded. The previous ``poll`` interface is retained for
-  compatibility but will be removed in Botan4. In addition, the entropy source's
-  self-reported entropy estimate is taken into account when deciding if the
-  RNG is seeded. (GH #5928 #5945)
+* Improve the performance of X.509 certificate parsing, including PEM decoding,
+  OID decoding, and extension handling. (GH #5888 #5889 #5890 #5891)
 
-* The TLS server now validates that the host name received in the server_name
-  (SNI) extension is a syntactically valid DNS name, as required by RFC 6066.
-  The name passed to the ``Credentials_Manager`` and other callbacks is now the
-  canonical (lowercased) form. (GH #5937)
+* Add a certificate cache to the macOS system certificate store, implement
+  ``contains()`` directly, and query the keychain by issuer DN and serial
+  number instead of scanning all certificates of an issuer. (GH #5541 #5929)
+
+* Resolve a performance regression in TLS 1.3 record processing introduced
+  in 3.13.0 (GH #6002)
+
+* Reduce memory allocations during TLS 1.2 record processing. (GH #5887)
+
+* Modify the bitsliced AES implementation to use the native word size of the
+  processor, instead of always 32 bits. (GH #5826)
+
+* The AVX-512/GFNI Twofish implementation is now used for all blocks, including
+  any tail of fewer than 16 blocks, so the table based implementation is never
+  used on processors which support these extensions. (GH #5975)
+
+* Optimize the Whirlpool compression function on x86-64 and aarch64. (GH #5857 #5892)
+
+* Add an AVX-512 implementation of base64 encoding and decoding (GH #5999)
+
+* Optimize base58 encoding and decoding (GH #5858)
+
+* Enable support for NEON/ARMv8 codepaths on Windows aarch64 (GH #5863)
+
+Bug Fixes
+----------------------------------------
 
 * Fix a bug where a TLS 1.2 client configured with multiple certificate chains
   selected among them arbitrarily, without considering the server's
@@ -75,102 +201,40 @@ Version 3.14.0, Not Yet Released
   ``RandomNumberGenerator::randomize_with_ts_input`` passed only the low 32 bits
   of the timestamp, and never the process id, as additional input. (GH #5924 #5926)
 
-* Fix various bugs in decoding the RFC 3779 IP address and AS identifier
-  extensions. The decoder now rejects encodings which are not in the canonical
-  form required by RFC 3779 (unsorted, overlapping, or unmerged ranges, or
-  ranges which should have been encoded as a prefix) rather than silently
-  sorting and merging the decoded ranges. (GH #5957)
+* Fix various bugs in RNGs and entropy sources, including some edge cases
+  involving fork safety. (GH #5987)
 
-* All paths which decode or construct an ``EC_Group`` now verify the complete
-  set of group parameters, including generator validity, the Hasse bound, and
-  the curve discriminant. Anomalous curves (where the order equals the field
-  prime) are now rejected, and the deprecated ``EC_Group`` constructor rejects
-  cofactors of zero or greater than 16. (GH #5921)
+* Fix several bugs in the PKCS #11 wrapper, including typed key searches
+  matching keys of the wrong type, EC public keys always being encoded in
+  compressed form, ECDH accepting peer points with a small order component,
+  and ``Object::destroy`` leaving a stale handle. (GH #5983)
 
-* Add ``EC_Group::register_custom_group``, which makes explicit the registration
-  behavior previously only available as a side effect of the ``EC_Group``
-  constructor taking the curve parameters. (GH #5922)
+* Fix a number of bugs in the Python binding (GH #5969)
 
-* Add ``group`` functions returning the associated ``EC_Group`` to ``EC_Scalar``
-  and ``EC_AffinePoint``. (GH #5948)
+* Fix a race in the FFI layer where the thread-local storage for the last exception
+  message could be accessed after its destruction during process shutdown. (GH #5859)
 
-* Password hash tuning (``PasswordHashFamily::tune_params``) now measures the
-  CPU time of the calling thread where available (falling back to a monotonic
-  clock), and uses the fastest of several samples rather than the mean. This
-  makes the result much less sensitive to concurrent load and clock adjustments.
-  (GH #5898)
+* Fix libsodium compatibility issues in the sodium compat layer (GH #5966)
 
-* By default, ECDSA signatures are now randomized rather than deterministic even
-  when RFC 6979 support is available at build time. Deterministic signatures can
-  be requested using the API ``PK_Signature_Options::with_deterministic_signature``
-  or by appending ",Deterministic" to the normal hash specifier string. (GH #5489)
+* Fix various edge cases in the sqlite3 database wrapper. (GH #5972)
 
-* Add ``TelephoneNumber`` and ``TelephoneNumberRange`` types modeling the
-  telephone numbers and number ranges used in RFC 8226 STIR certificates.
-  (GH #5979)
-
-* Fix lenient decoding of the RFC 8226 TNAuthList extension, and add
-  support for encoding it. (GH #5977)
-
-* Add ``PKCS12::mac_protected`` which indicates if the PKCS #12 file was
-  protected using a MAC. (GH #5902)
-
-* ``BER_Decoder::decode`` can now decode directly into byte-oriented strong
-  types. (GH #5935 #5946)
+Deprecations and Cleanups
+----------------------------------------
 
 * Deprecate the public header ``pem.h``; it will become internal in Botan4.
   (GH #5891)
-
-* Optimize primality testing by performing trial division by small primes
-  before running Miller-Rabin. (GH #5886)
-
-* ECIES now verifies that the peer's public point is encoded using the point
-  format specified in the ECIES parameters. Also, ``EC_AffinePoint::deserialize``
-  now rejects hybrid encoded points of the wrong length. (GH #5913 #5920)
-
-* Add a ``--one-shot`` flag to the ``speed`` command which causes the public key
-  benchmarks to create a new operation object (``PK_Signer``, ``PK_Verifier``,
-  etc) for each measured operation, rather than creating one and reusing it.
-  (GH #5951)
 
 * Remove the sandboxing support (``sandbox_init``, ``pledge``, Capsicum) from
   the command line tool. Recent versions of macOS kill any process which calls
   ``sandbox_init``, and the other implementations were dead or untested code.
   (GH #5940 #5942)
 
-* In TLS 1.3 send KeyUpdate requests when the number of records sent or
-  received approaches a policy-set limit. (GH #5877)
+* Remove many unused header includes, including from public headers.
+  Applications which relied on transitive includes may need to add explicit
+  includes. (GH #5897)
 
-* Modify the bitsliced AES implementation to use the native word size of the
-  processor, instead of always 32 bits. (GH #5826)
-
-* The AVX-512/GFNI Twofish implementation is now used for all blocks, including
-  any tail of fewer than 16 blocks, so the table based implementation is never
-  used on processors which support these extensions.
-
-* Optimize the Whirlpool compression function on x86-64 and aarch64. (GH #5857 #5892)
-
-* Enable support for NEON/ARMv8 codepaths on Windows aarch64 (GH #5863)
-
-* Optimize base58 encoding and decoding (GH #5858)
-
-* ``Jitter_RNG`` now accepts the compliance mode and the oversampling rate which
-  should be used by the jitterentropy library. AIS 20/31 NTG.1 compliance can be
-  requested with ``Jitter_RNG::Mode::NTG1`` if jitterentropy 3.7.0 or later is
-  used. Note that ``Jitter_RNG`` no longer forces the FIPS mode of jitterentropy
-  by default; use ``Jitter_RNG::Mode::FIPS`` to retain the previous behavior.
-  (GH #5832)
-
-* Fix a latent deadlock in ``Thread_Pool`` which would trigger if a task running
-  in the pool itself queued further work on the same pool. (GH #5874)
-
-* Fix a race in the FFI layer where the thread-local storage for the last
-  exception message could be accessed after its destruction during process
-  shutdown. (GH #5859)
-
-* Fix a latent bug in the amalgamation generator, where a header which was
-  conditionally included in one file and unconditionally included in another
-  could vanish from the amalgamation depending on include ordering. (GH #5881)
+Build and Infrastructure
+----------------------------------------
 
 * Add support for precompiled headers with GCC and Clang, enabled using
   ``--enable-pch``. (GH #5298)
@@ -178,10 +242,6 @@ Version 3.14.0, Not Yet Released
 * Various build fixes, including for MinGW with libc++ 20 or later, the import
   library output directory with GCC on MinGW, and Clang on Aarch64.
   (GH #5850 #5854 #5875 #5901 #5953 #5954)
-
-* Remove many unused header includes, including from public headers.
-  Applications which relied on transitive includes may need to add explicit
-  includes. (GH #5897)
 
 * CI updates including moving most builds to Ubuntu 26.04, adding Windows Aarch64
   builders, dropping the 32-bit MIPS cross build, and updating dependencies used
