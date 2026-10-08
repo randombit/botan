@@ -216,16 +216,19 @@ auto marshall_message(const T& message) {
 
 }  //namespace
 
+HandshakeProtocolHeader Handshake_Layer::prepare_header(Handshake_Type type, size_t payload_length) {
+   BOTAN_ASSERT_NOMSG(payload_length <= 0xFFFFFF);
+   auto header = HandshakeProtocolHeader(store_be(static_cast<uint32_t>(payload_length)));
+   header[0] = static_cast<uint8_t>(type);
+   return header;
+}
+
 MarshalledHandshakeMessage Handshake_Layer::prepare_message(const Handshake_Message_13_Ref message,
                                                             Transcript_Hash_State& transcript_hash) {
    auto msg = marshall_message(message);
    const auto [header, serialized] = split(msg);
    transcript_hash.update(header, serialized);
    return msg;
-}
-
-MarshalledHandshakeMessage Handshake_Layer::prepare_post_handshake_message(const Post_Handshake_Message_13& message) {
-   return marshall_message(message);
 }
 
 }  // namespace Botan::TLS

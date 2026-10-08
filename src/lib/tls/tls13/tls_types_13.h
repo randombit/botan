@@ -31,6 +31,10 @@ using HandshakeProtocolHeader = Strong<std::array<uint8_t, 4>, struct HandshakeP
 /// with the handshake protocol header.
 using MarshalledHandshakeMessage = Strong<std::vector<uint8_t>, struct MarshalledHandshakeMessage_>;
 
+/// Holds the serialization of a TLS 1.3 handshake message flight containing
+/// multiple handshake messages along with their handshake protocol headers.
+using MarshalledHandshakeMessageFlight = Strong<std::vector<uint8_t>, struct MarshalledHandshakeMessageFlight_>;
+
 /// Holds the serialization of a single TLS 1.3 record along with the record
 /// protocol header. Protected records hold the encrypted payload and AEAD tag.
 using MarshalledRecord = Strong<secure_vector<uint8_t>, struct MarshalledRecord_>;

@@ -19,6 +19,7 @@ tls_channel_impl_13.h
 tls_connection_state_13.h
 tls_cipher_state.h
 tls_client_impl_13.h
+tls_flight_13.h
 tls_handshake_layer_13.h
 tls_handshake_state_13.h
 tls_record_13.h

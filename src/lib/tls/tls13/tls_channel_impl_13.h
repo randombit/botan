@@ -14,6 +14,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_channel_impl.h>
 #include <botan/internal/tls_connection_state_13.h>
+#include <botan/internal/tls_flight_13.h>
 #include <botan/internal/tls_handshake_layer_13.h>
 #include <botan/internal/tls_record_layer_13.h>
 #include <botan/internal/tls_transcript_hash_13.h>
@@ -27,73 +28,6 @@ class Cipher_State;
 * Generic interface for TLS 1.3 endpoint
 */
 class Channel_Impl_13 : public Channel_Impl {
-   protected:
-      /**
-       * Helper class to coalesce handshake messages into a single TLS record
-       * of type 'Handshake'. This is used entirely internally in the Channel,
-       * Client and Server implementations.
-       *
-       * Note that implementations should use the derived classes that either
-       * aggregate conventional Handshake messages or Post-Handshake messages.
-       */
-      class AggregatedMessages {
-         public:
-            AggregatedMessages(Channel_Impl_13& channel, Handshake_Layer& handshake_layer);
-
-            AggregatedMessages(const AggregatedMessages&) = delete;
-            AggregatedMessages& operator=(const AggregatedMessages&) = delete;
-            AggregatedMessages(AggregatedMessages&&) = delete;
-            AggregatedMessages& operator=(AggregatedMessages&&) = delete;
-
-            ~AggregatedMessages() = default;
-
-            /**
-             * Send the messages aggregated in the message buffer.
-             */
-            void send() const;
-
-            bool contains_messages() const { return !m_message_buffer.empty(); }
-
-         protected:
-            std::vector<uint8_t> m_message_buffer;  // NOLINT(*non-private-member-variable*)
-
-            Channel_Impl_13& m_channel;          // NOLINT(*non-private-member-variable*)
-            Handshake_Layer& m_handshake_layer;  // NOLINT(*non-private-member-variable*)
-      };
-
-      /**
-       * Aggregate conventional handshake messages. This will update the given
-       * Transcript_Hash_State accordingly as individual messages are added to
-       * the aggregation.
-       */
-      class AggregatedHandshakeMessages : public AggregatedMessages {
-         public:
-            AggregatedHandshakeMessages(Channel_Impl_13& channel,
-                                        Handshake_Layer& handshake_layer,
-                                        Transcript_Hash_State& transcript_hash);
-
-            /**
-             * Adds a single handshake message to the send buffer. Note that this
-             * updates the handshake transcript hash regardless of sending the
-             * message.
-             */
-            AggregatedHandshakeMessages& add(Handshake_Message_13_Ref message);
-
-         private:
-            Transcript_Hash_State& m_transcript_hash;
-      };
-
-      /**
-       * Aggregate post-handshake messages. In contrast to ordinary handshake
-       * messages this does not maintain a Transcript_Hash_State.
-       */
-      class AggregatedPostHandshakeMessages : public AggregatedMessages {
-         public:
-            using AggregatedMessages::AggregatedMessages;
-
-            AggregatedPostHandshakeMessages& add(Post_Handshake_Message_13 message);
-      };
-
    public:
       /**
       * Set up a new TLS 1.3 session
@@ -197,16 +131,7 @@ class Channel_Impl_13 : public Channel_Impl {
       virtual void process_post_handshake_msg(Post_Handshake_Message_13 msg) = 0;
       virtual void process_dummy_change_cipher_spec() = 0;
 
-      enum class Compat_Mode_Situation : uint8_t {
-         BeforeSendingAlert,
-         AfterSendingFirstClientHello,
-         BeforeSendingSecondClientHello,
-         BeforeSendingEncryptedClientFlight,
-         AfterSendingFirstServerHello,
-         AfterSendingHelloRetryRequest,
-      };
-
-      virtual void maybe_handle_compatibility_mode(Compat_Mode_Situation situation) = 0;
+      virtual bool compat_mode_ccs_requested() const = 0;
       virtual void maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const = 0;
 
       void handle(const Key_Update& key_update);
@@ -218,30 +143,7 @@ class Channel_Impl_13 : public Channel_Impl {
        */
       void opportunistically_update_traffic_keys() { m_opportunistic_key_update = true; }
 
-      template <typename... MsgTs>
-      void send_handshake_message(const std::variant<MsgTs...>& message) {
-         aggregate_handshake_messages().add(generalize_to<Handshake_Message_13_Ref>(message)).send();
-      }
-
-      template <typename MsgT>
-      void send_handshake_message(std::reference_wrapper<MsgT> message) {
-         send_handshake_message(generalize_to<Handshake_Message_13_Ref>(message));
-      }
-
-      void send_post_handshake_message(Post_Handshake_Message_13 message) {
-         aggregate_post_handshake_messages().add(std::move(message)).send();
-      }
-
       void send_dummy_change_cipher_spec();
-
-      AggregatedHandshakeMessages aggregate_handshake_messages() {
-         BOTAN_STATE_CHECK(m_transcript_hash.has_value());
-         return AggregatedHandshakeMessages(*this, m_handshake_layer, *m_transcript_hash);
-      }
-
-      AggregatedPostHandshakeMessages aggregate_post_handshake_messages() {
-         return AggregatedPostHandshakeMessages(*this, m_handshake_layer);
-      }
 
       Callbacks& callbacks() const { return *m_callbacks; }
 
@@ -255,8 +157,10 @@ class Channel_Impl_13 : public Channel_Impl {
 
       SecretLoggerFn secret_logger() const;
 
+      void send_flight(std::vector<Flight::Message> flight);
+
    private:
-      void send_record(Record_Type record_type, const std::vector<uint8_t>& record);
+      void send_record(Record_Type record_type, const std::vector<uint8_t>& record, Cipher_State* cipher_state);
 
       void process_alert(const secure_vector<uint8_t>& record);
 
@@ -330,6 +234,8 @@ class Channel_Impl_13 : public Channel_Impl {
 
       bool m_first_message_sent;
       bool m_first_message_received;
+
+      bool m_dummy_ccs_emitted = false;
 
       uint64_t m_last_key_update_ms = 0;
 };

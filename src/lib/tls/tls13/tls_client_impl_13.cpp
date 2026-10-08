@@ -53,17 +53,27 @@ std::shared_ptr<Client_Impl_13> Client_Impl_13::create(const std::shared_ptr<Cal
 #endif
    }
 
-   self->send_handshake_message(self->m_handshake->state.sending(
-      Client_Hello_13(*policy,
-                      *callbacks,
-                      *rng,
-                      self->m_info.hostname(),
-                      next_protocols,
-                      self->m_handshake->resumed_session,
-                      creds->find_preshared_keys(self->m_info.hostname(), Connection_Side::Client),
-                      TLS_Flavor::TLS)));
+   BOTAN_ASSERT_NOMSG(self->m_transcript_hash.has_value());
 
-   self->maybe_handle_compatibility_mode(Compat_Mode_Situation::AfterSendingFirstClientHello);
+   auto flight = Flight(*self->m_transcript_hash, self->callbacks())
+                    .add(self->m_handshake->state.sending(
+                       Client_Hello_13(*policy,
+                                       *callbacks,
+                                       *rng,
+                                       self->m_info.hostname(),
+                                       next_protocols,
+                                       self->m_handshake->resumed_session,
+                                       creds->find_preshared_keys(self->m_info.hostname(), Connection_Side::Client),
+                                       TLS_Flavor::TLS)));
+
+   // RFC 9846 E.4
+   //    [...] If offering early data, the [dummy Change Cipher Spec record]
+   //    is placed immediately after the first ClientHello.
+   //
+   // TODO(0-RTT): When implementing early data, we need to add the dummy CCS
+   //              record to this initial ClientHello flight!
+
+   self->send_flight(flight.commit());
 
    self->m_handshake->transitions.set_expected_next({Handshake_Type::ServerHello, Handshake_Type::HelloRetryRequest});
 
@@ -398,8 +408,22 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr) {
 
    callbacks().tls_examine_extensions(hrr.extensions(), Connection_Side::Server, Handshake_Type::HelloRetryRequest);
 
-   maybe_handle_compatibility_mode(Compat_Mode_Situation::BeforeSendingSecondClientHello);
-   send_handshake_message(std::reference_wrapper(ch));
+   auto flight = Flight(*m_transcript_hash, callbacks());
+
+   // RFC 9846 E.4
+   //    If not offering early data, the client sends a dummy
+   //    change_cipher_spec record [...] immediately before its second
+   //    flight. This may either be before its second ClientHello or before
+   //    its encrypted handshake flight.
+   //
+   // Here, we are in the HelloRetryRequest flow, so we send the CCS before
+   // the second ClientHello.
+   if(compat_mode_ccs_requested()) {
+      flight.add_dummy_change_cipher_spec();
+   }
+   flight.add(ch);
+
+   send_flight(flight.commit());
 
    // RFC 8446 4.1.4
    //    If a client receives a second HelloRetryRequest in the same connection [...],
@@ -551,7 +575,7 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
    m_handshake->transitions.set_expected_next(Handshake_Type::Finished);
 }
 
-void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedHandshakeMessages& flight) {
+void Client_Impl_13::create_client_authentication_flight(Flight& flight) {
    BOTAN_ASSERT_NONNULL(m_handshake);
    BOTAN_ASSERT_NOMSG(m_transcript_hash.has_value());
    BOTAN_ASSERT_NOMSG(m_handshake->state.has_certificate_request());
@@ -638,20 +662,32 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
    // the derivation of sending application data.
    m_cipher_state->advance_with_server_finished(m_transcript_hash->current());
 
-   auto flight = aggregate_handshake_messages();
+   auto flight = Flight(*m_transcript_hash, callbacks());
+
+   // RFC 9846 E.4
+   //    If not offering early data, the client sends a dummy
+   //    change_cipher_spec record [...] immediately before its second
+   //    flight. This may either be before its second ClientHello or before
+   //    its encrypted handshake flight.
+   //
+   // If we didn't handle a HelloRetryRequest before, this is our second
+   // flight and we send the CCS. Otherwise, we are already sending our third
+   // flight and the CCS was already sent before the second ClientHello.
+   if(compat_mode_ccs_requested() && !m_handshake->state.has_hello_retry_request()) {
+      flight.add_dummy_change_cipher_spec();
+   }
 
    // RFC 8446 4.4.2
    //    The client MUST send a Certificate message if and only if the server
    //    has requested client authentication via a CertificateRequest message.
    if(m_handshake->state.has_certificate_request()) {
-      send_client_authentication(flight);
+      create_client_authentication_flight(flight);
    }
 
    // send client finished handshake message (still using handshake traffic secrets)
    flight.add(m_handshake->state.sending(Finished_13(m_cipher_state.get(), m_transcript_hash->current())));
 
-   maybe_handle_compatibility_mode(Compat_Mode_Situation::BeforeSendingEncryptedClientFlight);
-   flight.send();
+   send_flight(flight.commit());
 
    // derives the sending application traffic secrets
    m_cipher_state->advance_with_client_finished(m_transcript_hash->current());
@@ -783,65 +819,15 @@ std::optional<std::string> Client_Impl_13::external_psk_identity() const {
    return std::nullopt;
 }
 
-void Client_Impl_13::maybe_handle_compatibility_mode(Compat_Mode_Situation situation) {
+bool Client_Impl_13::compat_mode_ccs_requested() const {
    // RFC 9846 E.4
    //    This "compatibility mode" is partially negotiated: the client can opt
    //    [in] or not [...].
    if(!policy().tls_13_middlebox_compatibility_mode()) {
-      return;
+      return false;
    }
 
-   // RFC 9846 5.
-   //    An implementation [...] which receives a protected change_cipher_spec
-   //    record MUST abort the handshake with an "unexpected_message" alert.
-   if(m_handshake == nullptr) {
-      return;
-   }
-
-   switch(situation) {
-      case Compat_Mode_Situation::AfterSendingFirstClientHello:
-         // RFC 9846 E.4
-         //    If offering early data, the record is placed immediately after
-         //    the first ClientHello.
-         //
-         // TODO: Implement early data support
-         break;
-
-      case Compat_Mode_Situation::BeforeSendingSecondClientHello:
-         // RFC 9846 E.4
-         //    [...] the client sends a dummy change_cipher_spec record [...]
-         //    immediately before its second flight. This may either be before
-         //    its second ClientHello [...].
-         BOTAN_ASSERT_NOMSG(m_handshake->state.has_hello_retry_request());
-         send_dummy_change_cipher_spec();
-         break;
-
-      case Compat_Mode_Situation::BeforeSendingEncryptedClientFlight:
-         // RFC 9846 E.4
-         //    [...] or before its encrypted handshake flight.
-         BOTAN_ASSERT_NOMSG(m_handshake->state.has_server_finished());
-         if(!m_handshake->state.has_hello_retry_request()) {
-            send_dummy_change_cipher_spec();
-         }
-         break;
-
-      case Compat_Mode_Situation::BeforeSendingAlert:
-         // RFC 9846 E.4
-         //    [...] or before its encrypted handshake flight.
-         //
-         // Note that an encrypted alert message also counts as an encrypted
-         // handshake flight, so we also send a dummy CCS in that case. Except
-         // if we did receive a HelloRetryRequest, in which case we already sent
-         // a dummy CCS before the second ClientHello.
-         if(m_cipher_state != nullptr && !m_handshake->state.has_hello_retry_request()) {
-            send_dummy_change_cipher_spec();
-         }
-         break;
-
-      case Compat_Mode_Situation::AfterSendingFirstServerHello:
-      case Compat_Mode_Situation::AfterSendingHelloRetryRequest:
-         BOTAN_ASSERT_UNREACHABLE();  // These situations occur on the server side.
-   }
+   return true;
 }
 
 void Client_Impl_13::maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const {
