@@ -20,7 +20,9 @@ eme_oaep
 frodokem
 
 # Table 2.6: Recommended parameters for ClassicMcEliece-KEM.
-classic_mceliece
+# Recommendation withdrawn:
+# https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Krypto/Hinweis_Classic_McEliece.pdf
+# classic_mceliece
 
 # Table 2.7: Recommended parameters for ML-KEM
 ml_kem
