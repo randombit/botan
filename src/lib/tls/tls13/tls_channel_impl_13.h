@@ -3,6 +3,7 @@
 * (C) 2022 Jack Lloyd
 *     2021 Elektrobit Automotive GmbH
 *     2022 Hannes Rantzsch, René Meusel - neXenio GmbH
+*     2026 Amos Treiber, René Meusel - Rohde & Schwarz Networks and Cybersecurity GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,19 +11,16 @@
 #ifndef BOTAN_TLS_CHANNEL_IMPL_13_H_
 #define BOTAN_TLS_CHANNEL_IMPL_13_H_
 
-#include <botan/tls_messages_13.h>
-#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_channel_impl.h>
 #include <botan/internal/tls_connection_state_13.h>
 #include <botan/internal/tls_flight_13.h>
-#include <botan/internal/tls_handshake_layer_13.h>
-#include <botan/internal/tls_record_layer_13.h>
+#include <botan/internal/tls_record_13.h>
 #include <botan/internal/tls_transcript_hash_13.h>
-#include <botan/internal/tls_types_13.h>
 
 namespace Botan::TLS {
 
 class Cipher_State;
+class Channel_IO;
 
 /**
 * Generic interface for TLS 1.3 endpoint
@@ -127,6 +125,15 @@ class Channel_Impl_13 : public Channel_Impl {
       bool timeout_check() override { return false; }
 
    protected:
+      /**
+       * Hands ownership of the channel's cipher state to this channel and its
+       * associated Channel_IO. Typically called once the handshake's key
+       * schedule produced the first traffic secrets.
+       *
+       * @return a reference to the handed-off cipher state for convenience
+       */
+      Cipher_State& setup_cipher_state(std::unique_ptr<Cipher_State> cipher_state);
+
       virtual void process_handshake_msg(Handshake_Message_13 msg) = 0;
       virtual void process_post_handshake_msg(Post_Handshake_Message_13 msg) = 0;
       virtual void process_dummy_change_cipher_spec() = 0;
@@ -135,15 +142,6 @@ class Channel_Impl_13 : public Channel_Impl {
       virtual void maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const = 0;
 
       void handle(const Key_Update& key_update);
-
-      /**
-       * Schedule a traffic key update to opportunistically happen before the
-       * channel sends application data the next time. Such a key update will
-       * never request a reciprocal key update from the peer.
-       */
-      void opportunistically_update_traffic_keys() { m_opportunistic_key_update = true; }
-
-      void send_dummy_change_cipher_spec();
 
       Callbacks& callbacks() const { return *m_callbacks; }
 
@@ -160,9 +158,11 @@ class Channel_Impl_13 : public Channel_Impl {
       void send_flight(std::vector<Flight::Message> flight);
 
    private:
-      void send_record(Record_Type record_type, const std::vector<uint8_t>& record, Cipher_State* cipher_state);
-
-      void process_alert(const secure_vector<uint8_t>& record);
+      std::optional<BytesNeeded> process(Handshake_Message_13 handshake_msg);
+      void process(Post_Handshake_Message_13 post_handshake_msg);
+      void process(const Alert_Record& alert_record);
+      void process(const ChangeCipherSpec_Record& ccs_record);
+      void process(const ApplicationData_Record& app_data_record);
 
       /**
        * Terminate the connection (on sending or receiving an error alert) and
@@ -173,8 +173,11 @@ class Channel_Impl_13 : public Channel_Impl {
    protected:
       const Connection_Side m_side;                              // NOLINT(*non-private-member-variable*)
       std::optional<Transcript_Hash_State> m_transcript_hash;    // NOLINT(*non-private-member-variable*)
-      std::unique_ptr<Cipher_State> m_cipher_state;              // NOLINT(*non-private-member-variable*)
+      std::shared_ptr<Cipher_State> m_cipher_state;              // NOLINT(*non-private-member-variable*)
       std::optional<Active_Connection_State_13> m_active_state;  // NOLINT(*non-private-member-variable*)
+
+      /* I/O handling */
+      std::shared_ptr<Channel_IO> m_channel_io;  // NOLINT(*non-private-member-variable*)
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       /**
@@ -217,27 +220,8 @@ class Channel_Impl_13 : public Channel_Impl {
       std::shared_ptr<RandomNumberGenerator> m_rng;
       std::shared_ptr<const Policy> m_policy;
 
-      /* handshake state */
-      Record_Layer m_record_layer;
-      Handshake_Layer m_handshake_layer;
-
       bool m_can_read;
       bool m_can_write;
-
-      bool m_opportunistic_key_update;
-
-      /**
-       * True while a KeyUpdate with "update_requested" is outstanding, i.e.
-       * the peer has not yet replied with a KeyUpdate of its own.
-       */
-      bool m_key_update_requested;
-
-      bool m_first_message_sent;
-      bool m_first_message_received;
-
-      bool m_dummy_ccs_emitted = false;
-
-      uint64_t m_last_key_update_ms = 0;
 };
 }  // namespace Botan::TLS
 

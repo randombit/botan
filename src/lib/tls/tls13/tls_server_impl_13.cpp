@@ -336,7 +336,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
    send_flight(server_hello_flight.commit());
 
    // Setup encryption for all the remaining handshake messages
-   m_cipher_state = [&] {
+   setup_cipher_state([&] {
       // Currently, PSK without DHE is not implemented...
       auto* const my_keyshare = m_handshake->state.server_hello().extensions().get<Key_Share>();
       BOTAN_ASSERT_NONNULL(my_keyshare);
@@ -352,7 +352,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
          return Cipher_State::init_with_server_hello(
             m_side, my_keyshare->take_shared_secret(), cipher, m_transcript_hash->current(), secret_logger());
       }
-   }();
+   }());
 
    // Decide up front whether we will request client authentication so the
    // EncryptedExtensions can attach client_certificate_type when applicable

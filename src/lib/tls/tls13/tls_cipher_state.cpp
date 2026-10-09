@@ -107,6 +107,7 @@
 #include <botan/internal/hmac.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_channel_impl_13.h>
 
 namespace Botan::TLS {
