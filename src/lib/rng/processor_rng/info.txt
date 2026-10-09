@@ -11,6 +11,7 @@ brief -> "Directly invokes a CPU specific instruction to generate random numbers
 x86_32
 x86_64
 ppc64
+arm64
 </arch>
 
 <header:public>
