@@ -2689,3 +2689,103 @@ TLS Policies
 .. cpp:function:: int botan_tls_policy_destroy(botan_tls_policy_t policy)
 
    Destroy the object.
+
+TLS Credentials
+^^^^^^^^^^^^^^^^
+
+.. cpp:type:: opaque* botan_tls_credentials_t
+
+   An opaque data type holding what a TLS endpoint needs to authenticate the
+   peer and itself: trust anchors and CRLs for verifying the peer's certificate
+   chain, and certificate chains with private keys for authenticating this side
+   (as a server, or as a client when the server requests a client certificate).
+
+   Everything passed to the setters is copied, so the certificate, CRL and key
+   handles may be destroyed after the call. The object may be shared by any
+   number of channels, which keep it alive, and its setters may be called at any
+   time; later handshakes see the change. It is not synchronized, so modifying
+   it while a channel on another thread uses it is a data race. Don't mess with
+   it.
+
+.. cpp:function:: int botan_tls_credentials_init(botan_tls_credentials_t* creds)
+
+   Create an empty credentials object with no trust anchors and no certificate
+   chains.
+
+.. cpp:function:: int botan_tls_credentials_add_trusted_cert(botan_tls_credentials_t creds, \
+                  botan_x509_cert_t cert)
+
+   Add a certificate as a trust anchor for verifying the peer.
+
+.. cpp:function:: int botan_tls_credentials_add_crl(botan_tls_credentials_t creds, botan_x509_crl_t crl)
+
+   Add a CRL to the revocation data consulted when verifying the peer. Note that
+   the default policy requires revocation information for the peer's certificates
+   (``require_cert_revocation_info``), so without CRLs or stapled OCSP responses
+   verification fails unless the policy relaxes that requirement.
+
+.. cpp:function:: int botan_tls_credentials_add_trusted_dir(botan_tls_credentials_t creds, const char* path)
+
+   Add every certificate found in the files below the directory ``path``
+   (searched recursively; files that do not contain a certificate are skipped)
+   as a trust anchor, as ``Botan::Certificate_Store_In_Memory`` does. Returns
+   ``BOTAN_FFI_ERROR_BAD_PARAMETER`` if no certificate was found, which includes
+   a directory that does not exist or cannot be read, and
+   ``BOTAN_FFI_ERROR_NOT_IMPLEMENTED`` in a build without filesystem support.
+
+.. cpp:function:: int botan_tls_credentials_use_system_store(botan_tls_credentials_t creds)
+
+   Also trust the certificates in the operating system's certificate store
+   (``Botan::System_Certificate_Store``). Returns
+   ``BOTAN_FFI_ERROR_NOT_IMPLEMENTED`` in a build without the ``certstor_system``
+   module.
+
+.. cpp:function:: int botan_tls_credentials_add_cert_chain(botan_tls_credentials_t creds, \
+                  const botan_x509_cert_t* chain, size_t chain_len, botan_privkey_t key)
+
+   Add a certificate chain, leaf first, together with the private key of the leaf
+   certificate. The chain must contain at least one certificate. The certificates
+   are copied; the key is copied by re-encoding it as a PKCS #8 PrivateKeyInfo, so
+   a key that cannot be exported, such as a hardware backed key, is rejected with
+   the error code of the exception it throws. Returns
+   ``BOTAN_FFI_ERROR_BAD_PARAMETER`` if ``chain_len`` is 0 or the key does not
+   belong to the leaf certificate.
+
+   Several chains may be added, for instance one with an RSA and one with an ECDSA
+   key, or chains for different server names. A channel uses the first chain whose
+   key type the peer accepts. A server that has a chain whose leaf certificate
+   matches the server name the client asked for offers only such chains. If the
+   peer named acceptable certificate authorities, a chain with a certificate issued
+   by one of them is preferred.
+
+.. cpp:function:: int botan_tls_credentials_destroy(botan_tls_credentials_t creds)
+
+   Destroy the object.
+
+TLS Session Managers
+^^^^^^^^^^^^^^^^^^^^^
+
+.. cpp:type:: opaque* botan_tls_session_manager_t
+
+   An opaque data type for a store of session resumption information
+   (``Botan::TLS::Session_Manager``). It may be shared by any number of channels,
+   which keep it alive; the in-memory manager synchronizes its own state. Don't
+   mess with it.
+
+.. cpp:function:: int botan_tls_session_manager_init_memory(botan_tls_session_manager_t* mgr, \
+                  botan_rng_t rng, size_t max_sessions)
+
+   Create a session manager that keeps at most ``max_sessions`` sessions in memory
+   (``Botan::TLS::Session_Manager_In_Memory``; 0 means no limit). ``rng`` may be
+   NULL, in which case an internal system RNG is used. A non-NULL ``rng`` is not
+   copied: it must stay valid until the manager and every channel using the
+   manager have been destroyed.
+
+.. cpp:function:: int botan_tls_session_manager_init_noop(botan_tls_session_manager_t* mgr)
+
+   Create a session manager that stores nothing
+   (``Botan::TLS::Session_Manager_Noop``), which disables session resumption.
+
+.. cpp:function:: int botan_tls_session_manager_destroy(botan_tls_session_manager_t mgr)
+
+   Destroy the object.

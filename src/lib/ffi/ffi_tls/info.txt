@@ -1,5 +1,5 @@
 <defines>
-FFI_TLS -> 20260911
+FFI_TLS -> 20260916
 </defines>
 
 <module_info>
@@ -11,6 +11,10 @@ lifecycle -> "Experimental"
 <header:public>
 ffi_tls.h
 </header:public>
+
+<header:internal>
+ffi_tls_impl.h
+</header:internal>
 
 <requires>
 ffi
