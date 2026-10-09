@@ -203,6 +203,33 @@ class ECC_Mul2_Inf_Tests final : public Test {
             check_px_qy("r*g + r*-g", g, r, g.negate(), r);
             check_px_qy("r*g2 + -r2*g", g2, r, g, neg_r2);
 
+            // Related p and q make some entries of the mul2 table the identity,
+            // without the result being the identity
+            const auto check_related = [&](const char* what,
+                                           const Botan::EC_AffinePoint& p,
+                                           const Botan::EC_AffinePoint& q) {
+               const auto x = Botan::EC_Scalar::random(group, rng());
+               const auto y = Botan::EC_Scalar::random(group, rng());
+               const auto expected = p.mul(x, rng()).add(q.mul(y, rng()));
+               result.test_is_false(Botan::fmt("{} is not the identity", what), expected.is_identity());
+               if(const auto pt = Botan::EC_AffinePoint::mul_px_qy(p, x, q, y, rng())) {
+                  result.test_bin_eq(what, pt->serialize_uncompressed(), expected.serialize_uncompressed());
+               } else {
+                  result.test_failure(Botan::fmt("EC_AffinePoint::mul_px_qy {} unexpectedly returned nullopt", what));
+               }
+            };
+
+            const auto g3 = g2.add(g);
+            check_related("x*g + y*g", g, g);
+            check_related("x*g + y*-g", g, g.negate());
+            check_related("x*g + y*2g", g, g2);
+            check_related("x*g + y*-2g", g, g2.negate());
+            check_related("x*2g + y*-g", g2, g.negate());
+            check_related("x*g + y*-3g", g, g3.negate());
+            check_related("x*3g + y*-2g", g3, g2.negate());
+            check_related("x*g + y*id", g, id);
+            check_related("x*id + y*g", id, g);
+
             // Test 'zeroization' (explicit erasure of the scalar content)
             auto r2 = Botan::EC_Scalar::random(group, rng());
             result.test_is_true("random value is not zero", !r2.is_zero());
@@ -256,6 +283,46 @@ class ECC_Point_Addition_Tests final : public Test {
             check_expr_is_g("z - z + g", z.add(nz).add(g));
             check_expr_is_g("z + z + g - z - z", z.add(z).add(g).add(nz).add(nz));
             check_expr_is_g("z + id + g + z - z - z", z.add(id).add(g).add(z).add(nz).add(nz));
+
+            const auto r = Botan::EC_Scalar::random(group, rng());
+            result.test_is_true("id * r is the identity element", id.mul(r, rng()).is_identity());
+
+            // An unseeded RNG disables the scalar blinding, the representation
+            // randomization, and the random curve isomorphism; the results must
+            // be the same either way
+            Botan::Null_RNG null_rng;
+            const auto r2 = Botan::EC_Scalar::random(group, rng());
+            result.test_bin_eq("z * r with an unseeded RNG",
+                               z.mul(r, null_rng).serialize_uncompressed(),
+                               z.mul(r, rng()).serialize_uncompressed());
+
+            const auto zr_gr2_null = Botan::EC_AffinePoint::mul_px_qy(z, r, g, r2, null_rng);
+            const auto zr_gr2 = Botan::EC_AffinePoint::mul_px_qy(z, r, g, r2, rng());
+            if(zr_gr2_null.has_value() && zr_gr2.has_value()) {
+               result.test_bin_eq("z * r + g * r2 with an unseeded RNG",
+                                  zr_gr2_null->serialize_uncompressed(),
+                                  zr_gr2->serialize_uncompressed());
+            } else {
+               result.test_failure("z * r + g * r2 was unexpectedly the identity");
+            }
+
+            // Small multiples, computed by repeated addition, exercise every
+            // entry of the variable point multiplication table. Repeating with
+            // fresh blinding masks also exercises the (rare) case where the
+            // final addition of the multiplication is a doubling.
+            auto z_k = id;
+            for(size_t k = 1; k <= 32; ++k) {
+               z_k = z_k.add(z);
+               const auto s_k = Botan::EC_Scalar::from_bigint(group, Botan::BigInt::from_word(k));
+               const auto neg_s_k = s_k.negate();
+               const auto z_k_bytes = z_k.serialize_uncompressed();
+               const auto neg_z_k_bytes = z_k.negate().serialize_uncompressed();
+               for(size_t trial = 0; trial != 8; ++trial) {
+                  result.test_bin_eq(Botan::fmt("z * {}", k), z.mul(s_k, rng()).serialize_uncompressed(), z_k_bytes);
+                  result.test_bin_eq(
+                     Botan::fmt("z * -{}", k), z.mul(neg_s_k, rng()).serialize_uncompressed(), neg_z_k_bytes);
+               }
+            }
 
             results.push_back(result);
          }
