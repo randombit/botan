@@ -14,7 +14,6 @@
 #include <chrono>
 #include <functional>
 #include <map>
-#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -95,6 +94,8 @@ BOTAN_TEST_API std::ostream& operator<<(std::ostream& o, const Response& resp);
 
 /**
 * Per-request limits applied to an HTTP exchange.
+*
+* The timeout bounds the entire exchange, including any redirects.
 */
 class RequestLimits final {
    public:
@@ -104,7 +105,7 @@ class RequestLimits final {
 
       std::chrono::milliseconds timeout() const { return m_timeout; }
 
-      std::optional<size_t> max_body_size() const { return m_max_body_size; }
+      size_t max_body_size() const { return m_max_body_size; }
 
       RequestLimits& set_max_redirects(size_t n) {
          m_max_redirects = n;
@@ -124,10 +125,14 @@ class RequestLimits final {
    private:
       size_t m_max_redirects = 0;
       std::chrono::milliseconds m_timeout = std::chrono::milliseconds(3000);
-      std::optional<size_t> m_max_body_size;
+      size_t m_max_body_size = 8 * 1024 * 1024;
 };
 
-typedef std::function<Response(std::string_view, std::string_view, std::string_view, std::optional<size_t>)>
+/**
+* Performs one request/response exchange: (hostname, service, request message,
+* timeout, max body size)
+*/
+typedef std::function<Response(std::string_view, std::string_view, std::string_view, std::chrono::milliseconds, size_t)>
    http_exch_fn;
 
 Response BOTAN_TEST_API http_sync(const http_exch_fn& fn,
@@ -160,7 +165,7 @@ std::string BOTAN_TEST_API url_encode(std::string_view url);
 */
 Response BOTAN_TEST_API read_response_from_socket(OS::Socket& socket,
                                                   std::chrono::milliseconds timeout,
-                                                  std::optional<size_t> max_body_size);
+                                                  size_t max_body_size);
 
 }  // namespace Botan::HTTP
 

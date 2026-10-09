@@ -22,7 +22,7 @@
   */
    #define BOOST_ASIO_DISABLE_SERIAL_PORT
    #include <boost/asio.hpp>
-   #include <boost/asio/system_timer.hpp>
+   #include <boost/asio/steady_timer.hpp>
 
 #elif defined(BOTAN_TARGET_OS_HAS_SOCKETS)
    #include <errno.h>
@@ -47,8 +47,8 @@ namespace {
 class Asio_Socket final : public OS::Socket {
    public:
       Asio_Socket(std::string_view hostname, std::string_view service, std::chrono::milliseconds timeout) :
-            m_timeout(timeout), m_timer(m_io), m_tcp(m_io) {
-         m_timer.expires_after(m_timeout);
+            m_timer(m_io), m_tcp(m_io) {
+         m_timer.expires_after(timeout);
          check_timeout();
 
          // Resolve asynchronously so the timer covers DNS as well as connect.
@@ -91,8 +91,6 @@ class Asio_Socket final : public OS::Socket {
       }
 
       void write(std::span<const uint8_t> buf) override {
-         m_timer.expires_after(m_timeout);
-
          boost::system::error_code ec = boost::asio::error::would_block;
 
          boost::asio::async_write(m_tcp,
@@ -103,14 +101,16 @@ class Asio_Socket final : public OS::Socket {
             m_io.run_one();
          }
 
+         if(ec == boost::asio::error::operation_aborted) {
+            // check_timeout closed the socket
+            throw System_Error("Timeout during socket write");
+         }
          if(ec) {
             throw boost::system::system_error(ec);
          }
       }
 
       size_t read(uint8_t buf[], size_t len) override {
-         m_timer.expires_after(m_timeout);
-
          boost::system::error_code ec = boost::asio::error::would_block;
          size_t got = 0;
 
@@ -126,6 +126,10 @@ class Asio_Socket final : public OS::Socket {
          if(ec) {
             if(ec == boost::asio::error::eof) {
                return 0;
+            }
+            if(ec == boost::asio::error::operation_aborted) {
+               // check_timeout closed the socket
+               throw System_Error("Timeout during socket read");
             }
             throw boost::system::system_error(ec);  // Some other error.
          }
@@ -146,9 +150,8 @@ class Asio_Socket final : public OS::Socket {
          m_timer.async_wait(std::bind(&Asio_Socket::check_timeout, this));
       }
 
-      const std::chrono::milliseconds m_timeout;
       boost::asio::io_context m_io;
-      boost::asio::system_timer m_timer;
+      boost::asio::steady_timer m_timer;
       boost::asio::ip::tcp::socket m_tcp;
 };
 
@@ -239,7 +242,7 @@ class BSD_Socket final : public OS::Socket {
 
    public:
       BSD_Socket(std::string_view hostname, std::string_view service, std::chrono::microseconds timeout) :
-            m_timeout(timeout), m_socket(invalid_socket()) {
+            m_deadline(std::chrono::steady_clock::now() + timeout), m_socket(invalid_socket()) {
          socket_init();
 
          // A constructor that throws does not run its destructor, so do
@@ -269,24 +272,21 @@ class BSD_Socket final : public OS::Socket {
          unique_addr_info_ptr res = nullptr;
 
          // getaddrinfo blocks; POSIX has no portable way to time-bound it
-         // without spinning up a thread. Time spent here is not deducted
-         // from the connect budget below.
+         // without spinning up a thread. Time spent here is still deducted
+         // from the socket's overall deadline.
          const int rc = ::getaddrinfo(hostname_str.c_str(), service_str.c_str(), &hints, Botan::out_ptr(res));
          if(rc != 0) {
             throw System_Error(fmt("Name resolution failed for {}", hostname), rc);
          }
-
-         // Bound the total connect phase by the requested timeout, regardless of
-         // how many candidate addresses getaddrinfo returns.
-         const auto connect_deadline = std::chrono::steady_clock::now() + m_timeout;
 
          for(const addrinfo* rp = res.get(); (m_socket == invalid_socket()) && (rp != nullptr); rp = rp->ai_next) {
             if(rp->ai_family != AF_INET && rp->ai_family != AF_INET6) {
                continue;
             }
 
-            const auto remaining = std::chrono::duration_cast<std::chrono::microseconds>(
-               connect_deadline - std::chrono::steady_clock::now());
+            // Bound the total connect phase by the deadline, regardless of
+            // how many candidate addresses getaddrinfo returns.
+            const auto remaining = remaining_time();
             if(remaining <= std::chrono::microseconds::zero()) {
                break;
             }
@@ -387,7 +387,12 @@ class BSD_Socket final : public OS::Socket {
             FD_ZERO(&write_set);
             FD_SET(m_socket, &write_set);
 
-            struct timeval timeout = make_timeout_tv();
+            const auto remaining = remaining_time();
+            if(remaining <= std::chrono::microseconds::zero()) {
+               throw System_Error("Timeout during socket write");
+            }
+
+            struct timeval timeout = make_timeout_tv_from(remaining);
             const int active = ::select(static_cast<int>(m_socket + 1), nullptr, &write_set, nullptr, &timeout);
 
             if(active < 0) {
@@ -423,7 +428,12 @@ class BSD_Socket final : public OS::Socket {
             FD_ZERO(&read_set);
             FD_SET(m_socket, &read_set);
 
-            struct timeval timeout = make_timeout_tv();
+            const auto remaining = remaining_time();
+            if(remaining <= std::chrono::microseconds::zero()) {
+               throw System_Error("Timeout during socket read");
+            }
+
+            struct timeval timeout = make_timeout_tv_from(remaining);
             const int active = ::select(static_cast<int>(m_socket + 1), &read_set, nullptr, nullptr, &timeout);
 
             if(active < 0) {
@@ -452,7 +462,9 @@ class BSD_Socket final : public OS::Socket {
       }
 
    private:
-      struct timeval make_timeout_tv() const { return make_timeout_tv_from(m_timeout); }
+      std::chrono::microseconds remaining_time() const {
+         return std::chrono::duration_cast<std::chrono::microseconds>(m_deadline - std::chrono::steady_clock::now());
+      }
 
       static struct timeval make_timeout_tv_from(std::chrono::microseconds us) {
          struct timeval tv {};
@@ -462,7 +474,7 @@ class BSD_Socket final : public OS::Socket {
          return tv;
       }
 
-      const std::chrono::microseconds m_timeout;
+      const std::chrono::steady_clock::time_point m_deadline;
       socket_type m_socket;
 
       using unique_addr_info_ptr = std::unique_ptr<addrinfo, decltype([](addrinfo* p) {
