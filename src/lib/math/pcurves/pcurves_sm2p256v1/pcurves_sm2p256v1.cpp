@@ -198,9 +198,14 @@ class Sm2p256v1MontgomeryRep final {
          * The total is non-negative and below 2^256, so the final borrow is zero
          */
          W borrow = 0;
+
+         // This variable is intentionally non-const to work around
+         // GCC 14 at -O1 inserting a undesirable conditional jump
+         W zero = CT::value_barrier<W>(0);  // NOLINT(*-const-correctness)
+
          const W q0 = word_sub(m, m_lo, &borrow);
-         const W q1 = word_sub(static_cast<W>(0), m_hi, &borrow);
-         const W q2 = word_sub(static_cast<W>(0), m_lo, &borrow);
+         const W q1 = word_sub(zero, m_hi, &borrow);
+         const W q2 = word_sub(zero, m_lo, &borrow);
          const W q3 = word_sub(m, m_hi, &borrow);
 
          return {q0, q1, q2, q3};
