@@ -246,6 +246,12 @@ to p processors can work in parallel.
 
 As a general recommendation, use ``N`` = 32768, ``r`` = 8, ``p`` = 1
 
+.. warning::
+
+   Scrypt by design accesses memory at addresses which depend on the password,
+   and so may leak information about the password via cache based side
+   channels. This is inherent to the algorithm.
+
 Algorithm specification name: ``Scrypt``
 
 Argon2
@@ -256,6 +262,14 @@ Argon2
 Argon2 is the winner of the PHC (Password Hashing Competition) and
 provides a tunable memory hard PBKDF. There are three minor variants
 of Argon2 - Argon2d, Argon2i, and Argon2id. All three are implemented.
+
+.. warning::
+
+   Argon2d accesses memory at addresses which depend on the password, and so
+   may leak information about the password via cache based side channels. It
+   is not recommended for password hashing. Argon2i uses only data independent
+   memory accesses. Argon2id is a hybrid, using data independent accesses for
+   the first half of the first pass and data dependent accesses thereafter.
 
 Algorithm specification names:
 
@@ -276,6 +290,12 @@ tunable.
 
 This function is relatively obscure but is used for example in OpenSSH.
 Prefer Argon2 or Scrypt in new systems.
+
+.. warning::
+
+   Bcrypt-PBKDF is built on Blowfish, which uses key dependent tables indexed
+   by secret data. The implementation is thus likely vulnerable to cache based
+   side channel attacks. No constant time implementation is available.
 
 Algorithm specification name: ``Bcrypt-PBKDF``
 

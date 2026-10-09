@@ -117,6 +117,12 @@ It has the advantage that it requires a small amount (4K) of fast RAM
 to compute, which can make hardware password cracking somewhat more
 expensive.
 
+.. warning::
+
+   Bcrypt is built on Blowfish, which uses key dependent tables indexed by
+   secret data. The implementation is thus likely vulnerable to cache based
+   side channel attacks. No constant time implementation is available.
+
 Bcrypt provides outputs that look like this::
 
   "$2a$12$7KIYdyv8Bp32WAvc.7YvI.wvRlyVn0HP/EhPmmOyMQA4YKxINO0p2"

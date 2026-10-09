@@ -196,6 +196,13 @@ it unless you must.
    support for GOST 34.11 hash is deprecated and will be removed in a future
    major release.
 
+.. warning::
+
+   The implementation of GOST 34.11 is built on the GOST 28147-89 block cipher,
+   which uses table lookups indexed by the data being hashed. It is thus likely
+   vulnerable to cache based side channel attacks if used to process secret
+   data. No constant time implementation is available.
+
 Algorithm specification name:
 ``GOST-R-34.11-94`` (reported name) / ``GOST-34.11``
 
@@ -363,14 +370,20 @@ Streebog (Streebog-256, Streebog-512)
 
 Available if ``BOTAN_HAS_STREEBOG`` is defined.
 
-Newly designed Russian national hash function. Due to use of input-dependent
-table lookups, it is vulnerable to side channels. There is no reason to use it
+Newly designed Russian national hash function. There is no reason to use it
 unless compatibility is needed.
 
 .. warning::
    The Streebog Sbox has recently been revealed to have a hidden structure which
    interacts with its linear layer in a way which may provide a backdoor when
    used in certain ways. Avoid Streebog if at all possible.
+
+.. warning::
+
+   The baseline implementation of Streebog uses table lookups indexed by the
+   data being hashed, and is thus likely vulnerable to cache based side channel
+   attacks if used to process secret data. A constant time implementation is
+   used instead on processors with AVX-512 and GFNI.
 
 Algorithm specification names:
 
@@ -382,9 +395,14 @@ Whirlpool
 
 Available if ``BOTAN_HAS_WHIRLPOOL`` is defined.
 
-A 512-bit hash function standardized by ISO and NESSIE. Relatively slow, and due
-to the table based implementation it is potentially vulnerable to cache based
-side channels.
+A 512-bit hash function standardized by ISO and NESSIE. Relatively slow.
+
+.. warning::
+
+   The baseline implementation of Whirlpool uses table lookups indexed by the
+   data being hashed, and is thus likely vulnerable to cache based side channel
+   attacks if used to process secret data. Constant time implementations are
+   used instead on processors with AVX2 or AVX-512.
 
 Algorithm specification name: ``Whirlpool``
 

@@ -334,16 +334,54 @@ relatively large (multi kilobyte) tables. The library prefers to instead use the
 smallest possible representation (eg SEED uses just a pair of 256 byte tables)
 to avoid increasing the cache side channel signature.
 
-There are also implementation using hardware AES instructions and AVX-512/GFNI
-which are used whenever available. These implementations are constant time.
+There are also implementations using hardware AES instructions, or AVX2/AVX-512
+with GFNI, which are used whenever available. These implementations are constant
+time.
 
 Twofish
 ------------------------
 
 This algorithm uses table lookups with secret sboxes. No cache-based side
 channel attack on Twofish has ever been published, but it is possible nobody
-sufficiently skilled has ever tried. There is also an AVX-512 implementation
-which avoids table lookups completely.
+sufficiently skilled has ever tried. There is also an implementation for
+processors with AVX-512 and GFNI which avoids table lookups completely.
+
+Blowfish
+------------------------
+
+Blowfish uses key dependent sboxes which are indexed by the data being
+encrypted, and so is likely vulnerable to cache based side channels. There is
+no constant time implementation. This also applies to bcrypt and Bcrypt-PBKDF,
+which are built on the Blowfish key schedule.
+
+CAST-128
+------------------------
+
+The CAST-128 implementation uses table lookups indexed by secret data, and so is
+likely vulnerable to cache based side channels. There is no constant time
+implementation.
+
+GOST 28147-89
+------------------------
+
+The GOST 28147-89 implementation uses table lookups indexed by secret data, and
+so is likely vulnerable to cache based side channels. There is no constant time
+implementation. The GOST 34.11-94 hash is built on this cipher and inherits the
+same issue.
+
+Kuznyechik
+------------------------
+
+The Kuznyechik implementation uses large (64 KiB) tables indexed by secret data,
+and so is likely vulnerable to cache based side channels. There is no constant
+time implementation.
+
+RC4
+------------------------
+
+The RC4 state is a 256 byte table which is indexed by key and data dependent
+values, and so is likely vulnerable to cache based side channels. This is
+inherent to the design; there is no constant time implementation.
 
 ChaCha20, Serpent, Threefish, ...
 -----------------------------------
@@ -368,9 +406,23 @@ and BLAKE2 do not require any input-dependent memory lookups, and so seem to not
 affected by common CPU side channels.
 
 The baseline implementations of Whirlpool and Streebog use table lookups and
-probably can be attacked by side channels. For systems supporting AVX2 and
-AVX-512 there are additional constant time implementations of the Whirlpool and
-Streebog compression functions.
+probably can be attacked by side channels. There are constant time
+implementations of the Whirlpool compression function for AVX2 and AVX-512, and
+of the Streebog compression function for AVX-512 with GFNI.
+
+The GOST 34.11-94 hash is built on the GOST 28147-89 block cipher, and so shares
+its table lookups. There is no constant time implementation.
+
+Password Hashing
+-------------------------
+
+Scrypt, Argon2d, and (after the first half of its first pass) Argon2id access
+memory at addresses which depend on the password. This is inherent to these
+designs, and may leak information about the password via cache based side
+channels. Argon2i uses only data independent memory accesses.
+
+bcrypt and Bcrypt-PBKDF are built on Blowfish, and so share its cache based
+side channel exposure.
 
 Memory comparisons
 ----------------------
