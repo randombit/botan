@@ -274,6 +274,16 @@ Classic McEliece
 
 Post-quantum secure, code-based key encapsulation scheme.
 
+.. warning::
+
+   Recent research suggests that the security of code-based schemes, including
+   Classic McEliece, may be significantly less secure than what was previously
+   thought. Germany's BSI currently recommends that Classic McEliece "should
+   currently no longer be used in new developments or when planning new
+   cryptographic applications" and that Classic McEliece be used only in a
+   hybrid scheme, paired with either a classical EC algorithm or a lattice-based
+   scheme such as ML-KEM.
+
 ElGamal
 ~~~~~~~~
 
