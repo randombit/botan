@@ -495,7 +495,10 @@ Path Validation
 
 The process of validating a certificate chain up to a trusted root is
 called `path validation`, and in botan that operation is handled by a
-set of functions in ``x509path.h`` named ``x509_path_validate``:
+set of functions in ``x509path.h`` named ``x509_path_validate``. The
+signatures of all certificates in the chain are verified, except for
+the trust anchor itself: a trust anchor is trusted because it was
+provided by the application, not because of its (self-)signature.
 
 .. cpp:function:: Path_Validation_Result \
    x509_path_validate(const X509_Certificate& end_cert, \
