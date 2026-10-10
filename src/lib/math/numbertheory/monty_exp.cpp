@@ -14,6 +14,11 @@
 #include <botan/internal/monty.h>
 #include <botan/internal/rounding.h>
 
+#if defined(BOTAN_HAS_MONTY_EXP_AVX512)
+   #include <botan/internal/cpuid.h>
+   #include <botan/internal/monty_exp_avx512.h>
+#endif
+
 namespace Botan {
 
 namespace {
@@ -145,6 +150,14 @@ std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Mo
    if(window_bits < 1 || window_bits > 12) {  // really even 8 is too large ...
       throw Invalid_Argument("Invalid window bits for Montgomery exponentiation");
    }
+
+#if defined(BOTAN_HAS_MONTY_EXP_AVX512)
+   if(CPUID::has(CPUID::Feature::AVX512)) {
+      if(auto state = make_monty_exp_avx512(g, window_bits, const_time)) {
+         return state;
+      }
+   }
+#endif
 
    return std::make_shared<const Montgomery_Exponentiation_Generic>(g, window_bits, const_time);
 }
