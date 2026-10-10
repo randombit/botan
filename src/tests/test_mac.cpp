@@ -172,6 +172,27 @@ class Message_Auth_Tests final : public Text_Based_Test {
 
          return result;
       }
+
+      std::vector<Test::Result> run_final_tests() override {
+         return {
+   #if defined(BOTAN_HAS_GMAC) && defined(BOTAN_HAS_AES)
+            CHECK("GMAC requires a fresh nonce after each message",
+                  [](Test::Result& result) {
+                     auto gmac = Botan::MessageAuthenticationCode::create_or_throw("GMAC(AES-128)");
+                     gmac->set_key(std::vector<uint8_t>(16));
+                     gmac->start(std::vector<uint8_t>(12));
+                     gmac->update("some input");
+                     gmac->final();
+
+                     result.test_throws<Botan::Invalid_State>("update after final",
+                                                              "GMAC was not used with a fresh nonce",
+                                                              [&]() { gmac->update("some more input"); });
+                     result.test_throws<Botan::Invalid_State>(
+                        "final after final", "GMAC was not used with a fresh nonce", [&]() { gmac->final(); });
+                  }),
+   #endif
+         };
+      }
 };
 
 BOTAN_REGISTER_SERIALIZED_SMOKE_TEST("mac", "mac_algos", Message_Auth_Tests);
