@@ -277,7 +277,7 @@ std::string ASN1_Pretty_Printer::format_bin(ASN1_Type /*type_tag*/,
 }
 
 std::string ASN1_Pretty_Printer::format_bn(const BigInt& bn) const {
-   if(bn.bits() < 16) {
+   if(bn.bits() < 32) {
       return bn.to_dec_string();
    } else {
       return bn.to_hex_string();
