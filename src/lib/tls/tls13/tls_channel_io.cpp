@@ -9,6 +9,7 @@
 #include <botan/internal/tls_channel_io.h>
 
 #include <botan/tls_callbacks.h>
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/stl_util.h>
@@ -38,7 +39,7 @@ std::optional<Channel_IO::ReceiveEvent> Channel_IO::next_pending_handshake_messa
          }
       };
 
-      auto handshake_msg = hs_layer.next_message(policy(), transcript_hash_reference());
+      auto handshake_msg = hs_layer.next_message(policy(), transcript_hash_reference(), crypto());
       if(!handshake_msg.has_value()) {
          return std::nullopt;
       }
@@ -79,7 +80,7 @@ std::optional<Channel_IO::ReceiveEvent> Channel_IO::next_pending_handshake_messa
 
       return std::move(handshake_msg).value();
    } else {
-      auto post_handshake_msg = hs_layer.next_post_handshake_message(policy());
+      auto post_handshake_msg = hs_layer.next_post_handshake_message(policy(), crypto());
       if(!post_handshake_msg.has_value()) {
          return std::nullopt;
       }
@@ -328,8 +329,11 @@ namespace {
 
 class TLS_Channel_IO final : public Channel_IO {
    public:
-      TLS_Channel_IO(Connection_Side side, std::shared_ptr<const Policy> policy, std::shared_ptr<Callbacks> callbacks) :
-            Channel_IO(side, policy, std::move(callbacks)),
+      TLS_Channel_IO(Connection_Side side,
+                     std::shared_ptr<const Policy> policy,
+                     std::shared_ptr<Callbacks> callbacks,
+                     std::shared_ptr<CryptoOperations> crypto) :
+            Channel_IO(side, policy, std::move(callbacks), std::move(crypto)),
             m_record_layer(side, std::move(policy)),
             m_handshake_layer(side) {}
 
@@ -409,11 +413,13 @@ class TLS_Channel_IO final : public Channel_IO {
 std::shared_ptr<Channel_IO> Channel_IO::create(Connection_Side side,
                                                TLS_Flavor flavor,
                                                std::shared_ptr<const Policy> policy,
-                                               std::shared_ptr<Callbacks> callbacks) {
+                                               std::shared_ptr<Callbacks> callbacks,
+                                               std::shared_ptr<CryptoOperations> crypto) {
+   BOTAN_ASSERT_NONNULL(crypto);
    if(flavor == TLS_Flavor::DTLS) {
       throw Not_Implemented("DTLS 1.3 is not yet supported");
    } else {
-      return std::make_shared<TLS_Channel_IO>(side, std::move(policy), std::move(callbacks));
+      return std::make_shared<TLS_Channel_IO>(side, std::move(policy), std::move(callbacks), std::move(crypto));
    }
 }
 

@@ -21,6 +21,7 @@ namespace Botan::TLS {
 class Server_Impl_13 final : public Channel_Impl_13 {
    public:
       static std::shared_ptr<Server_Impl_13> create(const std::shared_ptr<Callbacks>& callbacks,
+                                                    const std::shared_ptr<CryptoOperations>& crypto,
                                                     const std::shared_ptr<Session_Manager>& session_manager,
                                                     const std::shared_ptr<Credentials_Manager>& credentials_manager,
                                                     const std::shared_ptr<const Policy>& policy,
@@ -28,11 +29,12 @@ class Server_Impl_13 final : public Channel_Impl_13 {
 
       Server_Impl_13([[maybe_unused]] Private dont_call_me,
                      const std::shared_ptr<Callbacks>& callbacks,
+                     const std::shared_ptr<CryptoOperations>& crypto,
                      const std::shared_ptr<Session_Manager>& session_manager,
                      const std::shared_ptr<Credentials_Manager>& credentials_manager,
                      const std::shared_ptr<const Policy>& policy,
                      const std::shared_ptr<RandomNumberGenerator>& rng) :
-            Channel_Impl_13(callbacks, session_manager, credentials_manager, rng, policy, true /* is_server */),
+            Channel_Impl_13(callbacks, crypto, session_manager, credentials_manager, rng, policy, true /* is_server */),
             m_handshake(std::make_unique<Pending_Handshake>()) {}
 
       std::string application_protocol() const override;

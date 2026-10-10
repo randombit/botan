@@ -16,17 +16,20 @@ namespace Botan::TLS {
 Session_Manager_Noop::Session_Manager_Noop() : Session_Manager(std::make_shared<Null_RNG>()) {}
 
 std::optional<Session_Handle> Session_Manager_Noop::establish(const Session& /*session*/,
+                                                              const CryptoOperations& /*crypto*/,
                                                               const std::optional<Session_ID>& /*session_id*/,
                                                               bool /*tls12_no_ticket*/) {
    return {};
 }
 
-std::optional<Session> Session_Manager_Noop::retrieve_one(const Session_Handle& /*handle*/) {
+std::optional<Session> Session_Manager_Noop::retrieve_one(const Session_Handle& /*handle*/,
+                                                          const CryptoOperations& /*crypto*/) {
    return {};
 }
 
 std::vector<Session_with_Handle> Session_Manager_Noop::find_some(const Server_Information& /*info*/,
-                                                                 size_t /*max_sessions_hint*/) {
+                                                                 size_t /*max_sessions_hint*/,
+                                                                 const CryptoOperations& /*crypto*/) {
    return {};
 }
 

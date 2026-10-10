@@ -25,10 +25,11 @@ std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
                                               Protocol_Version offered_version,
                                               Callbacks& cb,
                                               const Policy& policy,
-                                              TLS_Flavor flavor) {
+                                              TLS_Flavor flavor,
+                                              const CryptoOperations& crypto) {
    BOTAN_UNUSED(flavor);
 
-   auto random = make_hello_random(rng, cb, policy);
+   auto random = make_hello_random(rng, cb, policy, crypto);
 
    // RFC 8446 4.1.3
    //    TLS 1.3 has a downgrade protection mechanism embedded in the server's

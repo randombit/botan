@@ -25,7 +25,8 @@ namespace Botan::TLS {
 
 class Server_Handshake_State final : public Handshake_State {
    public:
-      Server_Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& cb) : Handshake_State(std::move(io), cb) {}
+      Server_Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& cb, CryptoOperations& crypto) :
+            Handshake_State(std::move(io), cb, crypto) {}
 
       Private_Key* server_rsa_kex_key() { return m_server_rsa_kex_key.get(); }
 
@@ -76,8 +77,9 @@ std::optional<Session> check_for_resume(const Session_Handle& handle_to_resume,
                                         Session_Manager& session_manager,
                                         Callbacks& cb,
                                         const Policy& policy,
+                                        const CryptoOperations& crypto,
                                         const Client_Hello_12* client_hello) {
-   auto session = session_manager.retrieve(handle_to_resume, cb, policy);
+   auto session = session_manager.retrieve(handle_to_resume, cb, policy, crypto);
    if(!session.has_value()) {
       return std::nullopt;
    }
@@ -284,6 +286,7 @@ secure_vector<uint8_t> load_dtls_cookie_secret(Credentials_Manager& creds) {
 }  // namespace
 
 std::shared_ptr<Server_Impl_12> Server_Impl_12::create(const std::shared_ptr<Callbacks>& callbacks,
+                                                       const std::shared_ptr<CryptoOperations>& crypto,
                                                        const std::shared_ptr<Session_Manager>& session_manager,
                                                        const std::shared_ptr<Credentials_Manager>& creds,
                                                        const std::shared_ptr<const Policy>& policy,
@@ -292,7 +295,7 @@ std::shared_ptr<Server_Impl_12> Server_Impl_12::create(const std::shared_ptr<Cal
                                                        size_t reserved_io_buffer_size)  //
 {
    auto self = std::make_shared<Server_Impl_12>(
-      Private{}, callbacks, session_manager, creds, policy, rng, flavor, reserved_io_buffer_size);
+      Private{}, callbacks, crypto, session_manager, creds, policy, rng, flavor, reserved_io_buffer_size);
    BOTAN_ASSERT_NONNULL(self->m_creds);
 
    // Try to load the cookie secret on initialization, rather than waiting to fail
@@ -305,7 +308,7 @@ std::shared_ptr<Server_Impl_12> Server_Impl_12::create(const std::shared_ptr<Cal
 }
 
 std::unique_ptr<Handshake_State> Server_Impl_12::new_handshake_state(std::unique_ptr<Handshake_IO> io) {
-   auto state = std::make_unique<Server_Handshake_State>(std::move(io), callbacks());
+   auto state = std::make_unique<Server_Handshake_State>(std::move(io), callbacks(), crypto());
    state->set_expected_next(Handshake_Type::ClientHello);
    return state;
 }
@@ -406,7 +409,7 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
       throw TLS_Exception(Alert::UnexpectedMessage, "Have data remaining in buffer after ClientHello");
    }
 
-   pending_state.client_hello(std::make_unique<Client_Hello_12>(contents));
+   pending_state.client_hello(std::make_unique<Client_Hello_12>(contents, crypto()));
    const Protocol_Version client_offer = pending_state.client_hello()->legacy_version();
    const bool datagram = client_offer.is_datagram_protocol();
 
@@ -462,7 +465,7 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
             "Since Botan 3.13 DTLS server requires tls_peer_network_identity() return a non-empty value");
       }
       const Hello_Verify_Request verify(
-         pending_state.client_hello()->cookie_input_data(), client_identity, cookie_secret);
+         pending_state.client_hello()->cookie_input_data(), client_identity, cookie_secret, crypto());
 
       if(!CT::is_equal<uint8_t>(pending_state.client_hello()->cookie(), verify.cookie()).as_bool()) {
          if(epoch0_restart) {
@@ -524,7 +527,7 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
    std::optional<Session> session_info;
    if(pending_state.allow_session_resumption() && session_handle.has_value()) {
       session_info = check_for_resume(
-         session_handle.value(), session_manager(), callbacks(), policy(), pending_state.client_hello());
+         session_handle.value(), session_manager(), callbacks(), policy(), crypto(), pending_state.client_hello());
    }
 
    m_next_protocol = "";
@@ -680,6 +683,7 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
 
       if(callbacks().tls_should_persist_resumption_information(session_info)) {
          auto handle = session_manager().establish(session_info,
+                                                   crypto(),
                                                    pending_state.server_hello()->session_id(),
                                                    !pending_state.server_hello()->supports_session_ticket());
 
@@ -806,7 +810,7 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state, const
          session_manager().remove(session.handle);
          return std::nullopt;
       } else {
-         return session_manager().establish(session.session, session.handle.id());
+         return session_manager().establish(session.session, crypto(), session.handle.id());
       }
    }();
 
@@ -864,7 +868,7 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
    const uint16_t ciphersuite =
       choose_ciphersuite(policy(), pending_state.version(), cert_chains, *pending_state.client_hello());
 
-   const Server_Hello_12::Settings srv_settings(Session_ID(make_hello_random(rng(), callbacks(), policy())),
+   const Server_Hello_12::Settings srv_settings(Session_ID(make_hello_random(rng(), callbacks(), policy(), crypto())),
                                                 pending_state.version(),
                                                 ciphersuite,
                                                 session_manager().emits_session_tickets());

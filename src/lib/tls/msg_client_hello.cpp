@@ -23,11 +23,14 @@
 
 namespace Botan::TLS {
 
-std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng, Callbacks& cb, const Policy& policy) {
+std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
+                                       Callbacks& cb,
+                                       const Policy& policy,
+                                       const CryptoOperations& crypto) {
    auto buf = rng.random_vec<std::vector<uint8_t>>(32);
 
    if(policy.hash_hello_random()) {
-      auto sha256 = HashFunction::create_or_throw("SHA-256");
+      auto sha256 = crypto.create_hash("SHA-256", CryptoOperations::Hash_Usage::HelloRandom);
       sha256->update(buf);
       sha256->final(buf);
    }
@@ -46,8 +49,9 @@ std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng, Callbacks& cb
 
 std::vector<uint8_t> calculate_cookie(std::span<const uint8_t> client_hello_bits,
                                       std::string_view client_identity,
-                                      std::span<const uint8_t> cookie_secret) {
-   auto hmac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
+                                      std::span<const uint8_t> cookie_secret,
+                                      const CryptoOperations& crypto) {
+   auto hmac = crypto.create_mac("HMAC(SHA-256)", CryptoOperations::MAC_Usage::DtlsCookie);
    hmac->set_key(cookie_secret);
 
    hmac->update_be(static_cast<uint64_t>(client_hello_bits.size()));
@@ -58,7 +62,7 @@ std::vector<uint8_t> calculate_cookie(std::span<const uint8_t> client_hello_bits
    return hmac->final_stdvec();
 }
 
-Client_Hello_Internal::Client_Hello_Internal(std::span<const uint8_t> buf) {
+Client_Hello_Internal::Client_Hello_Internal(std::span<const uint8_t> buf, const CryptoOperations& crypto) {
    /*
    Minimum possible client hello
 
@@ -92,7 +96,7 @@ Client_Hello_Internal::Client_Hello_Internal(std::span<const uint8_t> buf) {
    m_session_id = Session_ID(reader.get_range<uint8_t>(1, 0, 32));
 
    if(m_legacy_version.is_datagram_protocol()) {
-      auto sha256 = HashFunction::create_or_throw("SHA-256");
+      auto sha256 = crypto.create_hash("SHA-256", CryptoOperations::Hash_Usage::DtlsCookie);
       sha256->update(reader.get_data_read_so_far());
 
       m_hello_cookie = reader.get_range<uint8_t>(1, 0, 255);

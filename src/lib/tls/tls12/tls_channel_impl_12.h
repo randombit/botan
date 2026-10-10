@@ -54,6 +54,7 @@ class Channel_Impl_12 : public Channel_Impl {
       *        values just mean reallocations and copies are more likely.
       */
       explicit Channel_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
+                               const std::shared_ptr<CryptoOperations>& crypto,
                                const std::shared_ptr<Session_Manager>& session_manager,
                                const std::shared_ptr<RandomNumberGenerator>& rng,
                                const std::shared_ptr<const Policy>& policy,
@@ -201,6 +202,8 @@ class Channel_Impl_12 : public Channel_Impl {
 
       TLS_Flavor flavor() const { return m_flavor; }
 
+      CryptoOperations& crypto() const { return *m_crypto; }
+
       void reset_active_association_state();
 
       /**
@@ -255,6 +258,7 @@ class Channel_Impl_12 : public Channel_Impl {
 
       /* callbacks */
       std::shared_ptr<Callbacks> m_callbacks;
+      std::shared_ptr<CryptoOperations> m_crypto;
 
       /* external state */
       std::shared_ptr<Session_Manager> m_session_manager;

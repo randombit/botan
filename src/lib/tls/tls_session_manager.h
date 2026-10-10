@@ -26,6 +26,7 @@ class RandomNumberGenerator;
 namespace Botan::TLS {
 
 class Callbacks;
+class CryptoOperations;
 class Policy;
 class PskIdentity;
 class Server_Information;
@@ -62,6 +63,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        * tickets to the client when this method returns std::nullopt.
        *
        * @param session to save
+       * @param crypto cryptographic operations to use, e.g. for Session::encrypt()
        * @param id to use (instead of an ID chosen by the manager)
        * @param tls12_no_ticket disable tickets for this establishment
        *                        (set when TLS 1.2 client does not support them)
@@ -69,6 +71,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        *         if the session was saved, otherwise std::nullopt
        */
       virtual std::optional<Session_Handle> establish(const Session& session,
+                                                      const CryptoOperations& crypto,
                                                       const std::optional<Session_ID>& id = std::nullopt,
                                                       bool tls12_no_ticket = false);
 
@@ -87,8 +90,9 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        *
        * @param session to save
        * @param handle a Session_Handle on which this session should by stored
+       * @param crypto cryptographic operations to use, e.g. for Session::encrypt()
        */
-      virtual void store(const Session& session, const Session_Handle& handle) = 0;
+      virtual void store(const Session& session, const Session_Handle& handle, const CryptoOperations& crypto) = 0;
 
 #if defined(BOTAN_HAS_TLS_13)
       /**
@@ -111,6 +115,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        *                      the to-be-negotiated connection
        * @param callbacks callbacks to be used for session policy decisions
        * @param policy policy to be used for session policy decisions
+       * @param crypto cryptographic operations to use, e.g. for Session::decrypt()
        *
        * @return a std::pair of the Session associated to the chosen PSK and
        *         the index of the selected ticket; std::nullopt if no PSK was
@@ -122,7 +127,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
          const std::vector<PskIdentity>& tickets,
          std::string_view hash_function,
          Callbacks& callbacks,
-         const Policy& policy);
+         const Policy& policy,
+         const CryptoOperations& crypto);
 #endif
 
       /**
@@ -145,10 +151,14 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        * @param handle     the Session_Handle to be retrieved
        * @param callbacks  callbacks to be used for session policy decisions
        * @param policy     policy to be used for session policy decisions
+       * @param crypto     cryptographic operations to use, e.g. for Session::decrypt()
        * @return           the obtained session or std::nullopt if no session
        *                   was found or the policy checks failed
        */
-      virtual std::optional<Session> retrieve(const Session_Handle& handle, Callbacks& callbacks, const Policy& policy);
+      virtual std::optional<Session> retrieve(const Session_Handle& handle,
+                                              Callbacks& callbacks,
+                                              const Policy& policy,
+                                              const CryptoOperations& crypto);
 
       /**
        * @brief Find all sessions that match a given server @p info
@@ -179,12 +189,14 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        * @param info       the info about the server we want to handshake with
        * @param callbacks  callbacks to be used for session policy decisions
        * @param policy     policy to be used for session policy decisions
+       * @param crypto     cryptographic operations to use, e.g. for Session::decrypt()
        * @return           a list of usable sessions that might be empty if no
        *                   such session exists or passed the policy validation
        */
       virtual std::vector<Session_with_Handle> find(const Server_Information& info,
                                                     Callbacks& callbacks,
-                                                    const Policy& policy);
+                                                    const Policy& policy,
+                                                    const CryptoOperations& crypto);
 
       /**
        * Remove a specific session from the cache, if it exists.
@@ -231,9 +243,10 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        * This method is called only by servers.
        *
        * @param handle a Session_Handle containing either an ID or a ticket
+       * @param crypto cryptographic operations to use, e.g. for Session::decrypt()
        * @return the obtained session or std::nullopt if none can be obtained
        */
-      virtual std::optional<Session> retrieve_one(const Session_Handle& handle) = 0;
+      virtual std::optional<Session> retrieve_one(const Session_Handle& handle, const CryptoOperations& crypto) = 0;
 
       /**
        * @brief Internal retrieval function to find sessions to resume
@@ -257,10 +270,14 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        * @param max_sessions_hint  a non-binding guideline for an upper bound of
        *                           sessions to return from this method
        *                           (will be at least 1 but potentially more)
+       * @param crypto             cryptographic operations to use, e.g. for
+       *                           Session::decrypt()
        * @return the found sessions along with their handles (containing either a
        *         session ID or a ticket)
        */
-      virtual std::vector<Session_with_Handle> find_some(const Server_Information& info, size_t max_sessions_hint) = 0;
+      virtual std::vector<Session_with_Handle> find_some(const Server_Information& info,
+                                                         size_t max_sessions_hint,
+                                                         const CryptoOperations& crypto) = 0;
 
       /**
        * Returns the base class' recursive mutex for reuse in derived classes
@@ -270,7 +287,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
    private:
       std::vector<Session_with_Handle> find_and_filter(const Server_Information& info,
                                                        Callbacks& callbacks,
-                                                       const Policy& policy);
+                                                       const Policy& policy,
+                                                       const CryptoOperations& crypto);
 
    protected:
       std::shared_ptr<RandomNumberGenerator> m_rng;  // NOLINT(*non-private-member-variable*)

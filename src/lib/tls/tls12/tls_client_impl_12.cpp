@@ -26,8 +26,8 @@ namespace {
 
 class Client_Handshake_State_12 final : public Handshake_State {
    public:
-      Client_Handshake_State_12(std::unique_ptr<Handshake_IO> io, Callbacks& cb) :
-            Handshake_State(std::move(io), cb), m_is_reneg(false) {}
+      Client_Handshake_State_12(std::unique_ptr<Handshake_IO> io, Callbacks& cb, CryptoOperations& crypto) :
+            Handshake_State(std::move(io), cb, crypto), m_is_reneg(false) {}
 
       const Public_Key& server_public_key() const {
          BOTAN_ASSERT(m_server_public_key, "Server sent us a certificate");
@@ -98,6 +98,7 @@ class Client_Handshake_State_12 final : public Handshake_State {
 }  // namespace
 
 std::shared_ptr<Client_Impl_12> Client_Impl_12::create(const std::shared_ptr<Callbacks>& callbacks,
+                                                       const std::shared_ptr<CryptoOperations>& crypto,
                                                        const std::shared_ptr<Session_Manager>& session_manager,
                                                        const std::shared_ptr<Credentials_Manager>& creds,
                                                        const std::shared_ptr<const Policy>& policy,
@@ -108,6 +109,7 @@ std::shared_ptr<Client_Impl_12> Client_Impl_12::create(const std::shared_ptr<Cal
                                                        size_t reserved_io_buffer_size) {
    auto self = std::make_shared<Client_Impl_12>(Private{},
                                                 callbacks,
+                                                crypto,
                                                 session_manager,
                                                 creds,
                                                 policy,
@@ -196,7 +198,7 @@ std::shared_ptr<Client_Impl_12> Client_Impl_12::create_for_downgrade(
 #endif
 
 std::unique_ptr<Handshake_State> Client_Impl_12::new_handshake_state(std::unique_ptr<Handshake_IO> io) {
-   return std::make_unique<Client_Handshake_State_12>(std::move(io), callbacks());
+   return std::make_unique<Client_Handshake_State_12>(std::move(io), callbacks(), crypto());
 }
 
 /*
@@ -223,7 +225,7 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
    if(!force_full_renegotiation) {
       // if no session is provided, we need to try and find one opportunistically
       if(!session_and_handle.has_value() && !m_info.empty()) {
-         if(auto sessions = session_manager().find(m_info, callbacks(), policy()); !sessions.empty()) {
+         if(auto sessions = session_manager().find(m_info, callbacks(), policy(), crypto()); !sessions.empty()) {
             session_and_handle = std::move(sessions.front());
          }
       }
@@ -608,7 +610,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          }
       }
 
-      auto peer_key = server_cert.subject_public_key();
+      auto peer_key = crypto().load_public_key(server_cert.subject_public_key_info());
 
       const std::string expected_key_type =
          state.ciphersuite().signature_used() ? state.ciphersuite().sig_algo() : "RSA";
@@ -877,12 +879,12 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
             // renew the session ticket by removing the one we used to establish
             // this connection and replace it with the one we just received
             session_manager().remove(Session_Handle(state.client_hello()->session_ticket()));
-            session_manager().store(session_info, handle.value());
+            session_manager().store(session_info, handle.value(), crypto());
          }
 
          if(!state.is_a_resumption()) {
             if(should_save) {
-               session_manager().store(session_info, handle.value());
+               session_manager().store(session_info, handle.value(), crypto());
             } else {
                session_manager().remove(handle.value());
             }

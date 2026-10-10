@@ -768,6 +768,7 @@ class Stream {
                   if(side == Connection_Side::Client) {
                      m_native_handle = std::unique_ptr<Client>(
                         new Client(m_core,
+                                   m_context->m_crypto,
                                    m_context->m_session_manager,
                                    m_context->m_credentials_manager,
                                    m_context->m_policy,
@@ -777,6 +778,7 @@ class Stream {
                                    m_context->m_app_protocols));
                   } else {
                      m_native_handle = std::unique_ptr<Server>(new Server(m_core,
+                                                                          m_context->m_crypto,
                                                                           m_context->m_session_manager,
                                                                           m_context->m_credentials_manager,
                                                                           m_context->m_policy,

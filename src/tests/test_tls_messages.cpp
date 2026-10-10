@@ -272,7 +272,7 @@ class TLS_Key_Share_CH_Generation_Test final : public Text_Based_Test {
          const auto offered_groups = vars.get_opt_str("Offered_Groups", groups);
          const auto expected_key_share = vars.get_req_bin("Expected_Content");
 
-         Test_Callbacks cb(result);
+         const auto cb = std::make_shared<Test_Callbacks>(result);
          const Botan::TLS::Text_Policy policy("key_exchange_groups = " + groups +
                                               "\n"
                                               "key_exchange_groups_to_offer = " +
@@ -280,7 +280,8 @@ class TLS_Key_Share_CH_Generation_Test final : public Text_Based_Test {
          Fixed_Output_RNG rng;
          rng.add_entropy(rng_data.data(), rng_data.size());
 
-         const Botan::TLS::Key_Share share(policy, cb, rng);
+         Botan::TLS::DefaultCryptoOperations crypto(cb);
+         const Botan::TLS::Key_Share share(policy, crypto, rng);
          const auto serialized_buffer = share.serialize(Botan::TLS::Connection_Side::Client);
 
          result.test_bin_eq("key_share_CH_offers test", serialized_buffer, expected_key_share);

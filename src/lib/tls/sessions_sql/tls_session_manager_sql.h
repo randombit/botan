@@ -10,6 +10,7 @@
 
 #include <botan/database.h>
 #include <botan/symkey.h>
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_session_manager.h>
 
 namespace Botan {
@@ -36,11 +37,14 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_SQL : public Session_Manager {
       * @param rng a random number generator
       * @param max_sessions a hint on the maximum number of sessions
       *        to keep in memory at any one time. (If zero, don't cap)
+      * @param crypto cryptographic operations used to derive the database
+      *        key from the passphrase; not retained
       */
       Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
                           std::string_view passphrase,
                           const std::shared_ptr<RandomNumberGenerator>& rng,
-                          size_t max_sessions = 1000);
+                          size_t max_sessions = 1000,
+                          const CryptoOperations& crypto = CryptoOperations());
 
       Session_Manager_SQL(const Session_Manager_SQL&) = delete;
       Session_Manager_SQL& operator=(const Session_Manager_SQL&) = delete;
@@ -48,15 +52,17 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_SQL : public Session_Manager {
       Session_Manager_SQL& operator=(Session_Manager_SQL&&) = delete;
       ~Session_Manager_SQL() override = default;
 
-      void store(const Session& session, const Session_Handle& handle) override;
+      void store(const Session& session, const Session_Handle& handle, const CryptoOperations& crypto) override;
       size_t remove(const Session_Handle& handle) override;
       size_t remove_all() override;
 
       bool emits_session_tickets() override { return false; }
 
    protected:
-      std::optional<Session> retrieve_one(const Session_Handle& handle) override;
-      std::vector<Session_with_Handle> find_some(const Server_Information& info, size_t max_sessions_hint) override;
+      std::optional<Session> retrieve_one(const Session_Handle& handle, const CryptoOperations& crypto) override;
+      std::vector<Session_with_Handle> find_some(const Server_Information& info,
+                                                 size_t max_sessions_hint,
+                                                 const CryptoOperations& crypto) override;
 
       /**
        * Decides whether the underlying database is considered threadsafe in the
@@ -80,10 +86,10 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_SQL : public Session_Manager {
          BOTAN_3_0 = 20230112,
       };
 
-      void create_or_migrate_and_open(std::string_view passphrase);
+      void create_or_migrate_and_open(std::string_view passphrase, const CryptoOperations& crypto);
       Schema_Revision detect_schema_revision();
-      void create_with_latest_schema(std::string_view passphrase, Schema_Revision rev);
-      void initialize_existing_database(std::string_view passphrase);
+      void create_with_latest_schema(std::string_view passphrase, Schema_Revision rev, const CryptoOperations& crypto);
+      void initialize_existing_database(std::string_view passphrase, const CryptoOperations& crypto);
 
       void prune_session_cache();
 

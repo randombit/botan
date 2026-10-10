@@ -117,7 +117,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
                                  const Client_Hello_12::Settings& client_settings,
                                  std::vector<std::string> next_protocols) {
    m_data->m_legacy_version = client_settings.protocol_version();
-   m_data->m_random = make_hello_random(rng, cb, policy);
+   m_data->m_random = make_hello_random(rng, cb, policy, hash.crypto());
    m_data->m_suites = policy.ciphersuite_list(client_settings.protocol_version());
 
    if(!policy.acceptable_protocol_version(m_data->legacy_version())) {
@@ -193,14 +193,14 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
                                  const Session_with_Handle& session,
                                  std::vector<std::string> next_protocols) {
    m_data->m_legacy_version = session.session.version();
-   m_data->m_random = make_hello_random(rng, cb, policy);
+   m_data->m_random = make_hello_random(rng, cb, policy, hash.crypto());
 
    // RFC 5077 3.4
    //    When presenting a ticket, the client MAY generate and include a
    //    Session ID in the TLS ClientHello. [...] If a ticket is presented by
    //    the client, the server MUST NOT attempt to use the Session ID in the
    //    ClientHello for stateful session resumption.
-   m_data->m_session_id = session.handle.id().value_or(Session_ID(make_hello_random(rng, cb, policy)));
+   m_data->m_session_id = session.handle.id().value_or(Session_ID(make_hello_random(rng, cb, policy, hash.crypto())));
    m_data->m_suites = policy.ciphersuite_list(m_data->legacy_version());
 
    if(!policy.acceptable_protocol_version(session.session.version())) {
@@ -270,8 +270,8 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    hash.update(io.send(*this));
 }
 
-Client_Hello_12::Client_Hello_12(std::span<const uint8_t> buf) :
-      Client_Hello_12(std::make_unique<Client_Hello_Internal>(buf)) {}
+Client_Hello_12::Client_Hello_12(std::span<const uint8_t> buf, const CryptoOperations& crypto) :
+      Client_Hello_12(std::make_unique<Client_Hello_Internal>(buf, crypto)) {}
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
 

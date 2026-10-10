@@ -32,8 +32,9 @@ Hello_Verify_Request::Hello_Verify_Request(std::span<const uint8_t> buf) {
 
 Hello_Verify_Request::Hello_Verify_Request(std::span<const uint8_t> client_hello_bits,
                                            std::string_view client_identity,
-                                           std::span<const uint8_t> cookie_secret) :
-      m_cookie(calculate_cookie(client_hello_bits, client_identity, cookie_secret)) {}
+                                           std::span<const uint8_t> cookie_secret,
+                                           const CryptoOperations& crypto) :
+      m_cookie(calculate_cookie(client_hello_bits, client_identity, cookie_secret, crypto)) {}
 
 std::vector<uint8_t> Hello_Verify_Request::serialize() const {
    /* DTLS 1.2 server implementations SHOULD use DTLS version 1.0

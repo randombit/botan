@@ -31,6 +31,7 @@
    #include <botan/pkcs8.h>
    #include <botan/tls_callbacks.h>
    #include <botan/tls_client.h>
+   #include <botan/tls_crypto_operations.h>
    #include <botan/tls_extensions_12.h>
    #include <botan/tls_extensions_13.h>
    #include <botan/tls_messages.h>
@@ -545,11 +546,12 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager {
 
       const std::vector<Session_with_Handle>& all_sessions() const { return m_sessions; }
 
-      void store(const Session& session, const Session_Handle& handle) override {
+      void store(const Session& session, const Session_Handle& handle, const CryptoOperations& /*crypto*/) override {
          m_sessions.push_back({session, handle});
       }
 
       std::optional<Session_Handle> establish(const Session& session,
+                                              const CryptoOperations& /*crypto*/,
                                               const std::optional<Session_ID>& /*session*/,
                                               bool /*no_ticket*/) override {
          // we assume that the 'mocked' session is already stored in the manager,
@@ -568,7 +570,7 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager {
          return handle;
       }
 
-      std::optional<Session> retrieve_one(const Session_Handle& handle) override {
+      std::optional<Session> retrieve_one(const Session_Handle& handle, const CryptoOperations& /*crypto*/) override {
          const auto itr = std::find_if(m_sessions.begin(), m_sessions.end(), find_by_handle(handle));
          if(itr == m_sessions.end()) {
             return std::nullopt;
@@ -578,7 +580,8 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager {
       }
 
       std::vector<Session_with_Handle> find_some(const Server_Information& info,
-                                                 const size_t /*max_sessions_hint*/) override {
+                                                 const size_t /*max_sessions_hint*/,
+                                                 const CryptoOperations& /*crypto*/) override {
          std::vector<Session_with_Handle> found_sessions;
          for(const auto& [session, handle] : m_sessions) {
             if(session.server_info() == info) {
@@ -625,7 +628,8 @@ class TLS_Context {
             m_policy(std::move(policy)) {
          if(session_and_ticket.has_value()) {
             m_session_mgr->store(std::get<Session>(session_and_ticket.value()),
-                                 Botan::TLS::Session_Handle(std::get<Session_Ticket>(session_and_ticket.value())));
+                                 Botan::TLS::Session_Handle(std::get<Session_Ticket>(session_and_ticket.value())),
+                                 Botan::TLS::CryptoOperations());
          }
       }
 

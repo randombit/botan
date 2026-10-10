@@ -158,14 +158,15 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
                                  std::vector<std::string> next_protocols,
                                  std::optional<Session_with_Handle>& session,
                                  std::vector<ExternalPSK> psks,
-                                 TLS_Flavor flavor) {
+                                 TLS_Flavor flavor,
+                                 const std::shared_ptr<CryptoOperations>& crypto) {
    // RFC 8446 4.1.2
    //    In TLS 1.3, the client indicates its version preferences in the
    //    "supported_versions" extension (Section 4.2.1) and the
    //    legacy_version field MUST be set to 0x0303, which is the version
    //    number for TLS 1.2.
    m_data->m_legacy_version = Protocol_Version::TLS_V12;
-   m_data->m_random = make_hello_random(rng, cb, policy);
+   m_data->m_random = make_hello_random(rng, cb, policy, *crypto);
    m_data->m_suites = policy.ciphersuite_list(Protocol_Version::TLS_V13);
 
    if(policy.allow_tls12()) {
@@ -182,7 +183,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
       //
       // Note: we won't ever offer a TLS 1.2 session. In such a case we would
       //       have instantiated a TLS 1.2 client in the first place.
-      m_data->m_session_id = Session_ID(make_hello_random(rng, cb, policy));
+      m_data->m_session_id = Session_ID(make_hello_random(rng, cb, policy, *crypto));
    }
 
    // NOLINTBEGIN(*-owning-memory)
@@ -192,7 +193,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
 
    m_data->extensions().add(new Supported_Groups(policy.key_exchange_groups()));
 
-   m_data->extensions().add(new Key_Share(policy, cb, rng));
+   m_data->extensions().add(new Key_Share(policy, *crypto, rng));
 
    m_data->extensions().add(new Supported_Versions(Protocol_Version::TLS_V13, policy));
 
@@ -255,7 +256,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
 #endif
 
    if(session.has_value() || !psks.empty()) {
-      m_data->extensions().add(new PSK(session, std::move(psks), cb));
+      m_data->extensions().add(new PSK(session, std::move(psks), cb, crypto));
    }
    // NOLINTEND(*-owning-memory)
 
@@ -280,12 +281,13 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
          throw TLS_Exception(Alert::InternalError,
                              "Application modified extensions of Client Hello, PSK is not last anymore");
       }
-      calculate_psk_binders(Transcript_Hash_State(flavor));
+      calculate_psk_binders(Transcript_Hash_State(flavor, crypto));
    }
 }
 
-std::variant<Client_Hello_13, Client_Hello_12_Shim> Client_Hello_13::parse(std::span<const uint8_t> buf) {
-   auto data = std::make_unique<Client_Hello_Internal>(buf);
+std::variant<Client_Hello_13, Client_Hello_12_Shim> Client_Hello_13::parse(std::span<const uint8_t> buf,
+                                                                           const CryptoOperations& crypto) {
+   auto data = std::make_unique<Client_Hello_Internal>(buf, crypto);
    const auto version = data->version();
 
    if(version.is_pre_tls_13()) {
@@ -298,7 +300,8 @@ std::variant<Client_Hello_13, Client_Hello_12_Shim> Client_Hello_13::parse(std::
 void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
                             const Transcript_Hash_State& transcript_hash_state,
                             Callbacks& cb,
-                            RandomNumberGenerator& rng) {
+                            RandomNumberGenerator& rng,
+                            CryptoOperations& crypto) {
    BOTAN_STATE_CHECK(m_data->extensions().has<Supported_Groups>());
    BOTAN_STATE_CHECK(m_data->extensions().has<Key_Share>());
 
@@ -306,7 +309,7 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
    const auto& supported_groups = m_data->extensions().get<Supported_Groups>()->groups();
 
    if(hrr.extensions().has<Key_Share>()) {
-      m_data->extensions().get<Key_Share>()->retry_offer(*hrr_ks, supported_groups, cb, rng);
+      m_data->extensions().get<Key_Share>()->retry_offer(*hrr_ks, supported_groups, crypto, rng);
    }
 
    // RFC 8446 4.2.2
