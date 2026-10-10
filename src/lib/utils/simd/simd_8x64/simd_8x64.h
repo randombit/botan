@@ -232,6 +232,89 @@ class SIMD_8x64 final {
          return SIMD_8x64(_mm512_alignr_epi8(a.m_simd, b.m_simd, 8));
       }
 
+      /**
+      * Shift the concatenation hi:lo right by LANES lanes, returning the low 8 lanes
+      */
+      template <int LANES>
+      static SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 alignr(const SIMD_8x64& hi, const SIMD_8x64& lo)
+         requires(LANES > 0 && LANES < 8)
+      {
+         return SIMD_8x64(_mm512_alignr_epi64(hi.m_simd, lo.m_simd, LANES));
+      }
+
+      template <int LANE>
+      uint64_t BOTAN_FN_ISA_SIMD_8X64 extract() const
+         requires(LANE >= 0 && LANE < 8)
+      {
+         const __m128i v = _mm512_extracti64x2_epi64(m_simd, LANE / 2);
+         return static_cast<uint64_t>(_mm_extract_epi64(v, LANE % 2));
+      }
+
+      /**
+      * IFMA: this + low 52 bits of (a * b), using the low 52 bits of each lane of a and b
+      */
+      SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 madd52lo(const SIMD_8x64& a, const SIMD_8x64& b) const {
+         return SIMD_8x64(_mm512_madd52lo_epu64(m_simd, a.m_simd, b.m_simd));
+      }
+
+      /**
+      * IFMA: this + high 52 bits of (a * b), using the low 52 bits of each lane of a and b
+      */
+      SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 madd52hi(const SIMD_8x64& a, const SIMD_8x64& b) const {
+         return SIMD_8x64(_mm512_madd52hi_epu64(m_simd, a.m_simd, b.m_simd));
+      }
+
+      /**
+      * As madd52lo, but only in the lanes selected by the bitmask; the other lanes are unchanged
+      */
+      SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 masked_madd52lo(uint8_t lanes, const SIMD_8x64& a, const SIMD_8x64& b) const {
+         return SIMD_8x64(_mm512_mask_madd52lo_epu64(m_simd, lanes, a.m_simd, b.m_simd));
+      }
+
+      /**
+      * As madd52hi, but only in the lanes selected by the bitmask; the other lanes are unchanged
+      */
+      SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 masked_madd52hi(uint8_t lanes, const SIMD_8x64& a, const SIMD_8x64& b) const {
+         return SIMD_8x64(_mm512_mask_madd52hi_epu64(m_simd, lanes, a.m_simd, b.m_simd));
+      }
+
+      /**
+      * Interleave the low halves of a and b: a0 b0 a1 b1 a2 b2 a3 b3
+      */
+      static SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 interleave_lo(const SIMD_8x64& a, const SIMD_8x64& b) {
+         const auto idx = _mm512_set_epi64(11, 3, 10, 2, 9, 1, 8, 0);
+         return SIMD_8x64(_mm512_permutex2var_epi64(a.m_simd, idx, b.m_simd));
+      }
+
+      /**
+      * Interleave the high halves of a and b: a4 b4 a5 b5 a6 b6 a7 b7
+      */
+      static SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 interleave_hi(const SIMD_8x64& a, const SIMD_8x64& b) {
+         const auto idx = _mm512_set_epi64(15, 7, 14, 6, 13, 5, 12, 4);
+         return SIMD_8x64(_mm512_permutex2var_epi64(a.m_simd, idx, b.m_simd));
+      }
+
+      /**
+      * Return a bitmask of the lanes where this == other
+      */
+      uint8_t BOTAN_FN_ISA_SIMD_8X64 lanes_eq(const SIMD_8x64& other) const {
+         return _mm512_cmpeq_epi64_mask(m_simd, other.m_simd);
+      }
+
+      /**
+      * Return a bitmask of the lanes where this > other (unsigned)
+      */
+      uint8_t BOTAN_FN_ISA_SIMD_8X64 lanes_gt(const SIMD_8x64& other) const {
+         return _mm512_cmpgt_epu64_mask(m_simd, other.m_simd);
+      }
+
+      /**
+      * Return a + b in the lanes selected by the bitmask, and a elsewhere
+      */
+      static SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 masked_add(uint8_t lanes, const SIMD_8x64& a, const SIMD_8x64& b) {
+         return SIMD_8x64(_mm512_mask_add_epi64(a.m_simd, lanes, a.m_simd, b.m_simd));
+      }
+
       BOTAN_FN_ISA_SIMD_8X64
       static SIMD_8x64 splat(uint64_t v) { return SIMD_8x64(_mm512_set1_epi64(v)); }
 
