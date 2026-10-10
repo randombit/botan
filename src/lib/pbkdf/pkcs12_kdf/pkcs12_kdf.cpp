@@ -72,7 +72,8 @@ void pkcs12_kdf_with_hash(std::span<uint8_t> out,
                           std::span<const uint8_t> salt,
                           size_t iterations,
                           uint8_t id,
-                          HashFunction& hash) {
+                          HashFunction& hash,
+                          const std::optional<std::stop_token>& stop_token) {
    if(iterations == 0) {
       throw Invalid_Argument("PKCS12-KDF: Invalid iteration count");
    }
@@ -127,12 +128,19 @@ void pkcs12_kdf_with_hash(std::span<uint8_t> out,
 
    size_t out_offset = 0;
    while(out_offset < out.size()) {
+      if(stop_token.has_value() && stop_token->stop_requested()) {
+         throw Operation_Canceled("pkcs12_kdf");
+      }
+
       // Compute A = H^iterations(D || I)
       hash.update(D);
       hash.update(I);
       hash.final(A);
 
       for(size_t iter = 1; iter < iterations; ++iter) {
+         if((iter & 4095) == 1 && stop_token.has_value() && stop_token->stop_requested()) {
+            throw Operation_Canceled("pkcs12_kdf");
+         }
          hash.update(A);
          hash.final(A);
       }
@@ -160,7 +168,7 @@ void pkcs12_kdf(std::span<uint8_t> out,
                 size_t iterations,
                 uint8_t id,
                 HashFunction& hash) {
-   pkcs12_kdf_with_hash(out, pwd_bytes, salt, iterations, id, hash);
+   pkcs12_kdf_with_hash(out, pwd_bytes, salt, iterations, id, hash, std::nullopt);
 }
 
 PKCS12_KDF::PKCS12_KDF(std::unique_ptr<HashFunction> hash, uint8_t id, size_t iterations) :
@@ -179,10 +187,12 @@ void PKCS12_KDF::derive_key(uint8_t out[],
                             const char* password,
                             size_t password_len,
                             const uint8_t salt[],
-                            size_t salt_len) const {
+                            size_t salt_len,
+                            const std::optional<std::stop_token>& stop_token) const {
    const std::string_view pwd =
       (password != nullptr && password_len > 0) ? std::string_view(password, password_len) : std::string_view{};
-   pkcs12_kdf_with_hash({out, out_len}, pkcs12_encode_password(pwd), {salt, salt_len}, m_iterations, m_id, *m_hash);
+   pkcs12_kdf_with_hash(
+      {out, out_len}, pkcs12_encode_password(pwd), {salt, salt_len}, m_iterations, m_id, *m_hash, stop_token);
 }
 
 PKCS12_KDF_Family::PKCS12_KDF_Family(std::unique_ptr<HashFunction> hash, size_t id) :
@@ -212,7 +222,7 @@ std::unique_ptr<PasswordHash> PKCS12_KDF_Family::tune_params(size_t output_lengt
 
    auto tuning_hash = m_hash->new_object();
    const uint64_t measured_nsec = measure_cost(tuning_msec, [&]() {
-      pkcs12_kdf_with_hash(tuning_out, pwd_bytes, tuning_salt, tuning_iterations, m_id, *tuning_hash);
+      pkcs12_kdf_with_hash(tuning_out, pwd_bytes, tuning_salt, tuning_iterations, m_id, *tuning_hash, std::nullopt);
    });
 
    // Scale: one benchmark sample = tuning_iterations iterations; target matches desired_msec.
