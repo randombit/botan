@@ -272,20 +272,23 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
       auto* psk_extension = server_hello.extensions().get<PSK>();
 
       psk_cipher_state = std::visit(
-         overloaded{[&, this](Session session) {
-                       m_handshake->resumed_session = std::move(session);
-                       return Cipher_State::init_with_psk(Connection_Side::Server,
-                                                          Cipher_State::PSK_Type::Resumption,
-                                                          m_handshake->resumed_session->extract_master_secret(),
-                                                          cipher.prf_algo());
-                    },
-                    [&, this](ExternalPSK psk) {
-                       m_handshake->psk_identity = psk.identity();
-                       const auto psk_type =
-                          psk.is_imported() ? Cipher_State::PSK_Type::Imported : Cipher_State::PSK_Type::External;
-                       return Cipher_State::init_with_psk(
-                          Connection_Side::Server, psk_type, psk.extract_master_secret(), cipher.prf_algo());
-                    }},
+         overloaded{
+            [&, this](Session session) {
+               m_handshake->resumed_session = std::move(session);
+               return Cipher_State::init_with_psk(Connection_Side::Server,
+                                                  TLS_Flavor::TLS,
+                                                  Cipher_State::PSK_Type::Resumption,
+                                                  m_handshake->resumed_session->extract_master_secret(),
+                                                  cipher.prf_algo());
+            },
+            [&, this](ExternalPSK psk) {
+               m_handshake->psk_identity = psk.identity();
+               const auto psk_type =
+                  psk.is_imported() ? Cipher_State::PSK_Type::Imported : Cipher_State::PSK_Type::External;
+               return Cipher_State::init_with_psk(
+                  Connection_Side::Server, TLS_Flavor::TLS, psk_type, psk.extract_master_secret(), cipher.prf_algo());
+            },
+         },
          psk_extension->take_session_to_resume_or_psk());
       psk_cipher_state->set_secret_logger(secret_logger());
 
@@ -349,8 +352,12 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
 
          return std::move(psk_cipher_state);
       } else {
-         return Cipher_State::init_with_server_hello(
-            m_side, my_keyshare->take_shared_secret(), cipher, m_transcript_hash->current(), secret_logger());
+         return Cipher_State::init_with_server_hello(m_side,
+                                                     TLS_Flavor::TLS,
+                                                     my_keyshare->take_shared_secret(),
+                                                     cipher,
+                                                     m_transcript_hash->current(),
+                                                     secret_logger());
       }
    }());
 

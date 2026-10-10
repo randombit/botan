@@ -366,8 +366,12 @@ void Client_Impl_13::handle(const Server_Hello_13& sh) {
          return new_cipher_state;
       } else {
          m_handshake->resumed_session.reset();  // might have been set if we attempted a resumption
-         return Cipher_State::init_with_server_hello(
-            m_side, std::move(shared_secret), cipher.value(), m_transcript_hash->current(), secret_logger());
+         return Cipher_State::init_with_server_hello(m_side,
+                                                     TLS_Flavor::TLS,
+                                                     std::move(shared_secret),
+                                                     cipher.value(),
+                                                     m_transcript_hash->current(),
+                                                     secret_logger());
       }
    }());
 
