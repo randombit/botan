@@ -16,13 +16,15 @@
 
 namespace Botan {
 
-class Montgomery_Exponentiation_State final {
+namespace {
+
+class Montgomery_Exponentiation_Generic final : public Montgomery_Exponentiation_State {
    public:
-      Montgomery_Exponentiation_State(const Montgomery_Int& g, size_t window_bits, bool const_time);
+      Montgomery_Exponentiation_Generic(const Montgomery_Int& g, size_t window_bits, bool const_time);
 
-      Montgomery_Int exponentiation(const BigInt& k, size_t max_k_bits) const;
+      Montgomery_Int exponentiation(const BigInt& k, size_t max_k_bits) const override;
 
-      Montgomery_Int exponentiation_vartime(const BigInt& k) const;
+      Montgomery_Int exponentiation_vartime(const BigInt& k) const override;
 
    private:
       Montgomery_Params m_params;
@@ -30,14 +32,10 @@ class Montgomery_Exponentiation_State final {
       size_t m_window_bits;
 };
 
-Montgomery_Exponentiation_State::Montgomery_Exponentiation_State(const Montgomery_Int& g,
-                                                                 size_t window_bits,
-                                                                 bool const_time) :
-      m_params(g._params()), m_window_bits(window_bits == 0 ? 4 : window_bits) {
-   if(m_window_bits < 1 || m_window_bits > 12) {  // really even 8 is too large ...
-      throw Invalid_Argument("Invalid window bits for Montgomery exponentiation");
-   }
-
+Montgomery_Exponentiation_Generic::Montgomery_Exponentiation_Generic(const Montgomery_Int& g,
+                                                                     size_t window_bits,
+                                                                     bool const_time) :
+      m_params(g._params()), m_window_bits(window_bits) {
    const size_t window_size = (static_cast<size_t>(1) << m_window_bits);
 
    m_g.reserve(window_size);
@@ -60,8 +58,6 @@ Montgomery_Exponentiation_State::Montgomery_Exponentiation_State(const Montgomer
       CT::poison_range(m_g);
    }
 }
-
-namespace {
 
 void const_time_lookup(secure_vector<word>& output, const std::vector<Montgomery_Int>& g, size_t nibble) {
    BOTAN_ASSERT_NOMSG(g.size() % 2 == 0);  // actually a power of 2
@@ -86,9 +82,7 @@ void const_time_lookup(secure_vector<word>& output, const std::vector<Montgomery
    }
 }
 
-}  // namespace
-
-Montgomery_Int Montgomery_Exponentiation_State::exponentiation(const BigInt& scalar, size_t max_k_bits) const {
+Montgomery_Int Montgomery_Exponentiation_Generic::exponentiation(const BigInt& scalar, size_t max_k_bits) const {
    BOTAN_ARG_CHECK(scalar.signum() >= 0, "Invalid scalar for Montgomery exponentiation");
    BOTAN_DEBUG_ASSERT(scalar.bits() <= max_k_bits);
    // TODO add a const-time implementation of above assert and use it in release builds
@@ -115,7 +109,7 @@ Montgomery_Int Montgomery_Exponentiation_State::exponentiation(const BigInt& sca
    return x;
 }
 
-Montgomery_Int Montgomery_Exponentiation_State::exponentiation_vartime(const BigInt& scalar) const {
+Montgomery_Int Montgomery_Exponentiation_Generic::exponentiation_vartime(const BigInt& scalar) const {
    const size_t exp_nibbles = (scalar.bits() + m_window_bits - 1) / m_window_bits;
 
    secure_vector<word> ws(2 * m_params.p_words());
@@ -139,10 +133,20 @@ Montgomery_Int Montgomery_Exponentiation_State::exponentiation_vartime(const Big
    return x;
 }
 
+}  // namespace
+
 std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Int& g,
                                                                         size_t window_bits,
                                                                         bool const_time) {
-   return std::make_shared<const Montgomery_Exponentiation_State>(g, window_bits, const_time);
+   if(window_bits == 0) {
+      window_bits = 4;
+   }
+
+   if(window_bits < 1 || window_bits > 12) {  // really even 8 is too large ...
+      throw Invalid_Argument("Invalid window bits for Montgomery exponentiation");
+   }
+
+   return std::make_shared<const Montgomery_Exponentiation_Generic>(g, window_bits, const_time);
 }
 
 std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Params& params,

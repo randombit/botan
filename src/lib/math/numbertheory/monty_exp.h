@@ -13,7 +13,33 @@
 namespace Botan {
 
 class BigInt;
-class Montgomery_Exponentiation_State;
+
+/**
+* Precomputed state for computing g^x mod p
+*/
+class Montgomery_Exponentiation_State {
+   public:
+      virtual ~Montgomery_Exponentiation_State() = default;
+
+      Montgomery_Exponentiation_State(const Montgomery_Exponentiation_State& other) = delete;
+      Montgomery_Exponentiation_State(Montgomery_Exponentiation_State&& other) = delete;
+
+      Montgomery_Exponentiation_State& operator=(const Montgomery_Exponentiation_State& other) = delete;
+      Montgomery_Exponentiation_State& operator=(Montgomery_Exponentiation_State&& other) = delete;
+
+      /**
+      * Return g^k mod p, in time independent of k (assuming k is at most max_k_bits long)
+      */
+      virtual Montgomery_Int exponentiation(const BigInt& k, size_t max_k_bits) const = 0;
+
+      /**
+      * Return g^k mod p in variable time
+      */
+      virtual Montgomery_Int exponentiation_vartime(const BigInt& k) const = 0;
+
+   protected:
+      Montgomery_Exponentiation_State() = default;
+};
 
 /*
 * Precompute for calculating values g^x mod p
