@@ -23,13 +23,14 @@
 namespace Botan::TLS {
 
 std::shared_ptr<Server_Impl_13> Server_Impl_13::create(const std::shared_ptr<Callbacks>& callbacks,
+                                                       const std::shared_ptr<CryptoOperations>& crypto,
                                                        const std::shared_ptr<Session_Manager>& session_manager,
                                                        const std::shared_ptr<Credentials_Manager>& credentials_manager,
                                                        const std::shared_ptr<const Policy>& policy,
                                                        const std::shared_ptr<RandomNumberGenerator>& rng,
                                                        TLS_Flavor flavor) {
-   auto self =
-      std::make_shared<Server_Impl_13>(Private{}, callbacks, session_manager, credentials_manager, policy, rng, flavor);
+   auto self = std::make_shared<Server_Impl_13>(
+      Private{}, callbacks, crypto, session_manager, credentials_manager, policy, rng, flavor);
 
 #if defined(BOTAN_HAS_TLS_12)
    if(flavor.is_streaming() ? policy->allow_tls12() : policy->allow_dtls12()) {
@@ -159,7 +160,7 @@ size_t Server_Impl_13::send_new_session_tickets(const size_t tickets) {
                             callbacks().tls_current_timestamp());
 
       if(callbacks().tls_should_persist_resumption_information(session)) {
-         if(auto handle = session_manager().establish(session)) {
+         if(auto handle = session_manager().establish(session, crypto())) {
             flight.add(New_Session_Ticket_13(std::move(nonce), session, handle.value(), callbacks()));
             ++tickets_created;
          }
@@ -306,25 +307,30 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
    if(uses_psk) {
       auto* psk_extension = server_hello.extensions().get<PSK>();
 
-      psk_cipher_state = std::visit(
-         overloaded{
-            [&, this](Session session) {
-               m_handshake->resumed_session = std::move(session);
-               return Cipher_State::init_with_psk(Connection_Side::Server,
-                                                  m_flavor,
-                                                  Cipher_State::PSK_Type::Resumption,
-                                                  m_handshake->resumed_session->extract_master_secret(),
-                                                  cipher.prf_algo());
-            },
-            [&, this](ExternalPSK psk) {
-               m_handshake->psk_identity = psk.identity();
-               const auto psk_type =
-                  psk.is_imported() ? Cipher_State::PSK_Type::Imported : Cipher_State::PSK_Type::External;
-               return Cipher_State::init_with_psk(
-                  Connection_Side::Server, m_flavor, psk_type, psk.extract_master_secret(), cipher.prf_algo());
-            },
-         },
-         psk_extension->take_session_to_resume_or_psk());
+      psk_cipher_state =
+         std::visit(overloaded{
+                       [&, this](Session session) {
+                          m_handshake->resumed_session = std::move(session);
+                          return Cipher_State::init_with_psk(Connection_Side::Server,
+                                                             m_flavor,
+                                                             Cipher_State::PSK_Type::Resumption,
+                                                             m_handshake->resumed_session->extract_master_secret(),
+                                                             cipher.prf_algo(),
+                                                             crypto_ptr());
+                       },
+                       [&, this](ExternalPSK psk) {
+                          m_handshake->psk_identity = psk.identity();
+                          const auto psk_type =
+                             psk.is_imported() ? Cipher_State::PSK_Type::Imported : Cipher_State::PSK_Type::External;
+                          return Cipher_State::init_with_psk(Connection_Side::Server,
+                                                             m_flavor,
+                                                             psk_type,
+                                                             psk.extract_master_secret(),
+                                                             cipher.prf_algo(),
+                                                             crypto_ptr());
+                       },
+                    },
+                    psk_extension->take_session_to_resume_or_psk());
       psk_cipher_state->set_secret_logger(secret_logger());
 
       // RFC 8446 4.2.11
@@ -411,8 +417,13 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
 
          return std::move(psk_cipher_state);
       } else {
-         return Cipher_State::init_with_server_hello(
-            m_side, m_flavor, my_keyshare->take_shared_secret(), cipher, m_transcript_hash->current(), secret_logger());
+         return Cipher_State::init_with_server_hello(m_side,
+                                                     m_flavor,
+                                                     my_keyshare->take_shared_secret(),
+                                                     cipher,
+                                                     m_transcript_hash->current(),
+                                                     secret_logger(),
+                                                     crypto_ptr());
       }
    }();
 
@@ -478,7 +489,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
                                                                Connection_Side::Server,
                                                                credentials_manager(),
                                                                policy(),
-                                                               callbacks(),
+                                                               crypto(),
                                                                rng())));
    }
 
@@ -696,7 +707,8 @@ void Server_Impl_13::handle(const Client_Hello_13& client_hello) {
                                       rng(),
                                       policy(),
                                       callbacks(),
-                                      m_flavor));
+                                      m_flavor,
+                                      crypto()));
 }
 
 void Server_Impl_13::handle(const Certificate_13& certificate_msg) {
@@ -772,7 +784,7 @@ void Server_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
    BOTAN_ASSERT_NOMSG(m_handshake->state.has_client_certificate_msg() &&
                       !m_handshake->state.client_certificate().empty());
    const bool sig_valid = certificate_verify_msg.verify(
-      *m_handshake->state.client_certificate().public_key(), callbacks(), m_transcript_hash->previous());
+      *m_handshake->state.client_certificate().public_key(), crypto(), m_transcript_hash->previous());
 
    // RFC 8446 4.4.3
    //   If the verification fails, the receiver MUST terminate the handshake

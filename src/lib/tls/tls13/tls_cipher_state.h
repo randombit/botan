@@ -27,8 +27,7 @@ namespace Botan {
 
 class AEAD_Mode;
 class HashFunction;
-class HKDF_Extract;
-class HKDF_Expand;
+class KDF;
 
 }  // namespace Botan
 
@@ -98,7 +97,10 @@ class BOTAN_TEST_API Cipher_State {
       using ExpansionLabelPrefix = std::array<uint8_t, 6>;
 
    private:
-      static std::unique_ptr<Cipher_State> create(Connection_Side side, TLS_Flavor flavor, std::string_view prf_algo);
+      static std::unique_ptr<Cipher_State> create(Connection_Side side,
+                                                  TLS_Flavor flavor,
+                                                  std::string_view prf_algo,
+                                                  std::shared_ptr<CryptoOperations> crypto);
 
    public:
       virtual ~Cipher_State();
@@ -111,21 +113,25 @@ class BOTAN_TEST_API Cipher_State {
       /**
        * Construct a Cipher_State from a Pre-Shared-Key.
        */
-      static std::unique_ptr<Cipher_State> init_with_psk(Connection_Side side,
-                                                         TLS_Flavor flavor,
-                                                         PSK_Type type,
-                                                         secure_vector<uint8_t>&& psk,
-                                                         std::string_view prf_algo);
+      static std::unique_ptr<Cipher_State> init_with_psk(
+         Connection_Side side,
+         TLS_Flavor flavor,
+         PSK_Type type,
+         secure_vector<uint8_t>&& psk,
+         std::string_view prf_algo,
+         std::shared_ptr<CryptoOperations> crypto = std::make_shared<CryptoOperations>());
 
       /**
        * Construct a Cipher_State after receiving a server hello message.
        */
-      static std::unique_ptr<Cipher_State> init_with_server_hello(Connection_Side side,
-                                                                  TLS_Flavor flavor,
-                                                                  secure_vector<uint8_t>&& shared_secret,
-                                                                  const Ciphersuite& cipher,
-                                                                  const Transcript_Hash& transcript_hash,
-                                                                  SecretLoggerFn secret_logger);
+      static std::unique_ptr<Cipher_State> init_with_server_hello(
+         Connection_Side side,
+         TLS_Flavor flavor,
+         secure_vector<uint8_t>&& shared_secret,
+         const Ciphersuite& cipher,
+         const Transcript_Hash& transcript_hash,
+         SecretLoggerFn secret_logger,
+         std::shared_ptr<CryptoOperations> crypto = std::make_shared<CryptoOperations>());
 
       /**
        * Transition internal secrets/keys for transporting early application data.
@@ -349,8 +355,12 @@ class BOTAN_TEST_API Cipher_State {
        * @param whoami         whether we play the Server or Client
        * @param hash_function  the negotiated hash function to be used
        * @param expand_prefix  the prefix to be used for HKDF-Expand-Label
+       * @param crypto         the cryptographic operations to use
        */
-      Cipher_State(Connection_Side whoami, std::string_view hash_function, ExpansionLabelPrefix expand_prefix);
+      Cipher_State(Connection_Side whoami,
+                   std::string_view hash_function,
+                   ExpansionLabelPrefix expand_prefix,
+                   std::shared_ptr<CryptoOperations> crypto);
 
       static size_t protected_record_length(Epoch& epoch, size_t payload_length, size_t padding_bytes);
 
@@ -409,13 +419,14 @@ class BOTAN_TEST_API Cipher_State {
       };
 
    private:
+      std::shared_ptr<CryptoOperations> m_crypto;
       State m_state;
       Connection_Side m_connection_side;
       std::optional<Ciphersuite> m_ciphersuite;
       SecretLoggerFn m_secret_logger;
 
-      std::unique_ptr<HKDF_Extract> m_extract;
-      std::unique_ptr<HKDF_Expand> m_expand;
+      std::unique_ptr<KDF> m_extract;
+      std::unique_ptr<KDF> m_expand;
       std::unique_ptr<HashFunction> m_hash;
 
       ExpansionLabelPrefix m_expansion_label_prefix;
@@ -442,7 +453,7 @@ class BOTAN_TEST_API Cipher_State {
  */
 class BOTAN_TEST_API TLS_Cipher_State final : public Cipher_State {
    public:
-      TLS_Cipher_State(Connection_Side side, std::string_view prf_algo);
+      TLS_Cipher_State(Connection_Side side, std::string_view prf_algo, std::shared_ptr<CryptoOperations> crypto);
 
       ~TLS_Cipher_State() override;
       TLS_Cipher_State(const TLS_Cipher_State&) = delete;

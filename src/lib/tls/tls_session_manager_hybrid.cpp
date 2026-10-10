@@ -27,11 +27,13 @@ Session_Manager_Hybrid::Session_Manager_Hybrid(std::unique_ptr<Session_Manager> 
 
 std::vector<Session_with_Handle> Session_Manager_Hybrid::find(const Server_Information& info,
                                                               Callbacks& callbacks,
-                                                              const Policy& policy) {
-   return m_stateful->find(info, callbacks, policy);
+                                                              const Policy& policy,
+                                                              const CryptoOperations& crypto) {
+   return m_stateful->find(info, callbacks, policy, crypto);
 }
 
 std::optional<Session_Handle> Session_Manager_Hybrid::establish(const Session& session,
+                                                                const CryptoOperations& crypto,
                                                                 const std::optional<Session_ID>& id,
                                                                 bool tls12_no_ticket) {
    const auto create_ticket = [&]() -> std::optional<Session_Handle> {
@@ -39,7 +41,7 @@ std::optional<Session_Handle> Session_Manager_Hybrid::establish(const Session& s
          return std::nullopt;
       }
 
-      auto ticket_handle = m_stateless.establish(session, id, false /* always allow tickets */);
+      auto ticket_handle = m_stateless.establish(session, crypto, id, false /* always allow tickets */);
       BOTAN_ASSERT_IMPLICATION(ticket_handle.has_value(),
                                ticket_handle->is_ticket(),
                                "Session_Manager_Stateless produced unexpected Session_Handle");
@@ -49,7 +51,7 @@ std::optional<Session_Handle> Session_Manager_Hybrid::establish(const Session& s
    const auto create_id = [&] {
       // If we're dealing with a TLS 1.2 connection, we opportunistically
       // disable tickets for the underlying manager.
-      auto id_handle = m_stateful->establish(session, id, session.version().is_pre_tls_13());
+      auto id_handle = m_stateful->establish(session, crypto, id, session.version().is_pre_tls_13());
       BOTAN_ASSERT_IMPLICATION(
          id_handle.has_value(), id_handle->is_id(), "Session_Manager_In_Memory produced unexpected Session_Handle");
       return id_handle;
@@ -71,7 +73,8 @@ std::optional<Session_Handle> Session_Manager_Hybrid::establish(const Session& s
 
 std::optional<Session> Session_Manager_Hybrid::retrieve(const Session_Handle& handle,
                                                         Callbacks& callbacks,
-                                                        const Policy& policy) {
+                                                        const Policy& policy,
+                                                        const CryptoOperations& crypto) {
    std::reference_wrapper<Session_Manager> preferred = m_stateless;
    std::reference_wrapper<Session_Manager> fallback = *m_stateful;
 
@@ -79,23 +82,25 @@ std::optional<Session> Session_Manager_Hybrid::retrieve(const Session_Handle& ha
       std::swap(preferred, fallback);
    }
 
-   if(auto session = preferred.get().retrieve(handle, callbacks, policy)) {
+   if(auto session = preferred.get().retrieve(handle, callbacks, policy, crypto)) {
       return session;
    }
 
-   return fallback.get().retrieve(handle, callbacks, policy);
+   return fallback.get().retrieve(handle, callbacks, policy, crypto);
 }
 
 bool Session_Manager_Hybrid::emits_session_tickets() {
    return m_stateless.emits_session_tickets() || m_stateful->emits_session_tickets();
 }
 
-std::optional<Session> Session_Manager_Hybrid::retrieve_one(const Session_Handle& /*handle*/) {
+std::optional<Session> Session_Manager_Hybrid::retrieve_one(const Session_Handle& /*handle*/,
+                                                            const CryptoOperations& /*crypto*/) {
    BOTAN_ASSERT(false, "This should never be called");
 }
 
 std::vector<Session_with_Handle> Session_Manager_Hybrid::find_some(const Server_Information& /*info*/,
-                                                                   size_t /*max_sessions_hint*/) {
+                                                                   size_t /*max_sessions_hint*/,
+                                                                   const CryptoOperations& /*crypto*/) {
    BOTAN_ASSERT(false, "This should never be called");
 }
 

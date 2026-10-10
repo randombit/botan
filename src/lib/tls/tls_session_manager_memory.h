@@ -46,7 +46,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_In_Memory final : public Session_Ma
       BOTAN_FUTURE_EXPLICIT Session_Manager_In_Memory(const std::shared_ptr<RandomNumberGenerator>& rng,
                                                       size_t max_sessions = 1000);
 
-      void store(const Session& session, const Session_Handle& handle) override;
+      void store(const Session& session, const Session_Handle& handle, const CryptoOperations& crypto) override;
       size_t remove(const Session_Handle& handle) override;
       size_t remove_all() override;
 
@@ -55,8 +55,10 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_In_Memory final : public Session_Ma
       bool emits_session_tickets() override { return false; }
 
    protected:
-      std::optional<Session> retrieve_one(const Session_Handle& handle) override;
-      std::vector<Session_with_Handle> find_some(const Server_Information& info, size_t max_sessions_hint) override;
+      std::optional<Session> retrieve_one(const Session_Handle& handle, const CryptoOperations& crypto) override;
+      std::vector<Session_with_Handle> find_some(const Server_Information& info,
+                                                 size_t max_sessions_hint,
+                                                 const CryptoOperations& crypto) override;
 
    private:
       size_t remove_internal(const Session_Handle& handle);

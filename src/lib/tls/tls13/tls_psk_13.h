@@ -108,6 +108,10 @@ class BOTAN_PUBLIC_API(3, 12) PSKImporter {
        */
       ExternalPSK derive_imported_psk(Protocol_Version version, std::string_view target_hash) const;
 
+      ExternalPSK derive_imported_psk(Protocol_Version version,
+                                      std::string_view target_hash,
+                                      const CryptoOperations& crypto) const;
+
    private:
       secure_vector<uint8_t> m_key;
       std::vector<uint8_t> m_identity;

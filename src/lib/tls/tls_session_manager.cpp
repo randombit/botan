@@ -46,6 +46,7 @@ Session_Manager::Session_Manager(const std::shared_ptr<RandomNumberGenerator>& r
 }
 
 std::optional<Session_Handle> Session_Manager::establish(const Session& session,
+                                                         const CryptoOperations& crypto,
                                                          const std::optional<Session_ID>& id,
                                                          bool tls12_no_ticket) {
    // Establishing a session does not require locking at this level as
@@ -56,18 +57,19 @@ std::optional<Session_Handle> Session_Manager::establish(const Session& session,
    BOTAN_ASSERT(session.side() == Connection_Side::Server, "Client tried to establish a session");
 
    Session_Handle handle(id.value_or(m_rng->random_vec<Session_ID>(32)));
-   store(session, handle);
+   store(session, handle, crypto);
    return handle;
 }
 
 std::optional<Session> Session_Manager::retrieve(const Session_Handle& handle,
                                                  Callbacks& callbacks,
-                                                 const Policy& policy) {
+                                                 const Policy& policy,
+                                                 const CryptoOperations& crypto) {
    // Retrieving a session for a given handle does not require locking on this
    // level. Concurrent threads might handle the removal of an expired ticket
    // more than once, but removing an already removed ticket is a harmless NOOP.
 
-   auto session = retrieve_one(handle);
+   auto session = retrieve_one(handle, crypto);
    if(!session.has_value()) {
       return std::nullopt;
    }
@@ -117,7 +119,8 @@ std::optional<Session> Session_Manager::retrieve(const Session_Handle& handle,
 
 std::vector<Session_with_Handle> Session_Manager::find_and_filter(const Server_Information& info,
                                                                   Callbacks& callbacks,
-                                                                  const Policy& policy) {
+                                                                  const Policy& policy,
+                                                                  const CryptoOperations& crypto) {
    // A value of '0' means: No policy restrictions. Session ticket lifetimes as
    // communicated by the server apply regardless.
    const std::chrono::seconds policy_lifetime =
@@ -134,7 +137,7 @@ std::vector<Session_with_Handle> Session_Manager::find_and_filter(const Server_I
    // Query the session manager implementation for new sessions until at least
    // one session passes the filter or no more sessions are found.
    for(unsigned int attempt = 0; attempt < max_attempts && sessions_and_handles.empty(); ++attempt) {
-      sessions_and_handles = find_some(info, max_sessions_hint);
+      sessions_and_handles = find_some(info, max_sessions_hint, crypto);
 
       // The counterpart to the role check in retrieve(): a session established
       // while acting as a TLS server must not be offered for resumption as a
@@ -206,7 +209,8 @@ std::vector<Session_with_Handle> Session_Manager::find_and_filter(const Server_I
 
 std::vector<Session_with_Handle> Session_Manager::find(const Server_Information& info,
                                                        Callbacks& callbacks,
-                                                       const Policy& policy) {
+                                                       const Policy& policy,
+                                                       const CryptoOperations& crypto) {
    const auto allow_reusing_tickets = policy.reuse_session_tickets();
 
    // Session_Manager::find() must be an atomic getter if ticket reuse is not
@@ -218,7 +222,7 @@ std::vector<Session_with_Handle> Session_Manager::find(const Server_Information&
       lk.emplace(mutex());
    }
 
-   auto sessions_and_handles = find_and_filter(info, callbacks, policy);
+   auto sessions_and_handles = find_and_filter(info, callbacks, policy, crypto);
 
    // std::vector::resize() cannot be used as the vector's members aren't
    // default constructible.
@@ -253,7 +257,8 @@ std::optional<std::pair<Session, uint16_t>> Session_Manager::choose_from_offered
    const std::vector<PskIdentity>& tickets,
    std::string_view hash_function,
    Callbacks& callbacks,
-   const Policy& policy) {
+   const Policy& policy,
+   const CryptoOperations& crypto) {
    // Note that the TLS server currently does not ensure that tickets aren't
    // reused. As a result, no locking is required on this level.
 
@@ -269,7 +274,7 @@ std::optional<std::pair<Session, uint16_t>> Session_Manager::choose_from_offered
          continue;
       }
 
-      auto session = retrieve(Session_Handle(Opaque_Session_Handle(ticket.identity())), callbacks, policy);
+      auto session = retrieve(Session_Handle(Opaque_Session_Handle(ticket.identity())), callbacks, policy, crypto);
       if(session.has_value() && session->ciphersuite().prf_algo() == hash_function &&
          session->version().is_tls_13_or_later()) {
          return std::pair{std::move(session.value()), static_cast<uint16_t>(i)};

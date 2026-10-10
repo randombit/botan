@@ -10,7 +10,7 @@
 
 #include <botan/tls_extensions_13.h>
 
-#include <botan/tls_callbacks.h>
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/scoped_cleanup.h>
@@ -82,8 +82,8 @@ class Key_Share_Entry {
       // but don't pre-generate a keypair, yet.
       explicit Key_Share_Entry(const TLS::Group_Params group) : m_group(group) {}
 
-      Key_Share_Entry(const TLS::Group_Params group, Callbacks& cb, RandomNumberGenerator& rng) :
-            m_group(group), m_private_key(cb.tls_kem_generate_key(group, rng)) {
+      Key_Share_Entry(const TLS::Group_Params group, CryptoOperations& crypto, RandomNumberGenerator& rng) :
+            m_group(group), m_private_key(crypto.kem_generate_key(group, rng)) {
          if(!m_private_key) {
             throw TLS_Exception(Alert::InternalError, "Application did not provide a suitable ephemeral key pair");
          }
@@ -109,12 +109,12 @@ class Key_Share_Entry {
 
       secure_vector<uint8_t> encapsulate(const Key_Share_Entry& client_share,
                                          const Policy& policy,
-                                         Callbacks& cb,
+                                         CryptoOperations& crypto,
                                          RandomNumberGenerator& rng) {
          check_ecdh_uncompressed_format(m_group, client_share.m_key_exchange);
          check_ffdhe_padding(m_group, client_share.m_key_exchange);
          auto [encapsulated_shared_key, shared_key] =
-            KEM_Encapsulation::destructure(cb.tls_kem_encapsulate(m_group, client_share.m_key_exchange, rng, policy));
+            KEM_Encapsulation::destructure(crypto.kem_encapsulate(m_group, client_share.m_key_exchange, rng, policy));
          m_key_exchange = std::move(encapsulated_shared_key);
          return std::move(shared_key);
       }
@@ -127,14 +127,14 @@ class Key_Share_Entry {
        */
       secure_vector<uint8_t> decapsulate(const Key_Share_Entry& received,
                                          const Policy& policy,
-                                         Callbacks& cb,
+                                         CryptoOperations& crypto,
                                          RandomNumberGenerator& rng) {
          const auto scope = scoped_cleanup([&] { m_private_key.reset(); });
          BOTAN_ASSERT_NOMSG(m_group == received.m_group);
          BOTAN_STATE_CHECK(m_private_key != nullptr);
          check_ecdh_uncompressed_format(m_group, received.m_key_exchange);
          check_ffdhe_padding(m_group, received.m_key_exchange);
-         return cb.tls_kem_decapsulate(m_group, *m_private_key, received.m_key_exchange, rng, policy);
+         return crypto.kem_decapsulate(m_group, *m_private_key, received.m_key_exchange, rng, policy);
       }
 
    private:
@@ -152,7 +152,7 @@ class Key_Share_ServerHello {
       Key_Share_ServerHello(Named_Group group,
                             const Key_Share_ClientHello& client_keyshare,
                             const Policy& policy,
-                            Callbacks& cb,
+                            CryptoOperations& crypto,
                             RandomNumberGenerator& rng);
 
       ~Key_Share_ServerHello() = default;
@@ -222,7 +222,7 @@ class Key_Share_ClientHello {
          }
       }
 
-      Key_Share_ClientHello(const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng) {
+      Key_Share_ClientHello(const Policy& policy, CryptoOperations& crypto, RandomNumberGenerator& rng) {
          const auto supported = policy.key_exchange_groups();
          const auto offers = policy.key_exchange_groups_to_offer();
 
@@ -242,7 +242,7 @@ class Key_Share_ClientHello {
                !group_usable_in_version(group, Protocol_Version::TLS_V13)) {
                continue;
             }
-            m_client_shares.emplace_back(group, cb, rng);
+            m_client_shares.emplace_back(group, crypto, rng);
          }
       }
 
@@ -254,7 +254,7 @@ class Key_Share_ClientHello {
       Key_Share_ClientHello(Key_Share_ClientHello&&) = default;
       Key_Share_ClientHello& operator=(Key_Share_ClientHello&&) = default;
 
-      void retry_offer(const TLS::Group_Params to_offer, Callbacks& cb, RandomNumberGenerator& rng) {
+      void retry_offer(const TLS::Group_Params to_offer, CryptoOperations& crypto, RandomNumberGenerator& rng) {
          // RFC 8446 4.2.8
          //    The selected_group field [MUST] not correspond to a group which was provided
          //    in the "key_share" extension in the original ClientHello.
@@ -265,7 +265,7 @@ class Key_Share_ClientHello {
          }
 
          m_client_shares.clear();
-         m_client_shares.emplace_back(to_offer, cb, rng);
+         m_client_shares.emplace_back(to_offer, crypto, rng);
       }
 
       std::vector<Named_Group> offered_groups() const {
@@ -301,7 +301,7 @@ class Key_Share_ClientHello {
 
       secure_vector<uint8_t> encapsulate(Key_Share_ServerHello& server_share,
                                          const Policy& policy,
-                                         Callbacks& cb,
+                                         CryptoOperations& crypto,
                                          RandomNumberGenerator& rng) const {
          auto& server_selected = server_share.get_singleton_entry();
 
@@ -315,12 +315,12 @@ class Key_Share_ClientHello {
          // Key_Share_ServerHello extension.
          BOTAN_STATE_CHECK(match != m_client_shares.end());
 
-         return server_selected.encapsulate(*match, policy, cb, rng);
+         return server_selected.encapsulate(*match, policy, crypto, rng);
       }
 
       secure_vector<uint8_t> decapsulate(const Key_Share_ServerHello& server_share,
                                          const Policy& policy,
-                                         Callbacks& cb,
+                                         CryptoOperations& crypto,
                                          RandomNumberGenerator& rng) {
          const auto& server_selected = server_share.get_singleton_entry();
 
@@ -337,7 +337,7 @@ class Key_Share_ClientHello {
             throw TLS_Exception(Alert::IllegalParameter, "Server selected a key exchange group we didn't offer.");
          }
 
-         return match->decapsulate(server_selected, policy, cb, rng);
+         return match->decapsulate(server_selected, policy, crypto, rng);
       }
 
    private:
@@ -347,10 +347,10 @@ class Key_Share_ClientHello {
 Key_Share_ServerHello::Key_Share_ServerHello(Named_Group group,
                                              const Key_Share_ClientHello& client_keyshare,
                                              const Policy& policy,
-                                             Callbacks& cb,
+                                             CryptoOperations& crypto,
                                              RandomNumberGenerator& rng) :
       m_server_share(group) {
-   m_shared_secret = client_keyshare.encapsulate(*this, policy, cb, rng);
+   m_shared_secret = client_keyshare.encapsulate(*this, policy, crypto, rng);
 }
 
 class Key_Share_HelloRetryRequest {
@@ -420,8 +420,8 @@ Key_Share::Key_Share(TLS_Data_Reader& reader, uint16_t extension_size, Handshake
 }
 
 // ClientHello
-Key_Share::Key_Share(const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng) :
-      m_impl(std::make_unique<Key_Share_Impl>(Key_Share_ClientHello(policy, cb, rng))) {}
+Key_Share::Key_Share(const Policy& policy, CryptoOperations& crypto, RandomNumberGenerator& rng) :
+      m_impl(std::make_unique<Key_Share_Impl>(Key_Share_ClientHello(policy, crypto, rng))) {}
 
 // HelloRetryRequest
 Key_Share::Key_Share(Named_Group selected_group) :
@@ -431,10 +431,10 @@ Key_Share::Key_Share(Named_Group selected_group) :
 Key_Share::Key_Share(Group_Params selected_group,
                      const Key_Share& client_keyshare,
                      const Policy& policy,
-                     Callbacks& cb,
+                     CryptoOperations& crypto,
                      RandomNumberGenerator& rng) :
       m_impl(std::make_unique<Key_Share_Impl>(Key_Share_ServerHello(
-         selected_group, std::get<Key_Share_ClientHello>(client_keyshare.m_impl->key_share), policy, cb, rng))) {}
+         selected_group, std::get<Key_Share_ClientHello>(client_keyshare.m_impl->key_share), policy, crypto, rng))) {}
 
 Key_Share::~Key_Share() = default;
 
@@ -449,17 +449,17 @@ bool Key_Share::empty() const {
 std::unique_ptr<Key_Share> Key_Share::create_as_encapsulation(Group_Params selected_group,
                                                               const Key_Share& client_keyshare,
                                                               const Policy& policy,
-                                                              Callbacks& cb,
+                                                              CryptoOperations& crypto,
                                                               RandomNumberGenerator& rng) {
-   return std::unique_ptr<Key_Share>(new Key_Share(selected_group, client_keyshare, policy, cb, rng));
+   return std::unique_ptr<Key_Share>(new Key_Share(selected_group, client_keyshare, policy, crypto, rng));
 }
 
 secure_vector<uint8_t> Key_Share::decapsulate(const Key_Share& server_keyshare,
                                               const Policy& policy,
-                                              Callbacks& cb,
+                                              CryptoOperations& crypto,
                                               RandomNumberGenerator& rng) {
    return std::visit(overloaded{[&](Key_Share_ClientHello& ch, const Key_Share_ServerHello& sh) {
-                                   return ch.decapsulate(sh, policy, cb, rng);
+                                   return ch.decapsulate(sh, policy, crypto, rng);
                                 },
                                 [](const auto&, const auto&) -> secure_vector<uint8_t> {
                                    throw Invalid_Argument(
@@ -488,7 +488,7 @@ secure_vector<uint8_t> Key_Share::take_shared_secret() {
 
 void Key_Share::retry_offer(const Key_Share& retry_request_keyshare,
                             const std::vector<Named_Group>& supported_groups,
-                            Callbacks& cb,
+                            CryptoOperations& crypto,
                             RandomNumberGenerator& rng) {
    std::visit(overloaded{[&](Key_Share_ClientHello& ch, const Key_Share_HelloRetryRequest& hrr) {
                             const auto selected = hrr.selected_group();
@@ -500,7 +500,7 @@ void Key_Share::retry_offer(const Key_Share& retry_request_keyshare,
                                throw TLS_Exception(Alert::IllegalParameter, "group was not advertised as supported");
                             }
 
-                            return ch.retry_offer(selected, cb, rng);
+                            return ch.retry_offer(selected, crypto, rng);
                          },
                          [](const auto&, const auto&) {
                             throw Invalid_Argument("can only retry with HelloRetryRequest on a ClientHello Key_Share");

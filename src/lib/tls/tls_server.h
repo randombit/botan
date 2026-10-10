@@ -20,6 +20,7 @@
 namespace Botan::TLS {
 
 class Callbacks;
+class CryptoOperations;
 class Session_Manager;
 class Channel_Impl;
 class Policy;
@@ -67,6 +68,16 @@ class BOTAN_PUBLIC_API(2, 0) Server final : public Channel {
       *        mean reallocations and copies are more likely.
       */
       Server(const std::shared_ptr<Callbacks>& callbacks,
+             const std::shared_ptr<Session_Manager>& session_manager,
+             const std::shared_ptr<Credentials_Manager>& creds,
+             const std::shared_ptr<const Policy>& policy,
+             const std::shared_ptr<RandomNumberGenerator>& rng,
+             bool is_datagram = false,
+             size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE);
+
+      /** Construct a channel with explicit cryptographic operations. */
+      Server(const std::shared_ptr<Callbacks>& callbacks,
+             const std::shared_ptr<CryptoOperations>& crypto,
              const std::shared_ptr<Session_Manager>& session_manager,
              const std::shared_ptr<Credentials_Manager>& creds,
              const std::shared_ptr<const Policy>& policy,

@@ -10,6 +10,7 @@
 #define BOTAN_TLS_MESSAGES_12_H_
 
 #include <botan/secmem.h>
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_messages.h>
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
@@ -31,7 +32,8 @@ class BOTAN_UNSTABLE_API Hello_Verify_Request final : public Hello_Verify_Reques
 
       Hello_Verify_Request(std::span<const uint8_t> client_hello_bits,
                            std::string_view client_identity,
-                           std::span<const uint8_t> cookie_secret);
+                           std::span<const uint8_t> cookie_secret,
+                           const CryptoOperations& crypto = CryptoOperations());
 
       std::vector<uint8_t> serialize() const override;
 };
@@ -71,7 +73,9 @@ class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello_12_Shim {
                       const Session_with_Handle& session_and_handle,
                       std::vector<std::string> next_protocols);
 
-      explicit Client_Hello_12(std::span<const uint8_t> buf, TLS_Flavor flavor);
+      explicit Client_Hello_12(std::span<const uint8_t> buf,
+                               TLS_Flavor flavor,
+                               const CryptoOperations& crypto = CryptoOperations());
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       /**
