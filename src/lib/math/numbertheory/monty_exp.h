@@ -18,30 +18,29 @@ class Montgomery_Exponentiation_State;
 /*
 * Precompute for calculating values g^x mod p
 */
-std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Params& params_p,
-                                                                        const BigInt& g,
-                                                                        size_t window_bits,
-                                                                        bool const_time = true);
+BOTAN_TEST_API std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(
+   const Montgomery_Params& params_p, const BigInt& g, size_t window_bits, bool const_time = true);
 
 /*
 * Precompute for calculating values g^x mod p
 */
-std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Int& g,
-                                                                        size_t window_bits,
-                                                                        bool const_time = true);
+BOTAN_TEST_API std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Int& g,
+                                                                                       size_t window_bits,
+                                                                                       bool const_time = true);
 
 /*
 * Return g^k mod p
 */
-Montgomery_Int monty_execute(const Montgomery_Exponentiation_State& precomputed_state,
-                             const BigInt& k,
-                             size_t max_k_bits);
+BOTAN_TEST_API Montgomery_Int monty_execute(const Montgomery_Exponentiation_State& precomputed_state,
+                                            const BigInt& k,
+                                            size_t max_k_bits);
 
 /*
 * Return g^k mod p taking variable time depending on k
 * @warning only use this if k is public
 */
-Montgomery_Int monty_execute_vartime(const Montgomery_Exponentiation_State& precomputed_state, const BigInt& k);
+BOTAN_TEST_API Montgomery_Int monty_execute_vartime(const Montgomery_Exponentiation_State& precomputed_state,
+                                                    const BigInt& k);
 
 inline Montgomery_Int monty_exp(const Montgomery_Params& params_p,
                                 const BigInt& g,
