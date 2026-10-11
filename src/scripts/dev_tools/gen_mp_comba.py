@@ -58,6 +58,16 @@ def comba_square_code(N):
 
         print("   z[%d] = accum.extract();" % (rnd))
 
+# Sizes with a MULX/ADX implementation, see gen_mp_mulx.py
+MULX_SIZES = [4, 6, 8, 9]
+
+def mulx_dispatch(call):
+    print("#if defined(BOTAN_HAS_MP_MULX)")
+    print("   if(CPUID::has(CPUID::Feature::BMI, CPUID::Feature::ADX)) {")
+    print(f"      return {call};")
+    print("   }")
+    print("#endif\n")
+
 def main(args = None):
     if args is None:
         args = sys.argv
@@ -78,12 +88,19 @@ def main(args = None):
 
 #include <botan/internal/mp_core.h>
 
+#if defined(BOTAN_HAS_MP_MULX)
+   #include <botan/internal/cpuid.h>
+   #include <botan/internal/mp_mulx.h>
+#endif
+
 namespace Botan {
 """ % (sys.argv[0], datetime.date.today().strftime("%Y-%m-%d")))
 
     for n in sizes:
         print("/*\n* Comba %dx%d Squaring\n*/" % (n, n))
         print("void bigint_comba_sqr%d(word z[%d], const word x[%d]) {" % (n, 2*n, n))
+        if n in MULX_SIZES:
+            mulx_dispatch(f"bigint_mulx_sqr{n}(z, x)")
         print("   word3<word> accum;\n")
 
         comba_square_code(n)
@@ -92,6 +109,8 @@ namespace Botan {
 
         print("/*\n* Comba %dx%d Multiplication\n*/" % (n, n))
         print("void bigint_comba_mul%d(word z[%d], const word x[%d], const word y[%d]) {" % (n, 2*n, n, n))
+        if n in MULX_SIZES:
+            mulx_dispatch(f"bigint_mulx_mul{n}(z, x, y)")
         print("   word3<word> accum;\n")
 
         comba_multiply_code(n)

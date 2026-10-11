@@ -1,0 +1,31 @@
+<internal_defines>
+MP_MULX -> 20261010
+</internal_defines>
+
+<module_info>
+name -> "Big Integer (Low-Level) MULX"
+brief -> "Multiprecision multiplication using MULX and ADX instructions"
+</module_info>
+
+<isa>
+bmi2
+</isa>
+
+<arch>
+x86_64
+</arch>
+
+<requires>
+cpuid
+</requires>
+
+<header:internal>
+mp_mulx.h
+</header:internal>
+
+<cc>
+# Uses gcc-style inline asm
+gcc
+clang
+clangcl
+</cc>
