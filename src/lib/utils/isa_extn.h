@@ -71,7 +71,8 @@
 
 #if defined(BOTAN_TARGET_ARCH_IS_PPC_FAMILY)
 
-   #define BOTAN_FN_ISA_SIMD_4X32 BOTAN_FUNC_ISA("altivec")
+   #define BOTAN_FN_ISA_SIMD_4X32 BOTAN_FUNC_ISA("power8-vector")
+   #define BOTAN_FN_ISA_SIMD_2X64 BOTAN_FUNC_ISA("power8-vector")
    #define BOTAN_FN_ISA_CLMUL BOTAN_FUNC_ISA("vsx,crypto")
    #define BOTAN_FN_ISA_AES BOTAN_FUNC_ISA("vsx,crypto")
    #define BOTAN_FN_ISA_RNG BOTAN_FUNC_ISA("cpu=power9")
