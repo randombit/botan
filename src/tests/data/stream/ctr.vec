@@ -1,5 +1,5 @@
 
-#test cpuid avx2
+#test cpuid avx2 altivec
 
 [CTR-BE(DES)]
 Key = 0123456789ABCDEF
