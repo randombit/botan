@@ -130,7 +130,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_HWAES SIMD_4x32 camellia_f(SIMD_4x32 x) {
    const auto sxp3 = SIMD_4x32::byte_shuffle(sbox, P3);
    const auto sxp4 = SIMD_4x32::byte_shuffle(sbox, P4);
    const auto sxp5 = SIMD_4x32::byte_shuffle(sbox, P5);
-   const auto sxp6 = SIMD_4x32::byte_shuffle(sbox, P6);
+   const auto sxp6 = SIMD_4x32::masked_byte_shuffle(sbox, P6);
 
    return (sxp1 ^ sxp2 ^ sxp3 ^ sxp4 ^ sxp5 ^ sxp6);
 }

@@ -1,4 +1,4 @@
-#test cpuid intel_sm4 avx512 gfni armv8sm4 aesni armv8aes
+#test cpuid intel_sm4 avx512 gfni armv8sm4 aesni armv8aes power_crypto
 
 [SM4]
 Key = 0123456789abcdeffedcba9876543210

@@ -15,37 +15,72 @@
    #include <wmmintrin.h>
 #endif
 
+#if defined(BOTAN_TARGET_ARCH_IS_PPC64)
+   #include <bit>
+#endif
+
 namespace Botan {
 
 /**
 * Apply the AES S-box to each byte of the input vector.
 */
 inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_sbox(SIMD_4x32 x) {
+#if defined(BOTAN_TARGET_ARCH_IS_PPC64)
+   // vsbox is SubBytes alone so no shuffle is required
+   #if defined(__clang__)
+   return SIMD_4x32(reinterpret_cast<__vector unsigned int>(
+      __builtin_crypto_vsbox(reinterpret_cast<__vector unsigned char>(x.raw()))));
+   #else
+   return SIMD_4x32(reinterpret_cast<__vector unsigned int>(
+      __builtin_crypto_vsbox(reinterpret_cast<__vector unsigned long long>(x.raw()))));
+   #endif
+#else
    // Undo the ShiftRows with a byte shuffle implementing InvShiftRows
    const auto inv_sr = SIMD_4x32(0x070A0D00, 0x0B0E0104, 0x0F020508, 0x0306090C);
 
-#if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
+   #if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
    const auto enc = SIMD_4x32(_mm_aesenclast_si128(x.raw(), _mm_setzero_si128()));
-#elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
+   #elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
    const auto enc = SIMD_4x32(vreinterpretq_u32_u8(vaeseq_u8(vreinterpretq_u8_u32(x.raw()), vdupq_n_u8(0))));
-#else
-   #error "hw_aes_sbox not implemented for this architecture"
-#endif
+   #else
+      #error "hw_aes_sbox not implemented for this architecture"
+   #endif
 
    return SIMD_4x32::byte_shuffle(enc, inv_sr);
+#endif
 }
 
 /**
 * Apply the AES inverse S-box to each byte of the input vector.
 */
 inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_inv_sbox(SIMD_4x32 x) {
+#if defined(BOTAN_TARGET_ARCH_IS_PPC64)
+   /*
+   * Undo the InvShiftRows with a byte shuffle implementing ShiftRows. POWER
+   * numbers the AES state bytes starting from the most significant byte of the
+   * register, so the indices differ from x86/ARM and depend on endianness.
+   */
+   const auto sr = (std::endian::native == std::endian::little)
+                      ? SIMD_4x32(0x030E0904, 0x07020D08, 0x0B06010C, 0x0F0A0500)
+                      : SIMD_4x32(0x0306090C, 0x070A0D00, 0x0B0E0104, 0x0F020508);
+#else
    // Undo the InvShiftRows with a byte shuffle implementing ShiftRows
    const auto sr = SIMD_4x32(0x0F0A0500, 0x030E0904, 0x07020D08, 0x0B06010C);
+#endif
 
 #if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
    const auto dec = SIMD_4x32(_mm_aesdeclast_si128(x.raw(), _mm_setzero_si128()));
 #elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
    const auto dec = SIMD_4x32(vreinterpretq_u32_u8(vaesdq_u8(vreinterpretq_u8_u32(x.raw()), vdupq_n_u8(0))));
+#elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
+   #if defined(__clang__)
+   const auto dec = SIMD_4x32(reinterpret_cast<__vector unsigned int>(__builtin_crypto_vncipherlast(
+      reinterpret_cast<__vector unsigned char>(x.raw()), reinterpret_cast<__vector unsigned char>(SIMD_4x32().raw()))));
+   #else
+   const auto dec = SIMD_4x32(reinterpret_cast<__vector unsigned int>(
+      __builtin_crypto_vncipherlast(reinterpret_cast<__vector unsigned long long>(x.raw()),
+                                    reinterpret_cast<__vector unsigned long long>(SIMD_4x32().raw()))));
+   #endif
 #else
    #error "hw_aes_inv_sbox not implemented for this architecture"
 #endif
