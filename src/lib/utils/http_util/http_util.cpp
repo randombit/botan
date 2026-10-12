@@ -24,6 +24,16 @@ namespace {
 
 constexpr size_t MaxHeaderBytes = 16 * 1024;
 
+// RFC 9110 5.5: "field-content = field-vchar [ 1*( SP / HTAB / field-vchar ) field-vchar ]"
+void check_field_value_chars(std::string_view what, std::string_view value) {
+   for(const char c : value) {
+      const auto b = static_cast<uint8_t>(c);
+      if(b != '\t' && (b < 0x20 || b == 0x7F)) {
+         throw HTTP_Error(fmt("Invalid control character in HTTP {}", what));
+      }
+   }
+}
+
 struct Parsed_Head {
       unsigned int status_code;
       std::string status_message;
@@ -36,6 +46,9 @@ Parsed_Head parse_status_and_headers(std::string_view block) {
    if(status_line_end == 0) {
       throw HTTP_Error("No status line");
    }
+
+   // RFC 9112 4: reason-phrase = 1*( HTAB / SP / VCHAR / obs-text )
+   check_field_value_chars("status line", block.substr(0, status_line_end));
 
    std::stringstream ss{std::string(block.substr(0, status_line_end))};
    std::string http_version;
@@ -87,6 +100,10 @@ Parsed_Head parse_status_and_headers(std::string_view block) {
          value.remove_suffix(1);
       }
 
+      // RFC 9110 5.5: "a recipient of CR, LF, or NUL within a field value MUST
+      // either reject the message or replace each of those characters with SP"
+      check_field_value_chars("header value", value);
+
       auto [it, inserted] = headers.emplace(std::string(name), std::string(value));
       if(!inserted) {
          throw HTTP_Error(fmt("Duplicate HTTP header '{}'", it->first));
@@ -107,7 +124,7 @@ Parsed_Head parse_status_and_headers(std::string_view block) {
 * enforces Content-Length against max_body_size. Returns the parsed
 * Content-Length on success, if present.
 */
-std::optional<size_t> validate_response_headers(const Headers& headers, std::optional<size_t> max_body_size) {
+std::optional<size_t> validate_response_headers(const Headers& headers, size_t max_body_size) {
    // RFC 9112 6.1: "A server MUST NOT send a response containing Transfer-Encoding
    // unless the corresponding request indicates HTTP/1.1 (or later minor revisions)."
    if(headers.contains("Transfer-Encoding")) {
@@ -124,8 +141,8 @@ std::optional<size_t> validate_response_headers(const Headers& headers, std::opt
       }
    }
 
-   if(content_length && max_body_size && *content_length > *max_body_size) {
-      throw HTTP_Error(fmt("Content-Length {} exceeds maximum body size {}", *content_length, *max_body_size));
+   if(content_length && *content_length > max_body_size) {
+      throw HTTP_Error(fmt("Content-Length {} exceeds maximum body size {}", *content_length, max_body_size));
    }
 
    return content_length;
@@ -140,7 +157,7 @@ Response http_transact(std::string_view hostname,
                        std::string_view service,
                        std::string_view message,
                        std::chrono::milliseconds timeout,
-                       std::optional<size_t> max_body_size) {
+                       size_t max_body_size) {
    std::unique_ptr<OS::Socket> socket;
    try {
       socket = OS::open_socket(hostname, service, timeout);
@@ -187,11 +204,9 @@ std::optional<URI> resolve_location(const URI& base, std::string_view location) 
 
 }  // namespace
 
-Response read_response_from_socket(OS::Socket& socket,
-                                   std::chrono::milliseconds timeout,
-                                   std::optional<size_t> max_body_size) {
-   const auto start_time = std::chrono::system_clock::now();
-   const auto deadline_exceeded = [&] { return std::chrono::system_clock::now() - start_time > timeout; };
+Response read_response_from_socket(OS::Socket& socket, std::chrono::milliseconds timeout, size_t max_body_size) {
+   const auto start_time = std::chrono::steady_clock::now();
+   const auto deadline_exceeded = [&] { return std::chrono::steady_clock::now() - start_time > timeout; };
 
    if(deadline_exceeded()) {
       throw HTTP_Error("Timeout before reading response");
@@ -225,11 +240,11 @@ Response read_response_from_socket(OS::Socket& socket,
    auto parsed = parse_status_and_headers(std::string_view(buf).substr(0, header_end));
    const auto content_length = validate_response_headers(parsed.headers, max_body_size);
 
-   const size_t body_cap = std::min(max_body_size.value_or(std::numeric_limits<size_t>::max()),
-                                    content_length.value_or(std::numeric_limits<size_t>::max()));
+   const size_t body_cap = std::min(max_body_size, content_length.value_or(std::numeric_limits<size_t>::max()));
 
    std::vector<uint8_t> body;
    if(content_length) {
+      // Already checked against max_body_size by validate_response_headers
       body.reserve(*content_length);
    }
    const size_t body_start = header_end + 4;
@@ -293,12 +308,15 @@ std::ostream& operator<<(std::ostream& o, const Response& resp) {
    return o;
 }
 
-Response http_sync(const http_exch_fn& http_transact,
-                   std::string_view verb,
-                   const URI& uri,
-                   std::string_view content_type,
-                   const std::vector<uint8_t>& body,
-                   const RequestLimits& limits) {
+namespace {
+
+Response http_sync_until(const http_exch_fn& http_transact,
+                         std::string_view verb,
+                         const URI& uri,
+                         std::string_view content_type,
+                         const std::vector<uint8_t>& body,
+                         const RequestLimits& limits,
+                         std::chrono::steady_clock::time_point deadline) {
    if(uri.scheme() != "http") {
       throw HTTP_Error(fmt("Cannot initiate HTTP request to URI with scheme of '{}'", uri.scheme()));
    }
@@ -347,7 +365,15 @@ Response http_sync(const http_exch_fn& http_transact,
    outbuf << "Connection: close\r\n\r\n";
    outbuf.write(cast_uint8_ptr_to_char(body.data()), body.size());
 
-   Response resp = http_transact(hostname, service, outbuf.str(), limits.max_body_size());
+   const auto remaining = deadline - std::chrono::steady_clock::now();
+   if(remaining <= std::chrono::steady_clock::duration::zero()) {
+      throw HTTP_Error("Timeout before sending request");
+   }
+
+   // Round up so a positive sub-millisecond remainder is not truncated to zero
+   const auto remaining_ms = std::chrono::ceil<std::chrono::milliseconds>(remaining);
+
+   Response resp = http_transact(hostname, service, outbuf.str(), remaining_ms, limits.max_body_size());
 
    const auto sc = resp.status_code();
    const bool is_redirect = (sc == 301 || sc == 302 || sc == 303 || sc == 307 || sc == 308);
@@ -372,9 +398,9 @@ Response http_sync(const http_exch_fn& http_transact,
          // The recursion goes through the same http_exch_fn so a test seam (or
          // any caller wrapping the network layer) sees every hop.
          if(sc == 303) {
-            return http_sync(http_transact, "GET", *redir, "", std::vector<uint8_t>(), next);
+            return http_sync_until(http_transact, "GET", *redir, "", std::vector<uint8_t>(), next, deadline);
          } else {
-            return http_sync(http_transact, verb, *redir, content_type, body, next);
+            return http_sync_until(http_transact, verb, *redir, content_type, body, next, deadline);
          }
       }
    }
@@ -382,18 +408,24 @@ Response http_sync(const http_exch_fn& http_transact,
    return resp;
 }
 
+}  // namespace
+
+Response http_sync(const http_exch_fn& http_transact,
+                   std::string_view verb,
+                   const URI& uri,
+                   std::string_view content_type,
+                   const std::vector<uint8_t>& body,
+                   const RequestLimits& limits) {
+   const auto deadline = std::chrono::steady_clock::now() + limits.timeout();
+   return http_sync_until(http_transact, verb, uri, content_type, body, limits, deadline);
+}
+
 Response http_sync(std::string_view verb,
                    const URI& uri,
                    std::string_view content_type,
                    const std::vector<uint8_t>& body,
                    const RequestLimits& limits) {
-   const auto transact_with_timeout =
-      [timeout = limits.timeout()](
-         std::string_view hostname, std::string_view service, std::string_view message, std::optional<size_t> mbs) {
-         return http_transact(hostname, service, message, timeout, mbs);
-      };
-
-   return http_sync(transact_with_timeout, verb, uri, content_type, body, limits);
+   return http_sync(http_transact, verb, uri, content_type, body, limits);
 }
 
 Response GET_sync(const URI& uri, const RequestLimits& limits) {

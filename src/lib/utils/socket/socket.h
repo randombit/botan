@@ -50,6 +50,9 @@ class BOTAN_TEST_API Socket /* NOLINT(*-special-member-functions) */ {
 /**
 * Open up a socket. Will throw on error. Returns null if sockets are
 * not available on this platform.
+*
+* The timeout is a deadline for the lifetime of the socket: it bounds
+* connecting plus all subsequent reads and writes combined.
 */
 std::unique_ptr<Socket> BOTAN_TEST_API open_socket(std::string_view hostname,
                                                    std::string_view service,
