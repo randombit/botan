@@ -169,6 +169,27 @@ class SIMD_4X32_Tests final : public Test {
          test_eq(result, "shift right 2", input.shift_elems_right<2>(), pat3, pat4, 0, 0);
          test_eq(result, "shift right 3", input.shift_elems_right<3>(), pat4, 0, 0, 0);
 
+         const auto ch = [](uint32_t m, uint32_t a, uint32_t b) -> uint32_t { return (m & a) | (~m & b); };
+         const auto maj = [](uint32_t x, uint32_t y, uint32_t z) -> uint32_t { return (x & y) | (x & z) | (y & z); };
+         const Botan::SIMD_4x32 rot1(pat2, pat3, pat4, pat1);
+         const Botan::SIMD_4x32 rot2(pat3, pat4, pat1, pat2);
+
+         test_eq(result,
+                 "choose",
+                 Botan::SIMD_4x32::choose(input, rot1, rot2),
+                 ch(pat1, pat2, pat3),
+                 ch(pat2, pat3, pat4),
+                 ch(pat3, pat4, pat1),
+                 ch(pat4, pat1, pat2));
+
+         test_eq(result,
+                 "majority",
+                 Botan::SIMD_4x32::majority(input, rot1, rot2),
+                 maj(pat1, pat2, pat3),
+                 maj(pat2, pat3, pat4),
+                 maj(pat3, pat4, pat1),
+                 maj(pat4, pat1, pat2));
+
          // Test load/stores SIMD wrapper types
          const auto simd_le_in = Botan::hex_decode("ABCDEF01234567890123456789ABCDEF");
          const auto simd_be_in = Botan::hex_decode("0123456789ABCDEFABCDEF0123456789");
@@ -326,6 +347,39 @@ class SIMD_2X64_Tests final : public Test {
                  0x0706050403020100);
 
          test_eq(result, "swap_lanes", Botan::SIMD_2x64(pat1, pat2).swap_lanes(), pat2, pat1);
+
+         test_eq(result, "splat", Botan::SIMD_2x64::splat(pat2), pat2, pat2);
+
+         const uint64_t native_words[2] = {pat1, pat2};
+         test_eq(result, "load_native", Botan::SIMD_2x64::load_native(native_words), pat1, pat2);
+         uint64_t native_out[2] = {0, 0};
+         input.store_native(native_out);
+         result.test_u64_eq("store_native word 0", native_out[0], pat1);
+         result.test_u64_eq("store_native word 1", native_out[1], pat2);
+
+         const uint64_t pat3 = 0x8E1C35D27F0B9A64;
+         const auto other = Botan::SIMD_2x64(pat2, pat3);
+
+         test_eq(result, "alignr8", Botan::SIMD_2x64::alignr8(input, other), pat3, pat1);
+
+         const auto ch = [](uint64_t m, uint64_t a, uint64_t b) -> uint64_t { return (m & a) | (~m & b); };
+         const auto maj = [](uint64_t x, uint64_t y, uint64_t z) -> uint64_t { return (x & y) | (x & z) | (y & z); };
+         const auto mul2_32 = [](uint64_t x, uint64_t y) -> uint64_t {
+            return 2 * static_cast<uint64_t>(static_cast<uint32_t>(x)) * static_cast<uint32_t>(y);
+         };
+
+         const auto third = Botan::SIMD_2x64(pat3, pat1);
+         test_eq(result,
+                 "choose",
+                 Botan::SIMD_2x64::choose(input, other, third),
+                 ch(pat1, pat2, pat3),
+                 ch(pat2, pat3, pat1));
+         test_eq(result,
+                 "majority",
+                 Botan::SIMD_2x64::majority(input, other, third),
+                 maj(pat1, pat2, pat3),
+                 maj(pat2, pat3, pat1));
+         test_eq(result, "mul2_32", Botan::SIMD_2x64::mul2_32(input, other), mul2_32(pat1, pat2), mul2_32(pat2, pat3));
 
          const auto interleave_a = Botan::SIMD_2x64(0x1111111122222222, 0x3333333344444444);
          const auto interleave_b = Botan::SIMD_2x64(0x5555555566666666, 0x7777777788888888);

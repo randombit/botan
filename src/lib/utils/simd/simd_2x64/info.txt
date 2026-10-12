@@ -11,13 +11,14 @@ brief -> "Lightweight wrappers for SIMD 2x64"
 simd_2x64.h
 </header:internal>
 
-# TODO support VMX/LSX here
+# TODO support LSX here
 
 <isa>
 x86_32:ssse3
 x86_64:ssse3
 x32:ssse3
 arm64:neon
+ppc64:vsx
 wasm:simd128
 </isa>
 
@@ -26,5 +27,6 @@ x86_32
 x86_64
 x32
 arm64
+ppc64
 wasm
 </arch>

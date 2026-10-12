@@ -16,19 +16,26 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features([[maybe_unused]] uint32_t allowe
    uint32_t feat = 0;
 
    if(auto auxval = OS::get_auxval_hwcap()) {
-      const auto [hwcap_altivec, hwcap_crypto] = *auxval;
+      const auto [hwcap, hwcap2] = *auxval;
 
       enum class PPC_hwcap_bit : uint64_t /* NOLINT(performance-enum-size) */ {
-         ALTIVEC_bit = (1 << 28),
+         VSX_bit = (1 << 7),
+      };
+
+      enum class PPC_hwcap2_bit : uint64_t /* NOLINT(performance-enum-size) */ {
+         ARCH_2_07_bit = (1U << 31),
          CRYPTO_bit = (1 << 25),
          DARN_bit = (1 << 21),
       };
 
-      feat |= if_set(hwcap_altivec, PPC_hwcap_bit::ALTIVEC_bit, CPUFeature::Bit::ALTIVEC, allowed);
+      // POWER7 has VSX but lacks the ISA 2.07 vector instructions we rely on
+      if((hwcap2 & static_cast<uint64_t>(PPC_hwcap2_bit::ARCH_2_07_bit)) != 0) {
+         feat |= if_set(hwcap, PPC_hwcap_bit::VSX_bit, CPUFeature::Bit::VSX, allowed);
+      }
 
-      if(is_set(feat, CPUFeature::Bit::ALTIVEC)) {
-         feat |= if_set(hwcap_crypto, PPC_hwcap_bit::CRYPTO_bit, CPUFeature::Bit::POWER_CRYPTO, allowed);
-         feat |= if_set(hwcap_crypto, PPC_hwcap_bit::DARN_bit, CPUFeature::Bit::DARN, allowed);
+      if(is_set(feat, CPUFeature::Bit::VSX)) {
+         feat |= if_set(hwcap2, PPC_hwcap2_bit::CRYPTO_bit, CPUFeature::Bit::POWER_CRYPTO, allowed);
+         feat |= if_set(hwcap2, PPC_hwcap2_bit::DARN_bit, CPUFeature::Bit::DARN, allowed);
       }
 
       return feat;
@@ -38,17 +45,18 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features([[maybe_unused]] uint32_t allowe
 
    // NOLINTBEGIN(*-no-assembler)
 
-   if(is_set(allowed, CPUFeature::Bit::ALTIVEC)) {
-      auto vmx_probe = []() noexcept -> int {
-         asm("vor 0, 0, 0");
+   if(is_set(allowed, CPUFeature::Bit::VSX)) {
+      // vaddudm is new in ISA 2.07 (POWER8)
+      auto vsx_probe = []() noexcept -> int {
+         asm("vaddudm 0, 0, 0");
          return 1;
       };
 
-      if(OS::run_cpu_instruction_probe(vmx_probe) == 1) {
-         feat |= CPUFeature::Bit::ALTIVEC;
+      if(OS::run_cpu_instruction_probe(vsx_probe) == 1) {
+         feat |= CPUFeature::Bit::VSX;
       }
 
-      if(is_set(feat, CPUFeature::Bit::ALTIVEC)) {
+      if(is_set(feat, CPUFeature::Bit::VSX)) {
          auto vcipher_probe = []() noexcept -> int {
             asm("vcipher 0, 0, 0");
             return 1;

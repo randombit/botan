@@ -23,8 +23,7 @@ werror_flags "-Werror -Wno-error=unused-parameter -Wno-error=unreachable-code -W
 supports_gcc_inline_asm yes
 
 <isa_flags>
-altivec           -> "-maltivec"
-ppc64:vsx         -> "-mvsx"
+ppc64:vsx         -> "-mcpu=power8"
 ppc64:powercrypto -> "-mcrypto"
 ppc64:power9      -> "-mcpu=power9"
 </isa_flags>
