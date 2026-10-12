@@ -11,7 +11,8 @@
 #include <botan/internal/hash_engine_mdx.h>
 #include <botan/internal/sha2_64.h>
 
-#if defined(BOTAN_HAS_HASH_ENGINE_SHA2_64_AVX2) || defined(BOTAN_HAS_HASH_ENGINE_SHA2_64_AVX512)
+#if defined(BOTAN_HAS_HASH_ENGINE_SHA2_64_AVX2) || defined(BOTAN_HAS_HASH_ENGINE_SHA2_64_AVX512) || \
+   defined(BOTAN_HAS_HASH_ENGINE_SHA2_64_POWER8)
    #define BOTAN_HASH_ENGINE_SHA2_64_HAS_IMPL
    #include <botan/internal/cpuid.h>
 #endif
@@ -79,6 +80,14 @@ std::unique_ptr<Hash_Engine> create_sha2_64_mb_engine(std::string_view hash_fn,
    if(auto feat = CPUID::check(CPUID::Feature::AVX2)) {
       if(provider.empty() || provider == *feat) {
          return make_engine(*feat, 4, sha2_64_mb_compress_x4, sha2_64_mb_extract_x4);
+      }
+   }
+   #endif
+
+   #if defined(BOTAN_HAS_HASH_ENGINE_SHA2_64_POWER8)
+   if(auto feat = CPUID::check(CPUID::Feature::POWER_CRYPTO)) {
+      if(provider.empty() || provider == *feat) {
+         return make_engine(*feat, sha2_64_mb_power8_lanes, sha2_64_mb_compress_power8, sha2_64_mb_extract_power8);
       }
    }
    #endif

@@ -75,6 +75,7 @@
    #define BOTAN_FN_ISA_SIMD_2X64 BOTAN_FUNC_ISA("power8-vector")
    #define BOTAN_FN_ISA_CLMUL BOTAN_FUNC_ISA("vsx,crypto")
    #define BOTAN_FN_ISA_AES BOTAN_FUNC_ISA("vsx,crypto")
+   #define BOTAN_FN_ISA_SHA2 BOTAN_FUNC_ISA("power8-vector,crypto")
    #define BOTAN_FN_ISA_RNG BOTAN_FUNC_ISA("cpu=power9")
 
    #define BOTAN_FN_ISA_HWAES BOTAN_FN_ISA_AES
