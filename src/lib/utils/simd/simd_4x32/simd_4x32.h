@@ -261,7 +261,7 @@ class SIMD_4x32 final {
          if constexpr(std::endian::native == std::endian::little) {
             vst1q_u8(out, vreinterpretq_u8_u32(m_simd));
          } else {
-            vst1q_u8(out, vreinterpretq_u8_u32(bswap().m_simd));
+            vst1q_u32(reinterpret_cast<uint32_t*>(out), bswap().m_simd);
          }
 #elif defined(BOTAN_SIMD_USE_LSX)
          __lsx_vst(raw(), out, 0);
@@ -294,7 +294,7 @@ class SIMD_4x32 final {
          if constexpr(std::endian::native == std::endian::little) {
             vst1q_u8(out, vreinterpretq_u8_u32(bswap().m_simd));
          } else {
-            vst1q_u8(out, vreinterpretq_u8_u32(m_simd));
+            vst1q_u32(reinterpret_cast<uint32_t*>(out), m_simd);
          }
 #endif
       }
@@ -582,11 +582,7 @@ class SIMD_4x32 final {
 
       BOTAN_FN_ISA_SIMD_4X32 SIMD_4x32 reverse_all_bytes() const {
          const auto rev_idx = SIMD_4x32(0x0C0D0E0F, 0x08090A0B, 0x04050607, 0x00010203);
-         if constexpr(std::endian::native == std::endian::little) {
-            return SIMD_4x32::byte_shuffle(*this, rev_idx);
-         } else {
-            return SIMD_4x32::byte_shuffle(this->bswap(), rev_idx.bswap()).bswap();
-         }
+         return SIMD_4x32::byte_shuffle(*this, rev_idx);
       }
 
       /**
@@ -838,6 +834,9 @@ class SIMD_4x32 final {
       /**
       * Byte shuffle
       *
+      * Bytes are numbered in little-endian order (as written by store_le)
+      * regardless of the native endianness.
+      *
       * This function assumes that each byte of idx is <= 16; it may produce incorrect
       * results if this does not hold.
       */
@@ -858,10 +857,12 @@ class SIMD_4x32 final {
    #endif
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-         const auto r = vec_perm(reinterpret_cast<__vector signed char>(tbl.raw()),
-                                 reinterpret_cast<__vector signed char>(tbl.raw()),
-                                 reinterpret_cast<__vector unsigned char>(idx.raw()));
-         return SIMD_4x32(reinterpret_cast<__vector unsigned int>(r));
+         if constexpr(std::endian::native == std::endian::big) {
+            // vec_perm numbers the bytes in big-endian order
+            return SIMD_4x32::altivec_perm(tbl.bswap(), idx.bswap()).bswap();
+         } else {
+            return SIMD_4x32::altivec_perm(tbl, idx);
+         }
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vshuf_b(tbl.raw(), tbl.raw(), idx.raw()));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
@@ -872,7 +873,8 @@ class SIMD_4x32 final {
       /**
       * Byte shuffle with masking
       *
-      * If the index is >= 128 then the output byte is set to zero.
+      * Bytes are numbered as in byte_shuffle. If the index is >= 128 then the
+      * output byte is set to zero.
       *
       * Warning: for indices between 16 and 128 this function may have different
       * behaviors depending on the CPU; possibly the output is zero, tbl[idx % 16],
@@ -880,12 +882,12 @@ class SIMD_4x32 final {
       */
       inline static SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 masked_byte_shuffle(const SIMD_4x32& tbl, const SIMD_4x32& idx) {
 #if defined(BOTAN_SIMD_USE_ALTIVEC)
-         const auto zero = vec_splat_s8(0x00);
-         const auto mask = vec_cmplt(reinterpret_cast<__vector signed char>(idx.raw()), zero);
-         const auto r = vec_perm(reinterpret_cast<__vector signed char>(tbl.raw()),
-                                 reinterpret_cast<__vector signed char>(tbl.raw()),
-                                 reinterpret_cast<__vector unsigned char>(idx.raw()));
-         return SIMD_4x32(reinterpret_cast<__vector unsigned int>(vec_sel(r, zero, mask)));
+         if constexpr(std::endian::native == std::endian::big) {
+            // vec_perm numbers the bytes in big-endian order
+            return SIMD_4x32::altivec_masked_perm(tbl.bswap(), idx.bswap()).bswap();
+         } else {
+            return SIMD_4x32::altivec_masked_perm(tbl, idx);
+         }
 #elif defined(BOTAN_SIMD_USE_LSX)
          /*
          * The behavior of vshuf.b unfortunately differs among microarchitectures
@@ -1017,6 +1019,24 @@ class SIMD_4x32 final {
       explicit BOTAN_FN_ISA_SIMD_4X32 SIMD_4x32(native_simd_type x) noexcept : m_simd(x) {}
 
    private:
+#if defined(BOTAN_SIMD_USE_ALTIVEC)
+      static inline SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 altivec_perm(const SIMD_4x32& tbl, const SIMD_4x32& idx) {
+         const auto r = vec_perm(reinterpret_cast<__vector signed char>(tbl.raw()),
+                                 reinterpret_cast<__vector signed char>(tbl.raw()),
+                                 reinterpret_cast<__vector unsigned char>(idx.raw()));
+         return SIMD_4x32(reinterpret_cast<__vector unsigned int>(r));
+      }
+
+      static inline SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 altivec_masked_perm(const SIMD_4x32& tbl, const SIMD_4x32& idx) {
+         const auto zero = vec_splat_s8(0x00);
+         const auto mask = vec_cmplt(reinterpret_cast<__vector signed char>(idx.raw()), zero);
+         const auto r = vec_perm(reinterpret_cast<__vector signed char>(tbl.raw()),
+                                 reinterpret_cast<__vector signed char>(tbl.raw()),
+                                 reinterpret_cast<__vector unsigned char>(idx.raw()));
+         return SIMD_4x32(reinterpret_cast<__vector unsigned int>(vec_sel(r, zero, mask)));
+      }
+#endif
+
       native_simd_type m_simd;
 };
 
