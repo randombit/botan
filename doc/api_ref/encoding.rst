@@ -5,9 +5,10 @@ Botan provides routines for encoding binary data as printable text and decoding
 back again. Four encodings are supported: hex, base64, base32, and base58 (the
 last with an optional 4-byte checksum). Each lives in its own header.
 
-The hex, base32, and base64 encodings and decoding algorithms are constant time
-with respect to their input values. Currently the base58 radix conversion code
-is not completely constant time, and may leak some information about the contents.
+The hex, base32, base64, and base58 encoding and decoding algorithms are
+constant time with respect to their input values. The only information revealed
+is the length of the input and, for base58, the number of leading zero bytes,
+which is in any case visible from the length of the output.
 
 Hex
 ----------------------------------------
