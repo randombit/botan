@@ -44,6 +44,12 @@ void sha2_32_mb_compress_x16(uint8_t* states, const uint8_t* const* blocks, size
 void sha2_32_mb_extract_x16(const uint8_t* states, uint8_t* digests);
 #endif
 
+#if defined(BOTAN_HAS_HASH_ENGINE_SHA2_32_POWER8)
+constexpr size_t sha2_32_mb_power8_lanes = 8;
+void sha2_32_mb_compress_power8(uint8_t* states, const uint8_t* const* blocks, size_t nblocks);
+void sha2_32_mb_extract_power8(const uint8_t* states, uint8_t* digests);
+#endif
+
 }  // namespace Botan
 
 #endif
