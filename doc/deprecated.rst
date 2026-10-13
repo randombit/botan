@@ -61,6 +61,8 @@ in a future major release:
 
 - Support for CCM-8 ciphersuites
 
+- Support for OCB ciphersuites
+
 - ``Credentials_Manager::psk()`` to provide various TLS-specific keys and
   secrets, most notably "session-ticket", "dtls-cookie-secret" and the actual
   TLS PSKs for given identities and hosts. Instead, use the dedicated methods in
@@ -182,20 +184,37 @@ Deprecated modules include
 
 - Signature scheme ``gost_3410``
 
-- McEliece implementation ``mce``. Will be replaced by the proposal Classic
-  McEliece.
+- McEliece implementation ``mce``. Use Classic McEliece or ML-KEM for PQ KEM.
 
 - Stream cipher ``shake_cipher``. Note this deprecation affects only
   using SHAKE as a ``StreamCipher`` not as a hash or XOF
 
-- `cryptobox`: A not unreasonable password based encryption utility
+- Stream cipher ``ofb``: Inferior to CTR in every way
+
+- Stream cipher ``rc4``: Slow, broken, and obsolete
+
+- ``cryptobox``: A not unreasonable password based encryption utility
   but neither modern (these days) nor widely implemented.
 
-- `iso9796`: Obscure, complicated, and apparently little used.
+- ``passhash9`` prefer Argon2 or bcrypt
+
+- ``srp6`` prefer SPAKE2+
+
+- ``iso9796``: Obscure, complicated, and apparently little used.
 
 - ``dlies``: DLIES is considered quite obsolete
 
 - ``tpm`` (TPM 1.2 only, rarely tested)
+
+- ``emsa_x931``: X9.31 padding is no longer allowed by NIST
+
+- ``prf_x942``: Prefer HKDF or one of the SP KDFs
+
+- ``comp4p``: An interesting design but obscure and rarely used
+
+- ``certstor_sql`` and ``certstor_sqlite3``: unclear usage, many bugs
+
+- ``filters``: inefficient and sometimes difficult to use safely
 
 Other Deprecated Functionality
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
