@@ -18,7 +18,7 @@ x86_64:ssse3
 x32:ssse3
 arm32:neon
 arm64:neon
-ppc64:altivec
+ppc64:vsx
 loongarch64:lsx
 wasm:simd128
 </isa>

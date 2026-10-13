@@ -205,24 +205,43 @@ On ARM platforms, the following CPU specific optimizations are available.
 POWER/PowerPC
 --------------
 
-On 64-bit POWER/PowerPC platforms, the following CPU specific optimizations are available:
+On 64-bit POWER/PowerPC platforms, the following CPU specific optimizations are available.
+All of them require POWER8 (ISA 2.07) or later.
 
 +-----------+--------------------------------------------+--------------------+------------+
 | Algorithm | Extension                                  | Module             | Added in   |
 +===========+============================================+====================+============+
-| AES       | POWER8/POWER9                              | ``aes_power8``     | 2.14.0     |
+| AES       | POWER8 Cryptography Extensions             | ``aes_power8``     | 2.14.0     |
 |           |                                            |                    |            |
-|           | AltiVec                                    | ``aes_vperm``      | 2.12.0     |
+|           | POWER8 VSX                                 | ``aes_vperm``      | 2.12.0     |
 +-----------+--------------------------------------------+--------------------+------------+
-| ChaCha    | AltiVec                                    | ``chacha_simd32``  | 2.8.0      |
+| AES-GCM   | POWER8 Cryptography Extensions             | ``ghash_cpu``      | 2.14.0     |
+|           |                                            |                    |            |
+|           | POWER8 VSX                                 | ``ghash_vperm``    | 3.14.0     |
++-----------+--------------------------------------------+--------------------+------------+
+| Argon2    | POWER8 VSX                                 | ``argon2_simd64``  | 3.14.0     |
++-----------+--------------------------------------------+--------------------+------------+
+| ARIA      | POWER8 Cryptography Extensions             | ``aria_hwaes``     | 3.14.0     |
++-----------+--------------------------------------------+--------------------+------------+
+| Camellia  | POWER8 Cryptography Extensions             | ``camellia_hwaes`` | 3.14.0     |
++-----------+--------------------------------------------+--------------------+------------+
+| ChaCha    | POWER8 VSX                                 | ``chacha_simd32``  | 2.8.0      |
++-----------+--------------------------------------------+--------------------+------------+
+| CTR       | POWER8 VSX                                 | ``ctr_simd32``     | 3.14.0     |
 +-----------+--------------------------------------------+--------------------+------------+
 | DARN      | POWER9                                     | ``processor_rng``  | 2.15.0     |
 +-----------+--------------------------------------------+--------------------+------------+
-| Serpent   | AltiVec                                    | ``serpent_simd``   | 1.9.2      |
+| NOEKEON   | POWER8 VSX                                 | ``noekeon_simd``   | 1.9.4      |
 +-----------+--------------------------------------------+--------------------+------------+
-| SHACAL2   | AltiVec                                    | ``shacal2_simd``   | 2.3.0      |
+| SEED      | POWER8 Cryptography Extensions             | ``seed_hwaes``     | 3.14.0     |
 +-----------+--------------------------------------------+--------------------+------------+
-| NOEKEON   | AltiVec                                    | ``noekeon_simd``   | 1.9.4      |
+| Serpent   | POWER8 VSX                                 | ``serpent_simd``   | 1.9.2      |
++-----------+--------------------------------------------+--------------------+------------+
+| SHACAL2   | POWER8 VSX                                 | ``shacal2_simd``   | 2.3.0      |
++-----------+--------------------------------------------+--------------------+------------+
+| SM4       | POWER8 Cryptography Extensions             | ``sm4_hwaes``      | 3.14.0     |
++-----------+--------------------------------------------+--------------------+------------+
+| ZFEC      | POWER8 VSX                                 | ``zfec_vperm``     | 3.14.0     |
 +-----------+--------------------------------------------+--------------------+------------+
 
 Loongarch64

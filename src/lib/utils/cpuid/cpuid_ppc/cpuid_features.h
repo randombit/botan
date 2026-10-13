@@ -18,11 +18,13 @@ namespace Botan {
 class BOTAN_TEST_API CPUFeature final {
    public:
       enum Bit : uint32_t /* NOLINT(*-use-enum-class,*-enum-size) */ {
-         ALTIVEC = (1U << 0),
+         // VSX with the POWER8 (ISA 2.07) vector extensions
+         VSX = (1U << 0),
          POWER_CRYPTO = (1U << 1),
          DARN = (1U << 2),
 
-         SIMD_4X32 = ALTIVEC,
+         SIMD_4X32 = VSX,
+         SIMD_2X64 = VSX,
          HW_AES = POWER_CRYPTO,
          HW_CLMUL = POWER_CRYPTO,
       };

@@ -71,43 +71,43 @@ void BOTAN_FN_ISA_SIMD_2X64 Argon2::blamka_simd64(uint64_t N[128], uint64_t T[12
    for(size_t i = 0; i != 8; ++i) {
       SIMD_2x64 Tv[8];
       for(size_t j = 0; j != 4; ++j) {
-         Tv[2 * j] = SIMD_2x64::load_le(&N[16 * i + 4 * j]);
-         Tv[2 * j + 1] = SIMD_2x64::load_le(&N[16 * i + 4 * j + 2]);
+         Tv[2 * j] = SIMD_2x64::load_native(&N[16 * i + 4 * j]);
+         Tv[2 * j + 1] = SIMD_2x64::load_native(&N[16 * i + 4 * j + 2]);
       }
 
       blamka_R(Tv[0], Tv[1], Tv[2], Tv[3], Tv[4], Tv[5], Tv[6], Tv[7]);
 
       for(size_t j = 0; j != 4; ++j) {
-         Tv[2 * j].store_le(&T[16 * i + 4 * j]);
-         Tv[2 * j + 1].store_le(&T[16 * i + 4 * j + 2]);
+         Tv[2 * j].store_native(&T[16 * i + 4 * j]);
+         Tv[2 * j + 1].store_native(&T[16 * i + 4 * j + 2]);
       }
    }
 
    for(size_t i = 0; i != 8; ++i) {
       SIMD_2x64 Tv[8];
       for(size_t j = 0; j != 4; ++j) {
-         Tv[2 * j] = SIMD_2x64::load_le(&T[2 * i + 32 * j]);
-         Tv[2 * j + 1] = SIMD_2x64::load_le(&T[2 * i + 32 * j + 16]);
+         Tv[2 * j] = SIMD_2x64::load_native(&T[2 * i + 32 * j]);
+         Tv[2 * j + 1] = SIMD_2x64::load_native(&T[2 * i + 32 * j + 16]);
       }
 
       blamka_R(Tv[0], Tv[1], Tv[2], Tv[3], Tv[4], Tv[5], Tv[6], Tv[7]);
 
       for(size_t j = 0; j != 4; ++j) {
-         Tv[2 * j].store_le(&T[2 * i + 32 * j]);
-         Tv[2 * j + 1].store_le(&T[2 * i + 32 * j + 16]);
+         Tv[2 * j].store_native(&T[2 * i + 32 * j]);
+         Tv[2 * j + 1].store_native(&T[2 * i + 32 * j + 16]);
       }
    }
 
    for(size_t i = 0; i != 128 / 4; ++i) {
-      SIMD_2x64 n0 = SIMD_2x64::load_le(&N[4 * i]);
-      SIMD_2x64 n1 = SIMD_2x64::load_le(&N[4 * i + 2]);
-      const SIMD_2x64 t0 = SIMD_2x64::load_le(&T[4 * i]);
-      const SIMD_2x64 t1 = SIMD_2x64::load_le(&T[4 * i + 2]);
+      SIMD_2x64 n0 = SIMD_2x64::load_native(&N[4 * i]);
+      SIMD_2x64 n1 = SIMD_2x64::load_native(&N[4 * i + 2]);
+      const SIMD_2x64 t0 = SIMD_2x64::load_native(&T[4 * i]);
+      const SIMD_2x64 t1 = SIMD_2x64::load_native(&T[4 * i + 2]);
 
       n0 ^= t0;
       n1 ^= t1;
-      n0.store_le(&N[4 * i]);
-      n1.store_le(&N[4 * i + 2]);
+      n0.store_native(&N[4 * i]);
+      n1.store_native(&N[4 * i + 2]);
    }
 }
 

@@ -1,5 +1,5 @@
 
-#test cpuid aesni clmul armv8pmull ssse3 simd128
+#test cpuid aesni clmul armv8pmull power_crypto ssse3 simd128 vsx
 
 [AES-128/GCM]
 # Nist | Test Case 1

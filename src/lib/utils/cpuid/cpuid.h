@@ -54,7 +54,7 @@ class BOTAN_TEST_API CPUID final {
       * will be arbitrary. This list only contains values that are useful to
       * Botan (for example FMA instructions are not checked).
       *
-      * Example outputs "sse2 ssse3 rdtsc", "neon arm_aes", "altivec"
+      * Example outputs "sse2 ssse3 rdtsc", "neon arm_aes", "vsx"
       */
       static std::string to_string();
 

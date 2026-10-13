@@ -9,7 +9,6 @@ ppc64el
 </aliases>
 
 <isa_extensions>
-altivec
 vsx
 powercrypto
 power9

@@ -34,7 +34,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_CLMUL SIMD_4x32 clmul(const SIMD_4x32& H, const 
    return SIMD_4x32(reinterpret_cast<uint32x4_t>(vmull_p64(a, b)));
    #endif
 
-#elif defined(BOTAN_SIMD_USE_ALTIVEC)
+#elif defined(BOTAN_SIMD_USE_VSX)
    const SIMD_4x32 mask_lo = SIMD_4x32(0, 0, 0xFFFFFFFF, 0xFFFFFFFF);
    constexpr uint8_t flip = (std::endian::native == std::endian::big) ? 0x11 : 0x00;
 

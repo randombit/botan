@@ -12,8 +12,8 @@ namespace Botan {
 
 std::string CPUFeature::to_string() const {
    switch(m_bit) {
-      case CPUFeature::Bit::ALTIVEC:
-         return "altivec";
+      case CPUFeature::Bit::VSX:
+         return "vsx";
       case CPUFeature::Bit::POWER_CRYPTO:
          return "power_crypto";
       case CPUFeature::Bit::DARN:
@@ -24,8 +24,9 @@ std::string CPUFeature::to_string() const {
 
 //static
 std::optional<CPUFeature> CPUFeature::from_string(std::string_view tok) {
-   if(tok == "altivec" || tok == "simd") {
-      return CPUFeature::Bit::ALTIVEC;
+   if(tok == "vsx" || tok == "simd" || tok == "altivec") {
+      // TODO(Botan4) remove "altivec"
+      return CPUFeature::Bit::VSX;
    } else if(tok == "power_crypto") {
       return CPUFeature::Bit::POWER_CRYPTO;
    } else if(tok == "darn" || tok == "darn_rng") {

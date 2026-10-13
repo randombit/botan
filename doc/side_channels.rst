@@ -274,7 +274,7 @@ are fast and are thought to be side channel silent. These instructions
 are used when available.
 
 On CPUs which do not have hardware AES instructions but do support SIMD vectors
-with a byte shuffle (including x86's SSSE3, ARM's NEON and PowerPC AltiVec), a
+with a byte shuffle (including x86's SSSE3, ARM's NEON and POWER8 VSX), a
 version of AES is implemented which is side channel silent. This implementation
 is based on code by Mike Hamburg [VectorAes], see aes_vperm.cpp.
 
