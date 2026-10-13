@@ -1565,7 +1565,8 @@ class TLS_Unit_Tests final : public Test {
    #if defined(BOTAN_HAS_TLS_13)
       class KeyUpdate_Counting_Callbacks final : public Botan::TLS::Callbacks {
          public:
-            explicit KeyUpdate_Counting_Callbacks(std::vector<uint8_t>& outbound) : m_outbound(outbound) {}
+            explicit KeyUpdate_Counting_Callbacks(std::vector<uint8_t>& outbound, bool respond_to_close_notify = true) :
+                  m_outbound(outbound), m_respond_to_close_notify(respond_to_close_notify) {}
 
             void tls_emit_data(std::span<const uint8_t> bits) override {
                m_outbound.insert(m_outbound.end(), bits.begin(), bits.end());
@@ -1593,6 +1594,8 @@ class TLS_Unit_Tests final : public Test {
                }
             }
 
+            bool tls_peer_closed_connection() override { return m_respond_to_close_notify; }
+
             size_t key_updates_sent() const { return m_key_updates_sent; }
 
             size_t key_updates_requested() const { return m_key_updates_requested; }
@@ -1604,6 +1607,7 @@ class TLS_Unit_Tests final : public Test {
             std::vector<uint8_t> m_received;
             size_t m_key_updates_sent = 0;
             size_t m_key_updates_requested = 0;
+            bool m_respond_to_close_notify;
       };
 
       class KeyUpdate_Test_Policy final : public Botan::TLS::Text_Policy {
@@ -2096,6 +2100,77 @@ class TLS_Unit_Tests final : public Test {
          }
 
          results.push_back(reversed_result);
+
+         Test::Result half_closed_result("TLS 1.3 sending on a half-closed connection");
+
+         try {
+            std::vector<uint8_t> c2s;
+            std::vector<uint8_t> s2c;
+            const auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
+            // The server keeps its write side open after the peer's close_notify
+            const auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c, false);
+
+            const auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
+            const auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(4);
+
+            const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+            Botan::TLS::Server server(server_cb, session_manager, creds, server_policy, rng);
+            Botan::TLS::Client client(client_cb,
+                                      session_manager,
+                                      creds,
+                                      client_policy,
+                                      rng,
+                                      Botan::TLS::Server_Information("server.example.com"),
+                                      Botan::TLS::Protocol_Version::TLS_V13);
+
+            const auto pump = [&]() {
+               while(!c2s.empty() || !s2c.empty()) {
+                  if(!c2s.empty()) {
+                     std::vector<uint8_t> input;
+                     std::swap(c2s, input);
+                     server.received_data(input.data(), input.size());
+                  }
+                  if(!s2c.empty()) {
+                     std::vector<uint8_t> input;
+                     std::swap(s2c, input);
+                     client.received_data(input.data(), input.size());
+                  }
+               }
+            };
+
+            pump();
+            half_closed_result.test_is_true("handshake complete",
+                                            client.is_handshake_complete() && server.is_handshake_complete());
+
+            // The client closes its write side; the server processes the
+            // close_notify, discards its read keys and stays open for writing
+            // (RFC 8446 6.1: close_notify does not affect the read side of
+            // the sender nor the write side of the receiver).
+            client.close();
+            pump();
+
+            half_closed_result.test_is_true("server is closed for reading", server.is_closed_for_reading());
+            half_closed_result.test_is_false("server is not closed for writing", server.is_closed_for_writing());
+
+            // Sending on the half-closed connection must not fail. Regression:
+            // the traffic-based key update check dereferenced the read epoch
+            // that was removed along with the close_notify.
+            const std::vector<uint8_t> server_msg{'b', 'y', 'e'};
+            server.send(server_msg.data(), server_msg.size());
+            pump();
+
+            half_closed_result.test_is_true("server is still active", server.is_active());
+            half_closed_result.test_bin_eq("client received server data intact", client_cb->received(), server_msg);
+
+            server.close();
+            pump();
+            half_closed_result.test_is_true("server is closed", server.is_closed());
+         } catch(const std::exception& e) {
+            half_closed_result.test_failure("sending on a half-closed connection", e.what());
+         }
+
+         results.push_back(half_closed_result);
       }
    #endif
 

@@ -464,22 +464,22 @@ class BOTAN_TEST_API TLS_Cipher_State final : public Cipher_State {
       bool has_read_epoch() const override { return m_read_epoch.has_value(); }
 
       Epoch& latest_write_epoch() override {
-         BOTAN_ASSERT_NOMSG(has_write_epoch());
+         BOTAN_STATE_CHECK(has_write_epoch());
          return *m_write_epoch;
       }
 
       const Epoch& latest_write_epoch() const override {
-         BOTAN_ASSERT_NOMSG(has_write_epoch());
+         BOTAN_STATE_CHECK(has_write_epoch());
          return *m_write_epoch;
       }
 
       Epoch& latest_read_epoch() override {
-         BOTAN_ASSERT_NOMSG(has_read_epoch());
+         BOTAN_STATE_CHECK(has_read_epoch());
          return *m_read_epoch;
       }
 
       const Epoch& latest_read_epoch() const override {
-         BOTAN_ASSERT_NOMSG(has_read_epoch());
+         BOTAN_STATE_CHECK(has_read_epoch());
          return *m_read_epoch;
       }
 
