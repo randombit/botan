@@ -346,7 +346,19 @@ bool Cipher_State::is_compatible_with(const Ciphersuite& cipher) const {
       return false;
    }
 
-   BOTAN_ASSERT_NOMSG(has_write_epoch() == has_read_epoch());
+   // Determine the canonical AEAD name utilized by the current cipher state.
+   // If the connection is half-closed in either direction, we use the AEAD from
+   // the still-active epoch. We assume that the AEAD of both directions is
+   // equal and does not change between epochs.
+   const auto our_aead_name = [&]() -> std::optional<std::string> {
+      if(has_write_epoch()) {
+         return latest_write_epoch().cipher->name();
+      } else if(has_read_epoch()) {
+         return latest_read_epoch().cipher->name();
+      } else {
+         return std::nullopt;
+      }
+   }();
 
    // Compare canonical AEAD names rather than substring-matching cipher_algo
    // against the AEAD's name(). starts_with() is both too permissive (an
@@ -354,10 +366,9 @@ bool Cipher_State::is_compatible_with(const Ciphersuite& cipher) const {
    // CCM-16 suite) and too restrictive (cipher_algo "AES-128/CCM(8)" does not
    // prefix the canonical "AES-128/CCM(8,3)"). Re-instantiating the AEAD from
    // cipher_algo yields the same canonical name() the suite would produce.
-   if(has_write_epoch()) {
-      auto canonical = AEAD_Mode::create(cipher.cipher_algo(), Cipher_Dir::Encryption);
-      // This assumes that the AEAD cipher does not change between epochs.
-      if(!canonical || canonical->name() != latest_write_epoch().cipher->name()) {
+   if(our_aead_name.has_value()) {
+      const auto ciphersuite_aead = AEAD_Mode::create(cipher.cipher_algo(), Cipher_Dir::Encryption);
+      if(!ciphersuite_aead || ciphersuite_aead->name() != *our_aead_name) {
          return false;
       }
    }
@@ -701,6 +712,7 @@ secure_vector<uint8_t> Cipher_State::hkdf_expand_label(const secure_vector<uint8
    BOTAN_ASSERT_NONNULL(m_expand);
    BOTAN_ARG_CHECK(length <= std::numeric_limits<uint16_t>::max(), "invalid length");
    BOTAN_ARG_CHECK(context.size() <= 255, "context too large");
+   BOTAN_ARG_CHECK(m_expansion_label_prefix.size() + label.size() <= 255, "label too large");
 
    const auto hkdf_label =
       concat<secure_vector<uint8_t>>(store_be(static_cast<uint16_t>(length)),
