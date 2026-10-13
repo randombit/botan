@@ -16,6 +16,7 @@
 namespace Botan::TLS {
 
 class Alert;
+class CryptoOperations;
 class Record_Layer;
 class Handshake_Layer;
 class Cipher_State;
@@ -39,11 +40,15 @@ class Channel_IO {
       static std::shared_ptr<Channel_IO> create(Connection_Side side,
                                                 TLS_Flavor flavor,
                                                 std::shared_ptr<const Policy> policy,
-                                                std::shared_ptr<Callbacks> callbacks);
+                                                std::shared_ptr<Callbacks> callbacks,
+                                                std::shared_ptr<CryptoOperations> crypto);
 
    protected:
-      Channel_IO(Connection_Side side, std::shared_ptr<const Policy> policy, std::shared_ptr<Callbacks> callbacks) :
-            m_policy(std::move(policy)), m_callbacks(std::move(callbacks)), m_side(side) {}
+      Channel_IO(Connection_Side side,
+                 std::shared_ptr<const Policy> policy,
+                 std::shared_ptr<Callbacks> callbacks,
+                 std::shared_ptr<CryptoOperations> crypto) :
+            m_policy(std::move(policy)), m_callbacks(std::move(callbacks)), m_crypto(std::move(crypto)), m_side(side) {}
 
    public:
       Channel_IO(const Channel_IO&) = delete;
@@ -144,6 +149,8 @@ class Channel_IO {
 
       Callbacks& callbacks() { return *m_callbacks; }
 
+      const CryptoOperations& crypto() const { return *m_crypto; }
+
    private:
       bool needs_traffic_based_key_update() const;
 
@@ -173,6 +180,7 @@ class Channel_IO {
       std::weak_ptr<Cipher_State> m_cipher_state;
       std::shared_ptr<const Policy> m_policy;
       std::shared_ptr<Callbacks> m_callbacks;
+      std::shared_ptr<CryptoOperations> m_crypto;
       Connection_Side m_side;
 };
 

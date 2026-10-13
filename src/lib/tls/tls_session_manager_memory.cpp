@@ -24,7 +24,9 @@ Session_Manager_In_Memory::Session_Manager_In_Memory(const std::shared_ptr<Rando
    }
 }
 
-void Session_Manager_In_Memory::store(const Session& session, const Session_Handle& handle) {
+void Session_Manager_In_Memory::store(const Session& session,
+                                      const Session_Handle& handle,
+                                      const CryptoOperations& /*crypto*/) {
    // TODO: C++20 allows CTAD for template aliases (read: lock_guard_type), so
    //       technically we should be able to omit the explicit mutex type.
    //       Unfortunately clang does not agree, yet.
@@ -48,7 +50,8 @@ void Session_Manager_In_Memory::store(const Session& session, const Session_Hand
    }
 }
 
-std::optional<Session> Session_Manager_In_Memory::retrieve_one(const Session_Handle& handle) {
+std::optional<Session> Session_Manager_In_Memory::retrieve_one(const Session_Handle& handle,
+                                                               const CryptoOperations& /*crypto*/) {
    const lock_guard_type<recursive_mutex_type> lk(mutex());
 
    if(auto id = handle.id()) {
@@ -62,7 +65,8 @@ std::optional<Session> Session_Manager_In_Memory::retrieve_one(const Session_Han
 }
 
 std::vector<Session_with_Handle> Session_Manager_In_Memory::find_some(const Server_Information& info,
-                                                                      const size_t max_sessions_hint) {
+                                                                      const size_t max_sessions_hint,
+                                                                      const CryptoOperations& /*crypto*/) {
    BOTAN_UNUSED(max_sessions_hint);
 
    const lock_guard_type<recursive_mutex_type> lk(mutex());

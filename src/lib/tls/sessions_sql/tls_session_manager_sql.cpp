@@ -20,13 +20,14 @@ namespace Botan::TLS {
 Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
                                          std::string_view passphrase,
                                          const std::shared_ptr<RandomNumberGenerator>& rng,
-                                         size_t max_sessions) :
+                                         size_t max_sessions,
+                                         const CryptoOperations& crypto) :
       Session_Manager(rng), m_db(std::move(db)), m_max_sessions(max_sessions) {
    BOTAN_ARG_CHECK(m_db != nullptr, "Database must not be null");
-   create_or_migrate_and_open(passphrase);
+   create_or_migrate_and_open(passphrase, crypto);
 }
 
-void Session_Manager_SQL::create_or_migrate_and_open(std::string_view passphrase) {
+void Session_Manager_SQL::create_or_migrate_and_open(std::string_view passphrase, const CryptoOperations& crypto) {
    switch(detect_schema_revision()) {
       case CORRUPTED:
       case PRE_BOTAN_3_0:
@@ -35,10 +36,10 @@ void Session_Manager_SQL::create_or_migrate_and_open(std::string_view passphrase
          // migration is implemented. Same for apparently corrupt databases.
          m_db->exec("DROP TABLE IF EXISTS tls_sessions");
          m_db->exec("DROP TABLE IF EXISTS tls_sessions_metadata");
-         create_with_latest_schema(passphrase, BOTAN_3_0);
+         create_with_latest_schema(passphrase, BOTAN_3_0, crypto);
          break;
       case BOTAN_3_0:
-         initialize_existing_database(passphrase);
+         initialize_existing_database(passphrase, crypto);
          break;
       default:
          throw Internal_Error("TLS session db has unknown database schema");
@@ -66,7 +67,9 @@ Session_Manager_SQL::Schema_Revision Session_Manager_SQL::detect_schema_revision
    }
 }
 
-void Session_Manager_SQL::create_with_latest_schema(std::string_view passphrase, Schema_Revision rev) {
+void Session_Manager_SQL::create_with_latest_schema(std::string_view passphrase,
+                                                    Schema_Revision rev,
+                                                    const CryptoOperations& crypto) {
    using DB = SQL_Database;
    const auto blob = DB::Column_Type::Blob;
    const auto str = DB::Column_Type::String;
@@ -99,7 +102,8 @@ void Session_Manager_SQL::create_with_latest_schema(std::string_view passphrase,
    secure_vector<uint8_t> derived_key(32 + 2);
 
    const std::string pbkdf_name = "PBKDF2(SHA-512)";
-   auto pbkdf_fam = PasswordHashFamily::create_or_throw(pbkdf_name);
+   auto pbkdf_fam =
+      crypto.create_password_hash_family(pbkdf_name, CryptoOperations::Password_Hash_Usage::SessionDatabase);
 
    constexpr uint32_t desired_runtime_msec = 100;
    auto pbkdf = pbkdf_fam->tune_params(derived_key.size(), desired_runtime_msec);
@@ -122,7 +126,7 @@ void Session_Manager_SQL::create_with_latest_schema(std::string_view passphrase,
    stmt->spin();
 }
 
-void Session_Manager_SQL::initialize_existing_database(std::string_view passphrase) {
+void Session_Manager_SQL::initialize_existing_database(std::string_view passphrase, const CryptoOperations& crypto) {
    const auto stmt = m_db->select("*", "tls_sessions_metadata");
    if(!stmt->step()) {
       throw Internal_Error("Failed to initialize TLS session database");
@@ -135,7 +139,8 @@ void Session_Manager_SQL::initialize_existing_database(std::string_view passphra
 
    secure_vector<uint8_t> derived_key(32 + 2);
 
-   auto pbkdf_fam = PasswordHashFamily::create_or_throw(pbkdf_name);
+   auto pbkdf_fam =
+      crypto.create_password_hash_family(pbkdf_name, CryptoOperations::Password_Hash_Usage::SessionDatabase);
    auto pbkdf = pbkdf_fam->from_params(iterations);
 
    pbkdf->derive_key(
@@ -150,7 +155,7 @@ void Session_Manager_SQL::initialize_existing_database(std::string_view passphra
    m_session_key = SymmetricKey(std::span(derived_key).subspan(2));
 }
 
-void Session_Manager_SQL::store(const Session& session, const Session_Handle& handle) {
+void Session_Manager_SQL::store(const Session& session, const Session_Handle& handle, const CryptoOperations& crypto) {
    std::optional<lock_guard_type<recursive_mutex_type>> lk;
    if(!database_is_threadsafe()) {
       lk.emplace(mutex());
@@ -173,14 +178,14 @@ void Session_Manager_SQL::store(const Session& session, const Session_Handle& ha
    stmt->bind(3, session.start_time());
    stmt->bind(4, session.server_info().hostname());
    stmt->bind(5, session.server_info().port());
-   stmt->bind(6, session.encrypt(m_session_key, *m_rng));
+   stmt->bind(6, session.encrypt(m_session_key, *m_rng, crypto));
 
    stmt->spin();
 
    prune_session_cache();
 }
 
-std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& handle) {
+std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& handle, const CryptoOperations& crypto) {
    std::optional<lock_guard_type<recursive_mutex_type>> lk;
    if(!database_is_threadsafe()) {
       lk.emplace(mutex());
@@ -193,7 +198,7 @@ std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& h
 
       while(stmt->step()) {
          try {
-            return Session::decrypt(stmt->get_blob(0), m_session_key);
+            return Session::decrypt(stmt->get_blob(0), m_session_key, crypto);
          } catch(...) {}
       }
    }
@@ -202,7 +207,8 @@ std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& h
 }
 
 std::vector<Session_with_Handle> Session_Manager_SQL::find_some(const Server_Information& info,
-                                                                const size_t max_sessions_hint) {
+                                                                const size_t max_sessions_hint,
+                                                                const CryptoOperations& crypto) {
    std::optional<lock_guard_type<recursive_mutex_type>> lk;
    if(!database_is_threadsafe()) {
       lk.emplace(mutex());
@@ -231,7 +237,7 @@ std::vector<Session_with_Handle> Session_Manager_SQL::find_some(const Server_Inf
 
       try {
          found_sessions.emplace_back(
-            Session_with_Handle{Session::decrypt(stmt->get_blob(2), m_session_key), std::move(handle)});
+            Session_with_Handle{Session::decrypt(stmt->get_blob(2), m_session_key, crypto), std::move(handle)});
       } catch(...) {}
    }
 

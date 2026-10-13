@@ -386,6 +386,105 @@ available:
       Per :rfc:`5705`, *label* should begin with "EXPERIMENTAL" unless
       the label has been standardized in an RFC.
 
+.. _tls_crypto_operations:
+
+Custom Cryptographic Operations
+----------------------------------------
+
+.. versionadded:: 3.14
+
+``TLS::CryptoOperations`` provides the cryptographic operations and object
+factories used by TLS. Applications can subclass it to implement selected
+operations using an external device or another implementation. All methods have
+Botan defaults, so a subclass only needs to override the operations it replaces.
+
+The interface includes:
+
+* Signature generation and verification; ephemeral key generation, public key
+  decoding, key agreement, and KEM encapsulation and decapsulation.
+* Factories for hashes, MACs, KDFs, block ciphers, AEAD modes, and password
+  hash families. These cover transcript hashing, PSK binders, Finished
+  messages, key derivation, record encryption, DTLS cookies, session
+  encryption, and the key derivation of the SQL session managers.
+* TLS 1.2 PRF and RSA key transport factories, and a factory for TLS 1.2 record
+  protection, including CBC/HMAC and NULL/HMAC.
+* SubjectPublicKeyInfo decoding.
+
+Each algorithm factory receives a usage parameter (for example
+``CryptoOperations::Hash_Usage::TranscriptHash``) identifying what TLS will use
+the object for. An implementation can customize some uses and defer to the base
+class for the others, for example to leave the TLS 1.3 transcript hash alone
+when its own hash objects cannot implement ``copy_state``.
+
+For example, to choose a particular Botan provider for TLS's hash objects::
+
+   #include <botan/hash.h>
+   #include <botan/tls_crypto_operations.h>
+
+   class MyCryptoOperations : public Botan::TLS::CryptoOperations {
+      public:
+         std::unique_ptr<Botan::HashFunction>
+         create_hash(std::string_view algorithm, Hash_Usage usage) const override {
+            if(algorithm == "SHA-256" && usage != Hash_Usage::TranscriptHash) {
+               return std::make_unique<MyCustomSha256Impl>();
+            } else {
+               return CryptoOperations::create_hash(algorithm, usage);
+            }
+         }
+   };
+
+Pass the operations object immediately after the callbacks argument in the new
+``TLS::Client`` or ``TLS::Server`` constructor overload::
+
+   auto crypto = std::make_shared<MyCryptoOperations>();
+   Botan::TLS::Client client(callbacks, crypto, sessions, credentials, policy, rng,
+                             Botan::TLS::Server_Information("example.com"));
+
+The channel retains shared ownership of this object throughout its lifetime,
+including TLS version downgrade, resumption, retries, and traffic key updates.
+For ASIO streams, call ``TLS::Context::set_crypto_operations(crypto)`` before
+starting a handshake. The policy still determines the permitted algorithms;
+the RNG and credentials manager are supplied separately as before.
+
+Factories must return a usable object or throw an exception. A factory returning
+an algorithm also selects that algorithm's internal implementation: overriding
+``create_hash`` does not change the hash inside a MAC or KDF returned by another
+factory. Override ``create_mac`` and ``create_kdf`` as appropriate. Hash objects
+created for ``Hash_Usage::TranscriptHash`` must implement ``copy_state`` and
+``new_object`` with their usual semantics, because TLS clones transcript state.
+If an operations object is shared across concurrent channels, its overrides
+must support concurrent calls.
+
+The channel passes its operations object to the session manager in the same
+way as its callbacks and policy: ``Session_Manager::establish``, ``store``,
+``retrieve``, ``find``, ``choose_from_offered_tickets``, ``retrieve_one``, and
+``find_some`` all receive a ``const CryptoOperations&``, which custom session
+managers can use for ``Session::encrypt`` and ``Session::decrypt``. The SQL
+and SQLite session manager constructors take an optional operations object for
+deriving the database key from the passphrase; it is not retained.
+
+Session serialization and PSK importing can also run independently of a
+channel: ``Session::encrypt``, ``Session::decrypt``, the DER and PEM
+``Session`` constructors, and ``PSKImporter::derive_imported_psk`` have
+overloads taking a final ``const CryptoOperations&`` argument.
+
+Existing application code continues to work. The original channel constructors
+create a ``TLS::DefaultCryptoOperations`` adapter which forwards cryptographic
+operations to the channel's ``TLS::Callbacks``. This preserves existing overrides,
+including callbacks invoked by another callback's default implementation.
+Passing a null operations pointer to a channel selects the same adapter.
+
+New applications should derive directly from ``CryptoOperations``. An explicitly
+supplied operations object handles the channel's cryptography; the old crypto
+callbacks are used only if that object delegates to them. Applications migrating
+incrementally can construct a ``DefaultCryptoOperations`` from their
+``std::shared_ptr<Callbacks>`` and override selected operations; the adapter
+shares ownership of the callbacks. Nested calls made by a forwarded callback
+remain on the callbacks object; derive directly from ``CryptoOperations`` to
+customize those nested operations through the new interface. Certificate and
+raw-public-key trust decisions, OCSP handling, I/O, and connection notifications
+remain in ``Callbacks``.
+
 .. _tls_client:
 
 TLS Clients
@@ -597,13 +696,14 @@ the API documentation inline.
 
 .. cpp:class:: TLS::Session_Manager
 
- .. cpp:function:: void store(const Session& session, const Session_Handle& handle)
+ .. cpp:function:: void store(const Session& session, const Session_Handle& handle, const CryptoOperations& crypto)
 
      Attempts to save a new *session*. Typical implementations will use
      ``TLS::Session::encrypt``, ``TLS::Session::DER_encode`` or
      ``TLS::Session::PEM_encode`` to obtain an opaque and serialized session
      object for storage. It is legal to simply drop an incoming session for
-     whatever reason.
+     whatever reason. The *crypto* object is the one configured for the
+     channel storing the session, see :ref:`tls_crypto_operations`.
 
  .. cpp:function:: size_t remove(const Session_Handle& handle)
 
@@ -616,7 +716,7 @@ the API documentation inline.
       Empties the session storage. Returns the number of sessions actually
       removed.
 
- .. cpp:function:: std::optional<Session> retrieve_one(const Session_Handle& handle)
+ .. cpp:function:: std::optional<Session> retrieve_one(const Session_Handle& handle, const CryptoOperations& crypto)
 
       Attempts to retrieve a single session that corresponds to *handle* from
       storage. Typical implementations will use ``TLS::Session::decrypt`` or the
@@ -625,7 +725,7 @@ the API documentation inline.
       method is called in TLS servers to find a specific session for a given
       handle.
 
- .. cpp:function:: std::vector<Session_with_Handle> find_some(const Server_Information& info, size_t max_sessions_hint)
+ .. cpp:function:: std::vector<Session_with_Handle> find_some(const Server_Information& info, size_t max_sessions_hint, const CryptoOperations& crypto)
 
       Try to find some saved sessions using information about the server. TLS
       1.3 clients may offer more than one session for resumption to the server.
@@ -685,9 +785,11 @@ the PBKDF information).
        std::string_view passphrase, \
        const std::shared_ptr<RandomNumberGenerator>& rng, \
        std::string_view db_filename, \
-       size_t max_sessions = 1000)
+       size_t max_sessions = 1000, \
+       const CryptoOperations& crypto = CryptoOperations())
 
-   Uses the sqlite3 database named by *db_filename*.
+   Uses the sqlite3 database named by *db_filename*. The *crypto* object is
+   used to derive the database key from the *passphrase* and is not retained.
 
 Stateless Session Manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

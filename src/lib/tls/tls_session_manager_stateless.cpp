@@ -23,11 +23,13 @@ Session_Manager_Stateless::Session_Manager_Stateless(const std::shared_ptr<Crede
 }
 
 std::vector<Session_with_Handle> Session_Manager_Stateless::find_some(const Server_Information& /*info*/,
-                                                                      size_t /*max_sessions_hint*/) {
+                                                                      size_t /*max_sessions_hint*/,
+                                                                      const CryptoOperations& /*crypto*/) {
    return {};
 }
 
 std::optional<Session_Handle> Session_Manager_Stateless::establish(const Session& session,
+                                                                   const CryptoOperations& crypto,
                                                                    const std::optional<Session_ID>& /*session_id*/,
                                                                    bool tls12_no_ticket) {
    BOTAN_ASSERT(session.side() == Connection_Side::Server, "Client tried to establish a session");
@@ -40,14 +42,17 @@ std::optional<Session_Handle> Session_Manager_Stateless::establish(const Session
       return std::nullopt;
    }
 
-   return Session_Handle(Session_Ticket{session.encrypt(key.value(), *m_rng)});
+   return Session_Handle(Session_Ticket{session.encrypt(key.value(), *m_rng, crypto)});
 }
 
-void Session_Manager_Stateless::store(const Session& /*session*/, const Session_Handle& /*handle*/) {
+void Session_Manager_Stateless::store(const Session& /*session*/,
+                                      const Session_Handle& /*handle*/,
+                                      const CryptoOperations& /*crypto*/) {
    throw Invalid_Argument("A stateless Session Manager cannot store Sessions with their handle");
 }
 
-std::optional<Session> Session_Manager_Stateless::retrieve_one(const Session_Handle& handle) {
+std::optional<Session> Session_Manager_Stateless::retrieve_one(const Session_Handle& handle,
+                                                               const CryptoOperations& crypto) {
    auto ticket = handle.ticket();
    if(!ticket.has_value()) {
       return std::nullopt;
@@ -59,7 +64,7 @@ std::optional<Session> Session_Manager_Stateless::retrieve_one(const Session_Han
    }
 
    try {
-      return Session::decrypt(ticket.value(), key.value());
+      return Session::decrypt(ticket.value(), key.value(), crypto);
    } catch(const std::exception&) {
       // RFC 8446 4.2.11
       //    Any unknown PSKs (e.g., ones not in the PSK database or encrypted

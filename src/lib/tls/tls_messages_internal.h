@@ -11,6 +11,8 @@
 #ifndef BOTAN_TLS_MESSAGES_INTERNAL_H_
 #define BOTAN_TLS_MESSAGES_INTERNAL_H_
 
+#include <botan/tls_crypto_operations.h>
+
 #include <botan/tls_extensions.h>
 #include <botan/tls_session.h>
 #include <botan/tls_version.h>
@@ -34,7 +36,10 @@ namespace Botan::TLS {
  * Depending on the policy, the RNG output may be hashed and if TLS 1.2 is
  * offered, the random value may contain a timestamp.
  */
-std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng, Callbacks& cb, const Policy& policy);
+std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
+                                       Callbacks& cb,
+                                       const Policy& policy,
+                                       const CryptoOperations& crypto);
 
 /**
  * Generate a server hello random value for the given protocol version.
@@ -48,7 +53,8 @@ std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
                                               Protocol_Version offered_version,
                                               Callbacks& cb,
                                               const Policy& policy,
-                                              TLS_Flavor flavor);
+                                              TLS_Flavor flavor,
+                                              const CryptoOperations& crypto);
 
 /**
  * Compute a cookie value from the ClientHello and the client's identity. Used
@@ -60,7 +66,8 @@ std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
  */
 std::vector<uint8_t> calculate_cookie(std::span<const uint8_t> client_hello_bits,
                                       std::string_view client_identity,
-                                      std::span<const uint8_t> cookie_secret);
+                                      std::span<const uint8_t> cookie_secret,
+                                      const CryptoOperations& crypto);
 
 /**
  * Version-agnostic internal client hello data container that allows
@@ -71,7 +78,7 @@ class Client_Hello_Internal {
    public:
       Client_Hello_Internal() : m_comp_methods({0}) {}
 
-      explicit Client_Hello_Internal(std::span<const uint8_t> buf);
+      explicit Client_Hello_Internal(std::span<const uint8_t> buf, const CryptoOperations& crypto = CryptoOperations());
 
       /**
        * This distinguishes between a TLS 1.3 compliant Client Hello (containing

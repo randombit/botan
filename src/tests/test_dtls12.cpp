@@ -25,6 +25,7 @@
    #include <botan/rng.h>
    #include <botan/tls_callbacks.h>
    #include <botan/tls_client.h>
+   #include <botan/tls_crypto_operations.h>
    #include <botan/tls_exceptn.h>
    #include <botan/tls_policy.h>
    #include <botan/tls_server.h>
@@ -2471,7 +2472,9 @@ class TLS_Closure_Teardown_Test : public Test {
             explicit Throwing_Session_Manager(const std::shared_ptr<Botan::RandomNumberGenerator>& rng) :
                   Session_Manager(rng) {}
 
-            void store(const Botan::TLS::Session& /*session*/, const Botan::TLS::Session_Handle& /*handle*/) override {}
+            void store(const Botan::TLS::Session& /*session*/,
+                       const Botan::TLS::Session_Handle& /*handle*/,
+                       const Botan::TLS::CryptoOperations& /*crypto*/) override {}
 
             size_t remove(const Botan::TLS::Session_Handle& /*handle*/) override {
                throw Botan::Invalid_State("session storage is unavailable");
@@ -2480,12 +2483,15 @@ class TLS_Closure_Teardown_Test : public Test {
             size_t remove_all() override { return 0; }
 
          protected:
-            std::optional<Botan::TLS::Session> retrieve_one(const Botan::TLS::Session_Handle& /*handle*/) override {
+            std::optional<Botan::TLS::Session> retrieve_one(const Botan::TLS::Session_Handle& /*handle*/,
+                                                            const Botan::TLS::CryptoOperations& /*crypto*/) override {
                return std::nullopt;
             }
 
-            std::vector<Botan::TLS::Session_with_Handle> find_some(const Botan::TLS::Server_Information& /*info*/,
-                                                                   size_t /*max_sessions_hint*/) override {
+            std::vector<Botan::TLS::Session_with_Handle> find_some(
+               const Botan::TLS::Server_Information& /*info*/,
+               size_t /*max_sessions_hint*/,
+               const Botan::TLS::CryptoOperations& /*crypto*/) override {
                return {};
             }
       };
@@ -2616,8 +2622,9 @@ class TLS_Closure_Teardown_Test : public Test {
          // Without reuse allowed, find() itself consumes the ticket and the
          // final check below would pass vacuously.
          const auto policy = dtls_policy_reusing_session_tickets();
-         const auto cached =
-            assoc->client_sessions->find(Botan::TLS::Server_Information("localhost"), *assoc->client_cb, *policy);
+         const Botan::TLS::CryptoOperations crypto;
+         const auto cached = assoc->client_sessions->find(
+            Botan::TLS::Server_Information("localhost"), *assoc->client_cb, *policy, crypto);
          if(!result.test_is_true("client cached a resumable session", !cached.empty())) {
             return result;
          }
@@ -2625,8 +2632,8 @@ class TLS_Closure_Teardown_Test : public Test {
          // does not identify this session.
          result.test_is_true("the session is ticket-backed, not ID-backed", cached[0].handle.is_ticket());
 
-         const auto recheck =
-            assoc->client_sessions->find(Botan::TLS::Server_Information("localhost"), *assoc->client_cb, *policy);
+         const auto recheck = assoc->client_sessions->find(
+            Botan::TLS::Server_Information("localhost"), *assoc->client_cb, *policy, crypto);
          result.test_is_true("find() did not consume the ticket", !recheck.empty());
 
          assoc->server->send_fatal_alert(Botan::TLS::Alert::InternalError);
@@ -2634,8 +2641,8 @@ class TLS_Closure_Teardown_Test : public Test {
          std::swap(assoc->s2c, alert);
          assoc->client->received_data(alert.data(), alert.size());
 
-         const auto after =
-            assoc->client_sessions->find(Botan::TLS::Server_Information("localhost"), *assoc->client_cb, *policy);
+         const auto after = assoc->client_sessions->find(
+            Botan::TLS::Server_Information("localhost"), *assoc->client_cb, *policy, crypto);
          result.test_is_true("the ticket was removed from the client cache", after.empty());
 
          return result;

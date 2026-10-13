@@ -42,10 +42,11 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Stateless final : public Session_Ma
                                 const std::shared_ptr<RandomNumberGenerator>& rng);
 
       std::optional<Session_Handle> establish(const Session& session,
+                                              const CryptoOperations& crypto,
                                               const std::optional<Session_ID>& id = std::nullopt,
                                               bool tls12_no_ticket = false) override;
 
-      void store(const Session& session, const Session_Handle& handle) override;
+      void store(const Session& session, const Session_Handle& handle, const CryptoOperations& crypto) override;
 
       size_t remove(const Session_Handle& /*handle*/) override { return 0; }
 
@@ -54,10 +55,12 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Stateless final : public Session_Ma
       bool emits_session_tickets() override;
 
    protected:
-      std::optional<Session> retrieve_one(const Session_Handle& handle) override;
+      std::optional<Session> retrieve_one(const Session_Handle& handle, const CryptoOperations& crypto) override;
 
       // Returns empty by default
-      std::vector<Session_with_Handle> find_some(const Server_Information& info, size_t max_sessions_hint) override;
+      std::vector<Session_with_Handle> find_some(const Server_Information& info,
+                                                 size_t max_sessions_hint,
+                                                 const CryptoOperations& crypto) override;
 
    private:
       std::optional<SymmetricKey> get_ticket_key() noexcept;

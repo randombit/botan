@@ -11,6 +11,7 @@
 #include <botan/kdf.h>
 #include <botan/pkix_types.h>
 #include <botan/tls_callbacks.h>
+#include <botan/tls_crypto_operations.h>
 #include <botan/tls_messages_12.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_signature_scheme.h>
@@ -27,8 +28,12 @@ std::string Handshake_Message::type_string() const {
 */
 Handshake_State::~Handshake_State() = default;
 
-Handshake_State::Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& cb) :
-      m_callbacks(cb), m_handshake_io(std::move(io)), m_version(m_handshake_io->initial_record_version()) {}
+Handshake_State::Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& cb, CryptoOperations& crypto) :
+      m_callbacks(cb),
+      m_crypto(crypto),
+      m_handshake_io(std::move(io)),
+      m_version(m_handshake_io->initial_record_version()),
+      m_handshake_hash(crypto) {}
 
 void Handshake_State::note_message(const Handshake_Message& msg) {
    m_callbacks.tls_inspect_handshake_msg(msg);
@@ -190,7 +195,7 @@ Session_Ticket Handshake_State::session_ticket() const {
 }
 
 std::unique_ptr<KDF> Handshake_State::protocol_specific_prf() const {
-   return m_callbacks.tls12_protocol_specific_kdf(ciphersuite().prf_algo());
+   return m_crypto.tls12_protocol_specific_kdf(ciphersuite().prf_algo());
 }
 
 std::pair<std::string, Signature_Format> Handshake_State::choose_sig_format(const Private_Key& key,

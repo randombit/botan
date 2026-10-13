@@ -55,18 +55,23 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Hybrid final : public Session_Manag
                              bool prefer_tickets = true);
 
       std::optional<Session_Handle> establish(const Session& session,
+                                              const CryptoOperations& crypto,
                                               const std::optional<Session_ID>& id = std::nullopt,
                                               bool tls12_no_ticket = false) override;
 
       std::optional<Session> retrieve(const Session_Handle& handle,
                                       Callbacks& callbacks,
-                                      const Policy& policy) override;
+                                      const Policy& policy,
+                                      const CryptoOperations& crypto) override;
 
       std::vector<Session_with_Handle> find(const Server_Information& info,
                                             Callbacks& callbacks,
-                                            const Policy& policy) override;
+                                            const Policy& policy,
+                                            const CryptoOperations& crypto) override;
 
-      void store(const Session& session, const Session_Handle& handle) override { m_stateful->store(session, handle); }
+      void store(const Session& session, const Session_Handle& handle, const CryptoOperations& crypto) override {
+         m_stateful->store(session, handle, crypto);
+      }
 
       size_t remove(const Session_Handle& handle) override { return m_stateful->remove(handle); }
 
@@ -80,9 +85,11 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Hybrid final : public Session_Manag
       // The Hybrid_Session_Manager just delegates to its underlying managers
       // via the public retrieval API. Its own "storage interface" is therefore
       // never called.
-      std::optional<Session> retrieve_one(const Session_Handle& handle) override;
+      std::optional<Session> retrieve_one(const Session_Handle& handle, const CryptoOperations& crypto) override;
 
-      std::vector<Session_with_Handle> find_some(const Server_Information& info, size_t max_sessions_hint) override;
+      std::vector<Session_with_Handle> find_some(const Server_Information& info,
+                                                 size_t max_sessions_hint,
+                                                 const CryptoOperations& crypto) override;
 
    private:
       std::unique_ptr<Session_Manager> m_stateful;

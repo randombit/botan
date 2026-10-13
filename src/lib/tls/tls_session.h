@@ -29,6 +29,8 @@ class X509_Certificate;
 
 namespace Botan::TLS {
 
+class CryptoOperations;
+
 class Server_Hello_13;
 class Callbacks;
 
@@ -276,11 +278,15 @@ class BOTAN_PUBLIC_API(3, 0) Session final : public Session_Base {
       */
       BOTAN_FUTURE_EXPLICIT Session(std::span<const uint8_t> ber_data);
 
+      Session(std::span<const uint8_t> ber_data, const CryptoOperations& crypto);
+
       /**
       * Load a session from PEM representation (created by PEM_encode)
       * @param pem PEM representation
       */
       explicit Session(std::string_view pem);
+
+      Session(std::string_view pem, const CryptoOperations& crypto);
 
       /**
       * Encode this session data for storage
@@ -293,6 +299,10 @@ class BOTAN_PUBLIC_API(3, 0) Session final : public Session_Base {
       * Encrypt a session (useful for serialization or session tickets)
       */
       std::vector<uint8_t> encrypt(const SymmetricKey& key, RandomNumberGenerator& rng) const;
+
+      std::vector<uint8_t> encrypt(const SymmetricKey& key,
+                                   RandomNumberGenerator& rng,
+                                   const CryptoOperations& crypto) const;
 
       /**
       * Decrypt a session created by encrypt
@@ -310,6 +320,8 @@ class BOTAN_PUBLIC_API(3, 0) Session final : public Session_Base {
       * @param key the same key used by the encrypting side
       */
       static Session decrypt(std::span<const uint8_t> ctext, const SymmetricKey& key);
+
+      static Session decrypt(std::span<const uint8_t> ctext, const SymmetricKey& key, const CryptoOperations& crypto);
 
       /**
       * Encode this session data for storage
