@@ -202,7 +202,10 @@ bool Channel_IO::needs_traffic_based_key_update() const {
       return false;
    }
 
-   if(cs->records_encrypted_with_current_key() >= limit) {
+   // If we half-closed the connection for writing, i.e. we cannot encrypt
+   // application traffic any longer, naturally, we won't need to update our
+   // traffic keys.
+   if(cs->can_encrypt_application_traffic() && cs->records_encrypted_with_current_key() >= limit) {
       return true;
    }
 
@@ -211,8 +214,13 @@ bool Channel_IO::needs_traffic_based_key_update() const {
    // set above the write-side limit so that a peer which tracks its own
    // write limit will normally have rotated its keys already, avoiding a
    // redundant key update crossing ours in flight.
+   //
+   // Note: if the peer half-closed their connection for writing, i.e we
+   // destroyed the receive traffic keys, there's no point in requesting a key
+   // update from them.
    const uint64_t read_limit = limit + limit / 2;
-   return !m_key_update_requested && cs->records_decrypted_with_current_key() >= read_limit;
+   return !m_key_update_requested && cs->can_decrypt_application_traffic() &&
+          cs->records_decrypted_with_current_key() >= read_limit;
 }
 
 void Channel_IO::handle_key_update(const Key_Update& key_update) {
@@ -238,14 +246,16 @@ void Channel_IO::handle_key_update(const Key_Update& key_update) {
 
    cs->update_read_keys();
 
-   if(key_update.expects_reciprocation()) {
+   if(key_update.expects_reciprocation() && cs->can_encrypt_application_traffic()) {
       // RFC 9846 4.7.3
       //    If the request_update field is set to "update_requested", then the
       //    receiver MUST send a KeyUpdate of its own with request_update set to
       //    "update_not_requested" prior to sending its next Application Data
       //    record.
       //
-      // This happens opportunistically in send().
+      // This happens opportunistically in send(), and only if we can (still)
+      // encrypt application data. If we half-closed the connection on our side
+      // we cannot reciprocate the key update any longer.
       m_key_update_reciprocation_pending = true;
    } else {
       // Only an actual reciprocation settles our outstanding request. RFC 9846
