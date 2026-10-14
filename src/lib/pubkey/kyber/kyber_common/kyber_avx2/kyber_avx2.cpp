@@ -143,13 +143,15 @@ class Tables final {
    public:
       static consteval Tables create() {
          // z * q^-1 mod 2^16, the second multiplier of a Montgomery multiplication by z
-         const auto times_qinv = [](int16_t z) -> int16_t {
-            return static_cast<int16_t>(static_cast<int32_t>(z) * KyberPolyTraits::q_inverse());
+         const auto times_qinv = [](int32_t z) -> int16_t {
+            // Using unsigned arithmetic to work around a false positive warning with GCC -fwrapv
+            const uint32_t zq = static_cast<uint32_t>(z) * static_cast<uint32_t>(KyberPolyTraits::q_inverse());
+            return static_cast<int16_t>(static_cast<uint16_t>(zq));
          };
 
          // The scalar Montgomery reduction
-         const auto mont_reduce = [](int32_t a) -> int16_t {
-            const int16_t u = static_cast<int16_t>(static_cast<int16_t>(a) * KyberPolyTraits::q_inverse());
+         const auto mont_reduce = [&](int32_t a) -> int16_t {
+            const int16_t u = times_qinv(a);
             const int32_t t = a - static_cast<int32_t>(u) * KyberConstants::Q;
             return static_cast<int16_t>(t >> 16);
          };
