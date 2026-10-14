@@ -153,10 +153,17 @@ Optimizations
 
 * Refactor and optimize Ed25519 (GH #5893)
 
-* Refactor and optimize X25519 key agreement, especially key generation (GH #6010)
+* Refactor and optimize X25519, especially improving key generation (GH #6010)
 
 * Elliptic curve optimizations, especially improving P-256 and SM2.
-  (GH #6012 #6013)
+  (GH #6012 #6013 #6020 #6021 #6024 #6031)
+
+* Add AVX-512+IFMA modular exponentation support, improving RSA and FFDHE by 3-4x
+  (GH #6026)
+
+* Add AVX2 codepath for ML-KEM (GH #5964 #6032 #6033)
+
+* Enable many SIMD optimizations on POWER systems (GH #6027 #6028)
 
 * Improve the performance of one-shot RSA private key operations (GH #6004)
 
