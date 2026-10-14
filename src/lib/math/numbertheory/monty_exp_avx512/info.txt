@@ -1,0 +1,26 @@
+<internal_defines>
+MONTY_EXP_AVX512 -> 20261007
+</internal_defines>
+
+<module_info>
+name -> "Montgomery Exponentiation AVX-512"
+brief -> "Montgomery exponentiation using AVX-512 IFMA instructions"
+</module_info>
+
+<isa>
+avx512
+</isa>
+
+<arch>
+x86_64
+x32
+</arch>
+
+<header:internal>
+monty_exp_avx512.h
+</header:internal>
+
+<requires>
+cpuid
+simd_8x64
+</requires>
