@@ -26,10 +26,6 @@ using SerializedHandshakeMessage = Strong<std::vector<uint8_t>, struct Serialize
 /// Holds the serialization of a TLS 1.3 handshake protocol header.
 using HandshakeProtocolHeader = Strong<std::array<uint8_t, 4>, struct HandshakeProtocolHeader_>;
 
-/// Holds the serialization of a single TLS 1.3 handshake message along
-/// with the handshake protocol header.
-using MarshalledHandshakeMessage = Strong<std::vector<uint8_t>, struct MarshalledHandshakeMessage_>;
-
 /// Holds the serialization of a TLS 1.3 handshake message flight containing
 /// multiple handshake messages along with their handshake protocol headers.
 using MarshalledHandshakeMessageFlight = Strong<std::vector<uint8_t>, struct MarshalledHandshakeMessageFlight_>;

@@ -158,7 +158,7 @@ auto prepare_message(const Botan::TLS::Handshake_Message& msg, Transcript_Hash_S
    const auto msg_bytes = TLS_Handshake_Layer::serialize(msg);
    const auto hdr_bytes = TLS_Handshake_Layer::prepare_header(msg.wire_type(), msg_bytes.size());
    th.update(hdr_bytes, msg_bytes);
-   return Botan::concat<MarshalledHandshakeMessage>(hdr_bytes, msg_bytes);
+   return Botan::concat<std::vector<uint8_t>>(hdr_bytes, msg_bytes);
 }
 
 std::vector<Test::Result> read_handshake_messages() {
