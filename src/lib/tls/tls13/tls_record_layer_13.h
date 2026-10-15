@@ -32,7 +32,7 @@ class Policy;
  */
 class BOTAN_TEST_API Record_Layer {
    protected:
-      Record_Layer(Connection_Side side, std::shared_ptr<const Policy> policy);
+      explicit Record_Layer(Connection_Side side);
 
    public:
       virtual ~Record_Layer() = default;
@@ -78,6 +78,7 @@ class BOTAN_TEST_API Record_Layer {
        * The payload passed into this function must fit into a single record,
        * @sa record_payload_size_limit() for the maximum allowed payload size.
        *
+       * @param policy        The TLS policy for record size constraints
        * @param type          The type of the record to be prepared.
        * @param payload       The plaintext payload to be included in the record.
        * @param cipher_state  Optional pointer to a Cipher_State instance. If provided, the
@@ -86,7 +87,8 @@ class BOTAN_TEST_API Record_Layer {
        *
        * @returns The marshalled record, ready to be emitted to the peer.
        */
-      virtual MarshalledRecord prepare_record(Record_Type type,
+      virtual MarshalledRecord prepare_record(const Policy& policy,
+                                              Record_Type type,
                                               std::span<const uint8_t> payload,
                                               Cipher_State* cipher_state = nullptr) = 0;
 
@@ -133,14 +135,8 @@ class BOTAN_TEST_API Record_Layer {
 
       Connection_Side side() const noexcept { return m_side; }
 
-   protected:
-      const Policy& policy() const noexcept { return *m_policy; }
-
    private:
       Connection_Side m_side;
-
-      // Queried for Record Padding as defined in RFC 9846 5.4
-      std::shared_ptr<const Policy> m_policy;
 
       // Those are either the limits set by the TLS 1.3 specification (RFC 8446),
       // or the ones negotiated via the "record_size_limit" extension (RFC 8449).
@@ -155,11 +151,12 @@ class BOTAN_TEST_API Record_Layer {
 
 class BOTAN_TEST_API TLS_Record_Layer final : public Record_Layer {
    public:
-      explicit TLS_Record_Layer(Connection_Side side, std::shared_ptr<const Policy> policy);
+      explicit TLS_Record_Layer(Connection_Side side);
 
       void copy_data(std::span<const uint8_t> data) override;
       ReadResult next_record(Cipher_State* cipher_state = nullptr) override;
-      MarshalledRecord prepare_record(Record_Type type,
+      MarshalledRecord prepare_record(const Policy& policy,
+                                      Record_Type type,
                                       std::span<const uint8_t> payload,
                                       Cipher_State* cipher_state = nullptr) override;
 

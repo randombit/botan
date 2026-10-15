@@ -41,9 +41,8 @@ bool verify_change_cipher_spec(std::span<const uint8_t> data) {
 
 }  // namespace
 
-Record_Layer::Record_Layer(Connection_Side side, std::shared_ptr<const Policy> policy) :
+Record_Layer::Record_Layer(Connection_Side side) :
       m_side(side),
-      m_policy(std::move(policy)),
       m_outgoing_record_size_limit(MAX_PLAINTEXT_SIZE + content_type_tag_length),
       m_incoming_record_size_limit(MAX_PLAINTEXT_SIZE + content_type_tag_length),
 
@@ -65,9 +64,7 @@ Record_Layer::Record_Layer(Connection_Side side, std::shared_ptr<const Policy> p
       // Once TLS 1.3 is negotiateed, the implementations will disable these
       // compatibility modes accordingly or a protocol downgrade will transfer
       // the marshalling responsibility to our TLS 1.2 implementation.
-      m_receiving_compat_mode(true) {
-   BOTAN_ASSERT_NONNULL(m_policy);
-}
+      m_receiving_compat_mode(true) {}
 
 void Record_Layer::set_record_size_limits(const uint16_t outgoing_limit, const uint16_t incoming_limit) {
    // RFC 8449 4.
@@ -86,8 +83,8 @@ void Record_Layer::set_record_size_limits(const uint16_t outgoing_limit, const u
    m_incoming_record_size_limit = incoming_limit;
 }
 
-TLS_Record_Layer::TLS_Record_Layer(Connection_Side side, std::shared_ptr<const Policy> policy) :
-      Record_Layer(side, std::move(policy)), m_sending_compat_mode(side == Connection_Side::Client) {}
+TLS_Record_Layer::TLS_Record_Layer(Connection_Side side) :
+      Record_Layer(side), m_sending_compat_mode(side == Connection_Side::Client) {}
 
 void TLS_Record_Layer::copy_data(std::span<const uint8_t> data) {
    while(!data.empty()) {
@@ -106,13 +103,13 @@ void TLS_Record_Layer::copy_data(std::span<const uint8_t> data) {
    }
 }
 
-MarshalledRecord TLS_Record_Layer::prepare_record(const Record_Type type,
+MarshalledRecord TLS_Record_Layer::prepare_record(const Policy& policy,
+                                                  const Record_Type type,
                                                   std::span<const uint8_t> data,
                                                   Cipher_State* cipher_state) {
    auto* cs = as_tls_cipher_state(cipher_state);
 
-   BOTAN_ARG_CHECK(data.size() <= record_payload_size_limit(policy(), cs),
-                   "data size exceeds record payload size limit");
+   BOTAN_ARG_CHECK(data.size() <= record_payload_size_limit(policy, cs), "data size exceeds record payload size limit");
 
    // RFC 9846 5.
    //    Note that [change_cipher_spec records] may appear at a point at the
@@ -153,7 +150,7 @@ MarshalledRecord TLS_Record_Layer::prepare_record(const Record_Type type,
       // truncate the padding to fill up the record entirely.
       const size_t padding_length =
          (pt_size_with_type_tag < max_record_size)
-            ? std::min(policy().record_padding_bytes(pt_size_with_type_tag), max_record_size - pt_size_with_type_tag)
+            ? std::min(policy.record_padding_bytes(pt_size_with_type_tag), max_record_size - pt_size_with_type_tag)
             : 0;
       BOTAN_ASSERT_NOMSG(pt_size_with_type_tag + padding_length <= max_record_size);
 

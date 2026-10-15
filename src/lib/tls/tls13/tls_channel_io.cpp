@@ -340,9 +340,7 @@ namespace {
 class TLS_Channel_IO final : public Channel_IO {
    public:
       TLS_Channel_IO(Connection_Side side, std::shared_ptr<const Policy> policy, std::shared_ptr<Callbacks> callbacks) :
-            Channel_IO(side, policy, std::move(callbacks)),
-            m_record_layer(side, std::move(policy)),
-            m_handshake_layer(side) {}
+            Channel_IO(side, std::move(policy), std::move(callbacks)), m_record_layer(side), m_handshake_layer(side) {}
 
       void send_data(Record_Type record_type, std::span<const uint8_t> payload, Cipher_State* cipher_state) override {
          const size_t max_plaintext_payload_size = record_layer().record_payload_size_limit(policy(), cipher_state);
@@ -370,7 +368,8 @@ class TLS_Channel_IO final : public Channel_IO {
             const size_t pt_size = std::min(bs.remaining(), max_plaintext_payload_size);
             const auto pt_fragment = bs.take(pt_size);
 
-            const auto record_to_write = m_record_layer.prepare_record(record_type, pt_fragment, cipher_state);
+            const auto record_to_write =
+               m_record_layer.prepare_record(policy(), record_type, pt_fragment, cipher_state);
             callbacks().tls_emit_data(record_to_write);
          } while(!bs.empty());
       }
