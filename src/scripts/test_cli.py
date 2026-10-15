@@ -1251,7 +1251,7 @@ def cli_cpuid_tests(_tmp_dir):
 
 def cli_cc_enc_tests(_tmp_dir):
     test_vectors = [
-        ("8028028028028029", "4308989841607208", "8028028028028027"),
+        ("8028028028028027", "4308989841607208", "8028028028028027"),
         ("4222222222222", "8448574842145", "4222222222222"),
         ("4000000000000424", "0000572878697422", "4000000000000424"),
         ("4000000000000000006", "1096265612632810403", "4000000000000000006"),
@@ -1261,6 +1261,13 @@ def cli_cc_enc_tests(_tmp_dir):
     for plaintext, ciphertext, decrypted in test_vectors:
         test_cli("cc_encrypt", [plaintext, "pass"], ciphertext)
         test_cli("cc_decrypt", [ciphertext, "pass"], decrypted)
+
+    # Numbers with a bad check digit are rejected rather than silently
+    # mapped to a different card number
+    for cmd in ["cc_encrypt", "cc_decrypt"]:
+        test_cli(cmd, ["8028028028028029", "pass"], "",
+                 expected_stderr="Usage error: Credit card number fails the Luhn check\nUsage: %s CC passphrase --tweak=" % (cmd),
+                 expected_rc=1)
 
 def cli_cert_issuance_tests(tmp_dir, algos=None):
     root_key = os.path.join(tmp_dir, 'root.key')

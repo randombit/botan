@@ -328,32 +328,26 @@ std::string Command::get_passphrase_arg(const std::string& prompt, const std::st
    return get_passphrase(prompt);
 }
 
-namespace {
-
-bool echo_suppression_supported() {
-#if defined(BOTAN_HAS_OS_UTILS)
-   const auto echo = Botan::OS::suppress_echo_on_terminal();
-   return (echo != nullptr);
-#else
-   return false;
-#endif
-}
-
-}  // namespace
-
 std::string Command::get_passphrase(const std::string& prompt) {
-   if(!echo_suppression_supported()) {
+#if defined(BOTAN_HAS_OS_UTILS)
+   const auto echo_suppress = Botan::OS::suppress_echo_on_terminal();
+   const bool echo_suppressed = (echo_suppress != nullptr);
+#else
+   const bool echo_suppressed = false;
+#endif
+
+   if(!echo_suppressed) {
       error_output() << "Warning: terminal echo suppression not enabled for this platform\n";
    }
 
    error_output() << prompt << ": " << std::flush;
+
    std::string pass;
 
-#if defined(BOTAN_HAS_OS_UTILS)
-   const auto echo_suppress = Botan::OS::suppress_echo_on_terminal();
-#endif
-
-   std::getline(std::cin, pass);
+   // EOF (eg Ctrl-D) must not be mistaken for an empty passphrase
+   if(!std::getline(std::cin, pass)) {
+      throw CLI_Error("No passphrase was entered");
+   }
 
    return pass;
 }
