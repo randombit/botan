@@ -269,6 +269,7 @@ class Cert_Verify final : public Command {
             output() << "Certificate passes validation checks\n";
          } else {
             output() << "Certificate did not validate - " << result.result_string() << "\n";
+            set_return_code(1);
          }
       }
 };

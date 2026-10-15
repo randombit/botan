@@ -208,7 +208,7 @@ class ServerCertificateSuite:
 
         test_cli("keygen", ["--algo=ECDSA", f"--params={ecdsa_algo}", f"--output={self.private_key}"], "")
         test_cli("gen_self_signed", [self.private_key, "CA", "--ca", "--country=VT", "--dns=ca.example", f"--hash={hash_algo}", f"--output={self.ca_cert}"], "")
-        test_cli("cert_verify", self.ca_cert, "Certificate did not validate - Cannot establish trust")
+        test_cli("cert_verify", self.ca_cert, "Certificate did not validate - Cannot establish trust", expected_rc=1)
         test_cli("gen_pkcs10", [f"{self.private_key}", "localhost", "--dns=localhost", f"--output={crt_req}"])
         test_cli("sign_cert", [self.ca_cert, self.private_key, crt_req, f"--output={self.cert}"])
 
@@ -493,9 +493,19 @@ def cli_hex_tests(_tmp_dir):
     test_cli("hex_enc", "-", "6265657321", "bees!")
     test_cli("hex_dec", "-", "bees!", "6265657321")
 
-def cli_hash_tests(_tmp_dir):
+def cli_hash_tests(tmp_dir):
     test_cli("hash", "--algo=SHA-256",
              "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855 -", "")
+
+    # An unreadable file is reported, the remaining files are still hashed,
+    # and the exit status is nonzero
+    missing = os.path.join(tmp_dir, 'does_not_exist')
+    empty = os.path.join(tmp_dir, 'empty')
+    with open(empty, 'wb'):
+        pass
+    test_cli("hash", ["--no-fsname", missing, empty],
+             "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+             expected_stderr="Error reading file %s" % (missing), expected_rc=1)
 
     test_cli("hash", "--algo=SHA-256",
              "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD -", "abc")
@@ -516,6 +526,11 @@ def cli_hmac_tests(tmp_dir):
 
     test_cli("hmac", ["--no-fsname", "--hash=SHA-384", key_file, key_file],
              "E3A8529377030B28A7DBDFC50DDEC8E4ECEFB6EA850D95EB785938CD3E3AFEF9EF8B08AF219C1496633193468AB755CB")
+
+    missing = os.path.join(tmp_dir, 'does_not_exist')
+    test_cli("hmac", ["--no-fsname", "--hash=SHA-384", key_file, missing, key_file],
+             "E3A8529377030B28A7DBDFC50DDEC8E4ECEFB6EA850D95EB785938CD3E3AFEF9EF8B08AF219C1496633193468AB755CB",
+             expected_stderr="Error reading file %s" % (missing), expected_rc=1)
 
 def cli_bcrypt_tests(_tmp_dir):
     test_cli("gen_bcrypt", "--work-factor=4 s3kr1t",
@@ -631,14 +646,14 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
 
     test_cli("verify", [pub_key, pub_key, '-'],
              "Signature is invalid",
-             valid_sig.replace("G", "H"))
+             valid_sig.replace("G", "H"), expected_rc=1)
 
     test_cli("gen_self_signed",
              [priv_key, "CA", "--ca", "--country=VT",
               "--dns=ca.example", "--hash=SHA-384", "--output="+ca_cert],
              "")
 
-    test_cli("cert_verify", ca_cert, "Certificate did not validate - Cannot establish trust")
+    test_cli("cert_verify", ca_cert, "Certificate did not validate - Cannot establish trust", expected_rc=1)
 
     cert_info = test_cli("cert_info", ['--fingerprint', ca_cert], None)
 
@@ -655,7 +670,7 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
              "Certificate passes validation checks")
 
     test_cli("cert_verify", user_cert,
-             "Certificate did not validate - Certificate issuer not found")
+             "Certificate did not validate - Certificate issuer not found", expected_rc=1)
 
 def cli_pk_sign_tests(tmp_dir):
     # Ed25519 key from RFC 8032 section 7.1 "TEST 2"
@@ -689,7 +704,7 @@ MCowBQYDK2VwAyEAPUAXw+hDiVqStwqnTRt+vJyYLM8uxJaMwM1V8Sr0Zgw=
     # Ed25519ph is a distinct signature scheme
     test_cli("sign", ["--prehash=default", priv_key, msg, "--output=%s" % (sig)], "")
     test_cli("verify", ["--prehash=default", pub_key, msg, sig], "Signature is valid")
-    test_cli("verify", [pub_key, msg, sig], "Signature is invalid")
+    test_cli("verify", [pub_key, msg, sig], "Signature is invalid", expected_rc=1)
 
     # ML-DSA takes no options at all
     mldsa_priv = os.path.join(tmp_dir, 'mldsa.pem')
@@ -709,7 +724,7 @@ MCowBQYDK2VwAyEAPUAXw+hDiVqStwqnTRt+vJyYLM8uxJaMwM1V8Sr0Zgw=
     test_cli("sign", [rsa_priv, msg, "--output=%s" % (sig)], "")
     test_cli("verify", [rsa_pub, msg, sig], "Signature is valid")
     test_cli("verify", ["--padding=PSS", "--hash=SHA-256", rsa_pub, msg, sig], "Signature is valid")
-    test_cli("verify", ["--padding=PKCS1v15", rsa_pub, msg, sig], "Signature is invalid")
+    test_cli("verify", ["--padding=PKCS1v15", rsa_pub, msg, sig], "Signature is invalid", expected_rc=1)
     test_cli("sign", ["--padding=PKCS1v15", "--hash=SHA-512", rsa_priv, msg, "--output=%s" % (sig)], "")
     test_cli("verify", ["--padding=PKCS1v15", "--hash=SHA-512", rsa_pub, msg, sig], "Signature is valid")
     test_cli("sign", ["--padding=PSS", "--salt-size=0", "--deterministic", rsa_priv, msg, "--output=%s" % (sig)], "")
@@ -1065,6 +1080,16 @@ def cli_zfec_tests(tmp_dir):
         if info_re.match(info_out) is None:
             logging.error("Unexpected output for fec_info")
 
+    # A corrupted share is reported with a nonzero status
+    truncated_share = os.path.join(tmp_dir, 'truncated.fec')
+    with open(share_files[0], 'rb') as f:
+        share_data = f.read()
+    with open(truncated_share, 'wb') as f:
+        f.write(share_data[:20])
+    test_cli("fec_info", truncated_share, "",
+             expected_stderr="Invalid share '%s': FEC share is too short to be valid" % (truncated_share),
+             expected_rc=1)
+
     k_shares = n - k
 
     # Insufficient shares:
@@ -1287,6 +1312,10 @@ def cli_tls_ciphersuite_tests(_tmp_dir):
             for line in output:
                 if ciphersuite_re.match(line) is None:
                     logging.error("Unexpected ciphersuite line %s", line)
+
+    test_cli("tls_ciphers", ["--version=tls1.2", "--policy=datagram"], "",
+             expected_stderr="Error: the policy specified does not allow the given TLS version",
+             expected_rc=1)
 
 def cli_asn1_tests(_tmp_dir):
     input_pem = """-----BEGIN BLOB-----
@@ -1951,6 +1980,16 @@ def cli_tls_client_hello_tests(_tmp_dir):
     for output_hash, chello in chellos:
         output = test_cli("tls_client_hello", ["--hex", "-"], None, chello)
         test_cli("hash", ["--no-fsname", "--algo=SHA-256", "-"], output_hash, output)
+
+    # Malformed inputs are rejected with a nonzero status
+    test_cli("tls_client_hello", ["--hex", "-"], "", "160301",
+             expected_stderr="Input too short to be valid", expected_rc=1)
+    test_cli("tls_client_hello", ["--hex", "-"], "", chellos[0][1][:-2],
+             expected_stderr="Record layer length invalid", expected_rc=1)
+    test_cli("tls_client_hello", ["--hex", "-"], "", chellos[0][1][10:-2],
+             expected_stderr="Handshake layer length invalid", expected_rc=1)
+    test_cli("tls_client_hello", ["--hex", "-"], "", chellos[0][1][18:-2],
+             expected_stderr="Parsing client hello failed: Bad extension size", expected_rc=1)
 
 def cli_speed_pk_fast_tests(_tmp_dir):
     msec = 1

@@ -297,6 +297,10 @@ class PK_Verify final : public PK_Signature_Command {
          const bool valid = verifier.check_signature(signature);
 
          output() << "Signature is " << (valid ? "valid" : "invalid") << "\n";
+
+         if(!valid) {
+            set_return_code(1);
+         }
       }
 };
 

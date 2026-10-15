@@ -303,6 +303,7 @@ class FEC_Info final : public Command {
                      << " needed for recovery\n";
          } catch(std::exception& e) {
             error_output() << "Invalid share '" << share_fsname << "': " << e.what() << "\n";
+            set_return_code(1);
          }
       }
 };

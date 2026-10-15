@@ -59,6 +59,7 @@ class HMAC final : public Command {
                output() << "\n";
             } catch(CLI_IO_Error& e) {
                error_output() << e.what() << "\n";
+               set_return_code(1);
             }
          }
       }
