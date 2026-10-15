@@ -32,52 +32,51 @@ class BOTAN_UNSTABLE_API FFI_Error final : public Botan::Exception {
       int m_err_code;
 };
 
-template <typename T, uint32_t MAGIC>
-struct botan_ffi_unique_obj {
-   public:
-      explicit botan_ffi_unique_obj(std::unique_ptr<T> obj) : m_magic(MAGIC), m_obj(std::move(obj)) {}
-
-      virtual ~botan_ffi_unique_obj() {
-         m_magic = 0;
-         m_obj.reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
-      }
-
-      botan_ffi_unique_obj(const botan_ffi_unique_obj& other) = delete;
-      botan_ffi_unique_obj(botan_ffi_unique_obj&& other) = delete;
-      botan_ffi_unique_obj& operator=(const botan_ffi_unique_obj& other) = delete;
-      botan_ffi_unique_obj& operator=(botan_ffi_unique_obj&& other) = delete;
-
-      bool magic_ok() const { return (m_magic == MAGIC); }
-
-      T* unsafe_get() const { return m_obj.get(); }
-
-   private:
-      uint32_t m_magic = 0;
-      std::unique_ptr<T> m_obj;
+template <typename T>
+concept ffi_object_smart_pointer = requires(T& obj) {
+   { obj.get() } -> std::same_as<typename T::element_type*>;
+   { obj.reset() };
 };
 
-template <typename T, uint32_t MAGIC>
-struct botan_ffi_shared_obj {
+/**
+ * Base class for all FFI object handles wrapped around some specific type in
+ * the library. The inner type is managed by a configurable smart pointer type
+ * (e.g. std::unique_ptr or std::shared_ptr).
+ */
+template <typename T, uint32_t MAGIC, template <typename... Args> typename PtrType>
+   requires ffi_object_smart_pointer<PtrType<T>>
+struct botan_ffi_obj {
    public:
-      explicit botan_ffi_shared_obj(std::shared_ptr<T> obj) : m_magic(MAGIC), m_obj(std::move(obj)) {}
+      using element_type = T;
+      using smart_pointer_type = PtrType<T>;
 
-      virtual ~botan_ffi_shared_obj() {
+   public:
+      explicit botan_ffi_obj(smart_pointer_type obj) : m_magic(MAGIC), m_obj(std::move(obj)) {}
+
+      virtual ~botan_ffi_obj() {
          m_magic = 0;
          m_obj.reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
       }
 
-      botan_ffi_shared_obj(const botan_ffi_shared_obj& other) = delete;
-      botan_ffi_shared_obj(botan_ffi_shared_obj&& other) = delete;
-      botan_ffi_shared_obj& operator=(const botan_ffi_shared_obj& other) = delete;
-      botan_ffi_shared_obj& operator=(botan_ffi_shared_obj&& other) = delete;
+      botan_ffi_obj(const botan_ffi_obj& other) = delete;
+      botan_ffi_obj(botan_ffi_obj&& other) = delete;
+      botan_ffi_obj& operator=(const botan_ffi_obj& other) = delete;
+      botan_ffi_obj& operator=(botan_ffi_obj&& other) = delete;
 
       bool magic_ok() const { return (m_magic == MAGIC); }
 
-      std::shared_ptr<T> unsafe_get_sp() const { return m_obj; }
+      /// Retrieve the raw pointer to the underlying object. May be nullptr.
+      T* unsafe_get() const { return m_obj.get(); }
+
+      /// Retrieve the smart pointer to the underlying object. May be invalid.
+      smart_pointer_type& unsafe_get_sp() { return m_obj; }
+
+      /// Retrieve the smart pointer to the underlying object. May be invalid.
+      const smart_pointer_type& unsafe_get_sp() const { return m_obj; }
 
    private:
       uint32_t m_magic = 0;
-      std::shared_ptr<T> m_obj;
+      smart_pointer_type m_obj;
 };
 
 template <typename T>
@@ -87,18 +86,18 @@ concept ffi_object = requires(const T& obj) {
 
 // NOLINTBEGIN(*-macro-usage)
 
-#define BOTAN_FFI_DECLARE_UNIQUE_STRUCT(NAME, TYPE, MAGIC)                              \
-   struct NAME final : public Botan_FFI::botan_ffi_unique_obj<TYPE, MAGIC> {            \
-         explicit NAME(std::unique_ptr<TYPE> x) : botan_ffi_unique_obj(std::move(x)) {} \
+#define BOTAN_FFI_DECLARE_UNIQUE_STRUCT(NAME, TYPE, MAGIC)                             \
+   struct NAME final : public Botan_FFI::botan_ffi_obj<TYPE, MAGIC, std::unique_ptr> { \
+         using botan_ffi_obj::botan_ffi_obj;                                           \
    }
 
-#define BOTAN_FFI_DECLARE_SHARED_STRUCT(NAME, TYPE, MAGIC)                              \
-   struct NAME final : public Botan_FFI::botan_ffi_shared_obj<TYPE, MAGIC> {            \
-         explicit NAME(std::shared_ptr<TYPE> x) : botan_ffi_shared_obj(std::move(x)) {} \
+#define BOTAN_FFI_DECLARE_SHARED_STRUCT(NAME, TYPE, MAGIC)                             \
+   struct NAME final : public Botan_FFI::botan_ffi_obj<TYPE, MAGIC, std::shared_ptr> { \
+         using botan_ffi_obj::botan_ffi_obj;                                           \
    }
 
 #define BOTAN_FFI_DECLARE_DUMMY_STRUCT(NAME, MAGIC) \
-   struct NAME final : public Botan_FFI::botan_ffi_unique_obj<int, MAGIC> {}
+   struct NAME final : public Botan_FFI::botan_ffi_obj<int, MAGIC, std::unique_ptr> {}
 
 // NOLINTEND(*-macro-usage)
 
@@ -109,8 +108,12 @@ int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc);
 
 int ffi_error_exception_thrown(const char* func_name, const char* exn, Botan::ErrorType err);
 
-template <typename T, uint32_t M>
-T& safe_get(botan_ffi_unique_obj<T, M>* p) {
+/**
+ * Checked access to a reference of the underlying object wrapped in the
+ * FFI handle @p p.
+ */
+template <ffi_object T>
+auto safe_get(T* p) -> typename T::element_type& {
    if(!p) {
       throw FFI_Error("Null pointer argument", BOTAN_FFI_ERROR_NULL_POINTER);
    }
@@ -118,15 +121,20 @@ T& safe_get(botan_ffi_unique_obj<T, M>* p) {
       throw FFI_Error("Bad magic in ffi object", BOTAN_FFI_ERROR_INVALID_OBJECT);
    }
 
-   if(T* t = p->unsafe_get()) {
+   if(auto* t = p->unsafe_get()) {
       return *t;
    }
 
    throw FFI_Error("Invalid object pointer", BOTAN_FFI_ERROR_INVALID_OBJECT);
 }
 
-template <typename T, uint32_t M>
-std::shared_ptr<T> safe_get(botan_ffi_shared_obj<T, M>* p) {
+/**
+ * Checked access to a reference of the smart pointer of the underlying object
+ * wrapped in the FFI handle @p p. Note that the smart pointer is returned by
+ * reference, so that the caller can copy it (if it is a std::shared_ptr).
+ */
+template <ffi_object T>
+auto safe_get_sp(T* p) -> const typename T::smart_pointer_type& {
    if(!p) {
       throw FFI_Error("Null pointer argument", BOTAN_FFI_ERROR_NULL_POINTER);
    }
@@ -134,11 +142,12 @@ std::shared_ptr<T> safe_get(botan_ffi_shared_obj<T, M>* p) {
       throw FFI_Error("Bad magic in ffi object", BOTAN_FFI_ERROR_INVALID_OBJECT);
    }
 
-   if(auto sp = p->unsafe_get_sp()) {
-      return sp;
+   auto& sp = p->unsafe_get_sp();
+   if(sp == nullptr) {
+      throw FFI_Error("Invalid object pointer", BOTAN_FFI_ERROR_INVALID_OBJECT);
    }
 
-   throw FFI_Error("Invalid object pointer", BOTAN_FFI_ERROR_INVALID_OBJECT);
+   return sp;
 }
 
 template <std::invocable T>
@@ -160,12 +169,36 @@ int ffi_guard_thunk(const char* func_name, T thunk) {
    }
 }
 
-template <typename T, uint32_t M, typename F>
-int botan_ffi_visit(botan_ffi_unique_obj<T, M>* o, F func, const char* func_name) {
-   using RetT = std::invoke_result_t<F, T&>;
-   static_assert(std::is_void_v<RetT> || std::is_same_v<RetT, BOTAN_FFI_ERROR> || std::is_same_v<RetT, int>,
-                 "BOTAN_FFI_DO must be used with a block that returns either nothing, int or BOTAN_FFI_ERROR");
+namespace detail {
 
+template <typename T>
+concept ffi_visit_result = std::is_void_v<T> || std::same_as<T, int> || std::same_as<T, BOTAN_FFI_ERROR>;
+
+template <typename FnT, typename ArgT>
+concept ffi_visitor_for = std::invocable<FnT, ArgT> && ffi_visit_result<std::invoke_result_t<FnT, ArgT>>;
+
+}  // namespace detail
+
+template <typename FnT, typename HandleT>
+concept ffi_raw_visitor_fn = detail::ffi_visitor_for<FnT, typename HandleT::element_type&>;
+
+template <typename FnT, typename HandleT>
+concept ffi_sp_visitor_fn = detail::ffi_visitor_for<FnT, const typename HandleT::smart_pointer_type&>;
+
+template <typename FnT, typename HandleT>
+concept ffi_visitor_fn = ffi_raw_visitor_fn<FnT, HandleT> || ffi_sp_visitor_fn<FnT, HandleT>;
+
+/**
+ * Visit the underlying object wrapped in the FFI handle @p o with the visitor
+ * function @p func. The visitor function can either take a reference to the
+ * underlying object or a reference to the smart pointer of the underlying
+ * object and must return either void, BOTAN_FFI_ERROR or int.
+ *
+ * Note that a visitor lambda function with a generic parameter (e.g. `auto&`)
+ * will receive a reference to the underlying object, not the smart pointer.
+ */
+template <ffi_object HandleT, ffi_visitor_fn<HandleT> VisitorFnT>
+int botan_ffi_visit(HandleT* o, VisitorFnT func, const char* func_name) {
    if(!o) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
@@ -174,47 +207,29 @@ int botan_ffi_visit(botan_ffi_unique_obj<T, M>* o, F func, const char* func_name
       return BOTAN_FFI_ERROR_INVALID_OBJECT;
    }
 
-   T* p = o->unsafe_get();
+   const auto& p = o->unsafe_get_sp();
    if(p == nullptr) {
       return BOTAN_FFI_ERROR_INVALID_OBJECT;
    }
 
-   if constexpr(std::is_void_v<RetT>) {
-      return ffi_guard_thunk(func_name, [&] {
-         func(*p);
-         return BOTAN_FFI_SUCCESS;
-      });
+   auto call_visitor = [&](auto&& ref) -> int {
+      if constexpr(std::is_void_v<decltype(func(ref))>) {
+         return ffi_guard_thunk(func_name, [&] {
+            func(ref);
+            return BOTAN_FFI_SUCCESS;
+         });
+      } else {
+         return ffi_guard_thunk(func_name, [&] { return func(ref); });
+      }
+   };
+
+   // Call the visitor either with a reference to the visitee or its inner smart
+   // pointer depending on what the visitor expects. If it could handle both,
+   // the reference is preferred.
+   if constexpr(ffi_raw_visitor_fn<VisitorFnT, HandleT>) {
+      return call_visitor(*p);
    } else {
-      return ffi_guard_thunk(func_name, [&] { return func(*p); });
-   }
-}
-
-template <typename T, uint32_t M, typename F>
-int botan_ffi_visit(botan_ffi_shared_obj<T, M>* o, F func, const char* func_name) {
-   using RetT = std::invoke_result_t<F, const std::shared_ptr<T>&>;
-   static_assert(std::is_void_v<RetT> || std::is_same_v<RetT, BOTAN_FFI_ERROR> || std::is_same_v<RetT, int>,
-                 "BOTAN_FFI_DO must be used with a block that returns either nothing, int or BOTAN_FFI_ERROR");
-
-   if(!o) {
-      return BOTAN_FFI_ERROR_NULL_POINTER;
-   }
-
-   if(!o->magic_ok()) {
-      return BOTAN_FFI_ERROR_INVALID_OBJECT;
-   }
-
-   const std::shared_ptr<T> p = o->unsafe_get_sp();
-   if(p == nullptr) {
-      return BOTAN_FFI_ERROR_INVALID_OBJECT;
-   }
-
-   if constexpr(std::is_void_v<RetT>) {
-      return ffi_guard_thunk(func_name, [&] {
-         func(p);
-         return BOTAN_FFI_SUCCESS;
-      });
-   } else {
-      return ffi_guard_thunk(func_name, [&] { return func(p); });
+      return call_visitor(p);
    }
 }
 
@@ -223,7 +238,7 @@ int botan_ffi_visit(botan_ffi_shared_obj<T, M>* o, F func, const char* func_name
 //       that makes use of std::source_location like so:
 //
 //   template<typename T, uint32_t M, typename F>
-//   int botan_ffi_visit(botan_ffi_unique_obj<T, M>* obj, F func,
+//   int botan_ffi_visit(botan_ffi_obj<T, M, std::unique_ptr>* obj, F func,
 //                       const std::source_location sl = std::source_location::current())
 //      {
 //      // [...]

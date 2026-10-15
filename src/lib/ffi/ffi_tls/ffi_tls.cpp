@@ -55,7 +55,7 @@ int botan_tls_policy_init_from_text(botan_tls_policy_t* policy, const char* text
 }
 
 int botan_tls_policy_view_text(botan_tls_policy_t policy, botan_view_ctx ctx, botan_view_str_fn view) {
-   return BOTAN_FFI_VISIT(policy, [=](const auto& p) { return invoke_view_callback(view, ctx, p->to_string()); });
+   return BOTAN_FFI_VISIT(policy, [=](const auto& p) { return invoke_view_callback(view, ctx, p.to_string()); });
 }
 
 int botan_tls_policy_destroy(botan_tls_policy_t policy) {

@@ -39,9 +39,9 @@ BOTAN_FFI_DECLARE_UNIQUE_STRUCT(botan_tpm2_crypto_backend_state_struct, Botan::T
 namespace {
 
 Botan::TPM2::SessionBundle sessions(botan_tpm2_session_t s1, botan_tpm2_session_t s2, botan_tpm2_session_t s3) {
-   return Botan::TPM2::SessionBundle((s1 != nullptr) ? safe_get(s1) : nullptr,
-                                     (s2 != nullptr) ? safe_get(s2) : nullptr,
-                                     (s3 != nullptr) ? safe_get(s3) : nullptr);
+   return Botan::TPM2::SessionBundle((s1 != nullptr) ? safe_get_sp(s1) : nullptr,
+                                     (s2 != nullptr) ? safe_get_sp(s2) : nullptr,
+                                     (s3 != nullptr) ? safe_get_sp(s3) : nullptr);
 }
 
 }  // namespace
@@ -125,13 +125,13 @@ int botan_tpm2_ctx_from_esys(botan_tpm2_ctx_t* ctx_out, ESYS_CONTEXT* esys_ctx) 
 
 int botan_tpm2_ctx_enable_crypto_backend(botan_tpm2_ctx_t ctx, botan_rng_t rng) {
 #if defined(BOTAN_HAS_TPM2)
-   return BOTAN_FFI_VISIT(ctx, [=](const std::shared_ptr<Botan::TPM2::Context>& tpm2_ctx) -> int {
+   return BOTAN_FFI_VISIT(ctx, [=](auto& tpm2_ctx) -> int {
       Botan::RandomNumberGenerator& rng_ref = safe_get(rng);
 
       // The lifetime of the RNG used for the crypto backend should be managed
       // by the TPM2::Context. Here, we just need to trust the user that they
       // keep the passed-in RNG instance intact for the lifetime of the context.
-      tpm2_ctx->use_botan_crypto_backend(std::shared_ptr<Botan::RandomNumberGenerator>(&rng_ref, [](auto*) {}));
+      tpm2_ctx.use_botan_crypto_backend(std::shared_ptr<Botan::RandomNumberGenerator>(&rng_ref, [](auto*) {}));
       return BOTAN_FFI_SUCCESS;
    });
 #else
