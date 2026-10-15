@@ -113,8 +113,10 @@ class PKCS12_Info final : public Command {
          const bool has_key = !bundle.private_keys().empty();
          const auto end_entity = bundle.end_entity_certificate();
 
-         // Build CA chain list (everything except end-entity)
-         const std::vector<Botan::X509_Certificate> ca_chain = bundle.ca_certificates();
+         // Build CA chain list (everything except end-entity). Without an
+         // end-entity certificate, ca_certificates() would omit the first one.
+         const std::vector<Botan::X509_Certificate> ca_chain =
+            end_entity.has_value() ? bundle.ca_certificates() : bundle.certificates();
 
          // Output private key
          const std::string key_out = get_arg("key-out");
@@ -191,7 +193,8 @@ class PKCS12_Info final : public Command {
                output() << "  SHA-256 Fingerprint: " << end_entity->fingerprint("SHA-256") << "\n\n";
             }
             if(!ca_chain.empty()) {
-               output() << "CA Certificate Chain (" << ca_chain.size() << " certificates):\n";
+               output() << (end_entity.has_value() ? "CA Certificate Chain (" : "Certificates (") << ca_chain.size()
+                        << " certificates):\n";
                size_t idx = 1;
                for(const auto& ca_cert : ca_chain) {
                   output() << "  [" << idx++ << "] Subject: " << ca_cert.subject_dn().to_string() << "\n";

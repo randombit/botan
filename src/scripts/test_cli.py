@@ -2049,6 +2049,20 @@ def cli_pkcs12_tests(tmp_dir):
               "--out-key-pass=keypassword",
               "--key-pbkdf-iter=2048",
               pfx_file], None)
+    # A bundle whose key matches none of the certificates has no end-entity
+    # certificate; the certificates must still be listed and extractable
+    mismatch_pfx = os.path.join(TEST_DATA_DIR, 'pkcs12', 'key_cert_spki_mismatch.pfx')
+    mismatch_info = test_cli("pkcs12_info", ["--pass=", mismatch_pfx], None)
+    if "Certificates (1 certificates):" not in mismatch_info or "End-Entity Certificate" in mismatch_info:
+        logging.error("Unexpected pkcs12_info output for keyless bundle: %s", mismatch_info)
+
+    mismatch_chain = os.path.join(tmp_dir, 'mismatch_chain.pem')
+    test_cli("pkcs12_info", ["--pass=", "--chain-out=" + mismatch_chain, mismatch_pfx],
+             "CA chain (1 certs) written to %s" % (mismatch_chain))
+    with open(mismatch_chain, encoding='utf-8') as f:
+        if "BEGIN CERTIFICATE" not in f.read():
+            logging.error("pkcs12_info --chain-out did not write the certificate of a keyless bundle")
+
     if not os.path.exists(out_key_enc):
         logging.error("pkcs12_info --out-key-pass: key file not written")
     else:
