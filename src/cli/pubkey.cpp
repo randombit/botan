@@ -487,6 +487,11 @@ class Gen_DL_Group final : public Command {
             if(!seed_str.empty()) {
                throw CLI_Usage_Error("Seed only supported for DSA param gen");
             }
+            // Match the floor the FFI DSA/ElGamal wrappers enforce; a tiny
+            // subgroup order makes discrete logs trivial
+            if(qbits != 0 && qbits < 160) {
+               throw CLI_Usage_Error("Subgroup order of " + std::to_string(qbits) + " bits is too small");
+            }
             const Botan::DL_Group grp(rng(), Botan::DL_Group::Prime_Subgroup, pbits, qbits);
             output() << grp.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42);
          } else if(type == "dsa") {

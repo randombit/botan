@@ -643,6 +643,11 @@ ivM=
 
     test_cli("gen_dl_group", ["--type=dsa", "--pbits=1024"], dsa_grp)
 
+    test_cli("gen_dl_group", ["--type=subgroup", "--pbits=1024", "--qbits=8"], "",
+             expected_stderr="Usage error: Subgroup order of 8 bits is too small\n"
+             "Usage: gen_dl_group --pbits=2048 --qbits=0 --seed= --type=subgroup --rng-type= --drbg-seed=",
+             expected_rc=1)
+
 
 def cli_key_tests(tmp_dir):
 
