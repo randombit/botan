@@ -1089,10 +1089,30 @@ ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= 2A+I9q2+ZayxDDYC5n2YW8Bn/zB
     with open(ecosystem, 'w', encoding='utf8') as f:
         f.write("Cloudflare-Roughtime ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= udp 127.0.0.1:" + str(server_port))
 
+    # A rejected response must leave nothing on stdout
     test_cli("roughtime", [
         "--chain-file=",
         "--servers-file=" + ecosystem]
-             , expected_stderr='ERROR: Local clock mismatch', expected_rc=1)
+             , "", expected_stderr='ERROR: Local clock mismatch', expected_rc=1)
+
+    # A response signed by some other (valid) key is rejected
+    with open(ecosystem + ".otherkey", 'w', encoding='utf8') as f:
+        f.write("Cloudflare-Roughtime ed25519 PUAXw+hDiVqStwqnTRt+vJyYLM8uxJaMwM1V8Sr0Zgw= udp 127.0.0.1:" + str(server_port))
+
+    test_cli("roughtime", [
+        "--check-local-clock=0",
+        "--chain-file=",
+        "--servers-file=" + ecosystem + ".otherkey"]
+             , "", expected_stderr='ERROR: Public key does not match!', expected_rc=1)
+
+    # An unparsable response from every address of a server fails the command
+    server_response = base64.b64encode(b"this is not a roughtime response").decode('ascii')
+    test_cli("roughtime", [
+        "--check-local-clock=0",
+        "--chain-file=",
+        "--servers-file=" + ecosystem]
+             , "", expected_stderr='Roughtime: Map length too small to contain all tags', expected_rc=1)
+    server_response = response[0]
 
     test_cli("roughtime", [
         "--check-local-clock=0",
