@@ -1,5 +1,5 @@
 
-#test cpuid avx2 vsx
+#test cpuid avx2 ssse3 neon vsx lsx simd128
 
 [CTR-BE(DES)]
 Key = 0123456789ABCDEF

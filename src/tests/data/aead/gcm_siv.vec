@@ -1,4 +1,4 @@
-#test cpuid avx512_clmul clmul armv8pmull aesni ssse3 simd128 sse2
+#test cpuid avx512_clmul avx2_vaes clmul armv8pmull aesni armv8aes power_crypto ssse3 neon vsx lsx simd128
 
 [AES-128/GCM-SIV]
 

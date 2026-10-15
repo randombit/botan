@@ -189,9 +189,10 @@ void set_thread_name(std::thread& thread, const std::string& name);
 * can test to make sure the instruction works properly before
 * indicating that the instruction is available.
 *
-* @warning on Unix systems uses signal handling in a way that is not
-* thread safe. It should only be called in a single-threaded context
-* (ie, at static init time).
+* @warning on Unix systems this temporarily replaces the process-wide SIGILL
+* handler. Probes are serialized, and a SIGILL raised by another thread while
+* a probe is running is forwarded to the previous handler, but any such fault
+* on the probing thread (other than the probe itself) will be misreported.
 *
 * If probe_fn throws an exception the result is undefined.
 *

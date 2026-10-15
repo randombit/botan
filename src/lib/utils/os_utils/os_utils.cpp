@@ -478,19 +478,21 @@ bool OS::read_env_variable(std::string& value_out, std::string_view name_view) {
 #if defined(BOTAN_TARGET_OS_HAS_WIN32) && \
    (defined(BOTAN_BUILD_COMPILER_IS_MSVC) || defined(BOTAN_BUILD_COMPILER_IS_CLANGCL))
    const std::string name(name_view);
-   char val[128] = {0};
+
+   // First query the required buffer size; req_size is 0 if the variable is not set
    size_t req_size = 0;
-   if(getenv_s(&req_size, val, sizeof(val), name.c_str()) == 0) {
-      // Microsoft's implementation always writes a terminating \0,
-      // and includes it in the reported length of the environment variable
-      // if a value exists.
-      if(req_size > 0 && val[req_size - 1] == '\0') {
-         value_out = std::string(val);
-      } else {
-         value_out = std::string(val, req_size);
-      }
-      return true;
+   if(getenv_s(&req_size, nullptr, 0, name.c_str()) != 0 || req_size == 0) {
+      return false;
    }
+
+   // The reported size includes the terminating \0
+   std::string val(req_size, '\0');
+   if(getenv_s(&req_size, val.data(), val.size(), name.c_str()) != 0) {
+      return false;
+   }
+
+   value_out = std::string(val.c_str());
+   return true;
 #else
    const std::string name(name_view);
    if(const char* val = std::getenv(name.c_str())) {
@@ -766,11 +768,32 @@ void OS::set_thread_name(std::thread& thread, const std::string& name) {
 
 namespace {
 
-// NOLINTNEXTLINE(*-avoid-non-const-global-variables)
-::sigjmp_buf g_sigill_jmp_buf;
+// NOLINTBEGIN(*-avoid-non-const-global-variables)
 
-void botan_sigill_handler(int /*unused*/) {
-   siglongjmp(g_sigill_jmp_buf, /*non-zero return value*/ 1);
+/*
+* Probes are serialized (see run_cpu_instruction_probe) so these are only
+* written by a single thread at a time. The signal handler reads them, possibly
+* from another thread, in the (unlikely) event that some other thread faults
+* while a probe is running.
+*/
+::sigjmp_buf g_sigill_jmp_buf;
+::pthread_t g_sigill_probe_thread;
+struct sigaction g_sigill_prev_action;
+
+// NOLINTEND(*-avoid-non-const-global-variables)
+
+void botan_sigill_handler(int sig) {
+   if(::pthread_equal(::pthread_self(), g_sigill_probe_thread) != 0) {
+      siglongjmp(g_sigill_jmp_buf, /*non-zero return value*/ 1);
+   }
+
+   /*
+   * The SIGILL was raised on some other thread, so it was not caused by the
+   * probe. Restore the previous disposition and return; the faulting
+   * instruction is then re-executed and handled by the previous handler
+   * (or the default action) instead.
+   */
+   ::sigaction(sig, &g_sigill_prev_action, nullptr);
 }
 
 }  // namespace
@@ -781,7 +804,12 @@ int OS::run_cpu_instruction_probe(const std::function<int()>& probe_fn) {
    volatile int probe_result = -3;
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && !defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
-   struct sigaction old_sigaction {};
+
+   #if defined(BOTAN_TARGET_OS_HAS_THREADS)
+   // Signal dispositions are process wide, so only run one probe at a time
+   static std::mutex g_sigill_probe_mutex;
+   const std::lock_guard<std::mutex> lock(g_sigill_probe_mutex);
+   #endif
 
    struct sigaction sigaction {};
 
@@ -789,7 +817,9 @@ int OS::run_cpu_instruction_probe(const std::function<int()>& probe_fn) {
    sigemptyset(&sigaction.sa_mask);
    sigaction.sa_flags = 0;
 
-   int rc = ::sigaction(SIGILL, &sigaction, &old_sigaction);
+   g_sigill_probe_thread = ::pthread_self();
+
+   int rc = ::sigaction(SIGILL, &sigaction, &g_sigill_prev_action);
 
    if(rc != 0) {
       throw System_Error("run_cpu_instruction_probe sigaction failed", errno);
@@ -806,7 +836,7 @@ int OS::run_cpu_instruction_probe(const std::function<int()>& probe_fn) {
    }
 
    // Restore old SIGILL handler, if any
-   rc = ::sigaction(SIGILL, &old_sigaction, nullptr);
+   rc = ::sigaction(SIGILL, &g_sigill_prev_action, nullptr);
    if(rc != 0) {
       throw System_Error("run_cpu_instruction_probe sigaction restore failed", errno);
    }

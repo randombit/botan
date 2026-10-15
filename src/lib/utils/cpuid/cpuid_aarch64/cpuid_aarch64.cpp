@@ -9,6 +9,7 @@
 
 #include <botan/assert.h>
 #include <botan/internal/target_info.h>
+#include <functional>
 #include <optional>
 
 #if defined(BOTAN_HAS_OS_UTILS)
@@ -153,57 +154,75 @@ std::optional<uint32_t> aarch64_feat_using_instr_probe(uint32_t allowed) {
 
    /*
    No getauxval API available, fall back on probe functions.
-   NEON registers v0-v7 are caller saved in Aarch64
+
+   The probes are written using raw encodings so they assemble even if the
+   assembler is not told about the relevant extension. Each probe clobbers
+   only a caller saved register (v0 or x0).
    */
 
    auto neon_probe = []() noexcept -> int {
-      asm("and v0.16b, v0.16b, v0.16b");
+      asm volatile("and v0.16b, v0.16b, v0.16b" ::: "v0");
       return 1;
    };
    auto aes_probe = []() noexcept -> int {
-      asm(".word 0x4e284800");
+      asm volatile(".inst 0x4e284800" ::: "v0");  // aese v0.16b, v0.16b
       return 1;
    };
    auto pmull_probe = []() noexcept -> int {
-      asm(".word 0x0ee0e000");
+      asm volatile(".inst 0x0ee0e000" ::: "v0");  // pmull v0.1q, v0.1d, v0.1d
       return 1;
    };
    auto sha1_probe = []() noexcept -> int {
-      asm(".word 0x5e280800");
+      asm volatile(".inst 0x5e280800" ::: "v0");  // sha1h s0, s0
       return 1;
    };
    auto sha2_probe = []() noexcept -> int {
-      asm(".word 0x5e282800");
+      asm volatile(".inst 0x5e282800" ::: "v0");  // sha256su0 v0.4s, v0.4s
+      return 1;
+   };
+   auto sha3_probe = []() noexcept -> int {
+      asm volatile(".inst 0xce000000" ::: "v0");  // eor3 v0.16b, v0.16b, v0.16b, v0.16b
+      return 1;
+   };
+   auto sm3_probe = []() noexcept -> int {
+      asm volatile(".inst 0xce60c000" ::: "v0");  // sm3partw1 v0.4s, v0.4s, v0.4s
+      return 1;
+   };
+   auto sm4_probe = []() noexcept -> int {
+      asm volatile(".inst 0xcec08400" ::: "v0");  // sm4e v0.4s, v0.4s
       return 1;
    };
    auto sha512_probe = []() noexcept -> int {
-      asm(".long 0xcec08000");
+      asm volatile(".inst 0xcec08000" ::: "v0");  // sha512su0 v0.2d, v0.2d
+      return 1;
+   };
+   auto sve_probe = []() noexcept -> int {
+      asm volatile(".inst 0x04bf5020" ::: "x0");  // rdvl x0, #1
       return 1;
    };
 
    // NOLINTEND(*-no-assembler)
 
-   uint32_t feat = 0;
-   if((allowed & CPUFeature::Bit::NEON) == CPUFeature::Bit::NEON) {
-      if(OS::run_cpu_instruction_probe(neon_probe) == 1) {
-         feat |= CPUFeature::Bit::NEON;
-
-         if(OS::run_cpu_instruction_probe(aes_probe) == 1) {
-            feat |= CPUFeature::Bit::AES & allowed;
-         }
-         if(OS::run_cpu_instruction_probe(pmull_probe) == 1) {
-            feat |= CPUFeature::Bit::PMULL & allowed;
-         }
-         if(OS::run_cpu_instruction_probe(sha1_probe) == 1) {
-            feat |= CPUFeature::Bit::SHA1 & allowed;
-         }
-         if(OS::run_cpu_instruction_probe(sha2_probe) == 1) {
-            feat |= CPUFeature::Bit::SHA2 & allowed;
-         }
-         if(OS::run_cpu_instruction_probe(sha512_probe) == 1) {
-            feat |= CPUFeature::Bit::SHA2_512 & allowed;
-         }
+   // Only run the probe if the feature is allowed; a cleared feature should never be executed
+   auto probe = [allowed](CPUFeature::Bit bit, const std::function<int()>& probe_fn) -> uint32_t {
+      if((allowed & bit) == bit && OS::run_cpu_instruction_probe(probe_fn) == 1) {
+         return bit;
       }
+      return 0;
+   };
+
+   uint32_t feat = probe(CPUFeature::Bit::NEON, neon_probe);
+
+   if((feat & CPUFeature::Bit::NEON) == CPUFeature::Bit::NEON) {
+      feat |= probe(CPUFeature::Bit::AES, aes_probe);
+      feat |= probe(CPUFeature::Bit::PMULL, pmull_probe);
+      feat |= probe(CPUFeature::Bit::SHA1, sha1_probe);
+      feat |= probe(CPUFeature::Bit::SHA2, sha2_probe);
+      feat |= probe(CPUFeature::Bit::SHA3, sha3_probe);
+      feat |= probe(CPUFeature::Bit::SM3, sm3_probe);
+      feat |= probe(CPUFeature::Bit::SM4, sm4_probe);
+      feat |= probe(CPUFeature::Bit::SHA2_512, sha512_probe);
+      feat |= probe(CPUFeature::Bit::SVE, sve_probe);
    }
 
    return feat;
