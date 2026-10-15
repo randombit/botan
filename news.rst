@@ -163,7 +163,7 @@ Optimizations
 * Elliptic curve optimizations, especially improving P-256 and SM2.
   (GH #6012 #6013 #6020 #6021 #6024 #6031)
 
-* Add AVX-512+IFMA modular exponentation support, improving RSA and FFDHE by 3-4x
+* Add AVX-512+IFMA modular exponentiation support, improving RSA and FFDHE by 3-4x
   (GH #6026)
 
 * Add AVX2 codepath for ML-KEM (GH #5964 #6032 #6033)
