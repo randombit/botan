@@ -1481,6 +1481,12 @@ def cli_tls_socket_tests(tmp_dir):
             self.psk = kwargs.get("psk")
             self.psk_identity = kwargs.get("psk_identity")
             self.psk_prf = kwargs.get("psk_prf")
+            self.transport = kwargs.get("transport", "tcp")
+            self.host = kwargs.get("host", "localhost")
+            self.client_args = kwargs.get("client_args", [])
+            # The connection is expected to complete the handshake but then be
+            # denied application service (eg a rejected client certificate)
+            self.denial = kwargs.get("denial", False)
 
     configs = [
         # Explicitly testing x448-based key exchange against ourselves, as Bogo test
@@ -1519,31 +1525,37 @@ def cli_tls_socket_tests(tmp_dir):
     ]
 
     class TestServer(AsyncTestProcess):
-        def __init__(self, tmp_dir, psk, psk_identity, psk_prf, clients=0):
+        def __init__(self, tmp_dir, psk, psk_identity, psk_prf, clients=0, **kwargs):
             super().__init__("Server")
             self.port = None
             self.psk = psk
             self.psk_identity = psk_identity
             self.psk_prf = psk_prf
             self.clients = clients
+            self.transport = kwargs.get("transport", "tcp")
+            self.cred = kwargs.get("cred")
+            self.extra_args = kwargs.get("extra_args", [])
 
             self.cert_suite = ServerCertificateSuite(tmp_dir, "secp256r1", "SHA-384")
             self.policy = os.path.join(tmp_dir, 'test_server_policy.txt')
 
             with open(self.policy, 'w', encoding='utf8') as f:
-                f.write('key_exchange_methods = ECDH DH ECDHE_PSK\n')
-                f.write("key_exchange_groups = x25519 x448 secp256r1 ffdhe/ietf/2048 ML-KEM-768 x25519/ML-KEM-768")
+                if "policy_text" in kwargs:
+                    f.write(kwargs["policy_text"])
+                else:
+                    f.write('key_exchange_methods = ECDH DH ECDHE_PSK\n')
+                    f.write("key_exchange_groups = x25519 x448 secp256r1 ffdhe/ietf/2048 ML-KEM-768 x25519/ML-KEM-768")
 
         @property
         def ca_cert(self):
             return self.cert_suite.ca_cert
 
         async def __aenter__(self):
+            cred = self.cred if self.cred else (self.cert_suite.cert, self.cert_suite.private_key)
             server_cmd = [CLI_PATH, "tls_server", f"--max-clients={self.clients}",
-                          "--port=0", f"--policy={self.policy}",
+                          "--port=0", f"--policy={self.policy}", f"--type={self.transport}",
                           f"--psk={self.psk}", f"--psk-identity={self.psk_identity}",
-                          f"--psk-prf={self.psk_prf}",
-                          self.cert_suite.cert, self.cert_suite.private_key]
+                          f"--psk-prf={self.psk_prf}"] + self.extra_args + [cred[0], cred[1]]
 
             self.port = await self._launch_server(server_cmd)
 
@@ -1581,10 +1593,42 @@ def cli_tls_socket_tests(tmp_dir):
                 raise Exception(f'Client failed with error ({self.config.name}): {retcode}')
             self._check_stdout_regex()
 
+        async def send_partial_line_and_close(self):
+            """Send data without a newline, so the server never echoes it, then close"""
+            await self._write_to_stdin(b'secret')
+            retcode = await self._close_stdin_read_stdout_to_eof_and_wait_for_termination()
+            if retcode != 0:
+                raise Exception(f'Client failed with error ({self.config.name}): {retcode}')
+
+        async def send_overlong_line(self):
+            """Send a line far above the server's limit; the server drops the connection"""
+            try:
+                await self._write_to_stdin(b'a' * (80 * 1024))
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+            await asyncio.wait_for(self._proc.wait(), timeout=ASYNC_TIMEOUT)
+
         async def expect_handshake_error(self):
             retcode = await self._close_stdin_read_stdout_to_eof_and_wait_for_termination()
             if retcode == 0:
                 raise Exception(f"Expected an error, but tls_client finished with success ({self.config.name})")
+            self._check_stdout_regex()
+
+        async def expect_service_denied(self):
+            # The handshake completes from the client's point of view (it is
+            # already active before the server validates its certificate), so
+            # the deterministic signal is that the message is never echoed back
+            # and the connection is closed by the server.
+            try:
+                await self._write_to_stdin(TestClient.client_message)
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+
+            self._stdout += await asyncio.wait_for(self._proc.stdout.read(), timeout=ASYNC_TIMEOUT)
+            await asyncio.wait_for(self._proc.wait(), timeout=ASYNC_TIMEOUT)
+
+            if TestClient.client_message in self._stdout:
+                raise Exception(f"Server provided service despite rejection ({self.config.name})")
             self._check_stdout_regex()
 
         def _check_stdout_regex(self):
@@ -1594,8 +1638,9 @@ def cli_tls_socket_tests(tmp_dir):
                     raise Exception(f"Client log did not match expected regex ({self.config.name}): {self.config.stdout_regex}")
 
         async def __aenter__(self):
-            client_cmd = [CLI_PATH, "tls_client", 'localhost', f'--port={self.port}', f'--trusted-cas={self.ca}',
-                          f'--tls-version={self.config.protocol_version}', f'--policy={self.policy}']
+            client_cmd = [CLI_PATH, "tls_client", self.config.host, f'--port={self.port}', f'--trusted-cas={self.ca}',
+                          f'--tls-version={self.config.protocol_version}', f'--policy={self.policy}',
+                          f'--type={self.config.transport}'] + self.config.client_args
             if self.config.psk:
                 client_cmd += [f'--psk={self.config.psk}', f'--psk-identity={self.config.psk_identity}']
                 if self.config.psk_prf:
@@ -1608,25 +1653,154 @@ def cli_tls_socket_tests(tmp_dir):
         async def __aexit__(self, *_):
             await self._finalize()
 
+    async def run_client(server, tls_config):
+        logging.debug("Running test for %s in TLS %s mode", tls_config.name, tls_config.protocol_version)
+        try:
+            async with TestClient(tmp_dir, server.port, server.ca_cert, tls_config) as client:
+                if tls_config.denial:
+                    await client.expect_service_denied()
+                elif tls_config.expect_error:
+                    await client.expect_handshake_error()
+                else:
+                    await client.perform_message_ping_pong()
+                client.all_clear()
+                return client.stdout
+        except Exception as e:
+            logging.error("Test failed for %s: %s", tls_config.name, e)
+            return None
+
     async def run_async_test():
         async with TestServer(tmp_dir, psk, psk_identity, psk_prf, len(configs)) as server:
-            errors = 0
             for tls_config in configs:
-                logging.debug("Running test for %s in TLS %s mode", tls_config.name, tls_config.protocol_version)
-                async with TestClient(tmp_dir, server.port, server.ca_cert, tls_config) as client:
-                    try:
-                        if tls_config.expect_error:
-                            await client.expect_handshake_error()
-                        else:
-                            await client.perform_message_ping_pong()
-                        client.all_clear()
-                    except Exception as e:
-                        logging.error("Test failed for %s: %s", tls_config.name, e)
+                await run_client(server, tls_config)
 
-            if not errors:
-                server.all_clear()
+            server.all_clear()
+
+    async def run_dtls_test():
+        # Exercises the DTLS server path: cookie secret, peer network identity
+        # and the nonzero-peek handling. localhost may resolve to IPv6 first
+        # and UDP connect() always succeeds, so connect by IP and skip the
+        # hostname check (the test cert is issued for "localhost").
+        config = TestConfig("DTLS 1.2", "1.2", "allow_dtls12=true\n", transport="udp", host="127.0.0.1",
+                            client_args=["--skip-hostname-check"])
+        async with TestServer(tmp_dir, psk, psk_identity, psk_prf, 1, transport="udp") as server:
+            await run_client(server, config)
+            server.all_clear()
+
+    async def run_line_buffer_test():
+        config = TestConfig("Line buffer", "1.3", "allow_tls12=false\nallow_tls13=true\n")
+
+        async with TestServer(tmp_dir, psk, psk_identity, psk_prf, 4) as server:
+            # A client that disconnects mid-line must not have its partial
+            # line delivered to the next client
+            async with TestClient(tmp_dir, server.port, server.ca_cert, config) as client:
+                try:
+                    await client.send_partial_line_and_close()
+                    client.all_clear()
+                except Exception as e:
+                    logging.error("Partial line client failed: %s", e)
+
+            stdout = await run_client(server, config)
+            if stdout is not None and 'secret' in stdout:
+                logging.error("Partial line of a previous client was echoed to the next client")
+
+            # A client sending an overlong line is dropped, and the server keeps serving
+            async with TestClient(tmp_dir, server.port, server.ca_cert, config) as client:
+                try:
+                    await client.send_overlong_line()
+                    client.all_clear()
+                except Exception as e:
+                    logging.error("Overlong line client failed: %s", e)
+
+            await run_client(server, config)
+
+            # The server reported the overlong line but did not exit
+            server.all_clear()
+
+    async def run_rpk_tests():
+        def rpk_keypair(name):
+            priv = os.path.join(tmp_dir, name + '.key')
+            pub = os.path.join(tmp_dir, name + '.pub')
+            # The fixed test DRBG would produce the same key every time
+            test_cli("keygen", ["--algo=ECDSA", "--params=secp256r1", "--output=" + priv], "", use_drbg=False)
+            test_cli("pkcs8", ["--pub-out", priv, "--output=" + pub], "")
+            fingerprint = test_cli("fingerprint", ["--no-fsname", pub])
+            return (priv, pub, fingerprint)
+
+        (server_key, server_pub, server_fp) = rpk_keypair('rpk_server')
+        (client_key, client_pub, client_fp) = rpk_keypair('rpk_client')
+        (other_key, other_pub, other_fp) = rpk_keypair('rpk_other')
+
+        rpk_policy = ("allow_tls12=false\nallow_tls13=true\n"
+                      "accepted_server_certificate_types=RawPublicKey\n"
+                      "accepted_client_certificate_types=RawPublicKey\n")
+        rpk_client_auth_policy = rpk_policy + "require_client_certificate_authentication=true\n"
+
+        trust_server = f"--trusted-pubkey-sha256={server_fp}"
+        client_cred = [f"--client-cert={client_pub}", f"--client-cert-key={client_key}"]
+        other_cred = [f"--client-cert={other_pub}", f"--client-cert-key={other_key}"]
+
+        # Server authenticates with a raw public key; the client must verify the pin
+        async with TestServer(tmp_dir, psk, psk_identity, psk_prf, 3,
+                              policy_text=rpk_policy, cred=(server_pub, server_key)) as server:
+            await run_client(server, TestConfig("RPK server auth", "1.3", rpk_policy,
+                                                client_args=[trust_server],
+                                                stdout_regex="validation status: trusted"))
+            await run_client(server, TestConfig("RPK server auth, wrong pin", "1.3", rpk_policy,
+                                                client_args=[f"--trusted-pubkey-sha256={other_fp}"],
+                                                stdout_regex="validation status: NOT trusted",
+                                                expect_error=True))
+            await run_client(server, TestConfig("RPK server auth, no pin", "1.3", rpk_policy,
+                                                stdout_regex="validation status: NOT trusted",
+                                                expect_error=True))
+            server.all_clear()
+
+        # Client authenticates with a raw public key; the server must verify the pin
+        async with TestServer(tmp_dir, psk, psk_identity, psk_prf, 3,
+                              policy_text=rpk_client_auth_policy, cred=(server_pub, server_key),
+                              extra_args=[f"--trusted-pubkey-sha256={client_fp}"]) as server:
+            await run_client(server, TestConfig("RPK client auth", "1.3", rpk_policy,
+                                                client_args=[trust_server] + client_cred,
+                                                stdout_regex="Performing client authentication"))
+            await run_client(server, TestConfig("RPK client auth, untrusted key", "1.3", rpk_policy,
+                                                client_args=[trust_server] + other_cred,
+                                                stdout_regex="Performing client authentication",
+                                                denial=True))
+            # Without a credential the client sends an empty certificate list
+            # (it must not crash) and the server denies service
+            await run_client(server, TestConfig("RPK client auth, no key", "1.3", rpk_policy,
+                                                client_args=[trust_server],
+                                                denial=True))
+            server.all_clear()
+
+        # A server without a configured client pin accepts no raw public key
+        async with TestServer(tmp_dir, psk, psk_identity, psk_prf, 1,
+                              policy_text=rpk_client_auth_policy, cred=(server_pub, server_key)) as server:
+            await run_client(server, TestConfig("RPK client auth, no server pin", "1.3", rpk_policy,
+                                                client_args=[trust_server] + client_cred,
+                                                stdout_regex="Performing client authentication",
+                                                denial=True))
+            server.all_clear()
+
+    async def run_x509_client_auth_test():
+        # The server requests a certificate without naming any CA; the client
+        # must still offer its configured certificate (the server cannot
+        # validate it, so the handshake fails afterwards)
+        policy = "allow_tls12=false\nallow_tls13=true\n"
+        async with TestServer(tmp_dir, psk, psk_identity, psk_prf, 1,
+                              policy_text=policy + "require_client_certificate_authentication=true\n") as server:
+            client_cred = [f"--client-cert={server.cert_suite.cert}", f"--client-cert-key={server.cert_suite.private_key}"]
+            await run_client(server, TestConfig("X509 client auth, no CA list", "1.3", policy,
+                                                client_args=client_cred,
+                                                stdout_regex="Performing client authentication",
+                                                denial=True))
+            server.all_clear()
 
     asyncio.run(run_async_test())
+    asyncio.run(run_dtls_test())
+    asyncio.run(run_line_buffer_test())
+    asyncio.run(run_rpk_tests())
+    asyncio.run(run_x509_client_auth_test())
 
 def cli_tls_online_pqc_hybrid_tests(tmp_dir):
     if not run_socket_tests() or not run_online_tests() or not check_for_command("tls_client"):

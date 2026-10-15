@@ -109,6 +109,11 @@ class Callbacks : public Botan::TLS::Callbacks {
          const auto trusted = (fingerprint == get_arg("trusted-pubkey-sha256"));
          output() << "Raw Public Key (" << fingerprint
                   << ") validation status: " << (trusted ? "trusted" : "NOT trusted") << "\n";
+
+         if(!trusted && !flag_set("ignore-cert-error")) {
+            throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::BadCertificate,
+                                            "Raw public key does not match --trusted-pubkey-sha256");
+         }
       }
 
       void tls_session_activated() override { output() << "Handshake complete\n"; }
@@ -252,6 +257,7 @@ class TLS_Client final : public Command {
          }
 
          const bool use_tcp = (transport == "tcp");
+         m_use_tcp = use_tcp;
          Botan::TLS::Protocol_Version version = policy->latest_supported_version(!use_tcp);
 
          if(tls_version != "default") {
@@ -459,21 +465,41 @@ class TLS_Client final : public Command {
             return;
          }
 
-         // Signal that we are done writing so pending alert records are
-         // delivered with a FIN rather than lost to a RST.
-         ::shutdown(m_sockfd, SHUT_WR);
+         // Datagram sockets have no FIN/RST semantics so nothing to drain
+         if(m_use_tcp) {
+            // Signal that we are done writing so pending alert records are
+            // delivered with a FIN rather than lost to a RST.
+            ::shutdown(m_sockfd, SHUT_WR);
 
-         // Drain unread incoming data; if the receive buffer is non-empty when
-         // we close(), the kernel sends RST which discards our outgoing data
-         // (including any alert we sent).
-         char buf[256];
-         while(::read(m_sockfd, buf, sizeof(buf)) > 0) {}
+            // Drain unread incoming data; if the receive buffer is non-empty when
+            // we close(), the kernel sends RST which discards our outgoing data
+            // (including any alert we sent). The peer decides when (or if) it
+            // closes, so the drain is bounded in time.
+            for(size_t i = 0; i != 10; ++i) {
+               fd_set readfds;
+               FD_ZERO(&readfds);
+               FD_SET(m_sockfd, &readfds);
+               struct timeval timeout = {0, 100 * 1000};
+
+               // NOLINTNEXTLINE(*-redundant-casting) socket_type is not int on all platforms
+               if(::select(static_cast<int>(m_sockfd + 1), &readfds, nullptr, nullptr, &timeout) <= 0) {
+                  break;
+               }
+
+               char buf[256];
+               if(::read(m_sockfd, buf, sizeof(buf)) <= 0) {
+                  break;
+               }
+            }
+         }
+
          ::close(m_sockfd);
 
          m_sockfd = invalid_socket();
       }
 
       socket_type m_sockfd = invalid_socket();
+      bool m_use_tcp = true;
 
       using unique_addr_info_ptr = std::unique_ptr<addrinfo, decltype([](addrinfo* p) {
                                                       if(p != nullptr) {
