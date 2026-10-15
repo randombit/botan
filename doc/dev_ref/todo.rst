@@ -9,22 +9,21 @@ Request a new feature by opening a pull request to update this file.
 
 New Ciphers/Hashes/MACs
 ----------------------------------------
+
 * EME* tweakable block cipher (https://eprint.iacr.org/2004/125)
 * PMAC
 * SIV-PMAC
 * Threefish-1024
 * Skein-MAC
 * FFX format preserving encryption (NIST 800-38G)
-* HPKE (RFC 9180)
 * Blake3
 
 Hardware Specific Optimizations
 ----------------------------------------
+
 * AVX512 IFMA optimized field arithmetic for P-256 and/or P-384
 * Stitched AES/GCM implementation
-* GFNI implementations of ZFEC, others?
-* NEON/VMX/LSX support for the SIMD based GHASH
-* SIMD evaluation of SHA-2 and SHA-3 compression functions
+* LSX support for the SIMD based GHASH
 * Add CLMUL/PMULL implementations for CRC24
 * Add support for ARMv8.4-A SHA-3 instructions
 * Support POWER8 SHA-2 extensions (GH #1486 + #1487)
@@ -34,10 +33,10 @@ Hardware Specific Optimizations
 Public Key Crypto, Math
 ----------------------------------------
 
-* BLS12-381 pairing, BLS signatures
+* BLS signatures
 * Identity based encryption
 * Paillier homomorphic cryptosystem
-* New PAKEs (pending CFRG bakeoff results)
+* Further new PAKEs (pending CFRG bakeoff results)
 * SPHINX password store (https://eprint.iacr.org/2018/695)
 
 Utility Functions
@@ -56,7 +55,6 @@ TLS
 ----------------------------------------
 
 * Make DTLS support optional at build time
-* Improve/optimize DTLS defragmentation and retransmission
 * Make RSA optional at build time
 * Make finite field DH optional at build time
 * Certificate Transparency extensions
@@ -73,6 +71,7 @@ PKIX
 New Protocols / Formats
 ----------------------------------------
 
+* Messaging Layer Security (RFC 9420)
 * Noise protocol
 * ACME protocol (needs a story for JSON)
 * Cryptographic Message Syntax (RFC 5652)
@@ -100,7 +99,6 @@ FFI APIs
 * base32
 * base58
 * DL_Group
-* EC_Group
 
 Build/Test
 ----------------------------------------

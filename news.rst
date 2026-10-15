@@ -15,19 +15,21 @@ General Notes
 New APIs and Features
 ----------------------------------------
 
-* ML-DSA signatures now support the application context string of FIPS 204
-  (at most 255 bytes), passed via ``PK_Signature_Options::with_context``.
-
 * Add types ``PK_Signature_Options`` ``PK_Encryption_Options``, ``PK_KEM_Options``,
   and ``PK_Key_Agreement_Options`` which allow an application to precisely control
   how public key operations (signature, encryption, decryption, KEM, etc) are
   performed. (GH #5489 #5864)
+
+* Add an implementation of HPKE from RFC 9180 (GH #5989)
 
 * Add an implementation of the BLS12-381 pairing friendly curve, including the
   groups G1, G2, and Gt and the pairing operation. (GH #5718)
 
 * Add ``Work_Executor``, which allows an application to replace the library's
   internal thread pool with its own executor. (GH #5990)
+
+* ML-DSA signatures now support the application context string of FIPS 204, passed
+  via ``PK_Signature_Options::with_context``. (GH #5531)
 
 * Add an experimental C API for TLS in the new ``ffi_tls`` module. Experimental
   modules are not built by default and not covered by SemVer. (GH #2492 #5941)
