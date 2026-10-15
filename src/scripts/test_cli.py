@@ -1186,6 +1186,18 @@ def cli_zfec_tests(tmp_dir):
     test_cli("fec_decode", share_files[k_shares:] + ["--output=%s" % (output_file)])
     test_cli("hash", ["--no-fsname", output_file], exp_hash)
 
+    # k == n (no redundancy) is a valid configuration which must round trip
+    for kn in [1, 3]:
+        prefix = "kn%d" % (kn)
+        test_cli("fec_encode", ["--output-dir=%s" % (tmp_dir), "--prefix=%s" % (prefix),
+                                str(kn), str(kn), input_file])
+        kn_shares = [os.path.join(tmp_dir, '%s.%d_%d.fec' % (prefix, share, kn)) for share in range(1, kn + 1)]
+        for share in kn_shares:
+            test_cli("fec_info", share, "FEC share %s/%d with %d needed for recovery" % (share.split('.')[-2].split('_')[0], kn, kn))
+        kn_output = os.path.join(tmp_dir, 'output_%d.bin' % (kn))
+        test_cli("fec_decode", kn_shares + ["--output=%s" % (kn_output)])
+        test_cli("hash", ["--no-fsname", kn_output], exp_hash)
+
 def cli_pk_workfactor_tests(_tmp_dir):
     test_cli("pk_workfactor", "1024", "80")
     test_cli("pk_workfactor", "2048", "111")

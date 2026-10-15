@@ -67,7 +67,8 @@ class FEC_Share final {
          const size_t n = bits[6];
          const size_t padding = bits[7];
 
-         if(share_id >= n || k >= n || padding >= k) {
+         // Same invariant as the ZFEC constructor: 1 <= k <= n
+         if(share_id >= n || k == 0 || k > n || padding >= k) {
             throw CLI_Error("FEC share has invalid k/n/padding fields");
          }
 
