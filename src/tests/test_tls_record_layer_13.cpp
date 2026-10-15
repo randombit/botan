@@ -391,40 +391,40 @@ std::vector<Test::Result> read_fragmented_records() {
 std::vector<Test::Result> write_records() {
    auto cs_hs = rfc8448_rtt1_handshake_traffic();
    auto cs_ad = rfc8448_rtt1_appdata_traffic();
-   return {CHECK("prepare an zero-length application data fragment",
-                 [&](auto& result) {
-                    auto record = record_layer_client().prepare_record(
-                       Botan::TLS::Record_Type::ApplicationData, std::array<uint8_t, 0>{}, cs_ad.get());
-                    result.require("record header was added",
-                                   record.size() > Botan::TLS::TLS_HEADER_SIZE + 1 /* encrypted content type */);
-                 }),
-           CHECK("prepare a client hello",
-                 [&](auto& result) {
-                    const auto client_hello_msg = Botan::hex_decode(  // from RFC 8448
-                       "01 00 00 c0 03 03 cb"
-                       "34 ec b1 e7 81 63 ba 1c 38 c6 da cb 19 6a 6d ff a2 1a 8d 99 12"
-                       "ec 18 a2 ef 62 83 02 4d ec e7 00 00 06 13 01 13 03 13 02 01 00"
-                       "00 91 00 00 00 0b 00 09 00 00 06 73 65 72 76 65 72 ff 01 00 01"
-                       "00 00 0a 00 14 00 12 00 1d 00 17 00 18 00 19 01 00 01 01 01 02"
-                       "01 03 01 04 00 23 00 00 00 33 00 26 00 24 00 1d 00 20 99 38 1d"
-                       "e5 60 e4 bd 43 d2 3d 8e 43 5a 7d ba fe b3 c0 6e 51 c1 3c ae 4d"
-                       "54 13 69 1e 52 9a af 2c 00 2b 00 03 02 03 04 00 0d 00 20 00 1e"
-                       "04 03 05 03 06 03 02 03 08 04 08 05 08 06 04 01 05 01 06 01 02"
-                       "01 04 02 05 02 06 02 02 02 00 2d 00 02 01 01 00 1c 00 02 40 01");
-                    auto record = record_layer_client().prepare_record(TLS::Record_Type::Handshake, client_hello_msg);
+   return {
+      CHECK("prepare an zero-length application data fragment",
+            [&](auto& result) {
+               auto record = record_layer_client().prepare_record(
+                  Botan::TLS::Record_Type::ApplicationData, std::array<uint8_t, 0>{}, cs_ad.get());
+               result.require("record header was added",
+                              record.size() > Botan::TLS::TLS_HEADER_SIZE + 1 /* encrypted content type */);
+            }),
+      CHECK("prepare a client hello",
+            [&](auto& result) {
+               const auto client_hello_msg = Botan::hex_decode(  // from RFC 8448
+                  "01 00 00 c0 03 03 cb"
+                  "34 ec b1 e7 81 63 ba 1c 38 c6 da cb 19 6a 6d ff a2 1a 8d 99 12"
+                  "ec 18 a2 ef 62 83 02 4d ec e7 00 00 06 13 01 13 03 13 02 01 00"
+                  "00 91 00 00 00 0b 00 09 00 00 06 73 65 72 76 65 72 ff 01 00 01"
+                  "00 00 0a 00 14 00 12 00 1d 00 17 00 18 00 19 01 00 01 01 01 02"
+                  "01 03 01 04 00 23 00 00 00 33 00 26 00 24 00 1d 00 20 99 38 1d"
+                  "e5 60 e4 bd 43 d2 3d 8e 43 5a 7d ba fe b3 c0 6e 51 c1 3c ae 4d"
+                  "54 13 69 1e 52 9a af 2c 00 2b 00 03 02 03 04 00 0d 00 20 00 1e"
+                  "04 03 05 03 06 03 02 03 08 04 08 05 08 06 04 01 05 01 06 01 02"
+                  "01 04 02 05 02 06 02 02 02 00 2d 00 02 01 01 00 1c 00 02 40 01");
+               const auto record = record_layer_client().prepare_record(TLS::Record_Type::Handshake, client_hello_msg);
 
-                    result.require("record header was added",
-                                   record.size() == client_hello_msg.size() + Botan::TLS::TLS_HEADER_SIZE);
+               result.require("record header was added",
+                              record.size() == client_hello_msg.size() + Botan::TLS::TLS_HEADER_SIZE);
 
-                    const auto header = std::span{record}.first(Botan::TLS::TLS_HEADER_SIZE);
-                    result.test_bin_eq("record header is well-formed", header, "16030100c4");
-                 }),
-           CHECK("prepare a dummy CCS", [&](auto& result) {
-              std::array<uint8_t, 1> ccs_content = {0x01};
-              auto record =
-                 record_layer_client(true).prepare_record(Botan::TLS::Record_Type::ChangeCipherSpec, ccs_content);
-              result.test_bin_eq("CCS record is well-formed", record, "140303000101");
-           })};
+               const auto header = std::span{record}.first(Botan::TLS::TLS_HEADER_SIZE);
+               result.test_bin_eq("record header is well-formed", header, "16030100c4");
+            }),
+      CHECK("prepare a dummy CCS", [&](auto& result) {
+         std::array<uint8_t, 1> ccs_content = {0x01};
+         auto record = record_layer_client(true).prepare_record(Botan::TLS::Record_Type::ChangeCipherSpec, ccs_content);
+         result.test_bin_eq("CCS record is well-formed", record, "140303000101");
+      })};
 }
 
 std::vector<Test::Result> read_encrypted_records() {
@@ -762,7 +762,7 @@ std::vector<Test::Result> write_encrypted_records() {
             [&](Test::Result& result) {
                std::vector<uint8_t> data(5);
                auto rl = record_layer_client(true, pad_to_minimum_size(128));
-               auto record = rl.prepare_record(TLS::Record_Type::Handshake, data, cs_hs.get());
+               const auto record = rl.prepare_record(TLS::Record_Type::Handshake, data, cs_hs.get());
 
                // The content type byte that is appended to the plaintext does
                // count as ordinary plaintext, so the padding is added to six
@@ -816,7 +816,7 @@ std::vector<Test::Result> legacy_version_handling() {
            CHECK("server side starts with version 0x0303",
                  [&](Test::Result& result) {
                     auto rl = record_layer_server(true);
-                    auto rec = rl.prepare_record(TLS::Record_Type::Handshake, std::array<uint8_t, 5>{0});
+                    const auto rec = rl.prepare_record(TLS::Record_Type::Handshake, std::array<uint8_t, 5>{0});
                     result.test_is_true("first record has version 0x0303", has_version(rec, 0x0303));
                  }),
 

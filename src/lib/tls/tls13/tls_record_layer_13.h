@@ -10,8 +10,6 @@
 #ifndef BOTAN_TLS_RECORD_LAYER_13_H_
 #define BOTAN_TLS_RECORD_LAYER_13_H_
 
-#include <botan/assert.h>
-#include <botan/exceptn.h>
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>
 #include <botan/internal/stl_util.h>

@@ -13,9 +13,7 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_version.h>
-#include <botan/internal/buffer_slicer.h>
 #include <botan/internal/concat_util.h>
-#include <botan/internal/ct_utils.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_cipher_state.h>
@@ -72,6 +70,9 @@ Record_Layer::Record_Layer(Connection_Side side, std::shared_ptr<const Policy> p
 }
 
 void Record_Layer::set_record_size_limits(const uint16_t outgoing_limit, const uint16_t incoming_limit) {
+   // RFC 8449 4.
+   //    Endpoints MUST NOT send a "record_size_limit" extension with a value
+   //    smaller than 64.
    BOTAN_ARG_CHECK(outgoing_limit >= 64, "Invalid outgoing record size limit");
    BOTAN_ARG_CHECK(incoming_limit >= 64 && incoming_limit <= MAX_PLAINTEXT_SIZE + content_type_tag_length,
                    "Invalid incoming record size limit");
