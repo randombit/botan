@@ -100,6 +100,10 @@ class Factor final : public Command {
       void go() override {
          const Botan::BigInt n(get_arg("n"));
 
+         if(n.is_negative() || n < 2) {
+            throw CLI_Usage_Error("Cannot factor integers less than 2");
+         }
+
          std::vector<Botan::BigInt> factors = factorize(n, rng());
          std::sort(factors.begin(), factors.end());
 

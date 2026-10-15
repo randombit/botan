@@ -29,11 +29,11 @@ class Generate_Bcrypt final : public Command {
          const size_t wf = get_arg_sz("work-factor");
 
          if(wf < 4 || wf > 18) {
-            error_output() << "Invalid bcrypt work factor\n";
-         } else {
-            const uint16_t wf16 = static_cast<uint16_t>(wf);
-            output() << Botan::generate_bcrypt(password, rng(), wf16) << "\n";
+            throw CLI_Usage_Error("Invalid bcrypt work factor (must be between 4 and 18)");
          }
+
+         const uint16_t wf16 = static_cast<uint16_t>(wf);
+         output() << Botan::generate_bcrypt(password, rng(), wf16) << "\n";
       }
 };
 

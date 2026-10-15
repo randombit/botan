@@ -219,7 +219,8 @@ def test_cli(cmd, cmd_options,
              expected_stderr=None,
              use_drbg=True,
              extra_env=None,
-             timeout=None):
+             timeout=None,
+             expected_rc=0):
     global TESTS_RUN
 
     TESTS_RUN += 1
@@ -287,6 +288,10 @@ def test_cli(cmd, cmd_options,
         logging.info("Got %s", stdout)
         logging.info("Exp %s", expected_output)
 
+    if proc.returncode != expected_rc:
+        logging.error("Got return code %d expected %d running cmd %s %s (stderr %s)",
+                      proc.returncode, expected_rc, cmd, cmd_options, stderr, stack_info=True)
+
     return stdout
 
 def check_for_command(cmd):
@@ -318,7 +323,8 @@ def cli_config_tests(_tmp_dir):
         logging.error("Bad libs %s", libs)
 
 def cli_help_tests(_tmp_dir):
-    output = test_cli("help", None, None)
+    # The help command intentionally exits with status 1
+    output = test_cli("help", None, None, expected_rc=1)
 
     # Maybe test format somehow??
     if len(output) < 500:
@@ -408,6 +414,12 @@ def cli_gen_prime_tests(_tmp_dir):
     test_cli("gen_prime", "128", "287193909494025008847286845478788765881")
     test_cli("gen_prime", ["--hex", "64"], "0xD80F88F6ADBE65D3")
 
+    usage = "Usage: gen_prime --hex --count=1 bits"
+    for bad in ["-1", "+1", "12junk", " 12", "", "0x10"]:
+        test_cli("gen_prime", ["--count=%s" % (bad), "64"], "",
+                 expected_stderr="Usage error: Invalid integer value '%s' for option count\n%s" % (bad, usage),
+                 expected_rc=1)
+
 def cli_cycle_counter(_tmp_dir):
     output = test_cli("cpu_clock", None, None)
 
@@ -452,6 +464,11 @@ def cli_factor_tests(_tmp_dir):
     test_cli("factor", "97", "97: 97")
     test_cli("factor", "9753893489562389", "9753893489562389: 21433 455087644733")
     test_cli("factor", "12019502040659149507", "12019502040659149507: 3298628633 3643787579")
+
+    for bad in ["0", "1", "-5"]:
+        test_cli("factor", bad, "",
+                 expected_stderr="Usage error: Cannot factor integers less than 2\nUsage: factor n",
+                 expected_rc=1)
 
 def cli_mod_inverse_tests(_tmp_dir):
     test_cli("mod_inverse", "97 802", "339")
@@ -504,11 +521,17 @@ def cli_bcrypt_tests(_tmp_dir):
     test_cli("gen_bcrypt", "--work-factor=4 s3kr1t",
              "$2a$04$0.8G7o08XYwvBBWA3l0WUujtwoGZgGDzVSN8fNkNqXikcK4A3lHPS")
 
+    for wf in ["3", "19"]:
+        test_cli("gen_bcrypt", "--work-factor=%s s3kr1t" % (wf), "",
+                 expected_stderr="Usage error: Invalid bcrypt work factor (must be between 4 and 18)\n"
+                 "Usage: gen_bcrypt --work-factor=12 password",
+                 expected_rc=1)
+
     test_cli("check_bcrypt", "s3kr1t $2a$04$gHX4Qg7pDSJuXiPXnmt8leyb.FFzX1Bv4rXwIj2cPSakJ8zNnhIka",
              "Password is valid")
 
     test_cli("check_bcrypt", "santa $2a$04$gHX4Qg7pDSJuXiPXnmt8leyb.FFzX1Bv4rXwIj2cPSakJ8zNnhIka",
-             "Password is NOT valid")
+             "Password is NOT valid", expected_rc=1)
 
 def cli_argon2_tests(_tmp_dir):
     password = "s3kr1t"
@@ -518,7 +541,7 @@ def cli_argon2_tests(_tmp_dir):
     test_cli("gen_argon2", ['--mem=8', '--t=1', '--p=1', password], expected)
 
     test_cli("check_argon2", [password, expected], "Password is valid")
-    test_cli("check_argon2", ["guessing", expected], "Password is NOT valid")
+    test_cli("check_argon2", ["guessing", expected], "Password is NOT valid", expected_rc=1)
 
 def cli_gen_dl_group_tests(_tmp_dir):
 
@@ -795,6 +818,10 @@ def cli_psk_db_tests(tmp_dir):
     test_cli("psk_list", [psk_db, db_key1], "name\nname2")
     test_cli("psk_list", [psk_db, db_key2], "name")
 
+    test_cli("psk_list", [psk_db, ""], "",
+             expected_stderr="Usage error: Database key must not be empty\nUsage: psk_list db db_key",
+             expected_rc=1)
+
 def cli_compress_tests(tmp_dir):
 
     if not check_for_command("compress"):
@@ -807,6 +834,11 @@ def cli_compress_tests(tmp_dir):
         f.write("hi there")
         f.close()
 
+    test_cli("compress", ["--buf-size=0", input_file], "",
+             expected_stderr="Usage error: Cannot have a zero-sized buffer\n"
+             "Usage: compress --type=gzip --level=6 --buf-size=8192 file",
+             expected_rc=1)
+
     test_cli("compress", input_file)
 
     if not os.access(output_file, os.R_OK):
@@ -818,6 +850,11 @@ def cli_compress_tests(tmp_dir):
         logging.error("Did not see expected gzip header")
 
     os.unlink(input_file)
+
+    test_cli("decompress", ["--buf-size=0", output_file], "",
+             expected_stderr="Usage error: Cannot have a zero-sized buffer\n"
+             "Usage: decompress --buf-size=8192 file",
+             expected_rc=1)
 
     test_cli("decompress", output_file)
 
@@ -889,7 +926,7 @@ ed25519 cj8GsiNlRkqiDElAeNMSBBMwrAl15hYPgX50+GWX/lA= Tsy82BBU2xxVqNe1ip11OyEGoKW
 
     with open(chain, 'w', encoding='utf8') as f:
         f.write("ed25519 cbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE= eu9yhsJfVfguVSqGZdE8WKIxaBBM0ZG3Vmuc+IyZmG2YVmrIktUByDdwIFw6F4rZqmSFsBO85ljoVPz5bVPCOw== BQAAAEAAAABAAAAApAAAADwBAABTSUcAUEFUSFNSRVBDRVJUSU5EWBnGOEajOwPA6G7oL47seBP4C7eEpr57H43C2/fK/kMA0UGZVUdf4KNX8oxOK6JIcsbVk8qhghTwA70qtwpYmQkDAAAABAAAAAwAAABSQURJTUlEUFJPT1RAQg8AJrA8tEqPBQAqisiuAxgy2Pj7UJAiWbCdzGz1xcCnja3T+AqhC8fwpeIwW4GPy/vEb/awXW2DgSLKJfzWIAz+2lsR7t4UjNPvAgAAAEAAAABTSUcAREVMRes9Ch4X0HIw5KdOTB8xK4VDFSJBD/G9t7Et/CU7UW61OiTBXYYQTG2JekWZmGa0OHX1JPGG+APkpbsNw0BKUgYDAAAAIAAAACgAAABQVUJLTUlOVE1BWFR/9BWjpsWTQ1f6iUJea3EfZ1MkX3ftJiV3ABqNLpncFwAAAAAAAAAA//////////8AAAAA")
-    test_cli("roughtime_check", chain, expected_stderr='Error: Invalid Ed25519 public key')
+    test_cli("roughtime_check", chain, expected_stderr='Error: Invalid Ed25519 public key', expected_rc=2)
 
 def cli_roughtime_tests(tmp_dir):
     if not check_for_command("roughtime"):
@@ -942,7 +979,8 @@ ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= 2A+I9q2+ZayxDDYC5n2YW8Bn/zB
 
     server_request = request[0]
     server_response = response[0]
-    test_cli("roughtime", [], expected_stderr='Please specify either --servers-file or --host and --pubkey')
+    test_cli("roughtime", [], expected_stderr='Please specify either --servers-file or --host and --pubkey',
+             expected_rc=1)
 
     with open(ecosystem, 'w', encoding='utf8') as f:
         f.write("Cloudflare-Roughtime ed25519 gD63hSj4ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= udp 127.0.0.1:" + str(server_port))
@@ -951,7 +989,7 @@ ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= 2A+I9q2+ZayxDDYC5n2YW8Bn/zB
         "--check-local-clock=0",
         "--chain-file=",
         "--servers-file=" + ecosystem]
-             , expected_stderr='Error: Invalid Ed25519 public key')
+             , expected_stderr='Error: Invalid Ed25519 public key', expected_rc=2)
 
     with open(ecosystem, 'w', encoding='utf8') as f:
         f.write("Cloudflare-Roughtime ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= udp 127.0.0.1:" + str(server_port))
@@ -959,7 +997,7 @@ ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= 2A+I9q2+ZayxDDYC5n2YW8Bn/zB
     test_cli("roughtime", [
         "--chain-file=",
         "--servers-file=" + ecosystem]
-             , expected_stderr='ERROR: Local clock mismatch')
+             , expected_stderr='ERROR: Local clock mismatch', expected_rc=1)
 
     test_cli("roughtime", [
         "--check-local-clock=0",
@@ -1031,7 +1069,7 @@ def cli_zfec_tests(tmp_dir):
 
     # Insufficient shares:
     test_cli("fec_decode", share_files[(k_shares + 1):], None, None,
-             "At least %d shares are required for recovery" % (k))
+             "At least %d shares are required for recovery" % (k), expected_rc=2)
 
     output_file = os.path.join(tmp_dir, 'output.bin')
     test_cli("fec_decode", share_files[k_shares:] + ["--output=%s" % (output_file)])
@@ -1219,6 +1257,17 @@ def cli_timing_test_tests(_tmp_dir):
         for line in output:
             if output_re.match(line) is None:
                 logging.error("Unexpected output in timing_test %s: %s", suite, line)
+
+def cli_tls_client_usage_tests(_tmp_dir):
+    if not check_for_command("tls_client"):
+        return
+
+    usage = test_cli("tls_client", ["--help"], None, expected_rc=2)
+
+    # Rejected before any connection is attempted
+    test_cli("tls_client", ["localhost", "--port=1", "--tls-version=1.4"], "",
+             expected_stderr="Usage error: Unknown TLS protocol version '1.4'\n%s" % (usage),
+             expected_rc=1)
 
 def cli_tls_ciphersuite_tests(_tmp_dir):
     policies = ['default', 'suiteb_128', 'suiteb_192', 'strict', 'all']
@@ -1708,7 +1757,7 @@ def cli_tss_tests(tmp_dir):
 
     rec2 = os.path.join(tmp_dir, "recovered_2")
     test_cli("tss_recover", share_files[3:] + ["--output=%s" % (rec2)], "", None,
-             "Error: Insufficient shares to do TSS reconstruction")
+             "Error: Insufficient shares to do TSS reconstruction", expected_rc=2)
 
 
 def cli_pk_encrypt_tests(tmp_dir):
@@ -2021,13 +2070,19 @@ def cli_speed_invalid_option_tests(_tmp_dir):
     speed_usage = "Usage: speed --msec=500 --format=default --time-unit=ms --ecc-groups= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 --one-shot *algos"
 
     test_cli("speed", ["--buf-size=0", "--msec=1", "AES-128"],
-             expected_stderr="Usage error: Cannot have a zero-sized buffer\n%s" % (speed_usage))
+             expected_stderr="Usage error: Cannot have a zero-sized buffer\n%s" % (speed_usage), expected_rc=1)
 
     test_cli("speed", ["--buf-size=F00F", "--msec=1", "AES-128"],
-             expected_stderr="Usage error: Invalid integer value 'F00F' for option buf-size\n%s" % (speed_usage))
+             expected_stderr="Usage error: Invalid integer value 'F00F' for option buf-size\n%s" % (speed_usage),
+             expected_rc=1)
 
     test_cli("speed", ["--buf-size=90000000", "--msec=1", "AES-128"],
-             expected_stderr="Usage error: Specified buffer size is too large\n%s" % (speed_usage))
+             expected_stderr="Usage error: Specified buffer size is too large\n%s" % (speed_usage), expected_rc=1)
+
+    for ratio in ["0", "abc", "nan", "0.5xyz", "-0.5", "inf", ""]:
+        test_cli("speed", ["--cpu-clock-ratio=%s" % (ratio), "--msec=1", "AES-128"],
+                 expected_stderr="Usage error: Unlikely CPU clock ratio of %s\n%s" % (ratio, speed_usage),
+                 expected_rc=1)
 
     test_cli("speed", ["--clear-cpuid=goku", "--msec=1", "AES-128"],
              expected_stderr="Warning don't know CPUID flag 'goku'")
@@ -2221,6 +2276,7 @@ def main(args=None):
         cli_timing_test_tests,
         cli_tls_ciphersuite_tests,
         cli_tls_client_hello_tests,
+        cli_tls_client_usage_tests,
         cli_tls_http_server_tests,
         cli_tls_online_pqc_hybrid_tests,
         cli_tls_socket_tests,

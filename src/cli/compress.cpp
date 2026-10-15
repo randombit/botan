@@ -46,6 +46,10 @@ class Compress final : public Command {
          const size_t buf_size = get_arg_sz("buf-size");
          const size_t comp_level = get_arg_sz("level");
 
+         if(buf_size == 0) {
+            throw CLI_Usage_Error("Cannot have a zero-sized buffer");
+         }
+
          auto compress = Botan::Compression_Algorithm::create(comp_type);
          if(!compress) {
             throw CLI_Error_Unsupported("Compression", comp_type);
@@ -108,6 +112,11 @@ class Decompress final : public Command {
       void go() override {
          const size_t buf_size = get_arg_sz("buf-size");
          const std::string in_file = get_arg("file");
+
+         if(buf_size == 0) {
+            throw CLI_Usage_Error("Cannot have a zero-sized buffer");
+         }
+
          std::string out_file;
          std::string suffix;
          parse_extension(in_file, out_file, suffix);
