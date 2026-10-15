@@ -38,8 +38,8 @@ class BOTAN_TEST_API Record_Layer {
       virtual ~Record_Layer() = default;
       Record_Layer(const Record_Layer&) = delete;
       Record_Layer& operator=(const Record_Layer&) = delete;
-      Record_Layer(Record_Layer&&) = default;
-      Record_Layer& operator=(Record_Layer&&) = default;
+      Record_Layer(Record_Layer&&) = delete;
+      Record_Layer& operator=(Record_Layer&&) = delete;
 
       using ReadResult = variant_append_t<Record, BytesNeeded>;
 

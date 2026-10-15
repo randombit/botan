@@ -52,27 +52,12 @@ std::function<size_t(size_t)> pad_to_minimum_size(size_t minimum_record_size) {
    };
 }
 
-auto record_layer_client(const bool skip_client_hello = false, std::function<size_t(size_t)> record_padding = {}) {
-   auto rl =
-      TLS::TLS_Record_Layer(TLS::Connection_Side::Client, std::make_shared<Test_Policy>(std::move(record_padding)));
-
-   // this is relevant for tests that rely on the legacy version in the record
-   if(skip_client_hello) {
-      rl.disable_sending_compat_mode();
-   }
-
-   return rl;
+auto record_layer_client(std::function<size_t(size_t)> record_padding = {}) {
+   return TLS::TLS_Record_Layer(TLS::Connection_Side::Client, std::make_shared<Test_Policy>(std::move(record_padding)));
 }
 
-auto record_layer_server(const bool skip_client_hello = false) {
-   auto rl = TLS::TLS_Record_Layer(TLS::Connection_Side::Server, std::make_shared<Test_Policy>());
-
-   // this is relevant for tests that rely on the legacy version in the record
-   if(skip_client_hello) {
-      rl.disable_receiving_compat_mode();
-   }
-
-   return rl;
+auto record_layer_server() {
+   return TLS::TLS_Record_Layer(TLS::Connection_Side::Server, std::make_shared<Test_Policy>());
 }
 
 std::unique_ptr<TLS::Cipher_State> rfc8448_rtt1_handshake_traffic(
@@ -195,7 +180,7 @@ std::vector<Test::Result> read_full_records() {
 
 std::vector<Test::Result> basic_sanitization_parse_records(TLS::Connection_Side side) {
    auto parse_records = [side](const std::vector<uint8_t>& data, TLS::Cipher_State* cs = nullptr) {
-      auto rl = ((side == TLS::Connection_Side::Client) ? record_layer_client(true) : record_layer_server());
+      auto rl = ((side == TLS::Connection_Side::Client) ? record_layer_client() : record_layer_server());
       rl.copy_data(data);
       return rl.next_record(cs);
    };
@@ -334,7 +319,7 @@ std::vector<Test::Result> basic_sanitization_parse_records_server() {
 }
 
 std::vector<Test::Result> read_fragmented_records() {
-   auto rl = record_layer_client(true);
+   auto rl = record_layer_client();
 
    auto wait_for_more_bytes =
       [](Botan::TLS::BytesNeeded bytes_needed, auto& record_layer, std::vector<uint8_t> bytes, auto& result) {
@@ -391,40 +376,42 @@ std::vector<Test::Result> read_fragmented_records() {
 std::vector<Test::Result> write_records() {
    auto cs_hs = rfc8448_rtt1_handshake_traffic();
    auto cs_ad = rfc8448_rtt1_appdata_traffic();
-   return {
-      CHECK("prepare an zero-length application data fragment",
-            [&](auto& result) {
-               auto record = record_layer_client().prepare_record(
-                  Botan::TLS::Record_Type::ApplicationData, std::array<uint8_t, 0>{}, cs_ad.get());
-               result.require("record header was added",
-                              record.size() > Botan::TLS::TLS_HEADER_SIZE + 1 /* encrypted content type */);
-            }),
-      CHECK("prepare a client hello",
-            [&](auto& result) {
-               const auto client_hello_msg = Botan::hex_decode(  // from RFC 8448
-                  "01 00 00 c0 03 03 cb"
-                  "34 ec b1 e7 81 63 ba 1c 38 c6 da cb 19 6a 6d ff a2 1a 8d 99 12"
-                  "ec 18 a2 ef 62 83 02 4d ec e7 00 00 06 13 01 13 03 13 02 01 00"
-                  "00 91 00 00 00 0b 00 09 00 00 06 73 65 72 76 65 72 ff 01 00 01"
-                  "00 00 0a 00 14 00 12 00 1d 00 17 00 18 00 19 01 00 01 01 01 02"
-                  "01 03 01 04 00 23 00 00 00 33 00 26 00 24 00 1d 00 20 99 38 1d"
-                  "e5 60 e4 bd 43 d2 3d 8e 43 5a 7d ba fe b3 c0 6e 51 c1 3c ae 4d"
-                  "54 13 69 1e 52 9a af 2c 00 2b 00 03 02 03 04 00 0d 00 20 00 1e"
-                  "04 03 05 03 06 03 02 03 08 04 08 05 08 06 04 01 05 01 06 01 02"
-                  "01 04 02 05 02 06 02 02 02 00 2d 00 02 01 01 00 1c 00 02 40 01");
-               const auto record = record_layer_client().prepare_record(TLS::Record_Type::Handshake, client_hello_msg);
+   return {CHECK("prepare an zero-length application data fragment",
+                 [&](auto& result) {
+                    auto record = record_layer_client().prepare_record(
+                       Botan::TLS::Record_Type::ApplicationData, std::array<uint8_t, 0>{}, cs_ad.get());
+                    result.require("record header was added",
+                                   record.size() > Botan::TLS::TLS_HEADER_SIZE + 1 /* encrypted content type */);
+                 }),
+           CHECK("prepare a client hello",
+                 [&](auto& result) {
+                    const auto client_hello_msg = Botan::hex_decode(  // from RFC 8448
+                       "01 00 00 c0 03 03 cb"
+                       "34 ec b1 e7 81 63 ba 1c 38 c6 da cb 19 6a 6d ff a2 1a 8d 99 12"
+                       "ec 18 a2 ef 62 83 02 4d ec e7 00 00 06 13 01 13 03 13 02 01 00"
+                       "00 91 00 00 00 0b 00 09 00 00 06 73 65 72 76 65 72 ff 01 00 01"
+                       "00 00 0a 00 14 00 12 00 1d 00 17 00 18 00 19 01 00 01 01 01 02"
+                       "01 03 01 04 00 23 00 00 00 33 00 26 00 24 00 1d 00 20 99 38 1d"
+                       "e5 60 e4 bd 43 d2 3d 8e 43 5a 7d ba fe b3 c0 6e 51 c1 3c ae 4d"
+                       "54 13 69 1e 52 9a af 2c 00 2b 00 03 02 03 04 00 0d 00 20 00 1e"
+                       "04 03 05 03 06 03 02 03 08 04 08 05 08 06 04 01 05 01 06 01 02"
+                       "01 04 02 05 02 06 02 02 02 00 2d 00 02 01 01 00 1c 00 02 40 01");
+                    const auto record =
+                       record_layer_client().prepare_record(TLS::Record_Type::Handshake, client_hello_msg);
 
-               result.require("record header was added",
-                              record.size() == client_hello_msg.size() + Botan::TLS::TLS_HEADER_SIZE);
+                    result.require("record header was added",
+                                   record.size() == client_hello_msg.size() + Botan::TLS::TLS_HEADER_SIZE);
 
-               const auto header = std::span{record}.first(Botan::TLS::TLS_HEADER_SIZE);
-               result.test_bin_eq("record header is well-formed", header, "16030100c4");
-            }),
-      CHECK("prepare a dummy CCS", [&](auto& result) {
-         std::array<uint8_t, 1> ccs_content = {0x01};
-         auto record = record_layer_client(true).prepare_record(Botan::TLS::Record_Type::ChangeCipherSpec, ccs_content);
-         result.test_bin_eq("CCS record is well-formed", record, "140303000101");
-      })};
+                    const auto header = std::span{record}.first(Botan::TLS::TLS_HEADER_SIZE);
+                    result.test_bin_eq("record header is well-formed", header, "16030100c4");
+                 }),
+           CHECK("prepare a dummy CCS", [&](auto& result) {
+              std::array<uint8_t, 1> ccs_content = {0x01};
+              auto rl_client = record_layer_client();
+              rl_client.disable_sending_compat_mode();
+              const auto record = rl_client.prepare_record(Botan::TLS::Record_Type::ChangeCipherSpec, ccs_content);
+              result.test_bin_eq("CCS record is well-formed", record, "140303000101");
+           })};
 }
 
 std::vector<Test::Result> read_encrypted_records() {
@@ -506,17 +493,18 @@ std::vector<Test::Result> read_encrypted_records() {
       "59 50 7a 0c d0 62 3f 90 1b 5c 89 d4 b4 f2 d1 56 f6 da 4f 3e c5 fd 2d e5 e2"
       "fa 44 23 0a e0 c9 dd dd bb a8 be db d9 d7 f6 b8 3d 56 4c a5 47");
 
-   auto parse_records = [](const std::vector<uint8_t>& data) {
-      auto rl = record_layer_client(true);
+   auto parse_records = [](const std::vector<uint8_t>& data, TLS::Cipher_State* cs) {
+      auto rl = record_layer_client();
       rl.copy_data(data);
-      return rl;
+      return rl.next_record(cs);
    };
 
    return {
       CHECK("read encrypted server hello extensions",
             [&](Test::Result& result) {
                const auto cs = rfc8448_rtt1_handshake_traffic();
-               auto rl = parse_records(encrypted_record);
+               auto rl = record_layer_client();
+               rl.copy_data(encrypted_record);
 
                auto res = rl.next_record(cs.get());
                result.require("some records decrypted", !std::holds_alternative<Botan::TLS::BytesNeeded>(res));
@@ -528,7 +516,7 @@ std::vector<Test::Result> read_encrypted_records() {
 
       CHECK("premature application data",
             [&](Test::Result& result) {
-               auto rl = record_layer_client(true);
+               auto rl = record_layer_client();
                rl.copy_data(encrypted_record);
 
                result.test_throws<Botan::TLS::TLS_Exception>(
@@ -548,12 +536,11 @@ std::vector<Test::Result> read_encrypted_records() {
                   "db061d7d1dfbe687dc5708d5e95f51e5");
 
                const auto cs = rfc8448_rtt1_handshake_traffic();
-               auto rl = parse_records(appdata_protected_with_handshake_secret);
 
                result.test_throws<Botan::TLS::TLS_Exception>(
                   "Reject incoming protected application data before handshake is complete",
                   "Application data received before handshake completion",
-                  [&] { const auto res = rl.next_record(cs.get()); });
+                  [&] { const auto res = parse_records(appdata_protected_with_handshake_secret, cs.get()); });
             }),
 
       CHECK("decryption fails due to bad MAC",
@@ -563,8 +550,7 @@ std::vector<Test::Result> read_encrypted_records() {
 
                result.test_throws<Botan::Invalid_Authentication_Tag>("broken record detected", [&] {
                   const auto cs = rfc8448_rtt1_handshake_traffic();
-                  auto rl = parse_records(tampered_encrypted_record);
-                  rl.next_record(cs.get());
+                  parse_records(tampered_encrypted_record, cs.get());
                });
             }),
 
@@ -574,8 +560,7 @@ std::vector<Test::Result> read_encrypted_records() {
 
                result.test_throws<Botan::TLS::TLS_Exception>("too short to decrypt", [&] {
                   const auto cs = rfc8448_rtt1_handshake_traffic();
-                  auto rl = parse_records(short_record);
-                  rl.next_record(cs.get());
+                  parse_records(short_record, cs.get());
                });
             }),
 
@@ -587,8 +572,7 @@ std::vector<Test::Result> read_encrypted_records() {
                result.test_throws<Botan::TLS::TLS_Exception>(
                   "illegal state causes TLS alert", "protected TLS record type had unexpected value", [&] {
                      const auto cs = rfc8448_rtt1_handshake_traffic();
-                     auto rl = parse_records(protected_ccs);
-                     rl.next_record(cs.get());
+                     parse_records(protected_ccs, cs.get());
                   });
             }),
 
@@ -598,8 +582,7 @@ std::vector<Test::Result> read_encrypted_records() {
 
                result.test_no_throw("CCS is acceptable", [&] {
                   const auto cs = rfc8448_rtt1_handshake_traffic();  // expect encrypted traffic
-                  auto rl = parse_records(ccs_record);
-                  rl.next_record(cs.get());
+                  parse_records(ccs_record, cs.get());
                });
             }),
 
@@ -612,8 +595,7 @@ std::vector<Test::Result> read_encrypted_records() {
 
                result.test_no_throw("Server allows unprotected alerts after its first flight", [&] {
                   const auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::Server);
-                  auto rl = parse_records(alert);
-                  rl.next_record(cs.get());
+                  parse_records(alert, cs.get());
                });
 
                result.test_throws<Botan::TLS::TLS_Exception>(
@@ -621,8 +603,7 @@ std::vector<Test::Result> read_encrypted_records() {
                   "unprotected record received where protected traffic was expected",
                   [&] {
                      const auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::Server);
-                     auto rl = parse_records(hsmsg);
-                     rl.next_record(cs.get());
+                     parse_records(hsmsg, cs.get());
                   });
 
                result.test_throws<Botan::TLS::TLS_Exception>(
@@ -630,8 +611,7 @@ std::vector<Test::Result> read_encrypted_records() {
                   "unprotected record received where protected traffic was expected",
                   [&] {
                      const auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::Client);
-                     auto rl = parse_records(alert);
-                     rl.next_record(cs.get());
+                     parse_records(alert, cs.get());
                   });
 
                result.test_throws<Botan::TLS::TLS_Exception>(
@@ -639,8 +619,7 @@ std::vector<Test::Result> read_encrypted_records() {
                   "unprotected record received where protected traffic was expected",
                   [&] {
                      const auto cs = rfc8448_rtt1_handshake_traffic(TLS::Connection_Side::Client);
-                     auto rl = parse_records(hsmsg);
-                     rl.next_record(cs.get());
+                     parse_records(hsmsg, cs.get());
                   });
             }),
 
@@ -648,8 +627,7 @@ std::vector<Test::Result> read_encrypted_records() {
             [&](Test::Result& result) {
                result.test_throws("unprotected record is unacceptable", [&] {
                   const auto cs = rfc8448_rtt1_handshake_traffic();  // expect encrypted traffic
-                  auto rl = parse_records(server_hello);
-                  rl.next_record(cs.get());
+                  parse_records(server_hello, cs.get());
                });
             }),
 
@@ -673,7 +651,8 @@ std::vector<Test::Result> read_encrypted_records() {
                cs->advance_with_client_finished(
                   Botan::hex_decode("305e4a0a7cee581b282c571b251b20138a1a6a21918937a6bb95b1e9ba1b5cac"));
 
-               auto rl = parse_records(encrypted);
+               auto rl = record_layer_client();
+               rl.copy_data(encrypted);
                auto res = rl.next_record(cs.get());
                result.require("decrypted a record", std::holds_alternative<TLS::ApplicationData_Record>(res));
                auto records = std::get<TLS::ApplicationData_Record>(res);
@@ -698,7 +677,7 @@ std::vector<Test::Result> read_encrypted_records() {
                auto coalesced = server_hello;
                coalesced.insert(coalesced.end(), encrypted_record.cbegin(), encrypted_record.cend());
 
-               auto client = record_layer_client(true);
+               auto client = record_layer_client();
                client.copy_data(coalesced);
 
                const auto srv_hello = client.next_record(nullptr);
@@ -711,7 +690,7 @@ std::vector<Test::Result> read_encrypted_records() {
 
       CHECK("read a padded record",
             [&](Test::Result& result) {
-               auto client = record_layer_client(true);
+               auto client = record_layer_client();
                client.copy_data(encrypted_record_with_padding);
 
                auto cs = rfc8448_rtt1_handshake_traffic();
@@ -720,7 +699,7 @@ std::vector<Test::Result> read_encrypted_records() {
             }),
 
       CHECK("read an empty encrypted record", [&](Test::Result& result) {
-         auto client = record_layer_client(true);
+         auto client = record_layer_client();
          client.copy_data(Botan::hex_decode("1703030011292e9d47d3beec9aec58466d05f7718a2c"));
 
          const auto cs = rfc8448_rtt1_appdata_traffic();
@@ -740,7 +719,7 @@ std::vector<Test::Result> write_encrypted_records() {
       CHECK("write encrypted client handshake finished",
             [&](Test::Result& result) {
                auto record =
-                  record_layer_client(true).prepare_record(TLS::Record_Type::Handshake, plaintext_msg, cs_hs.get());
+                  record_layer_client().prepare_record(TLS::Record_Type::Handshake, plaintext_msg, cs_hs.get());
                auto expected_ct = Botan::hex_decode(
                   "17 03 03 00 35 75 ec 4d c2 38 cc e6"
                   "0b 29 80 44 a7 1e 21 9c 56 cc 77 b0 51 7f e9 b9 3c 7a 4b fc 44 d8 7f"
@@ -751,8 +730,10 @@ std::vector<Test::Result> write_encrypted_records() {
       CHECK("write a dummy CCS (that must not be encrypted)",
             [&](auto& result) {
                std::array<uint8_t, 1> ccs_content = {0x01};
-               auto record = record_layer_client(true).prepare_record(
-                  Botan::TLS::Record_Type::ChangeCipherSpec, ccs_content, nullptr);
+               auto rl_client = record_layer_client();
+               rl_client.disable_sending_compat_mode();
+               const auto record =
+                  rl_client.prepare_record(Botan::TLS::Record_Type::ChangeCipherSpec, ccs_content, nullptr);
                result.require("record was created and not encrypted", record.size() == Botan::TLS::TLS_HEADER_SIZE + 1);
 
                result.test_bin_eq("CCS record is well-formed", record, "140303000101");
@@ -761,7 +742,7 @@ std::vector<Test::Result> write_encrypted_records() {
       CHECK("write a record with padding",
             [&](Test::Result& result) {
                std::vector<uint8_t> data(5);
-               auto rl = record_layer_client(true, pad_to_minimum_size(128));
+               auto rl = record_layer_client(pad_to_minimum_size(128));
                const auto record = rl.prepare_record(TLS::Record_Type::Handshake, data, cs_hs.get());
 
                // The content type byte that is appended to the plaintext does
@@ -815,7 +796,7 @@ std::vector<Test::Result> legacy_version_handling() {
 
            CHECK("server side starts with version 0x0303",
                  [&](Test::Result& result) {
-                    auto rl = record_layer_server(true);
+                    auto rl = record_layer_server();
                     const auto rec = rl.prepare_record(TLS::Record_Type::Handshake, std::array<uint8_t, 5>{0});
                     result.test_is_true("first record has version 0x0303", has_version(rec, 0x0303));
                  }),
@@ -856,7 +837,8 @@ std::vector<Test::Result> legacy_version_handling() {
 
            CHECK("server side does not accept other versions (after receiving client hello)",
                  [&](Test::Result& result) {
-                    auto rl = record_layer_server(true);
+                    auto rl = record_layer_server();
+                    rl.disable_receiving_compat_mode();
                     result.test_throws("does not accept 0x0300",
                                        [&] { parse_record(rl, Botan::hex_decode("16 03 00 00 05 00 00 00 00 00")); });
                     result.test_throws("does not accept 0x0302",
@@ -882,13 +864,13 @@ std::vector<Test::Result> record_size_limits() {
       CHECK("no specified limits means protocol defaults",
             [&](Test::Result& result) {
                const auto csc = rfc8448_rtt1_appdata_traffic(Botan::TLS::Connection_Side::Client);
-               auto rlc = record_layer_client(true);
+               auto rlc = record_layer_client();
 
                const auto rec1 = rlc.prepare_record(
                   TLS::Record_Type::ApplicationData, std::vector<uint8_t>(Botan::TLS::MAX_PLAINTEXT_SIZE), csc.get());
 
                const auto css = rfc8448_rtt1_appdata_traffic(Botan::TLS::Connection_Side::Server);
-               auto rls = record_layer_server(true);
+               auto rls = record_layer_server();
                rls.copy_data(rec1);
 
                result.test_sz_eq("correct length record",
@@ -906,7 +888,7 @@ std::vector<Test::Result> record_size_limits() {
       CHECK("outgoing record size limit",
             [&](Test::Result& result) {
                const auto cs = rfc8448_rtt1_appdata_traffic();
-               auto rl = record_layer_client(true);
+               auto rl = record_layer_client();
 
                rl.set_record_size_limits(127 + 1 /* content type byte */, Botan::TLS::MAX_PLAINTEXT_SIZE + 1);
 
@@ -932,7 +914,7 @@ std::vector<Test::Result> record_size_limits() {
       CHECK("outgoing record size limit can be changed",
             [&](Test::Result& result) {
                const auto cs = rfc8448_rtt1_appdata_traffic();
-               auto rl = record_layer_client(true);
+               auto rl = record_layer_client();
 
                rl.set_record_size_limits(127 + 1 /* content type byte */, Botan::TLS::MAX_PLAINTEXT_SIZE + 1);
 
@@ -950,7 +932,7 @@ std::vector<Test::Result> record_size_limits() {
 
       CHECK("outgoing record limit does not affect unencrypted records",
             [&](Test::Result& result) {
-               auto rl = record_layer_client(true);
+               auto rl = record_layer_client();
 
                rl.set_record_size_limits(127 + 1 /* content type byte */, Botan::TLS::MAX_PLAINTEXT_SIZE + 1);
 
@@ -969,7 +951,7 @@ std::vector<Test::Result> record_size_limits() {
 
       CHECK("incoming limit is not checked on unprotected records",
             [&](Test::Result& result) {
-               auto rlc = record_layer_client(true);
+               auto rlc = record_layer_client();
 
                rlc.set_record_size_limits(Botan::TLS::MAX_PLAINTEXT_SIZE + 1, 95 + 1);
 
@@ -982,7 +964,7 @@ std::vector<Test::Result> record_size_limits() {
                constexpr size_t message_length = 105;
 
                auto css = rfc8448_rtt1_appdata_traffic();
-               auto rls = record_layer_server(true);
+               auto rls = record_layer_server();
 
                rls.set_record_size_limits(Botan::TLS::MAX_PLAINTEXT_SIZE + 1, message_length + 1);
                rls.copy_data(
@@ -1011,7 +993,7 @@ std::vector<Test::Result> record_size_limits() {
       CHECK("padding requests are truncated to the negotiated record size limit",
             [&](Test::Result& result) {
                constexpr uint16_t limit = 1024;
-               auto rl = record_layer_client(true, pad_to_minimum_size(4096));
+               auto rl = record_layer_client(pad_to_minimum_size(4096));
                rl.set_record_size_limits(/* outgoing_limit = */ limit,
                                          /* incoming_limit = */ limit);
 
@@ -1025,7 +1007,7 @@ std::vector<Test::Result> record_size_limits() {
 
       CHECK("padding requests are truncated to the protocol's plaintext size limit",
             [&](Test::Result& result) {
-               auto rl = record_layer_client(true, [](size_t) -> size_t { return 100000; });
+               auto rl = record_layer_client([](size_t) -> size_t { return 100000; });
 
                auto cs = rfc8448_rtt1_appdata_traffic();
                const std::array<uint8_t, 5> data = {0x01, 0x02, 0x03, 0x04, 0x05};
@@ -1039,7 +1021,7 @@ std::vector<Test::Result> record_size_limits() {
       CHECK("preparing a record where minimum_record_size == maximum_size_limit",
             [&](Test::Result& result) {
                constexpr uint16_t limit = 1024;
-               auto rl = record_layer_client(true, pad_to_minimum_size(limit));
+               auto rl = record_layer_client(pad_to_minimum_size(limit));
                rl.set_record_size_limits(/* outgoing_limit = */ limit,
                                          /* incoming_limit = */ limit);
 
@@ -1053,7 +1035,7 @@ std::vector<Test::Result> record_size_limits() {
 
       CHECK("pad records to a block boundary",
             [&](Test::Result& result) {
-               auto rl = record_layer_client(true, [](size_t ptb) { return (32 - ptb % 32) % 32; });
+               auto rl = record_layer_client([](size_t ptb) { return (32 - ptb % 32) % 32; });
                auto cs = rfc8448_rtt1_appdata_traffic();
 
                for(const size_t data_size : {0, 5, 31, 32, 100}) {
