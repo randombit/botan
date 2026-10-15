@@ -483,13 +483,42 @@ def cli_mod_inverse_tests(_tmp_dir):
     test_cli("mod_inverse", "97 802", "339")
     test_cli("mod_inverse", "98 802", "No modular inverse exists")
 
-def cli_base64_tests(_tmp_dir):
+def codec_roundtrip_test(tmp_dir, codec, py_encode, py_wrap):
+    """Round trip an input larger than the CLI read block through the given codec"""
+
+    raw = bytes(range(256)) * 40
+    raw_file = os.path.join(tmp_dir, '%s_raw' % (codec))
+    enc_file = os.path.join(tmp_dir, '%s_enc' % (codec))
+    dec_file = os.path.join(tmp_dir, '%s_dec' % (codec))
+
+    with open(raw_file, 'wb') as f:
+        f.write(raw)
+
+    expected = py_encode(raw).decode('ascii')
+    test_cli("%s_enc" % (codec), raw_file, expected)
+
+    # Decoding must tolerate line wrapping and other whitespace anywhere in the input
+    wrapped = " " + "\n".join(expected[i:i+py_wrap] for i in range(0, len(expected), py_wrap)) + "\n"
+    with open(enc_file, 'w', encoding='ascii') as f:
+        f.write(wrapped)
+
+    test_cli("%s_dec" % (codec), [enc_file, "--output=%s" % (dec_file)], "")
+
+    with open(dec_file, 'rb') as f:
+        if f.read() != raw:
+            logging.error("%s round trip of wrapped input failed", codec)
+
+def cli_base64_tests(tmp_dir):
     test_cli("base64_enc", "-", "YmVlcyE=", "bees!")
     test_cli("base64_dec", "-", "bees!", "YmVlcyE=")
 
-def cli_base32_tests(_tmp_dir):
+    codec_roundtrip_test(tmp_dir, "base64", base64.b64encode, 76)
+
+def cli_base32_tests(tmp_dir):
     test_cli("base32_enc", "-", "MJSWK4ZB", "bees!")
     test_cli("base32_dec", "-", "bees!", "MJSWK4ZB")
+
+    codec_roundtrip_test(tmp_dir, "base32", base64.b32encode, 64)
 
 def cli_base58_tests(_tmp_dir):
     test_cli("base58_enc", "-", "C6sRAr4", "bees!")
@@ -498,9 +527,12 @@ def cli_base58_tests(_tmp_dir):
     test_cli("base58_enc", ["--check", "-"], "Cjv15cdjaBc", "F00F")
     test_cli("base58_dec", ["--check", "-"], "F00F", "Cjv15cdjaBc")
 
-def cli_hex_tests(_tmp_dir):
+def cli_hex_tests(tmp_dir):
     test_cli("hex_enc", "-", "6265657321", "bees!")
     test_cli("hex_dec", "-", "bees!", "6265657321")
+    test_cli("hex_dec", "-", "bees!", "62 65\n65 73\n21")
+
+    codec_roundtrip_test(tmp_dir, "hex", lambda b: binascii.hexlify(b).upper(), 60)
 
 def cli_hash_tests(tmp_dir):
     test_cli("hash", "--algo=SHA-256",
