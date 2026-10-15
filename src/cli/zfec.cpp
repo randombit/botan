@@ -169,9 +169,17 @@ class FEC_Encode final : public Command {
             }
 
             std::ofstream output(output_fsname.str(), std::ios::binary);
+            if(!output) {
+               throw CLI_IO_Error("opening", output_fsname.str());
+            }
 
             const FEC_Share fec_share(share, k, n, padding, bits, len);
             fec_share.serialize_to(*hash, output);
+            output.close();
+
+            if(!output) {
+               throw CLI_IO_Error("writing", output_fsname.str());
+            }
          };
 
          fec.encode(input_data.data(), input_data.size(), encoder_fn);

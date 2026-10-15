@@ -63,14 +63,7 @@ int Command::run(const std::vector<std::string>& params) {
       m_args->parse_args(params);
 
       if(m_args->has_arg("output")) {
-         const std::string output_file = get_arg("output");
-
-         if(!output_file.empty()) {
-            m_output_stream = std::make_unique<std::ofstream>(output_file, std::ios::binary);
-            if(!m_output_stream->good()) {
-               throw CLI_IO_Error("opening", output_file);
-            }
-         }
+         m_output_file = get_arg("output");
       }
 
       if(m_args->has_arg("error-output")) {
@@ -90,6 +83,7 @@ int Command::run(const std::vector<std::string>& params) {
       }
 
       this->go();
+      finish_output();
       return m_return_code;
    } catch(CLI_Usage_Error& e) {
       error_output() << "Usage error: " << e.what() << "\n";
@@ -153,20 +147,51 @@ std::vector<std::string> Command::get_arg_list(const std::string& what) const {
 }
 
 std::ostream& Command::output() {
-   if(m_output_stream) {
+   if(!m_output_file.empty()) {
+      /*
+      * The output file is created only once something is written to it, so
+      * that naming an input file as the output does not truncate the input
+      * before the command has read it.
+      */
+      if(!m_output_stream) {
+         m_output_stream = std::make_unique<std::ofstream>(m_output_file, std::ios::binary);
+         if(!m_output_stream->good()) {
+            throw CLI_IO_Error("opening", m_output_file);
+         }
+      }
       return *m_output_stream;
    }
    return std::cout;
 }
 
 std::ostream& Command::output_binary() {
-   if(m_output_stream) {
-      return *m_output_stream;
+   if(!m_output_file.empty()) {
+      return output();
    }
 #ifdef _WIN32
    _setmode(_fileno(stdout), _O_BINARY);
 #endif
    return std::cout;
+}
+
+void Command::finish_output() {
+   if(!m_output_file.empty()) {
+      // Creates the file if the command produced no output at all
+      output();
+      m_output_stream->close();
+      if(m_output_stream->fail()) {
+         throw CLI_IO_Error("writing", m_output_file);
+      }
+   } else {
+      std::cout.flush();
+      if(!std::cout.good()) {
+         throw CLI_IO_Error("writing", "stdout");
+      }
+   }
+
+   if(m_error_output_stream) {
+      m_error_output_stream->flush();
+   }
 }
 
 std::ostream& Command::error_output() {
@@ -200,12 +225,19 @@ void Command::read_file(const std::string& input_file,
       _setmode(_fileno(stdin), _O_BINARY);
 #endif
       do_read_file(std::cin, consumer_fn, buf_size);
+      if(std::cin.bad()) {
+         throw CLI_IO_Error("reading", "stdin");
+      }
    } else {
       std::ifstream in(input_file, std::ios::binary);
       if(!in) {
          throw CLI_IO_Error("reading file", input_file);
       }
       do_read_file(in, consumer_fn, buf_size);
+      // A read error (as opposed to EOF) sets badbit
+      if(in.bad()) {
+         throw CLI_IO_Error("reading file", input_file);
+      }
    }
 }
 

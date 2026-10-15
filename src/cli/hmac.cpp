@@ -50,17 +50,20 @@ class HMAC final : public Command {
             try {
                const auto update_hmac = [&](const uint8_t b[], size_t l) { hmac->update(b, l); };
                read_file(fsname, update_hmac, buf_size);
-               output() << Botan::hex_encode(hmac->final());
-
-               if(!no_fsname) {
-                  output() << " " << fsname;
-               }
-
-               output() << "\n";
             } catch(CLI_IO_Error& e) {
                error_output() << e.what() << "\n";
                set_return_code(1);
+               hmac->final();  // discard any partial input
+               continue;
             }
+
+            output() << Botan::hex_encode(hmac->final());
+
+            if(!no_fsname) {
+               output() << " " << fsname;
+            }
+
+            output() << "\n";
          }
       }
 };

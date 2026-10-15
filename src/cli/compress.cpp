@@ -72,20 +72,26 @@ class Compress final : public Command {
 
          compress->start(comp_level);
 
-         while(in.good()) {
-            buf.resize(buf_size);
-            in.read(reinterpret_cast<char*>(buf.data()), buf.size());
-            buf.resize(in.gcount());
-
+         const auto compress_block = [&](const uint8_t b[], size_t l) {
+            buf.assign(b, b + l);
             compress->update(buf);
-
             out.write(reinterpret_cast<const char*>(buf.data()), buf.size());
+         };
+
+         Command::do_read_file(in, compress_block, buf_size);
+
+         if(in.bad()) {
+            throw CLI_IO_Error("reading", in_file);
          }
 
          buf.clear();
          compress->finish(buf);
          out.write(reinterpret_cast<const char*>(buf.data()), buf.size());
          out.close();
+
+         if(!out) {
+            throw CLI_IO_Error("writing", out_file);
+         }
       }
 };
 
@@ -142,20 +148,26 @@ class Decompress final : public Command {
 
          decompress->start();
 
-         while(in.good()) {
-            buf.resize(buf_size);
-            in.read(reinterpret_cast<char*>(buf.data()), buf.size());
-            buf.resize(in.gcount());
-
+         const auto decompress_block = [&](const uint8_t b[], size_t l) {
+            buf.assign(b, b + l);
             decompress->update(buf);
-
             out.write(reinterpret_cast<const char*>(buf.data()), buf.size());
+         };
+
+         Command::do_read_file(in, decompress_block, buf_size);
+
+         if(in.bad()) {
+            throw CLI_IO_Error("reading", in_file);
          }
 
          buf.clear();
          decompress->finish(buf);
          out.write(reinterpret_cast<const char*>(buf.data()), buf.size());
          out.close();
+
+         if(!out) {
+            throw CLI_IO_Error("writing", out_file);
+         }
       }
 };
 

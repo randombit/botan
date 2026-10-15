@@ -9,6 +9,7 @@
 
 #include "cli_exceptions.h"
 #include <botan/types.h>
+#include <fstream>
 #include <functional>
 #include <map>
 #include <memory>
@@ -197,12 +198,17 @@ class Command /* NOLINT(*special-member-functions) */ {
 
       void parse_spec();
 
+      void finish_output();
+
       // set in constructor
       std::string m_spec;
 
       std::unique_ptr<Argument_Parser> m_args;
-      std::unique_ptr<std::ostream> m_output_stream;
-      std::unique_ptr<std::ostream> m_error_output_stream;
+
+      // --output is opened on first use, see output()
+      std::string m_output_file;
+      std::unique_ptr<std::ofstream> m_output_stream;
+      std::unique_ptr<std::ofstream> m_error_output_stream;
 
       std::shared_ptr<Botan::RandomNumberGenerator> m_rng;
 

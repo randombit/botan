@@ -519,6 +519,24 @@ def cli_hash_tests(tmp_dir):
     test_cli("hash", ["--algo=SHA-224", "--format=base58check", "--no-fsname"],
              "3MmfMqgrhemdVa9bDAGfooukbviWtKMBx2xauL2RsyAe", "abc")
 
+    # Naming the input file as the output must not truncate it before it is read
+    inplace = os.path.join(tmp_dir, 'inplace')
+    with open(inplace, 'wb') as f:
+        f.write(b'abc')
+    test_cli("hash", ["--no-fsname", "--output=%s" % (inplace), inplace], "")
+    with open(inplace, 'r', encoding='utf8') as f:
+        if f.read() != "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD\n":
+            logging.error("hash --output naming the input file produced wrong output")
+
+    # Output file problems are reported with a nonzero status
+    bad_output = os.path.join(tmp_dir, 'no_such_dir', 'out')
+    test_cli("hash", ["--no-fsname", "--output=%s" % (bad_output), inplace], "",
+             expected_stderr="Error: Error opening %s" % (bad_output), expected_rc=2)
+
+    if platform.system() == 'Linux' and os.path.exists('/dev/full'):
+        test_cli("hash", ["--no-fsname", "--output=/dev/full", inplace], "",
+                 expected_stderr="Error: Error writing /dev/full", expected_rc=2)
+
 def cli_hmac_tests(tmp_dir):
     key_file = os.path.join(tmp_dir, 'hmac.key')
 
@@ -1065,6 +1083,12 @@ def cli_zfec_tests(tmp_dir):
     prefix = "test"
     k = 3
     n = 5
+
+    bad_dir = os.path.join(tmp_dir, 'no_such_dir')
+    test_cli("fec_encode", ["--output-dir=%s" % (bad_dir),
+                            "--prefix=%s" % (prefix),
+                            str(k), str(n), input_file], "",
+             expected_stderr="Error: Error opening %s/%s.1_%d.fec" % (bad_dir, prefix, n), expected_rc=2)
 
     test_cli("fec_encode", ["--output-dir=%s" % (tmp_dir),
                             "--prefix=%s" % (prefix),
