@@ -294,6 +294,15 @@ def test_cli(cmd, cmd_options,
 
     return stdout
 
+def check_private_file(path):
+    """Check that a file holding secret data is readable only by its owner"""
+    if platform.system() == 'Windows':
+        return
+
+    mode = os.stat(path).st_mode & 0o777
+    if mode & 0o077 != 0:
+        logging.error("File %s has mode %o but should be owner-only", path, mode)
+
 def check_for_command(cmd):
     cmdline = [CLI_PATH, 'has_command', cmd]
     proc = subprocess.Popen(cmdline)
@@ -623,12 +632,15 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
     test_cli("keygen", ["--algo=ECDSA", "--params=secp256k1"], pem)
 
     test_cli("keygen", ["--algo=ECDSA", "--params=secp256r1", "--output=" + priv_key], "")
+    check_private_file(priv_key)
 
     test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key, priv_key), "")
     test_cli("pkcs8", "--pub-out --der-out --output=%s %s" % (pub_der_key, priv_key), "")
 
     test_cli("pkcs8", "--pass-out=foof --cipher=AES-128/CBC --der-out --output=%s %s" % (enc_der, priv_key), "")
     test_cli("pkcs8", "--pass-out=foof --pbkdf=Scrypt --output=%s %s" % (enc_pem, priv_key), "")
+    check_private_file(enc_der)
+    check_private_file(enc_pem)
 
     dec_pem = test_cli("pkcs8", ["--pass-in=foof", enc_pem], None)
     dec_der = test_cli("pkcs8", ["--pass-in=foof", enc_der], None)
@@ -770,6 +782,21 @@ def cli_xmss_sign_tests(tmp_dir):
     test_cli("keygen", ["--algo=XMSS", "--params=XMSS-SHA2_10_256", "--output=%s" % (priv_key)], "")
     test_cli("hash", ["--no-fsname", priv_key], "737368AB8BFC6B0CDA0DF7FB6BD1DE48C2ABA81236F65E4E227920CECCC5F259")
 
+    # If the updated key cannot be stored, no signature may be produced and
+    # the key file must be left unchanged
+    if platform.system() != 'Windows' and os.geteuid() != 0:
+        ro_dir = os.path.join(tmp_dir, 'readonly')
+        os.mkdir(ro_dir)
+        ro_key = os.path.join(ro_dir, 'priv.pem')
+        shutil.copyfile(priv_key, ro_key)
+        os.chmod(ro_dir, 0o500)
+        try:
+            test_cli("sign", [ro_key, msg], "",
+                     expected_stderr="Error: Error opening %s.tmp" % (ro_key), expected_rc=2)
+            test_cli("hash", ["--no-fsname", ro_key], "737368AB8BFC6B0CDA0DF7FB6BD1DE48C2ABA81236F65E4E227920CECCC5F259")
+        finally:
+            os.chmod(ro_dir, 0o700)
+
     test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key, priv_key), "")
     test_cli("fingerprint", ['--no-fsname', pub_key],
              "7B:9F:20:23:A8:FC:A7:BD:BA:F4:DE:58:3C:D8:68:52:D1:8E:16:C8:B4:33:B0:34:FE:42:37:16:AE:95:7B:83")
@@ -779,6 +806,9 @@ def cli_xmss_sign_tests(tmp_dir):
     test_cli("verify", [pub_key, msg, sig1], "Signature is valid")
     test_cli("hash", ["--no-fsname", sig1], "A37241040C0C7044DD502D92B69E8B931FF43FBC91CF4E3C869B23206EBFABF6")
     test_cli("hash", ["--no-fsname", priv_key], "748E63766E8805A4CED94B7BC52F0A5EB2D6F8CECFD2CFC27C61DFA2C7DC1328")
+    check_private_file(priv_key)
+    if os.path.exists(priv_key + ".tmp"):
+        logging.error("Temporary key file was left behind")
 
     test_cli("sign", [priv_key, msg, "--output=%s" % (sig2)], "")
     test_cli("verify", [pub_key, msg, sig2], "Signature is valid")
@@ -1794,11 +1824,13 @@ def cli_tss_tests(tmp_dir):
         share = os.path.join(tmp_dir, "split%d.tss" % (i))
         if not os.access(share, os.R_OK):
             logging.error("Failed to create expected split file %s", share)
+        check_private_file(share)
         share_files.append(share)
 
     rec5 = os.path.join(tmp_dir, "recovered_5")
     test_cli("tss_recover", share_files + ["--output=%s" % (rec5)], "")
     test_cli("hash", ["--no-fsname", rec5], exp_hash)
+    check_private_file(rec5)
 
     rec4 = os.path.join(tmp_dir, "recovered_4")
     test_cli("tss_recover", share_files[1:] + ["--output=%s" % (rec4)], "")
@@ -1880,6 +1912,8 @@ def cli_pkcs12_tests(tmp_dir):
 
     if not os.path.exists(out_key):
         logging.error("pkcs12_info did not write key file")
+    else:
+        check_private_file(out_key)
     if not os.path.exists(out_cert):
         logging.error("pkcs12_info did not write cert file")
 

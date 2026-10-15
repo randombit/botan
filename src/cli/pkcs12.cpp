@@ -124,10 +124,7 @@ class PKCS12_Info final : public Command {
          if(!key_out.empty() && has_key) {
             const std::string key_pass =
                get_passphrase_arg("Output key password (empty for unencrypted)", "out-key-pass");
-            std::ofstream key_stream(key_out);
-            if(!key_stream) {
-               throw CLI_Error("Cannot open " + key_out + " for writing");
-            }
+            std::ofstream key_stream = open_output_file(key_out, true);
 
             const auto& key = *bundle.private_keys().front();
             if(key_pass.empty()) {
@@ -136,6 +133,10 @@ class PKCS12_Info final : public Command {
                const std::string cipher = get_arg_or("out-key-cipher", "AES-256/CBC");
                const size_t iterations = get_arg_sz("key-pbkdf-iter");
                key_stream << Botan::PKCS8::PEM_encode_encrypted_pbkdf_iter(key, rng(), key_pass, iterations, cipher);
+            }
+            key_stream.close();
+            if(!key_stream) {
+               throw CLI_IO_Error("writing", key_out);
             }
             output() << "Private key written to " << key_out << "\n";
          }

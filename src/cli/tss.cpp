@@ -65,12 +65,14 @@ class TSS_Split final : public Command {
 
          for(size_t i = 0; i != shares.size(); ++i) {
             const std::string share_name = Botan::fmt("{}{}.{}", share_prefix, i + 1, share_suffix);
-            std::ofstream out(share_name.c_str(), std::ios::binary);
-            if(!out) {
-               throw CLI_Error("Failed to open output file " + share_name);
-            }
+            std::ofstream out = open_output_file(share_name, true);
 
             out.write(reinterpret_cast<const char*>(shares[i].data().data()), shares[i].data().size());
+            out.close();
+
+            if(!out) {
+               throw CLI_IO_Error("writing", share_name);
+            }
          }
       }
 
@@ -92,6 +94,8 @@ class TSS_Recover final : public Command {
       std::string group() const override { return "tss"; }
 
       std::string description() const override { return "Recover a split secret"; }
+
+      bool output_contains_secrets() const override { return true; }
 
       void go() override {
          const std::vector<std::string> share_names = get_arg_list("shares");
