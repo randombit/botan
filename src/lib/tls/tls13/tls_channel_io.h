@@ -151,6 +151,13 @@ class Channel_IO {
       bool m_first_message_delivered = false;
 
       /**
+       * True once the peer sent close_notify and notify_closed_for_reading()
+       * was called. From then on, any further incoming data is ignored.
+       * See RFC 9846 6.1.
+       */
+      bool m_closed_for_reading = false;
+
+      /**
        * True if a dummy CCS record has been sent to the peer already.
        * See RFC 9846 E.4 for details.
        */
