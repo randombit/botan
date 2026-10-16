@@ -9,10 +9,10 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/numthry.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/mp_core.h>
-#include <botan/internal/rounding.h>
 
 namespace Botan {
 
@@ -150,15 +150,16 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k) {
 
    const size_t a_words = a.sig_words();
 
-   X.grow_to(round_up(k, WordInfo<word>::bits) / WordInfo<word>::bits);
-   b.grow_to(a_words);
-
    /*
    Hide the exact value of k. k is anyway known to word length
    granularity because of the length of a, so no point in doing more
    than this.
    */
-   const size_t iter = round_up(k, WordInfo<word>::bits);
+   const size_t k_words = ceil_division(k, WordInfo<word>::bits);
+   const size_t iter = k_words * WordInfo<word>::bits;
+
+   X.grow_to(k_words);
+   b.grow_to(a_words);
 
    for(size_t i = 0; i != iter; ++i) {
       const bool b0 = b.get_bit(0);

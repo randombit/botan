@@ -165,7 +165,8 @@ constexpr uint8_t ceil_log2(T x)
  */
 template <std::unsigned_integral T>
 BOTAN_FORCE_INLINE constexpr T ceil_division(T a, T b) {
-   return (a + b - 1) / b;
+   // Same as `(a + b - 1) / b` but avoids possible overflow
+   return a / b + ((a % b != 0) ? 1 : 0);
 }
 
 /**

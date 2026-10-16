@@ -24,7 +24,7 @@
 #endif
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
-   #include <botan/internal/rounding.h>
+   #include <botan/internal/bit_ops.h>
    #include <botan/internal/thread_pool.h>
    #include <atomic>
    #include <exception>
@@ -186,7 +186,8 @@ class Threaded_Hash_Engine final : public Hash_Engine {
       template <typename F>
       void dispatch(size_t threads, size_t count, F work_fn) {
          const size_t lanes = m_engines[0]->parallelism();
-         const size_t chunk = std::max(lanes, round_up(count / (4 * threads), lanes));
+         // Roughly four chunks per thread, each a whole number of lanes
+         const size_t chunk = lanes * std::max<size_t>(1, ceil_division(count / (4 * threads), lanes));
 
          std::atomic<size_t> next = 0;
 

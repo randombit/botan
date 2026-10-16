@@ -10,9 +10,9 @@
 
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/monty.h>
-#include <botan/internal/rounding.h>
 
 #if defined(BOTAN_HAS_MONTY_EXP_AVX512)
    #include <botan/internal/cpuid.h>
@@ -187,7 +187,9 @@ Montgomery_Int monty_multi_exp(
       throw Invalid_Argument("multi_exponentiate exponents must be positive");
    }
 
-   const size_t z_bits = round_up(std::max(z1.bits(), z2.bits()), 2);
+   // The exponents are consumed two bits at a time
+   const size_t max_z1z2 = std::max(z1.bits(), z2.bits());
+   const size_t z_bits = 2 * ceil_division<size_t>(max_z1z2, 2);
 
    secure_vector<word> ws(2 * params_p.p_words());
 

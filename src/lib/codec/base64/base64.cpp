@@ -8,12 +8,12 @@
 #include <botan/base64.h>
 
 #include <botan/exceptn.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/charset.h>
 #include <botan/internal/codec_base.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/rounding.h>
 
 #if defined(BOTAN_HAS_BASE64_AVX512)
    #include <botan/internal/base64_avx512.h>
@@ -42,13 +42,13 @@ class Base64 final {
       static constexpr size_t remaining_bits_before_padding() noexcept { return m_remaining_bits_before_padding; }
 
       static constexpr size_t encode_max_output(size_t input_length) {
-         const size_t encoding_blocks = round_up(input_length, m_encoding_bytes_in) / m_encoding_bytes_in;
+         const size_t encoding_blocks = ceil_division(input_length, m_encoding_bytes_in);
          return mul_or_throw(encoding_blocks, m_encoding_bytes_out, "Input too large to base64 encode");
       }
 
       static constexpr size_t decode_max_output(size_t input_length) {
-         // Divide before multiply to avoid overflow; round_up makes the division exact.
-         return (round_up(input_length, m_encoding_bytes_out) / m_encoding_bytes_out) * m_encoding_bytes_in;
+         // Cannot overflow since each block shrinks when decoded
+         return ceil_division(input_length, m_encoding_bytes_out) * m_encoding_bytes_in;
       }
 
       static void encode(char out[4], const uint8_t in[3]) noexcept;

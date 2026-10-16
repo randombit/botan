@@ -15,11 +15,11 @@
 #include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_version.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/cbc.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/rounding.h>
 
 namespace Botan::TLS {
 
@@ -160,7 +160,8 @@ void TLS_CBC_HMAC_AEAD_Encryption::set_associated_data_n(size_t idx, std::span<c
       // AAD hack for EtM
       // EtM uses ciphertext size instead of plaintext size for AEAD input
       const uint16_t pt_size = make_uint16(assoc_data()[11], assoc_data()[12]);
-      const uint16_t enc_size = static_cast<uint16_t>(round_up(iv_size() + pt_size + 1, block_size()));
+      const size_t enc_blocks = ceil_division(iv_size() + pt_size + 1, block_size());
+      const uint16_t enc_size = static_cast<uint16_t>(enc_blocks * block_size());
       assoc_data()[11] = get_byte<0, uint16_t>(enc_size);
       assoc_data()[12] = get_byte<1, uint16_t>(enc_size);
    }
@@ -202,11 +203,11 @@ size_t TLS_CBC_HMAC_AEAD_Encryption::output_length(size_t input_length) const {
    const size_t mac_in_plaintext = use_encrypt_then_mac() ? 0 : tag_size();
    const size_t mac_appended = use_encrypt_then_mac() ? tag_size() : 0;
 
-   // round_up() checks its own addition for overflow, but the addition feeding
-   // it and the trailing MAC must be checked separately. mac_in_plaintext + 1
-   // cannot overflow as the MAC length is small.
+   // mac_in_plaintext + 1 cannot overflow as the MAC length is small
    const size_t input_size = add_or_throw(input_length, mac_in_plaintext + 1, "TLS CBC input too large");
-   return add_or_throw(round_up(input_size, block_size()), mac_appended, "TLS CBC input too large");
+   const size_t enc_blocks = ceil_division(input_size, block_size());
+   const size_t enc_size = mul_or_throw(enc_blocks, block_size(), "TLS CBC input too large");
+   return add_or_throw(enc_size, mac_appended, "TLS CBC input too large");
 }
 
 void TLS_CBC_HMAC_AEAD_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
@@ -216,8 +217,7 @@ void TLS_CBC_HMAC_AEAD_Encryption::finish_msg(secure_vector<uint8_t>& buffer, si
 
    const size_t input_size =
       add_or_throw(msg_size, (use_encrypt_then_mac() ? 0 : tag_size()) + 1, "TLS CBC input too large");
-   const size_t enc_size = round_up(input_size, block_size());
-   BOTAN_DEBUG_ASSERT(enc_size % block_size() == 0);
+   const size_t enc_size = block_size() * ceil_division(input_size, block_size());
 
    const uint8_t padding_val = static_cast<uint8_t>(enc_size - input_size);
    const size_t padding_length = static_cast<size_t>(padding_val) + 1;
