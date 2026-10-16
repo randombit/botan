@@ -1,5 +1,5 @@
 /*
-* (C) 2016,2018 Jack Lloyd
+* (C) 2016,2018,2026 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,12 +10,16 @@
 #include <botan/numthry.h>
 #include <botan/rng.h>
 #include <botan/internal/barrett.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/monty.h>
 #include <botan/internal/monty_exp.h>
+#include <botan/internal/mp_core.h>
 
 namespace Botan {
 
-bool is_lucas_probable_prime(const BigInt& C, const Barrett_Reduction& mod_C) {
+namespace {
+
+bool lucas_test(const BigInt& C, const Barrett_Reduction& mod_C) {
    BOTAN_ARG_CHECK(C.signum() >= 0, "Argument must be non-negative");
 
    if(C == 2 || C == 3 || C == 5 || C == 7 || C == 11 || C == 13) {
@@ -95,87 +99,195 @@ bool is_lucas_probable_prime(const BigInt& C, const Barrett_Reduction& mod_C) {
    return (U == 0);
 }
 
-bool is_bailie_psw_probable_prime(const BigInt& n, const Barrett_Reduction& mod_n) {
-   if(n == 2) {
-      return true;
-   } else if(n <= 1 || n.is_even()) {
-      return false;
+/*
+* Window size for variable time exponentiation of an exponent of exp_bits
+*/
+size_t vartime_window_bits(size_t exp_bits) {
+   if(exp_bits <= 256) {
+      return 4;
+   } else if(exp_bits <= 1024) {
+      return 5;
+   } else if(exp_bits <= 2048) {
+      return 6;
+   } else {
+      return 7;
    }
-
-   const Montgomery_Params monty_n(n, mod_n);
-   const auto base = BigInt::from_word(2);
-   return passes_miller_rabin_test(n, mod_n, monty_n, base) && is_lucas_probable_prime(n, mod_n);
 }
 
-bool passes_miller_rabin_test(const BigInt& n,
-                              const Barrett_Reduction& mod_n,
-                              const Montgomery_Params& monty_n,
-                              const BigInt& a) {
-   if(n < 3 || n.is_even()) {
-      return false;
-   }
+/**
+* Precomputed values shared by all Miller-Rabin tests of a single n
+*/
+class Miller_Rabin_Test final {
+   public:
+      Miller_Rabin_Test(const BigInt& n, const Montgomery_Params& monty_n, bool vartime) :
+            m_monty_n(monty_n), m_vartime(vartime) {
+         BOTAN_ARG_CHECK(n >= 3 && n.is_odd(), "Invalid integer for Miller-Rabin test");
 
-   BOTAN_ASSERT_NOMSG(n > 1);
+         const size_t N = m_monty_n.p_words();
 
-   const BigInt n_minus_1 = n - 1;
-   /*
-   * This unpoison is not ideal but realistically there is no way to
-   * hide the number of loop iterations (below). The main user of
-   * secret primes is RSA and we always generate RSA primes such that
-   * p == 3 (mod 4), which means s is always 1.
-   */
-   const size_t s = CT::driveby_unpoison(low_zero_bits(n_minus_1));
-   const BigInt nm1_s = n_minus_1 >> s;
-   const size_t n_bits = n.bits();
+         const BigInt n_minus_1 = n - 1;
+         /*
+         * This unpoison is not ideal but realistically there is no way to
+         * hide the number of loop iterations (below). The main user of
+         * secret primes is RSA and we always generate RSA primes such that
+         * p == 3 (mod 4), which means s is always 1.
+         */
+         m_s = CT::driveby_unpoison(low_zero_bits(n_minus_1));
+         m_d = n_minus_1 >> m_s;
+         m_d_bits = m_d.bits();
 
-   const size_t powm_window = 4;
+         // 1 and -1 in Montgomery form
+         m_one.assign(m_monty_n.R1()._as_span().first(N).begin(), m_monty_n.R1()._as_span().first(N).end());
+         m_minus_one.resize(N);
+         bigint_sub3(m_minus_one.data(), n._data(), N, m_one.data(), N);
+      }
 
-   const auto powm_a_n = monty_precompute(monty_n, a, powm_window);
+      /**
+      * Perform a single Miller-Rabin test with the specified base
+      */
+      bool passes(const BigInt& a) const {
+         Montgomery_Int y = [&]() {
+            if(m_vartime) {
+               const auto powm_a = monty_precompute(m_monty_n, a, vartime_window_bits(m_d_bits), false);
+               return monty_execute_vartime(*powm_a, m_d);
+            } else {
+               const auto powm_a = monty_precompute(m_monty_n, a, 4, true);
+               return monty_execute(*powm_a, m_d, m_d_bits);
+            }
+         }();
 
-   BigInt y = monty_execute(*powm_a_n, nm1_s, n_bits).value();
+         if(is_one(y) || is_minus_one(y)) {
+            return true;
+         }
 
-   if(y == 1 || y == n_minus_1) {
-      return true;
-   }
+         secure_vector<word> ws(2 * m_monty_n.p_words());
 
-   for(size_t i = 1; i != s; ++i) {
-      y = mod_n.square(y);
+         for(size_t i = 1; i != m_s; ++i) {
+            y.square_this_n_times(ws, 1);
 
-      if(y == 1) {  // found a non-trivial square root
+            if(is_one(y)) {  // found a non-trivial square root
+               return false;
+            }
+
+            /*
+            -1 is the trivial square root of unity, so ``a`` is not a
+            witness for this number - give up
+            */
+            if(is_minus_one(y)) {
+               return true;
+            }
+         }
+
          return false;
       }
 
-      /*
-      -1 is the trivial square root of unity, so ``a`` is not a
-      witness for this number - give up
-      */
-      if(y == n_minus_1) {
-         return true;
+   private:
+      bool is_one(const Montgomery_Int& y) const {
+         return CT::is_equal(y.repr().data(), m_one.data(), m_one.size()).as_bool();
       }
-   }
 
-   return false;
-}
+      bool is_minus_one(const Montgomery_Int& y) const {
+         return CT::is_equal(y.repr().data(), m_minus_one.data(), m_minus_one.size()).as_bool();
+      }
 
-bool is_miller_rabin_probable_prime(const BigInt& n,
-                                    const Barrett_Reduction& mod_n,
-                                    const Montgomery_Params& monty_n,
-                                    RandomNumberGenerator& rng,
-                                    size_t test_iterations) {
+      Montgomery_Params m_monty_n;
+      bool m_vartime;
+      size_t m_s;
+      BigInt m_d;
+      size_t m_d_bits;
+      secure_vector<word> m_one;
+      secure_vector<word> m_minus_one;
+};
+
+bool miller_rabin_test(const BigInt& n,
+                       const Montgomery_Params& monty_n,
+                       RandomNumberGenerator& rng,
+                       size_t test_iterations,
+                       bool vartime) {
    if(n < 3 || n.is_even()) {
       return false;
    }
+
+   const Miller_Rabin_Test mr(n, monty_n, vartime);
 
    for(size_t i = 0; i != test_iterations; ++i) {
       const BigInt a = BigInt::random_integer(rng, BigInt::from_word(2), n);
 
-      if(!passes_miller_rabin_test(n, mod_n, monty_n, a)) {
+      if(!mr.passes(a)) {
          return false;
       }
    }
 
    // Failed to find a counterexample
    return true;
+}
+
+bool bailie_psw_test(const BigInt& n, const Montgomery_Params& monty_n, bool vartime) {
+   if(n == 2) {
+      return true;
+   } else if(n <= 1 || n.is_even()) {
+      return false;
+   }
+
+   const Miller_Rabin_Test mr(n, monty_n, vartime);
+   if(!mr.passes(BigInt::from_word(2))) {
+      return false;
+   }
+
+   return vartime ? is_lucas_probable_prime_vartime(n, monty_n) : is_lucas_probable_prime(n, monty_n);
+}
+
+}  // namespace
+
+bool is_lucas_probable_prime(const BigInt& n, const Montgomery_Params& monty_n) {
+   return lucas_test(n, Barrett_Reduction::for_secret_modulus(monty_n.p()));
+}
+
+bool is_lucas_probable_prime_vartime(const BigInt& n, const Montgomery_Params& monty_n) {
+   // Currently identical to the constant time version
+   return lucas_test(n, Barrett_Reduction::for_public_modulus(monty_n.p()));
+}
+
+bool is_bailie_psw_probable_prime(const BigInt& n, const Montgomery_Params& monty_n) {
+   return bailie_psw_test(n, monty_n, false);
+}
+
+bool is_bailie_psw_probable_prime_vartime(const BigInt& n, const Montgomery_Params& monty_n) {
+   return bailie_psw_test(n, monty_n, true);
+}
+
+bool is_bailie_psw_probable_prime(const BigInt& n) {
+   if(n == 2) {
+      return true;
+   } else if(n <= 1 || n.is_even()) {
+      return false;
+   }
+
+   return bailie_psw_test(n, Montgomery_Params(n), false);
+}
+
+bool is_bailie_psw_probable_prime_vartime(const BigInt& n) {
+   if(n == 2) {
+      return true;
+   } else if(n <= 1 || n.is_even()) {
+      return false;
+   }
+
+   return bailie_psw_test(n, Montgomery_Params(n), true);
+}
+
+bool is_miller_rabin_probable_prime(const BigInt& n,
+                                    const Montgomery_Params& monty_n,
+                                    RandomNumberGenerator& rng,
+                                    size_t test_iterations) {
+   return miller_rabin_test(n, monty_n, rng, test_iterations, false);
+}
+
+bool is_miller_rabin_probable_prime_vartime(const BigInt& n,
+                                            const Montgomery_Params& monty_n,
+                                            RandomNumberGenerator& rng,
+                                            size_t test_iterations) {
+   return miller_rabin_test(n, monty_n, rng, test_iterations, true);
 }
 
 size_t miller_rabin_test_iterations(size_t n_bits, size_t prob, bool random) {
