@@ -50,6 +50,38 @@ class Montgomery_Integer_Tests : public Test {
             result.test_bn_eq("Montgomery square x", (monty_x.square(ws)).value(), (x * x) % p);
             result.test_bn_eq("Montgomery square y", (monty_y.square(ws)).value(), (y * y) % p);
 
+            auto z = monty_x;
+            z += monty_y;
+            result.test_bn_eq("Montgomery in-place addition", z.value(), (x + y) % p);
+
+            z = monty_x;
+            z -= monty_y;
+            result.test_bn_eq("Montgomery in-place subtraction", z.value(), (x - y) % p);
+
+            z = monty_x;
+            z += z;
+            result.test_bn_eq("Montgomery in-place doubling", z.value(), (x + x) % p);
+
+            z = monty_x;
+            z.div2();
+            result.test_bn_eq("Montgomery div2", (z.value() * 2) % p, x);
+
+            for(const Botan::word d : {1, 2, 3, 5, 7, 17, 255, 1024, 65537}) {
+               z = monty_x;
+               z.mul_by_word(d);
+               result.test_bn_eq("Montgomery mul_by_word " + std::to_string(d), z.value(), (x * d) % p);
+            }
+
+            z = monty_x;
+            z.ct_cond_assign(false, monty_y);
+            result.test_bn_eq("Montgomery ct_cond_assign false", z.value(), x);
+            z.ct_cond_assign(true, monty_y);
+            result.test_bn_eq("Montgomery ct_cond_assign true", z.value(), y);
+
+            // NOLINTNEXTLINE(*-redundant-expression)
+            result.test_is_true("Montgomery x - x is zero", (monty_x - monty_x).is_zero());
+            result.test_is_false("Montgomery x is not zero", monty_x.is_zero());
+
             results.push_back(result);
          }
 
