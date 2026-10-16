@@ -39,6 +39,7 @@ class BigInt_Unit_Tests final : public Test {
 
          results.push_back(test_bigint_sizes());
          results.push_back(test_random_prime());
+         results.push_back(test_is_prime_strong());
          results.push_back(test_encode());
          results.push_back(test_bigint_io());
          results.push_back(test_get_substring());
@@ -78,6 +79,43 @@ class BigInt_Unit_Tests final : public Test {
 
                a--;
             }
+         }
+
+         return result;
+      }
+
+      static Test::Result test_is_prime_strong() {
+         Test::Result result("BigInt is_prime with many tests");
+
+         auto rng = Test::new_rng("is_prime_strong");
+
+         for(const size_t bits : {512, 1024}) {
+            const BigInt p = Botan::random_prime(*rng, bits);
+            result.test_is_true("Prime passes a strong check", Botan::is_prime(p, *rng, 128, false));
+            result.test_is_true("Prime passes a strong vartime check", Botan::is_prime_vartime(p, *rng, 128, false));
+         }
+
+         /*
+         * A composite with no small factors, tested with bases that are all n-1,
+         * which is a strong liar for any odd n. This forces the Miller-Rabin tests
+         * in the calling thread to pass, so that rejection can only come from the
+         * remaining tests, including any run in the thread pool.
+         */
+         const BigInt n = Botan::random_prime(*rng, 512) * Botan::random_prime(*rng, 512);
+
+         // random_integer draws bits(n - 2) bits and returns 2 + r, so r = n - 3 gives n - 1
+         const BigInt n_minus_3 = n - 3;
+         const auto liar = n_minus_3.serialize(((n - 2).bits() + 7) / 8);
+
+         for(const bool vartime : {false, true}) {
+            Fixed_Output_RNG liar_rng(*rng);
+            for(size_t i = 0; i != 9; ++i) {
+               liar_rng.add_entropy(liar);
+            }
+
+            const bool accepted =
+               vartime ? Botan::is_prime_vartime(n, liar_rng, 128, false) : Botan::is_prime(n, liar_rng, 128, false);
+            result.test_is_false("Composite rejected despite strong liar bases", accepted);
          }
 
          return result;

@@ -147,6 +147,44 @@ bool BOTAN_TEST_API is_miller_rabin_probable_prime_vartime(const BigInt& n,
                                                            size_t t);
 
 /**
+* Perform t iterations of a Miller-Rabin primality test with random bases,
+* followed by a Lucas test.
+*
+* If a thread pool is available and the work is large enough, the tests
+* run in parallel, after a single Miller-Rabin test in the calling thread
+* has rejected most composites.
+*
+* @param n the positive integer to test
+* @param monty_n pre-created Montgomery parameters for n
+* @param rng a random number generator
+* @param t number of Miller-Rabin tests to perform
+*
+* @return result of primality test
+*/
+bool BOTAN_TEST_API is_miller_rabin_lucas_probable_prime(const BigInt& n,
+                                                         const Montgomery_Params& monty_n,
+                                                         RandomNumberGenerator& rng,
+                                                         size_t t);
+
+/**
+* Perform t iterations of a Miller-Rabin primality test with random bases,
+* followed by a Lucas test, taking variable time depending on n
+*
+* @warning only use this if n is public
+*
+* @param n the positive integer to test
+* @param monty_n pre-created Montgomery parameters for n
+* @param rng a random number generator
+* @param t number of Miller-Rabin tests to perform
+*
+* @return result of primality test
+*/
+bool BOTAN_TEST_API is_miller_rabin_lucas_probable_prime_vartime(const BigInt& n,
+                                                                 const Montgomery_Params& monty_n,
+                                                                 RandomNumberGenerator& rng,
+                                                                 size_t t);
+
+/**
 * Check for primality, taking variable time depending on n
 *
 * This performs the same tests as is_prime, but uses variable time algorithms

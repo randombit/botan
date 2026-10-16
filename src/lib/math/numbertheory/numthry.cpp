@@ -413,17 +413,12 @@ bool is_prime_impl(const BigInt& n, RandomNumberGenerator& rng, size_t prob, boo
    if(rng.is_seeded()) {
       const size_t t = miller_rabin_test_iterations(n_bits, prob, is_random);
 
-      const bool mr_ok = vartime ? is_miller_rabin_probable_prime_vartime(n, monty_n, rng, t)
-                                 : is_miller_rabin_probable_prime(n, monty_n, rng, t);
-
-      if(!mr_ok) {
-         return false;
-      }
-
       if(is_random) {
-         return true;
+         return vartime ? is_miller_rabin_probable_prime_vartime(n, monty_n, rng, t)
+                        : is_miller_rabin_probable_prime(n, monty_n, rng, t);
       } else {
-         return vartime ? is_lucas_probable_prime_vartime(n, monty_n) : is_lucas_probable_prime(n, monty_n);
+         return vartime ? is_miller_rabin_lucas_probable_prime_vartime(n, monty_n, rng, t)
+                        : is_miller_rabin_lucas_probable_prime(n, monty_n, rng, t);
       }
    } else {
       return vartime ? is_bailie_psw_probable_prime_vartime(n, monty_n) : is_bailie_psw_probable_prime(n, monty_n);

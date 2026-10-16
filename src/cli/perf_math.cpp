@@ -243,6 +243,8 @@ class PerfTest_IsPrime final : public PerfTest {
             auto lucas_vt_timer = config.make_timer("Lucas-vartime" + suffix);
             auto bpsw_timer = config.make_timer("Bailie-PSW" + suffix);
             auto bpsw_vt_timer = config.make_timer("Bailie-PSW-vartime" + suffix);
+            auto strong_timer = config.make_timer("is_prime-strong" + suffix);
+            auto strong_vt_timer = config.make_timer("is_prime-strong-vartime" + suffix);
 
             // Testing a prime is the worst case, since no test can fail early
             const Botan::BigInt n = Botan::random_prime(config.rng(), bits);
@@ -258,6 +260,9 @@ class PerfTest_IsPrime final : public PerfTest {
 
                bpsw_timer->run([&]() { return Botan::is_bailie_psw_probable_prime(n, monty_n); });
                bpsw_vt_timer->run([&]() { return Botan::is_bailie_psw_probable_prime_vartime(n, monty_n); });
+
+               strong_timer->run([&]() { return Botan::is_prime(n, config.rng(), 128, false); });
+               strong_vt_timer->run([&]() { return Botan::is_prime_vartime(n, config.rng(), 128, false); });
             }
 
             config.record_result(*mr_timer);
@@ -266,6 +271,8 @@ class PerfTest_IsPrime final : public PerfTest {
             config.record_result(*lucas_vt_timer);
             config.record_result(*bpsw_timer);
             config.record_result(*bpsw_vt_timer);
+            config.record_result(*strong_timer);
+            config.record_result(*strong_vt_timer);
          }
       }
 };
