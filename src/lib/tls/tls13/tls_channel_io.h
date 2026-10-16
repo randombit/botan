@@ -27,7 +27,7 @@ class Cipher_State;
  * outgoing handshake flights, application data and alerts are emitted via the
  * send() overloads.
  */
-class Channel_IO {
+class BOTAN_TEST_API Channel_IO {
    public:
       using ReceiveEvent = std::variant<BytesNeeded,
                                         Handshake_Message_13,
