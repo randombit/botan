@@ -83,9 +83,6 @@ class Channel_IO {
       /// Sends an alert to the peer.
       void send(const Alert& alert, bool handle_compat_mode);
 
-      /// Sends a dummy ChangeCipherSpec record to the peer.
-      void send_dummy_change_cipher_spec();
-
       /// @}
 
       /// @name Traffic key updates (RFC 8446 4.6.3)
@@ -120,6 +117,9 @@ class Channel_IO {
    protected:
       std::optional<ReceiveEvent> next_pending_handshake_message(std::optional<Transcript_Hash_State>& transcript_hash,
                                                                  bool handshake_complete);
+
+      /// Sends a dummy ChangeCipherSpec record to the peer.
+      void send_dummy_change_cipher_spec();
 
       virtual void process(const Handshake_Record& record) = 0;
 
