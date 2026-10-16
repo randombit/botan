@@ -25,20 +25,8 @@ std::optional<Channel_IO::ReceiveEvent> Channel_IO::next_pending_handshake_messa
    auto& rec_layer = record_layer();
 
    if(!handshake_complete) {
-      // This is a temporary shim to allow the predicate of the while-loop
-      // below to run after the transcript hash state has been destroyed
-      // at the end of the handshake.
-      //
-      // TODO: remove when integrating the re-vamped data influx routine.
-      auto transcript_hash_reference = [&]() -> std::optional<std::reference_wrapper<Transcript_Hash_State>> {
-         if(transcript_hash.has_value()) {
-            return *transcript_hash;
-         } else {
-            return std::nullopt;
-         }
-      };
-
-      auto handshake_msg = hs_layer.next_message(policy(), transcript_hash_reference());
+      BOTAN_ASSERT_NOMSG(transcript_hash.has_value());
+      auto handshake_msg = hs_layer.next_message(policy(), *transcript_hash);
       if(!handshake_msg.has_value()) {
          return std::nullopt;
       }
@@ -397,7 +385,7 @@ class TLS_Channel_IO final : public Channel_IO {
          }
       }
 
-      void process(const Handshake_Record& record) override { m_handshake_layer.copy_data(record.payload); }
+      void process(const Handshake_Record& record) override { m_handshake_layer.copy_data(policy(), record); }
 
       Record_Layer& record_layer() override { return m_record_layer; }
 
@@ -411,7 +399,7 @@ class TLS_Channel_IO final : public Channel_IO {
       bool m_first_message_sent = false;
 
       Record_Layer m_record_layer;
-      Handshake_Layer m_handshake_layer;
+      TLS_Handshake_Layer m_handshake_layer;
 };
 
 }  // namespace

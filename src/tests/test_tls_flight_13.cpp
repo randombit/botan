@@ -18,6 +18,7 @@
    #include <botan/internal/concat_util.h>
    #include <botan/internal/loadstor.h>
    #include <botan/internal/tls_flight_13.h>
+   #include <botan/internal/tls_handshake_layer_13.h>
    #include <botan/internal/tls_transcript_hash_13.h>
 
 using namespace Botan::TLS;
@@ -100,10 +101,9 @@ class Recording_Callbacks final : public Callbacks {
  * production code. See RFC 9846 4.
  */
 auto marshal_message(const Handshake_Message& message) {
-   const auto body = message.serialize();
-   const auto len_bytes = Botan::store_be(body.size());
-   return Botan::concat<Botan::TLS::MarshalledHandshakeMessage>(
-      Botan::store_be(message.wire_type()), std::span{len_bytes}.last<3>(), body);
+   const auto msg_bytes = TLS_Handshake_Layer::serialize(message);
+   const auto hdr_bytes = TLS_Handshake_Layer::prepare_header(message.wire_type(), msg_bytes.size());
+   return Botan::concat<std::vector<uint8_t>>(hdr_bytes, msg_bytes);
 }
 
 std::vector<uint8_t> reference_transcript_hash(std::initializer_list<const Handshake_Message*> messages) {
