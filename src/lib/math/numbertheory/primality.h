@@ -13,7 +13,6 @@
 namespace Botan {
 
 class BigInt;
-class Barrett_Reduction;
 class Montgomery_Params;
 class RandomNumberGenerator;
 
@@ -38,10 +37,22 @@ std::vector<word> BOTAN_TEST_API mod_small_primes(const BigInt& n, size_t num_pr
 * this test alone.
 *
 * @param n the positive integer to test
-* @param mod_n a pre-created Barrett_Reduction for n
+* @param monty_n pre-created Montgomery parameters for n
 * @return true if n seems probably prime, false if n is composite
 */
-bool BOTAN_TEST_API is_lucas_probable_prime(const BigInt& n, const Barrett_Reduction& mod_n);
+bool BOTAN_TEST_API is_lucas_probable_prime(const BigInt& n, const Montgomery_Params& monty_n);
+
+/**
+* Perform Lucas primality test, taking variable time depending on n
+* @see FIPS 186-4 C.3.3
+*
+* @warning only use this if n is public
+*
+* @param n the positive integer to test
+* @param monty_n pre-created Montgomery parameters for n
+* @return true if n seems probably prime, false if n is composite
+*/
+bool BOTAN_TEST_API is_lucas_probable_prime_vartime(const BigInt& n, const Montgomery_Params& monty_n);
 
 /**
 * Perform Bailie-PSW primality test
@@ -51,10 +62,45 @@ bool BOTAN_TEST_API is_lucas_probable_prime(const BigInt& n, const Barrett_Reduc
 * many composite counterexamples exist.
 *
 * @param n the positive integer to test
-* @param mod_n a pre-created Barrett_Reduction for n
+* @param monty_n pre-created Montgomery parameters for n
 * @return true if n seems probably prime, false if n is composite
 */
-bool BOTAN_TEST_API is_bailie_psw_probable_prime(const BigInt& n, const Barrett_Reduction& mod_n);
+bool BOTAN_TEST_API is_bailie_psw_probable_prime(const BigInt& n, const Montgomery_Params& monty_n);
+
+/**
+* Perform Bailie-PSW primality test, taking variable time depending on n
+*
+* @warning only use this if n is public
+*
+* @param n the positive integer to test
+* @param monty_n pre-created Montgomery parameters for n
+* @return true if n seems probably prime, false if n is composite
+*/
+bool BOTAN_TEST_API is_bailie_psw_probable_prime_vartime(const BigInt& n, const Montgomery_Params& monty_n);
+
+/**
+* Perform Bailie-PSW primality test
+*
+* This variant creates the Montgomery parameters internally, and accepts any
+* non-negative integer (returning false for even or tiny values).
+*
+* @param n the positive integer to test
+* @return true if n seems probably prime, false if n is composite
+*/
+bool BOTAN_TEST_API is_bailie_psw_probable_prime(const BigInt& n);
+
+/**
+* Perform Bailie-PSW primality test, taking variable time depending on n
+*
+* This variant creates the Montgomery parameters internally, and accepts any
+* non-negative integer (returning false for even or tiny values).
+*
+* @warning only use this if n is public
+*
+* @param n the positive integer to test
+* @return true if n seems probably prime, false if n is composite
+*/
+bool BOTAN_TEST_API is_bailie_psw_probable_prime_vartime(const BigInt& n);
 
 /**
 * Return required number of Miller-Rabin tests in order to
@@ -68,24 +114,9 @@ bool BOTAN_TEST_API is_bailie_psw_probable_prime(const BigInt& n, const Barrett_
 size_t miller_rabin_test_iterations(size_t n_bits, size_t prob, bool random);
 
 /**
-* Perform a single Miller-Rabin test with specified base
-*
-* @param n the positive integer to test
-* @param mod_n a pre-created Barrett_Reduction for n
-* @param monty_n Montgomery parameters for n
-* @param a the base to check
-* @return result of primality test
-*/
-bool passes_miller_rabin_test(const BigInt& n,
-                              const Barrett_Reduction& mod_n,
-                              const Montgomery_Params& monty_n,
-                              const BigInt& a);
-
-/**
 * Perform t iterations of a Miller-Rabin primality test with random bases
 *
 * @param n the positive integer to test
-* @param mod_n a pre-created Barrett_Reduction for n
 * @param monty_n pre-created Montgomery parameters for n
 * @param rng a random number generator
 * @param t number of tests to perform
@@ -93,10 +124,43 @@ bool passes_miller_rabin_test(const BigInt& n,
 * @return result of primality test
 */
 bool BOTAN_TEST_API is_miller_rabin_probable_prime(const BigInt& n,
-                                                   const Barrett_Reduction& mod_n,
                                                    const Montgomery_Params& monty_n,
                                                    RandomNumberGenerator& rng,
                                                    size_t t);
+
+/**
+* Perform t iterations of a Miller-Rabin primality test with random bases,
+* taking variable time depending on n
+*
+* @warning only use this if n is public
+*
+* @param n the positive integer to test
+* @param monty_n pre-created Montgomery parameters for n
+* @param rng a random number generator
+* @param t number of tests to perform
+*
+* @return result of primality test
+*/
+bool BOTAN_TEST_API is_miller_rabin_probable_prime_vartime(const BigInt& n,
+                                                           const Montgomery_Params& monty_n,
+                                                           RandomNumberGenerator& rng,
+                                                           size_t t);
+
+/**
+* Check for primality, taking variable time depending on n
+*
+* This performs the same tests as is_prime, but uses variable time algorithms
+* throughout and so is faster.
+*
+* @warning only use this if n is public
+*
+* @param n a positive integer to test for primality
+* @param rng a random number generator
+* @param prob chance of false positive is bounded by 1/2**prob
+* @param is_random true if n was randomly chosen by us
+* @return true if all primality tests passed, otherwise false
+*/
+bool BOTAN_TEST_API is_prime_vartime(const BigInt& n, RandomNumberGenerator& rng, size_t prob, bool is_random);
 
 /**
 * Generate DSA parameters using the FIPS 186 kosherizer

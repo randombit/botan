@@ -98,7 +98,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    q.set_bit(qbits - 1);
    q.set_bit(0);
 
-   if(!is_prime(q, rng, 128, true)) {
+   if(!is_prime_vartime(q, rng, 128, true)) {
       return false;
    }
 
@@ -124,7 +124,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
          // Variable time division is OK here since DSA primes are public anyway
          p = X - ((X % q2) - 1);
 
-         if(p.bits() == pbits && is_prime(p, rng, 128, true)) {
+         if(p.bits() == pbits && is_prime_vartime(p, rng, 128, true)) {
             return true;
          }
       }

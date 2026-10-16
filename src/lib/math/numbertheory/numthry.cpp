@@ -375,10 +375,9 @@ BigInt is_perfect_square(const BigInt& C) {
    }
 }
 
-/*
-* Test for primality using Miller-Rabin
-*/
-bool is_prime(const BigInt& n, RandomNumberGenerator& rng, size_t prob, bool is_random) {
+namespace {
+
+bool is_prime_impl(const BigInt& n, RandomNumberGenerator& rng, size_t prob, bool is_random, bool vartime) {
    if(n == 2) {
       return true;
    }
@@ -409,24 +408,39 @@ bool is_prime(const BigInt& n, RandomNumberGenerator& rng, size_t prob, bool is_
       return false;
    }
 
-   const auto mod_n = Barrett_Reduction::for_secret_modulus(n);
-   const Montgomery_Params monty_n(n, mod_n);
+   const Montgomery_Params monty_n(n);
 
    if(rng.is_seeded()) {
       const size_t t = miller_rabin_test_iterations(n_bits, prob, is_random);
 
-      if(!is_miller_rabin_probable_prime(n, mod_n, monty_n, rng, t)) {
+      const bool mr_ok = vartime ? is_miller_rabin_probable_prime_vartime(n, monty_n, rng, t)
+                                 : is_miller_rabin_probable_prime(n, monty_n, rng, t);
+
+      if(!mr_ok) {
          return false;
       }
 
       if(is_random) {
          return true;
       } else {
-         return is_lucas_probable_prime(n, mod_n);
+         return vartime ? is_lucas_probable_prime_vartime(n, monty_n) : is_lucas_probable_prime(n, monty_n);
       }
    } else {
-      return is_bailie_psw_probable_prime(n, mod_n);
+      return vartime ? is_bailie_psw_probable_prime_vartime(n, monty_n) : is_bailie_psw_probable_prime(n, monty_n);
    }
+}
+
+}  // namespace
+
+/*
+* Test for primality using Miller-Rabin
+*/
+bool is_prime(const BigInt& n, RandomNumberGenerator& rng, size_t prob, bool is_random) {
+   return is_prime_impl(n, rng, prob, is_random, false);
+}
+
+bool is_prime_vartime(const BigInt& n, RandomNumberGenerator& rng, size_t prob, bool is_random) {
+   return is_prime_impl(n, rng, prob, is_random, true);
 }
 
 }  // namespace Botan

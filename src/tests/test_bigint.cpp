@@ -18,6 +18,7 @@
    #include <botan/internal/divide.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/mod_inv.h>
+   #include <botan/internal/monty.h>
    #include <botan/internal/parsing.h>
    #include <botan/internal/primality.h>
    #include <set>
@@ -784,6 +785,16 @@ class BigInt_IsPrime_Test final : public Text_Based_Test {
 
          Test::Result result("BigInt Test " + header);
          result.test_bool_eq("is_prime", Botan::is_prime(value, this->rng()), is_prime);
+         result.test_bool_eq("is_prime_vartime", Botan::is_prime_vartime(value, this->rng(), 64, false), is_prime);
+
+         if(value > 2 && value.is_odd()) {
+            const Botan::Montgomery_Params monty(value);
+            result.test_bool_eq(
+               "is_bailie_psw_probable_prime", Botan::is_bailie_psw_probable_prime(value, monty), is_prime);
+            result.test_bool_eq("is_bailie_psw_probable_prime_vartime",
+                                Botan::is_bailie_psw_probable_prime_vartime(value, monty),
+                                is_prime);
+         }
 
          return result;
       }
@@ -989,9 +1000,13 @@ class Lucas_Primality_Test final : public Test {
          Test::Result result("Lucas primality test");
 
          for(uint32_t i = 3; i <= lucas_max; i += 2) {
-            const auto mod_i = Botan::Barrett_Reduction::for_public_modulus(i);
-            const bool passes_lucas = Botan::is_lucas_probable_prime(i, mod_i);
-            const bool is_prime = Botan::is_prime(i, this->rng());
+            const auto i_bn = Botan::BigInt::from_word(i);
+            const Botan::Montgomery_Params monty_i(i_bn);
+            const bool passes_lucas = Botan::is_lucas_probable_prime(i_bn, monty_i);
+            const bool is_prime = Botan::is_prime(i_bn, this->rng());
+
+            result.test_bool_eq(
+               "Lucas vartime test agrees", Botan::is_lucas_probable_prime_vartime(i_bn, monty_i), passes_lucas);
 
             const bool is_lucas_pp = (is_prime == false && passes_lucas == true);
 

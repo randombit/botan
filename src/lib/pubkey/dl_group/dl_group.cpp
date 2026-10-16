@@ -353,7 +353,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, siz
       const BigInt q2 = q * 2;
       BigInt X;
       BigInt p;
-      while(p.bits() != pbits || !is_prime(p, rng, 128, true)) {
+      while(p.bits() != pbits || !is_prime_vartime(p, rng, 128, true)) {
          X.randomize(rng, pbits);
          // Variable time division is OK here since DH groups are public anyway
          p = X - (X % q2) + 1;
@@ -485,7 +485,7 @@ bool DL_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    const size_t test_prob = strong ? 128 : 12;
    const bool is_randomly_generated = (source() != DL_Group_Source::ExternalSource);
 
-   if(!is_prime(p, rng, test_prob, is_randomly_generated)) {
+   if(!is_prime_vartime(p, rng, test_prob, is_randomly_generated)) {
       return false;
    }
 
@@ -496,7 +496,7 @@ bool DL_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
       if(data().power_g_p_vartime(q) != 1) {
          return false;
       }
-      if(!is_prime(q, rng, test_prob, is_randomly_generated)) {
+      if(!is_prime_vartime(q, rng, test_prob, is_randomly_generated)) {
          return false;
       }
    } else {

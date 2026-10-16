@@ -234,30 +234,38 @@ class PerfTest_IsPrime final : public PerfTest {
       void go(const PerfConfig& config) override {
          const auto runtime = config.runtime();
 
-         for(const size_t bits : {256, 512, 1024}) {
-            auto mr_timer = config.make_timer("Miller-Rabin-" + std::to_string(bits));
-            auto bpsw_timer = config.make_timer("Bailie-PSW-" + std::to_string(bits));
-            auto lucas_timer = config.make_timer("Lucas-" + std::to_string(bits));
+         for(const size_t bits : {256, 512, 1024, 2048}) {
+            const std::string suffix = "-" + std::to_string(bits);
 
-            Botan::BigInt n = Botan::random_prime(config.rng(), bits);
+            auto mr_timer = config.make_timer("Miller-Rabin" + suffix);
+            auto mr_vt_timer = config.make_timer("Miller-Rabin-vartime" + suffix);
+            auto lucas_timer = config.make_timer("Lucas" + suffix);
+            auto lucas_vt_timer = config.make_timer("Lucas-vartime" + suffix);
+            auto bpsw_timer = config.make_timer("Bailie-PSW" + suffix);
+            auto bpsw_vt_timer = config.make_timer("Bailie-PSW-vartime" + suffix);
+
+            // Testing a prime is the worst case, since no test can fail early
+            const Botan::BigInt n = Botan::random_prime(config.rng(), bits);
+            const Botan::Montgomery_Params monty_n(n);
 
             while(lucas_timer->under(runtime)) {
-               auto mod_n = Botan::Barrett_Reduction::for_public_modulus(n);
-               const Botan::Montgomery_Params monty_n(n, mod_n);
+               mr_timer->run([&]() { return Botan::is_miller_rabin_probable_prime(n, monty_n, config.rng(), 1); });
+               mr_vt_timer->run(
+                  [&]() { return Botan::is_miller_rabin_probable_prime_vartime(n, monty_n, config.rng(), 1); });
 
-               mr_timer->run(
-                  [&]() { return Botan::is_miller_rabin_probable_prime(n, mod_n, monty_n, config.rng(), 2); });
+               lucas_timer->run([&]() { return Botan::is_lucas_probable_prime(n, monty_n); });
+               lucas_vt_timer->run([&]() { return Botan::is_lucas_probable_prime_vartime(n, monty_n); });
 
-               bpsw_timer->run([&]() { return Botan::is_bailie_psw_probable_prime(n, mod_n); });
-
-               lucas_timer->run([&]() { return Botan::is_lucas_probable_prime(n, mod_n); });
-
-               n += 2;
+               bpsw_timer->run([&]() { return Botan::is_bailie_psw_probable_prime(n, monty_n); });
+               bpsw_vt_timer->run([&]() { return Botan::is_bailie_psw_probable_prime_vartime(n, monty_n); });
             }
 
             config.record_result(*mr_timer);
-            config.record_result(*bpsw_timer);
+            config.record_result(*mr_vt_timer);
             config.record_result(*lucas_timer);
+            config.record_result(*lucas_vt_timer);
+            config.record_result(*bpsw_timer);
+            config.record_result(*bpsw_vt_timer);
          }
       }
 };
