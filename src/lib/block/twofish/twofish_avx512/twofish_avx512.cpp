@@ -6,6 +6,7 @@
 
 #include <botan/internal/twofish.h>
 
+#include <botan/mem_ops.h>
 #include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_avx512.h>
 #include <immintrin.h>
@@ -116,80 +117,116 @@ BOTAN_FORCE_INLINE void twofish_decrypt_round(
    D = (D ^ Y).rotr<1>();
 }
 
+BOTAN_FN_ISA_AVX512_GFNI
+void encrypt_16(const uint8_t in[16 * 16], uint8_t out[16 * 16], std::span<const uint32_t> RK, const uint8_t* QS) {
+   SIMD_16x32 B0 = SIMD_16x32::load_le(in);
+   SIMD_16x32 B1 = SIMD_16x32::load_le(in + 64);
+   SIMD_16x32 B2 = SIMD_16x32::load_le(in + 128);
+   SIMD_16x32 B3 = SIMD_16x32::load_le(in + 192);
+
+   SIMD_16x32::transpose(B0, B1, B2, B3);
+
+   B0 ^= SIMD_16x32::splat(RK[0]);
+   B1 ^= SIMD_16x32::splat(RK[1]);
+   B2 ^= SIMD_16x32::splat(RK[2]);
+   B3 ^= SIMD_16x32::splat(RK[3]);
+
+   for(size_t k = 8; k != 40; k += 4) {
+      twofish_encrypt_round(B0, B1, B2, B3, RK[k], RK[k + 1], QS);
+      twofish_encrypt_round(B2, B3, B0, B1, RK[k + 2], RK[k + 3], QS);
+   }
+
+   B2 ^= SIMD_16x32::splat(RK[4]);
+   B3 ^= SIMD_16x32::splat(RK[5]);
+   B0 ^= SIMD_16x32::splat(RK[6]);
+   B1 ^= SIMD_16x32::splat(RK[7]);
+
+   SIMD_16x32::transpose(B2, B3, B0, B1);
+
+   B2.store_le(out);
+   B3.store_le(out + 64);
+   B0.store_le(out + 128);
+   B1.store_le(out + 192);
+}
+
+BOTAN_FN_ISA_AVX512_GFNI
+void decrypt_16(const uint8_t in[16 * 16], uint8_t out[16 * 16], std::span<const uint32_t> RK, const uint8_t* QS) {
+   SIMD_16x32 B0 = SIMD_16x32::load_le(in);
+   SIMD_16x32 B1 = SIMD_16x32::load_le(in + 64);
+   SIMD_16x32 B2 = SIMD_16x32::load_le(in + 128);
+   SIMD_16x32 B3 = SIMD_16x32::load_le(in + 192);
+
+   SIMD_16x32::transpose(B0, B1, B2, B3);
+
+   B0 ^= SIMD_16x32::splat(RK[4]);
+   B1 ^= SIMD_16x32::splat(RK[5]);
+   B2 ^= SIMD_16x32::splat(RK[6]);
+   B3 ^= SIMD_16x32::splat(RK[7]);
+
+   for(size_t k = 40; k != 8; k -= 4) {
+      twofish_decrypt_round(B0, B1, B2, B3, RK[k - 2], RK[k - 1], QS);
+      twofish_decrypt_round(B2, B3, B0, B1, RK[k - 4], RK[k - 3], QS);
+   }
+
+   B2 ^= SIMD_16x32::splat(RK[0]);
+   B3 ^= SIMD_16x32::splat(RK[1]);
+   B0 ^= SIMD_16x32::splat(RK[2]);
+   B1 ^= SIMD_16x32::splat(RK[3]);
+
+   SIMD_16x32::transpose(B2, B3, B0, B1);
+
+   B2.store_le(out);
+   B3.store_le(out + 64);
+   B0.store_le(out + 128);
+   B1.store_le(out + 192);
+}
+
 }  // namespace Twofish_AVX512
 
 }  // namespace
 
-void BOTAN_FN_ISA_AVX512_GFNI Twofish::avx512_encrypt_16(const uint8_t in[16 * 16], uint8_t out[16 * 16]) const {
+void BOTAN_FN_ISA_AVX512_GFNI Twofish::avx512_encrypt(const uint8_t in[], uint8_t out[], size_t blocks) const {
    using namespace Twofish_AVX512;
-
-   SIMD_16x32 B0 = SIMD_16x32::load_le(in);
-   SIMD_16x32 B1 = SIMD_16x32::load_le(in + 64);
-   SIMD_16x32 B2 = SIMD_16x32::load_le(in + 128);
-   SIMD_16x32 B3 = SIMD_16x32::load_le(in + 192);
-
-   SIMD_16x32::transpose(B0, B1, B2, B3);
-
-   B0 ^= SIMD_16x32::splat(m_RK[0]);
-   B1 ^= SIMD_16x32::splat(m_RK[1]);
-   B2 ^= SIMD_16x32::splat(m_RK[2]);
-   B3 ^= SIMD_16x32::splat(m_RK[3]);
 
    const uint8_t* QS = m_QS.data();
 
-   for(size_t k = 8; k != 40; k += 4) {
-      twofish_encrypt_round(B0, B1, B2, B3, m_RK[k], m_RK[k + 1], QS);
-      twofish_encrypt_round(B2, B3, B0, B1, m_RK[k + 2], m_RK[k + 3], QS);
+   while(blocks >= 16) {
+      encrypt_16(in, out, m_RK, QS);
+      in += 16 * BLOCK_SIZE;
+      out += 16 * BLOCK_SIZE;
+      blocks -= 16;
    }
 
-   B2 ^= SIMD_16x32::splat(m_RK[4]);
-   B3 ^= SIMD_16x32::splat(m_RK[5]);
-   B0 ^= SIMD_16x32::splat(m_RK[6]);
-   B1 ^= SIMD_16x32::splat(m_RK[7]);
-
-   SIMD_16x32::transpose(B2, B3, B0, B1);
-
-   B2.store_le(out);
-   B3.store_le(out + 64);
-   B0.store_le(out + 128);
-   B1.store_le(out + 192);
+   if(blocks > 0) {
+      uint8_t ibuf[16 * BLOCK_SIZE] = {0};
+      uint8_t obuf[16 * BLOCK_SIZE] = {0};
+      copy_mem(ibuf, in, blocks * BLOCK_SIZE);
+      encrypt_16(ibuf, obuf, m_RK, QS);
+      copy_mem(out, obuf, blocks * BLOCK_SIZE);
+   }
 
    SIMD_16x32::zero_registers();
 }
 
-void BOTAN_FN_ISA_AVX512_GFNI Twofish::avx512_decrypt_16(const uint8_t in[16 * 16], uint8_t out[16 * 16]) const {
+void BOTAN_FN_ISA_AVX512_GFNI Twofish::avx512_decrypt(const uint8_t in[], uint8_t out[], size_t blocks) const {
    using namespace Twofish_AVX512;
-
-   SIMD_16x32 B0 = SIMD_16x32::load_le(in);
-   SIMD_16x32 B1 = SIMD_16x32::load_le(in + 64);
-   SIMD_16x32 B2 = SIMD_16x32::load_le(in + 128);
-   SIMD_16x32 B3 = SIMD_16x32::load_le(in + 192);
-
-   SIMD_16x32::transpose(B0, B1, B2, B3);
-
-   B0 ^= SIMD_16x32::splat(m_RK[4]);
-   B1 ^= SIMD_16x32::splat(m_RK[5]);
-   B2 ^= SIMD_16x32::splat(m_RK[6]);
-   B3 ^= SIMD_16x32::splat(m_RK[7]);
 
    const uint8_t* QS = m_QS.data();
 
-   for(size_t k = 40; k != 8; k -= 4) {
-      twofish_decrypt_round(B0, B1, B2, B3, m_RK[k - 2], m_RK[k - 1], QS);
-      twofish_decrypt_round(B2, B3, B0, B1, m_RK[k - 4], m_RK[k - 3], QS);
+   while(blocks >= 16) {
+      decrypt_16(in, out, m_RK, QS);
+      in += 16 * BLOCK_SIZE;
+      out += 16 * BLOCK_SIZE;
+      blocks -= 16;
    }
 
-   B2 ^= SIMD_16x32::splat(m_RK[0]);
-   B3 ^= SIMD_16x32::splat(m_RK[1]);
-   B0 ^= SIMD_16x32::splat(m_RK[2]);
-   B1 ^= SIMD_16x32::splat(m_RK[3]);
-
-   SIMD_16x32::transpose(B2, B3, B0, B1);
-
-   B2.store_le(out);
-   B3.store_le(out + 64);
-   B0.store_le(out + 128);
-   B1.store_le(out + 192);
+   if(blocks > 0) {
+      uint8_t ibuf[16 * BLOCK_SIZE] = {0};
+      uint8_t obuf[16 * BLOCK_SIZE] = {0};
+      copy_mem(ibuf, in, blocks * BLOCK_SIZE);
+      decrypt_16(ibuf, obuf, m_RK, QS);
+      copy_mem(out, obuf, blocks * BLOCK_SIZE);
+   }
 
    SIMD_16x32::zero_registers();
 }

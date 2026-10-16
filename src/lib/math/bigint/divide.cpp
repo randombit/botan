@@ -187,8 +187,8 @@ void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out) {
    ct_divide_impl(q, r, x, y);
 
    sign_fixup(x, y, q, r);
-   r_out = r;
-   q_out = q;
+   r_out = std::move(r);
+   q_out = std::move(q);
 }
 
 BigInt ct_divide_pow2k(size_t k, const BigInt& y) {
@@ -233,7 +233,7 @@ void ct_divide_word(const BigInt& x, word y, BigInt& q_out, word& r_out) {
    }
 
    r_out = r;
-   q_out = q;
+   q_out = std::move(q);
 }
 
 BigInt ct_divide_word(const BigInt& x, word y) {

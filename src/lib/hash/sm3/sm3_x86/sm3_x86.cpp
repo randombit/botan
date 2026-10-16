@@ -28,12 +28,12 @@ BOTAN_FN_ISA_AVX2_SM3 inline void SM3_NI_next(SIMD_4x32& W0,
                                               const SIMD_4x32& W1,
                                               const SIMD_4x32& W2,
                                               const SIMD_4x32& W3) {
-   auto X3 = SIMD_4x32(_mm_alignr_epi8(W1.raw(), W0.raw(), 12));  // W[3..6]
-   auto X7 = SIMD_4x32(_mm_alignr_epi8(W2.raw(), W1.raw(), 12));  // W[7..10]
-   auto X10 = SIMD_4x32::alignr8(W3, W2);                         // W[10..13]
-   auto X13 = W3.template shift_elems_right<1>();                 // W[13..15] || 0
+   const auto X3 = SIMD_4x32(_mm_alignr_epi8(W1.raw(), W0.raw(), 12));  // W[3..6]
+   const auto X7 = SIMD_4x32(_mm_alignr_epi8(W2.raw(), W1.raw(), 12));  // W[7..10]
+   const auto X10 = SIMD_4x32::alignr8(W3, W2);                         // W[10..13]
+   const auto X13 = W3.template shift_elems_right<1>();                 // W[13..15] || 0
 
-   auto P1_O = SIMD_4x32(_mm_sm3msg1_epi32(X7.raw(), X13.raw(), W0.raw()));
+   const auto P1_O = SIMD_4x32(_mm_sm3msg1_epi32(X7.raw(), X13.raw(), W0.raw()));
    W0 = SIMD_4x32(_mm_sm3msg2_epi32(P1_O.raw(), X3.raw(), X10.raw()));
 }
 

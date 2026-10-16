@@ -360,7 +360,7 @@ void process_blocks(secure_vector<uint64_t>& B, size_t t, size_t memory, size_t 
 
       for(size_t n = 0; n != t; ++n) {
          for(size_t slice = 0; slice != SYNC_POINTS; ++slice) {
-            std::vector<std::future<void>> fut_results;
+            std::vector<Joining_Future<void>> fut_results;
             fut_results.reserve(threads);
 
             for(size_t lane = 0; lane != threads; ++lane) {

@@ -189,8 +189,8 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX512 void load_and_deinterleave(const uint8_t 
    const auto idx_l = _mm512_set_epi64(0x0E, 0x0C, 0x0A, 0x08, 0x06, 0x04, 0x02, 0x00);
    const auto idx_r = _mm512_set_epi64(0x0F, 0x0D, 0x0B, 0x09, 0x07, 0x05, 0x03, 0x01);
 
-   auto A = SIMD_8x64::load_be(in);
-   auto B = SIMD_8x64::load_be(in + 64);
+   const auto A = SIMD_8x64::load_be(in);
+   const auto B = SIMD_8x64::load_be(in + 64);
 
    L = SIMD_8x64(_mm512_permutex2var_epi64(A.raw(), idx_l, B.raw()));
    R = SIMD_8x64(_mm512_permutex2var_epi64(A.raw(), idx_r, B.raw()));
@@ -203,8 +203,8 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX512 void interleave_and_store(uint8_t out[], 
    const auto idx_lo = _mm512_set_epi64(0x0B, 0x03, 0x0A, 0x02, 0x09, 0x01, 0x08, 0x00);
    const auto idx_hi = _mm512_set_epi64(0x0F, 0x07, 0x0E, 0x06, 0x0D, 0x05, 0x0C, 0x04);
 
-   auto A = SIMD_8x64(_mm512_permutex2var_epi64(R.raw(), idx_lo, L.raw()));
-   auto B = SIMD_8x64(_mm512_permutex2var_epi64(R.raw(), idx_hi, L.raw()));
+   const auto A = SIMD_8x64(_mm512_permutex2var_epi64(R.raw(), idx_lo, L.raw()));
+   const auto B = SIMD_8x64(_mm512_permutex2var_epi64(R.raw(), idx_hi, L.raw()));
 
    A.store_be(out);
    B.store_be(out + 64);

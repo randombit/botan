@@ -459,8 +459,20 @@ CertificatePathStatusCodes BOTAN_PUBLIC_API(3, 0)
 * is the associated CRL for the subject in cert_path[i].
 * @param ref_time whatever time you want to perform the validation against
 * (normally current system clock)
+* @param restrictions the relevant path validation restrictions object
 * @return revocation status
 */
+CertificatePathStatusCodes BOTAN_PUBLIC_API(3, 14) check_crl(const std::vector<X509_Certificate>& cert_path,
+                                                             const std::vector<std::optional<X509_CRL>>& crls,
+                                                             std::chrono::system_clock::time_point ref_time,
+                                                             const Path_Validation_Restrictions& restrictions);
+
+/**
+* Check CRLs for revocation information
+*
+* Equivalent to calling check_crl with a default Path_Validation_Restrictions
+*/
+BOTAN_DEPRECATED("Use overload taking Path_Validation_Restrictions")
 CertificatePathStatusCodes BOTAN_PUBLIC_API(2, 0) check_crl(const std::vector<X509_Certificate>& cert_path,
                                                             const std::vector<std::optional<X509_CRL>>& crls,
                                                             std::chrono::system_clock::time_point ref_time);
@@ -471,8 +483,20 @@ CertificatePathStatusCodes BOTAN_PUBLIC_API(2, 0) check_crl(const std::vector<X5
 * @param certstores a list of certificate stores to query for the CRL
 * @param ref_time whatever time you want to perform the validation against
 * (normally current system clock)
+* @param restrictions the relevant path validation restrictions object
 * @return revocation status
 */
+CertificatePathStatusCodes BOTAN_PUBLIC_API(3, 14) check_crl(const std::vector<X509_Certificate>& cert_path,
+                                                             const std::vector<Certificate_Store*>& certstores,
+                                                             std::chrono::system_clock::time_point ref_time,
+                                                             const Path_Validation_Restrictions& restrictions);
+
+/**
+* Check CRLs for revocation information
+*
+* Equivalent to calling check_crl with a default Path_Validation_Restrictions
+*/
+BOTAN_DEPRECATED("Use overload taking Path_Validation_Restrictions")
 CertificatePathStatusCodes BOTAN_PUBLIC_API(2, 0) check_crl(const std::vector<X509_Certificate>& cert_path,
                                                             const std::vector<Certificate_Store*>& certstores,
                                                             std::chrono::system_clock::time_point ref_time);
@@ -511,8 +535,23 @@ CertificatePathStatusCodes BOTAN_PUBLIC_API(3, 0)
 * (normally current system clock)
 * @param timeout for timing out the responses, though actually this function
 * may block for up to timeout*cert_path.size()*C for some small C.
+* @param restrictions the relevant path validation restrictions object
 * @return revocation status
 */
+CertificatePathStatusCodes BOTAN_PUBLIC_API(3, 14)
+   check_crl_online(const std::vector<X509_Certificate>& cert_path,
+                    const std::vector<Certificate_Store*>& trusted_certstores,
+                    Certificate_Store_In_Memory* certstore_to_recv_crls,
+                    std::chrono::system_clock::time_point ref_time,
+                    std::chrono::milliseconds timeout,
+                    const Path_Validation_Restrictions& restrictions);
+
+/**
+* Check CRL using online (HTTP) access.
+*
+* Equivalent to calling check_crl_online with a default Path_Validation_Restrictions
+*/
+BOTAN_DEPRECATED("Use overload taking Path_Validation_Restrictions")
 CertificatePathStatusCodes BOTAN_PUBLIC_API(2, 0)
    check_crl_online(const std::vector<X509_Certificate>& cert_path,
                     const std::vector<Certificate_Store*>& trusted_certstores,

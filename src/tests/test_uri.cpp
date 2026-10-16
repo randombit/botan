@@ -121,8 +121,7 @@ class URI_Tests final : public Test {
                const auto raw_authority = uri->raw_authority();
                result.test_is_true("raw authority present: " + c.input, raw_authority.has_value());
                if(raw_authority.has_value()) {
-                  result.test_str_eq(
-                     "raw authority: " + c.input, std::string(*raw_authority), authority.original_input());
+                  result.test_str_eq("raw authority: " + c.input, *raw_authority, authority.original_input());
                }
                result.test_str_eq("host: " + c.input, authority.host_to_string(), c.host);
                result.test_opt_u16_eq("port: " + c.input, authority.port(), c.port);
@@ -188,7 +187,7 @@ class URI_Tests final : public Test {
             const auto raw_authority = uri->raw_authority();
             result.test_is_true("raw authority present: " + c.input, raw_authority.has_value());
             if(raw_authority.has_value()) {
-               result.test_str_eq("raw authority is empty: " + c.input, std::string(*raw_authority), "");
+               result.test_str_eq("raw authority is empty: " + c.input, *raw_authority, "");
             }
             result.test_str_eq("scheme: " + c.input, uri->scheme(), c.scheme);
             result.test_is_false("host absent: " + c.input, uri->host().has_value());

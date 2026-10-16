@@ -395,8 +395,8 @@ class SIMD_8x32 final {
    private:
       BOTAN_FN_ISA_SIMD_8X32
       static void swap_tops(SIMD_8x32& A, SIMD_8x32& B) {
-         auto T0 = SIMD_8x32(_mm256_permute2x128_si256(A.raw(), B.raw(), 0 + (2 << 4)));
-         auto T1 = SIMD_8x32(_mm256_permute2x128_si256(A.raw(), B.raw(), 1 + (3 << 4)));
+         const auto T0 = SIMD_8x32(_mm256_permute2x128_si256(A.raw(), B.raw(), 0 + (2 << 4)));
+         const auto T1 = SIMD_8x32(_mm256_permute2x128_si256(A.raw(), B.raw(), 1 + (3 << 4)));
          A = T0;
          B = T1;
       }

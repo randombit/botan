@@ -52,7 +52,7 @@ void* Compression_Alloc_Info::do_malloc(size_t n, size_t size) noexcept {
 
 void Compression_Alloc_Info::do_free(void* ptr) noexcept {
    if(ptr != nullptr) {
-      auto i = m_current_allocs.find(ptr);
+      const auto i = m_current_allocs.find(ptr);
 
       if(i == m_current_allocs.end()) {
          /*

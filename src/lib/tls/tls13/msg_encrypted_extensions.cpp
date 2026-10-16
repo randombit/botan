@@ -66,7 +66,7 @@ Encrypted_Extensions::Encrypted_Extensions(const Client_Hello_13& client_hello,
    // Certificate_Request_13::maybe_create depends on both the policy flag
    // *and* the credentials manager's CA list, so re-checking just the
    // policy flag here would miss the trusted-CAs-only configuration.
-   if(auto* ch_client_cert_types = exts.get<Client_Certificate_Type>();
+   if(const auto* ch_client_cert_types = exts.get<Client_Certificate_Type>();
       ch_client_cert_types != nullptr && requesting_client_auth) {
       m_extensions.add(new Client_Certificate_Type(*ch_client_cert_types, policy));
    }
@@ -77,7 +77,7 @@ Encrypted_Extensions::Encrypted_Extensions(const Client_Hello_13& client_hello,
    //    the server in a subsequent certificate payload. [...] With the
    //    server_certificate_type extension in the server hello, the TLS server
    //    indicates the certificate type carried in the Certificate payload.
-   if(auto* ch_server_cert_types = exts.get<Server_Certificate_Type>()) {
+   if(const auto* ch_server_cert_types = exts.get<Server_Certificate_Type>()) {
       m_extensions.add(new Server_Certificate_Type(*ch_server_cert_types, policy));
    }
 
@@ -93,7 +93,7 @@ Encrypted_Extensions::Encrypted_Extensions(const Client_Hello_13& client_hello,
       m_extensions.add(new Server_Name_Indicator(""));
    }
 
-   if(auto* alpn_ext = exts.get<Application_Layer_Protocol_Notification>()) {
+   if(const auto* alpn_ext = exts.get<Application_Layer_Protocol_Notification>()) {
       const auto& offered = alpn_ext->protocols();
       const auto next_protocol = cb.tls_server_choose_app_protocol(offered);
       if(!next_protocol.empty()) {

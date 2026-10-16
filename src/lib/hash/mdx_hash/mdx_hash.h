@@ -99,7 +99,7 @@ class MerkleDamgard_Hash final {
 
          // Replace a bunch of the right-most zero-padding with the counter bytes.
          const uint64_t bit_count = m_count * 8;
-         auto last_bytes = m_buffer.directly_modify_last(sizeof(bit_count));
+         const auto last_bytes = m_buffer.directly_modify_last(sizeof(bit_count));
          if constexpr(MD::byte_endianness == MD_Endian::Big) {
             store_be(bit_count, last_bytes.data());
          } else {

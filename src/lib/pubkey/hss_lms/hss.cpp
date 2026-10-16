@@ -9,13 +9,13 @@
 #include <botan/internal/hss.h>
 
 #include <botan/rng.h>
+#include <botan/internal/algorithm_spec.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/concat_util.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hss_lms_utils.h>
 #include <botan/internal/int_utils.h>
-#include <botan/internal/scan_name.h>
 #include <botan/internal/stateful_key_index_registry.h>
 #include <limits>
 
@@ -110,20 +110,21 @@ HSS_LMS_Params::HSS_LMS_Params(std::string_view algo_params) : m_max_sig_count(0
          return fmt("HSS-LMS({})", algo_params);
       }
    }();
-   const SCAN_Name scan(wrap_in_hss_lms);
+   const AlgorithmSpec spec(wrap_in_hss_lms);
 
-   BOTAN_ARG_CHECK(scan.arg_count() >= 2 && scan.arg_count() <= HSS_MAX_LEVELS + 1, "Invalid number of arguments");
-   const std::string hash = scan.arg(0);
+   const auto m = spec.match("HSS-LMS({hash},{layer}...)");
+   BOTAN_ARG_CHECK(m.has_value(), "Invalid HSS-LMS parameters");
+   const auto layers = m->rest("layer");
+   BOTAN_ARG_CHECK(layers.size() <= HSS_MAX_LEVELS, "Invalid number of layer arguments");
+   const std::string hash(m->str("hash"));
    BOTAN_ARG_CHECK(is_supported_hash_function(hash), "Supported HSS-LMS hash function");
 
-   for(size_t i = 1; i < scan.arg_count(); ++i) {
-      const SCAN_Name scan_layer(scan.arg(i));
-      BOTAN_ARG_CHECK(scan_layer.algo_name() == "HW", "Invalid name for layer parameters");
-      BOTAN_ARG_CHECK(scan_layer.arg_count() == 2, "Invalid number of layer parameters");
-      const auto h =
-         checked_cast_to_or_throw<uint8_t, Invalid_Argument>(scan_layer.arg_as_integer(0), "Invalid tree height");
-      const auto w = checked_cast_to_or_throw<uint8_t, Invalid_Argument>(scan_layer.arg_as_integer(1),
-                                                                         "Invalid Winternitz parameter");
+   for(const auto& layer : layers) {
+      const auto lm = layer.match("HW({h:int},{w:int})");
+      BOTAN_ARG_CHECK(lm.has_value(), "Invalid layer parameters");
+      const auto h = checked_cast_to_or_throw<uint8_t, Invalid_Argument>(lm->integer("h"), "Invalid tree height");
+      const auto w =
+         checked_cast_to_or_throw<uint8_t, Invalid_Argument>(lm->integer("w"), "Invalid Winternitz parameter");
       m_lms_lmots_params.push_back({LMS_Params::create_or_throw(hash, h), LMOTS_Params::create_or_throw(hash, w)});
    }
    m_max_sig_count = calc_max_sig_count();

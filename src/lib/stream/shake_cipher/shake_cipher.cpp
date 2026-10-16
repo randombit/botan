@@ -45,7 +45,7 @@ void SHAKE_Cipher::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length
 
    const auto block_size = m_keystream_buffer.size();
 
-   auto cipher_some = [&](size_t bytes) {
+   const auto cipher_some = [&](size_t bytes) {
       if(bytes > 0) {
          BOTAN_ASSERT_NOMSG(bytes <= block_size);
          BOTAN_ASSERT_NOMSG(bytes <= length);

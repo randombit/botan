@@ -61,6 +61,8 @@ in a future major release:
 
 - Support for CCM-8 ciphersuites
 
+- Support for OCB ciphersuites
+
 - ``Credentials_Manager::psk()`` to provide various TLS-specific keys and
   secrets, most notably "session-ticket", "dtls-cookie-secret" and the actual
   TLS PSKs for given identities and hosts. Instead, use the dedicated methods in
@@ -182,20 +184,37 @@ Deprecated modules include
 
 - Signature scheme ``gost_3410``
 
-- McEliece implementation ``mce``. Will be replaced by the proposal Classic
-  McEliece.
+- McEliece implementation ``mce``. Use Classic McEliece or ML-KEM for PQ KEM.
 
 - Stream cipher ``shake_cipher``. Note this deprecation affects only
   using SHAKE as a ``StreamCipher`` not as a hash or XOF
 
-- `cryptobox`: A not unreasonable password based encryption utility
+- Stream cipher ``ofb``: Inferior to CTR in every way
+
+- Stream cipher ``rc4``: Slow, broken, and obsolete
+
+- ``cryptobox``: A not unreasonable password based encryption utility
   but neither modern (these days) nor widely implemented.
 
-- `iso9796`: Obscure, complicated, and apparently little used.
+- ``passhash9`` prefer Argon2 or bcrypt
+
+- ``srp6`` prefer SPAKE2+
+
+- ``iso9796``: Obscure, complicated, and apparently little used.
 
 - ``dlies``: DLIES is considered quite obsolete
 
 - ``tpm`` (TPM 1.2 only, rarely tested)
+
+- ``emsa_x931``: X9.31 padding is no longer allowed by NIST
+
+- ``prf_x942``: Prefer HKDF or one of the SP KDFs
+
+- ``comp4p``: An interesting design but obscure and rarely used
+
+- ``certstor_sql`` and ``certstor_sqlite3``: unclear usage, many bugs
+
+- ``filters``: inefficient and sometimes difficult to use safely
 
 Other Deprecated Functionality
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -245,6 +264,17 @@ release, or where a backwards incompatible change is expected.
   greater than or equal to 1024 bits. In a future major release the
   allowed bitlengths of new RSA keys will be restricted to 2048 bits
   or higher, and the bitlength must be a multiple of 1024 bits.
+
+- The RFC 3779 address type ``Cert_Extension::IPAddressBlocks::IPAddress<V>``
+  will become an alias of ``IPv4Address`` or ``IPv6Address``. Use ``to_bytes``
+  in place of the deprecated ``value``, construct it from an ``IPv4Address`` or
+  ``IPv6Address`` rather than from a span of bytes, and use its implicit
+  conversion to ``IPv4Address`` or ``IPv6Address`` rather than relying on any
+  other functionality of the class (such as ``operator+``). Similarly
+  ``IPAddressBlocks::add_address`` taking ``std::array`` arguments is
+  deprecated in favor of the overloads taking ``IPv4Address``,
+  ``IPv6Address``, ``IPv4Subnet``, or ``IPv6Subnet``, and ``IPAddressOrRange``
+  can be constructed directly from these types.
 
 - Currently some public key padding mechanisms can be used with several
   different names. This is deprecated.

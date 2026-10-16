@@ -41,7 +41,8 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test {
                             "SphincsParameterSet,Address,SecretSeed,PublicSeed,HashedWotsPk,Msg,HashedWotsSig") {}
 
       bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
-         [[maybe_unused]] auto params = Botan::Sphincs_Parameters::create(vars.get_req_str("SphincsParameterSet"));
+         [[maybe_unused]] const auto params =
+            Botan::Sphincs_Parameters::create(vars.get_req_str("SphincsParameterSet"));
          return !params.is_available();
       }
 
@@ -62,7 +63,7 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test {
          // Depending on the SLH-DSA's configuration the resulting WOTS+ signature is
          // hashed either with SHA-3 or SHA-256 to reduce the inner dependencies
          // on other hash function modules.
-         auto hash_algo_spec = [&]() -> std::string {
+         const auto hash_algo_spec = [&]() -> std::string {
             if(params.hash_type() == Botan::Sphincs_Hash_Type::Shake256) {
                return "SHA-3(256)";
             } else {
@@ -87,7 +88,7 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test {
          pk_addr_pk_from_sig.set_keypair_address(leaf_idx);
 
          // Prepare the message
-         auto wots_steps = Botan::chain_lengths(root_to_sign, params);
+         const auto wots_steps = Botan::chain_lengths(root_to_sign, params);
 
          // Test: WOTS+ Signature and Public Key Generation
          Botan::WotsSignature sig_out(params.n() * params.wots_len());

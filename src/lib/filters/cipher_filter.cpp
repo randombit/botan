@@ -7,20 +7,23 @@
 
 #include <botan/filters.h>
 
-#include <botan/internal/rounding.h>
+#include <botan/assert.h>
+#include <botan/internal/bit_ops.h>
 
 namespace Botan {
 
 namespace {
 
 size_t choose_update_size(size_t update_granularity) {
+   BOTAN_ARG_CHECK(update_granularity > 0, "Cipher mode granularity must be positive");
+
    const size_t target_size = 1024;
 
    if(update_granularity >= target_size) {
       return update_granularity;
    }
 
-   return round_up(target_size, update_granularity);
+   return update_granularity * ceil_division(target_size, update_granularity);
 }
 
 }  // namespace

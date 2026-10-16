@@ -29,7 +29,7 @@ namespace Botan {
 template <size_t N>
 class StringLiteral final {
    public:
-      // NOLINTNEXTLINE(*-explicit-conversions)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
       consteval StringLiteral(const char (&str)[N]) : value() {
          for(size_t i = 0; i != N; ++i) {
             value[i] = str[i];
@@ -411,8 +411,8 @@ class IntMod final {
          const W mask = cond.into_bitmask<W>();
 
          for(size_t i = 0; i != N; ++i) {
-            auto nx = Botan::choose(mask, y.m_val[i], x.m_val[i]);
-            auto ny = Botan::choose(mask, x.m_val[i], y.m_val[i]);
+            const auto nx = Botan::choose(mask, y.m_val[i], x.m_val[i]);
+            const auto ny = Botan::choose(mask, x.m_val[i], y.m_val[i]);
             x.m_val[i] = nx;
             y.m_val[i] = ny;
          }
@@ -625,7 +625,7 @@ class IntMod final {
                return r;
             }
 
-            auto nx = x + y;
+            const auto nx = x + y;
 
             /*
             * Otherwise either b > a or a > b
@@ -882,7 +882,7 @@ class IntMod final {
       static consteval Self constant(int8_t x) {
          std::array<W, 1> v{};
          v[0] = (x >= 0) ? x : -x;
-         auto s = Self::from_words(v);
+         const auto s = Self::from_words(v);
          return (x >= 0) ? s : s.negate();
       }
 
@@ -956,7 +956,7 @@ class AffineCurvePoint final {
          auto result = Self::identity(pts[0]);
 
          // Intentionally wrapping; set to maximum size_t if idx == 0
-         const size_t idx1 = static_cast<size_t>(idx - 1);
+         const size_t idx1 = idx - 1;
          for(size_t i = 0; i != pts.size(); ++i) {
             const auto found = CT::Mask<size_t>::is_equal(idx1, i).as_choice();
             result.conditional_assign(found, pts[i]);
@@ -1023,7 +1023,7 @@ class ProjectiveCurvePoint final {
          * affine point is the identity.
          */
 
-         auto x = pt.x();
+         const auto x = pt.x();
          auto y = pt.y();
          auto z = FieldElement::one();
 
@@ -1089,12 +1089,36 @@ class ProjectiveCurvePoint final {
       * Mixed (projective + affine) point addition
       */
       constexpr static Self add_mixed(const Self& a, const AffinePoint& b) {
-         return point_add_mixed<Self, AffinePoint, FieldElement>(a, b, FieldElement::one());
+         return point_add_mixed<Self, AffinePoint, FieldElement>(a, b, FieldElement::one(), A);
+      }
+
+      /**
+      * Mixed point addition on an isomorphic curve with the given a coefficient
+      */
+      constexpr static Self add_mixed_iso(const Self& a, const AffinePoint& b, const FieldElement& curve_a) {
+         return point_add_mixed<Self, AffinePoint, FieldElement>(a, b, FieldElement::one(), curve_a);
+      }
+
+      /**
+      * Mixed point addition, additionally returning H (the sum has Z = a.z * H)
+      */
+      constexpr static std::pair<Self, FieldElement> add_mixed_h(const Self& a, const AffinePoint& b) {
+         return point_add_mixed_h<Self, AffinePoint, FieldElement>(a, b, FieldElement::one(), A);
       }
 
       // Either add or subtract based on the CT::Choice
       constexpr static Self add_or_sub(const Self& a, const AffinePoint& b, CT::Choice sub) {
-         return point_add_or_sub_mixed<Self, AffinePoint, FieldElement>(a, b, sub, FieldElement::one());
+         return point_add_or_sub_mixed<Self, AffinePoint, FieldElement>(a, b, sub, FieldElement::one(), A);
+      }
+
+      /**
+      * Either add or subtract, on an isomorphic curve with the given a coefficient
+      */
+      constexpr static Self add_or_sub_iso(const Self& a,
+                                           const AffinePoint& b,
+                                           CT::Choice sub,
+                                           const FieldElement& curve_a) {
+         return point_add_or_sub_mixed<Self, AffinePoint, FieldElement>(a, b, sub, FieldElement::one(), curve_a);
       }
 
       /**
@@ -1112,6 +1136,31 @@ class ProjectiveCurvePoint final {
             return dbl_n_a_zero(*this, n);
          } else {
             return dbl_n_generic(*this, A, n);
+         }
+      }
+
+      /**
+      * Iterated point doubling on an isomorphic curve with the given a coefficient
+      *
+      * If a is zero on this curve it is zero on any isomorphic curve, so the
+      * argument is ignored in that case.
+      */
+      constexpr Self dbl_n_iso(const FieldElement& a, size_t n) const {
+         if constexpr(Self::A_is_zero) {
+            return dbl_n_a_zero(*this, n);
+         } else {
+            return dbl_n_generic(*this, a, n);
+         }
+      }
+
+      /**
+      * Point doubling on an isomorphic curve with the given a coefficient
+      */
+      constexpr Self dbl_iso(const FieldElement& a) const {
+         if constexpr(Self::A_is_zero) {
+            return dbl_a_zero(*this);
+         } else {
+            return dbl_generic(*this, a);
          }
       }
 
@@ -1139,21 +1188,13 @@ class ProjectiveCurvePoint final {
       * Projective coordinates are redundant; if (x,y,z) is a projective
       * point then so is (x*r^2,y*r^3,z*r) for any non-zero r.
       */
-      void randomize_rep(RandomNumberGenerator& rng) {
-         // In certain contexts we may be called with a Null_RNG; in that case the
-         // caller is accepting that randomization will not occur
+      void randomize_rep(const FieldElement& r) {
+         const auto r2 = r.square();
+         const auto r3 = r2 * r;
 
-         // Conditional ok: caller's RNG state (seeded vs not) is presumed public
-         if(rng.is_seeded()) {
-            auto r = FieldElement::random(rng);
-
-            auto r2 = r.square();
-            auto r3 = r2 * r;
-
-            m_x *= r2;
-            m_y *= r3;
-            m_z *= r;
-         }
+         m_x *= r2;
+         m_y *= r3;
+         m_z *= r;
       }
 
       /**
@@ -1299,23 +1340,27 @@ class BlindedScalarBits final {
       static_assert(BlindingBits < C::Scalar::BITS);
 
    public:
+      using Curve = C;
+
       // Maximum number of bits (used for table sizing)
       static constexpr size_t Bits = C::Scalar::BITS + BlindingBits;
 
+      static constexpr size_t MaskWords = (BlindingBits + WordInfo<W>::bits - 1) / WordInfo<W>::bits;
+      static constexpr size_t MaskBytes = MaskWords * WordInfo<W>::bytes;
+
       size_t bits() const { return m_bits; }
 
-      BlindedScalarBits(const typename C::Scalar& scalar, RandomNumberGenerator& rng) {
-         if(BlindingBits > 0 && rng.is_seeded()) {
-            constexpr size_t MaskWords = (BlindingBits + WordInfo<W>::bits - 1) / WordInfo<W>::bits;
-            constexpr size_t MaskBytes = MaskWords * WordInfo<W>::bytes;
-
+      /**
+      * Blind the scalar using the idx'th mask of the provided BlindingRandomness
+      */
+      template <typename Randomness>
+      BlindedScalarBits(const typename C::Scalar& scalar, const Randomness& randomness, size_t idx = 0) {
+         // Conditional ok: caller's RNG state (seeded vs not) is presumed public
+         if(BlindingBits > 0 && randomness.seeded()) {
             constexpr size_t n_words = C::Words;
 
-            uint8_t maskb[MaskBytes + (BlindingBits == 0 ? 1 : 0)] = {0};
-            rng.randomize(maskb, MaskBytes);
-
             W mask[n_words] = {0};
-            load_le(mask, maskb, MaskWords);
+            load_le(mask, randomness.mask(idx).data(), MaskWords);
 
             // Mask to exactly BlindingBits
             constexpr size_t ExcessBits = MaskWords * WordInfo<W>::bits - BlindingBits;
@@ -1370,12 +1415,91 @@ class BlindedScalarBits final {
       size_t m_bits;
 };
 
+/**
+* The randomness consumed by one blinded scalar multiplication
+*
+* The scalar masks, the projective re-randomizations, and the random curve
+* isomorphism of the point table are drawn from the RNG with a single request,
+* since each request has a fixed cost that dominates for small outputs.
+*
+* If the provided RNG is not seeded, no randomness is drawn and blinding is
+* skipped; the isomorphism parameter is then one.
+*/
+template <typename BlindedScalar, size_t Scalars = 1>
+class BlindingRandomness final {
+   public:
+      /// Each multiplication re-randomizes the accumulator this many times
+      static constexpr size_t Rerandomizations = 4;
+
+   private:
+      using C = typename BlindedScalar::Curve;
+      using FieldElement = typename C::FieldElement;
+
+      static constexpr size_t MaskBytes = BlindedScalar::MaskBytes;
+
+      // Reducing 64 extra bits mod p leaves a negligible bias
+      static constexpr size_t WideBytes = FieldElement::BYTES + 8;
+
+   public:
+      explicit BlindingRandomness(RandomNumberGenerator& rng) : m_seeded(rng.is_seeded()) {
+         // Conditional ok: caller's RNG state (seeded vs not) is presumed public
+         if(m_seeded) {
+            std::array<uint8_t, Scalars * MaskBytes + (Rerandomizations + 1) * WideBytes> buf{};
+            rng.randomize(buf);
+
+            const std::span<const uint8_t> bytes(buf);
+
+            copy_mem(m_masks, bytes.first<Scalars * MaskBytes>());
+
+            for(size_t i = 0; i != Rerandomizations; ++i) {
+               const auto wide = bytes.subspan(Scalars * MaskBytes + i * WideBytes).first<WideBytes>();
+               m_rerandomizers[i] = FieldElement::from_wide_bytes(wide);
+            }
+
+            const auto iso = bytes.subspan(Scalars * MaskBytes + Rerandomizations * WideBytes).first<WideBytes>();
+            m_isomorphism = FieldElement::from_wide_bytes(iso);
+            m_isomorphism.conditional_assign(m_isomorphism.is_zero(), FieldElement::one());
+         }
+      }
+
+      bool seeded() const { return m_seeded; }
+
+      std::span<const uint8_t, MaskBytes> mask(size_t idx) const {
+         BOTAN_ASSERT_NOMSG(idx < Scalars);
+         return std::span{m_masks}.subspan(idx * MaskBytes).template first<MaskBytes>();
+      }
+
+      /**
+      * Randomize the projective representation of pt using the idx'th element
+      */
+      void randomize_rep(typename C::ProjectivePoint& pt, size_t idx) const {
+         BOTAN_ASSERT_NOMSG(idx < Rerandomizations);
+         // Conditional ok: caller's RNG state (seeded vs not) is presumed public
+         if(m_seeded) {
+            pt.randomize_rep(m_rerandomizers[idx]);
+         }
+      }
+
+      /**
+      * Return the random curve isomorphism parameter for the point table
+      */
+      const FieldElement& isomorphism() const { return m_isomorphism; }
+
+   private:
+      bool m_seeded;
+      std::array<uint8_t, Scalars * MaskBytes> m_masks{};
+      std::array<FieldElement, Rerandomizations> m_rerandomizers{};
+      FieldElement m_isomorphism = FieldElement::one();
+};
+
 template <typename C, size_t WindowBits>
 class UnblindedScalarBits final {
    public:
       static constexpr size_t Bits = C::Scalar::BITS;
 
       explicit UnblindedScalarBits(const typename C::Scalar& scalar) { scalar.serialize_to(std::span{m_bytes}); }
+
+      size_t bits() const { return Bits; }
 
       size_t get_window(size_t offset) const {
          // Extract a WindowBits sized window out of s, depending on offset.
@@ -1384,6 +1508,96 @@ class UnblindedScalarBits final {
 
    private:
       std::array<uint8_t, C::Scalar::BYTES> m_bytes;
+};
+
+/**
+* Width W non-adjacent form of a public scalar
+*
+* Each digit is either zero or an odd integer with absolute value less
+* than 2^(W-1). The recoding is variable time and the digits are stored
+* in plain memory, so this is only usable when the scalar is public.
+*/
+template <typename C, size_t W>
+class WnafScalar final {
+   public:
+      static_assert(W >= 2 && W <= 7);
+
+      // A wNAF has at most one more digit than the scalar has bits
+      static constexpr size_t MaxDigits = C::Scalar::BITS + 1;
+
+      explicit WnafScalar(const typename C::Scalar& scalar) : m_digits{}, m_len(0) {
+         using Word = typename C::W;
+         constexpr size_t WordBits = WordInfo<Word>::bits;
+         constexpr Word WindowMask = (static_cast<Word>(1) << W) - 1;
+         constexpr Word HalfWindow = static_cast<Word>(1) << (W - 1);
+
+         // One extra word so that subtracting a negative digit cannot overflow
+         std::array<Word, C::Words + 1> k = {};
+         const auto sw = scalar.to_words();
+         std::copy(sw.begin(), sw.end(), k.begin());
+
+         // Conditionals ok: this function is variable time
+         size_t i = 0;
+         for(;;) {
+            bool k_is_zero = true;
+            for(const auto w : k) {
+               k_is_zero = k_is_zero && (w == 0);
+            }
+            if(k_is_zero) {
+               break;
+            }
+
+            size_t shift = 1;
+
+            if((k[0] & 1) == 1) {
+               BOTAN_DEBUG_ASSERT(i < MaxDigits);
+
+               const Word d = k[0] & WindowMask;
+
+               if(d >= HalfWindow) {
+                  // Negative digit (d - 2^W); subtracting it adds 2^W - d to k
+                  m_digits[i] = static_cast<int8_t>(static_cast<int>(d) - (1 << W));
+                  Word carry = (static_cast<Word>(1) << W) - d;
+                  for(size_t j = 0; j != k.size() && carry > 0; ++j) {
+                     const Word t = k[j] + carry;
+                     carry = (t < k[j]) ? 1 : 0;
+                     k[j] = t;
+                  }
+               } else {
+                  m_digits[i] = static_cast<int8_t>(d);
+                  Word borrow = d;
+                  for(size_t j = 0; j != k.size() && borrow > 0; ++j) {
+                     const Word t = k[j] - borrow;
+                     borrow = (k[j] < borrow) ? 1 : 0;
+                     k[j] = t;
+                  }
+               }
+
+               m_len = i + 1;
+
+               // k is now a multiple of 2^W, so the next W-1 digits are zero
+               shift = W;
+            }
+
+            for(size_t j = 0; j != k.size(); ++j) {
+               k[j] >>= shift;
+               if(j + 1 != k.size()) {
+                  k[j] |= k[j + 1] << (WordBits - shift);
+               }
+            }
+
+            i += shift;
+         }
+      }
+
+      /// Return the number of digits, ie one more than the index of the top nonzero digit
+      size_t length() const { return m_len; }
+
+      int8_t digit(size_t i) const { return m_digits[i]; }
+
+   private:
+      std::array<int8_t, MaxDigits> m_digits;
+      size_t m_len;
 };
 
 template <typename C, size_t W>
@@ -1405,235 +1619,217 @@ class PrecomputedBaseMulTable final {
             m_table(basemul_booth_setup<C, WindowBits>(p, BlindedScalar::Bits + 1)) {}
 
       ProjectivePoint mul(const Scalar& s, RandomNumberGenerator& rng) const {
-         const BlindedScalar scalar(s, rng);
-         return basemul_booth_exec<C, WindowBits>(m_table, scalar, rng);
+         const BlindingRandomness<BlindedScalar> blinding(rng);
+         const BlindedScalar scalar(s, blinding);
+         return basemul_booth_exec<C, WindowBits>(m_table, scalar, blinding);
       }
-
-   private:
-      std::vector<AffinePoint> m_table;
-};
-
-/**
-* Precomputed point multiplication table
-*
-* This is a standard fixed window multiplication using W-bit wide window.
-*/
-template <typename C, size_t W>
-class WindowedMulTable final {
-   public:
-      typedef typename C::Scalar Scalar;
-      typedef typename C::AffinePoint AffinePoint;
-      typedef typename C::ProjectivePoint ProjectivePoint;
-
-      static constexpr size_t WindowBits = W;
-      static_assert(WindowBits >= 1 && WindowBits <= 8);
-
-      using BlindedScalar = BlindedScalarBits<C, WindowBits>;
-
-      static constexpr size_t Windows = (BlindedScalar::Bits + WindowBits - 1) / WindowBits;
-
-      static_assert(Windows > 1);
-
-      // 2^W elements, less the identity element
-      static constexpr size_t TableSize = (1 << WindowBits) - 1;
-
-      explicit WindowedMulTable(const AffinePoint& p) : m_table(varpoint_setup<C, TableSize>(p)) {}
-
-      ProjectivePoint mul(const Scalar& s, RandomNumberGenerator& rng) const {
-         const BlindedScalar bits(s, rng);
-         return varpoint_exec<C, WindowBits>(m_table, bits, rng);
-      }
-
-   private:
-      std::vector<AffinePoint> m_table;
-};
-
-/**
-* Precomputed point multiplication table with Booth
-*/
-template <typename C, size_t W>
-class WindowedBoothMulTable final {
-   public:
-      typedef typename C::Scalar Scalar;
-      typedef typename C::AffinePoint AffinePoint;
-      typedef typename C::ProjectivePoint ProjectivePoint;
-
-      static constexpr size_t TableBits = W;
-      static_assert(TableBits >= 1 && TableBits <= 7);
-
-      static constexpr size_t WindowBits = TableBits + 1;
-
-      using BlindedScalar = BlindedScalarBits<C, WindowBits + 1>;
-
-      static constexpr size_t compute_full_windows(size_t sb, size_t wb) {
-         if(sb % wb == 0) {
-            return (sb - 1) / wb;
-         } else {
-            return sb / wb;
-         }
-      }
-
-      static constexpr size_t compute_initial_shift(size_t sb, size_t wb) {
-         if(sb % wb == 0) {
-            return wb;
-         } else {
-            return sb - (sb / wb) * wb;
-         }
-      }
-
-      // 2^W elements [1*P, 2*P, ..., 2^W*P]
-      static constexpr size_t TableSize = 1 << TableBits;
-
-      explicit WindowedBoothMulTable(const AffinePoint& p) : m_table(varpoint_setup<C, TableSize>(p)) {}
-
-      ProjectivePoint mul(const Scalar& s, RandomNumberGenerator& rng) const {
-         const BlindedScalar bits(s, rng);
-
-         const size_t scalar_bits = bits.bits();
-         const size_t full_windows = compute_full_windows(scalar_bits + 1, WindowBits);
-         const size_t initial_shift = compute_initial_shift(scalar_bits + 1, WindowBits);
-
-         BOTAN_DEBUG_ASSERT(full_windows * WindowBits + initial_shift == scalar_bits + 1);
-         BOTAN_DEBUG_ASSERT(initial_shift > 0);
-
-         auto accum = ProjectivePoint::identity();
-         CT::poison(accum);
-
-         for(size_t i = 0; i != full_windows; ++i) {
-            const size_t idx = scalar_bits - initial_shift - WindowBits * i;
-
-            const size_t w_i = bits.get_window(idx);
-            const auto [tidx, tneg] = booth_recode<WindowBits>(w_i);
-
-            // Conditional ok: loop iteration count is public
-            if(i == 0) {
-               accum = ProjectivePoint::from_affine(m_table.ct_select(tidx));
-               accum.conditional_assign(tneg, accum.negate());
-            } else {
-               accum = ProjectivePoint::add_or_sub(accum, m_table.ct_select(tidx), tneg);
-            }
-
-            accum = accum.dbl_n(WindowBits);
-
-            // Conditional ok: loop iteration count is public
-            if(i <= 3) {
-               accum.randomize_rep(rng);
-            }
-         }
-
-         // final window (note one bit shorter than previous reads)
-         const size_t w_l = bits.get_window(0) & ((1 << WindowBits) - 1);
-         const auto [tidx, tneg] = booth_recode<WindowBits>(w_l << 1);
-         accum = ProjectivePoint::add_or_sub(accum, m_table.ct_select(tidx), tneg);
-
-         CT::unpoison(accum);
-         return accum;
-      }
-
-   private:
-      AffinePointTable<C> m_table;
-};
-
-template <typename C, size_t W>
-class WindowedMul2Table final {
-   public:
-      // We look at W bits of each scalar per iteration
-      static_assert(W >= 1 && W <= 4);
-
-      typedef typename C::Scalar Scalar;
-      typedef typename C::AffinePoint AffinePoint;
-      typedef typename C::ProjectivePoint ProjectivePoint;
-
-      WindowedMul2Table(const AffinePoint& p, const AffinePoint& q) : m_table(mul2_setup<C, W>(p, q)) {}
 
       /**
-      * Constant time 2-ary multiplication
+      * Variable time multiplication, returning accum + s*P
+      *
+      * Only for use with public scalars, eg during signature verification
       */
-      ProjectivePoint mul2(const Scalar& s1, const Scalar& s2, RandomNumberGenerator& rng) const {
-         using BlindedScalar = BlindedScalarBits<C, W>;
-         const BlindedScalar bits1(s1, rng);
-         const BlindedScalar bits2(s2, rng);
-
-         return mul2_exec<C, W>(m_table, bits1, bits2, rng);
+      ProjectivePoint mul_vartime(const Scalar& s, const ProjectivePoint& accum) const {
+         const UnblindedScalarBits<C, WindowBits + 1> scalar(s);
+         return basemul_booth_exec_vartime<C, WindowBits>(m_table, scalar, accum);
       }
 
    private:
-      AffinePointTable<C> m_table;
+      std::vector<AffinePoint> m_table;
 };
 
+// Number of full windows in a scalar of sb bits, and the size of the leading partial window
+constexpr size_t booth_full_windows(size_t sb, size_t wb) {
+   if(sb % wb == 0) {
+      return (sb - 1) / wb;
+   } else {
+      return sb / wb;
+   }
+}
+
+constexpr size_t booth_initial_shift(size_t sb, size_t wb) {
+   if(sb % wb == 0) {
+      return wb;
+   } else {
+      return sb - (sb / wb) * wb;
+   }
+}
+
+/**
+* Variable point multiplication
+*
+* This is a fixed window multiplication with Booth recoding, using a table
+* [1*P, 2*P, ..., 2^W*P] with a shared Z coordinate. The scalar blinding,
+* the accumulator re-randomizations, and the random curve isomorphism of
+* the table all come from a single RNG request.
+*/
+template <typename C, size_t W>
+typename C::ProjectivePoint varpoint_mul(const typename C::AffinePoint& p,
+                                         const typename C::Scalar& s,
+                                         RandomNumberGenerator& rng) {
+   using ProjectivePoint = typename C::ProjectivePoint;
+
+   constexpr size_t TableBits = W;
+   static_assert(TableBits >= 1 && TableBits <= 7);
+
+   constexpr size_t WindowBits = TableBits + 1;
+
+   using BlindedScalar = BlindedScalarBits<C, WindowBits + 1>;
+   using Blinding = BlindingRandomness<BlindedScalar>;
+
+   // 2^W elements [1*P, 2*P, ..., 2^W*P]
+   constexpr size_t TableSize = 1 << TableBits;
+
+   const Blinding blinding(rng);
+   const SharedZPointTable<C> table(p, TableSize, C::A, blinding.isomorphism());
+   const BlindedScalar bits(s, blinding);
+
+   const size_t scalar_bits = bits.bits();
+   const size_t full_windows = booth_full_windows(scalar_bits + 1, WindowBits);
+   const size_t initial_shift = booth_initial_shift(scalar_bits + 1, WindowBits);
+
+   BOTAN_DEBUG_ASSERT(full_windows * WindowBits + initial_shift == scalar_bits + 1);
+   BOTAN_DEBUG_ASSERT(initial_shift > 0);
+
+   auto accum = ProjectivePoint::identity();
+   CT::poison(accum);
+
+   for(size_t i = 0; i != full_windows; ++i) {
+      const size_t idx = scalar_bits - initial_shift - WindowBits * i;
+
+      const size_t w_i = bits.get_window(idx);
+      const auto [tidx, tneg] = booth_recode<WindowBits>(w_i);
+
+      // Conditional ok: loop iteration count is public
+      if(i == 0) {
+         accum = ProjectivePoint::from_affine(table.ct_select(tidx));
+         accum.conditional_assign(tneg, accum.negate());
+      } else {
+         accum = ProjectivePoint::add_or_sub_iso(accum, table.ct_select(tidx), tneg, table.a());
+      }
+
+      accum = accum.dbl_n_iso(table.a(), WindowBits);
+
+      // Conditional ok: loop iteration count is public
+      if(i < Blinding::Rerandomizations) {
+         blinding.randomize_rep(accum, i);
+      }
+   }
+
+   // final window (note one bit shorter than previous reads)
+   const size_t w_l = bits.get_window(0) & ((1 << WindowBits) - 1);
+   const auto [tidx, tneg] = booth_recode<WindowBits>(w_l << 1);
+   accum = ProjectivePoint::add_or_sub_iso(accum, table.ct_select(tidx), tneg, table.a());
+
+   CT::unpoison(accum);
+
+   // Map back from the isomorphic curve
+   return ProjectivePoint(accum.x(), accum.y(), accum.z() * table.z());
+}
+
+/**
+* Constant time 2-ary multiplication x*P + y*Q
+*
+* Uses a joint table of all combinations of W bit windows of the two
+* scalars, with a shared Z coordinate.
+*/
+template <typename C, size_t W>
+typename C::ProjectivePoint varpoint_mul2(const typename C::AffinePoint& p,
+                                          const typename C::Scalar& x,
+                                          const typename C::AffinePoint& q,
+                                          const typename C::Scalar& y,
+                                          RandomNumberGenerator& rng) {
+   // We look at W bits of each scalar per iteration
+   static_assert(W >= 1 && W <= 4);
+
+   using BlindedScalar = BlindedScalarBits<C, W>;
+
+   const BlindingRandomness<BlindedScalar, 2> blinding(rng);
+   const SharedZPointTable<C> table(mul2_setup<C, W>(p, q), C::A, C::FieldElement::one(), blinding.isomorphism());
+   const BlindedScalar x_bits(x, blinding, 0);
+   const BlindedScalar y_bits(y, blinding, 1);
+
+   return mul2_exec<C, W>(table, x_bits, y_bits, blinding);
+}
+
+/**
+* Variable time 2-ary multiplication x*G + y*Q
+*
+* A common use of 2-ary multiplication is when verifying the commitments
+* of an elliptic curve signature. Since in this case the inputs are all
+* public, there is no problem with variable time computation.
+*
+* The generator half is read out of the precomputed base point table and
+* so needs no doublings. The variable point half uses a small table of odd
+* multiples of Q, indexed by the width W non-adjacent form of y.
+*/
 template <typename C, size_t W>
 class VartimeMul2Table final {
    public:
-      // We look at W bits of each scalar per iteration
-      static_assert(W >= 1 && W <= 4);
-
-      static constexpr size_t WindowBits = W;
+      static_assert(W >= 2 && W <= 7);
 
       using Scalar = typename C::Scalar;
       using AffinePoint = typename C::AffinePoint;
       using ProjectivePoint = typename C::ProjectivePoint;
 
-      VartimeMul2Table(const AffinePoint& p, const AffinePoint& q) :
-            m_table(to_affine_batch<C, true>(mul2_setup<C, W>(p, q))) {}
+      explicit VartimeMul2Table(const AffinePoint& q) : m_table(odd_multiples_setup_vartime<C, W>(q)) {}
 
-      /**
-      * Variable time 2-ary multiplication
-      *
-      * A common use of 2-ary multiplication is when verifying the commitments
-      * of an elliptic curve signature. Since in this case the inputs are all
-      * public, there is no problem with variable time computation.
-      *
-      * TODO in the future we could use joint sparse form here.
-      */
-      ProjectivePoint mul2_vartime(const Scalar& s1, const Scalar& s2) const {
-         constexpr size_t Windows = (Scalar::BITS + WindowBits - 1) / WindowBits;
-
-         const UnblindedScalarBits<C, W> bits1(s1);
-         const UnblindedScalarBits<C, W> bits2(s2);
-
-         const bool s1_is_zero = s1.is_zero().as_bool();
-         const bool s2_is_zero = s2.is_zero().as_bool();
-
+      template <size_t GW>
+      ProjectivePoint mul2_vartime(const PrecomputedBaseMulTable<C, GW>& g_table,
+                                   const Scalar& x,
+                                   const Scalar& y) const {
          // Conditional ok: this function is variable time
-         if(s1_is_zero && s2_is_zero) {
+         if(x.is_zero().as_bool() && y.is_zero().as_bool()) {
             return ProjectivePoint::identity();
          }
 
-         auto [w_0, first_nonempty_window] = [&]() {
-            for(size_t i = 0; i != Windows; ++i) {
-               const size_t w_1 = bits1.get_window((Windows - i - 1) * WindowBits);
-               const size_t w_2 = bits2.get_window((Windows - i - 1) * WindowBits);
-               const size_t window = w_1 + (w_2 << WindowBits);
-               // Conditional ok: this function is variable time
-               if(window > 0) {
-                  return std::make_pair(window, i);
-               }
+         return g_table.mul_vartime(x, this->mul_vartime(y));
+      }
+
+   private:
+      // Returns s*Q
+      ProjectivePoint mul_vartime(const Scalar& s) const {
+         const WnafScalar<C, W> naf(s);
+
+         size_t i = naf.length();
+
+         // Conditional ok: this function is variable time
+         if(i == 0) {
+            return ProjectivePoint::identity();
+         }
+
+         auto lookup = [&](int8_t d) -> const AffinePoint& {
+            const size_t mag = static_cast<size_t>((d < 0) ? -d : d);
+            return m_table[(mag - 1) / 2];
+         };
+
+         --i;
+         auto accum = ProjectivePoint::from_affine(lookup(naf.digit(i)));
+         if(naf.digit(i) < 0) {
+            accum = accum.negate();
+         }
+
+         size_t pending_dbl = 0;
+
+         while(i > 0) {
+            --i;
+            pending_dbl += 1;
+
+            const int8_t d = naf.digit(i);
+            if(d != 0) {
+               accum = accum.dbl_n(pending_dbl);
+               pending_dbl = 0;
+               accum = ProjectivePoint::add_or_sub(accum, lookup(d), CT::Choice::from_int(static_cast<uint8_t>(d < 0)));
             }
-            // We checked for s1 == s2 == 0 above, so we must see a window eventually
-            BOTAN_ASSERT_UNREACHABLE();
-         }();
+         }
 
-         BOTAN_ASSERT_NOMSG(w_0 > 0);
-         auto accum = ProjectivePoint::from_affine(m_table[w_0 - 1]);
-
-         for(size_t i = first_nonempty_window + 1; i < Windows; ++i) {
-            accum = accum.dbl_n(WindowBits);
-
-            const size_t w_1 = bits1.get_window((Windows - i - 1) * WindowBits);
-            const size_t w_2 = bits2.get_window((Windows - i - 1) * WindowBits);
-
-            const size_t window = w_1 + (w_2 << WindowBits);
-
-            // Conditional ok: this function is variable time
-            if(window > 0) {
-               accum += m_table[window - 1];
-            }
+         if(pending_dbl > 0) {
+            accum = accum.dbl_n(pending_dbl);
          }
 
          return accum;
       }
 
-   private:
       std::vector<AffinePoint> m_table;
 };
 
@@ -1687,8 +1883,9 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
 
    const auto use_y1 = y1.has_value();
 
-   auto x = C::FieldElement::choose(use_y1, x1, x2);
-   auto y = C::FieldElement::choose(use_y1, y1.value_or(C::FieldElement::zero()), y2.value_or(C::FieldElement::zero()));
+   const auto x = C::FieldElement::choose(use_y1, x1, x2);
+   const auto y =
+      C::FieldElement::choose(use_y1, y1.value_or(C::FieldElement::zero()), y2.value_or(C::FieldElement::zero()));
 
    auto pt = typename C::AffinePoint(x, y.correct_sign(u.is_even()));
 

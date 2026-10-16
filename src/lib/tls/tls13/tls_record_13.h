@@ -13,7 +13,9 @@
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>
+#include <botan/internal/tls_types_13.h>
 #include <optional>
+#include <variant>
 
 namespace Botan::TLS {
 
@@ -21,11 +23,29 @@ namespace Botan::TLS {
  * Represents the operational content of a (D)TLS record for further processing
  * throughout the TLS protocol or to be passed to the application layer.
  */
-struct Record_Content final {
+struct Record_Content {
       Record_Type type;
       std::optional<uint64_t> sequence_number;
       secure_vector<uint8_t> payload;
 };
+
+struct ChangeCipherSpec_Record final : public Record_Content {};
+
+struct Alert_Record final : public Record_Content {};
+
+struct Handshake_Record final : public Record_Content {};
+
+struct ApplicationData_Record final : public Record_Content {};
+
+using Record = std::variant<ChangeCipherSpec_Record, Alert_Record, Handshake_Record, ApplicationData_Record>;
+
+/**
+ * Takes a generic @p record and transforms it into one of the strong typed
+ * record variants based on the contained type.
+ *
+ * @throws TLS_Exception if the record type is any other value.
+ */
+Record annotate_record_type(Record_Content&& record);
 
 /**
  * Represents a TLS record composed of a partially ossified header and payload.

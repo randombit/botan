@@ -96,6 +96,13 @@ uint64_t BOTAN_TEST_API get_system_timestamp_ns();
 std::optional<uint64_t> BOTAN_TEST_API get_thread_cpu_time_ns();
 
 /**
+* @return an integer which increments every time the process forks.
+*
+* If the system does not have any notion of fork() this returns constant 0
+*/
+uint64_t BOTAN_TEST_API get_fork_generation();
+
+/**
 * Format a time
 *
 * Converts the time_t to a local time representation,
@@ -166,11 +173,6 @@ void page_prohibit_access(void* page);
 */
 void page_allow_access(void* page);
 
-/**
-* Set a ID to a page's range expressed by size bytes
-*/
-void page_named(void* page, size_t size);
-
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
 void set_thread_name(std::thread& thread, const std::string& name);
 #endif
@@ -187,9 +189,10 @@ void set_thread_name(std::thread& thread, const std::string& name);
 * can test to make sure the instruction works properly before
 * indicating that the instruction is available.
 *
-* @warning on Unix systems uses signal handling in a way that is not
-* thread safe. It should only be called in a single-threaded context
-* (ie, at static init time).
+* @warning on Unix systems this temporarily replaces the process-wide SIGILL
+* handler. Probes are serialized, and a SIGILL raised by another thread while
+* a probe is running is forwarded to the previous handler, but any such fault
+* on the probing thread (other than the probe itself) will be misreported.
 *
 * If probe_fn throws an exception the result is undefined.
 *

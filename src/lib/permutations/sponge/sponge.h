@@ -39,7 +39,8 @@ class Sponge {
 
    public:
       constexpr explicit Sponge(Config config) : m_S(config.initial_state), m_S_cursor(0), m_bit_rate(config.bit_rate) {
-         BOTAN_ARG_CHECK(m_bit_rate % word_bits == 0 && m_bit_rate < words * word_bits, "Invalid sponge bit rate");
+         BOTAN_ARG_CHECK(m_bit_rate > 0 && m_bit_rate % word_bits == 0 && m_bit_rate < words * word_bits,
+                         "Invalid sponge bit rate");
       }
 
       constexpr Sponge(const Sponge&) = default;

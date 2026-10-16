@@ -163,7 +163,7 @@ inline void treehash(
          // it is, write it out. The XOR sum of both nodes (at internal_idx and internal_leaf)
          // is 1 iff they have the same parent node in the FORS tree
          if(is_signing && (internal_idx ^ internal_leaf.value()) == 0x01U) {
-            auto auth_path_location = out_auth_path.value().get().subspan(h.get() * node_size, node_size);
+            const auto auth_path_location = out_auth_path.value().get().subspan(h.get() * node_size, node_size);
             copy_mem(auth_path_location, current_node);
          }
 

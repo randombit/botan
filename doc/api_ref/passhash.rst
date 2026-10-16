@@ -117,6 +117,12 @@ It has the advantage that it requires a small amount (4K) of fast RAM
 to compute, which can make hardware password cracking somewhat more
 expensive.
 
+.. warning::
+
+   Bcrypt is built on Blowfish, which uses key dependent tables indexed by
+   secret data. The implementation is thus likely vulnerable to cache based
+   side channel attacks. No constant time implementation is available.
+
 Bcrypt provides outputs that look like this::
 
   "$2a$12$7KIYdyv8Bp32WAvc.7YvI.wvRlyVn0HP/EhPmmOyMQA4YKxINO0p2"
@@ -192,6 +198,11 @@ Passhash9 hashes look like::
 This function should be secure with the proper parameters, and will remain in
 the library for the foreseeable future, but it is specific to Botan rather than
 being a widely used password hash. Prefer bcrypt or Argon2.
+
+.. warning::
+
+   Support for this password hashing scheme is deprecated, and will be removed
+   in a future major release.
 
 .. warning::
 

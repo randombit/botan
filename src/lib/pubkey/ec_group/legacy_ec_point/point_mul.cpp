@@ -10,8 +10,8 @@
 #include <botan/mem_ops.h>
 #include <botan/rng.h>
 #include <botan/internal/barrett.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
-#include <botan/internal/rounding.h>
 
 namespace Botan {
 
@@ -45,7 +45,7 @@ EC_Point_Base_Point_Precompute::EC_Point_Base_Point_Precompute(const EC_Point& b
 
    const size_t order_bits = mod_order.modulus_bits();
 
-   const size_t T_bits = round_up(order_bits + blinding_size(order_bits), WindowBits) / WindowBits;
+   const size_t T_bits = ceil_division(order_bits + blinding_size(order_bits), WindowBits);
 
    std::vector<EC_Point> T(WindowSize * T_bits);
 
@@ -112,7 +112,7 @@ EC_Point EC_Point_Base_Point_Precompute::mul(const BigInt& k,
       BOTAN_DEBUG_ASSERT(scalar.bits() == group_order.bits() + 1);
    }
 
-   const size_t windows = round_up(scalar.bits(), WindowBits) / WindowBits;
+   const size_t windows = ceil_division(scalar.bits(), WindowBits);
 
    const size_t elem_size = 2 * m_p_words;
 
@@ -227,7 +227,7 @@ EC_Point EC_Point_Var_Point_Precompute::mul(const BigInt& k,
    const size_t elem_size = 3 * m_p_words;
    const size_t window_elems = static_cast<size_t>(1) << WindowBits;
 
-   size_t windows = round_up(scalar.bits(), WindowBits) / WindowBits;
+   size_t windows = ceil_division(scalar.bits(), WindowBits);
    EC_Point R(m_curve);
    secure_vector<word> e(elem_size);
 
@@ -319,7 +319,7 @@ EC_Point_Multi_Point_Precompute::EC_Point_Multi_Point_Precompute(const EC_Point&
    m_M.push_back(y3.plus(x3, ws));
 
    bool no_infinity = true;
-   for(auto& pt : m_M) {
+   for(const auto& pt : m_M) {
       if(pt.is_zero()) {
          no_infinity = false;
       }
@@ -339,7 +339,8 @@ EC_Point EC_Point_Multi_Point_Precompute::multi_exp(const BigInt& z1, const BigI
 
    std::vector<BigInt> ws(EC_Point::WORKSPACE_SIZE);
 
-   const size_t z_bits = round_up(std::max(z1.bits(), z2.bits()), 2);
+   // The exponents are consumed two bits at a time
+   const size_t z_bits = 2 * ceil_division<size_t>(std::max(z1.bits(), z2.bits()), 2);
 
    EC_Point H = m_M[0].zero();
 

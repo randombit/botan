@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/charset.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
@@ -95,14 +96,9 @@ void pkcs12_kdf_with_hash(std::span<uint8_t> out,
    const size_t pwd_len = pwd_bytes.size();
    const size_t salt_len = salt.size();
 
-   // Round len up to a multiple of v, checking for overflow. Dividing before
-   // the multiply avoids overflow when computing the number of blocks.
-   auto round_up_to_v = [v](size_t len) -> size_t {
-      if(len == 0) {
-         return 0;
-      }
-      const size_t blocks = (len / v) + (len % v != 0 ? 1 : 0);
-      return mul_or_throw(blocks, v, "PKCS12-KDF: input too large");
+   // Round len up to a multiple of v, checking for overflow
+   const auto round_up_to_v = [v](size_t len) -> size_t {
+      return mul_or_throw(ceil_division(len, v), v, "PKCS12-KDF: input too large");
    };
 
    // Calculate sizes (must be multiple of v)

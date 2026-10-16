@@ -67,6 +67,11 @@ uint64_t TLS::Callbacks::tls_current_monotonic_clock_ms() {
    return std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
 }
 
+void TLS::Callbacks::tls_register_deferred_operation(uint64_t monotonic_delay_ms,
+                                                     std::function<void()> op /* NOLINT(*-value-param) */) {
+   BOTAN_UNUSED(monotonic_delay_ms, op);  // no-op
+}
+
 void TLS::Callbacks::tls_modify_extensions(Extensions& /*unused*/,
                                            Connection_Side /*unused*/,
                                            Handshake_Type /*unused*/) {}
@@ -200,7 +205,7 @@ std::unique_ptr<Public_Key> TLS::Callbacks::tls_deserialize_peer_public_key(
       // a standardized DH group identifier.
       const auto dl_group = get_dl_group(group);
 
-      auto Y = BigInt::from_bytes(key_bits);
+      const auto Y = BigInt::from_bytes(key_bits);
 
       /*
        * A basic check for key validity. As we do not know q here we
@@ -226,7 +231,7 @@ std::unique_ptr<Public_Key> TLS::Callbacks::tls_deserialize_peer_public_key(
       // share); TLS 1.2 may negotiate the compressed format. The deprecated
       // hybrid encoding and the identity element are never accepted.
 
-      auto point = [&]() -> EC_AffinePoint {
+      const auto point = [&]() -> EC_AffinePoint {
          if(auto pt_uncompressed = EC_AffinePoint::deserialize_uncompressed(ec_group, key_bits)) {
             return std::move(pt_uncompressed).value();
          } else if(auto pt_compressed = EC_AffinePoint::deserialize_compressed(ec_group, key_bits)) {
@@ -235,7 +240,7 @@ std::unique_ptr<Public_Key> TLS::Callbacks::tls_deserialize_peer_public_key(
             throw Decoding_Error("Invalid ECDH public key encoding");
          }
       }();
-      return std::make_unique<ECDH_PublicKey>(ec_group, std::move(point));
+      return std::make_unique<ECDH_PublicKey>(ec_group, point);
    }
 
 #if defined(BOTAN_HAS_X25519)
@@ -298,7 +303,7 @@ KEM_Encapsulation TLS::Callbacks::tls_kem_encapsulate(TLS::Group_Params group,
                                                       RandomNumberGenerator& rng,
                                                       const Policy& policy) {
    if(group.is_kem()) {
-      auto kem_pub_key = [&] {
+      const auto kem_pub_key = [&] {
          try {
             return tls_deserialize_peer_public_key(group, encoded_public_key);
          } catch(const Decoding_Error& ex) {

@@ -42,11 +42,11 @@ class LMOTS_Test final : public Text_Based_Test {
 
          auto hash = Botan::HashFunction::create("SHA-256");
 
-         auto type = static_cast<Botan::LMOTS_Algorithm_Type>(lmots_type_id);
-         auto params = Botan::LMOTS_Params::create_or_throw(type);
+         const auto type = static_cast<Botan::LMOTS_Algorithm_Type>(lmots_type_id);
+         const auto params = Botan::LMOTS_Params::create_or_throw(type);
 
          // Test private/public OTS key creation
-         auto sk = Botan::LMOTS_Private_Key(params, identifier, q, seed);
+         const auto sk = Botan::LMOTS_Private_Key(params, identifier, q, seed);
          const auto pk = Botan::LMOTS_Public_Key(sk);
          result.test_bin_eq("Public key generation", pk.K(), pk_ref);
 
@@ -57,7 +57,7 @@ class LMOTS_Test final : public Text_Based_Test {
 
          // Test create pubkey from signature
          auto sig_slicer = Botan::BufferSlicer(sig);
-         auto sig_obj = Botan::LMOTS_Signature::from_bytes_or_throw(sig_slicer);
+         const auto sig_obj = Botan::LMOTS_Signature::from_bytes_or_throw(sig_slicer);
          const Botan::LMOTS_K pk_from_sig = Botan::lmots_compute_pubkey_from_sig(sig_obj, msg, identifier, q);
          result.test_bin_eq("Public key from signature", pk_from_sig, pk_ref);
 

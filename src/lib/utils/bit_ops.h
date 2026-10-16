@@ -165,7 +165,8 @@ constexpr uint8_t ceil_log2(T x)
  */
 template <std::unsigned_integral T>
 BOTAN_FORCE_INLINE constexpr T ceil_division(T a, T b) {
-   return (a + b - 1) / b;
+   // Same as `(a + b - 1) / b` but avoids possible overflow
+   return a / b + ((a % b != 0) ? 1 : 0);
 }
 
 /**
@@ -237,7 +238,7 @@ BOTAN_FORCE_INLINE constexpr T majority(T a, T b, T c) {
  */
 template <std::unsigned_integral T>
 inline constexpr T ct_reverse_bits(T b) {
-   auto extend = [](uint8_t m) -> T {
+   const auto extend = [](uint8_t m) -> T {
       T mask = 0;
       for(size_t i = 0; i < sizeof(T); ++i) {
          mask |= T(m) << i * 8;

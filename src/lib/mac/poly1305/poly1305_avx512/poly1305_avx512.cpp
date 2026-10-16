@@ -89,9 +89,9 @@ class SIMD_8x44 final {
          const auto idx2_z2 = SIMD_8x44(7, 6, 5, 4, 3, 9, 12, 15);
 
          // NOLINTBEGIN(*-suspicious-call-argument)
-         auto z0 = SIMD_8x44::permute3(idx1_z0, idx2_z0, r0, r1, r2);
-         auto z1 = SIMD_8x44::permute3(idx1_z1, idx2_z1, r0, r1, r2);
-         auto z2 = SIMD_8x44::permute3(idx1_z2, idx2_z2, r0, r1, r2);
+         const auto z0 = SIMD_8x44::permute3(idx1_z0, idx2_z0, r0, r1, r2);
+         const auto z1 = SIMD_8x44::permute3(idx1_z1, idx2_z1, r0, r1, r2);
+         const auto z2 = SIMD_8x44::permute3(idx1_z2, idx2_z2, r0, r1, r2);
          // NOLINTEND(*-suspicious-call-argument)
 
          r0 = z0;

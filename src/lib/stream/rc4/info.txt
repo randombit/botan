@@ -4,4 +4,5 @@ RC4 -> 20131128
 
 <module_info>
 name -> "RC4"
+lifecycle -> "Deprecated"
 </module_info>

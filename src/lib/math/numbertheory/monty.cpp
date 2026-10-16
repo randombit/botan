@@ -234,7 +234,7 @@ Montgomery_Int Montgomery_Int::one(const Montgomery_Params& params) {
 
 Montgomery_Int Montgomery_Int::from_wide_int(const Montgomery_Params& params, const BigInt& x) {
    secure_vector<word> ws;
-   auto redc_x = params.mul(params.redc(x, ws), params.R3(), ws);
+   const auto redc_x = params.mul(params.redc(x, ws), params.R3(), ws);
    return Montgomery_Int(params, redc_x, false);
 }
 
@@ -350,7 +350,7 @@ Montgomery_Int& Montgomery_Int::mul_by(std::span<const word> other, secure_vecto
       ws.resize(2 * p_size);
    }
 
-   auto do_mul_by = [&](std::span<word> z) {
+   const auto do_mul_by = [&](std::span<word> z) {
       bigint_mul(z.data(), z.size(), m_v.data(), p_size, p_size, other.data(), p_size, p_size, ws.data(), ws.size());
 
       bigint_monty_redc_inplace(z.data(), m_params.p()._data(), p_size, m_params.p_dash(), ws.data(), ws.size());
@@ -377,7 +377,7 @@ Montgomery_Int& Montgomery_Int::square_this_n_times(secure_vector<word>& ws, siz
       ws.resize(2 * p_size);
    }
 
-   auto do_sqr_n = [&](std::span<word> z) {
+   const auto do_sqr_n = [&](std::span<word> z) {
       for(size_t i = 0; i != n; ++i) {
          bigint_sqr(z.data(), 2 * p_size, m_v.data(), p_size, p_size, ws.data(), ws.size());
 

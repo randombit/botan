@@ -22,7 +22,11 @@
    #include <botan/internal/ec_inner_data.h>
    #include <array>
    #if defined(BOTAN_HAS_ECDSA)
+      #include <botan/ecdsa.h>
+      #include <botan/hash.h>
       #include <botan/pk_algs.h>
+      #include <botan/pk_options.h>
+      #include <botan/pubkey.h>
    #endif
 #endif
 
@@ -75,7 +79,7 @@ Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, const
    */
    Botan::BigInt x = 0;
 
-   auto flip_prob = [](size_t i) -> double {
+   const auto flip_prob = [](size_t i) -> double {
       if(i % 64 == 0) {
          return .5;
       }
@@ -120,7 +124,7 @@ Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, const
 
 Botan::EC_Point create_random_point(Botan::RandomNumberGenerator& rng, const Botan::EC_Group& group) {
    const Botan::BigInt& p = group.get_p();
-   auto mod_p = Botan::Barrett_Reduction::for_public_modulus(p);
+   const auto mod_p = Botan::Barrett_Reduction::for_public_modulus(p);
 
    for(;;) {
       const Botan::BigInt x = Botan::BigInt::random_integer(rng, 1, p);
@@ -148,7 +152,7 @@ std::vector<Test::Result> ECC_Randomized_Tests::run() {
 
       result.start_timer();
 
-      auto group = Botan::EC_Group::from_name(group_name);
+      const auto group = Botan::EC_Group::from_name(group_name);
 
       const Botan::EC_Point pt = create_random_point(this->rng(), group);
 
@@ -313,9 +317,9 @@ class EC_Group_Tests : public Test {
          const Botan::EC_Point pt = create_random_point(this->rng(), group);
          const Botan::EC_Point zero = group.zero_point();
 
-         for(auto scheme : {Botan::EC_Point_Format::Uncompressed,
-                            Botan::EC_Point_Format::Compressed,
-                            Botan::EC_Point_Format::Hybrid}) {
+         for(const auto scheme : {Botan::EC_Point_Format::Uncompressed,
+                                  Botan::EC_Point_Format::Compressed,
+                                  Botan::EC_Point_Format::Hybrid}) {
             try {
                result.test_bin_eq("encoded/decode rt works", group.OS2ECP(pt.encode(scheme)).xy_bytes(), pt.xy_bytes());
             } catch(Botan::Exception& e) {
@@ -399,9 +403,9 @@ class EC_Group_Tests : public Test {
          result.test_bin_eq("addition of zero does nothing", p1.xy_bytes(), (p1 - zero).xy_bytes());
          result.test_is_true("zero times anything is the zero point", (zero * 39193).is_zero());
 
-         for(auto scheme : {Botan::EC_Point_Format::Uncompressed,
-                            Botan::EC_Point_Format::Compressed,
-                            Botan::EC_Point_Format::Hybrid}) {
+         for(const auto scheme : {Botan::EC_Point_Format::Uncompressed,
+                                  Botan::EC_Point_Format::Compressed,
+                                  Botan::EC_Point_Format::Hybrid}) {
             const std::vector<uint8_t> v = zero.encode(scheme);
             result.test_is_true("encoded/decode rt works", group.OS2ECP(v).is_zero());
          }
@@ -445,7 +449,7 @@ Test::Result test_mixed_points() {
 
       const auto p1 = Botan::EC_AffinePoint::generator(secp256r1);
       const auto p2 = Botan::EC_AffinePoint::generator(secp384r1);
-      result.test_throws("Mixing points from different groups", [&] { auto p3 = p1.add(p2); });
+      result.test_throws("Mixing points from different groups", [&] { const auto p3 = p1.add(p2); });
    }
 
    return result;
@@ -538,6 +542,9 @@ class EC_Group_Registration_Tests final : public Test {
             results.push_back(test_ec_group_alias_oid_cache());
             results.push_back(test_ec_group_unregistration());
             results.push_back(test_supports_named_group_with_registration());
+   #if defined(BOTAN_HAS_ECDSA)
+            results.push_back(test_ec_key_with_equivalent_group());
+   #endif
          }
 
          return results;
@@ -561,7 +568,7 @@ class EC_Group_Registration_Tests final : public Test {
          // Creating this object implicitly registers the curve for future use ...
          const auto reg_group = Botan::EC_Group::register_custom_group(oid, p, a, b, g_x, g_y, order);
 
-         auto group = Botan::EC_Group::from_OID(oid);
+         const auto group = Botan::EC_Group::from_OID(oid);
 
          result.test_bn_eq("Group registration worked", group.get_p(), p);
 
@@ -594,6 +601,87 @@ class EC_Group_Registration_Tests final : public Test {
 
          return result;
       }
+
+   #if defined(BOTAN_HAS_ECDSA)
+      Test::Result test_ec_key_with_equivalent_group() {
+         Test::Result result("EC key construction with equivalent but distinct EC_Group");
+
+         // numsp384d1 is not a builtin group, so decoding it does not register it
+         const Botan::BigInt p(
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEC3");
+         const Botan::BigInt a(
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEC0");
+         const Botan::BigInt b(
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF77BB");
+         const Botan::BigInt g_x("0x02");
+         const Botan::BigInt g_y(
+            "0x3C9F82CB4B87B4DC71E763E0663E5DBD8034ED422F04F82673330DC58D15FFA2B4A3D0BAD5D30F865BCBBF503EA66F43");
+         const Botan::BigInt order(
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD61EAF1EEB5D6881BEDA9D3D4C37E27A604D81F67B0E61B9");
+
+         const auto der = encode_explicit_group(p, a, b, g_x, g_y, order, 1);
+
+         const Botan::EC_Group group1(der);
+         const Botan::EC_Group group2(der);
+
+         result.test_is_true("Groups compare equal", group1 == group2);
+         result.test_is_true("Groups have distinct inner data", group1._data() != group2._data());
+
+         const Botan::ECDSA_PrivateKey sk1(rng(), group1);
+
+         // Keys created with the equivalent group adopt it, rebinding the key material
+         const Botan::ECDSA_PrivateKey sk2(group2, sk1._private_key());
+         const Botan::ECDSA_PublicKey pk2(group2, sk1._public_ec_point());
+
+         result.test_is_true("Private key uses the specified group", sk2.domain()._data() == group2._data());
+         result.test_is_true("Private scalar was rebound", sk2._private_key().group()._data() == group2._data());
+         result.test_is_true("Public key uses the specified group", pk2.domain()._data() == group2._data());
+         result.test_is_true("Public point was rebound", pk2._public_ec_point()._group() == group2._data());
+         result.test_bin_eq(
+            "Rebound private key has the same encoding", sk2.private_key_bits(), sk1.private_key_bits());
+         result.test_bin_eq("Rebound public key has the same encoding", pk2.public_key_bits(), sk1.public_key_bits());
+
+         if(Botan::HashFunction::create("SHA-256")) {
+            const auto msg = rng().random_vec(32);
+            Botan::PK_Signer signer(sk2, rng(), Botan::PK_Signature_Options().with_hash("SHA-256"));
+            Botan::PK_Verifier verifier(pk2, Botan::PK_Signature_Options().with_hash("SHA-256"));
+            result.test_is_true("Signature from rebound keys verifies",
+                                verifier.verify_message(msg, signer.sign_message(msg, rng())));
+         }
+
+         if(Botan::EC_Group::supports_named_group("secp256r1")) {
+            const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
+
+            result.test_throws<Botan::Decoding_Error>("Point from a different group is rejected", [&] {
+               static_cast<void>(Botan::ECDSA_PublicKey(secp256r1, sk1._public_ec_point()));
+            });
+            result.test_throws<Botan::Decoding_Error>("Scalar from a different group is rejected", [&] {
+               static_cast<void>(Botan::ECDSA_PrivateKey(secp256r1, sk1._private_key()));
+            });
+
+            // Clearing the registry causes builtin groups to get fresh inner data as well
+            const Botan::ECDSA_PrivateKey sk3(rng(), secp256r1);
+            Botan::EC_Group::clear_registered_curve_data();
+            const auto secp256r1_again = Botan::EC_Group::from_name("secp256r1");
+            result.test_is_true("Builtin group has distinct inner data after registry clear",
+                                secp256r1_again._data() != secp256r1._data());
+
+            const Botan::ECDSA_PublicKey pk3(secp256r1_again, sk3._public_ec_point());
+            result.test_is_true("Builtin point was rebound",
+                                pk3._public_ec_point()._group() == secp256r1_again._data());
+
+            if(Botan::HashFunction::create("SHA-256")) {
+               const auto msg = rng().random_vec(32);
+               Botan::PK_Signer signer(sk3, rng(), Botan::PK_Signature_Options().with_hash("SHA-256"));
+               Botan::PK_Verifier verifier(pk3, Botan::PK_Signature_Options().with_hash("SHA-256"));
+               result.test_is_true("Signature verifies across registry clear",
+                                   verifier.verify_message(msg, signer.sign_message(msg, rng())));
+            }
+         }
+
+         return result;
+      }
+   #endif
 
       Test::Result test_ec_group_bad_registration() {
          Test::Result result("EC_Group registering non-match");
@@ -1162,7 +1250,7 @@ class EC_Point_Arithmetic_Tests final : public Test {
             auto moved_from = Botan::EC_Scalar::from_bigint(group, 1);
             const auto replacement = Botan::EC_Scalar::from_bigint(group, 2);
             auto moved_to = std::move(moved_from);
-            auto as_rvalue = [](auto& x) -> decltype(auto) { return std::move(x); };
+            const auto as_rvalue = [](auto& x) -> decltype(auto) { return std::move(x); };
             moved_from = as_rvalue(moved_from);
             moved_from = replacement;
             result.test_is_true("copy assignment into moved-from EC_Scalar", moved_from == replacement);
@@ -1234,7 +1322,7 @@ class EC_Point_Arithmetic_Tests final : public Test {
             }
 
             for(size_t i = 0; i != 64; ++i) {
-               auto h = [&]() {
+               const auto h = [&]() {
                   const auto s = [&]() {
                      if(i == 0) {
                         // Test the identity case
@@ -1268,6 +1356,69 @@ class EC_Point_Arithmetic_Tests final : public Test {
                   result.test_bin_eq("ref == mul2t", ref.serialize_uncompressed(), mul2pt->serialize_uncompressed());
                } else {
                   result.test_is_true("ref is identity", ref.is_identity());
+               }
+            }
+
+            // Edge cases for the variable time 2-ary multiplication: zero
+            // scalars, cancellation, and partial sums which coincide with
+            // table entries (forcing the exceptional addition paths)
+            {
+               auto check_mul2 = [&](const std::string& what,
+                                     const Botan::EC_AffinePoint& h,
+                                     const Botan::EC_Group::Mul2Table& tbl,
+                                     const Botan::EC_Scalar& s1,
+                                     const Botan::EC_Scalar& s2) {
+                  const auto ref = Botan::EC_AffinePoint::g_mul(s1, rng).add(h.mul(s2, rng));
+                  if(auto mul2pt = tbl.mul2_vartime(s1, s2)) {
+                     result.test_bin_eq(what, mul2pt->serialize_uncompressed(), ref.serialize_uncompressed());
+                  } else {
+                     result.test_is_true(what + " is identity", ref.is_identity());
+                  }
+               };
+
+               auto scalar_of = [&](const Botan::BigInt& v) { return Botan::EC_Scalar::from_bigint(group, v); };
+
+               const auto r1 = Botan::EC_Scalar::random(group, rng);
+               const auto r2 = Botan::EC_Scalar::random(group, rng);
+               const auto zero_s = r1 - r1;  // NOLINT(*-redundant-expression)
+
+               const auto h = Botan::EC_AffinePoint::g_mul(Botan::EC_Scalar::random(group, rng), rng);
+               const Botan::EC_Group::Mul2Table h_table(h);
+
+               check_mul2("mul2 s1=0", h, h_table, zero_s, r2);
+               check_mul2("mul2 s2=0", h, h_table, r1, zero_s);
+               check_mul2("mul2 s1=s2=0", h, h_table, zero_s, zero_s);
+
+               // Small and near-order scalars exercise the digit recoding boundaries
+               for(uint64_t i = 1; i != 70; ++i) {
+                  const auto si = scalar_of(Botan::BigInt::from_u64(i));
+                  check_mul2("mul2 small s2", h, h_table, r1, si);
+                  check_mul2("mul2 small s1", h, h_table, si, r2);
+                  check_mul2("mul2 small -s2", h, h_table, r1, si.negate());
+                  check_mul2("mul2 small -s1", h, h_table, si.negate(), r2);
+               }
+
+               for(size_t i = 1; i < group.get_order_bits(); i += 7) {
+                  const auto si = scalar_of(Botan::BigInt::power_of_2(i));
+                  check_mul2("mul2 s2=2^i", h, h_table, r1, si);
+                  check_mul2("mul2 s2=-2^i", h, h_table, r1, si.negate());
+               }
+
+               // With h = G (or -G) the two halves can cancel or coincide
+               const Botan::EC_Group::Mul2Table g_table(g);
+               const Botan::EC_Group::Mul2Table neg_g_table(g.negate());
+
+               check_mul2("mul2 g s1=s2", g, g_table, r1, r1);
+               check_mul2("mul2 g s1=-s2", g, g_table, r1, r1.negate());
+               check_mul2("mul2 -g s1=s2", g.negate(), neg_g_table, r1, r1);
+
+               for(size_t k = 0; 6 * k + 6 < group.get_order_bits(); k += 5) {
+                  for(const uint64_t m : {1, 5, 31, 32, 33, 63}) {
+                     const auto si = scalar_of(Botan::BigInt::from_u64(m) << (6 * k));
+                     check_mul2("mul2 g coincident", g, g_table, si, si);
+                     check_mul2("mul2 g coincident neg", g, g_table, si, si.negate());
+                     check_mul2("mul2 -g coincident", g.negate(), neg_g_table, si, si);
+                  }
                }
             }
 

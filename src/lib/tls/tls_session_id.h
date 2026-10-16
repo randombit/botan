@@ -50,7 +50,7 @@ inline auto operator<(const Session_ID& id1, const Session_ID& id2) {
  */
 class BOTAN_PUBLIC_API(3, 0) Session_Handle final {
    public:
-      // NOLINTBEGIN(*-explicit-conversions)
+      // NOLINTBEGIN(*-explicit-conversions,*-explicit-constructor)
 
       /**
        * Constructs a Session_Handle from a session ID which is an
@@ -77,7 +77,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Handle final {
        */
       Session_Handle(Opaque_Session_Handle ticket) : m_handle(std::move(ticket)) { validate_constraints(); }
 
-      // NOLINTEND(*-explicit-conversions)
+      // NOLINTEND(*-explicit-conversions,*-explicit-constructor)
 
       bool is_id() const { return std::holds_alternative<Session_ID>(m_handle); }
 

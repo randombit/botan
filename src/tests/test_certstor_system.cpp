@@ -42,7 +42,7 @@ Test::Result find_certificate_by_pubkey_sha1(Botan::Certificate_Store& certstore
    return result;
 }
 
-Test::Result find_certificate_by_pubkey_sha1_with_unmatching_key_id(Botan::Certificate_Store& certstore) {
+Test::Result find_certificate_by_pubkey_sha1_with_unmatching_key_id(const Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find Certificate by SHA1(pubkey) - regression test for GH #2779");
 
    if(!certstore.find_cert(get_dn_of_cert_with_different_key_id(), {}).has_value()) {
@@ -67,11 +67,11 @@ Test::Result find_certificate_by_pubkey_sha1_with_unmatching_key_id(Botan::Certi
    return result;
 }
 
-Test::Result find_cert_by_subject_dn(Botan::Certificate_Store& certstore) {
+Test::Result find_cert_by_subject_dn(const Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find Certificate by subject DN");
 
    try {
-      auto dn = get_dn();
+      const auto dn = get_dn();
 
       result.start_timer();
       auto cert = certstore.find_cert(dn, std::vector<uint8_t>());
@@ -89,7 +89,7 @@ Test::Result find_cert_by_subject_dn(Botan::Certificate_Store& certstore) {
    return result;
 }
 
-Test::Result find_cert_by_utf8_subject_dn(Botan::Certificate_Store& certstore) {
+Test::Result find_cert_by_utf8_subject_dn(const Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find Certificate by UTF8 subject DN");
 
    try {
@@ -127,11 +127,11 @@ Test::Result find_cert_by_utf8_subject_dn(Botan::Certificate_Store& certstore) {
    return result;
 }
 
-Test::Result find_cert_by_subject_dn_and_key_id(Botan::Certificate_Store& certstore) {
+Test::Result find_cert_by_subject_dn_and_key_id(const Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find Certificate by subject DN and key ID");
 
    try {
-      auto dn = get_dn();
+      const auto dn = get_dn();
 
       result.start_timer();
       auto cert = certstore.find_cert(dn, get_key_id());
@@ -149,11 +149,11 @@ Test::Result find_cert_by_subject_dn_and_key_id(Botan::Certificate_Store& certst
    return result;
 }
 
-Test::Result find_certs_by_subject_dn_and_key_id(Botan::Certificate_Store& certstore) {
+Test::Result find_certs_by_subject_dn_and_key_id(const Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find Certificates by subject DN and key ID");
 
    try {
-      auto dn = get_dn();
+      const auto dn = get_dn();
 
       result.start_timer();
       auto certs = certstore.find_all_certs(dn, get_key_id());
@@ -173,11 +173,11 @@ Test::Result find_certs_by_subject_dn_and_key_id(Botan::Certificate_Store& certs
    return result;
 }
 
-Test::Result find_all_certs_by_subject_dn(Botan::Certificate_Store& certstore) {
+Test::Result find_all_certs_by_subject_dn(const Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find all Certificates by subject DN");
 
    try {
-      auto dn = get_dn();
+      const auto dn = get_dn();
 
       result.start_timer();
       auto certs = certstore.find_all_certs(dn, std::vector<uint8_t>());
@@ -208,7 +208,7 @@ Test::Result find_all_certs_by_subject_dn(Botan::Certificate_Store& certstore) {
    return result;
 }
 
-Test::Result find_all_subjects(Botan::Certificate_Store& certstore) {
+Test::Result find_all_subjects(const Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find all Certificate Subjects");
 
    try {
@@ -217,8 +217,8 @@ Test::Result find_all_subjects(Botan::Certificate_Store& certstore) {
       result.end_timer();
 
       if(result.test_is_true("result not empty", !subjects.empty())) {
-         auto dn = get_dn();
-         auto needle = std::find_if(
+         const auto dn = get_dn();
+         const auto needle = std::find_if(
             subjects.cbegin(), subjects.cend(), [=](const Botan::X509_DN& subject) { return subject == dn; });
 
          if(result.test_is_true("found expected certificate", needle != subjects.end())) {
@@ -232,7 +232,7 @@ Test::Result find_all_subjects(Botan::Certificate_Store& certstore) {
    return result;
 }
 
-Test::Result find_cert_by_issuer_dn_and_serial_number(Botan::Certificate_Store& certstore) {
+Test::Result find_cert_by_issuer_dn_and_serial_number(const Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find Certificate by issuer DN and serial number");
 
    try {
@@ -254,17 +254,17 @@ Test::Result find_cert_by_issuer_dn_and_serial_number(Botan::Certificate_Store& 
    return result;
 }
 
-Test::Result no_certificate_matches(Botan::Certificate_Store& certstore) {
+Test::Result no_certificate_matches(const Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - can deal with no matches (regression test)");
 
    try {
-      auto dn = get_unknown_dn();
-      auto kid = get_unknown_key_id();
+      const auto dn = get_unknown_dn();
+      const auto kid = get_unknown_key_id();
 
       result.start_timer();
-      auto certs = certstore.find_all_certs(dn, kid);
-      auto cert = certstore.find_cert(dn, kid);
-      auto pubk_cert = certstore.find_cert_by_pubkey_sha1(kid);
+      const auto certs = certstore.find_all_certs(dn, kid);
+      const auto cert = certstore.find_cert(dn, kid);
+      const auto pubk_cert = certstore.find_cert_by_pubkey_sha1(kid);
       result.end_timer();
 
       result.test_is_true("find_all_certs did not find the dummy", certs.empty());
@@ -277,7 +277,7 @@ Test::Result no_certificate_matches(Botan::Certificate_Store& certstore) {
    return result;
 }
 
-Test::Result repeated_lookups_share_parsed_certificate(Botan::Certificate_Store& certstore) {
+Test::Result repeated_lookups_share_parsed_certificate(const Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - repeated lookups share the parsed certificate");
 
    try {
@@ -305,7 +305,7 @@ Test::Result repeated_lookups_share_parsed_certificate(Botan::Certificate_Store&
    return result;
 }
 
-Test::Result contains_trusted_root_loaded_from_file(Botan::Certificate_Store& certstore) {
+Test::Result contains_trusted_root_loaded_from_file(const Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - contains() for a trusted root loaded from a file");
 
    try {
@@ -348,7 +348,7 @@ Test::Result contains_rejects_untrusted_certificate(Botan::Certificate_Store& ce
    return result;
 }
 
-Test::Result contains_every_certificate_in_the_store(Botan::Certificate_Store& certstore) {
+Test::Result contains_every_certificate_in_the_store(const Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - contains() for every certificate in the store");
 
    try {
@@ -397,7 +397,7 @@ bool skipped_in_issuer_and_serial_number_sweep(const Botan::X509_Certificate& ce
    #endif
 }
 
-Test::Result find_every_certificate_by_issuer_dn_and_serial_number(Botan::Certificate_Store& certstore) {
+Test::Result find_every_certificate_by_issuer_dn_and_serial_number(const Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find every certificate in the store by issuer DN and serial number");
 
    try {

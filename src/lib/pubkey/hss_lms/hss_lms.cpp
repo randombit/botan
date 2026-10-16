@@ -142,7 +142,7 @@ HSS_LMS_PrivateKey::HSS_LMS_PrivateKey(const AlgorithmIdentifier& alg_id, std::s
    }
 
    m_private = HSS_LMS_PrivateKeyInternal::from_bytes_or_throw(key_bits);
-   auto scope = CT::scoped_poison(*m_private);
+   const auto scope = CT::scoped_poison(*m_private);
    m_public = std::make_shared<HSS_LMS_PublicKeyInternal>(HSS_LMS_PublicKeyInternal::create(*m_private));
    CT::unpoison(*m_public);
 }
@@ -150,13 +150,13 @@ HSS_LMS_PrivateKey::HSS_LMS_PrivateKey(const AlgorithmIdentifier& alg_id, std::s
 HSS_LMS_PrivateKey::HSS_LMS_PrivateKey(RandomNumberGenerator& rng, std::string_view algo_params) {
    const HSS_LMS_Params hss_params(algo_params);
    m_private = std::make_shared<HSS_LMS_PrivateKeyInternal>(hss_params, rng);
-   auto scope = CT::scoped_poison(*m_private);
+   const auto scope = CT::scoped_poison(*m_private);
    m_public = std::make_shared<HSS_LMS_PublicKeyInternal>(HSS_LMS_PublicKeyInternal::create(*m_private));
    CT::unpoison(*m_public);
 }
 
 HSS_LMS_PrivateKey::HSS_LMS_PrivateKey(std::shared_ptr<HSS_LMS_PrivateKeyInternal> sk) : m_private(std::move(sk)) {
-   auto scope = CT::scoped_poison(*m_private);
+   const auto scope = CT::scoped_poison(*m_private);
    m_public = std::make_shared<HSS_LMS_PublicKeyInternal>(HSS_LMS_PublicKeyInternal::create(*m_private));
    CT::unpoison(*m_public);
 }
@@ -164,7 +164,7 @@ HSS_LMS_PrivateKey::HSS_LMS_PrivateKey(std::shared_ptr<HSS_LMS_PrivateKeyInterna
 HSS_LMS_PrivateKey::~HSS_LMS_PrivateKey() = default;
 
 secure_vector<uint8_t> HSS_LMS_PrivateKey::private_key_bits() const {
-   auto scope = CT::scoped_poison(*m_private);
+   const auto scope = CT::scoped_poison(*m_private);
    return CT::driveby_unpoison(m_private->to_bytes());
 }
 
@@ -207,7 +207,7 @@ class HSS_LMS_Signature_Operation final : public PK_Ops::Signature {
 
       std::vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
          std::vector<uint8_t> message_to_sign = std::exchange(m_msg_buffer, {});
-         auto scope = CT::scoped_poison(*m_private);
+         const auto scope = CT::scoped_poison(*m_private);
          return CT::driveby_unpoison(m_private->sign(message_to_sign));
       }
 

@@ -40,7 +40,7 @@ class SPHINCS_Plus_FORS_Test final : public Text_Based_Test {
                             "SphincsParameterSet,Address,SecretSeed,PublicSeed,PublicKey,Msg,HashSig") {}
 
       bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
-         auto params = Botan::Sphincs_Parameters::create(vars.get_req_str("SphincsParameterSet"));
+         const auto params = Botan::Sphincs_Parameters::create(vars.get_req_str("SphincsParameterSet"));
          return !params.is_available();
       }
 
@@ -57,7 +57,7 @@ class SPHINCS_Plus_FORS_Test final : public Text_Based_Test {
          // Depending on the SLH-DSA's configuration the resulting signature is
          // hashed either with SHA-3 or SHA-256 to reduce the inner dependencies
          // on other hash function modules.
-         auto hash_algo_spec = [&]() -> std::string {
+         const auto hash_algo_spec = [&]() -> std::string {
             if(params.hash_type() == Botan::Sphincs_Hash_Type::Shake256) {
                return "SHA-3(256)";
             } else {

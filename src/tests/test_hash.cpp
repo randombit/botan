@@ -36,7 +36,7 @@ class Invalid_Hash_Name_Tests final : public Test {
    private:
       static void test_invalid_name(Result& result, const std::string& name, const std::string& expected_msg = "") {
          try {
-            auto hash = Botan::HashFunction::create_or_throw(name);
+            const auto hash = Botan::HashFunction::create_or_throw(name);
             result.test_failure("Was successfully able to create " + name);
          } catch(Botan::Invalid_Argument& e) {
             const std::string msg = e.what();
@@ -356,7 +356,7 @@ Test::Result hash_truncation_negative_tests() {
                                                [] { Botan::HashFunction::create("Truncated(SHA-256,0)"); });
    result.test_throws<Botan::Invalid_Argument>("cannot output more bits than the underlying hash",
                                                [] { Botan::HashFunction::create("Truncated(SHA-256,257)"); });
-   auto unobtainable = Botan::HashFunction::create("Truncated(NonExistentHash-256,128)");
+   const auto unobtainable = Botan::HashFunction::create("Truncated(NonExistentHash-256,128)");
    result.test_is_true("non-existent hashes are not created", unobtainable == nullptr);
    return result;
 }

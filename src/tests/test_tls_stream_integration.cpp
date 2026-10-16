@@ -44,15 +44,15 @@ namespace {
 
 namespace net = boost::asio;
 
-using tcp = net::ip::tcp;
-using error_code = boost::system::error_code;
+using boost::system::error_code;
+using net::ip::tcp;
 using ssl_stream = Botan::TLS::Stream<net::ip::tcp::socket>;
 using namespace std::placeholders;
 
-// NOLINTBEGIN(cert-err58-cpp)
+// NOLINTBEGIN(cert-err58-cpp,*-throwing-static-initialization)
 const auto k_timeout = std::chrono::seconds(30);
 const auto k_endpoints = std::vector<tcp::endpoint>{tcp::endpoint{net::ip::make_address("127.0.0.1"), 8082}};
-// NOLINTEND(cert-err58-cpp)
+// NOLINTEND(cert-err58-cpp,*-throwing-static-initialization)
 
 constexpr size_t MAX_MSG_LENGTH = 512;
 
@@ -215,7 +215,7 @@ class Result_Wrapper {
       Test::Result m_result;
 };
 
-// NOLINTBEGIN(cert-err58-cpp)
+// NOLINTBEGIN(cert-err58-cpp,*-throwing-static-initialization)
 
 // Control messages
 // The messages below can be used by the test clients in order to configure the server's behavior during a test
@@ -226,7 +226,7 @@ const std::string EXPECT_SHORT_READ_MESSAGE = "SHORT_READ";
 // Prepare the server for the test case "Shutdown No Response"
 const std::string PREPARE_SHUTDOWN_NO_RESPONSE_MESSAGE = "SHUTDOWN_NOW";
 
-// NOLINTEND(cert-err58-cpp)
+// NOLINTEND(cert-err58-cpp,*-throwing-static-initialization)
 
 class Server : public Peer,
                public std::enable_shared_from_this<Server> {
@@ -496,7 +496,7 @@ class Test_Conversation : public TestBase,
             TestBase(ioc, client_policy, server_policy, test_name, config_name) {}
 
       void run(const error_code& ec) {
-         static auto test_case = &Test_Conversation::run;
+         static const auto test_case = &Test_Conversation::run;
          const std::string message("Time is an illusion. Lunchtime doubly so.");
 
          reenter(*this) {
@@ -592,7 +592,7 @@ class Test_Eager_Close : public TestBase,
             TestBase(ioc, client_policy, server_policy, "Test Eager Close", config_name) {}
 
       void run(const error_code& ec) {
-         static auto test_case = &Test_Eager_Close::run;
+         static const auto test_case = &Test_Eager_Close::run;
          reenter(*this) {
             client()->reset_timeout("connect");
             yield net::async_connect(
@@ -657,7 +657,7 @@ class Test_Close_Without_Shutdown : public TestBase,
             TestBase(ioc, client_policy, server_policy, "Test Close Without Shutdown", config_name) {}
 
       void run(const error_code& ec) {
-         static auto test_case = &Test_Close_Without_Shutdown::run;
+         static const auto test_case = &Test_Close_Without_Shutdown::run;
          reenter(*this) {
             client()->reset_timeout("connect");
             yield net::async_connect(
@@ -733,7 +733,7 @@ class Test_No_Shutdown_Response : public TestBase,
             TestBase(ioc, client_policy, server_policy, "Test No Shutdown Response", config_name) {}
 
       void run(const error_code& ec) {
-         static auto test_case = &Test_No_Shutdown_Response::run;
+         static const auto test_case = &Test_No_Shutdown_Response::run;
          reenter(*this) {
             client()->reset_timeout("connect");
             yield net::async_connect(
@@ -832,7 +832,7 @@ class Test_Handshake_Failure : public TestBase,
       }
 
       void run(const error_code& ec) {
-         static auto test_case = &Test_Handshake_Failure::run;
+         static const auto test_case = &Test_Handshake_Failure::run;
          reenter(*this) {
             client()->reset_timeout("connect");
             yield net::async_connect(
@@ -885,7 +885,7 @@ class SystemConfiguration {
       void run(std::vector<Test::Result>& results) {
          net::io_context ioc;
 
-         auto t = std::make_shared<TestT>(ioc, m_name, m_server_policy, m_client_policy);
+         const auto t = std::make_shared<TestT>(ioc, m_name, m_server_policy, m_client_policy);
 
          t->run(error_code{});
 

@@ -35,6 +35,7 @@ Server::Server(const std::shared_ptr<Callbacks>& callbacks,
                bool is_datagram,
                size_t io_buf_sz) {
    const auto max_version = policy->latest_supported_version(is_datagram);
+   const auto flavor = is_datagram ? TLS_Flavor::DTLS : TLS_Flavor::TLS;
 
 #if defined(BOTAN_HAS_TLS_13)
    if(!max_version.is_pre_tls_13()) {
@@ -51,13 +52,14 @@ Server::Server(const std::shared_ptr<Callbacks>& callbacks,
 #endif
 
 #if defined(BOTAN_HAS_TLS_12)
+
    if(max_version.is_pre_tls_13()) {
-      m_impl = Server_Impl_12::create(callbacks, session_manager, creds, policy, rng, is_datagram, io_buf_sz);
+      m_impl = Server_Impl_12::create(callbacks, session_manager, creds, policy, rng, flavor, io_buf_sz);
       return;
    }
 #endif
 
-   BOTAN_UNUSED(max_version, callbacks, session_manager, creds, policy, rng, is_datagram, io_buf_sz);
+   BOTAN_UNUSED(max_version, callbacks, session_manager, creds, policy, rng, flavor, io_buf_sz);
    throw Not_Implemented("Requested TLS server version is not available in this build");
 }
 

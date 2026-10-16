@@ -38,7 +38,7 @@ class Client_Impl_12 final : public Channel_Impl_12 {
       *
       * @param server_info is identifying information about the TLS server
       *
-      * @param datagram specifies whether to use TLS 1.2 or DTLS 1.2
+      * @param flavor specifies the TLS flavor (TLS or DTLS)
       *
       * @param next_protocols specifies protocols to advertise with ALPN
       *
@@ -52,7 +52,7 @@ class Client_Impl_12 final : public Channel_Impl_12 {
                                                     const std::shared_ptr<const Policy>& policy,
                                                     const std::shared_ptr<RandomNumberGenerator>& rng,
                                                     Server_Information server_info = Server_Information(),
-                                                    bool datagram = false,
+                                                    TLS_Flavor flavor = TLS_Flavor::TLS,
                                                     const std::vector<std::string>& next_protocols = {},
                                                     size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE);
 
@@ -63,9 +63,9 @@ class Client_Impl_12 final : public Channel_Impl_12 {
                      const std::shared_ptr<const Policy>& policy,
                      const std::shared_ptr<RandomNumberGenerator>& rng,
                      Server_Information server_info,
-                     bool datagram,
+                     TLS_Flavor flavor,
                      size_t reserved_io_buffer_size) :
-            Channel_Impl_12(callbacks, session_manager, rng, policy, false, datagram, reserved_io_buffer_size),
+            Channel_Impl_12(callbacks, session_manager, rng, policy, false, flavor, reserved_io_buffer_size),
             m_creds(creds),
             m_info(std::move(server_info)) {}
 
@@ -79,7 +79,7 @@ class Client_Impl_12 final : public Channel_Impl_12 {
                             downgrade_info.rng,
                             downgrade_info.policy,
                             false /* is_server */,
-                            false /* datagram -- not supported by Botan in TLS 1.3 */,
+                            downgrade_info.flavor,
                             downgrade_info.io_buffer_size),
             m_creds(downgrade_info.creds),
             m_info(downgrade_info.server_info) {}

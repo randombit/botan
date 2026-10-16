@@ -79,7 +79,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       // `Policy::default_dh_group()` could return a `std::variant<Group_Params,
       // DL_Group>`, allowing it to define arbitrary groups.
       m_kex_key = state.callbacks().tls_generate_ephemeral_key(m_shared_group.value(), rng);
-      auto* dh = dynamic_cast<DH_PrivateKey*>(m_kex_key.get());
+      const auto* dh = dynamic_cast<DH_PrivateKey*>(m_kex_key.get());
       if(dh == nullptr) {
          throw TLS_Exception(Alert::InternalError, "Application did not provide a Diffie-Hellman key");
       }

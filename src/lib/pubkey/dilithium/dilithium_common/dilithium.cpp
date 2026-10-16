@@ -8,6 +8,7 @@
 * (C) 2021-2022 Manuel Glaser - Rohde & Schwarz Cybersecurity
 * (C) 2021-2023 Michael Boric, René Meusel - Rohde & Schwarz Cybersecurity
 * (C) 2024      René Meusel - Rohde & Schwarz Cybersecurity
+* (C) 2026      Falko Strenzke – MTG AG
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -17,7 +18,6 @@
 #include <botan/exceptn.h>
 #include <botan/pk_options_readers.h>
 #include <botan/rng.h>
-
 #include <botan/internal/dilithium_algos.h>
 #include <botan/internal/dilithium_keys.h>
 #include <botan/internal/dilithium_symmetric_primitives.h>
@@ -27,6 +27,8 @@
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/pk_options_impl.h>
 #include <botan/internal/stl_util.h>
+
+#include <string_view>
 
 namespace Botan {
 namespace {
@@ -157,6 +159,16 @@ void validate_dilithium_options(const PK_Signature_Options_Reader& options, cons
          throw Invalid_Argument(fmt("{} can only be used with a {} byte salt", mode.to_string(), randomness_bytes));
       }
    }
+
+   /*
+   * FIPS 204 (Algorithm 2 line 10, Algorithm 3 line 5) binds an application
+   * context string of at most 255 bytes into the message representative.
+   * Dilithium round 3 has no such feature.
+   */
+   if(const auto& ctx = options.context()) {
+      BOTAN_ARG_CHECK(mode.is_ml_dsa(), "Dilithium round 3 does not support a signature context");
+      BOTAN_ARG_CHECK(ctx->size() <= 255, "ML-DSA context must not exceed 255 bytes");
+   }
 }
 
 }  // namespace
@@ -174,7 +186,8 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
             //   types of randomness [fresh from the RNG and a value in the private key].
             //   This is referred to as the "hedged" variant of the signing procedure.
             m_randomized(!options.using_deterministic_signature()),
-            m_h(m_keypair.second->mode().symmetric_primitives().get_message_hash(m_keypair.first->tr())),
+            m_h(m_keypair.second->mode().symmetric_primitives().get_message_hash(
+               m_keypair.first->tr(), options.context().value_or(std::vector<uint8_t>{}))),
             m_s1(ntt(m_keypair.second->s1().clone())),
             m_s2(ntt(m_keypair.second->s2().clone())),
             m_t0(ntt(m_keypair.second->t0().clone())),
@@ -196,7 +209,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
        *       application defined and "empty" by default and <= 255 bytes long.
        */
       std::vector<uint8_t> sign(RandomNumberGenerator& rng) override {
-         auto scope = CT::scoped_poison(*m_keypair.second);
+         const auto scope = CT::scoped_poison(*m_keypair.second);
 
          const auto mu = m_h->final();
          const auto& mode = m_keypair.second->mode();
@@ -293,11 +306,13 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
 
 class Dilithium_Verification_Operation final : public PK_Ops::Verification {
    public:
-      explicit Dilithium_Verification_Operation(std::shared_ptr<const Dilithium_PublicKeyInternal> pubkey) :
+      Dilithium_Verification_Operation(std::shared_ptr<const Dilithium_PublicKeyInternal> pubkey,
+                                       const PK_Signature_Options_Reader& options) :
             m_pub_key(std::move(pubkey)),
             m_A(Dilithium_Algos::expand_A(m_pub_key->rho(), m_pub_key->mode())),
             m_t1_ntt_shifted(ntt(m_pub_key->t1() << DilithiumConstants::D)),
-            m_h(m_pub_key->mode().symmetric_primitives().get_message_hash(m_pub_key->tr())) {}
+            m_h(m_pub_key->mode().symmetric_primitives().get_message_hash(
+               m_pub_key->tr(), options.context().value_or(std::vector<uint8_t>{}))) {}
 
       void update(std::span<const uint8_t> input) override { m_h->update(input); }
 
@@ -435,7 +450,7 @@ std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::_create_verification_
 
    require_software_provider(options, algo_name());
 
-   return std::make_unique<Dilithium_Verification_Operation>(m_public);
+   return std::make_unique<Dilithium_Verification_Operation>(m_public, options);
 }
 
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_x509_verification_op(
@@ -444,7 +459,8 @@ std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_x509_verificat
       if(alg_id != this->algorithm_identifier()) {
          throw Decoding_Error("Unexpected AlgorithmIdentifier for Dilithium X.509 signature");
       }
-      return std::make_unique<Dilithium_Verification_Operation>(m_public);
+      return std::make_unique<Dilithium_Verification_Operation>(
+         m_public, PK_Options_Reader_Access::for_verification(PK_Signature_Options()));
    }
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -476,7 +492,7 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(const AlgorithmIdentifier& alg_id, st
 
 Dilithium_PrivateKey::Dilithium_PrivateKey(std::span<const uint8_t> sk, DilithiumMode m) {
    DilithiumConstants mode(m);
-   auto& codec = mode.keypair_codec();
+   const auto& codec = mode.keypair_codec();
    std::tie(m_public, m_private) = codec.decode_keypair(sk, std::move(mode));
 }
 

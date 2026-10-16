@@ -252,9 +252,9 @@ consteval auto shanks_tonelli_c4(const std::array<W, N>& p_minus_1_over_2) -> Z 
    auto z = Z::constant(11);
 
    for(;;) {
-      auto c = z.pow_vartime(p_minus_1_over_2);
+      const auto c = z.pow_vartime(p_minus_1_over_2);
 
-      auto is_square = c.is_zero() || c.is_one();
+      const auto is_square = c.is_zero() || c.is_one();
 
       // Conditional ok: this function is consteval
       if(!is_square.as_bool()) {
@@ -267,7 +267,7 @@ consteval auto shanks_tonelli_c4(const std::array<W, N>& p_minus_1_over_2) -> Z 
 
 template <WordType W, size_t N>
 inline consteval size_t count_bits(const std::array<W, N>& p) {
-   auto get_bit = [&](size_t i) {
+   const auto get_bit = [&](size_t i) {
       const size_t w = i / WordInfo<W>::bits;
       const size_t b = i % WordInfo<W>::bits;
       return static_cast<uint8_t>((p[w] >> b) & 0x01);

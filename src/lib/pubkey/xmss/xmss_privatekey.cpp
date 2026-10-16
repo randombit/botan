@@ -109,7 +109,7 @@ class XMSS_PrivateKey_Internal final {
          // We're not interested in the public key here
          s.skip(m_xmss_params.raw_public_key_size());
 
-         auto unused_leaf_bytes = s.take(sizeof(uint32_t));
+         const auto unused_leaf_bytes = s.take(sizeof(uint32_t));
          const size_t unused_leaf = load_be<uint32_t>(unused_leaf_bytes.data(), 0);
 
          m_prf = s.copy_as_secure_vector(m_xmss_params.element_size());

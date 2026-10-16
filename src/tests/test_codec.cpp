@@ -237,6 +237,38 @@ class Base64_Tests final : public Text_Based_Test {
             }
          }
 
+         // Long inputs exercise the SIMD bulk paths in some build configurations
+         std::vector<uint8_t> long_bin(3000);
+         for(size_t i = 0; i != long_bin.size(); ++i) {
+            long_bin[i] = static_cast<uint8_t>(i * 7 + i / 251);
+         }
+
+         const std::string long_b64 = Botan::base64_encode(long_bin);
+
+         // PEM style line wrapping
+         std::string long_b64_ws;
+         for(size_t i = 0; i != long_b64.size(); ++i) {
+            if(i > 0 && i % 64 == 0) {
+               long_b64_ws += '\n';
+            }
+            long_b64_ws += long_b64[i];
+         }
+
+         try {
+            result.test_bin_eq("long base64 decoding", Botan::base64_decode(long_b64, false), long_bin);
+            result.test_bin_eq("long base64 decoding with newlines", Botan::base64_decode(long_b64_ws, true), long_bin);
+         } catch(std::exception& e) {
+            result.test_failure("long base64 roundtrip", e.what());
+         }
+
+         try {
+            std::string corrupted = long_b64;
+            corrupted[corrupted.size() / 2] = '!';
+            result.test_failure("decoded corrupted base64", Botan::base64_decode(corrupted));
+         } catch(std::exception&) {
+            result.test_note("rejected corrupted base64");
+         }
+
          return {result};
       }
 };

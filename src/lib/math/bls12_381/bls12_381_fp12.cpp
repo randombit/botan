@@ -103,7 +103,8 @@ Fp12 Fp12::cyclotomic_square() const {
    // See "Guide to Pairing-Based Cryptography", Algorithm 5.5.4
 
    // Squaring in Fp4 = Fp2[w]/(w^2 - v), on coefficients directly
-   auto fp4_square = [](const FieldElement2& a, const FieldElement2& b) -> std::pair<FieldElement2, FieldElement2> {
+   const auto fp4_square = [](const FieldElement2& a,
+                              const FieldElement2& b) -> std::pair<FieldElement2, FieldElement2> {
       const auto t0 = a.square();
       const auto t1 = b.square();
       const auto c0 = t1.mul_by_nonresidue() + t0;

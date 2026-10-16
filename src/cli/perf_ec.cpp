@@ -86,11 +86,12 @@ class PerfTest_EllipticCurve_Mul2 final : public PerfTest {
 
                auto mul2 = mul2_setup_timer->run([&]() { return Botan::EC_Group::Mul2Table(y); });
 
-               auto pt = mul2_vt_timer->run([&]() { return mul2.mul2_vartime(k, k2); });
+               const auto pt = mul2_vt_timer->run([&]() { return mul2.mul2_vartime(k, k2); });
 
-               auto pt2 = mul2_ct_timer->run([&]() { return Botan::EC_AffinePoint::mul_px_qy(g, k, y, k2, rng); });
+               const auto pt2 =
+                  mul2_ct_timer->run([&]() { return Botan::EC_AffinePoint::mul_px_qy(g, k, y, k2, rng); });
 
-               auto pt3 =
+               const auto pt3 =
                   mul2_ct_nb_timer->run([&]() { return Botan::EC_AffinePoint::mul_px_qy(g, k, y, k2, null_rng); });
 
                BOTAN_ASSERT_NOMSG(pt == pt2);

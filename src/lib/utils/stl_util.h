@@ -116,6 +116,7 @@ constexpr GeneralVariantT generalize_to(std::variant<SpecialTs...> specific) {
 template <typename SpecificVariantT, typename GeneralVariantT>
 constexpr std::optional<SpecificVariantT> specialize_to(GeneralVariantT&& v) {
    return std::visit(
+      // NOLINTNEXTLINE(*-missing-std-forward)
       []<typename AlternativeT>(AlternativeT&& obj) -> std::optional<SpecificVariantT> {
          if constexpr(std::is_constructible_v<SpecificVariantT, AlternativeT>) {
             return std::forward<AlternativeT>(obj);
@@ -125,6 +126,21 @@ constexpr std::optional<SpecificVariantT> specialize_to(GeneralVariantT&& v) {
       },
       std::forward<GeneralVariantT>(v));
 }
+
+template <typename Variant, typename T>
+struct variant_append;
+
+template <typename... Ts, typename T>
+struct variant_append<std::variant<Ts...>, T> {
+      using type = std::variant<Ts..., T>;
+};
+
+/**
+ * @brief Converts a given variant into another variant with all its alternative
+ *        types and an additional alternative type T.
+ */
+template <typename Variant, typename T>
+using variant_append_t = typename variant_append<Variant, T>::type;
 
 // This is a helper utility to emulate pattern matching with std::visit.
 // See https://en.cppreference.com/w/cpp/utility/variant/visit for more info.
@@ -160,7 +176,7 @@ template <typename T>
          out_ptr_t& operator=(const out_ptr_t&) = delete;
          out_ptr_t& operator=(out_ptr_t&&) = delete;
 
-         // NOLINTNEXTLINE(*-explicit-conversions) - Implicit by design for C API interop
+         // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor) - Implicit by design for C API interop
          [[nodiscard]] constexpr operator typename T::element_type **() && noexcept { return &m_rawptr; }
 
       private:

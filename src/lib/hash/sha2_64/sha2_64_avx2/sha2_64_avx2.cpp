@@ -17,13 +17,13 @@ namespace {
 
 template <typename SIMD_T>
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_BMI2 SIMD_T sha512_next_w(SIMD_T x[8]) {
-   auto t0 = SIMD_T::alignr8(x[1], x[0]);
-   auto t1 = SIMD_T::alignr8(x[5], x[4]);
+   const auto t0 = SIMD_T::alignr8(x[1], x[0]);
+   const auto t1 = SIMD_T::alignr8(x[5], x[4]);
 
-   auto s0 = t0.template rotr<1>() ^ t0.template rotr<8>() ^ t0.template shr<7>();
-   auto s1 = x[7].template rotr<19>() ^ x[7].template rotr<61>() ^ x[7].template shr<6>();
+   const auto s0 = t0.template rotr<1>() ^ t0.template rotr<8>() ^ t0.template shr<7>();
+   const auto s1 = x[7].template rotr<19>() ^ x[7].template rotr<61>() ^ x[7].template shr<6>();
 
-   auto nx = x[0] + s0 + s1 + t1;
+   const auto nx = x[0] + s0 + s1 + t1;
 
    x[0] = x[1];
    x[1] = x[2];
@@ -239,7 +239,7 @@ BOTAN_FN_ISA_AVX2_BMI2 void SHA_512::compress_digest_x86_avx2(digest_type& diges
 
       for(size_t i = 0; i < 8; i++) {
          WS[i] = SIMD_2x64::load_be(&data[16 * i]);
-         auto WK = WS[i] + SIMD_2x64::load_le(&SHA512_K[2 * i]);
+         const auto WK = WS[i] + SIMD_2x64::load_le(&SHA512_K[2 * i]);
          WK.store_le(&W[2 * i]);
       }
 

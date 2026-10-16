@@ -7,19 +7,21 @@
 #include <botan/sodium.h>
 
 #include <botan/ed25519.h>
-#include <botan/x25519.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/x25519_internal.h>
 
 namespace Botan {
 
 int Sodium::crypto_scalarmult_curve25519(uint8_t out[32], const uint8_t scalar[32], const uint8_t point[32]) {
-   curve25519_donna(out, scalar, point);
+   x25519_scalarmult(std::span<uint8_t, 32>(out, 32),
+                     std::span<const uint8_t, 32>(scalar, 32),
+                     std::span<const uint8_t, 32>(point, 32));
    // Return -1 if the result is the identity
    return -static_cast<int>(CT::all_zeros(out, 32).if_set_return(1));
 }
 
 int Sodium::crypto_scalarmult_curve25519_base(uint8_t out[32], const uint8_t scalar[32]) {
-   curve25519_basepoint(out, scalar);
+   x25519_basepoint(std::span<uint8_t, 32>(out, 32), std::span<const uint8_t, 32>(scalar, 32));
    return 0;
 }
 

@@ -47,7 +47,7 @@ Test::Result test_decode_ecdsa_X509() {
             cert.fingerprint("SHA-256"),
             "3B:6C:99:1C:D6:5A:51:FC:EB:17:E3:AA:F6:3C:1A:DA:14:1F:82:41:30:6F:64:EE:FF:63:F3:1F:D6:07:14:9F");
 
-         auto pubkey = cert.subject_public_key();
+         const auto pubkey = cert.subject_public_key();
          result.test_is_true("verify self-signed signature", cert.check_signature(*pubkey));
       } catch(Botan::Exception& e) {
          result.test_failure(e.what());
@@ -65,7 +65,7 @@ Test::Result test_decode_ver_link_SHA256() {
          const Botan::X509_Certificate root_cert(Test::data_file("x509/ecc/root2_SHA256.cer"));
          const Botan::X509_Certificate link_cert(Test::data_file("x509/ecc/link_SHA256.cer"));
 
-         auto pubkey = root_cert.subject_public_key();
+         const auto pubkey = root_cert.subject_public_key();
          result.test_is_true("verified self-signed signature", link_cert.check_signature(*pubkey));
       } catch(Botan::Exception& e) {
          result.test_failure(e.what());
@@ -83,9 +83,9 @@ Test::Result test_decode_ver_link_SHA1() {
          const Botan::X509_Certificate root_cert(Test::data_file("x509/ecc/root_SHA1.163.crt"));
          const Botan::X509_Certificate link_cert(Test::data_file("x509/ecc/link_SHA1.166.crt"));
 
-         auto pubkey = root_cert.subject_public_key();
+         const auto pubkey = root_cert.subject_public_key();
 
-         auto sha1 = Botan::HashFunction::create("SHA-1");
+         const auto sha1 = Botan::HashFunction::create("SHA-1");
 
          if(!sha1) {
             result.test_is_true("verification of self-signed signature failed due to missing SHA-1",

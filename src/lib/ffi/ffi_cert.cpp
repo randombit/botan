@@ -239,14 +239,13 @@ int botan_x509_object_view_value(const Botan::X509_Object& object,
       return BOTAN_FFI_ERROR_OUT_OF_RANGE;
    }
 
-   auto view = [=](const std::string& value) { return invoke_view_callback(view_fn, ctx, value); };
+   const auto view = [=](const std::string& value) { return invoke_view_callback(view_fn, ctx, value); };
 
-   switch(value_type) {
-      case BOTAN_X509_PEM_ENCODING:
-         return view(object.PEM_encode());
-      default:
-         BOTAN_ASSERT_UNREACHABLE(); /* called with unexpected (non-generic) value_type */
+   if(value_type == BOTAN_X509_PEM_ENCODING) {
+      return view(object.PEM_encode());
    }
+
+   BOTAN_ASSERT_UNREACHABLE(); /* called with unexpected (non-generic) value_type */
 }
 
 int botan_x509_object_view_value(const Botan::X509_Object& object,
@@ -259,7 +258,7 @@ int botan_x509_object_view_value(const Botan::X509_Object& object,
       return BOTAN_FFI_ERROR_OUT_OF_RANGE;
    }
 
-   auto view = [=](std::span<const uint8_t> value) { return invoke_view_callback(view_fn, ctx, value); };
+   const auto view = [=](std::span<const uint8_t> value) { return invoke_view_callback(view_fn, ctx, value); };
 
    switch(value_type) {
       case BOTAN_X509_TBS_DATA_BITS:
@@ -292,7 +291,7 @@ int botan_x509_cert_view_binary_values(botan_x509_cert_t cert,
       return BOTAN_FFI_ERROR_OUT_OF_RANGE;
    }
 
-   auto view = [=](std::span<const uint8_t> value) -> int {
+   const auto view = [=](std::span<const uint8_t> value) -> int {
       if(value.empty()) {
          return BOTAN_FFI_ERROR_NO_VALUE;
       } else {
@@ -354,7 +353,7 @@ int botan_x509_cert_view_string_values(botan_x509_cert_t cert,
                                        botan_view_ctx ctx,
                                        botan_view_str_fn view_fn) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   auto enumerate_uris = [view_fn, ctx](const std::vector<Botan::URI>& values, size_t idx) -> int {
+   const auto enumerate_uris = [view_fn, ctx](const std::vector<Botan::URI>& values, size_t idx) -> int {
       if(idx >= values.size()) {
          return BOTAN_FFI_ERROR_OUT_OF_RANGE;
       } else {
@@ -460,7 +459,7 @@ int botan_x509_cert_get_issuer_dn(
    }
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
-      auto issuer_info = c.issuer_info(key);
+      const auto issuer_info = c.issuer_info(key);
       if(index < issuer_info.size()) {
          // TODO(Botan4) change the type of out and remove this cast
          return write_str_output(reinterpret_cast<char*>(out), out_len, c.issuer_info(key).at(index));
@@ -497,7 +496,7 @@ int botan_x509_cert_get_subject_dn(
    }
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
-      auto subject_info = c.subject_info(key);
+      const auto subject_info = c.subject_info(key);
       if(index < subject_info.size()) {
          // TODO(Botan4) change the type of out and remove this cast
          return write_str_output(reinterpret_cast<char*>(out), out_len, c.subject_info(key).at(index));
@@ -999,7 +998,7 @@ int botan_x509_cert_verify(int* result_code,
 
       const Botan::Path_Validation_Restrictions restrictions(false, required_strength);
 
-      auto validation_result =
+      const auto validation_result =
          Botan::x509_path_validate(end_certs, restrictions, trusted_roots, hostname, usage, validation_time);
 
       if(result_code != nullptr) {
@@ -1116,7 +1115,7 @@ int botan_x509_crl_create(botan_x509_crl_t* crl_obj,
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto& rng_ = safe_get(rng);
-      auto ca = Botan::X509_CA(
+      const auto ca = Botan::X509_CA(
          safe_get(ca_cert), safe_get(ca_key), default_from_ptr(hash_fn), default_from_ptr(padding), rng_);
       auto crl = std::make_unique<Botan::X509_CRL>(
          ca.new_crl(rng_, timepoint_from_timestamp(issue_time), std::chrono::seconds(next_update)));
@@ -1163,7 +1162,7 @@ int botan_x509_crl_update(botan_x509_crl_t* crl_obj,
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto& rng_ = safe_get(rng);
-      auto ca = Botan::X509_CA(
+      const auto ca = Botan::X509_CA(
          safe_get(ca_cert), safe_get(ca_key), default_from_ptr(hash_fn), default_from_ptr(padding), rng_);
 
       std::vector<Botan::CRL_Entry> entries;
@@ -1212,7 +1211,7 @@ int botan_x509_crl_view_binary_values(botan_x509_crl_t crl_obj,
       return BOTAN_FFI_ERROR_OUT_OF_RANGE;
    }
 
-   auto view = [=](std::span<const uint8_t> value) -> int {
+   const auto view = [=](std::span<const uint8_t> value) -> int {
       if(value.empty()) {
          return BOTAN_FFI_ERROR_NO_VALUE;
       } else {
@@ -1497,7 +1496,7 @@ int botan_x509_cert_verify_with_crl(int* result_code,
 
       const Botan::Path_Validation_Restrictions restrictions(false, required_strength);
 
-      auto validation_result =
+      const auto validation_result =
          Botan::x509_path_validate(end_certs, restrictions, trusted_roots, hostname, usage, validation_time);
 
       if(result_code != nullptr) {

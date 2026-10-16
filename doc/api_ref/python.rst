@@ -269,6 +269,9 @@ SPAKE2+
 X509Cert
 -----------------------------------------
 
+.. autoclass:: X509ValueType
+   :members:
+
 .. autoclass:: X509Cert
    :members:
 

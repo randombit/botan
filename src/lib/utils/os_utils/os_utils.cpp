@@ -25,6 +25,7 @@
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    #include <errno.h>
+   #include <mutex>
    #include <pthread.h>
    #include <setjmp.h>
    #include <signal.h>
@@ -137,7 +138,7 @@ std::optional<std::pair<unsigned long, unsigned long>> OS::get_auxval_hwcap() {
    if(const auto hwcap = get_auxval(auxval_hwcap())) {
       // If hwcap worked/was valid, we don't require hwcap2 to also
       // succeed but instead will return zeros if it failed.
-      auto hwcap2 = get_auxval(auxval_hwcap2()).value_or(0);
+      const auto hwcap2 = get_auxval(auxval_hwcap2()).value_or(0);
       return std::make_pair(*hwcap, hwcap2);
    } else {
       return {};
@@ -152,7 +153,7 @@ namespace {
 */
 bool running_in_privileged_state() {
 #if defined(AT_SECURE)
-   if(auto at_secure = get_auxval(AT_SECURE)) {
+   if(const auto at_secure = get_auxval(AT_SECURE)) {
       return at_secure != 0;
    }
 #endif
@@ -317,7 +318,7 @@ uint64_t OS::get_high_resolution_clock() {
 
 #if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
    // Plain C++11 fallback
-   auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+   const auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
 #else
    return 0;
@@ -334,7 +335,7 @@ uint64_t OS::get_system_timestamp_ns() {
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
-   auto now = std::chrono::system_clock::now().time_since_epoch();
+   const auto now = std::chrono::system_clock::now().time_since_epoch();
    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
 #else
    throw Not_Implemented("OS::get_system_timestamp_ns this system does not support a clock");
@@ -477,19 +478,21 @@ bool OS::read_env_variable(std::string& value_out, std::string_view name_view) {
 #if defined(BOTAN_TARGET_OS_HAS_WIN32) && \
    (defined(BOTAN_BUILD_COMPILER_IS_MSVC) || defined(BOTAN_BUILD_COMPILER_IS_CLANGCL))
    const std::string name(name_view);
-   char val[128] = {0};
+
+   // First query the required buffer size; req_size is 0 if the variable is not set
    size_t req_size = 0;
-   if(getenv_s(&req_size, val, sizeof(val), name.c_str()) == 0) {
-      // Microsoft's implementation always writes a terminating \0,
-      // and includes it in the reported length of the environment variable
-      // if a value exists.
-      if(req_size > 0 && val[req_size - 1] == '\0') {
-         value_out = std::string(val);
-      } else {
-         value_out = std::string(val, req_size);
-      }
-      return true;
+   if(getenv_s(&req_size, nullptr, 0, name.c_str()) != 0 || req_size == 0) {
+      return false;
    }
+
+   // The reported size includes the terminating \0
+   std::string val(req_size, '\0');
+   if(getenv_s(&req_size, val.data(), val.size(), name.c_str()) != 0) {
+      return false;
+   }
+
+   value_out = std::string(val.c_str());
+   return true;
 #else
    const std::string name(name_view);
    if(const char* val = std::getenv(name.c_str())) {
@@ -621,8 +624,14 @@ std::vector<void*> OS::allocate_locked_pages(size_t count) {
 
       std::memset(ptr, 0, 3 * page_size);  // zero data page and both guard pages
 
-      // Attempts to name the data page
-      page_named(ptr, 3 * page_size);
+   #if defined(BOTAN_TARGET_OS_HAS_PRCTL) && defined(PR_SET_VMA) && defined(PR_SET_VMA_ANON_NAME)
+      // Attempt to name the data page
+      static constexpr char page_name[] = "Botan mlock pool";
+      // NOLINTNEXTLINE(*-vararg)
+      const int rc = ::prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, ptr, 3 * page_size, page_name);
+      BOTAN_UNUSED(rc);
+   #endif
+
       // Make guard page preceding the data page
       page_prohibit_access(static_cast<uint8_t*>(ptr));
       // Make guard page following the data page
@@ -665,6 +674,43 @@ void OS::page_prohibit_access(void* page) {
 #endif
 }
 
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+namespace {
+
+// NOLINTNEXTLINE(*-avoid-non-const-global-variables,*-static-definition-in-anon*)
+static uint64_t g_fork_generation = 1;
+
+void atfork_in_child() {
+   g_fork_generation += 1;
+   // Leave generation 0 reserved for "no forks possible on this system"
+   if(g_fork_generation == 0) {
+      g_fork_generation = 1;
+   }
+}
+
+void setup_atfork() {
+   const int rc = ::pthread_atfork(/*prepare=*/nullptr,
+                                   /*parent=*/nullptr,
+                                   /*child=*/atfork_in_child);
+
+   if(rc != 0) {
+      throw Internal_Error("Failed to setup pthread_atfork handler");
+   }
+}
+
+}  // namespace
+#endif
+
+uint64_t OS::get_fork_generation() {
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   static std::once_flag g_atfork_initialized;
+   std::call_once(g_atfork_initialized, setup_atfork);
+   return g_fork_generation;
+#else
+   return 0;
+#endif
+}
+
 void OS::free_locked_pages(const std::vector<void*>& pages) {
    const size_t page_size = OS::system_page_size();
 
@@ -683,17 +729,6 @@ void OS::free_locked_pages(const std::vector<void*>& pages) {
       ::VirtualFree(static_cast<uint8_t*>(ptr) - page_size, 0, MEM_RELEASE);
 #endif
    }
-}
-
-void OS::page_named(void* page, size_t size) {
-#if defined(BOTAN_TARGET_OS_HAS_PRCTL) && defined(PR_SET_VMA) && defined(PR_SET_VMA_ANON_NAME)
-   static constexpr char name[] = "Botan mlock pool";
-   // NOLINTNEXTLINE(*-vararg)
-   const int r = prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, reinterpret_cast<uintptr_t>(page), size, name);
-   BOTAN_UNUSED(r);
-#else
-   BOTAN_UNUSED(page, size);
-#endif
 }
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
@@ -733,11 +768,32 @@ void OS::set_thread_name(std::thread& thread, const std::string& name) {
 
 namespace {
 
-// NOLINTNEXTLINE(*-avoid-non-const-global-variables)
-::sigjmp_buf g_sigill_jmp_buf;
+// NOLINTBEGIN(*-avoid-non-const-global-variables)
 
-void botan_sigill_handler(int /*unused*/) {
-   siglongjmp(g_sigill_jmp_buf, /*non-zero return value*/ 1);
+/*
+* Probes are serialized (see run_cpu_instruction_probe) so these are only
+* written by a single thread at a time. The signal handler reads them, possibly
+* from another thread, in the (unlikely) event that some other thread faults
+* while a probe is running.
+*/
+::sigjmp_buf g_sigill_jmp_buf;
+::pthread_t g_sigill_probe_thread;
+struct sigaction g_sigill_prev_action;
+
+// NOLINTEND(*-avoid-non-const-global-variables)
+
+void botan_sigill_handler(int sig) {
+   if(::pthread_equal(::pthread_self(), g_sigill_probe_thread) != 0) {
+      siglongjmp(g_sigill_jmp_buf, /*non-zero return value*/ 1);
+   }
+
+   /*
+   * The SIGILL was raised on some other thread, so it was not caused by the
+   * probe. Restore the previous disposition and return; the faulting
+   * instruction is then re-executed and handled by the previous handler
+   * (or the default action) instead.
+   */
+   ::sigaction(sig, &g_sigill_prev_action, nullptr);
 }
 
 }  // namespace
@@ -748,7 +804,12 @@ int OS::run_cpu_instruction_probe(const std::function<int()>& probe_fn) {
    volatile int probe_result = -3;
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && !defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
-   struct sigaction old_sigaction {};
+
+   #if defined(BOTAN_TARGET_OS_HAS_THREADS)
+   // Signal dispositions are process wide, so only run one probe at a time
+   static std::mutex g_sigill_probe_mutex;
+   const std::lock_guard<std::mutex> lock(g_sigill_probe_mutex);
+   #endif
 
    struct sigaction sigaction {};
 
@@ -756,7 +817,9 @@ int OS::run_cpu_instruction_probe(const std::function<int()>& probe_fn) {
    sigemptyset(&sigaction.sa_mask);
    sigaction.sa_flags = 0;
 
-   int rc = ::sigaction(SIGILL, &sigaction, &old_sigaction);
+   g_sigill_probe_thread = ::pthread_self();
+
+   int rc = ::sigaction(SIGILL, &sigaction, &g_sigill_prev_action);
 
    if(rc != 0) {
       throw System_Error("run_cpu_instruction_probe sigaction failed", errno);
@@ -773,7 +836,7 @@ int OS::run_cpu_instruction_probe(const std::function<int()>& probe_fn) {
    }
 
    // Restore old SIGILL handler, if any
-   rc = ::sigaction(SIGILL, &old_sigaction, nullptr);
+   rc = ::sigaction(SIGILL, &g_sigill_prev_action, nullptr);
    if(rc != 0) {
       throw System_Error("run_cpu_instruction_probe sigaction restore failed", errno);
    }

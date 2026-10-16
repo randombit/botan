@@ -6,6 +6,10 @@ THREAD_UTILS -> 20190922
 name -> "Thread Utilities"
 </module_info>
 
+<header:public>
+work_executor.h
+</header:public>
+
 <header:internal>
 rwlock.h
 barrier.h

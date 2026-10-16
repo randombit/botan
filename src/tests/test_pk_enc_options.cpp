@@ -93,7 +93,7 @@ class PK_Encryption_Options_Test final : public Text_Based_Test {
 
          // For entries like "RSA/OAEP", use just "RSA" for key generation
          auto key_algo = header;
-         if(auto slash = key_algo.find('/'); slash != std::string::npos) {
+         if(const auto slash = key_algo.find('/'); slash != std::string::npos) {
             key_algo = key_algo.substr(0, slash);
          }
 
@@ -287,7 +287,7 @@ class PK_Encryption_Options_RSA_Explicit_Test final : public Test {
          }
          const auto pub = key->public_key();
 
-         auto rejected = [&](const std::string& what, const Botan::PK_Encryption_Options& opts) {
+         const auto rejected = [&](const std::string& what, const Botan::PK_Encryption_Options& opts) {
             result.test_throws(what + " rejected by encryptor", [&] { Botan::PK_Encryptor_EME(*pub, rng(), opts); });
             result.test_throws(what + " rejected by decryptor", [&] { Botan::PK_Decryptor_EME(*key, rng(), opts); });
          };
@@ -409,7 +409,7 @@ class PK_Key_Agreement_Options_Test final : public Text_Based_Test {
             const Botan::PK_Key_Agreement ka_a(*key_a, rng(), options);
             const Botan::PK_Key_Agreement ka_b(*key_b, rng(), options);
             auto shared_a = ka_a.derive_key(desired_len, ka_key_b->public_value()).bits_of();
-            auto shared_b = ka_b.derive_key(desired_len, ka_key_a->public_value()).bits_of();
+            const auto shared_b = ka_b.derive_key(desired_len, ka_key_a->public_value()).bits_of();
             if(shared_a != shared_b) {
                return std::nullopt;
             }
@@ -510,7 +510,7 @@ class PK_Options_Hardware_Provider_Test final : public Test {
 
          using Access = Botan::PK_Options_Reader_Access;
 
-         auto check = [&](const auto& options, bool expect_ok, const std::string& what) {
+         const auto check = [&](const auto& options, bool expect_ok, const std::string& what) {
             if(expect_ok) {
                result.test_no_throw(what + " accepted",
                                     [&] { Botan::require_hardware_provider(options, "RSA", "pkcs11"); });

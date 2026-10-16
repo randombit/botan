@@ -173,6 +173,13 @@ ARIA
 
 South Korean cipher used in industry there. No reason to use it otherwise.
 
+.. warning::
+
+   The baseline implementation of ARIA uses table lookups indexed by secret
+   data, and is thus likely vulnerable to cache based side channel attacks.
+   Constant time implementations are used instead on processors with AES
+   instructions, or with AVX-512 and GFNI.
+
 Available if ``BOTAN_HAS_ARIA`` is defined.
 
 Algorithm specification names:
@@ -187,6 +194,12 @@ Blowfish
 A 64-bit cipher popular in the pre-AES era. Very slow key setup. Also used (with
 bcrypt) for password hashing.
 
+.. warning::
+
+   Blowfish uses key dependent tables which are indexed by secret data, and is
+   thus likely vulnerable to cache based side channel attacks. No constant time
+   implementation is available.
+
 Available if ``BOTAN_HAS_BLOWFISH`` is defined.
 
 Algorithm specification name: ``Blowfish``
@@ -198,6 +211,13 @@ Comes in three variants, Camellia-128, Camellia-192, and Camellia-256.
 
 A Japanese design standardized by ISO, NESSIE and CRYPTREC.
 Rarely used outside of Japan.
+
+.. warning::
+
+   The baseline implementation of Camellia uses table lookups indexed by secret
+   data, and is thus likely vulnerable to cache based side channel attacks.
+   Constant time implementations are used instead on processors with AES
+   instructions, or with AVX2 or AVX-512 and GFNI.
 
 Available if ``BOTAN_HAS_CAMELLIA`` is defined.
 
@@ -223,7 +243,12 @@ CAST-128
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A 64-bit cipher, commonly used in OpenPGP. No reason to use it otherwise.
-Uses large tables, which leave it vulnerable to cache-based side channel attacks.
+
+.. warning::
+
+   The implementation of CAST-128 uses table lookups indexed by secret data,
+   and is thus likely vulnerable to cache based side channel attacks. No
+   constant time implementation is available.
 
 Available if ``BOTAN_HAS_CAST128`` is defined.
 
@@ -257,6 +282,12 @@ Available if ``BOTAN_HAS_GOST_28147_89`` is defined.
 .. warning::
    Support for this cipher is deprecated and will be removed in a future major release.
 
+.. warning::
+
+   The implementation of GOST 28147-89 uses table lookups indexed by secret
+   data, and is thus likely vulnerable to cache based side channel attacks. No
+   constant time implementation is available.
+
 Algorithm specification names:
 
 - ``GOST-28147-89`` / ``GOST-28147-89(R3411_94_TestParam)`` (reported name)
@@ -285,6 +316,12 @@ Newer Russian national cipher, also known as GOST R 34.12-2015 or "Grasshopper".
    mathematical structure which is exceedingly unlikely to have occurred by
    chance. This may indicate the existence of a backdoor or other issue. Avoid
    using this cipher unless strictly required.
+
+.. warning::
+
+   The implementation of Kuznyechik uses large table lookups indexed by secret
+   data, and is thus likely vulnerable to cache based side channel attacks. No
+   constant time implementation is available.
 
 Available if ``BOTAN_HAS_KUZNYECHIK`` is defined.
 
@@ -324,6 +361,13 @@ SEED
 
 A older South Korean cipher, widely used in industry there. No reason to choose it otherwise.
 
+.. warning::
+
+   The baseline implementation of SEED uses table lookups indexed by secret
+   data, and is thus likely vulnerable to cache based side channel attacks.
+   Constant time implementations are used instead on processors with AES
+   instructions, or with AVX-512 and GFNI.
+
 Available if ``BOTAN_HAS_SEED`` is defined.
 
 Algorithm specification name: ``SEED``
@@ -357,6 +401,13 @@ commercial applications in China. Quite slow unless hardware support
 (either ARMv8 crypto extensions or x86 GFNI instructions) is
 available. Probably no reason to use it outside of legal requirements.
 
+.. warning::
+
+   The baseline implementation of SM4 uses table lookups indexed by secret
+   data, and is thus likely vulnerable to cache based side channel attacks.
+   Constant time implementations are used instead on processors with dedicated
+   SM4 instructions, AES instructions, or GFNI.
+
 Available if ``BOTAN_HAS_SM4`` is defined.
 
 Algorithm specification name: ``SM4``
@@ -376,6 +427,13 @@ Twofish
 
 A 128-bit block cipher that was one of the AES finalists. Has a somewhat complicated key
 setup and a "kitchen sink" design.
+
+.. warning::
+
+   The baseline implementation of Twofish uses key dependent tables which are
+   indexed by secret data, and is thus likely vulnerable to cache based side
+   channel attacks. A constant time implementation is used instead on
+   processors with AVX-512 and GFNI.
 
 Available if ``BOTAN_HAS_TWOFISH`` is defined.
 

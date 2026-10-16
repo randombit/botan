@@ -29,7 +29,7 @@ Classic_McEliece_PublicKey::Classic_McEliece_PublicKey(const AlgorithmIdentifier
 
 Classic_McEliece_PublicKey::Classic_McEliece_PublicKey(std::span<const uint8_t> key_bits,
                                                        Classic_McEliece_Parameter_Set param_set) {
-   auto params = Classic_McEliece_Parameters::create(param_set);
+   const auto params = Classic_McEliece_Parameters::create(param_set);
    BOTAN_ARG_CHECK(key_bits.size() == params.pk_size_bytes(), "Wrong public key length");
    m_public = std::make_shared<Classic_McEliece_PublicKeyInternal>(
       params, Classic_McEliece_Matrix(params, {key_bits.begin(), key_bits.end()}));
@@ -88,7 +88,7 @@ std::unique_ptr<PK_Ops::KEM_Encryption> Classic_McEliece_PublicKey::_create_kem_
 
 Classic_McEliece_PrivateKey::Classic_McEliece_PrivateKey(RandomNumberGenerator& rng,
                                                          Classic_McEliece_Parameter_Set param_set) {
-   auto params = Classic_McEliece_Parameters::create(param_set);
+   const auto params = Classic_McEliece_Parameters::create(param_set);
    const auto seed = rng.random_vec<CmceInitialSeed>(params.seed_len());
    CT::poison(seed);
    std::tie(m_private, m_public) = Classic_McEliece_KeyPair_Internal::generate(params, seed).decompose_to_pair();
@@ -100,8 +100,8 @@ Classic_McEliece_PrivateKey::Classic_McEliece_PrivateKey(RandomNumberGenerator& 
 
 Classic_McEliece_PrivateKey::Classic_McEliece_PrivateKey(std::span<const uint8_t> sk,
                                                          Classic_McEliece_Parameter_Set param_set) {
-   auto scope = CT::scoped_poison(sk);
-   auto params = Classic_McEliece_Parameters::create(param_set);
+   const auto scope = CT::scoped_poison(sk);
+   const auto params = Classic_McEliece_Parameters::create(param_set);
    auto sk_internal = Classic_McEliece_PrivateKeyInternal::from_bytes(params, sk);
    m_private = std::make_shared<Classic_McEliece_PrivateKeyInternal>(std::move(sk_internal));
    // This creates and loads the public key, which is very large. Potentially, we could only load

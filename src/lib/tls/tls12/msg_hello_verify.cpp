@@ -7,7 +7,7 @@
 
 #include <botan/tls_messages.h>
 
-#include <botan/mac.h>
+#include <botan/internal/tls_messages_internal.h>
 #include <botan/internal/tls_reader.h>
 
 namespace Botan::TLS {
@@ -32,18 +32,8 @@ Hello_Verify_Request::Hello_Verify_Request(std::span<const uint8_t> buf) {
 
 Hello_Verify_Request::Hello_Verify_Request(std::span<const uint8_t> client_hello_bits,
                                            std::string_view client_identity,
-                                           std::span<const uint8_t> cookie_secret) {
-   auto hmac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
-   hmac->set_key(cookie_secret);
-
-   hmac->update_be(static_cast<uint64_t>(client_hello_bits.size()));
-   hmac->update(client_hello_bits);
-   hmac->update_be(static_cast<uint64_t>(client_identity.size()));
-   hmac->update(client_identity);
-
-   m_cookie.resize(hmac->output_length());
-   hmac->final(m_cookie.data());
-}
+                                           std::span<const uint8_t> cookie_secret) :
+      m_cookie(calculate_cookie(client_hello_bits, client_identity, cookie_secret)) {}
 
 std::vector<uint8_t> Hello_Verify_Request::serialize() const {
    /* DTLS 1.2 server implementations SHOULD use DTLS version 1.0

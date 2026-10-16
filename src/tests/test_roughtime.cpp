@@ -83,6 +83,9 @@ class Roughtime_Response_Tests final : public Text_Based_Test {
             }
          } catch(const Botan::Roughtime::Roughtime_Error& e) {
             result.test_is_true(e.what(), type == "Invalid");
+         } catch(const Botan::Decoding_Error& e) {
+            // An invalid Ed25519 public key is rejected when it is decoded
+            result.test_is_true(e.what(), type == "Invalid");
          }
 
          return result;

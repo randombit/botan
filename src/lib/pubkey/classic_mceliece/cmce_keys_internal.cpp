@@ -32,8 +32,8 @@ std::optional<Classic_McEliece_KeyPair_Internal> try_generate_keypair(std::span<
    auto big_e_xof = params.prg(seed);
 
    auto s = big_e_xof->output<CmceRejectionSeed>(params.n() / 8);
-   auto ordering_bits = big_e_xof->output<CmceOrderingBits>((params.sigma2() * params.q()) / 8);
-   auto irreducible_bits = big_e_xof->output<CmceIrreducibleBits>((params.sigma1() * params.t()) / 8);
+   const auto ordering_bits = big_e_xof->output<CmceOrderingBits>((params.sigma2() * params.q()) / 8);
+   const auto irreducible_bits = big_e_xof->output<CmceIrreducibleBits>((params.sigma1() * params.t()) / 8);
    big_e_xof->output(out_next_seed);
 
    // Field-ordering generation - Classic McEliece ISO 8.2
@@ -83,7 +83,7 @@ Classic_McEliece_PrivateKeyInternal Classic_McEliece_PrivateKeyInternal::from_by
 }
 
 secure_vector<uint8_t> Classic_McEliece_PrivateKeyInternal::serialize() const {
-   auto control_bits = m_field_ordering.alphas_control_bits();
+   const auto control_bits = m_field_ordering.alphas_control_bits();
 
    /* NIST Impl. guide 6.1 Control-Bit Gen:
     *     As low-cost protection against faults in the control-bit computation, implementors are advised

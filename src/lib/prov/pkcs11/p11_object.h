@@ -17,6 +17,7 @@
 #include <functional>
 #include <list>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Botan::PKCS11 {
@@ -89,13 +90,16 @@ class BOTAN_PUBLIC_API(2, 0) AttributeContainer {
 
       /**
       * Add a numeric attribute (e.g. CKA_MODULUS_BITS / AttributeType::ModulusBits).
+      * The value is always passed to the module as a CK_ULONG.
       * @param attribute attribute type
       * @param value numeric value to add
       */
       template <std::integral T>
       void add_numeric(AttributeType attribute, T value) {
-         m_numerics.push_back(static_cast<uint64_t>(value));
-         add_attribute(attribute, reinterpret_cast<uint8_t*>(&m_numerics.back()), sizeof(T));
+         if(!std::in_range<Ulong>(value)) {
+            throw Invalid_Argument("PKCS #11 numeric attribute value exceeds CK_ULONG range");
+         }
+         add_ulong(attribute, static_cast<Ulong>(value));
       }
 
    protected:
@@ -103,8 +107,11 @@ class BOTAN_PUBLIC_API(2, 0) AttributeContainer {
       void add_attribute(AttributeType attribute, const uint8_t* value, Ulong size);
 
    private:
+      void add_ulong(AttributeType attribute, Ulong value);
+
       std::vector<Attribute> m_attributes;
-      std::list<uint64_t> m_numerics;
+      std::list<Ulong> m_numerics;
+      std::list<Bbool> m_bools;
       std::list<std::string> m_strings;
       std::list<secure_vector<uint8_t>> m_vectors;
 };
@@ -528,7 +535,12 @@ class BOTAN_PUBLIC_API(2, 0) Object {
       /// Sets the given value for the attribute (using `C_SetAttributeValue`)
       void set_attribute_value(AttributeType attribute, const secure_vector<uint8_t>& value) const;
 
-      /// Destroys the object
+      /**
+      * Destroys the object
+      *
+      * Afterwards handle() returns CK_INVALID_HANDLE. Copies of this object
+      * made earlier still hold the old handle and must no longer be used.
+      */
       void destroy() const;
 
       /**
@@ -549,6 +561,17 @@ class BOTAN_PUBLIC_API(2, 0) Object {
    protected:
       explicit Object(Session& session) : m_session(session) {}
 
+      /// The search template matching all objects of type T
+      template <typename T>
+      static AttributeContainer search_template_for() {
+         AttributeContainer search_template(T::Class);
+         // Several key types share an object class, so the key type is required as well
+         if constexpr(requires { T::Key_Type; }) {
+            search_template.add_numeric(AttributeType::KeyType, static_cast<CK_KEY_TYPE>(T::Key_Type));
+         }
+         return search_template;
+      }
+
       void reset_handle(ObjectHandle handle) {
          if(m_handle != CK_INVALID_HANDLE) {
             throw Invalid_Argument("Cannot reset handle on already valid PKCS11 object");
@@ -558,7 +581,8 @@ class BOTAN_PUBLIC_API(2, 0) Object {
 
    private:
       const std::reference_wrapper<Session> m_session;
-      ObjectHandle m_handle = CK_INVALID_HANDLE;
+      // mutable since destroy() is const
+      mutable ObjectHandle m_handle = CK_INVALID_HANDLE;
 };
 
 template <typename T>
@@ -582,21 +606,21 @@ std::vector<T> Object::search(Session& session, const std::vector<Attribute>& se
 
 template <typename T>
 std::vector<T> Object::search(Session& session, std::string_view label) {
-   AttributeContainer search_template(T::Class);
+   AttributeContainer search_template = search_template_for<T>();
    search_template.add_string(AttributeType::Label, label);
    return search<T>(session, search_template.attributes());
 }
 
 template <typename T>
 std::vector<T> Object::search(Session& session, const std::vector<uint8_t>& id) {
-   AttributeContainer search_template(T::Class);
+   AttributeContainer search_template = search_template_for<T>();
    search_template.add_binary(AttributeType::Id, id);
    return search<T>(session, search_template.attributes());
 }
 
 template <typename T>
 std::vector<T> Object::search(Session& session, std::string_view label, const std::vector<uint8_t>& id) {
-   AttributeContainer search_template(T::Class);
+   AttributeContainer search_template = search_template_for<T>();
    search_template.add_string(AttributeType::Label, label);
    search_template.add_binary(AttributeType::Id, id);
    return search<T>(session, search_template.attributes());
@@ -604,7 +628,7 @@ std::vector<T> Object::search(Session& session, std::string_view label, const st
 
 template <typename T>
 std::vector<T> Object::search(Session& session) {
-   return search<T>(session, AttributeContainer(T::Class).attributes());
+   return search<T>(session, search_template_for<T>().attributes());
 }
 
 }  // namespace Botan::PKCS11

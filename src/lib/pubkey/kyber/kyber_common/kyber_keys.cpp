@@ -38,7 +38,7 @@ KyberSerializedPublicKey validate_public_key_length(KyberSerializedPublicKey pub
  * Expanded Secret Key: sk  := (sk' || pk || H(pk) || z)
  */
 KyberInternalKeypair Expanded_Keypair_Codec::decode_keypair(std::span<const uint8_t> sk, KyberConstants mode) const {
-   auto scope = CT::scoped_poison(sk);
+   const auto scope = CT::scoped_poison(sk);
    BufferSlicer s(sk);
 
    auto skpv = Kyber_Algos::decode_polynomial_vector(s.take(mode.polynomial_vector_bytes()), mode);
@@ -75,7 +75,7 @@ secure_vector<uint8_t> Expanded_Keypair_Codec::encode_keypair(KyberInternalKeypa
    BOTAN_ASSERT_NONNULL(keypair.first);
    BOTAN_ASSERT_NONNULL(keypair.second);
    const auto& mode = keypair.first->mode();
-   auto scope = CT::scoped_poison(*keypair.second);
+   const auto scope = CT::scoped_poison(*keypair.second);
    auto result = concat(Kyber_Algos::encode_polynomial_vector(keypair.second->s(), mode),
                         keypair.first->public_key_bits_raw(),
                         keypair.first->H_public_key_bits_raw(),

@@ -19,20 +19,41 @@
    #include <botan/system_rng.h>
 #endif
 
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
+#endif
+
 namespace Botan {
 
 namespace {
 
 std::unique_ptr<MessageAuthenticationCode> auto_rng_hmac() {
-   const std::string possible_auto_rng_hmacs[] = {
-      "HMAC(SHA-512)",
-      "HMAC(SHA-256)",
-   };
+   const bool has_hardware_sha256_support = []() {
+#if defined(BOTAN_HAS_SHA2_32_X86)
+      if(CPUID::has(CPUID::Feature::SHA)) {
+         return true;
+      }
+#endif
 
-   for(const auto& hmac : possible_auto_rng_hmacs) {
-      if(auto mac = MessageAuthenticationCode::create(hmac)) {
+#if defined(BOTAN_HAS_SHA2_32_ARMV8)
+      if(CPUID::has(CPUID::Feature::SHA2)) {
+         return true;
+      }
+#endif
+
+      return false;
+   }();
+
+   // On 64-bit systems prefer SHA-512, unless there is support for SHA-256 instructions
+   if(!has_hardware_sha256_support && HasNative64BitRegisters) {
+      if(auto mac = MessageAuthenticationCode::create("HMAC(SHA-512)")) {
          return mac;
       }
+   }
+
+   // Either SHA-512 is unavailable, or SHA-256 is preferable
+   if(auto mac = MessageAuthenticationCode::create("HMAC(SHA-256)")) {
+      return mac;
    }
 
    // This shouldn't happen since this module has a dependency on sha2_32
@@ -79,35 +100,38 @@ AutoSeeded_RNG::AutoSeeded_RNG(size_t reseed_interval) {
 }
 
 void AutoSeeded_RNG::force_reseed() {
+   BOTAN_STATE_CHECK(m_rng);
    m_rng->force_reseed();
    m_rng->next_byte();
-
-   if(!m_rng->is_seeded()) {
-      throw Internal_Error("AutoSeeded_RNG reseeding failed");
-   }
 }
 
 bool AutoSeeded_RNG::is_seeded() const {
-   return m_rng->is_seeded();
+   return m_rng && m_rng->is_seeded();
 }
 
 void AutoSeeded_RNG::clear() {
+   BOTAN_STATE_CHECK(m_rng);
    m_rng->clear();
 }
 
 std::string AutoSeeded_RNG::name() const {
+   BOTAN_STATE_CHECK(m_rng);
    return m_rng->name();
 }
 
 size_t AutoSeeded_RNG::reseed_from_sources(Entropy_Sources& srcs, size_t poll_bits) {
+   BOTAN_STATE_CHECK(m_rng);
    return m_rng->reseed_from_sources(srcs, poll_bits);
 }
 
 void AutoSeeded_RNG::accept_seed_material(std::span<const uint8_t> input) {
+   BOTAN_STATE_CHECK(m_rng);
    m_rng->add_entropy(input);
 }
 
 void AutoSeeded_RNG::fill_bytes_with_input(std::span<uint8_t> out, std::span<const uint8_t> in) {
+   BOTAN_STATE_CHECK(m_rng);
+
    if(out.empty() && in.empty()) {
       return;
    } else if(in.empty()) {

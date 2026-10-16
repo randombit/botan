@@ -68,7 +68,7 @@ void Ascon_p::finish(uint8_t rounds) {
 }
 
 void Ascon_p::permute(uint8_t rounds) {
-   BOTAN_DEBUG_ASSERT(rounds <= 16);
+   BOTAN_ASSERT_NOMSG(rounds > 0 && rounds <= 16);
 
    auto& S = state();
 

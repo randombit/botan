@@ -43,23 +43,23 @@ void transpose_in(SIMD_16x32& B0,
                   SIMD_16x32& B5,
                   SIMD_16x32& B6,
                   SIMD_16x32& B7) {
-   auto t0 = _mm512_unpacklo_epi32(B0.raw(), B1.raw());
-   auto t1 = _mm512_unpackhi_epi32(B0.raw(), B1.raw());
-   auto t2 = _mm512_unpacklo_epi32(B2.raw(), B3.raw());
-   auto t3 = _mm512_unpackhi_epi32(B2.raw(), B3.raw());
-   auto t4 = _mm512_unpacklo_epi32(B4.raw(), B5.raw());
-   auto t5 = _mm512_unpackhi_epi32(B4.raw(), B5.raw());
-   auto t6 = _mm512_unpacklo_epi32(B6.raw(), B7.raw());
-   auto t7 = _mm512_unpackhi_epi32(B6.raw(), B7.raw());
+   const auto t0 = _mm512_unpacklo_epi32(B0.raw(), B1.raw());
+   const auto t1 = _mm512_unpackhi_epi32(B0.raw(), B1.raw());
+   const auto t2 = _mm512_unpacklo_epi32(B2.raw(), B3.raw());
+   const auto t3 = _mm512_unpackhi_epi32(B2.raw(), B3.raw());
+   const auto t4 = _mm512_unpacklo_epi32(B4.raw(), B5.raw());
+   const auto t5 = _mm512_unpackhi_epi32(B4.raw(), B5.raw());
+   const auto t6 = _mm512_unpacklo_epi32(B6.raw(), B7.raw());
+   const auto t7 = _mm512_unpackhi_epi32(B6.raw(), B7.raw());
 
-   auto r0 = _mm512_unpacklo_epi64(t0, t2);
-   auto r1 = _mm512_unpackhi_epi64(t0, t2);
-   auto r2 = _mm512_unpacklo_epi64(t1, t3);
-   auto r3 = _mm512_unpackhi_epi64(t1, t3);
-   auto r4 = _mm512_unpacklo_epi64(t4, t6);
-   auto r5 = _mm512_unpackhi_epi64(t4, t6);
-   auto r6 = _mm512_unpacklo_epi64(t5, t7);
-   auto r7 = _mm512_unpackhi_epi64(t5, t7);
+   const auto r0 = _mm512_unpacklo_epi64(t0, t2);
+   const auto r1 = _mm512_unpackhi_epi64(t0, t2);
+   const auto r2 = _mm512_unpacklo_epi64(t1, t3);
+   const auto r3 = _mm512_unpackhi_epi64(t1, t3);
+   const auto r4 = _mm512_unpacklo_epi64(t4, t6);
+   const auto r5 = _mm512_unpackhi_epi64(t4, t6);
+   const auto r6 = _mm512_unpacklo_epi64(t5, t7);
+   const auto r7 = _mm512_unpackhi_epi64(t5, t7);
 
    const __m512i tbl0 = _mm512_set_epi32(27, 19, 26, 18, 25, 17, 24, 16, 11, 3, 10, 2, 9, 1, 8, 0);
    const __m512i tbl1 = _mm512_add_epi32(tbl0, _mm512_set1_epi32(4));
@@ -82,35 +82,35 @@ void transpose_out(SIMD_16x32& B0,
                    SIMD_16x32& B5,
                    SIMD_16x32& B6,
                    SIMD_16x32& B7) {
-   auto t0 = _mm512_unpacklo_epi32(B0.raw(), B1.raw());
-   auto t1 = _mm512_unpackhi_epi32(B0.raw(), B1.raw());
-   auto t2 = _mm512_unpacklo_epi32(B2.raw(), B3.raw());
-   auto t3 = _mm512_unpackhi_epi32(B2.raw(), B3.raw());
-   auto t4 = _mm512_unpacklo_epi32(B4.raw(), B5.raw());
-   auto t5 = _mm512_unpackhi_epi32(B4.raw(), B5.raw());
-   auto t6 = _mm512_unpacklo_epi32(B6.raw(), B7.raw());
-   auto t7 = _mm512_unpackhi_epi32(B6.raw(), B7.raw());
+   const auto t0 = _mm512_unpacklo_epi32(B0.raw(), B1.raw());
+   const auto t1 = _mm512_unpackhi_epi32(B0.raw(), B1.raw());
+   const auto t2 = _mm512_unpacklo_epi32(B2.raw(), B3.raw());
+   const auto t3 = _mm512_unpackhi_epi32(B2.raw(), B3.raw());
+   const auto t4 = _mm512_unpacklo_epi32(B4.raw(), B5.raw());
+   const auto t5 = _mm512_unpackhi_epi32(B4.raw(), B5.raw());
+   const auto t6 = _mm512_unpacklo_epi32(B6.raw(), B7.raw());
+   const auto t7 = _mm512_unpackhi_epi32(B6.raw(), B7.raw());
 
-   auto r0 = _mm512_unpacklo_epi64(t0, t2);
-   auto r1 = _mm512_unpackhi_epi64(t0, t2);
-   auto r2 = _mm512_unpacklo_epi64(t1, t3);
-   auto r3 = _mm512_unpackhi_epi64(t1, t3);
-   auto r4 = _mm512_unpacklo_epi64(t4, t6);
-   auto r5 = _mm512_unpackhi_epi64(t4, t6);
-   auto r6 = _mm512_unpacklo_epi64(t5, t7);
-   auto r7 = _mm512_unpackhi_epi64(t5, t7);
+   const auto r0 = _mm512_unpacklo_epi64(t0, t2);
+   const auto r1 = _mm512_unpackhi_epi64(t0, t2);
+   const auto r2 = _mm512_unpacklo_epi64(t1, t3);
+   const auto r3 = _mm512_unpackhi_epi64(t1, t3);
+   const auto r4 = _mm512_unpacklo_epi64(t4, t6);
+   const auto r5 = _mm512_unpackhi_epi64(t4, t6);
+   const auto r6 = _mm512_unpacklo_epi64(t5, t7);
+   const auto r7 = _mm512_unpackhi_epi64(t5, t7);
 
    const __m512i tbl0 = _mm512_set_epi32(23, 22, 21, 20, 7, 6, 5, 4, 19, 18, 17, 16, 3, 2, 1, 0);
    const __m512i tbl1 = _mm512_add_epi32(tbl0, _mm512_set1_epi32(8));
 
-   auto s0 = _mm512_permutex2var_epi32(r0, tbl0, r4);
-   auto s1 = _mm512_permutex2var_epi32(r1, tbl0, r5);
-   auto s2 = _mm512_permutex2var_epi32(r2, tbl0, r6);
-   auto s3 = _mm512_permutex2var_epi32(r3, tbl0, r7);
-   auto s4 = _mm512_permutex2var_epi32(r0, tbl1, r4);
-   auto s5 = _mm512_permutex2var_epi32(r1, tbl1, r5);
-   auto s6 = _mm512_permutex2var_epi32(r2, tbl1, r6);
-   auto s7 = _mm512_permutex2var_epi32(r3, tbl1, r7);
+   const auto s0 = _mm512_permutex2var_epi32(r0, tbl0, r4);
+   const auto s1 = _mm512_permutex2var_epi32(r1, tbl0, r5);
+   const auto s2 = _mm512_permutex2var_epi32(r2, tbl0, r6);
+   const auto s3 = _mm512_permutex2var_epi32(r3, tbl0, r7);
+   const auto s4 = _mm512_permutex2var_epi32(r0, tbl1, r4);
+   const auto s5 = _mm512_permutex2var_epi32(r1, tbl1, r5);
+   const auto s6 = _mm512_permutex2var_epi32(r2, tbl1, r6);
+   const auto s7 = _mm512_permutex2var_epi32(r3, tbl1, r7);
 
    B0 = SIMD_16x32(_mm512_shuffle_i32x4(s0, s1, 0b01000100));
    B1 = SIMD_16x32(_mm512_shuffle_i32x4(s2, s3, 0b01000100));

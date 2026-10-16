@@ -20,7 +20,7 @@ std::string Key_Constraints::to_string() const {
 
    std::vector<std::string> str;
 
-   auto usage_set = [value = m_value](const Key_Constraints::Bits usage) { return ((value & usage) == usage); };
+   const auto usage_set = [value = m_value](const Key_Constraints::Bits usage) { return ((value & usage) == usage); };
 
    if(usage_set(Key_Constraints::DigitalSignature)) {
       str.push_back("digital_signature");

@@ -10,10 +10,10 @@
 #define BOTAN_TLS_HANDSHAKE_LAYER_13_H_
 
 #include <optional>
-#include <vector>
 
 #include <botan/tls_magic.h>
 #include <botan/tls_messages_13.h>
+#include <botan/internal/tls_types_13.h>
 
 namespace Botan::TLS {
 
@@ -51,12 +51,16 @@ class BOTAN_TEST_API Handshake_Layer {
       /**
        * Parses one handshake message off the internal buffer that is being filled using `copy_data`.
        *
+       * TODO: remove the std::optional<std::reference_wrapper<>> shenanigan
+       *       when integrating the re-vamped DTLS-enabled data influx routine.
+       *
        * @param policy the TLS policy
        * @param transcript_hash the transcript hash state to be updated
        *
        * @return the parsed handshake message, or nullopt if more data is needed to complete the message
        */
-      std::optional<Handshake_Message_13> next_message(const Policy& policy, Transcript_Hash_State& transcript_hash);
+      std::optional<Handshake_Message_13> next_message(
+         const Policy& policy, std::optional<std::reference_wrapper<Transcript_Hash_State>> transcript_hash);
 
       /**
        * Parses one post-handshake message off the internal buffer that is being filled using `copy_data`.
@@ -68,6 +72,23 @@ class BOTAN_TEST_API Handshake_Layer {
       std::optional<Post_Handshake_Message_13> next_post_handshake_message(const Policy& policy);
 
       /**
+       * Serializes one handshake message without prepending a handshake
+       * protocol header.
+       *
+       * @param message the handshake message to be serialized
+       *
+       * @return the serialized handshake message
+       */
+      static SerializedHandshakeMessage serialize(const Handshake_Message& message) {
+         return SerializedHandshakeMessage(message.serialize());
+      }
+
+      /**
+       * Prepare the TLS handshake message header according to RFC 9846 Section 4
+       */
+      static HandshakeProtocolHeader prepare_header(Handshake_Type type, size_t payload_length);
+
+      /**
        * Marshals one handshake message for sending in an (encrypted) record and updates the
        * provided transcript hash state accordingly.
        *
@@ -76,17 +97,8 @@ class BOTAN_TEST_API Handshake_Layer {
        *
        * @return the marshalled handshake message
        */
-      static std::vector<uint8_t> prepare_message(Handshake_Message_13_Ref message,
-                                                  Transcript_Hash_State& transcript_hash);
-
-      /**
-       * Marshals one post-handshake message for sending in an (encrypted) record.
-       *
-       * @param message the post handshake message to be marshalled
-       *
-       * @return the marshalled post-handshake message
-       */
-      static std::vector<uint8_t> prepare_post_handshake_message(const Post_Handshake_Message_13& message);
+      static MarshalledHandshakeMessage prepare_message(Handshake_Message_13_Ref message,
+                                                        Transcript_Hash_State& transcript_hash);
 
       /**
        * Check if the Handshake_Layer has stored a partial message in its internal buffer.

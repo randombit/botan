@@ -76,7 +76,7 @@ bool operator==(const Classic_McEliece_Polynomial_Ring::Big_F_Coefficient& lhs,
 
 std::optional<Classic_McEliece_Minimal_Polynomial> Classic_McEliece_Polynomial_Ring::compute_minimal_polynomial(
    StrongSpan<const CmceIrreducibleBits> seed) const {
-   auto polynomial = create_element_from_bytes(seed);
+   const auto polynomial = create_element_from_bytes(seed);
    std::vector<Classic_McEliece_Polynomial> mat;
 
    mat.push_back(create_element_from_coef(concat<std::vector<CmceGfElem>>(
@@ -91,7 +91,7 @@ std::optional<Classic_McEliece_Minimal_Polynomial> Classic_McEliece_Polynomial_R
    // Gaussian
    for(size_t j = 0; j < degree(); ++j) {
       for(size_t k = j + 1; k < degree(); ++k) {
-         auto cond = GF_Mask::is_zero(mat.at(j).coef_at(j));
+         const auto cond = GF_Mask::is_zero(mat.at(j).coef_at(j));
 
          for(size_t c = j; c < degree() + 1; ++c) {
             mat.at(c).coef_at(j) += cond.if_set_return(mat.at(c).coef_at(k));
@@ -105,7 +105,7 @@ std::optional<Classic_McEliece_Minimal_Polynomial> Classic_McEliece_Polynomial_R
          return std::nullopt;
       }
 
-      auto inv = mat.at(j).coef_at(j).inv();
+      const auto inv = mat.at(j).coef_at(j).inv();
 
       for(size_t c = j; c < degree() + 1; ++c) {
          mat.at(c).coef_at(j) *= inv;
@@ -133,7 +133,7 @@ secure_vector<uint8_t> Classic_McEliece_Minimal_Polynomial::serialize() const {
    BOTAN_ASSERT_NOMSG(!coef().empty());
    const auto& all_coeffs = coef();
    // Store all except coef for monomial x^t since polynomial is monic (ISO Spec Section 9.2.9)
-   auto coeffs_to_store = std::span(all_coeffs).first(all_coeffs.size() - 1);
+   const auto coeffs_to_store = std::span(all_coeffs).first(all_coeffs.size() - 1);
    secure_vector<uint8_t> bytes(sizeof(uint16_t) * coeffs_to_store.size());
    BufferStuffer bytes_stuf(bytes);
    for(const auto& coef : coeffs_to_store) {

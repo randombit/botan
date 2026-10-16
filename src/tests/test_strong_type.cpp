@@ -165,7 +165,7 @@ class Strong_Type_Tests final : public Test {
          Test::Result result("behaves like a standard container");
 
          auto base_nonce = Botan::hex_decode("DEADBEEF");
-         auto* dataptr = base_nonce.data();
+         const auto* dataptr = base_nonce.data();
          auto nonce = Test_Nonce(std::move(base_nonce));
 
          result.test_sz_eq("size()", nonce.size(), 4);
@@ -208,7 +208,7 @@ class Strong_Type_Tests final : public Test {
       static Test::Result test_binds_to_span() {
          Test::Result result("binds to a std::span<>");
 
-         auto get_size = [](std::span<const uint8_t> data) { return data.size(); };
+         const auto get_size = [](std::span<const uint8_t> data) { return data.size(); };
 
          const auto nonce = Test_Nonce(Botan::hex_decode("DEADBEEF"));
 
@@ -224,7 +224,7 @@ class Strong_Type_Tests final : public Test {
 
          std::stringstream stream;
          stream << name;
-         result.test_str_eq("strong types are streamable", stream.str(), std::string("SHA-1"));
+         result.test_str_eq("strong types are streamable", stream.str(), "SHA-1");
 
          return result;
       }
@@ -658,10 +658,10 @@ class Strong_Type_Tests final : public Test {
          Strong_String stt_move("wrapped lvalue to be moved");
          const Strong_String const_stt("wrapped const lvalue");
 
-         auto& unwrapped_stt = Botan::unwrap_strong_type(stt);
+         const auto& unwrapped_stt = Botan::unwrap_strong_type(stt);
          const auto& unwrapped_const_stt = Botan::unwrap_strong_type(const_stt);
-         auto unwrapped_rvalue = Botan::unwrap_strong_type(std::move(stt_move));
-         auto unwrapped_rvalue2 = Botan::unwrap_strong_type(Strong_String("wrapped rvalue"));
+         const auto unwrapped_rvalue = Botan::unwrap_strong_type(std::move(stt_move));
+         const auto unwrapped_rvalue2 = Botan::unwrap_strong_type(Strong_String("wrapped rvalue"));
 
          result.test_str_eq("unwrapped_stt", unwrapped_stt, "wrapped lvalue");
          result.test_str_eq("unwrapped_const_stt", unwrapped_const_stt, "wrapped const lvalue");
@@ -671,9 +671,10 @@ class Strong_Type_Tests final : public Test {
          Strong_Unique stt_ptr(std::make_unique<std::string>("wrapped ptr"));
          Strong_Unique stt_ptr_move(std::make_unique<std::string>("wrapped ptr to be moved"));
 
-         auto& unwrapped_ptr = Botan::unwrap_strong_type(stt_ptr);
-         auto unwrapped_ptr_move = Botan::unwrap_strong_type(std::move(stt_ptr_move));
-         auto unwrapped_ptr_rvalue = Botan::unwrap_strong_type(std::make_unique<std::string>("wrapped ptr rvalue"));
+         const auto& unwrapped_ptr = Botan::unwrap_strong_type(stt_ptr);
+         const auto unwrapped_ptr_move = Botan::unwrap_strong_type(std::move(stt_ptr_move));
+         const auto unwrapped_ptr_rvalue =
+            Botan::unwrap_strong_type(std::make_unique<std::string>("wrapped ptr rvalue"));
 
          result.test_str_eq("unwrapped_ptr", *unwrapped_ptr, "wrapped ptr");
          result.test_str_eq("unwrapped_ptr_move", *unwrapped_ptr_move, "wrapped ptr to be moved");
@@ -689,10 +690,10 @@ class Strong_Type_Tests final : public Test {
          std::string stt_move("wrapped lvalue to be moved");
          const std::string const_stt("wrapped const lvalue");
 
-         auto& unwrapped_stt = Botan::unwrap_strong_type(stt);
+         const auto& unwrapped_stt = Botan::unwrap_strong_type(stt);
          const auto& unwrapped_const_stt = Botan::unwrap_strong_type(const_stt);
-         auto unwrapped_rvalue = Botan::unwrap_strong_type(std::move(stt_move));
-         auto unwrapped_rvalue2 = Botan::unwrap_strong_type(std::string("wrapped rvalue"));
+         const auto unwrapped_rvalue = Botan::unwrap_strong_type(std::move(stt_move));
+         const auto unwrapped_rvalue2 = Botan::unwrap_strong_type(std::string("wrapped rvalue"));
 
          result.test_str_eq("unwrapped_stt", unwrapped_stt, "wrapped lvalue");
          result.test_str_eq("unwrapped_const_stt", unwrapped_const_stt, "wrapped const lvalue");
@@ -702,9 +703,10 @@ class Strong_Type_Tests final : public Test {
          std::unique_ptr<std::string> stt_ptr(std::make_unique<std::string>("wrapped ptr"));
          std::unique_ptr<std::string> stt_ptr_move(std::make_unique<std::string>("wrapped ptr to be moved"));
 
-         auto& unwrapped_ptr = Botan::unwrap_strong_type(stt_ptr);
-         auto unwrapped_ptr_move = Botan::unwrap_strong_type(std::move(stt_ptr_move));
-         auto unwrapped_ptr_rvalue = Botan::unwrap_strong_type(std::make_unique<std::string>("wrapped ptr rvalue"));
+         const auto& unwrapped_ptr = Botan::unwrap_strong_type(stt_ptr);
+         const auto unwrapped_ptr_move = Botan::unwrap_strong_type(std::move(stt_ptr_move));
+         const auto unwrapped_ptr_rvalue =
+            Botan::unwrap_strong_type(std::make_unique<std::string>("wrapped ptr rvalue"));
 
          result.test_str_eq("unwrapped_ptr", *unwrapped_ptr, "wrapped ptr");
          result.test_str_eq("unwrapped_ptr_move", *unwrapped_ptr_move, "wrapped ptr to be moved");

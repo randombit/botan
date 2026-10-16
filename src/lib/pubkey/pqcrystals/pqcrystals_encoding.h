@@ -191,7 +191,7 @@ template <int32_t range,
 constexpr void unpack(Polynomial<PolyTrait, D>& p, ByteSourceT& byte_source, UnmapFnT unmap) {
    using trait = BitPackingTrait<range, PolyTrait>;
 
-   auto get_bytes = detail::as_byte_source(byte_source);
+   const auto get_bytes = detail::as_byte_source(byte_source);
    typename trait::collector_bytearray bytes = {0};
 
    // This is the inverse operation of the bit-packing algorithm above. Please

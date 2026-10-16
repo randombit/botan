@@ -8,12 +8,18 @@
 #include <botan/base64.h>
 
 #include <botan/exceptn.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/charset.h>
 #include <botan/internal/codec_base.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/rounding.h>
+
+#if defined(BOTAN_HAS_BASE64_AVX512)
+   #include <botan/internal/base64_avx512.h>
+   #include <botan/internal/cpuid.h>
+   #include <botan/internal/mem_utils.h>
+#endif
 
 namespace Botan {
 
@@ -36,13 +42,13 @@ class Base64 final {
       static constexpr size_t remaining_bits_before_padding() noexcept { return m_remaining_bits_before_padding; }
 
       static constexpr size_t encode_max_output(size_t input_length) {
-         const size_t encoding_blocks = round_up(input_length, m_encoding_bytes_in) / m_encoding_bytes_in;
+         const size_t encoding_blocks = ceil_division(input_length, m_encoding_bytes_in);
          return mul_or_throw(encoding_blocks, m_encoding_bytes_out, "Input too large to base64 encode");
       }
 
       static constexpr size_t decode_max_output(size_t input_length) {
-         // Divide before multiply to avoid overflow; round_up makes the division exact.
-         return (round_up(input_length, m_encoding_bytes_out) / m_encoding_bytes_out) * m_encoding_bytes_in;
+         // Cannot overflow since each block shrinks when decoded
+         return ceil_division(input_length, m_encoding_bytes_out) * m_encoding_bytes_in;
       }
 
       static void encode(char out[4], const uint8_t in[3]) noexcept;
@@ -110,10 +116,10 @@ void Base64::encode(char out[4], const uint8_t in[3]) noexcept {
 
 //static
 uint8_t Base64::lookup_binary_value(char input) noexcept {
-   auto has_zero_byte = [](uint64_t v) { return ((v - 0x0101010101010101) & ~(v) & 0x8080808080808080); };
+   const auto has_zero_byte = [](uint64_t v) { return ((v - 0x0101010101010101) & ~(v) & 0x8080808080808080); };
 
    // Assumes each byte is either 0x00 or 0x80
-   auto index_of_first_set_byte = [](uint64_t v) {
+   const auto index_of_first_set_byte = [](uint64_t v) {
       return ((((v - 1) & 0x0101010101010101) * 0x0101010101010101) >> 56) - 1;
    };
 
@@ -129,7 +135,7 @@ uint8_t Base64::lookup_binary_value(char input) noexcept {
 
    // If x is in one of the ranges return a mask. Otherwise we xor in at the
    // high word which will be our invalid marker
-   auto v_mask = swar_in_range<uint64_t>(x8, val_l, val_u) ^ 0x80000000;
+   const auto v_mask = swar_in_range<uint64_t>(x8, val_l, val_u) ^ 0x80000000;
 
    // This is the offset added to x to get the value
    const uint64_t val_v = 0xbfb904 ^ (0xFF000000 - (x << 24));
@@ -159,11 +165,39 @@ bool Base64::check_bad_char(uint8_t bin, char input, bool ignore_ws) {
 }  // namespace
 
 size_t base64_encode(char out[], const uint8_t in[], size_t input_length, size_t& input_consumed, bool final_inputs) {
-   return base_encode(Base64(), out, in, input_length, input_consumed, final_inputs);
+   size_t consumed = 0;
+   size_t produced = 0;
+
+#if defined(BOTAN_HAS_BASE64_AVX512)
+   if(input_length >= 48 && CPUID::has(CPUID::Feature::AVX512)) {
+      consumed = base64_encode_avx512(out, in, input_length);
+      produced = consumed / 3 * 4;
+   }
+#endif
+
+   size_t remainder_consumed = 0;
+   produced +=
+      base_encode(Base64(), out + produced, in + consumed, input_length - consumed, remainder_consumed, final_inputs);
+
+   input_consumed = consumed + remainder_consumed;
+   return produced;
 }
 
 std::string base64_encode(const uint8_t input[], size_t input_length) {
-   return base_encode_to_string(Base64(), input, input_length);
+   const size_t output_length = Base64::encode_max_output(input_length);
+   std::string output(output_length, 0);
+
+   size_t consumed = 0;
+   size_t produced = 0;
+
+   if(output_length > 0) {
+      produced = base64_encode(&output.front(), input, input_length, consumed, true);
+   }
+
+   BOTAN_ASSERT_EQUAL(consumed, input_length, "Consumed the entire input");
+   BOTAN_ASSERT_EQUAL(produced, output.size(), "Produced expected size");
+
+   return output;
 }
 
 size_t base64_decode(
@@ -172,6 +206,41 @@ size_t base64_decode(
 }
 
 size_t base64_decode(uint8_t output[], const char input[], size_t input_length, bool ignore_ws) {
+#if defined(BOTAN_HAS_BASE64_AVX512)
+   if(input_length >= 128 && CPUID::has(CPUID::Feature::AVX512, CPUID::Feature::POPCNT)) {
+      // Decoding directly stops at the first block containing whitespace,
+      // padding, or an invalid character
+      const uint8_t* in8 = as_span_of_bytes(input, input_length).data();
+      const size_t bulk = base64_decode_avx512(output, in8, input_length);
+      size_t written = bulk / 4 * 3;
+
+      const uint8_t* rest = in8 + bulk;
+      size_t rest_len = input_length - bulk;
+
+      // If the stop may have been due to whitespace, compact the remainder
+      // and continue decoding
+      secure_vector<uint8_t> compacted;
+      if(ignore_ws && rest_len > 128) {
+         compacted.resize(rest_len);
+         const size_t clean_len = base64_strip_ws_avx512(compacted.data(), rest, rest_len);
+         rest = compacted.data();
+         rest_len = clean_len;
+
+         const size_t bulk2 = base64_decode_avx512(output + written, rest, rest_len);
+         written += bulk2 / 4 * 3;
+         rest += bulk2;
+         rest_len -= bulk2;
+      }
+
+      // The scalar decoder handles the final blocks, and with them all of
+      // the padding logic and error reporting
+      const size_t tail_written =
+         base_decode_full(Base64(), output + written, cast_uint8_ptr_to_char(rest), rest_len, ignore_ws);
+
+      return written + tail_written;
+   }
+#endif
+
    return base_decode_full(Base64(), output, input, input_length, ignore_ws);
 }
 
@@ -187,7 +256,10 @@ size_t base64_decode(std::span<uint8_t> output, std::string_view input, bool ign
 }
 
 secure_vector<uint8_t> base64_decode(const char input[], size_t input_length, bool ignore_ws) {
-   return base_decode_to_vec<secure_vector<uint8_t>>(Base64(), input, input_length, ignore_ws);
+   secure_vector<uint8_t> bin(Base64::decode_max_output(input_length));
+   const size_t written = base64_decode(bin.data(), input, input_length, ignore_ws);
+   bin.resize(written);
+   return bin;
 }
 
 secure_vector<uint8_t> base64_decode(std::string_view input, bool ignore_ws) {

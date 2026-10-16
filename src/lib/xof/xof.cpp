@@ -9,7 +9,7 @@
 #include <botan/xof.h>
 
 #include <botan/assert.h>
-#include <botan/internal/scan_name.h>
+#include <botan/internal/probe_providers.h>
 
 #if defined(BOTAN_HAS_SHAKE_XOF)
    #include <botan/internal/shake_xof.h>
@@ -26,23 +26,21 @@ namespace Botan {
 
 //static
 std::unique_ptr<XOF> XOF::create(std::string_view algo_spec, std::string_view provider) {
-   const SCAN_Name req(algo_spec);
-
    if(!provider.empty() && provider != "base") {
       return nullptr;  // unknown provider
    }
 
 #if defined(BOTAN_HAS_SHAKE_XOF)
-   if(req.algo_name() == "SHAKE-128" && req.arg_count() == 0) {
+   if(algo_spec == "SHAKE-128") {
       return std::make_unique<SHAKE_128_XOF>();
    }
-   if(req.algo_name() == "SHAKE-256" && req.arg_count() == 0) {
+   if(algo_spec == "SHAKE-256") {
       return std::make_unique<SHAKE_256_XOF>();
    }
 #endif
 
 #if defined(BOTAN_HAS_ASCON_XOF128)
-   if(req.algo_name() == "Ascon-XOF128" && req.arg_count() == 0) {
+   if(algo_spec == "Ascon-XOF128") {
       return std::make_unique<Ascon_XOF128>();
    }
 #endif

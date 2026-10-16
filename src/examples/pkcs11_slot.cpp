@@ -35,7 +35,7 @@ int main() {
 
    // initialize the token
    const Botan::PKCS11::secure_string so_pin(8, '0');
-   slot.initialize("Botan PKCS11 documentation test label", so_pin);
+   slot.initialize("Botan PKCS11 documentation test", so_pin);
 
    return 0;
 }

@@ -70,7 +70,6 @@ aesni  -> "-maes -mpclmul"
 rdrand -> "-mrdrnd"
 rdseed -> "-mrdseed"
 sha    -> "-msha"
-altivec -> "-maltivec"
 
 arm64:armv8crypto -> "-march=armv8+crypto"
 arm64:armv8sha512 -> "-march=armv8.2-a+sha3"

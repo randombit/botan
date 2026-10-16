@@ -11,6 +11,7 @@
 #include <botan/internal/ct_utils.h>
 #include <algorithm>
 #include <span>
+#include <utility>
 #include <vector>
 
 namespace Botan {
@@ -234,10 +235,19 @@ inline constexpr ProjectivePoint point_add(const ProjectivePoint& a, const Proje
    return ProjectivePoint(X3, Y3, Z3);
 }
 
+/*
+* Mixed (projective + affine) point addition, additionally returning H
+*
+* If neither input is the identity, the Z coordinate of the sum is a.z * H
+*
+* The parameter curve_a is the a coefficient of the curve the points are on; it
+* is only used in the exceptional case where the addition is a doubling.
+*/
 template <typename ProjectivePoint, typename AffinePoint, typename FieldElement>
-inline constexpr ProjectivePoint point_add_mixed(const ProjectivePoint& a,
-                                                 const AffinePoint& b,
-                                                 const FieldElement& one) {
+inline constexpr std::pair<ProjectivePoint, FieldElement> point_add_mixed_h(const ProjectivePoint& a,
+                                                                            const AffinePoint& b,
+                                                                            const FieldElement& one,
+                                                                            const FieldElement& curve_a) {
    const auto a_is_identity = a.is_identity();
    const auto b_is_identity = b.is_identity();
 
@@ -264,7 +274,7 @@ inline constexpr ProjectivePoint point_add_mixed(const ProjectivePoint& a,
    * (the identity element)
    */
    if((r.is_zero() && H.is_zero() && !(a_is_identity && b_is_identity)).as_bool()) {
-      return a.dbl();
+      return {a.dbl_iso(curve_a), H};
    }
 
    const auto HH = H.square();
@@ -286,14 +296,26 @@ inline constexpr ProjectivePoint point_add_mixed(const ProjectivePoint& a,
    // if b is identity then return a
    FieldElement::conditional_assign(X3, Y3, Z3, b_is_identity, a.x(), a.y(), a.z());
 
-   return ProjectivePoint(X3, Y3, Z3);
+   return {ProjectivePoint(X3, Y3, Z3), H};
 }
 
+template <typename ProjectivePoint, typename AffinePoint, typename FieldElement>
+inline constexpr ProjectivePoint point_add_mixed(const ProjectivePoint& a,
+                                                 const AffinePoint& b,
+                                                 const FieldElement& one,
+                                                 const FieldElement& curve_a) {
+   return point_add_mixed_h<ProjectivePoint, AffinePoint, FieldElement>(a, b, one, curve_a).first;
+}
+
+/*
+* As with point_add_mixed_h, curve_a is only used if the addition is a doubling
+*/
 template <typename ProjectivePoint, typename AffinePoint, typename FieldElement>
 inline constexpr ProjectivePoint point_add_or_sub_mixed(const ProjectivePoint& a,
                                                         const AffinePoint& b,
                                                         CT::Choice sub,
-                                                        const FieldElement& one) {
+                                                        const FieldElement& one,
+                                                        const FieldElement& curve_a) {
    const auto a_is_identity = a.is_identity();
    const auto b_is_identity = b.is_identity();
 
@@ -323,7 +345,7 @@ inline constexpr ProjectivePoint point_add_or_sub_mixed(const ProjectivePoint& a
    * (the identity element)
    */
    if((r.is_zero() && H.is_zero() && !(a_is_identity && b_is_identity)).as_bool()) {
-      return a.dbl();
+      return a.dbl_iso(curve_a);
    }
 
    const auto HH = H.square();

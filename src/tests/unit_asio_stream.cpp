@@ -23,8 +23,10 @@
 
 namespace Botan_Tests {
 
+namespace {
+
 namespace net = boost::asio;
-using error_code = boost::system::error_code;
+using boost::system::error_code;
 
 constexpr uint8_t TEST_DATA[] =
    "The story so far: In the beginning the Universe was created. "
@@ -84,10 +86,12 @@ class ThrowingMockChannel : public MockChannel {
 
       explicit ThrowingMockChannel(std::shared_ptr<Botan::TLS::Callbacks> core) : MockChannel(std::move(core)) {}
 
+      // NOLINTNEXTLINE(bugprone-derived-method-shadowing-base-method)
       std::size_t received_data(std::span<const uint8_t> /*data*/) {
          throw Botan::TLS::Unexpected_Message("test_error");
       }
 
+      // NOLINTNEXTLINE(bugprone-derived-method-shadowing-base-method)
       void send(std::span<const uint8_t> /*data*/) { throw Botan::TLS::Unexpected_Message("test_error"); }
 };
 
@@ -95,6 +99,7 @@ class CancellingMockChannel : public MockChannel {
    public:
       explicit CancellingMockChannel(std::shared_ptr<Botan::TLS::Callbacks> core) : MockChannel(std::move(core)) {}
 
+      // NOLINTNEXTLINE(bugprone-derived-method-shadowing-base-method)
       std::size_t received_data(std::span<const uint8_t> /*data*/) {
          received_close_notify();
          return 0;
@@ -164,7 +169,7 @@ class Asio_Stream_Tests final : public Test {
 
       void test_sync_handshake(std::vector<Test::Result>& results) {
          net::io_context ioc;
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc, test_data());
 
          ssl.handshake(Botan::TLS::Connection_Side::Client);
@@ -180,7 +185,7 @@ class Asio_Stream_Tests final : public Test {
          FailCount fc{0, net::error::no_recovery};
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc, fc);
          ssl.next_layer().connect(remote);
 
@@ -200,7 +205,7 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          CancellingAsioStream ssl(ctx, ioc, test_data());
          ssl.next_layer().connect(remote);
 
@@ -221,7 +226,7 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          ThrowingAsioStream ssl(ctx, ioc, test_data());
          ssl.next_layer().connect(remote);
 
@@ -238,7 +243,7 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc, test_data());
          ssl.next_layer().connect(remote);
 
@@ -266,7 +271,7 @@ class Asio_Stream_Tests final : public Test {
          FailCount fc{0, net::error::no_recovery};
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc, fc);
          ssl.next_layer().connect(remote);
 
@@ -290,7 +295,7 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          CancellingAsioStream ssl(ctx, ioc, test_data());
          ssl.next_layer().connect(remote);
 
@@ -315,7 +320,7 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          ThrowingAsioStream ssl(ctx, ioc, test_data());
          ssl.next_layer().connect(remote);
 
@@ -335,14 +340,14 @@ class Asio_Stream_Tests final : public Test {
       void test_sync_read_some_success(std::vector<Test::Result>& results) {
          net::io_context ioc;
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc, test_data());
 
          const std::size_t buf_size = 128;
          uint8_t buf[buf_size];
          error_code ec;
 
-         auto bytes_transferred = net::read(ssl, net::mutable_buffer(buf, sizeof(buf)), ec);
+         const auto bytes_transferred = net::read(ssl, net::mutable_buffer(buf, sizeof(buf)), ec);
 
          Test::Result result("sync read_some success");
          result.test_is_true("reads the correct data", contains(buf, TEST_DATA, buf_size));
@@ -355,7 +360,7 @@ class Asio_Stream_Tests final : public Test {
       void test_sync_read_some_buffer_sequence(std::vector<Test::Result>& results) {
          net::io_context ioc;
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc, test_data());
          error_code ec;
 
@@ -365,7 +370,7 @@ class Asio_Stream_Tests final : public Test {
          data.emplace_back(net::mutable_buffer(buf1, TEST_DATA_SIZE / 2));
          data.emplace_back(net::mutable_buffer(buf2, TEST_DATA_SIZE / 2));
 
-         auto bytes_transferred = net::read(ssl, data, ec);
+         const auto bytes_transferred = net::read(ssl, data, ec);
 
          Test::Result result("sync read_some buffer sequence");
 
@@ -384,14 +389,14 @@ class Asio_Stream_Tests final : public Test {
          FailCount fc{0, net::error::no_recovery};
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc, fc);
          ssl.next_layer().connect(remote);
 
          uint8_t buf[128];
          error_code ec;
 
-         auto bytes_transferred = net::read(ssl, net::mutable_buffer(buf, sizeof(buf)), ec);
+         const auto bytes_transferred = net::read(ssl, net::mutable_buffer(buf, sizeof(buf)), ec);
 
          Test::Result result("sync read_some error");
          result.test_sz_eq("didn't transfer anything", bytes_transferred, 0);
@@ -404,14 +409,14 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          ThrowingAsioStream ssl(ctx, ioc, test_data());
          ssl.next_layer().connect(remote);
 
          uint8_t buf[128];
          error_code ec;
 
-         auto bytes_transferred = net::read(ssl, net::mutable_buffer(buf, sizeof(buf)), ec);
+         const auto bytes_transferred = net::read(ssl, net::mutable_buffer(buf, sizeof(buf)), ec);
 
          Test::Result result("sync read_some throw");
          result.test_sz_eq("didn't transfer anything", bytes_transferred, 0);
@@ -423,14 +428,14 @@ class Asio_Stream_Tests final : public Test {
       void test_sync_read_zero_buffer(std::vector<Test::Result>& results) {
          net::io_context ioc;
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc);
 
          const std::size_t buf_size = 128;
          uint8_t buf[buf_size];
          error_code ec;
 
-         auto bytes_transferred = net::read(ssl, net::mutable_buffer(buf, std::size_t(0)), ec);
+         const auto bytes_transferred = net::read(ssl, net::mutable_buffer(buf, std::size_t(0)), ec);
 
          Test::Result result("sync read_some into zero-size buffer");
          result.test_sz_eq("reads the correct amount of data", bytes_transferred, 0);
@@ -445,7 +450,7 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          const TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc, test_data());
          uint8_t data[TEST_DATA_SIZE]{};
 
@@ -467,7 +472,7 @@ class Asio_Stream_Tests final : public Test {
 
       void test_async_read_some_buffer_sequence(std::vector<Test::Result>& results) {
          net::io_context ioc;
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc, test_data());
 
          std::vector<net::mutable_buffer> data;
@@ -497,7 +502,7 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          // fail right away
          FailCount fc{0, net::error::no_recovery};
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc, fc);
          uint8_t data[TEST_DATA_SIZE];
 
@@ -518,7 +523,7 @@ class Asio_Stream_Tests final : public Test {
 
       void test_async_read_some_throw(std::vector<Test::Result>& results) {
          net::io_context ioc;
-         auto ctx = get_context();
+         const auto ctx = get_context();
          ThrowingAsioStream ssl(ctx, ioc, test_data());
          uint8_t data[TEST_DATA_SIZE];
 
@@ -541,7 +546,7 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          const TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc);
          uint8_t data[TEST_DATA_SIZE];
 
@@ -566,12 +571,12 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc);
          ssl.next_layer().connect(remote);
          error_code ec;
 
-         auto bytes_transferred = net::write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
+         const auto bytes_transferred = net::write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
 
          Test::Result result("sync write_some success");
          result.test_is_true("writes the correct data", remote.str() == test_data());
@@ -585,7 +590,7 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          Botan::TLS::Stream<TestStream> ssl(ctx, ioc);  // Note that we're not using MockChannel here
          ssl.next_layer().connect(remote);
          error_code ec;
@@ -602,7 +607,7 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc);
          ssl.next_layer().connect(remote);
          error_code ec;
@@ -618,7 +623,7 @@ class Asio_Stream_Tests final : public Test {
             data.emplace_back(net::const_buffer(random_data.data() + i, 1024));
          }
 
-         auto bytes_transferred = net::write(ssl, data, ec);
+         const auto bytes_transferred = net::write(ssl, data, ec);
 
          Test::Result result("sync write_some buffer sequence");
 
@@ -640,13 +645,13 @@ class Asio_Stream_Tests final : public Test {
          FailCount fc{0, net::error::no_recovery};
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc, fc);
          ssl.next_layer().connect(remote);
 
          error_code ec;
 
-         auto bytes_transferred = net::write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
+         const auto bytes_transferred = net::write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
 
          Test::Result result("sync write_some error");
          result.test_sz_eq("didn't transfer anything", bytes_transferred, 0);
@@ -659,12 +664,12 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          ThrowingAsioStream ssl(ctx, ioc);
          ssl.next_layer().connect(remote);
          error_code ec;
 
-         auto bytes_transferred = net::write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
+         const auto bytes_transferred = net::write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
 
          Test::Result result("sync write_some throw");
          result.test_sz_eq("didn't transfer anything", bytes_transferred, 0);
@@ -677,7 +682,7 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc);
          ssl.next_layer().connect(remote);
 
@@ -699,7 +704,7 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc);
          ssl.next_layer().connect(remote);
 
@@ -739,7 +744,7 @@ class Asio_Stream_Tests final : public Test {
          FailCount fc{0, net::error::no_recovery};
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          AsioStream ssl(ctx, ioc, fc);
          ssl.next_layer().connect(remote);
 
@@ -760,7 +765,7 @@ class Asio_Stream_Tests final : public Test {
          net::io_context ioc;
          TestStream remote{ioc};
 
-         auto ctx = get_context();
+         const auto ctx = get_context();
          ThrowingAsioStream ssl(ctx, ioc);
          ssl.next_layer().connect(remote);
 
@@ -820,6 +825,8 @@ class Asio_Stream_Tests final : public Test {
 };
 
 BOTAN_REGISTER_TEST("tls", "tls_asio_stream", Asio_Stream_Tests);
+
+}  // namespace
 
 }  // namespace Botan_Tests
 

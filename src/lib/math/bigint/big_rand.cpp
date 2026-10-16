@@ -7,9 +7,10 @@
 
 #include <botan/bigint.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/rng.h>
-#include <botan/internal/rounding.h>
+#include <botan/internal/bit_ops.h>
 
 namespace Botan {
 
@@ -22,7 +23,7 @@ void BigInt::randomize(RandomNumberGenerator& rng, size_t bitsize, bool set_high
    if(bitsize == 0) {
       clear();
    } else {
-      secure_vector<uint8_t> array = rng.random_vec(round_up(bitsize, 8) / 8);
+      secure_vector<uint8_t> array = rng.random_vec(ceil_tobytes(bitsize));
 
       // Always cut unwanted bits
       if(bitsize % 8 > 0) {

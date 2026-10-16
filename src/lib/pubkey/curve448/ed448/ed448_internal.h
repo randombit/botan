@@ -40,6 +40,9 @@ class BOTAN_TEST_API Ed448Point final {
       /// Return the identity element
       static Ed448Point identity() { return Ed448Point(Gf448Elem::zero(), Gf448Elem::one()); }
 
+      /// Return true if this is the identity element
+      bool is_identity() const { return m_x.is_zero() && m_y == m_z; }
+
       /// Encode the point to its 57-byte representation (RFC 8032 5.2.2)
       std::array<uint8_t, ED448_LEN> encode() const;
 
@@ -132,6 +135,15 @@ bool verify_signature(std::span<const uint8_t, ED448_LEN> pk,
                       std::span<const uint8_t> context,
                       std::span<const uint8_t> sig,
                       std::span<const uint8_t> msg);
+
+/**
+* Check that this is a valid public key point encoding: it must decode,
+* must not be the identity or another point of small order, and must lie
+* within the prime order subgroup
+*
+* @throw Decoding_Error if any of these checks fail
+*/
+void ed448_validate_public_key_point(std::span<const uint8_t, ED448_LEN> pk);
 
 }  // namespace Botan
 

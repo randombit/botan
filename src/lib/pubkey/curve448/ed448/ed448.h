@@ -52,11 +52,17 @@ class BOTAN_PUBLIC_API(3, 4) Ed448_PublicKey : public virtual Public_Key {
       * Create a Ed448 Public Key.
       * @param alg_id the X.509 algorithm identifier
       * @param key_bits DER encoded public key bits
+      *
+      * Throws Decoding_Error if the key is invalid; see the raw constructor
       */
       Ed448_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
 
       /**
       * Create a Ed448 Public Key from bytes (57 Bytes).
+      *
+      * Throws Decoding_Error if the encoding is invalid, or if the point is
+      * the identity, has small order, or lies outside the prime order
+      * subgroup. No further checks are needed once the key is constructed.
       */
       BOTAN_FUTURE_EXPLICIT Ed448_PublicKey(std::span<const uint8_t> key_bits);
 
@@ -69,6 +75,13 @@ class BOTAN_PUBLIC_API(3, 4) Ed448_PublicKey : public virtual Public_Key {
    protected:
       Ed448_PublicKey() = default;
       std::shared_ptr<const Ed448_PublicKey_Data> m_public;  // NOLINT(*non-private-member-variable*)
+
+   private:
+      friend class Ed448_PrivateKey;
+
+      // Shares already validated key data, so the private key's public_key()
+      // need not repeat the checks performed when decoding
+      explicit Ed448_PublicKey(std::shared_ptr<const Ed448_PublicKey_Data> key) : m_public(std::move(key)) {}
 };
 
 BOTAN_DIAGNOSTIC_PUSH

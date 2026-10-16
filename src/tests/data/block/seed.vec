@@ -1,5 +1,5 @@
 
-#test cpuid gfni aesni armv8aes
+#test cpuid gfni aesni armv8aes power_crypto
 
 [SEED]
 Key = 00000000000000000000000000000000

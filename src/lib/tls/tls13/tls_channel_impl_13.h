@@ -3,6 +3,7 @@
 * (C) 2022 Jack Lloyd
 *     2021 Elektrobit Automotive GmbH
 *     2022 Hannes Rantzsch, René Meusel - neXenio GmbH
+*     2026 Amos Treiber, René Meusel - Rohde & Schwarz Networks and Cybersecurity GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,112 +11,21 @@
 #ifndef BOTAN_TLS_CHANNEL_IMPL_13_H_
 #define BOTAN_TLS_CHANNEL_IMPL_13_H_
 
-#include <botan/tls_messages_13.h>
-#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_channel_impl.h>
 #include <botan/internal/tls_connection_state_13.h>
-#include <botan/internal/tls_handshake_layer_13.h>
-#include <botan/internal/tls_record_layer_13.h>
+#include <botan/internal/tls_flight_13.h>
+#include <botan/internal/tls_record_13.h>
 #include <botan/internal/tls_transcript_hash_13.h>
 
 namespace Botan::TLS {
 
 class Cipher_State;
-
-/**
- * Encapsulates the callbacks in the state machine described in RFC 8446 7.1,
- * that will make the realisation the SSLKEYLOGFILE for connection debugging
- * specified in ietf.org/archive/id/draft-thomson-tls-keylogfile-00.html
- *
- * The class is split from the rest of the Channel_Impl_13 for mockability.
- */
-class Secret_Logger /* NOLINT(*-special-member-functions) */ {
-   public:
-      virtual ~Secret_Logger() = default;
-
-      friend class Cipher_State;
-
-   protected:
-      /**
-       * Used exclusively in the Cipher_State to pass secret data to
-       * a user-provided Callbacks::tls_ssl_key_log_data() iff
-       * Policy::allow_ssl_key_log_file() returns true.
-       */
-      virtual void maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const = 0;
-};
+class Channel_IO;
 
 /**
 * Generic interface for TLS 1.3 endpoint
 */
-class Channel_Impl_13 : public Channel_Impl,
-                        protected Secret_Logger {
-   protected:
-      /**
-       * Helper class to coalesce handshake messages into a single TLS record
-       * of type 'Handshake'. This is used entirely internally in the Channel,
-       * Client and Server implementations.
-       *
-       * Note that implementations should use the derived classes that either
-       * aggregate conventional Handshake messages or Post-Handshake messages.
-       */
-      class AggregatedMessages {
-         public:
-            AggregatedMessages(Channel_Impl_13& channel, Handshake_Layer& handshake_layer);
-
-            AggregatedMessages(const AggregatedMessages&) = delete;
-            AggregatedMessages& operator=(const AggregatedMessages&) = delete;
-            AggregatedMessages(AggregatedMessages&&) = delete;
-            AggregatedMessages& operator=(AggregatedMessages&&) = delete;
-
-            ~AggregatedMessages() = default;
-
-            /**
-             * Send the messages aggregated in the message buffer.
-             */
-            void send() const;
-
-            bool contains_messages() const { return !m_message_buffer.empty(); }
-
-         protected:
-            std::vector<uint8_t> m_message_buffer;  // NOLINT(*non-private-member-variable*)
-
-            Channel_Impl_13& m_channel;          // NOLINT(*non-private-member-variable*)
-            Handshake_Layer& m_handshake_layer;  // NOLINT(*non-private-member-variable*)
-      };
-
-      /**
-       * Aggregate conventional handshake messages. This will update the given
-       * Transcript_Hash_State accordingly as individual messages are added to
-       * the aggregation.
-       */
-      class AggregatedHandshakeMessages : public AggregatedMessages {
-         public:
-            AggregatedHandshakeMessages(Channel_Impl_13& channel,
-                                        Handshake_Layer& handshake_layer,
-                                        Transcript_Hash_State& transcript_hash);
-
-            /**
-             * Adds a single handshake message to the send buffer. Note that this
-             * updates the handshake transcript hash regardless of sending the
-             * message.
-             */
-            AggregatedHandshakeMessages& add(Handshake_Message_13_Ref message);
-
-         private:
-            Transcript_Hash_State& m_transcript_hash;
-      };
-
-      /**
-       * Aggregate post-handshake messages. In contrast to ordinary handshake
-       * messages this does not maintain a Transcript_Hash_State.
-       */
-      class AggregatedPostHandshakeMessages : public AggregatedMessages {
-         public:
-            using AggregatedMessages::AggregatedMessages;
-
-            AggregatedPostHandshakeMessages& add(Post_Handshake_Message_13 message);
-      };
-
+class Channel_Impl_13 : public Channel_Impl {
    public:
       /**
       * Set up a new TLS 1.3 session
@@ -215,53 +125,23 @@ class Channel_Impl_13 : public Channel_Impl,
       bool timeout_check() override { return false; }
 
    protected:
+      /**
+       * Hands ownership of the channel's cipher state to this channel and its
+       * associated Channel_IO. Typically called once the handshake's key
+       * schedule produced the first traffic secrets.
+       *
+       * @return a reference to the handed-off cipher state for convenience
+       */
+      Cipher_State& setup_cipher_state(std::unique_ptr<Cipher_State> cipher_state);
+
       virtual void process_handshake_msg(Handshake_Message_13 msg) = 0;
       virtual void process_post_handshake_msg(Post_Handshake_Message_13 msg) = 0;
       virtual void process_dummy_change_cipher_spec() = 0;
 
-      enum class Compat_Mode_Situation : uint8_t {
-         BeforeSendingAlert,
-         AfterSendingFirstClientHello,
-         BeforeSendingSecondClientHello,
-         BeforeSendingEncryptedClientFlight,
-         AfterSendingFirstServerHello,
-         AfterSendingHelloRetryRequest,
-      };
-
-      virtual void maybe_handle_compatibility_mode(Compat_Mode_Situation situation) = 0;
+      virtual bool compat_mode_ccs_requested() const = 0;
+      virtual void maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const = 0;
 
       void handle(const Key_Update& key_update);
-
-      /**
-       * Schedule a traffic key update to opportunistically happen before the
-       * channel sends application data the next time. Such a key update will
-       * never request a reciprocal key update from the peer.
-       */
-      void opportunistically_update_traffic_keys() { m_opportunistic_key_update = true; }
-
-      template <typename... MsgTs>
-      void send_handshake_message(const std::variant<MsgTs...>& message) {
-         aggregate_handshake_messages().add(generalize_to<Handshake_Message_13_Ref>(message)).send();
-      }
-
-      template <typename MsgT>
-      void send_handshake_message(std::reference_wrapper<MsgT> message) {
-         send_handshake_message(generalize_to<Handshake_Message_13_Ref>(message));
-      }
-
-      void send_post_handshake_message(Post_Handshake_Message_13 message) {
-         aggregate_post_handshake_messages().add(std::move(message)).send();
-      }
-
-      void send_dummy_change_cipher_spec();
-
-      AggregatedHandshakeMessages aggregate_handshake_messages() {
-         return AggregatedHandshakeMessages(*this, m_handshake_layer, m_transcript_hash);
-      }
-
-      AggregatedPostHandshakeMessages aggregate_post_handshake_messages() {
-         return AggregatedPostHandshakeMessages(*this, m_handshake_layer);
-      }
 
       Callbacks& callbacks() const { return *m_callbacks; }
 
@@ -273,10 +153,16 @@ class Channel_Impl_13 : public Channel_Impl,
 
       const Policy& policy() const { return *m_policy; }
 
-   private:
-      void send_record(Record_Type record_type, const std::vector<uint8_t>& record);
+      SecretLoggerFn secret_logger() const;
 
-      void process_alert(const secure_vector<uint8_t>& record);
+      void send_flight(std::vector<Flight::Message> flight);
+
+   private:
+      std::optional<BytesNeeded> process(Handshake_Message_13 handshake_msg);
+      void process(Post_Handshake_Message_13 post_handshake_msg);
+      void process(const Alert_Record& alert_record);
+      void process(const ChangeCipherSpec_Record& ccs_record);
+      void process(const ApplicationData_Record& app_data_record);
 
       /**
        * Terminate the connection (on sending or receiving an error alert) and
@@ -286,9 +172,12 @@ class Channel_Impl_13 : public Channel_Impl,
 
    protected:
       const Connection_Side m_side;                              // NOLINT(*non-private-member-variable*)
-      Transcript_Hash_State m_transcript_hash;                   // NOLINT(*non-private-member-variable*)
-      std::unique_ptr<Cipher_State> m_cipher_state;              // NOLINT(*non-private-member-variable*)
+      std::optional<Transcript_Hash_State> m_transcript_hash;    // NOLINT(*non-private-member-variable*)
+      std::shared_ptr<Cipher_State> m_cipher_state;              // NOLINT(*non-private-member-variable*)
       std::optional<Active_Connection_State_13> m_active_state;  // NOLINT(*non-private-member-variable*)
+
+      /* I/O handling */
+      std::shared_ptr<Channel_IO> m_channel_io;  // NOLINT(*non-private-member-variable*)
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       /**
@@ -331,25 +220,8 @@ class Channel_Impl_13 : public Channel_Impl,
       std::shared_ptr<RandomNumberGenerator> m_rng;
       std::shared_ptr<const Policy> m_policy;
 
-      /* handshake state */
-      Record_Layer m_record_layer;
-      Handshake_Layer m_handshake_layer;
-
       bool m_can_read;
       bool m_can_write;
-
-      bool m_opportunistic_key_update;
-
-      /**
-       * True while a KeyUpdate with "update_requested" is outstanding, i.e.
-       * the peer has not yet replied with a KeyUpdate of its own.
-       */
-      bool m_key_update_requested;
-
-      bool m_first_message_sent;
-      bool m_first_message_received;
-
-      uint64_t m_last_key_update_ms = 0;
 };
 }  // namespace Botan::TLS
 

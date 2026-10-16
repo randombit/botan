@@ -45,6 +45,8 @@
       BOTAN_FUNC_ISA("avx512f,avx512dq,avx512bw,avx512vl,avx512vbmi,avx512vbmi2,avx512bitalg,avx512ifma,bmi,bmi2")
    #define BOTAN_FN_ISA_AVX512_GFNI \
       BOTAN_FUNC_ISA("avx512f,avx512dq,avx512bw,avx512vl,avx512vbmi,avx512vbmi2,avx512bitalg,avx512ifma,gfni")
+   #define BOTAN_FN_ISA_AVX512_POPCNT \
+      BOTAN_FUNC_ISA("avx512f,avx512dq,avx512bw,avx512vl,avx512vbmi,avx512vbmi2,avx512bitalg,avx512ifma,popcnt")
 
    #define BOTAN_FN_ISA_HWAES BOTAN_FN_ISA_AESNI
 #endif
@@ -69,7 +71,8 @@
 
 #if defined(BOTAN_TARGET_ARCH_IS_PPC_FAMILY)
 
-   #define BOTAN_FN_ISA_SIMD_4X32 BOTAN_FUNC_ISA("altivec")
+   #define BOTAN_FN_ISA_SIMD_4X32 BOTAN_FUNC_ISA("power8-vector")
+   #define BOTAN_FN_ISA_SIMD_2X64 BOTAN_FUNC_ISA("power8-vector")
    #define BOTAN_FN_ISA_CLMUL BOTAN_FUNC_ISA("vsx,crypto")
    #define BOTAN_FN_ISA_AES BOTAN_FUNC_ISA("vsx,crypto")
    #define BOTAN_FN_ISA_RNG BOTAN_FUNC_ISA("cpu=power9")

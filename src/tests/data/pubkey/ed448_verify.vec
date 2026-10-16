@@ -1,0 +1,10 @@
+[Pure]
+
+# A signature with R equal to the identity element and S = k*s. RFC 8032 5.2.3
+# decodes the identity like any other point and the verification equation
+# [S]B = R + [k]A holds, so this must be accepted. Only the holder of the
+# private key can produce it (it corresponds to the nonce r being zero mod L).
+PublicKey = 419610a534af127f583b04818cdb7f0ff300b025f2e01682bcae33fd691cee039511df0cddc690ee978426e8b38e50ce5af7dcfba50f704c00
+Msg = 3f
+Valid = 1
+Signature = 010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000f1da208c6b3574b532a37d56ef35a363cf83a70889f739141733054a82a67ca6c50df77e8776a0e9cc88b497c6fa9ea05a30e4ac02c0ac0900

@@ -190,7 +190,7 @@ class Concatenated_Compression_Tests final : public Test {
                const Botan::secure_vector<uint8_t> msg2 = {'W', 'o', 'r', 'l', 'd'};
 
                // Compress two messages independently
-               auto compress = [&](const Botan::secure_vector<uint8_t>& msg) {
+               const auto compress = [&](const Botan::secure_vector<uint8_t>& msg) {
                   Botan::secure_vector<uint8_t> buf = msg;
                   c->start(6);
                   c->update(buf, 0, false);

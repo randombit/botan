@@ -863,6 +863,13 @@ class Sodium_API_Tests : public Test {
             "reject invalid",
             Botan::Sodium::crypto_sign_ed25519_verify_detached(sig.data(), msg.data(), msg.size(), pk.data()));
 
+         // The public half of the secret key must match the seed
+         auto bad_sk = sk;
+         bad_sk[63] ^= 0x01;
+         result.test_throws("mismatched keypair rejected", [&]() {
+            Botan::Sodium::crypto_sign_ed25519_detached(sig.data(), &sig_len, msg.data(), msg.size(), bad_sk.data());
+         });
+
          return result;
       }
 

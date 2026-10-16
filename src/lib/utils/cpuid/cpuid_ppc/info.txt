@@ -7,6 +7,10 @@ name -> "CPUID for POWER/PowerPC"
 </module_info>
 
 <arch>
-ppc32
 ppc64
 </arch>
+
+<requires>
+# On PowerPC/POWER all known ways of checking cpuid features requires OS help
+os_utils
+</requires>

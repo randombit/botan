@@ -1,0 +1,11 @@
+<defines>
+TELEPHONE_NUMBER -> 20260928
+</defines>
+
+<module_info>
+name -> "Telephone number"
+</module_info>
+
+<header:public>
+telephone_number.h
+</header:public>

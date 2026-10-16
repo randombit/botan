@@ -4,6 +4,7 @@ allow_tls12 = false
 allow_tls13 = true
 allow_dtls10 = false
 allow_dtls12 = false
+allow_ssl_key_log_file = true
 accepted_server_certificate_types=RawPublicKey
 accepted_client_certificate_types=RawPublicKey
 require_client_certificate_authentication=true

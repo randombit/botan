@@ -82,7 +82,7 @@ void shim_log(std::string_view s) {
          return {};
       }
 
-      auto log_file_path = std::string(env);
+      const auto log_file_path = std::string(env);
       if(log_file_path.empty() || log_file_path == "1") {
          return "/tmp/bogo_shim.log";
       }
@@ -389,7 +389,7 @@ std::string map_to_bogo_error(const std::string& e) noexcept {
       {"Application did not provide a means to validate the raw public key", ":CERTIFICATE_VERIFY_FAILED:"},
    };
 
-   auto err_map_i = err_map.find(e);
+   const auto err_map_i = err_map.find(e);
    if(err_map_i != err_map.end()) {
       return err_map_i->second;
    }
@@ -648,7 +648,7 @@ class Shim_Arguments final {
             throw Shim_Exception("Unknown int vec key " + key);
          }
 
-         auto i = m_parsed_int_vec_opts.find(key);
+         const auto i = m_parsed_int_vec_opts.find(key);
          if(i == m_parsed_int_vec_opts.end()) {
             return std::vector<size_t>();
          } else {
@@ -684,7 +684,7 @@ class Shim_Arguments final {
 
    private:
       std::string get_opt(const std::string& key) const {
-         auto i = m_parsed_opts.find(key);
+         const auto i = m_parsed_opts.find(key);
          if(i == m_parsed_opts.end()) {
             throw Shim_Exception("Option " + key + " was not provided");
          }
@@ -741,7 +741,7 @@ std::vector<Shim_Credential> parse_credential_blocks(const std::vector<std::stri
    for(size_t i = 1; i < argv.size(); ++i) {
       const auto& arg = argv[i];
 
-      auto start_block = [&](Shim_Credential::Kind k) {
+      const auto start_block = [&](Shim_Credential::Kind k) {
          flush();
          Shim_Credential block;
          block.kind = k;
@@ -758,7 +758,7 @@ std::vector<Shim_Credential> parse_credential_blocks(const std::vector<std::stri
          // Unsupported credential block kind (resume, SPAKE2+, delegated, etc.).
          flush();
       } else if(current.has_value()) {
-         auto take_arg = [&]() -> std::optional<std::string> {
+         const auto take_arg = [&]() -> std::optional<std::string> {
             if(i + 1 < argv.size()) {
                return argv[++i];
             }
@@ -813,7 +813,7 @@ void Shim_Arguments::parse_args(char* argv[]) {
    while(argv[i] != nullptr) {
       const std::string param(argv[i]);
 
-      if(param.starts_with("-")) {
+      if(param.starts_with('-')) {
          const std::string flag_name = param.substr(1, std::string::npos);
 
          if(m_flags.contains(flag_name)) {
@@ -1228,7 +1228,7 @@ class Shim_Policy final : public Botan::TLS::Policy {
          bool have_classical = false;
          bool have_pq = false;
 
-         for(auto g : groups) {
+         for(const auto g : groups) {
             if(g.is_post_quantum()) {
                if(!have_pq) {
                   to_offer.push_back(g);
@@ -1701,7 +1701,7 @@ class Shim_Credentials final : public Botan::Credentials_Manager {
             return Botan::Credentials_Manager::find_preshared_keys(host, whoami, identities, prf);
          }
 
-         auto id_matches =
+         const auto id_matches =
             identities.empty() || std::find(identities.begin(), identities.end(), m_psk_identity) != identities.end();
 
          if(!id_matches) {
@@ -1918,7 +1918,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
          }
 
          if(!cert_chain.empty() && cert_chain.front().is_self_signed()) {
-            for(auto* const roots : trusted_roots) {
+            for(const auto* const roots : trusted_roots) {
                if(roots->contains(cert_chain.front())) {
                   shim_log("Trusting self-signed certificate");
                   return;
@@ -2151,7 +2151,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
          // is frozen on first access and rounded to the last full second. E.g.
          // storage of sessions does store the timestamp with second-resolution.
          using sec = std::chrono::seconds;
-         static auto g_now = std::chrono::floor<sec>(std::chrono::system_clock::now());
+         static const auto g_now = std::chrono::floor<sec>(std::chrono::system_clock::now());
          return g_now + m_clock_skew;
       }
 
@@ -2168,6 +2168,37 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
       // cookie path throws and every DTLS server test fails.
       std::string tls_peer_network_identity() override { return "bogo-shim-peer"; }
 
+      // Botan registers DTLS retransmission timers here. They are only queued:
+      // the runner must not see packets between AdvanceClock ('T') and its 't'
+      // ACK, so ops are invoked from fire_due_deferred_operations() after the
+      // ACK, never from this callback (also not for a zero delay).
+      void tls_register_deferred_operation(uint64_t monotonic_delay_ms, std::function<void()> op) override {
+         const uint64_t deadline_ms = tls_current_monotonic_clock_ms() + monotonic_delay_ms;
+         m_deferred_operations.emplace_back(Deferred_Operation{deadline_ms, std::move(op)});
+      }
+
+      // Invoke every queued operation whose deadline is within the fudge
+      // interval of the current virtual clock time, earliest first. BoGo's
+      // DTLS-Retransmit-Fudge test advances the clock to timeout-10ms and
+      // expects a retransmit; the library's next_retransmission_timeout()
+      // already treats a <=15ms remainder as expired, so firing the op a
+      // bit early makes the retransmission happen.
+      void fire_due_deferred_operations() {
+         const uint64_t now_ms = tls_current_monotonic_clock_ms();
+         const uint64_t fudge_ms = std::min<uint64_t>(15, m_policy.dtls_initial_timeout() / 2);
+
+         std::stable_sort(m_deferred_operations.begin(), m_deferred_operations.end());
+
+         while(!m_deferred_operations.empty() && m_deferred_operations.front().deadline_ms <= now_ms + fudge_ms) {
+            // Pop the operation from the queue only, then invoke it. op() might
+            // throw an exception or register new deferred operations. Both of
+            // which must happen only after m_deferred_operations got updated.
+            const auto op = std::move(m_deferred_operations.front().op);
+            m_deferred_operations.erase(m_deferred_operations.begin());
+            op();
+         }
+      }
+
       void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& msg) override {
          if(msg.type() == Botan::TLS::Handshake_Type::HelloRetryRequest) {
             m_hello_retry_request = true;
@@ -2175,6 +2206,15 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
       }
 
    private:
+      struct Deferred_Operation {
+            uint64_t deadline_ms;
+            std::function<void()> op;
+
+            friend auto operator<=>(const Deferred_Operation& lhs, const Deferred_Operation& rhs) {
+               return lhs.deadline_ms <=> rhs.deadline_ms;
+            }
+      };
+
       Botan::TLS::Channel* m_channel;
       const Shim_Arguments& m_args;
       Shim_Policy& m_policy;
@@ -2189,6 +2229,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
       // Virtual clock for the DTLS retransmit timer. Tracked in nanoseconds
       // (BoGo's wire unit) to avoid rounding errors
       uint64_t m_dtls_timer_ns = 0;
+      std::vector<Deferred_Operation> m_deferred_operations;
 };
 
 }  // namespace
@@ -2228,7 +2269,7 @@ int main(int /*argc*/, char* argv[]) {
       }
 
       for(size_t i = 0; i != resume_count + 1; ++i) {
-         auto execute_test = [&](const std::string& hostname) {
+         const auto execute_test = [&](const std::string& hostname) {
             Shim_Socket socket(hostname, port, args->flag_set("ipv6"));
 
             shim_log("Connection " + std::to_string(i + 1) + "/" + std::to_string(resume_count + 1));
@@ -2241,8 +2282,8 @@ int main(int /*argc*/, char* argv[]) {
             Botan::store_le(static_cast<uint64_t>(args->get_int_opt("shim-id")), shim_id.data());
             socket.write(shim_id.data(), shim_id.size());
 
-            auto policy = std::make_shared<Shim_Policy>(*args);
-            auto callbacks = std::make_shared<Shim_Callbacks>(*args, socket, *policy);
+            const auto policy = std::make_shared<Shim_Policy>(*args);
+            const auto callbacks = std::make_shared<Shim_Callbacks>(*args, socket, *policy);
 
             if(args->option_used("resumption-delay") && i > 0) {
                shim_log("skewing the clock by " + std::to_string(args->get_int_opt("resumption-delay")) + " seconds");
@@ -2295,11 +2336,10 @@ int main(int /*argc*/, char* argv[]) {
                      chan->received_data(buf.data(), packet_len);
                   } else if(opcode == 'T') {
                      // AdvanceClock: bump the virtual DTLS timer, ACK, and
-                     // THEN fire timeout_check. Any packets emitted during
-                     // the AdvanceClock window (between 'T' and 't' ACK) are
-                     // treated by the runner as unexpected; the retransmit
-                     // packets must arrive only after the ACK, where the
-                     // runner's ReadRetransmit picks them up.
+                     // THEN fire any deferred retransmission ops. Packets
+                     // emitted between 'T' and the 't' ACK are treated by the
+                     // runner as unexpected; retransmits must arrive only
+                     // after the ACK, where ReadRetransmit picks them up.
                      uint8_t timeout_bytes[8];
                      socket.read_exactly(timeout_bytes, sizeof(timeout_bytes));
                      const uint64_t nsec = Botan::load_be<uint64_t>(timeout_bytes, 0);
@@ -2307,7 +2347,7 @@ int main(int /*argc*/, char* argv[]) {
                      callbacks->advance_dtls_timer_ns(nsec);
                      const uint8_t timeout_ack = 't';
                      socket.write(&timeout_ack, 1);
-                     chan->timeout_check();
+                     callbacks->fire_due_deferred_operations();
                   } else if(opcode == 'E') {
                      // ExpectNextTimeout: runner-side self-check that the next
                      // timeout matches its model. Botan doesn't expose the

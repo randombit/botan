@@ -116,7 +116,7 @@ class Mock_Trait final : public Botan::CRYSTALS::Trait_Base<ConstantsT, Mock_Tra
 
 using Kyberish_Trait = Mock_Trait<Kyberish_Constants>;
 
-using Domain = Botan::CRYSTALS::Domain;
+using Botan::CRYSTALS::Domain;
 
 template <Domain D>
 using Kyberish_Poly = Botan::CRYSTALS::Polynomial<Kyberish_Trait, D>;
@@ -130,13 +130,13 @@ std::vector<Test::Result> test_polynomial_basics() {
             [](Test::Result& res) {
                const Kyberish_Poly<Domain::Normal> p;
                res.test_is_true("default constructed poly owns memory", p.owns_storage());
-               for(auto coeff : p) {
+               for(const auto coeff : p) {
                   res.test_i16_eq("default constructed poly has 0 coefficients", coeff, 0);
                }
 
                const Kyberish_Poly<Domain::NTT> p_ntt;
                res.test_is_true("default constructed poly owns memory (NTT)", p_ntt.owns_storage());
-               for(auto coeff : p) {
+               for(const auto coeff : p) {
                   res.test_i16_eq("default constructed poly (NTT) has 0 coefficients", coeff, 0);
                }
             }),
@@ -161,33 +161,33 @@ std::vector<Test::Result> test_polynomial_basics() {
       CHECK("cloned polynomials always manage their storage",
             [](Test::Result& res) {
                const Kyberish_Poly<Domain::Normal> p;
-               auto p2 = p.clone();
+               const auto p2 = p.clone();
                res.test_is_true("cloned poly owns memory", p2.owns_storage());
 
                const Kyberish_PolyVec<Domain::Normal> pv(3);
                for(const auto& poly : pv) {
                   res.require("poly in vector does not own memory", !poly.owns_storage());
-                  auto pv2 = poly.clone();
+                  const auto pv2 = poly.clone();
                   res.test_is_true("cloned poly in vector owns memory", pv2.owns_storage());
                }
 
-               auto pv2 = pv.clone();
+               const auto pv2 = pv.clone();
                for(const auto& poly : pv2) {
                   res.test_is_true("cloned vector polynomial don't own memory", !poly.owns_storage());
                }
 
                const Kyberish_Poly<Domain::NTT> p_ntt;
-               auto p2_ntt = p_ntt.clone();
+               const auto p2_ntt = p_ntt.clone();
                res.test_is_true("cloned poly (NTT) owns memory", p2_ntt.owns_storage());
 
                const Kyberish_PolyVec<Domain::NTT> pv_ntt(3);
                for(const auto& poly : pv_ntt) {
                   res.require("poly (NTT) in vector does not own memory", !poly.owns_storage());
-                  auto pv2_ntt = poly.clone();
+                  const auto pv2_ntt = poly.clone();
                   res.test_is_true("cloned poly (NTT) in vector owns memory", pv2_ntt.owns_storage());
                }
 
-               auto pv2_ntt = pv_ntt.clone();
+               const auto pv2_ntt = pv_ntt.clone();
                for(const auto& poly : pv2_ntt) {
                   res.test_is_true("cloned vector polynomial (NTT) don't own memory", !poly.owns_storage());
                }
@@ -320,7 +320,7 @@ void random_encoding_roundtrips(Test::Result& res, Botan::RandomNumberGenerator&
    using Poly = Botan::CRYSTALS::Polynomial<Trait, Domain::Normal>;
    using T = typename Trait::T;
 
-   auto random_poly = [&rng]() -> Poly {
+   const auto random_poly = [&rng]() -> Poly {
       Poly p;
       std::array<uint8_t, sizeof(T)> buf{};
       for(auto& coeff : p) {

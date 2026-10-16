@@ -110,7 +110,7 @@ void poly_pack_t1(const DilithiumPoly& p, BufferStuffer& stuffer) {
  */
 void poly_pack_w1(const DilithiumPoly& p, BufferStuffer& stuffer, const DilithiumConstants& mode) {
    using Gamma2 = DilithiumConstants::DilithiumGamma2;
-   auto calculate_b = [](auto gamma2) { return ((DilithiumConstants::Q - 1) / (2 * gamma2)) - 1; };
+   const auto calculate_b = [](auto gamma2) { return ((DilithiumConstants::Q - 1) / (2 * gamma2)) - 1; };
    switch(mode.gamma2()) {
       case Gamma2::Qminus1DividedBy88:
          return poly_pack<0, calculate_b(Gamma2::Qminus1DividedBy88)>(p, stuffer);
@@ -373,7 +373,7 @@ DilithiumSerializedPrivateKey encode_keypair(const DilithiumInternalKeypair& key
    BOTAN_ASSERT_NONNULL(pk);
    BOTAN_ASSERT_NONNULL(sk);
    const auto& mode = sk->mode();
-   auto scope = CT::scoped_poison(*sk);
+   const auto scope = CT::scoped_poison(*sk);
 
    DilithiumSerializedPrivateKey serialization(mode.private_key_bytes());
    BufferStuffer stuffer(serialization);
@@ -410,7 +410,7 @@ DilithiumSerializedPrivateKey encode_keypair(const DilithiumInternalKeypair& key
  *               from PublicKey anymore.
  */
 DilithiumInternalKeypair decode_keypair(StrongSpan<const DilithiumSerializedPrivateKey> sk, DilithiumConstants mode) {
-   auto scope = CT::scoped_poison(sk);
+   const auto scope = CT::scoped_poison(sk);
 
    BOTAN_ASSERT_NOMSG(sk.size() == mode.private_key_bytes());
 
@@ -418,7 +418,7 @@ DilithiumInternalKeypair decode_keypair(StrongSpan<const DilithiumSerializedPriv
 
    auto rho = slicer.copy<DilithiumSeedRho>(DilithiumConstants::SEED_RHO_BYTES);
    auto K = slicer.copy<DilithiumSigningSeedK>(DilithiumConstants::SEED_SIGNING_KEY_BYTES);
-   auto tr = slicer.copy<DilithiumHashedPublicKey>(mode.public_key_hash_bytes());
+   const auto tr = slicer.copy<DilithiumHashedPublicKey>(mode.public_key_hash_bytes());
 
    DilithiumPolyVec s1(mode.l());
    for(auto& p : s1) {
@@ -751,7 +751,7 @@ DilithiumPolyVec expand_mask(StrongSpan<const DilithiumSeedRhoPrime> rhoprime,
  */
 std::pair<DilithiumPolyVec, DilithiumPolyVec> power2round(const DilithiumPolyVec& vec) {
    // This procedure is taken verbatim from Dilithium's reference implementation.
-   auto power2round = [d = DilithiumConstants::D](int32_t r) -> std::pair<int32_t, int32_t> {
+   const auto power2round = [d = DilithiumConstants::D](int32_t r) -> std::pair<int32_t, int32_t> {
       const int32_t r1 = (r + (1 << (d - 1)) - 1) >> d;
       const int32_t r0 = r - (r1 << d);
       return {r1, r0};
@@ -849,9 +849,9 @@ std::pair<DilithiumPolyVec, DilithiumPolyVec> decompose(const DilithiumPolyVec& 
 DilithiumPolyVec make_hint(const DilithiumPolyVec& z, const DilithiumPolyVec& r, const DilithiumConstants& mode) {
    BOTAN_DEBUG_ASSERT(z.size() == r.size());
 
-   auto make_hint = [gamma2 = uint32_t(mode.gamma2()),
-                     q_gamma2 = static_cast<uint32_t>(DilithiumConstants::Q) - uint32_t(mode.gamma2())](
-                       int32_t c0, int32_t c1) -> CT::Choice {
+   const auto make_hint = [gamma2 = uint32_t(mode.gamma2()),
+                           q_gamma2 = static_cast<uint32_t>(DilithiumConstants::Q) - uint32_t(mode.gamma2())](
+                             int32_t c0, int32_t c1) -> CT::Choice {
       BOTAN_DEBUG_ASSERT(c0 >= 0);
       BOTAN_DEBUG_ASSERT(c1 >= 0);
 
@@ -891,7 +891,7 @@ void use_hint_on_coefficients(const DilithiumPolyVec& hints, DilithiumPolyVec& v
       return (r1 + m) % m;
    };
 
-   auto use_hint = [&modulo_m](bool hint, int32_t r) -> int32_t {
+   const auto use_hint = [&modulo_m](bool hint, int32_t r) -> int32_t {
       auto [r1, r0] = decompose<gamma2>(r);
 
       if(!hint) {
@@ -946,7 +946,7 @@ bool infinity_norm_within_bound(const DilithiumPolyVec& vec, size_t bound) {
    // for each coefficient is independent of secret data but we must not leak
    // the sign of the centralized representative.
    for(const auto& p : vec) {
-      for(auto c : p) {
+      for(const auto c : p) {
          const auto abs_c = c - is_negative_mask(c).if_set_return(2 * c);
          if(CT::driveby_unpoison(abs_c >= bound)) {
             return false;

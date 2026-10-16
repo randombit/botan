@@ -19,6 +19,8 @@ x86_32:aesni
 x86_64:aesni
 x32:aesni
 arm64:armv8crypto
+ppc64:vsx
+ppc64:powercrypto
 </isa>
 
 <arch>
@@ -26,4 +28,5 @@ x86_32
 x86_64
 x32
 arm64
+ppc64
 </arch>

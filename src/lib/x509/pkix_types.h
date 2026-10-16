@@ -987,7 +987,7 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
       */
       template <typename T>
       std::unique_ptr<T> get_raw(const OID& oid) const {
-         auto extn_info = m_extension_info.find(oid);
+         const auto extn_info = m_extension_info.find(oid);
 
          if(extn_info != m_extension_info.end()) {
             // Unknown_Extension oid_name is empty

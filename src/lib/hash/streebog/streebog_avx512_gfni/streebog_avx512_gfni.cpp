@@ -17,7 +17,7 @@ namespace Botan {
 namespace {
 
 consteval std::array<std::array<uint64_t, 8>, 8> streebog_avx512_affine_table() {
-   auto gfni_mul_matrix = [](uint8_t c) -> uint64_t {
+   const auto gfni_mul_matrix = [](uint8_t c) -> uint64_t {
       uint64_t q = 0;
       for(size_t r = 0; r != 8; ++r) {
          const size_t out_bit = 7 - r;
@@ -102,7 +102,7 @@ BOTAN_FN_ISA_AVX512_GFNI BOTAN_FORCE_INLINE void streebog_lps_x2(__m512i& a, __m
 }  // namespace
 
 void BOTAN_FN_ISA_AVX512_GFNI Streebog::compress_64_avx512_gfni(uint64_t h[8], const uint64_t M[8], uint64_t N) {
-   auto streebog_rc_table = []() consteval -> std::array<std::array<uint64_t, 8>, 12> {
+   const auto streebog_rc_table = []() consteval -> std::array<std::array<uint64_t, 8>, 12> {
       std::array<std::array<uint64_t, 8>, 12> tbl = {};
       for(size_t i = 0; i != 12; ++i) {
          for(size_t j = 0; j != 8; ++j) {

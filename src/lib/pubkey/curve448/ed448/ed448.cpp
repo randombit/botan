@@ -52,11 +52,7 @@ AlgorithmIdentifier Ed448_PublicKey::algorithm_identifier() const {
 }
 
 bool Ed448_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
-   try {
-      Ed448Point::decode(m_public->key());
-   } catch(Decoding_Error&) {
-      return false;
-   }
+   // All possible checks are performed when the key is decoded
    return true;
 }
 
@@ -74,6 +70,11 @@ Ed448_PublicKey::Ed448_PublicKey(std::span<const uint8_t> key_bits) {
    }
    std::array<uint8_t, ED448_LEN> pub{};
    copy_mem(pub, key_bits.first<ED448_LEN>());
+
+   // Rejects the identity, other points of small order, and points outside
+   // the prime order subgroup, so that no later check is needed
+   ed448_validate_public_key_point(pub);
+
    m_public = std::make_shared<const Ed448_PublicKey_Data>(pub);
 }
 
@@ -102,7 +103,7 @@ Ed448_PrivateKey::Ed448_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<
    if(bits.size() != ED448_LEN) {
       throw Decoding_Error("Invalid size for Ed448 private key");
    }
-   auto pub = create_pk_from_sk(std::span(bits).first<ED448_LEN>());
+   const auto pub = create_pk_from_sk(std::span(bits).first<ED448_LEN>());
    m_public = std::make_shared<const Ed448_PublicKey_Data>(pub);
    m_private = std::make_shared<const Ed448_PrivateKey_Data>(std::move(bits));
 }
@@ -116,7 +117,7 @@ Ed448_PrivateKey::Ed448_PrivateKey(std::span<const uint8_t> key_bits) {
    secure_vector<uint8_t> sk(key_bits.begin(), key_bits.end());
    std::array<uint8_t, ED448_LEN> pub{};
    {
-      auto scope = CT::scoped_poison(sk);
+      const auto scope = CT::scoped_poison(sk);
       pub = create_pk_from_sk(std::span(sk).first<ED448_LEN>());
       CT::unpoison(pub);
    }
@@ -125,7 +126,7 @@ Ed448_PrivateKey::Ed448_PrivateKey(std::span<const uint8_t> key_bits) {
 }
 
 std::unique_ptr<Public_Key> Ed448_PrivateKey::public_key() const {
-   return std::make_unique<Ed448_PublicKey>(raw_public_key_bits());
+   return std::unique_ptr<Ed448_PublicKey>(new Ed448_PublicKey(m_public));
 }
 
 secure_vector<uint8_t> Ed448_PrivateKey::private_key_bits() const {
@@ -137,7 +138,7 @@ secure_vector<uint8_t> Ed448_PrivateKey::private_key_bits() const {
 bool Ed448_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
    const auto& sk = m_private->key();
    BOTAN_ASSERT_NOMSG(sk.size() == ED448_LEN);
-   auto scope = CT::scoped_poison(sk);
+   const auto scope = CT::scoped_poison(sk);
    const auto public_point = create_pk_from_sk(std::span(sk).first<ED448_LEN>());
    CT::unpoison(public_point);
    return public_point == m_public->key();
@@ -239,7 +240,7 @@ class Ed448_Sign_Operation final : public PK_Ops::Signature {
       std::vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
          const auto& sk = m_private_key->key();
          BOTAN_ASSERT_NOMSG(sk.size() == ED448_LEN);
-         auto scope = CT::scoped_poison(sk);
+         const auto scope = CT::scoped_poison(sk);
          const auto sig = sign_message(std::span(sk).first<ED448_LEN>(),
                                        std::span(m_public_key->key()).first<ED448_LEN>(),
                                        m_prehash_function.has_value(),
@@ -263,6 +264,11 @@ class Ed448_Sign_Operation final : public PK_Ops::Signature {
 };
 
 AlgorithmIdentifier Ed448_Sign_Operation::algorithm_identifier() const {
+   // RFC 8410 Section 3 defines the OIDs for "the algorithms being ECDH and
+   // EdDSA in pure mode"; there is no identifier for Ed448ph
+   if(m_prehash_function) {
+      throw Not_Implemented("Ed448ph signatures do not have an algorithm identifier");
+   }
    return AlgorithmIdentifier(OID::from_string("Ed448"), AlgorithmIdentifier::USE_EMPTY_PARAM);
 }
 

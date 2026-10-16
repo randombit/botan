@@ -12,6 +12,7 @@ x86_32:ssse3
 x86_64:ssse3
 arm32:neon
 arm64:neon
+ppc64:vsx
 loongarch64:lsx
 wasm:simd128
 </isa>
@@ -21,6 +22,7 @@ x86_32
 x86_64
 arm32
 arm64
+ppc64
 loongarch64
 wasm
 </arch>

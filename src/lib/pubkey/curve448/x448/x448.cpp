@@ -46,8 +46,8 @@ secure_vector<uint8_t> X448_PrivateKey::raw_private_key_bits() const {
 
 namespace {
 void x448_basepoint_from_data(std::span<uint8_t, X448_LEN> mypublic, std::span<const uint8_t, X448_LEN> secret) {
-   auto bp = x448_basepoint(decode_scalar(secret));
-   auto bp_bytes = encode_point(bp);
+   const auto bp = x448_basepoint(decode_scalar(secret));
+   const auto bp_bytes = encode_point(bp);
    copy_mem(mypublic, bp_bytes);
 }
 
@@ -68,7 +68,7 @@ void load_x448_keypair(secure_vector<uint8_t> secret,
    BOTAN_ASSERT_NOMSG(secret.size() == X448_LEN);
    std::array<uint8_t, X448_LEN> pub{};
    {
-      auto scope = CT::scoped_poison(secret);
+      const auto scope = CT::scoped_poison(secret);
       x448_basepoint_from_data(pub, std::span(secret).first<X448_LEN>());
       CT::unpoison(pub);
    }
@@ -83,7 +83,14 @@ AlgorithmIdentifier X448_PublicKey::algorithm_identifier() const {
 }
 
 bool X448_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
-   return true;  // no tests possible?
+   /*
+   * Every clamped scalar is a multiple of the cofactor, so multiplying by one
+   * sends exactly the points of low order to the identity (all zero output).
+   * Nothing else can be checked for a Montgomery u-coordinate.
+   */
+   const std::array<uint8_t, X448_LEN> scalar{};  // clamped to 2^447 by decode_scalar
+   const auto out = encode_point(x448(decode_scalar(scalar), decode_point(m_public->key())));
+   return !CT::all_zeros(out.data(), out.size()).as_bool();
 }
 
 std::vector<uint8_t> X448_PublicKey::raw_public_key_bits() const {
@@ -108,7 +115,9 @@ X448_PublicKey::X448_PublicKey(const AlgorithmIdentifier& alg_id, std::span<cons
 }
 
 X448_PublicKey::X448_PublicKey(std::span<const uint8_t> pub) {
-   BOTAN_ARG_CHECK(pub.size() == X448_LEN, "Invalid size for X448 public key");
+   if(pub.size() != X448_LEN) {
+      throw Decoding_Error("Invalid size for X448 public key");
+   }
    std::array<uint8_t, X448_LEN> pub_arr{};
    copy_mem(pub_arr, pub);
    m_public = std::make_shared<const X448_PublicKey_Data>(pub_arr);
@@ -123,7 +132,9 @@ X448_PrivateKey::X448_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<co
 }
 
 X448_PrivateKey::X448_PrivateKey(std::span<const uint8_t> secret_key) {
-   BOTAN_ARG_CHECK(secret_key.size() == X448_LEN, "Invalid size for X448 private key");
+   if(secret_key.size() != X448_LEN) {
+      throw Decoding_Error("Invalid size for X448 private key");
+   }
    load_x448_keypair(secure_vector<uint8_t>(secret_key.begin(), secret_key.end()), m_public, m_private);
 }
 
@@ -142,7 +153,7 @@ bool X448_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/)
    const auto& pub = m_public->key();
    std::array<uint8_t, X448_LEN> public_point{};
    BOTAN_ASSERT_NOMSG(sk.size() == X448_LEN);
-   auto scope = CT::scoped_poison(sk);
+   const auto scope = CT::scoped_poison(sk);
    x448_basepoint_from_data(public_point, std::span(sk).first<X448_LEN>());
    return CT::is_equal(public_point.data(), pub.data(), pub.size()).as_bool();
 }
@@ -163,7 +174,7 @@ class X448_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
       secure_vector<uint8_t> raw_agree(const uint8_t w_data[], size_t w_len) override {
          const auto& sk = m_key->key();
          BOTAN_ASSERT_NOMSG(sk.size() == X448_LEN);
-         auto scope = CT::scoped_poison(sk);
+         const auto scope = CT::scoped_poison(sk);
 
          const std::span<const uint8_t> w(w_data, w_len);
          if(w.size() != X448_LEN) {

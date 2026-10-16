@@ -57,11 +57,10 @@ class Asio_SocketUDP final : public OS::SocketUDP {
          boost::asio::ip::udp::resolver resolver(m_io);
          boost::asio::ip::udp::resolver::results_type dns_iter;
          boost::system::error_code resolve_ec = boost::asio::error::would_block;
-         resolver.async_resolve(
-            std::string{hostname}, std::string{service}, [&](const boost::system::error_code& e, auto results) {
-               resolve_ec = e;
-               dns_iter = std::move(results);
-            });
+         resolver.async_resolve(hostname, service, [&](const boost::system::error_code& e, auto results) {
+            resolve_ec = e;
+            dns_iter = std::move(results);
+         });
          while(resolve_ec == boost::asio::error::would_block) {
             if(m_timer.expiry() < decltype(m_timer)::clock_type::now()) {
                resolver.cancel();

@@ -7,80 +7,100 @@
 
 #include <botan/internal/cpuid.h>
 
+#include <botan/internal/os_utils.h>
 #include <botan/internal/target_info.h>
-
-#if defined(BOTAN_HAS_OS_UTILS)
-   #include <botan/internal/os_utils.h>
-#endif
 
 namespace Botan {
 
 uint32_t CPUID::CPUID_Data::detect_cpu_features([[maybe_unused]] uint32_t allowed) {
    uint32_t feat = 0;
 
-#if defined(BOTAN_HAS_OS_UTILS)
-
    if(auto auxval = OS::get_auxval_hwcap()) {
-      const auto [hwcap_altivec, hwcap_crypto] = *auxval;
+      const auto [hwcap, hwcap2] = *auxval;
 
       enum class PPC_hwcap_bit : uint64_t /* NOLINT(performance-enum-size) */ {
-         ALTIVEC_bit = (1 << 28),
+         VSX_bit = (1 << 7),
+      };
+
+      enum class PPC_hwcap2_bit : uint64_t /* NOLINT(performance-enum-size) */ {
+         ARCH_2_07_bit = (1U << 31),
          CRYPTO_bit = (1 << 25),
          DARN_bit = (1 << 21),
       };
 
-      feat |= if_set(hwcap_altivec, PPC_hwcap_bit::ALTIVEC_bit, CPUFeature::Bit::ALTIVEC, allowed);
-
-   #if defined(BOTAN_TARGET_ARCH_IS_PPC64)
-      if(is_set(feat, CPUFeature::Bit::ALTIVEC)) {
-         feat |= if_set(hwcap_crypto, PPC_hwcap_bit::CRYPTO_bit, CPUFeature::Bit::POWER_CRYPTO, allowed);
-         feat |= if_set(hwcap_crypto, PPC_hwcap_bit::DARN_bit, CPUFeature::Bit::DARN, allowed);
+      // POWER7 has VSX but lacks the ISA 2.07 vector instructions we rely on
+      if((hwcap2 & static_cast<uint64_t>(PPC_hwcap2_bit::ARCH_2_07_bit)) != 0) {
+         feat |= if_set(hwcap, PPC_hwcap_bit::VSX_bit, CPUFeature::Bit::VSX, allowed);
       }
-   #endif
+
+      if(is_set(feat, CPUFeature::Bit::VSX)) {
+         feat |= if_set(hwcap2, PPC_hwcap2_bit::CRYPTO_bit, CPUFeature::Bit::POWER_CRYPTO, allowed);
+      }
+
+      // DARN is a scalar instruction (ISA 3.0) and does not depend on VSX
+      feat |= if_set(hwcap2, PPC_hwcap2_bit::DARN_bit, CPUFeature::Bit::DARN, allowed);
 
       return feat;
    }
-#endif
 
-#if defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_HAS_OS_UTILS)
+#if defined(BOTAN_USE_GCC_INLINE_ASM)
 
    // NOLINTBEGIN(*-no-assembler)
 
-   auto vmx_probe = []() noexcept -> int {
-      asm("vor 0, 0, 0");
-      return 1;
-   };
+   /*
+   * No auxval available, fall back on probing instructions. A probe is only
+   * executed if the associated feature is allowed, so that a cleared feature
+   * is never executed even during detection.
+   */
 
-   if(is_set(allowed, CPUFeature::Bit::ALTIVEC)) {
-      if(OS::run_cpu_instruction_probe(vmx_probe) == 1) {
-         feat |= CPUFeature::Bit::ALTIVEC;
-      }
-
-   #if defined(BOTAN_TARGET_ARCH_IS_PPC64)
-      auto vcipher_probe = []() noexcept -> int {
-         asm("vcipher 0, 0, 0");
+   if(is_set(allowed, CPUFeature::Bit::VSX)) {
+      // vaddudm is new in ISA 2.07 (POWER8)
+      auto vsx_probe = []() noexcept -> int {
+         asm volatile("vaddudm 0, 0, 0" ::: "v0");
          return 1;
       };
 
-      auto darn_probe = []() noexcept -> int {
-         uint64_t output = 0;
-         asm volatile("darn %0, 1" : "=r"(output));
-         return (~output) != 0;
-      };
-
-      if(is_set(feat, CPUFeature::Bit::ALTIVEC)) {
-         if(OS::run_cpu_instruction_probe(vcipher_probe) == 1) {
-            feat |= CPUFeature::Bit::POWER_CRYPTO & allowed;
-         }
-
-         if(OS::run_cpu_instruction_probe(darn_probe) == 1) {
-            feat |= CPUFeature::Bit::DARN & allowed;
-         }
+      if(OS::run_cpu_instruction_probe(vsx_probe) == 1) {
+         feat |= CPUFeature::Bit::VSX;
       }
-   #endif
    }
 
-   // NOLINTBEGIN(*-no-assembler)
+   if(is_set(feat, CPUFeature::Bit::VSX) && is_set(allowed, CPUFeature::Bit::POWER_CRYPTO)) {
+      auto vcipher_probe = []() noexcept -> int {
+         asm volatile("vcipher 0, 0, 0" ::: "v0");
+         return 1;
+      };
+
+      if(OS::run_cpu_instruction_probe(vcipher_probe) == 1) {
+         feat |= CPUFeature::Bit::POWER_CRYPTO;
+      }
+   }
+
+   // DARN is a scalar instruction (ISA 3.0) and does not depend on VSX
+   if(is_set(allowed, CPUFeature::Bit::DARN)) {
+      auto darn_probe = []() noexcept -> int {
+         /*
+         * DARN returns all ones to indicate a (transient) error. PowerISA 3.0
+         * recommends retrying ten times before giving up, as is done in
+         * Processor_RNG. Here if DARN never produces a value, it is treated as
+         * if the instruction was unavailable.
+         */
+         for(size_t i = 0; i != 10; ++i) {
+            uint64_t output = 0;
+            asm volatile("darn %0, 1" : "=r"(output));
+            if((~output) != 0) {
+               return 1;
+            }
+         }
+         return 0;
+      };
+
+      if(OS::run_cpu_instruction_probe(darn_probe) == 1) {
+         feat |= CPUFeature::Bit::DARN;
+      }
+   }
+
+   // NOLINTEND(*-no-assembler)
 
 #endif
 

@@ -41,7 +41,7 @@ std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::tune_params(size_t output_len
 
    auto pwhash = this->from_iterations(starting_iter);
 
-   auto tune_fn = [&]() {
+   const auto tune_fn = [&]() {
       uint8_t output[32] = {0};
       pwhash->derive_key(output, sizeof(output), "test", 4, nullptr, 0);
    };

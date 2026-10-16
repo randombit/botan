@@ -224,7 +224,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 basic roundtrip");
 
          auto rng = Test::new_rng("PKCS12_basic");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          Botan::PKCS12 bundle;
          bundle.add_key(creds.key);
@@ -301,7 +301,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 without friendly name");
 
          auto rng = Test::new_rng("PKCS12_no_name");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          // No friendly_name set on bundle or in options.
          const auto opts = Botan::PKCS12_Export_Options::legacy_compat("noname");
@@ -324,7 +324,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 with custom iterations");
 
          auto rng = Test::new_rng("PKCS12_iterations");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          // Test with non-default iteration count
          const auto opts = Botan::PKCS12_Export_Options::legacy_compat("itertest").with_iterations(5000);
@@ -344,7 +344,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 key encryption: " + algo);
 
          auto rng = Test::new_rng("PKCS12_key_enc_" + algo);
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          const auto opts =
             Botan::PKCS12_Export_Options("keyenctest").with_key_encryption_algo(algo).with_iterations(2048);
@@ -367,7 +367,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result(test_name);
 
          auto rng = Test::new_rng("PKCS12_cert_enc_" + (algo.empty() ? "none" : algo));
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          auto opts = Botan::PKCS12_Export_Options("certenctest").with_iterations(2048);
          if(!algo.empty()) {
@@ -390,7 +390,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 mixed encryption: key=" + key_algo + " cert=" + cert_algo);
 
          auto rng = Test::new_rng("PKCS12_mixed_" + key_algo + "_" + cert_algo);
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          const auto opts = Botan::PKCS12_Export_Options("mixedtest")
                               .with_key_encryption_algo(key_algo)
@@ -576,7 +576,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 wrong password rejected");
 
          auto rng = Test::new_rng("PKCS12_wrong_pass");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          const auto opts = Botan::PKCS12_Export_Options::legacy_compat("correct");
          Botan::PKCS12 bundle;
@@ -594,7 +594,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 corrupted data rejected");
 
          auto rng = Test::new_rng("PKCS12_corrupt");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          const auto opts = Botan::PKCS12_Export_Options::legacy_compat("test");
          Botan::PKCS12 bundle;
@@ -614,7 +614,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 without MAC");
 
          auto rng = Test::new_rng("PKCS12_no_mac");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          const auto opts = Botan::PKCS12_Export_Options::legacy_compat("nomactest").without_mac();
          Botan::PKCS12 bundle;
@@ -637,7 +637,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 empty password roundtrip");
 
          auto rng = Test::new_rng("PKCS12_empty_pass");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          // An empty password is permitted. PKCS#12 defines an encoding for it,
          // so export must work without a MAC and - although it offers no real
@@ -666,7 +666,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 cert-only bundle");
 
          auto rng = Test::new_rng("PKCS12_cert_only");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          const auto opts = Botan::PKCS12_Export_Options::legacy_compat("certonly");
          Botan::PKCS12 bundle;
@@ -743,7 +743,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 legacy_compat flag");
 
          auto rng = Test::new_rng("PKCS12_legacy_compat");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          // legacy_compat should produce a file readable with "old" defaults
          const auto opts = Botan::PKCS12_Export_Options::legacy_compat("legacytest");
@@ -792,7 +792,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 builder workflow (new API)");
 
          auto rng = Test::new_rng("PKCS12_builder");
-         auto creds = generate_credentials(*rng, "Builder Test");
+         const auto creds = generate_credentials(*rng, "Builder Test");
 
          Botan::PKCS12 bundle;
          bundle.add_key(creds.key);
@@ -829,18 +829,18 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12_Export_Options fluent API");
 
          auto rng = Test::new_rng("PKCS12_fluent");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          Botan::PKCS12 bundle;
          bundle.add_key(creds.key);
          bundle.add_certificate(creds.cert);
 
          // Chain several with_* mutators; each returns *this.
-         auto opts = Botan::PKCS12_Export_Options("fluentpw")
-                        .with_friendly_name("Fluent Key")
-                        .with_iterations(2048)
-                        .with_key_encryption_algo("PBE-SHA1-3DES")
-                        .with_mac_digest("SHA-1");
+         const auto opts = Botan::PKCS12_Export_Options("fluentpw")
+                              .with_friendly_name("Fluent Key")
+                              .with_iterations(2048)
+                              .with_key_encryption_algo("PBE-SHA1-3DES")
+                              .with_mac_digest("SHA-1");
 
          const auto pfx = bundle.export_to(opts, *rng);
          result.test_sz_gt("PFX generated", pfx.size(), 0);
@@ -855,7 +855,8 @@ class PKCS12_Tests final : public Test {
 
          // without_mac() returns *this and disables the MAC. The parser must
          // accept the file without a MAC trailer.
-         auto opts_no_mac = Botan::PKCS12_Export_Options::legacy_compat("nomacpw").without_mac().with_iterations(2048);
+         const auto opts_no_mac =
+            Botan::PKCS12_Export_Options::legacy_compat("nomacpw").without_mac().with_iterations(2048);
          const auto pfx_no_mac = bundle.export_to(opts_no_mac, *rng);
          result.test_sz_gt("PFX (no MAC) generated", pfx_no_mac.size(), 0);
          const Botan::PKCS12 parsed_no_mac(pfx_no_mac, "nomacpw");
@@ -887,11 +888,11 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 multiple private keys");
 
          auto rng = Test::new_rng("PKCS12_multi_key");
-         auto creds1 = generate_credentials(*rng, "Primary");
-         auto creds2 = generate_credentials(*rng, "Secondary");
+         const auto creds1 = generate_credentials(*rng, "Primary");
+         const auto creds2 = generate_credentials(*rng, "Secondary");
 
          // Clone both keys via PKCS#8 so the bundle owns its own copies.
-         auto clone_key = [](const Botan::Private_Key& k) {
+         const auto clone_key = [](const Botan::Private_Key& k) {
             Botan::DataSource_Memory s(Botan::PKCS8::BER_encode(k));
             return std::shared_ptr<Botan::Private_Key>(Botan::PKCS8::load_key(s));
          };
@@ -933,7 +934,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 clear_friendly_name");
 
          auto rng = Test::new_rng("PKCS12_clear_fn");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
          Botan::PKCS12 bundle;
          bundle.add_key(creds.key);
          bundle.add_certificate(creds.cert);
@@ -955,7 +956,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 set_local_key_id / clear_local_key_id");
 
          auto rng = Test::new_rng("PKCS12_lki");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
          const std::vector<uint8_t> custom_id = {0xDE, 0xAD, 0xBE, 0xEF, 0x42};
 
          Botan::PKCS12 bundle;
@@ -1028,13 +1029,13 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12_Export_Options friendly_name overrides bundle");
 
          auto rng = Test::new_rng("PKCS12_fn_override");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
          Botan::PKCS12 bundle;
          bundle.add_key(creds.key);
          bundle.add_certificate(creds.cert);
          bundle.set_friendly_name("Bundle-Level Name");
 
-         auto opts = Botan::PKCS12_Export_Options::modern("ovrpw").with_friendly_name("Options-Level Name");
+         const auto opts = Botan::PKCS12_Export_Options::modern("ovrpw").with_friendly_name("Options-Level Name");
          const auto pfx = bundle.export_to(opts, *rng);
 
          const Botan::PKCS12 parsed(pfx, "ovrpw");
@@ -1045,7 +1046,7 @@ class PKCS12_Tests final : public Test {
 
          // Also verify the opposite path: with no override in options, the
          // bundle FN is what ends up in the PFX.
-         auto opts_no_ovr = Botan::PKCS12_Export_Options::modern("ovrpw");
+         const auto opts_no_ovr = Botan::PKCS12_Export_Options::modern("ovrpw");
          const auto pfx2 = bundle.export_to(opts_no_ovr, *rng);
          const Botan::PKCS12 parsed2(pfx2, "ovrpw");
          result.test_is_true("Parsed has bundle FN", parsed2.friendly_name().has_value());
@@ -1075,7 +1076,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 duplicate certificate not deduplicated");
 
          auto rng = Test::new_rng("PKCS12_dup_cert");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          Botan::PKCS12 bundle;
          bundle.add_key(creds.key);
@@ -1121,7 +1122,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 non-BMP friendly name rejected on export");
 
          auto rng = Test::new_rng("PKCS12_non_bmp");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          Botan::PKCS12 bundle;
          bundle.add_key(creds.key);
@@ -1150,7 +1151,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 trailing data rejected");
 
          auto rng = Test::new_rng("PKCS12_trailing");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          Botan::PKCS12 bundle;
          bundle.add_key(creds.key);
@@ -1198,7 +1199,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 MAC digest: " + digest);
 
          auto rng = Test::new_rng("PKCS12_mac_" + digest);
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          const auto opts = Botan::PKCS12_Export_Options::legacy_compat("digestpw").with_mac_digest(digest);
          Botan::PKCS12 bundle;
@@ -1221,7 +1222,7 @@ class PKCS12_Tests final : public Test {
          Test::Result result("PKCS12 MAC SHA-256 roundtrip");
 
          auto rng = Test::new_rng("PKCS12_mac_sha256");
-         auto creds = generate_credentials(*rng);
+         const auto creds = generate_credentials(*rng);
 
          // Modern defaults: PBES2-SHA256-AES256 key encryption, SHA-256 MAC.
          const auto opts = Botan::PKCS12_Export_Options::modern("mactest").with_iterations(2048);

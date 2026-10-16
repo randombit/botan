@@ -95,7 +95,7 @@ class PerfTest_Scrypt final : public PerfTest {
                   uint8_t salt[8];
                   config.rng().randomize(salt, sizeof(salt));
 
-                  auto runtime = config.runtime();
+                  const auto runtime = config.runtime();
 
                   while(scrypt_timer->under(runtime)) {
                      scrypt_timer->run([&] {
@@ -137,7 +137,7 @@ class PerfTest_PBKDF2 final : public PerfTest {
                config.rng().randomize(salt);
 
                const std::string password = "password";
-               auto runtime = config.runtime();
+               const auto runtime = config.runtime();
 
                std::array<uint8_t, 32> out{};
 

@@ -169,7 +169,7 @@ std::vector<Session_with_Handle> Session_Manager::find_and_filter(const Server_I
 std::vector<Session_with_Handle> Session_Manager::find(const Server_Information& info,
                                                        Callbacks& callbacks,
                                                        const Policy& policy) {
-   auto allow_reusing_tickets = policy.reuse_session_tickets();
+   const auto allow_reusing_tickets = policy.reuse_session_tickets();
 
    // Session_Manager::find() must be an atomic getter if ticket reuse is not
    // allowed. I.e. each ticket handed to concurrently requesting threads must

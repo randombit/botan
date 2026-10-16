@@ -40,7 +40,7 @@ class Print_Help final : public Command {
       std::string help_text() const override {
          std::map<std::string, std::vector<std::unique_ptr<Command>>> grouped_commands;
 
-         auto reg_commands = Command::registered_cmds();
+         const auto reg_commands = Command::registered_cmds();
          for(const auto& cmd_name : reg_commands) {
             auto cmd = Command::get_cmd(cmd_name);
             if(cmd) {
@@ -81,7 +81,7 @@ class Print_Help final : public Command {
                continue;
             }
 
-            auto descr = groups_description.find(group);
+            const auto descr = groups_description.find(group);
             if(descr != groups_description.end()) {
                oss << descr->second;
             } else {

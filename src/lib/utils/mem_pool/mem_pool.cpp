@@ -190,7 +190,7 @@ class BitMap final {
       }
 
       bool empty() const {
-         for(auto bitset : m_bits) {
+         for(const auto bitset : m_bits) {
             if(bitset != 0) {
                return false;
             }

@@ -11,11 +11,10 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/pcurves_algos.h>
+#include <span>
 #include <vector>
 
 namespace Botan {
-
-class RandomNumberGenerator;
 
 /*
 * Multiplication algorithm window size parameters
@@ -23,6 +22,7 @@ class RandomNumberGenerator;
 
 static constexpr size_t BasePointWindowBits = 6;
 static constexpr size_t VarPointWindowBits = 4;
+static constexpr size_t Mul2VartimeWindowBits = 5;
 static constexpr size_t Mul2PrecompWindowBits = 3;
 static constexpr size_t Mul2WindowBits = 2;
 
@@ -49,81 +49,6 @@ constexpr size_t scalar_blinding_bits(size_t scalar_bits) {
       return scalar_bits / 8;
    }
 }
-
-/**
-* A precomputed table of affine points with constant time lookup
-*
-* If R is zero then the entire table is scanned for each lookup.
-*
-* If R is not zero, then the table must be a multiple of R points long.
-* Each lookup will be examine a range of length R, as in
-* pts[0..R], pts[R..2*R], ...
-*/
-template <typename C, size_t R = 0>
-class AffinePointTable final {
-   public:
-      using AffinePoint = typename C::AffinePoint;
-      using ProjectivePoint = typename C::ProjectivePoint;
-      using WordType = typename C::WordType;
-
-      static constexpr bool WholeRangeSearch = (R == 0);
-
-      explicit AffinePointTable(std::span<const ProjectivePoint> pts) {
-         BOTAN_ASSERT_NOMSG(pts.size() > 1);
-
-         if constexpr(R > 0) {
-            BOTAN_ASSERT_NOMSG(pts.size() % R == 0);
-         }
-
-         // TODO scatter/gather with SIMD lookup
-         m_table = to_affine_batch<C>(pts);
-      }
-
-      /**
-      * If idx is zero then return the identity element. Otherwise return pts[idx - 1]
-      */
-      inline AffinePoint ct_select(size_t idx) const
-         requires(WholeRangeSearch)
-      {
-         BOTAN_DEBUG_ASSERT(idx < m_table.size() + 1);
-
-         auto result = AffinePoint::identity(m_table[0]);
-
-         // Intentionally wrapping; set to maximum size_t if idx == 0
-         const size_t idx1 = static_cast<size_t>(idx - 1);
-         for(size_t i = 0; i != m_table.size(); ++i) {
-            const auto found = CT::Mask<size_t>::is_equal(idx1, i).as_choice();
-            result.conditional_assign(found, m_table[i]);
-         }
-
-         return result;
-      }
-
-      /**
-      * If idx is zero then return the identity element. Otherwise return pts[idx - 1]
-      * out of the table subrange pts[iter*R..(iter+1)*R]
-      */
-      inline AffinePoint ct_select(size_t idx, size_t iter) const
-         requires(!WholeRangeSearch)
-      {
-         BOTAN_DEBUG_ASSERT(idx < R + 1);
-         BOTAN_DEBUG_ASSERT(R * (iter + 1) <= m_table.size());
-
-         auto result = AffinePoint::identity(m_table[R * iter]);
-
-         // Intentionally wrapping; set to maximum size_t if idx == 0
-         const size_t idx1 = static_cast<size_t>(idx - 1);
-         for(size_t i = 0; i != R; ++i) {
-            const auto found = CT::Mask<size_t>::is_equal(idx1, i).as_choice();
-            result.conditional_assign(found, m_table[R * iter + i]);
-         }
-
-         return result;
-      }
-
-   private:
-      std::vector<AffinePoint> m_table;
-};
 
 /*
 * Base point precomputation table
@@ -197,10 +122,10 @@ std::vector<typename C::AffinePoint> basemul_setup(const typename C::AffinePoint
    return to_affine_batch<C, true>(table);
 }
 
-template <typename C, size_t WindowBits, typename BlindedScalar>
+template <typename C, size_t WindowBits, typename BlindedScalar, typename Blinding>
 typename C::ProjectivePoint basemul_exec(std::span<const typename C::AffinePoint> table,
                                          const BlindedScalar& scalar,
-                                         RandomNumberGenerator& rng) {
+                                         const Blinding& blinding) {
    // 2^W elements, less the identity element
    static constexpr size_t WindowElements = (1 << WindowBits) - 1;
 
@@ -211,7 +136,7 @@ typename C::ProjectivePoint basemul_exec(std::span<const typename C::AffinePoint
       const auto tbl_0 = table.first(WindowElements);
       auto pt = C::ProjectivePoint::from_affine(C::AffinePoint::ct_select(tbl_0, w_0));
       CT::poison(pt);
-      pt.randomize_rep(rng);
+      blinding.randomize_rep(pt, 0);
       return pt;
    }();
 
@@ -229,8 +154,8 @@ typename C::ProjectivePoint basemul_exec(std::span<const typename C::AffinePoint
       accum += C::AffinePoint::ct_select(tbl_i, w_i);
 
       // Conditional ok: loop iteration count is public
-      if(i <= 3) {
-         accum.randomize_rep(rng);
+      if(i < Blinding::Rerandomizations) {
+         blinding.randomize_rep(accum, i);
       }
    }
 
@@ -288,10 +213,10 @@ std::vector<typename C::AffinePoint> basemul_booth_setup(const typename C::Affin
    return to_affine_batch<C, true>(table);
 }
 
-template <typename C, size_t WindowBits, typename BlindedScalar>
+template <typename C, size_t WindowBits, typename BlindedScalar, typename Blinding>
 typename C::ProjectivePoint basemul_booth_exec(std::span<const typename C::AffinePoint> table,
                                                const BlindedScalar& scalar,
-                                               RandomNumberGenerator& rng) {
+                                               const Blinding& blinding) {
    static constexpr size_t WindowElements = 1 << (WindowBits - 1);
 
    const size_t windows = (scalar.bits() + WindowBits) / WindowBits;
@@ -306,7 +231,7 @@ typename C::ProjectivePoint basemul_booth_exec(std::span<const typename C::Affin
       auto pt = C::ProjectivePoint::from_affine(C::AffinePoint::ct_select(tbl_0, tidx));
       pt.conditional_assign(tneg, pt.negate());
       CT::poison(pt);
-      pt.randomize_rep(rng);
+      blinding.randomize_rep(pt, 0);
       return pt;
    }();
 
@@ -321,8 +246,8 @@ typename C::ProjectivePoint basemul_booth_exec(std::span<const typename C::Affin
       accum = C::ProjectivePoint::add_or_sub(accum, C::AffinePoint::ct_select(tbl_i, tidx), tneg);
 
       // Conditional ok: loop iteration count is public
-      if(i <= 3) {
-         accum.randomize_rep(rng);
+      if(i < Blinding::Rerandomizations) {
+         blinding.randomize_rep(accum, i);
       }
    }
 
@@ -331,44 +256,260 @@ typename C::ProjectivePoint basemul_booth_exec(std::span<const typename C::Affin
 }
 
 /*
-* Variable point table mul setup and online phase
+* Variable time base point multiplication using the Booth table
+*
+* Returns accum + s*P. The scalar is read directly, without blinding or
+* constant time table lookups, so this is only usable when s is public
+* (eg during signature verification).
 */
-template <typename C, size_t TableSize>
-AffinePointTable<C> varpoint_setup(const typename C::AffinePoint& p) {
-   static_assert(TableSize > 2);
+template <typename C, size_t WindowBits, typename ScalarBits>
+typename C::ProjectivePoint basemul_booth_exec_vartime(std::span<const typename C::AffinePoint> table,
+                                                       const ScalarBits& scalar,
+                                                       typename C::ProjectivePoint accum) {
+   static constexpr size_t WindowElements = 1 << (WindowBits - 1);
 
-   std::vector<typename C::ProjectivePoint> table;
-   table.reserve(TableSize);
-   table.push_back(C::ProjectivePoint::from_affine(p));
+   const size_t windows = (scalar.bits() + WindowBits) / WindowBits;
+   BOTAN_DEBUG_ASSERT(windows * WindowElements <= table.size());
 
-   for(size_t i = 1; i != TableSize; ++i) {
-      // Conditional ok: loop iteration count is public
-      if(i % 2 == 1) {
-         table.push_back(table[i / 2].dbl());
-      } else {
-         table.push_back(table[i - 1] + p);
+   for(size_t i = 0; i != windows; ++i) {
+      // Extract W+1 bits overlapping by 1 with the previous window; the
+      // first window has an implicit carry in of zero
+      const size_t raw =
+         (i == 0) ? ((scalar.get_window(0) & ((1 << WindowBits) - 1)) << 1) : scalar.get_window(WindowBits * i - 1);
+
+      const auto [tidx, tneg] = booth_recode<WindowBits>(raw);
+
+      // Conditional ok: this function is variable time
+      if(tidx > 0) {
+         accum = C::ProjectivePoint::add_or_sub(accum, table[WindowElements * i + tidx - 1], tneg);
       }
    }
 
-   return AffinePointTable<C>(table);
+   return accum;
 }
 
-template <typename C, size_t WindowBits, typename BlindedScalar>
-typename C::ProjectivePoint varpoint_exec(const AffinePointTable<C>& table,
+/*
+* Point table with a shared Z coordinate
+*
+* Using table points in mixed additions requires affine coordinates, but
+* converting to affine requires a field inversion. Instead the points are
+* rescaled so that they all share a single Z coordinate Zt, which needs only
+* multiplications.
+*
+* The map (x,y) -> (Zt^2*x, Zt^3*y) is an isomorphism from the curve
+* y^2 = x^3 + a*x + b onto the curve y^2 = x^3 + (a*Zt^4)*x + (b*Zt^6), and
+* under this map the Jacobian point (X, Y, Zt) becomes the affine point (X, Y).
+* So the table entries can be used directly as affine points, provided that
+* all doublings use the coefficient a*Zt^4 (see dbl_n_iso and add_or_sub_iso,
+* which covers the doubling fallback inside the addition formula). A result
+* (X, Y, Z) on the isomorphic curve maps back to (X, Y, Z*Zt) on the original
+* curve.
+*
+* Zt includes a random factor u, so the table entries and the isomorphic curve
+* differ between multiplications even for a fixed input point. This is the
+* random curve isomorphism countermeasure of Joye and Tymen (CHES 2001).
+*/
+template <typename C>
+class SharedZPointTable final {
+   public:
+      using AffinePoint = typename C::AffinePoint;
+      using ProjectivePoint = typename C::ProjectivePoint;
+      using FieldElement = typename C::FieldElement;
+
+      /**
+      * Table of the multiples [P, 2*P, ..., n*P]
+      *
+      * The multiples are computed as a chain of mixed additions, each of which
+      * multiplies Z by a known value H, so the rescaling factors Zt/Z_i are
+      * products of H values.
+      *
+      * @param p the point whose multiples are tabulated
+      * @param n the number of multiples
+      * @param a the a coefficient of the curve
+      * @param u the random isomorphism parameter, which must be nonzero
+      */
+      SharedZPointTable(const AffinePoint& p, size_t n, const FieldElement& a, const FieldElement& u) :
+            SharedZPointTable(build(p, n, a, u)) {}
+
+      /**
+      * Table of arbitrary points
+      *
+      * Here Zt is the product of the Z coordinates, and the rescaling factors
+      * Zt/Z_i are computed using prefix and suffix products. Identity elements
+      * are excluded from the product and remain the identity.
+      *
+      * @param pts the points to tabulate
+      * @param a the a coefficient of the curve
+      * @param one the field element 1
+      * @param u the random isomorphism parameter, which must be nonzero
+      */
+      SharedZPointTable(std::span<const ProjectivePoint> pts,
+                        const FieldElement& a,
+                        const FieldElement& one,
+                        const FieldElement& u) :
+            SharedZPointTable(build(pts, a, one, u)) {}
+
+      /**
+      * If idx is zero then return the identity element. Otherwise return pts[idx - 1]
+      */
+      AffinePoint ct_select(size_t idx) const { return AffinePoint::ct_select(m_table, idx); }
+
+      /**
+      * Return the shared Z coordinate
+      */
+      const FieldElement& z() const { return m_z; }
+
+      /**
+      * Return the a coefficient of the isomorphic curve, a*z^4
+      */
+      const FieldElement& a() const { return m_a; }
+
+   private:
+      struct Table {
+            std::vector<AffinePoint> pts;
+            FieldElement z;
+            FieldElement a;
+      };
+
+      explicit SharedZPointTable(Table t) : m_table(std::move(t.pts)), m_z(t.z), m_a(t.a) {}
+
+      // Return the affine point corresponding to pt after multiplying its Z by f
+      static AffinePoint rescale(const ProjectivePoint& pt, const FieldElement& f) {
+         const auto f2 = f.square();
+         const auto f3 = f2 * f;
+         return AffinePoint(pt.x() * f2, pt.y() * f3);
+      }
+
+      static Table finish(std::vector<AffinePoint> pts, const FieldElement& zt, const FieldElement& a) {
+         const auto zt2 = zt.square();
+         return Table{std::move(pts), zt, a * zt2.square()};
+      }
+
+      static Table build(const AffinePoint& p, size_t n, const FieldElement& a, const FieldElement& u) {
+         BOTAN_ASSERT_NOMSG(n > 2);
+
+         // Chain P, 2*P, 3*P, ... where Z_i = Z_{i-1} * H_i for i >= 2
+         std::vector<ProjectivePoint> chain;
+         chain.reserve(n);
+         // h[i - 2] = H_i
+         std::vector<FieldElement> h;
+         h.reserve(n - 2);
+
+         chain.push_back(ProjectivePoint::from_affine(p));
+         chain.push_back(chain[0].dbl());
+         for(size_t i = 2; i != n; ++i) {
+            const auto pt_h = ProjectivePoint::add_mixed_h(chain[i - 1], p);
+            chain.push_back(pt_h.first);
+            h.push_back(pt_h.second);
+         }
+
+         // The shared Z is u * Z_{n-1}
+         const FieldElement zt = u * chain[n - 1].z();
+
+         // Built in reverse order since the scaling factors are suffix products
+         std::vector<AffinePoint> pts;
+         pts.reserve(n);
+
+         // The last entry is scaled by u alone
+         pts.push_back(rescale(chain[n - 1], u));
+
+         // Entry i is scaled by Zt/Z_i = u * H_{i+1} * ... * H_{n-1}
+         FieldElement mu = u * h[n - 3];
+         for(size_t i = n - 2; i > 0; --i) {
+            // Conditional ok: loop iteration count is public
+            if(i != n - 2) {
+               mu *= h[i - 1];
+            }
+            pts.push_back(rescale(chain[i], mu));
+         }
+
+         // Entry 0 is P itself with Z = 1, so it is scaled by Zt
+         pts.push_back(rescale(chain[0], zt));
+
+         std::reverse(pts.begin(), pts.end());
+
+         return finish(std::move(pts), zt, a);
+      }
+
+      static Table build(std::span<const ProjectivePoint> pts,
+                         const FieldElement& a,
+                         const FieldElement& one,
+                         const FieldElement& u) {
+         const size_t n = pts.size();
+         BOTAN_ASSERT_NOMSG(n > 0);
+
+         // Identity elements have Z = 0; use 1 instead so they do not zero the products
+         std::vector<FieldElement> z;
+         z.reserve(n);
+         for(const auto& pt : pts) {
+            auto z_i = pt.z();
+            z_i.conditional_assign(pt.is_identity(), one);
+            z.push_back(z_i);
+         }
+
+         // prefix[i] = z_0 * ... * z_i
+         std::vector<FieldElement> prefix;
+         prefix.reserve(n);
+         prefix.push_back(z[0]);
+         for(size_t i = 1; i != n; ++i) {
+            prefix.push_back(prefix[i - 1] * z[i]);
+         }
+
+         // The shared Z is u * z_0 * ... * z_{n-1}
+         const FieldElement zt = u * prefix[n - 1];
+
+         // Entry i is scaled by Zt/Z_i = u * prefix[i-1] * z_{i+1} * ... * z_{n-1};
+         // built in reverse order since the second part is a suffix product
+         std::vector<AffinePoint> scaled;
+         scaled.reserve(n);
+
+         FieldElement suffix = u;
+         for(size_t i = n; i > 0; --i) {
+            const size_t idx = i - 1;
+
+            auto pt = [&]() {
+               // Conditional ok: idx is public
+               if(idx == 0) {
+                  return rescale(pts[idx], suffix);
+               } else {
+                  return rescale(pts[idx], prefix[idx - 1] * suffix);
+               }
+            }();
+            pt.conditional_assign(pts[idx].is_identity(), AffinePoint::identity(pt));
+            scaled.push_back(pt);
+
+            suffix *= z[idx];
+         }
+
+         std::reverse(scaled.begin(), scaled.end());
+
+         return finish(std::move(scaled), zt, a);
+      }
+
+      std::vector<AffinePoint> m_table;
+      FieldElement m_z;
+      FieldElement m_a;
+};
+
+/*
+* Variable point table mul online phase
+*/
+template <typename C, size_t WindowBits, typename BlindedScalar, typename Blinding>
+typename C::ProjectivePoint varpoint_exec(const SharedZPointTable<C>& table,
                                           const BlindedScalar& scalar,
-                                          RandomNumberGenerator& rng) {
+                                          const Blinding& blinding) {
    const size_t windows = (scalar.bits() + WindowBits - 1) / WindowBits;
 
    auto accum = [&]() {
       const size_t w_0 = scalar.get_window((windows - 1) * WindowBits);
       auto pt = C::ProjectivePoint::from_affine(table.ct_select(w_0));
       CT::poison(pt);
-      pt.randomize_rep(rng);
+      blinding.randomize_rep(pt, 0);
       return pt;
    }();
 
    for(size_t i = 1; i != windows; ++i) {
-      accum = accum.dbl_n(WindowBits);
+      accum = accum.dbl_n_iso(table.a(), WindowBits);
       auto w_i = scalar.get_window((windows - i - 1) * WindowBits);
 
       /*
@@ -397,16 +538,44 @@ typename C::ProjectivePoint varpoint_exec(const AffinePointTable<C>& table,
       it is not possible for the dlog of accum to overflow a second time.
       */
 
-      accum += table.ct_select(w_i);
+      accum = C::ProjectivePoint::add_mixed_iso(accum, table.ct_select(w_i), table.a());
 
       // Conditional ok: loop iteration count is public
-      if(i <= 3) {
-         accum.randomize_rep(rng);
+      if(i < Blinding::Rerandomizations) {
+         blinding.randomize_rep(accum, i);
       }
    }
 
    CT::unpoison(accum);
-   return accum;
+
+   // Map back from the isomorphic curve
+   return typename C::ProjectivePoint(accum.x(), accum.y(), accum.z() * table.z());
+}
+
+/*
+* Variable time table of odd multiples of a point
+*
+* Returns [P, 3*P, 5*P, ..., (2^(W-1) - 1)*P], which covers the digits of a
+* width W non-adjacent form.
+*/
+template <typename C, size_t W>
+std::vector<typename C::AffinePoint> odd_multiples_setup_vartime(const typename C::AffinePoint& p) {
+   static_assert(W >= 2 && W <= 7);
+
+   constexpr size_t TableSize = 1 << (W - 2);
+
+   std::vector<typename C::ProjectivePoint> table;
+   table.reserve(TableSize);
+
+   const auto p2 = C::ProjectivePoint::from_affine(p).dbl();
+
+   table.push_back(C::ProjectivePoint::from_affine(p));
+   for(size_t i = 1; i != TableSize; ++i) {
+      table.push_back(table[i - 1] + p2);
+   }
+
+   // Variable time batch conversion is fine since the point is public
+   return to_affine_batch<C, true>(table);
 }
 
 /*
@@ -450,7 +619,7 @@ std::vector<typename C::ProjectivePoint> mul2_setup(const typename C::AffinePoin
       // Conditionals ok: all based on t_i/p_i/q_i which in turn are derived from public i
 
       // Returns x_i * x + y_i * y
-      auto next_tbl_e = [&]() {
+      const auto next_tbl_e = [&]() {
          if(p_i % 2 == 0 && q_i % 2 == 0) {
             // Where possible using doubling (eg indices 1, 7, 9 in
             // the table above)
@@ -492,11 +661,11 @@ std::vector<typename C::ProjectivePoint> mul2_setup(const typename C::AffinePoin
    return table;
 }
 
-template <typename C, size_t WindowBits, typename BlindedScalar>
-typename C::ProjectivePoint mul2_exec(const AffinePointTable<C>& table,
+template <typename C, size_t WindowBits, typename BlindedScalar, typename Blinding>
+typename C::ProjectivePoint mul2_exec(const SharedZPointTable<C>& table,
                                       const BlindedScalar& x,
                                       const BlindedScalar& y,
-                                      RandomNumberGenerator& rng) {
+                                      const Blinding& blinding) {
    const size_t Windows = (x.bits() + WindowBits - 1) / WindowBits;
 
    auto accum = [&]() {
@@ -505,26 +674,28 @@ typename C::ProjectivePoint mul2_exec(const AffinePointTable<C>& table,
       const size_t window = w_1 + (w_2 << WindowBits);
       auto pt = C::ProjectivePoint::from_affine(table.ct_select(window));
       CT::poison(pt);
-      pt.randomize_rep(rng);
+      blinding.randomize_rep(pt, 0);
       return pt;
    }();
 
    for(size_t i = 1; i != Windows; ++i) {
-      accum = accum.dbl_n(WindowBits);
+      accum = accum.dbl_n_iso(table.a(), WindowBits);
 
       const size_t w_1 = x.get_window((Windows - i - 1) * WindowBits);
       const size_t w_2 = y.get_window((Windows - i - 1) * WindowBits);
       const size_t window = w_1 + (w_2 << WindowBits);
-      accum += table.ct_select(window);
+      accum = C::ProjectivePoint::add_mixed_iso(accum, table.ct_select(window), table.a());
 
       // Conditional ok: loop iteration count is public
-      if(i <= 3) {
-         accum.randomize_rep(rng);
+      if(i < Blinding::Rerandomizations) {
+         blinding.randomize_rep(accum, i);
       }
    }
 
    CT::unpoison(accum);
-   return accum;
+
+   // Map back from the isomorphic curve
+   return typename C::ProjectivePoint(accum.x(), accum.y(), accum.z() * table.z());
 }
 
 }  // namespace Botan

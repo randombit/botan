@@ -88,7 +88,7 @@ std::string BigInt::to_dec_string() const {
    s.reserve(1 + digits.size());
 
    if(signum() < 0) {
-      s += "-";
+      s += '-';
    }
 
    // Reverse and convert to textual digits
@@ -99,7 +99,7 @@ std::string BigInt::to_dec_string() const {
    }
 
    if(s.empty()) {
-      s += "0";
+      s += '0';
    }
 
    return s;
@@ -115,7 +115,7 @@ std::string BigInt::to_hex_string() const {
 
    std::string hrep;
    if(signum() < 0) {
-      hrep += "-";
+      hrep += '-';
    }
    hrep += "0x";
    hrep += hex_encode(bits);

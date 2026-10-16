@@ -126,7 +126,7 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
                             vars.get_req_bin("PK"));
 
          // Serialize/Deserialize the Public Key
-         auto pk2 = Botan::load_public_key(pk->algorithm_identifier(), pk->public_key_bits());
+         const auto pk2 = Botan::load_public_key(pk->algorithm_identifier(), pk->public_key_bits());
          if(!result.test_not_null("Successfully deserialized public key", pk2)) {
             return result;
          }
@@ -142,7 +142,7 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
          inspect_rng_after_encaps(params, rng_keygen, result);
 
          // Decapsulation
-         auto sk2 = Botan::load_private_key(sk->algorithm_identifier(), sk->private_key_bits());
+         const auto sk2 = Botan::load_private_key(sk->algorithm_identifier(), sk->private_key_bits());
          if(!result.test_not_null("Successfully deserialized private key", sk2)) {
             return result;
          }

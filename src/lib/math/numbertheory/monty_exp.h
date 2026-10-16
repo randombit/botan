@@ -13,46 +13,71 @@
 namespace Botan {
 
 class BigInt;
-class Montgomery_Exponentiation_State;
+
+/**
+* Precomputed state for computing g^x mod p
+*/
+class Montgomery_Exponentiation_State {
+   public:
+      virtual ~Montgomery_Exponentiation_State() = default;
+
+      Montgomery_Exponentiation_State(const Montgomery_Exponentiation_State& other) = delete;
+      Montgomery_Exponentiation_State(Montgomery_Exponentiation_State&& other) = delete;
+
+      Montgomery_Exponentiation_State& operator=(const Montgomery_Exponentiation_State& other) = delete;
+      Montgomery_Exponentiation_State& operator=(Montgomery_Exponentiation_State&& other) = delete;
+
+      /**
+      * Return g^k mod p, in time independent of k (assuming k is at most max_k_bits long)
+      */
+      virtual Montgomery_Int exponentiation(const BigInt& k, size_t max_k_bits) const = 0;
+
+      /**
+      * Return g^k mod p in variable time
+      */
+      virtual Montgomery_Int exponentiation_vartime(const BigInt& k) const = 0;
+
+   protected:
+      Montgomery_Exponentiation_State() = default;
+};
 
 /*
 * Precompute for calculating values g^x mod p
 */
-std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Params& params_p,
-                                                                        const BigInt& g,
-                                                                        size_t window_bits,
-                                                                        bool const_time = true);
+BOTAN_TEST_API std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(
+   const Montgomery_Params& params_p, const BigInt& g, size_t window_bits, bool const_time = true);
 
 /*
 * Precompute for calculating values g^x mod p
 */
-std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Int& g,
-                                                                        size_t window_bits,
-                                                                        bool const_time = true);
+BOTAN_TEST_API std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Int& g,
+                                                                                       size_t window_bits,
+                                                                                       bool const_time = true);
 
 /*
 * Return g^k mod p
 */
-Montgomery_Int monty_execute(const Montgomery_Exponentiation_State& precomputed_state,
-                             const BigInt& k,
-                             size_t max_k_bits);
+BOTAN_TEST_API Montgomery_Int monty_execute(const Montgomery_Exponentiation_State& precomputed_state,
+                                            const BigInt& k,
+                                            size_t max_k_bits);
 
 /*
 * Return g^k mod p taking variable time depending on k
 * @warning only use this if k is public
 */
-Montgomery_Int monty_execute_vartime(const Montgomery_Exponentiation_State& precomputed_state, const BigInt& k);
+BOTAN_TEST_API Montgomery_Int monty_execute_vartime(const Montgomery_Exponentiation_State& precomputed_state,
+                                                    const BigInt& k);
 
 inline Montgomery_Int monty_exp(const Montgomery_Params& params_p,
                                 const BigInt& g,
                                 const BigInt& k,
                                 size_t max_k_bits) {
-   auto precomputed = monty_precompute(params_p, g, 4, true);
+   const auto precomputed = monty_precompute(params_p, g, 4, true);
    return monty_execute(*precomputed, k, max_k_bits);
 }
 
 inline Montgomery_Int monty_exp_vartime(const Montgomery_Params& params_p, const BigInt& g, const BigInt& k) {
-   auto precomputed = monty_precompute(params_p, g, 4, false);
+   const auto precomputed = monty_precompute(params_p, g, 4, false);
    return monty_execute_vartime(*precomputed, k);
 }
 

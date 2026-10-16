@@ -76,7 +76,8 @@ std::optional<CmceErrorVector> Classic_McEliece_Encryptor::fixed_weight_vector_g
       for(size_t j = 0; j < a_values.size(); ++j) {
          // If the current byte is the one that is represented by the current bit index in a_values
          // then set the bit in e_bytes (in-byte position prepared above)
-         auto mask = CT::Mask<uint16_t>::is_equal(static_cast<uint16_t>(i), static_cast<uint16_t>(a_values[j] >> 3));
+         const auto mask =
+            CT::Mask<uint16_t>::is_equal(static_cast<uint16_t>(i), static_cast<uint16_t>(a_values[j] >> 3));
          e_bytes[i] |= mask.if_set_return(a_value_byte[j]);
       }
    }

@@ -57,10 +57,10 @@ namespace Botan_CLI {
 
 namespace {
 
-namespace beast = boost::beast;    // from <boost/beast.hpp>
-namespace http = beast::http;      // from <boost/beast/http.hpp>
-namespace net = boost::asio;       // from <boost/asio.hpp>
-using tcp = boost::asio::ip::tcp;  // from <boost/asio/ip/tcp.hpp>
+namespace beast = boost::beast;  // from <boost/beast.hpp>
+namespace http = beast::http;    // from <boost/beast/http.hpp>
+namespace net = boost::asio;     // from <boost/asio.hpp>
+using boost::asio::ip::tcp;      // from <boost/asio/ip/tcp.hpp>
 
 using tcp_stream = typename beast::tcp_stream::rebind_executor<
    net::use_awaitable_t<>::executor_with_default<net::any_io_executor>>::other;
@@ -227,7 +227,7 @@ net::awaitable<void> do_session(tcp_stream stream,
    beast::flat_buffer buffer;
 
    // Set up Botan's TLS stack
-   auto callbacks = std::make_shared<TlsHttpCallbacks>();
+   const auto callbacks = std::make_shared<TlsHttpCallbacks>();
    Botan::TLS::Stream<tcp_stream> tls_stream(std::move(stream), std::move(tls_ctx), callbacks);
 
    std::exception_ptr protocol_exception;
@@ -245,7 +245,7 @@ net::awaitable<void> do_session(tcp_stream stream,
          co_await http::async_read(tls_stream, buffer, req);
 
          // Handle the request
-         auto response = handle_response(req, callbacks, tls_stream, logger);
+         const auto response = handle_response(req, callbacks, tls_stream, logger);
 
          // Send the response
          co_await http::async_write(tls_stream, *response);
@@ -310,7 +310,7 @@ net::awaitable<void> do_listen(tcp::endpoint endpoint,
       "Listening for new connections on {}:{}", local_endpoint.address().to_string(), local_endpoint.port()));
    logger->flush();
 
-   auto done = [&] {
+   const auto done = [&] {
       if(run_forever) {
          return false;
       } else {
@@ -358,9 +358,9 @@ class TLS_HTTP_Server final : public Command {
          const size_t num_threads = thread_count();
          const size_t max_clients = get_arg_sz("max-clients");
 
-         auto creds = std::make_shared<Basic_Credentials_Manager>(server_crt, server_key);
+         const auto creds = std::make_shared<Basic_Credentials_Manager>(server_crt, server_key);
 
-         auto policy = load_tls_policy(get_arg("policy"));
+         const auto policy = load_tls_policy(get_arg("policy"));
 
          std::shared_ptr<Botan::TLS::Session_Manager> session_mgr;
 
@@ -380,10 +380,10 @@ class TLS_HTTP_Server final : public Command {
             session_mgr = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng_as_shared());
          }
 
-         auto logger = std::make_shared<Logger>(output(), error_output());
+         const auto logger = std::make_shared<Logger>(output(), error_output());
 
          net::io_context io{static_cast<int>(num_threads)};
-         auto address = net::ip::make_address("0.0.0.0");
+         const auto address = net::ip::make_address("0.0.0.0");
          boost::asio::co_spawn(
             io,
             do_listen(tcp::endpoint{address, listen_port},
@@ -401,7 +401,7 @@ class TLS_HTTP_Server final : public Command {
 
          io.run();
 
-         for(auto& thread : threads) {
+         for(const auto& thread : threads) {
             thread->join();
          }
       }

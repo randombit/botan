@@ -92,6 +92,7 @@ enum class Certificate_Status_Code : uint16_t {
    NO_REV_AVAIL_INVALID_USE = 4013,
    INVALID_OCSP_NOCHECK = 4014,
    CRL_HAS_UNKNOWN_CRITICAL_EXTENSION = 4015,
+   TN_AUTH_LIST_ERROR = 4016,
 
    // OCSP errors
    OCSP_SIGNATURE_ERROR = 4501,
@@ -158,7 +159,7 @@ class BOTAN_PUBLIC_API(3, 0) Key_Constraints final {
       Key_Constraints& operator=(Key_Constraints&& other) = default;
       ~Key_Constraints() = default;
 
-      // NOLINTNEXTLINE(*-explicit-conversions)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
       Key_Constraints(Key_Constraints::Bits bits) : m_value(bits) {}
 
       explicit Key_Constraints(uint32_t bits) : m_value(bits) {}
@@ -241,7 +242,7 @@ class BOTAN_PUBLIC_API(3, 13) ReasonFlags final {
                                                     CessationOfOperation | CertificateHold | PrivilegeWithdrawn |
                                                     AaCompromise;
 
-      // NOLINTNEXTLINE(*-explicit-conversions)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
       ReasonFlags(ReasonFlags::Bits bits) : ReasonFlags(static_cast<uint16_t>(bits)) {}
 
       explicit ReasonFlags(uint16_t bits) : m_value(bits) {

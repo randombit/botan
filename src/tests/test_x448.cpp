@@ -57,10 +57,21 @@ class X448_Agreement_Tests final : public PK_Key_Agreement_Test {
       }
 };
 
+class X448_Key_Validity_Tests final : public PK_Key_Validity_Test {
+   public:
+      X448_Key_Validity_Tests() : PK_Key_Validity_Test("X448", "pubkey/x448_key_valid.vec", "PublicKey") {}
+
+      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
+         const std::vector<uint8_t> pk = vars.get_req_bin("PublicKey");
+         return std::make_unique<Botan::X448_PublicKey>(pk);
+      }
+};
+
 }  // namespace
 
 BOTAN_REGISTER_TEST("x448", "x448_keygen", X448_Keygen_Tests);
 BOTAN_REGISTER_TEST("x448", "x448_agree", X448_Agreement_Tests);
+BOTAN_REGISTER_TEST("x448", "x448_key_valid", X448_Key_Validity_Tests);
 
 }  // namespace Botan_Tests
 #endif  // BOTAN_HAS_X448

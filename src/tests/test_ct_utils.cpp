@@ -46,7 +46,7 @@ class CT_Mask_Tests final : public Test {
          result.test_u32_eq("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(0xFFFFFFFF, 5).value(), 0x00000000);
          result.test_u32_eq("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(5, 0xFFFFFFFF).value(), 0xFFFFFFFF);
 
-         for(auto bad_input : {0, 1}) {
+         for(const auto bad_input : {0, 1}) {
             for(size_t input_length = 0; input_length != 64; ++input_length) {
                for(size_t offset = 0; offset != input_length + 5; ++offset) {
                   const auto accept = !Botan::CT::Choice::from_int(static_cast<uint32_t>(bad_input));
@@ -56,7 +56,7 @@ class CT_Mask_Tests final : public Test {
 
                   std::vector<uint8_t> output(input_length);
 
-                  auto written = Botan::CT::copy_output(accept, output, input, offset);
+                  const auto written = Botan::CT::copy_output(accept, output, input, offset);
 
                   if(bad_input > 0) {
                      result.test_is_true("If bad input, no output", !written.has_value().as_bool());
@@ -161,7 +161,7 @@ class CT_Option_Tests final : public Test {
          result.test_is_false("Unset Option returns nullopt for as_optional_vartime",
                               unset.as_optional_vartime().has_value());
 
-         auto next = [](const T& v) -> T {
+         const auto next = [](const T& v) -> T {
             T n = v;
             ++n;
             return n;
@@ -169,7 +169,7 @@ class CT_Option_Tests final : public Test {
 
          result.test_is_false("Unset Option transform returns unset", unset.transform(next).has_value().as_bool());
 
-         auto set = Botan::CT::Option<T>(value);
+         const auto set = Botan::CT::Option<T>(value);
          result.test_is_true("Set does have value", set.has_value().as_bool());
          result.test_is_true("Set Option has the expected value", set.value() == value);
          result.test_is_true("Set Option returns original with value_or", set.value_or(value2) == value);
@@ -231,7 +231,7 @@ std::vector<Test::Result> test_higher_level_ct_poison() {
                result.test_bool_eq("not poisoned", !p1.poisoned && !p2.poisoned, !p3.poisoned);
 
                {
-                  auto scope = Botan::CT::scoped_poison(p1, p2, p3);
+                  const auto scope = Botan::CT::scoped_poison(p1, p2, p3);
                   result.test_is_true("poisoned", p1.poisoned && p2.poisoned && p3.poisoned);
                }
 
@@ -240,7 +240,7 @@ std::vector<Test::Result> test_higher_level_ct_poison() {
 
       CHECK("poison a range of poisonable objects",
             [](Test::Result& result) {
-               auto is_poisoned = [](const auto& p) { return p.poisoned; };
+               const auto is_poisoned = [](const auto& p) { return p.poisoned; };
 
                std::vector<Poisonable<>> v(10);
                result.test_is_true("none poisoned", std::none_of(v.begin(), v.end(), is_poisoned));

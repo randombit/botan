@@ -51,7 +51,7 @@ void append_utf8_for(std::string& s, uint32_t c) {
 }  // namespace
 
 uint32_t next_utf8_codepoint(std::string_view utf8, size_t& pos) {
-   auto read_continuation = [&]() -> uint32_t {
+   const auto read_continuation = [&]() -> uint32_t {
       if(pos >= utf8.size()) {
          throw Decoding_Error("Invalid UTF-8 sequence");
       }

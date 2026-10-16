@@ -16,6 +16,7 @@ API Reference
    message_auth_codes
    cipher_modes
    pubkey
+   hpke
    names
    x509
    pkcs12
@@ -45,5 +46,6 @@ API Reference
    sodium
    zfec
    ffi
+   thread_pool
    env_vars
    python

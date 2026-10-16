@@ -60,7 +60,7 @@ class KyberConstants final {
       // NOLINTEND(*-use-enum-class)
 
    public:
-      /* NOLINT(*-explicit-conversions) */ KyberConstants(KyberMode mode);
+      /* NOLINT(*-explicit-conversions,*-explicit-constructor) */ KyberConstants(KyberMode mode);
 
       ~KyberConstants();
 

@@ -1,0 +1,142 @@
+/*
+* (C) 2014,2024 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+#ifndef BOTAN_X25519_H_
+#define BOTAN_X25519_H_
+
+#include <botan/pk_keys.h>
+#include <memory>
+#include <vector>
+
+namespace Botan {
+
+class X25519_PublicKey_Data;
+class X25519_PrivateKey_Data;
+
+class BOTAN_PUBLIC_API(2, 0) X25519_PublicKey : public virtual Public_Key {
+   public:
+      std::string algo_name() const override { return "X25519"; }
+
+      size_t estimated_strength() const override { return 128; }
+
+      size_t key_length() const override { return 255; }
+
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
+
+      AlgorithmIdentifier algorithm_identifier() const override;
+
+      std::vector<uint8_t> raw_public_key_bits() const override;
+
+      std::vector<uint8_t> public_key_bits() const override;
+
+      BOTAN_DEPRECATED("Use raw_public_key_bits") std::vector<uint8_t> public_value() const {
+         return raw_public_key_bits();
+      }
+
+      bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::KeyAgreement); }
+
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
+
+      /**
+      * Create a X25519 Public Key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits DER encoded public key bits
+      */
+      X25519_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
+
+      /**
+      * Create a X25519 Public Key.
+      * @param pub 32-byte raw public key
+      */
+      explicit X25519_PublicKey(std::span<const uint8_t> pub);
+
+   protected:
+      X25519_PublicKey() = default;
+      std::shared_ptr<const X25519_PublicKey_Data> m_public;  // NOLINT(*non-private-member-variable*)
+};
+
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
+class BOTAN_PUBLIC_API(2, 0) X25519_PrivateKey final : public X25519_PublicKey,
+                                                       public virtual Private_Key,
+                                                       public virtual PK_Key_Agreement_Key {
+   public:
+      /**
+      * Construct a private key from the specified parameters.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits PKCS #8 structure
+      */
+      X25519_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
+
+      /**
+      * Generate a private key.
+      * @param rng the RNG to use
+      */
+      explicit X25519_PrivateKey(RandomNumberGenerator& rng);
+
+      /**
+      * Construct a private key from the specified parameters.
+      * @param secret_key the private key
+      */
+      explicit X25519_PrivateKey(std::span<const uint8_t> secret_key);
+
+      std::vector<uint8_t> public_value() const override { return raw_public_key_bits(); }
+
+      /**
+      * Perform X25519 with the peer's 32-byte public value
+      *
+      * Throws Invalid_Argument if the peer's value is a point of low order
+      * (that is, if the result would be all zeros).
+      *
+      * Prefer PK_Key_Agreement, which also derives a key from the result.
+      */
+      BOTAN_DEPRECATED("Use PK_Key_Agreement") secure_vector<uint8_t> agree(const uint8_t w[], size_t w_len) const;
+
+      secure_vector<uint8_t> raw_private_key_bits() const override;
+
+      BOTAN_DEPRECATED("Use raw_private_key_bits") const secure_vector<uint8_t>& get_x() const;
+
+      secure_vector<uint8_t> private_key_bits() const override;
+
+      std::unique_ptr<Public_Key> public_key() const override;
+
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
+
+      std::unique_ptr<PK_Ops::Key_Agreement> _create_key_agreement_op(
+         RandomNumberGenerator& rng, const PK_Key_Agreement_Options_Reader& options) const override;
+
+   private:
+      std::shared_ptr<const X25519_PrivateKey_Data> m_private;
+};
+
+BOTAN_DIAGNOSTIC_POP
+
+/*
+* The following functions are deprecated and no longer used within the
+* library itself; use X25519_PrivateKey instead.
+*/
+
+/**
+* Compute the X25519 scalar multiplication of secret and basepoint
+* @param mypublic output value
+* @param secret random scalar
+* @param basepoint the u-coordinate of the point to multiply
+*/
+BOTAN_DEPRECATED_API("Use X25519_PrivateKey or Sodium::crypto_scalarmult_curve25519")
+void curve25519_donna(uint8_t mypublic[32], const uint8_t secret[32], const uint8_t basepoint[32]);
+
+/**
+* Exponentiate by the x25519 base point
+* @param mypublic output value
+* @param secret random scalar
+*/
+BOTAN_DEPRECATED_API("Use X25519_PrivateKey or Sodium::crypto_scalarmult_curve25519_base")
+void curve25519_basepoint(uint8_t mypublic[32], const uint8_t secret[32]);
+
+}  // namespace Botan
+
+#endif

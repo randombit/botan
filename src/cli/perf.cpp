@@ -31,7 +31,7 @@ std::map<std::string, PerfTest::pt_maker_fn>& PerfTest::global_registry() {
 std::unique_ptr<PerfTest> PerfTest::get(const std::string& name) {
    const auto& reg = PerfTest::global_registry();
 
-   auto i = reg.find(name);
+   const auto i = reg.find(name);
    if(i != reg.end()) {
       return i->second();
    }

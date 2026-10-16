@@ -81,7 +81,7 @@ std::vector<AlgoTestConfig> parse_sig_options_vec(const std::string& contents) {
 
    while(std::getline(iss, line)) {
       // Strip inline comments
-      if(auto pos = line.find('#'); pos != std::string::npos) {
+      if(const auto pos = line.find('#'); pos != std::string::npos) {
          line.erase(pos);
       }
 
@@ -223,7 +223,7 @@ class PK_Signature_Options_Test final : public Test {
             try {
                // For entries like "RSA/PSS", use just "RSA" for key generation
                auto key_algo = config.algo_name;
-               if(auto slash = key_algo.find('/'); slash != std::string::npos) {
+               if(const auto slash = key_algo.find('/'); slash != std::string::npos) {
                   key_algo = key_algo.substr(0, slash);
                }
                key = Botan::create_private_key(key_algo, rng(), config.key_params);
@@ -401,7 +401,7 @@ class PK_Signature_Options_Unexamined_Test final : public Test {
 
          const auto opts = Botan::PK_Signature_Options().with_salt_size(32).with_explicit_trailer_field();
 
-         auto check_message = [&](const std::string& what, const std::exception& e) {
+         const auto check_message = [&](const std::string& what, const std::exception& e) {
             const std::string msg = e.what();
             result.test_is_true(what + " names the unexamined options",
                                 msg.find("Ed25519 does not support the signature option(s): salt size, explicit "
@@ -471,7 +471,7 @@ class PK_Signature_Options_RSA_Explicit_Test final : public Test {
          }
          const auto pub = key->public_key();
 
-         auto rejected = [&](const std::string& what, const Botan::PK_Signature_Options& opts) {
+         const auto rejected = [&](const std::string& what, const Botan::PK_Signature_Options& opts) {
             result.test_throws(what + " rejected by signer", [&] { Botan::PK_Signer(*key, rng(), opts); });
             result.test_throws(what + " rejected by verifier", [&] { Botan::PK_Verifier(*pub, opts); });
          };

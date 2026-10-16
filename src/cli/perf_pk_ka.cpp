@@ -50,7 +50,7 @@ class PerfTest_PKKa : public PerfTest {
 
          auto& rng = config.rng();
 
-         auto key1 = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
+         const auto key1 = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
          auto key2 = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
 
          if(key1 && key2) {
@@ -81,14 +81,14 @@ class PerfTest_PKKa : public PerfTest {
             auto ka_timer = config.make_timer(nm, 1, "key agreements");
 
             while(ka_timer->under(msec)) {
-               auto k1 = ka_timer->run([&]() {
+               const auto k1 = ka_timer->run([&]() {
                   if(one_shot) {
                      return make_ka1().derive_key(32, ka2_pub);
                   } else {
                      return ka1->derive_key(32, ka2_pub);
                   }
                });
-               auto k2 = ka_timer->run([&]() {
+               const auto k2 = ka_timer->run([&]() {
                   if(one_shot) {
                      return make_ka2().derive_key(32, ka1_pub);
                   } else {

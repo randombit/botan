@@ -38,7 +38,7 @@ Certificate_Verify_12::Certificate_Verify_12(Handshake_IO& io,
 bool Certificate_Verify_12::verify(const X509_Certificate& cert,
                                    const Handshake_State& state,
                                    const Policy& policy) const {
-   auto key = cert.subject_public_key();
+   const auto key = cert.subject_public_key();
 
    policy.check_peer_key_acceptable(*key);
 

@@ -66,7 +66,11 @@ class Keccak_Permutation final : public Sponge<25, uint64_t> {
         * @param config Keccak parameter configuration
         */
       constexpr explicit Keccak_Permutation(Config config) :
-            Sponge({.bit_rate = state_bits() - config.capacity_bits, .initial_state = {}}), m_padding(config.padding) {}
+            Sponge({.bit_rate = state_bits() - config.capacity_bits, .initial_state = {}}), m_padding(config.padding) {
+         // finish() packs the padding bits plus the first bit of "pad10*1" into a
+         // single byte, leaving its top bit free for the final bit of "pad10*1"
+         BOTAN_ASSERT_NOMSG(m_padding.bit_len <= 6 && (m_padding.padding >> m_padding.bit_len) == 0);
+      }
 
       void clear();
       std::string provider() const;

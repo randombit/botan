@@ -318,7 +318,7 @@ Test::Result test_concurrent_key_agreement(const ConcurrentPkTestCase& tc) {
       return result;
    }
 
-   auto peer_key = tc.try_create_key(*rng);
+   const auto peer_key = tc.try_create_key(*rng);
 
    const auto* our_ka_key = dynamic_cast<Botan::PK_Key_Agreement_Key*>(our_key.get());
    const auto* peer_ka_key = dynamic_cast<Botan::PK_Key_Agreement_Key*>(peer_key.get());
@@ -429,7 +429,7 @@ class Concurrent_Public_Key_Operations_Test : public Test {
             auto rng = Test::new_rng(tc.algo_name());
 
             if(auto privkey = tc.try_create_key(*rng)) {
-               auto pubkey = privkey->public_key();
+               const auto pubkey = privkey->public_key();
                results.push_back(test_concurrent_signing(tc, *privkey, *pubkey));
                results.push_back(test_concurrent_verification(tc, *privkey, *pubkey));
             } else {
@@ -448,7 +448,7 @@ class Concurrent_Public_Key_Operations_Test : public Test {
             auto rng = Test::new_rng(tc.algo_name());
 
             if(auto privkey = tc.try_create_key(*rng)) {
-               auto pubkey = privkey->public_key();
+               const auto pubkey = privkey->public_key();
                results.push_back(test_concurrent_encryption(tc, *privkey, *pubkey));
                results.push_back(test_concurrent_decryption(tc, *privkey, *pubkey));
             } else {
@@ -472,7 +472,7 @@ class Concurrent_Public_Key_Operations_Test : public Test {
          for(const auto& tc : test_cases) {
             auto rng = Test::new_rng(tc.algo_name());
             if(auto privkey = tc.try_create_key(*rng)) {
-               auto pubkey = privkey->public_key();
+               const auto pubkey = privkey->public_key();
                results.push_back(test_concurrent_kem_encap(tc, *privkey, *pubkey));
                results.push_back(test_concurrent_kem_decap(tc, *privkey, *pubkey));
             } else {

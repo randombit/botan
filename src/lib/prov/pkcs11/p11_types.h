@@ -55,18 +55,32 @@ class BOTAN_PUBLIC_API(2, 0) Module final {
       void reload(C_InitializeArgs init_args = {
                      nullptr, nullptr, nullptr, nullptr, static_cast<CK_FLAGS>(Flag::OsLockingOk), nullptr});
 
-      inline LowLevel* operator->() const { return m_low_level.get(); }
+      /**
+      * @throws Invalid_State if the module is not initialized, which is the
+      * case after a failed reload()
+      */
+      inline LowLevel* operator->() const {
+         if(!m_low_level) {
+            throw Invalid_State("PKCS11 module is not initialized");
+         }
+         return m_low_level.get();
+      }
 
       /// @return general information about Cryptoki
       inline Info get_info() const {
          Info info;
-         m_low_level->C_GetInfo(&info);
+         (*this)->C_GetInfo(&info);
          return info;
       }
 
       std::string_view library_path() const { return m_file_path; }
 
-      const Dynamically_Loaded_Library& library() { return *m_library; }
+      const Dynamically_Loaded_Library& library() {
+         if(!m_library) {
+            throw Invalid_State("PKCS11 module is not initialized");
+         }
+         return *m_library;
+      }
 
    private:
       const std::string m_file_path;

@@ -21,6 +21,8 @@ def to_ctype(typ, is_ptr):
 
     if typ == 'botan_view_ctx':
         return 'c_void_p'
+    if typ == 'botan_x509_value_type':
+        return 'c_int'
 
     if typ == 'botan_view_bin_fn':
         return '_VIEW_BIN_CALLBACK'

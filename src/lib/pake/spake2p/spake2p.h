@@ -231,6 +231,8 @@ class BOTAN_PUBLIC_API(3, 13) ProverSecret final {
       /**
       * Create a prover secret from already derived scalars
       *
+      * Throws Invalid_Argument if either scalar is zero.
+      *
       * @warning This interface is potentially unsafe, depending upon how the
       * scalars are derived from the password. They must be uniformly random,
       * and preferably computed in a way such that testing password guesses is
@@ -264,7 +266,7 @@ class BOTAN_PUBLIC_API(3, 13) ProverSecret final {
    private:
       friend class ProverContext;
 
-      ProverSecret(EC_Scalar w0, EC_Scalar w1) : m_w0(std::move(w0)), m_w1(std::move(w1)) {}
+      ProverSecret(EC_Scalar w0, EC_Scalar w1);
 
       EC_Scalar m_w0;
       EC_Scalar m_w1;
@@ -305,7 +307,8 @@ class BOTAN_PUBLIC_API(3, 13) ProverContext final {
       *
       * Throws Decoding_Error if the message is malformed, and
       * Invalid_Authentication_Tag if the verifier's key confirmation is
-      * wrong (typically due to a password mismatch).
+      * wrong (typically due to a password mismatch). After any failure
+      * the context cannot be used further.
       */
       std::vector<uint8_t> process_message(std::span<const uint8_t> peer_message, RandomNumberGenerator& rng);
 
@@ -360,7 +363,7 @@ class BOTAN_PUBLIC_API(3, 13) VerifierContext final {
       * response (shareV followed by confirmV), which is sent to the prover.
       *
       * This can be called only once. Throws Decoding_Error if the key
-      * share is malformed.
+      * share is malformed, after which the context cannot be used further.
       */
       std::vector<uint8_t> process_message(std::span<const uint8_t> peer_message, RandomNumberGenerator& rng);
 

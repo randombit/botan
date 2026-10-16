@@ -37,8 +37,7 @@ class Server_Impl_12 final : public Channel_Impl_12 {
       *
       * @param rng a random number generator
       *
-      * @param is_datagram set to true if this server should expect DTLS
-      *        connections. Otherwise TLS connections are expected.
+      * @param flavor specifies the TLS flavor (TLS or DTLS)
       *
       * @param reserved_io_buffer_size This many bytes of memory will
       *        be preallocated for the read and write buffers. Smaller
@@ -49,7 +48,7 @@ class Server_Impl_12 final : public Channel_Impl_12 {
                                                     const std::shared_ptr<Credentials_Manager>& creds,
                                                     const std::shared_ptr<const Policy>& policy,
                                                     const std::shared_ptr<RandomNumberGenerator>& rng,
-                                                    bool is_datagram = false,
+                                                    TLS_Flavor flavor = TLS_Flavor::TLS,
                                                     size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE);
 
       Server_Impl_12([[maybe_unused]] Private dont_call_me,
@@ -58,9 +57,9 @@ class Server_Impl_12 final : public Channel_Impl_12 {
                      const std::shared_ptr<Credentials_Manager>& creds,
                      const std::shared_ptr<const Policy>& policy,
                      const std::shared_ptr<RandomNumberGenerator>& rng,
-                     bool is_datagram = false,
+                     TLS_Flavor flavor = TLS_Flavor::TLS,
                      size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE) :
-            Channel_Impl_12(callbacks, session_manager, rng, policy, true, is_datagram, reserved_io_buffer_size),
+            Channel_Impl_12(callbacks, session_manager, rng, policy, true, flavor, reserved_io_buffer_size),
             m_creds(creds) {}
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
@@ -76,7 +75,7 @@ class Server_Impl_12 final : public Channel_Impl_12 {
                             downgrade_info.rng,
                             downgrade_info.policy,
                             true /* is_server*/,
-                            false /* TLS 1.3 does not support DTLS yet */,
+                            downgrade_info.flavor,
                             downgrade_info.io_buffer_size),
             m_creds(downgrade_info.creds) {}
 

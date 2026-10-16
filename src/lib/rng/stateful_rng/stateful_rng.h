@@ -64,15 +64,18 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       Stateful_RNG() : m_reseed_interval(0) {}
 
       /**
-      * Consume this input and mark the RNG as initialized regardless
-      * of the length of the input or the current seeded state of
-      * the RNG.
+      * Reset the RNG then consume this input as seed material
+      *
+      * The RNG is marked as seeded only if the input is at least
+      * security_level() bits long.
       */
       void initialize_with(std::span<const uint8_t> input);
 
       /**
-      * Consume this input and mark the RNG as initialized regardless
-      * of the length of the input or the current seeded state of the RNG.
+      * Reset the RNG then consume this input as seed material
+      *
+      * The RNG is marked as seeded only if the input is at least
+      * security_level() bits long.
       * @param input the seed material
       * @param length the number of bytes in input
       */
@@ -174,6 +177,8 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
 
       void reset_reseed_counter();
 
+      bool fork_detected() const;
+
       mutable recursive_mutex_type m_mutex;
 
       // A non-owned and possibly null pointer to shared RNG
@@ -184,6 +189,7 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
 
       const size_t m_reseed_interval;
       uint32_t m_last_pid = 0;
+      uint64_t m_fork_generation = 0;
 
       /*
       * Set to 1 after a successful seeding, then incremented.  Reset

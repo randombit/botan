@@ -7,11 +7,12 @@
 
 #include <botan/internal/commoncrypto.h>
 
+#include <botan/assert.h>
 #include <botan/block_cipher.h>
 #include <botan/cipher_mode.h>
 #include <botan/mem_ops.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/commoncrypto_utils.h>
-#include <botan/internal/rounding.h>
 
 #include <limits.h>
 
@@ -163,7 +164,7 @@ size_t CommonCrypto_Cipher_Mode::output_length(size_t input_length) const {
    if(input_length == 0) {
       return m_opts.block_size;
    } else {
-      return round_up(input_length, m_opts.block_size);
+      return m_opts.block_size * ceil_division(input_length, m_opts.block_size);
    }
 }
 

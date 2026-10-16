@@ -43,6 +43,15 @@ std::vector<Test::Result> test_buffer_slicer() {
                result.test_sz_eq("non-empty slicer has remaining bytes", s.remaining(), buffer.size());
                result.test_is_true("non-empty slicer is not empty()", !s.empty());
 
+               const auto peeked = s.peek(5);
+               result.require("has 5 bytes", peeked.size() == 5);
+               result.test_u8_eq("peeked hello", peeked[0], uint8_t('h'));
+               result.test_u8_eq("peeked hello", peeked[1], uint8_t('e'));
+               result.test_u8_eq("peeked hello", peeked[2], uint8_t('l'));
+               result.test_u8_eq("peeked hello", peeked[3], uint8_t('l'));
+               result.test_u8_eq("peeked hello", peeked[4], uint8_t('o'));
+               result.test_sz_eq("no bytes consumed", s.remaining(), buffer.size());
+
                const auto hello = s.take(5);
                result.require("has 5 bytes", hello.size() == 5);
                result.test_u8_eq("took hello", hello[0], uint8_t('h'));
@@ -130,7 +139,7 @@ std::vector<Test::Result> test_buffer_stuffer() {
                result.test_sz_eq("has some capacity", s.remaining_capacity(), sink.size());
                result.test_is_true("is not full", !s.full());
 
-               auto n1 = s.next(5);
+               const auto n1 = s.next(5);
                result.require("got requested bytes", n1.size() == 5);
                n1[0] = 'h';
                n1[1] = 'e';
@@ -152,7 +161,7 @@ std::vector<Test::Result> test_buffer_stuffer() {
 
                result.test_sz_eq("has 2 bytes remaining", s.remaining_capacity(), 2);
 
-               auto n3 = s.next<2>();
+               const auto n3 = s.next<2>();
                result.require("got requested bytes", n3.size() == 2);
                result.require("is static extent", decltype(n3)::extent != std::dynamic_extent);
                result.require("static extent is 2", decltype(n3)::extent == 2);

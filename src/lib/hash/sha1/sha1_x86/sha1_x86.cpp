@@ -44,7 +44,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha1_x86_first8(SIMD_4x32& ABCD,
                                                            SIMD_4x32& E,
                                                            const SIMD_4x32& W0,
                                                            const SIMD_4x32& W1) {
-   auto TE = ABCD;
+   const auto TE = ABCD;
    ABCD = SIMD_4x32(_mm_sha1rnds4_epu32(ABCD.raw(), (E + W0).raw(), R1));
 
    E = ABCD;
@@ -56,7 +56,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha1_x86_rnds8(SIMD_4x32& ABCD,
                                                           SIMD_4x32& E,
                                                           const SIMD_4x32& W0,
                                                           const SIMD_4x32& W1) {
-   auto TE = ABCD;
+   const auto TE = ABCD;
    ABCD = SIMD_4x32(_mm_sha1rnds4_epu32(ABCD.raw(), sha1_x86_nexte(E, W0).raw(), R1));
 
    E = ABCD;

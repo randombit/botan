@@ -21,6 +21,8 @@
 
 namespace Botan_CLI {
 
+namespace {
+
 class PKCS12_Export final : public Command {
    public:
       PKCS12_Export() :
@@ -205,6 +207,8 @@ class PKCS12_Info final : public Command {
 };
 
 BOTAN_REGISTER_COMMAND("pkcs12_info", PKCS12_Info);
+
+}  // namespace
 
 }  // namespace Botan_CLI
 

@@ -29,7 +29,7 @@ class RFC6979_KAT_Tests final : public Text_Based_Test {
 
          Test::Result result("RFC 6979 nonce generation");
 
-         auto hash_func = Botan::HashFunction::create(hash);
+         const auto hash_func = Botan::HashFunction::create(hash);
 
          if(!hash_func) {
             result.test_note("Skipping due to missing hash", hash);

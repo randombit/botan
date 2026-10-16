@@ -363,7 +363,7 @@ int botan_constant_time_compare(const uint8_t* x, const uint8_t* y, size_t len) 
    if(len > 0 && any_null_pointers(x, y)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
-   auto same = Botan::CT::is_equal(x, y, len);
+   const auto same = Botan::CT::is_equal(x, y, len);
    // Return 0 if same or -1 otherwise
    return static_cast<int>(same.select(1, 0)) - 1;
 }

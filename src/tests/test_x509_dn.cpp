@@ -280,7 +280,7 @@ class X509_DN_String_Tests final : public Test {
             return std::any_of(s.begin(), s.end(), [](char c) { return Botan::is_ascii_control_char(c); });
          };
 
-         auto check_cn = [&](const std::string& label, std::string_view value) -> std::string {
+         const auto check_cn = [&](const std::string& label, std::string_view value) -> std::string {
             // Render a DN with CN=value and check the invariants that hold for any
             // value: the rendering has no raw C0/DEL control byte, and it parses back
             // to the exact value and re-renders identically. Returns the rendering.

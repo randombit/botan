@@ -81,7 +81,8 @@ class BOTAN_TEST_API Hash_Engine {
       * @param provider if set, use this specific implementation
       *
       * The default provider splits sufficiently large batches over the
-      * global Thread_Pool, which is created on the first such batch.
+      * global Thread_Pool, whose threads are started on the first such
+      * batch, or over the executor installed with Work_Executor::set_global.
       *
       * Throws Lookup_Error if the hash function or requested provider is
       * not available

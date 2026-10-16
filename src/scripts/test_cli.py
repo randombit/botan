@@ -889,7 +889,7 @@ ed25519 cj8GsiNlRkqiDElAeNMSBBMwrAl15hYPgX50+GWX/lA= Tsy82BBU2xxVqNe1ip11OyEGoKW
 
     with open(chain, 'w', encoding='utf8') as f:
         f.write("ed25519 cbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE= eu9yhsJfVfguVSqGZdE8WKIxaBBM0ZG3Vmuc+IyZmG2YVmrIktUByDdwIFw6F4rZqmSFsBO85ljoVPz5bVPCOw== BQAAAEAAAABAAAAApAAAADwBAABTSUcAUEFUSFNSRVBDRVJUSU5EWBnGOEajOwPA6G7oL47seBP4C7eEpr57H43C2/fK/kMA0UGZVUdf4KNX8oxOK6JIcsbVk8qhghTwA70qtwpYmQkDAAAABAAAAAwAAABSQURJTUlEUFJPT1RAQg8AJrA8tEqPBQAqisiuAxgy2Pj7UJAiWbCdzGz1xcCnja3T+AqhC8fwpeIwW4GPy/vEb/awXW2DgSLKJfzWIAz+2lsR7t4UjNPvAgAAAEAAAABTSUcAREVMRes9Ch4X0HIw5KdOTB8xK4VDFSJBD/G9t7Et/CU7UW61OiTBXYYQTG2JekWZmGa0OHX1JPGG+APkpbsNw0BKUgYDAAAAIAAAACgAAABQVUJLTUlOVE1BWFR/9BWjpsWTQ1f6iUJea3EfZ1MkX3ftJiV3ABqNLpncFwAAAAAAAAAA//////////8AAAAA")
-    test_cli("roughtime_check", chain, expected_stderr='Error: Roughtime: Invalid signature or public key')
+    test_cli("roughtime_check", chain, expected_stderr='Error: Invalid Ed25519 public key')
 
 def cli_roughtime_tests(tmp_dir):
     if not check_for_command("roughtime"):
@@ -951,7 +951,7 @@ ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= 2A+I9q2+ZayxDDYC5n2YW8Bn/zB
         "--check-local-clock=0",
         "--chain-file=",
         "--servers-file=" + ecosystem]
-             , expected_stderr='ERROR: Public key does not match!')
+             , expected_stderr='Error: Invalid Ed25519 public key')
 
     with open(ecosystem, 'w', encoding='utf8') as f:
         f.write("Cloudflare-Roughtime ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= udp 127.0.0.1:" + str(server_port))
@@ -1136,15 +1136,22 @@ def cli_cert_issuance_tests(tmp_dir, algos=None):
     test_cli("gen_pkcs10", "%s Intermediate --ca --output=%s" % (int_key, int_csr))
     test_cli("sign_cert", "%s %s %s --output=%s" % (root_crt, root_key, int_csr, int_crt))
 
-    test_cli("gen_pkcs10", "%s Leaf --output=%s" % (leaf_key, leaf_csr))
-    test_cli("sign_cert", "%s %s %s --output=%s" % (int_crt, int_key, leaf_csr, leaf_crt))
+    if algos[2][0] != "ML-KEM":
+        test_cli("gen_pkcs10", "%s Leaf --output=%s" % (leaf_key, leaf_csr))
+        test_cli("sign_cert", "%s %s %s --output=%s" % (int_crt, int_key, leaf_csr, leaf_crt))
+    else:
+        leaf_pub = os.path.join(tmp_dir, 'leaf.pub')
+        test_cli("pkcs8", "%s --pub-out --output=%s" % (leaf_key, leaf_pub ))
+        test_cli("create_cert_for_key", "%s %s %s Leaf --output=%s" % (leaf_pub, int_crt, int_key, leaf_crt))
 
     test_cli("cert_verify", "%s %s %s" % (leaf_crt, int_crt, root_crt), "Certificate passes validation checks")
 
 def cli_cert_issuance_alternative_algos_tests(tmp_dir):
     for i, algo in enumerate([[("Dilithium", "Dilithium-8x7-AES-r3"), ("Dilithium", "Dilithium-8x7-AES-r3"), ("Dilithium", "Dilithium-8x7-AES-r3")],
                               [("ECDSA",     "secp256r1"),            ("ECDSA",     "secp384r1"),            ("ECDSA",     "secp256r1")],
-                              [("Dilithium", "Dilithium-6x5-r3"),     ("ECDSA",     "secp256r1"),            ("RSA",       "2048")]]):
+                              [("Dilithium", "Dilithium-6x5-r3"),     ("ECDSA",     "secp256r1"),            ("RSA",       "2048")],
+                              [("Dilithium", "Dilithium-6x5-r3"),     ("ECDSA",     "secp256r1"),            ("ML-KEM",    "")]
+                             ]):
         sub_tmp_dir = os.path.join(tmp_dir, str(i))
         os.mkdir(sub_tmp_dir)
         cli_cert_issuance_tests(sub_tmp_dir, algo)
@@ -1494,22 +1501,26 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
             # We track OQS's code point allocations for FrodoKEM and hybrids thereof.
             # All are defined in TLS's private code point section (0xFE00 - 0xFFFF)
             # and may change in the future.
-            TestConfig("test.openquantumsafe.org", "eFrodoKEM-640-SHAKE", port=oqsp['frodo640shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "eFrodoKEM-976-SHAKE", port=oqsp['frodo976shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "eFrodoKEM-1344-SHAKE", port=oqsp['frodo1344shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "eFrodoKEM-640-AES", port=oqsp['frodo640aes'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "eFrodoKEM-976-AES", port=oqsp['frodo976aes'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "eFrodoKEM-1344-AES", port=oqsp['frodo1344aes'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "x25519/eFrodoKEM-640-SHAKE", port=oqsp['x25519_frodo640shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "x25519/eFrodoKEM-640-AES", port=oqsp['x25519_frodo640aes'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "x448/eFrodoKEM-976-SHAKE", port=oqsp['x448_frodo976shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "x448/eFrodoKEM-976-AES", port=oqsp['x448_frodo976aes'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp256r1/eFrodoKEM-640-SHAKE", port=oqsp['p256_frodo640shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp256r1/eFrodoKEM-640-AES", port=oqsp['p256_frodo640aes'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp384r1/eFrodoKEM-976-SHAKE", port=oqsp['p384_frodo976shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp384r1/eFrodoKEM-976-AES", port=oqsp['p384_frodo976aes'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp521r1/eFrodoKEM-1344-SHAKE", port=oqsp['p521_frodo1344shake'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp521r1/eFrodoKEM-1344-AES", port=oqsp['p521_frodo1344aes'], ca=oqs_test_ca),
+            #
+            # OQS's 'efrodo*' ports serve the ephemeral variant implemented by Botan's
+            # TLS stack; the 'frodo*' ports serve salted FrodoKEM (as of liboqs 0.16.0),
+            # which Botan's TLS does not currently support.
+            TestConfig("test.openquantumsafe.org", "eFrodoKEM-640-SHAKE", port=oqsp['efrodo640shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "eFrodoKEM-976-SHAKE", port=oqsp['efrodo976shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "eFrodoKEM-1344-SHAKE", port=oqsp['efrodo1344shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "eFrodoKEM-640-AES", port=oqsp['efrodo640aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "eFrodoKEM-976-AES", port=oqsp['efrodo976aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "eFrodoKEM-1344-AES", port=oqsp['efrodo1344aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "x25519/eFrodoKEM-640-SHAKE", port=oqsp['x25519_efrodo640shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "x25519/eFrodoKEM-640-AES", port=oqsp['x25519_efrodo640aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "x448/eFrodoKEM-976-SHAKE", port=oqsp['x448_efrodo976shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "x448/eFrodoKEM-976-AES", port=oqsp['x448_efrodo976aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "secp256r1/eFrodoKEM-640-SHAKE", port=oqsp['p256_efrodo640shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "secp256r1/eFrodoKEM-640-AES", port=oqsp['p256_efrodo640aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "secp384r1/eFrodoKEM-976-SHAKE", port=oqsp['p384_efrodo976shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "secp384r1/eFrodoKEM-976-AES", port=oqsp['p384_efrodo976aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "secp521r1/eFrodoKEM-1344-SHAKE", port=oqsp['p521_efrodo1344shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "secp521r1/eFrodoKEM-1344-AES", port=oqsp['p521_efrodo1344aes'], ca=oqs_test_ca),
         ]
     else:
         logging.info("failed to pull OQS port assignment, skipping OQS...")

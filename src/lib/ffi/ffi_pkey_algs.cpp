@@ -1311,7 +1311,7 @@ int botan_privkey_load_ml_kem(botan_privkey_t* key, const uint8_t privkey[], siz
    *key = nullptr;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      auto mode = Botan::ML_KEM_Mode(mlkem_mode);
+      const auto mode = Botan::ML_KEM_Mode(mlkem_mode);
       if(!mode.is_ml_kem()) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
@@ -1334,7 +1334,7 @@ int botan_pubkey_load_ml_kem(botan_pubkey_t* key, const uint8_t pubkey[], size_t
    *key = nullptr;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      auto mode = Botan::ML_KEM_Mode(mlkem_mode);
+      const auto mode = Botan::ML_KEM_Mode(mlkem_mode);
       if(!mode.is_ml_kem()) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
@@ -1361,7 +1361,7 @@ int botan_privkey_load_ml_dsa(botan_privkey_t* key, const uint8_t privkey[], siz
    *key = nullptr;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      auto mode = Botan::ML_DSA_Mode(mldsa_mode);
+      const auto mode = Botan::ML_DSA_Mode(mldsa_mode);
       if(!mode.is_ml_dsa()) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
@@ -1384,7 +1384,7 @@ int botan_pubkey_load_ml_dsa(botan_pubkey_t* key, const uint8_t pubkey[], size_t
    *key = nullptr;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      auto mode = Botan::ML_DSA_Mode(mldsa_mode);
+      const auto mode = Botan::ML_DSA_Mode(mldsa_mode);
       if(!mode.is_ml_dsa()) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
@@ -1411,7 +1411,7 @@ int botan_privkey_load_slh_dsa(botan_privkey_t* key, const uint8_t privkey[], si
    *key = nullptr;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      auto mode = Botan::SLH_DSA_Parameters::create(slhdsa_mode);
+      const auto mode = Botan::SLH_DSA_Parameters::create(slhdsa_mode);
       if(!mode.is_slh_dsa()) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
@@ -1434,7 +1434,7 @@ int botan_pubkey_load_slh_dsa(botan_pubkey_t* key, const uint8_t pubkey[], size_
    *key = nullptr;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      auto mode = Botan::SLH_DSA_Parameters::create(slhdsa_mode);
+      const auto mode = Botan::SLH_DSA_Parameters::create(slhdsa_mode);
       if(!mode.is_slh_dsa()) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }

@@ -162,7 +162,7 @@ bool OID::matches(std::initializer_list<uint32_t> other) const {
 uint64_t OID::hash_code() const {
    // If this is changed also update gen_oids.py to match
    uint64_t hash = 0x621F302327D9A49A;
-   for(auto id : m_id) {
+   for(const auto id : m_id) {
       hash *= 193;
       hash += id;
    }
@@ -187,7 +187,7 @@ void OID::encode_into(DER_Encoder& der) const {
       throw Invalid_Argument("OID::encode_into: OID is invalid");
    }
 
-   auto append = [](std::vector<uint8_t>& encoding, uint32_t z) {
+   const auto append = [](std::vector<uint8_t>& encoding, uint32_t z) {
       if(z <= 0x7F) {
          encoding.push_back(static_cast<uint8_t>(z));
       } else {
@@ -232,7 +232,7 @@ void OID::decode_from(BER_Decoder& decoder) {
       throw BER_Decoding_Error("OID encoding is too short");
    }
 
-   auto consume = [](BufferSlicer& data) -> uint32_t {
+   const auto consume = [](BufferSlicer& data) -> uint32_t {
       BOTAN_ASSERT_NOMSG(!data.empty());
       uint32_t b = data.take_byte();
 
@@ -274,8 +274,9 @@ void OID::decode_from(BER_Decoder& decoder) {
    std::vector<uint32_t> parts;
 
    // Each byte of the DER encoding can result in at most one additional arc,
-   // except the first byte which always encodes two.
-   parts.reserve(obj.length() + 1);
+   // except the first byte which always encodes two. Don't reserve for more than
+   // 16 arcs though; the longest OID in our current table has just 13 arcs.
+   parts.reserve(std::min<size_t>(16, obj.length() + 1));
 
    while(!data.empty()) {
       const uint32_t comp = consume(data);

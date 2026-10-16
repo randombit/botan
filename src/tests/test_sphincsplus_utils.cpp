@@ -65,7 +65,7 @@ std::vector<Test::Result> test_sphincsplus_address() {
                   .set_tree_height(Botan::TreeLayerIndex(67108864))
                   .set_tree_index(Botan::TreeNodeIndex(1073741824));
 
-               auto subtree1 = Botan::Sphincs_Address::as_subtree_from(a);
+               const auto subtree1 = Botan::Sphincs_Address::as_subtree_from(a);
                Botan::Sphincs_Address subtree2({0, 0, 0, 0, 0, 0, 0, 0});
                subtree2.copy_subtree_from(a);
 
@@ -86,7 +86,7 @@ std::vector<Test::Result> test_sphincsplus_address() {
                   .set_chain_address(Botan::WotsChainIndex(67108864))
                   .set_hash_address(Botan::WotsHashIndex(42));
 
-               auto keypair1 = Botan::Sphincs_Address::as_keypair_from(a);
+               const auto keypair1 = Botan::Sphincs_Address::as_keypair_from(a);
                Botan::Sphincs_Address keypair2({0, 0, 0, 0, 0, 0, 0, 0});
                keypair2.copy_keypair_from(a);
 

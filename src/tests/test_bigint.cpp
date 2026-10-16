@@ -193,11 +193,11 @@ class BigInt_Unit_Tests final : public Test {
             result.test_bn_eq("input '" + vec.first + "'", n, vec.second);
          }
 
-         auto check_bigint_formatting = [&](const Botan::BigInt& n,
-                                            const std::string& dec,
-                                            const std::string& hex,
-                                            const std::string& neg_dec,
-                                            const std::string& neg_hex) {
+         const auto check_bigint_formatting = [&](const Botan::BigInt& n,
+                                                  const std::string& dec,
+                                                  const std::string& hex,
+                                                  const std::string& neg_dec,
+                                                  const std::string& neg_hex) {
             std::ostringstream oss;
             oss << n;
             result.test_str_eq("output decimal", oss.str(), dec);
@@ -542,10 +542,10 @@ class BigInt_Mod_Test final : public Text_Based_Test {
          result.test_bn_eq("a %= b", e, expected);
 
          if(a.signum() >= 0 && a < (b * b)) {
-            auto mod_b_pub = Botan::Barrett_Reduction::for_public_modulus(b);
+            const auto mod_b_pub = Botan::Barrett_Reduction::for_public_modulus(b);
             result.test_bn_eq("Barrett public", mod_b_pub.reduce(a), expected);
 
-            auto mod_b_sec = Botan::Barrett_Reduction::for_secret_modulus(b);
+            const auto mod_b_sec = Botan::Barrett_Reduction::for_secret_modulus(b);
             result.test_bn_eq("Barrett secret", mod_b_sec.reduce(a), expected);
          }
 
@@ -603,7 +603,7 @@ class Barrett_Redc_Test final : public Test {
             }();
 
             const size_t mod_bits = mod.bits();
-            auto barrett = Botan::Barrett_Reduction::for_public_modulus(mod);
+            const auto barrett = Botan::Barrett_Reduction::for_public_modulus(mod);
 
             for(size_t i = 0; i != 10; ++i) {
                const auto input = [&]() {
@@ -906,6 +906,50 @@ class BigInt_InvMod_Test final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("math", "bn_invmod", BigInt_InvMod_Test);
 
+class BigInt_InvMod_Random_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("BigInt InvMod random");
+
+         for(const size_t bits : {8,   31,  32,  33,  63,   64,   65,   127,  128,  129,  255, 256,
+                                  257, 511, 512, 513, 1023, 1024, 1025, 2047, 2048, 3072, 4096}) {
+            for(size_t trial = 0; trial != 8; ++trial) {
+               Botan::BigInt mod(rng(), bits);
+               if(trial % 2 == 0) {
+                  mod.set_bit(0);
+               } else {
+                  mod.clear_bit(0);
+               }
+               if(mod < 3) {
+                  mod = 3;
+               }
+
+               const std::vector<Botan::BigInt> inputs = {
+                  Botan::BigInt::one(),
+                  mod - 1,
+                  mod >> 1,
+                  Botan::BigInt(rng(), bits) % mod,
+               };
+
+               for(const auto& a : inputs) {
+                  const Botan::BigInt inv = Botan::inverse_mod(a, mod);
+
+                  if(Botan::gcd(a, mod) == 1) {
+                     result.test_bn_eq("inverse works", (inv * a) % mod, Botan::BigInt::one());
+                     result.test_is_true("inverse in range", inv > 0 && inv < mod);
+                  } else {
+                     result.test_bn_eq("no inverse exists", inv, Botan::BigInt::zero());
+                  }
+               }
+            }
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("math", "bn_invmod_random", BigInt_InvMod_Random_Test);
+
 class BigInt_Rand_Test final : public Text_Based_Test {
    public:
       BigInt_Rand_Test() : Text_Based_Test("bn/random.vec", "Seed,Min,Max,Output") {}
@@ -945,7 +989,7 @@ class Lucas_Primality_Test final : public Test {
          Test::Result result("Lucas primality test");
 
          for(uint32_t i = 3; i <= lucas_max; i += 2) {
-            auto mod_i = Botan::Barrett_Reduction::for_public_modulus(i);
+            const auto mod_i = Botan::Barrett_Reduction::for_public_modulus(i);
             const bool passes_lucas = Botan::is_lucas_probable_prime(i, mod_i);
             const bool is_prime = Botan::is_prime(i, this->rng());
 
@@ -982,7 +1026,7 @@ class RSA_Compute_Exp_Test : public Test {
             std::vector<Botan::BigInt> rp;
             for(size_t i = 0; i != iter / 10; ++i) {
                const size_t bits = (128 + (i % 1024)) % 4096;
-               auto p = Botan::random_prime(rng(), bits);
+               const auto p = Botan::random_prime(rng(), bits);
                if(gcd(p - 1, e) == 1) {
                   rp.push_back(p);
                }
@@ -1001,11 +1045,15 @@ class RSA_Compute_Exp_Test : public Test {
             const auto& p = random_primes[p_idx];
             const auto& q = random_primes[q_idx];
 
-            auto phi_n = lcm(p - 1, q - 1);
+            const auto phi_n = lcm(p - 1, q - 1);
 
-            auto d = Botan::compute_rsa_secret_exponent(e, phi_n, p, q);
+            const auto d = Botan::compute_rsa_secret_exponent(e, phi_n, p, q);
 
-            auto ed_mod_phi_n = (e * d) % phi_n;
+            if(!result.test_is_true("compute_rsa_secret_exponent found an inverse", d.has_value())) {
+               continue;
+            }
+
+            const auto ed_mod_phi_n = (e * *d) % phi_n;
 
             result.test_bn_eq("compute_rsa_secret_exponent returned inverse", ed_mod_phi_n, Botan::BigInt::one());
          }

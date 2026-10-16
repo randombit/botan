@@ -118,6 +118,7 @@ class GenericCurveParams final {
             m_field_minus_2(bn_to_fixed_rev(p - 2)),
             m_field_monty_r1(bn_to_fixed(m_monty_field.R1())),
             m_field_monty_r2(bn_to_fixed(m_monty_field.R2())),
+            m_field_monty_r3(bn_to_fixed(m_monty_field.R3())),
             m_field_p_plus_1_over_4(bn_to_fixed_rev((p + 1) / 4)),
             m_field_inv_2(bn_to_fixed((p / 2) + 1)),
             m_field_p_dash(m_monty_field.p_dash()),
@@ -162,6 +163,8 @@ class GenericCurveParams final {
       const StorageUnit& field_monty_r1() const { return m_field_monty_r1; }
 
       const StorageUnit& field_monty_r2() const { return m_field_monty_r2; }
+
+      const StorageUnit& field_monty_r3() const { return m_field_monty_r3; }
 
       const StorageUnit& field_p_plus_1_over_4() const { return m_field_p_plus_1_over_4; }
 
@@ -259,6 +262,7 @@ class GenericCurveParams final {
       StorageUnit m_field_minus_2;
       StorageUnit m_field_monty_r1;
       StorageUnit m_field_monty_r2;
+      StorageUnit m_field_monty_r3;
       StorageUnit m_field_p_plus_1_over_4;
       StorageUnit m_field_inv_2;
       word m_field_p_dash;
@@ -301,7 +305,7 @@ class GenericScalar final {
 
          auto words = bytes_to_words<2 * N>(std::span{padded_bytes});
          if(words) {
-            auto in_rep = wide_to_rep(curve, words.value());
+            const auto in_rep = wide_to_rep(curve, words.value());
             return GenericScalar(curve, in_rep);
          } else {
             return {};
@@ -406,7 +410,7 @@ class GenericScalar final {
       }
 
       GenericScalar pow_vartime(const StorageUnit& exp) const {
-         auto one = GenericScalar::one(curve());
+         const auto one = GenericScalar::one(curve());
          auto bits = curve()->_params().order_bits();
          auto words = curve()->_params().words();
          return impl_pow_vartime(*this, one, bits, std::span{exp}.last(words));
@@ -471,13 +475,13 @@ class GenericScalar final {
             // Conditional ok: this function is variable time
             if(a.m_val == b.m_val) {
                // At this point it should be that a == b == 1
-               auto r = y.negate();
+               const auto r = y.negate();
 
                // Convert back to Montgomery
                return GenericScalar(curve(), to_rep(curve(), r.m_val));
             }
 
-            auto nx = x + y;
+            const auto nx = x + y;
 
             /*
             * Otherwise either b > a or a > b
@@ -583,7 +587,7 @@ class GenericScalar final {
       }
 
       static StorageUnit wide_to_rep(const GenericPrimeOrderCurve* curve, std::array<W, 2 * N> x) {
-         auto redc_x = redc(curve, x);
+         const auto redc_x = redc(curve, x);
          std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          curve->_params().mul(z, redc_x, curve->_params().order_monty_r3());
          return redc(curve, z);
@@ -642,6 +646,24 @@ class GenericField final {
 
       static GenericField curve_b(const GenericPrimeOrderCurve* curve) {
          return GenericField(curve, curve->_params().monty_curve_b());
+      }
+
+      /**
+      * Modular reduce a larger input
+      *
+      * This takes a bytestring that is at most twice the length of the modulus, and
+      * modular reduces it.
+      */
+      static GenericField from_wide_bytes(const GenericPrimeOrderCurve* curve, std::span<const uint8_t> bytes) {
+         BOTAN_ARG_CHECK(bytes.size() <= 2 * curve->_params().field_bytes(), "Input too large");
+
+         std::array<uint8_t, 2 * sizeof(word) * N> padded_bytes{};
+         copy_mem(std::span{padded_bytes}.last(bytes.size()), bytes);
+
+         // Cannot fail since the padded input is exactly 2*N words
+         const auto words = bytes_to_words<2 * N>(std::span{padded_bytes});
+         BOTAN_ASSERT_NOMSG(words.has_value());
+         return GenericField(curve, wide_to_rep(curve, words.value()));
       }
 
       static GenericField random(const GenericPrimeOrderCurve* curve, RandomNumberGenerator& rng) {
@@ -741,7 +763,7 @@ class GenericField final {
       }
 
       GenericField pow_vartime(const StorageUnit& exp) const {
-         auto one = GenericField::one(curve());
+         const auto one = GenericField::one(curve());
          auto bits = curve()->_params().field_bits();
          auto words = curve()->_params().words();
          return impl_pow_vartime(*this, one, bits, std::span{exp}.last(words));
@@ -818,8 +840,8 @@ class GenericField final {
          const W mask = cond.into_bitmask<W>();
 
          for(size_t i = 0; i != N; ++i) {
-            auto nx = choose(mask, y.m_val[i], x.m_val[i]);
-            auto ny = choose(mask, x.m_val[i], y.m_val[i]);
+            const auto nx = choose(mask, y.m_val[i], x.m_val[i]);
+            const auto ny = choose(mask, x.m_val[i], y.m_val[i]);
             x.m_val[i] = nx;
             y.m_val[i] = ny;
          }
@@ -913,6 +935,13 @@ class GenericField final {
          return redc(curve, z);
       }
 
+      static StorageUnit wide_to_rep(const GenericPrimeOrderCurve* curve, std::array<W, 2 * N> x) {
+         const auto redc_x = redc(curve, x);
+         std::array<W, 2 * N> z{};
+         curve->_params().mul(z, redc_x, curve->_params().field_monty_r3());
+         return redc(curve, z);
+      }
+
       const GenericPrimeOrderCurve* m_curve;
       StorageUnit m_val;
 };
@@ -965,7 +994,7 @@ class GenericAffinePoint final {
          auto result = GenericAffinePoint::identity(pts[0].curve());
 
          // Intentionally wrapping; set to maximum size_t if idx == 0
-         const size_t idx1 = static_cast<size_t>(idx - 1);
+         const size_t idx1 = idx - 1;
          for(size_t i = 0; i != pts.size(); ++i) {
             const auto found = CT::Mask<size_t>::is_equal(idx1, i).as_choice();
             result.conditional_assign(found, pts[i]);
@@ -1066,7 +1095,7 @@ class GenericProjectivePoint final {
       * Convert a point from affine to projective form
       */
       static Self from_affine(const GenericAffinePoint& pt) {
-         auto x = pt.x();
+         const auto x = pt.x();
          auto y = pt.y();
          auto z = GenericField::one(x.curve());
 
@@ -1126,11 +1155,39 @@ class GenericProjectivePoint final {
       * Mixed (projective + affine) point addition
       */
       static Self add_mixed(const Self& a, const GenericAffinePoint& b) {
-         return point_add_mixed<Self, GenericAffinePoint, GenericField>(a, b, GenericField::one(a.curve()));
+         return point_add_mixed<Self, GenericAffinePoint, GenericField>(
+            a, b, GenericField::one(a.curve()), GenericField::curve_a(a.curve()));
+      }
+
+      /**
+      * Mixed point addition on an isomorphic curve with the given a coefficient
+      */
+      static Self add_mixed_iso(const Self& a, const GenericAffinePoint& b, const GenericField& curve_a) {
+         return point_add_mixed<Self, GenericAffinePoint, GenericField>(a, b, GenericField::one(a.curve()), curve_a);
+      }
+
+      /**
+      * Mixed point addition, additionally returning H (the sum has Z = a.z * H)
+      */
+      static std::pair<Self, GenericField> add_mixed_h(const Self& a, const GenericAffinePoint& b) {
+         return point_add_mixed_h<Self, GenericAffinePoint, GenericField>(
+            a, b, GenericField::one(a.curve()), GenericField::curve_a(a.curve()));
       }
 
       static Self add_or_sub(const Self& a, const GenericAffinePoint& b, CT::Choice sub) {
-         return point_add_or_sub_mixed<Self, GenericAffinePoint, GenericField>(a, b, sub, GenericField::one(a.curve()));
+         return point_add_or_sub_mixed<Self, GenericAffinePoint, GenericField>(
+            a, b, sub, GenericField::one(a.curve()), GenericField::curve_a(a.curve()));
+      }
+
+      /**
+      * Either add or subtract, on an isomorphic curve with the given a coefficient
+      */
+      static Self add_or_sub_iso(const Self& a,
+                                 const GenericAffinePoint& b,
+                                 CT::Choice sub,
+                                 const GenericField& curve_a) {
+         return point_add_or_sub_mixed<Self, GenericAffinePoint, GenericField>(
+            a, b, sub, GenericField::one(a.curve()), curve_a);
       }
 
       /**
@@ -1149,6 +1206,31 @@ class GenericProjectivePoint final {
          } else {
             const auto A = GenericField::curve_a(curve());
             return dbl_n_generic(*this, A, n);
+         }
+      }
+
+      /**
+      * Iterated point doubling on an isomorphic curve with the given a coefficient
+      *
+      * If a is zero on this curve it is zero on any isomorphic curve, so the
+      * argument is ignored in that case.
+      */
+      Self dbl_n_iso(const GenericField& a, size_t n) const {
+         if(curve()->_params().a_is_zero()) {
+            return dbl_n_a_zero(*this, n);
+         } else {
+            return dbl_n_generic(*this, a, n);
+         }
+      }
+
+      /**
+      * Point doubling on an isomorphic curve with the given a coefficient
+      */
+      Self dbl_iso(const GenericField& a) const {
+         if(curve()->_params().a_is_zero()) {
+            return dbl_a_zero(*this);
+         } else {
+            return dbl_generic(*this, a);
          }
       }
 
@@ -1177,20 +1259,13 @@ class GenericProjectivePoint final {
       * Projective coordinates are redundant; if (x,y,z) is a projective
       * point then so is (x*r^2,y*r^3,z*r) for any non-zero r.
       */
-      void randomize_rep(RandomNumberGenerator& rng) {
-         // In certain contexts we may be called with a Null_RNG; in that case the
-         // caller is accepting that randomization will not occur
+      void randomize_rep(const GenericField& r) {
+         const auto r2 = r.square();
+         const auto r3 = r2 * r;
 
-         if(rng.is_seeded()) {
-            auto r = GenericField::random(curve(), rng);
-
-            auto r2 = r.square();
-            auto r3 = r2 * r;
-
-            m_x *= r2;
-            m_y *= r3;
-            m_z *= r;
-         }
+         m_x *= r2;
+         m_y *= r3;
+         m_z *= r;
       }
 
       /**
@@ -1232,9 +1307,96 @@ class GenericCurve final {
       typedef word WordType;
 };
 
+/**
+* The randomness consumed by one blinded scalar multiplication
+*
+* The scalar masks, the projective re-randomizations, and the random curve
+* isomorphism of the point table are drawn from the RNG with a single request,
+* since each request has a fixed cost that dominates for small outputs.
+*
+* If the provided RNG is not seeded, no randomness is drawn and blinding is
+* skipped; the isomorphism parameter is then one.
+*/
+class GenericBlindingRandomness final {
+   public:
+      /// Each multiplication re-randomizes the accumulator this many times
+      static constexpr size_t Rerandomizations = 4;
+
+      GenericBlindingRandomness(const GenericPrimeOrderCurve* curve, RandomNumberGenerator& rng, size_t scalars) :
+            m_seeded(rng.is_seeded()),
+            m_scalars(scalars),
+            m_mask_bytes(mask_bytes(curve->_params().order_bits())),
+            m_isomorphism(GenericField::one(curve)) {
+         // Conditional ok: caller's RNG state (seeded vs not) is presumed public
+         if(m_seeded) {
+            // Reducing 64 extra bits mod p leaves a negligible bias
+            const size_t wide_bytes = curve->_params().field_bytes() + 8;
+
+            secure_vector<uint8_t> buf(m_scalars * m_mask_bytes + (Rerandomizations + 1) * wide_bytes);
+            rng.randomize(buf);
+
+            m_masks.assign(buf.begin(), buf.begin() + m_scalars * m_mask_bytes);
+
+            m_rerandomizers.reserve(Rerandomizations);
+            for(size_t i = 0; i != Rerandomizations; ++i) {
+               const auto bytes = std::span{buf}.subspan(m_scalars * m_mask_bytes + i * wide_bytes, wide_bytes);
+               m_rerandomizers.push_back(GenericField::from_wide_bytes(curve, bytes));
+            }
+
+            const auto iso =
+               std::span{buf}.subspan(m_scalars * m_mask_bytes + Rerandomizations * wide_bytes, wide_bytes);
+            m_isomorphism = GenericField::from_wide_bytes(curve, iso);
+            m_isomorphism.conditional_assign(m_isomorphism.is_zero(), GenericField::one(curve));
+         }
+      }
+
+      bool seeded() const { return m_seeded; }
+
+      std::span<const uint8_t> mask(size_t idx) const {
+         BOTAN_ASSERT_NOMSG(idx < m_scalars);
+         return std::span{m_masks}.subspan(idx * m_mask_bytes, m_mask_bytes);
+      }
+
+      /**
+      * Randomize the projective representation of pt using the idx'th element
+      */
+      void randomize_rep(GenericProjectivePoint& pt, size_t idx) const {
+         BOTAN_ASSERT_NOMSG(idx < Rerandomizations);
+         // Conditional ok: caller's RNG state (seeded vs not) is presumed public
+         if(m_seeded) {
+            pt.randomize_rep(m_rerandomizers[idx]);
+         }
+      }
+
+      /**
+      * Return the random curve isomorphism parameter for the point table
+      */
+      const GenericField& isomorphism() const { return m_isomorphism; }
+
+   private:
+      static size_t mask_bytes(size_t order_bits) {
+         const size_t blinder_bits = scalar_blinding_bits(order_bits);
+         const size_t mask_words = (blinder_bits + WordInfo<word>::bits - 1) / WordInfo<word>::bits;
+         return mask_words * WordInfo<word>::bytes;
+      }
+
+      bool m_seeded;
+      size_t m_scalars;
+      size_t m_mask_bytes;
+      secure_vector<uint8_t> m_masks;
+      std::vector<GenericField> m_rerandomizers;
+      GenericField m_isomorphism;
+};
+
 class GenericBlindedScalarBits final {
    public:
-      GenericBlindedScalarBits(const GenericScalar& scalar, RandomNumberGenerator& rng, size_t wb) {
+      /**
+      * Blind the scalar using the idx'th mask of the provided GenericBlindingRandomness
+      */
+      GenericBlindedScalarBits(const GenericScalar& scalar,
+                               const GenericBlindingRandomness& randomness,
+                               size_t idx,
+                               size_t wb) {
          BOTAN_ASSERT_NOMSG(wb == 1 || wb == 2 || wb == 3 || wb == 4 || wb == 5 || wb == 6 || wb == 7);
 
          const auto& params = scalar.curve()->_params();
@@ -1244,14 +1406,14 @@ class GenericBlindedScalarBits final {
 
          const size_t blinder_bits = scalar_blinding_bits(order_bits);
 
-         if(blinder_bits > 0 && rng.is_seeded()) {
+         // Conditional ok: caller's RNG state (seeded vs not) is presumed public
+         if(blinder_bits > 0 && randomness.seeded()) {
             const size_t mask_words = (blinder_bits + WordInfo<word>::bits - 1) / WordInfo<word>::bits;
-            const size_t mask_bytes = mask_words * WordInfo<word>::bytes;
 
             const size_t words = params.words();
 
-            secure_vector<uint8_t> maskb(mask_bytes);
-            rng.randomize(maskb);
+            const auto maskb = randomness.mask(idx);
+            BOTAN_ASSERT_NOMSG(maskb.size() == mask_words * WordInfo<word>::bytes);
 
             std::array<word, PrimeOrderCurve::StorageWords> mask{};
             load_le(mask.data(), maskb.data(), mask_words);
@@ -1316,23 +1478,25 @@ class GenericBlindedScalarBits final {
       size_t m_window_bits;
 };
 
-class GenericWindowedMul final {
-   public:
-      static constexpr size_t WindowBits = VarPointWindowBits;
-      static constexpr size_t TableSize = (1 << WindowBits) - 1;
+/**
+* Variable point multiplication
+*
+* This is a fixed window multiplication using a table [1*P, ..., (2^W - 1)*P]
+* with a shared Z coordinate. The scalar blinding, the accumulator
+* re-randomizations, and the random curve isomorphism of the table all come
+* from a single RNG request.
+*/
+GenericProjectivePoint varpoint_mul(const GenericAffinePoint& pt, const GenericScalar& s, RandomNumberGenerator& rng) {
+   constexpr size_t WindowBits = VarPointWindowBits;
+   constexpr size_t TableSize = (1 << WindowBits) - 1;
 
-      explicit GenericWindowedMul(const GenericAffinePoint& pt) :
-            m_table(varpoint_setup<GenericCurve, TableSize>(pt)) {}
+   const GenericBlindingRandomness blinding(s.curve(), rng, 1);
+   const SharedZPointTable<GenericCurve> table(
+      pt, TableSize, GenericField::curve_a(pt.curve()), blinding.isomorphism());
+   const GenericBlindedScalarBits bits(s, blinding, 0, WindowBits);
 
-      GenericProjectivePoint mul(const GenericScalar& s, RandomNumberGenerator& rng) {
-         const GenericBlindedScalarBits bits(s, rng, WindowBits);
-
-         return varpoint_exec<GenericCurve, WindowBits>(m_table, bits, rng);
-      }
-
-   private:
-      AffinePointTable<GenericCurve> m_table;
-};
+   return varpoint_exec<GenericCurve, WindowBits>(table, bits, blinding);
+}
 
 }  // namespace
 
@@ -1345,9 +1509,10 @@ class GenericBaseMulTable final {
             m_table(basemul_booth_setup<GenericCurve, WindowBits>(pt, blinded_scalar_bits(*pt.curve()) + 1)) {}
 
       GenericProjectivePoint mul(const GenericScalar& s, RandomNumberGenerator& rng) {
+         const GenericBlindingRandomness blinding(s.curve(), rng, 1);
          // W+1 bit windows for Booth recoding overlap
-         const GenericBlindedScalarBits scalar(s, rng, WindowBits + 1);
-         return basemul_booth_exec<GenericCurve, WindowBits>(m_table, scalar, rng);
+         const GenericBlindedScalarBits scalar(s, blinding, 0, WindowBits + 1);
+         return basemul_booth_exec<GenericCurve, WindowBits>(m_table, scalar, blinding);
       }
 
    private:
@@ -1361,29 +1526,26 @@ class GenericBaseMulTable final {
 
 namespace {
 
-class GenericWindowedMul2 final {
-   public:
-      static constexpr size_t WindowBits = Mul2PrecompWindowBits;
+/**
+* Constant time 2-ary multiplication x*P + y*Q
+*/
+GenericProjectivePoint varpoint_mul2(const GenericAffinePoint& p,
+                                     const GenericScalar& x,
+                                     const GenericAffinePoint& q,
+                                     const GenericScalar& y,
+                                     RandomNumberGenerator& rng) {
+   constexpr size_t WindowBits = Mul2PrecompWindowBits;
 
-      GenericWindowedMul2(const GenericWindowedMul2& other) = delete;
-      GenericWindowedMul2(GenericWindowedMul2&& other) = delete;
-      GenericWindowedMul2& operator=(const GenericWindowedMul2& other) = delete;
-      GenericWindowedMul2& operator=(GenericWindowedMul2&& other) = delete;
+   const GenericBlindingRandomness blinding(x.curve(), rng, 2);
+   const SharedZPointTable<GenericCurve> table(mul2_setup<GenericCurve, WindowBits>(p, q),
+                                               GenericField::curve_a(p.curve()),
+                                               GenericField::one(p.curve()),
+                                               blinding.isomorphism());
+   const GenericBlindedScalarBits x_bits(x, blinding, 0, WindowBits);
+   const GenericBlindedScalarBits y_bits(y, blinding, 1, WindowBits);
 
-      ~GenericWindowedMul2() = default;
-
-      GenericWindowedMul2(const GenericAffinePoint& p, const GenericAffinePoint& q) :
-            m_table(mul2_setup<GenericCurve, WindowBits>(p, q)) {}
-
-      GenericProjectivePoint mul2(const GenericScalar& x, const GenericScalar& y, RandomNumberGenerator& rng) const {
-         const GenericBlindedScalarBits x_bits(x, rng, WindowBits);
-         const GenericBlindedScalarBits y_bits(y, rng, WindowBits);
-         return mul2_exec<GenericCurve, WindowBits>(m_table, x_bits, y_bits, rng);
-      }
-
-   private:
-      AffinePointTable<GenericCurve> m_table;
-};
+   return mul2_exec<GenericCurve, WindowBits>(table, x_bits, y_bits, blinding);
+}
 
 class GenericVartimeWindowedMul2 final : public PrimeOrderCurve::PrecomputedMul2Table {
    public:
@@ -1464,7 +1626,7 @@ PrimeOrderCurve::ProjectivePoint GenericPrimeOrderCurve::mul_by_g(const Scalar& 
 PrimeOrderCurve::Scalar GenericPrimeOrderCurve::base_point_mul_x_mod_order(const Scalar& scalar,
                                                                            RandomNumberGenerator& rng) const {
    BOTAN_STATE_CHECK(m_basemul != nullptr);
-   auto pt_s = m_basemul->mul(from_stash(scalar), rng);
+   const auto pt_s = m_basemul->mul(from_stash(scalar), rng);
    BOTAN_STATE_CHECK(!pt_s.is_identity().as_bool());
    const auto x_bytes = to_affine_x<GenericCurve>(pt_s).serialize<secure_vector<uint8_t>>();
    if(auto s = GenericScalar::from_wide_bytes(this, x_bytes)) {
@@ -1477,15 +1639,13 @@ PrimeOrderCurve::Scalar GenericPrimeOrderCurve::base_point_mul_x_mod_order(const
 PrimeOrderCurve::ProjectivePoint GenericPrimeOrderCurve::mul(const AffinePoint& pt,
                                                              const Scalar& scalar,
                                                              RandomNumberGenerator& rng) const {
-   GenericWindowedMul pt_table(from_stash(pt));
-   return stash(pt_table.mul(from_stash(scalar), rng));
+   return stash(varpoint_mul(from_stash(pt), from_stash(scalar), rng));
 }
 
 secure_vector<uint8_t> GenericPrimeOrderCurve::mul_x_only(const AffinePoint& pt,
                                                           const Scalar& scalar,
                                                           RandomNumberGenerator& rng) const {
-   GenericWindowedMul pt_table(from_stash(pt));
-   auto pt_s = pt_table.mul(from_stash(scalar), rng);
+   const auto pt_s = varpoint_mul(from_stash(pt), from_stash(scalar), rng);
    BOTAN_STATE_CHECK(!pt_s.is_identity().as_bool());
    return to_affine_x<GenericCurve>(pt_s).serialize<secure_vector<uint8_t>>();
 }
@@ -1499,7 +1659,7 @@ std::optional<PrimeOrderCurve::ProjectivePoint> GenericPrimeOrderCurve::mul2_var
                                                                                      const Scalar& s1,
                                                                                      const Scalar& s2) const {
    const auto& tbl = dynamic_cast<const GenericVartimeWindowedMul2&>(tableb);
-   auto pt = tbl.mul2_vartime(from_stash(s1), from_stash(s2));
+   const auto pt = tbl.mul2_vartime(from_stash(s1), from_stash(s2));
    if(pt.is_identity().as_bool()) {
       return {};
    } else {
@@ -1509,8 +1669,7 @@ std::optional<PrimeOrderCurve::ProjectivePoint> GenericPrimeOrderCurve::mul2_var
 
 std::optional<PrimeOrderCurve::ProjectivePoint> GenericPrimeOrderCurve::mul_px_qy(
    const AffinePoint& p, const Scalar& x, const AffinePoint& q, const Scalar& y, RandomNumberGenerator& rng) const {
-   const GenericWindowedMul2 table(from_stash(p), from_stash(q));
-   auto pt = table.mul2(from_stash(x), from_stash(y), rng);
+   const auto pt = varpoint_mul2(from_stash(p), from_stash(x), from_stash(q), from_stash(y), rng);
    if(pt.is_identity().as_bool()) {
       return {};
    } else {
@@ -1523,7 +1682,7 @@ bool GenericPrimeOrderCurve::mul2_vartime_x_mod_order_eq(const PrecomputedMul2Ta
                                                          const Scalar& s1,
                                                          const Scalar& s2) const {
    const auto& tbl = dynamic_cast<const GenericVartimeWindowedMul2&>(tableb);
-   auto pt = tbl.mul2_vartime(from_stash(s1), from_stash(s2));
+   const auto pt = tbl.mul2_vartime(from_stash(s1), from_stash(s2));
 
    if(!pt.is_identity().as_bool()) {
       const auto z2 = pt.z().square();
@@ -1559,7 +1718,7 @@ PrimeOrderCurve::AffinePoint GenericPrimeOrderCurve::point_identity() const {
 }
 
 PrimeOrderCurve::AffinePoint GenericPrimeOrderCurve::point_to_affine(const ProjectivePoint& pt) const {
-   auto affine = to_affine<GenericCurve>(from_stash(pt));
+   const auto affine = to_affine<GenericCurve>(from_stash(pt));
 
    const auto y2 = affine.y().square();
    const auto x3_ax_b = GenericCurve::AffinePoint::x3_ax_b(affine.x());
@@ -1683,30 +1842,30 @@ GenericScalar GenericPrimeOrderCurve::from_stash(const PrimeOrderCurve::Scalar& 
 }
 
 PrimeOrderCurve::AffinePoint GenericPrimeOrderCurve::stash(const GenericAffinePoint& pt) const {
-   auto x_w = pt.x().stash_value();
-   auto y_w = pt.y().stash_value();
+   const auto x_w = pt.x().stash_value();
+   const auto y_w = pt.y().stash_value();
    return AffinePoint::_create(shared_from_this(), x_w, y_w);
 }
 
 GenericAffinePoint GenericPrimeOrderCurve::from_stash(const PrimeOrderCurve::AffinePoint& pt) const {
    BOTAN_ARG_CHECK(pt._curve().get() == this, "Curve mismatch");
-   auto x = GenericField(this, pt._x());
-   auto y = GenericField(this, pt._y());
+   const auto x = GenericField(this, pt._x());
+   const auto y = GenericField(this, pt._y());
    return GenericAffinePoint(x, y);
 }
 
 PrimeOrderCurve::ProjectivePoint GenericPrimeOrderCurve::stash(const GenericProjectivePoint& pt) const {
-   auto x_w = pt.x().stash_value();
-   auto y_w = pt.y().stash_value();
-   auto z_w = pt.z().stash_value();
+   const auto x_w = pt.x().stash_value();
+   const auto y_w = pt.y().stash_value();
+   const auto z_w = pt.z().stash_value();
    return ProjectivePoint::_create(shared_from_this(), x_w, y_w, z_w);
 }
 
 GenericProjectivePoint GenericPrimeOrderCurve::from_stash(const PrimeOrderCurve::ProjectivePoint& pt) const {
    BOTAN_ARG_CHECK(pt._curve().get() == this, "Curve mismatch");
-   auto x = GenericField(this, pt._x());
-   auto y = GenericField(this, pt._y());
-   auto z = GenericField(this, pt._z());
+   const auto x = GenericField(this, pt._x());
+   const auto y = GenericField(this, pt._y());
+   const auto z = GenericField(this, pt._z());
    return GenericProjectivePoint(x, y, z);
 }
 
@@ -1760,7 +1919,7 @@ std::shared_ptr<const PrimeOrderCurve> PCurveInstance::from_params(
    }
 
    // Check that the (x,y) generator point is on the curve
-   auto mod_p = Barrett_Reduction::for_public_modulus(p);
+   const auto mod_p = Barrett_Reduction::for_public_modulus(p);
    const BigInt y2 = mod_p.square(base_y);
    const BigInt x3_ax_b = mod_p.reduce(mod_p.cube(base_x) + mod_p.multiply(a, base_x) + b);
    if(y2 != x3_ax_b) {

@@ -1,4 +1,4 @@
-#test cpuid avx2 ssse3 simd128
+#test cpuid avx512 avx2 ssse3 neon vsx lsx simd128
 
 # First three are the official test vectors
 

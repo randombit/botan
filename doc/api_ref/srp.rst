@@ -5,6 +5,11 @@ The library contains an implementation of the
 `SRP6-a <http://srp.stanford.edu/design.html>`_ password authenticated
 key exchange protocol in ``srp6.h``.
 
+.. warning::
+
+   Support for SRP6 is deprecated and will be removed in a future major
+   release. Prefer SPAKE2+
+
 A SRP client provides what is called a SRP *verifier* to the server.
 This verifier is based on a password, but the password cannot be
 easily derived from the verifier (however brute force attacks are
@@ -15,10 +20,6 @@ authentication and/or encryption.
 SRP works in a discrete logarithm group. Special parameter sets for
 SRP6 are defined, denoted in the library as "modp/srp/<size>", for
 example "modp/srp/2048".
-
-.. warning::
-
-   If possible prefer a newer PAKE design such as SPAKE2+
 
 .. warning::
 

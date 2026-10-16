@@ -264,7 +264,7 @@ DL_Group::DL_Group(std::string_view str) {
 }
 
 DL_Group DL_Group::from_name(std::string_view name) {
-   auto data = DL_group_info(name);
+   const auto data = DL_group_info(name);
 
    if(!data) {
       throw Invalid_Argument(fmt("DL_Group: Unknown group '{}'", name));
@@ -296,7 +296,7 @@ BigInt make_dsa_generator(const BigInt& p, const BigInt& q) {
    }
 
    // TODO we compute these, then throw them away and recompute in DL_Group_Data
-   auto mod_p = Barrett_Reduction::for_public_modulus(p);
+   const auto mod_p = Barrett_Reduction::for_public_modulus(p);
    const Montgomery_Params params(p, mod_p);
 
    for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i) {
@@ -443,7 +443,7 @@ bool DL_Group::verify_private_element(const BigInt& x) const {
       return false;
    }
 
-   if(q > 0 && x > q) {
+   if(q > 0 && x >= q) {
       return false;
    }
 
@@ -482,7 +482,7 @@ bool DL_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
       return false;
    }
 
-   const size_t test_prob = 128;
+   const size_t test_prob = strong ? 128 : 12;
    const bool is_randomly_generated = (source() != DL_Group_Source::ExternalSource);
 
    if(!is_prime(p, rng, test_prob, is_randomly_generated)) {

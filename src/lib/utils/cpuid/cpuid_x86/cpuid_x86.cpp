@@ -66,6 +66,7 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
       CLMUL = (1ULL << 33),
       SSSE3 = (1ULL << 41),
       SSE41 = (1ULL << 51),
+      POPCNT = (1ULL << 55),
       AESNI = (1ULL << 57),
       // AVX + OSXSAVE
       OSXSAVE = (1ULL << 59) | (1ULL << 60),
@@ -121,6 +122,7 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
 
    uint32_t feat = 0;
    uint32_t cpuid[4] = {0};
+   bool has_sse41 = false;
    bool has_os_ymm_support = false;
    bool has_os_zmm_support = false;
 
@@ -138,6 +140,8 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
 
       feat |= if_set(flags0, x86_CPUID_1_bits::RDRAND, CPUFeature::Bit::RDRAND, allowed);
 
+      feat |= if_set(flags0, x86_CPUID_1_bits::POPCNT, CPUFeature::Bit::POPCNT, allowed);
+
       feat |= if_set(flags0, x86_CPUID_1_bits::SSE2, CPUFeature::Bit::SSE2, allowed);
 
       if(is_set(feat, CPUFeature::Bit::SSE2)) {
@@ -146,6 +150,10 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
          if(is_set(feat, CPUFeature::Bit::SSSE3)) {
             feat |= if_set(flags0, x86_CPUID_1_bits::CLMUL, CPUFeature::Bit::CLMUL, allowed);
             feat |= if_set(flags0, x86_CPUID_1_bits::AESNI, CPUFeature::Bit::AESNI, allowed);
+
+            // SSE4.1 is not tracked as a feature, but is required by the SHA-NI code
+            const uint64_t sse41 = static_cast<uint64_t>(x86_CPUID_1_bits::SSE41);
+            has_sse41 = (flags0 & sse41) == sse41;
          }
 
          const uint64_t osxsave64 = static_cast<uint64_t>(x86_CPUID_1_bits::OSXSAVE);
@@ -179,8 +187,10 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
       feat |= if_set(flags7, x86_CPUID_7_bits::BMI_1_AND_2, CPUFeature::Bit::BMI, allowed);
 
       if(is_set(feat, CPUFeature::Bit::SSSE3)) {
-         feat |= if_set(flags7, x86_CPUID_7_bits::SHA, CPUFeature::Bit::SHA, allowed);
-         feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SM3, CPUFeature::Bit::SM3, allowed);
+         // The SHA-NI code uses SSE4.1 instructions in addition to SSSE3
+         if(has_sse41) {
+            feat |= if_set(flags7, x86_CPUID_7_bits::SHA, CPUFeature::Bit::SHA, allowed);
+         }
 
          // We only consider AVX2 if SSSE3 is supported
          if(has_os_ymm_support) {
@@ -189,9 +199,15 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
             if(is_set(feat, CPUFeature::Bit::AVX2)) {
                feat |= if_set(flags7, x86_CPUID_7_bits::GFNI, CPUFeature::Bit::GFNI, allowed);
                feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUFeature::Bit::AVX2_AES, allowed);
-               feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VCLMUL, CPUFeature::Bit::AVX2_CLMUL, allowed);
                feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SHA512, CPUFeature::Bit::SHA512, allowed);
+               // The SM3/SM4 instructions are VEX encoded and the code using them also uses AVX2
+               feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SM3, CPUFeature::Bit::SM3, allowed);
                feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SM4, CPUFeature::Bit::SM4, allowed);
+
+               // The VPCLMULQDQ code also uses the legacy 128-bit PCLMULQDQ instruction
+               if(is_set(feat, CPUFeature::Bit::CLMUL)) {
+                  feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VCLMUL, CPUFeature::Bit::AVX2_CLMUL, allowed);
+               }
 
                // Likewise we only consider AVX-512 if AVX2 is supported
                if(has_os_zmm_support) {
@@ -199,7 +215,9 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
 
                   if(is_set(feat, CPUFeature::Bit::AVX512)) {
                      feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUFeature::Bit::AVX512_AES, allowed);
-                     feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VCLMUL, CPUFeature::Bit::AVX512_CLMUL, allowed);
+                     if(is_set(feat, CPUFeature::Bit::CLMUL)) {
+                        feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VCLMUL, CPUFeature::Bit::AVX512_CLMUL, allowed);
+                     }
                   }
                }
             }

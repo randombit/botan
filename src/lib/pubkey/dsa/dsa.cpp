@@ -8,7 +8,7 @@
 
 #include <botan/dsa.h>
 
-#include <botan/assert.h>
+#include <botan/exceptn.h>
 #include <botan/pk_options_readers.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/divide.h>
@@ -26,9 +26,13 @@ namespace Botan {
 namespace {
 
 void check_dsa_group(const DL_Group& group) {
-   BOTAN_ARG_CHECK(group.has_q(), "Q parameter must be set for DSA");
+   if(!group.has_q()) {
+      throw Decoding_Error("Q parameter must be set for DSA");
+   }
    // All versions of FIPS 186 have required that Q be at least 160 bits
-   BOTAN_ARG_CHECK(group.q_bits() >= 160, "DSA Q parameter must be at least 160 bits");
+   if(group.q_bits() < 160) {
+      throw Decoding_Error("DSA Q parameter must be at least 160 bits");
+   }
 }
 
 }  // namespace
@@ -107,8 +111,8 @@ bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
       return false;
    }
 
-   if(m_private_key->private_key() >= m_private_key->group().get_q()) {
-      return false;
+   if(!strong) {
+      return true;
    }
 
    return KeyPair::signature_consistency_check(rng, *this, "SHA-256");

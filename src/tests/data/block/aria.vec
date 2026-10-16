@@ -1,5 +1,5 @@
 
-#test cpuid avx512 aesni armv8aes
+#test cpuid avx512 aesni armv8aes power_crypto
 
 [ARIA-128]
 

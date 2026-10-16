@@ -78,6 +78,9 @@ class BOTAN_PUBLIC_API(3, 12) IPv6Address final {
       */
       std::array<uint8_t, 16> address() const { return m_ip; }
 
+      /// The address as sixteen bytes, network-byte-order.
+      std::array<uint8_t, 16> to_bytes() const { return m_ip; }
+
       /**
       * Convert an IPv6 address to the RFC 5952 canonical text form:
       * lowercase hex, leading zeros within a group suppressed, and the
@@ -157,6 +160,9 @@ class BOTAN_PUBLIC_API(3, 12) IPv6Subnet final {
 
       /// True iff @p ip falls within this subnet.
       bool contains(const IPv6Address& ip) const;
+
+      /// The last address in this subnet (all host bits set)
+      IPv6Address last_address() const;
 
       /// CIDR-style "2001:db8::/32".
       std::string to_string() const;

@@ -92,10 +92,10 @@ Channel_Impl_12::Channel_Impl_12(const std::shared_ptr<Callbacks>& callbacks,
                                  const std::shared_ptr<RandomNumberGenerator>& rng,
                                  const std::shared_ptr<const Policy>& policy,
                                  bool is_server,
-                                 bool is_datagram,
+                                 TLS_Flavor flavor,
                                  size_t reserved_io_buffer_size) :
       m_is_server(is_server),
-      m_is_datagram(is_datagram),
+      m_flavor(flavor),
       m_callbacks(callbacks),
       m_session_manager(session_manager),
       m_policy(policy),
@@ -168,7 +168,7 @@ void Channel_Impl_12::invalidate_sessions(const std::vector<Session_Handle>& han
 
 void Channel_Impl_12::reset_active_association_state() {
    // This operation only makes sense for DTLS
-   BOTAN_ASSERT_NOMSG(m_is_datagram);
+   BOTAN_ASSERT_NOMSG(m_flavor == TLS_Flavor::DTLS);
    m_active_state.reset();
    m_read_cipher_states.clear();
    m_write_cipher_states.clear();
@@ -189,7 +189,7 @@ Connection_Sequence_Numbers& Channel_Impl_12::sequence_numbers() const {
 }
 
 std::shared_ptr<Connection_Cipher_State> Channel_Impl_12::read_cipher_state_epoch(uint16_t epoch) const {
-   auto i = m_read_cipher_states.find(epoch);
+   const auto i = m_read_cipher_states.find(epoch);
    if(i == m_read_cipher_states.end()) {
       throw Internal_Error("TLS::Channel_Impl_12 No read cipherstate for epoch " + std::to_string(epoch));
    }
@@ -213,7 +213,7 @@ std::shared_ptr<Connection_Cipher_State> Channel_Impl_12::read_cipher_state_epoc
 }
 
 std::shared_ptr<Connection_Cipher_State> Channel_Impl_12::write_cipher_state_epoch(uint16_t epoch) const {
-   auto i = m_write_cipher_states.find(epoch);
+   const auto i = m_write_cipher_states.find(epoch);
    if(i == m_write_cipher_states.end()) {
       throw Internal_Error("TLS::Channel_Impl_12 No write cipherstate for epoch " + std::to_string(epoch));
    }
@@ -237,7 +237,10 @@ std::optional<std::string> Channel_Impl_12::external_psk_identity() const {
    return std::nullopt;
 }
 
-Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version version, bool epoch0_restart) {
+Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version version,
+                                                         bool epoch0_restart,
+                                                         std::optional<uint64_t> read_sequence_number,
+                                                         std::optional<uint64_t> write_sequence_number) {
    if(pending_state() != nullptr) {
       throw Internal_Error("create_handshake_state called during handshake");
    }
@@ -254,8 +257,11 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
 
    if(!m_sequence_numbers) {
       if(version.is_datagram_protocol()) {
-         m_sequence_numbers = std::make_unique<Datagram_Sequence_Numbers>();
+         m_sequence_numbers = std::make_unique<Datagram_Sequence_Numbers>(read_sequence_number.value_or(0),
+                                                                          write_sequence_number.value_or(0));
       } else {
+         BOTAN_ARG_CHECK(!read_sequence_number.has_value() && !write_sequence_number.has_value(),
+                         "TLS does not support externally provided sequence numbers");
          m_sequence_numbers = std::make_unique<Stream_Sequence_Numbers>();
       }
    }
@@ -286,10 +292,10 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
       const size_t max_timeout_ms = policy().dtls_maximum_timeout();
       const std::optional<size_t> max_retransmissions = policy().dtls_maximum_retransmissions();
 
-      auto send_record_f = [this](uint16_t epoch, Record_Type record_type, const std::vector<uint8_t>& record) {
+      const auto send_record_f = [this](uint16_t epoch, Record_Type record_type, const std::vector<uint8_t>& record) {
          send_record_under_epoch(epoch, record_type, record);
       };
-      auto clock_f = [this]() { return callbacks().tls_current_monotonic_clock_ms(); };
+      const auto clock_f = [this]() { return callbacks().tls_current_monotonic_clock_ms(); };
       io = std::make_unique<Datagram_Handshake_IO>(send_record_f,
                                                    clock_f,
                                                    sequence_numbers(),
@@ -300,7 +306,7 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
                                                    policy().maximum_handshake_message_size(),
                                                    initial_epoch);
    } else {
-      auto send_record_f = [this](Record_Type rec_type, const std::vector<uint8_t>& record) {
+      const auto send_record_f = [this](Record_Type rec_type, const std::vector<uint8_t>& record) {
          send_record(rec_type, record);
       };
       io = std::make_unique<Stream_Handshake_IO>(send_record_f);
@@ -356,7 +362,7 @@ void Channel_Impl_12::abandon_timed_out_handshake() {
 }
 
 bool Channel_Impl_12::timeout_check() {
-   if(m_is_datagram && !m_has_been_closed && m_pending_state) {
+   if(m_flavor == TLS_Flavor::DTLS && !m_has_been_closed && m_pending_state) {
       try {
          return m_pending_state->handshake_io().timeout_check();
       } catch(const TLS_Exception&) {
@@ -370,6 +376,62 @@ bool Channel_Impl_12::timeout_check() {
    return false;
 }
 
+void Channel_Impl_12::maybe_arm_dtls_retransmission_timer(TimerGeneration generation_policy) {
+   auto next_timeout = next_retransmission_timeout();
+
+   // If there is no timeout, the handshake is complete or there is no handshake
+   // in progress, so there is nothing to arm a timer for.
+   if(!next_timeout.has_value()) {
+      return;
+   }
+
+   // If a new timer generation was requested, we increment the channel-wide
+   // generation counter to invalidate any other timer chain that might still be
+   // running from a backoff interval that has been cut short by incoming data
+   // from the peer.
+   if(generation_policy == TimerGeneration::Advance) {
+      ++m_retransmission_timer_generation;
+   }
+
+   // The actual asynchronous operation:
+   const auto on_timer = [self = weak_from_this(), generation = m_retransmission_timer_generation]() mutable {
+      // If this operation is called after the channel implementation is gone,
+      // the channel magically became some other type, or the operation was
+      // called more than once (see below) just return.
+      const auto channel = std::dynamic_pointer_cast<Channel_Impl_12>(self.lock());
+      if(!channel) {
+         return;
+      }
+
+      // Drop the reference to the channel in this deferred operation. If the
+      // user accidentally calls the operation more than once, the second
+      // invocation will be a harmless no-op.
+      self.reset();
+
+      // This timer-chain may have been superseded by a newer one, when a
+      // backoff interval was reset by the arrival of a belated handshake
+      // message. This generation is no longer active and ends here.
+      if(generation != channel->m_retransmission_timer_generation) {
+         return;
+      }
+
+      // Now we know that we're on the active retransmission/backoff
+      // chain...
+      if(channel->timeout_check()) {
+         // ... and a retransmission was performed: Spawn the next timer
+         // generation for the next backoff interval in this chain.
+         channel->maybe_arm_dtls_retransmission_timer(TimerGeneration::Advance);
+      } else {
+         // ... but no retransmission was performed. Probably, because the
+         // operation was invoked too-early. Re-spawn this generation's
+         // timer for the remaining time until the next deadline.
+         channel->maybe_arm_dtls_retransmission_timer(TimerGeneration::Keep);
+      }
+   };
+
+   m_callbacks->tls_register_deferred_operation(next_timeout->count(), on_timer);
+}
+
 void Channel_Impl_12::renegotiate(bool force_full_renegotiation) {
    if(pending_state() != nullptr) {  // currently in handshake?
       return;
@@ -379,7 +441,7 @@ void Channel_Impl_12::renegotiate(bool force_full_renegotiation) {
       // A DTLS handshake consumes one read and one write epoch. Refuse here if
       // either is spent, so the caller learns before the handshake tears the
       // working association down partway through. See next_epoch().
-      if(m_is_datagram &&
+      if(m_flavor == TLS_Flavor::DTLS &&
          (sequence_numbers().current_read_epoch() == 0xFFFF || sequence_numbers().current_write_epoch() == 0xFFFF)) {
          throw Invalid_State("DTLS epoch counter exhausted, a new association is required");
       }
@@ -414,7 +476,7 @@ void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side) {
    BOTAN_ASSERT(!m_read_cipher_states.contains(epoch), "No read cipher state currently set for next epoch");
 
    // flip side as we are reading
-   auto read_state = std::make_shared<Connection_Cipher_State>(
+   const auto read_state = std::make_shared<Connection_Cipher_State>(
       pending->version(),
       (side == Connection_Side::Client) ? Connection_Side::Server : Connection_Side::Client,
       false,
@@ -425,8 +487,9 @@ void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side) {
    // The epoch we just left is retained only to absorb reordering, so start its
    // clock now (see read_cipher_state_epoch). Epoch 0 is the plaintext
    // placeholder and holds no keys, so the window does not apply to it.
-   if(m_is_datagram && epoch > 1) {
-      if(auto prev = m_read_cipher_states.find(static_cast<uint16_t>(epoch - 1)); prev != m_read_cipher_states.end()) {
+   if(m_flavor == TLS_Flavor::DTLS && epoch > 1) {
+      if(const auto prev = m_read_cipher_states.find(static_cast<uint16_t>(epoch - 1));
+         prev != m_read_cipher_states.end()) {
          prev->second.retired_at = callbacks().tls_current_monotonic_clock_ms();
       }
    }
@@ -450,12 +513,13 @@ void Channel_Impl_12::change_cipher_spec_writer(Connection_Side side) {
 
    BOTAN_ASSERT(!m_write_cipher_states.contains(epoch), "No write cipher state currently set for next epoch");
 
-   auto write_state = std::make_shared<Connection_Cipher_State>(pending->version(),
-                                                                side,
-                                                                true,
-                                                                pending->ciphersuite(),
-                                                                pending->session_keys(),
-                                                                pending->server_hello()->supports_encrypt_then_mac());
+   const auto write_state =
+      std::make_shared<Connection_Cipher_State>(pending->version(),
+                                                side,
+                                                true,
+                                                pending->ciphersuite(),
+                                                pending->session_keys(),
+                                                pending->server_hello()->supports_encrypt_then_mac());
 
    m_write_cipher_states[epoch] = write_state;
    prune_old_cipher_states(m_write_cipher_states);
@@ -470,7 +534,7 @@ bool Channel_Impl_12::is_active() const {
 }
 
 std::optional<std::chrono::milliseconds> Channel_Impl_12::next_retransmission_timeout() const {
-   if(m_is_datagram && !m_has_been_closed && m_pending_state) {
+   if(m_flavor == TLS_Flavor::DTLS && !m_has_been_closed && m_pending_state) {
       return m_pending_state->handshake_io().next_retransmission_timeout();
    }
 
@@ -501,9 +565,10 @@ void Channel_Impl_12::activate_session() {
    // retransmit of the peer's last flight with a retransmit of the last
    // flight." Both endpoints retain handshake sequence state, but only that
    // node replays its outgoing flight.
-   const bool sent_terminal_dtls_flight = m_is_datagram && (m_is_server == (state.server_hello_done() != nullptr));
+   const bool sent_terminal_dtls_flight =
+      (m_flavor == TLS_Flavor::DTLS) && (m_is_server == (state.server_hello_done() != nullptr));
 
-   if(m_is_datagram) {
+   if(m_flavor == TLS_Flavor::DTLS) {
       m_active_state = Active_Connection_State_12(state, application_protocol(), m_pending_state->take_handshake_io());
       if(auto* dtls_io = m_active_state->dtls_handshake_io()) {
          // Retain receive sequence state on both endpoints to distinguish a
@@ -521,7 +586,8 @@ void Channel_Impl_12::activate_session() {
 }
 
 size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
-   const bool allow_epoch0_restart = m_is_datagram && m_is_server && policy().allow_dtls_epoch0_restart();
+   const bool allow_epoch0_restart =
+      (m_flavor == TLS_Flavor::DTLS) && m_is_server && policy().allow_dtls_epoch0_restart();
 
    const auto* input = data.data();
    auto input_size = data.size();
@@ -538,9 +604,9 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
 
          size_t consumed = 0;
 
-         auto get_epoch = [this](uint16_t epoch) { return read_cipher_state_epoch(epoch); };
+         const auto get_epoch = [this](uint16_t epoch) { return read_cipher_state_epoch(epoch); };
 
-         const Record_Header record = read_record(m_is_datagram,
+         const Record_Header record = read_record(m_flavor,
                                                   m_readbuf,
                                                   input,
                                                   input_size,
@@ -566,12 +632,12 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
          }
 
          // Ignore invalid records in DTLS
-         if(m_is_datagram && record.type() == Record_Type::Invalid) {
+         if(m_flavor == TLS_Flavor::DTLS && record.type() == Record_Type::Invalid) {
             return 0;
          }
 
-         const bool old_unprotected_record = m_is_datagram && record.epoch() == 0 && m_active_state.has_value() &&
-                                             sequence_numbers().current_read_epoch() > 0;
+         const bool old_unprotected_record = m_flavor == TLS_Flavor::DTLS && record.epoch() == 0 &&
+                                             m_active_state.has_value() && sequence_numbers().current_read_epoch() > 0;
 
          // Once encrypted traffic is expected, epoch-zero records are
          // unauthenticated. Only handshake records can be useful as part of a
@@ -653,7 +719,7 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
                Epoch zero is neither: application data there is plaintext, so it is
                never legitimate and no association is at stake.
                */
-               if(m_is_datagram && record.epoch() > 0) {
+               if(m_flavor == TLS_Flavor::DTLS && record.epoch() > 0) {
                   const uint16_t active_epoch =
                      m_epochs_before_latest_renegotiation ? m_epochs_before_latest_renegotiation->read_epoch : 0;
 
@@ -720,7 +786,7 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
          }
       }
 
-      if(m_is_datagram && !epoch0_restart) {
+      if(m_flavor == TLS_Flavor::DTLS && !epoch0_restart) {
          if(m_sequence_numbers) {
             const uint16_t epoch = record_sequence >> 48;
             const uint16_t current_epoch = sequence_numbers().current_read_epoch();
@@ -761,13 +827,13 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
       // fails when the message itself is parsed or dispatched, which reaches
       // the same teardown by a later route.
       const bool unauthenticated_against_active_association =
-         m_is_datagram && (record_sequence >> 48) == 0 && m_active_state.has_value();
+         (m_flavor == TLS_Flavor::DTLS) && (record_sequence >> 48) == 0 && m_active_state.has_value();
 
       absorb_malformed_input_errors(unauthenticated_against_active_association, [&] {
          m_pending_state->handshake_io().add_record(record.data(), record.size(), record_type, record_sequence);
 
          while(auto* pending = m_pending_state.get()) {
-            auto msg = pending->get_next_handshake_msg(policy().maximum_handshake_message_size());
+            const auto msg = pending->get_next_handshake_msg(policy().maximum_handshake_message_size());
 
             if(msg.first == Handshake_Type::None) {  // no full handshake yet
                break;
@@ -790,7 +856,7 @@ void Channel_Impl_12::process_application_data(uint64_t seq_no, const secure_vec
 
    // ApplicationData must arrive under a non-zero read epoch
    const uint16_t read_epoch =
-      m_is_datagram ? static_cast<uint16_t>(seq_no >> 48) : sequence_numbers().current_read_epoch();
+      (m_flavor == TLS_Flavor::DTLS) ? static_cast<uint16_t>(seq_no >> 48) : sequence_numbers().current_read_epoch();
    if(read_epoch == 0) {
       throw Unexpected_Message("Application data received in unexpected read epoch");
    }
@@ -876,7 +942,7 @@ void Channel_Impl_12::send_record_array(uint16_t epoch, Record_Type type, const 
       return;
    }
 
-   auto cipher_state = write_cipher_state_epoch(epoch);
+   const auto cipher_state = write_cipher_state_epoch(epoch);
 
    while(length > 0) {
       const size_t sending = std::min<size_t>(length, MAX_PLAINTEXT_SIZE);

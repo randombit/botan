@@ -9,6 +9,7 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    #include <botan/ber_dec.h>
+   #include <botan/certstor.h>
    #include <botan/der_enc.h>
    #include <botan/hex.h>
    #include <botan/pk_algs.h>
@@ -16,6 +17,7 @@
    #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
    #include <botan/rng.h>
+   #include <botan/telephone_number.h>
    #include <botan/x509_ca.h>
    #include <botan/x509_ext.h>
    #include <botan/x509path.h>
@@ -40,6 +42,14 @@ Botan::X509_Time from_date(const int y, const int m, const int d) {
 
    const Botan::calendar_point t(static_cast<uint32_t>(this_year + y), m, d, 0, 0, 0);
    return Botan::X509_Time(t.to_std_timepoint());
+}
+
+Botan::TelephoneNumber tn(std::string_view number) {
+   return Botan::TelephoneNumber::from_string(number).value();
+}
+
+Botan::TelephoneNumberRange tn_range(std::string_view start, uint64_t count) {
+   return Botan::TelephoneNumberRange::from(tn(start), count).value();
 }
 
 /* Return some option sets */
@@ -180,6 +190,7 @@ Test::Result test_cert_status_strings() {
       Botan::Certificate_Status_Code::NAME_CONSTRAINT_ERROR,
       Botan::Certificate_Status_Code::IPADDR_BLOCKS_ERROR,
       Botan::Certificate_Status_Code::AS_BLOCKS_ERROR,
+      Botan::Certificate_Status_Code::TN_AUTH_LIST_ERROR,
       Botan::Certificate_Status_Code::CA_CERT_NOT_FOR_CRL_ISSUER,
       Botan::Certificate_Status_Code::OCSP_CERT_NOT_LISTED,
       Botan::Certificate_Status_Code::OCSP_BAD_STATUS,
@@ -509,13 +520,13 @@ Test::Result test_x509_encode_authority_info_access_extension() {
    const auto ocsp_uri_parsed = Botan::URI::from_string(ocsp_uri).value();
 
    // create a CA
-   auto ca_key = make_a_private_key(sig_algo, *rng);
+   const auto ca_key = make_a_private_key(sig_algo, *rng);
    result.require("CA key", ca_key != nullptr);
    const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts(), *ca_key, hash_fn, *rng);
    const Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, padding_method, *rng);
 
    // create a certificate with only caIssuer information
-   auto key = make_a_private_key(sig_algo, *rng);
+   const auto key = make_a_private_key(sig_algo, *rng);
 
    Botan::X509_Cert_Options opts1 = req_opts1(sig_algo);
    opts1.extensions.add(
@@ -595,14 +606,14 @@ Test::Result test_x509_encode_authority_info_access_extension() {
 Test::Result test_x509_serial_number_type() {
    Test::Result result("X509_Serial_Number");
 
-   auto der_of = [](const Botan::X509_Serial_Number& sn) {
+   const auto der_of = [](const Botan::X509_Serial_Number& sn) {
       std::vector<uint8_t> der;
       Botan::DER_Encoder enc(der);
       enc.encode(sn);
       return der;
    };
 
-   auto from_bigint = [](int64_t v) {
+   const auto from_bigint = [](int64_t v) {
       const auto mag = Botan::BigInt::from_u64(static_cast<uint64_t>(v < 0 ? -v : v));
       return Botan::X509_Serial_Number(v < 0 ? -mag : mag);
    };
@@ -695,7 +706,7 @@ Test::Result test_crl_dn_name() {
    const Botan::X509_Certificate cert(Test::data_file("x509/misc/opcuactt_ca.der"));
 
    Botan::DataSource_Stream key_input(Test::data_file("x509/misc/opcuactt_ca.pem"));
-   auto key = Botan::PKCS8::load_key(key_input);
+   const auto key = Botan::PKCS8::load_key(key_input);
    const Botan::X509_CA ca(cert, *key, "SHA-256", *rng);
 
    const Botan::X509_CRL crl = ca.new_crl(*rng);
@@ -727,7 +738,7 @@ Test::Result test_rsa_oaep() {
       #if defined(BOTAN_HAS_RSA)
    const Botan::X509_Certificate cert(Test::data_file("x509/misc/rsa_oaep.pem"));
 
-   auto public_key = cert.subject_public_key();
+   const auto public_key = cert.subject_public_key();
    result.test_not_null("Decoding RSA-OAEP worked", public_key.get());
    const auto& pk_info = cert.subject_public_key_algo();
 
@@ -799,7 +810,7 @@ Test::Result test_x509_serial_revocation_matching() {
 
    const Botan::X509_Certificate ca_cert(Test::data_file(base + "ca.pem"));
    Botan::DataSource_Stream key_in(Test::data_file(base + "ca_key.pem"));
-   auto ca_key = Botan::PKCS8::load_key(key_in);
+   const auto ca_key = Botan::PKCS8::load_key(key_in);
 
    const Botan::X509_Certificate pos(Test::data_file(base + "pos255.pem"));
    const Botan::X509_Certificate neg(Test::data_file(base + "neg255.pem"));
@@ -1007,7 +1018,7 @@ Test::Result test_x509_ldap_empty_authority_uris() {
       const auto raw_authority = uri.raw_authority();
       result.test_is_true(std::string(label) + " raw authority present", raw_authority.has_value());
       if(raw_authority.has_value()) {
-         result.test_str_eq(std::string(label) + " raw authority is empty", std::string(*raw_authority), "");
+         result.test_str_eq(std::string(label) + " raw authority is empty", *raw_authority, "");
       }
       result.test_is_false(std::string(label) + " has no parsed authority", uri.authority().has_value());
       result.test_is_false(std::string(label) + " has no host", uri.host().has_value());
@@ -1269,7 +1280,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    }
 
    /* Create user #1's key and cert request */
-   auto user1_key = make_a_private_key(sig_algo, rng);
+   const auto user1_key = make_a_private_key(sig_algo, rng);
 
    const Botan::PKCS10_Request user1_req =
       Botan::X509::create_cert_req(req_opts1(sig_algo, sig_padding), *user1_key, hash_fn, rng);
@@ -1277,13 +1288,13 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    result.test_str_eq("PKCS10 challenge password parsed", user1_req.challenge_password(), "zoom");
 
    /* Create user #2's key and cert request */
-   auto user2_key = make_a_private_key(sig_algo, rng);
+   const auto user2_key = make_a_private_key(sig_algo, rng);
 
    const Botan::PKCS10_Request user2_req =
       Botan::X509::create_cert_req(req_opts2(sig_padding), *user2_key, hash_fn, rng);
 
    // /* Create user #3's key and cert request */
-   auto user3_key = make_a_private_key(sig_algo, rng);
+   const auto user3_key = make_a_private_key(sig_algo, rng);
 
    const Botan::PKCS10_Request user3_req =
       Botan::X509::create_cert_req(req_opts3(sig_padding), *user3_key, hash_fn, rng);
@@ -1316,7 +1327,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
       Botan::X509::create_self_signed_cert(req_opts1(sig_algo, sig_padding), *user1_key, hash_fn, rng);
 
    {
-      auto constraints = req_opts1(sig_algo).constraints;
+      const auto constraints = req_opts1(sig_algo).constraints;
       result.test_is_true("user1 key usage", user1_cert.constraints().includes(constraints));
    }
 
@@ -1474,7 +1485,7 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
    /* Create the CA object */
    const Botan::X509_CA ca(ca_cert, ca_key, hash_fn, rng);
 
-   auto user1_key = make_a_private_key(sig_algo, rng);
+   const auto user1_key = make_a_private_key(sig_algo, rng);
 
    Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
    opts.constraints = Key_Constraints::DigitalSignature;
@@ -1555,7 +1566,7 @@ Test::Result test_self_issued(const Botan::Private_Key& ca_key,
    /* Create the CA object */
    const Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, rng);
 
-   auto user_key = make_a_private_key(sig_algo, rng);
+   const auto user_key = make_a_private_key(sig_algo, rng);
 
    // create a self-issued certificate, that is, a certificate with subject dn == issuer dn,
    // but signed by a CA, not signed by it's own private key
@@ -1760,7 +1771,7 @@ Test::Result test_x509_wrong_context_certificate_extensions() {
 
    const auto test_rejected = [&](const std::string& filename, std::string_view what) {
       result.test_throws<Botan::Decoding_Error>(
-         std::string(what), [&]() { const Botan::X509_Certificate cert(Test::data_file(base + filename)); });
+         what, [&]() { const Botan::X509_Certificate cert(Test::data_file(base + filename)); });
    };
 
    test_rejected("cert_with_crl_number.pem", "CRL number rejected in certificate");
@@ -1796,7 +1807,8 @@ Test::Result test_x509_wrong_context_crl_extensions() {
       result.test_is_true("CRL records the unknown critical extension", crl.has_unknown_critical_extension());
 
       const std::vector<std::optional<Botan::X509_CRL>> crls = {crl};
-      const auto crl_status = Botan::PKIX::check_crl(cert_path, crls, validation_time);
+      const auto crl_status =
+         Botan::PKIX::check_crl(cert_path, crls, validation_time, Botan::Path_Validation_Restrictions());
 
       const bool contains_expected_code =
          !crl_status.empty() &&
@@ -1825,7 +1837,7 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
    /* Create the CA object */
    const Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, rng);
 
-   auto user_key = make_a_private_key(sig_algo, rng);
+   const auto user_key = make_a_private_key(sig_algo, rng);
 
    Botan::X509_DN subject_dn;
 
@@ -1856,7 +1868,7 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
    const Botan::X509_Time not_before("100301123001Z", Botan::ASN1_Type::UtcTime);
    const Botan::X509_Time not_after("300301123001Z", Botan::ASN1_Type::UtcTime);
 
-   auto cert = ca.sign_request(req, rng, not_before, not_after);
+   const auto cert = ca.sign_request(req, rng, not_before, not_after);
 
    const Botan::X509_DN& cert_dn = cert.subject_dn();
 
@@ -1903,7 +1915,7 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
       dps.emplace_back(dp);
    }
 
-   auto user_key = make_a_private_key(sig_algo, rng);
+   const auto user_key = make_a_private_key(sig_algo, rng);
 
    Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
    opts.constraints = Key_Constraints::DigitalSignature;
@@ -1982,7 +1994,7 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
 
    key_usage_ext = ca_signed_cert.v3_extensions().get(ku_oid);
    if(result.test_is_true("Key_Usage extension present in CA-signed certificate", key_usage_ext != nullptr)) {
-      auto constraints = dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints();
+      const auto constraints = dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints();
       result.test_is_true("Key_Usage extension value matches in user certificate",
                           constraints == Botan::Key_Constraints::DigitalSignature);
    }
@@ -2081,61 +2093,374 @@ Test::Result test_hashes(const Botan::Private_Key& key, const std::string& hash_
    #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 Test::Result test_x509_tn_auth_list_extension_decode() {
-   /* cert with TNAuthList extension data was generated by asn1parse cfg:
-
-      asn1=SEQUENCE:tn_auth_list
-
-      [tn_auth_list]
-      spc=EXP:0,IA5:1001
-      range=EXP:1,SEQUENCE:TelephoneNumberRange
-      one=EXP:2,IA5:333
-
-      [TelephoneNumberRange]
-      start1=IA5:111
-      count1=INT:128
-      start2=IA5:222
-      count2=INT:256
-    */
-   const std::string filename("TNAuthList.pem");
    Test::Result result("X509 TNAuthList decode");
    result.start_timer();
 
-   const Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
-
    using Botan::Cert_Extension::TNAuthList;
+   using Entry = TNAuthList::Entry;
+   const std::string base = "x509/tnauthlist/";
 
-   const auto* tn_auth_list = cert.v3_extensions().get_extension_object_as<TNAuthList>();
+   {
+      const Botan::X509_Certificate cert(Test::data_file(base + "mixed.pem"));
+      const auto* tn_auth_list = cert.v3_extensions().get_extension_object_as<TNAuthList>();
+      if(result.test_is_true("mixed.pem TNAuthList decoded", tn_auth_list != nullptr)) {
+         const auto& entries = tn_auth_list->entries();
+         if(result.test_sz_eq("mixed.pem entry count", entries.size(), 4)) {
+            result.test_is_true("entry 0 type", entries[0].type() == Entry::ServiceProviderCode);
+            result.test_str_eq("entry 0 spc", entries[0].service_provider_code(), "1001");
+            result.test_is_true("entry 1 type", entries[1].type() == Entry::TelephoneNumberRange);
+            result.test_str_eq("entry 1 start", entries[1].range().start().to_string(), "2125551000");
+            result.test_is_true("entry 1 count", entries[1].range().count() == 1000);
+            result.test_is_true("entry 2 type", entries[2].type() == Entry::TelephoneNumberRange);
+            result.test_str_eq("entry 2 start", entries[2].range().start().to_string(), "2125552000");
+            result.test_is_true("entry 2 count", entries[2].range().count() == 2);
+            result.test_is_true("entry 3 type", entries[3].type() == Entry::TelephoneNumber);
+            result.test_str_eq("entry 3 tn", entries[3].number().to_string(), "2125559999");
 
-   const auto& tn_entries = tn_auth_list->entries();
+            result.test_throws("range accessor on spc entry", [&entries] { entries[0].range(); });
+            result.test_throws("tn accessor on range entry", [&entries] { entries[1].number().to_string(); });
+            result.test_throws("spc accessor on tn entry", [&entries] { entries[3].service_provider_code(); });
 
-   result.test_not_null("cert has TNAuthList extension", tn_auth_list);
+            // The 3.5 string accessors keep working for existing applications
+            BOTAN_DIAGNOSTIC_PUSH
+            BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
+            size_t legacy_ranges = 0;
+            for(const auto& entry : entries) {
+               if(entry.type() == Entry::TelephoneNumberRange) {
+                  for(const auto& legacy : entry.telephone_number_range()) {
+                     legacy_ranges++;
+                     result.test_str_eq("legacy range start", legacy.start.value(), entry.range().start().to_string());
+                     result.test_is_true("legacy range count", legacy.count == entry.range().count());
+                  }
+               } else if(entry.type() == Entry::TelephoneNumber) {
+                  result.test_str_eq("legacy telephone_number", entry.telephone_number(), entry.number().to_string());
+               }
+            }
+            result.test_sz_eq("legacy range accessor yields one range per entry", legacy_ranges, 2);
+            // A reference into the returned container must outlive the call
+            const auto& legacy_front = entries[1].telephone_number_range().front();
+            result.test_is_true("legacy front reference stays valid", legacy_front.count == entries[1].range().count());
+            BOTAN_DIAGNOSTIC_POP
+         }
 
-   result.test_throws("wrong telephone_number_range() accessor for spc",
-                      [&tn_entries] { tn_entries[0].telephone_number_range(); });
-   result.test_throws("wrong telephone_number() accessor for range",
-                      [&tn_entries] { tn_entries[1].telephone_number(); });
-   result.test_throws("wrong service_provider_code() accessor for one",
-                      [&tn_entries] { tn_entries[2].service_provider_code(); });
+         // Botan's encoding of the same entries must match what openssl embedded
+         Botan::Extensions rebuilt;
+         rebuilt.add(std::make_unique<TNAuthList>(std::vector<Entry>{
+            Entry::from_service_provider_code("1001"),
+            Entry::from_telephone_number_range(tn_range("2125551000", 1000)),
+            Entry::from_telephone_number_range(tn_range("2125552000", 2)),
+            Entry::from_telephone_number(tn("2125559999")),
+         }));
+         const auto raw_from_cert = cert.v3_extensions().extensions_raw();
+         const auto found = raw_from_cert.find(TNAuthList::static_oid());
+         if(result.test_is_true("mixed.pem raw extension present", found != raw_from_cert.end())) {
+            result.test_bin_eq("encoding matches openssl",
+                               rebuilt.extensions_raw().at(TNAuthList::static_oid()).first,
+                               found->second.first);
+         }
 
-   result.test_is_true("spc entry type", tn_entries[0].type() == TNAuthList::Entry::ServiceProviderCode);
-   result.test_str_eq("spc entry data", tn_entries[0].service_provider_code(), "1001");
+         const std::string expected_text =
+            "TN Authorization List:\n"
+            "   SPC: 1001\n"
+            "   Range: 2125551000 count 1000\n"
+            "   Range: 2125552000 count 2\n"
+            "   TN: 2125559999\n";
+         result.test_is_true("to_string lists the entries", cert.to_string().find(expected_text) != std::string::npos);
+      }
+   }
 
-   result.test_is_true("range entry type", tn_entries[1].type() == TNAuthList::Entry::TelephoneNumberRange);
-   const auto& range = tn_entries[1].telephone_number_range();
-   result.test_sz_eq("range entries count", range.size(), 2);
-   result.test_str_eq("range entry 0 start data", range[0].start.value(), "111");
-   result.test_sz_eq("range entry 0 count data", range[0].count, 128);
-   result.test_str_eq("range entry 1 start data", range[1].start.value(), "222");
-   result.test_sz_eq("range entry 1 count data", range[1].count, 256);
+   struct Single_Entry_Cert {
+         const char* file;
+         Entry::Type type;
+         const char* value;
+         uint64_t count;
+   };
 
-   result.test_is_true("one entry type", tn_entries[2].type() == TNAuthList::Entry::TelephoneNumber);
-   result.test_str_eq("one entry data", tn_entries[2].telephone_number(), "333");
+   const std::vector<Single_Entry_Cert> singles = {
+      {"spc_only.pem", Entry::ServiceProviderCode, "709J", 0},
+      {"rfc9118_example.pem", Entry::ServiceProviderCode, "1234", 0},
+      {"large_count.pem", Entry::TelephoneNumberRange, "2000000000", 8000000000},
+      {"max_len_tn.pem", Entry::TelephoneNumber, "123456789012345", 0},
+      {"tn_star_hash.pem", Entry::TelephoneNumber, "*67#", 0},
+      {"range_to_all_nines.pem", Entry::TelephoneNumberRange, "9990000", 10000},
+      {"range_exact_fit.pem", Entry::TelephoneNumberRange, "10", 90},
+      {"range_extension_addition.pem", Entry::TelephoneNumberRange, "111", 128},
+      // A second (start, count) pair inside one [1] is indistinguishable from extension additions
+      {"flattened_ranges.pem", Entry::TelephoneNumberRange, "111", 128},
+   };
+
+   for(const auto& single : singles) {
+      const std::string file(single.file);
+      const Botan::X509_Certificate cert(Test::data_file(base + file));
+      const auto* tn_auth_list = cert.v3_extensions().get_extension_object_as<TNAuthList>();
+      if(!result.test_is_true(file + " TNAuthList decoded", tn_auth_list != nullptr)) {
+         continue;
+      }
+      if(!result.test_sz_eq(file + " entry count", tn_auth_list->entries().size(), 1)) {
+         continue;
+      }
+      const auto& entry = tn_auth_list->entries()[0];
+      if(!result.test_is_true(file + " entry type", entry.type() == single.type)) {
+         continue;
+      }
+      if(single.type == Entry::ServiceProviderCode) {
+         result.test_str_eq(file + " spc", entry.service_provider_code(), single.value);
+      } else if(single.type == Entry::TelephoneNumberRange) {
+         result.test_str_eq(file + " start", entry.range().start().to_string(), single.value);
+         result.test_is_true(file + " count", entry.range().count() == single.count);
+      } else {
+         result.test_str_eq(file + " tn", entry.number().to_string(), single.value);
+      }
+   }
+
+   const std::vector<std::string> invalid = {
+      "count_one",
+      "count_negative",
+      "count_huge",
+      "range_start_hash",
+      "range_overflow",
+      "tn_too_long",
+      "tn_empty",
+      "tn_bad_char",
+      "tn_utf8string",
+      "spc_utf8string",
+      "empty_list",
+      "implicit_tag",
+      "unknown_choice",
+      "bare_ia5string",
+   };
+
+   for(const auto& name : invalid) {
+      // The extension is non-critical so the certificate itself still loads
+      const Botan::X509_Certificate cert(Test::data_file(base + name + ".pem"));
+      result.test_is_true(name + " not decoded as TNAuthList",
+                          cert.v3_extensions().get_extension_object_as<TNAuthList>() == nullptr);
+      const auto* raw = cert.v3_extensions().get_extension_object(TNAuthList::static_oid());
+      const auto* unknown = dynamic_cast<const Botan::Cert_Extension::Unknown_Extension*>(raw);
+      result.test_is_true(name + " retained as failed unknown extension",
+                          unknown != nullptr && unknown->failed_to_decode());
+   }
+
+   {
+      const Botan::PKCS10_Request req(Test::data_file(base + "csr.pem"));
+      const auto* tn_auth_list = req.extensions().get_extension_object_as<TNAuthList>();
+      if(result.test_is_true("csr.pem TNAuthList decoded", tn_auth_list != nullptr) &&
+         result.test_sz_eq("csr.pem entry count", tn_auth_list->entries().size(), 2)) {
+         result.test_str_eq("csr.pem spc", tn_auth_list->entries()[0].service_provider_code(), "1001");
+         result.test_str_eq("csr.pem tn", tn_auth_list->entries()[1].number().to_string(), "2125550100");
+      }
+   }
 
    result.end_timer();
    return result;
 }
 
+      #if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_SHA2_32)
+Test::Result test_x509_tn_auth_list_path_validation() {
+   Test::Result result("X509 TNAuthList path validation");
+   result.start_timer();
+
+   using Botan::Cert_Extension::TNAuthList;
+   const std::string base = "x509/tnauthlist/chain/";
+   const auto load = [&](const std::string& name) {
+      return Botan::X509_Certificate(Test::data_file(base + name + ".pem"));
+   };
+
+   Botan::Certificate_Store_In_Memory store;
+   store.add_certificate(load("root"));
+
+   const Botan::X509_Certificate ca_ranges = load("ca_ranges");
+   const Botan::X509_Certificate ca_spc = load("ca_spc");
+   const Botan::X509_Certificate ca_malformed = load("ca_malformed");
+   const Botan::X509_Certificate ca_unconstrained = load("ca_unconstrained");
+
+   struct Chain_Case {
+         const char* leaf;
+         std::vector<Botan::X509_Certificate> intermediates;
+         std::optional<Botan::Certificate_Status_Code> expected_error;
+         size_t error_pos;
+   };
+
+   const auto tn_error = Botan::Certificate_Status_Code::TN_AUTH_LIST_ERROR;
+   const auto encoding_error = Botan::Certificate_Status_Code::EXTENSION_ENCODING_ERROR;
+   const std::vector<Chain_Case> cases = {
+      {"in_range", {ca_ranges}, std::nullopt, 0},
+      {"sub_range", {ca_ranges}, std::nullopt, 0},
+      {"exact_single", {ca_ranges}, std::nullopt, 0},
+      {"wildcard_match", {ca_ranges}, std::nullopt, 0},
+      {"no_list", {ca_ranges}, std::nullopt, 0},
+      {"out_of_range", {ca_ranges}, tn_error, 0},
+      {"range_spills", {ca_ranges}, tn_error, 0},
+      {"wrong_width", {ca_ranges}, tn_error, 0},
+      {"wildcard_other", {ca_ranges}, tn_error, 0},
+      {"spc_under_ranges", {ca_ranges}, tn_error, 0},
+      // ca_unconstrained carries no list, so the leaf is checked against ca_ranges
+      {"escape_in_range", {ca_unconstrained, ca_ranges}, std::nullopt, 0},
+      {"escape", {ca_unconstrained, ca_ranges}, tn_error, 0},
+      {"spc_same", {ca_spc}, std::nullopt, 0},
+      {"numbers_under_spc", {ca_spc}, std::nullopt, 0},
+      {"spc_other", {ca_spc}, tn_error, 0},
+      // The CA's own undecodable list fails the path whatever the leaf carries
+      {"under_malformed", {ca_malformed}, encoding_error, 1},
+      {"under_malformed_no_list", {ca_malformed}, encoding_error, 1},
+   };
+
+   const Botan::Path_Validation_Restrictions restrictions;
+
+   for(const auto& chain_case : cases) {
+      const std::string name(chain_case.leaf);
+      std::vector<Botan::X509_Certificate> chain = {load(name)};
+      chain.insert(chain.end(), chain_case.intermediates.begin(), chain_case.intermediates.end());
+
+      const auto path_result =
+         Botan::x509_path_validate(chain, restrictions, store, "", Botan::Usage_Type::UNSPECIFIED);
+
+      if(!chain_case.expected_error) {
+         result.test_is_true(name + " validates (" + path_result.result_string() + ")",
+                             path_result.successful_validation());
+      } else {
+         result.test_is_true(name + " rejected (" + path_result.result_string() + ")",
+                             path_result.result() == *chain_case.expected_error);
+         // A TN error lands on the leaf that exceeds its authority, not on the CA
+         const auto& statuses = path_result.all_statuses();
+         result.test_is_true(name + " error position",
+                             statuses.size() > chain_case.error_pos &&
+                                statuses[chain_case.error_pos].contains(*chain_case.expected_error));
+      }
+   }
+
+   // encompasses() is also usable directly, eg by an authentication service checking its delegate
+   const Botan::X509_Certificate in_range = load("in_range");
+   const auto* ca_list = ca_ranges.v3_extensions().get_extension_object_as<TNAuthList>();
+   const auto* leaf_list = in_range.v3_extensions().get_extension_object_as<TNAuthList>();
+   if(result.test_is_true("lists decoded", ca_list != nullptr && leaf_list != nullptr)) {
+      result.test_is_true("ca_ranges encompasses in_range", ca_list->encompasses(*leaf_list));
+      result.test_is_false("in_range does not encompass ca_ranges", leaf_list->encompasses(*ca_list));
+      result.test_is_true("a list encompasses itself", ca_list->encompasses(*ca_list));
+   }
+
+   result.end_timer();
+   return result;
+}
+      #endif
+
    #endif
+
+Test::Result test_x509_tn_auth_list_extension_encode() {
+   Test::Result result("X509 TNAuthList encode");
+   result.start_timer();
+
+   using Botan::Cert_Extension::TNAuthList;
+   using Entry = TNAuthList::Entry;
+
+   result.test_throws("empty spc rejected", [] { Entry::from_service_provider_code(""); });
+   result.test_throws("non-IA5 spc rejected", [] { Entry::from_service_provider_code("\xC3\xA9"); });
+   result.test_throws("range count 1 rejected", [] { Entry::from_telephone_number_range(tn_range("111", 1)); });
+   result.test_no_throw("range count 2 accepted", [] { Entry::from_telephone_number_range(tn_range("111", 2)); });
+   result.test_throws("empty list rejected", [] { const TNAuthList unused(std::vector<Entry>{}); });
+
+   const std::vector<Entry> entries = {
+      Entry::from_service_provider_code("1001"),
+      Entry::from_telephone_number_range(tn_range("2125551000", 1000)),
+      Entry::from_telephone_number_range(tn_range("2125552000", 2)),
+      Entry::from_telephone_number(tn("2125559999")),
+   };
+
+   // Expected bytes produced by the independent encoder in src/tests/data/x509/tnauthlist/generate.py
+   const auto expected = Botan::hex_decode(
+      "303DA006160431303031A1123010160A32313235353531303030020203E8"
+      "A111300F160A32313235353532303030020102A20C160A32313235353539393939");
+
+   Botan::Extensions exts;
+   exts.add(std::make_unique<TNAuthList>(entries));
+   result.test_bin_eq("encoding", exts.extensions_raw().at(TNAuthList::static_oid()).first, expected);
+
+   std::vector<uint8_t> der;
+   Botan::DER_Encoder(der).start_sequence().encode(exts).end_cons();
+
+   Botan::Extensions decoded;
+   Botan::BER_Decoder ber(der);
+   decoded.decode_from(ber, Botan::Extension_Context::Certificate);
+   const auto* tn_auth_list = decoded.get_extension_object_as<TNAuthList>();
+   if(result.test_is_true("round trip decoded", tn_auth_list != nullptr) &&
+      result.test_sz_eq("round trip entry count", tn_auth_list->entries().size(), entries.size())) {
+      const auto& rt = tn_auth_list->entries();
+      result.test_str_eq("round trip spc", rt[0].service_provider_code(), "1001");
+      result.test_str_eq("round trip range start", rt[1].range().start().to_string(), "2125551000");
+      result.test_is_true("round trip range count", rt[1].range().count() == 1000);
+      result.test_str_eq("round trip tn", rt[3].number().to_string(), "2125559999");
+   }
+
+   // The TNAuthList from the RFC 9118 example certificate, as a bare list
+   const auto rfc9118 = TNAuthList::from_der(Botan::hex_decode("3008A006160431323334"));
+   if(result.test_sz_eq("from_der entry count", rfc9118.entries().size(), 1)) {
+      result.test_str_eq("from_der spc", rfc9118.entries()[0].service_provider_code(), "1234");
+   }
+   result.test_throws("from_der rejects empty list", [] { TNAuthList::from_der(Botan::hex_decode("3000")); });
+
+   result.end_timer();
+   return result;
+}
+
+Test::Result test_x509_tn_auth_list_encompasses() {
+   Test::Result result("X509 TNAuthList encompasses");
+   result.start_timer();
+
+   using Botan::Cert_Extension::TNAuthList;
+   using Entry = TNAuthList::Entry;
+
+   const auto list = [](std::vector<Entry> entries) { return TNAuthList(std::move(entries)); };
+   const auto range_entry = [](std::string_view start, uint64_t count) {
+      return Entry::from_telephone_number_range(tn_range(start, count));
+   };
+   const auto number_entry = [](std::string_view number) { return Entry::from_telephone_number(tn(number)); };
+
+   // RFC 9060 Section 4.1 permits SPC parents to delegate individual numbers,
+   // including those containing '*' or '#'. We trust the issuer's assignment
+   // checks because the numbers behind an SPC are not known locally.
+   const TNAuthList spc = list({Entry::from_service_provider_code("1001")});
+   const TNAuthList special_number = list({number_entry("*67#")});
+   result.test_is_true("SPC encompasses a number containing '*' and '#'", spc.encompasses(special_number));
+   result.test_is_true("verbatim special number matches", special_number.encompasses(special_number));
+   result.test_is_false("without an SPC the special number must match verbatim",
+                        list({number_entry("*68#")}).encompasses(special_number));
+
+   const TNAuthList adjacent = list({range_entry("100", 10), range_entry("110", 10)});
+   result.test_is_true("adjacent blocks merge", adjacent.encompasses(list({range_entry("105", 10)})));
+   result.test_is_true("adjacent blocks cover the full span", adjacent.encompasses(list({range_entry("100", 20)})));
+   result.test_is_false("past the merged span", adjacent.encompasses(list({range_entry("100", 21)})));
+
+   const TNAuthList gap = list({range_entry("100", 10), range_entry("111", 10)});
+   result.test_is_false("range across a gap", gap.encompasses(list({range_entry("105", 10)})));
+   result.test_is_false("number in the gap", gap.encompasses(list({number_entry("110")})));
+
+   const TNAuthList overlapping =
+      list({range_entry("100", 10), range_entry("105", 10), number_entry("115"), number_entry("116")});
+   result.test_is_true("overlapping blocks and singles merge", overlapping.encompasses(list({range_entry("100", 17)})));
+   result.test_is_false("one past the merged span", overlapping.encompasses(list({number_entry("117")})));
+
+   const TNAuthList lengths = list({range_entry("100", 10), range_entry("1000", 10)});
+   result.test_is_true("four digit number in the four digit block", lengths.encompasses(list({number_entry("1005")})));
+   result.test_is_false("four digit number not in the three digit block",
+                        lengths.encompasses(list({number_entry("0105")})));
+   result.test_is_false("before the first block", lengths.encompasses(list({number_entry("099")})));
+   result.test_is_false("after the last block", lengths.encompasses(list({number_entry("1010")})));
+
+   // Long lists of individual numbers, as a service provider might issue
+   std::vector<Entry> many;
+   for(size_t i = 0; i != 8192; ++i) {
+      many.push_back(number_entry(std::to_string(1000000 + i)));
+   }
+   const TNAuthList big = list(many);
+   result.test_is_true("long list encompasses itself", big.encompasses(big));
+   result.test_is_true("long list covers the merged block", big.encompasses(list({range_entry("1000000", 8192)})));
+   result.test_is_false("long list rejects the next block", big.encompasses(list({range_entry("1000000", 8193)})));
+   many.push_back(number_entry("2000000"));
+   result.test_is_false("long list rejects an extra number", big.encompasses(list(many)));
+
+   result.end_timer();
+   return result;
+}
 
 std::vector<std::string> get_sig_paddings(const std::string& sig_algo, const std::string& hash) {
    if(sig_algo == "RSA") {
@@ -2199,7 +2524,7 @@ class X509_Cert_Unit_Tests final : public Test {
                hash = "SHAKE-256(512)";
             }
 
-            auto key = make_a_private_key(algo, rng);
+            const auto key = make_a_private_key(algo, rng);
 
             if(key == nullptr) {
                continue;
@@ -2267,7 +2592,7 @@ class X509_Cert_Unit_Tests final : public Test {
             "DH", "ECDH", "ElGamal", "Kyber", "ML-KEM", "FrodoKEM", "ClassicMcEliece"};
 
          for(const std::string& algo : enc_algos) {
-            auto key = make_a_private_key(algo, rng);
+            const auto key = make_a_private_key(algo, rng);
 
             if(key) {
                results.push_back(test_valid_constraints(*key, algo));
@@ -2291,6 +2616,7 @@ class X509_Cert_Unit_Tests final : public Test {
          results.push_back(test_x509_serial_decoding());
       #if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_SHA2_32)
          results.push_back(test_x509_serial_revocation_matching());
+         results.push_back(test_x509_tn_auth_list_path_validation());
       #endif
          results.push_back(test_x509_any_key_extended_usage());
          results.push_back(test_x509_bmpstring());
@@ -2308,6 +2634,8 @@ class X509_Cert_Unit_Tests final : public Test {
    #endif
 
          results.push_back(test_x509_encode_authority_info_access_extension());
+         results.push_back(test_x509_tn_auth_list_extension_encode());
+         results.push_back(test_x509_tn_auth_list_encompasses());
          results.push_back(test_x509_serial_number_type());
          results.push_back(test_x509_extension());
          results.push_back(test_x509_extension_decode_duplicate());
@@ -2330,7 +2658,7 @@ class X509_Cert_Cache_Tests final : public Test {
          Test::Result result("X509_Certificate_Cache");
 
          auto rng = Test::new_rng(__func__);
-         auto key = Botan::create_private_key("ECDSA", *rng, "secp256r1");
+         const auto key = Botan::create_private_key("ECDSA", *rng, "secp256r1");
          if(!key) {
             result.note_missing("ECDSA/secp256r1");
             return {result};

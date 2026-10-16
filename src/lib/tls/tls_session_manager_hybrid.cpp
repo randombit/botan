@@ -34,7 +34,7 @@ std::vector<Session_with_Handle> Session_Manager_Hybrid::find(const Server_Infor
 std::optional<Session_Handle> Session_Manager_Hybrid::establish(const Session& session,
                                                                 const std::optional<Session_ID>& id,
                                                                 bool tls12_no_ticket) {
-   auto create_ticket = [&]() -> std::optional<Session_Handle> {
+   const auto create_ticket = [&]() -> std::optional<Session_Handle> {
       if(tls12_no_ticket) {
          return std::nullopt;
       }
@@ -46,7 +46,7 @@ std::optional<Session_Handle> Session_Manager_Hybrid::establish(const Session& s
       return ticket_handle;
    };
 
-   auto create_id = [&] {
+   const auto create_id = [&] {
       // If we're dealing with a TLS 1.2 connection, we opportunistically
       // disable tickets for the underlying manager.
       auto id_handle = m_stateful->establish(session, id, session.version().is_pre_tls_13());

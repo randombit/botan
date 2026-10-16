@@ -58,7 +58,7 @@ namespace {
  * to switch to botan_cipher_get_ideal_update_granularity() instead. See also
  * the discussion in GitHub Issue #4090.
  */
-size_t ffi_choose_update_size(Botan::Cipher_Mode& mode) {
+size_t ffi_choose_update_size(const Botan::Cipher_Mode& mode) {
    const size_t update_granularity = mode.update_granularity();
    const size_t ideal_update_granularity = mode.ideal_granularity();
    const size_t minimum_final_size = mode.minimum_final_size();
@@ -278,7 +278,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
          BufferStuffer out({output, output_size});
 
          // Helper function to do blockwise processing of data.
-         auto blockwise_update = [&](const size_t granularity) {
+         const auto blockwise_update = [&](const size_t granularity) {
             if(granularity == 0) {
                return;
             }

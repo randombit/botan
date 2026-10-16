@@ -55,6 +55,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_RSA_PublicKey : public Object,
                                                     public RSA_PublicKey {
    public:
       static const ObjectClass Class = ObjectClass::PublicKey;
+      static const KeyType Key_Type = KeyType::Rsa;
 
       /**
       * Creates a PKCS11_RSA_PublicKey object from an existing PKCS#11 RSA public key
@@ -140,6 +141,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_RSA_PrivateKey final : public Object,
                                                            public RSA_PublicKey {
    public:
       static const ObjectClass Class = ObjectClass::PrivateKey;
+      static const KeyType Key_Type = KeyType::Rsa;
 
       /// Creates a PKCS11_RSA_PrivateKey object from an existing PKCS#11 RSA private key
       PKCS11_RSA_PrivateKey(Session& session, ObjectHandle handle);

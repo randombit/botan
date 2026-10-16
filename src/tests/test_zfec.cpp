@@ -58,7 +58,7 @@ class ZFEC_KAT final : public Text_Based_Test {
 
          std::set<size_t> shares_encoded;
 
-         auto zfec_enc_fn = [&](size_t share, const uint8_t block[], size_t len) {
+         const auto zfec_enc_fn = [&](size_t share, const uint8_t block[], size_t len) {
             if(shares_encoded.insert(share).second == false) {
                result.test_failure("Encoding returned the same share twice");
             }
@@ -76,7 +76,7 @@ class ZFEC_KAT final : public Text_Based_Test {
          // First test full decoding:
          std::set<size_t> shares_decoded;
 
-         auto zfec_dec_fn = [&](size_t share, const uint8_t block[], size_t len) {
+         const auto zfec_dec_fn = [&](size_t share, const uint8_t block[], size_t len) {
             if(shares_decoded.insert(share).second == false) {
                result.test_failure("Decoding returned the same share twice");
             }

@@ -46,7 +46,8 @@ void GHASH::ghash_multiply(std::span<uint8_t, GCM_BS> x, std::span<const uint8_t
 
 #if defined(BOTAN_HAS_GHASH_AVX512_CLMUL)
    if(CPUID::has(CPUID::Feature::AVX512_CLMUL)) {
-      BOTAN_ASSERT_NOMSG(!m_H_pow.empty());
+      // The AVX-512 table layout differs from the one used by ghash_cpu
+      BOTAN_ASSERT_NOMSG(m_H_pow.size() == 32);
       return ghash_multiply_avx512_clmul(x.data(), m_H_pow.data(), input.data(), blocks);
    }
 #endif
@@ -71,7 +72,7 @@ void GHASH::ghash_multiply_base(std::span<uint8_t, GCM_BS> x,
                                 const secure_vector<uint64_t>& HM,
                                 std::span<const uint8_t> input,
                                 size_t blocks) {
-   auto scope = CT::scoped_poison(x);
+   const auto scope = CT::scoped_poison(x);
 
    auto X = load_be<std::array<uint64_t, 2>>(x);
 

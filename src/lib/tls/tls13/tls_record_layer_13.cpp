@@ -13,7 +13,6 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_version.h>
-#include <botan/internal/ct_utils.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_cipher_state.h>
@@ -169,10 +168,10 @@ std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
 
       const size_t ct_size = (!protect) ? pt_size : cipher_state->encrypt_output_length(pt_size_with_type_and_padding);
 
-      auto pt_fragment = data.subspan(pt_offset, pt_size);
+      const auto pt_fragment = data.subspan(pt_offset, pt_size);
       if(protect) {
-         const auto record =
-            cipher_state->protect_record(type, pt_fragment, pt_size_with_type_and_padding - pt_size_with_type);
+         const auto record = as_tls_cipher_state(cipher_state)
+                                ->protect_record(type, pt_fragment, pt_size_with_type_and_padding - pt_size_with_type);
          BOTAN_ASSERT_NOMSG(record.size() == ct_size + TLS_HEADER_SIZE);
 
          // TODO: avoid this copy
@@ -207,7 +206,7 @@ std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
    return output;
 }
 
-Record_Layer::ReadResult<Record_Content> Record_Layer::next_record(Cipher_State* cipher_state) {
+Record_Layer::ReadResult Record_Layer::next_record(Cipher_State* cipher_state) {
    // Special case: on the record boundary we don't actually need any more data
    // and we also don't want to be the know-it-all that now demands exactly
    // enough bytes to start parsing the next record header.
@@ -258,11 +257,11 @@ Record_Layer::ReadResult<Record_Content> Record_Layer::next_record(Cipher_State*
    }
 
    if(record.type() != Record_Type::ApplicationData) {
-      return Record_Content{
+      return generalize_to<ReadResult>(annotate_record_type({
          .type = record.type(),
          .sequence_number = std::nullopt,
          .payload = record.take_payload(),
-      };
+      }));
    } else {
       if(cipher_state == nullptr) {
          // This could also mean a misuse of the interface, i.e. failing to
@@ -271,7 +270,8 @@ Record_Layer::ReadResult<Record_Content> Record_Layer::next_record(Cipher_State*
          throw TLS_Exception(Alert::UnexpectedMessage, "premature Application Data received");
       }
 
-      return cipher_state->deprotect_record(std::move(record), m_incoming_record_size_limit);
+      return generalize_to<ReadResult>(
+         as_tls_cipher_state(cipher_state)->deprotect_record(std::move(record), m_incoming_record_size_limit));
    }
 }
 

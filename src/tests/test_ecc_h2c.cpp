@@ -70,8 +70,8 @@ class ECC_H2S_Tests final : public Text_Based_Test {
          const std::string input_str = vars.get_req_str("Input");
          const std::vector<uint8_t> expected_value = vars.get_req_bin("Output");
 
-         auto input = std::span{reinterpret_cast<const uint8_t*>(input_str.data()), input_str.size()};
-         auto domain = std::span{reinterpret_cast<const uint8_t*>(domain_str.data()), domain_str.size()};
+         const auto input = std::span{reinterpret_cast<const uint8_t*>(input_str.data()), input_str.size()};
+         const auto domain = std::span{reinterpret_cast<const uint8_t*>(domain_str.data()), domain_str.size()};
 
          const auto group = Botan::EC_Group::from_name(group_id);
 
@@ -180,7 +180,7 @@ class ECC_H2C_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> expected_point = vars.get_req_bin("Point");
          const bool random_oracle = method.find("-RO") != std::string::npos;
 
-         auto domain = std::span{reinterpret_cast<const uint8_t*>(domain_str.data()), domain_str.size()};
+         const auto domain = std::span{reinterpret_cast<const uint8_t*>(domain_str.data()), domain_str.size()};
 
          const auto group = Botan::EC_Group::from_name(group_id);
 

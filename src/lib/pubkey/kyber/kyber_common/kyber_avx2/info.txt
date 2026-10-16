@@ -1,0 +1,27 @@
+<internal_defines>
+KYBER_AVX2 -> 20260921
+</internal_defines>
+
+<module_info>
+name -> "Kyber AVX2"
+brief -> "Kyber/ML-KEM polynomial arithmetic using AVX2"
+type -> "Internal"
+</module_info>
+
+<isa>
+avx2
+</isa>
+
+<arch>
+x86_32
+x86_64
+x32
+</arch>
+
+<requires>
+cpuid
+</requires>
+
+<header:internal>
+kyber_avx2.h
+</header:internal>

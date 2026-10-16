@@ -142,7 +142,9 @@ std::string AlternativeName::get_first_attribute(std::string_view type) const {
 }
 
 std::vector<std::string> AlternativeName::get_attribute(std::string_view attr) const {
-   auto set_to_vector = [](const std::set<std::string>& s) -> std::vector<std::string> { return {s.begin(), s.end()}; };
+   const auto set_to_vector = [](const std::set<std::string>& s) -> std::vector<std::string> {
+      return {s.begin(), s.end()};
+   };
 
    if(attr == "DNS") {
       return set_to_vector(this->dns());

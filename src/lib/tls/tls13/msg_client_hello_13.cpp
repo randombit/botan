@@ -109,7 +109,7 @@ Client_Hello_13::Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data) : 
    }
 
    if(exts.has<Key_Share>()) {
-      auto* const supported_ext = exts.get<Supported_Groups>();
+      const auto* const supported_ext = exts.get<Supported_Groups>();
       BOTAN_ASSERT_NONNULL(supported_ext);
       const auto supports = supported_ext->groups();
       const auto offers = exts.get<Key_Share>()->offered_groups();
@@ -157,7 +157,8 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
                                  std::string_view hostname,
                                  std::vector<std::string> next_protocols,
                                  std::optional<Session_with_Handle>& session,
-                                 std::vector<ExternalPSK> psks) {
+                                 std::vector<ExternalPSK> psks,
+                                 TLS_Flavor flavor) {
    // RFC 8446 4.1.2
    //    In TLS 1.3, the client indicates its version preferences in the
    //    "supported_versions" extension (Section 4.2.1) and the
@@ -279,7 +280,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
          throw TLS_Exception(Alert::InternalError,
                              "Application modified extensions of Client Hello, PSK is not last anymore");
       }
-      calculate_psk_binders({});
+      calculate_psk_binders(Transcript_Hash_State(flavor));
    }
 }
 
@@ -301,7 +302,7 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
    BOTAN_STATE_CHECK(m_data->extensions().has<Supported_Groups>());
    BOTAN_STATE_CHECK(m_data->extensions().has<Key_Share>());
 
-   auto* hrr_ks = hrr.extensions().get<Key_Share>();
+   const auto* hrr_ks = hrr.extensions().get<Key_Share>();
    const auto& supported_groups = m_data->extensions().get<Supported_Groups>()->groups();
 
    if(hrr.extensions().has<Key_Share>()) {
@@ -489,7 +490,7 @@ std::optional<Protocol_Version> Client_Hello_13::highest_supported_version(const
    //    which versions of TLS it supports and by the server to indicate which
    //    version it is using. The extension contains a list of supported
    //    versions in preference order, with the most preferred version first.
-   auto* const supvers = m_data->extensions().get<Supported_Versions>();
+   const auto* const supvers = m_data->extensions().get<Supported_Versions>();
    BOTAN_ASSERT_NONNULL(supvers);
 
    std::optional<Protocol_Version> result;

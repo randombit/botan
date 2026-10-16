@@ -23,7 +23,7 @@ const std::span<const Utf8Char> PKCS11_INTERFACE_NAME(PKCS11_INTERFACE_NAME_ARR.
 
 std::strong_ordering operator<=>(const Version& left, const Version& right) {
    // Compare both versions by concatenating their bytes: major || minor
-   auto version_value = [](const Version& v) -> uint16_t {
+   const auto version_value = [](const Version& v) -> uint16_t {
       return static_cast<uint16_t>(v.major) << 8 | static_cast<uint16_t>(v.minor);
    };
    return version_value(left) <=> version_value(right);
@@ -90,7 +90,7 @@ InterfaceWrapper InterfaceWrapper::latest_p11_interface(Dynamically_Loaded_Libra
 
    // We only load interfaces named "PKCS 11" (which are the pure ones defined in the spec) with
    // version >= 2.40.
-   auto is_valid_interface = [](const Interface& i) {
+   const auto is_valid_interface = [](const Interface& i) {
       if(i.pFunctionList == nullptr || i.pInterfaceName == nullptr) {
          return false;
       }
@@ -110,7 +110,7 @@ InterfaceWrapper InterfaceWrapper::latest_p11_interface(Dynamically_Loaded_Libra
    // We prioritize valid interfaces the following way:
    // Higher versions are preferred over lower ones. If multiple interfaces of
    // the highest version exist, fork safe interfaces are preferred.
-   auto priority_comparator = [](const Interface& left, const Interface& right) {
+   const auto priority_comparator = [](const Interface& left, const Interface& right) {
       const Version left_version = version_of(left);
       const Version right_version = version_of(right);
 
@@ -120,7 +120,7 @@ InterfaceWrapper InterfaceWrapper::latest_p11_interface(Dynamically_Loaded_Libra
       }
       return left_version < right_version;
    };
-   auto best_interface = std::max_element(valid_interfaces.begin(), valid_interfaces.end(), priority_comparator);
+   const auto best_interface = std::max_element(valid_interfaces.begin(), valid_interfaces.end(), priority_comparator);
    return InterfaceWrapper(*best_interface);
 }
 

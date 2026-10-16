@@ -132,7 +132,7 @@ FrodoMatrix FrodoMatrix::mul_add_as_plus_e(const FrodoKEMConstants& constants,
                 "FrodoMatrix dimension mismatch of new matrix dimensions and E");
 
    auto elements = make_elements_vector(e.dimensions());
-   auto row_generator = make_row_generator(constants, seed_a);
+   const auto row_generator = make_row_generator(constants, seed_a);
 
    /*
    We generate the rows of A in batched chunks, each row containing n 16-bit values.
@@ -200,7 +200,7 @@ FrodoMatrix FrodoMatrix::mul_add_sa_plus_e(const FrodoKEMConstants& constants,
                 "FrodoMatrix dimension mismatch of new matrix dimensions and E");
 
    auto elements = e.m_elements;
-   auto row_generator = make_row_generator(constants, seed_a);
+   const auto row_generator = make_row_generator(constants, seed_a);
 
    /*
    We generate the rows of A in batched chunks, each row containing n 16-bit values.

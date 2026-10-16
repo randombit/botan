@@ -338,14 +338,14 @@ class OCSP_Tests final : public Test {
          Test::Result result("OCSP response finding signature certificates");
 
          // OCSP response is signed by the issuing CA itself
-         auto randombit_ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
+         const auto randombit_ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
          auto randombit_ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
 
          // OCSP response is signed by an authorized responder certificate
          // issued by the issuing CA and embedded in the response
-         auto bdr_ocsp = load_test_OCSP_resp("x509/ocsp/bdr-ocsp-resp.der");
+         const auto bdr_ocsp = load_test_OCSP_resp("x509/ocsp/bdr-ocsp-resp.der");
          auto bdr_responder = load_test_X509_cert("x509/ocsp/bdr-ocsp-responder.pem");
-         auto bdr_ca = load_test_X509_cert("x509/ocsp/bdr-int.pem");
+         const auto bdr_ca = load_test_X509_cert("x509/ocsp/bdr-int.pem");
 
          // The response in bdr_ocsp contains two certificates
          if(result.test_sz_eq("both certificates found", bdr_ocsp.certificates().size(), 2)) {
@@ -358,12 +358,12 @@ class OCSP_Tests final : public Test {
          }
 
          // Dummy OCSP response is not signed at all
-         auto dummy_ocsp = Botan::OCSP::Response(Botan::Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE);
+         const auto dummy_ocsp = Botan::OCSP::Response(Botan::Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE);
 
          // OCSP response is signed by 3rd party responder certificate that is
          // not included in the OCSP response itself
          // See `src/scripts/randombit_ocsp_forger.sh` for a helper script to recreate those.
-         auto randombit_alt_resp_ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp_forged_valid_nocerts.der");
+         const auto randombit_alt_resp_ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp_forged_valid_nocerts.der");
          auto randombit_alt_resp_cert = load_test_X509_cert("x509/ocsp/randombit_ocsp_forged_responder.pem");
 
          result.test_opt_is_null("Dummy has no signing certificate",
@@ -385,7 +385,7 @@ class OCSP_Tests final : public Test {
             "Delegated responder without stapled certs does not find signer without user-provided certs",
             randombit_alt_resp_ocsp.find_signing_certificate(randombit_ca));
 
-         auto trusted_responders = std::make_unique<Botan::Certificate_Store_In_Memory>(randombit_alt_resp_cert);
+         const auto trusted_responders = std::make_unique<Botan::Certificate_Store_In_Memory>(randombit_alt_resp_cert);
          test_arb_eq(result,
                      "Delegated responder returns user-provided cert",
                      randombit_alt_resp_ocsp.find_signing_certificate(randombit_ca, trusted_responders.get()),
@@ -397,9 +397,9 @@ class OCSP_Tests final : public Test {
       static Test::Result test_response_verification_with_next_update_without_max_age() {
          Test::Result result("OCSP request check with next_update w/o max_age");
 
-         auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
 
          const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
 
@@ -408,8 +408,8 @@ class OCSP_Tests final : public Test {
          Botan::Certificate_Store_In_Memory certstore;
          certstore.add_certificate(trust_root);
 
-         auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
-                               const Botan::Certificate_Status_Code expected) {
+         const auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
+                                     const Botan::Certificate_Status_Code expected) {
             const auto ocsp_status = Botan::PKIX::check_ocsp(
                cert_path, {ocsp}, {&certstore}, valid_time, Botan::Path_Validation_Restrictions());
 
@@ -434,9 +434,9 @@ class OCSP_Tests final : public Test {
       static Test::Result test_response_verification_with_next_update_with_max_age() {
          Test::Result result("OCSP request check with next_update with max_age");
 
-         auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
 
          const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
 
@@ -448,8 +448,8 @@ class OCSP_Tests final : public Test {
          // Some arbitrary time within the validity period of the test certs
          const auto max_age = std::chrono::minutes(59);
 
-         auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
-                               const Botan::Certificate_Status_Code expected) {
+         const auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
+                                     const Botan::Certificate_Status_Code expected) {
             const Botan::Path_Validation_Restrictions pvr(false, 110, false, max_age);
             const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, {ocsp}, {&certstore}, valid_time, pvr);
 
@@ -474,9 +474,9 @@ class OCSP_Tests final : public Test {
       static Test::Result test_response_verification_without_next_update_with_max_age() {
          Test::Result result("OCSP request check w/o next_update with max_age");
 
-         auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
 
          const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
 
@@ -488,8 +488,8 @@ class OCSP_Tests final : public Test {
          // Some arbitrary time within the validity period of the test certs
          const auto max_age = std::chrono::minutes(59);
 
-         auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
-                               const Botan::Certificate_Status_Code expected) {
+         const auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
+                                     const Botan::Certificate_Status_Code expected) {
             const Botan::Path_Validation_Restrictions pvr(false, 110, false, max_age);
             const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, {ocsp}, {&certstore}, valid_time, pvr);
 
@@ -516,9 +516,9 @@ class OCSP_Tests final : public Test {
       static Test::Result test_response_verification_without_next_update_without_max_age() {
          Test::Result result("OCSP request check w/o next_update w/o max_age");
 
-         auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
 
          const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
 
@@ -527,8 +527,8 @@ class OCSP_Tests final : public Test {
          Botan::Certificate_Store_In_Memory certstore;
          certstore.add_certificate(trust_root);
 
-         auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
-                               const Botan::Certificate_Status_Code expected) {
+         const auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
+                                     const Botan::Certificate_Status_Code expected) {
             const auto ocsp_status = Botan::PKIX::check_ocsp(
                cert_path, {ocsp}, {&certstore}, valid_time, Botan::Path_Validation_Restrictions());
 
@@ -554,9 +554,9 @@ class OCSP_Tests final : public Test {
       static Test::Result test_response_verification_softfail() {
          Test::Result result("OCSP request softfail check");
 
-         auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
 
          const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
 
@@ -584,8 +584,8 @@ class OCSP_Tests final : public Test {
       static Test::Result test_online_request() {
          Test::Result result("OCSP online check");
 
-         auto cert = load_test_X509_cert("x509/ocsp/digicert-ecdsa-int.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/digicert-root.pem");
+         const auto cert = load_test_X509_cert("x509/ocsp/digicert-ecdsa-int.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/digicert-root.pem");
 
          const std::vector<Botan::X509_Certificate> cert_path = {cert, trust_root};
 
@@ -616,9 +616,9 @@ class OCSP_Tests final : public Test {
          // OCSP response is signed by 3rd party responder certificate that is
          // not included in the OCSP response itself
          // See `src/scripts/randombit_ocsp_forger.sh` for a helper script to recreate those.
-         auto ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp_forged_valid_nocerts.der");
+         const auto ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp_forged_valid_nocerts.der");
          auto responder = load_test_X509_cert("x509/ocsp/randombit_ocsp_forged_responder.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
 
          Botan::Certificate_Store_In_Memory trusted_responders;
 
@@ -646,9 +646,9 @@ class OCSP_Tests final : public Test {
       static Test::Result test_forged_ocsp_signature_is_rejected() {
          Test::Result result("OCSP response with forged signature is rejected by path validation");
 
-         auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
 
          const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
 
@@ -692,9 +692,9 @@ class OCSP_Tests final : public Test {
       static Test::Result test_partial_stapling_preserves_per_slot_gap() {
          Test::Result result("OCSP partial stapling preserves per-slot gap for online fallback");
 
-         auto ee = load_test_X509_cert("x509/ocsp/mychain_ee.pem");
-         auto ca = load_test_X509_cert("x509/ocsp/mychain_int.pem");
-         auto trust_root = load_test_X509_cert("x509/ocsp/mychain_root.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/mychain_ee.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/mychain_int.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/mychain_root.pem");
 
          auto ocsp_for_ee = load_test_OCSP_resp("x509/ocsp/mychain_ocsp_for_ee.der");
          auto ocsp_for_int = load_test_OCSP_resp("x509/ocsp/mychain_ocsp_for_int_self_signed.der");
@@ -742,7 +742,7 @@ class OCSP_Tests final : public Test {
          // The response is signed by the issuing CA itself. See
          // `src/scripts/dev_tools/gen_pqc_ocsp_testdata.sh` for a helper script
          // to recreate the test data.
-         auto ee = load_test_X509_cert("x509/ocsp/" + prefix + "_ee.pem");
+         const auto ee = load_test_X509_cert("x509/ocsp/" + prefix + "_ee.pem");
          auto trust_root = load_test_X509_cert("x509/ocsp/" + prefix + "_root.pem");
 
          auto ocsp = load_test_OCSP_resp("x509/ocsp/" + prefix + "_ocsp.der");
@@ -788,7 +788,7 @@ class OCSP_Tests final : public Test {
       static Test::Result test_responder_cert_with_nocheck_extension() {
          Test::Result result("BDr's OCSP response contains certificate featuring NoCheck extension");
 
-         auto ocsp = load_test_OCSP_resp("x509/ocsp/bdr-ocsp-resp.der");
+         const auto ocsp = load_test_OCSP_resp("x509/ocsp/bdr-ocsp-resp.der");
          const bool contains_cert_with_nocheck =
             std::find_if(ocsp.certificates().cbegin(), ocsp.certificates().cend(), [](const auto& cert) {
                return cert.v3_extensions().extension_set(Botan::OID::from_string("PKIX.OCSP.NoCheck"));

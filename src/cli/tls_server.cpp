@@ -76,7 +76,7 @@ class Callbacks : public Botan::TLS::Callbacks {
       }
 
       void tls_record_received(uint64_t /*seq_no*/, std::span<const uint8_t> input) override {
-         for(auto uc : input) {
+         for(const auto uc : input) {
             const char c = static_cast<char>(uc);
             m_line_buf += c;
             if(c == '\n') {
@@ -163,12 +163,12 @@ class TLS_Server final : public Command {
 
          m_is_tcp = (transport == "tcp");
 
-         auto policy = load_tls_policy(get_arg("policy"));
-         auto session_manager =
+         const auto policy = load_tls_policy(get_arg("policy"));
+         const auto session_manager =
             std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng_as_shared());  // TODO sqlite3
-         auto creds =
+         const auto creds =
             std::make_shared<Basic_Credentials_Manager>(server_cred, server_key, std::move(psk), psk_identity, psk_prf);
-         auto callbacks = std::make_shared<Callbacks>(*this);
+         const auto callbacks = std::make_shared<Callbacks>(*this);
 
          const socket_type server_fd = make_server_socket(port);
          size_t clients_served = 0;
@@ -221,7 +221,7 @@ class TLS_Server final : public Command {
             std::unique_ptr<std::ostream> dump_stream;
 
             if(!dump_traces_to.empty()) {
-               auto now = std::chrono::system_clock::now().time_since_epoch();
+               const auto now = std::chrono::system_clock::now().time_since_epoch();
                const uint64_t timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
                const std::string dump_file = dump_traces_to + "/tls_" + std::to_string(timestamp) + ".bin";
                dump_stream = std::make_unique<std::ofstream>(dump_file.c_str());

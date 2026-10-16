@@ -56,11 +56,11 @@ int ip_addr_blocks_get_address(const Botan::Cert_Extension::IPAddressBlocks::IPA
 
    const auto& entry_ = choice.ranges().value().at(entry);
 
-   const int ret = Botan_FFI::write_vec_output(min_out, out_len, entry_.min().value());
+   const int ret = Botan_FFI::write_vec_output(min_out, out_len, entry_.min().to_bytes());
    if(ret != BOTAN_FFI_SUCCESS) {
       return ret;
    }
-   return Botan_FFI::write_vec_output(max_out, out_len, entry_.max().value());
+   return Botan_FFI::write_vec_output(max_out, out_len, entry_.max().to_bytes());
 }
 #endif
 }  // namespace

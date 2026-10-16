@@ -354,7 +354,7 @@ class BOTAN_UNSTABLE_API SRTP_Protection_Profiles final : public Extension {
 
       explicit SRTP_Protection_Profiles(uint16_t pp) : m_pp(1, pp) {}
 
-      SRTP_Protection_Profiles(TLS_Data_Reader& reader, uint16_t extension_size);
+      SRTP_Protection_Profiles(TLS_Data_Reader& reader, uint16_t extension_size, Connection_Side from);
 
    private:
       std::vector<uint16_t> m_pp;
@@ -571,7 +571,7 @@ class BOTAN_UNSTABLE_API Extensions final {
        *          if the extension was not present or was added programmatically.
        */
       std::optional<std::vector<uint8_t>> extension_raw_bytes(Extension_Code type) const {
-         auto it = m_raw_extension_data.find(type);
+         const auto it = m_raw_extension_data.find(type);
          if(it != m_raw_extension_data.end()) {
             return it->second;
          }

@@ -47,8 +47,8 @@ class SIMD_5x64 final {
          const auto i4_lo_idx = _mm512_setr_epi64(0, 1, 2, 3, 4, 5, 8, 10);
          const auto i4_hi_idx = _mm512_setr_epi64(0, 1, 2, 3, -1, -1, 9, 11);
 
-         auto t0 = _mm512_permutex2var_epi64(lo_01, i4_lo_idx, i4.m_v);
-         auto t2 = _mm512_permutex2var_epi64(hi_01, i4_hi_idx, i4.m_v);
+         const auto t0 = _mm512_permutex2var_epi64(lo_01, i4_lo_idx, i4.m_v);
+         const auto t2 = _mm512_permutex2var_epi64(hi_01, i4_hi_idx, i4.m_v);
 
          // Now merge the 0/1/4 and 2/3 vectors using permutes
          const auto idx0 = _mm512_setr_epi64(0, 1, 8, 9, 6, -1, -1, -1);
@@ -74,7 +74,7 @@ class SIMD_5x64 final {
       static BOTAN_FN_ISA_AVX512 SIMD_5x64
       xor5(const SIMD_5x64& i0, const SIMD_5x64& i1, const SIMD_5x64& i2, const SIMD_5x64& i3, const SIMD_5x64& i4) {
          constexpr uint8_t tern_xor = 0b10010110;
-         auto t = _mm512_ternarylogic_epi64(i0.m_v, i1.m_v, i2.m_v, tern_xor);
+         const auto t = _mm512_ternarylogic_epi64(i0.m_v, i1.m_v, i2.m_v, tern_xor);
          return SIMD_5x64(_mm512_ternarylogic_epi64(i3.m_v, i4.m_v, t, tern_xor));
       }
 

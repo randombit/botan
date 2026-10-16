@@ -63,7 +63,7 @@ void X509_Cert_Options::set_padding_scheme(std::string_view scheme) {
 * Initialize the certificate options
 */
 X509_Cert_Options::X509_Cert_Options(std::string_view initial_opts, uint32_t expiration_time) {
-   auto now = std::chrono::system_clock::now();
+   const auto now = std::chrono::system_clock::now();
 
    start = X509_Time(now);
    end = X509_Time(now + std::chrono::seconds(expiration_time));

@@ -27,7 +27,7 @@ void ML_KEM_Encryptor::encapsulate(StrongSpan<KyberCompressedCiphertext> out_enc
    const auto& sym = mode().symmetric_primitives();
 
    const auto m = rng.random_vec<KyberMessage>(KyberConstants::SEED_BYTES);
-   auto scope = CT::scoped_poison(m);
+   const auto scope = CT::scoped_poison(m);
 
    const auto [K, r] = sym.G(m, m_public_key->H_public_key_bits_raw());
    m_public_key->indcpa_encrypt(out_encapsulated_key, m, r, precomputed_matrix_At(), mode());
@@ -46,7 +46,7 @@ void ML_KEM_Encryptor::encapsulate(StrongSpan<KyberCompressedCiphertext> out_enc
  */
 void ML_KEM_Decryptor::decapsulate(StrongSpan<KyberSharedSecret> out_shared_key,
                                    StrongSpan<const KyberCompressedCiphertext> c) {
-   auto scope = CT::scoped_poison(*m_private_key);
+   const auto scope = CT::scoped_poison(*m_private_key);
 
    const auto& sym = mode().symmetric_primitives();
 

@@ -55,7 +55,7 @@ class PK_Encrypt final : public Command {
          }
 
          Botan::secure_vector<uint8_t> data;
-         auto insert_fn = [&](const uint8_t b[], size_t l) { data.insert(data.end(), b, b + l); };
+         const auto insert_fn = [&](const uint8_t b[], size_t l) { data.insert(data.end(), b, b + l); };
          Command::read_file(get_arg("datafile"), insert_fn);
 
          const Botan::AlgorithmIdentifier hash_id(OAEP_HASH, Botan::AlgorithmIdentifier::USE_EMPTY_PARAM);
@@ -101,7 +101,7 @@ class PK_Decrypt final : public Command {
 
       void go() override {
          Botan::DataSource_Stream input_stream(get_arg("privkey"));
-         auto get_pass = [this]() { return get_passphrase("Password"); };
+         const auto get_pass = [this]() { return get_passphrase("Password"); };
          std::unique_ptr<Botan::Private_Key> key = Botan::PKCS8::load_key(input_stream, get_pass);
 
          if(!key) {

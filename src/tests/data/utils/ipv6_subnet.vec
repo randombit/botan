@@ -3,13 +3,20 @@
 # Valid entries must be in canonical form (host bits cleared, RFC 5952
 # address, prefix length a plain decimal), as the test also checks that
 # they round trip through IPv6Subnet::to_string unchanged
+LastAddress = ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
 IPv6Subnet = ::/0
+LastAddress = ::1
 IPv6Subnet = ::1/128
+LastAddress = ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
 IPv6Subnet = ff00::/8
+LastAddress = febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff
 IPv6Subnet = fe80::/10
+LastAddress = 2001:db8:ffff:ffff:ffff:ffff:ffff:ffff
 IPv6Subnet = 2001:db8::/32
+LastAddress = 2001:db8:0:ffff:ffff:ffff:ffff:ffff
 IPv6Subnet = 2001:db8::/48
 # An IPv4-mapped host is fine in canonical hex form, just not dotted notation
+LastAddress = ::ffff:102:304
 IPv6Subnet = ::ffff:102:304/128
 
 [Invalid]

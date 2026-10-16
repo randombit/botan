@@ -51,7 +51,8 @@ class PerfTest_ASN1_Parsing final : public PerfTest {
 
          auto root_key = create_private_key(rng);
          BOTAN_ASSERT_NONNULL(root_key);
-         auto root_cert = Botan::X509::create_self_signed_cert(root_cert_options, *root_key, get_hash_function(), rng);
+         const auto root_cert =
+            Botan::X509::create_self_signed_cert(root_cert_options, *root_key, get_hash_function(), rng);
          auto ca = Botan::X509_CA(root_cert, *root_key, get_hash_function(), rng);
 
          return CA{
@@ -120,8 +121,8 @@ class PerfTest_ASN1_Parsing final : public PerfTest {
    public:
       void go(const PerfConfig& config) override {
          auto ca = create_ca(config.rng());
-         auto cert = make_certificate("Test Certificate", ca, config.rng());
-         auto crl = make_revocation_list(500, ca, config.rng());
+         const auto cert = make_certificate("Test Certificate", ca, config.rng());
+         const auto crl = make_revocation_list(500, ca, config.rng());
 
          const auto cert_encoded = cert.BER_encode();
          const auto crl_encoded = crl.BER_encode();

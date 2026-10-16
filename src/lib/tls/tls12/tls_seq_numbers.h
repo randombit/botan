@@ -86,7 +86,15 @@ class Stream_Sequence_Numbers final : public Connection_Sequence_Numbers {
 
 class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers {
    public:
-      Datagram_Sequence_Numbers() { Datagram_Sequence_Numbers::reset(); }
+      explicit Datagram_Sequence_Numbers(uint64_t initial_read_sequence_number = 0,
+                                         uint64_t initial_write_sequence_number = 0) {
+         Datagram_Sequence_Numbers::reset();
+
+         const auto is_epoch0 = ((initial_read_sequence_number >> 48) + (initial_write_sequence_number >> 48)) == 0;
+         BOTAN_ARG_CHECK(is_epoch0, "Initial sequence numbers must be in epoch 0");
+
+         m_write_seqs[0] = initial_write_sequence_number;
+      }
 
       void reset() override {
          m_write_seqs.clear();
@@ -114,7 +122,7 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers {
       uint16_t current_write_epoch() const override { return m_write_epoch; }
 
       uint64_t next_write_sequence(uint16_t epoch) override {
-         auto i = m_write_seqs.find(epoch);
+         const auto i = m_write_seqs.find(epoch);
          if(i == m_write_seqs.end()) {
             throw Invalid_State("DTLS epoch not found");
          }

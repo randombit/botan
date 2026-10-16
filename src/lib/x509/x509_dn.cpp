@@ -308,7 +308,7 @@ std::vector<std::pair<OID, std::string>> canonicalize_rdn(const std::vector<std:
 }
 
 std::vector<uint8_t> canonicalize_dn(const std::vector<std::vector<std::pair<OID, ASN1_String>>>& rdns) {
-   auto append_canonical_data = []<typename T>(std::vector<uint8_t>& out, const T& data) {
+   const auto append_canonical_data = []<typename T>(std::vector<uint8_t>& out, const T& data) {
       const std::array<uint8_t, 8> data_len = store_le(static_cast<uint64_t>(data.size()));
       out.insert(out.end(), data_len.begin(), data_len.end());
       out.insert(out.end(), data.begin(), data.end());
@@ -492,7 +492,7 @@ std::ostream& operator<<(std::ostream& out, const X509_DN& dn) {
 
    // Escape characters as a backslash plus two hex digits per byte
    // See RFC 4514 Sections 2.4 and 4
-   auto hex_escape = [](std::ostream& s, char c) {
+   const auto hex_escape = [](std::ostream& s, char c) {
       const auto b = static_cast<uint8_t>(c);
       s << '\\' << nibble_to_hex(b >> 4) << nibble_to_hex(b);
    };

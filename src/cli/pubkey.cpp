@@ -248,7 +248,7 @@ class PK_Sign final : public PK_Signature_Command {
 
          Botan::PK_Signer signer(*key, rng(), signature_options(*key));
 
-         auto onData = [&signer](const uint8_t b[], size_t l) { signer.update(b, l); };
+         const auto onData = [&signer](const uint8_t b[], size_t l) { signer.update(b, l); };
          Command::read_file(get_arg("file"), onData);
 
          std::vector<uint8_t> sig{signer.signature(rng())};
@@ -282,13 +282,13 @@ class PK_Verify final : public PK_Signature_Command {
       }
 
       void go() override {
-         auto key = Botan::X509::load_key(get_arg("pubkey"));
+         const auto key = Botan::X509::load_key(get_arg("pubkey"));
          if(!key) {
             throw CLI_Error("Unable to load public key");
          }
 
          Botan::PK_Verifier verifier(*key, signature_options(*key));
-         auto onData = [&verifier](const uint8_t b[], size_t l) { verifier.update(b, l); };
+         const auto onData = [&verifier](const uint8_t b[], size_t l) { verifier.update(b, l); };
          Command::read_file(get_arg("file"), onData);
 
          const Botan::secure_vector<uint8_t> signature =
@@ -330,7 +330,7 @@ class PKCS8_Tool final : public Command {
          const bool der_out = flag_set("der-out");
 
          if(flag_set("pub-out")) {
-            auto pk = key->public_key();
+            const auto pk = key->public_key();
             if(der_out) {
                write_output(Botan::X509::BER_encode(*pk));
             } else {
@@ -416,7 +416,7 @@ class DL_Group_Info final : public Command {
       }
 
       void go() override {
-         auto dl_group = Botan::DL_Group::from_name(get_arg("name"));
+         const auto dl_group = Botan::DL_Group::from_name(get_arg("name"));
 
          if(flag_set("pem")) {
             output() << dl_group.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42_DH_PARAMETERS);

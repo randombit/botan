@@ -19,6 +19,7 @@
 #include <botan/tls_algos.h>
 #include <botan/tls_magic.h>
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <variant>
@@ -673,6 +674,44 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        * code should not need to.
        */
       virtual uint64_t tls_current_monotonic_clock_ms();
+
+      /**
+       * Optional callback: Channel registers a deferred operation to be
+       * invoked by the user exactly once after a given delay.
+       *
+       * @note The TLS implementation is not re-entrant. The @p op must be
+       *       invoked in a thread-safe manner when no other thread is
+       *       concurrently interacting with the respective instance of the
+       *       TLS channel.
+       *
+       * @note Invoking @p op might throw an exception. Typically this indicates
+       *       that the maximum number of retransmission attempts has been
+       *       reached (see also Policy::dtls_maximum_retransmissions()) and the
+       *       association is being abandoned.
+       *
+       * @note During an invocation of @p op the DTLS implementation might call
+       *       tls_register_deferred_operation() again to schedule another
+       *       operation. This must be supported by the user implementation.
+       *
+       * By default, this callback does nothing. If the downstream application
+       * chooses not to override and implement this callback, it has to
+       * independently invoke Channel::timeout_check() regularly whenever a DTLS
+       * handshake is in progress. In contrast, if the downstream application
+       * implements this callback, it must never invoke Channel::timeout_check()
+       * directly!
+       *
+       * TODO(Botan4): Change the default to throw an exception to force users
+       *               of DTLS to implement this callback and remove the public
+       *               ::timeout_check() and ::next_retransmission_timeout()
+       *               mechanisms from the Channel.
+       *
+       * @param monotonic_delay_ms the delay in milliseconds with respect to
+       *                           tls_current_monotonic_clock_ms() after which
+       *                           the operation @p op should be invoked
+       * @param op                 the operation to be executed by the user
+       *                           after the delay @p monotonic_delay_ms
+       */
+      virtual void tls_register_deferred_operation(uint64_t monotonic_delay_ms, std::function<void()> op);
 
       /**
        * Optional callback: error logging. (not currently called)

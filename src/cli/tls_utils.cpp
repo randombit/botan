@@ -52,7 +52,7 @@ class TLS_Ciphersuites final : public Command {
          const std::string policy_type = get_arg("policy");
          const Botan::TLS::Protocol_Version version = tls_version_from_str(get_arg("version"));
 
-         auto policy = load_tls_policy(policy_type);
+         const auto policy = load_tls_policy(policy_type);
 
          if(!policy->acceptable_protocol_version(version)) {
             error_output() << "Error: the policy specified does not allow the given TLS version\n";
@@ -169,7 +169,7 @@ class TLS_Client_Hello_Reader final : public Command {
          } else {
             for(const Botan::TLS::Signature_Scheme scheme : hello_base->signature_schemes()) {
                try {
-                  auto s = scheme.to_string();
+                  const auto s = scheme.to_string();
                   oss << s << " ";
                } catch(...) {
                   oss << "(" << std::hex << static_cast<unsigned int>(scheme.wire_code()) << ") ";
@@ -178,7 +178,7 @@ class TLS_Client_Hello_Reader final : public Command {
             oss << "\n";
          }
 
-         if(auto* sg = hello_base->extensions().get<Botan::TLS::Supported_Groups>()) {
+         if(const auto* sg = hello_base->extensions().get<Botan::TLS::Supported_Groups>()) {
             oss << "Supported Groups: ";
             for(const auto group : sg->groups()) {
                oss << group.to_string().value_or(Botan::fmt("Unknown group: {}", group.wire_code())) << " ";
@@ -196,7 +196,7 @@ class TLS_Client_Hello_Reader final : public Command {
                           hello_flags["Session Ticket"] = ch12.supports_session_ticket();
                        },
                        [&](const Botan::TLS::Client_Hello_13& ch13) {
-                          if(auto* ks = ch13.extensions().get<Botan::TLS::Key_Share>()) {
+                          if(const auto* ks = ch13.extensions().get<Botan::TLS::Key_Share>()) {
                              oss << "Key Shares: ";
                              for(const auto group : ks->offered_groups()) {
                                 oss << group.to_string().value_or(Botan::fmt("Unknown group: {}", group.wire_code()))

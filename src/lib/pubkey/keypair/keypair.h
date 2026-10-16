@@ -49,7 +49,7 @@ bool signature_consistency_check(RandomNumberGenerator& rng,
 * @return true if consistent otherwise false
 */
 inline bool encryption_consistency_check(RandomNumberGenerator& rng, const Private_Key& sk, std::string_view padding) {
-   auto pk = sk.public_key();
+   const auto pk = sk.public_key();
    return encryption_consistency_check(rng, sk, *pk, padding);
 }
 
@@ -62,7 +62,7 @@ inline bool encryption_consistency_check(RandomNumberGenerator& rng, const Priva
 * @return true if consistent otherwise false
 */
 inline bool signature_consistency_check(RandomNumberGenerator& rng, const Private_Key& sk, std::string_view padding) {
-   auto pk = sk.public_key();
+   const auto pk = sk.public_key();
    return signature_consistency_check(rng, sk, *pk, padding);
 }
 

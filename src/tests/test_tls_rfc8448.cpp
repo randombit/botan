@@ -335,6 +335,12 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks {
          return m_timestamp;
       }
 
+      void tls_ssl_key_log_data(std::string_view /* label */,
+                                std::span<const uint8_t> /* client_random */,
+                                std::span<const uint8_t> /* secret */) const override {
+         count_callback_invocation("tls_ssl_key_log_data");
+      }
+
       std::vector<uint8_t> pull_send_buffer() { return std::exchange(send_buffer, std::vector<uint8_t>()); }
 
       std::vector<uint8_t> pull_receive_buffer() { return std::exchange(receive_buffer, std::vector<uint8_t>()); }
@@ -563,7 +569,7 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager {
       }
 
       std::optional<Session> retrieve_one(const Session_Handle& handle) override {
-         auto itr = std::find_if(m_sessions.begin(), m_sessions.end(), find_by_handle(handle));
+         const auto itr = std::find_if(m_sessions.begin(), m_sessions.end(), find_by_handle(handle));
          if(itr == m_sessions.end()) {
             return std::nullopt;
          } else {
@@ -796,7 +802,7 @@ std::vector<uint8_t> strip_message_header(const std::vector<uint8_t>& msg) {
 std::vector<MockSignature> make_mock_signatures(const VarMap& vars) {
    std::vector<MockSignature> result;
 
-   auto mock = [&](const std::string& msg, const std::string& sig) {
+   const auto mock = [&](const std::string& msg, const std::string& sig) {
       if(vars.has_key(msg) && vars.has_key(sig)) {
          result.push_back({vars.get_opt_bin(msg), vars.get_opt_bin(sig)});
       }
@@ -989,7 +995,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                      "server hello received",
                                                      {"tls_inspect_handshake_msg_server_hello",
                                                       "tls_examine_extensions_server_hello",
-                                                      "tls_ephemeral_key_agreement"});
+                                                      "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data"});
 
                      result.test_is_true("client is not yet active", !ctx->client.is_active());
                      result.test_is_true("handshake is not yet complete", !ctx->client.is_handshake_complete());
@@ -1012,6 +1019,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                       "tls_current_timestamp",
                                                       "tls_session_established",
                                                       "tls_session_activated",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_verify_cert_chain",
                                                       "tls_verify_message"});
                      result.require("certificate exists", !ctx->certs_verified().empty());
@@ -1230,6 +1238,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_inspect_handshake_msg_server_hello",
                                                         "tls_examine_extensions_server_hello",
                                                         "tls_ephemeral_key_agreement",
+                                                        "tls_ssl_key_log_data",
                                                      });
                   }),
 
@@ -1250,6 +1259,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                       "tls_current_timestamp",
                                                       "tls_session_established",
                                                       "tls_session_activated",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_verify_cert_chain",
                                                       "tls_verify_message"});
 
@@ -1329,6 +1339,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_examine_extensions_server_hello",
                                                         "tls_inspect_handshake_msg_server_hello",
                                                         "tls_ephemeral_key_agreement",
+                                                        "tls_ssl_key_log_data",
                                                      });
                   }),
 
@@ -1354,6 +1365,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_current_timestamp",
                                                         "tls_session_established",
                                                         "tls_session_activated",
+                                                        "tls_ssl_key_log_data",
                                                         "tls_verify_cert_chain",
                                                         "tls_verify_message",
                                                      });
@@ -1450,6 +1462,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_current_timestamp",
                                                         "tls_session_established",
                                                         "tls_session_activated",
+                                                        "tls_ssl_key_log_data",
                                                         "tls_verify_cert_chain",
                                                         "tls_verify_message",
                                                         "tls_ephemeral_key_agreement",
@@ -1546,7 +1559,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                      "server hello received",
                                                      {"tls_inspect_handshake_msg_server_hello",
                                                       "tls_examine_extensions_server_hello",
-                                                      "tls_ephemeral_key_agreement"});
+                                                      "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data"});
 
                      result.test_is_true("client is not yet active", !ctx->client.is_active());
                      result.test_is_true("handshake is not yet complete", !ctx->client.is_handshake_complete());
@@ -1566,7 +1580,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                    "tls_emit_data",
                                                    "tls_current_timestamp",
                                                    "tls_session_established",
-                                                   "tls_session_activated"});
+                                                   "tls_session_activated",
+                                                   "tls_ssl_key_log_data"});
                   result.require("PSK negotiated", ctx->psk_identity_negotiated() == vars.get_req_str("PskIdentity"));
                   result.require("client is active", ctx->client.is_active());
                   result.test_is_true("handshake is complete", ctx->client.is_handshake_complete());
@@ -1682,6 +1697,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_examine_extensions_server_hello",
                                                         "tls_inspect_handshake_msg_server_hello",
                                                         "tls_ephemeral_key_agreement",
+                                                        "tls_ssl_key_log_data",
                                                      });
                   }),
 
@@ -1707,6 +1723,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_current_timestamp",
                                                         "tls_session_established",
                                                         "tls_session_activated",
+                                                        "tls_ssl_key_log_data",
                                                         "tls_verify_raw_public_key",
                                                         "tls_verify_message",
                                                      });
@@ -1762,9 +1779,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
          return {
             CHECK("Send Client Hello",
                   [&](Test::Result& result) {
-                     auto add_early_data_and_sort = [&](Botan::TLS::Extensions& exts,
-                                                        Botan::TLS::Connection_Side side,
-                                                        Botan::TLS::Handshake_Type type) {
+                     const auto add_early_data_and_sort = [&](Botan::TLS::Extensions& exts,
+                                                              Botan::TLS::Connection_Side side,
+                                                              Botan::TLS::Handshake_Type type) {
                         if(type == Handshake_Type::NewSessionTicket) {
                            exts.add(new EarlyDataIndication(1024));  // NOLINT(*-owning-memory)
                         }
@@ -1794,6 +1811,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_sign_message",
                                                       "tls_generate_ephemeral_key",
                                                       "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_inspect_handshake_msg_client_hello",
                                                       "tls_inspect_handshake_msg_server_hello",
                                                       "tls_inspect_handshake_msg_encrypted_extensions",
@@ -1933,9 +1951,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
          return {
             CHECK("Receive Client Hello",
                   [&](Test::Result& result) {
-                     auto add_cookie_and_sort = [&](Botan::TLS::Extensions& exts,
-                                                    Botan::TLS::Connection_Side side,
-                                                    Botan::TLS::Handshake_Type type) {
+                     const auto add_cookie_and_sort = [&](Botan::TLS::Extensions& exts,
+                                                          Botan::TLS::Connection_Side side,
+                                                          Botan::TLS::Handshake_Type type) {
                         if(type == Handshake_Type::EncryptedExtensions) {
                            exts.add(new EarlyDataIndication());  // NOLINT(*-owning-memory)
                         }
@@ -1969,6 +1987,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                         "tls_inspect_handshake_msg_server_hello",
                                                         "tls_inspect_handshake_msg_encrypted_extensions",
                                                         "tls_inspect_handshake_msg_finished",
+                                                        "tls_ssl_key_log_data",
                                                      });
                   }),
 
@@ -2018,9 +2037,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
          return {
             CHECK("Receive Client Hello",
                   [&](Test::Result& result) {
-                     auto add_cookie_and_sort = [&](Botan::TLS::Extensions& exts,
-                                                    Botan::TLS::Connection_Side side,
-                                                    Botan::TLS::Handshake_Type type) {
+                     const auto add_cookie_and_sort = [&](Botan::TLS::Extensions& exts,
+                                                          Botan::TLS::Connection_Side side,
+                                                          Botan::TLS::Handshake_Type type) {
                         if(type == Handshake_Type::HelloRetryRequest) {
                            // This cookie needs to be mocked into the HRR since RFC 8448 contains it.
                            exts.add(
@@ -2072,6 +2091,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_sign_message",
                                                       "tls_generate_ephemeral_key",
                                                       "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_inspect_handshake_msg_client_hello",
                                                       "tls_inspect_handshake_msg_server_hello",
                                                       "tls_inspect_handshake_msg_encrypted_extensions",
@@ -2189,6 +2209,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_sign_message",
                                                       "tls_generate_ephemeral_key",
                                                       "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_inspect_handshake_msg_client_hello",
                                                       "tls_inspect_handshake_msg_server_hello",
                                                       "tls_inspect_handshake_msg_encrypted_extensions",
@@ -2323,6 +2344,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_sign_message",
                                                       "tls_generate_ephemeral_key",
                                                       "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_inspect_handshake_msg_client_hello",
                                                       "tls_inspect_handshake_msg_server_hello",
                                                       "tls_inspect_handshake_msg_encrypted_extensions",
@@ -2420,9 +2442,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
          return {
             CHECK("Send Client Hello",
                   [&](Test::Result& result) {
-                     auto sort_our_extensions = [&](Botan::TLS::Extensions& exts,
-                                                    Botan::TLS::Connection_Side /* side */,
-                                                    Botan::TLS::Handshake_Type type) {
+                     const auto sort_our_extensions = [&](Botan::TLS::Extensions& exts,
+                                                          Botan::TLS::Connection_Side /* side */,
+                                                          Botan::TLS::Handshake_Type type) {
                         // This is the order of extensions when we first introduced the PSK
                         // implementation and generated the transcript. To stay compatible
                         // with the now hard-coded transcript, we pin the extension order.
@@ -2463,6 +2485,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_modify_extensions_encrypted_extensions",
                                                       "tls_generate_ephemeral_key",
                                                       "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_inspect_handshake_msg_client_hello",
                                                       "tls_inspect_handshake_msg_server_hello",
                                                       "tls_inspect_handshake_msg_encrypted_extensions",
@@ -2604,6 +2627,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_sign_message",
                                                       "tls_generate_ephemeral_key",
                                                       "tls_ephemeral_key_agreement",
+                                                      "tls_ssl_key_log_data",
                                                       "tls_inspect_handshake_msg_client_hello",
                                                       "tls_inspect_handshake_msg_server_hello",
                                                       "tls_inspect_handshake_msg_encrypted_extensions",

@@ -525,7 +525,7 @@ void EC_Point::force_all_affine(std::span<EC_Point> points, secure_vector<word>&
       return;
    }
 
-   for(auto& point : points) {
+   for(const auto& point : points) {
       if(point.is_zero()) {
          throw Invalid_State("Cannot convert zero ECC point to affine");
       }

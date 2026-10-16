@@ -354,7 +354,7 @@ namespace {
 * distribution point (RFC 5280 4.2.1.13 and 5.2.5) so they are ignored here.
 */
 bool dp_names_overlap(const AlternativeName& a, const AlternativeName& b) {
-   auto has_common = [](const auto& s1, const auto& s2) {
+   const auto has_common = [](const auto& s1, const auto& s2) {
       return std::ranges::any_of(s1, [&](const auto& e) { return s2.contains(e); });
    };
 

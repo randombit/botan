@@ -90,7 +90,7 @@ Threaded_Fork::~Threaded_Fork() {
 
    m_thread_data->m_input_ready_semaphore.release(m_threads.size());
 
-   for(auto& thread : m_threads) {
+   for(const auto& thread : m_threads) {
       thread->join();
    }
 }

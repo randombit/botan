@@ -34,7 +34,7 @@ std::optional<std::string> check_and_canonicalize_dns_name(std::string_view name
    }
 
    // DNS names do not start with or end with a dot
-   if(name.starts_with(".") || name.ends_with(".")) {
+   if(name.starts_with('.') || name.ends_with('.')) {
       return {};
    }
 

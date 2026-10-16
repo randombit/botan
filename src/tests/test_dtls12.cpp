@@ -379,7 +379,7 @@ std::unique_ptr<DTLS_Association> make_association(Test::Result& result,
                                                    DTLS_Association_Options opts = {}) {
    auto assoc = std::make_unique<DTLS_Association>();
 
-   auto policy = opts.policy ? opts.policy : std::make_shared<DTLS_PSK_Policy>();
+   const auto policy = opts.policy ? opts.policy : std::make_shared<DTLS_PSK_Policy>();
    assoc->client_policy = opts.client_policy ? opts.client_policy : policy;
    assoc->creds = std::make_shared<DTLS_PSK_Credentials>();
 
@@ -615,7 +615,7 @@ class DTLS_Core_Regression_Tests final : public Test {
 
       static bool contains_dtls_handshake_type(const std::vector<uint8_t>& records,
                                                Botan::TLS::Handshake_Type expected) {
-         for(auto type : dtls_handshake_types(records)) {
+         for(const auto type : dtls_handshake_types(records)) {
             if(type == expected) {
                return true;
             }
@@ -625,7 +625,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       }
 
       static bool contains_dtls_record_type(const std::vector<uint8_t>& records, Botan::TLS::Record_Type expected) {
-         for(auto type : dtls_record_types(records)) {
+         for(const auto type : dtls_record_types(records)) {
             if(type == expected) {
                return true;
             }
@@ -656,7 +656,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_timeout_check_paces_retransmissions() {
          Test::Result result("DTLS timeout_check retransmit pacing");
 
-         auto rng = Test::new_shared_rng("dtls-core-timeout-pacing");
+         const auto rng = Test::new_shared_rng("dtls-core-timeout-pacing");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -702,7 +702,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_retransmitted_epoch_transition_flight_includes_ccs() {
          Test::Result result("DTLS retransmitted epoch-1 flight includes CCS");
 
-         auto rng = Test::new_shared_rng("dtls-core-retransmitted-ccs");
+         const auto rng = Test::new_shared_rng("dtls-core-retransmitted-ccs");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -738,7 +738,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_lost_hello_verify_request_retransmits() {
          Test::Result result("DTLS lost HelloVerifyRequest retransmits");
 
-         auto rng = Test::new_shared_rng("dtls-core-lost-hvr");
+         const auto rng = Test::new_shared_rng("dtls-core-lost-hvr");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -778,7 +778,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_duplicate_hello_verify_request_is_tolerated() {
          Test::Result result("DTLS duplicate HelloVerifyRequest is tolerated");
 
-         auto rng = Test::new_shared_rng("dtls-core-duplicate-hvr");
+         const auto rng = Test::new_shared_rng("dtls-core-duplicate-hvr");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -820,7 +820,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_partial_server_flight_does_not_advance_client() {
          Test::Result result("DTLS partial server flight waits for ServerHelloDone");
 
-         auto rng = Test::new_shared_rng("dtls-core-partial-server-flight");
+         const auto rng = Test::new_shared_rng("dtls-core-partial-server-flight");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -865,7 +865,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_lost_server_flight_retransmits() {
          Test::Result result("DTLS lost server flight retransmits");
 
-         auto rng = Test::new_shared_rng("dtls-core-lost-server-flight");
+         const auto rng = Test::new_shared_rng("dtls-core-lost-server-flight");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -903,7 +903,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_hello_request_during_handshake_is_ignored() {
          Test::Result result("DTLS HelloRequest crossing a client renegotiation");
 
-         auto rng = Test::new_shared_rng("dtls-core-crossed-hello-request");
+         const auto rng = Test::new_shared_rng("dtls-core-crossed-hello-request");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -941,7 +941,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_rotated_cookie_secret_produces_fresh_hello_verify_request() {
          Test::Result result("DTLS fresh HelloVerifyRequest after cookie secret rotation");
 
-         auto rng = Test::new_shared_rng("dtls-core-rotated-cookie-secret");
+         const auto rng = Test::new_shared_rng("dtls-core-rotated-cookie-secret");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -983,7 +983,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_no_renegotiation_before_ccs_is_accepted() {
          Test::Result result("DTLS no_renegotiation before ChangeCipherSpec");
 
-         auto rng = Test::new_shared_rng("dtls-core-no-reneg-pre-ccs");
+         const auto rng = Test::new_shared_rng("dtls-core-no-reneg-pre-ccs");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& c2s = assoc->c2s;
@@ -1013,7 +1013,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_no_renegotiation_after_ccs_ends_the_association() {
          Test::Result result("DTLS no_renegotiation after ChangeCipherSpec");
 
-         auto rng = Test::new_shared_rng("dtls-core-no-reneg-post-ccs");
+         const auto rng = Test::new_shared_rng("dtls-core-no-reneg-post-ccs");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -1050,15 +1050,15 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_hello_verify_request_flood_is_bounded() {
          Test::Result result("DTLS HelloVerifyRequest flood is bounded");
 
-         auto rng = Test::new_shared_rng("dtls-core-hvr-flood");
-         auto policy = std::make_shared<DTLS_PSK_Policy>();
-         auto creds = std::make_shared<DTLS_PSK_Credentials>();
+         const auto rng = Test::new_shared_rng("dtls-core-hvr-flood");
+         const auto policy = std::make_shared<DTLS_PSK_Policy>();
+         const auto creds = std::make_shared<DTLS_PSK_Credentials>();
 
          std::vector<uint8_t> c2s;
          std::vector<uint8_t> client_recv;
          // This client is expected to fail, so do not fail the test on its alert.
          Test::Result ignored_alerts("ignored");
-         auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(ignored_alerts, c2s, client_recv);
+         const auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(ignored_alerts, c2s, client_recv);
          Botan::TLS::Client client(client_callbacks,
                                    std::make_shared<Botan::TLS::Session_Manager_Noop>(),
                                    creds,
@@ -1116,19 +1116,19 @@ class DTLS_Core_Regression_Tests final : public Test {
          auto rng = Test::new_shared_rng("dtls-core-epoch-retirement-restart");
          auto policy = std::make_shared<DTLS_PSK_Policy>();
          auto creds = std::make_shared<DTLS_PSK_Credentials>();
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
 
          std::vector<uint8_t> s2c;
          std::vector<uint8_t> server_recv;
-         auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
+         const auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
          Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
 
          // Drive a full handshake plus a renegotiation, which advances the
          // server to epoch 2 and so retires its epoch 1.
-         auto associate = [&](const std::string& label, bool renegotiate) {
+         const auto associate = [&](const std::string& label, bool renegotiate) {
             std::vector<uint8_t> c2s;
             std::vector<uint8_t> client_recv;
-            auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
+            const auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
             auto client = std::make_shared<Botan::TLS::Client>(client_callbacks,
                                                                std::make_shared<Botan::TLS::Session_Manager_Noop>(),
                                                                creds,
@@ -1197,7 +1197,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_timed_out_initial_handshake_closes_the_channel() {
          Test::Result result("DTLS unanswered handshake closes the channel");
 
-         auto rng = Test::new_shared_rng("dtls-core-timeout-abandon");
+         const auto rng = Test::new_shared_rng("dtls-core-timeout-abandon");
          auto assoc = make_association(result, rng, dtls_policy_with_max_retransmissions(2));
          auto& client = *assoc->client;
 
@@ -1215,7 +1215,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_timed_out_renegotiation_keeps_the_association() {
          Test::Result result("DTLS timed out renegotiation keeps the association");
 
-         auto rng = Test::new_shared_rng("dtls-core-timeout-abandon-reneg");
+         const auto rng = Test::new_shared_rng("dtls-core-timeout-abandon-reneg");
          auto assoc = make_association(result, rng, dtls_policy_with_max_retransmissions(2));
          auto& client = *assoc->client;
          auto& c2s = assoc->c2s;
@@ -1246,12 +1246,12 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_forged_epoch0_message_during_renegotiation() {
          Test::Result result("DTLS forged epoch-zero message during renegotiation");
 
-         auto rng = Test::new_shared_rng("dtls-core-forged-epoch0-message");
+         const auto rng = Test::new_shared_rng("dtls-core-forged-epoch0-message");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
          auto& c2s = assoc->c2s;
-         auto& server_recv = assoc->server_recv;
+         const auto& server_recv = assoc->server_recv;
 
          if(!complete_dtls_handshake(result, *assoc)) {
             return result;
@@ -1300,14 +1300,14 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_forged_epoch0_appdata_during_renegotiation() {
          Test::Result result("DTLS forged epoch-zero application data during renegotiation");
 
-         auto rng = Test::new_shared_rng("dtls-core-forged-epoch0-appdata");
+         const auto rng = Test::new_shared_rng("dtls-core-forged-epoch0-appdata");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
          auto& c2s = assoc->c2s;
          auto& s2c = assoc->s2c;
-         auto& client_recv = assoc->client_recv;
-         auto& server_recv = assoc->server_recv;
+         const auto& client_recv = assoc->client_recv;
+         const auto& server_recv = assoc->server_recv;
 
          if(!complete_dtls_handshake(result, *assoc)) {
             return result;
@@ -1349,7 +1349,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_forged_epoch0_record_during_renegotiation() {
          Test::Result result("DTLS forged epoch-zero record during renegotiation");
 
-         auto rng = Test::new_shared_rng("dtls-core-forged-epoch0-reneg");
+         const auto rng = Test::new_shared_rng("dtls-core-forged-epoch0-reneg");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -1404,7 +1404,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_app_data_reordered_before_finished_is_discarded() {
          Test::Result result("DTLS application data ahead of Finished is discarded");
 
-         auto rng = Test::new_shared_rng("dtls-core-appdata-before-finished");
+         const auto rng = Test::new_shared_rng("dtls-core-appdata-before-finished");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -1436,7 +1436,7 @@ class DTLS_Core_Regression_Tests final : public Test {
          if(!split_first_dtls_record(result, finished, remainder, application)) {
             return result;
          }
-         finished = remainder;
+         finished = std::move(remainder);
          s2c.clear();
 
          deliver_copy(result, "change cipher spec", ccs, client);
@@ -1462,11 +1462,11 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_old_epoch_app_data_during_renegotiation() {
          Test::Result result("DTLS old-epoch application data during renegotiation");
 
-         auto rng = Test::new_shared_rng("dtls-core-appdata-old-epoch");
+         const auto rng = Test::new_shared_rng("dtls-core-appdata-old-epoch");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
-         auto& c2s = assoc->c2s;
+         const auto& c2s = assoc->c2s;
          auto& s2c = assoc->s2c;
          auto& client_recv = assoc->client_recv;
 
@@ -1498,7 +1498,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_duplicate_server_flight_defers_to_timer() {
          Test::Result result("DTLS duplicate server flight defers replay to timer");
 
-         auto rng = Test::new_shared_rng("dtls-core-retransmitted-server-flight");
+         const auto rng = Test::new_shared_rng("dtls-core-retransmitted-server-flight");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -1549,7 +1549,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_lost_server_final_flight_retransmits() {
          Test::Result result("DTLS lost server final flight retransmits");
 
-         auto rng = Test::new_shared_rng("dtls-core-lost-server-final");
+         const auto rng = Test::new_shared_rng("dtls-core-lost-server-final");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -1598,7 +1598,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_stale_client_hello_does_not_replace_active_handshake() {
          Test::Result result("DTLS stale ClientHello after server activation");
 
-         auto rng = Test::new_shared_rng("dtls-core-stale-client-hello");
+         const auto rng = Test::new_shared_rng("dtls-core-stale-client-hello");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -1643,20 +1643,20 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_epoch0_client_hello_retransmit_while_restart_pending() {
          Test::Result result("DTLS epoch-zero ClientHello retransmit while restart pending");
 
-         auto rng = Test::new_shared_rng("dtls-core-pending-epoch0-restart");
-         auto policy = std::make_shared<DTLS_PSK_Policy>();
-         auto creds = std::make_shared<DTLS_PSK_Credentials>();
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+         const auto rng = Test::new_shared_rng("dtls-core-pending-epoch0-restart");
+         const auto policy = std::make_shared<DTLS_PSK_Policy>();
+         const auto creds = std::make_shared<DTLS_PSK_Credentials>();
+         const auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_Noop>();
 
          std::vector<uint8_t> s2c;
          std::vector<uint8_t> server_recv;
-         auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
+         const auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
          Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
 
          std::vector<uint8_t> c1_c2s;
          std::vector<uint8_t> client1_recv;
-         auto client1_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c1_c2s, client1_recv);
+         const auto client1_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c1_c2s, client1_recv);
          Botan::TLS::Client client1(client1_callbacks,
                                     client_sessions,
                                     creds,
@@ -1678,7 +1678,7 @@ class DTLS_Core_Regression_Tests final : public Test {
 
          std::vector<uint8_t> c2_c2s;
          std::vector<uint8_t> client2_recv;
-         auto client2_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2_c2s, client2_recv);
+         const auto client2_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2_c2s, client2_recv);
          Botan::TLS::Client client2(client2_callbacks,
                                     client_sessions,
                                     creds,
@@ -1724,11 +1724,11 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result(expect_resumption ? "DTLS resumed handshake accepts app data"
                                                : "DTLS final flight retransmit before app data");
 
-         auto rng = Test::new_shared_rng(expect_resumption ? "dtls-core-resumption" : "dtls-core-full");
-         auto policy = std::make_shared<DTLS_PSK_Policy>();
-         auto creds = std::make_shared<DTLS_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto rng = Test::new_shared_rng(expect_resumption ? "dtls-core-resumption" : "dtls-core-full");
+         const auto policy = std::make_shared<DTLS_PSK_Policy>();
+         const auto creds = std::make_shared<DTLS_PSK_Credentials>();
+         const auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
 
          if(expect_resumption) {
             run_handshake(result, rng, policy, creds, client_sessions, server_sessions, false);
@@ -1740,11 +1740,11 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_resumed_client_final_flight_retransmits_after_activation() {
          Test::Result result("DTLS resumed client final flight retransmits after activation");
 
-         auto rng = Test::new_shared_rng("dtls-core-resumed-client-active");
-         auto policy = std::make_shared<DTLS_PSK_Policy>();
-         auto creds = std::make_shared<DTLS_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto rng = Test::new_shared_rng("dtls-core-resumed-client-active");
+         const auto policy = std::make_shared<DTLS_PSK_Policy>();
+         const auto creds = std::make_shared<DTLS_PSK_Credentials>();
+         const auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
 
          run_handshake(result, rng, policy, creds, client_sessions, server_sessions, false);
 
@@ -1753,8 +1753,8 @@ class DTLS_Core_Regression_Tests final : public Test {
          std::vector<uint8_t> client_recv;
          std::vector<uint8_t> server_recv;
 
-         auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
+         const auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
+         const auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
 
          Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
          Botan::TLS::Client client(client_callbacks,
@@ -1809,7 +1809,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_reordered_retransmitted_final_flight() {
          Test::Result result("DTLS reordered retransmitted final flight");
 
-         auto rng = Test::new_shared_rng("dtls-core-reordered-retransmitted-final");
+         const auto rng = Test::new_shared_rng("dtls-core-reordered-retransmitted-final");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -1865,8 +1865,8 @@ class DTLS_Core_Regression_Tests final : public Test {
          Test::Result result(server_initiated ? "DTLS server-initiated renegotiation"
                                               : "DTLS client-initiated renegotiation");
 
-         auto rng = Test::new_shared_rng(server_initiated ? "dtls-core-server-renegotiation"
-                                                          : "dtls-core-client-renegotiation");
+         const auto rng = Test::new_shared_rng(server_initiated ? "dtls-core-server-renegotiation"
+                                                                : "dtls-core-client-renegotiation");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -1907,11 +1907,11 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_empty_old_handshake_fragment_does_not_retransmit() {
          Test::Result result("DTLS empty old handshake fragment does not retransmit");
 
-         auto rng = Test::new_shared_rng("dtls-core-empty-old-fragment");
+         const auto rng = Test::new_shared_rng("dtls-core-empty-old-fragment");
          auto assoc = make_association(result, rng);
-         auto& client = *assoc->client;
+         const auto& client = *assoc->client;
          auto& server = *assoc->server;
-         auto& s2c = assoc->s2c;
+         const auto& s2c = assoc->s2c;
 
          complete_dtls_handshake(result, *assoc);
 
@@ -1930,7 +1930,7 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_spoofed_epoch0_records_do_not_abort_or_poison_retransmission() {
          Test::Result result("DTLS spoofed epoch 0 records do not abort or poison retransmission");
 
-         auto rng = Test::new_shared_rng("dtls-core-spoofed-epoch0");
+         const auto rng = Test::new_shared_rng("dtls-core-spoofed-epoch0");
          auto assoc = make_association(result, rng);
          auto& client = *assoc->client;
          auto& server = *assoc->server;
@@ -1978,11 +1978,11 @@ class DTLS_Core_Regression_Tests final : public Test {
       static Test::Result test_resumed_final_flight_and_app_data_in_one_receive() {
          Test::Result result("DTLS resumed final flight and app data in one receive");
 
-         auto rng = Test::new_shared_rng("dtls-core-resumed-final-and-app-data");
-         auto policy = std::make_shared<DTLS_PSK_Policy>();
-         auto creds = std::make_shared<DTLS_PSK_Credentials>();
-         auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto rng = Test::new_shared_rng("dtls-core-resumed-final-and-app-data");
+         const auto policy = std::make_shared<DTLS_PSK_Policy>();
+         const auto creds = std::make_shared<DTLS_PSK_Credentials>();
+         const auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
 
          run_handshake(result, rng, policy, creds, client_sessions, server_sessions, false);
 
@@ -1991,8 +1991,8 @@ class DTLS_Core_Regression_Tests final : public Test {
          std::vector<uint8_t> client_recv;
          std::vector<uint8_t> server_recv;
 
-         auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
+         const auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
+         const auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
 
          Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
          Botan::TLS::Client client(client_callbacks,
@@ -2038,8 +2038,8 @@ class DTLS_Core_Regression_Tests final : public Test {
          std::vector<uint8_t> client_recv;
          std::vector<uint8_t> server_recv;
 
-         auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
-         auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
+         const auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
+         const auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
 
          Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
          Botan::TLS::Client client(client_callbacks,
@@ -2141,7 +2141,7 @@ class DTLS_Reconnection_Test : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("DTLS reconnection");
 
-         auto rng = Test::new_shared_rng(this->test_name());
+         const auto rng = Test::new_shared_rng(this->test_name());
 
          // Neither client caches sessions, so the second one starts a genuinely
          // new handshake rather than trying to resume.
@@ -2205,7 +2205,7 @@ class DTLS_Reconnection_Test : public Test {
 
          std::vector<uint8_t> c2_c2s;
          std::vector<uint8_t> client2_recv;
-         auto client2_cb = std::make_shared<DTLS_Test_Callbacks>(result, c2_c2s, client2_recv);
+         const auto client2_cb = std::make_shared<DTLS_Test_Callbacks>(result, c2_c2s, client2_recv);
          auto client2 = make_dtls_client(client2_cb, assoc->client_sessions, assoc->creds, assoc->client_policy, rng);
 
          if(!exchange(*client2, c2_c2s, client2_recv, 0xC2, 0x66, "client2")) {
@@ -2239,7 +2239,7 @@ class DTLS_Renegotiation_Test : public Test {
       Test::Result run_one(const std::string& subtest, bool server_initiates) {
          Test::Result result("DTLS renegotiation: " + subtest);
 
-         auto rng = Test::new_shared_rng(this->test_name() + "/" + subtest);
+         const auto rng = Test::new_shared_rng(this->test_name() + "/" + subtest);
          auto assoc = make_association(result, rng);
 
          const auto sessions_established = [&](size_t n) {
@@ -2293,7 +2293,7 @@ class DTLS_Renegotiation_Delayed_Finished_Test : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("DTLS renegotiation with delayed Finished from previous handshake");
 
-         auto rng = Test::new_shared_rng(this->test_name());
+         const auto rng = Test::new_shared_rng(this->test_name());
 
          // Without the cookie exchange, both handshakes number the client's
          // messages identically: ClientHello 0, ClientKeyExchange 1,
@@ -2373,7 +2373,7 @@ class DTLS_Epoch0_Inject_Test : public Test {
       Test::Result run_one(const std::string& subtest, bool target_server) {
          Test::Result result("DTLS epoch-0 inject: " + subtest);
 
-         auto rng = Test::new_shared_rng(this->test_name() + "/" + subtest);
+         const auto rng = Test::new_shared_rng(this->test_name() + "/" + subtest);
 
          // allow_dtls_epoch0_restart() is off, which is the vulnerable
          // configuration and the default for every DTLS endpoint.
@@ -2422,7 +2422,7 @@ class DTLS_Epoch0_Window_Tampering_Test : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("DTLS epoch-0 window tampering");
 
-         auto rng = Test::new_shared_rng(this->test_name());
+         const auto rng = Test::new_shared_rng(this->test_name());
          auto assoc = make_association(result, rng, dtls_policy_without_epoch0_restart());
 
          // One round-trip so the server has processed the first ClientHello and
@@ -2678,7 +2678,7 @@ class TLS_Closure_Teardown_Test : public Test {
 
    public:
       std::vector<Test::Result> run() override {
-         auto rng = Test::new_shared_rng(this->test_name());
+         const auto rng = Test::new_shared_rng(this->test_name());
 
          return {fatal_alert_teardown(rng),
                  ticket_invalidated(rng),

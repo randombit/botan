@@ -82,7 +82,7 @@ std::vector<Botan::Classic_McEliece_Parameter_Set> instances_to_test() {
 }
 
 bool skip_cmce_test(const std::string& params_str) {
-   auto params = Botan::Classic_McEliece_Parameters::create(params_str);
+   const auto params = Botan::Classic_McEliece_Parameters::create(params_str);
    auto to_test = instances_to_test();
    return std::find(to_test.begin(), to_test.end(), params.parameter_set()) == to_test.end();
 }
@@ -92,7 +92,7 @@ class CMCE_Utility_Tests final : public Test {
       Test::Result expand_seed_test() {
          Test::Result result("Seed expansion");
 
-         auto params =
+         const auto params =
             Botan::Classic_McEliece_Parameters::create(Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_348864);
 
          // Created using the reference implementation
@@ -116,15 +116,15 @@ class CMCE_Utility_Tests final : public Test {
       Test::Result irreducible_poly_gen_test() {
          Test::Result result("Irreducible Polynomial Generation");
 
-         auto params =
+         const auto params =
             Botan::Classic_McEliece_Parameters::create(Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_348864);
 
          // Created using the reference implementation
-         auto random_bits = Botan::CmceIrreducibleBits(Botan::hex_decode(
+         const auto random_bits = Botan::CmceIrreducibleBits(Botan::hex_decode(
             "d9b8bb962a3f9dac0f832d243def581e7d26f4028de1ff9cd168460e5050ab095a32a372b40d720bd5d75389a6b3f08fa1d13cec60a4b716d4d6c240f2f80cd3"
             "cbc76ae0dddca164c1130da185bd04e890f2256fb9f4754864811e14ea5a43b8b3612d59cecde1b2fdb6362659a0193d2b7d4b9d79aa1801dde3ca90dc300773"));
 
-         auto exp_g = Botan::Classic_McEliece_Minimal_Polynomial::from_bytes(
+         const auto exp_g = Botan::Classic_McEliece_Minimal_Polynomial::from_bytes(
             Botan::hex_decode(
                "8d00a50f520a0307b8007c06cb04b9073b0f4a0f800fb706a60f2a05910a670b460375091209fc060a09ab036c09e5085a0df90d3506b404a30fda041d09970f"
                "1206d000e00aac01c00dc80f490cd80b4108330c0208cf00d602450ec00a21079806eb093f00de015f052905560917081b09270c820af002000c34094504cd03"),
@@ -140,11 +140,11 @@ class CMCE_Utility_Tests final : public Test {
       Test::Result gf_inv_test() {
          Test::Result result("GF inv test");
 
-         auto params =
+         const auto params =
             Botan::Classic_McEliece_Parameters::create(Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_348864);
 
-         auto v = params.gf(Botan::CmceGfElem(42));
-         auto v_inv = v.inv();
+         const auto v = params.gf(Botan::CmceGfElem(42));
+         const auto v_inv = v.inv();
          test_arb_eq(result, "Control bits creation", (v * v_inv).elem(), Botan::CmceGfElem(1));
 
          return result;
@@ -153,30 +153,30 @@ class CMCE_Utility_Tests final : public Test {
       Test::Result gf_poly_mul_test() {
          Test::Result result("GF Poly Mul");
 
-         auto params =
+         const auto params =
             Botan::Classic_McEliece_Parameters::create(Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_348864);
 
          const auto& field = params.poly_ring();
 
-         auto val1 = create_element_from_bytes(
+         const auto val1 = create_element_from_bytes(
             Botan::hex_decode(
                "bb02d40437094c0ae4034c00b10fed090a04850f660c3b0e110eb409810a86015b0f5804ca0e78089806e20b5b03aa0bc2020b05ea03710da902340c390f630b"
                "bc07a70db20b9e0ee4038905a00a09090a0521045e0a0706370b5a00050a4100480c4d0e8f00730692093701fe04650dbe0fd00702011a04910360023f04fb0a"),
             field);
 
-         auto val2 = create_element_from_bytes(
+         const auto val2 = create_element_from_bytes(
             Botan::hex_decode(
                "060c630b170abb00020fef03e501020e89098108bf01f30dd30900000e0d3d0ca404ec01190760021f088c09b90b0a06a702d104500f0f02f00a580287010a09"
                "4e01490d270c73051800bc0af303b901b202b50321002802b903ce0ab40806083f0a2d06d002df0f260811005c02a10b300e5c0ba20d14045003c50f2f02de02"),
             field);
 
-         auto exp_mul = create_element_from_bytes(
+         const auto exp_mul = create_element_from_bytes(
             Botan::hex_decode(
                "370d090b19008f0efb01f5011b04f9054b0d1f071d0457011e09cd0dfa093c004f08500e670abb0567090000f603770a3905bf044408b8025805930b25012201"
                "8d0a560e840d960d9d0a280d1d06fc08d5078c06fe0cb406d0061e02c6090507d20eb10cb90146085c042e030c0e1a07910fcd0c5f0fda066c0cee061d01f40f"),
             field);
 
-         auto mul = field.multiply(val1, val2);  // val1 * val2;
+         const auto mul = field.multiply(val1, val2);  // val1 * val2;
          result.test_is_true("GF multiplication", mul.coef() == exp_mul.coef());
 
          return result;
@@ -201,7 +201,7 @@ class CMCE_Utility_Tests final : public Test {
 
          Test::Result result("No endless loop with rigged RNG");
          // Key creation should work even with a rigged RNG (PRNG is not used for key creation)
-         auto private_key = Botan::create_private_key("ClassicMcEliece", rigged_rng, "348864f");
+         const auto private_key = Botan::create_private_key("ClassicMcEliece", rigged_rng, "348864f");
          if(!private_key) {
             result.test_failure("Key generation failed");
             return result;
@@ -230,7 +230,7 @@ class CMCE_Invalid_Test : public Text_Based_Test {
       Test::Result run_one_test(const std::string& params_str, const VarMap& vars) override {
          Test::Result result("CMCE Invalid Ciphertext Test");
 
-         auto params = Botan::Classic_McEliece_Parameters::create(params_str);
+         const auto params = Botan::Classic_McEliece_Parameters::create(params_str);
 
          const auto kat_seed = vars.get_req_bin("seed");
          const auto ct_invalid = vars.get_req_bin("ct_invalid");
@@ -238,7 +238,7 @@ class CMCE_Invalid_Test : public Text_Based_Test {
 
          const auto test_rng = std::make_unique<CTR_DRBG_AES256>(kat_seed);
 
-         auto private_key = Botan::create_private_key("ClassicMcEliece", *test_rng, params_str);
+         const auto private_key = Botan::create_private_key("ClassicMcEliece", *test_rng, params_str);
 
          // Decaps an invalid ciphertext
          auto dec = Botan::PK_KEM_Decryptor(*private_key, *test_rng, "Raw");
@@ -313,7 +313,7 @@ class Classic_McEliece_KAT_Tests final : public Botan_Tests::PK_PQC_KEM_KAT_Test
          // There is no way to tell exactly how much randomness is
          // needed for encapsulation (rejection sampling)
          // For testing we use a number that fits for all test cases
-         auto params = get_params(alg_name);
+         const auto params = get_params(alg_name);
          const size_t max_attempts = 100;
          const size_t bits_per_attempt = (params.sigma1() / 8) * params.tau();
 

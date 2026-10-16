@@ -440,6 +440,7 @@
 1.3.6.1.5.5.7.48.1.2 = PKIX.OCSP.Nonce
 1.3.6.1.5.5.7.48.1.5 = PKIX.OCSP.NoCheck
 1.3.6.1.5.5.7.48.2 = PKIX.CertificateAuthorityIssuers
+1.3.6.1.5.5.7.48.14 = PKIX.STIRTNList
 
 1.3.6.1.4.1.311.20.2.2 = Microsoft SmartcardLogon
 1.3.6.1.4.1.311.20.2.3 = Microsoft UPN

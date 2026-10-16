@@ -132,22 +132,22 @@ class SIMD_4x64 final {
          return SIMD_4x64(_mm256_ror_epi64(m_simd, ROT));
 #else
          if constexpr(ROT == 8) {
-            auto shuf_rot_8 =
+            const auto shuf_rot_8 =
                _mm256_set_epi64x(0x080f0e0d0c0b0a09, 0x0007060504030201, 0x080f0e0d0c0b0a09, 0x0007060504030201);
 
             return SIMD_4x64(_mm256_shuffle_epi8(m_simd, shuf_rot_8));
          } else if constexpr(ROT == 16) {
-            auto shuf_rot_16 =
+            const auto shuf_rot_16 =
                _mm256_set_epi64x(0x09080f0e0d0c0b0a, 0x0100070605040302, 0x09080f0e0d0c0b0a, 0x0100070605040302);
 
             return SIMD_4x64(_mm256_shuffle_epi8(m_simd, shuf_rot_16));
          } else if constexpr(ROT == 24) {
-            auto shuf_rot_24 =
+            const auto shuf_rot_24 =
                _mm256_set_epi64x(0x0a09080f0e0d0c0b, 0x0201000706050403, 0x0a09080f0e0d0c0b, 0x0201000706050403);
 
             return SIMD_4x64(_mm256_shuffle_epi8(m_simd, shuf_rot_24));
          } else if constexpr(ROT == 32) {
-            auto shuf_rot_32 =
+            const auto shuf_rot_32 =
                _mm256_set_epi64x(0x0b0a09080f0e0d0c, 0x0302010007060504, 0x0b0a09080f0e0d0c, 0x0302010007060504);
 
             return SIMD_4x64(_mm256_shuffle_epi8(m_simd, shuf_rot_32));

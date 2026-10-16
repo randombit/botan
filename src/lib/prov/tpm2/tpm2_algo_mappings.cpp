@@ -10,8 +10,8 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/exceptn.h>
+#include <botan/internal/algorithm_spec.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/scan_name.h>
 
 namespace Botan::TPM2 {
 
@@ -261,13 +261,14 @@ std::optional<std::string> cipher_tss2_to_botan(TPMT_SYM_DEF cipher_def) {
 }
 
 std::optional<TPMT_SYM_DEF> cipher_botan_to_tss2(std::string_view algo_name) {
-   const SCAN_Name spec(algo_name);
-   if(spec.arg_count() == 0) {
+   const AlgorithmSpec spec(algo_name);
+   const auto m = spec.match("*({cipher})");
+   if(!m) {
       return std::nullopt;
    }
 
-   const auto cipher = block_cipher_botan_to_tss2(spec.arg(0));
-   const auto mode = cipher_mode_botan_to_tss2(spec.algo_name());
+   const auto cipher = block_cipher_botan_to_tss2(m->str("cipher"));
+   const auto mode = cipher_mode_botan_to_tss2(m->head());
 
    if(!cipher || !mode) {
       return std::nullopt;
@@ -302,19 +303,17 @@ std::optional<TPMI_ALG_SIG_SCHEME> rsa_signature_padding_botan_to_tss2(std::stri
 }
 
 std::optional<TPMT_SIG_SCHEME> rsa_signature_scheme_botan_to_tss2(std::string_view name) {
-   const SCAN_Name req(name);
-   if(req.arg_count() == 0) {
+   const AlgorithmSpec req(name);
+
+   // PSS with an explicit MGF1 or salt size is not expressible
+   const auto m = req.match("*({hash})");
+   if(!m) {
       return std::nullopt;
    }
 
-   const auto scheme = rsa_signature_padding_botan_to_tss2(req.algo_name());
-   const auto hash = hash_algo_botan_to_tss2(req.arg(0));
+   const auto scheme = rsa_signature_padding_botan_to_tss2(m->head());
+   const auto hash = hash_algo_botan_to_tss2(m->str("hash"));
    if(!scheme || !hash) {
-      return std::nullopt;
-   }
-
-   if(scheme.value() == TPM2_ALG_RSAPSS && req.arg_count() != 1) {
-      // RSA signing using PSS with MGF1
       return std::nullopt;
    }
 
@@ -337,34 +336,28 @@ std::optional<TPMI_ALG_ASYM_SCHEME> rsa_encryption_padding_botan_to_tss2(std::st
 }
 
 std::optional<TPMT_RSA_DECRYPT> rsa_encryption_scheme_botan_to_tss2(std::string_view padding) {
-   const SCAN_Name req(padding);
-   const auto scheme = rsa_encryption_padding_botan_to_tss2(req.algo_name());
-   if(!scheme) {
-      return std::nullopt;
-   }
+   const AlgorithmSpec req(padding);
 
-   if(scheme.value() == TPM2_ALG_OAEP) {
-      if(req.arg_count() < 1) {
-         return std::nullopt;
-      }
-
-      const auto hash = hash_algo_botan_to_tss2(req.arg(0));
+   if(const auto m = req.match("OAEP|EME-OAEP|EME1({hash})")) {
+      const auto hash = hash_algo_botan_to_tss2(m->str("hash"));
       if(!hash) {
          return std::nullopt;
       }
 
       return TPMT_RSA_DECRYPT{
-         .scheme = scheme.value(),
+         .scheme = TPM2_ALG_OAEP,
          .details = {.oaep = {.hashAlg = hash.value()}},
       };
-   } else if(scheme.value() == TPM2_ALG_RSAES) {
+   }
+
+   if(req.matches("PKCS1v15|EME-PKCS1-v1_5")) {
       return TPMT_RSA_DECRYPT{
-         .scheme = scheme.value(),
+         .scheme = TPM2_ALG_RSAES,
          .details = {.rsaes = {}},
       };
-   } else {
-      return std::nullopt;
    }
+
+   return std::nullopt;
 }
 
 }  // namespace Botan::TPM2

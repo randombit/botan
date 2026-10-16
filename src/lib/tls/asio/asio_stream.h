@@ -98,7 +98,7 @@ class StreamCallbacks : public Callbacks {
                                  Usage_Type usage,
                                  std::string_view hostname,
                                  const TLS::Policy& policy) override {
-         auto ctx = m_context.lock();
+         const auto ctx = m_context.lock();
 
          if(ctx && ctx->has_verify_callback()) {
             ctx->get_verify_callback()(cert_chain, ocsp_responses, trusted_roots, usage, hostname, policy);
@@ -111,7 +111,7 @@ class StreamCallbacks : public Callbacks {
          if(client_protos.empty()) {
             return "";
          }
-         auto ctx = m_context.lock();
+         const auto ctx = m_context.lock();
 
          if(!ctx || ctx->m_app_protocols.empty()) {
             return "";
@@ -813,7 +813,7 @@ class Stream {
          // the peer, we expose that error here.
          //
          // See also `process_encrypted_data()`.
-         else if(auto error = error_from_us()) {
+         else if(const auto error = error_from_us()) {
             ec = error;
          }
 
@@ -884,7 +884,7 @@ class Stream {
             return 0;
          }
 
-         auto writtenBytes = boost::asio::write(m_nextLayer, send_buffer(), ec);
+         const auto writtenBytes = boost::asio::write(m_nextLayer, send_buffer(), ec);
          consume_send_buffer(writtenBytes);
 
          if(ec == boost::asio::error::eof && !shutdown_received()) {

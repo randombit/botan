@@ -103,7 +103,7 @@ std::shared_ptr<Client_Impl_12> Client_Impl_12::create(const std::shared_ptr<Cal
                                                        const std::shared_ptr<const Policy>& policy,
                                                        const std::shared_ptr<RandomNumberGenerator>& rng,
                                                        Server_Information server_info,
-                                                       bool datagram,
+                                                       TLS_Flavor flavor,
                                                        const std::vector<std::string>& next_protocols,
                                                        size_t reserved_io_buffer_size) {
    auto self = std::make_shared<Client_Impl_12>(Private{},
@@ -113,11 +113,11 @@ std::shared_ptr<Client_Impl_12> Client_Impl_12::create(const std::shared_ptr<Cal
                                                 policy,
                                                 rng,
                                                 std::move(server_info),
-                                                datagram,
+                                                flavor,
                                                 reserved_io_buffer_size);
 
    BOTAN_ASSERT_NONNULL(self->m_creds);
-   const auto version = datagram ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
+   const auto version = (flavor == TLS_Flavor::DTLS) ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
    Handshake_State& state = self->create_handshake_state(version);
    self->send_client_hello(state, false, version, std::nullopt /* no a-priori session to resume */, next_protocols);
 
@@ -130,22 +130,59 @@ std::shared_ptr<Client_Impl_12> Client_Impl_12::create_for_downgrade(
    Channel_Impl::Downgrade_Information& downgrade_info) {
    auto self = std::make_shared<Client_Impl_12>(Private{}, downgrade_info);
 
-   Handshake_State& state = self->create_handshake_state(Protocol_Version::TLS_V12);
+   const auto version =
+      (downgrade_info.flavor == TLS_Flavor::DTLS) ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
 
    if(downgrade_info.client_hello.has_value()) {
-      // Downgrade detected after receiving a TLS 1.2 server hello. We need to
-      // recreate the state as if this implementation issued the client hello.
+      // Downgrade detected after receiving a (D)TLS 1.2 server hello. We need
+      // to recreate the state as if this implementation issued the client
+      // hello.
+
+      // For DTLS we have to initialize the record sequence numbers as
+      // transferred from the TLS 1.3 implementation.
+      BOTAN_ASSERT_IMPLICATION(downgrade_info.flavor == TLS_Flavor::DTLS,
+                               downgrade_info.epoch0_sequence_numbers.has_value(),
+                               "downgrading DTLS requires transferring the record sequence numbers");
+
+      // TODO(C++23): Use std::optional::and_then() instead
+      auto seqno_read = [](const std::optional<Epoch0_SequenceNumbers>& seq) -> std::optional<uint64_t> {
+         if(seq.has_value()) {
+            return seq->read;
+         }
+         return std::nullopt;
+      };
+      auto seqno_write = [](const std::optional<Epoch0_SequenceNumbers>& seq) -> std::optional<uint64_t> {
+         if(seq.has_value()) {
+            return seq->write;
+         }
+         return std::nullopt;
+      };
+
+      auto& state = self->create_handshake_state(version,
+                                                 false /* no epoch0 restart */,
+                                                 seqno_read(downgrade_info.epoch0_sequence_numbers),
+                                                 seqno_write(downgrade_info.epoch0_sequence_numbers));
 
       state.client_hello(std::make_unique<Client_Hello_12>(
          std::exchange(downgrade_info.client_hello, {}).value(), state.handshake_io(), state.hash()));
 
       self->secure_renegotiation_check(state.client_hello());
+      if(downgrade_info.flavor == TLS_Flavor::DTLS) {
+         state.set_expected_next(Handshake_Type::HelloVerifyRequest);  // optional
+      }
       state.set_expected_next(Handshake_Type::ServerHello);
    } else {
-      // Downgrade initiated after a TLS 1.2 session was found. No communication
+      // Downgrade initiated after a (D)TLS 1.2 session was found. No communication
       // has happened yet but the found session should be used for resumption.
       BOTAN_ASSERT_NOMSG(downgrade_info.tls12_session.has_value() &&
                          downgrade_info.tls12_session->session.version().is_pre_tls_13());
+      BOTAN_ASSERT_NOMSG(downgrade_info.tls12_session->session.version().is_datagram_protocol() ==
+                         (downgrade_info.flavor == TLS_Flavor::DTLS));
+
+      // When resuming based on an existing session, the (D)TLS 1.3
+      // implementation won't have emitted any data prior to the downgrade.
+      // Therefore, we can start with default sequence numbers.
+      auto& state = self->create_handshake_state(version);
       self->send_client_hello(state,
                               false,
                               downgrade_info.tls12_session->session.version(),
@@ -232,6 +269,11 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
    }
 
    secure_renegotiation_check(state.client_hello());
+
+   // We just sent our first message that might get lost in transit. Hence, we
+   // kick-off a retransmission timer chain for users that implement the
+   // asynchronous timer callback introduced in Botan 3.14.0.
+   maybe_arm_dtls_retransmission_timer();
 }
 
 namespace {
@@ -319,6 +361,9 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
 
       const Hello_Verify_Request hello_verify_request(contents);
       state.hello_verify_request(hello_verify_request);
+
+      // Cookie ClientHello is a new outgoing flight with a fresh deadline.
+      maybe_arm_dtls_retransmission_timer();
    } else if(type == Handshake_Type::ServerHello) {
       state.server_hello(std::make_unique<Server_Hello_12>(contents));
 
@@ -354,24 +399,35 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          throw TLS_Exception(Alert::IllegalParameter, "Server replied with non-null compression method");
       }
 
-      if(state.client_hello()->legacy_version() > state.server_hello()->legacy_version()) {
-         // check for downgrade attacks
+      const auto downgrade_signal = state.server_hello()->random_signals_downgrade();
+      if(downgrade_signal.has_value()) {
+         // RFC 9846 4.2.3.:
+         //   TLS 1.3 clients receiving a ServerHello indicating TLS 1.2 or
+         //   below MUST check that the last 8 bytes are not equal to either of
+         //   [the magic downgrade values].
          //
-         // RFC 8446 4.1.3.:
-         //   TLS 1.2 clients SHOULD also check that the last 8 bytes are
-         //   not equal to the [magic value DOWNGRADE_TLS11] if the ServerHello
-         //   indicates TLS 1.1 or below.  If a match is found, the client MUST
-         //   abort the handshake with an "illegal_parameter" alert.
+         // If `random_signals_downgrade()` returns any value, then the server
+         // is signaling a downgrade to TLS 1.2 or below.
+         if(state.client_hello()->offered_tls13()) {
+            throw TLS_Exception(Alert::IllegalParameter, "Downgrade attack detected");
+         }
+
+         // RFC 9846 4.2.3.:
+         //    TLS 1.2 clients SHOULD also check that the last 8 bytes are not
+         //    equal to the [magic value DOWNGRADE_TLS11] if the ServerHello
+         //    indicates TLS 1.1 or below.
          //
-         // TLS 1.3 servers will still set the magic string to DOWNGRADE_TLS12. Don't abort in this case.
-         if(auto requested = state.server_hello()->random_signals_downgrade();
-            requested.has_value() && requested.value() <= Protocol_Version::TLS_V11) {
+         // Technically, this is dead code because we don't support TLS 1.1 or
+         // below anymore, but we keep it for completeness and to avoid future
+         // regressions.
+         if(state.client_hello()->legacy_version() > state.server_hello()->legacy_version() &&
+            downgrade_signal.value() <= Protocol_Version::TLS_V11) {
             throw TLS_Exception(Alert::IllegalParameter, "Downgrade attack detected");
          }
       }
 
-      auto client_extn = state.client_hello()->extension_types();
-      auto server_extn = state.server_hello()->extension_types();
+      const auto client_extn = state.client_hello()->extension_types();
+      const auto server_extn = state.server_hello()->extension_types();
 
       std::vector<Extension_Code> diff;
 
@@ -578,7 +634,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          state.set_expected_next(Handshake_Type::CertificateStatus);  // optional
       } else {
          try {
-            auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-client", m_info.hostname());
+            const auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-client", m_info.hostname());
 
             callbacks().tls_verify_cert_chain(
                server_certs, {}, trusted_CAs, Usage_Type::TLS_SERVER_AUTH, m_info.hostname(), policy());
@@ -625,7 +681,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
 
       if(state.server_certs() != nullptr && state.server_hello()->supports_certificate_status_message()) {
          try {
-            auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-client", m_info.hostname());
+            const auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-client", m_info.hostname());
 
             std::vector<std::optional<OCSP::Response>> ocsp;
             if(state.server_cert_status() != nullptr) {
@@ -696,7 +752,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       }
 
       if(state.received_handshake_msg(Handshake_Type::CertificateRequest) && !state.client_certs()->empty()) {
-         auto private_key =
+         const auto private_key =
             m_creds->private_key_for(state.client_certs()->cert_chain()[0], "tls-client", m_info.hostname());
 
          if(!private_key) {
@@ -712,6 +768,10 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       change_cipher_spec_writer(Connection_Side::Client);
 
       state.client_finished(std::make_unique<Finished_12>(state.handshake_io(), state, Connection_Side::Client));
+
+      // Flight is complete, we're now waiting for the peer to respond or for
+      // our timer to cause a retransmission.
+      maybe_arm_dtls_retransmission_timer();
 
       if(state.server_hello()->supports_session_ticket()) {
          state.set_expected_next(Handshake_Type::NewSessionTicket);

@@ -14,7 +14,8 @@ These values can be set in the environment before the program starts, or using
   set, or set to 0, then it defaults to the number of CPUs available on the
   system. If it is set to the string "none" then the thread pool is disabled;
   instead all work passed to the thread pool will be executed immediately
-  by the calling thread.
+  by the calling thread. An application can also replace the pool entirely
+  with its own executor; see :ref:`thread_pool`.
 
   As of version 3.2.0, on MinGW the thread pool is by default disabled, due to a
   bug which causes deadlock on application shutdown. Enabling the pool can be

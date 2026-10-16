@@ -427,9 +427,9 @@ std::vector<Test::Result> test_kyber_ntt() {
    constexpr int32_t q = Botan::KyberConstants::Q;
    constexpr int32_t R = 65536 % q;  // inverse_ntt leaves this Montgomery factor in
 
-   auto modq = [](int64_t x) { return static_cast<int32_t>(((x % q) + q) % q); };
+   const auto modq = [](int64_t x) { return static_cast<int32_t>(((x % q) + q) % q); };
 
-   auto random_poly = [](Botan::RandomNumberGenerator& rng) {
+   const auto random_poly = [](Botan::RandomNumberGenerator& rng) {
       Poly p;
       for(auto& c : p) {
          c = static_cast<int16_t>(Botan::load_le<uint16_t>(rng.random_array<2>()) % q);
@@ -437,7 +437,7 @@ std::vector<Test::Result> test_kyber_ntt() {
       return p;
    };
 
-   auto in_range = [](const Poly& p, int32_t lo, int32_t hi) {
+   const auto in_range = [](const Poly& p, int32_t lo, int32_t hi) {
       return std::all_of(p.begin(), p.end(), [&](int16_t c) { return c >= lo && c < hi; });
    };
 

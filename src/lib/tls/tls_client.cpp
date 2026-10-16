@@ -67,7 +67,7 @@ Client::Client(const std::shared_ptr<Callbacks>& callbacks,
                                       policy,
                                       rng,
                                       std::move(info),
-                                      offer_version.is_datagram_protocol(),
+                                      offer_version.is_datagram_protocol() ? TLS_Flavor::DTLS : TLS_Flavor::TLS,
                                       next_protocols,
                                       io_buf_sz);
       return;

@@ -34,7 +34,7 @@ std::optional<IPv6Address> IPv6Address::from_string(std::string_view str) {
    size_t post_count = 0;
    bool seen_double_colon = false;
 
-   auto hex_value = [](char c) -> std::optional<uint8_t> {
+   const auto hex_value = [](char c) -> std::optional<uint8_t> {
       if(c >= '0' && c <= '9') {
          return c - '0';
       } else if(c >= 'a' && c <= 'f') {
@@ -216,7 +216,7 @@ std::string IPv6Address::to_string() const {
    std::string out;
    out.reserve(39);
 
-   auto append_group = [&](uint16_t group) {
+   const auto append_group = [&](uint16_t group) {
       bool started = false;
       // Write each nibble omitting leading 0s
       for(int s = 12; s >= 0; s -= 4) {
@@ -346,6 +346,15 @@ std::optional<IPv6Subnet> IPv6Subnet::from_string(std::string_view str) {
 
 bool IPv6Subnet::contains(const IPv6Address& ip) const {
    return (ip & IPv6Address::netmask(m_prefix_length)) == m_address;
+}
+
+IPv6Address IPv6Subnet::last_address() const {
+   auto last = m_address.to_bytes();
+   const auto mask = IPv6Address::netmask(m_prefix_length).to_bytes();
+   for(size_t i = 0; i != 16; ++i) {
+      last[i] |= static_cast<uint8_t>(~mask[i]);
+   }
+   return IPv6Address(last);
 }
 
 std::string IPv6Subnet::to_string() const {

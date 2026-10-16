@@ -1,0 +1,15 @@
+<module_info>
+name -> "Curve25519 Arithmetic"
+brief -> "X25519 and Ed25519 Arithmetic"
+type -> "Internal"
+</module_info>
+
+<requires>
+mp
+</requires>
+
+<header:internal>
+ed25519_fe.h
+ed25519_internal.h
+ed25519_scalar.h
+</header:internal>

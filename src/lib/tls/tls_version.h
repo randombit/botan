@@ -24,6 +24,8 @@ enum class Version_Code : uint16_t {
    TLS_V12 = 0x0303,
    /// TLSv1.3
    TLS_V13 = 0x0304,
+   /// DTLSv1.0 (no longer supported)
+   DTLS_V10 = 0xFEFF,
    /// DTLSv1.2
    DTLS_V12 = 0xFEFD,
    /// DTLSv1.3 (not supported yet)
@@ -60,7 +62,7 @@ class BOTAN_PUBLIC_API(2, 0) Protocol_Version final {
       /**
       * @param named_version a specific named version of the protocol
       */
-      Protocol_Version(Version_Code named_version) :  // NOLINT(*-explicit-conversions)
+      Protocol_Version(Version_Code named_version) :  // NOLINT(*-explicit-conversions,*-explicit-constructor)
             Protocol_Version(static_cast<uint16_t>(named_version)) {}
 
       /**

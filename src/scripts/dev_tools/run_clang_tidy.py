@@ -76,6 +76,7 @@ disabled_not_interested = [
     'cppcoreguidelines-pro-bounds-constant-array-index',
     'cppcoreguidelines-pro-type-reinterpret-cast',
     'hicpp-signed-bitwise', # would be reasonable if it ignored constants (it doesn't)
+    'bugprone-signed-bitwise', # would be reasonable if it ignored constants (it doesn't)
     'misc-no-recursion',
     'modernize-avoid-c-style-cast', # the kind of cast clang-tidy is complaining about here is fine
     'modernize-use-trailing-return-type', # fine, but we're not using it everywhere
@@ -83,17 +84,21 @@ disabled_not_interested = [
     'modernize-use-default-member-init',
     'modernize-use-designated-initializers',
     'modernize-use-nodiscard',
+    'modernize-use-string-view', # mostly flags public API functions whose return type cannot change
     'modernize-use-using', # fine not great
     'readability-avoid-return-with-void-value', # Jack likes doing this
     'readability-function-cognitive-complexity',
     'readability-identifier-length', # lol, lmao
     'readability-math-missing-parentheses',
     'readability-non-const-parameter',
-    'readability-use-concise-preprocessor-directives', # it's not more readable...
-    'readability-redundant-parentheses', # often improves readability ...
-    'readability-redundant-inline-specifier', # Jack likes doing this
     'readability-redundant-access-specifiers', # reneme likes doing this
+    'readability-redundant-inline-specifier', # Jack likes doing this
+    'readability-redundant-lambda-parameter-list', # such readable wow
+    'readability-redundant-parentheses', # often improves readability ...
+    'readability-trailing-comma', # this is not more readable...
     'readability-use-anyofallof', # not more readable
+    'readability-use-concise-preprocessor-directives', # it's not more readable...
+    'readability-redundant-nested-if', # what the fuck, no
 ]
 
 disabled_checks = sorted(disabled_needs_work + disabled_not_interested)

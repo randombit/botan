@@ -13,6 +13,7 @@
    #include <botan/internal/bitvector.h>
    #include <botan/internal/fmt.h>
    #include <algorithm>
+   #include <limits>
    #include <numeric>
    #include <set>
 #endif
@@ -35,13 +36,13 @@ size_t rand_in_range(Botan::RandomNumberGenerator& rng, size_t min, size_t max) 
 
 /// Returns @p n integers smaller than @p upper_bound in random order
 std::vector<size_t> rand_indices(Botan::RandomNumberGenerator& rng, size_t n, size_t upper_bound) {
-   auto shuffle = [&](std::vector<size_t>& v) {
+   const auto shuffle = [&](std::vector<size_t>& v) {
       // Fisher-Yates shuffle
       if(v.size() < 2) {
          return;
       }
       for(size_t i = 0; i < v.size() - 1; ++i) {
-         auto j = rand_in_range(rng, i, v.size());
+         const auto j = rand_in_range(rng, i, v.size());
          std::swap(v[i], v[j]);
       }
    };
@@ -485,11 +486,11 @@ std::vector<Test::Result> test_bitvector_subvector(Botan::RandomNumberGenerator&
       CHECK("empty copy is allowed",
             [&](auto& result) {
                const Botan::bitvector bv1(100);
-               auto bv2 = bv1.subvector(0, 0);
+               const auto bv2 = bv1.subvector(0, 0);
                result.test_sz_eq("empty at 0", bv2.size(), size_t(0));
-               auto bv3 = bv1.subvector(10, 0);
+               const auto bv3 = bv1.subvector(10, 0);
                result.test_sz_eq("empty at 10", bv3.size(), size_t(0));
-               auto bv4 = bv1.subvector(100, 0);
+               const auto bv4 = bv1.subvector(100, 0);
                result.test_sz_eq("empty at 100", bv3.size(), size_t(0));
             }),
 
@@ -580,6 +581,23 @@ std::vector<Test::Result> test_bitvector_subvector(Botan::RandomNumberGenerator&
                auto bv8 = bv1.subvector(33);  // copy until the end
                result.test_sz_eq("size is as expected", bv8.size(), size_t(67));
                check_bitpattern(result, bv8, 33);
+            }),
+
+      CHECK("unaligned copy at the exact end of the buffer",
+            [&](auto& result) {
+               // Regression test: the block-wise processing must not read past
+               // the underlying buffer when the copied range ends exactly at
+               // the buffer's end. Best checked with a sanitizer build.
+               Botan::bitvector bv1(64);
+               make_bitpattern(bv1);
+
+               auto bv2 = bv1.subvector(3, 61);
+               result.test_sz_eq("size is as requested", bv2.size(), size_t(61));
+               check_bitpattern(result, bv2, 3);
+
+               auto bv3 = bv1.subvector(1, 63);
+               result.test_sz_eq("size is as requested", bv3.size(), size_t(63));
+               check_bitpattern(result, bv3, 1);
             }),
 
       CHECK("byte-aligned unsigned integer subvector",
@@ -850,7 +868,7 @@ std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates(Botan::
 
       CHECK("hamming weight",
             [](auto& result) {
-               auto naive_count = [](const auto& v) {
+               const auto naive_count = [](const auto& v) {
                   size_t weight = 0;
                   for(const auto& bit : v) {
                      weight += bit.template as<size_t>();
@@ -878,6 +896,382 @@ std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates(Botan::
                bv.pop_back();
                result.test_sz_eq("hamming weight", bv.hamming_weight(), size_t(34));
                result.test_sz_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
+            }),
+   };
+}
+
+std::vector<Test::Result> test_bitvector_set_range(Botan::RandomNumberGenerator& /*rng*/) {
+   auto check_set_range = [](auto& result, const auto& bitvector, size_t offset, size_t length) {
+      for(size_t i = 0; i < bitvector.size(); ++i) {
+         const bool in_range = (offset <= i && i < offset + length);
+         result.test_bool_eq(Botan::fmt("bit {} is as expected", i), bitvector[i], in_range);
+      }
+   };
+
+   auto check_set_range_in_pattern = [](auto& result, const auto& bitvector, size_t offset, size_t length) {
+      auto next = pattern_generator<3>();
+      for(size_t i = 0; i < bitvector.size(); ++i) {
+         const bool in_range = (offset <= i && i < offset + length);
+         const bool pattern_bit = next();  // must be evaluated unconditionally
+         result.test_bool_eq(Botan::fmt("bit {} is as expected", i), bitvector[i], in_range || pattern_bit);
+      }
+   };
+
+   auto make_bitpattern = [](auto& bitvector) {
+      auto next = pattern_generator<3>();
+      for(auto& i : bitvector) {
+         i = next();
+      }
+   };
+
+   return {
+      CHECK("set_range with zero length is a no-op",
+            [&](auto& result) {
+               Botan::bitvector bv(100);
+               make_bitpattern(bv);
+               const auto before = bv;
+
+               result.test_no_throw("empty range at the beginning", [&] { bv.set_range(0, 0); });
+               result.test_no_throw("empty range in the middle", [&] { bv.set_range(50, 0); });
+               result.test_no_throw("empty range at the end", [&] { bv.set_range(100, 0); });
+               result.test_is_true("bitvector was not modified", bv.equals(before));
+            }),
+
+      CHECK("set_range on empty bitvector",
+            [](auto& result) {
+               Botan::bitvector bv;
+               result.test_no_throw("empty range", [&] { bv.set_range(0, 0); });
+               result.template test_throws<Botan::Invalid_Argument>("non-empty range", [&] { bv.set_range(0, 1); });
+            }),
+
+      CHECK("byte-aligned set_range",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               bv1.set_range(8, 16);
+               check_set_range(result, bv1, 8, 16);
+
+               Botan::bitvector bv2(100);
+               bv2.set_range(16, 64);
+               check_set_range(result, bv2, 16, 64);
+
+               Botan::bitvector bv3(100);
+               bv3.set_range(0, 8);
+               check_set_range(result, bv3, 0, 8);
+
+               Botan::bitvector bv4(100);
+               bv4.set_range(96, 4);
+               check_set_range(result, bv4, 96, 4);
+            }),
+
+      CHECK("unaligned set_range",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               bv1.set_range(3, 5);
+               check_set_range(result, bv1, 3, 5);
+
+               Botan::bitvector bv2(100);
+               bv2.set_range(13, 47);
+               check_set_range(result, bv2, 13, 47);
+
+               Botan::bitvector bv3(100);
+               bv3.set_range(1, 99);
+               check_set_range(result, bv3, 1, 99);
+
+               Botan::bitvector bv4(100);
+               bv4.set_range(99, 1);
+               check_set_range(result, bv4, 99, 1);
+            }),
+
+      CHECK("set_range over the entire bitvector",
+            [&](auto& result) {
+               Botan::bitvector bv(100);
+               bv.set_range(0, 100);
+               result.test_is_true("all bits are set", bv.all_vartime());
+               result.test_sz_eq("hamming weight is 100", bv.hamming_weight(), size_t(100));
+            }),
+
+      CHECK("set_range spanning many blocks",
+            [&](auto& result) {
+               Botan::bitvector bv1(1000);
+               bv1.set_range(0, 1000);
+               result.test_is_true("all bits are set", bv1.all_vartime());
+
+               Botan::bitvector bv2(1000);
+               bv2.set_range(64, 512);
+               check_set_range(result, bv2, 64, 512);
+
+               Botan::bitvector bv3(1000);
+               bv3.set_range(7, 913);
+               check_set_range(result, bv3, 7, 913);
+            }),
+
+      CHECK("set_range at the exact end of the buffer",
+            [&](auto& result) {
+               // Regression test: the block-wise processing must not read or
+               // write past the underlying buffer when a range ends exactly at
+               // the buffer's end. Best checked with a sanitizer build.
+               Botan::bitvector bv16(16);
+               bv16.set_range(0, 16);
+               result.test_is_true("all bits set (16 bits)", bv16.all_vartime());
+
+               Botan::bitvector bv32(32);
+               bv32.set_range(0, 32);
+               result.test_is_true("all bits set (32 bits)", bv32.all_vartime());
+
+               Botan::bitvector bv64(64);
+               bv64.set_range(0, 64);
+               result.test_is_true("all bits set (64 bits)", bv64.all_vartime());
+
+               Botan::bitvector bv128(128);
+               bv128.set_range(64, 64);
+               check_set_range(result, bv128, 64, 64);
+
+               Botan::bitvector bvu1(64);
+               bvu1.set_range(3, 61);
+               check_set_range(result, bvu1, 3, 61);
+
+               Botan::bitvector bvu2(64);
+               bvu2.set_range(0, 61);
+               check_set_range(result, bvu2, 0, 61);
+
+               Botan::bitvector bvu3(32);
+               bvu3.set_range(5, 27);
+               check_set_range(result, bvu3, 5, 27);
+            }),
+
+      CHECK("set_range preserves bits outside the range",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               make_bitpattern(bv1);
+               bv1.set_range(16, 32);
+               check_set_range_in_pattern(result, bv1, 16, 32);
+
+               Botan::bitvector bv2(100);
+               make_bitpattern(bv2);
+               bv2.set_range(19, 43);
+               check_set_range_in_pattern(result, bv2, 19, 43);
+
+               Botan::bitvector bv3(100);
+               make_bitpattern(bv3);
+               bv3.set_range(1, 98);
+               check_set_range_in_pattern(result, bv3, 1, 98);
+            }),
+
+      CHECK(
+         "set_range validates its arguments",
+         [&](auto& result) {
+            Botan::bitvector bv(100);
+            make_bitpattern(bv);
+            const auto before = bv;
+
+            result.template test_throws<Botan::Invalid_Argument>("offset out of range", [&] { bv.set_range(101, 0); });
+            result.template test_throws<Botan::Invalid_Argument>("range end out of range",
+                                                                 [&] { bv.set_range(100, 1); });
+            result.template test_throws<Botan::Invalid_Argument>("length out of range", [&] { bv.set_range(0, 101); });
+            result.template test_throws<Botan::Invalid_Argument>("offset + length out of range",
+                                                                 [&] { bv.set_range(90, 11); });
+            result.template test_throws<Botan::Invalid_Argument>(
+               "offset + length overflowing", [&] { bv.set_range(1, std::numeric_limits<size_t>::max()); });
+
+            result.test_is_true("bitvector was not modified", bv.equals(before));
+         }),
+   };
+}
+
+std::vector<Test::Result> test_bitvector_unset_range(Botan::RandomNumberGenerator& /*rng*/) {
+   auto check_unset_range = [](auto& result, const auto& bitvector, size_t offset, size_t length) {
+      for(size_t i = 0; i < bitvector.size(); ++i) {
+         const bool in_range = (offset <= i && i < offset + length);
+         result.test_bool_eq(Botan::fmt("bit {} is as expected", i), bitvector[i], !in_range);
+      }
+   };
+
+   auto check_unset_range_in_pattern = [](auto& result, const auto& bitvector, size_t offset, size_t length) {
+      auto next = pattern_generator<3>();
+      for(size_t i = 0; i < bitvector.size(); ++i) {
+         const bool in_range = (offset <= i && i < offset + length);
+         const bool pattern_bit = next();  // must be evaluated unconditionally
+         result.test_bool_eq(Botan::fmt("bit {} is as expected", i), bitvector[i], !in_range && pattern_bit);
+      }
+   };
+
+   auto make_bitpattern = [](auto& bitvector) {
+      auto next = pattern_generator<3>();
+      for(auto& i : bitvector) {
+         i = next();
+      }
+   };
+
+   return {
+      CHECK("unset_range with zero length is a no-op",
+            [&](auto& result) {
+               Botan::bitvector bv(100);
+               make_bitpattern(bv);
+               const auto before = bv;
+
+               result.test_no_throw("empty range at the beginning", [&] { bv.unset_range(0, 0); });
+               result.test_no_throw("empty range in the middle", [&] { bv.unset_range(50, 0); });
+               result.test_no_throw("empty range at the end", [&] { bv.unset_range(100, 0); });
+               result.test_is_true("bitvector was not modified", bv.equals(before));
+            }),
+
+      CHECK("unset_range on empty bitvector",
+            [](auto& result) {
+               Botan::bitvector bv;
+               result.test_no_throw("empty range", [&] { bv.unset_range(0, 0); });
+               result.template test_throws<Botan::Invalid_Argument>("non-empty range", [&] { bv.unset_range(0, 1); });
+            }),
+
+      CHECK("byte-aligned unset_range",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               bv1.set();
+               bv1.unset_range(8, 16);
+               check_unset_range(result, bv1, 8, 16);
+
+               Botan::bitvector bv2(100);
+               bv2.set();
+               bv2.unset_range(16, 64);
+               check_unset_range(result, bv2, 16, 64);
+
+               Botan::bitvector bv3(100);
+               bv3.set();
+               bv3.unset_range(0, 8);
+               check_unset_range(result, bv3, 0, 8);
+
+               Botan::bitvector bv4(100);
+               bv4.set();
+               bv4.unset_range(96, 4);
+               check_unset_range(result, bv4, 96, 4);
+            }),
+
+      CHECK("unaligned unset_range",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               bv1.set();
+               bv1.unset_range(3, 5);
+               check_unset_range(result, bv1, 3, 5);
+
+               Botan::bitvector bv2(100);
+               bv2.set();
+               bv2.unset_range(13, 47);
+               check_unset_range(result, bv2, 13, 47);
+
+               Botan::bitvector bv3(100);
+               bv3.set();
+               bv3.unset_range(1, 99);
+               check_unset_range(result, bv3, 1, 99);
+
+               Botan::bitvector bv4(100);
+               bv4.set();
+               bv4.unset_range(99, 1);
+               check_unset_range(result, bv4, 99, 1);
+            }),
+
+      CHECK("unset_range over the entire bitvector",
+            [&](auto& result) {
+               Botan::bitvector bv(100);
+               bv.set();
+               bv.unset_range(0, 100);
+               result.test_is_true("no bits are set", bv.none_vartime());
+               result.test_sz_eq("hamming weight is 0", bv.hamming_weight(), size_t(0));
+            }),
+
+      CHECK("unset_range spanning many blocks",
+            [&](auto& result) {
+               Botan::bitvector bv1(1000);
+               bv1.set();
+               bv1.unset_range(0, 1000);
+               result.test_is_true("no bits are set", bv1.none_vartime());
+
+               Botan::bitvector bv2(1000);
+               bv2.set();
+               bv2.unset_range(64, 512);
+               check_unset_range(result, bv2, 64, 512);
+
+               Botan::bitvector bv3(1000);
+               bv3.set();
+               bv3.unset_range(7, 913);
+               check_unset_range(result, bv3, 7, 913);
+            }),
+
+      CHECK("unset_range at the exact end of the buffer",
+            [&](auto& result) {
+               // Regression test: the block-wise processing must not read or
+               // write past the underlying buffer when a range ends exactly at
+               // the buffer's end. Best checked with a sanitizer build.
+               Botan::bitvector bv16(16);
+               bv16.set();
+               bv16.unset_range(0, 16);
+               result.test_is_true("no bits set (16 bits)", bv16.none_vartime());
+
+               Botan::bitvector bv32(32);
+               bv32.set();
+               bv32.unset_range(0, 32);
+               result.test_is_true("no bits set (32 bits)", bv32.none_vartime());
+
+               Botan::bitvector bv64(64);
+               bv64.set();
+               bv64.unset_range(0, 64);
+               result.test_is_true("no bits set (64 bits)", bv64.none_vartime());
+
+               Botan::bitvector bv128(128);
+               bv128.set();
+               bv128.unset_range(64, 64);
+               check_unset_range(result, bv128, 64, 64);
+
+               Botan::bitvector bvu1(64);
+               bvu1.set();
+               bvu1.unset_range(3, 61);
+               check_unset_range(result, bvu1, 3, 61);
+
+               Botan::bitvector bvu2(64);
+               bvu2.set();
+               bvu2.unset_range(0, 61);
+               check_unset_range(result, bvu2, 0, 61);
+
+               Botan::bitvector bvu3(32);
+               bvu3.set();
+               bvu3.unset_range(5, 27);
+               check_unset_range(result, bvu3, 5, 27);
+            }),
+
+      CHECK("unset_range preserves bits outside the range",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               make_bitpattern(bv1);
+               bv1.unset_range(16, 32);
+               check_unset_range_in_pattern(result, bv1, 16, 32);
+
+               Botan::bitvector bv2(100);
+               make_bitpattern(bv2);
+               bv2.unset_range(19, 43);
+               check_unset_range_in_pattern(result, bv2, 19, 43);
+
+               Botan::bitvector bv3(100);
+               make_bitpattern(bv3);
+               bv3.unset_range(1, 98);
+               check_unset_range_in_pattern(result, bv3, 1, 98);
+            }),
+
+      CHECK("unset_range validates its arguments",
+            [&](auto& result) {
+               Botan::bitvector bv(100);
+               make_bitpattern(bv);
+               const auto before = bv;
+
+               result.template test_throws<Botan::Invalid_Argument>("offset out of range",
+                                                                    [&] { bv.unset_range(101, 0); });
+               result.template test_throws<Botan::Invalid_Argument>("range end out of range",
+                                                                    [&] { bv.unset_range(100, 1); });
+               result.template test_throws<Botan::Invalid_Argument>("length out of range",
+                                                                    [&] { bv.unset_range(0, 101); });
+               result.template test_throws<Botan::Invalid_Argument>("offset + length out of range",
+                                                                    [&] { bv.unset_range(90, 11); });
+               result.template test_throws<Botan::Invalid_Argument>(
+                  "offset + length overflowing", [&] { bv.unset_range(1, std::numeric_limits<size_t>::max()); });
+
+               result.test_is_true("bitvector was not modified", bv.equals(before));
             }),
    };
 }
@@ -983,27 +1377,27 @@ std::vector<Test::Result> test_bitvector_binary_operators(Botan::RandomNumberGen
                Botan::bitvector unary(20);
                unary.set(8).set(16);
 
-               auto res1 = lhs | rhs;
+               const auto res1 = lhs | rhs;
                is_secure_allocator(result, res1);
                check_set(result, res1, {0, 1, 4, 15, 16, 17, 18});
 
-               auto res2 = rhs | lhs;
+               const auto res2 = rhs | lhs;
                is_secure_allocator(result, res2);
                check_set(result, res2, {0, 1, 4, 15, 16, 17, 18});
 
-               auto res3 = lhs & rhs;
+               const auto res3 = lhs & rhs;
                is_secure_allocator(result, res3);
                check_set(result, res3, {4, 16, 18});
 
-               auto res4 = rhs & lhs;
+               const auto res4 = rhs & lhs;
                is_secure_allocator(result, res4);
                check_set(result, res4, {4, 16, 18});
 
-               auto res5 = lhs ^ rhs;
+               const auto res5 = lhs ^ rhs;
                is_secure_allocator(result, res5);
                check_set(result, res5, {0, 1, 15, 17});
 
-               auto res6 = rhs ^ lhs;
+               const auto res6 = rhs ^ lhs;
                is_secure_allocator(result, res6);
                check_set(result, res6, {0, 1, 15, 17});
             }),
@@ -1041,7 +1435,7 @@ std::vector<Test::Result> test_bitvector_serialization(Botan::RandomNumberGenera
                const Botan::bitvector bv(bytes);
                result.test_is_true("empty bit vector", bv.empty());
 
-               auto rendered = bv.to_bytes();
+               const auto rendered = bv.to_bytes();
                result.test_is_true("empty bit vector renders an empty buffer", rendered.empty());
             }),
 
@@ -1050,8 +1444,8 @@ std::vector<Test::Result> test_bitvector_serialization(Botan::RandomNumberGenera
                const Botan::bitvector bv;
                const Botan::secure_bitvector sbv;
 
-               auto rbv = bv.to_bytes();
-               auto rsbv = sbv.to_bytes();
+               auto rbv = bv.to_bytes();    // NOLINT(*-const-correctness) decltype is under test
+               auto rsbv = sbv.to_bytes();  // NOLINT(*-const-correctness) decltype is under test
 
                result.test_is_true("ordinary bitvector uses ordinary std::vector",
                                    std::is_same_v<std::vector<uint8_t>, decltype(rbv)>);
@@ -1204,7 +1598,7 @@ std::vector<Test::Result> test_bitvector_iterators(Botan::RandomNumberGenerator&
                Botan::bitvector bv(6);
                bv.set(0).set(3).set(4);
 
-               for(size_t i = 0; auto& ref : bv) {
+               for(size_t i = 0; const auto& ref : bv) {
                   const bool expected = i == 0 || i == 3 || i == 4;
                   result.test_bool_eq(Botan::fmt("bit {} is as expected", i), ref, expected);
                   ++i;
@@ -1295,8 +1689,8 @@ std::vector<Test::Result> test_bitvector_iterators(Botan::RandomNumberGenerator&
       CHECK("Iterators: satiesfies C++20 concepts",
             [](auto& result) {
                Botan::secure_bitvector bv(42);
-               auto ro_itr = bv.cbegin();
-               auto rw_itr = bv.begin();
+               auto ro_itr = bv.cbegin();  // NOLINT(*-const-correctness) decltype is under test
+               auto rw_itr = bv.begin();   // NOLINT(*-const-correctness) decltype is under test
 
                using ro = decltype(ro_itr);
                using rw = decltype(rw_itr);
@@ -1342,7 +1736,7 @@ std::vector<Test::Result> test_bitvector_strongtype_adapter(Botan::RandomNumberG
 
    result.test_is_true("hamming weight of bv1", bv1.has_odd_hamming_weight().as_bool());
 
-   for(size_t i = 0; auto bit : bv1) {
+   for(size_t i = 0; const bool bit : bv1) {
       const bool expected = (i == 0 || i == 1 || i == 2 || i == 4 || i == 33);
       result.test_is_true(Botan::fmt("bv1 bit {} is set", i), bit == expected);
       ++i;
@@ -1350,18 +1744,18 @@ std::vector<Test::Result> test_bitvector_strongtype_adapter(Botan::RandomNumberG
 
    bv1.flip();
 
-   for(size_t i = 0; auto bit : bv1) {
+   for(size_t i = 0; const bool bit : bv1) {
       const bool expected = (i == 0 || i == 1 || i == 2 || i == 4 || i == 33);
       result.test_is_true(Botan::fmt("bv1 bit {} is set", i), bit != expected);
       ++i;
    }
 
-   auto bv2 = bv1.as<TestSecureBitvector>();
+   const auto bv2 = bv1.as<TestSecureBitvector>();
 
-   auto bv3 = bv1 | bv2;
+   auto bv3 = bv1 | bv2;  // NOLINT(*-const-correctness) decltype is under test
    result.test_is_true("bv3 is a secure_bitvector", std::same_as<Botan::secure_bitvector, decltype(bv3)>);
 
-   auto bv4 = bv2.subvector<TestSecureBitvector>(0, 5);
+   auto bv4 = bv2.subvector<TestSecureBitvector>(0, 5);  // NOLINT(*-const-correctness) decltype is under test
    result.test_is_true("bv4 is a TestSecureBitvector", std::same_as<TestSecureBitvector, decltype(bv4)>);
 
    auto bv5 = bv2.subvector<TestUInt32>(1);
@@ -1385,6 +1779,8 @@ class BitVector_Tests final : public Test {
             test_bitvector_capacity,
             test_bitvector_subvector,
             test_bitvector_global_modifiers_and_predicates,
+            test_bitvector_set_range,
+            test_bitvector_unset_range,
             test_bitvector_binary_operators,
             test_bitvector_serialization,
             test_bitvector_constant_time_operations,

@@ -7,6 +7,7 @@
 
 #include <botan/tls_session_manager_sql.h>
 
+#include <botan/assert.h>
 #include <botan/database.h>
 #include <botan/hex.h>
 #include <botan/pwdhash.h>
@@ -21,6 +22,7 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
                                          const std::shared_ptr<RandomNumberGenerator>& rng,
                                          size_t max_sessions) :
       Session_Manager(rng), m_db(std::move(db)), m_max_sessions(max_sessions) {
+   BOTAN_ARG_CHECK(m_db != nullptr, "Database must not be null");
    create_or_migrate_and_open(passphrase);
 }
 
@@ -54,7 +56,7 @@ Session_Manager_SQL::Schema_Revision Session_Manager_SQL::detect_schema_revision
    }
 
    try {
-      auto stmt = m_db->select("database_revision", "tls_sessions_metadata");
+      const auto stmt = m_db->select("database_revision", "tls_sessions_metadata");
       if(!stmt->step()) {
          throw Internal_Error("Failed to read revision of TLS session database");
       }
@@ -109,7 +111,7 @@ void Session_Manager_SQL::create_with_latest_schema(std::string_view passphrase,
    const size_t check_val = make_uint16(derived_key[0], derived_key[1]);
    m_session_key = SymmetricKey(std::span(derived_key).subspan(2));
 
-   auto stmt = m_db->new_statement("INSERT INTO tls_sessions_metadata VALUES (?1, ?2, ?3, ?4, ?5)");
+   const auto stmt = m_db->new_statement("INSERT INTO tls_sessions_metadata VALUES (?1, ?2, ?3, ?4, ?5)");
 
    stmt->bind(1, salt);
    stmt->bind(2, iterations);
@@ -121,7 +123,7 @@ void Session_Manager_SQL::create_with_latest_schema(std::string_view passphrase,
 }
 
 void Session_Manager_SQL::initialize_existing_database(std::string_view passphrase) {
-   auto stmt = m_db->select("*", "tls_sessions_metadata");
+   const auto stmt = m_db->select("*", "tls_sessions_metadata");
    if(!stmt->step()) {
       throw Internal_Error("Failed to initialize TLS session database");
    }
@@ -158,8 +160,8 @@ void Session_Manager_SQL::store(const Session& session, const Session_Handle& ha
       return;
    }
 
-   auto stmt = m_db->upsert("tls_sessions",
-                            {"session_id", "session_ticket", "session_start", "hostname", "hostport", "session"});
+   const auto stmt = m_db->upsert("tls_sessions",
+                                  {"session_id", "session_ticket", "session_start", "hostname", "hostport", "session"});
 
    // Generate a random session ID if the peer did not provide one. Note that
    // this ID will not be returned on ::find(), as the ticket is preferred.
@@ -185,7 +187,7 @@ std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& h
    }
 
    if(auto session_id = handle.id()) {
-      auto stmt = m_db->select("session", "tls_sessions", "session_id = ?1");
+      const auto stmt = m_db->select("session", "tls_sessions", "session_id = ?1");
 
       stmt->bind(1, hex_encode(session_id->get()));
 
@@ -219,7 +221,7 @@ std::vector<Session_with_Handle> Session_Manager_SQL::find_some(const Server_Inf
    std::vector<Session_with_Handle> found_sessions;
    while(stmt->step()) {
       auto handle = [&]() -> Session_Handle {
-         auto ticket_blob = stmt->get_blob(1);
+         const auto ticket_blob = stmt->get_blob(1);
          if(!ticket_blob.empty()) {
             return Session_Handle(Session_Ticket(ticket_blob));
          } else {
@@ -242,11 +244,11 @@ size_t Session_Manager_SQL::remove(const Session_Handle& handle) {
    const lock_guard_type<recursive_mutex_type> lk(mutex());
 
    if(const auto id = handle.id()) {
-      auto stmt = m_db->new_statement("DELETE FROM tls_sessions WHERE session_id = ?1");
+      const auto stmt = m_db->new_statement("DELETE FROM tls_sessions WHERE session_id = ?1");
       stmt->bind(1, hex_encode(id->get()));
       stmt->spin();
    } else if(const auto ticket = handle.ticket()) {
-      auto stmt = m_db->new_statement("DELETE FROM tls_sessions WHERE session_ticket = ?1");
+      const auto stmt = m_db->new_statement("DELETE FROM tls_sessions WHERE session_ticket = ?1");
       stmt->bind(1, ticket->get());
       stmt->spin();
    } else {
@@ -273,7 +275,7 @@ void Session_Manager_SQL::prune_session_cache() {
       return;
    }
 
-   auto remove_oldest = m_db->new_statement(
+   const auto remove_oldest = m_db->new_statement(
       "DELETE FROM tls_sessions WHERE session_id NOT IN "
       "(SELECT session_id FROM tls_sessions ORDER BY session_start DESC LIMIT ?1)");
    remove_oldest->bind(1, m_max_sessions);

@@ -200,7 +200,7 @@ class ObjectSetter {
       ObjectSetter& operator=(const ObjectSetter&) = delete;
       ObjectSetter& operator=(ObjectSetter&&) = delete;
 
-      // NOLINTNEXTLINE(*-explicit-conversions) FIXME
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor) FIXME
       [[nodiscard]] constexpr operator uint32_t*() && noexcept { return &m_handle; }
 
    private:

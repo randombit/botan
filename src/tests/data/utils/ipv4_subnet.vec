@@ -3,11 +3,17 @@
 # Valid entries must be in canonical form (host bits cleared, prefix length
 # a plain decimal), as the test also checks that they round trip through
 # IPv4Subnet::to_string unchanged
+LastAddress = 255.255.255.255
 IPv4Subnet = 0.0.0.0/0
+LastAddress = 10.255.255.255
 IPv4Subnet = 10.0.0.0/8
+LastAddress = 10.255.255.255
 IPv4Subnet = 10.128.0.0/9
+LastAddress = 172.31.255.255
 IPv4Subnet = 172.16.0.0/12
+LastAddress = 192.168.1.255
 IPv4Subnet = 192.168.1.0/24
+LastAddress = 255.255.255.255
 IPv4Subnet = 255.255.255.255/32
 
 [Invalid]

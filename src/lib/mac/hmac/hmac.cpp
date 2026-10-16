@@ -103,11 +103,11 @@ void HMAC::key_schedule(std::span<const uint8_t> key) {
          access key[i % length] but avoiding division due to variable
          time computation on some processors.
          */
-         auto needs_reduction = CT::Mask<size_t>::is_lte(key.size(), i_mod_length);
+         const auto needs_reduction = CT::Mask<size_t>::is_lte(key.size(), i_mod_length);
          i_mod_length = needs_reduction.select(0, i_mod_length);
          const uint8_t kb = key[i_mod_length];
 
-         auto in_range = CT::Mask<size_t>::is_lt(i, key.size());
+         const auto in_range = CT::Mask<size_t>::is_lt(i, key.size());
          m_ikey[i] = static_cast<uint8_t>(in_range.if_set_return(kb));
          i_mod_length += 1;
       }

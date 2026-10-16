@@ -303,7 +303,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
                return;
             }
 
-            if(auto ptr = self.lock()) {
+            if(const auto ptr = self.lock()) {
                ptr->server_read(boost::system::error_code(), 0);  // start read loop
                ptr->proxy_write_to_server({});
             } else {
@@ -435,14 +435,14 @@ class TLS_Proxy final : public Command {
          const size_t num_threads = thread_count();
          const size_t max_clients = get_arg_sz("max-clients");
 
-         auto creds = std::make_shared<Basic_Credentials_Manager>(server_crt, server_key);
+         const auto creds = std::make_shared<Basic_Credentials_Manager>(server_crt, server_key);
 
-         auto policy = load_tls_policy(get_arg("policy"));
+         const auto policy = load_tls_policy(get_arg("policy"));
 
          boost::asio::io_context io;
 
          tcp::resolver resolver(io);
-         auto server_endpoint_iterator = resolver.resolve(target, target_port);
+         const auto server_endpoint_iterator = resolver.resolve(target, target_port);
 
          std::shared_ptr<Botan::TLS::Session_Manager> session_mgr;
 
@@ -471,7 +471,7 @@ class TLS_Proxy final : public Command {
 
          io.run();
 
-         for(auto& thread : threads) {
+         for(const auto& thread : threads) {
             thread->join();
          }
       }

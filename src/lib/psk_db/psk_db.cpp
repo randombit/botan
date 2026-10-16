@@ -20,7 +20,7 @@ std::string PSK_Database::get_str(std::string_view name) const {
 }
 
 void PSK_Database::set_str(std::string_view name, std::string_view psk) {
-   auto pskb = as_span_of_bytes(psk);
+   const auto pskb = as_span_of_bytes(psk);
    this->set(name, pskb.data(), pskb.size());
 }
 
@@ -47,7 +47,9 @@ std::set<std::string> Encrypted_PSK_Database::list_names() const {
 
          const auto pt_name = bytes_to_string(name_bits);
          names.insert(pt_name);
-      } catch(Invalid_Authentication_Tag&) {}
+      } catch(Exception&) {
+         // wrong master key or possibly simply malformed data
+      }
    }
 
    return names;

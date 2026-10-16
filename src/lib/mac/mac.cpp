@@ -8,8 +8,9 @@
 #include <botan/mac.h>
 
 #include <botan/exceptn.h>
+#include <botan/internal/algorithm_spec.h>
 #include <botan/internal/ct_utils.h>
-#include <botan/internal/scan_name.h>
+#include <botan/internal/probe_providers.h>
 
 #if defined(BOTAN_HAS_CMAC)
    #include <botan/internal/cmac.h>
@@ -49,20 +50,20 @@ namespace Botan {
 
 std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create(std::string_view algo_spec,
                                                                              std::string_view provider) {
-   const SCAN_Name req(algo_spec);
+   const AlgorithmSpec req(algo_spec);
 
 #if defined(BOTAN_HAS_BLAKE2BMAC)
-   if(req.algo_name() == "Blake2b" || req.algo_name() == "BLAKE2b") {
+   if(auto m = req.match("BLAKE2b|Blake2b({bits:int=512})")) {
       if(provider.empty() || provider == "base") {
-         return std::make_unique<BLAKE2bMAC>(req.arg_as_integer(0, 512));
+         return std::make_unique<BLAKE2bMAC>(m->integer("bits"));
       }
    }
 #endif
 
 #if defined(BOTAN_HAS_GMAC)
-   if(req.algo_name() == "GMAC" && req.arg_count() == 1) {
+   if(auto m = req.match("GMAC({cipher})")) {
       if(provider.empty() || provider == "base") {
-         if(auto bc = BlockCipher::create(req.arg(0))) {
+         if(auto bc = BlockCipher::create(m->str("cipher"))) {
             return std::make_unique<GMAC>(std::move(bc));
          }
       }
@@ -70,9 +71,9 @@ std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create(std
 #endif
 
 #if defined(BOTAN_HAS_HMAC)
-   if(req.algo_name() == "HMAC" && req.arg_count() == 1) {
+   if(auto m = req.match("HMAC({hash})")) {
       if(provider.empty() || provider == "base") {
-         if(auto hash = HashFunction::create(req.arg(0))) {
+         if(auto hash = HashFunction::create(m->str("hash"))) {
             return std::make_unique<HMAC>(std::move(hash));
          }
       }
@@ -80,7 +81,7 @@ std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create(std
 #endif
 
 #if defined(BOTAN_HAS_POLY1305)
-   if(req.algo_name() == "Poly1305" && req.arg_count() == 0) {
+   if(req.matches("Poly1305")) {
       if(provider.empty() || provider == "base") {
          return std::make_unique<Poly1305>();
       }
@@ -88,17 +89,17 @@ std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create(std
 #endif
 
 #if defined(BOTAN_HAS_SIPHASH)
-   if(req.algo_name() == "SipHash") {
+   if(auto m = req.match("SipHash({c:int=2},{d:int=4})")) {
       if(provider.empty() || provider == "base") {
-         return std::make_unique<SipHash>(req.arg_as_integer(0, 2), req.arg_as_integer(1, 4));
+         return std::make_unique<SipHash>(m->integer("c"), m->integer("d"));
       }
    }
 #endif
 
 #if defined(BOTAN_HAS_CMAC)
-   if((req.algo_name() == "CMAC" || req.algo_name() == "OMAC") && req.arg_count() == 1) {
+   if(auto m = req.match("CMAC|OMAC({cipher})")) {
       if(provider.empty() || provider == "base") {
-         if(auto bc = BlockCipher::create(req.arg(0))) {
+         if(auto bc = BlockCipher::create(m->str("cipher"))) {
             return std::make_unique<CMAC>(std::move(bc));
          }
       }
@@ -106,7 +107,7 @@ std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create(std
 #endif
 
 #if defined(BOTAN_HAS_ANSI_X919_MAC)
-   if(req.algo_name() == "X9.19-MAC") {
+   if(req.matches("X9.19-MAC")) {
       if(provider.empty() || provider == "base") {
          return std::make_unique<ANSI_X919_MAC>();
       }
@@ -114,23 +115,15 @@ std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create(std
 #endif
 
 #if defined(BOTAN_HAS_KMAC)
-   if(req.algo_name() == "KMAC-128") {
+   if(auto m = req.match("KMAC-128({bits:int})")) {
       if(provider.empty() || provider == "base") {
-         if(req.arg_count() != 1) {
-            throw Invalid_Argument(
-               "invalid algorithm specification for KMAC-128: need exactly one argument for output bit length");
-         }
-         return std::make_unique<KMAC128>(req.arg_as_integer(0));
+         return std::make_unique<KMAC128>(m->integer("bits"));
       }
    }
 
-   if(req.algo_name() == "KMAC-256") {
+   if(auto m = req.match("KMAC-256({bits:int})")) {
       if(provider.empty() || provider == "base") {
-         if(req.arg_count() != 1) {
-            throw Invalid_Argument(
-               "invalid algorithm specification for KMAC-256: need exactly one argument for output bit length");
-         }
-         return std::make_unique<KMAC256>(req.arg_as_integer(0));
+         return std::make_unique<KMAC256>(m->integer("bits"));
       }
    }
 #endif

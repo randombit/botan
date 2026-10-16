@@ -32,7 +32,7 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test {
          const Botan::BigInt g = vars.get_req_bn("G");
          const Botan::BigInt x = vars.get_req_bn("X");
 
-         auto group = [&]() {
+         const auto group = [&]() {
             if(q == 0) {
                return Botan::DL_Group(p, g);
             } else {
@@ -49,7 +49,7 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test {
          const Botan::BigInt g = vars.get_req_bn("G");
          const Botan::BigInt y = vars.get_req_bn("Y");
 
-         auto group = [&]() {
+         const auto group = [&]() {
             if(q == 0) {
                return Botan::DL_Group(p, g);
             } else {
@@ -69,7 +69,7 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test {
          const Botan::DL_Group group(p, g);
 
          const Botan::BigInt x("46205663093589612668746163860870963912226379131190812163519349848291472898748");
-         auto privkey = std::make_unique<Botan::DH_PrivateKey>(group, x);
+         const auto privkey = std::make_unique<Botan::DH_PrivateKey>(group, x);
 
          auto kas = std::make_unique<Botan::PK_Key_Agreement>(*privkey, this->rng(), "Raw");
 

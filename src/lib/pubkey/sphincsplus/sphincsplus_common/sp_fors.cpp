@@ -33,7 +33,7 @@ std::vector<TreeNodeIndex> fors_message_to_indices(std::span<const uint8_t> mess
    uint32_t offset = 0;
 
    // This is one of the few places where the logic of SPHINCS+ round 3.1 and SLH-DSA differs
-   auto update_idx = [&]() -> std::function<void(TreeNodeIndex&, uint32_t)> {
+   const auto update_idx = [&]() -> std::function<void(TreeNodeIndex&, uint32_t)> {
 #if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
       if(params.is_slh_dsa()) {
          return [&](TreeNodeIndex& idx, uint32_t i) {
@@ -72,7 +72,8 @@ SphincsTreeNode fors_sign_and_pkgen(StrongSpan<ForsSignature> sig_out,
 
    auto fors_tree_addr = Sphincs_Address::as_keypair_from(address);
 
-   auto fors_pk_addr = Sphincs_Address::as_keypair_from(address).set_type(Sphincs_Address::ForsTreeRootsCompression);
+   const auto fors_pk_addr =
+      Sphincs_Address::as_keypair_from(address).set_type(Sphincs_Address::ForsTreeRootsCompression);
 
    std::vector<uint8_t> roots_buffer(params.k() * params.n());
    BufferStuffer roots(roots_buffer);
@@ -155,7 +156,8 @@ SphincsTreeNode fors_public_key_from_signature(const SphincsHashedMessage& hashe
 
    auto fors_tree_addr = Sphincs_Address::as_keypair_from(address).set_type(Sphincs_Address::ForsTree);
 
-   auto fors_pk_addr = Sphincs_Address::as_keypair_from(address).set_type(Sphincs_Address::ForsTreeRootsCompression);
+   const auto fors_pk_addr =
+      Sphincs_Address::as_keypair_from(address).set_type(Sphincs_Address::ForsTreeRootsCompression);
 
    BufferSlicer s(signature);
    std::vector<uint8_t> roots_buffer(params.k() * params.n());
@@ -169,9 +171,9 @@ SphincsTreeNode fors_public_key_from_signature(const SphincsHashedMessage& hashe
 
       // Compute the FORS leaf by using the secret leaf contained in the signature
       fors_tree_addr.set_tree_height(TreeLayerIndex(0)).set_tree_index(indices[i] + idx_offset);
-      auto fors_leaf_secret = s.take<ForsLeafSecret>(params.n());
-      auto auth_path = s.take<SphincsAuthenticationPath>(params.n() * params.a());
-      auto leaf = hashes.T<SphincsTreeNode>(fors_tree_addr, fors_leaf_secret);
+      const auto fors_leaf_secret = s.take<ForsLeafSecret>(params.n());
+      const auto auth_path = s.take<SphincsAuthenticationPath>(params.n() * params.a());
+      const auto leaf = hashes.T<SphincsTreeNode>(fors_tree_addr, fors_leaf_secret);
 
       // Reconstruct the subtree's root using the authentication path
       compute_root(roots.next<SphincsTreeNode>(params.n()),

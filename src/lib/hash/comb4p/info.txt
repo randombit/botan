@@ -4,4 +4,5 @@ COMB4P -> 20131128
 
 <module_info>
 name -> "Comb4P"
+lifecycle -> "Deprecated"
 </module_info>

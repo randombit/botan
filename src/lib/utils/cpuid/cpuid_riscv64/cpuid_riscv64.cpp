@@ -8,6 +8,8 @@
 
 #include <botan/assert.h>
 #include <botan/internal/os_utils.h>
+#include <botan/internal/target_info.h>
+#include <concepts>
 
 #if defined(BOTAN_TARGET_OS_IS_LINUX) && __has_include(<sys/hwprobe.h>)
    #include <asm/hwprobe.h>
@@ -47,7 +49,9 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
 
       Vector = bitflag(2, 17, 26),
       Vector_Aes = bitflag(2, 17, 26, 21),
-      Vector_Sha256 = bitflag(2, 17, 26, 22, 23),
+      // Zvknha (bit 22) provides SHA-256, Zvknhb (bit 23) provides SHA-256 and SHA-512
+      Vector_Sha256_Zvknha = bitflag(2, 17, 26, 22),
+      Vector_Sha256_Zvknhb = bitflag(2, 17, 26, 23),
       Vector_SM4 = bitflag(2, 17, 26, 24),
       Vector_SM3 = bitflag(2, 17, 26, 25),
       Vector_GCM = bitflag(2, 17, 26, 20),
@@ -68,7 +72,10 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
 
       if(is_set(feat, CPUFeature::Bit::VECTOR)) {
          feat |= if_set(riscv_features, RISCV_HWPROBE_bit::Vector_Aes, CPUFeature::Bit::VECTOR_AES, allowed);
-         feat |= if_set(riscv_features, RISCV_HWPROBE_bit::Vector_Sha256, CPUFeature::Bit::VECTOR_SHA256, allowed);
+         feat |=
+            if_set(riscv_features, RISCV_HWPROBE_bit::Vector_Sha256_Zvknha, CPUFeature::Bit::VECTOR_SHA256, allowed);
+         feat |=
+            if_set(riscv_features, RISCV_HWPROBE_bit::Vector_Sha256_Zvknhb, CPUFeature::Bit::VECTOR_SHA256, allowed);
          feat |= if_set(riscv_features, RISCV_HWPROBE_bit::Vector_SM3, CPUFeature::Bit::VECTOR_SM3, allowed);
          feat |= if_set(riscv_features, RISCV_HWPROBE_bit::Vector_SM4, CPUFeature::Bit::VECTOR_SM4, allowed);
       }

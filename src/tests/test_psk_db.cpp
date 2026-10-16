@@ -26,7 +26,7 @@ class Test_Map_PSK_Db : public Botan::Encrypted_PSK_Database {
             Botan::Encrypted_PSK_Database(master_key) {}
 
       void test_entry(Test::Result& result, const std::string& index, const std::string& value) {
-         auto i = m_vals.find(index);
+         const auto i = m_vals.find(index);
 
          if(i == m_vals.end()) {
             result.test_failure("Expected to find encrypted name " + index);
@@ -40,7 +40,7 @@ class Test_Map_PSK_Db : public Botan::Encrypted_PSK_Database {
       }
 
       std::string kv_get(std::string_view index) const override {
-         auto i = m_vals.find(index);
+         const auto i = m_vals.find(index);
          if(i == m_vals.end()) {
             return "";
          }
@@ -48,7 +48,7 @@ class Test_Map_PSK_Db : public Botan::Encrypted_PSK_Database {
       }
 
       void kv_del(std::string_view index) override {
-         auto i = m_vals.find(index);
+         const auto i = m_vals.find(index);
          if(i != m_vals.end()) {
             m_vals.erase(i);
          }
@@ -145,7 +145,8 @@ class PSK_DB_Tests final : public Test {
                       const std::string& table,
                       const std::string& expected_name,
                       const std::string& expected_value) {
-         auto stmt = db.new_statement("select psk_value from " + table + " where psk_name='" + expected_name + "'");
+         const auto stmt =
+            db.new_statement("select psk_value from " + table + " where psk_name='" + expected_name + "'");
 
          const bool got_it = stmt->step();
          result.test_is_true("Had expected name", got_it);

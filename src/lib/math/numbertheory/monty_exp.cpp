@@ -10,19 +10,26 @@
 
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/monty.h>
-#include <botan/internal/rounding.h>
+
+#if defined(BOTAN_HAS_MONTY_EXP_AVX512)
+   #include <botan/internal/cpuid.h>
+   #include <botan/internal/monty_exp_avx512.h>
+#endif
 
 namespace Botan {
 
-class Montgomery_Exponentiation_State final {
+namespace {
+
+class Montgomery_Exponentiation_Generic final : public Montgomery_Exponentiation_State {
    public:
-      Montgomery_Exponentiation_State(const Montgomery_Int& g, size_t window_bits, bool const_time);
+      Montgomery_Exponentiation_Generic(const Montgomery_Int& g, size_t window_bits, bool const_time);
 
-      Montgomery_Int exponentiation(const BigInt& k, size_t max_k_bits) const;
+      Montgomery_Int exponentiation(const BigInt& k, size_t max_k_bits) const override;
 
-      Montgomery_Int exponentiation_vartime(const BigInt& k) const;
+      Montgomery_Int exponentiation_vartime(const BigInt& k) const override;
 
    private:
       Montgomery_Params m_params;
@@ -30,14 +37,10 @@ class Montgomery_Exponentiation_State final {
       size_t m_window_bits;
 };
 
-Montgomery_Exponentiation_State::Montgomery_Exponentiation_State(const Montgomery_Int& g,
-                                                                 size_t window_bits,
-                                                                 bool const_time) :
-      m_params(g._params()), m_window_bits(window_bits == 0 ? 4 : window_bits) {
-   if(m_window_bits < 1 || m_window_bits > 12) {  // really even 8 is too large ...
-      throw Invalid_Argument("Invalid window bits for Montgomery exponentiation");
-   }
-
+Montgomery_Exponentiation_Generic::Montgomery_Exponentiation_Generic(const Montgomery_Int& g,
+                                                                     size_t window_bits,
+                                                                     bool const_time) :
+      m_params(g._params()), m_window_bits(window_bits) {
    const size_t window_size = (static_cast<size_t>(1) << m_window_bits);
 
    m_g.reserve(window_size);
@@ -60,8 +63,6 @@ Montgomery_Exponentiation_State::Montgomery_Exponentiation_State(const Montgomer
       CT::poison_range(m_g);
    }
 }
-
-namespace {
 
 void const_time_lookup(secure_vector<word>& output, const std::vector<Montgomery_Int>& g, size_t nibble) {
    BOTAN_ASSERT_NOMSG(g.size() % 2 == 0);  // actually a power of 2
@@ -86,9 +87,7 @@ void const_time_lookup(secure_vector<word>& output, const std::vector<Montgomery
    }
 }
 
-}  // namespace
-
-Montgomery_Int Montgomery_Exponentiation_State::exponentiation(const BigInt& scalar, size_t max_k_bits) const {
+Montgomery_Int Montgomery_Exponentiation_Generic::exponentiation(const BigInt& scalar, size_t max_k_bits) const {
    BOTAN_ARG_CHECK(scalar.signum() >= 0, "Invalid scalar for Montgomery exponentiation");
    BOTAN_DEBUG_ASSERT(scalar.bits() <= max_k_bits);
    // TODO add a const-time implementation of above assert and use it in release builds
@@ -115,7 +114,7 @@ Montgomery_Int Montgomery_Exponentiation_State::exponentiation(const BigInt& sca
    return x;
 }
 
-Montgomery_Int Montgomery_Exponentiation_State::exponentiation_vartime(const BigInt& scalar) const {
+Montgomery_Int Montgomery_Exponentiation_Generic::exponentiation_vartime(const BigInt& scalar) const {
    const size_t exp_nibbles = (scalar.bits() + m_window_bits - 1) / m_window_bits;
 
    secure_vector<word> ws(2 * m_params.p_words());
@@ -139,10 +138,28 @@ Montgomery_Int Montgomery_Exponentiation_State::exponentiation_vartime(const Big
    return x;
 }
 
+}  // namespace
+
 std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Int& g,
                                                                         size_t window_bits,
                                                                         bool const_time) {
-   return std::make_shared<const Montgomery_Exponentiation_State>(g, window_bits, const_time);
+   if(window_bits == 0) {
+      window_bits = 4;
+   }
+
+   if(window_bits < 1 || window_bits > 12) {  // really even 8 is too large ...
+      throw Invalid_Argument("Invalid window bits for Montgomery exponentiation");
+   }
+
+#if defined(BOTAN_HAS_MONTY_EXP_AVX512)
+   if(CPUID::has(CPUID::Feature::AVX512)) {
+      if(auto state = make_monty_exp_avx512(g, window_bits, const_time)) {
+         return state;
+      }
+   }
+#endif
+
+   return std::make_shared<const Montgomery_Exponentiation_Generic>(g, window_bits, const_time);
 }
 
 std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Params& params,
@@ -170,7 +187,9 @@ Montgomery_Int monty_multi_exp(
       throw Invalid_Argument("multi_exponentiate exponents must be positive");
    }
 
-   const size_t z_bits = round_up(std::max(z1.bits(), z2.bits()), 2);
+   // The exponents are consumed two bits at a time
+   const size_t max_z1z2 = std::max(z1.bits(), z2.bits());
+   const size_t z_bits = 2 * ceil_division<size_t>(max_z1z2, 2);
 
    secure_vector<word> ws(2 * params_p.p_words());
 

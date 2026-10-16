@@ -15,7 +15,9 @@
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
+   #include <atomic>
    #include <thread>
+   #include <vector>
 #endif
 
 namespace Botan_Tests {
@@ -48,6 +50,9 @@ class OS_Utils_Tests final : public Test {
          results.push_back(test_measure_cost());
          results.push_back(test_memory_locking());
          results.push_back(test_cpu_instruction_probe());
+   #if defined(BOTAN_TARGET_OS_HAS_THREADS)
+         results.push_back(test_cpu_instruction_probe_threads());
+   #endif
 
          return results;
       }
@@ -202,7 +207,7 @@ class OS_Utils_Tests final : public Test {
 
          size_t calls = 0;
          uint64_t state = 0x9E3779B97F4A7C15;
-         auto fn = [&]() {
+         const auto fn = [&]() {
             calls += 1;
             state = burn_cpu(state, 20000);
          };
@@ -248,12 +253,82 @@ class OS_Utils_Tests final : public Test {
 
          result.test_is_true("Correct result returned by working probe fn", run_rc == 5);
 
-         std::function<int()> crash_probe;
+         if(const auto crash_probe = illegal_instruction_probe()) {
+            const int crash_rc = Botan::OS::run_cpu_instruction_probe(crash_probe);
+            result.test_is_true("Result for function executing undefined opcode", crash_rc < 0);
+         }
 
+         return result;
+      }
+
+   #if defined(BOTAN_TARGET_OS_HAS_THREADS)
+      static Test::Result test_cpu_instruction_probe_threads() {
+         Test::Result result("OS::run_cpu_instruction_probe multithreaded");
+
+         const std::function<int()> ok_fn = []() noexcept -> int { return 5; };
+
+         if(Botan::OS::run_cpu_instruction_probe(ok_fn) == -3) {
+            result.test_note("run_cpu_instruction_probe not implemented on this platform");
+            return result;
+         }
+
+         const auto crash_probe = illegal_instruction_probe();
+
+         /*
+         * Probes modify the process-wide signal disposition and formerly
+         * shared a single jump buffer, so concurrent probes (in particular
+         * ones which actually fault) must be serialized to be safe.
+         */
+         constexpr size_t thread_count = 4;
+         constexpr size_t iterations = 32;
+
+         std::atomic<size_t> ok_results = 0;
+         std::atomic<size_t> crash_results = 0;
+         std::atomic<size_t> other_results = 0;
+
+         std::vector<std::thread> threads;
+         threads.reserve(thread_count);
+         for(size_t t = 0; t != thread_count; ++t) {
+            threads.emplace_back([&]() {
+               for(size_t i = 0; i != iterations; ++i) {
+                  if(Botan::OS::run_cpu_instruction_probe(ok_fn) == 5) {
+                     ok_results++;
+                  } else {
+                     other_results++;
+                  }
+
+                  if(crash_probe) {
+                     if(Botan::OS::run_cpu_instruction_probe(crash_probe) == -1) {
+                        crash_results++;
+                     } else {
+                        other_results++;
+                     }
+                  }
+               }
+            });
+         }
+
+         for(auto& thread : threads) {
+            thread.join();
+         }
+
+         result.test_sz_eq("Working probes returned the expected value", ok_results.load(), thread_count * iterations);
+         if(crash_probe) {
+            result.test_sz_eq(
+               "Illegal instruction probes were detected", crash_results.load(), thread_count * iterations);
+         }
+         result.test_sz_eq("No unexpected probe results", other_results.load(), 0);
+
+         return result;
+      }
+   #endif
+
+      // Returns a probe executing an illegal instruction, if one is known for this platform
+      static std::function<int()> illegal_instruction_probe() {
    #if defined(BOTAN_USE_GCC_INLINE_ASM)
 
       #if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
-         crash_probe = []() noexcept -> int {
+         return []() noexcept -> int {
             asm volatile("ud2");  // NOLINT(*-no-assembler)
             return 3;
          };
@@ -261,7 +336,7 @@ class OS_Utils_Tests final : public Test {
       #elif defined(BOTAN_TARGET_ARCH_IS_ARM_FAMILY)
          //ARM: asm volatile (".word 0xf7f0a000\n");
          // illegal instruction in both ARM and Thumb modes
-         crash_probe = []() noexcept -> int {
+         return []() noexcept -> int {
             asm volatile(".word 0xe7f0def0\n");  // NOLINT(*-no-assembler)
             return 3;
          };
@@ -276,12 +351,7 @@ class OS_Utils_Tests final : public Test {
 
    #endif
 
-         if(crash_probe) {
-            const int crash_rc = Botan::OS::run_cpu_instruction_probe(crash_probe);
-            result.test_is_true("Result for function executing undefined opcode", crash_rc < 0);
-         }
-
-         return result;
+         return {};
       }
 };
 

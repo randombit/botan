@@ -86,7 +86,7 @@ inline bool Argument_Parser::has_arg(const std::string& opt_name) const {
 }
 
 inline std::string Argument_Parser::get_arg(const std::string& opt_name) const {
-   auto i = m_user_args.find(opt_name);
+   const auto i = m_user_args.find(opt_name);
    if(i == m_user_args.end()) {
       // this shouldn't occur unless you passed the wrong thing to get_arg
       throw CLI_Error("Unknown option " + opt_name + " used (program bug)");
@@ -95,7 +95,7 @@ inline std::string Argument_Parser::get_arg(const std::string& opt_name) const {
 }
 
 inline std::string Argument_Parser::get_arg_or(const std::string& opt_name, const std::string& otherwise) const {
-   auto i = m_user_args.find(opt_name);
+   const auto i = m_user_args.find(opt_name);
    if(i == m_user_args.end() || i->second.empty()) {
       return otherwise;
    }
@@ -235,7 +235,7 @@ inline Argument_Parser::Argument_Parser(const std::string& spec,
       if(s.size() > 2 && s[0] == '-' && s[1] == '-') {
          // option or flag
 
-         auto eq = s.find('=');
+         const auto eq = s.find('=');
 
          if(eq == std::string::npos) {
             m_spec_flags.insert(s.substr(2, std::string::npos));

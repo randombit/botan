@@ -140,7 +140,7 @@ class CC_Encrypt final : public Command {
             throw CLI_Error_Unsupported("PBKDF", "PBKDF2(SHA-256)");
          }
 
-         auto key = Botan::SymmetricKey(pbkdf->pbkdf_iterations(32, pass, tweak.data(), tweak.size(), 100000));
+         const auto key = Botan::SymmetricKey(pbkdf->pbkdf_iterations(32, pass, tweak.data(), tweak.size(), 100000));
 
          output() << format_cc_number(encrypt_cc_number(cc_number, cc.size(), key, tweak), cc.size()) << "\n";
       }
@@ -169,7 +169,7 @@ class CC_Decrypt final : public Command {
             throw CLI_Error_Unsupported("PBKDF", "PBKDF2(SHA-256)");
          }
 
-         auto key = Botan::SymmetricKey(pbkdf->pbkdf_iterations(32, pass, tweak.data(), tweak.size(), 100000));
+         const auto key = Botan::SymmetricKey(pbkdf->pbkdf_iterations(32, pass, tweak.data(), tweak.size(), 100000));
 
          output() << format_cc_number(decrypt_cc_number(cc_number, cc.size(), key, tweak), cc.size()) << "\n";
       }

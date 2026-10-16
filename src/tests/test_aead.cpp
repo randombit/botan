@@ -476,7 +476,7 @@ class AEAD_Tests final : public Text_Based_Test {
 
          // On tag check failure, every AEAD must zero the unauthenticated
          // plaintext in the caller's buffer before throwing
-         auto check_plaintext_cleared =
+         const auto check_plaintext_cleared =
             [&result, &dec](const std::string& msg, const Botan::secure_vector<uint8_t>& b, size_t ctext_and_tag_len) {
                const size_t ptext_len = ctext_and_tag_len - dec->tag_size();
                bool cleared = (b.size() >= ptext_len);

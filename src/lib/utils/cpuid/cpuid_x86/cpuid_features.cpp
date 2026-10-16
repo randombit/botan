@@ -32,6 +32,8 @@ std::string CPUFeature::to_string() const {
          return "rdrand";
       case Bit::RDSEED:
          return "rdseed";
+      case Bit::POPCNT:
+         return "popcnt";
       case Bit::AESNI:
          return "aesni";
       case Bit::CLMUL:
@@ -88,6 +90,8 @@ std::optional<CPUFeature> CPUFeature::from_string(std::string_view tok) {
       return CPUFeature(Bit::RDRAND);
    } else if(tok == "rdseed") {
       return CPUFeature(Bit::RDSEED);
+   } else if(tok == "popcnt") {
+      return CPUFeature(Bit::POPCNT);
    } else if(tok == "avx512_aes") {
       return CPUFeature(Bit::AVX512_AES);
    } else if(tok == "avx512_clmul") {

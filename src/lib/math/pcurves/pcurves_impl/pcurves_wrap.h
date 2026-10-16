@@ -40,17 +40,15 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       }
 
       ProjectivePoint mul(const AffinePoint& pt, const Scalar& scalar, RandomNumberGenerator& rng) const override {
-         auto tbl = WindowedBoothMulTable<C, VarPointWindowBits>(from_stash(pt));
-         return stash(tbl.mul(from_stash(scalar), rng));
+         return stash(varpoint_mul<C, VarPointWindowBits>(from_stash(pt), from_stash(scalar), rng));
       }
 
       secure_vector<uint8_t> mul_x_only(const AffinePoint& pt,
                                         const Scalar& scalar,
                                         RandomNumberGenerator& rng) const override {
-         auto tbl = WindowedBoothMulTable<C, VarPointWindowBits>(from_stash(pt));
-         auto result = tbl.mul(from_stash(scalar), rng);
+         const auto result = varpoint_mul<C, VarPointWindowBits>(from_stash(pt), from_stash(scalar), rng);
          BOTAN_STATE_CHECK(!result.is_identity().as_bool());
-         auto pt_x = to_affine_x<C>(result);
+         const auto pt_x = to_affine_x<C>(result);
          secure_vector<uint8_t> x_bytes(C::FieldElement::BYTES);
          pt_x.serialize_to(std::span<uint8_t, C::FieldElement::BYTES>{x_bytes});
          return x_bytes;
@@ -60,15 +58,14 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          public:
             const auto& table() const { return m_table; }
 
-            explicit PrecomputedMul2TableC(const typename C::AffinePoint& x, const typename C::AffinePoint& y) :
-                  m_table(x, y) {}
+            explicit PrecomputedMul2TableC(const typename C::AffinePoint& q) : m_table(q) {}
 
          private:
-            VartimeMul2Table<C, Mul2PrecompWindowBits> m_table;
+            VartimeMul2Table<C, Mul2VartimeWindowBits> m_table;
       };
 
       std::unique_ptr<const PrecomputedMul2Table> mul2_setup_g(const AffinePoint& q) const override {
-         return std::make_unique<PrecomputedMul2TableC>(C::G, from_stash(q));
+         return std::make_unique<PrecomputedMul2TableC>(from_stash(q));
       }
 
       std::optional<ProjectivePoint> mul2_vartime(const PrecomputedMul2Table& tableb,
@@ -76,7 +73,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
                                                   const Scalar& y) const override {
          try {
             const auto& table = dynamic_cast<const PrecomputedMul2TableC&>(tableb);
-            auto pt = table.table().mul2_vartime(from_stash(x), from_stash(y));
+            const auto pt = table.table().mul2_vartime(m_mul_by_g, from_stash(x), from_stash(y));
             if(pt.is_identity().as_bool()) {
                return {};
             } else {
@@ -92,8 +89,8 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
                                                const AffinePoint& q,
                                                const Scalar& y,
                                                RandomNumberGenerator& rng) const override {
-         const WindowedMul2Table<C, Mul2WindowBits> tbl(from_stash(p), from_stash(q));
-         auto pt = tbl.mul2(from_stash(x), from_stash(y), rng);
+         const auto pt =
+            varpoint_mul2<C, Mul2WindowBits>(from_stash(p), from_stash(x), from_stash(q), from_stash(y), rng);
          if(pt.is_identity().as_bool()) {
             return {};
          } else {
@@ -107,7 +104,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
                                        const Scalar& y) const override {
          try {
             const auto& table = dynamic_cast<const PrecomputedMul2TableC&>(tableb);
-            const auto pt = table.table().mul2_vartime(from_stash(x), from_stash(y));
+            const auto pt = table.table().mul2_vartime(m_mul_by_g, from_stash(x), from_stash(y));
             // Variable time here, so the early return is fine
             if(pt.is_identity().as_bool()) {
                return false;
@@ -179,7 +176,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       }
 
       Scalar base_point_mul_x_mod_order(const Scalar& scalar, RandomNumberGenerator& rng) const override {
-         auto pt = m_mul_by_g.mul(from_stash(scalar), rng);
+         const auto pt = m_mul_by_g.mul(from_stash(scalar), rng);
          BOTAN_STATE_CHECK(!pt.is_identity().as_bool());
          std::array<uint8_t, C::FieldElement::BYTES> x_bytes{};
          to_affine_x<C>(pt).serialize_to(std::span{x_bytes});
@@ -190,7 +187,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       AffinePoint generator() const override { return stash(C::G); }
 
       AffinePoint point_to_affine(const ProjectivePoint& pt) const override {
-         auto affine = to_affine<C>(from_stash(pt));
+         const auto affine = to_affine<C>(from_stash(pt));
 
          const auto y2 = affine.y().square();
          const auto x3_ax_b = C::x3_ax_b(affine.x());
@@ -314,7 +311,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       Scalar scalar_square(const Scalar& s) const override { return stash(from_stash(s).square()); }
 
       Scalar scalar_invert(const Scalar& ss) const override {
-         auto s = from_stash(ss);
+         const auto s = from_stash(ss);
          if constexpr(curve_supports_scalar_invert<C>) {
             return stash(C::scalar_invert(s));
          } else {
@@ -323,7 +320,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       }
 
       Scalar scalar_invert_vartime(const Scalar& ss) const override {
-         auto s = from_stash(ss);
+         const auto s = from_stash(ss);
          return stash(s.invert_vartime());
       }
 
@@ -342,7 +339,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       PrimeOrderCurveImpl() : m_mul_by_g(C::G) {}
 
       static std::shared_ptr<const PrimeOrderCurve> instance() {
-         static auto g_curve = std::make_shared<const PrimeOrderCurveImpl<C>>();
+         static const auto g_curve = std::make_shared<const PrimeOrderCurveImpl<C>>();
          return g_curve;
       }
 
@@ -359,8 +356,8 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       }
 
       static AffinePoint stash(const typename C::AffinePoint& pt) {
-         auto x_w = pt.x().template stash_value<StorageWords>();
-         auto y_w = pt.y().template stash_value<StorageWords>();
+         const auto x_w = pt.x().template stash_value<StorageWords>();
+         const auto y_w = pt.y().template stash_value<StorageWords>();
          return AffinePoint::_create(instance(), x_w, y_w);
       }
 
@@ -368,15 +365,15 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          if(pt._curve() != instance()) {
             throw Invalid_Argument("Curve mismatch");
          }
-         auto x = C::FieldElement::from_stash(pt._x());
-         auto y = C::FieldElement::from_stash(pt._y());
+         const auto x = C::FieldElement::from_stash(pt._x());
+         const auto y = C::FieldElement::from_stash(pt._y());
          return typename C::AffinePoint(x, y);
       }
 
       static ProjectivePoint stash(const typename C::ProjectivePoint& pt) {
-         auto x_w = pt.x().template stash_value<StorageWords>();
-         auto y_w = pt.y().template stash_value<StorageWords>();
-         auto z_w = pt.z().template stash_value<StorageWords>();
+         const auto x_w = pt.x().template stash_value<StorageWords>();
+         const auto y_w = pt.y().template stash_value<StorageWords>();
+         const auto z_w = pt.z().template stash_value<StorageWords>();
          return ProjectivePoint::_create(instance(), x_w, y_w, z_w);
       }
 
@@ -384,9 +381,9 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          if(pt._curve() != instance()) {
             throw Invalid_Argument("Curve mismatch");
          }
-         auto x = C::FieldElement::from_stash(pt._x());
-         auto y = C::FieldElement::from_stash(pt._y());
-         auto z = C::FieldElement::from_stash(pt._z());
+         const auto x = C::FieldElement::from_stash(pt._x());
+         const auto y = C::FieldElement::from_stash(pt._y());
+         const auto z = C::FieldElement::from_stash(pt._z());
          return typename C::ProjectivePoint(x, y, z);
       }
 

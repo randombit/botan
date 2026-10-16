@@ -155,7 +155,7 @@ uint16_t choose_ciphersuite(const Policy& policy,
    const std::unordered_set<std::string> client_sig_algs = [&] {
       std::unordered_set<uint16_t> allowed_codes;
       allowed_codes.reserve(allowed_sig_schemes.size());
-      for(auto s : allowed_sig_schemes) {
+      for(const auto s : allowed_sig_schemes) {
          allowed_codes.insert(static_cast<uint16_t>(s.wire_code()));
       }
       std::unordered_set<std::string> result;
@@ -179,12 +179,12 @@ uint16_t choose_ciphersuite(const Policy& policy,
    */
    const std::vector<uint16_t>& pref_list = our_choice ? server_suites : client_suites;
 
-   auto in_other_list = [&](uint16_t suite_id) {
+   const auto in_other_list = [&](uint16_t suite_id) {
       // server_suites is small and policy-controlled
       return our_choice ? client_suite_set.contains(suite_id) : value_exists(server_suites, suite_id);
    };
 
-   for(auto suite_id : pref_list) {
+   for(const auto suite_id : pref_list) {
       if(!in_other_list(suite_id)) {
          continue;
       }
@@ -288,16 +288,16 @@ std::shared_ptr<Server_Impl_12> Server_Impl_12::create(const std::shared_ptr<Cal
                                                        const std::shared_ptr<Credentials_Manager>& creds,
                                                        const std::shared_ptr<const Policy>& policy,
                                                        const std::shared_ptr<RandomNumberGenerator>& rng,
-                                                       bool is_datagram,
+                                                       TLS_Flavor flavor,
                                                        size_t reserved_io_buffer_size)  //
 {
    auto self = std::make_shared<Server_Impl_12>(
-      Private{}, callbacks, session_manager, creds, policy, rng, is_datagram, reserved_io_buffer_size);
+      Private{}, callbacks, session_manager, creds, policy, rng, flavor, reserved_io_buffer_size);
    BOTAN_ASSERT_NONNULL(self->m_creds);
 
    // Try to load the cookie secret on initialization, rather than waiting to fail
    // until the first client connects.
-   if(is_datagram && policy->dtls_server_require_cookie_exchange()) {
+   if(flavor == TLS_Flavor::DTLS && policy->dtls_server_require_cookie_exchange()) {
       load_dtls_cookie_secret(*self->m_creds);
    }
 
@@ -317,6 +317,10 @@ void Server_Impl_12::initiate_handshake(Handshake_State& state, bool force_full_
    dynamic_cast<Server_Handshake_State&>(state).set_allow_session_resumption(!force_full_renegotiation);
 
    const Hello_Request hello_req(state.handshake_io());
+
+   // If the HelloRequest above gets lost (or if the peer ignores it), we
+   // retransmit it to ensure that server-initiated renegotiations are reliable.
+   maybe_arm_dtls_retransmission_timer();
 }
 
 namespace {
@@ -469,6 +473,15 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
 
          pending_state.client_hello(nullptr);
          pending_state.set_expected_next(Handshake_Type::ClientHello);
+
+         // RFC 6346 3.2.1
+         //    Note that timeout and retransmission do not apply to the
+         //    HelloVerifyRequest, because this would require creating state on
+         //    the server.
+         //
+         // We don't kick-off a retransmission timer for a HelloVerifyRequest,
+         // if it gets lost in transit the client will retransmit the initial
+         // ClientHello anyway.
          return;
       }
    }
@@ -532,6 +545,11 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
       // new session
       this->session_create(pending_state);
    }
+
+   // We just sent our first flight that might get lost in transit. Hence, we
+   // kick-off a retransmission timer chain for users that implement the
+   // asynchronous timer callback introduced in Botan 3.14.0.
+   maybe_arm_dtls_retransmission_timer();
 }
 
 void Server_Impl_12::process_certificate_msg(Server_Handshake_State& pending_state,
@@ -606,7 +624,7 @@ void Server_Impl_12::process_certificate_verify_msg(Server_Handshake_State& pend
 
    try {
       const std::string sni_hostname = pending_state.client_hello()->sni_hostname();
-      auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-server", sni_hostname);
+      const auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-server", sni_hostname);
 
       callbacks().tls_verify_cert_chain(client_certs,
                                         {},  // ocsp
@@ -755,7 +773,8 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state, const
                                                                 *pending_state.client_hello(),
                                                                 session.session,
                                                                 offer_new_session_ticket,
-                                                                m_next_protocol));
+                                                                m_next_protocol,
+                                                                flavor()));
 
    secure_renegotiation_check(pending_state.server_hello());
 
@@ -858,7 +877,8 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
                                                                 secure_renegotiation_data_for_server_hello(),
                                                                 *pending_state.client_hello(),
                                                                 srv_settings,
-                                                                m_next_protocol));
+                                                                m_next_protocol,
+                                                                flavor()));
 
    secure_renegotiation_check(pending_state.server_hello());
 
@@ -875,7 +895,7 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
          std::make_unique<Certificate_12>(pending_state.handshake_io(), pending_state.hash(), cert_chains[algo_used]));
 
       if(pending_state.client_hello()->supports_cert_status_message() && pending_state.is_a_resumption() == false) {
-         auto* csr = pending_state.client_hello()->extensions().get<Certificate_Status_Request>();
+         const auto* csr = pending_state.client_hello()->extensions().get<Certificate_Status_Request>();
          // csr is non-null if client_hello()->supports_cert_status_message()
          BOTAN_ASSERT_NOMSG(csr != nullptr);
          const auto resp_bytes = callbacks().tls_provide_cert_status(cert_chains[algo_used], *csr);
@@ -899,11 +919,11 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
          pending_state.handshake_io(), pending_state, policy(), *m_creds, rng(), private_key.get()));
    }
 
-   auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-server", sni_hostname);
+   const auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-server", sni_hostname);
 
    std::vector<X509_DN> client_auth_CAs;
 
-   for(auto* store : trusted_CAs) {
+   for(const auto* store : trusted_CAs) {
       auto subjects = store->all_subjects();
       client_auth_CAs.insert(client_auth_CAs.end(), subjects.begin(), subjects.end());
    }

@@ -29,13 +29,13 @@ class ECC_Explicit_Curve_Tests final : public Text_Based_Test {
          const auto expected_result = vars.get_req_str("Result");
 
          try {
-            auto pk = Botan::X509::load_key(pubkey);
+            const auto pk = Botan::X509::load_key(pubkey);
 
             const auto* ecdsa = dynamic_cast<const Botan::ECDSA_PublicKey*>(pk.get());
             if(ecdsa != nullptr) {
                result.test_success("Returned key was ECDSA");
 
-               auto used_explicit = ecdsa->domain().used_explicit_encoding();
+               const auto used_explicit = ecdsa->domain().used_explicit_encoding();
 
                result.test_is_true("Loaded ECC key marked as an explicit encoding", used_explicit);
             } else {

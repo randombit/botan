@@ -51,8 +51,10 @@ For base blinding, as an optimization, instead of choosing a new random mask and
 inverse with each decryption, both the mask and its inverse are simply squared
 to choose the next blinding factor. This is much faster than computing a fresh
 value each time, and the additional relation is thought to provide only minimal
-useful information for an attacker. Every BOTAN_BLINDING_REINIT_INTERVAL
-(default 64) operations, a new starting point is chosen.
+useful information for an attacker. Every 64 operations, a new starting point
+is chosen. The blinding sequence is shared by all private key operations which
+use the same key object, so creating a new signer or decryptor does not require
+computing a new starting point.
 
 Exponent blinding uses new values for each signature, with 64 bit masks.
 
@@ -219,11 +221,15 @@ the computation of ``s``, normally ``((x * r) + m)/k``, is computed instead as
 x25519
 ----------------------
 
-The x25519 code is independent of the main Weierstrass form ECC code, instead
-based on curve25519-donna-c64.c by Adam Langley. The code seems immune to cache
-based side channels. It does make use of integer multiplications; on some old
-CPUs these multiplications take variable time and might allow a side channel
-attack. This is not considered a problem on modern processors.
+The x25519 code is independent of the main Weierstrass form ECC code. Key
+agreement uses a Montgomery ladder with field arithmetic based on
+curve25519-donna-c64.c by Adam Langley. Key generation instead computes the
+public key on the Ed25519 curve using the Ed25519 fixed-base tables (table
+entries are selected by scanning the whole table with masked loads) and maps the
+result to Curve25519. The code seems immune to cache based side channels. It
+does make use of integer multiplications; on some old CPUs these multiplications
+take variable time and might allow a side channel attack. This is not considered
+a problem on modern processors.
 
 The x25519 implementation does not currently include blinding or point
 rerandomization.
@@ -268,7 +274,7 @@ are fast and are thought to be side channel silent. These instructions
 are used when available.
 
 On CPUs which do not have hardware AES instructions but do support SIMD vectors
-with a byte shuffle (including x86's SSSE3, ARM's NEON and PowerPC AltiVec), a
+with a byte shuffle (including x86's SSSE3, ARM's NEON and POWER8 VSX), a
 version of AES is implemented which is side channel silent. This implementation
 is based on code by Mike Hamburg [VectorAes], see aes_vperm.cpp.
 
@@ -328,16 +334,54 @@ relatively large (multi kilobyte) tables. The library prefers to instead use the
 smallest possible representation (eg SEED uses just a pair of 256 byte tables)
 to avoid increasing the cache side channel signature.
 
-There are also implementation using hardware AES instructions and AVX-512/GFNI
-which are used whenever available. These implementations are constant time.
+There are also implementations using hardware AES instructions, or AVX2/AVX-512
+with GFNI, which are used whenever available. These implementations are constant
+time.
 
 Twofish
 ------------------------
 
 This algorithm uses table lookups with secret sboxes. No cache-based side
 channel attack on Twofish has ever been published, but it is possible nobody
-sufficiently skilled has ever tried. There is also an AVX-512 implementation
-which avoids table lookups completely.
+sufficiently skilled has ever tried. There is also an implementation for
+processors with AVX-512 and GFNI which avoids table lookups completely.
+
+Blowfish
+------------------------
+
+Blowfish uses key dependent sboxes which are indexed by the data being
+encrypted, and so is likely vulnerable to cache based side channels. There is
+no constant time implementation. This also applies to bcrypt and Bcrypt-PBKDF,
+which are built on the Blowfish key schedule.
+
+CAST-128
+------------------------
+
+The CAST-128 implementation uses table lookups indexed by secret data, and so is
+likely vulnerable to cache based side channels. There is no constant time
+implementation.
+
+GOST 28147-89
+------------------------
+
+The GOST 28147-89 implementation uses table lookups indexed by secret data, and
+so is likely vulnerable to cache based side channels. There is no constant time
+implementation. The GOST 34.11-94 hash is built on this cipher and inherits the
+same issue.
+
+Kuznyechik
+------------------------
+
+The Kuznyechik implementation uses large (64 KiB) tables indexed by secret data,
+and so is likely vulnerable to cache based side channels. There is no constant
+time implementation.
+
+RC4
+------------------------
+
+The RC4 state is a 256 byte table which is indexed by key and data dependent
+values, and so is likely vulnerable to cache based side channels. This is
+inherent to the design; there is no constant time implementation.
 
 ChaCha20, Serpent, Threefish, ...
 -----------------------------------
@@ -362,9 +406,23 @@ and BLAKE2 do not require any input-dependent memory lookups, and so seem to not
 affected by common CPU side channels.
 
 The baseline implementations of Whirlpool and Streebog use table lookups and
-probably can be attacked by side channels. For systems supporting AVX2 and
-AVX-512 there are additional constant time implementations of the Whirlpool and
-Streebog compression functions.
+probably can be attacked by side channels. There are constant time
+implementations of the Whirlpool compression function for AVX2 and AVX-512, and
+of the Streebog compression function for AVX-512 with GFNI.
+
+The GOST 34.11-94 hash is built on the GOST 28147-89 block cipher, and so shares
+its table lookups. There is no constant time implementation.
+
+Password Hashing
+-------------------------
+
+Scrypt, Argon2d, and (after the first half of its first pass) Argon2id access
+memory at addresses which depend on the password. This is inherent to these
+designs, and may leak information about the password via cache based side
+channels. Argon2i uses only data independent memory accesses.
+
+bcrypt and Bcrypt-PBKDF are built on Blowfish, and so share its cache based
+side channel exposure.
 
 Memory comparisons
 ----------------------

@@ -36,7 +36,7 @@ class Sphincs_Parameters;
 SphincsTreeNode xmss_sign_and_pkgen(StrongSpan<SphincsXmssSignature> out_sig,
                                     const SphincsTreeNode& message,
                                     const SphincsSecretSeed& secret_seed,
-                                    Sphincs_Address& wots_addr,
+                                    const Sphincs_Address& wots_addr,
                                     Sphincs_Address& tree_addr,
                                     std::optional<TreeNodeIndex> idx_leaf,
                                     const Sphincs_Parameters& params,

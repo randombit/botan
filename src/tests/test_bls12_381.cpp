@@ -44,7 +44,7 @@ T random_test_elem(Botan::RandomNumberGenerator& rng) {
       const bool flip = (rng.next_byte() % 2) == 1;
       uint32_t x = 0;
       rng.randomize(reinterpret_cast<uint8_t*>(&x), 4);
-      auto s = T::from_u32(x);
+      const auto s = T::from_u32(x);
       return (flip) ? s.negate() : s;
    } else {
       std::array<uint8_t, T::BYTES> buf{};
@@ -204,8 +204,8 @@ class BLS12_381_Scalar_Tests final : public Test {
          for(size_t i = 0; i != 128; ++i) {
             std::array<uint8_t, 64> buf{};
             rng().randomize(buf);
-            auto s = Botan::BLS12_381::Scalar::from_bytes_wide(buf);
-            auto bn = mod_p.reduce(Botan::BigInt::from_bytes(buf));
+            const auto s = Botan::BLS12_381::Scalar::from_bytes_wide(buf);
+            const auto bn = mod_p.reduce(Botan::BigInt::from_bytes(buf));
             result.test_bin_eq("Scalar::from_bytes_wide", bn.serialize(32), s.serialize());
          }
 
@@ -403,8 +403,8 @@ class BLS12_381_FieldElement_Tests final : public Test {
          for(size_t i = 0; i != 128; ++i) {
             std::array<uint8_t, 96> buf{};
             rng().randomize(buf);
-            auto s = Botan::BLS12_381::FieldElement::from_bytes_wide(buf);
-            auto bn = mod_p.reduce(Botan::BigInt::from_bytes(buf));
+            const auto s = Botan::BLS12_381::FieldElement::from_bytes_wide(buf);
+            const auto bn = mod_p.reduce(Botan::BigInt::from_bytes(buf));
             result.test_bin_eq("FieldElement::from_bytes_wide", bn.serialize(48), s.serialize());
          }
 
@@ -559,12 +559,12 @@ class BLS12_381_Fp2_Tests final : public Test {
             Botan::BigInt::from_bytes(Botan::BLS12_381::FieldElement::one().negate().serialize()) + 1;
          const auto mod_p = Botan::Modular_Reducer::for_public_modulus(p);
 
-         auto fp2_to_bn = [](const FieldElement2& x) {
+         const auto fp2_to_bn = [](const FieldElement2& x) {
             return std::pair{Botan::BigInt::from_bytes(x.c0().serialize()),
                              Botan::BigInt::from_bytes(x.c1().serialize())};
          };
 
-         auto bn_eq =
+         const auto bn_eq =
             [&](const char* what, const FieldElement2& x, const Botan::BigInt& c0_bn, const Botan::BigInt& c1_bn) {
                result.test_bin_eq(what, x.c0().serialize(), mod_p.reduce(c0_bn).serialize(48));
                result.test_bin_eq(what, x.c1().serialize(), mod_p.reduce(c1_bn).serialize(48));
@@ -698,7 +698,7 @@ std::optional<Botan::BLS12_381::Fp12> fp12_deserialize(std::span<const uint8_t> 
       coeffs[i] = *fe;
    }
 
-   auto fp6_at = [&](size_t base) {
+   const auto fp6_at = [&](size_t base) {
       return Fp6(FieldElement2(coeffs[base], coeffs[base + 1]),
                  FieldElement2(coeffs[base + 2], coeffs[base + 3]),
                  FieldElement2(coeffs[base + 4], coeffs[base + 5]));
@@ -899,7 +899,7 @@ class BLS12_381_G1_Mul_Tests final : public Text_Based_Test {
          result.test_is_true("P is accepted", pt.has_value());
          result.test_is_true("K is accepted", k.has_value());
 
-         auto cz = Botan::BLS12_381::G1Projective::from_affine(pt.value()).mul(k.value());
+         const auto cz = Botan::BLS12_381::G1Projective::from_affine(pt.value()).mul(k.value());
 
          result.test_bin_eq("Expected Z", cz.to_affine().serialize(), z);
 
@@ -1211,7 +1211,7 @@ class BLS12_381_G2_Mul_Tests final : public Text_Based_Test {
          result.test_is_true("P is accepted", pt.has_value());
          result.test_is_true("K is accepted", k.has_value());
 
-         auto cz = Botan::BLS12_381::G2Projective::from_affine(pt.value()).mul(k.value());
+         const auto cz = Botan::BLS12_381::G2Projective::from_affine(pt.value()).mul(k.value());
 
          result.test_bin_eq("Expected Z", cz.to_affine().serialize(), z);
 

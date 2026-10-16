@@ -37,7 +37,7 @@ class Hex_Encode final : public Command {
       std::string description() const override { return "Hex encode a given file"; }
 
       void go() override {
-         auto hex_enc_f = [&](const uint8_t b[], size_t l) { output() << Botan::hex_encode(b, l); };
+         const auto hex_enc_f = [&](const uint8_t b[], size_t l) { output() << Botan::hex_encode(b, l); };
          Command::read_file(get_arg("file"), hex_enc_f, 2);
       }
 };
@@ -53,7 +53,7 @@ class Hex_Decode final : public Command {
       std::string description() const override { return "Hex decode a given file"; }
 
       void go() override {
-         auto hex_dec_f = [&](const uint8_t b[], size_t l) {
+         const auto hex_dec_f = [&](const uint8_t b[], size_t l) {
             write_output(Botan::hex_decode(reinterpret_cast<const char*>(b), l));
          };
 
@@ -97,7 +97,7 @@ class Base58_Decode final : public Command {
       std::string description() const override { return "Decode Base58 encoded file"; }
 
       void go() override {
-         auto data = slurp_file_as_str(get_arg("file"));
+         const auto data = slurp_file_as_str(get_arg("file"));
 
          std::vector<uint8_t> bin;
 
@@ -126,7 +126,7 @@ class Base32_Encode final : public Command {
       std::string description() const override { return "Encode given file to Base32"; }
 
       void go() override {
-         auto onData = [&](const uint8_t b[], size_t l) { output() << Botan::base32_encode(b, l); };
+         const auto onData = [&](const uint8_t b[], size_t l) { output() << Botan::base32_encode(b, l); };
          Command::read_file(get_arg("file"), onData, 768);
       }
 };
@@ -142,7 +142,7 @@ class Base32_Decode final : public Command {
       std::string description() const override { return "Decode Base32 encoded file"; }
 
       void go() override {
-         auto write_bin = [&](const uint8_t b[], size_t l) {
+         const auto write_bin = [&](const uint8_t b[], size_t l) {
             write_output(Botan::base32_decode(reinterpret_cast<const char*>(b), l));
          };
 
@@ -165,7 +165,7 @@ class Base64_Encode final : public Command {
       std::string description() const override { return "Encode given file to Base64"; }
 
       void go() override {
-         auto onData = [&](const uint8_t b[], size_t l) { output() << Botan::base64_encode(b, l); };
+         const auto onData = [&](const uint8_t b[], size_t l) { output() << Botan::base64_encode(b, l); };
          Command::read_file(get_arg("file"), onData, 768);
       }
 };
@@ -181,7 +181,7 @@ class Base64_Decode final : public Command {
       std::string description() const override { return "Decode Base64 encoded file"; }
 
       void go() override {
-         auto write_bin = [&](const uint8_t b[], size_t l) {
+         const auto write_bin = [&](const uint8_t b[], size_t l) {
             write_output(Botan::base64_decode(reinterpret_cast<const char*>(b), l));
          };
 

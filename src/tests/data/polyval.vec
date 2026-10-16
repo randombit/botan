@@ -1,6 +1,6 @@
 # POLYVAL vectors extracted from RFC 8452, plus longer inputs
 
-#test cpuid avx512_clmul clmul armv8pmull ssse3 simd128 sse2
+#test cpuid avx512_clmul clmul armv8pmull power_crypto ssse3 neon vsx lsx simd128
 
 Key = 25629347589242761D31F826BA4B757B
 In  = 4F4F95668C83DFB6401762BB2D01A262D1A24DDD2721D006BBE45F20D3C9F362

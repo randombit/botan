@@ -27,7 +27,7 @@ std::string Credentials_Manager::psk_identity(const std::string& /*unused*/,
 SymmetricKey Credentials_Manager::psk(const std::string& type,
                                       const std::string& context,
                                       const std::string& identity) {
-   auto side = [&] {
+   const auto side = [&] {
       if(type == "tls-client") {
          return TLS::Connection_Side::Client;
       } else if(type == "tls-server") {

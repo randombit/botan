@@ -19,14 +19,14 @@ namespace Botan {
 SphincsTreeNode xmss_sign_and_pkgen(StrongSpan<SphincsXmssSignature> out_sig,
                                     const SphincsTreeNode& message,
                                     const SphincsSecretSeed& secret_seed,
-                                    Sphincs_Address& wots_addr,
+                                    const Sphincs_Address& wots_addr,
                                     Sphincs_Address& tree_addr,
                                     std::optional<TreeNodeIndex> idx_leaf,
                                     const Sphincs_Parameters& params,
                                     Sphincs_Hash_Functions& hashes) {
    BufferStuffer sig(out_sig);
    auto wots_bytes_s = sig.next<WotsSignature>(params.wots_bytes());
-   auto auth_path_s = sig.next<SphincsAuthenticationPath>(sig.remaining_capacity());
+   const auto auth_path_s = sig.next<SphincsAuthenticationPath>(sig.remaining_capacity());
 
    const auto steps = [&]() -> std::vector<WotsHashIndex> {
       // if `idx_leaf` is not set, we don't want to calculate a signature and

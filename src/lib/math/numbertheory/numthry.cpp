@@ -40,7 +40,7 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
       return BigInt::from_s32(-1);
    }
 
-   auto mod_p = Barrett_Reduction::for_public_modulus(p);
+   const auto mod_p = Barrett_Reduction::for_public_modulus(p);
    const Montgomery_Params monty_p(p, mod_p);
 
    // If p == 3 (mod 4) there is a simple solution
@@ -248,10 +248,10 @@ BigInt gcd(const BigInt& a, const BigInt& b) {
    secure_vector<word> ws(sz * 2);
    size_t factors_of_two = 0;
    for(size_t i = 0; i != loop_cnt; ++i) {
-      auto both_odd = CT::Mask<word>::expand_bool(u.is_odd()) & CT::Mask<word>::expand_bool(v.is_odd());
+      const auto both_odd = CT::Mask<word>::expand_bool(u.is_odd()) & CT::Mask<word>::expand_bool(v.is_odd());
 
       // Subtract the smaller from the larger if both are odd
-      auto u_gt_v = CT::Mask<word>::expand_bool(bigint_cmp(u._data(), u.size(), v._data(), v.size()) > 0);
+      const auto u_gt_v = CT::Mask<word>::expand_bool(bigint_cmp(u._data(), u.size(), v._data(), v.size()) > 0);
       bigint_sub_abs(tmp.mutable_data(), u._data(), v._data(), sz, ws.data());
       u.ct_cond_assign((u_gt_v & both_odd).as_bool(), tmp);
       v.ct_cond_assign((~u_gt_v & both_odd).as_bool(), tmp);
@@ -319,7 +319,7 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod) {
       return BigInt::zero();
    }
 
-   auto reduce_mod = Barrett_Reduction::for_secret_modulus(mod);
+   const auto reduce_mod = Barrett_Reduction::for_secret_modulus(mod);
 
    const size_t exp_bits = exp.bits();
 
@@ -409,7 +409,7 @@ bool is_prime(const BigInt& n, RandomNumberGenerator& rng, size_t prob, bool is_
       return false;
    }
 
-   auto mod_n = Barrett_Reduction::for_secret_modulus(n);
+   const auto mod_n = Barrett_Reduction::for_secret_modulus(n);
    const Montgomery_Params monty_n(n, mod_n);
 
    if(rng.is_seeded()) {

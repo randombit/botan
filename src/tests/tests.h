@@ -276,8 +276,8 @@ class Test {
             template <typename E>
                requires std::is_enum_v<E>
             bool test_enum_eq(std::string_view what, const E& produced, const E& expected) {
-               auto produced_v = static_cast<std::underlying_type_t<E>>(produced);
-               auto expected_v = static_cast<std::underlying_type_t<E>>(expected);
+               const auto produced_v = static_cast<std::underlying_type_t<E>>(produced);
+               const auto expected_v = static_cast<std::underlying_type_t<E>>(expected);
                return test_u64_eq(what, produced_v, expected_v);
             }
 

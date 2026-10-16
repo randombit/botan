@@ -12,7 +12,6 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mp_core.h>
-#include <botan/internal/rounding.h>
 
 namespace Botan {
 
@@ -291,7 +290,7 @@ void BigInt::clear_bit(size_t n) {
 }
 
 size_t BigInt::bytes() const {
-   return round_up(bits(), 8) / 8;
+   return ceil_tobytes(bits());
 }
 
 size_t BigInt::top_bits_free() const {
@@ -428,7 +427,9 @@ void BigInt::assign_from_bytes(std::span<const uint8_t> bytes) {
    const size_t full_words = length / sizeof(word);
    const size_t extra_bytes = length % sizeof(word);
 
-   secure_vector<word> reg((round_up(full_words + (extra_bytes > 0 ? 1 : 0), 8)));
+   const size_t total_words = full_words + (extra_bytes > 0 ? 1 : 0);
+
+   secure_vector<word> reg(8 * ceil_division<size_t>(total_words, 8));
 
    for(size_t i = 0; i != full_words; ++i) {
       reg[i] = load_be<word>(bytes.last<sizeof(word)>());

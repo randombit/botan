@@ -6,7 +6,7 @@ Near Term Plans
 ----------------------------------------
 
 Here is an outline of the development plans over the next ~12 months, as of
-August 2026.
+October 2026.
 
 Botan2
 ---------------
@@ -18,8 +18,6 @@ Botan3
 
 The following major feature work is currently planned for Botan3:
 
-* BLS12-381
-* HPKE (RFC 9180)
 * DTLS 1.3
 * CMS (RFC 5562 et al)
 * XMSS^MT

@@ -280,8 +280,9 @@ class System_RNG_Impl final : public RandomNumberGenerator {
             m_writable = false;
          }
 
-         if(m_fd < 0)
+         if(m_fd < 0) {
             throw System_Error("System_RNG failed to open RNG device", errno);
+         }
       }
 
       System_RNG_Impl(const System_RNG_Impl& other) = delete;
@@ -290,8 +291,10 @@ class System_RNG_Impl final : public RandomNumberGenerator {
       System_RNG_Impl& operator=(System_RNG_Impl&& other) = delete;
 
       ~System_RNG_Impl() override {
-         ::close(m_fd);
-         m_fd = -1;
+         if(m_fd >= 0) {
+            ::close(m_fd);
+            m_fd = -1;
+         }
       }
 
       bool is_seeded() const override { return true; }
@@ -321,12 +324,14 @@ void System_RNG_Impl::fill_bytes_with_input(std::span<uint8_t> output, std::span
       ssize_t got = ::read(m_fd, buf, len);
 
       if(got < 0) {
-         if(errno == EINTR)
+         if(errno == EINTR) {
             continue;
+         }
          throw System_Error("System_RNG read failed", errno);
       }
-      if(got == 0)
+      if(got == 0) {
          throw System_Error("System_RNG EOF on device");  // ?!?
+      }
 
       buf += got;
       len -= got;
@@ -343,8 +348,9 @@ void System_RNG_Impl::maybe_write_entropy(std::span<const uint8_t> entropy_input
       ssize_t got = ::write(m_fd, input, len);
 
       if(got < 0) {
-         if(errno == EINTR)
+         if(errno == EINTR) {
             continue;
+         }
 
          /*
          * This is seen on OS X CI, despite the fact that the man page
@@ -358,8 +364,9 @@ void System_RNG_Impl::maybe_write_entropy(std::span<const uint8_t> entropy_input
          * In Linux EBADF or EPERM is returned if m_fd is not opened for
          * writing.
          */
-         if(errno == EPERM || errno == EBADF)
+         if(errno == EPERM || errno == EBADF) {
             return;
+         }
 
          // maybe just ignore any failure here and return?
          throw System_Error("System_RNG write failed", errno);

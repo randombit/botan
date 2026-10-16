@@ -1,6 +1,7 @@
 /*
 * (C) 2021 Jack Lloyd
 * (C) 2021 Hannes Rantzsch, René Meusel - neXenio
+* (C) 2026 Amos Treiber, René Meusel - Rohde & Schwarz Networks and Cybersecurity GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -26,9 +27,17 @@ namespace {
 using namespace Botan;
 using namespace Botan::TLS;
 
-class Journaling_Secret_Logger : public Secret_Logger {
+class Journaling_Secret_Logger : public std::enable_shared_from_this<Journaling_Secret_Logger> {
    public:
-      void maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const override {
+      Botan::TLS::SecretLoggerFn get_secret_logger() {
+         return [self = weak_from_this()](std::string_view label, std::span<const uint8_t> secret) {
+            if(const auto s = self.lock()) {
+               s->maybe_log_secret(label, secret);
+            }
+         };
+      }
+
+      void maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const {
          secrets[std::string(label)] = std::vector<uint8_t>(secret.begin(), secret.end());
       }
 
@@ -49,6 +58,22 @@ decltype(auto) make_CHECK_both(Cipher_State* cs_client,
                     std::bind(lambda, cs_server, sl_server, Connection_Side::Server, _1))};
       // NOLINTEND(*-avoid-bind)
    };
+}
+
+template <typename RecordT>
+   requires std::constructible_from<Record, RecordT>
+bool record_type_matches_type_field(const RecordT& record) {
+   if constexpr(std::is_same_v<RecordT, Handshake_Record>) {
+      return record.type == Record_Type::Handshake;
+   } else if constexpr(std::is_same_v<RecordT, ApplicationData_Record>) {
+      return record.type == Record_Type::ApplicationData;
+   } else if constexpr(std::is_same_v<RecordT, Alert_Record>) {
+      return record.type == Record_Type::Alert;
+   } else if constexpr(std::is_same_v<RecordT, ChangeCipherSpec_Record>) {
+      return record.type == Record_Type::ChangeCipherSpec;
+   } else {
+      return false;
+   }
 }
 
 class RFC8448_TestData {
@@ -77,8 +102,9 @@ class RFC8448_TestData {
       void encrypt(Test::Result& result, Cipher_State* cs) const {
          MarshalledRecord record;
 
-         result.test_no_throw("protection is successful for " + name,
-                              [&] { record = cs->protect_record(record_type, plaintext_fragment, 0); });
+         result.test_no_throw("protection is successful for " + name, [&] {
+            record = Botan::TLS::as_tls_cipher_state(cs)->protect_record(record_type, plaintext_fragment, 0);
+         });
 
          result.test_bin_eq(
             "protected record header for " + name, std::span{record}.first(TLS_HEADER_SIZE), record_header);
@@ -95,13 +121,20 @@ class RFC8448_TestData {
          record.append(encrypted_fragment);
          result.require("record is complete for " + name, record.complete());
 
-         std::optional<Record_Content> plaintext;
+         std::optional<Record> plaintext;
          result.test_no_throw("deprotection is successful for " + name, [&] {
-            plaintext = cs->deprotect_record(std::move(record), Botan::TLS::MAX_PLAINTEXT_SIZE);
+            plaintext =
+               Botan::TLS::as_tls_cipher_state(cs)->deprotect_record(std::move(record), Botan::TLS::MAX_PLAINTEXT_SIZE);
          });
 
-         result.test_bin_eq("plaintext for " + name, plaintext->payload, plaintext_fragment);
-         result.test_enum_eq("record type for " + name, plaintext->type, record_type);
+         result.test_opt_not_null("deprotection successful for " + name, plaintext);
+         std::visit(
+            [&](const auto& r) {
+               result.test_bin_eq("plaintext for " + name, r.payload, plaintext_fragment);
+               result.test_enum_eq("record type for " + name, r.type, record_type);
+               result.test_is_true("record type matches record type field", record_type_matches_type_field(r));
+            },
+            *plaintext);
       }
 
       void xxcrypt(Test::Result& result, Cipher_State* cs, Connection_Side side) const {
@@ -111,6 +144,8 @@ class RFC8448_TestData {
             decrypt(result, cs);
          }
       }
+
+   private:
 };
 
 std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
@@ -324,14 +359,22 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
    auto cipher = Ciphersuite::from_name("AES_128_GCM_SHA256").value();
 
    // initialize Cipher_State with client_hello...server_hello
-   Journaling_Secret_Logger sl_client;
-   Journaling_Secret_Logger sl_server;
-   auto cs_client = Cipher_State::init_with_server_hello(
-      Connection_Side::Client, secure_vector<uint8_t>(shared_secret), cipher, th_server_hello, sl_client);
-   auto cs_server = Cipher_State::init_with_server_hello(
-      Connection_Side::Server, secure_vector<uint8_t>(shared_secret), cipher, th_server_hello, sl_server);
+   const auto sl_client = std::make_shared<Journaling_Secret_Logger>();
+   const auto sl_server = std::make_shared<Journaling_Secret_Logger>();
+   const auto cs_client = Cipher_State::init_with_server_hello(Connection_Side::Client,
+                                                               TLS_Flavor::TLS,
+                                                               secure_vector<uint8_t>(shared_secret),
+                                                               cipher,
+                                                               th_server_hello,
+                                                               sl_client->get_secret_logger());
+   const auto cs_server = Cipher_State::init_with_server_hello(Connection_Side::Server,
+                                                               TLS_Flavor::TLS,
+                                                               secure_vector<uint8_t>(shared_secret),
+                                                               cipher,
+                                                               th_server_hello,
+                                                               sl_server->get_secret_logger());
 
-   auto CHECK_both = make_CHECK_both(cs_client.get(), &sl_client, cs_server.get(), &sl_server);
+   const auto CHECK_both = make_CHECK_both(cs_client.get(), sl_client.get(), cs_server.get(), sl_server.get());
 
    return Test::flatten_result_lists(
       {CHECK_both(
@@ -397,7 +440,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
              // advance Cipher_State with client_hello...server_Finished
              // (allows receiving of application data, but does not yet allow such sending)
              result.test_no_throw("state advancement is legal",
-                                  [&] { cs->advance_with_server_finished(th_server_finished, *sl); });
+                                  [&] { cs->advance_with_server_finished(th_server_finished); });
 
              if(side == Connection_Side::Client) {
                 result.test_is_true("can read application data", cs->can_decrypt_application_traffic());
@@ -498,11 +541,11 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
                      const auto* const write_label =
                         side == Connection_Side::Client ? "CLIENT_TRAFFIC_SECRET_1" : "SERVER_TRAFFIC_SECRET_1";
 
-                     cs->update_read_keys(*sl);
+                     cs->update_read_keys();
                      result.test_sz_eq("read secret update is here", sl->secrets.size(), 6);
                      result.require("has new read traffic secret", sl->secrets.contains(read_label));
 
-                     cs->update_write_keys(*sl);
+                     cs->update_write_keys();
                      result.test_sz_eq("write secret update is here", sl->secrets.size(), 7);
                      result.require("has new write traffic secret", sl->secrets.contains(write_label));
 
@@ -674,19 +717,21 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
 
    auto cipher = Ciphersuite::from_name("AES_128_GCM_SHA256").value();
 
-   Journaling_Secret_Logger sl_client;
-   Journaling_Secret_Logger sl_server;
+   const auto sl_client = std::make_shared<Journaling_Secret_Logger>();
+   const auto sl_server = std::make_shared<Journaling_Secret_Logger>();
 
-   auto cs_client = Cipher_State::init_with_psk(Connection_Side::Client,
-                                                Cipher_State::PSK_Type::Resumption,
-                                                secure_vector<uint8_t>(psk.begin(), psk.end()),
-                                                cipher.prf_algo());
-   auto cs_server = Cipher_State::init_with_psk(Connection_Side::Server,
-                                                Cipher_State::PSK_Type::Resumption,
-                                                secure_vector<uint8_t>(psk.begin(), psk.end()),
-                                                cipher.prf_algo());
+   const auto cs_client = Cipher_State::init_with_psk(Connection_Side::Client,
+                                                      TLS_Flavor::TLS,
+                                                      Cipher_State::PSK_Type::Resumption,
+                                                      secure_vector<uint8_t>(psk.begin(), psk.end()),
+                                                      cipher.prf_algo());
+   const auto cs_server = Cipher_State::init_with_psk(Connection_Side::Server,
+                                                      TLS_Flavor::TLS,
+                                                      Cipher_State::PSK_Type::Resumption,
+                                                      secure_vector<uint8_t>(psk.begin(), psk.end()),
+                                                      cipher.prf_algo());
 
-   auto CHECK_both = make_CHECK_both(cs_client.get(), &sl_client, cs_server.get(), &sl_server);
+   const auto CHECK_both = make_CHECK_both(cs_client.get(), sl_client.get(), cs_server.get(), sl_server.get());
 
    return Test::flatten_result_lists(
       {CHECK_both("no secrets logged for PSK initialization",
@@ -715,9 +760,15 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                            !cs->is_compatible_with(Ciphersuite::from_name("AES_256_GCM_SHA384").value()));
                   }),
 
+       CHECK_both("before calculating any traffic secrets, set the secret logger",
+                  [&](Cipher_State* cs, Journaling_Secret_Logger* sl, Connection_Side, Test::Result& result) {
+                     cs->set_secret_logger(sl->get_secret_logger());
+                     result.test_sz_eq("no secrets logged", sl->secrets.size(), 0);
+                  }),
+
        CHECK_both("calculate the early traffic secrets",
                   [&](Cipher_State* cs, Journaling_Secret_Logger* sl, Connection_Side side, Test::Result& result) {
-                     cs->advance_with_client_hello(th_client_hello, *sl);
+                     cs->advance_with_client_hello(th_client_hello);
                      result.require("early key export is possible", cs->can_export_keys());
                      result.test_bin_eq("early key export produces expected result",
                                         cs->export_key(early_export_label, early_export_context, 16),
@@ -745,7 +796,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
 
        CHECK_both("handshake traffic after PSK",
                   [&](Cipher_State* cs, Journaling_Secret_Logger* sl, Connection_Side side, Test::Result& result) {
-                     cs->advance_with_server_hello(cipher, secure_vector<uint8_t>(shared_secret), th_server_hello, *sl);
+                     cs->advance_with_server_hello(cipher, secure_vector<uint8_t>(shared_secret), th_server_hello);
 
                      // decrypt encrypted extensions from server
                      encrypted_extensions.xxcrypt(result, cs, side);
@@ -788,7 +839,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                      // advance Cipher_State with client_hello...server_Finished
                      // (allows receiving of application data, but no such sending)
                      result.test_no_throw("state advancement is legal",
-                                          [&] { cs->advance_with_server_finished(th_server_finished, *sl); });
+                                          [&] { cs->advance_with_server_finished(th_server_finished); });
 
                      if(side == Connection_Side::Client) {
                         result.test_is_true("can read application data", cs->can_decrypt_application_traffic());
@@ -857,7 +908,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
 }
 
 std::vector<Test::Result> test_record_padding() {
-   auto shared_secret = [] {
+   const auto shared_secret = [] {
       return Botan::hex_decode_locked(
          "8b d4 05 4f b5 5b 9d 63 fd fb ac f9 f0 4b 9f 0d"
          "35 e6 d6 3f 53 75 63 ef d4 62 72 90 0f 89 49 2d");
@@ -867,16 +918,17 @@ std::vector<Test::Result> test_record_padding() {
       "86 0c 06 ed c0 78 58 ee 8e 78 f0 e7 42 8c 58 ed"
       "d6 b4 3f 2c a3 e6 e9 5f 02 ed 06 3c f0 e1 ca d8");
 
-   const Journaling_Secret_Logger sl_client;
-
    const auto cipher = Ciphersuite::from_name("AES_128_GCM_SHA256").value();
 
    // Create a Cipher_State for the client side, that is capable of
    // protecting and deprotecting records.
    auto cs_client = Cipher_State::init_with_server_hello(
-      Connection_Side::Client, shared_secret(), cipher, th_server_hello, sl_client);
+      Connection_Side::Client, TLS_Flavor::TLS, shared_secret(), cipher, th_server_hello, {});
    auto cs_server = Cipher_State::init_with_server_hello(
-      Connection_Side::Server, shared_secret(), cipher, th_server_hello, sl_client);
+      Connection_Side::Server, TLS_Flavor::TLS, shared_secret(), cipher, th_server_hello, {});
+
+   auto* tls_cs_client = Botan::TLS::as_tls_cipher_state(cs_client.get());
+   auto* tls_cs_server = Botan::TLS::as_tls_cipher_state(cs_server.get());
 
    const auto plaintext = Botan::hex_decode_locked("01 02 03 04 05 06 07 08");
    const auto ciphertext_42_bytes_padding = Botan::hex_decode_locked(
@@ -891,7 +943,7 @@ std::vector<Test::Result> test_record_padding() {
    return {
       CHECK("add a record padding",
             [&](Test::Result& result) {
-               const auto record = cs_client->protect_record(Record_Type::Handshake, plaintext, 42);
+               const auto record = tls_cs_client->protect_record(Record_Type::Handshake, plaintext, 42);
 
                result.test_sz_eq("record length", record.size(), expected_output(42) + TLS_HEADER_SIZE);
                result.test_bin_eq(
@@ -908,10 +960,15 @@ std::vector<Test::Result> test_record_padding() {
                record.append(ciphertext_42_bytes_padding);
                result.require("record is complete", record.complete());
 
-               auto pt = cs_server->deprotect_record(std::move(record), MAX_PLAINTEXT_SIZE + 1);
+               auto deprotected_record = tls_cs_server->deprotect_record(std::move(record), MAX_PLAINTEXT_SIZE + 1);
 
-               result.test_bin_eq("pt", pt.payload, plaintext);
-               result.test_enum_eq("inner content type", pt.type, Record_Type::Handshake);
+               std::visit(
+                  [&](const auto& pt) {
+                     result.test_bin_eq("pt", pt.payload, plaintext);
+                     result.test_enum_eq("inner content type", pt.type, Record_Type::Handshake);
+                     result.test_is_true("record type matches record type field", record_type_matches_type_field(pt));
+                  },
+                  deprotected_record);
             }),
 
       CHECK("reject a record that is too long",
@@ -924,7 +981,7 @@ std::vector<Test::Result> test_record_padding() {
                const size_t short_incoming_plaintext = plaintext.size();
                result.test_throws<TLS_Exception>(
                   "too much padding", "Received an encrypted record that exceeds maximum plaintext size", [&] {
-                     std::ignore = cs_server->deprotect_record(std::move(record), short_incoming_plaintext);
+                     std::ignore = tls_cs_server->deprotect_record(std::move(record), short_incoming_plaintext);
                   });
             }),
 
@@ -939,8 +996,172 @@ std::vector<Test::Result> test_record_padding() {
                record.append(record_with_ciphertext_of_zeros);
 
                result.test_throws<TLS_Exception>("no plaintext", "No content type found in encrypted record", [&] {
-                  std::ignore = cs_server->deprotect_record(std::move(record), MAX_PLAINTEXT_SIZE + 1);
+                  std::ignore = tls_cs_server->deprotect_record(std::move(record), MAX_PLAINTEXT_SIZE + 1);
                });
+            }),
+   };
+}
+
+// Regression test for CVE-2026-34582
+// https://github.com/randombit/botan/security/advisories/GHSA-pxcj-9ppx-g86g
+std::vector<Test::Result> test_reject_premature_application_data() {
+   // Key derivation data from RFC 8448
+   auto shared_secret = Botan::hex_decode_locked(
+      "8b d4 05 4f b5 5b 9d 63 fd fb ac f9 f0 4b 9f 0d"
+      "35 e6 d6 3f 53 75 63 ef d4 62 72 90 0f 89 49 2d");
+   const auto transcript_hash_server_hello = Botan::hex_decode(
+      "86 0c 06 ed c0 78 58 ee 8e 78 f0 e7 42 8c 58 ed"
+      "d6 b4 3f 2c a3 e6 e9 5f 02 ed 06 3c f0 e1 ca d8");
+   const auto transcript_hash_server_finished = Botan::hex_decode(
+      "96 08 10 2a 0f 1c cc 6d b6 25 0b 7b 7e 41 7b 1a"
+      "00 0e aa da 3d aa e4 77 7a 76 86 c9 ff 83 df 13");
+   const auto transcript_hash_client_finished = Botan::hex_decode(
+      "20 91 45 a9 6e e8 e2 a1 22 ff 81 00 47 cc 95 26"
+      "84 65 8d 60 49 e8 64 29 42 6d b8 7c 54 ad 14 3d");
+   const auto cipher = TLS::Ciphersuite::from_name("AES_128_GCM_SHA256").value();
+
+   // This is a record containing application data protected with a
+   // handshake secret. This must be detected and rejected.
+   const auto s_appdata_protected_with_hs_secret = Botan::hex_decode(
+      "17030300299aa9764364e78dca746d33ebbf9aa05d4c68"
+      "6c3d90ee8e862cdb061d7d1dfbe687dc5708d5e95f51e5");
+
+   // This is a record containing application data protected with a
+   // handshake secret (sequence number: 0). This must be detected and rejected.
+   const auto c_appdata_protected_with_hs_secret_0 = Botan::hex_decode(
+      "170303002722ba08cfa210975063c5443c74497dc354b6"
+      "cd3d8f4dd895605089acee701945f3c580cdbcba30");
+
+   // This is a record containing application data protected with a
+   // handshake secret (sequence number: 1). This must be detected and rejected.
+   const auto c_appdata_protected_with_hs_secret_1 = Botan::hex_decode(
+      "170303002741342f6862eb9f4a16a7011e77debf147dfea85"
+      "25b42a96eb78209feafda9953dc1219141ba388");
+
+   // This is a record containing application data protected with the
+   // server's outgoing application data secret (sequence number: 0).
+   const auto s_appdata_protected_with_appdata_secret_0 = Botan::hex_decode(
+      "170303002c7d3dca74737aa5fe4279aa77523fc57a8b27572"
+      "18b1a909145071f44444cd67a32b7720d5e0ab00a357ac478");
+
+   // This is a record containing application data protected with the
+   // client's outgoing application data secret (sequence number: 0).
+   const auto c_appdata_protected_with_appdata_secret_0 = Botan::hex_decode(
+      "1703030027e168377a8019a0e18ac0c0bc1c857bad8cc9d82"
+      "68866ab14deab0cbf4a6637170874105ebc1508");
+
+   // This is a record containing application data protected with the
+   // server's outgoing application data secret (sequence number: 1).
+   const auto s_appdata_protected_with_appdata_secret_1 = Botan::hex_decode(
+      "170303002b6dc4393fd97ff371c00293083460eac20a039a4"
+      "946a43be1d7663b4e1cc3d1e862a64a72cdb6af31ce9713");
+
+   auto make_record = [](std::span<const uint8_t> payload) {
+      Record_TLS record;
+      record.append(payload);
+      return record;
+   };
+
+   auto should_not_deprotect = [&](Test::Result& result, Record_TLS record, TLS::Cipher_State* cs) {
+      auto* tls_cs = Botan::TLS::as_tls_cipher_state(cs);
+      result.test_throws<Botan::TLS::TLS_Exception>(
+         "Reject incoming protected application data before handshake is complete",
+         "Application data received before handshake completion",
+         [&] { std::ignore = tls_cs->deprotect_record(std::move(record), 42 /* irrelevant */); });
+   };
+
+   auto should_deprotect = [&](Test::Result& result, Record_TLS record, TLS::Cipher_State* cs) {
+      auto* tls_cs = Botan::TLS::as_tls_cipher_state(cs);
+      result.test_no_throw("Incoming protected application data after handshake is complete",
+                           [&] { std::ignore = tls_cs->deprotect_record(std::move(record), 42 /* irrelevant */); });
+   };
+
+   auto should_not_protect = [&](Test::Result& result, TLS::Cipher_State* cs) {
+      auto* tls_cs = Botan::TLS::as_tls_cipher_state(cs);
+      constexpr std::string_view data = "Don't be evil";
+      result.test_throws<Botan::Invalid_State>(
+         "Reject outgoing protected application data before handshake is complete",
+         "Application data must not be encrypted before handshake completion",
+         [&] {
+            std::ignore = tls_cs->protect_record(
+               TLS::Record_Type::ApplicationData, {reinterpret_cast<const uint8_t*>(data.data()), data.size()}, 0);
+         });
+   };
+
+   auto should_protect = [&](Test::Result& result, TLS::Cipher_State* cs) {
+      auto* tls_cs = Botan::TLS::as_tls_cipher_state(cs);
+      constexpr std::string_view data = "CVE-2026-34582 shall not come back to haunt us";
+      result.test_no_throw("Outgoing protected application data after handshake is complete", [&] {
+         std::ignore = tls_cs->protect_record(
+            TLS::Record_Type::ApplicationData, {reinterpret_cast<const uint8_t*>(data.data()), data.size()}, 0);
+      });
+   };
+
+   return {
+      CHECK("reject premature application data (client side)",
+            [&](Test::Result& result) {
+               auto cipher_state =  //
+                  TLS::Cipher_State::init_with_server_hello(Botan::TLS::Connection_Side::Client,
+                                                            TLS::TLS_Flavor::TLS,
+                                                            std::move(shared_secret),
+                                                            cipher,
+                                                            transcript_hash_server_hello,
+                                                            {});
+
+               // After initialization, the cipher state holds handshake traffic secrets
+               result.test_is_false("no incoming appdata yet", cipher_state->can_decrypt_application_traffic());
+               result.test_is_false("no outgoing appdata yet", cipher_state->can_encrypt_application_traffic());
+               should_not_deprotect(result, make_record(s_appdata_protected_with_hs_secret), cipher_state.get());
+               should_not_protect(result, cipher_state.get());
+
+               // After receiving the server's Finished message, the cipher state
+               // holds application traffic secrets for incoming data.
+               // But the handshake is not yet complete.
+               cipher_state->advance_with_server_finished(transcript_hash_server_finished);
+               result.test_is_true("incoming appdata is okay", cipher_state->can_decrypt_application_traffic());
+               result.test_is_false("no outgoing appdata yet", cipher_state->can_encrypt_application_traffic());
+               should_deprotect(result, make_record(s_appdata_protected_with_appdata_secret_0), cipher_state.get());
+               should_not_protect(result, cipher_state.get());
+
+               // Only after the client's Finished message is the handshake complete.
+               cipher_state->advance_with_client_finished(transcript_hash_client_finished);
+               result.test_is_true("incoming appdata is okay", cipher_state->can_decrypt_application_traffic());
+               result.test_is_true("outgoing appdata is okay", cipher_state->can_encrypt_application_traffic());
+               should_deprotect(result, make_record(s_appdata_protected_with_appdata_secret_1), cipher_state.get());
+               should_protect(result, cipher_state.get());
+            }),
+
+      CHECK("reject premature application data (server side)",
+            [&](Test::Result& result) {
+               auto cipher_state =  //
+                  TLS::Cipher_State::init_with_server_hello(Botan::TLS::Connection_Side::Server,
+                                                            TLS::TLS_Flavor::TLS,
+                                                            std::move(shared_secret),
+                                                            cipher,
+                                                            transcript_hash_server_hello,
+                                                            {});
+
+               // After initialization, the cipher state holds handshake traffic secrets
+               result.test_is_false("no incoming appdata yet", cipher_state->can_decrypt_application_traffic());
+               result.test_is_false("no outgoing appdata yet", cipher_state->can_encrypt_application_traffic());
+               should_not_deprotect(result, make_record(c_appdata_protected_with_hs_secret_0), cipher_state.get());
+               should_not_protect(result, cipher_state.get());
+
+               // After sending the server's Finished message, the cipher state holds
+               // application traffic secrets for outgoing data. But the handshake is
+               // not yet complete.
+               cipher_state->advance_with_server_finished(transcript_hash_server_finished);
+               result.test_is_false("no incoming appdata yet", cipher_state->can_decrypt_application_traffic());
+               result.test_is_true("outgoing appdata is okay", cipher_state->can_encrypt_application_traffic());
+               should_not_deprotect(result, make_record(c_appdata_protected_with_hs_secret_1), cipher_state.get());
+               should_protect(result, cipher_state.get());
+
+               // Only after the client's Finished message is the handshake complete.
+               cipher_state->advance_with_client_finished(transcript_hash_client_finished);
+               result.test_is_true("incoming appdata is okay", cipher_state->can_decrypt_application_traffic());
+               result.test_is_true("outgoing appdata is okay", cipher_state->can_encrypt_application_traffic());
+               should_deprotect(result, make_record(c_appdata_protected_with_appdata_secret_0), cipher_state.get());
+               should_protect(result, cipher_state.get());
             }),
    };
 }
@@ -949,7 +1170,8 @@ BOTAN_REGISTER_TEST_FN("tls",
                        "tls_cipher_state",
                        test_secret_derivation_rfc8448_rtt1,
                        test_secret_derivation_rfc8448_rtt0,
-                       test_record_padding);
+                       test_record_padding,
+                       test_reject_premature_application_data);
 }  // namespace
 
 }  // namespace Botan_Tests

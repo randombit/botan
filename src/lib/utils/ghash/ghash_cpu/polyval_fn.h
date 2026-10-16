@@ -34,7 +34,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_CLMUL SIMD_4x32 clmul(const SIMD_4x32& H, const 
    return SIMD_4x32(reinterpret_cast<uint32x4_t>(vmull_p64(a, b)));
    #endif
 
-#elif defined(BOTAN_SIMD_USE_ALTIVEC)
+#elif defined(BOTAN_SIMD_USE_VSX)
    const SIMD_4x32 mask_lo = SIMD_4x32(0, 0, 0xFFFFFFFF, 0xFFFFFFFF);
    constexpr uint8_t flip = (std::endian::native == std::endian::big) ? 0x11 : 0x00;
 
@@ -108,10 +108,10 @@ BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 mulx_polyval(const SIMD_4x32
    const auto mask = h.top_bit_mask();
 
    // Extract the top bits of the words and move them into place as the low bit of the next word
-   auto top_bits = h.shr<31>().shift_elems_left<1>();
+   const auto top_bits = h.shr<31>().shift_elems_left<1>();
 
    // The main shift, adding back in the top bits that are otherwise lost
-   auto shifted_h = h.shl<1>() | top_bits;
+   const auto shifted_h = h.shl<1>() | top_bits;
 
    return shifted_h ^ (mask & V);
 }

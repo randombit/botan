@@ -9,7 +9,8 @@
 
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
-#include <botan/internal/scan_name.h>
+#include <botan/internal/algorithm_spec.h>
+#include <botan/internal/probe_providers.h>
 
 #if defined(BOTAN_HAS_CHACHA)
    #include <botan/internal/chacha.h>
@@ -68,14 +69,13 @@ std::unique_ptr<StreamCipher> StreamCipher::create(std::string_view algo_spec, s
    }
 #endif
 
-   const SCAN_Name req(algo_spec);
+   const AlgorithmSpec req(algo_spec);
 
 #if defined(BOTAN_HAS_CTR_BE)
-   if((req.algo_name() == "CTR-BE" || req.algo_name() == "CTR") && req.arg_count_between(1, 2)) {
+   if(auto m = req.match("CTR-BE|CTR({cipher},{ctr_size:int?})")) {
       if(provider.empty() || provider == "base") {
-         auto cipher = BlockCipher::create(req.arg(0));
-         if(cipher) {
-            const size_t ctr_size = req.arg_as_integer(1, cipher->block_size());
+         if(auto cipher = BlockCipher::create(m->str("cipher"))) {
+            const size_t ctr_size = m->has("ctr_size") ? m->integer("ctr_size") : cipher->block_size();
             return std::make_unique<CTR_BE>(std::move(cipher), ctr_size);
          }
       }
@@ -83,17 +83,17 @@ std::unique_ptr<StreamCipher> StreamCipher::create(std::string_view algo_spec, s
 #endif
 
 #if defined(BOTAN_HAS_CHACHA)
-   if(req.algo_name() == "ChaCha") {
+   if(auto m = req.match("ChaCha({rounds:int=20})")) {
       if(provider.empty() || provider == "base") {
-         return std::make_unique<ChaCha>(req.arg_as_integer(0, 20));
+         return std::make_unique<ChaCha>(m->integer("rounds"));
       }
    }
 #endif
 
 #if defined(BOTAN_HAS_OFB)
-   if(req.algo_name() == "OFB" && req.arg_count() == 1) {
+   if(auto m = req.match("OFB({cipher})")) {
       if(provider.empty() || provider == "base") {
-         if(auto cipher = BlockCipher::create(req.arg(0))) {
+         if(auto cipher = BlockCipher::create(m->str("cipher"))) {
             return std::make_unique<OFB>(std::move(cipher));
          }
       }
@@ -101,15 +101,17 @@ std::unique_ptr<StreamCipher> StreamCipher::create(std::string_view algo_spec, s
 #endif
 
 #if defined(BOTAN_HAS_RC4)
-
-   if(req.algo_name() == "RC4" || req.algo_name() == "ARC4" || req.algo_name() == "MARK-4") {
-      const size_t skip = (req.algo_name() == "MARK-4") ? 256 : req.arg_as_integer(0, 0);
-
+   if(auto m = req.match("RC4|ARC4({skip:int=0})")) {
       if(provider.empty() || provider == "base") {
-         return std::make_unique<RC4>(skip);
+         return std::make_unique<RC4>(m->integer("skip"));
       }
    }
 
+   if(req.matches("MARK-4")) {
+      if(provider.empty() || provider == "base") {
+         return std::make_unique<RC4>(256);
+      }
+   }
 #endif
 
    BOTAN_UNUSED(req);

@@ -390,7 +390,8 @@ BOTAN_FFI_EXPORT(2, 8) int botan_rng_add_entropy(botan_rng_t rng, const uint8_t*
 * @param rng_out the new DRBG object
 * @param drbg_name the name of the DRBG (e.g. "HMAC_DRBG(SHA-256)")
 * @param seed the seed material (entropy || nonce || personalization_string)
-* @param seed_len length of seed in bytes
+* @param seed_len length of seed in bytes which should be at least the security
+*        level of the RNG (eg 32 bytes for SHA-256 based HMAC_DRBG)
 * @return 0 on success, negative on failure
 */
 BOTAN_FFI_EXPORT(3, 12)
@@ -2222,6 +2223,12 @@ BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_estimated_strength(botan_pubkey_t key, s
 
 /**
 * Compute a fingerprint (hash of the public key encoding)
+*
+* @warning This hashes the algorithm specific public key encoding (the contents
+* of the subjectPublicKey BIT STRING). Unlike Public_Key::fingerprint_public in
+* the C++ API the algorithm identifier is not included, so keys of different
+* algorithms with identical raw encodings share a fingerprint.
+*
 * @param key the public key to fingerprint
 * @param hash the name of the hash to use, eg "SHA-256"
 * @param out output buffer
