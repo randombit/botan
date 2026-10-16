@@ -9,10 +9,16 @@
 #include <botan/bigint.h>
 #include <botan/numthry.h>
 #include <botan/rng.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/monty.h>
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/mp_core.h>
+#include <botan/internal/target_info.h>
+
+#if defined(BOTAN_HAS_THREAD_UTILS) && !defined(BOTAN_HAS_VALGRIND)
+   #include <botan/internal/thread_pool.h>
+#endif
 
 namespace Botan {
 
@@ -251,6 +257,103 @@ bool miller_rabin_test(const BigInt& n,
    return true;
 }
 
+#if defined(BOTAN_HAS_THREAD_UTILS) && !defined(BOTAN_HAS_VALGRIND)
+
+/*
+* Miller-Rabin tests per thread pool job
+*
+* The cost of a test grows roughly quadratically with the size of n, so
+* smaller n get more tests per job to keep each job worth dispatching.
+*/
+size_t miller_rabin_tests_per_job(size_t n_bits) {
+   constexpr size_t ref_bits = 1024;
+   constexpr size_t ref_tests = 8;
+   if(n_bits > ref_bits) {
+      return ref_tests;
+   } else {
+      return std::max(ref_tests, (ref_tests * ref_bits * ref_bits) / (n_bits * n_bits));
+   }
+}
+
+#endif
+
+bool miller_rabin_lucas_test(
+   const BigInt& n, const Montgomery_Params& monty_n, RandomNumberGenerator& rng, size_t t, bool vartime) {
+   if(n < 3 || n.is_even()) {
+      return false;
+   }
+   if(t == 0) {
+      t = 1;
+   }
+
+   const Miller_Rabin_Test mr(n, monty_n, vartime);
+
+   const auto random_base = [&]() { return BigInt::random_integer(rng, BigInt::from_word(2), n); };
+
+   // A single test first, since that alone rejects almost all composites
+   if(!mr.passes(random_base())) {
+      return false;
+   }
+   t -= 1;
+
+#if defined(BOTAN_HAS_THREAD_UTILS) && !defined(BOTAN_HAS_VALGRIND)
+   auto& pool = Thread_Pool::global_instance();
+   const size_t tests_per_job = miller_rabin_tests_per_job(n.bits());
+
+   // The Lucas test costs about as much as three Miller-Rabin tests
+   if(pool.worker_count() > 0 && t > 0 && t + 3 >= tests_per_job) {
+      // The jobs cannot share the RNG, so draw all of the bases here
+      std::vector<BigInt> bases;
+      bases.reserve(t);
+      for(size_t i = 0; i != t; ++i) {
+         bases.push_back(random_base());
+      }
+
+      // Split the tests into jobs of (nearly) equal size
+      const size_t job_tests = ceil_division(t, ceil_division(t, tests_per_job));
+      const size_t jobs = ceil_division(t, job_tests);
+
+      const auto passes_tests = [&](size_t from, size_t to) {
+         for(size_t i = from; i != to; ++i) {
+            if(!mr.passes(bases[i])) {
+               return false;
+            }
+         }
+         return true;
+      };
+
+      std::vector<Joining_Future<bool>> futures;
+      futures.reserve(jobs);
+
+      futures.push_back(pool.run([&]() { return lucas_test(n, monty_n, vartime); }));
+
+      // The first job runs in this thread, the rest in the pool
+      for(size_t j = 1; j < jobs; ++j) {
+         const size_t from = j * job_tests;
+         const size_t to = std::min(t, from + job_tests);
+         futures.push_back(pool.run([&, from, to]() { return passes_tests(from, to); }));
+      }
+
+      bool passes = passes_tests(0, std::min(t, job_tests));
+
+      // Collect every result, so that an exception from any job propagates
+      for(auto& future : futures) {
+         passes = future.get() && passes;
+      }
+
+      return passes;
+   }
+#endif
+
+   for(size_t i = 0; i != t; ++i) {
+      if(!mr.passes(random_base())) {
+         return false;
+      }
+   }
+
+   return lucas_test(n, monty_n, vartime);
+}
+
 bool bailie_psw_test(const BigInt& n, const Montgomery_Params& monty_n, bool vartime) {
    if(n == 2) {
       return true;
@@ -312,6 +415,20 @@ bool is_miller_rabin_probable_prime_vartime(const BigInt& n,
                                             RandomNumberGenerator& rng,
                                             size_t test_iterations) {
    return miller_rabin_test(n, monty_n, rng, test_iterations, true);
+}
+
+bool is_miller_rabin_lucas_probable_prime(const BigInt& n,
+                                          const Montgomery_Params& monty_n,
+                                          RandomNumberGenerator& rng,
+                                          size_t test_iterations) {
+   return miller_rabin_lucas_test(n, monty_n, rng, test_iterations, false);
+}
+
+bool is_miller_rabin_lucas_probable_prime_vartime(const BigInt& n,
+                                                  const Montgomery_Params& monty_n,
+                                                  RandomNumberGenerator& rng,
+                                                  size_t test_iterations) {
+   return miller_rabin_lucas_test(n, monty_n, rng, test_iterations, true);
 }
 
 size_t miller_rabin_test_iterations(size_t n_bits, size_t prob, bool random) {
