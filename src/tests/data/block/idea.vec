@@ -1,5 +1,5 @@
 
-#test cpuid sse2
+#test cpuid avx2 sse2
 
 [IDEA]
 Key = ED1BCC9E9267925F3132BA3A8CF9B764

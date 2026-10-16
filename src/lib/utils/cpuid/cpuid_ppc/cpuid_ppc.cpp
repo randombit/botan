@@ -35,8 +35,10 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features([[maybe_unused]] uint32_t allowe
 
       if(is_set(feat, CPUFeature::Bit::VSX)) {
          feat |= if_set(hwcap2, PPC_hwcap2_bit::CRYPTO_bit, CPUFeature::Bit::POWER_CRYPTO, allowed);
-         feat |= if_set(hwcap2, PPC_hwcap2_bit::DARN_bit, CPUFeature::Bit::DARN, allowed);
       }
+
+      // DARN is a scalar instruction (ISA 3.0) and does not depend on VSX
+      feat |= if_set(hwcap2, PPC_hwcap2_bit::DARN_bit, CPUFeature::Bit::DARN, allowed);
 
       return feat;
    }
@@ -45,40 +47,60 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features([[maybe_unused]] uint32_t allowe
 
    // NOLINTBEGIN(*-no-assembler)
 
+   /*
+   * No auxval available, fall back on probing instructions. A probe is only
+   * executed if the associated feature is allowed, so that a cleared feature
+   * is never executed even during detection.
+   */
+
    if(is_set(allowed, CPUFeature::Bit::VSX)) {
       // vaddudm is new in ISA 2.07 (POWER8)
       auto vsx_probe = []() noexcept -> int {
-         asm("vaddudm 0, 0, 0");
+         asm volatile("vaddudm 0, 0, 0" ::: "v0");
          return 1;
       };
 
       if(OS::run_cpu_instruction_probe(vsx_probe) == 1) {
          feat |= CPUFeature::Bit::VSX;
       }
+   }
 
-      if(is_set(feat, CPUFeature::Bit::VSX)) {
-         auto vcipher_probe = []() noexcept -> int {
-            asm("vcipher 0, 0, 0");
-            return 1;
-         };
+   if(is_set(feat, CPUFeature::Bit::VSX) && is_set(allowed, CPUFeature::Bit::POWER_CRYPTO)) {
+      auto vcipher_probe = []() noexcept -> int {
+         asm volatile("vcipher 0, 0, 0" ::: "v0");
+         return 1;
+      };
 
-         auto darn_probe = []() noexcept -> int {
-            uint64_t output = 0;
-            asm volatile("darn %0, 1" : "=r"(output));
-            return (~output) != 0;
-         };
-
-         if(OS::run_cpu_instruction_probe(vcipher_probe) == 1) {
-            feat |= CPUFeature::Bit::POWER_CRYPTO & allowed;
-         }
-
-         if(OS::run_cpu_instruction_probe(darn_probe) == 1) {
-            feat |= CPUFeature::Bit::DARN & allowed;
-         }
+      if(OS::run_cpu_instruction_probe(vcipher_probe) == 1) {
+         feat |= CPUFeature::Bit::POWER_CRYPTO;
       }
    }
 
-   // NOLINTBEGIN(*-no-assembler)
+   // DARN is a scalar instruction (ISA 3.0) and does not depend on VSX
+   if(is_set(allowed, CPUFeature::Bit::DARN)) {
+      auto darn_probe = []() noexcept -> int {
+         /*
+         * DARN returns all ones to indicate a (transient) error. PowerISA 3.0
+         * recommends retrying ten times before giving up, as is done in
+         * Processor_RNG. Here if DARN never produces a value, it is treated as
+         * if the instruction was unavailable.
+         */
+         for(size_t i = 0; i != 10; ++i) {
+            uint64_t output = 0;
+            asm volatile("darn %0, 1" : "=r"(output));
+            if((~output) != 0) {
+               return 1;
+            }
+         }
+         return 0;
+      };
+
+      if(OS::run_cpu_instruction_probe(darn_probe) == 1) {
+         feat |= CPUFeature::Bit::DARN;
+      }
+   }
+
+   // NOLINTEND(*-no-assembler)
 
 #endif
 
