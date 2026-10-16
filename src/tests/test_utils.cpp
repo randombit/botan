@@ -24,10 +24,10 @@
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
-#include <botan/internal/rounding.h>
 #include <botan/internal/target_info.h>
 
 #include <bit>
+#include <limits>
 
 #if defined(BOTAN_HAS_CPUID)
    #include <botan/internal/cpuid.h>
@@ -61,7 +61,7 @@ class Utility_Function_Tests final : public Test {
          results.push_back(test_checked_add());
          results.push_back(test_checked_mul());
          results.push_back(test_checked_cast());
-         results.push_back(test_round_up());
+         results.push_back(test_ceil_division());
          results.push_back(test_loadstore());
          results.push_back(test_loadstore_ambiguity());
          results.push_back(test_loadstore_fallback());
@@ -146,36 +146,24 @@ class Utility_Function_Tests final : public Test {
          return result;
       }
 
-      Test::Result test_round_up() {
-         Test::Result result("Util round_up");
+      Test::Result test_ceil_division() {
+         Test::Result result("Util ceil_division");
 
-         // clang-format off
-         const std::vector<size_t> inputs = {
-            0, 1, 2, 3, 4, 9, 10, 32, 99, 100, 101, 255, 256, 1000, 10000,
-            65535, 65536, 65537,
-         };
-
-         const std::vector<size_t> alignments = {
-            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 16, 32, 50, 64, 100, 512, 521,
-            1000, 1023, 1024, 1025, 10000, 65535, 65536
-         };
-         // clang-format on
-
-         for(const size_t i : inputs) {
-            for(const size_t m : alignments) {
-               try {
-                  const size_t z = Botan::round_up(i, m);
-
-                  result.test_is_true("z % m == 0", z % m == 0);
-                  result.test_is_true("z >= i", z >= i);
-                  result.test_is_true("z <= i + m", z <= i + m);
-               } catch(Botan::Exception& e) {
-                  result.test_failure(Botan::fmt("round_up({},{})", i, m), e.what());
-               }
+         for(size_t a = 0; a != 1000; ++a) {
+            for(size_t b = 1; b != 70; ++b) {
+               const size_t q = Botan::ceil_division(a, b);
+               result.test_is_true("q*b >= a", q * b >= a);
+               result.test_is_true("(q-1)*b < a", q == 0 || (q - 1) * b < a);
             }
          }
 
-         result.test_throws("Integer overflow is detected", []() { Botan::round_up(static_cast<size_t>(-1), 1024); });
+         // These would wrap if the computation added b - 1 to a
+         const size_t max = std::numeric_limits<size_t>::max();
+         result.test_sz_eq("ceil_division(max, 1)", Botan::ceil_division(max, size_t(1)), max);
+         result.test_sz_eq("ceil_division(max, 2)", Botan::ceil_division(max, size_t(2)), max / 2 + 1);
+         result.test_sz_eq("ceil_division(max - 1, 2)", Botan::ceil_division(max - 1, size_t(2)), max / 2);
+         result.test_sz_eq("ceil_division(max, max - 1)", Botan::ceil_division(max, max - 1), 2);
+         result.test_sz_eq("ceil_division(max, max)", Botan::ceil_division(max, max), 1);
 
          return result;
       }
@@ -521,9 +509,6 @@ class Utility_Function_Tests final : public Test {
          Botan::detail::fallback_store_any<std::endian::little, T>(in, out);
          return out;
       }
-
-      template <size_t N>
-      using a = std::array<uint8_t, N>;
 
       static Test::Result test_loadstore_ambiguity() {
          // This is a regression test for a (probable) compiler bug in Xcode 15
