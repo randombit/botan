@@ -38,6 +38,13 @@
 
 namespace Botan {
 
+namespace {
+
+// This is an arbitrary upper bound of the size of a RSA modulus
+constexpr size_t MAX_RSA_BITS = 16384;
+
+}  // namespace
+
 class RSA_Public_Data final {
    public:
       RSA_Public_Data(BigInt&& n, BigInt&& e) :
@@ -315,7 +322,7 @@ const BigInt& RSA_PublicKey::get_e() const {
 }
 
 void RSA_PublicKey::init(BigInt&& n, BigInt&& e) {
-   if(n.signum() <= 0 || n.is_even() || n.bits() < 384 || n.bits() > 16384) {
+   if(n.signum() <= 0 || n.is_even() || n.bits() < 384 || n.bits() > MAX_RSA_BITS) {
       throw Decoding_Error("Invalid RSA public key modulus");
    }
    if(e.is_even() || e <= 1 || e >= n || e.bits() > 256) {
@@ -432,7 +439,7 @@ const BigInt& RSA_PrivateKey::get_d2() const {
 namespace {
 
 void check_rsa_private_key_params(const BigInt& n, const BigInt& p, const BigInt& q) {
-   if(p < 3 || q < 3 || p == q) {
+   if(n.bits() > MAX_RSA_BITS || p < 3 || q < 3 || p == q || p >= n || q >= n) {
       throw Decoding_Error("Invalid RSA private key parameters");
    }
    if(p * q != n) {
@@ -561,7 +568,6 @@ RSA_PrivateKey::RSA_PrivateKey(
 */
 RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng, size_t bits, size_t exp) {
    constexpr size_t MIN_RSA_BITS = 1024;
-   constexpr size_t MAX_RSA_BITS = 16384;
    constexpr size_t MOD_RSA_BITS = 8;
 
    if(bits < MIN_RSA_BITS) {
