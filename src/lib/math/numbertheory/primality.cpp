@@ -9,7 +9,6 @@
 #include <botan/bigint.h>
 #include <botan/numthry.h>
 #include <botan/rng.h>
-#include <botan/internal/barrett.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/monty.h>
 #include <botan/internal/monty_exp.h>
@@ -19,7 +18,11 @@ namespace Botan {
 
 namespace {
 
-bool lucas_test(const BigInt& C, const Barrett_Reduction& mod_C) {
+/*
+* Lucas probable prime test, following FIPS 186-4 C.3.3 with all values
+* kept in Montgomery form
+*/
+bool lucas_test(const BigInt& C, const Montgomery_Params& monty_C, bool vartime) {
    BOTAN_ARG_CHECK(C.signum() >= 0, "Argument must be non-negative");
 
    if(C == 2 || C == 3 || C == 5 || C == 7 || C == 11 || C == 13) {
@@ -30,10 +33,15 @@ bool lucas_test(const BigInt& C, const Barrett_Reduction& mod_C) {
       return false;
    }
 
-   BigInt D = BigInt::from_word(5);
+   // Check 5, -7, 9, -11, 13, -15, 17, ...
+   word D = 5;
+   bool D_negative = false;
 
    for(;;) {
-      const int32_t j = jacobi(D, C);
+      auto D_bn = BigInt::from_word(D);
+      D_bn.cond_flip_sign(D_negative);
+
+      const int32_t j = jacobi(D_bn, C);
       if(j == 0) {
          return false;
       }
@@ -42,61 +50,82 @@ bool lucas_test(const BigInt& C, const Barrett_Reduction& mod_C) {
          break;
       }
 
-      // Check 5, -7, 9, -11, 13, -15, 17, ...
-      if(D.signum() < 0) {
-         D.flip_sign();
-         D += 2;
-      } else {
-         D += 2;
-         D.flip_sign();
-      }
+      D += 2;
+      D_negative = !D_negative;
 
       if(D == 17 && is_perfect_square(C).signum() != 0) {
          return false;
       }
    }
 
-   if(D.signum() < 0) {
-      D += C;
-   }
-
    const BigInt K = C + 1;
    const size_t K_bits = K.bits() - 1;
 
-   BigInt U = BigInt::one();
-   BigInt V = BigInt::one();
+   secure_vector<word> ws;
 
-   BigInt Ut;
-   BigInt Vt;
-   BigInt U2;
-   BigInt V2;
+   Montgomery_Int U = Montgomery_Int::one(monty_C);
+   Montgomery_Int V = U;
+   Montgomery_Int Ut = U;
+   Montgomery_Int Vt = U;
+   Montgomery_Int U2 = U;
+   Montgomery_Int V2 = U;
+   Montgomery_Int T = U;
 
    for(size_t i = 0; i != K_bits; ++i) {
       const bool k_bit = K.get_bit(K_bits - 1 - i);
 
-      Ut = mod_C.multiply(U, V);
+      // U_temp = U V
+      Ut = U;
+      Ut.mul_by(V, ws);
 
-      Vt = mod_C.reduce(mod_C.square(V) + mod_C.multiply(D, mod_C.square(U)));
-      Vt.ct_cond_add(Vt.is_odd(), C);
-      Vt >>= 1;
-      Vt = mod_C.reduce(Vt);
+      // V_temp = (V^2 + D U^2) / 2
+      T = U;
+      T.square_this_n_times(ws, 1);
+      T.mul_by_word(D);
+      Vt = V;
+      Vt.square_this_n_times(ws, 1);
+      if(D_negative) {
+         Vt -= T;
+      } else {
+         Vt += T;
+      }
+      Vt.div2();
 
-      U = Ut;
-      V = Vt;
+      if(!vartime || k_bit) {
+         // U_i = (U_temp + V_temp) / 2
+         U2 = Ut;
+         U2 += Vt;
+         U2.div2();
 
-      U2 = mod_C.reduce(Ut + Vt);
-      U2.ct_cond_add(U2.is_odd(), C);
-      U2 >>= 1;
+         // V_i = (V_temp + D U_temp) / 2
+         T = Ut;
+         T.mul_by_word(D);
+         V2 = Vt;
+         if(D_negative) {
+            V2 -= T;
+         } else {
+            V2 += T;
+         }
+         V2.div2();
+      }
 
-      V2 = mod_C.reduce(Vt + mod_C.multiply(Ut, D));
-      V2.ct_cond_add(V2.is_odd(), C);
-      V2 >>= 1;
-
-      U.ct_cond_assign(k_bit, U2);
-      V.ct_cond_assign(k_bit, V2);
+      if(vartime) {
+         if(k_bit) {
+            U = U2;
+            V = V2;
+         } else {
+            U = Ut;
+            V = Vt;
+         }
+      } else {
+         U = Ut;
+         V = Vt;
+         U.ct_cond_assign(k_bit, U2);
+         V.ct_cond_assign(k_bit, V2);
+      }
    }
 
-   return (U == 0);
+   return U.is_zero();
 }
 
 /*
@@ -230,22 +259,17 @@ bool bailie_psw_test(const BigInt& n, const Montgomery_Params& monty_n, bool var
    }
 
    const Miller_Rabin_Test mr(n, monty_n, vartime);
-   if(!mr.passes(BigInt::from_word(2))) {
-      return false;
-   }
-
-   return vartime ? is_lucas_probable_prime_vartime(n, monty_n) : is_lucas_probable_prime(n, monty_n);
+   return mr.passes(BigInt::from_word(2)) && lucas_test(n, monty_n, vartime);
 }
 
 }  // namespace
 
 bool is_lucas_probable_prime(const BigInt& n, const Montgomery_Params& monty_n) {
-   return lucas_test(n, Barrett_Reduction::for_secret_modulus(monty_n.p()));
+   return lucas_test(n, monty_n, false);
 }
 
 bool is_lucas_probable_prime_vartime(const BigInt& n, const Montgomery_Params& monty_n) {
-   // Currently identical to the constant time version
-   return lucas_test(n, Barrett_Reduction::for_public_modulus(monty_n.p()));
+   return lucas_test(n, monty_n, true);
 }
 
 bool is_bailie_psw_probable_prime(const BigInt& n, const Montgomery_Params& monty_n) {
