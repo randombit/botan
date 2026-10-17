@@ -27,7 +27,7 @@ class Cipher_State;
  * outgoing handshake flights, application data and alerts are emitted via the
  * send() overloads.
  */
-class Channel_IO {
+class BOTAN_TEST_API Channel_IO {
    public:
       using ReceiveEvent = std::variant<BytesNeeded,
                                         Handshake_Message_13,
@@ -83,9 +83,6 @@ class Channel_IO {
       /// Sends an alert to the peer.
       void send(const Alert& alert, bool handle_compat_mode);
 
-      /// Sends a dummy ChangeCipherSpec record to the peer.
-      void send_dummy_change_cipher_spec();
-
       /// @}
 
       /// @name Traffic key updates (RFC 8446 4.6.3)
@@ -121,6 +118,9 @@ class Channel_IO {
       std::optional<ReceiveEvent> next_pending_handshake_message(std::optional<Transcript_Hash_State>& transcript_hash,
                                                                  bool handshake_complete);
 
+      /// Sends a dummy ChangeCipherSpec record to the peer.
+      void send_dummy_change_cipher_spec();
+
       virtual void process(const Handshake_Record& record) = 0;
 
       virtual void send_data(Record_Type record_type, std::span<const uint8_t> payload, Cipher_State* cipher_state) = 0;
@@ -149,6 +149,13 @@ class Channel_IO {
 
    private:
       bool m_first_message_delivered = false;
+
+      /**
+       * True once the peer sent close_notify and notify_closed_for_reading()
+       * was called. From then on, any further incoming data is ignored.
+       * See RFC 9846 6.1.
+       */
+      bool m_closed_for_reading = false;
 
       /**
        * True if a dummy CCS record has been sent to the peer already.
