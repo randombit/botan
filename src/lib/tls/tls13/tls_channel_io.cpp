@@ -11,6 +11,7 @@
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
+#include <botan/internal/buffer_slicer.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_cipher_state.h>
 #include <botan/internal/tls_handshake_layer_13.h>
@@ -339,23 +340,38 @@ namespace {
 class TLS_Channel_IO final : public Channel_IO {
    public:
       TLS_Channel_IO(Connection_Side side, std::shared_ptr<const Policy> policy, std::shared_ptr<Callbacks> callbacks) :
-            Channel_IO(side, policy, std::move(callbacks)),
-            m_record_layer(side, std::move(policy)),
-            m_handshake_layer(side) {}
+            Channel_IO(side, std::move(policy), std::move(callbacks)), m_record_layer(side), m_handshake_layer(side) {}
 
       void send_data(Record_Type record_type, std::span<const uint8_t> payload, Cipher_State* cipher_state) override {
-         auto to_write = m_record_layer.prepare_records(record_type, payload, cipher_state);
+         const size_t max_plaintext_payload_size = record_layer().record_payload_size_limit(policy(), cipher_state);
 
-         // After the initial handshake message is sent, the record layer must
-         // adhere to a more strict record specification. Note that for the
-         // server case this is a NOOP.
-         // See (RFC 9846 5.1. regarding "legacy_record_version")
-         if(record_type == Record_Type::Handshake && !m_first_message_sent) {
-            m_record_layer.disable_sending_compat_mode();
-            m_first_message_sent = true;
-         }
+         // RFC 9846 5.1
+         //    Handshake messages MAY be [...] fragmented across several records.
+         //    [...] Application Data fragments MAY be split across multiple records
+         //    [...].
+         //
+         // In TLS, we may fragment application data and handshake data into multiple
+         // records. Other record types are not allowed to be fragmented.
+         BOTAN_ASSERT_IMPLICATION(payload.size() > max_plaintext_payload_size,
+                                  record_type == Record_Type::ApplicationData || record_type == Record_Type::Handshake,
+                                  "Only Handshake and Application Data records may be fragmented");
 
-         callbacks().tls_emit_data(to_write);
+         BufferSlicer bs(payload);
+
+         // RFC 9846 5.1
+         //    Zero-length fragments of Application Data [...] MAY be sent, as they
+         //    are potentially useful as a traffic analysis countermeasure.
+         //
+         // We're using a do-while loop to ensure that we process at least one slice
+         // of the payload, even if that first slice is empty.
+         do /* NOLINT(*-avoid-do-while) */ {
+            const size_t pt_size = std::min(bs.remaining(), max_plaintext_payload_size);
+            const auto pt_fragment = bs.take(pt_size);
+
+            const auto record_to_write =
+               m_record_layer.prepare_record(policy(), record_type, pt_fragment, cipher_state);
+            callbacks().tls_emit_data(record_to_write);
+         } while(!bs.empty());
       }
 
       void send_flight(std::vector<Flight::Message> flight) override {
@@ -408,9 +424,7 @@ class TLS_Channel_IO final : public Channel_IO {
       const Handshake_Layer& handshake_layer() const override { return m_handshake_layer; }
 
    private:
-      bool m_first_message_sent = false;
-
-      Record_Layer m_record_layer;
+      TLS_Record_Layer m_record_layer;
       Handshake_Layer m_handshake_layer;
 };
 
