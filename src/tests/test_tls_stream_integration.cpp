@@ -556,6 +556,9 @@ class Test_Conversation_Sync : public Synchronous_Test {
          client()->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
          result().expect_success("handshake", ec);
 
+         client()->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
+         result().expect_ec("second handshake is refused", Botan::ErrorType::InvalidObjectState, ec);
+
          net::write(client()->stream(),
                     net::buffer(message.c_str(), message.size() + 1),  // including \0 termination
                     ec);
@@ -719,7 +722,8 @@ class Test_Close_Without_Shutdown_Sync : public Synchronous_Test {
 };
 
 /* In this test case the server shuts down the connection but the client doesn't send the corresponding close_notify
- * response. Instead, it closes the socket immediately.
+ * response. Instead, it closes the socket immediately. Since the stream answers any close_notify it processes, the
+ * client consumes the server's alert from the next layer directly.
  * The server should see a short-read error.
  */
 class Test_No_Shutdown_Response : public TestBase,
@@ -754,11 +758,12 @@ class Test_No_Shutdown_Response : public TestBase,
                std::bind(test_case, shared_from_this(), _1));
             result().expect_success("send shutdown message", ec);
 
-            // read the server's close-notify message
+            // wait for the server's close-notify message without processing it
             client()->reset_timeout("read close_notify");
-            yield net::async_read(client()->stream(), client()->buffer(), std::bind(test_case, shared_from_this(), _1));
-            result().expect_ec("read gives EOF", net::error::eof, ec);
-            result().test_is_true("received close_notify", client()->stream().shutdown_received());
+            yield client()->stream().next_layer().async_read_some(client()->buffer(),
+                                                                  std::bind(test_case, shared_from_this(), _1));
+            result().expect_success("read close_notify record", ec);
+            result().test_is_true("did not process close_notify", !client()->stream().shutdown_received());
 
             // close the socket rather than shutting down
             client()->close_socket();
@@ -790,15 +795,80 @@ class Test_No_Shutdown_Response_Sync : public Synchronous_Test {
                     ec);
          result().expect_success("send expect_short_read message", ec);
 
-         net::read(client()->stream(), client()->buffer(), ec);
-         result().expect_ec("read gives EOF", net::error::eof, ec);
-         result().test_is_true("received close_notify", client()->stream().shutdown_received());
+         // wait for the server's close-notify message without processing it
+         client()->stream().next_layer().read_some(client()->buffer(), ec);
+         result().expect_success("read close_notify record", ec);
+         result().test_is_true("did not process close_notify", !client()->stream().shutdown_received());
 
          // close the socket rather than shutting down
          client()->close_socket();
 
          teardown();
       }
+};
+
+/* In this test case the client cancels a pending read through the cancellation slot associated with its completion
+ * handler. The read is expected to complete with operation_aborted. The client then closes the socket, so the server
+ * should see a short-read error.
+ */
+class Test_Read_Cancellation : public TestBase,
+                               public net::coroutine,
+                               public std::enable_shared_from_this<Test_Read_Cancellation> {
+   public:
+      Test_Read_Cancellation(net::io_context& ioc,
+                             const std::string& config_name,
+                             const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+                             const std::shared_ptr<const Botan::TLS::Policy>& server_policy) :
+            TestBase(ioc, client_policy, server_policy, "Test Read Cancellation", config_name) {}
+
+      void run(const error_code& ec) {
+         static const auto test_case = &Test_Read_Cancellation::run;
+         reenter(*this) {
+            client()->reset_timeout("connect");
+            yield net::async_connect(
+               client()->stream().lowest_layer(), k_endpoints, std::bind(test_case, shared_from_this(), _1));
+            result().expect_success("connect", ec);
+
+            client()->reset_timeout("handshake");
+            yield client()->stream().async_handshake(Botan::TLS::Connection_Side::Client,
+                                                     std::bind(test_case, shared_from_this(), _1));
+            result().expect_success("handshake", ec);
+
+            // send the control message to configure the server to expect a short-read
+            client()->reset_timeout("send expect_short_read message");
+            yield net::async_write(client()->stream(),
+                                   net::buffer(EXPECT_SHORT_READ_MESSAGE.c_str(),
+                                               EXPECT_SHORT_READ_MESSAGE.size() + 1),  // including \0 termination
+                                   std::bind(test_case, shared_from_this(), _1));
+            result().expect_success("send expect_short_read message", ec);
+
+            // read the confirmation of the control message above
+            client()->reset_timeout("receive_response");
+            yield net::async_read(client()->stream(),
+                                  client()->buffer(),
+                                  std::bind(&Client::received_zero_byte, client().get(), _1, _2),
+                                  std::bind(test_case, shared_from_this(), _1));
+            result().expect_success("receive_response", ec);
+
+            // nothing more will arrive; cancel the pending read via the handler's cancellation slot
+            client()->reset_timeout("cancel read");
+            yield {
+               net::async_read(
+                  client()->stream(),
+                  client()->buffer(),
+                  net::bind_cancellation_slot(m_cancel.slot(), std::bind(test_case, shared_from_this(), _1)));
+               m_cancel.emit(net::cancellation_type::terminal);
+            }
+            result().expect_ec("read was cancelled", net::error::operation_aborted, ec);
+
+            client()->close_socket();
+
+            teardown();
+         }
+      }
+
+   private:
+      net::cancellation_signal m_cancel;
 };
 
 class Test_Conversation_With_Move : public Test_Conversation {
@@ -945,6 +1015,7 @@ class Tls_Stream_Integration_Tests final : public Test {
             config.run<Test_Eager_Close>(results);
             config.run<Test_Close_Without_Shutdown>(results);
             config.run<Test_No_Shutdown_Response>(results);
+            config.run<Test_Read_Cancellation>(results);
             config.run<Test_Handshake_Failure>(results);
             config.run<Test_Conversation_Sync>(results);
             config.run<Test_Eager_Close_Sync>(results);

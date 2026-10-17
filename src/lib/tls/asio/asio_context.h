@@ -15,6 +15,7 @@
    #include <functional>
 
    #include <botan/credentials_manager.h>
+   #include <botan/exceptn.h>
    #include <botan/rng.h>
    #include <botan/tls_callbacks.h>
    #include <botan/tls_policy.h>
@@ -71,7 +72,11 @@ class BOTAN_PUBLIC_API(2, 11) Context {
             m_rng(std::move(rng)),
             m_session_manager(std::move(session_manager)),
             m_policy(std::move(policy)),
-            m_server_info(std::move(server_info)) {}
+            m_server_info(std::move(server_info)) {
+         if(!m_credentials_manager || !m_rng || !m_session_manager || !m_policy) {
+            throw Invalid_Argument("TLS::Context requires a credentials manager, RNG, session manager and policy");
+         }
+      }
 
       virtual ~Context() = default;
 
