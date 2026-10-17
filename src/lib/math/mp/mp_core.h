@@ -1104,6 +1104,28 @@ inline void bigint_monty_redc_inplace(word z[], const word p[], size_t p_size, w
 }
 
 /**
+* Montgomery multiplication
+*
+* Computes z[0..p_size) = x*y/R mod p, where R = 2^(p_size * word bits),
+* and x and y are each p_size words and less than p. z may alias x or y.
+*
+* ws must be at least 4*p_size words
+*/
+BOTAN_TEST_API void bigint_monty_mul(
+   word z[], const word x[], const word y[], const word p[], size_t p_size, word p_dash, word ws[], size_t ws_size);
+
+/**
+* Montgomery squaring
+*
+* Computes z[0..p_size) = x*x/R mod p, where R = 2^(p_size * word bits),
+* and x is p_size words and less than p. z may alias x.
+*
+* ws must be at least 4*p_size words
+*/
+BOTAN_TEST_API void bigint_monty_sqr(
+   word z[], const word x[], const word p[], size_t p_size, word p_dash, word ws[], size_t ws_size);
+
+/**
 * Basecase O(N^2) multiplication
 */
 BOTAN_FUZZER_API

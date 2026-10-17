@@ -11,6 +11,10 @@
    #include <botan/internal/mp_core.h>
 #endif
 
+#if defined(BOTAN_HAS_BIGINT)
+   #include <botan/bigint.h>
+#endif
+
 namespace Botan_Tests {
 
 namespace {
@@ -28,11 +32,99 @@ class MP_Unit_Tests final : public Test {
          results.push_back(test_cnd_abs());
          results.push_back(test_reciprocal_word(rng()));
          results.push_back(test_divide_precomp(rng()));
+   #if defined(BOTAN_HAS_BIGINT)
+         results.push_back(test_monty_mul(rng()));
+   #endif
 
          return results;
       }
 
    private:
+   #if defined(BOTAN_HAS_BIGINT)
+      // Check the Montgomery products of x and y modulo p, an odd n word modulus
+      static void test_monty_mul_case(
+         Result& result, const Botan::BigInt& p, const Botan::BigInt& x, const Botan::BigInt& y, size_t n) {
+         constexpr size_t word_bits = Botan::WordInfo<Botan::word>::bits;
+
+         const Botan::word p_dash = Botan::monty_inverse(p.word_at(0));
+
+         std::vector<Botan::word> pw(n);
+         std::vector<Botan::word> xw(n);
+         std::vector<Botan::word> yw(n);
+         std::vector<Botan::word> out(n);
+         std::vector<Botan::word> ws(4 * n);
+
+         for(size_t i = 0; i != n; ++i) {
+            pw[i] = p.word_at(i);
+            xw[i] = x.word_at(i);
+            yw[i] = y.word_at(i);
+         }
+
+         // The Montgomery product z is below p and satisfies z * 2^(word_bits * n) == x * y mod p
+         const auto to_bn = [&](const std::vector<Botan::word>& w) {
+            Botan::BigInt r;
+            for(size_t i = 0; i != n; ++i) {
+               r.set_word_at(i, w[i]);
+            }
+            return r;
+         };
+         const auto check =
+            [&](const std::string& what, const std::vector<Botan::word>& z, const Botan::BigInt& expected) {
+               const std::string name = what + " " + std::to_string(n);
+               const Botan::BigInt zn = to_bn(z);
+               result.test_is_true(name + " reduced", zn < p);
+               result.test_bn_eq(name, (zn << (word_bits * n)) % p, expected);
+            };
+
+         const Botan::BigInt xy = (x * y) % p;
+         const Botan::BigInt xx = (x * x) % p;
+
+         Botan::bigint_monty_mul(out.data(), xw.data(), yw.data(), pw.data(), n, p_dash, ws.data(), ws.size());
+         check("monty mul", out, xy);
+
+         // In place, with the output aliasing the first input
+         std::vector<Botan::word> xw2 = xw;
+         Botan::bigint_monty_mul(xw2.data(), xw2.data(), yw.data(), pw.data(), n, p_dash, ws.data(), ws.size());
+         check("monty mul in place", xw2, xy);
+
+         Botan::bigint_monty_sqr(out.data(), xw.data(), pw.data(), n, p_dash, ws.data(), ws.size());
+         check("monty sqr", out, xx);
+
+         xw2 = xw;  // NOLINT(*-use-std-move)
+         Botan::bigint_monty_sqr(xw2.data(), xw2.data(), pw.data(), n, p_dash, ws.data(), ws.size());
+         check("monty sqr in place", xw2, xx);
+      }
+
+      static Result test_monty_mul(Botan::RandomNumberGenerator& rng) {
+         Result result("bigint_monty_mul");
+
+         constexpr size_t word_bits = Botan::WordInfo<Botan::word>::bits;
+
+         std::vector<size_t> sizes;
+         for(size_t n = 1; n <= 72; ++n) {
+            sizes.push_back(n);
+         }
+         for(const size_t n : {96, 128, 200, 256}) {
+            sizes.push_back(n);
+         }
+
+         for(const size_t n : sizes) {
+            Botan::BigInt p(rng, word_bits * n, true);
+            p.set_bit(0);
+
+            const Botan::BigInt x = Botan::BigInt::random_integer(rng, Botan::BigInt::zero(), p);
+            const Botan::BigInt y = Botan::BigInt::random_integer(rng, Botan::BigInt::zero(), p);
+            test_monty_mul_case(result, p, x, y, n);
+
+            // All words of the modulus and inputs set, so every carry propagates
+            const Botan::BigInt p_max = Botan::BigInt::power_of_2(word_bits * n) - 1;
+            test_monty_mul_case(result, p_max, p_max - 1, p_max - 1, n);
+         }
+
+         return result;
+      }
+   #endif
+
       static Result test_cnd_add() {
          Result result("bigint_cnd_add");
 
