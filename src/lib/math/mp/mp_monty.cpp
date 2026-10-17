@@ -11,6 +11,10 @@
 
 #include <botan/assert.h>
 
+#if defined(BOTAN_HAS_MP_MULX)
+   #include <botan/internal/mp_mulx.h>
+#endif
+
 namespace Botan {
 
 namespace {
@@ -134,6 +138,38 @@ void bigint_monty_redc_generic(
    */
 
    bigint_monty_maybe_sub(p_size, r, w1, ws, p);
+}
+
+void bigint_monty_mul(
+   word z[], const word x[], const word y[], const word p[], size_t p_size, word p_dash, word ws[], size_t ws_size) {
+   BOTAN_ARG_CHECK(ws_size >= 4 * p_size && p_size > 0, "Invalid workspace for Montgomery multiplication");
+
+#if defined(BOTAN_HAS_MP_MULX)
+   if(use_mulx_monty(p_size)) {
+      return bigint_mulx_monty_mul(z, x, y, p, p_size, p_dash, ws);
+   }
+#endif
+
+   word* prod = ws;
+   word* mul_ws = ws + 2 * p_size;
+   bigint_mul(prod, 2 * p_size, x, p_size, p_size, y, p_size, p_size, mul_ws, 2 * p_size);
+   bigint_monty_redc(z, prod, p, p_size, p_dash, mul_ws, 2 * p_size);
+}
+
+void bigint_monty_sqr(word z[], const word x[], const word p[], size_t p_size, word p_dash, word ws[], size_t ws_size) {
+   BOTAN_ARG_CHECK(ws_size >= 4 * p_size && p_size > 0, "Invalid workspace for Montgomery squaring");
+
+   word* prod = ws;
+
+#if defined(BOTAN_HAS_MP_MULX)
+   if(use_mulx_monty(p_size)) {
+      return bigint_mulx_monty_sqr(z, x, p, p_size, p_dash, ws);
+   }
+#endif
+
+   word* mul_ws = ws + 2 * p_size;
+   bigint_sqr(prod, 2 * p_size, x, p_size, p_size, mul_ws, 2 * p_size);
+   bigint_monty_redc(z, prod, p, p_size, p_dash, mul_ws, 2 * p_size);
 }
 
 }  // namespace Botan

@@ -10,16 +10,11 @@
 #include <botan/mem_ops.h>
 #include <botan/internal/barrett.h>
 #include <botan/internal/mp_core.h>
-#include <array>
 #include <functional>
 
 namespace Botan {
 
 namespace {
-
-// If the modulus is at most this many words, then use the stack instead
-// of a heap variable for some temporary values
-constexpr size_t MontgomeryUseStackLimit = 32;
 
 /*
 * The typed std::less<T*> specialization gives a strict total order on pointers
@@ -323,16 +318,14 @@ Montgomery_Int Montgomery_Int::mul(const Montgomery_Int& other, secure_vector<wo
    const size_t p_size = m_params.p_words();
    BOTAN_ASSERT_NOMSG(m_v.size() == p_size && other.m_v.size() == p_size);
 
-   if(ws.size() < 2 * p_size) {
-      ws.resize(2 * p_size);
+   if(ws.size() < 4 * p_size) {
+      ws.resize(4 * p_size);
    }
 
-   secure_vector<word> z(2 * p_size);
+   secure_vector<word> z(p_size);
 
-   bigint_mul(z.data(), z.size(), m_v.data(), p_size, p_size, other.m_v.data(), p_size, p_size, ws.data(), ws.size());
-
-   bigint_monty_redc_inplace(z.data(), m_params.p()._data(), p_size, m_params.p_dash(), ws.data(), ws.size());
-   z.resize(p_size);  // truncate off high zero words
+   bigint_monty_mul(
+      z.data(), m_v.data(), other.m_v.data(), m_params.p()._data(), p_size, m_params.p_dash(), ws.data(), ws.size());
 
    return Montgomery_Int(m_params, std::move(z));
 }
@@ -346,25 +339,12 @@ Montgomery_Int& Montgomery_Int::mul_by(std::span<const word> other, secure_vecto
    const size_t p_size = m_params.p_words();
    BOTAN_ASSERT_NOMSG(m_v.size() == p_size && other.size() == p_size);
 
-   if(ws.size() < 2 * p_size) {
-      ws.resize(2 * p_size);
+   if(ws.size() < 4 * p_size) {
+      ws.resize(4 * p_size);
    }
 
-   const auto do_mul_by = [&](std::span<word> z) {
-      bigint_mul(z.data(), z.size(), m_v.data(), p_size, p_size, other.data(), p_size, p_size, ws.data(), ws.size());
-
-      bigint_monty_redc_inplace(z.data(), m_params.p()._data(), p_size, m_params.p_dash(), ws.data(), ws.size());
-
-      copy_mem(m_v, z.first(p_size));
-   };
-
-   if(p_size <= MontgomeryUseStackLimit) {
-      std::array<word, 2 * MontgomeryUseStackLimit> z{};
-      do_mul_by(z);
-   } else {
-      secure_vector<word> z(2 * p_size);
-      do_mul_by(z);
-   }
+   bigint_monty_mul(
+      m_v.data(), m_v.data(), other.data(), m_params.p()._data(), p_size, m_params.p_dash(), ws.data(), ws.size());
 
    return (*this);
 }
@@ -373,26 +353,12 @@ Montgomery_Int& Montgomery_Int::square_this_n_times(secure_vector<word>& ws, siz
    const size_t p_size = m_params.p_words();
    BOTAN_ASSERT_NOMSG(m_v.size() == p_size);
 
-   if(ws.size() < 2 * p_size) {
-      ws.resize(2 * p_size);
+   if(ws.size() < 4 * p_size) {
+      ws.resize(4 * p_size);
    }
 
-   const auto do_sqr_n = [&](std::span<word> z) {
-      for(size_t i = 0; i != n; ++i) {
-         bigint_sqr(z.data(), 2 * p_size, m_v.data(), p_size, p_size, ws.data(), ws.size());
-
-         bigint_monty_redc_inplace(z.data(), m_params.p()._data(), p_size, m_params.p_dash(), ws.data(), ws.size());
-
-         copy_mem(m_v, std::span{z}.first(p_size));
-      }
-   };
-
-   if(p_size <= MontgomeryUseStackLimit) {
-      std::array<word, 2 * MontgomeryUseStackLimit> z{};
-      do_sqr_n(z);
-   } else {
-      secure_vector<word> z(2 * p_size);
-      do_sqr_n(z);
+   for(size_t i = 0; i != n; ++i) {
+      bigint_monty_sqr(m_v.data(), m_v.data(), m_params.p()._data(), p_size, m_params.p_dash(), ws.data(), ws.size());
    }
 
    return (*this);
