@@ -1798,7 +1798,7 @@ class VartimeMul2Table final {
             return ProjectivePoint::identity();
          }
 
-         auto lookup = [&](int8_t d) -> const AffinePoint& {
+         const auto lookup = [&](int8_t d) -> const AffinePoint& {
             const size_t mag = static_cast<size_t>((d < 0) ? -d : d);
             return m_table[(mag - 1) / 2];
          };

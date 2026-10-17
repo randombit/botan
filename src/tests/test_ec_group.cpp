@@ -1363,11 +1363,11 @@ class EC_Point_Arithmetic_Tests final : public Test {
             // scalars, cancellation, and partial sums which coincide with
             // table entries (forcing the exceptional addition paths)
             {
-               auto check_mul2 = [&](const std::string& what,
-                                     const Botan::EC_AffinePoint& h,
-                                     const Botan::EC_Group::Mul2Table& tbl,
-                                     const Botan::EC_Scalar& s1,
-                                     const Botan::EC_Scalar& s2) {
+               const auto check_mul2 = [&](const std::string& what,
+                                           const Botan::EC_AffinePoint& h,
+                                           const Botan::EC_Group::Mul2Table& tbl,
+                                           const Botan::EC_Scalar& s1,
+                                           const Botan::EC_Scalar& s2) {
                   const auto ref = Botan::EC_AffinePoint::g_mul(s1, rng).add(h.mul(s2, rng));
                   if(auto mul2pt = tbl.mul2_vartime(s1, s2)) {
                      result.test_bin_eq(what, mul2pt->serialize_uncompressed(), ref.serialize_uncompressed());
@@ -1376,7 +1376,7 @@ class EC_Point_Arithmetic_Tests final : public Test {
                   }
                };
 
-               auto scalar_of = [&](const Botan::BigInt& v) { return Botan::EC_Scalar::from_bigint(group, v); };
+               const auto scalar_of = [&](const Botan::BigInt& v) { return Botan::EC_Scalar::from_bigint(group, v); };
 
                const auto r1 = Botan::EC_Scalar::random(group, rng);
                const auto r2 = Botan::EC_Scalar::random(group, rng);

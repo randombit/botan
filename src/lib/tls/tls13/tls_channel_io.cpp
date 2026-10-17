@@ -30,7 +30,7 @@ std::optional<Channel_IO::ReceiveEvent> Channel_IO::next_pending_handshake_messa
       // at the end of the handshake.
       //
       // TODO: remove when integrating the re-vamped data influx routine.
-      auto transcript_hash_reference = [&]() -> std::optional<std::reference_wrapper<Transcript_Hash_State>> {
+      const auto transcript_hash_reference = [&]() -> std::optional<std::reference_wrapper<Transcript_Hash_State>> {
          if(transcript_hash.has_value()) {
             return *transcript_hash;
          } else {
@@ -100,7 +100,7 @@ void Channel_IO::copy_data(std::span<const uint8_t> data) {
 
 Channel_IO::ReceiveEvent Channel_IO::next_pending_event(std::optional<Transcript_Hash_State>& transcript_hash,
                                                         bool handshake_complete) {
-   auto cs = cipher_state();
+   const auto cs = cipher_state();
 
    while(true) {
       // First we check if the handshake layer has any complete messages ready
@@ -167,7 +167,7 @@ void Channel_IO::send(std::span<const uint8_t> payload) {
       update_traffic_keys(!m_key_update_requested);
    }
 
-   auto cs = cipher_state();
+   const auto cs = cipher_state();
    BOTAN_ASSERT_NONNULL(cs);
    send_data(Record_Type::ApplicationData, payload, cs.get());
 }
@@ -192,7 +192,7 @@ bool Channel_IO::needs_traffic_based_key_update() const {
    // The ChaCha-based suites don't have any practical usage limit but we apply
    // the limit for all suites for simplicity.
    const uint64_t limit = policy().records_per_traffic_key();
-   auto cs = cipher_state();
+   const auto cs = cipher_state();
    BOTAN_ASSERT_NONNULL(cs);
 
    // Have to skip this if the handshake is not yet completed since we can't
@@ -224,7 +224,7 @@ bool Channel_IO::needs_traffic_based_key_update() const {
 }
 
 void Channel_IO::handle_key_update(const Key_Update& key_update) {
-   auto cs = cipher_state();
+   const auto cs = cipher_state();
    BOTAN_ASSERT_NONNULL(cs);
 
    // A non-requesting KeyUpdate received while our own request is outstanding
@@ -266,7 +266,7 @@ void Channel_IO::handle_key_update(const Key_Update& key_update) {
 }
 
 void Channel_IO::update_traffic_keys(bool request_peer_update) {
-   auto cs = cipher_state();
+   const auto cs = cipher_state();
    BOTAN_ASSERT_NONNULL(cs);
 
    send_flight(PostHandshakeFlight(callbacks())  //
@@ -280,7 +280,7 @@ void Channel_IO::update_traffic_keys(bool request_peer_update) {
 }
 
 void Channel_IO::send(const Alert& alert, bool handle_compat_mode) {
-   auto cs = cipher_state();
+   const auto cs = cipher_state();
 
    // RFC 9846 E.4
    //    [...] the client sends a dummy change_cipher_spec record [...]

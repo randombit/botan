@@ -130,7 +130,7 @@ class X25519_Keygen_Consistency_Test final : public Test {
          std::vector<uint8_t> basepoint(32);
          basepoint[0] = 9;
 
-         auto check = [&](std::span<const uint8_t> secret) {
+         const auto check = [&](std::span<const uint8_t> secret) {
             const Botan::X25519_PrivateKey key(secret);
             const Botan::PK_Key_Agreement ka(key, this->rng(), "Raw");
             const auto via_ladder = ka.derive_key(32, basepoint).bits_of();

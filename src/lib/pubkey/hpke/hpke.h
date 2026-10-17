@@ -73,11 +73,11 @@ class BOTAN_PUBLIC_API(3, 14) KEM_Id final {
    public:
       using enum KEM_Code;
 
-      // NOLINTNEXTLINE(*-explicit-conversions)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
       constexpr KEM_Id(KEM_Code code) : m_code(code) {}
 
       // Any codepoint is representable, including ones unknown to this library
-      // NOLINTNEXTLINE(*-explicit-conversions,clang-analyzer-optin.core.EnumCastOutOfRange)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor,clang-analyzer-optin.core.EnumCastOutOfRange)
       constexpr KEM_Id(uint16_t code) : m_code(static_cast<KEM_Code>(code)) {}
 
       constexpr KEM_Code code() const { return m_code; }
@@ -140,11 +140,11 @@ class BOTAN_PUBLIC_API(3, 14) KDF_Id final {
    public:
       using enum KDF_Code;
 
-      // NOLINTNEXTLINE(*-explicit-conversions)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
       constexpr KDF_Id(KDF_Code code) : m_code(code) {}
 
       // Any codepoint is representable, including ones unknown to this library
-      // NOLINTNEXTLINE(*-explicit-conversions,clang-analyzer-optin.core.EnumCastOutOfRange)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor,clang-analyzer-optin.core.EnumCastOutOfRange)
       constexpr KDF_Id(uint16_t code) : m_code(static_cast<KDF_Code>(code)) {}
 
       constexpr KDF_Code code() const { return m_code; }
@@ -184,11 +184,11 @@ class BOTAN_PUBLIC_API(3, 14) AEAD_Id final {
    public:
       using enum AEAD_Code;
 
-      // NOLINTNEXTLINE(*-explicit-conversions)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
       constexpr AEAD_Id(AEAD_Code code) : m_code(code) {}
 
       // Any codepoint is representable, including ones unknown to this library
-      // NOLINTNEXTLINE(*-explicit-conversions,clang-analyzer-optin.core.EnumCastOutOfRange)
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor,clang-analyzer-optin.core.EnumCastOutOfRange)
       constexpr AEAD_Id(uint16_t code) : m_code(static_cast<AEAD_Code>(code)) {}
 
       constexpr AEAD_Code code() const { return m_code; }

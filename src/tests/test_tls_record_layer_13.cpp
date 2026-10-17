@@ -402,7 +402,7 @@ std::vector<Test::Result> read_fragmented_records() {
 }
 
 std::vector<Test::Result> write_records() {
-   auto cs_hs = rfc8448_rtt1_handshake_traffic();
+   const auto cs_hs = rfc8448_rtt1_handshake_traffic();
    auto cs_ad = rfc8448_rtt1_appdata_traffic();
    return {CHECK("prepare an zero-length application data fragment",
                  [&](auto& result) {

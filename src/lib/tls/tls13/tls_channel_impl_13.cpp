@@ -106,6 +106,7 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
          const auto bytes_needed = std::visit(  //
             overloaded{
                [](BytesNeeded bytes) -> std::optional<BytesNeeded> { return bytes; },
+               // NOLINTNEXTLINE(*-missing-std-forward) false positive on templated lambdas in clang-tidy 23
                [&]<typename T>(T&& event) -> std::optional<BytesNeeded> {
                   constexpr bool can_report_bytes_needed =
                      std::is_same_v<std::optional<BytesNeeded>, decltype(process(std::forward<T>(event)))>;

@@ -844,7 +844,7 @@ class Stateful_RNG_Tests : public Test {
                failable_rng.set_failing();
 
                std::vector<uint8_t> threw;
-               auto request_throws = [&]() {
+               const auto request_throws = [&]() {
                   try {
                      rng->random_vec(output_len);
                      return false;
