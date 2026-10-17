@@ -22,6 +22,10 @@ New APIs and Features
 
 * Add an implementation of HPKE from RFC 9180 (GH #5989)
 
+* Fix a bug where GMAC's nonce-reuse guard could be bypassed after the first
+  message, so a second message without a fresh nonce was silently accepted.
+  (GH #5908)
+
 * Add an implementation of the BLS12-381 pairing friendly curve, including the
   groups G1, G2, and Gt and the pairing operation. (GH #5718)
 
