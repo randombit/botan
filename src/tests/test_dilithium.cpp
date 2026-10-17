@@ -364,7 +364,7 @@ class MldsaCertificateTests final : public Test {
             Botan::DataSource_Stream in(Test::data_file("x509/mldsa/" + cert_file));
             const Botan::X509_Certificate cert(in);
             Test::Result this_result(cert_file);
-            auto ver_res = cert.verify_signature(*cert.subject_public_key());
+            const auto ver_res = cert.verify_signature(*cert.subject_public_key());
             this_result.test_is_true("signature of certificate verifies",
                                      ver_res.first == Botan::Certificate_Status_Code::OK);
             result_vec.push_back(this_result);
@@ -378,8 +378,6 @@ BOTAN_REGISTER_TEST("pubkey", "mldsa_certificate", MldsaCertificateTests);
    #endif
 
 #endif
-
-}  // namespace
 
 #if defined(BOTAN_HAS_DILITHIUM_COMMON)
 
@@ -485,5 +483,7 @@ class MLDSA_Context_Tests final : public Test {
 
 BOTAN_REGISTER_TEST("pubkey", "mldsa_context", MLDSA_Context_Tests);
 #endif
+
+}  // namespace
 
 }  // namespace Botan_Tests

@@ -924,7 +924,7 @@ std::vector<Test::Result> test_record_padding() {
    // protecting and deprotecting records.
    auto cs_client = Cipher_State::init_with_server_hello(
       Connection_Side::Client, TLS_Flavor::TLS, shared_secret(), cipher, th_server_hello, {});
-   auto cs_server = Cipher_State::init_with_server_hello(
+   const auto cs_server = Cipher_State::init_with_server_hello(
       Connection_Side::Server, TLS_Flavor::TLS, shared_secret(), cipher, th_server_hello, {});
 
    auto* tls_cs_client = Botan::TLS::as_tls_cipher_state(cs_client.get());

@@ -263,21 +263,21 @@ Test::Result test_hpke_suite_ids() {
    result.test_is_false("reserved suite is unknown", reserved.is_known());
 
    // Every defined codepoint is known, whether given as an enumerator or read off the wire
-   for(auto code : {KEM_Code::DHKEM_P256,
-                    KEM_Code::DHKEM_P384,
-                    KEM_Code::DHKEM_P521,
-                    KEM_Code::DHKEM_X25519,
-                    KEM_Code::DHKEM_X448}) {
+   for(const auto code : {KEM_Code::DHKEM_P256,
+                          KEM_Code::DHKEM_P384,
+                          KEM_Code::DHKEM_P521,
+                          KEM_Code::DHKEM_X25519,
+                          KEM_Code::DHKEM_X448}) {
       result.test_is_true("defined KEM is known", KEM_Id(code).is_known());
       result.test_is_true("defined KEM is known from the wire", KEM_Id(KEM_Id(code).wire_code()).is_known());
       result.test_is_true("defined KEM has a name", KEM_Id(code).to_string().has_value());
    }
-   for(auto code : {KDF_Code::HKDF_SHA256, KDF_Code::HKDF_SHA384, KDF_Code::HKDF_SHA512}) {
+   for(const auto code : {KDF_Code::HKDF_SHA256, KDF_Code::HKDF_SHA384, KDF_Code::HKDF_SHA512}) {
       result.test_is_true("defined KDF is known", KDF_Id(code).is_known());
       result.test_is_true("defined KDF is known from the wire", KDF_Id(KDF_Id(code).wire_code()).is_known());
       result.test_is_true("defined KDF has a name", KDF_Id(code).to_string().has_value());
    }
-   for(auto code :
+   for(const auto code :
        {AEAD_Code::AES_128_GCM, AEAD_Code::AES_256_GCM, AEAD_Code::ChaCha20Poly1305, AEAD_Code::ExportOnly}) {
       result.test_is_true("defined AEAD is known", AEAD_Id(code).is_known());
       result.test_is_true("defined AEAD is known from the wire", AEAD_Id(AEAD_Id(code).wire_code()).is_known());
@@ -426,7 +426,7 @@ Test::Result test_hpke_context_behavior() {
    auto eo_sender = Sender_Context::setup_base(eo_suite, skR.public_key(), *rng, info);
    result.test_throws("export-only cannot seal", [&] { eo_sender.seal(aad, msg); });
 
-   auto eo_recipient = Recipient_Context::setup_base(eo_suite, skR, eo_sender.encapsulated_key(), *rng, info);
+   const auto eo_recipient = Recipient_Context::setup_base(eo_suite, skR, eo_sender.encapsulated_key(), *rng, info);
    result.test_bin_eq("export-only exports agree",
                       eo_sender.export_secret(to_bytes("ctx"), 64),
                       eo_recipient.export_secret(to_bytes("ctx"), 64));
@@ -441,7 +441,7 @@ Test::Result test_hpke_failed_open() {
    const auto msg = to_bytes("message after a failed open");
    const auto aad = to_bytes("aad");
 
-   for(auto aead : {AEAD_Code::AES_128_GCM, AEAD_Code::AES_256_GCM, AEAD_Code::ChaCha20Poly1305}) {
+   for(const auto aead : {AEAD_Code::AES_128_GCM, AEAD_Code::AES_256_GCM, AEAD_Code::ChaCha20Poly1305}) {
       const Suite suite(KEM_Code::DHKEM_X25519, KDF_Code::HKDF_SHA256, aead);
       if(!suite.is_available()) {
          continue;
@@ -477,14 +477,14 @@ Test::Result test_hpke_ec_key_encoding() {
 
    BOTAN_DIAGNOSTIC_PUSH
    BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
-   for(auto kem : {KEM_Code::DHKEM_P256, KEM_Code::DHKEM_P384, KEM_Code::DHKEM_P521}) {
+   for(const auto kem : {KEM_Code::DHKEM_P256, KEM_Code::DHKEM_P384, KEM_Code::DHKEM_P521}) {
       const Suite suite(kem, KDF_Code::HKDF_SHA256, AEAD_Code::AES_128_GCM);
       if(!suite.is_available()) {
          continue;
       }
       const auto generated = Private_Key::generate(kem, *rng);
       const auto canonical_pk = generated.public_key().serialize();
-      for(auto format : {Botan::EC_Point_Format::Compressed, Botan::EC_Point_Format::Hybrid}) {
+      for(const auto format : {Botan::EC_Point_Format::Compressed, Botan::EC_Point_Format::Hybrid}) {
          auto underlying_pk = generated.underlying().public_key();
          dynamic_cast<Botan::ECDH_PublicKey&>(*underlying_pk).set_point_encoding(format);
          const auto pk = Public_Key::from_key(kem, std::move(underlying_pk));
@@ -660,7 +660,7 @@ Test::Result test_hpke_low_order_points() {
 
    auto rng = Test::new_rng("hpke_low_order_points");
 
-   for(auto kem_code : {KEM_Code::DHKEM_X25519, KEM_Code::DHKEM_X448}) {
+   for(const auto kem_code : {KEM_Code::DHKEM_X25519, KEM_Code::DHKEM_X448}) {
       const Suite suite(kem_code, KDF_Code::HKDF_SHA256, AEAD_Code::AES_128_GCM);
       if(!suite.is_available()) {
          continue;
@@ -701,11 +701,11 @@ Test::Result test_hpke_malformed_public_keys() {
 
    auto rng = Test::new_rng("hpke_malformed_public_keys");
 
-   for(auto kem_code : {KEM_Code::DHKEM_P256,
-                        KEM_Code::DHKEM_P384,
-                        KEM_Code::DHKEM_P521,
-                        KEM_Code::DHKEM_X25519,
-                        KEM_Code::DHKEM_X448}) {
+   for(const auto kem_code : {KEM_Code::DHKEM_P256,
+                              KEM_Code::DHKEM_P384,
+                              KEM_Code::DHKEM_P521,
+                              KEM_Code::DHKEM_X25519,
+                              KEM_Code::DHKEM_X448}) {
       const Suite suite(kem_code, KDF_Code::HKDF_SHA256, AEAD_Code::AES_128_GCM);
       if(!suite.is_available()) {
          continue;
@@ -808,11 +808,11 @@ Test::Result test_hpke_malformed_private_keys() {
          "all-ones scalar rejected", [&] { Private_Key::deserialize(kem, std::vector<uint8_t>(nsk, 0xFF)); });
    }
 
-   for(auto kem_code : {KEM_Code::DHKEM_P256,
-                        KEM_Code::DHKEM_P384,
-                        KEM_Code::DHKEM_P521,
-                        KEM_Code::DHKEM_X25519,
-                        KEM_Code::DHKEM_X448}) {
+   for(const auto kem_code : {KEM_Code::DHKEM_P256,
+                              KEM_Code::DHKEM_P384,
+                              KEM_Code::DHKEM_P521,
+                              KEM_Code::DHKEM_X25519,
+                              KEM_Code::DHKEM_X448}) {
       const KEM_Id kem(kem_code);
       if(!kem.is_available()) {
          continue;
@@ -850,7 +850,7 @@ Test::Result test_hpke_mismatched_inputs() {
    const PSK other_psk(other_psk_bytes, to_bytes("psk id"));
    const PSK other_psk_id(psk_bytes, to_bytes("other psk id"));
 
-   for(auto kem_code : {KEM_Code::DHKEM_X25519, KEM_Code::DHKEM_P256}) {
+   for(const auto kem_code : {KEM_Code::DHKEM_X25519, KEM_Code::DHKEM_P256}) {
       const Suite suite(kem_code, KDF_Code::HKDF_SHA256, AEAD_Code::AES_128_GCM);
       if(!suite.is_available()) {
          continue;

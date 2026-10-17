@@ -437,7 +437,7 @@ class Context_Data final {
          } catch(...) {
             // Failed messages must not leave the AEAD in a partially processed
             // state: the caller may retry at the same sequence number.
-            m_aead->reset();
+            m_aead->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
             throw;
          }
 

@@ -546,7 +546,7 @@ void Cipher_State::deprotect_and_hydrate_content_type(Epoch& epoch,
    // information (namely the length of the unpadded record) still leaks to the
    // same side channels later on during processing, when the application
    // actually receives and looks at the record.
-   auto end_of_content = std::find_if(
+   const auto end_of_content = std::find_if(
       protected_record.payload.crbegin(), protected_record.payload.crend(), [](uint8_t b) { return b != 0x00; });
 
    // RFC 9846 5.4
@@ -744,7 +744,7 @@ void Cipher_State::update_read_keys() {
    BOTAN_ASSERT_NOMSG(m_state == State::ServerApplicationTraffic || m_state == State::Completed);
    BOTAN_ASSERT_NONNULL(m_hash);
 
-   auto& epoch = latest_read_epoch();
+   const auto& epoch = latest_read_epoch();
 
    const auto new_read_application_traffic_secret =
       hkdf_expand_label(epoch.traffic_secret, "traffic upd", {}, m_hash->output_length());
@@ -761,7 +761,7 @@ void Cipher_State::update_write_keys() {
    BOTAN_ASSERT_NOMSG(m_state == State::ServerApplicationTraffic || m_state == State::Completed);
    BOTAN_ASSERT_NONNULL(m_hash);
 
-   auto& epoch = latest_write_epoch();
+   const auto& epoch = latest_write_epoch();
 
    const auto new_write_application_traffic_secret =
       hkdf_expand_label(epoch.traffic_secret, "traffic upd", {}, m_hash->output_length());

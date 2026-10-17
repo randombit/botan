@@ -145,13 +145,13 @@ std::shared_ptr<Client_Impl_12> Client_Impl_12::create_for_downgrade(
                                "downgrading DTLS requires transferring the record sequence numbers");
 
       // TODO(C++23): Use std::optional::and_then() instead
-      auto seqno_read = [](const std::optional<Epoch0_SequenceNumbers>& seq) -> std::optional<uint64_t> {
+      const auto seqno_read = [](const std::optional<Epoch0_SequenceNumbers>& seq) -> std::optional<uint64_t> {
          if(seq.has_value()) {
             return seq->read;
          }
          return std::nullopt;
       };
-      auto seqno_write = [](const std::optional<Epoch0_SequenceNumbers>& seq) -> std::optional<uint64_t> {
+      const auto seqno_write = [](const std::optional<Epoch0_SequenceNumbers>& seq) -> std::optional<uint64_t> {
          if(seq.has_value()) {
             return seq->write;
          }

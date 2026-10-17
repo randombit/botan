@@ -414,7 +414,7 @@ class Create_Cert_for_Key final : public Command {
          const std::string ca_key_file = get_arg("ca_key");
          const std::string passphrase = get_passphrase_arg("Passphrase for CA key " + ca_key_file, "ca-key-pass");
 
-         auto key = load_private_key(ca_key_file, passphrase);
+         const auto key = load_private_key(ca_key_file, passphrase);
          std::unique_ptr<Botan::Public_Key> client_pub_key = Botan::X509::load_key(get_arg("client_public_key"));
 
          const Botan::X509_Certificate ca_cert(get_arg("ca_cert"));
@@ -449,7 +449,7 @@ class Create_Cert_for_Key final : public Command {
          subject_dn.add_attribute("X520.Country", get_arg("country"));
          subject_dn.add_attribute("X520.Organization", get_arg("organization"));
 
-         auto now = std::chrono::system_clock::now();
+         const auto now = std::chrono::system_clock::now();
 
          const Botan::X509_Time start_time(now);
 
@@ -475,7 +475,7 @@ class Create_Cert_for_Key final : public Command {
       std::unique_ptr<Botan::Cert_Extension::Subject_Alternative_Name> create_alt_name_ext() {
          Botan::AlternativeName subject_alt;
 
-         auto more_dns = Command::split_on(get_arg("dns"), ',');
+         const auto more_dns = Command::split_on(get_arg("dns"), ',');
          for(const auto& nm : more_dns) {
             subject_alt.add_dns(nm);
          }
