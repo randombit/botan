@@ -8,7 +8,6 @@
 
 #include <botan/assert.h>
 #include <botan/certstor.h>
-#include <botan/pkcs8.h>
 #include <botan/system_rng.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_session_manager_memory.h>
@@ -200,11 +199,11 @@ int botan_tls_credentials_init(botan_tls_credentials_t* creds) {
 }
 
 int botan_tls_credentials_add_trusted_cert(botan_tls_credentials_t creds, botan_x509_cert_t cert) {
-   return BOTAN_FFI_VISIT(creds, [=](const auto& c) { c->add_trusted_cert(safe_get(cert)); });
+   return BOTAN_FFI_VISIT(creds, [=](auto& c) { c.add_trusted_cert(safe_get(cert)); });
 }
 
 int botan_tls_credentials_add_crl(botan_tls_credentials_t creds, botan_x509_crl_t crl) {
-   return BOTAN_FFI_VISIT(creds, [=](const auto& c) { c->add_crl(safe_get(crl)); });
+   return BOTAN_FFI_VISIT(creds, [=](auto& c) { c.add_crl(safe_get(crl)); });
 }
 
 int botan_tls_credentials_add_trusted_dir(botan_tls_credentials_t creds, const char* path) {
@@ -213,7 +212,7 @@ int botan_tls_credentials_add_trusted_dir(botan_tls_credentials_t creds, const c
    }
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-   return BOTAN_FFI_VISIT(creds, [=](const auto& c) -> int {
+   return BOTAN_FFI_VISIT(creds, [=](auto& c) -> int {
       // The directory constructor silently yields an empty store for a
       // missing or unreadable directory, which would make every verification
       // fail without any hint why; report that as an error instead.
@@ -221,7 +220,7 @@ int botan_tls_credentials_add_trusted_dir(botan_tls_credentials_t creds, const c
       if(store->all_subjects().empty()) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
-      c->add_store(std::move(store));
+      c.add_store(std::move(store));
       return BOTAN_FFI_SUCCESS;
    });
 #else
@@ -235,8 +234,7 @@ int botan_tls_credentials_use_system_store(botan_tls_credentials_t creds) {
    }
 
 #if defined(BOTAN_HAS_CERTSTOR_SYSTEM)
-   return BOTAN_FFI_VISIT(creds,
-                          [](const auto& c) { c->add_store(std::make_shared<Botan::System_Certificate_Store>()); });
+   return BOTAN_FFI_VISIT(creds, [](auto& c) { c.add_store(std::make_shared<Botan::System_Certificate_Store>()); });
 #else
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
@@ -254,24 +252,23 @@ int botan_tls_credentials_add_cert_chain(botan_tls_credentials_t creds,
       return BOTAN_FFI_ERROR_BAD_PARAMETER;
    }
 
-   return BOTAN_FFI_VISIT(creds, [=](const auto& c) -> int {
+   return BOTAN_FFI_VISIT(creds, [=](auto& c) -> int {
       std::vector<Botan::X509_Certificate> certs;
       certs.reserve(chain_len);
       for(size_t i = 0; i != chain_len; ++i) {
          certs.push_back(safe_get(chain[i]));
       }
 
-      // Copy the key by re-encoding it, so that the caller's handle need not
-      // outlive the credentials. private_key_info() is the PKCS #8
-      // PrivateKeyInfo, which load_key() decodes back into a key object.
-      const auto pkcs8 = safe_get(key).private_key_info();
-      std::shared_ptr<Botan::Private_Key> key_copy = Botan::PKCS8::load_key(pkcs8);
+      // The key handle shares ownership of the key object, so the credentials
+      // keep the key alive after the caller destroys the handle, and a key
+      // that cannot be exported (a hardware backed one) works as well.
+      std::shared_ptr<Botan::Private_Key> key_ptr = safe_get_sp(key);
 
-      if(key_copy->public_key()->fingerprint_public() != certs.front().subject_public_key()->fingerprint_public()) {
+      if(key_ptr->public_key()->fingerprint_public() != certs.front().subject_public_key()->fingerprint_public()) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
 
-      c->add_cert_chain(std::move(certs), std::move(key_copy));
+      c.add_cert_chain(std::move(certs), std::move(key_ptr));
       return BOTAN_FFI_SUCCESS;
    });
 }

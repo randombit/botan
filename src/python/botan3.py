@@ -4324,9 +4324,10 @@ class TLSCredentials(_NonCopyable):
     the peer, and the certificate chains with private keys used to authenticate this
     side, as a server or as a client when the server requests a client certificate.
 
-    Everything passed to the setters is copied. The object may be shared by any
-    number of channels and modified at any time, but it is not synchronized: do not
-    modify it while a channel on another thread uses it.
+    Certificates and CRLs passed to the setters are copied and private keys are
+    shared with the object. The object may be shared by any number of channels and
+    modified at any time, but it is not synchronized: do not modify it while a
+    channel on another thread uses it.
 
     This is part of the experimental TLS FFI API and is only available if the
     loaded library was built with the ``ffi_tls`` module; see

@@ -2700,8 +2700,9 @@ TLS Credentials
    chain, and certificate chains with private keys for authenticating this side
    (as a server, or as a client when the server requests a client certificate).
 
-   Everything passed to the setters is copied, so the certificate, CRL and key
-   handles may be destroyed after the call. The object may be shared by any
+   Certificates and CRLs passed to the setters are copied and a private key is
+   shared with the object, so the handles may be destroyed after the call. The
+   object may be shared by any
    number of channels, which keep it alive, and its setters may be called at any
    time; later handshakes see the change. It is not synchronized, so modifying
    it while a channel on another thread uses it is a data race. Don't mess with
@@ -2745,9 +2746,9 @@ TLS Credentials
 
    Add a certificate chain, leaf first, together with the private key of the leaf
    certificate. The chain must contain at least one certificate. The certificates
-   are copied; the key is copied by re-encoding it as a PKCS #8 PrivateKeyInfo, so
-   a key that cannot be exported, such as a hardware backed key, is rejected with
-   the error code of the exception it throws. Returns
+   are copied; the key object is shared between the key handle and the
+   credentials, so the handle may be destroyed afterwards and a key that cannot be
+   exported, such as a hardware backed key, can be used. Returns
    ``BOTAN_FFI_ERROR_BAD_PARAMETER`` if ``chain_len`` is 0 or the key does not
    belong to the leaf certificate.
 

@@ -282,9 +282,10 @@ class FFI_TLS_Credentials_Test final : public Test {
          TEST_FFI_OK(botan_privkey_destroy, (key03));
          TEST_FFI_OK(botan_x509_cert_destroy, (cert1));
 
-         // The inputs were copied, so the credentials are complete although
-         // every handle passed to the setters has been destroyed.
-         auto& mgr = *Botan_FFI::safe_get(creds);
+         // The certificates were copied and the key is shared, so the
+         // credentials are complete although every handle passed to the
+         // setters has been destroyed.
+         auto& mgr = Botan_FFI::safe_get(creds);
          const Botan::X509_Certificate leaf(Test::data_file("x509/certstor/cert1.crt"));
          const auto chain = mgr.find_cert_chain({"RSA"}, {}, {}, "tls-server", "");
          result.test_sz_eq("Chain is found after the handles were destroyed", chain.size(), 1);
@@ -304,7 +305,7 @@ class FFI_TLS_Credentials_Test final : public Test {
          REQUIRE_FFI_OK(botan_tls_credentials_init, (&creds));
 
          // Before anything is added there is exactly one (empty) trust store
-         auto& mgr = *Botan_FFI::safe_get(creds);
+         auto& mgr = Botan_FFI::safe_get(creds);
          auto stores = mgr.trusted_certificate_authorities("tls-client", "");
          result.test_sz_eq("One store on a fresh object", stores.size(), 1);
          if(stores.size() == 1) {
@@ -442,7 +443,7 @@ class FFI_TLS_Session_Manager_Test final : public Test {
          result.test_not_null("In-memory manager with internal RNG", mgr);
          result.test_is_true(
             "Handle wraps Session_Manager_In_Memory",
-            dynamic_cast<Botan::TLS::Session_Manager_In_Memory*>(Botan_FFI::safe_get(mgr).get()) != nullptr);
+            dynamic_cast<Botan::TLS::Session_Manager_In_Memory*>(Botan_FFI::safe_get_sp(mgr).get()) != nullptr);
          TEST_FFI_OK(botan_tls_session_manager_destroy, (mgr));
 
          botan_rng_t rng = nullptr;
@@ -456,7 +457,7 @@ class FFI_TLS_Session_Manager_Test final : public Test {
          result.test_not_null("Noop manager", mgr);
          result.test_is_true(
             "Handle wraps Session_Manager_Noop",
-            dynamic_cast<Botan::TLS::Session_Manager_Noop*>(Botan_FFI::safe_get(mgr).get()) != nullptr);
+            dynamic_cast<Botan::TLS::Session_Manager_Noop*>(Botan_FFI::safe_get_sp(mgr).get()) != nullptr);
          TEST_FFI_OK(botan_tls_session_manager_destroy, (mgr));
 
          TEST_FFI_OK(botan_tls_session_manager_destroy, (nullptr));
