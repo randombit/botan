@@ -9,6 +9,7 @@
 
 #include "cli_exceptions.h"
 #include <botan/types.h>
+#include <fstream>
 #include <functional>
 #include <map>
 #include <memory>
@@ -97,6 +98,20 @@ class Command /* NOLINT(*special-member-functions) */ {
 
       static std::vector<std::string> split_on(const std::string& str, char delim);
 
+      /**
+      * Open a file for writing, replacing any existing file. If private_file
+      * is set, the file is created readable only by its owner where the
+      * platform supports this.
+      */
+      static std::ofstream open_output_file(const std::string& path, bool private_file);
+
+      /**
+      * Replace the contents of a file. The data is written to a temporary
+      * file in the same directory which is then renamed over the original,
+      * so the original is left intact if writing fails.
+      */
+      static void replace_file_contents(const std::string& path, std::string_view contents, bool private_file);
+
    protected:
       /*
       * The actual functionality of the cli command implemented in subclass.
@@ -105,6 +120,13 @@ class Command /* NOLINT(*special-member-functions) */ {
       virtual void go() = 0;
 
       void set_return_code(int rc) { m_return_code = rc; }
+
+      /**
+      * Commands whose output contains secrets (eg private keys) override
+      * this to return true, and the --output file is then created readable
+      * only by its owner.
+      */
+      virtual bool output_contains_secrets() const { return false; }
 
       std::ostream& output();
 
@@ -197,12 +219,17 @@ class Command /* NOLINT(*special-member-functions) */ {
 
       void parse_spec();
 
+      void finish_output();
+
       // set in constructor
       std::string m_spec;
 
       std::unique_ptr<Argument_Parser> m_args;
-      std::unique_ptr<std::ostream> m_output_stream;
-      std::unique_ptr<std::ostream> m_error_output_stream;
+
+      // --output is opened on first use, see output()
+      std::string m_output_file;
+      std::unique_ptr<std::ofstream> m_output_stream;
+      std::unique_ptr<std::ofstream> m_error_output_stream;
 
       std::shared_ptr<Botan::RandomNumberGenerator> m_rng;
 

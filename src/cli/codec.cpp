@@ -38,7 +38,7 @@ class Hex_Encode final : public Command {
 
       void go() override {
          const auto hex_enc_f = [&](const uint8_t b[], size_t l) { output() << Botan::hex_encode(b, l); };
-         Command::read_file(get_arg("file"), hex_enc_f, 2);
+         Command::read_file(get_arg("file"), hex_enc_f, 4096);
       }
 };
 
@@ -53,11 +53,8 @@ class Hex_Decode final : public Command {
       std::string description() const override { return "Hex decode a given file"; }
 
       void go() override {
-         const auto hex_dec_f = [&](const uint8_t b[], size_t l) {
-            write_output(Botan::hex_decode(reinterpret_cast<const char*>(b), l));
-         };
-
-         Command::read_file(get_arg("file"), hex_dec_f, 2);
+         // Decoded as a whole since whitespace in the input shifts the digit pairs
+         write_output(Botan::hex_decode(slurp_file_as_str(get_arg("file"))));
       }
 };
 
@@ -127,7 +124,8 @@ class Base32_Encode final : public Command {
 
       void go() override {
          const auto onData = [&](const uint8_t b[], size_t l) { output() << Botan::base32_encode(b, l); };
-         Command::read_file(get_arg("file"), onData, 768);
+         // Each block must be a multiple of the 5 byte quantum so only the final block is padded
+         Command::read_file(get_arg("file"), onData, 5 * 768);
       }
 };
 
@@ -142,11 +140,8 @@ class Base32_Decode final : public Command {
       std::string description() const override { return "Decode Base32 encoded file"; }
 
       void go() override {
-         const auto write_bin = [&](const uint8_t b[], size_t l) {
-            write_output(Botan::base32_decode(reinterpret_cast<const char*>(b), l));
-         };
-
-         Command::read_file(get_arg("file"), write_bin, 1024);
+         // Decoded as a whole since whitespace in the input shifts the quanta
+         write_output(Botan::base32_decode(slurp_file_as_str(get_arg("file"))));
       }
 };
 
@@ -166,7 +161,8 @@ class Base64_Encode final : public Command {
 
       void go() override {
          const auto onData = [&](const uint8_t b[], size_t l) { output() << Botan::base64_encode(b, l); };
-         Command::read_file(get_arg("file"), onData, 768);
+         // Each block must be a multiple of the 3 byte quantum so only the final block is padded
+         Command::read_file(get_arg("file"), onData, 3 * 1024);
       }
 };
 
@@ -181,11 +177,8 @@ class Base64_Decode final : public Command {
       std::string description() const override { return "Decode Base64 encoded file"; }
 
       void go() override {
-         const auto write_bin = [&](const uint8_t b[], size_t l) {
-            write_output(Botan::base64_decode(reinterpret_cast<const char*>(b), l));
-         };
-
-         Command::read_file(get_arg("file"), write_bin, 1024);
+         // Decoded as a whole since whitespace in the input shifts the quanta
+         write_output(Botan::base64_decode(slurp_file_as_str(get_arg("file"))));
       }
 };
 

@@ -18,6 +18,7 @@
 #include <botan/tls_policy.h>
 #include <botan/x509_key.h>
 #include <botan/x509self.h>
+#include <algorithm>
 #include <fstream>
 #include <memory>
 #include <utility>
@@ -156,11 +157,19 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
          BOTAN_UNUSED(cert_signature_schemes);
 
          if(type == "tls-client") {
-            for(const auto& dn : acceptable_cas) {
-               for(const auto& cred : m_certs) {
-                  if(dn == cred.certs[0].issuer_dn()) {
-                     return cred.certs;
-                  }
+            for(const auto& cred : m_certs) {
+               if(!algos.empty() && !value_exists(algos, cred.key->algo_name())) {
+                  continue;
+               }
+
+               // An empty CA list means the server did not restrict the issuer
+               const bool issuer_acceptable =
+                  acceptable_cas.empty() ||
+                  std::find(acceptable_cas.begin(), acceptable_cas.end(), cred.certs[0].issuer_dn()) !=
+                     acceptable_cas.end();
+
+               if(issuer_acceptable) {
+                  return cred.certs;
                }
             }
          } else if(type == "tls-server") {
@@ -184,6 +193,12 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
                                                              const std::string& type,
                                                              const std::string& hostname) override {
          BOTAN_UNUSED(type, hostname);
+
+         // No raw public key credential was configured
+         if(!m_raw_pubkey.public_key) {
+            return nullptr;
+         }
+
          return (algos.empty() || value_exists(algos, m_raw_pubkey.public_key->algo_name())) ? m_raw_pubkey.public_key
                                                                                              : nullptr;
       }
@@ -203,10 +218,18 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
       std::shared_ptr<Botan::Private_Key> private_key_for(const Botan::Public_Key& raw_public_key,
                                                           const std::string& /*type*/,
                                                           const std::string& /*context*/) override {
-         return (m_raw_pubkey.public_key->fingerprint_public() == raw_public_key.fingerprint_public())
-                   ? m_raw_pubkey.private_key
-                   : nullptr;
+         if(m_raw_pubkey.public_key &&
+            m_raw_pubkey.public_key->fingerprint_public() == raw_public_key.fingerprint_public()) {
+            return m_raw_pubkey.private_key;
+         }
+
+         return nullptr;
       }
+
+      // The DTLS server refuses to run without a secret for the cookie exchange
+      void set_dtls_cookie_secret(Botan::secure_vector<uint8_t> secret) { m_dtls_cookie_secret = std::move(secret); }
+
+      Botan::secure_vector<uint8_t> dtls_cookie_secret() override { return m_dtls_cookie_secret; }
 
       std::string psk_identity(const std::string& type,
                                const std::string& context,
@@ -255,6 +278,7 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
       std::optional<Botan::secure_vector<uint8_t>> m_psk;
       std::optional<std::string> m_psk_identity;
       std::string m_psk_prf;
+      Botan::secure_vector<uint8_t> m_dtls_cookie_secret;
 };
 
 class TLS_All_Policy final : public Botan::TLS::Policy {

@@ -29,7 +29,9 @@
 
    #include <botan/hex.h>
    #include <botan/mem_ops.h>
+   #include <botan/rng.h>
    #include <botan/tls_callbacks.h>
+   #include <botan/tls_exceptn.h>
    #include <botan/tls_policy.h>
    #include <botan/tls_server.h>
    #include <botan/tls_session_manager_memory.h>
@@ -55,6 +57,7 @@ class Callbacks : public Botan::TLS::Callbacks {
       std::ostream& output();
       void send(std::span<const uint8_t> buffer);
       void push_pending_output(std::string line);
+      std::string peer_identity() const;
 
       void tls_session_established(const Botan::TLS::Session_Summary& session) override {
          output() << "Handshake complete, " << session.version().to_string() << " using "
@@ -83,6 +86,11 @@ class Callbacks : public Botan::TLS::Callbacks {
                push_pending_output(std::exchange(m_line_buf, {}));
             }
          }
+
+         // Bound the memory a client can tie up by never sending a newline
+         if(m_line_buf.size() > max_line_length) {
+            throw CLI_Error("Client sent a line longer than " + std::to_string(max_line_length) + " bytes");
+         }
       }
 
       void tls_emit_data(std::span<const uint8_t> buf) override { send(buf); }
@@ -94,15 +102,29 @@ class Callbacks : public Botan::TLS::Callbacks {
          return "echo/0.1";
       }
 
+      // Binds the DTLS cookie to the client's address
+      std::string tls_peer_network_identity() override { return peer_identity(); }
+
       void tls_verify_raw_public_key(const Botan::Public_Key& raw_public_key,
                                      Botan::Usage_Type /* usage */,
                                      std::string_view /* hostname */,
                                      const Botan::TLS::Policy& /* policy */) override {
          const auto fingerprint = raw_public_key.fingerprint_public("SHA-256");
-         output() << "received Raw Public Key (" << fingerprint << ")\n";
+         const bool trusted = (fingerprint == trusted_client_pubkey_sha256());
+         output() << "received Raw Public Key (" << fingerprint << ") which is "
+                  << (trusted ? "trusted" : "NOT trusted") << "\n";
+
+         if(!trusted) {
+            throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::BadCertificate,
+                                            "Client raw public key does not match --trusted-pubkey-sha256");
+         }
       }
 
    private:
+      static constexpr size_t max_line_length = 64 * 1024;
+
+      std::string trusted_client_pubkey_sha256() const;
+
       TLS_Server& m_server_command;
       std::string m_line_buf;
 };
@@ -114,11 +136,11 @@ class TLS_Server final : public Command {
    #if defined(BOTAN_SO_SOCKETID)
       TLS_Server() :
             Command(
-               "tls_server cert-or-pubkey key --port=443 --psk= --psk-identity= --psk-prf=SHA-256 --type=tcp --policy=default --dump-traces= --max-clients=0 --socket-id=0")
+               "tls_server cert-or-pubkey key --port=443 --psk= --psk-identity= --psk-prf=SHA-256 --type=tcp --policy=default --dump-traces= --max-clients=0 --trusted-pubkey-sha256= --socket-id=0")
    #else
       TLS_Server() :
             Command(
-               "tls_server cert-or-pubkey key --port=443 --psk= --psk-identity= --psk-prf=SHA-256 --type=tcp --policy=default --dump-traces= --max-clients=0")
+               "tls_server cert-or-pubkey key --port=443 --psk= --psk-identity= --psk-prf=SHA-256 --type=tcp --policy=default --dump-traces= --max-clients=0 --trusted-pubkey-sha256=")
    #endif
       {
          init_sockets();
@@ -168,7 +190,10 @@ class TLS_Server final : public Command {
             std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng_as_shared());  // TODO sqlite3
          const auto creds =
             std::make_shared<Basic_Credentials_Manager>(server_cred, server_key, std::move(psk), psk_identity, psk_prf);
-         const auto callbacks = std::make_shared<Callbacks>(*this);
+
+         if(!m_is_tcp) {
+            creds->set_dtls_cookie_secret(rng().random_vec(32));
+         }
 
          const socket_type server_fd = make_server_socket(port);
          size_t clients_served = 0;
@@ -181,13 +206,13 @@ class TLS_Server final : public Command {
                break;
             }
 
+            struct sockaddr_in from {};
+
+            socklen_t from_len = sizeof(sockaddr_in);
+
             if(m_is_tcp) {
-               m_socket = ::accept(server_fd, nullptr, nullptr);
+               m_socket = ::accept(server_fd, reinterpret_cast<struct sockaddr*>(&from), &from_len);
             } else {
-               struct sockaddr_in from {};
-
-               socklen_t from_len = sizeof(sockaddr_in);
-
                void* peek_buf = nullptr;
                size_t peek_len = 0;  // NOLINT(*-const-correctness)
 
@@ -199,12 +224,13 @@ class TLS_Server final : public Command {
                peek_len = sizeof(dummy);
    #endif
 
+               // With a nonzero peek buffer (macOS) this returns the datagram size
                if(::recvfrom(server_fd,
                              static_cast<char*>(peek_buf),
                              static_cast<sendrecv_len_type>(peek_len),
                              MSG_PEEK,
                              reinterpret_cast<struct sockaddr*>(&from),
-                             &from_len) != 0) {
+                             &from_len) < 0) {
                   throw CLI_Error("Could not peek next packet");
                }
 
@@ -214,7 +240,13 @@ class TLS_Server final : public Command {
                m_socket = server_fd;
             }
 
+            m_peer_identity = format_peer(from);
+
             clients_served++;
+
+            // Per-connection state: nothing buffered from a previous client may leak into this one
+            m_pending_output.clear();
+            const auto callbacks = std::make_shared<Callbacks>(*this);
 
             Botan::TLS::Server server(callbacks, session_manager, creds, policy, rng_as_shared(), m_is_tcp == false);
 
@@ -273,6 +305,13 @@ class TLS_Server final : public Command {
             if(m_is_tcp) {
                close_socket(m_socket);
                m_socket = invalid_socket();
+            } else {
+               // Reset the peer address so datagrams from the next client are
+               // accepted; failure is harmless as the next peek rediscovers one
+               sockaddr unspec{};
+               unspec.sa_family = AF_UNSPEC;
+               // NOLINTNEXTLINE(bugprone-unused-return-value)
+               ::connect(server_fd, &unspec, sizeof(unspec));
             }
          }
 
@@ -281,37 +320,39 @@ class TLS_Server final : public Command {
 
    public:
       using Command::flag_set;
+      using Command::get_arg;
       using Command::output;
 
-      void send(std::span<const uint8_t> buf) {
-         if(m_is_tcp) {
-            const ssize_t sent = ::send(m_socket, buf.data(), static_cast<sendrecv_len_type>(buf.size()), MSG_NOSIGNAL);
+      void send(std::span<const uint8_t> buf) const {
+         // A short write on the stream socket would corrupt the TLS stream
+         while(!buf.empty()) {
+            ssize_t sent = ::send(m_socket, buf.data(), static_cast<sendrecv_len_type>(buf.size()), MSG_NOSIGNAL);
 
             if(sent == -1) {
-               error_output() << "Error writing to socket - " << err_to_string(errno) << std::endl;
-            } else if(sent >= 0 && static_cast<size_t>(sent) != buf.size()) {
-               error_output() << "Packet of length " << buf.size() << " truncated to " << sent << std::endl;
-            }
-         } else {
-            while(!buf.empty()) {
-               ssize_t sent = ::send(m_socket, buf.data(), static_cast<sendrecv_len_type>(buf.size()), MSG_NOSIGNAL);
-
-               if(sent == -1) {
-                  if(errno == EINTR) {
-                     sent = 0;
-                  } else {
-                     throw CLI_Error("Socket write failed");
-                  }
+               if(errno == EINTR) {
+                  sent = 0;
+               } else {
+                  throw CLI_Error("Socket write failed - " + err_to_string(errno));
                }
-
-               buf = buf.subspan(sent);
             }
+
+            buf = buf.subspan(sent);
          }
       }
 
       void push_pending_output(std::string line) { m_pending_output.emplace_back(std::move(line)); }
 
+      const std::string& peer_identity() const { return m_peer_identity; }
+
    private:
+      static std::string format_peer(const sockaddr_in& addr) {
+         char host[INET_ADDRSTRLEN] = {0};
+         if(::inet_ntop(AF_INET, &addr.sin_addr, host, sizeof(host)) == nullptr) {
+            return "unknown";
+         }
+         return std::string(host) + ":" + std::to_string(ntohs(addr.sin_port));
+      }
+
       socket_type make_server_socket(uint16_t port) {
          const int type = m_is_tcp ? SOCK_STREAM : SOCK_DGRAM;
 
@@ -358,6 +399,7 @@ class TLS_Server final : public Command {
       socket_type m_socket = invalid_socket();
       bool m_is_tcp = false;
       uint32_t m_socket_id = 0;
+      std::string m_peer_identity;
       std::list<std::string> m_pending_output;
 };
 
@@ -373,6 +415,14 @@ void Callbacks::send(std::span<const uint8_t> buffer) {
 
 void Callbacks::push_pending_output(std::string line) {
    m_server_command.push_pending_output(std::move(line));
+}
+
+std::string Callbacks::trusted_client_pubkey_sha256() const {
+   return m_server_command.get_arg("trusted-pubkey-sha256");
+}
+
+std::string Callbacks::peer_identity() const {
+   return m_server_command.peer_identity();
 }
 
 }  // namespace

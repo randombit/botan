@@ -311,7 +311,11 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
                return;
             }
          };
-         async_connect(m_server_socket, m_server_endpoints.begin(), m_server_endpoints.end(), onConnect);
+         // Must run on the strand like every other handler touching session state
+         async_connect(m_server_socket,
+                       m_server_endpoints.begin(),
+                       m_server_endpoints.end(),
+                       boost::asio::bind_executor(m_strand, onConnect));
       }
 
       void tls_session_established(const Botan::TLS::Session_Summary& session) override {

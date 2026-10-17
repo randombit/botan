@@ -208,7 +208,7 @@ class ServerCertificateSuite:
 
         test_cli("keygen", ["--algo=ECDSA", f"--params={ecdsa_algo}", f"--output={self.private_key}"], "")
         test_cli("gen_self_signed", [self.private_key, "CA", "--ca", "--country=VT", "--dns=ca.example", f"--hash={hash_algo}", f"--output={self.ca_cert}"], "")
-        test_cli("cert_verify", self.ca_cert, "Certificate did not validate - Cannot establish trust")
+        test_cli("cert_verify", self.ca_cert, "Certificate did not validate - Cannot establish trust", expected_rc=1)
         test_cli("gen_pkcs10", [f"{self.private_key}", "localhost", "--dns=localhost", f"--output={crt_req}"])
         test_cli("sign_cert", [self.ca_cert, self.private_key, crt_req, f"--output={self.cert}"])
 
@@ -219,7 +219,8 @@ def test_cli(cmd, cmd_options,
              expected_stderr=None,
              use_drbg=True,
              extra_env=None,
-             timeout=None):
+             timeout=None,
+             expected_rc=0):
     global TESTS_RUN
 
     TESTS_RUN += 1
@@ -287,7 +288,20 @@ def test_cli(cmd, cmd_options,
         logging.info("Got %s", stdout)
         logging.info("Exp %s", expected_output)
 
+    if proc.returncode != expected_rc:
+        logging.error("Got return code %d expected %d running cmd %s %s (stderr %s)",
+                      proc.returncode, expected_rc, cmd, cmd_options, stderr, stack_info=True)
+
     return stdout
+
+def check_private_file(path):
+    """Check that a file holding secret data is readable only by its owner"""
+    if platform.system() == 'Windows':
+        return
+
+    mode = os.stat(path).st_mode & 0o777
+    if mode & 0o077 != 0:
+        logging.error("File %s has mode %o but should be owner-only", path, mode)
 
 def check_for_command(cmd):
     cmdline = [CLI_PATH, 'has_command', cmd]
@@ -318,7 +332,8 @@ def cli_config_tests(_tmp_dir):
         logging.error("Bad libs %s", libs)
 
 def cli_help_tests(_tmp_dir):
-    output = test_cli("help", None, None)
+    # The help command intentionally exits with status 1
+    output = test_cli("help", None, None, expected_rc=1)
 
     # Maybe test format somehow??
     if len(output) < 500:
@@ -408,6 +423,12 @@ def cli_gen_prime_tests(_tmp_dir):
     test_cli("gen_prime", "128", "287193909494025008847286845478788765881")
     test_cli("gen_prime", ["--hex", "64"], "0xD80F88F6ADBE65D3")
 
+    usage = "Usage: gen_prime --hex --count=1 bits"
+    for bad in ["-1", "+1", "12junk", " 12", "", "0x10"]:
+        test_cli("gen_prime", ["--count=%s" % (bad), "64"], "",
+                 expected_stderr="Usage error: Invalid integer value '%s' for option count\n%s" % (bad, usage),
+                 expected_rc=1)
+
 def cli_cycle_counter(_tmp_dir):
     output = test_cli("cpu_clock", None, None)
 
@@ -453,17 +474,51 @@ def cli_factor_tests(_tmp_dir):
     test_cli("factor", "9753893489562389", "9753893489562389: 21433 455087644733")
     test_cli("factor", "12019502040659149507", "12019502040659149507: 3298628633 3643787579")
 
+    for bad in ["0", "1", "-5"]:
+        test_cli("factor", bad, "",
+                 expected_stderr="Usage error: Cannot factor integers less than 2\nUsage: factor n",
+                 expected_rc=1)
+
 def cli_mod_inverse_tests(_tmp_dir):
     test_cli("mod_inverse", "97 802", "339")
     test_cli("mod_inverse", "98 802", "No modular inverse exists")
 
-def cli_base64_tests(_tmp_dir):
+def codec_roundtrip_test(tmp_dir, codec, py_encode, py_wrap):
+    """Round trip an input larger than the CLI read block through the given codec"""
+
+    raw = bytes(range(256)) * 40
+    raw_file = os.path.join(tmp_dir, '%s_raw' % (codec))
+    enc_file = os.path.join(tmp_dir, '%s_enc' % (codec))
+    dec_file = os.path.join(tmp_dir, '%s_dec' % (codec))
+
+    with open(raw_file, 'wb') as f:
+        f.write(raw)
+
+    expected = py_encode(raw).decode('ascii')
+    test_cli("%s_enc" % (codec), raw_file, expected)
+
+    # Decoding must tolerate line wrapping and other whitespace anywhere in the input
+    wrapped = " " + "\n".join(expected[i:i+py_wrap] for i in range(0, len(expected), py_wrap)) + "\n"
+    with open(enc_file, 'w', encoding='ascii') as f:
+        f.write(wrapped)
+
+    test_cli("%s_dec" % (codec), [enc_file, "--output=%s" % (dec_file)], "")
+
+    with open(dec_file, 'rb') as f:
+        if f.read() != raw:
+            logging.error("%s round trip of wrapped input failed", codec)
+
+def cli_base64_tests(tmp_dir):
     test_cli("base64_enc", "-", "YmVlcyE=", "bees!")
     test_cli("base64_dec", "-", "bees!", "YmVlcyE=")
 
-def cli_base32_tests(_tmp_dir):
+    codec_roundtrip_test(tmp_dir, "base64", base64.b64encode, 76)
+
+def cli_base32_tests(tmp_dir):
     test_cli("base32_enc", "-", "MJSWK4ZB", "bees!")
     test_cli("base32_dec", "-", "bees!", "MJSWK4ZB")
+
+    codec_roundtrip_test(tmp_dir, "base32", base64.b32encode, 64)
 
 def cli_base58_tests(_tmp_dir):
     test_cli("base58_enc", "-", "C6sRAr4", "bees!")
@@ -472,13 +527,26 @@ def cli_base58_tests(_tmp_dir):
     test_cli("base58_enc", ["--check", "-"], "Cjv15cdjaBc", "F00F")
     test_cli("base58_dec", ["--check", "-"], "F00F", "Cjv15cdjaBc")
 
-def cli_hex_tests(_tmp_dir):
+def cli_hex_tests(tmp_dir):
     test_cli("hex_enc", "-", "6265657321", "bees!")
     test_cli("hex_dec", "-", "bees!", "6265657321")
+    test_cli("hex_dec", "-", "bees!", "62 65\n65 73\n21")
 
-def cli_hash_tests(_tmp_dir):
+    codec_roundtrip_test(tmp_dir, "hex", lambda b: binascii.hexlify(b).upper(), 60)
+
+def cli_hash_tests(tmp_dir):
     test_cli("hash", "--algo=SHA-256",
              "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855 -", "")
+
+    # An unreadable file is reported, the remaining files are still hashed,
+    # and the exit status is nonzero
+    missing = os.path.join(tmp_dir, 'does_not_exist')
+    empty = os.path.join(tmp_dir, 'empty')
+    with open(empty, 'wb'):
+        pass
+    test_cli("hash", ["--no-fsname", missing, empty],
+             "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+             expected_stderr="Error reading file %s" % (missing), expected_rc=1)
 
     test_cli("hash", "--algo=SHA-256",
              "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD -", "abc")
@@ -492,6 +560,24 @@ def cli_hash_tests(_tmp_dir):
     test_cli("hash", ["--algo=SHA-224", "--format=base58check", "--no-fsname"],
              "3MmfMqgrhemdVa9bDAGfooukbviWtKMBx2xauL2RsyAe", "abc")
 
+    # Naming the input file as the output must not truncate it before it is read
+    inplace = os.path.join(tmp_dir, 'inplace')
+    with open(inplace, 'wb') as f:
+        f.write(b'abc')
+    test_cli("hash", ["--no-fsname", "--output=%s" % (inplace), inplace], "")
+    with open(inplace, 'r', encoding='utf8') as f:
+        if f.read() != "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD\n":
+            logging.error("hash --output naming the input file produced wrong output")
+
+    # Output file problems are reported with a nonzero status
+    bad_output = os.path.join(tmp_dir, 'no_such_dir', 'out')
+    test_cli("hash", ["--no-fsname", "--output=%s" % (bad_output), inplace], "",
+             expected_stderr="Error: Error opening %s" % (bad_output), expected_rc=2)
+
+    if platform.system() == 'Linux' and os.path.exists('/dev/full'):
+        test_cli("hash", ["--no-fsname", "--output=/dev/full", inplace], "",
+                 expected_stderr="Error: Error writing /dev/full", expected_rc=2)
+
 def cli_hmac_tests(tmp_dir):
     key_file = os.path.join(tmp_dir, 'hmac.key')
 
@@ -500,15 +586,26 @@ def cli_hmac_tests(tmp_dir):
     test_cli("hmac", ["--no-fsname", "--hash=SHA-384", key_file, key_file],
              "E3A8529377030B28A7DBDFC50DDEC8E4ECEFB6EA850D95EB785938CD3E3AFEF9EF8B08AF219C1496633193468AB755CB")
 
+    missing = os.path.join(tmp_dir, 'does_not_exist')
+    test_cli("hmac", ["--no-fsname", "--hash=SHA-384", key_file, missing, key_file],
+             "E3A8529377030B28A7DBDFC50DDEC8E4ECEFB6EA850D95EB785938CD3E3AFEF9EF8B08AF219C1496633193468AB755CB",
+             expected_stderr="Error reading file %s" % (missing), expected_rc=1)
+
 def cli_bcrypt_tests(_tmp_dir):
     test_cli("gen_bcrypt", "--work-factor=4 s3kr1t",
              "$2a$04$0.8G7o08XYwvBBWA3l0WUujtwoGZgGDzVSN8fNkNqXikcK4A3lHPS")
+
+    for wf in ["3", "19"]:
+        test_cli("gen_bcrypt", "--work-factor=%s s3kr1t" % (wf), "",
+                 expected_stderr="Usage error: Invalid bcrypt work factor (must be between 4 and 18)\n"
+                 "Usage: gen_bcrypt --work-factor=12 password",
+                 expected_rc=1)
 
     test_cli("check_bcrypt", "s3kr1t $2a$04$gHX4Qg7pDSJuXiPXnmt8leyb.FFzX1Bv4rXwIj2cPSakJ8zNnhIka",
              "Password is valid")
 
     test_cli("check_bcrypt", "santa $2a$04$gHX4Qg7pDSJuXiPXnmt8leyb.FFzX1Bv4rXwIj2cPSakJ8zNnhIka",
-             "Password is NOT valid")
+             "Password is NOT valid", expected_rc=1)
 
 def cli_argon2_tests(_tmp_dir):
     password = "s3kr1t"
@@ -518,7 +615,7 @@ def cli_argon2_tests(_tmp_dir):
     test_cli("gen_argon2", ['--mem=8', '--t=1', '--p=1', password], expected)
 
     test_cli("check_argon2", [password, expected], "Password is valid")
-    test_cli("check_argon2", ["guessing", expected], "Password is NOT valid")
+    test_cli("check_argon2", ["guessing", expected], "Password is NOT valid", expected_rc=1)
 
 def cli_gen_dl_group_tests(_tmp_dir):
 
@@ -546,6 +643,11 @@ ivM=
 
     test_cli("gen_dl_group", ["--type=dsa", "--pbits=1024"], dsa_grp)
 
+    test_cli("gen_dl_group", ["--type=subgroup", "--pbits=1024", "--qbits=8"], "",
+             expected_stderr="Usage error: Subgroup order of 8 bits is too small\n"
+             "Usage: gen_dl_group --pbits=2048 --qbits=0 --seed= --type=subgroup --rng-type= --drbg-seed=",
+             expected_rc=1)
+
 
 def cli_key_tests(tmp_dir):
 
@@ -567,12 +669,15 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
     test_cli("keygen", ["--algo=ECDSA", "--params=secp256k1"], pem)
 
     test_cli("keygen", ["--algo=ECDSA", "--params=secp256r1", "--output=" + priv_key], "")
+    check_private_file(priv_key)
 
     test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key, priv_key), "")
     test_cli("pkcs8", "--pub-out --der-out --output=%s %s" % (pub_der_key, priv_key), "")
 
     test_cli("pkcs8", "--pass-out=foof --cipher=AES-128/CBC --der-out --output=%s %s" % (enc_der, priv_key), "")
     test_cli("pkcs8", "--pass-out=foof --pbkdf=Scrypt --output=%s %s" % (enc_pem, priv_key), "")
+    check_private_file(enc_der)
+    check_private_file(enc_pem)
 
     dec_pem = test_cli("pkcs8", ["--pass-in=foof", enc_pem], None)
     dec_der = test_cli("pkcs8", ["--pass-in=foof", enc_der], None)
@@ -608,14 +713,14 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
 
     test_cli("verify", [pub_key, pub_key, '-'],
              "Signature is invalid",
-             valid_sig.replace("G", "H"))
+             valid_sig.replace("G", "H"), expected_rc=1)
 
     test_cli("gen_self_signed",
              [priv_key, "CA", "--ca", "--country=VT",
               "--dns=ca.example", "--hash=SHA-384", "--output="+ca_cert],
              "")
 
-    test_cli("cert_verify", ca_cert, "Certificate did not validate - Cannot establish trust")
+    test_cli("cert_verify", ca_cert, "Certificate did not validate - Cannot establish trust", expected_rc=1)
 
     cert_info = test_cli("cert_info", ['--fingerprint', ca_cert], None)
 
@@ -632,7 +737,7 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
              "Certificate passes validation checks")
 
     test_cli("cert_verify", user_cert,
-             "Certificate did not validate - Certificate issuer not found")
+             "Certificate did not validate - Certificate issuer not found", expected_rc=1)
 
 def cli_pk_sign_tests(tmp_dir):
     # Ed25519 key from RFC 8032 section 7.1 "TEST 2"
@@ -666,7 +771,7 @@ MCowBQYDK2VwAyEAPUAXw+hDiVqStwqnTRt+vJyYLM8uxJaMwM1V8Sr0Zgw=
     # Ed25519ph is a distinct signature scheme
     test_cli("sign", ["--prehash=default", priv_key, msg, "--output=%s" % (sig)], "")
     test_cli("verify", ["--prehash=default", pub_key, msg, sig], "Signature is valid")
-    test_cli("verify", [pub_key, msg, sig], "Signature is invalid")
+    test_cli("verify", [pub_key, msg, sig], "Signature is invalid", expected_rc=1)
 
     # ML-DSA takes no options at all
     mldsa_priv = os.path.join(tmp_dir, 'mldsa.pem')
@@ -686,7 +791,7 @@ MCowBQYDK2VwAyEAPUAXw+hDiVqStwqnTRt+vJyYLM8uxJaMwM1V8Sr0Zgw=
     test_cli("sign", [rsa_priv, msg, "--output=%s" % (sig)], "")
     test_cli("verify", [rsa_pub, msg, sig], "Signature is valid")
     test_cli("verify", ["--padding=PSS", "--hash=SHA-256", rsa_pub, msg, sig], "Signature is valid")
-    test_cli("verify", ["--padding=PKCS1v15", rsa_pub, msg, sig], "Signature is invalid")
+    test_cli("verify", ["--padding=PKCS1v15", rsa_pub, msg, sig], "Signature is invalid", expected_rc=1)
     test_cli("sign", ["--padding=PKCS1v15", "--hash=SHA-512", rsa_priv, msg, "--output=%s" % (sig)], "")
     test_cli("verify", ["--padding=PKCS1v15", "--hash=SHA-512", rsa_pub, msg, sig], "Signature is valid")
     test_cli("sign", ["--padding=PSS", "--salt-size=0", "--deterministic", rsa_priv, msg, "--output=%s" % (sig)], "")
@@ -714,6 +819,21 @@ def cli_xmss_sign_tests(tmp_dir):
     test_cli("keygen", ["--algo=XMSS", "--params=XMSS-SHA2_10_256", "--output=%s" % (priv_key)], "")
     test_cli("hash", ["--no-fsname", priv_key], "737368AB8BFC6B0CDA0DF7FB6BD1DE48C2ABA81236F65E4E227920CECCC5F259")
 
+    # If the updated key cannot be stored, no signature may be produced and
+    # the key file must be left unchanged
+    if platform.system() != 'Windows' and os.geteuid() != 0:
+        ro_dir = os.path.join(tmp_dir, 'readonly')
+        os.mkdir(ro_dir)
+        ro_key = os.path.join(ro_dir, 'priv.pem')
+        shutil.copyfile(priv_key, ro_key)
+        os.chmod(ro_dir, 0o500)
+        try:
+            test_cli("sign", [ro_key, msg], "",
+                     expected_stderr="Error: Error opening %s.tmp" % (ro_key), expected_rc=2)
+            test_cli("hash", ["--no-fsname", ro_key], "737368AB8BFC6B0CDA0DF7FB6BD1DE48C2ABA81236F65E4E227920CECCC5F259")
+        finally:
+            os.chmod(ro_dir, 0o700)
+
     test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key, priv_key), "")
     test_cli("fingerprint", ['--no-fsname', pub_key],
              "7B:9F:20:23:A8:FC:A7:BD:BA:F4:DE:58:3C:D8:68:52:D1:8E:16:C8:B4:33:B0:34:FE:42:37:16:AE:95:7B:83")
@@ -723,6 +843,9 @@ def cli_xmss_sign_tests(tmp_dir):
     test_cli("verify", [pub_key, msg, sig1], "Signature is valid")
     test_cli("hash", ["--no-fsname", sig1], "A37241040C0C7044DD502D92B69E8B931FF43FBC91CF4E3C869B23206EBFABF6")
     test_cli("hash", ["--no-fsname", priv_key], "748E63766E8805A4CED94B7BC52F0A5EB2D6F8CECFD2CFC27C61DFA2C7DC1328")
+    check_private_file(priv_key)
+    if os.path.exists(priv_key + ".tmp"):
+        logging.error("Temporary key file was left behind")
 
     test_cli("sign", [priv_key, msg, "--output=%s" % (sig2)], "")
     test_cli("verify", [pub_key, msg, sig2], "Signature is valid")
@@ -795,6 +918,10 @@ def cli_psk_db_tests(tmp_dir):
     test_cli("psk_list", [psk_db, db_key1], "name\nname2")
     test_cli("psk_list", [psk_db, db_key2], "name")
 
+    test_cli("psk_list", [psk_db, ""], "",
+             expected_stderr="Usage error: Database key must not be empty\nUsage: psk_list db db_key",
+             expected_rc=1)
+
 def cli_compress_tests(tmp_dir):
 
     if not check_for_command("compress"):
@@ -807,6 +934,11 @@ def cli_compress_tests(tmp_dir):
         f.write("hi there")
         f.close()
 
+    test_cli("compress", ["--buf-size=0", input_file], "",
+             expected_stderr="Usage error: Cannot have a zero-sized buffer\n"
+             "Usage: compress --type=gzip --level=6 --buf-size=8192 file",
+             expected_rc=1)
+
     test_cli("compress", input_file)
 
     if not os.access(output_file, os.R_OK):
@@ -818,6 +950,11 @@ def cli_compress_tests(tmp_dir):
         logging.error("Did not see expected gzip header")
 
     os.unlink(input_file)
+
+    test_cli("decompress", ["--buf-size=0", output_file], "",
+             expected_stderr="Usage error: Cannot have a zero-sized buffer\n"
+             "Usage: decompress --buf-size=8192 file",
+             expected_rc=1)
 
     test_cli("decompress", output_file)
 
@@ -889,7 +1026,7 @@ ed25519 cj8GsiNlRkqiDElAeNMSBBMwrAl15hYPgX50+GWX/lA= Tsy82BBU2xxVqNe1ip11OyEGoKW
 
     with open(chain, 'w', encoding='utf8') as f:
         f.write("ed25519 cbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE= eu9yhsJfVfguVSqGZdE8WKIxaBBM0ZG3Vmuc+IyZmG2YVmrIktUByDdwIFw6F4rZqmSFsBO85ljoVPz5bVPCOw== BQAAAEAAAABAAAAApAAAADwBAABTSUcAUEFUSFNSRVBDRVJUSU5EWBnGOEajOwPA6G7oL47seBP4C7eEpr57H43C2/fK/kMA0UGZVUdf4KNX8oxOK6JIcsbVk8qhghTwA70qtwpYmQkDAAAABAAAAAwAAABSQURJTUlEUFJPT1RAQg8AJrA8tEqPBQAqisiuAxgy2Pj7UJAiWbCdzGz1xcCnja3T+AqhC8fwpeIwW4GPy/vEb/awXW2DgSLKJfzWIAz+2lsR7t4UjNPvAgAAAEAAAABTSUcAREVMRes9Ch4X0HIw5KdOTB8xK4VDFSJBD/G9t7Et/CU7UW61OiTBXYYQTG2JekWZmGa0OHX1JPGG+APkpbsNw0BKUgYDAAAAIAAAACgAAABQVUJLTUlOVE1BWFR/9BWjpsWTQ1f6iUJea3EfZ1MkX3ftJiV3ABqNLpncFwAAAAAAAAAA//////////8AAAAA")
-    test_cli("roughtime_check", chain, expected_stderr='Error: Invalid Ed25519 public key')
+    test_cli("roughtime_check", chain, expected_stderr='Error: Invalid Ed25519 public key', expected_rc=2)
 
 def cli_roughtime_tests(tmp_dir):
     if not check_for_command("roughtime"):
@@ -942,7 +1079,8 @@ ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= 2A+I9q2+ZayxDDYC5n2YW8Bn/zB
 
     server_request = request[0]
     server_response = response[0]
-    test_cli("roughtime", [], expected_stderr='Please specify either --servers-file or --host and --pubkey')
+    test_cli("roughtime", [], expected_stderr='Please specify either --servers-file or --host and --pubkey',
+             expected_rc=1)
 
     with open(ecosystem, 'w', encoding='utf8') as f:
         f.write("Cloudflare-Roughtime ed25519 gD63hSj4ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= udp 127.0.0.1:" + str(server_port))
@@ -951,15 +1089,35 @@ ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= 2A+I9q2+ZayxDDYC5n2YW8Bn/zB
         "--check-local-clock=0",
         "--chain-file=",
         "--servers-file=" + ecosystem]
-             , expected_stderr='Error: Invalid Ed25519 public key')
+             , expected_stderr='Error: Invalid Ed25519 public key', expected_rc=2)
 
     with open(ecosystem, 'w', encoding='utf8') as f:
         f.write("Cloudflare-Roughtime ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= udp 127.0.0.1:" + str(server_port))
 
+    # A rejected response must leave nothing on stdout
     test_cli("roughtime", [
         "--chain-file=",
         "--servers-file=" + ecosystem]
-             , expected_stderr='ERROR: Local clock mismatch')
+             , "", expected_stderr='ERROR: Local clock mismatch', expected_rc=1)
+
+    # A response signed by some other (valid) key is rejected
+    with open(ecosystem + ".otherkey", 'w', encoding='utf8') as f:
+        f.write("Cloudflare-Roughtime ed25519 PUAXw+hDiVqStwqnTRt+vJyYLM8uxJaMwM1V8Sr0Zgw= udp 127.0.0.1:" + str(server_port))
+
+    test_cli("roughtime", [
+        "--check-local-clock=0",
+        "--chain-file=",
+        "--servers-file=" + ecosystem + ".otherkey"]
+             , "", expected_stderr='ERROR: Public key does not match!', expected_rc=1)
+
+    # An unparsable response from every address of a server fails the command
+    server_response = base64.b64encode(b"this is not a roughtime response").decode('ascii')
+    test_cli("roughtime", [
+        "--check-local-clock=0",
+        "--chain-file=",
+        "--servers-file=" + ecosystem]
+             , "", expected_stderr='Roughtime: Map length too small to contain all tags', expected_rc=1)
+    server_response = response[0]
 
     test_cli("roughtime", [
         "--check-local-clock=0",
@@ -1013,6 +1171,12 @@ def cli_zfec_tests(tmp_dir):
     k = 3
     n = 5
 
+    bad_dir = os.path.join(tmp_dir, 'no_such_dir')
+    test_cli("fec_encode", ["--output-dir=%s" % (bad_dir),
+                            "--prefix=%s" % (prefix),
+                            str(k), str(n), input_file], "",
+             expected_stderr="Error: Error opening %s/%s.1_%d.fec" % (bad_dir, prefix, n), expected_rc=2)
+
     test_cli("fec_encode", ["--output-dir=%s" % (tmp_dir),
                             "--prefix=%s" % (prefix),
                             str(k), str(n), input_file])
@@ -1027,15 +1191,37 @@ def cli_zfec_tests(tmp_dir):
         if info_re.match(info_out) is None:
             logging.error("Unexpected output for fec_info")
 
+    # A corrupted share is reported with a nonzero status
+    truncated_share = os.path.join(tmp_dir, 'truncated.fec')
+    with open(share_files[0], 'rb') as f:
+        share_data = f.read()
+    with open(truncated_share, 'wb') as f:
+        f.write(share_data[:20])
+    test_cli("fec_info", truncated_share, "",
+             expected_stderr="Invalid share '%s': FEC share is too short to be valid" % (truncated_share),
+             expected_rc=1)
+
     k_shares = n - k
 
     # Insufficient shares:
     test_cli("fec_decode", share_files[(k_shares + 1):], None, None,
-             "At least %d shares are required for recovery" % (k))
+             "At least %d shares are required for recovery" % (k), expected_rc=2)
 
     output_file = os.path.join(tmp_dir, 'output.bin')
     test_cli("fec_decode", share_files[k_shares:] + ["--output=%s" % (output_file)])
     test_cli("hash", ["--no-fsname", output_file], exp_hash)
+
+    # k == n (no redundancy) is a valid configuration which must round trip
+    for kn in [1, 3]:
+        prefix = "kn%d" % (kn)
+        test_cli("fec_encode", ["--output-dir=%s" % (tmp_dir), "--prefix=%s" % (prefix),
+                                str(kn), str(kn), input_file])
+        kn_shares = [os.path.join(tmp_dir, '%s.%d_%d.fec' % (prefix, share, kn)) for share in range(1, kn + 1)]
+        for share in kn_shares:
+            test_cli("fec_info", share, "FEC share %s/%d with %d needed for recovery" % (share.split('.')[-2].split('_')[0], kn, kn))
+        kn_output = os.path.join(tmp_dir, 'output_%d.bin' % (kn))
+        test_cli("fec_decode", kn_shares + ["--output=%s" % (kn_output)])
+        test_cli("hash", ["--no-fsname", kn_output], exp_hash)
 
 def cli_pk_workfactor_tests(_tmp_dir):
     test_cli("pk_workfactor", "1024", "80")
@@ -1102,7 +1288,7 @@ def cli_cpuid_tests(_tmp_dir):
 
 def cli_cc_enc_tests(_tmp_dir):
     test_vectors = [
-        ("8028028028028029", "4308989841607208", "8028028028028027"),
+        ("8028028028028027", "4308989841607208", "8028028028028027"),
         ("4222222222222", "8448574842145", "4222222222222"),
         ("4000000000000424", "0000572878697422", "4000000000000424"),
         ("4000000000000000006", "1096265612632810403", "4000000000000000006"),
@@ -1112,6 +1298,13 @@ def cli_cc_enc_tests(_tmp_dir):
     for plaintext, ciphertext, decrypted in test_vectors:
         test_cli("cc_encrypt", [plaintext, "pass"], ciphertext)
         test_cli("cc_decrypt", [ciphertext, "pass"], decrypted)
+
+    # Numbers with a bad check digit are rejected rather than silently
+    # mapped to a different card number
+    for cmd in ["cc_encrypt", "cc_decrypt"]:
+        test_cli(cmd, ["8028028028028029", "pass"], "",
+                 expected_stderr="Usage error: Credit card number fails the Luhn check\nUsage: %s CC passphrase --tweak=" % (cmd),
+                 expected_rc=1)
 
 def cli_cert_issuance_tests(tmp_dir, algos=None):
     root_key = os.path.join(tmp_dir, 'root.key')
@@ -1220,6 +1413,17 @@ def cli_timing_test_tests(_tmp_dir):
             if output_re.match(line) is None:
                 logging.error("Unexpected output in timing_test %s: %s", suite, line)
 
+def cli_tls_client_usage_tests(_tmp_dir):
+    if not check_for_command("tls_client"):
+        return
+
+    usage = test_cli("tls_client", ["--help"], None, expected_rc=2)
+
+    # Rejected before any connection is attempted
+    test_cli("tls_client", ["localhost", "--port=1", "--tls-version=1.4"], "",
+             expected_stderr="Usage error: Unknown TLS protocol version '1.4'\n%s" % (usage),
+             expected_rc=1)
+
 def cli_tls_ciphersuite_tests(_tmp_dir):
     policies = ['default', 'suiteb_128', 'suiteb_192', 'strict', 'all']
 
@@ -1238,6 +1442,10 @@ def cli_tls_ciphersuite_tests(_tmp_dir):
             for line in output:
                 if ciphersuite_re.match(line) is None:
                     logging.error("Unexpected ciphersuite line %s", line)
+
+    test_cli("tls_ciphers", ["--version=tls1.2", "--policy=datagram"], "",
+             expected_stderr="Error: the policy specified does not allow the given TLS version",
+             expected_rc=1)
 
 def cli_asn1_tests(_tmp_dir):
     input_pem = """-----BEGIN BLOB-----
@@ -1278,6 +1486,12 @@ def cli_tls_socket_tests(tmp_dir):
             self.psk = kwargs.get("psk")
             self.psk_identity = kwargs.get("psk_identity")
             self.psk_prf = kwargs.get("psk_prf")
+            self.transport = kwargs.get("transport", "tcp")
+            self.host = kwargs.get("host", "localhost")
+            self.client_args = kwargs.get("client_args", [])
+            # The connection is expected to complete the handshake but then be
+            # denied application service (eg a rejected client certificate)
+            self.denial = kwargs.get("denial", False)
 
     configs = [
         # Explicitly testing x448-based key exchange against ourselves, as Bogo test
@@ -1316,31 +1530,37 @@ def cli_tls_socket_tests(tmp_dir):
     ]
 
     class TestServer(AsyncTestProcess):
-        def __init__(self, tmp_dir, psk, psk_identity, psk_prf, clients=0):
+        def __init__(self, tmp_dir, psk, psk_identity, psk_prf, clients=0, **kwargs):
             super().__init__("Server")
             self.port = None
             self.psk = psk
             self.psk_identity = psk_identity
             self.psk_prf = psk_prf
             self.clients = clients
+            self.transport = kwargs.get("transport", "tcp")
+            self.cred = kwargs.get("cred")
+            self.extra_args = kwargs.get("extra_args", [])
 
             self.cert_suite = ServerCertificateSuite(tmp_dir, "secp256r1", "SHA-384")
             self.policy = os.path.join(tmp_dir, 'test_server_policy.txt')
 
             with open(self.policy, 'w', encoding='utf8') as f:
-                f.write('key_exchange_methods = ECDH DH ECDHE_PSK\n')
-                f.write("key_exchange_groups = x25519 x448 secp256r1 ffdhe/ietf/2048 ML-KEM-768 x25519/ML-KEM-768")
+                if "policy_text" in kwargs:
+                    f.write(kwargs["policy_text"])
+                else:
+                    f.write('key_exchange_methods = ECDH DH ECDHE_PSK\n')
+                    f.write("key_exchange_groups = x25519 x448 secp256r1 ffdhe/ietf/2048 ML-KEM-768 x25519/ML-KEM-768")
 
         @property
         def ca_cert(self):
             return self.cert_suite.ca_cert
 
         async def __aenter__(self):
+            cred = self.cred if self.cred else (self.cert_suite.cert, self.cert_suite.private_key)
             server_cmd = [CLI_PATH, "tls_server", f"--max-clients={self.clients}",
-                          "--port=0", f"--policy={self.policy}",
+                          "--port=0", f"--policy={self.policy}", f"--type={self.transport}",
                           f"--psk={self.psk}", f"--psk-identity={self.psk_identity}",
-                          f"--psk-prf={self.psk_prf}",
-                          self.cert_suite.cert, self.cert_suite.private_key]
+                          f"--psk-prf={self.psk_prf}"] + self.extra_args + [cred[0], cred[1]]
 
             self.port = await self._launch_server(server_cmd)
 
@@ -1378,10 +1598,42 @@ def cli_tls_socket_tests(tmp_dir):
                 raise Exception(f'Client failed with error ({self.config.name}): {retcode}')
             self._check_stdout_regex()
 
+        async def send_partial_line_and_close(self):
+            """Send data without a newline, so the server never echoes it, then close"""
+            await self._write_to_stdin(b'secret')
+            retcode = await self._close_stdin_read_stdout_to_eof_and_wait_for_termination()
+            if retcode != 0:
+                raise Exception(f'Client failed with error ({self.config.name}): {retcode}')
+
+        async def send_overlong_line(self):
+            """Send a line far above the server's limit; the server drops the connection"""
+            try:
+                await self._write_to_stdin(b'a' * (80 * 1024))
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+            await asyncio.wait_for(self._proc.wait(), timeout=ASYNC_TIMEOUT)
+
         async def expect_handshake_error(self):
             retcode = await self._close_stdin_read_stdout_to_eof_and_wait_for_termination()
             if retcode == 0:
                 raise Exception(f"Expected an error, but tls_client finished with success ({self.config.name})")
+            self._check_stdout_regex()
+
+        async def expect_service_denied(self):
+            # The handshake completes from the client's point of view (it is
+            # already active before the server validates its certificate), so
+            # the deterministic signal is that the message is never echoed back
+            # and the connection is closed by the server.
+            try:
+                await self._write_to_stdin(TestClient.client_message)
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+
+            self._stdout += await asyncio.wait_for(self._proc.stdout.read(), timeout=ASYNC_TIMEOUT)
+            await asyncio.wait_for(self._proc.wait(), timeout=ASYNC_TIMEOUT)
+
+            if TestClient.client_message in self._stdout:
+                raise Exception(f"Server provided service despite rejection ({self.config.name})")
             self._check_stdout_regex()
 
         def _check_stdout_regex(self):
@@ -1391,8 +1643,9 @@ def cli_tls_socket_tests(tmp_dir):
                     raise Exception(f"Client log did not match expected regex ({self.config.name}): {self.config.stdout_regex}")
 
         async def __aenter__(self):
-            client_cmd = [CLI_PATH, "tls_client", 'localhost', f'--port={self.port}', f'--trusted-cas={self.ca}',
-                          f'--tls-version={self.config.protocol_version}', f'--policy={self.policy}']
+            client_cmd = [CLI_PATH, "tls_client", self.config.host, f'--port={self.port}', f'--trusted-cas={self.ca}',
+                          f'--tls-version={self.config.protocol_version}', f'--policy={self.policy}',
+                          f'--type={self.config.transport}'] + self.config.client_args
             if self.config.psk:
                 client_cmd += [f'--psk={self.config.psk}', f'--psk-identity={self.config.psk_identity}']
                 if self.config.psk_prf:
@@ -1405,25 +1658,154 @@ def cli_tls_socket_tests(tmp_dir):
         async def __aexit__(self, *_):
             await self._finalize()
 
+    async def run_client(server, tls_config):
+        logging.debug("Running test for %s in TLS %s mode", tls_config.name, tls_config.protocol_version)
+        try:
+            async with TestClient(tmp_dir, server.port, server.ca_cert, tls_config) as client:
+                if tls_config.denial:
+                    await client.expect_service_denied()
+                elif tls_config.expect_error:
+                    await client.expect_handshake_error()
+                else:
+                    await client.perform_message_ping_pong()
+                client.all_clear()
+                return client.stdout
+        except Exception as e:
+            logging.error("Test failed for %s: %s", tls_config.name, e)
+            return None
+
     async def run_async_test():
         async with TestServer(tmp_dir, psk, psk_identity, psk_prf, len(configs)) as server:
-            errors = 0
             for tls_config in configs:
-                logging.debug("Running test for %s in TLS %s mode", tls_config.name, tls_config.protocol_version)
-                async with TestClient(tmp_dir, server.port, server.ca_cert, tls_config) as client:
-                    try:
-                        if tls_config.expect_error:
-                            await client.expect_handshake_error()
-                        else:
-                            await client.perform_message_ping_pong()
-                        client.all_clear()
-                    except Exception as e:
-                        logging.error("Test failed for %s: %s", tls_config.name, e)
+                await run_client(server, tls_config)
 
-            if not errors:
-                server.all_clear()
+            server.all_clear()
+
+    async def run_dtls_test():
+        # Exercises the DTLS server path: cookie secret, peer network identity
+        # and the nonzero-peek handling. localhost may resolve to IPv6 first
+        # and UDP connect() always succeeds, so connect by IP and skip the
+        # hostname check (the test cert is issued for "localhost").
+        config = TestConfig("DTLS 1.2", "1.2", "allow_dtls12=true\n", transport="udp", host="127.0.0.1",
+                            client_args=["--skip-hostname-check"])
+        async with TestServer(tmp_dir, psk, psk_identity, psk_prf, 1, transport="udp") as server:
+            await run_client(server, config)
+            server.all_clear()
+
+    async def run_line_buffer_test():
+        config = TestConfig("Line buffer", "1.3", "allow_tls12=false\nallow_tls13=true\n")
+
+        async with TestServer(tmp_dir, psk, psk_identity, psk_prf, 4) as server:
+            # A client that disconnects mid-line must not have its partial
+            # line delivered to the next client
+            async with TestClient(tmp_dir, server.port, server.ca_cert, config) as client:
+                try:
+                    await client.send_partial_line_and_close()
+                    client.all_clear()
+                except Exception as e:
+                    logging.error("Partial line client failed: %s", e)
+
+            stdout = await run_client(server, config)
+            if stdout is not None and 'secret' in stdout:
+                logging.error("Partial line of a previous client was echoed to the next client")
+
+            # A client sending an overlong line is dropped, and the server keeps serving
+            async with TestClient(tmp_dir, server.port, server.ca_cert, config) as client:
+                try:
+                    await client.send_overlong_line()
+                    client.all_clear()
+                except Exception as e:
+                    logging.error("Overlong line client failed: %s", e)
+
+            await run_client(server, config)
+
+            # The server reported the overlong line but did not exit
+            server.all_clear()
+
+    async def run_rpk_tests():
+        def rpk_keypair(name):
+            priv = os.path.join(tmp_dir, name + '.key')
+            pub = os.path.join(tmp_dir, name + '.pub')
+            # The fixed test DRBG would produce the same key every time
+            test_cli("keygen", ["--algo=ECDSA", "--params=secp256r1", "--output=" + priv], "", use_drbg=False)
+            test_cli("pkcs8", ["--pub-out", priv, "--output=" + pub], "")
+            fingerprint = test_cli("fingerprint", ["--no-fsname", pub])
+            return (priv, pub, fingerprint)
+
+        (server_key, server_pub, server_fp) = rpk_keypair('rpk_server')
+        (client_key, client_pub, client_fp) = rpk_keypair('rpk_client')
+        (other_key, other_pub, other_fp) = rpk_keypair('rpk_other')
+
+        rpk_policy = ("allow_tls12=false\nallow_tls13=true\n"
+                      "accepted_server_certificate_types=RawPublicKey\n"
+                      "accepted_client_certificate_types=RawPublicKey\n")
+        rpk_client_auth_policy = rpk_policy + "require_client_certificate_authentication=true\n"
+
+        trust_server = f"--trusted-pubkey-sha256={server_fp}"
+        client_cred = [f"--client-cert={client_pub}", f"--client-cert-key={client_key}"]
+        other_cred = [f"--client-cert={other_pub}", f"--client-cert-key={other_key}"]
+
+        # Server authenticates with a raw public key; the client must verify the pin
+        async with TestServer(tmp_dir, psk, psk_identity, psk_prf, 3,
+                              policy_text=rpk_policy, cred=(server_pub, server_key)) as server:
+            await run_client(server, TestConfig("RPK server auth", "1.3", rpk_policy,
+                                                client_args=[trust_server],
+                                                stdout_regex="validation status: trusted"))
+            await run_client(server, TestConfig("RPK server auth, wrong pin", "1.3", rpk_policy,
+                                                client_args=[f"--trusted-pubkey-sha256={other_fp}"],
+                                                stdout_regex="validation status: NOT trusted",
+                                                expect_error=True))
+            await run_client(server, TestConfig("RPK server auth, no pin", "1.3", rpk_policy,
+                                                stdout_regex="validation status: NOT trusted",
+                                                expect_error=True))
+            server.all_clear()
+
+        # Client authenticates with a raw public key; the server must verify the pin
+        async with TestServer(tmp_dir, psk, psk_identity, psk_prf, 3,
+                              policy_text=rpk_client_auth_policy, cred=(server_pub, server_key),
+                              extra_args=[f"--trusted-pubkey-sha256={client_fp}"]) as server:
+            await run_client(server, TestConfig("RPK client auth", "1.3", rpk_policy,
+                                                client_args=[trust_server] + client_cred,
+                                                stdout_regex="Performing client authentication"))
+            await run_client(server, TestConfig("RPK client auth, untrusted key", "1.3", rpk_policy,
+                                                client_args=[trust_server] + other_cred,
+                                                stdout_regex="Performing client authentication",
+                                                denial=True))
+            # Without a credential the client sends an empty certificate list
+            # (it must not crash) and the server denies service
+            await run_client(server, TestConfig("RPK client auth, no key", "1.3", rpk_policy,
+                                                client_args=[trust_server],
+                                                denial=True))
+            server.all_clear()
+
+        # A server without a configured client pin accepts no raw public key
+        async with TestServer(tmp_dir, psk, psk_identity, psk_prf, 1,
+                              policy_text=rpk_client_auth_policy, cred=(server_pub, server_key)) as server:
+            await run_client(server, TestConfig("RPK client auth, no server pin", "1.3", rpk_policy,
+                                                client_args=[trust_server] + client_cred,
+                                                stdout_regex="Performing client authentication",
+                                                denial=True))
+            server.all_clear()
+
+    async def run_x509_client_auth_test():
+        # The server requests a certificate without naming any CA; the client
+        # must still offer its configured certificate (the server cannot
+        # validate it, so the handshake fails afterwards)
+        policy = "allow_tls12=false\nallow_tls13=true\n"
+        async with TestServer(tmp_dir, psk, psk_identity, psk_prf, 1,
+                              policy_text=policy + "require_client_certificate_authentication=true\n") as server:
+            client_cred = [f"--client-cert={server.cert_suite.cert}", f"--client-cert-key={server.cert_suite.private_key}"]
+            await run_client(server, TestConfig("X509 client auth, no CA list", "1.3", policy,
+                                                client_args=client_cred,
+                                                stdout_regex="Performing client authentication",
+                                                denial=True))
+            server.all_clear()
 
     asyncio.run(run_async_test())
+    asyncio.run(run_dtls_test())
+    asyncio.run(run_line_buffer_test())
+    asyncio.run(run_rpk_tests())
+    asyncio.run(run_x509_client_auth_test())
 
 def cli_tls_online_pqc_hybrid_tests(tmp_dir):
     if not run_socket_tests() or not run_online_tests() or not check_for_command("tls_client"):
@@ -1692,11 +2074,13 @@ def cli_tss_tests(tmp_dir):
         share = os.path.join(tmp_dir, "split%d.tss" % (i))
         if not os.access(share, os.R_OK):
             logging.error("Failed to create expected split file %s", share)
+        check_private_file(share)
         share_files.append(share)
 
     rec5 = os.path.join(tmp_dir, "recovered_5")
     test_cli("tss_recover", share_files + ["--output=%s" % (rec5)], "")
     test_cli("hash", ["--no-fsname", rec5], exp_hash)
+    check_private_file(rec5)
 
     rec4 = os.path.join(tmp_dir, "recovered_4")
     test_cli("tss_recover", share_files[1:] + ["--output=%s" % (rec4)], "")
@@ -1708,7 +2092,7 @@ def cli_tss_tests(tmp_dir):
 
     rec2 = os.path.join(tmp_dir, "recovered_2")
     test_cli("tss_recover", share_files[3:] + ["--output=%s" % (rec2)], "", None,
-             "Error: Insufficient shares to do TSS reconstruction")
+             "Error: Insufficient shares to do TSS reconstruction", expected_rc=2)
 
 
 def cli_pk_encrypt_tests(tmp_dir):
@@ -1778,6 +2162,8 @@ def cli_pkcs12_tests(tmp_dir):
 
     if not os.path.exists(out_key):
         logging.error("pkcs12_info did not write key file")
+    else:
+        check_private_file(out_key)
     if not os.path.exists(out_cert):
         logging.error("pkcs12_info did not write cert file")
 
@@ -1862,6 +2248,20 @@ def cli_pkcs12_tests(tmp_dir):
               "--out-key-pass=keypassword",
               "--key-pbkdf-iter=2048",
               pfx_file], None)
+    # A bundle whose key matches none of the certificates has no end-entity
+    # certificate; the certificates must still be listed and extractable
+    mismatch_pfx = os.path.join(TEST_DATA_DIR, 'pkcs12', 'key_cert_spki_mismatch.pfx')
+    mismatch_info = test_cli("pkcs12_info", ["--pass=", mismatch_pfx], None)
+    if "Certificates (1 certificates):" not in mismatch_info or "End-Entity Certificate" in mismatch_info:
+        logging.error("Unexpected pkcs12_info output for keyless bundle: %s", mismatch_info)
+
+    mismatch_chain = os.path.join(tmp_dir, 'mismatch_chain.pem')
+    test_cli("pkcs12_info", ["--pass=", "--chain-out=" + mismatch_chain, mismatch_pfx],
+             "CA chain (1 certs) written to %s" % (mismatch_chain))
+    with open(mismatch_chain, encoding='utf-8') as f:
+        if "BEGIN CERTIFICATE" not in f.read():
+            logging.error("pkcs12_info --chain-out did not write the certificate of a keyless bundle")
+
     if not os.path.exists(out_key_enc):
         logging.error("pkcs12_info --out-key-pass: key file not written")
     else:
@@ -1902,6 +2302,16 @@ def cli_tls_client_hello_tests(_tmp_dir):
     for output_hash, chello in chellos:
         output = test_cli("tls_client_hello", ["--hex", "-"], None, chello)
         test_cli("hash", ["--no-fsname", "--algo=SHA-256", "-"], output_hash, output)
+
+    # Malformed inputs are rejected with a nonzero status
+    test_cli("tls_client_hello", ["--hex", "-"], "", "160301",
+             expected_stderr="Input too short to be valid", expected_rc=1)
+    test_cli("tls_client_hello", ["--hex", "-"], "", chellos[0][1][:-2],
+             expected_stderr="Record layer length invalid", expected_rc=1)
+    test_cli("tls_client_hello", ["--hex", "-"], "", chellos[0][1][10:-2],
+             expected_stderr="Handshake layer length invalid", expected_rc=1)
+    test_cli("tls_client_hello", ["--hex", "-"], "", chellos[0][1][18:-2],
+             expected_stderr="Parsing client hello failed: Bad extension size", expected_rc=1)
 
 def cli_speed_pk_fast_tests(_tmp_dir):
     msec = 1
@@ -2021,13 +2431,19 @@ def cli_speed_invalid_option_tests(_tmp_dir):
     speed_usage = "Usage: speed --msec=500 --format=default --time-unit=ms --ecc-groups= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 --one-shot *algos"
 
     test_cli("speed", ["--buf-size=0", "--msec=1", "AES-128"],
-             expected_stderr="Usage error: Cannot have a zero-sized buffer\n%s" % (speed_usage))
+             expected_stderr="Usage error: Cannot have a zero-sized buffer\n%s" % (speed_usage), expected_rc=1)
 
     test_cli("speed", ["--buf-size=F00F", "--msec=1", "AES-128"],
-             expected_stderr="Usage error: Invalid integer value 'F00F' for option buf-size\n%s" % (speed_usage))
+             expected_stderr="Usage error: Invalid integer value 'F00F' for option buf-size\n%s" % (speed_usage),
+             expected_rc=1)
 
     test_cli("speed", ["--buf-size=90000000", "--msec=1", "AES-128"],
-             expected_stderr="Usage error: Specified buffer size is too large\n%s" % (speed_usage))
+             expected_stderr="Usage error: Specified buffer size is too large\n%s" % (speed_usage), expected_rc=1)
+
+    for ratio in ["0", "abc", "nan", "0.5xyz", "-0.5", "inf", ""]:
+        test_cli("speed", ["--cpu-clock-ratio=%s" % (ratio), "--msec=1", "AES-128"],
+                 expected_stderr="Usage error: Unlikely CPU clock ratio of %s\n%s" % (ratio, speed_usage),
+                 expected_rc=1)
 
     test_cli("speed", ["--clear-cpuid=goku", "--msec=1", "AES-128"],
              expected_stderr="Warning don't know CPUID flag 'goku'")
@@ -2221,6 +2637,7 @@ def main(args=None):
         cli_timing_test_tests,
         cli_tls_ciphersuite_tests,
         cli_tls_client_hello_tests,
+        cli_tls_client_usage_tests,
         cli_tls_http_server_tests,
         cli_tls_online_pqc_hybrid_tests,
         cli_tls_socket_tests,

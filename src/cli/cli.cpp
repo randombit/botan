@@ -6,7 +6,10 @@
 
 #include "cli.h"
 #include "argparse.h"
+#include <botan/assert.h>
 #include <botan/rng.h>
+#include <botan/internal/target_info.h>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 
@@ -29,6 +32,12 @@
 #ifdef _WIN32
    #include <fcntl.h>
    #include <io.h>
+#endif
+
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   #include <fcntl.h>
+   #include <sys/stat.h>
+   #include <unistd.h>
 #endif
 
 namespace Botan_CLI {
@@ -63,14 +72,7 @@ int Command::run(const std::vector<std::string>& params) {
       m_args->parse_args(params);
 
       if(m_args->has_arg("output")) {
-         const std::string output_file = get_arg("output");
-
-         if(!output_file.empty()) {
-            m_output_stream = std::make_unique<std::ofstream>(output_file, std::ios::binary);
-            if(!m_output_stream->good()) {
-               throw CLI_IO_Error("opening", output_file);
-            }
-         }
+         m_output_file = get_arg("output");
       }
 
       if(m_args->has_arg("error-output")) {
@@ -90,6 +92,7 @@ int Command::run(const std::vector<std::string>& params) {
       }
 
       this->go();
+      finish_output();
       return m_return_code;
    } catch(CLI_Usage_Error& e) {
       error_output() << "Usage error: " << e.what() << "\n";
@@ -153,15 +156,23 @@ std::vector<std::string> Command::get_arg_list(const std::string& what) const {
 }
 
 std::ostream& Command::output() {
-   if(m_output_stream) {
+   if(!m_output_file.empty()) {
+      /*
+      * The output file is created only once something is written to it, so
+      * that naming an input file as the output does not truncate the input
+      * before the command has read it.
+      */
+      if(!m_output_stream) {
+         m_output_stream = std::make_unique<std::ofstream>(open_output_file(m_output_file, output_contains_secrets()));
+      }
       return *m_output_stream;
    }
    return std::cout;
 }
 
 std::ostream& Command::output_binary() {
-   if(m_output_stream) {
-      return *m_output_stream;
+   if(!m_output_file.empty()) {
+      return output();
    }
 #ifdef _WIN32
    _setmode(_fileno(stdout), _O_BINARY);
@@ -169,11 +180,78 @@ std::ostream& Command::output_binary() {
    return std::cout;
 }
 
+void Command::finish_output() {
+   if(!m_output_file.empty()) {
+      // Creates the file if the command produced no output at all
+      output();
+      m_output_stream->close();
+      if(m_output_stream->fail()) {
+         throw CLI_IO_Error("writing", m_output_file);
+      }
+   } else {
+      std::cout.flush();
+      if(!std::cout.good()) {
+         throw CLI_IO_Error("writing", "stdout");
+      }
+   }
+
+   if(m_error_output_stream) {
+      m_error_output_stream->flush();
+   }
+}
+
 std::ostream& Command::error_output() {
    if(m_error_output_stream) {
       return *m_error_output_stream;
    }
    return std::cerr;
+}
+
+//static
+std::ofstream Command::open_output_file(const std::string& path, bool private_file) {
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   if(private_file) {
+      // Create the file with owner-only permissions before the stream opens it
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
+      const int fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+      if(fd < 0) {
+         throw CLI_IO_Error("opening", path);
+      }
+      ::close(fd);
+   }
+#else
+   BOTAN_UNUSED(private_file);
+#endif
+
+   std::ofstream out(path, std::ios::binary);
+   if(!out) {
+      throw CLI_IO_Error("opening", path);
+   }
+   return out;
+}
+
+//static
+void Command::replace_file_contents(const std::string& path, std::string_view contents, bool private_file) {
+   const std::string tmp_path = path + ".tmp";
+
+   std::ofstream out = open_output_file(tmp_path, private_file);
+   out.write(contents.data(), static_cast<std::streamsize>(contents.size()));
+   out.close();
+
+   if(!out) {
+      static_cast<void>(std::remove(tmp_path.c_str()));
+      throw CLI_IO_Error("writing", tmp_path);
+   }
+
+#if defined(_WIN32)
+   // rename does not replace an existing file on Windows
+   static_cast<void>(std::remove(path.c_str()));
+#endif
+
+   if(std::rename(tmp_path.c_str(), path.c_str()) != 0) {
+      static_cast<void>(std::remove(tmp_path.c_str()));
+      throw CLI_IO_Error("replacing", path);
+   }
 }
 
 //static
@@ -200,12 +278,19 @@ void Command::read_file(const std::string& input_file,
       _setmode(_fileno(stdin), _O_BINARY);
 #endif
       do_read_file(std::cin, consumer_fn, buf_size);
+      if(std::cin.bad()) {
+         throw CLI_IO_Error("reading", "stdin");
+      }
    } else {
       std::ifstream in(input_file, std::ios::binary);
       if(!in) {
          throw CLI_IO_Error("reading file", input_file);
       }
       do_read_file(in, consumer_fn, buf_size);
+      // A read error (as opposed to EOF) sets badbit
+      if(in.bad()) {
+         throw CLI_IO_Error("reading file", input_file);
+      }
    }
 }
 
@@ -243,32 +328,26 @@ std::string Command::get_passphrase_arg(const std::string& prompt, const std::st
    return get_passphrase(prompt);
 }
 
-namespace {
-
-bool echo_suppression_supported() {
-#if defined(BOTAN_HAS_OS_UTILS)
-   const auto echo = Botan::OS::suppress_echo_on_terminal();
-   return (echo != nullptr);
-#else
-   return false;
-#endif
-}
-
-}  // namespace
-
 std::string Command::get_passphrase(const std::string& prompt) {
-   if(!echo_suppression_supported()) {
+#if defined(BOTAN_HAS_OS_UTILS)
+   const auto echo_suppress = Botan::OS::suppress_echo_on_terminal();
+   const bool echo_suppressed = (echo_suppress != nullptr);
+#else
+   const bool echo_suppressed = false;
+#endif
+
+   if(!echo_suppressed) {
       error_output() << "Warning: terminal echo suppression not enabled for this platform\n";
    }
 
    error_output() << prompt << ": " << std::flush;
+
    std::string pass;
 
-#if defined(BOTAN_HAS_OS_UTILS)
-   const auto echo_suppress = Botan::OS::suppress_echo_on_terminal();
-#endif
-
-   std::getline(std::cin, pass);
+   // EOF (eg Ctrl-D) must not be mistaken for an empty passphrase
+   if(!std::getline(std::cin, pass)) {
+      throw CLI_Error("No passphrase was entered");
+   }
 
    return pass;
 }

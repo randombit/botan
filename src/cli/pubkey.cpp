@@ -46,6 +46,8 @@ class PK_Keygen final : public Command {
 
       std::string description() const override { return "Generate a PKCS #8 private key"; }
 
+      bool output_contains_secrets() const override { return true; }
+
       void go() override {
          const std::string algo = get_arg("algo");
          const std::string params = get_arg("params");
@@ -254,12 +256,10 @@ class PK_Sign final : public PK_Signature_Command {
          std::vector<uint8_t> sig{signer.signature(rng())};
 
          if(key->stateful_operation()) {
-            std::ofstream updated_key(key_file);
-            if(passphrase.empty()) {
-               updated_key << Botan::PKCS8::PEM_encode(*key);
-            } else {
-               updated_key << Botan::PKCS8::PEM_encode(*key, rng(), passphrase);
-            }
+            // The advanced key state must be stored before the signature is released
+            const std::string updated_key =
+               passphrase.empty() ? Botan::PKCS8::PEM_encode(*key) : Botan::PKCS8::PEM_encode(*key, rng(), passphrase);
+            replace_file_contents(key_file, updated_key, true);
          }
 
          output() << Botan::base64_encode(sig) << "\n";
@@ -297,6 +297,10 @@ class PK_Verify final : public PK_Signature_Command {
          const bool valid = verifier.check_signature(signature);
 
          output() << "Signature is " << (valid ? "valid" : "invalid") << "\n";
+
+         if(!valid) {
+            set_return_code(1);
+         }
       }
 };
 
@@ -312,6 +316,8 @@ class PKCS8_Tool final : public Command {
       std::string group() const override { return "pubkey"; }
 
       std::string description() const override { return "Open a PKCS #8 formatted key"; }
+
+      bool output_contains_secrets() const override { return !flag_set("pub-out"); }
 
       void go() override {
          const std::string key_file = get_arg("key");
@@ -480,6 +486,11 @@ class Gen_DL_Group final : public Command {
          } else if(type == "subgroup") {
             if(!seed_str.empty()) {
                throw CLI_Usage_Error("Seed only supported for DSA param gen");
+            }
+            // Match the floor the FFI DSA/ElGamal wrappers enforce; a tiny
+            // subgroup order makes discrete logs trivial
+            if(qbits != 0 && qbits < 160) {
+               throw CLI_Usage_Error("Subgroup order of " + std::to_string(qbits) + " bits is too small");
             }
             const Botan::DL_Group grp(rng(), Botan::DL_Group::Prime_Subgroup, pbits, qbits);
             output() << grp.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42);

@@ -67,7 +67,8 @@ class FEC_Share final {
          const size_t n = bits[6];
          const size_t padding = bits[7];
 
-         if(share_id >= n || k >= n || padding >= k) {
+         // Same invariant as the ZFEC constructor: 1 <= k <= n
+         if(share_id >= n || k == 0 || k > n || padding >= k) {
             throw CLI_Error("FEC share has invalid k/n/padding fields");
          }
 
@@ -169,9 +170,17 @@ class FEC_Encode final : public Command {
             }
 
             std::ofstream output(output_fsname.str(), std::ios::binary);
+            if(!output) {
+               throw CLI_IO_Error("opening", output_fsname.str());
+            }
 
             const FEC_Share fec_share(share, k, n, padding, bits, len);
             fec_share.serialize_to(*hash, output);
+            output.close();
+
+            if(!output) {
+               throw CLI_IO_Error("writing", output_fsname.str());
+            }
          };
 
          fec.encode(input_data.data(), input_data.size(), encoder_fn);
@@ -303,6 +312,7 @@ class FEC_Info final : public Command {
                      << " needed for recovery\n";
          } catch(std::exception& e) {
             error_output() << "Invalid share '" << share_fsname << "': " << e.what() << "\n";
+            set_return_code(1);
          }
       }
 };

@@ -56,6 +56,7 @@ class TLS_Ciphersuites final : public Command {
 
          if(!policy->acceptable_protocol_version(version)) {
             error_output() << "Error: the policy specified does not allow the given TLS version\n";
+            set_return_code(1);
             return;
          }
 
@@ -90,6 +91,7 @@ class TLS_Client_Hello_Reader final : public Command {
 
          if(input.size() < 45) {
             error_output() << "Input too short to be valid\n";
+            set_return_code(1);
             return;
          }
 
@@ -99,6 +101,7 @@ class TLS_Client_Hello_Reader final : public Command {
 
             if(input.size() != len + 5) {
                error_output() << "Record layer length invalid\n";
+               set_return_code(1);
                return;
             }
 
@@ -111,6 +114,7 @@ class TLS_Client_Hello_Reader final : public Command {
 
             if(input.size() != hs_len + 4) {
                error_output() << "Handshake layer length invalid\n";
+               set_return_code(1);
                return;
             }
 
@@ -128,6 +132,7 @@ class TLS_Client_Hello_Reader final : public Command {
             }());
          } catch(std::exception& e) {
             error_output() << "Parsing client hello failed: " << e.what() << "\n";
+            set_return_code(1);
          }
       }
 

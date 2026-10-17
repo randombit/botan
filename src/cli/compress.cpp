@@ -46,6 +46,10 @@ class Compress final : public Command {
          const size_t buf_size = get_arg_sz("buf-size");
          const size_t comp_level = get_arg_sz("level");
 
+         if(buf_size == 0) {
+            throw CLI_Usage_Error("Cannot have a zero-sized buffer");
+         }
+
          auto compress = Botan::Compression_Algorithm::create(comp_type);
          if(!compress) {
             throw CLI_Error_Unsupported("Compression", comp_type);
@@ -68,20 +72,26 @@ class Compress final : public Command {
 
          compress->start(comp_level);
 
-         while(in.good()) {
-            buf.resize(buf_size);
-            in.read(reinterpret_cast<char*>(buf.data()), buf.size());
-            buf.resize(in.gcount());
-
+         const auto compress_block = [&](const uint8_t b[], size_t l) {
+            buf.assign(b, b + l);
             compress->update(buf);
-
             out.write(reinterpret_cast<const char*>(buf.data()), buf.size());
+         };
+
+         Command::do_read_file(in, compress_block, buf_size);
+
+         if(in.bad()) {
+            throw CLI_IO_Error("reading", in_file);
          }
 
          buf.clear();
          compress->finish(buf);
          out.write(reinterpret_cast<const char*>(buf.data()), buf.size());
          out.close();
+
+         if(!out) {
+            throw CLI_IO_Error("writing", out_file);
+         }
       }
 };
 
@@ -108,6 +118,11 @@ class Decompress final : public Command {
       void go() override {
          const size_t buf_size = get_arg_sz("buf-size");
          const std::string in_file = get_arg("file");
+
+         if(buf_size == 0) {
+            throw CLI_Usage_Error("Cannot have a zero-sized buffer");
+         }
+
          std::string out_file;
          std::string suffix;
          parse_extension(in_file, out_file, suffix);
@@ -133,20 +148,26 @@ class Decompress final : public Command {
 
          decompress->start();
 
-         while(in.good()) {
-            buf.resize(buf_size);
-            in.read(reinterpret_cast<char*>(buf.data()), buf.size());
-            buf.resize(in.gcount());
-
+         const auto decompress_block = [&](const uint8_t b[], size_t l) {
+            buf.assign(b, b + l);
             decompress->update(buf);
-
             out.write(reinterpret_cast<const char*>(buf.data()), buf.size());
+         };
+
+         Command::do_read_file(in, decompress_block, buf_size);
+
+         if(in.bad()) {
+            throw CLI_IO_Error("reading", in_file);
          }
 
          buf.clear();
          decompress->finish(buf);
          out.write(reinterpret_cast<const char*>(buf.data()), buf.size());
          out.close();
+
+         if(!out) {
+            throw CLI_IO_Error("writing", out_file);
+         }
       }
 };
 
