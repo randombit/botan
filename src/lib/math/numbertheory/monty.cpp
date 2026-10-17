@@ -9,6 +9,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/barrett.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/mp_core.h>
 #include <array>
 #include <functional>
@@ -396,6 +397,97 @@ Montgomery_Int& Montgomery_Int::square_this_n_times(secure_vector<word>& ws, siz
    }
 
    return (*this);
+}
+
+void Montgomery_Int::add_mod_p(std::span<const word> other) {
+   const size_t p_size = m_params.p_words();
+   BOTAN_ASSERT_NOMSG(m_v.size() == p_size && other.size() == p_size);
+
+   const auto do_add = [&](std::span<word> t) {
+      const word carry = bigint_add3(t.data(), m_v.data(), p_size, other.data(), p_size);
+      bigint_monty_maybe_sub(p_size, m_v.data(), carry, t.data(), m_params.p()._data());
+   };
+
+   if(p_size <= MontgomeryUseStackLimit) {
+      std::array<word, MontgomeryUseStackLimit> t{};
+      do_add(std::span{t}.first(p_size));
+   } else {
+      secure_vector<word> t(p_size);
+      do_add(t);
+   }
+}
+
+Montgomery_Int& Montgomery_Int::operator+=(const Montgomery_Int& other) {
+   BOTAN_STATE_CHECK(other.m_params == m_params);
+   this->add_mod_p(other.m_v);
+   return (*this);
+}
+
+Montgomery_Int& Montgomery_Int::operator-=(const Montgomery_Int& other) {
+   BOTAN_STATE_CHECK(other.m_params == m_params);
+
+   const size_t p_size = m_params.p_words();
+   BOTAN_ASSERT_NOMSG(m_v.size() == p_size && other.m_v.size() == p_size);
+
+   const word borrow = bigint_sub2(m_v.data(), p_size, other.m_v.data(), p_size);
+   bigint_cnd_add(borrow, m_v.data(), m_params.p()._data(), p_size);
+
+   return (*this);
+}
+
+Montgomery_Int& Montgomery_Int::mul_by_word(word d) {
+   BOTAN_ARG_CHECK(d > 0, "Multiplier must be positive");
+
+   const size_t p_size = m_params.p_words();
+   BOTAN_ASSERT_NOMSG(m_v.size() == p_size);
+
+   // Double and add, from the second highest bit of d downwards
+   const auto do_mul = [&](std::span<word> x) {
+      copy_mem(x.data(), m_v.data(), p_size);
+
+      for(size_t i = high_bit(d) - 1; i > 0; --i) {
+         this->add_mod_p(m_v);
+         if(((d >> (i - 1)) & 1) == 1) {
+            this->add_mod_p(x);
+         }
+      }
+   };
+
+   if(p_size <= MontgomeryUseStackLimit) {
+      std::array<word, MontgomeryUseStackLimit> x{};
+      do_mul(std::span{x}.first(p_size));
+   } else {
+      secure_vector<word> x(p_size);
+      do_mul(x);
+   }
+
+   return (*this);
+}
+
+Montgomery_Int& Montgomery_Int::div2() {
+   const size_t p_size = m_params.p_words();
+   BOTAN_ASSERT_NOMSG(m_v.size() == p_size);
+   constexpr size_t WB = WordInfo<word>::bits;
+
+   // If odd, add p (also odd) to make the value even; the sum is below 2p
+   const word carry = bigint_cnd_add(m_v[0] & 1, m_v.data(), m_params.p()._data(), p_size);
+
+   for(size_t i = 0; i != p_size - 1; ++i) {
+      m_v[i] = (m_v[i] >> 1) | (m_v[i + 1] << (WB - 1));
+   }
+   m_v[p_size - 1] = (m_v[p_size - 1] >> 1) | (carry << (WB - 1));
+
+   return (*this);
+}
+
+void Montgomery_Int::ct_cond_assign(bool predicate, const Montgomery_Int& other) {
+   BOTAN_STATE_CHECK(other.m_params == m_params);
+   BOTAN_ASSERT_NOMSG(m_v.size() == other.m_v.size());
+   CT::conditional_assign_mem(static_cast<word>(predicate), m_v.data(), other.m_v.data(), m_v.size());
+}
+
+bool Montgomery_Int::is_zero() const {
+   return CT::all_zeros(m_v.data(), m_v.size()).as_bool();
 }
 
 Montgomery_Int Montgomery_Int::square(secure_vector<word>& ws) const {

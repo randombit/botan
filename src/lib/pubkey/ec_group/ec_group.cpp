@@ -358,12 +358,11 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::DER_decode_EC_group(st
       */
 
       const auto mod_p = Barrett_Reduction::for_public_modulus(p);
-      if(!is_bailie_psw_probable_prime(p, mod_p)) {
+      if(!is_bailie_psw_probable_prime_vartime(p)) {
          throw Decoding_Error("ECC p parameter is not a prime");
       }
 
-      const auto mod_order = Barrett_Reduction::for_public_modulus(order);
-      if(!is_bailie_psw_probable_prime(order, mod_order)) {
+      if(!is_bailie_psw_probable_prime_vartime(order)) {
          throw Decoding_Error("Invalid ECC order parameter");
       }
 
@@ -591,10 +590,9 @@ EC_Group::EC_Group(const BigInt& p,
    BOTAN_ARG_CHECK(cofactor >= 1 && cofactor < 16, "EC_Group cofactor is invalid");
 
    const auto mod_p = Barrett_Reduction::for_public_modulus(p);
-   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(p, mod_p), "EC_Group p is not prime");
+   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime_vartime(p), "EC_Group p is not prime");
 
-   const auto mod_order = Barrett_Reduction::for_public_modulus(order);
-   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(order, mod_order), "EC_Group order is not prime");
+   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime_vartime(order), "EC_Group order is not prime");
 
    BOTAN_ARG_CHECK(p != order, "Anomalous elliptic curves are not supported");
 
@@ -676,10 +674,9 @@ EC_Group EC_Group::register_custom_group(const OID& oid,
    BOTAN_ARG_CHECK(p.bits() == order.bits(), "EC_Group p and order must have the same number of bits");
 
    const auto mod_p = Barrett_Reduction::for_public_modulus(p);
-   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(p, mod_p), "EC_Group p is not prime");
+   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime_vartime(p), "EC_Group p is not prime");
 
-   const auto mod_order = Barrett_Reduction::for_public_modulus(order);
-   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(order, mod_order), "EC_Group order is not prime");
+   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime_vartime(order), "EC_Group order is not prime");
 
    BOTAN_ARG_CHECK(p != order, "Anomalous elliptic curves are not supported");
 
@@ -913,12 +910,12 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    const bool is_randomly_generated = false;
 
    //check if field modulus is prime
-   if(!is_prime(p, rng, test_prob, is_randomly_generated)) {
+   if(!is_prime_vartime(p, rng, test_prob, is_randomly_generated)) {
       return false;
    }
 
    //check if order is prime
-   if(!is_prime(order, rng, test_prob, is_randomly_generated)) {
+   if(!is_prime_vartime(order, rng, test_prob, is_randomly_generated)) {
       return false;
    }
 
