@@ -32,6 +32,8 @@ std::string CPUFeature::to_string() const {
          return "armv8sm3";
       case CPUFeature::Bit::SM4:
          return "armv8sm4";
+      case CPUFeature::Bit::RNG:
+         return "armv8rng";
    }
    throw Invalid_State("CPUFeature invalid bit");
 }
@@ -59,6 +61,8 @@ std::optional<CPUFeature> CPUFeature::from_string(std::string_view tok) {
       return CPUFeature::Bit::SM3;
    } else if(tok == "armv8sm4" || tok == "arm_sm4") {
       return CPUFeature::Bit::SM4;
+   } else if(tok == "armv8rng") {
+      return CPUFeature::Bit::RNG;
    } else {
       return {};
    }
