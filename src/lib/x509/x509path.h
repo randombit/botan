@@ -419,7 +419,8 @@ Certificate_Status_Code BOTAN_PUBLIC_API(2, 0)
 *
 * @param cert_path path built by build_certificate_path with OK result.
 * The first element is the end entity certificate, the last element is
-* the trusted root certificate.
+* the trusted root certificate. The signature on the trusted root is
+* not verified; it is trusted because it was provided as a trust anchor.
 * @param ref_time whatever time you want to perform the validation
 * against (normally current system clock)
 * @param hostname the hostname

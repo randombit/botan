@@ -357,25 +357,21 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
    CertificatePathStatusCodes cert_status(cert_path.size());
 
    // Before anything else verify the entire chain of signatures
-   // starting from the root certificate and working towards the
-   // leaf. This precludes denial of service attacks based on long
-   // certificate chains which are valid except for the final
-   // forged (invalid) signature purportedly by the trust root.
-   for(size_t i = cert_path.size(); i-- > 0;) {
+   // starting from the certificate issued by the trust anchor and
+   // working towards the leaf. This precludes denial of service
+   // attacks based on long certificate chains which are valid except
+   // for the final forged (invalid) signature purportedly by the
+   // trust root.
+   //
+   // The trust anchor's own signature is not checked. RFC 5280 6.1.1:
+   // "The trust anchor information is trusted because it was
+   // delivered to the path processing procedure by some trustworthy
+   // out-of-band procedure."
+   for(size_t i = cert_path.size() - 1; i-- > 0;) {
       std::set<Certificate_Status_Code>& status = cert_status.at(i);
 
-      const bool at_trust_anchor = (i == cert_path.size() - 1);
-
       const X509_Certificate& subject = cert_path[i];
-
-      // If using intermediate CAs as trust anchors, the signature of the trust
-      // anchor cannot be verified since the issuer is not part of the
-      // certificate chain
-      if(!restrictions.require_self_signed_trust_anchors() && at_trust_anchor && !subject.is_self_signed()) {
-         continue;
-      }
-
-      const X509_Certificate& issuer = cert_path[at_trust_anchor ? (i) : (i + 1)];
+      const X509_Certificate& issuer = cert_path[i + 1];
 
       // Check the signature algorithm is known
       if(!subject.signature_algorithm().oid().registered_oid()) {
@@ -403,11 +399,8 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
                BOTAN_ASSERT_NOMSG(!hash_used_for_signature.empty());
                const auto& trusted_hashes = restrictions.trusted_hashes();
 
-               // Ignore untrusted hashes on self-signed roots
-               if(!trusted_hashes.empty() && !at_trust_anchor) {
-                  if(!trusted_hashes.contains(hash_used_for_signature)) {
-                     status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
-                  }
+               if(!trusted_hashes.empty() && !trusted_hashes.contains(hash_used_for_signature)) {
+                  status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
                }
             }
          }

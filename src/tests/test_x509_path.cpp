@@ -2123,6 +2123,9 @@ class XMSS_Path_Validation_Tests final : public Test {
          const Botan::Path_Validation_Restrictions restrictions;
          const auto self_signed = Botan::X509_Certificate(Test::data_file("x509/xmss/" + file));
 
+         // Path validation does not verify the trust anchor's signature, so check it directly
+         result.test_is_true("Self-signature verifies", self_signed.check_signature(*self_signed.subject_public_key()));
+
          const auto cert_path = std::vector<Botan::X509_Certificate>{self_signed};
          const auto valid_time = Botan::calendar_point(2019, 10, 8, 4, 45, 0).to_std_timepoint();
 
