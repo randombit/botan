@@ -92,10 +92,15 @@ class Roughtime final : public Command {
 
       std::string description() const override { return "Retrieve time from Roughtime server"; }
 
-      void query(std::unique_ptr<Botan::Roughtime::Chain>& chain,
+      /*
+      * Query one server. Returns true if an authenticated response was
+      * received; otherwise the failure is reported and false returned.
+      */
+      bool query(std::unique_ptr<Botan::Roughtime::Chain>& chain,
                  const size_t max_chain_size,
                  const std::string& address,
-                 const Botan::Ed25519_PublicKey& public_key) {
+                 const Botan::Ed25519_PublicKey& public_key,
+                 const std::string& prefix) {
          Botan::Roughtime::Nonce nonce{};
          Botan::Roughtime::Nonce blind{};
          if(chain) {
@@ -106,19 +111,23 @@ class Roughtime final : public Command {
          }
          const auto response_raw = Botan::Roughtime::online_request(address, nonce, std::chrono::seconds(5));
          const auto response = Botan::Roughtime::Response::from_bits(response_raw, nonce);
-         if(flag_set("raw-time")) {
-            output()
-               << "UTC "
-               << Botan::Roughtime::Response::sys_microseconds64(response.utc_midpoint()).time_since_epoch().count();
-         } else {
-            output() << "UTC " << format_utc_datetime(response.utc_midpoint());
-         }
-         output() << " (+-" << Botan::Roughtime::Response::microseconds32(response.utc_radius()).count() << "us)";
+
+         // Nothing from the response reaches stdout until it has been authenticated
          if(!response.validate(public_key)) {
             error_output() << "ERROR: Public key does not match!\n";
             set_return_code(1);
-            return;
+            return false;
          }
+
+         std::ostringstream line;
+         line << prefix << "UTC ";
+         if(flag_set("raw-time")) {
+            line << Botan::Roughtime::Response::sys_microseconds64(response.utc_midpoint()).time_since_epoch().count();
+         } else {
+            line << format_utc_datetime(response.utc_midpoint());
+         }
+         line << " (+-" << Botan::Roughtime::Response::microseconds32(response.utc_radius()).count() << "us)";
+
          const auto tolerance = get_arg_sz("check-local-clock");
          if(tolerance > 0) {
             const auto now = std::chrono::system_clock::now();
@@ -127,14 +136,15 @@ class Roughtime final : public Command {
             if(diff_abs > (response.utc_radius() + std::chrono::seconds(tolerance))) {
                error_output() << "ERROR: Local clock mismatch\n";
                set_return_code(1);
-               return;
+               return false;
             }
-            output() << " Local clock match";
+            line << " Local clock match";
          }
          if(chain) {
             chain->append({response_raw, public_key, blind}, max_chain_size);
          }
-         output() << '\n';
+         output() << line.str() << '\n';
+         return true;
       }
 
       void go() override {
@@ -166,20 +176,27 @@ class Roughtime final : public Command {
             const auto servers = Botan::Roughtime::servers_from_str(slurp_file_as_str(servers_file));
 
             for(const auto& s : servers) {
-               output() << std::setw(25) << std::left << s.name() << ": ";
+               std::ostringstream prefix;
+               prefix << std::setw(25) << std::left << s.name() << ": ";
+
+               bool server_ok = false;
                for(const auto& a : s.addresses()) {
                   try {
-                     query(chain, max_chain_size, a, s.public_key());
+                     server_ok = query(chain, max_chain_size, a, s.public_key(), prefix.str());
                      break;
                   } catch(const std::exception& ex)  //network error, try next address
                   {
                      error_output() << ex.what() << '\n';
                   }
                }
+
+               if(!server_ok) {
+                  set_return_code(1);
+               }
             }
 
          } else {
-            query(chain, max_chain_size, host, Botan::Ed25519_PublicKey(Botan::base64_decode(pk)));
+            query(chain, max_chain_size, host, Botan::Ed25519_PublicKey(Botan::base64_decode(pk)), "");
          }
 
          if(chain) {

@@ -112,6 +112,10 @@ uint64_t decrypt_cc_number(uint64_t enc_cc,
 uint64_t parse_cc(std::string_view input) {
    if(input.size() >= 13 && input.size() <= 19) {
       if(auto cc = Botan::parse_u64(input)) {
+         // The check digit is dropped before FPE, so a wrong one would be silently replaced
+         if(!luhn_check(*cc)) {
+            throw CLI_Usage_Error("Credit card number fails the Luhn check");
+         }
          return *cc;
       }
    }
@@ -133,7 +137,7 @@ class CC_Encrypt final : public Command {
          const std::string cc = get_arg("CC");
          const uint64_t cc_number = parse_cc(cc);
          const std::vector<uint8_t> tweak = Botan::hex_decode(get_arg("tweak"));
-         const std::string pass = get_arg("passphrase");
+         const std::string pass = get_passphrase_arg("Passphrase", "passphrase");
 
          auto pbkdf = Botan::PBKDF::create("PBKDF2(SHA-256)");
          if(!pbkdf) {
@@ -162,7 +166,7 @@ class CC_Decrypt final : public Command {
          const std::string cc = get_arg("CC");
          const uint64_t cc_number = parse_cc(cc);
          const std::vector<uint8_t> tweak = Botan::hex_decode(get_arg("tweak"));
-         const std::string pass = get_arg("passphrase");
+         const std::string pass = get_passphrase_arg("Passphrase", "passphrase");
 
          auto pbkdf = Botan::PBKDF::create("PBKDF2(SHA-256)");
          if(!pbkdf) {

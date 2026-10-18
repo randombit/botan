@@ -57,12 +57,9 @@ void update_stateful_private_key(const Botan::Private_Key& key,
       return;
    }
 
-   std::ofstream updated_key(key_file);
-   if(pass.empty()) {
-      updated_key << Botan::PKCS8::PEM_encode(key);
-   } else {
-      updated_key << Botan::PKCS8::PEM_encode(key, rng, pass);
-   }
+   const std::string updated_key =
+      pass.empty() ? Botan::PKCS8::PEM_encode(key) : Botan::PKCS8::PEM_encode(key, rng, pass);
+   Command::replace_file_contents(key_file, updated_key, true);
 }
 
    #if defined(BOTAN_HAS_CERTSTOR_SYSTEM)
@@ -269,6 +266,7 @@ class Cert_Verify final : public Command {
             output() << "Certificate passes validation checks\n";
          } else {
             output() << "Certificate did not validate - " << result.result_string() << "\n";
+            set_return_code(1);
          }
       }
 };

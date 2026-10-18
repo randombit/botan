@@ -9,6 +9,7 @@
 #include "perf.h"
 
 #include <algorithm>
+#include <cmath>
 #include <iomanip>
 #include <map>
 #include <set>
@@ -413,8 +414,6 @@ class Speed final : public Command {
 
          const size_t clock_speed = get_arg_sz("cpu-clock-speed");
 
-         double clock_cycle_ratio = std::strtod(clock_ratio.c_str(), nullptr);
-
          m_time_unit = [](std::string_view tu) {
             if(tu == "ms") {
                return 1000;
@@ -433,11 +432,18 @@ class Speed final : public Command {
          * any machine where the cycle counter increments faster than the actual
          * clock.
          */
-         if(clock_cycle_ratio < 0.0 || clock_cycle_ratio > 1.0) {
-            throw CLI_Usage_Error("Unlikely CPU clock ratio of " + clock_ratio);
-         }
+         const double clock_cycle_ratio = [&]() {
+            const char* begin = clock_ratio.c_str();
+            char* end = nullptr;
+            const double ratio = std::strtod(begin, &end);
 
-         clock_cycle_ratio = 1.0 / clock_cycle_ratio;
+            if(clock_ratio.empty() || end != begin + clock_ratio.size() || !std::isfinite(ratio) || ratio <= 0.0 ||
+               ratio > 1.0) {
+               throw CLI_Usage_Error("Unlikely CPU clock ratio of " + clock_ratio);
+            }
+
+            return 1.0 / ratio;
+         }();
 
 #if defined(BOTAN_HAS_OS_UTILS)
          if(clock_speed != 0 && Botan::OS::get_cpu_cycle_counter() != 0) {

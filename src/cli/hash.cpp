@@ -45,16 +45,19 @@ class Hash final : public Command {
             try {
                const auto update_hash = [&](const uint8_t b[], size_t l) { hash_fn->update(b, l); };
                read_file(fsname, update_hash, buf_size);
-
-               const std::string digest = format_blob(format, hash_fn->final());
-
-               if(no_fsname) {
-                  output() << digest << "\n";
-               } else {
-                  output() << digest << " " << fsname << "\n";
-               }
             } catch(CLI_IO_Error& e) {
                error_output() << e.what() << "\n";
+               set_return_code(1);
+               hash_fn->final();  // discard any partial input
+               continue;
+            }
+
+            const std::string digest = format_blob(format, hash_fn->final());
+
+            if(no_fsname) {
+               output() << digest << "\n";
+            } else {
+               output() << digest << " " << fsname << "\n";
             }
          }
       }

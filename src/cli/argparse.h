@@ -8,6 +8,7 @@
 #define BOTAN_CLI_ARGPARSE_H_
 
 #include "cli_exceptions.h"
+#include <charconv>
 #include <map>
 #include <set>
 #include <string>
@@ -105,21 +106,37 @@ inline std::string Argument_Parser::get_arg_or(const std::string& opt_name, cons
 inline size_t Argument_Parser::get_arg_sz(const std::string& opt_name) const {
    const std::string s = get_arg(opt_name);
 
-   try {
-      return static_cast<size_t>(std::stoul(s));
-   } catch(std::exception&) {
+   // Unlike strtoul this rejects signs, leading whitespace, and trailing junk
+   size_t val = 0;
+   const char* end = s.data() + s.size();
+   const auto res = std::from_chars(s.data(), end, val, 10);
+
+   if(s.empty() || res.ec != std::errc() || res.ptr != end) {
       throw CLI_Usage_Error("Invalid integer value '" + s + "' for option " + opt_name);
    }
+
+   return val;
 }
 
 inline size_t Argument_Parser::get_arg_hex_sz_or(const std::string& opt_name, const std::string& otherwise) const {
    const std::string s = get_arg_or(opt_name, otherwise);
 
-   try {
-      return static_cast<size_t>(std::stoul(s, nullptr, 16));
-   } catch(std::exception&) {
+   const char* begin = s.data();
+   const char* const end = s.data() + s.size();
+
+   // Accept an optional "0x" prefix
+   if(s.size() >= 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
+      begin += 2;
+   }
+
+   size_t val = 0;
+   const auto res = std::from_chars(begin, end, val, 16);
+
+   if(begin == end || res.ec != std::errc() || res.ptr != end) {
       throw CLI_Usage_Error("Invalid hex integer value '" + s + "' for option " + opt_name);
    }
+
+   return val;
 }
 
 inline std::vector<std::string> Argument_Parser::get_arg_list(const std::string& what) const {
