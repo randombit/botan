@@ -101,6 +101,7 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_magic.h>
 
+#include <botan/mem_ops.h>
 #include <botan/internal/concat_util.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hkdf.h>
@@ -489,28 +490,46 @@ size_t Cipher_State::protected_record_length(Epoch& epoch, size_t payload_length
    return epoch.cipher->output_length(plaintext_length);
 }
 
-MarshalledRecord Cipher_State::marshall_and_protect(Epoch& epoch,
-                                                    std::span<const uint8_t> header,
-                                                    std::span<const uint8_t> payload,
-                                                    Record_Type type,
-                                                    size_t padding_bytes) {
+void Cipher_State::marshall_and_protect(Epoch& epoch,
+                                        std::span<const uint8_t> header,
+                                        std::span<const uint8_t> payload,
+                                        Record_Type type,
+                                        size_t padding_bytes,
+                                        secure_vector<uint8_t>& out) {
    BOTAN_ASSERT_NONNULL(epoch.cipher);
 
+   const size_t record_offset = out.size();
+   const size_t content_offset = record_offset + header.size();
    const size_t record_length = header.size() + protected_record_length(epoch, payload.size(), padding_bytes);
+   out.reserve(record_offset + record_length);
 
-   MarshalledRecord result;
-   result.reserve(record_length);
-   result.get().insert(result.end(), header.begin(), header.end());    // header
-   result.get().insert(result.end(), payload.begin(), payload.end());  // content
-   result.get().push_back(to_underlying(type));                        // type
-   result.get().insert(result.end(), padding_bytes, 0x00);             // zeros
+   // RFC 9846 5.2
+   //    struct {
+   //        opaque content[TLSPlaintext.length];
+   //        ContentType type;
+   //        uint8 zeros[length_of_padding];
+   //    } TLSInnerPlaintext;
+   //
+   // RFC 9846 5.4
+   //    Implementations MUST set the padding octets to all zeros before
+   //    encrypting.
+   //
+   // resize() value-initializes the new bytes, so the padding is already
+   // zeroed. The header and content are then copied with copy_mem(): for a
+   // vector with a non-standard allocator, insert() falls back to an
+   // element-wise copy loop in libstdc++ that is several times slower than
+   // a memcpy() for a full-sized record.
+   out.resize(content_offset + payload.size() + 1 /* type */ + padding_bytes);
+   copy_mem(std::span{out}.subspan(record_offset, header.size()), header);
+   copy_mem(std::span{out}.subspan(content_offset, payload.size()), payload);
+   out[content_offset + payload.size()] = to_underlying(type);
 
+   // Protect the TLSInnerPlaintext in place (everything after the header,
+   // which is the tail of the buffer) and append the AEAD tag.
    epoch.cipher->set_associated_data(header);
    epoch.cipher->start(current_nonce(epoch.sequence_number, epoch.iv));
-   epoch.cipher->finish(result, header.size() /* don't encrypt the header in the marshalled record */);
-   BOTAN_DEBUG_ASSERT(result.size() == record_length);
-
-   return result;
+   epoch.cipher->finish(out, content_offset);
+   BOTAN_DEBUG_ASSERT(out.size() == record_offset + record_length);
 }
 
 void Cipher_State::deprotect_and_hydrate_content_type(Epoch& epoch,
@@ -787,9 +806,10 @@ TLS_Cipher_State::TLS_Cipher_State(Connection_Side side, std::string_view prf_al
 
 TLS_Cipher_State::~TLS_Cipher_State() = default;
 
-MarshalledRecord TLS_Cipher_State::protect_record(Record_Type type,
-                                                  std::span<const uint8_t> plaintext,
-                                                  size_t padding_bytes) {
+void TLS_Cipher_State::protect_record(Record_Type type,
+                                      std::span<const uint8_t> plaintext,
+                                      size_t padding_bytes,
+                                      secure_vector<uint8_t>& out) {
    BOTAN_ASSERT_NOMSG(m_write_epoch.has_value());
    BOTAN_STATE_CHECK_MSG(type != Record_Type::ApplicationData || can_encrypt_application_traffic(),
                          "Application data must not be encrypted before handshake completion");
@@ -816,9 +836,8 @@ MarshalledRecord TLS_Cipher_State::protect_record(Record_Type type,
       Protocol_Version::TLS_V12 /* = 0x0303 */,
       checked_cast_to<uint16_t>(protected_record_length(*m_write_epoch, plaintext.size(), padding_bytes)));
 
-   auto result = marshall_and_protect(*m_write_epoch, header, plaintext, type, padding_bytes);
+   marshall_and_protect(*m_write_epoch, header, plaintext, type, padding_bytes, out);
    ++m_write_epoch->sequence_number;
-   return result;
 }
 
 Record TLS_Cipher_State::deprotect_record(Record_TLS record, size_t incoming_record_size_limit) {

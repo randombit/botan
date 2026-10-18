@@ -9,6 +9,7 @@
 
 #include <botan/assert.h>
 #include <botan/concepts.h>
+#include <botan/mem_ops.h>
 #include <botan/range_concepts.h>
 #include <botan/strong_type_helpers.h>
 #include <array>
@@ -16,6 +17,8 @@
 #include <ranges>
 #include <span>
 #include <tuple>
+#include <type_traits>
+#include <vector>
 
 namespace Botan {
 
@@ -116,6 +119,20 @@ constexpr auto concat(Rs&&... ranges)
       // The caller has explicitly specified the output type
       return detail::concatenate<OutR>(std::forward<Rs>(ranges)...);
    }
+}
+
+/**
+ * Append @p in to the end of @p out
+ *
+ * For a vector with a non-standard allocator (eg secure_vector), insert()
+ * falls back to an element-wise copy loop in libstdc++; this uses memcpy.
+ */
+template <typename T, typename Alloc>
+   requires std::is_trivially_copyable_v<T>
+void append(std::vector<T, Alloc>& out, std::type_identity_t<std::span<const T>> in) {
+   const size_t offset = out.size();
+   out.resize(offset + in.size());
+   copy_mem(std::span{out}.subspan(offset), in);
 }
 
 }  // namespace Botan

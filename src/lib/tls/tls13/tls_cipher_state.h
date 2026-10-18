@@ -332,11 +332,18 @@ class BOTAN_TEST_API Cipher_State {
       Cipher_State(Connection_Side whoami, std::string_view hash_function, ExpansionLabelPrefix expand_prefix);
 
       static size_t protected_record_length(Epoch& epoch, size_t payload_length, size_t padding_bytes);
-      static MarshalledRecord marshall_and_protect(Epoch& epoch,
-                                                   std::span<const uint8_t> header,
-                                                   std::span<const uint8_t> payload,
-                                                   Record_Type type,
-                                                   size_t padding_bytes);
+
+      /**
+       * Marshalls the record (header || TLSInnerPlaintext), protects it in
+       * place and appends the result to @p out. The plaintext is copied into
+       * @p out exactly once; no intermediate buffers are allocated.
+       */
+      static void marshall_and_protect(Epoch& epoch,
+                                       std::span<const uint8_t> header,
+                                       std::span<const uint8_t> payload,
+                                       Record_Type type,
+                                       size_t padding_bytes,
+                                       secure_vector<uint8_t>& out);
       void deprotect_and_hydrate_content_type(Epoch& epoch,
                                               std::span<const uint8_t> header,
                                               Record_Content& protected_record,
@@ -428,14 +435,15 @@ class BOTAN_TEST_API TLS_Cipher_State final : public Cipher_State {
        * multiple calls with the same input will not produce the same result.
        *
        * @param type           the record type to be protected
-       * @param payload        the record plaintext to be protected in-place
+       * @param payload        the record plaintext to be protected
        * @param padding_bytes  the number of padding zero-bytes to be added
-       *
-       * @returns the marshalled and protected record to be sent on the wire
+       * @param out            the marshalled and protected record (to be sent
+       *                       on the wire) is appended to this buffer
        */
-      [[nodiscard]] MarshalledRecord protect_record(Record_Type type,
-                                                    std::span<const uint8_t> payload,
-                                                    size_t padding_bytes);
+      void protect_record(Record_Type type,
+                          std::span<const uint8_t> payload,
+                          size_t padding_bytes,
+                          secure_vector<uint8_t>& out);
 
       /**
        * Deprotect a TLS record (RFC 9846 5.2 -- TLSCiphertext.encrypted_record)
