@@ -12,6 +12,13 @@ General Notes
   notes in ``doc/deprecated.rst`` and if your usage would be impacted by any
   such deprecations, please comment in GH #4666
 
+* Add a warning to the documentation regarding recent research on the security
+  of Classic McEliece. Following the current recommendations of BSI, Classic
+  McEliece should only be used in a hybrid scheme. (GH #5993)
+
+* The API documentation now consistently warns about algorithms and operations
+  with known side channel issues. (GH #6007)
+
 New APIs and Features
 ----------------------------------------
 
@@ -33,8 +40,6 @@ New APIs and Features
 
 * Add an experimental C API for TLS in the new ``ffi_tls`` module. Experimental
   modules are not built by default and not covered by SemVer. (GH #2492 #5941)
-
-* The Python binding now can adapt itself to any version of Botan3. (GH #5851)
 
 * Introduce a new design for entropy sources. (GH #5928 #5945)
 
@@ -59,24 +64,12 @@ New APIs and Features
 * Add ``PKCS12::mac_protected`` which indicates if the PKCS #12 file was
   protected using a MAC. (GH #5902)
 
-* ``BER_Decoder::decode`` can now decode directly into byte-oriented strong
-  types. (GH #5935 #5946)
-
 * ``Jitter_RNG`` now accepts the compliance mode and the oversampling rate which
   should be used by the jitterentropy library. AIS 20/31 NTG.1 compliance can be
   requested with ``Jitter_RNG::Mode::NTG1`` if jitterentropy 3.7.0 or later is
   used. Note that ``Jitter_RNG`` no longer forces the FIPS mode of jitterentropy
   by default; use ``Jitter_RNG::Mode::FIPS`` to retain the previous behavior.
   (GH #5832)
-
-* Add support for reference counted objects in the FFI layer. (GH #5959)
-
-* Add ``X509Cert.binary_values``/``string_values`` and the equivalents on
-  ``X509CRL`` to the Python binding. (GH #5984)
-
-* Add a ``--one-shot`` flag to the ``speed`` command which causes the public key
-  benchmarks to create a new operation object (``PK_Signer``, ``PK_Verifier``, ...)
-  for each measured operation, rather than creating one and reusing it. (GH #5951)
 
 Security and Hardening
 ----------------------------------------
@@ -92,7 +85,7 @@ Security and Hardening
   on deserialization, rejecting points of low order. (GH #5594)
 
 * Harden EC, RSA, DL, and Ed25519 private key loading, rejecting various invalid
-  encodings and parameters. (GH #5994 #5995 #5996 #5997 #6009)
+  encodings and parameters. (GH #5994 #5995 #5996 #5997 #6009 #6041)
 
 * All paths which decode or construct an ``EC_Group`` now verify the complete
   set of group parameters, including generator validity, the Hasse bound, and
@@ -110,17 +103,13 @@ Security and Hardening
   call of ``initialize_with`` or ``add_entropy`` is treated as a possible seeding
   event. (GH #5928 #5945)
 
-* The TLS server now validates that the host name received in the server_name
-  (SNI) extension is a syntactically valid DNS name, as required by RFC 6066.
-  The name passed to the ``Credentials_Manager`` and other callbacks is now the
-  canonical (lowercased) form. (GH #5937)
+* The TLS server now validates that the host name received in the SNI extension
+  is a syntactically valid DNS name. The name passed to the ``Credentials_Manager``
+  and other callbacks is now the canonical (lowercased) form. (GH #5937)
 
 * Fix various bugs in decoding the RFC 3779 IP address and AS identifier
-  extensions. The decoder now rejects encodings which are not in the canonical
-  form required by RFC 3779 (unsorted, overlapping, or unmerged ranges, or
-  ranges which should have been encoded as a prefix) rather than silently
-  sorting and merging the decoded ranges. Add interop between ``IPAddressBlocks``
-  and the IPv4/IPv6 name types. (GH #5957 #5978)
+  extensions. Add interop between ``IPAddressBlocks`` and the IPv4/IPv6 name
+  types. (GH #5957 #5978)
 
 * Fix lenient decoding of the RFC 8226 TNAuthList extension, and add
   support for encoding it. (GH #5977)
@@ -128,6 +117,15 @@ Security and Hardening
 * Replace the algorithm name parser with a stricter and faster one. Previously,
   invalid or trailing parameters were sometimes silently ignored, for example
   ``HMAC(SHA-512,Foo)`` was accepted. (GH #5956)
+
+* Fix several bugs and missing validations in the HTTP client. Control
+  characters in headers are now rejected, ``RequestLimits`` now caps the
+  response body at 8 MiB by default, and timeouts are tracked using a monotonic
+  clock with the budget carried across redirects. (GH #5980)
+
+* SPAKE2+ now rejects a ``ProverSecret`` with w0 or w1 equal to zero, and the
+  context moves to a failed state if any peer message fails to decode, rather
+  than allowing further attempts. (GH #5976)
 
 Behavior Changes
 ----------------------------------------
@@ -165,6 +163,9 @@ Optimizations
 
 * Add AVX-512+IFMA modular exponentiation support, improving RSA and FFDHE by 3-4x
   (GH #6026)
+
+* Add a fused Montgomery multiplication using BMI2/ADX, improving modular
+  exponentiation on x86-64 processors without IFMA by about 30%. (GH #6044)
 
 * Add AVX2 codepath for ML-KEM (GH #5964 #6032 #6033)
 
@@ -229,8 +230,6 @@ Bug Fixes
   compressed form, ECDH accepting peer points with a small order component,
   and ``Object::destroy`` leaving a stale handle. (GH #5983)
 
-* Fix a number of bugs in the Python binding (GH #5969)
-
 * Fix a race in the FFI layer where the thread-local storage for the last exception
   message could be accessed after its destruction during process shutdown. (GH #5859)
 
@@ -238,26 +237,66 @@ Bug Fixes
 
 * Fix various edge cases in the sqlite3 database wrapper. (GH #5972)
 
+* Fix several corner case bugs in CPU feature detection. (GH #6036)
+
+* Fix the move operators of ``Dynamically_Loaded_Library``, which previously
+  caused the library to be closed twice. (GH #5967)
+
 Deprecations and Cleanups
 ----------------------------------------
 
 * Deprecate the public header ``pem.h``; it will become internal in Botan4.
   (GH #5891)
 
+* Deprecate the modules ``filters``, ``comb4p``, ``passhash9``, ``emsa_x931``,
+  ``ofb``, ``rc4``, ``certstor_sql``, and ``certstor_sqlite3``. Additionally SRP6,
+  the X9.42 PRF, and the TLS OCB ciphersuites are now documented as deprecated.
+  (GH #5971)
+
+* Remove many unused header includes, including from public headers.
+  Applications which relied on transitive includes may need to add explicit
+  includes. (GH #5897)
+
+Command Line Utility
+----------------------------------------
+
+* Add a ``create_cert_for_key`` command, which issues a certificate directly for
+  a public key without requiring a PKCS #10 request. This allows creating
+  certificates for KEM keys such as ML-KEM. (GH #5529)
+
+* Add a ``--one-shot`` flag to the ``speed`` command which causes the public key
+  benchmarks to create a new operation object (``PK_Signer``, ``PK_Verifier``, ...)
+  for each measured operation, rather than creating one and reusing it. (GH #5951)
+
 * Remove the sandboxing support (``sandbox_init``, ``pledge``, Capsicum) from
   the command line tool. Recent versions of macOS kill any process which calls
   ``sandbox_init``, and the other implementations were dead or untested code.
   (GH #5940 #5942)
 
-* Remove many unused header includes, including from public headers.
-  Applications which relied on transitive includes may need to add explicit
-  includes. (GH #5897)
+* Fix many bugs in the command line tool. Commands now consistently report
+  failures through the exit status, integer and option arguments are strictly
+  validated, I/O errors are consistently detected, and passing the same file as
+  input and ``--output`` no longer truncates the input. (GH #6037)
+
+Python Binding
+----------------------------------------
+
+* The Python binding now can adapt itself to any version of Botan3. (GH #5851)
+
+* Add ``X509Cert.binary_values``/``string_values`` and the equivalents on
+  ``X509CRL``. (GH #5984)
+
+* Fix a number of bugs in the Python binding (GH #5969)
 
 Build and Infrastructure
 ----------------------------------------
 
 * Add support for precompiled headers with GCC and Clang, enabled using
   ``--enable-pch``. (GH #5298)
+
+* SIMD support on POWER now requires POWER8 (VSX). (GH #6029)
+
+* Add ``--disable-lsx`` and ``--disable-lasx`` options for LoongArch. (GH #5108)
 
 * Various build fixes, including for MinGW with libc++ 20 or later, the import
   library output directory with GCC on MinGW, and Clang on Aarch64.
