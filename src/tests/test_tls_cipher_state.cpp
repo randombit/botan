@@ -100,10 +100,10 @@ class RFC8448_TestData {
             record_type(rt) {}
 
       void encrypt(Test::Result& result, Cipher_State* cs) const {
-         MarshalledRecord record;
+         secure_vector<uint8_t> record;
 
          result.test_no_throw("protection is successful for " + name, [&] {
-            record = Botan::TLS::as_tls_cipher_state(cs)->protect_record(record_type, plaintext_fragment, 0);
+            Botan::TLS::as_tls_cipher_state(cs)->protect_record(record_type, plaintext_fragment, 0, record);
          });
 
          result.test_bin_eq(
@@ -943,7 +943,8 @@ std::vector<Test::Result> test_record_padding() {
    return {
       CHECK("add a record padding",
             [&](Test::Result& result) {
-               const auto record = tls_cs_client->protect_record(Record_Type::Handshake, plaintext, 42);
+               secure_vector<uint8_t> record;
+               tls_cs_client->protect_record(Record_Type::Handshake, plaintext, 42, record);
 
                result.test_sz_eq("record length", record.size(), expected_output(42) + TLS_HEADER_SIZE);
                result.test_bin_eq(
@@ -1079,21 +1080,25 @@ std::vector<Test::Result> test_reject_premature_application_data() {
    auto should_not_protect = [&](Test::Result& result, TLS::Cipher_State* cs) {
       auto* tls_cs = Botan::TLS::as_tls_cipher_state(cs);
       constexpr std::string_view data = "Don't be evil";
+      secure_vector<uint8_t> record;
       result.test_throws<Botan::Invalid_State>(
          "Reject outgoing protected application data before handshake is complete",
          "Application data must not be encrypted before handshake completion",
          [&] {
-            std::ignore = tls_cs->protect_record(
-               TLS::Record_Type::ApplicationData, {reinterpret_cast<const uint8_t*>(data.data()), data.size()}, 0);
+            tls_cs->protect_record(TLS::Record_Type::ApplicationData,
+                                   {reinterpret_cast<const uint8_t*>(data.data()), data.size()},
+                                   0,
+                                   record);
          });
    };
 
    auto should_protect = [&](Test::Result& result, TLS::Cipher_State* cs) {
       auto* tls_cs = Botan::TLS::as_tls_cipher_state(cs);
       constexpr std::string_view data = "CVE-2026-34582 shall not come back to haunt us";
+      secure_vector<uint8_t> record;
       result.test_no_throw("Outgoing protected application data after handshake is complete", [&] {
-         std::ignore = tls_cs->protect_record(
-            TLS::Record_Type::ApplicationData, {reinterpret_cast<const uint8_t*>(data.data()), data.size()}, 0);
+         tls_cs->protect_record(
+            TLS::Record_Type::ApplicationData, {reinterpret_cast<const uint8_t*>(data.data()), data.size()}, 0, record);
       });
    };
 

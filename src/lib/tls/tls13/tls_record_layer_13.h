@@ -63,9 +63,17 @@ class BOTAN_TEST_API Record_Layer {
        */
       ReadResult next_record(Cipher_State* cipher_state = nullptr);
 
-      std::vector<uint8_t> prepare_records(Record_Type type,
-                                           std::span<const uint8_t> data,
-                                           Cipher_State* cipher_state = nullptr) const;
+      /**
+       * Marshalls @p data into one or more records of the given @p type and
+       * protects them if a @p cipher_state is provided.
+       *
+       * @returns the serialized records to be sent on the wire. The returned
+       *          view refers to a buffer owned by the record layer that is
+       *          reused (and overwritten) by the next call to this method.
+       */
+      std::span<const uint8_t> prepare_records(Record_Type type,
+                                               std::span<const uint8_t> data,
+                                               Cipher_State* cipher_state = nullptr);
 
       /**
        * Clears any data currently stored in the read buffer. This is typically
@@ -94,6 +102,11 @@ class BOTAN_TEST_API Record_Layer {
 
    private:
       std::deque<Record_TLS> m_incoming_records;
+
+      // Outgoing records are marshalled (and protected in place) into this
+      // buffer. It is reused across prepare_records() invocations to avoid
+      // allocating, copying and scrubbing a buffer for every single record.
+      secure_vector<uint8_t> m_write_buffer;
 
       Connection_Side m_side;
 
