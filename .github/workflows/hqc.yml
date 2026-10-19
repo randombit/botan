@@ -1,0 +1,62 @@
+name: HQC
+
+permissions:
+  contents: read
+
+on: [push, pull_request]
+
+jobs:
+  native-linux:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        build-tool: [make, ninja]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Select Rust toolchain
+        run: rustup default stable
+      - name: Rust tests
+        env:
+          CARGO_TARGET_DIR: ${{ runner.temp }}/hqc-rust-tests
+        run: cargo test --release --locked --manifest-path src/lib/pubkey/hqc/rust/Cargo.toml
+      - name: Check that HQC is disabled by default
+        run: |
+          python3 configure.py --with-build-dir=default-build --rustc=missing-rustc --without-documentation
+          python3 -c "import json; c=json.load(open('default-build/build/build_config.json')); assert not c['with_hqc']"
+      - name: Configure HQC
+        run: >-
+          python3 configure.py --minimized-build --enable-modules=hqc,aes,sha2_32
+          --without-documentation --build-tool=${{ matrix.build-tool }}
+          --build-targets=shared,static,tests
+      - name: Build
+        run: ${{ matrix.build-tool }} -j2
+      - name: Botan HQC tests
+        run: LD_LIBRARY_PATH=. ./botan-test hqc
+      - name: Build static consumer configuration
+        run: |
+          ${{ matrix.build-tool }} clean
+          python3 configure.py --minimized-build --enable-modules=hqc,aes,sha2_32 \
+            --without-documentation --build-tool=${{ matrix.build-tool }} \
+            --build-targets=static,tests --prefix=${{ runner.temp }}/botan-hqc-install
+      - name: Build and test static Botan
+        run: |
+          ${{ matrix.build-tool }} -j2
+          LD_LIBRARY_PATH=. ./botan-test hqc
+      - name: Test installed static library
+        env:
+          PKG_CONFIG_PATH: ${{ runner.temp }}/botan-hqc-install/lib/pkgconfig
+        run: |
+          ${{ matrix.build-tool }} install
+          cat > hqc_consumer.cpp <<'CPP'
+          #include <botan/hqc.h>
+          #include <array>
+          int main() {
+              const std::array<uint8_t, 32> seed{};
+              Botan::HQC_PrivateKey key(seed, Botan::HQC_Mode::HQC_1);
+              return key.public_key_bits().empty();
+          }
+          CPP
+          g++ -std=c++20 hqc_consumer.cpp $(pkg-config --static --cflags --libs botan-3) -o hqc_consumer
+          ./hqc_consumer

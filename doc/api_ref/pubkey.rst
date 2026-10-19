@@ -299,27 +299,36 @@ and ``HQCr4-5``. The algorithm name ``HQCr4`` carries the round number because
 HQC is not yet standardized; the standardized scheme will be added under a
 different name.
 
-The cryptographic core is implemented in Rust in the crate ``rust-hqc``, which
-is included as a git submodule in ``src/lib/pubkey/hqc/rust-hqc``. The crate
+The cryptographic core is implemented in Rust in the crate ``rust-hqc``, whose
+sources are part of Botan in ``src/lib/pubkey/hqc/rust``. The crate
 contains no hash function and no allocator for secrets of its own: Botan's
 SHA-3 and SHAKE-256 implementations and Botan's secure allocator (locked
 memory pool for small secrets, scrubbed on release) are handed to it through
-callbacks on every call. The Botan
-module ``hqc`` wraps the crate's C API and is not built by default. To enable it,
-build the crate first and point ``configure.py`` to its header and static library::
+callbacks on every call.
 
-  git submodule update --init src/lib/pubkey/hqc/rust-hqc
-  (cd src/lib/pubkey/hqc/rust-hqc/rust-hqc && cargo build --release)
-  ./configure.py --enable-modules=hqc \
-     --with-external-includedir=src/lib/pubkey/hqc/rust-hqc/rust-hqc/include \
-     --with-external-libdir=src/lib/pubkey/hqc/rust-hqc/rust-hqc/target/release
+The module ``hqc`` is disabled by default and requires explicit activation::
 
-The Rust standard library needs ``libdl``, ``libpthread`` and ``libm``, which the
-module adds to the link line on Linux. On distributions with glibc older than
-2.34 whose linker defaults to ``--as-needed`` (for example Ubuntu 20.04) these
-have to be kept explicitly by passing ``--ldflags=-Wl,--no-as-needed`` to
-``configure.py``. Building on Windows is untested; the libraries required there
-are listed by ``cargo rustc -- --print native-static-libs``.
+  ./configure.py --enable-modules=hqc
+  make
+
+The integrated build currently supports native GNU/Linux targets with a matching
+GNU/Linux Rust toolchain. Rust 1.85 or later (2024 edition) and GNU or LLVM
+``ar`` with MRI support are required. Use ``--rustc=/path/to/rustc`` to select
+the compiler. Cross compilation and amalgamation builds with HQC are not yet
+supported.
+
+The build compiles the Rust sources directly with ``rustc`` and needs no Cargo
+registry access. Rust artifacts live under the configured build directory and
+are removed by ``make clean``. Both shared and static Botan libraries include
+the Rust implementation; installed applications need no separate HQC library.
+Rust's native system library dependencies are detected during configuration and
+included in the build and static linking metadata.
+
+To run the Rust unit tests and reference-vector tests separately (requires Cargo
+and the crate's development dependencies)::
+
+  CARGO_TARGET_DIR=/tmp/botan-hqc-tests cargo test --release --locked \
+     --manifest-path src/lib/pubkey/hqc/rust/Cargo.toml
 
 Keys are encoded as the raw byte strings defined by the specification (there is
 no ASN.1 structure for HQC keys yet), and the algorithm identifiers use OIDs from

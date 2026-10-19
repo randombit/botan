@@ -9,7 +9,7 @@
 # full, and the public key and the ciphertext as SHAKE-256(128) digests.
 #
 # Usage:
-#   ./src/scripts/dev_tools/gen_hqc_kat.py src/lib/pubkey/hqc/rust-hqc/rust-hqc/kats/ref
+#   ./src/scripts/dev_tools/gen_hqc_kat.py src/lib/pubkey/hqc/rust/kats/ref
 #
 # (C) 2026 Falko Strenzke
 #

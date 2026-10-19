@@ -76,7 +76,7 @@ def list_source_files_in(directory):
     excluded = ['pkcs11.h']
 
     for (dirpath, dirnames, filenames) in os.walk(directory):
-        # Do not descend into Rust crates (e.g. the rust-hqc submodule)
+        # Do not descend into Rust crates (e.g. the native HQC crate)
         dirnames[:] = [d for d in dirnames if not os.path.exists(os.path.join(dirpath, d, 'Cargo.toml'))]
 
         for filename in filenames:
