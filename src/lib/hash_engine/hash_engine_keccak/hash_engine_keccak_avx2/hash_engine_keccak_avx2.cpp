@@ -14,6 +14,20 @@ namespace Botan {
 
 namespace {
 
+BOTAN_FN_ISA_SIMD_4X64 BOTAN_FORCE_INLINE void absorb4(SIMD_4x64 A[25],
+                                                       const uint8_t* const* blocks,
+                                                       size_t w0,
+                                                       size_t skip) {
+   SIMD_4x64 M[4];
+   for(size_t l = 0; l != 4; ++l) {
+      M[l] = SIMD_4x64::load_le(blocks[l] + 8 * w0);
+   }
+   SIMD_4x64::transpose(M[0], M[1], M[2], M[3]);
+   for(size_t w = skip; w != 4; ++w) {
+      A[w0 + w] ^= M[w];
+   }
+}
+
 /**
 * XOR one rate block of each lane into the state, transposing from the
 * per lane byte order into the word-major lane order. Any words past a
@@ -24,23 +38,12 @@ namespace {
 BOTAN_FN_ISA_SIMD_4X64 BOTAN_FORCE_INLINE void absorb_block(SIMD_4x64 A[25],
                                                             const uint8_t* const* blocks,
                                                             size_t rate_words) {
-   const auto absorb4 = [&](size_t w0, size_t skip) {
-      SIMD_4x64 M[4];
-      for(size_t l = 0; l != 4; ++l) {
-         M[l] = SIMD_4x64::load_le(blocks[l] + 8 * w0);
-      }
-      SIMD_4x64::transpose(M[0], M[1], M[2], M[3]);
-      for(size_t w = skip; w != 4; ++w) {
-         A[w0 + w] ^= M[w];
-      }
-   };
-
    size_t w = 0;
    for(; w + 4 <= rate_words; w += 4) {
-      absorb4(w, 0);
+      absorb4(A, blocks, w, 0);
    }
    if(w != rate_words) {
-      absorb4(rate_words - 4, 4 - (rate_words - w));
+      absorb4(A, blocks, rate_words - 4, 4 - (rate_words - w));
    }
 }
 
