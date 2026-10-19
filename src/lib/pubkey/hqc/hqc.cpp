@@ -95,10 +95,11 @@ class HQC_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF {
       void raw_kem_encrypt(std::span<uint8_t> out_encapsulated_key,
                            std::span<uint8_t> out_shared_key,
                            RandomNumberGenerator& rng) override {
-         const auto seed = rng.random_vec<secure_vector<uint8_t>>(HQC_FFI::seed_length);
-         CT::poison(seed);
+         // The message m followed by the salt, used by the crate as is
+         const auto randomness = rng.random_vec<secure_vector<uint8_t>>(m_public_key->sizes().encaps_randomness);
+         CT::poison(randomness);
 
-         HQC_FFI::encaps(m_public_key->mode(), out_encapsulated_key, out_shared_key, m_public_key->ek(), seed);
+         HQC_FFI::encaps(m_public_key->mode(), out_encapsulated_key, out_shared_key, m_public_key->ek(), randomness);
 
          CT::unpoison_all(out_encapsulated_key, out_shared_key);
       }
@@ -207,7 +208,8 @@ std::unique_ptr<PK_Ops::KEM_Encryption> HQC_PublicKey::_create_kem_encryption_op
 HQC_PrivateKey::HQC_PrivateKey(RandomNumberGenerator& rng, HQC_Mode mode) {
    const auto sizes = HQC_FFI::sizes(mode);
 
-   const auto seed = rng.random_vec<secure_vector<uint8_t>>(HQC_FFI::seed_length);
+   // The master seed, which becomes the decapsulation key
+   const auto seed = rng.random_vec<secure_vector<uint8_t>>(sizes.keypair_randomness);
    std::vector<uint8_t> ek(sizes.ek);
    secure_vector<uint8_t> dk(sizes.dk);
 
@@ -228,11 +230,19 @@ HQC_PrivateKey::HQC_PrivateKey(std::span<const uint8_t> sk, HQC_Mode mode) {
       throw Invalid_Argument("HQCr4 private key does not have the correct byte count");
    }
 
-   // The decapsulation key starts with the encapsulation key
-   const auto ek = sk.first(sizes.ek);
+   // The decapsulation key is the master seed; the encapsulation key is
+   // derived from it by repeating the public half of the key generation
+   secure_vector<uint8_t> dk(sk.begin(), sk.end());
+   std::vector<uint8_t> ek(sizes.ek);
 
-   m_public = std::make_shared<HQC_PublicKeyInternal>(mode, std::vector<uint8_t>(ek.begin(), ek.end()));
-   m_private = std::make_shared<HQC_PrivateKeyInternal>(secure_vector<uint8_t>(sk.begin(), sk.end()));
+   CT::poison(dk);
+
+   HQC_FFI::public_key(mode, ek, dk);
+
+   CT::unpoison_all(ek, dk);
+
+   m_public = std::make_shared<HQC_PublicKeyInternal>(mode, std::move(ek));
+   m_private = std::make_shared<HQC_PrivateKeyInternal>(std::move(dk));
 }
 
 HQC_PrivateKey::HQC_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :

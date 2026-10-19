@@ -1,19 +1,12 @@
 #!/usr/bin/env python3
 
 #
-# Converts the NIST-style KAT files (PQCkemKAT_*.rsp) of the HQC reference
+# Converts the NIST-style KAT files (PQCkemKAT_32.rsp) of the HQC reference
 # implementation, as vendored in the Rust crate rust-hqc, into the test vector
-# files `src/tests/data/pubkey/hqc_kat_keygen.vec` and
-# `src/tests/data/pubkey/hqc_kat_decap.vec`.
-#
-# The key generation file carries, for every vector, the 48 byte seed and the
-# SHAKE-256(128) digests of the encapsulation and decapsulation key.
-#
-# Since the reference KAT driver continues a single PRNG stream from key
-# generation into encapsulation, the encapsulation results cannot be reproduced
-# through the stateless C API of the crate. The decapsulation, however, is
-# deterministic; therefore the decapsulation file carries the seed, the full
-# ciphertext and the shared secret for the first vectors of every parameter set.
+# file `src/tests/data/pubkey/hqc_kat.vec` in the format of Botan's generic
+# PQC KEM KAT test (PK_PQC_KEM_KAT_Test): for every vector the 48 byte DRBG
+# seed, the shared secret and the 32 byte private key (the master seed) in
+# full, and the public key and the ciphertext as SHAKE-256(128) digests.
 #
 # Usage:
 #   ./src/scripts/dev_tools/gen_hqc_kat.py src/lib/pubkey/hqc/rust-hqc/rust-hqc/kats/ref
@@ -30,15 +23,17 @@ import os
 import sys
 
 PARAMETER_SETS = [
-    ("HQCr4-1", "hqc-1", "PQCkemKAT_2321.rsp"),
-    ("HQCr4-3", "hqc-3", "PQCkemKAT_4602.rsp"),
-    ("HQCr4-5", "hqc-5", "PQCkemKAT_7333.rsp"),
+    ("HQCr4-1", "hqc-1", "PQCkemKAT_32.rsp"),
+    ("HQCr4-3", "hqc-3", "PQCkemKAT_32.rsp"),
+    ("HQCr4-5", "hqc-5", "PQCkemKAT_32.rsp"),
 ]
 
 HEADER = """# This file was auto-generated from the HQC reference implementation's KATs
-# as vendored in the Rust crate rust-hqc (kats/ref/hqc-{1,3,5}/PQCkemKAT_*.rsp).
+# as vendored in the Rust crate rust-hqc (kats/ref/hqc-{1,3,5}/PQCkemKAT_32.rsp).
 # See src/scripts/dev_tools/gen_hqc_kat.py
 #
+# PK and CT are SHAKE-256(128) digests; SK (the 32 byte master seed) and SS are
+# stored in full.
 """
 
 
@@ -89,15 +84,11 @@ def shake_256_16(v):
     return h.hexdigest(16)
 
 
-def keygen_vector(kat):
+def kat_vector(kat):
     # The test framework runs a vector as soon as it reads the last required
-    # key, so the order of the keys matters: DK must be last.
-    return [('Seed', kat['seed']), ('EK', shake_256_16(kat['pk'])), ('DK', shake_256_16(kat['sk']))]
-
-
-def decap_vector(kat):
-    # SS must be last, see above
-    return [('Seed', kat['seed']), ('CT', kat['ct']), ('SS', kat['ss'])]
+    # key (Seed,SS,PK,SK,CT), so CT must be last.
+    return [('Seed', kat['seed']), ('SS', kat['ss']), ('PK', shake_256_16(kat['pk'])),
+            ('SK', kat['sk']), ('CT', shake_256_16(kat['ct']))]
 
 
 def read_all_kats(kats_dir):
@@ -107,10 +98,9 @@ def read_all_kats(kats_dir):
             yield (mode, list(KatReader(kat_file).read_kats()))
 
 
-def write_vec_file(path, description, sections):
+def write_vec_file(path, sections):
     with open(path, 'w', encoding='utf8') as output:
         output.write(HEADER)
-        output.write(description)
         output.write("\n")
 
         for (mode, vectors) in sections:
@@ -126,22 +116,13 @@ def main(args=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('kats_dir', help='directory containing hqc-1/, hqc-3/, hqc-5/ with the .rsp files')
     parser.add_argument('--output-dir', default='src/tests/data/pubkey')
-    parser.add_argument('--full-ct-count', type=int, default=3,
-                        help='number of vectors per parameter set written to the decapsulation file')
     opts = parser.parse_args(args)
 
     kats = list(read_all_kats(opts.kats_dir))
 
     write_vec_file(
-        os.path.join(opts.output_dir, 'hqc_kat_keygen.vec'),
-        "# EK and DK are SHAKE-256(128) digests of the keys generated from Seed.\n",
-        [(mode, [keygen_vector(kat) for kat in vectors]) for (mode, vectors) in kats])
-
-    write_vec_file(
-        os.path.join(opts.output_dir, 'hqc_kat_decap.vec'),
-        "# CT is decapsulated with the private key generated from Seed and must yield SS.\n"
-        "# Only the first %d vectors of each parameter set are included.\n" % opts.full_ct_count,
-        [(mode, [decap_vector(kat) for kat in vectors[:opts.full_ct_count]]) for (mode, vectors) in kats])
+        os.path.join(opts.output_dir, 'hqc_kat.vec'),
+        [(mode, [kat_vector(kat) for kat in vectors]) for (mode, vectors) in kats])
 
     return 0
 

@@ -1,7 +1,7 @@
 /*
  * Tests for HQC
  * - KAT tests using the vectors of the reference implementation as vendored
- *   in the Rust crate rust-hqc
+ *   in the Rust crate rust-hqc (kats/ref/hqc-{1,3,5}/PQCkemKAT_32.rsp)
  *
  * (C) 2026 Falko Strenzke
  *
@@ -20,7 +20,8 @@
    #include <botan/hqc.h>
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
-   #include <botan/internal/fmt.h>
+   #include <botan/xof.h>
+   #include <botan/internal/concat_util.h>
 #endif
 
 namespace Botan_Tests {
@@ -30,45 +31,42 @@ namespace Botan_Tests {
 namespace {
 
 /**
- * Key generation is verified against all vectors of the reference KATs. The
- * encapsulation of the reference KATs continues the PRNG stream of the key
- * generation and cannot be reproduced through the stateless C API of the
- * crate; the decapsulation is verified separately by HQC_KAT_Decap_Tests.
+ * The reference KAT driver seeds the NIST AES-256 CTR-DRBG with the 48-byte
+ * seed and draws from it, in separate requests, the 32-byte master seed for
+ * the key generation and then the message and the salt for the encapsulation.
+ * Since the crate's C API takes exactly these bytes, key generation,
+ * encapsulation and decapsulation of all reference vectors are reproduced.
  */
-class HQC_KAT_KeyGen_Tests final : public PK_PQC_KEM_ACVP_KAT_KeyGen_Test {
+class HQC_KAT_Tests final : public PK_PQC_KEM_KAT_Test {
    public:
-      HQC_KAT_KeyGen_Tests() : PK_PQC_KEM_ACVP_KAT_KeyGen_Test("HQCr4", "pubkey/hqc_kat_keygen.vec", "Seed") {}
+      HQC_KAT_Tests() : PK_PQC_KEM_KAT_Test("HQCr4", "pubkey/hqc_kat.vec") {}
 
    private:
       bool is_available(const std::string& /*params*/) const final { return true; }
 
-      Fixed_Output_RNG rng_for_keygen(const VarMap& vars) const final {
-         return Fixed_Output_RNG(vars.get_req_bin("Seed"));
+      std::vector<uint8_t> map_value(const std::string& /*params*/,
+                                     std::span<const uint8_t> value,
+                                     VarType var_type) const final {
+         // The private key (32 bytes) and the shared secret are stored in
+         // full, the public key and the ciphertext as SHAKE-256(128) digests
+         if(var_type == VarType::SharedSecret || var_type == VarType::PrivateKey) {
+            return {value.begin(), value.end()};
+         }
+         auto xof = Botan::XOF::create_or_throw("SHAKE-256");
+         xof->update(value);
+         return xof->output<std::vector<uint8_t>>(16);
       }
-};
 
-/**
- * Decapsulation of the reference ciphertexts with the key generated from the
- * reference seed must yield the reference shared secret.
- */
-class HQC_KAT_Decap_Tests final : public PK_Test {
-   public:
-      HQC_KAT_Decap_Tests() : PK_Test("HQCr4", "pubkey/hqc_kat_decap.vec", "Seed,CT,SS") {}
+      Fixed_Output_RNG rng_for_keygen(const std::string& /*params*/, Botan::RandomNumberGenerator& rng) const final {
+         return Fixed_Output_RNG(rng.random_vec(32));
+      }
 
-   private:
-      Test::Result run_one_test(const std::string& params, const VarMap& vars) final {
-         Test::Result result(Botan::fmt("HQCr4 decapsulation KAT with parameters {}", params));
-
-         Fixed_Output_RNG rng_keygen(vars.get_req_bin("Seed"));
-         const Botan::HQC_PrivateKey sk(rng_keygen, Botan::HQC_Mode(params));
-         result.test_is_true("All prepared random bits used for key generation", rng_keygen.empty());
-
-         Botan::Null_RNG null_rng;
-         Botan::PK_KEM_Decryptor dec(sk, null_rng, "Raw");
-         const auto shared_key = dec.decrypt(vars.get_req_bin("CT"), 0 /* no KDF */);
-         result.test_bin_eq("Decaps. Shared Secret", shared_key, vars.get_req_bin("SS"));
-
-         return result;
+      Fixed_Output_RNG rng_for_encapsulation(const std::string& params, Botan::RandomNumberGenerator& rng) const final {
+         // The message has as many bytes as the security level (16, 24 or 32),
+         // the salt 16; the reference draws them in two requests.
+         const auto m = rng.random_vec(Botan::HQC_Mode(params).estimated_strength() / 8);
+         const auto salt = rng.random_vec(16);
+         return Fixed_Output_RNG(Botan::concat(m, salt));
       }
 };
 
@@ -131,11 +129,17 @@ std::vector<Test::Result> test_hqc_roundtrips() {
       result.test_bin_eq("public key encoding roundtrip", pk_loaded->public_key_bits(), pk1.public_key_bits());
       result.test_str_eq("loaded public key algorithm name", pk_loaded->algo_name(), "HQCr4");
 
+      // The private key is the 32-byte master seed; the public key is derived from it on load
+      result.test_sz_eq("private key is the master seed", sk1.private_key_bits().size(), 32);
       const auto sk_loaded = Botan::load_private_key(sk1.algorithm_identifier(), sk1.private_key_bits());
       result.test_not_null("private key loaded from encoding", sk_loaded);
       result.test_bin_eq("private key encoding roundtrip", sk_loaded->private_key_bits(), sk1.private_key_bits());
       result.test_bin_eq(
          "public key of loaded private key", sk_loaded->public_key()->public_key_bits(), pk1.public_key_bits());
+
+      Botan::PK_KEM_Decryptor dec_loaded(*sk_loaded, *rng, "Raw");
+      result.test_bin_eq(
+         "loaded private key decapsulates", dec_loaded.decrypt(enc_res.encapsulated_shared_key(), 0), ss);
 
       result.test_throws("short public key", "HQCr4 public key does not have the correct byte count", [&] {
          auto short_pk = pk1.public_key_bits();
@@ -178,8 +182,7 @@ class HQC_Keygen_Tests final : public PK_Key_Generation_Test {
 
 }  // namespace
 
-BOTAN_REGISTER_TEST("hqc", "hqc_kat_keygen", HQC_KAT_KeyGen_Tests);
-BOTAN_REGISTER_TEST("hqc", "hqc_kat_decap", HQC_KAT_Decap_Tests);
+BOTAN_REGISTER_TEST("hqc", "hqc_kat", HQC_KAT_Tests);
 BOTAN_REGISTER_TEST_FN("hqc", "hqc_roundtrips", test_hqc_roundtrips);
 BOTAN_REGISTER_TEST("hqc", "hqc_keygen", HQC_Keygen_Tests);
 

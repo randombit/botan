@@ -156,6 +156,8 @@ void check_rc(int32_t rc, std::string_view operation) {
 Sizes sizes(const HQC_Mode& mode) {
    Sizes s;
    check_rc(::hqc_sizes(mode.parameter_set_byte(), &s.ek, &s.dk, &s.ct, &s.ss), "sizes");
+   check_rc(::hqc_randomness_lengths(mode.parameter_set_byte(), &s.keypair_randomness, &s.encaps_randomness),
+            "randomness lengths");
    return s;
 }
 
@@ -171,11 +173,16 @@ void keypair(const HQC_Mode& mode, std::span<uint8_t> ek, std::span<uint8_t> dk,
             "keypair");
 }
 
+void public_key(const HQC_Mode& mode, std::span<uint8_t> ek, std::span<const uint8_t> dk) {
+   check_rc(::hqc_public_key(mode.parameter_set_byte(), botan_callbacks(), ek.data(), ek.size(), dk.data(), dk.size()),
+            "public key derivation");
+}
+
 void encaps(const HQC_Mode& mode,
             std::span<uint8_t> ct,
             std::span<uint8_t> ss,
             std::span<const uint8_t> ek,
-            std::span<const uint8_t> seed) {
+            std::span<const uint8_t> randomness) {
    check_rc(::hqc_encaps(mode.parameter_set_byte(),
                          botan_callbacks(),
                          ct.data(),
@@ -184,8 +191,8 @@ void encaps(const HQC_Mode& mode,
                          ss.size(),
                          ek.data(),
                          ek.size(),
-                         seed.data(),
-                         seed.size()),
+                         randomness.data(),
+                         randomness.size()),
             "encaps");
 }
 

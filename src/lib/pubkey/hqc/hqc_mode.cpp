@@ -76,9 +76,10 @@ size_t HQC_Mode::estimated_strength() const {
 }
 
 size_t HQC_Mode::code_length() const {
-   // Table 6 of the HQC specification of 2025-08-22. The C API of the crate
-   // does not expose n; the relation ek_bytes == 32 + ceil(n / 8) is asserted
-   // when a public key is constructed.
+   // Table 6 of the HQC specification of 2025-08-22; unchanged by the
+   // parameter update that followed it. The C API of the crate does not
+   // expose n; the relation ek_bytes == 32 + ceil(n / 8) is asserted when a
+   // public key is constructed.
    switch(m_mode) {
       case HQC_1:
          return 17669;

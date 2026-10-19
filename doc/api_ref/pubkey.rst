@@ -291,9 +291,12 @@ HQCr4
 Post-quantum secure, code-based key encapsulation scheme (Hamming Quasi-Cyclic),
 selected by NIST in March 2025 for standardization as a backup to ML-KEM. The
 implementation follows the HQC specification of 2025-08-22, i.e. the round-4
-submission, and supports the parameter sets ``HQCr4-1``, ``HQCr4-3`` and
-``HQCr4-5``. The algorithm name ``HQCr4`` carries the round number because HQC
-is not yet standardized; the standardized scheme will be added under a
+submission, including the parameter update the HQC team announced on the
+pqc-forum afterwards (reference implementation commit ``71090d46``: changed
+sampling weights, GF(256) representation and key format; key and ciphertext
+sizes are unchanged), and supports the parameter sets ``HQCr4-1``, ``HQCr4-3``
+and ``HQCr4-5``. The algorithm name ``HQCr4`` carries the round number because
+HQC is not yet standardized; the standardized scheme will be added under a
 different name.
 
 The cryptographic core is implemented in Rust in the crate ``rust-hqc``, which
@@ -320,7 +323,9 @@ are listed by ``cargo rustc -- --print native-static-libs``.
 
 Keys are encoded as the raw byte strings defined by the specification (there is
 no ASN.1 structure for HQC keys yet), and the algorithm identifiers use OIDs from
-Botan's private arc. The public key format is not yet stable.
+Botan's private arc. The private key is the 32 byte master seed of the
+specification; the public key is derived from it when a private key is loaded,
+which costs one key generation. The key formats are not yet stable.
 
 ElGamal
 ~~~~~~~
