@@ -2123,6 +2123,9 @@ class XMSS_Path_Validation_Tests final : public Test {
          const Botan::Path_Validation_Restrictions restrictions;
          const auto self_signed = Botan::X509_Certificate(Test::data_file("x509/xmss/" + file));
 
+         // Path validation does not verify the trust anchor's signature, so check it directly
+         result.test_is_true("Self-signature verifies", self_signed.check_signature(*self_signed.subject_public_key()));
+
          const auto cert_path = std::vector<Botan::X509_Certificate>{self_signed};
          const auto valid_time = Botan::calendar_point(2019, 10, 8, 4, 45, 0).to_std_timepoint();
 
@@ -2276,6 +2279,39 @@ class Verification_Exits_Early_For_Signature_Error_Test final : public Test {
 BOTAN_REGISTER_TEST("x509",
                     "x509_path_verify_exits_early_on_bad_sig",
                     Verification_Exits_Early_For_Signature_Error_Test);
+
+/**
+* Test that the signature on the trust anchor itself is not verified
+*/
+class Trust_Anchor_Signature_Not_Verified_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("X509 trust anchor signature is not verified");
+
+         const Botan::X509_Certificate root(Test::data_file("x509/bad_root_self_sig/root.pem"));
+         const Botan::X509_Certificate leaf(Test::data_file("x509/bad_root_self_sig/leaf.pem"));
+
+         result.test_is_true("Root appears self-signed", root.is_self_signed());
+         result.test_is_false("Root self-signature is invalid", root.check_signature(*root.subject_public_key()));
+         result.test_is_true("Leaf is signed by the root", leaf.check_signature(*root.subject_public_key()));
+
+         Botan::Certificate_Store_In_Memory trusted;
+         trusted.add_certificate(root);
+
+         const auto validation_time = Botan::calendar_point(2026, 6, 1, 0, 0, 0).to_std_timepoint();
+         const Botan::Path_Validation_Restrictions restrictions;
+
+         const auto path_result =
+            Botan::x509_path_validate(leaf, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
+
+         result.test_is_true("Path validation succeeds", path_result.successful_validation());
+         result.test_str_eq("Path validation result", path_result.result_string(), "Verified");
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_path_trust_anchor_sig_not_verified", Trust_Anchor_Signature_Not_Verified_Test);
 
    #endif
 

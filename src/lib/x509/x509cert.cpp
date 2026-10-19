@@ -305,7 +305,6 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    /*
    Determine if this certificate appears to be self-issued (subject == issuer).
    This is only a heuristic used for path building so it's ok it is not precise.
-   The self-signature is verified during path validation.
    */
    if(data->m_subject_dn == data->m_issuer_dn) {
       if(!data->m_subject_key_id.empty() && !data->m_authority_key_id.empty()) {
