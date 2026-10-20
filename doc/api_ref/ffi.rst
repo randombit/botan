@@ -369,6 +369,10 @@ Random Number Generators
    .. versionadded:: 2.18.0
 
    Create a new custom RNG object, which will invoke the provided callbacks.
+   Note that your custom RNG callbacks must remain callable for the lifetime
+   of the RNG object. This lifetime might extend beyond a call to
+   :cpp:func:`botan_rng_destroy` if the RNG handle is shared with another
+   object.
 
 .. cpp:function:: int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len)
 
@@ -1734,6 +1738,7 @@ TPM 2.0 Functions
 
    Enable the Botan-based TPM 2.0 crypto backend. Note that the random number
    generator passed to this function must not be dependent on the TPM itself.
+   A handle to the passed RNG is kept for the lifetime of the TMP2 context.
    This should be used when the ``ESYS_CONTEXT`` is managed by the TPM 2.0
    wrapper provided by Botan (i.e. the application did not explicitly instantiate
    the ``ESYS_CONTEXT`` itself).
@@ -1745,8 +1750,9 @@ TPM 2.0 Functions
    Enable the Botan-based TPM 2.0 crypto backend on a pre-existing ``ESYS_CONTEXT``
    that is managed by the application. Note that the random number generator
    passed to this function must not be dependent on the TPM itself.
-   The crypto backend has to keep internal state. The application is responsible
-   to keep this state alive and destroy it after the ``ESYS_CONTEXT`` is no longer
+   The crypto backend has to keep internal state and retains a handle to the
+   passed RNG for the lifetime of it. The application is responsible to keep
+   this state alive and destroy it after the ``ESYS_CONTEXT`` is no longer
    used.
 
 .. cpp:function:: int botan_tpm2_unauthenticated_session_init(botan_tpm2_session_t* session_out, botan_tpm2_ctx_t ctx)
