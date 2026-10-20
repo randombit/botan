@@ -95,6 +95,13 @@ std::optional<Channel_IO::ReceiveEvent> Channel_IO::next_pending_handshake_messa
 }
 
 void Channel_IO::copy_data(std::span<const uint8_t> data) {
+   // RFC 9846 6.1
+   //    Any data received after a closure alert has been received MUST
+   //    be ignored.
+   if(m_closed_for_reading) {
+      return;
+   }
+
    record_layer().copy_data(data);
 }
 
@@ -316,6 +323,7 @@ void Channel_IO::send_dummy_change_cipher_spec() {
 
 void Channel_IO::notify_closed_for_reading() {
    record_layer().clear_read_buffer();
+   m_closed_for_reading = true;
 }
 
 void Channel_IO::set_record_size_limits(uint16_t out, uint16_t in) {
