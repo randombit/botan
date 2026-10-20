@@ -369,3 +369,27 @@ Therefore, it is strongly recommended to explicitly reseed any
 userspace random generators after forking a new process. If this is
 not possible in your application, prefer using the system PRNG
 instead.
+
+Snapshot and Checkpoint Restores
+---------------------------------
+
+A process or a virtual machine can also be duplicated without a fork:
+a virtual machine restored from a snapshot, a process restored from a
+checkpoint (for example with CRIU), or a function resumed from a saved
+image. The process ID does not change and no fork happens, so the
+checks above see nothing, and every copy continues from the generator
+state that was in the image. ``AutoSeeded_RNG`` mixes output of the
+system RNG into every request, which keeps its output distinct between
+the copies as long as the operating system's own generator was
+reseeded at the restore (on Linux this happens when the hypervisor
+provides a VM generation ID and the guest kernel carries the
+``vmgenid`` driver); the internal state is still the image's until the
+next reseed.
+
+Therefore, as after a fork, it is strongly recommended to explicitly
+reseed any userspace random generators after a restore. An application
+can learn of a restore from its platform (a restore hook, or on Linux
+7.0 and later the ``vm_generation_counter`` of the VMClock page,
+``/dev/vmclock0``, which changes when the machine is loaded from a
+snapshot); if no such signal is available, prefer using the system
+PRNG instead.
