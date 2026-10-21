@@ -241,6 +241,17 @@ Montgomery_Int monty_multi_exp(
       throw Invalid_Argument("multi_exponentiate exponents must be positive");
    }
 
+#if defined(BOTAN_HAS_MONTY_EXP_AVX512)
+   // With IFMA, two separate exponentiations are faster than the joint algorithm below
+   if(CPUID::has(CPUID::Feature::AVX512)) {
+      if(auto x_exp = make_monty_exp_avx512(Montgomery_Int(params_p, x_bn), 4)) {
+         auto y_exp = make_monty_exp_avx512(Montgomery_Int(params_p, y_bn), 4);
+         secure_vector<word> ws(2 * params_p.p_words());
+         return x_exp->exponentiation_vartime(z1).mul(y_exp->exponentiation_vartime(z2), ws);
+      }
+   }
+#endif
+
    // The exponents are consumed two bits at a time
    const size_t max_z1z2 = std::max(z1.bits(), z2.bits());
    const size_t z_bits = 2 * ceil_division<size_t>(max_z1z2, 2);
