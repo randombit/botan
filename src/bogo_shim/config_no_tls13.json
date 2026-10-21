@@ -113,8 +113,6 @@
         "Server-JDK11-*": "We don't implement JDK-specific workarounds",
         "Client-RejectJDK11DowngradeRandom": "We don't implement this workaround",
         "ExportTrafficSecrets-*": "Exporting traffic secrets is not implemented",
-        "TooManyChangeCipherSpec-Client-TLS13": "Limits on the number of CCS are not implemented",
-        "TooManyChangeCipherSpec-Server-TLS13": "Limits on the number of CCS are not implemented",
         "PostQuantumNotEnabledByDefaultInClients": "Oh yes it is",
         "TLS12SessionID-TLS13": "We don't offer TLS 1.3 when a TLS 1.2 session was found",
         "Ticket-Forbidden-TLS13": "We don't offer TLS 1.3 when a TLS 1.2 session was found",

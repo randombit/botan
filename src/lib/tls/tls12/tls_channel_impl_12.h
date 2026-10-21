@@ -248,7 +248,7 @@ class Channel_Impl_12 : public Channel_Impl {
 
       void process_application_data(uint64_t req_no, const secure_vector<uint8_t>& record);
 
-      void process_alert(const secure_vector<uint8_t>& record);
+      void process_alert(const secure_vector<uint8_t>& record, bool counts_for_useless_records);
 
       const bool m_is_server;
       const TLS_Flavor m_flavor;

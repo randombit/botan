@@ -654,6 +654,17 @@ class BOTAN_PUBLIC_API(2, 0) Policy /* NOLINT(*-special-member-functions) */ {
       virtual size_t maximum_session_tickets_per_connection() const;
 
       /**
+      * @return the maximum number of consecutive records received from the
+      * peer which are dropped without any effect: empty records, warning
+      * alerts other than close_notify, and in TLS 1.3 the compatibility mode
+      * ChangeCipherSpec. If more than this many arrive
+      * without some useful record in between, the connection is closed with
+      * an unexpected_message alert. Return std::nullopt to disable the limit.
+      * @note Unauthenticated DTLS records (epoch 0) are not counted.
+      */
+      virtual std::optional<size_t> max_useless_records() const;
+
+      /**
       * @note Has no effect for TLS 1.3 connections.
       */
       virtual bool allow_resumption_for_renegotiation() const;
@@ -937,6 +948,8 @@ class BOTAN_PUBLIC_API(2, 0) Text_Policy : public Policy {
       size_t dtls_maximum_timeout() const override;
 
       std::optional<size_t> dtls_maximum_hello_verify_requests() const override;
+
+      std::optional<size_t> max_useless_records() const override;
 
       bool require_cert_revocation_info() const override;
 

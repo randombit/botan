@@ -1562,6 +1562,118 @@ class TLS_Unit_Tests final : public Test {
          results.push_back(test.results());
       }
 
+      class Useless_Record_Callbacks final : public Botan::TLS::Callbacks {
+         public:
+            explicit Useless_Record_Callbacks(std::vector<uint8_t>& outbound) : m_outbound(outbound) {}
+
+            void tls_emit_data(std::span<const uint8_t> bits) override {
+               m_outbound.insert(m_outbound.end(), bits.begin(), bits.end());
+            }
+
+            void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> /*bits*/) override {}
+
+            void tls_alert(Botan::TLS::Alert alert) override { m_alerts.push_back(alert); }
+
+            void tls_session_established(const Botan::TLS::Session_Summary& /*session*/) override {}
+
+            const std::vector<Botan::TLS::Alert>& alerts() const { return m_alerts; }
+
+         private:
+            std::vector<uint8_t>& m_outbound;
+            std::vector<Botan::TLS::Alert> m_alerts;
+      };
+
+      void test_useless_record_limit(std::vector<Test::Result>& results,
+                                     const std::shared_ptr<Credentials_Manager_Test>& creds,
+                                     const std::shared_ptr<Botan::RandomNumberGenerator>& rng,
+                                     Botan::TLS::Protocol_Version version,
+                                     const std::string& limit) {
+         Test::Result result("TLS useless record limit " + version.to_string() + " limit=" + limit);
+
+         try {
+            std::vector<uint8_t> c2s;
+            std::vector<uint8_t> s2c;
+            const auto client_cb = std::make_shared<Useless_Record_Callbacks>(c2s);
+            const auto server_cb = std::make_shared<Useless_Record_Callbacks>(s2c);
+
+            auto policy = std::make_shared<Botan::TLS::Text_Policy>("");
+            policy->set("allow_tls12", version.is_pre_tls_13() ? "true" : "false");
+            policy->set("allow_tls13", version.is_pre_tls_13() ? "false" : "true");
+            policy->set("minimum_rsa_bits", "1024");
+            policy->set("minimum_signature_strength", "80");
+            policy->set("max_useless_records", limit);
+
+            const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+            Botan::TLS::Server server(server_cb, session_manager, creds, policy, rng);
+            Botan::TLS::Client client(client_cb,
+                                      session_manager,
+                                      creds,
+                                      policy,
+                                      rng,
+                                      Botan::TLS::Server_Information("server.example.com"),
+                                      version);
+
+            const auto pump = [&]() {
+               while(!c2s.empty() || !s2c.empty()) {
+                  if(!c2s.empty()) {
+                     std::vector<uint8_t> input;
+                     std::swap(c2s, input);
+                     try {
+                        server.received_data(input);
+                     } catch(const Botan::TLS::TLS_Exception&) {}
+                  }
+                  if(!s2c.empty()) {
+                     std::vector<uint8_t> input;
+                     std::swap(s2c, input);
+                     client.received_data(input);
+                  }
+               }
+            };
+
+            const auto send_warnings = [&](size_t count) {
+               for(size_t i = 0; i != count; ++i) {
+                  client.send_warning_alert(Botan::TLS::Alert::UserCanceled);
+               }
+               pump();
+            };
+
+            pump();
+            result.test_is_true("client is active", client.is_active());
+            result.test_is_true("server is active", server.is_active());
+
+            // Application data in between resets the count
+            for(size_t i = 0; i != 3; ++i) {
+               send_warnings(4);
+               client.send("x");
+               pump();
+            }
+            result.test_is_true("server tolerates 4 consecutive warnings", server.is_active());
+            result.test_sz_eq("server saw every warning", server_cb->alerts().size(), 12);
+
+            send_warnings(5);
+
+            if(limit == "none") {
+               result.test_is_true("server tolerates any number of warnings", server.is_active());
+               send_warnings(100);
+               result.test_is_true("server still active", server.is_active());
+            } else {
+               result.test_is_true("server closed after 5 consecutive warnings", server.is_closed());
+               result.test_sz_eq("client got one alert", client_cb->alerts().size(), 1);
+               if(!client_cb->alerts().empty()) {
+                  result.test_is_true("alert is fatal", client_cb->alerts()[0].is_fatal());
+                  result.test_enum_eq("alert is unexpected_message",
+                                      client_cb->alerts()[0].type(),
+                                      Botan::TLS::Alert::UnexpectedMessage);
+               }
+            }
+         } catch(const std::exception& e) {
+            result.test_failure("useless record limit", e.what());
+         }
+
+         results.push_back(result);
+      }
+
    #if defined(BOTAN_HAS_TLS_13)
       class KeyUpdate_Counting_Callbacks final : public Botan::TLS::Callbacks {
          public:
@@ -2385,6 +2497,17 @@ class TLS_Unit_Tests final : public Test {
    #if defined(BOTAN_HAS_TLS_13)
          test_tls13_automatic_key_updates(results, creds, rng);
    #endif
+
+         // Too many consecutive warning alerts close the connection
+
+         for(const std::string limit : {"4", "none"}) {
+   #if defined(BOTAN_HAS_TLS_12)
+            test_useless_record_limit(results, creds, rng, Botan::TLS::Protocol_Version::TLS_V12, limit);
+   #endif
+   #if defined(BOTAN_HAS_TLS_13)
+            test_useless_record_limit(results, creds, rng, Botan::TLS::Protocol_Version::TLS_V13, limit);
+   #endif
+         }
 
          // Test using a custom KDF instead of the original TLS 1.2 KDF
          // (this is a TLS 1.2 specific feature)

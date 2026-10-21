@@ -691,9 +691,20 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
             continue;
          }
 
+         // An off-path attacker can forge DTLS epoch-zero records, so they
+         // must neither trip nor reset the limit on useless records
+         const bool counts_for_useless_records = (m_flavor != TLS_Flavor::DTLS || record.epoch() > 0);
+
          if(record.type() == Record_Type::Handshake || record.type() == Record_Type::ChangeCipherSpec) {
             if(m_has_been_closed) {
                throw TLS_Exception(Alert::UnexpectedMessage, "Received handshake data after connection closure");
+            }
+            if(counts_for_useless_records) {
+               if(m_record_buf.empty()) {
+                  note_useless_record(policy());
+               } else {
+                  reset_useless_records();
+               }
             }
             process_handshake_ccs(m_record_buf, record.sequence(), record.type(), record.version(), epoch0_restart);
          } else if(record.type() == Record_Type::ApplicationData) {
@@ -732,7 +743,7 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
             }
             process_application_data(record.sequence(), m_record_buf);
          } else if(record.type() == Record_Type::Alert) {
-            process_alert(m_record_buf);
+            process_alert(m_record_buf, counts_for_useless_records);
          } else if(record.type() != Record_Type::Invalid) {
             throw Unexpected_Message("Unexpected record type " + std::to_string(static_cast<size_t>(record.type())) +
                                      " from counterparty");
@@ -861,11 +872,21 @@ void Channel_Impl_12::process_application_data(uint64_t seq_no, const secure_vec
       throw Unexpected_Message("Application data received in unexpected read epoch");
    }
 
+   if(record.empty()) {
+      note_useless_record(policy());
+   } else {
+      reset_useless_records();
+   }
+
    callbacks().tls_record_received(seq_no, record);
 }
 
-void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record) {
+void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record, bool counts_for_useless_records) {
    const Alert alert_msg(record);
+
+   if(counts_for_useless_records && !alert_msg.is_fatal() && alert_msg.type() != Alert::CloseNotify) {
+      note_useless_record(policy());
+   }
 
    // RFC 5246 7.2.2:
    //    no_renegotiation
