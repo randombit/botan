@@ -344,6 +344,25 @@ Utility Functions
 
    Hex decode some data
 
+.. cpp:function:: int botan_is_shared(void* ffi_handle)
+
+   Lets the application query if the ownership of the given ``ffi_handle`` may
+   be shared internally. For instance, a ``botan_rng_t`` handle may be shared
+   with a ``botan_tpm2_ctx_t`` object. For such handles, a call to
+   ``botan_*_destroy`` may not actually destroy the internal object, but instead
+   decrement a reference count only.
+
+   Returns 1 if the handle can be shared internally, 0 otherwise
+
+.. cpp:function:: int botan_use_count(void* ffi_handle)
+
+   Lets the application query the current internal reference count of the passed
+   ``ffi_handle``. Assuming no concurrent access, a return value of 1 means that
+   the application is the sole owner and a call to ``botan_*_destroy()`` will
+   destroy the underlying object.
+
+   Returns the number of internal references to this handle
+
 Random Number Generators
 ----------------------------------------
 
@@ -372,7 +391,7 @@ Random Number Generators
    Note that your custom RNG callbacks must remain callable for the lifetime
    of the RNG object. This lifetime might extend beyond a call to
    :cpp:func:`botan_rng_destroy` if the RNG handle is shared with another
-   object.
+   object, see :cpp:func:`botan_is_shared` and :cpp:func:`botan_use_count`.
 
 .. cpp:function:: int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len)
 

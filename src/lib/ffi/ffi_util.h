@@ -72,16 +72,29 @@ struct botan_ffi_obj_base {
       botan_ffi_obj_base& operator=(const botan_ffi_obj_base& other) = delete;
       botan_ffi_obj_base& operator=(botan_ffi_obj_base&& other) = delete;
 
+      /// @returns true if the underlying type is managed via a shared_ptr
+      virtual bool is_shared() const = 0;
+
+      /// @returns internal reference count of the underlying object
+      virtual size_t use_count() const = 0;
+
       /**
        * Heuristic, type-agnostic check whether some casted void* pointer
        * plausibly points to a live FFI object handle. This deliberately does
        * not use virtual dispatch, so that the check works without relying on a
        * potentially bogus vtable.
        *
-       * Unlike botan_ffi_obj<>::magic_ok() this cannot detect handles that are
-       * used through the wrong handle type.
+       * @note Calling this on any pointer that isn't actually a Botan FFI
+       *       object handle is undefined behavior. This is really just a best
+       *       effort check to avoid dereferencing a pointer that is definitely
+       *       not a valid FFI object handle.
+       *
+       * @returns false if the this-pointer definitely does not reference an
+       *          alive FFI object handle. In contrast, returns true if it
+       *          plausibly references an alive FFI object with the possibility
+       *          of false-positives.
        */
-      bool has_valid_magic() const { return m_magic != 0 && m_magic == m_magic_expected; }
+      bool appears_to_be_valid_ffi_handle() const { return m_magic != 0 && m_magic == m_magic_expected; }
 
    protected:
       void invalidate_magic() { m_magic = 0; }
@@ -119,6 +132,16 @@ struct botan_ffi_obj : public botan_ffi_obj_base {
       botan_ffi_obj& operator=(botan_ffi_obj&& other) = delete;
 
       bool magic_ok() const { return magic() == MAGIC; }
+
+      bool is_shared() const final { return detail::is_std_shared_pointer<smart_pointer_type>::value; }
+
+      size_t use_count() const final {
+         if constexpr(detail::is_std_shared_pointer<smart_pointer_type>::value) {
+            return static_cast<size_t>(m_obj.use_count());
+         } else {
+            return 1;  // unique_ptr always has an implicit use count of 1
+         }
+      }
 
       /// Retrieve the raw pointer to the underlying object. May be nullptr.
       T* unsafe_get() const { return m_obj.get(); }
