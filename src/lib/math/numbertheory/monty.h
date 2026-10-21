@@ -156,6 +156,27 @@ class BOTAN_TEST_API Montgomery_Int final {
 
       Montgomery_Int& square_this_n_times(secure_vector<word>& ws, size_t n);
 
+      Montgomery_Int& operator+=(const Montgomery_Int& other);
+
+      Montgomery_Int& operator-=(const Montgomery_Int& other);
+
+      /**
+      * Multiply by a small public integer d (which is not in Montgomery form)
+      */
+      Montgomery_Int& mul_by_word(word d);
+
+      /**
+      * Divide by 2 modulo p
+      */
+      Montgomery_Int& div2();
+
+      /**
+      * If predicate is true assign other to this, in constant time
+      */
+      void ct_cond_assign(bool predicate, const Montgomery_Int& other);
+
+      bool is_zero() const;
+
       void _const_time_poison() const { CT::poison(m_v); }
 
       void _const_time_unpoison() const { CT::unpoison(m_v); }
@@ -164,6 +185,9 @@ class BOTAN_TEST_API Montgomery_Int final {
 
    private:
       Montgomery_Int(const Montgomery_Params& params, secure_vector<word> words);
+
+      // this = this + other mod p; other may alias this
+      void add_mod_p(std::span<const word> other);
 
       Montgomery_Params m_params;
       secure_vector<word> m_v;

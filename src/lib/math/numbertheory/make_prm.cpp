@@ -10,7 +10,6 @@
 #include <botan/exceptn.h>
 #include <botan/numthry.h>
 #include <botan/rng.h>
-#include <botan/internal/barrett.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
@@ -145,15 +144,14 @@ BigInt random_prime_with_sieve(RandomNumberGenerator& rng,
 
          BOTAN_DEBUG_ASSERT(no_small_multiples(p, sieve));
 
-         const auto mod_p = Barrett_Reduction::for_secret_modulus(p);
-         const Montgomery_Params monty_p(p, mod_p);
+         const Montgomery_Params monty_p(p);
 
          if(coprime > 1) {
             /*
             First do a single M-R iteration to quickly eliminate most non-primes,
             before doing the coprimality check which is expensive
             */
-            if(!is_miller_rabin_probable_prime(p, mod_p, monty_p, rng, 1)) {
+            if(!is_miller_rabin_probable_prime(p, monty_p, rng, 1)) {
                continue;
             }
 
@@ -170,11 +168,11 @@ BigInt random_prime_with_sieve(RandomNumberGenerator& rng,
             break;
          }
 
-         if(!is_miller_rabin_probable_prime(p, mod_p, monty_p, rng, mr_trials)) {
+         if(!is_miller_rabin_probable_prime(p, monty_p, rng, mr_trials)) {
             continue;
          }
 
-         if(prob > 32 && !is_lucas_probable_prime(p, mod_p)) {
+         if(prob > 32 && !is_lucas_probable_prime(p, monty_p)) {
             continue;
          }
 
@@ -295,15 +293,14 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
 
          BOTAN_DEBUG_ASSERT(no_small_multiples(p, sieve));
 
-         const auto mod_p = Barrett_Reduction::for_secret_modulus(p);
-         const Montgomery_Params monty_p(p, mod_p);
+         const Montgomery_Params monty_p(p);
 
          /*
          * Do a single primality test first before checking coprimality, since
          * currently a single Miller-Rabin test is faster than computing gcd,
          * and this eliminates almost all wasted gcd computations.
          */
-         if(!is_miller_rabin_probable_prime(p, mod_p, monty_p, prime_test_rng, 1)) {
+         if(!is_miller_rabin_probable_prime(p, monty_p, prime_test_rng, 1)) {
             continue;
          }
 
@@ -318,7 +315,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
             break;
          }
 
-         if(is_miller_rabin_probable_prime(p, mod_p, monty_p, prime_test_rng, mr_trials)) {
+         if(is_miller_rabin_probable_prime(p, monty_p, prime_test_rng, mr_trials)) {
             return p;
          }
       }
