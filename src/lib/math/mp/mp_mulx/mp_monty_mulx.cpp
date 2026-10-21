@@ -8,6 +8,7 @@
 
 #include <botan/mem_ops.h>
 #include <botan/internal/mp_core.h>
+#include <array>
 
 namespace Botan {
 
@@ -124,36 +125,57 @@ void bigint_mulx_monty_mul(word z[], const word x[], const word y[], const word 
 }
 
 void bigint_mulx_monty_sqr(word z[], const word x[], const word p[], size_t N, word p_dash, word ws[]) {
-   // Below this many words the rows of the triangular squaring are too short
-   // to amortize their setup, and squaring via the fused multiplication wins
-   constexpr size_t MulxMontySqrMinWords = 24;
-
-   if(N < MulxMontySqrMinWords) {
-      return bigint_mulx_monty_mul(z, x, x, p, N, p_dash, ws);
-   } else {
-      bigint_mulx_sqr(ws, x, N);
-      return bigint_mulx_monty_redc(z, ws, p, N, p_dash);
-   }
+   bigint_mulx_sqr(ws, x, N);
+   bigint_mulx_monty_redc(z, ws, p, N, p_dash);
 }
 
 void bigint_mulx_sqr(word z[], const word x[], size_t N) {
    clear_mem(z, 2 * N + 1);
 
-   // Each off-diagonal product x[i]*x[j] with j > i, once
-   for(size_t i = 0; i + 1 < N; ++i) {
+   /*
+   * x is split into a leading block of N % 8 words followed by blocks of 8
+   * words. Rows from the leading block cover every product x[i]*x[j] with
+   * j > i; rows from the other blocks cover only products with x[j] in a
+   * later block, so their lengths are multiples of 8.
+   */
+   const size_t lead = N % 8;
+
+   for(size_t i = 0; i != lead; ++i) {
       monty_row(z + 2 * i + 1, z + 2 * i + 1, x + i + 1, N - i - 1, x[i], 0);
    }
 
-   // Double them, then add the squares x[i]^2 along the diagonal
-   bigint_shl1(z, 2 * N + 1, 2 * N, 1);
+   for(size_t b = lead; b + 8 < N; b += 8) {
+      for(size_t i = b; i != b + 8; ++i) {
+         monty_row(z + i + b + 8, z + i + b + 8, x + b + 8, N - b - 8, x[i], 0);
+      }
+   }
 
+   // Double the products while adding the squares not yet included, which together cover z[0..2N)
    word carry = 0;
-   for(size_t i = 0; i != N; ++i) {
+   word top = 0;
+   auto double_and_add = [&](size_t k, word s) {
+      const word w = z[k];
+      z[k] = word_add((w << 1) | top, s, &carry);
+      top = w >> (WordInfo<word>::bits - 1);
+   };
+
+   for(size_t i = 0; i != lead; ++i) {
       word hi = 0;
       const word lo = word_madd2(x[i], x[i], &hi);
-      z[2 * i] = word_add(z[2 * i], lo, &carry);
-      z[2 * i + 1] = word_add(z[2 * i + 1], hi, &carry);
+      double_and_add(2 * i, lo);
+      double_and_add(2 * i + 1, hi);
    }
+
+   for(size_t b = lead; b != N; b += 8) {
+      std::array<word, 16> sq{};
+      bigint_mulx_sqr8(sq.data(), x + b);
+      for(size_t k = 0; k != 16; ++k) {
+         double_and_add(2 * b + k, sq[k]);
+      }
+   }
+
+   // The square fits in 2N words
+   BOTAN_DEBUG_ASSERT(carry == 0 && top == 0);
 }
 
 void bigint_mulx_monty_redc(word r[], word z[], const word p[], size_t N, word p_dash) {
