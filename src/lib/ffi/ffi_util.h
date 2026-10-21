@@ -15,6 +15,7 @@
 #include <cstring>
 #include <exception>
 #include <memory>
+#include <type_traits>
 
 namespace Botan_FFI {
 
@@ -32,10 +33,64 @@ class BOTAN_UNSTABLE_API FFI_Error final : public Botan::Exception {
       int m_err_code;
 };
 
+namespace detail {
+
 template <typename T>
-concept ffi_object_smart_pointer = requires(T& obj) {
-   { obj.get() } -> std::same_as<typename T::element_type*>;
-   { obj.reset() };
+struct is_std_unique_pointer : std::false_type {};
+
+template <typename T, typename Deleter>
+struct is_std_unique_pointer<std::unique_ptr<T, Deleter>> : std::true_type {};
+
+template <typename T>
+struct is_std_shared_pointer : std::false_type {};
+
+template <typename T>
+struct is_std_shared_pointer<std::shared_ptr<T>> : std::true_type {};
+
+}  // namespace detail
+
+template <typename T>
+concept ffi_object_smart_pointer = detail::is_std_unique_pointer<T>::value || detail::is_std_shared_pointer<T>::value;
+
+/**
+ * Base class of all FFI object handles. This allows dealing with arbitrary
+ * handles generically, e.g. when the downstream consumer passes them as void*.
+ */
+struct botan_ffi_obj_base {
+   protected:
+      explicit constexpr botan_ffi_obj_base(uint32_t magic) : m_magic(magic), m_magic_expected(magic) {}
+
+      /**
+       * Protected destructor to ensure that this class is never destroyed via
+       * this base type.
+       */
+      ~botan_ffi_obj_base() = default;
+
+   public:
+      botan_ffi_obj_base(const botan_ffi_obj_base& other) = delete;
+      botan_ffi_obj_base(botan_ffi_obj_base&& other) = delete;
+      botan_ffi_obj_base& operator=(const botan_ffi_obj_base& other) = delete;
+      botan_ffi_obj_base& operator=(botan_ffi_obj_base&& other) = delete;
+
+      /**
+       * Heuristic, type-agnostic check whether some casted void* pointer
+       * plausibly points to a live FFI object handle. This deliberately does
+       * not use virtual dispatch, so that the check works without relying on a
+       * potentially bogus vtable.
+       *
+       * Unlike botan_ffi_obj<>::magic_ok() this cannot detect handles that are
+       * used through the wrong handle type.
+       */
+      bool has_valid_magic() const { return m_magic != 0 && m_magic == m_magic_expected; }
+
+   protected:
+      void invalidate_magic() { m_magic = 0; }
+
+      uint32_t magic() const { return m_magic; }
+
+   private:
+      uint32_t m_magic;
+      uint32_t m_magic_expected;
 };
 
 /**
@@ -45,16 +100,16 @@ concept ffi_object_smart_pointer = requires(T& obj) {
  */
 template <typename T, uint32_t MAGIC, template <typename... Args> typename PtrType>
    requires ffi_object_smart_pointer<PtrType<T>>
-struct botan_ffi_obj {
+struct botan_ffi_obj : public botan_ffi_obj_base {
    public:
       using element_type = T;
       using smart_pointer_type = PtrType<T>;
 
    public:
-      explicit botan_ffi_obj(smart_pointer_type obj) : m_magic(MAGIC), m_obj(std::move(obj)) {}
+      explicit botan_ffi_obj(smart_pointer_type obj) : botan_ffi_obj_base(MAGIC), m_obj(std::move(obj)) {}
 
       virtual ~botan_ffi_obj() {
-         m_magic = 0;
+         invalidate_magic();
          m_obj.reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
       }
 
@@ -63,7 +118,7 @@ struct botan_ffi_obj {
       botan_ffi_obj& operator=(const botan_ffi_obj& other) = delete;
       botan_ffi_obj& operator=(botan_ffi_obj&& other) = delete;
 
-      bool magic_ok() const { return (m_magic == MAGIC); }
+      bool magic_ok() const { return magic() == MAGIC; }
 
       /// Retrieve the raw pointer to the underlying object. May be nullptr.
       T* unsafe_get() const { return m_obj.get(); }
@@ -75,14 +130,11 @@ struct botan_ffi_obj {
       const smart_pointer_type& unsafe_get_sp() const { return m_obj; }
 
    private:
-      uint32_t m_magic = 0;
       smart_pointer_type m_obj;
 };
 
 template <typename T>
-concept ffi_object = requires(const T& obj) {
-   { obj.magic_ok() } -> std::same_as<bool>;
-};
+concept ffi_object = std::derived_from<T, botan_ffi_obj_base>;
 
 // NOLINTBEGIN(*-macro-usage)
 
