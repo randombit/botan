@@ -25,7 +25,7 @@ Flight::Message_Info make_message_info(const Handshake_Message& message, const F
    auto serialized_message = Handshake_Layer::serialize(message);
    return {
       .wire_type = message.wire_type(),
-      .header = Handshake_Layer::prepare_header(message.wire_type(), serialized_message.size()),
+      .header = TLS_Handshake_Layer::prepare_header(message.wire_type(), serialized_message.size()),
       .serialized = std::move(serialized_message),
    };
 }

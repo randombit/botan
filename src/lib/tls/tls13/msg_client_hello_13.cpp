@@ -480,7 +480,7 @@ void Client_Hello_13::calculate_psk_binders(Transcript_Hash_State transcript_has
    // (truncated) transcript hash, calculate the PSK binders with it, update
    // the Client Hello thus finalizing the message. Down the road, it will be
    // re-marshalled with the correct binders and sent over the wire.
-   Handshake_Layer::prepare_message(*this, transcript_hash);
+   Handshake_Layer::update_transcript_for_psk_binder_calc(*this, transcript_hash);
    psk->calculate_binders(transcript_hash);
 }
 
