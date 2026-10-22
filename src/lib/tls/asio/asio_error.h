@@ -47,6 +47,11 @@ namespace TLS {
 // NOLINTNEXTLINE(*-use-enum-class)
 enum StreamError : uint8_t { StreamTruncated = 1 };
 
+// NOLINTNEXTLINE(*-use-enum-class)
+enum DatagramError : uint8_t {
+   DatagramReceiveQueueOverflow = 1,
+};
+
 //! @brief An error category for errors from the TLS::Stream
 class StreamCategory final : public BoostErrorCategory {
    public:
@@ -68,6 +73,28 @@ inline const StreamCategory& botan_stream_category() {
 
 inline boost::system::error_code make_error_code(Botan::TLS::StreamError e) {
    return boost::system::error_code(static_cast<int>(e), Botan::TLS::botan_stream_category());
+}
+
+//! @brief An error category for errors from the TLS::Datagram wrapper
+class DatagramCategory final : public BoostErrorCategory {
+   public:
+      const char* name() const noexcept override { return "Botan TLS Datagram"; }
+
+      std::string message(int value) const override {
+         if(value == DatagramReceiveQueueOverflow) {
+            return "datagram receive queue overflow";
+         }
+         return "generic datagram error";
+      }
+};
+
+inline const DatagramCategory& botan_datagram_category() {
+   static const DatagramCategory category;
+   return category;
+}
+
+inline boost::system::error_code make_error_code(Botan::TLS::DatagramError e) {
+   return boost::system::error_code(static_cast<int>(e), Botan::TLS::botan_datagram_category());
 }
 
 //! @brief An error category for TLS alerts
@@ -124,6 +151,11 @@ struct is_error_code_enum<Botan::TLS::Alert::Type> {
 
 template <>
 struct is_error_code_enum<Botan::TLS::StreamError> {
+      static const bool value = true;
+};
+
+template <>
+struct is_error_code_enum<Botan::TLS::DatagramError> {
       static const bool value = true;
 };
 
