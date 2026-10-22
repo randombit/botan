@@ -43,10 +43,10 @@ inline bool use_mulx_monty(size_t p_size) {
 void bigint_mulx_monty_mul(word z[], const word x[], const word y[], const word p[], size_t N, word p_dash, word ws[]);
 
 /**
-* Fused Montgomery squaring
+* Montgomery squaring
 *
 * Computes z[0..N) = x*x*2^(-64*N) mod p for x < p. z may alias x.
-* ws must hold at least N + 3 words.
+* ws must hold at least 2N + 1 words.
 */
 void bigint_mulx_monty_sqr(word z[], const word x[], const word p[], size_t N, word p_dash, word ws[]);
 
