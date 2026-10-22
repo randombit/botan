@@ -41,6 +41,7 @@ class BOTAN_TEST_API Flight {
 
       struct Message_Info {
             Handshake_Type wire_type;
+            std::optional<EpochNumber> epoch;
             HandshakeProtocolHeader header;
             SerializedHandshakeMessage serialized;
       };

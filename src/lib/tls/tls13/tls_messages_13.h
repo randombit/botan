@@ -361,9 +361,9 @@ class BOTAN_UNSTABLE_API Certificate_Verify_13 final : public Certificate_Verify
 class BOTAN_UNSTABLE_API Finished_13 final : public Finished {
    public:
       using Finished::Finished;
-      Finished_13(Cipher_State* cipher_state, const Transcript_Hash& transcript_hash);
+      Finished_13(const Cipher_State& cipher_state, const Transcript_Hash& transcript_hash);
 
-      bool verify(Cipher_State* cipher_state, const Transcript_Hash& transcript_hash) const;
+      bool verify(const Cipher_State& cipher_state, const Transcript_Hash& transcript_hash) const;
 };
 
 class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message {
