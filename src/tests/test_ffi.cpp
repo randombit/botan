@@ -18,6 +18,7 @@
    #include <botan/mem_ops.h>
    #include <botan/internal/calendar.h>
    #include <botan/internal/concat_util.h>
+   #include <botan/internal/ffi_rng.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/loadstor.h>
    #include <botan/internal/stl_util.h>
@@ -356,6 +357,64 @@ class FFI_Utils_Test final : public FFI_Test {
 
          TEST_FFI_OK(botan_hex_encode, (bin.data(), bin.size(), outstr.data(), BOTAN_FFI_HEX_LOWER_CASE));
          result.test_str_eq("lowercase hex", outstr, "aade01");
+
+         // botan_is_shared() and botan_use_count() with a handle type that may
+         // share internal ownership of the underlying object (botan_rng_t)
+         botan_rng_t sharable_rng = nullptr;
+         REQUIRE_FFI_OK(botan_rng_init, (&sharable_rng, nullptr));
+
+         result.test_u32_eq("RNG handle can be shared internally", uint32_t(botan_is_shared(sharable_rng)), 1);
+
+         size_t use_count = 0;
+         TEST_FFI_OK(botan_use_count, (sharable_rng, &use_count));
+         result.test_sz_eq("RNG handle use count is 1", use_count, 1);
+
+         {
+            // simulate another handle retaining internal ownership of the RNG
+            auto internal_reference = sharable_rng->unsafe_get_sp();
+            TEST_FFI_OK(botan_use_count, (sharable_rng, &use_count));
+            result.test_sz_eq("RNG handle use count is 1", use_count, 2);
+         }
+
+         TEST_FFI_OK(botan_use_count, (sharable_rng, &use_count));
+         result.test_sz_eq("RNG handle use count after internal consumer is gone", use_count, 1);
+
+         TEST_FFI_OK(botan_rng_destroy, (sharable_rng));
+
+         // ... and with a handle type that owns the underlying object uniquely
+         botan_mp_t unique_mp = nullptr;
+         REQUIRE_FFI_OK(botan_mp_init, (&unique_mp));
+
+         result.test_u32_eq("MP handle cannot be shared internally", uint32_t(botan_is_shared(unique_mp)), 0);
+
+         use_count = 0;
+         TEST_FFI_OK(botan_use_count, (unique_mp, &use_count));
+         result.test_sz_eq("MP handle use count is always 1", use_count, 1);
+
+         // Error handling for invalid handles
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_is_shared, (nullptr));
+
+         use_count = 42;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_use_count, (unique_mp, nullptr));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_use_count, (nullptr, &use_count));
+         result.test_sz_eq("use_count out-param zeroed on error", use_count, 0);
+
+         TEST_FFI_OK(botan_mp_destroy, (unique_mp));
+
+         // A live handle with invalidated magic must be rejected.
+         struct Invalid_FFI_Handle final : Botan_FFI::botan_ffi_obj_base {
+               Invalid_FFI_Handle() : botan_ffi_obj_base(0xDEADBEEF) { invalidate_magic(); }
+
+               bool is_shared() const override { return false; }
+
+               size_t use_count() const override { return 1; }
+         } invalid_handle;
+
+         auto* invalid_base = static_cast<Botan_FFI::botan_ffi_obj_base*>(&invalid_handle);
+         use_count = 1337;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT, botan_is_shared, (invalid_base));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT, botan_use_count, (invalid_base, &use_count));
+         result.test_sz_eq("use_count out-param zeroed on error", use_count, 0);
       }
 };
 

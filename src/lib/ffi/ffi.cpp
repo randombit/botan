@@ -426,4 +426,41 @@ int botan_base64_decode(const char* base64_str, size_t in_len, uint8_t* out, siz
       return BOTAN_FFI_SUCCESS;
    });
 }
+
+int botan_is_shared(void* handle) {
+   if(any_null_pointers(handle)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const auto* obj = static_cast<const Botan_FFI::botan_ffi_obj_base*>(handle);
+      if(!obj->appears_to_be_valid_ffi_handle()) {
+         return BOTAN_FFI_ERROR_INVALID_OBJECT;
+      }
+
+      return obj->is_shared() ? 1 : 0;
+   });
+}
+
+int botan_use_count(void* handle, size_t* out_use_count) {
+   if(out_use_count != nullptr) {
+      // Set the out-param to an implausible value, in case any of the error
+      // paths below return early.
+      *out_use_count = 0;
+   }
+
+   if(any_null_pointers(handle, out_use_count)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const auto* obj = static_cast<const Botan_FFI::botan_ffi_obj_base*>(handle);
+      if(!obj->appears_to_be_valid_ffi_handle()) {
+         return BOTAN_FFI_ERROR_INVALID_OBJECT;
+      }
+
+      *out_use_count = obj->use_count();
+      return BOTAN_FFI_SUCCESS;
+   });
+}
 }

@@ -300,6 +300,44 @@ BOTAN_FFI_EXPORT(2, 3) int botan_base64_encode(const uint8_t* x, size_t len, cha
 BOTAN_FFI_EXPORT(2, 3) int botan_base64_decode(const char* base64_str, size_t in_len, uint8_t* out, size_t* out_len);
 
 /**
+* Some handles created by functions like botan_*_init() allow sharing internal
+* ownership of the underlying C++ object via a std::shared_ptr. Typically, this
+* is used when some other handle needs to retain ownership of the same object
+* for continuous use internally. The botan_rng_t handle is such an internally
+* sharable object, for instance.
+*
+* Calling botan_*_destroy() on such a handle drops the shared_ptr reference held
+* by the application, but the underlying object may still be alive because of
+* other handles that retain the internal shared_ptr.
+*
+* This lets the application query if some handle can be shared internally. That
+* way users can determine if a call to botan_*_destroy() will certainly destroy
+* the underlying object or not.
+*
+* @returns 1 if the handle can be shared internally, 0 otherwise
+*/
+BOTAN_FFI_EXPORT(3, 14) int botan_is_shared(void* handle);
+
+/**
+* Some handles created by functions like botan_*_init() allow sharing internal
+* ownership of the underlying C++ object via a std::shared_ptr. Typically, this
+* is used when some other handle needs to retain ownership of the same object
+* for continuous use internally. The botan_rng_t handle is such an internally
+* sharable object, for instance.
+*
+* Calling botan_*_destroy() on such a handle drops the shared_ptr reference held
+* by the application, but the underlying object may still be alive because of
+* other handles that retain the internal shared_ptr.
+*
+* This lets the application query the current internal reference count of such
+* an object. Assuming no concurrent access, a return value of 1 means that the
+* application is the sole owner of the underlying object and that a call to
+* botan_*_destroy() will destroy the underlying object. Handles for which
+* botan_is_shared() returns 0 will always return 1 for botan_use_count().
+*/
+BOTAN_FFI_EXPORT(3, 14) int botan_use_count(void* handle, size_t* out_use_count);
+
+/**
 * RNG type
 */
 typedef struct botan_rng_struct* botan_rng_t;
