@@ -78,20 +78,22 @@ class BOTAN_TEST_API Record_Layer {
        * The payload passed into this function must fit into a single record,
        * @sa record_payload_size_limit() for the maximum allowed payload size.
        *
-       * @param policy        The TLS policy for record size constraints
        * @param type          The type of the record to be prepared.
-       * @param payload       The plaintext payload to be included in the
-       *                      record.
+       * @param payload       The plaintext payload to be included in the record.
+       * @param policy        The TLS policy for record size constraints
        * @param cipher_state  If not nullptr, the record will be encrypted using
        *                      this cipher state. Pass nullptr to prepare a
        *                      plaintext record.
        * @param out           The container the marshalled record is written to
+       *
+       * @returns The record number (epoch and sequence number) of the
+       *          prepared record
        */
-      virtual void prepare_record(const Policy& policy,
-                                  Record_Type type,
-                                  std::span<const uint8_t> payload,
-                                  Cipher_State* cipher_state,
-                                  secure_vector<uint8_t>& out) = 0;
+      virtual RecordNumber prepare_record(Record_Type type,
+                                          std::span<const uint8_t> payload,
+                                          const Policy& policy,
+                                          Cipher_State* cipher_state,
+                                          secure_vector<uint8_t>& out) = 0;
 
       /// @}
 
@@ -156,11 +158,11 @@ class BOTAN_TEST_API TLS_Record_Layer final : public Record_Layer {
 
       void copy_data(std::span<const uint8_t> data) override;
       ReadResult next_record(Cipher_State* cipher_state = nullptr) override;
-      void prepare_record(const Policy& policy,
-                          Record_Type type,
-                          std::span<const uint8_t> payload,
-                          Cipher_State* cipher_state,
-                          secure_vector<uint8_t>& out) override;
+      RecordNumber prepare_record(Record_Type type,
+                                  std::span<const uint8_t> payload,
+                                  const Policy& policy,
+                                  Cipher_State* cipher_state,
+                                  secure_vector<uint8_t>& out) override;
 
       void clear_read_buffer() override;
 

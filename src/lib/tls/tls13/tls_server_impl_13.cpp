@@ -325,21 +325,26 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
    // NOTE: the server_hello variable is moved into the handshake state. Later
    //       references to the Server Hello will need to consult the handshake
    //       state object!
-   auto server_hello_flight = Flight(*m_transcript_hash, callbacks())  //
-                                 .add(m_handshake->state.sending(std::move(server_hello)));
+   auto flight = Flight(*m_transcript_hash, callbacks())  //
+                    .add(m_handshake->state.sending(std::move(server_hello)));
 
    // RFC 9846 E.4
    //    The server sends a dummy change_cipher_spec record immediately after
    //    its first handshake message. This may either be after a ServerHello or
    //    a HelloRetryRequest.
    if(compat_mode_ccs_requested() && !m_handshake->state.has_hello_retry_request()) {
-      server_hello_flight.add_dummy_change_cipher_spec();
+      flight.add_dummy_change_cipher_spec();
    }
 
-   send_flight(server_hello_flight.commit());
-
-   // Setup encryption for all the remaining handshake messages
-   setup_cipher_state([&] {
+   // Setup encryption for all the remaining handshake messages. Note that this
+   // is not promoted to m_cipher_state yet, because the ServerHello is not yet
+   // sent to the peer. The promotion happens only immediately before the
+   // sending of the ServerHello, because then the existence of m_cipher_state
+   // means that the peer can decrypt. (This is relevant if anything throws
+   // before the ServerHello is sent and results in an alert. In that case, if
+   // m_cipher_state were set, an encrypted alert would be sent without the peer
+   // being able to decrypt it.)
+   auto new_cipher_state = [&] {
       // Currently, PSK without DHE is not implemented...
       auto* const my_keyshare = m_handshake->state.server_hello().extensions().get<Key_Share>();
       BOTAN_ASSERT_NONNULL(my_keyshare);
@@ -359,7 +364,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
                                                      m_transcript_hash->current(),
                                                      secret_logger());
       }
-   }());
+   }();
 
    // Decide up front whether we will request client authentication so the
    // EncryptedExtensions can attach client_certificate_type when applicable
@@ -370,9 +375,9 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
 
    const bool is_resumption = m_handshake->resumed_session.has_value();
    const bool requesting_client_auth = certificate_request.has_value();
-   auto flight = Flight(*m_transcript_hash, callbacks())
-                    .add(m_handshake->state.sending(Encrypted_Extensions(
-                       client_hello, policy(), callbacks(), is_resumption, requesting_client_auth)));
+
+   flight.add(m_handshake->state.sending(
+      Encrypted_Extensions(client_hello, policy(), callbacks(), is_resumption, requesting_client_auth)));
 
    if(!uses_psk) {
       // RFC 8446 4.3.2
@@ -422,7 +427,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
                                                                rng())));
    }
 
-   flight.add(m_handshake->state.sending(Finished_13(m_cipher_state.get(), m_transcript_hash->current())));
+   flight.add(m_handshake->state.sending(Finished_13(*new_cipher_state, m_transcript_hash->current())));
 
    if(client_hello.extensions().has<Record_Size_Limit>() &&
       m_handshake->state.encrypted_extensions().extensions().has<Record_Size_Limit>()) {
@@ -447,9 +452,12 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
       set_record_size_limits(outgoing_limit->limit(), incoming_limit->limit());
    }
 
+   // Promote cipher state immediately before sending the flight (see comment
+   // at declaration of new_cipher_state).
+   auto& cs = setup_cipher_state(std::move(new_cipher_state));
    send_flight(flight.commit());
 
-   m_cipher_state->advance_with_server_finished(m_transcript_hash->current());
+   cs.advance_with_server_finished(m_transcript_hash->current());
 
    if(m_handshake->state.has_certificate_request()) {
       // RFC 8446 4.4.2
@@ -667,7 +675,7 @@ void Server_Impl_13::handle(const Finished_13& finished_msg) {
    //    Recipients of Finished messages MUST verify that the contents are
    //    correct and if incorrect MUST terminate the connection with a
    //    "decrypt_error" alert.
-   if(!finished_msg.verify(m_cipher_state.get(), m_transcript_hash->previous())) {
+   if(!finished_msg.verify(*m_cipher_state, m_transcript_hash->previous())) {
       throw TLS_Exception(Alert::DecryptError, "Finished message didn't verify");
    }
 

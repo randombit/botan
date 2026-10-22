@@ -651,7 +651,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
    //    Recipients of Finished messages MUST verify that the contents are
    //    correct and if incorrect MUST terminate the connection with a
    //    "decrypt_error" alert.
-   if(!finished_msg.verify(m_cipher_state.get(), m_transcript_hash->previous())) {
+   if(!finished_msg.verify(*m_cipher_state, m_transcript_hash->previous())) {
       throw TLS_Exception(Alert::DecryptError, "Finished message didn't verify");
    }
 
@@ -695,7 +695,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
    }
 
    // send client finished handshake message (still using handshake traffic secrets)
-   flight.add(m_handshake->state.sending(Finished_13(m_cipher_state.get(), m_transcript_hash->current())));
+   flight.add(m_handshake->state.sending(Finished_13(*m_cipher_state, m_transcript_hash->current())));
 
    send_flight(flight.commit());
 
