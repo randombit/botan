@@ -103,6 +103,33 @@ std::optional<uint64_t> BOTAN_TEST_API get_thread_cpu_time_ns();
 uint64_t BOTAN_TEST_API get_fork_generation();
 
 /**
+* Detects if the address space of this process may have been duplicated,
+* for example by fork(), since this object was created or last rebaselined.
+*/
+class BOTAN_TEST_API Fork_Detector final {
+   public:
+      /**
+      * Record the state of the current process
+      */
+      Fork_Detector();
+
+      /**
+      * Discard the recorded state and record the state of the current process
+      */
+      void rebaseline();
+
+      /**
+      * @return true if the current process may be a duplicate of the
+      * process in which this object was created or last rebaselined
+      */
+      bool fork_detected() const;
+
+   private:
+      uint32_t m_process_id;
+      uint64_t m_fork_generation;
+};
+
+/**
 * Format a time
 *
 * Converts the time_t to a local time representation,

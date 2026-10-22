@@ -10,6 +10,7 @@
 
 #include <botan/mutex.h>
 #include <botan/types.h>
+#include <botan/internal/os_utils.h>
 #include <array>
 #include <map>
 #include <optional>
@@ -68,7 +69,7 @@ class Stateful_Key_Index_Registry final {
 
          private:
             std::array<uint8_t, 32> m_val{};
-            uint32_t m_process_id = 0;
+            OS::Fork_Detector m_fork_detector;
             uint64_t m_max_operations = 0;
 
             friend class Stateful_Key_Index_Registry;
@@ -118,7 +119,7 @@ class Stateful_Key_Index_Registry final {
 
       mutex_type m_mutex;
       RegistryMap m_registry;
-      uint32_t m_process_id = 0;
+      OS::Fork_Detector m_fork_detector;
       bool m_fork_detected = false;
 };
 

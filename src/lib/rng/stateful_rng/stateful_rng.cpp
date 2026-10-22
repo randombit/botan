@@ -16,11 +16,31 @@
 
 namespace Botan {
 
+Stateful_RNG::Stateful_RNG(RandomNumberGenerator& rng, Entropy_Sources& entropy_sources, size_t reseed_interval) :
+      m_underlying_rng(&rng),
+      m_entropy_sources(&entropy_sources),
+      m_reseed_interval(reseed_interval),
+      m_fork_detector(std::make_unique<OS::Fork_Detector>()) {}
+
+Stateful_RNG::Stateful_RNG(RandomNumberGenerator& rng, size_t reseed_interval) :
+      m_underlying_rng(&rng),
+      m_reseed_interval(reseed_interval),
+      m_fork_detector(std::make_unique<OS::Fork_Detector>()) {}
+
+Stateful_RNG::Stateful_RNG(Entropy_Sources& entropy_sources, size_t reseed_interval) :
+      m_entropy_sources(&entropy_sources),
+      m_reseed_interval(reseed_interval),
+      m_fork_detector(std::make_unique<OS::Fork_Detector>()) {}
+
+Stateful_RNG::Stateful_RNG() : m_reseed_interval(0), m_fork_detector(std::make_unique<OS::Fork_Detector>()) {}
+
+Stateful_RNG::~Stateful_RNG() = default;
+
 void Stateful_RNG::clear() {
    const lock_guard_type<recursive_mutex_type> lock(m_mutex);
    m_reseed_counter = 0;
-   m_last_pid = 0;
-   m_fork_generation = 0;
+   // The cleared state has nothing left to inherit from a parent process
+   m_fork_detector->rebaseline();
    clear_state();
 }
 
@@ -128,18 +148,13 @@ void Stateful_RNG::reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits)
 
 void Stateful_RNG::reset_reseed_counter() {
    // Lock is held whenever this function is called
+   m_fork_detector->rebaseline();
    m_reseed_counter = 1;
-   m_last_pid = OS::get_process_id();
-   m_fork_generation = OS::get_fork_generation();
 }
 
 bool Stateful_RNG::fork_detected() const {
    // Lock is held whenever this function is called
-   if(m_last_pid == 0) {
-      return false;
-   }
-
-   return (OS::get_process_id() != m_last_pid || OS::get_fork_generation() != m_fork_generation);
+   return m_fork_detector->fork_detected();
 }
 
 void Stateful_RNG::reseed_check() {
