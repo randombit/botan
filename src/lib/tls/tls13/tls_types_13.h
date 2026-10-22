@@ -19,6 +19,37 @@ using BytesNeeded = size_t;
 
 using SecretLoggerFn = std::function<void(std::string_view label, std::span<const uint8_t> secret)>;
 
+enum class EpochNumber /* NOLINT(*-enum-size) */ : uint64_t {
+   Unprotected = 0,
+   EarlyTraffic = 1,
+   HandshakeTraffic = 2,
+   ApplicationTraffic_0 = 3,
+   // ApplicationTraffic_1 = 4
+   // ApplicationTraffic_2 = 5
+   // ...
+   // ApplicationTraffic_N = N + 3
+};
+
+constexpr EpochNumber operator+(EpochNumber current, size_t offset) {
+   // NOLINTNEXTLINE(*.EnumCastOutOfRange)
+   return static_cast<EpochNumber>(static_cast<uint64_t>(current) + offset);
+}
+
+constexpr EpochNumber operator-(EpochNumber current, EpochNumber offset) {
+   // NOLINTNEXTLINE(*.EnumCastOutOfRange)
+   return static_cast<EpochNumber>(static_cast<uint64_t>(current) - static_cast<uint64_t>(offset));
+}
+
+/**
+ * RFC 9147 Section 4
+ */
+struct RecordNumber {
+      EpochNumber epoch;         // NOLINT(*-non-private-member-variable*)
+      uint64_t sequence_number;  // NOLINT(*-non-private-member-variable*)
+
+      auto operator<=>(const RecordNumber&) const = default;
+};
+
 /// Holds the serialization of a single TLS 1.3 handshake message without the
 /// handshake protocol header.
 using SerializedHandshakeMessage = Strong<std::vector<uint8_t>, struct SerializedHandshakeMessage_>;
