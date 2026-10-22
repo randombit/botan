@@ -13,12 +13,12 @@
 
 namespace Botan::TLS {
 
-Finished_13::Finished_13(Cipher_State* cipher_state, const Transcript_Hash& transcript_hash) {
-   m_verification_data = cipher_state->finished_mac(transcript_hash);
+Finished_13::Finished_13(const Cipher_State& cipher_state, const Transcript_Hash& transcript_hash) {
+   m_verification_data = cipher_state.finished_mac(transcript_hash);
 }
 
-bool Finished_13::verify(Cipher_State* cipher_state, const Transcript_Hash& transcript_hash) const {
-   return cipher_state->verify_peer_finished_mac(transcript_hash, m_verification_data);
+bool Finished_13::verify(const Cipher_State& cipher_state, const Transcript_Hash& transcript_hash) const {
+   return cipher_state.verify_peer_finished_mac(transcript_hash, m_verification_data);
 }
 
 }  // namespace Botan::TLS
