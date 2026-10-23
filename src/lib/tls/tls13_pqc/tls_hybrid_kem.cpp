@@ -41,17 +41,14 @@ PairOfAlgorithmSpecs algorithm_specs_for_group(Group_Params group) {
    BOTAN_ARG_CHECK(group.is_pqc_hybrid(), "Group is not hybrid");
 
    switch(group.code()) {
-      // draft-kwiatkowski-tls-ecdhe-mlkem-02 Section 3
-      //
+      // RFC 10024 5.
       //    NIST's special publication 800-56Cr2 approves the usage of HKDF with
       //    two distinct shared secrets, with the condition that the first one
       //    is computed by a FIPS-approved key-establishment scheme.  FIPS also
       //    requires a certified implementation of the scheme, which will remain
-      //    more ubiquitous for secp256r1 in the coming years.
-      //
-      //    For this reason we put the ML-KEM-768 shared secret first in
-      //    X25519MLKEM768, and the secp256r1 shared secret first in
-      //    SecP256r1MLKEM768.
+      //    more ubiquitous for secp256r1 in the coming years. For this reason
+      //    we put the ML-KEM-768 shared secret first in X25519MLKEM768, and the
+      //    secp256r1 shared secret first in SecP256r1MLKEM768.
       case Group_Params::HYBRID_X25519_ML_KEM_768:
          return {{"ML-KEM", "ML-KEM-768"}, {"X25519", "X25519"}};
       case Group_Params::HYBRID_SECP256R1_ML_KEM_768:

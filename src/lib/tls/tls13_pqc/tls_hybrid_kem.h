@@ -22,8 +22,7 @@
 namespace Botan::TLS {
 
 /**
- * Composes a pair of public keys as defined in this IETF draft:
- * https://datatracker.ietf.org/doc/html/draft-ietf-tls-hybrid-design-16
+ * Composes a pair of public keys as defined in RFC 9954.
  *
  * To an upstream user, this composite key pair is presented as a KEM. Each
  * individual key pair must either work as a KEX or as a KEM. Currently, the
@@ -64,8 +63,7 @@ BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
 /**
- * Composes a pair of private keys for hybrid key agreement as defined in this
- * IETF draft: https://datatracker.ietf.org/doc/html/draft-ietf-tls-hybrid-design-16
+ * Composes a pair of private keys for hybrid key agreement as defined in RFC 9954.
  */
 class BOTAN_TEST_API Hybrid_TLS_KEM_PrivateKey final : public virtual Hybrid_TLS_KEM_PublicKey,
                                                        public virtual Hybrid_KEM_PrivateKey {
