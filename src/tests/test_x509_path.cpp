@@ -2117,7 +2117,9 @@ BOTAN_REGISTER_TEST("x509", "x509_path_crl_trusted_hash", Path_Validation_CRL_Tr
 
 class XMSS_Path_Validation_Tests final : public Test {
    public:
-      static Test::Result validate_self_signed(const std::string& name, const std::string& file) {
+      static Test::Result validate_self_signed(const std::string& name,
+                                               const std::string& file,
+                                               const Botan::calendar_point& valid_at) {
          Test::Result result(name);
 
          const Botan::Path_Validation_Restrictions restrictions;
@@ -2127,7 +2129,7 @@ class XMSS_Path_Validation_Tests final : public Test {
          result.test_is_true("Self-signature verifies", self_signed.check_signature(*self_signed.subject_public_key()));
 
          const auto cert_path = std::vector<Botan::X509_Certificate>{self_signed};
-         const auto valid_time = Botan::calendar_point(2019, 10, 8, 4, 45, 0).to_std_timepoint();
+         const auto valid_time = valid_at.to_std_timepoint();
 
          const auto status = Botan::PKIX::overall_status(
             Botan::PKIX::check_chain(cert_path, valid_time, "", Botan::Usage_Type::UNSPECIFIED, restrictions));
@@ -2140,10 +2142,21 @@ class XMSS_Path_Validation_Tests final : public Test {
             return {Test::Result::Note("XMSS path validation", "Skipping due to missing filesystem access")};
          }
 
+         // The ISARA and BouncyCastle certificates use the legacy OID and public key
+         // encoding from draft-vangeest-x509-hash-sigs, the RFC 9802 certificate the
+         // final ones
+         const Botan::calendar_point legacy_certs_valid_at(2019, 10, 8, 4, 45, 0);
+         const Botan::calendar_point rfc9802_cert_valid_at(2026, 5, 8, 4, 45, 0);
+
          return {
-            validate_self_signed("XMSS path validation with certificate created by ISARA corp", "xmss_isara_root.pem"),
+            validate_self_signed("XMSS path validation with certificate created by ISARA corp",
+                                 "xmss_isara_root.pem",
+                                 legacy_certs_valid_at),
             validate_self_signed("XMSS path validation with certificate created by BouncyCastle",
-                                 "xmss_bouncycastle_sha256_10_root.pem")};
+                                 "xmss_bouncycastle_sha256_10_root.pem",
+                                 legacy_certs_valid_at),
+            validate_self_signed(
+               "XMSS path validation with certificate from RFC 9802", "xmss_rfc9802_root.pem", rfc9802_cert_valid_at)};
       }
 };
 

@@ -36,20 +36,30 @@ namespace Botan {
 
 namespace {
 
-// fall back to raw decoding for previous versions, which did not encode an OCTET STRING
-secure_vector<uint8_t> extract_raw_private_key(std::span<const uint8_t> key_bits, const XMSS_Parameters& xmss_params) {
-   secure_vector<uint8_t> raw_key;
-
-   // The public part of the input key bits was already parsed, so we can
-   // decide depending on the buffer length whether this must be BER decoded.
-   if(key_bits.size() == xmss_params.raw_private_key_size() ||
-      key_bits.size() == xmss_params.raw_legacy_private_key_size()) {
-      raw_key.assign(key_bits.begin(), key_bits.end());
-   } else {
-      BER_Decoder(key_bits, BER_Decoder::Limits::DER()).decode(raw_key, ASN1_Type::OctetString).verify_end();
+/*
+* The PKCS #8 private key payload is the raw private key wrapped in an OCTET
+* STRING, under the RFC 9802 OID as well as under the OID of
+* draft-vangeest-x509-hash-sigs used by earlier Botan versions. An empty
+* AlgorithmIdentifier denotes the raw key, as accepted by the constructor
+* without an AlgorithmIdentifier.
+*/
+secure_vector<uint8_t> unwrap_private_key_bits(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
+   // The XMSS parameter set is carried in the key bits; no AlgorithmIdentifier parameters are defined
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for XMSS private key");
    }
 
-   return raw_key;
+   if(alg_id.oid().empty()) {
+      return secure_vector<uint8_t>(key_bits.begin(), key_bits.end());
+   }
+
+   if(alg_id.oid() == OID::from_string("XMSS") || alg_id.oid() == OID::from_string("XMSS-draft-vangeest")) {
+      secure_vector<uint8_t> raw_key;
+      BER_Decoder(key_bits, BER_Decoder::Limits::DER()).decode(raw_key, ASN1_Type::OctetString).verify_end();
+      return raw_key;
+   }
+
+   throw Decoding_Error("Unexpected AlgorithmIdentifier for XMSS private key");
 }
 
 }  // namespace
@@ -85,7 +95,7 @@ class XMSS_PrivateKey_Internal final {
                                                        m_private_seed,
                                                        m_prf)) {}
 
-      XMSS_PrivateKey_Internal(XMSS_Parameters::xmss_algorithm_t xmss_algo_id, std::span<const uint8_t> key_bits) :
+      XMSS_PrivateKey_Internal(XMSS_Parameters::xmss_algorithm_t xmss_algo_id, std::span<const uint8_t> raw_key) :
             m_xmss_params(XMSS_Parameters::from_id(xmss_algo_id)), m_wots_params(m_xmss_params.wots_parameters()) {
          /*
          The code requires sizeof(size_t) >= ceil(tree_height / 8)
@@ -96,8 +106,6 @@ class XMSS_PrivateKey_Internal final {
          compute.
          */
          static_assert(sizeof(size_t) >= 4, "size_t is big enough to support leaf index");
-
-         const secure_vector<uint8_t> raw_key = extract_raw_private_key(key_bits, m_xmss_params);
 
          if(raw_key.size() != m_xmss_params.raw_private_key_size() &&
             raw_key.size() != m_xmss_params.raw_legacy_private_key_size()) {
@@ -195,8 +203,11 @@ XMSS_PrivateKey::XMSS_PrivateKey(std::span<const uint8_t> key_bits) :
       XMSS_PrivateKey(AlgorithmIdentifier(), key_bits) {}
 
 XMSS_PrivateKey::XMSS_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
-      XMSS_PublicKey(alg_id, key_bits),
-      m_private(std::make_shared<XMSS_PrivateKey_Internal>(xmss_parameters().oid(), key_bits)) {}
+      XMSS_PrivateKey(unwrap_private_key_bits(alg_id, key_bits), RawKeyTag{}) {}
+
+XMSS_PrivateKey::XMSS_PrivateKey(secure_vector<uint8_t> raw_key, RawKeyTag /*tag*/) :
+      XMSS_PublicKey(AlgorithmIdentifier(), raw_key),
+      m_private(std::make_shared<XMSS_PrivateKey_Internal>(xmss_parameters().oid(), raw_key)) {}
 
 struct XMSS_PrivateKey::Keygen_Material {
       secure_vector<uint8_t> private_seed;
