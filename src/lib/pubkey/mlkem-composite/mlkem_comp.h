@@ -60,8 +60,8 @@ class BOTAN_PUBLIC_API(3, 13) MLKEM_Composite_PublicKey : public virtual Hybrid_
 
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
 
-      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(std::string_view params,
-                                                                       std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::KEM_Encryption> _create_kem_encryption_op(
+         const PK_KEM_Options_Reader& options) const override;
 
       const ML_KEM_PublicKey& mlkem_public_key() const;
       const Public_Key& traditional_public_key() const;
@@ -108,11 +108,10 @@ class BOTAN_PUBLIC_API(3, 13) MLKEM_Composite_PrivateKey final : public virtual 
       }
 
       /**
-       * Create a signature operation that produces a MLKEM_Composite signature.
+       * Create an MLKEM_Composite decapsulation operation.
        */
-      std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
-                                                                       std::string_view params,
-                                                                       std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::KEM_Decryption> _create_kem_decryption_op(
+         RandomNumberGenerator& rng, const PK_KEM_Options_Reader& options) const override;
 
    private:
       MLKEM_Composite_Param m_parameters;

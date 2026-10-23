@@ -11,6 +11,7 @@
 
 #include <botan/assert.h>
 #include <botan/mem_ops.h>
+#include <botan/pk_options_readers.h>
 #include <botan/rng.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/pk_ops_impl.h>
@@ -30,9 +31,10 @@ class Asymmetric_Encryption_to_KEM_Encryption_Operation final : public PK_Ops::K
    public:
       Asymmetric_Encryption_to_KEM_Encryption_Operation(const Public_Key& key,
                                                         std::string_view padding,
-                                                        std::string_view kdf,
+                                                        const PK_KEM_Options_Reader& options,
                                                         std::string_view provider) :
-            PK_Ops::KEM_Encryption_with_KDF(kdf), m_encryptor(key, m_null_rng, padding, provider) {}
+            PK_Ops::KEM_Encryption_with_KDF(options, PK_Ops::KemSharedKeyQuality::IsUniform),
+            m_encryptor(key, m_null_rng, padding, provider) {}
 
       size_t raw_kem_shared_key_length() const override { return shared_secret_length; }
 
@@ -68,9 +70,10 @@ class Asymmetric_Encryption_to_KEM_Decryption_Operation final : public PK_Ops::K
       Asymmetric_Encryption_to_KEM_Decryption_Operation(const Private_Key& key,
                                                         RandomNumberGenerator& rng,
                                                         std::string_view padding,
-                                                        std::string_view kdf,
+                                                        const PK_KEM_Options_Reader& options,
                                                         std::string_view provider) :
-            PK_Ops::KEM_Decryption_with_KDF(kdf), m_decryptor(key, rng, padding, provider) {}
+            PK_Ops::KEM_Decryption_with_KDF(options, PK_Ops::KemSharedKeyQuality::IsUniform),
+            m_decryptor(key, rng, padding, provider) {}
 
       void raw_kem_decrypt(std::span<uint8_t> out_shared_key, std::span<const uint8_t> encap_key) override {
          BOTAN_ARG_CHECK(out_shared_key.size() == shared_secret_length,
@@ -165,15 +168,16 @@ bool Asymmetric_Encryption_to_KEM_Adapter_PrivateKey::check_key(RandomNumberGene
    return m_private_key->check_key(rng, strong);
 }
 
-std::unique_ptr<PK_Ops::KEM_Encryption> Asymmetric_Encryption_to_KEM_Adapter_PublicKey::create_kem_encryption_op(
-   std::string_view kdf, std::string_view provider) const {
-   return std::make_unique<Asymmetric_Encryption_to_KEM_Encryption_Operation>(*m_public_key, padding(), kdf, provider);
+std::unique_ptr<PK_Ops::KEM_Encryption> Asymmetric_Encryption_to_KEM_Adapter_PublicKey::_create_kem_encryption_op(
+   const PK_KEM_Options_Reader& options) const {
+   return std::make_unique<Asymmetric_Encryption_to_KEM_Encryption_Operation>(
+      *m_public_key, padding(), options, options.provider().value_or(""));
 }
 
-std::unique_ptr<PK_Ops::KEM_Decryption> Asymmetric_Encryption_to_KEM_Adapter_PrivateKey::create_kem_decryption_op(
-   RandomNumberGenerator& rng, std::string_view kdf, std::string_view provider) const {
+std::unique_ptr<PK_Ops::KEM_Decryption> Asymmetric_Encryption_to_KEM_Adapter_PrivateKey::_create_kem_decryption_op(
+   RandomNumberGenerator& rng, const PK_KEM_Options_Reader& options) const {
    return std::make_unique<Asymmetric_Encryption_to_KEM_Decryption_Operation>(
-      *m_private_key, rng, padding(), kdf, provider);
+      *m_private_key, rng, padding(), options, options.provider().value_or(""));
 }
 
 }  // namespace Botan

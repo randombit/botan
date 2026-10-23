@@ -39,8 +39,8 @@ class BOTAN_TEST_API Asymmetric_Encryption_to_KEM_Adapter_PublicKey : public vir
 
       bool supports_operation(PublicKeyOperation op) const override;
 
-      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(
-         std::string_view kdf, std::string_view provider = "base") const override;
+      std::unique_ptr<PK_Ops::KEM_Encryption> _create_kem_encryption_op(
+         const PK_KEM_Options_Reader& options) const override;
 
       const Public_Key& inner() const { return *m_public_key; }
 
@@ -75,8 +75,8 @@ class BOTAN_TEST_API Asymmetric_Encryption_to_KEM_Adapter_PrivateKey final
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
-      std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(
-         RandomNumberGenerator& rng, std::string_view kdf, std::string_view provider = "base") const override;
+      std::unique_ptr<PK_Ops::KEM_Decryption> _create_kem_decryption_op(
+         RandomNumberGenerator& rng, const PK_KEM_Options_Reader& options) const override;
 
       const Private_Key& inner() const { return *m_private_key; }
 

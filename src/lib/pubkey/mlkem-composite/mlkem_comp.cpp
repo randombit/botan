@@ -14,6 +14,7 @@
 #include <botan/mlkem_comp.h>
 #include <botan/oids.h>
 #include <botan/pk_algs.h>
+#include <botan/pk_options_readers.h>
 #include <botan/pubkey.h>
 #include <botan/rng.h>
 #include <botan/internal/asymmetric_encryption_to_kem_adapter.h>
@@ -342,11 +343,14 @@ std::unique_ptr<Private_Key> MLKEM_Composite_PublicKey::generate_another(RandomN
    return std::make_unique<MLKEM_Composite_PrivateKey>(rng, m_parameters);
 }
 
-std::unique_ptr<PK_Ops::KEM_Encryption> MLKEM_Composite_PublicKey::create_kem_encryption_op(
-   std::string_view params, std::string_view provider) const {
-   if(!params.empty() && params != "Raw") {
-      throw Botan::Invalid_Argument("only empty parameters or 'Raw' is supported by MLKEM-composite KEM");
+std::unique_ptr<PK_Ops::KEM_Encryption> MLKEM_Composite_PublicKey::_create_kem_encryption_op(
+   const PK_KEM_Options_Reader& options) const {
+   if(options.using_kdf()) {
+      throw Botan::Invalid_Argument("MLKEM-composite KEM does not support an additional KDF");
    }
+   // The combiner already produces a uniform key; explicit raw output is also supported.
+   static_cast<void>(options.using_raw_shared_key());
+   const auto provider = options.provider().value_or("");
 
    if(!provider.empty() && provider != "base") {
       throw Provider_Not_Found(algo_name(), provider);
@@ -414,11 +418,14 @@ std::unique_ptr<Public_Key> MLKEM_Composite_PrivateKey::public_key() const {
 /**
  * Create a decryption operation that produces a MLKEM_Composite KEM Decryption Operation.
  */
-std::unique_ptr<PK_Ops::KEM_Decryption> MLKEM_Composite_PrivateKey::create_kem_decryption_op(
-   RandomNumberGenerator& rng, std::string_view params, std::string_view provider) const {
-   if(!params.empty() && params != "Raw") {
-      throw Botan::Invalid_Argument("only empty parameters or 'Raw' is supported by MLKEM-composite KEM");
+std::unique_ptr<PK_Ops::KEM_Decryption> MLKEM_Composite_PrivateKey::_create_kem_decryption_op(
+   RandomNumberGenerator& rng, const PK_KEM_Options_Reader& options) const {
+   if(options.using_kdf()) {
+      throw Botan::Invalid_Argument("MLKEM-composite KEM does not support an additional KDF");
    }
+   // The combiner already produces a uniform key; explicit raw output is also supported.
+   static_cast<void>(options.using_raw_shared_key());
+   const auto provider = options.provider().value_or("");
 
    if(!provider.empty() && provider != "base") {
       throw Provider_Not_Found(algo_name(), provider);
