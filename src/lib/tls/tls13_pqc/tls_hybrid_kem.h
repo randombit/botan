@@ -53,9 +53,6 @@ class BOTAN_TEST_API Hybrid_TLS_KEM_PublicKey : public virtual Hybrid_KEM_Public
       // no KDF support
       std::unique_ptr<PK_Ops::KEM_Encryption> _create_kem_encryption_op(
          const PK_KEM_Options_Reader& options) const override;
-
-   protected:
-      Hybrid_TLS_KEM_PublicKey() = default;
 };
 
 BOTAN_DIAGNOSTIC_PUSH
