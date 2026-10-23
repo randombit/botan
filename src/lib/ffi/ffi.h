@@ -1944,7 +1944,8 @@ BOTAN_FFI_EXPORT(2, 0)
 int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng, const uint8_t bits[], size_t len, const char* password);
 
 /**
-* Frees all resources of the private key object
+* Frees all resources of the private key object, if no other handle holds a
+* reference to this private key
 * @param key the private key to destroy
 * @return 0 if success, error if invalid object handle
 */
