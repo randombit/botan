@@ -533,6 +533,11 @@ std::optional<size_t> Policy::dtls_maximum_hello_verify_requests() const {
    return 4;
 }
 
+std::optional<size_t> Policy::max_useless_records() const {
+   // Matches the limit of OpenSSL and BoringSSL on consecutive empty records
+   return 32;
+}
+
 std::optional<size_t> Policy::dtls_maximum_retransmissions() const {
    // Matches BoringSSL's DTLS1_MAX_TIMEOUTS.
    //

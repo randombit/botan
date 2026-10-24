@@ -106,8 +106,20 @@ void shim_log(std::string_view s) {
    std::exit(rc);
 }
 
-std::string map_to_bogo_error(const std::string& e) noexcept {
+/**
+* Tests of BoringSSL's limit of 4 consecutive warning alerts
+*/
+bool is_warning_alert_limit_test(std::string_view test_name) {
+   return test_name.starts_with("SendWarningAlerts") || test_name.starts_with("SendUserCanceledAlerts");
+}
+
+std::string map_to_bogo_error(const std::string& e, std::string_view test_name) noexcept {
    shim_log("Original error " + e);
+
+   // BoringSSL has separate limits for empty records and warning alerts
+   if(e == "Peer sent too many consecutive useless records" && is_warning_alert_limit_test(test_name)) {
+      return ":TOO_MANY_WARNING_ALERTS:";
+   }
 
    static const std::unordered_map<std::string, std::string> err_map{
       {"Application data before handshake done", ":APPLICATION_DATA_INSTEAD_OF_HANDSHAKE:"},
@@ -301,6 +313,7 @@ std::string map_to_bogo_error(const std::string& e) noexcept {
       {"TLS record version had unexpected value", ":WRONG_VERSION_NUMBER:"},
       {"Test requires rejecting cert", ":CERTIFICATE_VERIFY_FAILED:"},
       {"Too many PSK binders", ":PSK_IDENTITY_BINDER_COUNT_MISMATCH:"},
+      {"Peer sent too many consecutive useless records", ":TOO_MANY_EMPTY_FRAGMENTS:"},
       {"Server selected an ALPN protocol not offered by the client", ":INVALID_ALPN_PROTOCOL:"},
       {"Unexpected record type 42 from counterparty", ":UNEXPECTED_RECORD:"},
       {"Unexpected state transition in handshake got a certificate_request expected server_hello_done seen server_hello+server_key_exchange",
@@ -1488,21 +1501,11 @@ class Shim_Policy final : public Botan::TLS::Policy {
       }
 
    public:
-      bool tls_13_middlebox_compatibility_mode() const override {
-         // These tests expect the client to send an alert in return of a malformed TLS 1.2 server hello.
-         // However, our TLS 1.3 implementation produces an alert without downgrading to TLS 1.2 first.
-         // In compatibility mode this prepends a CCS, which BoGo does not expect to read.
-         const std::vector<std::string> alert_after_server_hello = {
-            "DuplicateExtensionClient-TLS-TLS12",
-            "WrongMessageType-ServerHello-TLS",
-            "SendServerHelloAsHelloRetryRequest",
-            "TrailingMessageData-ServerHello-TLS",
-            "NoSSL3-Client-Unsolicited",
-            "Client-TooLongSessionID",
-            "MinimumVersion-Client-TLS13-TLS12-TLS",
-            "MinimumVersion-Client2-TLS13-TLS12-TLS",
-         };
-         return !Botan::value_exists(alert_after_server_hello, m_args.test_name());
+      std::optional<size_t> max_useless_records() const override {
+         if(is_warning_alert_limit_test(m_args.test_name())) {
+            return 4;
+         }
+         return Botan::TLS::Policy::max_useless_records();
       }
 
    private:
@@ -1798,8 +1801,6 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
             m_policy(policy),
             m_socket(socket),
             m_is_datagram(args.flag_set("dtls")),
-            m_warning_alerts(0),
-            m_empty_records(0),
             m_sessions_established(0),
             m_got_close(false),
             m_hello_retry_request(false),
@@ -1854,15 +1855,6 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
       }
 
       void tls_record_received(uint64_t /*seq_no*/, std::span<const uint8_t> data) override {
-         if(data.empty()) {
-            m_empty_records += 1;
-            if(m_empty_records > 32) {
-               shim_exit_with_error(":TOO_MANY_EMPTY_FRAGMENTS:");
-            }
-         } else {
-            m_empty_records = 0;
-         }
-
          shim_log("Reflecting application_data len " + std::to_string(data.size()));
 
          std::vector<uint8_t> buf(data.begin(), data.end());
@@ -2032,13 +2024,6 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
 
          if(alert.type() == Botan::TLS::Alert::DecompressionFailure) {
             shim_exit_with_error(":SSLV3_ALERT_DECOMPRESSION_FAILURE:");
-         }
-
-         if(!alert.is_fatal()) {
-            m_warning_alerts++;
-            if(m_warning_alerts > 5) {
-               shim_exit_with_error(":TOO_MANY_WARNING_ALERTS:");
-            }
          }
 
          if(alert.type() == Botan::TLS::Alert::CloseNotify) {
@@ -2220,8 +2205,6 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
       Shim_Policy& m_policy;
       Shim_Socket& m_socket;
       const bool m_is_datagram;
-      size_t m_warning_alerts;
-      size_t m_empty_records;
       size_t m_sessions_established;
       bool m_got_close;
       bool m_hello_retry_request;
@@ -2235,8 +2218,10 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
 }  // namespace
 
 int main(int /*argc*/, char* argv[]) {
+   std::unique_ptr<Shim_Arguments> args;
+
    try {
-      std::unique_ptr<Shim_Arguments> args = parse_options(argv);
+      args = parse_options(argv);
 
       if(args->flag_set("is-handshaker-supported")) {
          return shim_output("No\n");
@@ -2429,7 +2414,8 @@ int main(int /*argc*/, char* argv[]) {
    } catch(Shim_Exception& e) {
       shim_exit_with_error(e.what(), e.rc());
    } catch(std::exception& e) {
-      shim_exit_with_error(map_to_bogo_error(e.what()));
+      const std::string test_name = (args && args->option_used("test-name")) ? args->test_name() : "";
+      shim_exit_with_error(map_to_bogo_error(e.what(), test_name));
    } catch(...) {
       shim_exit_with_error("Unknown exception", 3);
    }

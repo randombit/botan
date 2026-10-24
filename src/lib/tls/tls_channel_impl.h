@@ -198,6 +198,18 @@ class Channel_Impl : public std::enable_shared_from_this<Channel_Impl> {
    protected:
       Channel_Impl() = default;
 
+      /**
+      * Called for each received record that was dropped without having any
+      * effect, eg an empty record or a warning alert.
+      * Throws if too many of these arrive without any useful record between.
+      */
+      void note_useless_record(const Policy& policy);
+
+      /**
+      * Called for each received record that made progress
+      */
+      void reset_useless_records() { m_useless_records = 0; }
+
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
 
       /**
@@ -306,6 +318,9 @@ class Channel_Impl : public std::enable_shared_from_this<Channel_Impl> {
          return false;
 #endif
       }
+
+   private:
+      size_t m_useless_records = 0;
 };
 
 }  // namespace TLS

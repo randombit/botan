@@ -217,6 +217,7 @@ void Channel_Impl_13::send_flight(std::vector<Flight::Message> flight) {
 }
 
 std::optional<BytesNeeded> Channel_Impl_13::process(Handshake_Message_13 handshake_msg) {
+   reset_useless_records();
    process_handshake_msg(std::move(handshake_msg));
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
@@ -241,6 +242,7 @@ std::optional<BytesNeeded> Channel_Impl_13::process(Handshake_Message_13 handsha
 }
 
 void Channel_Impl_13::process(Post_Handshake_Message_13 post_handshake_msg) {
+   reset_useless_records();
    process_post_handshake_msg(std::move(post_handshake_msg));
 }
 
@@ -278,6 +280,10 @@ void Channel_Impl_13::process(const Alert_Record& alert_record) {
 #endif
    }
 
+   if(!alert.is_fatal() && !is_close_notify_alert(alert)) {
+      note_useless_record(policy());
+   }
+
    if(alert.is_fatal()) {
       shutdown();
    }
@@ -293,6 +299,7 @@ void Channel_Impl_13::process(const Alert_Record& alert_record) {
 void Channel_Impl_13::process(const ChangeCipherSpec_Record& ccs_record) {
    BOTAN_UNUSED(ccs_record);
    process_dummy_change_cipher_spec();
+   note_useless_record(policy());
 }
 
 void Channel_Impl_13::process(const ApplicationData_Record& record) {
@@ -301,6 +308,13 @@ void Channel_Impl_13::process(const ApplicationData_Record& record) {
    if(!m_cipher_state->can_decrypt_application_traffic()) {
       throw Unexpected_Message("Application data received before handshake completion");
    }
+
+   if(record.payload.empty()) {
+      note_useless_record(policy());
+   } else {
+      reset_useless_records();
+   }
+
    callbacks().tls_record_received(record.sequence_number.value(), record.payload);
 }
 

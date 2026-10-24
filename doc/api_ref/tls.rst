@@ -1060,6 +1060,20 @@ policy settings from a file.
 
      Default: 2^23 records
 
+ .. cpp:function:: std::optional<size_t> max_useless_records() const
+
+     The maximum number of consecutive records received from the peer which are
+     dropped without having any effect: empty records, warning alerts other than
+     ``close_notify``, and in TLS 1.3 the ChangeCipherSpec records of middlebox
+     compatibility mode. If more than this many such records arrive without any
+     useful record in between, the connection is closed with an alert. Return
+     ``std::nullopt`` to disable the limit.
+
+     In DTLS, records received in epoch 0 are unauthenticated and so are not
+     counted.
+
+     Default: 32
+
  .. cpp:function:: bool tls_13_middlebox_compatibility_mode() const
 
      Enables middlebox compatibility mode as defined in RFC 8446 Appendix D.4.
