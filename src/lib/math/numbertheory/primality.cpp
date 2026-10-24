@@ -52,7 +52,8 @@ bool lucas_test(const BigInt& C, const Montgomery_Params& monty_C, bool vartime)
          return false;
       }
 
-      if(j == -1) {
+      const BigInt Q = (BigInt::one() - D) / 4;
+      if(j == -1 && gcd(C, Q) == 1) {
          break;
       }
 
