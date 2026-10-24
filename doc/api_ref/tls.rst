@@ -623,14 +623,18 @@ the API documentation inline.
       ``TLS::Session`` constructors that deserialize a session from DER or PEM.
       If no session was found for the given *handle*, return std::nullopt. This
       method is called in TLS servers to find a specific session for a given
-      handle.
+      handle. Sessions that were stored by a TLS client (via ``store``) must not
+      be returned, as a single manager may be shared between a client and a
+      server role.
 
  .. cpp:function:: std::vector<Session_with_Handle> find_some(const Server_Information& info, size_t max_sessions_hint)
 
       Try to find some saved sessions using information about the server. TLS
       1.3 clients may offer more than one session for resumption to the server.
       It is okay to ignore the *max_sessions_hint* and just return exactly one
-      or no sessions at all.
+      or no sessions at all. Sessions that were established by a TLS server
+      (via ``establish``) must not be returned, as a single manager may be
+      shared between a client and a server role.
 
  .. cpp:function:: recursive_mutex_type& mutex()
 

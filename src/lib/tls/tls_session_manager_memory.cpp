@@ -52,9 +52,13 @@ std::optional<Session> Session_Manager_In_Memory::retrieve_one(const Session_Han
    const lock_guard_type<recursive_mutex_type> lk(mutex());
 
    if(auto id = handle.id()) {
-      const auto session = m_sessions.find(id.value());
-      if(session != m_sessions.end()) {
-         return session->second.session_and_handle.session;
+      const auto stored = m_sessions.find(id.value());
+      if(stored != m_sessions.end()) {
+         const auto& session = stored->second.session_and_handle.session;
+         // Sessions stored by the client role are not subject to server-side lookup
+         if(session.side() == Connection_Side::Server) {
+            return session;
+         }
       }
    }
 
@@ -69,7 +73,9 @@ std::vector<Session_with_Handle> Session_Manager_In_Memory::find_some(const Serv
 
    std::vector<std::reference_wrapper<const Stored_Session>> matches;
    for(const auto& [_, stored] : m_sessions) {
-      if(stored.session_and_handle.session.server_info() == info) {
+      const auto& session = stored.session_and_handle.session;
+      // Sessions established by the server role are not offered to clients
+      if(session.side() == Connection_Side::Client && session.server_info() == info) {
          matches.emplace_back(stored);
       }
    }
