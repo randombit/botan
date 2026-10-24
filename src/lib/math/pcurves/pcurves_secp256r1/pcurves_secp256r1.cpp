@@ -138,27 +138,25 @@ class Secp256r1MontgomeryRep final {
       constexpr static std::array<W, N> one() { return R1; }
 
       constexpr static BOTAN_FORCE_INLINE std::array<W, N> redc(const std::array<W, 2 * N>& z) {
-         std::array<W, 2 * N> t = z;
+         // Scalar locals rather than a copy of z: GCC copies arrays using 16 byte
+         // loads, which stall on the 8 byte stores that just produced z
+         W t1 = z[1];
+         W t2 = z[2];
+         W t3 = z[3];
+         W t4 = z[4];
+         W t5 = z[5];
+         W t6 = z[6];
+         W t7 = z[7];
 
-         // The carry out from the previous loop iteration
+         // The carry out from the previous step
          W pending = 0;
 
-         for(size_t i = 0; i != N; ++i) {
-            auto [q0, q1, q2, q3] = p256_m_p1_64(t[i]);
+         redc_step(z[0], t1, t2, t3, t4, pending);
+         redc_step(t1, t2, t3, t4, t5, pending);
+         redc_step(t2, t3, t4, t5, t6, pending);
+         redc_step(t3, t4, t5, t6, t7, pending);
 
-            // q3 is at most 2^64 - 2^32, leaving room to add the carry from the
-            // previous iteration without worrying about creating a new carry
-            q3 += pending;
-
-            W carry = 0;
-            t[i + 1] = word_add(t[i + 1], q0, &carry);
-            t[i + 2] = word_add(t[i + 2], q1, &carry);
-            t[i + 3] = word_add(t[i + 3], q2, &carry);
-            t[i + 4] = word_add(t[i + 4], q3, &carry);
-            pending = carry;
-         }
-
-         return final_sub(pending, {t[4], t[5], t[6], t[7]});
+         return final_sub(pending, {t4, t5, t6, t7});
       }
 
       constexpr static std::array<W, N> to_rep(const std::array<W, N>& x) {
@@ -181,6 +179,24 @@ class Secp256r1MontgomeryRep final {
       }
 
    private:
+      /**
+      * Add m*(p+1)/2^64 to (t3 || t2 || t1 || t0)
+      */
+      constexpr static BOTAN_FORCE_INLINE void redc_step(W m, W& t0, W& t1, W& t2, W& t3, W& pending) {
+         auto [q0, q1, q2, q3] = p256_m_p1_64(m);
+
+         // q3 is at most 2^64 - 2^32, leaving room to add the carry from the
+         // previous step without worrying about creating a new carry
+         q3 += pending;
+
+         W carry = 0;
+         t0 = word_add(t0, q0, &carry);
+         t1 = word_add(t1, q1, &carry);
+         t2 = word_add(t2, q2, &carry);
+         t3 = word_add(t3, q3, &carry);
+         pending = carry;
+      }
+
       /**
       * Return the 4 words of m*(p+1)/2^64, which is what remains above the
       * low word after adding m*p to an accumulator whose low word is m

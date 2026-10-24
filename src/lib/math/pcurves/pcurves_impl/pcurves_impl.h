@@ -15,7 +15,9 @@
 #include <botan/internal/pcurves_algos.h>
 #include <botan/internal/pcurves_mul.h>
 #include <botan/internal/pcurves_util.h>
+#include <botan/internal/target_info.h>
 #include <concepts>
+#include <utility>
 #include <vector>
 
 namespace Botan {
@@ -895,7 +897,16 @@ class IntMod final {
 
       constexpr const W* data() const { return m_val.data(); }
 
+#if defined(BOTAN_BUILD_COMPILER_IS_GCC)
+      // Initialized word by word since GCC copies arrays using 16 byte loads,
+      // which stall when v was just written by 8 byte stores
+      explicit constexpr IntMod(const std::array<W, N>& v) : IntMod(v, std::make_index_sequence<N>{}) {}
+
+      template <size_t... I>
+      constexpr IntMod(const std::array<W, N>& v, std::index_sequence<I...> /*unused*/) : m_val{v[I]...} {}
+#else
       explicit constexpr IntMod(std::array<W, N> v) : m_val(v) {}
+#endif
 
       std::array<W, N> m_val;
 };
