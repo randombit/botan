@@ -95,7 +95,9 @@ class BOTAN_TEST_API Channel_IO {
       void handle_key_update(const Key_Update& key_update);
 
       /**
-       * Sends a KeyUpdate message to the peer and updates the write keys.
+       * Sends a KeyUpdate message to the peer and updates the write keys once
+       * the transport allows it. Silently does nothing if no KeyUpdate may be
+       * sent right now (see can_send_key_update()).
        *
        * @param request_peer_update  whether to request a reciprocal KeyUpdate
        */
@@ -125,7 +127,22 @@ class BOTAN_TEST_API Channel_IO {
 
       virtual void send_data(Record_Type record_type, std::span<const uint8_t> payload, Cipher_State* cipher_state) = 0;
 
+      /**
+       * Whether a KeyUpdate may be sent right now. Relevant for DTLS only
+       * (RFC 9147 8. disallows a new KeyUpdate while a previous one is not
+       * yet acknowledged); always true for TLS.
+       */
+      virtual bool can_send_key_update() const { return true; }
+
       virtual void send_flight(std::vector<Flight::Message> flight) = 0;
+
+      /// Marshalls and sends the given KeyUpdate message, then advances the
+      /// write epoch.
+      virtual void send_key_update(const Key_Update& msg) = 0;
+
+      /// Gives the IO the opportunity to schedule pruning of superseded read
+      /// epochs after a key update. Relevant for DTLS only; a no-op for TLS.
+      virtual void schedule_read_epoch_pruning(EpochNumber latest_epoch) = 0;
 
       virtual Record_Layer& record_layer() = 0;
 

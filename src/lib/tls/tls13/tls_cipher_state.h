@@ -80,17 +80,17 @@ class BOTAN_TEST_API Cipher_State {
       /**
        * The cryptographic state required to protect or deprotect records in
        * one direction. Concrete subclasses manage the available epochs, e.g.
-       * a single current epoch per direction for TLS 1.3.
+       * a single current epoch per direction for (D)TLS 1.3.
        */
       struct Epoch {
+            EpochNumber number;
             std::unique_ptr<AEAD_Mode> cipher;
             secure_vector<uint8_t> iv;
             uint64_t sequence_number;
 
             secure_vector<uint8_t> traffic_secret;
 
-            /// only relevant in the handshake traffic epoch to
-            /// calculate and verify the handshake's Finished MACs
+            /// only relevant in epoch 2 to verify the peer's Finished MAC
             std::optional<secure_vector<uint8_t>> finished_key;
       };
 
@@ -261,8 +261,10 @@ class BOTAN_TEST_API Cipher_State {
        *
        * Note that this must not be called before the connection is ready for
        * application traffic.
+       *
+       * @returns the epoch number of the new read epoch
        */
-      void update_read_keys();
+      EpochNumber update_read_keys();
 
       /**
        * Updates the key material used for encrypting data
@@ -270,18 +272,10 @@ class BOTAN_TEST_API Cipher_State {
        *
        * Note that this must not be called before the connection is ready for
        * application traffic.
+       *
+       * @returns the epoch number of the new write epoch
        */
-      void update_write_keys();
-
-      /**
-       * @returns the number of records encrypted with the current write key
-       */
-      uint64_t records_encrypted_with_current_key() const;
-
-      /**
-       * @returns the number of records decrypted with the current read key
-       */
-      uint64_t records_decrypted_with_current_key() const;
+      EpochNumber update_write_keys();
 
       /**
        * Remove handshake/traffic secrets for decrypting data from peer
@@ -292,6 +286,26 @@ class BOTAN_TEST_API Cipher_State {
        * Remove handshake/traffic secrets for encrypting data
        */
       virtual void clear_write_keys() = 0;
+
+      /**
+       * @returns the current write epoch number
+       */
+      EpochNumber current_write_epoch_number() const;
+
+      /**
+       * @returns the current read epoch number
+       */
+      EpochNumber current_read_epoch_number() const;
+
+      /**
+       * @returns the current sequence number of the current write epoch.
+       */
+      uint64_t current_write_sequence_number() const;
+
+      /**
+       * @returns the current sequence number of the current read epoch.
+       */
+      uint64_t current_read_sequence_number() const;
 
       /**
        * Register an optional callback function to extract secrets bound for a
@@ -337,13 +351,15 @@ class BOTAN_TEST_API Cipher_State {
        * Marshalls the record (header || TLSInnerPlaintext), protects it in
        * place and appends the result to @p out. The plaintext is copied into
        * @p out exactly once; no intermediate buffers are allocated.
+       *
+       * @returns the marshalled and protected record as a view into @p out
        */
-      static void marshall_and_protect(Epoch& epoch,
-                                       std::span<const uint8_t> header,
-                                       std::span<const uint8_t> payload,
-                                       Record_Type type,
-                                       size_t padding_bytes,
-                                       secure_vector<uint8_t>& out);
+      static std::span<uint8_t> marshall_and_protect(Epoch& epoch,
+                                                     std::span<const uint8_t> header,
+                                                     std::span<const uint8_t> payload,
+                                                     Record_Type type,
+                                                     size_t padding_bytes,
+                                                     secure_vector<uint8_t>& out);
       void deprotect_and_hydrate_content_type(Epoch& epoch,
                                               std::span<const uint8_t> header,
                                               Record_Content& protected_record,
@@ -357,14 +373,16 @@ class BOTAN_TEST_API Cipher_State {
                                                const std::vector<uint8_t>& context,
                                                size_t length) const;
 
-      Cipher_State::Epoch create_epoch(Cipher_Dir direction,
-                                       const secure_vector<uint8_t>& traffic_secret,
-                                       bool handshake_epoch) const;
+      Cipher_State::Epoch create_epoch(EpochNumber epoch_number,
+                                       Cipher_Dir direction,
+                                       const secure_vector<uint8_t>& traffic_secret) const;
 
       const Ciphersuite& ciphersuite() const;
 
-      virtual void advance_write_epoch(const secure_vector<uint8_t>& traffic_secret, bool handshake_epoch = false) = 0;
-      virtual void advance_read_epoch(const secure_vector<uint8_t>& traffic_secret, bool handshake_epoch = false) = 0;
+      virtual EpochNumber advance_write_epoch(const secure_vector<uint8_t>& traffic_secret,
+                                              std::optional<EpochNumber> epoch_number = {}) = 0;
+      virtual EpochNumber advance_read_epoch(const secure_vector<uint8_t>& traffic_secret,
+                                             std::optional<EpochNumber> epoch_number = {}) = 0;
 
       virtual bool has_write_epoch() const = 0;
       virtual bool has_read_epoch() const = 0;
@@ -396,9 +414,6 @@ class BOTAN_TEST_API Cipher_State {
       ExpansionLabelPrefix m_expansion_label_prefix;
       secure_vector<uint8_t> m_salt;
       secure_vector<uint8_t> m_client_application_traffic_secret_0;
-
-      uint32_t m_write_key_update_count = 0;
-      uint32_t m_read_key_update_count = 0;
 
       uint16_t m_ticket_nonce;
       bool m_ticket_nonce_exhausted = false;
@@ -439,11 +454,13 @@ class BOTAN_TEST_API TLS_Cipher_State final : public Cipher_State {
        * @param padding_bytes  the number of padding zero-bytes to be added
        * @param out            the marshalled and protected record (to be sent
        *                       on the wire) is appended to this buffer
+       *
+       * @returns the sequence number of the record that was just protected
        */
-      void protect_record(Record_Type type,
-                          std::span<const uint8_t> payload,
-                          size_t padding_bytes,
-                          secure_vector<uint8_t>& out);
+      RecordNumber protect_record(Record_Type type,
+                                  std::span<const uint8_t> payload,
+                                  size_t padding_bytes,
+                                  secure_vector<uint8_t>& out);
 
       /**
        * Deprotect a TLS record (RFC 9846 5.2 -- TLSCiphertext.encrypted_record)
@@ -464,8 +481,10 @@ class BOTAN_TEST_API TLS_Cipher_State final : public Cipher_State {
       void clear_read_keys() override;
 
    private:
-      void advance_write_epoch(const secure_vector<uint8_t>& traffic_secret, bool handshake_epoch = false) override;
-      void advance_read_epoch(const secure_vector<uint8_t>& traffic_secret, bool handshake_epoch = false) override;
+      EpochNumber advance_write_epoch(const secure_vector<uint8_t>& traffic_secret,
+                                      std::optional<EpochNumber> epoch_number = {}) override;
+      EpochNumber advance_read_epoch(const secure_vector<uint8_t>& traffic_secret,
+                                     std::optional<EpochNumber> epoch_number = {}) override;
 
       bool has_write_epoch() const override { return m_write_epoch.has_value(); }
 

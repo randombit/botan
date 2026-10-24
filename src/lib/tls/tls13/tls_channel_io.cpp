@@ -11,6 +11,8 @@
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
+#include <botan/internal/buffer_slicer.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_cipher_state.h>
 #include <botan/internal/tls_handshake_layer_13.h>
@@ -150,7 +152,6 @@ void Channel_IO::send(std::span<const uint8_t> payload) {
    //    a single update.
    if(m_key_update_reciprocation_pending) {
       update_traffic_keys(false /* update_requested */);
-      m_key_update_reciprocation_pending = false;
    } else if(needs_traffic_based_key_update()) {
       // If approaching traffic limits request the peer update their own keys
       // as well, unless an earlier request is still unanswered:
@@ -200,7 +201,7 @@ bool Channel_IO::needs_traffic_based_key_update() const {
    // If we half-closed the connection for writing, i.e. we cannot encrypt
    // application traffic any longer, naturally, we won't need to update our
    // traffic keys.
-   if(cs->can_encrypt_application_traffic() && cs->records_encrypted_with_current_key() >= limit) {
+   if(cs->can_encrypt_application_traffic() && cs->current_write_sequence_number() >= limit) {
       return true;
    }
 
@@ -215,7 +216,7 @@ bool Channel_IO::needs_traffic_based_key_update() const {
    // update from them.
    const uint64_t read_limit = limit + limit / 2;
    return !m_key_update_requested && cs->can_decrypt_application_traffic() &&
-          cs->records_decrypted_with_current_key() >= read_limit;
+          cs->current_read_sequence_number() >= read_limit;
 }
 
 void Channel_IO::handle_key_update(const Key_Update& key_update) {
@@ -239,7 +240,7 @@ void Channel_IO::handle_key_update(const Key_Update& key_update) {
       m_last_peer_key_update_ms = now;
    }
 
-   cs->update_read_keys();
+   schedule_read_epoch_pruning(cs->update_read_keys());
 
    if(key_update.expects_reciprocation() && cs->can_encrypt_application_traffic()) {
       // RFC 9846 4.7.3
@@ -264,13 +265,25 @@ void Channel_IO::update_traffic_keys(bool request_peer_update) {
    const auto cs = cipher_state();
    BOTAN_ASSERT_NONNULL(cs);
 
-   send_flight(PostHandshakeFlight(callbacks())  //
-                  .add(Key_Update(request_peer_update))
-                  .commit());
+   // In DTLS we cannot send a KeyUpdate while a previous one is not yet
+   // acknowledged. In that case, we just skip the update silently. Note that if
+   // called in `Channel_IO::send` because m_key_update_reciprocation_pending is
+   // true, this flag will remain true and a reciprocation will be tried again
+   // during the next call to `Channel_IO::send`.
+   if(!can_send_key_update()) {
+      return;
+   }
 
-   cs->update_write_keys();
+   const auto key_update = Key_Update(request_peer_update);
+   callbacks().tls_inspect_handshake_msg(key_update);
+   send_key_update(key_update);
+
    if(request_peer_update) {
       m_key_update_requested = true;
+   } else {
+      // Any KeyUpdate with "update_not_requested" satisfies a pending request
+      // of the peer (RFC 9846 4.7.3).
+      m_key_update_reciprocation_pending = false;
    }
 }
 
@@ -332,65 +345,138 @@ std::shared_ptr<Cipher_State> Channel_IO::cipher_state() {
 
 namespace {
 
+// Once the write buffer grew beyond this size (e.g. due to a single large
+// application write), it is released rather than kept for the lifetime of the
+// connection.
+constexpr size_t max_retained_write_buffer_size = 4 * (TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE_TLS13);
+
 class TLS_Channel_IO final : public Channel_IO {
    public:
       TLS_Channel_IO(Connection_Side side, std::shared_ptr<const Policy> policy, std::shared_ptr<Callbacks> callbacks) :
-            Channel_IO(side, policy, std::move(callbacks)),
-            m_record_layer(side, std::move(policy)),
-            m_handshake_layer(side) {}
+            Channel_IO(side, std::move(policy), std::move(callbacks)), m_record_layer(side), m_handshake_layer(side) {}
 
       void send_data(Record_Type record_type, std::span<const uint8_t> payload, Cipher_State* cipher_state) override {
-         auto to_write = m_record_layer.prepare_records(record_type, payload, cipher_state);
+         const size_t max_plaintext_payload_size = record_layer().record_payload_size_limit(policy(), cipher_state);
 
-         // After the initial handshake message is sent, the record layer must
-         // adhere to a more strict record specification. Note that for the
-         // server case this is a NOOP.
-         // See (RFC 9846 5.1. regarding "legacy_record_version")
-         if(record_type == Record_Type::Handshake && !m_first_message_sent) {
-            m_record_layer.disable_sending_compat_mode();
-            m_first_message_sent = true;
+         // RFC 9846 5.1
+         //    Handshake messages MAY be [...] fragmented across several records.
+         //    [...] Application Data fragments MAY be split across multiple records
+         //    [...].
+         //
+         // In TLS, we may fragment application data and handshake data into multiple
+         // records. Other record types are not allowed to be fragmented.
+         BOTAN_ASSERT_IMPLICATION(payload.size() > max_plaintext_payload_size,
+                                  record_type == Record_Type::ApplicationData || record_type == Record_Type::Handshake,
+                                  "Only Handshake and Application Data records may be fragmented");
+
+         auto& output = m_write_buffer;
+         output.clear();
+         if(output.capacity() > max_retained_write_buffer_size) {
+            output.shrink_to_fit();
          }
 
-         callbacks().tls_emit_data(to_write);
+         const auto records =
+            std::max<size_t>((payload.size() + max_plaintext_payload_size - 1) / max_plaintext_payload_size, 1);
+
+         if(cipher_state == nullptr) {
+            output.reserve(records * TLS_HEADER_SIZE + payload.size());
+         } else if(records > 1) {
+            const auto max_record_size =
+               cipher_state != nullptr
+                  ? cipher_state->encrypt_output_length(record_layer().outgoing_record_size_limit())
+                  : max_plaintext_payload_size;
+            output.reserve(records * (TLS_HEADER_SIZE + max_record_size));
+         }
+
+         BufferSlicer bs(payload);
+
+         // RFC 9846 5.1
+         //    Zero-length fragments of Application Data [...] MAY be sent, as they
+         //    are potentially useful as a traffic analysis countermeasure.
+         //
+         // We're using a do-while loop to ensure that we process at least one slice
+         // of the payload, even if that first slice is empty.
+         do /* NOLINT(*-avoid-do-while) */ {
+            const size_t pt_size = std::min(bs.remaining(), max_plaintext_payload_size);
+            const auto pt_fragment = bs.take(pt_size);
+
+            m_record_layer.prepare_record(record_type, pt_fragment, policy(), cipher_state, output);
+         } while(!bs.empty());
+
+         callbacks().tls_emit_data(output);
       }
 
       void send_flight(std::vector<Flight::Message> flight) override {
-         auto cs = cipher_state();
+         // Go through all messages of the flight, grouping them into (at
+         // most) two runs: one for the unprotected messages and one for the
+         // protected messages. Each run is sent in as little records as
+         // possible.
+         bool protect_current_msgs = false;
          auto msgs = MarshalledHandshakeMessageFlight();
+         const auto cs = cipher_state();
 
-         // This isn't very efficient or elegant, but it is a simple way to send
-         // the collected messages and dummy CCSs in as little records as
-         // possible. It will be replaced with a more efficient implementation
-         // with upcoming patches towards DTLS 1.3 support anyway.
-         //
-         // TODO: Replace this with a more efficient implementation
+         auto prepare_and_flush_current_prepared = [&](bool protect) {
+            if(msgs.get().empty()) {
+               return;
+            }
 
-         for(const auto& msg_info : flight) {
+            BOTAN_ASSERT_IMPLICATION(
+               protect, cs != nullptr, "Cipher State is available when messages require protection");
+
+            send_data(Record_Type::Handshake, msgs.get(), protect ? cs.get() : nullptr);
+
+            msgs.get().clear();
+
+            if(!protect) {
+               // RFC 9846 5.1
+               //    To maximize backward compatibility, a record containing an
+               //    initial ClientHello SHOULD have version 0x0301.
+               //
+               // We just sent the flight's unprotected messages (e.g. the
+               // initial ClientHello of a TLS client). All subsequent records
+               // MUST carry version 0x0303.
+               m_record_layer.disable_sending_compat_mode();
+            }
+         };
+
+         for(const auto& message_info : flight) {
             std::visit(  //
                overloaded{
                   [&](const Flight::Dummy_ChangeCipherSpec&) {
-                     // Flush pending handshake messages, then send the dummy
-                     // CCS record. Note that messages preceding a dummy CCS
-                     // (i.e. a HelloRetryRequest) are always unprotected
-                     // because no cipher state is available, yet.
-                     if(!msgs.get().empty()) {
-                        send_data(Record_Type::Handshake, msgs.get(), cs.get());
-                        msgs.get().clear();
-                     }
+                     // We reached a dummy CCS. Before that only unprotected
+                     // messages were allowed. Flush those (if any).
+                     BOTAN_STATE_CHECK(!protect_current_msgs);
+                     prepare_and_flush_current_prepared(false /* no protection */);
+
+                     // Then send the dummy CCS record.
                      send_dummy_change_cipher_spec();
                   },
-                  [&](const Flight::Message_Info& info) {
-                     // Collect marshalled messages into the flight's buffer.
-                     msgs.get().insert(msgs.get().end(), info.header.begin(), info.header.end());
-                     msgs.get().insert(msgs.get().end(), info.serialized.begin(), info.serialized.end());
+                  [&](const Flight::Message_Info& msg_info) {
+                     const bool protect = !msg_info.epoch.has_value() || msg_info.epoch > EpochNumber::Unprotected;
+
+                     if(!protect) {
+                        // Once we have reached the first protected message, all
+                        // subsequent messages must be protected as well.
+                        BOTAN_ASSERT_NOMSG(!protect_current_msgs);
+                     } else if(!protect_current_msgs) {
+                        // We reached the first protected message. Flush the
+                        // unprotected ones (if any).
+                        prepare_and_flush_current_prepared(false /* no protection */);
+                        BOTAN_DEBUG_ASSERT(msgs.get().empty());
+                        protect_current_msgs = true;
+                     }
+
+                     // Collect marshalled messages into the current run.
+                     append(msgs.get(), msg_info.header);
+                     append(msgs.get(), msg_info.serialized);
                   },
                },
-               msg_info);
+               message_info);
          }
 
-         if(!msgs.get().empty()) {
-            send_data(Record_Type::Handshake, msgs.get(), cs.get());
-         }
+         // After we have processed all messages of the given flight, flush the
+         // last run of messages (if any).
+         prepare_and_flush_current_prepared(protect_current_msgs);
       }
 
       void process(const Handshake_Record& record) override { m_handshake_layer.copy_data(policy(), record); }
@@ -404,10 +490,27 @@ class TLS_Channel_IO final : public Channel_IO {
       const Handshake_Layer& handshake_layer() const override { return m_handshake_layer; }
 
    private:
-      bool m_first_message_sent = false;
+      void send_key_update(const Key_Update& msg) override {
+         const auto cs = cipher_state();
+         BOTAN_ASSERT_NONNULL(cs);
 
-      Record_Layer m_record_layer;
+         const auto serialized = Handshake_Layer::serialize(msg);
+         const auto header = TLS_Handshake_Layer::prepare_header(msg.wire_type(), serialized.size());
+
+         const auto payload = concat<std::vector<uint8_t>>(header, serialized);
+
+         send_data(Record_Type::Handshake, payload, cs.get());
+         cs->update_write_keys();
+      }
+
+      void schedule_read_epoch_pruning(EpochNumber /* latest_epoch */) override { /* don't care */
+      }
+
+   private:
+      TLS_Record_Layer m_record_layer;
       TLS_Handshake_Layer m_handshake_layer;
+
+      secure_vector<uint8_t> m_write_buffer;
 };
 
 }  // namespace
