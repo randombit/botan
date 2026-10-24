@@ -35,7 +35,8 @@ extern "C" {
 * The compile time version of the TLS FFI API (YYYYMMDD). Matches the value
 * returned by botan_ffi_tls_api_version() and BOTAN_HAS_FFI_TLS in build.h.
 */
-#define BOTAN_FFI_TLS_API_VERSION 20260911
+/* This C API version must also be usable in preprocessor conditionals. */
+#define BOTAN_FFI_TLS_API_VERSION 20260911 /* NOLINT(cppcoreguidelines-macro-usage) */
 
 /*
 * TLS policies
