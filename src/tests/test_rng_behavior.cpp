@@ -1486,25 +1486,32 @@ class RNG_TS_Input_Tests final : public Test {
          const auto second = rng.last_input();
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-         // 128 bits from the system RNG
-         result.test_sz_eq("additional input length (system RNG)", first.size(), 16);
+         // 8 byte clock (if available) with the system RNG filling the remainder
+         const size_t expected = 22;
+#elif defined(BOTAN_HAS_OS_UTILS)
+         // 8 byte clock followed by the 32-bit process id, if the platform has one
+         const uint32_t pid = Botan::OS::get_process_id();
+         const size_t expected = 8 + ((pid != 0) ? 4 : 0);
+#else
+         const size_t expected = 0;
+#endif
+
+         result.test_sz_eq("additional input length", first.size(), expected);
+         result.test_sz_eq("additional input length is consistent", second.size(), expected);
+
+         if(first.size() != expected || second.size() != expected) {
+            return {result};
+         }
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+         // Adjacent clock samples may be equal, but the system RNG output should not be
          result.test_bin_ne("additional input differs between calls", first, second);
 #elif defined(BOTAN_HAS_OS_UTILS)
-         // 64-bit clock followed by the 32-bit process id, if the platform has one
-         const uint32_t pid = Botan::OS::get_process_id();
-         const size_t expected = (pid != 0) ? 12 : 8;
-         result.test_sz_eq("additional input length (clock + pid)", first.size(), expected);
-         if(first.size() == 12) {
+         if(pid != 0) {
             result.test_u32_eq("process id is forwarded", Botan::load_le<uint32_t>(first.data() + 8, 0), pid);
          }
-         if(first.size() >= 8 && second.size() >= 8) {
-            const uint64_t clock1 = Botan::load_le<uint64_t>(first.data(), 0);
-            const uint64_t clock2 = Botan::load_le<uint64_t>(second.data(), 0);
-            result.test_is_true("clock is forwarded in full", clock1 != 0 && clock2 != 0 && clock2 >= clock1);
-         }
-#else
-         result.test_sz_eq("no additional input available", first.size(), 0);
 #endif
+
          return {result};
       }
 };

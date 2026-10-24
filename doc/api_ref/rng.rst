@@ -27,12 +27,11 @@ Random Number Generators
 
    .. cpp:function:: void randomize_with_ts_input(uint8_t* data, size_t length)
 
-      Creates a buffer with some timestamp values and calls ``randomize_with_input``
+      Creates a buffer with some unique values and calls ``randomize_with_input``
 
-      .. note::
-
-         When RDRAND is enabled and available at runtime, instead of timestamps
-         the output of RDRAND is used as the additional data.
+      The buffer consists of an 8 byte timestamp. The remainder of the 22 byte
+      buffer is filled from the system RNG if available, otherwise the process ID
+      is appended.
 
    .. cpp:function:: uint8_t next_byte()
 

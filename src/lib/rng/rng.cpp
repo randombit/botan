@@ -8,6 +8,7 @@
 
 #include <botan/assert.h>
 #include <botan/exceptn.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/loadstor.h>
 
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
@@ -16,7 +17,9 @@
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    #include <botan/system_rng.h>
-#elif defined(BOTAN_HAS_OS_UTILS)
+#endif
+
+#if defined(BOTAN_HAS_OS_UTILS)
    #include <botan/internal/os_utils.h>
 #endif
 
@@ -28,35 +31,55 @@ void RandomNumberGenerator::accept_seed_material(std::span<const uint8_t> input)
    this->fill_bytes_with_input({}, input);
 }
 
-void RandomNumberGenerator::randomize_with_ts_input(std::span<uint8_t> output) {
-   if(this->accepts_input()) {
-      std::array<uint8_t, 16> additional_input = {0};
+namespace {
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-      // If we have a system RNG just read 128 bits from that
-      system_rng().randomize(additional_input);
-      constexpr size_t written = additional_input.size();
-#elif defined(BOTAN_HAS_OS_UTILS)
-      // Otherwise take clock + pid
-      const uint64_t clock = OS::get_high_resolution_clock();
-      const uint32_t pid = OS::get_process_id();  // 0 if no PIDs on this system
+// 22 bytes is the most HMAC_DRBG(SHA-256) can accept without needing an
+// additional compression for each HMAC in update
+constexpr size_t RollbackInputBytes = 22;
 
-      store_le(std::span{additional_input}.first<8>(), clock);
-      size_t written = 8;
+/*
+* Fill out with values likely to be unique to this call even if the system RNG
+* repeats its output after a VM rollback the guest was not informed of.
+* Returns the number of bytes written.
+*
+* Ideally, we would use the processor RNG here (RDRAND/DARN), if available.
+* Unfortunately there is a huge variance in the performance of this instruction
+* depending on uarch and microcode; uops.info reports RDRAND instruction costs
+* ranging between 65 to 13800 cycles. On the higher end, a single RDRAND
+* invocation costs more than everything else (clock/pid read, system RNG draw,
+* and the HMAC_DRBG itself)
+*/
+size_t rollback_unique_input(std::span<uint8_t, RollbackInputBytes> out) {
+   BufferStuffer stuffer(out);
 
-      if(pid != 0) {
-         store_le(std::span{additional_input}.subspan<8, 4>(), pid);
-         written += 4;
-      }
-#else
-      // Nothing to use in this case
-      constexpr size_t written = 0;
+#if defined(BOTAN_HAS_OS_UTILS)
+   // Uses the CPU cycle counter if available
+   stuffer.append(store_le(OS::get_high_resolution_clock()));
 #endif
 
-      this->fill_bytes_with_input(output, std::span{additional_input}.first(written));
-   } else {
-      this->fill_bytes_with_input(output, {});
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+   system_rng().randomize(stuffer.next(stuffer.remaining_capacity()));
+#elif defined(BOTAN_HAS_OS_UTILS)
+   if(const uint32_t pid = OS::get_process_id(); pid != 0) {
+      stuffer.append(store_le(pid));
    }
+#endif
+
+   return out.size() - stuffer.remaining_capacity();
+}
+
+}  // namespace
+
+void RandomNumberGenerator::randomize_with_ts_input(std::span<uint8_t> output) {
+   if(!this->accepts_input()) {
+      this->fill_bytes_with_input(output, {});
+      return;
+   }
+
+   // TODO(C++26): let rollback_unique_input return std::inplace_vector
+   std::array<uint8_t, RollbackInputBytes> additional_input = {0};
+   const size_t written = rollback_unique_input(additional_input);
+   this->fill_bytes_with_input(output, std::span{additional_input}.first(written));
 }
 
 size_t RandomNumberGenerator::reseed_from_sources(Entropy_Sources& srcs, size_t poll_bits) {
