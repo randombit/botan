@@ -2485,6 +2485,8 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
 
         if options.os == 'windows':
             variables['implib_name'] = variables['static_lib_name']
+        elif options.os == 'mingw':
+            variables['implib_name'] = variables['shared_lib_name'] + '.a'
 
         variables['lib_link_cmd'] = variables['lib_link_cmd'].format(**variables)
 

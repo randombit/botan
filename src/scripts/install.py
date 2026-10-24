@@ -182,7 +182,7 @@ def main(args):
             shared_lib_name = cfg['shared_lib_name']
             copy_executable(os.path.join(out_dir, shared_lib_name),
                             prepend_destdir(os.path.join(bin_dir, shared_lib_name)))
-            implib_name = shared_lib_name + '.a'
+            implib_name = cfg['implib_name']
             copy_executable(os.path.join(out_dir, implib_name),
                             prepend_destdir(os.path.join(lib_dir, implib_name)))
         else:
