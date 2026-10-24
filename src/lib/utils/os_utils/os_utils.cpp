@@ -711,6 +711,17 @@ uint64_t OS::get_fork_generation() {
 #endif
 }
 
+OS::Fork_Detector::Fork_Detector() : m_process_id(OS::get_process_id()), m_fork_generation(OS::get_fork_generation()) {}
+
+void OS::Fork_Detector::rebaseline() {
+   *this = Fork_Detector();
+}
+
+bool OS::Fork_Detector::fork_detected() const {
+   // The PID check also catches clones which bypass the pthread_atfork handlers
+   return OS::get_process_id() != m_process_id || OS::get_fork_generation() != m_fork_generation;
+}
+
 void OS::free_locked_pages(const std::vector<void*>& pages) {
    const size_t page_size = OS::system_page_size();
 

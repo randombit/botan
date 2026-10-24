@@ -11,7 +11,13 @@
    #include <botan/internal/os_utils.h>
    #include <botan/internal/target_info.h>
    #include <botan/internal/time_utils.h>
+   #include <array>
    #include <chrono>
+
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+      #include <sys/wait.h>
+      #include <unistd.h>
+   #endif
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
@@ -42,6 +48,7 @@ class OS_Utils_Tests final : public Test {
          std::vector<Test::Result> results;
 
          results.push_back(test_get_process_id());
+         results.push_back(test_fork_detector());
          results.push_back(test_get_cpu_cycle_counter());
          results.push_back(test_get_high_resolution_clock());
          results.push_back(test_get_cpu_numbers());
@@ -70,6 +77,64 @@ class OS_Utils_Tests final : public Test {
          result.test_u32_eq("PID is expected to be zero on this platform", pid1, 0);
    #else
          result.test_sz_ne("PID is non-zero on systems with processes", pid1, 0);
+   #endif
+
+         return result;
+      }
+
+      static Test::Result test_fork_detector() {
+         Test::Result result("OS::Fork_Detector");
+
+         const Botan::OS::Fork_Detector parent_detector;
+         result.test_is_false("No fork detected in the same process", parent_detector.fork_detected());
+
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+         int fd[2];
+         if(::pipe(fd) != 0) {
+            result.test_failure("failed to create pipe");
+            return result;
+         }
+
+         const pid_t pid = ::fork();
+         if(pid == -1) {
+            ::close(fd[0]);
+            ::close(fd[1]);
+      #if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
+            result.test_note("failed to fork process");
+      #else
+            result.test_failure("failed to fork process");
+      #endif
+            return result;
+         } else if(pid == 0) {
+            // The child must not allocate, since other test threads may hold locks
+            ::close(fd[0]);
+            const Botan::OS::Fork_Detector child_detector;
+            const std::array<uint8_t, 2> detected = {
+               static_cast<uint8_t>(parent_detector.fork_detected()),
+               static_cast<uint8_t>(child_detector.fork_detected()),
+            };
+            [[maybe_unused]] const ssize_t written = ::write(fd[1], detected.data(), detected.size());
+            ::close(fd[1]);
+
+            ::execl("/bin/true", "true", NULL);  // NOLINT(*-vararg)
+            ::_exit(0);
+         }
+
+         ::close(fd[1]);
+
+         std::array<uint8_t, 2> detected = {};
+         const ssize_t got = ::read(fd[0], detected.data(), detected.size());
+         ::close(fd[0]);
+
+         if(result.test_sz_eq("expected bytes from child", static_cast<size_t>(got), detected.size())) {
+            result.test_u8_eq("Parent detector reports fork in child", detected[0], 1);
+            result.test_u8_eq("Child detector reports no fork in child", detected[1], 0);
+         }
+
+         int status = 0;
+         ::waitpid(pid, &status, 0);
+
+         result.test_is_false("No fork detected in parent after fork", parent_detector.fork_detected());
    #endif
 
          return result;

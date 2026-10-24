@@ -811,6 +811,28 @@ class Stateful_RNG_Tests : public Test {
             result.test_sz_eq("parent not reseeded", counting_rng.randomize_count(), 1);
          }
 
+         // Same as above, but the fork happens before the RNG is ever seeded
+         {
+            Request_Counting_RNG counting_rng;
+            auto rng = make_rng(counting_rng);
+
+            const auto child = run_in_child(result, [&]() {
+               rng->add_entropy(seed);
+               auto out = rng->random_vec<std::vector<uint8_t>>(output_len);
+               out.push_back(static_cast<uint8_t>(counting_rng.randomize_count()));
+               return out;
+            });
+
+            rng->add_entropy(seed);
+            const auto parent_out = rng->random_vec<std::vector<uint8_t>>(output_len);
+
+            if(result.test_sz_eq("child output length", child.size(), output_len + 1)) {
+               result.test_sz_eq("child reseeded", child[output_len], 1);
+               result.test_bin_ne("parent and child output differ", parent_out, std::span{child}.first(output_len));
+            }
+            result.test_sz_eq("parent not reseeded", counting_rng.randomize_count(), 0);
+         }
+
          // If the reseed after a fork fails, adding entropy must not clear the pending fork
          {
             class Failable_RNG final : public Botan::RandomNumberGenerator {
