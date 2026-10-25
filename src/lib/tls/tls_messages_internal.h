@@ -51,6 +51,17 @@ std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
                                               TLS_Flavor flavor);
 
 /**
+ * The Brainpool group code points of RFC 7027 are only defined up to TLS 1.2,
+ * those of RFC 8734 and all KEM groups only for TLS 1.3.
+ */
+bool group_usable_in_version(Group_Params group, Protocol_Version version);
+
+/**
+ * Filter @p groups by group_usable_in_version()
+ */
+std::vector<Group_Params> groups_usable_in_version(std::span<const Group_Params> groups, Protocol_Version version);
+
+/**
  * Compute a cookie value from the ClientHello and the client's identity. Used
  * by both the DTLS 1.2 HelloVerifyRequest and the DTLS 1.3 HelloRetryRequest
  * cookie extension.

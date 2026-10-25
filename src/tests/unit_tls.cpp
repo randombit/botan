@@ -34,6 +34,7 @@
    #include <botan/tls_server.h>
    #include <botan/tls_session_manager_memory.h>
    #include <botan/tls_session_manager_noop.h>
+   #include <botan/internal/fmt.h>
    #include <botan/internal/stl_util.h>
    #include <botan/internal/tls_reader.h>
 
@@ -204,18 +205,8 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager {
 };
 
 std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenerator& rng,
-                                                       bool with_client_certs = false) {
-   // RSA and ECDSA are required for the TLS module, but we need to find an
-   // ECC group that is supported in this build or skip this test.
-   //
-   // secp256r1 is excluded because the Strict_Policy requires at least SHA-384
-   // and TLS 1.3 enforces that hash lengths match the key strength.
-   const auto ec_group = Test::supported_ec_group_name({"secp384r1", "secp521r1"});
-   if(!ec_group) {
-      return nullptr;
-   }
-
-   const auto ecdsa_params = Botan::EC_Group::from_name(*ec_group);
+                                                       const Botan::EC_Group& ecdsa_params,
+                                                       bool with_client_certs) {
    const size_t rsa_params = 1024;
 
    const auto rsa_ca_key = std::make_unique<Botan::RSA_PrivateKey>(rng, rsa_params);
@@ -263,6 +254,46 @@ std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenera
                                                      ecdsa_srv_key.release(),
                                                      ecdsa_ca_cert,
                                                      ecdsa_crl);
+}
+
+std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenerator& rng,
+                                                       bool with_client_certs = false) {
+   // RSA and ECDSA are required for the TLS module, but we need to find an
+   // ECC group that is supported in this build or skip this test.
+   //
+   // secp256r1 is excluded because the Strict_Policy requires at least SHA-384
+   // and TLS 1.3 enforces that hash lengths match the key strength.
+   const auto ec_group = Test::supported_ec_group_name({"secp384r1", "secp521r1"});
+   if(!ec_group) {
+      return nullptr;
+   }
+
+   return create_creds(rng, Botan::EC_Group::from_name(*ec_group), with_client_certs);
+}
+
+/**
+ * Register numsp256d1 as an application specific curve, which has no TLS
+ * group or signature scheme code point
+ */
+Botan::EC_Group register_numsp256d1() {
+   static const Botan::EC_Group group = [] {
+      const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF43");
+      const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF40");
+      const Botan::BigInt b("0x25581");
+      const Botan::BigInt order("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE43C8275EA265C6020AB20294751A825");
+
+      const Botan::BigInt g_x("0x01");
+      const Botan::BigInt g_y("0x696F1853C1E466D7FC82C96CCEEEDD6BD02C2F9375894EC10BF46306C2B56C77");
+
+      const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
+
+      Botan::OID::register_oid(oid, "numsp256d1");
+
+      // Creating this object implicitly registers the curve for future use ...
+      return Botan::EC_Group::register_custom_group(oid, p, a, b, g_x, g_y, order);
+   }();
+
+   return group;
 }
 
 class TLS_Handshake_Test final {
@@ -877,6 +908,21 @@ class Test_Policy final : public Botan::TLS::Text_Policy {
       size_t minimum_signature_strength() const override { return 80; }
 };
 
+   #if defined(BOTAN_HAS_TLS_12)
+/**
+ * The ECDSA test certificates use secp384r1 (or secp521r1), and the server
+ * only uses a certificate whose curve the client offered.
+ */
+class Suite_B_128_Test_Policy final : public Botan::TLS::NSA_Suite_B_128 {
+   public:
+      std::vector<Botan::TLS::Group_Params> key_exchange_groups() const override {
+         return {Botan::TLS::Group_Params::SECP256R1,
+                 Botan::TLS::Group_Params::SECP384R1,
+                 Botan::TLS::Group_Params::SECP521R1};
+      }
+};
+   #endif
+
 /**
  * This mocks a custom ECDH adapter class that essentially just wraps an
  * ordinary ECDH key to mimic a typical hardware-based ECDH key.
@@ -1199,48 +1245,127 @@ class TLS_Unit_Tests final : public Test {
       }
 
       /**
-       * A TLS 1.2 server that requires client certificates but cannot send a
-       * CertificateRequest must fail the handshake instead of continuing
+       * A TLS 1.2 server that cannot send a CertificateRequest must fail the
+       * handshake if it requires client certificates, and otherwise continue
        * without client authentication.
        */
-      void test_tls12_required_client_auth_without_signature_schemes(
-         std::vector<Test::Result>& results, const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+      void test_tls12_client_auth_without_signature_schemes(std::vector<Test::Result>& results,
+                                                            const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
          using PV = Botan::TLS::Protocol_Version;
+         using SS = Botan::TLS::Signature_Scheme;
 
-         class No_Signature_Schemes_Policy final : public Botan::TLS::Text_Policy {
+         class Client_Auth_Schemes_Policy final : public Botan::TLS::Text_Policy {
             public:
-               No_Signature_Schemes_Policy() :
-                     Text_Policy("allow_tls13 = false\nrequire_client_certificate_authentication = true\n") {}
+               Client_Auth_Schemes_Policy(bool require_client_auth, std::vector<SS> schemes) :
+                     Text_Policy("allow_tls13 = false\n"),
+                     m_require_client_auth(require_client_auth),
+                     m_schemes(std::move(schemes)) {}
 
                size_t minimum_rsa_bits() const override { return 1024; }
 
                size_t minimum_signature_strength() const override { return 80; }
 
-               std::vector<Botan::TLS::Signature_Scheme> acceptable_signature_schemes() const override { return {}; }
+               bool require_client_certificate_authentication() const override { return m_require_client_auth; }
+
+               bool request_client_certificate_authentication() const override { return true; }
+
+               std::vector<SS> acceptable_signature_schemes() const override { return m_schemes; }
+
+            private:
+               bool m_require_client_auth;
+               std::vector<SS> m_schemes;
          };
 
          const auto creds = create_creds(*rng, true /* with_client_certs */);
          if(!creds) {
-            results.push_back(Test::Result::Note("TLS 1.2 required client auth", "no ECC group available"));
+            results.push_back(Test::Result::Note("TLS 1.2 client auth", "no ECC group available"));
             return;
          }
 
          const auto client_policy = std::make_shared<Test_Policy>();
          set_allowed_versions(client_policy, std::array<PV, 1>{PV::TLS_V12});
 
-         TLS_Handshake_Test test("TLS v1.2 required client auth without acceptable signature schemes",
-                                 PV::TLS_V12,
-                                 creds,
-                                 client_policy,
-                                 std::make_shared<No_Signature_Schemes_Policy>(),
-                                 rng,
-                                 make_session_manager(rng),
-                                 make_session_manager(rng),
-                                 false);
-         test.set_client_expected_handshake_alert(Botan::TLS::Alert::HandshakeFailure);
-         test.expect_handshake_failure();
-         test.go();
-         results.push_back(test.results());
+         const std::vector<std::pair<std::string, std::vector<SS>>> scheme_lists = {
+            {"no acceptable signature schemes", {}},
+            {"only TLS 1.3 signature schemes",
+             { SS::ECDSA_BRAINPOOL256R1_TLS13_SHA256,
+               SS::ECDSA_BRAINPOOL384R1_TLS13_SHA384,
+               SS::ECDSA_BRAINPOOL512R1_TLS13_SHA512 }},
+         };
+
+         for(const auto& [schemes_name, schemes] : scheme_lists) {
+            for(const bool require_client_auth : {true, false}) {
+               const std::string mode = require_client_auth ? "required" : "optional";
+               TLS_Handshake_Test test(Botan::fmt("TLS v1.2 {} client auth with {}", mode, schemes_name),
+                                       PV::TLS_V12,
+                                       creds,
+                                       client_policy,
+                                       std::make_shared<Client_Auth_Schemes_Policy>(require_client_auth, schemes),
+                                       rng,
+                                       make_session_manager(rng),
+                                       make_session_manager(rng),
+                                       false);
+               if(require_client_auth) {
+                  test.set_client_expected_handshake_alert(Botan::TLS::Alert::HandshakeFailure);
+                  test.expect_handshake_failure();
+               }
+               test.go();
+               results.push_back(test.results());
+            }
+         }
+      }
+
+      /**
+       * Certificates on curves that have no TLS code point can be used in
+       * TLS 1.2, but not in TLS 1.3 which names the curve in the signature scheme
+       */
+      void test_application_specific_curve_certificates(std::vector<Test::Result>& results,
+                                                        const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         using PV = Botan::TLS::Protocol_Version;
+
+         if(!Botan::EC_Group::supports_application_specific_group()) {
+            results.push_back(
+               Test::Result::Note("TLS application specific curve certificates", "not supported in this build"));
+            return;
+         }
+
+         const auto numsp256d1 = register_numsp256d1();
+
+         for(const auto version : available_versions()) {
+            if(version.is_datagram_protocol()) {
+               continue;
+            }
+
+            for(const bool client_auth : {false, true}) {
+               const auto policy = std::make_shared<Test_Policy>();
+               policy->set("key_exchange_methods", "ECDH");
+               policy->set("signature_methods", "ECDSA");
+               set_allowed_versions(policy, std::array<PV, 1>{version});
+
+               TLS_Handshake_Test test(version.to_string() + " certificate on an application specific curve" +
+                                          (client_auth ? " with client auth" : ""),
+                                       version,
+                                       create_creds(*rng, numsp256d1, client_auth),
+                                       policy,
+                                       policy,
+                                       rng,
+                                       make_session_manager(rng),
+                                       make_session_manager(rng),
+                                       client_auth);
+
+               // RFC 8446 4.2.3
+               //    ECDSA algorithms:  Indicates a signature algorithm using ECDSA
+               //    [ECDSA], the corresponding curve as defined in ANSI X9.62 [ECDSA]
+               //    and FIPS 186-4 [DSS], [...]
+               if(!version.is_pre_tls_13()) {
+                  test.set_client_expected_handshake_alert(Botan::TLS::Alert::HandshakeFailure);
+                  test.expect_handshake_failure();
+               }
+
+               test.go();
+               results.push_back(test.results());
+            }
+         }
       }
 
       /**
@@ -1662,8 +1787,20 @@ class TLS_Unit_Tests final : public Test {
                continue;
             }
 
+            // TLS 1.3 uses the Brainpool group code points of RFC 8734
+            const auto group_for_version = [](Botan::TLS::Group_Params group,
+                                              Botan::TLS::Protocol_Version ver) -> Botan::TLS::Group_Params {
+               if(!ver.is_pre_tls_13() && group == Botan::TLS::Group_Params::BRAINPOOL256R1) {
+                  return Botan::TLS::Group_Params::BRAINPOOL256R1TLS13;
+               } else if(!ver.is_pre_tls_13() && group == Botan::TLS::Group_Params::BRAINPOOL512R1) {
+                  return Botan::TLS::Group_Params::BRAINPOOL512R1TLS13;
+               } else {
+                  return group;
+               }
+            }(ecdh_group, version);
+
             const auto policy = std::make_shared<Test_Policy>();
-            policy->set("groups", "0x" + Botan::hex_encode(Botan::store_be(ecdh_group.wire_code())));
+            policy->set("groups", "0x" + Botan::hex_encode(Botan::store_be(group_for_version.wire_code())));
 
             TLS_Handshake_Test test("Client uses a custom ECDH provider for " + ecdh_group.to_string().value() +
                                        " in " + version.to_string(),
@@ -1688,7 +1825,7 @@ class TLS_Unit_Tests final : public Test {
                   generator_called = true;
                   test_results.require("tls_generate_ephemeral_ecdh_key_callback called for ECDH",
                                        group.is_ecdh_named_curve());
-                  const auto ec_group = Botan::EC_Group::from_name(group.to_string().value());
+                  const auto ec_group = Botan::EC_Group::from_name(group.to_algorithm_spec().value());
                   return std::make_unique<HardwareEcdhKey>(ec_group, clbk_rng, format);
                });
 
@@ -2602,7 +2739,7 @@ class TLS_Unit_Tests final : public Test {
          test_with_policy("Strict policy", results, creds, available_versions(), strict_policy, rng);
 
    #if defined(BOTAN_HAS_TLS_12)
-         const auto suiteb_128 = std::make_shared<Botan::TLS::NSA_Suite_B_128>();
+         const auto suiteb_128 = std::make_shared<Suite_B_128_Test_Policy>();
          test_with_policy("Suite B", results, creds, {Botan::TLS::Protocol_Version::TLS_V12}, suiteb_128, rng);
    #endif
 
@@ -2670,7 +2807,7 @@ class TLS_Unit_Tests final : public Test {
                                  "ECDH",
                                  "AES-128/GCM",
                                  "AEAD",
-                                 {{"groups", "brainpool256r1"}});
+                                 {{"groups", "brainpool256r1 brainpool256r1tls13"}});
          }
 
    #if defined(BOTAN_HAS_X25519)
@@ -2774,7 +2911,8 @@ class TLS_Unit_Tests final : public Test {
 
    #if defined(BOTAN_HAS_TLS_12)
          test_tls12_client_cert_selection(results, rng);
-         test_tls12_required_client_auth_without_signature_schemes(results, rng);
+         test_tls12_client_auth_without_signature_schemes(results, rng);
+         test_application_specific_curve_certificates(results, rng);
 
          // DTLS-SRTP profile must survive session resumption (RFC 5764)
          test_dtls12_srtp_resumption(results, rng);

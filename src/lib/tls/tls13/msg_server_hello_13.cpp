@@ -41,8 +41,10 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
    // Note: We currently do not support PSK without (EC)DHE, hence, we can
    //       assume that those extensions are available.
    BOTAN_ASSERT_NOMSG(exts.has<Supported_Groups>() && exts.has<Key_Share>());
-   const auto& supported_by_client = exts.get<Supported_Groups>()->groups();
-   const auto& offered_by_client = exts.get<Key_Share>()->offered_groups();
+   const auto supported_by_client =
+      groups_usable_in_version(exts.get<Supported_Groups>()->groups(), Protocol_Version::TLS_V13);
+   const auto offered_by_client =
+      groups_usable_in_version(exts.get<Key_Share>()->offered_groups(), Protocol_Version::TLS_V13);
    const auto selected_group = policy.choose_key_exchange_group(supported_by_client, offered_by_client);
 
    // RFC 8446 4.1.1
