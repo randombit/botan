@@ -129,6 +129,12 @@ class BOTAN_UNSTABLE_API Server_Hello_13 : public Server_Hello {
          std::span<const uint8_t> buf);
 
       /**
+       * Decline the PSK selected in this (not yet sent) Server Hello, so that
+       * the handshake continues as a full handshake.
+       */
+      void decline_psk();
+
+      /**
        * Return desired downgrade version indicated by hello random, if any.
        */
       std::optional<Protocol_Version> random_signals_downgrade() const;
