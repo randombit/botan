@@ -2022,6 +2022,97 @@ class TLS_Unit_Tests final : public Test {
          results.push_back(result);
       }
 
+   #if defined(BOTAN_HAS_TLS_12)
+      class No_EMS_Callbacks final : public Botan::TLS::Callbacks {
+         public:
+            explicit No_EMS_Callbacks(std::vector<uint8_t>& outbound, bool offer_ems) :
+                  m_outbound(outbound), m_offer_ems(offer_ems) {}
+
+            void tls_emit_data(std::span<const uint8_t> bits) override {
+               m_outbound.insert(m_outbound.end(), bits.begin(), bits.end());
+            }
+
+            void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> /*bits*/) override {}
+
+            void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+
+            void tls_modify_extensions(Botan::TLS::Extensions& extn,
+                                       Botan::TLS::Connection_Side side,
+                                       Botan::TLS::Handshake_Type which_message) override {
+               if(!m_offer_ems && side == Botan::TLS::Connection_Side::Client &&
+                  which_message == Botan::TLS::Handshake_Type::ClientHello) {
+                  extn.remove_extension(Botan::TLS::Extension_Code::ExtendedMasterSecret);
+               }
+            }
+
+         private:
+            std::vector<uint8_t>& m_outbound;
+            bool m_offer_ems;
+      };
+
+      void test_tls12_exporter_requirements(std::vector<Test::Result>& results,
+                                            const std::shared_ptr<Credentials_Manager_Test>& creds,
+                                            const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         for(const bool use_ems : {true, false}) {
+            Test::Result result(std::string("TLS 1.2 exporter ") + (use_ems ? "with" : "without") +
+                                " extended master secret");
+
+            try {
+               std::vector<uint8_t> c2s;
+               std::vector<uint8_t> s2c;
+               const auto client_cb = std::make_shared<No_EMS_Callbacks>(c2s, use_ems);
+               const auto server_cb = std::make_shared<No_EMS_Callbacks>(s2c, true);
+
+               auto policy = std::make_shared<Botan::TLS::Text_Policy>("");
+               policy->set("allow_tls13", "false");
+               policy->set("minimum_rsa_bits", "1024");
+               policy->set("minimum_signature_strength", "80");
+               policy->set("require_extended_master_secret", "false");
+
+               const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+               Botan::TLS::Server server(server_cb, session_manager, creds, policy, rng);
+               Botan::TLS::Client client(client_cb,
+                                         session_manager,
+                                         creds,
+                                         policy,
+                                         rng,
+                                         Botan::TLS::Server_Information("server.example.com"),
+                                         Botan::TLS::Protocol_Version::TLS_V12);
+
+               while(!c2s.empty() || !s2c.empty()) {
+                  std::vector<uint8_t> input;
+                  std::swap(c2s, input);
+                  server.received_data(input);
+                  input.clear();
+                  std::swap(s2c, input);
+                  client.received_data(input);
+               }
+               result.test_is_true("handshake complete", client.is_active() && server.is_active());
+
+               if(use_ems) {
+                  result.test_bin_eq("both sides export the same key",
+                                     client.key_material_export("label", "context", 32).bits_of(),
+                                     server.key_material_export("label", "context", 32).bits_of());
+
+                  const std::string long_context(65536, 'c');
+                  result.test_throws<Botan::Invalid_Argument>(
+                     "context too long", [&] { client.key_material_export("label", long_context, 32); });
+               } else {
+                  result.test_throws<Botan::Invalid_State>("client refuses to export",
+                                                           [&] { client.key_material_export("label", "", 32); });
+                  result.test_throws<Botan::Invalid_State>("server refuses to export",
+                                                           [&] { server.key_material_export("label", "", 32); });
+               }
+            } catch(const std::exception& e) {
+               result.test_failure("exporter requirements", e.what());
+            }
+
+            results.push_back(result);
+         }
+      }
+   #endif
+
       void test_sent_alert_validation(std::vector<Test::Result>& results,
                                       const std::shared_ptr<Credentials_Manager_Test>& creds,
                                       const std::shared_ptr<Botan::RandomNumberGenerator>& rng,
@@ -3044,6 +3135,7 @@ class TLS_Unit_Tests final : public Test {
 
    #if defined(BOTAN_HAS_TLS_12)
          test_sent_alert_validation(results, creds, rng, Botan::TLS::Protocol_Version::TLS_V12);
+         test_tls12_exporter_requirements(results, creds, rng);
    #endif
    #if defined(BOTAN_HAS_TLS_13)
          test_sent_alert_validation(results, creds, rng, Botan::TLS::Protocol_Version::TLS_V13);

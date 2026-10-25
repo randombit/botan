@@ -90,7 +90,8 @@ bool Protocol_Version::valid() const {
       return true;
    }
 
-   if(maj == 254 && (min == 253 || min == 255)) {
+   if(maj == 254 && (min == 252 || min == 253 || min == 255)) {
+      // 254.252: DTLS 1.3
       // 254.253: DTLS 1.2
       // 254.255: DTLS 1.0
       return true;

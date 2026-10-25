@@ -44,6 +44,9 @@ void verify_is_expected_wire_handshake_type(Handshake_Type type) {
 }
 
 void store_be24(uint8_t out[3], size_t val) {
+   if(val > 0xFFFFFF) {
+      throw Encoding_Error("Handshake message is too large to encode");
+   }
    out[0] = get_byte<1>(static_cast<uint32_t>(val));
    out[1] = get_byte<2>(static_cast<uint32_t>(val));
    out[2] = get_byte<3>(static_cast<uint32_t>(val));
