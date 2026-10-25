@@ -17,6 +17,7 @@
 #include <botan/tls_extensions.h>
 #include <botan/tls_policy.h>
 #include <botan/x509_key.h>
+#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_reader.h>
 #include <algorithm>
 #include <iterator>
@@ -85,6 +86,16 @@ void Certificate_13::verify(Callbacks& callbacks,
                             std::string_view hostname,
                             bool use_ocsp) const {
    const auto usage = (m_side == Connection_Side::Client) ? Usage_Type::TLS_CLIENT_AUTH : Usage_Type::TLS_SERVER_AUTH;
+
+   // Without a certificate type extension the peer sends an X.509 chain,
+   // which the policy may not accept
+   const auto cert_type = is_raw_public_key() ? Certificate_Type::RawPublicKey : Certificate_Type::X509;
+   const auto& accepted_types = (m_side == Connection_Side::Client) ? policy.accepted_client_certificate_types()
+                                                                    : policy.accepted_server_certificate_types();
+   if(!value_exists(accepted_types, cert_type)) {
+      throw TLS_Exception(Alert::UnsupportedCertificate,
+                          "Peer sent a certificate of a type that is not accepted by the policy");
+   }
 
    if(is_raw_public_key()) {
       callbacks.tls_verify_raw_public_key(*public_key(), usage, hostname, policy);

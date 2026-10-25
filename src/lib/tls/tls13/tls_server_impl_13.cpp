@@ -437,6 +437,11 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
          }
       }();
 
+      if(!value_exists(policy().accepted_server_certificate_types(), cert_type)) {
+         throw TLS_Exception(Alert::UnsupportedCertificate,
+                             "Client does not support a certificate type that our policy allows");
+      }
+
       flight
          .add(m_handshake->state.sending(Certificate_13(client_hello, credentials_manager(), callbacks(), cert_type)))
          .add(m_handshake->state.sending(Certificate_Verify_13(m_handshake->state.server_certificate(),

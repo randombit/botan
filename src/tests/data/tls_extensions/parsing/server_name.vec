@@ -131,7 +131,11 @@ Exception = Bad encoding of SNI extension
 
 # two host_name entries
 Buffer = 001c00000b6578616d706c652e636f6d00000b6578616d706c652e6f7267
-Exception = TLS ServerNameIndicator contains more than one host_name
+Exception = TLS ServerNameIndicator contains more than one name of the same type
+
+# two entries of an unknown name type
+Buffer = 00080100014101000142
+Exception = TLS ServerNameIndicator contains more than one name of the same type
 
 # server_name_list length mismatch
 Buffer = 000b00000b6578616d706c652e636f6d

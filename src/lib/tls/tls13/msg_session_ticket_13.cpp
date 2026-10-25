@@ -59,6 +59,13 @@ New_Session_Ticket_13::New_Session_Ticket_13(std::span<const uint8_t> buf, Conne
    // RFC 8446 4.6.1: opaque ticket<1..2^16-1>
    m_handle = Opaque_Session_Handle(reader.get_range<uint8_t>(2, 1, 65535));
 
+   // RFC 8446 4.6.1
+   //    Extension extensions<0..2^16-2>;
+   //
+   // Extensions::deserialize() also accepts an absent extension list
+   if(reader.remaining_bytes() < 2) {
+      throw TLS_Exception(Alert::DecodeError, "NewSessionTicket message lacks the extensions field");
+   }
    m_extensions.deserialize(reader, from, type());
 
    // RFC 8446 4.6.1

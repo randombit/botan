@@ -382,7 +382,8 @@ class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension /* 
       // TLS 1.2 Server generated version: empty
       Certificate_Status_Request();
 
-      // TLS 1.2 Client version, both lists can be empty
+      // Client version: ocsp_responder_ids is the encoded responder_id_list
+      // (may be empty), ocsp_key_ids is not supported and must be empty
       Certificate_Status_Request(std::vector<uint8_t> ocsp_responder_ids,
                                  std::vector<std::vector<uint8_t>> ocsp_key_ids);
 

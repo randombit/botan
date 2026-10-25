@@ -204,6 +204,19 @@ void Client_Impl_13::handle(const Server_Hello_12_Shim& server_hello_msg) {
       throw TLS_Exception(Alert::IllegalParameter, "Unexpected extension received");
    }
 
+   // These extensions offered in our ClientHello are not defined for a TLS 1.2 ServerHello
+   const auto& sh_exts = server_hello_msg.extensions();
+   for(const auto tls13_only : {Extension_Code::KeyShare,
+                                Extension_Code::PresharedKey,
+                                Extension_Code::PskKeyExchangeModes,
+                                Extension_Code::EarlyData,
+                                Extension_Code::Cookie,
+                                Extension_Code::CertificateAuthorities}) {
+      if(sh_exts.has(tls13_only)) {
+         throw TLS_Exception(Alert::IllegalParameter, "TLS 1.2 Server Hello contained a TLS 1.3 extension");
+      }
+   }
+
    // RFC 8446 Appendix D.1
    //    If the version chosen by the server is not supported by the client
    //    (or is not acceptable), the client MUST abort the handshake with a
@@ -506,6 +519,27 @@ void Client_Impl_13::handle(const Encrypted_Extensions& encrypted_extensions_msg
       set_selected_certificate_type(server_cert_type->selected_certificate_type());
    }
 
+   if(const auto* client_cert_type = exts.get<Client_Certificate_Type>()) {
+      // RFC 7250 4.2
+      //    The value conveyed in the client_certificate_type extension MUST be
+      //    selected from one of the values provided in the
+      //    client_certificate_type extension sent in the client hello.
+      m_handshake->state.client_hello().extensions().get<Client_Certificate_Type>()->validate_selection(
+         *client_cert_type);
+
+      // RFC 7250 4.2
+      //    If the server does not send a certificate_request payload [...],
+      //    then the client_certificate_type payload in the server hello MUST
+      //    be omitted.
+      //
+      // A server authenticating with a PSK cannot send a certificate_request.
+      // Otherwise this is checked once the server's Finished arrived.
+      if(m_handshake->state.server_hello().extensions().has<PSK>()) {
+         throw TLS_Exception(Alert::IllegalParameter,
+                             "Server selected a client certificate type without requesting a certificate");
+      }
+   }
+
    callbacks().tls_examine_extensions(exts, Connection_Side::Server, Handshake_Type::EncryptedExtensions);
 
    if(m_handshake->state.server_hello().extensions().has<PSK>()) {
@@ -656,6 +690,12 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
    }
 
    m_handshake->state.confirm_peer_finished_verified();
+
+   if(m_handshake->state.encrypted_extensions().extensions().has<Client_Certificate_Type>() &&
+      !m_handshake->state.has_certificate_request()) {
+      throw TLS_Exception(Alert::IllegalParameter,
+                          "Server selected a client certificate type without requesting a certificate");
+   }
 
    // Give the application a chance for a final veto before fully
    // establishing the connection.
