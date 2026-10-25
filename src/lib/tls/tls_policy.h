@@ -500,12 +500,24 @@ class BOTAN_PUBLIC_API(2, 0) Policy /* NOLINT(*-special-member-functions) */ {
       * Indicate if client certificate authentication is required.
       * If true, then a cert will be requested and if the client does
       * not send a certificate the connection will be closed.
+      *
+      * Externally provided PSKs are not used while this is set, and a
+      * session is only resumed if the client authenticated with a
+      * certificate when the session was established.
       */
       virtual bool require_client_certificate_authentication() const;
 
       /**
       * Indicate if client certificate authentication is requested.
-      * If true, then a cert will be requested.
+      * If true, then a cert will be requested, but the handshake also
+      * succeeds without one.
+      *
+      * PSKs and session resumption are not restricted by this, so it is
+      * the application's responsibility to check that the peer was
+      * sufficiently authenticated, either by a client certificate or by
+      * the PSK or resumed session.
+      *
+      * Default: the value of require_client_certificate_authentication()
       */
       virtual bool request_client_certificate_authentication() const;
 
