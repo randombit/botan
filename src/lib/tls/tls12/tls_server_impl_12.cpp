@@ -47,6 +47,11 @@ class Server_Handshake_State final : public Handshake_State {
 
       void mark_as_resumption() { m_is_a_resumption = true; }
 
+      // Set if this renegotiation was requested by our HelloRequest
+      void mark_as_server_initiated() { m_server_initiated = true; }
+
+      bool is_server_initiated() const { return m_server_initiated; }
+
       bool is_a_resumption() const { return m_is_a_resumption; }
 
       void set_resumption_summary(Session_Summary summary) { m_resumption_summary = std::move(summary); }
@@ -74,6 +79,8 @@ class Server_Handshake_State final : public Handshake_State {
       bool m_allow_session_resumption = true;
 
       bool m_is_a_resumption = false;
+
+      bool m_server_initiated = false;
 
       std::vector<X509_Certificate> m_resume_peer_certs;
 
@@ -375,7 +382,9 @@ std::unique_ptr<Handshake_State> Server_Impl_12::new_handshake_state(std::unique
 * Send a hello request to the client
 */
 void Server_Impl_12::initiate_handshake(Handshake_State& state, bool force_full_renegotiation) {
-   dynamic_cast<Server_Handshake_State&>(state).set_allow_session_resumption(!force_full_renegotiation);
+   auto& server_state = dynamic_cast<Server_Handshake_State&>(state);
+   server_state.set_allow_session_resumption(!force_full_renegotiation);
+   server_state.mark_as_server_initiated();
 
    const Hello_Request hello_req(state.handshake_io());
 
@@ -449,7 +458,9 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
 
    const bool initial_handshake = epoch0_restart || !active_state().has_value();
 
-   if(initial_handshake == false && policy().allow_client_initiated_renegotiation() == false) {
+   // A renegotiation that we asked for with a HelloRequest is not client initiated
+   if(initial_handshake == false && !pending_state.is_server_initiated() &&
+      policy().allow_client_initiated_renegotiation() == false) {
       if(policy().abort_connection_on_undesired_renegotiation()) {
          throw TLS_Exception(Alert::NoRenegotiation, "Server policy prohibits renegotiation");
       } else {
@@ -589,7 +600,11 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
    }
 
    m_next_protocol = "";
-   if(pending_state.client_hello()->supports_alpn()) {
+   if(!initial_handshake && !pending_state.client_hello()->supports_alpn()) {
+      // The application protocol is a property of the connection, which a
+      // renegotiation that does not offer ALPN does not change.
+      m_next_protocol = active_state()->application_protocol();
+   } else if(pending_state.client_hello()->supports_alpn()) {
       const auto offered = pending_state.client_hello()->next_protocols();
       m_next_protocol = callbacks().tls_server_choose_app_protocol(offered);
       // RFC 7301 3.2: if a protocol is selected, the server MUST select one

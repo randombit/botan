@@ -31,7 +31,8 @@ Active_Connection_State_12::Active_Connection_State_12(const Handshake_State& st
       m_server_supports_secure_renegotiation(state.server_hello()->secure_renegotiation()),
       m_client_finished_verify_data(state.client_finished()->verify_data()),
       m_server_finished_verify_data(state.server_finished()->verify_data()),
-      m_supports_extended_master_secret(state.server_hello()->supports_extended_master_secret()) {}
+      m_supports_extended_master_secret(state.server_hello()->supports_extended_master_secret()),
+      m_encrypt_then_mac_used(state.server_hello()->supports_encrypt_then_mac()) {}
 
 Active_Connection_State_12::Active_Connection_State_12(const Handshake_State& state,
                                                        std::string application_protocol,
