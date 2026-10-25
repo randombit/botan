@@ -21,7 +21,9 @@
 #include <botan/internal/tls_messages_internal.h>
 #include <algorithm>
 #include <limits>
+#include <optional>
 #include <unordered_set>
+#include <utility>
 
 namespace Botan::TLS {
 
@@ -47,6 +49,10 @@ class Server_Handshake_State final : public Handshake_State {
 
       bool is_a_resumption() const { return m_is_a_resumption; }
 
+      void set_resumption_summary(Session_Summary summary) { m_resumption_summary = std::move(summary); }
+
+      std::optional<Session_Summary> take_resumption_summary() { return std::exchange(m_resumption_summary, {}); }
+
       std::vector<X509_Certificate> peer_cert_chain() const override {
          if(!m_resume_peer_certs.empty()) {
             return m_resume_peer_certs;
@@ -70,6 +76,9 @@ class Server_Handshake_State final : public Handshake_State {
       bool m_is_a_resumption = false;
 
       std::vector<X509_Certificate> m_resume_peer_certs;
+
+      // Reported once the client's Finished proved possession of the session
+      std::optional<Session_Summary> m_resumption_summary;
 };
 
 namespace {
@@ -152,6 +161,15 @@ std::optional<Session> check_for_resume(const Session_Handle& handle_to_resume,
       but has now attempted to resume without the extension: abort
       */
       throw TLS_Exception(Alert::HandshakeFailure, "Client resumed Encrypt-then-MAC session without sending extension");
+   }
+
+   // The resumed connection would silently lose the DTLS-SRTP profile of the
+   // session, or use one that the current policy no longer allows
+   if(const uint16_t srtp_profile = session->dtls_srtp_profile()) {
+      if(!value_exists(client_hello->srtp_profiles(), srtp_profile) ||
+         !value_exists(policy.srtp_profiles(), srtp_profile)) {
+         return std::nullopt;
+      }
    }
 
    return session;
@@ -747,6 +765,10 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
 
       pending_state.server_finished(
          std::make_unique<Finished_12>(pending_state.handshake_io(), pending_state, Connection_Side::Server));
+   } else if(auto summary = pending_state.take_resumption_summary()) {
+      // Give the application a chance for a final veto before fully
+      // establishing the resumed connection.
+      callbacks().tls_session_established(summary.value());
    }
 
    activate_session();
@@ -832,10 +854,10 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state, const
    }
    pending_state.set_resume_certs(session.session.peer_certs());
 
-   // Give the application a chance for a final veto before fully
-   // establishing the connection.
-   callbacks().tls_session_established([&, this] {
-      Session_Summary summary(session.session, pending_state.is_a_resumption(), external_psk_identity());
+   // The application is given the chance for a final veto once the client's
+   // Finished message was verified, see process_finished_msg()
+   pending_state.set_resumption_summary([&] {
+      Session_Summary summary(session.session, pending_state.is_a_resumption(), pending_state.psk_identity());
       summary.set_session_id(pending_state.server_hello()->session_id());
       if(auto ticket = session.handle.ticket()) {
          summary.set_session_ticket(std::move(ticket.value()));

@@ -122,11 +122,14 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
       m_data->extensions().add(new Application_Layer_Protocol_Notification(next_protocol));
    }
 
-   if(client_hello.supports_encrypt_then_mac() && policy.negotiate_encrypt_then_mac()) {
-      const Ciphersuite c = resumed_session.ciphersuite();
-      if(c.cbc_ciphersuite()) {
-         m_data->extensions().add(new Encrypt_then_MAC);
-      }
+   // RFC 7366 3.1
+   //    Implementations SHOULD retain the current session state across all
+   //    rehandshakes for that session.
+   //
+   // The client's offer was checked against the session in check_for_resume
+   if(resumed_session.supports_encrypt_then_mac() && client_hello.supports_encrypt_then_mac() &&
+      resumed_session.ciphersuite().cbc_ciphersuite()) {
+      m_data->extensions().add(new Encrypt_then_MAC);
    }
 
    if(resumed_session.ciphersuite().ecc_ciphersuite() &&
