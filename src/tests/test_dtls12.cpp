@@ -1677,6 +1677,68 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      // A forged epoch-zero ClientHello that fails to parse must not leave a
+      // pending handshake behind that blocks the genuine restart
+      static Test::Result test_rejected_epoch0_client_hello_does_not_block_restart() {
+         Test::Result result("DTLS rejected epoch-zero ClientHello does not block a restart");
+
+         const auto rng = Test::new_shared_rng("dtls-core-rejected-epoch0-restart");
+         const auto policy = std::make_shared<DTLS_PSK_Policy>();
+         const auto creds = std::make_shared<DTLS_PSK_Credentials>();
+         const auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> server_recv;
+         const auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
+         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
+
+         std::vector<uint8_t> c1_c2s;
+         std::vector<uint8_t> client1_recv;
+         const auto client1_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c1_c2s, client1_recv);
+         Botan::TLS::Client client1(client1_callbacks,
+                                    client_sessions,
+                                    creds,
+                                    policy,
+                                    rng,
+                                    Botan::TLS::Server_Information("localhost"),
+                                    Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         deliver(result, "client 1 hello", c1_c2s, server);
+         deliver(result, "client 1 hello verify request", s2c, client1);
+         deliver(result, "client 1 cookie-bearing hello", c1_c2s, server);
+         deliver(result, "client 1 server handshake flight", s2c, client1);
+         deliver(result, "client 1 final flight", c1_c2s, server);
+         deliver(result, "client 1 server final flight", s2c, client1);
+         result.test_is_true("server became active", server.is_active());
+
+         // A complete but empty ClientHello at message_seq 0
+         const auto forged =
+            unprotected_dtls_record(Botan::TLS::Record_Type::Handshake,
+                                    1000,
+                                    dtls_handshake_message(Botan::TLS::Handshake_Type::ClientHello, 0, {}));
+         result.test_no_throw("forged ClientHello is ignored", [&] { server.received_data(forged); });
+         result.test_is_true("server is still active", server.is_active());
+         s2c.clear();
+
+         std::vector<uint8_t> c2_c2s;
+         std::vector<uint8_t> client2_recv;
+         const auto client2_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2_c2s, client2_recv);
+         const Botan::TLS::Client client2(client2_callbacks,
+                                          client_sessions,
+                                          creds,
+                                          policy,
+                                          rng,
+                                          Botan::TLS::Server_Information("localhost"),
+                                          Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         deliver(result, "client 2 hello", c2_c2s, server);
+         result.test_is_true("restart is answered with a HelloVerifyRequest",
+                             contains_dtls_handshake_type(s2c, Botan::TLS::Handshake_Type::HelloVerifyRequest));
+
+         return result;
+      }
+
       static Test::Result test_epoch0_client_hello_retransmit_while_restart_pending() {
          Test::Result result("DTLS epoch-zero ClientHello retransmit while restart pending");
 
@@ -2156,6 +2218,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_lost_server_final_flight_retransmits(),
                  test_stale_client_hello_does_not_replace_active_handshake(),
                  test_epoch0_client_hello_retransmit_while_restart_pending(),
+                 test_rejected_epoch0_client_hello_does_not_block_restart(),
                  test_reordered_retransmitted_final_flight(),
                  test_empty_old_handshake_fragment_does_not_retransmit(),
                  test_spoofed_epoch0_records_do_not_abort_or_poison_retransmission(),

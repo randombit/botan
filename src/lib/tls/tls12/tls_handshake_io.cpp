@@ -342,6 +342,9 @@ void Datagram_Handshake_IO::finalize_handshake(bool retransmit_terminal_flight) 
    // retransmits, but do not arm a proactive retransmission timer.
    m_finished = true;
    m_retransmit_terminal_flight = retransmit_terminal_flight;
+
+   // Messages of any later handshake are reassembled by a new Handshake_IO
+   discard_pending_messages();
 }
 
 bool Datagram_Handshake_IO::timeout_check() {
@@ -501,8 +504,10 @@ bool Datagram_Handshake_IO::process_previous_handshake_fragment(const uint8_t fr
             m_retransmitted_client_hello = std::make_pair(message_seq, Handshake_Reassembly());
          }
 
+         // Like any message other than the expected one, this may only use
+         // half of the budget so that the expected ClientHello always fits
          charged_add_fragment(m_retransmitted_client_hello->second,
-                              m_max_pending_reassembly,
+                              m_max_pending_reassembly / 2,
                               fragment,
                               fragment_length,
                               fragment_offset,
@@ -743,6 +748,18 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
    }
 }
 
+void Datagram_Handshake_IO::discard_pending_messages() {
+   for(const auto& [seq, reassembly] : m_messages) {
+      release_reassembly_bytes(reassembly);
+   }
+   m_messages.clear();
+
+   if(m_retransmitted_client_hello.has_value()) {
+      release_reassembly_bytes(m_retransmitted_client_hello->second);
+      m_retransmitted_client_hello.reset();
+   }
+}
+
 void Datagram_Handshake_IO::discard_stale_epoch_messages() {
    for(auto i = m_messages.lower_bound(m_in_message_seq); i != m_messages.end();) {
       if(i->second.epoch() < m_last_delivered_epoch) {
@@ -798,6 +815,11 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::get_next_
 
    if(result.first == Handshake_Type::ClientHello) {
       m_awaiting_cookie_client_hello = false;
+      // An incomplete retransmission of the initial ClientHello is no longer needed
+      if(m_retransmitted_client_hello.has_value()) {
+         release_reassembly_bytes(m_retransmitted_client_hello->second);
+         m_retransmitted_client_hello.reset();
+      }
    }
 
    const uint16_t delivered_epoch = i->second.epoch();
@@ -933,6 +955,11 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_under_epoch(const Handshake_Mes
       // retransmission. A repeated ClientHello recreates the response using
       // the original message sequence number without retaining a flight.
       const uint16_t msg_seq = m_recreating_hello_verify_request ? m_out_message_seq - 1 : m_out_message_seq++;
+      // A ClientHello carrying the cookie cannot have been sent yet, so
+      // anything received so far is useless and must not stay allocated
+      if(!m_recreating_hello_verify_request) {
+         discard_pending_messages();
+      }
       m_awaiting_cookie_client_hello = true;
       m_recreating_hello_verify_request = false;
       send_message(msg_seq, epoch, msg_type, msg_bits);
