@@ -60,7 +60,11 @@ Session_Manager_SQL::Schema_Revision Session_Manager_SQL::detect_schema_revision
       if(!stmt->step()) {
          throw Internal_Error("Failed to read revision of TLS session database");
       }
-      return Schema_Revision(stmt->get_size_t(0));
+      const size_t revision = stmt->get_size_t(0);
+      if(revision == PRE_BOTAN_3_0 || revision == BOTAN_3_0) {
+         return static_cast<Schema_Revision>(revision);
+      }
+      throw Internal_Error("TLS session db has unknown database schema");
    } catch(const SQL_Database::SQL_DB_Error&) {
       return PRE_BOTAN_3_0;  // `database_revision` did not exist yet -> preparing the statement failed
    }
@@ -131,7 +135,14 @@ void Session_Manager_SQL::initialize_existing_database(std::string_view passphra
    const auto salt = stmt->get_blob(0);
    const size_t iterations = stmt->get_size_t(1);
    const size_t check_val_db = stmt->get_size_t(2);
-   const std::string pbkdf_name = stmt->get_str(3).value();
+   const std::string pbkdf_name = stmt->get_str(3).value_or("");
+
+   // The metadata is not authenticated; only accept what create_with_latest_schema()
+   // writes, rather than letting it request an arbitrary amount of work.
+   constexpr size_t max_iterations = 10'000'000;
+   if(pbkdf_name != "PBKDF2(SHA-512)" || salt.size() != 16 || iterations == 0 || iterations > max_iterations) {
+      throw Invalid_Argument("TLS session database has invalid passphrase parameters");
+   }
 
    secure_vector<uint8_t> derived_key(32 + 2);
 
@@ -156,7 +167,9 @@ void Session_Manager_SQL::store(const Session& session, const Session_Handle& ha
       lk.emplace(mutex());
    }
 
-   if(session.server_info().hostname().empty()) {
+   // Client sessions are looked up by hostname. A server however retrieves
+   // sessions by their handle, regardless of whether the client sent an SNI.
+   if(session.side() == Connection_Side::Client && session.server_info().hostname().empty()) {
       return;
    }
 
@@ -224,18 +237,22 @@ std::vector<Session_with_Handle> Session_Manager_SQL::find_some(const Server_Inf
 
    std::vector<Session_with_Handle> found_sessions;
    while(found_sessions.size() < max_sessions_hint && stmt->step()) {
-      auto handle = [&]() -> Session_Handle {
-         const auto ticket_blob = stmt->get_blob(1);
-         if(!ticket_blob.empty()) {
-            return Session_Handle(Session_Ticket(ticket_blob));
-         } else {
-            return Session_Handle(Session_ID(Botan::hex_decode(stmt->get_str(0).value())));
-         }
-      }();
-
+      // Rows that cannot be decoded (eg due to corruption) are skipped
       try {
+         auto handle = [&]() -> Session_Handle {
+            const auto ticket_blob = stmt->get_blob(1);
+            if(!ticket_blob.empty()) {
+               return Session_Handle(Session_Ticket(ticket_blob));
+            } else {
+               return Session_Handle(Session_ID(Botan::hex_decode(stmt->get_str(0).value())));
+            }
+         }();
+
          auto session = Session::decrypt(stmt->get_blob(2), m_session_key);
-         if(session.side() == Connection_Side::Client) {
+
+         // The hostname and port columns are not authenticated, so make sure
+         // the session actually belongs to the requested server.
+         if(session.side() == Connection_Side::Client && session.server_info() == info) {
             found_sessions.emplace_back(Session_with_Handle{std::move(session), std::move(handle)});
          }
       } catch(...) {}

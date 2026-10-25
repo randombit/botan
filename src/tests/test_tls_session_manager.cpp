@@ -24,6 +24,7 @@
    #include <chrono>
 
    #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
+      #include <botan/sqlite3.h>
       #include <botan/tls_session_manager_sqlite.h>
    #endif
 
@@ -1778,6 +1779,95 @@ std::vector<Test::Result> tls_session_manager_oversized_ticket() {
    #endif
 }
 
+std::vector<Test::Result> tls_session_manager_sql_robustness() {
+   #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
+   auto rng = Test::new_shared_rng(__func__);
+   Session_Manager_Callbacks cbs;
+   const Session_Manager_Policy plcy;
+
+   const auto new_db = [] { return std::make_shared<Botan::Sqlite3_Database>(":memory:"); };
+
+   return {
+      CHECK("a session is only found for the server it was stored for",
+            [&](auto& result) {
+               auto db = new_db();
+               Botan::TLS::Session_Manager_SQL mgr(db, "secure_pw", rng);
+               mgr.store(default_session(Botan::TLS::Connection_Side::Client, cbs), random_id(*rng));
+
+               // the hostname column is not authenticated
+               db->exec("UPDATE tls_sessions SET hostname = 'other.example'");
+
+               result.test_is_true("relabeled session is not found for the other host",
+                                   mgr.find(Botan::TLS::Server_Information("other.example"), cbs, plcy).empty());
+            }),
+
+      CHECK("malformed rows do not prevent finding valid sessions",
+            [&](auto& result) {
+               auto db = new_db();
+               Botan::TLS::Session_Manager_SQL mgr(db, "secure_pw", rng);
+               const auto id = random_id(*rng);
+               mgr.store(default_session(Botan::TLS::Connection_Side::Client, cbs), id);
+
+               // newer rows for the same server with an invalid session_id or session blob
+               db->exec(
+                  "INSERT INTO tls_sessions VALUES ('not hex', x'', 9999999999, 'botan.randombit.net', 0, x'00')");
+               db->exec("INSERT INTO tls_sessions VALUES ('', x'', 9999999999, 'botan.randombit.net', 0, x'00')");
+               db->exec("INSERT INTO tls_sessions VALUES ('AABB', x'', 9999999999, 'botan.randombit.net', 0, x'00')");
+
+               const auto found = mgr.find(server_info(), cbs, plcy);
+               if(result.test_sz_eq("the valid session is found", found.size(), 1)) {
+                  result.test_bin_eq("it has the expected ID", found.front().handle.id().value(), id);
+               }
+            }),
+
+      CHECK("an unknown schema revision is rejected",
+            [&](auto& result) {
+               auto db = new_db();
+               { const Botan::TLS::Session_Manager_SQL mgr(db, "secure_pw", rng); }
+               db->exec("UPDATE tls_sessions_metadata SET database_revision = 1099511627776");
+               result.template test_throws<Botan::Internal_Error>(
+                  "database is not opened", [&] { const Botan::TLS::Session_Manager_SQL mgr(db, "secure_pw", rng); });
+            }),
+
+      CHECK("invalid passphrase parameters are rejected",
+            [&](auto& result) {
+               for(const std::string update : {"passphrase_iterations = 4611686018427387904",
+                                               "passphrase_iterations = -1",
+                                               "passphrase_iterations = 0",
+                                               "password_hash_family = 'Scrypt'",
+                                               "passphrase_salt = x'00'"}) {
+                  auto db = new_db();
+                  { const Botan::TLS::Session_Manager_SQL mgr(db, "secure_pw", rng); }
+                  db->exec("UPDATE tls_sessions_metadata SET " + update);
+                  result.test_throws(update, [&] { const Botan::TLS::Session_Manager_SQL mgr(db, "secure_pw", rng); });
+               }
+            }),
+
+      CHECK("server sessions without a hostname are stored",
+            [&](auto& result) {
+               Botan::TLS::Session_Manager_SQL mgr(new_db(), "secure_pw", rng);
+               const Botan::TLS::Session session(Botan::secure_vector<uint8_t>(48, 0x42),
+                                                 Botan::TLS::Version_Code::TLS_V12,
+                                                 0x009C,
+                                                 Botan::TLS::Connection_Side::Server,
+                                                 true,
+                                                 true,
+                                                 {},
+                                                 Botan::TLS::Server_Information(),
+                                                 0,
+                                                 cbs.tls_current_timestamp());
+
+               const auto handle = mgr.establish(session);
+               if(result.test_is_true("session was established", handle.has_value())) {
+                  result.test_is_true("session can be retrieved", mgr.retrieve(handle.value(), cbs, plcy).has_value());
+               }
+            }),
+   };
+   #else
+   return {};
+   #endif
+}
+
 BOTAN_REGISTER_TEST_FN("tls",
                        "tls_session_manager",
                        test_session_manager_in_memory,
@@ -1792,7 +1882,8 @@ BOTAN_REGISTER_TEST_FN("tls",
                        tls_session_manager_client_session_not_chosen_as_psk,
                        tls_session_manager_expiry,
                        tls_session_manager_lifetime_edge_cases,
-                       tls_session_manager_oversized_ticket);
+                       tls_session_manager_oversized_ticket,
+                       tls_session_manager_sql_robustness);
 
 }  // namespace
 
