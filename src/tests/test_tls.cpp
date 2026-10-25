@@ -570,6 +570,8 @@ class Test_TLS_Alert_Strings : public Test {
             Botan::TLS::Alert::BadCertificateStatusResponse,
             Botan::TLS::Alert::BadCertificateHashValue,
             Botan::TLS::Alert::UnknownPSKIdentity,
+            Botan::TLS::Alert::CertificateRequired,
+            Botan::TLS::Alert::GeneralError,
             Botan::TLS::Alert::NoApplicationProtocol,
          };
 
@@ -584,6 +586,17 @@ class Test_TLS_Alert_Strings : public Test {
          const Botan::TLS::Alert unknown_alert = Botan::TLS::Alert({01, 66});
 
          result.test_str_eq("Unknown alert str", unknown_alert.type_string(), "unrecognized_alert_66");
+
+         const Botan::TLS::Alert general_error = Botan::TLS::Alert({02, 117});
+         result.test_str_eq("general_error str", general_error.type_string(), "general_error");
+
+         result.test_is_true("Alert with type 255 is valid",
+                             // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+                             Botan::TLS::Alert(static_cast<Botan::TLS::Alert::Type>(255)).is_valid());
+         result.test_is_false("Empty alert is not valid", Botan::TLS::Alert().is_valid());
+         result.test_is_false("Alert with type 512 is not valid",
+                              // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+                              Botan::TLS::Alert(static_cast<Botan::TLS::Alert::Type>(512), true).is_valid());
 
          return {result};
       }
