@@ -77,6 +77,16 @@ class Client_Handshake_State_12 final : public Handshake_State {
          return m_resumed_session->ciphersuite_code();
       }
 
+      bool resumed_session_supports_encrypt_then_mac() const {
+         BOTAN_STATE_CHECK(is_a_resumption());
+         return m_resumed_session->supports_encrypt_then_mac();
+      }
+
+      uint16_t resumed_session_dtls_srtp_profile() const {
+         BOTAN_STATE_CHECK(is_a_resumption());
+         return m_resumed_session->dtls_srtp_profile();
+      }
+
       std::vector<X509_Certificate> peer_cert_chain() const override {
          if(is_a_resumption()) {
             return resume_peer_certs();
@@ -247,7 +257,11 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
             session_version_ok &&
             value_exists(policy().ciphersuite_list(session_info.version()), session_info.ciphersuite_code());
 
-         if(session_suite_ok) {
+         // A session's DTLS-SRTP profile is re-offered on resumption, so it must still be acceptable
+         const bool session_srtp_ok = session_info.dtls_srtp_profile() == 0 ||
+                                      value_exists(policy().srtp_profiles(), session_info.dtls_srtp_profile());
+
+         if(session_suite_ok && session_srtp_ok) {
             try {
                state.client_hello(std::make_unique<Client_Hello_12>(state.handshake_io(),
                                                                     state.hash(),
@@ -259,6 +273,15 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
                                                                     next_protocols));
 
                state.record_resumption_info(std::move(session_info));
+
+               // RFC 5246 7.2.2
+               //    Thus, any connection terminated with a fatal alert MUST NOT
+               //    be resumed.
+               //
+               // Make sure the offered session is forgotten if this fails
+               if(!active_state().has_value()) {
+                  note_resumption_handle(session_and_handle->handle);
+               }
             } catch(Encoding_Error&) {
                // The session's ticket does not fit into a ClientHello (nothing
                // was sent yet); it can never be used, so forget about it.
@@ -519,6 +542,17 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          if(!state.server_hello()->supports_extended_master_secret() &&
             state.resumed_session_supports_extended_master_secret()) {
             throw TLS_Exception(Alert::HandshakeFailure, "Server resumed session and removed extended master secret");
+         }
+
+         // RFC 7366 3.1
+         //    implementations MUST NOT renegotiate a downgrade from
+         //    encrypt-then-MAC to MAC-then-encrypt.
+         if(state.server_hello()->supports_encrypt_then_mac() != state.resumed_session_supports_encrypt_then_mac()) {
+            throw TLS_Exception(Alert::HandshakeFailure, "Server resumed session but changed encrypt-then-MAC");
+         }
+
+         if(state.server_hello()->srtp_profile() != state.resumed_session_dtls_srtp_profile()) {
+            throw TLS_Exception(Alert::HandshakeFailure, "Server resumed session but changed the DTLS-SRTP profile");
          }
 
          state.compute_session_keys(state.resume_master_secret());
@@ -898,6 +932,12 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
                session_manager().store(session_info, handle.value());
             } else {
                session_manager().remove(handle.value());
+            }
+         } else if(!should_save) {
+            // The application does not want this session to be resumed again
+            session_manager().remove(handle.value());
+            if(!state.client_hello()->session_ticket().empty()) {
+               session_manager().remove(Session_Handle(state.client_hello()->session_ticket()));
             }
          }
       }

@@ -794,10 +794,20 @@ SRTP_Protection_Profiles::SRTP_Protection_Profiles(TLS_Data_Reader& reader,
       throw TLS_Exception(Alert::DecodeError, "Server sent malformed DTLS-SRTP extension");
    }
 
-   // Any srtp_mki the peer offers is ignored; serialize() always answers with an
-   // empty srtp_mki, per RFC 5764 4.1.3:
+   // Any srtp_mki the client offers is ignored; serialize() always answers
+   // with an empty srtp_mki, per RFC 5764 4.1.3:
    //    2.  return an empty "srtp_mki" value to indicate that it cannot make
    //        use of the MKI.
+   //
+   // As a client we always offer an empty MKI, so a server cannot select one:
+   //
+   // RFC 5764 4.1.3
+   //    If the client detects a nonzero-length MKI in the server's response
+   //    that is different than the one the client offered, then the client
+   //    MUST abort the handshake and SHOULD send an invalid_parameter alert.
+   if(from == Connection_Side::Server && !mki.empty()) {
+      throw TLS_Exception(Alert::IllegalParameter, "Server selected a DTLS-SRTP MKI that was not offered");
+   }
 }
 
 std::vector<uint8_t> SRTP_Protection_Profiles::serialize(Connection_Side /*whoami*/) const {

@@ -323,6 +323,11 @@ class TLS_Handshake_Test final {
          m_server_cb->set_custom_tls_session_established_callback(std::move(clbk));
       }
 
+      void set_custom_client_tls_should_persist_callback(std::function<bool(const Botan::TLS::Session&)> clbk) {
+         BOTAN_ASSERT_NONNULL(m_client_cb);
+         m_client_cb->set_custom_tls_should_persist_callback(std::move(clbk));
+      }
+
       void set_custom_client_tls_generate_ephemeral_ecdh_key_callback(generate_ephemeral_ecdh_key_clbk clbk) {
          BOTAN_ASSERT_NONNULL(m_client_cb);
          m_client_cb->set_custom_client_tls_generate_ephemeral_ecdh_key_callback(std::move(clbk));
@@ -609,6 +614,17 @@ class TLS_Handshake_Test final {
                m_generate_ephemeral_ecdh_key_callback = std::move(clbk);
             }
 
+            void set_custom_tls_should_persist_callback(std::function<bool(const Botan::TLS::Session&)> clbk) {
+               m_should_persist_callback = std::move(clbk);
+            }
+
+            bool tls_should_persist_resumption_information(const Botan::TLS::Session& session) override {
+               if(m_should_persist_callback) {
+                  return m_should_persist_callback(session);
+               }
+               return Botan::TLS::Callbacks::tls_should_persist_resumption_information(session);
+            }
+
             void set_custom_client_tls_ephemeral_key_agreement_callback(ephemeral_key_agreement_clbk clbk) {
                m_ephemeral_key_agreement_callback = std::move(clbk);
             }
@@ -626,6 +642,7 @@ class TLS_Handshake_Test final {
             std::vector<uint8_t>& m_recv;
 
             std::function<void(const Botan::TLS::Session_Summary&)> m_session_established_callback;
+            std::function<bool(const Botan::TLS::Session&)> m_should_persist_callback;
             generate_ephemeral_ecdh_key_clbk m_generate_ephemeral_ecdh_key_callback;
             ephemeral_key_agreement_clbk m_ephemeral_key_agreement_callback;
             custom_kdf_clbk m_custom_kdf_callback;
@@ -1224,6 +1241,155 @@ class TLS_Unit_Tests final : public Test {
          test.expect_handshake_failure();
          test.go();
          results.push_back(test.results());
+      }
+
+      /**
+       * TLS 1.2 resumption must keep the state of the session, and must not
+       * resume sessions that were vetoed or whose connection failed.
+       */
+      void test_tls12_resumption_consistency(std::vector<Test::Result>& results,
+                                             const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         using PV = Botan::TLS::Protocol_Version;
+
+         const auto creds = create_creds(*rng, false /* no client certs */);
+         if(!creds) {
+            results.push_back(Test::Result::Note("TLS 1.2 resumption consistency", "no ECC group available"));
+            return;
+         }
+
+         const auto make_policy = [](PV version, const std::map<std::string, std::string>& extra = {}) {
+            auto policy = std::make_shared<Test_Policy>();
+            policy->set("key_exchange_methods", "ECDH");
+            set_allowed_versions(policy, std::array<PV, 1>{version});
+            for(const auto& [key, value] : extra) {
+               policy->set(key, value);
+            }
+            return policy;
+         };
+
+         struct Phase {
+               std::string name;
+               std::shared_ptr<Test_Policy> client_policy;
+               std::shared_ptr<Test_Policy> server_policy;
+               bool expect_resumption;
+               // Without the initializer, phases that omit setup warn about a missing field
+               std::function<void(TLS_Handshake_Test&)> setup = {};  // NOLINT(*-redundant-member-init)
+         };
+
+         const auto run = [&](const std::string& scenario,
+                              PV version,
+                              const std::vector<Phase>& phases,
+                              std::optional<size_t> remaining_client_sessions = std::nullopt) {
+            const auto client_ses = make_session_manager(rng);
+            const auto server_ses = make_session_manager(rng);
+            for(const auto& phase : phases) {
+               TLS_Handshake_Test test(scenario + ": " + phase.name,
+                                       version,
+                                       creds,
+                                       phase.client_policy,
+                                       phase.server_policy,
+                                       rng,
+                                       client_ses,
+                                       server_ses,
+                                       false);
+               if(phase.expect_resumption) {
+                  test.expect_session_resumption();
+               }
+               if(phase.setup) {
+                  phase.setup(test);
+               }
+               test.go();
+               results.push_back(test.results());
+            }
+
+            if(remaining_client_sessions.has_value()) {
+               Test::Result result(scenario);
+               result.test_sz_eq("sessions remaining in the client's cache",
+                                 client_ses->remove_all(),
+                                 remaining_client_sessions.value());
+               results.push_back(result);
+            }
+         };
+
+         const auto policy = make_policy(PV::TLS_V12);
+
+         run("TLS 1.2 resumption vetoed by the client",
+             PV::TLS_V12,
+             {
+                {"initial", policy, policy, false},
+                {"resumed and vetoed",
+                 policy,
+                 policy,
+                 true,
+                 [](TLS_Handshake_Test& test) {
+                    test.set_custom_client_tls_should_persist_callback([](const auto&) { return false; });
+                 }},
+                {"not resumed again", policy, policy, false},
+             });
+
+         run("TLS 1.2 resumption failing with a fatal alert",
+             PV::TLS_V12,
+             {
+                {"initial", policy, policy, false},
+                {"resumption aborted by the client",
+                 policy,
+                 policy,
+                 false,
+                 [](TLS_Handshake_Test& test) {
+                    test.set_custom_client_tls_session_established_callback([](const Botan::TLS::Session_Summary&) {
+                       throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::AccessDenied, "test abort");
+                    });
+                    test.set_server_expected_handshake_alert(Botan::TLS::Alert::AccessDenied);
+                    test.expect_handshake_failure();
+                 }},
+             },
+             0 /* the offered session was forgotten */);
+
+      #if defined(BOTAN_HAS_TLS_CBC)
+         {
+            const std::map<std::string, std::string> cbc = {{"ciphers", "AES-128"}, { "macs", "SHA-256" }};
+            auto etm_policy = make_policy(PV::TLS_V12, cbc);
+            etm_policy->set("negotiate_encrypt_then_mac", "true");
+            auto no_etm_policy = make_policy(PV::TLS_V12, cbc);
+            no_etm_policy->set("negotiate_encrypt_then_mac", "false");
+
+            const auto expect_etm = [&results](TLS_Handshake_Test& test) {
+               test.set_custom_client_tls_session_established_callback(
+                  [&results](const Botan::TLS::Session_Summary& summary) {
+                     Test::Result result("TLS 1.2 resumption retains encrypt-then-MAC");
+                     result.test_is_true("resumed session uses encrypt-then-MAC", summary.supports_encrypt_then_mac());
+                     results.push_back(result);
+                  });
+            };
+
+            run("TLS 1.2 resumption after the server disabled encrypt-then-MAC",
+                PV::TLS_V12,
+                {
+                   {"initial", etm_policy, etm_policy, false},
+                   {"resumed", etm_policy, no_etm_policy, true, expect_etm},
+                });
+         }
+      #endif
+
+         // A session's DTLS-SRTP profile that is no longer acceptable is not resumed
+         {
+            auto srtp_1 = make_policy(PV::DTLS_V12, {{ "srtp_profiles", "1" }});
+            auto srtp_2 = make_policy(PV::DTLS_V12, {{ "srtp_profiles", "2" }});
+
+            run("DTLS 1.2 resumption after the server changed its SRTP profiles",
+                PV::DTLS_V12,
+                {
+                   {"initial", srtp_1, srtp_1, false},
+                   {"not resumed", srtp_1, srtp_2, false},
+                });
+
+            run("DTLS 1.2 resumption after the client changed its SRTP profiles",
+                PV::DTLS_V12,
+                {
+                   {"initial", srtp_1, srtp_1, false},
+                   {"not resumed", srtp_2, srtp_1, false},
+                });
+         }
       }
 
       /**
@@ -2543,6 +2709,8 @@ class TLS_Unit_Tests final : public Test {
 
          // DTLS-SRTP profile must survive session resumption (RFC 5764)
          test_dtls12_srtp_resumption(results, rng);
+
+         test_tls12_resumption_consistency(results, rng);
    #endif
 
          // TLS version negotiation / downgrade (and mismatch failures)
