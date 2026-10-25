@@ -482,6 +482,11 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
    const Protocol_Version client_offer = pending_state.client_hello()->legacy_version();
    const bool datagram = client_offer.is_datagram_protocol();
 
+   const auto peer_flavor = datagram ? TLS_Flavor::DTLS : TLS_Flavor::TLS;
+   if(peer_flavor != flavor()) {
+      throw TLS_Exception(Alert::ProtocolVersion, "Client offered a version of the wrong protocol type");
+   }
+
    if(datagram) {
       if(client_offer.major_version() == 0xFF) {
          throw TLS_Exception(Alert::ProtocolVersion, "Client offered DTLS version with major version 0xFF");

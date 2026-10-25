@@ -41,8 +41,11 @@
 
    #if defined(BOTAN_HAS_TLS_12)
       #include <botan/credentials_manager.h>
+      #include <botan/hex.h>
       #include <botan/tls_callbacks.h>
       #include <botan/tls_client.h>
+      #include <botan/tls_exceptn.h>
+      #include <botan/tls_server.h>
       #include <botan/tls_session_manager_memory.h>
    #endif
 #endif
@@ -679,6 +682,132 @@ class Test_TLS12_NoRenegotiation_During_Initial_Handshake : public Test {
 BOTAN_REGISTER_TEST("tls",
                     "tls12_no_renegotiation_during_initial_handshake",
                     Test_TLS12_NoRenegotiation_During_Initial_Handshake);
+
+// A TLS server must not negotiate DTLS on a stream transport
+class Test_TLS12_Server_Rejects_DTLS_ClientHello final : public Test {
+   private:
+      class Capture_Callbacks final : public Botan::TLS::Callbacks {
+         public:
+            void tls_emit_data(std::span<const uint8_t> bits) override {
+               m_emitted.insert(m_emitted.end(), bits.begin(), bits.end());
+            }
+
+            void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> /*data*/) override {}
+
+            void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+
+            std::span<const uint8_t> emitted() const { return m_emitted; }
+
+         private:
+            std::vector<uint8_t> m_emitted;
+      };
+
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("TLS 1.2 server rejects a DTLS ClientHello");
+
+         const auto rng = Test::new_shared_rng(this->test_name());
+         const auto callbacks = std::make_shared<Capture_Callbacks>();
+         const auto sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto creds = std::make_shared<Botan::Credentials_Manager>();
+         const auto policy = std::make_shared<Botan::TLS::Text_Policy>("allow_tls13 = false");
+
+         Botan::TLS::Server server(callbacks, sessions, creds, policy, rng);
+
+         // A DTLS 1.2 ClientHello (including the empty cookie) in a TLS record
+         const auto client_hello = Botan::hex_decode(
+            "160303002E"
+            "0100002A"
+            "FEFD"
+            "0000000000000000000000000000000000000000000000000000000000000000"
+            "00"
+            "00"
+            "0002C02B"
+            "0100");
+
+         result.test_throws<Botan::TLS::TLS_Exception>("ClientHello is rejected",
+                                                       [&] { server.received_data(client_hello); });
+
+         // A protocol_version alert framed as a TLS record
+         result.test_bin_eq("alert", callbacks->emitted(), "15030300020246");
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls12_server_rejects_dtls_client_hello", Test_TLS12_Server_Rejects_DTLS_ClientHello);
+
+// A DTLS server must neither negotiate stream TLS nor skip the cookie exchange
+class Test_DTLS12_Server_Rejects_TLS_ClientHello final : public Test {
+   private:
+      class Capture_Callbacks final : public Botan::TLS::Callbacks {
+         public:
+            void tls_emit_data(std::span<const uint8_t> bits) override {
+               m_emitted.insert(m_emitted.end(), bits.begin(), bits.end());
+            }
+
+            void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> /*data*/) override {}
+
+            void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+
+            std::string tls_peer_network_identity() override { return "test-peer"; }
+
+            std::span<const uint8_t> emitted() const { return m_emitted; }
+
+         private:
+            std::vector<uint8_t> m_emitted;
+      };
+
+      class Cookie_Credentials final : public Botan::Credentials_Manager {
+         public:
+            Botan::secure_vector<uint8_t> dtls_cookie_secret() override {
+               return Botan::secure_vector<uint8_t>(32, 0x42);
+            }
+      };
+
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("DTLS 1.2 server rejects a TLS ClientHello");
+
+         const auto rng = Test::new_shared_rng(this->test_name());
+         const auto callbacks = std::make_shared<Capture_Callbacks>();
+         const auto sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto creds = std::make_shared<Cookie_Credentials>();
+         // A suite that needs no certificate, and the TLS 1.2 a default policy allows
+         auto policy = std::make_shared<Botan::TLS::Text_Policy>("");
+         policy->set("allow_tls13", "false");
+         policy->set("key_exchange_methods", "PSK");
+         policy->set("ciphers", "AES-128/GCM");
+
+         Botan::TLS::Server server(callbacks, sessions, creds, policy, rng, true);
+
+         // A TLS 1.2 ClientHello (without a cookie field) in a DTLS record
+         const auto client_hello = Botan::hex_decode(
+            "16FEFD00000000000000000040"
+            "010000340000000000000034"
+            "0303"
+            "0000000000000000000000000000000000000000000000000000000000000000"
+            "00"
+            "000200A8"
+            "0100"
+            "0009"
+            "00170000"
+            "FF01000100");
+
+         try {
+            server.received_data(client_hello);
+            result.test_failure("ClientHello was accepted");
+         } catch(const Botan::TLS::TLS_Exception& e) {
+            result.test_enum_eq("protocol_version alert", e.type(), Botan::TLS::Alert::ProtocolVersion);
+         }
+
+         // Neither a HelloVerifyRequest nor a ServerHello, just the alert
+         const auto emitted = callbacks->emitted();
+         result.test_is_true("an alert record was sent", !emitted.empty() && emitted[0] == 0x15);
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "dtls12_server_rejects_tls_client_hello", Test_DTLS12_Server_Rejects_TLS_ClientHello);
 
 // A cached session whose ticket cannot fit into a ClientHello must not prevent
 // the client from connecting

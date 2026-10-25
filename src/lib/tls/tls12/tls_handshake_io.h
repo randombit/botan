@@ -99,7 +99,7 @@ class Stream_Handshake_IO final : public Handshake_IO {
 
       std::optional<std::chrono::milliseconds> next_retransmission_timeout() const override { return std::nullopt; }
 
-      bool have_more_data() const override { return !m_queue.empty(); }
+      bool have_more_data() const override { return !m_queue.empty() || m_ccs_received; }
 
       std::vector<uint8_t> send(const Handshake_Message& msg) override;
 
@@ -119,6 +119,7 @@ class Stream_Handshake_IO final : public Handshake_IO {
 
    private:
       std::deque<uint8_t> m_queue;
+      bool m_ccs_received = false;
       writer_fn m_send_hs;
 };
 
