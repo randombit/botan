@@ -284,11 +284,11 @@ void decrypt_record(secure_vector<uint8_t>& output,
                     Connection_Cipher_State& cs) {
    AEAD_Mode& aead = cs.aead();
 
-   const auto nonce = cs.aead_nonce(record_contents, record_len, record_sequence);
    const size_t nonce_from_record = cs.nonce_bytes_from_record();
    if(record_len <= nonce_from_record) {
       throw TLS_Exception(Alert::BadRecordMac, "AEAD packet too short to be valid");
    }
+   const auto nonce = cs.aead_nonce(record_contents, record_len, record_sequence);
    const uint8_t* msg = &record_contents[nonce_from_record];
    const size_t msg_length = record_len - nonce_from_record;
 
@@ -466,6 +466,16 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
 
    const Record_Type type = static_cast<Record_Type>(readbuf[0]);
 
+   // RFC 6347 4.1.2.7
+   //    In general, invalid records SHOULD be silently discarded, thus
+   //    preserving the association; however, an error MAY be logged for
+   //    diagnostic purposes.
+   if(type != Record_Type::ChangeCipherSpec && type != Record_Type::Alert && type != Record_Type::Handshake &&
+      type != Record_Type::ApplicationData) {
+      readbuf.clear();
+      return Record_Header(0);
+   }
+
    const uint64_t sequence = load_be<uint64_t>(&readbuf[3], 0);
    const uint16_t epoch = (sequence >> 48);
 
@@ -492,7 +502,7 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
 
       BOTAN_ASSERT(cs, "Have cipherstate for this epoch");
 
-      decrypt_record(recbuf, &readbuf[DTLS_HEADER_SIZE], record_size, sequence, version, type, *cs);
+      decrypt_record(recbuf, readbuf.data() + DTLS_HEADER_SIZE, record_size, sequence, version, type, *cs);
    } catch(std::exception&) {
       readbuf.clear();
       return Record_Header(0);

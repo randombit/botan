@@ -407,6 +407,11 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          throw TLS_Exception(Alert::ProtocolVersion, "Server replied with an invalid version");
       }
 
+      if(state.client_hello()->legacy_version().is_datagram_protocol() !=
+         state.server_hello()->legacy_version().is_datagram_protocol()) {
+         throw TLS_Exception(Alert::ProtocolVersion, "Server replied with different protocol type than we offered");
+      }
+
       if(!state.client_hello()->offered_suite(state.server_hello()->ciphersuite())) {
          throw TLS_Exception(Alert::HandshakeFailure, "Server replied with ciphersuite we didn't send");
       }
@@ -422,9 +427,9 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       //   and then selects a stream or Authenticated Encryption with Associated
       //   Data (AEAD) ciphersuite, it MUST NOT send an encrypt-then-MAC
       //   response extension back to the client.
-      if(suite->aead_ciphersuite() && state.server_hello()->supports_encrypt_then_mac()) {
+      if(!suite->cbc_ciphersuite() && state.server_hello()->supports_encrypt_then_mac()) {
          throw TLS_Exception(Alert::IllegalParameter,
-                             "Server replied using an AEAD ciphersuite and an encrypt-then-MAC response extension");
+                             "Server replied using a non-CBC ciphersuite and an encrypt-then-MAC response extension");
       }
 
       if(Ciphersuite::is_scsv(state.server_hello()->ciphersuite())) {
@@ -596,11 +601,6 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          }
 
          state.discard_resumption_state();
-
-         if(state.client_hello()->legacy_version().is_datagram_protocol() !=
-            state.server_hello()->legacy_version().is_datagram_protocol()) {
-            throw TLS_Exception(Alert::ProtocolVersion, "Server replied with different protocol type than we offered");
-         }
 
          if(state.version() > state.client_hello()->legacy_version()) {
             throw TLS_Exception(Alert::HandshakeFailure, "Server replied with later version than client offered");

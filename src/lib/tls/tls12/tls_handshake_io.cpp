@@ -66,9 +66,13 @@ void Stream_Handshake_IO::add_record(const uint8_t record[],
          throw Decoding_Error("Invalid ChangeCipherSpec");
       }
 
-      // Pretend it's a regular handshake message of zero length
-      const uint8_t ccs_hs[] = {static_cast<uint8_t>(Handshake_Type::HandshakeCCS), 0, 0, 0};
-      m_queue.insert(m_queue.end(), ccs_hs, ccs_hs + sizeof(ccs_hs));
+      // Handshake messages are processed as soon as they are complete, so
+      // anything still queued is a partial message
+      if(m_ccs_received || !m_queue.empty()) {
+         throw TLS_Exception(Alert::UnexpectedMessage, "Unexpected ChangeCipherSpec");
+      }
+
+      m_ccs_received = true;
    } else {
       throw Decoding_Error("Unknown message type " + std::to_string(static_cast<size_t>(record_type)) +
                            " in handshake processing");
@@ -77,6 +81,14 @@ void Stream_Handshake_IO::add_record(const uint8_t record[],
 
 std::pair<Handshake_Type, std::vector<uint8_t>> Stream_Handshake_IO::get_next_record(bool expecting_ccs,
                                                                                      size_t max_message_size) {
+   if(m_ccs_received) {
+      if(!expecting_ccs) {
+         throw TLS_Exception(Alert::UnexpectedMessage, "Unexpected ChangeCipherSpec");
+      }
+      m_ccs_received = false;
+      return std::make_pair(Handshake_Type::HandshakeCCS, std::vector<uint8_t>());
+   }
+
    if(m_queue.size() >= 4) {
       const Handshake_Type type = static_cast<Handshake_Type>(m_queue[0]);
 
@@ -87,18 +99,15 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Stream_Handshake_IO::get_next_re
       // sends an encrypted Finished without the preceding CCS, in which case
       // the encrypted bytes are misinterpreted as a handshake message.
       if(expecting_ccs) {
-         const bool is_ccs = (type == Handshake_Type::HandshakeCCS && rec_length == 0);
-         if(!is_ccs) {
-            throw TLS_Exception(Alert::UnexpectedMessage, "Expected ChangeCipherSpec but got a handshake message");
-         }
-      } else {
-         verify_is_expected_wire_handshake_type(type);
+         throw TLS_Exception(Alert::UnexpectedMessage, "Expected ChangeCipherSpec but got a handshake message");
+      }
 
-         if(max_message_size > 0 && rec_length > max_message_size) {
-            throw TLS_Exception(
-               Alert::HandshakeFailure,
-               Botan::fmt("Handshake message is {} bytes, policy maximum is {}", rec_length, max_message_size));
-         }
+      verify_is_expected_wire_handshake_type(type);
+
+      if(max_message_size > 0 && rec_length > max_message_size) {
+         throw TLS_Exception(
+            Alert::HandshakeFailure,
+            Botan::fmt("Handshake message is {} bytes, policy maximum is {}", rec_length, max_message_size));
       }
 
       const size_t length = 4 + rec_length;

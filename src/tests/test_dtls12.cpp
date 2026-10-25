@@ -2170,6 +2170,105 @@ class DTLS_Core_Regression_Tests final : public Test {
 
 BOTAN_REGISTER_TEST("tls", "tls_dtls_core_regressions", DTLS_Core_Regression_Tests);
 
+// Records that are invalid for any reason are silently discarded without
+// affecting the rest of the datagram (RFC 6347 4.1.2.7)
+class DTLS_Record_Validation_Test final : public Test {
+   private:
+      static Test::Result server_hello_lacks_downgrade_sentinel(
+         const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         Test::Result result("DTLS 1.2 ServerHello random has no TLS 1.3 downgrade sentinel");
+
+         auto assoc = make_association(result, rng);
+         deliver(result, "client hello 1", assoc->c2s, *assoc->server);
+         deliver(result, "hello verify request", assoc->s2c, *assoc->client);
+         deliver(result, "client hello 2", assoc->c2s, *assoc->server);
+
+         // record header (13) || handshake header (12) || version (2) || random (32)
+         const size_t random_end = 13 + 12 + 2 + 32;
+         if(result.test_sz_gte("server flight size", assoc->s2c.size(), random_end)) {
+            result.test_sz_eq("first record is a ServerHello", assoc->s2c[13], 2);
+            const std::vector<uint8_t> downgrade_tls12 = {0x44, 0x4F, 0x57, 0x4E, 0x47, 0x52, 0x44, 0x01};
+            const std::vector<uint8_t> random_tail(assoc->s2c.begin() + random_end - 8,
+                                                   assoc->s2c.begin() + random_end);
+            result.test_bin_ne("random does not end with DOWNGRADE_TLS12", random_tail, downgrade_tls12);
+         }
+
+         return result;
+      }
+
+      static Test::Result unknown_record_type_is_ignored(const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         Test::Result result("DTLS record of unknown type is ignored during the handshake");
+
+         auto assoc = make_association(result, rng);
+         deliver(result, "client hello 1", assoc->c2s, *assoc->server);
+         deliver(result, "hello verify request", assoc->s2c, *assoc->client);
+
+         const std::vector<uint8_t> garbage = {0x01, 0x02, 0x03};
+         // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+         const auto record = unprotected_dtls_record(static_cast<Botan::TLS::Record_Type>(0xFF), 1000, garbage);
+         result.test_no_throw("unknown record type", [&] { assoc->server->received_data(record); });
+         result.test_is_true("nothing sent in response", assoc->s2c.empty());
+
+         result.test_is_true("handshake completes", assoc->pump());
+         return result;
+      }
+
+      static Test::Result empty_protected_record_is_ignored(const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         Test::Result result("DTLS empty record at a protected epoch is ignored");
+
+         auto assoc = make_association(result, rng);
+         if(!result.test_is_true("handshake", assoc->pump())) {
+            return result;
+         }
+
+         const uint64_t epoch1_sequence = (uint64_t(1) << 48) | 1000;
+         const auto record = unprotected_dtls_record(Botan::TLS::Record_Type::ApplicationData, epoch1_sequence, {});
+         result.test_no_throw("empty record", [&] { assoc->server->received_data(record); });
+         result.test_is_true("server still active", assoc->server->is_active());
+
+         const std::vector<uint8_t> ping = {0x50, 0x49, 0x4E, 0x47};
+         assoc->client->send(ping);
+         deliver(result, "application data", assoc->c2s, *assoc->server);
+         result.test_bin_eq("application data received", assoc->server_recv, ping);
+         return result;
+      }
+
+      static Test::Result valid_record_after_invalid_record(const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         Test::Result result("DTLS valid record after an invalid one in the same datagram");
+
+         auto assoc = make_association(result, rng);
+         if(!result.test_is_true("handshake", assoc->pump())) {
+            return result;
+         }
+
+         const std::vector<uint8_t> ping = {0x50, 0x49, 0x4E, 0x47};
+         assoc->client->send(ping);
+
+         // A copy of the record with a corrupted tag precedes the real one
+         std::vector<uint8_t> datagram = assoc->c2s;
+         datagram.back() ^= 0x01;
+         datagram.insert(datagram.end(), assoc->c2s.begin(), assoc->c2s.end());
+         assoc->c2s.clear();
+
+         result.test_no_throw("datagram", [&] { assoc->server->received_data(datagram); });
+         result.test_bin_eq("application data received", assoc->server_recv, ping);
+         result.test_is_true("server still active", assoc->server->is_active());
+         return result;
+      }
+
+   public:
+      std::vector<Test::Result> run() override {
+         const auto rng = Test::new_shared_rng(this->test_name());
+
+         return {server_hello_lacks_downgrade_sentinel(rng),
+                 unknown_record_type_is_ignored(rng),
+                 empty_protected_record_is_ignored(rng),
+                 valid_record_after_invalid_record(rng)};
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls_dtls_record_validation", DTLS_Record_Validation_Test);
+
 // RFC 6347 4.2.8: a client that goes silent may be replaced by a new one
 // arriving on the same 5-tuple, which the server has to take up as a fresh
 // association rather than as traffic on the old one.

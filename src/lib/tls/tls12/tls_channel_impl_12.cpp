@@ -643,7 +643,7 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
 
          // Ignore invalid records in DTLS
          if(m_flavor == TLS_Flavor::DTLS && record.type() == Record_Type::Invalid) {
-            return 0;
+            continue;
          }
 
          const bool old_unprotected_record = m_flavor == TLS_Flavor::DTLS && record.epoch() == 0 &&

@@ -190,6 +190,7 @@ std::string map_to_bogo_error(const std::string& e, std::string_view test_name) 
       {"Encoding error: Cannot encode PSS string, output length too small", ":NO_COMMON_SIGNATURE_ALGORITHMS:"},
       {"Expected TLS but got a record with DTLS version", ":WRONG_VERSION_NUMBER:"},
       {"Expected ChangeCipherSpec but got a handshake message", ":UNEXPECTED_RECORD:"},
+      {"Unexpected ChangeCipherSpec", ":UNEXPECTED_RECORD:"},
       {"Extension removed in updated Client Hello", ":INCONSISTENT_CLIENT_HELLO:"},
       {"Failed to agree on a signature algorithm", ":NO_COMMON_SIGNATURE_ALGORITHMS:"},
       {"Failed to agree on any signature algorithm", ":NO_COMMON_SIGNATURE_ALGORITHMS:"},
