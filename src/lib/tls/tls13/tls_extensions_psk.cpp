@@ -154,18 +154,15 @@ PSK::PSK(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type messag
 
       std::vector<PskIdentity> psk_identities;
       while(reader.has_remaining() && (reader.read_so_far() - identities_offset) < identities_length) {
-         /* Per RFC 8446 PskIdentity is
-
-         struct {
-            opaque identity<1..2^16-1>;
-            uint32 obfuscated_ticket_age;
-         } PskIdentity;
-
-         so we should reject an empty identity. However BoGo seems to expect
-         being able to send us such an identity, so for now we accept it.
-         */
-
+         // RFC 9846 4.3.11
+         //    struct {
+         //        opaque identity<1..2^16-1>;
+         //        uint32 obfuscated_ticket_age;
+         //    } PskIdentity;
          auto identity = reader.get_tls_length_value(2);
+         if(identity.empty()) {
+            throw TLS_Exception(Alert::DecodeError, "Empty PSK identity");
+         }
          const auto obfuscated_ticket_age = reader.get_uint32_t();
          psk_identities.emplace_back(std::move(identity), obfuscated_ticket_age);
       }

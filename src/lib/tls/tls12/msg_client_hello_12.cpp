@@ -221,7 +221,8 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
       m_data->extensions().add(new Encrypt_then_MAC);
    }
 
-   if(session.handle.is_ticket()) {
+   // An opaque handle that is not usable as a session ID must be a ticket
+   if(session.handle.is_ticket() || (session.handle.is_opaque_handle() && !session.handle.id().has_value())) {
       m_data->extensions().add(new Session_Ticket_Extension(session.handle.ticket().value()));
    }
 

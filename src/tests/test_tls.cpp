@@ -11,6 +11,9 @@
 #if defined(BOTAN_HAS_TLS)
    #include "test_rng.h"
 
+   #include <botan/asn1_obj.h>
+   #include <botan/bigint.h>
+   #include <botan/der_enc.h>
    #include <botan/mem_ops.h>
    #include <botan/tls_alert.h>
    #include <botan/tls_external_psk.h>
@@ -110,7 +113,77 @@ class TLS_Session_Tests final : public Test {
                             "Serialized TLS session contains unknown cipher suite (47789)",
                             [&] { Botan::TLS::Session{pem_with_unknown_ciphersuite}; });
 
-         return {result};
+         return {result, decoding_validation()};
+      }
+
+   private:
+      struct Encoded_Session_Fields {
+            uint64_t start_time = 1700000000;
+            size_t major_version = 3;
+            size_t minor_version = 3;
+            size_t ciphersuite = 0xC02F;
+            size_t port = 443;
+            size_t srtp_profile = 0;
+            uint64_t lifetime_hint = 86400;
+      };
+
+      static std::vector<uint8_t> encode_session(const Encoded_Session_Fields& f) {
+         const bool tls13 = (f.major_version == 3 && f.minor_version == 4);
+
+         return Botan::DER_Encoder()
+            .start_sequence()
+            .encode(size_t(20231031))
+            .encode(Botan::BigInt::from_u64(f.start_time))
+            .encode(f.major_version)
+            .encode(f.minor_version)
+            .encode(f.ciphersuite)
+            .encode(static_cast<size_t>(Botan::TLS::Connection_Side::Client))
+            .encode(true)
+            .encode(false)
+            .encode(std::vector<uint8_t>(tls13 ? 32 : 48, 0x42), Botan::ASN1_Type::OctetString)
+            .start_sequence()
+            .end_cons()
+            .encode(std::vector<uint8_t>(), Botan::ASN1_Type::OctetString)
+            .encode(Botan::ASN1_String("server", Botan::ASN1_Type::Utf8String))
+            .encode(Botan::ASN1_String("", Botan::ASN1_Type::Utf8String))
+            .encode(f.port)
+            .encode(f.srtp_profile)
+            .encode(false)
+            .encode(size_t(0))
+            .encode(size_t(0))
+            .encode(Botan::BigInt::from_u64(f.lifetime_hint))
+            .end_cons()
+            .get_contents_unlocked();
+      }
+
+      static Test::Result decoding_validation() {
+         Test::Result result("TLS::Session decoding validation");
+
+         const auto decodes = [&](const std::string& what, const Encoded_Session_Fields& f) {
+            result.test_no_throw(what, [&] { Botan::TLS::Session{encode_session(f)}; });
+         };
+
+         const auto rejects = [&](const std::string& what, const Encoded_Session_Fields& f) {
+            result.test_throws<Botan::Decoding_Error>(what, [&] { Botan::TLS::Session{encode_session(f)}; });
+         };
+
+         decodes("baseline TLS 1.2 session", {});
+
+         rejects("unknown protocol version", {.minor_version = 7});
+         rejects("SSLv3 protocol version", {.minor_version = 0});
+         rejects("start time beyond the system clock's range", {.start_time = uint64_t(1) << 63});
+         rejects("port above 65535", {.port = 65536});
+         rejects("SRTP profile above 65535", {.srtp_profile = 0x10001});
+         rejects("lifetime beyond std::chrono::seconds", {.lifetime_hint = uint64_t(1) << 63});
+
+   #if defined(BOTAN_HAS_TLS_13)
+         decodes("TLS 1.3 session with a 7 day lifetime",
+                 {.minor_version = 4, .ciphersuite = 0x1301, .lifetime_hint = 604800});
+         rejects("TLS 1.3 session with a lifetime above 7 days",
+                 {.minor_version = 4, .ciphersuite = 0x1301, .lifetime_hint = 604801});
+   #endif
+
+         return result;
       }
 };
 
@@ -593,6 +666,63 @@ class Test_TLS12_NoRenegotiation_During_Initial_Handshake : public Test {
 BOTAN_REGISTER_TEST("tls",
                     "tls12_no_renegotiation_during_initial_handshake",
                     Test_TLS12_NoRenegotiation_During_Initial_Handshake);
+
+// A cached session whose ticket cannot fit into a ClientHello must not prevent
+// the client from connecting
+class Test_TLS12_Oversized_Session_Ticket final : public Test {
+   private:
+      class Emit_Callbacks final : public Botan::TLS::Callbacks {
+         public:
+            void tls_emit_data(std::span<const uint8_t> bits) override {
+               m_emitted.insert(m_emitted.end(), bits.begin(), bits.end());
+            }
+
+            void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> /*data*/) override {}
+
+            void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+
+            std::span<const uint8_t> emitted() const { return m_emitted; }
+
+         private:
+            std::vector<uint8_t> m_emitted;
+      };
+
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("TLS 1.2 client with an oversized cached session ticket");
+
+         const auto rng = Test::new_shared_rng(this->test_name());
+         const auto callbacks = std::make_shared<Emit_Callbacks>();
+         const auto sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto creds = std::make_shared<Botan::Credentials_Manager>();
+         const auto policy = std::make_shared<Botan::TLS::Policy>();
+         const Botan::TLS::Server_Information server_info("server.example.com");
+
+         const Botan::TLS::Session session(Botan::secure_vector<uint8_t>(48, 0x42),
+                                           Botan::TLS::Protocol_Version::TLS_V12,
+                                           0xC02F,
+                                           Botan::TLS::Connection_Side::Client,
+                                           true,
+                                           false,
+                                           {},
+                                           server_info,
+                                           0,
+                                           std::chrono::system_clock::now());
+         sessions->store(session, Botan::TLS::Session_Ticket(std::vector<uint8_t>(65535, 0xAB)));
+
+         result.test_no_throw("client sends a ClientHello", [&] {
+            const Botan::TLS::Client client(
+               callbacks, sessions, creds, policy, rng, server_info, Botan::TLS::Protocol_Version::TLS_V12);
+         });
+
+         result.test_is_true("ClientHello was emitted", !callbacks->emitted().empty());
+         result.test_sz_lt("ClientHello does not contain the ticket", callbacks->emitted().size(), 65535);
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls12_oversized_session_ticket", Test_TLS12_Oversized_Session_Ticket);
 
    #endif
 

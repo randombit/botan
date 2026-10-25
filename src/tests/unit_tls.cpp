@@ -2408,6 +2408,25 @@ class TLS_Unit_Tests final : public Test {
          test_modern_versions(
             "AES-256/GCM p521", results, creds, rng, "ECDH", "AES-256/GCM", "AEAD", {{"groups", "secp521r1"}});
 
+         // TLS 1.3 tickets must not be issued with a lifetime above 7 days,
+         // even if the policy allows longer (or unlimited) lifetimes
+         test_modern_versions("AES-128/GCM 8 day ticket lifetime",
+                              results,
+                              creds,
+                              rng,
+                              "ECDH",
+                              "AES-128/GCM",
+                              "AEAD",
+                              {{"session_ticket_lifetime", "691200"}});
+         test_modern_versions("AES-128/GCM unlimited ticket lifetime",
+                              results,
+                              creds,
+                              rng,
+                              "ECDH",
+                              "AES-128/GCM",
+                              "AEAD",
+                              {{"session_ticket_lifetime", "0"}});
+
          if(Botan::EC_Group::supports_named_group("brainpool256r1")) {
             test_modern_versions("AES-128/GCM bp256r1",
                                  results,
