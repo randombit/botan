@@ -34,6 +34,7 @@ Server::Server(const std::shared_ptr<Callbacks>& callbacks,
                const std::shared_ptr<RandomNumberGenerator>& rng,
                bool is_datagram,
                size_t io_buf_sz) {
+   BOTAN_ARG_CHECK(policy != nullptr, "Policy must not be null");
    const auto max_version = policy->latest_supported_version(is_datagram);
    const auto flavor = is_datagram ? TLS_Flavor::DTLS : TLS_Flavor::TLS;
 

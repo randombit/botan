@@ -287,9 +287,18 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
 
    std::unique_ptr<Handshake_IO> io;
    if(version.is_datagram_protocol()) {
-      const uint16_t mtu = static_cast<uint16_t>(policy().dtls_default_mtu());
+      const size_t policy_mtu = policy().dtls_default_mtu();
+      if(policy_mtu > 0xFFFF) {
+         throw Invalid_Argument("Policy specifies a DTLS MTU larger than 65535");
+      }
+      const uint16_t mtu = static_cast<uint16_t>(policy_mtu);
+
       const size_t initial_timeout_ms = policy().dtls_initial_timeout();
       const size_t max_timeout_ms = policy().dtls_maximum_timeout();
+      // A zero timeout would cause retransmissions without any backoff
+      if(initial_timeout_ms == 0 || max_timeout_ms < initial_timeout_ms) {
+         throw Invalid_Argument("Policy specifies invalid DTLS retransmission timeouts");
+      }
       const std::optional<size_t> max_retransmissions = policy().dtls_maximum_retransmissions();
 
       const auto send_record_f = [this](uint16_t epoch, Record_Type record_type, const std::vector<uint8_t>& record) {
@@ -1140,6 +1149,24 @@ SymmetricKey Channel_Impl_12::key_material_export(std::string_view label,
 
    if(pending_state() != nullptr) {
       throw Invalid_State("Channel_Impl_12::key_material_export cannot export during renegotiation");
+   }
+
+   // RFC 7627 5.4
+   //    If a client or server chooses to continue with a full handshake
+   //    without the extended master secret extension, then the new session
+   //    becomes vulnerable to the man-in-the-middle key synchronization
+   //    attack described in Section 1.  Hence, the client or server MUST NOT
+   //    export any key material based on the new master secret for any
+   //    subsequent application-level authentication.  In particular, it MUST
+   //    disable [RFC5705] [...]
+   if(!m_active_state->supports_extended_master_secret()) {
+      throw Invalid_State("Channel_Impl_12::key_material_export requires the extended master secret");
+   }
+
+   // RFC 5705 4.
+   //    The context value length is encoded as an unsigned, 16-bit quantity
+   if(context.size() > 0xFFFF) {
+      throw Invalid_Argument("Channel_Impl_12::key_material_export context is too long");
    }
 
    auto prf = callbacks().tls12_protocol_specific_kdf(m_active_state->prf_algo());

@@ -874,6 +874,119 @@ class Test_DTLS12_Server_Rejects_TLS_ClientHello final : public Test {
 
 BOTAN_REGISTER_TEST("tls", "dtls12_server_rejects_tls_client_hello", Test_DTLS12_Server_Rejects_TLS_ClientHello);
 
+// Invalid arguments and configurations are rejected with an exception
+class Test_TLS_API_Argument_Validation final : public Test {
+   private:
+      class Null_Callbacks final : public Botan::TLS::Callbacks {
+         public:
+            void tls_emit_data(std::span<const uint8_t> /*data*/) override {}
+
+            void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> /*data*/) override {}
+
+            void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+      };
+
+      class Permissive_Policy final : public Botan::TLS::Policy {
+         public:
+            bool acceptable_protocol_version(Botan::TLS::Protocol_Version /*version*/) const override { return true; }
+      };
+
+      class DTLS_Policy final : public Botan::TLS::Policy {
+         public:
+            DTLS_Policy(size_t mtu, size_t initial_timeout, size_t maximum_timeout) :
+                  m_mtu(mtu), m_initial_timeout(initial_timeout), m_maximum_timeout(maximum_timeout) {}
+
+            size_t dtls_default_mtu() const override { return m_mtu; }
+
+            size_t dtls_initial_timeout() const override { return m_initial_timeout; }
+
+            size_t dtls_maximum_timeout() const override { return m_maximum_timeout; }
+
+         private:
+            size_t m_mtu;
+            size_t m_initial_timeout;
+            size_t m_maximum_timeout;
+      };
+
+      class Overwriting_Policy final : public Botan::TLS::Text_Policy {
+         public:
+            explicit Overwriting_Policy(std::string_view text) : Text_Policy(text) {}
+
+            bool overwrite(const std::string& key, std::string_view value) { return set_value(key, value, true); }
+      };
+
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("TLS API argument validation");
+
+         const auto rng = Test::new_shared_rng(this->test_name());
+         const auto callbacks = std::make_shared<Null_Callbacks>();
+         const auto sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto creds = std::make_shared<Botan::Credentials_Manager>();
+         const std::shared_ptr<const Botan::TLS::Policy> null_policy;
+
+         result.test_throws<Botan::Invalid_Argument>(
+            "server with null policy", [&] { Botan::TLS::Server(callbacks, sessions, creds, null_policy, rng); });
+         result.test_throws<Botan::Invalid_Argument>(
+            "client with null policy", [&] { Botan::TLS::Client(callbacks, sessions, creds, null_policy, rng); });
+
+         result.test_throws("client offering TLS 1.1", [&] {
+            Botan::TLS::Client(callbacks,
+                               sessions,
+                               creds,
+                               std::make_shared<Permissive_Policy>(),
+                               rng,
+                               Botan::TLS::Server_Information(),
+                               Botan::TLS::Protocol_Version::TLS_V11);
+         });
+
+         const auto dtls_client = [&](size_t mtu, size_t initial_timeout, size_t maximum_timeout) {
+            Botan::TLS::Client(callbacks,
+                               sessions,
+                               creds,
+                               std::make_shared<DTLS_Policy>(mtu, initial_timeout, maximum_timeout),
+                               rng,
+                               Botan::TLS::Server_Information(),
+                               Botan::TLS::Protocol_Version::DTLS_V12);
+         };
+         result.test_no_throw("DTLS client with valid policy", [&] { dtls_client(1232, 1000, 60000); });
+         result.test_throws<Botan::Invalid_Argument>("DTLS MTU above 65535", [&] { dtls_client(65536, 1000, 60000); });
+         result.test_throws<Botan::Invalid_Argument>("DTLS initial timeout of zero",
+                                                     [&] { dtls_client(1232, 0, 60000); });
+         result.test_throws<Botan::Invalid_Argument>("DTLS maximum timeout of zero",
+                                                     [&] { dtls_client(1232, 1000, 0); });
+
+         result.test_is_true("DTLS 1.3 is a valid version",
+                             Botan::TLS::Protocol_Version(Botan::TLS::Protocol_Version::DTLS_V13).valid());
+
+         Overwriting_Policy policy("allow_tls12 = true");
+         result.test_is_true("overwrite reports success", policy.overwrite("allow_tls12", "false"));
+         result.test_is_false("overwrite replaced the value", policy.allow_tls12());
+
+         // Indented lines and CRLF line endings
+         const Botan::TLS::Text_Policy indented("  ciphers = AES-256/GCM AES-128/GCM \r\n\tallow_tls12 = false\r\n");
+         result.test_sz_eq("indented list setting", indented.allowed_ciphers().size(), 2);
+         result.test_is_false("CRLF boolean setting", indented.allow_tls12());
+
+      #if defined(BOTAN_HAS_TLS_13)
+         const std::vector<uint8_t> psk_key(32, 0x42);
+         const std::vector<uint8_t> identity = {'i', 'd'};
+         result.test_throws<Botan::Invalid_Argument>("PSK importer with an empty key",
+                                                     [&] { Botan::TLS::PSKImporter({}, identity, {}, "SHA-256"); });
+
+         const std::vector<uint8_t> long_identity(65500, 'x');
+         const Botan::TLS::PSKImporter importer(psk_key, long_identity, {}, "SHA-256");
+         result.test_throws<Botan::Invalid_Argument>("PSK importer identity too long for the extension", [&] {
+            importer.derive_imported_psk(Botan::TLS::Protocol_Version::TLS_V13, "SHA-256");
+         });
+      #endif
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls_api_argument_validation", Test_TLS_API_Argument_Validation);
+
 // A cached session whose ticket cannot fit into a ClientHello must not prevent
 // the client from connecting
 class Test_TLS12_Oversized_Session_Ticket final : public Test {

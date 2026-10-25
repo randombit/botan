@@ -15,7 +15,8 @@ namespace Botan {
 namespace {
 
 std::string clean_ws(std::string_view s) {
-   const char* ws = " \t\n";
+   // Includes \r so that files with CRLF line endings can be read
+   const char* ws = " \t\r\n";
    const auto start = s.find_first_not_of(ws);
    const auto end = s.find_last_not_of(ws);
 
@@ -23,11 +24,7 @@ std::string clean_ws(std::string_view s) {
       return "";
    }
 
-   if(end == std::string::npos) {
-      return std::string(s.substr(start, end));
-   } else {
-      return std::string(s.substr(start, start + end + 1));
-   }
+   return std::string(s.substr(start, end - start + 1));
 }
 
 }  // namespace
