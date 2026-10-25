@@ -84,31 +84,47 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
 std::variant<Hello_Retry_Request, Server_Hello_13, Server_Hello_12_Shim> Server_Hello_13::parse(
    std::span<const uint8_t> buf) {
    auto data = std::make_unique<Server_Hello_Internal>(buf);
+
+   // RFC 8446 4.1.3
+   //    Upon receiving a message with type server_hello, implementations MUST
+   //    first examine the Random value and, if it matches this value, process
+   //    it as described in Section 4.1.4.
+   //
+   // Hello_Retry_Request validates that it selects TLS 1.3
+   if(data->is_hello_retry_request()) {
+      return Hello_Retry_Request(std::move(data));
+   }
+
    const auto version = data->version();
 
-   // server hello that appears to be pre-TLS 1.3, takes precedence over...
    if(version.is_pre_tls_13()) {
       return Server_Hello_12_Shim(std::move(data));
    }
 
-   // ... the TLS 1.3 "special case" aka. Hello_Retry_Request
    if(version == Protocol_Version::TLS_V13) {
-      if(data->is_hello_retry_request()) {
-         return Hello_Retry_Request(std::move(data));
-      }
-
       return Server_Hello_13(std::move(data));
    }
 
    throw TLS_Exception(Alert::ProtocolVersion, "unexpected server hello version: " + version.to_string());
 }
 
+namespace {
+
+// RFC 8446 4.2
+//    If an implementation receives an extension which it recognizes and which
+//    is not specified for the message in which it appears, it MUST abort the
+//    handshake with an "illegal_parameter" alert.
+Alert::Type disallowed_extension_alert(const Extensions& exts, const std::set<Extension_Code>& allowed) {
+   return exts.contains_implemented_extensions_other_than(allowed) ? Alert::IllegalParameter
+                                                                   : Alert::UnsupportedExtension;
+}
+
+}  // namespace
+
 /**
  * Validation that applies to both Server Hello and Hello Retry Request
  */
 void Server_Hello_13::basic_validation() const {
-   BOTAN_ASSERT_NOMSG(m_data->version() == Protocol_Version::TLS_V13);
-
    // Note: checks that cannot be performed without contextual information
    //       are done in the specific TLS client implementation.
    // Note: The Supported_Version extension makes sure internally that
@@ -177,7 +193,8 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
    // As the ServerHello shall only contain essential extensions, we don't give
    // any slack for extensions not implemented by Botan here.
    if(exts.contains_other_than(allowed)) {
-      throw TLS_Exception(Alert::UnsupportedExtension, "Server Hello contained an extension that is not allowed");
+      throw TLS_Exception(disallowed_extension_alert(exts, allowed),
+                          "Server Hello contained an extension that is not allowed");
    }
 
    // RFC 8446 4.1.3
@@ -211,7 +228,7 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
    // As the Hello Retry Request shall only contain essential extensions, we
    // don't give any slack for extensions not implemented by Botan here.
    if(exts.contains_other_than(allowed)) {
-      throw TLS_Exception(Alert::UnsupportedExtension,
+      throw TLS_Exception(disallowed_extension_alert(exts, allowed),
                           "Hello Retry Request contained an extension that is not allowed");
    }
 

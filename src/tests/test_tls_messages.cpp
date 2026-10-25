@@ -10,6 +10,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_TLS)
+   #include <botan/hex.h>
    #include <botan/mac.h>
    #include <botan/ocsp.h>
    #include <botan/tls_alert.h>
@@ -94,6 +95,63 @@ Test::Result test_srtp_extension() {
 
    result.test_throws<Botan::TLS::TLS_Exception>("Server sent malformed DTLS-SRTP extension",
                                                  [&] { read_srtp(ext2, Botan::TLS::Connection_Side::Server); });
+
+   return result;
+}
+
+Test::Result test_certificate_status_request() {
+   Test::Result result("status_request extension");
+
+   auto read_csr = [](std::span<const uint8_t> ext) {
+      Botan::TLS::TLS_Data_Reader reader("test_csr", ext);
+      return Botan::TLS::Certificate_Status_Request(reader,
+                                                    static_cast<uint16_t>(ext.size()),
+                                                    Botan::TLS::Handshake_Type::ClientHello,
+                                                    Botan::TLS::Connection_Side::Client);
+   };
+
+   // status_type ocsp, responder_id_list containing one ResponderID, request_extensions
+   const std::vector<uint8_t> ext = {0x01, 0x00, 0x04, 0x00, 0x02, 0xAA, 0xBB, 0x00, 0x02, 0x30, 0x00};
+
+   const auto csr = read_csr(ext);
+   result.test_bin_eq("responder_id_list", csr.get_responder_id_list(), "0002AABB");
+   result.test_bin_eq("request_extensions", csr.get_request_extensions(), "3000");
+   result.test_bin_eq("re-serialized", csr.serialize(Botan::TLS::Connection_Side::Client), ext);
+
+   const Botan::TLS::Certificate_Status_Request created(Botan::hex_decode("0002AABB"), {});
+   result.test_bin_eq("serialized", created.serialize(Botan::TLS::Connection_Side::Client), "0100040002AABB0000");
+
+   result.test_throws<Botan::Invalid_Argument>("OCSP key IDs are rejected",
+                                               [] { Botan::TLS::Certificate_Status_Request({}, {{0x01}}); });
+
+   result.test_throws<Botan::Invalid_Argument>("empty OCSP response is rejected",
+                                               [] { Botan::TLS::Certificate_Status_Request(std::vector<uint8_t>{}); });
+
+   return result;
+}
+
+Test::Result test_padding_extension() {
+   Test::Result result("padding extension");
+
+   auto parse = [](std::string_view extensions_hex) {
+      const auto buf = Botan::hex_decode(extensions_hex);
+      Botan::TLS::TLS_Data_Reader reader("test_padding", buf);
+      Botan::TLS::Extensions extensions;
+      extensions.deserialize(reader, Botan::TLS::Connection_Side::Client, Botan::TLS::Handshake_Type::ClientHello);
+      return extensions;
+   };
+
+   const auto empty = parse("000400150000");
+   result.test_is_true("empty padding is accepted", empty.has(Botan::TLS::Extension_Code::Padding));
+   result.test_bin_eq(
+      "empty padding is serialized", empty.serialize(Botan::TLS::Connection_Side::Client), "000400150000");
+
+   const auto zeros = parse("000700150003000000");
+   result.test_is_true("zero padding is accepted", zeros.has(Botan::TLS::Extension_Code::Padding));
+   result.test_bin_eq(
+      "zero padding is serialized", zeros.serialize(Botan::TLS::Connection_Side::Client), "000700150003000000");
+
+   result.test_throws<Botan::Decoding_Error>("non-zero padding is rejected", [&] { parse("000700150003000100"); });
 
    return result;
 }
@@ -247,6 +305,8 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
 
          results.push_back(test_hello_verify_request());
          results.push_back(test_srtp_extension());
+         results.push_back(test_certificate_status_request());
+         results.push_back(test_padding_extension());
 
          return results;
       }

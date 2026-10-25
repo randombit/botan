@@ -20,6 +20,7 @@
 #include <botan/tls_policy.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/tls_messages_internal.h>
 #include <botan/internal/tls_reader.h>
 #include <algorithm>
 #include <unordered_set>
@@ -36,6 +37,37 @@ namespace Botan::TLS {
 
 namespace {
 
+/*
+* Padding (RFC 7685) carries no information, but is a recognized extension
+* which may only appear in a ClientHello
+*/
+class Padding_Extension final : public Extension {
+   public:
+      static Extension_Code static_type() { return Extension_Code::Padding; }
+
+      Extension_Code type() const override { return static_type(); }
+
+      Padding_Extension(TLS_Data_Reader& reader, uint16_t extension_size) : m_size(extension_size) {
+         // RFC 7685 3.
+         //    The client MUST fill the padding extension completely with zero
+         //    bytes, although the padding extension_data field may be empty.
+         const auto padding = reader.get_fixed<uint8_t>(extension_size);
+         if(std::ranges::any_of(padding, [](uint8_t b) { return b != 0; })) {
+            throw Decoding_Error("Padding extension contains non-zero bytes");
+         }
+      }
+
+      std::vector<uint8_t> serialize(Connection_Side /*whoami*/) const override { return std::vector<uint8_t>(m_size); }
+
+      bool empty() const override {
+         // Even without any padding bytes the extension must be serialized
+         return false;
+      }
+
+   private:
+      size_t m_size;
+};
+
 std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
                                           Extension_Code code,
                                           const Connection_Side from,
@@ -51,7 +83,7 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
          return std::make_unique<Supported_Groups>(reader, size);
 
       case Extension_Code::CertificateStatusRequest:
-         return std::make_unique<Certificate_Status_Request>(reader, size, message_type, from);
+         return make_certificate_status_request(reader, size, message_type, from);
 
       case Extension_Code::SignatureAlgorithms:
          return std::make_unique<Signature_Algorithms>(reader, size);
@@ -78,7 +110,7 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
          return std::make_unique<Supported_Versions>(reader, size, from);
 
       case Extension_Code::Padding:
-         break;  // RFC 7685, recognized but not implemented; falls through to Unknown_Extension
+         return std::make_unique<Padding_Extension>(reader, size);
 
 #if defined(BOTAN_HAS_TLS_12)
       case Extension_Code::EcPointFormats:
@@ -355,18 +387,20 @@ Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader, uint16_t e
 
       BOTAN_ASSERT_NOMSG(reader.remaining_bytes() == name_bytes);
 
+      std::vector<uint8_t> seen_name_types;
       while(reader.has_remaining()) {
          const uint8_t name_type = reader.get_byte();
 
-         if(name_type == 0) {
-            /*
-            RFC 6066 Section 3
-               The ServerNameList MUST NOT contain more than one name of the same name_type.
-            */
-            if(!m_sni_host_name.empty()) {
-               throw Decoding_Error("TLS ServerNameIndicator contains more than one host_name");
-            }
+         /*
+         RFC 6066 Section 3
+            The ServerNameList MUST NOT contain more than one name of the same name_type.
+         */
+         if(value_exists(seen_name_types, name_type)) {
+            throw Decoding_Error("TLS ServerNameIndicator contains more than one name of the same type");
+         }
+         seen_name_types.push_back(name_type);
 
+         if(name_type == 0) {
             const std::string host_name = reader.get_string(2, 1, 65535);
 
             /*
@@ -592,6 +626,19 @@ Certificate_Type_Base::Certificate_Type_Base(TLS_Data_Reader& reader, uint16_t e
          type_bytes.begin(), type_bytes.end(), std::back_inserter(m_certificate_types), [](const auto type_byte) {
             return static_cast<Certificate_Type>(type_byte);
          });
+
+      // RFC 7250 4.1
+      //    If the client has no remaining certificate types to send in the
+      //    client hello, other than the default X.509 type, it MUST omit the
+      //    client_certificate_type extension in the client hello.
+      //    [...]
+      //    If the client has no remaining certificate types to send in the
+      //    client hello, other than the default X.509 certificate type, it
+      //    MUST omit the entire server_certificate_type extension from the
+      //    client hello.
+      if(m_certificate_types.size() == 1 && m_certificate_types.front() == Certificate_Type::X509) {
+         throw TLS_Exception(Alert::IllegalParameter, "Certificate type extension contains only the default type");
+      }
    } else {
       // RFC 7250 4.2
       //    Note that only a single value is permitted in the

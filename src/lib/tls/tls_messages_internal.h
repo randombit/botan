@@ -63,6 +63,16 @@ std::vector<uint8_t> calculate_cookie(std::span<const uint8_t> client_hello_bits
                                       std::span<const uint8_t> cookie_secret);
 
 /**
+ * Parse a "status_request" extension. In a ClientHello, a request for any
+ * status_type other than "ocsp" is not supported and is treated as an unknown
+ * extension.
+ */
+std::unique_ptr<Extension> make_certificate_status_request(TLS_Data_Reader& reader,
+                                                           uint16_t extension_size,
+                                                           Handshake_Type message_type,
+                                                           Connection_Side from);
+
+/**
  * Version-agnostic internal client hello data container that allows
  * parsing Client_Hello messages without prior knowledge of the contained
  * protocol version.
