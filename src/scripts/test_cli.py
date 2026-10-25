@@ -1495,8 +1495,10 @@ def cli_tls_socket_tests(tmp_dir):
 
     configs = [
         # Explicitly testing x448-based key exchange against ourselves, as Bogo test
-        # don't cover that. Better than nothing...
-        TestConfig("x448", "1.2", "allow_tls12=true\nallow_tls13=false\nkey_exchange_groups=x448"),
+        # don't cover that. Better than nothing... In TLS 1.2 the groups also
+        # name the curve of the server's ECDSA certificate, which the server
+        # ranks below x448.
+        TestConfig("x448", "1.2", "allow_tls12=true\nallow_tls13=false\nkey_exchange_groups=x448 secp256r1"),
         TestConfig("x448", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=x448"),
 
         # Regression test: TLS 1.3 server hit an assertion when no certificate

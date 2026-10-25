@@ -9,6 +9,13 @@
 
 #if defined(BOTAN_HAS_TLS)
    #include <botan/tls_signature_scheme.h>
+   #include <botan/tls_version.h>
+#endif
+
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_ECDSA)
+   #include <botan/ec_group.h>
+   #include <botan/ecdsa.h>
+   #include <botan/rng.h>
 #endif
 
 #if defined(BOTAN_HAS_TLS)
@@ -96,6 +103,57 @@ std::vector<Test::Result> test_signature_scheme() {
       result.test_throws("from_string throws on invalid hex 2", [] { Sig::from_string("0x03g0"); });
       result.test_throws("from_string throws on invalid hex 3", [] { Sig::from_string("0xabc"); });
    }));
+
+   results.push_back(CHECK("protocol version compatibility", [&](auto& result) {
+      using Sig = Botan::TLS::Signature_Scheme;
+      using PV = Botan::TLS::Version_Code;
+
+      for(const Sig scheme : {Sig::ECDSA_BRAINPOOL256R1_TLS13_SHA256,
+                              Sig::ECDSA_BRAINPOOL384R1_TLS13_SHA384,
+                              Sig::ECDSA_BRAINPOOL512R1_TLS13_SHA512}) {
+         result.test_is_true(scheme.to_string() + " in TLS 1.3", scheme.is_compatible_with(PV::TLS_V13));
+         result.test_is_false(scheme.to_string() + " in TLS 1.2", scheme.is_compatible_with(PV::TLS_V12));
+         result.test_is_false(scheme.to_string() + " in DTLS 1.2", scheme.is_compatible_with(PV::DTLS_V12));
+      }
+
+      for(const Sig scheme : {Sig::ECDSA_SHA256, Sig::ECDSA_SHA384, Sig::ECDSA_SHA512, Sig::RSA_PSS_SHA256}) {
+         result.test_is_true(scheme.to_string() + " in TLS 1.3", scheme.is_compatible_with(PV::TLS_V13));
+         result.test_is_true(scheme.to_string() + " in TLS 1.2", scheme.is_compatible_with(PV::TLS_V12));
+      }
+   }));
+
+   #if defined(BOTAN_HAS_ECDSA)
+   if(Botan::EC_Group::supports_named_group("brainpool256r1") && Botan::EC_Group::supports_named_group("secp256r1")) {
+      results.push_back(CHECK("ECDSA schemes are bound to their curve", [&](auto& result) {
+         using Sig = Botan::TLS::Signature_Scheme;
+         auto rng = Test::new_rng("tls_signature_scheme");
+
+         const Botan::ECDSA_PrivateKey bp256(*rng, Botan::EC_Group::from_name("brainpool256r1"));
+         const Botan::ECDSA_PrivateKey p256(*rng, Botan::EC_Group::from_name("secp256r1"));
+
+         const Sig bp_scheme = Sig::ECDSA_BRAINPOOL256R1_TLS13_SHA256;
+         const Sig p256_scheme = Sig::ECDSA_SECP256R1_TLS13_SHA256;
+
+         result.test_is_true("brainpool256r1 key with brainpool scheme", bp_scheme.is_suitable_for(bp256));
+         result.test_is_false("brainpool256r1 key with secp256r1 scheme", p256_scheme.is_suitable_for(bp256));
+         result.test_is_true("secp256r1 key with secp256r1 scheme", p256_scheme.is_suitable_for(p256));
+         result.test_is_false("secp256r1 key with brainpool scheme", bp_scheme.is_suitable_for(p256));
+         result.test_is_false("secp256r1 key with secp384r1 scheme",
+                              Sig(Sig::ECDSA_SECP384R1_TLS13_SHA384).is_suitable_for(p256));
+
+         // The curve is what matters, not how the key encodes it
+         Botan::ECDSA_PrivateKey p256_explicit(*rng, Botan::EC_Group::from_name("secp256r1"));
+         BOTAN_DIAGNOSTIC_PUSH
+         BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
+         p256_explicit.set_parameter_encoding(Botan::EC_Group_Encoding::Explicit);
+         BOTAN_DIAGNOSTIC_POP
+         result.test_is_true("explicitly encoded secp256r1 key with secp256r1 scheme",
+                             p256_scheme.is_suitable_for(p256_explicit));
+         result.test_is_false("explicitly encoded secp256r1 key with brainpool scheme",
+                              bp_scheme.is_suitable_for(p256_explicit));
+      }));
+   }
+   #endif
 
    return results;
 }

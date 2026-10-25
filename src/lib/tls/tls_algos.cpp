@@ -8,6 +8,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/tls_messages_internal.h>
 
 #include <algorithm>
 #include <array>
@@ -140,27 +141,30 @@ namespace {
 
 consteval auto available_group_params() {
    auto codes = std::array {
-#if defined(BOTAN_HAS_PCURVES_SECP256R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
+#if defined(BOTAN_HAS_PCURVES_SECP256R1) || defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_LEGACY_EC_POINT)
       Group_Params_Code::SECP256R1,
 #endif
 
-#if defined(BOTAN_HAS_PCURVES_SECP384R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
+#if defined(BOTAN_HAS_PCURVES_SECP384R1) || defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_LEGACY_EC_POINT)
          Group_Params_Code::SECP384R1,
 #endif
 
-#if defined(BOTAN_HAS_PCURVES_SECP521R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
+#if defined(BOTAN_HAS_PCURVES_SECP521R1) || defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_LEGACY_EC_POINT)
          Group_Params_Code::SECP521R1,
 #endif
 
-#if defined(BOTAN_HAS_PCURVES_BRAINPOOL256R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
+#if defined(BOTAN_HAS_PCURVES_BRAINPOOL256R1) || defined(BOTAN_HAS_PCURVES_GENERIC) || \
+   defined(BOTAN_HAS_LEGACY_EC_POINT)
          Group_Params_Code::BRAINPOOL256R1, Group_Params_Code::BRAINPOOL256R1TLS13,
 #endif
 
-#if defined(BOTAN_HAS_PCURVES_BRAINPOOL384R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
+#if defined(BOTAN_HAS_PCURVES_BRAINPOOL384R1) || defined(BOTAN_HAS_PCURVES_GENERIC) || \
+   defined(BOTAN_HAS_LEGACY_EC_POINT)
          Group_Params_Code::BRAINPOOL384R1, Group_Params_Code::BRAINPOOL384R1TLS13,
 #endif
 
-#if defined(BOTAN_HAS_PCURVES_BRAINPOOL512R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
+#if defined(BOTAN_HAS_PCURVES_BRAINPOOL512R1) || defined(BOTAN_HAS_PCURVES_GENERIC) || \
+   defined(BOTAN_HAS_LEGACY_EC_POINT)
          Group_Params_Code::BRAINPOOL512R1, Group_Params_Code::BRAINPOOL512R1TLS13,
 #endif
 
@@ -179,12 +183,14 @@ consteval auto available_group_params() {
 
 #if defined(BOTAN_HAS_ML_KEM)
          Group_Params_Code::ML_KEM_512, Group_Params_Code::ML_KEM_768, Group_Params_Code::ML_KEM_1024,
+#endif
 
-   #if defined(BOTAN_HAS_PCURVES_SECP256R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
+#if defined(BOTAN_HAS_ML_KEM) && defined(BOTAN_HAS_TLS_13_PQC)
+   #if defined(BOTAN_HAS_PCURVES_SECP256R1) || defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_LEGACY_EC_POINT)
          Group_Params_Code::HYBRID_SECP256R1_ML_KEM_768,
    #endif
 
-   #if defined(BOTAN_HAS_PCURVES_SECP384R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
+   #if defined(BOTAN_HAS_PCURVES_SECP384R1) || defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_LEGACY_EC_POINT)
          Group_Params_Code::HYBRID_SECP384R1_ML_KEM_1024,
    #endif
 
@@ -193,33 +199,57 @@ consteval auto available_group_params() {
    #endif
 #endif
 
-#if defined(BOTAN_HAS_FRODOKEM)
+#if defined(BOTAN_HAS_FRODOKEM_SHAKE)
          Group_Params_Code::eFRODOKEM_640_SHAKE_OQS, Group_Params_Code::eFRODOKEM_976_SHAKE_OQS,
-         Group_Params_Code::eFRODOKEM_1344_SHAKE_OQS, Group_Params_Code::eFRODOKEM_640_AES_OQS,
-         Group_Params_Code::eFRODOKEM_976_AES_OQS, Group_Params_Code::eFRODOKEM_1344_AES_OQS,
+         Group_Params_Code::eFRODOKEM_1344_SHAKE_OQS,
+#endif
 
-   #if defined(BOTAN_HAS_PCURVES_SECP256R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
+#if defined(BOTAN_HAS_FRODOKEM_AES)
+         Group_Params_Code::eFRODOKEM_640_AES_OQS, Group_Params_Code::eFRODOKEM_976_AES_OQS,
+         Group_Params_Code::eFRODOKEM_1344_AES_OQS,
+#endif
+
+#if defined(BOTAN_HAS_FRODOKEM_SHAKE) && defined(BOTAN_HAS_TLS_13_PQC)
+   #if defined(BOTAN_HAS_PCURVES_SECP256R1) || defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_LEGACY_EC_POINT)
          Group_Params_Code::HYBRID_SECP256R1_eFRODOKEM_640_SHAKE_OQS,
-         Group_Params_Code::HYBRID_SECP256R1_eFRODOKEM_640_AES_OQS,
    #endif
 
-   #if defined(BOTAN_HAS_PCURVES_SECP384R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
+   #if defined(BOTAN_HAS_PCURVES_SECP384R1) || defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_LEGACY_EC_POINT)
          Group_Params_Code::HYBRID_SECP384R1_eFRODOKEM_976_SHAKE_OQS,
-         Group_Params_Code::HYBRID_SECP384R1_eFRODOKEM_976_AES_OQS,
    #endif
 
-   #if defined(BOTAN_HAS_PCURVES_SECP521R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
+   #if defined(BOTAN_HAS_PCURVES_SECP521R1) || defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_LEGACY_EC_POINT)
          Group_Params_Code::HYBRID_SECP521R1_eFRODOKEM_1344_SHAKE_OQS,
-         Group_Params_Code::HYBRID_SECP521R1_eFRODOKEM_1344_AES_OQS,
    #endif
 
    #if defined(BOTAN_HAS_X25519)
          Group_Params_Code::HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS,
+   #endif
+
+   #if defined(BOTAN_HAS_X448)
+         Group_Params_Code::HYBRID_X448_eFRODOKEM_976_SHAKE_OQS,
+   #endif
+#endif
+
+#if defined(BOTAN_HAS_FRODOKEM_AES) && defined(BOTAN_HAS_TLS_13_PQC)
+   #if defined(BOTAN_HAS_PCURVES_SECP256R1) || defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_LEGACY_EC_POINT)
+         Group_Params_Code::HYBRID_SECP256R1_eFRODOKEM_640_AES_OQS,
+   #endif
+
+   #if defined(BOTAN_HAS_PCURVES_SECP384R1) || defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_LEGACY_EC_POINT)
+         Group_Params_Code::HYBRID_SECP384R1_eFRODOKEM_976_AES_OQS,
+   #endif
+
+   #if defined(BOTAN_HAS_PCURVES_SECP521R1) || defined(BOTAN_HAS_PCURVES_GENERIC) || defined(BOTAN_HAS_LEGACY_EC_POINT)
+         Group_Params_Code::HYBRID_SECP521R1_eFRODOKEM_1344_AES_OQS,
+   #endif
+
+   #if defined(BOTAN_HAS_X25519)
          Group_Params_Code::HYBRID_X25519_eFRODOKEM_640_AES_OQS,
    #endif
 
    #if defined(BOTAN_HAS_X448)
-         Group_Params_Code::HYBRID_X448_eFRODOKEM_976_SHAKE_OQS, Group_Params_Code::HYBRID_X448_eFRODOKEM_976_AES_OQS,
+         Group_Params_Code::HYBRID_X448_eFRODOKEM_976_AES_OQS,
    #endif
 #endif
    };
@@ -239,6 +269,26 @@ bool Group_Params::is_available() const {
       return std::binary_search(codes.begin(), codes.end(), this->code());
    }
    return true;
+}
+
+bool group_usable_in_version(Group_Params group, Protocol_Version version) {
+   if(version.is_pre_tls_13()) {
+      return !group.is_kem() && group != Group_Params::BRAINPOOL256R1TLS13 &&
+             group != Group_Params::BRAINPOOL384R1TLS13 && group != Group_Params::BRAINPOOL512R1TLS13;
+   } else {
+      return group != Group_Params::BRAINPOOL256R1 && group != Group_Params::BRAINPOOL384R1 &&
+             group != Group_Params::BRAINPOOL512R1;
+   }
+}
+
+std::vector<Group_Params> groups_usable_in_version(std::span<const Group_Params> groups, Protocol_Version version) {
+   std::vector<Group_Params> usable;
+   for(const auto group : groups) {
+      if(group_usable_in_version(group, version)) {
+         usable.push_back(group);
+      }
+   }
+   return usable;
 }
 
 std::optional<Group_Params_Code> Group_Params::pqc_hybrid_ecc() const {

@@ -39,6 +39,11 @@ class BOTAN_TEST_API KEX_to_KEM_Adapter_PublicKey : public virtual Public_Key {
       std::unique_ptr<PK_Ops::KEM_Encryption> _create_kem_encryption_op(
          const PK_KEM_Options_Reader& options) const override;
 
+      /**
+      * @return the adapted key agreement public key
+      */
+      const Public_Key& kex_public_key() const { return *m_public_key; }
+
    private:
       std::shared_ptr<const Public_Key> m_public_key;
 };

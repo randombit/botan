@@ -176,8 +176,8 @@ Group_Params Policy::default_dh_group() const {
 }
 
 std::vector<Group_Params> Policy::key_exchange_groups() const {
-   return {
-      // clang-format off
+   std::vector<Group_Params> groups = {
+   // clang-format off
 #if defined(BOTAN_HAS_X25519)
       Group_Params::X25519,
 #endif
@@ -210,6 +210,11 @@ std::vector<Group_Params> Policy::key_exchange_groups() const {
 
       // clang-format on
    };
+
+   // Some curves may have been disabled in the build
+   std::erase_if(groups, [](Group_Params group) { return !group.is_available(); });
+
+   return groups;
 }
 
 std::vector<Group_Params> Policy::key_exchange_groups_to_offer() const {

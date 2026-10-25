@@ -9,6 +9,8 @@
 #include <botan/internal/tls_server_impl_12.h>
 
 #include <botan/certstor.h>
+#include <botan/ec_group.h>
+#include <botan/ecc_key.h>
 #include <botan/ocsp.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_magic.h>
@@ -198,7 +200,32 @@ uint16_t choose_ciphersuite(const Policy& policy,
    }
 
    const bool have_shared_ecc_curve =
-      (policy.choose_key_exchange_group(client_hello.supported_ecc_curves(), {}) != Group_Params::NONE);
+      (policy.choose_key_exchange_group(
+          groups_usable_in_version(client_hello.supported_ecc_curves(), Protocol_Version::TLS_V12), {}) !=
+       Group_Params::NONE);
+
+   // RFC 8422 5.1
+   //    NOTE: A server participating in an ECDHE_ECDSA key exchange may use
+   //    different curves for the ECDSA or EdDSA key in its certificate and
+   //    for the ephemeral ECDH key in the ServerKeyExchange message.  The
+   //    server MUST consider the extensions in both cases.
+   const bool client_supports_ecdsa_cert_curve = [&] {
+      const auto chain = cert_chains.find("ECDSA");
+      if(chain == cert_chains.end() || chain->second.empty()) {
+         return false;
+      }
+      const auto key = chain->second.front().subject_public_key();
+      const auto* ec_key = dynamic_cast<const EC_PublicKey*>(key.get());
+      if(ec_key == nullptr) {
+         return false;
+      }
+      const auto group = Group_Params::from_string(ec_key->domain().get_curve_oid().human_name_or_empty());
+      // The client cannot offer an application specific curve, which has no TLS code point
+      if(!group.has_value()) {
+         return true;
+      }
+      return value_exists(client_hello.supported_ecc_curves(), group.value());
+   }();
 
    const bool client_supports_ffdhe_groups = !client_hello.supported_dh_groups().empty();
 
@@ -224,7 +251,7 @@ uint16_t choose_ciphersuite(const Policy& policy,
       }
       std::unordered_set<std::string> result;
       for(const Signature_Scheme scheme : client_sig_methods) {
-         if(!scheme.is_available()) {
+         if(!scheme.is_available() || !scheme.is_compatible_with(Protocol_Version::TLS_V12)) {
             continue;
          }
          if(!allowed_codes.contains(static_cast<uint16_t>(scheme.wire_code()))) {
@@ -277,6 +304,10 @@ uint16_t choose_ciphersuite(const Policy& policy,
 
          // Do we have any certificates for this sig?
          if(!cert_chains.contains(cert_algo)) {
+            continue;
+         }
+
+         if(cert_algo == "ECDSA" && !client_supports_ecdsa_cert_curve) {
             continue;
          }
       }
@@ -1018,10 +1049,13 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
       require_cert || (client_auth_CAs.empty() == false) || policy().request_client_certificate_authentication();
 
    // RFC 5246 7.4.4: supported_signature_algorithms<2..2^16-2>
-   // Without at least one acceptable scheme we cannot construct a valid
+   // Without at least one acceptable TLS 1.2 scheme we cannot construct a valid
    // CertificateRequest, so client cert auth is unreachable regardless.
-   const bool can_request_cert =
-      !policy().acceptable_signature_schemes().empty() && pending_state.ciphersuite().is_certificate_required();
+   const bool can_request_cert = std::ranges::any_of(policy().acceptable_signature_schemes(),
+                                                     [](const Signature_Scheme& scheme) {
+                                                        return scheme.is_compatible_with(Protocol_Version::TLS_V12);
+                                                     }) &&
+                                 pending_state.ciphersuite().is_certificate_required();
 
    if(require_cert && !can_request_cert) {
       throw TLS_Exception(Alert::HandshakeFailure,

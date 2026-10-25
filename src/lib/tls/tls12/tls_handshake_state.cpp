@@ -211,7 +211,7 @@ std::pair<std::string, Signature_Format> Handshake_State::choose_sig_format(cons
       (for_client_auth) ? cert_req()->signature_schemes() : client_hello()->signature_schemes();
 
    for(const Signature_Scheme scheme : allowed) {
-      if(!scheme.is_available()) {
+      if(!scheme.is_available() || !scheme.is_compatible_with(version())) {
          continue;
       }
 

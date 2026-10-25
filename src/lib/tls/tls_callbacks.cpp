@@ -42,6 +42,7 @@
 
 #if defined(BOTAN_HAS_TLS_13_PQC)
    #include <botan/internal/hybrid_public_key.h>
+   #include <botan/internal/kex_to_kem_adapter.h>
 #endif
 
 namespace Botan {
@@ -317,6 +318,19 @@ KEM_Encapsulation TLS::Callbacks::tls_kem_encapsulate(TLS::Group_Params group,
 
       BOTAN_ASSERT_NONNULL(kem_pub_key);
       policy.check_peer_key_acceptable(*kem_pub_key);
+
+#if defined(BOTAN_HAS_TLS_13_PQC)
+      // The policy's minimum key sizes also apply to each component of a hybrid key
+      if(const auto* hybrid = dynamic_cast<const Hybrid_PublicKey*>(kem_pub_key.get())) {
+         for(const auto& component : hybrid->public_keys()) {
+            if(const auto* adapted = dynamic_cast<const KEX_to_KEM_Adapter_PublicKey*>(component.get())) {
+               policy.check_peer_key_acceptable(adapted->kex_public_key());
+            } else {
+               policy.check_peer_key_acceptable(*component);
+            }
+         }
+      }
+#endif
 
       try {
          return PK_KEM_Encryptor(*kem_pub_key, "Raw").encrypt(rng);

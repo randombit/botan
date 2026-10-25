@@ -191,7 +191,13 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
       m_data->extensions().add(new Server_Name_Indicator(hostname));
    }
 
-   m_data->extensions().add(new Supported_Groups(policy.key_exchange_groups()));
+   // Groups only defined for TLS 1.2 are offered only if TLS 1.2 is offered as well
+   if(policy.allow_tls12()) {
+      m_data->extensions().add(new Supported_Groups(policy.key_exchange_groups()));
+   } else {
+      m_data->extensions().add(
+         new Supported_Groups(groups_usable_in_version(policy.key_exchange_groups(), Protocol_Version::TLS_V13)));
+   }
 
    m_data->extensions().add(new Key_Share(policy, cb, rng));
 

@@ -17,6 +17,7 @@
 #include <botan/internal/target_info.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/tls_messages_internal.h>
 #include <botan/internal/tls_reader.h>
 
 #include <botan/dh.h>
@@ -88,7 +89,8 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       append_tls_length_value(m_params, dh->get_int_field("g").serialize(), 2);
       append_tls_length_value(m_params, dh->public_value(), 2);
    } else if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK) {
-      const std::vector<Group_Params> ec_groups = state.client_hello()->supported_ecc_curves();
+      const std::vector<Group_Params> ec_groups =
+         groups_usable_in_version(state.client_hello()->supported_ecc_curves(), Protocol_Version::TLS_V12);
 
       if(ec_groups.empty()) {
          throw Internal_Error("Client sent no ECC extension but we negotiated ECDH");
