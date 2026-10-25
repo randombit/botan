@@ -9,8 +9,13 @@
 
 #include <botan/mutex.h>
 #include <botan/rng.h>
+#include <memory>
 
 namespace Botan {
+
+namespace OS {
+class Fork_Detector;
+}
 
 /**
 * Inherited by RNGs which maintain in-process state, like HMAC_DRBG.
@@ -34,8 +39,7 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       * @param reseed_interval specifies a limit of how many times
       * the RNG will be called before automatic reseeding is performed
       */
-      Stateful_RNG(RandomNumberGenerator& rng, Entropy_Sources& entropy_sources, size_t reseed_interval) :
-            m_underlying_rng(&rng), m_entropy_sources(&entropy_sources), m_reseed_interval(reseed_interval) {}
+      Stateful_RNG(RandomNumberGenerator& rng, Entropy_Sources& entropy_sources, size_t reseed_interval);
 
       /**
       * Create a Stateful_RNG which reseeds from another RNG
@@ -45,8 +49,7 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       * @param reseed_interval specifies a limit of how many times
       * the RNG will be called before automatic reseeding is performed
       */
-      Stateful_RNG(RandomNumberGenerator& rng, size_t reseed_interval) :
-            m_underlying_rng(&rng), m_reseed_interval(reseed_interval) {}
+      Stateful_RNG(RandomNumberGenerator& rng, size_t reseed_interval);
 
       /**
       * Create a Stateful_RNG which reseeds from entropy sources
@@ -55,13 +58,19 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       * @param reseed_interval specifies a limit of how many times
       * the RNG will be called before automatic reseeding is performed
       */
-      Stateful_RNG(Entropy_Sources& entropy_sources, size_t reseed_interval) :
-            m_entropy_sources(&entropy_sources), m_reseed_interval(reseed_interval) {}
+      Stateful_RNG(Entropy_Sources& entropy_sources, size_t reseed_interval);
 
       /**
       * In this case, automatic reseeding is impossible
       */
-      Stateful_RNG() : m_reseed_interval(0) {}
+      Stateful_RNG();
+
+      ~Stateful_RNG() override;
+
+      Stateful_RNG(const Stateful_RNG& other) = delete;
+      Stateful_RNG(Stateful_RNG&& other) = delete;
+      Stateful_RNG& operator=(const Stateful_RNG& other) = delete;
+      Stateful_RNG& operator=(Stateful_RNG&& other) = delete;
 
       /**
       * Reset the RNG then consume this input as seed material
@@ -188,8 +197,9 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       Entropy_Sources* m_entropy_sources = nullptr;
 
       const size_t m_reseed_interval;
-      uint32_t m_last_pid = 0;
-      uint64_t m_fork_generation = 0;
+
+      // Never null; rebaselined by clear() and by each successful seeding
+      std::unique_ptr<OS::Fork_Detector> m_fork_detector;
 
       /*
       * Set to 1 after a successful seeding, then incremented.  Reset

@@ -10,7 +10,6 @@
 #include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>
-#include <botan/internal/os_utils.h>
 #include <algorithm>
 
 namespace Botan {
@@ -20,7 +19,7 @@ Stateful_Key_Index_Registry& Stateful_Key_Index_Registry::global() {
    return g_registry;
 }
 
-Stateful_Key_Index_Registry::Stateful_Key_Index_Registry() : m_process_id(OS::get_process_id()) {}
+Stateful_Key_Index_Registry::Stateful_Key_Index_Registry() = default;
 
 Stateful_Key_Index_Registry::~Stateful_Key_Index_Registry() = default;
 
@@ -29,7 +28,7 @@ Stateful_Key_Index_Registry::KeyId::KeyId(std::string_view algo_name,
                                           uint64_t max_operations,
                                           std::span<const uint8_t> key_material_1,
                                           std::span<const uint8_t> key_material_2) :
-      m_process_id(OS::get_process_id()), m_max_operations(max_operations) {
+      m_max_operations(max_operations) {
    auto hash = HashFunction::create_or_throw("SHA-256");
 
    hash->update("Botan Stateful_Key_Index_Registry KeyID");
@@ -70,16 +69,16 @@ Stateful_Key_Index_Registry::RegistryMap::iterator Stateful_Key_Index_Registry::
 * hold copy-on-write duplicates of the counters. The registry fails closed
 * rather than risk index reuse.
 *
-* There are two PIDs stored, one in the registry and one in each KeyId, because
-* there are two possible cases where reuse might occur after a fork:
+* There are two fork detectors, one in the registry and one in each KeyId,
+* because there are two possible cases where reuse might occur after a fork:
 *
-* - If the registry was used before the fork, then its stored PID will
-*   not match the current PID, in which case the latch closes.
+* - If the registry was used before the fork, then its detector will report
+*   the fork, in which case the latch closes.
 *
-* - KeyId's PID catches the rarer case where a key was created prior to the
-*   fork, but not used. In that case the registry has not yet been created in
-*   either process, and it would be possible to use the same key (with the same
-*   starting-from-0 index) in both processes.
+* - KeyId's detector catches the rarer case where a key was created prior to
+*   the fork, but not used. In that case the registry has not yet been created
+*   in either process, and it would be possible to use the same key (with the
+*   same starting-from-0 index) in both processes.
 *
 * Fork detection is a one way latch, and intentionally coarse. Once any fork is
 * seen, the whole registry is disabled for the rest of this process, including
@@ -97,22 +96,11 @@ bool Stateful_Key_Index_Registry::fork_detected(const KeyId& key_id) {
       return true;
    }
 
-   const uint32_t current_process_id = OS::get_process_id();
-
    /*
-   We assume OS::get_process_id returns 0 only if processes are not a thing on
-   this system, in which case there is also no fork syscall
-   */
-   if(current_process_id == 0) {
-      return false;
-   }
-
-   /*
-   * If either the registry PID or the KeyId PID do not match the current process,
+   * If either the registry or the KeyId was created in a different process,
    * assume a fork occurred and latch closed.
    */
-   if((m_process_id != 0 && m_process_id != current_process_id) ||
-      (key_id.m_process_id != 0 && key_id.m_process_id != current_process_id)) {
+   if(m_fork_detector.fork_detected() || key_id.m_fork_detector.fork_detected()) {
       m_fork_detected = true;
    }
 
