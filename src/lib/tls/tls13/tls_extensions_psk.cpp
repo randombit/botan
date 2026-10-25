@@ -397,6 +397,25 @@ void PSK::filter(const Ciphersuite& cipher) {
    psks.erase(r, psks.end());
 }
 
+void PSK::validate_updates(const PSK& new_psk) const {
+   BOTAN_STATE_CHECK(std::holds_alternative<std::vector<Client_PSK>>(m_impl->psk));
+   BOTAN_STATE_CHECK(std::holds_alternative<std::vector<Client_PSK>>(new_psk.m_impl->psk));
+
+   const auto& old_psks = std::get<std::vector<Client_PSK>>(m_impl->psk);
+   const auto& new_psks = std::get<std::vector<Client_PSK>>(new_psk.m_impl->psk);
+
+   auto old_itr = old_psks.begin();
+   for(const auto& psk : new_psks) {
+      old_itr = std::find_if(old_itr, old_psks.end(), [&](const Client_PSK& old_psk) {
+         return old_psk.identity().identity() == psk.identity().identity();
+      });
+      if(old_itr == old_psks.end()) {
+         throw TLS_Exception(Alert::IllegalParameter, "PSK identities changed in updated Client Hello");
+      }
+      ++old_itr;
+   }
+}
+
 std::variant<Session, ExternalPSK> PSK::take_session_to_resume_or_psk() {
    BOTAN_STATE_CHECK(std::holds_alternative<Server_PSK>(m_impl->psk));
 

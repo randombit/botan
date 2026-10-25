@@ -149,6 +149,16 @@ class BOTAN_UNSTABLE_API PSK final : public Extension /* NOLINT(*-special-member
       void filter(const Ciphersuite& cipher);
 
       /**
+       * Validates that the PSK extension of a ClientHello sent in response to
+       * a Hello Retry Request (@p new_psk) only removed PSK identities offered
+       * in this extension, but did not add or reorder any. Otherwise an
+       * Alert::IllegalParameter TLS exception is thrown.
+       *
+       * Both extensions must be from a ClientHello.
+       */
+      void validate_updates(const PSK& new_psk) const;
+
+      /**
        * Pulls the preshared key or the Session to resume from a PSK extension
        * in Server Hello.
        */
