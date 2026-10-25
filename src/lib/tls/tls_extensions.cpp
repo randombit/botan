@@ -279,8 +279,9 @@ std::set<Extension_Code> Extensions::extension_types() const {
    std::set<Extension_Code> offers;
    for(const auto& [extn_type, extn] : m_extensions) {
       // Consistent with serialize(): empty extensions are not placed on
-      // the wire so they must not appear in the "offered" set either.
-      if(!extn->empty()) {
+      // the wire so they must not appear in the "offered" set either. An
+      // extension received from the peer was on the wire, whatever it holds.
+      if(!extn->empty() || m_raw_extension_data.contains(extn_type)) {
          offers.insert(extn_type);
       }
    }

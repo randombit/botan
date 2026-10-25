@@ -570,7 +570,15 @@ void Server_Impl_13::handle(const Client_Hello_13& client_hello) {
    // TODO: Implement support for PSK. For now, we ignore any such extensions
    //       and always revert to a standard key exchange.
    if(!exts.has<Supported_Groups>()) {
-      throw Not_Implemented("PSK-only handshake NYI");
+      // RFC 8446 4.2.9
+      //    psk_dhe_ke:  PSK with (EC)DHE key establishment.  In this mode, the
+      //       client and server MUST supply "key_share" values as described in
+      //       Section 4.2.8.
+      const auto* psk_modes = exts.get<PSK_Key_Exchange_Modes>();
+      if(psk_modes != nullptr && value_exists(psk_modes->modes(), PSK_Key_Exchange_Mode::PSK_DHE_KE)) {
+         throw TLS_Exception(Alert::MissingExtension, "Client offered psk_dhe_ke without a key_share");
+      }
+      throw TLS_Exception(Alert::HandshakeFailure, "PSK-only key exchange is not supported");
    }
 
    // RFC 8446 9.2
@@ -588,6 +596,17 @@ void Server_Impl_13::handle(const Client_Hello_13& client_hello) {
       const auto selected_group = hrr_key_share->selected_group();
       if(offered_groups.size() != 1 || offered_groups.at(0) != selected_group) {
          throw TLS_Exception(Alert::IllegalParameter, "Client did not comply with the requested key exchange group");
+      }
+
+      // RFC 8446 4.2.2
+      //    When sending the new ClientHello, the client MUST copy the contents
+      //    of the extension received in the HelloRetryRequest into a "cookie"
+      //    extension in the new ClientHello.
+      const auto* hrr_cookie = hrr_exts.get<Cookie>();
+      const auto* client_cookie = exts.get<Cookie>();
+      if((hrr_cookie == nullptr) != (client_cookie == nullptr) ||
+         (hrr_cookie != nullptr && hrr_cookie->get_cookie() != client_cookie->get_cookie())) {
+         throw TLS_Exception(Alert::IllegalParameter, "Client did not echo the cookie of the HelloRetryRequest");
       }
    }
 
