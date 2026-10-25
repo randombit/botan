@@ -30,21 +30,40 @@ void Session_Manager_In_Memory::store(const Session& session, const Session_Hand
    //       Unfortunately clang does not agree, yet.
    const lock_guard_type<recursive_mutex_type> lk(mutex());
 
+   // Generate a random session ID if the peer did not provide one. Note that
+   // this ID is just for internal use and won't be returned on ::find().
+   auto id = handle.id().value_or(m_rng->random_vec<Session_ID>(32));
+
+   // Storing a handle again (eg. after a TLS 1.2 resumption) replaces the
+   // session, which then counts as the most recently stored one
+   m_sessions.erase(id);
+
+   // A FIFO entry is stale if its session was removed or stored again since
+   const auto is_live = [&](const std::pair<Session_ID, uint64_t>& entry) {
+      const auto stored = m_sessions.find(entry.first);
+      return stored != m_sessions.end() && stored->second.sequence_number == entry.second;
+   };
+
    if(m_fifo.has_value()) {
       while(m_sessions.size() >= capacity()) {
          BOTAN_ASSERT_NOMSG(m_sessions.size() <= m_fifo->size());
-         m_sessions.erase(m_fifo->front());
+         if(is_live(m_fifo->front())) {
+            m_sessions.erase(m_fifo->front().first);
+         }
          m_fifo->pop_front();
       }
    }
 
-   // Generate a random session ID if the peer did not provide one. Note that
-   // this ID is just for internal use and won't be returned on ::find().
-   auto id = handle.id().value_or(m_rng->random_vec<Session_ID>(32));
-   m_sessions.emplace(id, Stored_Session{Session_with_Handle{session, handle}, m_next_sequence_number++});
+   const uint64_t sequence_number = m_next_sequence_number++;
+   m_sessions.emplace(id, Stored_Session{Session_with_Handle{session, handle}, sequence_number});
 
    if(m_fifo.has_value()) {
-      m_fifo->emplace_back(std::move(id));
+      m_fifo->emplace_back(std::move(id), sequence_number);
+
+      // Drop stale entries before they can accumulate without bound
+      if(m_fifo->size() > 2 * capacity()) {
+         std::erase_if(*m_fifo, [&](const auto& entry) { return !is_live(entry); });
+      }
    }
 }
 
@@ -107,7 +126,7 @@ size_t Session_Manager_In_Memory::remove_internal(const Session_Handle& handle) 
    return std::visit(overloaded{
                         // We deliberately leave the deleted session in m_fifo. Finding it would be
                         // another O(n) operation. Instead, purging will run in a loop and skip m_fifo
-                        // entries that were not found anymore.
+                        // entries that do not match a stored session anymore.
                         [&](const Session_Ticket& ticket) -> size_t {
                            // TODO: This is an O(n) operation. Typically, the Session_Manager will
                            //       not contain a plethora of sessions and this should be fine. If

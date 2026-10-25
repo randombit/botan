@@ -13,6 +13,7 @@
 #include <botan/tls_extensions.h>
 
 #include <botan/dns_name.h>
+#include <botan/exceptn.h>
 #include <botan/ipv4_address.h>
 #include <botan/ipv6_address.h>
 #include <botan/tls_exceptn.h>
@@ -244,7 +245,9 @@ std::vector<uint8_t> Extensions::serialize(Connection_Side whoami) const {
       const std::vector<uint8_t> extn_val = extn->serialize(whoami);
 
       // Each extension carries a uint16 length prefix.
-      BOTAN_ASSERT_NOMSG(extn_val.size() <= 0xFFFF);
+      if(extn_val.size() > 0xFFFF) {
+         throw Encoding_Error("TLS extension is too large to encode");
+      }
 
       buf.push_back(get_byte<0>(extn_code));
       buf.push_back(get_byte<1>(extn_code));
@@ -256,7 +259,9 @@ std::vector<uint8_t> Extensions::serialize(Connection_Side whoami) const {
    }
 
    // The outer extensions block is itself uint16-length-prefixed.
-   BOTAN_ASSERT_NOMSG(buf.size() - 2 <= 0xFFFF);
+   if(buf.size() - 2 > 0xFFFF) {
+      throw Encoding_Error("TLS extensions are too large to encode");
+   }
    const uint16_t extn_size = static_cast<uint16_t>(buf.size() - 2);
 
    buf[0] = get_byte<0>(extn_size);
@@ -406,7 +411,9 @@ std::vector<uint8_t> Server_Name_Indicator::serialize(Connection_Side whoami) co
    // RFC 6066 3: HostName<1..2^16-1>; the outer ServerNameList wraps a
    // 1-byte name_type and a 2-byte length so the whole entry must fit in
    // a uint16_t too.
-   BOTAN_ASSERT_NOMSG(name_len + 3 <= 0xFFFF);
+   if(name_len + 3 > 0xFFFF) {
+      throw Encoding_Error("TLS server name is too long to encode");
+   }
 
    buf.push_back(get_byte<0>(static_cast<uint16_t>(name_len + 3)));
    buf.push_back(get_byte<1>(static_cast<uint16_t>(name_len + 3)));
@@ -521,7 +528,9 @@ std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize(Connecti
    }
 
    // RFC 7301 3.1: ProtocolName protocol_name_list<2..2^16-1>;
-   BOTAN_ASSERT_NOMSG(buf.size() - 2 <= 0xFFFF);
+   if(buf.size() - 2 > 0xFFFF) {
+      throw Encoding_Error("TLS ALPN protocol list is too long to encode");
+   }
    buf[0] = get_byte<0>(static_cast<uint16_t>(buf.size() - 2));
    buf[1] = get_byte<1>(static_cast<uint16_t>(buf.size() - 2));
 

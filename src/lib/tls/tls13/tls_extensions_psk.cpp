@@ -154,18 +154,15 @@ PSK::PSK(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type messag
 
       std::vector<PskIdentity> psk_identities;
       while(reader.has_remaining() && (reader.read_so_far() - identities_offset) < identities_length) {
-         /* Per RFC 8446 PskIdentity is
-
-         struct {
-            opaque identity<1..2^16-1>;
-            uint32 obfuscated_ticket_age;
-         } PskIdentity;
-
-         so we should reject an empty identity. However BoGo seems to expect
-         being able to send us such an identity, so for now we accept it.
-         */
-
+         // RFC 8446 4.2.11
+         //    struct {
+         //        opaque identity<1..2^16-1>;
+         //        uint32 obfuscated_ticket_age;
+         //    } PskIdentity;
          auto identity = reader.get_tls_length_value(2);
+         if(identity.empty()) {
+            throw TLS_Exception(Alert::DecodeError, "Empty PSK identity");
+         }
          const auto obfuscated_ticket_age = reader.get_uint32_t();
          psk_identities.emplace_back(std::move(identity), obfuscated_ticket_age);
       }
@@ -300,9 +297,22 @@ std::unique_ptr<PSK> PSK::select_offered_psk(std::string_view host,
    std::vector<PskIdentity> psk_identities;
    std::transform(
       psks.begin(), psks.end(), std::back_inserter(psk_identities), [&](const auto& psk) { return psk.identity(); });
-   if(auto selected_session =
-         session_mgr.choose_from_offered_tickets(psk_identities, cipher.prf_algo(), callbacks, policy)) {
-      auto& [session, psk_index] = selected_session.value();
+
+   // The session manager is not aware of the SNI, so a ticket for another
+   // host is skipped here and the remaining identities are offered again.
+   // Each offer may cost several session lookups, so only a few are made.
+   constexpr size_t max_offers = 3;
+   size_t offset = 0;
+   for(size_t offers = 0; offers < max_offers && offset < psk_identities.size(); ++offers) {
+      const std::vector<PskIdentity> remaining(psk_identities.begin() + offset, psk_identities.end());
+      auto selected_session = session_mgr.choose_from_offered_tickets(remaining, cipher.prf_algo(), callbacks, policy);
+      if(!selected_session.has_value()) {
+         break;
+      }
+
+      auto& [session, remaining_index] = selected_session.value();
+      BOTAN_ASSERT_NOMSG(remaining_index < remaining.size());
+      const size_t psk_index = offset + remaining_index;
 
       // A session manager shared with our client role must not resume a session
       // here that we stored as a client: its peer certificates are a remote
@@ -315,8 +325,8 @@ std::unique_ptr<PSK> PSK::select_offered_psk(std::string_view host,
 
       // Refuse to resume a ticket across SNI: a session minted for one
       // virtual host must not be presentable against another. Treat as a
-      // cache miss and fall through to the external PSK path rather than
-      // failing the connection.
+      // cache miss and continue with any later identities, finally falling
+      // through to the external PSK path rather than failing the connection.
       if(session.server_info().hostname() == host) {
          // RFC 8446 4.6.1
          //    Any ticket MUST only be resumed with a cipher suite that has the
@@ -327,8 +337,10 @@ std::unique_ptr<PSK> PSK::select_offered_psk(std::string_view host,
                                 "Application chose a ticket that is not compatible with the negotiated ciphersuite");
          }
 
-         return std::unique_ptr<PSK>(new PSK(std::move(session), psk_index));
+         return std::unique_ptr<PSK>(new PSK(std::move(session), static_cast<uint16_t>(psk_index)));
       }
+
+      offset = psk_index + 1;
    }
 
    //

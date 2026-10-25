@@ -122,13 +122,22 @@ size_t Server_Impl_13::send_new_session_tickets(const size_t tickets) {
 
    BOTAN_STATE_CHECK(m_active_state.has_value());
 
+   // RFC 8446 4.6.1
+   //    Servers MUST NOT use any value greater than 604800 seconds (7 days).
+   //
+   // A policy lifetime of 0 (no expiry) is capped the same way.
+   const std::chrono::seconds max_ticket_lifetime(604800);
+   const auto policy_lifetime = policy().session_ticket_lifetime();
+   const auto ticket_lifetime =
+      (policy_lifetime.count() <= 0 || policy_lifetime > max_ticket_lifetime) ? max_ticket_lifetime : policy_lifetime;
+
    for(size_t i = 0; i < tickets; ++i) {
       auto nonce = m_cipher_state->next_ticket_nonce();
       const uint32_t ticket_age_add = load_be(rng().random_array<4>());
       const Session session(m_cipher_state->psk(nonce),
                             std::nullopt,  // early data not yet implemented
                             ticket_age_add,
-                            policy().session_ticket_lifetime(),
+                            ticket_lifetime,
                             m_active_state->version(),
                             m_active_state->ciphersuite_code(),
                             Connection_Side::Server,

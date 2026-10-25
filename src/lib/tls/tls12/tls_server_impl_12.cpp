@@ -19,6 +19,8 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages_internal.h>
+#include <algorithm>
+#include <limits>
 #include <unordered_set>
 
 namespace Botan::TLS {
@@ -71,6 +73,18 @@ class Server_Handshake_State final : public Handshake_State {
 };
 
 namespace {
+
+/*
+* RFC 5077 3.3: the ticket_lifetime_hint is a 32-bit value, where zero
+* means that the lifetime is unspecified
+*/
+uint32_t ticket_lifetime_hint(const Policy& policy) {
+   const auto lifetime = policy.session_ticket_lifetime().count();
+   if(lifetime <= 0) {
+      return 0;
+   }
+   return static_cast<uint32_t>(std::min<std::chrono::seconds::rep>(lifetime, std::numeric_limits<uint32_t>::max()));
+}
 
 std::optional<Session> check_for_resume(const Session_Handle& handle_to_resume,
                                         Session_Manager& session_manager,
@@ -713,11 +727,10 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
                                                    !pending_state.server_hello()->supports_session_ticket());
 
          if(pending_state.server_hello()->supports_session_ticket() && handle.has_value() && handle->is_ticket()) {
-            pending_state.new_session_ticket(std::make_unique<New_Session_Ticket_12>(
-               pending_state.handshake_io(),
-               pending_state.hash(),
-               handle->ticket().value(),
-               static_cast<uint32_t>(policy().session_ticket_lifetime().count())));
+            pending_state.new_session_ticket(std::make_unique<New_Session_Ticket_12>(pending_state.handshake_io(),
+                                                                                     pending_state.hash(),
+                                                                                     handle->ticket().value(),
+                                                                                     ticket_lifetime_hint(policy())));
          }
 
          note_resumption_handle(handle);
@@ -843,9 +856,10 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state, const
 
    if(pending_state.server_hello()->supports_session_ticket()) {
       if(new_handle.has_value() && new_handle->is_ticket()) {
-         const uint32_t lifetime = static_cast<uint32_t>(policy().session_ticket_lifetime().count());
-         pending_state.new_session_ticket(std::make_unique<New_Session_Ticket_12>(
-            pending_state.handshake_io(), pending_state.hash(), new_handle->ticket().value(), lifetime));
+         pending_state.new_session_ticket(std::make_unique<New_Session_Ticket_12>(pending_state.handshake_io(),
+                                                                                  pending_state.hash(),
+                                                                                  new_handle->ticket().value(),
+                                                                                  ticket_lifetime_hint(policy())));
       } else {
          pending_state.new_session_ticket(
             std::make_unique<New_Session_Ticket_12>(pending_state.handshake_io(), pending_state.hash()));

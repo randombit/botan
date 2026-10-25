@@ -9,6 +9,7 @@
 
 #include <botan/internal/tls_client_impl_12.h>
 
+#include <botan/exceptn.h>
 #include <botan/ocsp.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_messages_12.h>
@@ -247,16 +248,22 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
             value_exists(policy().ciphersuite_list(session_info.version()), session_info.ciphersuite_code());
 
          if(session_suite_ok) {
-            state.client_hello(std::make_unique<Client_Hello_12>(state.handshake_io(),
-                                                                 state.hash(),
-                                                                 policy(),
-                                                                 callbacks(),
-                                                                 rng(),
-                                                                 secure_renegotiation_data_for_client_hello(),
-                                                                 session_and_handle.value(),
-                                                                 next_protocols));
+            try {
+               state.client_hello(std::make_unique<Client_Hello_12>(state.handshake_io(),
+                                                                    state.hash(),
+                                                                    policy(),
+                                                                    callbacks(),
+                                                                    rng(),
+                                                                    secure_renegotiation_data_for_client_hello(),
+                                                                    session_and_handle.value(),
+                                                                    next_protocols));
 
-            state.record_resumption_info(std::move(session_info));
+               state.record_resumption_info(std::move(session_info));
+            } catch(Encoding_Error&) {
+               // The session's ticket does not fit into a ClientHello (nothing
+               // was sent yet); it can never be used, so forget about it.
+               session_manager().remove(session_and_handle->handle);
+            }
          }
       }
    }
