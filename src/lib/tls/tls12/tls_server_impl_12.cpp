@@ -1014,7 +1014,14 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
       pending_state.server_certs(
          std::make_unique<Certificate_12>(pending_state.handshake_io(), pending_state.hash(), cert_chains[algo_used]));
 
-      if(pending_state.client_hello()->supports_cert_status_message() && pending_state.is_a_resumption() == false) {
+      // RFC 6066 8.
+      //    Note in addition that a server MUST NOT send the "CertificateStatus"
+      //    message unless it received a "status_request" extension in the client
+      //    hello message and sent a "status_request" extension in the server
+      //    hello message.
+      if(pending_state.client_hello()->supports_cert_status_message() &&
+         pending_state.server_hello()->supports_certificate_status_message() &&
+         pending_state.is_a_resumption() == false) {
          const auto* csr = pending_state.client_hello()->extensions().get<Certificate_Status_Request>();
          // csr is non-null if client_hello()->supports_cert_status_message()
          BOTAN_ASSERT_NOMSG(csr != nullptr);
@@ -1032,8 +1039,18 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
       }
    }
 
+   // RFC 4279 2.
+   //    To help the client in selecting which identity to use, the server can
+   //    provide a "PSK identity hint" in the ServerKeyExchange message.  If no
+   //    hint is provided, the ServerKeyExchange message is omitted.
+   const bool omit_psk_server_kex =
+      pending_suite.kex_method() == Kex_Algo::PSK &&
+      m_creds->psk_identity_hint("tls-server", pending_state.client_hello()->sni_hostname()).empty();
+
    if(pending_suite.kex_method() == Kex_Algo::STATIC_RSA) {
       pending_state.set_server_rsa_kex_key(private_key);
+   } else if(omit_psk_server_kex) {
+      // nothing to send
    } else {
       pending_state.server_kex(std::make_unique<Server_Key_Exchange>(
          pending_state.handshake_io(), pending_state, policy(), *m_creds, rng(), private_key.get()));

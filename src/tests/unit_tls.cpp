@@ -2050,6 +2050,79 @@ class TLS_Unit_Tests final : public Test {
             bool m_offer_ems;
       };
 
+      void test_tls12_psk_without_hint(std::vector<Test::Result>& results,
+                                       const std::shared_ptr<Credentials_Manager_Test>& creds,
+                                       const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         Test::Result result("TLS 1.2 PSK without identity hint omits ServerKeyExchange");
+
+         class Inspecting_Callbacks final : public Botan::TLS::Callbacks {
+            public:
+               explicit Inspecting_Callbacks(std::vector<uint8_t>& outbound) : m_outbound(outbound) {}
+
+               void tls_emit_data(std::span<const uint8_t> bits) override {
+                  m_outbound.insert(m_outbound.end(), bits.begin(), bits.end());
+               }
+
+               void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> /*bits*/) override {}
+
+               void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+
+               void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& message) override {
+                  m_types.push_back(message.type());
+               }
+
+               bool saw(Botan::TLS::Handshake_Type type) const {
+                  return std::find(m_types.begin(), m_types.end(), type) != m_types.end();
+               }
+
+            private:
+               std::vector<uint8_t>& m_outbound;
+               std::vector<Botan::TLS::Handshake_Type> m_types;
+         };
+
+         try {
+            std::vector<uint8_t> c2s;
+            std::vector<uint8_t> s2c;
+            const auto client_cb = std::make_shared<Inspecting_Callbacks>(c2s);
+            const auto server_cb = std::make_shared<Inspecting_Callbacks>(s2c);
+
+            auto policy = std::make_shared<Botan::TLS::Text_Policy>("");
+            policy->set("allow_tls13", "false");
+            policy->set("key_exchange_methods", "PSK");
+            policy->set("ciphers", "AES-128/GCM");
+
+            const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+            Botan::TLS::Server server(server_cb, session_manager, creds, policy, rng);
+            Botan::TLS::Client client(client_cb,
+                                      session_manager,
+                                      creds,
+                                      policy,
+                                      rng,
+                                      Botan::TLS::Server_Information("server.example.com"),
+                                      Botan::TLS::Protocol_Version::TLS_V12);
+
+            while(!c2s.empty() || !s2c.empty()) {
+               std::vector<uint8_t> input;
+               std::swap(c2s, input);
+               server.received_data(input);
+               input.clear();
+               std::swap(s2c, input);
+               client.received_data(input);
+            }
+
+            result.test_is_true("handshake complete", client.is_active() && server.is_active());
+            result.test_is_true("ServerHelloDone received",
+                                client_cb->saw(Botan::TLS::Handshake_Type::ServerHelloDone));
+            result.test_is_false("no ServerKeyExchange received",
+                                 client_cb->saw(Botan::TLS::Handshake_Type::ServerKeyExchange));
+         } catch(const std::exception& e) {
+            result.test_failure("PSK without hint", e.what());
+         }
+
+         results.push_back(result);
+      }
+
       void test_tls12_exporter_requirements(std::vector<Test::Result>& results,
                                             const std::shared_ptr<Credentials_Manager_Test>& creds,
                                             const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
@@ -3136,6 +3209,7 @@ class TLS_Unit_Tests final : public Test {
    #if defined(BOTAN_HAS_TLS_12)
          test_sent_alert_validation(results, creds, rng, Botan::TLS::Protocol_Version::TLS_V12);
          test_tls12_exporter_requirements(results, creds, rng);
+         test_tls12_psk_without_hint(results, creds, rng);
    #endif
    #if defined(BOTAN_HAS_TLS_13)
          test_sent_alert_validation(results, creds, rng, Botan::TLS::Protocol_Version::TLS_V13);
