@@ -14,6 +14,7 @@
 #include <botan/tls_messages_12.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_signature_scheme.h>
+#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_record.h>
 
 namespace Botan::TLS {
@@ -294,6 +295,11 @@ std::pair<std::string, Signature_Format> Handshake_State::parse_sig_format(
    if(!supported_algos_include(supported_algos, scheme)) {
       throw TLS_Exception(Alert::IllegalParameter,
                           "TLS signature extension did not allow for " + scheme.to_string() + " signature");
+   }
+
+   // The offered schemes might have been modified by the application
+   if(!value_exists(policy.acceptable_signature_schemes(), scheme)) {
+      throw TLS_Exception(Alert::IllegalParameter, "Peer sent " + scheme.to_string() + " signature rejected by policy");
    }
 
    if(!scheme.format().has_value()) {
