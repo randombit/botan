@@ -350,7 +350,8 @@ std::map<std::string, std::vector<X509_Certificate>> get_server_certs(
       const std::vector<X509_Certificate> certs = creds.cert_chain_single_type(
          cert_type, to_algorithm_identifiers(cert_sig_schemes), "tls-server", std::string(hostname));
 
-      if(!certs.empty()) {
+      // The credentials manager might return a chain of another type than requested
+      if(!certs.empty() && certs.front().subject_public_key()->algo_name() == cert_type) {
          cert_chains[cert_type] = certs;
       }
    }
@@ -715,9 +716,27 @@ void Server_Impl_12::process_certificate_verify_msg(Server_Handshake_State& pend
 
    const auto cert_constraints = client_certs[0].constraints();
    if(!cert_constraints.empty()) {
-      if(!cert_constraints.includes_any(Key_Constraints::DigitalSignature, Key_Constraints::NonRepudiation)) {
+      if(!cert_constraints.includes(Key_Constraints::DigitalSignature)) {
          throw TLS_Exception(Alert::BadCertificate, "Client certificate does not support signing");
       }
+   }
+
+   // The chain is verified first, so that an untrusted peer cannot make us
+   // perform an expensive signature verification with a key of its choice
+   try {
+      const std::string sni_hostname = pending_state.client_hello()->sni_hostname();
+      const auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-server", sni_hostname);
+
+      callbacks().tls_verify_cert_chain(client_certs,
+                                        {},  // ocsp
+                                        trusted_CAs,
+                                        Usage_Type::TLS_CLIENT_AUTH,
+                                        sni_hostname,
+                                        policy());
+   } catch(TLS_Exception&) {
+      throw;
+   } catch(std::exception& e) {
+      throw TLS_Exception(Alert::BadCertificate, e.what());
    }
 
    const bool sig_valid = pending_state.client_verify()->verify(client_certs[0], pending_state, policy());
@@ -731,20 +750,6 @@ void Server_Impl_12::process_certificate_verify_msg(Server_Handshake_State& pend
    */
    if(!sig_valid) {
       throw TLS_Exception(Alert::DecryptError, "Client cert verify failed");
-   }
-
-   try {
-      const std::string sni_hostname = pending_state.client_hello()->sni_hostname();
-      const auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-server", sni_hostname);
-
-      callbacks().tls_verify_cert_chain(client_certs,
-                                        {},  // ocsp
-                                        trusted_CAs,
-                                        Usage_Type::TLS_CLIENT_AUTH,
-                                        sni_hostname,
-                                        policy());
-   } catch(std::exception& e) {
-      throw TLS_Exception(Alert::BadCertificate, e.what());
    }
 
    pending_state.set_expected_next(Handshake_Type::HandshakeCCS);

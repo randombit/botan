@@ -9,12 +9,15 @@
 
 #include <botan/tls_messages_13.h>
 
+#include <botan/ber_dec.h>
 #include <botan/credentials_manager.h>
 #include <botan/ocsp.h>
+#include <botan/pk_algs.h>
 #include <botan/tls_alert.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
+#include <botan/tls_extensions_13.h>
 #include <botan/tls_policy.h>
 #include <botan/x509_key.h>
 #include <botan/internal/stl_util.h>
@@ -27,13 +30,38 @@ namespace Botan::TLS {
 
 namespace {
 
+// RFC 8446 4.4.2.2
+//    The certificate MUST allow the key to be used for signing (i.e.,
+//    the digitalSignature bit MUST be set if the Key Usage extension is
+//    present) [...]
 bool certificate_allows_signing(const X509_Certificate& cert) {
    const auto constraints = cert.constraints();
    if(constraints.empty()) {
       return true;
    }
 
-   return constraints.includes_any(Key_Constraints::DigitalSignature, Key_Constraints::NonRepudiation);
+   return constraints.includes(Key_Constraints::DigitalSignature);
+}
+
+// RFC 7250 3.
+//    The SubjectPublicKeyInfo value in the Certificate payload MUST
+//    contain the DER encoding [X.690] of the SubjectPublicKeyInfo.
+std::unique_ptr<Public_Key> decode_raw_public_key(std::span<const uint8_t> spki) {
+   AlgorithmIdentifier alg_id;
+   std::vector<uint8_t> key_bits;
+
+   BER_Decoder(spki, BER_Decoder::Limits::DER())
+      .start_sequence()
+      .decode(alg_id)
+      .decode_octet_aligned_bitstring(key_bits)
+      .end_cons()
+      .verify_end();
+
+   if(key_bits.empty()) {
+      throw Decoding_Error("Empty raw public key");
+   }
+
+   return load_public_key(alg_id, key_bits);
 }
 
 }  // namespace
@@ -183,9 +211,13 @@ Certificate_13::Certificate_13(const Certificate_Request_13& cert_request,
                                Callbacks& callbacks,
                                Certificate_Type cert_type) :
       m_request_context(cert_request.context()), m_side(Connection_Side::Client) {
+   // RFC 8446 4.4.2
+   //    If the server requests client authentication but no suitable
+   //    certificate is available, the client MUST send a Certificate message
+   //    containing no certificates [...].
    const auto key_types = filter_signature_schemes(cert_request.signature_schemes(), Protocol_Version::TLS_V13);
    if(key_types.empty()) {
-      throw TLS_Exception(Alert::HandshakeFailure, "Failed to agree on any signature algorithm");
+      return;
    }
    const std::string op_type = "tls-client";
 
@@ -245,8 +277,22 @@ Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
    const std::string context = client_hello.sni_hostname();
 
    if(cert_type == Certificate_Type::X509) {
-      auto cert_chain = credentials_manager.find_cert_chain(
-         key_types, to_algorithm_identifiers(client_hello.certificate_signature_schemes()), {}, op_type, context);
+      // RFC 8446 4.2.4
+      //    The "certificate_authorities" extension is used to indicate the
+      //    certificate authorities (CAs) which an endpoint supports and which
+      //    SHOULD be used by the receiving endpoint to guide certificate
+      //    selection.
+      std::vector<X509_DN> acceptable_CAs;
+      if(const auto* cas = client_hello.extensions().get<Certificate_Authorities>()) {
+         acceptable_CAs = cas->distinguished_names();
+      }
+
+      auto cert_chain =
+         credentials_manager.find_cert_chain(key_types,
+                                             to_algorithm_identifiers(client_hello.certificate_signature_schemes()),
+                                             acceptable_CAs,
+                                             op_type,
+                                             context);
 
       // RFC 8446 4.4.2
       //    The server's certificate_list MUST always be non-empty.
@@ -292,7 +338,7 @@ Certificate_13::Certificate_Entry::Certificate_Entry(TLS_Data_Reader& reader,
       //    available encoding used in a PKIX certificate in the form of a
       //    SubjectPublicKeyInfo structure is reused.
       try {
-         m_raw_public_key = X509::load_key(reader.get_tls_length_value(3));
+         m_raw_public_key = decode_raw_public_key(reader.get_tls_length_value(3));
       } catch(Exception& e) {
          throw TLS_Exception(Alert::DecodeError, e.what());
       }

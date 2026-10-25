@@ -314,15 +314,21 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
 
 namespace {
 
+// RFC 5246 7.4.2
+//    the certificate MUST allow the key to be used for encryption (the
+//    keyEncipherment bit MUST be set if the key usage extension is present)
+//    [...]
+//    the certificate MUST allow the key to be used for signing (the
+//    digitalSignature bit MUST be set if the key usage extension is present)
 bool key_usage_matches_ciphersuite(Key_Constraints usage, const Ciphersuite& suite) {
    if(usage == Key_Constraints::None) {
       return true;  // anything goes ...
    }
 
    if(suite.kex_method() == Kex_Algo::STATIC_RSA) {
-      return usage.includes_any(Key_Constraints::KeyEncipherment, Key_Constraints::DataEncipherment);
+      return usage.includes(Key_Constraints::KeyEncipherment);
    } else {
-      return usage.includes_any(Key_Constraints::DigitalSignature, Key_Constraints::NonRepudiation);
+      return usage.includes(Key_Constraints::DigitalSignature);
    }
 }
 
@@ -675,6 +681,10 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          throw TLS_Exception(Alert::BadCertificate, "Certificate usage constraints do not allow this ciphersuite");
       }
 
+      // With a signing key this is also checked once the ServerKeyExchange
+      // signature is verified, but for RSA key exchange this is the only place
+      policy().check_peer_key_acceptable(*peer_key);
+
       state.record_server_public_key(std::move(peer_key));
 
       if(state.ciphersuite().kex_method() != Kex_Algo::STATIC_RSA) {
@@ -768,8 +778,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          //       algorithm pair in supported_signature_algorithms.
          //
          // TLS 1.2 has no signature_algorithms_cert analog, so the one list
-         // constrains both. If nothing survives the filter, pass the requested
-         // types through and let the credentials manager decide.
+         // constrains both.
          const auto usable_key_types = filter_signature_schemes(cert_req.signature_schemes(), state.version());
 
          std::vector<std::string> key_types;
@@ -778,16 +787,21 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
                key_types.push_back(cert_type);
             }
          }
-         if(key_types.empty()) {
-            key_types = cert_req.acceptable_cert_types();
-         }
 
-         const std::vector<X509_Certificate> client_certs =
-            m_creds->find_cert_chain(key_types,
-                                     to_algorithm_identifiers(cert_req.signature_schemes()),
-                                     cert_req.acceptable_CAs(),
-                                     "tls-client",
-                                     m_info.hostname());
+         // RFC 5246 7.4.6
+         //    If no suitable certificate is available, the client MUST send a
+         //    certificate message containing no certificates.
+         //
+         // An empty list of key types would mean "no preference" to the
+         // credentials manager, so it is not asked at all.
+         std::vector<X509_Certificate> client_certs;
+         if(!key_types.empty()) {
+            client_certs = m_creds->find_cert_chain(key_types,
+                                                    to_algorithm_identifiers(cert_req.signature_schemes()),
+                                                    cert_req.acceptable_CAs(),
+                                                    "tls-client",
+                                                    m_info.hostname());
+         }
 
          state.client_certs(std::make_unique<Certificate_12>(state.handshake_io(), state.hash(), client_certs));
       }

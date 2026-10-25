@@ -279,13 +279,25 @@ Client_Key_Exchange::Client_Key_Exchange(std::span<const uint8_t> contents,
       const uint8_t expected_content_bytes[expected_content_size] = {client_major, client_minor};
       const uint8_t expected_content_pos[expected_content_size] = {0, 1};
 
-      m_pre_master = decryptor.decrypt_or_random(encrypted_pre_master.data(),
-                                                 encrypted_pre_master.size(),
-                                                 expected_plaintext_size,
-                                                 rng,
-                                                 expected_content_bytes,
-                                                 expected_content_pos,
-                                                 expected_content_size);
+      // RFC 5246 7.4.7.1
+      //    In any case, a TLS server MUST NOT generate an alert if processing an
+      //    RSA-encrypted premaster secret message fails, or the version number
+      //    is not as expected.  Instead, it MUST continue the handshake with a
+      //    randomly generated premaster secret.
+      //
+      // decrypt_or_random throws if the ciphertext is invalid based on public
+      // information alone (such as its length), so this reveals nothing.
+      try {
+         m_pre_master = decryptor.decrypt_or_random(encrypted_pre_master.data(),
+                                                    encrypted_pre_master.size(),
+                                                    expected_plaintext_size,
+                                                    rng,
+                                                    expected_content_bytes,
+                                                    expected_content_pos,
+                                                    expected_content_size);
+      } catch(Decoding_Error&) {
+         m_pre_master = rng.random_vec(expected_plaintext_size);
+      }
    } else {
       TLS_Data_Reader reader("ClientKeyExchange", contents);
 
