@@ -109,6 +109,12 @@ class BOTAN_TEST_API Channel_IO {
        */
       void notify_closed_for_reading();
 
+      /**
+       * Notifies that the channel was shut down in both directions. The IO
+       * discards any read-side state; no further data will be processed.
+       */
+      void notify_shutdown();
+
       void set_cipher_state(std::weak_ptr<Cipher_State> cipher_state) { m_cipher_state = std::move(cipher_state); }
 
       void set_record_size_limits(uint16_t out, uint16_t in);
