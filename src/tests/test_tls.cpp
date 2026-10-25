@@ -412,6 +412,9 @@ class TLS_CBC_KAT_Tests final : public Text_Based_Test {
             std::swap(in, out);
          }
 
+         result.test_is_true("requires the entire message", tls_cbc.requires_entire_message());
+         result.test_sz_gte("output_length is an upper bound", tls_cbc.output_length(in.size()), out.size());
+
          // Test 1: process the entire message at once
          std::vector<uint8_t> inout = in;
          tls_cbc.start(nonce);
@@ -493,6 +496,66 @@ class TLS_Null_Tests final : public Text_Based_Test {
          }
       }
 
+      void chunked_test(Test::Result& result,
+                        const std::string& hash,
+                        const std::vector<uint8_t>& key,
+                        const std::vector<uint8_t>& associated_data,
+                        const std::vector<uint8_t>& message,
+                        const std::vector<uint8_t>& tls_fragment) {
+         auto mac = Botan::MessageAuthenticationCode::create_or_throw(Botan::fmt("HMAC({})", hash));
+         const auto mac_output_length = mac->output_length();
+         Botan::TLS::TLS_NULL_HMAC_AEAD_Encryption tls_null_encrypt(std::move(mac), mac_output_length);
+
+         tls_null_encrypt.set_key(key);
+         tls_null_encrypt.set_associated_data(associated_data);
+
+         for(size_t split : {size_t(0), message.size() / 2, message.size()}) {
+            Botan::secure_vector<uint8_t> first(message.begin(), message.begin() + split);
+            Botan::secure_vector<uint8_t> rest(message.begin() + split, message.end());
+            tls_null_encrypt.start();
+            tls_null_encrypt.update(first);
+            tls_null_encrypt.finish(rest);
+            first.insert(first.end(), rest.begin(), rest.end());
+            result.test_bin_eq("Chunked encryption matches expectation", first, tls_fragment);
+         }
+      }
+
+      void misuse_test(Test::Result& result,
+                       const std::string& hash,
+                       const std::vector<uint8_t>& key,
+                       const std::vector<uint8_t>& associated_data) {
+         const auto make_mac = [&] {
+            return Botan::MessageAuthenticationCode::create_or_throw(Botan::fmt("HMAC({})", hash));
+         };
+         const size_t mac_len = make_mac()->output_length();
+
+         result.test_throws<Botan::Invalid_Argument>("zero MAC key length",
+                                                     [&] { Botan::TLS::TLS_NULL_HMAC_AEAD_Encryption(make_mac(), 0); });
+
+         Botan::TLS::TLS_NULL_HMAC_AEAD_Encryption enc(make_mac(), mac_len);
+         enc.set_key(key);
+         result.test_throws<Botan::Invalid_State>("start without associated data", [&] { enc.start(); });
+
+         enc.set_associated_data(associated_data);
+         enc.set_key(key);
+         result.test_throws<Botan::Invalid_State>("associated data cleared by set_key", [&] { enc.start(); });
+
+         enc.set_associated_data(associated_data);
+         enc.start();
+         Botan::secure_vector<uint8_t> buf(4);
+         result.test_throws<Botan::Invalid_Argument>("encryption offset past the end", [&] { enc.finish(buf, 5); });
+
+         Botan::TLS::TLS_NULL_HMAC_AEAD_Decryption dec(make_mac(), mac_len);
+         dec.set_key(key);
+         dec.set_associated_data(associated_data);
+         dec.start();
+         Botan::secure_vector<uint8_t> dbuf(mac_len + 4);
+         result.test_throws<Botan::Invalid_Argument>("decryption offset past the end",
+                                                     [&] { dec.finish(dbuf, dbuf.size() + 1); });
+         result.test_throws<Botan::Invalid_Argument>("decryption offset wrapping the tag length",
+                                                     [&] { dec.finish(dbuf, SIZE_MAX - mac_len + 1); });
+      }
+
       void invalid_ad_length_test(Test::Result& result,
                                   const std::string& hash,
                                   const std::vector<uint8_t>& associated_data) {
@@ -517,6 +580,8 @@ class TLS_Null_Tests final : public Text_Based_Test {
          if(header.empty()) {
             encryption_test(result, hash, key, associated_data, expected_message, tls_fragment);
             decryption_test(result, hash, key, associated_data, expected_message, tls_fragment, header);
+            chunked_test(result, hash, key, associated_data, expected_message, tls_fragment);
+            misuse_test(result, hash, key, associated_data);
          }
 
          if(header == "InvalidMAC") {
