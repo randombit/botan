@@ -1182,6 +1182,51 @@ class TLS_Unit_Tests final : public Test {
       }
 
       /**
+       * A TLS 1.2 server that requires client certificates but cannot send a
+       * CertificateRequest must fail the handshake instead of continuing
+       * without client authentication.
+       */
+      void test_tls12_required_client_auth_without_signature_schemes(
+         std::vector<Test::Result>& results, const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         using PV = Botan::TLS::Protocol_Version;
+
+         class No_Signature_Schemes_Policy final : public Botan::TLS::Text_Policy {
+            public:
+               No_Signature_Schemes_Policy() :
+                     Text_Policy("allow_tls13 = false\nrequire_client_certificate_authentication = true\n") {}
+
+               size_t minimum_rsa_bits() const override { return 1024; }
+
+               size_t minimum_signature_strength() const override { return 80; }
+
+               std::vector<Botan::TLS::Signature_Scheme> acceptable_signature_schemes() const override { return {}; }
+         };
+
+         const auto creds = create_creds(*rng, true /* with_client_certs */);
+         if(!creds) {
+            results.push_back(Test::Result::Note("TLS 1.2 required client auth", "no ECC group available"));
+            return;
+         }
+
+         const auto client_policy = std::make_shared<Test_Policy>();
+         set_allowed_versions(client_policy, std::array<PV, 1>{PV::TLS_V12});
+
+         TLS_Handshake_Test test("TLS v1.2 required client auth without acceptable signature schemes",
+                                 PV::TLS_V12,
+                                 creds,
+                                 client_policy,
+                                 std::make_shared<No_Signature_Schemes_Policy>(),
+                                 rng,
+                                 make_session_manager(rng),
+                                 make_session_manager(rng),
+                                 false);
+         test.set_client_expected_handshake_alert(Botan::TLS::Alert::HandshakeFailure);
+         test.expect_handshake_failure();
+         test.go();
+         results.push_back(test.results());
+      }
+
+      /**
        * The DTLS-SRTP profile negotiated via the use_srtp extension (RFC 5764)
        * is connection state that must survive session resumption: the
        * abbreviated ClientHello and ServerHello have to carry use_srtp again so
@@ -2475,6 +2520,7 @@ class TLS_Unit_Tests final : public Test {
 
    #if defined(BOTAN_HAS_TLS_12)
          test_tls12_client_cert_selection(results, rng);
+         test_tls12_required_client_auth_without_signature_schemes(results, rng);
 
          // DTLS-SRTP profile must survive session resumption (RFC 5764)
          test_dtls12_srtp_resumption(results, rng);

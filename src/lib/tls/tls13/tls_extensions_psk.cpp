@@ -13,6 +13,7 @@
 #include <botan/hash.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_policy.h>
 #include <botan/tls_psk_identity_13.h>
 #include <botan/tls_session.h>
 #include <botan/tls_session_manager.h>
@@ -333,6 +334,17 @@ std::unique_ptr<PSK> PSK::select_offered_psk(std::string_view host,
    //
    // Externally provided PSKs
    //
+
+   // RFC 8446 4.3.2
+   //    Servers which are authenticating with a PSK MUST NOT send the
+   //    CertificateRequest message in the main handshake
+   //
+   // Selecting an external PSK would silently drop a mandatory client
+   // certificate, so ignore them and perform a full handshake instead.
+   if(policy.require_client_certificate_authentication()) {
+      return nullptr;
+   }
+
    std::vector<std::string> psk_ids;
    std::transform(psks.begin(), psks.end(), std::back_inserter(psk_ids), [&](const auto& psk) {
       return psk.identity().identity_as_string();

@@ -168,6 +168,10 @@ uint16_t choose_ciphersuite(const Policy& policy,
 
    const std::unordered_set<uint16_t> client_suite_set(client_suites.begin(), client_suites.end());
 
+   // PSK suites omit CertificateRequest entirely, so they cannot satisfy a
+   // policy that requires client certificate authentication
+   const bool require_client_cert = policy.require_client_certificate_authentication();
+
    const std::vector<Signature_Scheme> allowed_sig_schemes = policy.allowed_signature_schemes();
    const std::vector<Signature_Scheme> client_sig_methods = client_hello.signature_schemes();
 
@@ -221,6 +225,10 @@ uint16_t choose_ciphersuite(const Policy& policy,
       }
 
       if(suite->kex_method() == Kex_Algo::DH && client_supports_ffdhe_groups && !have_shared_dh_group) {
+         continue;
+      }
+
+      if(require_client_cert && !suite->is_certificate_required()) {
          continue;
       }
 
@@ -949,14 +957,23 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
       client_auth_CAs.insert(client_auth_CAs.end(), subjects.begin(), subjects.end());
    }
 
-   const bool request_cert = (client_auth_CAs.empty() == false) || policy().request_client_certificate_authentication();
+   const bool require_cert = policy().require_client_certificate_authentication();
+
+   const bool request_cert =
+      require_cert || (client_auth_CAs.empty() == false) || policy().request_client_certificate_authentication();
 
    // RFC 5246 7.4.4: supported_signature_algorithms<2..2^16-2>
    // Without at least one acceptable scheme we cannot construct a valid
    // CertificateRequest, so client cert auth is unreachable regardless.
-   const bool can_request_cert = !policy().acceptable_signature_schemes().empty();
+   const bool can_request_cert =
+      !policy().acceptable_signature_schemes().empty() && pending_state.ciphersuite().is_certificate_required();
 
-   if(request_cert && can_request_cert && pending_state.ciphersuite().is_certificate_required()) {
+   if(require_cert && !can_request_cert) {
+      throw TLS_Exception(Alert::HandshakeFailure,
+                          "Policy requires client certificate authentication but no CertificateRequest can be sent");
+   }
+
+   if(request_cert && can_request_cert) {
       pending_state.cert_req(std::make_unique<Certificate_Request_12>(
          pending_state.handshake_io(), pending_state.hash(), policy(), client_auth_CAs));
 

@@ -289,6 +289,7 @@
         "ClientCertificateType-Client-OffersRPKOnly-ServerOmitsExtension-TLS13": "Botan does not reject when server omits cert_type extension and client only offers RPK",
         "*ML-DSA*": "Need support for the LAMPS tagged seed keys",
         "TLS13-EmptyRecords-DTLS": "No DTLS 1.3",
+        "PSK-Server-DoNotRequestClientCertificate-TLS": "Botan declines external PSKs when client certificates are required",
         "TLS13-RecordPadding-DTLS": "No DTLS 1.3",
         "ClientCertificateType-Server-*-TLS12": "Botan does not support RPK certificate type negotiation in TLS 1.2",
         "ClientCertificateType-Client-*-TLS12*": "Botan does not support RPK certificate type negotiation in TLS 1.2",

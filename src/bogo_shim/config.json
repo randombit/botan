@@ -290,6 +290,7 @@
         "ServerCertificateType-Server-RejectsDefaultOnly-TLS13": "Botan does not reject X509-only cert type extension as server",
         "ServerCertificateType-Client-RequestsRPKOnly-ServerPickedX509ByDefaultInError-TLS13": "Botan does not enforce client-side cert type rejection of unsolicited X509",
         "ExtensionTrailingData-TrustAnchors-ClientHello-Server-TLS-TLS13": "No TrustAnchors extension support",
+        "PSK-Server-DoNotRequestClientCertificate-TLS": "Botan declines external PSKs when client certificates are required",
         "PSK-Client-PSKRequired-TLS": "Botan client does not enforce PSK-only mode",
         "PSK-Client-PSKRequired-TLS12-TLS": "Botan client does not enforce PSK-only mode",
         "PSK-*-DTLS": "No DTLS 1.3",
