@@ -71,9 +71,10 @@ void prune_old_cipher_states(std::map<uint16_t, T>& states) {
 // accounting assertions, or a failed allocation, still propagates rather than
 // leaving the association running on state those assertions exist to protect.
 template <typename F>
-void absorb_malformed_input_errors(bool absorb, F fn) {
+bool absorb_malformed_input_errors(bool absorb, F fn) {
    try {
       fn();
+      return false;
    } catch(const TLS_Exception&) {
       if(!absorb) {
          throw;
@@ -83,6 +84,7 @@ void absorb_malformed_input_errors(bool absorb, F fn) {
          throw;
       }
    }
+   return true;
 }
 
 }  // namespace
@@ -803,6 +805,8 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
       });
    };
 
+   const bool had_pending_state = (m_pending_state != nullptr);
+
    if(!m_pending_state) {
       // With no pending handshake this is either a new handshake attempt or a
       // DTLS retransmission from the previous handshake. The latter must not
@@ -859,7 +863,7 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
       const bool unauthenticated_against_active_association =
          (m_flavor == TLS_Flavor::DTLS) && (record_sequence >> 48) == 0 && m_active_state.has_value();
 
-      absorb_malformed_input_errors(unauthenticated_against_active_association, [&] {
+      const bool absorbed = absorb_malformed_input_errors(unauthenticated_against_active_association, [&] {
          m_pending_state->handshake_io().add_record(record.data(), record.size(), record_type, record_sequence);
 
          while(auto* pending = m_pending_state.get()) {
@@ -876,6 +880,12 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
             }
          }
       });
+
+      // A handshake started by a forged record would otherwise block a genuine
+      // restart for as long as the association exists
+      if(absorbed && !had_pending_state && m_pending_state) {
+         clear_pending_handshake_state();
+      }
    }
 }
 

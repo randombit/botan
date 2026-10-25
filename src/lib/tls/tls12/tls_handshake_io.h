@@ -151,6 +151,11 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
 
       bool have_more_data() const override;
 
+      /**
+      * @return the number of bytes currently claimed by partially received messages
+      */
+      size_t pending_reassembly_bytes() const { return m_pending_reassembly_bytes; }
+
       std::vector<uint8_t> send(const Handshake_Message& msg) override;
 
       std::vector<uint8_t> send_under_epoch(const Handshake_Message& msg, uint16_t epoch) override;
@@ -208,6 +213,12 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       // Drop buffered messages left over from an earlier handshake, identified
       // by an epoch below the most recently delivered one.
       void discard_stale_epoch_messages();
+
+      /**
+      * Drop all partially received messages, eg once they can no longer
+      * become part of the handshake
+      */
+      void discard_pending_messages();
 
       void retransmit_flight(size_t flight);
       void retransmit_last_flight();
