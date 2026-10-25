@@ -894,6 +894,24 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
                                    seqs.next_write_sequence(0xFFFF) == (uint64_t(0xFFFF) << 48));
             }),
 
+      // Epoch 0 is the unprotected initial state; a stream connection must
+      // never return to it after 65535 renegotiations.
+      CHECK("TLS epoch counters refuse to wrap",
+            [&](Test::Result& result) {
+               Stream_Sequence_Numbers seqs;
+
+               for(size_t i = 0; i != 0xFFFF; ++i) {
+                  seqs.new_write_cipher_state();
+                  seqs.new_read_cipher_state();
+               }
+
+               result.test_throws("write epoch will not wrap", [&] { seqs.new_write_cipher_state(); });
+               result.test_throws("read epoch will not wrap", [&] { seqs.new_read_cipher_state(); });
+
+               result.test_sz_eq("write epoch unchanged by the refusal", seqs.current_write_epoch(), size_t(0xFFFF));
+               result.test_sz_eq("read epoch unchanged by the refusal", seqs.current_read_epoch(), size_t(0xFFFF));
+            }),
+
       // Write sequence counters and replay windows are pruned as the
       // association rekeys, so a long-lived connection does not accumulate an
       // entry per epoch. Epoch 0 is exempt: a HelloVerifyRequest is written

@@ -438,12 +438,15 @@ void Channel_Impl_12::renegotiate(bool force_full_renegotiation) {
    }
 
    if(m_active_state.has_value()) {
-      // A DTLS handshake consumes one read and one write epoch. Refuse here if
+      // A handshake consumes one read and one write epoch. Refuse here if
       // either is spent, so the caller learns before the handshake tears the
-      // working association down partway through. See next_epoch().
-      if(m_flavor == TLS_Flavor::DTLS &&
-         (sequence_numbers().current_read_epoch() == 0xFFFF || sequence_numbers().current_write_epoch() == 0xFFFF)) {
-         throw Invalid_State("DTLS epoch counter exhausted, a new association is required");
+      // working connection down partway through. See next_epoch().
+      if(sequence_numbers().current_read_epoch() == 0xFFFF || sequence_numbers().current_write_epoch() == 0xFFFF) {
+         throw Invalid_State("TLS epoch counter exhausted, a new connection is required");
+      }
+
+      if(!secure_renegotiation_supported() && !policy().allow_insecure_renegotiation()) {
+         throw Invalid_State("Peer does not support secure renegotiation and policy prohibits insecure renegotiation");
       }
 
       if(!force_full_renegotiation) {
@@ -568,8 +571,11 @@ void Channel_Impl_12::activate_session() {
    const bool sent_terminal_dtls_flight =
       (m_flavor == TLS_Flavor::DTLS) && (m_is_server == (state.server_hello_done() != nullptr));
 
+   const bool encrypt_then_mac_used = m_active_state.has_value() && m_active_state->encrypt_then_mac_used();
+
    if(m_flavor == TLS_Flavor::DTLS) {
-      m_active_state = Active_Connection_State_12(state, application_protocol(), m_pending_state->take_handshake_io());
+      m_active_state =
+         Active_Connection_State_12(state, negotiated_application_protocol(), m_pending_state->take_handshake_io());
       if(auto* dtls_io = m_active_state->dtls_handshake_io()) {
          // Retain receive sequence state on both endpoints to distinguish a
          // retransmission from an unexpected new handshake message. Only the
@@ -577,7 +583,11 @@ void Channel_Impl_12::activate_session() {
          dtls_io->finalize_handshake(sent_terminal_dtls_flight);
       }
    } else {
-      m_active_state = Active_Connection_State_12(state, application_protocol());
+      m_active_state = Active_Connection_State_12(state, negotiated_application_protocol());
+   }
+
+   if(encrypt_then_mac_used) {
+      m_active_state->note_encrypt_then_mac_used();
    }
 
    clear_pending_handshake_state();
@@ -1073,6 +1083,18 @@ void Channel_Impl_12::secure_renegotiation_check(const Server_Hello_12* server_h
       const auto expected = secure_renegotiation_data_for_server_hello();
       if(!CT::is_equal<uint8_t>(data, expected).as_bool()) {
          throw TLS_Exception(Alert::HandshakeFailure, "Server sent bad values for secure renegotiation");
+      }
+   }
+
+   // RFC 7366 3.1
+   //    implementations MUST NOT renegotiate a downgrade from
+   //    encrypt-then-MAC to MAC-then-encrypt.
+   //
+   //    Note that these rules apply across potentially many rehandshakes.
+   if(m_active_state && m_active_state->encrypt_then_mac_used() && !server_hello->supports_encrypt_then_mac()) {
+      const auto suite = Ciphersuite::by_id(server_hello->ciphersuite());
+      if(suite.has_value() && suite->cbc_ciphersuite()) {
+         throw TLS_Exception(Alert::HandshakeFailure, "Renegotiation would downgrade from encrypt-then-MAC");
       }
    }
 }

@@ -46,13 +46,13 @@ class Stream_Sequence_Numbers final : public Connection_Sequence_Numbers {
       }
 
       void new_read_cipher_state() override {
+         m_read_epoch = next_epoch(m_read_epoch);
          m_read_seq_no = 0;
-         m_read_epoch++;
       }
 
       void new_write_cipher_state() override {
+         m_write_epoch = next_epoch(m_write_epoch);
          m_write_seq_no = 0;
-         m_write_epoch++;
       }
 
       uint16_t current_read_epoch() const override { return m_read_epoch; }
@@ -78,6 +78,14 @@ class Stream_Sequence_Numbers final : public Connection_Sequence_Numbers {
       }
 
    private:
+      // Epoch 0 denotes the initial, unprotected state
+      static uint16_t next_epoch(uint16_t epoch) {
+         if(epoch == std::numeric_limits<uint16_t>::max()) {
+            throw Invalid_State("TLS epoch counter exhausted");
+         }
+         return static_cast<uint16_t>(epoch + 1);
+      }
+
       uint64_t m_write_seq_no;
       uint64_t m_read_seq_no;
       uint16_t m_read_epoch;

@@ -26,11 +26,13 @@
    #include <botan/tls_callbacks.h>
    #include <botan/tls_client.h>
    #include <botan/tls_exceptn.h>
+   #include <botan/tls_extensions.h>
    #include <botan/tls_policy.h>
    #include <botan/tls_server.h>
    #include <botan/tls_session_manager_memory.h>
    #include <botan/tls_session_manager_noop.h>
    #include <botan/tls_session_manager_stateless.h>
+   #include <botan/internal/stl_util.h>
 
 #endif
 
@@ -98,6 +100,37 @@ class DTLS_Test_Callbacks final : public Botan::TLS::Callbacks {
 
       std::optional<bool> session_was_resumption() const { return m_session_was_resumption; }
 
+      // As a server, select this application protocol if the client offers it
+      void set_app_protocol(std::string protocol) { m_app_protocol = std::move(protocol); }
+
+      std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos) override {
+         if(!m_app_protocol.empty() && Botan::value_exists(client_protos, m_app_protocol)) {
+            return m_app_protocol;
+         }
+         return "";
+      }
+
+      // As a server, behave like a peer that does not support RFC 5746
+      void omit_renegotiation_info() { m_omit_renegotiation_info = true; }
+
+      // As a client, offer these protocols also in a renegotiation ClientHello
+      void reoffer_app_protocols(std::vector<std::string> protocols) { m_reoffered_protocols = std::move(protocols); }
+
+      void tls_modify_extensions(Botan::TLS::Extensions& extn,
+                                 Botan::TLS::Connection_Side side,
+                                 Botan::TLS::Handshake_Type type) override {
+         if(m_omit_renegotiation_info && side == Botan::TLS::Connection_Side::Server &&
+            type == Botan::TLS::Handshake_Type::ServerHello) {
+            extn.remove_extension(Botan::TLS::Extension_Code::SafeRenegotiation);
+         }
+
+         if(!m_reoffered_protocols.empty() && side == Botan::TLS::Connection_Side::Client &&
+            type == Botan::TLS::Handshake_Type::ClientHello &&
+            !extn.has<Botan::TLS::Application_Layer_Protocol_Notification>()) {
+            extn.add(std::make_unique<Botan::TLS::Application_Layer_Protocol_Notification>(m_reoffered_protocols));
+         }
+      }
+
    private:
       Test::Result& m_result;
       std::vector<uint8_t>& m_outbound;
@@ -108,6 +141,9 @@ class DTLS_Test_Callbacks final : public Botan::TLS::Callbacks {
       std::optional<bool> m_session_was_resumption;
       uint64_t m_now_ms = 0;
       bool m_tolerate_fatal_alerts = false;
+      std::string m_app_protocol;
+      bool m_omit_renegotiation_info = false;
+      std::vector<std::string> m_reoffered_protocols;
 };
 
 class DTLS_PSK_Credentials final : public Botan::Credentials_Manager {
@@ -151,6 +187,7 @@ struct DTLS_Policy_Options final {
       bool allow_epoch0_restart = true;
       bool require_cookie_exchange = true;
       bool reuse_session_tickets = false;
+      bool allow_client_initiated_renegotiation = true;
       size_t initial_timeout_ms = 1;
       size_t maximum_timeout_ms = 8;
 };
@@ -191,7 +228,7 @@ class DTLS_PSK_Policy final : public Botan::TLS::Policy {
 
       bool allow_server_initiated_renegotiation() const override { return true; }
 
-      bool allow_client_initiated_renegotiation() const override { return true; }
+      bool allow_client_initiated_renegotiation() const override { return m_opts.allow_client_initiated_renegotiation; }
 
       bool reuse_session_tickets() const override { return m_opts.reuse_session_tickets; }
 
@@ -2282,6 +2319,128 @@ class DTLS_Renegotiation_Test : public Test {
 };
 
 BOTAN_REGISTER_TEST("tls", "tls_dtls_renegotiate", DTLS_Renegotiation_Test);
+
+// Renegotiation corner cases that are shared by TLS and DTLS 1.2
+class DTLS_Renegotiation_Policy_Test : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         return {server_initiated_without_client_initiated(),
+                 alpn_survives_renegotiation(),
+                 alpn_declined_in_renegotiation(),
+                 insecure_renegotiation_refused()};
+      }
+
+   private:
+      static bool sessions_established(const DTLS_Association& assoc, size_t n) {
+         return assoc.client_cb->sessions_established() == n && assoc.server_cb->sessions_established() == n &&
+                assoc.both_active();
+      }
+
+      // A renegotiation requested by the server's HelloRequest is not a
+      // client-initiated renegotiation
+      Test::Result server_initiated_without_client_initiated() {
+         Test::Result result("DTLS server-initiated renegotiation with client-initiated renegotiation disabled");
+
+         const auto rng = Test::new_shared_rng(this->test_name() + "/server-initiated");
+         DTLS_Policy_Options opts;
+         opts.allow_client_initiated_renegotiation = false;
+         auto assoc = make_association(result, rng, std::make_shared<DTLS_PSK_Policy>(opts));
+
+         result.test_is_true("initial handshake", assoc->pump_until([&] { return sessions_established(*assoc, 1); }));
+
+         assoc->server->renegotiate();
+         result.test_is_true("renegotiation completed",
+                             assoc->pump_until([&] { return sessions_established(*assoc, 2); }));
+         result.test_sz_eq("no alerts were sent", assoc->client_cb->alerts_received(), 0);
+
+         return result;
+      }
+
+      // ALPN is not renegotiated, so the protocol of the connection is kept
+      Test::Result alpn_survives_renegotiation() {
+         Test::Result result("DTLS application protocol is kept across renegotiation");
+
+         const auto rng = Test::new_shared_rng(this->test_name() + "/alpn");
+         auto assoc = make_association(result, rng);
+         assoc->server_cb->set_app_protocol("h2");
+         assoc->client = std::make_unique<Botan::TLS::Client>(assoc->client_cb,
+                                                              assoc->client_sessions,
+                                                              assoc->creds,
+                                                              assoc->client_policy,
+                                                              rng,
+                                                              Botan::TLS::Server_Information("localhost"),
+                                                              Botan::TLS::Protocol_Version::latest_dtls_version(),
+                                                              std::vector<std::string>{"http/1.1", "h2"});
+
+         result.test_is_true("initial handshake", assoc->pump_until([&] { return sessions_established(*assoc, 1); }));
+         result.test_str_eq("client protocol", assoc->client->application_protocol(), "h2");
+         result.test_str_eq("server protocol", assoc->server->application_protocol(), "h2");
+
+         // The renegotiation ClientHello (which does not offer ALPN) reaches the server
+         assoc->client->renegotiate();
+         assoc->pump_one();
+         result.test_str_eq("server protocol during renegotiation", assoc->server->application_protocol(), "h2");
+
+         result.test_is_true("renegotiation completed",
+                             assoc->pump_until([&] { return sessions_established(*assoc, 2); }));
+         result.test_str_eq("client protocol after renegotiation", assoc->client->application_protocol(), "h2");
+         result.test_str_eq("server protocol after renegotiation", assoc->server->application_protocol(), "h2");
+
+         return result;
+      }
+
+      // A renegotiation that offers ALPN but where the server selects no protocol
+      // clears the protocol on both sides
+      Test::Result alpn_declined_in_renegotiation() {
+         Test::Result result("DTLS application protocol is cleared when renegotiated ALPN is declined");
+
+         const auto rng = Test::new_shared_rng(this->test_name() + "/alpn-declined");
+         auto assoc = make_association(result, rng);
+         assoc->server_cb->set_app_protocol("h2");
+         assoc->client = std::make_unique<Botan::TLS::Client>(assoc->client_cb,
+                                                              assoc->client_sessions,
+                                                              assoc->creds,
+                                                              assoc->client_policy,
+                                                              rng,
+                                                              Botan::TLS::Server_Information("localhost"),
+                                                              Botan::TLS::Protocol_Version::latest_dtls_version(),
+                                                              std::vector<std::string>{"http/1.1", "h2"});
+
+         result.test_is_true("initial handshake", assoc->pump_until([&] { return sessions_established(*assoc, 1); }));
+         result.test_str_eq("client protocol", assoc->client->application_protocol(), "h2");
+         result.test_str_eq("server protocol", assoc->server->application_protocol(), "h2");
+
+         assoc->client_cb->reoffer_app_protocols({"http/1.1", "h2"});
+         assoc->server_cb->set_app_protocol("");
+         assoc->client->renegotiate();
+         result.test_is_true("renegotiation completed",
+                             assoc->pump_until([&] { return sessions_established(*assoc, 2); }));
+         result.test_str_eq("client protocol after renegotiation", assoc->client->application_protocol(), "");
+         result.test_str_eq("server protocol after renegotiation", assoc->server->application_protocol(), "");
+
+         return result;
+      }
+
+      // Policy::allow_insecure_renegotiation also applies to a renegotiation we initiate
+      Test::Result insecure_renegotiation_refused() {
+         Test::Result result("DTLS client does not initiate an insecure renegotiation");
+
+         const auto rng = Test::new_shared_rng(this->test_name() + "/insecure");
+         auto assoc = make_association(result, rng);
+         assoc->server_cb->omit_renegotiation_info();
+
+         result.test_is_true("initial handshake", assoc->pump_until([&] { return sessions_established(*assoc, 1); }));
+         result.test_is_true("server does not support secure renegotiation",
+                             !assoc->client->secure_renegotiation_supported());
+
+         result.test_throws<Botan::Invalid_State>("renegotiation is refused", [&] { assoc->client->renegotiate(); });
+         result.test_is_true("no ClientHello was sent", assoc->c2s.empty());
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls_dtls_renegotiate_policy", DTLS_Renegotiation_Policy_Test);
 
 // A delayed datagram carrying the previous handshake's client Finished must
 // not stall a renegotiation, even on a server whose policy permits epoch-zero

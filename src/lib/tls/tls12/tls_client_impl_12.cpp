@@ -502,7 +502,14 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
             throw TLS_Exception(Alert::IllegalParameter, "Server selected an ALPN protocol not offered by the client");
          }
       }
-      m_application_protocol = state.server_hello()->next_protocol();
+      if(active_state().has_value() && !state.client_hello()->supports_alpn()) {
+         // The application protocol is a property of the connection, which a
+         // renegotiation that does not offer ALPN does not change. If it was
+         // offered, the server cleared its protocol unless it selected one.
+         m_application_protocol = active_state()->application_protocol();
+      } else {
+         m_application_protocol = state.server_hello()->next_protocol();
+      }
 
       secure_renegotiation_check(state.server_hello());
 
