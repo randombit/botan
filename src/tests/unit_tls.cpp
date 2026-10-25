@@ -1885,6 +1885,75 @@ class TLS_Unit_Tests final : public Test {
          results.push_back(result);
       }
 
+      void test_sent_alert_validation(std::vector<Test::Result>& results,
+                                      const std::shared_ptr<Credentials_Manager_Test>& creds,
+                                      const std::shared_ptr<Botan::RandomNumberGenerator>& rng,
+                                      Botan::TLS::Protocol_Version version) {
+         Test::Result result("TLS sent alert validation " + version.to_string());
+
+         try {
+            std::vector<uint8_t> c2s;
+            std::vector<uint8_t> s2c;
+            const auto client_cb = std::make_shared<Useless_Record_Callbacks>(c2s);
+            const auto server_cb = std::make_shared<Useless_Record_Callbacks>(s2c);
+
+            auto policy = std::make_shared<Botan::TLS::Text_Policy>("");
+            policy->set("allow_tls12", version.is_pre_tls_13() ? "true" : "false");
+            policy->set("allow_tls13", version.is_pre_tls_13() ? "false" : "true");
+            policy->set("minimum_rsa_bits", "1024");
+            policy->set("minimum_signature_strength", "80");
+
+            const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+            Botan::TLS::Server server(server_cb, session_manager, creds, policy, rng);
+            Botan::TLS::Client client(client_cb,
+                                      session_manager,
+                                      creds,
+                                      policy,
+                                      rng,
+                                      Botan::TLS::Server_Information("server.example.com"),
+                                      version);
+
+            const auto pump = [&]() {
+               while(!c2s.empty() || !s2c.empty()) {
+                  if(!c2s.empty()) {
+                     std::vector<uint8_t> input;
+                     std::swap(c2s, input);
+                     server.received_data(input);
+                  }
+                  if(!s2c.empty()) {
+                     std::vector<uint8_t> input;
+                     std::swap(s2c, input);
+                     client.received_data(input);
+                  }
+               }
+            };
+
+            pump();
+            result.test_is_true("client is active", client.is_active());
+
+            // A type that has no single byte encoding is not sent at all
+            // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+            client.send_warning_alert(static_cast<Botan::TLS::Alert::Type>(0x128));
+            result.test_is_true("no record was emitted", c2s.empty());
+            result.test_is_true("client is still active", client.is_active());
+
+            client.send_warning_alert(Botan::TLS::Alert::BadRecordMac);
+            pump();
+            result.test_sz_eq("server received one alert", server_cb->alerts().size(), 1);
+            if(!server_cb->alerts().empty()) {
+               const auto& alert = server_cb->alerts()[0];
+               result.test_enum_eq("alert type", alert.type(), Botan::TLS::Alert::BadRecordMac);
+               // TLS 1.3 always sends error alerts with level fatal
+               result.test_bool_eq("alert level", alert.is_fatal(), !version.is_pre_tls_13());
+            }
+         } catch(const std::exception& e) {
+            result.test_failure("sent alert validation", e.what());
+         }
+
+         results.push_back(result);
+      }
+
    #if defined(BOTAN_HAS_TLS_13)
       class KeyUpdate_Counting_Callbacks final : public Botan::TLS::Callbacks {
          public:
@@ -2741,6 +2810,13 @@ class TLS_Unit_Tests final : public Test {
             test_useless_record_limit(results, creds, rng, Botan::TLS::Protocol_Version::TLS_V13, limit);
    #endif
          }
+
+   #if defined(BOTAN_HAS_TLS_12)
+         test_sent_alert_validation(results, creds, rng, Botan::TLS::Protocol_Version::TLS_V12);
+   #endif
+   #if defined(BOTAN_HAS_TLS_13)
+         test_sent_alert_validation(results, creds, rng, Botan::TLS::Protocol_Version::TLS_V13);
+   #endif
 
          // Test using a custom KDF instead of the original TLS 1.2 KDF
          // (this is a TLS 1.2 specific feature)
