@@ -111,6 +111,11 @@ Certificate_Request_13::Certificate_Request_13(std::vector<X509_DN> acceptable_C
          Alert::InternalError,
          "Application tls_modify_extensions callback removed Signature_Algorithms from the CertificateRequest");
    }
+
+   // An empty extension would not be serialized at all
+   if(m_extensions.get<Signature_Algorithms>()->supported_schemes().empty()) {
+      throw TLS_Exception(Alert::InternalError, "CertificateRequest does not contain any signature algorithms");
+   }
 }
 
 std::optional<Certificate_Request_13> Certificate_Request_13::maybe_create(const Client_Hello_13& client_hello,
@@ -126,6 +131,15 @@ std::optional<Certificate_Request_13> Certificate_Request_13::maybe_create(const
    }
 
    if(client_auth_CAs.empty() && !policy.request_client_certificate_authentication()) {
+      return std::nullopt;
+   }
+
+   // Without any acceptable signature scheme a client certificate cannot be requested
+   if(policy.acceptable_signature_schemes().empty()) {
+      if(policy.require_client_certificate_authentication()) {
+         throw TLS_Exception(Alert::InternalError,
+                             "Policy requires client certificate authentication but allows no signature schemes");
+      }
       return std::nullopt;
    }
 

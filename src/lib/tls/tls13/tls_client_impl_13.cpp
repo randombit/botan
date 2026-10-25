@@ -106,7 +106,12 @@ void Client_Impl_13::process_post_handshake_msg(Post_Handshake_Message_13 messag
       throw TLS_Exception(Alert::UnexpectedMessage, "received an unexpected post-handshake message");
    }
 
-   std::visit([&](auto&& m) { handle(m); }, *msg);
+   std::visit(
+      [&](auto&& m) {
+         callbacks().tls_inspect_handshake_msg(m);
+         handle(m);
+      },
+      *msg);
 }
 
 void Client_Impl_13::process_dummy_change_cipher_spec() {

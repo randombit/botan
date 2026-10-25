@@ -346,6 +346,8 @@ void Channel_Impl_13::shutdown() {
    m_can_write = false;
    m_cipher_state.reset();
    m_active_state.reset();
+   // Drop any records of the peer that are still buffered
+   m_channel_io->notify_closed_for_reading();
 }
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)

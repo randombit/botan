@@ -187,7 +187,12 @@ void Server_Impl_13::process_post_handshake_msg(Post_Handshake_Message_13 messag
       throw TLS_Exception(Alert::UnexpectedMessage, "Received an unexpected post-handshake message");
    }
 
-   std::visit([&](auto&& m) { handle(m); }, *msg);
+   std::visit(
+      [&](auto&& m) {
+         callbacks().tls_inspect_handshake_msg(m);
+         handle(m);
+      },
+      *msg);
 }
 
 void Server_Impl_13::process_dummy_change_cipher_spec() {
@@ -209,7 +214,9 @@ void Server_Impl_13::process_dummy_change_cipher_spec() {
 }
 
 bool Server_Impl_13::is_handshake_complete() const {
-   return m_active_state.has_value() || (m_handshake != nullptr && m_handshake->state.handshake_finished());
+   // A handshake that was aborted after the client's Finished is not complete
+   return m_active_state.has_value() ||
+          (m_handshake != nullptr && m_handshake->state.handshake_finished() && !is_closed());
 }
 
 void Server_Impl_13::maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const {

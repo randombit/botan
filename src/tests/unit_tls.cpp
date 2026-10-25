@@ -2109,11 +2109,25 @@ class TLS_Unit_Tests final : public Test {
 
             void tls_session_established(const Botan::TLS::Session_Summary& /*session*/) override {}
 
+            /**
+            * Received KeyUpdates also pass through tls_inspect_handshake_msg.
+            * KeyUpdates are never sent from within received_data(), so feeding
+            * incoming data through here separates the two directions.
+            */
+            void deliver(Botan::TLS::Channel& channel, std::span<const uint8_t> data) {
+               m_receiving = true;
+               try {
+                  channel.received_data(data);
+               } catch(...) {
+                  m_receiving = false;
+                  throw;
+               }
+               m_receiving = false;
+            }
+
             void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& message) override {
-               // This callback sees both sent and received handshake messages,
-               // but received KeyUpdates bypass it. Hence this counts the
-               // KeyUpdate messages sent by this side of the channel.
-               if(message.type() == Botan::TLS::Handshake_Type::KeyUpdate) {
+               // Counts the KeyUpdate messages sent by this side of the channel
+               if(!m_receiving && message.type() == Botan::TLS::Handshake_Type::KeyUpdate) {
                   ++m_key_updates_sent;
 
                   const auto* key_update = dynamic_cast<const Botan::TLS::Key_Update*>(&message);
@@ -2124,6 +2138,13 @@ class TLS_Unit_Tests final : public Test {
             }
 
             bool tls_peer_closed_connection() override { return m_respond_to_close_notify; }
+
+            uint64_t tls_current_monotonic_clock_ms() override {
+               return m_clock_ms.has_value() ? m_clock_ms.value()
+                                             : Botan::TLS::Callbacks::tls_current_monotonic_clock_ms();
+            }
+
+            void set_clock_ms(uint64_t now) { m_clock_ms = now; }
 
             size_t key_updates_sent() const { return m_key_updates_sent; }
 
@@ -2137,6 +2158,8 @@ class TLS_Unit_Tests final : public Test {
             size_t m_key_updates_sent = 0;
             size_t m_key_updates_requested = 0;
             bool m_respond_to_close_notify;
+            bool m_receiving = false;
+            std::optional<uint64_t> m_clock_ms;
       };
 
       class KeyUpdate_Test_Policy final : public Botan::TLS::Text_Policy {
@@ -2159,6 +2182,72 @@ class TLS_Unit_Tests final : public Test {
          private:
             uint64_t m_min_key_update_interval_ms;
       };
+
+      void test_tls13_key_update_rate_limit_clock(std::vector<Test::Result>& results,
+                                                  const std::shared_ptr<Credentials_Manager_Test>& creds,
+                                                  const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         struct Clock_Case {
+               std::string name;
+               uint64_t first_ms;
+               uint64_t second_ms;
+         };
+
+         for(const auto& clock : {Clock_Case{"a clock reading zero", 0, 0}, Clock_Case {
+                                     "a clock going backwards",
+                                     5000,
+                                     4000
+                                  }}) {
+            Test::Result result("TLS 1.3 KeyUpdate rate limit with " + clock.name);
+
+            try {
+               std::vector<uint8_t> c2s;
+               std::vector<uint8_t> s2c;
+               const auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
+               const auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
+
+               const auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
+               const auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(0, 1000);
+
+               const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+               Botan::TLS::Server server(server_cb, session_manager, creds, server_policy, rng);
+               Botan::TLS::Client client(client_cb,
+                                         session_manager,
+                                         creds,
+                                         client_policy,
+                                         rng,
+                                         Botan::TLS::Server_Information("server.example.com"),
+                                         Botan::TLS::Protocol_Version::TLS_V13);
+
+               while(!c2s.empty() || !s2c.empty()) {
+                  std::vector<uint8_t> input;
+                  std::swap(c2s, input);
+                  server_cb->deliver(server, input);
+                  input.clear();
+                  std::swap(s2c, input);
+                  client_cb->deliver(client, input);
+               }
+               result.test_is_true("handshake complete", server.is_active() && client.is_active());
+
+               server_cb->set_clock_ms(clock.first_ms);
+               client.update_traffic_keys(false);
+               std::vector<uint8_t> first;
+               std::swap(c2s, first);
+               result.test_no_throw("first KeyUpdate is accepted", [&] { server_cb->deliver(server, first); });
+
+               server_cb->set_clock_ms(clock.second_ms);
+               client.update_traffic_keys(false);
+               std::vector<uint8_t> second;
+               std::swap(c2s, second);
+               result.test_throws("second KeyUpdate is rejected", [&] { server_cb->deliver(server, second); });
+               result.test_is_false("server closed the connection", server.is_active());
+            } catch(const std::exception& e) {
+               result.test_failure("KeyUpdate rate limit", e.what());
+            }
+
+            results.push_back(result);
+         }
+      }
 
       void test_tls13_automatic_key_updates(std::vector<Test::Result>& results,
                                             const std::shared_ptr<Credentials_Manager_Test>& creds,
@@ -2192,12 +2281,12 @@ class TLS_Unit_Tests final : public Test {
                   if(!c2s.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(c2s, input);
-                     server.received_data(input.data(), input.size());
+                     server_cb->deliver(server, input);
                   }
                   if(!s2c.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(s2c, input);
-                     client.received_data(input.data(), input.size());
+                     client_cb->deliver(client, input);
                   }
                }
             };
@@ -2265,12 +2354,12 @@ class TLS_Unit_Tests final : public Test {
                   if(!c2s.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(c2s, input);
-                     server.received_data(input.data(), input.size());
+                     server_cb->deliver(server, input);
                   }
                   if(!s2c.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(s2c, input);
-                     client.received_data(input.data(), input.size());
+                     client_cb->deliver(client, input);
                   }
                }
             };
@@ -2319,10 +2408,11 @@ class TLS_Unit_Tests final : public Test {
                                       Botan::TLS::Server_Information("server.example.com"),
                                       Botan::TLS::Protocol_Version::TLS_V13);
 
-            const auto deliver = [](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
+            const auto deliver = [&](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
                std::vector<uint8_t> input;
                std::swap(transport, input);
-               receiver.received_data(input.data(), input.size());
+               const auto& cb = (&receiver == &server) ? server_cb : client_cb;
+               cb->deliver(receiver, input);
             };
 
             // Deliver the ClientHello; once the server responded with its
@@ -2403,12 +2493,12 @@ class TLS_Unit_Tests final : public Test {
                   if(!c2s.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(c2s, input);
-                     server.received_data(input.data(), input.size());
+                     server_cb->deliver(server, input);
                   }
                   if(!s2c.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(s2c, input);
-                     client.received_data(input.data(), input.size());
+                     client_cb->deliver(client, input);
                   }
                }
             };
@@ -2501,10 +2591,11 @@ class TLS_Unit_Tests final : public Test {
                                       Botan::TLS::Server_Information("server.example.com"),
                                       Botan::TLS::Protocol_Version::TLS_V13);
 
-            const auto deliver = [](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
+            const auto deliver = [&](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
                std::vector<uint8_t> input;
                std::swap(transport, input);
-               receiver.received_data(input.data(), input.size());
+               const auto& cb = (&receiver == &server) ? server_cb : client_cb;
+               cb->deliver(receiver, input);
             };
 
             while(!c2s.empty() || !s2c.empty()) {
@@ -2581,10 +2672,11 @@ class TLS_Unit_Tests final : public Test {
                                       Botan::TLS::Server_Information("server.example.com"),
                                       Botan::TLS::Protocol_Version::TLS_V13);
 
-            const auto deliver = [](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
+            const auto deliver = [&](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
                std::vector<uint8_t> input;
                std::swap(transport, input);
-               receiver.received_data(input.data(), input.size());
+               const auto& cb = (&receiver == &server) ? server_cb : client_cb;
+               cb->deliver(receiver, input);
             };
 
             while(!c2s.empty() || !s2c.empty()) {
@@ -2658,12 +2750,12 @@ class TLS_Unit_Tests final : public Test {
                   if(!c2s.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(c2s, input);
-                     server.received_data(input.data(), input.size());
+                     server_cb->deliver(server, input);
                   }
                   if(!s2c.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(s2c, input);
-                     client.received_data(input.data(), input.size());
+                     client_cb->deliver(client, input);
                   }
                }
             };
@@ -2936,6 +3028,7 @@ class TLS_Unit_Tests final : public Test {
 
    #if defined(BOTAN_HAS_TLS_13)
          test_tls13_automatic_key_updates(results, creds, rng);
+         test_tls13_key_update_rate_limit_clock(results, creds, rng);
    #endif
 
          // Too many consecutive warning alerts close the connection

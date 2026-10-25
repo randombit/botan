@@ -1061,7 +1061,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
 
                      ctx->check_callback_invocations(result,
                                                      "new session ticket received",
-                                                     {"tls_examine_extensions_new_session_ticket",
+                                                     {"tls_inspect_handshake_msg_new_session_ticket",
+                                                      "tls_examine_extensions_new_session_ticket",
                                                       "tls_should_persist_resumption_information",
                                                       "tls_current_timestamp"});
                      if(result.test_sz_eq("session was stored", ctx->stored_sessions().size(), 1)) {
