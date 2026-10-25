@@ -64,13 +64,6 @@ class BOTAN_TEST_API TLS_NULL_HMAC_AEAD_Mode : public AEAD_Mode {
       // calls mac().final() which clears the internal state, so we cache the
       // AD here and re-feed it at start_msg time.
       std::vector<uint8_t> m_ad;
-
-      // Single-call contract for process_msg: the TLS record code path is
-      // expected to MAC the entire record in one shot via finish_msg. A second
-      // process_msg call between start_msg and finish_msg would re-feed bytes
-      // to the MAC and produce a tag covering them twice; this flag is
-      // asserted to catch any such future misuse.
-      bool m_processed = false;
 };
 
 /**
