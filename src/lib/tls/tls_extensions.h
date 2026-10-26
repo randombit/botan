@@ -261,7 +261,8 @@ class BOTAN_UNSTABLE_API Supported_Groups final : public Extension {
 
       const std::vector<Group_Params>& groups() const;
 
-      // Returns the list of groups we recognize as ECDH curves
+      // Returns the list of groups we recognize as ECDH curves, along with
+      // any unknown groups outside the FFDHE range (see TLS::Callbacks)
       std::vector<Group_Params> ec_groups() const;
 
       // Returns the list of any groups in the FFDHE range

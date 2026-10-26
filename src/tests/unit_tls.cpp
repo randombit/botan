@@ -3114,38 +3114,9 @@ class TLS_Unit_Tests final : public Test {
 
          test_modern_versions("AES-128/GCM ECDHE_PSK", results, creds, rng, "ECDHE_PSK", "AES-128/GCM");
 
-         // Test with a custom curve
-
-         /*
-         * Disabled, currently broken.
-         *
-         * TLS 1.2 server side currently can't negotiate application-specific group codes.
-         *
-         * The current flow is that choose_ciphersuite computes have_shared_ecc_curve via
-         * Client_Hello::supported_ecc_curves(), which goes through Supported_Groups::ec_groups()
-         * and filters by Group_Params::is_pure_ecc_group(). That predicate only accepts a hardcoded
-         * set of known groups, so a custom code such as 0xFEE1 is silently dropped and the server
-         * throws "Can't agree on a ciphersuite with client".
-         */
-         const bool disabled = true;
-         if(Botan::EC_Group::supports_application_specific_group() && !disabled) {
-            /*
-            * First register a curve, in this case numsp256d1
-            */
-            const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF43");
-            const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF40");
-            const Botan::BigInt b("0x25581");
-            const Botan::BigInt order("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE43C8275EA265C6020AB20294751A825");
-
-            const Botan::BigInt g_x("0x01");
-            const Botan::BigInt g_y("0x696F1853C1E466D7FC82C96CCEEEDD6BD02C2F9375894EC10BF46306C2B56C77");
-
-            const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
-
-            Botan::OID::register_oid(oid, "numsp256d1");
-
-            // Creating this object implicitly registers the curve for future use ...
-            const auto group = Botan::EC_Group::register_custom_group(oid, p, a, b, g_x, g_y, order);
+         // Test with a custom curve, which the callbacks implement as numsp256d1
+         if(Botan::EC_Group::supports_application_specific_group()) {
+            register_numsp256d1();
 
             test_modern_versions("AES-256/GCM numsp256d1",
                                  results,

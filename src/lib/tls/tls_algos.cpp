@@ -291,6 +291,10 @@ std::vector<Group_Params> groups_usable_in_version(std::span<const Group_Params>
    return usable;
 }
 
+bool group_may_be_ecc(Group_Params group) {
+   return group.is_pure_ecc_group() || (!group.to_string().has_value() && !group.is_in_ffdhe_range());
+}
+
 std::optional<Group_Params_Code> Group_Params::pqc_hybrid_ecc() const {
    switch(m_code) {
       case Group_Params_Code::HYBRID_X25519_ML_KEM_768:
