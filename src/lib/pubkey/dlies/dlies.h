@@ -24,7 +24,7 @@ namespace Botan {
 *
 * @deprecated DLIES is obsolete and deprecated. Use HPKE in new systems.
 */
-class BOTAN_PUBLIC_API(2, 0) DLIES_Encryptor final : public PK_Encryptor {
+class BOTAN_DEPRECATED_API("Prefer HPKE") DLIES_Encryptor final : public PK_Encryptor {
    public:
       /**
       * Stream mode: use KDF to provide a stream of bytes to xor with the message
@@ -37,7 +37,7 @@ class BOTAN_PUBLIC_API(2, 0) DLIES_Encryptor final : public PK_Encryptor {
       *
       * output = (ephemeral) public key + ciphertext + tag
       */
-      BOTAN_DEPRECATED("DLIES support is deprecated")
+      BOTAN_DEPRECATED("DLIES support is deprecated, prefer HPKE")
       DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
                       RandomNumberGenerator& rng,
                       std::unique_ptr<KDF> kdf,
@@ -57,7 +57,7 @@ class BOTAN_PUBLIC_API(2, 0) DLIES_Encryptor final : public PK_Encryptor {
       *
       * output = (ephemeral) public key + ciphertext + tag
       */
-      BOTAN_DEPRECATED("DLIES support is deprecated")
+      BOTAN_DEPRECATED("DLIES support is deprecated, prefer HPKE")
       DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
                       RandomNumberGenerator& rng,
                       std::unique_ptr<KDF> kdf,
@@ -102,8 +102,10 @@ class BOTAN_PUBLIC_API(2, 0) DLIES_Encryptor final : public PK_Encryptor {
 
 /**
 * DLIES Decryption
+*
+* DLIES support is deprecated prefer HPKE in new systems
 */
-class BOTAN_PUBLIC_API(2, 0) DLIES_Decryptor final : public PK_Decryptor {
+class BOTAN_DEPRECATED_API("Prefer HPKE") DLIES_Decryptor final : public PK_Decryptor {
    public:
       /**
       * Stream mode: use KDF to provide a stream of bytes to xor with the message
@@ -116,7 +118,7 @@ class BOTAN_PUBLIC_API(2, 0) DLIES_Decryptor final : public PK_Decryptor {
       *
       * input = (ephemeral) public key + ciphertext + tag
       */
-      BOTAN_DEPRECATED("DLIES support is deprecated")
+      BOTAN_DEPRECATED("DLIES support is deprecated, prefer HPKE")
       DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
                       RandomNumberGenerator& rng,
                       std::unique_ptr<KDF> kdf,
@@ -136,7 +138,7 @@ class BOTAN_PUBLIC_API(2, 0) DLIES_Decryptor final : public PK_Decryptor {
       *
       * input = (ephemeral) public key + ciphertext + tag
       */
-      BOTAN_DEPRECATED("DLIES support is deprecated")
+      BOTAN_DEPRECATED("DLIES support is deprecated, prefer HPKE")
       DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
                       RandomNumberGenerator& rng,
                       std::unique_ptr<KDF> kdf,
