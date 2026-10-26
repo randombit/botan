@@ -29,9 +29,18 @@ void check_dsa_group(const DL_Group& group) {
    if(!group.has_q()) {
       throw Decoding_Error("Q parameter must be set for DSA");
    }
-   // All versions of FIPS 186 have required that Q be at least 160 bits
-   if(group.q_bits() < 160) {
-      throw Decoding_Error("DSA Q parameter must be at least 160 bits");
+
+   const size_t q_bits = group.q_bits();
+   const size_t p_bits = group.p_bits();
+
+   // TODO(Botan4) restrict to exactly the parameter sizes from FIPS 186-4
+   // (1024,160), (2048,224), (2048,256), or (3072,256)
+
+   if(q_bits < 160 || q_bits > 256) {
+      throw Decoding_Error("Invalid DSA q parameter size");
+   }
+   if(p_bits < 512 || p_bits > 3072) {
+      throw Decoding_Error("Invalid DSA p parameter size");
    }
 }
 
