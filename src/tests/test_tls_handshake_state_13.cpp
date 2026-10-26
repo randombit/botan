@@ -110,8 +110,8 @@ std::vector<Test::Result> handshake_message_filtering() {
 
             const auto server_hello_message = Botan::hex_decode(server_hello_message_hex);
 
-            auto server_hello =
-               std::get<Botan::TLS::Server_Hello_13>(Botan::TLS::Server_Hello_13::parse(server_hello_message));
+            auto server_hello = std::get<Botan::TLS::Server_Hello_13>(
+               Botan::TLS::Server_Hello_13::parse(server_hello_message, Botan::TLS::TLS_Flavor::TLS));
 
             const auto filtered = state.received(std::move(server_hello));
             result.test_is_true("client can receive server hello",
