@@ -22,7 +22,7 @@ namespace Botan {
 /**
 * DLIES Encryption
 *
-* @deprecated DLIES is obsolete and deprecated. Use HPKE in new systems.
+* DLIES is obsolete and deprecated. Use HPKE in new systems.
 */
 class BOTAN_DEPRECATED_API("Prefer HPKE") DLIES_Encryptor final : public PK_Encryptor {
    public:
