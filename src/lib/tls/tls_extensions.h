@@ -35,6 +35,7 @@ namespace TLS {
 
 class Policy;
 class TLS_Data_Reader;
+class Extensions;
 
 enum class Extension_Code : uint16_t {
    ServerNameIndication = 0,
@@ -346,6 +347,12 @@ class BOTAN_UNSTABLE_API SRTP_Protection_Profiles final : public Extension {
       Extension_Code type() const override { return static_type(); }
 
       const std::vector<uint16_t>& profiles() const { return m_pp; }
+
+      /**
+      * @returns the profile selected by the server in @p exts, or 0 if
+      *          no DTLS-SRTP profile was negotiated
+      */
+      static uint16_t selected_profile(const Extensions& exts);
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 

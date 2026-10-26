@@ -1,5 +1,6 @@
 /*
 * (C) 2026 Jack Lloyd
+*     2026 René Meusel - Rohde & Schwarz Networks and Cybersecurity GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -36,6 +37,7 @@ Active_Connection_State_13::Active_Connection_State_13(const Internal::Handshake
       m_version(state.server_hello().selected_version()),
       m_ciphersuite_code(state.server_hello().ciphersuite()),
       m_application_protocol(extract_alpn(state)),
+      m_srtp_profile(SRTP_Protection_Profiles::selected_profile(state.encrypted_extensions().extensions())),
       m_peer_certs(std::move(peer_certs)),
       m_client_random(state.client_hello().random()),
       m_psk_identity(std::move(psk_identity)),

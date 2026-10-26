@@ -58,7 +58,7 @@ Client_Hello_13 make_client_hello() {
 }
 
 Server_Hello_13 make_server_hello() {
-   return std::get<Server_Hello_13>(Server_Hello_13::parse(Botan::hex_decode(server_hello_body)));
+   return std::get<Server_Hello_13>(Server_Hello_13::parse(Botan::hex_decode(server_hello_body), TLS_Flavor::TLS));
 }
 
 Certificate_13 make_certificate() {

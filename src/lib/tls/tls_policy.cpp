@@ -333,6 +333,9 @@ bool Policy::acceptable_protocol_version(Protocol_Version version) const {
 
 Protocol_Version Policy::latest_supported_version(bool datagram) const {
    if(datagram) {
+      if(acceptable_protocol_version(Protocol_Version::DTLS_V13)) {
+         return Protocol_Version::DTLS_V13;
+      }
       if(acceptable_protocol_version(Protocol_Version::DTLS_V12)) {
          return Protocol_Version::DTLS_V12;
       }
@@ -387,6 +390,10 @@ bool Policy::allow_dtls12() const {
 #else
    return false;
 #endif
+}
+
+bool Policy::allow_dtls13() const {
+   return false;  // DTLS 1.3 is not yet supported
 }
 
 bool Policy::include_time_in_hello_random() const {
