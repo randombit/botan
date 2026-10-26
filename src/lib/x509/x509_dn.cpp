@@ -128,6 +128,54 @@ class X500_Char_Iterator final {
       size_t m_pos;
 };
 
+/*
+* Canonical form of an RDN's AVAs: each value is X.500-canonicalized
+* (case-fold and whitespace collapse) and the resulting (OID, value)
+* pairs are sorted, so an RDN's SET semantics reduce to vector equality.
+*/
+std::vector<std::pair<OID, std::string>> canonicalize_rdn(const std::vector<std::pair<OID, ASN1_String>>& rdn) {
+   std::vector<std::pair<OID, std::string>> result;
+   result.reserve(rdn.size());
+   for(const auto& ava : rdn) {
+      result.emplace_back(ava.first, X500_Char_Iterator::canonicalize(ava.second.value()));
+   }
+   if(result.size() != 1) {
+      std::sort(result.begin(), result.end());
+   }
+   return result;
+}
+
+/*
+* The canonical encoding of a DN is the concatenation of the encodings of
+* each RDN, so appending an RDN to a DN only requires appending its encoding.
+*/
+void append_canonical_rdn(std::vector<uint8_t>& canonical_bits, const std::vector<std::pair<OID, ASN1_String>>& rdn) {
+   const auto append_canonical_data = []<typename T>(std::vector<uint8_t>& out, const T& data) {
+      const std::array<uint8_t, 8> data_len = store_le(static_cast<uint64_t>(data.size()));
+      out.insert(out.end(), data_len.begin(), data_len.end());
+      out.insert(out.end(), data.begin(), data.end());
+   };
+
+   std::vector<uint8_t> rdn_bits;
+
+   for(const auto& [oid, value] : canonicalize_rdn(rdn)) {
+      append_canonical_data(rdn_bits, oid.BER_encode());
+      append_canonical_data(rdn_bits, value);
+   }
+
+   append_canonical_data(canonical_bits, rdn_bits);
+}
+
+std::vector<uint8_t> canonicalize_dn(const std::vector<std::vector<std::pair<OID, ASN1_String>>>& rdns) {
+   std::vector<uint8_t> canonical_bits;
+
+   for(const auto& rdn : rdns) {
+      append_canonical_rdn(canonical_bits, rdn);
+   }
+
+   return canonical_bits;
+}
+
 }  // namespace
 
 /*
@@ -146,18 +194,16 @@ void X509_DN::add_attribute(const OID& oid, const ASN1_String& str) {
    }
 
    // Each programmatic add appends a new single-AVA RDN.
-   m_rdn.push_back({std::make_pair(oid, str)});
-   m_dn_bits.clear();
-   update_canonical_bits();
+   add_rdn({std::make_pair(oid, str)});
 }
 
 void X509_DN::add_rdn(std::vector<std::pair<OID, ASN1_String>> rdn) {
    if(rdn.empty()) {
       return;
    }
+   append_canonical_rdn(m_canonical_dn_bits, rdn);
    m_rdn.push_back(std::move(rdn));
    m_dn_bits.clear();
-   update_canonical_bits();
 }
 
 std::vector<std::pair<OID, ASN1_String>> X509_DN::dn_info() const {
@@ -288,50 +334,6 @@ std::string X509_DN::deref_info_field(std::string_view info) {
    return std::string(info);
 }
 
-namespace {
-
-/*
-* Canonical form of an RDN's AVAs: each value is X.500-canonicalized
-* (case-fold and whitespace collapse) and the resulting (OID, value)
-* pairs are sorted, so an RDN's SET semantics reduce to vector equality.
-*/
-std::vector<std::pair<OID, std::string>> canonicalize_rdn(const std::vector<std::pair<OID, ASN1_String>>& rdn) {
-   std::vector<std::pair<OID, std::string>> result;
-   result.reserve(rdn.size());
-   for(const auto& ava : rdn) {
-      result.emplace_back(ava.first, X500_Char_Iterator::canonicalize(ava.second.value()));
-   }
-   if(result.size() != 1) {
-      std::sort(result.begin(), result.end());
-   }
-   return result;
-}
-
-std::vector<uint8_t> canonicalize_dn(const std::vector<std::vector<std::pair<OID, ASN1_String>>>& rdns) {
-   const auto append_canonical_data = []<typename T>(std::vector<uint8_t>& out, const T& data) {
-      const std::array<uint8_t, 8> data_len = store_le(static_cast<uint64_t>(data.size()));
-      out.insert(out.end(), data_len.begin(), data_len.end());
-      out.insert(out.end(), data.begin(), data.end());
-   };
-
-   std::vector<uint8_t> canonical_bits;
-
-   for(const auto& rdn : rdns) {
-      std::vector<uint8_t> rdn_bits;
-
-      for(const auto& [oid, value] : canonicalize_rdn(rdn)) {
-         append_canonical_data(rdn_bits, oid.BER_encode());
-         append_canonical_data(rdn_bits, value);
-      }
-
-      append_canonical_data(canonical_bits, rdn_bits);
-   }
-
-   return canonical_bits;
-}
-
-}  // namespace
-
 /*
 * Compare two X509_DNs for equality
 */
@@ -363,10 +365,6 @@ bool x509_dn_subtree_match(const X509_DN& name, const X509_DN& constraint) {
    }
 
    return std::equal(constraint_bits.begin(), constraint_bits.end(), name_bits.begin());
-}
-
-void X509_DN::update_canonical_bits() {
-   m_canonical_dn_bits = canonicalize_dn(m_rdn);
 }
 
 std::vector<uint8_t> X509_DN::DER_encode() const {

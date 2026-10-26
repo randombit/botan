@@ -274,8 +274,6 @@ class BOTAN_PUBLIC_API(2, 0) X509_DN final : public ASN1_Object {
       const std::vector<uint8_t>& _canonical_bytes() const { return m_canonical_dn_bits; }
 
    private:
-      void update_canonical_bits();
-
       // Outer vector: sequence of RDNs. Inner vector: AVAs within
       // one RDN (X.501 SET OF AttributeTypeAndValue).
       std::vector<std::vector<std::pair<OID, ASN1_String>>> m_rdn;
