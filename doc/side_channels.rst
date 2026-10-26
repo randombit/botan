@@ -200,6 +200,17 @@ which should not leak information about the secret scalar to side channels.
 
 For details see pcurves_impl.h in src/lib/math/pcurves/pcurves_impl
 
+.. warning::
+
+   Botan currently contains two distinct codepaths for elliptic curves, the
+   modern fixed-length implementation (pcurves) carefully designed to avoid side
+   channels, and an older, now deprecated, implementation (`legacy_ec_point`)
+   which uses arbitrary-length integers (`BigInt`) to represent coordinates.
+   The legacy implementation has several known side channels, which are
+   partially addressed by use of blinding. Passing a `Null_RNG` (or any other
+   unseeded RNG object) disables the blinding and exposes these side channels.
+   The `legacy_ec_point` module will be removed in the next major release.
+
 ECDH
 ----------------------
 
