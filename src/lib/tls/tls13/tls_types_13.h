@@ -9,6 +9,7 @@
 #ifndef BOTAN_TLS_TYPES_13_H_
 #define BOTAN_TLS_TYPES_13_H_
 
+#include <botan/secmem.h>
 #include <botan/strong_type.h>
 #include <functional>
 #include <vector>
@@ -57,9 +58,25 @@ using SerializedHandshakeMessage = Strong<std::vector<uint8_t>, struct Serialize
 /// Holds the serialization of a TLS 1.3 handshake protocol header.
 using HandshakeProtocolHeader = Strong<std::array<uint8_t, 4>, struct HandshakeProtocolHeader_>;
 
+/// Holds the serialization of a single TLS 1.3 handshake message along with
+/// the handshake protocol header.
+using MarshalledHandshakeMessage = Strong<std::vector<uint8_t>, struct MarshalledHandshakeMessage_>;
+
 /// Holds the serialization of a TLS 1.3 handshake message flight containing
 /// multiple handshake messages along with their handshake protocol headers.
 using MarshalledHandshakeMessageFlight = Strong<std::vector<uint8_t>, struct MarshalledHandshakeMessageFlight_>;
+
+/// Holds the serialization of a single TLS 1.3 handshake message fragment along
+/// with the handshake protocol header. This is used in DTLS' fragmentation.
+using MarshalledHandshakeMessageFragment = Strong<std::vector<uint8_t>, struct MarshalledHandshakeMessageFragment_>;
+
+/// Holds a bunch of marshalled handshake message fragments that are packed into
+/// a single record payload. This is used in DTLS' fragmentation.
+using PackedHandshakeMessageFragments = Strong<std::vector<uint8_t>, struct PackedHandshakeMessageFragments_>;
+
+/// Holds the serialization of a single TLS 1.3 record along with the record
+/// protocol header. Protected records hold the encrypted payload and AEAD tag.
+using MarshalledRecord = Strong<secure_vector<uint8_t>, struct MarshalledRecord_>;
 
 /**
  * Wraps the epoch0 (unprotected) sequence numbers that are being handed down

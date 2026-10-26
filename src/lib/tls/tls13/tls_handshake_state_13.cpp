@@ -50,6 +50,13 @@ Hello_Retry_Request& Handshake_State_13_Base::store(Hello_Retry_Request hello_re
    return m_hello_retry_request.value();
 }
 
+Hello_Verify_Request& Handshake_State_13_Base::store(Hello_Verify_Request hello_verify_request,
+                                                     const bool /*from_peer*/) {
+   BOTAN_STATE_CHECK(!m_hello_verify_request_12.has_value());
+   m_hello_verify_request_12 = std::move(hello_verify_request);
+   return m_hello_verify_request_12.value();
+}
+
 Encrypted_Extensions& Handshake_State_13_Base::store(Encrypted_Extensions encrypted_extensions,
                                                      const bool /*from_peer*/) {
    BOTAN_STATE_CHECK(!m_encrypted_extensions.has_value());
