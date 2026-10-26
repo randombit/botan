@@ -123,16 +123,16 @@ Protocol_Version Client_Hello_Internal::version() const {
    //    TLS 1.3 ClientHellos are identified as having a legacy_version of
    //    0x0303 and a supported_versions extension present with 0x0304 as
    //    the highest version indicated therein.
+   const bool is_dtls = m_legacy_version.is_datagram_protocol();
+   const auto protocol_version_13 = is_dtls ? Protocol_Version::DTLS_V13 : Protocol_Version::TLS_V13;
    if(!extensions().has<Supported_Versions>() ||
-      !extensions().get<Supported_Versions>()->supports(Protocol_Version::TLS_V13)) {
-      // The exact legacy_version is ignored we just inspect it to
-      // distinguish TLS and DTLS.
-      return (m_legacy_version.is_datagram_protocol()) ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
+      !extensions().get<Supported_Versions>()->supports(protocol_version_13)) {
+      return is_dtls ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
    }
 
    // Note: The Client_Hello_13 class will make sure that legacy_version
    //       is exactly 0x0303 (aka ossified TLS 1.2)
-   return Protocol_Version::TLS_V13;
+   return protocol_version_13;
 }
 
 Client_Hello::Client_Hello(Client_Hello&&) noexcept = default;
@@ -267,17 +267,7 @@ std::string Client_Hello::sni_hostname() const {
 }
 
 bool Client_Hello::offered_tls13() const {
-   // RFC 9846 4.2.2
-   //    TLS 1.3 ClientHellos are identified as having a legacy_version of
-   //    0x0303 and a "supported_versions" extension present with 0x0304 as the
-   //    highest version indicated therein.
-   const auto* versions = m_data->extensions().get<Supported_Versions>();
-   if(versions == nullptr) {
-      return false;
-   }
-
-   return versions->supports(Protocol_Version::TLS_V13) ||  //
-          versions->supports(Protocol_Version::DTLS_V13);
+   return m_data->version().is_tls_13_or_later();
 }
 
 std::vector<Protocol_Version> Client_Hello::supported_versions() const {

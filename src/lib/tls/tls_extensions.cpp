@@ -858,6 +858,18 @@ SRTP_Protection_Profiles::SRTP_Protection_Profiles(TLS_Data_Reader& reader,
    }
 }
 
+uint16_t SRTP_Protection_Profiles::selected_profile(const Extensions& exts) {
+   if(const auto* srtp = exts.get<SRTP_Protection_Profiles>()) {
+      const auto& profiles = srtp->profiles();
+      BOTAN_STATE_CHECK(profiles.size() == 1);
+      // The handshake logic guarantees that a negotiated "use_srtp" extension
+      // carries exactly one protection profile (RFC 5764 4.1.2): the server
+      // selects a single profile and the client validates the selection.
+      return profiles.front();
+   }
+   return 0;
+}
+
 std::vector<uint8_t> SRTP_Protection_Profiles::serialize(Connection_Side /*whoami*/) const {
    std::vector<uint8_t> buf;
 
