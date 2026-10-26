@@ -402,6 +402,43 @@ class BotanPythonTests(unittest.TestCase):
         self.assertEqual(len(my_custom_rng2.entropy_pool), 0)
         self.assertEqual(len(my_custom_rng3.entropy_pool), 0)
 
+    def test_custom_rng_callback_failure(self):
+        # Any exception from a callback must be reported as a failure, even
+        # a BotanException without an error code
+        for exn in [botan.BotanException("failed"),
+                    botan.BotanException("failed", 0),
+                    botan.BotanException("failed", -10),
+                    ValueError("failed"),
+                    KeyboardInterrupt()]:
+            def fail(*_args, exn=exn):
+                raise exn
+
+            rng = botan.RandomNumberGenerator("custom", get_callback=fail)
+            self.assertRaises(botan.BotanException, lambda rng=rng: rng.get(16))
+            self.assertRaises(botan.BotanException, lambda rng=rng: botan.PrivateKey.create('Ed25519', '', rng))
+
+            rng = botan.RandomNumberGenerator("custom", get_callback=lambda n: b'x' * n, add_entropy_callback=fail)
+            self.assertRaises(botan.BotanException, lambda rng=rng: rng.add_entropy(b'entropy'))
+
+    def test_custom_rng_callback_result_type(self):
+        class Index:
+            def __init__(self, v):
+                self._v = v
+
+            def __index__(self):
+                return self._v
+
+        # Anything accepted by bytes() as a length must be rejected
+        for get_cb in [lambda n: n, lambda n: n == 1, Index]:
+            rng = botan.RandomNumberGenerator("custom", get_callback=get_cb)
+            self.assertRaises(botan.BotanException, lambda rng=rng: rng.get(1))
+            self.assertRaises(botan.BotanException, lambda rng=rng: rng.get(16))
+            self.assertRaises(botan.BotanException, lambda rng=rng: botan.PrivateKey.create('Ed25519', '', rng))
+
+        for get_cb in [lambda n: b'x' * n, lambda n: bytearray(b'x' * n), lambda n: memoryview(b'x' * n)]:
+            rng = botan.RandomNumberGenerator("custom", get_callback=get_cb)
+            self.assertEqual(rng.get(16), b'x' * 16)
+
     def test_esdm_rng(self):
         try:
             esdm_rng = botan.RandomNumberGenerator("esdm-full")

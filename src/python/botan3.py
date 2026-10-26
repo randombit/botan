@@ -1090,11 +1090,14 @@ class _CustomRngContext:
     @staticmethod
     def _translate_exceptions(fn):
         def wrapper(*args, **kwargs):
+            # Returning 0 signals success to the C side, so every failure
+            # must map to a nonzero code. BaseException is caught because
+            # ctypes would otherwise return an uninitialized value.
             try:
                 return fn(*args, **kwargs)
             except BotanException as e:
-                return e.error_code()
-            except Exception:
+                return e.error_code() or -100  # internal error
+            except BaseException:
                 return -100  # internal error
         return wrapper
 
@@ -1103,7 +1106,8 @@ class _CustomRngContext:
     @_translate_exceptions
     def _custom_get(ctx, out, out_len):
         py_ctx = cast(ctx, POINTER(py_object)).contents.value
-        result = bytes(py_ctx.get_callback(out_len))
+        # bytes() would turn an integer into that many zero bytes
+        result = bytes(memoryview(py_ctx.get_callback(out_len)))
         if len(result) != out_len:
             return -1  # Invalid input
         memmove(out, result, out_len)
