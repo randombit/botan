@@ -277,6 +277,10 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_KA_Operation {
 /**
 * ECIES Encryption according to ISO 18033-2
 *
+* @warning ECIES is a complicated and poorly specified scheme which, while
+* standardized, in practice has significant interop difficulties. Prefer
+* HPKE in new systems.
+*
 * TODO(Botan4) remove derivation on PK_Encryptor and provide a direct API
 * for encryption taking all relevant params, avoiding setters/implicit state
 */
@@ -312,6 +316,15 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_Encryptor final : public PK_Encryptor {
       ///
       /// A new IV must be provided for each message; it is not included
       /// in the serialized ciphertext and must be conveyed separately
+      ///
+      /// @warning in ECIES the initialization vector is not authenticated. This
+      /// has the effect that for non-AEAD uses it is possible to corrupt
+      /// ciphertexts without detection. Workarounds for this include using an
+      /// AEAD mode (such as GCM), or including the initialization vector as
+      /// part of the "label" (associated data, which will be additionally
+      /// authenticated). This limitation of ECIES is intrinsic to the
+      /// specification and cannot be fixed by the library. Prefer HPKE in new
+      /// designs.
       void set_initialization_vector(const InitializationVector& iv) { m_iv = iv; }
 
       /// Set the label which is appended to the input for the message authentication code
@@ -336,6 +349,10 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_Encryptor final : public PK_Encryptor {
 
 /**
 * ECIES Decryption according to ISO 18033-2
+*
+* @warning ECIES is a complicated and poorly specified scheme which, while
+* standardized, in practice has significant interop difficulties. Prefer
+* HPKE in new systems.
 *
 * TODO(Botan4) remove derivation on PK_Decryptor and provide a direct API
 * for decryption taking all relevant params, avoiding setters/implicit state

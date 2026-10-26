@@ -888,6 +888,8 @@ support it directly, such as RSA or ElGamal; these use the EME class:
       interoperability. ECDH key exchange with a static receiver key is much
       simpler, and provides similar security properties.
 
+      Prefer HPKE in new systems.
+
    Parameters for encryption and decryption are set by the
    :cpp:class:`ECIES_System_Params` class which stores the EC domain parameters,
    the KDF (see :ref:`key_derivation_function`), the cipher (see
@@ -912,6 +914,19 @@ support it directly, such as RSA or ElGamal; these use the EME class:
       before each message with a random nonce suitable for the chosen cipher. In
       the ECIES message format the nonce is not conveyed with the produced
       ciphertext, so it must be set separately.
+
+      .. warning::
+
+         The ECIES specification has a flaw that the initialization vector is
+         not authenticated. If ECIES is used with a CBC mode cipher, an attacker
+         can trivially modify ciphertexts by flipping bits, and may also be able
+         to mount a padding oracle attack. To avoid this only use ECIES with an
+         AEAD mode such as GCM, or additionally authenticate the IV by including
+         it in the value passed to `set_label`. Alternately, use HPKE.
+
+   .. cpp:function:: void ECIES_Encryptor::set_label(std::string_view label)
+
+      Provide some additional data which is authenticated along with the ciphertext.
 
 .. cpp:class:: PK_Decryptor
 

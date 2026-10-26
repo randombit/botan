@@ -21,6 +21,8 @@ namespace Botan {
 
 /**
 * DLIES Encryption
+*
+* @deprecated DLIES is obsolete and deprecated. Use HPKE in new systems.
 */
 class BOTAN_PUBLIC_API(2, 0) DLIES_Encryptor final : public PK_Encryptor {
    public:
@@ -72,6 +74,12 @@ class BOTAN_PUBLIC_API(2, 0) DLIES_Encryptor final : public PK_Encryptor {
       /// If DLIES is being used with a cipher, a fresh IV must be provided for
       /// each message; it is not included in the serialized ciphertext and must
       /// be conveyed separately.
+      ///
+      /// @warning DLIES does not authenticate the IV, so for uses based on CBC
+      /// it is possible for an attacker to manipulate ciphertexts undetectably,
+      /// for example by flipping bytes in the ciphertext knowing that this will
+      /// cause single corrupted blocks. This weakness is intrinsic to the DLIES
+      /// scheme when used with CBC mode ciphers.
       inline void set_initialization_vector(const InitializationVector& iv) { m_iv = iv; }
 
    private:
