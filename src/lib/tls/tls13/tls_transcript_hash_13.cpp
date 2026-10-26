@@ -83,10 +83,7 @@ namespace {
 //
 // Finds the truncation offset in a serialization of Client Hello as defined in
 // RFC 8446 4.2.11.2 used for the calculation of PSK binder MACs.
-// Returns std::nullopt if the Client Hello does not contain a PSK extension.
 std::optional<size_t> find_client_hello_truncation_mark(std::span<const uint8_t> client_hello, TLS_Flavor flavor) {
-   BOTAN_UNUSED(flavor);
-
    TLS_Data_Reader reader("Client Hello Truncation", client_hello);
 
    // legacy version
@@ -98,6 +95,19 @@ std::optional<size_t> find_client_hello_truncation_mark(std::span<const uint8_t>
    // session ID
    const auto session_id_length = reader.get_byte();
    reader.discard_next(session_id_length);
+
+   // Cookie (only for DTLS)
+   if(flavor == TLS_Flavor::DTLS) {
+      // RFC 9147 5.3
+      //    A DTLS 1.3-only client MUST set the legacy_cookie field to zero
+      //    length. If a DTLS 1.3 ClientHello is received with any other value
+      //    in this field, the server MUST abort the handshake with an
+      //    "illegal_parameter" alert.
+      const auto cookie_length = reader.get_byte();
+      if(cookie_length != 0) {
+         throw TLS_Exception(Alert::IllegalParameter, "DTLS 1.3 Client Hello has non-empty cookie");
+      }
+   }
 
    // cipher suites
    const auto ciphersuites_length = reader.get_uint16_t();
