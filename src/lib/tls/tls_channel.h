@@ -187,7 +187,15 @@ class BOTAN_PUBLIC_API(2, 0) Channel {
 
       /**
       * Attempt to update the session's traffic key material
-      * Note that this is possible with a TLS 1.3 channel, only.
+      * Note that this is possible with a (D)TLS 1.3 channel, only.
+      *
+      * @throws Invalid_Argument if called on a (D)TLS 1.2 channel
+      * @throws Invalid_State if called on a DTLS 1.3 channel and another
+      *         KeyUpdate is already pending (see RFC 9147 quote below).
+      *
+      * RFC 9147 (DTLS 1.3) Section 8 "Key Updates":
+      *    [...] implementations MUST NOT send [...] a new KeyUpdate until the
+      *    previous KeyUpdate has been acknowledged [...].
       *
       * @param request_peer_update if true, require a reciprocal key update
       */

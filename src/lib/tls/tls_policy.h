@@ -264,6 +264,11 @@ class BOTAN_PUBLIC_API(2, 0) Policy /* NOLINT(*-special-member-functions) */ {
       virtual bool allow_dtls12() const;
 
       /**
+      * Allow DTLS v1.3
+      */
+      virtual bool allow_dtls13() const;
+
+      /**
       * For ephemeral Diffie-Hellman key exchange, the server sends a group
       * parameter. Return the 2 Byte TLS group identifier specifying the group
       * parameter a server should use.
@@ -615,6 +620,19 @@ class BOTAN_PUBLIC_API(2, 0) Policy /* NOLINT(*-special-member-functions) */ {
       virtual std::optional<size_t> dtls_maximum_hello_verify_requests() const;
 
       /**
+       * @return the maximum number of queued DTLS record acknowledgements.
+       *
+       * Dropping ACKs won't cause a connection to fail, but may result in
+       * spurious retransmissions. This is used to cap the amount of consumed
+       * memory for the stored ACK information.
+       *
+       * Default: 32
+       *
+       * @note Only applies for DTLS 1.3 associations.
+       */
+      virtual size_t dtls_maximum_queued_acknowledgements() const;
+
+      /**
       * @return the maximum size of a single handshake message, in bytes.
       * Messages larger than this will be rejected prior to processing.
       * Return 0 to disable this and accept any size.
@@ -907,6 +925,8 @@ class BOTAN_PUBLIC_API(2, 0) Text_Policy : public Policy {
 
       bool allow_dtls12() const override;
 
+      bool allow_dtls13() const override;
+
       bool allow_insecure_renegotiation() const override;
 
       bool include_time_in_hello_random() const override;
@@ -948,6 +968,8 @@ class BOTAN_PUBLIC_API(2, 0) Text_Policy : public Policy {
       size_t dtls_maximum_timeout() const override;
 
       std::optional<size_t> dtls_maximum_hello_verify_requests() const override;
+
+      size_t dtls_maximum_queued_acknowledgements() const override;
 
       std::optional<size_t> max_useless_records() const override;
 

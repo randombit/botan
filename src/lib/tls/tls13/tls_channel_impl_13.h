@@ -20,15 +20,16 @@
 namespace Botan::TLS {
 
 class Cipher_State;
+class Transcript_Hash_State;
 class Channel_IO;
 
 /**
 * Generic interface for TLS 1.3 endpoint
 */
 class Channel_Impl_13 : public Channel_Impl {
-   public:
+   protected:
       /**
-      * Set up a new TLS 1.3 session
+      * Set up a new (D)TLS 1.3 session
       *
       * @param callbacks contains a set of callback function references
       *        required by the TLS endpoint.
@@ -36,15 +37,18 @@ class Channel_Impl_13 : public Channel_Impl {
       * @param credentials_manager manages application/user credentials
       * @param rng a random number generator
       * @param policy specifies other connection policy information
-      * @param is_server whether this is a server session or not
+      * @param connection_side whether this is a client or server session
+      * @param flavor whether TLS1.3 or DTLS1.3 is used
       */
       explicit Channel_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
                                const std::shared_ptr<Session_Manager>& session_manager,
                                const std::shared_ptr<Credentials_Manager>& credentials_manager,
                                const std::shared_ptr<RandomNumberGenerator>& rng,
                                const std::shared_ptr<const Policy>& policy,
-                               bool is_server);
+                               Connection_Side connection_side,
+                               TLS_Flavor flavor);
 
+   public:
       Channel_Impl_13(const Channel_Impl_13& other) = delete;
       Channel_Impl_13(Channel_Impl_13&& other) = delete;
       Channel_Impl_13& operator=(const Channel_Impl_13& other) = delete;
@@ -115,23 +119,30 @@ class Channel_Impl_13 : public Channel_Impl {
       }
 
       /**
-      * Perform a handshake timeout check. This does nothing unless
-      * this is a DTLS channel with a pending handshake state, in
-      * which case we check for timeout and potentially retransmit
-      * handshake packets.
-      *
-      * In the TLS 1.3 implementation, this always returns false.
+      * Perform a handshake timeout check that the user can call. This is no
+      * longer relevant for DTLS 1.3.
+      * @throws for DTLS 1.3, since the callback mechanism
+      *         tls_register_deferred_operation() shall be used instead of
+      *         timeout_check.
+      * @returns false for TLS 1.3
       */
-      bool timeout_check() override { return false; }
+      bool timeout_check() override;
+
+      /**
+      * Tells the user when to call Channel::timeout_check() next. This is no
+      * longer relevant for DTLS 1.3.
+      * @throws for DTLS 1.3, since the callback mechanism
+      *         tls_register_deferred_operation() shall be used instead of
+      *         timeout_check.
+      * @returns std::nullopt for TLS 1.3
+      */
+      std::optional<std::chrono::milliseconds> next_retransmission_timeout() const override;
+
+      const Cipher_State* cipher_state() const { return m_cipher_state.get(); }
+
+      Cipher_State* cipher_state() { return m_cipher_state.get(); }
 
    protected:
-      /**
-       * Hands ownership of the channel's cipher state to this channel and its
-       * associated Channel_IO. Typically called once the handshake's key
-       * schedule produced the first traffic secrets.
-       *
-       * @return a reference to the handed-off cipher state for convenience
-       */
       Cipher_State& setup_cipher_state(std::unique_ptr<Cipher_State> cipher_state);
 
       virtual void process_handshake_msg(Handshake_Message_13 msg) = 0;
@@ -155,6 +166,8 @@ class Channel_Impl_13 : public Channel_Impl {
 
       SecretLoggerFn secret_logger() const;
 
+      bool is_datagram() const { return m_flavor == TLS_Flavor::DTLS; }
+
       void send_flight(std::vector<Flight::Message> flight);
 
    private:
@@ -171,14 +184,6 @@ class Channel_Impl_13 : public Channel_Impl {
       void shutdown();
 
    protected:
-      const Connection_Side m_side;                              // NOLINT(*non-private-member-variable*)
-      std::optional<Transcript_Hash_State> m_transcript_hash;    // NOLINT(*non-private-member-variable*)
-      std::shared_ptr<Cipher_State> m_cipher_state;              // NOLINT(*non-private-member-variable*)
-      std::optional<Active_Connection_State_13> m_active_state;  // NOLINT(*non-private-member-variable*)
-
-      /* I/O handling */
-      std::shared_ptr<Channel_IO> m_channel_io;  // NOLINT(*non-private-member-variable*)
-
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       /**
        * Indicate that we have to expect a downgrade to TLS 1.2. In which case the current
@@ -210,6 +215,18 @@ class Channel_Impl_13 : public Channel_Impl {
        */
       void set_selected_certificate_type(Certificate_Type cert_type);
 
+   protected:
+      /* basic channel information */
+      const Connection_Side m_side;  // NOLINT(*non-private-member-variable*)
+      TLS_Flavor m_flavor;           // NOLINT(*non-private-member-variable*)
+
+      /* handshake state */
+      std::optional<Transcript_Hash_State> m_transcript_hash;    // NOLINT(*non-private-member-variable*)
+      std::optional<Active_Connection_State_13> m_active_state;  // NOLINT(*non-private-member-variable*)
+
+      /* I/O handling */
+      std::shared_ptr<Channel_IO> m_channel_io;  // NOLINT(*non-private-member-variable*)
+
    private:
       /* callbacks */
       std::shared_ptr<Callbacks> m_callbacks;
@@ -219,6 +236,7 @@ class Channel_Impl_13 : public Channel_Impl {
       std::shared_ptr<Credentials_Manager> m_credentials_manager;
       std::shared_ptr<RandomNumberGenerator> m_rng;
       std::shared_ptr<const Policy> m_policy;
+      std::shared_ptr<Cipher_State> m_cipher_state;
 
       bool m_can_read;
       bool m_can_write;

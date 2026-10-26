@@ -40,8 +40,16 @@ Client::Client(const std::shared_ptr<Callbacks>& callbacks,
                    "Policy does not allow to offer requested protocol version");
 
 #if defined(BOTAN_HAS_TLS_13)
-   if(offer_version == Protocol_Version::TLS_V13) {
-      m_impl = Client_Impl_13::create(callbacks, session_manager, creds, policy, rng, std::move(info), next_protocols);
+   if(offer_version.is_tls_13_or_later()) {
+      const auto flavor = offer_version.is_datagram_protocol() ? TLS_Flavor::DTLS : TLS_Flavor::TLS;
+
+      if(flavor == TLS_Flavor::DTLS) {
+         // DTLS 1.3 is not yet supported.
+         throw Not_Implemented("DTLS 1.3 is not yet supported");
+      }
+
+      m_impl = Client_Impl_13::create(
+         callbacks, session_manager, creds, policy, rng, flavor, std::move(info), next_protocols);
 
    #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       if(m_impl->expects_downgrade()) {

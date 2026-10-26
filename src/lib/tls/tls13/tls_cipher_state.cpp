@@ -276,6 +276,11 @@ size_t Cipher_State::minimum_decryption_input_length() const {
    return latest_read_epoch().cipher->minimum_final_size();
 }
 
+bool Cipher_State::has_cryptographic_association() const {
+   return current_write_epoch_number() > EpochNumber::Unprotected &&
+          current_read_epoch_number() > EpochNumber::Unprotected;
+}
+
 bool Cipher_State::must_expect_unprotected_alert_traffic() const {
    // Client side:
    //   After successfully receiving a Server Hello we expect servers to send
@@ -886,6 +891,7 @@ Record TLS_Cipher_State::deprotect_record(Record_TLS record, size_t incoming_rec
       .type = Record_Type::Invalid,
       .sequence_number = m_read_epoch->sequence_number++,
       .payload = record.take_payload(),
+      .epoch = std::nullopt,
    };
 
    deprotect_and_hydrate_content_type(*m_read_epoch, record.header(), result, incoming_record_size_limit);

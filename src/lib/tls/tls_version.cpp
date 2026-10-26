@@ -24,6 +24,8 @@ Protocol_Version Protocol_Version::latest_tls_version() {
 }
 
 Protocol_Version Protocol_Version::latest_dtls_version() {
+   // Note: DTLS 1.3 is not yet supported, so DTLS 1.2 remains the latest
+   //       DTLS version for the time being.
 #if defined(BOTAN_HAS_TLS_12)
    return Protocol_Version::DTLS_V12;
 #else

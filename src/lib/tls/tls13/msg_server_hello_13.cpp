@@ -10,6 +10,7 @@
 
 #include <botan/tls_messages_13.h>
 
+#include <botan/credentials_manager.h>
 #include <botan/tls_alert.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
@@ -31,7 +32,8 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
                                                                            Credentials_Manager& credentials_mgr,
                                                                            RandomNumberGenerator& rng,
                                                                            const Policy& policy,
-                                                                           Callbacks& cb) {
+                                                                           Callbacks& cb,
+                                                                           TLS_Flavor flavor) {
    const auto& exts = ch.extensions();
 
    // RFC 8446 4.2.9
@@ -66,23 +68,32 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
    //    ClientHello does not contain sufficient information to proceed with
    //    the handshake.
    //
-   // In this case, the Client Hello did not contain a key share offer for
-   // the group selected by the application.
-   if(!value_exists(offered_by_client, selected_group)) {
-      // RFC 8446 4.1.4
-      //    If a client receives a second HelloRetryRequest in the same
-      //    connection (i.e., where the ClientHello was itself in response to a
-      //    HelloRetryRequest), it MUST abort the handshake with an
-      //    "unexpected_message" alert.
-      BOTAN_STATE_CHECK(hello_retry_request_allowed);
-      return Hello_Retry_Request(ch, selected_group, policy, cb);
+   // Hence, we need a HelloRetryRequest if the client did not offer an
+   // acceptable key share.
+   const bool hrr_for_key_exchange = !value_exists(offered_by_client, selected_group);
+
+   // RFC 9147 5.1
+   //    Datagram security protocols are extremely susceptible to a variety of
+   //    DoS attacks [...]. In order to counter [two] of these attacks, DTLS
+   //    borrows the stateless cookie technique used by Photuris and IKE. [...]
+   //    The HelloRetryRequest message contains a stateless cookie [...]. This
+   //    mechanism forces the attacker/client to be able to receive the cookie,
+   //    which makes DoS attacks with spoofed IP addresses difficult.
+   //
+   // Hence, we enforce HelloRetryRequest if we're running DTLS and DoS
+   // protection is required by the policy.
+   const bool hrr_for_cookie = flavor == TLS_Flavor::DTLS &&  //
+                               policy.dtls_server_require_cookie_exchange();
+
+   if(hello_retry_request_allowed && (hrr_for_cookie || hrr_for_key_exchange)) {
+      return Hello_Retry_Request(ch, selected_group, policy, credentials_mgr, cb, flavor);
    } else {
-      return Server_Hello_13(ch, selected_group, session_mgr, credentials_mgr, rng, cb, policy);
+      return Server_Hello_13(ch, selected_group, session_mgr, credentials_mgr, rng, cb, policy, flavor);
    }
 }
 
 std::variant<Hello_Retry_Request, Server_Hello_13, Server_Hello_12_Shim> Server_Hello_13::parse(
-   std::span<const uint8_t> buf) {
+   std::span<const uint8_t> buf, TLS_Flavor flavor) {
    auto data = std::make_unique<Server_Hello_Internal>(buf);
    const auto version = data->version();
 
@@ -92,12 +103,12 @@ std::variant<Hello_Retry_Request, Server_Hello_13, Server_Hello_12_Shim> Server_
    }
 
    // ... the TLS 1.3 "special case" aka. Hello_Retry_Request
-   if(version == Protocol_Version::TLS_V13) {
+   if(version.is_tls_13_or_later()) {
       if(data->is_hello_retry_request()) {
-         return Hello_Retry_Request(std::move(data));
+         return Hello_Retry_Request(std::move(data), flavor);
       }
 
-      return Server_Hello_13(std::move(data));
+      return Server_Hello_13(std::move(data), flavor);
    }
 
    throw TLS_Exception(Alert::ProtocolVersion, "unexpected server hello version: " + version.to_string());
@@ -106,8 +117,8 @@ std::variant<Hello_Retry_Request, Server_Hello_13, Server_Hello_12_Shim> Server_
 /**
  * Validation that applies to both Server Hello and Hello Retry Request
  */
-void Server_Hello_13::basic_validation() const {
-   BOTAN_ASSERT_NOMSG(m_data->version() == Protocol_Version::TLS_V13);
+void Server_Hello_13::basic_validation(TLS_Flavor flavor) const {
+   BOTAN_ASSERT_NOMSG(m_data->version().is_tls_13_or_later());
 
    // Note: checks that cannot be performed without contextual information
    //       are done in the specific TLS client implementation.
@@ -125,7 +136,12 @@ void Server_Hello_13::basic_validation() const {
 
    // RFC 8446 4.1.3
    //    In TLS 1.3, [...] the legacy_version field MUST be set to 0x0303
-   if(legacy_version() != Protocol_Version::TLS_V12) {
+
+   // RFC 9147 5.4
+   //    [...] the legacy_version field is set to 0xfefd, indicating DTLS 1.2.
+   const auto accepted_legacy_version =
+      (flavor == TLS_Flavor::DTLS) ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
+   if(legacy_version() != accepted_legacy_version) {
       throw TLS_Exception(Alert::ProtocolVersion,
                           "legacy_version '" + legacy_version().to_string() + "' is not allowed");
    }
@@ -146,16 +162,21 @@ void Server_Hello_13::basic_validation() const {
    //    A server which negotiates TLS 1.3 MUST respond by sending
    //    a "supported_versions" extension containing the selected version
    //    value (0x0304).
-   if(selected_version() != Protocol_Version::TLS_V13) {
+   //
+   // RFC 9147 4.2.1
+   //    The "supported_versions" [...] value 0xfefc is used to indicate DTLS 1.3.
+   if((flavor == TLS_Flavor::TLS && selected_version() != Protocol_Version::TLS_V13) ||
+      (flavor == TLS_Flavor::DTLS && selected_version() != Protocol_Version::DTLS_V13)) {
       throw TLS_Exception(Alert::IllegalParameter, "TLS 1.3 Server Hello selected a different version");
    }
 }
 
 Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
+                                 TLS_Flavor flavor,
                                  Server_Hello_13::Server_Hello_Tag /*tag*/) :
       Server_Hello(std::move(data)) {
    BOTAN_ASSERT_NOMSG(!m_data->is_hello_retry_request());
-   basic_validation();
+   basic_validation(flavor);
 
    const auto& exts = extensions();
 
@@ -190,10 +211,11 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
 }
 
 Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
+                                 TLS_Flavor flavor,
                                  Server_Hello_13::Hello_Retry_Request_Tag /*tag*/) :
       Server_Hello(std::move(data)) {
    BOTAN_ASSERT_NOMSG(m_data->is_hello_retry_request());
-   basic_validation();
+   basic_validation(flavor);
 
    const auto& exts = extensions();
 
@@ -229,10 +251,10 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
 
 namespace {
 
-uint16_t choose_ciphersuite(const Client_Hello_13& ch, const Policy& policy) {
+uint16_t choose_ciphersuite(const Client_Hello_13& ch, const Policy& policy, TLS_Flavor flavor) {
    auto pref_list = ch.ciphersuites();
-   // TODO: DTLS might need to make this version dynamic
-   auto other_list = policy.ciphersuite_list(Protocol_Version::TLS_V13);
+   const auto version = flavor == TLS_Flavor::DTLS ? Protocol_Version::DTLS_V13 : Protocol_Version::TLS_V13;
+   auto other_list = policy.ciphersuite_list(version);
 
    if(policy.server_uses_own_ciphersuite_preferences()) {
       std::swap(pref_list, other_list);
@@ -279,12 +301,25 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
                                  Credentials_Manager& credentials_mgr,
                                  RandomNumberGenerator& rng,
                                  Callbacks& cb,
-                                 const Policy& policy) :
+                                 const Policy& policy,
+                                 TLS_Flavor flavor) :
       Server_Hello(std::make_unique<Server_Hello_Internal>(
-         Protocol_Version::TLS_V12,
-         ch.session_id(),
-         make_server_hello_random(rng, Protocol_Version::TLS_V13, cb, policy, TLS_Flavor::TLS),
-         choose_ciphersuite(ch, policy),
+         flavor == TLS_Flavor::DTLS ? Protocol_Version::DTLS_V12 /* legacy version */
+                                    : Protocol_Version::TLS_V12,
+         // RFC 9846 4.2.3
+         //    legacy_session_id_echo: The contents of the client's
+         //                            legacy_session_id field.
+         //
+         // RFC 9147 5.
+         //    DTLS servers MUST NOT echo the "legacy_session_id" value from the
+         //    client [...].
+         flavor == TLS_Flavor::TLS ? ch.session_id() : Session_ID{},
+         make_server_hello_random(rng,
+                                  flavor == TLS_Flavor::DTLS ? Protocol_Version::DTLS_V13 : Protocol_Version::TLS_V13,
+                                  cb,
+                                  policy,
+                                  flavor),
+         choose_ciphersuite(ch, policy, flavor),
          uint8_t(0) /* compression method */
          )) {
    // RFC 8446 4.2.1
@@ -295,7 +330,8 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
    //
    // Note that the legacy version (TLS 1.2) is set in this constructor's
    // initializer list, accordingly.
-   m_data->extensions().add(new Supported_Versions(Protocol_Version::TLS_V13));  // NOLINT(*-owning-memory)
+   const auto version = flavor == TLS_Flavor::DTLS ? Protocol_Version::DTLS_V13 : Protocol_Version::TLS_V13;
+   m_data->extensions().add(new Supported_Versions(version));  // NOLINT(*-owning-memory)
 
    if(key_exchange_group.has_value()) {
       BOTAN_ASSERT_NOMSG(ch.extensions().has<Key_Share>());
@@ -338,18 +374,6 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
    }
 }
 
-std::optional<Protocol_Version> Server_Hello_13::random_signals_downgrade() const {
-   const uint64_t last8 = load_be<uint64_t>(m_data->random().data(), 3);
-   if(last8 == DOWNGRADE_TLS11) {
-      return Protocol_Version::TLS_V11;
-   }
-   if(last8 == DOWNGRADE_TLS12) {
-      return Protocol_Version::TLS_V12;
-   }
-
-   return std::nullopt;
-}
-
 Protocol_Version Server_Hello_13::selected_version() const {
    const auto* const versions_ext = m_data->extensions().get<Supported_Versions>();
    BOTAN_ASSERT_NOMSG(versions_ext);
@@ -358,18 +382,24 @@ Protocol_Version Server_Hello_13::selected_version() const {
    return versions.front();
 }
 
-Hello_Retry_Request::Hello_Retry_Request(std::unique_ptr<Server_Hello_Internal> data) :
-      Server_Hello_13(std::move(data), Server_Hello_13::as_hello_retry_request) {}
+Hello_Retry_Request::Hello_Retry_Request(std::unique_ptr<Server_Hello_Internal> data, TLS_Flavor flavor) :
+      Server_Hello_13(std::move(data), flavor, Server_Hello_13::as_hello_retry_request) {}
 
 Hello_Retry_Request::Hello_Retry_Request(const Client_Hello_13& ch,
                                          Named_Group selected_group,
                                          const Policy& policy,
-                                         Callbacks& cb) :
+                                         Credentials_Manager& credentials_manager,
+                                         Callbacks& cb,
+                                         TLS_Flavor flavor) :
       Server_Hello_13(std::make_unique<Server_Hello_Internal>(
-                         Protocol_Version::TLS_V12 /* legacy_version */,
-                         ch.session_id(),
+                         flavor == TLS_Flavor::DTLS ? Protocol_Version::DTLS_V12 /* legacy_version */
+                                                    : Protocol_Version::TLS_V12,
+                         // RFC 9147 5.
+                         //    DTLS servers MUST NOT echo the "legacy_session_id" value from the
+                         //    client [...].
+                         flavor == TLS_Flavor::DTLS ? Session_ID{} : ch.session_id(),
                          std::vector<uint8_t>(HELLO_RETRY_REQUEST_MARKER.begin(), HELLO_RETRY_REQUEST_MARKER.end()),
-                         choose_ciphersuite(ch, policy),
+                         choose_ciphersuite(ch, policy, flavor),
                          uint8_t(0) /* compression method */,
                          true /* is Hello Retry Request */
                          ),
@@ -382,8 +412,6 @@ Hello_Retry_Request::Hello_Retry_Request(const Client_Hello_13& ch,
    BOTAN_STATE_CHECK(ch.extensions().has<Supported_Groups>());
    BOTAN_STATE_CHECK(ch.extensions().has<Key_Share>());
 
-   BOTAN_STATE_CHECK(!value_exists(ch.extensions().get<Key_Share>()->offered_groups(), selected_group));
-
    // RFC 8446 4.1.4
    //    The server's extensions MUST contain "supported_versions".
    //
@@ -393,19 +421,48 @@ Hello_Retry_Request::Hello_Retry_Request(const Client_Hello_13& ch,
    //    value (0x0304). It MUST set the ServerHello.legacy_version field to
    //    0x0303 (TLS 1.2).
    //
-   // Note that the legacy version (TLS 1.2) is set in this constructor's
+   // Note that the legacy version ((D)TLS 1.2) is set in this constructor's
    // initializer list, accordingly.
    // NOLINTBEGIN(*-owning-memory)
-   m_data->extensions().add(new Supported_Versions(Protocol_Version::TLS_V13));
+   const auto version = flavor == TLS_Flavor::DTLS ? Protocol_Version::DTLS_V13 : Protocol_Version::TLS_V13;
+   m_data->extensions().add(new Supported_Versions(version));
 
-   m_data->extensions().add(new Key_Share(selected_group));
+   // RFC 9846 4.2.4
+   //    The server's [HelloRetryRequest] extensions SHOULD contain the minimal
+   //    set of extensions necessary for the client to generate a correct
+   //    ClientHello pair.
+   //
+   // I.e., if the client already offered a key share for our preferred group,
+   // we don't need to request a new key share for this particular group.
+   if(!value_exists(ch.extensions().get<Key_Share>()->offered_groups(), selected_group)) {
+      m_data->extensions().add(new Key_Share(selected_group));
+   }
+
+   // RFC 9846 4.2.4
+   //    A HelloRetryRequest MUST NOT contain any extensions that were not first
+   //    offered by the client in its ClientHello, with the exception of
+   //    optionally the "cookie" [...] extension.
+   //
+   // RFC 9147 5.1
+   //    In order to counter [some DoS attacks], DTLS borrows the stateless
+   //    cookie technique used by Photuris and IKE. [...] DTLS 1.3 reuses the
+   //    HelloRetryRequest message and conveys the cookie to the client via an
+   //    extension.
+   if(flavor == TLS_Flavor::DTLS && policy.dtls_server_require_cookie_exchange()) {
+      m_data->extensions().add(new Cookie(calculate_cookie(
+         ch.cookie_input_data(), cb.tls_peer_network_identity(), credentials_manager.dtls_cookie_secret())));
+   }
+
    // NOLINTEND(*-owning-memory)
 
    cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Server, type());
 
-   if(!m_data->extensions().has<Key_Share>()) {
-      throw TLS_Exception(Alert::InternalError,
-                          "Application tls_modify_extensions callback removed Key_Share from the HelloRetryRequest");
+   // Note: This error condition could also indicate some other internal
+   //       issue, e.g., a faulty use of the Hello_Retry_Request constructor.
+   if(!m_data->extensions().has<Key_Share>() && !m_data->extensions().has<Cookie>()) {
+      throw TLS_Exception(
+         Alert::InternalError,
+         "Application tls_modify_extensions callback removed Key_Share or Cookie from the HelloRetryRequest");
    }
 }
 

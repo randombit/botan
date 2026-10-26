@@ -593,7 +593,7 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
                      }
                      result.test_bin_eq("Hello extensions", buf, extensions);
                   },
-                  Botan::TLS::Server_Hello_13::parse(buffer));
+                  Botan::TLS::Server_Hello_13::parse(buffer, Botan::TLS::TLS_Flavor::TLS));
             } catch(const std::exception& ex) {
                result.test_str_eq("correct error produced", ex.what(), exception);
                result.test_is_true("negative test", !is_positive_test);

@@ -266,6 +266,7 @@ class BOTAN_PUBLIC_API(3, 0) Session final : public Session_Base {
               const std::vector<X509_Certificate>& peer_certs,
               std::shared_ptr<const Public_Key> peer_raw_public_key,
               const Server_Information& server_info,
+              uint16_t srtp_profile,
               std::chrono::system_clock::time_point current_timestamp);
 
 #endif

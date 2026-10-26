@@ -169,8 +169,12 @@ class BOTAN_UNSTABLE_API PSK final : public Extension /* NOLINT(*-special-member
        * @param psks               a list of non-resumption PSKs that should be
        *                           offered to the server
        * @param callbacks          the application's callbacks
+       * @param flavor             whether TLS or DTLS is used (default: TLS)
        */
-      PSK(std::optional<Session_with_Handle>& session_to_resume, std::vector<ExternalPSK> psks, Callbacks& callbacks);
+      PSK(std::optional<Session_with_Handle>& session_to_resume,
+          std::vector<ExternalPSK> psks,
+          Callbacks& callbacks,
+          TLS_Flavor flavor = TLS_Flavor::TLS);
 
       ~PSK() override;
 

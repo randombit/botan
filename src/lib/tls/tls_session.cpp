@@ -277,14 +277,13 @@ Session::Session(const secure_vector<uint8_t>& session_psk,
                  const std::vector<X509_Certificate>& peer_certs,
                  std::shared_ptr<const Public_Key> peer_raw_public_key,
                  const Server_Information& server_info,
+                 uint16_t srtp_profile,
                  std::chrono::system_clock::time_point current_timestamp) :
       Session_Base(current_timestamp,
                    version,
                    ciphersuite,
                    side,
-
-                   // TODO: SRTP might become necessary when DTLS 1.3 is being implemented
-                   0,
+                   srtp_profile,
 
                    // RFC 8446 Appendix D
                    //    Because TLS 1.3 always hashes in the transcript up to the server

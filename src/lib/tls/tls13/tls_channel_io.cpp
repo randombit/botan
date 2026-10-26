@@ -54,6 +54,7 @@ std::optional<Channel_IO::ReceiveEvent> Channel_IO::next_pending_handshake_messa
       if(holds_any_of<Client_Hello_12_Shim,
                       Client_Hello_13 /*, EndOfEarlyData,*/,
                       Server_Hello_13,
+                      Hello_Verify_Request,  // DTLS 1.3 -> 1.2 downgrade
                       Hello_Retry_Request,
                       Finished_13>(handshake_msg.value()) &&
          hs_layer.has_pending_data()) {
@@ -93,7 +94,10 @@ void Channel_IO::copy_data(std::span<const uint8_t> data) {
       return;
    }
 
-   record_layer().copy_data(data);
+   const auto cs = cipher_state();
+   const auto has_cryptographic_association = (cs != nullptr) && cs->has_cryptographic_association();
+
+   record_layer().copy_data(data, has_cryptographic_association);
 }
 
 Channel_IO::ReceiveEvent Channel_IO::next_pending_event(std::optional<Transcript_Hash_State>& transcript_hash,
@@ -120,6 +124,10 @@ Channel_IO::ReceiveEvent Channel_IO::next_pending_event(std::optional<Transcript
             [&](const Handshake_Record& record) -> std::optional<Channel_IO::ReceiveEvent> {
                process(record);
                return std::nullopt;  // continue looping, the handshake layer may have progressed...
+            },
+            [&](const ACK_Record& record) -> std::optional<Channel_IO::ReceiveEvent> {
+               process(record);
+               return std::nullopt;  // continue looping, the record layer may have more data...
             },
             [&](auto anything_else) -> std::optional<Channel_IO::ReceiveEvent> {
                // RFC 8446 5.1
@@ -241,7 +249,7 @@ void Channel_IO::handle_key_update(const Key_Update& key_update) {
       m_last_peer_key_update_ms = now;
    }
 
-   schedule_read_epoch_pruning(cs->update_read_keys());
+   cs->update_read_keys();
 
    if(key_update.expects_reciprocation() && cs->can_encrypt_application_traffic()) {
       // RFC 9846 4.7.3
@@ -334,6 +342,10 @@ void Channel_IO::set_record_size_limits(uint16_t out, uint16_t in) {
 
 void Channel_IO::set_selected_certificate_type(Certificate_Type cert_type) {
    handshake_layer().set_selected_certificate_type(cert_type);
+}
+
+std::optional<Epoch0_SequenceNumbers> Channel_IO::epoch0_sequence_numbers() const {
+   return record_layer().epoch0_sequence_numbers();
 }
 
 std::shared_ptr<const Cipher_State> Channel_IO::cipher_state() const {
@@ -479,7 +491,14 @@ class TLS_Channel_IO final : public Channel_IO {
          prepare_and_flush_current_prepared(protect_current_msgs);
       }
 
-      void process(const Handshake_Record& record) override { m_handshake_layer.copy_data(policy(), record); }
+      void process(const Handshake_Record& record) override {
+         std::ignore = m_handshake_layer.copy_data(policy(), record);
+      }
+
+      void process(const ACK_Record& ack_record) override {
+         BOTAN_UNUSED(ack_record);
+         throw Unexpected_Message("Received ACK record in TLS 1.3");
+      }
 
       Record_Layer& record_layer() override { return m_record_layer; }
 
@@ -493,17 +512,8 @@ class TLS_Channel_IO final : public Channel_IO {
       void send_key_update(const Key_Update& msg) override {
          const auto cs = cipher_state();
          BOTAN_ASSERT_NONNULL(cs);
-
-         const auto serialized = Handshake_Layer::serialize(msg);
-         const auto header = TLS_Handshake_Layer::prepare_header(msg.wire_type(), serialized.size());
-
-         const auto payload = concat<std::vector<uint8_t>>(header, serialized);
-
-         send_data(Record_Type::Handshake, payload, cs.get());
+         send_data(Record_Type::Handshake, m_handshake_layer.marshal(msg), cs.get());
          cs->update_write_keys();
-      }
-
-      void schedule_read_epoch_pruning(EpochNumber /* latest_epoch */) override { /* don't care */
       }
 
    private:

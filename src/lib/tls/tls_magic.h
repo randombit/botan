@@ -64,6 +64,8 @@ enum class Record_Type : uint8_t {
    ApplicationData = 23,
 
    Heartbeat = 24,  // RFC 6520
+
+   ACK = 26,  // RFC 9147 (DTLS 1.3)
 };
 
 enum class TLS_Flavor : bool {

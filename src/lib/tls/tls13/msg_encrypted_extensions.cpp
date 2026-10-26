@@ -20,7 +20,8 @@ Encrypted_Extensions::Encrypted_Extensions(const Client_Hello_13& client_hello,
                                            const Policy& policy,
                                            Callbacks& cb,
                                            bool is_resumption,
-                                           bool requesting_client_auth) {
+                                           bool requesting_client_auth,
+                                           TLS_Flavor flavor) {
    const auto& exts = client_hello.extensions();
 
    // NOLINTBEGIN(*-owning-memory)
@@ -107,10 +108,29 @@ Encrypted_Extensions::Encrypted_Extensions(const Client_Hello_13& client_hello,
       }
    }
 
-   // NOLINTEND(*-owning-memory)
+   // DTLS-SRTP is not defined for plain TLS, hence the "use_srtp" extension
+   // is only negotiated on datagram connections and silently ignored otherwise.
+   if(const auto* client_srtp = exts.get<SRTP_Protection_Profiles>();
+      client_srtp != nullptr && flavor == TLS_Flavor::DTLS) {
+      const auto& server_profiles = policy.srtp_profiles();
+      const auto& client_profiles = client_srtp->profiles();
 
-   // TODO: Implement handling for (at least)
-   //       * SRTP
+      // RFC 5764 4.1.1
+      //    The extension_data field MUST contain a UseSRTPData value with a
+      //    single SRTPProtectionProfile value that the server has chosen for
+      //    use with this connection. [...] If there is no shared profile,
+      //    the server SHOULD NOT return the use_srtp extension [...].
+      //
+      // We're always using the server preference.
+      for(const auto profile : server_profiles) {
+         if(profile != 0 && value_exists(client_profiles, profile)) {
+            m_extensions.add(new SRTP_Protection_Profiles(profile));
+            break;
+         }
+      }
+   }
+
+   // NOLINTEND(*-owning-memory)
 
    cb.tls_modify_extensions(m_extensions, Connection_Side::Server, type());
 

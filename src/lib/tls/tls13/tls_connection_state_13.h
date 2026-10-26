@@ -53,6 +53,8 @@ class Active_Connection_State_13 final {
 
       const std::string& application_protocol() const { return m_application_protocol; }
 
+      uint16_t srtp_profile() const { return m_srtp_profile; }
+
       const std::vector<X509_Certificate>& peer_certs() const { return m_peer_certs; }
 
       const std::vector<uint8_t>& client_random() const { return m_client_random; }
@@ -69,6 +71,7 @@ class Active_Connection_State_13 final {
       Protocol_Version m_version;
       uint16_t m_ciphersuite_code = 0;
       std::string m_application_protocol;
+      uint16_t m_srtp_profile = 0;
       std::vector<X509_Certificate> m_peer_certs;
       std::vector<uint8_t> m_client_random;
       std::optional<std::string> m_psk_identity;

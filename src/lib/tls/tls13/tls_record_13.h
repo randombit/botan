@@ -27,6 +27,8 @@ struct Record_Content {
       Record_Type type;
       std::optional<uint64_t> sequence_number;
       secure_vector<uint8_t> payload;
+
+      std::optional<EpochNumber> epoch;  // only set for DTLS
 };
 
 struct ChangeCipherSpec_Record final : public Record_Content {};
@@ -37,7 +39,10 @@ struct Handshake_Record final : public Record_Content {};
 
 struct ApplicationData_Record final : public Record_Content {};
 
-using Record = std::variant<ChangeCipherSpec_Record, Alert_Record, Handshake_Record, ApplicationData_Record>;
+struct ACK_Record final : public Record_Content {};
+
+using Record =
+   std::variant<ChangeCipherSpec_Record, Alert_Record, Handshake_Record, ApplicationData_Record, ACK_Record>;
 
 /**
  * Takes a generic @p record and transforms it into one of the strong typed

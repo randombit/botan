@@ -42,7 +42,8 @@ PSKImporter::PSKImporter(std::span<const uint8_t> key,
 }
 
 ExternalPSK PSKImporter::derive_imported_psk(Protocol_Version version, std::string_view target_hash) const {
-   BOTAN_ARG_CHECK(version == Protocol_Version::TLS_V13, "PSK importer is only defined for TLS 1.3");
+   BOTAN_ARG_CHECK(version == Protocol_Version::TLS_V13 || version == Protocol_Version::DTLS_V13,
+                   "PSK importer is only defined for (D)TLS 1.3");
    BOTAN_ARG_CHECK(target_hash == "SHA-256" || target_hash == "SHA-384",
                    "PSK importer target hash must be SHA-256 or SHA-384");
 
@@ -97,9 +98,20 @@ ExternalPSK PSKImporter::derive_imported_psk(Protocol_Version version, std::stri
    const auto expand_out_len = static_cast<uint16_t>(target_hash_len);
 
    auto hkdf_expand = KDF::create_or_throw("HKDF-Expand(" + m_hash + ")");
-   // "tls13 derived psk" as bytes
-   const std::array<uint8_t, 17> prefixed_label = {
-      't', 'l', 's', '1', '3', ' ', 'd', 'e', 'r', 'i', 'v', 'e', 'd', ' ', 'p', 's', 'k'};
+
+   // RFC 9147 5.9
+   //    Section 7.1 of RFC 9846 specifies that HKDF-Expand-Label uses a label
+   //    prefix of "tls13 ". For DTLS 1.3, that label SHALL be "dtls13". [...]
+   //    Note that there is no trailing space; this is necessary in order to
+   //    keep the overall label size inside of one hash iteration because "DTLS"
+   //    is one letter longer than "TLS".
+   const auto prefixed_label = [&]() -> std::array<uint8_t, 17> {
+      if(!version.is_datagram_protocol()) {
+         return {'t', 'l', 's', '1', '3', ' ', 'd', 'e', 'r', 'i', 'v', 'e', 'd', ' ', 'p', 's', 'k'};
+      } else {
+         return {'d', 't', 'l', 's', '1', '3', 'd', 'e', 'r', 'i', 'v', 'e', 'd', ' ', 'p', 's', 'k'};
+      }
+   }();
 
    // TLS 1.3 HkdfLabel: length (2) || label length (1) || label || context length (1) || context
 

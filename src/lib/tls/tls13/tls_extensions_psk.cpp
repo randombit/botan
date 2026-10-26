@@ -37,20 +37,24 @@ decltype(auto) calculate_age(std::chrono::system_clock::time_point then, std::ch
 
 class Client_PSK {
    public:
-      Client_PSK(Session_with_Handle& session_to_resume, std::chrono::system_clock::time_point timestamp) :
+      Client_PSK(Session_with_Handle& session_to_resume,
+                 std::chrono::system_clock::time_point timestamp,
+                 TLS_Flavor flavor) :
             Client_PSK(PskIdentity(session_to_resume.handle.opaque_handle(),
                                    calculate_age(session_to_resume.session.start_time(), timestamp),
                                    session_to_resume.session.session_age_add()),
                        session_to_resume.session.ciphersuite().prf_algo(),
                        session_to_resume.session.extract_master_secret(),
-                       Cipher_State::PSK_Type::Resumption) {}
+                       Cipher_State::PSK_Type::Resumption,
+                       flavor) {}
 
       // NOLINTNEXTLINE(*-rvalue-reference-param-not-moved)
-      explicit Client_PSK(ExternalPSK&& psk) :
+      explicit Client_PSK(ExternalPSK&& psk, TLS_Flavor flavor) :
             Client_PSK(PskIdentity(PresharedKeyID(psk.identity())),
                        psk.prf_algo(),
                        psk.extract_master_secret(),
-                       psk.is_imported() ? Cipher_State::PSK_Type::Imported : Cipher_State::PSK_Type::External) {}
+                       psk.is_imported() ? Cipher_State::PSK_Type::Imported : Cipher_State::PSK_Type::External,
+                       flavor) {}
 
       Client_PSK(PskIdentity id, std::vector<uint8_t> bndr) :
             m_identity(std::move(id)), m_binder(std::move(bndr)), m_is_resumption(false) {}
@@ -58,7 +62,8 @@ class Client_PSK {
       Client_PSK(PskIdentity id,
                  std::string_view prf_algo,
                  secure_vector<uint8_t>&& master_secret,
-                 Cipher_State::PSK_Type psk_type) :
+                 Cipher_State::PSK_Type psk_type,
+                 TLS_Flavor flavor) :
             m_identity(std::move(id)),
 
             // RFC 8446 4.2.11.2
@@ -77,7 +82,7 @@ class Client_PSK {
             m_binder(HashFunction::create_or_throw(prf_algo)->output_length()),
             m_is_resumption(psk_type == Cipher_State::PSK_Type::Resumption),
             m_cipher_state(Cipher_State::init_with_psk(
-               Connection_Side::Client, TLS_Flavor::TLS, psk_type, std::move(master_secret), prf_algo)) {}
+               Connection_Side::Client, flavor, psk_type, std::move(master_secret), prf_algo)) {}
 
       const PskIdentity& identity() const { return m_identity; }
 
@@ -208,15 +213,18 @@ PSK::PSK(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type messag
    }
 }
 
-PSK::PSK(std::optional<Session_with_Handle>& session_to_resume, std::vector<ExternalPSK> psks, Callbacks& callbacks) {
+PSK::PSK(std::optional<Session_with_Handle>& session_to_resume,
+         std::vector<ExternalPSK> psks,
+         Callbacks& callbacks,
+         TLS_Flavor flavor) {
    std::vector<Client_PSK> cpsk;
 
    if(session_to_resume.has_value()) {
-      cpsk.emplace_back(session_to_resume.value(), callbacks.tls_current_timestamp());
+      cpsk.emplace_back(session_to_resume.value(), callbacks.tls_current_timestamp(), flavor);
    }
 
    for(auto&& psk : psks) {
-      cpsk.emplace_back(std::move(psk));
+      cpsk.emplace_back(std::move(psk), flavor);
    }
 
    m_impl = std::make_unique<PSK_Internal>(std::move(cpsk));

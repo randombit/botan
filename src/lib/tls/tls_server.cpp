@@ -38,8 +38,8 @@ Server::Server(const std::shared_ptr<Callbacks>& callbacks,
    const auto flavor = is_datagram ? TLS_Flavor::DTLS : TLS_Flavor::TLS;
 
 #if defined(BOTAN_HAS_TLS_13)
-   if(!max_version.is_pre_tls_13()) {
-      m_impl = Server_Impl_13::create(callbacks, session_manager, creds, policy, rng);
+   if(max_version.is_tls_13_or_later()) {
+      m_impl = Server_Impl_13::create(callbacks, session_manager, creds, policy, rng, flavor);
 
    #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       if(m_impl->expects_downgrade()) {

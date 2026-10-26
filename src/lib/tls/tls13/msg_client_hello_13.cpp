@@ -164,24 +164,41 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    //    "supported_versions" extension (Section 4.2.1) and the
    //    legacy_version field MUST be set to 0x0303, which is the version
    //    number for TLS 1.2.
-   m_data->m_legacy_version = Protocol_Version::TLS_V12;
+   // RFC 9147 5.3
+   //    In DTLS 1.3, the client indicates its version preferences in the
+   //    "supported_versions" extension (see Section 4.2.1 of [TLS13]) and
+   //    the legacy_version field MUST be set to {254, 253} [...]
+   m_data->m_legacy_version = flavor == TLS_Flavor::DTLS ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
    m_data->m_random = make_hello_random(rng, cb, policy);
    m_data->m_suites = policy.ciphersuite_list(Protocol_Version::TLS_V13);
 
-   if(policy.allow_tls12()) {
-      // Note: DTLS 1.3 is NYI, hence dtls_12 is not checked
+   // When (D)TLS 1.2 is also allowed, advertise its ciphersuites so a legacy
+   // peer can select one and trigger a downgrade to Client_Impl_12.
+   if(flavor == TLS_Flavor::DTLS) {
+      if(policy.allow_dtls12()) {
+         const auto legacy_suites = policy.ciphersuite_list(Protocol_Version::DTLS_V12);
+         m_data->m_suites.insert(m_data->m_suites.end(), legacy_suites.cbegin(), legacy_suites.cend());
+      }
+   } else if(policy.allow_tls12()) {
       const auto legacy_suites = policy.ciphersuite_list(Protocol_Version::TLS_V12);
       m_data->m_suites.insert(m_data->m_suites.end(), legacy_suites.cbegin(), legacy_suites.cend());
    }
 
-   if(policy.tls_13_middlebox_compatibility_mode()) {
+   // RFC 9147 5.
+   //    DTLS implementations do not use the TLS 1.3 "compatibility mode" [...].
+   //
+   // RFC 9147 5.3
+   //    A client which has a cached session ID set by a pre-DTLS 1.3 server
+   //    SHOULD set this field to that value. Otherwise, it MUST be set as a
+   //    zero-length vector [...].
+   //
+   // Note: we won't ever offer a (D)TLS 1.2 session. In such a case we would
+   //       have instantiated a (D)TLS 1.2 client in the first place.
+   if(policy.tls_13_middlebox_compatibility_mode() && flavor != TLS_Flavor::DTLS) {
       // RFC 8446 4.1.2
       //    In compatibility mode (see Appendix D.4), this field MUST be non-empty,
       //    so a client not offering a pre-TLS 1.3 session MUST generate a new
       //    32-byte value.
-      //
-      // Note: we won't ever offer a TLS 1.2 session. In such a case we would
-      //       have instantiated a TLS 1.2 client in the first place.
       m_data->m_session_id = Session_ID(make_hello_random(rng, cb, policy));
    }
 
@@ -194,7 +211,8 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
 
    m_data->extensions().add(new Key_Share(policy, cb, rng));
 
-   m_data->extensions().add(new Supported_Versions(Protocol_Version::TLS_V13, policy));
+   m_data->extensions().add(new Supported_Versions(
+      flavor == TLS_Flavor::DTLS ? Protocol_Version::DTLS_V13 : Protocol_Version::TLS_V13, policy));
 
    m_data->extensions().add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
    if(auto cert_signing_prefs = policy.acceptable_certificate_signature_schemes()) {
@@ -214,9 +232,10 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    }
 
    // We currently support "record_size_limit" for TLS 1.3 exclusively. Hence,
-   // when TLS 1.2 is advertised as a supported protocol, we must not offer this
+   // when (D)TLS 1.2 is advertised as a supported protocol, we must not offer this
    // extension.
-   if(policy.record_size_limit().has_value() && !policy.allow_tls12()) {
+   const bool offers_pre_tls_13 = (flavor == TLS_Flavor::DTLS) ? policy.allow_dtls12() : policy.allow_tls12();
+   if(policy.record_size_limit().has_value() && !offers_pre_tls_13) {
       m_data->extensions().add(new Record_Size_Limit(policy.record_size_limit().value()));
    }
 
@@ -226,7 +245,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    * support is disabled. Otherwise a peer might reply with a 1.2 server hello + a certificate_type
    * extension indicating it wishes to use RPK, which would lead to errors later.
    */
-   if(!policy.allow_tls12()) {
+   if(!offers_pre_tls_13) {
       m_data->extensions().add(new Client_Certificate_Type(policy.accepted_client_certificate_types()));
       m_data->extensions().add(new Server_Certificate_Type(policy.accepted_server_certificate_types()));
    }
@@ -235,12 +254,16 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
       m_data->extensions().add(new Application_Layer_Protocol_Notification(std::move(next_protocols)));
    }
 
+   if(flavor == TLS_Flavor::DTLS) {
+      m_data->extensions().add(new SRTP_Protection_Profiles(policy.srtp_profiles()));
+   }
+
 #if defined(BOTAN_HAS_TLS_12)
-   if(policy.allow_tls12()) {
+   if(offers_pre_tls_13) {
       m_data->extensions().add(new Renegotiation_Extension());
       m_data->extensions().add(new Session_Ticket_Extension());
 
-      // EMS must always be used with TLS 1.2, regardless of the policy
+      // EMS must always be used with (D)TLS 1.2, regardless of the policy
       m_data->extensions().add(new Extended_Master_Secret);
 
       if(policy.negotiate_encrypt_then_mac()) {
@@ -255,7 +278,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
 #endif
 
    if(session.has_value() || !psks.empty()) {
-      m_data->extensions().add(new PSK(session, std::move(psks), cb));
+      m_data->extensions().add(new PSK(session, std::move(psks), cb, flavor));
    }
    // NOLINTEND(*-owning-memory)
 
