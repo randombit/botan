@@ -697,7 +697,7 @@ const std::vector<Group_Params>& Supported_Groups::groups() const {
 std::vector<Group_Params> Supported_Groups::ec_groups() const {
    std::vector<Group_Params> ec;
    for(const auto g : m_groups) {
-      if(g.is_pure_ecc_group()) {
+      if(group_may_be_ecc(g)) {
          ec.push_back(g);
       }
    }

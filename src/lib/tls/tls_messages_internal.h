@@ -62,6 +62,12 @@ bool group_usable_in_version(Group_Params group, Protocol_Version version);
 std::vector<Group_Params> groups_usable_in_version(std::span<const Group_Params> groups, Protocol_Version version);
 
 /**
+ * Return true if @p group is an elliptic curve group, or an unknown group outside
+ * the FFDHE range which the application may implement as a curve via the callbacks
+ */
+bool group_may_be_ecc(Group_Params group);
+
+/**
  * Compute a cookie value from the ClientHello and the client's identity. Used
  * by both the DTLS 1.2 HelloVerifyRequest and the DTLS 1.3 HelloRetryRequest
  * cookie extension.
