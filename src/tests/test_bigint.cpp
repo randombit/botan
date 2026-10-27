@@ -894,6 +894,39 @@ class BigInt_IsSquare_Test final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("math", "bn_issquare", BigInt_IsSquare_Test);
 
+class BigInt_IsSquare_Random_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("BigInt IsSquare random");
+
+         for(uint32_t x = 1; x <= (1 << 14); ++x) {
+            uint32_t root = 0;
+            while((root + 1) * (root + 1) <= x) {
+               ++root;
+            }
+            const uint32_t expected = (root * root == x) ? root : 0;
+            result.test_bn_eq(
+               "is_perfect_square small", Botan::is_perfect_square(BigInt::from_u64(x)), BigInt::from_u64(expected));
+         }
+
+         for(size_t bits = 1; bits <= 400; ++bits) {
+            const BigInt r(this->rng(), bits);
+            const BigInt x = r * r;
+
+            result.test_bn_eq("is_perfect_square r^2", Botan::is_perfect_square(x), r);
+            result.test_bn_eq("is_perfect_square r^2 + 1", Botan::is_perfect_square(x + 1), BigInt::zero());
+            result.test_bn_eq("is_perfect_square r^2 + 2r", Botan::is_perfect_square(x + 2 * r), BigInt::zero());
+            if(x > 1) {
+               result.test_bn_eq("is_perfect_square r^2 - 1", Botan::is_perfect_square(x - 1), BigInt::zero());
+            }
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("math", "bn_issquare_random", BigInt_IsSquare_Random_Test);
+
 class BigInt_Sqrt_Modulo_Prime_Test final : public Text_Based_Test {
    public:
       BigInt_Sqrt_Modulo_Prime_Test() : Text_Based_Test("bn/sqrt_modulo_prime.vec", "Input,Modulus,Output") {}
