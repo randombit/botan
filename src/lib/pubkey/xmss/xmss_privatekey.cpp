@@ -52,6 +52,10 @@ secure_vector<uint8_t> extract_raw_private_key(std::span<const uint8_t> key_bits
    return raw_key;
 }
 
+bool is_known_wots_derivation_method(WOTS_Derivation_Method method) {
+   return method == WOTS_Derivation_Method::Botan2x || method == WOTS_Derivation_Method::NIST_SP800_208;
+}
+
 /*
 * The identity consists of the inputs to the WOTS+ key derivation, so that
 * keys with the same WOTS+ keys share one leaf index. SK_PRF is not one of
@@ -89,6 +93,8 @@ class XMSS_PrivateKey_Internal final {
             m_private_seed(std::move(private_seed)),
             m_keyid(xmss_key_id(m_xmss_params, m_wots_derivation_method, m_private_seed, public_seed)) {
          // Callers update the registry afterwards, so all validation must happen here
+         BOTAN_ARG_CHECK(is_known_wots_derivation_method(m_wots_derivation_method),
+                         "XMSS: unknown WOTS+ derivation method");
          BOTAN_ARG_CHECK(m_prf.size() == m_xmss_params.element_size(), "XMSS: unexpected byte length of PRF value");
          BOTAN_ARG_CHECK(m_private_seed.size() == m_xmss_params.element_size(),
                          "XMSS: unexpected byte length of private seed");
@@ -129,7 +135,11 @@ class XMSS_PrivateKey_Internal final {
          // Legacy keys generated prior to Botan 3.x don't feature a
          // WOTS+ key derivation method encoded in their private key.
          m_wots_derivation_method =
-            (s.empty()) ? WOTS_Derivation_Method::Botan2x : static_cast<WOTS_Derivation_Method>(s.take(1).front());
+            (s.empty()) ? WOTS_Derivation_Method::Botan2x : static_cast<WOTS_Derivation_Method>(s.take_byte());
+
+         if(!is_known_wots_derivation_method(m_wots_derivation_method)) {
+            throw Decoding_Error("XMSS private key has an unknown WOTS+ derivation method");
+         }
 
          BOTAN_ASSERT_NOMSG(s.empty());
 
@@ -216,6 +226,8 @@ XMSS_PrivateKey::Keygen_Material XMSS_PrivateKey::generate_keygen_material(
    XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
    RandomNumberGenerator& rng,
    WOTS_Derivation_Method wots_derivation_method) {
+   BOTAN_ARG_CHECK(is_known_wots_derivation_method(wots_derivation_method), "XMSS: unknown WOTS+ derivation method");
+
    const auto params = XMSS_Parameters::from_id(xmss_algo_id);
    const size_t n = params.element_size();
 

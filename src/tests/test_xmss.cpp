@@ -397,6 +397,41 @@ std::vector<Test::Result> xmss_key_decoding() {
    })};
 }
 
+std::vector<Test::Result> xmss_wots_derivation_method() {
+   return {CHECK("unknown WOTS+ derivation methods are rejected", [](Test::Result& result) {
+      const auto oid = Botan::XMSS_Parameters::XMSS_SHA2_10_256;
+      const Botan::secure_vector<uint8_t> private_seed(32, 0x01);
+      const Botan::secure_vector<uint8_t> prf(32, 0x02);
+      const Botan::secure_vector<uint8_t> root(32, 0x03);
+      const Botan::secure_vector<uint8_t> public_seed(32, 0x04);
+      // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+      const auto unknown_method = static_cast<Botan::WOTS_Derivation_Method>(3);
+
+      const Botan::XMSS_PrivateKey sk(oid, 0, private_seed, prf, root, public_seed);
+      auto skbytes = sk.raw_private_key();
+
+      // The derivation method is the final byte of the encoding
+      skbytes.back() = 0;
+      result.test_throws<Botan::Decoding_Error>("decoding rejects method 0", [&] {
+         const Botan::XMSS_PrivateKey loaded(Botan::AlgorithmIdentifier(), skbytes);
+      });
+
+      skbytes.back() = 3;
+      result.test_throws<Botan::Decoding_Error>("decoding rejects method 3", [&] {
+         const Botan::XMSS_PrivateKey loaded(Botan::AlgorithmIdentifier(), skbytes);
+      });
+
+      result.test_throws<Botan::Invalid_Argument>("component constructor rejects unknown method", [&] {
+         const Botan::XMSS_PrivateKey bad(oid, 0, private_seed, prf, root, public_seed, unknown_method);
+      });
+
+      result.test_throws<Botan::Invalid_Argument>("key generation rejects unknown method", [&] {
+         auto rng = Test::new_rng("xmss_unknown_derivation_method");
+         const Botan::XMSS_PrivateKey bad(oid, *rng, unknown_method);
+      });
+   })};
+}
+
 std::vector<Test::Result> xmss_key_identity() {
    auto rng = Test::new_rng(__func__);
 
@@ -581,6 +616,7 @@ BOTAN_REGISTER_TEST_FN("pubkey",
                        xmss_statefulness,
                        xmss_legacy_private_key,
                        xmss_key_decoding,
+                       xmss_wots_derivation_method,
                        xmss_key_identity,
                        xmss_check_key,
                        xmss_fork_safety);
