@@ -65,6 +65,33 @@ std::vector<Test::Result> test_hss_lms_params_parsing() {
                });
             }),
 
+      CHECK("HSS Parameters with inconsistent hash functions",
+            [&](Test::Result& result) {
+               using Params_Pair = Botan::HSS_LMS_Params::LMS_LMOTS_Params_Pair;
+
+               const Botan::HSS_LMS_Params sha256("SHA-256,HW(5,4)");
+               const Botan::HSS_LMS_Params sha192("Truncated(SHA-256,192),HW(5,4)");
+
+               const auto& sha256_lms = sha256.params_at_level(Botan::HSS_Level(0)).lms_params();
+               const auto& sha256_lmots = sha256.params_at_level(Botan::HSS_Level(0)).lmots_params();
+               const auto& sha192_lms = sha192.params_at_level(Botan::HSS_Level(0)).lms_params();
+               const auto& sha192_lmots = sha192.params_at_level(Botan::HSS_Level(0)).lmots_params();
+
+               result.test_no_throw("consistent hash functions are accepted", [&] {
+                  const Botan::HSS_LMS_Params params(
+                     std::vector<Params_Pair>{{sha256_lms, sha256_lmots}, {sha256_lms, sha256_lmots}});
+               });
+
+               result.test_throws<Botan::Invalid_Argument>("different hash functions within a level are rejected", [&] {
+                  const Botan::HSS_LMS_Params params(std::vector<Params_Pair>{{sha256_lms, sha192_lmots}});
+               });
+
+               result.test_throws<Botan::Invalid_Argument>("different hash functions between levels are rejected", [&] {
+                  const Botan::HSS_LMS_Params params(
+                     std::vector<Params_Pair>{{sha256_lms, sha256_lmots}, {sha192_lms, sha192_lmots}});
+               });
+            }),
+
    };
 }
 
