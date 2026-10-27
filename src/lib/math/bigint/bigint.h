@@ -1106,9 +1106,6 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
             void set_word_at(size_t i, word w) {
                invalidate_sig_words();
                if(i >= m_reg.size()) {
-                  if(w == 0) {
-                     return;
-                  }
                   grow_to(i + 1);
                }
                m_reg[i] = w;

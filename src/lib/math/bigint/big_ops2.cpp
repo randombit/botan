@@ -208,8 +208,11 @@ BigInt& BigInt::operator*=(word y) {
       set_sign(Positive);
    }
 
-   const word carry = bigint_linmul2(mutable_data(), size(), y);
-   set_word_at(size(), carry);
+   const size_t x_sw = sig_words();
+   grow_to(x_sw + 1);
+
+   const word carry = bigint_linmul2(mutable_data(), x_sw, y);
+   mutable_data()[x_sw] = carry;
 
    return (*this);
 }

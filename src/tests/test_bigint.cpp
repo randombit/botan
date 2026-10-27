@@ -81,6 +81,12 @@ class BigInt_Unit_Tests final : public Test {
             }
          }
 
+         BigInt x = BigInt::from_u64(3);
+         for(size_t i = 0; i != 1000; ++i) {
+            x *= 1;
+         }
+         result.test_sz_lte("Repeated operator*= by a word does not grow the register", x.size(), 16);
+
          return result;
       }
 
@@ -385,6 +391,22 @@ class BigInt_Mul_Test final : public Text_Based_Test {
          e = b;
          e *= a;
          result.test_bn_eq("b *= a", e, c);
+
+         if(b.signum() >= 0 && b.sig_words() <= 1) {
+            const Botan::word w = b.word_at(0);
+            result.test_bn_eq("a * word", a * w, c);
+            e = a;
+            e *= w;
+            result.test_bn_eq("a *= word", e, c);
+         }
+
+         if(a.signum() >= 0 && a.sig_words() <= 1) {
+            const Botan::word w = a.word_at(0);
+            result.test_bn_eq("b * word", b * w, c);
+            e = b;
+            e *= w;
+            result.test_bn_eq("b *= word", e, c);
+         }
 
          return result;
       }
