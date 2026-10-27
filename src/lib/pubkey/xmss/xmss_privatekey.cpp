@@ -263,6 +263,17 @@ XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
    m_private->set_unused_leaf_index(idx_leaf);
 }
 
+bool XMSS_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool strong) const {
+   if(strong) {
+      // Check that the stored root is consistent with the seeds by
+      // recomputing it. This costs about as much as a key generation.
+      const XMSS_Address adrs;
+      XMSS_Hash hash(xmss_parameters());
+      return tree_hash(0, xmss_parameters().tree_height(), adrs, hash) == root();
+   }
+   return true;
+}
+
 secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx,
                                                   size_t target_node_height,
                                                   const XMSS_Address& adrs,

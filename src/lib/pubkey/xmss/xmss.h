@@ -228,6 +228,8 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
 
       bool stateful_operation() const override { return true; }
 
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
+
       std::unique_ptr<Public_Key> public_key() const override;
 
       /**

@@ -446,6 +446,21 @@ std::vector<Test::Result> xmss_key_identity() {
            })};
 }
 
+std::vector<Test::Result> xmss_check_key() {
+   auto rng = Test::new_rng(__func__);
+
+   return {CHECK("strong check_key detects an inconsistent root", [&](auto& result) {
+      const Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, *rng);
+      result.test_is_true("generated key is valid", sk.check_key(*rng, true));
+
+      auto skbytes = sk.raw_private_key();
+      // The root immediately follows the 4 byte OID
+      skbytes[4] ^= 0x01;
+      const Botan::XMSS_PrivateKey bad_root(Botan::AlgorithmIdentifier(), skbytes);
+      result.test_is_false("key with modified root is invalid", bad_root.check_key(*rng, true));
+   })};
+}
+
 std::vector<Test::Result> xmss_fork_safety() {
    #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    // The child allocates and takes locks, which may deadlock if other test threads exist
@@ -544,8 +559,13 @@ BOTAN_REGISTER_TEST("pubkey", "xmss_verify", XMSS_Signature_Verify_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_verify_invalid", XMSS_Signature_Verify_Invalid_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_keygen", XMSS_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_keygen_reference", XMSS_Keygen_Reference_Test);
-BOTAN_REGISTER_TEST_FN(
-   "pubkey", "xmss_unit_tests", xmss_statefulness, xmss_legacy_private_key, xmss_key_identity, xmss_fork_safety);
+BOTAN_REGISTER_TEST_FN("pubkey",
+                       "xmss_unit_tests",
+                       xmss_statefulness,
+                       xmss_legacy_private_key,
+                       xmss_key_identity,
+                       xmss_check_key,
+                       xmss_fork_safety);
 
 #endif
 
