@@ -48,6 +48,11 @@ class BOTAN_TEST_API Montgomery_Params final {
 
       word p_dash() const { return m_data->p_dash(); }
 
+      /**
+      * Return floor(2^(bits(p) - 1 + WB) / p) where WB is the word size in bits
+      */
+      word p_top_mu() const { return m_data->p_top_mu(); }
+
       size_t p_words() const { return m_data->p_size(); }
 
       BigInt redc(const BigInt& x, secure_vector<word>& ws) const;
@@ -83,6 +88,8 @@ class BOTAN_TEST_API Montgomery_Params final {
 
             word p_dash() const { return m_p_dash; }
 
+            word p_top_mu() const { return m_p_top_mu; }
+
             size_t p_size() const { return m_p_words; }
 
          private:
@@ -91,6 +98,7 @@ class BOTAN_TEST_API Montgomery_Params final {
             BigInt m_r2;
             BigInt m_r3;
             word m_p_dash;
+            word m_p_top_mu;
             size_t m_p_words;
       };
 
@@ -161,7 +169,13 @@ class BOTAN_TEST_API Montgomery_Int final {
       Montgomery_Int& operator-=(const Montgomery_Int& other);
 
       /**
-      * Multiply by a small public integer d (which is not in Montgomery form)
+      * Multiply by an integer d (which is not in Montgomery form)
+      *
+      * Requires 0 <= d < 2^(WB-2), where WB is the word size in bits (so
+      * d < 2^62 with 64-bit words, or d < 2^30 with 32-bit words). Larger
+      * values throw Invalid_Argument.
+      *
+      * This is constant time with respect to the values of this, d, and p
       */
       Montgomery_Int& mul_by_word(word d);
 
@@ -174,6 +188,11 @@ class BOTAN_TEST_API Montgomery_Int final {
       * If predicate is true assign other to this, in constant time
       */
       void ct_cond_assign(bool predicate, const Montgomery_Int& other);
+
+      /**
+      * If predicate is true negate this modulo p, in constant time
+      */
+      void ct_cond_negate(bool predicate);
 
       bool is_zero() const;
 

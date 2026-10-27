@@ -46,6 +46,10 @@ Montgomery_Params::Data::Data(const BigInt& p, const Barrett_Reduction& mod_p) {
    m_p_words = m_p.sig_words();
    m_p_dash = monty_inverse(m_p.word_at(0));
 
+   // floor(2^(bits(p) - 1 + WB) / p), derived from Barrett's floor(2^(2*WB*p_words) / p)
+   m_p_top_mu =
+      (mod_p.mu() >> (2 * WordInfo<word>::bits * m_p_words - (m_p.bits() - 1 + WordInfo<word>::bits))).word_at(0);
+
    const BigInt r = BigInt::power_of_2(m_p_words * WordInfo<word>::bits);
 
    m_r1 = mod_p.reduce(r);
@@ -406,29 +410,44 @@ Montgomery_Int& Montgomery_Int::operator-=(const Montgomery_Int& other) {
 }
 
 Montgomery_Int& Montgomery_Int::mul_by_word(word d) {
-   BOTAN_ARG_CHECK(d > 0, "Multiplier must be positive");
+   constexpr size_t WB = WordInfo<word>::bits;
+
+   BOTAN_ARG_CHECK(!CT::Mask<word>::expand(d >> (WB - 2)).as_bool(), "Multiplier too large");
 
    const size_t p_size = m_params.p_words();
    BOTAN_ASSERT_NOMSG(m_v.size() == p_size);
 
-   // Double and add, from the second highest bit of d downwards
-   const auto do_mul = [&](std::span<word> x) {
-      copy_mem(x.data(), m_v.data(), p_size);
+   const word* p = m_params.p()._data();
 
-      for(size_t i = high_bit(d) - 1; i > 0; --i) {
-         this->add_mod_p(m_v);
-         if(((d >> (i - 1)) & 1) == 1) {
-            this->add_mod_p(x);
-         }
-      }
+   const auto do_mul = [&](std::span<word> t) {
+      // t = x*d, which is less than d*p < 2^(bits(p) - 2 + WB)
+      bigint_linmul3(t.data(), m_v.data(), p_size, d);
+
+      /*
+      * Estimate q = floor(t/p) as floor(T*mu / 2^(WB+1)), where T is the WB bits
+      * of t starting at bit bits(p) - 2 and mu = floor(2^(bits(p) - 1 + WB) / p).
+      * The estimate is never too high, and is low by at most one.
+      */
+      const size_t pos = (p_size - 1) * WB + high_bit(p[p_size - 1]) - 2;
+      const size_t pos_word = pos / WB;
+      const size_t pos_bit = pos % WB;
+      const word T = (t[pos_word] >> pos_bit) | ((t[pos_word + 1] << 1) << (WB - 1 - pos_bit));
+
+      word q = 0;
+      word_madd2(T, m_params.p_top_mu(), &q);
+      q >>= 1;
+
+      // Now t - q*p < 2*p
+      const word t_hi = t[p_size] - bigint_submul(t.data(), p, p_size, q);
+      bigint_monty_maybe_sub(p_size, m_v.data(), t_hi, t.data(), p);
    };
 
    if(p_size <= MontgomeryUseStackLimit) {
-      std::array<word, MontgomeryUseStackLimit> x{};
-      do_mul(std::span{x}.first(p_size));
+      std::array<word, MontgomeryUseStackLimit + 1> t{};
+      do_mul(std::span{t}.first(p_size + 1));
    } else {
-      secure_vector<word> x(p_size);
-      do_mul(x);
+      secure_vector<word> t(p_size + 1);
+      do_mul(t);
    }
 
    return (*this);
@@ -448,6 +467,27 @@ Montgomery_Int& Montgomery_Int::div2() {
    m_v[p_size - 1] = (m_v[p_size - 1] >> 1) | (carry << (WB - 1));
 
    return (*this);
+}
+
+void Montgomery_Int::ct_cond_negate(bool predicate) {
+   const size_t p_size = m_params.p_words();
+   BOTAN_ASSERT_NOMSG(m_v.size() == p_size);
+
+   // The negation of zero is zero, not p
+   const auto negate = CT::Mask<word>::expand_bool(predicate) & ~CT::all_zeros(m_v.data(), p_size);
+
+   const auto do_negate = [&](std::span<word> t) {
+      bigint_sub3(t.data(), m_params.p()._data(), p_size, m_v.data(), p_size);
+      negate.select_n(m_v.data(), t.data(), m_v.data(), p_size);
+   };
+
+   if(p_size <= MontgomeryUseStackLimit) {
+      std::array<word, MontgomeryUseStackLimit> t{};
+      do_negate(std::span{t}.first(p_size));
+   } else {
+      secure_vector<word> t(p_size);
+      do_negate(t);
+   }
 }
 
 void Montgomery_Int::ct_cond_assign(bool predicate, const Montgomery_Int& other) {
