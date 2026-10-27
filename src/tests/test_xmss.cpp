@@ -20,6 +20,12 @@
    #include <botan/xmss.h>
    #include <botan/internal/buffer_slicer.h>
    #include <botan/internal/loadstor.h>
+   #include <botan/internal/target_info.h>
+
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+      #include <sys/wait.h>
+      #include <unistd.h>
+   #endif
 #endif
 
 namespace Botan_Tests {
@@ -440,12 +446,106 @@ std::vector<Test::Result> xmss_key_identity() {
            })};
 }
 
+std::vector<Test::Result> xmss_fork_safety() {
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   // The child allocates and takes locks, which may deadlock if other test threads exist
+   if(Test::options().test_threads() != 1) {
+      return {};
+   }
+
+   return {CHECK("signer updated before fork cannot sign in the child", [](auto& result) {
+      auto rng = Test::new_rng("xmss_fork_safety");
+
+      const Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, *rng);
+      const std::vector<uint8_t> msg = {0xde, 0xad, 0xbe, 0xef};
+      constexpr uint8_t child_signed = 1;
+      constexpr uint8_t child_refused = 2;
+      constexpr uint8_t child_other_exception = 3;
+
+      Botan::PK_Signer signer(sk, *rng, Botan::PK_Signature_Options());
+      signer.update(msg);
+      result.test_opt_u64_eq("update does not reserve a leaf", sk.remaining_operations(), 1024);
+
+      int fd[2];
+      if(::pipe(fd) != 0) {
+         result.test_failure("failed to create pipe");
+         return;
+      }
+
+      const pid_t pid = ::fork();
+      if(pid == -1) {
+         ::close(fd[0]);
+         ::close(fd[1]);
+
+      #if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
+         result.test_note("failed to fork process");
+      #else
+         result.test_failure("failed to fork process");
+      #endif
+
+         return;
+      } else if(pid == 0) {
+         ::close(fd[0]);
+
+         // Signing may wait on worker threads which do not exist in the child
+         ::alarm(30);
+
+         uint8_t child_status = child_signed;
+
+         try {
+            const std::vector<uint8_t> suffix = {0x01};
+            signer.update(suffix);
+            signer.signature(*rng);
+         } catch(const Botan::Invalid_State&) {
+            child_status = child_refused;
+         } catch(const std::exception&) {
+            child_status = child_other_exception;
+         }
+
+         [[maybe_unused]] const ssize_t written = ::write(fd[1], &child_status, sizeof(child_status));
+         ::close(fd[1]);
+
+         ::execl("/bin/true", "true", NULL);  // NOLINT(*-vararg)
+         ::_exit(0);
+      }
+
+      ::close(fd[1]);
+
+      uint8_t child_status = 0;
+      const ssize_t got = ::read(fd[0], &child_status, sizeof(child_status));
+      if(got > 0) {
+         result.test_sz_eq("expected status byte from child", static_cast<size_t>(got), sizeof(child_status));
+         result.test_u8_eq("forked child refused to sign", child_status, child_refused);
+      } else {
+         result.test_failure("failed to read child status");
+      }
+      ::close(fd[0]);
+
+      int status = 0;
+      if(::waitpid(pid, &status, 0) == pid) {
+         result.test_is_true("child exited successfully", WIFEXITED(status) && WEXITSTATUS(status) == 0);
+      } else {
+         result.test_failure("failed to wait for child process");
+      }
+
+      const auto sig = signer.signature(*rng);
+      result.test_u64_eq("parent signature used leaf 0", Botan::load_be<uint32_t>(sig.data(), 0), 0);
+
+      Botan::PK_Verifier verifier(sk, Botan::PK_Signature_Options());
+      result.test_is_true("parent signature is valid", verifier.verify_message(msg, sig));
+   })};
+   #else
+   return {};
+   #endif
+}
+
 BOTAN_REGISTER_TEST("pubkey", "xmss_sign", XMSS_Signature_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_verify", XMSS_Signature_Verify_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_verify_invalid", XMSS_Signature_Verify_Invalid_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_keygen", XMSS_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_keygen_reference", XMSS_Keygen_Reference_Test);
-BOTAN_REGISTER_TEST_FN("pubkey", "xmss_unit_tests", xmss_statefulness, xmss_legacy_private_key, xmss_key_identity);
+BOTAN_REGISTER_TEST_FN(
+   "pubkey", "xmss_unit_tests", xmss_statefulness, xmss_legacy_private_key, xmss_key_identity, xmss_fork_safety);
 
 #endif
 
