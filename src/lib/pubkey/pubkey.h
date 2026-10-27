@@ -256,7 +256,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
       * Set the output format of the signature.
       * @param format the signature format to use
       */
-      void set_output_format(Signature_Format format) { m_sig_format = format; }
+      void set_output_format(Signature_Format format);
 
       /**
       * Return an upper bound on the length of the signatures this

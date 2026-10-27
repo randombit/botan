@@ -410,14 +410,20 @@ size_t PK_Signer::signature_length() const {
    }
 }
 
-std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng) {
-   std::vector<uint8_t> sig = m_op->sign(rng);
+void PK_Signer::set_output_format(Signature_Format format) {
+   if(format == Signature_Format::DerSequence) {
+      BOTAN_ARG_CHECK(m_sig_element_size.has_value(), "This key does not support DER signatures");
+   }
+   m_sig_format = format;
+}
 
+std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng) {
+   // The format is checked before signing, since signing may consume a stateful key index
    if(m_sig_format == Signature_Format::Standard) {
-      return sig;
+      return m_op->sign(rng);
    } else if(m_sig_format == Signature_Format::DerSequence) {
       BOTAN_ASSERT_NOMSG(m_sig_element_size.has_value());
-      return der_encode_signature(sig, 2, m_sig_element_size.value());
+      return der_encode_signature(m_op->sign(rng), 2, m_sig_element_size.value());
    } else {
       throw Internal_Error("PK_Signer: Invalid signature format enum");
    }

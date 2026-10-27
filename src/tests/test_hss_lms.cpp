@@ -434,6 +434,25 @@ class HSS_LMS_Statefulness_Test final : public Test {
          return result;
       }
 
+      Test::Result test_unsupported_output_format_rejected() {
+         Test::Result result("HSS-LMS DER output format");
+
+         const Botan::HSS_LMS_PrivateKey sk(Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
+         Botan::PK_Signer signer(sk, Test::rng(), Botan::PK_Signature_Options());
+
+         result.test_throws<Botan::Invalid_Argument>(
+            "DER output format is rejected", [&] { signer.set_output_format(Botan::Signature_Format::DerSequence); });
+
+         const std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
+         const auto sig = signer.sign_message(mes, Test::rng());
+         result.test_opt_u64_eq("only one index was used", sk.remaining_operations(), 31);
+
+         Botan::PK_Verifier verifier(sk, Botan::PK_Signature_Options());
+         result.test_is_true("signature is valid", verifier.verify_message(mes, sig));
+
+         return result;
+      }
+
    #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
       Test::Result test_forked_key_cannot_sign() {
          Test::Result result("HSS-LMS fork safety");
@@ -518,7 +537,8 @@ class HSS_LMS_Statefulness_Test final : public Test {
                                               test_idx_bound_checked_on_load(),
                                               test_exhausted_key_stays_exhausted(),
                                               test_params_are_part_of_key_identity(),
-                                              test_separately_loaded_copies_share_state()};
+                                              test_separately_loaded_copies_share_state(),
+                                              test_unsupported_output_format_rejected()};
 
    #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
          if(Test::options().test_threads() == 1) {
