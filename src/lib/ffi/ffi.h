@@ -3256,6 +3256,10 @@ BOTAN_FFI_EXPORT(2, 0) int botan_pk_op_sign_update(botan_pk_op_sign_t op, const 
 
 /**
 * Produce a signature over the message, then reset for signing another message
+*
+* If sig is smaller than botan_pk_op_sign_output_length, no signature is created
+* and the message is retained, so the call can be repeated with a larger buffer.
+*
 * @param op the signature operation
 * @param rng a random number generator
 * @param sig output buffer
