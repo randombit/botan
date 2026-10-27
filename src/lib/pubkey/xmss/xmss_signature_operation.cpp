@@ -26,7 +26,7 @@ XMSS_Signature_Operation::XMSS_Signature_Operation(const XMSS_PrivateKey& privat
 
 size_t XMSS_Signature_Operation::signature_length() const {
    const auto& params = m_priv_key.xmss_parameters();
-   return sizeof(uint64_t) +  // size of leaf index
+   return sizeof(uint32_t) +  // size of leaf index
           params.element_size() + params.len() * params.element_size() + params.tree_height() * params.element_size();
 }
 

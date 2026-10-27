@@ -498,6 +498,17 @@ std::vector<Test::Result> xmss_key_identity() {
            })};
 }
 
+std::vector<Test::Result> xmss_signature_length() {
+   auto rng = Test::new_rng(__func__);
+
+   return {CHECK("signature_length is exact", [&](auto& result) {
+      const Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, *rng);
+      Botan::PK_Signer signer(sk, *rng, Botan::PK_Signature_Options());
+      const auto sig = signer.sign_message(Botan::hex_decode("deadbeef"), *rng);
+      result.test_sz_eq("signature_length matches signature size", signer.signature_length(), sig.size());
+   })};
+}
+
 std::vector<Test::Result> xmss_check_key() {
    auto rng = Test::new_rng(__func__);
 
@@ -618,6 +629,7 @@ BOTAN_REGISTER_TEST_FN("pubkey",
                        xmss_key_decoding,
                        xmss_wots_derivation_method,
                        xmss_key_identity,
+                       xmss_signature_length,
                        xmss_check_key,
                        xmss_fork_safety);
 
