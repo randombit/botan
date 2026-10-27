@@ -4812,12 +4812,7 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
                         (signer, rng, nullptr, &sig_output_length_out));
             result.test_sz_eq("reported sig lengths are equal", sig_output_length, sig_output_length_out);
 
-            // Recreate signer and try again
-            TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
-            TEST_FFI_OK(botan_pk_op_sign_create, (&signer, priv_loaded, hash_algo_or_padding(), 0));
-            TEST_FFI_OK(botan_pk_op_sign_update, (signer, message1.data(), message1.size()));
-            TEST_FFI_OK(botan_pk_op_sign_update, (signer, message2.data(), message2.size()));
-
+            // The failed call must leave the message in place, so retry using the same signer
             // allocate buffers (with additional space) and perform the actual signing
             sig_output_length_out = sig_output_length * 2;
             Botan::secure_vector<uint8_t> signature(sig_output_length_out);

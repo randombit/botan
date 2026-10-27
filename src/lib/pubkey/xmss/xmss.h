@@ -36,14 +36,14 @@ class XMSS_WOTS_PrivateKey;
 class BOTAN_PUBLIC_API(2, 0) XMSS_PublicKey : public virtual Public_Key {
    public:
       /**
-       * Creates a new XMSS public key for the chosen XMSS signature method.
-       * New public and prf seeds are generated using rng. The appropriate WOTS
-       * signature method will be automatically set based on the chosen XMSS
-       * signature method.
+       * Creates an XMSS public key with a random public seed and an all-zero
+       * root. No private key corresponds to this public key, so it cannot be
+       * used to verify signatures. To generate a new key use XMSS_PrivateKey.
        *
        * @param xmss_oid Identifier for the selected XMSS signature method.
-       * @param rng A random number generator to use for key generation.
+       * @param rng A random number generator used to create the public seed.
        **/
+      BOTAN_DEPRECATED("Use XMSS_PrivateKey to generate a new key")
       XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid, RandomNumberGenerator& rng);
 
       /**
@@ -227,6 +227,8 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
                       WOTS_Derivation_Method wots_derivation_method = WOTS_Derivation_Method::NIST_SP800_208);
 
       bool stateful_operation() const override { return true; }
+
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       std::unique_ptr<Public_Key> public_key() const override;
 

@@ -156,7 +156,13 @@ int botan_pk_op_sign_update(botan_pk_op_sign_t op, const uint8_t in[], size_t in
 }
 
 int botan_pk_op_sign_finish(botan_pk_op_sign_t op, botan_rng_t rng_obj, uint8_t out[], size_t* out_len) {
-   return BOTAN_FFI_VISIT(op, [=](auto& o) { return write_vec_output(out, out_len, o.signature(safe_get(rng_obj))); });
+   return BOTAN_FFI_VISIT(op, [=](auto& o) {
+      // Check before signing, which resets the message and may consume a stateful key index
+      if(const int rc = check_and_prepare_output_space(out, out_len, o.signature_length()); rc != BOTAN_FFI_SUCCESS) {
+         return rc;
+      }
+      return write_vec_output(out, out_len, o.signature(safe_get(rng_obj)));
+   });
 }
 
 int botan_pk_op_verify_create(botan_pk_op_verify_t* op, botan_pubkey_t key_obj, const char* hash, uint32_t flags) {

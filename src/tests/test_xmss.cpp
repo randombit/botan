@@ -20,6 +20,12 @@
    #include <botan/xmss.h>
    #include <botan/internal/buffer_slicer.h>
    #include <botan/internal/loadstor.h>
+   #include <botan/internal/target_info.h>
+
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+      #include <sys/wait.h>
+      #include <unistd.h>
+   #endif
 #endif
 
 namespace Botan_Tests {
@@ -132,10 +138,10 @@ class XMSS_Keygen_Reference_Test final : public Text_Based_Test {
          const auto add_entropy = [&](auto v) { fixed_rng.add_entropy(v.data(), v.size()); };
 
          // The order of the RNG values is dependent on the order they are pulled
-         // from the RNG in the production implementation.
-         add_entropy(vars.get_req_bin("PublicSeed"));  // XMSS_PublicKey constructor's initializer list
-         add_entropy(vars.get_req_bin("SecretPrf"));   // XMSS_PrivateKey constructor's call to ..._Internal constructor
-         add_entropy(vars.get_req_bin("SecretSeed"));  // XMSS_PrivateKey constructor's call to ..._Internal constructor
+         // from the RNG in XMSS_PrivateKey::generate_keygen_material
+         add_entropy(vars.get_req_bin("PublicSeed"));
+         add_entropy(vars.get_req_bin("SecretPrf"));
+         add_entropy(vars.get_req_bin("SecretSeed"));
 
          const auto xmss_algo = Botan::XMSS_Parameters::xmss_id_from_string(vars.get_req_str("Params"));
          const Botan::XMSS_PrivateKey keypair(xmss_algo, fixed_rng);
@@ -210,6 +216,24 @@ std::vector<Test::Result> xmss_statefulness() {
                     Botan::store_be(static_cast<uint32_t>(1025), &skbytes[leaf_idx_offset]);
                     result.test_throws<Botan::Decoding_Error>("no key with leaf index 2^h + 1",
                                                               [&] { const Botan::XMSS_PrivateKey sk(skbytes); });
+                 }),
+
+           CHECK("copies differing only in SK_PRF share state",
+                 [&](auto& result) {
+                    const Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, *rng);
+                    auto skbytes = sk.raw_private_key();
+
+                    // SK_PRF immediately follows the leaf index
+                    skbytes[leaf_idx_offset + 4] ^= 0x01;
+                    const Botan::XMSS_PrivateKey variant(skbytes);
+
+                    const auto sig1 = sign_something(sk);
+                    result.test_opt_u64_eq(
+                       "signing with one key is seen by the other", variant.remaining_operations(), 1023);
+
+                    const auto sig2 = sign_something(variant);
+                    result.test_u64_eq("first signature used leaf 0", Botan::load_be<uint32_t>(sig1.data(), 0), 0);
+                    result.test_u64_eq("second signature used leaf 1", Botan::load_be<uint32_t>(sig2.data(), 0), 1);
                  }),
 
            CHECK("separately loaded copies share state", [&](auto& result) {
@@ -356,12 +380,258 @@ std::vector<Test::Result> xmss_legacy_private_key() {
    };
 }
 
+std::vector<Test::Result> xmss_key_decoding() {
+   return {CHECK("public key with trailing bytes is rejected", [](Test::Result& result) {
+      const Botan::XMSS_PublicKey pk(Botan::XMSS_Parameters::XMSS_SHA2_10_256,
+                                     Botan::secure_vector<uint8_t>(32, 0x01),
+                                     Botan::secure_vector<uint8_t>(32, 0x02));
+      auto pkbytes = pk.raw_public_key_bits();
+
+      result.test_no_throw("key of exact length is accepted",
+                           [&] { const Botan::XMSS_PublicKey loaded(Botan::AlgorithmIdentifier(), pkbytes); });
+
+      pkbytes.push_back(0x00);
+      result.test_throws<Botan::Decoding_Error>("key with trailing data is rejected", [&] {
+         const Botan::XMSS_PublicKey loaded(Botan::AlgorithmIdentifier(), pkbytes);
+      });
+   })};
+}
+
+std::vector<Test::Result> xmss_wots_derivation_method() {
+   return {CHECK("unknown WOTS+ derivation methods are rejected", [](Test::Result& result) {
+      const auto oid = Botan::XMSS_Parameters::XMSS_SHA2_10_256;
+      const Botan::secure_vector<uint8_t> private_seed(32, 0x01);
+      const Botan::secure_vector<uint8_t> prf(32, 0x02);
+      const Botan::secure_vector<uint8_t> root(32, 0x03);
+      const Botan::secure_vector<uint8_t> public_seed(32, 0x04);
+      // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+      const auto unknown_method = static_cast<Botan::WOTS_Derivation_Method>(3);
+
+      const Botan::XMSS_PrivateKey sk(oid, 0, private_seed, prf, root, public_seed);
+      auto skbytes = sk.raw_private_key();
+
+      // The derivation method is the final byte of the encoding
+      skbytes.back() = 0;
+      result.test_throws<Botan::Decoding_Error>("decoding rejects method 0", [&] {
+         const Botan::XMSS_PrivateKey loaded(Botan::AlgorithmIdentifier(), skbytes);
+      });
+
+      skbytes.back() = 3;
+      result.test_throws<Botan::Decoding_Error>("decoding rejects method 3", [&] {
+         const Botan::XMSS_PrivateKey loaded(Botan::AlgorithmIdentifier(), skbytes);
+      });
+
+      result.test_throws<Botan::Invalid_Argument>("component constructor rejects unknown method", [&] {
+         const Botan::XMSS_PrivateKey bad(oid, 0, private_seed, prf, root, public_seed, unknown_method);
+      });
+
+      result.test_throws<Botan::Invalid_Argument>("key generation rejects unknown method", [&] {
+         auto rng = Test::new_rng("xmss_unknown_derivation_method");
+         const Botan::XMSS_PrivateKey bad(oid, *rng, unknown_method);
+      });
+   })};
+}
+
+std::vector<Test::Result> xmss_key_identity() {
+   auto rng = Test::new_rng(__func__);
+
+   const auto oid = Botan::XMSS_Parameters::XMSS_SHA2_10_256;
+
+   const auto random_value = [&]() { return rng->random_vec(32); };
+
+   const auto nist = Botan::WOTS_Derivation_Method::NIST_SP800_208;
+   const auto botan2x = Botan::WOTS_Derivation_Method::Botan2x;
+
+   return {CHECK("keys differing only in public seed have separate state using NIST derivation",
+                 [&](Test::Result& result) {
+                    const auto private_seed = random_value();
+
+                    const Botan::XMSS_PrivateKey sk1(
+                       oid, 0, private_seed, random_value(), random_value(), random_value(), nist);
+                    const Botan::XMSS_PrivateKey sk2(
+                       oid, 5, private_seed, random_value(), random_value(), random_value(), nist);
+
+                    result.test_opt_u64_eq("first key is unaffected", sk1.remaining_operations(), 1024);
+                    result.test_opt_u64_eq("second key has its own state", sk2.remaining_operations(), 1019);
+                 }),
+
+           CHECK("keys differing only in public seed share state using Botan2x derivation",
+                 [&](Test::Result& result) {
+                    // Botan2x derives the WOTS+ keys from only the private seed
+                    const auto private_seed = random_value();
+
+                    const Botan::XMSS_PrivateKey sk1(
+                       oid, 0, private_seed, random_value(), random_value(), random_value(), botan2x);
+                    const Botan::XMSS_PrivateKey sk2(
+                       oid, 5, private_seed, random_value(), random_value(), random_value(), botan2x);
+
+                    result.test_opt_u64_eq("first key shares the state", sk1.remaining_operations(), 1019);
+                    result.test_opt_u64_eq("second key shares the state", sk2.remaining_operations(), 1019);
+                 }),
+
+           CHECK("keys differing only in derivation method have separate state",
+                 [&](Test::Result& result) {
+                    const auto private_seed = random_value();
+                    const auto prf = random_value();
+                    const auto root = random_value();
+                    const auto public_seed = random_value();
+
+                    const Botan::XMSS_PrivateKey sk1(oid, 0, private_seed, prf, root, public_seed, nist);
+                    const Botan::XMSS_PrivateKey sk2(oid, 5, private_seed, prf, root, public_seed, botan2x);
+
+                    result.test_opt_u64_eq("first key is unaffected", sk1.remaining_operations(), 1024);
+                    result.test_opt_u64_eq("second key has its own state", sk2.remaining_operations(), 1019);
+                 }),
+
+           CHECK("rejected import does not modify the state of an existing key", [&](Test::Result& result) {
+              const auto private_seed = random_value();
+              const auto root = random_value();
+              const auto public_seed = random_value();
+
+              const Botan::XMSS_PrivateKey sk(oid, 0, private_seed, random_value(), root, public_seed);
+
+              result.test_throws<Botan::Invalid_Argument>("import with empty PRF is rejected", [&] {
+                 const Botan::XMSS_PrivateKey bad(oid, 1024, private_seed, {}, root, public_seed);
+              });
+
+              result.test_opt_u64_eq("existing key is unaffected", sk.remaining_operations(), 1024);
+           })};
+}
+
+std::vector<Test::Result> xmss_signature_length() {
+   auto rng = Test::new_rng(__func__);
+
+   return {CHECK("signature_length is exact", [&](auto& result) {
+      const Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, *rng);
+      Botan::PK_Signer signer(sk, *rng, Botan::PK_Signature_Options());
+      const auto sig = signer.sign_message(Botan::hex_decode("deadbeef"), *rng);
+      result.test_sz_eq("signature_length matches signature size", signer.signature_length(), sig.size());
+   })};
+}
+
+std::vector<Test::Result> xmss_check_key() {
+   auto rng = Test::new_rng(__func__);
+
+   return {CHECK("strong check_key detects an inconsistent root", [&](auto& result) {
+      const Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, *rng);
+      result.test_is_true("generated key is valid", sk.check_key(*rng, true));
+
+      auto skbytes = sk.raw_private_key();
+      // The root immediately follows the 4 byte OID
+      skbytes[4] ^= 0x01;
+      const Botan::XMSS_PrivateKey bad_root(Botan::AlgorithmIdentifier(), skbytes);
+      result.test_is_false("key with modified root is invalid", bad_root.check_key(*rng, true));
+   })};
+}
+
+std::vector<Test::Result> xmss_fork_safety() {
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   // The child allocates and takes locks, which may deadlock if other test threads exist
+   if(Test::options().test_threads() != 1) {
+      return {};
+   }
+
+   return {CHECK("signer updated before fork cannot sign in the child", [](auto& result) {
+      auto rng = Test::new_rng("xmss_fork_safety");
+
+      const Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, *rng);
+      const std::vector<uint8_t> msg = {0xde, 0xad, 0xbe, 0xef};
+      constexpr uint8_t child_signed = 1;
+      constexpr uint8_t child_refused = 2;
+      constexpr uint8_t child_other_exception = 3;
+
+      Botan::PK_Signer signer(sk, *rng, Botan::PK_Signature_Options());
+      signer.update(msg);
+      result.test_opt_u64_eq("update does not reserve a leaf", sk.remaining_operations(), 1024);
+
+      int fd[2];
+      if(::pipe(fd) != 0) {
+         result.test_failure("failed to create pipe");
+         return;
+      }
+
+      const pid_t pid = ::fork();
+      if(pid == -1) {
+         ::close(fd[0]);
+         ::close(fd[1]);
+
+      #if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
+         result.test_note("failed to fork process");
+      #else
+         result.test_failure("failed to fork process");
+      #endif
+
+         return;
+      } else if(pid == 0) {
+         ::close(fd[0]);
+
+         // Signing may wait on worker threads which do not exist in the child
+         ::alarm(30);
+
+         uint8_t child_status = child_signed;
+
+         try {
+            const std::vector<uint8_t> suffix = {0x01};
+            signer.update(suffix);
+            signer.signature(*rng);
+         } catch(const Botan::Invalid_State&) {
+            child_status = child_refused;
+         } catch(const std::exception&) {
+            child_status = child_other_exception;
+         }
+
+         [[maybe_unused]] const ssize_t written = ::write(fd[1], &child_status, sizeof(child_status));
+         ::close(fd[1]);
+
+         ::execl("/bin/true", "true", NULL);  // NOLINT(*-vararg)
+         ::_exit(0);
+      }
+
+      ::close(fd[1]);
+
+      uint8_t child_status = 0;
+      const ssize_t got = ::read(fd[0], &child_status, sizeof(child_status));
+      if(got > 0) {
+         result.test_sz_eq("expected status byte from child", static_cast<size_t>(got), sizeof(child_status));
+         result.test_u8_eq("forked child refused to sign", child_status, child_refused);
+      } else {
+         result.test_failure("failed to read child status");
+      }
+      ::close(fd[0]);
+
+      int status = 0;
+      if(::waitpid(pid, &status, 0) == pid) {
+         result.test_is_true("child exited successfully", WIFEXITED(status) && WEXITSTATUS(status) == 0);
+      } else {
+         result.test_failure("failed to wait for child process");
+      }
+
+      const auto sig = signer.signature(*rng);
+      result.test_u64_eq("parent signature used leaf 0", Botan::load_be<uint32_t>(sig.data(), 0), 0);
+
+      Botan::PK_Verifier verifier(sk, Botan::PK_Signature_Options());
+      result.test_is_true("parent signature is valid", verifier.verify_message(msg, sig));
+   })};
+   #else
+   return {};
+   #endif
+}
+
 BOTAN_REGISTER_TEST("pubkey", "xmss_sign", XMSS_Signature_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_verify", XMSS_Signature_Verify_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_verify_invalid", XMSS_Signature_Verify_Invalid_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_keygen", XMSS_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_keygen_reference", XMSS_Keygen_Reference_Test);
-BOTAN_REGISTER_TEST_FN("pubkey", "xmss_unit_tests", xmss_statefulness, xmss_legacy_private_key);
+BOTAN_REGISTER_TEST_FN("pubkey",
+                       "xmss_unit_tests",
+                       xmss_statefulness,
+                       xmss_legacy_private_key,
+                       xmss_key_decoding,
+                       xmss_wots_derivation_method,
+                       xmss_key_identity,
+                       xmss_signature_length,
+                       xmss_check_key,
+                       xmss_fork_safety);
 
 #endif
 

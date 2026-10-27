@@ -52,26 +52,38 @@ secure_vector<uint8_t> extract_raw_private_key(std::span<const uint8_t> key_bits
    return raw_key;
 }
 
+bool is_known_wots_derivation_method(WOTS_Derivation_Method method) {
+   return method == WOTS_Derivation_Method::Botan2x || method == WOTS_Derivation_Method::NIST_SP800_208;
+}
+
+/*
+* The identity consists of the inputs to the WOTS+ key derivation, so that
+* keys with the same WOTS+ keys share one leaf index. SK_PRF is not one of
+* these inputs, and neither is the public seed when using Botan2x derivation.
+*/
+Stateful_Key_Index_Registry::KeyId xmss_key_id(const XMSS_Parameters& params,
+                                               WOTS_Derivation_Method wots_derivation_method,
+                                               std::span<const uint8_t> private_seed,
+                                               std::span<const uint8_t> public_seed) {
+   const auto algo_params = concat<std::vector<uint8_t>>(store_be(static_cast<uint32_t>(params.oid())),
+                                                         std::array{static_cast<uint8_t>(wots_derivation_method)});
+
+   const bool derivation_uses_public_seed = (wots_derivation_method == WOTS_Derivation_Method::NIST_SP800_208);
+
+   return Stateful_Key_Index_Registry::KeyId("XMSS",
+                                             algo_params,
+                                             params.total_number_of_signatures(),
+                                             private_seed,
+                                             derivation_uses_public_seed ? public_seed : std::span<const uint8_t>());
+}
+
 }  // namespace
 
 class XMSS_PrivateKey_Internal final {
    public:
       XMSS_PrivateKey_Internal(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                                WOTS_Derivation_Method wots_derivation_method,
-                               RandomNumberGenerator& rng) :
-            m_xmss_params(XMSS_Parameters::from_id(xmss_algo_id)),
-            m_wots_params(m_xmss_params.wots_parameters()),
-            m_wots_derivation_method(wots_derivation_method),
-            m_prf(rng.random_vec(m_xmss_params.element_size())),
-            m_private_seed(rng.random_vec(m_xmss_params.element_size())),
-            m_keyid(Stateful_Key_Index_Registry::KeyId("XMSS",
-                                                       store_be(static_cast<uint32_t>(m_xmss_params.oid())),
-                                                       m_xmss_params.total_number_of_signatures(),
-                                                       m_private_seed,
-                                                       m_prf)) {}
-
-      XMSS_PrivateKey_Internal(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
-                               WOTS_Derivation_Method wots_derivation_method,
+                               std::span<const uint8_t> public_seed,
                                secure_vector<uint8_t> private_seed,
                                secure_vector<uint8_t> prf) :
             m_xmss_params(XMSS_Parameters::from_id(xmss_algo_id)),
@@ -79,11 +91,14 @@ class XMSS_PrivateKey_Internal final {
             m_wots_derivation_method(wots_derivation_method),
             m_prf(std::move(prf)),
             m_private_seed(std::move(private_seed)),
-            m_keyid(Stateful_Key_Index_Registry::KeyId("XMSS",
-                                                       store_be(static_cast<uint32_t>(m_xmss_params.oid())),
-                                                       m_xmss_params.total_number_of_signatures(),
-                                                       m_private_seed,
-                                                       m_prf)) {}
+            m_keyid(xmss_key_id(m_xmss_params, m_wots_derivation_method, m_private_seed, public_seed)) {
+         // Callers update the registry afterwards, so all validation must happen here
+         BOTAN_ARG_CHECK(is_known_wots_derivation_method(m_wots_derivation_method),
+                         "XMSS: unknown WOTS+ derivation method");
+         BOTAN_ARG_CHECK(m_prf.size() == m_xmss_params.element_size(), "XMSS: unexpected byte length of PRF value");
+         BOTAN_ARG_CHECK(m_private_seed.size() == m_xmss_params.element_size(),
+                         "XMSS: unexpected byte length of private seed");
+      }
 
       XMSS_PrivateKey_Internal(XMSS_Parameters::xmss_algorithm_t xmss_algo_id, std::span<const uint8_t> key_bits) :
             m_xmss_params(XMSS_Parameters::from_id(xmss_algo_id)), m_wots_params(m_xmss_params.wots_parameters()) {
@@ -106,8 +121,10 @@ class XMSS_PrivateKey_Internal final {
 
          BufferSlicer s(raw_key);
 
-         // We're not interested in the public key here
-         s.skip(m_xmss_params.raw_public_key_size());
+         // The OID and root were already parsed by XMSS_PublicKey; the public
+         // seed is needed here as part of the key identity
+         s.skip(4 + m_xmss_params.element_size());
+         const auto public_seed = s.take(m_xmss_params.element_size());
 
          const auto unused_leaf_bytes = s.take(sizeof(uint32_t));
          const size_t unused_leaf = load_be<uint32_t>(unused_leaf_bytes.data(), 0);
@@ -115,21 +132,21 @@ class XMSS_PrivateKey_Internal final {
          m_prf = s.copy_as_secure_vector(m_xmss_params.element_size());
          m_private_seed = s.copy_as_secure_vector(m_xmss_params.element_size());
 
-         m_keyid = Stateful_Key_Index_Registry::KeyId("XMSS",
-                                                      store_be(static_cast<uint32_t>(m_xmss_params.oid())),
-                                                      m_xmss_params.total_number_of_signatures(),
-                                                      m_private_seed,
-                                                      m_prf);
-
-         // Note m_keyid must be initialized before set_unused_leaf_index is called!
-         set_unused_leaf_index(unused_leaf);
-
          // Legacy keys generated prior to Botan 3.x don't feature a
          // WOTS+ key derivation method encoded in their private key.
          m_wots_derivation_method =
-            (s.empty()) ? WOTS_Derivation_Method::Botan2x : static_cast<WOTS_Derivation_Method>(s.take(1).front());
+            (s.empty()) ? WOTS_Derivation_Method::Botan2x : static_cast<WOTS_Derivation_Method>(s.take_byte());
+
+         if(!is_known_wots_derivation_method(m_wots_derivation_method)) {
+            throw Decoding_Error("XMSS private key has an unknown WOTS+ derivation method");
+         }
 
          BOTAN_ASSERT_NOMSG(s.empty());
+
+         m_keyid = xmss_key_id(m_xmss_params, m_wots_derivation_method, m_private_seed, public_seed);
+
+         // Note m_keyid must be initialized before set_unused_leaf_index is called!
+         set_unused_leaf_index(unused_leaf);
       }
 
       secure_vector<uint8_t> serialize(std::vector<uint8_t> raw_public_key) const {
@@ -209,6 +226,8 @@ XMSS_PrivateKey::Keygen_Material XMSS_PrivateKey::generate_keygen_material(
    XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
    RandomNumberGenerator& rng,
    WOTS_Derivation_Method wots_derivation_method) {
+   BOTAN_ARG_CHECK(is_known_wots_derivation_method(wots_derivation_method), "XMSS: unknown WOTS+ derivation method");
+
    const auto params = XMSS_Parameters::from_id(xmss_algo_id);
    const size_t n = params.element_size();
 
@@ -237,8 +256,11 @@ XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                                  WOTS_Derivation_Method wots_derivation_method,
                                  Keygen_Material material) :
       XMSS_PublicKey(xmss_algo_id, std::move(material.root), std::move(material.public_seed)),
-      m_private(std::make_shared<XMSS_PrivateKey_Internal>(
-         xmss_algo_id, wots_derivation_method, std::move(material.private_seed), std::move(material.prf))) {}
+      m_private(std::make_shared<XMSS_PrivateKey_Internal>(xmss_algo_id,
+                                                           wots_derivation_method,
+                                                           this->public_seed(),
+                                                           std::move(material.private_seed),
+                                                           std::move(material.prf))) {}
 
 XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                                  size_t idx_leaf,
@@ -249,12 +271,19 @@ XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                                  WOTS_Derivation_Method wots_derivation_method) :
       XMSS_PublicKey(xmss_algo_id, std::move(root), std::move(public_seed)),
       m_private(std::make_shared<XMSS_PrivateKey_Internal>(
-         xmss_algo_id, wots_derivation_method, std::move(wots_priv_seed), std::move(prf))) {
+         xmss_algo_id, wots_derivation_method, this->public_seed(), std::move(wots_priv_seed), std::move(prf))) {
    m_private->set_unused_leaf_index(idx_leaf);
-   BOTAN_ARG_CHECK(m_private->prf_value().size() == xmss_parameters().element_size(),
-                   "XMSS: unexpected byte length of PRF value");
-   BOTAN_ARG_CHECK(m_private->private_seed().size() == xmss_parameters().element_size(),
-                   "XMSS: unexpected byte length of private seed");
+}
+
+bool XMSS_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool strong) const {
+   if(strong) {
+      // Check that the stored root is consistent with the seeds by
+      // recomputing it. This costs about as much as a key generation.
+      const XMSS_Address adrs;
+      XMSS_Hash hash(xmss_parameters());
+      return tree_hash(0, xmss_parameters().tree_height(), adrs, hash) == root();
+   }
+   return true;
 }
 
 secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx,

@@ -1392,6 +1392,12 @@ Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
    m_trusted_hashes.insert("SHAKE-256(336)");  // SLH-DSA-SHAKE-192f
    m_trusted_hashes.insert("SHAKE-256(376)");  // SLH-DSA-SHAKE-256s
    m_trusted_hashes.insert("SHAKE-256(392)");  // SLH-DSA-SHAKE-256f
+
+   // Hashes used by HSS-LMS and XMSS parameter sets
+   m_trusted_hashes.insert("SHAKE-128(256)");          // XMSS-SHAKE_*_256
+   m_trusted_hashes.insert("SHAKE-256(192)");          // HSS-LMS and XMSS with SHAKE-256/192
+   m_trusted_hashes.insert("SHAKE-256(256)");          // HSS-LMS and XMSS with SHAKE-256/256
+   m_trusted_hashes.insert("Truncated(SHA-256,192)");  // HSS-LMS and XMSS with SHA-256/192
 }
 
 namespace {

@@ -203,7 +203,7 @@ class BOTAN_TEST_API LMOTS_Signature final {
       /**
        * @brief Returns the part of the signature for @p chain_idx.
        */
-      StrongSpan<const LMOTS_Node> y(uint16_t chain_idx) const { return m_y.at(chain_idx); }
+      StrongSpan<const LMOTS_Node> y(uint16_t chain_idx) const;
 
       /**
        * @brief The expected size of the signature.
@@ -216,7 +216,6 @@ class BOTAN_TEST_API LMOTS_Signature final {
       LMOTS_Algorithm_Type m_algorithm_type;
       std::vector<uint8_t> m_C;
       std::vector<uint8_t> m_y_buffer;
-      std::vector<StrongSpan<const LMOTS_Node>> m_y;
 };
 
 /**

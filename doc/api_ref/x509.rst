@@ -596,9 +596,10 @@ step. The two constructors are:
 
     A variant of the above with some convenient defaults. The current
     default `minimum_key_strength` of 80 roughly corresponds to 1024
-    bit RSA. The set of trusted hashes is set to all SHA-2 variants,
-    and, if `minimum_key_strength` is less than or equal to 80, then
-    SHA-1 signatures will also be accepted.
+    bit RSA. The set of trusted hashes is set to all SHA-2 variants
+    along with the hash functions used by Ed448 and the hash-based and
+    post-quantum signature schemes, and, if `minimum_key_strength` is less
+    than or equal to 80, then SHA-1 signatures will also be accepted.
 
 .. _x509_certificates_example:
 

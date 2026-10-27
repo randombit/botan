@@ -47,13 +47,9 @@ class XMSS_Signature_Operation final : public virtual PK_Ops::Signature {
       std::string hash_function() const override { return m_hash.hash_function(); }
 
    private:
-      void initialize();
-
       XMSS_PrivateKey m_priv_key;
       XMSS_Hash m_hash;
-      secure_vector<uint8_t> m_randomness;
-      uint32_t m_leaf_idx;
-      bool m_is_initialized;
+      std::vector<uint8_t> m_msg_buffer;
 };
 
 }  // namespace Botan

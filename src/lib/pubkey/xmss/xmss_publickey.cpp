@@ -116,7 +116,10 @@ XMSS_PublicKey::XMSS_PublicKey(const AlgorithmIdentifier& alg_id, std::span<cons
    const auto raw_key = extract_raw_public_key(key_bits);
    const auto xmss_oid = deserialize_xmss_oid(raw_key);
    const auto params = XMSS_Parameters::from_id(xmss_oid);
-   if(raw_key.size() < params.raw_public_key_size()) {
+
+   // XMSS_PrivateKey passes its complete encoding to this constructor
+   if(raw_key.size() != params.raw_public_key_size() && raw_key.size() != params.raw_private_key_size() &&
+      raw_key.size() != params.raw_legacy_private_key_size()) {
       throw Decoding_Error("Invalid XMSS public key size detected");
    }
 

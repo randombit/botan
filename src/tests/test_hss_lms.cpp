@@ -19,6 +19,7 @@
    #include <botan/internal/fmt.h>
    #include <botan/internal/hss.h>
    #include <botan/internal/loadstor.h>
+   #include <botan/internal/target_info.h>
    #include <limits>
 
    #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
@@ -61,6 +62,33 @@ std::vector<Test::Result> test_hss_lms_params_parsing() {
                   result.test_enum_eq("2nd level - ots type",
                                       second_lms_params.lmots_params().algorithm_type(),
                                       Botan::LMOTS_Algorithm_Type::SHA256_N32_W8);
+               });
+            }),
+
+      CHECK("HSS Parameters with inconsistent hash functions",
+            [&](Test::Result& result) {
+               using Params_Pair = Botan::HSS_LMS_Params::LMS_LMOTS_Params_Pair;
+
+               const Botan::HSS_LMS_Params sha256("SHA-256,HW(5,4)");
+               const Botan::HSS_LMS_Params sha192("Truncated(SHA-256,192),HW(5,4)");
+
+               const auto& sha256_lms = sha256.params_at_level(Botan::HSS_Level(0)).lms_params();
+               const auto& sha256_lmots = sha256.params_at_level(Botan::HSS_Level(0)).lmots_params();
+               const auto& sha192_lms = sha192.params_at_level(Botan::HSS_Level(0)).lms_params();
+               const auto& sha192_lmots = sha192.params_at_level(Botan::HSS_Level(0)).lmots_params();
+
+               result.test_no_throw("consistent hash functions are accepted", [&] {
+                  const Botan::HSS_LMS_Params params(
+                     std::vector<Params_Pair>{{sha256_lms, sha256_lmots}, {sha256_lms, sha256_lmots}});
+               });
+
+               result.test_throws<Botan::Invalid_Argument>("different hash functions within a level are rejected", [&] {
+                  const Botan::HSS_LMS_Params params(std::vector<Params_Pair>{{sha256_lms, sha192_lmots}});
+               });
+
+               result.test_throws<Botan::Invalid_Argument>("different hash functions between levels are rejected", [&] {
+                  const Botan::HSS_LMS_Params params(
+                     std::vector<Params_Pair>{{sha256_lms, sha256_lmots}, {sha192_lms, sha192_lmots}});
                });
             }),
 
@@ -406,6 +434,25 @@ class HSS_LMS_Statefulness_Test final : public Test {
          return result;
       }
 
+      Test::Result test_unsupported_output_format_rejected() {
+         Test::Result result("HSS-LMS DER output format");
+
+         const Botan::HSS_LMS_PrivateKey sk(Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
+         Botan::PK_Signer signer(sk, Test::rng(), Botan::PK_Signature_Options());
+
+         result.test_throws<Botan::Invalid_Argument>(
+            "DER output format is rejected", [&] { signer.set_output_format(Botan::Signature_Format::DerSequence); });
+
+         const std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
+         const auto sig = signer.sign_message(mes, Test::rng());
+         result.test_opt_u64_eq("only one index was used", sk.remaining_operations(), 31);
+
+         Botan::PK_Verifier verifier(sk, Botan::PK_Signature_Options());
+         result.test_is_true("signature is valid", verifier.verify_message(mes, sig));
+
+         return result;
+      }
+
    #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
       Test::Result test_forked_key_cannot_sign() {
          Test::Result result("HSS-LMS fork safety");
@@ -436,6 +483,9 @@ class HSS_LMS_Statefulness_Test final : public Test {
             return result;
          } else if(pid == 0) {
             ::close(fd[0]);
+
+            // Signing may wait on worker threads which do not exist in the child
+            ::alarm(30);
 
             uint8_t child_status = child_signed;
 
@@ -487,7 +537,8 @@ class HSS_LMS_Statefulness_Test final : public Test {
                                               test_idx_bound_checked_on_load(),
                                               test_exhausted_key_stays_exhausted(),
                                               test_params_are_part_of_key_identity(),
-                                              test_separately_loaded_copies_share_state()};
+                                              test_separately_loaded_copies_share_state(),
+                                              test_unsupported_output_format_rejected()};
 
    #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
          if(Test::options().test_threads() == 1) {
@@ -508,10 +559,7 @@ class HSS_LMS_Missing_API_Test final : public Test {
 
          // HSS_LMS_PublicKey::key_length()
          auto sk = Botan::create_private_key("HSS-LMS", Test::rng(), "SHA-256,HW(10,4)");
-         sk->key_length();
-         result.test_sz_gt("Public key length must be greater than the simply type information plus I",
-                           sk->key_length(),
-                           3 * sizeof(uint32_t) + Botan::LMS_IDENTIFIER_LEN);
+         result.test_sz_eq("Key length is the hash output length in bits", sk->key_length(), 256);
 
          // HSS_LMS_Verification_Operation::hash_function()
          const Botan::PK_Verifier verifier(*sk, Botan::PK_Signature_Options());

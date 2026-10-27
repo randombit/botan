@@ -100,6 +100,12 @@ HSS_LMS_Params::HSS_LMS_Params(std::vector<LMS_LMOTS_Params_Pair> lm_lmots_param
       m_lms_lmots_params(std::move(lm_lmots_params)), m_max_sig_count(calc_max_sig_count()) {
    BOTAN_ARG_CHECK(!m_lms_lmots_params.empty() && m_lms_lmots_params.size() <= HSS_MAX_LEVELS,
                    "Invalid number of levels");
+
+   const auto& hash_name = m_lms_lmots_params.front().lms_params().hash_name();
+   for(const auto& param : m_lms_lmots_params) {
+      BOTAN_ARG_CHECK(param.lms_params().hash_name() == hash_name && param.lmots_params().hash_name() == hash_name,
+                      "Inconsistent hash functions are not allowed");
+   }
 }
 
 HSS_LMS_Params::HSS_LMS_Params(std::string_view algo_params) : m_max_sig_count(0) {

@@ -1581,6 +1581,11 @@ Signature Generation
    Produce a signature over all of the bytes passed to :cpp:func:`botan_pk_op_sign_update`.
    Afterwards, the sign operator is reset and may be used to sign a new message.
 
+   If ``sig_len`` is smaller than the length returned by
+   :cpp:func:`botan_pk_op_sign_output_length`, no signature is created and
+   ``BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE`` is returned. In this case the
+   message is retained, so the call can be repeated with a larger buffer.
+
 Signature Verification
 ----------------------------------------
 

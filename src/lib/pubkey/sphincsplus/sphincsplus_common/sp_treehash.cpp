@@ -25,8 +25,10 @@ void treehash(StrongSpan<SphincsTreeNode> out_root,
               Sphincs_Address& tree_address) {
    BOTAN_ASSERT_NOMSG(out_root.size() == params.n());
    BOTAN_ASSERT_NOMSG(out_auth_path.size() == params.n() * total_tree_height);
+   BOTAN_ASSERT_NOMSG(total_tree_height < 32);
 
-   const TreeNodeIndex max_idx(uint32_t((1 << total_tree_height) - 1));
+   const TreeNodeIndex max_idx((uint32_t(1) << total_tree_height) - 1);
+   BOTAN_ASSERT_NOMSG(!leaf_idx.has_value() || leaf_idx.value() <= max_idx);
 
    std::vector<uint8_t> stack(total_tree_height * params.n());
 
