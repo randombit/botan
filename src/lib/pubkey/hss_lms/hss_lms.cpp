@@ -32,7 +32,7 @@ HSS_LMS_PublicKey::HSS_LMS_PublicKey(const AlgorithmIdentifier& alg_id, std::spa
 HSS_LMS_PublicKey::~HSS_LMS_PublicKey() = default;
 
 size_t HSS_LMS_PublicKey::key_length() const {
-   return m_public->size();
+   return 8 * m_public->lms_pub_key().lms_params().m();
 }
 
 size_t HSS_LMS_PublicKey::estimated_strength() const {
