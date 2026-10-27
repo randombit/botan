@@ -33,6 +33,11 @@ if type -p "apt-get"; then
 
     sudo rm -f /var/lib/man-db/auto-update
 
+    # Keep package installs from starting services. Starting the tpm2-abrmd
+    # service times out after 90 seconds, and CI runs its own instance anyway
+    printf '#!/bin/sh\nexit 101\n' | sudo tee /usr/sbin/policy-rc.d > /dev/null
+    sudo chmod +x /usr/sbin/policy-rc.d
+
     "${SCRIPT_LOCATION}"/apt_get.py update
     "${SCRIPT_LOCATION}"/apt_get.py install "$TARGET" "$COMPILER"
 
