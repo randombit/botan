@@ -19,6 +19,7 @@
    #include <botan/internal/fmt.h>
    #include <botan/internal/hss.h>
    #include <botan/internal/loadstor.h>
+   #include <botan/internal/target_info.h>
    #include <limits>
 
    #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
@@ -436,6 +437,9 @@ class HSS_LMS_Statefulness_Test final : public Test {
             return result;
          } else if(pid == 0) {
             ::close(fd[0]);
+
+            // Signing may wait on worker threads which do not exist in the child
+            ::alarm(30);
 
             uint8_t child_status = child_signed;
 
