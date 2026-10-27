@@ -11,6 +11,7 @@
    #include <botan/ber_dec.h>
    #include <botan/certstor.h>
    #include <botan/der_enc.h>
+   #include <botan/hash.h>
    #include <botan/hex.h>
    #include <botan/pk_algs.h>
    #include <botan/pkcs10.h>
@@ -2486,6 +2487,58 @@ std::vector<std::string> get_sig_paddings(const std::string& sig_algo, const std
    }
 }
 
+   #if defined(BOTAN_HAS_HSS_LMS) || defined(BOTAN_HAS_XMSS_RFC8391)
+
+/*
+* The hash-based signature schemes use hash functions which are otherwise not
+* used for certificates; check that they are accepted by default.
+*/
+Test::Result test_hash_based_sig_default_trusted_hashes(Botan::RandomNumberGenerator& rng) {
+   Test::Result result("X509 hash-based signatures with default trusted hashes");
+
+   struct Param_Set {
+         std::string algo;
+         std::string params;
+         std::string hash;
+   };
+
+   const std::vector<Param_Set> param_sets = {
+      #if defined(BOTAN_HAS_HSS_LMS)
+      {"HSS-LMS", "SHAKE-256(256),HW(5,8)", "SHAKE-256(256)"},
+      {"HSS-LMS", "SHAKE-256(192),HW(5,8)", "SHAKE-256(192)"},
+      {"HSS-LMS", "Truncated(SHA-256,192),HW(5,8)", "Truncated(SHA-256,192)"},
+      #endif
+      #if defined(BOTAN_HAS_XMSS_RFC8391)
+      {"XMSS", "XMSS-SHAKE_10_256", "SHAKE-128(256)"},
+      #endif
+   };
+
+   const Botan::Path_Validation_Restrictions restrictions;
+
+   for(const auto& param_set : param_sets) {
+      if(Botan::HashFunction::create(param_set.hash) == nullptr) {
+         continue;
+      }
+
+      const auto ca_key = Botan::create_private_key(param_set.algo, rng, param_set.params);
+      const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts(), *ca_key, "", rng);
+      const Botan::X509_CA ca(ca_cert, *ca_key, "", rng);
+
+      const auto leaf_key = Botan::create_private_key(param_set.algo, rng, param_set.params);
+      const auto req = Botan::X509::create_cert_req(req_opts1(param_set.algo), *leaf_key, "", rng);
+      const auto leaf_cert = ca.sign_request(req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+
+      const Botan::Certificate_Store_In_Memory store(ca_cert);
+      const auto validation = Botan::x509_path_validate(leaf_cert, restrictions, store);
+      result.test_is_true(param_set.params + " certificate validates (" + validation.result_string() + ")",
+                          validation.successful_validation());
+   }
+
+   return result;
+}
+
+   #endif
+
 class X509_Cert_Unit_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -2631,6 +2684,10 @@ class X509_Cert_Unit_Tests final : public Test {
          results.push_back(test_verify_gost2012_cert());
          results.push_back(test_parse_rsa_pss_cert());
          results.push_back(test_x509_tn_auth_list_extension_decode());
+   #endif
+
+   #if defined(BOTAN_HAS_HSS_LMS) || defined(BOTAN_HAS_XMSS_RFC8391)
+         results.push_back(test_hash_based_sig_default_trusted_hashes(rng));
    #endif
 
          results.push_back(test_x509_encode_authority_info_access_extension());
