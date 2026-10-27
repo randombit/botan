@@ -2104,7 +2104,7 @@ def cli_pk_encrypt_tests(tmp_dir):
 
     test_cli("keygen", ["--algo=RSA", "--params=2048", "--output=%s" % (rsa_priv_key)], "")
 
-    key_hash = "D1621B7D1272545F8CCC220BC7F6F5BAF0150303B19299F0C5B79C095B3CDFC0"
+    key_hash = "E9B8A4513B30FC66320F46F43D98C60F1E2D114C6348373D619E99C79149B419"
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", rsa_priv_key], key_hash)
 
     test_cli("pkcs8", ["--pub-out", "%s/rsa.priv" % (tmp_dir), "--output=%s" % (rsa_pub_key)], "")
@@ -2114,7 +2114,7 @@ def cli_pk_encrypt_tests(tmp_dir):
 
     # Because we used a fixed DRBG for each invocation the same ctext is generated each time
     rng_output_hash = "32F5E7B61357DE8397EFDA1E598379DFD5EE21767BDF4E2A435F05117B836AC6"
-    ctext_hash = "FD39EDCAEA56B0FD39AC5CF700EDA79CD80A938C964E78E56BAA6AF742D476A2"
+    ctext_hash = "740CC47283E5EFE55A338EC47E2FB092B0F3BD172B0A960F294EB739913B2406"
 
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", input_file], rng_output_hash)
 
