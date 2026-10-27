@@ -212,6 +212,24 @@ std::vector<Test::Result> xmss_statefulness() {
                                                               [&] { const Botan::XMSS_PrivateKey sk(skbytes); });
                  }),
 
+           CHECK("copies differing only in SK_PRF share state",
+                 [&](auto& result) {
+                    const Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, *rng);
+                    auto skbytes = sk.raw_private_key();
+
+                    // SK_PRF immediately follows the leaf index
+                    skbytes[leaf_idx_offset + 4] ^= 0x01;
+                    const Botan::XMSS_PrivateKey variant(skbytes);
+
+                    const auto sig1 = sign_something(sk);
+                    result.test_opt_u64_eq(
+                       "signing with one key is seen by the other", variant.remaining_operations(), 1023);
+
+                    const auto sig2 = sign_something(variant);
+                    result.test_u64_eq("first signature used leaf 0", Botan::load_be<uint32_t>(sig1.data(), 0), 0);
+                    result.test_u64_eq("second signature used leaf 1", Botan::load_be<uint32_t>(sig2.data(), 0), 1);
+                 }),
+
            CHECK("separately loaded copies share state", [&](auto& result) {
               const Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, *rng);
               const auto skbytes = sk.raw_private_key();
@@ -356,12 +374,78 @@ std::vector<Test::Result> xmss_legacy_private_key() {
    };
 }
 
+std::vector<Test::Result> xmss_key_identity() {
+   auto rng = Test::new_rng(__func__);
+
+   const auto oid = Botan::XMSS_Parameters::XMSS_SHA2_10_256;
+
+   const auto random_value = [&]() { return rng->random_vec(32); };
+
+   const auto nist = Botan::WOTS_Derivation_Method::NIST_SP800_208;
+   const auto botan2x = Botan::WOTS_Derivation_Method::Botan2x;
+
+   return {CHECK("keys differing only in public seed have separate state using NIST derivation",
+                 [&](Test::Result& result) {
+                    const auto private_seed = random_value();
+
+                    const Botan::XMSS_PrivateKey sk1(
+                       oid, 0, private_seed, random_value(), random_value(), random_value(), nist);
+                    const Botan::XMSS_PrivateKey sk2(
+                       oid, 5, private_seed, random_value(), random_value(), random_value(), nist);
+
+                    result.test_opt_u64_eq("first key is unaffected", sk1.remaining_operations(), 1024);
+                    result.test_opt_u64_eq("second key has its own state", sk2.remaining_operations(), 1019);
+                 }),
+
+           CHECK("keys differing only in public seed share state using Botan2x derivation",
+                 [&](Test::Result& result) {
+                    // Botan2x derives the WOTS+ keys from only the private seed
+                    const auto private_seed = random_value();
+
+                    const Botan::XMSS_PrivateKey sk1(
+                       oid, 0, private_seed, random_value(), random_value(), random_value(), botan2x);
+                    const Botan::XMSS_PrivateKey sk2(
+                       oid, 5, private_seed, random_value(), random_value(), random_value(), botan2x);
+
+                    result.test_opt_u64_eq("first key shares the state", sk1.remaining_operations(), 1019);
+                    result.test_opt_u64_eq("second key shares the state", sk2.remaining_operations(), 1019);
+                 }),
+
+           CHECK("keys differing only in derivation method have separate state",
+                 [&](Test::Result& result) {
+                    const auto private_seed = random_value();
+                    const auto prf = random_value();
+                    const auto root = random_value();
+                    const auto public_seed = random_value();
+
+                    const Botan::XMSS_PrivateKey sk1(oid, 0, private_seed, prf, root, public_seed, nist);
+                    const Botan::XMSS_PrivateKey sk2(oid, 5, private_seed, prf, root, public_seed, botan2x);
+
+                    result.test_opt_u64_eq("first key is unaffected", sk1.remaining_operations(), 1024);
+                    result.test_opt_u64_eq("second key has its own state", sk2.remaining_operations(), 1019);
+                 }),
+
+           CHECK("rejected import does not modify the state of an existing key", [&](Test::Result& result) {
+              const auto private_seed = random_value();
+              const auto root = random_value();
+              const auto public_seed = random_value();
+
+              const Botan::XMSS_PrivateKey sk(oid, 0, private_seed, random_value(), root, public_seed);
+
+              result.test_throws<Botan::Invalid_Argument>("import with empty PRF is rejected", [&] {
+                 const Botan::XMSS_PrivateKey bad(oid, 1024, private_seed, {}, root, public_seed);
+              });
+
+              result.test_opt_u64_eq("existing key is unaffected", sk.remaining_operations(), 1024);
+           })};
+}
+
 BOTAN_REGISTER_TEST("pubkey", "xmss_sign", XMSS_Signature_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_verify", XMSS_Signature_Verify_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_verify_invalid", XMSS_Signature_Verify_Invalid_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_keygen", XMSS_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_keygen_reference", XMSS_Keygen_Reference_Test);
-BOTAN_REGISTER_TEST_FN("pubkey", "xmss_unit_tests", xmss_statefulness, xmss_legacy_private_key);
+BOTAN_REGISTER_TEST_FN("pubkey", "xmss_unit_tests", xmss_statefulness, xmss_legacy_private_key, xmss_key_identity);
 
 #endif
 
