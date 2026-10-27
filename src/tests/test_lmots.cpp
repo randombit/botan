@@ -61,6 +61,17 @@ class LMOTS_Test final : public Text_Based_Test {
          const Botan::LMOTS_K pk_from_sig = Botan::lmots_compute_pubkey_from_sig(sig_obj, msg, identifier, q);
          result.test_bin_eq("Public key from signature", pk_from_sig, pk_ref);
 
+         // A copy of the signature must remain usable after the original is destroyed
+         const auto sig_copy = [&]() {
+            auto copy_slicer = Botan::BufferSlicer(sig);
+            const auto original = Botan::LMOTS_Signature::from_bytes_or_throw(copy_slicer);
+            Botan::LMOTS_Signature copy(original);
+            return copy;
+         }();
+         result.test_bin_eq("Public key from copied signature",
+                            Botan::lmots_compute_pubkey_from_sig(sig_copy, msg, identifier, q),
+                            pk_ref);
+
          return result;
       }
 };

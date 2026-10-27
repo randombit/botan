@@ -257,11 +257,15 @@ LMOTS_Signature::LMOTS_Signature(LMOTS_Algorithm_Type lmots_type,
       m_algorithm_type(lmots_type), m_C(std::move(C)), m_y_buffer(std::move(y_buffer)) {
    const LMOTS_Params params = LMOTS_Params::create_or_throw(m_algorithm_type);
 
-   BufferSlicer y_slicer(m_y_buffer);
-   for(uint16_t i = 0; i < params.p(); ++i) {
-      m_y.push_back(y_slicer.take<LMOTS_Node>(params.n()));
-   }
-   BOTAN_ASSERT_NOMSG(y_slicer.empty());
+   BOTAN_ASSERT_NOMSG(m_C.size() == params.n());
+   BOTAN_ASSERT_NOMSG(m_y_buffer.size() == params.p() * params.n());
+}
+
+StrongSpan<const LMOTS_Node> LMOTS_Signature::y(uint16_t chain_idx) const {
+   // C is n bytes long, as is each element of y
+   const size_t n = m_C.size();
+   BOTAN_ARG_CHECK((static_cast<size_t>(chain_idx) + 1) * n <= m_y_buffer.size(), "Invalid LM-OTS chain index");
+   return StrongSpan<const LMOTS_Node>(std::span(m_y_buffer).subspan(chain_idx * n, n));
 }
 
 LMOTS_Signature LMOTS_Signature::from_bytes_or_throw(BufferSlicer& slicer) {
