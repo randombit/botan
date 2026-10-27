@@ -138,10 +138,10 @@ class XMSS_Keygen_Reference_Test final : public Text_Based_Test {
          const auto add_entropy = [&](auto v) { fixed_rng.add_entropy(v.data(), v.size()); };
 
          // The order of the RNG values is dependent on the order they are pulled
-         // from the RNG in the production implementation.
-         add_entropy(vars.get_req_bin("PublicSeed"));  // XMSS_PublicKey constructor's initializer list
-         add_entropy(vars.get_req_bin("SecretPrf"));   // XMSS_PrivateKey constructor's call to ..._Internal constructor
-         add_entropy(vars.get_req_bin("SecretSeed"));  // XMSS_PrivateKey constructor's call to ..._Internal constructor
+         // from the RNG in XMSS_PrivateKey::generate_keygen_material
+         add_entropy(vars.get_req_bin("PublicSeed"));
+         add_entropy(vars.get_req_bin("SecretPrf"));
+         add_entropy(vars.get_req_bin("SecretSeed"));
 
          const auto xmss_algo = Botan::XMSS_Parameters::xmss_id_from_string(vars.get_req_str("Params"));
          const Botan::XMSS_PrivateKey keypair(xmss_algo, fixed_rng);
