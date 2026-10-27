@@ -380,6 +380,23 @@ std::vector<Test::Result> xmss_legacy_private_key() {
    };
 }
 
+std::vector<Test::Result> xmss_key_decoding() {
+   return {CHECK("public key with trailing bytes is rejected", [](Test::Result& result) {
+      const Botan::XMSS_PublicKey pk(Botan::XMSS_Parameters::XMSS_SHA2_10_256,
+                                     Botan::secure_vector<uint8_t>(32, 0x01),
+                                     Botan::secure_vector<uint8_t>(32, 0x02));
+      auto pkbytes = pk.raw_public_key_bits();
+
+      result.test_no_throw("key of exact length is accepted",
+                           [&] { const Botan::XMSS_PublicKey loaded(Botan::AlgorithmIdentifier(), pkbytes); });
+
+      pkbytes.push_back(0x00);
+      result.test_throws<Botan::Decoding_Error>("key with trailing data is rejected", [&] {
+         const Botan::XMSS_PublicKey loaded(Botan::AlgorithmIdentifier(), pkbytes);
+      });
+   })};
+}
+
 std::vector<Test::Result> xmss_key_identity() {
    auto rng = Test::new_rng(__func__);
 
@@ -563,6 +580,7 @@ BOTAN_REGISTER_TEST_FN("pubkey",
                        "xmss_unit_tests",
                        xmss_statefulness,
                        xmss_legacy_private_key,
+                       xmss_key_decoding,
                        xmss_key_identity,
                        xmss_check_key,
                        xmss_fork_safety);
