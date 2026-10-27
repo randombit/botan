@@ -11,10 +11,13 @@
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/divide.h>
 #include <botan/internal/monty.h>
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/target_info.h>
+#include <tuple>
+#include <utility>
 
 #if defined(BOTAN_HAS_THREAD_UTILS) && !defined(BOTAN_HAS_VALGRIND)
    #include <botan/internal/thread_pool.h>
@@ -23,6 +26,68 @@
 namespace Botan {
 
 namespace {
+
+/*
+* Jacobi symbol (a/n) for odd n and a < n, returned as masks for the symbol
+* being -1 or 0
+*
+* This is the binary algorithm run for a fixed number of iterations, so it is
+* constant time with respect to a. The value of n is public.
+*/
+std::pair<CT::Mask<word>, CT::Mask<word>> ct_jacobi_word(word a, word n) {
+   // Each iteration reduces the total bit length of a and n by at least one,
+   // ending with a == 0 and n == gcd(a, n)
+   const size_t iterations = 2 * high_bit(n);
+
+   word s = 0;  // the sign, in bit 1
+
+   for(size_t i = 0; i != iterations; ++i) {
+      const auto a_odd = CT::Mask<word>::expand_bit(a, 0);
+      const auto swap = a_odd & CT::Mask<word>::is_lt(a, n);
+
+      // (a/n) = -(n/a) if a and n are both 3 (mod 4)
+      s ^= swap.if_set_return(a & n & 2);
+      swap.conditional_swap(a, n);
+
+      a -= a_odd.if_set_return(n);
+      a >>= 1;
+
+      // (2/n) = -1 if n is 3 or 5 (mod 8)
+      s ^= (n ^ (n >> 1)) & 2;
+   }
+
+   const auto gcd_is_one = CT::Mask<word>::is_equal(n, 1);
+   return {gcd_is_one & CT::Mask<word>::expand(s), ~gcd_is_one};
+}
+
+/*
+* Search count entries of the sequence 5, -7, 9, -11, 13, ..., starting at
+* index first, for the first D with Jacobi symbol (D/C) != 1
+*
+* This is constant time with respect to C. Returns masks indicating if such
+* a D was found and if (D/C) == 0, along with the index of D.
+*/
+std::tuple<CT::Mask<word>, CT::Mask<word>, word> selfridge_search(const BigInt& C, size_t first, size_t count) {
+   auto found = CT::Mask<word>::cleared();
+   auto symbol_zero = CT::Mask<word>::cleared();
+   word index = 0;
+
+   for(size_t i = first; i != first + count; ++i) {
+      const word d = 5 + 2 * i;
+
+      // Every D in the sequence is 1 (mod 4), which implies (D/C) == (C/|D|)
+      const word r = ct_mod_word(C, d);
+      CT::poison(r);
+      const auto [minus_one, zero] = ct_jacobi_word(r, d);
+
+      const auto first_hit = ~found & (minus_one | zero);
+      index = first_hit.select(static_cast<word>(i), index);
+      symbol_zero |= first_hit & zero;
+      found |= first_hit;
+   }
+
+   return {found, symbol_zero, index};
+}
 
 /*
 * Lucas probable prime test, following FIPS 186-4 C.3.3 with all values
@@ -39,30 +104,39 @@ bool lucas_test(const BigInt& C, const Montgomery_Params& monty_C, bool vartime)
       return false;
    }
 
-   // Check 5, -7, 9, -11, 13, -15, 17, ...
-   word D = 5;
-   bool D_negative = false;
+   /*
+   * Find the first D in the sequence 5, -7, 9, -11, 13, ... with (D/C) == -1
+   *
+   * Which D is chosen depends on C, so the constant time variant checks a
+   * block of 256 values at once, revealing only which block contained D. For
+   * a random prime C, the first block fails with probability about 2^-96.
+   */
+   const size_t block = vartime ? 8 : 256;
 
-   for(;;) {
-      auto D_bn = BigInt::from_word(D);
-      D_bn.cond_flip_sign(D_negative);
+   word D_index = 0;
+   for(size_t first = 0;; first += block) {
+      const auto [found, symbol_zero, index] = selfridge_search(C, first, block);
 
-      const int32_t j = jacobi(D_bn, C);
-      if(j == 0) {
-         return false;
-      }
-
-      if(j == -1) {
+      if(found.as_bool()) {
+         if(symbol_zero.as_bool()) {
+            return false;
+         }
+         D_index = index;
          break;
       }
 
-      D += 2;
-      D_negative = !D_negative;
-
-      if(D == 17 && is_perfect_square(C).signum() != 0) {
+      // A perfect square has no D with (D/C) == -1
+      if(first == 0 && is_perfect_square(C).signum() != 0) {
          return false;
       }
    }
+
+   if(vartime) {
+      CT::unpoison(D_index);
+   }
+
+   const word D = 5 + 2 * D_index;
+   const bool D_negative = (D_index % 2) == 1;
 
    const BigInt K = C + 1;
    const size_t K_bits = K.bits() - 1;
@@ -77,6 +151,21 @@ bool lucas_test(const BigInt& C, const Montgomery_Params& monty_C, bool vartime)
    Montgomery_Int V2 = U;
    Montgomery_Int T = U;
 
+   // z += D*t, overwriting t
+   const auto add_D_times = [&](Montgomery_Int& z, Montgomery_Int& t) {
+      t.mul_by_word(D);
+      if(vartime) {
+         if(D_negative) {
+            z -= t;
+         } else {
+            z += t;
+         }
+      } else {
+         t.ct_cond_negate(D_negative);
+         z += t;
+      }
+   };
+
    for(size_t i = 0; i != K_bits; ++i) {
       const bool k_bit = K.get_bit(K_bits - 1 - i);
 
@@ -87,14 +176,9 @@ bool lucas_test(const BigInt& C, const Montgomery_Params& monty_C, bool vartime)
       // V_temp = (V^2 + D U^2) / 2
       T = U;
       T.square_this_n_times(ws, 1);
-      T.mul_by_word(D);
       Vt = V;
       Vt.square_this_n_times(ws, 1);
-      if(D_negative) {
-         Vt -= T;
-      } else {
-         Vt += T;
-      }
+      add_D_times(Vt, T);
       Vt.div2();
 
       if(!vartime || k_bit) {
@@ -105,13 +189,8 @@ bool lucas_test(const BigInt& C, const Montgomery_Params& monty_C, bool vartime)
 
          // V_i = (V_temp + D U_temp) / 2
          T = Ut;
-         T.mul_by_word(D);
          V2 = Vt;
-         if(D_negative) {
-            V2 -= T;
-         } else {
-            V2 += T;
-         }
+         add_D_times(V2, T);
          V2.div2();
       }
 
