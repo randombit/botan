@@ -453,24 +453,61 @@ consteval auto compute_small_prime_groups() {
 */
 constexpr auto SMALL_PRIME_GROUPS = compute_small_prime_groups();
 
+/*
+* Division reciprocals for each small prime and each group product
+*
+* These are computed at runtime since doing so at compile time requires more
+* constexpr evaluation steps than MSVC allows by default
+*/
+class Small_Prime_Divisors final {
+   public:
+      static const Small_Prime_Divisors& instance() {
+         static const Small_Prime_Divisors divisors;
+         return divisors;
+      }
+
+      divide_precomp<word> prime(size_t i) const {
+         return divide_precomp<word>::setup_with_reciprocal(PRIMES[i], m_prime_recip[i]);
+      }
+
+      divide_precomp<word> group(size_t g) const {
+         return divide_precomp<word>::setup_with_reciprocal(SMALL_PRIME_GROUPS[g].first, m_group_recip[g]);
+      }
+
+   private:
+      Small_Prime_Divisors() {
+         for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i) {
+            m_prime_recip[i] = divide_precomp<word>::setup_vartime(PRIMES[i]).reciprocal();
+         }
+         for(size_t g = 0; g != SMALL_PRIME_GROUPS.size(); ++g) {
+            m_group_recip[g] = divide_precomp<word>::setup_vartime(SMALL_PRIME_GROUPS[g].first).reciprocal();
+         }
+      }
+
+      std::array<word, PRIME_TABLE_SIZE> m_prime_recip{};
+      std::array<word, SMALL_PRIME_GROUPS.size()> m_group_recip{};
+};
+
 }  // namespace
 
 std::vector<word> mod_small_primes(const BigInt& n, size_t num_primes) {
    BOTAN_ARG_CHECK(num_primes > 0 && num_primes <= PRIME_TABLE_SIZE, "Invalid num_primes");
    BOTAN_ARG_CHECK(n.signum() >= 0, "The argument n must be non-negative");
 
+   const auto& divisors = Small_Prime_Divisors::instance();
+
    std::vector<word> residues(num_primes);
 
    const size_t n_words = n.sig_words();
 
    size_t i = 0;
-   for(const auto& group : SMALL_PRIME_GROUPS) {
+   for(size_t g = 0; g != SMALL_PRIME_GROUPS.size(); ++g) {
       if(i >= num_primes) {
          break;
       }
 
-      const auto div_product = divide_precomp<word>::setup_vartime(group.first);
-      const size_t group_end = std::min<size_t>(i + group.second, num_primes);
+      const auto div_product = divisors.group(g);
+      const size_t group_end = std::min<size_t>(i + SMALL_PRIME_GROUPS[g].second, num_primes);
 
       // First compute n modulo the group product
       word n_mod_product = 0;
@@ -480,12 +517,30 @@ std::vector<word> mod_small_primes(const BigInt& n, size_t num_primes) {
 
       // Then extract the individual remainders using word arithmetic
       while(i != group_end) {
-         const auto div_p = divide_precomp<word>::setup_vartime(PRIMES[i]);
-         residues[i] = div_p.mod_2to1(0, n_mod_product);
+         residues[i] = divisors.prime(i).mod_2to1(0, n_mod_product);
          ++i;
       }
    }
 
+   return residues;
+}
+
+std::vector<word> mod_small_primes(uint64_t x, size_t num_primes) {
+   BOTAN_ARG_CHECK(num_primes > 0 && num_primes <= PRIME_TABLE_SIZE, "Invalid num_primes");
+
+   const auto& divisors = Small_Prime_Divisors::instance();
+
+   constexpr size_t x_words = 64 / WordInfo<word>::bits;
+
+   std::vector<word> residues(num_primes);
+   for(size_t i = 0; i != num_primes; ++i) {
+      const auto div_p = divisors.prime(i);
+      word r = 0;
+      for(size_t w = x_words; w > 0; --w) {
+         r = div_p.mod_2to1(r, static_cast<word>(x >> (WordInfo<word>::bits * (w - 1))));
+      }
+      residues[i] = r;
+   }
    return residues;
 }
 
