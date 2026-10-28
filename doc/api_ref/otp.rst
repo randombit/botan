@@ -95,4 +95,6 @@ timestamp is used.
 
       Return true if the provided OTP code is correct for the provided
       timestamp. If required, use *clock_drift_accepted* to deal with
-      the client and server having slightly different clocks.
+      the client and server having slightly different clocks. A code is
+      accepted if it matches any time step up to *clock_drift_accepted*
+      steps before or after the current one.

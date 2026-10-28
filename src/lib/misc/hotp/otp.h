@@ -111,7 +111,8 @@ class BOTAN_PUBLIC_API(2, 2) TOTP final {
       * Verify a TOTP against the provided time point
       * @param otp the presented OTP
       * @param time the current local time
-      * @param clock_drift_accepted the acceptable clock drift, in time steps
+      * @param clock_drift_accepted the acceptable clock drift, in time steps,
+      * in either direction
       * @return true if the OTP is valid
       */
       bool verify_totp(uint32_t otp, std::chrono::system_clock::time_point time, size_t clock_drift_accepted = 0);
@@ -120,7 +121,8 @@ class BOTAN_PUBLIC_API(2, 2) TOTP final {
       * Verify a TOTP against the provided Unix timestamp
       * @param otp the presented OTP
       * @param unix_time the current local time as a Unix timestamp
-      * @param clock_drift_accepted the acceptable clock drift, in time steps
+      * @param clock_drift_accepted the acceptable clock drift, in time steps,
+      * in either direction
       * @return true if the OTP is valid
       */
       bool verify_totp(uint32_t otp, uint64_t unix_time, size_t clock_drift_accepted = 0);

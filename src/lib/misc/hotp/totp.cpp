@@ -55,6 +55,9 @@ bool TOTP::verify_totp(uint32_t otp, uint64_t unix_time, size_t clock_drift_acce
       if(m_hotp.generate_hotp(t - i) == otp) {
          return true;
       }
+      if(i > 0 && m_hotp.generate_hotp(t + i) == otp) {
+         return true;
+      }
    }
 
    return false;
