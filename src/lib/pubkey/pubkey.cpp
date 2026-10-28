@@ -17,19 +17,25 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/pk_options_impl.h>
+#include <algorithm>
 
 namespace Botan {
 
 secure_vector<uint8_t> PK_Decryptor::decrypt(const uint8_t in[], size_t length) const {
-   uint8_t valid_mask = 0;
+   secure_vector<uint8_t> ptext(plaintext_length(length));
 
-   secure_vector<uint8_t> decoded = do_decrypt(valid_mask, in, length);
+   uint8_t valid_mask = 0;
+   const size_t ptext_len = do_decrypt(valid_mask, ptext, {in, length});
+
+   // This function reveals whether decryption succeeded, and the length of the plaintext
+   CT::unpoison_all(valid_mask, ptext_len, ptext);
 
    if(valid_mask == 0) {
       throw Decoding_Error("Invalid public key ciphertext, cannot decrypt");
    }
 
-   return decoded;
+   ptext.resize(ptext_len);
+   return ptext;
 }
 
 secure_vector<uint8_t> PK_Decryptor::decrypt_or_random(const uint8_t in[],
@@ -59,11 +65,14 @@ secure_vector<uint8_t> PK_Decryptor::decrypt_or_random(const uint8_t in[],
       return pms;
    }();
 
+   // Whether the ciphertext was valid, and the length of the plaintext, are secret
+   secure_vector<uint8_t> decoded(std::max(plaintext_length(length), expected_pt_len));
+
    uint8_t decrypt_valid = 0;
-   secure_vector<uint8_t> decoded = do_decrypt(decrypt_valid, in, length);
+   const size_t decoded_len = do_decrypt(decrypt_valid, decoded, {in, length});
 
    auto valid_mask = CT::Mask<uint8_t>::is_equal(decrypt_valid, 0xFF);
-   valid_mask &= CT::Mask<uint8_t>(CT::Mask<size_t>::is_equal(decoded.size(), expected_pt_len));
+   valid_mask &= CT::Mask<uint8_t>(CT::Mask<size_t>::is_equal(decoded_len, expected_pt_len));
 
    decoded.resize(expected_pt_len);
 
@@ -81,6 +90,8 @@ secure_vector<uint8_t> PK_Decryptor::decrypt_or_random(const uint8_t in[],
    // If valid_mask is false, assign fake pre master instead
    valid_mask.select_n(decoded.data(), decoded.data(), fake_pms.data(), expected_pt_len);
 
+   // Any further secret handling of the output is up to the caller
+   CT::unpoison(decoded);
    return decoded;
 }
 
@@ -159,8 +170,10 @@ size_t PK_Decryptor_EME::ciphertext_length(size_t ptext_len) const {
    return m_op->ciphertext_length(ptext_len);
 }
 
-secure_vector<uint8_t> PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const {
-   return m_op->decrypt(valid_mask, {in, in_len});
+size_t PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask,
+                                    std::span<uint8_t> ptext,
+                                    std::span<const uint8_t> ctext) const {
+   return m_op->decrypt(valid_mask, ptext, ctext);
 }
 
 PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, std::string_view param, std::string_view provider) :

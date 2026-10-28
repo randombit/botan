@@ -60,7 +60,7 @@ class Decryption_with_Padding : public Decryption {
    public:
       ~Decryption_with_Padding() override;
 
-      secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) override;
+      size_t decrypt(uint8_t& valid_mask, std::span<uint8_t> ptext, std::span<const uint8_t> ctext) override;
 
    protected:
       explicit Decryption_with_Padding(const PK_Encryption_Options_Reader& options);

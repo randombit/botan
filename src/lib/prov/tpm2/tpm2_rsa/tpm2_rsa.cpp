@@ -8,6 +8,7 @@
 
 #include <botan/tpm2_rsa.h>
 
+#include <botan/mem_ops.h>
 #include <botan/pk_options_readers.h>
 #include <botan/pss_params.h>
 #include <botan/rsa.h>
@@ -379,7 +380,7 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption {
                                const PK_Encryption_Options_Reader& options) :
             m_key_handle(object), m_sessions(sessions), m_scheme(select_encryption_algorithms(options)) {}
 
-      secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> input) override {
+      size_t decrypt(uint8_t& valid_mask, std::span<uint8_t> ptext, std::span<const uint8_t> input) override {
          const auto ciphertext = copy_into<TPM2B_PUBLIC_KEY_RSA>(input);
          const auto label = init_empty<TPM2B_DATA>();  // see the TODO in select_encryption_algorithms
          unique_esys_ptr<TPM2B_PUBLIC_KEY_RSA> plaintext;
@@ -420,7 +421,10 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption {
          CT::conditional_swap_ptr(success.as_bool(), out, maybe_plaintext);
 
          BOTAN_ASSERT_NONNULL(out);
-         return copy_into<secure_vector<uint8_t>>(*out);
+         const auto decrypted = as_span(*out);
+         BOTAN_ARG_CHECK(ptext.size() >= decrypted.size(), "Output buffer too small for decryption");
+         copy_mem(ptext.first(decrypted.size()), decrypted);
+         return decrypted.size();
       }
 
       size_t plaintext_length(size_t /* ciphertext_length */) const override {

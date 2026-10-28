@@ -13,6 +13,7 @@
 #if defined(BOTAN_HAS_RSA)
 
    #include <botan/assert.h>
+   #include <botan/mem_ops.h>
    #include <botan/numthry.h>
    #include <botan/p11_mechanism.h>
    #include <botan/pk_options_readers.h>
@@ -163,7 +164,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
 
       size_t ciphertext_length(size_t /*ptext_len*/) const override { return m_key.get_n().bytes(); }
 
-      secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) override {
+      size_t decrypt(uint8_t& valid_mask, std::span<uint8_t> ptext, std::span<const uint8_t> ctext) override {
          valid_mask = 0;
 
          const size_t modulus_bytes = (m_key.get_n().bits() + 7) / 8;
@@ -177,11 +178,11 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
             // RFC 8017 5.1.2: ciphertext representative must be in [0, n-1];
             // check before blinding (which reduces mod n).
             if(encrypted_data.size() != modulus_bytes) {
-               return secure_vector<uint8_t>{};
+               return 0;
             }
             const BigInt input_bn = BigInt::from_bytes(encrypted_data);
             if(input_bn.is_zero() || input_bn >= m_key.get_n()) {
-               return secure_vector<uint8_t>{};
+               return 0;
             }
             const BigInt blinded = m_blinder.blind(input_bn);
             // SoftHSM at least requires raw RSA inputs be == the modulus size
@@ -205,7 +206,9 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
             unblinded.serialize_to(decrypted_data);
          }
 
-         return decrypted_data;
+         BOTAN_ARG_CHECK(ptext.size() >= decrypted_data.size(), "Output buffer too small for decryption");
+         copy_mem(ptext.first(decrypted_data.size()), decrypted_data);
+         return decrypted_data.size();
       }
 
    private:
@@ -245,7 +248,9 @@ class PKCS11_RSA_Decryption_Operation_Software_EME final : public PK_Ops::Decryp
          // Returns the fixed-width RSA encoded message (I2OSP(m, k)); the outer
          // PKCS#1 / OAEP unpadder relies on the leading 0x00 byte being preserved.
          uint8_t valid_mask = 0;
-         return m_raw_op.decrypt(valid_mask, input);
+         secure_vector<uint8_t> raw(m_raw_op.plaintext_length(input.size()));
+         raw.resize(m_raw_op.decrypt(valid_mask, raw, input));
+         return raw;
       }
 
    private:

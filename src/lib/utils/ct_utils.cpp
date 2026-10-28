@@ -22,10 +22,9 @@ CT::Option<size_t> CT::copy_output(CT::Choice accept,
    /*
    * We do not poison the input here because if we did we would have
    * to unpoison it at exit. We assume instead that callers have
-   * already poisoned the input and will unpoison it at their own
-   * time.
+   * already poisoned the input and will unpoison it, and the outputs,
+   * at their own time.
    */
-   CT::poison(offset);
 
    /**
    * Zeroize the entire output buffer to get started
@@ -75,8 +74,6 @@ CT::Option<size_t> CT::copy_output(CT::Choice accept,
 
    // This will always be zero if the input was invalid
    const size_t output_bytes = input.size() - offset;
-
-   CT::unpoison_all(output, output_bytes);
 
    return CT::Option<size_t>(output_bytes, accept);
 }

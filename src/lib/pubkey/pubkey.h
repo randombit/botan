@@ -150,7 +150,22 @@ class BOTAN_PUBLIC_API(2, 0) PK_Decryptor {
       PK_Decryptor& operator=(PK_Decryptor&&) noexcept = default;
 
    private:
-      virtual secure_vector<uint8_t> do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const = 0;
+      /**
+      * Decrypt a ciphertext, writing the plaintext to the start of ptext
+      *
+      * @param valid_mask set to 0xFF if the ciphertext was valid, otherwise 0
+      * @param ptext the output, which is at least plaintext_length(ctext.size())
+      *        bytes long
+      * @param ctext the ciphertext
+      * @return the length of the plaintext, which is meaningless if the
+      *         ciphertext was invalid
+      *
+      * decrypt_or_random relies on neither the validity of the ciphertext nor
+      * the length of the plaintext being revealed.
+      */
+      virtual size_t do_decrypt(uint8_t& valid_mask,
+                                std::span<uint8_t> ptext,
+                                std::span<const uint8_t> ctext) const = 0;
 };
 
 /**
@@ -610,7 +625,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Decryptor_EME final : public PK_Decryptor {
       PK_Decryptor_EME& operator=(PK_Decryptor_EME&&) noexcept;
 
    private:
-      secure_vector<uint8_t> do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const override;
+      size_t do_decrypt(uint8_t& valid_mask, std::span<uint8_t> ptext, std::span<const uint8_t> ctext) const override;
 
       std::unique_ptr<PK_Ops::Decryption> m_op;
 };

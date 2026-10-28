@@ -15,6 +15,7 @@
    #include <botan/pubkey.h>
    #include <botan/rsa.h>
    #include <botan/internal/fmt.h>
+   #include <algorithm>
 #endif
 
 namespace Botan_Tests {
@@ -424,6 +425,16 @@ class RSA_DecryptOrRandom_Tests : public Test {
             const auto rec = dec.decrypt_or_random(bad_ctext.data(), bad_ctext.size(), pt_len, rng);
 
             result.test_sz_eq("Returns a ciphertext of expected length", rec.size(), pt_len);
+         }
+
+         // Test decrypt_or_random with a valid ciphertext whose plaintext is not the expected length
+         for(const size_t other_len : {pt_len / 2, pt_len - 1, pt_len + 1, modulus_bytes, 2 * modulus_bytes}) {
+            const auto rec = dec.decrypt_or_random(ctext.data(), ctext.size(), other_len, rng);
+
+            result.test_sz_eq("Returns a plaintext of the requested length", rec.size(), other_len);
+
+            const size_t prefix = std::min(pt_len, other_len);
+            result.test_bin_ne("Returned random message", std::span{rec}.first(prefix), std::span{msg}.first(prefix));
          }
 
          // Test decrypt_or_random with content check happy path

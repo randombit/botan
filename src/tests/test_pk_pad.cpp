@@ -7,6 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_RSA_ENCRYPTION_PADDING)
+   #include <botan/internal/ct_utils.h>
    #include <botan/internal/enc_padding.h>
    #include <botan/internal/pk_options_impl.h>
 #endif
@@ -38,10 +39,14 @@ class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
          std::vector<uint8_t> decoded(ciphertext.size());
          const auto len = pkcs->unpad(decoded, ciphertext);
 
+         // Unpadding leaves the outputs marked as secret for the valgrind checks
+         const size_t decoded_len = Botan::CT::driveby_unpoison(len.value_or(0));
+         Botan::CT::unpoison(decoded);
+
          result.test_bool_eq("EME decoding valid/invalid matches", len.has_value().as_bool(), is_valid);
 
          if(len.has_value().as_bool()) {
-            decoded.resize(len.value_or(0));
+            decoded.resize(decoded_len);
             result.test_bin_eq("EME decoded plaintext correct", decoded, plaintext);
          } else {
             bool all_zeros = true;

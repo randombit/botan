@@ -141,7 +141,12 @@ size_t DLIES_Decryptor::ciphertext_length(size_t ptext_len) const {
    return m_pub_key_size + m_mac->output_length() + ctext_len;
 }
 
-secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask, const uint8_t msg[], size_t length) const {
+size_t DLIES_Decryptor::do_decrypt(uint8_t& valid_mask,
+                                   std::span<uint8_t> ptext,
+                                   std::span<const uint8_t> ctext) const {
+   const uint8_t* msg = ctext.data();
+   const size_t length = ctext.size();
+
    if(length < m_pub_key_size + m_mac->output_length()) {
       throw Decoding_Error("DLIES decryption: ciphertext is too short");
    }
@@ -193,13 +198,15 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
          }
 
       } else {
-         return secure_vector<uint8_t>();
+         return 0;
       }
    } else {
       xor_buf(ciphertext, secret_keys.data(), cipher_key_len);
    }
 
-   return ciphertext;
+   BOTAN_ARG_CHECK(ptext.size() >= ciphertext.size(), "Output buffer too small for decryption");
+   copy_mem(ptext.first(ciphertext.size()), ciphertext);
+   return ciphertext.size();
 }
 
 }  // namespace Botan

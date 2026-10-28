@@ -378,7 +378,7 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_Decryptor final : public PK_Decryptor {
       void set_label(std::string_view label) { m_label = std::vector<uint8_t>(label.begin(), label.end()); }
 
    private:
-      secure_vector<uint8_t> do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const override;
+      size_t do_decrypt(uint8_t& valid_mask, std::span<uint8_t> ptext, std::span<const uint8_t> ctext) const override;
 
       size_t plaintext_length(size_t ctext_len) const override;
 

@@ -64,7 +64,21 @@ class BOTAN_UNSTABLE_API Encryption /* NOLINT(*special-member-functions) */ {
 */
 class BOTAN_UNSTABLE_API Decryption /* NOLINT(*special-member-functions) */ {
    public:
-      virtual secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) = 0;
+      /**
+      * Decrypt a ciphertext, writing the plaintext to the start of ptext
+      *
+      * @param valid_mask set to 0xFF if the ciphertext was valid, otherwise 0
+      * @param ptext the output, which must be at least
+      *        plaintext_length(ctext.size()) bytes long
+      * @param ctext the ciphertext
+      * @return the length of the plaintext, which is meaningless if the
+      *         ciphertext was invalid
+      *
+      * For some schemes (eg PKCS #1 v1.5) whether the ciphertext was valid, and
+      * the length of the plaintext, must be kept secret, so neither should be
+      * declassified here.
+      */
+      virtual size_t decrypt(uint8_t& valid_mask, std::span<uint8_t> ptext, std::span<const uint8_t> ctext) = 0;
 
       virtual size_t plaintext_length(size_t ctext_len) const = 0;
 

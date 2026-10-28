@@ -58,26 +58,18 @@ PK_Ops::Decryption_with_Padding::Decryption_with_Padding(const PK_Encryption_Opt
 
 PK_Ops::Decryption_with_Padding::~Decryption_with_Padding() = default;
 
-secure_vector<uint8_t> PK_Ops::Decryption_with_Padding::decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) {
+size_t PK_Ops::Decryption_with_Padding::decrypt(uint8_t& valid_mask,
+                                                std::span<uint8_t> ptext,
+                                                std::span<const uint8_t> ctext) {
    const secure_vector<uint8_t> raw = raw_decrypt(ctext);
 
-   secure_vector<uint8_t> ptext(raw.size());
+   // Unpadding requires space for the entire encoded message
+   BOTAN_ARG_CHECK(ptext.size() >= raw.size(), "Output buffer too small for decryption");
+
    const auto len = m_padding->unpad(ptext, raw);
 
    valid_mask = CT::Mask<uint8_t>::from_choice(len.has_value()).if_set_return(0xFF);
-
-   /*
-   This is potentially not const time, depending on how std::vector is
-   implemented. But since we are always reducing length, it should
-   just amount to setting the member var holding the length. Resizing
-   downwards is guaranteed to not change the capacity, and since we
-   set ctext to the maximum possible size (equal to the raw input) we
-   know that this is always, if anything, resizing smaller than the
-   capacity, so no reallocation occurs.
-   */
-
-   ptext.resize(len.value_or(0));
-   return ptext;
+   return len.value_or(0);
 }
 
 #endif

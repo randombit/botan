@@ -129,14 +129,14 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
          return der_overhead + 2 * elem_size + m_hash->output_length() + ptext_len;
       }
 
-      secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) override {
+      size_t decrypt(uint8_t& valid_mask, std::span<uint8_t> ptext, std::span<const uint8_t> ctext) override {
          const size_t p_bytes = m_group.get_p_bytes();
 
          valid_mask = 0x00;
 
          // Too short to be valid - no timing problem from early return
          if(ctext.size() < 1 + p_bytes * 2 + m_hash->output_length()) {
-            return secure_vector<uint8_t>();
+            return 0;
          }
 
          BigInt x1;
@@ -155,14 +155,19 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
 
          // Wrong length so certainly invalid, reject immediately
          if(C3.size() != m_hash->output_length()) {
-            return secure_vector<uint8_t>();
+            return 0;
+         }
+
+         // Longer than any output of encryption (see plaintext_length), so also invalid
+         if(masked_msg.size() > ptext.size()) {
+            return 0;
          }
 
          auto C1 = EC_AffinePoint::from_bigint_xy(m_group, x1, y1);
 
          // Here C1 is publicly invalid, so no problem with early return:
          if(!C1) {
-            return secure_vector<uint8_t>();
+            return 0;
          }
 
          const auto scope = CT::scoped_poison(m_x);
@@ -192,9 +197,8 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
 
          // Zero the plaintext if the MAC check failed
          (~mac_ok).if_set_zero_out(masked_msg.data(), masked_msg.size());
-         const size_t output_len = CT::Mask<size_t>::expand(mac_ok).if_set_return(masked_msg.size());
-         masked_msg.resize(output_len);
-         return masked_msg;
+         copy_mem(ptext.first(masked_msg.size()), masked_msg);
+         return CT::Mask<size_t>::expand(mac_ok).if_set_return(masked_msg.size());
       }
 
    private:
