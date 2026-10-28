@@ -17,6 +17,7 @@
    #include <botan/internal/ct_utils.h>
    #include <botan/internal/divide.h>
    #include <botan/internal/fmt.h>
+   #include <botan/internal/loadstor.h>
    #include <botan/internal/mod_inv.h>
    #include <botan/internal/monty.h>
    #include <botan/internal/parsing.h>
@@ -888,6 +889,29 @@ class BigInt_ModSmallPrimes_Test final : public Test {
                if(all_ok) {
                   result.test_success(Botan::fmt("Correct residues of a {} bit integer", bits));
                }
+            }
+         }
+
+         std::vector<uint64_t> values = {
+            0, 1, 2, 65520, 65521, 0xFFFFFFFF, 0x100000000, 0x1FFFFFFFF, ~uint64_t(0), ~uint64_t(0) - 3};
+         for(size_t i = 0; i != 16; ++i) {
+            values.push_back(Botan::load_le<uint64_t>(this->rng().random_array<8>()));
+         }
+
+         for(const uint64_t x : values) {
+            const auto residues = Botan::mod_small_primes(x, 6541);
+
+            bool all_ok = result.test_sz_eq("expected number of residues", residues.size(), 6541);
+
+            for(size_t i = 0; i != residues.size(); ++i) {
+               if(residues[i] != x % Botan::PRIMES[i]) {
+                  result.test_failure(Botan::fmt("Wrong residue of {} mod {}", x, Botan::PRIMES[i]));
+                  all_ok = false;
+               }
+            }
+
+            if(all_ok) {
+               result.test_success(Botan::fmt("Correct residues of {}", x));
             }
          }
 

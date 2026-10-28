@@ -30,6 +30,18 @@ class RandomNumberGenerator;
 std::vector<word> BOTAN_TEST_API mod_small_primes(const BigInt& n, size_t num_primes);
 
 /**
+* Compute the residues of x modulo the first num_primes small odd primes
+*
+* Returns a vector r of length num_primes where r[i] == x % PRIMES[i]
+*
+* This is constant time with respect to the value of x
+*
+* @param x a 64-bit integer
+* @param num_primes number of primes to reduce by, at most PRIME_TABLE_SIZE
+*/
+std::vector<word> BOTAN_TEST_API mod_small_primes(uint64_t x, size_t num_primes);
+
+/**
 * Perform Lucas primality test
 * @see FIPS 186-4 C.3.3
 *

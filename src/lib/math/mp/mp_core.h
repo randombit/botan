@@ -18,6 +18,7 @@
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/mp_asmi.h>
 #include <array>
+#include <bit>
 #include <span>
 #include <utility>
 
@@ -697,6 +698,15 @@ class divide_precomp final {
          const W reciprocal = reciprocal_word_ct(norm_divisor);
          return divide_precomp(divisor, shift, norm_divisor, reciprocal);
       }
+
+      // Setup using the value of reciprocal() from a previous setup with this divisor
+      static constexpr divide_precomp setup_with_reciprocal(W divisor, W reciprocal) {
+         // The divisor is public so a variable time count is fine
+         const size_t shift = std::countl_zero(divisor);
+         return divide_precomp(divisor, shift, divisor << shift, reciprocal);
+      }
+
+      constexpr W reciprocal() const { return m_reciprocal; }
 
       // Return quotient and remainder of (n1 || n0) divided by d
       //

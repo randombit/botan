@@ -56,6 +56,15 @@ class Prime_Sieve final {
          return passes.as_bool();
       }
 
+      // Add r to the sieved value, in constant time with respect to r
+      void add(uint64_t r) {
+         const auto r_mod = mod_small_primes(r, m_sieve.size());
+         for(size_t i = 0; i != m_sieve.size(); ++i) {
+            const word next = m_sieve[i] + r_mod[i];
+            m_sieve[i] = next - CT::Mask<word>::is_gte(next, PRIMES[i]).if_set_return(PRIMES[i]);
+         }
+      }
+
    private:
       // Return (v + step) % mod
       //
@@ -284,6 +293,21 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
 
       Prime_Sieve sieve(p, bits, step, false);
 
+      /*
+      * Which candidates pass the sieve and are then rejected is visible to a side
+      * channel, and their offsets from the final prime would reveal its residues
+      * modulo the sieve primes. After each rejection, skip ahead by a secret random
+      * multiple of the step so that these offsets are unknown.
+      */
+      const auto skip_ahead = [&]() {
+         // Always 64 bits so that the output does not depend on the word size
+         uint64_t r = load_le<uint64_t>(keygen_rng.random_array<8>());
+         CT::poison(r);
+         r *= step;
+         p += BigInt::from_u64(r);
+         sieve.add(r);
+      };
+
       for(size_t attempt = 0; attempt <= MAX_ATTEMPTS; ++attempt) {
          p += step;
 
@@ -301,6 +325,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
          * and this eliminates almost all wasted gcd computations.
          */
          if(!is_miller_rabin_probable_prime(p, monty_p, prime_test_rng, 1)) {
+            skip_ahead();
             continue;
          }
 
@@ -308,6 +333,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
          * Check if p - 1 and coprime are relatively prime.
          */
          if(gcd(p - 1, coprime) > 1) {
+            skip_ahead();
             continue;
          }
 
@@ -318,6 +344,8 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
          if(is_miller_rabin_probable_prime(p, monty_p, prime_test_rng, mr_trials)) {
             return p;
          }
+
+         skip_ahead();
       }
    }
 }

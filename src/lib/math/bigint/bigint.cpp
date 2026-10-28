@@ -16,9 +16,12 @@
 namespace Botan {
 
 BigInt::BigInt(uint64_t n) {
+   // Preallocate so that set_word_at does not branch on the value of n
    if constexpr(sizeof(word) == 8) {
+      m_data.grow_to(1);
       m_data.set_word_at(0, static_cast<word>(n));
    } else {
+      m_data.grow_to(2);
       m_data.set_word_at(1, static_cast<word>(n >> 32));
       m_data.set_word_at(0, static_cast<word>(n));
    }
