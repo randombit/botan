@@ -138,6 +138,24 @@ BigInt crt_recombine(const Montgomery_Int& j1,
    return BigInt::_from_words(r);
 }
 
+/*
+* Compute d + m*(p - 1), with lengths that depend only on the sizes of the
+* inputs, not on their values
+*/
+BigInt blind_exponent(const BigInt& d, const BigInt& m, const BigInt& p_minus_1) {
+   const size_t m_words = m.size();
+   const size_t p_words = p_minus_1.size();
+
+   secure_vector<word> z(m_words + p_words + 1);
+   BOTAN_ASSERT_NOMSG(d.size() <= z.size());
+
+   bigint_mul(z.data(), z.size(), m._data(), m_words, m_words, p_minus_1._data(), p_words, p_words, nullptr, 0);
+   const word carry = bigint_add2(z.data(), z.size(), d._data(), d.size());
+   BOTAN_ASSERT_NOMSG(CT::driveby_unpoison(carry == 0));
+
+   return BigInt::_from_words(z);
+}
+
 }  // namespace
 
 class RSA_Private_Data final {
@@ -156,6 +174,8 @@ class RSA_Private_Data final {
             m_d1(std::move(d1)),
             m_d2(std::move(d2)),
             m_c(std::move(c)),
+            m_p_minus_1(m_p - 1),
+            m_q_minus_1(m_q - 1),
             m_monty_p(m_p),
             m_monty_q(m_q),
             m_c_monty(m_monty_p, m_c),
@@ -172,9 +192,9 @@ class RSA_Private_Data final {
 
       const BigInt& get_d2() const { return m_d2; }
 
-      BigInt blinded_d1(const BigInt& m) const { return m_d1 + m * (m_p - 1); }
+      BigInt blinded_d1(const BigInt& m) const { return blind_exponent(m_d1, m, m_p_minus_1); }
 
-      BigInt blinded_d2(const BigInt& m) const { return m_d2 + m * (m_q - 1); }
+      BigInt blinded_d2(const BigInt& m) const { return blind_exponent(m_d2, m, m_q_minus_1); }
 
       const BigInt& get_c() const { return m_c; }
 
@@ -191,13 +211,35 @@ class RSA_Private_Data final {
       bool primes_imbalanced() const { return p_bits() != q_bits(); }
 
       void _const_time_poison() const {
-         CT::poison_all(
-            m_d, m_p, m_q, m_d1, m_d2, m_c, m_monty_p, m_monty_q, m_c_monty, m_blinding_fwd, m_blinding_inv);
+         CT::poison_all(m_d,
+                        m_p,
+                        m_q,
+                        m_d1,
+                        m_d2,
+                        m_c,
+                        m_p_minus_1,
+                        m_q_minus_1,
+                        m_monty_p,
+                        m_monty_q,
+                        m_c_monty,
+                        m_blinding_fwd,
+                        m_blinding_inv);
       }
 
       void _const_time_unpoison() const {
-         CT::unpoison_all(
-            m_d, m_p, m_q, m_d1, m_d2, m_c, m_monty_p, m_monty_q, m_c_monty, m_blinding_fwd, m_blinding_inv);
+         CT::unpoison_all(m_d,
+                          m_p,
+                          m_q,
+                          m_d1,
+                          m_d2,
+                          m_c,
+                          m_p_minus_1,
+                          m_q_minus_1,
+                          m_monty_p,
+                          m_monty_q,
+                          m_c_monty,
+                          m_blinding_fwd,
+                          m_blinding_inv);
       }
 
       /**
@@ -295,6 +337,8 @@ class RSA_Private_Data final {
       BigInt m_d1;
       BigInt m_d2;
       BigInt m_c;
+      BigInt m_p_minus_1;
+      BigInt m_q_minus_1;
 
       const Montgomery_Params m_monty_p;
       const Montgomery_Params m_monty_q;

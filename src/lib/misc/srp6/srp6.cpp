@@ -13,6 +13,7 @@
 #include <botan/hash.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mp_core.h>
 
 namespace Botan {
 
@@ -119,7 +120,13 @@ std::pair<BigInt, SymmetricKey> srp6_client_agree(std::string_view identifier,
 
    const BigInt B_k_g_x_p = group.mod_p(B + group.mod_p(p - group.multiply_mod_p(k, g_x_p)));
 
-   const BigInt a_ux = a + u * x;
+   // a + u*x, with lengths that depend only on the sizes of the inputs, not on their values
+   secure_vector<word> a_ux_words(std::max(a.size(), u.size() + x.size()) + 1);
+   bigint_mul(
+      a_ux_words.data(), a_ux_words.size(), u._data(), u.size(), u.size(), x._data(), x.size(), x.size(), nullptr, 0);
+   const word carry = bigint_add2(a_ux_words.data(), a_ux_words.size(), a._data(), a.size());
+   BOTAN_ASSERT_NOMSG(CT::driveby_unpoison(carry == 0));
+   const BigInt a_ux = BigInt::_from_words(a_ux_words);
 
    // a < 2^a_bits and u*x < 2^(2H) where H is the hash output bits, so
    // a + u*x < 2^(max(a_bits, 2H) + 1).
