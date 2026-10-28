@@ -12,6 +12,7 @@
 #include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/ec_key_data.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/pk_ops_impl.h>
@@ -251,9 +252,14 @@ AlgorithmIdentifier GOST_3410_Signature_Operation::algorithm_identifier() const 
 std::vector<uint8_t> GOST_3410_Signature_Operation::raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
    const auto e = gost_msg_to_scalar(m_group, msg);
 
+   const auto scope = CT::scoped_poison(m_x);
+
    const auto k = EC_Scalar::random(m_group, rng);
+   CT::poison(k);
    const auto r = EC_Scalar::gk_x_mod_order(k, rng);
    const auto s = (r * m_x) + (k * e);
+
+   CT::unpoison_all(r, s);
 
    if(r.is_zero() || s.is_zero()) {
       throw Internal_Error("GOST 34.10 signature generation failed, r/s equal to zero");

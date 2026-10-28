@@ -165,6 +165,8 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
             return secure_vector<uint8_t>();
          }
 
+         const auto scope = CT::scoped_poison(m_x);
+
          const auto dbC1 = C1->mul(m_x, m_rng);
          const auto x2_bytes = dbC1.x_bytes();
          const auto y2_bytes = dbC1.y_bytes();

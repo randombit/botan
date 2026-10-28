@@ -11,6 +11,7 @@
 
 #include <botan/ec_group.h>
 #include <botan/hash.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/loadstor.h>
@@ -282,10 +283,15 @@ class SM2_Signature_Operation final : public PK_Ops::Signature {
 std::vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng) {
    const auto e = m_input.final_e();
 
+   const auto scope = CT::scoped_poison(m_x, m_da_inv);
+
    const auto k = EC_Scalar::random(m_group, rng);
+   CT::poison(k);
 
    const auto r = EC_Scalar::gk_x_mod_order(k, rng) + e;
    const auto s = (k - r * m_x) * m_da_inv;
+
+   CT::unpoison_all(r, s);
 
    const auto rs = r + s;
 

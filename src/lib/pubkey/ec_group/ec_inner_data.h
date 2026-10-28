@@ -67,6 +67,10 @@ class EC_Scalar_Data /* NOLINT(*-special-member-functions) */ {
       virtual std::unique_ptr<EC_Scalar_Data> mul(const EC_Scalar_Data& other) const = 0;
 
       virtual void serialize_to(std::span<uint8_t> bytes) const = 0;
+
+      virtual void _const_time_poison() const = 0;
+
+      virtual void _const_time_unpoison() const = 0;
 };
 
 class EC_AffinePoint_Data /* NOLINT(*-special-member-functions) */ {
@@ -102,6 +106,10 @@ class EC_AffinePoint_Data /* NOLINT(*-special-member-functions) */ {
                                                        RandomNumberGenerator& rng) const = 0;
 
       virtual secure_vector<uint8_t> mul_x_only(const EC_Scalar_Data& scalar, RandomNumberGenerator& rng) const = 0;
+
+      virtual void _const_time_poison() const = 0;
+
+      virtual void _const_time_unpoison() const = 0;
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
       virtual EC_Point to_legacy_point() const = 0;

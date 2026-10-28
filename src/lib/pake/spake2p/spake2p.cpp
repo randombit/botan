@@ -15,6 +15,7 @@
 #include <botan/pwdhash.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/concat_util.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mem_utils.h>
@@ -310,8 +311,9 @@ secure_vector<uint8_t> ProverSecret::serialize() const {
 }
 
 RegistrationRecord ProverSecret::registration_record(RandomNumberGenerator& rng) const {
+   const auto scope = CT::scoped_poison(m_w1);
    // RFC 9383 Section 3.2: "the registration record L=w1*P"
-   return RegistrationRecord(m_w0, EC_AffinePoint::g_mul(m_w1, rng));
+   return RegistrationRecord(m_w0, CT::driveby_unpoison(EC_AffinePoint::g_mul(m_w1, rng)));
 }
 
 ProverContext::ProverContext(const SystemParameters& params,
@@ -331,8 +333,11 @@ std::vector<uint8_t> ProverContext::generate_message(RandomNumberGenerator& rng)
    const auto x = EC_Scalar::random(m_params.group(), rng);
    const auto g = EC_AffinePoint::generator(m_params.group());
 
+   const auto scope = CT::scoped_poison(x, m_secret.m_w0);
+
    // RFC 9383 Section 3.3: X = x*P + w0*M
    if(auto share_p = EC_AffinePoint::mul_px_qy(g, x, m_params.spake2p_m(), m_secret.m_w0, rng)) {
+      CT::unpoison(*share_p);
       m_our_message = std::make_pair(share_p->serialize_uncompressed(), x);
       m_state = State::ShareGenerated;
       return m_our_message->first;
@@ -369,6 +374,8 @@ std::vector<uint8_t> ProverContext::process_message(std::span<const uint8_t> pee
    const auto& w1 = m_secret.m_w1;
    const auto& n = m_params.spake2p_n();
 
+   const auto scope = CT::scoped_poison(x, w0, w1);
+
    // RFC 9383 Section 3.3: Z = h*x*(Y - w0*N), V = h*w1*(Y - w0*N)
    const auto z = EC_AffinePoint::mul_px_qy(*y, x, n, (x * w0).negate(), rng);
    const auto v = EC_AffinePoint::mul_px_qy(*y, w1, n, (w1 * w0).negate(), rng);
@@ -378,6 +385,8 @@ std::vector<uint8_t> ProverContext::process_message(std::span<const uint8_t> pee
    }
 
    auto keys = spake2p_key_schedule(m_params, m_context, m_prover_id, m_verifier_id, share_p, share_v, *z, *v, w0);
+   // Any further secret handling of the output is up to the caller
+   CT::unpoison_all(keys.shared_key, keys.confirm_p, keys.confirm_v);
 
    if(!constant_time_compare(keys.confirm_v, confirm_v)) {
       throw Invalid_Authentication_Tag("SPAKE2+ key confirmation failed");
@@ -422,8 +431,11 @@ std::vector<uint8_t> VerifierContext::process_message(std::span<const uint8_t> p
    const auto y = EC_Scalar::random(m_params.group(), rng);
    const auto g = EC_AffinePoint::generator(m_params.group());
 
+   const auto scope = CT::scoped_poison(y, w0);
+
    // RFC 9383 Section 3.3: Y = y*P + w0*N
    const auto share_v_pt = EC_AffinePoint::mul_px_qy(g, y, m_params.spake2p_n(), w0, rng);
+   CT::unpoison(share_v_pt);
    if(!share_v_pt) {
       throw Internal_Error("Computed the identity element during SPAKE2+ key exchange");
    }
@@ -437,6 +449,8 @@ std::vector<uint8_t> VerifierContext::process_message(std::span<const uint8_t> p
    const auto v = m_record.m_l.mul(y, rng);
 
    auto keys = spake2p_key_schedule(m_params, m_context, m_prover_id, m_verifier_id, peer_message, share_v, *z, v, w0);
+   // Any further secret handling of the output is up to the caller
+   CT::unpoison_all(keys.shared_key, keys.confirm_p, keys.confirm_v);
 
    m_shared_secret = std::move(keys.shared_key);
    m_expected_confirmation = std::move(keys.confirm_p);

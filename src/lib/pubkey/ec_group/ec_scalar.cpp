@@ -16,6 +16,14 @@ EC_Scalar EC_Scalar::_from_inner(std::unique_ptr<EC_Scalar_Data> inner) {
    return EC_Scalar(std::move(inner));
 }
 
+void EC_Scalar::_const_time_poison() const {
+   m_scalar->_const_time_poison();
+}
+
+void EC_Scalar::_const_time_unpoison() const {
+   m_scalar->_const_time_unpoison();
+}
+
 EC_Scalar::EC_Scalar(std::unique_ptr<EC_Scalar_Data> scalar) : m_scalar(std::move(scalar)) {
    BOTAN_ASSERT_NONNULL(m_scalar);
 }

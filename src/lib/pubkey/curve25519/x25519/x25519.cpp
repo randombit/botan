@@ -58,6 +58,7 @@ void size_check(size_t size, const char* thing) {
 // X25519 agreement, shared by agree() and the PK_Key_Agreement operation
 secure_vector<uint8_t> x25519_agree(const secure_vector<uint8_t>& secret, const uint8_t pubval[32]) {
    BOTAN_ASSERT_NOMSG(secret.size() == 32);
+   const auto scope = CT::scoped_poison(secret);
    secure_vector<uint8_t> shared_key(32);
    x25519_scalarmult(std::span<uint8_t, 32>(shared_key.data(), 32),
                      std::span<const uint8_t, 32>(secret.data(), 32),
@@ -76,6 +77,8 @@ secure_vector<uint8_t> x25519_agree(const secure_vector<uint8_t>& secret, const 
       throw Invalid_Argument("X25519 public point appears to be of low order");
    }
 
+   // Any further secret handling of the output is up to the caller
+   CT::unpoison(shared_key);
    return shared_key;
 }
 
@@ -86,7 +89,11 @@ void load_x25519_keypair(secure_vector<uint8_t> secret,
                          std::shared_ptr<const X25519_PrivateKey_Data>& sk_out) {
    BOTAN_ASSERT_NOMSG(secret.size() == 32);
    std::vector<uint8_t> pub(32);
-   x25519_basepoint(std::span<uint8_t, 32>(pub.data(), 32), std::span<const uint8_t, 32>(secret.data(), 32));
+   {
+      const auto scope = CT::scoped_poison(secret);
+      x25519_basepoint(std::span<uint8_t, 32>(pub.data(), 32), std::span<const uint8_t, 32>(secret.data(), 32));
+      CT::unpoison(pub);
+   }
    pk_out = std::make_shared<const X25519_PublicKey_Data>(std::move(pub));
    sk_out = std::make_shared<const X25519_PrivateKey_Data>(std::move(secret));
 }
@@ -169,8 +176,10 @@ secure_vector<uint8_t> X25519_PrivateKey::private_key_bits() const {
 
 bool X25519_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
    std::vector<uint8_t> public_point(32);
+   const auto scope = CT::scoped_poison(m_private->key());
    x25519_basepoint(std::span<uint8_t, 32>(public_point.data(), 32),
                     std::span<const uint8_t, 32>(m_private->key().data(), 32));
+   CT::unpoison(public_point);
    return public_point == m_public->key();
 }
 

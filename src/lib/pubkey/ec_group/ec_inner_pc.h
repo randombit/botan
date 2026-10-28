@@ -7,6 +7,7 @@
 #ifndef BOTAN_EC_INNER_DATA_PC_H_
 #define BOTAN_EC_INNER_DATA_PC_H_
 
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/ec_inner_data.h>
 
 #include <botan/internal/pcurves.h>
@@ -50,6 +51,10 @@ class EC_Scalar_Data_PC final : public EC_Scalar_Data {
 
       void serialize_to(std::span<uint8_t> bytes) const override;
 
+      void _const_time_poison() const override { m_v._const_time_poison(); }
+
+      void _const_time_unpoison() const override { m_v._const_time_unpoison(); }
+
       const auto& value() const { return m_v; }
 
    private:
@@ -84,6 +89,10 @@ class EC_AffinePoint_Data_PC final : public EC_AffinePoint_Data {
       std::unique_ptr<EC_AffinePoint_Data> mul(const EC_Scalar_Data& scalar, RandomNumberGenerator& rng) const override;
 
       secure_vector<uint8_t> mul_x_only(const EC_Scalar_Data& scalar, RandomNumberGenerator& rng) const override;
+
+      void _const_time_poison() const override { CT::poison_all(m_pt, m_xy); }
+
+      void _const_time_unpoison() const override { CT::unpoison_all(m_pt, m_xy); }
 
       const PCurve::PrimeOrderCurve::AffinePoint& value() const { return m_pt; }
 

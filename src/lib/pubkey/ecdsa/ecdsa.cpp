@@ -12,6 +12,7 @@
 
 #include <botan/ec_group.h>
 #include <botan/pk_options_readers.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/pk_options_impl.h>
@@ -173,11 +174,14 @@ AlgorithmIdentifier ECDSA_Signature_Operation::algorithm_identifier() const {
 std::vector<uint8_t> ECDSA_Signature_Operation::raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
    const auto m = EC_Scalar::from_bytes_with_trunc(m_group, msg);
 
+   const auto scope = CT::scoped_poison(m_x, m_b);
+
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    const auto k = m_rfc6979 ? m_rfc6979->nonce_for(m_group, m) : EC_Scalar::random(m_group, rng);
 #else
    const auto k = EC_Scalar::random(m_group, rng);
 #endif
+   CT::poison(k);
 
    /*
    * Blind the inputs
@@ -210,6 +214,8 @@ std::vector<uint8_t> ECDSA_Signature_Operation::raw_sign(std::span<const uint8_t
 
    // Generate the next blinding value via modular squaring
    m_b.square_self();
+
+   CT::unpoison_all(r, s);
 
    // With overwhelming probability, a bug rather than actual zero r/s
    if(r.is_zero() || s.is_zero()) {

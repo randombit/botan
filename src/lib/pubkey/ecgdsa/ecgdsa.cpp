@@ -10,6 +10,7 @@
 
 #include <botan/assert.h>
 #include <botan/ec_group.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/pk_options_impl.h>
@@ -62,11 +63,16 @@ AlgorithmIdentifier ECGDSA_Signature_Operation::algorithm_identifier() const {
 std::vector<uint8_t> ECGDSA_Signature_Operation::raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
    const auto m = EC_Scalar::from_bytes_with_trunc(m_group, msg);
 
+   const auto scope = CT::scoped_poison(m_x);
+
    const auto k = EC_Scalar::random(m_group, rng);
+   CT::poison(k);
 
    const auto r = EC_Scalar::gk_x_mod_order(k, rng);
 
    const auto s = m_x * ((k * r) - m);
+
+   CT::unpoison_all(r, s);
 
    // With overwhelming probability, a bug rather than actual zero r/s
    if(r.is_zero() || s.is_zero()) {
