@@ -109,7 +109,7 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
                       RandomNumberGenerator& rng) :
             PK_Ops::Key_Agreement_with_KDF(options),
             m_key(key),
-            m_key_bits(m_key->private_key().bits()),
+            m_key_bits(m_key->max_private_key_bits()),
             m_blinder(
                m_key->group()._reducer_mod_p(),
                rng,

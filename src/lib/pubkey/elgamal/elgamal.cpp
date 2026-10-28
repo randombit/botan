@@ -186,7 +186,9 @@ class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_Paddin
       secure_vector<uint8_t> raw_decrypt(std::span<const uint8_t> ctext) override;
 
    private:
-      BigInt powermod_x_p(const BigInt& v) const { return m_key->group().power_b_p(v, m_key->private_key()); }
+      BigInt powermod_x_p(const BigInt& v) const {
+         return m_key->group().power_b_p(v, m_key->private_key(), m_key->max_private_key_bits());
+      }
 
       std::shared_ptr<const DL_PrivateKey> m_key;
       Blinder m_blinder;
