@@ -326,7 +326,12 @@ class Choice final {
       * obviously branchy way (`if(choice.as_bool()) ...`) a smart compiler
       * may introduce branches depending on the value.
       */
-      constexpr bool as_bool() const { return m_value != 0; }
+      constexpr bool as_bool() const {
+         // If r were const the compiler could ignore the unpoisoning
+         underlying_type r = value();  // NOLINT(misc-const-correctness)
+         CT::unpoison(r);
+         return r != 0;
+      }
 
       /// Return the masked value
       constexpr underlying_type value() const { return value_barrier(m_value); }
@@ -618,9 +623,9 @@ class Mask final {
       */
       constexpr CT::Choice as_choice() const {
          if constexpr(sizeof(T) >= sizeof(Choice::underlying_type)) {
-            return CT::Choice::from_mask(static_cast<Choice::underlying_type>(unpoisoned_value()));
+            return CT::Choice::from_mask(static_cast<Choice::underlying_type>(value()));
          } else {
-            return CT::Choice::from_int(unpoisoned_value());
+            return CT::Choice::from_int(value());
          }
       }
 

@@ -79,10 +79,18 @@ class PointMul final {
       static Pt ct_select(std::span<const Pt> pts, size_t idx) {
          auto result = Pt::identity();
 
+         // Selecting one coordinate at a time limits the number of live vector
+         // registers; otherwise valgrind on aarch64 crashes (in genSpill_ARM64)
          for(size_t i = 0; i != pts.size(); ++i) {
             const auto cnd = CT::Mask<word>::is_equal(i, idx).as_choice();
             CT::conditional_assign_mem(cnd, result.m_x.data(), pts[i].m_x.data(), result.m_x.size());
+         }
+         for(size_t i = 0; i != pts.size(); ++i) {
+            const auto cnd = CT::Mask<word>::is_equal(i, idx).as_choice();
             CT::conditional_assign_mem(cnd, result.m_y.data(), pts[i].m_y.data(), result.m_y.size());
+         }
+         for(size_t i = 0; i != pts.size(); ++i) {
+            const auto cnd = CT::Mask<word>::is_equal(i, idx).as_choice();
             CT::conditional_assign_mem(cnd, result.m_z.data(), pts[i].m_z.data(), result.m_z.size());
          }
 
