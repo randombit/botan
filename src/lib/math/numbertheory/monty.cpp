@@ -43,12 +43,13 @@ Montgomery_Params::Data::Data(const BigInt& p, const Barrett_Reduction& mod_p) {
    }
 
    m_p = p;
+   m_p_bits = m_p.bits();
    m_p_words = m_p.sig_words();
    m_p_dash = monty_inverse(m_p.word_at(0));
 
    // floor(2^(bits(p) - 1 + WB) / p), derived from Barrett's floor(2^(2*WB*p_words) / p)
    m_p_top_mu =
-      (mod_p.mu() >> (2 * WordInfo<word>::bits * m_p_words - (m_p.bits() - 1 + WordInfo<word>::bits))).word_at(0);
+      (mod_p.mu() >> (2 * WordInfo<word>::bits * m_p_words - (m_p_bits - 1 + WordInfo<word>::bits))).word_at(0);
 
    const BigInt r = BigInt::power_of_2(m_p_words * WordInfo<word>::bits);
 
@@ -428,7 +429,7 @@ Montgomery_Int& Montgomery_Int::mul_by_word(word d) {
       * of t starting at bit bits(p) - 2 and mu = floor(2^(bits(p) - 1 + WB) / p).
       * The estimate is never too high, and is low by at most one.
       */
-      const size_t pos = (p_size - 1) * WB + high_bit(p[p_size - 1]) - 2;
+      const size_t pos = m_params.p_bits() - 2;
       const size_t pos_word = pos / WB;
       const size_t pos_bit = pos % WB;
       const word T = (t[pos_word] >> pos_bit) | ((t[pos_word + 1] << 1) << (WB - 1 - pos_bit));

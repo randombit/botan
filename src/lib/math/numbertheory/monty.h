@@ -53,6 +53,8 @@ class BOTAN_TEST_API Montgomery_Params final {
       */
       word p_top_mu() const { return m_data->p_top_mu(); }
 
+      size_t p_bits() const { return m_data->p_bits(); }
+
       size_t p_words() const { return m_data->p_size(); }
 
       BigInt redc(const BigInt& x, secure_vector<word>& ws) const;
@@ -90,6 +92,8 @@ class BOTAN_TEST_API Montgomery_Params final {
 
             word p_top_mu() const { return m_p_top_mu; }
 
+            size_t p_bits() const { return m_p_bits; }
+
             size_t p_size() const { return m_p_words; }
 
          private:
@@ -99,6 +103,7 @@ class BOTAN_TEST_API Montgomery_Params final {
             BigInt m_r3;
             word m_p_dash;
             word m_p_top_mu;
+            size_t m_p_bits;
             size_t m_p_words;
       };
 
