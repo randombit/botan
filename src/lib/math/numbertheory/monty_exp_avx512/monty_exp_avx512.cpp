@@ -499,7 +499,7 @@ class Montgomery_Exponentiation_AVX512 final : public Montgomery_Exponentiation_
 
       using Digits = typename IFMA_Modulus<N>::Digits;
 
-      Montgomery_Exponentiation_AVX512(const Montgomery_Int& g, size_t window_bits, bool const_time) :
+      Montgomery_Exponentiation_AVX512(const Montgomery_Int& g, size_t window_bits) :
             m_monty(g._params()), m_window_bits(window_bits) {
          const size_t window_size = static_cast<size_t>(1) << m_window_bits;
 
@@ -516,10 +516,6 @@ class Montgomery_Exponentiation_AVX512 final : public Montgomery_Exponentiation_
             } else {
                m_monty.mul(entry(i), entry(1), entry(i - 1));
             }
-         }
-
-         if(const_time) {
-            CT::poison(m_table);
          }
       }
 
@@ -546,9 +542,7 @@ class Montgomery_Exponentiation_AVX512 final : public Montgomery_Exponentiation_
             m_monty.mul(x, x, e);
          }
 
-         auto r = m_monty.to_monty_int(x);
-         CT::unpoison(r);
-         return r;
+         return m_monty.to_monty_int(x);
       }
 
       Montgomery_Int exponentiation_vartime(const BigInt& scalar) const override {
@@ -608,38 +602,34 @@ class Montgomery_Exponentiation_AVX512 final : public Montgomery_Exponentiation_
 };
 
 template <size_t N>
-std::unique_ptr<Montgomery_Exponentiation_State> make_monty_exp(const Montgomery_Int& g,
-                                                                size_t window_bits,
-                                                                bool const_time) {
-   return std::make_unique<Montgomery_Exponentiation_AVX512<N>>(g, window_bits, const_time);
+std::unique_ptr<Montgomery_Exponentiation_State> make_monty_exp(const Montgomery_Int& g, size_t window_bits) {
+   return std::make_unique<Montgomery_Exponentiation_AVX512<N>>(g, window_bits);
 }
 
 }  // namespace
 
-std::unique_ptr<Montgomery_Exponentiation_State> make_monty_exp_avx512(const Montgomery_Int& g,
-                                                                       size_t window_bits,
-                                                                       bool const_time) {
+std::unique_ptr<Montgomery_Exponentiation_State> make_monty_exp_avx512(const Montgomery_Int& g, size_t window_bits) {
    const size_t vectors = (ifma_digits(g._params().p().bits()) + 7) / 8;
 
    switch(vectors) {
       case 2: /* 415 - 830 bits */
-         return make_monty_exp<2>(g, window_bits, const_time);
+         return make_monty_exp<2>(g, window_bits);
       case 3: /* 831 - 1246 bits */
-         return make_monty_exp<3>(g, window_bits, const_time);
+         return make_monty_exp<3>(g, window_bits);
       case 4: /* 1247 - 1662 bits */
-         return make_monty_exp<4>(g, window_bits, const_time);
+         return make_monty_exp<4>(g, window_bits);
       case 5: /* 1663 - 2078 bits */
-         return make_monty_exp<5>(g, window_bits, const_time);
+         return make_monty_exp<5>(g, window_bits);
       case 6: /* 2079 - 2494 bits */
-         return make_monty_exp<6>(g, window_bits, const_time);
+         return make_monty_exp<6>(g, window_bits);
       case 7: /* 2495 - 2910 bits */
-         return make_monty_exp<7>(g, window_bits, const_time);
+         return make_monty_exp<7>(g, window_bits);
       case 8: /* 2911 - 3326 bits */
-         return make_monty_exp<8>(g, window_bits, const_time);
+         return make_monty_exp<8>(g, window_bits);
       case 9: /* 3327 - 3742 bits */
-         return make_monty_exp<9>(g, window_bits, const_time);
+         return make_monty_exp<9>(g, window_bits);
       case 10: /* 3743 - 4158 bits */
-         return make_monty_exp<10>(g, window_bits, const_time);
+         return make_monty_exp<10>(g, window_bits);
       default:
          // Moduli under 415 bits or over 4158 bits do not seem of practical interest
          return nullptr;

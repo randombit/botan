@@ -67,8 +67,6 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod) {
    const word carry = bigint_add2(mp1o2, mod_words, u_w, 1);
    BOTAN_ASSERT_NOMSG(CT::driveby_unpoison(carry == 0));
 
-   CT::poison(tmp_mem.data(), tmp_mem.size());
-
    // Only n.bits() + mod.bits() iterations are required, but avoid leaking the size of n
    const size_t execs = 2 * mod.bits();
 
@@ -121,8 +119,6 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod) {
    */
    clear_mem(&tmp_mem[mod_words], 4 * mod_words);
 
-   CT::unpoison(tmp_mem.data(), tmp_mem.size());
-
    BigInt r;
    r.swap_reg(tmp_mem);
    return r;
@@ -171,7 +167,6 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k) {
 
    X.mask_bits(k);
 
-   CT::unpoison(X);
    return X;
 }
 

@@ -262,10 +262,10 @@ class Miller_Rabin_Test final {
       bool passes(const BigInt& a) const {
          Montgomery_Int y = [&]() {
             if(m_vartime) {
-               const auto powm_a = monty_precompute(m_monty_n, a, vartime_window_bits(m_d_bits), false);
+               const auto powm_a = monty_precompute(m_monty_n, a, vartime_window_bits(m_d_bits));
                return monty_execute_vartime(*powm_a, m_d);
             } else {
-               const auto powm_a = monty_precompute(m_monty_n, a, 4, true);
+               const auto powm_a = monty_precompute(m_monty_n, a, 4);
                return monty_execute(*powm_a, m_d, m_d_bits);
             }
          }();

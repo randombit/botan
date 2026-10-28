@@ -58,7 +58,7 @@ class RSA_Public_Data final {
 
       BigInt public_op(const BigInt& m) const {
          const size_t powm_window = 1;
-         const auto powm_m_n = monty_precompute(m_monty_n, m, powm_window, false);
+         const auto powm_m_n = monty_precompute(m_monty_n, m, powm_window);
          return monty_execute_vartime(*powm_m_n, m_e).value();
       }
 
@@ -302,7 +302,7 @@ class RSA_Private_Data final {
          // Returns (k^e, k^-1) modulo the prime, the former still in Montgomery form
          auto half = [&e](const Montgomery_Int& k_monty, const BigInt& k_mod, const BigInt& prime) {
             const size_t powm_window = 1;
-            auto fwd = monty_execute_vartime(*monty_precompute(k_monty, powm_window, false), e);
+            auto fwd = monty_execute_vartime(*monty_precompute(k_monty, powm_window), e);
             auto inv = inverse_mod_secret_prime(k_mod, prime);
             return std::make_pair(std::move(fwd), std::move(inv));
          };

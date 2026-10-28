@@ -45,14 +45,13 @@ class Montgomery_Exponentiation_State {
 * Precompute for calculating values g^x mod p
 */
 BOTAN_TEST_API std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(
-   const Montgomery_Params& params_p, const BigInt& g, size_t window_bits, bool const_time = true);
+   const Montgomery_Params& params_p, const BigInt& g, size_t window_bits);
 
 /*
 * Precompute for calculating values g^x mod p
 */
 BOTAN_TEST_API std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Int& g,
-                                                                                       size_t window_bits,
-                                                                                       bool const_time = true);
+                                                                                       size_t window_bits);
 
 /*
 * Return g^k mod p
@@ -72,12 +71,12 @@ inline Montgomery_Int monty_exp(const Montgomery_Params& params_p,
                                 const BigInt& g,
                                 const BigInt& k,
                                 size_t max_k_bits) {
-   const auto precomputed = monty_precompute(params_p, g, 4, true);
+   const auto precomputed = monty_precompute(params_p, g, 4);
    return monty_execute(*precomputed, k, max_k_bits);
 }
 
 inline Montgomery_Int monty_exp_vartime(const Montgomery_Params& params_p, const BigInt& g, const BigInt& k) {
-   const auto precomputed = monty_precompute(params_p, g, 4, false);
+   const auto precomputed = monty_precompute(params_p, g, 4);
    return monty_execute_vartime(*precomputed, k);
 }
 

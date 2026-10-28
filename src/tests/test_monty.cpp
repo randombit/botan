@@ -198,7 +198,7 @@ class Montgomery_Exponentiation_Tests : public Test {
          const auto expected = ref_powmod(g, k, mod_p);
 
          for(const size_t window : {1, 2, 3, 5, 6, 7}) {
-            const auto precomp = Botan::monty_precompute(params, g, window, true);
+            const auto precomp = Botan::monty_precompute(params, g, window);
             result.test_bn_eq("const time window " + std::to_string(window),
                               Botan::monty_execute(*precomp, k, 1024).value(),
                               expected);
