@@ -344,35 +344,51 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod) {
    return accum;
 }
 
+/*
+* Bitwise integer square root, which brings down two bits of C per iteration.
+* The iteration count depends only on the size of C, so this is constant time
+* with respect to its value.
+*/
 BigInt is_perfect_square(const BigInt& C) {
    if(C < 1) {
       throw Invalid_Argument("is_perfect_square requires C >= 1");
    }
-   if(C == 1) {
-      return BigInt::one();
+
+   constexpr size_t WB = WordInfo<word>::bits;
+
+   // The root r is less than 2^(bits(C)/2), and the remainder at most 8*r + 3
+   const size_t n = C.sig_words() / 2 + 2;
+
+   secure_vector<word> c(C._data(), C._data() + C.sig_words());
+   secure_vector<word> r(n);
+   secure_vector<word> rem(n);
+   secure_vector<word> t(n);
+   secure_vector<word> u(n);
+
+   CT::poison(c);
+
+   for(size_t i = (C.bits() + 1) / 2; i > 0; --i) {
+      // Bring down the next two bits of C
+      bigint_shl1(rem.data(), n, n, 2);
+      rem[0] |= (c[(2 * i - 2) / WB] >> ((2 * i - 2) % WB)) & 3;
+
+      // If rem >= 4*r + 1 then the next bit of the root is set
+      copy_mem(t.data(), r.data(), n);
+      bigint_shl1(t.data(), n, n, 2);
+      t[0] |= 1;
+
+      const word next_bit = bigint_sub3(u.data(), rem.data(), n, t.data(), n) ^ 1;
+      CT::conditional_assign_mem(next_bit, rem.data(), u.data(), n);
+
+      bigint_shl1(r.data(), n, n, 1);
+      r[0] |= next_bit;
    }
 
-   const size_t n = C.bits();
-   const size_t m = (n + 1) / 2;
-   const BigInt B = C + BigInt::power_of_2(m);
+   // C is a perfect square iff the remainder is zero
+   (~CT::all_zeros(rem.data(), n)).if_set_zero_out(r.data(), n);
+   CT::unpoison(r);
 
-   BigInt X = BigInt::power_of_2(m) - 1;
-   BigInt X2 = (X * X);
-
-   for(;;) {
-      X = (X2 + C) / (2 * X);
-      X2 = (X * X);
-
-      if(X2 < B) {
-         break;
-      }
-   }
-
-   if(X2 == C) {
-      return X;
-   } else {
-      return BigInt::zero();
-   }
+   return BigInt::_from_words(r);
 }
 
 namespace {

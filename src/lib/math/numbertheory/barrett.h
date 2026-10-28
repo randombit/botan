@@ -70,6 +70,12 @@ class BOTAN_TEST_API Barrett_Reduction final {
       */
       size_t modulus_bits() const { return m_modulus_bits; }
 
+      /**
+      * Return mu = floor(2^(2*WB*k) / m), where WB is the word size in bits
+      * and k is the number of words in the modulus m
+      */
+      const BigInt& mu() const { return m_mu; }
+
    private:
       Barrett_Reduction(const BigInt& m, BigInt mu, size_t mw);
 

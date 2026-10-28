@@ -7,6 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
+   #include <botan/exceptn.h>
    #include <botan/numthry.h>
    #include <botan/rng.h>
    #include <botan/internal/barrett.h>
@@ -28,6 +29,9 @@ class Montgomery_Integer_Tests : public Test {
          std::vector<Test::Result> results;
 
          Botan::secure_vector<Botan::word> ws;
+
+         // The largest value accepted by mul_by_word
+         const Botan::word max_mul = static_cast<Botan::word>(-1) >> 2;
 
          for(size_t i = 0; i != 100; ++i) {
             Test::Result result("Montgomery_Int");
@@ -66,11 +70,25 @@ class Montgomery_Integer_Tests : public Test {
             z.div2();
             result.test_bn_eq("Montgomery div2", (z.value() * 2) % p, x);
 
-            for(const Botan::word d : {1, 2, 3, 5, 7, 17, 255, 1024, 65537}) {
+            for(const Botan::word d : {Botan::word(0),
+                                       Botan::word(1),
+                                       Botan::word(2),
+                                       Botan::word(3),
+                                       Botan::word(5),
+                                       Botan::word(7),
+                                       Botan::word(17),
+                                       Botan::word(255),
+                                       Botan::word(1024),
+                                       Botan::word(65537),
+                                       max_mul}) {
                z = monty_x;
                z.mul_by_word(d);
                result.test_bn_eq("Montgomery mul_by_word " + std::to_string(d), z.value(), (x * d) % p);
             }
+
+            z = monty_x;
+            result.test_throws<Botan::Invalid_Argument>("Montgomery mul_by_word rejects large multiplier",
+                                                        [&]() { z.mul_by_word(max_mul + 1); });
 
             z = monty_x;
             z.ct_cond_assign(false, monty_y);
@@ -78,12 +96,55 @@ class Montgomery_Integer_Tests : public Test {
             z.ct_cond_assign(true, monty_y);
             result.test_bn_eq("Montgomery ct_cond_assign true", z.value(), y);
 
+            z = monty_x;
+            z.ct_cond_negate(false);
+            result.test_bn_eq("Montgomery ct_cond_negate false", z.value(), x);
+            z.ct_cond_negate(true);
+            result.test_bn_eq("Montgomery ct_cond_negate true", z.value(), p - x);
+
+            z = Botan::Montgomery_Int(params);
+            z.ct_cond_negate(true);
+            result.test_is_true("Montgomery ct_cond_negate of zero is zero", z.is_zero());
+
             // NOLINTNEXTLINE(*-redundant-expression)
             result.test_is_true("Montgomery x - x is zero", (monty_x - monty_x).is_zero());
             result.test_is_false("Montgomery x is not zero", monty_x.is_zero());
 
             results.push_back(result);
          }
+
+         /*
+         * Moduli whose leading word is all ones or is 1, which are edge cases
+         * of the quotient estimate in mul_by_word
+         */
+         Test::Result mul_result("Montgomery_Int mul_by_word");
+
+         for(const char* p_hex : {"0x3",
+                                  "0xFFFFFFFFFFFFFFC5",
+                                  "0x1000000000000000D",
+                                  "0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+                                  "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF61",
+                                  "0x100000000000000000000000000000000000000000000000000000000000000BD"}) {
+            const Botan::BigInt p(p_hex);
+            const Botan::Montgomery_Params params(p);
+
+            for(size_t i = 0; i != 50; ++i) {
+               const auto x = Botan::BigInt::random_integer(*rng, 0, p);
+               const Botan::word d = [&]() -> Botan::word {
+                  if(i < 2) {
+                     return max_mul - i;
+                  }
+                  const auto r = Botan::BigInt::random_integer(*rng, 0, Botan::BigInt::from_word(max_mul)).word_at(0);
+                  return (i % 2 == 0) ? r : (r & 0xFF);
+               }();
+
+               auto z = Botan::Montgomery_Int(params, x, true);
+               z.mul_by_word(d);
+               mul_result.test_bn_eq("Montgomery mul_by_word", z.value(), (x * d) % p);
+            }
+         }
+
+         results.push_back(mul_result);
 
          return results;
       }
