@@ -10,6 +10,7 @@
 #include <botan/mem_ops.h>
 #include <botan/internal/barrett.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/mp_core.h>
 #include <functional>
 
@@ -38,7 +39,7 @@ bool ranges_overlap(const word* a, size_t na, const word* b, size_t nb) {
 }  // namespace
 
 Montgomery_Params::Data::Data(const BigInt& p, const Barrett_Reduction& mod_p) {
-   if(p.is_even() || p < 3) {
+   if(CT::driveby_unpoison(p.is_even()) || p < 3) {
       throw Invalid_Argument("Montgomery_Params invalid modulus");
    }
 

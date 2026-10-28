@@ -28,9 +28,9 @@ bool uses_short_exponents(const DL_Group& group) {
 
 BigInt generate_private_dl_key(const DL_Group& group, RandomNumberGenerator& rng) {
    if(uses_short_exponents(group)) {
-      return BigInt(rng, group.exponent_bits());
+      return CT::driveby_poison(BigInt(rng, group.exponent_bits()));
    } else {
-      return BigInt::random_integer(rng, BigInt::from_s32(2), group.get_q());
+      return CT::driveby_poison(BigInt::random_integer(rng, BigInt::from_s32(2), group.get_q()));
    }
 }
 
@@ -38,7 +38,7 @@ BigInt check_dl_private_key_input(const BigInt& x, const DL_Group& group) {
    if(!group.verify_private_element(x)) {
       throw Decoding_Error("Invalid DL private key");
    }
-   return x;
+   return CT::driveby_poison(BigInt(x));
 }
 
 /*
@@ -101,13 +101,17 @@ DL_PrivateKey::DL_PrivateKey(const DL_Group& group, const BigInt& private_key) :
       m_group(group),
       m_private_key(check_dl_private_key_input(private_key, m_group)),
       m_max_private_key_bits(dl_private_key_max_bits(m_private_key, m_group)),
-      m_public_key(m_group.power_g_p(m_private_key, m_max_private_key_bits)) {}
+      m_public_key(m_group.power_g_p(m_private_key, m_max_private_key_bits)) {
+   CT::unpoison_all(m_private_key, m_public_key);
+}
 
 DL_PrivateKey::DL_PrivateKey(const DL_Group& group, RandomNumberGenerator& rng) :
       m_group(group),
       m_private_key(generate_private_dl_key(group, rng)),
       m_max_private_key_bits(dl_private_key_max_bits(m_private_key, m_group)),
-      m_public_key(m_group.power_g_p(m_private_key, m_max_private_key_bits)) {}
+      m_public_key(m_group.power_g_p(m_private_key, m_max_private_key_bits)) {
+   CT::unpoison_all(m_private_key, m_public_key);
+}
 
 DL_PrivateKey::DL_PrivateKey(const AlgorithmIdentifier& alg_id,
                              std::span<const uint8_t> key_bits,
@@ -115,7 +119,9 @@ DL_PrivateKey::DL_PrivateKey(const AlgorithmIdentifier& alg_id,
       m_group(alg_id.parameters(), format),
       m_private_key(check_dl_private_key_input(decode_single_bigint(key_bits), m_group)),
       m_max_private_key_bits(dl_private_key_max_bits(m_private_key, m_group)),
-      m_public_key(m_group.power_g_p(m_private_key, m_max_private_key_bits)) {}
+      m_public_key(m_group.power_g_p(m_private_key, m_max_private_key_bits)) {
+   CT::unpoison_all(m_private_key, m_public_key);
+}
 
 secure_vector<uint8_t> DL_PrivateKey::DER_encode() const {
    return DER_Encoder().encode(m_private_key).get_contents();

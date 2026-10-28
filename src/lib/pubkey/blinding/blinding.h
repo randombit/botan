@@ -10,6 +10,7 @@
 
 #include <botan/bigint.h>
 #include <botan/internal/barrett.h>
+#include <botan/internal/ct_utils.h>
 #include <functional>
 
 namespace Botan {
@@ -56,6 +57,10 @@ class Blinder final {
       * @return unblinded value
       */
       BigInt unblind(const BigInt& x) const;
+
+      void _const_time_poison() const { CT::poison_all(m_e, m_d); }
+
+      void _const_time_unpoison() const { CT::unpoison_all(m_e, m_d); }
 
       /**
       * @param reducer precomputed Barrett reduction for the modulus

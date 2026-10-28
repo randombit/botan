@@ -9,6 +9,7 @@
 
 #include <botan/internal/blinding.h>
 #include <botan/internal/buffer_stuffer.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/dl_scheme.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/monty_exp.h>
@@ -152,8 +153,11 @@ std::vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(std::span<const u
    const size_t k_bits = group.p_bits() - 1;
    const BigInt k(rng, k_bits, false);
 
+   const auto scope = CT::scoped_poison(m, k);
+
    const BigInt a = group.power_g_p(k, k_bits);
    const BigInt b = group.multiply_mod_p(m, monty_execute(*m_monty_y_p, k, k_bits).value());
+   CT::unpoison_all(a, b);
 
    const size_t p_bytes = group.p_bytes();
    std::vector<uint8_t> ctext(2 * p_bytes);
@@ -214,11 +218,17 @@ secure_vector<uint8_t> ElGamal_Decryption_Operation::raw_decrypt(std::span<const
       throw Invalid_Argument("ElGamal decryption: Invalid message");
    }
 
+   const auto scope = CT::scoped_poison(m_key->private_key(), m_blinder);
+
    a = m_blinder.blind(a);
 
    const BigInt r = group.multiply_mod_p(group.inverse_mod_p(powermod_x_p(a)), b);
 
-   return m_blinder.unblind(r).serialize<secure_vector<uint8_t>>(p_bytes);
+   // Any further secret handling of the output is up to the caller
+   const BigInt ptext = m_blinder.unblind(r);
+   CT::unpoison(ptext);
+
+   return ptext.serialize<secure_vector<uint8_t>>(p_bytes);
 }
 
 }  // namespace

@@ -11,6 +11,7 @@
 #include <botan/dl_group.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 
 namespace Botan {
@@ -103,13 +104,16 @@ std::pair<BigInt, SymmetricKey> srp6_client_agree(std::string_view identifier,
    const BigInt k = hash_seq(*hash_fn, p_bytes, p, g);
 
    const BigInt a(rng, a_bits);
+   CT::poison(a);
 
    const BigInt A = group.power_g_p(a, a_bits);
+   CT::unpoison(A);
 
    const BigInt u = hash_seq(*hash_fn, p_bytes, A, B);
    BOTAN_ASSERT_NOMSG(!u.is_zero());
 
    const BigInt x = compute_x(*hash_fn, identifier, password, salt);
+   CT::poison(x);
 
    const BigInt g_x_p = group.power_g_p(x, hash_fn->output_length() * 8);
 
@@ -123,6 +127,9 @@ std::pair<BigInt, SymmetricKey> srp6_client_agree(std::string_view identifier,
    BOTAN_ASSERT_NOMSG(max_aux_bits >= a_ux.bits());
 
    const BigInt S = group.power_b_p(B_k_g_x_p, a_ux, max_aux_bits);
+
+   // Any further secret handling of the output is up to the caller
+   CT::unpoison_all(a, x, S);
 
    const SymmetricKey Sk(S.serialize<secure_vector<uint8_t>>(p_bytes));
 
@@ -149,7 +156,8 @@ BigInt srp6_generate_verifier(std::string_view identifier,
    }
 
    const BigInt x = compute_x(*hash_fn, identifier, password, salt);
-   return group.power_g_p(x, hash_fn->output_length() * 8);
+   const auto scope = CT::scoped_poison(x);
+   return CT::driveby_unpoison(group.power_g_p(x, hash_fn->output_length() * 8));
 }
 
 BigInt SRP6_Server_Session::step1(const BigInt& v,
@@ -186,7 +194,10 @@ BigInt SRP6_Server_Session::step1(
    }
 
    const BigInt k = hash_seq(*hash_fn, m_group->p_bytes(), p, g);
-   m_B = m_group->mod_p(v * k + m_group->power_g_p(m_b, b_bits));
+
+   const auto scope = CT::scoped_poison(m_v, m_b);
+   m_B = m_group->mod_p(m_v * k + m_group->power_g_p(m_b, b_bits));
+   CT::unpoison(m_B);
 
    return m_B;
 }
@@ -206,12 +217,17 @@ SymmetricKey SRP6_Server_Session::step2(const BigInt& A) {
    const BigInt u = hash_seq(*hash_fn, m_group->p_bytes(), A, m_B);
    BOTAN_ASSERT_NOMSG(!u.is_zero());
 
+   const auto scope = CT::scoped_poison(m_v, m_b);
+
    // The maximum length of u is fixed based on the chosen hash function
    const size_t u_bits = hash_fn->output_length() * 8;
    const BigInt vup = m_group->power_b_p(m_v, u, u_bits);
 
    // The size of b is chosen by either a formula or the application; either way it is public
    const BigInt S = m_group->power_b_p(m_group->multiply_mod_p(A, vup), m_b, m_b_bits);
+
+   // Any further secret handling of the output is up to the caller
+   CT::unpoison(S);
 
    return SymmetricKey(S.serialize<secure_vector<uint8_t>>(m_group->p_bytes()));
 }

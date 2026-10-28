@@ -10,6 +10,7 @@
 #include <botan/exceptn.h>
 #include <botan/mac.h>
 #include <botan/numthry.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
@@ -154,6 +155,7 @@ BigInt FPE_FE1::encrypt(const BigInt& input, const uint8_t tweak[], size_t tweak
    const secure_vector<uint8_t> tweak_mac = compute_tweak_mac(tweak, tweak_len);
 
    BigInt X = input;
+   CT::poison(X);
 
    secure_vector<uint8_t> tmp;
 
@@ -166,6 +168,7 @@ BigInt FPE_FE1::encrypt(const BigInt& input, const uint8_t tweak[], size_t tweak
       X = m_a * R + ct_modulo(L + Fi, m_a);
    }
 
+   CT::unpoison(X);
    return X;
 }
 
@@ -175,6 +178,7 @@ BigInt FPE_FE1::decrypt(const BigInt& input, const uint8_t tweak[], size_t tweak
    const secure_vector<uint8_t> tweak_mac = compute_tweak_mac(tweak, tweak_len);
 
    BigInt X = input;
+   CT::poison(X);
    secure_vector<uint8_t> tmp;
 
    BigInt W;
@@ -187,6 +191,7 @@ BigInt FPE_FE1::decrypt(const BigInt& input, const uint8_t tweak[], size_t tweak
       X = m_b * ct_modulo(W - Fi, m_a) + R;
    }
 
+   CT::unpoison(X);
    return X;
 }
 

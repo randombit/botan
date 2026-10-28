@@ -397,7 +397,7 @@ bool is_prime_impl(const BigInt& n, RandomNumberGenerator& rng, size_t prob, boo
    if(n == 2) {
       return true;
    }
-   if(n <= 1 || n.is_even()) {
+   if(n <= 1 || CT::driveby_unpoison(n.is_even())) {
       return false;
    }
 

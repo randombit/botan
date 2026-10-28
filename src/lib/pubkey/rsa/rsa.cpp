@@ -14,6 +14,7 @@
 #include <botan/pss_params.h>
 #include <botan/internal/algorithm_spec.h>
 #include <botan/internal/barrett.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/keypair.h>
@@ -131,7 +132,8 @@ BigInt crt_recombine(const Montgomery_Int& j1,
 
    // r += j2
    const word carry = bigint_add2(r.data(), n_words, j2._data(), p_words);
-   BOTAN_ASSERT_NOMSG(carry == 0);  // should not be possible since it would imply r > the public modulus
+   // should not be possible since it would imply r > the public modulus
+   BOTAN_ASSERT_NOMSG(CT::driveby_unpoison(carry == 0));
 
    return BigInt::_from_words(r);
 }
@@ -188,6 +190,16 @@ class RSA_Private_Data final {
 
       bool primes_imbalanced() const { return p_bits() != q_bits(); }
 
+      void _const_time_poison() const {
+         CT::poison_all(
+            m_d, m_p, m_q, m_d1, m_d2, m_c, m_monty_p, m_monty_q, m_c_monty, m_blinding_fwd, m_blinding_inv);
+      }
+
+      void _const_time_unpoison() const {
+         CT::unpoison_all(
+            m_d, m_p, m_q, m_d1, m_d2, m_c, m_monty_p, m_monty_q, m_c_monty, m_blinding_fwd, m_blinding_inv);
+      }
+
       /**
       * Return the next pair of base blinding values (k^e mod n, k^-1 mod n)
       *
@@ -202,6 +214,7 @@ class RSA_Private_Data final {
             // TODO the fresh pair could be computed ahead of time (eg in the thread
             // pool) so that no operation has to wait for it
             const BigInt k(rng, m_public->public_modulus_bits() - 1);
+            CT::poison(k);
             auto [fwd, inv] = fresh_blinding_pair(k);
             m_blinding_fwd = std::move(fwd);
             m_blinding_inv = std::move(inv);
@@ -452,6 +465,7 @@ void check_rsa_private_key_params(const BigInt& n, const BigInt& p, const BigInt
 * is equivalent and avoids the (costly, constant time) gcd needed for the lcm.
 */
 void check_rsa_secret_exponent(const BigInt& e, const BigInt& d, const BigInt& p, const BigInt& q) {
+   const auto scope = CT::scoped_poison(d, p, q);
    const BigInt ed = e * d;
    if(ct_modulo(ed, p - 1) != 1 || ct_modulo(ed, q - 1) != 1) {
       throw Decoding_Error("Invalid RSA private key: e * d != 1 mod lcm(p-1, q-1)");
@@ -535,20 +549,25 @@ RSA_PrivateKey::RSA_PrivateKey(
    // Validated early since the arithmetic below depends on it
    check_rsa_private_key_params(get_n(), p, q);
 
+   BigInt d = d_exp;
+   const bool compute_d = d.is_zero();
+
+   if(!compute_d) {
+      check_rsa_secret_exponent(get_e(), d, p, q);
+   }
+
+   CT::poison_all(p, q, d);
+
    const BigInt p_minus_1 = p - 1;
    const BigInt q_minus_1 = q - 1;
 
-   BigInt d = d_exp;
-
-   if(d.is_zero()) {
+   if(compute_d) {
       const BigInt phi_n = lcm(p_minus_1, q_minus_1);
       if(auto d_inv = compute_rsa_secret_exponent(get_e(), phi_n, p, q)) {
          d = std::move(*d_inv);
       } else {
          throw Decoding_Error("Invalid RSA private key: e has no inverse modulo lcm(p-1, q-1)");
       }
-   } else {
-      check_rsa_secret_exponent(get_e(), d, p, q);
    }
 
    BigInt d1 = ct_modulo(d, p_minus_1);
@@ -559,6 +578,8 @@ RSA_PrivateKey::RSA_PrivateKey(
       throw Decoding_Error("Invalid RSA private key: p divides q");
    }
    BigInt c = inverse_mod_secret_prime(q_mod_p, p);
+
+   CT::unpoison_all(p, q, d, d1, d2, c);
 
    RSA_PrivateKey::init(std::move(d), std::move(p), std::move(q), std::move(d1), std::move(d2), std::move(c));
 }
@@ -600,6 +621,7 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng, size_t bits, size_t e
       // TODO could generate primes in thread pool
       p = generate_rsa_prime(rng, rng, p_bits, e);
       q = generate_rsa_prime(rng, rng, q_bits, e);
+      CT::poison_all(p, q);
 
       const BigInt diff = p - q;
       if(diff.bits() < (bits / 2) - 100) {
@@ -607,6 +629,7 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng, size_t bits, size_t e
       }
 
       n = p * q;
+      CT::unpoison(n);
 
       if(n.bits() != bits) {
          continue;
@@ -629,6 +652,8 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng, size_t bits, size_t e
    BigInt d1 = ct_modulo(*d, p_minus_1);
    BigInt d2 = ct_modulo(*d, q_minus_1);
    BigInt c = inverse_mod_secret_prime(ct_modulo(q, p), p);
+
+   CT::unpoison_all(p, q, *d, d1, d2, c);
 
    RSA_PublicKey::init(std::move(n), std::move(e));
 
@@ -664,6 +689,8 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    if(get_n() < 35 || get_n().is_even() || get_e() < 3 || get_e().is_even()) {
       return false;
    }
+
+   const auto scope = CT::scoped_poison(*m_private);
 
    if(get_d() < 2 || get_p() < 3 || get_q() < 3) {
       return false;
@@ -743,10 +770,14 @@ class RSA_Private_Operation {
             throw Decoding_Error("RSA input is not in the valid range");
          }
 
+         const auto scope = CT::scoped_poison(*m_private);
+
          const auto [blind_fwd, blind_inv] = m_private->next_blinding_pair(m_rng);
          const auto& mod_n = m_public->reducer_mod_n();
 
          const BigInt recovered = mod_n.multiply(rsa_private_op(mod_n.multiply(input_bn, blind_fwd)), blind_inv);
+         // Any further secret handling of the output is up to the caller
+         CT::unpoison(recovered);
          BOTAN_ASSERT(input_bn == m_public->public_op(recovered), "RSA consistency check");
          BOTAN_ASSERT(m_public->public_modulus_bytes() == out.size(), "output size check");
          recovered.serialize_to(out);
@@ -766,6 +797,7 @@ class RSA_Private_Operation {
 
          // Compute this in main thread to avoid racing on the rng
          const BigInt d1_mask(m_rng, m_blinding_bits);
+         CT::poison(d1_mask);
 
 #if defined(BOTAN_RSA_USE_ASYNC)
          /*
@@ -788,6 +820,7 @@ class RSA_Private_Operation {
 #endif
 
          const BigInt d2_mask(m_rng, m_blinding_bits);
+         CT::poison(d2_mask);
          const BigInt masked_d2 = m_private->blinded_d2(d2_mask);
          const auto powm_d2_q = monty_precompute(Montgomery_Int::from_wide_int(m_private->monty_q(), m), powm_window);
          const auto j2 = monty_execute(*powm_d2_q, masked_d2, m_max_d2_bits).value();

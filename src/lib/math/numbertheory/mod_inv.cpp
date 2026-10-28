@@ -23,7 +23,7 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod) {
    BOTAN_ASSERT_NOMSG(n.signum() >= 0);
    BOTAN_ASSERT_NOMSG(mod.signum() > 0);
    BOTAN_ASSERT_NOMSG(n < mod);
-   BOTAN_ASSERT_NOMSG(mod >= 3 && mod.is_odd());
+   BOTAN_ASSERT_NOMSG(mod >= 3 && CT::driveby_unpoison(mod.is_odd()));
 
    /*
    This uses a modular inversion algorithm designed by Niels Möller
@@ -65,7 +65,7 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod) {
    copy_mem(mp1o2, mod._data(), std::min(mod.size(), mod_words));
    bigint_shr1(mp1o2, mod_words, 1);
    const word carry = bigint_add2(mp1o2, mod_words, u_w, 1);
-   BOTAN_ASSERT_NOMSG(carry == 0);
+   BOTAN_ASSERT_NOMSG(CT::driveby_unpoison(carry == 0));
 
    CT::poison(tmp_mem.data(), tmp_mem.size());
 
@@ -284,7 +284,7 @@ BigInt inverse_mod_secret_prime(const BigInt& x, const BigInt& p) {
    BOTAN_ARG_CHECK(p.signum() > 0, "Modulus must be positive");
    BOTAN_ARG_CHECK(x.signum() > 0, "Input must be positive");
    BOTAN_ARG_CHECK(x < p, "Input must be less than modulus");
-   BOTAN_ARG_CHECK(p.is_odd() && p > 1, "Primes are odd integers greater than 1");
+   BOTAN_ARG_CHECK(CT::driveby_unpoison(p.is_odd()) && p > 1, "Primes are odd integers greater than 1");
 
    // TODO possibly use FLT, or the algorithm presented for this case in
    // Handbook of Elliptic and Hyperelliptic Curve Cryptography
@@ -365,7 +365,7 @@ std::optional<BigInt> compute_rsa_secret_exponent(const BigInt& e,
       const word phi_mod_e = ct_mod_word(phi_n, e_w);
 
       // If e divides phi_n there is no inverse, which the general path below reports
-      if(phi_mod_e != 0) {
+      if(CT::driveby_unpoison(phi_mod_e != 0)) {
          const word inv_phi_mod_e = inverse_mod_65537(phi_mod_e);
          BOTAN_DEBUG_ASSERT((inv_phi_mod_e * phi_mod_e) % e_w == 1);
          const word neg_inv_phi_mod_e = (e_w - inv_phi_mod_e);
@@ -380,6 +380,7 @@ std::optional<BigInt> compute_rsa_secret_exponent(const BigInt& e,
       return std::nullopt;
    }
 
+   CT::unpoison_all(e_mod_phi, phi_n);
    return inverse_mod_general(e_mod_phi, phi_n);
 }
 
