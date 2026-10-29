@@ -126,7 +126,8 @@ inline void treehash(
    BOTAN_ASSERT_NOMSG(total_tree_height.get() < 32);
 
    const TreeNodeIndex max_idx((uint32_t(1) << total_tree_height.get()) - 1);
-   BOTAN_ASSERT_NOMSG(!is_signing || leaf_idx.value() <= max_idx);
+   // Not has_value() || value(), which GCC may compile to test the payload first
+   BOTAN_ASSERT_NOMSG(leaf_idx.value_or(TreeNodeIndex(0)) <= max_idx);
 
    std::vector<TreeNode> last_visited_left_child_at_layer(total_tree_height.get(), TreeNode(node_size));
 
