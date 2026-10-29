@@ -44,10 +44,14 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption {
       }
 
       std::vector<uint8_t> encrypt(std::span<const uint8_t> msg, RandomNumberGenerator& rng) override {
+         const auto scope = CT::scoped_poison(msg);
+
          for(;;) {
             const auto k = EC_Scalar::random(m_group, rng);
+            CT::poison(k);
 
             const EC_AffinePoint C1 = EC_AffinePoint::g_mul(k, rng);
+            CT::unpoison(C1);
 
             const EC_AffinePoint kPB = m_peer.mul(k, rng);
 
@@ -75,6 +79,8 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption {
             m_hash->update(msg);
             m_hash->update(y2_bytes);
             const auto C3 = m_hash->final<std::vector<uint8_t>>();
+
+            CT::unpoison_all(masked_msg, C3);
 
             std::vector<uint8_t> ctext;
             DER_Encoder(ctext)

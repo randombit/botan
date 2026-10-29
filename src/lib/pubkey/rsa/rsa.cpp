@@ -1035,7 +1035,10 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_Padding,
 
       std::vector<uint8_t> raw_encrypt(std::span<const uint8_t> input, RandomNumberGenerator& /*rng*/) override {
          const BigInt input_bn(input);
-         return public_op(input_bn).serialize(public_modulus_bytes());
+         CT::poison(input_bn);
+         const BigInt c = public_op(input_bn);
+         CT::unpoison(c);
+         return c.serialize(public_modulus_bytes());
       }
 };
 
@@ -1087,10 +1090,13 @@ class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KD
                            std::span<uint8_t> raw_shared_key,
                            RandomNumberGenerator& rng) override {
          const BigInt r = BigInt::random_integer(rng, BigInt::one(), get_n());
+         CT::poison(r);
          const BigInt c = public_op(r);
+         CT::unpoison(c);
 
          c.serialize_to(out_encapsulated_key);
          r.serialize_to(raw_shared_key);
+         CT::unpoison(raw_shared_key);
       }
 };
 

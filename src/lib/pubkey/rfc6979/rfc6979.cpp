@@ -10,6 +10,7 @@
 #include <botan/assert.h>
 #include <botan/hmac_drbg.h>
 #include <botan/mac.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 
 namespace Botan {
@@ -31,6 +32,8 @@ BigInt RFC6979_Nonce_Generator::nonce_for(const BigInt& order, const BigInt& m) 
 
    m.serialize_to(std::span{m_rng_in}.last(m_rlen));
 
+   // m_rng_in contains the private key
+   const auto scope = CT::scoped_poison(m_rng_in);
    m_hmac_drbg->initialize_with(m_rng_in);
 
    const size_t shift = 8 * m_rlen - m_qlen;
@@ -65,6 +68,8 @@ RFC6979_Nonce_Generator::RFC6979_Nonce_Generator(std::string_view hash, size_t o
 EC_Scalar RFC6979_Nonce_Generator::nonce_for(const EC_Group& group, const EC_Scalar& m) {
    m.serialize_to(std::span{m_rng_in}.last(m_rlen));
 
+   // m_rng_in contains the private key
+   const auto scope = CT::scoped_poison(m_rng_in);
    m_hmac_drbg->initialize_with(m_rng_in);
 
    const size_t shift = 8 * m_rlen - m_qlen;
