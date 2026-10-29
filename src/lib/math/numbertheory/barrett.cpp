@@ -59,8 +59,6 @@ BigInt barrett_reduce(
       ws.resize(2 * (mod_words + 2));
    }
 
-   CT::poison(x_words);
-
    /*
    * Following the notation of Handbook of Applied Cryptography
    * Algorithm 14.42 "Barrett modular reduction", page 604
@@ -133,11 +131,6 @@ BigInt barrett_reduce(
       const word borrow = bigint_sub3(ws.data(), r.data(), mod_words + 1, modulus._data(), mod_words);
       CT::Mask<word>::is_zero(borrow).select_n(r.data(), ws.data(), r.data(), mod_words + 1);
    }
-
-   CT::unpoison(q2);
-   CT::unpoison(r);
-   CT::unpoison(ws);
-   CT::unpoison(x_words);
 
    return BigInt::_from_words(r);
 }

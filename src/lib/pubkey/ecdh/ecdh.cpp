@@ -11,6 +11,7 @@
 
 #include <botan/bigint.h>
 #include <botan/ec_group.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/pk_options_impl.h>
 
@@ -64,7 +65,9 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
             throw Decoding_Error("ECDH - Invalid elliptic curve point: identity");
          }
 
-         return input_point.mul_x_only(m_l_times_priv, m_rng);
+         const auto scope = CT::scoped_poison(m_l_times_priv);
+         // Any further secret handling of the output is up to the caller
+         return CT::driveby_unpoison(input_point.mul_x_only(m_l_times_priv, m_rng));
       }
 
    private:

@@ -17,9 +17,7 @@ namespace Botan {
 *
 * Returns nullptr if the CPU or the size of the modulus is not supported
 */
-std::unique_ptr<Montgomery_Exponentiation_State> make_monty_exp_avx512(const Montgomery_Int& g,
-                                                                       size_t window_bits,
-                                                                       bool const_time);
+std::unique_ptr<Montgomery_Exponentiation_State> make_monty_exp_avx512(const Montgomery_Int& g, size_t window_bits);
 
 }  // namespace Botan
 

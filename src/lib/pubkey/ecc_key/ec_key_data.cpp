@@ -9,6 +9,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/rng.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -124,11 +125,11 @@ EC_PrivateKey_Data::~EC_PrivateKey_Data() {
 std::shared_ptr<EC_PublicKey_Data> EC_PrivateKey_Data::public_key(RandomNumberGenerator& rng,
                                                                   bool with_modular_inverse) const {
    const auto public_point = [&] {
-      if(with_modular_inverse) {
-         return EC_AffinePoint::g_mul(m_scalar.invert(), rng);
-      } else {
-         return EC_AffinePoint::g_mul(m_scalar, rng);
-      }
+      const auto scope = CT::scoped_poison(m_scalar);
+      auto pt =
+         with_modular_inverse ? EC_AffinePoint::g_mul(m_scalar.invert(), rng) : EC_AffinePoint::g_mul(m_scalar, rng);
+      CT::unpoison(pt);
+      return pt;
    };
 
    return std::make_shared<EC_PublicKey_Data>(m_group, public_point());

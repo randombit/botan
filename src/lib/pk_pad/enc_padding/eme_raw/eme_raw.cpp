@@ -25,6 +25,8 @@ size_t EME_Raw::pad(std::span<uint8_t> output,
 CT::Option<size_t> EME_Raw::unpad(std::span<uint8_t> output, std::span<const uint8_t> input) const {
    BOTAN_ASSERT_NOMSG(output.size() >= input.size());
 
+   const auto scope = CT::scoped_poison(input);
+
    if(input.empty()) {
       return CT::Option<size_t>(0);
    }

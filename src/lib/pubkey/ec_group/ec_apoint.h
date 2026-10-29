@@ -349,6 +349,22 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
       */
       const std::shared_ptr<const EC_Group_Data>& _group() const;
 
+      /**
+       * Mark this point as holding secret data
+       *
+       * @warning this is an implementation detail which is not for
+       * public use and not covered by SemVer.
+       */
+      void _const_time_poison() const;
+
+      /**
+       * Mark this point as no longer holding secret data
+       *
+       * @warning this is an implementation detail which is not for
+       * public use and not covered by SemVer.
+       */
+      void _const_time_unpoison() const;
+
    private:
       friend class EC_Mul2Table;
 

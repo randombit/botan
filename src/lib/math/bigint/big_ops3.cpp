@@ -91,12 +91,8 @@ BigInt operator*(const BigInt& x, word y) {
    const size_t x_sw = x.sig_words();
 
    BigInt z = BigInt::with_capacity(x_sw + 1);
-
-   if(x_sw > 0 && y > 0) {
-      bigint_linmul3(z.mutable_data(), x._data(), x_sw, y);
-      z.set_sign(x.sign());
-   }
-
+   bigint_linmul3(z.mutable_data(), x._data(), x_sw, y);
+   z.set_sign(x.sign());
    return z;
 }
 

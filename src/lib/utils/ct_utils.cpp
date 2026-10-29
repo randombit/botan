@@ -22,10 +22,9 @@ CT::Option<size_t> CT::copy_output(CT::Choice accept,
    /*
    * We do not poison the input here because if we did we would have
    * to unpoison it at exit. We assume instead that callers have
-   * already poisoned the input and will unpoison it at their own
-   * time.
+   * already poisoned the input and will unpoison it, and the outputs,
+   * at their own time.
    */
-   CT::poison(offset);
 
    /**
    * Zeroize the entire output buffer to get started
@@ -76,8 +75,6 @@ CT::Option<size_t> CT::copy_output(CT::Choice accept,
    // This will always be zero if the input was invalid
    const size_t output_bytes = input.size() - offset;
 
-   CT::unpoison_all(output, output_bytes);
-
    return CT::Option<size_t>(output_bytes, accept);
 }
 
@@ -89,23 +86,6 @@ size_t CT::count_leading_zero_bytes(std::span<const uint8_t> input) {
       leading_zeros += only_zeros.if_set_return(1);
    }
    return leading_zeros;
-}
-
-secure_vector<uint8_t> CT::strip_leading_zeros(std::span<const uint8_t> input) {
-   const size_t leading_zeros = CT::count_leading_zero_bytes(input);
-
-   secure_vector<uint8_t> output(input.size());
-
-   const auto written = CT::copy_output(CT::Choice::yes(), output, input, leading_zeros);
-
-   /*
-   This is potentially not const time, depending on how std::vector is
-   implemented. But since we are always reducing length, it should
-   just amount to setting the member var holding the length.
-   */
-   output.resize(written.value_or(0));
-
-   return output;
 }
 
 }  // namespace Botan

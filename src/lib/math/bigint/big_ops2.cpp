@@ -142,7 +142,8 @@ BigInt& BigInt::mod_mul(uint8_t y, const BigInt& mod, secure_vector<word>& ws) {
    BOTAN_DEBUG_ASSERT(*this < mod);
 
    *this *= static_cast<word>(y);
-   this->reduce_below(mod, ws);
+   // Since *this < mod, the product is less than y * mod
+   this->ct_reduce_below(mod, ws, y);
    return (*this);
 }
 

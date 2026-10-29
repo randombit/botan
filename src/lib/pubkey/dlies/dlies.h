@@ -155,7 +155,7 @@ class BOTAN_DEPRECATED_API("Prefer HPKE") DLIES_Decryptor final : public PK_Decr
       inline void set_initialization_vector(const InitializationVector& iv) { m_iv = iv; }
 
    private:
-      secure_vector<uint8_t> do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const override;
+      size_t do_decrypt(uint8_t& valid_mask, std::span<uint8_t> ptext, std::span<const uint8_t> ctext) const override;
 
       size_t plaintext_length(size_t ctext_len) const override;
 

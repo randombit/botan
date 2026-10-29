@@ -864,7 +864,7 @@ class divide_precomp final {
 */
 template <WordType W>
 inline constexpr auto monty_inverse(W a) -> W {
-   BOTAN_ARG_CHECK(a % 2 == 1, "Cannot compute Montgomery inverse of an even integer");
+   BOTAN_ARG_CHECK(CT::driveby_unpoison(a % 2 == 1), "Cannot compute Montgomery inverse of an even integer");
 
    // Newton's Method, following https://lemire.me/blog/2017/09/18/computing-the-inverse-of-odd-integers/
 

@@ -21,6 +21,9 @@ class MessageAuthenticationCode;
 * Format Preserving Encryption using the scheme FE1 from the paper
 * "Format-Preserving Encryption" by Bellare, Rogaway, et al
 * (https://eprint.iacr.org/2009/251)
+*
+* @warning This is not constant time; the length of each round's intermediate
+* value, as input to the PRF, depends on the values being encrypted
 */
 class BOTAN_PUBLIC_API(2, 5) FPE_FE1 final : public SymmetricAlgorithm {
    public:

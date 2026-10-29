@@ -72,6 +72,12 @@ class DL_PrivateKey final {
       const BigInt& private_key() const { return m_private_key; }
 
       /**
+      * Return a public upper bound on the bit length of the private key,
+      * for use as the exponent length when exponentiating by it
+      */
+      size_t max_private_key_bits() const { return m_max_private_key_bits; }
+
+      /**
       * DER encode the private key
       */
       secure_vector<uint8_t> DER_encode() const;
@@ -86,6 +92,7 @@ class DL_PrivateKey final {
    private:
       const DL_Group m_group;
       const BigInt m_private_key;
+      const size_t m_max_private_key_bits;
       const BigInt m_public_key;
 };
 

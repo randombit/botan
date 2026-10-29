@@ -13,6 +13,7 @@
 #include <botan/ecdh.h>
 #include <botan/kdf.h>
 #include <botan/mac.h>
+#include <botan/mem_ops.h>
 #include <botan/rng.h>
 #include <botan/internal/concat_util.h>
 #include <botan/internal/ct_utils.h>
@@ -77,7 +78,9 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override {
          const EC_Group& group = m_key.domain();
          if(auto input_point = EC_AffinePoint::deserialize(group, {w, w_len})) {
-            return input_point->mul(m_key._private_key(), m_rng).x_bytes();
+            const auto scope = CT::scoped_poison(m_key._private_key());
+            // Any further secret handling of the output is up to the caller
+            return CT::driveby_unpoison(input_point->mul(m_key._private_key(), m_rng).x_bytes());
          } else {
             throw Decoding_Error("ECIES - Invalid elliptic curve point");
          }
@@ -418,7 +421,11 @@ size_t ECIES_Decryptor::ciphertext_length(size_t ptext_len) const {
 /**
 * ECIES Decryption according to ISO 18033-2
 */
-secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const {
+size_t ECIES_Decryptor::do_decrypt(uint8_t& valid_mask,
+                                   std::span<uint8_t> ptext,
+                                   std::span<const uint8_t> ctext) const {
+   const uint8_t* in = ctext.data();
+   const size_t in_len = ctext.size();
    const size_t point_size = compute_point_size(m_params.group(), m_params.point_format());
 
    if(in_len < point_size + m_mac->output_length()) {
@@ -490,12 +497,14 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
          // e.g. Invalid_Authentication_Tag is thrown if GCM is used and the message does not have a valid tag
          secure_vector<uint8_t> decrypted_data(encrypted_data.begin(), encrypted_data.end());
          m_cipher->finish(decrypted_data);
-         return decrypted_data;
+         BOTAN_ARG_CHECK(ptext.size() >= decrypted_data.size(), "Output buffer too small for decryption");
+         copy_mem(ptext.first(decrypted_data.size()), decrypted_data);
+         return decrypted_data.size();
       } catch(...) {
          valid_mask = 0;
       }
    }
-   return secure_vector<uint8_t>();
+   return 0;
 }
 
 }  // namespace Botan

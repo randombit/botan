@@ -229,7 +229,7 @@ template <typename... Ts>
  * Poisons an r-value @p v and forwards it as the return value.
  */
 template <poisonable T>
-[[nodiscard]] decltype(auto) driveby_poison(T&& v)
+[[nodiscard]] constexpr decltype(auto) driveby_poison(T&& v)
    requires(std::is_rvalue_reference_v<decltype(v)>)
 {
    poison(v);
@@ -240,7 +240,7 @@ template <poisonable T>
  * Unpoisons an r-value @p v and forwards it as the return value.
  */
 template <unpoisonable T>
-[[nodiscard]] decltype(auto) driveby_unpoison(T&& v)
+[[nodiscard]] constexpr decltype(auto) driveby_unpoison(T&& v)
    requires(std::is_rvalue_reference_v<decltype(v)>)
 {
    unpoison(v);
@@ -326,7 +326,12 @@ class Choice final {
       * obviously branchy way (`if(choice.as_bool()) ...`) a smart compiler
       * may introduce branches depending on the value.
       */
-      constexpr bool as_bool() const { return m_value != 0; }
+      constexpr bool as_bool() const {
+         // If r were const the compiler could ignore the unpoisoning
+         underlying_type r = value();  // NOLINT(misc-const-correctness)
+         CT::unpoison(r);
+         return r != 0;
+      }
 
       /// Return the masked value
       constexpr underlying_type value() const { return value_barrier(m_value); }
@@ -618,9 +623,9 @@ class Mask final {
       */
       constexpr CT::Choice as_choice() const {
          if constexpr(sizeof(T) >= sizeof(Choice::underlying_type)) {
-            return CT::Choice::from_mask(static_cast<Choice::underlying_type>(unpoisoned_value()));
+            return CT::Choice::from_mask(static_cast<Choice::underlying_type>(value()));
          } else {
-            return CT::Choice::from_int(unpoisoned_value());
+            return CT::Choice::from_int(value());
          }
       }
 
@@ -865,8 +870,6 @@ CT::Option<size_t> copy_output(CT::Choice accept,
                                size_t offset);
 
 size_t count_leading_zero_bytes(std::span<const uint8_t> input);
-
-secure_vector<uint8_t> strip_leading_zeros(std::span<const uint8_t> input);
 
 }  // namespace Botan::CT
 

@@ -9,6 +9,7 @@
 
 #include <botan/secmem.h>
 #include <botan/types.h>
+#include <botan/internal/ct_utils.h>
 #include <array>
 #include <functional>
 #include <memory>
@@ -80,6 +81,10 @@ class PrimeOrderCurve /* NOLINT(*-special-member-functions) */ {
 
             static Scalar _create(CurvePtr curve, StorageUnit v) { return Scalar(std::move(curve), v); }
 
+            void _const_time_poison() const { CT::poison(m_value); }
+
+            void _const_time_unpoison() const { CT::unpoison(m_value); }
+
          private:
             Scalar(CurvePtr curve, StorageUnit v) : m_curve(std::move(curve)), m_value(v) {}
 
@@ -111,6 +116,10 @@ class PrimeOrderCurve /* NOLINT(*-special-member-functions) */ {
             static AffinePoint _create(CurvePtr curve, StorageUnit x, StorageUnit y) {
                return AffinePoint(std::move(curve), x, y);
             }
+
+            void _const_time_poison() const { CT::poison_all(m_x, m_y); }
+
+            void _const_time_unpoison() const { CT::unpoison_all(m_x, m_y); }
 
          private:
             AffinePoint(CurvePtr curve, StorageUnit x, StorageUnit y) : m_curve(std::move(curve)), m_x(x), m_y(y) {}

@@ -26,6 +26,14 @@ new (ciphertext) number. Or, if you were encrypting words in a
 dictionary, you could rank the words by their lexicographical order,
 and choose the modulus to be the number of words in the dictionary.
 
+.. warning::
+
+   This implementation of FE1 is not constant time. In each round the
+   intermediate value is encoded at its minimal length before being input to
+   the PRF, so the time taken depends on the values being encrypted or
+   decrypted. This cannot be changed without altering the output. Avoid FE1
+   in settings where such side channels are a concern.
+
 The interfaces for FE1 are defined in the header ``fpe_fe1.h``:
 
 .. versionadded:: 2.5.0

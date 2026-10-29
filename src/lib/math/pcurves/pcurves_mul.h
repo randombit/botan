@@ -135,7 +135,6 @@ typename C::ProjectivePoint basemul_exec(std::span<const typename C::AffinePoint
       const size_t w_0 = scalar.get_window(0);
       const auto tbl_0 = table.first(WindowElements);
       auto pt = C::ProjectivePoint::from_affine(C::AffinePoint::ct_select(tbl_0, w_0));
-      CT::poison(pt);
       blinding.randomize_rep(pt, 0);
       return pt;
    }();
@@ -159,7 +158,6 @@ typename C::ProjectivePoint basemul_exec(std::span<const typename C::AffinePoint
       }
    }
 
-   CT::unpoison(accum);
    return accum;
 }
 
@@ -230,7 +228,6 @@ typename C::ProjectivePoint basemul_booth_exec(std::span<const typename C::Affin
 
       auto pt = C::ProjectivePoint::from_affine(C::AffinePoint::ct_select(tbl_0, tidx));
       pt.conditional_assign(tneg, pt.negate());
-      CT::poison(pt);
       blinding.randomize_rep(pt, 0);
       return pt;
    }();
@@ -251,7 +248,6 @@ typename C::ProjectivePoint basemul_booth_exec(std::span<const typename C::Affin
       }
    }
 
-   CT::unpoison(accum);
    return accum;
 }
 
@@ -503,7 +499,6 @@ typename C::ProjectivePoint varpoint_exec(const SharedZPointTable<C>& table,
    auto accum = [&]() {
       const size_t w_0 = scalar.get_window((windows - 1) * WindowBits);
       auto pt = C::ProjectivePoint::from_affine(table.ct_select(w_0));
-      CT::poison(pt);
       blinding.randomize_rep(pt, 0);
       return pt;
    }();
@@ -545,8 +540,6 @@ typename C::ProjectivePoint varpoint_exec(const SharedZPointTable<C>& table,
          blinding.randomize_rep(accum, i);
       }
    }
-
-   CT::unpoison(accum);
 
    // Map back from the isomorphic curve
    return typename C::ProjectivePoint(accum.x(), accum.y(), accum.z() * table.z());
@@ -673,7 +666,6 @@ typename C::ProjectivePoint mul2_exec(const SharedZPointTable<C>& table,
       const size_t w_2 = y.get_window((Windows - 1) * WindowBits);
       const size_t window = w_1 + (w_2 << WindowBits);
       auto pt = C::ProjectivePoint::from_affine(table.ct_select(window));
-      CT::poison(pt);
       blinding.randomize_rep(pt, 0);
       return pt;
    }();
@@ -691,8 +683,6 @@ typename C::ProjectivePoint mul2_exec(const SharedZPointTable<C>& table,
          blinding.randomize_rep(accum, i);
       }
    }
-
-   CT::unpoison(accum);
 
    // Map back from the isomorphic curve
    return typename C::ProjectivePoint(accum.x(), accum.y(), accum.z() * table.z());

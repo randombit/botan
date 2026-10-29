@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/pk_options_readers.h>
 #include <botan/internal/buffer_stuffer.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/dl_scheme.h>
 #include <botan/internal/keypair.h>
@@ -161,7 +162,9 @@ class DSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
          }
 #endif
          m_b = BigInt::random_integer(rng, BigInt::from_s32(2), m_key->group().get_q());
+         CT::poison(m_b);
          m_b_inv = m_key->group().inverse_mod_q(m_b);
+         CT::unpoison_all(m_b, m_b_inv);
       }
 
       size_t signature_length() const override { return 2 * m_key->group().q_bytes(); }
@@ -192,12 +195,15 @@ std::vector<uint8_t> DSA_Signature_Operation::raw_sign(std::span<const uint8_t> 
       m -= q;
    }
 
+   const auto scope = CT::scoped_poison(m_key->private_key(), m_b, m_b_inv);
+
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    const BigInt k = m_deterministic ? generate_rfc6979_nonce(m_key->private_key(), q, m, this->rfc6979_hash_function())
                                     : BigInt::random_integer(rng, 1, q);
 #else
    const BigInt k = BigInt::random_integer(rng, 1, q);
 #endif
+   CT::poison(k);
 
    const BigInt k_inv = group.multiply_mod_q(group.inverse_mod_q(group.mod_q(m_b * k)), m_b);
 
@@ -222,6 +228,8 @@ std::vector<uint8_t> DSA_Signature_Operation::raw_sign(std::span<const uint8_t> 
    const BigInt xr = group.multiply_mod_q(m_b, m_key->private_key(), r);
 
    const BigInt s = group.multiply_mod_q(m_b_inv, k_inv, group.mod_q(xr + m));
+
+   CT::unpoison_all(r, s);
 
    // With overwhelming probability, a bug rather than actual zero r/s
    if(r.is_zero() || s.is_zero()) {

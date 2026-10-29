@@ -1402,8 +1402,6 @@ class BlindedScalarBits final {
             scalar.serialize_to(std::span{m_bytes}.template first<C::Scalar::BYTES>());
             m_bits = C::Scalar::BITS;
          }
-
-         CT::poison(m_bytes.data(), m_bytes.size());
       }
 
       size_t get_window(size_t offset) const {
@@ -1411,10 +1409,7 @@ class BlindedScalarBits final {
          return read_window_bits<WindowBits>(std::span{m_bytes}, offset);
       }
 
-      ~BlindedScalarBits() {
-         secure_zeroize_buffer(m_bytes.data(), m_bytes.size());
-         CT::unpoison(m_bytes.data(), m_bytes.size());
-      }
+      ~BlindedScalarBits() { secure_zeroize_buffer(m_bytes.data(), m_bytes.size()); }
 
       BlindedScalarBits(const BlindedScalarBits& other) = delete;
       BlindedScalarBits(BlindedScalarBits&& other) = delete;
@@ -1703,7 +1698,6 @@ typename C::ProjectivePoint varpoint_mul(const typename C::AffinePoint& p,
    BOTAN_DEBUG_ASSERT(initial_shift > 0);
 
    auto accum = ProjectivePoint::identity();
-   CT::poison(accum);
 
    for(size_t i = 0; i != full_windows; ++i) {
       const size_t idx = scalar_bits - initial_shift - WindowBits * i;
@@ -1731,8 +1725,6 @@ typename C::ProjectivePoint varpoint_mul(const typename C::AffinePoint& p,
    const size_t w_l = bits.get_window(0) & ((1 << WindowBits) - 1);
    const auto [tidx, tneg] = booth_recode<WindowBits>(w_l << 1);
    accum = ProjectivePoint::add_or_sub_iso(accum, table.ct_select(tidx), tneg, table.a());
-
-   CT::unpoison(accum);
 
    // Map back from the isomorphic curve
    return ProjectivePoint(accum.x(), accum.y(), accum.z() * table.z());

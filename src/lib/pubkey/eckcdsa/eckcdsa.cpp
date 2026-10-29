@@ -15,6 +15,7 @@
 #include <botan/pk_options_readers.h>
 #include <botan/rng.h>
 #include <botan/internal/concat_util.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/parsing.h>
@@ -155,13 +156,18 @@ AlgorithmIdentifier ECKCDSA_Signature_Operation::algorithm_identifier() const {
 }
 
 std::vector<uint8_t> ECKCDSA_Signature_Operation::raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
+   const auto scope = CT::scoped_poison(m_x);
+
    const auto k = EC_Scalar::random(m_group, rng);
+   CT::poison(k);
 
    // We cannot use gk_x_mod_order because ECKCDSA, unlike ECDSA or ECGDSA, does
    // not reduce the x coordinate modulo the group order.
    m_hash->update(EC_AffinePoint::g_mul(k, rng).x_bytes());
    auto c = m_hash->final_stdvec();
    truncate_hash_if_needed(c, m_group.get_order_bytes());
+   // r is part of the signature
+   CT::unpoison(c);
 
    const auto r = c;
 
@@ -169,6 +175,7 @@ std::vector<uint8_t> ECKCDSA_Signature_Operation::raw_sign(std::span<const uint8
    const auto w = EC_Scalar::from_bytes_mod_order(m_group, c);
 
    const auto s = m_x * (k - w);
+   CT::unpoison(s);
    if(s.is_zero()) {
       throw Internal_Error("During ECKCDSA signature generation created zero s");
    }

@@ -25,7 +25,7 @@ namespace {
 
 class Montgomery_Exponentiation_Generic final : public Montgomery_Exponentiation_State {
    public:
-      Montgomery_Exponentiation_Generic(const Montgomery_Int& g, size_t window_bits, bool const_time);
+      Montgomery_Exponentiation_Generic(const Montgomery_Int& g, size_t window_bits);
 
       Montgomery_Int exponentiation(const BigInt& k, size_t max_k_bits) const override;
 
@@ -37,9 +37,7 @@ class Montgomery_Exponentiation_Generic final : public Montgomery_Exponentiation
       size_t m_window_bits;
 };
 
-Montgomery_Exponentiation_Generic::Montgomery_Exponentiation_Generic(const Montgomery_Int& g,
-                                                                     size_t window_bits,
-                                                                     bool const_time) :
+Montgomery_Exponentiation_Generic::Montgomery_Exponentiation_Generic(const Montgomery_Int& g, size_t window_bits) :
       m_params(g._params()), m_window_bits(window_bits) {
    const size_t window_size = (static_cast<size_t>(1) << m_window_bits);
 
@@ -57,10 +55,6 @@ Montgomery_Exponentiation_Generic::Montgomery_Exponentiation_Generic(const Montg
       } else {
          m_g.push_back(m_g[1].mul(m_g[i - 1], ws));
       }
-   }
-
-   if(const_time) {
-      CT::poison_range(m_g);
    }
 }
 
@@ -110,7 +104,6 @@ Montgomery_Int Montgomery_Exponentiation_Generic::exponentiation(const BigInt& s
       x.mul_by(e_bits, ws);
    }
 
-   CT::unpoison(x);
    return x;
 }
 
@@ -134,15 +127,12 @@ Montgomery_Int Montgomery_Exponentiation_Generic::exponentiation_vartime(const B
       }
    }
 
-   CT::unpoison(x);
    return x;
 }
 
 }  // namespace
 
-std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Int& g,
-                                                                        size_t window_bits,
-                                                                        bool const_time) {
+std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Int& g, size_t window_bits) {
    if(window_bits == 0) {
       window_bits = 4;
    }
@@ -153,22 +143,21 @@ std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Mo
 
 #if defined(BOTAN_HAS_MONTY_EXP_AVX512)
    if(CPUID::has(CPUID::Feature::AVX512)) {
-      if(auto state = make_monty_exp_avx512(g, window_bits, const_time)) {
+      if(auto state = make_monty_exp_avx512(g, window_bits)) {
          return state;
       }
    }
 #endif
 
-   return std::make_shared<const Montgomery_Exponentiation_Generic>(g, window_bits, const_time);
+   return std::make_shared<const Montgomery_Exponentiation_Generic>(g, window_bits);
 }
 
 std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Params& params,
                                                                         const BigInt& g,
-                                                                        size_t window_bits,
-                                                                        bool const_time) {
+                                                                        size_t window_bits) {
    BOTAN_ARG_CHECK(g.signum() >= 0 && g < params.p(), "Montgomery exponentiation base integer out of range");
    const Montgomery_Int monty_g(params, g);
-   return monty_precompute(monty_g, window_bits, const_time);
+   return monty_precompute(monty_g, window_bits);
 }
 
 Montgomery_Int monty_execute(const Montgomery_Exponentiation_State& precomputed_state,

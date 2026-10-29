@@ -8,6 +8,7 @@
 #include <botan/dh.h>
 
 #include <botan/internal/blinding.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/dl_scheme.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/pk_options_impl.h>
@@ -109,7 +110,7 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
                       RandomNumberGenerator& rng) :
             PK_Ops::Key_Agreement_with_KDF(options),
             m_key(key),
-            m_key_bits(m_key->private_key().bits()),
+            m_key_bits(m_key->max_private_key_bits()),
             m_blinder(
                m_key->group()._reducer_mod_p(),
                rng,
@@ -137,9 +138,14 @@ secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_le
       throw Invalid_Argument("DH agreement - invalid key provided");
    }
 
+   const auto scope = CT::scoped_poison(m_key->private_key(), m_blinder);
+
    v = m_blinder.blind(v);
    v = powermod_x_p(v);
    v = m_blinder.unblind(v);
+
+   // Any further secret handling of the output is up to the caller
+   CT::unpoison(v);
 
    return v.serialize<secure_vector<uint8_t>>(group().p_bytes());
 }

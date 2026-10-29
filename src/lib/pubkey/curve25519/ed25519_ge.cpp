@@ -586,8 +586,6 @@ Ed25519_Point_Extended basepoint_mul(const Ed25519_Scalar& scalar) {
 
    std::array<int8_t, 64> e{};
 
-   CT::poison(a.data(), a.size());
-
    // each e[i] is between 0 and 15 except e[63] which is between 0 and 7
    for(size_t i = 0; i != 32; ++i) {
       e[2 * i + 0] = (a[i] >> 0) & 0x0F;
@@ -618,8 +616,6 @@ Ed25519_Point_Extended basepoint_mul(const Ed25519_Scalar& scalar) {
       h = Ed25519_Point_Extended::from(h + select(B_precomp[i / 2].data(), e[i]));
    }
 
-   CT::unpoison(a.data(), a.size());
-
    return h;
 }
 
@@ -628,7 +624,6 @@ Ed25519_Point_Extended basepoint_mul(const Ed25519_Scalar& scalar) {
 void ed25519_basepoint_mul(std::span<uint8_t, 32> out, const Ed25519_Scalar& scalar) {
    const auto h = basepoint_mul(scalar);
    h.serialize_to(out);
-   CT::unpoison(out);
 }
 
 void ed25519_basepoint_mul_to_x25519(std::span<uint8_t, 32> out, const Ed25519_Scalar& scalar) {
@@ -648,7 +643,6 @@ void ed25519_basepoint_mul_to_x25519(std::span<uint8_t, 32> out, const Ed25519_S
    */
    const auto u = (h.Z + h.Y) * (h.Z - h.Y).invert();
    u.serialize_to(out);
-   CT::unpoison(out);
 }
 
 bool ed25519_check_signature(std::span<const uint8_t, 32> pk,

@@ -141,12 +141,16 @@ Ed25519_Scalar ed25519_secret_scalar(HashFunction& sha512, std::span<const uint8
 secure_vector<uint8_t> ed25519_expand_seed(std::span<const uint8_t> seed) {
    BOTAN_ASSERT_NOMSG(seed.size() == 32);
 
-   auto sha512 = HashFunction::create_or_throw("SHA-512");
-   const auto a = ed25519_secret_scalar(*sha512, seed);
-
    secure_vector<uint8_t> sk(64);
    copy_mem(sk.data(), seed.data(), 32);
+   const auto sk_seed = std::span{sk}.first<32>();
+   CT::poison(sk_seed);
+
+   auto sha512 = HashFunction::create_or_throw("SHA-512");
+   const auto a = ed25519_secret_scalar(*sha512, sk_seed);
+
    ed25519_basepoint_mul(std::span<uint8_t, 32>{sk.data() + 32, 32}, a);
+   CT::unpoison(sk);
    return sk;
 }
 
@@ -355,6 +359,8 @@ class Ed25519_Sign_Operation_Base : public PK_Ops::Signature {
 
       std::vector<uint8_t> sign_message(std::span<const uint8_t> msg) const {
          const auto& sk = m_key->key();
+         const auto seed = std::span{sk}.first<32>();
+         const auto scope = CT::scoped_poison(seed);
 
          std::vector<uint8_t> sig_buf(64);
          const std::span<uint8_t, 64> sig(sig_buf.data(), 64);
@@ -395,6 +401,7 @@ class Ed25519_Sign_Operation_Base : public PK_Ops::Signature {
          secure_scrub_memory(az);
          secure_scrub_memory(nonce);
 
+         CT::unpoison(sig_buf);
          return sig_buf;
       }
 

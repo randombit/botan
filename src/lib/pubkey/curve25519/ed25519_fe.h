@@ -229,7 +229,15 @@ class Ed25519_FieldElement final {
          return z;
       }
 
-      static constexpr Ed25519_FieldElement negate(const Ed25519_FieldElement& a) { return sub(zero(), a); }
+      static constexpr Ed25519_FieldElement negate(const Ed25519_FieldElement& a) {
+         // Hide the zero, since subtracting from a constant zero GCC 14 at -O1
+         // emits a branch on the borrow
+         Ed25519_FieldElement z;
+         for(size_t i = 0; i != N; ++i) {
+            z.m_val[i] = CT::value_barrier<W>(0);
+         }
+         return sub(z, a);
+      }
 
       static constexpr Ed25519_FieldElement mul(const Ed25519_FieldElement& a, const Ed25519_FieldElement& b) {
          std::array<W, 2 * N> z;  // NOLINT(*-member-init)

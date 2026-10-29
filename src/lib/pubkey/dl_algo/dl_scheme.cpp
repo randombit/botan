@@ -9,6 +9,7 @@
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/exceptn.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -20,11 +21,16 @@ BigInt decode_single_bigint(std::span<const uint8_t> key_bits) {
    return x;
 }
 
+// If false, private keys are chosen uniformly in [2, q)
+bool uses_short_exponents(const DL_Group& group) {
+   return !(group.has_q() && group.q_bits() >= 160 && group.q_bits() <= 384);
+}
+
 BigInt generate_private_dl_key(const DL_Group& group, RandomNumberGenerator& rng) {
-   if(group.has_q() && group.q_bits() >= 160 && group.q_bits() <= 384) {
-      return BigInt::random_integer(rng, BigInt::from_s32(2), group.get_q());
+   if(uses_short_exponents(group)) {
+      return CT::driveby_poison(BigInt(rng, group.exponent_bits()));
    } else {
-      return BigInt(rng, group.exponent_bits());
+      return CT::driveby_poison(BigInt::random_integer(rng, BigInt::from_s32(2), group.get_q()));
    }
 }
 
@@ -32,7 +38,22 @@ BigInt check_dl_private_key_input(const BigInt& x, const DL_Group& group) {
    if(!group.verify_private_element(x)) {
       throw Decoding_Error("Invalid DL private key");
    }
-   return x;
+   return CT::driveby_poison(BigInt(x));
+}
+
+/*
+* A public upper bound on the bit length of x. This reveals which of these
+* ranges x is in, which for keys we generated is determined by the group.
+*/
+size_t dl_private_key_max_bits(const BigInt& x, const DL_Group& group) {
+   const size_t exp_bits = group.exponent_bits();
+   if(uses_short_exponents(group) && CT::driveby_unpoison(x < BigInt::power_of_2(exp_bits))) {
+      return exp_bits;
+   }
+   if(group.has_q() && CT::driveby_unpoison(x < group.get_q())) {
+      return group.q_bits();
+   }
+   return group.p_bits();
 }
 
 BigInt check_dl_public_key_input(const BigInt& y, const DL_Group& group) {
@@ -79,19 +100,28 @@ size_t DL_PublicKey::p_bits() const {
 DL_PrivateKey::DL_PrivateKey(const DL_Group& group, const BigInt& private_key) :
       m_group(group),
       m_private_key(check_dl_private_key_input(private_key, m_group)),
-      m_public_key(m_group.power_g_p(m_private_key, m_private_key.bits())) {}
+      m_max_private_key_bits(dl_private_key_max_bits(m_private_key, m_group)),
+      m_public_key(m_group.power_g_p(m_private_key, m_max_private_key_bits)) {
+   CT::unpoison_all(m_private_key, m_public_key);
+}
 
 DL_PrivateKey::DL_PrivateKey(const DL_Group& group, RandomNumberGenerator& rng) :
       m_group(group),
       m_private_key(generate_private_dl_key(group, rng)),
-      m_public_key(m_group.power_g_p(m_private_key, m_private_key.bits())) {}
+      m_max_private_key_bits(dl_private_key_max_bits(m_private_key, m_group)),
+      m_public_key(m_group.power_g_p(m_private_key, m_max_private_key_bits)) {
+   CT::unpoison_all(m_private_key, m_public_key);
+}
 
 DL_PrivateKey::DL_PrivateKey(const AlgorithmIdentifier& alg_id,
                              std::span<const uint8_t> key_bits,
                              DL_Group_Format format) :
       m_group(alg_id.parameters(), format),
       m_private_key(check_dl_private_key_input(decode_single_bigint(key_bits), m_group)),
-      m_public_key(m_group.power_g_p(m_private_key, m_private_key.bits())) {}
+      m_max_private_key_bits(dl_private_key_max_bits(m_private_key, m_group)),
+      m_public_key(m_group.power_g_p(m_private_key, m_max_private_key_bits)) {
+   CT::unpoison_all(m_private_key, m_public_key);
+}
 
 secure_vector<uint8_t> DL_PrivateKey::DER_encode() const {
    return DER_Encoder().encode(m_private_key).get_contents();

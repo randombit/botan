@@ -293,4 +293,12 @@ const std::shared_ptr<const EC_Group_Data>& EC_AffinePoint::_group() const {
    return inner().group();
 }
 
+void EC_AffinePoint::_const_time_poison() const {
+   inner()._const_time_poison();
+}
+
+void EC_AffinePoint::_const_time_unpoison() const {
+   inner()._const_time_unpoison();
+}
+
 }  // namespace Botan

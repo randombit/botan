@@ -100,7 +100,7 @@ bool lucas_test(const BigInt& C, const Montgomery_Params& monty_C, bool vartime)
       return true;
    }
 
-   if(C <= 1 || C.is_even()) {
+   if(C <= 1 || CT::driveby_unpoison(C.is_even())) {
       return false;
    }
 
@@ -235,7 +235,7 @@ class Miller_Rabin_Test final {
    public:
       Miller_Rabin_Test(const BigInt& n, const Montgomery_Params& monty_n, bool vartime) :
             m_monty_n(monty_n), m_vartime(vartime) {
-         BOTAN_ARG_CHECK(n >= 3 && n.is_odd(), "Invalid integer for Miller-Rabin test");
+         BOTAN_ARG_CHECK(n >= 3 && CT::driveby_unpoison(n.is_odd()), "Invalid integer for Miller-Rabin test");
 
          const size_t N = m_monty_n.p_words();
 
@@ -262,10 +262,10 @@ class Miller_Rabin_Test final {
       bool passes(const BigInt& a) const {
          Montgomery_Int y = [&]() {
             if(m_vartime) {
-               const auto powm_a = monty_precompute(m_monty_n, a, vartime_window_bits(m_d_bits), false);
+               const auto powm_a = monty_precompute(m_monty_n, a, vartime_window_bits(m_d_bits));
                return monty_execute_vartime(*powm_a, m_d);
             } else {
-               const auto powm_a = monty_precompute(m_monty_n, a, 4, true);
+               const auto powm_a = monty_precompute(m_monty_n, a, 4);
                return monty_execute(*powm_a, m_d, m_d_bits);
             }
          }();
@@ -318,7 +318,7 @@ bool miller_rabin_test(const BigInt& n,
                        RandomNumberGenerator& rng,
                        size_t test_iterations,
                        bool vartime) {
-   if(n < 3 || n.is_even()) {
+   if(n < 3 || CT::driveby_unpoison(n.is_even())) {
       return false;
    }
 
@@ -358,7 +358,7 @@ size_t miller_rabin_tests_per_job(size_t n_bits) {
 
 bool miller_rabin_lucas_test(
    const BigInt& n, const Montgomery_Params& monty_n, RandomNumberGenerator& rng, size_t t, bool vartime) {
-   if(n < 3 || n.is_even()) {
+   if(n < 3 || CT::driveby_unpoison(n.is_even())) {
       return false;
    }
    if(t == 0) {
@@ -436,7 +436,7 @@ bool miller_rabin_lucas_test(
 bool bailie_psw_test(const BigInt& n, const Montgomery_Params& monty_n, bool vartime) {
    if(n == 2) {
       return true;
-   } else if(n <= 1 || n.is_even()) {
+   } else if(n <= 1 || CT::driveby_unpoison(n.is_even())) {
       return false;
    }
 
@@ -465,7 +465,7 @@ bool is_bailie_psw_probable_prime_vartime(const BigInt& n, const Montgomery_Para
 bool is_bailie_psw_probable_prime(const BigInt& n) {
    if(n == 2) {
       return true;
-   } else if(n <= 1 || n.is_even()) {
+   } else if(n <= 1 || CT::driveby_unpoison(n.is_even())) {
       return false;
    }
 

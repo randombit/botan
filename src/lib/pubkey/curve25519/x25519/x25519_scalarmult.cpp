@@ -7,7 +7,6 @@
 #include <botan/internal/x25519_internal.h>
 
 #include <botan/mem_ops.h>
-#include <botan/internal/ct_utils.h>
 #include <botan/internal/ed25519_internal.h>
 #include <botan/internal/x25519_fe.h>
 #include <array>
@@ -31,16 +30,9 @@ std::array<uint8_t, 32> x25519_clamp(std::span<const uint8_t, 32> scalar) {
 void x25519_scalarmult(std::span<uint8_t, 32> out,
                        std::span<const uint8_t, 32> scalar,
                        std::span<const uint8_t, 32> u) {
-   CT::poison(scalar);
-   CT::poison(u);
-
    auto k = x25519_clamp(scalar);
    x25519_ladder(out, k, u);
    secure_scrub_memory(k.data(), k.size());
-
-   CT::unpoison(scalar);
-   CT::unpoison(u);
-   CT::unpoison(out);
 }
 
 void x25519_basepoint(std::span<uint8_t, 32> out, std::span<const uint8_t, 32> scalar) {
@@ -50,14 +42,10 @@ void x25519_basepoint(std::span<uint8_t, 32> out, std::span<const uint8_t, 32> s
    * running the Montgomery ladder on u = 9 since the base points correspond
    * under the birational map and B has order l, but is several times faster.
    */
-   CT::poison(scalar);
-
    auto k = x25519_clamp(scalar);
    const auto s = Ed25519_Scalar::from_bytes(k);
    ed25519_basepoint_mul_to_x25519(out, s);
    secure_scrub_memory(k.data(), k.size());
-
-   CT::unpoison(scalar);
 }
 
 }  // namespace Botan

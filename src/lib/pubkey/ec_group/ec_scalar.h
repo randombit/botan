@@ -288,6 +288,22 @@ class BOTAN_PUBLIC_API(3, 6) EC_Scalar final {
       */
       static EC_Scalar _from_inner(std::unique_ptr<EC_Scalar_Data> inner);
 
+      /**
+       * Mark this scalar as holding secret data
+       *
+       * @warning this is an implementation detail which is not for
+       * public use and not covered by SemVer.
+       */
+      void _const_time_poison() const;
+
+      /**
+       * Mark this scalar as no longer holding secret data
+       *
+       * @warning this is an implementation detail which is not for
+       * public use and not covered by SemVer.
+       */
+      void _const_time_unpoison() const;
+
    private:
       friend class EC_AffinePoint;
 

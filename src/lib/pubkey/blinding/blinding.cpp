@@ -7,6 +7,8 @@
 
 #include <botan/internal/blinding.h>
 
+#include <botan/internal/ct_utils.h>
+
 namespace Botan {
 
 Blinder::Blinder(const Barrett_Reduction& reducer,
@@ -22,10 +24,11 @@ Blinder::Blinder(const Barrett_Reduction& reducer,
    const BigInt k = blinding_nonce();
    m_e = m_fwd_fn(k);
    m_d = m_inv_fn(k);
+   _const_time_unpoison();
 }
 
 BigInt Blinder::blinding_nonce() const {
-   return BigInt(m_rng, m_modulus_bits - 1);
+   return CT::driveby_poison(BigInt(m_rng, m_modulus_bits - 1));
 }
 
 BigInt Blinder::blind(const BigInt& i) const {
