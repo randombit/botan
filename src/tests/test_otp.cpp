@@ -104,9 +104,9 @@ class TOTP_KAT_Tests final : public Text_Based_Test {
          result.test_is_false("TOTP verify time slip", totp.verify_totp(otp, later_time, 0));
          result.test_is_true("TOTP verify time slip allowed", totp.verify_totp(otp, later_time, 1));
          result.test_is_false("TOTP verify time slip out of range", totp.verify_totp(otp, too_late, 1));
-         result.test_is_false("TOTP verify early clock", totp.verify_totp(otp, earlier_time, 0));
-         result.test_is_true("TOTP verify early clock allowed", totp.verify_totp(otp, earlier_time, 1));
-         result.test_is_false("TOTP verify early clock out of range", totp.verify_totp(otp, too_early, 1));
+         result.test_is_false("TOTP verify early clock", totp.verify_totp(otp, earlier_time, 1));
+         result.test_is_true("TOTP verify early clock allowed", totp.verify_totp(otp, earlier_time, 0, 1));
+         result.test_is_false("TOTP verify early clock out of range", totp.verify_totp(otp, too_early, 0, 1));
 
          return result;
       }

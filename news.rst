@@ -237,9 +237,10 @@ Bug Fixes
 
 * Fix various edge cases in the sqlite3 database wrapper. (GH #5972)
 
-* Fix ``TOTP::verify_totp`` to accept codes from a client whose clock is ahead
-  of the server's, as RFC 6238 requires. Previously the allowed clock drift was
-  only applied backwards. (GH #6035)
+* ``TOTP::verify_totp`` now takes an optional ``forward_drift_accepted``
+  parameter to accept codes from a client whose clock is ahead of the
+  server's, as allowed by RFC 6238. The existing ``clock_drift_accepted``
+  parameter is unchanged and still only applies backwards. (GH #6035)
 
 * Fix several corner case bugs in CPU feature detection. (GH #6036)
 
