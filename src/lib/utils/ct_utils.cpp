@@ -88,21 +88,4 @@ size_t CT::count_leading_zero_bytes(std::span<const uint8_t> input) {
    return leading_zeros;
 }
 
-secure_vector<uint8_t> CT::strip_leading_zeros(std::span<const uint8_t> input) {
-   const size_t leading_zeros = CT::count_leading_zero_bytes(input);
-
-   secure_vector<uint8_t> output(input.size());
-
-   const auto written = CT::copy_output(CT::Choice::yes(), output, input, leading_zeros);
-
-   /*
-   This is potentially not const time, depending on how std::vector is
-   implemented. But since we are always reducing length, it should
-   just amount to setting the member var holding the length.
-   */
-   output.resize(written.value_or(0));
-
-   return output;
-}
-
 }  // namespace Botan

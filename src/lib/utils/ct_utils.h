@@ -871,8 +871,6 @@ CT::Option<size_t> copy_output(CT::Choice accept,
 
 size_t count_leading_zero_bytes(std::span<const uint8_t> input);
 
-secure_vector<uint8_t> strip_leading_zeros(std::span<const uint8_t> input);
-
 }  // namespace Botan::CT
 
 #endif

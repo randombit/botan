@@ -28,6 +28,19 @@ namespace Botan::TLS {
 namespace {
 
 /*
+* RFC 5246 Section 8.1.2: "Leading bytes of Z that contain all zero bits are
+* stripped before it is used as the pre_master_secret."
+*
+* This reveals the length of Z. The Raccoon attack exploits that, but requires
+* the DH key to be reused across handshakes, whereas a new ephemeral key is
+* generated for each one.
+*/
+void strip_leading_zeros(secure_vector<uint8_t>& z) {
+   const size_t leading_zeros = CT::count_leading_zero_bytes(z);
+   z.erase(z.begin(), z.begin() + leading_zeros);
+}
+
+/*
 * If the (p, g) pair the server sent corresponds to a known group
 * (RFC 7919 or RFC 3526), return that group.
 */
@@ -137,8 +150,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          }();
 
          const auto private_key = state.callbacks().tls_generate_ephemeral_key(group, rng);
-         m_pre_master = CT::strip_leading_zeros(
-            state.callbacks().tls_ephemeral_key_agreement(group, *private_key, peer_public_value, rng, policy));
+         m_pre_master =
+            state.callbacks().tls_ephemeral_key_agreement(group, *private_key, peer_public_value, rng, policy);
+         strip_leading_zeros(m_pre_master);
          append_tls_length_value(m_key_material, private_key->public_value(), 2);
       } else if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK) {
          const uint8_t curve_type = reader.get_byte();
@@ -328,7 +342,7 @@ Client_Key_Exchange::Client_Key_Exchange(std::span<const uint8_t> contents,
                state.callbacks().tls_ephemeral_key_agreement(shared_group.value(), ka_key, client_pubkey, rng, policy);
 
             if(ka_key.algo_name() == "DH") {
-               shared_secret = CT::strip_leading_zeros(shared_secret);
+               strip_leading_zeros(shared_secret);
             }
 
             if(kex_algo == Kex_Algo::ECDHE_PSK) {
