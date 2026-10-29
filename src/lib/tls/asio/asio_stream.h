@@ -31,13 +31,142 @@
    #include <boost/asio.hpp>
    #include <boost/beast/core.hpp>
 
+   #include <algorithm>
+   #include <exception>
    #include <memory>
+   #include <new>
+   #include <span>
+   #include <stdexcept>
    #include <type_traits>
+   #include <utility>
+   #include <vector>
 
 namespace Botan::TLS {
 
 template <class SL, class C>
 class Stream;
+
+namespace detail {
+
+/**
+ * @brief The records emitted by the TLS implementation, on their way to the next layer
+ *
+ * Records are written in the order they were emitted, by one write at a time.
+ * The records lent to the next layer by that write are kept apart from the
+ * ones emitted in the meantime, which may reallocate the queue's storage.
+ * Whatever the next layer did not accept stays in flight and goes out first
+ * with the next write, so no record is lost or reordered. Read operations
+ * mark the output emitted so far and wait until it is written, whoever writes
+ * it. Only push() allocates; everything else may run in a completion handler.
+ */
+class OutputQueue {
+   public:
+      //! @brief Append a record; a record that cannot be buffered is refused up front, leaving the queue untouched
+      void push(std::span<const uint8_t> record) {
+         if(record.size() > m_queued.max_size() - m_queued.size()) {
+            throw std::length_error("TLS record does not fit the output queue");
+         }
+         m_queued.insert(m_queued.end(), record.begin(), record.end());
+      }
+
+      //! @brief Check whether a write is lending records to the next layer
+      bool write_in_progress() const { return m_write_in_progress; }
+
+      //! @brief Check if records are waiting to be written (queued, or left behind by the last write)
+      bool has_data() const { return !m_queued.empty() || (!m_write_in_progress && in_flight().size() > 0); }
+
+      /**
+       * @brief Lend the records to write next to the next layer
+       *
+       * Whatever the previous write did not get through goes out first, on its
+       * own. The records queued since are taken (by swapping storage) once the
+       * in-flight buffer is empty.
+       *
+       * @return the records to write
+       */
+      boost::asio::const_buffer begin_write() {
+         if(m_write_in_progress || !has_data()) {
+            throw Botan::Invalid_State("ASIO TLS stream write already in progress or nothing to write");
+         }
+
+         if(in_flight().size() == 0) {
+            m_in_flight.clear();
+            m_in_flight_offset = 0;
+            std::swap(m_in_flight, m_queued);
+         }
+         m_write_in_progress = true;
+         return in_flight();
+      }
+
+      /**
+       * @brief Take back the records lent by begin_write()
+       *
+       * Records the next layer did not accept stay in flight; whoever writes
+       * next continues exactly where this write stopped.
+       *
+       * @param bytes_transferred the number of bytes the next layer accepted
+       */
+      void end_write(std::size_t bytes_transferred) {
+         const auto accepted = std::min(bytes_transferred, in_flight().size());
+         m_in_flight_offset += accepted;
+         m_written += accepted;
+         if(m_in_flight_offset == m_in_flight.size()) {
+            m_in_flight.clear();
+            m_in_flight_offset = 0;
+         }
+         m_write_in_progress = false;
+      }
+
+      //! @brief Have everything emitted so far written before a read operation reports a condition or consumes input
+      void mark_pending() {
+         if(has_data()) {
+            m_pending_mark = position();
+         }
+      }
+
+      //! @brief Check whether records marked by mark_pending() are still waiting to be written
+      bool pending() const { return m_written < m_pending_mark; }
+
+      //! @brief Number of bytes queued but not lent out yet, see truncate()
+      std::size_t queued_size() const { return m_queued.size(); }
+
+      //! @brief Drop the queued records beyond the first @p keep bytes, i.e. those emitted since queued_size() was @p keep
+      void truncate(std::size_t keep) {
+         if(m_queued.size() > keep) {
+            m_queued.resize(keep);
+            // Read operations must not wait for records that no longer exist
+            m_pending_mark = std::min(m_pending_mark, position());
+         }
+      }
+
+      //! @brief Discard everything, for a new connection
+      void clear() {
+         m_queued.clear();
+         m_in_flight.clear();
+         m_in_flight_offset = 0;
+         m_write_in_progress = false;
+         m_written = 0;
+         m_pending_mark = 0;
+      }
+
+   private:
+      //! @brief The records currently lent to the next layer, or left behind by the last write
+      boost::asio::const_buffer in_flight() const {
+         return {m_in_flight.data() + m_in_flight_offset, m_in_flight.size() - m_in_flight_offset};
+      }
+
+      //! @brief Position of the end of the records emitted so far in the stream of output bytes
+      uint64_t position() const { return m_written + in_flight().size() + m_queued.size(); }
+
+      std::vector<uint8_t> m_queued;
+      std::vector<uint8_t> m_in_flight;
+      std::size_t m_in_flight_offset = 0;
+      bool m_write_in_progress = false;
+      uint64_t m_written = 0;
+      uint64_t m_pending_mark = 0;
+};
+
+}  // namespace detail
 
 /**
  * @brief Specialization of TLS::Callbacks for the ASIO Stream
@@ -50,17 +179,25 @@ class Stream;
  * integration. The methods required for that are `final` and cannot be
  * overridden.
  *
- * Each instance of TLS::Stream must have their own instance of this class. A
- * future major version of Botan will therefor consume instances of this class
- * as a std::unique_ptr. The current usage of std::shared_ptr is erratic.
+ * Each instance of TLS::Stream must have their own instance of this class;
+ * constructing a Stream with an instance that is still in use by another
+ * Stream throws Invalid_Argument. A future major version of Botan will
+ * therefor consume instances of this class as a std::unique_ptr. The current
+ * usage of std::shared_ptr is erratic.
  */
 class StreamCallbacks : public Callbacks {
    public:
       StreamCallbacks() = default;
 
       void tls_emit_data(std::span<const uint8_t> data) final {
-         m_send_buffer.commit(boost::asio::buffer_copy(m_send_buffer.prepare(data.size()),
-                                                       boost::asio::buffer(data.data(), data.size())));
+         try {
+            m_output.push(data);
+         } catch(...) {
+            // The TLS implementation swallows this when the record is an alert,
+            // see Stream::call_tls()
+            m_emit_failure = std::current_exception();
+            throw;
+         }
       }
 
       void tls_record_received(uint64_t /*record_number*/, std::span<const uint8_t> data) final {
@@ -135,13 +272,32 @@ class StreamCallbacks : public Callbacks {
       template <class SL, class C>
       friend class Stream;
 
-      void set_context(std::weak_ptr<Botan::TLS::Context> context) { m_context = std::move(context); }
+      /**
+       * Bind this instance to a Stream. An instance serves at most one live
+       * Stream at a time; the Stream holds the token for as long as it is alive
+       * and releases it when it is destroyed or assigned over.
+       */
+      void bind_to_stream(const std::shared_ptr<const void>& stream_token, std::weak_ptr<Botan::TLS::Context> context) {
+         if(!m_stream_token.expired()) {
+            throw Invalid_Argument("TLS::StreamCallbacks instance is already in use by another TLS::Stream");
+         }
 
-      void consume_send_buffer() { m_send_buffer.consume(m_send_buffer.size()); }
+         m_stream_token = stream_token;
+         m_context = std::move(context);
 
-      boost::beast::flat_buffer& send_buffer() { return m_send_buffer; }
+         // Discard anything left over from a previous connection
+         m_alert_from_peer.reset();
+         m_receive_buffer.clear();
+         m_output.clear();
+         m_emit_failure = nullptr;
+      }
 
-      const boost::beast::flat_buffer& send_buffer() const { return m_send_buffer; }
+      detail::OutputQueue& output_queue() { return m_output; }
+
+      const detail::OutputQueue& output_queue() const { return m_output; }
+
+      //! @brief Hand out and clear the failure of the last tls_emit_data() call that failed
+      std::exception_ptr take_emit_failure() { return std::exchange(m_emit_failure, nullptr); }
 
       boost::beast::flat_buffer& receive_buffer() { return m_receive_buffer; }
 
@@ -156,9 +312,11 @@ class StreamCallbacks : public Callbacks {
    private:
       std::optional<Alert> m_alert_from_peer;
       boost::beast::flat_buffer m_receive_buffer;
-      boost::beast::flat_buffer m_send_buffer;
+      detail::OutputQueue m_output;
+      std::exception_ptr m_emit_failure;
 
       std::weak_ptr<TLS::Context> m_context;
+      std::weak_ptr<const void> m_stream_token;
 };
 
 namespace detail {
@@ -173,6 +331,22 @@ concept byte_size_completion_token = boost::asio::completion_token_for<T, void(b
 
 /**
  * @brief boost::asio compatible SSL/TLS stream
+ *
+ * Like boost::asio::ssl::stream, the stream allows one read operation and
+ * one write operation (async_write_some or async_shutdown) to be outstanding
+ * at the same time. All asynchronous operations must be performed within the
+ * same implicit or explicit strand. Operations support terminal cancellation
+ * via the completion token's associated cancellation slot.
+ *
+ * Synchronous operations must not be used while an asynchronous write is in
+ * flight; they then fail with boost::asio::error::already_started. A stream
+ * must not be destroyed or moved while an operation is outstanding.
+ *
+ * A failure inside the TLS implementation on an active connection, or a
+ * record it emitted that could not be buffered, may leave its record
+ * sequence out of step with the peer. The stream then discards whatever
+ * the TLS implementation emits afterwards and refuses any further output,
+ * reporting that error again.
  *
  * @tparam StreamLayer type of the next layer, usually a network socket
  * @tparam ChannelT type of the native_handle, defaults to TLS::Channel, only needed for testing purposes
@@ -194,8 +368,9 @@ class Stream {
        * @param callbacks The callbacks parameter may contain an instance of a derived TLS::Callbacks
        *                  class to allow for fine-grained customization of the TLS stream. Note that
        *                  applications need to ensure a 1-to-1 relationship between instances of
-       *                  Callbacks and Streams. A future major version of Botan will use a unique_ptr
-       *                  here.
+       *                  Callbacks and Streams; passing an instance that is still in use by another
+       *                  Stream throws Invalid_Argument. A future major version of Botan will use a
+       *                  unique_ptr here.
        *
        * @param args Arguments to be forwarded to the construction of the next layer.
        */
@@ -204,9 +379,13 @@ class Stream {
             m_context(std::move(context)),
             m_nextLayer(std::forward<Args>(args)...),
             m_core(std::move(callbacks)),
+            m_core_token(std::make_shared<int>(0)),
             m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0'),
-            m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size()) {
-         m_core->set_context(m_context);
+            m_pending_write(m_nextLayer.get_executor(), std::chrono::steady_clock::time_point::max()) {
+         if(!m_context || !m_core) {
+            throw Invalid_Argument("TLS::Stream requires a context and a callbacks object");
+         }
+         m_core->bind_to_stream(m_core_token, m_context);
       }
 
       /**
@@ -254,8 +433,9 @@ class Stream {
 
       virtual ~Stream() = default;
 
-      Stream(Stream&& other) = default;
-      Stream& operator=(Stream&& other) = default;
+      // Moving throws if moving the next layer does (e.g. boost::beast::test::stream)
+      Stream(Stream&& other) = default;             // NOLINT(*-exception-escape)
+      Stream& operator=(Stream&& other) = default;  // NOLINT(*-exception-escape)
 
       Stream(const Stream& other) = delete;
       Stream& operator=(const Stream& other) = delete;
@@ -381,7 +561,12 @@ class Stream {
        * @param ec Set to indicate what error occurred, if any.
        */
       void handshake(Connection_Side side, boost::system::error_code& ec) {
-         setup_native_handle(side, ec);
+         ec = {};
+         if(async_write_in_flight(ec)) {
+            return;
+         }
+
+         ec = setup_native_handle(side);
 
          // We write to the socket if we have data to send and read from it
          // otherwise, until either some error occurred or we have successfully
@@ -431,11 +616,8 @@ class Stream {
             [this](auto&& completion_handler, TLS::Connection_Side connection_side) {
                using completion_handler_t = std::decay_t<decltype(completion_handler)>;
 
-               boost::system::error_code ec;
-               setup_native_handle(connection_side, ec);
-
                const detail::AsyncHandshakeOperation<completion_handler_t, Stream> op{
-                  std::forward<completion_handler_t>(completion_handler), *this, ec};
+                  std::forward<completion_handler_t>(completion_handler), *this, setup_native_handle(connection_side)};
             },
             completion_token,
             side);
@@ -467,8 +649,12 @@ class Stream {
        * @param ec Set to indicate what error occurred, if any.
        */
       void shutdown(boost::system::error_code& ec) {
-         try_with_error_code([&] { native_handle()->close(); }, ec);
+         ec = {};
+         if(async_write_in_flight(ec)) {
+            return;
+         }
 
+         ec = tls_close();
          send_pending_encrypted_data(ec);
       }
 
@@ -494,7 +680,8 @@ class Stream {
        *        signature of `AsyncWriteOperation`.
        *
        * This is boilerplate to ignore the `size_t` parameter that is passed to the completion handler of
-       * `AsyncWriteOperation`. Note that it needs to retain the wrapped handler's executor.
+       * `AsyncWriteOperation`. Note that it needs to retain the wrapped handler's executor, allocator and
+       * cancellation slot.
        */
       template <typename Handler, typename Executor>
       struct Wrapper {
@@ -509,6 +696,12 @@ class Stream {
             using allocator_type = boost::asio::associated_allocator_t<Handler>;
 
             allocator_type get_allocator() const noexcept { return boost::asio::get_associated_allocator(handler); }
+
+            using cancellation_slot_type = boost::asio::associated_cancellation_slot_t<Handler>;
+
+            cancellation_slot_type get_cancellation_slot() const noexcept {
+               return boost::asio::get_associated_cancellation_slot(handler);
+            }
 
             Handler handler;       // NOLINT(*-non-private-member-variable*)
             Executor io_executor;  // NOLINT(*-non-private-member-variable*)
@@ -531,17 +724,13 @@ class Stream {
          return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code)>(
             [this](auto&& completion_handler) {
                using completion_handler_t = std::decay_t<decltype(completion_handler)>;
-
-               boost::system::error_code ec;
-               try_with_error_code([&] { native_handle()->close(); }, ec);
-
                using write_handler_t = Wrapper<completion_handler_t, typename Stream::executor_type>;
 
-               const TLS::detail::AsyncWriteOperation<write_handler_t, Stream> op{
+               // The operation closes the TLS session once no other write is in flight
+               const TLS::detail::AsyncWriteOperation<write_handler_t, Stream, boost::asio::const_buffer> op{
                   write_handler_t{std::forward<completion_handler_t>(completion_handler), get_executor()},
                   *this,
-                  boost::asio::buffer_size(send_buffer()),
-                  ec};
+                  std::nullopt};
             },
             completion_token);
       }
@@ -563,13 +752,37 @@ class Stream {
        */
       template <typename MutableBufferSequence>
       std::size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec) {
+         ec = {};
+
+         // Reading into a zero-byte buffer completes immediately, without
+         // touching the next layer.
+         if(boost::asio::buffer_size(buffers) == 0) {
+            return 0;
+         }
+
+         // Records this read generates could pile up behind that write
+         if(async_write_in_flight(ec) || native_handle_missing(ec)) {
+            return 0;
+         }
+
          // We read from the socket until either some error occurred or we have
          // decrypted at least one byte of application data.
          while(!ec) {
             // Some previous invocation of process_encrypted_data() generated
             // application data in the output buffer that can now be returned.
+            // Records generated alongside (our close_notify in reply to the
+            // peer's, say) stay queued; the next operation writes them.
             if(has_received_data()) {
                return copy_received_data(buffers);
+            }
+
+            // Records generated while processing the peer's data (an alert, or
+            // our close_notify in reply to the peer's) go out before the
+            // condition they announce is reported and before we wait for more
+            // input.
+            if(has_data_to_send()) {
+               send_pending_encrypted_data(ec);
+               continue;
             }
 
             // Handle and report any TLS protocol errors (including a
@@ -621,9 +834,27 @@ class Stream {
        */
       template <typename ConstBufferSequence>
       std::size_t write_some(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
-         tls_encrypt(buffers, ec);
+         ec = {};
+
+         // Writing from a zero-byte buffer completes immediately, without
+         // touching the next layer.
+         if(boost::asio::buffer_size(buffers) == 0) {
+            return 0;
+         }
+
+         if(async_write_in_flight(ec)) {
+            return 0;
+         }
+
+         ec = tls_encrypt(buffers);
+         if(ec) {
+            return 0;
+         }
+
+         // The input is processed once it is encrypted. Records the next layer
+         // did not accept stay queued and go out with the next operation.
          send_pending_encrypted_data(ec);
-         return !ec ? boost::asio::buffer_size(buffers) : 0;
+         return boost::asio::buffer_size(buffers);
       }
 
       /**
@@ -647,7 +878,10 @@ class Stream {
       /**
        * @brief Start an asynchronous write. The function call always returns immediately.
        *
-       * @param buffers The data to be written.
+       * @param buffers The data to be written. Although the buffers object may be copied as necessary, ownership of
+       *                the underlying buffers is retained by the caller, which must guarantee that they remain valid
+       *                until the handler is called: the data is encrypted only once the operation's turn to write
+       *                comes.
        * @param completion_token The completion handler to be called when the write operation completes. Copies of the
        *                         handler will be made as required. The completion signature of the handler must be:
        *                         void(boost::system::error_code, std::size_t).
@@ -661,20 +895,9 @@ class Stream {
             [this](auto&& completion_handler, const auto& bufs) {
                using completion_handler_t = std::decay_t<decltype(completion_handler)>;
 
-               boost::system::error_code ec;
-               tls_encrypt(bufs, ec);
-
-               if(ec) {
-                  // we cannot be sure how many bytes were committed here so clear the send_buffer and let the
-                  // AsyncWriteOperation call the handler with the error_code set
-                  m_core->send_buffer().consume(m_core->send_buffer().size());
-               }
-
-               const detail::AsyncWriteOperation<completion_handler_t, Stream> op{
-                  std::forward<completion_handler_t>(completion_handler),
-                  *this,
-                  ec ? 0 : boost::asio::buffer_size(bufs),
-                  ec};
+               // The operation encrypts the data once no other write is in flight
+               const detail::AsyncWriteOperation<completion_handler_t, Stream, ConstBufferSequence> op{
+                  std::forward<completion_handler_t>(completion_handler), *this, bufs};
             },
             completion_token,
             buffers);
@@ -698,8 +921,14 @@ class Stream {
             [this](auto&& completion_handler, const auto& bufs) {
                using completion_handler_t = std::decay_t<decltype(completion_handler)>;
 
+               // A zero-byte read completes right away, even before the handshake
+               boost::system::error_code ec;
+               if(boost::asio::buffer_size(bufs) > 0) {
+                  native_handle_missing(ec);
+               }
+
                const detail::AsyncReadOperation<completion_handler_t, Stream, MutableBufferSequence> op{
-                  std::forward<completion_handler_t>(completion_handler), *this, bufs};
+                  std::forward<completion_handler_t>(completion_handler), *this, bufs, ec};
             },
             completion_token,
             buffers);
@@ -716,14 +945,91 @@ class Stream {
    protected:
       template <class H, class S, class M, class A>
       friend class detail::AsyncReadOperation;
-      template <class H, class S, class A>
+      template <class H, class S, class B, class A>
       friend class detail::AsyncWriteOperation;
       template <class H, class S, class A>
       friend class detail::AsyncHandshakeOperation;
+      template <class O, class S>
+      friend class detail::WriteQueuedStep;
+      template <class O, class S>
+      friend class detail::ReadAndProcessStep;
 
-      const boost::asio::mutable_buffer& input_buffer() { return m_input_buffer; }
+      //! @brief Buffer space to read the peer's records into
+      boost::asio::mutable_buffer input_buffer() { return boost::asio::buffer(m_input_buffer_space); }
 
-      boost::asio::const_buffer send_buffer() const { return m_core->send_buffer().data(); }
+      //! @brief Check if some operation is currently writing to the next layer
+      bool write_in_progress() const { return m_core->output_queue().write_in_progress(); }
+
+      //! @brief Synchronous operations must not run while an asynchronous write does; sets @p ec if that is the case
+      bool async_write_in_flight(boost::system::error_code& ec) const {
+         if(write_in_progress()) {
+            ec = boost::asio::error::already_started;
+         }
+         return write_in_progress();
+      }
+
+      //! @brief Nothing but a handshake may be attempted before the native handle exists; sets @p ec if it does not
+      bool native_handle_missing(boost::system::error_code& ec) const {
+         if(m_native_handle == nullptr) {
+            ec = ErrorType::InvalidObjectState;
+         }
+         return m_native_handle == nullptr;
+      }
+
+      //! @brief Lend the records to write next to the next layer, see detail::OutputQueue::begin_write()
+      boost::asio::const_buffer begin_write() { return m_core->output_queue().begin_write(); }
+
+      //! @brief Take back the records lent by begin_write() and wake up operations waiting for their turn to write
+      void end_write(std::size_t bytes_transferred) {
+         m_core->output_queue().end_write(bytes_transferred);
+         m_pending_write.cancel();
+      }
+
+      /**
+       * @brief Have read operations send whatever is queued before they report a condition or consume more input
+       *
+       * This covers the records generated while processing the peer's data (an alert, or our close_notify in
+       * reply to the peer's), but also records left behind by a failed write.
+       */
+      void mark_output_to_send() { m_core->output_queue().mark_pending(); }
+
+      //! @brief Check whether records marked by mark_output_to_send() are still waiting to be written
+      bool output_pending() const { return m_core->output_queue().pending(); }
+
+      /**
+       * @brief Make progress on getting the records emitted so far onto the wire
+       *
+       * If another operation's write is in flight, waits for it to finish. Otherwise lends the queued
+       * records to the next layer and writes them. Either way @p operation is resumed with the result
+       * (operation_aborted if cancellation was requested in the meantime).
+       */
+      template <class Operation>
+      void async_send_queued(Operation operation) {
+         if(write_in_progress()) {
+            m_pending_write.async_wait(detail::WaitForWriteStep<Operation>(std::move(operation)));
+         } else {
+            boost::asio::async_write(
+               m_nextLayer, begin_write(), detail::WriteQueuedStep<Operation, Stream>(std::move(operation), *this));
+         }
+      }
+
+      /**
+       * @brief Read from the next layer and hand the data to the TLS implementation
+       *
+       * @p operation is resumed with the result; TLS protocol errors are retained, see process_encrypted_data().
+       */
+      template <class Operation>
+      void async_read_and_process(Operation operation) {
+         m_nextLayer.async_read_some(input_buffer(),
+                                     detail::ReadAndProcessStep<Operation, Stream>(std::move(operation), *this));
+      }
+
+      //! @brief An EOF from the next layer without a prior close_notify from the peer means the stream was truncated
+      void translate_eof(boost::system::error_code& ec) const {
+         if(ec == boost::asio::error::eof && !shutdown_received()) {
+            ec = StreamError::StreamTruncated;
+         }
+      }
 
       //! @brief Check if decrypted data is available in the receive buffer
       bool has_received_data() const { return m_core->receive_buffer().size() > 0; }
@@ -740,11 +1046,8 @@ class Stream {
          return copiedBytes;
       }
 
-      //! @brief Check if encrypted data is available in the send buffer
-      bool has_data_to_send() const { return m_core->send_buffer().size() > 0; }
-
-      //! @brief Mark bytes in the send buffer as consumed, removing them from the buffer
-      void consume_send_buffer(std::size_t bytesConsumed) { m_core->send_buffer().consume(bytesConsumed); }
+      //! @brief Check if records are waiting to be written (queued, or left behind by the last write)
+      bool has_data_to_send() const { return m_core->output_queue().has_data(); }
 
       /**
        * @brief Create the native handle.
@@ -753,38 +1056,41 @@ class Stream {
        * TLS::Server.
        *
        * @param side The desired connection side (client or server)
-       * @param ec Set to indicate what error occurred, if any.
+       * @return the error that occurred, if any
        */
-      void setup_native_handle(Connection_Side side, boost::system::error_code& ec) {
+      boost::system::error_code setup_native_handle(Connection_Side side) {
          // Do not attempt to instantiate the native_handle when a custom (mocked) channel type template parameter has
          // been specified. This allows mocking the native_handle in test code.
          if constexpr(std::is_same_v<ChannelT, Channel>) {
+            // A handshake was performed (or at least attempted) already
             if(m_native_handle != nullptr) {
-               throw Botan::Invalid_State("ASIO native handle unexpectedly set");
+               return ErrorType::InvalidObjectState;
             }
 
-            try_with_error_code(
-               [&] {
-                  if(side == Connection_Side::Client) {
-                     m_native_handle = std::unique_ptr<Client>(
-                        new Client(m_core,
-                                   m_context->m_session_manager,
-                                   m_context->m_credentials_manager,
-                                   m_context->m_policy,
-                                   m_context->m_rng,
-                                   m_context->m_server_info,
-                                   m_context->m_policy->latest_supported_version(false /* no DTLS */),
-                                   m_context->m_app_protocols));
-                  } else {
-                     m_native_handle = std::unique_ptr<Server>(new Server(m_core,
-                                                                          m_context->m_session_manager,
-                                                                          m_context->m_credentials_manager,
-                                                                          m_context->m_policy,
-                                                                          m_context->m_rng,
-                                                                          false /* no DTLS */));
-                  }
-               },
-               ec);
+            // Constructing the client emits the ClientHello. Nothing of a
+            // failed attempt may be left behind for a retry.
+            return call_tls_discarding_output([&] {
+               if(side == Connection_Side::Client) {
+                  m_native_handle = std::unique_ptr<Client>(
+                     new Client(m_core,
+                                m_context->m_session_manager,
+                                m_context->m_credentials_manager,
+                                m_context->m_policy,
+                                m_context->m_rng,
+                                m_context->m_server_info,
+                                m_context->m_policy->latest_supported_version(false /* no DTLS */),
+                                m_context->m_app_protocols));
+               } else {
+                  m_native_handle = std::unique_ptr<Server>(new Server(m_core,
+                                                                       m_context->m_session_manager,
+                                                                       m_context->m_credentials_manager,
+                                                                       m_context->m_policy,
+                                                                       m_context->m_rng,
+                                                                       false /* no DTLS */));
+               }
+            });
+         } else {
+            return {};
          }
       }
 
@@ -864,44 +1170,60 @@ class Stream {
          // not immediately cause an abort, they are checked in the invocation
          // via `error_from_us()`.
          const boost::asio::const_buffer read_buffer{input_buffer().data(), m_nextLayer.read_some(input_buffer(), ec)};
+         translate_eof(ec);
          if(!ec) {
             process_encrypted_data(read_buffer);
-         } else if(ec == boost::asio::error::eof) {
-            ec = StreamError::StreamTruncated;
          }
       }
 
-      /** @brief Synchronously write encrypted data from the send buffer to the next layer.
+      /** @brief Synchronously write the records waiting to be written to the next layer.
        *
-       * If this function is called with an error code other than 'Success', it will do nothing and return 0.
+       * If this function is called with an error code other than 'Success', it will do nothing.
        *
        * @param ec Set to indicate what error occurred, if any. Specifically, StreamTruncated will be set if the peer
        *           has closed the connection but did not properly shut down the SSL connection.
-       * @return The number of bytes written.
        */
-      size_t send_pending_encrypted_data(boost::system::error_code& ec) {
-         if(ec) {
-            return 0;
+      void send_pending_encrypted_data(boost::system::error_code& ec) {
+         if(ec || async_write_in_flight(ec)) {
+            return;
          }
 
-         const auto writtenBytes = boost::asio::write(m_nextLayer, send_buffer(), ec);
-         consume_send_buffer(writtenBytes);
+         // Records that could not be written stay in flight for the next attempt
+         while(!ec && has_data_to_send()) {
+            const auto written = boost::asio::write(m_nextLayer, begin_write(), ec);
+            end_write(written);
+            translate_eof(ec);
+         }
+      }
 
-         if(ec == boost::asio::error::eof && !shutdown_received()) {
-            // transport layer was closed by peer without receiving 'close_notify'
-            ec = StreamError::StreamTruncated;
+      /**
+       * @brief Close the TLS session, queueing a close_notify alert for sending
+       *
+       * @return the error that occurred, if any
+       */
+      boost::system::error_code tls_close() {
+         boost::system::error_code ec;
+         if(native_handle_missing(ec)) {
+            return ec;
          }
 
-         return writtenBytes;
+         return call_tls_discarding_output([&] { native_handle()->close(); });
       }
 
       /**
        * @brief Pass plaintext data to the native handle for processing.
        *
        * The native handle will then create TLS records and hand them back to the Stream via the tls_emit_data callback.
+       *
+       * @return the error that occurred, if any
        */
       template <typename ConstBufferSequence>
-      void tls_encrypt(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
+      boost::system::error_code tls_encrypt(const ConstBufferSequence& buffers) {
+         boost::system::error_code ec;
+         if(native_handle_missing(ec) || output_failed(ec)) {
+            return ec;
+         }
+
          // TODO: Once the TLS::Channel can deal with buffer sequences we can
          //       save this copy. Until then we optimize for the smallest amount
          //       of TLS records and flatten the boost buffer sequence.
@@ -922,10 +1244,17 @@ class Stream {
             }
          };
 
+         // Flattening may fail to allocate, which leaves the TLS implementation untouched
+         std::span<const uint8_t> plaintext;
+         ec = try_with_error_code([&] { plaintext = unpack(buffers); });
+         if(ec) {
+            return ec;
+         }
+
          // NOTE: This is not asynchronous: it encrypts the data synchronously.
-         // The data encrypted by native_handle()->send() is synchronously stored in the send_buffer of m_core,
-         // but is not actually written to the wire, yet.
-         try_with_error_code([&] { native_handle()->send(unpack(buffers)); }, ec);
+         // The data encrypted by native_handle()->send() is synchronously queued
+         // in m_core, but is not actually written to the wire, yet.
+         return call_tls_discarding_output([&] { native_handle()->send(plaintext); });
       }
 
       /**
@@ -945,28 +1274,118 @@ class Stream {
          }
 
          // If the local TLS implementation generates an alert, we are notified
-         // with an exception that is caught in try_with_error_code(). The error
-         // code is retained and not handled directly. Stream operations will
-         // have to invoke `handle_tls_protocol_errors()` to handle them later.
-         try_with_error_code(
-            [&] {
-               native_handle()->received_data({static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size()});
-            },
-            m_ec_from_last_read);
+         // with an exception that is caught in call_tls(). The error code is
+         // retained and not handled directly. Stream operations will have to
+         // invoke `handle_tls_protocol_errors()` to handle them later. The
+         // alert itself stays queued and is written before that.
+         m_ec_from_last_read = call_tls_keeping_output([&] {
+            native_handle()->received_data({static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size()});
+         });
+
+         // Whatever the TLS implementation generated in response (an alert, or
+         // our close_notify in reply to the peer's) must be written before the
+         // condition it announces is reported.
+         mark_output_to_send();
       }
 
-      //! @brief Catch exceptions and set an error_code
+      //! @brief Run @p f, turning an exception into the error code returned
       template <typename Fun>
-      void try_with_error_code(Fun f, boost::system::error_code& ec) {
+      static boost::system::error_code try_with_error_code(Fun f) {
          try {
             f();
          } catch(const TLS_Exception& e) {
-            ec = e.type();
+            return e.type();
          } catch(const Exception& e) {
-            ec = e.error_type();
+            return e.error_type();
+         } catch(const std::bad_alloc&) {
+            return ErrorType::OutOfMemory;
          } catch(const std::exception&) {
-            ec = ErrorType::Unknown;
+            return ErrorType::Unknown;
          }
+         return {};
+      }
+
+      /**
+       * @brief Call into the TLS implementation to process the peer's data
+       *
+       * The records emitted stay queued even if the call fails: the TLS
+       * implementation sends a fatal alert before it reports a failure, and
+       * that alert must reach the peer. They are discarded only once output
+       * failed beyond repair, see call_tls().
+       *
+       * @return the error that occurred, if any
+       */
+      template <typename Fun>
+      boost::system::error_code call_tls_keeping_output(Fun f) {
+         return call_tls(f, false);
+      }
+
+      /**
+       * @brief Call into the TLS implementation to produce output
+       *
+       * Refused once output failed before. The records emitted by a failed
+       * call are discarded: the TLS implementation emits one record at a time,
+       * and nothing of input reported as unprocessed may reach the peer.
+       *
+       * @return the error that occurred, if any
+       */
+      template <typename Fun>
+      boost::system::error_code call_tls_discarding_output(Fun f) {
+         boost::system::error_code ec;
+         if(output_failed(ec)) {
+            return ec;
+         }
+
+         return call_tls(f, true);
+      }
+
+      //! @brief Sets @p ec if the TLS implementation must not produce further output, see call_tls()
+      bool output_failed(boost::system::error_code& ec) const {
+         if(m_ec_from_failed_output) {
+            ec = m_ec_from_failed_output;
+         }
+         return static_cast<bool>(m_ec_from_failed_output);
+      }
+
+      /**
+       * @brief Call into the TLS implementation, which may emit records.
+       *
+       * The TLS implementation advances its record sequence number before it
+       * emits a record. Once a call failed on an active connection, or a
+       * record could not be buffered (which the TLS implementation swallows
+       * for alerts), the peer could not authenticate anything emitted
+       * afterwards: that failure is retained, the records of that call and of
+       * any later one are discarded, and output is refused from then on, see
+       * call_tls_discarding_output().
+       *
+       * @param f the call
+       * @param discard_output_on_failure whether to drop the records a failed call emitted
+       * @return the error that occurred, if any
+       */
+      template <typename Fun>
+      boost::system::error_code call_tls(Fun f, bool discard_output_on_failure) {
+         auto& output = m_core->output_queue();
+         const auto queued_before = output.queued_size();
+
+         auto ec = try_with_error_code(f);
+         const auto emit_failure = m_core->take_emit_failure();
+         if(emit_failure && !ec) {
+            ec = try_with_error_code([&] { std::rethrow_exception(emit_failure); });
+         }
+
+         // A failure before the connection is active leaves no state behind,
+         // unless a record went missing (the TLS implementation then considers
+         // itself closed after a close_notify it never emitted, for instance)
+         if(ec && !m_ec_from_failed_output && m_native_handle != nullptr &&
+            (emit_failure || m_native_handle->is_active())) {
+            m_ec_from_failed_output = ec;
+         }
+
+         if(m_ec_from_failed_output || (ec && discard_output_on_failure)) {
+            output.truncate(queued_before);
+         }
+
+         return ec;
       }
 
    private:
@@ -986,16 +1405,26 @@ class Stream {
       boost::system::error_code error_from_us() const { return m_ec_from_last_read; }
 
    protected:
+      using timer_type = boost::asio::basic_waitable_timer<std::chrono::steady_clock,
+                                                           boost::asio::wait_traits<std::chrono::steady_clock>,
+                                                           executor_type>;
+
       std::shared_ptr<Context> m_context;  // NOLINT(*-non-private-member-variable*)
       StreamLayer m_nextLayer;             // NOLINT(*-non-private-member-variable*)
 
-      std::shared_ptr<StreamCallbacks> m_core;        // NOLINT(*-non-private-member-variable*)
+      std::shared_ptr<StreamCallbacks> m_core;  // NOLINT(*-non-private-member-variable*)
+      // Marks m_core as in use by this stream, see StreamCallbacks::bind_to_stream()
+      std::shared_ptr<const void> m_core_token;       // NOLINT(*-non-private-member-variable*)
       std::unique_ptr<ChannelT> m_native_handle;      // NOLINT(*-non-private-member-variable*)
       boost::system::error_code m_ec_from_last_read;  // NOLINT(*-non-private-member-variable*)
+      // Retained once the TLS implementation failed on an active connection, see call_tls()
+      boost::system::error_code m_ec_from_failed_output;  // NOLINT(*-non-private-member-variable*)
 
       // Buffer space used to read input intended for the core
-      std::vector<uint8_t> m_input_buffer_space;         // NOLINT(*-non-private-member-variable*)
-      const boost::asio::mutable_buffer m_input_buffer;  // NOLINT(*-non-private-member-variable*)
+      std::vector<uint8_t> m_input_buffer_space;  // NOLINT(*-non-private-member-variable*)
+
+      // Never expires; operations wait on it for the write in flight to finish, see async_send_queued()
+      timer_type m_pending_write;  // NOLINT(*-non-private-member-variable*)
 };
 
 // deduction guides for convenient construction from an existing
