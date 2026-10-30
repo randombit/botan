@@ -30,6 +30,6 @@ void fuzz(std::span<const uint8_t> in) {
 
       auto hl2 = Botan::TLS::TLS_Handshake_Layer(Botan::TLS::Connection_Side::Client);
       std::ignore = hl2.copy_data(policy, in_record);
-      while(hl2.next_post_handshake_message(policy).has_value()) {};
+      while(hl2.next_post_handshake_message(policy, Botan::TLS::EpochNumber::ApplicationTraffic_0).has_value()) {};
    } catch(const Botan::Exception& e) {}
 }
