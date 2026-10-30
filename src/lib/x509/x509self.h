@@ -12,12 +12,17 @@
 #include <botan/asn1_time.h>
 #include <botan/pkcs10.h>
 #include <botan/pkix_types.h>
+#include <botan/x509_builder.h>
 #include <botan/x509cert.h>
+#include <string>
+#include <string_view>
 
 namespace Botan {
 
 class RandomNumberGenerator;
 class Private_Key;
+
+// Older interface for creating PKCS10 requests and self-signed certificates follows
 
 /**
 * Options for X.509 certificates.
@@ -179,12 +184,15 @@ class BOTAN_PUBLIC_API(2, 0) X509_Cert_Options final {
       */
       void add_ex_constraint(std::string_view name);
 
+      CertificateParametersBuilder into_builder() const;
+
       /**
       * Construct a new options object
       * @param opts define the common name of this object. An example for this
       * parameter would be "common_name/country/organization/organizational_unit".
       * @param expire_time the expiration time (from the current clock in seconds)
       */
+      BOTAN_DEPRECATED("Use CertificateParametersBuilder")
       BOTAN_FUTURE_EXPLICIT X509_Cert_Options(std::string_view opts = "", uint32_t expire_time = 365 * 24 * 60 * 60);
 };
 
