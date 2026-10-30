@@ -18,7 +18,7 @@ it is within the general threat model that the library operates under.
 2026
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* 2026-08-12: Blind SSRF due to OCSP redirect following
+* 2026-08-12 (CVE-2026-118766): Blind SSRF due to OCSP redirect following
 
   When making an OCSP request, the HTTP client was configured to allow a single
   HTTP redirect from the responder. This allows a network attacker or malicious OCSP
@@ -34,7 +34,7 @@ it is within the general threat model that the library operates under.
 
   Credit: Filipe Casal of Trail of Bits in collaboration with OpenAI
 
-* 2026-08-12: AutoSeeded_RNG can become reinitialized from predictable data after clearing state
+* 2026-08-12 (CVE-2026-118765): AutoSeeded_RNG can become reinitialized from predictable data after clearing state
 
   An application which first calls ``AutoSeeded_RNG::clear()``, followed by a call to
   ``randomize`` writing to an empty output buffer, causes the ``AutoSeeded_RNG`` to mark
@@ -53,7 +53,7 @@ it is within the general threat model that the library operates under.
 
   Credit: Filipe Casal of Trail of Bits in collaboration with OpenAI
 
-* 2026-08-12: Scrypt heap overflow on 32-bit systems
+* 2026-08-12 (CVE-2026-104267): Scrypt heap overflow on 32-bit systems
 
   An unchecked multiplication in Scrypt led to an integer overflow resulting in an
   allocated buffer being shorter than expected. Only 32-bit platforms are affected by
@@ -77,7 +77,7 @@ it is within the general threat model that the library operates under.
 
   Credit: Haruki Oyama
 
-* 2026-08-12: Integer Overflow in FFI Block Size Reporting
+* 2026-08-12 (CVE-2026-118769): Integer Overflow in FFI Block Size Reporting
 
   The FFI interface ``botan_block_cipher_block_size`` reported the block size of a
   cipher using ``int`` however this value can overflow when using the variable length
@@ -89,7 +89,7 @@ it is within the general threat model that the library operates under.
 
   Credit: Filipe Casal of Trail of Bits in collaboration with OpenAI
 
-* 2026-08-12: Python bcrypt API truncates passwords containing NUL characters
+* 2026-08-12 (CVE-2026-118767): Python bcrypt API truncates passwords containing NUL characters
 
   The Python binding did not consistently detect the existence of a NUL (``U+0000``)
   character in a Python string when converting it to a ``const char*`` before passing
@@ -102,7 +102,7 @@ it is within the general threat model that the library operates under.
 
   Credit: Filipe Casal of Trail of Bits in collaboration with OpenAI
 
-* 2026-08-12: The ``oscp_check`` cli utility accepted unauthenticated responses
+* 2026-08-12 (CVE-2026-118768): The ``oscp_check`` cli utility accepted unauthenticated responses
 
   The command line interface subcommand ``botan ocsp_check`` would request an OCSP
   response from the URL specified in the certificate's AIA extension, without

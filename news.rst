@@ -309,24 +309,24 @@ Build and Infrastructure
 Version 3.13.0, 2026-08-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Fix a blind SSRF during OCSP request processing. A malicious OCSP responder or
-  network attacker could cause the application to perform a blind GET to an
-  internal service. (GH #5815)
+* CVE-2026-118766 Fix a blind SSRF during OCSP request processing. A malicious
+  OCSP responder or network attacker could cause the application to perform a
+  blind GET to an internal service. (GH #5815)
 
-* Fix a bug in ``AutoSeeded_RNG``, affecting only platforms without a system
-  RNG, where an API sequence of calling first ``clear``, followed by ``randomize``
-  writing to an empty buffer, resulted in the RNG object being considered seeded
-  even though it was not. (GH #5839 #5838)
+* CVE-2026-118765 Fix a bug in ``AutoSeeded_RNG``, affecting only platforms
+  without a system RNG, where an API sequence of calling first ``clear``,
+  followed by ``randomize`` writing to an empty buffer, resulted in the RNG
+  object being considered seeded even though it was not. (GH #5839 #5838)
 
-* Fix an integer overflow in Scrypt parameter handling, affecting 32-bit platforms.
-  (GH #5820 #5629)
+* CVE-2026-104267 Fix an integer overflow in Scrypt parameter handling,
+  affecting 32-bit platforms.  (GH #5820 #5629)
 
-* Fix a bug where certain DN name constraints were not correctly enforced.
-  (GH #5618)
+* CVE-2026-48057 Fix a bug where certain DN name constraints were not correctly
+  enforced. (GH #5618)
 
-* Fix an integer overflow in the FFI interface which might be exploitable
-  in unusual scenarios involving attacker-control cipher specifiers and
-  the raw block cipher (ECB) APIs. (GH #5805)
+* CVE-2026-118769 Fix an integer overflow in the FFI interface which might be
+  exploitable in unusual scenarios involving attacker-control cipher specifiers
+  and the raw block cipher (ECB) APIs. (GH #5805)
 
 * Add URI and email name constraint processing to X509 path validation (GH #5598)
 
