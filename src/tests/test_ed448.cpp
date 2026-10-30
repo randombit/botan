@@ -170,12 +170,21 @@ class Ed448_General_Test final : public Text_Based_Test {
 
 class Ed448_Utils_Test final : public Test {
    private:
+      static BigInt group_order() {
+         return BigInt(
+            "0x3fffffffffffffffffffffffffffffffffffffffffffffffffffffff7cca23e9c44edb49aed63690216cc2728dc58f552378c292ab5844f3");
+      }
+
+      static std::vector<uint8_t> to_le_bytes(const BigInt& x, size_t len) {
+         auto bytes = x.serialize(len);
+         std::reverse(bytes.begin(), bytes.end());
+         return bytes;
+      }
+
       std::array<uint8_t, 56> reduce_mod_L_ref(std::span<const uint8_t> t) {
          const std::vector<uint8_t> t_bytes(t.rbegin(), t.rend());
          const Botan::BigInt t_int(t_bytes.data(), t_bytes.size());
-         const BigInt L(
-            "0x3fffffffffffffffffffffffffffffffffffffffffffffffffffffff7cca23e9c44edb49aed63690216cc2728dc58f552378c292ab5844f3");
-         const auto res = t_int % L;
+         const auto res = t_int % group_order();
          std::array<uint8_t, 56> res_bytes = {0};
          res.serialize_to(res_bytes);
          std::reverse(res_bytes.begin(), res_bytes.end());
@@ -200,8 +209,30 @@ class Ed448_Utils_Test final : public Test {
          return result;
       }
 
+      Test::Result test_bytes_are_reduced() {
+         Test::Result result("Scalar448::bytes_are_reduced");
+
+         const BigInt L = group_order();
+         const auto is_reduced = [](std::span<const uint8_t> x) { return Botan::Scalar448::bytes_are_reduced(x); };
+
+         result.test_is_true("0 is reduced", is_reduced(to_le_bytes(BigInt::zero(), 56)));
+         result.test_is_true("L-1 is reduced", is_reduced(to_le_bytes(L - 1, 56)));
+         result.test_is_false("L is not reduced", is_reduced(to_le_bytes(L, 56)));
+         result.test_is_false("L+1 is not reduced", is_reduced(to_le_bytes(L + 1, 56)));
+         result.test_is_false("2^448-1 is not reduced", is_reduced(std::vector<uint8_t>(56, 0xFF)));
+
+         result.test_is_true("L-1 with a zero high byte is reduced", is_reduced(to_le_bytes(L - 1, 57)));
+         auto high_byte_set = to_le_bytes(BigInt::zero(), 57);
+         high_byte_set[56] = 0x01;
+         result.test_is_false("Nonzero high byte is not reduced", is_reduced(high_byte_set));
+
+         result.test_throws("Short input is rejected", [&] { is_reduced(std::vector<uint8_t>(55)); });
+
+         return result;
+      }
+
    public:
-      std::vector<Test::Result> run() override { return {test_reduce_mod_L()}; }
+      std::vector<Test::Result> run() override { return {test_reduce_mod_L(), test_bytes_are_reduced()}; }
 };
 
 }  // namespace
