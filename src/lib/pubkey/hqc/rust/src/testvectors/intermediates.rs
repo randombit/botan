@@ -1,13 +1,12 @@
 //! Parser for the reference implementation's `intermediates_values` files.
 //!
-//! One such file ships per parameter set under `kats/<arch>/hqc-<n>/`. Each is
-//! a single trace through KEYGEN, ENCAPS and DECAPS recording every value on
-//! the data path as hex.
+//! One trace per parameter set is stored in Botan's test-data directory,
+//! `src/tests/data/pubkey/hqc_intermediates/hqc-{1,3,5}.txt`. Each records
+//! values through KEYGEN, ENCAPS and DECAPS as hex.
 //!
-//! This is the backbone of reference testing **without linking any C**: it
-//! pins the whole internal data flow for all three parameter sets, where the
-//! `.rsp` KAT files pin only the public inputs and outputs. It is therefore
-//! the coverage that survives onto the `main` branch, which has no submodule.
+//! These traces supplement the public inputs and outputs in `hqc_kat.vec`.
+//! The tests below check their sizes, Hamming weights and consistency
+//! without linking any C reference implementation.
 //!
 //! Labels repeat across sections (`h` and `s` appear in all three), so every
 //! lookup is section-scoped.
@@ -63,20 +62,11 @@ fn hex_decode(s: &str) -> Option<Vec<u8>> {
 }
 
 impl Intermediates {
-    /// Loads the trace for `set` from the reference `ref` implementation.
-    ///
-    /// Anchored to `CARGO_MANIFEST_DIR`, not the process working directory:
-    /// `cargo test` happens to run from the package root, but nothing
-    /// guarantees it and a wrong-directory failure is confusing to diagnose.
+    /// Loads the reference trace for `set` from Botan's test-data directory.
+    /// The path is independent of the process working directory.
     pub fn load(set: HqcParameterSet) -> Self {
-        Self::load_arch(set, "ref")
-    }
-
-    /// Loads the trace for `set` from a named architecture directory
-    /// (`"ref"` or `"x86_64/avx256"`).
-    pub fn load_arch(set: HqcParameterSet, arch: &str) -> Self {
         let path = format!(
-            "{}/kats/{arch}/hqc-{}/intermediates_values",
+            "{}/../../../../tests/data/pubkey/hqc_intermediates/hqc-{}.txt",
             env!("CARGO_MANIFEST_DIR"),
             set.nist_level()
         );

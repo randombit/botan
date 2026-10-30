@@ -2,14 +2,14 @@
 
 #
 # Converts the NIST-style KAT files (PQCkemKAT_32.rsp) of the HQC reference
-# implementation, as vendored in the Rust crate rust-hqc, into the test vector
+# implementation into the shared C++/Rust test vector
 # file `src/tests/data/pubkey/hqc_kat.vec` in the format of Botan's generic
 # PQC KEM KAT test (PK_PQC_KEM_KAT_Test): for every vector the 48 byte DRBG
 # seed, the shared secret and the 32 byte private key (the master seed) in
 # full, and the public key and the ciphertext as SHAKE-256(128) digests.
 #
 # Usage:
-#   ./src/scripts/dev_tools/gen_hqc_kat.py src/lib/pubkey/hqc/rust/kats/ref
+#   ./src/scripts/dev_tools/gen_hqc_kat.py /path/to/hqc-reference/kats/ref
 #
 # (C) 2026 Falko Strenzke
 #
@@ -29,7 +29,7 @@ PARAMETER_SETS = [
 ]
 
 HEADER = """# This file was auto-generated from the HQC reference implementation's KATs
-# as vendored in the Rust crate rust-hqc (kats/ref/hqc-{1,3,5}/PQCkemKAT_32.rsp).
+# (hqc-{1,3,5}/PQCkemKAT_32.rsp), shared by the C++ and Rust tests.
 # See src/scripts/dev_tools/gen_hqc_kat.py
 #
 # PK and CT are SHAKE-256(128) digests; SK (the 32 byte master seed) and SS are

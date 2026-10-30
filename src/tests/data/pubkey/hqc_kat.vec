@@ -1,5 +1,5 @@
 # This file was auto-generated from the HQC reference implementation's KATs
-# as vendored in the Rust crate rust-hqc (kats/ref/hqc-{1,3,5}/PQCkemKAT_32.rsp).
+# (hqc-{1,3,5}/PQCkemKAT_32.rsp), shared by the C++ and Rust tests.
 # See src/scripts/dev_tools/gen_hqc_kat.py
 #
 # PK and CT are SHAKE-256(128) digests; SK (the 32 byte master seed) and SS are

@@ -1,7 +1,7 @@
 /*
  * Tests for HQC
- * - KAT tests using the vectors of the reference implementation as vendored
- *   in the Rust crate rust-hqc (kats/ref/hqc-{1,3,5}/PQCkemKAT_32.rsp)
+ * - KAT tests using the reference vectors in data/pubkey/hqc_kat.vec,
+ *   shared with the Rust implementation's tests
  *
  * (C) 2026 Falko Strenzke
  *

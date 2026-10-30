@@ -1,12 +1,12 @@
 //! Reference test vectors that require no C library.
 //!
-//! Two sources, both already vendored under `kats/`, both covering all three
+//! Two sources in Botan's `src/tests/data/pubkey/`, both covering all three
 //! parameter sets:
 //!
-//! - [`intermediates`] — the reference's own trace of every internal value
-//!   through keygen, encaps and decaps.
-//! - `.rsp` KAT files — 100 seed/pk/sk/ct/ss vectors per set, driven by
-//!   `kem::tests_kat`.
+//! - [`intermediates`] — reference traces in `hqc_intermediates/` for
+//!   keygen, encaps and decaps.
+//! - `hqc_kat.vec` — 100 vectors per set, shared with the C++ tests and
+//!   driven here by `kem::tests_kat`. PK and CT are SHAKE-256(128) digests.
 //!
 //! This module is the reference coverage that survives onto the `main`
 //! branch. `src/ffi` and the `tests_ffi.rs` modules do not.

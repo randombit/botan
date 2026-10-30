@@ -82,16 +82,24 @@ What they cover:
 
 | Suite                        | What it checks                                                                                                                                                                                  |
 |------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `kem::tests_kat`             | The full 100-vector NIST KAT suite **for all three parameter sets**, against the vendored `PQCkemKAT_32.rsp` files using a Rust NIST AES-256 CTR_DRBG. The strongest single check in the crate. |
-| `testvectors::intermediates` | The reference's own trace of every internal value through keygen/encaps/decaps — `x`, `y`, `h`, `s`, `r1`, `r2`, `e`, `theta`, `c_kem`, `K` — for all three sets.                               |
+| `kem::tests_kat`             | The full 100-vector NIST KAT suite **for all three parameter sets**, against Botan's shared `src/tests/data/pubkey/hqc_kat.vec` using a Rust NIST AES-256 CTR_DRBG. |
+| `testvectors::intermediates` | Sizes, Hamming weights and consistency of reference traces in `src/tests/data/pubkey/hqc_intermediates/`, for all three sets.                               |
 | `parameters::tests`          | Regenerates the alpha-power tables from GF(2^8) arithmetic; checks ordering and RS generator polynomials.                                                                                       |
 | `api::tests`                 | Round-trip per parameter set, `dk` equals the seed, `public_key` reproduces `ek`; randomness, buffer and key length errors; cross-parameter-set rejection.                                       |
 | `capi::tests`                | The C ABI round-trip and its error codes; pins the enumerators in `include/hqc_c_api.h` against the Rust constants.                                                                              |
 | `nist::tests`                | Static `CRYPTO_*` constants against the runtime accessors.                                                                                                                                      |
 | `vector::tests`              | `barrett_reduce` against `x % n` over the full 24-bit sampler domain, all three sets.                                                                                                           |
 
-These tests use vendored data and Rust dependencies only; no C reference,
-CMake, or OpenSSL is needed. AES is a test-only dependency.
+These tests use Botan's checked-in test data and Rust dependencies only; no C
+reference, CMake, or OpenSSL is needed. AES is a test-only dependency. Run the
+tests from a Botan checkout: the test-data paths are anchored to the crate's
+manifest directory, so the working directory does not matter.
+
+Both the Rust and C++ KAT tests use the same 300 records in `hqc_kat.vec`.
+The seed, private key and shared secret are stored in full; public keys and
+ciphertexts are compared using 16-byte SHAKE-256 digests. To import updated
+reference `.rsp` files, use `src/scripts/dev_tools/gen_hqc_kat.py` from the
+Botan repository root. No separate KAT corpus is stored in this crate.
 
 Useful subsets:
 
@@ -324,10 +332,11 @@ through its generic PQC KEM KAT test.
 
 ## Relationship to the FFI testing branches
 
-`main` contains the Rust library, vendored KATs and traces, and the Botan ABI
-smoke test. It has no C reference submodule, reference build script, or
-reference differential-test files. The optional smoke test is a C consumer
-of the Rust static library, not a dependency of the crate.
+The Botan checkout contains the Rust library, shared KATs and reference traces
+in `src/tests/data/pubkey/`, and the Botan ABI smoke test. It has no C reference
+submodule, reference build script, or reference differential-test files. The
+optional smoke test is a C consumer of the Rust static library, not a dependency
+of the crate.
 
 `ffi-testing-update` carries the C reference and differential tests for the
 tracked revision; `ffi-testing` retains the previous revision. The reserved
