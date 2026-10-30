@@ -6270,7 +6270,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_cmce", FFI_Classic_McEliece_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_elgamal", FFI_ElGamal_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_dh", FFI_DH_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_oid", FFI_OID_Test);
-BOTAN_REGISTER_TEST("ffi", "ffi_ec_group", FFI_EC_Group_Test);
+BOTAN_REGISTER_SERIALIZED_TEST("ffi", "ffi_ec_group", FFI_EC_Group_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ec_points", FFI_EC_Point_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_srp6", FFI_SRP6_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_spake2p", FFI_SPAKE2P_Test);
