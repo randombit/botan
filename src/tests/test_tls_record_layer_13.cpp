@@ -49,18 +49,24 @@ std::function<size_t(size_t)> pad_to_minimum_size(size_t minimum_record_size) {
    };
 }
 
-template <typename... Args>
-Botan::secure_vector<uint8_t> prepare_record(TLS::TLS_Record_Layer& rl, Args&&... args) {
+inline Botan::secure_vector<uint8_t> prepare_record(TLS::TLS_Record_Layer& rl,
+                                                    const TLS::Policy& policy,
+                                                    TLS::Record_Type type,
+                                                    std::span<const uint8_t> payload,
+                                                    TLS::Cipher_State* cipher_state) {
    Botan::secure_vector<uint8_t> out;
-   rl.prepare_record(std::forward<Args>(args)..., out);
+   rl.prepare_record(type, payload, policy, cipher_state, out);
    return out;
 }
 
-template <typename... Args>
-Botan::secure_vector<uint8_t> prepare_record(TLS::Connection_Side side, Args&&... args) {
+inline Botan::secure_vector<uint8_t> prepare_record(TLS::Connection_Side side,
+                                                    const TLS::Policy& policy,
+                                                    TLS::Record_Type type,
+                                                    std::span<const uint8_t> payload,
+                                                    TLS::Cipher_State* cipher_state) {
    auto rl = Botan::TLS::TLS_Record_Layer(side);
 
-   return prepare_record(rl, std::forward<Args>(args)...);
+   return prepare_record(rl, policy, type, payload, cipher_state);
 }
 
 std::unique_ptr<TLS::Cipher_State> rfc8448_rtt1_handshake_traffic(
@@ -1163,6 +1169,44 @@ std::vector<Test::Result> record_layer_api_surface() {
    };
 }
 
+std::vector<Test::Result> record_number_reporting() {
+   return {
+      CHECK("unprotected records report something",
+            [&](Test::Result& result) {
+               auto rl = TLS::TLS_Record_Layer(TLS::Connection_Side::Client);
+               Botan::secure_vector<uint8_t> out;
+               const auto rn = rl.prepare_record(
+                  TLS::Record_Type::Handshake, std::array<uint8_t, 5>{0}, Test_Policy(), nullptr, out);
+               result.test_enum_eq(
+                  "unprotected record reports the Unprotected epoch", rn.epoch, TLS::EpochNumber::Unprotected);
+            }),
+
+      CHECK("protected records report the cipher state's epoch and sequence number",
+            [&](Test::Result& result) {
+               const auto cs = rfc8448_rtt1_appdata_traffic(TLS::Connection_Side::Client);
+               auto rl = TLS::TLS_Record_Layer(TLS::Connection_Side::Client);
+
+               result.test_u64_eq("write sequence starts at 0", cs->current_write_sequence_number(), 0);
+
+               Botan::secure_vector<uint8_t> out1;
+               const auto rn1 = rl.prepare_record(
+                  TLS::Record_Type::ApplicationData, std::array<uint8_t, 5>{0}, Test_Policy(), cs.get(), out1);
+               result.test_enum_eq(
+                  "first record reports the current write epoch", rn1.epoch, cs->current_write_epoch_number());
+               result.test_u64_eq("first record reports sequence number 0", rn1.sequence_number, 0);
+               result.test_u64_eq("write sequence advanced to 1", cs->current_write_sequence_number(), 1);
+
+               Botan::secure_vector<uint8_t> out2;
+               const auto rn2 = rl.prepare_record(
+                  TLS::Record_Type::ApplicationData, std::array<uint8_t, 5>{0}, Test_Policy(), cs.get(), out2);
+               result.test_enum_eq(
+                  "second record reports the current write epoch", rn2.epoch, cs->current_write_epoch_number());
+               result.test_u64_eq("second record reports sequence number 1", rn2.sequence_number, 1);
+               result.test_u64_eq("write sequence advanced to 2", cs->current_write_sequence_number(), 2);
+            }),
+   };
+}
+
 std::vector<Test::Result> record_structure() {
    namespace TLS = Botan::TLS;
 
@@ -1387,7 +1431,8 @@ BOTAN_REGISTER_TEST_FN("tls",
                        write_encrypted_records,
                        legacy_version_handling,
                        record_size_limits,
-                       record_layer_api_surface);
+                       record_layer_api_surface,
+                       record_number_reporting);
 
 BOTAN_REGISTER_TEST_FN("tls", "tls_record_13", record_structure);
 
