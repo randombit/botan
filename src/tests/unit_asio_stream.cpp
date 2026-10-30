@@ -299,10 +299,11 @@ class SwallowingMockChannel : public MockChannel {
    private:
       void emit_oversized_record() {
          try {
-            // never dereferenced: buffering fails before anything is copied. Larger than
-            // any object can be, yet small enough that computing its end does not wrap.
-            const auto oversized = static_cast<std::size_t>(std::numeric_limits<std::ptrdiff_t>::max()) + 1;
-            send(std::span<const uint8_t>(TEST_DATA, oversized));
+            // Never dereferenced: once a byte is queued, a record of PTRDIFF_MAX bytes no longer
+            // fits and buffering fails before anything is copied. With any longer span, computing
+            // its end pointer overflows (GCC's UBSan reports this in libstdc++'s debug mode).
+            send(std::span<const uint8_t>(TEST_DATA, 1));
+            send(std::span<const uint8_t>(TEST_DATA, std::numeric_limits<std::ptrdiff_t>::max()));
          } catch(...) { /* swallowed, like Channel::send_alert() does */
          }
       }
