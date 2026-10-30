@@ -121,6 +121,9 @@ struct botan_ffi_obj : public botan_ffi_obj_base {
    public:
       explicit botan_ffi_obj(smart_pointer_type obj) : botan_ffi_obj_base(MAGIC), m_obj(std::move(obj)) {}
 
+      // Some translation units only declare handles. These virtual functions are
+      // valid for both supported smart pointer types even when instantiated eagerly.
+      // NOLINTNEXTLINE(portability-template-virtual-member-function)
       virtual ~botan_ffi_obj() {
          invalidate_magic();
          m_obj.reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
@@ -133,8 +136,10 @@ struct botan_ffi_obj : public botan_ffi_obj_base {
 
       bool magic_ok() const { return magic() == MAGIC; }
 
+      // NOLINTNEXTLINE(portability-template-virtual-member-function)
       bool is_shared() const final { return detail::is_std_shared_pointer<smart_pointer_type>::value; }
 
+      // NOLINTNEXTLINE(portability-template-virtual-member-function)
       size_t use_count() const final {
          if constexpr(detail::is_std_shared_pointer<smart_pointer_type>::value) {
             return static_cast<size_t>(m_obj.use_count());

@@ -819,7 +819,7 @@ int OS::run_cpu_instruction_probe(const std::function<int()>& probe_fn) {
    #if defined(BOTAN_TARGET_OS_HAS_THREADS)
    // Signal dispositions are process wide, so only run one probe at a time
    static std::mutex g_sigill_probe_mutex;
-   const std::lock_guard<std::mutex> lock(g_sigill_probe_mutex);
+   const std::scoped_lock lock(g_sigill_probe_mutex);
    #endif
 
    struct sigaction sigaction {};

@@ -434,7 +434,8 @@ class Speed final : public Command {
          */
          const double clock_cycle_ratio = [&]() {
             const char* begin = clock_ratio.c_str();
-            char* end = nullptr;
+            // std::strtod requires a char**, so the pointee cannot be const.
+            char* end = nullptr;  // NOLINT(misc-const-correctness)
             const double ratio = std::strtod(begin, &end);
 
             if(clock_ratio.empty() || end != begin + clock_ratio.size() || !std::isfinite(ratio) || ratio <= 0.0 ||
