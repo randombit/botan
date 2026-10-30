@@ -74,8 +74,8 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
          result.test_is_true("All prepared random bits used for encapsulation", rng_encaps.empty());
       }
 
-   private:
-      bool skip_this_test([[maybe_unused]] const std::string& params, const VarMap& /*vars*/) final {
+      // Derived tests can further restrict which vectors run, retaining this availability check.
+      bool skip_this_test([[maybe_unused]] const std::string& params, const VarMap& /*vars*/) override {
    #if !defined(BOTAN_HAS_AES)
          return true;
    #else
@@ -83,6 +83,7 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
    #endif
       }
 
+   private:
       std::unique_ptr<Botan::RandomNumberGenerator> create_drbg([[maybe_unused]] std::span<const uint8_t> seed) {
    #if defined(BOTAN_HAS_AES)
          return std::make_unique<CTR_DRBG_AES256>(seed);

@@ -12,6 +12,7 @@
 #include "tests.h"
 
 #include <memory>
+#include <set>
 
 #if defined(BOTAN_HAS_HQC)
    #include "test_pubkey.h"
@@ -44,6 +45,16 @@ class HQC_KAT_Tests final : public PK_PQC_KEM_KAT_Test {
    private:
       bool is_available(const std::string& /*params*/) const final { return true; }
 
+      bool skip_this_test(const std::string& params, const VarMap& vars) override {
+         if(PK_PQC_KEM_KAT_Test::skip_this_test(params, vars)) {
+            return true;
+         }
+
+         // One KAT per parameter set complements the randomized roundtrip and
+         // key-generation tests. Run all 100 per set with --run-long-tests.
+         return !Test::run_long_tests() && !m_tested_params.insert(params).second;
+      }
+
       std::vector<uint8_t> map_value(const std::string& /*params*/,
                                      std::span<const uint8_t> value,
                                      VarType var_type) const final {
@@ -68,6 +79,8 @@ class HQC_KAT_Tests final : public PK_PQC_KEM_KAT_Test {
          const auto salt = rng.random_vec(16);
          return Fixed_Output_RNG(Botan::concat(m, salt));
       }
+
+      std::set<std::string> m_tested_params;
 };
 
 std::vector<Test::Result> test_hqc_roundtrips() {
