@@ -64,6 +64,43 @@ inline void lps(uint64_t block[8]) {
    }
 }
 
+#if defined(BOTAN_TARGET_ARCH_IS_ARM64) && \
+   (defined(BOTAN_BUILD_COMPILER_IS_CLANG) || defined(BOTAN_BUILD_COMPILER_IS_XCODE))
+// Apply two independent LPS transformations together. This exposes the table
+// lookups from both states to the compiler, improving instruction scheduling in
+// the compression loop where A and hN are transformed back-to-back. This
+// formulation regresses performance on x86_64 and with GCC on ARM64.
+inline void lps2(uint64_t block_a[8], uint64_t block_b[8]) {
+   const uint64_t block2_a[8] = {
+      block_a[0], block_a[1], block_a[2], block_a[3], block_a[4], block_a[5], block_a[6], block_a[7]};
+   const uint64_t block2_b[8] = {
+      block_b[0], block_b[1], block_b[2], block_b[3], block_b[4], block_b[5], block_b[6], block_b[7]};
+
+   const std::span<const uint8_t> a{reinterpret_cast<const uint8_t*>(block2_a), 64};
+   const std::span<const uint8_t> b{reinterpret_cast<const uint8_t*>(block2_b), 64};
+
+   uint64_t acc_a[8];
+   uint64_t acc_b[8];
+
+   for(int i = 0; i < 8; ++i) {
+      acc_a[i] = force_le(STREEBOG_Ax[0][a[i]]);
+      acc_b[i] = force_le(STREEBOG_Ax[0][b[i]]);
+   }
+
+   for(int k = 1; k < 8; ++k) {
+      for(int i = 0; i < 8; ++i) {
+         acc_a[i] ^= force_le(STREEBOG_Ax[k][a[i + k * 8]]);
+         acc_b[i] ^= force_le(STREEBOG_Ax[k][b[i + k * 8]]);
+      }
+   }
+
+   for(int i = 0; i < 8; ++i) {
+      block_a[i] = acc_a[i];
+      block_b[i] = acc_b[i];
+   }
+}
+#endif
+
 }  //namespace
 
 std::unique_ptr<HashFunction> Streebog::copy_state() const {
@@ -204,9 +241,13 @@ void Streebog::compress_64(const uint64_t M[], bool last_block) {
       for(size_t j = 0; j != 8; ++j) {
          A[j] ^= force_le(STREEBOG_C[i][7 - j]);
       }
+#if defined(BOTAN_TARGET_ARCH_IS_ARM64) && \
+   (defined(BOTAN_BUILD_COMPILER_IS_CLANG) || defined(BOTAN_BUILD_COMPILER_IS_XCODE))
+      lps2(A, hN);
+#else
       lps(A);
-
       lps(hN);
+#endif
       for(size_t j = 0; j != 8; ++j) {
          hN[j] ^= A[j];
       }
