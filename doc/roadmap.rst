@@ -21,7 +21,6 @@ The following major feature work is currently planned for Botan3:
 * DTLS 1.3
 * CMS (RFC 5562 et al)
 * XMSS^MT
-* HQC (the round-4 submission is available as the opt-in module ``hqc`` under the name ``HQCr4``; upstreaming is pending)
 
 Along with the usual optimizations, bug fixes, and refinements.
 
