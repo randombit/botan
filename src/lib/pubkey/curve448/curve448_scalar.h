@@ -61,7 +61,7 @@ class BOTAN_TEST_API Scalar448 final {
       /// @brief scalar = (scalar * other) mod L
       Scalar448 operator*(const Scalar448& other) const;
 
-      /// @return true iff x >= L.
+      /// @return true iff x < L (and any bytes beyond BYTES are zero). Little endian.
       static bool bytes_are_reduced(std::span<const uint8_t> x);
 
    private:
