@@ -37,9 +37,7 @@ namespace TLS = Botan::TLS;
 }
 
 [[maybe_unused]] TLS::Protocol_Version latest_dtls_version_in_this_build() {
-   #if defined(BOTAN_HAS_DTLS_13)
-   return TLS::Protocol_Version::DTLS_V13;
-   #elif defined(BOTAN_HAS_TLS_12)
+   #if defined(BOTAN_HAS_TLS_12)
    return TLS::Protocol_Version::DTLS_V12;
    #else
    throw Test_Error("No DTLS in this build, some #ifdef issue in the test code?");

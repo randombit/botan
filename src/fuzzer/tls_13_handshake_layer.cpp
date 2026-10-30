@@ -14,6 +14,7 @@
 
 void fuzz(std::span<const uint8_t> in) {
    static const Botan::TLS::Default_Policy policy;
+   constexpr auto epoch_appdata_0 = Botan::TLS::EpochNumber::create(3);
 
    const auto in_record = Botan::TLS::Handshake_Record{
       {.type = Botan::TLS::Record_Type::Handshake,
@@ -30,6 +31,6 @@ void fuzz(std::span<const uint8_t> in) {
 
       auto hl2 = Botan::TLS::TLS_Handshake_Layer(Botan::TLS::Connection_Side::Client);
       std::ignore = hl2.copy_data(policy, in_record);
-      while(hl2.next_post_handshake_message(policy).has_value()) {};
+      while(hl2.next_post_handshake_message(policy, epoch_appdata_0).has_value()) {};
    } catch(const Botan::Exception& e) {}
 }

@@ -672,7 +672,7 @@ std::vector<Test::Result> receive_error_cases() {
 
                io->copy_data(record);
                result.test_throws("server hello must not be followed by more data in the same record",
-                                  "Unexpected additional handshake message data found in record",
+                                  "Unexpected additional handshake data at epoch boundary",
                                   [&] { drain_events(*io, th, false); });
             }),
 
