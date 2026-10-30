@@ -199,6 +199,23 @@ SymmetricKey Channel_Impl_13::key_material_export(std::string_view label,
 
 void Channel_Impl_13::update_traffic_keys(bool request_peer_update) {
    BOTAN_STATE_CHECK(!is_downgrading() && is_handshake_complete() && is_active());
+
+   // RFC 9147 8.
+   //    In order to facilitate epoch reconstruction, implementations MUST NOT
+   //    send records with the new keys or send a new KeyUpdate until the
+   //    previous KeyUpdate has been acknowledged (this avoids having too many
+   //    epochs in active use).
+   //
+   // For DTLS this will prevent sending a KeyUpdate while a previous one is not
+   // yet acknowledged. For TLS this will always be true once the handshake has
+   // completed and the connection is active.
+   if(!m_channel_io->can_send_post_handshake_messages()) {
+      throw Invalid_State(
+         "Cannot send KeyUpdate messages right now. "
+         "Probably you're using DTLS and another KeyUpdate is currently pending. "
+         "Please try again later.");
+   }
+
    m_channel_io->update_traffic_keys(request_peer_update);
 }
 

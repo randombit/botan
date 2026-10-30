@@ -126,6 +126,17 @@ size_t Server_Impl_13::send_new_session_tickets(const size_t tickets) {
       return 0;
    }
 
+   if(!m_channel_io->can_send_post_handshake_messages()) {
+      // In DTLS 1.3 KeyUpdate messages must be acknowledged by the peer. Before
+      // that, we don't allow any other post-handshake messages to be sent for
+      // compatibility with BoringSSL which enforces this restriction even
+      // though the RFC does not require it explicitly.
+      throw Invalid_State(
+         "Cannot send NewSessionTicket messages right now. "
+         "Probably you're using DTLS and a KeyUpdate is currently pending. "
+         "Please try again later.");
+   }
+
    auto flight = PostHandshakeFlight(callbacks());
    size_t tickets_created = 0;
 
@@ -806,8 +817,10 @@ void Server_Impl_13::handle(const Finished_13& finished_msg) {
    m_transcript_hash.reset();
    callbacks().tls_session_activated();
 
-   if(new_session_ticket_supported()) {
-      send_new_session_tickets(policy().new_session_tickets_upon_handshake_success());
+   const auto session_tickets_after_handshake = policy().new_session_tickets_upon_handshake_success();
+   if(new_session_ticket_supported() && session_tickets_after_handshake > 0) {
+      BOTAN_ASSERT_NOMSG(m_channel_io->can_send_post_handshake_messages());
+      send_new_session_tickets(session_tickets_after_handshake);
    }
 }
 

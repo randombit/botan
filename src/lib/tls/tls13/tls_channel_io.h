@@ -9,6 +9,7 @@
 #ifndef BOTAN_TLS_CHANNEL_IO_BASE_H_
 #define BOTAN_TLS_CHANNEL_IO_BASE_H_
 
+#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_flight_13.h>
 #include <botan/internal/tls_record_13.h>
 #include <optional>
@@ -29,13 +30,19 @@ struct RecordNumber;
  * send() overloads.
  */
 class BOTAN_TEST_API Channel_IO {
+   protected:
+      /// Records that the I/O object just passes out to the channel for further
+      /// processing. These records are not processed by the I/O object itself,
+      /// they may be used for validation of protocol invariants, though.
+      using TransparentRecords = std::variant<ChangeCipherSpec_Record,  //
+                                              Alert_Record,
+                                              ApplicationData_Record>;
+
    public:
-      using ReceiveEvent = std::variant<BytesNeeded,
-                                        Handshake_Message_13,
-                                        Post_Handshake_Message_13,
-                                        ChangeCipherSpec_Record,
-                                        Alert_Record,
-                                        ApplicationData_Record>;
+      using ReceiveEvent = variant_append_t<TransparentRecords,  //
+                                            BytesNeeded,
+                                            Handshake_Message_13,
+                                            Post_Handshake_Message_13>;
 
       static std::shared_ptr<Channel_IO> create(Connection_Side side,
                                                 TLS_Flavor flavor,
@@ -97,8 +104,8 @@ class BOTAN_TEST_API Channel_IO {
 
       /**
        * Sends a KeyUpdate message to the peer and updates the write keys once
-       * the transport allows it. Silently does nothing if no KeyUpdate may be
-       * sent right now (see can_send_key_update()).
+       * the transport allows it. Note that this assumes that post-handshake
+       * messages are allowed to be sent when this is invoked.
        *
        * @param request_peer_update  whether to request a reciprocal KeyUpdate
        */
@@ -108,6 +115,15 @@ class BOTAN_TEST_API Channel_IO {
 
       /// @name DTLS-specific state management
       /// @{
+
+      /**
+       * Whether it is currently possible to send post-handshake messages like
+       * KeyUpdate or NewSessionTicket. Note that DTLS might intermittently deny
+       * sending such messages while a recent KeyUpdate is not yet acknowledged.
+       *
+       * @returns true if post-handshake messages may be sent, false otherwise
+       */
+      virtual bool can_send_post_handshake_messages() const;
 
       /**
        * Notifies that the TLS state machine is sure that we're talking to a
@@ -183,15 +199,9 @@ class BOTAN_TEST_API Channel_IO {
 
       virtual void process(const Handshake_Record& record) = 0;
       virtual void process(const ACK_Record& ack_record) = 0;
+      virtual void validate(const TransparentRecords& record) const;
 
       virtual void send_data(Record_Type record_type, std::span<const uint8_t> payload, Cipher_State* cipher_state) = 0;
-
-      /**
-       * Whether a KeyUpdate may be sent right now. Relevant for DTLS only
-       * (RFC 9147 8. disallows a new KeyUpdate while a previous one is not
-       * yet acknowledged); always true for TLS.
-       */
-      virtual bool can_send_key_update() const { return true; }
 
       virtual void send_flight(std::vector<Flight::Message> flight) = 0;
 
@@ -217,7 +227,7 @@ class BOTAN_TEST_API Channel_IO {
       Callbacks& callbacks() { return *m_callbacks; }
 
    private:
-      bool needs_traffic_based_key_update() const;
+      void maybe_send_opportunistic_key_update();
 
    private:
       bool m_first_message_delivered = false;
