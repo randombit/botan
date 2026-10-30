@@ -61,6 +61,8 @@ BOTAN_FFI_VERSION = 20260811  #: The FFI API version this module was written aga
 
 BOTAN_MINIMUM_FFI_VERSION = 20230403  #: The oldest FFI API version (Botan 3.0.0) this module can load.
 
+BOTAN_FFI_TLS_VERSION = 20260916  #: The experimental TLS FFI API version this module was written against.
+
 _NOT_IMPLEMENTED_RC = -40  # BOTAN_FFI_ERROR_NOT_IMPLEMENTED
 
 

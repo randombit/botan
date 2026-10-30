@@ -32,6 +32,8 @@ The library in use can be identified with :func:`version_string` or
 
 .. autodata:: BOTAN_MINIMUM_FFI_VERSION
 
+.. autodata:: BOTAN_FFI_TLS_VERSION
+
 .. autoclass:: BotanFunctionUnavailable
    :members:
 
