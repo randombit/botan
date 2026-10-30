@@ -5,7 +5,7 @@
 //! the Rust system allocator. A [`TestCtx`] can be attached as the `ctx`
 //! pointer to count invocations, track live allocations and inject failures.
 
-use crate::hash::{
+use crate::callbacks::{
     CallbackProvider, HqcAllocCallbacks, HqcBuffer, HqcCallbacks, HqcHashCallbacks, HqcXof, HQC_CALLBACKS_VERSION,
 };
 use core::ffi::c_void;

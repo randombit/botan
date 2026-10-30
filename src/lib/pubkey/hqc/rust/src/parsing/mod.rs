@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::hash::Callbacks;
+use crate::callbacks::Callbacks;
 use crate::secmem::SecureBuffer;
 use crate::kem::CiphertextKem;
 use crate::parameters::{HqcParameters, SALT_BYTES, SEED_BYTES};

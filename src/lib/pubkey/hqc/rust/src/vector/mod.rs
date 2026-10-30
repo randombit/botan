@@ -1,5 +1,6 @@
 use crate::error::Result;
-use crate::hash::{Callbacks, Xof};
+use crate::callbacks::Callbacks;
+use crate::hash::Xof;
 use crate::parameters::*;
 use crate::secmem::{zeroize_slice, SecureBuffer};
 

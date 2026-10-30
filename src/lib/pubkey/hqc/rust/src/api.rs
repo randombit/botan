@@ -22,8 +22,8 @@
 //! the output of the NIST KAT DRBG therefore reproduces the reference known
 //! answer tests, and a caller such as Botan draws the bytes from its own RNG.
 
+use crate::callbacks::Callbacks;
 use crate::error::{HqcError, Result, check_len};
-use crate::hash::Callbacks;
 use crate::kem;
 use crate::parameters::{HqcParameterSet, HqcParameters, SALT_BYTES, SEED_BYTES};
 

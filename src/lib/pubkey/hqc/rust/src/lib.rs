@@ -1,4 +1,5 @@
 pub mod api;
+pub mod callbacks;
 pub mod capi;
 pub mod error;
 pub mod code;

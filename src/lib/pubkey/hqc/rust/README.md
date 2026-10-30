@@ -50,8 +50,9 @@ Sizes in bytes, matching the tracked reference revision. They are derived in
 |---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `api`         | **Public API.** `Hqc` handle, caller-provided buffers, `Result` returns, length accessors. Start here.                                                       |
 | `capi`        | **C ABI** for Botan. Stateless `extern "C"` entry points, `catch_unwind` on every one, integer error codes. Declared for C in `include/hqc_c_api.h`.        |
-| `hash`        | Provider traits (`HashProvider`, `SecureAllocator`, `Callbacks`) and `CallbackProvider`, the implementation over the C callbacks.                       |
-| `secmem`      | Secret memory: `SecureBuffer` (provider memory), `SecretVec` (heap, volatile zeroize on drop), `zeroize_slice`.                                          |
+| `callbacks`   | C callback definitions, the combined `Callbacks` trait, and `CallbackProvider` implementing hashing and secure allocation. |
+| `hash`        | Hash abstractions: `HashProvider` and the incremental `Xof` interface.                       |
+| `secmem`      | Secret memory: the `SecureAllocator` trait, `SecureBuffer` (provider memory), `SecretVec` (heap, volatile zeroize on drop), `zeroize_slice`.                                          |
 | `error`       | `HqcError` and the crate's `Result` alias.                                                                                                                   |
 | `nist`        | The NIST `api.h` constants (`CRYPTO_SECRETKEYBYTES` …), one module per parameter set, pinned against the reference.                                          |
 | `parameters`  | `HqcParameterSet`, `HqcParameters`, and the three `const` instances. Everything parameter-dependent originates here, including the generated α-power tables. |
@@ -115,7 +116,7 @@ cargo test --release                  # KATs are ~10x faster
 use rust_hqc::api::Hqc;
 use rust_hqc::parameters::HqcParameterSet;
 
-// `cb` implements `hash::Callbacks` (SHA3, SHAKE256, secure memory)
+// `cb` implements `callbacks::Callbacks` (SHA3, SHAKE256, secure memory)
 let hqc = Hqc::new(HqcParameterSet::Hqc3, &cb);
 
 // The API is derandomized: the caller draws exactly the bytes the

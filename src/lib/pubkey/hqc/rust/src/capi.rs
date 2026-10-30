@@ -19,7 +19,7 @@
 //!
 //! The crate has neither a hash implementation nor an allocator for secrets.
 //! Every operation takes a pointer to an `hqc_callbacks_t` (see
-//! `include/hqc_c_api.h` and [`crate::hash`]) through which the caller
+//! `include/hqc_c_api.h` and [`crate::callbacks`]) through which the caller
 //! supplies SHA3-256, SHA3-512, SHAKE256 and secure memory.
 //!
 //! # Unwinding
@@ -37,8 +37,8 @@
 //! and valid for the stated lengths. Output buffers must not alias the inputs.
 
 use crate::api::Hqc;
+use crate::callbacks::{CallbackProvider, HqcCallbacks};
 use crate::error::HqcError;
-use crate::hash::{CallbackProvider, HqcCallbacks};
 use crate::parameters::{HqcParameterSet, HqcParameters};
 use core::panic::AssertUnwindSafe;
 use std::panic::catch_unwind;
@@ -326,7 +326,7 @@ pub unsafe extern "C" fn hqc_decaps(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::hash::HQC_CALLBACKS_VERSION;
+    use crate::callbacks::HQC_CALLBACKS_VERSION;
     use crate::test_support::{callbacks, callbacks_with, TestCtx};
     use core::sync::atomic::Ordering;
 
@@ -465,7 +465,7 @@ mod tests {
         }
 
         // The callback struct: version macro and every member, in the order
-        // of the Rust definition in `hash.rs`.
+        // of the Rust definition in `callbacks.rs`.
         assert!(
             header.contains(&format!("#define HQC_CALLBACKS_VERSION {HQC_CALLBACKS_VERSION}")),
             "HQC_CALLBACKS_VERSION is not {HQC_CALLBACKS_VERSION} in {path}"

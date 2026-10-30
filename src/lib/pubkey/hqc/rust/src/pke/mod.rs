@@ -1,7 +1,7 @@
 use crate::code::{code_decode, code_encode};
 use crate::error::Result;
 use crate::gf2x::vect_mul;
-use crate::hash::Callbacks;
+use crate::callbacks::Callbacks;
 use crate::parameters::{HqcParameters, SEED_BYTES};
 use crate::parsing::{hqc_dk_pke_from_string, hqc_ek_pke_from_string};
 use crate::secmem::{SecretVec, SecureBuffer};

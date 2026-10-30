@@ -1,5 +1,6 @@
 use crate::error::{HqcError, Result};
-use crate::hash::{Callbacks, Xof};
+use crate::callbacks::Callbacks;
+use crate::hash::Xof;
 use crate::parameters::{HqcParameters, SALT_BYTES, SEED_BYTES, SHARED_SECRET_BYTES};
 use crate::parsing::{hqc_c_kem_from_string, hqc_c_kem_to_string, hqc_dk_pke_from_string};
 use crate::pke::{CiphertextPke, hqc_pke_decrypt_expanded, hqc_pke_encrypt, hqc_pke_keygen};
