@@ -18,7 +18,7 @@ import copy
 import errno
 import json
 import logging
-import optparse  # pylint: disable=deprecated-module
+import argparse
 import os
 import os.path
 import platform
@@ -370,92 +370,93 @@ def process_command_line(args):
     available before logging is setup.
     """
 
-    def define_option_pair(group, verb, nverb, what, default, msg=optparse.SUPPRESS_HELP):
+    def define_option_pair(group, verb, nverb, what, default, msg=argparse.SUPPRESS):
         dest = '%s_%s' % (verb, what.replace('-', '_'))
 
         # always show the help for the option that switches away from the default
-        with_help = msg if not default else optparse.SUPPRESS_HELP
-        without_help = msg if default else optparse.SUPPRESS_HELP
+        with_help = msg if not default else argparse.SUPPRESS
+        without_help = msg if default else argparse.SUPPRESS
 
-        group.add_option('--%s-%s' % (verb, what),
+        group.add_argument('--%s-%s' % (verb, what),
                          dest=dest,
                          action='store_true',
                          default=default,
                          help=with_help)
 
-        group.add_option('--%s-%s' % (nverb, what),
+        group.add_argument('--%s-%s' % (nverb, what),
                          dest=dest,
                          action='store_false',
                          help=without_help)
 
-    def add_with_without_pair(group, what, default, msg=optparse.SUPPRESS_HELP):
+    def add_with_without_pair(group, what, default, msg=argparse.SUPPRESS):
         define_option_pair(group, 'with', 'without', what, default, msg)
 
-    def add_enable_disable_pair(group, what, default, msg=optparse.SUPPRESS_HELP):
+    def add_enable_disable_pair(group, what, default, msg=argparse.SUPPRESS):
         define_option_pair(group, 'enable', 'disable', what, default, msg)
 
-    parser = optparse.OptionParser(
-        formatter=optparse.IndentedHelpFormatter(max_help_position=50),
-        version=Version.as_string())
+    parser = argparse.ArgumentParser(
+        formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=50))
 
-    parser.add_option('--verbose', action='store_true', default=False,
+    parser.add_argument('--version', action='version', version=Version.as_string())
+
+    parser.add_argument('--verbose', action='store_true', default=False,
                       help='Show debug messages')
-    parser.add_option('--quiet', action='store_true', default=False,
+    parser.add_argument('--quiet', action='store_true', default=False,
                       help='Show only warnings and errors')
 
-    target_group = optparse.OptionGroup(parser, 'Target options')
+    target_group = parser.add_argument_group('Target options')
 
-    target_group.add_option('--cpu', help='set the target CPU architecture')
+    target_group.add_argument('--cpu', help='set the target CPU architecture')
 
-    target_group.add_option('--os', help='set the target operating system')
+    target_group.add_argument('--os', help='set the target operating system')
 
-    target_group.add_option('--cc', dest='compiler', help='set the desired build compiler')
+    target_group.add_argument('--cc', dest='compiler', help='set the desired build compiler')
 
-    target_group.add_option('--cc-min-version', dest='cc_min_version', default=None,
+    target_group.add_argument('--cc-min-version', dest='cc_min_version', default=None,
                             metavar='MAJOR.MINOR',
                             help='Set the minimal version of the target compiler. ' \
                                  'Use --cc-min-version=0.0 to support all compiler versions. ' \
                                  'Default is auto detection.')
 
-    target_group.add_option('--cc-bin', dest='compiler_binary', metavar='BINARY',
+    target_group.add_argument('--cc-bin', dest='compiler_binary', metavar='BINARY',
                             help='set path to compiler binary')
 
-    target_group.add_option('--cc-abi-flags', metavar='FLAGS', default='',
+    target_group.add_argument('--cc-abi-flags', metavar='FLAGS', default='',
                             help='set compiler ABI flags')
 
-    target_group.add_option('--cxxflags', metavar='FLAGS', default=None,
+    target_group.add_argument('--cxxflags', metavar='FLAGS', default=None,
                             help='override all compiler flags')
 
-    target_group.add_option('--extra-cxxflags', metavar='FLAGS', default=[], action='append',
+    target_group.add_argument('--extra-cxxflags', metavar='FLAGS', default=[], action='append',
                             help='set extra compiler flags')
 
-    target_group.add_option('--lto-cxxflags-to-ldflags', default=False, action='store_true',
+    target_group.add_argument('--lto-cxxflags-to-ldflags', default=False, action='store_true',
                             help='set all compilation flags also during linking (for LTO)')
 
-    target_group.add_option('--ldflags', metavar='FLAGS',
+    target_group.add_argument('--ldflags', metavar='FLAGS',
                             help='set linker flags', default=None)
 
-    target_group.add_option('--extra-libs', metavar='LIBS',
+    target_group.add_argument('--extra-libs', metavar='LIBS',
                             help='specify extra libraries to link against', default='')
 
-    target_group.add_option('--ar-command', dest='ar_command', metavar='AR', default=None,
+    target_group.add_argument('--ar-command', dest='ar_command', metavar='AR', default=None,
                             help='set path to static archive creator')
 
-    target_group.add_option('--ar-options', dest='ar_options', metavar='AR_OPTIONS', default=None,
+    target_group.add_argument('--ar-options', dest='ar_options', metavar='AR_OPTIONS', default=None,
                             help='set options for ar')
 
-    target_group.add_option('--msvc-runtime', metavar='RT', default=None,
+    target_group.add_argument('--msvc-runtime', metavar='RT', default=None,
                             help='specify MSVC runtime (MT, MD, MTd, MDd)')
 
-    target_group.add_option('--compiler-cache',
+    target_group.add_argument('--compiler-cache',
                             help='specify a compiler cache to use')
 
-    target_group.add_option('--ct-value-barrier-type', metavar='TYPE', default=None,
-                            help=optparse.SUPPRESS_HELP)
+    target_group.add_argument('--ct-value-barrier-type', metavar='TYPE', default=None,
+                            help=argparse.SUPPRESS)
 
-    target_group.add_option('--with-os-features', action='append', metavar='FEAT',
+    target_group.add_argument('--with-os-features', action='append', metavar='FEAT',
                             help='specify OS features to use')
-    target_group.add_option('--without-os-features', action='append', metavar='FEAT',
+    target_group.add_argument('--without-os-features', action='append', metavar='FEAT',
                             help='specify OS features to disable')
 
     add_with_without_pair(target_group, 'compilation-database', True, 'disable compile_commands.json')
@@ -467,15 +468,15 @@ def process_command_line(args):
 
         nm = isa_extn.replace('-', '').replace('.', '').replace(' ', '')
 
-        target_group.add_option('--disable-%s' % (isa_extn),
+        target_group.add_argument('--disable-%s' % (isa_extn),
                                 help='disable %s intrinsics' % (isa_extn_name),
                                 action='append_const',
                                 const=(nm,arch),
                                 dest='disable_intrinsics')
 
-    build_group = optparse.OptionGroup(parser, 'Build options')
+    build_group = parser.add_argument_group('Build options')
 
-    build_group.add_option('--system-cert-bundle', metavar='PATH', default=None,
+    build_group.add_argument('--system-cert-bundle', metavar='PATH', default=None,
                            help='set path to trusted CA bundle')
 
     add_with_without_pair(build_group, 'debug-info', False, 'include debug symbols')
@@ -486,117 +487,117 @@ def process_command_line(args):
 
     add_enable_disable_pair(build_group, 'stack-scrubbing', False, 'enable compiler-assisted stack scrubbing')
 
-    build_group.add_option('--enable-sanitizers', metavar='SAN', default='',
+    build_group.add_argument('--enable-sanitizers', metavar='SAN', default='',
                            help='enable specific sanitizers')
 
     add_with_without_pair(build_group, 'stack-protector', None, 'disable stack smashing protections')
 
     add_with_without_pair(build_group, 'coverage-info', False, 'add coverage info')
 
-    build_group.add_option('--enable-shared-library', dest='build_shared_lib',
+    build_group.add_argument('--enable-shared-library', dest='build_shared_lib',
                            action='store_true', default=None,
-                           help=optparse.SUPPRESS_HELP)
-    build_group.add_option('--disable-shared-library', dest='build_shared_lib',
+                           help=argparse.SUPPRESS)
+    build_group.add_argument('--disable-shared-library', dest='build_shared_lib',
                            action='store_false',
                            help='disable building shared library')
 
-    build_group.add_option('--enable-static-library', dest='build_static_lib',
+    build_group.add_argument('--enable-static-library', dest='build_static_lib',
                            action='store_true', default=None,
-                           help=optparse.SUPPRESS_HELP)
-    build_group.add_option('--disable-static-library', dest='build_static_lib',
+                           help=argparse.SUPPRESS)
+    build_group.add_argument('--disable-static-library', dest='build_static_lib',
                            action='store_false',
                            help='disable building static library')
 
-    build_group.add_option('--optimize-for-size', dest='optimize_for_size',
+    build_group.add_argument('--optimize-for-size', dest='optimize_for_size',
                            action='store_true', default=False,
                            help='optimize for code size')
 
-    build_group.add_option('--no-optimizations', dest='no_optimizations',
+    build_group.add_argument('--no-optimizations', dest='no_optimizations',
                            action='store_true', default=False,
                            help='disable all optimizations (for debugging)')
 
-    build_group.add_option('--debug-mode', action='store_true', default=False, dest='debug_mode',
+    build_group.add_argument('--debug-mode', action='store_true', default=False, dest='debug_mode',
                            help='enable debug info, disable optimizations')
 
-    build_group.add_option('--amalgamation', dest='amalgamation',
+    build_group.add_argument('--amalgamation', dest='amalgamation',
                            default=False, action='store_true',
                            help='use amalgamation to build')
 
-    build_group.add_option('--name-amalgamation', metavar='NAME', default='botan_all',
+    build_group.add_argument('--name-amalgamation', metavar='NAME', default='botan_all',
                            help='specify alternate name for amalgamation files')
 
-    build_group.add_option('--with-build-dir', metavar='DIR', default='',
+    build_group.add_argument('--with-build-dir', metavar='DIR', default='',
                            help='setup the build in DIR')
 
-    build_group.add_option('--with-external-includedir', metavar='DIR', default=[],
+    build_group.add_argument('--with-external-includedir', metavar='DIR', default=[],
                            help='use DIR for external includes', action='append')
 
-    build_group.add_option('--with-external-libdir', metavar='DIR', default=[],
+    build_group.add_argument('--with-external-libdir', metavar='DIR', default=[],
                            help='use DIR for external libs', action='append')
 
-    build_group.add_option('--define-build-macro', metavar='DEFINE', default=[],
+    build_group.add_argument('--define-build-macro', metavar='DEFINE', default=[],
                            help='set compile-time pre-processor definition like KEY[=VALUE]', action='append')
 
-    build_group.add_option('--with-sysroot-dir', metavar='DIR', default='',
+    build_group.add_argument('--with-sysroot-dir', metavar='DIR', default='',
                            help='use DIR for system root while cross-compiling')
 
     link_methods = ['symlink', 'hardlink', 'copy']
-    build_group.add_option('--link-method', default=None, metavar='METHOD',
+    build_group.add_argument('--link-method', default=None, metavar='METHOD',
                            choices=link_methods,
                            help='choose how links to include headers are created (%s)' % ', '.join(link_methods))
 
-    build_group.add_option('--distribution-info', metavar='STRING',
+    build_group.add_argument('--distribution-info', metavar='STRING',
                            help='distribution specific version', default=None)
 
-    build_group.add_option('--maintainer-mode', dest='maintainer_mode',
+    build_group.add_argument('--maintainer-mode', dest='maintainer_mode',
                            action='store_true', default=False,
-                           help=optparse.SUPPRESS_HELP)
+                           help=argparse.SUPPRESS)
 
-    build_group.add_option('--werror-mode', dest='werror_mode',
+    build_group.add_argument('--werror-mode', dest='werror_mode',
                            action='store_true', default=False,
                            help="Prohibit compiler warnings")
 
-    build_group.add_option('--no-install-python-module', action='store_true', default=False,
+    build_group.add_argument('--no-install-python-module', action='store_true', default=False,
                            help='skip installing Python module')
 
-    build_group.add_option('--with-python-versions', dest='python_version',
+    build_group.add_argument('--with-python-versions', dest='python_version',
                            metavar='N.M',
                            default='%d.%d' % (sys.version_info[0], sys.version_info[1]),
-                           help='where to install botan3.py (def %default)')
+                           help='where to install botan3.py (def %(default)s)')
 
-    build_group.add_option('--disable-cc-tests', dest='enable_cc_tests',
+    build_group.add_argument('--disable-cc-tests', dest='enable_cc_tests',
                            default=True, action='store_false',
-                           help=optparse.SUPPRESS_HELP)
+                           help=argparse.SUPPRESS)
 
     add_enable_disable_pair(build_group, 'pch', False, 'enable precompiled headers')
 
     add_with_without_pair(build_group, 'valgrind', False, 'use valgrind API')
 
-    build_group.add_option('--unsafe-fuzzer-mode', action='store_true', default=False,
-                           help=optparse.SUPPRESS_HELP)
+    build_group.add_argument('--unsafe-fuzzer-mode', action='store_true', default=False,
+                           help=argparse.SUPPRESS)
 
-    build_group.add_option('--build-fuzzers', dest='build_fuzzers',
+    build_group.add_argument('--build-fuzzers', dest='build_fuzzers',
                            metavar='TYPE', default=None,
                            help='Build fuzzers (afl, libfuzzer, klee, test)')
 
-    build_group.add_option('--with-fuzzer-lib', metavar='LIB', default=None, dest='fuzzer_lib',
+    build_group.add_argument('--with-fuzzer-lib', metavar='LIB', default=None, dest='fuzzer_lib',
                            help='additionally link in LIB')
 
     add_with_without_pair(build_group, 'debug-asserts', default=False)
 
-    build_group.add_option('--unsafe-terminate-on-asserts', action='store_true', default=False,
-                           help=optparse.SUPPRESS_HELP)
+    build_group.add_argument('--unsafe-terminate-on-asserts', action='store_true', default=False,
+                           help=argparse.SUPPRESS)
 
-    build_group.add_option('--build-targets', default=None, dest="build_targets", action='append',
+    build_group.add_argument('--build-targets', default=None, dest="build_targets", action='append',
                            help="build specific targets and tools (%s)" % ', '.join(ACCEPTABLE_BUILD_TARGETS))
 
-    build_group.add_option('--build-tool', default='make',
+    build_group.add_argument('--build-tool', default='make',
                            help="specify the build tool (make, ninja)")
 
     add_with_without_pair(build_group, 'pkg-config', default=None)
     add_with_without_pair(build_group, 'cmake-config', default=True)
 
-    docs_group = optparse.OptionGroup(parser, 'Documentation Options')
+    docs_group = parser.add_argument_group('Documentation Options')
 
     add_with_without_pair(docs_group, 'documentation', True, 'skip building/installing documentation')
 
@@ -610,21 +611,21 @@ def process_command_line(args):
 
     add_with_without_pair(docs_group, 'doxygen', False, 'run Doxygen')
 
-    mods_group = optparse.OptionGroup(parser, 'Module selection')
+    mods_group = parser.add_argument_group('Module selection')
 
-    mods_group.add_option('--module-policy', dest='module_policy',
+    mods_group.add_argument('--module-policy', dest='module_policy',
                           help="module policy file (see src/build-data/policy)",
                           metavar='POL', default=None)
 
-    mods_group.add_option('--enable-modules', dest='enabled_modules',
+    mods_group.add_argument('--enable-modules', dest='enabled_modules',
                           metavar='MODS', action='append',
                           help='enable specific modules')
-    mods_group.add_option('--disable-modules', dest='disabled_modules',
+    mods_group.add_argument('--disable-modules', dest='disabled_modules',
                           metavar='MODS', action='append',
                           help='disable specific modules')
-    mods_group.add_option('--no-autoload', action='store_true', default=False,
-                          help=optparse.SUPPRESS_HELP)
-    mods_group.add_option('--minimized-build', action='store_true', dest='no_autoload',
+    mods_group.add_argument('--no-autoload', action='store_true', default=False,
+                          help=argparse.SUPPRESS)
+    mods_group.add_argument('--minimized-build', action='store_true', dest='no_autoload',
                           help='minimize build')
 
     add_enable_disable_pair(mods_group, 'experimental-features', False,
@@ -637,57 +638,51 @@ def process_command_line(args):
     third_party = ['boost', 'bzip2', 'esdm_rng', 'lzma', 'commoncrypto', 'sqlite3', 'zlib', 'tpm', 'tpm2']
 
     for mod in third_party:
-        mods_group.add_option('--with-%s' % (mod),
-                              help=('use %s' % (mod)) if mod in third_party else optparse.SUPPRESS_HELP,
+        mods_group.add_argument('--with-%s' % (mod),
+                              help=('use %s' % (mod)) if mod in third_party else argparse.SUPPRESS,
                               action='append_const',
                               const=mod,
                               dest='enabled_modules')
 
-        mods_group.add_option('--without-%s' % (mod),
-                              help=optparse.SUPPRESS_HELP,
+        mods_group.add_argument('--without-%s' % (mod),
+                              help=argparse.SUPPRESS,
                               action='append_const',
                               const=mod,
                               dest='disabled_modules')
 
-    install_group = optparse.OptionGroup(parser, 'Installation options')
+    install_group = parser.add_argument_group('Installation options')
 
-    install_group.add_option('--program-suffix', metavar='SUFFIX',
+    install_group.add_argument('--program-suffix', metavar='SUFFIX',
                              help='append string to program names')
-    install_group.add_option('--library-suffix', metavar='SUFFIX', default='',
+    install_group.add_argument('--library-suffix', metavar='SUFFIX', default='',
                              help='append string to library names')
 
-    install_group.add_option('--prefix', metavar='DIR',
+    install_group.add_argument('--prefix', metavar='DIR',
                              help='set the install prefix')
-    install_group.add_option('--docdir', metavar='DIR',
+    install_group.add_argument('--docdir', metavar='DIR',
                              help='set the doc install dir')
-    install_group.add_option('--bindir', metavar='DIR',
+    install_group.add_argument('--bindir', metavar='DIR',
                              help='set the binary install dir')
-    install_group.add_option('--libdir', metavar='DIR',
+    install_group.add_argument('--libdir', metavar='DIR',
                              help='set the library install dir')
-    install_group.add_option('--mandir', metavar='DIR',
+    install_group.add_argument('--mandir', metavar='DIR',
                              help='set the install dir for man pages')
-    install_group.add_option('--includedir', metavar='DIR',
+    install_group.add_argument('--includedir', metavar='DIR',
                              help='set the include file install dir')
-    install_group.add_option('--cmakeconfigdir', metavar='DIR',
+    install_group.add_argument('--cmakeconfigdir', metavar='DIR',
                              help='set the CMake config (botan-config.cmake, botan-config-version.cmake) install dir')
     add_with_without_pair(install_group, 'include-namespace', default=True, msg="don't add a 'botan-%d/' namespace to the include path" % (Version.major()))
 
-    info_group = optparse.OptionGroup(parser, 'Informational')
+    info_group = parser.add_argument_group('Informational')
 
-    info_group.add_option('--list-modules', dest='list_modules',
-                          action='store_true',
+    info_group.add_argument('--list-modules', dest='list_modules',
+                          action='store_true', default=None,
                           help='list available modules and exit')
 
-    info_group.add_option('--list-os-features', dest='list_os_features',
-                          action='store_true',
+    info_group.add_argument('--list-os-features', dest='list_os_features',
+                          action='store_true', default=None,
                           help='list available OS features and exit')
 
-    parser.add_option_group(target_group)
-    parser.add_option_group(build_group)
-    parser.add_option_group(docs_group)
-    parser.add_option_group(mods_group)
-    parser.add_option_group(install_group)
-    parser.add_option_group(info_group)
 
     # These exist only for autoconf compatibility (requested by zw for mtn)
     compat_with_autoconf_options = [
@@ -709,9 +704,27 @@ def process_command_line(args):
         ]
 
     for opt in compat_with_autoconf_options:
-        parser.add_option('--' + opt, help=optparse.SUPPRESS_HELP)
+        parser.add_argument('--' + opt, help=argparse.SUPPRESS)
 
-    (options, args) = parser.parse_args(args)
+    # Positional arguments are not accepted, but are collected so that we can
+    # report them in the same way as before
+    parser.add_argument('args', nargs='*', help=argparse.SUPPRESS)
+
+    # optparse accepted a separate value starting with a dash (--cxxflags -O2),
+    # argparse would take it for an option. Join such values with their option.
+    joined_args = []
+    for arg in args:
+        prev = joined_args[-1] if joined_args else None
+        action = parser._option_string_actions.get(prev)  # pylint: disable=protected-access
+        if action is not None and action.nargs is None and arg.startswith('-') and arg != '--':
+            joined_args[-1] = prev + '=' + arg
+        else:
+            joined_args.append(arg)
+
+    options = parser.parse_args(joined_args)
+
+    args = options.args
+    del options.args
 
     if args != []:
         raise UserError('Unhandled option(s): ' + ' '.join(args))
