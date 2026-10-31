@@ -469,6 +469,77 @@ class FFI_TLS_Session_Manager_Test final : public Test {
 
 BOTAN_REGISTER_TEST("ffi", "ffi_tls_session_manager", FFI_TLS_Session_Manager_Test);
 
+class FFI_TLS_Utilities_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override { return {test_utilities()}; }
+
+   private:
+      static Test::Result test_utilities() {
+         Test::Result result("FFI TLS version and ciphersuite utilities");
+
+   #if defined(BOTAN_HAS_TLS_12)
+         result.test_i32_eq("TLS 1.2 available", botan_tls_version_is_available(BOTAN_TLS_VERSION_TLS_12), 1);
+   #else
+         result.test_i32_eq("TLS 1.2 not available", botan_tls_version_is_available(BOTAN_TLS_VERSION_TLS_12), 0);
+   #endif
+   #if defined(BOTAN_HAS_TLS_13)
+         result.test_i32_eq("TLS 1.3 available", botan_tls_version_is_available(BOTAN_TLS_VERSION_TLS_13), 1);
+         std::string name;
+         TEST_FFI_OK(botan_tls_ciphersuite_view_name, (0x1301, &name, view_string_fn));
+         result.test_str_eq("Ciphersuite name", name, "AES_128_GCM_SHA256");
+   #else
+         result.test_i32_eq("TLS 1.3 not available", botan_tls_version_is_available(BOTAN_TLS_VERSION_TLS_13), 0);
+   #endif
+         result.test_i32_eq("DTLS is not offered by this API", botan_tls_version_is_available(0xFEFD), 0);
+         result.test_i32_eq("Unknown version", botan_tls_version_is_available(0x0301), 0);
+
+         std::string unknown;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE, botan_tls_ciphersuite_view_name, (0xFFFF, &unknown, view_string_fn));
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("ffi", "ffi_tls_utilities", FFI_TLS_Utilities_Test);
+
+class FFI_TLS_Callbacks_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override { return {test_callbacks_handle()}; }
+
+   private:
+      static int emit_fn(void* /*ctx*/, const uint8_t /*data*/[], size_t /*len*/) { return 0; }
+
+      static int record_fn(void* /*ctx*/, uint64_t /*seq_no*/, const uint8_t /*data*/[], size_t /*len*/) { return 0; }
+
+      static int alert_fn(void* /*ctx*/, uint16_t /*alert_code*/, int /*is_fatal*/) { return 0; }
+
+      static int handshake_fn(void* /*ctx*/) { return 0; }
+
+      static Test::Result test_callbacks_handle() {
+         Test::Result result("FFI TLS callbacks handle");
+
+         botan_tls_callbacks_t cb = nullptr;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_tls_callbacks_init, (nullptr, emit_fn, record_fn, alert_fn));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_tls_callbacks_init, (&cb, nullptr, record_fn, alert_fn));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_tls_callbacks_init, (&cb, emit_fn, nullptr, alert_fn));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_tls_callbacks_init, (&cb, emit_fn, record_fn, nullptr));
+         result.test_is_true("Handle stays NULL on error", cb == nullptr);
+
+         REQUIRE_FFI_OK(botan_tls_callbacks_init, (&cb, emit_fn, record_fn, alert_fn));
+         result.test_not_null("Callbacks handle", cb);
+         TEST_FFI_OK(botan_tls_callbacks_set_handshake_complete, (cb, handshake_fn));
+         TEST_FFI_OK(botan_tls_callbacks_set_handshake_complete, (cb, nullptr));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_tls_callbacks_set_handshake_complete, (nullptr, handshake_fn));
+
+         TEST_FFI_OK(botan_tls_callbacks_destroy, (cb));
+         TEST_FFI_OK(botan_tls_callbacks_destroy, (nullptr));
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("ffi", "ffi_tls_callbacks", FFI_TLS_Callbacks_Test);
+
 #endif
 
 }  // namespace
