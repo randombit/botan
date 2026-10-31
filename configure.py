@@ -27,6 +27,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import traceback
 
@@ -443,6 +444,9 @@ def process_command_line(args):
 
     target_group.add_option('--ar-options', dest='ar_options', metavar='AR_OPTIONS', default=None,
                             help='set options for ar')
+
+    target_group.add_option('--rustc', default='rustc', metavar='BINARY',
+                            help='Rust compiler for the opt-in HQC module (default %default)')
 
     target_group.add_option('--msvc-runtime', metavar='RT', default=None,
                             help='specify MSVC runtime (MT, MD, MTd, MDd)')
@@ -2056,10 +2060,70 @@ def generate_build_info(build_paths, modules, osinfo, options):
 
     return out
 
+def hqc_build_config(source_paths, build_paths, options, modules, cc, arch):
+    config = {'with_hqc': False, 'hqc_rust_archive': '', 'hqc_rust_dir': '',
+              'hqc_rust_sources': '', 'hqc_rust_flags': '', 'hqc_native_libs': [],
+              'hqc_rust_link_flags': ''}
+    if not any(m.basename == 'hqc' for m in modules):
+        return config
+
+    if 'hqc' not in options.enabled_modules:
+        raise UserError('HQC requires explicit activation with --enable-modules=hqc')
+    if options.os != 'linux' or platform.system() != 'Linux' or options.with_sysroot_dir:
+        raise UserError('The integrated HQC build currently supports native GNU/Linux targets only')
+    if options.amalgamation:
+        raise UserError('HQC is not supported in amalgamation builds')
+
+    try:
+        cxx_target = subprocess.check_output(shlex.split(options.compiler_binary or cc.binary_name) +
+                                             ['-dumpmachine'], text=True).strip()
+        if 'linux-gnu' not in cxx_target:
+            raise UserError('HQC requires a GNU/Linux C++ toolchain')
+        version = subprocess.check_output([options.rustc, '-vV'], text=True)
+        host = re.search(r'^host: (.*)$', version, re.MULTILINE).group(1)
+        rust_arch = {'x86_64': 'x86_64', 'arm64': 'aarch64', 'x86': 'i686',
+                     'arm32': 'arm', 'riscv64': 'riscv64gc'}.get(arch.basename)
+        if not rust_arch or not host.startswith(rust_arch + '-') or not host.endswith('-linux-gnu'):
+            raise UserError('HQC requires a native GNU/Linux Rust toolchain matching the Botan target')
+        # Probe edition support and obtain the standard library's native link dependencies.
+        # No Cargo registry access is needed, including on a fresh offline checkout.
+        with tempfile.TemporaryDirectory(prefix='botan-hqc-') as probe_dir:
+            probe = subprocess.run([options.rustc, '--edition=2024', '--crate-name=botan_hqc_probe',
+                                    '--crate-type=staticlib', '--print=native-static-libs',
+                                    '-o', os.path.join(probe_dir, 'probe.a'), '-'],
+                                   input='', text=True, capture_output=True, check=True)
+        native_libs = re.search(r'native-static-libs: (.*)', probe.stderr).group(1).split()
+        if any(not lib.startswith('-l') for lib in native_libs):
+            raise UserError('Unsupported Rust native link dependencies for HQC')
+    except (OSError, subprocess.CalledProcessError, AttributeError) as ex:
+        raise UserError('HQC requires rustc with Rust 2024 edition support (Rust 1.85 or later): %s' % ex) from ex
+
+    crate_dir = normalize_source_path(os.path.join(source_paths.lib_dir, 'pubkey/hqc/rust'))
+    rust_dir = normalize_source_path(os.path.join(build_paths.build_dir, 'rust/hqc'))
+    sources = [os.path.join(crate_dir, 'Cargo.toml')]
+    for dirpath, _, filenames in os.walk(os.path.join(crate_dir, 'src')):
+        sources.extend(os.path.join(dirpath, f) for f in filenames if f.endswith('.rs'))
+    flags = ['--edition=2024', '--crate-name=rust_hqc', '--crate-type=staticlib',
+             '-Crelocation-model=pic', '-Copt-level=' + ('0' if options.no_optimizations else
+                                                        's' if options.optimize_for_size else '3')]
+    if options.with_debug_info:
+        flags.append('-Cdebuginfo=2')
+    config.update({'with_hqc': True, 'hqc_rust_dir': rust_dir,
+                   'hqc_rust_archive': rust_dir + '/librust_hqc.a',
+                   'hqc_rust_sources': ' '.join(normalize_source_paths(sorted(sources))),
+                   'hqc_rust_crate': crate_dir + '/src/lib.rs',
+                   'hqc_rustc': options.rustc, 'hqc_rust_flags': ' '.join(flags),
+                   'hqc_rust_link_flags': '-Wl,--exclude-libs,librust_hqc.a',
+                   'hqc_native_libs': [lib[2:] for lib in native_libs]})
+    return config
+
+
 def create_template_vars(source_paths, build_paths, options, modules, disabled_modules, cc, arch, osinfo):
     """
     Create the template variables needed to process the makefile, build.h, etc
     """
+
+    hqc_config = hqc_build_config(source_paths, build_paths, options, modules, cc, arch)
 
     def external_link_cmd():
         return ' '.join([cc.add_lib_dir_option + libdir for libdir in options.with_external_libdir])
@@ -2071,7 +2135,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         if module_member_name not in ['libs', 'frameworks']:
             raise InternalError("Invalid argument")
 
-        libs = set()
+        libs = set(hqc_config['hqc_native_libs']) if module_member_name == 'libs' else set()
         for module in modules:
             for (osname, module_link_to) in getattr(module, module_member_name).items():
                 if osname in ['all', osinfo.basename]:
@@ -2509,6 +2573,12 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         variables['build_dir_link_path'] = '%s%s' % (cc.add_lib_dir_option, build_dir)
         variables['link_to_botan'] = cc.add_lib_option % variables['libname']
 
+    variables.update(hqc_config)
+    variables['build_static_lib_with_hqc'] = options.build_static_lib and hqc_config['with_hqc']
+    variables['build_static_lib_without_hqc'] = options.build_static_lib and not hqc_config['with_hqc']
+    variables['build_static_lib_using_cmdline_args_without_hqc'] = (
+        variables['build_static_lib_using_cmdline_args'] and not hqc_config['with_hqc'])
+    variables['hqc_native_libs_cmake'] = ';'.join(hqc_config['hqc_native_libs'])
     return variables
 
 class ModulesChooser:

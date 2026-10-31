@@ -285,8 +285,59 @@ Post-quantum secure, code-based key encapsulation scheme.
    hybrid scheme, paired with either a classical EC algorithm or a lattice-based
    scheme such as ML-KEM.
 
+HQCr4
+~~~~~
+
+Post-quantum secure, code-based key encapsulation scheme (Hamming Quasi-Cyclic),
+selected by NIST in March 2025 for standardization as a backup to ML-KEM. The
+implementation follows the HQC specification of 2025-08-22, i.e. the round-4
+submission, including the parameter update the HQC team announced on the
+pqc-forum afterwards (reference implementation commit ``71090d46``: changed
+sampling weights, GF(256) representation and key format; key and ciphertext
+sizes are unchanged), and supports the parameter sets ``HQCr4-1``, ``HQCr4-3``
+and ``HQCr4-5``. The algorithm name ``HQCr4`` carries the round number because
+HQC is not yet standardized; the standardized scheme will be added under a
+different name.
+
+The cryptographic core is implemented in Rust in the crate ``rust-hqc``, whose
+sources are part of Botan in ``src/lib/pubkey/hqc/rust``. The crate
+contains no hash function and no allocator for secrets of its own: Botan's
+SHA-3 and SHAKE-256 implementations and Botan's secure allocator (locked
+memory pool for small secrets, scrubbed on release) are handed to it through
+callbacks on every call.
+
+The module ``hqc`` is disabled by default and requires explicit activation::
+
+  ./configure.py --enable-modules=hqc
+  make
+
+The integrated build currently supports native GNU/Linux targets with a matching
+GNU/Linux Rust toolchain. Rust 1.85 or later (2024 edition) and GNU or LLVM
+``ar`` with MRI support are required. Use ``--rustc=/path/to/rustc`` to select
+the compiler. Cross compilation and amalgamation builds with HQC are not yet
+supported.
+
+The build compiles the Rust sources directly with ``rustc`` and needs no Cargo
+registry access. Rust artifacts live under the configured build directory and
+are removed by ``make clean``. Both shared and static Botan libraries include
+the Rust implementation; installed applications need no separate HQC library.
+Rust's native system library dependencies are detected during configuration and
+included in the build and static linking metadata.
+
+To run the Rust unit tests and reference-vector tests separately (requires Cargo
+and the crate's development dependencies)::
+
+  CARGO_TARGET_DIR=/tmp/botan-hqc-tests cargo test --release --locked \
+     --manifest-path src/lib/pubkey/hqc/rust/Cargo.toml
+
+Keys are encoded as the raw byte strings defined by the specification (there is
+no ASN.1 structure for HQC keys yet), and the algorithm identifiers use OIDs from
+Botan's private arc. The private key is the 32 byte master seed of the
+specification; the public key is derived from it when a private key is loaded,
+which costs one key generation. The key formats are not yet stable.
+
 ElGamal
-~~~~~~~~
+~~~~~~~
 
 Encryption scheme based on the discrete logarithm problem. Generally unused
 except in PGP.
