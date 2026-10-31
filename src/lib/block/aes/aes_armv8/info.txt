@@ -12,5 +12,6 @@ armv8crypto
 </isa>
 
 <requires>
+aes_hwaes
 cpuid
 </requires>

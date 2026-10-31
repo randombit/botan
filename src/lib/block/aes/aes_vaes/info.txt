@@ -8,6 +8,7 @@ brief -> "AES using VAES"
 </module_info>
 
 <requires>
+aes_hwaes
 cpuid
 simd_8x32
 </requires>
