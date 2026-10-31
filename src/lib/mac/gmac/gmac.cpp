@@ -100,6 +100,7 @@ void GMAC::final_result(std::span<uint8_t> mac) {
 
    m_ghash->final(mac.first(output_length()));
    m_ghash->reset_associated_data();
+   m_initialized = false;
 }
 
 std::unique_ptr<MessageAuthenticationCode> GMAC::new_object() const {
