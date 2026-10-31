@@ -76,6 +76,14 @@ class Active_Connection_State_12 final {
       bool supports_extended_master_secret() const { return m_supports_extended_master_secret; }
 
       /**
+       * True if encrypt-then-MAC was used by this or any previous handshake
+       * on this connection; RFC 7366 3.1 forbids downgrading from it
+       */
+      bool encrypt_then_mac_used() const { return m_encrypt_then_mac_used; }
+
+      void note_encrypt_then_mac_used() { m_encrypt_then_mac_used = true; }
+
+      /**
        * For DTLS: the handshake IO from the completed handshake, needed to
        * validate retransmissions and, for the terminal-flight sender, replay
        * the final flight. Null for stream TLS.
@@ -98,6 +106,7 @@ class Active_Connection_State_12 final {
       std::vector<uint8_t> m_client_finished_verify_data;
       std::vector<uint8_t> m_server_finished_verify_data;
       bool m_supports_extended_master_secret = false;
+      bool m_encrypt_then_mac_used = false;
       std::unique_ptr<Datagram_Handshake_IO> m_dtls_handshake_io;
 };
 

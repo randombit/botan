@@ -34,6 +34,7 @@
    #include <botan/tls_server.h>
    #include <botan/tls_session_manager_memory.h>
    #include <botan/tls_session_manager_noop.h>
+   #include <botan/internal/fmt.h>
    #include <botan/internal/stl_util.h>
    #include <botan/internal/tls_reader.h>
 
@@ -204,18 +205,8 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager {
 };
 
 std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenerator& rng,
-                                                       bool with_client_certs = false) {
-   // RSA and ECDSA are required for the TLS module, but we need to find an
-   // ECC group that is supported in this build or skip this test.
-   //
-   // secp256r1 is excluded because the Strict_Policy requires at least SHA-384
-   // and TLS 1.3 enforces that hash lengths match the key strength.
-   const auto ec_group = Test::supported_ec_group_name({"secp384r1", "secp521r1"});
-   if(!ec_group) {
-      return nullptr;
-   }
-
-   const auto ecdsa_params = Botan::EC_Group::from_name(*ec_group);
+                                                       const Botan::EC_Group& ecdsa_params,
+                                                       bool with_client_certs) {
    const size_t rsa_params = 1024;
 
    const auto rsa_ca_key = std::make_unique<Botan::RSA_PrivateKey>(rng, rsa_params);
@@ -263,6 +254,46 @@ std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenera
                                                      ecdsa_srv_key.release(),
                                                      ecdsa_ca_cert,
                                                      ecdsa_crl);
+}
+
+std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenerator& rng,
+                                                       bool with_client_certs = false) {
+   // RSA and ECDSA are required for the TLS module, but we need to find an
+   // ECC group that is supported in this build or skip this test.
+   //
+   // secp256r1 is excluded because the Strict_Policy requires at least SHA-384
+   // and TLS 1.3 enforces that hash lengths match the key strength.
+   const auto ec_group = Test::supported_ec_group_name({"secp384r1", "secp521r1"});
+   if(!ec_group) {
+      return nullptr;
+   }
+
+   return create_creds(rng, Botan::EC_Group::from_name(*ec_group), with_client_certs);
+}
+
+/**
+ * Register numsp256d1 as an application specific curve, which has no TLS
+ * group or signature scheme code point
+ */
+Botan::EC_Group register_numsp256d1() {
+   static const Botan::EC_Group group = [] {
+      const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF43");
+      const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF40");
+      const Botan::BigInt b("0x25581");
+      const Botan::BigInt order("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE43C8275EA265C6020AB20294751A825");
+
+      const Botan::BigInt g_x("0x01");
+      const Botan::BigInt g_y("0x696F1853C1E466D7FC82C96CCEEEDD6BD02C2F9375894EC10BF46306C2B56C77");
+
+      const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
+
+      Botan::OID::register_oid(oid, "numsp256d1");
+
+      // Creating this object implicitly registers the curve for future use ...
+      return Botan::EC_Group::register_custom_group(oid, p, a, b, g_x, g_y, order);
+   }();
+
+   return group;
 }
 
 class TLS_Handshake_Test final {
@@ -321,6 +352,11 @@ class TLS_Handshake_Test final {
          std::function<void(const Botan::TLS::Session_Summary&)> clbk) {
          BOTAN_ASSERT_NONNULL(m_server_cb);
          m_server_cb->set_custom_tls_session_established_callback(std::move(clbk));
+      }
+
+      void set_custom_client_tls_should_persist_callback(std::function<bool(const Botan::TLS::Session&)> clbk) {
+         BOTAN_ASSERT_NONNULL(m_client_cb);
+         m_client_cb->set_custom_tls_should_persist_callback(std::move(clbk));
       }
 
       void set_custom_client_tls_generate_ephemeral_ecdh_key_callback(generate_ephemeral_ecdh_key_clbk clbk) {
@@ -609,6 +645,17 @@ class TLS_Handshake_Test final {
                m_generate_ephemeral_ecdh_key_callback = std::move(clbk);
             }
 
+            void set_custom_tls_should_persist_callback(std::function<bool(const Botan::TLS::Session&)> clbk) {
+               m_should_persist_callback = std::move(clbk);
+            }
+
+            bool tls_should_persist_resumption_information(const Botan::TLS::Session& session) override {
+               if(m_should_persist_callback) {
+                  return m_should_persist_callback(session);
+               }
+               return Botan::TLS::Callbacks::tls_should_persist_resumption_information(session);
+            }
+
             void set_custom_client_tls_ephemeral_key_agreement_callback(ephemeral_key_agreement_clbk clbk) {
                m_ephemeral_key_agreement_callback = std::move(clbk);
             }
@@ -626,6 +673,7 @@ class TLS_Handshake_Test final {
             std::vector<uint8_t>& m_recv;
 
             std::function<void(const Botan::TLS::Session_Summary&)> m_session_established_callback;
+            std::function<bool(const Botan::TLS::Session&)> m_should_persist_callback;
             generate_ephemeral_ecdh_key_clbk m_generate_ephemeral_ecdh_key_callback;
             ephemeral_key_agreement_clbk m_ephemeral_key_agreement_callback;
             custom_kdf_clbk m_custom_kdf_callback;
@@ -859,6 +907,21 @@ class Test_Policy final : public Botan::TLS::Text_Policy {
 
       size_t minimum_signature_strength() const override { return 80; }
 };
+
+   #if defined(BOTAN_HAS_TLS_12)
+/**
+ * The ECDSA test certificates use secp384r1 (or secp521r1), and the server
+ * only uses a certificate whose curve the client offered.
+ */
+class Suite_B_128_Test_Policy final : public Botan::TLS::NSA_Suite_B_128 {
+   public:
+      std::vector<Botan::TLS::Group_Params> key_exchange_groups() const override {
+         return {Botan::TLS::Group_Params::SECP256R1,
+                 Botan::TLS::Group_Params::SECP384R1,
+                 Botan::TLS::Group_Params::SECP521R1};
+      }
+};
+   #endif
 
 /**
  * This mocks a custom ECDH adapter class that essentially just wraps an
@@ -1182,6 +1245,279 @@ class TLS_Unit_Tests final : public Test {
       }
 
       /**
+       * A TLS 1.2 server that cannot send a CertificateRequest must fail the
+       * handshake if it requires client certificates, and otherwise continue
+       * without client authentication.
+       */
+      void test_tls12_client_auth_without_signature_schemes(std::vector<Test::Result>& results,
+                                                            const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         using PV = Botan::TLS::Protocol_Version;
+         using SS = Botan::TLS::Signature_Scheme;
+
+         class Client_Auth_Schemes_Policy final : public Botan::TLS::Text_Policy {
+            public:
+               Client_Auth_Schemes_Policy(bool require_client_auth, std::vector<SS> schemes) :
+                     Text_Policy("allow_tls13 = false\n"),
+                     m_require_client_auth(require_client_auth),
+                     m_schemes(std::move(schemes)) {}
+
+               size_t minimum_rsa_bits() const override { return 1024; }
+
+               size_t minimum_signature_strength() const override { return 80; }
+
+               bool require_client_certificate_authentication() const override { return m_require_client_auth; }
+
+               bool request_client_certificate_authentication() const override { return true; }
+
+               std::vector<SS> acceptable_signature_schemes() const override { return m_schemes; }
+
+            private:
+               bool m_require_client_auth;
+               std::vector<SS> m_schemes;
+         };
+
+         const auto creds = create_creds(*rng, true /* with_client_certs */);
+         if(!creds) {
+            results.push_back(Test::Result::Note("TLS 1.2 client auth", "no ECC group available"));
+            return;
+         }
+
+         const auto client_policy = std::make_shared<Test_Policy>();
+         set_allowed_versions(client_policy, std::array<PV, 1>{PV::TLS_V12});
+
+         const std::vector<std::pair<std::string, std::vector<SS>>> scheme_lists = {
+            {"no acceptable signature schemes", {}},
+            {"only TLS 1.3 signature schemes",
+             { SS::ECDSA_BRAINPOOL256R1_TLS13_SHA256,
+               SS::ECDSA_BRAINPOOL384R1_TLS13_SHA384,
+               SS::ECDSA_BRAINPOOL512R1_TLS13_SHA512 }},
+         };
+
+         for(const auto& [schemes_name, schemes] : scheme_lists) {
+            for(const bool require_client_auth : {true, false}) {
+               const std::string mode = require_client_auth ? "required" : "optional";
+               TLS_Handshake_Test test(Botan::fmt("TLS v1.2 {} client auth with {}", mode, schemes_name),
+                                       PV::TLS_V12,
+                                       creds,
+                                       client_policy,
+                                       std::make_shared<Client_Auth_Schemes_Policy>(require_client_auth, schemes),
+                                       rng,
+                                       make_session_manager(rng),
+                                       make_session_manager(rng),
+                                       false);
+               if(require_client_auth) {
+                  test.set_client_expected_handshake_alert(Botan::TLS::Alert::HandshakeFailure);
+                  test.expect_handshake_failure();
+               }
+               test.go();
+               results.push_back(test.results());
+            }
+         }
+      }
+
+      /**
+       * Certificates on curves that have no TLS code point can be used in
+       * TLS 1.2, but not in TLS 1.3 which names the curve in the signature scheme
+       */
+      void test_application_specific_curve_certificates(std::vector<Test::Result>& results,
+                                                        const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         using PV = Botan::TLS::Protocol_Version;
+
+         if(!Botan::EC_Group::supports_application_specific_group()) {
+            results.push_back(
+               Test::Result::Note("TLS application specific curve certificates", "not supported in this build"));
+            return;
+         }
+
+         const auto numsp256d1 = register_numsp256d1();
+
+         for(const auto version : available_versions()) {
+            if(version.is_datagram_protocol()) {
+               continue;
+            }
+
+            for(const bool client_auth : {false, true}) {
+               const auto policy = std::make_shared<Test_Policy>();
+               policy->set("key_exchange_methods", "ECDH");
+               policy->set("signature_methods", "ECDSA");
+               set_allowed_versions(policy, std::array<PV, 1>{version});
+
+               TLS_Handshake_Test test(version.to_string() + " certificate on an application specific curve" +
+                                          (client_auth ? " with client auth" : ""),
+                                       version,
+                                       create_creds(*rng, numsp256d1, client_auth),
+                                       policy,
+                                       policy,
+                                       rng,
+                                       make_session_manager(rng),
+                                       make_session_manager(rng),
+                                       client_auth);
+
+               // RFC 8446 4.2.3
+               //    ECDSA algorithms:  Indicates a signature algorithm using ECDSA
+               //    [ECDSA], the corresponding curve as defined in ANSI X9.62 [ECDSA]
+               //    and FIPS 186-4 [DSS], [...]
+               if(!version.is_pre_tls_13()) {
+                  test.set_client_expected_handshake_alert(Botan::TLS::Alert::HandshakeFailure);
+                  test.expect_handshake_failure();
+               }
+
+               test.go();
+               results.push_back(test.results());
+            }
+         }
+      }
+
+      /**
+       * TLS 1.2 resumption must keep the state of the session, and must not
+       * resume sessions that were vetoed or whose connection failed.
+       */
+      void test_tls12_resumption_consistency(std::vector<Test::Result>& results,
+                                             const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         using PV = Botan::TLS::Protocol_Version;
+
+         const auto creds = create_creds(*rng, false /* no client certs */);
+         if(!creds) {
+            results.push_back(Test::Result::Note("TLS 1.2 resumption consistency", "no ECC group available"));
+            return;
+         }
+
+         const auto make_policy = [](PV version, const std::map<std::string, std::string>& extra = {}) {
+            auto policy = std::make_shared<Test_Policy>();
+            policy->set("key_exchange_methods", "ECDH");
+            set_allowed_versions(policy, std::array<PV, 1>{version});
+            for(const auto& [key, value] : extra) {
+               policy->set(key, value);
+            }
+            return policy;
+         };
+
+         struct Phase {
+               std::string name;
+               std::shared_ptr<Test_Policy> client_policy;
+               std::shared_ptr<Test_Policy> server_policy;
+               bool expect_resumption;
+               // Without the initializer, phases that omit setup warn about a missing field
+               std::function<void(TLS_Handshake_Test&)> setup = {};  // NOLINT(*-redundant-member-init)
+         };
+
+         const auto run = [&](const std::string& scenario,
+                              PV version,
+                              const std::vector<Phase>& phases,
+                              std::optional<size_t> remaining_client_sessions = std::nullopt) {
+            const auto client_ses = make_session_manager(rng);
+            const auto server_ses = make_session_manager(rng);
+            for(const auto& phase : phases) {
+               TLS_Handshake_Test test(scenario + ": " + phase.name,
+                                       version,
+                                       creds,
+                                       phase.client_policy,
+                                       phase.server_policy,
+                                       rng,
+                                       client_ses,
+                                       server_ses,
+                                       false);
+               if(phase.expect_resumption) {
+                  test.expect_session_resumption();
+               }
+               if(phase.setup) {
+                  phase.setup(test);
+               }
+               test.go();
+               results.push_back(test.results());
+            }
+
+            if(remaining_client_sessions.has_value()) {
+               Test::Result result(scenario);
+               result.test_sz_eq("sessions remaining in the client's cache",
+                                 client_ses->remove_all(),
+                                 remaining_client_sessions.value());
+               results.push_back(result);
+            }
+         };
+
+         const auto policy = make_policy(PV::TLS_V12);
+
+         run("TLS 1.2 resumption vetoed by the client",
+             PV::TLS_V12,
+             {
+                {"initial", policy, policy, false},
+                {"resumed and vetoed",
+                 policy,
+                 policy,
+                 true,
+                 [](TLS_Handshake_Test& test) {
+                    test.set_custom_client_tls_should_persist_callback([](const auto&) { return false; });
+                 }},
+                {"not resumed again", policy, policy, false},
+             });
+
+         run("TLS 1.2 resumption failing with a fatal alert",
+             PV::TLS_V12,
+             {
+                {"initial", policy, policy, false},
+                {"resumption aborted by the client",
+                 policy,
+                 policy,
+                 false,
+                 [](TLS_Handshake_Test& test) {
+                    test.set_custom_client_tls_session_established_callback([](const Botan::TLS::Session_Summary&) {
+                       throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::AccessDenied, "test abort");
+                    });
+                    test.set_server_expected_handshake_alert(Botan::TLS::Alert::AccessDenied);
+                    test.expect_handshake_failure();
+                 }},
+             },
+             0 /* the offered session was forgotten */);
+
+      #if defined(BOTAN_HAS_TLS_CBC)
+         {
+            const std::map<std::string, std::string> cbc = {{"ciphers", "AES-128"}, { "macs", "SHA-256" }};
+            auto etm_policy = make_policy(PV::TLS_V12, cbc);
+            etm_policy->set("negotiate_encrypt_then_mac", "true");
+            auto no_etm_policy = make_policy(PV::TLS_V12, cbc);
+            no_etm_policy->set("negotiate_encrypt_then_mac", "false");
+
+            const auto expect_etm = [&results](TLS_Handshake_Test& test) {
+               test.set_custom_client_tls_session_established_callback(
+                  [&results](const Botan::TLS::Session_Summary& summary) {
+                     Test::Result result("TLS 1.2 resumption retains encrypt-then-MAC");
+                     result.test_is_true("resumed session uses encrypt-then-MAC", summary.supports_encrypt_then_mac());
+                     results.push_back(result);
+                  });
+            };
+
+            run("TLS 1.2 resumption after the server disabled encrypt-then-MAC",
+                PV::TLS_V12,
+                {
+                   {"initial", etm_policy, etm_policy, false},
+                   {"resumed", etm_policy, no_etm_policy, true, expect_etm},
+                });
+         }
+      #endif
+
+         // A session's DTLS-SRTP profile that is no longer acceptable is not resumed
+         {
+            auto srtp_1 = make_policy(PV::DTLS_V12, {{ "srtp_profiles", "1" }});
+            auto srtp_2 = make_policy(PV::DTLS_V12, {{ "srtp_profiles", "2" }});
+
+            run("DTLS 1.2 resumption after the server changed its SRTP profiles",
+                PV::DTLS_V12,
+                {
+                   {"initial", srtp_1, srtp_1, false},
+                   {"not resumed", srtp_1, srtp_2, false},
+                });
+
+            run("DTLS 1.2 resumption after the client changed its SRTP profiles",
+                PV::DTLS_V12,
+                {
+                   {"initial", srtp_1, srtp_1, false},
+                   {"not resumed", srtp_2, srtp_1, false},
+                });
+         }
+      }
+
+      /**
        * The DTLS-SRTP profile negotiated via the use_srtp extension (RFC 5764)
        * is connection state that must survive session resumption: the
        * abbreviated ClientHello and ServerHello have to carry use_srtp again so
@@ -1451,8 +1787,20 @@ class TLS_Unit_Tests final : public Test {
                continue;
             }
 
+            // TLS 1.3 uses the Brainpool group code points of RFC 8734
+            const auto group_for_version = [](Botan::TLS::Group_Params group,
+                                              Botan::TLS::Protocol_Version ver) -> Botan::TLS::Group_Params {
+               if(!ver.is_pre_tls_13() && group == Botan::TLS::Group_Params::BRAINPOOL256R1) {
+                  return Botan::TLS::Group_Params::BRAINPOOL256R1TLS13;
+               } else if(!ver.is_pre_tls_13() && group == Botan::TLS::Group_Params::BRAINPOOL512R1) {
+                  return Botan::TLS::Group_Params::BRAINPOOL512R1TLS13;
+               } else {
+                  return group;
+               }
+            }(ecdh_group, version);
+
             const auto policy = std::make_shared<Test_Policy>();
-            policy->set("groups", "0x" + Botan::hex_encode(Botan::store_be(ecdh_group.wire_code())));
+            policy->set("groups", "0x" + Botan::hex_encode(Botan::store_be(group_for_version.wire_code())));
 
             TLS_Handshake_Test test("Client uses a custom ECDH provider for " + ecdh_group.to_string().value() +
                                        " in " + version.to_string(),
@@ -1477,7 +1825,7 @@ class TLS_Unit_Tests final : public Test {
                   generator_called = true;
                   test_results.require("tls_generate_ephemeral_ecdh_key_callback called for ECDH",
                                        group.is_ecdh_named_curve());
-                  const auto ec_group = Botan::EC_Group::from_name(group.to_string().value());
+                  const auto ec_group = Botan::EC_Group::from_name(group.to_algorithm_spec().value());
                   return std::make_unique<HardwareEcdhKey>(ec_group, clbk_rng, format);
                });
 
@@ -1674,6 +2022,239 @@ class TLS_Unit_Tests final : public Test {
          results.push_back(result);
       }
 
+   #if defined(BOTAN_HAS_TLS_12)
+      class No_EMS_Callbacks final : public Botan::TLS::Callbacks {
+         public:
+            explicit No_EMS_Callbacks(std::vector<uint8_t>& outbound, bool offer_ems) :
+                  m_outbound(outbound), m_offer_ems(offer_ems) {}
+
+            void tls_emit_data(std::span<const uint8_t> bits) override {
+               m_outbound.insert(m_outbound.end(), bits.begin(), bits.end());
+            }
+
+            void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> /*bits*/) override {}
+
+            void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+
+            void tls_modify_extensions(Botan::TLS::Extensions& extn,
+                                       Botan::TLS::Connection_Side side,
+                                       Botan::TLS::Handshake_Type which_message) override {
+               if(!m_offer_ems && side == Botan::TLS::Connection_Side::Client &&
+                  which_message == Botan::TLS::Handshake_Type::ClientHello) {
+                  extn.remove_extension(Botan::TLS::Extension_Code::ExtendedMasterSecret);
+               }
+            }
+
+         private:
+            std::vector<uint8_t>& m_outbound;
+            bool m_offer_ems;
+      };
+
+      void test_tls12_psk_without_hint(std::vector<Test::Result>& results,
+                                       const std::shared_ptr<Credentials_Manager_Test>& creds,
+                                       const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         Test::Result result("TLS 1.2 PSK without identity hint omits ServerKeyExchange");
+
+         class Inspecting_Callbacks final : public Botan::TLS::Callbacks {
+            public:
+               explicit Inspecting_Callbacks(std::vector<uint8_t>& outbound) : m_outbound(outbound) {}
+
+               void tls_emit_data(std::span<const uint8_t> bits) override {
+                  m_outbound.insert(m_outbound.end(), bits.begin(), bits.end());
+               }
+
+               void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> /*bits*/) override {}
+
+               void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+
+               void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& message) override {
+                  m_types.push_back(message.type());
+               }
+
+               bool saw(Botan::TLS::Handshake_Type type) const {
+                  return std::find(m_types.begin(), m_types.end(), type) != m_types.end();
+               }
+
+            private:
+               std::vector<uint8_t>& m_outbound;
+               std::vector<Botan::TLS::Handshake_Type> m_types;
+         };
+
+         try {
+            std::vector<uint8_t> c2s;
+            std::vector<uint8_t> s2c;
+            const auto client_cb = std::make_shared<Inspecting_Callbacks>(c2s);
+            const auto server_cb = std::make_shared<Inspecting_Callbacks>(s2c);
+
+            auto policy = std::make_shared<Botan::TLS::Text_Policy>("");
+            policy->set("allow_tls13", "false");
+            policy->set("key_exchange_methods", "PSK");
+            policy->set("ciphers", "AES-128/GCM");
+
+            const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+            Botan::TLS::Server server(server_cb, session_manager, creds, policy, rng);
+            Botan::TLS::Client client(client_cb,
+                                      session_manager,
+                                      creds,
+                                      policy,
+                                      rng,
+                                      Botan::TLS::Server_Information("server.example.com"),
+                                      Botan::TLS::Protocol_Version::TLS_V12);
+
+            while(!c2s.empty() || !s2c.empty()) {
+               std::vector<uint8_t> input;
+               std::swap(c2s, input);
+               server.received_data(input);
+               input.clear();
+               std::swap(s2c, input);
+               client.received_data(input);
+            }
+
+            result.test_is_true("handshake complete", client.is_active() && server.is_active());
+            result.test_is_true("ServerHelloDone received",
+                                client_cb->saw(Botan::TLS::Handshake_Type::ServerHelloDone));
+            result.test_is_false("no ServerKeyExchange received",
+                                 client_cb->saw(Botan::TLS::Handshake_Type::ServerKeyExchange));
+         } catch(const std::exception& e) {
+            result.test_failure("PSK without hint", e.what());
+         }
+
+         results.push_back(result);
+      }
+
+      void test_tls12_exporter_requirements(std::vector<Test::Result>& results,
+                                            const std::shared_ptr<Credentials_Manager_Test>& creds,
+                                            const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         for(const bool use_ems : {true, false}) {
+            Test::Result result(std::string("TLS 1.2 exporter ") + (use_ems ? "with" : "without") +
+                                " extended master secret");
+
+            try {
+               std::vector<uint8_t> c2s;
+               std::vector<uint8_t> s2c;
+               const auto client_cb = std::make_shared<No_EMS_Callbacks>(c2s, use_ems);
+               const auto server_cb = std::make_shared<No_EMS_Callbacks>(s2c, true);
+
+               auto policy = std::make_shared<Botan::TLS::Text_Policy>("");
+               policy->set("allow_tls13", "false");
+               policy->set("minimum_rsa_bits", "1024");
+               policy->set("minimum_signature_strength", "80");
+               policy->set("require_extended_master_secret", "false");
+
+               const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+               Botan::TLS::Server server(server_cb, session_manager, creds, policy, rng);
+               Botan::TLS::Client client(client_cb,
+                                         session_manager,
+                                         creds,
+                                         policy,
+                                         rng,
+                                         Botan::TLS::Server_Information("server.example.com"),
+                                         Botan::TLS::Protocol_Version::TLS_V12);
+
+               while(!c2s.empty() || !s2c.empty()) {
+                  std::vector<uint8_t> input;
+                  std::swap(c2s, input);
+                  server.received_data(input);
+                  input.clear();
+                  std::swap(s2c, input);
+                  client.received_data(input);
+               }
+               result.test_is_true("handshake complete", client.is_active() && server.is_active());
+
+               if(use_ems) {
+                  result.test_bin_eq("both sides export the same key",
+                                     client.key_material_export("label", "context", 32).bits_of(),
+                                     server.key_material_export("label", "context", 32).bits_of());
+
+                  const std::string long_context(65536, 'c');
+                  result.test_throws<Botan::Invalid_Argument>(
+                     "context too long", [&] { client.key_material_export("label", long_context, 32); });
+               } else {
+                  result.test_throws<Botan::Invalid_State>("client refuses to export",
+                                                           [&] { client.key_material_export("label", "", 32); });
+                  result.test_throws<Botan::Invalid_State>("server refuses to export",
+                                                           [&] { server.key_material_export("label", "", 32); });
+               }
+            } catch(const std::exception& e) {
+               result.test_failure("exporter requirements", e.what());
+            }
+
+            results.push_back(result);
+         }
+      }
+   #endif
+
+      void test_sent_alert_validation(std::vector<Test::Result>& results,
+                                      const std::shared_ptr<Credentials_Manager_Test>& creds,
+                                      const std::shared_ptr<Botan::RandomNumberGenerator>& rng,
+                                      Botan::TLS::Protocol_Version version) {
+         Test::Result result("TLS sent alert validation " + version.to_string());
+
+         try {
+            std::vector<uint8_t> c2s;
+            std::vector<uint8_t> s2c;
+            const auto client_cb = std::make_shared<Useless_Record_Callbacks>(c2s);
+            const auto server_cb = std::make_shared<Useless_Record_Callbacks>(s2c);
+
+            auto policy = std::make_shared<Botan::TLS::Text_Policy>("");
+            policy->set("allow_tls12", version.is_pre_tls_13() ? "true" : "false");
+            policy->set("allow_tls13", version.is_pre_tls_13() ? "false" : "true");
+            policy->set("minimum_rsa_bits", "1024");
+            policy->set("minimum_signature_strength", "80");
+
+            const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+            Botan::TLS::Server server(server_cb, session_manager, creds, policy, rng);
+            Botan::TLS::Client client(client_cb,
+                                      session_manager,
+                                      creds,
+                                      policy,
+                                      rng,
+                                      Botan::TLS::Server_Information("server.example.com"),
+                                      version);
+
+            const auto pump = [&]() {
+               while(!c2s.empty() || !s2c.empty()) {
+                  if(!c2s.empty()) {
+                     std::vector<uint8_t> input;
+                     std::swap(c2s, input);
+                     server.received_data(input);
+                  }
+                  if(!s2c.empty()) {
+                     std::vector<uint8_t> input;
+                     std::swap(s2c, input);
+                     client.received_data(input);
+                  }
+               }
+            };
+
+            pump();
+            result.test_is_true("client is active", client.is_active());
+
+            // A type that has no single byte encoding is not sent at all
+            // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+            client.send_warning_alert(static_cast<Botan::TLS::Alert::Type>(0x128));
+            result.test_is_true("no record was emitted", c2s.empty());
+            result.test_is_true("client is still active", client.is_active());
+
+            client.send_warning_alert(Botan::TLS::Alert::BadRecordMac);
+            pump();
+            result.test_sz_eq("server received one alert", server_cb->alerts().size(), 1);
+            if(!server_cb->alerts().empty()) {
+               const auto& alert = server_cb->alerts()[0];
+               result.test_enum_eq("alert type", alert.type(), Botan::TLS::Alert::BadRecordMac);
+               // TLS 1.3 always sends error alerts with level fatal
+               result.test_bool_eq("alert level", alert.is_fatal(), !version.is_pre_tls_13());
+            }
+         } catch(const std::exception& e) {
+            result.test_failure("sent alert validation", e.what());
+         }
+
+         results.push_back(result);
+      }
+
    #if defined(BOTAN_HAS_TLS_13)
       class KeyUpdate_Counting_Callbacks final : public Botan::TLS::Callbacks {
          public:
@@ -1692,11 +2273,25 @@ class TLS_Unit_Tests final : public Test {
 
             void tls_session_established(const Botan::TLS::Session_Summary& /*session*/) override {}
 
+            /**
+            * Received KeyUpdates also pass through tls_inspect_handshake_msg.
+            * KeyUpdates are never sent from within received_data(), so feeding
+            * incoming data through here separates the two directions.
+            */
+            void deliver(Botan::TLS::Channel& channel, std::span<const uint8_t> data) {
+               m_receiving = true;
+               try {
+                  channel.received_data(data);
+               } catch(...) {
+                  m_receiving = false;
+                  throw;
+               }
+               m_receiving = false;
+            }
+
             void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& message) override {
-               // This callback sees both sent and received handshake messages,
-               // but received KeyUpdates bypass it. Hence this counts the
-               // KeyUpdate messages sent by this side of the channel.
-               if(message.type() == Botan::TLS::Handshake_Type::KeyUpdate) {
+               // Counts the KeyUpdate messages sent by this side of the channel
+               if(!m_receiving && message.type() == Botan::TLS::Handshake_Type::KeyUpdate) {
                   ++m_key_updates_sent;
 
                   const auto* key_update = dynamic_cast<const Botan::TLS::Key_Update*>(&message);
@@ -1707,6 +2302,13 @@ class TLS_Unit_Tests final : public Test {
             }
 
             bool tls_peer_closed_connection() override { return m_respond_to_close_notify; }
+
+            uint64_t tls_current_monotonic_clock_ms() override {
+               return m_clock_ms.has_value() ? m_clock_ms.value()
+                                             : Botan::TLS::Callbacks::tls_current_monotonic_clock_ms();
+            }
+
+            void set_clock_ms(uint64_t now) { m_clock_ms = now; }
 
             size_t key_updates_sent() const { return m_key_updates_sent; }
 
@@ -1720,6 +2322,8 @@ class TLS_Unit_Tests final : public Test {
             size_t m_key_updates_sent = 0;
             size_t m_key_updates_requested = 0;
             bool m_respond_to_close_notify;
+            bool m_receiving = false;
+            std::optional<uint64_t> m_clock_ms;
       };
 
       class KeyUpdate_Test_Policy final : public Botan::TLS::Text_Policy {
@@ -1742,6 +2346,72 @@ class TLS_Unit_Tests final : public Test {
          private:
             uint64_t m_min_key_update_interval_ms;
       };
+
+      void test_tls13_key_update_rate_limit_clock(std::vector<Test::Result>& results,
+                                                  const std::shared_ptr<Credentials_Manager_Test>& creds,
+                                                  const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         struct Clock_Case {
+               std::string name;
+               uint64_t first_ms;
+               uint64_t second_ms;
+         };
+
+         for(const auto& clock : {Clock_Case{"a clock reading zero", 0, 0}, Clock_Case {
+                                     "a clock going backwards",
+                                     5000,
+                                     4000
+                                  }}) {
+            Test::Result result("TLS 1.3 KeyUpdate rate limit with " + clock.name);
+
+            try {
+               std::vector<uint8_t> c2s;
+               std::vector<uint8_t> s2c;
+               const auto client_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(c2s);
+               const auto server_cb = std::make_shared<KeyUpdate_Counting_Callbacks>(s2c);
+
+               const auto client_policy = std::make_shared<KeyUpdate_Test_Policy>(0);
+               const auto server_policy = std::make_shared<KeyUpdate_Test_Policy>(0, 1000);
+
+               const auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+               Botan::TLS::Server server(server_cb, session_manager, creds, server_policy, rng);
+               Botan::TLS::Client client(client_cb,
+                                         session_manager,
+                                         creds,
+                                         client_policy,
+                                         rng,
+                                         Botan::TLS::Server_Information("server.example.com"),
+                                         Botan::TLS::Protocol_Version::TLS_V13);
+
+               while(!c2s.empty() || !s2c.empty()) {
+                  std::vector<uint8_t> input;
+                  std::swap(c2s, input);
+                  server_cb->deliver(server, input);
+                  input.clear();
+                  std::swap(s2c, input);
+                  client_cb->deliver(client, input);
+               }
+               result.test_is_true("handshake complete", server.is_active() && client.is_active());
+
+               server_cb->set_clock_ms(clock.first_ms);
+               client.update_traffic_keys(false);
+               std::vector<uint8_t> first;
+               std::swap(c2s, first);
+               result.test_no_throw("first KeyUpdate is accepted", [&] { server_cb->deliver(server, first); });
+
+               server_cb->set_clock_ms(clock.second_ms);
+               client.update_traffic_keys(false);
+               std::vector<uint8_t> second;
+               std::swap(c2s, second);
+               result.test_throws("second KeyUpdate is rejected", [&] { server_cb->deliver(server, second); });
+               result.test_is_false("server closed the connection", server.is_active());
+            } catch(const std::exception& e) {
+               result.test_failure("KeyUpdate rate limit", e.what());
+            }
+
+            results.push_back(result);
+         }
+      }
 
       void test_tls13_automatic_key_updates(std::vector<Test::Result>& results,
                                             const std::shared_ptr<Credentials_Manager_Test>& creds,
@@ -1775,12 +2445,12 @@ class TLS_Unit_Tests final : public Test {
                   if(!c2s.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(c2s, input);
-                     server.received_data(input.data(), input.size());
+                     server_cb->deliver(server, input);
                   }
                   if(!s2c.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(s2c, input);
-                     client.received_data(input.data(), input.size());
+                     client_cb->deliver(client, input);
                   }
                }
             };
@@ -1848,12 +2518,12 @@ class TLS_Unit_Tests final : public Test {
                   if(!c2s.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(c2s, input);
-                     server.received_data(input.data(), input.size());
+                     server_cb->deliver(server, input);
                   }
                   if(!s2c.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(s2c, input);
-                     client.received_data(input.data(), input.size());
+                     client_cb->deliver(client, input);
                   }
                }
             };
@@ -1902,10 +2572,11 @@ class TLS_Unit_Tests final : public Test {
                                       Botan::TLS::Server_Information("server.example.com"),
                                       Botan::TLS::Protocol_Version::TLS_V13);
 
-            const auto deliver = [](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
+            const auto deliver = [&](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
                std::vector<uint8_t> input;
                std::swap(transport, input);
-               receiver.received_data(input.data(), input.size());
+               const auto& cb = (&receiver == &server) ? server_cb : client_cb;
+               cb->deliver(receiver, input);
             };
 
             // Deliver the ClientHello; once the server responded with its
@@ -1986,12 +2657,12 @@ class TLS_Unit_Tests final : public Test {
                   if(!c2s.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(c2s, input);
-                     server.received_data(input.data(), input.size());
+                     server_cb->deliver(server, input);
                   }
                   if(!s2c.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(s2c, input);
-                     client.received_data(input.data(), input.size());
+                     client_cb->deliver(client, input);
                   }
                }
             };
@@ -2084,10 +2755,11 @@ class TLS_Unit_Tests final : public Test {
                                       Botan::TLS::Server_Information("server.example.com"),
                                       Botan::TLS::Protocol_Version::TLS_V13);
 
-            const auto deliver = [](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
+            const auto deliver = [&](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
                std::vector<uint8_t> input;
                std::swap(transport, input);
-               receiver.received_data(input.data(), input.size());
+               const auto& cb = (&receiver == &server) ? server_cb : client_cb;
+               cb->deliver(receiver, input);
             };
 
             while(!c2s.empty() || !s2c.empty()) {
@@ -2164,10 +2836,11 @@ class TLS_Unit_Tests final : public Test {
                                       Botan::TLS::Server_Information("server.example.com"),
                                       Botan::TLS::Protocol_Version::TLS_V13);
 
-            const auto deliver = [](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
+            const auto deliver = [&](std::vector<uint8_t>& transport, Botan::TLS::Channel& receiver) {
                std::vector<uint8_t> input;
                std::swap(transport, input);
-               receiver.received_data(input.data(), input.size());
+               const auto& cb = (&receiver == &server) ? server_cb : client_cb;
+               cb->deliver(receiver, input);
             };
 
             while(!c2s.empty() || !s2c.empty()) {
@@ -2241,12 +2914,12 @@ class TLS_Unit_Tests final : public Test {
                   if(!c2s.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(c2s, input);
-                     server.received_data(input.data(), input.size());
+                     server_cb->deliver(server, input);
                   }
                   if(!s2c.empty()) {
                      std::vector<uint8_t> input;
                      std::swap(s2c, input);
-                     client.received_data(input.data(), input.size());
+                     client_cb->deliver(client, input);
                   }
                }
             };
@@ -2322,7 +2995,7 @@ class TLS_Unit_Tests final : public Test {
          test_with_policy("Strict policy", results, creds, available_versions(), strict_policy, rng);
 
    #if defined(BOTAN_HAS_TLS_12)
-         const auto suiteb_128 = std::make_shared<Botan::TLS::NSA_Suite_B_128>();
+         const auto suiteb_128 = std::make_shared<Suite_B_128_Test_Policy>();
          test_with_policy("Suite B", results, creds, {Botan::TLS::Protocol_Version::TLS_V12}, suiteb_128, rng);
    #endif
 
@@ -2363,6 +3036,25 @@ class TLS_Unit_Tests final : public Test {
          test_modern_versions(
             "AES-256/GCM p521", results, creds, rng, "ECDH", "AES-256/GCM", "AEAD", {{"groups", "secp521r1"}});
 
+         // TLS 1.3 tickets must not be issued with a lifetime above 7 days,
+         // even if the policy allows longer (or unlimited) lifetimes
+         test_modern_versions("AES-128/GCM 8 day ticket lifetime",
+                              results,
+                              creds,
+                              rng,
+                              "ECDH",
+                              "AES-128/GCM",
+                              "AEAD",
+                              {{"session_ticket_lifetime", "691200"}});
+         test_modern_versions("AES-128/GCM unlimited ticket lifetime",
+                              results,
+                              creds,
+                              rng,
+                              "ECDH",
+                              "AES-128/GCM",
+                              "AEAD",
+                              {{"session_ticket_lifetime", "0"}});
+
          if(Botan::EC_Group::supports_named_group("brainpool256r1")) {
             test_modern_versions("AES-128/GCM bp256r1",
                                  results,
@@ -2371,7 +3063,7 @@ class TLS_Unit_Tests final : public Test {
                                  "ECDH",
                                  "AES-128/GCM",
                                  "AEAD",
-                                 {{"groups", "brainpool256r1"}});
+                                 {{"groups", "brainpool256r1 brainpool256r1tls13"}});
          }
 
    #if defined(BOTAN_HAS_X25519)
@@ -2422,38 +3114,9 @@ class TLS_Unit_Tests final : public Test {
 
          test_modern_versions("AES-128/GCM ECDHE_PSK", results, creds, rng, "ECDHE_PSK", "AES-128/GCM");
 
-         // Test with a custom curve
-
-         /*
-         * Disabled, currently broken.
-         *
-         * TLS 1.2 server side currently can't negotiate application-specific group codes.
-         *
-         * The current flow is that choose_ciphersuite computes have_shared_ecc_curve via
-         * Client_Hello::supported_ecc_curves(), which goes through Supported_Groups::ec_groups()
-         * and filters by Group_Params::is_pure_ecc_group(). That predicate only accepts a hardcoded
-         * set of known groups, so a custom code such as 0xFEE1 is silently dropped and the server
-         * throws "Can't agree on a ciphersuite with client".
-         */
-         const bool disabled = true;
-         if(Botan::EC_Group::supports_application_specific_group() && !disabled) {
-            /*
-            * First register a curve, in this case numsp256d1
-            */
-            const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF43");
-            const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF40");
-            const Botan::BigInt b("0x25581");
-            const Botan::BigInt order("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE43C8275EA265C6020AB20294751A825");
-
-            const Botan::BigInt g_x("0x01");
-            const Botan::BigInt g_y("0x696F1853C1E466D7FC82C96CCEEEDD6BD02C2F9375894EC10BF46306C2B56C77");
-
-            const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
-
-            Botan::OID::register_oid(oid, "numsp256d1");
-
-            // Creating this object implicitly registers the curve for future use ...
-            const auto group = Botan::EC_Group::register_custom_group(oid, p, a, b, g_x, g_y, order);
+         // Test with a custom curve, which the callbacks implement as numsp256d1
+         if(Botan::EC_Group::supports_application_specific_group()) {
+            register_numsp256d1();
 
             test_modern_versions("AES-256/GCM numsp256d1",
                                  results,
@@ -2475,9 +3138,13 @@ class TLS_Unit_Tests final : public Test {
 
    #if defined(BOTAN_HAS_TLS_12)
          test_tls12_client_cert_selection(results, rng);
+         test_tls12_client_auth_without_signature_schemes(results, rng);
+         test_application_specific_curve_certificates(results, rng);
 
          // DTLS-SRTP profile must survive session resumption (RFC 5764)
          test_dtls12_srtp_resumption(results, rng);
+
+         test_tls12_resumption_consistency(results, rng);
    #endif
 
          // TLS version negotiation / downgrade (and mismatch failures)
@@ -2496,6 +3163,7 @@ class TLS_Unit_Tests final : public Test {
 
    #if defined(BOTAN_HAS_TLS_13)
          test_tls13_automatic_key_updates(results, creds, rng);
+         test_tls13_key_update_rate_limit_clock(results, creds, rng);
    #endif
 
          // Too many consecutive warning alerts close the connection
@@ -2508,6 +3176,15 @@ class TLS_Unit_Tests final : public Test {
             test_useless_record_limit(results, creds, rng, Botan::TLS::Protocol_Version::TLS_V13, limit);
    #endif
          }
+
+   #if defined(BOTAN_HAS_TLS_12)
+         test_sent_alert_validation(results, creds, rng, Botan::TLS::Protocol_Version::TLS_V12);
+         test_tls12_exporter_requirements(results, creds, rng);
+         test_tls12_psk_without_hint(results, creds, rng);
+   #endif
+   #if defined(BOTAN_HAS_TLS_13)
+         test_sent_alert_validation(results, creds, rng, Botan::TLS::Protocol_Version::TLS_V13);
+   #endif
 
          // Test using a custom KDF instead of the original TLS 1.2 KDF
          // (this is a TLS 1.2 specific feature)

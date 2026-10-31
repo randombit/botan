@@ -31,7 +31,11 @@ Certificate_Status::Certificate_Status(std::span<const uint8_t> buf, const Conne
 }
 
 Certificate_Status::Certificate_Status(std::vector<uint8_t> raw_response_bytes) :
-      m_response(std::move(raw_response_bytes)) {}
+      m_response(std::move(raw_response_bytes)) {
+   // RFC 6066 8.
+   //    opaque OCSPResponse<1..2^24-1>;
+   BOTAN_ARG_CHECK(!m_response.empty(), "OCSP response must not be empty");
+}
 
 std::vector<uint8_t> Certificate_Status::serialize() const {
    if(m_response.size() > 0xFFFFFF) {  // unlikely

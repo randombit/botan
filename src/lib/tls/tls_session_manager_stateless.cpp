@@ -13,6 +13,7 @@
 #include <botan/exceptn.h>
 #include <botan/rng.h>
 #include <botan/tls_session.h>
+#include <limits>
 
 namespace Botan::TLS {
 
@@ -40,7 +41,17 @@ std::optional<Session_Handle> Session_Manager_Stateless::establish(const Session
       return std::nullopt;
    }
 
-   return Session_Handle(Session_Ticket{session.encrypt(key.value(), *m_rng)});
+   auto ticket = session.encrypt(key.value(), *m_rng);
+
+   // RFC 8446 4.6.1 (and likewise RFC 5077 3.3)
+   //    opaque ticket<1..2^16-1>;
+   //
+   // A session containing a large peer certificate chain may not fit
+   if(ticket.size() > std::numeric_limits<uint16_t>::max()) {
+      return std::nullopt;
+   }
+
+   return Session_Handle(Session_Ticket{std::move(ticket)});
 }
 
 void Session_Manager_Stateless::store(const Session& /*session*/, const Session_Handle& /*handle*/) {

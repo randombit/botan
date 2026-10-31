@@ -158,9 +158,21 @@ void Channel_Impl_13::to_peer(std::span<const uint8_t> data) {
 }
 
 void Channel_Impl_13::send_alert(const Alert& alert) {
-   if(alert.is_valid() && m_can_write) {
+   // An alert that cannot be encoded is never sent; a fatal one is a local teardown
+   if(!alert.is_valid()) {
+      if(alert.is_fatal()) {
+         shutdown();
+      }
+      return;
+   }
+
+   if(m_can_write) {
+      // RFC 8446 6.
+      //    All the alerts listed in Section 6.2 MUST be sent with
+      //    AlertLevel=fatal [...]
+      const Alert to_send = is_error_alert(alert) ? Alert(alert.type(), true) : alert;
       try {
-         m_channel_io->send(alert, compat_mode_ccs_requested());
+         m_channel_io->send(to_send, compat_mode_ccs_requested());
       } catch(...) { /* swallow it */
       }
    }
@@ -259,7 +271,7 @@ void Channel_Impl_13::process(const Alert_Record& alert_record) {
 
    // user canceled alerts are ignored
 
-   // RFC 8446 5.
+   // RFC 8446 6.
    //    All the alerts listed in Section 6.2 MUST be sent with
    //    AlertLevel=fatal and MUST be treated as error alerts when received
    //    regardless of the AlertLevel in the message.  Unknown Alert types
@@ -280,11 +292,19 @@ void Channel_Impl_13::process(const Alert_Record& alert_record) {
 #endif
    }
 
-   if(!alert.is_fatal() && !is_close_notify_alert(alert)) {
+   // RFC 8446 6.
+   //    In TLS 1.3, the severity is implicit in the type of alert being sent,
+   //    and the "level" field can safely be ignored.
+   //
+   // An error alert marked as a warning is only accepted here if a downgrade
+   // to TLS 1.2 is still possible, and then the shutdown is deferred.
+   const bool is_fatal_error_alert = is_error_alert(alert) && alert.is_fatal();
+
+   if(!is_close_notify_alert(alert) && !is_fatal_error_alert) {
       note_useless_record(policy());
    }
 
-   if(alert.is_fatal()) {
+   if(is_fatal_error_alert) {
       shutdown();
    }
 
@@ -326,6 +346,8 @@ void Channel_Impl_13::shutdown() {
    m_can_write = false;
    m_cipher_state.reset();
    m_active_state.reset();
+   // Drop any records of the peer that are still buffered
+   m_channel_io->notify_closed_for_reading();
 }
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)

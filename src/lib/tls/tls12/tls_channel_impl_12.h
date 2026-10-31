@@ -212,6 +212,12 @@ class Channel_Impl_12 : public Channel_Impl {
 
       virtual void initiate_handshake(Handshake_State& state, bool force_full_renegotiation) = 0;
 
+      /**
+      * The application protocol of the handshake currently in progress, which
+      * becomes the protocol of the connection once that handshake activates
+      */
+      virtual std::string negotiated_application_protocol() const = 0;
+
    private:
       void send_record(Record_Type record_type, const std::vector<uint8_t>& record);
 

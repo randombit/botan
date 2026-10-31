@@ -239,6 +239,7 @@ class Hybrid_TLS_KEM_Decryptor final : public KEM_Decryption_with_Combiner {
 
 std::unique_ptr<Hybrid_KEM_PublicKey> Hybrid_KEM_PublicKey::load_for_group(
    Group_Params group, std::span<const uint8_t> concatenated_public_keys) {
+   BOTAN_ARG_CHECK(group.is_pqc_hybrid(), "Group is not hybrid");
    const auto public_key_lengths = public_key_lengths_for_group(group);
    auto alg_ids = algorithm_identifiers_for_group(group);
    BOTAN_ASSERT_NOMSG(public_key_lengths.size() == alg_ids.size());

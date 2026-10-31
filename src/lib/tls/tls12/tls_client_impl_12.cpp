@@ -9,6 +9,7 @@
 
 #include <botan/internal/tls_client_impl_12.h>
 
+#include <botan/exceptn.h>
 #include <botan/ocsp.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_messages_12.h>
@@ -74,6 +75,16 @@ class Client_Handshake_State_12 final : public Handshake_State {
       uint16_t resumed_session_ciphersuite_code() const {
          BOTAN_STATE_CHECK(is_a_resumption());
          return m_resumed_session->ciphersuite_code();
+      }
+
+      bool resumed_session_supports_encrypt_then_mac() const {
+         BOTAN_STATE_CHECK(is_a_resumption());
+         return m_resumed_session->supports_encrypt_then_mac();
+      }
+
+      uint16_t resumed_session_dtls_srtp_profile() const {
+         BOTAN_STATE_CHECK(is_a_resumption());
+         return m_resumed_session->dtls_srtp_profile();
       }
 
       std::vector<X509_Certificate> peer_cert_chain() const override {
@@ -246,17 +257,36 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
             session_version_ok &&
             value_exists(policy().ciphersuite_list(session_info.version()), session_info.ciphersuite_code());
 
-         if(session_suite_ok) {
-            state.client_hello(std::make_unique<Client_Hello_12>(state.handshake_io(),
-                                                                 state.hash(),
-                                                                 policy(),
-                                                                 callbacks(),
-                                                                 rng(),
-                                                                 secure_renegotiation_data_for_client_hello(),
-                                                                 session_and_handle.value(),
-                                                                 next_protocols));
+         // A session's DTLS-SRTP profile is re-offered on resumption, so it must still be acceptable
+         const bool session_srtp_ok = session_info.dtls_srtp_profile() == 0 ||
+                                      value_exists(policy().srtp_profiles(), session_info.dtls_srtp_profile());
 
-            state.record_resumption_info(std::move(session_info));
+         if(session_suite_ok && session_srtp_ok) {
+            try {
+               state.client_hello(std::make_unique<Client_Hello_12>(state.handshake_io(),
+                                                                    state.hash(),
+                                                                    policy(),
+                                                                    callbacks(),
+                                                                    rng(),
+                                                                    secure_renegotiation_data_for_client_hello(),
+                                                                    session_and_handle.value(),
+                                                                    next_protocols));
+
+               state.record_resumption_info(std::move(session_info));
+
+               // RFC 5246 7.2.2
+               //    Thus, any connection terminated with a fatal alert MUST NOT
+               //    be resumed.
+               //
+               // Make sure the offered session is forgotten if this fails
+               if(!active_state().has_value()) {
+                  note_resumption_handle(session_and_handle->handle);
+               }
+            } catch(Encoding_Error&) {
+               // The session's ticket does not fit into a ClientHello (nothing
+               // was sent yet); it can never be used, so forget about it.
+               session_manager().remove(session_and_handle->handle);
+            }
          }
       }
    }
@@ -284,15 +314,21 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
 
 namespace {
 
+// RFC 5246 7.4.2
+//    the certificate MUST allow the key to be used for encryption (the
+//    keyEncipherment bit MUST be set if the key usage extension is present)
+//    [...]
+//    the certificate MUST allow the key to be used for signing (the
+//    digitalSignature bit MUST be set if the key usage extension is present)
 bool key_usage_matches_ciphersuite(Key_Constraints usage, const Ciphersuite& suite) {
    if(usage == Key_Constraints::None) {
       return true;  // anything goes ...
    }
 
    if(suite.kex_method() == Kex_Algo::STATIC_RSA) {
-      return usage.includes_any(Key_Constraints::KeyEncipherment, Key_Constraints::DataEncipherment);
+      return usage.includes(Key_Constraints::KeyEncipherment);
    } else {
-      return usage.includes_any(Key_Constraints::DigitalSignature, Key_Constraints::NonRepudiation);
+      return usage.includes(Key_Constraints::DigitalSignature);
    }
 }
 
@@ -377,6 +413,11 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          throw TLS_Exception(Alert::ProtocolVersion, "Server replied with an invalid version");
       }
 
+      if(state.client_hello()->legacy_version().is_datagram_protocol() !=
+         state.server_hello()->legacy_version().is_datagram_protocol()) {
+         throw TLS_Exception(Alert::ProtocolVersion, "Server replied with different protocol type than we offered");
+      }
+
       if(!state.client_hello()->offered_suite(state.server_hello()->ciphersuite())) {
          throw TLS_Exception(Alert::HandshakeFailure, "Server replied with ciphersuite we didn't send");
       }
@@ -392,9 +433,9 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       //   and then selects a stream or Authenticated Encryption with Associated
       //   Data (AEAD) ciphersuite, it MUST NOT send an encrypt-then-MAC
       //   response extension back to the client.
-      if(suite->aead_ciphersuite() && state.server_hello()->supports_encrypt_then_mac()) {
+      if(!suite->cbc_ciphersuite() && state.server_hello()->supports_encrypt_then_mac()) {
          throw TLS_Exception(Alert::IllegalParameter,
-                             "Server replied using an AEAD ciphersuite and an encrypt-then-MAC response extension");
+                             "Server replied using a non-CBC ciphersuite and an encrypt-then-MAC response extension");
       }
 
       if(Ciphersuite::is_scsv(state.server_hello()->ciphersuite())) {
@@ -472,7 +513,14 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
             throw TLS_Exception(Alert::IllegalParameter, "Server selected an ALPN protocol not offered by the client");
          }
       }
-      m_application_protocol = state.server_hello()->next_protocol();
+      if(active_state().has_value() && !state.client_hello()->supports_alpn()) {
+         // The application protocol is a property of the connection, which a
+         // renegotiation that does not offer ALPN does not change. If it was
+         // offered, the server cleared its protocol unless it selected one.
+         m_application_protocol = active_state()->application_protocol();
+      } else {
+         m_application_protocol = state.server_hello()->next_protocol();
+      }
 
       secure_renegotiation_check(state.server_hello());
 
@@ -514,6 +562,17 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
             throw TLS_Exception(Alert::HandshakeFailure, "Server resumed session and removed extended master secret");
          }
 
+         // RFC 7366 3.1
+         //    implementations MUST NOT renegotiate a downgrade from
+         //    encrypt-then-MAC to MAC-then-encrypt.
+         if(state.server_hello()->supports_encrypt_then_mac() != state.resumed_session_supports_encrypt_then_mac()) {
+            throw TLS_Exception(Alert::HandshakeFailure, "Server resumed session but changed encrypt-then-MAC");
+         }
+
+         if(state.server_hello()->srtp_profile() != state.resumed_session_dtls_srtp_profile()) {
+            throw TLS_Exception(Alert::HandshakeFailure, "Server resumed session but changed the DTLS-SRTP profile");
+         }
+
          state.compute_session_keys(state.resume_master_secret());
          if(policy().allow_ssl_key_log_file()) {
             // draft-thomson-tls-keylogfile-00 Section 3.2
@@ -548,11 +607,6 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          }
 
          state.discard_resumption_state();
-
-         if(state.client_hello()->legacy_version().is_datagram_protocol() !=
-            state.server_hello()->legacy_version().is_datagram_protocol()) {
-            throw TLS_Exception(Alert::ProtocolVersion, "Server replied with different protocol type than we offered");
-         }
 
          if(state.version() > state.client_hello()->legacy_version()) {
             throw TLS_Exception(Alert::HandshakeFailure, "Server replied with later version than client offered");
@@ -626,6 +680,10 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       if(!key_usage_matches_ciphersuite(server_cert.constraints(), state.ciphersuite())) {
          throw TLS_Exception(Alert::BadCertificate, "Certificate usage constraints do not allow this ciphersuite");
       }
+
+      // With a signing key this is also checked once the ServerKeyExchange
+      // signature is verified, but for RSA key exchange this is the only place
+      policy().check_peer_key_acceptable(*peer_key);
 
       state.record_server_public_key(std::move(peer_key));
 
@@ -720,8 +778,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          //       algorithm pair in supported_signature_algorithms.
          //
          // TLS 1.2 has no signature_algorithms_cert analog, so the one list
-         // constrains both. If nothing survives the filter, pass the requested
-         // types through and let the credentials manager decide.
+         // constrains both.
          const auto usable_key_types = filter_signature_schemes(cert_req.signature_schemes(), state.version());
 
          std::vector<std::string> key_types;
@@ -730,16 +787,21 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
                key_types.push_back(cert_type);
             }
          }
-         if(key_types.empty()) {
-            key_types = cert_req.acceptable_cert_types();
-         }
 
-         const std::vector<X509_Certificate> client_certs =
-            m_creds->find_cert_chain(key_types,
-                                     to_algorithm_identifiers(cert_req.signature_schemes()),
-                                     cert_req.acceptable_CAs(),
-                                     "tls-client",
-                                     m_info.hostname());
+         // RFC 5246 7.4.6
+         //    If no suitable certificate is available, the client MUST send a
+         //    certificate message containing no certificates.
+         //
+         // An empty list of key types would mean "no preference" to the
+         // credentials manager, so it is not asked at all.
+         std::vector<X509_Certificate> client_certs;
+         if(!key_types.empty()) {
+            client_certs = m_creds->find_cert_chain(key_types,
+                                                    to_algorithm_identifiers(cert_req.signature_schemes()),
+                                                    cert_req.acceptable_CAs(),
+                                                    "tls-client",
+                                                    m_info.hostname());
+         }
 
          state.client_certs(std::make_unique<Certificate_12>(state.handshake_io(), state.hash(), client_certs));
       }
@@ -891,6 +953,12 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
                session_manager().store(session_info, handle.value());
             } else {
                session_manager().remove(handle.value());
+            }
+         } else if(!should_save) {
+            // The application does not want this session to be resumed again
+            session_manager().remove(handle.value());
+            if(!state.client_hello()->session_ticket().empty()) {
+               session_manager().remove(Session_Handle(state.client_hello()->session_ticket()));
             }
          }
       }

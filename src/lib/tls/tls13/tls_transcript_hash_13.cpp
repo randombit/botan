@@ -163,6 +163,7 @@ void Transcript_Hash_State::update(HandshakeProtocolHeader tls_message_header,
             m_truncated = read_hash_state(m_hash);
             m_hash->update(serialized_message_s.get().subspan(*truncation_mark));
          } else {
+            m_truncated.clear();
             m_hash->update(serialized_message_s);
          }
       } else {

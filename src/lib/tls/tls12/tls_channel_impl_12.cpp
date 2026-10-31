@@ -71,9 +71,10 @@ void prune_old_cipher_states(std::map<uint16_t, T>& states) {
 // accounting assertions, or a failed allocation, still propagates rather than
 // leaving the association running on state those assertions exist to protect.
 template <typename F>
-void absorb_malformed_input_errors(bool absorb, F fn) {
+bool absorb_malformed_input_errors(bool absorb, F fn) {
    try {
       fn();
+      return false;
    } catch(const TLS_Exception&) {
       if(!absorb) {
          throw;
@@ -83,6 +84,7 @@ void absorb_malformed_input_errors(bool absorb, F fn) {
          throw;
       }
    }
+   return true;
 }
 
 }  // namespace
@@ -287,9 +289,18 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
 
    std::unique_ptr<Handshake_IO> io;
    if(version.is_datagram_protocol()) {
-      const uint16_t mtu = static_cast<uint16_t>(policy().dtls_default_mtu());
+      const size_t policy_mtu = policy().dtls_default_mtu();
+      if(policy_mtu > 0xFFFF) {
+         throw Invalid_Argument("Policy specifies a DTLS MTU larger than 65535");
+      }
+      const uint16_t mtu = static_cast<uint16_t>(policy_mtu);
+
       const size_t initial_timeout_ms = policy().dtls_initial_timeout();
       const size_t max_timeout_ms = policy().dtls_maximum_timeout();
+      // A zero timeout would cause retransmissions without any backoff
+      if(initial_timeout_ms == 0 || max_timeout_ms < initial_timeout_ms) {
+         throw Invalid_Argument("Policy specifies invalid DTLS retransmission timeouts");
+      }
       const std::optional<size_t> max_retransmissions = policy().dtls_maximum_retransmissions();
 
       const auto send_record_f = [this](uint16_t epoch, Record_Type record_type, const std::vector<uint8_t>& record) {
@@ -438,12 +449,15 @@ void Channel_Impl_12::renegotiate(bool force_full_renegotiation) {
    }
 
    if(m_active_state.has_value()) {
-      // A DTLS handshake consumes one read and one write epoch. Refuse here if
+      // A handshake consumes one read and one write epoch. Refuse here if
       // either is spent, so the caller learns before the handshake tears the
-      // working association down partway through. See next_epoch().
-      if(m_flavor == TLS_Flavor::DTLS &&
-         (sequence_numbers().current_read_epoch() == 0xFFFF || sequence_numbers().current_write_epoch() == 0xFFFF)) {
-         throw Invalid_State("DTLS epoch counter exhausted, a new association is required");
+      // working connection down partway through. See next_epoch().
+      if(sequence_numbers().current_read_epoch() == 0xFFFF || sequence_numbers().current_write_epoch() == 0xFFFF) {
+         throw Invalid_State("TLS epoch counter exhausted, a new connection is required");
+      }
+
+      if(!secure_renegotiation_supported() && !policy().allow_insecure_renegotiation()) {
+         throw Invalid_State("Peer does not support secure renegotiation and policy prohibits insecure renegotiation");
       }
 
       if(!force_full_renegotiation) {
@@ -568,8 +582,11 @@ void Channel_Impl_12::activate_session() {
    const bool sent_terminal_dtls_flight =
       (m_flavor == TLS_Flavor::DTLS) && (m_is_server == (state.server_hello_done() != nullptr));
 
+   const bool encrypt_then_mac_used = m_active_state.has_value() && m_active_state->encrypt_then_mac_used();
+
    if(m_flavor == TLS_Flavor::DTLS) {
-      m_active_state = Active_Connection_State_12(state, application_protocol(), m_pending_state->take_handshake_io());
+      m_active_state =
+         Active_Connection_State_12(state, negotiated_application_protocol(), m_pending_state->take_handshake_io());
       if(auto* dtls_io = m_active_state->dtls_handshake_io()) {
          // Retain receive sequence state on both endpoints to distinguish a
          // retransmission from an unexpected new handshake message. Only the
@@ -577,7 +594,11 @@ void Channel_Impl_12::activate_session() {
          dtls_io->finalize_handshake(sent_terminal_dtls_flight);
       }
    } else {
-      m_active_state = Active_Connection_State_12(state, application_protocol());
+      m_active_state = Active_Connection_State_12(state, negotiated_application_protocol());
+   }
+
+   if(encrypt_then_mac_used) {
+      m_active_state->note_encrypt_then_mac_used();
    }
 
    clear_pending_handshake_state();
@@ -633,7 +654,7 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
 
          // Ignore invalid records in DTLS
          if(m_flavor == TLS_Flavor::DTLS && record.type() == Record_Type::Invalid) {
-            return 0;
+            continue;
          }
 
          const bool old_unprotected_record = m_flavor == TLS_Flavor::DTLS && record.epoch() == 0 &&
@@ -784,6 +805,8 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
       });
    };
 
+   const bool had_pending_state = (m_pending_state != nullptr);
+
    if(!m_pending_state) {
       // With no pending handshake this is either a new handshake attempt or a
       // DTLS retransmission from the previous handshake. The latter must not
@@ -840,7 +863,7 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
       const bool unauthenticated_against_active_association =
          (m_flavor == TLS_Flavor::DTLS) && (record_sequence >> 48) == 0 && m_active_state.has_value();
 
-      absorb_malformed_input_errors(unauthenticated_against_active_association, [&] {
+      const bool absorbed = absorb_malformed_input_errors(unauthenticated_against_active_association, [&] {
          m_pending_state->handshake_io().add_record(record.data(), record.size(), record_type, record_sequence);
 
          while(auto* pending = m_pending_state.get()) {
@@ -857,6 +880,12 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
             }
          }
       });
+
+      // A handshake started by a forged record would otherwise block a genuine
+      // restart for as long as the association exists
+      if(absorbed && !had_pending_state && m_pending_state) {
+         clear_pending_handshake_state();
+      }
    }
 }
 
@@ -1075,6 +1104,18 @@ void Channel_Impl_12::secure_renegotiation_check(const Server_Hello_12* server_h
          throw TLS_Exception(Alert::HandshakeFailure, "Server sent bad values for secure renegotiation");
       }
    }
+
+   // RFC 7366 3.1
+   //    implementations MUST NOT renegotiate a downgrade from
+   //    encrypt-then-MAC to MAC-then-encrypt.
+   //
+   //    Note that these rules apply across potentially many rehandshakes.
+   if(m_active_state && m_active_state->encrypt_then_mac_used() && !server_hello->supports_encrypt_then_mac()) {
+      const auto suite = Ciphersuite::by_id(server_hello->ciphersuite());
+      if(suite.has_value() && suite->cbc_ciphersuite()) {
+         throw TLS_Exception(Alert::HandshakeFailure, "Renegotiation would downgrade from encrypt-then-MAC");
+      }
+   }
 }
 
 std::vector<uint8_t> Channel_Impl_12::secure_renegotiation_data_for_client_hello() const {
@@ -1118,6 +1159,24 @@ SymmetricKey Channel_Impl_12::key_material_export(std::string_view label,
 
    if(pending_state() != nullptr) {
       throw Invalid_State("Channel_Impl_12::key_material_export cannot export during renegotiation");
+   }
+
+   // RFC 7627 5.4
+   //    If a client or server chooses to continue with a full handshake
+   //    without the extended master secret extension, then the new session
+   //    becomes vulnerable to the man-in-the-middle key synchronization
+   //    attack described in Section 1.  Hence, the client or server MUST NOT
+   //    export any key material based on the new master secret for any
+   //    subsequent application-level authentication.  In particular, it MUST
+   //    disable [RFC5705] [...]
+   if(!m_active_state->supports_extended_master_secret()) {
+      throw Invalid_State("Channel_Impl_12::key_material_export requires the extended master secret");
+   }
+
+   // RFC 5705 4.
+   //    The context value length is encoded as an unsigned, 16-bit quantity
+   if(context.size() > 0xFFFF) {
+      throw Invalid_Argument("Channel_Impl_12::key_material_export context is too long");
    }
 
    auto prf = callbacks().tls12_protocol_specific_kdf(m_active_state->prf_algo());

@@ -88,25 +88,30 @@ uint32_t bitmask_for_handshake_type(Handshake_Type type) {
 }
 
 std::string handshake_mask_to_string(uint32_t mask, char combiner) {
-   const Handshake_Type types[] = {Handshake_Type::HelloVerifyRequest,
-                                   Handshake_Type::HelloRequest,
-                                   Handshake_Type::ClientHello,
-                                   Handshake_Type::ServerHello,
-                                   Handshake_Type::Certificate,
-                                   Handshake_Type::CertificateUrl,
-                                   Handshake_Type::CertificateStatus,
-                                   Handshake_Type::ServerKeyExchange,
-                                   Handshake_Type::CertificateRequest,
-                                   Handshake_Type::ServerHelloDone,
-                                   Handshake_Type::CertificateVerify,
-                                   Handshake_Type::ClientKeyExchange,
-                                   Handshake_Type::NewSessionTicket,
-                                   Handshake_Type::HandshakeCCS,
-                                   Handshake_Type::MessageHash,
-                                   Handshake_Type::Finished,
-                                   Handshake_Type::EndOfEarlyData,
-                                   Handshake_Type::EncryptedExtensions,
-                                   Handshake_Type::KeyUpdate};
+   // clang-format off
+   const Handshake_Type types[] = {
+      Handshake_Type::HelloVerifyRequest,
+      Handshake_Type::HelloRequest,
+      Handshake_Type::ClientHello,
+      Handshake_Type::ServerHello,
+      Handshake_Type::HelloRetryRequest,
+      Handshake_Type::Certificate,
+      Handshake_Type::CertificateUrl,
+      Handshake_Type::CertificateStatus,
+      Handshake_Type::ServerKeyExchange,
+      Handshake_Type::CertificateRequest,
+      Handshake_Type::ServerHelloDone,
+      Handshake_Type::CertificateVerify,
+      Handshake_Type::ClientKeyExchange,
+      Handshake_Type::NewSessionTicket,
+      Handshake_Type::HandshakeCCS,
+      Handshake_Type::MessageHash,
+      Handshake_Type::Finished,
+      Handshake_Type::EndOfEarlyData,
+      Handshake_Type::EncryptedExtensions,
+      Handshake_Type::KeyUpdate
+   };
+   // clang-format on
 
    std::ostringstream o;
    bool empty = true;

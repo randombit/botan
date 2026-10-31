@@ -13,14 +13,17 @@
 #include <botan/tls_extensions.h>
 
 #include <botan/dns_name.h>
+#include <botan/exceptn.h>
 #include <botan/ipv4_address.h>
 #include <botan/ipv6_address.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/tls_messages_internal.h>
 #include <botan/internal/tls_reader.h>
 #include <algorithm>
+#include <set>
 #include <unordered_set>
 
 #if defined(BOTAN_HAS_TLS_13)
@@ -34,6 +37,28 @@
 namespace Botan::TLS {
 
 namespace {
+
+/*
+* Padding (RFC 7685) carries no information, but is a recognized extension
+* which may only appear in a ClientHello
+*/
+class Padding_Extension final : public Extension {
+   public:
+      static Extension_Code static_type() { return Extension_Code::Padding; }
+
+      Extension_Code type() const override { return static_type(); }
+
+      Padding_Extension(TLS_Data_Reader& reader, uint16_t extension_size) : m_size(extension_size) {
+         reader.discard_next(extension_size);
+      }
+
+      std::vector<uint8_t> serialize(Connection_Side /*whoami*/) const override { return std::vector<uint8_t>(m_size); }
+
+      bool empty() const override { return false; }
+
+   private:
+      size_t m_size;
+};
 
 std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
                                           Extension_Code code,
@@ -50,6 +75,10 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
          return std::make_unique<Supported_Groups>(reader, size);
 
       case Extension_Code::CertificateStatusRequest:
+         // Only the "ocsp" status_type is supported, a request for any other type is ignored
+         if(message_type == Handshake_Type::ClientHello && size > 0 && reader.peek_byte() != 1) {
+            break;  // considered as 'unknown extension'
+         }
          return std::make_unique<Certificate_Status_Request>(reader, size, message_type, from);
 
       case Extension_Code::SignatureAlgorithms:
@@ -77,7 +106,7 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
          return std::make_unique<Supported_Versions>(reader, size, from);
 
       case Extension_Code::Padding:
-         break;  // RFC 7685, recognized but not implemented; falls through to Unknown_Extension
+         return std::make_unique<Padding_Extension>(reader, size);
 
 #if defined(BOTAN_HAS_TLS_12)
       case Extension_Code::EcPointFormats:
@@ -244,7 +273,9 @@ std::vector<uint8_t> Extensions::serialize(Connection_Side whoami) const {
       const std::vector<uint8_t> extn_val = extn->serialize(whoami);
 
       // Each extension carries a uint16 length prefix.
-      BOTAN_ASSERT_NOMSG(extn_val.size() <= 0xFFFF);
+      if(extn_val.size() > 0xFFFF) {
+         throw Encoding_Error("TLS extension is too large to encode");
+      }
 
       buf.push_back(get_byte<0>(extn_code));
       buf.push_back(get_byte<1>(extn_code));
@@ -256,7 +287,9 @@ std::vector<uint8_t> Extensions::serialize(Connection_Side whoami) const {
    }
 
    // The outer extensions block is itself uint16-length-prefixed.
-   BOTAN_ASSERT_NOMSG(buf.size() - 2 <= 0xFFFF);
+   if(buf.size() - 2 > 0xFFFF) {
+      throw Encoding_Error("TLS extensions are too large to encode");
+   }
    const uint16_t extn_size = static_cast<uint16_t>(buf.size() - 2);
 
    buf[0] = get_byte<0>(extn_size);
@@ -274,8 +307,9 @@ std::set<Extension_Code> Extensions::extension_types() const {
    std::set<Extension_Code> offers;
    for(const auto& [extn_type, extn] : m_extensions) {
       // Consistent with serialize(): empty extensions are not placed on
-      // the wire so they must not appear in the "offered" set either.
-      if(!extn->empty()) {
+      // the wire so they must not appear in the "offered" set either. An
+      // extension received from the peer was on the wire, whatever it holds.
+      if(!extn->empty() || m_raw_extension_data.contains(extn_type)) {
          offers.insert(extn_type);
       }
    }
@@ -349,18 +383,19 @@ Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader, uint16_t e
 
       BOTAN_ASSERT_NOMSG(reader.remaining_bytes() == name_bytes);
 
+      std::set<uint8_t> seen_name_types;
       while(reader.has_remaining()) {
          const uint8_t name_type = reader.get_byte();
 
-         if(name_type == 0) {
-            /*
-            RFC 6066 Section 3
-               The ServerNameList MUST NOT contain more than one name of the same name_type.
-            */
-            if(!m_sni_host_name.empty()) {
-               throw Decoding_Error("TLS ServerNameIndicator contains more than one host_name");
-            }
+         /*
+         RFC 6066 Section 3
+            The ServerNameList MUST NOT contain more than one name of the same name_type.
+         */
+         if(!seen_name_types.insert(name_type).second) {
+            throw Decoding_Error("TLS ServerNameIndicator contains more than one name of the same type");
+         }
 
+         if(name_type == 0) {
             const std::string host_name = reader.get_string(2, 1, 65535);
 
             /*
@@ -406,7 +441,9 @@ std::vector<uint8_t> Server_Name_Indicator::serialize(Connection_Side whoami) co
    // RFC 6066 3: HostName<1..2^16-1>; the outer ServerNameList wraps a
    // 1-byte name_type and a 2-byte length so the whole entry must fit in
    // a uint16_t too.
-   BOTAN_ASSERT_NOMSG(name_len + 3 <= 0xFFFF);
+   if(name_len + 3 > 0xFFFF) {
+      throw Encoding_Error("TLS server name is too long to encode");
+   }
 
    buf.push_back(get_byte<0>(static_cast<uint16_t>(name_len + 3)));
    buf.push_back(get_byte<1>(static_cast<uint16_t>(name_len + 3)));
@@ -521,7 +558,9 @@ std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize(Connecti
    }
 
    // RFC 7301 3.1: ProtocolName protocol_name_list<2..2^16-1>;
-   BOTAN_ASSERT_NOMSG(buf.size() - 2 <= 0xFFFF);
+   if(buf.size() - 2 > 0xFFFF) {
+      throw Encoding_Error("TLS ALPN protocol list is too long to encode");
+   }
    buf[0] = get_byte<0>(static_cast<uint16_t>(buf.size() - 2));
    buf[1] = get_byte<1>(static_cast<uint16_t>(buf.size() - 2));
 
@@ -582,6 +621,19 @@ Certificate_Type_Base::Certificate_Type_Base(TLS_Data_Reader& reader, uint16_t e
          type_bytes.begin(), type_bytes.end(), std::back_inserter(m_certificate_types), [](const auto type_byte) {
             return static_cast<Certificate_Type>(type_byte);
          });
+
+      // RFC 7250 4.1
+      //    If the client has no remaining certificate types to send in the
+      //    client hello, other than the default X.509 type, it MUST omit the
+      //    client_certificate_type extension in the client hello.
+      //    [...]
+      //    If the client has no remaining certificate types to send in the
+      //    client hello, other than the default X.509 certificate type, it
+      //    MUST omit the entire server_certificate_type extension from the
+      //    client hello.
+      if(m_certificate_types == std::vector{Certificate_Type::X509}) {
+         throw TLS_Exception(Alert::IllegalParameter, "Certificate type extension contains only the default type");
+      }
    } else {
       // RFC 7250 4.2
       //    Note that only a single value is permitted in the
@@ -640,7 +692,7 @@ const std::vector<Group_Params>& Supported_Groups::groups() const {
 std::vector<Group_Params> Supported_Groups::ec_groups() const {
    std::vector<Group_Params> ec;
    for(const auto g : m_groups) {
-      if(g.is_pure_ecc_group()) {
+      if(group_may_be_ecc(g)) {
          ec.push_back(g);
       }
    }
@@ -785,10 +837,20 @@ SRTP_Protection_Profiles::SRTP_Protection_Profiles(TLS_Data_Reader& reader,
       throw TLS_Exception(Alert::DecodeError, "Server sent malformed DTLS-SRTP extension");
    }
 
-   // Any srtp_mki the peer offers is ignored; serialize() always answers with an
-   // empty srtp_mki, per RFC 5764 4.1.3:
+   // Any srtp_mki the client offers is ignored; serialize() always answers
+   // with an empty srtp_mki, per RFC 5764 4.1.3:
    //    2.  return an empty "srtp_mki" value to indicate that it cannot make
    //        use of the MKI.
+   //
+   // As a client we always offer an empty MKI, so a server cannot select one:
+   //
+   // RFC 5764 4.1.3
+   //    If the client detects a nonzero-length MKI in the server's response
+   //    that is different than the one the client offered, then the client
+   //    MUST abort the handshake and SHOULD send an invalid_parameter alert.
+   if(from == Connection_Side::Server && !mki.empty()) {
+      throw TLS_Exception(Alert::IllegalParameter, "Server selected a DTLS-SRTP MKI that was not offered");
+   }
 }
 
 std::vector<uint8_t> SRTP_Protection_Profiles::serialize(Connection_Side /*whoami*/) const {

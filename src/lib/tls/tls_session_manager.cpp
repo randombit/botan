@@ -14,12 +14,32 @@
 #include <botan/tls_policy.h>
 #include <botan/tls_session.h>
 #include <algorithm>
+#include <chrono>
 
 #if defined(BOTAN_HAS_TLS_13)
    #include <botan/tls_psk_identity_13.h>
 #endif
 
 namespace Botan::TLS {
+
+namespace {
+
+/*
+* A session whose start time lies in the future cannot be judged and is
+* considered expired. The age is rounded up so that a session is expired
+* as soon as its lifetime is exceeded by any fraction of a second.
+*/
+bool session_has_expired(std::chrono::system_clock::time_point now,
+                         std::chrono::system_clock::time_point start_time,
+                         std::chrono::seconds lifetime) {
+   if(now < start_time) {
+      return true;
+   }
+
+   return std::chrono::ceil<std::chrono::seconds>(now - start_time) > lifetime;
+}
+
+}  // namespace
 
 Session_Manager::Session_Manager(const std::shared_ptr<RandomNumberGenerator>& rng) : m_rng(rng) {
    BOTAN_ASSERT_NONNULL(m_rng);
@@ -78,13 +98,14 @@ std::optional<Session> Session_Manager::retrieve(const Session_Handle& handle,
    //    A server MAY treat a ticket as valid for a shorter period of time than
    //    what is stated in the ticket_lifetime.
    //
-   // Note: This disregards what is stored in the session (e.g. "lifetime_hint")
-   //       and only takes the local policy into account. The lifetime stored in
-   //       the sessions was taken from the same policy anyways and changes by
-   //       the application should have an immediate effect.
-   const auto ticket_age =
-      std::chrono::duration_cast<std::chrono::seconds>(callbacks.tls_current_timestamp() - session->start_time());
-   const bool expired = ticket_age > policy_lifetime;
+   // Note: For TLS 1.2 this disregards what is stored in the session (e.g.
+   //       "lifetime_hint") and only takes the local policy into account, so
+   //       that changes by the application have an immediate effect. A TLS 1.3
+   //       ticket additionally never outlives the ticket_lifetime it was
+   //       issued with, which was sent to the client.
+   const auto lifetime =
+      session->version().is_pre_tls_13() ? policy_lifetime : std::min(policy_lifetime, session->lifetime_hint());
+   const bool expired = session_has_expired(callbacks.tls_current_timestamp(), session->start_time(), lifetime);
 
    if(expired) {
       remove(handle);
@@ -128,8 +149,6 @@ std::vector<Session_with_Handle> Session_Manager::find_and_filter(const Server_I
       }
 
       std::erase_if(sessions_and_handles, [&](const auto& session) {
-         const auto age = std::chrono::duration_cast<std::chrono::seconds>(now - session.session.start_time());
-
          // RFC 5077 3.3 -- "Old Session Tickets"
          //    The ticket_lifetime_hint field contains a hint from the
          //    server about how long the ticket should be stored. [...]
@@ -165,10 +184,14 @@ std::vector<Session_with_Handle> Session_Manager::find_and_filter(const Server_I
          //       obeyed regardless of the policy setting.
          const auto session_lifetime_hint = session.session.lifetime_hint();
 
-         const bool is_rfc5077_unspecified =
-            (session_lifetime_hint.count() == 0 && session.session.version().is_pre_tls_13());
-         const auto effective_hint = is_rfc5077_unspecified ? std::chrono::seconds::max() : session_lifetime_hint;
-         const bool expired = age > std::min(policy_lifetime, effective_hint);
+         const bool is_tls13 = !session.session.version().is_pre_tls_13();
+         const bool is_rfc5077_unspecified = (session_lifetime_hint.count() == 0 && !is_tls13);
+         auto effective_hint = is_rfc5077_unspecified ? std::chrono::seconds::max() : session_lifetime_hint;
+         if(is_tls13) {
+            effective_hint = std::min(effective_hint, std::chrono::seconds(604800));
+         }
+         const bool expired =
+            session_has_expired(now, session.session.start_time(), std::min(policy_lifetime, effective_hint));
 
          if(expired) {
             remove(session.handle);
@@ -240,6 +263,12 @@ std::optional<std::pair<Session, uint16_t>> Session_Manager::choose_from_offered
 
    for(size_t i = 0; i < max_attempts; ++i) {
       const auto& ticket = tickets[i];
+
+      // An empty identity is not a valid session handle and cannot be a ticket we issued
+      if(ticket.identity().empty()) {
+         continue;
+      }
+
       auto session = retrieve(Session_Handle(Opaque_Session_Handle(ticket.identity())), callbacks, policy);
       if(session.has_value() && session->ciphersuite().prf_algo() == hash_function &&
          session->version().is_tls_13_or_later()) {

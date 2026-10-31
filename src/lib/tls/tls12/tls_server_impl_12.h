@@ -88,7 +88,15 @@ class Server_Impl_12 final : public Channel_Impl_12 {
       * tied to the session and a later renegotiation of the same
       * session can choose a new protocol.
       */
-      std::string application_protocol() const override { return m_next_protocol; }
+      std::string application_protocol() const override {
+         // A renegotiation in progress does not affect the active connection
+         if(active_state().has_value()) {
+            return active_state()->application_protocol();
+         }
+         return m_next_protocol;
+      }
+
+      std::string negotiated_application_protocol() const override { return m_next_protocol; }
 
       void initiate_handshake(Handshake_State& state, bool force_full_renegotiation) override;
 

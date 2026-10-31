@@ -12,6 +12,7 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/tls_messages_internal.h>
 #include <botan/internal/tls_reader.h>
 
 namespace Botan::TLS {
@@ -31,7 +32,8 @@ Encrypted_Extensions::Encrypted_Extensions(const Client_Hello_13& client_hello,
    //    learned from a successfully completed handshake to change what groups
    //    they use in their "key_share" extension in subsequent connections.
    if(exts.has<Supported_Groups>()) {
-      m_extensions.add(new Supported_Groups(policy.key_exchange_groups()));
+      m_extensions.add(
+         new Supported_Groups(groups_usable_in_version(policy.key_exchange_groups(), Protocol_Version::TLS_V13)));
    }
 
    const auto record_size_limit = policy.record_size_limit();

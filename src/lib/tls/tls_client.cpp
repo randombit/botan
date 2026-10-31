@@ -36,6 +36,7 @@ Client::Client(const std::shared_ptr<Callbacks>& callbacks,
                Protocol_Version offer_version,
                const std::vector<std::string>& next_protocols,
                size_t io_buf_sz) {
+   BOTAN_ARG_CHECK(policy != nullptr, "Policy must not be null");
    BOTAN_ARG_CHECK(policy->acceptable_protocol_version(offer_version),
                    "Policy does not allow to offer requested protocol version");
 
@@ -60,7 +61,8 @@ Client::Client(const std::shared_ptr<Callbacks>& callbacks,
 #endif
 
 #if defined(BOTAN_HAS_TLS_12)
-   if(offer_version.is_pre_tls_13()) {
+   // Older versions are not implemented, and would otherwise be offered as (D)TLS 1.2
+   if(offer_version == Protocol_Version::TLS_V12 || offer_version == Protocol_Version::DTLS_V12) {
       m_impl = Client_Impl_12::create(callbacks,
                                       session_manager,
                                       creds,

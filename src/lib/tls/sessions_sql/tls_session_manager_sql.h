@@ -30,12 +30,15 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_SQL : public Session_Manager {
    public:
       /**
       * @param db A connection to the database to use
-               The table names botan_tls_sessions and
-               botan_tls_sessions_metadata will be used
+               The tables tls_sessions and tls_sessions_metadata (and the
+               index tls_tickets) are owned by the session manager. They
+               are dropped and recreated if their schema is missing or not
+               recognized.
       * @param passphrase used to encrypt the session data
       * @param rng a random number generator
-      * @param max_sessions a hint on the maximum number of sessions
-      *        to keep in memory at any one time. (If zero, don't cap)
+      * @param max_sessions the maximum number of sessions kept in the
+      *        database; whenever a session is stored, the oldest sessions
+      *        beyond this limit are permanently deleted. (If zero, don't cap)
       */
       Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
                           std::string_view passphrase,
