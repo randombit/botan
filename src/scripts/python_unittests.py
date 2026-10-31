@@ -17,6 +17,7 @@ sys.path.append("../..") # Botan repo root
 from configure import (  # pylint: disable=wrong-import-position
     AmalgamationHelper,
     ModulesChooser,
+    process_command_line,
 )
 
 
@@ -220,6 +221,70 @@ class ModulesChooserResolveDependencies(unittest.TestCase):
         ok, modules = ModulesChooser.resolve_dependencies(available_modules, table, "G")
         self.assertTrue(ok)
         self.assertEqual(modules, {"G", "A", "C", "E"})
+
+
+class FakeModule:
+    def is_public(self):
+        return True
+
+
+class ModulesChooserUserSelection(unittest.TestCase):
+    """
+    The module selection switches are applied in command line order
+    """
+
+    MODULES = {name: FakeModule() for name in [
+        "pcurves", "pcurves_generic", "pcurves_secp256r1",
+        "pcurves_brainpool256r1", "pcurves_brainpool384r1",
+        "sha2_32", "sha2_32_avx2", "aes_avx2", "chacha_avx2"]}
+
+    def select(self, *args):
+        options = process_command_line(list(args))
+        return ModulesChooser._apply_user_selection(self.MODULES, options.module_selection)
+
+    def test_enable_then_specific_disable(self):
+        enabled, disabled = self.select("--minimized-build",
+                                        "--enable-modules=pcurves*",
+                                        "--disable-modules=pcurves_brainpool*")
+        self.assertEqual(enabled, ["pcurves_generic", "pcurves_secp256r1"])
+        self.assertEqual(disabled, ["pcurves_brainpool256r1", "pcurves_brainpool384r1"])
+
+    def test_disable_then_specific_enable(self):
+        enabled, disabled = self.select("--disable-modules=pcurves*",
+                                        "--enable-modules=pcurves_generic")
+        self.assertEqual(enabled, ["pcurves_generic"])
+        self.assertEqual(disabled, ["pcurves_brainpool256r1", "pcurves_brainpool384r1",
+                                    "pcurves_secp256r1"])
+
+    def test_disable_avx2_except_one(self):
+        enabled, disabled = self.select("--disable-modules=*avx2",
+                                        "--enable-modules=sha2_32_avx2")
+        self.assertEqual(enabled, ["sha2_32_avx2"])
+        self.assertEqual(disabled, ["aes_avx2", "chacha_avx2"])
+
+    def test_last_switch_wins(self):
+        self.assertEqual(self.select("--enable-modules=sha2_32", "--disable-modules=sha2_32"),
+                         ([], ["sha2_32"]))
+        self.assertEqual(self.select("--disable-modules=sha2_32", "--enable-modules=sha2_32"),
+                         (["sha2_32"], []))
+
+    def test_comma_separated_and_repeated(self):
+        enabled, disabled = self.select("--enable-modules=sha2_32,aes_avx2",
+                                        "--disable-modules=aes_avx2,chacha_avx2",
+                                        "--enable-modules=chacha_avx2")
+        self.assertEqual(enabled, ["chacha_avx2", "sha2_32"])
+        self.assertEqual(disabled, ["aes_avx2"])
+
+    def test_with_and_without_are_ordered_too(self):
+        self.assertEqual(self.select("--without-zlib", "--with-zlib"), (["zlib"], []))
+        self.assertEqual(self.select("--with-zlib", "--without-zlib"), ([], ["zlib"]))
+        self.assertEqual(self.select("--disable-modules=zlib", "--with-zlib"), (["zlib"], []))
+
+    def test_wildcard_matching_nothing_is_not_an_error(self):
+        self.assertEqual(self.select("--disable-modules=zz*"), ([], []))
+
+    def test_no_switches(self):
+        self.assertEqual(self.select(), ([], []))
 
 
 if __name__ == '__main__':
