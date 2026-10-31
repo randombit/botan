@@ -85,11 +85,18 @@ class BotanPythonTests(unittest.TestCase):
 
     def test_unavailable_functions(self):
         # A library at (or beyond) the module's API version must provide every function
-        # the module binds; an older library lacks some, and each is a raising stub
+        # the module binds; an older library lacks some, and each is a raising stub.
+        # The optional ffi_tls module is versioned separately, so a library built
+        # without it, or with an older version of it, lacks some of the botan_tls_
+        # functions while providing everything else this module binds
         unavailable = botan._DLL_RESOLVER.unavailable # pylint: disable=protected-access
+        if botan.ffi_tls_api_version() >= botan.BOTAN_FFI_TLS_VERSION:
+            required = unavailable
+        else:
+            required = [fn for fn in unavailable if not fn.startswith('botan_tls_')]
 
         if botan.ffi_api_version() >= botan.BOTAN_FFI_VERSION:
-            self.assertEqual(unavailable, [])
+            self.assertEqual(required, [])
         else:
             self.assertNotEqual(unavailable, [])
 
