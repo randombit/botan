@@ -1029,6 +1029,14 @@ ofvkP1EDmpx50fHLawIDAQAB
         pub4 = botan.PublicKey.load_sm2_sec1(group, compressed_sec1)
         self._pksign_roundtrips(priv, pub4, hash_fn)
 
+        if library_at_least(3, 14):
+            # demonstrate loading SM2 key from nothing but an ec point
+            ec_point = botan.ECPoint.from_xy(botan.ECGroup.from_name(group), botan.MPI(pub_x), botan.MPI(pub_y))
+            ec_group = ec_point.get_group()
+            x, y = ec_point.to_mpi_xy()
+            pub5 = botan.PublicKey.load_sm2(ec_group.get_curve_oid().to_name(), x, y)
+            self._pksign_roundtrips(priv, pub5, hash_fn)
+
     def test_ecdh(self):
         a_rng = botan.RandomNumberGenerator('user')
         b_rng = botan.RandomNumberGenerator('user')
@@ -2014,6 +2022,12 @@ iWtHjIcunpiq6+IiB8IVu7Ncu6uPKoFS/mWzTvjgdNusmgNle9p3OAbE
         self.assertTrue(result == botan.ECPoint.from_xy(group, botan.MPI(x_bytes, 16), botan.MPI(y_bytes, 16)))
         self.assertTrue(result == botan.ECPoint.from_bytes(group, result.to_uncompressed()))
         self.assertTrue(result == botan.ECPoint.from_bytes(group, result.to_compressed()))
+
+        if library_at_least(3, 14):
+            self.assertEqual(group, one.get_group())
+            self.assertEqual(group, identity.get_group())
+            x, y = result.to_mpi_xy()
+            self.assertEqual(botan.ECPoint.from_xy(group, x, y), result)
 
     def test_tls_policy(self):
         if not botan.tls_available():

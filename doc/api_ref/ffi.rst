@@ -1080,6 +1080,10 @@ EC Points and Scalars
 
    Convert from a scalar to an MPI.
 
+.. cpp:function:: int botan_ec_scalar_get_group(botan_ec_scalar_t ec_scalar, botan_ec_group_t* ec_group)
+
+   Get the group associated with this scalar.
+
 .. cpp:function:: int botan_ec_point_destroy(botan_ec_point_t ec_point)
 
    Destroy an object.
@@ -1123,6 +1127,14 @@ EC Points and Scalars
 .. cpp:function:: int botan_ec_point_view_compressed(botan_ec_point_t ec_point, botan_view_ctx ctx, botan_view_bin_fn view);
 
    View the fixed length SEC1 compressed encoding.
+
+.. cpp:function:: int botan_ec_point_to_mp_xy(botan_ec_point_t ec_point, botan_mp_t* x, botan_mp_t* y)
+
+   Convert from a point to a pair of (x,y) MPIs.
+
+.. cpp:function:: int botan_ec_point_get_group(botan_ec_point_t ec_point, botan_ec_group_t* ec_group)
+
+   Get the group associated with this point.
 
 .. cpp:function:: int botan_ec_point_is_identity(botan_ec_point_t ec_point);
 

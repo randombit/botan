@@ -225,6 +225,15 @@ int botan_ec_scalar_to_mp(botan_ec_scalar_t ec_scalar, botan_mp_t* mp) {
    });
 }
 
+int botan_ec_scalar_get_group(botan_ec_scalar_t ec_scalar, botan_ec_group_t* ec_group) {
+   if(Botan::any_null_pointers(ec_group)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   return BOTAN_FFI_VISIT(ec_scalar, [=](const auto& s) -> int {
+      return ffi_new_object(ec_group, std::make_unique<Botan::EC_Group>(s.group()));
+   });
+}
+
 // ec points
 
 int botan_ec_point_destroy(botan_ec_point_t ec_point) {
@@ -309,6 +318,32 @@ int botan_ec_point_view_compressed(botan_ec_point_t ec_point, botan_view_ctx ctx
    return BOTAN_FFI_VISIT(ec_point, [=](const auto& p) -> int {
       auto bytes = p.serialize_compressed();
       return invoke_view_callback(view, ctx, bytes);
+   });
+}
+
+int botan_ec_point_to_mp_xy(botan_ec_point_t ec_point, botan_mp_t* x, botan_mp_t* y) {
+   if(Botan::any_null_pointers(x, y)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   return BOTAN_FFI_VISIT(ec_point, [=](const auto& p) -> int {
+      Botan::BigInt mp_x;
+      Botan::BigInt mp_y;
+      std::tie(mp_x, mp_y) = p.to_bigint_xy();
+
+      const int res = ffi_new_object(x, std::make_unique<Botan::BigInt>(mp_x));
+      if(res != BOTAN_FFI_SUCCESS) {
+         return res;
+      }
+      return ffi_new_object(y, std::make_unique<Botan::BigInt>(mp_y));
+   });
+}
+
+int botan_ec_point_get_group(botan_ec_point_t ec_point, botan_ec_group_t* ec_group) {
+   if(Botan::any_null_pointers(ec_group)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   return BOTAN_FFI_VISIT(ec_point, [=](const auto& p) -> int {
+      return ffi_new_object(ec_group, std::make_unique<Botan::EC_Group>(p.group()));
    });
 }
 

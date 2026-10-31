@@ -1724,6 +1724,15 @@ BOTAN_FFI_EXPORT(3, 12)
 int botan_ec_scalar_to_mp(botan_ec_scalar_t ec_scalar, botan_mp_t* mp);
 
 /**
+* Get the group associated with this scalar
+* @param ec_scalar the scalar object to examine
+* @param ec_group the new object will be placed here
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 14)
+int botan_ec_scalar_get_group(botan_ec_scalar_t ec_scalar, botan_ec_group_t* ec_group);
+
+/**
 * Frees all resources of the point object
 * @param ec_point the point object to destroy
 * @returns negative number on error, or zero on success
@@ -1791,6 +1800,25 @@ int botan_ec_point_view_uncompressed(botan_ec_point_t ec_point, botan_view_ctx c
 */
 BOTAN_FFI_EXPORT(3, 12)
 int botan_ec_point_view_compressed(botan_ec_point_t ec_point, botan_view_ctx ctx, botan_view_bin_fn view);
+
+/**
+* Convert from a point to two MPIs (x, y)
+* @param ec_point the point to convert
+* @param x the new object for the x coordinate will be placed here
+* @param y the new object for the y coordinate will be placed here
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 14)
+int botan_ec_point_to_mp_xy(botan_ec_point_t ec_point, botan_mp_t* x, botan_mp_t* y);
+
+/**
+* Get the group associated with this point
+* @param ec_point the point object to examine
+* @param ec_group the new object will be placed here
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 14)
+int botan_ec_point_get_group(botan_ec_point_t ec_point, botan_ec_group_t* ec_group);
 
 /**
 * Test if a point is the identity element of the group

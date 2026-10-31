@@ -163,6 +163,9 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
       /// Return true if this point is the identity element
       bool is_identity() const;
 
+      /// Convert *this to two BigInts (x, y)
+      std::pair<BigInt, BigInt> to_bigint_xy() const;
+
       /// Write the fixed length encoding of affine x coordinate
       ///
       /// The output span must be exactly field_element_bytes long
