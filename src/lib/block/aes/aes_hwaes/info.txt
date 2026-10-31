@@ -1,0 +1,13 @@
+<internal_defines>
+AES_HWAES -> 20261031
+</internal_defines>
+
+<module_info>
+name -> "AES hardware key schedule"
+brief -> "AES key schedule using hardware AES instructions"
+</module_info>
+
+<requires>
+cpuid
+simd_hwaes
+</requires>

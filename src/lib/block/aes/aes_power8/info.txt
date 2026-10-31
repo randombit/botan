@@ -8,6 +8,7 @@ brief -> "AES using Power8 instructions"
 </module_info>
 
 <requires>
+aes_hwaes
 cpuid
 </requires>
 
