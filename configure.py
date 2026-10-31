@@ -361,6 +361,30 @@ class BuildPaths:
             return (self.example_sources, self.example_obj_dir)
         raise InternalError("Unknown src info type '%s'" % (typ))
 
+class ModuleSelectionAction(argparse.Action):
+    """
+    Records --enable-modules/--disable-modules/--with-X/--without-X in the
+    order they appear on the command line, as (enable, name_or_wildcard) pairs
+    in the `module_selection` attribute of the namespace.
+
+    The names are also collected in the plain list named by `dest` (as before),
+    which is what the rest of the option processing looks at.
+    """
+    def __init__(self, option_strings, dest, enable, const=None, **kwargs):
+        if const is not None:
+            kwargs['nargs'] = 0
+        super().__init__(option_strings, dest, const=const, **kwargs)
+        self.enable = enable
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if self.const is not None:
+            names = [self.const]
+        else:
+            names = [m for m in values.split(',') if m != '']
+
+        setattr(namespace, self.dest, (getattr(namespace, self.dest, None) or []) + names)
+        namespace.module_selection = namespace.module_selection + [(self.enable, n) for n in names]
+
 ACCEPTABLE_BUILD_TARGETS = ["static", "shared", "cli", "tests", "bogo_shim", "examples", "ct_selftest"]
 
 def process_command_line(args):
@@ -617,11 +641,13 @@ def process_command_line(args):
                           help="module policy file (see src/build-data/policy)",
                           metavar='POL', default=None)
 
+    parser.set_defaults(module_selection=[])
+
     mods_group.add_argument('--enable-modules', dest='enabled_modules',
-                          metavar='MODS', action='append',
+                          metavar='MODS', action=ModuleSelectionAction, enable=True,
                           help='enable specific modules')
     mods_group.add_argument('--disable-modules', dest='disabled_modules',
-                          metavar='MODS', action='append',
+                          metavar='MODS', action=ModuleSelectionAction, enable=False,
                           help='disable specific modules')
     mods_group.add_argument('--no-autoload', action='store_true', default=False,
                           help=argparse.SUPPRESS)
@@ -640,13 +666,13 @@ def process_command_line(args):
     for mod in third_party:
         mods_group.add_argument('--with-%s' % (mod),
                               help=('use %s' % (mod)) if mod in third_party else argparse.SUPPRESS,
-                              action='append_const',
+                              action=ModuleSelectionAction, enable=True,
                               const=mod,
                               dest='enabled_modules')
 
         mods_group.add_argument('--without-%s' % (mod),
                               help=argparse.SUPPRESS,
-                              action='append_const',
+                              action=ModuleSelectionAction, enable=False,
                               const=mod,
                               dest='disabled_modules')
 
@@ -2544,8 +2570,8 @@ class ModulesChooser:
         self._not_using_because = collections.defaultdict(set)
 
         ModulesChooser._validate_dependencies_exist(self._modules)
-        self._options.enabled_modules = ModulesChooser._expand_wildcards_in_user_selection(self._modules, self._options.enabled_modules)
-        self._options.disabled_modules = ModulesChooser._expand_wildcards_in_user_selection(self._modules, self._options.disabled_modules)
+        self._options.enabled_modules, self._options.disabled_modules = ModulesChooser._apply_user_selection(
+            self._modules, self._options.module_selection)
         ModulesChooser._validate_user_selection(
             self._modules, self._options.enabled_modules, self._options.disabled_modules)
 
@@ -2640,6 +2666,23 @@ class ModulesChooser:
                 logging.warning("Wildcard '%s' did not match any modules", user_selected_module)
             return matching_modules
         return flatten([expand(mod) if '*' in mod else [mod] for mod in user_selected_modules])
+
+    @staticmethod
+    def _apply_user_selection(modules, selection):
+        """
+        Apply the user's module selection switches in command line order.
+
+        `selection` is a list of (enable, name_or_wildcard) pairs. A later switch
+        overrides an earlier one for each module it matches. Returns the sorted
+        lists of enabled and disabled module names.
+        """
+        state = {}
+        for (enable, name) in selection:
+            for modname in ModulesChooser._expand_wildcards_in_user_selection(modules, [name]):
+                state[modname] = enable
+
+        return (sorted(m for m, enable in state.items() if enable),
+                sorted(m for m, enable in state.items() if not enable))
 
     @staticmethod
     def _validate_user_selection(modules, enabled_modules, disabled_modules):

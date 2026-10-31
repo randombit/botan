@@ -90,6 +90,11 @@ still enable and use such modules using ``--enable-modules=MODS`` or using
 You can control which algorithms and modules are built using the
 options ``--enable-modules=MODS`` and ``--disable-modules=MODS``, for
 instance ``--enable-modules=zlib`` and ``--disable-modules=xtea,idea``.
+Module names may contain the wildcard ``*``, for instance
+``--disable-modules='*avx2'``. These switches are applied from left to right,
+so a later switch overrides an earlier one: for instance
+``--disable-modules='pcurves*' --enable-modules=pcurves_generic`` disables all
+modules whose name starts with ``pcurves``, except ``pcurves_generic``.
 Modules not listed on the command line will simply be loaded if needed
 or if configured to load by default. If you use ``--minimized-build``,
 only the most core modules will be included; you can then explicitly

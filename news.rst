@@ -144,6 +144,13 @@ Behavior Changes
   makes the result much less sensitive to concurrent load and clock adjustments.
   (GH #5898)
 
+* In ``configure.py`` the module selection switches ``--enable-modules``,
+  ``--disable-modules`` and ``--with-X``/``--without-X`` are now applied in the
+  order given on the command line, so that a later switch overrides an earlier
+  one. Previously ``--disable-modules`` always took precedence. For instance
+  ``--disable-modules='*avx2' --enable-modules=sha2_32_avx2`` now enables
+  ``sha2_32_avx2``. (GH #5253)
+
 Optimizations
 ----------------------------------------
 
