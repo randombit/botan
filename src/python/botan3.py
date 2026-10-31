@@ -693,6 +693,8 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_crl_view_string_values,
             [c_void_p, c_int, c_size_t, c_void_p, _VIEW_STR_CALLBACK])
     ffi_api(dll.botan_x509_crl_view_string_values_count, [c_void_p, c_int, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_crl_view_issuer_dn, [c_void_p, c_char_p, c_size_t, c_void_p, _VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_x509_crl_view_issuer_dn_count, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_verify_with_crl,
             [POINTER(c_int), c_void_p, c_void_p, c_size_t, c_void_p, c_size_t, c_void_p, c_size_t, c_char_p, c_size_t, c_char_p, c_uint64])
 
@@ -3140,6 +3142,11 @@ class X509CRL(_NonCopyable):
                             _DLL.botan_x509_crl_view_string_values_count,
                             _DLL.botan_x509_crl_view_string_values,
                             _call_fn_viewing_str)
+
+    def issuer_dn(self, key: str, index: int) -> str:
+        """Get a value from the issuer DN field."""
+        return _call_fn_viewing_str(
+            lambda vc, vfn: _DLL.botan_x509_crl_view_issuer_dn(self.__obj, _ctype_str(key), index, vc, vfn))
 
     def verify(self, key: PublicKey) -> bool:
         """Returns True if the signature on this CRL is valid for the given public key"""

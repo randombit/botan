@@ -892,6 +892,20 @@ class FFI_CRL_Test final : public FFI_Test {
 
          result.test_str_eq("CRL PEM", remove_newlines(crl_pem.get()), remove_newlines(crl_string));
 
+         size_t rdn_count;
+         TEST_FFI_OK(botan_x509_crl_view_issuer_dn_count, (bytecrl, "Name", &rdn_count));
+         result.test_sz_eq("issuer DN 'name' count", rdn_count, 1);
+         TEST_FFI_OK(botan_x509_crl_view_issuer_dn_count, (bytecrl, "State", &rdn_count));
+         result.test_sz_eq("issuer DN 'state' count", rdn_count, 0);
+
+         ViewStringSink dn;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE,
+                     botan_x509_crl_view_issuer_dn,
+                     (bytecrl, "Name", 1, dn.delegate(), dn.callback()));
+
+         TEST_FFI_OK(botan_x509_crl_view_issuer_dn, (bytecrl, "Name", 0, dn.delegate(), dn.callback()));
+         result.test_str_eq("issuer dn", dn.get(), "Usable cert validation: Temporary CA");
+
          TEST_FFI_OK(botan_x509_crl_destroy, (crl));
          TEST_FFI_OK(botan_x509_crl_destroy, (bytecrl));
          TEST_FFI_OK(botan_x509_crl_destroy, (crl_without_next_update));
