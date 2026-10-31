@@ -88,6 +88,51 @@ inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_inv_sbox(SIMD_4x32 x) {
    return SIMD_4x32::byte_shuffle(dec, sr);
 }
 
+/**
+* Compute SubBytes(x) ^ k for a vector x whose four 32-bit words are all equal
+*
+* ShiftRows is the identity on such a vector, so this is exactly what the final
+* round instruction computes. The AES key schedule uses it to apply SubWord to a
+* broadcast word, with k carrying the round constant.
+*/
+inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_sbox_splat(SIMD_4x32 x, SIMD_4x32 k) {
+#if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
+   return SIMD_4x32(_mm_aesenclast_si128(x.raw(), k.raw()));
+#elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
+   // AESE adds its key before SubBytes so k is added afterwards instead
+   return SIMD_4x32(vreinterpretq_u32_u8(vaeseq_u8(vreinterpretq_u8_u32(x.raw()), vdupq_n_u8(0)))) ^ k;
+#elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
+   #if defined(__clang__)
+   return SIMD_4x32(reinterpret_cast<__vector unsigned int>(__builtin_crypto_vcipherlast(
+      reinterpret_cast<__vector unsigned char>(x.raw()), reinterpret_cast<__vector unsigned char>(k.raw()))));
+   #else
+   return SIMD_4x32(reinterpret_cast<__vector unsigned int>(__builtin_crypto_vcipherlast(
+      reinterpret_cast<__vector unsigned long long>(x.raw()), reinterpret_cast<__vector unsigned long long>(k.raw()))));
+   #endif
+#else
+   #error "hw_aes_sbox_splat not implemented for this architecture"
+#endif
+}
+
+#if !defined(BOTAN_TARGET_ARCH_IS_PPC64)
+/**
+* Apply InvMixColumns to each column of x
+*
+* The x86 and ARM decryption round instructions require the round keys in this
+* form. POWER's vncipher consumes the encryption round keys and has no such
+* instruction, so this is not available there.
+*/
+inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_inv_mix_columns(SIMD_4x32 x) {
+   #if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
+   return SIMD_4x32(_mm_aesimc_si128(x.raw()));
+   #elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
+   return SIMD_4x32(vreinterpretq_u32_u8(vaesimcq_u8(vreinterpretq_u8_u32(x.raw()))));
+   #else
+      #error "hw_aes_inv_mix_columns not implemented for this architecture"
+   #endif
+}
+#endif
+
 namespace detail {
 
 /*

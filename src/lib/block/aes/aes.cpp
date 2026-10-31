@@ -21,10 +21,6 @@
    #define BOTAN_HAS_HW_AES_SUPPORT
 #endif
 
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
-   #include <bit>
-#endif
-
 namespace Botan {
 
 /*
@@ -731,11 +727,7 @@ uint32_t SE_word(uint32_t x) {
    return x;
 }
 
-void aes_key_schedule(const uint8_t key[],
-                      size_t length,
-                      secure_vector<uint32_t>& EK,
-                      secure_vector<uint32_t>& DK,
-                      bool bswap_keys = false) {
+void aes_key_schedule(const uint8_t key[], size_t length, secure_vector<uint32_t>& EK, secure_vector<uint32_t>& DK) {
    static const uint32_t RC[10] = {0x01000000,
                                    0x02000000,
                                    0x04000000,
@@ -790,14 +782,6 @@ void aes_key_schedule(const uint8_t key[],
 
    for(size_t i = 4; i != 4 * rounds; i += 4) {
       InvMixColumn_x4(&DK[i]);
-   }
-
-   if(bswap_keys) {
-      // HW AES on little endian needs the subkeys to be byte reversed
-      for(size_t i = 0; i != KS_len; ++i) {
-         EK[i] = reverse_bytes(EK[i]);
-         DK[i] = reverse_bytes(DK[i]);
-      }
    }
 
    CT::unpoison(EK.data(), EK.size());
@@ -937,22 +921,9 @@ void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 }
 
 void AES_128::key_schedule(std::span<const uint8_t> key) {
-#if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has(CPUID::Feature::AESNI)) {
-      return aesni_key_schedule(key.data(), key.size());
-   }
-#endif
-
-#if defined(BOTAN_HAS_AES_VAES)
-   if(CPUID::has(CPUID::Feature::AVX2_AES)) {
-      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, true);
-   }
-#endif
-
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has(CPUID::Feature::HW_AES)) {
-      constexpr bool is_little_endian = std::endian::native == std::endian::little;
-      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, is_little_endian);
+      return hw_aes_key_schedule(key);
    }
 #endif
 
@@ -1019,22 +990,9 @@ void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 }
 
 void AES_192::key_schedule(std::span<const uint8_t> key) {
-#if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has(CPUID::Feature::AESNI)) {
-      return aesni_key_schedule(key.data(), key.size());
-   }
-#endif
-
-#if defined(BOTAN_HAS_AES_VAES)
-   if(CPUID::has(CPUID::Feature::AVX2_AES)) {
-      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, true);
-   }
-#endif
-
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has(CPUID::Feature::HW_AES)) {
-      constexpr bool is_little_endian = std::endian::native == std::endian::little;
-      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, is_little_endian);
+      return hw_aes_key_schedule(key);
    }
 #endif
 
@@ -1101,22 +1059,9 @@ void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 }
 
 void AES_256::key_schedule(std::span<const uint8_t> key) {
-#if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has(CPUID::Feature::AESNI)) {
-      return aesni_key_schedule(key.data(), key.size());
-   }
-#endif
-
-#if defined(BOTAN_HAS_AES_VAES)
-   if(CPUID::has(CPUID::Feature::AVX2_AES)) {
-      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, true);
-   }
-#endif
-
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has(CPUID::Feature::HW_AES)) {
-      constexpr bool is_little_endian = std::endian::native == std::endian::little;
-      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, is_little_endian);
+      return hw_aes_key_schedule(key);
    }
 #endif
 

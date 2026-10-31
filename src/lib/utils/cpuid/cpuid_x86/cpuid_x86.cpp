@@ -198,7 +198,9 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
 
             if(is_set(feat, CPUFeature::Bit::AVX2)) {
                feat |= if_set(flags7, x86_CPUID_7_bits::GFNI, CPUFeature::Bit::GFNI, allowed);
-               feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUFeature::Bit::AVX2_AES, allowed);
+               if(is_set(feat, CPUFeature::Bit::AESNI)) {
+                  feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUFeature::Bit::AVX2_AES, allowed);
+               }
                feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SHA512, CPUFeature::Bit::SHA512, allowed);
                // The SM3/SM4 instructions are VEX encoded and the code using them also uses AVX2
                feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SM3, CPUFeature::Bit::SM3, allowed);
@@ -214,7 +216,9 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
                   feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_PROFILE, CPUFeature::Bit::AVX512, allowed);
 
                   if(is_set(feat, CPUFeature::Bit::AVX512)) {
-                     feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUFeature::Bit::AVX512_AES, allowed);
+                     if(is_set(feat, CPUFeature::Bit::AESNI)) {
+                        feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUFeature::Bit::AVX512_AES, allowed);
+                     }
                      if(is_set(feat, CPUFeature::Bit::CLMUL)) {
                         feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VCLMUL, CPUFeature::Bit::AVX512_CLMUL, allowed);
                      }
