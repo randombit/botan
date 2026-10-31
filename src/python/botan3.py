@@ -3857,7 +3857,7 @@ class TOTP(_NonCopyable):
     def check(self, code: int, timestamp: int | None = None, acceptable_drift: int = 0) -> bool:
         """Returns True if ``code`` is the correct code for the given Unix timestamp
         (or for the current time), allowing up to ``acceptable_drift`` time steps of
-        clock skew in either direction"""
+        clock skew where the client's clock is behind"""
         if timestamp is None:
             timestamp = int(system_time())
         rc = _DLL.botan_totp_check(self.__obj, code, timestamp, acceptable_drift)

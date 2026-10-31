@@ -88,11 +88,15 @@ timestamp is used.
       Generate and return a TOTP code based on a timestamp.
 
    .. cpp:function:: bool verify_totp(uint32_t otp, std::chrono::system_clock::time_point time, \
-                                      size_t clock_drift_accepted = 0)
+                                      size_t clock_drift_accepted = 0, size_t forward_drift_accepted = 0)
 
    .. cpp:function:: bool verify_totp(uint32_t otp, uint64_t unix_time, \
-                                      size_t clock_drift_accepted = 0)
+                                      size_t clock_drift_accepted = 0, size_t forward_drift_accepted = 0)
 
       Return true if the provided OTP code is correct for the provided
       timestamp. If required, use *clock_drift_accepted* to deal with
       the client and server having slightly different clocks.
+      *clock_drift_accepted* accepts codes up to that many time steps
+      before the current one (client clock behind), and
+      *forward_drift_accepted* accepts codes up to that many time steps
+      after it (client clock ahead). Both default to 0.
