@@ -2350,6 +2350,19 @@ X.509 Certificate Revocation Lists
    Get the number of entries for multi-value string fields of information
    contained in the CRL.
 
+.. cpp:function:: int botan_x509_crl_view_issuer_dn(botan_x509_crl_t crl, \
+                                                   const char* key, size_t index, \
+                                                   botan_view_ctx ctx, \
+                                                   botan_view_str_fn view_fn)
+
+   Get a value from the issuer DN field. If the index is out of range,
+   :cpp:enumerator:`BOTAN_FFI_ERROR_OUT_OF_RANGE` is returned.
+
+.. cpp:function:: int botan_x509_crl_view_issuer_dn_count(botan_x509_crl_t crl, \
+                                                          const char* key, size_t* count)
+
+   Get the number of values for a given key in the issuer DN field.
+
 .. cpp:function:: int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert)
 
    Check whether a given ``crl`` contains a given ``cert``.

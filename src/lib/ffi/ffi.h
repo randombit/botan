@@ -4368,6 +4368,29 @@ BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_crl_view_string_values_count(botan_x509_crl_t crl_obj, botan_x509_value_type value_type, size_t* count);
 
 /**
+* Enumerates the names of the given @p key in the issuer DN.
+*
+* @param crl the CRL whose DN should be enumerated
+* @param key the key to to look up
+* @param index the index of the entry to return for the given key
+* @returns 0 on success, BOTAN_FFI_ERROR_OUT_OF_RANGE if the given @p index is out of range, a negative number on failure
+*/
+BOTAN_FFI_EXPORT(3, 14)
+int botan_x509_crl_view_issuer_dn(
+   botan_x509_crl_t crl, const char* key, size_t index, botan_view_ctx ctx, botan_view_str_fn view);
+
+/**
+* Count the names of the given @p key in the issuer DN.
+*
+* @param crl the CRL to inspect
+* @param key the DN component to count
+* @param count set to the number of available entries
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 14)
+int botan_x509_crl_view_issuer_dn_count(botan_x509_crl_t crl, const char* key, size_t* count);
+
+/**
  * Given a CRL and a certificate,
  * check if the certificate is revoked on that particular CRL
  */
