@@ -30,7 +30,7 @@ On x86-64 and x86-32 platforms, the following CPU specific optimizations are ava
 +===========+============================================+=========================+============+
 | AES       | VAES-AVX2                                  | ``aes_vaes``            | 3.6.0      |
 |           |                                            |                         |            |
-|           | AES-NI                                     | ``aes_ni``              | 1.9.3      |
+|           | AES-NI                                     | ``aes_hwaes``           | 1.9.3      |
 |           |                                            |                         |            |
 |           | SSSE3                                      | ``aes_vperm``           | 1.9.10     |
 +-----------+--------------------------------------------+-------------------------+------------+
@@ -159,7 +159,7 @@ On ARM platforms, the following CPU specific optimizations are available.
 +-----------+--------------------------------------------+--------------------+------------+
 | Algorithm | Extension                                  | Module             | Added in   |
 +===========+============================================+====================+============+
-| AES       | ARMv8 Cryptography Extensions              | ``aes_armv8``      | 2.3.0      |
+| AES       | ARMv8 Cryptography Extensions              | ``aes_hwaes``      | 2.3.0      |
 |           |                                            |                    |            |
 |           | NEON                                       | ``aes_vperm``      | 2.12.0     |
 +-----------+--------------------------------------------+--------------------+------------+
@@ -211,7 +211,7 @@ All of them require POWER8 (ISA 2.07) or later.
 +-----------+--------------------------------------------+--------------------+------------+
 | Algorithm | Extension                                  | Module             | Added in   |
 +===========+============================================+====================+============+
-| AES       | POWER8 Cryptography Extensions             | ``aes_power8``     | 2.14.0     |
+| AES       | POWER8 Cryptography Extensions             | ``aes_hwaes``      | 2.14.0     |
 |           |                                            |                    |            |
 |           | POWER8 VSX                                 | ``aes_vperm``      | 2.12.0     |
 +-----------+--------------------------------------------+--------------------+------------+
@@ -312,11 +312,17 @@ Configuring Acceleration
 
 If it is desirable to avoid using some form of acceleration, this can be accomplished
 *at build time* by using ``--disable-modules=``. For instance, to remove support
-of ARMv8 intrinsics for AES, use ``--disable-modules=aes_armv8``. Note that this is rarely
+for the AES instructions of the CPU, use ``--disable-modules=aes_hwaes``. Note that this is rarely
 if ever required; if support for the CPU extension is not available at runtime then the
 code using that extension will simply be skipped over. The only reason to do this is when
 the code is being deployed to a fixed target (eg the specific board used in your product)
 and you know that target does not support such an extension, and you wish to minimize code size.
+
+.. note::
+
+   Prior to 3.14.0 the hardware AES implementations were in separate modules
+   named ``aes_ni``, ``aes_armv8`` and ``aes_power8``. These were merged into
+   ``aes_hwaes``, which covers all three platforms.
 
 It is also possible to disable acceleration *at runtime* using
 ``BOTAN_CLEAR_CPUID`` :doc:`environment variable <api_ref/env_vars>`. This is the preferred

@@ -1,5 +1,5 @@
 /*
-* AES key schedule using hardware AES instructions
+* AES using hardware AES instructions
 * (C) 2026 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -7,14 +7,105 @@
 
 #include <botan/internal/aes.h>
 
-#include <botan/assert.h>
 #include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_4x32.h>
 #include <botan/internal/simd_hwaes.h>
+#include <utility>
 
 namespace Botan {
 
 namespace {
+
+template <bool ENC>
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_HWAES SIMD_4x32 hw_aes_round(SIMD_4x32 B, SIMD_4x32 K) {
+   if constexpr(ENC) {
+      return hw_aes_enc_round(B, K);
+   } else {
+      return hw_aes_dec_round(B, K);
+   }
+}
+
+template <bool ENC>
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_HWAES SIMD_4x32 hw_aes_last_round(SIMD_4x32 B, SIMD_4x32 K) {
+   if constexpr(ENC) {
+      return hw_aes_enc_last_round(B, K);
+   } else {
+      return hw_aes_dec_last_round(B, K);
+   }
+}
+
+template <bool ENC, typename... Bs>
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_HWAES void hw_aes_round_all(SIMD_4x32 K, Bs&... B) {
+   ((B = hw_aes_round<ENC>(B, K)), ...);
+}
+
+// The round keys are indexed with constants so that GCC keeps them in registers
+template <size_t R, bool ENC, size_t... Is, typename... Bs>
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_HWAES void hw_aes_inner_rounds(const SIMD_4x32 (&K)[R + 1],
+                                                               std::index_sequence<Is...> /*rounds*/,
+                                                               Bs&... B) {
+   constexpr size_t S = HwAesKeyFirst ? 0 : 1;
+   (hw_aes_round_all<ENC>(K[Is + S], B...), ...);
+}
+
+/*
+* Run the full cipher over any number of blocks in parallel. Where the ISA adds
+* the round key before SubBytes the whitening key goes into the first round
+* instruction, otherwise the last round key goes into the final one.
+*/
+template <size_t R, bool ENC, typename... Bs>
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_HWAES void hw_aes_blocks(const SIMD_4x32 (&K)[R + 1], Bs&... B) {
+   constexpr size_t S = HwAesKeyFirst ? 0 : 1;
+
+   if constexpr(!HwAesKeyFirst) {
+      ((B ^= K[0]), ...);
+   }
+
+   hw_aes_inner_rounds<R, ENC>(K, std::make_index_sequence<R - 1>{}, B...);
+
+   ((B = hw_aes_last_round<ENC>(B, K[R - 1 + S])), ...);
+
+   if constexpr(HwAesKeyFirst) {
+      ((B ^= K[R]), ...);
+   }
+}
+
+template <size_t R, size_t... Is>
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_HWAES void hw_aes_load_keys(SIMD_4x32 (&K)[R + 1],
+                                                            const uint32_t keys[],
+                                                            std::index_sequence<Is...> /*keys*/) {
+   ((K[Is] = hw_aes_load_block(reinterpret_cast<const uint8_t*>(&keys[4 * Is]))), ...);
+}
+
+template <size_t R, bool ENC>
+BOTAN_FN_ISA_HWAES void hw_aes_process(const uint8_t in[], uint8_t out[], size_t blocks, const uint32_t keys[]) {
+   SIMD_4x32 K[R + 1];
+   hw_aes_load_keys<R>(K, keys, std::make_index_sequence<R + 1>{});
+
+   while(blocks >= 4) {
+      SIMD_4x32 B0 = hw_aes_load_block(in);
+      SIMD_4x32 B1 = hw_aes_load_block(in + 16);
+      SIMD_4x32 B2 = hw_aes_load_block(in + 32);
+      SIMD_4x32 B3 = hw_aes_load_block(in + 48);
+
+      hw_aes_blocks<R, ENC>(K, B0, B1, B2, B3);
+
+      hw_aes_store_block(B0, out);
+      hw_aes_store_block(B1, out + 16);
+      hw_aes_store_block(B2, out + 32);
+      hw_aes_store_block(B3, out + 48);
+
+      in += 4 * 16;
+      out += 4 * 16;
+      blocks -= 4;
+   }
+
+   for(size_t i = 0; i != blocks; ++i) {
+      SIMD_4x32 B = hw_aes_load_block(in + 16 * i);
+      hw_aes_blocks<R, ENC>(K, B);
+      hw_aes_store_block(B, out + 16 * i);
+   }
+}
 
 /*
 * Each word of a round key is the xor of the previous word and the word four
@@ -74,26 +165,45 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_HWAES void aes_256_round_keys(SIMD_4x32& K0, SIM
 }
 
 /*
-* The decryption round keys are the encryption round keys in reverse order
-* with InvMixColumns applied to all but the first and last
+* The decryption round keys are the encryption round keys in reverse order,
+* with the inner ones converted to the form the decryption instructions take
 */
 BOTAN_FN_ISA_HWAES void hw_aes_decryption_keys(const secure_vector<uint32_t>& EK, secure_vector<uint32_t>& DK) {
-#if defined(BOTAN_TARGET_ARCH_IS_PPC64)
-   // vncipher takes the encryption round keys so no decryption schedule is needed
-   BOTAN_UNUSED(EK, DK);
-#else
    const size_t rounds = EK.size() / 4 - 1;
    DK.resize(EK.size());
 
    SIMD_4x32::load_le(&EK[4 * rounds]).store_le(DK.data());
    for(size_t i = 1; i != rounds; ++i) {
-      hw_aes_inv_mix_columns(SIMD_4x32::load_le(&EK[4 * (rounds - i)])).store_le(&DK[4 * i]);
+      hw_aes_dec_round_key(SIMD_4x32::load_le(&EK[4 * (rounds - i)])).store_le(&DK[4 * i]);
    }
    SIMD_4x32::load_le(EK.data()).store_le(&DK[4 * rounds]);
-#endif
 }
 
 }  // namespace
+
+void BOTAN_FN_ISA_HWAES AES_128::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+   hw_aes_process<10, true>(in, out, blocks, m_EK.data());
+}
+
+void BOTAN_FN_ISA_HWAES AES_128::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+   hw_aes_process<10, false>(in, out, blocks, m_DK.data());
+}
+
+void BOTAN_FN_ISA_HWAES AES_192::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+   hw_aes_process<12, true>(in, out, blocks, m_EK.data());
+}
+
+void BOTAN_FN_ISA_HWAES AES_192::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+   hw_aes_process<12, false>(in, out, blocks, m_DK.data());
+}
+
+void BOTAN_FN_ISA_HWAES AES_256::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+   hw_aes_process<14, true>(in, out, blocks, m_EK.data());
+}
+
+void BOTAN_FN_ISA_HWAES AES_256::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+   hw_aes_process<14, false>(in, out, blocks, m_DK.data());
+}
 
 void BOTAN_FN_ISA_HWAES AES_128::hw_aes_key_schedule(std::span<const uint8_t> key) {
    m_EK.resize(44);

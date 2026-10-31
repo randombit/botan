@@ -17,10 +17,6 @@
    #include <botan/internal/cpuid.h>
 #endif
 
-#if defined(BOTAN_HAS_AES_POWER8) || defined(BOTAN_HAS_AES_ARMV8) || defined(BOTAN_HAS_AES_NI)
-   #define BOTAN_HAS_HW_AES_SUPPORT
-#endif
-
 namespace Botan {
 
 /*
@@ -796,7 +792,7 @@ size_t aes_parallelism() {
    }
 #endif
 
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+#if defined(BOTAN_HAS_AES_HWAES)
    if(CPUID::has(CPUID::Feature::HW_AES)) {
       return 4;  // pipelined
    }
@@ -819,7 +815,7 @@ std::string aes_provider() {
    }
 #endif
 
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+#if defined(BOTAN_HAS_AES_HWAES)
    if(auto feat = CPUID::check(CPUID::Feature::HW_AES)) {
       return *feat;
    }
@@ -881,7 +877,7 @@ void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    }
 #endif
 
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+#if defined(BOTAN_HAS_AES_HWAES)
    if(CPUID::has(CPUID::Feature::HW_AES)) {
       return hw_aes_encrypt_n(in, out, blocks);
    }
@@ -905,7 +901,7 @@ void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    }
 #endif
 
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+#if defined(BOTAN_HAS_AES_HWAES)
    if(CPUID::has(CPUID::Feature::HW_AES)) {
       return hw_aes_decrypt_n(in, out, blocks);
    }
@@ -921,7 +917,7 @@ void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 }
 
 void AES_128::key_schedule(std::span<const uint8_t> key) {
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+#if defined(BOTAN_HAS_AES_HWAES)
    if(CPUID::has(CPUID::Feature::HW_AES)) {
       return hw_aes_key_schedule(key);
    }
@@ -950,7 +946,7 @@ void AES_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    }
 #endif
 
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+#if defined(BOTAN_HAS_AES_HWAES)
    if(CPUID::has(CPUID::Feature::HW_AES)) {
       return hw_aes_encrypt_n(in, out, blocks);
    }
@@ -974,7 +970,7 @@ void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    }
 #endif
 
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+#if defined(BOTAN_HAS_AES_HWAES)
    if(CPUID::has(CPUID::Feature::HW_AES)) {
       return hw_aes_decrypt_n(in, out, blocks);
    }
@@ -990,7 +986,7 @@ void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 }
 
 void AES_192::key_schedule(std::span<const uint8_t> key) {
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+#if defined(BOTAN_HAS_AES_HWAES)
    if(CPUID::has(CPUID::Feature::HW_AES)) {
       return hw_aes_key_schedule(key);
    }
@@ -1019,7 +1015,7 @@ void AES_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    }
 #endif
 
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+#if defined(BOTAN_HAS_AES_HWAES)
    if(CPUID::has(CPUID::Feature::HW_AES)) {
       return hw_aes_encrypt_n(in, out, blocks);
    }
@@ -1043,7 +1039,7 @@ void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    }
 #endif
 
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+#if defined(BOTAN_HAS_AES_HWAES)
    if(CPUID::has(CPUID::Feature::HW_AES)) {
       return hw_aes_decrypt_n(in, out, blocks);
    }
@@ -1059,7 +1055,7 @@ void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 }
 
 void AES_256::key_schedule(std::span<const uint8_t> key) {
-#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+#if defined(BOTAN_HAS_AES_HWAES)
    if(CPUID::has(CPUID::Feature::HW_AES)) {
       return hw_aes_key_schedule(key);
    }

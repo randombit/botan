@@ -106,10 +106,8 @@ pcurves_sm2p256v1
 pcurves_generic
 
 # block
-aes_ni
+aes_hwaes
 aes_vperm
-aes_armv8
-aes_power8
 aes_vaes
 
 # modes
