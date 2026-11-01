@@ -1,0 +1,32 @@
+<internal_defines>
+HWRNG -> 20261101
+</internal_defines>
+
+<module_info>
+name -> "Hardware RNG"
+brief -> "Wrapper for CPU instructions which generate random numbers"
+</module_info>
+
+<arch>
+x86_32
+x86_64
+x32
+ppc64
+arm64
+</arch>
+
+<header:internal>
+hwrng.h
+</header:internal>
+
+<requires>
+cpuid
+
+x86_32?hwrng_x86
+x86_64?hwrng_x86
+x32?hwrng_x86
+
+ppc64?hwrng_power
+
+arm64?hwrng_aarch64
+</requires>

@@ -1,0 +1,8 @@
+<module_info>
+name -> "Hardware RNG for POWER"
+brief -> "Wrapper for the DARN instruction"
+</module_info>
+
+<arch>
+ppc64
+</arch>

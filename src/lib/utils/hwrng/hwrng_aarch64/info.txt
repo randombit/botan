@@ -1,0 +1,19 @@
+<module_info>
+name -> "Hardware RNG for AArch64"
+brief -> "Wrapper for the RNDR instruction"
+</module_info>
+
+<arch>
+arm64
+</arch>
+
+<os_features>
+# Detecting the RNG extension requires the OS to report it via the ELF
+# auxiliary vector. Any one of these is sufficient.
+getauxval
+elf_aux_info
+</os_features>
+
+<requires>
+os_utils
+</requires>
