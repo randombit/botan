@@ -65,9 +65,9 @@ modules have and have not been enabled. For instance on one system
 we might see lines like::
 
    INFO: Skipping (dependency failure): certstor_sqlite3 sessions_sqlite3
-   INFO: Skipping (incompatible CPU): aes_power8
+   INFO: Skipping (incompatible CPU): cpuid_aarch64 cpuid_ppc sm4_armv8
    INFO: Skipping (incompatible OS): darwin_secrandom getentropy win32_stats
-   INFO: Skipping (incompatible compiler): aes_armv8 pmull sha1_armv8 sha2_32_armv8
+   INFO: Skipping (incompatible compiler): sha1_armv8 sha2_32_armv8 sha2_64_armv8
    INFO: Skipping (no enabled compression schemes): compression
    INFO: Skipping (requires external dependency): boost bzip2 lzma sqlite3 tpm zlib
 
@@ -636,7 +636,7 @@ specific features their application will use. In general this is straightforward
 use ``--minimized-build`` plus ``--enable-modules=`` to enable the specific modules
 you wish to use. It is possible to use an asterisk (``*``) as a wildcard for
 related modules. For instance to enable all available AES implementations, use
-``--enable-modules='aes*'`` which will enable ``aes_ni``, ``aes_power8``, etc.
+``--enable-modules='aes*'`` which will enable ``aes_hwaes``, ``aes_vperm``, etc.
 Any such configurations should build and pass the tests; if you encounter a case
 where it doesn't please file an issue.
 
@@ -648,9 +648,9 @@ used directly as the RNG.
 
 If you are building for x86, ARM, or POWER, it can be beneficial to enable
 hardware support for the relevant instruction sets with modules such as
-``aes_ni`` and ``clmul`` for x86, or ``aes_armv8``, ``pmull``, and
-``sha2_32_armv8`` on ARMv8. SIMD optimizations such as ``chacha_simd8x32`` also can
-provide substantial performance improvements.
+``aes_hwaes`` and ``ghash_cpu``, or ``sha2_32_armv8`` on ARMv8. SIMD
+optimizations such as ``chacha_simd8x32`` also can provide substantial
+performance improvements.
 
 .. note::
    In a future release, hardware specific modules will be enabled by default if

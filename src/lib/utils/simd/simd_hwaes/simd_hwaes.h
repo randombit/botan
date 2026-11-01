@@ -21,19 +21,46 @@
 
 namespace Botan {
 
+#if defined(BOTAN_TARGET_ARCH_IS_PPC64)
+
+namespace detail {
+
+   // The vector type taken by the POWER crypto builtins differs between compilers
+   #if defined(__clang__)
+using HwAesVec = __vector unsigned char;
+   #else
+using HwAesVec = __vector unsigned long long;
+   #endif
+
+inline HwAesVec BOTAN_FN_ISA_HWAES hw_aes_vec(SIMD_4x32 x) {
+   return reinterpret_cast<HwAesVec>(x.raw());
+}
+
+inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_simd(HwAesVec x) {
+   return SIMD_4x32(reinterpret_cast<__vector unsigned int>(x));
+}
+
+// POWER numbers the AES state bytes from the most significant end of the register
+inline __vector unsigned char BOTAN_FN_ISA_HWAES hw_aes_state_order(__vector unsigned char v) {
+   if constexpr(std::endian::native == std::endian::little) {
+      const __vector unsigned char rev = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+      return vec_perm(v, v, rev);
+   } else {
+      return v;
+   }
+}
+
+}  // namespace detail
+
+#endif
+
 /**
 * Apply the AES S-box to each byte of the input vector.
 */
 inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_sbox(SIMD_4x32 x) {
 #if defined(BOTAN_TARGET_ARCH_IS_PPC64)
    // vsbox is SubBytes alone so no shuffle is required
-   #if defined(__clang__)
-   return SIMD_4x32(reinterpret_cast<__vector unsigned int>(
-      __builtin_crypto_vsbox(reinterpret_cast<__vector unsigned char>(x.raw()))));
-   #else
-   return SIMD_4x32(reinterpret_cast<__vector unsigned int>(
-      __builtin_crypto_vsbox(reinterpret_cast<__vector unsigned long long>(x.raw()))));
-   #endif
+   return detail::hw_aes_simd(__builtin_crypto_vsbox(detail::hw_aes_vec(x)));
 #else
    // Undo the ShiftRows with a byte shuffle implementing InvShiftRows
    const auto inv_sr = SIMD_4x32(0x070A0D00, 0x0B0E0104, 0x0F020508, 0x0306090C);
@@ -73,14 +100,8 @@ inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_inv_sbox(SIMD_4x32 x) {
 #elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
    const auto dec = SIMD_4x32(vreinterpretq_u32_u8(vaesdq_u8(vreinterpretq_u8_u32(x.raw()), vdupq_n_u8(0))));
 #elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
-   #if defined(__clang__)
-   const auto dec = SIMD_4x32(reinterpret_cast<__vector unsigned int>(__builtin_crypto_vncipherlast(
-      reinterpret_cast<__vector unsigned char>(x.raw()), reinterpret_cast<__vector unsigned char>(SIMD_4x32().raw()))));
-   #else
-   const auto dec = SIMD_4x32(reinterpret_cast<__vector unsigned int>(
-      __builtin_crypto_vncipherlast(reinterpret_cast<__vector unsigned long long>(x.raw()),
-                                    reinterpret_cast<__vector unsigned long long>(SIMD_4x32().raw()))));
-   #endif
+   const auto dec =
+      detail::hw_aes_simd(__builtin_crypto_vncipherlast(detail::hw_aes_vec(x), detail::hw_aes_vec(SIMD_4x32())));
 #else
    #error "hw_aes_inv_sbox not implemented for this architecture"
 #endif
@@ -102,36 +123,124 @@ inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_sbox_splat(SIMD_4x32 x, SIMD_4x32 k) 
    // AESE adds its key before SubBytes so k is added afterwards instead
    return SIMD_4x32(vreinterpretq_u32_u8(vaeseq_u8(vreinterpretq_u8_u32(x.raw()), vdupq_n_u8(0)))) ^ k;
 #elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
-   #if defined(__clang__)
-   return SIMD_4x32(reinterpret_cast<__vector unsigned int>(__builtin_crypto_vcipherlast(
-      reinterpret_cast<__vector unsigned char>(x.raw()), reinterpret_cast<__vector unsigned char>(k.raw()))));
-   #else
-   return SIMD_4x32(reinterpret_cast<__vector unsigned int>(__builtin_crypto_vcipherlast(
-      reinterpret_cast<__vector unsigned long long>(x.raw()), reinterpret_cast<__vector unsigned long long>(k.raw()))));
-   #endif
+   return detail::hw_aes_simd(__builtin_crypto_vcipherlast(detail::hw_aes_vec(x), detail::hw_aes_vec(k)));
 #else
    #error "hw_aes_sbox_splat not implemented for this architecture"
 #endif
 }
 
-#if !defined(BOTAN_TARGET_ARCH_IS_PPC64)
 /**
-* Apply InvMixColumns to each column of x
-*
-* The x86 and ARM decryption round instructions require the round keys in this
-* form. POWER's vncipher consumes the encryption round keys and has no such
-* instruction, so this is not available there.
+* True if the round instructions add the round key before SubBytes, as on
+* ARMv8, rather than after MixColumns as on x86 and POWER
 */
-inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_inv_mix_columns(SIMD_4x32 x) {
-   #if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
-   return SIMD_4x32(_mm_aesimc_si128(x.raw()));
-   #elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
-   return SIMD_4x32(vreinterpretq_u32_u8(vaesimcq_u8(vreinterpretq_u8_u32(x.raw()))));
-   #else
-      #error "hw_aes_inv_mix_columns not implemented for this architecture"
-   #endif
-}
+#if defined(BOTAN_TARGET_ARCH_IS_ARM64)
+constexpr bool HwAesKeyFirst = true;
+#else
+constexpr bool HwAesKeyFirst = false;
 #endif
+
+/**
+* Load a block in the byte order the AES round instructions operate on
+*/
+inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_load_block(const uint8_t in[16]) {
+#if defined(BOTAN_TARGET_ARCH_IS_PPC64)
+   return SIMD_4x32(reinterpret_cast<__vector unsigned int>(detail::hw_aes_state_order(vec_xl(0, in))));
+#else
+   return SIMD_4x32::load_le(in);
+#endif
+}
+
+/**
+* Store a block produced by the AES round instructions
+*/
+inline void BOTAN_FN_ISA_HWAES hw_aes_store_block(SIMD_4x32 B, uint8_t out[16]) {
+#if defined(BOTAN_TARGET_ARCH_IS_PPC64)
+   vec_xst(detail::hw_aes_state_order(reinterpret_cast<__vector unsigned char>(B.raw())), 0, out);
+#else
+   B.store_le(out);
+#endif
+}
+
+/**
+* One encryption round, adding the round key where HwAesKeyFirst says
+*/
+inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_enc_round(SIMD_4x32 B, SIMD_4x32 K) {
+#if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
+   return SIMD_4x32(_mm_aesenc_si128(B.raw(), K.raw()));
+#elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
+   return SIMD_4x32(
+      vreinterpretq_u32_u8(vaesmcq_u8(vaeseq_u8(vreinterpretq_u8_u32(B.raw()), vreinterpretq_u8_u32(K.raw())))));
+#elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
+   return detail::hw_aes_simd(__builtin_crypto_vcipher(detail::hw_aes_vec(B), detail::hw_aes_vec(K)));
+#else
+   #error "hw_aes_enc_round not implemented for this architecture"
+#endif
+}
+
+/**
+* The final encryption round, which omits MixColumns
+*/
+inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_enc_last_round(SIMD_4x32 B, SIMD_4x32 K) {
+#if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
+   return SIMD_4x32(_mm_aesenclast_si128(B.raw(), K.raw()));
+#elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
+   return SIMD_4x32(vreinterpretq_u32_u8(vaeseq_u8(vreinterpretq_u8_u32(B.raw()), vreinterpretq_u8_u32(K.raw()))));
+#elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
+   return detail::hw_aes_simd(__builtin_crypto_vcipherlast(detail::hw_aes_vec(B), detail::hw_aes_vec(K)));
+#else
+   #error "hw_aes_enc_last_round not implemented for this architecture"
+#endif
+}
+
+/**
+* One decryption round, taking a round key prepared by hw_aes_dec_round_key
+*/
+inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_dec_round(SIMD_4x32 B, SIMD_4x32 K) {
+#if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
+   return SIMD_4x32(_mm_aesdec_si128(B.raw(), K.raw()));
+#elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
+   return SIMD_4x32(
+      vreinterpretq_u32_u8(vaesimcq_u8(vaesdq_u8(vreinterpretq_u8_u32(B.raw()), vreinterpretq_u8_u32(K.raw())))));
+#elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
+   return detail::hw_aes_simd(__builtin_crypto_vncipher(detail::hw_aes_vec(B), detail::hw_aes_vec(K)));
+#else
+   #error "hw_aes_dec_round not implemented for this architecture"
+#endif
+}
+
+/**
+* The final decryption round, which omits InvMixColumns
+*/
+inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_dec_last_round(SIMD_4x32 B, SIMD_4x32 K) {
+#if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
+   return SIMD_4x32(_mm_aesdeclast_si128(B.raw(), K.raw()));
+#elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
+   return SIMD_4x32(vreinterpretq_u32_u8(vaesdq_u8(vreinterpretq_u8_u32(B.raw()), vreinterpretq_u8_u32(K.raw()))));
+#elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
+   return detail::hw_aes_simd(__builtin_crypto_vncipherlast(detail::hw_aes_vec(B), detail::hw_aes_vec(K)));
+#else
+   #error "hw_aes_dec_last_round not implemented for this architecture"
+#endif
+}
+
+/**
+* Convert an inner encryption round key to the form hw_aes_dec_round takes
+*
+* x86 and ARMv8 implement the equivalent inverse cipher, which needs
+* InvMixColumns applied to the inner round keys. POWER's vncipher implements
+* the standard inverse cipher and takes the encryption round keys unchanged.
+*/
+inline SIMD_4x32 BOTAN_FN_ISA_HWAES hw_aes_dec_round_key(SIMD_4x32 K) {
+#if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
+   return SIMD_4x32(_mm_aesimc_si128(K.raw()));
+#elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
+   return SIMD_4x32(vreinterpretq_u32_u8(vaesimcq_u8(vreinterpretq_u8_u32(K.raw()))));
+#elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
+   return K;
+#else
+   #error "hw_aes_dec_round_key not implemented for this architecture"
+#endif
+}
 
 namespace detail {
 

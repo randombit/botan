@@ -44,9 +44,6 @@ class AES_128 final : public Block_Cipher_Fixed_Params<16, 16> {
 
 #if defined(BOTAN_HAS_AES_HWAES)
       void hw_aes_key_schedule(std::span<const uint8_t> key);
-#endif
-
-#if defined(BOTAN_HAS_AES_POWER8) || defined(BOTAN_HAS_AES_ARMV8) || defined(BOTAN_HAS_AES_NI)
       void hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
       void hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
 #endif
@@ -87,9 +84,6 @@ class AES_192 final : public Block_Cipher_Fixed_Params<16, 24> {
 
 #if defined(BOTAN_HAS_AES_HWAES)
       void hw_aes_key_schedule(std::span<const uint8_t> key);
-#endif
-
-#if defined(BOTAN_HAS_AES_POWER8) || defined(BOTAN_HAS_AES_ARMV8) || defined(BOTAN_HAS_AES_NI)
       void hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
       void hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
 #endif
@@ -132,9 +126,6 @@ class AES_256 final : public Block_Cipher_Fixed_Params<16, 32> {
 
 #if defined(BOTAN_HAS_AES_HWAES)
       void hw_aes_key_schedule(std::span<const uint8_t> key);
-#endif
-
-#if defined(BOTAN_HAS_AES_POWER8) || defined(BOTAN_HAS_AES_ARMV8) || defined(BOTAN_HAS_AES_NI)
       void hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
       void hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
 #endif

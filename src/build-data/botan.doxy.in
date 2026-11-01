@@ -151,9 +151,7 @@ EXPAND_ONLY_PREDEF     = NO
 SEARCH_INCLUDES        = YES
 INCLUDE_PATH           =
 INCLUDE_FILE_PATTERNS  =
-PREDEFINED             = BOTAN_HAS_AES_ARMV8 \
-                         BOTAN_HAS_AES_NI \
-                         BOTAN_HAS_AES_POWER8 \
+PREDEFINED             = BOTAN_HAS_AES_HWAES \
                          BOTAN_HAS_AES_VPERM \
                          BOTAN_HAS_CHACHA_SIMD32 \
                          BOTAN_HAS_CHACHA_SIMD8X32 \

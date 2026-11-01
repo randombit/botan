@@ -3,8 +3,8 @@ AES_HWAES -> 20261031
 </internal_defines>
 
 <module_info>
-name -> "AES hardware key schedule"
-brief -> "AES key schedule using hardware AES instructions"
+name -> "AES using hardware instructions"
+brief -> "AES using the AES instructions of x86, ARMv8 and POWER8"
 </module_info>
 
 <requires>
