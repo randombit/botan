@@ -32,18 +32,22 @@ uint32_t TOTP::generate_totp(uint64_t unix_time) {
    return m_hotp.generate_hotp(unix_time / m_time_step);
 }
 
-bool TOTP::verify_totp(uint32_t otp, std::chrono::system_clock::time_point current_time, size_t clock_drift_accepted) {
+bool TOTP::verify_totp(uint32_t otp,
+                       std::chrono::system_clock::time_point current_time,
+                       size_t clock_drift_accepted,
+                       size_t forward_drift_accepted) {
    const uint64_t unix_time = std::chrono::duration_cast<std::chrono::seconds>(current_time - m_unix_epoch).count();
-   return verify_totp(otp, unix_time, clock_drift_accepted);
+   return verify_totp(otp, unix_time, clock_drift_accepted, forward_drift_accepted);
 }
 
-bool TOTP::verify_totp(uint32_t otp, uint64_t unix_time, size_t clock_drift_accepted) {
+bool TOTP::verify_totp(uint32_t otp, uint64_t unix_time, size_t clock_drift_accepted, size_t forward_drift_accepted) {
    /*
    clock_drift_accepted is denominated in time steps. This bounds the loop to
    far more iterations than any reasonable clock drift would require. For the
    almost universally used 30 second time step, this limit is about 3.5 days
    */
    BOTAN_ARG_CHECK(clock_drift_accepted <= 10000, "TOTP clock_drift_accepted too large");
+   BOTAN_ARG_CHECK(forward_drift_accepted <= 10000, "TOTP forward_drift_accepted too large");
 
    // This was on Sep 9, 2001
    BOTAN_ARG_CHECK(unix_time >= 1000000000, "TOTP unix_time argument is implausibly small");
@@ -53,6 +57,12 @@ bool TOTP::verify_totp(uint32_t otp, uint64_t unix_time, size_t clock_drift_acce
    for(size_t i = 0; i <= clock_drift_accepted; ++i) {
       BOTAN_ASSERT_NOMSG(t >= i);
       if(m_hotp.generate_hotp(t - i) == otp) {
+         return true;
+      }
+   }
+
+   for(size_t i = 1; i <= forward_drift_accepted; ++i) {
+      if(m_hotp.generate_hotp(t + i) == otp) {
          return true;
       }
    }
