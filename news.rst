@@ -38,8 +38,9 @@ New APIs and Features
 * ML-DSA signatures now support the application context string of FIPS 204, passed
   via ``PK_Signature_Options::with_context``. (GH #5531)
 
-* Add an experimental C API for TLS in the new ``ffi_tls`` module. Experimental
-  modules are not built by default and not covered by SemVer. (GH #2492 #5941)
+* Add an experimental C API for TLS in the new ``ffi_tls`` module, currently
+  covering policies, credentials, and session managers. Experimental modules
+  are not built by default and not covered by SemVer. (GH #2492 #5941 #5963)
 
 * Introduce a new design for entropy sources. (GH #5928 #5945)
 
@@ -70,6 +71,22 @@ New APIs and Features
   used. Note that ``Jitter_RNG`` no longer forces the FIPS mode of jitterentropy
   by default; use ``Jitter_RNG::Mode::FIPS`` to retain the previous behavior.
   (GH #5832)
+
+* FFI handles can now share ownership of the underlying object. The RNG passed
+  to ``botan_tpm2_ctx_enable_crypto_backend`` is now retained for the lifetime
+  of the TPM2 context, rather than being borrowed. Add ``botan_is_shared`` and
+  ``botan_use_count`` to query the ownership of a handle. (GH #5959 #6038 #6048
+  #6052)
+
+* Add FFI functions ``botan_ec_scalar_get_group``, ``botan_ec_point_get_group``,
+  and ``botan_ec_point_to_mp_xy``. (GH #6080)
+
+* Add FFI functions ``botan_x509_crl_view_issuer_dn`` and
+  ``botan_x509_crl_view_issuer_dn_count`` for accessing the issuer DN of a CRL.
+  (GH #6077)
+
+* ``Processor_RNG`` now supports the ARMv8.5-A FEAT_RNG extension (the ``RNDR``
+  instruction) on aarch64. (GH #5228 #6084)
 
 Security and Hardening
 ----------------------------------------
@@ -127,6 +144,46 @@ Security and Hardening
   context moves to a failed state if any peer message fails to decode, rather
   than allowing further attempts. (GH #5976)
 
+* Avoid an information leak during RSA key generation, where the number of
+  candidate primes rejected after sieving leaked some bits of the final prime.
+  (GH #6068)
+
+* The Lucas primality test is now constant time; previously the search for the
+  parameter D leaked information about the prime being tested. (GH #6067)
+
+* Fix various minor side channels, including a value dependent branch when
+  storing BigInt words, a value dependent loop in modular multiplication,
+  variable length blinding of RSA exponents, and a branch when negating Ed25519
+  field elements. Many more secrets are now marked for the valgrind based
+  constant time checks. (GH #6069 #6071)
+
+* Improve validation of ML-KEM, ML-DSA, FrodoKEM, Classic McEliece, McEliece,
+  and XMSS keys. Invalid keys now consistently throw ``Decoding_Error``, and
+  various cheap consistency checks are performed during deserialization.
+  (GH #6083)
+
+* Fix two bugs in TLS session resumption. A server now verifies that a resumed
+  session satisfies the current policy, including client certificate
+  authentication requirements and (in TLS 1.2) the ciphersuite requirements,
+  rather than accepting any previously established session. Additionally a
+  session manager shared between a client and a server role no longer allows a
+  session established in one role to be resumed in the other. (GH #5797 #5837)
+
+* TLS now limits the number of consecutive useless records (empty records,
+  warning alerts, and TLS 1.3 compatibility mode ChangeCipherSpec) accepted
+  from the peer, closing the connection if the limit is exceeded. The default
+  limit of 32 can be changed using ``TLS::Policy::max_useless_records``.
+  (GH #6051)
+
+* ``AutoSeeded_RNG`` now mixes a high resolution timestamp along with output
+  from the system RNG into each request, to help recover from a VM rollback or
+  process duplication which the kernel RNG did not detect. (GH #6054)
+
+* The stateful key index registry used by XMSS and HSS-LMS now detects a fork
+  using the fork generation counter rather than only the process ID, and
+  ``Stateful_RNG`` now detects a fork which occurs before it is first seeded.
+  (GH #6058)
+
 Behavior Changes
 ----------------------------------------
 
@@ -144,6 +201,18 @@ Behavior Changes
   makes the result much less sensitive to concurrent load and clock adjustments.
   (GH #5898)
 
+* During X.509 path validation the self-signature of the trust anchor is no
+  longer verified; the anchor is trusted because the application provided it.
+  For a typical chain this removes about a third of the cost of path
+  validation. (GH #6008)
+
+* DSA now rejects parameters where p is smaller than 512 bits or larger than
+  3072 bits, or where q is larger than 256 bits. Previously only a minimum of
+  160 bits for q was enforced. (GH #6039)
+
+* The ASN.1 pretty printer now formats integers of fewer than 32 bits in
+  decimal; previously the limit was 16 bits. (GH #6025)
+
 Optimizations
 ----------------------------------------
 
@@ -159,13 +228,14 @@ Optimizations
 * Refactor and optimize X25519, especially improving key generation (GH #6010)
 
 * Elliptic curve optimizations, especially improving P-256 and SM2.
-  (GH #6012 #6013 #6020 #6021 #6024 #6031)
+  (GH #6012 #6013 #6020 #6021 #6024 #6031 #6059)
 
 * Add AVX-512+IFMA modular exponentiation support, improving RSA and FFDHE by 3-4x
   (GH #6026)
 
 * Add a fused Montgomery multiplication using BMI2/ADX, improving modular
-  exponentiation on x86-64 processors without IFMA by about 30%. (GH #6044)
+  exponentiation on x86-64 processors without IFMA by about 30%, and optimize
+  the corresponding Montgomery squaring. (GH #6044 #6053)
 
 * Add AVX2 codepath for ML-KEM (GH #5964 #6032 #6033)
 
@@ -178,19 +248,31 @@ Optimizations
   (GH #5849 #5880 #5883 #5884)
 
 * Optimize primality testing by performing trial division by small primes
-  before running Miller-Rabin. (GH #5886)
+  before running Miller-Rabin, rewriting the Lucas test to use Montgomery form,
+  using faster variable time variants when testing public parameters, and
+  running the Miller-Rabin and Lucas tests in the thread pool when it is
+  available. (GH #5886 #6040)
 
 * Improve the performance of X.509 certificate parsing, including PEM decoding,
   OID decoding, and extension handling. (GH #5888 #5889 #5890 #5891)
+
+* Avoid quadratic behavior when decoding an X.509 distinguished name with many
+  attributes. (GH #6063)
 
 * Add a certificate cache to the macOS system certificate store, implement
   ``contains()`` directly, and query the keychain by issuer DN and serial
   number instead of scanning all certificates of an issuer. (GH #5541 #5929)
 
 * Resolve a performance regression in TLS 1.3 record processing introduced
-  in 3.13.0 (GH #6002)
+  in 3.13.0, and avoid several copies and allocations on the send side.
+  (GH #6002 #6046)
 
 * Reduce memory allocations during TLS 1.2 record processing. (GH #5887)
+
+* Use the AES instructions to compute the key schedule on x86, ARMv8, and
+  POWER8, making ``AES::set_key`` substantially faster, especially on ARMv8 and
+  POWER8 which previously used the bitsliced software key schedule.
+  (GH #6078 #6081)
 
 * Modify the bitsliced AES implementation to use the native word size of the
   processor, instead of always 32 bits. (GH #5826)
@@ -240,12 +322,21 @@ Bug Fixes
 * ``TOTP::verify_totp`` now takes an optional ``forward_drift_accepted``
   parameter to accept codes from a client whose clock is ahead of the
   server's, as allowed by RFC 6238. The existing ``clock_drift_accepted``
-  parameter is unchanged and still only applies backwards. (GH #6035)
+  parameter is unchanged and still only applies backwards. (GH #6035 #6070)
 
 * Fix several corner case bugs in CPU feature detection. (GH #6036)
 
 * Fix the move operators of ``Dynamically_Loaded_Library``, which previously
   caused the library to be closed twice. (GH #5967)
+
+* Fix various bugs in the TLS ASIO stream. Cancellation slots are now forwarded
+  to the next layer so that timeouts reach pending operations, synchronous
+  operations are refused while an asynchronous write is in flight, operations
+  attempted before the handshake no longer cause all later handshakes to fail,
+  and move assignment of ``Stream`` now compiles. (GH #6060)
+
+* Fix various bugs and edge cases in the stateful hash signature schemes XMSS
+  and HSS-LMS (GH #6066)
 
 Deprecations and Cleanups
 ----------------------------------------
@@ -288,10 +379,10 @@ Python Binding
 
 * The Python binding now can adapt itself to any version of Botan3. (GH #5851)
 
-* Add ``X509Cert.binary_values``/``string_values`` and the equivalents on
-  ``X509CRL``. (GH #5984)
+* Add ``X509Cert.binary_values``/``string_values`` and the equivalents on ``X509CRL``.
+  (GH #5984)
 
-* Fix a number of bugs in the Python binding (GH #5969)
+* Fix a number of bugs in the Python binding (GH #5969 #6064)
 
 Build and Infrastructure
 ----------------------------------------
@@ -307,9 +398,17 @@ Build and Infrastructure
   library output directory with GCC on MinGW, and Clang on Aarch64.
   (GH #5850 #5854 #5875 #5901 #5953 #5954)
 
+* The ``aes_ni``, ``aes_armv8``, and ``aes_power8`` modules have been merged
+  into a single ``aes_hwaes`` module. Build configurations which referenced the
+  old module names must be updated. (GH #6081)
+
+* Fix the CMake package configuration on MinGW, which did not set
+  ``IMPORTED_IMPLIB`` for the imported target. (GH #6057)
+
 * CI updates including moving most builds to Ubuntu 26.04, adding Windows Aarch64
-  builders, dropping the 32-bit MIPS cross build, and updating dependencies used
-  in CI (GH #5768 #5846 #5848 #5860 #5861)
+  builders, dropping the 32-bit MIPS cross build, updating dependencies used in
+  CI, and improving resilience to slow package mirrors.
+  (GH #5768 #5846 #5848 #5860 #5861 #6065)
 
 Version 3.13.0, 2026-08-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
