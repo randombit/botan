@@ -102,6 +102,7 @@ Classic_McEliece_PrivateKey::Classic_McEliece_PrivateKey(std::span<const uint8_t
                                                          Classic_McEliece_Parameter_Set param_set) {
    const auto scope = CT::scoped_poison(sk);
    const auto params = Classic_McEliece_Parameters::create(param_set);
+   BOTAN_ARG_CHECK(sk.size() == params.sk_size_bytes(), "Wrong private key length");
    auto sk_internal = Classic_McEliece_PrivateKeyInternal::from_bytes(params, sk);
    m_private = std::make_shared<Classic_McEliece_PrivateKeyInternal>(std::move(sk_internal));
    // This creates and loads the public key, which is very large. Potentially, we could only load

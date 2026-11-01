@@ -212,12 +212,33 @@ class CMCE_Utility_Tests final : public Test {
          return result;
       }
 
+      Test::Result wrong_key_length_test() {
+         Test::Result result("Keys of the wrong length are rejected");
+
+         const auto param_set = Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_348864;
+         const auto params = Botan::Classic_McEliece_Parameters::create(param_set);
+
+         const std::vector<uint8_t> short_sk(params.sk_size_bytes() - 1);
+         const std::vector<uint8_t> long_sk(params.sk_size_bytes() + 1);
+         const std::vector<uint8_t> short_pk(params.pk_size_bytes() - 1);
+
+         result.test_throws<Botan::Invalid_Argument>(
+            "Short private key", [&] { const Botan::Classic_McEliece_PrivateKey key(short_sk, param_set); });
+         result.test_throws<Botan::Invalid_Argument>(
+            "Long private key", [&] { const Botan::Classic_McEliece_PrivateKey key(long_sk, param_set); });
+         result.test_throws<Botan::Invalid_Argument>(
+            "Short public key", [&] { const Botan::Classic_McEliece_PublicKey key(short_pk, param_set); });
+
+         return result;
+      }
+
       std::vector<Test::Result> run() override {
          return {expand_seed_test(),
                  irreducible_poly_gen_test(),
                  gf_inv_test(),
                  gf_poly_mul_test(),
-                 rigged_rng_encryption_test()};
+                 rigged_rng_encryption_test(),
+                 wrong_key_length_test()};
       }
 };
 
