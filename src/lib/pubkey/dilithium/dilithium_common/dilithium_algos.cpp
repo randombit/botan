@@ -26,6 +26,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/pqcrystals_encoding.h>
 #include <botan/internal/pqcrystals_helpers.h>
+#include <algorithm>
 #include <utility>
 
 namespace Botan::Dilithium_Algos {
@@ -444,7 +445,7 @@ DilithiumInternalKeypair decode_keypair(StrongSpan<const DilithiumSerializedPriv
    CT::unpoison(rho);  // rho is public (used in rejection sampling of matrix A)
 
    const auto A = expand_A(rho, mode);
-   auto [t1, _] = compute_t1_and_t0(A, s1, s2);
+   auto [t1, t0_recomputed] = compute_t1_and_t0(A, s1, s2);
 
    CT::unpoison(t1);  // part of the public key
 
@@ -465,6 +466,12 @@ DilithiumInternalKeypair decode_keypair(StrongSpan<const DilithiumSerializedPriv
    }
 
    CT::unpoison(*keypair.second);
+
+   // t0 is fully determined by (rho, s1, s2), so the encoded value must agree
+   CT::unpoison(t0_recomputed);
+   if(!std::ranges::equal(keypair.second->t0().coefficients(), t0_recomputed.coefficients())) {
+      throw Decoding_Error("Decoded dilithium private key t0 does not match the value derived from s1 and s2");
+   }
 
    return keypair;
 }

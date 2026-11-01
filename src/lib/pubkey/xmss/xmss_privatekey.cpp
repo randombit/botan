@@ -146,6 +146,8 @@ class XMSS_PrivateKey_Internal final {
          m_keyid = xmss_key_id(m_xmss_params, m_wots_derivation_method, m_private_seed, public_seed);
 
          // Note m_keyid must be initialized before set_unused_leaf_index is called!
+         // This comes last, after every check that can reject the encoding, since
+         // it raises the index lower bound shared by all copies of this key.
          set_unused_leaf_index(unused_leaf);
       }
 
@@ -212,7 +214,7 @@ XMSS_PrivateKey::XMSS_PrivateKey(std::span<const uint8_t> key_bits) :
       XMSS_PrivateKey(AlgorithmIdentifier(), key_bits) {}
 
 XMSS_PrivateKey::XMSS_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
-      XMSS_PublicKey(alg_id, key_bits),
+      XMSS_PublicKey(alg_id, key_bits, Key_Encoding::PrivateKey),
       m_private(std::make_shared<XMSS_PrivateKey_Internal>(xmss_parameters().oid(), key_bits)) {}
 
 struct XMSS_PrivateKey::Keygen_Material {

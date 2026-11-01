@@ -122,6 +122,14 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PublicKey : public virtual Public_Key {
    protected:
       friend class XMSS_Verification_Operation;
 
+      /**
+       * Which key the serialization in key_bits holds. A private key
+       * encoding carries the public key followed by the private key body.
+       */
+      enum class Key_Encoding : uint8_t { PublicKey, PrivateKey };
+
+      XMSS_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits, Key_Encoding encoding);
+
       const secure_vector<uint8_t>& public_seed() const;
 
       const secure_vector<uint8_t>& root() const;

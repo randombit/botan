@@ -240,6 +240,19 @@ class Frodo_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
       std::shared_ptr<const FrodoKEM_PrivateKeyInternal> m_private_key;
 };
 
+// The entries of S^T are samples from the error distribution, which is
+// supported on [-(cdf_table_len - 1), cdf_table_len - 1]
+bool s_trans_in_range(const FrodoKEMConstants& constants, const FrodoMatrix& s_trans) {
+   const auto bound = static_cast<uint16_t>(constants.cdf_table_len() - 1);
+   auto in_range = CT::Mask<uint16_t>::set();
+   for(size_t i = 0; i != s_trans.element_count(); ++i) {
+      // Adding the bound maps the valid two's complement entries onto [0, 2*bound]
+      const auto shifted = static_cast<uint16_t>(s_trans.elements_at(i) + bound);
+      in_range &= CT::Mask<uint16_t>::is_lte(shifted, static_cast<uint16_t>(2 * bound));
+   }
+   return in_range.as_bool();
+}
+
 }  // namespace
 
 //
@@ -249,7 +262,7 @@ class Frodo_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
 FrodoKEM_PublicKey::FrodoKEM_PublicKey(std::span<const uint8_t> pub_key, FrodoKEMMode mode) {
    FrodoKEMConstants constants(mode);
    if(pub_key.size() != constants.len_public_key_bytes()) {
-      throw Invalid_Argument("FrodoKEM public key does not have the correct byte count");
+      throw Decoding_Error("FrodoKEM public key does not have the correct byte count");
    }
 
    BufferSlicer pk_bs(pub_key);
@@ -366,7 +379,7 @@ FrodoKEM_PrivateKey::FrodoKEM_PrivateKey(std::span<const uint8_t> sk, FrodoKEMMo
    FrodoKEMConstants constants(mode);
 
    if(sk.size() != constants.len_private_key_bytes()) {
-      throw Invalid_Argument("FrodoKEM private key does not have the correct byte count");
+      throw Decoding_Error("FrodoKEM private key does not have the correct byte count");
    }
 
    BufferSlicer sk_bs(sk);
@@ -379,6 +392,9 @@ FrodoKEM_PrivateKey::FrodoKEM_PrivateKey(std::span<const uint8_t> sk, FrodoKEMMo
 
    auto b = FrodoMatrix::unpack(constants, std::tuple(constants.n(), constants.n_bar()), packed_b);
    auto s_trans = FrodoMatrix::deserialize({constants.n_bar(), constants.n()}, s_trans_bytes);
+   if(!s_trans_in_range(constants, s_trans)) {
+      throw Decoding_Error("FrodoKEM private key matrix entry is out of range");
+   }
 
    m_public = std::make_shared<FrodoKEM_PublicKeyInternal>(std::move(constants), std::move(seed_a), std::move(b));
    m_private = std::make_shared<FrodoKEM_PrivateKeyInternal>(std::move(s), std::move(s_trans));

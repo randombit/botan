@@ -497,10 +497,91 @@ std::vector<Test::Result> test_kyber_ntt() {
    return {result};
 }
 
+/**
+ * Checks validation of ML-KEM keys in the expanded private key format
+ */
+std::vector<Test::Result> test_kyber_key_validation() {
+   Test::Result result("ML-KEM key validation");
+
+   const Botan::KyberMode mode(Botan::KyberMode::ML_KEM_768);
+   if(!mode.is_available()) {
+      result.note_missing(mode.to_string());
+      return {result};
+   }
+
+   auto rng = Test::new_rng(__func__);
+
+   const Botan::Kyber_PrivateKey sk(*rng, mode);
+   const auto pk_bits = sk.public_key_bits();
+   const auto sk_bits = sk.private_key_bits_with_format(Botan::MlPrivateKeyFormat::Expanded);
+   result.test_sz_eq("public key length", pk_bits.size(), 1184);
+   result.test_sz_eq("expanded private key length", sk_bits.size(), 2400);
+
+   // Expanded private key layout: s || ek || H(ek) || z
+   const size_t ek_offset = sk_bits.size() - pk_bits.size() - 64;
+   const size_t hash_offset = ek_offset + pk_bits.size();
+
+   {
+      const Botan::Kyber_PrivateKey loaded(sk_bits, mode);
+      result.test_is_true("valid expanded key passes weak check", loaded.check_key(*rng, false));
+      result.test_is_true("valid expanded key passes strong check", loaded.check_key(*rng, true));
+   }
+
+   {
+      // Flip the low bit of a coefficient of s. The result must stay below q
+      // for decoding to succeed, which only rules out a coefficient of q-1.
+      auto corrupted = sk_bits;
+      bool flipped = false;
+      for(size_t i = 0; i + 1 < ek_offset; i += 3) {
+         const auto coeff = static_cast<uint16_t>(corrupted[i] | ((corrupted[i + 1] & 0x0F) << 8));
+         if((coeff ^ 1) < Botan::KyberConstants::Q) {
+            corrupted[i] ^= 0x01;
+            flipped = true;
+            break;
+         }
+      }
+      result.test_is_true("found a coefficient of s to corrupt", flipped);
+
+      const Botan::Kyber_PrivateKey loaded(corrupted, mode);
+      result.test_is_true("corrupted s passes weak check", loaded.check_key(*rng, false));
+      result.test_is_false("corrupted s fails strong check", loaded.check_key(*rng, true));
+   }
+
+   result.test_throws<Botan::Decoding_Error>("corrupted public key hash", [&] {
+      auto corrupted = sk_bits;
+      corrupted[hash_offset] ^= 0x01;
+      Botan::Kyber_PrivateKey(corrupted, mode);
+   });
+
+   result.test_throws<Botan::Decoding_Error>("corrupted rho in embedded public key", [&] {
+      auto corrupted = sk_bits;
+      corrupted[hash_offset - 1] ^= 0x01;
+      Botan::Kyber_PrivateKey(corrupted, mode);
+   });
+
+   result.test_throws<Botan::Decoding_Error>("truncated private key", [&] {
+      auto truncated = sk_bits;
+      truncated.pop_back();
+      Botan::Kyber_PrivateKey(truncated, mode);
+   });
+
+   result.test_throws<Botan::Decoding_Error>("truncated public key", [&] {
+      auto truncated = pk_bits;
+      truncated.pop_back();
+      Botan::Kyber_PublicKey(truncated, mode);
+   });
+
+   result.test_throws<Botan::Decoding_Error>("empty public key",
+                                             [&] { Botan::Kyber_PublicKey(std::vector<uint8_t>(), mode); });
+
+   return {result};
+}
+
 }  // namespace
 
 BOTAN_REGISTER_TEST_FN("pubkey", "kyber_helpers", test_kyber_helpers);
 BOTAN_REGISTER_TEST_FN("pubkey", "kyber_ntt", test_kyber_ntt);
+BOTAN_REGISTER_TEST_FN("pubkey", "kyber_key_validation", test_kyber_key_validation);
 
 #endif
 

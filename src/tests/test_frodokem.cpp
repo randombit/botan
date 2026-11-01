@@ -137,6 +137,43 @@ std::vector<Test::Result> test_frodo_roundtrips() {
             short_encaps_value.pop_back();
             dec1.decrypt(short_encaps_value, 0);
          });
+
+      // Malformed keys
+      result.test_throws<Botan::Decoding_Error>("short public key", [&] {
+         auto pk_bytes = sk1.public_key_bits();
+         pk_bytes.pop_back();
+         const Botan::FrodoKEM_PublicKey pk(pk_bytes, mode);
+      });
+
+      result.test_throws<Botan::Decoding_Error>("short private key", [&] {
+         auto sk_bytes = sk1.raw_private_key_bits();
+         sk_bytes.pop_back();
+         const Botan::FrodoKEM_PrivateKey sk(sk_bytes, mode);
+      });
+
+      // S^T follows s, seed_a and the packed b in the private key encoding. Its
+      // entries are 16 bit little endian two's complement samples within +-bound
+      const size_t s_trans_offset =
+         constants.len_sec_bytes() + constants.len_a_bytes() + constants.len_packed_b_bytes();
+      const auto bound = static_cast<uint16_t>(constants.cdf_table_len() - 1);
+      auto with_s_trans_entry = [&](uint16_t value) {
+         auto sk_bytes = sk1.raw_private_key_bits();
+         sk_bytes[s_trans_offset] = static_cast<uint8_t>(value & 0xFF);
+         sk_bytes[s_trans_offset + 1] = static_cast<uint8_t>(value >> 8);
+         return sk_bytes;
+      };
+
+      result.test_no_throw("S^T entry at the positive bound",
+                           [&] { const Botan::FrodoKEM_PrivateKey sk(with_s_trans_entry(bound), mode); });
+      result.test_no_throw("S^T entry at the negative bound", [&] {
+         const Botan::FrodoKEM_PrivateKey sk(with_s_trans_entry(static_cast<uint16_t>(-bound)), mode);
+      });
+      result.test_throws<Botan::Decoding_Error>("S^T entry above the positive bound", [&] {
+         const Botan::FrodoKEM_PrivateKey sk(with_s_trans_entry(static_cast<uint16_t>(bound + 1)), mode);
+      });
+      result.test_throws<Botan::Decoding_Error>("S^T entry below the negative bound", [&] {
+         const Botan::FrodoKEM_PrivateKey sk(with_s_trans_entry(static_cast<uint16_t>(-(bound + 1))), mode);
+      });
    }
 
    return results;

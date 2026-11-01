@@ -155,9 +155,11 @@ class McEliece_Tests final : public Test {
             result.test_str_eq("decoded public key equals original", fingerprint(pk1), fingerprint(pk));
             result.test_str_eq("decoded private key equals original", fingerprint(sk1), fingerprint(sk));
             result.test_is_true("key validation passes", sk.check_key(this->rng(), false));
+            result.test_is_true("strong key validation passes", sk.check_key(this->rng(), true));
             result.end_timer();
 
             results.push_back(result);
+            results.push_back(test_invalid_key_material(sk1));
 
       #if defined(BOTAN_HAS_KDF2)
             results.push_back(test_kem(sk, pk, this->rng()));
@@ -171,14 +173,54 @@ class McEliece_Tests final : public Test {
       static Test::Result test_invalid_params(Botan::RandomNumberGenerator& rng) {
          Test::Result result("McEliece invalid parameters");
 
-         result.test_throws("unsupported keygen parameters", [&] { Botan::McEliece_PrivateKey(rng, 2048, 50); });
-         result.test_throws("unsupported public key parameters", [&] {
+         result.test_throws<Botan::Invalid_Argument>("unsupported keygen parameters",
+                                                     [&] { Botan::McEliece_PrivateKey(rng, 2048, 50); });
+         result.test_throws<Botan::Decoding_Error>("unsupported public key parameters", [&] {
             const std::vector<uint8_t> pub_matrix;
             Botan::McEliece_PublicKey(pub_matrix, 50, 2048);
          });
-         result.test_throws("wrong public matrix length", [&] {
+         result.test_throws<Botan::Decoding_Error>("wrong public matrix length", [&] {
             const std::vector<uint8_t> pub_matrix;
             Botan::McEliece_PublicKey(pub_matrix, 33, 1632);
+         });
+
+         return result;
+      }
+
+      static Test::Result test_invalid_key_material(const Botan::McEliece_PrivateKey& sk) {
+         Test::Result result("McEliece invalid key material");
+
+         result.test_throws<Botan::Decoding_Error>("truncated support", [&] {
+            auto support = sk.get_Linv();
+            support.pop_back();
+            const Botan::McEliece_PrivateKey k(
+               sk.get_goppa_polyn(), sk.get_H_coeffs(), sk.get_sqrtmod(), support, sk.get_public_matrix());
+         });
+
+         result.test_throws<Botan::Decoding_Error>("support element out of range", [&] {
+            auto support = sk.get_Linv();
+            support[0] = static_cast<Botan::gf2m>(sk.get_code_length());
+            const Botan::McEliece_PrivateKey k(
+               sk.get_goppa_polyn(), sk.get_H_coeffs(), sk.get_sqrtmod(), support, sk.get_public_matrix());
+         });
+
+         result.test_throws<Botan::Decoding_Error>("truncated public matrix", [&] {
+            auto matrix = sk.get_public_matrix();
+            matrix.pop_back();
+            const Botan::McEliece_PrivateKey k(
+               sk.get_goppa_polyn(), sk.get_H_coeffs(), sk.get_sqrtmod(), sk.get_Linv(), matrix);
+         });
+
+         result.test_throws<Botan::Decoding_Error>("trailing bytes after encoded private key", [&] {
+            auto sk_enc = sk.private_key_bits();
+            sk_enc.push_back(0);
+            const Botan::McEliece_PrivateKey k(Botan::AlgorithmIdentifier(), sk_enc);
+         });
+
+         result.test_throws<Botan::Decoding_Error>("trailing bytes after encoded public key", [&] {
+            auto pk_enc = sk.public_key_bits();
+            pk_enc.push_back(0);
+            const Botan::McEliece_PublicKey k(Botan::AlgorithmIdentifier(), pk_enc);
          });
 
          return result;

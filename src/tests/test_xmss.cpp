@@ -381,20 +381,41 @@ std::vector<Test::Result> xmss_legacy_private_key() {
 }
 
 std::vector<Test::Result> xmss_key_decoding() {
-   return {CHECK("public key with trailing bytes is rejected", [](Test::Result& result) {
-      const Botan::XMSS_PublicKey pk(Botan::XMSS_Parameters::XMSS_SHA2_10_256,
-                                     Botan::secure_vector<uint8_t>(32, 0x01),
-                                     Botan::secure_vector<uint8_t>(32, 0x02));
-      auto pkbytes = pk.raw_public_key_bits();
+   return {CHECK("public key with trailing bytes is rejected",
+                 [](Test::Result& result) {
+                    const Botan::XMSS_PublicKey pk(Botan::XMSS_Parameters::XMSS_SHA2_10_256,
+                                                   Botan::secure_vector<uint8_t>(32, 0x01),
+                                                   Botan::secure_vector<uint8_t>(32, 0x02));
+                    auto pkbytes = pk.raw_public_key_bits();
 
-      result.test_no_throw("key of exact length is accepted",
-                           [&] { const Botan::XMSS_PublicKey loaded(Botan::AlgorithmIdentifier(), pkbytes); });
+                    result.test_no_throw("key of exact length is accepted", [&] {
+                       const Botan::XMSS_PublicKey loaded(Botan::AlgorithmIdentifier(), pkbytes);
+                    });
 
-      pkbytes.push_back(0x00);
-      result.test_throws<Botan::Decoding_Error>("key with trailing data is rejected", [&] {
-         const Botan::XMSS_PublicKey loaded(Botan::AlgorithmIdentifier(), pkbytes);
-      });
-   })};
+                    pkbytes.push_back(0x00);
+                    result.test_throws<Botan::Decoding_Error>("key with trailing data is rejected", [&] {
+                       const Botan::XMSS_PublicKey loaded(Botan::AlgorithmIdentifier(), pkbytes);
+                    });
+                 }),
+
+           CHECK("public key decoding rejects private key encodings", [](Test::Result& result) {
+              const Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256,
+                                              0,
+                                              Botan::secure_vector<uint8_t>(32, 0x05),
+                                              Botan::secure_vector<uint8_t>(32, 0x06),
+                                              Botan::secure_vector<uint8_t>(32, 0x07),
+                                              Botan::secure_vector<uint8_t>(32, 0x08));
+
+              result.test_no_throw("DER encoded public key is accepted", [&] {
+                 const Botan::XMSS_PublicKey loaded(Botan::AlgorithmIdentifier(), sk.public_key_bits());
+              });
+              result.test_throws<Botan::Decoding_Error>("raw private key is rejected", [&] {
+                 const Botan::XMSS_PublicKey loaded(Botan::AlgorithmIdentifier(), sk.raw_private_key());
+              });
+              result.test_throws<Botan::Decoding_Error>("DER encoded private key is rejected", [&] {
+                 const Botan::XMSS_PublicKey loaded(Botan::AlgorithmIdentifier(), sk.private_key_bits());
+              });
+           })};
 }
 
 std::vector<Test::Result> xmss_wots_derivation_method() {
@@ -520,6 +541,7 @@ std::vector<Test::Result> xmss_check_key() {
       // The root immediately follows the 4 byte OID
       skbytes[4] ^= 0x01;
       const Botan::XMSS_PrivateKey bad_root(Botan::AlgorithmIdentifier(), skbytes);
+      result.test_is_true("weak check does not recompute the root", bad_root.check_key(*rng, false));
       result.test_is_false("key with modified root is invalid", bad_root.check_key(*rng, true));
    })};
 }

@@ -212,12 +212,71 @@ class CMCE_Utility_Tests final : public Test {
          return result;
       }
 
+      Test::Result key_validation_test() {
+         Test::Result result("Key validation");
+
+         const auto param_set = Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_348864f;
+         const Botan::Classic_McEliece_PrivateKey sk(this->rng(), param_set);
+
+         result.test_is_true("weak check of generated key", sk.check_key(this->rng(), false));
+         result.test_is_true("strong check of generated key", sk.check_key(this->rng(), true));
+
+         const auto sk_bytes = sk.raw_private_key_bits();
+         const auto pk_bytes = sk.raw_public_key_bits();
+
+         auto short_sk = sk_bytes;
+         short_sk.pop_back();
+         auto long_sk = sk_bytes;
+         long_sk.push_back(0);
+
+         result.test_throws<Botan::Decoding_Error>(
+            "short private key", [&] { const Botan::Classic_McEliece_PrivateKey k(short_sk, param_set); });
+         result.test_throws<Botan::Decoding_Error>(
+            "long private key", [&] { const Botan::Classic_McEliece_PrivateKey k(long_sk, param_set); });
+         result.test_throws<Botan::Decoding_Error>("short private key via AlgorithmIdentifier", [&] {
+            const Botan::Classic_McEliece_PrivateKey k(sk.algorithm_identifier(), short_sk);
+         });
+
+         // Layout of the private key: 32 byte seed delta, 8 byte column selection c,
+         // 2t byte polynomial g, control bits of alpha, n/8 byte seed s
+         const size_t c_offset = Botan::Classic_McEliece_Parameters::seed_len();
+         const size_t g_offset = c_offset + Botan::Classic_McEliece_Parameters::sk_c_bytes();
+
+         auto bad_c = sk_bytes;
+         bad_c[c_offset] ^= 0x01;
+         result.test_throws<Botan::Decoding_Error>("private key with wrong column selection weight", [&] {
+            const Botan::Classic_McEliece_PrivateKey k(bad_c, param_set);
+         });
+
+         // The coefficients of g are 12 bit values stored in 16 bit words
+         auto bad_g = sk_bytes;
+         bad_g[g_offset + 1] |= 0xF0;
+         result.test_throws<Botan::Decoding_Error>("private key with polynomial coefficient out of range", [&] {
+            const Botan::Classic_McEliece_PrivateKey k(bad_g, param_set);
+         });
+
+         const std::vector<uint8_t> short_pk(pk_bytes.begin(), pk_bytes.end() - 1);
+         auto long_pk = pk_bytes;
+         long_pk.push_back(0);
+
+         result.test_throws<Botan::Decoding_Error>(
+            "short public key", [&] { const Botan::Classic_McEliece_PublicKey k(short_pk, param_set); });
+         result.test_throws<Botan::Decoding_Error>(
+            "long public key", [&] { const Botan::Classic_McEliece_PublicKey k(long_pk, param_set); });
+         result.test_throws<Botan::Decoding_Error>("short public key via AlgorithmIdentifier", [&] {
+            const Botan::Classic_McEliece_PublicKey k(sk.algorithm_identifier(), short_pk);
+         });
+
+         return result;
+      }
+
       std::vector<Test::Result> run() override {
          return {expand_seed_test(),
                  irreducible_poly_gen_test(),
                  gf_inv_test(),
                  gf_poly_mul_test(),
-                 rigged_rng_encryption_test()};
+                 rigged_rng_encryption_test(),
+                 key_validation_test()};
       }
 };
 

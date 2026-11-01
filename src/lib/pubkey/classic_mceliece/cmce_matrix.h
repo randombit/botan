@@ -10,6 +10,7 @@
 #ifndef BOTAN_CMCE_MATRIX_H_
 #define BOTAN_CMCE_MATRIX_H_
 
+#include <botan/exceptn.h>
 #include <botan/internal/cmce_field_ordering.h>
 #include <botan/internal/cmce_parameters.h>
 #include <botan/internal/cmce_poly.h>
@@ -82,7 +83,9 @@ class BOTAN_TEST_API Classic_McEliece_Matrix final {
        */
       Classic_McEliece_Matrix(const Classic_McEliece_Parameters& params, std::vector<uint8_t> mat_bytes) :
             m_mat_bytes(std::move(mat_bytes)) {
-         BOTAN_ARG_CHECK(m_mat_bytes.size() == params.pk_size_bytes(), "Invalid byte size for matrix");
+         if(m_mat_bytes.size() != params.pk_size_bytes()) {
+            throw Decoding_Error("Invalid Classic McEliece public key matrix length");
+         }
          if(params.pk_no_cols() % 8 == 0) {
             return;
          }
@@ -91,7 +94,9 @@ class BOTAN_TEST_API Classic_McEliece_Matrix final {
          for(size_t row = 0; row < params.pk_no_rows(); ++row) {
             const uint8_t padded_byte = m_mat_bytes[(row + 1) * params.pk_row_size_bytes() - 1];
             CT::unpoison(padded_byte);
-            BOTAN_ARG_CHECK(padded_byte >> (params.pk_no_cols() % 8) == 0, "Valid padding of unused bytes");
+            if(padded_byte >> (params.pk_no_cols() % 8) != 0) {
+               throw Decoding_Error("Invalid Classic McEliece public key matrix padding");
+            }
          }
       }
 

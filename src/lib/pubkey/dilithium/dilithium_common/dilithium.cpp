@@ -386,8 +386,6 @@ Dilithium_PublicKey::Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, std:
 Dilithium_PublicKey::Dilithium_PublicKey(std::span<const uint8_t> pk, DilithiumMode m) {
    DilithiumConstants mode(m);
    BOTAN_ARG_CHECK(mode.mode().is_available(), "Dilithium/ML-DSA mode is not available in this build");
-   BOTAN_ARG_CHECK(pk.empty() || pk.size() == mode.public_key_bytes(),
-                   "dilithium public key does not have the correct byte count");
 
    m_public = Dilithium_PublicKeyInternal::decode(std::move(mode), StrongSpan<const DilithiumSerializedPublicKey>(pk));
 }
