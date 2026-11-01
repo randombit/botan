@@ -10,6 +10,8 @@
 
 #if defined(BOTAN_HAS_TLS)
    #include <botan/assert.h>
+   #include <botan/pk_keys.h>
+   #include <botan/tls_callbacks.h>
    #include <botan/tls_ciphersuite.h>
    #include <botan/tls_exceptn.h>
    #include <botan/tls_policy.h>
@@ -53,8 +55,56 @@ class TLS_Policy_Unit_Tests final : public Test {
          results.push_back(test_key_exchange_groups_to_offer());
          results.push_back(test_require_extended_master_secret());
          results.push_back(test_dtls_refuses_weak_ciphersuites());
+         results.push_back(test_default_groups_are_available());
+   #if defined(BOTAN_HAS_TLS_13_PQC) && defined(BOTAN_HAS_ML_KEM) && defined(BOTAN_HAS_X25519)
+         results.push_back(test_hybrid_peer_key_acceptable(this->rng()));
+   #endif
 
          return results;
+      }
+
+   #if defined(BOTAN_HAS_TLS_13_PQC) && defined(BOTAN_HAS_ML_KEM) && defined(BOTAN_HAS_X25519)
+      static Test::Result test_hybrid_peer_key_acceptable(Botan::RandomNumberGenerator& rng) {
+         Test::Result result("TLS Policy minimum ECDH group size applies to hybrid groups");
+
+         class Min_ECDH_384_Policy final : public Botan::TLS::Policy {
+            public:
+               size_t minimum_ecdh_group_size() const override { return 384; }
+         };
+
+         class Null_Callbacks final : public Botan::TLS::Callbacks {
+            public:
+               void tls_emit_data(std::span<const uint8_t> /*data*/) override {}
+
+               void tls_record_received(uint64_t /*seq_no*/, std::span<const uint8_t> /*data*/) override {}
+
+               void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+         };
+
+         Null_Callbacks callbacks;
+         const auto group = Botan::TLS::Group_Params::HYBRID_X25519_ML_KEM_768;
+         const auto key = callbacks.tls_kem_generate_key(group, rng);
+         const auto key_share = key->raw_public_key_bits();
+
+         result.test_throws<Botan::TLS::TLS_Exception>("X25519 component is too small", [&] {
+            callbacks.tls_kem_encapsulate(group, key_share, rng, Min_ECDH_384_Policy());
+         });
+         result.test_no_throw("accepted by the default policy",
+                              [&] { callbacks.tls_kem_encapsulate(group, key_share, rng, Botan::TLS::Policy()); });
+
+         return result;
+      }
+   #endif
+
+      static Test::Result test_default_groups_are_available() {
+         Test::Result result("TLS Policy default groups are available");
+
+         const Botan::TLS::Policy policy;
+         for(const auto group : policy.key_exchange_groups()) {
+            result.test_is_true(group.to_string().value_or("unknown") + " is available", group.is_available());
+         }
+
+         return result;
       }
 
       // RFC 9147 4.5.3 forbids _CCM_8 in DTLS absent forgery safeguards Botan does

@@ -52,6 +52,7 @@ enum class AlertType : uint16_t {
    BadCertificateHashValue = 114,  // Not specified in TLS 1.3 (RFC 9846)
    UnknownPSKIdentity = 115,
    CertificateRequired = 116,
+   GeneralError = 117,
    NoApplicationProtocol = 120,
 
    // pseudo alert values
@@ -73,9 +74,9 @@ class BOTAN_PUBLIC_API(2, 0) Alert final {
       using enum AlertType;
 
       /**
-      * @return true iff this alert is non-empty
+      * @return true iff this alert is non-empty and has a type that can be encoded
       */
-      bool is_valid() const { return (m_type_code != AlertType::None); }
+      bool is_valid() const { return static_cast<uint16_t>(m_type_code) <= 255; }
 
       /**
       * Return true if this alert is fatal. A fatal alert causes the connection

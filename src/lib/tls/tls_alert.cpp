@@ -103,6 +103,8 @@ const char* alert_type_to_string(AlertType type) {
          return "unknown_psk_identity";
       case AlertType::CertificateRequired:
          return "certificate_required";
+      case AlertType::GeneralError:
+         return "general_error";
       case AlertType::NoApplicationProtocol:
          return "no_application_protocol";
 

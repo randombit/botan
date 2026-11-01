@@ -77,6 +77,19 @@ std::vector<Test::Result> test_handshake_state_transitions() {
                ht.set_expected_next(Botan::TLS::Handshake_Type::HandshakeCCS);
                result.test_is_true("CCS expected", ht.change_cipher_spec_expected());
             }),
+
+      CHECK("diagnostics name all expected messages",
+            [](Test::Result& result) {
+               Botan::TLS::Handshake_Transitions ht;
+               ht.set_expected_next(
+                  {Botan::TLS::Handshake_Type::ServerHello, Botan::TLS::Handshake_Type::HelloRetryRequest});
+               try {
+                  ht.confirm_transition_to(Botan::TLS::Handshake_Type::EncryptedExtensions);
+                  result.test_failure("unexpected message was accepted");
+               } catch(const std::exception& e) {
+                  result.test_str_contains("message names the HelloRetryRequest", e.what(), "hello_retry_request");
+               }
+            }),
    };
 }
 

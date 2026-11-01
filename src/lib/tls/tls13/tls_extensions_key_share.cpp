@@ -15,6 +15,7 @@
 #include <botan/tls_policy.h>
 #include <botan/internal/scoped_cleanup.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/tls_messages_internal.h>
 #include <botan/internal/tls_reader.h>
 #include <algorithm>
 #include <unordered_set>
@@ -237,7 +238,8 @@ class Key_Share_ClientHello {
          // ... hence, we're going through the supported groups and find those that
          //     should be used to offer a key exchange. This will satisfy above spec.
          for(const auto group : supported) {
-            if(std::find(offers.begin(), offers.end(), group) == offers.end()) {
+            if(std::find(offers.begin(), offers.end(), group) == offers.end() ||
+               !group_usable_in_version(group, Protocol_Version::TLS_V13)) {
                continue;
             }
             m_client_shares.emplace_back(group, cb, rng);
@@ -493,7 +495,8 @@ void Key_Share::retry_offer(const Key_Share& retry_request_keyshare,
                             // RFC 8446 4.2.8
                             //    [T]he selected_group field [MUST correspond] to a group which was provided in
                             //    the "supported_groups" extension in the original ClientHello
-                            if(!value_exists(supported_groups, selected)) {
+                            if(!value_exists(supported_groups, selected) ||
+                               !group_usable_in_version(selected, Protocol_Version::TLS_V13)) {
                                throw TLS_Exception(Alert::IllegalParameter, "group was not advertised as supported");
                             }
 

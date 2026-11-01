@@ -70,7 +70,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_In_Memory final : public Session_Ma
       size_t m_max_sessions;
 
       std::map<Session_ID, Stored_Session> m_sessions;
-      std::optional<std::deque<Session_ID>> m_fifo;
+      // Session IDs in insertion order, with the sequence number they were stored under
+      std::optional<std::deque<std::pair<Session_ID, uint64_t>>> m_fifo;
       uint64_t m_next_sequence_number = 0;
 };
 

@@ -175,7 +175,7 @@ class BOTAN_TEST_API Channel_IO {
        */
       bool m_key_update_requested = false;
 
-      uint64_t m_last_peer_key_update_ms = 0;
+      std::optional<uint64_t> m_last_peer_key_update_ms;
 
       std::weak_ptr<Cipher_State> m_cipher_state;
       std::shared_ptr<const Policy> m_policy;

@@ -122,13 +122,22 @@ size_t Server_Impl_13::send_new_session_tickets(const size_t tickets) {
 
    BOTAN_STATE_CHECK(m_active_state.has_value());
 
+   // RFC 8446 4.6.1
+   //    Servers MUST NOT use any value greater than 604800 seconds (7 days).
+   //
+   // A policy lifetime of 0 (no expiry) is capped the same way.
+   const std::chrono::seconds max_ticket_lifetime(604800);
+   const auto policy_lifetime = policy().session_ticket_lifetime();
+   const auto ticket_lifetime =
+      (policy_lifetime.count() <= 0 || policy_lifetime > max_ticket_lifetime) ? max_ticket_lifetime : policy_lifetime;
+
    for(size_t i = 0; i < tickets; ++i) {
       auto nonce = m_cipher_state->next_ticket_nonce();
       const uint32_t ticket_age_add = load_be(rng().random_array<4>());
       const Session session(m_cipher_state->psk(nonce),
                             std::nullopt,  // early data not yet implemented
                             ticket_age_add,
-                            policy().session_ticket_lifetime(),
+                            ticket_lifetime,
                             m_active_state->version(),
                             m_active_state->ciphersuite_code(),
                             Connection_Side::Server,
@@ -178,7 +187,12 @@ void Server_Impl_13::process_post_handshake_msg(Post_Handshake_Message_13 messag
       throw TLS_Exception(Alert::UnexpectedMessage, "Received an unexpected post-handshake message");
    }
 
-   std::visit([&](auto&& m) { handle(m); }, *msg);
+   std::visit(
+      [&](auto&& m) {
+         callbacks().tls_inspect_handshake_msg(m);
+         handle(m);
+      },
+      *msg);
 }
 
 void Server_Impl_13::process_dummy_change_cipher_spec() {
@@ -200,7 +214,9 @@ void Server_Impl_13::process_dummy_change_cipher_spec() {
 }
 
 bool Server_Impl_13::is_handshake_complete() const {
-   return m_active_state.has_value() || (m_handshake != nullptr && m_handshake->state.handshake_finished());
+   // A handshake that was aborted after the client's Finished is not complete
+   return m_active_state.has_value() ||
+          (m_handshake != nullptr && m_handshake->state.handshake_finished() && !is_closed());
 }
 
 void Server_Impl_13::maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const {
@@ -428,6 +444,11 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
          }
       }();
 
+      if(!value_exists(policy().accepted_server_certificate_types(), cert_type)) {
+         throw TLS_Exception(Alert::UnsupportedCertificate,
+                             "Client does not support a certificate type that our policy allows");
+      }
+
       flight
          .add(m_handshake->state.sending(Certificate_13(client_hello, credentials_manager(), callbacks(), cert_type)))
          .add(m_handshake->state.sending(Certificate_Verify_13(m_handshake->state.server_certificate(),
@@ -561,7 +582,15 @@ void Server_Impl_13::handle(const Client_Hello_13& client_hello) {
    // TODO: Implement support for PSK. For now, we ignore any such extensions
    //       and always revert to a standard key exchange.
    if(!exts.has<Supported_Groups>()) {
-      throw Not_Implemented("PSK-only handshake NYI");
+      // RFC 8446 4.2.9
+      //    psk_dhe_ke:  PSK with (EC)DHE key establishment.  In this mode, the
+      //       client and server MUST supply "key_share" values as described in
+      //       Section 4.2.8.
+      const auto* psk_modes = exts.get<PSK_Key_Exchange_Modes>();
+      if(psk_modes != nullptr && value_exists(psk_modes->modes(), PSK_Key_Exchange_Mode::PSK_DHE_KE)) {
+         throw TLS_Exception(Alert::MissingExtension, "Client offered psk_dhe_ke without a key_share");
+      }
+      throw TLS_Exception(Alert::HandshakeFailure, "PSK-only key exchange is not supported");
    }
 
    // RFC 8446 9.2
@@ -579,6 +608,17 @@ void Server_Impl_13::handle(const Client_Hello_13& client_hello) {
       const auto selected_group = hrr_key_share->selected_group();
       if(offered_groups.size() != 1 || offered_groups.at(0) != selected_group) {
          throw TLS_Exception(Alert::IllegalParameter, "Client did not comply with the requested key exchange group");
+      }
+
+      // RFC 8446 4.2.2
+      //    When sending the new ClientHello, the client MUST copy the contents
+      //    of the extension received in the HelloRetryRequest into a "cookie"
+      //    extension in the new ClientHello.
+      const auto* hrr_cookie = hrr_exts.get<Cookie>();
+      const auto* client_cookie = exts.get<Cookie>();
+      if((hrr_cookie == nullptr) != (client_cookie == nullptr) ||
+         (hrr_cookie != nullptr && hrr_cookie->get_cookie() != client_cookie->get_cookie())) {
+         throw TLS_Exception(Alert::IllegalParameter, "Client did not echo the cookie of the HelloRetryRequest");
       }
    }
 

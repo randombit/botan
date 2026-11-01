@@ -31,9 +31,12 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_SQLite final : public Session_Manag
       * @param rng a random number generator
       * @param db_filename filename of the SQLite database file.
                The table names tls_sessions and tls_sessions_metadata
-               will be used
-      * @param max_sessions a hint on the maximum number of sessions
-      *        to keep in memory at any one time. (If zero, don't cap)
+               will be used. A new file is created with the default
+               permissions of the process, so it should be placed in a
+               directory that is not accessible to other users.
+      * @param max_sessions the maximum number of sessions kept in the
+      *        database; whenever a session is stored, the oldest sessions
+      *        beyond this limit are permanently deleted. (If zero, don't cap)
       */
       Session_Manager_SQLite(std::string_view passphrase,
                              const std::shared_ptr<RandomNumberGenerator>& rng,

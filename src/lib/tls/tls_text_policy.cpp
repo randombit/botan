@@ -405,7 +405,7 @@ bool Text_Policy::set_value(const std::string& key, std::string_view val, bool o
       return false;
    }
 
-   m_kv.insert(i, std::make_pair(key, val));
+   m_kv.insert_or_assign(key, std::string(val));
    return true;
 }
 

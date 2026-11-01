@@ -32,8 +32,9 @@ class RFC6066_Empty_Certificate_Status_Request {
 
 class RFC6066_Certificate_Status_Request {
    public:
-      RFC6066_Certificate_Status_Request(std::vector<uint8_t> names, std::vector<std::vector<uint8_t>> keys) :
-            ocsp_names(std::move(names)), ocsp_keys(std::move(keys)) {}
+      explicit RFC6066_Certificate_Status_Request(std::vector<uint8_t> names) : ocsp_names(std::move(names)) {
+         BOTAN_ARG_CHECK(ocsp_names.size() <= 0xFFFF, "OCSP responder_id_list is too long");
+      }
 
       RFC6066_Certificate_Status_Request(TLS_Data_Reader& reader, uint16_t extension_size) {
          if(extension_size == 0) {
@@ -62,27 +63,21 @@ class RFC6066_Certificate_Status_Request {
             }
             extension_bytes = reader.get_fixed<uint8_t>(len_requ_ext);
          } else {
-            // RFC 6066 does not specify anything but 'ocsp' and we
-            // don't support anything else either.
-            reader.discard_next(extension_size - 1);
+            // Other status types are filtered out by make_extension()
+            throw Decoding_Error("Unexpected status_type in Certificate_Status_Request");
          }
       }
 
       std::vector<uint8_t> serialize() const {
-         // Serialization is hard-coded as we don't support advanced features
-         // of this extension anyway.
-         return {
-            1,  // status_type = ocsp
-            0,
-            0,  // empty responder_id_list
-            0,
-            0,  // no extensions
-         };
+         std::vector<uint8_t> buf;
+         buf.push_back(1);  // status_type = ocsp
+         append_tls_length_value(buf, ocsp_names, 2);
+         append_tls_length_value(buf, extension_bytes, 2);
+         return buf;
       }
 
-      std::vector<uint8_t> ocsp_names;              // NOLINT(*-non-private-member-variable*)
-      std::vector<std::vector<uint8_t>> ocsp_keys;  // NOLINT(*-non-private-member-variable*)
-      std::vector<uint8_t> extension_bytes;         // NOLINT(*-non-private-member-variable*)
+      std::vector<uint8_t> ocsp_names;       // NOLINT(*-non-private-member-variable*)
+      std::vector<uint8_t> extension_bytes;  // NOLINT(*-non-private-member-variable*)
 };
 
 }  // namespace
@@ -165,15 +160,34 @@ Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
 Certificate_Status_Request::Certificate_Status_Request() :
       m_impl(std::make_unique<Certificate_Status_Request_Internal>(RFC6066_Empty_Certificate_Status_Request())) {}
 
+// The public signature takes ocsp_key_ids by value
+// NOLINTBEGIN(performance-unnecessary-value-param)
 Certificate_Status_Request::Certificate_Status_Request(std::vector<uint8_t> ocsp_responder_ids,
                                                        std::vector<std::vector<uint8_t>> ocsp_key_ids) :
       m_impl(std::make_unique<Certificate_Status_Request_Internal>(
-         RFC6066_Certificate_Status_Request(std::move(ocsp_responder_ids), std::move(ocsp_key_ids)))) {}
+         RFC6066_Certificate_Status_Request(std::move(ocsp_responder_ids)))) {
+   // The OCSPStatusRequest structure has no place to carry these
+   BOTAN_ARG_CHECK(ocsp_key_ids.empty(), "Certificate_Status_Request does not support OCSP key IDs");
+}
+
+// NOLINTEND(performance-unnecessary-value-param)
 
 Certificate_Status_Request::Certificate_Status_Request(std::vector<uint8_t> response) :
       m_impl(std::make_unique<Certificate_Status_Request_Internal>(Certificate_Status(std::move(response)))) {}
 
 Certificate_Status_Request::~Certificate_Status_Request() = default;
+
+const std::vector<uint8_t>& Certificate_Status_Request::get_responder_id_list() const {
+   BOTAN_ASSERT_NONNULL(m_impl);
+   BOTAN_STATE_CHECK(std::holds_alternative<RFC6066_Certificate_Status_Request>(m_impl->content));
+   return std::get<RFC6066_Certificate_Status_Request>(m_impl->content).ocsp_names;
+}
+
+const std::vector<uint8_t>& Certificate_Status_Request::get_request_extensions() const {
+   BOTAN_ASSERT_NONNULL(m_impl);
+   BOTAN_STATE_CHECK(std::holds_alternative<RFC6066_Certificate_Status_Request>(m_impl->content));
+   return std::get<RFC6066_Certificate_Status_Request>(m_impl->content).extension_bytes;
+}
 
 const std::vector<uint8_t>& Certificate_Status_Request::get_ocsp_response() const {
    BOTAN_ASSERT_NONNULL(m_impl);

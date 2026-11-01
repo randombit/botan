@@ -21,6 +21,7 @@
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/tls_messages_internal.h>
 #include <botan/internal/tls_reader.h>
 
 namespace Botan::TLS {
@@ -163,7 +164,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          const Group_Params curve_id = static_cast<Group_Params>(reader.get_uint16_t());
          const std::vector<uint8_t> peer_public_value = reader.get_range<uint8_t>(1, 1, 255);
 
-         if(!curve_id.is_ecdh_named_curve() && !curve_id.is_x25519() && !curve_id.is_x448()) {
+         if(!group_may_be_ecc(curve_id) || !group_usable_in_version(curve_id, Protocol_Version::TLS_V12)) {
             throw TLS_Exception(Alert::IllegalParameter,
                                 "Server selected a group that is not compatible with the negotiated ciphersuite");
          }
@@ -291,13 +292,25 @@ Client_Key_Exchange::Client_Key_Exchange(std::span<const uint8_t> contents,
       const uint8_t expected_content_bytes[expected_content_size] = {client_major, client_minor};
       const uint8_t expected_content_pos[expected_content_size] = {0, 1};
 
-      m_pre_master = decryptor.decrypt_or_random(encrypted_pre_master.data(),
-                                                 encrypted_pre_master.size(),
-                                                 expected_plaintext_size,
-                                                 rng,
-                                                 expected_content_bytes,
-                                                 expected_content_pos,
-                                                 expected_content_size);
+      // RFC 5246 7.4.7.1
+      //    In any case, a TLS server MUST NOT generate an alert if processing an
+      //    RSA-encrypted premaster secret message fails, or the version number
+      //    is not as expected.  Instead, it MUST continue the handshake with a
+      //    randomly generated premaster secret.
+      //
+      // decrypt_or_random throws if the ciphertext is invalid based on public
+      // information alone (such as its length), so this reveals nothing.
+      try {
+         m_pre_master = decryptor.decrypt_or_random(encrypted_pre_master.data(),
+                                                    encrypted_pre_master.size(),
+                                                    expected_plaintext_size,
+                                                    rng,
+                                                    expected_content_bytes,
+                                                    expected_content_pos,
+                                                    expected_content_size);
+      } catch(Decoding_Error&) {
+         m_pre_master = rng.random_vec(expected_plaintext_size);
+      }
    } else {
       TLS_Data_Reader reader("ClientKeyExchange", contents);
 

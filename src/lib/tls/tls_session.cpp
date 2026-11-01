@@ -317,13 +317,13 @@ Session::Session(std::span<const uint8_t> ber_data) /* NOLINT(*-member-init) */ 
 
    ASN1_String server_hostname;
    ASN1_String server_service;
-   size_t server_port = 0;
+   uint16_t server_port = 0;
 
    uint8_t major_version = 0;
    uint8_t minor_version = 0;
 
-   size_t start_time = 0;
-   size_t srtp_profile = 0;
+   uint64_t start_time = 0;
+   uint16_t srtp_profile = 0;
    uint16_t ciphersuite_code = 0;
    uint64_t lifetime_hint = 0;
 
@@ -342,8 +342,8 @@ Session::Session(std::span<const uint8_t> ber_data) /* NOLINT(*-member-init) */ 
       .decode(raw_pubkey_or_empty, ASN1_Type::OctetString)
       .decode(server_hostname)
       .decode(server_service)
-      .decode(server_port)
-      .decode(srtp_profile)
+      .decode_integer_type(server_port)
+      .decode_integer_type(srtp_profile)
       .decode(m_early_data_allowed)
       .decode_integer_type(m_max_early_data_bytes)
       .decode_integer_type(m_ticket_age_add)
@@ -360,7 +360,20 @@ Session::Session(std::span<const uint8_t> ber_data) /* NOLINT(*-member-init) */ 
 
    m_ciphersuite = ciphersuite_code;
    m_version = Protocol_Version(major_version, minor_version);
-   m_start_time = std::chrono::system_clock::from_time_t(start_time);
+   // A session for a version that is disabled in this build is still well formed
+   if(m_version != Protocol_Version::TLS_V12 && m_version != Protocol_Version::DTLS_V12 &&
+      m_version != Protocol_Version::TLS_V13) {
+      throw Decoding_Error("Serialized TLS session contains unknown protocol version " + m_version.to_string());
+   }
+
+   const auto max_seconds =
+      std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::time_point::max().time_since_epoch());
+
+   if(start_time > static_cast<uint64_t>(max_seconds.count())) {
+      throw Decoding_Error("Serialized TLS session contains an out of range start time");
+   }
+   m_start_time = std::chrono::system_clock::time_point(
+      std::chrono::duration_cast<std::chrono::system_clock::duration>(std::chrono::seconds(start_time)));
    if(side_code != static_cast<uint8_t>(Connection_Side::Client) &&
       side_code != static_cast<uint8_t>(Connection_Side::Server)) {
       throw Decoding_Error("Serialized TLS session contains unknown connection side " + std::to_string(side_code));
@@ -373,15 +386,21 @@ Session::Session(std::span<const uint8_t> ber_data) /* NOLINT(*-member-init) */ 
    if(!valid_secret_size) {
       throw Decoding_Error("Serialized TLS session has master_secret of unexpected length");
    }
-   m_srtp_profile = static_cast<uint16_t>(srtp_profile);
+   m_srtp_profile = srtp_profile;
 
-   m_server_info =
-      Server_Information(server_hostname.value(), server_service.value(), static_cast<uint16_t>(server_port));
+   m_server_info = Server_Information(server_hostname.value(), server_service.value(), server_port);
 
    if(!raw_pubkey_or_empty.empty()) {
       m_peer_raw_public_key = X509::load_key(raw_pubkey_or_empty);
    }
 
+   // RFC 8446 4.6.1
+   //    Servers MUST NOT use any value greater than 604800 seconds (7 days).
+   const uint64_t max_lifetime =
+      m_version.is_pre_tls_13() ? static_cast<uint64_t>(std::chrono::seconds::max().count()) : 604800;
+   if(lifetime_hint > max_lifetime) {
+      throw Decoding_Error("Serialized TLS session contains an out of range lifetime");
+   }
    m_lifetime_hint = std::chrono::seconds(lifetime_hint);
 }
 

@@ -25,6 +25,7 @@ PSKImporter::PSKImporter(std::span<const uint8_t> key,
       m_context(context.begin(), context.end()),
       m_hash(hash) {
    BOTAN_ARG_CHECK(m_hash == "SHA-256" || m_hash == "SHA-384", "PSK importer hash must be SHA-256 or SHA-384");
+   BOTAN_ARG_CHECK(!m_key.empty(), "PSK importer key must not be empty");
    // RFC 9258 5.1:
    //    struct {
    //       opaque external_identity<1...2^16-1>;
@@ -45,6 +46,12 @@ ExternalPSK PSKImporter::derive_imported_psk(Protocol_Version version, std::stri
    BOTAN_ARG_CHECK(version == Protocol_Version::TLS_V13, "PSK importer is only defined for TLS 1.3");
    BOTAN_ARG_CHECK(target_hash == "SHA-256" || target_hash == "SHA-384",
                    "PSK importer target hash must be SHA-256 or SHA-384");
+
+   // The imported identity has to fit into a pre_shared_key extension, along
+   // with the length fields, the obfuscated ticket age and the binder
+   const size_t binder_length = (target_hash == "SHA-256") ? 32 : 48;
+   BOTAN_ARG_CHECK(m_identity.size() + m_context.size() + 8 + 11 + binder_length <= 65535,
+                   "PSK importer identity + context too long for a TLS PSK extension");
 
    // TODO(DTLS1.3): This duplicates Cipher_State::hkdf_expand_label
 

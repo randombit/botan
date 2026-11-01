@@ -234,8 +234,13 @@ void Channel_IO::handle_key_update(const Key_Update& key_update) {
       min_interval > 0 && !solicited_reciprocation) {
       const uint64_t now = callbacks().tls_current_monotonic_clock_ms();
 
-      if(m_last_peer_key_update_ms != 0 && (now - m_last_peer_key_update_ms) < min_interval) {
-         throw TLS_Exception(Alert::UnexpectedMessage, "Peer is requesting KeyUpdates too frequently");
+      if(m_last_peer_key_update_ms.has_value()) {
+         // A clock going backwards counts as no time having passed
+         const uint64_t last = m_last_peer_key_update_ms.value();
+         const uint64_t elapsed = (now > last) ? now - last : 0;
+         if(elapsed < min_interval) {
+            throw TLS_Exception(Alert::UnexpectedMessage, "Peer is requesting KeyUpdates too frequently");
+         }
       }
 
       m_last_peer_key_update_ms = now;
@@ -270,10 +275,10 @@ void Channel_IO::update_traffic_keys(bool request_peer_update) {
                   .add(Key_Update(request_peer_update))
                   .commit());
 
-   cs->update_write_keys();
    if(request_peer_update) {
       m_key_update_requested = true;
    }
+   cs->update_write_keys();
 }
 
 void Channel_IO::send(const Alert& alert, bool handle_compat_mode) {

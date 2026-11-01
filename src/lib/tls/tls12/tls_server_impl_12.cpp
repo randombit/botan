@@ -9,6 +9,8 @@
 #include <botan/internal/tls_server_impl_12.h>
 
 #include <botan/certstor.h>
+#include <botan/ec_group.h>
+#include <botan/ecc_key.h>
 #include <botan/ocsp.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_magic.h>
@@ -19,7 +21,11 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages_internal.h>
+#include <algorithm>
+#include <limits>
+#include <optional>
 #include <unordered_set>
+#include <utility>
 
 namespace Botan::TLS {
 
@@ -43,7 +49,16 @@ class Server_Handshake_State final : public Handshake_State {
 
       void mark_as_resumption() { m_is_a_resumption = true; }
 
+      // Set if this renegotiation was requested by our HelloRequest
+      void mark_as_server_initiated() { m_server_initiated = true; }
+
+      bool is_server_initiated() const { return m_server_initiated; }
+
       bool is_a_resumption() const { return m_is_a_resumption; }
+
+      void set_resumption_summary(Session_Summary summary) { m_resumption_summary = std::move(summary); }
+
+      std::optional<Session_Summary> take_resumption_summary() { return std::exchange(m_resumption_summary, {}); }
 
       std::vector<X509_Certificate> peer_cert_chain() const override {
          if(!m_resume_peer_certs.empty()) {
@@ -67,10 +82,27 @@ class Server_Handshake_State final : public Handshake_State {
 
       bool m_is_a_resumption = false;
 
+      bool m_server_initiated = false;
+
       std::vector<X509_Certificate> m_resume_peer_certs;
+
+      // Reported once the client's Finished proved possession of the session
+      std::optional<Session_Summary> m_resumption_summary;
 };
 
 namespace {
+
+/*
+* RFC 5077 3.3: the ticket_lifetime_hint is a 32-bit value, where zero
+* means that the lifetime is unspecified
+*/
+uint32_t ticket_lifetime_hint(const Policy& policy) {
+   const auto lifetime = policy.session_ticket_lifetime().count();
+   if(lifetime <= 0) {
+      return 0;
+   }
+   return static_cast<uint32_t>(std::min<std::chrono::seconds::rep>(lifetime, std::numeric_limits<uint32_t>::max()));
+}
 
 std::optional<Session> check_for_resume(const Session_Handle& handle_to_resume,
                                         Session_Manager& session_manager,
@@ -140,6 +172,15 @@ std::optional<Session> check_for_resume(const Session_Handle& handle_to_resume,
       throw TLS_Exception(Alert::HandshakeFailure, "Client resumed Encrypt-then-MAC session without sending extension");
    }
 
+   // The resumed connection would silently lose the DTLS-SRTP profile of the
+   // session, or use one that the current policy no longer allows
+   if(const uint16_t srtp_profile = session->dtls_srtp_profile()) {
+      if(!value_exists(client_hello->srtp_profiles(), srtp_profile) ||
+         !value_exists(policy.srtp_profiles(), srtp_profile)) {
+         return std::nullopt;
+      }
+   }
+
    return session;
 }
 
@@ -159,7 +200,32 @@ uint16_t choose_ciphersuite(const Policy& policy,
    }
 
    const bool have_shared_ecc_curve =
-      (policy.choose_key_exchange_group(client_hello.supported_ecc_curves(), {}) != Group_Params::NONE);
+      (policy.choose_key_exchange_group(
+          groups_usable_in_version(client_hello.supported_ecc_curves(), Protocol_Version::TLS_V12), {}) !=
+       Group_Params::NONE);
+
+   // RFC 8422 5.1
+   //    NOTE: A server participating in an ECDHE_ECDSA key exchange may use
+   //    different curves for the ECDSA or EdDSA key in its certificate and
+   //    for the ephemeral ECDH key in the ServerKeyExchange message.  The
+   //    server MUST consider the extensions in both cases.
+   const bool client_supports_ecdsa_cert_curve = [&] {
+      const auto chain = cert_chains.find("ECDSA");
+      if(chain == cert_chains.end() || chain->second.empty()) {
+         return false;
+      }
+      const auto key = chain->second.front().subject_public_key();
+      const auto* ec_key = dynamic_cast<const EC_PublicKey*>(key.get());
+      if(ec_key == nullptr) {
+         return false;
+      }
+      const auto group = Group_Params::from_string(ec_key->domain().get_curve_oid().human_name_or_empty());
+      // The client cannot offer an application specific curve, which has no TLS code point
+      if(!group.has_value()) {
+         return true;
+      }
+      return value_exists(client_hello.supported_ecc_curves(), group.value());
+   }();
 
    const bool client_supports_ffdhe_groups = !client_hello.supported_dh_groups().empty();
 
@@ -167,6 +233,10 @@ uint16_t choose_ciphersuite(const Policy& policy,
       (policy.choose_key_exchange_group(client_hello.supported_dh_groups(), {}) != Group_Params::NONE);
 
    const std::unordered_set<uint16_t> client_suite_set(client_suites.begin(), client_suites.end());
+
+   // PSK suites omit CertificateRequest entirely, so they cannot satisfy a
+   // policy that requires client certificate authentication
+   const bool require_client_cert = policy.require_client_certificate_authentication();
 
    const std::vector<Signature_Scheme> allowed_sig_schemes = policy.allowed_signature_schemes();
    const std::vector<Signature_Scheme> client_sig_methods = client_hello.signature_schemes();
@@ -181,7 +251,7 @@ uint16_t choose_ciphersuite(const Policy& policy,
       }
       std::unordered_set<std::string> result;
       for(const Signature_Scheme scheme : client_sig_methods) {
-         if(!scheme.is_available()) {
+         if(!scheme.is_available() || !scheme.is_compatible_with(Protocol_Version::TLS_V12)) {
             continue;
          }
          if(!allowed_codes.contains(static_cast<uint16_t>(scheme.wire_code()))) {
@@ -224,12 +294,20 @@ uint16_t choose_ciphersuite(const Policy& policy,
          continue;
       }
 
+      if(require_client_cert && !suite->is_certificate_required()) {
+         continue;
+      }
+
       // For non-anon ciphersuites
       if(suite->is_certificate_required()) {
          const std::string cert_algo = suite->signature_used() ? suite->sig_algo() : "RSA";
 
          // Do we have any certificates for this sig?
          if(!cert_chains.contains(cert_algo)) {
+            continue;
+         }
+
+         if(cert_algo == "ECDSA" && !client_supports_ecdsa_cert_curve) {
             continue;
          }
       }
@@ -272,7 +350,8 @@ std::map<std::string, std::vector<X509_Certificate>> get_server_certs(
       const std::vector<X509_Certificate> certs = creds.cert_chain_single_type(
          cert_type, to_algorithm_identifiers(cert_sig_schemes), "tls-server", std::string(hostname));
 
-      if(!certs.empty()) {
+      // The credentials manager might return a chain of another type than requested
+      if(!certs.empty() && certs.front().subject_public_key()->algo_name() == cert_type) {
          cert_chains[cert_type] = certs;
       }
    }
@@ -335,7 +414,9 @@ std::unique_ptr<Handshake_State> Server_Impl_12::new_handshake_state(std::unique
 * Send a hello request to the client
 */
 void Server_Impl_12::initiate_handshake(Handshake_State& state, bool force_full_renegotiation) {
-   dynamic_cast<Server_Handshake_State&>(state).set_allow_session_resumption(!force_full_renegotiation);
+   auto& server_state = dynamic_cast<Server_Handshake_State&>(state);
+   server_state.set_allow_session_resumption(!force_full_renegotiation);
+   server_state.mark_as_server_initiated();
 
    const Hello_Request hello_req(state.handshake_io());
 
@@ -409,7 +490,9 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
 
    const bool initial_handshake = epoch0_restart || !active_state().has_value();
 
-   if(initial_handshake == false && policy().allow_client_initiated_renegotiation() == false) {
+   // A renegotiation that we asked for with a HelloRequest is not client initiated
+   if(initial_handshake == false && !pending_state.is_server_initiated() &&
+      policy().allow_client_initiated_renegotiation() == false) {
       if(policy().abort_connection_on_undesired_renegotiation()) {
          throw TLS_Exception(Alert::NoRenegotiation, "Server policy prohibits renegotiation");
       } else {
@@ -430,6 +513,10 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
    pending_state.client_hello(std::make_unique<Client_Hello_12>(contents));
    const Protocol_Version client_offer = pending_state.client_hello()->legacy_version();
    const bool datagram = client_offer.is_datagram_protocol();
+
+   if(datagram != (flavor() == TLS_Flavor::DTLS)) {
+      throw TLS_Exception(Alert::ProtocolVersion, "Client offered a version of the wrong protocol type");
+   }
 
    if(datagram) {
       if(client_offer.major_version() == 0xFF) {
@@ -549,7 +636,11 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
    }
 
    m_next_protocol = "";
-   if(pending_state.client_hello()->supports_alpn()) {
+   if(!initial_handshake && !pending_state.client_hello()->supports_alpn()) {
+      // The application protocol is a property of the connection, which a
+      // renegotiation that does not offer ALPN does not change.
+      m_next_protocol = active_state()->application_protocol();
+   } else if(pending_state.client_hello()->supports_alpn()) {
       const auto offered = pending_state.client_hello()->next_protocols();
       m_next_protocol = callbacks().tls_server_choose_app_protocol(offered);
       // RFC 7301 3.2: if a protocol is selected, the server MUST select one
@@ -625,9 +716,27 @@ void Server_Impl_12::process_certificate_verify_msg(Server_Handshake_State& pend
 
    const auto cert_constraints = client_certs[0].constraints();
    if(!cert_constraints.empty()) {
-      if(!cert_constraints.includes_any(Key_Constraints::DigitalSignature, Key_Constraints::NonRepudiation)) {
+      if(!cert_constraints.includes(Key_Constraints::DigitalSignature)) {
          throw TLS_Exception(Alert::BadCertificate, "Client certificate does not support signing");
       }
+   }
+
+   // The chain is verified first, so that an untrusted peer cannot make us
+   // perform an expensive signature verification with a key of its choice
+   try {
+      const std::string sni_hostname = pending_state.client_hello()->sni_hostname();
+      const auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-server", sni_hostname);
+
+      callbacks().tls_verify_cert_chain(client_certs,
+                                        {},  // ocsp
+                                        trusted_CAs,
+                                        Usage_Type::TLS_CLIENT_AUTH,
+                                        sni_hostname,
+                                        policy());
+   } catch(TLS_Exception&) {
+      throw;
+   } catch(std::exception& e) {
+      throw TLS_Exception(Alert::BadCertificate, e.what());
    }
 
    const bool sig_valid = pending_state.client_verify()->verify(client_certs[0], pending_state, policy());
@@ -641,20 +750,6 @@ void Server_Impl_12::process_certificate_verify_msg(Server_Handshake_State& pend
    */
    if(!sig_valid) {
       throw TLS_Exception(Alert::DecryptError, "Client cert verify failed");
-   }
-
-   try {
-      const std::string sni_hostname = pending_state.client_hello()->sni_hostname();
-      const auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-server", sni_hostname);
-
-      callbacks().tls_verify_cert_chain(client_certs,
-                                        {},  // ocsp
-                                        trusted_CAs,
-                                        Usage_Type::TLS_CLIENT_AUTH,
-                                        sni_hostname,
-                                        policy());
-   } catch(std::exception& e) {
-      throw TLS_Exception(Alert::BadCertificate, e.what());
    }
 
    pending_state.set_expected_next(Handshake_Type::HandshakeCCS);
@@ -705,11 +800,10 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
                                                    !pending_state.server_hello()->supports_session_ticket());
 
          if(pending_state.server_hello()->supports_session_ticket() && handle.has_value() && handle->is_ticket()) {
-            pending_state.new_session_ticket(std::make_unique<New_Session_Ticket_12>(
-               pending_state.handshake_io(),
-               pending_state.hash(),
-               handle->ticket().value(),
-               static_cast<uint32_t>(policy().session_ticket_lifetime().count())));
+            pending_state.new_session_ticket(std::make_unique<New_Session_Ticket_12>(pending_state.handshake_io(),
+                                                                                     pending_state.hash(),
+                                                                                     handle->ticket().value(),
+                                                                                     ticket_lifetime_hint(policy())));
          }
 
          note_resumption_handle(handle);
@@ -726,6 +820,10 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
 
       pending_state.server_finished(
          std::make_unique<Finished_12>(pending_state.handshake_io(), pending_state, Connection_Side::Server));
+   } else if(auto summary = pending_state.take_resumption_summary()) {
+      // Give the application a chance for a final veto before fully
+      // establishing the resumed connection.
+      callbacks().tls_session_established(summary.value());
    }
 
    activate_session();
@@ -811,10 +909,10 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state, const
    }
    pending_state.set_resume_certs(session.session.peer_certs());
 
-   // Give the application a chance for a final veto before fully
-   // establishing the connection.
-   callbacks().tls_session_established([&, this] {
-      Session_Summary summary(session.session, pending_state.is_a_resumption(), external_psk_identity());
+   // The application is given the chance for a final veto once the client's
+   // Finished message was verified, see process_finished_msg()
+   pending_state.set_resumption_summary([&] {
+      Session_Summary summary(session.session, pending_state.is_a_resumption(), pending_state.psk_identity());
       summary.set_session_id(pending_state.server_hello()->session_id());
       if(auto ticket = session.handle.ticket()) {
          summary.set_session_ticket(std::move(ticket.value()));
@@ -835,9 +933,10 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state, const
 
    if(pending_state.server_hello()->supports_session_ticket()) {
       if(new_handle.has_value() && new_handle->is_ticket()) {
-         const uint32_t lifetime = static_cast<uint32_t>(policy().session_ticket_lifetime().count());
-         pending_state.new_session_ticket(std::make_unique<New_Session_Ticket_12>(
-            pending_state.handshake_io(), pending_state.hash(), new_handle->ticket().value(), lifetime));
+         pending_state.new_session_ticket(std::make_unique<New_Session_Ticket_12>(pending_state.handshake_io(),
+                                                                                  pending_state.hash(),
+                                                                                  new_handle->ticket().value(),
+                                                                                  ticket_lifetime_hint(policy())));
       } else {
          pending_state.new_session_ticket(
             std::make_unique<New_Session_Ticket_12>(pending_state.handshake_io(), pending_state.hash()));
@@ -915,7 +1014,14 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
       pending_state.server_certs(
          std::make_unique<Certificate_12>(pending_state.handshake_io(), pending_state.hash(), cert_chains[algo_used]));
 
-      if(pending_state.client_hello()->supports_cert_status_message() && pending_state.is_a_resumption() == false) {
+      // RFC 6066 8.
+      //    Note in addition that a server MUST NOT send the "CertificateStatus"
+      //    message unless it received a "status_request" extension in the client
+      //    hello message and sent a "status_request" extension in the server
+      //    hello message.
+      if(pending_state.client_hello()->supports_cert_status_message() &&
+         pending_state.server_hello()->supports_certificate_status_message() &&
+         pending_state.is_a_resumption() == false) {
          const auto* csr = pending_state.client_hello()->extensions().get<Certificate_Status_Request>();
          // csr is non-null if client_hello()->supports_cert_status_message()
          BOTAN_ASSERT_NOMSG(csr != nullptr);
@@ -933,8 +1039,18 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
       }
    }
 
+   // RFC 4279 2.
+   //    To help the client in selecting which identity to use, the server can
+   //    provide a "PSK identity hint" in the ServerKeyExchange message.  If no
+   //    hint is provided, the ServerKeyExchange message is omitted.
+   const bool omit_psk_server_kex =
+      pending_suite.kex_method() == Kex_Algo::PSK &&
+      m_creds->psk_identity_hint("tls-server", pending_state.client_hello()->sni_hostname()).empty();
+
    if(pending_suite.kex_method() == Kex_Algo::STATIC_RSA) {
       pending_state.set_server_rsa_kex_key(private_key);
+   } else if(omit_psk_server_kex) {
+      // nothing to send
    } else {
       pending_state.server_kex(std::make_unique<Server_Key_Exchange>(
          pending_state.handshake_io(), pending_state, policy(), *m_creds, rng(), private_key.get()));
@@ -949,14 +1065,26 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
       client_auth_CAs.insert(client_auth_CAs.end(), subjects.begin(), subjects.end());
    }
 
-   const bool request_cert = (client_auth_CAs.empty() == false) || policy().request_client_certificate_authentication();
+   const bool require_cert = policy().require_client_certificate_authentication();
+
+   const bool request_cert =
+      require_cert || (client_auth_CAs.empty() == false) || policy().request_client_certificate_authentication();
 
    // RFC 5246 7.4.4: supported_signature_algorithms<2..2^16-2>
-   // Without at least one acceptable scheme we cannot construct a valid
+   // Without at least one acceptable TLS 1.2 scheme we cannot construct a valid
    // CertificateRequest, so client cert auth is unreachable regardless.
-   const bool can_request_cert = !policy().acceptable_signature_schemes().empty();
+   const bool can_request_cert = std::ranges::any_of(policy().acceptable_signature_schemes(),
+                                                     [](const Signature_Scheme& scheme) {
+                                                        return scheme.is_compatible_with(Protocol_Version::TLS_V12);
+                                                     }) &&
+                                 pending_state.ciphersuite().is_certificate_required();
 
-   if(request_cert && can_request_cert && pending_state.ciphersuite().is_certificate_required()) {
+   if(require_cert && !can_request_cert) {
+      throw TLS_Exception(Alert::HandshakeFailure,
+                          "Policy requires client certificate authentication but no CertificateRequest can be sent");
+   }
+
+   if(request_cert && can_request_cert) {
       pending_state.cert_req(std::make_unique<Certificate_Request_12>(
          pending_state.handshake_io(), pending_state.hash(), policy(), client_auth_CAs));
 

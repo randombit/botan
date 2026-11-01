@@ -286,6 +286,68 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
                result.test_bin_eq("its body is intact", bytes, payload);
             }),
 
+      CHECK("fragments received before a HelloVerifyRequest are discarded",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 40, 0, 0, make_payload(40)));
+               result.test_enum_eq("ClientHello delivered", fix.next_message().first, Handshake_Type::ClientHello);
+
+               const std::vector<uint8_t> fragment = {0x42};
+               for(uint16_t seq = 1; seq <= 3; ++seq) {
+                  fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 1000, seq, 0, fragment));
+               }
+               result.test_sz_eq("future fragments are pending", fix.io().pending_reassembly_bytes(), 3000);
+
+               const Stub_Handshake_Message hvr(Handshake_Type::HelloVerifyRequest, std::vector<uint8_t>(35, 0x11));
+               fix.io().send(hvr);
+               result.test_sz_eq("discarded by the HelloVerifyRequest", fix.io().pending_reassembly_bytes(), 0);
+            }),
+
+      CHECK("an incomplete retransmitted ClientHello is released once the cookie ClientHello arrives",
+            [&](Test::Result& result) {
+               // Without a policy limit on the message size
+               Datagram_IO_Fixture fix(1000, 60000, std::nullopt, 1500, 0);
+
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 40, 0, 0, make_payload(40)));
+               fix.next_message();
+               const Stub_Handshake_Message hvr(Handshake_Type::HelloVerifyRequest, std::vector<uint8_t>(35, 0x11));
+               fix.io().send(hvr);
+
+               // A retransmission of the initial ClientHello may not claim more
+               // than half of the budget, which would starve the cookie ClientHello
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 0xFFFFFF, 0, 0, std::vector<uint8_t>{0x42}));
+               result.test_sz_eq("oversized retransmission is not admitted", fix.io().pending_reassembly_bytes(), 0);
+
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 1000, 0, 0, std::vector<uint8_t>{0x42}));
+               result.test_sz_eq("partial retransmission is pending", fix.io().pending_reassembly_bytes(), 1000);
+
+               const auto payload = make_payload(60);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 60, 1, 0, payload));
+               result.test_enum_eq(
+                  "cookie ClientHello delivered", fix.next_message().first, Handshake_Type::ClientHello);
+               result.test_sz_eq("retransmission released", fix.io().pending_reassembly_bytes(), 0);
+            }),
+
+      CHECK("pending fragments are released when the handshake completes",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 40, 0, 0, make_payload(40)));
+               fix.next_message();
+
+               const std::vector<uint8_t> fragment = {0x42};
+               for(uint16_t seq = 2; seq <= 4; ++seq) {
+                  fix.feed(dtls_hs_record(Handshake_Type::Certificate, 1000, seq, 0, fragment));
+               }
+               result.test_sz_eq("future fragments are pending", fix.io().pending_reassembly_bytes(), 3000);
+
+               const Stub_Handshake_Message sh(Handshake_Type::ServerHello, std::vector<uint8_t>(64, 0x11));
+               fix.io().send(sh);
+               fix.io().finalize_handshake(true);
+               result.test_sz_eq("released at completion", fix.io().pending_reassembly_bytes(), 0);
+            }),
+
       CHECK("tiny future-seq fragments do not exhaust the reassembly budget",
             [&](Test::Result& result) {
                Datagram_IO_Fixture fix;
@@ -892,6 +954,24 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
                result.test_sz_eq("read epoch unchanged by the refusal", seqs.current_read_epoch(), size_t(0xFFFF));
                result.test_is_true("the final epoch is still writable",
                                    seqs.next_write_sequence(0xFFFF) == (uint64_t(0xFFFF) << 48));
+            }),
+
+      // Epoch 0 is the unprotected initial state; a stream connection must
+      // never return to it after 65535 renegotiations.
+      CHECK("TLS epoch counters refuse to wrap",
+            [&](Test::Result& result) {
+               Stream_Sequence_Numbers seqs;
+
+               for(size_t i = 0; i != 0xFFFF; ++i) {
+                  seqs.new_write_cipher_state();
+                  seqs.new_read_cipher_state();
+               }
+
+               result.test_throws("write epoch will not wrap", [&] { seqs.new_write_cipher_state(); });
+               result.test_throws("read epoch will not wrap", [&] { seqs.new_read_cipher_state(); });
+
+               result.test_sz_eq("write epoch unchanged by the refusal", seqs.current_write_epoch(), size_t(0xFFFF));
+               result.test_sz_eq("read epoch unchanged by the refusal", seqs.current_read_epoch(), size_t(0xFFFF));
             }),
 
       // Write sequence counters and replay windows are pruned as the

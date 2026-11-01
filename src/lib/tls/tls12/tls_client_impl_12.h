@@ -89,9 +89,17 @@ class Client_Impl_12 final : public Channel_Impl_12 {
       /**
       * @return network protocol as advertised by the TLS server, if server sent the ALPN extension
       */
-      std::string application_protocol() const override { return m_application_protocol; }
+      std::string application_protocol() const override {
+         // A renegotiation in progress does not affect the active connection
+         if(active_state().has_value()) {
+            return active_state()->application_protocol();
+         }
+         return m_application_protocol;
+      }
 
    private:
+      std::string negotiated_application_protocol() const override { return m_application_protocol; }
+
       void initiate_handshake(Handshake_State& state, bool force_full_renegotiation) override;
 
       void send_client_hello(Handshake_State& state,
