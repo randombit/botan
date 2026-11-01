@@ -1318,6 +1318,44 @@ int botan_x509_crl_view_string_values_count(botan_x509_crl_t crl_obj, botan_x509
 #endif
 }
 
+int botan_x509_crl_view_issuer_dn(
+   botan_x509_crl_t crl, const char* key, size_t index, botan_view_ctx ctx, botan_view_str_fn view) {
+   if(Botan::any_null_pointers(key)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(crl, [=](const auto& c) -> int {
+      const auto& dn = c.issuer_dn();
+      const auto& issuer_info = dn.get_attribute(key);
+      if(index < issuer_info.size()) {
+         return invoke_view_callback(view, ctx, issuer_info.at(index));
+      } else {
+         return BOTAN_FFI_ERROR_OUT_OF_RANGE;
+      }
+   });
+#else
+   BOTAN_UNUSED(crl, index, ctx, view);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_crl_view_issuer_dn_count(botan_x509_crl_t crl, const char* key, size_t* count) {
+   if(Botan::any_null_pointers(key)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(crl, [=](const auto& c) -> int {
+      const auto& dn = c.issuer_dn();
+      *count = dn.get_attribute(key).size();
+
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(crl, count);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_VISIT(crl, [=](const auto& c) { return c.is_revoked(safe_get(cert)) ? 0 : -1; });

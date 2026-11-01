@@ -1408,6 +1408,8 @@ iWtHjIcunpiq6+IiB8IVu7Ncu6uPKoFS/mWzTvjgdNusmgNle9p3OAbE
         self.assertTrue(crl.verify(ca_pubkey))
         self.assertEqual(sub1_cert.verify(None, [ca_cert], crls=[crl]), 0)
         self.assertEqual(sub2_cert.verify(None, [ca_cert], crls=[crl]), 0)
+        if library_at_least(3, 14):
+            self.assertEqual(crl.issuer_dn("Name", 0), "Test CA/US/Botan Project/Testing")
 
         to_revoke = botan.X509CRLEntry.create(sub2_cert, botan.X509CRLReason.KEY_COMPROMISE)
 
