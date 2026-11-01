@@ -8,6 +8,7 @@ brief -> "Module Lattice Digital Signature Algorithm (FIPS 204)"
 </module_info>
 
 <requires>
+asn1
 dilithium_common
 dilithium_shake
 </requires>

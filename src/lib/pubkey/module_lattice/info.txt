@@ -1,0 +1,23 @@
+<internal_defines>
+MODULE_LATTICE -> 20260911
+</internal_defines>
+
+<module_info>
+name -> "Module Lattice (common)"
+brief -> "Common utilities and public key interfaces for the module-lattice schemes ML-KEM/CRYSTALS-Kyber and ML-DSA/CRYSTALS-Dilithium"
+type -> "Internal"
+</module_info>
+
+<requires>
+pubkey
+</requires>
+
+<header:public>
+module_lattice_keys.h
+</header:public>
+
+<header:internal>
+pqcrystals.h
+pqcrystals_encoding.h
+pqcrystals_helpers.h
+</header:internal>
