@@ -5735,6 +5735,11 @@ class FFI_EC_Point_Test final : public FFI_Test {
          TEST_FFI_OK(botan_ec_scalar_to_mp, (from_mp, &from_scalar));
          TEST_FFI_RC(1, botan_mp_equal, (to_scalar, from_scalar));
 
+         botan_ec_group_t group_from_scalar;
+         TEST_FFI_OK(botan_ec_scalar_get_group, (random, &group_from_scalar));
+         TEST_FFI_RC(1, botan_ec_group_equal, (group, group_from_scalar));
+
+         TEST_FFI_OK(botan_ec_group_destroy, (group_from_scalar));
          TEST_FFI_OK(botan_ec_scalar_destroy, (random));
          TEST_FFI_OK(botan_ec_scalar_destroy, (from_mp));
          TEST_FFI_OK(botan_mp_destroy, (to_scalar));
@@ -5752,6 +5757,17 @@ class FFI_EC_Point_Test final : public FFI_Test {
 
          TEST_FFI_OK(botan_ec_point_add, (&out_add_ident, generator, identity));
          TEST_FFI_OK(botan_ec_point_add, (&out_add_inverse, generator, generator_neg));
+
+         botan_ec_group_t group_from_point;
+         TEST_FFI_OK(botan_ec_point_get_group, (identity, &group_from_point));
+         TEST_FFI_RC(1, botan_ec_group_equal, (group, group_from_point));
+
+         botan_mp_t generator_x;
+         botan_mp_t generator_y;
+         botan_ec_point_t point_from_xy;
+         TEST_FFI_OK(botan_ec_point_to_mp_xy, (generator, &generator_x, &generator_y));
+         TEST_FFI_OK(botan_ec_point_from_xy, (&point_from_xy, group, generator_x, generator_y));
+         TEST_FFI_RC(1, botan_ec_point_equal, (point_from_xy, generator));
 
          ViewBytesSink generator_bytes;
          TEST_FFI_OK(botan_ec_point_view_xy_bytes, (generator, generator_bytes.delegate(), generator_bytes.callback()));
@@ -5790,6 +5806,8 @@ class FFI_EC_Point_Test final : public FFI_Test {
 
          TEST_FFI_OK(botan_mp_destroy, (group_order));
          TEST_FFI_OK(botan_mp_destroy, (group_order_minus_1));
+         TEST_FFI_OK(botan_mp_destroy, (generator_x));
+         TEST_FFI_OK(botan_mp_destroy, (generator_y));
          TEST_FFI_OK(botan_ec_scalar_destroy, (order));
 
          TEST_FFI_OK(botan_ec_point_destroy, (identity));
@@ -5799,6 +5817,8 @@ class FFI_EC_Point_Test final : public FFI_Test {
          TEST_FFI_OK(botan_ec_point_destroy, (out_add_inverse));
          TEST_FFI_OK(botan_ec_point_destroy, (out_mul_order_minus_one));
          TEST_FFI_OK(botan_ec_point_destroy, (out_add_gen_to_order));
+         TEST_FFI_OK(botan_ec_point_destroy, (point_from_xy));
+         TEST_FFI_OK(botan_ec_group_destroy, (group_from_point));
          TEST_FFI_OK(botan_ec_group_destroy, (group));
       }
 };

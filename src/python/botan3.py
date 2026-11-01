@@ -427,11 +427,14 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_ec_scalar_random, [c_void_p, c_void_p, c_void_p])
     ffi_api(dll.botan_ec_scalar_from_mp, [c_void_p, c_void_p, c_void_p])
     ffi_api(dll.botan_ec_scalar_to_mp, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_scalar_get_group, [c_void_p, c_void_p])
     ffi_api(dll.botan_ec_point_destroy, [c_void_p])
     ffi_api(dll.botan_ec_point_identity, [c_void_p, c_void_p])
     ffi_api(dll.botan_ec_point_generator, [c_void_p, c_void_p])
     ffi_api(dll.botan_ec_point_from_xy, [c_void_p, c_void_p, c_void_p, c_void_p])
     ffi_api(dll.botan_ec_point_from_bytes, [c_void_p, c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_ec_point_to_mp_xy, [c_void_p, c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_point_get_group, [c_void_p, c_void_p])
     ffi_api(dll.botan_ec_point_view_x_bytes, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_ec_point_view_y_bytes, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_ec_point_view_xy_bytes, [c_void_p, c_void_p, _VIEW_BIN_CALLBACK])
@@ -3676,6 +3679,12 @@ class ECScalar(_NonCopyable):
         _DLL.botan_ec_scalar_to_mp(self.__obj, byref(obj))
         return MPI(obj)
 
+    def get_group(self) -> ECGroup:
+        """Returns the group associated with this scalar"""
+        group = ECGroup()
+        _DLL.botan_ec_scalar_get_group(self.__obj, byref(group._handle()))
+        return group
+
 
 class ECPoint(_NonCopyable):
     """A point on an elliptic curve"""
@@ -3772,6 +3781,18 @@ class ECPoint(_NonCopyable):
         """Get the fixed length SEC1 compressed encoding"""
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_ec_point_view_compressed(self.__obj, vc, vfn))
 
+    def to_mpi_xy(self) -> tuple [MPI, MPI]:
+        """Convert from a point to two MPIs (x, y)"""
+        x = c_void_p(0)
+        y = c_void_p(0)
+        _DLL.botan_ec_point_to_mp_xy(self.__obj, byref(x), byref(y))
+        return (MPI(x), MPI(y))
+
+    def get_group(self) -> ECGroup:
+        """Returns the group associated with this point"""
+        group = ECGroup()
+        _DLL.botan_ec_point_get_group(self.__obj, byref(group._handle()))
+        return group
 
 class FormatPreservingEncryptionFE1(_NonCopyable):
     """Initialize an instance for format preserving encryption"""

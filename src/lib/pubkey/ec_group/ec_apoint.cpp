@@ -107,6 +107,14 @@ std::optional<EC_AffinePoint> EC_AffinePoint::from_bigint_xy(const EC_Group& gro
    return EC_AffinePoint::deserialize_uncompressed(group, sec1);
 }
 
+std::pair<BigInt, BigInt> EC_AffinePoint::to_bigint_xy() const {
+   std::vector<uint8_t> x_bytes(m_point->field_element_bytes());
+   std::vector<uint8_t> y_bytes(m_point->field_element_bytes());
+   m_point->serialize_x_to(x_bytes);
+   m_point->serialize_y_to(y_bytes);
+   return std::make_pair(BigInt::from_bytes(x_bytes), BigInt::from_bytes(y_bytes));
+}
+
 EC_Group EC_AffinePoint::group() const {
    return EC_Group(inner().group());
 }
