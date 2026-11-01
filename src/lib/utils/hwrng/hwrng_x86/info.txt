@@ -1,0 +1,10 @@
+<module_info>
+name -> "Hardware RNG for x86"
+brief -> "Wrapper for the RDRAND instruction"
+</module_info>
+
+<arch>
+x86_32
+x86_64
+x32
+</arch>

@@ -989,13 +989,14 @@ def cli_rng_tests(_tmp_dir):
         if hex_10.match(output) is None:
             logging.error('Unexpected RNG output %s', output)
 
-    has_rdrand = test_cli("cpuid", []).find(' rdrand ') > 0
+    cpuid_flags = test_cli("cpuid", []).split()
+    has_hwrng = any(flag in cpuid_flags for flag in ['rdrand', 'darn', 'armv8rng'])
 
-    if has_rdrand:
+    if has_hwrng:
         output = test_cli("rng", ["10", '--rdrand'], use_drbg=False)
 
         if output == "D80F88F6ADBE65ACB10C":
-            logging.error('RDRAND produced DRBG output')
+            logging.error('Processor RNG produced DRBG output')
         if hex_10.match(output) is None:
             logging.error('Unexpected RNG output %s', output)
 

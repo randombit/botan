@@ -20,6 +20,11 @@
 #include <botan/hex.h>
 #include <botan/internal/target_info.h>
 #include <cstring>
+#include <set>
+
+#if defined(BOTAN_HAS_HWRNG)
+   #include <botan/internal/hwrng.h>
+#endif
 
 #if defined(BOTAN_HAS_STATEFUL_RNG)
    #include <botan/stateful_rng.h>
@@ -1466,6 +1471,35 @@ class Processor_RNG_Tests final : public Test {
 };
 
 BOTAN_REGISTER_TEST("rng", "processor_rng", Processor_RNG_Tests);
+
+#endif
+
+#if defined(BOTAN_HAS_HWRNG)
+
+class HWRNG_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("HWRNG");
+
+         if(Botan::HWRNG::available()) {
+            // A repeated output within 64 draws of 64 bits indicates a stuck generator
+            std::set<uint64_t> seen;
+            for(size_t i = 0; i != 64; ++i) {
+               const auto output = Botan::HWRNG::read();
+               if(result.test_is_true("HWRNG produced output", output.has_value())) {
+                  seen.insert(*output);
+               }
+            }
+            result.test_sz_eq("HWRNG outputs are distinct", seen.size(), 64);
+         } else {
+            result.test_note("HWRNG not available on this CPU");
+         }
+
+         return std::vector<Test::Result>{result};
+      }
+};
+
+BOTAN_REGISTER_TEST("rng", "hwrng", HWRNG_Tests);
 
 #endif
 

@@ -14,12 +14,13 @@ namespace Botan {
 /**
 * Directly invokes a CPU specific instruction to generate random numbers.
 * On x86, the RDRAND instruction is used.
-* on POWER, the DARN instruction is used.
+* On POWER, the DARN instruction is used.
+* On AArch64, the RNDR instruction is used.
 */
 class BOTAN_PUBLIC_API(2, 15) Processor_RNG final : public Hardware_RNG {
    public:
       /**
-      * Constructor will throw if CPU does not have RDRAND bit set
+      * Constructor will throw if the CPU does not support the RNG instruction
       */
       Processor_RNG();
 

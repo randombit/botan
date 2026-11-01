@@ -231,9 +231,10 @@ Processor_RNG
 
 This RNG type directly invokes a CPU instruction capable of generating
 a cryptographically secure random number. On x86 it uses ``rdrand``,
-on POWER ``darn``. If the relevant instruction is not available, the
-constructor of the class will throw at runtime. You can test
-beforehand by checking the result of ``Processor_RNG::available()``.
+on POWER ``darn``, and on AArch64 ``rndr``. If the relevant instruction
+is not available, the constructor of the class will throw at runtime.
+You can test beforehand by checking the result of
+``Processor_RNG::available()``.
 
 TPM_RNG & TPM2_RNG
 ^^^^^^^^^^^^^^^^^^
@@ -326,7 +327,7 @@ The following entropy sources are currently included in the library:
 
  * The system RNG (``/dev/urandom``, ``getrandom``, ``arc4random``,
    ``BCryptGenRandom``, or ``RtlGenRandom``).
- * Processor provided RNG outputs (RDRAND, RDSEED, DARN) are used if available
+ * Processor provided RNG outputs (RDRAND, RDSEED, DARN, RNDR) are used if available
    (but not counted as contributing entropy)
  * The ``getentropy`` call is used on OpenBSD, FreeBSD, and macOS
  * Gathering Windows system statistics (a last ditch protection against

@@ -7,17 +7,10 @@ name -> "Processor RNG"
 brief -> "Directly invokes a CPU specific instruction to generate random numbers"
 </module_info>
 
-<arch>
-x86_32
-x86_64
-ppc64
-arm64
-</arch>
-
 <header:public>
 processor_rng.h
 </header:public>
 
 <requires>
-cpuid
+hwrng
 </requires>
