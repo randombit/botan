@@ -19,6 +19,7 @@
 #include <botan/exceptn.h>
 #include <botan/hex.h>
 #include <botan/internal/target_info.h>
+#include <algorithm>
 #include <cstring>
 #include <set>
 
@@ -244,7 +245,7 @@ class Stateful_RNG_Tests : public Test {
          Test::Result result(rng_name() + " Seed Material vs Additional Input");
 
          auto rng = create_rng(nullptr, nullptr, 0);
-         const size_t seed_bytes = rng->security_level() / 8;
+         const size_t seed_bytes = rng->required_seed_bits() / 8;
          const std::vector<uint8_t> input(2 * seed_bytes, 0x42);
 
          result.test_is_false("not seeded initially", rng->is_seeded());
@@ -261,7 +262,7 @@ class Stateful_RNG_Tests : public Test {
          result.test_is_false("short seed material does not seed", rng->is_seeded());
 
          rng->add_entropy(std::vector<uint8_t>(seed_bytes, 0x42));
-         result.test_is_true("seed material of security_level bits seeds", rng->is_seeded());
+         result.test_is_true("seed material of required_seed_bits bits seeds", rng->is_seeded());
          result.test_no_throw("output after seeding", [&]() { rng->random_vec(16); });
 
          // additional input is nonetheless mixed into the state
@@ -404,9 +405,9 @@ class Stateful_RNG_Tests : public Test {
                std::string name() const override { return "Neither Source"; }
          };
 
-         const size_t sec_level = create_rng(nullptr, nullptr, 0)->security_level();
+         const size_t seed_bits = create_rng(nullptr, nullptr, 0)->required_seed_bits();
          // well above the length at which add_entropy would consider the RNG seeded
-         const size_t big = 2 * sec_level / 8;
+         const size_t big = 2 * seed_bits / 8;
 
          // a source providing plenty of data but claiming no entropy does not seed the RNG
          {
@@ -424,7 +425,7 @@ class Stateful_RNG_Tests : public Test {
          // small estimates accumulate over a poll
          {
             Botan::Entropy_Sources srcs;
-            srcs.add_source(std::make_unique<Chunked_Source>((sec_level + 63) / 64));
+            srcs.add_source(std::make_unique<Chunked_Source>((seed_bits + 63) / 64));
 
             auto rng = make_rng(srcs);
             result.test_no_throw("chunked source seeds", [&]() { rng->random_vec(16); });
@@ -444,7 +445,7 @@ class Stateful_RNG_Tests : public Test {
          // a counted source seeds the RNG
          {
             Botan::Entropy_Sources srcs;
-            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 8, sec_level));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(seed_bits / 8, seed_bits));
 
             auto rng = make_rng(srcs);
             result.test_no_throw("counted source seeds", [&]() { rng->random_vec(16); });
@@ -455,7 +456,7 @@ class Stateful_RNG_Tests : public Test {
          {
             Botan::Entropy_Sources srcs;
             srcs.add_source(std::make_unique<Fixed_Estimate_Source>(big, 0));
-            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 8, sec_level));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(seed_bits / 8, seed_bits));
 
             auto rng = make_rng(srcs);
             result.test_no_throw("mixed sources seed", [&]() { rng->random_vec(16); });
@@ -465,7 +466,7 @@ class Stateful_RNG_Tests : public Test {
          // an estimate exceeding the data is capped
          {
             Botan::Entropy_Sources srcs;
-            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 16, sec_level));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(seed_bits / 16, seed_bits));
 
             auto rng = make_rng(srcs);
             result.test_throws<Botan::PRNG_Unseeded>("overstated estimate is capped", [&]() { rng->random_vec(16); });
@@ -484,7 +485,7 @@ class Stateful_RNG_Tests : public Test {
          // a legacy source is credited with what it reports
          {
             Botan::Entropy_Sources srcs;
-            srcs.add_source(std::make_unique<Legacy_Source>(sec_level / 8, sec_level));
+            srcs.add_source(std::make_unique<Legacy_Source>(seed_bits / 8, seed_bits));
 
             auto rng = make_rng(srcs);
             result.test_no_throw("counted legacy source seeds", [&]() { rng->random_vec(16); });
@@ -494,7 +495,7 @@ class Stateful_RNG_Tests : public Test {
          // but never with more than it provided
          {
             Botan::Entropy_Sources srcs;
-            srcs.add_source(std::make_unique<Legacy_Source>(sec_level / 16, sec_level));
+            srcs.add_source(std::make_unique<Legacy_Source>(seed_bits / 16, seed_bits));
 
             auto rng = make_rng(srcs);
             result.test_throws<Botan::PRNG_Unseeded>("overstated legacy estimate is capped",
@@ -505,7 +506,7 @@ class Stateful_RNG_Tests : public Test {
          {
             Botan::Entropy_Sources srcs;
             srcs.add_source(std::make_unique<Fixed_Estimate_Source>(big, 0));
-            srcs.add_source(std::make_unique<Legacy_Source>(sec_level / 16, sec_level));
+            srcs.add_source(std::make_unique<Legacy_Source>(seed_bits / 16, seed_bits));
 
             auto rng = make_rng(srcs);
             result.test_throws<Botan::PRNG_Unseeded>("legacy estimate cannot borrow from earlier data",
@@ -521,7 +522,7 @@ class Stateful_RNG_Tests : public Test {
 
             Botan::Entropy_Sources srcs;
             srcs.add_source(std::make_unique<Hostile_Legacy_Source>());
-            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 8, sec_level));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(seed_bits / 8, seed_bits));
 
             auto rng = make_rng(srcs);
             result.test_no_throw("hostile source followed by good source", [&]() { rng->random_vec(16); });
@@ -545,32 +546,32 @@ class Stateful_RNG_Tests : public Test {
          // the legacy Entropy_Sources::poll interface mixes data in without seeding
          {
             Botan::Entropy_Sources srcs;
-            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 8, sec_level));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(seed_bits / 8, seed_bits));
 
             auto rng = create_rng(nullptr, nullptr, 0);
-            result.test_sz_eq("legacy poll reports estimate", srcs.poll(*rng, sec_level), sec_level);
+            result.test_sz_eq("legacy poll reports estimate", srcs.poll(*rng, seed_bits), seed_bits);
             result.test_is_false("legacy poll does not seed", rng->is_seeded());
             result.test_sz_eq(
-               "legacy poll_just reports estimate", srcs.poll_just(*rng, "Fixed Estimate Source"), sec_level);
+               "legacy poll_just reports estimate", srcs.poll_just(*rng, "Fixed Estimate Source"), seed_bits);
             result.test_is_false("legacy poll_just does not seed", rng->is_seeded());
-            result.test_sz_eq("reseed_from seeds", rng->reseed_from(srcs), sec_level);
+            result.test_sz_eq("reseed_from seeds", rng->reseed_from(srcs), seed_bits);
             result.test_is_true("seeded", rng->is_seeded());
          }
 
          // the legacy poll with a timeout must not stop early for very large timeouts
          {
             Botan::Entropy_Sources srcs;
-            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 16, sec_level / 2));
-            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 16, sec_level / 2));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(seed_bits / 16, seed_bits / 2));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(seed_bits / 16, seed_bits / 2));
 
             auto rng = create_rng(nullptr, nullptr, 0);
             result.test_sz_eq("legacy poll with max timeout polls all sources",
-                              srcs.poll(*rng, sec_level, std::chrono::milliseconds::max()),
-                              sec_level);
+                              srcs.poll(*rng, seed_bits, std::chrono::milliseconds::max()),
+                              seed_bits);
       #if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
             result.test_sz_eq("legacy poll with expired timeout stops after first source",
-                              srcs.poll(*rng, sec_level, std::chrono::milliseconds(-1)),
-                              sec_level / 2);
+                              srcs.poll(*rng, seed_bits, std::chrono::milliseconds(-1)),
+                              seed_bits / 2);
       #endif
          }
 
@@ -604,7 +605,7 @@ class Stateful_RNG_Tests : public Test {
       Test::Result test_check_nonce() {
          Test::Result result(rng_name() + " Nonce Check");
 
-         // make sure the nonce has at least security_strength bits
+         // make sure the seed has at least required_seed_bits bits
          auto rng = create_rng(nullptr, nullptr, 0);
 
          for(const size_t nonce_size : {0, 4, 8, 16, 31, 32, 34, 64}) {
@@ -614,7 +615,7 @@ class Stateful_RNG_Tests : public Test {
             const std::vector<uint8_t> nonce(nonce_size);
             rng->initialize_with(nonce.data(), nonce.size());
 
-            if(nonce_size < rng->security_level() / 8) {
+            if(nonce_size < rng->required_seed_bits() / 8) {
                result.test_is_false("not seeded", rng->is_seeded());
                result.test_throws("invalid nonce size", [&rng]() { rng->random_vec(32); });
             } else {
@@ -790,7 +791,7 @@ class Stateful_RNG_Tests : public Test {
 
    #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
          const size_t output_len = 16;
-         const std::vector<uint8_t> seed(create_rng(nullptr, nullptr, 0)->security_level() / 8, 0x42);
+         const std::vector<uint8_t> seed(create_rng(nullptr, nullptr, 0)->required_seed_bits() / 8, 0x42);
 
          // Parent and child both add the same full entropy input after the fork;
          // the child must still detect the fork and reseed
@@ -977,6 +978,51 @@ class Stateful_RNG_Tests : public Test {
          return result;
       }
 };
+
+std::vector<Test::Result> stateful_rng_reseed_limit() {
+   return {
+      CHECK("Stateful_RNG without a reseed source enforces the reseed interval",
+            [](Test::Result& result) {
+               class Limited_RNG final : public Botan::Stateful_RNG {
+                  public:
+                     explicit Limited_RNG(size_t reseed_interval) : Stateful_RNG(reseed_interval) {}
+
+                     std::string name() const override { return "Limited_RNG"; }
+
+                     size_t security_level() const override { return 128; }
+
+                     size_t max_number_of_bytes_per_request() const override { return 0; }
+
+                  private:
+                     void generate_output(std::span<uint8_t> output, std::span<const uint8_t> /*input*/) override {
+                        std::fill(output.begin(), output.end(), 0x42);
+                     }
+
+                     void update(std::span<const uint8_t> /*input*/) override {}
+
+                     void clear_state() override {}
+               };
+
+               const std::vector<uint8_t> seed(16);
+
+               Limited_RNG rng(4);
+               result.test_sz_eq("reseed interval", rng.reseed_interval(), 4);
+               rng.add_entropy(seed);
+
+               for(size_t i = 0; i != 3; ++i) {
+                  result.test_no_throw("request within the interval", [&]() { rng.random_vec(1); });
+               }
+
+               result.test_throws<Botan::PRNG_Unseeded>("request beyond the interval", [&]() { rng.random_vec(1); });
+               result.test_is_false("no longer seeded", rng.is_seeded());
+
+               rng.add_entropy(seed);
+               result.test_no_throw("request after reseeding", [&]() { rng.random_vec(1); });
+            }),
+   };
+}
+
+BOTAN_REGISTER_TEST_FN("rng", "stateful_rng_reseed_limit", stateful_rng_reseed_limit);
 
 #endif
 

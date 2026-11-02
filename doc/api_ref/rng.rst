@@ -47,7 +47,8 @@ Random Number Generators
 
       The caller asserts that the data is full entropy seed material. A stateful
       RNG such as ``HMAC_DRBG`` considers itself seeded once a single call
-      provides at least ``security_level()`` bits. To mix in data which should
+      provides at least ``required_seed_bits()`` bits, which is normally its
+      security level. To mix in data which should
       not be credited use :cpp:func:`RandomNumberGenerator::randomize_with_input`
       with an empty output buffer instead.
 
@@ -60,7 +61,9 @@ Random Number Generators
    .. cpp:function:: void reseed_from_rng(RandomNumberGenerator& rng, \
                      size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS)
 
-      Reseed by calling ``rng`` to acquire ``poll_bits`` data.
+      Reseed by calling ``rng`` to acquire ``poll_bits`` data. A stateful RNG
+      such as ``HMAC_DRBG`` always requests at least enough data to seed
+      itself.
 
 
 RNG Types
@@ -317,7 +320,7 @@ estimate. The accumulator's ``goal_reached`` function tells a source when it may
 stop early.
 
 The RNG which initiated the poll considers itself seeded once the total reaches
-its security level. Estimates are summed over the poll, and if sufficient data
+the amount it requires, which is normally its security level. Estimates are summed over the poll, and if sufficient data
 is available in that poll then the RNG is considered seeded. A failed/incomplete
 poll on an unseeded RNG leaves it in an unseeded state; entropy estimates do not
 carry over between polls.
