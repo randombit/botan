@@ -319,7 +319,8 @@ Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
 
 Certificate_13::Certificate_Entry::Certificate_Entry(TLS_Data_Reader& reader,
                                                      Connection_Side side,
-                                                     Certificate_Type cert_type) {
+                                                     Certificate_Type cert_type,
+                                                     bool is_leaf) {
    if(cert_type == Certificate_Type::X509) {
       // RFC 8446 4.2.2
       //    [...] each CertificateEntry contains a DER-encoded X.509
@@ -327,7 +328,11 @@ Certificate_13::Certificate_Entry::Certificate_Entry(TLS_Data_Reader& reader,
       const auto cert_bytes = reader.get_tls_length_value(3);
       try {
          m_certificate = std::make_unique<X509_Certificate>(cert_bytes);
-         m_raw_public_key = m_certificate->subject_public_key();
+
+         // We only need the public key for the leaf
+         if(is_leaf) {
+            m_raw_public_key = m_certificate->subject_public_key();
+         }
       } catch(Exception& e) {
          // bad_certificate would make more sense but BoGo expects decoding_error
          throw TLS_Exception(Alert::DecodeError, e.what());
@@ -436,7 +441,16 @@ Certificate_13::Certificate_13(std::span<const uint8_t> buf,
    }
 
    while(reader.has_remaining()) {
-      m_entries.emplace_back(reader, side, cert_type);
+      const bool is_leaf = m_entries.empty();
+
+      // RFC 8446 4.4.2
+      //    If the RawPublicKey certificate type was negotiated, then the
+      //    certificate_list MUST contain no more than one CertificateEntry.
+      if(cert_type == Certificate_Type::RawPublicKey && !is_leaf) {
+         throw TLS_Exception(Alert::IllegalParameter, "Certificate message contained more than one RawPublicKey");
+      }
+
+      m_entries.emplace_back(reader, side, cert_type, is_leaf);
    }
 
    // RFC 8446 4.4.2
@@ -468,13 +482,6 @@ Certificate_13::Certificate_13(std::span<const uint8_t> buf,
    // But, require that the leaf certificate be v3.
    if(cert_type == Certificate_Type::X509 && m_entries.front().certificate().x509_version() != 3) {
       throw TLS_Exception(Alert::BadCertificate, "The leaf certificate must be v3");
-   }
-
-   // RFC 8446 4.4.2
-   //    If the RawPublicKey certificate type was negotiated, then the
-   //    certificate_list MUST contain no more than one CertificateEntry.
-   if(cert_type == Certificate_Type::RawPublicKey && m_entries.size() != 1) {
-      throw TLS_Exception(Alert::IllegalParameter, "Certificate message contained more than one RawPublicKey");
    }
 
    // Validate the provided (certificate) public key against our policy

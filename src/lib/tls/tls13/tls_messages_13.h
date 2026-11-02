@@ -185,7 +185,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
    public:
       class Certificate_Entry {
          public:
-            Certificate_Entry(TLS_Data_Reader& reader, Connection_Side side, Certificate_Type cert_type);
+            Certificate_Entry(TLS_Data_Reader& reader, Connection_Side side, Certificate_Type cert_type, bool is_leaf);
             explicit Certificate_Entry(const X509_Certificate& cert);
             explicit Certificate_Entry(std::shared_ptr<Public_Key> raw_public_key);
 
@@ -210,7 +210,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
 
          private:
             std::unique_ptr<X509_Certificate> m_certificate;  // possibly null if raw public key in use
-            std::shared_ptr<Public_Key> m_raw_public_key;
+            std::shared_ptr<Public_Key> m_raw_public_key;     // null for a non-leaf certificate sent by the peer
             Extensions m_extensions;
       };
 
