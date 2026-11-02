@@ -78,8 +78,8 @@ def verify_includes(build_config):
     return True
 
 def verify_cmake_package(build_config):
-    if build_config['os'] not in ['windows', 'linux', 'macos']:
-        return True # skip (e.g. for mingw)
+    if build_config['os'] not in ['windows', 'linux', 'macos', 'mingw']:
+        return True # skip (e.g. for android)
 
     cmake_build_dir = os.path.join(build_config['abs_root_dir'], build_config['build_dir'], 'cmake_test')
     cmake_test_dir = os.path.join(build_config['abs_root_dir'], "src", "scripts", "ci", "cmake_tests")
@@ -102,12 +102,18 @@ def verify_cmake_package(build_config):
         print("Not a single disabled module in this build to use for testing.") # just for good measure
         return False
 
+    additional_cmake_vars = []
+    if build_config['os'] == 'mingw':
+        additional_cmake_vars += ["-G", "MinGW Makefiles"]
+        additional_cmake_vars += ["-DCMAKE_C_COMPILER=gcc"]
+        additional_cmake_vars += ["-DCMAKE_CXX_COMPILER=g++"]
+
     try:
         subprocess.run(["cmake", "--preset", cmake_preset(),
                                  "-B", cmake_build_dir,
                                  "-S", cmake_test_dir,
                                  "-DCMAKE_PREFIX_PATH=%s" % build_config['prefix'],
-                                 "-DBOTAN_DISABLED_MODULE=%s" % disabled_module], check=True)
+                                 "-DBOTAN_DISABLED_MODULE=%s" % disabled_module] + additional_cmake_vars, check=True)
         subprocess.run(["cmake", "--build", cmake_build_dir, "--config", "Release"], check=True)
         subprocess.run(["cmake", "--build", cmake_build_dir, "--config", "Release", "--target", test_target()], check=True)
     except RuntimeError as e:
