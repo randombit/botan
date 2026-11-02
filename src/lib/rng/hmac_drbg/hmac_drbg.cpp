@@ -37,7 +37,7 @@ size_t hmac_drbg_security_level(size_t mac_output_length) {
    }
 }
 
-void check_limits(size_t reseed_interval, size_t max_number_of_bytes_per_request) {
+void check_hmac_drbg_limits(size_t reseed_interval, size_t max_number_of_bytes_per_request) {
    // SP800-90A permits up to 2^48, but it is not usable on 32 bit
    // platforms, so we only allow up to 2^24, which is still reasonably high
    if(reseed_interval == 0 || reseed_interval > static_cast<size_t>(1) << 24) {
@@ -67,7 +67,7 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
       m_mac(check_not_null(std::move(prf))),
       m_max_number_of_bytes_per_request(max_number_of_bytes_per_request),
       m_security_level(hmac_drbg_security_level(m_mac->output_length())) {
-   check_limits(reseed_interval, max_number_of_bytes_per_request);
+   check_hmac_drbg_limits(reseed_interval, max_number_of_bytes_per_request);
 
    clear();
 }
@@ -81,7 +81,7 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
       m_mac(check_not_null(std::move(prf))),
       m_max_number_of_bytes_per_request(max_number_of_bytes_per_request),
       m_security_level(hmac_drbg_security_level(m_mac->output_length())) {
-   check_limits(reseed_interval, max_number_of_bytes_per_request);
+   check_hmac_drbg_limits(reseed_interval, max_number_of_bytes_per_request);
 
    clear();
 }
@@ -94,7 +94,7 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
       m_mac(check_not_null(std::move(prf))),
       m_max_number_of_bytes_per_request(max_number_of_bytes_per_request),
       m_security_level(hmac_drbg_security_level(m_mac->output_length())) {
-   check_limits(reseed_interval, max_number_of_bytes_per_request);
+   check_hmac_drbg_limits(reseed_interval, max_number_of_bytes_per_request);
 
    clear();
 }
