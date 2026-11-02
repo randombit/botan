@@ -174,9 +174,11 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       * This calls `randomize_with_input` using system specific values
       *
       * This first attempts to provide input to the underlying RNG from some system
-      * specific source. The additional input consists of an 8 byte timestamp from the
-      * local clock. The remainder of the 22 byte input is filled from the system RNG if
-      * available, otherwise the current process ID is appended.
+      * specific source. The additional input begins with an 8 byte timestamp from the
+      * local clock, followed by 8 bytes from the processor's hardware RNG (RDRAND, DARN,
+      * or RNDR) if one is available and known to be fast. The remainder of the 22 byte
+      * input is filled from the system RNG if available, otherwise from the processor's
+      * hardware RNG (regardless of its speed) if one is available.
       *
       * For a stateful RNG that was already correctly seeded with sufficient
       * cryptographically secure material, using non-random but potentially unique data
