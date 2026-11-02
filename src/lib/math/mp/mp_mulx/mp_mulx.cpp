@@ -10,6 +10,7 @@
 #include <botan/internal/mp_mulx.h>
 
 #include <botan/mem_ops.h>
+#include <botan/internal/mp_asmi.h>
 
 namespace Botan {
 
@@ -115,6 +116,7 @@ void bigint_mulx_sqr4(word z[8], const word x[4]) {
       : [z] "r"(z), [x] "r"(x)
       : "rax", "rcx", "rdx", "r8", "r9", "r10", "cc", "memory");
    // clang-format on
+   unpoison_asm_output<8>(z);
 }
 
 void bigint_mulx_mul4(word z[8], const word x[4], const word y[4]) {
@@ -205,6 +207,7 @@ void bigint_mulx_mul4(word z[8], const word x[4], const word y[4]) {
       : [z] "r"(z), [x] "r"(x), [y] "r"(y)
       : "rax", "rcx", "rdx", "r8", "r9", "r10", "r11", "cc", "memory");
    // clang-format on
+   unpoison_asm_output<8>(z);
 }
 
 void bigint_mulx_sqr6(word z[12], const word x[6]) {
@@ -362,6 +365,7 @@ void bigint_mulx_sqr6(word z[12], const word x[6]) {
       : [z] "r"(z), [x] "r"(x)
       : "rax", "rcx", "rdx", "r8", "r9", "r10", "r11", "r12", "cc", "memory");
    // clang-format on
+   unpoison_asm_output<12>(z);
 }
 
 void bigint_mulx_mul6(word z[12], const word x[6], const word y[6]) {
@@ -528,6 +532,7 @@ void bigint_mulx_mul6(word z[12], const word x[6], const word y[6]) {
       : [z] "r"(z), [x] "r"(x), [y] "r"(y)
       : "rax", "rcx", "rdx", "r8", "r9", "r10", "r11", "r12", "r13", "cc", "memory");
    // clang-format on
+   unpoison_asm_output<12>(z);
 }
 
 void bigint_mulx_sqr8(word z[16], const word x[8]) {
@@ -761,6 +766,7 @@ void bigint_mulx_sqr8(word z[16], const word x[8]) {
       : [z] "r"(z), [x] "r"(x)
       : "rax", "rcx", "rdx", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "cc", "memory");
    // clang-format on
+   unpoison_asm_output<16>(z);
 }
 
 void bigint_mulx_mul8(word z[16], const word x[8], const word y[8]) {
@@ -1027,6 +1033,7 @@ void bigint_mulx_mul8(word z[16], const word x[8], const word y[8]) {
       : [z] "r"(z), [x] "r"(x), [y] "r"(y)
       : "rax", "rcx", "rdx", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15", "cc", "memory");
    // clang-format on
+   unpoison_asm_output<16>(z);
 }
 
 void bigint_mulx_sqr9(word z[18], const word x[9]) {
@@ -1302,6 +1309,7 @@ void bigint_mulx_sqr9(word z[18], const word x[9]) {
       : [z] "r"(z), [x] "r"(x)
       : "rax", "rcx", "rdx", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15", "cc", "memory");
    // clang-format on
+   unpoison_asm_output<18>(z);
 }
 
 void bigint_mulx_mul9(word z[18], const word x[9], const word y[9]) {
@@ -1637,6 +1645,7 @@ void bigint_mulx_mul9(word z[18], const word x[9], const word y[9]) {
       : [z] "r"(z), [x] "r"(x)
       : "rax", "rcx", "rdx", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15", "rbx", "cc", "memory");
    // clang-format on
+   unpoison_asm_output<18>(z);
 }
 
 // NOLINTEND(*-no-assembler)
