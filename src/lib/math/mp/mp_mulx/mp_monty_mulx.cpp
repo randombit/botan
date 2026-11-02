@@ -62,6 +62,7 @@ BOTAN_FORCE_INLINE word muladd8(word* out, const word* t, const word* x, word b,
    word lo = 0;
    word zero = 0;
    BOTAN_MULADD_ASM(BOTAN_MULADD_STEPS8);
+   unpoison_asm_output<8>(out);
    return carry;
 }
 
@@ -71,6 +72,7 @@ BOTAN_FORCE_INLINE word muladd4(word* out, const word* t, const word* x, word b,
    word lo = 0;
    word zero = 0;
    BOTAN_MULADD_ASM(BOTAN_MULADD_STEPS4);
+   unpoison_asm_output<4>(out);
    return carry;
 }
 

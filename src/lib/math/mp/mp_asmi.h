@@ -14,6 +14,13 @@
 #include <botan/internal/target_info.h>
 #include <concepts>
 
+#if defined(__has_feature)
+   #if __has_feature(memory_sanitizer)
+      #define BOTAN_MP_ASM_HAS_MSAN
+      #include <sanitizer/msan_interface.h>
+   #endif
+#endif
+
 #if !defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
    #include <botan/internal/donna128.h>
 #endif
@@ -82,6 +89,20 @@ struct WordInfo<uint64_t> {
       static const constexpr bool dword_is_native = false;
 #endif
 };
+
+/**
+* Inform MemorySanitizer that inline asm has written the K words at ptr
+*
+* MSan does not see the stores an asm block makes through a pointer operand,
+* so memory that was uninitialized before the asm would otherwise still be
+* considered uninitialized afterwards.
+*/
+template <size_t K, WordType W>
+inline void unpoison_asm_output([[maybe_unused]] const W* ptr) {
+#if defined(BOTAN_MP_ASM_HAS_MSAN)
+   __msan_unpoison(ptr, K * sizeof(W));
+#endif
+}
 
 /*
 * Word Multiply/Add
@@ -281,6 +302,7 @@ inline constexpr auto word8_add2(W x[8], const W y[8], W carry) -> W {
                       : [carry] "=r"(carry)
                       : [x] "r"(x), [y] "r"(y), "0"(carry)
                       : "cc", "memory");
+         unpoison_asm_output<8>(x);
          return carry;
       }
    }
@@ -309,6 +331,7 @@ inline constexpr auto word8_add3(W z[8], const W x[8], const W y[8], W carry) ->
                       : [carry] "=r"(carry)
                       : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
                       : "cc", "memory");
+         unpoison_asm_output<8>(z);
          return carry;
       }
    }
@@ -362,6 +385,7 @@ inline constexpr auto word8_sub2(W x[8], const W y[8], W carry) -> W {
                       : [carry] "=r"(carry)
                       : [x] "r"(x), [y] "r"(y), "0"(carry)
                       : "cc", "memory");
+         unpoison_asm_output<8>(x);
          return carry;
       }
    }
@@ -390,6 +414,7 @@ inline constexpr auto word8_sub3(W z[8], const W x[8], const W y[8], W carry) ->
                       : [carry] "=r"(carry)
                       : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
                       : "cc", "memory");
+         unpoison_asm_output<8>(z);
          return carry;
       }
    }
@@ -418,6 +443,7 @@ inline constexpr auto word8_linmul3(W z[8], const W x[8], W y, W carry) -> W {
                       : [carry] "=r"(carry)
                       : [z] "r"(z), [x] "r"(x), [y] "rm"(y), "0"(carry)
                       : "cc", "%rax", "%rdx", "memory");
+         unpoison_asm_output<8>(z);
          return carry;
       }
    }
@@ -446,6 +472,7 @@ inline constexpr auto word8_madd3(W z[8], const W x[8], W y, W carry) -> W {
                       : [carry] "=r"(carry)
                       : [z] "r"(z), [x] "r"(x), [y] "rm"(y), "0"(carry)
                       : "cc", "%rax", "%rdx", "memory");
+         unpoison_asm_output<8>(z);
          return carry;
       }
    }
