@@ -249,6 +249,13 @@ std::shared_ptr<DTLS_PSK_Policy> dtls_policy_with_max_retransmissions(size_t lim
    return std::make_shared<DTLS_PSK_Policy>(std::move(opts));
 }
 
+std::shared_ptr<DTLS_PSK_Policy> dtls_policy_with_cipher(std::string cipher, bool allow_epoch0_restart) {
+   DTLS_Policy_Options opts;
+   opts.cipher = std::move(cipher);
+   opts.allow_epoch0_restart = allow_epoch0_restart;
+   return std::make_shared<DTLS_PSK_Policy>(std::move(opts));
+}
+
 // allow_dtls_epoch0_restart() off, which is the Policy default and the
 // configuration every DTLS client runs in.
 std::shared_ptr<DTLS_PSK_Policy> dtls_policy_without_epoch0_restart() {
@@ -3180,6 +3187,90 @@ class DTLS_Epoch0_Window_Tampering_Test : public Test {
 };
 
 BOTAN_REGISTER_TEST("tls", "tls_dtls_epoch0_window_tamper", DTLS_Epoch0_Window_Tampering_Test);
+
+// A restart ClientHello that authenticates via the DTLS cookie but then fails a
+// later, attacker-influenced validation step must not tear down the active
+// association. The step exercised here is choose_ciphersuite(): the restarting
+// client offers only a ciphersuite the server does not accept.
+class DTLS_Epoch0_Restart_Validation_Failure_Test : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("DTLS epoch-0 restart validation failure preserves active session");
+
+         auto rng = Test::new_shared_rng(this->test_name());
+
+         // The server and the legitimate client agree on AES-128/GCM; the
+         // restarting client below offers only AES-256/GCM, so the server's
+         // choose_ciphersuite() finds no overlap and throws after the cookie
+         // has already validated.
+         DTLS_Association_Options opts;
+         opts.policy = dtls_policy_with_cipher("AES-128/GCM", true);
+         opts.client_policy = dtls_policy_with_cipher("AES-128/GCM", false);
+         auto assoc = make_association(result, rng, opts);
+
+         result.test_is_true("legitimate DTLS session established", assoc->pump());
+
+         // The restart attempt: a valid cookie, then no acceptable cipher.
+         std::vector<uint8_t> bad_c2s;
+         std::vector<uint8_t> bad_recv;
+         auto bad_cb = std::make_shared<DTLS_Test_Callbacks>(result, bad_c2s, bad_recv);
+         bad_cb->tolerate_fatal_alerts();
+         auto bad_client = make_dtls_client(bad_cb,
+                                            std::make_shared<Botan::TLS::Session_Manager_Noop>(),
+                                            assoc->creds,
+                                            dtls_policy_with_cipher("AES-256/GCM", false),
+                                            rng);
+
+         // The server completes the cookie exchange and throws inside
+         // choose_ciphersuite(); process_handshake_ccs() absorbs the throw and
+         // rolls the pending restart back, so no alert is emitted and both
+         // buffers drain.
+         result.test_no_throw("server survives the failed restart without throwing", [&] {
+            pump_records(bad_c2s, *assoc->server, assoc->s2c, *bad_client, [] { return false; });
+         });
+
+         result.test_is_true("server still active after failed restart", assoc->server->is_active());
+         result.test_is_false("server not closed after failed restart", assoc->server->is_closed());
+
+         // End-to-end proof that the original association still carries data.
+         // Guarded on is_active() so that when the bug is present this reports
+         // an assertion failure rather than throwing out of send().
+         bool data_ok = false;
+         if(assoc->both_active()) {
+            const std::vector<uint8_t> ping(16, 0xC1);
+            const std::vector<uint8_t> pong(16, 0x42);
+            assoc->server_recv.clear();
+            assoc->client_recv.clear();
+            assoc->client->send(ping);
+            assoc->server->send(pong);
+            data_ok = assoc->pump_until([&] { return assoc->server_recv == ping && assoc->client_recv == pong; });
+         }
+         result.test_is_true("legitimate session still carries app data after failed restart", data_ok);
+
+         // The failed restart must have rolled its pending state back, not merely
+         // left it inert behind the still-active association. A stuck pending
+         // handshake would swallow the ClientHello of any later restart, so prove
+         // one can still run to completion.
+         std::vector<uint8_t> good_c2s;
+         std::vector<uint8_t> good_recv;
+         auto good_cb = std::make_shared<DTLS_Test_Callbacks>(result, good_c2s, good_recv);
+         auto good_client = make_dtls_client(good_cb,
+                                             std::make_shared<Botan::TLS::Session_Manager_Noop>(),
+                                             assoc->creds,
+                                             dtls_policy_with_cipher("AES-128/GCM", false),
+                                             rng);
+
+         assoc->s2c.clear();
+         const bool fresh_restart_ok = pump_records(good_c2s, *assoc->server, assoc->s2c, *good_client, [&] {
+            return good_client->is_active() && assoc->server->is_active();
+         });
+         result.test_is_true("a fresh restart completes after the failed one rolled back", fresh_restart_ok);
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls_dtls_epoch0_restart_validation_failure", DTLS_Epoch0_Restart_Validation_Failure_Test);
 
 /*
 * A DTLS server must have a cookie secret, but a stream server has no use for
