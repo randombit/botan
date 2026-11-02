@@ -199,6 +199,13 @@ Behavior Changes
 * ``AutoSeeded_RNG`` now uses HMAC_DRBG with SHA-256 rather than SHA-512 when
   hardware support for SHA-256 is available. (GH #6003)
 
+* Rework ``ChaCha_RNG``: it now uses HMAC(SHA-512) instead of HMAC(SHA-256) and
+  also derives the ChaCha nonce from the key material. Optional fast key erasure
+  can be enabled with ``ChaCha_RNG::KeyErasure::WithKeyErasure`` to gain
+  backtracking resistance. As a result the output of ``ChaCha_RNG`` for a given
+  seed has changed; it was never guaranteed to be stable across versions and may
+  change again in the future. (GH #5121)
+
 * Password hash tuning (``PasswordHashFamily::tune_params``) now measures the
   CPU time of the calling thread where available (falling back to a monotonic
   clock), and uses the fastest of several samples rather than the mean. This
@@ -413,13 +420,6 @@ Build and Infrastructure
   builders, dropping the 32-bit MIPS cross build, updating dependencies used in
   CI, and improving resilience to slow package mirrors.
   (GH #5768 #5846 #5848 #5860 #5861 #6065)
-
-* Rework ``ChaCha_RNG``: it now uses HMAC(SHA-512) instead of HMAC(SHA-256) and
-  also derives the ChaCha nonce from the key material. Optional fast key erasure
-  can be enabled with ``ChaCha_RNG::KeyErasure::WithKeyErasure`` to gain
-  backtracking resistance. As a result the output of ``ChaCha_RNG`` for a given
-  seed has changed; it was never guaranteed to be stable across versions and may
-  change again in the future. (GH #5121)
 
 Version 3.13.0, 2026-08-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
