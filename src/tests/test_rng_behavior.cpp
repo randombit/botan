@@ -8,11 +8,6 @@
 #include "tests.h"
 
 #include <botan/rng.h>
-#include <botan/internal/loadstor.h>
-
-#if defined(BOTAN_HAS_OS_UTILS)
-   #include <botan/internal/os_utils.h>
-#endif
 
 #include "test_rng.h"
 
@@ -1562,7 +1557,7 @@ class HWRNG_Tests final : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("HWRNG");
 
-         if(Botan::HWRNG::available()) {
+         if(Botan::HWRNG::is_available()) {
             // A repeated output within 64 draws of 64 bits indicates a stuck generator
             std::set<uint64_t> seen;
             for(size_t i = 0; i != 64; ++i) {
@@ -1572,8 +1567,17 @@ class HWRNG_Tests final : public Test {
                }
             }
             result.test_sz_eq("HWRNG outputs are distinct", seen.size(), 64);
+
+            const bool fast = Botan::HWRNG::is_fast();
+            result.test_note(fast ? "HWRNG is fast" : "HWRNG is slow");
+
+            // The speed is known by now, so output is returned exactly when the hardware RNG is fast
+            result.test_is_true("read_if_fast returns output iff fast",
+                                Botan::HWRNG::read_if_fast().has_value() == fast);
          } else {
             result.test_note("HWRNG not available on this CPU");
+            result.test_is_false("Unavailable HWRNG is not fast", Botan::HWRNG::is_fast());
+            result.test_is_false("Unavailable HWRNG has no fast output", Botan::HWRNG::read_if_fast().has_value());
          }
 
          return std::vector<Test::Result>{result};
@@ -1622,16 +1626,19 @@ class RNG_TS_Input_Tests final : public Test {
          rng.randomize_with_ts_input(out);
          const auto second = rng.last_input();
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-         // 8 byte clock (if available) with the system RNG filling the remainder
-         const size_t expected = 22;
-#elif defined(BOTAN_HAS_OS_UTILS)
-         // 8 byte clock followed by the 32-bit process id, if the platform has one
-         const uint32_t pid = Botan::OS::get_process_id();
-         const size_t expected = 8 + ((pid != 0) ? 4 : 0);
-#else
-         const size_t expected = 0;
+         // 8 byte clock if available, 8 bytes of hardware RNG output if it is fast, then
+         // the system RNG (or without one, the hardware RNG at any speed) fills the rest
+         size_t clock_bytes = 0;
+         bool rng_fills = false;
+#if defined(BOTAN_HAS_OS_UTILS)
+         clock_bytes = 8;
 #endif
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+         rng_fills = true;
+#elif defined(BOTAN_HAS_HWRNG)
+         rng_fills = Botan::HWRNG::available();
+#endif
+         const size_t expected = rng_fills ? 22 : clock_bytes;
 
          result.test_sz_eq("additional input length", first.size(), expected);
          result.test_sz_eq("additional input length is consistent", second.size(), expected);
@@ -1640,12 +1647,17 @@ class RNG_TS_Input_Tests final : public Test {
             return {result};
          }
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-         // Adjacent clock samples may be equal, but the system RNG output should not be
-         result.test_bin_ne("additional input differs between calls", first, second);
-#elif defined(BOTAN_HAS_OS_UTILS)
-         if(pid != 0) {
-            result.test_u32_eq("process id is forwarded", Botan::load_le<uint32_t>(first.data() + 8, 0), pid);
+         if(rng_fills) {
+            // Adjacent clock samples may be equal, but RNG output should not be
+            result.test_bin_ne("additional input differs between calls", first, second);
+         }
+
+#if defined(BOTAN_HAS_HWRNG)
+         if(Botan::HWRNG::is_fast()) {
+            // Unlike the clock, the hardware RNG output following it never repeats
+            result.test_bin_ne("hardware RNG output differs between calls",
+                               std::span{first}.subspan(clock_bytes, 8),
+                               std::span{second}.subspan(clock_bytes, 8));
          }
 #endif
 
