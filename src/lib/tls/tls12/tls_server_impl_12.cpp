@@ -280,28 +280,6 @@ std::map<std::string, std::vector<X509_Certificate>> get_server_certs(
    return cert_chains;
 }
 
-secure_vector<uint8_t> load_dtls_cookie_secret(Credentials_Manager& creds) {
-   auto cookie_secret = [&]() -> secure_vector<uint8_t> {
-      try {
-         return creds.psk("tls-server", "dtls-cookie-secret", "").bits_of();
-      } catch(...) {
-         return {};
-      }
-   }();
-
-   if(cookie_secret.empty()) {
-      // TODO(Botan4): Simplify this error message that was meant to ease the
-      //               burden on users running into a deliberate semver violation.
-      throw Invalid_State(
-         "Since Botan 3.13 DTLS server requires setting a non-empty cookie secret. "
-         "Either override Credentials_Manager::dtls_cookie_secret() or disable the "
-         "cookie exchange using TLS::Policy::dtls_server_require_cookie_exchange(), "
-         "if you understand the security implications of doing so.");
-   }
-
-   return cookie_secret;
-}
-
 }  // namespace
 
 std::shared_ptr<Server_Impl_12> Server_Impl_12::create(const std::shared_ptr<Callbacks>& callbacks,
@@ -312,17 +290,8 @@ std::shared_ptr<Server_Impl_12> Server_Impl_12::create(const std::shared_ptr<Cal
                                                        TLS_Flavor flavor,
                                                        size_t reserved_io_buffer_size)  //
 {
-   auto self = std::make_shared<Server_Impl_12>(
+   return std::make_shared<Server_Impl_12>(
       Private{}, callbacks, session_manager, creds, policy, rng, flavor, reserved_io_buffer_size);
-   BOTAN_ASSERT_NONNULL(self->m_creds);
-
-   // Try to load the cookie secret on initialization, rather than waiting to fail
-   // until the first client connects.
-   if(flavor == TLS_Flavor::DTLS && policy->dtls_server_require_cookie_exchange()) {
-      load_dtls_cookie_secret(*self->m_creds);
-   }
-
-   return self;
 }
 
 std::unique_ptr<Handshake_State> Server_Impl_12::new_handshake_state(std::unique_ptr<Handshake_IO> io) {
@@ -469,7 +438,14 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
 
    if(initial_handshake && datagram && policy().dtls_server_require_cookie_exchange()) {
       // The cookie secret is read each time to allow for refreshing the key
-      const auto cookie_secret = load_dtls_cookie_secret(*m_creds);
+      const auto cookie_secret = [&]() -> secure_vector<uint8_t> {
+         try {
+            return m_creds->psk("tls-server", "dtls-cookie-secret", "").bits_of();
+         } catch(...) {
+            return {};
+         }
+      }();
+      BOTAN_STATE_CHECK_MSG(!cookie_secret.empty(), "DTLS server requires a non-empty cookie secret");
 
       const std::string client_identity = callbacks().tls_peer_network_identity();
       if(client_identity.empty()) {
