@@ -15,18 +15,25 @@
 
 namespace Botan {
 
-secure_vector<uint8_t> Dilithium_Expanded_Keypair_Codec::encode_keypair(DilithiumInternalKeypair keypair) const {
+secure_vector<uint8_t> Dilithium_Expanded_Keypair_Codec::encode_keypair(const DilithiumInternalKeypair& keypair,
+                                                                        MlPrivateKeyFormat format) const {
+   if(format != MlPrivateKeyFormat::Expanded) {
+      throw Encoding_Error("Dilithium round 3 private keys only support the expanded format");
+   }
    return Dilithium_Algos::encode_keypair(keypair).get();
 }
 
-DilithiumInternalKeypair Dilithium_Expanded_Keypair_Codec::decode_keypair(std::span<const uint8_t> private_key,
-                                                                          DilithiumConstants mode) const {
+DilithiumDecodedKeypair Dilithium_Expanded_Keypair_Codec::decode_keypair(std::span<const uint8_t> private_key,
+                                                                         DilithiumConstants mode) const {
    BOTAN_ARG_CHECK(mode.mode().is_available(), "Dilithium/ML-DSA mode is not available in this build");
    if(private_key.size() != mode.private_key_bytes()) {
       throw Decoding_Error("Dilithium: Invalid private key length");
    }
-   return Dilithium_Algos::decode_keypair(StrongSpan<const DilithiumSerializedPrivateKey>(private_key),
-                                          std::move(mode));
+   return {
+      .keypair =
+         Dilithium_Algos::decode_keypair(StrongSpan<const DilithiumSerializedPrivateKey>(private_key), std::move(mode)),
+      .format = MlPrivateKeyFormat::Expanded,
+   };
 }
 
 }  // namespace Botan

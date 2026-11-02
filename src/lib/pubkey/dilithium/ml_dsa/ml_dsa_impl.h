@@ -20,9 +20,20 @@ namespace Botan {
 
 class ML_DSA_Expanding_Keypair_Codec final : public Dilithium_Keypair_Codec {
    public:
-      secure_vector<uint8_t> encode_keypair(DilithiumInternalKeypair keypair) const override;
-      DilithiumInternalKeypair decode_keypair(std::span<const uint8_t> private_key,
-                                              DilithiumConstants mode) const override;
+      /**
+       * Encodes the private key as one of the three CHOICE alternatives of the
+       * ML-DSA-PrivateKey structure specified in RFC 9881, Section 6.
+       */
+      secure_vector<uint8_t> encode_keypair(const DilithiumInternalKeypair& keypair,
+                                            MlPrivateKeyFormat format) const override;
+
+      /**
+       * Decodes any of the three RFC 9881 CHOICE alternatives. For backwards
+       * compatibility, also the raw 32-byte seed and the raw expanded key of
+       * FIPS 204 (without any ASN.1 wrapping) are accepted.
+       */
+      DilithiumDecodedKeypair decode_keypair(std::span<const uint8_t> private_key,
+                                             DilithiumConstants mode) const override;
 };
 
 class ML_DSA_MessageHash final : public DilithiumMessageHash {

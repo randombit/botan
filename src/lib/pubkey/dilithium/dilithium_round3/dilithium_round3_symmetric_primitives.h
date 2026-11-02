@@ -19,9 +19,10 @@ namespace Botan {
 
 class Dilithium_Expanded_Keypair_Codec final : public Dilithium_Keypair_Codec {
    public:
-      secure_vector<uint8_t> encode_keypair(DilithiumInternalKeypair keypair) const override;
-      DilithiumInternalKeypair decode_keypair(std::span<const uint8_t> private_key,
-                                              DilithiumConstants mode) const override;
+      secure_vector<uint8_t> encode_keypair(const DilithiumInternalKeypair& keypair,
+                                            MlPrivateKeyFormat format) const override;
+      DilithiumDecodedKeypair decode_keypair(std::span<const uint8_t> private_key,
+                                             DilithiumConstants mode) const override;
 };
 
 class Dilithium_Round3_Symmetric_Primitives : public Dilithium_Symmetric_Primitives_Base {
