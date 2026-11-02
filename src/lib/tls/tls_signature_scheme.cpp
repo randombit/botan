@@ -8,6 +8,8 @@
 #include <botan/assert.h>
 #include <botan/tls_signature_scheme.h>
 
+#include <botan/ec_group.h>
+#include <botan/ecc_key.h>
 #include <botan/hex.h>
 #include <botan/pk_keys.h>
 #include <botan/pss_params.h>
@@ -36,17 +38,21 @@ const std::vector<Signature_Scheme>& Signature_Scheme::all_available_schemes() {
       ECDSA_SECP521R1_TLS13_SHA512,
       ECDSA_SECP256R1_TLS13_SHA256,
 
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PSSR)
       RSA_PSS_SHA384,
       RSA_PSS_SHA256,
       RSA_PSS_SHA512,
+#endif
 
       ECDSA_BRAINPOOL384R1_TLS13_SHA384,
       ECDSA_BRAINPOOL256R1_TLS13_SHA256,
       ECDSA_BRAINPOOL512R1_TLS13_SHA512,
 
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1)
       RSA_PKCS1_SHA384,
       RSA_PKCS1_SHA512,
       RSA_PKCS1_SHA256,
+#endif
    };
 
    return all_schemes;
@@ -121,12 +127,16 @@ Signature_Scheme::Signature_Scheme(Signature_Scheme::Code wire_code) : m_code(wi
 
 bool Signature_Scheme::is_available() const noexcept {
    switch(m_code) {
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PSSR)
       case RSA_PSS_SHA384:
       case RSA_PSS_SHA256:
       case RSA_PSS_SHA512:
+#endif
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1)
       case RSA_PKCS1_SHA384:
       case RSA_PKCS1_SHA512:
       case RSA_PKCS1_SHA256:
+#endif
       case ECDSA_BRAINPOOL384R1_TLS13_SHA384:
       case ECDSA_BRAINPOOL256R1_TLS13_SHA256:
       case ECDSA_BRAINPOOL512R1_TLS13_SHA512:
@@ -418,6 +428,13 @@ bool Signature_Scheme::is_compatible_with(const Protocol_Version& protocol_versi
       return false;
    }
 
+   // RFC 8734 defines these code points for TLS 1.3 only
+   if(protocol_version.is_pre_tls_13() &&
+      (m_code == ECDSA_BRAINPOOL256R1_TLS13_SHA256 || m_code == ECDSA_BRAINPOOL384R1_TLS13_SHA384 ||
+       m_code == ECDSA_BRAINPOOL512R1_TLS13_SHA512)) {
+      return false;
+   }
+
    return true;
 }
 
@@ -426,24 +443,20 @@ bool Signature_Scheme::is_suitable_for(const Private_Key& private_key) const {
       return false;
    }
 
-   // The ECDSA private key length must match the utilized hash output length.
+   // Keys this small are not suitable for any scheme
    const auto keylen = private_key.key_length();
    if(keylen <= 250) {
       return false;
    }
 
+   // Each TLS 1.3 ECDSA scheme names the curve of the key
    if(algorithm_name() == "ECDSA") {
-      if(hash_function_name() == "SHA-256" && !(keylen >= 250 && keylen <= 350)) {
-         return false;
+      // Compare the curve itself, as an EC_PublicKey may be set to encode it explicitly
+      if(const auto* ec_key = dynamic_cast<const EC_PublicKey*>(&private_key)) {
+         const auto& curve = ec_key->domain().get_curve_oid();
+         return curve.has_value() && curve.BER_encode() == key_algorithm_identifier().parameters();
       }
-
-      if(hash_function_name() == "SHA-384" && !(keylen >= 350 && keylen <= 450)) {
-         return false;
-      }
-
-      if(hash_function_name() == "SHA-512" && !(keylen >= 450 && keylen <= 550)) {
-         return false;
-      }
+      return key_algorithm_identifier() == private_key.algorithm_identifier();
    }
 
    return true;

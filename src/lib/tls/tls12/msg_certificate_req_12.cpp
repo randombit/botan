@@ -61,7 +61,11 @@ Certificate_Request_12::Certificate_Request_12(Handshake_IO& io,
                                                const Policy& policy,
                                                std::vector<X509_DN> ca_certs) :
       m_names(std::move(ca_certs)), m_cert_key_types({"RSA", "ECDSA"}) {
-   m_schemes = policy.acceptable_signature_schemes();
+   for(const auto scheme : policy.acceptable_signature_schemes()) {
+      if(scheme.is_compatible_with(Protocol_Version::TLS_V12)) {
+         m_schemes.push_back(scheme);
+      }
+   }
    // RFC 5246 7.4.4: supported_signature_algorithms<2..2^16-2>
    if(m_schemes.empty()) {
       throw Internal_Error("Policy returned no acceptable signature schemes for CertificateRequest");

@@ -270,10 +270,10 @@ void Channel_IO::update_traffic_keys(bool request_peer_update) {
                   .add(Key_Update(request_peer_update))
                   .commit());
 
-   cs->update_write_keys();
    if(request_peer_update) {
       m_key_update_requested = true;
    }
+   cs->update_write_keys();
 }
 
 void Channel_IO::send(const Alert& alert, bool handle_compat_mode) {
@@ -314,6 +314,10 @@ void Channel_IO::send_dummy_change_cipher_spec() {
 void Channel_IO::notify_closed_for_reading() {
    record_layer().clear_read_buffer();
    m_closed_for_reading = true;
+}
+
+void Channel_IO::notify_shutdown() {
+   notify_closed_for_reading();
 }
 
 void Channel_IO::set_record_size_limits(uint16_t out, uint16_t in) {

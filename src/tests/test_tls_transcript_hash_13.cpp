@@ -276,6 +276,19 @@ std::vector<Test::Result> transcript_hash() {
                h.update(header2, msg2);
                result.test_throws("truncated hash is still unavailable", [&] { h.truncated(); });
             }),
+
+      CHECK("client hello without PSK clears the truncated hash",
+            [&](Test::Result& result) {
+               Transcript_Hash_State h(TLS_Flavor::TLS, "SHA-256");
+
+               const auto [header1, msg1] = make_header_and_msg(Handshake_Type::ClientHello, psk_client_hello);
+               h.update(header1, msg1);
+               result.test_bin_eq("truncated hash", h.truncated(), sha256_truncated_ch);
+
+               const auto [header2, msg2] = make_header_and_msg(Handshake_Type::ClientHello, client_hello_no_psk);
+               h.update(header2, msg2);
+               result.test_throws("truncated hash is cleared", [&] { h.truncated(); });
+            }),
    };
 }
 

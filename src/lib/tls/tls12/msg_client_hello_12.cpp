@@ -20,6 +20,20 @@
 
 namespace Botan::TLS {
 
+namespace {
+
+std::vector<Signature_Scheme> tls12_signature_schemes(const Policy& policy) {
+   std::vector<Signature_Scheme> schemes;
+   for(const auto scheme : policy.acceptable_signature_schemes()) {
+      if(scheme.is_compatible_with(Protocol_Version::TLS_V12)) {
+         schemes.push_back(scheme);
+      }
+   }
+   return schemes;
+}
+
+}  // namespace
+
 void Client_Hello_12::update_hello_cookie(const Hello_Verify_Request& hello_verify) {
    BOTAN_STATE_CHECK(m_data->legacy_version().is_datagram_protocol());
 
@@ -87,15 +101,8 @@ void Client_Hello_12::add_tls12_supported_groups_extensions(const Policy& policy
    //    key exchange using that group.
    //
    // We don't support hybrid key exchange in TLS 1.2
-
-   std::vector<Group_Params> compatible_kex_groups;
-   for(const auto& group : policy.key_exchange_groups()) {
-      if(!group.is_post_quantum()) {
-         compatible_kex_groups.push_back(group);
-      }
-   }
-
-   auto supported_groups = std::make_unique<Supported_Groups>(std::move(compatible_kex_groups));
+   auto supported_groups = std::make_unique<Supported_Groups>(
+      groups_usable_in_version(policy.key_exchange_groups(), Protocol_Version::TLS_V12));
 
    if(!supported_groups->ec_groups().empty()) {
       // NOLINTNEXTLINE(*-owning-memory)
@@ -157,7 +164,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
 
    add_tls12_supported_groups_extensions(policy);
 
-   m_data->extensions().add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
+   m_data->extensions().add(new Signature_Algorithms(tls12_signature_schemes(policy)));
    if(auto cert_signing_prefs = policy.acceptable_certificate_signature_schemes()) {
       // RFC 8446 4.2.3
       //    TLS 1.2 implementations SHOULD also process this extension.
@@ -221,7 +228,8 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
       m_data->extensions().add(new Encrypt_then_MAC);
    }
 
-   if(session.handle.is_ticket()) {
+   // An opaque handle that is not usable as a session ID must be a ticket
+   if(session.handle.is_ticket() || (session.handle.is_opaque_handle() && !session.handle.id().has_value())) {
       m_data->extensions().add(new Session_Ticket_Extension(session.handle.ticket().value()));
    }
 
@@ -240,7 +248,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
 
    add_tls12_supported_groups_extensions(policy);
 
-   m_data->extensions().add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
+   m_data->extensions().add(new Signature_Algorithms(tls12_signature_schemes(policy)));
    if(auto cert_signing_prefs = policy.acceptable_certificate_signature_schemes()) {
       // RFC 8446 4.2.3
       //    TLS 1.2 implementations SHOULD also process this extension.

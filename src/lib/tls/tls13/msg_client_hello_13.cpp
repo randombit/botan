@@ -190,7 +190,13 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
       m_data->extensions().add(new Server_Name_Indicator(hostname));
    }
 
-   m_data->extensions().add(new Supported_Groups(policy.key_exchange_groups()));
+   // Groups only defined for TLS 1.2 are offered only if TLS 1.2 is offered as well
+   if(policy.allow_tls12()) {
+      m_data->extensions().add(new Supported_Groups(policy.key_exchange_groups()));
+   } else {
+      m_data->extensions().add(
+         new Supported_Groups(groups_usable_in_version(policy.key_exchange_groups(), Protocol_Version::TLS_V13)));
+   }
 
    m_data->extensions().add(new Key_Share(policy, cb, rng));
 
@@ -370,7 +376,8 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
    //    to its ClientHello with a HelloRetryRequest. In that case, the client
    //    MUST send the same ClientHello without modification, except as follows:
 
-   if(m_data->session_id() != new_ch.m_data->session_id() || m_data->random() != new_ch.m_data->random() ||
+   if(m_data->legacy_version() != new_ch.m_data->legacy_version() ||
+      m_data->session_id() != new_ch.m_data->session_id() || m_data->random() != new_ch.m_data->random() ||
       m_data->ciphersuites() != new_ch.m_data->ciphersuites() ||
       m_data->comp_methods() != new_ch.m_data->comp_methods()) {
       throw TLS_Exception(Alert::IllegalParameter, "Client Hello core values changed after Hello Retry Request");
@@ -396,6 +403,17 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
          //    Optionally adding, removing, or changing the length of the
          //    "padding" extension.
          if(oldext == Extension_Code::Padding) {
+            continue;
+         }
+
+         // RFC 8446 4.1.2
+         //    Updating the "pre_shared_key" extension if present by
+         //    recomputing the "obfuscated_ticket_age" and binder values
+         //    and (optionally) removing any PSKs which are incompatible
+         //    with the server's indicated cipher suite.
+         //
+         // If all PSKs are removed then so is the extension
+         if(oldext == Extension_Code::PresharedKey) {
             continue;
          }
 
@@ -445,6 +463,14 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
       Extension_Code::Cookie,
       Extension_Code::Padding,
    };
+
+   // As quoted above, PSKs may only be removed. Their identities must
+   // otherwise be retained in the same order.
+   const auto* old_psk = extensions().get<PSK>();
+   const auto* new_psk = new_ch.extensions().get<PSK>();
+   if(old_psk != nullptr && new_psk != nullptr) {
+      old_psk->validate_updates(*new_psk);
+   }
 
    for(const auto ext_type : oldexts) {
       if(extensions_allowed_to_change.contains(ext_type)) {

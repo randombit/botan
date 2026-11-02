@@ -80,6 +80,11 @@ class BOTAN_TEST_API TLS_Data_Reader final {
          return make_uint16(m_buf[m_offset], m_buf[m_offset + 1]);
       }
 
+      uint8_t peek_byte() const {
+         assert_at_least(1);
+         return m_buf[m_offset];
+      }
+
       uint8_t get_byte() {
          assert_at_least(1);
          const uint8_t result = m_buf[m_offset];

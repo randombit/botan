@@ -44,6 +44,9 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode {
 
       size_t default_nonce_length() const final { return m_iv_size; }
 
+      // All processing happens when the record is finished
+      bool requires_entire_message() const final { return true; }
+
       void clear() final;
 
       void reset() final;

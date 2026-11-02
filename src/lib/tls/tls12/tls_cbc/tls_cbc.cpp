@@ -314,11 +314,11 @@ void TLS_CBC_HMAC_AEAD_Decryption::cbc_decrypt_record(uint8_t record_contents[],
    cbc().process(record_contents, record_len);
 }
 
-size_t TLS_CBC_HMAC_AEAD_Decryption::output_length(size_t /*input_length*/) const {
+size_t TLS_CBC_HMAC_AEAD_Decryption::output_length(size_t input_length) const {
    /*
-   * We don't know this because the padding is arbitrary
+   * We don't know this because the padding is arbitrary, so return an upper bound
    */
-   return 0;
+   return (input_length > tag_size()) ? input_length - tag_size() : 0;
 }
 
 /*
@@ -398,8 +398,10 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish_msg(secure_vector<uint8_t>& buffer, si
    const size_t record_len = msg().size();
    uint8_t* record_contents = msg().data();
 
-   // This early exit does not leak info because all the values compared are public
-   if(record_len < tag_size() || (record_len - (use_encrypt_then_mac() ? tag_size() : 0)) % block_size() != 0) {
+   // This early exit does not leak info because all the values compared are public.
+   // With encrypt-then-MAC the ciphertext must contain at least the padding length byte.
+   const size_t min_record_len = use_encrypt_then_mac() ? tag_size() + block_size() : tag_size();
+   if(record_len < min_record_len || (record_len - (use_encrypt_then_mac() ? tag_size() : 0)) % block_size() != 0) {
       throw TLS_Exception(Alert::BadRecordMac, "Message authentication failure");
    }
 

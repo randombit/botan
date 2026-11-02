@@ -16,6 +16,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
+#include <botan/internal/tls_reader.h>
 
 namespace Botan::TLS {
 
@@ -88,22 +89,17 @@ Certificate_12::Certificate_12(std::span<const uint8_t> buf, const Policy& polic
 * Serialize a Certificate message
 */
 std::vector<uint8_t> Certificate_12::serialize() const {
-   std::vector<uint8_t> buf(3);
-
+   // RFC 5246 7.4.2
+   //    opaque ASN.1Cert<1..2^24-1>;
+   //    [...]
+   //    ASN.1Cert certificate_list<0..2^24-1>;
+   std::vector<uint8_t> certs;
    for(const auto& cert : m_certs) {
-      const auto raw_cert = cert.BER_encode();
-      const size_t cert_size = raw_cert.size();
-      for(size_t j = 0; j != 3; ++j) {
-         buf.push_back(get_byte_var(j + 1, static_cast<uint32_t>(cert_size)));
-      }
-      buf += raw_cert;
+      append_tls_length_value(certs, cert.BER_encode(), 3);
    }
 
-   const size_t buf_size = buf.size() - 3;
-   for(size_t i = 0; i != 3; ++i) {
-      buf[i] = get_byte_var(i + 1, static_cast<uint32_t>(buf_size));
-   }
-
+   std::vector<uint8_t> buf;
+   append_tls_length_value(buf, certs, 3);
    return buf;
 }
 

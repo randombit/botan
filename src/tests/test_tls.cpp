@@ -11,6 +11,9 @@
 #if defined(BOTAN_HAS_TLS)
    #include "test_rng.h"
 
+   #include <botan/asn1_obj.h>
+   #include <botan/bigint.h>
+   #include <botan/der_enc.h>
    #include <botan/mem_ops.h>
    #include <botan/tls_alert.h>
    #include <botan/tls_external_psk.h>
@@ -38,8 +41,11 @@
 
    #if defined(BOTAN_HAS_TLS_12)
       #include <botan/credentials_manager.h>
+      #include <botan/hex.h>
       #include <botan/tls_callbacks.h>
       #include <botan/tls_client.h>
+      #include <botan/tls_exceptn.h>
+      #include <botan/tls_server.h>
       #include <botan/tls_session_manager_memory.h>
    #endif
 #endif
@@ -110,7 +116,77 @@ class TLS_Session_Tests final : public Test {
                             "Serialized TLS session contains unknown cipher suite (47789)",
                             [&] { Botan::TLS::Session{pem_with_unknown_ciphersuite}; });
 
-         return {result};
+         return {result, decoding_validation()};
+      }
+
+   private:
+      struct Encoded_Session_Fields {
+            uint64_t start_time = 1700000000;
+            size_t major_version = 3;
+            size_t minor_version = 3;
+            size_t ciphersuite = 0xC02F;
+            size_t port = 443;
+            size_t srtp_profile = 0;
+            uint64_t lifetime_hint = 86400;
+      };
+
+      static std::vector<uint8_t> encode_session(const Encoded_Session_Fields& f) {
+         const bool tls13 = (f.major_version == 3 && f.minor_version == 4);
+
+         return Botan::DER_Encoder()
+            .start_sequence()
+            .encode(size_t(20231031))
+            .encode(Botan::BigInt::from_u64(f.start_time))
+            .encode(f.major_version)
+            .encode(f.minor_version)
+            .encode(f.ciphersuite)
+            .encode(static_cast<size_t>(Botan::TLS::Connection_Side::Client))
+            .encode(true)
+            .encode(false)
+            .encode(std::vector<uint8_t>(tls13 ? 32 : 48, 0x42), Botan::ASN1_Type::OctetString)
+            .start_sequence()
+            .end_cons()
+            .encode(std::vector<uint8_t>(), Botan::ASN1_Type::OctetString)
+            .encode(Botan::ASN1_String("server", Botan::ASN1_Type::Utf8String))
+            .encode(Botan::ASN1_String("", Botan::ASN1_Type::Utf8String))
+            .encode(f.port)
+            .encode(f.srtp_profile)
+            .encode(false)
+            .encode(size_t(0))
+            .encode(size_t(0))
+            .encode(Botan::BigInt::from_u64(f.lifetime_hint))
+            .end_cons()
+            .get_contents_unlocked();
+      }
+
+      static Test::Result decoding_validation() {
+         Test::Result result("TLS::Session decoding validation");
+
+         const auto decodes = [&](const std::string& what, const Encoded_Session_Fields& f) {
+            result.test_no_throw(what, [&] { Botan::TLS::Session{encode_session(f)}; });
+         };
+
+         const auto rejects = [&](const std::string& what, const Encoded_Session_Fields& f) {
+            result.test_throws<Botan::Decoding_Error>(what, [&] { Botan::TLS::Session{encode_session(f)}; });
+         };
+
+         decodes("baseline TLS 1.2 session", {});
+
+         rejects("unknown protocol version", {.minor_version = 7});
+         rejects("SSLv3 protocol version", {.minor_version = 0});
+         rejects("start time beyond the system clock's range", {.start_time = uint64_t(1) << 63});
+         rejects("port above 65535", {.port = 65536});
+         rejects("SRTP profile above 65535", {.srtp_profile = 0x10001});
+         rejects("lifetime beyond std::chrono::seconds", {.lifetime_hint = uint64_t(1) << 63});
+
+   #if defined(BOTAN_HAS_TLS_13)
+         decodes("TLS 1.3 session with a 7 day lifetime",
+                 {.minor_version = 4, .ciphersuite = 0x1301, .lifetime_hint = 604800});
+         rejects("TLS 1.3 session with a lifetime above 7 days",
+                 {.minor_version = 4, .ciphersuite = 0x1301, .lifetime_hint = 604801});
+   #endif
+
+         return result;
       }
 };
 
@@ -336,6 +412,9 @@ class TLS_CBC_KAT_Tests final : public Text_Based_Test {
             std::swap(in, out);
          }
 
+         result.test_is_true("requires the entire message", tls_cbc.requires_entire_message());
+         result.test_sz_gte("output_length is an upper bound", tls_cbc.output_length(in.size()), out.size());
+
          // Test 1: process the entire message at once
          std::vector<uint8_t> inout = in;
          tls_cbc.start(nonce);
@@ -417,6 +496,66 @@ class TLS_Null_Tests final : public Text_Based_Test {
          }
       }
 
+      void chunked_test(Test::Result& result,
+                        const std::string& hash,
+                        const std::vector<uint8_t>& key,
+                        const std::vector<uint8_t>& associated_data,
+                        const std::vector<uint8_t>& message,
+                        const std::vector<uint8_t>& tls_fragment) {
+         auto mac = Botan::MessageAuthenticationCode::create_or_throw(Botan::fmt("HMAC({})", hash));
+         const auto mac_output_length = mac->output_length();
+         Botan::TLS::TLS_NULL_HMAC_AEAD_Encryption tls_null_encrypt(std::move(mac), mac_output_length);
+
+         tls_null_encrypt.set_key(key);
+         tls_null_encrypt.set_associated_data(associated_data);
+
+         for(size_t split : {size_t(0), message.size() / 2, message.size()}) {
+            Botan::secure_vector<uint8_t> first(message.begin(), message.begin() + split);
+            Botan::secure_vector<uint8_t> rest(message.begin() + split, message.end());
+            tls_null_encrypt.start();
+            tls_null_encrypt.update(first);
+            tls_null_encrypt.finish(rest);
+            first.insert(first.end(), rest.begin(), rest.end());
+            result.test_bin_eq("Chunked encryption matches expectation", first, tls_fragment);
+         }
+      }
+
+      void misuse_test(Test::Result& result,
+                       const std::string& hash,
+                       const std::vector<uint8_t>& key,
+                       const std::vector<uint8_t>& associated_data) {
+         const auto make_mac = [&] {
+            return Botan::MessageAuthenticationCode::create_or_throw(Botan::fmt("HMAC({})", hash));
+         };
+         const size_t mac_len = make_mac()->output_length();
+
+         result.test_throws<Botan::Invalid_Argument>("zero MAC key length",
+                                                     [&] { Botan::TLS::TLS_NULL_HMAC_AEAD_Encryption(make_mac(), 0); });
+
+         Botan::TLS::TLS_NULL_HMAC_AEAD_Encryption enc(make_mac(), mac_len);
+         enc.set_key(key);
+         result.test_throws<Botan::Invalid_State>("start without associated data", [&] { enc.start(); });
+
+         enc.set_associated_data(associated_data);
+         enc.set_key(key);
+         result.test_throws<Botan::Invalid_State>("associated data cleared by set_key", [&] { enc.start(); });
+
+         enc.set_associated_data(associated_data);
+         enc.start();
+         Botan::secure_vector<uint8_t> buf(4);
+         result.test_throws<Botan::Invalid_Argument>("encryption offset past the end", [&] { enc.finish(buf, 5); });
+
+         Botan::TLS::TLS_NULL_HMAC_AEAD_Decryption dec(make_mac(), mac_len);
+         dec.set_key(key);
+         dec.set_associated_data(associated_data);
+         dec.start();
+         Botan::secure_vector<uint8_t> dbuf(mac_len + 4);
+         result.test_throws<Botan::Invalid_Argument>("decryption offset past the end",
+                                                     [&] { dec.finish(dbuf, dbuf.size() + 1); });
+         result.test_throws<Botan::Invalid_Argument>("decryption offset wrapping the tag length",
+                                                     [&] { dec.finish(dbuf, SIZE_MAX - mac_len + 1); });
+      }
+
       void invalid_ad_length_test(Test::Result& result,
                                   const std::string& hash,
                                   const std::vector<uint8_t>& associated_data) {
@@ -441,6 +580,8 @@ class TLS_Null_Tests final : public Text_Based_Test {
          if(header.empty()) {
             encryption_test(result, hash, key, associated_data, expected_message, tls_fragment);
             decryption_test(result, hash, key, associated_data, expected_message, tls_fragment, header);
+            chunked_test(result, hash, key, associated_data, expected_message, tls_fragment);
+            misuse_test(result, hash, key, associated_data);
          }
 
          if(header == "InvalidMAC") {
@@ -497,6 +638,8 @@ class Test_TLS_Alert_Strings : public Test {
             Botan::TLS::Alert::BadCertificateStatusResponse,
             Botan::TLS::Alert::BadCertificateHashValue,
             Botan::TLS::Alert::UnknownPSKIdentity,
+            Botan::TLS::Alert::CertificateRequired,
+            Botan::TLS::Alert::GeneralError,
             Botan::TLS::Alert::NoApplicationProtocol,
          };
 
@@ -511,6 +654,17 @@ class Test_TLS_Alert_Strings : public Test {
          const Botan::TLS::Alert unknown_alert = Botan::TLS::Alert({01, 66});
 
          result.test_str_eq("Unknown alert str", unknown_alert.type_string(), "unrecognized_alert_66");
+
+         const Botan::TLS::Alert general_error = Botan::TLS::Alert({02, 117});
+         result.test_str_eq("general_error str", general_error.type_string(), "general_error");
+
+         result.test_is_true("Alert with type 255 is valid",
+                             // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+                             Botan::TLS::Alert(static_cast<Botan::TLS::Alert::Type>(255)).is_valid());
+         result.test_is_false("Empty alert is not valid", Botan::TLS::Alert().is_valid());
+         result.test_is_false("Alert with type 512 is not valid",
+                              // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+                              Botan::TLS::Alert(static_cast<Botan::TLS::Alert::Type>(512), true).is_valid());
 
          return {result};
       }
@@ -593,6 +747,302 @@ class Test_TLS12_NoRenegotiation_During_Initial_Handshake : public Test {
 BOTAN_REGISTER_TEST("tls",
                     "tls12_no_renegotiation_during_initial_handshake",
                     Test_TLS12_NoRenegotiation_During_Initial_Handshake);
+
+// A TLS server must not negotiate DTLS on a stream transport
+class Test_TLS12_Server_Rejects_DTLS_ClientHello final : public Test {
+   private:
+      class Capture_Callbacks final : public Botan::TLS::Callbacks {
+         public:
+            void tls_emit_data(std::span<const uint8_t> bits) override {
+               m_emitted.insert(m_emitted.end(), bits.begin(), bits.end());
+            }
+
+            void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> /*data*/) override {}
+
+            void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+
+            std::span<const uint8_t> emitted() const { return m_emitted; }
+
+         private:
+            std::vector<uint8_t> m_emitted;
+      };
+
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("TLS 1.2 server rejects a DTLS ClientHello");
+
+         const auto rng = Test::new_shared_rng(this->test_name());
+         const auto callbacks = std::make_shared<Capture_Callbacks>();
+         const auto sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto creds = std::make_shared<Botan::Credentials_Manager>();
+         const auto policy = std::make_shared<Botan::TLS::Text_Policy>("allow_tls13 = false");
+
+         Botan::TLS::Server server(callbacks, sessions, creds, policy, rng);
+
+         // A DTLS 1.2 ClientHello (including the empty cookie) in a TLS record
+         const auto client_hello = Botan::hex_decode(
+            "160303002E"
+            "0100002A"
+            "FEFD"
+            "0000000000000000000000000000000000000000000000000000000000000000"
+            "00"
+            "00"
+            "0002C02B"
+            "0100");
+
+         result.test_throws<Botan::TLS::TLS_Exception>("ClientHello is rejected",
+                                                       [&] { server.received_data(client_hello); });
+
+         // A protocol_version alert framed as a TLS record
+         result.test_bin_eq("alert", callbacks->emitted(), "15030300020246");
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls12_server_rejects_dtls_client_hello", Test_TLS12_Server_Rejects_DTLS_ClientHello);
+
+// A DTLS server must neither negotiate stream TLS nor skip the cookie exchange
+class Test_DTLS12_Server_Rejects_TLS_ClientHello final : public Test {
+   private:
+      class Capture_Callbacks final : public Botan::TLS::Callbacks {
+         public:
+            void tls_emit_data(std::span<const uint8_t> bits) override {
+               m_emitted.insert(m_emitted.end(), bits.begin(), bits.end());
+            }
+
+            void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> /*data*/) override {}
+
+            void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+
+            std::string tls_peer_network_identity() override { return "test-peer"; }
+
+            std::span<const uint8_t> emitted() const { return m_emitted; }
+
+         private:
+            std::vector<uint8_t> m_emitted;
+      };
+
+      class Cookie_Credentials final : public Botan::Credentials_Manager {
+         public:
+            Botan::secure_vector<uint8_t> dtls_cookie_secret() override {
+               return Botan::secure_vector<uint8_t>(32, 0x42);
+            }
+      };
+
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("DTLS 1.2 server rejects a TLS ClientHello");
+
+         const auto rng = Test::new_shared_rng(this->test_name());
+         const auto callbacks = std::make_shared<Capture_Callbacks>();
+         const auto sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto creds = std::make_shared<Cookie_Credentials>();
+         // A suite that needs no certificate, and the TLS 1.2 a default policy allows
+         auto policy = std::make_shared<Botan::TLS::Text_Policy>("");
+         policy->set("allow_tls13", "false");
+         policy->set("key_exchange_methods", "PSK");
+         policy->set("ciphers", "AES-128/GCM");
+
+         Botan::TLS::Server server(callbacks, sessions, creds, policy, rng, true);
+
+         // A TLS 1.2 ClientHello (without a cookie field) in a DTLS record
+         const auto client_hello = Botan::hex_decode(
+            "16FEFD00000000000000000040"
+            "010000340000000000000034"
+            "0303"
+            "0000000000000000000000000000000000000000000000000000000000000000"
+            "00"
+            "000200A8"
+            "0100"
+            "0009"
+            "00170000"
+            "FF01000100");
+
+         try {
+            server.received_data(client_hello);
+            result.test_failure("ClientHello was accepted");
+         } catch(const Botan::TLS::TLS_Exception& e) {
+            result.test_enum_eq("protocol_version alert", e.type(), Botan::TLS::Alert::ProtocolVersion);
+         }
+
+         // Neither a HelloVerifyRequest nor a ServerHello, just the alert
+         const auto emitted = callbacks->emitted();
+         result.test_is_true("an alert record was sent", !emitted.empty() && emitted[0] == 0x15);
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "dtls12_server_rejects_tls_client_hello", Test_DTLS12_Server_Rejects_TLS_ClientHello);
+
+// Invalid arguments and configurations are rejected with an exception
+class Test_TLS_API_Argument_Validation final : public Test {
+   private:
+      class Null_Callbacks final : public Botan::TLS::Callbacks {
+         public:
+            void tls_emit_data(std::span<const uint8_t> /*data*/) override {}
+
+            void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> /*data*/) override {}
+
+            void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+      };
+
+      class Permissive_Policy final : public Botan::TLS::Policy {
+         public:
+            bool acceptable_protocol_version(Botan::TLS::Protocol_Version /*version*/) const override { return true; }
+      };
+
+      class DTLS_Policy final : public Botan::TLS::Policy {
+         public:
+            DTLS_Policy(size_t mtu, size_t initial_timeout, size_t maximum_timeout) :
+                  m_mtu(mtu), m_initial_timeout(initial_timeout), m_maximum_timeout(maximum_timeout) {}
+
+            size_t dtls_default_mtu() const override { return m_mtu; }
+
+            size_t dtls_initial_timeout() const override { return m_initial_timeout; }
+
+            size_t dtls_maximum_timeout() const override { return m_maximum_timeout; }
+
+         private:
+            size_t m_mtu;
+            size_t m_initial_timeout;
+            size_t m_maximum_timeout;
+      };
+
+      class Overwriting_Policy final : public Botan::TLS::Text_Policy {
+         public:
+            explicit Overwriting_Policy(std::string_view text) : Text_Policy(text) {}
+
+            bool overwrite(const std::string& key, std::string_view value) { return set_value(key, value, true); }
+      };
+
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("TLS API argument validation");
+
+         const auto rng = Test::new_shared_rng(this->test_name());
+         const auto callbacks = std::make_shared<Null_Callbacks>();
+         const auto sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto creds = std::make_shared<Botan::Credentials_Manager>();
+         const std::shared_ptr<const Botan::TLS::Policy> null_policy;
+
+         result.test_throws<Botan::Invalid_Argument>(
+            "server with null policy", [&] { Botan::TLS::Server(callbacks, sessions, creds, null_policy, rng); });
+         result.test_throws<Botan::Invalid_Argument>(
+            "client with null policy", [&] { Botan::TLS::Client(callbacks, sessions, creds, null_policy, rng); });
+
+         result.test_throws("client offering TLS 1.1", [&] {
+            Botan::TLS::Client(callbacks,
+                               sessions,
+                               creds,
+                               std::make_shared<Permissive_Policy>(),
+                               rng,
+                               Botan::TLS::Server_Information(),
+                               Botan::TLS::Protocol_Version::TLS_V11);
+         });
+
+         const auto dtls_client = [&](size_t mtu, size_t initial_timeout, size_t maximum_timeout) {
+            Botan::TLS::Client(callbacks,
+                               sessions,
+                               creds,
+                               std::make_shared<DTLS_Policy>(mtu, initial_timeout, maximum_timeout),
+                               rng,
+                               Botan::TLS::Server_Information(),
+                               Botan::TLS::Protocol_Version::DTLS_V12);
+         };
+         result.test_no_throw("DTLS client with valid policy", [&] { dtls_client(1232, 1000, 60000); });
+         result.test_throws<Botan::Invalid_Argument>("DTLS MTU above 65535", [&] { dtls_client(65536, 1000, 60000); });
+         result.test_throws<Botan::Invalid_Argument>("DTLS initial timeout of zero",
+                                                     [&] { dtls_client(1232, 0, 60000); });
+         result.test_throws<Botan::Invalid_Argument>("DTLS maximum timeout of zero",
+                                                     [&] { dtls_client(1232, 1000, 0); });
+
+         result.test_is_true("DTLS 1.3 is a valid version",
+                             Botan::TLS::Protocol_Version(Botan::TLS::Protocol_Version::DTLS_V13).valid());
+
+         Overwriting_Policy policy("allow_tls12 = true");
+         result.test_is_true("overwrite reports success", policy.overwrite("allow_tls12", "false"));
+         result.test_is_false("overwrite replaced the value", policy.allow_tls12());
+
+         // Indented lines and CRLF line endings
+         const Botan::TLS::Text_Policy indented("  ciphers = AES-256/GCM AES-128/GCM \r\n\tallow_tls12 = false\r\n");
+         result.test_sz_eq("indented list setting", indented.allowed_ciphers().size(), 2);
+         result.test_is_false("CRLF boolean setting", indented.allow_tls12());
+
+      #if defined(BOTAN_HAS_TLS_13)
+         const std::vector<uint8_t> psk_key(32, 0x42);
+         const std::vector<uint8_t> identity = {'i', 'd'};
+         result.test_throws<Botan::Invalid_Argument>("PSK importer with an empty key",
+                                                     [&] { Botan::TLS::PSKImporter({}, identity, {}, "SHA-256"); });
+
+         const std::vector<uint8_t> long_identity(65500, 'x');
+         const Botan::TLS::PSKImporter importer(psk_key, long_identity, {}, "SHA-256");
+         result.test_throws<Botan::Invalid_Argument>("PSK importer identity too long for the extension", [&] {
+            importer.derive_imported_psk(Botan::TLS::Protocol_Version::TLS_V13, "SHA-256");
+         });
+      #endif
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls_api_argument_validation", Test_TLS_API_Argument_Validation);
+
+// A cached session whose ticket cannot fit into a ClientHello must not prevent
+// the client from connecting
+class Test_TLS12_Oversized_Session_Ticket final : public Test {
+   private:
+      class Emit_Callbacks final : public Botan::TLS::Callbacks {
+         public:
+            void tls_emit_data(std::span<const uint8_t> bits) override {
+               m_emitted.insert(m_emitted.end(), bits.begin(), bits.end());
+            }
+
+            void tls_record_received(uint64_t /*seq*/, std::span<const uint8_t> /*data*/) override {}
+
+            void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+
+            std::span<const uint8_t> emitted() const { return m_emitted; }
+
+         private:
+            std::vector<uint8_t> m_emitted;
+      };
+
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("TLS 1.2 client with an oversized cached session ticket");
+
+         const auto rng = Test::new_shared_rng(this->test_name());
+         const auto callbacks = std::make_shared<Emit_Callbacks>();
+         const auto sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto creds = std::make_shared<Botan::Credentials_Manager>();
+         const auto policy = std::make_shared<Botan::TLS::Policy>();
+         const Botan::TLS::Server_Information server_info("server.example.com");
+
+         const Botan::TLS::Session session(Botan::secure_vector<uint8_t>(48, 0x42),
+                                           Botan::TLS::Protocol_Version::TLS_V12,
+                                           0xC02F,
+                                           Botan::TLS::Connection_Side::Client,
+                                           true,
+                                           false,
+                                           {},
+                                           server_info,
+                                           0,
+                                           std::chrono::system_clock::now());
+         sessions->store(session, Botan::TLS::Session_Ticket(std::vector<uint8_t>(65535, 0xAB)));
+
+         result.test_no_throw("client sends a ClientHello", [&] {
+            const Botan::TLS::Client client(
+               callbacks, sessions, creds, policy, rng, server_info, Botan::TLS::Protocol_Version::TLS_V12);
+         });
+
+         result.test_is_true("ClientHello was emitted", !callbacks->emitted().empty());
+         result.test_sz_lt("ClientHello does not contain the ticket", callbacks->emitted().size(), 65535);
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls12_oversized_session_ticket", Test_TLS12_Oversized_Session_Ticket);
 
    #endif
 

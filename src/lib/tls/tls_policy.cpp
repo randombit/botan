@@ -176,28 +176,15 @@ Group_Params Policy::default_dh_group() const {
 }
 
 std::vector<Group_Params> Policy::key_exchange_groups() const {
-   return {
-      // clang-format off
-#if defined(BOTAN_HAS_X25519)
+   std::vector<Group_Params> groups = {
       Group_Params::X25519,
-#endif
-
       Group_Params::SECP256R1,
 
-#if defined(BOTAN_HAS_ML_KEM) && defined(BOTAN_HAS_TLS_13_PQC)
-
-#if defined(BOTAN_HAS_X25519)
       Group_Params_Code::HYBRID_X25519_ML_KEM_768,
-#endif
-
       Group_Params_Code::HYBRID_SECP256R1_ML_KEM_768,
       Group_Params_Code::HYBRID_SECP384R1_ML_KEM_1024,
-#endif
 
-#if defined(BOTAN_HAS_X448)
       Group_Params::X448,
-#endif
-
       Group_Params::SECP384R1,
       Group_Params::SECP521R1,
 
@@ -207,9 +194,12 @@ std::vector<Group_Params> Policy::key_exchange_groups() const {
       Group_Params::BRAINPOOL384R1TLS13,
       Group_Params::BRAINPOOL512R1,
       Group_Params::BRAINPOOL512R1TLS13,
-
-      // clang-format on
    };
+
+   // Some groups may have been disabled in the build
+   std::erase_if(groups, [](Group_Params group) { return !group.is_available(); });
+
+   return groups;
 }
 
 std::vector<Group_Params> Policy::key_exchange_groups_to_offer() const {

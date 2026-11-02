@@ -51,6 +51,23 @@ std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
                                               TLS_Flavor flavor);
 
 /**
+ * The Brainpool group code points of RFC 7027 are only defined up to TLS 1.2,
+ * those of RFC 8734 and all KEM groups only for TLS 1.3.
+ */
+bool group_usable_in_version(Group_Params group, Protocol_Version version);
+
+/**
+ * Filter @p groups by group_usable_in_version()
+ */
+std::vector<Group_Params> groups_usable_in_version(std::span<const Group_Params> groups, Protocol_Version version);
+
+/**
+ * Return true if @p group is an elliptic curve group, or an unknown group outside
+ * the FFDHE range which the application may implement as a curve via the callbacks
+ */
+bool group_may_be_ecc(Group_Params group);
+
+/**
  * Compute a cookie value from the ClientHello and the client's identity. Used
  * by both the DTLS 1.2 HelloVerifyRequest and the DTLS 1.3 HelloRetryRequest
  * cookie extension.
@@ -61,6 +78,16 @@ std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
 std::vector<uint8_t> calculate_cookie(std::span<const uint8_t> client_hello_bits,
                                       std::string_view client_identity,
                                       std::span<const uint8_t> cookie_secret);
+
+/**
+ * Parse a "status_request" extension. In a ClientHello, a request for any
+ * status_type other than "ocsp" is not supported and is treated as an unknown
+ * extension.
+ */
+std::unique_ptr<Extension> make_certificate_status_request(TLS_Data_Reader& reader,
+                                                           uint16_t extension_size,
+                                                           Handshake_Type message_type,
+                                                           Connection_Side from);
 
 /**
  * Version-agnostic internal client hello data container that allows

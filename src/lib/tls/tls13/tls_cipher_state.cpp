@@ -771,9 +771,9 @@ void Cipher_State::update_read_keys() {
    const auto secret_label = fmt("{}_TRAFFIC_SECRET_{}",
                                  m_connection_side == Connection_Side::Server ? "CLIENT" : "SERVER",
                                  ++m_read_key_update_count);
-   maybe_log_secret(secret_label, new_read_application_traffic_secret);
 
    advance_read_epoch(new_read_application_traffic_secret);
+   maybe_log_secret(secret_label, new_read_application_traffic_secret);
 }
 
 void Cipher_State::update_write_keys() {
@@ -788,9 +788,11 @@ void Cipher_State::update_write_keys() {
    const auto secret_label = fmt("{}_TRAFFIC_SECRET_{}",
                                  m_connection_side == Connection_Side::Server ? "SERVER" : "CLIENT",
                                  ++m_write_key_update_count);
-   maybe_log_secret(secret_label, new_write_application_traffic_secret);
 
+   // Our KeyUpdate was already sent, so install the new keys before a key log
+   // callback can throw; the application may continue using the channel
    advance_write_epoch(new_write_application_traffic_secret);
+   maybe_log_secret(secret_label, new_write_application_traffic_secret);
 }
 
 uint64_t Cipher_State::records_encrypted_with_current_key() const {

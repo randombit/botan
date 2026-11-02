@@ -13,6 +13,7 @@
 #include <botan/hash.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_policy.h>
 #include <botan/tls_psk_identity_13.h>
 #include <botan/tls_session.h>
 #include <botan/tls_session_manager.h>
@@ -153,18 +154,15 @@ PSK::PSK(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type messag
 
       std::vector<PskIdentity> psk_identities;
       while(reader.has_remaining() && (reader.read_so_far() - identities_offset) < identities_length) {
-         /* Per RFC 8446 PskIdentity is
-
-         struct {
-            opaque identity<1..2^16-1>;
-            uint32 obfuscated_ticket_age;
-         } PskIdentity;
-
-         so we should reject an empty identity. However BoGo seems to expect
-         being able to send us such an identity, so for now we accept it.
-         */
-
+         // RFC 9846 4.3.11
+         //    struct {
+         //        opaque identity<1..2^16-1>;
+         //        uint32 obfuscated_ticket_age;
+         //    } PskIdentity;
          auto identity = reader.get_tls_length_value(2);
+         if(identity.empty()) {
+            throw TLS_Exception(Alert::DecodeError, "Empty PSK identity");
+         }
          const auto obfuscated_ticket_age = reader.get_uint32_t();
          psk_identities.emplace_back(std::move(identity), obfuscated_ticket_age);
       }
@@ -333,6 +331,17 @@ std::unique_ptr<PSK> PSK::select_offered_psk(std::string_view host,
    //
    // Externally provided PSKs
    //
+
+   // RFC 8446 4.3.2
+   //    Servers which are authenticating with a PSK MUST NOT send the
+   //    CertificateRequest message in the main handshake
+   //
+   // Selecting an external PSK would silently drop a mandatory client
+   // certificate, so ignore them and perform a full handshake instead.
+   if(policy.require_client_certificate_authentication()) {
+      return nullptr;
+   }
+
    std::vector<std::string> psk_ids;
    std::transform(psks.begin(), psks.end(), std::back_inserter(psk_ids), [&](const auto& psk) {
       return psk.identity().identity_as_string();
@@ -386,6 +395,25 @@ void PSK::filter(const Ciphersuite& cipher) {
       return !cipher_state.is_compatible_with(cipher);
    });
    psks.erase(r, psks.end());
+}
+
+void PSK::validate_updates(const PSK& new_psk) const {
+   BOTAN_STATE_CHECK(std::holds_alternative<std::vector<Client_PSK>>(m_impl->psk));
+   BOTAN_STATE_CHECK(std::holds_alternative<std::vector<Client_PSK>>(new_psk.m_impl->psk));
+
+   const auto& old_psks = std::get<std::vector<Client_PSK>>(m_impl->psk);
+   const auto& new_psks = std::get<std::vector<Client_PSK>>(new_psk.m_impl->psk);
+
+   auto old_itr = old_psks.begin();
+   for(const auto& psk : new_psks) {
+      old_itr = std::find_if(old_itr, old_psks.end(), [&](const Client_PSK& old_psk) {
+         return old_psk.identity().identity() == psk.identity().identity();
+      });
+      if(old_itr == old_psks.end()) {
+         throw TLS_Exception(Alert::IllegalParameter, "PSK identities changed in updated Client Hello");
+      }
+      ++old_itr;
+   }
 }
 
 std::variant<Session, ExternalPSK> PSK::take_session_to_resume_or_psk() {

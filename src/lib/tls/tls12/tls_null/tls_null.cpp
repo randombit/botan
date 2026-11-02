@@ -21,7 +21,10 @@ namespace Botan::TLS {
 * TLS_NULL_HMAC_AEAD_Mode Constructor
 */
 TLS_NULL_HMAC_AEAD_Mode::TLS_NULL_HMAC_AEAD_Mode(std::unique_ptr<MessageAuthenticationCode> mac, size_t mac_keylen) :
-      m_mac_name(mac->name()), m_mac_keylen(mac_keylen), m_tag_size(mac->output_length()), m_mac(std::move(mac)) {}
+      m_mac_name(mac->name()), m_mac_keylen(mac_keylen), m_tag_size(mac->output_length()), m_mac(std::move(mac)) {
+   // An empty m_key means that no key was set
+   BOTAN_ARG_CHECK(m_mac_keylen > 0, "TLS 1.2 NULL/HMAC: MAC key length must not be zero");
+}
 
 void TLS_NULL_HMAC_AEAD_Mode::clear() {
    m_key.clear();
@@ -86,25 +89,19 @@ void TLS_NULL_HMAC_AEAD_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
       throw Invalid_IV_Length(name(), nonce_len);
    }
 
-   m_processed = false;
+   // The MAC always covers the record header
+   if(m_ad.empty()) {
+      throw Invalid_State("TLS 1.2 NULL/HMAC: associated data must be set before starting a message");
+   }
 
    // AEAD_Mode contract: AD set via set_associated_data persists across
    // messages until reset. finish_msg calls mac().final() which clears the
    // internal state, so we re-feed the cached AD at the start of each
    // message rather than once at set_associated_data time.
-   if(!m_ad.empty()) {
-      mac().update(m_ad);
-   }
+   mac().update(m_ad);
 }
 
 size_t TLS_NULL_HMAC_AEAD_Mode::process_msg(uint8_t buf[], size_t sz) {
-   // The TLS record code path MACs each record in a single call (via
-   // finish_msg -> process). A second invocation between start_msg and
-   // finish_msg would feed additional bytes into the same HMAC instance,
-   // producing a tag covering more than the intended record body.
-   BOTAN_ASSERT_NOMSG(!m_processed);
-   m_processed = true;
-
    mac().update(buf, sz);
    return sz;
 }
@@ -127,6 +124,7 @@ size_t TLS_NULL_HMAC_AEAD_Encryption::output_length(size_t input_length) const {
 }
 
 void TLS_NULL_HMAC_AEAD_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
+   BOTAN_ARG_CHECK(offset <= buffer.size(), "Invalid offset");
    process(std::span{buffer}.subspan(offset));
    const size_t output_size = add_or_throw(buffer.size(), tag_size(), "TLS NULL input too large");
    buffer.resize(output_size);
@@ -139,7 +137,8 @@ size_t TLS_NULL_HMAC_AEAD_Decryption::output_length(size_t input_length) const {
 }
 
 void TLS_NULL_HMAC_AEAD_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   BOTAN_ARG_CHECK(buffer.size() >= tag_size() + offset,
+   BOTAN_ARG_CHECK(offset <= buffer.size(), "Invalid offset");
+   BOTAN_ARG_CHECK(buffer.size() - offset >= tag_size(),
                    "TLS_NULL_HMAC_AEAD_Decryption needs at least tag_size() bytes in final buffer");
 
    const auto data_and_tag = std::span{buffer}.subspan(offset);

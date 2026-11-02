@@ -94,7 +94,9 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
       * Currently empty records are ignored and do not instigate a callback,
       * but this may change in a future release.
       *
-      * For TLS the record number will always increase. For DTLS, it is
+      * For TLS the record number will always increase, except that it starts
+      * again from zero whenever the peer switches to new keys (in TLS 1.3 after
+      * a KeyUpdate, in TLS 1.2 after a renegotiation). For DTLS, it is
       * possible to receive records with the @p seq_no field out of order, or
       * with gaps, corresponding to reordered or lost datagrams.
       *

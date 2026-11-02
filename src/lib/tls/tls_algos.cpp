@@ -6,11 +6,14 @@
 
 #include <botan/tls_algos.h>
 
+#include <botan/ec_group.h>
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/tls_messages_internal.h>
 
-#include <algorithm>
-#include <array>
+#if defined(BOTAN_HAS_FRODOKEM)
+   #include <botan/frodo_mode.h>
+#endif
 
 namespace Botan::TLS {
 
@@ -136,109 +139,122 @@ Auth_Method auth_method_from_string(std::string_view str) {
    throw Invalid_Argument(fmt("Unknown TLS signature method '{}'", str));
 }
 
+#if defined(BOTAN_HAS_TLS_13_PQC)
+
 namespace {
 
-consteval auto available_group_params() {
-   auto codes = std::array {
-#if defined(BOTAN_HAS_PCURVES_SECP256R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
-      Group_Params_Code::SECP256R1,
-#endif
+// The KEM component of a hybrid group
+Group_Params pqc_hybrid_kem(Group_Params group) {
+   switch(group.code()) {
+      case Group_Params::HYBRID_X25519_ML_KEM_768:
+      case Group_Params::HYBRID_SECP256R1_ML_KEM_768:
+         return Group_Params::ML_KEM_768;
+      case Group_Params::HYBRID_SECP384R1_ML_KEM_1024:
+         return Group_Params::ML_KEM_1024;
 
-#if defined(BOTAN_HAS_PCURVES_SECP384R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
-         Group_Params_Code::SECP384R1,
-#endif
+      case Group_Params::HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS:
+      case Group_Params::HYBRID_SECP256R1_eFRODOKEM_640_SHAKE_OQS:
+         return Group_Params::eFRODOKEM_640_SHAKE_OQS;
+      case Group_Params::HYBRID_X25519_eFRODOKEM_640_AES_OQS:
+      case Group_Params::HYBRID_SECP256R1_eFRODOKEM_640_AES_OQS:
+         return Group_Params::eFRODOKEM_640_AES_OQS;
 
-#if defined(BOTAN_HAS_PCURVES_SECP521R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
-         Group_Params_Code::SECP521R1,
-#endif
+      case Group_Params::HYBRID_X448_eFRODOKEM_976_SHAKE_OQS:
+      case Group_Params::HYBRID_SECP384R1_eFRODOKEM_976_SHAKE_OQS:
+         return Group_Params::eFRODOKEM_976_SHAKE_OQS;
+      case Group_Params::HYBRID_X448_eFRODOKEM_976_AES_OQS:
+      case Group_Params::HYBRID_SECP384R1_eFRODOKEM_976_AES_OQS:
+         return Group_Params::eFRODOKEM_976_AES_OQS;
 
-#if defined(BOTAN_HAS_PCURVES_BRAINPOOL256R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
-         Group_Params_Code::BRAINPOOL256R1, Group_Params_Code::BRAINPOOL256R1TLS13,
-#endif
+      case Group_Params::HYBRID_SECP521R1_eFRODOKEM_1344_SHAKE_OQS:
+         return Group_Params::eFRODOKEM_1344_SHAKE_OQS;
+      case Group_Params::HYBRID_SECP521R1_eFRODOKEM_1344_AES_OQS:
+         return Group_Params::eFRODOKEM_1344_AES_OQS;
 
-#if defined(BOTAN_HAS_PCURVES_BRAINPOOL384R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
-         Group_Params_Code::BRAINPOOL384R1, Group_Params_Code::BRAINPOOL384R1TLS13,
-#endif
-
-#if defined(BOTAN_HAS_PCURVES_BRAINPOOL512R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
-         Group_Params_Code::BRAINPOOL512R1, Group_Params_Code::BRAINPOOL512R1TLS13,
-#endif
-
-#if defined(BOTAN_HAS_X25519)
-         Group_Params_Code::X25519,
-#endif
-
-#if defined(BOTAN_HAS_X448)
-         Group_Params_Code::X448,
-#endif
-
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-         Group_Params_Code::FFDHE_2048, Group_Params_Code::FFDHE_3072, Group_Params_Code::FFDHE_4096,
-         Group_Params_Code::FFDHE_6144, Group_Params_Code::FFDHE_8192,
-#endif
-
-#if defined(BOTAN_HAS_ML_KEM)
-         Group_Params_Code::ML_KEM_512, Group_Params_Code::ML_KEM_768, Group_Params_Code::ML_KEM_1024,
-
-   #if defined(BOTAN_HAS_PCURVES_SECP256R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
-         Group_Params_Code::HYBRID_SECP256R1_ML_KEM_768,
-   #endif
-
-   #if defined(BOTAN_HAS_PCURVES_SECP384R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
-         Group_Params_Code::HYBRID_SECP384R1_ML_KEM_1024,
-   #endif
-
-   #if defined(BOTAN_HAS_X25519)
-         Group_Params_Code::HYBRID_X25519_ML_KEM_768,
-   #endif
-#endif
-
-#if defined(BOTAN_HAS_FRODOKEM)
-         Group_Params_Code::eFRODOKEM_640_SHAKE_OQS, Group_Params_Code::eFRODOKEM_976_SHAKE_OQS,
-         Group_Params_Code::eFRODOKEM_1344_SHAKE_OQS, Group_Params_Code::eFRODOKEM_640_AES_OQS,
-         Group_Params_Code::eFRODOKEM_976_AES_OQS, Group_Params_Code::eFRODOKEM_1344_AES_OQS,
-
-   #if defined(BOTAN_HAS_PCURVES_SECP256R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
-         Group_Params_Code::HYBRID_SECP256R1_eFRODOKEM_640_SHAKE_OQS,
-         Group_Params_Code::HYBRID_SECP256R1_eFRODOKEM_640_AES_OQS,
-   #endif
-
-   #if defined(BOTAN_HAS_PCURVES_SECP384R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
-         Group_Params_Code::HYBRID_SECP384R1_eFRODOKEM_976_SHAKE_OQS,
-         Group_Params_Code::HYBRID_SECP384R1_eFRODOKEM_976_AES_OQS,
-   #endif
-
-   #if defined(BOTAN_HAS_PCURVES_SECP521R1) || defined(BOTAN_HAS_PCURVES_GENERIC)
-         Group_Params_Code::HYBRID_SECP521R1_eFRODOKEM_1344_SHAKE_OQS,
-         Group_Params_Code::HYBRID_SECP521R1_eFRODOKEM_1344_AES_OQS,
-   #endif
-
-   #if defined(BOTAN_HAS_X25519)
-         Group_Params_Code::HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS,
-         Group_Params_Code::HYBRID_X25519_eFRODOKEM_640_AES_OQS,
-   #endif
-
-   #if defined(BOTAN_HAS_X448)
-         Group_Params_Code::HYBRID_X448_eFRODOKEM_976_SHAKE_OQS, Group_Params_Code::HYBRID_X448_eFRODOKEM_976_AES_OQS,
-   #endif
-#endif
-   };
-
-   std::sort(codes.begin(), codes.end());
-
-   return codes;
+      default:
+         return Group_Params::NONE;
+   }
 }
 
 }  // namespace
 
+#endif
+
 bool Group_Params::is_available() const {
-   // For group codes we recognize, check the build-time availability table.
-   // Unknown codes may be user-supplied custom groups handled via callbacks.
-   if(to_string().has_value()) {
-      static constexpr auto codes = available_group_params();
-      return std::binary_search(codes.begin(), codes.end(), this->code());
+   // Unknown codes may be user-supplied custom groups handled via callbacks
+   if(!to_string().has_value()) {
+      return true;
    }
-   return true;
+
+   // This must agree with what TLS::Callbacks can generate keys for
+   if(is_ecdh_named_curve()) {
+      return EC_Group::supports_named_group(to_algorithm_spec().value());
+   }
+
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+   if(is_dh_named_group()) {
+      return true;
+   }
+#endif
+
+#if defined(BOTAN_HAS_X25519)
+   if(is_x25519()) {
+      return true;
+   }
+#endif
+
+#if defined(BOTAN_HAS_X448)
+   if(is_x448()) {
+      return true;
+   }
+#endif
+
+#if defined(BOTAN_HAS_ML_KEM)
+   if(is_pure_ml_kem()) {
+      return true;
+   }
+#endif
+
+#if defined(BOTAN_HAS_FRODOKEM)
+   if(is_pure_frodokem()) {
+      return FrodoKEMMode(to_algorithm_spec().value()).is_available();
+   }
+#endif
+
+#if defined(BOTAN_HAS_TLS_13_PQC)
+   if(is_pqc_hybrid()) {
+      return Group_Params(pqc_hybrid_ecc().value()).is_available() && pqc_hybrid_kem(*this).is_available();
+   }
+#endif
+
+   return false;
+}
+
+bool group_usable_in_version(Group_Params group, Protocol_Version version) {
+   if(version.is_pre_tls_13()) {
+      return !group.is_kem() &&                             //
+             group != Group_Params::BRAINPOOL256R1TLS13 &&  //
+             group != Group_Params::BRAINPOOL384R1TLS13 &&  //
+             group != Group_Params::BRAINPOOL512R1TLS13;
+   } else {
+      return group != Group_Params::BRAINPOOL256R1 &&  //
+             group != Group_Params::BRAINPOOL384R1 &&  //
+             group != Group_Params::BRAINPOOL512R1;
+   }
+}
+
+std::vector<Group_Params> groups_usable_in_version(std::span<const Group_Params> groups, Protocol_Version version) {
+   std::vector<Group_Params> usable;
+   for(const auto group : groups) {
+      if(group_usable_in_version(group, version)) {
+         usable.push_back(group);
+      }
+   }
+   return usable;
+}
+
+bool group_may_be_ecc(Group_Params group) {
+   return group.is_pure_ecc_group() || (!group.to_string().has_value() && !group.is_in_ffdhe_range());
 }
 
 std::optional<Group_Params_Code> Group_Params::pqc_hybrid_ecc() const {
