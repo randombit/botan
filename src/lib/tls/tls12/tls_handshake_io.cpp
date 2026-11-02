@@ -26,11 +26,28 @@ constexpr size_t DTLS_HANDSHAKE_HEADER_SIZE = 12;
 // count unlimited. Matches the default value of Policy::dtls_maximum_retransmissions.
 constexpr size_t DEFAULT_PEER_REPLAY_BUDGET = 12;
 
+// How many ClientHellos a server will take before it commits to a handshake by
+// sending a flight. The exchange RFC 6347 4.2.1 describes needs two; the rest
+// absorb a cookie secret rotation. Each one advances the expected sequence, so
+// this is also what keeps that counter from being driven around by
+// unauthenticated input.
+constexpr uint16_t MAX_PRE_COMMIT_CLIENT_HELLOS = 8;
+
 // client_version(2) + random(32) + session_id length(1) + cookie length(1)
 // + cipher_suites length(2) + one suite(2) + compression_methods
 // length(1) + one method(1). RFC 6347 4.2.1 gives the DTLS ClientHello
 // layout. A shorter declared length cannot be a real ClientHello.
 constexpr size_t MIN_CLIENT_HELLO_SIZE = 42;
+
+// HelloRequest and ServerHelloDone are the only DTLS handshake messages with a
+// zero-length encoding; every other type carries a mandatory body. A record
+// declaring msg_len 0 for one of those other types is not a real message: a
+// bare 12-byte header would otherwise reassemble into a "complete" message and
+// be delivered to the state machine as the wrong thing, or park in a slot the
+// genuine message can then no longer reach.
+constexpr bool dtls_handshake_type_requires_body(Handshake_Type type) {
+   return type != Handshake_Type::HelloRequest && type != Handshake_Type::ServerHelloDone;
+}
 
 inline size_t load_be24(const uint8_t q[3]) {
    return make_uint32(0, q[0], q[1], q[2]);
@@ -217,6 +234,7 @@ Datagram_Handshake_IO::Datagram_Handshake_IO(writer_fn writer,
                                              uint64_t max_timeout_ms,
                                              std::optional<size_t> max_retransmissions,
                                              size_t max_handshake_msg_size,
+                                             bool is_server,
                                              uint16_t initial_epoch) :
       m_seqs(seq),
       m_flights(1),
@@ -230,7 +248,8 @@ Datagram_Handshake_IO::Datagram_Handshake_IO(writer_fn writer,
       m_steady_clock_ms(std::move(steady_clock_ms)),
       m_mtu(mtu),
       m_max_handshake_msg_size(max_handshake_msg_size),
-      m_max_pending_reassembly(max_pending_reassembly(m_max_handshake_msg_size)) {}
+      m_max_pending_reassembly(max_pending_reassembly(m_max_handshake_msg_size)),
+      m_is_server(is_server) {}
 
 Protocol_Version Datagram_Handshake_IO::initial_record_version() const {
    return Protocol_Version::DTLS_V12;
@@ -428,7 +447,17 @@ bool Datagram_Handshake_IO::reassemble_retransmitted_fragment(const uint8_t frag
                                                               uint16_t message_seq) {
    auto [i, inserted] = m_retransmitted_messages.try_emplace(msg_type, message_seq, Handshake_Reassembly{});
 
-   if(!inserted && i->second.first != message_seq) {
+   // A slot here holds unauthenticated epoch-zero data until a genuine
+   // retransmission arrives. A partial fragment buffered at a lower epoch than
+   // this one has been superseded: an off-path peer cannot forge the higher
+   // epoch, so start over from it. Without this the header mismatch would throw
+   // in add_fragment, and that throw -- keyed to the authenticated, higher-epoch
+   // record that triggered it rather than to the forged data it collided with --
+   // is not absorbed and tears the established association down.
+   const bool superseded_by_higher_epoch =
+      i->second.second.initialized() && !i->second.second.complete() && epoch > i->second.second.epoch();
+
+   if(!inserted && (i->second.first != message_seq || superseded_by_higher_epoch)) {
       release_reassembly_bytes(i->second.second);
       i->second = std::make_pair(message_seq, Handshake_Reassembly());
    }
@@ -508,6 +537,14 @@ bool Datagram_Handshake_IO::process_previous_handshake_fragment(const uint8_t fr
    // trigger a flight retransmission. A zero-length message such as
    // ServerHelloDone is not an empty fragment in this sense.
    if(fragment_length == 0 && msg_length != 0) {
+      return false;
+   }
+
+   // A record declaring a zero-length body for a type that must carry one is not
+   // a real message, so it cannot be a retransmission of one. Without this a
+   // bare 12-byte header claiming msg_length 0 counts as a fully reassembled
+   // message and buys a whole flight replay.
+   if(msg_length == 0 && dtls_handshake_type_requires_body(msg_type)) {
       return false;
    }
 
@@ -693,6 +730,19 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
             continue;
          }
 
+         // A bare 12-byte header declaring a zero-length body for a type that
+         // must carry one is not a real message. At a future slot it would
+         // otherwise reassemble as a "complete" message and, never being
+         // replaced, displace the genuine message that later arrives there. Only
+         // future slots are dropped: the same wrong message at the sequence
+         // actually expected is a protocol error and has to be reported as one,
+         // which BoGo's WrongMessageType-ServerHelloDone-DTLS checks.
+         if(msg_len == 0 && message_seq != m_in_message_seq && dtls_handshake_type_requires_body(msg_type)) {
+            record += total_size;
+            record_len -= total_size;
+            continue;
+         }
+
          /*
          RFC 6347 4.2.2 keeps message_seq across a retransmission but gives the
          record a new sequence number, and a rehandshake restarts message_seq at
@@ -707,6 +757,36 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
          is never replaced, so verification fails against the wrong transcript.
          */
          if(msg_type == Handshake_Type::Finished && epoch <= m_initial_epoch) {
+            record += total_size;
+            record_len -= total_size;
+            continue;
+         }
+
+         /*
+         RFC 6347 4.2.1 has the cookie exchange exist so that a server need not
+         allocate state before the peer's reachability is proved. Until this
+         endpoint commits to the handshake by sending a flight, the only message
+         worth keeping is the ClientHello it is waiting for.
+
+         Queueing anything else lets one spoofed datagram decide the handshake.
+         A complete message parked in a future slot survives into the real
+         handshake, where have_more_data() reads it as trailing handshake data
+         and the server answers the legitimate client with a fatal alert. RFC
+         6347 4.2.2 permits queueing a future message but equally permits
+         discarding it, and before a cookie there is nothing to weigh against
+         the cost. Only future slots are dropped, and regardless of type: a
+         future ClientHello is no more trustworthy than any other future
+         message, and one parked ahead of the expected sequence produces the
+         same trailing-data teardown. A wrong message type at the sequence
+         actually expected is left alone: that is a protocol error and has to be
+         reported as one, which BoGo's WrongMessageType-ClientHello-DTLS checks.
+
+         The count bounds it in the other direction: each accepted ClientHello
+         advances the expected sequence and draws another HelloVerifyRequest, so
+         without a limit that counter can be walked all the way around.
+         */
+         if(server_awaiting_first_flight() &&
+            (message_seq != m_in_message_seq || m_in_message_seq >= MAX_PRE_COMMIT_CLIENT_HELLOS)) {
             record += total_size;
             record_len -= total_size;
             continue;
@@ -872,7 +952,7 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Datagram_Handshake_IO::get_next_
       // ClientHello as the message_seq in its initial ServerHello". Until a
       // flight has been sent, the outgoing counter therefore follows the
       // ClientHello just delivered.
-      if(m_flights.size() == 1 && m_flights.front().empty()) {
+      if(server_awaiting_first_flight()) {
          m_out_message_seq = static_cast<uint16_t>(m_in_message_seq - 1);
       }
 

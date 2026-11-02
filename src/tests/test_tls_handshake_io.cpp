@@ -57,7 +57,8 @@ class Datagram_IO_Fixture {
                                    uint64_t max_timeout_ms = 60000,
                                    std::optional<size_t> max_retransmissions = std::nullopt,
                                    uint16_t mtu = 1500,
-                                   size_t max_handshake_msg_size = k_max_handshake_msg_size) :
+                                   size_t max_handshake_msg_size = k_max_handshake_msg_size,
+                                   bool is_server = false) :
             m_io(
                [this](uint16_t, Record_Type type, const std::vector<uint8_t>& record) {
                   if(type == Record_Type::Handshake) {
@@ -72,7 +73,8 @@ class Datagram_IO_Fixture {
                initial_timeout_ms,
                max_timeout_ms,
                max_retransmissions,
-               max_handshake_msg_size) {}
+               max_handshake_msg_size,
+               is_server) {}
 
       void feed(std::span<const uint8_t> record, uint16_t epoch = 0) {
          const uint64_t record_seq = static_cast<uint64_t>(epoch) << 48;
@@ -366,7 +368,8 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
       // exchange at itself again.
       CHECK("a ClientHello from an earlier sequence re-seats the cookie exchange",
             [&](Test::Result& result) {
-               Datagram_IO_Fixture fix;
+               Datagram_IO_Fixture fix(
+                  1000, 60000, std::nullopt, 1500, Datagram_IO_Fixture::k_max_handshake_msg_size, /*is_server=*/true);
                const Stub_Handshake_Message hvr(Handshake_Type::HelloVerifyRequest,
                                                 std::vector<uint8_t>{0xFE, 0xFD, 0x00});
                const Stub_Handshake_Message server_hello(Handshake_Type::ServerHello, std::vector<uint8_t>(64, 0x11));
@@ -407,7 +410,8 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
 
       CHECK("a partial earlier ClientHello does not disturb the cookie exchange",
             [&](Test::Result& result) {
-               Datagram_IO_Fixture fix;
+               Datagram_IO_Fixture fix(
+                  1000, 60000, std::nullopt, 1500, Datagram_IO_Fixture::k_max_handshake_msg_size, /*is_server=*/true);
                const Stub_Handshake_Message hvr(Handshake_Type::HelloVerifyRequest,
                                                 std::vector<uint8_t>{0xFE, 0xFD, 0x00});
 
@@ -586,6 +590,45 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
                result.test_sz_eq("no payload bytes", bytes.size(), size_t(0));
             }),
 
+      // A bare header declaring a zero-length body, for a type that has no empty
+      // encoding, must not reassemble into a "complete" message and displace the
+      // genuine message that later arrives at the same message_seq. Before the
+      // fix the forgery occupied the slot and was delivered in its place.
+      CHECK("zero-length forgery does not displace the genuine message",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+
+               // Park a bare, zero-length Finished at future message_seq=1.
+               fix.feed(dtls_hs_record(Handshake_Type::Finished, 0, 1, 0, {}));
+
+               // The genuine message at seq=0, then the genuine 12-byte Finished
+               // at seq=1 (under epoch 1, as a real Finished is).
+               const auto ch = make_payload(48);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 48, 0, 0, ch));
+
+               const auto verify_data = make_payload(12);
+               fix.feed(dtls_hs_record(Handshake_Type::Finished, 12, 1, 0, verify_data), 1);
+
+               auto [t0, b0] = fix.next_message();
+               result.test_enum_eq("seq=0 delivered", t0, Handshake_Type::ClientHello);
+               result.test_bin_eq("seq=0 body intact", b0, ch);
+
+               auto [t1, b1] = fix.next_message();
+               result.test_enum_eq("seq=1 is the genuine Finished", t1, Handshake_Type::Finished);
+               result.test_bin_eq("its verify_data is intact, not the empty forgery", b1, verify_data);
+            }),
+
+      // The complement: a message that is legitimately empty (ServerHelloDone,
+      // HelloRequest) must still reassemble and be delivered.
+      CHECK("legitimately empty message is still delivered",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix;
+               fix.feed(dtls_hs_record(Handshake_Type::ServerHelloDone, 0, 0, 0, {}));
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("delivered ServerHelloDone", type, Handshake_Type::ServerHelloDone);
+               result.test_sz_eq("no payload bytes", bytes.size(), size_t(0));
+            }),
+
       CHECK("fragment past end of message is rejected",
             [&](Test::Result& result) {
                Datagram_IO_Fixture fix;
@@ -675,6 +718,32 @@ std::vector<Test::Result> dtls12_handshake_io_tests() {
                auto [t2, b2] = fix.next_message();
                result.test_enum_eq("full-budget message admitted after supersede", t2, Handshake_Type::Certificate);
                result.test_sz_eq("its body is intact", b2.size(), size_t(512));
+            }),
+
+      // Before a server has committed to a handshake by sending a flight, only
+      // the ClientHello at the sequence it is waiting for is worth keeping. A
+      // future ClientHello is no exception: parked ahead of the expected slot it
+      // survives into the real handshake as trailing data. (This is server-only
+      // behavior, so the fixture is built as a server.)
+      CHECK("a server drops a future ClientHello before committing",
+            [&](Test::Result& result) {
+               Datagram_IO_Fixture fix(
+                  1000, 60000, std::nullopt, 1500, Datagram_IO_Fixture::k_max_handshake_msg_size, /*is_server=*/true);
+
+               // A complete forged ClientHello parked one ahead of the expected
+               // sequence, before the genuine one at sequence 0 arrives.
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 48, 1, 0, make_payload(48)));
+
+               const auto genuine = make_payload(48);
+               fix.feed(dtls_hs_record(Handshake_Type::ClientHello, 48, 0, 0, genuine));
+
+               auto [type, bytes] = fix.next_message();
+               result.test_enum_eq("expected ClientHello delivered", type, Handshake_Type::ClientHello);
+               result.test_bin_eq("its body is intact", bytes, genuine);
+
+               // The parked future ClientHello was dropped, so nothing trails.
+               result.test_is_false("no trailing data from a dropped future ClientHello", fix.io().have_more_data());
+               result.test_is_true("no further message", fix.next_message().first == Handshake_Type::None);
             }),
 
       // Same reasoning for a byte-level conflict within a matching header.

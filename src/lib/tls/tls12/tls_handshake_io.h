@@ -141,6 +141,7 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
                             uint64_t max_timeout_ms,
                             std::optional<size_t> max_retransmissions,
                             size_t max_handshake_msg_size,
+                            bool is_server,
                             uint16_t initial_epoch = 0);
 
       Protocol_Version initial_record_version() const override;
@@ -227,6 +228,15 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       // Index of the last completed outgoing flight, or nullopt when no
       // flight has been sent yet.
       std::optional<size_t> last_completed_flight_index() const;
+
+      // Whether this is a server that has yet to send a flight. Since a
+      // HelloVerifyRequest is not retained as one, that is exactly the window
+      // before a cookie has validated. Restricted to servers because a client
+      // legitimately receives a HelloRequest into a fresh IO that has not sent
+      // anything either.
+      bool server_awaiting_first_flight() const {
+         return m_is_server && m_flights.size() == 1 && m_flights.front().empty();
+      }
 
       std::vector<uint8_t> format_fragment(const uint8_t fragment[],
                                            size_t fragment_len,
@@ -383,6 +393,7 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       uint16_t m_mtu;
       size_t m_max_handshake_msg_size;
       size_t m_max_pending_reassembly;
+      bool m_is_server;
 };
 
 }  // namespace Botan::TLS

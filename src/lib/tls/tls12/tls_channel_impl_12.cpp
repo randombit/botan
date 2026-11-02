@@ -315,6 +315,7 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
                                                    max_timeout_ms,
                                                    max_retransmissions,
                                                    policy().maximum_handshake_message_size(),
+                                                   m_is_server,
                                                    initial_epoch);
    } else {
       const auto send_record_f = [this](Record_Type rec_type, const std::vector<uint8_t>& record) {

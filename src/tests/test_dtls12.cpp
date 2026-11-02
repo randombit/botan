@@ -2361,6 +2361,117 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      // A forged epoch-0 partial Finished fragment, planted at the peer's
+      // Finished message_seq, parks in the retransmission reassembly slot. When
+      // the peer later retransmits its genuine, authenticated (epoch 1) final
+      // flight, the buffered forgery must not turn the header mismatch into a
+      // teardown of the established association: the higher, unforgeable epoch
+      // supersedes the planted fragment instead of throwing.
+      static Test::Result test_forged_epoch0_partial_finished_does_not_destroy_association() {
+         Test::Result result("DTLS forged epoch 0 partial Finished does not destroy an active association");
+
+         auto rng = Test::new_shared_rng("dtls-core-epoch0-partial-finished");
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
+
+         deliver(result, "client hello 1", c2s, server);
+         deliver(result, "hello verify request", s2c, client);
+         deliver(result, "client hello 2", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+         deliver(result, "client final flight", c2s, server);
+
+         result.test_is_true("server became active", server.is_active());
+         s2c.clear();  // simulate losing the server's final flight
+
+         // The client's Finished is its fourth handshake message, at message_seq
+         // 3 (ClientHello, cookie ClientHello, ClientKeyExchange, Finished). Plant
+         // a one-byte epoch-0 fragment of a 12-byte Finished in that slot. Being
+         // epoch 0 it is unauthenticated and does not advance the replay window,
+         // so it cannot be more than a forgery.
+         const std::array<uint8_t, 1> partial_finished = {0x00};
+         const auto forged = unprotected_dtls_record(
+            Botan::TLS::Record_Type::Handshake,
+            0x0000FFFFFFFFFFFE,
+            dtls_handshake_fragment(Botan::TLS::Handshake_Type::Finished, 12, 3, 0, partial_finished));
+         result.test_no_throw("epoch 0 partial Finished is absorbed",
+                              [&] { server.received_data(forged.data(), forged.size()); });
+         result.test_is_true("server remains active after the forgery", server.is_active());
+
+         // The genuine client retransmits its final flight, its Finished under
+         // epoch 1. Before the fix this collided with the planted fragment and
+         // the resulting throw, keyed to the authenticated record, was not
+         // absorbed and tore the association down.
+         fire_retransmission_timer(result, *assoc->client_cb, client, c2s);
+         result.test_no_throw("genuine retransmitted final flight is accepted", [&] {
+            std::vector<uint8_t> in;
+            std::swap(c2s, in);
+            server.received_data(in.data(), in.size());
+         });
+         result.test_is_true("server survives the retransmission", server.is_active());
+         result.test_is_false("server did not close", server.is_closed());
+
+         deliver(result, "retransmitted server final flight", s2c, client);
+         result.test_is_true("client became active", client.is_active());
+         result.test_is_true("server remains active", server.is_active());
+
+         return result;
+      }
+
+      // A bare 12-byte header declaring a zero-length body is not a real message
+      // of a type that has no empty encoding. Parked at a future message_seq of
+      // a handshake past the cookie exchange, it must not reassemble into a
+      // "complete" message that is never replaced and so silently displaces the
+      // genuine message that later arrives at that slot. (A wrong message at the
+      // sequence actually expected is a different matter: that is a protocol
+      // error and is correctly rejected, as BoGo's WrongMessageType tests check.)
+      static Test::Result test_forged_zero_length_message_does_not_displace_genuine() {
+         Test::Result result("DTLS forged zero-length handshake message does not displace the genuine one");
+
+         auto rng = Test::new_shared_rng("dtls-core-zero-length-forgery");
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
+
+         deliver(result, "client hello 1", c2s, server);
+         deliver(result, "hello verify request", s2c, client);
+         deliver(result, "client hello 2", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+
+         // The server has committed to the handshake and is waiting for the
+         // client's ClientKeyExchange at message_seq 2, with its Finished to
+         // follow at message_seq 3. Capture the client's genuine final flight.
+         if(!result.test_is_true("client produced its final flight", !c2s.empty())) {
+            return result;
+         }
+         const std::vector<uint8_t> client_final_flight = c2s;
+         c2s.clear();
+
+         // Park a zero-length forgery in the future Finished slot. Before the fix
+         // it reassembled as a "complete" Finished, and the genuine Finished
+         // arriving there was then discarded as a duplicate of a complete slot.
+         const auto forged =
+            unprotected_dtls_record(Botan::TLS::Record_Type::Handshake,
+                                    0x0000FFFFFFFFFFFE,
+                                    dtls_handshake_fragment(Botan::TLS::Handshake_Type::Finished, 0, 3, 0, {}));
+         result.test_no_throw("zero-length Finished forgery is accepted quietly",
+                              [&] { server.received_data(forged.data(), forged.size()); });
+         result.test_is_false("server did not close on the forgery", server.is_closed());
+
+         // The genuine client final flight must still complete the handshake:
+         // epoch-0 forgeries do not advance the replay window, so its records are
+         // not shut out, and the forged slot must not have displaced its Finished.
+         deliver_copy(result, "genuine client final flight", client_final_flight, server);
+         deliver(result, "server final flight", s2c, client);
+         result.test_is_true("handshake completed", client.is_active() && server.is_active());
+
+         return result;
+      }
+
       static Test::Result test_resumed_final_flight_and_app_data_in_one_receive() {
          Test::Result result("DTLS resumed final flight and app data in one receive");
 
@@ -2514,6 +2625,8 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_reordered_retransmitted_final_flight(),
                  test_empty_old_handshake_fragment_does_not_retransmit(),
                  test_spoofed_epoch0_records_do_not_abort_or_poison_retransmission(),
+                 test_forged_epoch0_partial_finished_does_not_destroy_association(),
+                 test_forged_zero_length_message_does_not_displace_genuine(),
                  test_retransmitted_final_flight_then_application_data(false),
                  test_retransmitted_final_flight_then_application_data(true),
                  test_resumed_client_final_flight_retransmits_after_activation(),
