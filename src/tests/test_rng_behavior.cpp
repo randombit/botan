@@ -1220,8 +1220,9 @@ class ChaCha_RNG_Unit_Tests : public Stateful_RNG_Tests {
       }
 
       Test::Result test_max_number_of_bytes_per_request() override {
-         Test::Result result("ChaCha_RNG max_number_of_bytes_per_request");
-         // ChaCha_RNG doesn't have this notion
+         Test::Result result("ChaCha_RNG Max Number of Bytes per Request");
+         const Botan::ChaCha_RNG rng;
+         result.test_sz_eq("Expected max. bytes per request", rng.max_number_of_bytes_per_request(), 0);
          return result;
       }
 
@@ -1296,6 +1297,13 @@ class ChaCha_RNG_FKE_Unit_Tests final : public ChaCha_RNG_Unit_Tests {
          Test::Result result("ChaCha_RNG(FKE) Security Level");
          const Botan::ChaCha_RNG rng(Botan::ChaCha_RNG::KeyErasure::WithKeyErasure);
          result.test_sz_eq("Expected security level", rng.security_level(), size_t(256));
+         return result;
+      }
+
+      Test::Result test_max_number_of_bytes_per_request() override {
+         Test::Result result("ChaCha_RNG(FKE) Max Number of Bytes per Request");
+         const Botan::ChaCha_RNG rng(Botan::ChaCha_RNG::KeyErasure::WithKeyErasure);
+         result.test_sz_eq("Expected max. bytes per request", rng.max_number_of_bytes_per_request(), (1 << 19) / 8);
          return result;
       }
 
