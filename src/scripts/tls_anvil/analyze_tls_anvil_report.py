@@ -29,10 +29,7 @@ def xfail_list(side):
         "server.tls13.rfc8446.PreSharedKey.isLastButDuplicatedExtension",
     }
 
-    partially_failed = {
-        # We accept the TLS 1.2 brainpool curve IDs in 1.3
-        "server.tls13.rfc8446.KeyShare.serverAcceptsDeprecatedGroups",
-    }
+    partially_failed = set()
 
     fully_failed = {
         # If ClientHello has no extensions that includes supported signatures; TLS 1.2 then
@@ -48,9 +45,6 @@ def xfail_list(side):
         # Possibly this can be fixed by using a dedicated util rather than tls_client
         "both.tls13.rfc8446.KeyUpdate.respondsWithValidKeyUpdate",
         "both.tls13.rfc8446.KeyUpdate.appDataUnderNewKeysSucceeds",
-
-        # We accept the TLS 1.2 brainpool curve IDs in 1.3
-        "server.tls13.rfc8446.KeyShare.serverAcceptsDeprecatedGroupsAllAtOnce",
     }
 
     if side == 'client':
