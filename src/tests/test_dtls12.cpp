@@ -249,6 +249,13 @@ std::shared_ptr<DTLS_PSK_Policy> dtls_policy_with_max_retransmissions(size_t lim
    return std::make_shared<DTLS_PSK_Policy>(std::move(opts));
 }
 
+std::shared_ptr<DTLS_PSK_Policy> dtls_policy_with_cipher(std::string cipher, bool allow_epoch0_restart) {
+   DTLS_Policy_Options opts;
+   opts.cipher = std::move(cipher);
+   opts.allow_epoch0_restart = allow_epoch0_restart;
+   return std::make_shared<DTLS_PSK_Policy>(std::move(opts));
+}
+
 // allow_dtls_epoch0_restart() off, which is the Policy default and the
 // configuration every DTLS client runs in.
 std::shared_ptr<DTLS_PSK_Policy> dtls_policy_without_epoch0_restart() {
@@ -1143,6 +1150,168 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      // A record carrying the cookie-bearing ClientHello followed by a stale copy
+      // of the original must not abort the handshake: delivering the duplicate
+      // first makes the real ClientHello look like trailing data.
+      static Test::Result test_coalesced_stale_client_hello_does_not_abort() {
+         Test::Result result("DTLS ClientHello packed with a stale duplicate completes");
+
+         auto rng = Test::new_shared_rng("dtls-core-coalesced-stale-client-hello");
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
+
+         const std::vector<uint8_t> client_hello_1 = c2s;
+         deliver(result, "client hello 1", c2s, server);
+         deliver(result, "hello verify request", s2c, client);
+         if(!result.test_is_true("cookie-bearing client hello was produced", !c2s.empty())) {
+            return result;
+         }
+         const std::vector<uint8_t> client_hello_2 = c2s;
+         c2s.clear();
+         s2c.clear();
+
+         const auto coalesced = coalesce_dtls_records(client_hello_2, client_hello_1);
+         deliver_copy(result, "cookie client hello packed with the stale one", coalesced, server);
+
+         if(!result.test_is_true("server answered the cookie-bearing ClientHello", !s2c.empty())) {
+            return result;
+         }
+         result.test_is_true("server response is the handshake flight",
+                             contains_dtls_handshake_type(s2c, Botan::TLS::Handshake_Type::ServerHello));
+         result.test_is_false("server did not close the connection", server.is_closed());
+
+         deliver(result, "server handshake flight", s2c, client);
+         deliver(result, "client final flight", c2s, server);
+         deliver(result, "server final flight", s2c, client);
+
+         result.test_is_true("client became active", client.is_active());
+         result.test_is_true("server became active", server.is_active());
+
+         return result;
+      }
+
+      // ClientHellos that never validate must not permanently advance the pending
+      // cookie exchange's handshake sequence numbers, which would make every
+      // fresh handshake starting at message_seq 0 look like a stale duplicate.
+      // Needs no epoch-zero restart: this is the ordinary initial handshake.
+      static Test::Result test_unvalidated_client_hellos_do_not_lock_out_a_server() {
+         Test::Result result("DTLS repeated unvalidated ClientHellos do not lock out a server");
+
+         auto rng = Test::new_shared_rng("dtls-core-cookie-lockout");
+         auto policy = std::make_shared<DTLS_PSK_Policy>();
+         auto creds = std::make_shared<DTLS_PSK_Credentials>();
+         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> server_recv;
+         auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
+         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
+
+         std::vector<uint8_t> c2s;
+         std::vector<uint8_t> client_recv;
+         auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
+         Botan::TLS::Client client(client_callbacks,
+                                   std::make_shared<Botan::TLS::Session_Manager_Noop>(),
+                                   creds,
+                                   policy,
+                                   rng,
+                                   Botan::TLS::Server_Information("localhost"),
+                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         // The client's initial ClientHello carries no cookie, so replaying it
+         // is enough to make the server answer with a HelloVerifyRequest.
+         const std::vector<uint8_t> client_hello = c2s;
+         c2s.clear();
+
+         constexpr size_t dtls_header_len = 13;
+         if(!result.test_is_true("captured a ClientHello", client_hello.size() > dtls_header_len + 6)) {
+            return result;
+         }
+
+         auto with_message_seq = [&](uint16_t seq) {
+            auto record = client_hello;
+            record[dtls_header_len + 4] = static_cast<uint8_t>(seq >> 8);
+            record[dtls_header_len + 5] = static_cast<uint8_t>(seq);
+            return record;
+         };
+
+         for(uint16_t seq = 0; seq != 2; ++seq) {
+            s2c.clear();
+            const auto spoofed = with_message_seq(seq);
+            deliver_copy(result, "unvalidated client hello", spoofed, server);
+            result.test_is_true("server answered with HelloVerifyRequest",
+                                contains_dtls_handshake_type(s2c, Botan::TLS::Handshake_Type::HelloVerifyRequest));
+         }
+         s2c.clear();
+
+         // The genuine client now handshakes on the same association.
+         deliver_copy(result, "genuine client hello", client_hello, server);
+         deliver(result, "hello verify request", s2c, client);
+         deliver(result, "cookie-bearing client hello", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+         deliver(result, "client final flight", c2s, server);
+         deliver(result, "server final flight", s2c, client);
+
+         result.test_is_true("client became active", client.is_active());
+         result.test_is_true("server became active", server.is_active());
+
+         return result;
+      }
+
+      // A bare 12-byte header claiming a zero-length ClientHello is not a
+      // ClientHello and must not touch a pending cookie exchange.
+      static Test::Result test_short_client_hello_does_not_discard_cookie_state() {
+         Test::Result result("DTLS undersized ClientHello header during cookie exchange");
+
+         auto rng = Test::new_shared_rng("dtls-core-short-ch-cookie-state");
+         auto policy = std::make_shared<DTLS_PSK_Policy>();
+         auto creds = std::make_shared<DTLS_PSK_Credentials>();
+
+         std::vector<uint8_t> c2s;
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> client_recv;
+         std::vector<uint8_t> server_recv;
+
+         auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
+         auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
+
+         Botan::TLS::Server server(
+            server_callbacks, std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng), creds, policy, rng, true);
+         Botan::TLS::Client client(client_callbacks,
+                                   std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng),
+                                   creds,
+                                   policy,
+                                   rng,
+                                   Botan::TLS::Server_Information("localhost"),
+                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         // Drive the server into a cookie exchange: it has answered with a
+         // HelloVerifyRequest and is waiting for the cookie to come back.
+         deliver(result, "client hello 1", c2s, server);
+         deliver(result, "hello verify request", s2c, client);
+
+         // A bare header at message_seq 0, declaring length 0.
+         std::array<uint8_t, 12> header = {};
+         header[0] = static_cast<uint8_t>(Botan::TLS::Handshake_Type::ClientHello);
+         const auto forged = unprotected_dtls_record(Botan::TLS::Record_Type::Handshake, 9, header);
+         result.test_no_throw("undersized ClientHello header is ignored",
+                              [&] { server.received_data(forged.data(), forged.size()); });
+
+         // If it had discarded the cookie state, the cookie-bearing ClientHello
+         // at message_seq 1 would be out of sequence for a fresh one and the
+         // handshake would stall here.
+         deliver(result, "client hello 2", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+         deliver(result, "client final flight", c2s, server);
+         deliver(result, "server final flight", s2c, client);
+         result.test_is_true("handshake still completed", client.is_active() && server.is_active());
+
+         return result;
+      }
+
       // Epoch numbers restart after an epoch-0 restart, so a retirement time
       // recorded for the first association's epoch 1 must not expire the second
       // association's epoch 1. Regression test: it previously did, and past the
@@ -1579,6 +1748,131 @@ class DTLS_Core_Regression_Tests final : public Test {
          // from the local timer.
          fire_retransmission_timer(result, *assoc->client_cb, client, c2s);
          result.test_is_true("client timer replays the lost response flight", !c2s.empty());
+
+         return result;
+      }
+
+      // A forged pre-cookie fragment must not poison the reassembly slot the
+      // genuine ClientHello needs, which would close the channel before any
+      // cookie was ever validated.
+      static Test::Result test_partial_client_hello_during_cookie_exchange() {
+         Test::Result result("DTLS partial ClientHello during cookie exchange");
+
+         auto rng = Test::new_shared_rng("dtls-core-partial-ch-cookie-state");
+         auto policy = std::make_shared<DTLS_PSK_Policy>();
+         auto creds = std::make_shared<DTLS_PSK_Credentials>();
+
+         std::vector<uint8_t> c2s;
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> client_recv;
+         std::vector<uint8_t> server_recv;
+
+         auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
+         auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
+
+         Botan::TLS::Server server(
+            server_callbacks, std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng), creds, policy, rng, true);
+         Botan::TLS::Client client(client_callbacks,
+                                   std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng),
+                                   creds,
+                                   policy,
+                                   rng,
+                                   Botan::TLS::Server_Information("localhost"),
+                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         // The server has answered with a HelloVerifyRequest and is waiting for
+         // the cookie-bearing ClientHello at message_seq 1.
+         deliver(result, "client hello 1", c2s, server);
+         deliver(result, "hello verify request", s2c, client);
+
+         // The first byte of some ClientHello at message_seq 0, declaring 100 bytes.
+         const std::vector<uint8_t> partial = {static_cast<uint8_t>(Botan::TLS::Handshake_Type::ClientHello),
+                                               0x00,
+                                               0x00,
+                                               0x64,  // msg_len 100
+                                               0x00,
+                                               0x00,  // message_seq 0
+                                               0x00,
+                                               0x00,
+                                               0x00,  // fragment_offset 0
+                                               0x00,
+                                               0x00,
+                                               0x01,  // fragment_length 1
+                                               0xAA};
+         const auto forged = unprotected_dtls_record(Botan::TLS::Record_Type::Handshake, 9, partial);
+         result.test_no_throw("partial ClientHello is accepted quietly",
+                              [&] { server.received_data(forged.data(), forged.size()); });
+         result.test_is_true("no reply to the partial ClientHello", s2c.empty());
+
+         // The exchange in progress is unaffected by it.
+         deliver(result, "client hello 2", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+         deliver(result, "client final flight", c2s, server);
+         deliver(result, "server final flight", s2c, client);
+         result.test_is_true("handshake still completed", client.is_active() && server.is_active());
+
+         return result;
+      }
+
+      static Test::Result test_pre_cookie_fragment_does_not_poison_a_handshake() {
+         Test::Result result("DTLS pre-cookie fragment does not poison a handshake");
+
+         auto rng = Test::new_shared_rng("dtls-core-pre-cookie-poison");
+         auto policy = std::make_shared<DTLS_PSK_Policy>();
+         auto creds = std::make_shared<DTLS_PSK_Credentials>();
+         auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> server_recv;
+         auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
+         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
+
+         std::vector<uint8_t> c2s;
+         std::vector<uint8_t> client_recv;
+         auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
+         Botan::TLS::Client client(client_callbacks,
+                                   std::make_shared<Botan::TLS::Session_Manager_Noop>(),
+                                   creds,
+                                   policy,
+                                   rng,
+                                   Botan::TLS::Server_Information("localhost"),
+                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         // One byte at a high offset of a ClientHello declaring 64 KiB, so the
+         // declared length conflicts with any real ClientHello.
+         std::vector<uint8_t> poison = {static_cast<uint8_t>(Botan::TLS::Handshake_Type::ClientHello),
+                                        0x01,
+                                        0x00,
+                                        0x00,  // msg_len 65536
+                                        0x00,
+                                        0x00,  // message_seq 0
+                                        0x00,
+                                        0xFF,
+                                        0xFF,  // fragment_offset 65535
+                                        0x00,
+                                        0x00,
+                                        0x01,  // fragment_length 1
+                                        0xAA};
+         const auto poison_record = unprotected_dtls_record(Botan::TLS::Record_Type::Handshake, 1, poison);
+
+         result.test_no_throw("poison fragment is accepted quietly",
+                              [&] { server.received_data(poison_record.data(), poison_record.size()); });
+         result.test_is_true("no reply to the poison fragment", s2c.empty());
+
+         // The genuine handshake must still complete.
+         deliver(result, "client hello 1", c2s, server);
+         result.test_is_false("server did not close", server.is_closed());
+         result.test_is_true("server answered with HelloVerifyRequest",
+                             contains_dtls_handshake_type(s2c, Botan::TLS::Handshake_Type::HelloVerifyRequest));
+
+         deliver(result, "hello verify request", s2c, client);
+         deliver(result, "client hello 2", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+         deliver(result, "client final flight", c2s, server);
+         deliver(result, "server final flight", s2c, client);
+
+         result.test_is_true("client became active", client.is_active());
+         result.test_is_true("server became active", server.is_active());
 
          return result;
       }
@@ -2074,6 +2368,117 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      // A forged epoch-0 partial Finished fragment, planted at the peer's
+      // Finished message_seq, parks in the retransmission reassembly slot. When
+      // the peer later retransmits its genuine, authenticated (epoch 1) final
+      // flight, the buffered forgery must not turn the header mismatch into a
+      // teardown of the established association: the higher, unforgeable epoch
+      // supersedes the planted fragment instead of throwing.
+      static Test::Result test_forged_epoch0_partial_finished_does_not_destroy_association() {
+         Test::Result result("DTLS forged epoch 0 partial Finished does not destroy an active association");
+
+         auto rng = Test::new_shared_rng("dtls-core-epoch0-partial-finished");
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
+
+         deliver(result, "client hello 1", c2s, server);
+         deliver(result, "hello verify request", s2c, client);
+         deliver(result, "client hello 2", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+         deliver(result, "client final flight", c2s, server);
+
+         result.test_is_true("server became active", server.is_active());
+         s2c.clear();  // simulate losing the server's final flight
+
+         // The client's Finished is its fourth handshake message, at message_seq
+         // 3 (ClientHello, cookie ClientHello, ClientKeyExchange, Finished). Plant
+         // a one-byte epoch-0 fragment of a 12-byte Finished in that slot. Being
+         // epoch 0 it is unauthenticated and does not advance the replay window,
+         // so it cannot be more than a forgery.
+         const std::array<uint8_t, 1> partial_finished = {0x00};
+         const auto forged = unprotected_dtls_record(
+            Botan::TLS::Record_Type::Handshake,
+            0x0000FFFFFFFFFFFE,
+            dtls_handshake_fragment(Botan::TLS::Handshake_Type::Finished, 12, 3, 0, partial_finished));
+         result.test_no_throw("epoch 0 partial Finished is absorbed",
+                              [&] { server.received_data(forged.data(), forged.size()); });
+         result.test_is_true("server remains active after the forgery", server.is_active());
+
+         // The genuine client retransmits its final flight, its Finished under
+         // epoch 1. Before the fix this collided with the planted fragment and
+         // the resulting throw, keyed to the authenticated record, was not
+         // absorbed and tore the association down.
+         fire_retransmission_timer(result, *assoc->client_cb, client, c2s);
+         result.test_no_throw("genuine retransmitted final flight is accepted", [&] {
+            std::vector<uint8_t> in;
+            std::swap(c2s, in);
+            server.received_data(in.data(), in.size());
+         });
+         result.test_is_true("server survives the retransmission", server.is_active());
+         result.test_is_false("server did not close", server.is_closed());
+
+         deliver(result, "retransmitted server final flight", s2c, client);
+         result.test_is_true("client became active", client.is_active());
+         result.test_is_true("server remains active", server.is_active());
+
+         return result;
+      }
+
+      // A bare 12-byte header declaring a zero-length body is not a real message
+      // of a type that has no empty encoding. Parked at a future message_seq of
+      // a handshake past the cookie exchange, it must not reassemble into a
+      // "complete" message that is never replaced and so silently displaces the
+      // genuine message that later arrives at that slot. (A wrong message at the
+      // sequence actually expected is a different matter: that is a protocol
+      // error and is correctly rejected, as BoGo's WrongMessageType tests check.)
+      static Test::Result test_forged_zero_length_message_does_not_displace_genuine() {
+         Test::Result result("DTLS forged zero-length handshake message does not displace the genuine one");
+
+         auto rng = Test::new_shared_rng("dtls-core-zero-length-forgery");
+         auto assoc = make_association(result, rng);
+         auto& client = *assoc->client;
+         auto& server = *assoc->server;
+         auto& c2s = assoc->c2s;
+         auto& s2c = assoc->s2c;
+
+         deliver(result, "client hello 1", c2s, server);
+         deliver(result, "hello verify request", s2c, client);
+         deliver(result, "client hello 2", c2s, server);
+         deliver(result, "server handshake flight", s2c, client);
+
+         // The server has committed to the handshake and is waiting for the
+         // client's ClientKeyExchange at message_seq 2, with its Finished to
+         // follow at message_seq 3. Capture the client's genuine final flight.
+         if(!result.test_is_true("client produced its final flight", !c2s.empty())) {
+            return result;
+         }
+         const std::vector<uint8_t> client_final_flight = c2s;
+         c2s.clear();
+
+         // Park a zero-length forgery in the future Finished slot. Before the fix
+         // it reassembled as a "complete" Finished, and the genuine Finished
+         // arriving there was then discarded as a duplicate of a complete slot.
+         const auto forged =
+            unprotected_dtls_record(Botan::TLS::Record_Type::Handshake,
+                                    0x0000FFFFFFFFFFFE,
+                                    dtls_handshake_fragment(Botan::TLS::Handshake_Type::Finished, 0, 3, 0, {}));
+         result.test_no_throw("zero-length Finished forgery is accepted quietly",
+                              [&] { server.received_data(forged.data(), forged.size()); });
+         result.test_is_false("server did not close on the forgery", server.is_closed());
+
+         // The genuine client final flight must still complete the handshake:
+         // epoch-0 forgeries do not advance the replay window, so its records are
+         // not shut out, and the forged slot must not have displaced its Finished.
+         deliver_copy(result, "genuine client final flight", client_final_flight, server);
+         deliver(result, "server final flight", s2c, client);
+         result.test_is_true("handshake completed", client.is_active() && server.is_active());
+
+         return result;
+      }
+
       static Test::Result test_resumed_final_flight_and_app_data_in_one_receive() {
          Test::Result result("DTLS resumed final flight and app data in one receive");
 
@@ -2204,6 +2609,10 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_lost_server_flight_retransmits(),
                  test_duplicate_server_flight_defers_to_timer(),
                  test_hello_request_during_handshake_is_ignored(),
+                 test_coalesced_stale_client_hello_does_not_abort(),
+                 test_unvalidated_client_hellos_do_not_lock_out_a_server(),
+                 test_short_client_hello_does_not_discard_cookie_state(),
+                 test_partial_client_hello_during_cookie_exchange(),
                  test_forged_epoch0_record_during_renegotiation(),
                  test_forged_epoch0_message_during_renegotiation(),
                  test_forged_epoch0_appdata_during_renegotiation(),
@@ -2213,6 +2622,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_epoch_retirement_does_not_outlive_a_restart(),
                  test_timed_out_initial_handshake_closes_the_channel(),
                  test_timed_out_renegotiation_keeps_the_association(),
+                 test_pre_cookie_fragment_does_not_poison_a_handshake(),
                  test_app_data_reordered_before_finished_is_discarded(),
                  test_old_epoch_app_data_during_renegotiation(),
                  test_lost_server_final_flight_retransmits(),
@@ -2222,6 +2632,8 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_reordered_retransmitted_final_flight(),
                  test_empty_old_handshake_fragment_does_not_retransmit(),
                  test_spoofed_epoch0_records_do_not_abort_or_poison_retransmission(),
+                 test_forged_epoch0_partial_finished_does_not_destroy_association(),
+                 test_forged_zero_length_message_does_not_displace_genuine(),
                  test_retransmitted_final_flight_then_application_data(false),
                  test_retransmitted_final_flight_then_application_data(true),
                  test_resumed_client_final_flight_retransmits_after_activation(),
@@ -2775,6 +3187,144 @@ class DTLS_Epoch0_Window_Tampering_Test : public Test {
 };
 
 BOTAN_REGISTER_TEST("tls", "tls_dtls_epoch0_window_tamper", DTLS_Epoch0_Window_Tampering_Test);
+
+// A restart ClientHello that authenticates via the DTLS cookie but then fails a
+// later, attacker-influenced validation step must not tear down the active
+// association. The step exercised here is choose_ciphersuite(): the restarting
+// client offers only a ciphersuite the server does not accept.
+class DTLS_Epoch0_Restart_Validation_Failure_Test : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("DTLS epoch-0 restart validation failure preserves active session");
+
+         auto rng = Test::new_shared_rng(this->test_name());
+
+         // The server and the legitimate client agree on AES-128/GCM; the
+         // restarting client below offers only AES-256/GCM, so the server's
+         // choose_ciphersuite() finds no overlap and throws after the cookie
+         // has already validated.
+         DTLS_Association_Options opts;
+         opts.policy = dtls_policy_with_cipher("AES-128/GCM", true);
+         opts.client_policy = dtls_policy_with_cipher("AES-128/GCM", false);
+         auto assoc = make_association(result, rng, opts);
+
+         result.test_is_true("legitimate DTLS session established", assoc->pump());
+
+         // The restart attempt: a valid cookie, then no acceptable cipher.
+         std::vector<uint8_t> bad_c2s;
+         std::vector<uint8_t> bad_recv;
+         auto bad_cb = std::make_shared<DTLS_Test_Callbacks>(result, bad_c2s, bad_recv);
+         bad_cb->tolerate_fatal_alerts();
+         auto bad_client = make_dtls_client(bad_cb,
+                                            std::make_shared<Botan::TLS::Session_Manager_Noop>(),
+                                            assoc->creds,
+                                            dtls_policy_with_cipher("AES-256/GCM", false),
+                                            rng);
+
+         // The server completes the cookie exchange and throws inside
+         // choose_ciphersuite(); process_handshake_ccs() absorbs the throw and
+         // rolls the pending restart back, so no alert is emitted and both
+         // buffers drain.
+         result.test_no_throw("server survives the failed restart without throwing", [&] {
+            pump_records(bad_c2s, *assoc->server, assoc->s2c, *bad_client, [] { return false; });
+         });
+
+         result.test_is_true("server still active after failed restart", assoc->server->is_active());
+         result.test_is_false("server not closed after failed restart", assoc->server->is_closed());
+
+         // End-to-end proof that the original association still carries data.
+         // Guarded on is_active() so that when the bug is present this reports
+         // an assertion failure rather than throwing out of send().
+         bool data_ok = false;
+         if(assoc->both_active()) {
+            const std::vector<uint8_t> ping(16, 0xC1);
+            const std::vector<uint8_t> pong(16, 0x42);
+            assoc->server_recv.clear();
+            assoc->client_recv.clear();
+            assoc->client->send(ping);
+            assoc->server->send(pong);
+            data_ok = assoc->pump_until([&] { return assoc->server_recv == ping && assoc->client_recv == pong; });
+         }
+         result.test_is_true("legitimate session still carries app data after failed restart", data_ok);
+
+         // The failed restart must have rolled its pending state back, not merely
+         // left it inert behind the still-active association. A stuck pending
+         // handshake would swallow the ClientHello of any later restart, so prove
+         // one can still run to completion.
+         std::vector<uint8_t> good_c2s;
+         std::vector<uint8_t> good_recv;
+         auto good_cb = std::make_shared<DTLS_Test_Callbacks>(result, good_c2s, good_recv);
+         auto good_client = make_dtls_client(good_cb,
+                                             std::make_shared<Botan::TLS::Session_Manager_Noop>(),
+                                             assoc->creds,
+                                             dtls_policy_with_cipher("AES-128/GCM", false),
+                                             rng);
+
+         assoc->s2c.clear();
+         const bool fresh_restart_ok = pump_records(good_c2s, *assoc->server, assoc->s2c, *good_client, [&] {
+            return good_client->is_active() && assoc->server->is_active();
+         });
+         result.test_is_true("a fresh restart completes after the failed one rolled back", fresh_restart_ok);
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls_dtls_epoch0_restart_validation_failure", DTLS_Epoch0_Restart_Validation_Failure_Test);
+
+/*
+* A DTLS server must have a cookie secret, but a stream server has no use for
+* one. Looking it up regardless meant a credentials manager that reports an
+* unsupported context by throwing could no longer construct a TLS 1.2 server.
+*/
+class TLS_Stream_Server_Cookie_Lookup_Test : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("stream TLS server construction ignores the DTLS cookie secret");
+
+         auto rng = Test::new_shared_rng(this->test_name());
+         auto creds = std::make_shared<Strict_Credentials>();
+         auto policy = std::make_shared<Botan::TLS::Policy>();
+         auto callbacks = std::make_shared<Quiet_Callbacks>();
+
+         result.test_no_throw("stream server constructs", [&] {
+            Botan::TLS::Server(
+               callbacks, std::make_shared<Botan::TLS::Session_Manager_Noop>(), creds, policy, rng, false);
+         });
+
+         result.test_throws("datagram server still reports the missing secret", [&] {
+            Botan::TLS::Server(
+               callbacks, std::make_shared<Botan::TLS::Session_Manager_Noop>(), creds, policy, rng, true);
+         });
+
+         return {result};
+      }
+
+   private:
+      // Rejects every context it does not know, which is what a strict
+      // application-supplied manager does.
+      class Strict_Credentials final : public Botan::Credentials_Manager {
+         public:
+            Botan::SymmetricKey psk(const std::string& type,
+                                    const std::string& context,
+                                    const std::string& identity) override {
+               throw Botan::Invalid_Argument("no PSK for " + type + "/" + context + "/" + identity);
+            }
+      };
+
+      class Quiet_Callbacks final : public Botan::TLS::Callbacks {
+         public:
+            void tls_emit_data(std::span<const uint8_t> /*data*/) override {}
+
+            void tls_record_received(uint64_t /*seq_no*/, std::span<const uint8_t> /*data*/) override {}
+
+            void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+
+            std::string tls_peer_network_identity() override { return "test-peer"; }
+      };
+};
+
+BOTAN_REGISTER_TEST("tls", "tls_stream_server_cookie_lookup", TLS_Stream_Server_Cookie_Lookup_Test);
 
 /*
 * RFC 5246 7.2.2 requires a fatally terminated connection to forget its keys and

@@ -120,6 +120,7 @@ void Channel_Impl_12::reset_state() {
    m_active_state.reset();
    m_pending_state.reset();
    m_epochs_before_latest_renegotiation.reset();
+   m_dtls_pending_is_epoch0_restart = false;
    m_resumption_handle.reset();
    m_readbuf.clear();
    m_write_cipher_states.clear();
@@ -172,6 +173,9 @@ void Channel_Impl_12::reset_active_association_state() {
    // This operation only makes sense for DTLS
    BOTAN_ASSERT_NOMSG(m_flavor == TLS_Flavor::DTLS);
    m_active_state.reset();
+   // With the old association gone the restart is an ordinary handshake, whose
+   // failure must be reported rather than rolled back
+   m_dtls_pending_is_epoch0_restart = false;
    m_read_cipher_states.clear();
    m_write_cipher_states.clear();
 
@@ -315,6 +319,7 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
                                                    max_timeout_ms,
                                                    max_retransmissions,
                                                    policy().maximum_handshake_message_size(),
+                                                   m_is_server,
                                                    initial_epoch);
    } else {
       const auto send_record_f = [this](Record_Type rec_type, const std::vector<uint8_t>& record) {
@@ -348,6 +353,7 @@ bool Channel_Impl_12::pending_handshake_epochs_unmoved() const {
 void Channel_Impl_12::clear_pending_handshake_state() {
    m_pending_state.reset();
    m_epochs_before_latest_renegotiation.reset();
+   m_dtls_pending_is_epoch0_restart = false;
 }
 
 /*
@@ -607,8 +613,7 @@ void Channel_Impl_12::activate_session() {
 }
 
 size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
-   const bool allow_epoch0_restart =
-      (m_flavor == TLS_Flavor::DTLS) && m_is_server && policy().allow_dtls_epoch0_restart();
+   const bool allow_epoch0_restart = (m_flavor == TLS_Flavor::DTLS) && dtls_epoch0_restart_enabled();
 
    const auto* input = data.data();
    auto input_size = data.size();
@@ -805,7 +810,7 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
       });
    };
 
-   const bool had_pending_state = (m_pending_state != nullptr);
+   const bool no_pending_at_entry = !m_pending_state;
 
    if(!m_pending_state) {
       // With no pending handshake this is either a new handshake attempt or a
@@ -848,6 +853,16 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
       }
    }
 
+   // A handshake created just now from an epoch-zero record while an association
+   // is live is a restart; remember that, so its failure rolls back to the live
+   // association instead of tearing it down, and so a stray epoch-zero record
+   // arriving later against an unrelated pending handshake (a renegotiation) is
+   // not mistaken for one. A pending state that already existed is untouched: a
+   // restart's own cookie-bearing ClientHello arrives while it is set.
+   if(no_pending_at_entry && m_pending_state) {
+      m_dtls_pending_is_epoch0_restart = epoch0_restart;
+   }
+
    // May have been created in above conditional
    if(m_pending_state) {
       // An epoch-zero record is unauthenticated. Once an association is
@@ -881,9 +896,13 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
          }
       });
 
-      // A handshake started by a forged record would otherwise block a genuine
-      // restart for as long as the association exists
-      if(absorbed && !had_pending_state && m_pending_state) {
+      // A restart's ClientHello authenticates through its cookie, but the checks
+      // after it (choosing a ciphersuite, for one) can still fail on input the
+      // peer controls. Until the restart commits by discarding the old
+      // association, a failure rolls the pending state back: the association
+      // stays live and untouched, and a handshake begun by a forged record
+      // cannot block a genuine restart for as long as the association exists.
+      if(absorbed && m_dtls_pending_is_epoch0_restart) {
          clear_pending_handshake_state();
       }
    }
@@ -1070,18 +1089,20 @@ void Channel_Impl_12::send_alert(const Alert& alert) {
    }
 }
 
-void Channel_Impl_12::secure_renegotiation_check(const Client_Hello_12* client_hello) {
+void Channel_Impl_12::secure_renegotiation_check(const Client_Hello_12* client_hello, bool fresh_handshake_mode) {
    BOTAN_ASSERT_NONNULL(client_hello);
    const bool secure_renegotiation = client_hello->secure_renegotiation();
 
-   if(m_active_state && m_active_state->client_supports_secure_renegotiation() != secure_renegotiation) {
+   if(!fresh_handshake_mode && m_active_state &&
+      m_active_state->client_supports_secure_renegotiation() != secure_renegotiation) {
       throw TLS_Exception(Alert::HandshakeFailure, "Client changed its mind about secure renegotiation");
    }
 
    if(secure_renegotiation) {
       const std::vector<uint8_t>& data = client_hello->renegotiation_info();
 
-      const auto expected = secure_renegotiation_data_for_client_hello();
+      const auto expected =
+         fresh_handshake_mode ? std::vector<uint8_t>() : secure_renegotiation_data_for_client_hello();
       if(!CT::is_equal<uint8_t>(data, expected).as_bool()) {
          throw TLS_Exception(Alert::HandshakeFailure, "Client sent bad values for secure renegotiation");
       }

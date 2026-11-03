@@ -141,6 +141,7 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
                             uint64_t max_timeout_ms,
                             std::optional<size_t> max_retransmissions,
                             size_t max_handshake_msg_size,
+                            bool is_server,
                             uint16_t initial_epoch = 0);
 
       Protocol_Version initial_record_version() const override;
@@ -228,6 +229,15 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       // flight has been sent yet.
       std::optional<size_t> last_completed_flight_index() const;
 
+      // Whether this is a server that has yet to send a flight. Since a
+      // HelloVerifyRequest is not retained as one, that is exactly the window
+      // before a cookie has validated. Restricted to servers because a client
+      // legitimately receives a HelloRequest into a fresh IO that has not sent
+      // anything either.
+      bool server_awaiting_first_flight() const {
+         return m_is_server && m_flights.size() == 1 && m_flights.front().empty();
+      }
+
       std::vector<uint8_t> format_fragment(const uint8_t fragment[],
                                            size_t fragment_len,
                                            uint32_t frag_offset,
@@ -259,7 +269,16 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
 
             bool complete() const;
 
+            // Whether a ClientHello fragment may replace what this slot holds:
+            // unauthenticated epoch-zero data of a message never completed.
+            bool superseded_by_client_hello(uint16_t epoch, Handshake_Type msg_type) const {
+               return msg_type == Handshake_Type::ClientHello && epoch == 0 && m_epoch == 0 && initialized() &&
+                      !complete();
+            }
+
             uint16_t epoch() const { return m_epoch; }
+
+            Handshake_Type msg_type() const { return m_msg_type; }
 
             // 0 until the first fragment has set the declared msg_length.
             size_t msg_length() const { return m_msg_length; }
@@ -320,6 +339,9 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
 
       std::optional<std::pair<uint16_t, Handshake_Reassembly>> m_retransmitted_client_hello;
       bool m_awaiting_cookie_client_hello = false;
+
+      // Set while answering a buffered duplicate ClientHello, so the reissued
+      // HelloVerifyRequest does not discard what the peer has sent since
       bool m_recreating_hello_verify_request = false;
       bool m_finished = false;
       bool m_retransmit_terminal_flight = false;
@@ -371,6 +393,7 @@ class BOTAN_TEST_API Datagram_Handshake_IO final : public Handshake_IO {
       uint16_t m_mtu;
       size_t m_max_handshake_msg_size;
       size_t m_max_pending_reassembly;
+      bool m_is_server;
 };
 
 }  // namespace Botan::TLS

@@ -404,6 +404,15 @@ std::shared_ptr<Server_Impl_12> Server_Impl_12::create(const std::shared_ptr<Cal
    return self;
 }
 
+bool Server_Impl_12::dtls_epoch0_restart_enabled() const {
+   // The restart replaces an established association on the strength of an
+   // unauthenticated epoch-zero ClientHello, so it is only safe once the cookie
+   // exchange has proved the peer's reachability. RFC 6347 4.2.8 relies on the
+   // cookie for exactly this. With the cookie exchange disabled there is no such
+   // proof, so a spoofed ClientHello could otherwise tear down the association.
+   return policy().allow_dtls_epoch0_restart() && policy().dtls_server_require_cookie_exchange();
+}
+
 std::unique_ptr<Handshake_State> Server_Impl_12::new_handshake_state(std::unique_ptr<Handshake_IO> io) {
    auto state = std::make_unique<Server_Handshake_State>(std::move(io), callbacks());
    state->set_expected_next(Handshake_Type::ClientHello);
@@ -507,6 +516,13 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
    }
 
    if(pending_state.handshake_io().have_more_data()) {
+      // For an unauthenticated epoch-0 restart attempt, silently drop rather
+      // than alerting the active association: the trailing data may be
+      // attacker-injected garbage on the 5-tuple, and any alert here would
+      // tear down a session the peer hasn't proven it can authenticate.
+      if(epoch0_restart) {
+         return;
+      }
       throw TLS_Exception(Alert::UnexpectedMessage, "Have data remaining in buffer after ClientHello");
    }
 
@@ -580,6 +596,11 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
             pending_state.handshake_io().send(verify);
          }
 
+         // Reset the ClientHello state while keeping the Datagram_Handshake_IO
+         // object alive; it is needed to detect the cookie-bearing ClientHello
+         // expected at the next sequence number. A ClientHello that never
+         // validates cannot wedge the exchange: the IO seats its sequence
+         // numbers at whichever complete ClientHello it delivers next.
          pending_state.client_hello(nullptr);
          pending_state.set_expected_next(Handshake_Type::ClientHello);
 
@@ -595,12 +616,7 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
       }
    }
 
-   if(epoch0_restart) {
-      // If we reached here then we were able to verify the cookie
-      reset_active_association_state();
-   }
-
-   secure_renegotiation_check(pending_state.client_hello());
+   secure_renegotiation_check(pending_state.client_hello(), epoch0_restart);
 
    // RFC 7627 / RFC 9325 4.4: optionally require Extended Master Secret
    if(policy().require_extended_master_secret() && !pending_state.client_hello()->supports_extended_master_secret()) {
@@ -617,7 +633,11 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
    // There is apparently no RFC requirement that a client must not drop EMS between the
    // initial negotiation and a renegotiation... but there is also no RFC requirement
    // that we must accept it. So we don't.
-   if(const auto& active = active_state()) {
+   //
+   // An epoch-zero restart is not a renegotiation: the peer has lost its state and is
+   // negotiating a fresh association, so the old association's EMS choice does not bind
+   // it. Comparing against active_state() there would reject a legitimate restart.
+   if(const auto& active = active_state(); active && !epoch0_restart) {
       const bool ems_pending = pending_state.client_hello()->supports_extended_master_secret();
       if(active->supports_extended_master_secret() == true && ems_pending == false) {
          throw TLS_Exception(Alert::HandshakeFailure,
@@ -652,11 +672,18 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
       }
    }
 
+   // For an epoch-0 restart the old association is discarded inside
+   // session_resume()/session_create(), at the point just before the new
+   // ServerHello is sent. Deferring it that far ensures a ClientHello that
+   // authenticates via the cookie but then fails a later check (e.g. no
+   // mutually-acceptable ciphersuite in choose_ciphersuite()) does not destroy
+   // the active session: the rollback in process_handshake_ccs() clears
+   // m_pending_state, but it cannot un-reset m_active_state.
    if(session_info.has_value()) {
-      this->session_resume(pending_state, {session_info.value(), session_handle.value()});
+      this->session_resume(pending_state, {session_info.value(), session_handle.value()}, epoch0_restart);
    } else {
       // new session
-      this->session_create(pending_state);
+      this->session_create(pending_state, epoch0_restart);
    }
 
    // We just sent our first flight that might get lost in transit. Hence, we
@@ -876,13 +903,21 @@ void Server_Impl_12::process_handshake_msg(Handshake_State& state_base,
    }
 }
 
-void Server_Impl_12::session_resume(Server_Handshake_State& pending_state, const Session_with_Handle& session) {
+void Server_Impl_12::session_resume(Server_Handshake_State& pending_state,
+                                    const Session_with_Handle& session,
+                                    bool epoch0_restart) {
    // Only offer a resuming client a new ticket if they didn't send one this time,
    // ie, resumed via server-side resumption. TODO: also send one if expiring soon?
 
    const bool offer_new_session_ticket = pending_state.client_hello()->supports_session_ticket() &&
                                          pending_state.client_hello()->session_ticket().empty() &&
                                          session_manager().emits_session_tickets();
+
+   // Commit point for a DTLS epoch-0 restart; see the comment in
+   // session_create() for the rationale.
+   if(epoch0_restart) {
+      reset_active_association_state();
+   }
 
    pending_state.server_hello(std::make_unique<Server_Hello_12>(pending_state.handshake_io(),
                                                                 pending_state.hash(),
@@ -953,7 +988,7 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state, const
    pending_state.set_expected_next(Handshake_Type::HandshakeCCS);
 }
 
-void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
+void Server_Impl_12::session_create(Server_Handshake_State& pending_state, bool epoch0_restart) {
    std::map<std::string, std::vector<X509_Certificate>> cert_chains;
 
    const std::string sni_hostname = pending_state.client_hello()->sni_hostname();
@@ -989,6 +1024,17 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
                                                 pending_state.version(),
                                                 ciphersuite,
                                                 session_manager().emits_session_tickets());
+
+   // Commit point for a DTLS epoch-0 restart: all validation that can throw has
+   // now passed (in particular choose_ciphersuite() above, which throws when the
+   // client offers no mutually-acceptable suite), and the next statement sends
+   // the ServerHello. Only here do we discard the old association. This must
+   // precede the Server_Hello_12 construction so that
+   // secure_renegotiation_data_for_server_hello() sees no active state and emits
+   // an empty (fresh-handshake) renegotiation_info.
+   if(epoch0_restart) {
+      reset_active_association_state();
+   }
 
    pending_state.server_hello(std::make_unique<Server_Hello_12>(pending_state.handshake_io(),
                                                                 pending_state.hash(),
