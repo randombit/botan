@@ -91,8 +91,8 @@ class Client_Handshake_State_12 final : public Handshake_State {
          if(is_a_resumption()) {
             return resume_peer_certs();
          }
-         if(server_certs() != nullptr) {
-            return server_certs()->cert_chain();
+         if(has_server_certs()) {
+            return server_certs().cert_chain();
          }
          return {};
       }
@@ -177,7 +177,7 @@ std::shared_ptr<Client_Impl_12> Client_Impl_12::create_for_downgrade(
       state.client_hello(std::make_unique<Client_Hello_12>(
          std::exchange(downgrade_info.client_hello, {}).value(), state.handshake_io(), state.hash()));
 
-      self->secure_renegotiation_check(state.client_hello());
+      self->secure_renegotiation_check(state.maybe_client_hello());
       if(downgrade_info.flavor == TLS_Flavor::DTLS) {
          state.set_expected_next(Handshake_Type::HelloVerifyRequest);  // optional
       }
@@ -292,7 +292,7 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
       }
    }
 
-   if(state.client_hello() == nullptr) {
+   if(!state.has_client_hello()) {
       // not resuming
       const Client_Hello_12::Settings client_settings(version, m_info.hostname());
       state.client_hello(std::make_unique<Client_Hello_12>(state.handshake_io(),
@@ -305,7 +305,7 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
                                                            next_protocols));
    }
 
-   secure_renegotiation_check(state.client_hello());
+   secure_renegotiation_check(state.maybe_client_hello());
 
    // We just sent our first message that might get lost in transit. Hence, we
    // kick-off a retransmission timer chain for users that implement the
@@ -352,7 +352,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       // RFC 5246 Section 7.4.1.1
       //    This message will be ignored by the client if the client is
       //    currently negotiating a session.
-      if(state.client_hello() != nullptr) {
+      if(state.has_client_hello()) {
          return;
       }
 
@@ -410,21 +410,21 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
    } else if(type == Handshake_Type::ServerHello) {
       state.server_hello(std::make_unique<Server_Hello_12>(contents));
 
-      if(!state.server_hello()->legacy_version().valid()) {
+      if(!state.server_hello().legacy_version().valid()) {
          throw TLS_Exception(Alert::ProtocolVersion, "Server replied with an invalid version");
       }
 
-      if(state.client_hello()->legacy_version().is_datagram_protocol() !=
-         state.server_hello()->legacy_version().is_datagram_protocol()) {
+      if(state.client_hello().legacy_version().is_datagram_protocol() !=
+         state.server_hello().legacy_version().is_datagram_protocol()) {
          throw TLS_Exception(Alert::ProtocolVersion, "Server replied with different protocol type than we offered");
       }
 
-      if(!state.client_hello()->offered_suite(state.server_hello()->ciphersuite())) {
+      if(!state.client_hello().offered_suite(state.server_hello().ciphersuite())) {
          throw TLS_Exception(Alert::HandshakeFailure, "Server replied with ciphersuite we didn't send");
       }
 
-      const auto suite = Ciphersuite::by_id(state.server_hello()->ciphersuite());
-      if(!suite || !suite->usable_in_version(state.server_hello()->legacy_version())) {
+      const auto suite = Ciphersuite::by_id(state.server_hello().ciphersuite());
+      if(!suite || !suite->usable_in_version(state.server_hello().legacy_version())) {
          throw TLS_Exception(Alert::HandshakeFailure,
                              "Server replied using a ciphersuite not allowed in version it offered");
       }
@@ -434,20 +434,20 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       //   and then selects a stream or Authenticated Encryption with Associated
       //   Data (AEAD) ciphersuite, it MUST NOT send an encrypt-then-MAC
       //   response extension back to the client.
-      if(!suite->cbc_ciphersuite() && state.server_hello()->supports_encrypt_then_mac()) {
+      if(!suite->cbc_ciphersuite() && state.server_hello().supports_encrypt_then_mac()) {
          throw TLS_Exception(Alert::IllegalParameter,
                              "Server replied using a non-CBC ciphersuite and an encrypt-then-MAC response extension");
       }
 
-      if(Ciphersuite::is_scsv(state.server_hello()->ciphersuite())) {
+      if(Ciphersuite::is_scsv(state.server_hello().ciphersuite())) {
          throw TLS_Exception(Alert::HandshakeFailure, "Server replied with a signaling ciphersuite");
       }
 
-      if(state.server_hello()->compression_method() != 0) {
+      if(state.server_hello().compression_method() != 0) {
          throw TLS_Exception(Alert::IllegalParameter, "Server replied with non-null compression method");
       }
 
-      const auto downgrade_signal = state.server_hello()->random_signals_downgrade();
+      const auto downgrade_signal = state.server_hello().random_signals_downgrade();
       if(downgrade_signal.has_value()) {
          // RFC 9846 4.2.3.:
          //   TLS 1.3 clients receiving a ServerHello indicating TLS 1.2 or
@@ -456,7 +456,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          //
          // If `random_signals_downgrade()` returns any value, then the server
          // is signaling a downgrade to TLS 1.2 or below.
-         if(state.client_hello()->offered_tls13()) {
+         if(state.client_hello().offered_tls13()) {
             throw TLS_Exception(Alert::IllegalParameter, "Downgrade attack detected");
          }
 
@@ -468,14 +468,14 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          // Technically, this is dead code because we don't support TLS 1.1 or
          // below anymore, but we keep it for completeness and to avoid future
          // regressions.
-         if(state.client_hello()->legacy_version() > state.server_hello()->legacy_version() &&
+         if(state.client_hello().legacy_version() > state.server_hello().legacy_version() &&
             downgrade_signal.value() <= Protocol_Version::TLS_V11) {
             throw TLS_Exception(Alert::IllegalParameter, "Downgrade attack detected");
          }
       }
 
-      const auto client_extn = state.client_hello()->extension_types();
-      const auto server_extn = state.server_hello()->extension_types();
+      const auto client_extn = state.client_hello().extension_types();
+      const auto server_extn = state.server_hello().extension_types();
 
       std::vector<Extension_Code> diff;
 
@@ -493,47 +493,47 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          throw TLS_Exception(Alert::UnsupportedExtension, msg.str());
       }
 
-      if(const uint16_t srtp = state.server_hello()->srtp_profile()) {
-         if(!value_exists(state.client_hello()->srtp_profiles(), srtp)) {
+      if(const uint16_t srtp = state.server_hello().srtp_profile()) {
+         if(!value_exists(state.client_hello().srtp_profiles(), srtp)) {
             throw TLS_Exception(Alert::HandshakeFailure, "Server replied with DTLS-SRTP alg we did not send");
          }
       }
 
       callbacks().tls_examine_extensions(
-         state.server_hello()->extensions(), Connection_Side::Server, Handshake_Type::ServerHello);
+         state.server_hello().extensions(), Connection_Side::Server, Handshake_Type::ServerHello);
 
-      state.set_version(state.server_hello()->legacy_version());
+      state.set_version(state.server_hello().legacy_version());
 
-      if(state.server_hello()->extensions().has<Application_Layer_Protocol_Notification>()) {
-         const auto* server_alpn = state.server_hello()->extensions().get<Application_Layer_Protocol_Notification>();
+      if(state.server_hello().extensions().has<Application_Layer_Protocol_Notification>()) {
+         const auto* server_alpn = state.server_hello().extensions().get<Application_Layer_Protocol_Notification>();
          const auto selected = server_alpn->single_protocol();
-         const auto* client_alpn = state.client_hello()->extensions().get<Application_Layer_Protocol_Notification>();
+         const auto* client_alpn = state.client_hello().extensions().get<Application_Layer_Protocol_Notification>();
          BOTAN_ASSERT_NONNULL(client_alpn);
          const auto& offered = client_alpn->protocols();
          if(!value_exists(offered, selected)) {
             throw TLS_Exception(Alert::IllegalParameter, "Server selected an ALPN protocol not offered by the client");
          }
       }
-      if(active_state().has_value() && !state.client_hello()->supports_alpn()) {
+      if(active_state().has_value() && !state.client_hello().supports_alpn()) {
          // The application protocol is a property of the connection, which a
          // renegotiation that does not offer ALPN does not change. If it was
          // offered, the server cleared its protocol unless it selected one.
          m_application_protocol = active_state()->application_protocol();
       } else {
-         m_application_protocol = state.server_hello()->next_protocol();
+         m_application_protocol = state.server_hello().next_protocol();
       }
 
-      secure_renegotiation_check(state.server_hello());
+      secure_renegotiation_check(state.maybe_server_hello());
 
       // RFC 7627 / RFC 9325 4.4: optionally require Extended Master Secret.
-      if(policy().require_extended_master_secret() && !state.server_hello()->supports_extended_master_secret()) {
+      if(policy().require_extended_master_secret() && !state.server_hello().supports_extended_master_secret()) {
          throw TLS_Exception(Alert::HandshakeFailure,
                              "Policy requires the Extended Master Secret extension but the server did not send it");
       }
 
       const bool server_returned_same_session_id =
-         !state.server_hello()->session_id().empty() &&
-         (state.server_hello()->session_id() == state.client_hello()->session_id());
+         !state.server_hello().session_id().empty() &&
+         (state.server_hello().session_id() == state.client_hello().session_id());
 
       if(server_returned_same_session_id) {
          // successful resumption
@@ -543,22 +543,22 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          * In this case, we offered the version used in the original
          * session, and the server must resume with the same version.
          */
-         if(state.server_hello()->legacy_version() != state.client_hello()->legacy_version()) {
+         if(state.server_hello().legacy_version() != state.client_hello().legacy_version()) {
             throw TLS_Exception(Alert::HandshakeFailure, "Server resumed session but with wrong version");
          }
 
          // RFC 5246 7.4.1.2: when resuming a session, the server MUST use
          // the same cipher suite that was negotiated in the original session.
-         if(state.server_hello()->ciphersuite() != state.resumed_session_ciphersuite_code()) {
+         if(state.server_hello().ciphersuite() != state.resumed_session_ciphersuite_code()) {
             throw TLS_Exception(Alert::HandshakeFailure, "Server resumed session with a different ciphersuite");
          }
 
-         if(state.server_hello()->supports_extended_master_secret() &&
+         if(state.server_hello().supports_extended_master_secret() &&
             !state.resumed_session_supports_extended_master_secret()) {
             throw TLS_Exception(Alert::HandshakeFailure, "Server resumed session but added extended master secret");
          }
 
-         if(!state.server_hello()->supports_extended_master_secret() &&
+         if(!state.server_hello().supports_extended_master_secret() &&
             state.resumed_session_supports_extended_master_secret()) {
             throw TLS_Exception(Alert::HandshakeFailure, "Server resumed session and removed extended master secret");
          }
@@ -566,11 +566,11 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          // RFC 7366 3.1
          //    implementations MUST NOT renegotiate a downgrade from
          //    encrypt-then-MAC to MAC-then-encrypt.
-         if(state.server_hello()->supports_encrypt_then_mac() != state.resumed_session_supports_encrypt_then_mac()) {
+         if(state.server_hello().supports_encrypt_then_mac() != state.resumed_session_supports_encrypt_then_mac()) {
             throw TLS_Exception(Alert::HandshakeFailure, "Server resumed session but changed encrypt-then-MAC");
          }
 
-         if(state.server_hello()->srtp_profile() != state.resumed_session_dtls_srtp_profile()) {
+         if(state.server_hello().srtp_profile() != state.resumed_session_dtls_srtp_profile()) {
             throw TLS_Exception(Alert::HandshakeFailure, "Server resumed session but changed the DTLS-SRTP profile");
          }
 
@@ -581,10 +581,10 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
             //    the label "CLIENT_RANDOM" to identify the "master" secret for
             //    the connection.
             callbacks().tls_ssl_key_log_data(
-               "CLIENT_RANDOM", state.client_hello()->random(), state.session_keys().master_secret());
+               "CLIENT_RANDOM", state.client_hello().random(), state.session_keys().master_secret());
          }
 
-         if(state.server_hello()->supports_session_ticket()) {
+         if(state.server_hello().supports_session_ticket()) {
             state.set_expected_next(Handshake_Type::NewSessionTicket);
          } else {
             state.set_expected_next(Handshake_Type::HandshakeCCS);
@@ -597,11 +597,11 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
             // even if the server creates a new session. However they might change
             // in a resumption scenario.
 
-            if(active_state()->version() != state.server_hello()->legacy_version()) {
+            if(active_state()->version() != state.server_hello().legacy_version()) {
                throw TLS_Exception(Alert::ProtocolVersion, "Server changed version after renegotiation");
             }
 
-            if(state.server_hello()->supports_extended_master_secret() !=
+            if(state.server_hello().supports_extended_master_secret() !=
                active_state()->supports_extended_master_secret()) {
                throw TLS_Exception(Alert::HandshakeFailure, "Server changed its mind about extended master secret");
             }
@@ -609,7 +609,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
 
          state.discard_resumption_state();
 
-         if(state.version() > state.client_hello()->legacy_version()) {
+         if(state.version() > state.client_hello().legacy_version()) {
             throw TLS_Exception(Alert::HandshakeFailure, "Server replied with later version than client offered");
          }
 
@@ -647,7 +647,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
    } else if(type == Handshake_Type::Certificate) {
       state.server_certs(std::make_unique<Certificate_12>(contents, policy()));
 
-      const std::vector<X509_Certificate>& server_certs = state.server_certs()->cert_chain();
+      const std::vector<X509_Certificate>& server_certs = state.server_certs().cert_chain();
 
       if(server_certs.empty()) {
          throw TLS_Exception(Alert::HandshakeFailure, "Client: No certificates sent by server");
@@ -695,7 +695,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          state.set_expected_next(Handshake_Type::ServerHelloDone);
       }
 
-      if(state.server_hello()->supports_certificate_status_message()) {
+      if(state.server_hello().supports_certificate_status_message()) {
          state.set_expected_next(Handshake_Type::CertificateStatus);  // optional
       } else {
          try {
@@ -730,7 +730,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       if(state.ciphersuite().signature_used()) {
          const Public_Key& server_key = state.server_public_key();
 
-         if(!state.server_kex()->verify(server_key, state, policy())) {
+         if(!state.server_kex().verify(server_key, state, policy())) {
             throw TLS_Exception(Alert::DecryptError, "Bad signature on server key exchange");
          }
       }
@@ -744,16 +744,16 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          throw TLS_Exception(Alert::UnexpectedMessage, "Have data remaining in buffer after ServerHelloDone");
       }
 
-      if(state.server_certs() != nullptr && state.server_hello()->supports_certificate_status_message()) {
+      if(state.has_server_certs() && state.server_hello().supports_certificate_status_message()) {
          try {
             const auto trusted_CAs = m_creds->trusted_certificate_authorities("tls-client", m_info.hostname());
 
             std::vector<std::optional<OCSP::Response>> ocsp;
-            if(state.server_cert_status() != nullptr) {
-               ocsp.emplace_back(callbacks().tls_parse_ocsp_response(state.server_cert_status()->response()));
+            if(state.has_server_cert_status()) {
+               ocsp.emplace_back(callbacks().tls_parse_ocsp_response(state.server_cert_status().response()));
             }
 
-            callbacks().tls_verify_cert_chain(state.server_certs()->cert_chain(),
+            callbacks().tls_verify_cert_chain(state.server_certs().cert_chain(),
                                               ocsp,
                                               trusted_CAs,
                                               Usage_Type::TLS_SERVER_AUTH,
@@ -767,7 +767,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       }
 
       if(state.received_handshake_msg(Handshake_Type::CertificateRequest)) {
-         const auto& cert_req = *state.cert_req();
+         const auto& cert_req = state.cert_req();
 
          // RFC 5246 7.4.4
          //    -  Any certificates provided by the client MUST be signed using a
@@ -817,12 +817,12 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          //    the label "CLIENT_RANDOM" to identify the "master" secret for
          //    the connection.
          callbacks().tls_ssl_key_log_data(
-            "CLIENT_RANDOM", state.client_hello()->random(), state.session_keys().master_secret());
+            "CLIENT_RANDOM", state.client_hello().random(), state.session_keys().master_secret());
       }
 
-      if(state.received_handshake_msg(Handshake_Type::CertificateRequest) && !state.client_certs()->empty()) {
+      if(state.received_handshake_msg(Handshake_Type::CertificateRequest) && !state.client_certs().empty()) {
          const auto private_key =
-            m_creds->private_key_for(state.client_certs()->cert_chain()[0], "tls-client", m_info.hostname());
+            m_creds->private_key_for(state.client_certs().cert_chain()[0], "tls-client", m_info.hostname());
 
          if(!private_key) {
             throw TLS_Exception(Alert::InternalError, "Failed to get private key for signing");
@@ -842,7 +842,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       // our timer to cause a retransmission.
       maybe_arm_dtls_retransmission_timer();
 
-      if(state.server_hello()->supports_session_ticket()) {
+      if(state.server_hello().supports_session_ticket()) {
          state.set_expected_next(Handshake_Type::NewSessionTicket);
       } else {
          state.set_expected_next(Handshake_Type::HandshakeCCS);
@@ -862,13 +862,13 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
 
       state.server_finished(std::make_unique<Finished_12>(contents));
 
-      if(!state.server_finished()->verify(state, Connection_Side::Server)) {
+      if(!state.server_finished().verify(state, Connection_Side::Server)) {
          throw TLS_Exception(Alert::DecryptError, "Finished message didn't verify");
       }
 
       state.hash().update(state.handshake_io().format(contents, type));
 
-      if(state.client_finished() == nullptr) {
+      if(!state.has_client_finished()) {
          // session resume case
          state.handshake_io().send(Change_Cipher_Spec());
          change_cipher_spec_writer(Connection_Side::Client);
@@ -878,22 +878,22 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       // Session Tickets (as defined in RFC 5077) contain a lifetime_hint,
       // sessions identified via a Session_ID do not.
       const std::chrono::seconds session_lifetime_hint = [&] {
-         if(state.new_session_ticket() != nullptr) {
-            return std::chrono::seconds(state.new_session_ticket()->ticket_lifetime_hint());
+         if(state.has_new_session_ticket()) {
+            return std::chrono::seconds(state.new_session_ticket().ticket_lifetime_hint());
          } else {
             return std::chrono::seconds::max();
          }
       }();
 
       Session session_info(state.session_keys().master_secret(),
-                           state.server_hello()->legacy_version(),
-                           state.server_hello()->ciphersuite(),
+                           state.server_hello().legacy_version(),
+                           state.server_hello().ciphersuite(),
                            Connection_Side::Client,
-                           state.server_hello()->supports_extended_master_secret(),
-                           state.server_hello()->supports_encrypt_then_mac(),
+                           state.server_hello().supports_extended_master_secret(),
+                           state.server_hello().supports_encrypt_then_mac(),
                            state.peer_cert_chain(),
                            m_info,
-                           state.server_hello()->srtp_profile(),
+                           state.server_hello().srtp_profile(),
                            callbacks().tls_current_timestamp(),
                            session_lifetime_hint);
 
@@ -908,13 +908,13 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          ClientHello's old ticket would store the new master secret under a ticket the
          server has discarded.
          */
-         if(const auto* nst = state.new_session_ticket(); nst != nullptr && !nst->ticket().empty()) {
+         if(const auto* nst = state.maybe_new_session_ticket(); nst != nullptr && !nst->ticket().empty()) {
             return Session_Handle(nst->ticket());
          }
-         if(state.is_a_resumption() && !state.client_hello()->session_ticket().empty()) {
-            return Session_Handle(state.client_hello()->session_ticket());
+         if(state.is_a_resumption() && !state.client_hello().session_ticket().empty()) {
+            return Session_Handle(state.client_hello().session_ticket());
          }
-         if(const auto& session_id = state.server_hello()->session_id(); !session_id.empty()) {
+         if(const auto& session_id = state.server_hello().session_id(); !session_id.empty()) {
             return Session_Handle(session_id);
          }
          return std::nullopt;
@@ -924,8 +924,8 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       // establishing the connection.
       callbacks().tls_session_established([&] {
          Session_Summary summary(session_info, state.is_a_resumption(), state.psk_identity());
-         summary.set_session_id(state.server_hello()->session_id());
-         if(const auto* nst = state.new_session_ticket()) {
+         summary.set_session_id(state.server_hello().session_id());
+         if(const auto* nst = state.maybe_new_session_ticket()) {
             summary.set_session_ticket(nst->ticket());
          }
          return summary;
@@ -941,11 +941,11 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          //    client should start using the new ticket as soon as possible
          //    after it verifies the server's Finished message for new
          //    connections.
-         if(state.is_a_resumption() && !state.client_hello()->session_ticket().empty() && handle->is_ticket() &&
+         if(state.is_a_resumption() && !state.client_hello().session_ticket().empty() && handle->is_ticket() &&
             should_save) {
             // renew the session ticket by removing the one we used to establish
             // this connection and replace it with the one we just received
-            session_manager().remove(Session_Handle(state.client_hello()->session_ticket()));
+            session_manager().remove(Session_Handle(state.client_hello().session_ticket()));
             session_manager().store(session_info, handle.value());
          }
 
@@ -958,8 +958,8 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
          } else if(!should_save) {
             // The application does not want this session to be resumed again
             session_manager().remove(handle.value());
-            if(!state.client_hello()->session_ticket().empty()) {
-               session_manager().remove(Session_Handle(state.client_hello()->session_ticket()));
+            if(!state.client_hello().session_ticket().empty()) {
+               session_manager().remove(Session_Handle(state.client_hello().session_ticket()));
             }
          }
       }

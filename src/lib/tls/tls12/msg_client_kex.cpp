@@ -80,8 +80,8 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
    if(kex_algo == Kex_Algo::PSK) {
       std::string identity_hint;
 
-      if(state.server_kex() != nullptr) {
-         TLS_Data_Reader reader("ClientKeyExchange", state.server_kex()->params());
+      if(state.has_server_kex()) {
+         TLS_Data_Reader reader("ClientKeyExchange", state.server_kex().params());
          identity_hint = reader.get_string(2, 0, 65535);
       }
 
@@ -99,8 +99,8 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
       append_tls_length_value(m_pre_master, zeros, 2);
       append_tls_length_value(m_pre_master, psk.bits_of(), 2);
-   } else if(state.server_kex() != nullptr) {
-      TLS_Data_Reader reader("ClientKeyExchange", state.server_kex()->params());
+   } else if(state.has_server_kex()) {
+      TLS_Data_Reader reader("ClientKeyExchange", state.server_kex().params());
 
       SymmetricKey psk;
 
@@ -174,7 +174,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          // offered list (which may be a strict subset of the policy's
          // key_exchange_groups() if the application narrowed it via
          // tls_modify_extensions) rather than just the policy.
-         if(!value_exists(state.client_hello()->supported_ecc_curves(), curve_id)) {
+         if(!value_exists(state.client_hello().supported_ecc_curves(), curve_id)) {
             throw TLS_Exception(Alert::IllegalParameter, "Server selected a curve we did not offer");
          }
 
@@ -184,7 +184,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          const auto private_key = [&] {
             if(curve_id.is_ecdh_named_curve()) {
-               const auto pubkey_point_format = state.server_hello()->prefers_compressed_ec_points()
+               const auto pubkey_point_format = state.server_hello().prefers_compressed_ec_points()
                                                    ? EC_Point_Format::Compressed
                                                    : EC_Point_Format::Uncompressed;
                return state.callbacks().tls12_generate_ephemeral_ecdh_key(curve_id, rng, pubkey_point_format);
@@ -228,7 +228,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
       }
 
       if(const auto* rsa_pub = dynamic_cast<const RSA_PublicKey*>(server_public_key)) {
-         const Protocol_Version offered_version = state.client_hello()->legacy_version();
+         const Protocol_Version offered_version = state.client_hello().legacy_version();
 
          rng.random_vec(m_pre_master, 48);
          m_pre_master[0] = offered_version.major_version();
@@ -260,7 +260,7 @@ Client_Key_Exchange::Client_Key_Exchange(std::span<const uint8_t> contents,
    const Kex_Algo kex_algo = state.ciphersuite().kex_method();
 
    if(kex_algo == Kex_Algo::STATIC_RSA) {
-      BOTAN_ASSERT(state.server_certs() && !state.server_certs()->cert_chain().empty(),
+      BOTAN_ASSERT(!state.server_certs().cert_chain().empty(),
                    "RSA key exchange negotiated so server sent a certificate");
 
       if(server_rsa_kex_key == nullptr) {
@@ -278,8 +278,8 @@ Client_Key_Exchange::Client_Key_Exchange(std::span<const uint8_t> contents,
 
       const PK_Decryptor_EME decryptor(*server_rsa_kex_key, rng, "PKCS1v15");
 
-      const uint8_t client_major = state.client_hello()->legacy_version().major_version();
-      const uint8_t client_minor = state.client_hello()->legacy_version().minor_version();
+      const uint8_t client_major = state.client_hello().legacy_version().major_version();
+      const uint8_t client_minor = state.client_hello().legacy_version().minor_version();
 
       /*
       * PK_Decryptor::decrypt_or_random will return a random value if
@@ -320,7 +320,7 @@ Client_Key_Exchange::Client_Key_Exchange(std::span<const uint8_t> contents,
          m_psk_identity = reader.get_string(2, 0, 65535);
 
          try {
-            psk = creds.psk("tls-server", state.client_hello()->sni_hostname(), m_psk_identity.value());
+            psk = creds.psk("tls-server", state.client_hello().sni_hostname(), m_psk_identity.value());
          } catch(...) {
             // Treat any lookup failure for the identity sent by the client as
             // "no PSK for this identity" and let the logic below handle it
@@ -341,13 +341,13 @@ Client_Key_Exchange::Client_Key_Exchange(std::span<const uint8_t> contents,
          append_tls_length_value(m_pre_master, zeros, 2);
          append_tls_length_value(m_pre_master, psk.bits_of(), 2);
       } else if(kex_algo == Kex_Algo::DH || kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK) {
-         const PK_Key_Agreement_Key& ka_key = state.server_kex()->server_kex_key();
+         const PK_Key_Agreement_Key& ka_key = state.server_kex().server_kex_key();
 
          const std::vector<uint8_t> client_pubkey = (ka_key.algo_name() == "DH")
                                                        ? reader.get_range<uint8_t>(2, 1, 65535)
                                                        : reader.get_range<uint8_t>(1, 1, 255);
 
-         const auto shared_group = state.server_kex()->shared_group();
+         const auto shared_group = state.server_kex().shared_group();
          BOTAN_STATE_CHECK(shared_group && shared_group.value() != Group_Params::NONE);
 
          try {

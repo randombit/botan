@@ -154,8 +154,7 @@ void Handshake_State::set_version(const Protocol_Version& version) {
 }
 
 void Handshake_State::compute_session_keys() {
-   BOTAN_ASSERT_NONNULL(client_kex());
-   m_session_keys = Session_Keys(this, client_kex()->pre_master_secret(), false);
+   m_session_keys = Session_Keys(this, client_kex().pre_master_secret(), false);
 }
 
 void Handshake_State::compute_session_keys(const secure_vector<uint8_t>& resume_master_secret) {
@@ -179,15 +178,14 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Handshake_State::get_next_handsh
 }
 
 Session_Ticket Handshake_State::session_ticket() const {
-   if(const auto* nst = new_session_ticket()) {
+   if(const auto* nst = maybe_new_session_ticket()) {
       const auto& ticket = nst->ticket();
       if(!ticket.empty()) {
          return ticket;
       }
    }
 
-   BOTAN_ASSERT_NONNULL(client_hello());
-   return client_hello()->session_ticket();
+   return client_hello().session_ticket();
 }
 
 std::unique_ptr<KDF> Handshake_State::protocol_specific_prf() const {
@@ -202,14 +200,8 @@ std::pair<std::string, Signature_Format> Handshake_State::choose_sig_format(cons
 
    const std::vector<Signature_Scheme> allowed = policy.allowed_signature_schemes();
 
-   if(for_client_auth) {
-      BOTAN_ASSERT_NONNULL(cert_req());
-   } else {
-      BOTAN_ASSERT_NONNULL(client_hello());
-   }
-
    std::vector<Signature_Scheme> requested =
-      (for_client_auth) ? cert_req()->signature_schemes() : client_hello()->signature_schemes();
+      (for_client_auth) ? cert_req().signature_schemes() : client_hello().signature_schemes();
 
    for(const Signature_Scheme scheme : allowed) {
       if(!scheme.is_available() || !scheme.is_compatible_with(version())) {
@@ -276,7 +268,7 @@ std::pair<std::string, Signature_Format> Handshake_State::parse_sig_format(
       throw Decoding_Error("Counterparty sent inconsistent key and sig types");
    }
 
-   if(for_client_auth && cert_req() == nullptr) {
+   if(for_client_auth && !has_cert_req()) {
       throw TLS_Exception(Alert::HandshakeFailure, "No CertificateVerify message received");
    }
 
@@ -286,7 +278,7 @@ std::pair<std::string, Signature_Format> Handshake_State::parse_sig_format(
    */
 
    const std::vector<Signature_Scheme> supported_algos =
-      for_client_auth ? cert_req()->signature_schemes() : offered_schemes;
+      for_client_auth ? cert_req().signature_schemes() : offered_schemes;
 
    if(!scheme.is_compatible_with(Protocol_Version::TLS_V12)) {
       throw TLS_Exception(Alert::IllegalParameter, "Peer sent unacceptable signature scheme");
