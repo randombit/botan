@@ -8,6 +8,7 @@
 #include <botan/chacha_rng.h>
 
 #include <botan/assert.h>
+#include <botan/mem_ops.h>
 
 namespace Botan {
 
@@ -94,6 +95,7 @@ void ChaCha_RNG::generate_output(std::span<uint8_t> output, std::span<const uint
    // optionally overwrite key after each output operation for backtracking resistance
    if(erase_key) {
       update_chacha_state(key_material);
+      secure_scrub_memory(key_material);
    }
 }
 

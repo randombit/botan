@@ -176,9 +176,12 @@ class BOTAN_PUBLIC_API(2, 3) ChaCha_RNG final : public Stateful_RNG {
 
       /**
       * Return the largest number of bytes this DRBG will produce per request
-      * @return always zero, as this RNG has no such limit
+      * @return 2^{16} with key erasure (BSI's AIs 20/31 3.0 DRG.3.2 limits a
+      * request to 2^{19} bits.), otherwise zero (no limit)
       */
-      size_t max_number_of_bytes_per_request() const override { return 0; }
+      size_t max_number_of_bytes_per_request() const override {
+         return (m_key_erasure == KeyErasure::WithKeyErasure ? 65536 : 0);
+      }
 
       KeyErasure key_erasure() const { return m_key_erasure; }
 
