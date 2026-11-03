@@ -91,6 +91,11 @@ New APIs and Features
 Security and Hardening
 ----------------------------------------
 
+* Address various DTLS handshake desync bugs (GH #5783)
+
+* Fix a number of minor TLS conformance bugs and validate peer input with
+  respect to some RFC requirements which were previously ignored. (GH #6061)
+
 * During X.509 path validation, signatures are now verified starting from the
   trust anchor down to the leaf, stopping at the first invalid signature.
   (GH #5982)
@@ -184,8 +189,19 @@ Security and Hardening
   ``Stateful_RNG`` now detects a fork which occurs before it is first seeded.
   (GH #6058)
 
+* The baseline SM4 implementation (used if there is no suitable AES or SIMD
+  hardware) is now constant time. (GH #6090)
+
 Behavior Changes
 ----------------------------------------
+
+* TLS now enforces that certificates contain the digitalSignature bit (or, for
+  TLS 1.2 RSA key exchange, keyEncipherment). Previously nonRepudiation or
+  dataEncipherment key usages were also accepted. (GH #6061)
+
+* If the TLS policy requires client authentication then PSK ciphersuites will no
+  longer be accepted, since PSK plus client auth is not supported in the handshake.
+  (GH #6061)
 
 * Fix the ML-DSA private key encoding in PKCS #8 containers to conform to
   RFC 9881. All three encodings of the RFC (seed, expanded key, both) are
