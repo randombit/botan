@@ -145,6 +145,8 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
             bool m_reject_default_value_encoding;
       };
 
+      // TODO(Botan4) have the various Limits arguments default to Limits::DER()
+
       /**
       * Set up to BER decode the data in buf of length len
       */
