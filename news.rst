@@ -203,9 +203,12 @@ Behavior Changes
   longer be accepted, since PSK plus client auth is not supported in the handshake.
   (GH #6061)
 
-* Fix the ML-DSA private key encoding in PKCS #8 containers to conform to
+* Update the ML-DSA private key encoding in PKCS #8 containers to conform to
   RFC 9881. All three encodings of the RFC (seed, expanded key, both) are
-  supported. (GH #5002 #5307)
+  supported. The old formats can still be decoded. (GH #5002 #5307)
+
+* Update the ML-KEM private key encoding in PKCS #8 containers to conform to
+  RFC 9935. The old formats can still be decoded. (GH #5934)
 
 * By default, ECDSA signatures are now randomized rather than deterministic even
   when RFC 6979 support is available at build time. Deterministic signatures can
