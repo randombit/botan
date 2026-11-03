@@ -63,6 +63,7 @@ class SM4 final : public Block_Cipher_Fixed_Params<16, 16> {
       static uint32_t SM4_Tp(uint32_t x);
 
       secure_vector<uint32_t> m_RK;
+      secure_vector<word> m_BSK;
 };
 
 }  // namespace Botan
