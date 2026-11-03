@@ -187,17 +187,6 @@ Security and Hardening
 Behavior Changes
 ----------------------------------------
 
-* Fix the ML-KEM private key encoding in PKCS #8 containers to conform to
-  RFC 9935. All three encodings of the RFC (seed, expanded key, both) are
-  supported via the ``Module_Lattice_PrivateKey`` interface; a key loaded from
-  one of them is re-encoded in the same format, newly generated keys are encoded
-  in the "seed" format. Previously the raw 64-byte seed or the raw expanded key
-  was written, both of which are still accepted when loading a key; earlier
-  versions of Botan cannot read the new encoding. Loading an expanded ML-KEM or
-  Kyber private key now also performs a pairwise consistency check, and all
-  malformed private key encodings (including raw keys of wrong length) are
-  rejected with ``Decoding_Error``. (GH #TODO)
-
 * Fix the ML-DSA private key encoding in PKCS #8 containers to conform to
   RFC 9881. All three encodings of the RFC (seed, expanded key, both) are
   supported. (GH #5002 #5307)

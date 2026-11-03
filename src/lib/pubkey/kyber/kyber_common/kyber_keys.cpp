@@ -79,11 +79,16 @@ KyberInternalKeypair Expanded_Keypair_Codec::decode_keypair(std::span<const uint
       // secret vector s that does not belong to the public key (see RFC 9935,
       // Appendix C.4, example 2). A deterministic K-PKE encryption of an
       // arbitrary message with the public key must decrypt correctly with s.
+      //
+      // TODO(Botan4): reuse the ML_KEM_Encryptor/Decryptor helpers for this
+      //               roundtrip check. The encryptor might need an additional
+      //               interface to accept a fixed randomness value.
+      // See: https://github.com/randombit/botan/pull/5934#discussion_r4454849589
       const auto& pk = *keypair.first;
       const auto& priv = *keypair.second;
       const auto& sym = pk.mode().symmetric_primitives();
       const auto& pk_hash = pk.H_public_key_bits_raw();
-      const KyberMessage m(secure_vector<uint8_t>(pk_hash.begin(), pk_hash.end()));
+      const KyberMessage m(pk_hash.begin(), pk_hash.end());
       const auto [K, r] = sym.G(m, pk_hash);
       BOTAN_UNUSED(K);
       const auto At = Kyber_Algos::sample_matrix(pk.rho(), true /* transposed */, pk.mode());
@@ -151,19 +156,27 @@ KyberDecodedKeypair decode_ml_kem_private_key(std::span<const uint8_t> private_k
 
    if(private_key.size() == mode.seed_private_key_bytes()) {
       // backwards compatibility (not RFC 9935 conforming) to the raw seed d || z
-      return {decode_ml_kem_seed(private_key, std::move(mode)), MlPrivateKeyFormat::Seed};
+      return {
+         .keypair = decode_ml_kem_seed(private_key, std::move(mode)),
+         .format = MlPrivateKeyFormat::Seed,
+      };
    }
    if(private_key.size() == mode.expanded_private_key_bytes()) {
       // raw expanded key in the FIPS 203 dk encoding without ASN.1 wrapping (not RFC 9935
       // conforming), as used e.g. by the NIST ACVP and Wycheproof test vectors. The length
       // cannot collide with any of the RFC 9935 encodings.
-      return {decode_ml_kem_expanded(private_key, std::move(mode)), MlPrivateKeyFormat::Expanded};
+      return {
+         .keypair = decode_ml_kem_expanded(private_key, std::move(mode)),
+         .format = MlPrivateKeyFormat::Expanded,
+      };
    }
+
+   auto dec = BER_Decoder(private_key, BER_Decoder::Limits::DER());
 
    // RFC 9935, Section 6: the ASN.1 tag identifies the CHOICE alternative
    const auto obj = [&]() {
       try {
-         return BER_Decoder(private_key).peek_next_object();
+         return dec.peek_next_object();
       } catch(const Decoding_Error&) {
          throw Decoding_Error("Invalid ML-KEM private key encoding");
       }
@@ -172,37 +185,50 @@ KyberDecodedKeypair decode_ml_kem_private_key(std::span<const uint8_t> private_k
    if(obj.type() == ASN1_Type(0) && obj.class_tag() == ASN1_Class::ContextSpecific) {
       // "seed" alternative: [0] IMPLICIT OCTET STRING
       secure_vector<uint8_t> seed;
-      BER_Decoder(private_key)
-         .decode(seed, ASN1_Type::OctetString, ASN1_Type(0), ASN1_Class::ContextSpecific)
-         .verify_end();
-      return {decode_ml_kem_seed(seed, std::move(mode)), MlPrivateKeyFormat::Seed};
+      dec.decode(seed, ASN1_Type::OctetString, ASN1_Type(0), ASN1_Class::ContextSpecific).verify_end();
+
+      return {
+         .keypair = decode_ml_kem_seed(seed, std::move(mode)),
+         .format = MlPrivateKeyFormat::Seed,
+      };
    }
+
    if(obj.type() == ASN1_Type::OctetString && obj.class_tag() == ASN1_Class::Universal) {
       // "expandedKey" alternative: OCTET STRING
       secure_vector<uint8_t> expanded;
-      BER_Decoder(private_key).decode(expanded, ASN1_Type::OctetString).verify_end();
-      return {decode_ml_kem_expanded(expanded, std::move(mode)), MlPrivateKeyFormat::Expanded};
+      dec.decode(expanded, ASN1_Type::OctetString).verify_end();
+
+      return {
+         .keypair = decode_ml_kem_expanded(expanded, std::move(mode)),
+         .format = MlPrivateKeyFormat::Expanded,
+      };
    }
+
    if(obj.type() == ASN1_Type::Sequence && obj.class_tag() == ASN1_Class::Constructed) {
       // "both" alternative: SEQUENCE { seed OCTET STRING, expandedKey OCTET STRING }
       secure_vector<uint8_t> seed;
       secure_vector<uint8_t> expanded;
-      BER_Decoder(private_key)
-         .start_sequence()
+      dec.start_sequence()
          .decode(seed, ASN1_Type::OctetString)
          .decode(expanded, ASN1_Type::OctetString)
          .end_cons()
          .verify_end();
+
       if(expanded.size() != mode.expanded_private_key_bytes()) {
          throw Decoding_Error("invalid length of ML-KEM expanded private key");
       }
+
       // RFC 9935, Section 8: the expanded key must be the expansion of the seed
       auto keypair = decode_ml_kem_seed(seed, std::move(mode));
       const auto expanded_from_seed = Expanded_Keypair_Codec().encode_keypair(keypair);
       if(expanded_from_seed.size() != expanded.size() || !constant_time_compare(expanded_from_seed, expanded)) {
          throw Decoding_Error("seed and expanded key in ML-KEM private key do not match");
       }
-      return {std::move(keypair), MlPrivateKeyFormat::Both};
+
+      return {
+         .keypair = std::move(keypair),
+         .format = MlPrivateKeyFormat::Both,
+      };
    }
 
    throw Decoding_Error("Invalid ML-KEM private key encoding");
@@ -216,8 +242,7 @@ secure_vector<uint8_t> encode_ml_kem_private_key(const KyberInternalKeypair& key
       throw Encoding_Error("ML-KEM private key does not contain the seed, cannot encode it in the requested format");
    }
 
-   secure_vector<uint8_t> result;
-   DER_Encoder der_enc(result);
+   DER_Encoder der_enc;
    switch(format) {
       case MlPrivateKeyFormat::Seed:
          // RFC 9935 "seed" CHOICE alternative: [0] IMPLICIT OCTET STRING
@@ -240,7 +265,7 @@ secure_vector<uint8_t> encode_ml_kem_private_key(const KyberInternalKeypair& key
          break;
    }
 
-   return result;
+   return der_enc.get_contents();
 }
 
 Kyber_PublicKeyInternal::Kyber_PublicKeyInternal(KyberConstants mode, KyberSerializedPublicKey public_key) :
