@@ -483,9 +483,9 @@ void Channel_Impl_12::update_traffic_keys(bool /*update_requested*/) {
 void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side) {
    const auto* pending = pending_state();
 
-   BOTAN_ASSERT(pending && pending->server_hello(), "Have received server hello");
+   BOTAN_ASSERT(pending && pending->has_server_hello(), "Have received server hello");
 
-   if(pending->server_hello()->compression_method() != 0) {
+   if(pending->server_hello().compression_method() != 0) {
       throw Internal_Error("Negotiated unknown compression algorithm");
    }
 
@@ -502,7 +502,7 @@ void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side) {
       false,
       pending->ciphersuite(),
       pending->session_keys(),
-      pending->server_hello()->supports_encrypt_then_mac());
+      pending->server_hello().supports_encrypt_then_mac());
 
    // The epoch we just left is retained only to absorb reordering, so start its
    // clock now (see read_cipher_state_epoch). Epoch 0 is the plaintext
@@ -521,9 +521,9 @@ void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side) {
 void Channel_Impl_12::change_cipher_spec_writer(Connection_Side side) {
    const auto* pending = pending_state();
 
-   BOTAN_ASSERT(pending && pending->server_hello(), "Have received server hello");
+   BOTAN_ASSERT(pending && pending->has_server_hello(), "Have received server hello");
 
-   if(pending->server_hello()->compression_method() != 0) {
+   if(pending->server_hello().compression_method() != 0) {
       throw Internal_Error("Negotiated unknown compression algorithm");
    }
 
@@ -539,7 +539,7 @@ void Channel_Impl_12::change_cipher_spec_writer(Connection_Side side) {
                                                 true,
                                                 pending->ciphersuite(),
                                                 pending->session_keys(),
-                                                pending->server_hello()->supports_encrypt_then_mac());
+                                                pending->server_hello().supports_encrypt_then_mac());
 
    m_write_cipher_states[epoch] = write_state;
    prune_old_cipher_states(m_write_cipher_states);
@@ -586,7 +586,7 @@ void Channel_Impl_12::activate_session() {
    // flight." Both endpoints retain handshake sequence state, but only that
    // node replays its outgoing flight.
    const bool sent_terminal_dtls_flight =
-      (m_flavor == TLS_Flavor::DTLS) && (m_is_server == (state.server_hello_done() != nullptr));
+      (m_flavor == TLS_Flavor::DTLS) && (m_is_server == state.has_server_hello_done());
 
    const bool encrypt_then_mac_used = m_active_state.has_value() && m_active_state->encrypt_then_mac_used();
 
@@ -698,8 +698,7 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
                   throw TLS_Exception(Alert::ProtocolVersion, "Received unexpected record version in initial record");
                }
             } else if(const auto* pending = pending_state()) {
-               if(pending->server_hello() != nullptr && !initial_handshake_message &&
-                  record.version() != pending->version()) {
+               if(pending->has_server_hello() && !initial_handshake_message && record.version() != pending->version()) {
                   throw TLS_Exception(Alert::ProtocolVersion, "Received unexpected record version");
                }
             } else if(m_active_state.has_value()) {
@@ -1160,7 +1159,7 @@ bool Channel_Impl_12::secure_renegotiation_supported() const {
    }
 
    if(const auto* pending = pending_state()) {
-      if(const auto* hello = pending->server_hello()) {
+      if(const auto* hello = pending->maybe_server_hello()) {
          return hello->secure_renegotiation();
       }
    }

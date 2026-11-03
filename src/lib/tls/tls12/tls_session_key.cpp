@@ -21,8 +21,6 @@ Session_Keys::Session_Keys(const Handshake_State* state,
                            const secure_vector<uint8_t>& pre_master_secret,
                            bool resuming) {
    BOTAN_ASSERT_NONNULL(state);
-   BOTAN_ASSERT_NONNULL(state->client_hello());
-   BOTAN_ASSERT_NONNULL(state->server_hello());
 
    const auto& suite = state->ciphersuite();
    BOTAN_STATE_CHECK(suite.valid());
@@ -31,7 +29,7 @@ Session_Keys::Session_Keys(const Handshake_State* state,
    const size_t mac_keylen = suite.mac_keylen();
    const size_t cipher_nonce_bytes = suite.nonce_bytes_from_handshake();
 
-   const bool extended_master_secret = state->server_hello()->supports_extended_master_secret();
+   const bool extended_master_secret = state->server_hello().supports_extended_master_secret();
 
    const size_t prf_gen = 2 * (mac_keylen + cipher_keylen + cipher_nonce_bytes);
 
@@ -55,8 +53,8 @@ Session_Keys::Session_Keys(const Handshake_State* state,
          salt += state->hash().final(suite.prf_algo());
       } else {
          label.assign(MASTER_SECRET_MAGIC, MASTER_SECRET_MAGIC + sizeof(MASTER_SECRET_MAGIC));
-         salt += state->client_hello()->random();
-         salt += state->server_hello()->random();
+         salt += state->client_hello().random();
+         salt += state->server_hello().random();
       }
 
       m_master_sec = prf->derive_key(48, pre_master_secret, salt, label);
@@ -65,8 +63,8 @@ Session_Keys::Session_Keys(const Handshake_State* state,
    std::vector<uint8_t> salt;
    std::vector<uint8_t> label;
    label.assign(KEY_GEN_MAGIC, KEY_GEN_MAGIC + sizeof(KEY_GEN_MAGIC));
-   salt += state->server_hello()->random();
-   salt += state->client_hello()->random();
+   salt += state->server_hello().random();
+   salt += state->client_hello().random();
 
    const secure_vector<uint8_t> prf_output = prf->derive_key(
       prf_gen, m_master_sec.data(), m_master_sec.size(), salt.data(), salt.size(), label.data(), label.size());

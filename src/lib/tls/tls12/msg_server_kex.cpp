@@ -35,7 +35,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
                                          Credentials_Manager& creds,
                                          RandomNumberGenerator& rng,
                                          const Private_Key* signing_key) {
-   const std::string hostname = state.client_hello()->sni_hostname();
+   const std::string hostname = state.client_hello().sni_hostname();
    const Kex_Algo kex_algo = state.ciphersuite().kex_method();
 
    if(kex_algo == Kex_Algo::PSK || kex_algo == Kex_Algo::ECDHE_PSK) {
@@ -45,7 +45,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
    }
 
    if(kex_algo == Kex_Algo::DH) {
-      const std::vector<Group_Params> dh_groups = state.client_hello()->supported_dh_groups();
+      const std::vector<Group_Params> dh_groups = state.client_hello().supported_dh_groups();
 
       m_shared_group = Group_Params::NONE;
 
@@ -90,7 +90,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       append_tls_length_value(m_params, dh->public_value(), 2);
    } else if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK) {
       const std::vector<Group_Params> ec_groups =
-         groups_usable_in_version(state.client_hello()->supported_ecc_curves(), Protocol_Version::TLS_V12);
+         groups_usable_in_version(state.client_hello().supported_ecc_curves(), Protocol_Version::TLS_V12);
 
       if(ec_groups.empty()) {
          throw Internal_Error("Client sent no ECC extension but we negotiated ECDH");
@@ -104,7 +104,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
       m_kex_key = [&] {
          if(m_shared_group->is_ecdh_named_curve()) {
-            const auto pubkey_point_format = state.client_hello()->prefers_compressed_ec_points()
+            const auto pubkey_point_format = state.client_hello().prefers_compressed_ec_points()
                                                 ? EC_Point_Format::Compressed
                                                 : EC_Point_Format::Uncompressed;
             return state.callbacks().tls12_generate_ephemeral_ecdh_key(*m_shared_group, rng, pubkey_point_format);
@@ -136,9 +136,9 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       const std::pair<std::string, Signature_Format> format =
          state.choose_sig_format(*signing_key, m_scheme, false, policy);
 
-      std::vector<uint8_t> buf = state.client_hello()->random();
+      std::vector<uint8_t> buf = state.client_hello().random();
 
-      buf += state.server_hello()->random();
+      buf += state.server_hello().random();
       buf += params();
 
       m_signature = state.callbacks().tls_sign_message(*signing_key, rng, format.first, format.second, buf);
@@ -220,11 +220,11 @@ bool Server_Key_Exchange::verify(const Public_Key& server_key,
    policy.check_peer_key_acceptable(server_key);
 
    const std::pair<std::string, Signature_Format> format =
-      state.parse_sig_format(server_key, m_scheme, state.client_hello()->signature_schemes(), false, policy);
+      state.parse_sig_format(server_key, m_scheme, state.client_hello().signature_schemes(), false, policy);
 
-   std::vector<uint8_t> buf = state.client_hello()->random();
+   std::vector<uint8_t> buf = state.client_hello().random();
 
-   buf += state.server_hello()->random();
+   buf += state.server_hello().random();
    buf += params();
 
    const bool signature_valid =

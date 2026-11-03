@@ -9,6 +9,7 @@
 #ifndef BOTAN_TLS_HANDSHAKE_STATE_H_
 #define BOTAN_TLS_HANDSHAKE_STATE_H_
 
+#include <botan/assert.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
@@ -132,33 +133,100 @@ class Handshake_State {
 
       void new_session_ticket(std::unique_ptr<New_Session_Ticket_12> new_session_ticket);
 
-      const Client_Hello_12* client_hello() const { return m_client_hello.get(); }
+      /*
+      * Whether a given handshake message has been received/stored yet.
+      */
+      bool has_client_hello() const { return m_client_hello != nullptr; }
 
-      const Server_Hello_12* server_hello() const { return m_server_hello.get(); }
+      bool has_server_hello() const { return m_server_hello != nullptr; }
 
-      const Certificate_12* server_certs() const { return m_server_certs.get(); }
+      bool has_server_certs() const { return m_server_certs != nullptr; }
 
-      const Server_Key_Exchange* server_kex() const { return m_server_kex.get(); }
+      bool has_server_kex() const { return m_server_kex != nullptr; }
 
-      const Certificate_Request_12* cert_req() const { return m_cert_req.get(); }
+      bool has_cert_req() const { return m_cert_req != nullptr; }
 
-      const Server_Hello_Done* server_hello_done() const { return m_server_hello_done.get(); }
+      bool has_server_hello_done() const { return m_server_hello_done != nullptr; }
 
-      const Certificate_12* client_certs() const { return m_client_certs.get(); }
+      bool has_client_certs() const { return m_client_certs != nullptr; }
 
-      const Client_Key_Exchange* client_kex() const { return m_client_kex.get(); }
+      bool has_client_kex() const { return m_client_kex != nullptr; }
 
-      const Certificate_Verify_12* client_verify() const { return m_client_verify.get(); }
+      bool has_client_verify() const { return m_client_verify != nullptr; }
 
-      const Certificate_Verify_12* server_verify() const { return m_server_verify.get(); }
+      bool has_server_verify() const { return m_server_verify != nullptr; }
 
-      const Certificate_Status* server_cert_status() const { return m_server_cert_status.get(); }
+      bool has_server_cert_status() const { return m_server_cert_status != nullptr; }
 
-      const New_Session_Ticket_12* new_session_ticket() const { return m_new_session_ticket.get(); }
+      bool has_new_session_ticket() const { return m_new_session_ticket != nullptr; }
 
-      const Finished_12* server_finished() const { return m_server_finished.get(); }
+      bool has_server_finished() const { return m_server_finished != nullptr; }
 
-      const Finished_12* client_finished() const { return m_client_finished.get(); }
+      bool has_client_finished() const { return m_client_finished != nullptr; }
+
+      /*
+      * Accessors for the handshake messages. Each asserts the message is
+      * present and returns a reference, for the common case where the protocol
+      * state machine has already established that it must exist.
+      */
+      const Client_Hello_12& client_hello() const { return require(m_client_hello); }
+
+      const Server_Hello_12& server_hello() const { return require(m_server_hello); }
+
+      const Certificate_12& server_certs() const { return require(m_server_certs); }
+
+      const Server_Key_Exchange& server_kex() const { return require(m_server_kex); }
+
+      const Certificate_Request_12& cert_req() const { return require(m_cert_req); }
+
+      const Server_Hello_Done& server_hello_done() const { return require(m_server_hello_done); }
+
+      const Certificate_12& client_certs() const { return require(m_client_certs); }
+
+      const Client_Key_Exchange& client_kex() const { return require(m_client_kex); }
+
+      const Certificate_Verify_12& client_verify() const { return require(m_client_verify); }
+
+      const Certificate_Verify_12& server_verify() const { return require(m_server_verify); }
+
+      const Certificate_Status& server_cert_status() const { return require(m_server_cert_status); }
+
+      const New_Session_Ticket_12& new_session_ticket() const { return require(m_new_session_ticket); }
+
+      const Finished_12& server_finished() const { return require(m_server_finished); }
+
+      const Finished_12& client_finished() const { return require(m_client_finished); }
+
+      /*
+      * Pointer accessors that return nullptr when the message has not been received
+      */
+      const Client_Hello_12* maybe_client_hello() const { return m_client_hello.get(); }
+
+      const Server_Hello_12* maybe_server_hello() const { return m_server_hello.get(); }
+
+      const Certificate_12* maybe_server_certs() const { return m_server_certs.get(); }
+
+      const Server_Key_Exchange* maybe_server_kex() const { return m_server_kex.get(); }
+
+      const Certificate_Request_12* maybe_cert_req() const { return m_cert_req.get(); }
+
+      const Server_Hello_Done* maybe_server_hello_done() const { return m_server_hello_done.get(); }
+
+      const Certificate_12* maybe_client_certs() const { return m_client_certs.get(); }
+
+      const Client_Key_Exchange* maybe_client_kex() const { return m_client_kex.get(); }
+
+      const Certificate_Verify_12* maybe_client_verify() const { return m_client_verify.get(); }
+
+      const Certificate_Verify_12* maybe_server_verify() const { return m_server_verify.get(); }
+
+      const Certificate_Status* maybe_server_cert_status() const { return m_server_cert_status.get(); }
+
+      const New_Session_Ticket_12* maybe_new_session_ticket() const { return m_new_session_ticket.get(); }
+
+      const Finished_12* maybe_server_finished() const { return m_server_finished.get(); }
+
+      const Finished_12* maybe_client_finished() const { return m_client_finished.get(); }
 
       virtual std::vector<X509_Certificate> peer_cert_chain() const = 0;
 
@@ -181,6 +249,12 @@ class Handshake_State {
       void note_message(const Handshake_Message& msg);
 
    private:
+      template <typename T>
+      static const T& require(const std::unique_ptr<T>& msg) {
+         BOTAN_ASSERT_NONNULL(msg);
+         return *msg;
+      }
+
       Callbacks& m_callbacks;
 
       std::unique_ptr<Handshake_IO> m_handshake_io;

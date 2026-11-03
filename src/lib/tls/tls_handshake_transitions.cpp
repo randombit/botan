@@ -140,8 +140,6 @@ bool Handshake_Transitions::received_handshake_msg(Handshake_Type msg_type) cons
 void Handshake_Transitions::confirm_transition_to(Handshake_Type msg_type) {
    const uint32_t mask = bitmask_for_handshake_type(msg_type);
 
-   m_hand_received_mask |= mask;
-
    const bool ok = (m_hand_expecting_mask & mask) != 0;  // overlap?
 
    if(!ok) {
@@ -163,6 +161,9 @@ void Handshake_Transitions::confirm_transition_to(Handshake_Type msg_type) {
 
       throw Unexpected_Message(msg.str());
    }
+
+   // Record the message as received only once the transition is accepted
+   m_hand_received_mask |= mask;
 
    /* We don't know what to expect next, so force a call to
       set_expected_next; if it doesn't happen, the next transition
