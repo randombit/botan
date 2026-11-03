@@ -79,6 +79,12 @@ def filter_tests(available, cmdline, options):
 def split_list(list, n):
     return [list[x:x+n] for x in range(0, len(list), n)]
 
+def decide_bunch(tests, jobs):
+    if tests <= jobs:
+        return 1
+
+    return tests // (jobs * 16)
+
 def main(args = None):
     if args is None:
         args = sys.argv
@@ -115,7 +121,7 @@ def main(args = None):
     results = []
 
     if options.bunch:
-        bunching = len(tests) // (jobs * 8)
+        bunching = decide_bunch(len(tests), jobs)
 
         for test in split_list(tests, bunching):
             results.append(pool.apply_async(run_valgrind, (options, test)))
