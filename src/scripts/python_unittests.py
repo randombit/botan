@@ -240,7 +240,8 @@ class ModulesChooserUserSelection(unittest.TestCase):
 
     def select(self, *args):
         options = process_command_line(list(args))
-        return ModulesChooser._apply_user_selection(self.MODULES, options.module_selection)
+        return ModulesChooser._apply_user_selection(  # pylint: disable=protected-access
+            self.MODULES, options.module_selection)
 
     def test_enable_then_specific_disable(self):
         enabled, disabled = self.select("--minimized-build",
