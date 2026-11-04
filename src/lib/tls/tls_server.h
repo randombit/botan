@@ -90,6 +90,7 @@ class BOTAN_PUBLIC_API(2, 0) Server final : public Channel {
 
       bool is_active() const override;
 
+      BOTAN_DEPRECATED("Use TLS::Callbacks::tls_register_deferred_operation instead")  //
       std::optional<std::chrono::milliseconds> next_retransmission_timeout() const override;
 
       bool is_closed() const override;
@@ -122,6 +123,7 @@ class BOTAN_PUBLIC_API(2, 0) Server final : public Channel {
 
       void close() override;
 
+      BOTAN_DEPRECATED("Use TLS::Callbacks::tls_register_deferred_operation instead")  //
       bool timeout_check() override;
 
       Server(const Server& other) = delete;

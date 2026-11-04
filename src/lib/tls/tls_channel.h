@@ -126,6 +126,7 @@ class BOTAN_PUBLIC_API(2, 0) Channel {
       * @return the remaining time until timeout_check() might retransmit
       *         handshake data, or std::nullopt if no timeout check is needed.
       */
+      BOTAN_DEPRECATED("Use TLS::Callbacks::tls_register_deferred_operation instead")  //
       virtual std::optional<std::chrono::milliseconds> next_retransmission_timeout() const = 0;
 
       /**
@@ -219,6 +220,7 @@ class BOTAN_PUBLIC_API(2, 0) Channel {
       *
       * @returns true if a timeout condition occurred
       */
+      BOTAN_DEPRECATED("Use TLS::Callbacks::tls_register_deferred_operation instead")  //
       virtual bool timeout_check() = 0;
 
       virtual std::string application_protocol() const = 0;

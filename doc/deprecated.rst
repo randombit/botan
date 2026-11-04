@@ -68,6 +68,11 @@ in a future major release:
   TLS PSKs for given identities and hosts. Instead, use the dedicated methods in
   ``Credentials_Manager`` and do not override the ``psk()`` method any longer.
 
+- ``TLS::Callbacks::tls_register_deferred_operation()`` becomes the preferred
+  way to schedule deferred operations for DTLS, replacing
+  ``TLS::Channel::timeout_check()`` as well as
+  ``TLS::Channel::next_retransmission_timeout()``.
+
 Elliptic Curve Deprecations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
