@@ -34,6 +34,10 @@ std::string zero_pad(uint32_t value, size_t digits) {
 
 }  // namespace
 
+ASN1_Time ASN1_Time::current_time() {
+   return ASN1_Time::from_time_point(std::chrono::system_clock::now());
+}
+
 ASN1_Time ASN1_Time::from_seconds_since_epoch(uint64_t time_since_epoch) {
    return ASN1_Time::from_time_point(std::chrono::system_clock::time_point(std::chrono::seconds(time_since_epoch)));
 }
