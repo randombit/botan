@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 3.14.0, Not Yet Released
+Version 3.14.0, 2026-11-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 General Notes
@@ -53,7 +53,8 @@ New APIs and Features
 
 * Add ``TLS::Callbacks::tls_register_deferred_operation``, which gives the
   library explicit control over DTLS retransmission timers, as an alternative
-  to polling ``Channel::timeout_check``. (GH #5915)
+  to polling ``Channel::timeout_check``. Use of ``timeout_check`` is deprecated.
+  (GH #5915 #6096)
 
 * In TLS 1.3 send KeyUpdate requests when the number of records sent or
   received approaches a policy-set limit. (GH #5877)
@@ -90,6 +91,17 @@ New APIs and Features
 
 Security and Hardening
 ----------------------------------------
+
+* CVE-2026-118770 Fix a use after free in the TLS asio integration which
+  depending on application usage patterns may allow leaking heap memory
+  to the peer.
+
+* CVE-2026-118771 Fix a bug in TLS 1.3 which could allow an unauthenticated
+  peer to pin unlimited amounts of memory in the handshake by sending many
+  dummy ChangeCipherSpec messages.
+
+* Fix a bug in DTLS which allowed a peer to skip the cookie exchange even
+  if the policy required it.
 
 * Address various DTLS handshake desync bugs (GH #5783)
 

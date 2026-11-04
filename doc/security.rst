@@ -18,6 +18,43 @@ it is within the general threat model that the library operates under.
 2026
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* 2026-11-04 (CVE-2026-118770): Use after free in TLS asio integration
+
+  Improper state management in the asio integration allows a misbehaving peer to
+  cause a use after free which results in the disclosure of heap data.
+  Exploitation depends on the application having simultaneous reads and writes
+  outstanding to the peer. Disabling TLS 1.2 is a partial, but not complete,
+  countermeasure. This only affects applications using ``botan/asio_stream.h``
+
+  Credit: Anthropic OSS-Scanner (ANT-2026-4PMK7FYH)
+
+* 2026-11-04 (CVE-2026-118771): TLS 1.3 handshake memory consumption DoS
+
+  The TLS 1.3 protocol allows sending an arbitrary number of ChangeCipherSpec
+  messages. Any CCS sent prior to the server deciding if the client would
+  downgrade to 1.2 or not were buffered in memory; a peer could then send many
+  such messages and pin memory.
+
+  Credit: Trail of Bits in collaboration with OpenAI
+  Credit: Anthropic OSS-Scanner (ANT-2026-5QKEFF4F)
+  Credit: SecBuddyF (with Hy4-preview @HY-CyberTeam) of Tencent (@KeenSecurityLab)
+
+* 2026-11-04: DTLS cookie exchange bypass
+
+  A DTLS client which sent a ClientHello containing a TLS (rather than DTLS)
+  version in the ClientHello could bypass the DTLS cookie exchange, even if
+  the policy otherwise would require it.
+
+  Credit: SecBuddyF (with Hy4-preview @HY-CyberTeam) of Tencent (@KeenSecurityLab)
+
+* 2026-11-04: PasswordHash tuning sensitive to concurrent load
+
+  The password hash tuning mechanism used the system clock, which made it sensitive
+  to clock adjustments or concurrent load. Depending on activity on the system, the
+  generated parameters might be weaker than expected.
+
+  Credit: Harry Sintonen
+
 * 2026-08-12 (CVE-2026-118766): Blind SSRF due to OCSP redirect following
 
   When making an OCSP request, the HTTP client was configured to allow a single
