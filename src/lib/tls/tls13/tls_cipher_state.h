@@ -338,12 +338,12 @@ class BOTAN_TEST_API Cipher_State {
        * place and appends the result to @p out. The plaintext is copied into
        * @p out exactly once; no intermediate buffers are allocated.
        */
-      static void marshall_and_protect(Epoch& epoch,
-                                       std::span<const uint8_t> header,
-                                       std::span<const uint8_t> payload,
-                                       Record_Type type,
-                                       size_t padding_bytes,
-                                       secure_vector<uint8_t>& out);
+      void marshall_and_protect(Epoch& epoch,
+                                std::span<const uint8_t> header,
+                                std::span<const uint8_t> payload,
+                                Record_Type type,
+                                size_t padding_bytes,
+                                secure_vector<uint8_t>& out);
       void deprotect_and_hydrate_content_type(Epoch& epoch,
                                               std::span<const uint8_t> header,
                                               Record_Content& protected_record,
@@ -387,6 +387,7 @@ class BOTAN_TEST_API Cipher_State {
       State m_state;
       Connection_Side m_connection_side;
       std::optional<Ciphersuite> m_ciphersuite;
+      std::optional<uint32_t> m_record_confidentiality_limit;
       SecretLoggerFn m_secret_logger;
 
       std::unique_ptr<HKDF_Extract> m_extract;
