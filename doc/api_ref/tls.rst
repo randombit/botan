@@ -1388,7 +1388,7 @@ The asio Stream offers the following interface:
 
 .. cpp:class:: TLS::Context
 
-   A helper class to initialize and configure the Stream's underlying *native handle* (see :cpp:class:`TLS::Client` and :cpp:class:`TLS::Server`).
+   A helper class to initialize and configure a Stream's or Datagram's underlying *native handle* (see :cpp:class:`TLS::Client` and :cpp:class:`TLS::Server`).
 
    .. cpp:function:: Context(Credentials_Manager&   credentialsManager, \
                              RandomNumberGenerator& randomNumberGenerator, \
@@ -1401,8 +1401,188 @@ The asio Stream offers the following interface:
    .. cpp:function:: void set_verify_callback(Verify_Callback callback)
 
    Set a user-defined callback function for certificate chain verification. This
-   will cause the stream to override the default implementation of the
+   will cause the wrapper to override the default implementation of the
    :cpp:func:`tls_verify_cert_chain` callback.
+
+.. _tls_asio_datagram:
+
+DTLS Datagram
+----------------------------------------
+
+``TLS::Datagram<DatagramLayer>``, declared in ``botan/asio_datagram.h``, wraps a
+DTLS 1.2 client or server over a connected, single-peer datagram transport, such
+as ``boost::asio::ip::udp::socket``. It requires Botan built with ``--with-boost``
+and Boost 1.79 or newer. Check
+``BOTAN_FOUND_COMPATIBLE_BOOST_ASIO_DATAGRAM_VERSION`` from
+``botan/asio_compat.h`` to conditionally compile code using this wrapper.
+Each wrapper handles one connected peer. Applications select peers and route
+incoming traffic to the appropriate wrapper.
+
+Construction and configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Construct a wrapper with a shared ``TLS::Context`` and the next layer's
+constructor arguments, or an already connected socket. The context owns the
+credentials, RNG, session manager and policy used by the DTLS connection.
+It may be shared between wrappers when those components support the intended
+concurrency. Configure certificate verification, ALPN, and the server name for
+client connections through the context before starting operations. A server needs
+appropriate credentials, including a DTLS cookie secret. For UDP sockets the
+wrapper obtains the peer's network identity from ``remote_endpoint()``.
+
+To customize callbacks or receive limits, use the constructor
+``Datagram(context, callbacks, options, next_layer_args...)``.
+``DatagramCallbacks`` may be subclassed to customize verification and other
+non-final TLS callbacks. Each callback instance can be attached to only one
+wrapper and cannot be reused for another wrapper. Configure receive limits
+through ``DatagramOptions``:
+
+* ``receive_queue_limit`` bounds the number of queued plaintext application
+  records (default 64).
+* ``encrypted_receive_buffer_size`` specifies the capacity for an incoming
+  encrypted datagram (default ``MAX_CIPHERTEXT_SIZE``). Configure the outgoing
+  DTLS MTU through the TLS policy.
+
+Both limits must be nonzero.
+
+Operations and lifetime
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The synchronous operations ``handshake(side)``, ``send(buffers)``,
+``receive(buffers)``, ``shutdown()`` and ``cancel()`` also have
+``boost::system::error_code&`` overloads. The asynchronous variants of handshake,
+send, receive and shutdown accept Asio completion tokens; handshake and shutdown
+complete with ``void(error_code)``,
+send and receive with ``void(error_code, size_t)``. Completions are never invoked
+inline and run on the handler's associated executor. Operation storage uses
+the handler's associated allocator.
+
+All access to a wrapper, including initiation, cancellation, moving and
+destruction, must be serialized with its transport and timer callbacks. For a
+multi-threaded ``io_context``, construct the transport with a strand executor
+and initiate operations on that strand. Binding only the final user handler to
+a strand does not serialize operations on the wrapper. A completion bound
+to another executor must post any further wrapper access back to the transport
+executor.
+
+Only one input operation (handshake or receive) may be outstanding. After a
+successful handshake, one asynchronous send and one asynchronous receive may
+overlap. Do not overlap multiple user sends, handshake with application I/O,
+shutdown with sends, or synchronous and asynchronous operations. Keep the
+wrapper and operation buffers alive until their user completions run. Moving
+is supported only when no user operation is pending.
+
+Sending more than ``MAX_PLAINTEXT_SIZE`` bytes fails with
+``boost::asio::error::message_size``. Empty application records are not
+delivered to receive callers; sending an empty buffer is a no-op at the DTLS
+channel. One receive returns one plaintext application record. If the supplied
+buffers are too small, receive reports ``message_size`` without consuming the
+record, allowing a retry with larger buffers. If the queue overflows, newly
+arriving records are dropped and the next receive reports
+``DatagramReceiveQueueOverflow`` once; retained records remain readable.
+
+``cancel()`` cancels pending operations and stops DTLS retransmissions.
+Await outstanding completions before starting new I/O. An active channel may
+continue application I/O after cancellation, but canceled handshake
+retransmissions are not restarted. After a failed or
+canceled handshake, create a new wrapper; a wrapper cannot start a second
+handshake. Fatal protocol and retransmission errors remain terminal.
+
+The asynchronous operations support ``cancellation_type::terminal`` through
+the completion handler's associated cancellation slot. Slot cancellation
+completes the targeted operation with ``operation_aborted`` and does not cancel
+an overlapping send or receive. Handshake cancellation also stops DTLS
+retransmissions. A slot is detached when its operation completes, so it can be
+reused. Cancellation requests must follow the same serialization rules as
+other wrapper access.
+
+Only terminal cancellation is supported: a canceled operation may already have
+sent or processed data. After slot cancellation, stop any remaining I/O and
+protocol work with object-wide ``cancel()``, await outstanding completions, then
+close or destroy the wrapper. Requests for only ``partial`` or ``total``
+cancellation have no effect.
+
+``shutdown()`` sends the local ``close_notify`` alert and stops DTLS retransmissions.
+It does not wait for or acknowledge the peer's shutdown, nor does its success
+guarantee delivery over UDP. ``shutdown_received()`` reports whether an incoming
+``close_notify`` has been processed by a receive operation.
+
+Custom next layers must preserve datagram boundaries and provide an executor,
+``send``/``async_send``, ``receive``/``async_receive``, and
+``lowest_layer().cancel(error_code&)``. They must either provide a UDP-like
+``remote_endpoint()`` or use callbacks overriding
+``tls_peer_network_identity()``. Canceling pending transport I/O through a slot
+requires ``async_send`` and ``async_receive`` to honor the handler's associated
+cancellation slot. Otherwise, the wrapper observes cancellation when the
+pending transport operation completes. Synchronous retransmission also requires
+the lowest layer's ``non_blocking()`` getter and
+``non_blocking(bool, error_code&)`` setter. A custom blocking receive without
+that interface cannot service retransmission deadlines while blocked.
+
+Example: connected UDP client
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The standalone coroutine example ``src/examples/dtls_datagram_client.cpp``
+connects to a DTLS echo server, verifies the server's certificate and hostname
+using a supplied CA certificate, sends one line, prints the reply, and shuts
+down. It uses a strand and an associated cancellation slot to enforce a
+30-second deadline for the exchange. Messages must be shorter than 1024 bytes.
+The example relaxes the certificate revocation information requirement for
+local servers; applications should choose this policy setting deliberately.
+It requires Boost 1.81 or newer.
+
+Configure Botan with ``--with-boost --build-targets=static,cli,examples`` and
+build the examples. Given a server certificate valid for ``127.0.0.1`` and its
+private key, start Botan's CLI echo server::
+
+   botan tls_server server.pem server.key --type=udp --port=4433
+
+Then run the client with the CA certificate that issued ``server.pem``::
+
+   dtls_datagram_client 127.0.0.1 4433 ca.pem hello
+
+The following function shows the basic exchange with a context configured for
+the server's name, trusted credentials, and DTLS policy. The transport and
+coroutine share a strand. ``done.get()`` propagates exceptions from the
+coroutine to the caller.
+
+.. code-block:: cpp
+
+   #include <botan/asio_datagram.h>
+   #include <boost/asio/awaitable.hpp>
+   #include <boost/asio/co_spawn.hpp>
+   #include <boost/asio/io_context.hpp>
+   #include <boost/asio/ip/udp.hpp>
+   #include <boost/asio/strand.hpp>
+   #include <boost/asio/use_awaitable.hpp>
+   #include <boost/asio/use_future.hpp>
+   #include <array>
+   #include <iostream>
+   #include <memory>
+   #include <string>
+   #include <utility>
+
+   void dtls_echo(std::shared_ptr<Botan::TLS::Context> context,
+                  const boost::asio::ip::udp::endpoint& peer) {
+      namespace net = boost::asio;
+      net::io_context io;
+      auto strand = net::make_strand(io);
+      net::ip::udp::socket socket(strand, peer.protocol());
+      socket.connect(peer);
+      Botan::TLS::Datagram datagram(std::move(context), std::move(socket));
+
+      auto done = net::co_spawn(strand, [&datagram]() -> net::awaitable<void> {
+         co_await datagram.async_handshake(Botan::TLS::Connection_Side::Client, net::use_awaitable);
+         const std::string request = "hello\n";
+         co_await datagram.async_send(net::buffer(request), net::use_awaitable);
+         std::array<char, 16384> reply{};
+         const auto n = co_await datagram.async_receive(net::buffer(reply), net::use_awaitable);
+         std::cout.write(reply.data(), static_cast<std::streamsize>(n));
+         co_await datagram.async_shutdown(net::use_awaitable);
+      }, net::use_future);
+      io.run();
+      done.get();
+   }
 
 .. _https_client_example:
 

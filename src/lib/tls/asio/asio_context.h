@@ -41,8 +41,13 @@ struct fn_signature_helper<R (D::*)(Args...)> {
 };
 }  // namespace detail
 
+template <class DL, class C>
+class Datagram;
+
+class DatagramCallbacks;
+
 /**
- * A helper class to initialize and configure Botan::TLS::Stream
+ * A helper class to initialize and configure Botan::TLS::Stream and Botan::TLS::Datagram
  */
 class BOTAN_PUBLIC_API(2, 11) Context {
    public:
@@ -56,7 +61,7 @@ class BOTAN_PUBLIC_API(2, 11) Context {
 
    #if defined(BOTAN_HAS_DEFAULT_TLS_CONTEXT)
       /**
-       * @brief Construct a TLS stream context with typical defaults
+       * @brief Construct a TLS context with typical defaults
        *
        * @param server_info  Basic information about the host to connect to (SNI)
        */
@@ -88,11 +93,10 @@ class BOTAN_PUBLIC_API(2, 11) Context {
       /**
        * @brief Override the tls_verify_cert_chain callback
        *
-       * This changes the verify_callback in the stream's TLS::Context, and hence the tls_verify_cert_chain callback
-       * used in the handshake.
-       * Using this function is equivalent to setting the callback via @see Botan::TLS::Stream::set_verify_callback
+       * Sets the certificate verification callback for Stream and Datagram wrappers
+       * sharing this context.
        *
-       * @note This function should only be called before initiating the TLS handshake
+       * @note Set the callback before initiating handshakes on wrappers sharing this context.
        */
       void set_verify_callback(Verify_Callback callback) { m_verify_callback = std::move(callback); }
 
@@ -109,7 +113,10 @@ class BOTAN_PUBLIC_API(2, 11) Context {
    protected:
       template <class S, class C>
       friend class Stream;
+      template <class DL, class C>
+      friend class Datagram;
       friend class StreamCallbacks;
+      friend class DatagramCallbacks;
 
       // NOLINTBEGIN(*-non-private-member-variable*)
       std::shared_ptr<Credentials_Manager> m_credentials_manager;

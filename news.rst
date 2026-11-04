@@ -22,6 +22,11 @@ General Notes
 New APIs and Features
 ----------------------------------------
 
+* Add a Boost.Asio DTLS datagram wrapper with synchronous and asynchronous
+  handshake, send, receive, and shutdown operations, as well as object-wide and
+  terminal per-operation cancellation. The DTLS wrapper requires Boost 1.79 or
+  newer.
+
 * Add types ``PK_Signature_Options`` ``PK_Encryption_Options``, ``PK_KEM_Options``,
   and ``PK_Key_Agreement_Options`` which allow an application to precisely control
   how public key operations (signature, encryption, decryption, KEM, etc) are
