@@ -195,6 +195,9 @@ additional information about the connection.
  .. cpp:function:: void tls_register_deferred_operation(uint64_t monotonic_delay_ms, \
                                                         std::function<void()> op)
 
+     ..
+        TODO(Botan4): When timeout_check is removed, this becomes _required_ for DTLS.
+
      Optional, but recommended for DTLS. This callback is used to schedule a
      deferred operation to be invoked after a specified number of milliseconds.
      This is used by DTLS to schedule retransmissions of handshake messages that
@@ -295,6 +298,12 @@ available:
       retransmission is due. If ``std::nullopt`` is returned, no timeout check
       is currently needed.
 
+     .. note::
+
+        This method is deprecated and will be removed in Botan 4.
+        For DTLS 1.3 this will always return std::nullopt because a call to
+        ``timeout_check`` won't work for it anyway.
+
    .. cpp:function:: bool is_closed()
 
       Returns true if and only if either a close notification or a
@@ -322,6 +331,13 @@ available:
       handle retransmission timers transparently instead of polling this
       function at regular intervals. Never do both, either implement the
       callback or poll this function, but not both.
+
+     .. note::
+
+        This method is deprecated and will be removed in Botan 4.
+        DTLS 1.3 requires finer-grained timer control and works with
+        ``Callbacks::tls_register_deferred_operation`` exclusively already
+        in Botan 3.15.0
 
    .. cpp:function:: void renegotiate(bool force_full_renegotiation = false)
 
