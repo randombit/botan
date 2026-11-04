@@ -84,6 +84,13 @@ default all
 
 # Library targets
 
+%{if with_hqc}
+rule compile_hqc
+  command = "${PYTHON_EXE}" -c "import os; os.makedirs('%{hqc_rust_dir}', exist_ok=True)" && "%{hqc_rustc}" %{hqc_rust_flags} %{hqc_rust_crate} -o $out
+
+build %{hqc_rust_archive}: compile_hqc %{hqc_rust_sources}
+%{endif}
+
 %{if build_static_lib_using_response_file}
 
 rule link_static
@@ -92,14 +99,22 @@ rule link_static
   command = %{ar_command} %{ar_options} %{ar_output_to}$out @%{response_file_dir}/static.txt
 
 %{endif}
-%{if build_static_lib_using_cmdline_args}
+%{if build_static_lib_with_hqc}
 
+rule link_static
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/build_hqc_archive.py" --ar="%{ar_command}" --ar-options="%{ar_options}" --output="$out" --rust-archive="%{hqc_rust_archive}" %{join lib_objs}
+%{endif}
+
+%{if build_static_lib_using_cmdline_args_without_hqc}
 rule link_static
   command = %{ar_command} %{ar_options} %{ar_output_to}$out $in
 
 %{endif}
-%{if build_static_lib}
-build %{out_dir}/%{static_lib_name}: link_static %{join lib_objs}
+%{if build_static_lib_without_hqc}
+build %{out_dir}/%{static_lib_name}: link_static %{join lib_objs} %{hqc_rust_archive}
+%{endif}
+%{if build_static_lib_with_hqc}
+build %{out_dir}/%{static_lib_name}: link_static %{join lib_objs} %{hqc_rust_archive} | %{scripts_dir}/build_hqc_archive.py
 %{endif}
 
 %{if build_shared_lib}
@@ -107,9 +122,9 @@ build %{out_dir}/%{static_lib_name}: link_static %{join lib_objs}
 rule link_shared
   rspfile = %{response_file_dir}/shared.txt
   rspfile_content = $in
-  command = %{lib_link_cmd} ${ABI_FLAGS} ${LDFLAGS} @%{response_file_dir}/shared.txt ${LIB_LINKS_TO} %{output_to_exe}$out
+  command = %{lib_link_cmd} ${ABI_FLAGS} ${LDFLAGS} @%{response_file_dir}/shared.txt %{hqc_rust_link_flags} ${LIB_LINKS_TO} %{output_to_exe}$out
 
-build %{out_dir}/%{shared_lib_name}: link_shared %{join lib_objs}
+build %{out_dir}/%{shared_lib_name}: link_shared %{join lib_objs} %{hqc_rust_archive}
 %{endif}
 %{if symlink_shared_lib}
 

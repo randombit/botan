@@ -1,0 +1,32 @@
+[package]
+name = "rust-hqc"
+version = "0.1.0"
+edition = "2024"
+
+# No runtime dependencies: hashing and secret memory are supplied by the
+# caller through the C API callbacks, zeroization is implemented in src/secmem.rs.
+[dependencies]
+
+[dev-dependencies]
+aes = "0.8"
+# The crate has no hash implementation of its own; the tests implement the
+# hash callbacks of the C API with the sha3 crate.
+sha3 = { version = "0.11", default-features = false }
+hex-literal = "1.1.0"
+rand = "0.10.1"
+serial_test = "4.0.1"
+
+[features]
+# Compile the C reference and enable differential tests against it.
+#
+# Builds all three variants (hqc-1/-3/-5), each with its own symbol prefix, so
+# a single test binary can compare the Rust port against every parameter set.
+#
+# Requires: cmake >= 3.21, a C compiler, `nm` from binutils, and the reference
+# sources via $HQC_REF_SRC or third_party/hqc-next-release.
+ref-ffi = []
+
+[lib]
+crate-type = ["lib", "staticlib"]
+name = "rust_hqc"
+path = "src/lib.rs"
