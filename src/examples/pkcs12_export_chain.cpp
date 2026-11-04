@@ -5,12 +5,11 @@
 #include <botan/hex.h>
 #include <botan/pkcs10.h>
 #include <botan/pkcs12.h>
+#include <botan/x509_builder.h>
 #include <botan/x509_ca.h>
-#include <botan/x509self.h>
 
 #include <iostream>
 #include <memory>
-#include <vector>
 
 int main() {
    Botan::AutoSeeded_RNG rng;
@@ -18,15 +17,22 @@ int main() {
 
    // Issuing CA.
    const Botan::ECDSA_PrivateKey ca_key(rng, group);
-   Botan::X509_Cert_Options ca_opts("Example CA");
-   ca_opts.CA_key();
-   const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts, ca_key, "SHA-256", rng);
+
+   constexpr uint64_t seconds_in_a_year = 31556926;
+   auto not_before = Botan::ASN1_Time::current_time();
+   auto not_after = Botan::ASN1_Time::from_seconds_since_epoch(not_before.time_since_epoch() + seconds_in_a_year);
+
+   auto ca_metadata = Botan::CertificateParametersBuilder();
+   ca_metadata.add_common_name("Example CA").set_as_ca_certificate();
+   const auto ca_cert = ca_metadata.into_self_signed_cert(not_before, not_after, ca_key, rng);
 
    // End-entity, signed by the CA.
    auto ee_key = std::make_shared<Botan::ECDSA_PrivateKey>(rng, group);
-   Botan::X509_Cert_Options ee_opts("example.com");
-   ee_opts.dns = "example.com";
-   const auto csr = Botan::X509::create_cert_req(ee_opts, *ee_key, "SHA-256", rng);
+
+   auto ee_metadata = Botan::CertificateParametersBuilder();
+   ee_metadata.add_dns("example.com");
+   const auto csr = ee_metadata.into_pkcs10_request(*ee_key, rng);
+
    const Botan::X509_CA ca(ca_cert, ca_key, "SHA-256", rng);
    const auto ee_cert = ca.sign_request(csr, rng, Botan::X509_Time("200101000000Z"), Botan::X509_Time("300101000000Z"));
 

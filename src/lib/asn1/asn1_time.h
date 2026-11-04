@@ -41,6 +41,9 @@ class BOTAN_PUBLIC_API(2, 0) ASN1_Time final : public ASN1_Object {
       /// Create an invalid ASN1_Time
       ASN1_Time() = default;
 
+      /// Create an ASN1_Time from the current system clock
+      static ASN1_Time current_time();
+
       /// Create an ASN1_Time from seconds since epoch
       static ASN1_Time from_seconds_since_epoch(uint64_t seconds);
 
