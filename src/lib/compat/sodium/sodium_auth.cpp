@@ -6,6 +6,7 @@
 
 #include <botan/sodium.h>
 
+#include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/mac.h>
 #include <botan/mem_ops.h>
@@ -27,7 +28,14 @@ int Sodium::crypto_hash_sha256(uint8_t out[], const uint8_t in[], size_t in_len)
 }
 
 int Sodium::crypto_shorthash_siphash24(uint8_t out[8], const uint8_t in[], size_t in_len, const uint8_t key[16]) {
-   auto mac = MessageAuthenticationCode::create_or_throw("SipHash(2,4)");
+   // The siphash module is deprecated so we don't require it here
+   auto mac = MessageAuthenticationCode::create("SipHash(2,4)");
+   if(!mac) {
+      // We could implement this by returning an error code but libsodium's
+      // crypto_shorthash_siphash24 always returns 0 so it would be easy for
+      // callers to miss the error return
+      throw Not_Implemented("SipHash support is not available");
+   }
    mac->set_key(key, crypto_shorthash_siphash24_KEYBYTES);
    mac->update(in, in_len);
    mac->final(out);
