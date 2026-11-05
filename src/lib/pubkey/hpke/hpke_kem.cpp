@@ -410,7 +410,7 @@ class DHKEM final : public KEM_Ops {
                   if constexpr(is_private) {
                      return std::make_unique<ECDH_PrivateKey>(ec_group(), ecdsa->_private_key());
                   } else {
-                     return std::make_unique<ECDH_PublicKey>(ec_group(), ecdsa->_public_ec_point());
+                     return std::make_unique<ECDH_PublicKey>(ec_group(), ecdsa->public_ec_point());
                   }
                }
 #endif

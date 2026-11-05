@@ -18,7 +18,7 @@
 namespace Botan {
 
 std::unique_ptr<Public_Key> ECDH_PrivateKey::public_key() const {
-   return std::make_unique<ECDH_PublicKey>(domain(), _public_ec_point());
+   return std::make_unique<ECDH_PublicKey>(domain(), public_ec_point());
 }
 
 namespace {
@@ -95,7 +95,7 @@ std::unique_ptr<Private_Key> ECDH_PublicKey::generate_another(RandomNumberGenera
 }
 
 std::vector<uint8_t> ECDH_PublicKey::public_value(EC_Point_Format format) const {
-   return _public_ec_point().serialize(format);
+   return public_ec_point().serialize(format);
 }
 
 std::unique_ptr<PK_Ops::Key_Agreement> ECDH_PrivateKey::_create_key_agreement_op(

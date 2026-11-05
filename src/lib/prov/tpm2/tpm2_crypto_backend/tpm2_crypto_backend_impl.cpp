@@ -659,7 +659,7 @@ TSS2_RC get_ecdh_point(TPM2B_PUBLIC* key,
 
       // Serialize public key coordinates into TPM2B_ECC_PARAMETER with Big Endian encoding.
       // This ensures bn_{x,y}.bytes() <= curve_order_byte_size.
-      const auto& eph_pub_point = eph_key._public_ec_point();
+      const auto& eph_pub_point = eph_key.public_ec_point();
       eph_pub_point.serialize_x_to(Botan::TPM2::as_span(Q->x, curve_order_byte_size));
       eph_pub_point.serialize_y_to(Botan::TPM2::as_span(Q->y, curve_order_byte_size));
 

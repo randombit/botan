@@ -85,14 +85,14 @@ const EC_Point& EC_PublicKey::public_point() const {
 }
 #endif
 
-const EC_AffinePoint& EC_PublicKey::_public_ec_point() const {
+const EC_AffinePoint& EC_PublicKey::public_ec_point() const {
    BOTAN_STATE_CHECK(m_public_key != nullptr);
    return m_public_key->public_key();
 }
 
 bool EC_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    // We already checked when deserializing that the point was on the curve
-   return domain().verify_group(rng, strong) && !_public_ec_point().is_identity();
+   return domain().verify_group(rng, strong) && !public_ec_point().is_identity();
 }
 
 AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const {
@@ -100,7 +100,7 @@ AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const {
 }
 
 std::vector<uint8_t> EC_PublicKey::raw_public_key_bits() const {
-   return _public_ec_point().serialize(point_encoding());
+   return public_ec_point().serialize(point_encoding());
 }
 
 std::vector<uint8_t> EC_PublicKey::public_key_bits() const {
@@ -246,7 +246,7 @@ bool EC_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    // Verify that the public key is consistent with the private key.
    // For ECKCDSA/ECGDSA the derivation is g^(x^-1), for all others it is g^x.
    const auto expected = m_private_key->public_key(m_with_modular_inverse);
-   return expected->public_key() == _public_ec_point();
+   return expected->public_key() == public_ec_point();
 }
 
 const BigInt& EC_PublicKey::get_int_field(std::string_view field) const {

@@ -631,12 +631,12 @@ class EC_Group_Registration_Tests final : public Test {
 
          // Keys created with the equivalent group adopt it, rebinding the key material
          const Botan::ECDSA_PrivateKey sk2(group2, sk1._private_key());
-         const Botan::ECDSA_PublicKey pk2(group2, sk1._public_ec_point());
+         const Botan::ECDSA_PublicKey pk2(group2, sk1.public_ec_point());
 
          result.test_is_true("Private key uses the specified group", sk2.domain()._data() == group2._data());
          result.test_is_true("Private scalar was rebound", sk2._private_key().group()._data() == group2._data());
          result.test_is_true("Public key uses the specified group", pk2.domain()._data() == group2._data());
-         result.test_is_true("Public point was rebound", pk2._public_ec_point()._group() == group2._data());
+         result.test_is_true("Public point was rebound", pk2.public_ec_point()._group() == group2._data());
          result.test_bin_eq(
             "Rebound private key has the same encoding", sk2.private_key_bits(), sk1.private_key_bits());
          result.test_bin_eq("Rebound public key has the same encoding", pk2.public_key_bits(), sk1.public_key_bits());
@@ -653,7 +653,7 @@ class EC_Group_Registration_Tests final : public Test {
             const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
 
             result.test_throws<Botan::Decoding_Error>("Point from a different group is rejected", [&] {
-               static_cast<void>(Botan::ECDSA_PublicKey(secp256r1, sk1._public_ec_point()));
+               static_cast<void>(Botan::ECDSA_PublicKey(secp256r1, sk1.public_ec_point()));
             });
             result.test_throws<Botan::Decoding_Error>("Scalar from a different group is rejected", [&] {
                static_cast<void>(Botan::ECDSA_PrivateKey(secp256r1, sk1._private_key()));
@@ -666,9 +666,8 @@ class EC_Group_Registration_Tests final : public Test {
             result.test_is_true("Builtin group has distinct inner data after registry clear",
                                 secp256r1_again._data() != secp256r1._data());
 
-            const Botan::ECDSA_PublicKey pk3(secp256r1_again, sk3._public_ec_point());
-            result.test_is_true("Builtin point was rebound",
-                                pk3._public_ec_point()._group() == secp256r1_again._data());
+            const Botan::ECDSA_PublicKey pk3(secp256r1_again, sk3.public_ec_point());
+            result.test_is_true("Builtin point was rebound", pk3.public_ec_point()._group() == secp256r1_again._data());
 
             if(Botan::HashFunction::create("SHA-256")) {
                const auto msg = rng().random_vec(32);
