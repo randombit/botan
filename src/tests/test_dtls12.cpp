@@ -192,7 +192,19 @@ struct DTLS_Policy_Options final {
       size_t maximum_timeout_ms = 8;
 };
 
-class DTLS_PSK_Policy final : public Botan::TLS::Policy {
+class DTLS12_Policy : public Botan::TLS::Policy {
+   public:
+      explicit DTLS12_Policy(bool with_tls12_option = false) : m_allow_tls12(with_tls12_option) {}
+
+      bool allow_tls12() const override { return m_allow_tls12; }
+
+      bool allow_dtls12() const override { return true; }
+
+   private:
+      bool m_allow_tls12;
+};
+
+class DTLS_PSK_Policy final : public DTLS12_Policy {
    public:
       DTLS_PSK_Policy() = default;
 
@@ -217,10 +229,6 @@ class DTLS_PSK_Policy final : public Botan::TLS::Policy {
          }
          return Botan::TLS::Policy::allowed_ciphers();
       }
-
-      bool allow_tls12() const override { return false; }
-
-      bool allow_dtls12() const override { return true; }
 
       bool allow_dtls_epoch0_restart() const override { return m_opts.allow_epoch0_restart; }
 
@@ -291,7 +299,7 @@ std::unique_ptr<Botan::TLS::Client> make_dtls_client(const std::shared_ptr<Botan
                                                policy,
                                                rng,
                                                Botan::TLS::Server_Information("localhost"),
-                                               Botan::TLS::Protocol_Version::latest_dtls_version());
+                                               Botan::TLS::Protocol_Version::DTLS_V12);
 }
 
 std::unique_ptr<Botan::TLS::Server> make_dtls_server(const std::shared_ptr<Botan::TLS::Callbacks>& callbacks,
@@ -1109,7 +1117,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                                    policy,
                                    rng,
                                    Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+                                   Botan::TLS::Protocol_Version::DTLS_V12);
 
          const size_t first_client_hello = c2s.size();
          result.test_is_true("client sent an initial ClientHello", first_client_hello > 0);
@@ -1219,7 +1227,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                                    policy,
                                    rng,
                                    Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+                                   Botan::TLS::Protocol_Version::DTLS_V12);
 
          // The client's initial ClientHello carries no cookie, so replaying it
          // is enough to make the server answer with a HelloVerifyRequest.
@@ -1286,7 +1294,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                                    policy,
                                    rng,
                                    Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+                                   Botan::TLS::Protocol_Version::DTLS_V12);
 
          // Drive the server into a cookie exchange: it has answered with a
          // HelloVerifyRequest and is waiting for the cookie to come back.
@@ -1341,7 +1349,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                                                                policy,
                                                                rng,
                                                                Botan::TLS::Server_Information("localhost"),
-                                                               Botan::TLS::Protocol_Version::latest_dtls_version());
+                                                               Botan::TLS::Protocol_Version::DTLS_V12);
 
             deliver(result, label + " client hello 1", c2s, server);
             deliver(result, label + " hello verify request", s2c, *client);
@@ -1778,7 +1786,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                                    policy,
                                    rng,
                                    Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+                                   Botan::TLS::Protocol_Version::DTLS_V12);
 
          // The server has answered with a HelloVerifyRequest and is waiting for
          // the cookie-bearing ClientHello at message_seq 1.
@@ -1836,7 +1844,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                                    policy,
                                    rng,
                                    Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+                                   Botan::TLS::Protocol_Version::DTLS_V12);
 
          // One byte at a high offset of a ClientHello declaring 64 KiB, so the
          // declared length conflicts with any real ClientHello.
@@ -1996,7 +2004,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                                     policy,
                                     rng,
                                     Botan::TLS::Server_Information("localhost"),
-                                    Botan::TLS::Protocol_Version::latest_dtls_version());
+                                    Botan::TLS::Protocol_Version::DTLS_V12);
 
          deliver(result, "client 1 hello", c1_c2s, server);
          deliver(result, "client 1 hello verify request", s2c, client1);
@@ -2024,7 +2032,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                                           policy,
                                           rng,
                                           Botan::TLS::Server_Information("localhost"),
-                                          Botan::TLS::Protocol_Version::latest_dtls_version());
+                                          Botan::TLS::Protocol_Version::DTLS_V12);
 
          deliver(result, "client 2 hello", c2_c2s, server);
          result.test_is_true("restart is answered with a HelloVerifyRequest",
@@ -2056,7 +2064,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                                     policy,
                                     rng,
                                     Botan::TLS::Server_Information("localhost"),
-                                    Botan::TLS::Protocol_Version::latest_dtls_version());
+                                    Botan::TLS::Protocol_Version::DTLS_V12);
 
          deliver(result, "client 1 hello", c1_c2s, server);
          deliver(result, "client 1 hello verify request", s2c, client1);
@@ -2078,7 +2086,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                                     policy,
                                     rng,
                                     Botan::TLS::Server_Information("localhost"),
-                                    Botan::TLS::Protocol_Version::latest_dtls_version());
+                                    Botan::TLS::Protocol_Version::DTLS_V12);
 
          const auto epoch0_client_hello = c2_c2s;
          deliver(result, "client 2 epoch-zero hello", c2_c2s, server);
@@ -2156,7 +2164,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                                    policy,
                                    rng,
                                    Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+                                   Botan::TLS::Protocol_Version::DTLS_V12);
 
          deliver(result, "resumed client hello 1", c2s, server);
          deliver(result, "resumed hello verify request", s2c, client);
@@ -2505,7 +2513,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                                    policy,
                                    rng,
                                    Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+                                   Botan::TLS::Protocol_Version::DTLS_V12);
 
          deliver(result, "resumed client hello 1", c2s, server);
          deliver(result, "resumed hello verify request", s2c, client);
@@ -2552,7 +2560,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                                    policy,
                                    rng,
                                    Botan::TLS::Server_Information("localhost"),
-                                   Botan::TLS::Protocol_Version::latest_dtls_version());
+                                   Botan::TLS::Protocol_Version::DTLS_V12);
 
          deliver(result, "client hello 1", c2s, server);
          deliver(result, "hello verify request", s2c, client);
@@ -2943,7 +2951,7 @@ class DTLS_Renegotiation_Policy_Test : public Test {
                                                               assoc->client_policy,
                                                               rng,
                                                               Botan::TLS::Server_Information("localhost"),
-                                                              Botan::TLS::Protocol_Version::latest_dtls_version(),
+                                                              Botan::TLS::Protocol_Version::DTLS_V12,
                                                               std::vector<std::string>{"http/1.1", "h2"});
 
          result.test_is_true("initial handshake", assoc->pump_until([&] { return sessions_established(*assoc, 1); }));
@@ -2977,7 +2985,7 @@ class DTLS_Renegotiation_Policy_Test : public Test {
                                                               assoc->client_policy,
                                                               rng,
                                                               Botan::TLS::Server_Information("localhost"),
-                                                              Botan::TLS::Protocol_Version::latest_dtls_version(),
+                                                              Botan::TLS::Protocol_Version::DTLS_V12,
                                                               std::vector<std::string>{"http/1.1", "h2"});
 
          result.test_is_true("initial handshake", assoc->pump_until([&] { return sessions_established(*assoc, 1); }));
@@ -3284,7 +3292,7 @@ class TLS_Stream_Server_Cookie_Lookup_Test : public Test {
 
          auto rng = Test::new_shared_rng(this->test_name());
          auto creds = std::make_shared<Strict_Credentials>();
-         auto policy = std::make_shared<Botan::TLS::Policy>();
+         auto policy = std::make_shared<DTLS12_Policy>(true /* allow TLS 1.2 as well */);
          auto callbacks = std::make_shared<Quiet_Callbacks>();
 
          result.test_no_throw("stream server constructs", [&] {
