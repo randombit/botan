@@ -23,7 +23,7 @@
 namespace Botan::PKCS11 {
 
 ECDSA_PublicKey PKCS11_ECDSA_PublicKey::export_key() const {
-   return ECDSA_PublicKey(domain(), _public_ec_point());
+   return ECDSA_PublicKey(domain(), public_ec_point());
 }
 
 bool PKCS11_ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {

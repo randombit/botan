@@ -106,7 +106,13 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
 
       const BigInt& get_int_field(std::string_view field) const override;
 
-      const EC_AffinePoint& _public_ec_point() const;
+      /**
+      * Return the public point of this key
+      */
+      const EC_AffinePoint& public_ec_point() const;
+
+      // TODO(Botan4) remove this
+      const EC_AffinePoint& _public_ec_point() const { return public_ec_point(); }
 
    protected:
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)

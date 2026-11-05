@@ -115,7 +115,7 @@ std::optional<size_t> GOST_3410_PublicKey::_signature_element_size_for_DER_encod
 }
 
 std::vector<uint8_t> GOST_3410_PublicKey::public_key_bits() const {
-   auto bits = _public_ec_point().xy_bytes();
+   auto bits = public_ec_point().xy_bytes();
 
    const size_t part_size = bits.size() / 2;
 
@@ -191,7 +191,7 @@ GOST_3410_PrivateKey::GOST_3410_PrivateKey(const AlgorithmIdentifier& alg_id, st
       EC_PrivateKey(gost_private_key_alg_id(alg_id), key_bits) {}
 
 std::unique_ptr<Public_Key> GOST_3410_PrivateKey::public_key() const {
-   return std::make_unique<GOST_3410_PublicKey>(domain(), _public_ec_point());
+   return std::make_unique<GOST_3410_PublicKey>(domain(), public_ec_point());
 }
 
 namespace {
@@ -296,12 +296,12 @@ PK_Signature_Options gost_hash_from_algid(const AlgorithmIdentifier& alg_id) {
 class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
       GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, const PK_Signature_Options_Reader& options) :
-            PK_Ops::Verification_with_Hash(options), m_group(gost.domain()), m_gy_mul(gost._public_ec_point()) {}
+            PK_Ops::Verification_with_Hash(options), m_group(gost.domain()), m_gy_mul(gost.public_ec_point()) {}
 
       GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(PK_Options_Reader_Access::for_verification(gost_hash_from_algid(alg_id))),
             m_group(gost.domain()),
-            m_gy_mul(gost._public_ec_point()) {}
+            m_gy_mul(gost.public_ec_point()) {}
 
       bool verify(std::span<const uint8_t> msg, std::span<const uint8_t> sig) override;
 

@@ -27,7 +27,7 @@
 namespace Botan::PKCS11 {
 
 ECDH_PublicKey PKCS11_ECDH_PublicKey::export_key() const {
-   return ECDH_PublicKey(domain(), _public_ec_point());
+   return ECDH_PublicKey(domain(), public_ec_point());
 }
 
 ECDH_PrivateKey PKCS11_ECDH_PrivateKey::export_key() const {

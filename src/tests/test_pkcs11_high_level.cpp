@@ -1054,7 +1054,7 @@ BOTAN_REGISTER_SERIALIZED_TEST("pkcs11", "pkcs11-rsa", PKCS11_RSA_Tests);
    #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
 std::vector<uint8_t> encode_ec_point_in_octet_str(const Botan::EC_PublicKey& pk) {
    std::vector<uint8_t> enc;
-   DER_Encoder(enc).encode(pk._public_ec_point().serialize_uncompressed(), ASN1_Type::OctetString);
+   DER_Encoder(enc).encode(pk.public_ec_point().serialize_uncompressed(), ASN1_Type::OctetString);
    return enc;
 }
 
@@ -1105,7 +1105,7 @@ void check_ec_private_key_public_point(Test::Result& result,
    // Exercise the software public key with a scalar from its own domain.
    const auto public_key = key.public_key();
    const auto& ec_public = dynamic_cast<const EC_PublicKey&>(*public_key);
-   const auto point = ec_public._public_ec_point().mul(EC_Scalar::one(ec_public.domain()), rng);
+   const auto point = ec_public.public_ec_point().mul(EC_Scalar::one(ec_public.domain()), rng);
    result.test_bin_eq("public point belongs to the private key's domain",
                       point.serialize_uncompressed(),
                       key.public_ec_point().serialize_uncompressed());
@@ -1137,7 +1137,7 @@ Test::Result test_ecdsa_privkey_import() {
 
    PKCS11_ECDSA_PrivateKey pk(test_session.session(), props);
    result.test_success("ECDSA private key import was successful");
-   pk.set_public_point(priv_key._public_ec_point());
+   pk.set_public_point(priv_key.public_ec_point());
    result.test_is_true("P11 key self test OK", pk.check_key(*rng, false));
 
    pk.destroy();
@@ -1167,7 +1167,7 @@ Test::Result test_ecdsa_privkey_export() {
    props.set_label(label);
 
    PKCS11_ECDSA_PrivateKey pk(test_session.session(), props);
-   pk.set_public_point(priv_key._public_ec_point());
+   pk.set_public_point(priv_key.public_ec_point());
    result.test_is_true("Check PK11 key", pk.check_key(*rng, false));
 
    const ECDSA_PrivateKey exported = pk.export_key();

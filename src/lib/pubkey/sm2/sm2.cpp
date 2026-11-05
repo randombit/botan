@@ -47,7 +47,7 @@ std::optional<size_t> SM2_PublicKey::_signature_element_size_for_DER_encoding() 
 }
 
 std::unique_ptr<Public_Key> SM2_PrivateKey::public_key() const {
-   return std::make_unique<SM2_Signature_PublicKey>(domain(), _public_ec_point());
+   return std::make_unique<SM2_Signature_PublicKey>(domain(), public_ec_point());
 }
 
 bool SM2_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
@@ -263,7 +263,7 @@ class SM2_Signature_Operation final : public PK_Ops::Signature {
             m_group(sm2.domain()),
             m_x(sm2._private_key()),
             m_da_inv(sm2._get_da_inv()),
-            m_input(options, m_group, sm2._public_ec_point()) {}
+            m_input(options, m_group, sm2.public_ec_point()) {}
 
       size_t signature_length() const override { return 2 * m_group.get_order_bytes(); }
 
@@ -309,9 +309,7 @@ std::vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng) {
 class SM2_Verification_Operation final : public PK_Ops::Verification {
    public:
       SM2_Verification_Operation(const SM2_PublicKey& sm2, const PK_Signature_Options_Reader& options) :
-            m_group(sm2.domain()),
-            m_gy_mul(sm2._public_ec_point()),
-            m_input(options, m_group, sm2._public_ec_point()) {}
+            m_group(sm2.domain()), m_gy_mul(sm2.public_ec_point()), m_input(options, m_group, sm2.public_ec_point()) {}
 
       void update(std::span<const uint8_t> input) override { m_input.update(input); }
 
