@@ -157,6 +157,16 @@ class Channel_Impl_13 : public Channel_Impl {
 
       void send_flight(std::vector<Flight::Message> flight);
 
+      template <typename FnT>
+      auto exceptions_as_alert(const FnT& fn) -> std::invoke_result_t<FnT> {
+         try {
+            return fn();
+         } catch(...) {
+            send_alert_for_exception(std::current_exception());
+            throw;
+         }
+      }
+
    private:
       std::optional<BytesNeeded> process(Handshake_Message_13 handshake_msg);
       void process(Post_Handshake_Message_13 post_handshake_msg);
@@ -169,6 +179,8 @@ class Channel_Impl_13 : public Channel_Impl {
        * clear secrets
        */
       void shutdown();
+
+      void send_alert_for_exception(std::exception_ptr ex);
 
    protected:
       const Connection_Side m_side;                              // NOLINT(*non-private-member-variable*)

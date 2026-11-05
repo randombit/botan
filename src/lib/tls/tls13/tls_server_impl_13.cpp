@@ -155,7 +155,7 @@ size_t Server_Impl_13::send_new_session_tickets(const size_t tickets) {
    }
 
    if(tickets_created > 0) {
-      send_flight(flight.commit());
+      exceptions_as_alert([&] { send_flight(flight.commit()); });
    }
 
    return tickets_created;
