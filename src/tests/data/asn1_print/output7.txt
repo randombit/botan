@@ -1,5 +1,5 @@
   d= 0, l=5302: SEQUENCE
-  d= 1, l=   9:  OBJECT                                     1.2.840.113549.1.7.2
+  d= 1, l=   9:  OBJECT                                     PKCS7.SignedData [1.2.840.113549.1.7.2]
   d= 1, l=5287:  cons [0] context
   d= 2, l=5283:   SEQUENCE
   d= 3, l=   1:    INTEGER                                  1
@@ -413,11 +413,11 @@
   d= 7, l=  11:        SET
   d= 8, l=   9:         OBJECT                              PKCS7.Data [1.2.840.113549.1.7.1]
   d= 6, l=  28:       SEQUENCE
-  d= 7, l=   9:        OBJECT                               1.2.840.113549.1.9.5
+  d= 7, l=   9:        OBJECT                               PKCS9.SigningTime [1.2.840.113549.1.9.5]
   d= 7, l=  15:        SET
   d= 8, l=  13:         UTC TIME                            2023/05/08 11:20:37 UTC
   d= 6, l=  45:       SEQUENCE
-  d= 7, l=   9:        OBJECT                               1.2.840.113549.1.9.52
+  d= 7, l=   9:        OBJECT                               PKCS9.CMSAlgorithmProtection [1.2.840.113549.1.9.52]
   d= 7, l=  32:        SET
   d= 8, l=  30:         SEQUENCE
   d= 9, l=  13:          SEQUENCE
