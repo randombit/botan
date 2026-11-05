@@ -22,6 +22,20 @@ class PK_Key_Agreement_Key;
 
 namespace TLS {
 
+/**
+* DTLS Hello Verify Request
+*/
+class BOTAN_UNSTABLE_API Hello_Verify_Request final : public Hello_Verify_Request_Shim {
+   public:
+      using Hello_Verify_Request_Shim::Hello_Verify_Request_Shim;
+
+      Hello_Verify_Request(std::span<const uint8_t> client_hello_bits,
+                           std::string_view client_identity,
+                           std::span<const uint8_t> cookie_secret);
+
+      std::vector<uint8_t> serialize() const override;
+};
+
 class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello_12_Shim {
    public:
       class Settings final {
