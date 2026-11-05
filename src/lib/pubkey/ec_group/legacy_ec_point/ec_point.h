@@ -380,6 +380,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       BOTAN_DEPRECATED("Deprecated no replacement") const CurveGFp& get_curve() const { return m_curve; }
 
    private:
+      friend class EC_AffinePoint_Data_BN;
       CurveGFp m_curve;
       BigInt m_x, m_y, m_z;
 };
