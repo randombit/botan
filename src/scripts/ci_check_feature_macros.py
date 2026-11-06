@@ -37,6 +37,7 @@ import sys
 EXTERNALLY_DEFINED_MACROS = {
     # Passed on the compiler command line by the generated makefile
     'BOTAN_IS_BEING_BUILT',
+    'BOTAN_PLZN_SHIM_EXPECTATIONS',
     # Set by users before including Botan headers
     'BOTAN_NO_DEPRECATED_WARNINGS',
     # Header guard of the amalgamation header written by configure.py
