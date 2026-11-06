@@ -57,7 +57,7 @@ from typing import Any, Callable, Union
 # 3.12.0 - EcScalar/EcPoint, DRBG
 # 3.11.0 - XOF API, CRL creation
 # 3.10.0 - introduced botan_pubkey_load_ec*_sec1()
-BOTAN_FFI_VERSION = 20260811  #: The FFI API version this module was written against.
+BOTAN_FFI_VERSION = 20261104  #: The FFI API version this module was written against.
 
 BOTAN_MINIMUM_FFI_VERSION = 20230403  #: The oldest FFI API version (Botan 3.0.0) this module can load.
 

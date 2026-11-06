@@ -1,6 +1,14 @@
 Release Notes
 ========================================
 
+Version 3.14.1, 2026-11-05
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Bump the reported version of FFI; this was missed in 3.14.0
+
+* Fix a build failure in 3.14.0 when deprecated features are disabled and
+  ``legacy_ec_point`` is explicitly enabled. (GH #6100)
+
 Version 3.14.0, 2026-11-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
