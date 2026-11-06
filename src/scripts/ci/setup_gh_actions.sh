@@ -73,6 +73,11 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "acvp" ]; then
         git clone --depth 1 "${ACVP_SERVER_GIT_URL}" --revision "${ACVP_GIT_REV}" acvp-server-git
         echo "ACVP_TESTDATA_DIR=$(pwd)/acvp-server-git/gen-val/json-files" >> "$GITHUB_ENV"
+
+    elif [ "$TARGET" = "plzn" ]; then
+        # The plzn checkout was fetched by the workflow; build its test runner.
+        # The shim in src/plzn_shim is built by the Botan build itself
+        cargo build --locked --release --manifest-path "${GITHUB_WORKSPACE}/plzn/Cargo.toml"
     fi
 
     if [ "$TARGET" = "coverage" ] || [ "$TARGET" = "sanitizer" ]; then
