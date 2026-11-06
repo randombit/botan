@@ -19,8 +19,11 @@
 #include <botan/exceptn.h>
 #include <botan/hex.h>
 #include <botan/internal/target_info.h>
+#include <algorithm>
 #include <cstring>
+#include <limits>
 #include <set>
+#include <tuple>
 
 #if defined(BOTAN_HAS_HWRNG)
    #include <botan/internal/hwrng.h>
@@ -33,6 +36,12 @@
 #if defined(BOTAN_HAS_HMAC_DRBG)
    #include <botan/hmac_drbg.h>
    #include <botan/mac.h>
+#endif
+
+#if defined(BOTAN_HAS_CTR_DRBG)
+   #include <botan/block_cipher.h>
+   #include <botan/ctr_drbg.h>
+   #include <botan/internal/ctr_drbg_nodf.h>
 #endif
 
 #if defined(BOTAN_HAS_AUTO_RNG)
@@ -244,7 +253,7 @@ class Stateful_RNG_Tests : public Test {
          Test::Result result(rng_name() + " Seed Material vs Additional Input");
 
          auto rng = create_rng(nullptr, nullptr, 0);
-         const size_t seed_bytes = rng->security_level() / 8;
+         const size_t seed_bytes = rng->required_seed_bits() / 8;
          const std::vector<uint8_t> input(2 * seed_bytes, 0x42);
 
          result.test_is_false("not seeded initially", rng->is_seeded());
@@ -261,7 +270,7 @@ class Stateful_RNG_Tests : public Test {
          result.test_is_false("short seed material does not seed", rng->is_seeded());
 
          rng->add_entropy(std::vector<uint8_t>(seed_bytes, 0x42));
-         result.test_is_true("seed material of security_level bits seeds", rng->is_seeded());
+         result.test_is_true("seed material of required_seed_bits bits seeds", rng->is_seeded());
          result.test_no_throw("output after seeding", [&]() { rng->random_vec(16); });
 
          // additional input is nonetheless mixed into the state
@@ -404,9 +413,9 @@ class Stateful_RNG_Tests : public Test {
                std::string name() const override { return "Neither Source"; }
          };
 
-         const size_t sec_level = create_rng(nullptr, nullptr, 0)->security_level();
+         const size_t seed_bits = create_rng(nullptr, nullptr, 0)->required_seed_bits();
          // well above the length at which add_entropy would consider the RNG seeded
-         const size_t big = 2 * sec_level / 8;
+         const size_t big = 2 * seed_bits / 8;
 
          // a source providing plenty of data but claiming no entropy does not seed the RNG
          {
@@ -424,7 +433,7 @@ class Stateful_RNG_Tests : public Test {
          // small estimates accumulate over a poll
          {
             Botan::Entropy_Sources srcs;
-            srcs.add_source(std::make_unique<Chunked_Source>((sec_level + 63) / 64));
+            srcs.add_source(std::make_unique<Chunked_Source>((seed_bits + 63) / 64));
 
             auto rng = make_rng(srcs);
             result.test_no_throw("chunked source seeds", [&]() { rng->random_vec(16); });
@@ -444,7 +453,7 @@ class Stateful_RNG_Tests : public Test {
          // a counted source seeds the RNG
          {
             Botan::Entropy_Sources srcs;
-            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 8, sec_level));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(seed_bits / 8, seed_bits));
 
             auto rng = make_rng(srcs);
             result.test_no_throw("counted source seeds", [&]() { rng->random_vec(16); });
@@ -455,7 +464,7 @@ class Stateful_RNG_Tests : public Test {
          {
             Botan::Entropy_Sources srcs;
             srcs.add_source(std::make_unique<Fixed_Estimate_Source>(big, 0));
-            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 8, sec_level));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(seed_bits / 8, seed_bits));
 
             auto rng = make_rng(srcs);
             result.test_no_throw("mixed sources seed", [&]() { rng->random_vec(16); });
@@ -465,7 +474,7 @@ class Stateful_RNG_Tests : public Test {
          // an estimate exceeding the data is capped
          {
             Botan::Entropy_Sources srcs;
-            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 16, sec_level));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(seed_bits / 16, seed_bits));
 
             auto rng = make_rng(srcs);
             result.test_throws<Botan::PRNG_Unseeded>("overstated estimate is capped", [&]() { rng->random_vec(16); });
@@ -484,7 +493,7 @@ class Stateful_RNG_Tests : public Test {
          // a legacy source is credited with what it reports
          {
             Botan::Entropy_Sources srcs;
-            srcs.add_source(std::make_unique<Legacy_Source>(sec_level / 8, sec_level));
+            srcs.add_source(std::make_unique<Legacy_Source>(seed_bits / 8, seed_bits));
 
             auto rng = make_rng(srcs);
             result.test_no_throw("counted legacy source seeds", [&]() { rng->random_vec(16); });
@@ -494,7 +503,7 @@ class Stateful_RNG_Tests : public Test {
          // but never with more than it provided
          {
             Botan::Entropy_Sources srcs;
-            srcs.add_source(std::make_unique<Legacy_Source>(sec_level / 16, sec_level));
+            srcs.add_source(std::make_unique<Legacy_Source>(seed_bits / 16, seed_bits));
 
             auto rng = make_rng(srcs);
             result.test_throws<Botan::PRNG_Unseeded>("overstated legacy estimate is capped",
@@ -505,7 +514,7 @@ class Stateful_RNG_Tests : public Test {
          {
             Botan::Entropy_Sources srcs;
             srcs.add_source(std::make_unique<Fixed_Estimate_Source>(big, 0));
-            srcs.add_source(std::make_unique<Legacy_Source>(sec_level / 16, sec_level));
+            srcs.add_source(std::make_unique<Legacy_Source>(seed_bits / 16, seed_bits));
 
             auto rng = make_rng(srcs);
             result.test_throws<Botan::PRNG_Unseeded>("legacy estimate cannot borrow from earlier data",
@@ -521,7 +530,7 @@ class Stateful_RNG_Tests : public Test {
 
             Botan::Entropy_Sources srcs;
             srcs.add_source(std::make_unique<Hostile_Legacy_Source>());
-            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 8, sec_level));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(seed_bits / 8, seed_bits));
 
             auto rng = make_rng(srcs);
             result.test_no_throw("hostile source followed by good source", [&]() { rng->random_vec(16); });
@@ -545,32 +554,32 @@ class Stateful_RNG_Tests : public Test {
          // the legacy Entropy_Sources::poll interface mixes data in without seeding
          {
             Botan::Entropy_Sources srcs;
-            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 8, sec_level));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(seed_bits / 8, seed_bits));
 
             auto rng = create_rng(nullptr, nullptr, 0);
-            result.test_sz_eq("legacy poll reports estimate", srcs.poll(*rng, sec_level), sec_level);
+            result.test_sz_eq("legacy poll reports estimate", srcs.poll(*rng, seed_bits), seed_bits);
             result.test_is_false("legacy poll does not seed", rng->is_seeded());
             result.test_sz_eq(
-               "legacy poll_just reports estimate", srcs.poll_just(*rng, "Fixed Estimate Source"), sec_level);
+               "legacy poll_just reports estimate", srcs.poll_just(*rng, "Fixed Estimate Source"), seed_bits);
             result.test_is_false("legacy poll_just does not seed", rng->is_seeded());
-            result.test_sz_eq("reseed_from seeds", rng->reseed_from(srcs), sec_level);
+            result.test_sz_eq("reseed_from seeds", rng->reseed_from(srcs), seed_bits);
             result.test_is_true("seeded", rng->is_seeded());
          }
 
          // the legacy poll with a timeout must not stop early for very large timeouts
          {
             Botan::Entropy_Sources srcs;
-            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 16, sec_level / 2));
-            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(sec_level / 16, sec_level / 2));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(seed_bits / 16, seed_bits / 2));
+            srcs.add_source(std::make_unique<Fixed_Estimate_Source>(seed_bits / 16, seed_bits / 2));
 
             auto rng = create_rng(nullptr, nullptr, 0);
             result.test_sz_eq("legacy poll with max timeout polls all sources",
-                              srcs.poll(*rng, sec_level, std::chrono::milliseconds::max()),
-                              sec_level);
+                              srcs.poll(*rng, seed_bits, std::chrono::milliseconds::max()),
+                              seed_bits);
       #if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
             result.test_sz_eq("legacy poll with expired timeout stops after first source",
-                              srcs.poll(*rng, sec_level, std::chrono::milliseconds(-1)),
-                              sec_level / 2);
+                              srcs.poll(*rng, seed_bits, std::chrono::milliseconds(-1)),
+                              seed_bits / 2);
       #endif
          }
 
@@ -604,7 +613,7 @@ class Stateful_RNG_Tests : public Test {
       Test::Result test_check_nonce() {
          Test::Result result(rng_name() + " Nonce Check");
 
-         // make sure the nonce has at least security_strength bits
+         // make sure the seed has at least required_seed_bits bits
          auto rng = create_rng(nullptr, nullptr, 0);
 
          for(const size_t nonce_size : {0, 4, 8, 16, 31, 32, 34, 64}) {
@@ -614,7 +623,7 @@ class Stateful_RNG_Tests : public Test {
             const std::vector<uint8_t> nonce(nonce_size);
             rng->initialize_with(nonce.data(), nonce.size());
 
-            if(nonce_size < rng->security_level() / 8) {
+            if(nonce_size < rng->required_seed_bits() / 8) {
                result.test_is_false("not seeded", rng->is_seeded());
                result.test_throws("invalid nonce size", [&rng]() { rng->random_vec(32); });
             } else {
@@ -790,7 +799,7 @@ class Stateful_RNG_Tests : public Test {
 
    #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
          const size_t output_len = 16;
-         const std::vector<uint8_t> seed(create_rng(nullptr, nullptr, 0)->security_level() / 8, 0x42);
+         const std::vector<uint8_t> seed(create_rng(nullptr, nullptr, 0)->required_seed_bits() / 8, 0x42);
 
          // Parent and child both add the same full entropy input after the fork;
          // the child must still detect the fork and reseed
@@ -977,6 +986,51 @@ class Stateful_RNG_Tests : public Test {
          return result;
       }
 };
+
+std::vector<Test::Result> stateful_rng_reseed_limit() {
+   return {
+      CHECK("Stateful_RNG without a reseed source enforces the reseed interval",
+            [](Test::Result& result) {
+               class Limited_RNG final : public Botan::Stateful_RNG {
+                  public:
+                     explicit Limited_RNG(size_t reseed_interval) : Stateful_RNG(reseed_interval) {}
+
+                     std::string name() const override { return "Limited_RNG"; }
+
+                     size_t security_level() const override { return 128; }
+
+                     size_t max_number_of_bytes_per_request() const override { return 0; }
+
+                  private:
+                     void generate_output(std::span<uint8_t> output, std::span<const uint8_t> /*input*/) override {
+                        std::fill(output.begin(), output.end(), 0x42);
+                     }
+
+                     void update(std::span<const uint8_t> /*input*/) override {}
+
+                     void clear_state() override {}
+               };
+
+               const std::vector<uint8_t> seed(16);
+
+               Limited_RNG rng(4);
+               result.test_sz_eq("reseed interval", rng.reseed_interval(), 4);
+               rng.add_entropy(seed);
+
+               for(size_t i = 0; i != 3; ++i) {
+                  result.test_no_throw("request within the interval", [&]() { rng.random_vec(1); });
+               }
+
+               result.test_throws<Botan::PRNG_Unseeded>("request beyond the interval", [&]() { rng.random_vec(1); });
+               result.test_is_false("no longer seeded", rng.is_seeded());
+
+               rng.add_entropy(seed);
+               result.test_no_throw("request after reseeding", [&]() { rng.random_vec(1); });
+            }),
+   };
+}
+
+BOTAN_REGISTER_TEST_FN("rng", "stateful_rng_reseed_limit", stateful_rng_reseed_limit);
 
 #endif
 
@@ -1187,6 +1241,342 @@ std::vector<Test::Result> hmac_drbg_multiple_requests() {
 
 BOTAN_REGISTER_TEST("rng", "hmac_drbg_unit", HMAC_DRBG_Unit_Tests);
 BOTAN_REGISTER_TEST_FN("rng", "hmac_drbg_multi_request", hmac_drbg_multiple_requests);
+
+#endif
+
+#if defined(BOTAN_HAS_CTR_DRBG) && defined(BOTAN_HAS_AES)
+
+class CTR_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
+   public:
+      std::string rng_name() const override { return "CTR_DRBG"; }
+
+      std::unique_ptr<Botan::Stateful_RNG> create_rng(Botan::RandomNumberGenerator* underlying_rng,
+                                                      Botan::Entropy_Sources* underlying_es,
+                                                      size_t reseed_interval) override {
+         auto cipher = Botan::BlockCipher::create_or_throw("AES-256");
+
+         if(underlying_rng != nullptr && underlying_es != nullptr) {
+            return std::make_unique<Botan::CTR_DRBG>(
+               std::move(cipher), *underlying_rng, *underlying_es, reseed_interval);
+         } else if(underlying_rng != nullptr) {
+            return std::make_unique<Botan::CTR_DRBG>(std::move(cipher), *underlying_rng, reseed_interval);
+         } else if(underlying_es != nullptr) {
+            return std::make_unique<Botan::CTR_DRBG>(std::move(cipher), *underlying_es, reseed_interval);
+         } else if(reseed_interval == 0) {
+            return std::make_unique<Botan::CTR_DRBG>(std::move(cipher));
+         } else {
+            throw Test_Error("Invalid reseed interval in CTR_DRBG unit test");
+         }
+      }
+
+      Test::Result test_max_number_of_bytes_per_request() override {
+         Test::Result result("CTR_DRBG max_number_of_bytes_per_request");
+
+         Request_Counting_RNG counting_rng;
+
+         result.test_throws("CTR_DRBG does not accept 0 for max_number_of_bytes_per_request", [&counting_rng]() {
+            const Botan::CTR_DRBG failing_rng(Botan::BlockCipher::create_or_throw("AES-256"), counting_rng, 2, 0);
+         });
+
+         result.test_throws("CTR_DRBG does not accept values higher than 64KB for max_number_of_bytes_per_request",
+                            [&counting_rng]() {
+                               const Botan::CTR_DRBG failing_rng(
+                                  Botan::BlockCipher::create_or_throw("AES-256"), counting_rng, 2, 64 * 1024 + 1);
+                            });
+
+         // set reseed_interval to 1 so we can test that a long request is split
+         // into multiple, max_number_of_bytes_per_request long requests
+         // for each smaller request, reseed_check() calls counting_rng::randomize(),
+         // which we can compare with
+         Botan::CTR_DRBG rng(Botan::BlockCipher::create_or_throw("AES-256"), counting_rng, 1, 64);
+
+         rng.random_vec(63);
+         result.test_sz_eq("one request", counting_rng.randomize_count(), 1);
+
+         rng.clear();
+         counting_rng.clear();
+
+         rng.random_vec(64);
+         result.test_sz_eq("one request", counting_rng.randomize_count(), 1);
+
+         rng.clear();
+         counting_rng.clear();
+
+         rng.random_vec(65);
+         result.test_sz_eq("two requests", counting_rng.randomize_count(), 2);
+
+         rng.clear();
+         counting_rng.clear();
+
+         rng.random_vec(1025);
+         result.test_sz_eq("17 requests", counting_rng.randomize_count(), 17);
+
+         return result;
+      }
+
+      Test::Result test_reseed_interval_limits() override {
+         Test::Result result("CTR_DRBG reseed_interval limits");
+
+         Request_Counting_RNG counting_rng;
+
+         result.test_throws("CTR_DRBG does not accept 0 for reseed_interval", [&counting_rng]() {
+            const Botan::CTR_DRBG failing_rng(Botan::BlockCipher::create_or_throw("AES-256"), counting_rng, 0);
+         });
+
+         result.test_throws("CTR_DRBG does not accept values higher than 2^24 for reseed_interval", [&counting_rng]() {
+            const Botan::CTR_DRBG failing_rng(
+               Botan::BlockCipher::create_or_throw("AES-256"), counting_rng, (static_cast<size_t>(1) << 24) + 1);
+         });
+
+         return result;
+      }
+
+      Test::Result test_security_level() override {
+         Test::Result result("CTR_DRBG Security Level");
+
+         // Without the derivation function the seed is seedlen bits; with it,
+         // 3/2 of the security level to cover the nonce
+         const std::vector<std::tuple<std::string, size_t, size_t, size_t>> ciphers = {
+            {"AES-128", 128, 192, 256},
+            {"AES-192", 192, 288, 320},
+            {"AES-256", 256, 384, 384},
+         };
+
+         for(const auto& [cipher, expected_security_level, df_seed_bits, nodf_seed_bits] : ciphers) {
+            const Botan::CTR_DRBG rng(cipher);
+            result.test_sz_eq(cipher + " security level", rng.security_level(), expected_security_level);
+            result.test_sz_eq(cipher + " required seed bits", rng.required_seed_bits(), df_seed_bits);
+
+            const auto rng_nodf = Botan::CTR_DRBG_Without_DF::create(cipher);
+            result.test_sz_eq(cipher + " NoDF security level", rng_nodf->security_level(), expected_security_level);
+            result.test_sz_eq(cipher + " NoDF required seed bits", rng_nodf->required_seed_bits(), nodf_seed_bits);
+         }
+
+         return result;
+      }
+
+      Test::Result test_reseed_kat() override {
+         Test::Result result("CTR_DRBG Reseed KAT");
+
+         Request_Counting_RNG counting_rng;
+         auto rng = make_rng(counting_rng, 2);
+
+         const Botan::secure_vector<uint8_t> seed_input(
+            {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
+             0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
+             0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF});
+
+         result.test_is_false("is_seeded", rng->is_seeded());
+
+         rng->initialize_with(seed_input.data(), seed_input.size());
+
+         Botan::secure_vector<uint8_t> out(32);
+
+         rng->randomize(out.data(), out.size());
+         result.test_sz_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(0));
+         result.test_bin_eq(
+            "out before reseed", out, "9BD4B46A4B5B3C5D46FA14DF470640E1A8A693903668EC2B6E4C04BE718FC4BA");
+
+         // reseed must happen here
+         rng->randomize(out.data(), out.size());
+         result.test_sz_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(1));
+         result.test_bin_eq(
+            "out after reseed", out, "6138826C951BE359864A904E791CE036B9BC0604C127CFF35085DF1C5C9845FF");
+
+         return result;
+      }
+};
+
+std::vector<Test::Result> ctr_drbg_misc() {
+   std::vector<Test::Result> results = {
+      CHECK("CTR_DRBG names",
+            [](Test::Result& result) {
+               result.test_str_eq("name", Botan::CTR_DRBG("AES-128").name(), "CTR_DRBG(AES-128)");
+               result.test_str_eq(
+                  "name without df", Botan::CTR_DRBG_Without_DF::create("AES-256")->name(), "CTR_DRBG(AES-256,NoDF)");
+            }),
+
+      CHECK("CTR_DRBG rejects unsuitable block ciphers",
+            [](Test::Result& result) {
+               result.test_throws<Botan::Invalid_Argument>(
+                  "null cipher", []() { const Botan::CTR_DRBG rng(std::unique_ptr<Botan::BlockCipher>{}); });
+
+               for(const std::string cipher : {"Blowfish", "DES", "SHACAL2", "Threefish-512"}) {
+                  if(auto bc = Botan::BlockCipher::create(cipher)) {
+                     result.test_throws<Botan::Invalid_Argument>(cipher + " has wrong block size",
+                                                                 [&]() { const Botan::CTR_DRBG rng(std::move(bc)); });
+                  }
+               }
+
+               if(auto bc = Botan::BlockCipher::create("Cascade(AES-256,AES-128)")) {
+                  result.test_throws<Botan::Invalid_Argument>("key length too long",
+                                                              [&]() { const Botan::CTR_DRBG rng(std::move(bc)); });
+               }
+            }),
+
+      CHECK("CTR_DRBG without df rejects long inputs",
+            [](Test::Result& result) {
+               auto rng = Botan::CTR_DRBG_Without_DF::create("AES-256");
+
+               result.test_throws<Botan::Invalid_Argument>("seed too long",
+                                                           [&]() { rng->initialize_with(std::vector<uint8_t>(49)); });
+               result.test_is_false("not seeded by rejected input", rng->is_seeded());
+
+               rng->initialize_with(std::vector<uint8_t>(48));
+               result.test_is_true("seeded", rng->is_seeded());
+
+               std::vector<uint8_t> out(16);
+               result.test_throws<Botan::Invalid_Argument>(
+                  "additional input too long", [&]() { rng->randomize_with_input(out, std::vector<uint8_t>(49)); });
+               result.test_no_throw("additional input of seed length",
+                                    [&]() { rng->randomize_with_input(out, std::vector<uint8_t>(48)); });
+
+               result.test_throws<Botan::Invalid_Argument>("reseed input too long",
+                                                           [&]() { rng->add_entropy(std::vector<uint8_t>(49)); });
+               result.test_no_throw("short reseed input", [&]() { rng->add_entropy(std::vector<uint8_t>(32)); });
+            }),
+
+      CHECK("CTR_DRBG requires the full seed length",
+            [](Test::Result& result) {
+               for(const std::string cipher : {"AES-128", "AES-192", "AES-256"}) {
+                  std::vector<std::unique_ptr<Botan::CTR_DRBG>> rngs;
+                  rngs.push_back(std::make_unique<Botan::CTR_DRBG>(cipher));
+                  rngs.push_back(Botan::CTR_DRBG_Without_DF::create(cipher));
+
+                  for(auto& rng : rngs) {
+                     const size_t seed_bytes = rng->required_seed_bits() / 8;
+
+                     rng->initialize_with(std::vector<uint8_t>(seed_bytes - 1, 0x42));
+                     result.test_is_false(rng->name() + " short seed does not seed", rng->is_seeded());
+                     result.test_throws<Botan::PRNG_Unseeded>(rng->name() + " no output after short seed",
+                                                              [&]() { rng->random_vec(16); });
+
+                     // Even one that would satisfy the security level
+                     rng->initialize_with(std::vector<uint8_t>(rng->security_level() / 8, 0x42));
+                     if(rng->security_level() / 8 < seed_bytes) {
+                        result.test_is_false(rng->name() + " security level seed does not seed", rng->is_seeded());
+                     }
+
+                     rng->initialize_with(std::vector<uint8_t>(seed_bytes, 0x42));
+                     result.test_is_true(rng->name() + " full seed seeds", rng->is_seeded());
+                     result.test_no_throw(rng->name() + " output after full seed", [&]() { rng->random_vec(16); });
+                  }
+               }
+            }),
+
+      CHECK("CTR_DRBG automatic seeding includes a nonce",
+            [](Test::Result& result) {
+               // Records the size of each request
+               class Request_Size_RNG final : public Botan::RandomNumberGenerator {
+                  public:
+                     bool accepts_input() const override { return false; }
+
+                     bool is_seeded() const override { return true; }
+
+                     void clear() override { m_requests.clear(); }
+
+                     std::string name() const override { return "Request_Size_RNG"; }
+
+                     const std::vector<size_t>& requests() const { return m_requests; }
+
+                  private:
+                     void fill_bytes_with_input(std::span<uint8_t> output,
+                                                std::span<const uint8_t> /*input*/) override {
+                        std::fill(output.begin(), output.end(), 0x80);
+                        if(!output.empty()) {
+                           m_requests.push_back(output.size());
+                        }
+                     }
+
+                     std::vector<size_t> m_requests;
+               };
+
+               for(const auto& [cipher, seed_bytes] :
+                   std::vector<std::pair<std::string, size_t>>{{"AES-128", 24}, {"AES-192", 36}, {"AES-256", 48}}) {
+                  Request_Size_RNG source;
+                  Botan::CTR_DRBG rng(Botan::BlockCipher::create_or_throw(cipher), source, 2);
+
+                  rng.random_vec(16);
+                  rng.random_vec(16);
+                  rng.random_vec(16);
+
+                  result.test_sz_eq(cipher + " seeded and reseeded once", source.requests().size(), 2);
+                  for(const size_t req : source.requests()) {
+                     result.test_sz_eq(cipher + " seed request size", req, seed_bytes);
+                  }
+
+                  // An explicit reseed with the default poll bits fully seeds the RNG
+                  Botan::CTR_DRBG manual_rng(cipher);
+                  source.clear();
+                  manual_rng.reseed_from_rng(source);
+                  result.test_is_true(cipher + " seeded by reseed_from_rng", manual_rng.is_seeded());
+                  result.test_sz_eq(cipher + " reseed_from_rng requests", source.requests().size(), 1);
+                  if(!source.requests().empty()) {
+                     const size_t expected = std::max(Botan::RandomNumberGenerator::DefaultPollBits / 8, seed_bytes);
+                     result.test_sz_eq(cipher + " reseed_from_rng request size", source.requests()[0], expected);
+                  }
+               }
+            }),
+
+      CHECK("CTR_DRBG manual seeding has a reseed limit",
+            [](Test::Result& result) {
+               const size_t expected = static_cast<size_t>(
+                  std::min<uint64_t>(static_cast<uint64_t>(1) << 48, std::numeric_limits<size_t>::max()));
+
+               result.test_sz_eq("reseed limit", Botan::CTR_DRBG("AES-256").reseed_interval(), expected);
+               result.test_sz_eq(
+                  "NoDF reseed limit", Botan::CTR_DRBG_Without_DF::create("AES-256")->reseed_interval(), expected);
+            }),
+
+      CHECK("CTR_DRBG bulk and split output with input",
+            [](Test::Result& result) {
+               auto null_rng = Botan::Null_RNG();
+               constexpr size_t rng_max_output = 1024;
+               const auto seed = Botan::hex_decode(
+                  "deadbeefbaadcafedeadbeefbaadcafedeadbeefbaadcafedeadbeefbaadcafedeadbeefbaadcafedeadbeefbaadcafe");
+
+               const auto make_seeded_rng = [&]() {
+                  auto rng = std::make_unique<Botan::CTR_DRBG>(
+                     Botan::BlockCipher::create_or_throw("AES-256"), null_rng, 4, rng_max_output);
+                  rng->add_entropy(seed);
+                  return rng;
+               };
+
+               auto rng1 = make_seeded_rng();
+               auto rng2 = make_seeded_rng();
+
+               std::vector<uint8_t> bulk(3 * rng_max_output);
+               rng1->randomize_with_input(bulk, seed);
+
+               std::vector<uint8_t> split(3 * rng_max_output);
+               const std::span<uint8_t> split_span(split);
+               rng2->randomize_with_input(split_span.subspan(0, rng_max_output), seed);
+               rng2->randomize_with_input(split_span.subspan(rng_max_output, rng_max_output), {});
+               rng2->randomize_with_input(split_span.subspan(2 * rng_max_output), {});
+
+               result.test_bin_eq("Output is equal, regardless bulk request", bulk, split);
+            }),
+   };
+
+   #if defined(BOTAN_HAS_SYSTEM_RNG) && defined(BOTAN_HAS_ENTROPY_SOURCE)
+   results.push_back(CHECK("CTR_DRBG seeds from a single RNG based entropy source", [](Test::Result& result) {
+      // AES-192 and AES-256 need more than the default poll of 256 bits
+      Botan::Entropy_Sources srcs;
+      srcs.add_source(Botan::Entropy_Source::create("system_rng"));
+
+      for(const std::string cipher : {"AES-128", "AES-192", "AES-256"}) {
+         Botan::CTR_DRBG rng(Botan::BlockCipher::create_or_throw(cipher), srcs);
+         result.test_no_throw(cipher + " produces output", [&]() { rng.random_vec(16); });
+         result.test_is_true(cipher + " is seeded", rng.is_seeded());
+      }
+   }));
+   #endif
+
+   return results;
+}
+
+BOTAN_REGISTER_TEST("rng", "ctr_drbg_unit", CTR_DRBG_Unit_Tests);
+BOTAN_REGISTER_TEST_FN("rng", "ctr_drbg_misc", ctr_drbg_misc);
 
 #endif
 

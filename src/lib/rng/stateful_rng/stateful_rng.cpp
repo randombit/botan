@@ -9,6 +9,7 @@
 #include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/internal/os_utils.h>
+#include <algorithm>
 
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
    #include <botan/entropy_src.h>
@@ -32,7 +33,10 @@ Stateful_RNG::Stateful_RNG(Entropy_Sources& entropy_sources, size_t reseed_inter
       m_reseed_interval(reseed_interval),
       m_fork_detector(std::make_unique<OS::Fork_Detector>()) {}
 
-Stateful_RNG::Stateful_RNG() : m_reseed_interval(0), m_fork_detector(std::make_unique<OS::Fork_Detector>()) {}
+Stateful_RNG::Stateful_RNG(size_t reseed_interval) :
+      m_reseed_interval(reseed_interval), m_fork_detector(std::make_unique<OS::Fork_Detector>()) {}
+
+Stateful_RNG::Stateful_RNG() : Stateful_RNG(0) {}
 
 Stateful_RNG::~Stateful_RNG() = default;
 
@@ -91,7 +95,7 @@ void Stateful_RNG::accept_seed_material(std::span<const uint8_t> input) {
    this->update(input);
 
    // The contract of add_entropy is that the caller asserts full entropy
-   if(8 * input.size() >= security_level()) {
+   if(8 * input.size() >= required_seed_bits()) {
       const bool can_reseed = (m_underlying_rng != nullptr || m_entropy_sources != nullptr);
 
       if(can_reseed && fork_detected()) {
@@ -117,7 +121,7 @@ void Stateful_RNG::fill_bytes_with_input(std::span<uint8_t> output, std::span<co
 
 size_t Stateful_RNG::finish_reseed(size_t bits_collected) {
    // Lock is held whenever this function is called
-   if(bits_collected >= security_level()) {
+   if(bits_collected >= required_seed_bits()) {
       reset_reseed_counter();
    }
    return bits_collected;
@@ -127,7 +131,8 @@ size_t Stateful_RNG::reseed_from_sources(Entropy_Sources& srcs, size_t poll_bits
    const lock_guard_type<recursive_mutex_type> lock(m_mutex);
 
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
-   Entropy_Accumulator acc(poll_bits, [this](std::span<const uint8_t> in) { this->update(in); });
+   Entropy_Accumulator acc(std::max(poll_bits, required_seed_bits()),
+                           [this](std::span<const uint8_t> in) { this->update(in); });
    srcs._gather(acc);
    return finish_reseed(acc.bits_collected());
 #else
@@ -139,7 +144,7 @@ size_t Stateful_RNG::reseed_from_sources(Entropy_Sources& srcs, size_t poll_bits
 void Stateful_RNG::reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits) {
    const lock_guard_type<recursive_mutex_type> lock(m_mutex);
 
-   const auto seed = rng.random_vec(poll_bits / 8);
+   const auto seed = rng.random_vec(std::max(poll_bits, required_seed_bits()) / 8);
    this->update(seed);
 
    // The caller designated this RNG as a seed source, so its output is credited in full
@@ -167,11 +172,11 @@ void Stateful_RNG::reseed_check() {
       m_reseed_counter = 0;
 
       if(m_underlying_rng != nullptr) {
-         reseed_from_rng(*m_underlying_rng, security_level());
+         reseed_from_rng(*m_underlying_rng, required_seed_bits());
       }
 
       if(m_entropy_sources != nullptr) {
-         reseed_from_sources(*m_entropy_sources, security_level());
+         reseed_from_sources(*m_entropy_sources, required_seed_bits());
       }
 
       if(!is_seeded()) {

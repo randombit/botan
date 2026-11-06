@@ -280,7 +280,7 @@ class CMCE_Utility_Tests final : public Test {
       }
 };
 
-   #if defined(BOTAN_HAS_AES)
+   #if defined(BOTAN_HAS_CTR_DRBG) && defined(BOTAN_HAS_AES)
 class CMCE_Invalid_Test : public Text_Based_Test {
    public:
       CMCE_Invalid_Test() :
@@ -295,7 +295,7 @@ class CMCE_Invalid_Test : public Text_Based_Test {
          const auto ct_invalid = vars.get_req_bin("ct_invalid");
          const auto ref_ss_invalid = vars.get_req_bin("ss_invalid");
 
-         const auto test_rng = std::make_unique<CTR_DRBG_AES256>(kat_seed);
+         const auto test_rng = make_pqc_kat_drbg(kat_seed);
 
          const auto private_key = Botan::create_private_key("ClassicMcEliece", *test_rng, params_str);
 
@@ -395,7 +395,7 @@ class Classic_McEliece_KAT_Tests final : public Botan_Tests::PK_PQC_KEM_KAT_Test
 BOTAN_REGISTER_TEST("cmce", "cmce_utility", CMCE_Utility_Tests);
 BOTAN_REGISTER_TEST("cmce", "cmce_generic_keygen", CMCE_Generic_Keygen_Tests);
 BOTAN_REGISTER_TEST("cmce", "cmce_generic_kat", Classic_McEliece_KAT_Tests);
-   #if defined(BOTAN_HAS_AES)
+   #if defined(BOTAN_HAS_CTR_DRBG) && defined(BOTAN_HAS_AES)
 BOTAN_REGISTER_TEST("cmce", "cmce_invalid", CMCE_Invalid_Test);
    #endif
 

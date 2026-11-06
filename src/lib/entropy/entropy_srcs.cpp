@@ -93,7 +93,11 @@ class RNG_Based_EntropySource : public Entropy_Source {
 };
 
 void RNG_Based_EntropySource::gather(Entropy_Accumulator& acc) {
-   secure_vector<uint8_t> buf(poll_bits() / 8);
+   // A trusted source provides enough to reach the goal on its own
+   const size_t remaining_bits = acc.goal_bits() - std::min(acc.goal_bits(), acc.bits_collected());
+   const size_t bits = trusted() ? std::max(poll_bits(), remaining_bits) : poll_bits();
+
+   secure_vector<uint8_t> buf((bits + 7) / 8);
    try {
       rng().randomize(buf);
    } catch(...) {

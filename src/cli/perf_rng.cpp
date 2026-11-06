@@ -17,6 +17,11 @@
    #include <botan/chacha_rng.h>
 #endif
 
+#if defined(BOTAN_HAS_CTR_DRBG)
+   #include <botan/block_cipher.h>
+   #include <botan/ctr_drbg.h>
+#endif
+
 #if defined(BOTAN_HAS_HMAC_DRBG)
    #include <botan/hmac_drbg.h>
 #endif
@@ -40,6 +45,15 @@ class PerfTest_Rng final : public PerfTest {
          for(const std::string hash : {"SHA-256", "SHA-384", "SHA-512"}) {
             Botan::HMAC_DRBG hmac_drbg(hash);
             bench_rng(config, hmac_drbg, hmac_drbg.name());
+         }
+#endif
+
+#if defined(BOTAN_HAS_CTR_DRBG)
+         for(const std::string cipher : {"AES-128", "AES-256"}) {
+            if(auto bc = Botan::BlockCipher::create(cipher)) {
+               Botan::CTR_DRBG ctr_drbg(std::move(bc));
+               bench_rng(config, ctr_drbg, ctr_drbg.name());
+            }
          }
 #endif
 

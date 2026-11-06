@@ -1255,7 +1255,7 @@ class RandomNumberGenerator(_NonCopyable):
 
     @staticmethod
     def drbg(drbg_name: str, seed: bytes) -> RandomNumberGenerator:
-        """Create a seeded DRBG (e.g. "HMAC_DRBG(SHA-256)")
+        """Create a seeded DRBG (e.g. "HMAC_DRBG(SHA-256)" or "CTR_DRBG(AES-256)")
 
         The seed should be the concatenation of entropy, nonce, and
         personalization string."""
