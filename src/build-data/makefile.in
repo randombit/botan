@@ -135,6 +135,17 @@ bogo_shim: %{out_dir}/botan_bogo_shim
 
 %{endif}
 
+%{if build_plzn_shim}
+
+plzn_shim: %{out_dir}/botan_plzn_shim
+
+# plzn shim, compiled together with the helper library sources from the plzn
+# checkout so that both see the same ABI-affecting flags (eg _GLIBCXX_DEBUG)
+%{out_dir}/botan_plzn_shim: %{plzn_shim_all_src} $(LIBRARIES)
+	$(CXX) $(BUILD_FLAGS) %{public_include_flags} %{external_include_flags} %{plzn_shim_include_flags} -DBOTAN_PLZN_SHIM_EXPECTATIONS='"%{plzn_shim_expectations}"' %{plzn_shim_all_src} $(BUILD_DIR_LINK_PATH) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
+
+%{endif}
+
 %{if build_ct_selftest}
 
 ct_selftest: %{out_dir}/botan_ct_selftest
