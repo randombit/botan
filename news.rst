@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 3.14.1, 2026-11-05
+Version 3.14.1, 2026-11-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Bump the reported version of FFI; this was missed in 3.14.0
