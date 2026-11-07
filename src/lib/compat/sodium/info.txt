@@ -16,7 +16,7 @@ ed25519
 sha2_32
 sha2_64
 hmac
-siphash
+#siphash
 system_rng
 x25519
 </requires>
