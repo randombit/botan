@@ -68,6 +68,10 @@ bool Text_Policy::allow_dtls12() const {
    return get_bool("allow_dtls12", Policy::allow_dtls12());
 }
 
+bool Text_Policy::allow_dtls13() const {
+   return get_bool("allow_dtls13", Policy::allow_dtls13());
+}
+
 bool Text_Policy::allow_insecure_renegotiation() const {
    return get_bool("allow_insecure_renegotiation", Policy::allow_insecure_renegotiation());
 }
@@ -203,6 +207,10 @@ std::optional<size_t> Text_Policy::dtls_maximum_hello_verify_requests() const {
    }
 
    return to_u32bit(v);
+}
+
+size_t Text_Policy::dtls_maximum_queued_acknowledgements() const {
+   return get_len("dtls_maximum_queued_acknowledgements", Policy::dtls_maximum_queued_acknowledgements());
 }
 
 std::optional<size_t> Text_Policy::max_useless_records() const {

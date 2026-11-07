@@ -1171,12 +1171,151 @@ std::vector<Test::Result> test_reject_premature_application_data() {
    };
 }
 
+std::vector<Test::Result> test_epoch_and_sequence_tracking() {
+   // Key derivation data from RFC 8448 (RTT1 handshake)
+   const auto shared_secret = Botan::hex_decode_locked(
+      "8b d4 05 4f b5 5b 9d 63 fd fb ac f9 f0 4b 9f 0d"
+      "35 e6 d6 3f 53 75 63 ef d4 62 72 90 0f 89 49 2d");
+   const auto th_server_hello = Botan::hex_decode(
+      "86 0c 06 ed c0 78 58 ee 8e 78 f0 e7 42 8c 58 ed"
+      "d6 b4 3f 2c a3 e6 e9 5f 02 ed 06 3c f0 e1 ca d8");
+   const auto th_server_finished = Botan::hex_decode(
+      "96 08 10 2a 0f 1c cc 6d b6 25 0b 7b 7e 41 7b 1a"
+      "00 0e aa da 3d aa e4 77 7a 76 86 c9 ff 83 df 13");
+   const auto th_client_finished = Botan::hex_decode(
+      "20 91 45 a9 6e e8 e2 a1 22 ff 81 00 47 cc 95 26"
+      "84 65 8d 60 49 e8 64 29 42 6d b8 7c 54 ad 14 3d");
+   const auto cipher = Ciphersuite::from_name("AES_128_GCM_SHA256").value();
+
+   const auto app_traffic_1 = EpochNumber::ApplicationTraffic_0 + 1;
+   const auto app_traffic_2 = EpochNumber::ApplicationTraffic_0 + 2;
+
+   // A small plaintext that can be protected and deprotected repeatedly.
+   const auto plaintext = Botan::hex_decode_locked("00 01 02 03 04");
+
+   auto make_client_cs = [&] {
+      auto cs = Cipher_State::init_with_server_hello(
+         Connection_Side::Client, TLS_Flavor::TLS, secure_vector<uint8_t>(shared_secret), cipher, th_server_hello, {});
+      cs->advance_with_server_finished(th_server_finished);
+      cs->advance_with_client_finished(th_client_finished);
+      return cs;
+   };
+
+   return {
+      CHECK("epoch numbers track the handshake state transitions",
+            [&](Test::Result& result) {
+               auto cs = Cipher_State::init_with_server_hello(Connection_Side::Client,
+                                                              TLS_Flavor::TLS,
+                                                              secure_vector<uint8_t>(shared_secret),
+                                                              cipher,
+                                                              th_server_hello,
+                                                              {});
+
+               result.test_enum_eq("write epoch is handshake traffic after ServerHello",
+                                   cs->current_write_epoch_number(),
+                                   EpochNumber::HandshakeTraffic);
+               result.test_enum_eq("read epoch is handshake traffic after ServerHello",
+                                   cs->current_read_epoch_number(),
+                                   EpochNumber::HandshakeTraffic);
+               result.test_u64_eq("write sequence number starts at 0", cs->current_write_sequence_number(), 0);
+               result.test_u64_eq("read sequence number starts at 0", cs->current_read_sequence_number(), 0);
+
+               cs->advance_with_server_finished(th_server_finished);
+               result.test_enum_eq("client read epoch is application traffic after server Finished",
+                                   cs->current_read_epoch_number(),
+                                   EpochNumber::ApplicationTraffic_0);
+               result.test_enum_eq("client write epoch is still handshake traffic after server Finished",
+                                   cs->current_write_epoch_number(),
+                                   EpochNumber::HandshakeTraffic);
+
+               cs->advance_with_client_finished(th_client_finished);
+               result.test_enum_eq("client write epoch is application traffic after client Finished",
+                                   cs->current_write_epoch_number(),
+                                   EpochNumber::ApplicationTraffic_0);
+               result.test_enum_eq("client read epoch stays application traffic after client Finished",
+                                   cs->current_read_epoch_number(),
+                                   EpochNumber::ApplicationTraffic_0);
+            }),
+
+      CHECK("update_read_keys and update_write_keys return the new epoch",
+            [&](Test::Result& result) {
+               auto cs = make_client_cs();
+
+               result.test_enum_eq(
+                  "first read key update enters ApplicationTraffic_1", cs->update_read_keys(), app_traffic_1);
+               result.test_enum_eq(
+                  "second read key update enters ApplicationTraffic_2", cs->update_read_keys(), app_traffic_2);
+
+               result.test_enum_eq(
+                  "first write key update enters ApplicationTraffic_1", cs->update_write_keys(), app_traffic_1);
+               result.test_enum_eq(
+                  "second write key update enters ApplicationTraffic_2", cs->update_write_keys(), app_traffic_2);
+            }),
+
+      CHECK("protect_record returns the record number and advances the write sequence",
+            [&](Test::Result& result) {
+               auto cs = make_client_cs();
+               auto* tls_cs = Botan::TLS::as_tls_cipher_state(cs.get());
+
+               result.test_u64_eq("write sequence number starts at 0", cs->current_write_sequence_number(), 0);
+
+               secure_vector<uint8_t> out1;
+               const auto rn1 = tls_cs->protect_record(Record_Type::ApplicationData, plaintext, 0, out1);
+               result.test_enum_eq(
+                  "first record's epoch is the current write epoch", rn1.epoch, cs->current_write_epoch_number());
+               result.test_u64_eq("first record's sequence number is 0", rn1.sequence_number, 0);
+               result.test_u64_eq("write sequence number advanced to 1", cs->current_write_sequence_number(), 1);
+
+               secure_vector<uint8_t> out2;
+               const auto rn2 = tls_cs->protect_record(Record_Type::ApplicationData, plaintext, 0, out2);
+               result.test_enum_eq(
+                  "second record's epoch is the current write epoch", rn2.epoch, cs->current_write_epoch_number());
+               result.test_u64_eq("second record's sequence number is 1", rn2.sequence_number, 1);
+               result.test_u64_eq("write sequence number advanced to 2", cs->current_write_sequence_number(), 2);
+            }),
+
+      CHECK("deprotect_record advances the read sequence number",
+            [&](Test::Result& result) {
+               // Protect records with the client's write key and deprotect them
+               // with a fresh server cipher state's read key.
+               const auto cs_client = make_client_cs();
+               auto* tls_cs_client = Botan::TLS::as_tls_cipher_state(cs_client.get());
+
+               auto cs_server = Cipher_State::init_with_server_hello(Connection_Side::Server,
+                                                                     TLS_Flavor::TLS,
+                                                                     secure_vector<uint8_t>(shared_secret),
+                                                                     cipher,
+                                                                     th_server_hello,
+                                                                     {});
+               cs_server->advance_with_server_finished(th_server_finished);
+               cs_server->advance_with_client_finished(th_client_finished);
+               auto* tls_cs_server = Botan::TLS::as_tls_cipher_state(cs_server.get());
+
+               result.test_u64_eq("server read sequence starts at 0", cs_server->current_read_sequence_number(), 0);
+
+               for(unsigned i = 0; i < 3; ++i) {
+                  secure_vector<uint8_t> out;
+                  tls_cs_client->protect_record(Record_Type::ApplicationData, plaintext, 0, out);
+
+                  Record_TLS record;
+                  record.append(std::span{out}.first(TLS_HEADER_SIZE));
+                  record.append(std::span{out}.subspan(TLS_HEADER_SIZE));
+                  result.require("record is complete", record.complete());
+
+                  std::ignore = tls_cs_server->deprotect_record(std::move(record), MAX_PLAINTEXT_SIZE + 1);
+                  result.test_u64_eq("server read sequence advanced", cs_server->current_read_sequence_number(), i + 1);
+               }
+            }),
+   };
+}
+
 BOTAN_REGISTER_TEST_FN("tls",
                        "tls_cipher_state",
                        test_secret_derivation_rfc8448_rtt1,
                        test_secret_derivation_rfc8448_rtt0,
                        test_record_padding,
-                       test_reject_premature_application_data);
+                       test_reject_premature_application_data,
+                       test_epoch_and_sequence_tracking);
 }  // namespace
 
 }  // namespace Botan_Tests
