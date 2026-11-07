@@ -6,6 +6,7 @@
 
 #include <botan/internal/sig_padding.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/pk_options_readers.h>
@@ -93,6 +94,8 @@ std::unique_ptr<SignaturePaddingScheme> SignaturePaddingScheme::create_or_throw(
          return std::make_unique<X931_SignaturePadding>(options);
       }
 #endif
+
+      BOTAN_UNUSED(hash_available);
    }
 
    throw Lookup_Error("Invalid or unavailable signature padding scheme " + options.to_string());

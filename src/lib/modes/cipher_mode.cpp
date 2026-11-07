@@ -131,7 +131,7 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(std::string_view algo,
 
 #endif
 
-   BOTAN_UNUSED(spec);
+   BOTAN_UNUSED(spec, direction);
 
    return std::unique_ptr<Cipher_Mode>();
 }

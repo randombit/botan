@@ -9,7 +9,6 @@
 
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_X509_CERTIFICATES) && \
    ((defined(BOTAN_HAS_TLS_12) && defined(BOTAN_HAS_ECDH)) || defined(BOTAN_HAS_TLS_13))
-   #include <botan/auto_rng.h>
    #include <botan/credentials_manager.h>
    #include <botan/rsa.h>
    #include <botan/tls_alert.h>
@@ -259,7 +258,7 @@ class TLS12_Policy_Resumption_Tests final : public Test {
 
          const auto version = Botan::TLS::Protocol_Version::TLS_V12;
 
-         auto rng = std::make_shared<Botan::AutoSeeded_RNG>();
+         auto rng = this->new_shared_rng("policy_resumption");
          auto server_key = std::make_shared<Botan::RSA_PrivateKey>(*rng, 2048);
          const Botan::X509_Cert_Options server_opts("service.example");
          auto server_cert = Botan::X509::create_self_signed_cert(server_opts, *server_key, "SHA-256", *rng);
@@ -499,7 +498,7 @@ class TLS13_Client_Auth_Resumption_Tests final : public Test {
 
          const auto version = Botan::TLS::Protocol_Version::TLS_V13;
 
-         auto rng = std::make_shared<Botan::AutoSeeded_RNG>();
+         auto rng = this->new_shared_rng("tls_client_auth_resumption");
          auto key = std::make_shared<Botan::RSA_PrivateKey>(*rng, 2048);
          const Botan::X509_Cert_Options options("service.example");
          auto certificate = Botan::X509::create_self_signed_cert(options, *key, "SHA-256", *rng);
