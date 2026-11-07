@@ -743,6 +743,7 @@ std::vector<Test::Result> send_flights() {
                const size_t message_size = TLS::MAX_PLAINTEXT_SIZE + 4096;
                const TLS::Flight::Message_Info big_message{
                   .wire_type = TLS::Handshake_Type::Certificate,
+                  .epoch = TLS::EpochNumber::Unprotected,
                   .header = TLS::TLS_Handshake_Layer::prepare_header(TLS::Handshake_Type::Certificate, message_size),
                   .serialized = TLS::SerializedHandshakeMessage(std::vector<uint8_t>(message_size)),
                };
@@ -765,6 +766,7 @@ std::vector<Test::Result> send_flights() {
                callbacks->clear_emitted();
                const TLS::Flight::Message_Info small_message{
                   .wire_type = TLS::Handshake_Type::Finished,
+                  .epoch = TLS::EpochNumber::Unprotected,
                   .header = TLS::TLS_Handshake_Layer::prepare_header(TLS::Handshake_Type::Finished, 5),
                   .serialized = TLS::SerializedHandshakeMessage(std::vector<uint8_t>(5)),
                };
