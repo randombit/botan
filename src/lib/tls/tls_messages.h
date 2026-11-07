@@ -52,7 +52,7 @@ class Policy;
 /**
 * DTLS Hello Verify Request
 */
-class BOTAN_UNSTABLE_API Hello_Verify_Request final : public Handshake_Message {
+class BOTAN_UNSTABLE_API Hello_Verify_Request_Shim : public Handshake_Message {
    public:
       std::vector<uint8_t> serialize() const override;
 
@@ -60,14 +60,13 @@ class BOTAN_UNSTABLE_API Hello_Verify_Request final : public Handshake_Message {
 
       const std::vector<uint8_t>& cookie() const { return m_cookie; }
 
-      explicit Hello_Verify_Request(std::span<const uint8_t> buf);
+      explicit Hello_Verify_Request_Shim(std::span<const uint8_t> buf);
 
-      Hello_Verify_Request(std::span<const uint8_t> client_hello_bits,
-                           std::string_view client_identity,
-                           std::span<const uint8_t> cookie_secret);
+   protected:
+      Hello_Verify_Request_Shim() = default;
 
-   private:
-      std::vector<uint8_t> m_cookie;
+   protected:
+      std::vector<uint8_t> m_cookie;  // NOLINT(*-non-private-member-variables-in-classes)
 };
 
 class Client_Hello_Internal;
