@@ -6,10 +6,109 @@
 
 #include <botan/internal/hwrng.h>
 
+#include <botan/internal/target_info.h>
+#include <botan/internal/time_utils.h>
+#include <atomic>
+
 namespace Botan::HWRNG {
+
+namespace {
+
+enum class Speed : uint8_t { Unknown, Slow, Fast };
+
+std::atomic<Speed>& speed_state() {
+   static std::atomic<Speed> g_speed{Speed::Unknown};
+   return g_speed;
+}
+
+struct Probe_Result {
+      Speed speed = Speed::Slow;
+      std::optional<uint64_t> output;
+};
+
+/*
+* Time the hardware RNG, also returning the last output produced while doing so
+*/
+Probe_Result probe() {
+#if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
+   /*
+   * A hardware RNG is considered fast if a 64-bit read completes within this
+   * many nanoseconds. Per uops.info, RDRAND costs about 65-120 cycles on AMD
+   * Zen 3 and later, Intel Ivy Bridge, and Emerald Rapids, but between 575 and
+   * 13800 cycles on every other x86 core measured. At typical clock rates 100 ns
+   * falls in the gap between these two groups.
+   */
+   constexpr uint64_t FastThresholdNs = 100;
+
+   // Enough reads per timed batch that the cost of reading the clock is minor
+   constexpr size_t ProbeReads = 32;
+
+   // The first read may incur a one-time cost so it is not timed
+   std::optional<uint64_t> output = read_once();
+   if(!output) {
+      return {Speed::Slow, std::nullopt};
+   }
+
+   bool ever_failed = false;
+   const uint64_t batch_ns = measure_cost(0, [&]() {
+      for(size_t i = 0; i != ProbeReads; ++i) {
+         if(const auto r = read_once()) {
+            output = r;
+         } else {
+            ever_failed = true;
+         }
+      }
+   });
+
+   // A generator that fails even once during a short probe cannot trusted for fast path
+   const bool hwrng_is_slow = ever_failed || (batch_ns > ProbeReads * FastThresholdNs);
+
+   const Speed speed = hwrng_is_slow ? Speed::Slow : Speed::Fast;
+   return {speed, output};
+#else
+   // Without a clock there is no way to time the hardware RNG
+   return {Speed::Slow, std::nullopt};
+#endif
+}
+
+}  // namespace
 
 bool available() {
    return CPUID::has(feature());
+}
+
+bool fast() {
+   if(!available()) {
+      return false;
+   }
+
+   auto& state = speed_state();
+   Speed speed = state.load();
+   if(speed == Speed::Unknown) {
+      speed = probe().speed;
+      state.store(speed);
+   }
+   return speed == Speed::Fast;
+}
+
+std::optional<uint64_t> read_if_fast() {
+   if(!available()) {
+      return std::nullopt;
+   }
+
+   auto& state = speed_state();
+   const Speed speed = state.load();
+
+   if(speed == Speed::Unknown) {
+      // Concurrent first calls each probe; the last result stored wins, which is harmless
+      const auto probed = probe();
+      state.store(probed.speed);
+      return probed.output;
+   } else if(speed == Speed::Fast) {
+      return read();
+   } else {
+      return std::nullopt;
+   }
 }
 
 std::optional<uint64_t> read() {

@@ -28,6 +28,26 @@ BOTAN_TEST_API bool available();
 */
 BOTAN_TEST_API std::optional<uint64_t> read();
 
+/**
+* Return true if the hardware RNG is available and executes quickly enough
+* that it can be used in performance sensitive code
+*
+* The speed is determined by timing the hardware RNG the first time this
+* function (or read_if_fast) is called.
+*/
+BOTAN_TEST_API bool fast();
+
+/**
+* Read 64 bits from the hardware RNG if it is fast
+*
+* Returns nullopt if the hardware RNG is unavailable, slow, or failed.
+*
+* If the speed of the hardware RNG is not yet known, this call times it and
+* returns one of the outputs produced while doing so, even if the hardware RNG
+* turns out to be slow.
+*/
+BOTAN_TEST_API std::optional<uint64_t> read_if_fast();
+
 /*
 * The following functions are implemented by the architecture specific submodule
 */
