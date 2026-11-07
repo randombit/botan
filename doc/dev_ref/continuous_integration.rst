@@ -40,6 +40,35 @@ following ways:
       config = RepoConfig()
       print(config['VAR'])
 
+TLS Conformance Tests
+-----------------------
+
+Two external TLS test suites are run against the library, both driven through
+small "shim" programs that wrap Botan's TLS implementation:
+
+* BoGo, the test runner from BoringSSL, using ``src/bogo_shim``. It runs in the
+  ``sanitizer`` and ``coverage`` CI targets. The pinned fork and branch are
+  ``BORINGSSL_REPO`` and ``BORINGSSL_BRANCH`` in the repository configuration.
+
+* `plzn <https://github.com/randombit/plzn>`_, using ``src/plzn_shim``. It runs
+  in the dedicated ``plzn`` CI target, a plain optimized build without
+  sanitizers. The pinned revision is ``PLZN_GIT_REV``. The shim is built by
+  the ``plzn_shim`` build target (which needs ``--with-plzn-dir``) and the
+  suite is run by ``src/scripts/run_plzn_tests.py``, which reports a summary
+  (tests run, passed, skipped, expected failures) and fails on any unexpected
+  result.
+  Botan-specific expectations, for example an ``xfail`` for a known bug that
+  is not yet fixed, go in ``src/plzn_shim/expectations.json`` (the format is
+  described in plzn's ``shims/DESIGN.md``). To run it locally:
+
+  .. code-block:: bash
+
+     git clone https://github.com/randombit/plzn ../plzn
+     (cd ../plzn && cargo build --release --locked)
+     ./configure.py --build-targets=shared,cli,tests,plzn_shim --with-plzn-dir=../plzn
+     make -j8
+     ./src/scripts/run_plzn_tests.py --plzn=../plzn/target/release/plzn ../plzn/suite
+
 Github Actions
 ---------------
 

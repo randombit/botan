@@ -361,7 +361,7 @@ class BuildPaths:
             return (self.example_sources, self.example_obj_dir)
         raise InternalError("Unknown src info type '%s'" % (typ))
 
-ACCEPTABLE_BUILD_TARGETS = ["static", "shared", "cli", "tests", "bogo_shim", "examples", "ct_selftest"]
+ACCEPTABLE_BUILD_TARGETS = ["static", "shared", "cli", "tests", "bogo_shim", "plzn_shim", "examples", "ct_selftest"]
 
 def process_command_line(args):
     """
@@ -581,6 +581,9 @@ def process_command_line(args):
 
     build_group.add_option('--with-fuzzer-lib', metavar='LIB', default=None, dest='fuzzer_lib',
                            help='additionally link in LIB')
+
+    build_group.add_option('--with-plzn-dir', metavar='DIR', default=None, dest='plzn_dir',
+                           help='plzn checkout to build the plzn_shim target against')
 
     add_with_without_pair(build_group, 'debug-asserts', default=False)
 
@@ -2056,6 +2059,14 @@ def generate_build_info(build_paths, modules, osinfo, options):
 
     return out
 
+def plzn_helper_sources(plzn_dir):
+    """
+    Sources of plzn's shim helper library (shims/common, minus its unit test)
+    """
+    common_dir = os.path.join(plzn_dir, 'shims', 'common')
+    return sorted(os.path.join(common_dir, f) for f in os.listdir(common_dir)
+                  if f.endswith('.cpp') and not f.startswith('test_'))
+
 def create_template_vars(source_paths, build_paths, options, modules, disabled_modules, cc, arch, osinfo):
     """
     Create the template variables needed to process the makefile, build.h, etc
@@ -2091,6 +2102,20 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         main_executable = os.path.basename(sys.argv[0])
         quoted_args = [arg if ' ' not in arg else '\'' + arg + '\'' for arg in sys.argv[1:]]
         return ' '.join([main_executable] + quoted_args)
+
+    def plzn_shim_include_flags():
+        if options.plzn_dir is None:
+            return ''
+        return cc.add_system_include_dir_option + ' ' + normalize_source_path(os.path.join(options.plzn_dir, 'shims', 'common'))
+
+    def plzn_shim_all_src():
+        # The helper library sources from the plzn checkout are compiled along
+        # with the shim rather than linked as a prebuilt archive, so that both
+        # see the same ABI-affecting flags (eg -D_GLIBCXX_DEBUG)
+        srcs = [os.path.join(source_paths.src_dir, 'plzn_shim', 'plzn_shim.cpp')]
+        if options.plzn_dir is not None:
+            srcs += [normalize_source_path(src) for src in plzn_helper_sources(options.plzn_dir)]
+        return ' '.join(srcs)
 
     def sysroot_option():
         if options.with_sysroot_dir == '':
@@ -2138,6 +2163,8 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
             yield 'fuzzers'
         if 'bogo_shim' in options.build_targets:
             yield 'bogo_shim'
+        if 'plzn_shim' in options.build_targets:
+            yield 'plzn_shim'
         if 'examples' in options.build_targets:
             yield 'examples'
         if 'ct_selftest' in options.build_targets:
@@ -2360,6 +2387,12 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
 
         'build_bogo_shim': bool('bogo_shim' in options.build_targets),
         'bogo_shim_src': os.path.join(source_paths.src_dir, 'bogo_shim', 'bogo_shim.cpp'),
+
+        'build_plzn_shim': bool('plzn_shim' in options.build_targets),
+        'plzn_shim_src': os.path.join(source_paths.src_dir, 'plzn_shim', 'plzn_shim.cpp'),
+        'plzn_shim_all_src': plzn_shim_all_src(),
+        'plzn_shim_include_flags': plzn_shim_include_flags(),
+        'plzn_shim_expectations': normalize_source_path(os.path.abspath(os.path.join(source_paths.src_dir, 'plzn_shim', 'expectations.json'))),
 
         'build_ct_selftest': bool('ct_selftest' in options.build_targets),
         'ct_selftest_src': os.path.join(source_paths.src_dir, 'ct_selftest', 'ct_selftest.cpp'),
@@ -3319,6 +3352,14 @@ def canonicalize_options(options, info_os, info_arch):
         for build_target in build_targets:
             if build_target not in ACCEPTABLE_BUILD_TARGETS:
                 raise UserError("unknown build target: %s" % build_target)
+
+        if 'plzn_shim' in build_targets:
+            if options.plzn_dir is None:
+                raise UserError("building plzn_shim requires --with-plzn-dir")
+            if not os.path.isfile(os.path.join(options.plzn_dir, 'shims', 'common', 'plzn_shim.h')):
+                raise UserError("--with-plzn-dir=%s does not look like a plzn checkout" % (options.plzn_dir))
+            if not plzn_helper_sources(options.plzn_dir):
+                raise UserError("no shim helper library sources found in %s/shims/common" % (options.plzn_dir))
 
         # building the shared lib desired and without contradiction?
         if options.build_shared_lib is None:

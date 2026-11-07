@@ -78,6 +78,12 @@ rule compile_exe_no_pch
 %{endif}
   command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{header_deps_flag} %{header_deps_out|concat: $out.d} %{dash_c} $in %{dash_o}$out
 
+# The plzn shim is an ordinary library client (public headers only). It is
+# compiled and linked in one step together with the helper library sources
+# from the plzn checkout, so that both see the same ABI-affecting flags
+rule build_plzn_shim
+  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} ${WARN_FLAGS} %{public_include_flags} %{external_include_flags} %{plzn_shim_include_flags} -DBOTAN_PLZN_SHIM_EXPECTATIONS='"%{plzn_shim_expectations}"' $in ${BUILD_DIR_LINK_PATH} ${LANG_EXE_FLAGS} ${LDFLAGS} ${EXE_LINKS_TO} %{output_to_exe}$out
+
 # The primary target
 build all: phony %{all_targets}
 default all
@@ -174,6 +180,12 @@ build %{out_dir}/bogo_shim_object: compile_exe_no_pch %{bogo_shim_src}
 
 %{endif}
 
+%{if build_plzn_shim}
+
+build %{out_dir}/botan_plzn_shim: build_plzn_shim %{plzn_shim_all_src} | libs
+
+%{endif}
+
 %{if build_ct_selftest}
 
 build botan_ct_selftest: link_cli ct_selftest_object | libs
@@ -215,6 +227,8 @@ build cli: phony %{cli_exe}
 build tests: phony %{test_exe}
 
 build bogo_shim: phony botan_bogo_shim
+
+build plzn_shim: phony %{out_dir}/botan_plzn_shim
 
 build ct_selftest: phony botan_ct_selftest
 
