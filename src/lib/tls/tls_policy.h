@@ -654,6 +654,11 @@ class BOTAN_PUBLIC_API(2, 0) Policy /* NOLINT(*-special-member-functions) */ {
       * key before the channel initiates a KeyUpdate on its own. Such automatic
       * KeyUpdates request a reciprocal key update from the peer. Return 0 to
       * disable automatic key updates.
+      *
+      * The default value is chosen with a significant safety margin below the
+      * mandated hard limits for ciphersuites using AES/GCM and AES/CCM (see
+      * RFCs 9846 5.5 and 9147 4.5.3 + Appendix B.3).
+      *
       * @note Only applies to TLS 1.3 connections.
       */
       virtual uint64_t records_per_traffic_key() const;

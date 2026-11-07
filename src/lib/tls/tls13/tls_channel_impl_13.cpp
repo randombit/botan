@@ -81,7 +81,7 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
       return 0;
    }
 
-   try {
+   return exceptions_as_alert([&]() -> size_t {
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       if(expects_downgrade()) {
          preserve_peer_transcript(data);
@@ -124,23 +124,7 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
             return *bytes_needed;
          }
       }
-
-   } catch(TLS_Exception& e) {
-      send_fatal_alert(e.type());
-      throw;
-   } catch(Invalid_Authentication_Tag&) {
-      // RFC 8446 5.2
-      //    If the decryption fails, the receiver MUST terminate the connection
-      //    with a "bad_record_mac" alert.
-      send_fatal_alert(Alert::BadRecordMac);
-      throw;
-   } catch(Decoding_Error&) {
-      send_fatal_alert(Alert::DecodeError);
-      throw;
-   } catch(...) {
-      send_fatal_alert(Alert::InternalError);
-      throw;
-   }
+   });
 }
 
 void Channel_Impl_13::handle(const Key_Update& key_update) {
@@ -154,7 +138,7 @@ void Channel_Impl_13::to_peer(std::span<const uint8_t> data) {
       throw Invalid_State("Data cannot be sent on inactive TLS connection");
    }
 
-   m_channel_io->send(data);
+   exceptions_as_alert([&] { m_channel_io->send(data); });
 }
 
 void Channel_Impl_13::send_alert(const Alert& alert) {
@@ -209,7 +193,8 @@ SymmetricKey Channel_Impl_13::key_material_export(std::string_view label,
 
 void Channel_Impl_13::update_traffic_keys(bool request_peer_update) {
    BOTAN_STATE_CHECK(!is_downgrading() && is_handshake_complete() && is_active());
-   m_channel_io->update_traffic_keys(request_peer_update);
+
+   exceptions_as_alert([&] { m_channel_io->update_traffic_keys(request_peer_update); });
 }
 
 SecretLoggerFn Channel_Impl_13::secret_logger() const {
@@ -226,6 +211,29 @@ void Channel_Impl_13::send_flight(std::vector<Flight::Message> flight) {
    BOTAN_STATE_CHECK(m_can_write);
 
    m_channel_io->send(std::move(flight));
+}
+
+void Channel_Impl_13::send_alert_for_exception(std::exception_ptr ex) {
+   if(ex) {
+      try {
+         std::rethrow_exception(ex);
+      } catch(TLS_Exception& e) {
+         send_fatal_alert(e.type());
+         throw;
+      } catch(Invalid_Authentication_Tag&) {
+         // RFC 8446 5.2
+         //    If the decryption fails, the receiver MUST terminate the connection
+         //    with a "bad_record_mac" alert.
+         send_fatal_alert(Alert::BadRecordMac);
+         throw;
+      } catch(Decoding_Error&) {
+         send_fatal_alert(Alert::DecodeError);
+         throw;
+      } catch(...) {
+         send_fatal_alert(Alert::InternalError);
+         throw;
+      }
+   }
 }
 
 std::optional<BytesNeeded> Channel_Impl_13::process(Handshake_Message_13 handshake_msg) {
