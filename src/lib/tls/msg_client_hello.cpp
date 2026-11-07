@@ -124,7 +124,8 @@ Protocol_Version Client_Hello_Internal::version() const {
    //    0x0303 and a supported_versions extension present with 0x0304 as
    //    the highest version indicated therein.
    if(!extensions().has<Supported_Versions>() ||
-      !extensions().get<Supported_Versions>()->supports(Protocol_Version::TLS_V13)) {
+      (!extensions().get<Supported_Versions>()->supports(Protocol_Version::TLS_V13) &&
+       !extensions().get<Supported_Versions>()->supports(Protocol_Version::DTLS_V13))) {
       // The exact legacy_version is ignored we just inspect it to
       // distinguish TLS and DTLS.
       return (m_legacy_version.is_datagram_protocol()) ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
@@ -132,7 +133,7 @@ Protocol_Version Client_Hello_Internal::version() const {
 
    // Note: The Client_Hello_13 class will make sure that legacy_version
    //       is exactly 0x0303 (aka ossified TLS 1.2)
-   return Protocol_Version::TLS_V13;
+   return (m_legacy_version.is_datagram_protocol()) ? Protocol_Version::DTLS_V13 : Protocol_Version::TLS_V13;
 }
 
 Client_Hello::Client_Hello(Client_Hello&&) noexcept = default;

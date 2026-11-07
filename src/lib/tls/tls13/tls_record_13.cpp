@@ -28,6 +28,9 @@ Record annotate_record_type(Record_Content&& record) {
       case Record_Type::ApplicationData:
          return ApplicationData_Record{std::move(record)};
 
+      case Record_Type::ACK:
+         return ACK_Record{std::move(record)};
+
       case Record_Type::Invalid:
       case Record_Type::Heartbeat:  // not supported
          break;

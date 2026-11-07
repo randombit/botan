@@ -16,21 +16,20 @@ void fuzz(std::span<const uint8_t> in) {
    static const Botan::TLS::Default_Policy policy;
 
    const auto in_record = Botan::TLS::Handshake_Record{
-      {
-         .type = Botan::TLS::Record_Type::Handshake,
-         .sequence_number = std::nullopt,
-         .payload = {in.begin(), in.end()},
-      },
+      {.type = Botan::TLS::Record_Type::Handshake,
+       .sequence_number = std::nullopt,
+       .payload = {in.begin(), in.end()},
+       .epoch = std::nullopt},
    };
 
    try {
       auto hl1 = Botan::TLS::TLS_Handshake_Layer(Botan::TLS::Connection_Side::Client);
-      hl1.copy_data(policy, in_record);
+      std::ignore = hl1.copy_data(policy, in_record);
       Botan::TLS::Transcript_Hash_State transcript_hash(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
       while(hl1.next_message(policy, transcript_hash).has_value()) {};
 
       auto hl2 = Botan::TLS::TLS_Handshake_Layer(Botan::TLS::Connection_Side::Client);
-      hl2.copy_data(policy, in_record);
-      while(hl2.next_post_handshake_message(policy).has_value()) {};
+      std::ignore = hl2.copy_data(policy, in_record);
+      while(hl2.next_post_handshake_message(policy, Botan::TLS::EpochNumber::ApplicationTraffic_0).has_value()) {};
    } catch(const Botan::Exception& e) {}
 }

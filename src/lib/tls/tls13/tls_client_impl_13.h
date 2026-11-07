@@ -12,6 +12,7 @@
 
 #include <botan/tls_server_info.h>
 #include <botan/internal/tls_channel_impl_13.h>
+#include <botan/internal/tls_flight_13.h>
 #include <botan/internal/tls_handshake_state_13.h>
 #include <botan/internal/tls_handshake_transitions.h>
 
@@ -40,6 +41,8 @@ class Client_Impl_13 final : public Channel_Impl_13 {
       *
       * @param rng a random number generator
       *
+      * @param flavor Whether to use TLS or DTLS
+      *
       * @param server_info is identifying information about the TLS server
       *
       * @param next_protocols specifies protocols to advertise with ALPN
@@ -49,6 +52,7 @@ class Client_Impl_13 final : public Channel_Impl_13 {
                                                     const std::shared_ptr<Credentials_Manager>& creds,
                                                     const std::shared_ptr<const Policy>& policy,
                                                     const std::shared_ptr<RandomNumberGenerator>& rng,
+                                                    TLS_Flavor flavor,
                                                     Server_Information server_info = Server_Information(),
                                                     const std::vector<std::string>& next_protocols = {});
 
@@ -58,8 +62,9 @@ class Client_Impl_13 final : public Channel_Impl_13 {
                      const std::shared_ptr<Credentials_Manager>& creds,
                      const std::shared_ptr<const Policy>& policy,
                      const std::shared_ptr<RandomNumberGenerator>& rng,
+                     TLS_Flavor flavor,
                      Server_Information server_info = Server_Information()) :
-            Channel_Impl_13(callbacks, session_manager, creds, rng, policy, false /* is_server */),
+            Channel_Impl_13(callbacks, session_manager, creds, rng, policy, Connection_Side::Client, flavor),
             m_info(std::move(server_info)),
             m_handshake(std::make_unique<Pending_Handshake>()) {}
 
@@ -99,6 +104,7 @@ class Client_Impl_13 final : public Channel_Impl_13 {
 
       using Channel_Impl_13::handle;
       void handle(const Server_Hello_12_Shim& server_hello_msg);
+      void handle(const Hello_Verify_Request& hello_verify_request);
       void handle(const Server_Hello_13& server_hello_msg);
       void handle(const Hello_Retry_Request& hrr_msg);
       void handle(const Encrypted_Extensions& encrypted_extensions_msg);

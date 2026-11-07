@@ -1,5 +1,5 @@
 /*
-* TLS Channel IO
+* (D)TLS Channel IO
 * (C) 2026 Jack Lloyd
 *     2026 Amos Treiber, René Meusel - Rohde & Schwarz Networks and Cybersecurity GmbH
 *
@@ -9,6 +9,7 @@
 #ifndef BOTAN_TLS_CHANNEL_IO_BASE_H_
 #define BOTAN_TLS_CHANNEL_IO_BASE_H_
 
+#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_flight_13.h>
 #include <botan/internal/tls_record_13.h>
 #include <optional>
@@ -19,6 +20,7 @@ class Alert;
 class Record_Layer;
 class Handshake_Layer;
 class Cipher_State;
+struct RecordNumber;
 
 /**
  * Channel_IO owns the record layer and handshake layer of a (D)TLS 1.3
@@ -28,13 +30,19 @@ class Cipher_State;
  * send() overloads.
  */
 class BOTAN_TEST_API Channel_IO {
+   protected:
+      /// Records that the I/O object just passes out to the channel for further
+      /// processing. These records are not processed by the I/O object itself,
+      /// they may be used for validation of protocol invariants, though.
+      using TransparentRecords = std::variant<ChangeCipherSpec_Record,  //
+                                              Alert_Record,
+                                              ApplicationData_Record>;
+
    public:
-      using ReceiveEvent = std::variant<BytesNeeded,
-                                        Handshake_Message_13,
-                                        Post_Handshake_Message_13,
-                                        ChangeCipherSpec_Record,
-                                        Alert_Record,
-                                        ApplicationData_Record>;
+      using ReceiveEvent = variant_append_t<TransparentRecords,  //
+                                            BytesNeeded,
+                                            Handshake_Message_13,
+                                            Post_Handshake_Message_13>;
 
       static std::shared_ptr<Channel_IO> create(Connection_Side side,
                                                 TLS_Flavor flavor,
@@ -85,17 +93,19 @@ class BOTAN_TEST_API Channel_IO {
 
       /// @}
 
-      /// @name Traffic key updates (RFC 8446 4.6.3)
+      /// @name Traffic key updates (RFC 8446 4.6.3, RFC 9147 8.)
       /// @{
 
       /**
        * Processes a KeyUpdate message received from the peer: updates the read
        * keys, and schedules a reciprocal KeyUpdate if the peer requested one.
        */
-      void handle_key_update(const Key_Update& key_update);
+      virtual void handle_key_update(const Key_Update& key_update);
 
       /**
-       * Sends a KeyUpdate message to the peer and updates the write keys.
+       * Sends a KeyUpdate message to the peer and updates the write keys once
+       * the transport allows it. Note that this assumes that post-handshake
+       * messages are allowed to be sent when this is invoked.
        *
        * @param request_peer_update  whether to request a reciprocal KeyUpdate
        */
@@ -103,17 +113,93 @@ class BOTAN_TEST_API Channel_IO {
 
       /// @}
 
+      /// @name DTLS-specific state management
+      /// @{
+
+      /**
+       * Whether it is currently possible to send post-handshake messages like
+       * KeyUpdate or NewSessionTicket. Note that DTLS might intermittently deny
+       * sending such messages while a recent KeyUpdate is not yet acknowledged.
+       *
+       * @returns true if post-handshake messages may be sent, false otherwise
+       */
+      virtual bool can_send_post_handshake_messages() const;
+
+      /**
+       * Notifies that the TLS state machine is sure that we're talking to a
+       * peer using (D)TLS 1.3. Typically that is the case after receiving and
+       * processing a ServerHello or a ClientHello indicating support for (D)TLS
+       * 1.3.
+       *
+       * This is relevant for DTLS: before this point, lost records must be
+       * recovered by retransmitting entire flights (1.2-style); only afterwards
+       * may the ACK mechanism (RFC 9147 7.) be relied upon.
+       *
+       * For the case of receiving a HelloRetryRequest, use
+       * notify_protocol_version_committed_and_flight_superseded().
+       */
+      virtual void notify_protocol_version_committed() { /* don't care */
+      }
+
+      /**
+       * Like notify_protocol_version_committed(), but for the case where
+       * committing message additionally supersedes the flight currently held
+       * for retransmission. This is the case exactly for a HelloRetryRequest.
+       *
+       * This difference is only relevant for DTLS: Since the buffered flight
+       * (the initial ClientHello) is superseded by the response about to be
+       * sent, retransmitting it would be wrong. So in addition to committing the
+       * protocol version, this method also clears the resend buffer and
+       * retransmission timer.
+       */
+      virtual void notify_protocol_version_committed_and_flight_superseded() { /* don't care */
+      }
+
+      /**
+       * Notifies that the last message completing a flight was received.
+       *
+       * This is relevant for DTLS: At that point, everything we need
+       * was received and the ACK mechanism is no longer needed.
+       */
+      virtual void notify_received_complete_flight() { /* don't care */
+      }
+
+      /**
+       * Notifies that a complete flight was received that expects no response,
+       * i.e., the final flight of the peer (the client's Finished).
+       *
+       * This is relevant for DTLS: since there is no response flight
+       * that would implicitly acknowledge it, the flight must be acknowledged
+       * explicitly with an ACK message.
+       */
+      virtual void notify_received_final_flight() { /* don't care */
+      }
+
+      std::optional<Epoch0_SequenceNumbers> epoch0_sequence_numbers() const;
+
+      /// @}
+
       /**
        * Notifies that the channel is closed for reading (close_notify received).
        * The IO can discard any read-side state; no further data will be processed.
        */
-      void notify_closed_for_reading();
+      virtual void notify_closed_for_reading();
+
+      /**
+       * Notifies that the channel is closed for writing (close_notify sent).
+       * The IO can discard any write-side state; no further data will be sent.
+       */
+      virtual void notify_closed_for_writing();
 
       /**
        * Notifies that the channel was shut down in both directions. The IO
-       * discards any read-side state; no further data will be processed.
+       * discards any read-side and write-side state; no further data will be
+       * processed or sent.
        */
-      void notify_shutdown();
+      void notify_shutdown() {
+         notify_closed_for_reading();
+         notify_closed_for_writing();
+      }
 
       void set_cipher_state(std::weak_ptr<Cipher_State> cipher_state) { m_cipher_state = std::move(cipher_state); }
 
@@ -128,10 +214,16 @@ class BOTAN_TEST_API Channel_IO {
       void send_dummy_change_cipher_spec();
 
       virtual void process(const Handshake_Record& record) = 0;
+      virtual void process(const ACK_Record& ack_record) = 0;
+      virtual void validate(const TransparentRecords& record);
 
       virtual void send_data(Record_Type record_type, std::span<const uint8_t> payload, Cipher_State* cipher_state) = 0;
 
       virtual void send_flight(std::vector<Flight::Message> flight) = 0;
+
+      /// Marshalls and sends the given KeyUpdate message, then advances the
+      /// write epoch.
+      virtual void send_key_update(const Key_Update& msg) = 0;
 
       virtual Record_Layer& record_layer() = 0;
 
@@ -151,7 +243,7 @@ class BOTAN_TEST_API Channel_IO {
       Callbacks& callbacks() { return *m_callbacks; }
 
    private:
-      bool needs_traffic_based_key_update() const;
+      void maybe_send_opportunistic_key_update();
 
    private:
       bool m_first_message_delivered = false;
