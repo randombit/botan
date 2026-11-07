@@ -6,6 +6,7 @@
 
 #include <botan/internal/enc_padding.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/pk_options_readers.h>
 
@@ -52,6 +53,7 @@ std::unique_ptr<EncryptionPaddingScheme> EncryptionPaddingScheme::create_or_thro
    }
 #endif
 
+   BOTAN_UNUSED(padding);
    throw Lookup_Error("Invalid or unavailable encryption padding scheme " + options.to_string());
 }
 

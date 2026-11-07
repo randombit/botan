@@ -59,7 +59,7 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create_or_throw(std::string_view algo,
 }
 
 std::unique_ptr<AEAD_Mode> AEAD_Mode::create(std::string_view algo, Cipher_Dir dir, std::string_view provider) {
-   BOTAN_UNUSED(provider);
+   BOTAN_UNUSED(algo, dir, provider);
 #if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
    if(algo == "ChaCha20Poly1305") {
       if(dir == Cipher_Dir::Encryption) {

@@ -45,6 +45,7 @@ std::unique_ptr<XOF> XOF::create(std::string_view algo_spec, std::string_view pr
    }
 #endif
 
+   BOTAN_UNUSED(algo_spec);
    return nullptr;
 }
 
