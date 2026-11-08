@@ -10,6 +10,7 @@
 
 #if defined(BOTAN_HAS_TLS_13)
 
+   #include <botan/aead.h>
    #include <botan/hex.h>
    #include <botan/secmem.h>
    #include <botan/tls_ciphersuite.h>
@@ -1171,12 +1172,110 @@ std::vector<Test::Result> test_reject_premature_application_data() {
    };
 }
 
+/**
+ * Gives the test access to the protected `Cipher_State::marshall_and_protect()`
+ * which is where the record protection limits are enforced. This class is
+ * never instantiated. It merely lends its (derived-class) access rights to
+ * call the protected method on a regular Cipher_State object.
+ */
+class Cipher_State_Protection_Access : public Cipher_State {
+   public:
+      static void protect(Cipher_State& cs, Epoch& epoch, Record_Type type) {
+         const std::array<uint8_t, TLS_HEADER_SIZE> header = {0x17, 0x03, 0x03, 0x00, 0x00};
+         const std::array<uint8_t, 4> payload = {0x01, 0x02, 0x03, 0x04};
+
+         // Naming the member via the derived class yields a pointer-to-member
+         // of the base class that we are allowed to apply to any Cipher_State.
+         constexpr auto marshall_and_protect = &Cipher_State_Protection_Access::marshall_and_protect;
+
+         secure_vector<uint8_t> out;
+         (cs.*marshall_and_protect)(epoch, header, payload, type, 0 /* padding */, out);
+      }
+};
+
+std::vector<Test::Result> test_record_protection_limit() {
+   struct Limit_Case {
+         std::string ciphersuite;
+         uint64_t limit;
+   };
+
+   // see RFC 9846 5.5 and RFC 9147 4.5.3 + Appendix B.3
+   const std::vector<Limit_Case> cases = {
+      {"AES_128_GCM_SHA256", 23'726'566},
+      {"AES_256_GCM_SHA384", 23'726'566},
+      {"AES_128_CCM_SHA256", 8'388'608},
+      {"AES_128_CCM_8_SHA256", 8'388'608},
+   };
+
+   // Creates a Cipher_State with an initialized limit and a matching write
+   // epoch whose sequence number is controlled by the test.
+   auto protect = [&](const Limit_Case& tc, uint64_t seqno, Record_Type type) {
+      const auto cipher = Ciphersuite::from_name(tc.ciphersuite).value();
+      auto cs = Cipher_State::init_with_server_hello(
+         Connection_Side::Client,
+         TLS_Flavor::TLS,
+         Botan::hex_decode_locked("8b d4 05 4f b5 5b 9d 63 fd fb ac f9 f0 4b 9f 0d"
+                                  "35 e6 d6 3f 53 75 63 ef d4 62 72 90 0f 89 49 2d"),
+         cipher,
+         Botan::hex_decode(
+            "86 0c 06 ed c0 78 58 ee 8e 78 f0 e7 42 8c 58 ed"
+            "d6 b4 3f 2c a3 e6 e9 5f 02 ed 06 3c f0 e1 ca d8"),
+         {});
+
+      Cipher_State::Epoch epoch = {
+         .cipher = Botan::AEAD_Mode::create_or_throw(cipher.cipher_algo(), Botan::Cipher_Dir::Encryption),
+         .iv = secure_vector<uint8_t>(12, 0x00),
+         .sequence_number = seqno,
+         .traffic_secret = {},
+         .finished_key = {},
+      };
+      epoch.cipher->set_key(secure_vector<uint8_t>(epoch.cipher->minimum_keylength(), 0x42));
+
+      Cipher_State_Protection_Access::protect(*cs, epoch, type);
+   };
+
+   constexpr std::string_view limit_message = "Traffic key usage limit reached";
+
+   std::vector<Test::Result> results;
+   for(const auto& tc : cases) {
+      const std::string name = "record protection limit for " + tc.ciphersuite;
+      results.push_back(CHECK(name.c_str(), [&](Test::Result& result) {
+         // Records below the limit are protected without issues
+         result.test_no_throw("first ApplicationData record", [&] { protect(tc, 0, Record_Type::ApplicationData); });
+         result.test_no_throw("last ApplicationData record below the limit",
+                              [&] { protect(tc, tc.limit - 1, Record_Type::ApplicationData); });
+
+         // ApplicationData records hit the limit
+         result.test_throws<TLS_Exception>("ApplicationData record at the limit", limit_message, [&] {
+            protect(tc, tc.limit, Record_Type::ApplicationData);
+         });
+         result.test_throws<TLS_Exception>("ApplicationData record beyond the limit", limit_message, [&] {
+            protect(tc, tc.limit + 1, Record_Type::ApplicationData);
+         });
+
+         // Alert records may exceed the limit by exactly one record
+         result.test_no_throw("last Alert record below the limit",
+                              [&] { protect(tc, tc.limit - 1, Record_Type::Alert); });
+         result.test_no_throw("Alert record at the limit", [&] { protect(tc, tc.limit, Record_Type::Alert); });
+         result.test_throws<TLS_Exception>("Alert record one beyond the limit", limit_message, [&] {
+            protect(tc, tc.limit + 1, Record_Type::Alert);
+         });
+         result.test_throws<TLS_Exception>("Alert record far beyond the limit", limit_message, [&] {
+            protect(tc, tc.limit + 100, Record_Type::Alert);
+         });
+      }));
+   }
+
+   return results;
+}
+
 BOTAN_REGISTER_TEST_FN("tls",
                        "tls_cipher_state",
                        test_secret_derivation_rfc8448_rtt1,
                        test_secret_derivation_rfc8448_rtt0,
                        test_record_padding,
-                       test_reject_premature_application_data);
+                       test_reject_premature_application_data,
+                       test_record_protection_limit);
 }  // namespace
 
 }  // namespace Botan_Tests

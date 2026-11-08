@@ -477,6 +477,61 @@ std::array<uint8_t, NONCE_LENGTH> current_nonce(const uint64_t seq_no, std::span
    return nonce;
 }
 
+std::optional<uint32_t> get_confidentiality_limit(const Ciphersuite& ciphersuite) {
+   // RFC 9846 5.5
+   //    There are cryptographic limits on the amount of plaintext which can be
+   //    safely encrypted under a given set of keys. [...]
+   //
+   //    For AES-GCM, up to 2^24.5 full-size records (about 24 million) may be
+   //    encrypted under a given set of keys [...]. For ChaCha20/Poly1305, the
+   //    record sequence number would wrap before the safety limit is reached.
+   //
+   // RFC 9147 4.5.3
+   //    [RFC 9846] does not specify a limit for AEAD_AES_128_CCM, but the
+   //    analysis in Appendix B shows that a limit of 2^23 packets can be used
+   //    to obtain the same confidentiality protection as the limits specified
+   //    in TLS.
+   //
+   // RFC 9147 Appendix B.3
+   //    The confidentiality limits of AEAD_AES_128_CCM_8 are the same as
+   //    those for AEAD_AES_128_CCM, as this does not depend on the tag length.
+   //
+   // Note that these limits are meant to protect the confidentiality of the
+   // traffic. Particularly for AES-128/CCM(8), which uses an 8-byte truncated
+   // authentication tag, the traffic authenticity would need other limits.
+   constexpr uint16_t AES_128_GCM_SHA256 = 0x1301;
+   constexpr uint16_t AES_256_GCM_SHA384 = 0x1302;
+   constexpr uint16_t AES_128_CCM_SHA256 = 0x1304;
+   constexpr uint16_t AES_128_CCM_8_SHA256 = 0x1305;
+
+   switch(ciphersuite.ciphersuite_code()) {
+      case AES_128_GCM_SHA256:
+      case AES_256_GCM_SHA384:
+         return 23'726'566;
+      case AES_128_CCM_SHA256:
+      case AES_128_CCM_8_SHA256:
+         return 8'388'608;
+      default:
+         return std::nullopt;
+   }
+}
+
+void check_protection_limit(const Cipher_State::Epoch& epoch, size_t limit) {
+   // RFC 9846 5.5
+   //    There are cryptographic limits on the amount of plaintext which can be
+   //    safely encrypted under a given set of keys. [...] Implementations MUST
+   //    either close the connection or do a key update as described in Section
+   //    4.7.3 prior to reaching these limits. [...]
+   //
+   // Note that `Channel_IO::maybe_send_opportunistic_key_update()` would have
+   // already triggered a key update before the limit is reached in the default
+   // configuration. If the user decided to disable this limit or set it too
+   // high, this will still enforce the mandated usage limit from the RFC.
+   if(epoch.sequence_number >= limit) {
+      throw TLS_Exception(Alert::InsufficientSecurity, "Traffic key usage limit reached");
+   }
+}
+
 }  // namespace
 
 size_t Cipher_State::protected_record_length(Epoch& epoch, size_t payload_length, size_t padding_bytes) {
@@ -497,6 +552,14 @@ void Cipher_State::marshall_and_protect(Epoch& epoch,
                                         size_t padding_bytes,
                                         secure_vector<uint8_t>& out) {
    BOTAN_ASSERT_NONNULL(epoch.cipher);
+
+   if(auto limit = m_record_confidentiality_limit) {
+      // We allow Alert records to exceed the limit by one record, so that a
+      // fatal alert emitted as a reaction to to hitting the limit can still be
+      // sent so that the peer learns about the connection termination.
+      const auto effective_limit = (type == Record_Type::Alert) ? *limit + 1 : *limit;
+      check_protection_limit(epoch, effective_limit);
+   }
 
    const size_t record_offset = out.size();
    const size_t content_offset = record_offset + header.size();
@@ -661,6 +724,7 @@ void Cipher_State::advance_with_server_hello(const Ciphersuite& cipher,
    BOTAN_STATE_CHECK(!m_ciphersuite.has_value());
 
    m_ciphersuite = cipher;
+   m_record_confidentiality_limit = get_confidentiality_limit(*m_ciphersuite);
 
    const auto handshake_secret = hkdf_extract(std::move(shared_secret));
 

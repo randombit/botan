@@ -491,17 +491,25 @@ uint64_t Policy::minimum_key_update_interval_ms() const {
 }
 
 uint64_t Policy::records_per_traffic_key() const {
-   /* RFC 8446 Section 5.5
+   /* RFC 9846 Section 5.5
    *   For AES-GCM, up to 2^24.5 full-size records (about 24 million) may be encrypted on
    *   a given connection while keeping a safety margin of approximately 2^-57 for
    *   Authenticated Encryption (AE) security.
    *
+   *  RFC 9147 Section 4.5.3
+   *     [RFC 9846] does not specify a limit for AEAD_AES_128_CCM, but the
+   *     analysis in Appendix B shows that a limit of 2^23 packets can be used
+   *     to obtain the same confidentiality protection as the limits specified
+   *     in TLS.
+   *
    * However RFC 9001 (QUIC) Section 6.6
    *    For [GCM suites], the confidentiality limit is 2^23 encrypted packets [...]
    *
-   * Here we take the lower value as the default.
+   * We take the lowest value as the default, with some safety margin because
+   * the library enforces a ciphersuite-specific limit and closes the connection
+   * with an alert when the limit is reached.
    */
-   return uint64_t(1) << 23;
+   return 7'340'032;  // 2^23 - 2^20 (~1 million records below the CCM limit)
 }
 
 size_t Policy::maximum_session_tickets_per_connection() const {
