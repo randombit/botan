@@ -443,6 +443,7 @@ std::vector<uint8_t> RSA_PublicKey::public_key_bits() const {
 * Check RSA Public Parameters
 */
 bool RSA_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
+   // TODO(Botan4) increase this to at least 512 bit minimum modulus...
    if(get_n() < 35 || get_n().is_even() || get_e() < 3 || get_e().is_even()) {
       return false;
    }
