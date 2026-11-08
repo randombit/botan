@@ -18,8 +18,6 @@
 #include <type_traits>
 #include <vector>
 
-BOTAN_FUTURE_INTERNAL_HEADER(mem_ops.h)
-
 /*
 The header mem_ops.h previously included the contents of allocator.h
 
@@ -32,6 +30,13 @@ include the header here to avoid breaking application code.
 #endif
 
 namespace Botan {
+
+/*
+* TODO(Botan4) this header should remain but be stripped almost completely,
+* leaving probably just secure_scrub_memory and constant_time_compare.
+* Additionally those functions (and this header) should never be used within the
+* library itself.
+*/
 
 /**
 * Scrub memory contents in a way that a compiler should not elide,
