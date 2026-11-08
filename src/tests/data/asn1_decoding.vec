@@ -166,13 +166,21 @@ ResultBER = Truncated OID value
 Input = 060450018181
 ResultBER = Truncated OID value
 
-# OID component overflow: 2.1.4294967296 (exceeds 32-bit)
+# 2.1.4294967296 (arc exceeds 32 bits)
 Input = 0606519080808000
-ResultBER = OID component overflow
+ResultBER = OK
 
-# OID component overflow: 2.4294967216 (exceeds 32-bit second arc)
+# 2.4294967216 (second arc exceeds 32 bits)
 Input = 06059080808000
-ResultBER = OID component overflow
+ResultBER = OK
+
+# Valid OID (1.2 followed by 128 single byte arcs) but the 129 byte encoding exceeds our limit
+Input = 0681812A0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101
+ResultBER = OID encoding is too long
+
+# Valid OID (2.25.10889035741470030830827987437816582766592) but the arc of 2^133 exceeds our limit
+Input = 0615698180808080808080808080808080808080808000
+ResultBER = OID arc is too large
 
 # Tag 06 with zero-length content (duplicate of empty OID, different TLV)
 Input = 060000
@@ -204,9 +212,9 @@ ResultBER = Leading zero byte in multibyte OID encoding
 Input = 060181
 ResultBER = Truncated OID value
 
-# Multibyte component that overflows 32 bits
+# 2.4398046511023 (the first subidentifier is 42 bits)
 Input = 0606FFFFFFFFFF7F
-ResultBER = OID component overflow
+ResultBER = OK
 
 # Long-form tag with 0x80 as first subsequent octet (continuation, no data)
 # X.690 8.1.2.4.2(c) forbids bits 7-1 of the first subsequent octet being all zero

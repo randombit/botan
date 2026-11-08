@@ -8,9 +8,6 @@
 #define BOTAN_X509_UTILS_H_
 
 #include <botan/asn1_obj.h>
-#include <algorithm>
-#include <initializer_list>
-#include <optional>
 #include <string_view>
 
 namespace Botan {
@@ -18,20 +15,6 @@ namespace Botan {
 class X509_CRL;
 class X509_Certificate;
 class X509_DN;
-
-inline std::optional<uint32_t> is_sub_element_of(const OID& oid, std::initializer_list<uint32_t> prefix) {
-   const auto& c = oid.get_components();
-
-   if(c.size() != prefix.size() + 1) {
-      return {};
-   }
-
-   if(!std::equal(c.begin(), c.end() - 1, prefix.begin(), prefix.end())) {
-      return {};
-   }
-
-   return c[c.size() - 1];
-}
 
 /*
 * DirectoryName subtree match according to RFC 5280 7.1. The constraint's

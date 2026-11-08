@@ -684,6 +684,64 @@ std::vector<Test::Result> Future_Dates_Path_Test::run() {
 
 BOTAN_REGISTER_TEST("x509", "x509_path_future_dates", Future_Dates_Path_Test);
 
+class Large_OID_Arcs_Path_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("X509 OIDs with arcs over 32 bits");
+
+         /*
+         * The leaf carries OIDs with arcs that do not fit in 32 bits (GH #4020):
+         * two policy OIDs (a UUID under the X.667 2.25 arc, and a 35 bit arc seen
+         * in a real certificate), a private extension, and a subject DN attribute.
+         */
+         const std::string uuid_policy = "2.25.329800735698586629295641978511506172918";
+         const std::string large_arc_policy = "1.2.36.20151795998.3.1.1.1";
+         const std::string private_ext_oid = "2.25.143098242404177361603877621312831893704";
+         const std::string dn_attr_oid = "2.25.143098242483405524118141958906375844040";
+
+         const Botan::X509_Certificate ca(Test::data_file("x509/large_oid_arcs/ca.pem"));
+         const Botan::X509_Certificate ee(Test::data_file("x509/large_oid_arcs/ee.pem"));
+
+         std::vector<std::string> policies;
+         for(const auto& oid : ee.certificate_policy_oids()) {
+            policies.push_back(oid.to_string());
+         }
+         const std::vector<std::string> expected_policies = {uuid_policy, large_arc_policy};
+         result.test_is_true("Policy OIDs with large arcs are decoded", policies == expected_policies);
+         result.test_is_true("Certificate printout includes the policy",
+                             ee.to_string().find(uuid_policy) != std::string::npos);
+
+         const Botan::OID private_ext(private_ext_oid);
+         result.test_is_true("Private extension with large arc OID is present",
+                             ee.v3_extensions().extension_set(private_ext));
+         result.test_bin_eq("Private extension value",
+                            ee.v3_extensions().get_extension_bits(private_ext),
+                            "0C136C617267652061726320657874656E73696F6E");
+
+         result.test_str_eq(
+            "DN attribute with large arc OID", ee.subject_dn().get_first_attribute(dn_attr_oid), "large arc attribute");
+         result.test_is_true("DN string includes the attribute OID",
+                             ee.subject_dn().to_string().find(dn_attr_oid) != std::string::npos);
+
+         Botan::Certificate_Store_In_Memory trusted;
+         trusted.add_certificate(ca);
+
+         const std::vector<Botan::X509_Certificate> chain = {ee};
+         const auto validation_time = Botan::calendar_point(2027, 1, 1, 0, 0, 0).to_std_timepoint();
+         const Botan::Path_Validation_Restrictions restrictions;
+
+         const Botan::Path_Validation_Result path_result = Botan::x509_path_validate(
+            chain, restrictions, trusted, "ee.example.com", Botan::Usage_Type::TLS_SERVER_AUTH, validation_time);
+
+         result.test_is_true("Chain validates", path_result.successful_validation());
+         result.test_str_eq("Validation result", path_result.result_string(), "Verified");
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_path_large_oid_arcs", Large_OID_Arcs_Path_Test);
+
 class Validate_Invalid_OCSP_NoCheck_Test final : public Test {
    public:
       std::vector<Test::Result> run() override;
@@ -1900,7 +1958,7 @@ class CVE_2020_0601_Tests final : public Test {
          }
 
          const auto& secp384r1 = Botan::EC_Group::from_name("secp384r1");
-         const Botan::OID curveball_oid("1.3.6.1.4.1.25258.4.2020.0601");
+         const Botan::OID curveball_oid("1.3.6.1.4.1.25258.4.2020.601");
          const auto curveball = Botan::EC_Group::register_custom_group(
             curveball_oid,
             secp384r1.get_p(),

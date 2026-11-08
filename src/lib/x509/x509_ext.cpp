@@ -16,6 +16,7 @@
 #include <botan/hash.h>
 #include <botan/pk_keys.h>
 #include <botan/x509cert.h>
+#include <botan/internal/asn1_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
@@ -58,7 +59,7 @@ auto make_extension([[maybe_unused]] const OID& oid) {
 }
 
 std::unique_ptr<Certificate_Extension> extension_from_oid(const OID& oid) {
-   if(auto iso_ext = is_sub_element_of(oid, {2, 5, 29})) {
+   if(auto iso_ext = ASN1::is_sub_element_of(oid, {2, 5, 29})) {
       // NOLINTNEXTLINE(*-switch-missing-default-case)
       switch(*iso_ext) {
          case 14:
@@ -92,7 +93,7 @@ std::unique_ptr<Certificate_Extension> extension_from_oid(const OID& oid) {
       }
    }
 
-   if(auto pkix_ext = is_sub_element_of(oid, {1, 3, 6, 1, 5, 5, 7, 1})) {
+   if(auto pkix_ext = ASN1::is_sub_element_of(oid, {1, 3, 6, 1, 5, 5, 7, 1})) {
       // NOLINTNEXTLINE(*-switch-missing-default-case)
       switch(*pkix_ext) {
          case 1:

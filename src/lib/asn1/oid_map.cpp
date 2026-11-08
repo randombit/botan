@@ -48,28 +48,6 @@ void OID_Map::add_oid(const OID& oid, std::string_view str) {
    }
 }
 
-void OID_Map::add_str2oid(const OID& oid, std::string_view str) {
-   if(lookup_static_oid_name(str).has_value()) {
-      return;
-   }
-
-   const lock_guard_type<mutex_type> lock(m_mutex);
-   if(!m_str2oid.contains(std::string(str))) {
-      m_str2oid.insert(std::make_pair(str, oid));
-   }
-}
-
-void OID_Map::add_oid2str(const OID& oid, std::string_view str) {
-   if(lookup_static_oid(oid).has_value()) {
-      return;
-   }
-
-   const lock_guard_type<mutex_type> lock(m_mutex);
-   if(!m_oid2str.contains(oid)) {
-      m_oid2str.insert(std::make_pair(oid, str));
-   }
-}
-
 std::optional<std::string> OID_Map::oid2str(const OID& oid) {
    if(auto name = lookup_static_oid(oid)) {
       return std::string(*name);

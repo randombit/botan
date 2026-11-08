@@ -8,7 +8,7 @@
 #include <botan/pkix_types.h>
 
 #include <botan/asn1_obj.h>
-#include <botan/internal/x509_utils.h>
+#include <botan/internal/asn1_utils.h>
 
 namespace Botan {
 
@@ -19,7 +19,7 @@ size_t X509_DN::lookup_ub(const OID& oid) {
    */
 
    // NOLINTBEGIN(*-branch-clone)
-   if(auto iso_dn = is_sub_element_of(oid, {2, 5, 4})) {
+   if(auto iso_dn = ASN1::is_sub_element_of(oid, {2, 5, 4})) {
       switch(*iso_dn) {
          case 3:
             // X520.CommonName
