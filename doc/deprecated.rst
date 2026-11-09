@@ -316,5 +316,4 @@ internal to the library in the future.
   the library API and most are just sufficient for what the library needs
   to implement other functionality.
   ``compiler.h``,
-  ``mem_ops.h``,
   ``uuid.h``,
