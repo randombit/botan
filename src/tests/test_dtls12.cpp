@@ -2538,6 +2538,121 @@ class DTLS_Core_Regression_Tests final : public Test {
          return result;
       }
 
+      // GH #4782: a resuming client that writes as soon as it activates can have
+      // its final flight reordered on the wire, so that the server sees
+      // Finished, application data, ChangeCipherSpec, application data. The
+      // records ahead of the ChangeCipherSpec cannot be decrypted yet and are
+      // dropped (RFC 6347 4.1 permits discarding), the application data behind
+      // it must not be fatal (RFC 6347 4.2.4), and the handshake completes once
+      // the server's retransmitted flight prompts the client to replay its own.
+      static Test::Result test_resumed_final_flight_reordered_around_app_data() {
+         Test::Result result("DTLS resumed final flight reordered around application data");
+
+         const auto rng = Test::new_shared_rng("dtls-core-resumed-reordered-final-flight");
+         const auto policy = std::make_shared<DTLS_PSK_Policy>();
+         const auto creds = std::make_shared<DTLS_PSK_Credentials>();
+         const auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         const auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+
+         run_handshake(result, rng, policy, creds, client_sessions, server_sessions, false);
+
+         std::vector<uint8_t> c2s;
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> client_recv;
+         std::vector<uint8_t> server_recv;
+
+         const auto server_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, s2c, server_recv);
+         const auto client_callbacks = std::make_shared<DTLS_Test_Callbacks>(result, c2s, client_recv);
+
+         Botan::TLS::Server server(server_callbacks, server_sessions, creds, policy, rng, true);
+         Botan::TLS::Client client(client_callbacks,
+                                   client_sessions,
+                                   creds,
+                                   policy,
+                                   rng,
+                                   Botan::TLS::Server_Information("localhost"),
+                                   Botan::TLS::Protocol_Version::DTLS_V12);
+
+         deliver(result, "resumed client hello 1", c2s, server);
+         deliver(result, "resumed hello verify request", s2c, client);
+         deliver(result, "resumed client hello 2", c2s, server);
+         deliver(result, "resumed server handshake flight", s2c, client);
+
+         result.test_is_true("client is active after resumed server flight", client.is_active());
+         result.test_is_false("server is still waiting for client final flight", server.is_active());
+         if(!result.test_is_true("client final flight was produced", !c2s.empty())) {
+            return result;
+         }
+
+         // Two writes straight after activation, as from tls_session_activated()
+         const std::vector<uint8_t> early_data = {0x47, 0x82, 0x01};
+         result.test_no_throw("client sends application data before the server has its final flight", [&] {
+            client.send(early_data);
+            client.send(early_data);
+         });
+
+         std::vector<uint8_t> ccs;
+         std::vector<uint8_t> finished;
+         std::vector<uint8_t> first_app_data;
+         std::vector<uint8_t> second_app_data;
+         std::vector<uint8_t> after_ccs;
+         std::vector<uint8_t> after_finished;
+         if(!split_first_dtls_record(result, c2s, ccs, after_ccs) ||
+            !split_first_dtls_record(result, after_ccs, finished, after_finished) ||
+            !split_first_dtls_record(result, after_finished, first_app_data, second_app_data)) {
+            return result;
+         }
+         c2s.clear();
+
+         result.test_is_true("first record is ChangeCipherSpec",
+                             contains_dtls_record_type(ccs, Botan::TLS::Record_Type::ChangeCipherSpec));
+         result.test_is_true("second record is Finished",
+                             contains_dtls_record_type(finished, Botan::TLS::Record_Type::Handshake));
+         result.test_is_true("third record is application data",
+                             contains_dtls_record_type(first_app_data, Botan::TLS::Record_Type::ApplicationData));
+         result.test_sz_eq("fourth record is the last", dtls_record_types(second_app_data).size(), 1);
+         result.test_is_true("fourth record is application data",
+                             contains_dtls_record_type(second_app_data, Botan::TLS::Record_Type::ApplicationData));
+
+         // The order the server observed in the report
+         deliver_copy(result, "Finished ahead of ChangeCipherSpec", finished, server);
+         result.test_is_false("server cannot complete on a Finished it has no keys for", server.is_active());
+         deliver_copy(result, "application data ahead of ChangeCipherSpec", first_app_data, server);
+         deliver_copy(result, "ChangeCipherSpec", ccs, server);
+         deliver_copy(result, "application data between ChangeCipherSpec and Finished", second_app_data, server);
+
+         result.test_is_false("server did not close", server.is_closed());
+         result.test_is_false("server is still waiting for Finished", server.is_active());
+         result.test_is_true("server sent nothing in response", s2c.empty());
+         result.test_is_true("nothing reached the server application", server_recv.empty());
+
+         // The server's timer retransmits its flight, which prompts the already
+         // active client to replay its final flight.
+         fire_retransmission_timer(result, *server_callbacks, server, s2c);
+         deliver(result, "retransmitted resumed server flight", s2c, client);
+         result.test_is_true("client replayed ChangeCipherSpec",
+                             contains_dtls_record_type(c2s, Botan::TLS::Record_Type::ChangeCipherSpec));
+         result.test_is_true("client replayed Finished",
+                             contains_dtls_record_type(c2s, Botan::TLS::Record_Type::Handshake));
+         deliver(result, "replayed client final flight", c2s, server);
+
+         result.test_is_true("server became active", server.is_active());
+         result.test_is_true("server completed a resumption",
+                             server_callbacks->session_was_resumption().value_or(false));
+         result.test_is_true("discarded application data stayed discarded", server_recv.empty());
+
+         const std::vector<uint8_t> app_data = {0x47, 0x82, 0x02};
+         result.test_no_throw("client sends application data after recovery", [&] { client.send(app_data); });
+         deliver(result, "client application data after recovery", c2s, server);
+         result.test_bin_eq("server received only the post-recovery write", server_recv, app_data);
+
+         result.test_no_throw("server sends application data", [&] { server.send(app_data); });
+         deliver(result, "server application data", s2c, client);
+         result.test_bin_eq("client received server application data", client_recv, app_data);
+
+         return result;
+      }
+
       static Test::Result run_handshake(Test::Result& result,
                                         const std::shared_ptr<Botan::RandomNumberGenerator>& rng,
                                         const std::shared_ptr<Botan::TLS::Policy>& policy,
@@ -2646,6 +2761,7 @@ class DTLS_Core_Regression_Tests final : public Test {
                  test_retransmitted_final_flight_then_application_data(true),
                  test_resumed_client_final_flight_retransmits_after_activation(),
                  test_resumed_final_flight_and_app_data_in_one_receive(),
+                 test_resumed_final_flight_reordered_around_app_data(),
                  test_renegotiation(false),
                  test_renegotiation(true)};
       }
