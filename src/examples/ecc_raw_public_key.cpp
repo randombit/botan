@@ -1,25 +1,12 @@
+#include <botan/bigint.h>
+#include <botan/ec_apoint.h>
 #include <botan/ec_group.h>
 #include <botan/ecdsa.h>
 #include <botan/hex.h>
 #include <botan/x509_key.h>
 
 #include <iostream>
-#include <span>
 #include <string>
-#include <vector>
-
-namespace {
-
-std::vector<uint8_t> to_uncompress_point_encoding(std::span<const uint8_t> x, std::span<const uint8_t> y) {
-   std::vector<uint8_t> public_key_bytes;
-   public_key_bytes.reserve(x.size() + y.size() + 1);
-   public_key_bytes.push_back(0x04);  // means: uncompressed point encoding
-   public_key_bytes.insert(public_key_bytes.end(), x.begin(), x.end());
-   public_key_bytes.insert(public_key_bytes.end(), y.begin(), y.end());
-   return public_key_bytes;
-}
-
-}  // namespace
 
 int main() {
    const std::string curve_name = "secp256r1";
@@ -27,12 +14,21 @@ int main() {
    const auto public_y_bytes = Botan::hex_decode("AC457F18D1F3675D46E98ED2E509EE47AC2CB9A012F73263B30CD7248AEA6020");
 
    const auto domain = Botan::EC_Group::from_name(curve_name);
-   const auto encoded_public_point = to_uncompress_point_encoding(public_x_bytes, public_y_bytes);
+
+   // This function will return nullopt if either coordinate is not in the
+   // valid range for the group, or if (x,y) is not a point on the curve.
+   const auto public_point = Botan::EC_AffinePoint::from_bigint_xy(
+      domain, Botan::BigInt::from_bytes(public_x_bytes), Botan::BigInt::from_bytes(public_y_bytes));
+
+   if(!public_point) {
+      std::cerr << "Public key is invalid\n";
+      return 1;
+   }
 
    // This loads the public point into an ECDSA_PublicKey. Creating an
    // ECDH_PublicKey would work the same way.
-
-   const auto public_key = Botan::ECDSA_PublicKey(domain, Botan::EC_AffinePoint(domain, encoded_public_point));
+   const auto public_key = Botan::ECDSA_PublicKey(domain, public_point.value());
 
    std::cout << "Public Key (PEM):\n\n" << Botan::X509::PEM_encode(public_key) << '\n';
+   return 0;
 }

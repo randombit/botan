@@ -551,6 +551,94 @@ require much larger keys than elliptic curve schemes, and are typically much slo
 
 .. cpp:function:: ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng, const DL_Group& group)
 
+Creating EC Keys From Raw Values
+----------------------------------------
+
+Some protocols and formats represent an EC private key as just the secret
+scalar, or an EC public key as just the encoded public point, rather than using
+the PKCS #8 or X.509 SubjectPublicKeyInfo encodings. To load such a key, first
+convert the value to an :cpp:class:`EC_Scalar` or :cpp:class:`EC_AffinePoint`
+(see :doc:`ecc`), then pass it to the key constructor along with the relevant
+:cpp:class:`EC_Group`.
+
+A secret scalar is loaded using :cpp:func:`EC_Scalar::deserialize`. A public
+point in one of the SEC1 formats is loaded using
+:cpp:func:`EC_AffinePoint::deserialize`,
+:cpp:func:`EC_AffinePoint::deserialize_compressed` or
+:cpp:func:`EC_AffinePoint::deserialize_uncompressed`. If instead the affine x
+and y coordinates of the point are known, use
+:cpp:func:`EC_AffinePoint::from_bigint_xy`. All of these return ``nullopt`` if
+the input is not valid for the group.
+
+The following constructors are available since Botan 3.7
+
+.. cpp:function:: ECDH_PrivateKey::ECDH_PrivateKey(const EC_Group& group, const EC_Scalar& x)
+
+   Create an ECDH private key from the secret scalar *x*, which must not be zero
+
+.. cpp:function:: ECDSA_PrivateKey::ECDSA_PrivateKey(const EC_Group& group, const EC_Scalar& x)
+
+   Create an ECDSA private key from the secret scalar *x*, which must not be zero
+
+.. cpp:function:: ECKCDSA_PrivateKey::ECKCDSA_PrivateKey(const EC_Group& group, const EC_Scalar& x)
+
+   Create an ECKCDSA private key from the secret scalar *x*, which must not be zero
+
+.. cpp:function:: ECGDSA_PrivateKey::ECGDSA_PrivateKey(const EC_Group& group, const EC_Scalar& x)
+
+   Create an ECGDSA private key from the secret scalar *x*, which must not be zero
+
+.. cpp:function:: SM2_PrivateKey::SM2_PrivateKey(const EC_Group& group, const EC_Scalar& x)
+
+   Create an SM2 private key from the secret scalar *x*, which must not be zero
+
+.. cpp:function:: ECDH_PublicKey::ECDH_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key)
+
+   Create an ECDH public key from the point *public_key*, which must not be the
+   identity element
+
+.. cpp:function:: ECDSA_PublicKey::ECDSA_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key)
+
+   Create an ECDSA public key from the point *public_key*, which must not be the
+   identity element
+
+.. cpp:function:: ECKCDSA_PublicKey::ECKCDSA_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key)
+
+   Create an ECKCDSA public key from the point *public_key*, which must not be the
+   identity element
+
+.. cpp:function:: ECGDSA_PublicKey::ECGDSA_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key)
+
+   Create an ECGDSA public key from the point *public_key*, which must not be the
+   identity element
+
+.. cpp:function:: GOST_3410_PublicKey::GOST_3410_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key)
+
+   Create a GOST-34.10 public key from the point *public_key*, which must not be the
+   identity element
+
+.. cpp:function:: SM2_PublicKey::SM2_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key)
+
+   Create an SM2 public key from the point *public_key*, which must not be the
+   identity element
+
+Code Example: Loading A Raw EC Private Key
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following loads an ECDH private key from the bytes of its secret scalar.
+
+.. literalinclude:: /../src/examples/ecc_raw_private_key.cpp
+   :language: cpp
+
+Code Example: Loading A Raw EC Public Key
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following loads an ECDSA public key from the x and y coordinates of its
+public point.
+
+.. literalinclude:: /../src/examples/ecc_raw_public_key.cpp
+   :language: cpp
+
 .. _serializing_private_keys:
 
 Serializing Private Keys Using PKCS #8
