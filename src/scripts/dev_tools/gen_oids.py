@@ -16,14 +16,33 @@ import sys
 from jinja2 import Environment, FileSystemLoader
 
 
-# This must match OID::hash_code
+# The contents octets of the DER encoding of the OID
+def der_encode_oid(oid):
+    arcs = list(map(int, oid.split('.')))
+    subidentifiers = [40 * arcs[0] + arcs[1]] + arcs[2:]
+
+    der = bytearray()
+    for value in subidentifiers:
+        digits = []
+        while True:
+            digits.append(value & 0x7F)
+            value >>= 7
+            if value == 0:
+                break
+        digits.reverse()
+        for (i, digit) in enumerate(digits):
+            der.append(digit | (0x80 if i + 1 < len(digits) else 0x00))
+
+    return bytes(der)
+
+# This must match OID::hash_code (FNV-1a over the DER encoding)
 def hash_oid(oid):
     word_size = 2 ** 64
-    h = 0x621F302327D9A49A
+    h = 0xCBF29CE484222325
 
-    for part in map(int, oid.split('.')):
-        h = (h * 193) % word_size
-        h += part
+    for b in der_encode_oid(oid):
+        h ^= b
+        h = (h * 0x100000001B3) % word_size
 
     # This reduction step occurs in static_oids.cpp.in
     return h % 858701

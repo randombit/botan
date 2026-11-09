@@ -1081,7 +1081,7 @@ class EC_Group_Registration_Tests final : public Test {
 
          // TODO(Botan4) remove this when OIDs lose internal nullability
          try {
-            const Botan::OID empty_oid("");
+            const Botan::OID empty_oid;
             Botan::EC_Group::unregister(empty_oid);
             result.test_failure("Should have failed");
          } catch(Botan::Invalid_Argument&) {

@@ -1905,6 +1905,10 @@ iWtHjIcunpiq6+IiB8IVu7Ncu6uPKoFS/mWzTvjgdNusmgNle9p3OAbE
         self.assertEqual(oid_rsa.to_string(), "1.2.840.113549.1.1.1")
         self.assertEqual(oid_rsa.to_name(), "RSA")
 
+        # Arcs which do not fit in 32 bits, GH #4020
+        uuid_oid = botan.OID.from_string("2.25.329800735698586629295641978511506172918")
+        self.assertEqual(uuid_oid.to_string(), "2.25.329800735698586629295641978511506172918")
+
         oid_a = botan.OID.from_string("1.2.3.4.5.6")
         oid_b = botan.OID.from_string("1.2.3.4.5.6")
         oid_c = botan.OID.from_string("1.2.3.4")

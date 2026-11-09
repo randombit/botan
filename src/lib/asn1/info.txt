@@ -16,7 +16,6 @@ asn1_time.h
 asn1_print.h
 asn1_obj.h
 der_enc.h
-oids.h
 ber_dec.h
 pss_params.h
 </header:public>

@@ -8,6 +8,8 @@
 #define BOTAN_ASN1_UTILS_H_
 
 #include <botan/asn1_obj.h>
+#include <initializer_list>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -18,6 +20,13 @@ class BigInt;
 }
 
 namespace Botan::ASN1 {
+
+/**
+* If @p oid consists of @p prefix followed by exactly one further arc, and
+* that final arc fits in 32 bits, return the final arc. Otherwise return
+* nullopt.
+*/
+std::optional<uint32_t> is_sub_element_of(const OID& oid, std::initializer_list<uint32_t> prefix);
 
 /**
 * Return the contents octets of the DER encoding of the INTEGER @p n:

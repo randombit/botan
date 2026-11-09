@@ -414,6 +414,9 @@ class BOTAN_PUBLIC_API(2, 0) BER_Bad_Tag final : public BER_Decoding_Error {
 
 /**
 * This class represents ASN.1 object identifiers.
+*
+* The OID is stored as its DER encoding. Arcs larger than 32 bits are
+* supported, up to the 128 bit UUIDs embedded under the 2.25 arc (ITU-T X.667).
 */
 class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
    public:
@@ -425,8 +428,10 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       /**
       * Construct an OID from a string.
       * @param str a string in the form "a.b.c" etc., where a,b,c are integers
+      *        written without leading zeros
       *
-      * Note: it is currently required that each integer fit into 32 bits
+      * Throws Invalid_Argument if the string is not a valid OID. An empty
+      * string is not accepted; use the default constructor for an empty OID.
       */
       explicit OID(std::string_view str);
 
@@ -436,9 +441,9 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       OID(std::initializer_list<uint32_t> init);
 
       /**
-      * Initialize an OID from a vector of integer values
+      * Initialize an OID from a sequence of integer values
       */
-      explicit OID(std::vector<uint32_t>&& init);
+      explicit OID(std::span<const uint32_t> init);
 
       /**
       * Construct an OID from a string.
@@ -454,6 +459,14 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       static std::optional<OID> from_name(std::string_view name);
 
       /**
+      * Construct an OID from the contents octets of its DER encoding,
+      * that is the encoding without the tag and length prefix.
+      *
+      * Throws Decoding_Error if the encoding is not valid
+      */
+      static OID from_der_contents(std::span<const uint8_t> contents);
+
+      /**
       * Register a new OID in the internal table
       */
       static void register_oid(const OID& oid, std::string_view name);
@@ -465,7 +478,7 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       * Find out whether this OID is empty
       * @return true is no OID value is set
       */
-      bool empty() const { return m_id.empty(); }
+      bool empty() const { return m_der.empty(); }
 
       /**
       * Find out whether this OID has a value
@@ -504,10 +517,24 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       bool registered_oid() const;
 
       /**
+      * Return the contents octets of the DER encoding of this OID,
+      * that is the encoding without the tag and length prefix.
+      */
+      std::span<const uint8_t> der_contents() const { return m_der; }
+
+      /**
       * Compare two OIDs.
       * @return true if they are equal, false otherwise
       */
-      bool operator==(const OID& other) const { return m_id == other.m_id; }
+      bool operator==(const OID& other) const { return m_der == other.m_der; }
+
+      /**
+      * Order two OIDs.
+      *
+      * The ordering is lexicographic over the DER encodings. It is consistent,
+      * and so suitable for ordered containers, but it is not numeric.
+      */
+      bool operator<(const OID& other) const { return m_der < other.m_der; }
 
       /**
       * Return a hash code for this OID
@@ -522,26 +549,8 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       */
       bool matches(std::initializer_list<uint32_t> other) const;
 
-      /**
-      * Get this OID as list (vector) of its components.
-      * @return vector representing this OID
-      */
-      BOTAN_DEPRECATED("Do not access the integer values, use eg to_string")
-      const std::vector<uint32_t>& get_components() const {
-         return m_id;
-      }
-
-      /**
-      * Get this OID as list (vector) of its components.
-      * @return vector representing this OID
-      */
-      BOTAN_DEPRECATED("Do not access the integer values, use eg to_string")
-      const std::vector<uint32_t>& get_id() const {
-         return m_id;
-      }
-
    private:
-      std::vector<uint32_t> m_id;
+      std::vector<uint8_t> m_der;
 };
 
 /**
@@ -561,14 +570,6 @@ BOTAN_PUBLIC_API(3, 0) std::ostream& operator<<(std::ostream& out, const OID& oi
 inline bool operator!=(const OID& a, const OID& b) {
    return !(a == b);
 }
-
-/**
-* Compare two OIDs.
-* @param a the first OID
-* @param b the second OID
-* @return true if a is lexicographically smaller than b
-*/
-BOTAN_PUBLIC_API(2, 0) bool operator<(const OID& a, const OID& b);
 
 /**
 * ASN.1 string type
