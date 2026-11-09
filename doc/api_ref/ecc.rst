@@ -172,6 +172,12 @@ side channels) unless otherwise documented. Usually this is denoted by including
 
       Available since Botan 3.13
 
+   .. cpp:function:: static std::optional<EC_AffinePoint> from_bigint_xy(const EC_Group& group, const BigInt& x, const BigInt& y)
+
+      Create a point from its affine coordinates (x,y). Returns ``nullopt`` if
+      either integer is not in the range [0,p), or if (x,y) does not satisfy
+      the curve equation.
+
    .. cpp:function:: bool is_identity() const
 
       Return true if this point is the identity element.
