@@ -16,31 +16,12 @@
 #include <botan/internal/pcurves_mul.h>
 #include <botan/internal/pcurves_util.h>
 #include <botan/internal/target_info.h>
+#include <botan/internal/stl_util.h>
 #include <concepts>
 #include <utility>
 #include <vector>
 
 namespace Botan {
-
-/*
- * @brief Helper class to pass literal strings to C++ templates
- *
- * This is a generic utility so it may make sense to move this into utils
- * if someday such functionality is useful outside of pcurves.
- */
-template <size_t N>
-class StringLiteral final {
-   public:
-      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
-      consteval StringLiteral(const char (&str)[N]) : value() {
-         for(size_t i = 0; i != N; ++i) {
-            value[i] = str[i];
-         }
-      }
-
-      // NOLINTNEXTLINE(*non-private-member-variable*)
-      char value[N];
-};
 
 /*
 This file implements a system for compile-time instantiation of elliptic curve arithmetic.
