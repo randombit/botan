@@ -1,0 +1,21 @@
+<internal_defines>
+HASH_ENGINE_SHA2_64_POWER8 -> 20261012
+</internal_defines>
+
+<module_info>
+name -> "Multi-buffer SHA-512 using POWER8 crypto"
+</module_info>
+
+<isa>
+vsx
+powercrypto
+</isa>
+
+<arch>
+ppc64
+</arch>
+
+<requires>
+cpuid
+simd_2x64
+</requires>
