@@ -13,6 +13,7 @@
 #include <botan/tls_policy.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/buffer_slicer.h>
+#include <botan/internal/hex_array.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_cipher_state.h>
 #include <botan/internal/tls_handshake_layer_13.h>
@@ -306,8 +307,8 @@ void Channel_IO::send_dummy_change_cipher_spec() {
    //
    // I.e. Change Cipher Spec records must always be sent unprotected, even if
    // the cipher state is already set up for handshake message encryption.
-   constexpr auto ccs = std::array<uint8_t, 1>{0x01};
-   send_data(Record_Type::ChangeCipherSpec, ccs, nullptr);
+   using namespace Botan::literals;
+   send_data(Record_Type::ChangeCipherSpec, "01"_hex, nullptr);
    m_dummy_ccs_emitted = true;
 }
 
