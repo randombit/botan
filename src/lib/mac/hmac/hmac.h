@@ -39,10 +39,14 @@ class HMAC final : public MessageAuthenticationCode {
       void start_msg(std::span<const uint8_t> nonce) override;
       void key_schedule(std::span<const uint8_t> key) override;
 
+      void absorb_ikey_if_pending();
+
       std::unique_ptr<HashFunction> m_hash;
       secure_vector<uint8_t> m_ikey, m_okey;
       size_t m_hash_output_length;
       size_t m_hash_block_size;
+      // m_ikey is absorbed lazily so that rekeying or restarting doesn't compress it twice
+      bool m_ikey_pending = false;
 };
 
 }  // namespace Botan

@@ -15,11 +15,19 @@
 
 namespace Botan {
 
+void HMAC::absorb_ikey_if_pending() {
+   if(m_ikey_pending) {
+      m_hash->update(m_ikey);
+      m_ikey_pending = false;
+   }
+}
+
 /*
 * Update a HMAC Calculation
 */
 void HMAC::add_data(std::span<const uint8_t> input) {
    assert_key_material_set();
+   absorb_ikey_if_pending();
    m_hash->update(input);
 }
 
@@ -28,11 +36,12 @@ void HMAC::add_data(std::span<const uint8_t> input) {
 */
 void HMAC::final_result(std::span<uint8_t> mac) {
    assert_key_material_set();
+   absorb_ikey_if_pending();  // still pending here if the message was empty
    m_hash->final(mac);
    m_hash->update(m_okey);
    m_hash->update(mac.first(m_hash_output_length));
    m_hash->final(mac);
-   m_hash->update(m_ikey);
+   m_ikey_pending = true;
 }
 
 void HMAC::start_msg(std::span<const uint8_t> nonce) {
@@ -42,7 +51,7 @@ void HMAC::start_msg(std::span<const uint8_t> nonce) {
    assert_key_material_set();
 
    m_hash->clear();
-   m_hash->update(m_ikey);
+   m_ikey_pending = true;
 }
 
 Key_Length_Specification HMAC::key_spec() const {
@@ -118,7 +127,7 @@ void HMAC::key_schedule(std::span<const uint8_t> key) {
       m_okey[i] = m_ikey[i] ^ ipad ^ opad;
    }
 
-   m_hash->update(m_ikey);
+   m_ikey_pending = true;
 }
 
 /*
@@ -128,6 +137,7 @@ void HMAC::clear() {
    m_hash->clear();
    zap(m_ikey);
    zap(m_okey);
+   m_ikey_pending = false;
 }
 
 /*
