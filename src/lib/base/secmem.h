@@ -229,31 +229,24 @@ std::vector<T, Alloc>& operator+=(std::vector<T, Alloc>& out, const std::pair<T*
 * the writes as being without side-effects; use secure_scrub_memory
 * for that.
 *
-* TODO(Botan4): make these not-inlined and only for secure_vector, eg declare
-*  void zeroize(secure_vector<uint8_t>& v);
-*  void zeroize(secure_vector<uint16_t>& v);
-*  void zeroize(secure_vector<uint32_t>& v);
-*  void zeroize(secure_vector<uint64_t>& v);
+* TODO(Botan4): move this to mem_utils.h
 *
 * @param vec the vector to zeroise
 */
 template <typename T, typename Alloc>
 void zeroise(std::vector<T, Alloc>& vec) {
-   for(size_t i = 0; i != vec.size(); ++i) {
-      vec[i] = static_cast<T>(0);
+   // Hoisted out of loop to avoid aliasing
+   T* p = vec.data();
+   const size_t n = vec.size();
+   for(size_t i = 0; i != n; ++i) {
+      p[i] = static_cast<T>(0);
    }
 }
 
 /**
 * Zeroise the values then free the memory
 *
-* TODO(Botan4): make these not-inlined and only for secure_vector, eg declare
-*  void zap(secure_vector<uint8_t>& v);
-*  void zap(secure_vector<uint16_t>& v);
-*  void zap(secure_vector<uint32_t>& v);
-*  void zap(secure_vector<uint64_t>& v);
-*
-* [And maybe rename as well]
+* TODO(Botan4): move this to mem_utils.h, rename to zeroise_and_release
 *
 * @param vec the vector to zeroise and free
 */
