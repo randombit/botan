@@ -62,6 +62,26 @@ void map_remove_if(Pred pred, T& assoc) {
    }
 }
 
+/*
+ * @brief Helper class to pass literal strings to C++ templates
+ *
+ * This is a generic utility so it may make sense to move this into utils
+ * if someday such functionality is useful outside of pcurves.
+ */
+template <size_t N>
+class StringLiteral final {
+   public:
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
+      consteval StringLiteral(const char (&str)[N]) : value() {
+         for(size_t i = 0; i != N; ++i) {
+            value[i] = str[i];
+         }
+      }
+
+      // NOLINTNEXTLINE(*non-private-member-variable*)
+      char value[N];
+};
+
 template <typename... Alts, typename... Ts>
 constexpr bool holds_any_of(const std::variant<Ts...>& v) noexcept {
    return (std::holds_alternative<Alts>(v) || ...);

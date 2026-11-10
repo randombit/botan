@@ -10,3 +10,7 @@ brief -> "Hex encoder and decoder"
 <header:public>
 hex.h
 </header:public>
+
+<header:internal>
+hex_array.h
+</header:internal>
