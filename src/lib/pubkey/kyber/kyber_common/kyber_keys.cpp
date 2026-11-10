@@ -55,8 +55,12 @@ KyberInternalKeypair Expanded_Keypair_Codec::decode_keypair(std::span<const uint
 
    CT::unpoison_all(pub_key, puk_key_hash, skpv, z);
 
+   // Needed for the consistency check below, and kept with the public key for the KEM operations
+   const KyberSeedRho rho(std::span{pub_key}.last(KyberConstants::SEED_BYTES));
+   const auto At = std::make_shared<const KyberPolyMat>(Kyber_Algos::sample_matrix(rho, true /* transposed */, mode));
+
    KyberInternalKeypair keypair{
-      std::make_shared<Kyber_PublicKeyInternal>(mode, std::move(pub_key)),
+      std::make_shared<Kyber_PublicKeyInternal>(mode, std::move(pub_key), At),
       std::make_shared<Kyber_PrivateKeyInternal>(
          std::move(mode),
          std::move(skpv),
@@ -91,8 +95,7 @@ KyberInternalKeypair Expanded_Keypair_Codec::decode_keypair(std::span<const uint
       const KyberMessage m(pk_hash.begin(), pk_hash.end());
       const auto [K, r] = sym.G(m, pk_hash);
       BOTAN_UNUSED(K);
-      const auto At = Kyber_Algos::sample_matrix(pk.rho(), true /* transposed */, pk.mode());
-      const auto ct = pk.indcpa_encrypt(m, r, At, pk.mode());
+      const auto ct = pk.indcpa_encrypt(m, r, *At, pk.mode());
       const auto m_prime = priv.indcpa_decrypt(ct);
       if(m_prime.size() != m.size() || !constant_time_compare(m_prime, m)) {
          throw Decoding_Error("ML-KEM expanded private key is inconsistent with its public key");
@@ -268,20 +271,27 @@ secure_vector<uint8_t> encode_ml_kem_private_key(const KyberInternalKeypair& key
    return der_enc.get_contents();
 }
 
-Kyber_PublicKeyInternal::Kyber_PublicKeyInternal(KyberConstants mode, KyberSerializedPublicKey public_key) :
+Kyber_PublicKeyInternal::Kyber_PublicKeyInternal(KyberConstants mode,
+                                                 KyberSerializedPublicKey public_key,
+                                                 std::shared_ptr<const KyberPolyMat> At) :
       m_mode(std::move(mode)),
       m_public_key_bits_raw(validate_public_key_length(std::move(public_key), m_mode.public_key_bytes())),
       m_H_public_key_bits_raw(m_mode.symmetric_primitives().H(m_public_key_bits_raw)),
       m_t(Kyber_Algos::decode_polynomial_vector(
          std::span{m_public_key_bits_raw}.first(m_mode.polynomial_vector_bytes()), m_mode)),
-      m_rho(std::span{m_public_key_bits_raw}.last(Botan::KyberConstants::SEED_BYTES)) {}
+      m_rho(std::span{m_public_key_bits_raw}.last(Botan::KyberConstants::SEED_BYTES)),
+      m_At(std::move(At)) {}
 
-Kyber_PublicKeyInternal::Kyber_PublicKeyInternal(KyberConstants mode, KyberPolyVecNTT t, KyberSeedRho rho) :
+Kyber_PublicKeyInternal::Kyber_PublicKeyInternal(KyberConstants mode,
+                                                 KyberPolyVecNTT t,
+                                                 KyberSeedRho rho,
+                                                 std::shared_ptr<const KyberPolyMat> At) :
       m_mode(std::move(mode)),
       m_public_key_bits_raw(concat(Kyber_Algos::encode_polynomial_vector<std::vector<uint8_t>>(t, m_mode), rho)),
       m_H_public_key_bits_raw(m_mode.symmetric_primitives().H(m_public_key_bits_raw)),
       m_t(std::move(t)),
-      m_rho(std::move(rho)) {}
+      m_rho(std::move(rho)),
+      m_At(std::move(At)) {}
 
 /**
  * NIST FIPS 203, Algorithm 14 (K-PKE.Encrypt)

@@ -12,25 +12,32 @@
 #include <botan/internal/kyber_constants.h>
 #include <botan/internal/kyber_keys.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <memory>
 
 namespace Botan {
 
 class Kyber_KEM_Operation_Base {
    protected:
       explicit Kyber_KEM_Operation_Base(const Kyber_PublicKeyInternal& pk) :
-            m_mode(pk.mode()), m_At(Kyber_Algos::sample_matrix(pk.rho(), true /* transposed */, m_mode)) {}
+            m_mode(pk.mode()), m_At(pk.precomputed_matrix_At()) {
+         if(!m_At) {
+            m_At = std::make_shared<const KyberPolyMat>(
+               Kyber_Algos::sample_matrix(pk.rho(), true /* transposed */, m_mode));
+         }
+      }
 
       const KyberConstants& mode() const { return m_mode; }
 
-      const KyberPolyMat& precomputed_matrix_At() const { return m_At; }
+      const KyberPolyMat& precomputed_matrix_At() const { return *m_At; }
 
    private:
       const KyberConstants& m_mode;
 
       // The public key's matrix is pre-computed to avoid redundant work when
       // encapsulating multiple keys. This matrix is needed for encapsulation as
-      // well as for the Fujisaki-Okamoto transform in the decapsulation.
-      KyberPolyMat m_At;
+      // well as for the Fujisaki-Okamoto transform in the decapsulation. If the
+      // public key already has it (eg from key generation) it is shared.
+      std::shared_ptr<const KyberPolyMat> m_At;
 };
 
 class Kyber_KEM_Encryptor_Base : public PK_Ops::KEM_Encryption_with_KDF,
