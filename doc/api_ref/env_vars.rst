@@ -36,4 +36,6 @@ These values can be set in the environment before the program starts, or using
   CPUID fields to ignore. For example setting ``BOTAN_CLEAR_CPUID=avx2,avx512``
   will cause AVX2 and AVX-512 codepaths to be avoided. Note that disabling basic
   features (notably NEON or SSE2/SSSE3) can cause other higher level features
-  like AES-NI to also become disabled.
+  like AES-NI to also become disabled. The special value ``all`` disables every
+  CPU feature, so that only code targeting the baseline instruction set of the
+  build is executed.

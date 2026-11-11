@@ -249,7 +249,7 @@ def test_cli(cmd, cmd_options,
         if cmd_input is None:
             proc_env = None
             if extra_env:
-                proc_env = os.environ
+                proc_env = os.environ.copy()
                 for (k,v) in extra_env.items():
                     proc_env[k] = v
 
@@ -1286,6 +1286,9 @@ def cli_cpuid_tests(_tmp_dir):
                 logging.error('Clearing CPUID %s did not disable it', flag)
             if f not in flags:
                 logging.error('Clearing CPUID %s caused flag %s to appear', flag, f)
+
+    for clear in ['all', 'avx2,all']:
+        test_cli("cpuid", [], "CPUID flags:", extra_env={'BOTAN_CLEAR_CPUID': clear})
 
 def cli_cc_enc_tests(_tmp_dir):
     test_vectors = [

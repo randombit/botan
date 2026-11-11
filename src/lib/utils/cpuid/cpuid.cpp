@@ -63,7 +63,9 @@ uint32_t cleared_cpuid_bits() {
    std::string clear_cpuid_env;
    if(OS::read_env_variable(clear_cpuid_env, "BOTAN_CLEAR_CPUID")) {
       for(const auto& cpuid : split_on(clear_cpuid_env, ',')) {
-         if(auto bit = CPUID::bit_from_string(cpuid)) {
+         if(cpuid == "all") {
+            return ~static_cast<uint32_t>(0);
+         } else if(auto bit = CPUID::bit_from_string(cpuid)) {
             cleared |= bit->as_u32();
          }
       }
@@ -77,14 +79,14 @@ uint32_t cleared_cpuid_bits() {
 
 #endif
 
-CPUID::CPUID_Data::CPUID_Data() {
-   // NOLINTBEGIN(*-prefer-member-initializer)
+CPUID::CPUID_Data::CPUID_Data() : m_processor_features(0) {
 #if defined(BOTAN_HAS_CPUID_DETECTION)
-   m_processor_features = detect_cpu_features(~cleared_cpuid_bits());
-#else
-   m_processor_features = 0;
+   const uint32_t allowed = ~cleared_cpuid_bits();
+   // If nothing is allowed, skip detection entirely
+   if(allowed != 0) {
+      m_processor_features = detect_cpu_features(allowed);
+   }
 #endif
-   // NOLINTEND(*-prefer-member-initializer)
 }
 
 std::optional<CPUFeature> CPUID::bit_from_string(std::string_view tok) {
