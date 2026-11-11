@@ -152,6 +152,36 @@ class Montgomery_Integer_Tests : public Test {
 
 BOTAN_REGISTER_TEST("math", "monty_int", Montgomery_Integer_Tests);
 
+class Montgomery_Params_Tests : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         auto rng = Test::new_rng(__func__);
+
+         Test::Result result("Montgomery_Params");
+
+         // Includes moduli which fill their top word and ones which do not
+         for(const size_t p_bits : {2, 63, 64, 65, 127, 128, 129, 521, 1023, 1024, 2047, 2048, 4095, 4096}) {
+            Botan::BigInt random_p(*rng, p_bits);
+            random_p.set_bit(0);
+
+            const std::vector<Botan::BigInt> moduli = {
+               random_p, Botan::BigInt::power_of_2(p_bits) - 1, Botan::BigInt::power_of_2(p_bits - 1) + 1};
+
+            for(const auto& p : moduli) {
+               const Botan::Montgomery_Params params(p);
+               const auto r = Botan::BigInt::power_of_2(params.p_words() * sizeof(Botan::word) * 8);
+               result.test_bn_eq("R1", params.R1(), r % p);
+               result.test_bn_eq("R2", params.R2(), (r * r) % p);
+               result.test_bn_eq("R3", params.R3(), (r * r * r) % p);
+            }
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("math", "monty_params", Montgomery_Params_Tests);
+
 class Montgomery_Exponentiation_Tests : public Test {
    public:
       std::vector<Test::Result> run() override {
