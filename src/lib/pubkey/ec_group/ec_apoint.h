@@ -24,10 +24,6 @@ class RandomNumberGenerator;
 class EC_Group;
 class EC_Scalar;
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-class EC_Point;
-#endif
-
 class EC_Group_Data;
 class EC_AffinePoint_Data;
 
@@ -293,18 +289,6 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
       * @return reference to this
       */
       EC_AffinePoint& operator=(EC_AffinePoint&& other) noexcept;
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      /**
-      * Deprecated conversion
-      */
-      EC_AffinePoint(const EC_Group& group, const EC_Point& pt);
-
-      /**
-      * Deprecated conversion
-      */
-      EC_Point to_legacy_point() const;
-#endif
 
       /**
       * Multiply by the group generator returning a complete point

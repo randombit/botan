@@ -14,8 +14,7 @@ side channels) unless otherwise documented. Usually this is denoted by including
 
    Prior to 3.6.0, Botan used :cpp:class:`BigInt` to represent scalar values,
    and ``EC_Point`` for elliptic curve points in Jacobian projective
-   form. ``EC_Point`` still exists, but is intentionally undocumented, and will
-   be removed in Botan4.
+   form. ``EC_Point`` has since been removed.
 
 .. warning::
 

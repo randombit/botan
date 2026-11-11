@@ -140,46 +140,6 @@ ECIES_KA_Operation::ECIES_KA_Operation(const PK_Key_Agreement_Key& private_key,
                                        RandomNumberGenerator& rng) :
       m_ka(create_key_agreement(private_key, ecies_params, for_encryption, rng)), m_params(ecies_params) {}
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-/**
-* ECIES secret derivation according to ISO 18033-2
-*/
-SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_public_key_bin,
-                                               const EC_Point& other_public_key_point) const {
-   if(other_public_key_point.is_zero()) {
-      throw Invalid_Argument("ECIES: other public key point is zero");
-   }
-
-   auto kdf = KDF::create_or_throw(m_params.kdf());
-
-   EC_Point other_point = other_public_key_point;
-
-   // ISO 18033: step b
-   // TODO(Botan4) remove when cofactor support is removed
-   if(m_params.old_cofactor_mode() && m_params.group().has_cofactor()) {
-      other_point *= m_params.group().get_cofactor();
-   }
-
-   secure_vector<uint8_t> derivation_input;
-
-   // ISO 18033: encryption step e / decryption step g
-   if(!m_params.single_hash_mode()) {
-      derivation_input += eph_public_key_bin;
-   }
-
-   // ISO 18033: encryption step f / decryption step h
-   std::vector<uint8_t> other_public_key_bin = other_point.encode(m_params.point_format());
-   // Note: the argument `m_params.secret_length()` passed for `key_len` will only be used by providers because
-   // "Raw" is passed to the `PK_Key_Agreement` if the implementation of botan is used.
-   const SymmetricKey peh =
-      m_ka.derive_key(m_params.group().get_order_bytes(), other_public_key_bin.data(), other_public_key_bin.size());
-   derivation_input.insert(derivation_input.end(), peh.begin(), peh.end());
-
-   // ISO 18033: encryption step g / decryption step i
-   return SymmetricKey(kdf->derive_key(m_params.secret_length(), derivation_input));
-}
-#endif
-
 /**
 * ECIES secret derivation according to ISO 18033-2
 */

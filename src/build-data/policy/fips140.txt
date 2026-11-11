@@ -138,7 +138,6 @@ prf_x942
 
 # Brainpool and secp256k1 allowed per latest NIST guidance
 # so left as optional
-legacy_ec_point
 pcurves_secp192r1
 pcurves_numsp512d1
 pcurves_sm2p256v1

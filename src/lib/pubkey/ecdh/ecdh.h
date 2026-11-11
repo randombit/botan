@@ -27,15 +27,6 @@ class BOTAN_PUBLIC_API(2, 0) ECDH_PublicKey : public virtual EC_PublicKey {
       ECDH_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
             EC_PublicKey(alg_id, key_bits) {}
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      /**
-      * Construct a public key from a given public point.
-      * @param group the domain parameters associated with this key
-      * @param public_point the public point defining this key
-      */
-      ECDH_PublicKey(const EC_Group& group, const EC_Point& public_point) : EC_PublicKey(group, public_point) {}
-#endif
-
       /**
       * Construct a public key from a given public point.
       * @param group the domain parameters associated with this key

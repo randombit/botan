@@ -119,16 +119,6 @@ SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group
    }
 }
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
-                                    std::string_view user_id,
-                                    const EC_Group& group,
-                                    const EC_Point& pubkey) {
-   const auto apoint = EC_AffinePoint(group, pubkey);
-   return sm2_compute_za(hash, user_id, group, apoint);
-}
-#endif
-
 namespace {
 
 std::vector<uint8_t> sm2_compute_za(HashFunction& hash,

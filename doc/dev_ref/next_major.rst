@@ -6,8 +6,6 @@ Checklist For Next Major Version
 
 * Make the remaining PasswordHash interfaces internal
 
-* Remove EC_Point/CurveGFp
-
 
 Big Project: Public Key Split
 -------------------------------

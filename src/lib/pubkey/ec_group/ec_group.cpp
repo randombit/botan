@@ -452,12 +452,6 @@ EC_Group::EC_Group(std::shared_ptr<const EC_Group_Data> data) : m_data(std::move
 bool EC_Group::verify_generator_order(std::shared_ptr<const EC_Group_Data> data) {
    const EC_Group group(std::move(data));
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-   if(group.engine() == EC_Group_Engine::Legacy) {
-      return (group.get_base_point() * group.get_order()).is_zero();
-   }
-#endif
-
    auto g_pt = EC_AffinePoint::from_bigint_xy(group, group.get_g_x(), group.get_g_y());
    if(!g_pt) {
       return false;
@@ -498,7 +492,7 @@ bool EC_Group::supports_named_group(std::string_view name) {
 
 //static
 bool EC_Group::supports_application_specific_group() {
-#if defined(BOTAN_HAS_LEGACY_EC_POINT) || defined(BOTAN_HAS_PCURVES_GENERIC)
+#if defined(BOTAN_HAS_PCURVES_GENERIC)
    return true;
 #else
    return false;
@@ -507,11 +501,7 @@ bool EC_Group::supports_application_specific_group() {
 
 //static
 bool EC_Group::supports_application_specific_group_with_cofactor() {
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-   return true;
-#else
    return false;
-#endif
 }
 
 //static
@@ -746,42 +736,6 @@ const BigInt& EC_Group::get_b() const {
    return data().b();
 }
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-const EC_Point& EC_Group::get_base_point() const {
-   return data().base_point();
-}
-
-const EC_Point& EC_Group::generator() const {
-   return data().base_point();
-}
-
-bool EC_Group::verify_public_element(const EC_Point& point) const {
-   //check that public point is not at infinity
-   if(point.is_zero()) {
-      return false;
-   }
-
-   //check that public point is on the curve
-   if(point.on_the_curve() == false) {
-      return false;
-   }
-
-   //check that public point has order q
-   if((point * get_order()).is_zero() == false) {
-      return false;
-   }
-
-   if(has_cofactor()) {
-      if((point * get_cofactor()).is_zero()) {
-         return false;
-      }
-   }
-
-   return true;
-}
-
-#endif
-
 const BigInt& EC_Group::get_order() const {
    return data().order();
 }
@@ -948,17 +902,6 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
       return false;
    }
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-   // Reject if [cofactor]G is the identity. pcurves does not support cofactor != 1
-   // so this can only matter when the legacy backend is in use.
-   if(has_cofactor()) {
-      const EC_Point& base_point = get_base_point();
-      if((base_point * get_cofactor()).is_zero()) {
-         return false;
-      }
-   }
-#endif
-
    // check the Hasse bound (roughly)
    if((p - get_cofactor() * order).abs().bits() > (p.bits() / 2) + 1) {
       return false;
@@ -971,14 +914,21 @@ EC_Group::Mul2Table::Mul2Table(EC_Group::Mul2Table&& other) noexcept = default;
 
 EC_Group::Mul2Table& EC_Group::Mul2Table::operator=(EC_Group::Mul2Table&& other) noexcept = default;
 
-EC_Group::Mul2Table::Mul2Table(const EC_AffinePoint& h) : m_tbl(h._group()->make_mul2_table(h._inner())) {}
+EC_Group::Mul2Table::Mul2Table(const EC_AffinePoint& h) {
+   const auto& group = h._group();
+   m_tbl = std::make_unique<EC_Mul2Table_Data>(group, group->pcurve().mul2_setup_g(h._inner().value()));
+}
 
 EC_Group::Mul2Table::~Mul2Table() = default;
 
 std::optional<EC_AffinePoint> EC_Group::Mul2Table::mul2_vartime(const EC_Scalar& x, const EC_Scalar& y) const {
-   auto pt = m_tbl->mul2_vartime(x._inner(), y._inner());
-   if(pt) {
-      return EC_AffinePoint::_from_inner(std::move(pt));
+   const auto& group = m_tbl->group();
+   BOTAN_ARG_CHECK(x._inner().group() == group && y._inner().group() == group, "Curve mismatch");
+
+   const auto& pcurve = group->pcurve();
+
+   if(auto pt = pcurve.mul2_vartime(m_tbl->table(), x._inner().value(), y._inner().value())) {
+      return EC_AffinePoint::_from_inner(std::make_unique<EC_AffinePoint_Data>(group, pcurve.point_to_affine(*pt)));
    } else {
       return {};
    }
@@ -987,7 +937,11 @@ std::optional<EC_AffinePoint> EC_Group::Mul2Table::mul2_vartime(const EC_Scalar&
 bool EC_Group::Mul2Table::mul2_vartime_x_mod_order_eq(const EC_Scalar& v,
                                                       const EC_Scalar& x,
                                                       const EC_Scalar& y) const {
-   return m_tbl->mul2_vartime_x_mod_order_eq(v._inner(), x._inner(), y._inner());
+   const auto& group = m_tbl->group();
+   BOTAN_ARG_CHECK(x._inner().group() == group && y._inner().group() == group, "Curve mismatch");
+
+   return group->pcurve().mul2_vartime_x_mod_order_eq(
+      m_tbl->table(), v._inner().value(), x._inner().value(), y._inner().value());
 }
 
 bool EC_Group::Mul2Table::mul2_vartime_x_mod_order_eq(const EC_Scalar& v,

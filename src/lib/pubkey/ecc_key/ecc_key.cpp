@@ -19,10 +19,6 @@
 
 #include <memory>
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-   #include <botan/ec_point.h>
-#endif
-
 namespace Botan {
 
 size_t EC_PublicKey::key_length() const {
@@ -55,14 +51,6 @@ const AlgorithmIdentifier& EC_PublicKey::assert_algorithm_identifier(const Algor
    return alg_id;  // NOLINT(*-return-const-ref-from-parameter)
 }
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-EC_PublicKey::EC_PublicKey(const EC_Group& group, const EC_Point& pub_point) {
-   auto pt = EC_AffinePoint(group, pub_point);
-   m_public_key = std::make_shared<const EC_PublicKey_Data>(group, std::move(pt));
-   m_domain_encoding = default_encoding_for(domain());  // NOLINT(*-prefer-member-initializer)
-}
-#endif
-
 EC_PublicKey::EC_PublicKey(const EC_Group& group, const EC_AffinePoint& pub_point) {
    m_public_key = std::make_shared<const EC_PublicKey_Data>(group, pub_point);
    m_domain_encoding = default_encoding_for(domain());  // NOLINT(*-prefer-member-initializer)
@@ -77,13 +65,6 @@ const EC_Group& EC_PublicKey::domain() const {
    BOTAN_STATE_CHECK(m_public_key != nullptr);
    return m_public_key->group();
 }
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-const EC_Point& EC_PublicKey::public_point() const {
-   BOTAN_STATE_CHECK(m_public_key != nullptr);
-   return m_public_key->legacy_point();
-}
-#endif
 
 const EC_AffinePoint& EC_PublicKey::public_ec_point() const {
    BOTAN_STATE_CHECK(m_public_key != nullptr);

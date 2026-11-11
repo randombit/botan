@@ -11,128 +11,82 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/bigint.h>
-#include <botan/internal/monty.h>
+#include <botan/internal/ct_utils.h>
+#include <botan/internal/pcurves.h>
 #include <functional>
 #include <memory>
 #include <span>
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-   #include <botan/internal/barrett.h>
-#endif
-
 namespace Botan {
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-class EC_Point_Base_Point_Precompute;
-#endif
-
-namespace PCurve {
-
-class PrimeOrderCurve;
-
-}
 
 class EC_Group_Data;
 
-class EC_Scalar_Data /* NOLINT(*-special-member-functions) */ {
+/**
+* The internal representation of an EC_Scalar
+*/
+class EC_Scalar_Data final {
    public:
-      virtual ~EC_Scalar_Data() = default;
+      EC_Scalar_Data(std::shared_ptr<const EC_Group_Data> group, PCurve::PrimeOrderCurve::Scalar v) :
+            m_group(std::move(group)), m_v(std::move(v)) {}
 
-      virtual const std::shared_ptr<const EC_Group_Data>& group() const = 0;
+      const std::shared_ptr<const EC_Group_Data>& group() const { return m_group; }
 
-      virtual size_t bytes() const = 0;
+      const PCurve::PrimeOrderCurve::Scalar& value() const { return m_v; }
 
-      virtual std::unique_ptr<EC_Scalar_Data> clone() const = 0;
+      void set_value(const PCurve::PrimeOrderCurve::Scalar& v) { m_v = v; }
 
-      virtual bool is_zero() const = 0;
+      void zeroize() { m_v._zeroize(); }
 
-      virtual bool is_eq(const EC_Scalar_Data& y) const = 0;
-
-      virtual void assign(const EC_Scalar_Data& y) = 0;
-
-      virtual void zeroize() = 0;
-
-      virtual void square_self() = 0;
-
-      virtual std::unique_ptr<EC_Scalar_Data> negate() const = 0;
-
-      virtual std::unique_ptr<EC_Scalar_Data> invert() const = 0;
-
-      virtual std::unique_ptr<EC_Scalar_Data> invert_vartime() const = 0;
-
-      virtual std::unique_ptr<EC_Scalar_Data> add(const EC_Scalar_Data& other) const = 0;
-
-      virtual std::unique_ptr<EC_Scalar_Data> sub(const EC_Scalar_Data& other) const = 0;
-
-      virtual std::unique_ptr<EC_Scalar_Data> mul(const EC_Scalar_Data& other) const = 0;
-
-      virtual void serialize_to(std::span<uint8_t> bytes) const = 0;
-
-      virtual void _const_time_poison() const = 0;
-
-      virtual void _const_time_unpoison() const = 0;
+   private:
+      std::shared_ptr<const EC_Group_Data> m_group;
+      PCurve::PrimeOrderCurve::Scalar m_v;
 };
 
-class EC_AffinePoint_Data /* NOLINT(*-special-member-functions) */ {
+/**
+* The internal representation of an EC_AffinePoint
+*/
+class EC_AffinePoint_Data final {
    public:
-      virtual ~EC_AffinePoint_Data() = default;
+      EC_AffinePoint_Data(std::shared_ptr<const EC_Group_Data> group, PCurve::PrimeOrderCurve::AffinePoint pt);
 
-      virtual const std::shared_ptr<const EC_Group_Data>& group() const = 0;
+      const std::shared_ptr<const EC_Group_Data>& group() const { return m_group; }
 
-      virtual std::unique_ptr<EC_AffinePoint_Data> clone() const = 0;
+      const PCurve::PrimeOrderCurve::AffinePoint& value() const { return m_pt; }
 
-      // Return size of a field element
-      virtual size_t field_element_bytes() const = 0;
+      bool is_identity() const { return m_xy.empty(); }
 
-      // Return if this is the identity element
-      virtual bool is_identity() const = 0;
+      /// The SEC1 uncompressed encoding; empty if the point is the identity
+      std::span<const uint8_t> uncompressed() const { return m_xy; }
 
-      // Writes 1 field element worth of data to bytes
-      virtual void serialize_x_to(std::span<uint8_t> bytes) const = 0;
+      void _const_time_poison() const { CT::poison_all(m_pt, m_xy); }
 
-      // Writes 1 field element worth of data to bytes
-      virtual void serialize_y_to(std::span<uint8_t> bytes) const = 0;
+      void _const_time_unpoison() const { CT::unpoison_all(m_pt, m_xy); }
 
-      // Writes 2 field elements worth of data to bytes
-      virtual void serialize_xy_to(std::span<uint8_t> bytes) const = 0;
-
-      // Writes 1 byte + 1 field element worth of data to bytes
-      virtual void serialize_compressed_to(std::span<uint8_t> bytes) const = 0;
-
-      // Writes 1 byte + 2 field elements worth of data to bytes
-      virtual void serialize_uncompressed_to(std::span<uint8_t> bytes) const = 0;
-
-      virtual std::unique_ptr<EC_AffinePoint_Data> mul(const EC_Scalar_Data& scalar,
-                                                       RandomNumberGenerator& rng) const = 0;
-
-      virtual secure_vector<uint8_t> mul_x_only(const EC_Scalar_Data& scalar, RandomNumberGenerator& rng) const = 0;
-
-      virtual void _const_time_poison() const = 0;
-
-      virtual void _const_time_unpoison() const = 0;
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      virtual EC_Point to_legacy_point() const = 0;
-#endif
+   private:
+      std::shared_ptr<const EC_Group_Data> m_group;
+      PCurve::PrimeOrderCurve::AffinePoint m_pt;
+      secure_vector<uint8_t> m_xy;
 };
 
-class EC_Mul2Table_Data /* NOLINT(*-special-member-functions) */ {
+/**
+* The internal representation of an EC_Group::Mul2Table
+*/
+class EC_Mul2Table_Data final {
    public:
-      virtual ~EC_Mul2Table_Data() = default;
+      EC_Mul2Table_Data(std::shared_ptr<const EC_Group_Data> group,
+                        std::unique_ptr<const PCurve::PrimeOrderCurve::PrecomputedMul2Table> tbl) :
+            m_group(std::move(group)), m_tbl(std::move(tbl)) {}
 
-      // Returns nullptr if g*x + h*y was point at infinity
-      virtual std::unique_ptr<EC_AffinePoint_Data> mul2_vartime(const EC_Scalar_Data& x,
-                                                                const EC_Scalar_Data& y) const = 0;
+      const std::shared_ptr<const EC_Group_Data>& group() const { return m_group; }
 
-      // Check if v == (g*x + h*y).x % n
-      //
-      // Returns false if g*x + h*y was point at infinity
-      virtual bool mul2_vartime_x_mod_order_eq(const EC_Scalar_Data& v,
-                                               const EC_Scalar_Data& x,
-                                               const EC_Scalar_Data& y) const = 0;
+      const PCurve::PrimeOrderCurve::PrecomputedMul2Table& table() const { return *m_tbl; }
+
+   private:
+      std::shared_ptr<const EC_Group_Data> m_group;
+      std::unique_ptr<const PCurve::PrimeOrderCurve::PrecomputedMul2Table> m_tbl;
 };
 
-class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
+class EC_Group_Data final {
    public:
       static std::shared_ptr<EC_Group_Data> create(const BigInt& p,
                                                    const BigInt& a,
@@ -185,20 +139,6 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
 
       const BigInt& cofactor() const { return m_cofactor; }
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      const CurveGFp& curve() const { return m_curve; }
-
-      const EC_Point& base_point() const { return m_base_point; }
-
-      const Montgomery_Params& monty() const { return m_monty; }
-
-      const BigInt& monty_a() const { return m_a_r; }
-
-      const BigInt& monty_b() const { return m_b_r; }
-
-      const Barrett_Reduction& mod_order() const { return m_mod_order; }
-#endif
-
       bool order_is_less_than_p() const { return m_order_is_less_than_p; }
 
       bool has_cofactor() const { return m_has_cofactor; }
@@ -225,87 +165,11 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
 
       EC_Group_Engine engine() const { return m_engine; }
 
-      /// Scalar from bytes
-      ///
-      /// This returns a value only if the bytes represent (in big-endian encoding) an integer
-      /// that is less than n, where n is the group order. It requires that the fixed length
-      /// encoding (with zero prefix) be used. It also rejects inputs that encode zero.
-      /// Thus the accepted range is [1,n)
-      ///
-      /// If the input is rejected then nullptr is returned
-      std::unique_ptr<EC_Scalar_Data> scalar_deserialize(std::span<const uint8_t> bytes) const;
-
-      /// Scalar from bytes with ECDSA style truncation
-      ///
-      /// This should always succeed
-      std::unique_ptr<EC_Scalar_Data> scalar_from_bytes_with_trunc(std::span<const uint8_t> bytes) const;
-
-      /// Scalar from bytes with modular reduction
-      ///
-      /// This returns a value only if bytes represents (in big-endian encoding) an integer
-      /// that is at most the square of the scalar group size. Otherwise it returns nullptr.
-      std::unique_ptr<EC_Scalar_Data> scalar_from_bytes_mod_order(std::span<const uint8_t> bytes) const;
-
-      /// Scalar from BigInt
-      ///
-      /// This returns a value only if bn is in [1,n) where n is the group order.
-      /// Otherwise it returns nullptr
-      std::unique_ptr<EC_Scalar_Data> scalar_from_bigint(const BigInt& bn) const;
-
-      /// Return a random scalar
-      ///
-      /// This will be in the range [1,n) where n is the group order
-      std::unique_ptr<EC_Scalar_Data> scalar_random(RandomNumberGenerator& rng) const;
-
-      std::unique_ptr<EC_Scalar_Data> scalar_one() const;
-
-      std::unique_ptr<EC_Scalar_Data> gk_x_mod_order(const EC_Scalar_Data& scalar, RandomNumberGenerator& rng) const;
-
-      /// Deserialize a point in the SEC1 uncompressed format
-      ///
-      /// Returns nullptr if the encoding was not in the uncompressed format,
-      /// or if the point is not on the curve
-      std::unique_ptr<EC_AffinePoint_Data> point_deserialize_uncompressed(std::span<const uint8_t> bytes) const;
-
-      /// Deserialize a point in the SEC1 compressed format
-      ///
-      /// Returns nullptr if the encoding was not in the compressed format,
-      /// or if the point is not on the curve
-      std::unique_ptr<EC_AffinePoint_Data> point_deserialize_compressed(std::span<const uint8_t> bytes) const;
-
-      /// Return the identity element (aka the point at infinity)
-      std::unique_ptr<EC_AffinePoint_Data> point_identity() const;
-
-      /// Return true if point_hash_to_curve_ro/point_hash_to_curve_nu will
+      /// Return true if EC_AffinePoint::hash_to_curve_ro/hash_to_curve_nu will
       /// work for this group when using the specified hash function
       bool hash_to_curve_supported(std::string_view hash_fn) const;
 
-      std::unique_ptr<EC_AffinePoint_Data> point_hash_to_curve_ro(std::string_view hash_fn,
-                                                                  std::span<const uint8_t> input,
-                                                                  std::span<const uint8_t> domain_sep) const;
-
-      std::unique_ptr<EC_AffinePoint_Data> point_hash_to_curve_nu(std::string_view hash_fn,
-                                                                  std::span<const uint8_t> input,
-                                                                  std::span<const uint8_t> domain_sep) const;
-
-      std::unique_ptr<EC_AffinePoint_Data> point_g_mul(const EC_Scalar_Data& scalar, RandomNumberGenerator& rng) const;
-
-      std::unique_ptr<EC_AffinePoint_Data> mul_px_qy(const EC_AffinePoint_Data& p,
-                                                     const EC_Scalar_Data& x,
-                                                     const EC_AffinePoint_Data& q,
-                                                     const EC_Scalar_Data& y,
-                                                     RandomNumberGenerator& rng) const;
-
-      std::unique_ptr<EC_AffinePoint_Data> affine_add(const EC_AffinePoint_Data& p, const EC_AffinePoint_Data& q) const;
-
-      std::unique_ptr<EC_AffinePoint_Data> affine_neg(const EC_AffinePoint_Data& p) const;
-
-      std::unique_ptr<EC_Mul2Table_Data> make_mul2_table(const EC_AffinePoint_Data& pt) const;
-
-      const PCurve::PrimeOrderCurve& pcurve() const {
-         BOTAN_ASSERT_NONNULL(m_pcurve);
-         return *m_pcurve;
-      }
+      const PCurve::PrimeOrderCurve& pcurve() const { return *m_pcurve; }
 
       /**
       * Note this constructor should *only* be called by EC_Group_Data::create.
@@ -323,13 +187,8 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
                     EC_Group_Source source);
 
    private:
-      // Possibly nullptr (if pcurves not available or not a standard curve)
+      // Never null; the constructor throws if no implementation is available
       std::shared_ptr<const PCurve::PrimeOrderCurve> m_pcurve;
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      // Set only if m_pcurve is nullptr
-      std::unique_ptr<EC_Point_Base_Point_Precompute> m_base_mult;
-#endif
 
       BigInt m_p;
       BigInt m_a;
@@ -338,20 +197,6 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       BigInt m_g_y;
       BigInt m_order;
       BigInt m_cofactor;
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      CurveGFp m_curve;
-      EC_Point m_base_point;
-
-      Barrett_Reduction m_mod_field;
-      Barrett_Reduction m_mod_order;
-
-      // Montgomery parameters (only used for legacy EC_Point)
-      Montgomery_Params m_monty;
-
-      BigInt m_a_r;  // (a*r) % p
-      BigInt m_b_r;  // (b*r) % p
-#endif
 
       OID m_oid;
       std::vector<uint8_t> m_der_named_curve;

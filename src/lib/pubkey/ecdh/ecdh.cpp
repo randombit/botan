@@ -41,12 +41,8 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override {
          const auto input_point = [&] {
             if(m_group.has_cofactor()) {
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-               return EC_AffinePoint(m_group, m_group.get_cofactor() * m_group.OS2ECP(w, w_len));
-#else
                throw Not_Implemented(
                   "Support for DH with cofactor adjustment not available in this build configuration");
-#endif
             } else {
                if(auto point = EC_AffinePoint::deserialize(m_group, {w, w_len})) {
                   return *point;

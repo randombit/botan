@@ -20,10 +20,6 @@
    #include <botan/internal/pk_options_impl.h>
    #include <botan/internal/scoped_cleanup.h>
 
-   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      #include <botan/ec_point.h>
-   #endif
-
 namespace Botan::PKCS11 {
 
 ECDH_PublicKey PKCS11_ECDH_PublicKey::export_key() const {
@@ -73,13 +69,7 @@ class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement {
          * different value than ECDH in software does.
          */
          if(m_key.domain().has_cofactor()) {
-   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
-            if(!(m_key.domain().get_order() * peer_point->to_legacy_point()).is_zero()) {
-               throw Decoding_Error("ECDH - Invalid elliptic curve point: not in the prime order subgroup");
-            }
-   #else
             throw Not_Implemented("PKCS#11 ECDH with a cofactor is not available in this build configuration");
-   #endif
          }
 
          std::vector<uint8_t> der_encoded_other_key;

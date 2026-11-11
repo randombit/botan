@@ -24,15 +24,6 @@ class BOTAN_PUBLIC_API(2, 0) ECKCDSA_PublicKey : public virtual EC_PublicKey {
       */
       ECKCDSA_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key) : EC_PublicKey(group, public_key) {}
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      /**
-      * Construct a public key from a given public point.
-      * @param group the domain parameters associated with this key
-      * @param public_point the public point defining this key
-      */
-      ECKCDSA_PublicKey(const EC_Group& group, const EC_Point& public_point) : EC_PublicKey(group, public_point) {}
-#endif
-
       /**
       * Load a public key.
       * @param alg_id the X.509 algorithm identifier

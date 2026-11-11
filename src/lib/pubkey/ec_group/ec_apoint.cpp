@@ -8,22 +8,37 @@
 
 #include <botan/ec_group.h>
 #include <botan/ec_scalar.h>
+#include <botan/mem_ops.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ec_inner_data.h>
 #include <botan/internal/mem_utils.h>
 
 namespace Botan {
 
+namespace {
+
+EC_AffinePoint make_point(const std::shared_ptr<const EC_Group_Data>& group, PCurve::PrimeOrderCurve::AffinePoint pt) {
+   return EC_AffinePoint::_from_inner(std::make_unique<EC_AffinePoint_Data>(group, std::move(pt)));
+}
+
+}  // namespace
+
 EC_AffinePoint::EC_AffinePoint(std::unique_ptr<EC_AffinePoint_Data> point) : m_point(std::move(point)) {
    BOTAN_ASSERT_NONNULL(m_point);
 }
 
-EC_AffinePoint::EC_AffinePoint(const EC_AffinePoint& other) : m_point(other.inner().clone()) {}
+EC_AffinePoint::EC_AffinePoint(const EC_AffinePoint& other) :
+      m_point(std::make_unique<EC_AffinePoint_Data>(other.inner())) {}
 
 EC_AffinePoint::EC_AffinePoint(EC_AffinePoint&& other) noexcept : m_point(std::move(other.m_point)) {}
 
 EC_AffinePoint& EC_AffinePoint::operator=(const EC_AffinePoint& other) {
    if(this != &other) {
-      m_point = other.inner().clone();
+      if(m_point == nullptr) {
+         m_point = std::make_unique<EC_AffinePoint_Data>(other.inner());
+      } else {
+         *m_point = other.inner();
+      }
    }
    return (*this);
 }
@@ -40,17 +55,6 @@ EC_AffinePoint::EC_AffinePoint(const EC_Group& group, std::span<const uint8_t> b
       throw Decoding_Error("Failed to deserialize elliptic curve point");
    }
 }
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-
-EC_Point EC_AffinePoint::to_legacy_point() const {
-   return m_point->to_legacy_point();
-}
-
-EC_AffinePoint::EC_AffinePoint(const EC_Group& group, const EC_Point& pt) :
-      EC_AffinePoint(group, pt.encode(EC_Point_Format::Uncompressed)) {}
-
-#endif
 
 bool EC_AffinePoint::operator==(const EC_AffinePoint& other) const {
    if(this == &other) {
@@ -70,24 +74,21 @@ bool EC_AffinePoint::operator==(const EC_AffinePoint& other) const {
       return (a_is_id == b_is_id);
    }
 
-   auto a_xy = this->serialize_uncompressed();
-   auto b_xy = other.serialize_uncompressed();
+   const auto a_xy = this->inner().uncompressed();
+   const auto b_xy = other.inner().uncompressed();
    BOTAN_ASSERT_NOMSG(a_xy.size() == b_xy.size());
 
    return CT::is_equal(a_xy.data(), b_xy.data(), a_xy.size()).as_bool();
 }
 
 EC_AffinePoint EC_AffinePoint::identity(const EC_Group& group) {
-   return EC_AffinePoint(group._data()->point_identity());
+   const auto& data = group._data();
+   return make_point(data, data->pcurve().point_identity());
 }
 
 EC_AffinePoint EC_AffinePoint::generator(const EC_Group& group) {
-   // TODO it would be nice to improve this (pcurves supports returning generator directly)
-   if(auto g = EC_AffinePoint::from_bigint_xy(group, group.get_g_x(), group.get_g_y())) {
-      return *g;
-   } else {
-      throw Internal_Error("EC_AffinePoint::generator curve rejected generator");
-   }
+   const auto& data = group._data();
+   return make_point(data, data->pcurve().generator());
 }
 
 std::optional<EC_AffinePoint> EC_AffinePoint::from_bigint_xy(const EC_Group& group, const BigInt& x, const BigInt& y) {
@@ -108,10 +109,10 @@ std::optional<EC_AffinePoint> EC_AffinePoint::from_bigint_xy(const EC_Group& gro
 }
 
 std::pair<BigInt, BigInt> EC_AffinePoint::to_bigint_xy() const {
-   std::vector<uint8_t> x_bytes(m_point->field_element_bytes());
-   std::vector<uint8_t> y_bytes(m_point->field_element_bytes());
-   m_point->serialize_x_to(x_bytes);
-   m_point->serialize_y_to(y_bytes);
+   std::vector<uint8_t> x_bytes(this->field_element_bytes());
+   std::vector<uint8_t> y_bytes(this->field_element_bytes());
+   this->serialize_x_to(x_bytes);
+   this->serialize_y_to(y_bytes);
    return std::make_pair(BigInt::from_bytes(x_bytes), BigInt::from_bytes(y_bytes));
 }
 
@@ -120,7 +121,7 @@ EC_Group EC_AffinePoint::group() const {
 }
 
 size_t EC_AffinePoint::field_element_bytes() const {
-   return inner().field_element_bytes();
+   return inner().group()->pcurve().field_element_bytes();
 }
 
 bool EC_AffinePoint::is_identity() const {
@@ -131,8 +132,15 @@ EC_AffinePoint EC_AffinePoint::hash_to_curve_ro(const EC_Group& group,
                                                 std::string_view hash_fn,
                                                 std::span<const uint8_t> input,
                                                 std::span<const uint8_t> domain_sep) {
-   auto pt = group._data()->point_hash_to_curve_ro(hash_fn, input, domain_sep);
-   return EC_AffinePoint(std::move(pt));
+   const auto& data = group._data();
+   const auto& pcurve = data->pcurve();
+
+   if(!pcurve.supports_hash_to_curve()) {
+      throw Not_Implemented("Hash to curve is not implemented for this curve");
+   }
+
+   const auto pt = pcurve.hash_to_curve_ro(h2c_expand_message(hash_fn, data->order_bits(), input, domain_sep));
+   return make_point(data, pcurve.point_to_affine(pt));
 }
 
 EC_AffinePoint EC_AffinePoint::hash_to_curve_ro(const EC_Group& group,
@@ -146,8 +154,15 @@ EC_AffinePoint EC_AffinePoint::hash_to_curve_nu(const EC_Group& group,
                                                 std::string_view hash_fn,
                                                 std::span<const uint8_t> input,
                                                 std::span<const uint8_t> domain_sep) {
-   auto pt = group._data()->point_hash_to_curve_nu(hash_fn, input, domain_sep);
-   return EC_AffinePoint(std::move(pt));
+   const auto& data = group._data();
+   const auto& pcurve = data->pcurve();
+
+   if(!pcurve.supports_hash_to_curve()) {
+      throw Not_Implemented("Hash to curve is not implemented for this curve");
+   }
+
+   auto pt = pcurve.hash_to_curve_nu(h2c_expand_message(hash_fn, data->order_bits(), input, domain_sep));
+   return make_point(data, std::move(pt));
 }
 
 EC_AffinePoint EC_AffinePoint::hash_to_curve_nu(const EC_Group& group,
@@ -201,8 +216,14 @@ std::optional<EC_AffinePoint> EC_AffinePoint::deserialize(const EC_Group& group,
 
 std::optional<EC_AffinePoint> EC_AffinePoint::deserialize_compressed(const EC_Group& group,
                                                                      std::span<const uint8_t> bytes) {
-   if(auto pt = group._data()->point_deserialize_compressed(bytes)) {
-      return EC_AffinePoint(std::move(pt));
+   const auto& data = group._data();
+
+   if(bytes.size() != 1 + data->p_bytes() || (bytes[0] != 0x02 && bytes[0] != 0x03)) {
+      return {};
+   }
+
+   if(auto pt = data->pcurve().deserialize_point_compressed(bytes)) {
+      return make_point(data, std::move(*pt));
    } else {
       return {};
    }
@@ -210,24 +231,36 @@ std::optional<EC_AffinePoint> EC_AffinePoint::deserialize_compressed(const EC_Gr
 
 std::optional<EC_AffinePoint> EC_AffinePoint::deserialize_uncompressed(const EC_Group& group,
                                                                        std::span<const uint8_t> bytes) {
-   if(auto pt = group._data()->point_deserialize_uncompressed(bytes)) {
-      return EC_AffinePoint(std::move(pt));
+   const auto& data = group._data();
+
+   if(bytes.size() != 1 + 2 * data->p_bytes() || bytes[0] != 0x04) {
+      return {};
+   }
+
+   if(auto pt = data->pcurve().deserialize_point_uncompressed(bytes)) {
+      return make_point(data, std::move(*pt));
    } else {
       return {};
    }
 }
 
 EC_AffinePoint EC_AffinePoint::g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng) {
-   auto pt = scalar._inner().group()->point_g_mul(scalar.inner(), rng);
-   return EC_AffinePoint(std::move(pt));
+   const auto& group = scalar._inner().group();
+   const auto& pcurve = group->pcurve();
+   return make_point(group, pcurve.point_to_affine(pcurve.mul_by_g(scalar._inner().value(), rng)));
 }
 
 EC_AffinePoint EC_AffinePoint::mul(const EC_Scalar& scalar, RandomNumberGenerator& rng) const {
-   return EC_AffinePoint(inner().mul(scalar._inner(), rng));
+   const auto& group = inner().group();
+   BOTAN_ARG_CHECK(scalar._inner().group() == group, "Curve mismatch");
+   const auto& pcurve = group->pcurve();
+   return make_point(group, pcurve.point_to_affine(pcurve.mul(inner().value(), scalar._inner().value(), rng)));
 }
 
 secure_vector<uint8_t> EC_AffinePoint::mul_x_only(const EC_Scalar& scalar, RandomNumberGenerator& rng) const {
-   return inner().mul_x_only(scalar._inner(), rng);
+   const auto& group = inner().group();
+   BOTAN_ARG_CHECK(scalar._inner().group() == group, "Curve mismatch");
+   return group->pcurve().mul_x_only(inner().value(), scalar._inner().value(), rng);
 }
 
 std::optional<EC_AffinePoint> EC_AffinePoint::mul_px_qy(const EC_AffinePoint& p,
@@ -235,22 +268,25 @@ std::optional<EC_AffinePoint> EC_AffinePoint::mul_px_qy(const EC_AffinePoint& p,
                                                         const EC_AffinePoint& q,
                                                         const EC_Scalar& y,
                                                         RandomNumberGenerator& rng) {
-   auto pt = p._inner().group()->mul_px_qy(p._inner(), x._inner(), q._inner(), y._inner(), rng);
-   if(pt) {
-      return EC_AffinePoint(std::move(pt));
+   const auto& group = p._group();
+   const auto& pcurve = group->pcurve();
+
+   if(auto pt = pcurve.mul_px_qy(p.inner().value(), x._inner().value(), q.inner().value(), y._inner().value(), rng)) {
+      return make_point(group, pcurve.point_to_affine(*pt));
    } else {
       return {};
    }
 }
 
 EC_AffinePoint EC_AffinePoint::add(const EC_AffinePoint& q) const {
-   auto pt = _inner().group()->affine_add(_inner(), q._inner());
-   return EC_AffinePoint(std::move(pt));
+   const auto& group = inner().group();
+   const auto& pcurve = group->pcurve();
+   return make_point(group, pcurve.point_to_affine(pcurve.point_add(inner().value(), q.inner().value())));
 }
 
 EC_AffinePoint EC_AffinePoint::negate() const {
-   auto pt = this->_inner().group()->affine_neg(this->_inner());
-   return EC_AffinePoint(std::move(pt));
+   const auto& group = inner().group();
+   return make_point(group, group->pcurve().point_negate(inner().value()));
 }
 
 std::vector<uint8_t> EC_AffinePoint::serialize(EC_Point_Format format) const {
@@ -270,27 +306,41 @@ std::vector<uint8_t> EC_AffinePoint::serialize(EC_Point_Format format) const {
 
 void EC_AffinePoint::serialize_x_to(std::span<uint8_t> bytes) const {
    BOTAN_STATE_CHECK(!this->is_identity());
-   m_point->serialize_x_to(bytes);
+   const size_t fe_bytes = this->field_element_bytes();
+   BOTAN_ARG_CHECK(bytes.size() == fe_bytes, "Invalid output size");
+   copy_mem(bytes, inner().uncompressed().subspan(1, fe_bytes));
 }
 
 void EC_AffinePoint::serialize_y_to(std::span<uint8_t> bytes) const {
    BOTAN_STATE_CHECK(!this->is_identity());
-   m_point->serialize_y_to(bytes);
+   const size_t fe_bytes = this->field_element_bytes();
+   BOTAN_ARG_CHECK(bytes.size() == fe_bytes, "Invalid output size");
+   copy_mem(bytes, inner().uncompressed().subspan(1 + fe_bytes, fe_bytes));
 }
 
 void EC_AffinePoint::serialize_xy_to(std::span<uint8_t> bytes) const {
    BOTAN_STATE_CHECK(!this->is_identity());
-   m_point->serialize_xy_to(bytes);
+   const size_t fe_bytes = this->field_element_bytes();
+   BOTAN_ARG_CHECK(bytes.size() == 2 * fe_bytes, "Invalid output size");
+   copy_mem(bytes, inner().uncompressed().last(2 * fe_bytes));
 }
 
 void EC_AffinePoint::serialize_compressed_to(std::span<uint8_t> bytes) const {
    BOTAN_STATE_CHECK(!this->is_identity());
-   m_point->serialize_compressed_to(bytes);
+   const size_t fe_bytes = this->field_element_bytes();
+   BOTAN_ARG_CHECK(bytes.size() == 1 + fe_bytes, "Invalid output size");
+   const bool y_is_odd = (inner().uncompressed().back() & 0x01) == 0x01;
+
+   BufferStuffer stuffer(bytes);
+   stuffer.append(y_is_odd ? 0x03 : 0x02);
+   this->serialize_x_to(stuffer.next(fe_bytes));
 }
 
 void EC_AffinePoint::serialize_uncompressed_to(std::span<uint8_t> bytes) const {
    BOTAN_STATE_CHECK(!this->is_identity());
-   m_point->serialize_uncompressed_to(bytes);
+   const size_t fe_bytes = this->field_element_bytes();
+   BOTAN_ARG_CHECK(bytes.size() == 1 + 2 * fe_bytes, "Invalid output size");
+   copy_mem(bytes, inner().uncompressed());
 }
 
 EC_AffinePoint EC_AffinePoint::_from_inner(std::unique_ptr<EC_AffinePoint_Data> inner) {

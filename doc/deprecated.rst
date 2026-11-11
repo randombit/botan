@@ -85,19 +85,11 @@ elliptic curve points.
 - Botan currently contains support for a number of relatively weak or little
   used elliptic curves. These are deprecated.
 
-  The curves "secp160k1", "secp160r1", "secp160r2", "brainpool160r1" and
-  "secp224k1" will be removed in Botan4, and it *will not be possible* to add
-  support for them as an application specified curve. If your application makes
-  use of any of these curves please open an issue asap so we can understand your
-  use case.
-
-  Other curves including "secp192k1", "brainpool192r1", "brainpool224r1",
+  The curves "secp192k1", "brainpool192r1", "brainpool224r1",
   "brainpool320r1", "x962_p192v2", "x962_p192v3", "x962_p239v1", "x962_p239v2",
-  "x962_p239v3", "gost_256A", "gost_512A" are deprecated, and may also be
+  "x962_p239v3", "gost_256A", "gost_512A" are deprecated, and may be
   removed from Botan4. However it will be possible to add support for any
   curves from this list as an application specified curve.
-
-- The EC_Point type is deprecated and will be removed. Use EC_AffinePoint.
 
 - Support for explicit ECC curve parameters and ImplicitCA encoded parameters in
   ``EC_Group`` and all users (including X.509 certificates and PKCS#8 private keys).

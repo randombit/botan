@@ -16,7 +16,6 @@ pem
 </requires>
 
 <header:internal>
-ec_inner_pc.h
 ec_inner_data.h
 </header:internal>
 

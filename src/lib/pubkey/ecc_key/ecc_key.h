@@ -41,16 +41,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
       EC_PublicKey& operator=(EC_PublicKey&& other) = delete;
       ~EC_PublicKey() override = default;
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      /**
-      * Get the public point of this key.
-      * @throw Invalid_State is thrown if the
-      * domain parameters of this point are not set
-      * @result the public point of this key
-      */
-      BOTAN_DEPRECATED("Avoid accessing the point directly") const EC_Point& public_point() const;
-#endif
-
       AlgorithmIdentifier algorithm_identifier() const override;
 
       std::vector<uint8_t> raw_public_key_bits() const override;
@@ -115,16 +105,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
       const EC_AffinePoint& _public_ec_point() const { return public_ec_point(); }
 
    protected:
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      /**
-      * Load a public key from the point.
-      *
-      * @param group EC domain parameters
-      * @param pub_point public point on the curve
-      */
-      EC_PublicKey(const EC_Group& group, const EC_Point& pub_point);
-#endif
-
       /**
       * Load a public key from the point.
       *

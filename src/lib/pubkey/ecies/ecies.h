@@ -22,10 +22,6 @@
 #include <string_view>
 #include <vector>
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-   #include <botan/ec_point.h>
-#endif
-
 namespace Botan {
 
 class RandomNumberGenerator;
@@ -251,16 +247,6 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_KA_Operation {
                          bool for_encryption,
                          RandomNumberGenerator& rng);
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      /**
-      * Performs a key agreement with the provided keys and derives the secret from the result
-      * @param eph_public_key_bin the encoded (ephemeral) public key which belongs to the used (ephemeral) private key
-      * @param other_public_key_point public key point of the other party
-      */
-      SymmetricKey derive_secret(const std::vector<uint8_t>& eph_public_key_bin,
-                                 const EC_Point& other_public_key_point) const;
-#endif
-
       /**
       * Performs a key agreement with the provided keys and derives the secret from the result
       * @param eph_public_key_bin the encoded (ephemeral) public key which belongs to the used (ephemeral) private key
@@ -301,13 +287,6 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_Encryptor final : public PK_Encryptor {
       * @param ecies_params settings for ecies
       */
       ECIES_Encryptor(RandomNumberGenerator& rng, const ECIES_System_Params& ecies_params);
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      /// Set the public key of the other party
-      void set_other_key(const EC_Point& public_point) {
-         m_other_point = EC_AffinePoint(m_params.group(), public_point);
-      }
-#endif
 
       /// Set the public key of the other party
       void set_other_key(const EC_AffinePoint& pt) { m_other_point = pt; }
