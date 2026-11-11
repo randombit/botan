@@ -47,7 +47,7 @@ Session_Keys::Session_Keys(const Handshake_State* state,
                             ? "extended master secret"sv
                             : "master secret"sv;
       const auto salt = extended_master_secret  //
-                           ? unlock(state->hash().final(suite.prf_algo()))
+                           ? state->hash().final(suite.prf_algo())
                            : concat(state->client_hello().random(), state->server_hello().random());
 
       m_master_sec = prf->derive_key(48, pre_master_secret, salt, as_span_of_bytes(label));
