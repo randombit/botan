@@ -34,13 +34,22 @@ void check_dsa_group(const DL_Group& group) {
    const size_t q_bits = group.q_bits();
    const size_t p_bits = group.p_bits();
 
+   // This accepts a superset of the valid p,q parameters that were ever
+   // actually valid for DSA. Somewhat by accident, botan_privkey_create_dsa
+   // skips using the DSA parameter generator (which has always enforced that p
+   // and q are sized appropriately for FIPS 186) and instead allows generating
+   // a wider range of key sizes.
+   //
+   // The size checks below are effectively a union of what is (or was) allowed
+   // by FIPS 186, plus what botan_privkey_create_dsa will generate.
+   //
    // TODO(Botan4) restrict to exactly the parameter sizes from FIPS 186-4
    // (1024,160), (2048,224), (2048,256), or (3072,256)
 
-   if(q_bits < 160 || q_bits > 256) {
+   if(q_bits < 160 || q_bits > 256 || (q_bits % 8) != 0) {
       throw Decoding_Error("Invalid DSA q parameter size");
    }
-   if(p_bits < 512 || p_bits > 3072) {
+   if(p_bits < 512 || p_bits > 3072 || (p_bits % 64) != 0) {
       throw Decoding_Error("Invalid DSA p parameter size");
    }
 }
