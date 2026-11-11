@@ -55,32 +55,13 @@ fields are supported.
           * No cofactor is allowed
           * An object identifier must be specified
 
-      .. cpp:function:: EC_Group(const BigInt& p, \
-               const BigInt& a, \
-               const BigInt& b, \
-               const BigInt& base_x, \
-               const BigInt& base_y, \
-               const BigInt& order, \
-               const BigInt& cofactor, \
-               const OID& oid = OID())
-
-          This is a deprecated alternative interface for creating application
-          specific elliptic curves.
-
-          This does not impose the same restrictions regarding use of
-          arbitrary sized groups, use of a cofactor, etc, and the
-          object identifier is optional.
-
-          .. warning::
-
-             If you are using this constructor, and cannot use the
-             non-deprecated constructor due to the restrictions it places on the
-             curve parameters, be aware that this constructor will be dropped
-             in Botan 4. Please open an issue on Github describing your usecase.
-
       .. cpp:function:: EC_Group(std::span<const uint8_t> ber_encoding)
 
          Initialize an ``EC_Group`` by decoding a DER encoded parameter block.
+
+         If the encoding uses explicit curve parameters, they must match either
+         a builtin group or a group previously registered by the application;
+         otherwise decoding fails.
 
       .. cpp:function:: std::vector<uint8_t> DER_encode() const
 
@@ -123,21 +104,12 @@ fields are supported.
 
       .. cpp:function:: const BigInt& get_cofactor() const
 
-         Return the cofactor of the curve. In most cases this will be 1.
-
-         .. warning::
-
-            In Botan4 all support for elliptic curves group with a
-            cofactor > 1 will be removed.
+         Return the cofactor of the curve. This is always 1, since only prime
+         order groups are supported.
 
       .. cpp:function:: const OID& get_curve_oid() const
 
-         Return the OID used to identify this curve. May be empty.
-
-         .. note::
-
-            Botan4 will remove the ability to create elliptic curves without an
-            object identifier.
+         Return the OID used to identify this curve.
 
       .. cpp:function:: bool verify_group(RandomNumberGenerator& rng, bool strong = false) const
 

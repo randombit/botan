@@ -79,6 +79,18 @@ Test::Result test_decode_ver_link_SHA1() {
    Test::Result result("Check ECDSA signature SHA-1");
 
    if(Botan::EC_Group::supports_application_specific_group()) {
+      // These certificates use explicit parameters for a non-standard curve,
+      // which can only be decoded after the curve has been registered
+      const Botan::OID curve_oid("1.3.6.1.4.1.25258.100.63");
+      Botan::EC_Group::register_custom_group(
+         curve_oid,
+         Botan::BigInt("0xD7C134AA264366862A18302575D1D787B09F075797DA89F57EC8C0FF"),
+         Botan::BigInt("0x0A2233AB4CAA850891B5CD000A537B4163F6E33386EA714571ACDAD0"),
+         Botan::BigInt("0x4C656229EC4916CB18A8519722864AAF005CE53CA9A5F54FB2A1148B"),
+         Botan::BigInt("0x590131AD694E4CB1DDE553FEBAEEEF4896B2C003535857907D68778A"),
+         Botan::BigInt("0x9C2F5EBAE83EDF237D1DC4FDC575CB048A2EAEA66B7732A68AC7222E"),
+         Botan::BigInt("0xD7C134AA264366862A18302575D256A0D0B78486F1C27E6A959507CD"));
+
       try {
          const Botan::X509_Certificate root_cert(Test::data_file("x509/ecc/root_SHA1.163.crt"));
          const Botan::X509_Certificate link_cert(Test::data_file("x509/ecc/link_SHA1.166.crt"));
@@ -90,12 +102,14 @@ Test::Result test_decode_ver_link_SHA1() {
          if(!sha1) {
             result.test_is_true("verification of self-signed signature failed due to missing SHA-1",
                                 !link_cert.check_signature(*pubkey));
-            return result;
+         } else {
+            result.test_is_true("verified self-signed signature", link_cert.check_signature(*pubkey));
          }
-         result.test_is_true("verified self-signed signature", link_cert.check_signature(*pubkey));
       } catch(Botan::Exception& e) {
          result.test_failure(e.what());
       }
+
+      Botan::EC_Group::unregister(curve_oid);
    }
 
    return result;

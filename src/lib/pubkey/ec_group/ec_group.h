@@ -65,45 +65,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       *
       * This is used for example to create custom (application-specific) curves.
       *
-      * Some build configurations do not support application specific curves, in
-      * which case this constructor will throw an exception. You can check for
-      * this situation beforehand using the function
-      * EC_Group::supports_application_specific_group()
-      *
-      * @param p the elliptic curve p
-      * @param a the elliptic curve a param
-      * @param b the elliptic curve b param
-      * @param base_x the x coordinate of the base point
-      * @param base_y the y coordinate of the base point
-      * @param order the order of the base point
-      * @param cofactor the cofactor
-      * @param oid an optional OID used to identify this curve
-      *
-      * @warning This constructor is deprecated and will be removed in Botan 4
-      *
-      * @warning support for cofactors > 1 is deprecated and will be removed
-      *
-      * @warning support for prime fields > 521 bits is deprecated and
-      * will be removed.
-      *
-      * @warning Support for explicitly encoded curve parameters is deprecated.
-      * An OID must be assigned.
-      */
-      BOTAN_DEPRECATED("Use EC_Group::register_custom_group")
-      EC_Group(const BigInt& p,
-               const BigInt& a,
-               const BigInt& b,
-               const BigInt& base_x,
-               const BigInt& base_y,
-               const BigInt& order,
-               const BigInt& cofactor,
-               const OID& oid = OID());
-
-      /**
-      * Construct elliptic curve from the specified parameters
-      *
-      * This is used for example to create custom (application-specific) curves.
-      *
       * Calling this function registers these parameters within the persistent state
       * of the library; for example once this call completes, an ECDSA key
       * specifying its namedCurve matching the provided OID can be decoded, and
@@ -168,8 +129,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * this situation beforehand using the function
       * EC_Group::supports_application_specific_group()
       *
-      * Unlike the deprecated constructor, this function imposes additional
-      * restrictions on the parameters, namely:
+      * The following constraints are imposed on the parameters:
       *
       *  - An object identifier must be provided
       *
@@ -310,7 +270,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
 
       /**
        * Verify EC_Group domain
-       * @returns true if group is valid. false otherwise
+       *
+       * Groups are either builtin or were fully validated by register_custom_group
+       * when they were created, so this always returns true.
        */
       bool verify_group(RandomNumberGenerator& rng, bool strong = false) const;
 
@@ -696,8 +658,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
 
       static bool verify_generator_order(std::shared_ptr<const EC_Group_Data> data);
 
-      static std::pair<std::shared_ptr<EC_Group_Data>, bool> DER_decode_EC_group(std::span<const uint8_t> der,
-                                                                                 EC_Group_Source source);
+      static std::pair<std::shared_ptr<const EC_Group_Data>, bool> DER_decode_EC_group(std::span<const uint8_t> der);
 
       static std::shared_ptr<EC_Group_Data> load_EC_group_info(const char* p,
                                                                const char* a,

@@ -123,8 +123,6 @@ class EC_Group_Data final {
 
       bool params_match(const EC_Group_Data& other) const;
 
-      void set_oid(const OID& oid);
-
       const OID& oid() const { return m_oid; }
 
       const std::vector<uint8_t>& der_named_curve() const { return m_der_named_curve; }

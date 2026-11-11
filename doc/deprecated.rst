@@ -93,21 +93,11 @@ elliptic curve points.
 
 - Support for explicit ECC curve parameters and ImplicitCA encoded parameters in
   ``EC_Group`` and all users (including X.509 certificates and PKCS#8 private keys).
+  Currently explicit parameters are accepted if they match a builtin group or
+  a group registered by the application.
 
-- Currently it is possible to create an ``EC_Group`` with cofactor > 1. None of
-  the builtin groups have composite order, and in the future it will be
-  impossible to create composite order ``EC_Group``.
-
-- Currently it is possible to create an application specific
-  ``EC_Group`` with parameters of effectively arbitrary size. In a
-  future release the parameters of application provided elliptic curve
-  will be limited in the following ways.
-
-  a) The bitlength must be between 192 and 512 bits, and a multiple of 32
-  b) As an extension of (a) you can also use the 521 bit Mersenne prime
-     or the X9.62 239 bit prime.
-  c) The prime must be congruent to 3 modulo 4
-  d) The bitlength of the prime and the bitlength of the order must be equal
+- Currently an application specific ``EC_Group`` may use a prime as small as
+  128 bits. In a future release the minimum will be 192 bits.
 
 - Elliptic curve points can be encoded in several different ways.  The
   most common are "compressed" and "uncompressed"; both are widely

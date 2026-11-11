@@ -253,9 +253,9 @@ class EC_Group_Registration_Tests final : public Test {
 
          if(Botan::EC_Group::supports_application_specific_group()) {
             results.push_back(test_ecc_registration());
-            results.push_back(test_ec_group_from_params());
             results.push_back(test_ec_group_bad_registration());
             results.push_back(test_ec_group_off_curve_generator());
+            results.push_back(test_ec_group_explicit_requires_registration());
             results.push_back(test_ec_group_duplicate_orders());
             results.push_back(test_ec_group_incorrect_order());
             results.push_back(test_ec_group_registration_with_custom_oid());
@@ -298,35 +298,14 @@ class EC_Group_Registration_Tests final : public Test {
          return result;
       }
 
-      Test::Result test_ec_group_from_params() {
-         Test::Result result("EC_Group from params");
-
-         Botan::EC_Group::clear_registered_curve_data();
-
-         // secp256r1
-         const Botan::BigInt p("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
-         const Botan::BigInt a("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC");
-         const Botan::BigInt b("0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B");
-
-         const Botan::BigInt g_x("0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296");
-         const Botan::BigInt g_y("0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5");
-         const Botan::BigInt order("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551");
-
-         const Botan::OID oid("1.2.840.10045.3.1.7");
-
-         // This uses the deprecated constructor to verify we dedup even without an OID
-         // This whole test can be removed once explicit curve support is removed
-         const Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1);
-         result.test_is_true("Group has correct OID", reg_group.get_curve_oid() == oid);
-
-         return result;
-      }
-
    #if defined(BOTAN_HAS_ECDSA)
       Test::Result test_ec_key_with_equivalent_group() {
          Test::Result result("EC key construction with equivalent but distinct EC_Group");
 
-         // numsp384d1 is not a builtin group, so decoding it does not register it
+         Botan::EC_Group::clear_registered_curve_data();
+
+         // numsp384d1 is not a builtin group; registering it under two OIDs
+         // creates equivalent groups with distinct inner data
          const Botan::BigInt p(
             "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEC3");
          const Botan::BigInt a(
@@ -339,10 +318,10 @@ class EC_Group_Registration_Tests final : public Test {
          const Botan::BigInt order(
             "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD61EAF1EEB5D6881BEDA9D3D4C37E27A604D81F67B0E61B9");
 
-         const auto der = encode_explicit_group(p, a, b, g_x, g_y, order, 1);
-
-         const Botan::EC_Group group1(der);
-         const Botan::EC_Group group2(der);
+         const auto group1 =
+            Botan::EC_Group::register_custom_group(Botan::OID("1.3.6.1.4.1.25258.100.60"), p, a, b, g_x, g_y, order);
+         const auto group2 =
+            Botan::EC_Group::register_custom_group(Botan::OID("1.3.6.1.4.1.25258.100.61"), p, a, b, g_x, g_y, order);
 
          result.test_is_true("Groups compare equal", group1 == group2);
          result.test_is_true("Groups have distinct inner data", group1._data() != group2._data());
@@ -442,14 +421,47 @@ class EC_Group_Registration_Tests final : public Test {
          const Botan::BigInt bad_g_y("0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F4");
          const Botan::BigInt order("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551");
 
-         result.test_throws("Deprecated EC_Group constructor rejects off-curve generator",
-                            "EC_Group generator is not on the curve",
-                            [&]() { const Botan::EC_Group g(p, a, b, g_x, bad_g_y, order, 1); });
-
          const Botan::OID custom_oid("1.3.6.1.4.1.25258.100.42");
-         result.test_throws("Deprecated EC_Group constructor with custom OID rejects off-curve generator",
-                            "EC_Group generator is not on the curve",
-                            [&]() { const Botan::EC_Group g(p, a, b, g_x, bad_g_y, order, 1, custom_oid); });
+         result.test_throws(
+            "Custom group with off-curve generator is rejected", "EC_Group generator is not on the curve", [&]() {
+               Botan::EC_Group::register_custom_group(custom_oid, p, a, b, g_x, bad_g_y, order);
+            });
+
+         return result;
+      }
+
+      Test::Result test_ec_group_explicit_requires_registration() {
+         Test::Result result("EC_Group explicit encoding requires a known group");
+
+         Botan::EC_Group::clear_registered_curve_data();
+
+         // numsp384d1, which is not a builtin group
+         const Botan::BigInt p(
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEC3");
+         const Botan::BigInt a(
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEC0");
+         const Botan::BigInt b(
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF77BB");
+         const Botan::BigInt g_x("0x02");
+         const Botan::BigInt g_y(
+            "0x3C9F82CB4B87B4DC71E763E0663E5DBD8034ED422F04F82673330DC58D15FFA2B4A3D0BAD5D30F865BCBBF503EA66F43");
+         const Botan::BigInt order(
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD61EAF1EEB5D6881BEDA9D3D4C37E27A604D81F67B0E61B9");
+
+         const auto der = encode_explicit_group(p, a, b, g_x, g_y, order, 1);
+
+         result.test_throws<Botan::Decoding_Error>(
+            "Unregistered explicit group is rejected",
+            "Explicit ECC parameters do not match any builtin or registered group",
+            [&] { static_cast<void>(Botan::EC_Group(der)); });
+
+         const Botan::OID oid("1.3.6.1.4.1.25258.100.62");
+         const auto reg_group = Botan::EC_Group::register_custom_group(oid, p, a, b, g_x, g_y, order);
+
+         const Botan::EC_Group decoded(der);
+         result.test_is_true("Explicit encoding decodes to the registered group", decoded._data() == reg_group._data());
+         result.test_is_true("Decoded group has the registered OID", decoded.get_curve_oid() == oid);
+         result.test_is_true("Decoded group is marked as explicit encoding", decoded.used_explicit_encoding());
 
          return result;
       }
@@ -562,9 +574,10 @@ class EC_Group_Registration_Tests final : public Test {
                                                             secp256r1.get_g_y(),
                                                             wrong_order,
                                                             1);
-         result.test_throws<Botan::Decoding_Error>("Explicit group with incorrect order is rejected",
-                                                   "generator does not have the claimed order",
-                                                   [&] { static_cast<void>(Botan::EC_Group(wrong_order_der)); });
+         result.test_throws<Botan::Decoding_Error>(
+            "Explicit group with incorrect order is rejected",
+            "Explicit ECC parameters do not match any builtin or registered group",
+            [&] { static_cast<void>(Botan::EC_Group(wrong_order_der)); });
 
          result.test_throws<Botan::Invalid_Argument>(
             "Custom anomalous group is rejected", "Anomalous elliptic curves are not supported", [&] {
@@ -575,17 +588,6 @@ class EC_Group_Registration_Tests final : public Test {
                                                  secp256r1.get_g_x(),
                                                  secp256r1.get_g_y(),
                                                  secp256r1.get_p()));
-            });
-
-         result.test_throws<Botan::Invalid_Argument>(
-            "Deprecated constructor rejects anomalous group", "Anomalous elliptic curves are not supported", [&] {
-               static_cast<void>(Botan::EC_Group(secp256r1.get_p(),
-                                                 secp256r1.get_a(),
-                                                 secp256r1.get_b(),
-                                                 secp256r1.get_g_x(),
-                                                 secp256r1.get_g_y(),
-                                                 secp256r1.get_p(),
-                                                 1));
             });
 
          const auto anomalous_der = encode_explicit_group(secp256r1.get_p(),
@@ -601,15 +603,17 @@ class EC_Group_Registration_Tests final : public Test {
 
          const auto invalid_hasse_der = encode_explicit_group(
             secp256r1.get_p(), secp256r1.get_a(), secp256r1.get_b(), secp256r1.get_g_x(), secp256r1.get_g_y(), 2, 1);
-         result.test_throws<Botan::Decoding_Error>("Explicit group outside the Hasse bound is rejected",
-                                                   "Invalid ECC Hasse bound",
-                                                   [&] { static_cast<void>(Botan::EC_Group(invalid_hasse_der)); });
+         result.test_throws<Botan::Decoding_Error>(
+            "Explicit group outside the Hasse bound is rejected",
+            "Explicit ECC parameters do not match any builtin or registered group",
+            [&] { static_cast<void>(Botan::EC_Group(invalid_hasse_der)); });
 
          const auto singular_der =
             encode_explicit_group(secp256r1.get_p(), secp256r1.get_p() - 3, 2, 1, 0, secp256r1.get_order(), 1);
-         result.test_throws<Botan::Decoding_Error>("Explicit singular curve is rejected",
-                                                   "Invalid ECC curve discriminant",
-                                                   [&] { static_cast<void>(Botan::EC_Group(singular_der)); });
+         result.test_throws<Botan::Decoding_Error>(
+            "Explicit singular curve is rejected",
+            "Explicit ECC parameters do not match any builtin or registered group",
+            [&] { static_cast<void>(Botan::EC_Group(singular_der)); });
 
          return result;
       }

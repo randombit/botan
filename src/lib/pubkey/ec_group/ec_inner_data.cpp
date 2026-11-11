@@ -46,6 +46,8 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       m_has_cofactor(m_cofactor != 1),
       m_order_is_less_than_p(m_order < p),
       m_source(source) {
+   BOTAN_ARG_CHECK(m_oid.has_value(), "EC_Group OID must be set");
+
    // Verify the generator (x, y) satisfies y^2 = x^3 + a*x + b (mod p)
    const auto mod_p = Barrett_Reduction::for_public_modulus(p);
    const BigInt y2 = mod_p.square(g_y);
@@ -54,34 +56,29 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       throw Invalid_Argument("EC_Group generator is not on the curve");
    }
 
-   // TODO(Botan4) we can assume/assert the OID is set
-   if(!m_oid.empty()) {
-      DER_Encoder der(m_der_named_curve);
-      der.encode(m_oid);
+   DER_Encoder der(m_der_named_curve);
+   der.encode(m_oid);
 
-      if(const auto name = m_oid.registered_name()) {
-         if(auto pcurve = PCurve::PrimeOrderCurve::for_named_curve(*name)) {
-            const bool same_params = [&]() {
-               if(m_source == EC_Group_Source::Builtin) {
-                  return true;
-               }
-
-               if(const auto group_oid = OID::from_name(*name)) {
-                  if(const auto group_info = EC_Group::EC_group_info(*group_oid)) {
-                     return group_info->params_match(p, a, b, g_x, g_y, order, cofactor);
-                  }
-               }
-
-               return false;
-            }();
-
-            if(same_params) {
-               m_pcurve = std::move(pcurve);
+   if(const auto name = m_oid.registered_name()) {
+      if(auto pcurve = PCurve::PrimeOrderCurve::for_named_curve(*name)) {
+         const bool same_params = [&]() {
+            if(m_source == EC_Group_Source::Builtin) {
+               return true;
             }
+
+            if(const auto group_oid = OID::from_name(*name)) {
+               if(const auto group_info = EC_Group::EC_group_info(*group_oid)) {
+                  return group_info->params_match(p, a, b, g_x, g_y, order, cofactor);
+               }
+            }
+
+            return false;
+         }();
+
+         if(same_params) {
+            m_pcurve = std::move(pcurve);
+            m_engine = EC_Group_Engine::Optimized;
          }
-      }
-      if(m_pcurve) {
-         m_engine = EC_Group_Engine::Optimized;
       }
    }
 
@@ -96,12 +93,7 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
    }
 
    if(!m_pcurve) {
-      if(m_oid.empty()) {
-         throw Not_Implemented("EC_Group this group is not supported in this build configuration");
-      } else {
-         throw Not_Implemented(
-            fmt("EC_Group the group {} is not supported in this build configuration", oid.to_string()));
-      }
+      throw Not_Implemented(fmt("EC_Group the group {} is not supported in this build configuration", oid.to_string()));
    }
 }
 
@@ -214,15 +206,6 @@ bool EC_Group_Data::params_match(const BigInt& p,
 
 bool EC_Group_Data::params_match(const EC_Group_Data& other) const {
    return params_match(other.p(), other.a(), other.b(), other.g_x(), other.g_y(), other.order(), other.cofactor());
-}
-
-void EC_Group_Data::set_oid(const OID& oid) {
-   BOTAN_ARG_CHECK(!oid.empty(), "OID should be set");
-   BOTAN_STATE_CHECK(m_oid.empty() && m_der_named_curve.empty());
-   m_oid = oid;
-
-   DER_Encoder der(m_der_named_curve);
-   der.encode(m_oid);
 }
 
 std::function<void(std::span<uint8_t>)> h2c_expand_message(std::string_view hash_fn,

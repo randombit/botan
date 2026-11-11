@@ -29,18 +29,6 @@ size_t EC_PublicKey::estimated_strength() const {
    return ecp_work_factor(key_length());
 }
 
-namespace {
-
-EC_Group_Encoding default_encoding_for(const EC_Group& group) {
-   if(group.get_curve_oid().empty()) {
-      return EC_Group_Encoding::Explicit;
-   } else {
-      return EC_Group_Encoding::NamedCurve;
-   }
-}
-
-}  // namespace
-
 const AlgorithmIdentifier& EC_PublicKey::assert_algorithm_identifier(const AlgorithmIdentifier& alg_id,
                                                                      std::string_view alg_name) {
    if(alg_id.oid() != OID::from_string(alg_name)) {
@@ -51,15 +39,11 @@ const AlgorithmIdentifier& EC_PublicKey::assert_algorithm_identifier(const Algor
    return alg_id;  // NOLINT(*-return-const-ref-from-parameter)
 }
 
-EC_PublicKey::EC_PublicKey(const EC_Group& group, const EC_AffinePoint& pub_point) {
-   m_public_key = std::make_shared<const EC_PublicKey_Data>(group, pub_point);
-   m_domain_encoding = default_encoding_for(domain());  // NOLINT(*-prefer-member-initializer)
-}
+EC_PublicKey::EC_PublicKey(const EC_Group& group, const EC_AffinePoint& pub_point) :
+      m_public_key(std::make_shared<const EC_PublicKey_Data>(group, pub_point)) {}
 
-EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
-   m_public_key = std::make_shared<const EC_PublicKey_Data>(EC_Group(alg_id.parameters()), key_bits);
-   m_domain_encoding = default_encoding_for(domain());  // NOLINT(*-prefer-member-initializer)
-}
+EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
+      m_public_key(std::make_shared<const EC_PublicKey_Data>(EC_Group(alg_id.parameters()), key_bits)) {}
 
 const EC_Group& EC_PublicKey::domain() const {
    BOTAN_STATE_CHECK(m_public_key != nullptr);
@@ -101,10 +85,6 @@ void EC_PublicKey::set_point_encoding(EC_Point_Format enc) {
 }
 
 void EC_PublicKey::set_parameter_encoding(EC_Group_Encoding form) {
-   if(form == EC_Group_Encoding::NamedCurve && domain().get_curve_oid().empty()) {
-      throw Invalid_Argument("Cannot used NamedCurve encoding for a curve without an OID");
-   }
-
    m_domain_encoding = form;
 }
 
@@ -129,7 +109,6 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
    auto scalar = (x.is_zero()) ? EC_Scalar::random(ec_group, rng) : EC_Scalar::from_bigint(ec_group, x);
    m_private_key = std::make_shared<EC_PrivateKey_Data>(ec_group, std::move(scalar));
    m_public_key = m_private_key->public_key(rng, with_modular_inverse);
-   m_domain_encoding = default_encoding_for(domain());
 }
 
 EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng, const EC_Group& ec_group, bool with_modular_inverse) :
@@ -137,14 +116,12 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng, const EC_Group& ec_grou
    auto scalar = EC_Scalar::random(ec_group, rng);
    m_private_key = std::make_shared<EC_PrivateKey_Data>(ec_group, std::move(scalar));
    m_public_key = m_private_key->public_key(rng, with_modular_inverse);
-   m_domain_encoding = default_encoding_for(domain());
 }
 
 EC_PrivateKey::EC_PrivateKey(const EC_Group& ec_group, const EC_Scalar& x, bool with_modular_inverse) :
       m_with_modular_inverse(with_modular_inverse) {
    m_private_key = std::make_shared<EC_PrivateKey_Data>(ec_group, x);
    m_public_key = m_private_key->public_key(with_modular_inverse);
-   m_domain_encoding = default_encoding_for(domain());
 }
 
 secure_vector<uint8_t> EC_PrivateKey::raw_private_key_bits() const {
@@ -211,8 +188,6 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
          throw Decoding_Error("ECPrivateKey public key does not match the private key");
       }
    }
-
-   m_domain_encoding = default_encoding_for(domain());
 }
 
 bool EC_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
