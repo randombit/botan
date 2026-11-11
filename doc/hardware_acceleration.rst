@@ -12,7 +12,8 @@ automatically used if enabled in the build. If not, the base implementation is u
 
 It is possible to disable CPU-specific optimizations at runtime by setting the
 environment variable ``BOTAN_CLEAR_CPUID``. For example
-``BOTAN_CLEAR_CPUID=avx2`` will disable use of any AVX2 instructions.
+``BOTAN_CLEAR_CPUID=avx2`` will disable use of any AVX2 instructions, while
+``BOTAN_CLEAR_CPUID=all`` disables all CPU-specific optimizations.
 
 x86
 --------------
