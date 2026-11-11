@@ -1,9 +1,10 @@
+#include <botan/asn1_time.h>
 #include <botan/auto_rng.h>
 #include <botan/ec_group.h>
 #include <botan/ecdsa.h>
 #include <botan/hex.h>
 #include <botan/pkcs12.h>
-#include <botan/x509self.h>
+#include <botan/x509_builder.h>
 
 #include <iostream>
 #include <memory>
@@ -14,8 +15,13 @@ int main() {
    // Generate an ECDSA private key + self-signed certificate to bundle.
    auto key = std::make_shared<Botan::ECDSA_PrivateKey>(rng, Botan::EC_Group::from_name("secp256r1"));
 
-   const Botan::X509_Cert_Options cert_opts("example.com");
-   const auto cert = Botan::X509::create_self_signed_cert(cert_opts, *key, "SHA-256", rng);
+   constexpr uint64_t seconds_in_a_year = 31556926;
+   auto not_before = Botan::ASN1_Time::current_time();
+   auto not_after = Botan::ASN1_Time::from_seconds_since_epoch(not_before.time_since_epoch() + seconds_in_a_year);
+
+   auto metadata = Botan::CertificateParametersBuilder();
+   metadata.add_uri("https://example.com");
+   const auto cert = metadata.into_self_signed_cert(not_before, not_after, *key, rng);
 
    // Populate the PKCS#12 bundle.
    Botan::PKCS12 bundle;
