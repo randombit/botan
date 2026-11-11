@@ -72,8 +72,6 @@ class EC_Group_Data_Map final {
                                                             const BigInt& order) {
          BOTAN_ASSERT_NOMSG(oid.has_value());
 
-         const BigInt cofactor(1);
-
          const lock_guard_type<mutex_type> lock(m_mutex);
 
          if(const auto i = m_registered_curves.find(oid); i != m_registered_curves.end()) {
@@ -85,7 +83,7 @@ class EC_Group_Data_Map final {
             * that is attempting to register a EC_Group under the same OID as
             * another group currently in use
             */
-            if(!i->second->params_match(p, a, b, g_x, g_y, order, cofactor)) {
+            if(!i->second->params_match(p, a, b, g_x, g_y, order)) {
                throw Invalid_Argument("Attempting to register a curve using OID " + oid.to_string() +
                                       " but a distinct curve is already registered using that OID");
             }
@@ -102,7 +100,7 @@ class EC_Group_Data_Map final {
                * This turned out to be the OID of one of the builtin groups. Verify
                * that all of the provided parameters match that builtin group.
                */
-               BOTAN_ARG_CHECK(g->params_match(p, a, b, g_x, g_y, order, cofactor),
+               BOTAN_ARG_CHECK(g->params_match(p, a, b, g_x, g_y, order),
                                "Attempting to register an EC group under OID of hardcoded group");
 
                return g;
@@ -110,7 +108,7 @@ class EC_Group_Data_Map final {
                /*
                * This path is taken for an application registering a new EC_Group with an OID specified
                */
-               return EC_Group_Data::create(p, a, b, g_x, g_y, order, cofactor, oid, EC_Group_Source::ExternalSource);
+               return EC_Group_Data::create(p, a, b, g_x, g_y, order, oid, EC_Group_Source::ExternalSource);
             }
          }();
 
@@ -122,16 +120,12 @@ class EC_Group_Data_Map final {
          return add(new_group);
       }
 
-      std::shared_ptr<const EC_Group_Data> lookup_from_params(const BigInt& p,
-                                                              const BigInt& a,
-                                                              const BigInt& b,
-                                                              std::span<const uint8_t> base_pt,
-                                                              const BigInt& order,
-                                                              const BigInt& cofactor) {
+      std::shared_ptr<const EC_Group_Data> lookup_from_params(
+         const BigInt& p, const BigInt& a, const BigInt& b, std::span<const uint8_t> base_pt, const BigInt& order) {
          const lock_guard_type<mutex_type> lock(m_mutex);
 
          for(const auto& i : m_registered_curves) {
-            if(i.second->params_match(p, a, b, base_pt, order, cofactor)) {
+            if(i.second->params_match(p, a, b, base_pt, order)) {
                return i.second;
             }
          }
@@ -142,7 +136,7 @@ class EC_Group_Data_Map final {
             const auto new_group = EC_Group::EC_group_info(oid_from_order);
 
             // Have to check all params in the (unlikely/malicious) event of an order collision
-            if(new_group && new_group->params_match(p, a, b, base_pt, order, cofactor)) {
+            if(new_group && new_group->params_match(p, a, b, base_pt, order)) {
                return add(new_group);
             }
          }
@@ -194,9 +188,8 @@ std::shared_ptr<EC_Group_Data> EC_Group::load_EC_group_info(const char* p_str,
    const BigInt g_x(g_x_str);
    const BigInt g_y(g_y_str);
    const BigInt order(order_str);
-   const BigInt cofactor(1);  // implicit
 
-   return EC_Group_Data::create(p, a, b, g_x, g_y, order, cofactor, oid, EC_Group_Source::Builtin);
+   return EC_Group_Data::create(p, a, b, g_x, g_y, order, oid, EC_Group_Source::Builtin);
 }
 
 //static
@@ -271,7 +264,7 @@ std::pair<std::shared_ptr<const EC_Group_Data>, bool> EC_Group::DER_decode_EC_gr
          throw Decoding_Error("Anomalous elliptic curves are not supported");
       }
 
-      if(const auto data = ec_group_data().lookup_from_params(p, a, b, base_pt, order, cofactor)) {
+      if(const auto data = ec_group_data().lookup_from_params(p, a, b, base_pt, order)) {
          return std::make_pair(data, true);
       }
 
@@ -344,11 +337,6 @@ bool EC_Group::supports_application_specific_group() {
 #else
    return false;
 #endif
-}
-
-//static
-bool EC_Group::supports_application_specific_group_with_cofactor() {
-   return false;
 }
 
 //static
@@ -549,14 +537,6 @@ const BigInt& EC_Group::get_g_y() const {
    return data().g_y();
 }
 
-const BigInt& EC_Group::get_cofactor() const {
-   return data().cofactor();
-}
-
-bool EC_Group::has_cofactor() const {
-   return data().has_cofactor();
-}
-
 const OID& EC_Group::get_curve_oid() const {
    return data().oid();
 }
@@ -600,7 +580,7 @@ std::vector<uint8_t> EC_Group::DER_encode(EC_Group_Encoding form) const {
          .end_cons()
          .encode(generator, ASN1_Type::OctetString)
          .encode(get_order())
-         .encode(get_cofactor())
+         .encode(static_cast<size_t>(1))  // cofactor
          .end_cons();
       return output;
    } else if(form == EC_Group_Encoding::NamedCurve) {
@@ -623,8 +603,7 @@ bool EC_Group::operator==(const EC_Group& other) const {
    }
 
    return (get_p() == other.get_p() && get_a() == other.get_a() && get_b() == other.get_b() &&
-           get_g_x() == other.get_g_x() && get_g_y() == other.get_g_y() && get_order() == other.get_order() &&
-           get_cofactor() == other.get_cofactor());
+           get_g_x() == other.get_g_x() && get_g_y() == other.get_g_y() && get_order() == other.get_order());
 }
 
 bool EC_Group::verify_group(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {

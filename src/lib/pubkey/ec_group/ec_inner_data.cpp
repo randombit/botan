@@ -26,7 +26,6 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
                              const BigInt& g_x,
                              const BigInt& g_y,
                              const BigInt& order,
-                             const BigInt& cofactor,
                              const OID& oid,
                              EC_Group_Source source) :
       m_p(p),
@@ -35,7 +34,6 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       m_g_x(g_x),
       m_g_y(g_y),
       m_order(order),
-      m_cofactor(cofactor),
       m_oid(oid),
       m_p_words(p.sig_words()),
       m_p_bits(p.bits()),
@@ -43,7 +41,6 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       m_order_bytes((m_order_bits + 7) / 8),
       m_a_is_minus_3(a == p - 3),
       m_a_is_zero(a.is_zero()),
-      m_has_cofactor(m_cofactor != 1),
       m_order_is_less_than_p(m_order < p),
       m_source(source) {
    BOTAN_ARG_CHECK(m_oid.has_value(), "EC_Group OID must be set");
@@ -68,7 +65,7 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
 
             if(const auto group_oid = OID::from_name(*name)) {
                if(const auto group_info = EC_Group::EC_group_info(*group_oid)) {
-                  return group_info->params_match(p, a, b, g_x, g_y, order, cofactor);
+                  return group_info->params_match(p, a, b, g_x, g_y, order);
                }
             }
 
@@ -83,7 +80,7 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
    }
 
    // Try a generic pcurves instance
-   if(!m_pcurve && !m_has_cofactor) {
+   if(!m_pcurve) {
       m_pcurve = PCurve::PrimeOrderCurve::from_params(p, a, b, g_x, g_y, order);
       if(m_pcurve) {
          m_engine = EC_Group_Engine::Generic;
@@ -103,19 +100,13 @@ std::shared_ptr<EC_Group_Data> EC_Group_Data::create(const BigInt& p,
                                                      const BigInt& g_x,
                                                      const BigInt& g_y,
                                                      const BigInt& order,
-                                                     const BigInt& cofactor,
                                                      const OID& oid,
                                                      EC_Group_Source source) {
-   return std::make_shared<EC_Group_Data>(p, a, b, g_x, g_y, order, cofactor, oid, source);
+   return std::make_shared<EC_Group_Data>(p, a, b, g_x, g_y, order, oid, source);
 }
 
-bool EC_Group_Data::params_match(const BigInt& p,
-                                 const BigInt& a,
-                                 const BigInt& b,
-                                 const BigInt& g_x,
-                                 const BigInt& g_y,
-                                 const BigInt& order,
-                                 const BigInt& cofactor) const {
+bool EC_Group_Data::params_match(
+   const BigInt& p, const BigInt& a, const BigInt& b, const BigInt& g_x, const BigInt& g_y, const BigInt& order) const {
    if(p != this->p()) {
       return false;
    }
@@ -126,9 +117,6 @@ bool EC_Group_Data::params_match(const BigInt& p,
       return false;
    }
    if(order != this->order()) {
-      return false;
-   }
-   if(cofactor != this->cofactor()) {
       return false;
    }
    if(g_x != this->g_x()) {
@@ -141,12 +129,8 @@ bool EC_Group_Data::params_match(const BigInt& p,
    return true;
 }
 
-bool EC_Group_Data::params_match(const BigInt& p,
-                                 const BigInt& a,
-                                 const BigInt& b,
-                                 std::span<const uint8_t> base_pt,
-                                 const BigInt& order,
-                                 const BigInt& cofactor) const {
+bool EC_Group_Data::params_match(
+   const BigInt& p, const BigInt& a, const BigInt& b, std::span<const uint8_t> base_pt, const BigInt& order) const {
    if(p != this->p()) {
       return false;
    }
@@ -157,9 +141,6 @@ bool EC_Group_Data::params_match(const BigInt& p,
       return false;
    }
    if(order != this->order()) {
-      return false;
-   }
-   if(cofactor != this->cofactor()) {
       return false;
    }
 
@@ -205,7 +186,7 @@ bool EC_Group_Data::params_match(const BigInt& p,
 }
 
 bool EC_Group_Data::params_match(const EC_Group_Data& other) const {
-   return params_match(other.p(), other.a(), other.b(), other.g_x(), other.g_y(), other.order(), other.cofactor());
+   return params_match(other.p(), other.a(), other.b(), other.g_x(), other.g_y(), other.order());
 }
 
 std::function<void(std::span<uint8_t>)> h2c_expand_message(std::string_view hash_fn,

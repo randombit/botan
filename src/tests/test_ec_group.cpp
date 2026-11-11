@@ -87,8 +87,6 @@ class EC_Group_Tests : public Test {
             result.test_sz_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
             result.test_sz_eq("EC_Group has byte size", group.get_p().bytes(), group.get_p_bytes());
 
-            result.test_bn_eq("EC_Group has cofactor == 1", group.get_cofactor(), 1);
-
             const Botan::OID from_order = Botan::EC_Group::EC_group_identity_from_order(group.get_order());
 
             result.test_str_eq(
@@ -614,6 +612,17 @@ class EC_Group_Registration_Tests final : public Test {
             "Explicit singular curve is rejected",
             "Explicit ECC parameters do not match any builtin or registered group",
             [&] { static_cast<void>(Botan::EC_Group(singular_der)); });
+
+         const auto cofactor_der = encode_explicit_group(secp256r1.get_p(),
+                                                         secp256r1.get_a(),
+                                                         secp256r1.get_b(),
+                                                         secp256r1.get_g_x(),
+                                                         secp256r1.get_g_y(),
+                                                         secp256r1.get_order(),
+                                                         2);
+         result.test_throws<Botan::Decoding_Error>("Explicit group with a cofactor is rejected",
+                                                   "Invalid ECC cofactor parameter",
+                                                   [&] { static_cast<void>(Botan::EC_Group(cofactor_der)); });
 
          return result;
       }

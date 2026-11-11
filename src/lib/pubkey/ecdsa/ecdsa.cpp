@@ -27,10 +27,6 @@ namespace {
 
 EC_AffinePoint recover_ecdsa_public_key(
    const EC_Group& group, const std::vector<uint8_t>& msg, const BigInt& r, const BigInt& s, uint8_t v) {
-   if(group.has_cofactor()) {
-      throw Invalid_Argument("ECDSA public key recovery only supported for prime order groups");
-   }
-
    if(v >= 4) {
       throw Invalid_Argument("Unexpected v param for ECDSA public key recovery");
    }

@@ -33,22 +33,17 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
                         RandomNumberGenerator& rng) :
             PK_Ops::Key_Agreement_with_KDF(options),
             m_group(key.domain()),
-            m_l_times_priv(mul_cofactor_inv(m_group, key._private_key())),
+            m_private_key(key._private_key()),
             m_rng(rng) {}
 
       size_t agreed_value_size() const override { return m_group.get_p_bytes(); }
 
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override {
          const auto input_point = [&] {
-            if(m_group.has_cofactor()) {
-               throw Not_Implemented(
-                  "Support for DH with cofactor adjustment not available in this build configuration");
+            if(auto point = EC_AffinePoint::deserialize(m_group, {w, w_len})) {
+               return *point;
             } else {
-               if(auto point = EC_AffinePoint::deserialize(m_group, {w, w_len})) {
-                  return *point;
-               } else {
-                  throw Decoding_Error("ECDH - Invalid elliptic curve point: not on curve");
-               }
+               throw Decoding_Error("ECDH - Invalid elliptic curve point: not on curve");
             }
          }();
 
@@ -61,26 +56,14 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
             throw Decoding_Error("ECDH - Invalid elliptic curve point: identity");
          }
 
-         const auto scope = CT::scoped_poison(m_l_times_priv);
+         const auto scope = CT::scoped_poison(m_private_key);
          // Any further secret handling of the output is up to the caller
-         return CT::driveby_unpoison(input_point.mul_x_only(m_l_times_priv, m_rng));
+         return CT::driveby_unpoison(input_point.mul_x_only(m_private_key, m_rng));
       }
 
    private:
-      static EC_Scalar mul_cofactor_inv(const EC_Group& group, const EC_Scalar& x) {
-         // We implement BSI TR-03111 ECKAEG which only matters in the (rare/deprecated)
-         // case of a curve with cofactor.
-
-         if(group.has_cofactor()) {
-            // We could precompute this but cofactors are rare
-            return x * EC_Scalar::from_bigint(group, group.get_cofactor()).invert_vartime();
-         } else {
-            return x;
-         }
-      }
-
       const EC_Group m_group;
-      const EC_Scalar m_l_times_priv;
+      const EC_Scalar m_private_key;
       RandomNumberGenerator& m_rng;
 };
 

@@ -62,16 +62,6 @@ class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement {
             throw Decoding_Error("ECDH - Invalid elliptic curve point: identity");
          }
 
-         /*
-         * CKM_ECDH1_DERIVE does not clear the cofactor, so a point with a small
-         * order component would reveal the private scalar modulo that order.
-         * CKM_ECDH1_COFACTOR_DERIVE is not an alternative, since it computes a
-         * different value than ECDH in software does.
-         */
-         if(m_key.domain().has_cofactor()) {
-            throw Not_Implemented("PKCS#11 ECDH with a cofactor is not available in this build configuration");
-         }
-
          std::vector<uint8_t> der_encoded_other_key;
          if(m_key.point_encoding() == PublicPointEncoding::Der) {
             DER_Encoder(der_encoded_other_key).encode(other_key.data(), other_key.size(), ASN1_Type::OctetString);
@@ -136,15 +126,11 @@ std::unique_ptr<PK_Ops::Key_Agreement> PKCS11_ECDH_PrivateKey::_create_key_agree
 
    /*
    * The token performs the derivation, so the KDF names the PKCS #11 key
-   * derivation function (a hash name, optionally with ",Cofactor") rather
-   * than a Botan KDF; see MechanismWrapper::create_ecdh_mechanism
+   * derivation function (a hash name) rather than a Botan KDF; see
+   * MechanismWrapper::create_ecdh_mechanism
    *
    * The raw agreed value is requested via with_raw_shared_key as for any
-   * other key, so "Raw" alone is rejected here. The only exception is the
-   * cofactor variant with raw output ("Raw,Cofactor"), which the options
-   * cannot otherwise express.
-   *
-   * TODO(Botan4) remove the cofactor variant along with the rest
+   * other key, so naming "Raw" as the KDF is rejected here.
    */
    const std::string params = [&]() -> std::string {
       if(options.using_kdf()) {

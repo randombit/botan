@@ -296,13 +296,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       static bool supports_application_specific_group();
 
       /**
-      * Return true if in this build configuration it is possible to
-      * register an application specific elliptic curve with a cofactor
-      * larger than 1.
-      */
-      static bool supports_application_specific_group_with_cofactor();
-
-      /**
       * Return true if EC_Group::from_name(name) should succeed for this name
       * either because it is a group compiled into the library or it is a group
       * which has already been registered by the application at runtime.
@@ -499,19 +492,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @result order of the base point
       */
       const BigInt& get_order() const;
-
-      /**
-      * Return the cofactor
-      * @result the cofactor
-      * TODO(Botan4): Remove this
-      */
-      const BigInt& get_cofactor() const;
-
-      /**
-      * Return true if the cofactor is > 1
-      * TODO(Botan4): Remove this
-      */
-      bool has_cofactor() const;
 
       /**
       * Look up the parameters of a builtin group by OID

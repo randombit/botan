@@ -218,8 +218,6 @@ const BigInt& EC_PublicKey::get_int_field(std::string_view field) const {
       return this->domain().get_a();
    } else if(field == "b") {
       return this->domain().get_b();
-   } else if(field == "cofactor") {
-      return this->domain().get_cofactor();
    } else if(field == "order") {
       return this->domain().get_order();
    } else {

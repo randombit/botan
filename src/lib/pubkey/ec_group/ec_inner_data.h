@@ -94,7 +94,6 @@ class EC_Group_Data final {
                                                    const BigInt& g_x,
                                                    const BigInt& g_y,
                                                    const BigInt& order,
-                                                   const BigInt& cofactor,
                                                    const OID& oid,
                                                    EC_Group_Source source);
 
@@ -110,16 +109,14 @@ class EC_Group_Data final {
                         const BigInt& b,
                         const BigInt& g_x,
                         const BigInt& g_y,
-                        const BigInt& order,
-                        const BigInt& cofactor) const;
+                        const BigInt& order) const;
 
       // Like the other params_match but accepting the base point in encoded form
       bool params_match(const BigInt& p,
                         const BigInt& a,
                         const BigInt& b,
                         std::span<const uint8_t> base_pt,
-                        const BigInt& order,
-                        const BigInt& cofactor) const;
+                        const BigInt& order) const;
 
       bool params_match(const EC_Group_Data& other) const;
 
@@ -135,11 +132,7 @@ class EC_Group_Data final {
 
       const BigInt& order() const { return m_order; }
 
-      const BigInt& cofactor() const { return m_cofactor; }
-
       bool order_is_less_than_p() const { return m_order_is_less_than_p; }
-
-      bool has_cofactor() const { return m_has_cofactor; }
 
       const BigInt& g_x() const { return m_g_x; }
 
@@ -180,7 +173,6 @@ class EC_Group_Data final {
                     const BigInt& g_x,
                     const BigInt& g_y,
                     const BigInt& order,
-                    const BigInt& cofactor,
                     const OID& oid,
                     EC_Group_Source source);
 
@@ -194,7 +186,6 @@ class EC_Group_Data final {
       BigInt m_g_x;
       BigInt m_g_y;
       BigInt m_order;
-      BigInt m_cofactor;
 
       OID m_oid;
       std::vector<uint8_t> m_der_named_curve;
@@ -204,7 +195,6 @@ class EC_Group_Data final {
       size_t m_order_bytes;
       bool m_a_is_minus_3;
       bool m_a_is_zero;
-      bool m_has_cofactor;
       bool m_order_is_less_than_p;
       EC_Group_Source m_source;
       EC_Group_Engine m_engine;

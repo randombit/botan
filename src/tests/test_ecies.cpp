@@ -20,8 +20,6 @@ namespace {
 
 #if defined(BOTAN_HAS_ECIES) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_MODE_CBC)
 
-using Flags = Botan::ECIES_Flags;
-
 Botan::EC_Point_Format get_compression_type(const std::string& format) {
    if(format == "uncompressed") {
       return Botan::EC_Point_Format::Uncompressed;
@@ -31,12 +29,6 @@ Botan::EC_Point_Format get_compression_type(const std::string& format) {
       return Botan::EC_Point_Format::Hybrid;
    }
    throw Botan::Invalid_Argument("invalid compression format");
-}
-
-Flags ecies_flags(bool cofactor_mode, bool old_cofactor_mode, bool check_mode, bool single_hash_mode) {
-   return (cofactor_mode ? Flags::CofactorMode : Flags::None) |
-          (single_hash_mode ? Flags::SingleHashMode : Flags::None) |
-          (old_cofactor_mode ? Flags::OldCofactorMode : Flags::None) | (check_mode ? Flags::CheckMode : Flags::None);
 }
 
 void check_encrypt_decrypt(Test::Result& result,
@@ -152,54 +144,27 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
          result.test_bin_eq("encoded (ephemeral) public key", eph_public_key_bin, c0);
 
          // test secret derivation: ISO 18033 test vectors use KDF1 from ISO 18033
-         // no cofactor-/oldcofactor-/singlehash-/check-mode and 128 byte secret length
+         // without single hash mode and 128 byte secret length
          const Botan::ECIES_KA_Params ka_params(
-            eph_private_key.domain(), "KDF1-18033(SHA-1)", 128, compression_type, Flags::None);
-         const Botan::ECIES_KA_Operation ka(eph_private_key, ka_params, true, this->rng());
+            eph_private_key.domain(), "KDF1-18033(SHA-1)", 128, compression_type, false);
+         const Botan::ECIES_KA_Operation ka(eph_private_key, ka_params, this->rng());
          const Botan::SymmetricKey secret_key = ka.derive_secret(eph_public_key_bin, other_public_key_point);
          result.test_bin_eq("derived secret key", secret_key.bits_of(), k);
 
          // test encryption / decryption
-
-         // TODO(Botan4) clean this up after removing cofactor support
-
-         for(auto comp_type : {Botan::EC_Point_Format::Uncompressed,
-                               Botan::EC_Point_Format::Compressed,
-                               Botan::EC_Point_Format::Hybrid}) {
-            for(const bool cofactor_mode : {true, false}) {
-               for(const bool single_hash_mode : {true, false}) {
-                  for(const bool old_cofactor_mode : {true, false}) {
-                     for(const bool check_mode : {true, false}) {
-                        Flags flags = ecies_flags(cofactor_mode, old_cofactor_mode, check_mode, single_hash_mode);
-
-                        if(size_t(cofactor_mode) + size_t(check_mode) + size_t(old_cofactor_mode) > 1) {
-                           const auto onThrow = [&]() {
-                              Botan::ECIES_System_Params(eph_private_key.domain(),
-                                                         "KDF2(SHA-1)",
-                                                         "AES-256/CBC",
-                                                         32,
-                                                         "HMAC(SHA-1)",
-                                                         20,
-                                                         comp_type,
-                                                         flags);
-                           };
-                           result.test_throws("throw on invalid ECIES_Flags", onThrow);
-                           continue;
-                        }
-
-                        const Botan::ECIES_System_Params ecies_params(eph_private_key.domain(),
-                                                                      "KDF2(SHA-1)",
-                                                                      "AES-256/CBC",
-                                                                      32,
-                                                                      "HMAC(SHA-1)",
-                                                                      20,
-                                                                      comp_type,
-                                                                      flags);
-                        check_encrypt_decrypt(
-                           result, eph_private_key, other_private_key, ecies_params, 16, this->rng());
-                     }
-                  }
-               }
+         for(const auto comp_type : {Botan::EC_Point_Format::Uncompressed,
+                                     Botan::EC_Point_Format::Compressed,
+                                     Botan::EC_Point_Format::Hybrid}) {
+            for(const bool single_hash_mode : {true, false}) {
+               const Botan::ECIES_System_Params ecies_params(eph_private_key.domain(),
+                                                             "KDF2(SHA-1)",
+                                                             "AES-256/CBC",
+                                                             32,
+                                                             "HMAC(SHA-1)",
+                                                             20,
+                                                             comp_type,
+                                                             single_hash_mode);
+               check_encrypt_decrypt(result, eph_private_key, other_private_key, ecies_params, 16, this->rng());
             }
          }
 
@@ -216,7 +181,7 @@ class ECIES_Tests final : public Text_Based_Test {
       ECIES_Tests() :
             Text_Based_Test("pubkey/ecies.vec",
                             "Curve,PrivateKey,OtherPrivateKey,Kdf,Dem,DemKeyLen,Mac,MacKeyLen,Format,"
-                            "CofactorMode,OldCofactorMode,CheckMode,SingleHashMode,Label,Plaintext,Ciphertext",
+                            "SingleHashMode,Label,Plaintext,Ciphertext",
                             "Iv") {}
 
       bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
@@ -236,15 +201,10 @@ class ECIES_Tests final : public Text_Based_Test {
          const std::string mac = vars.get_req_str("Mac");
          const size_t mac_key_len = vars.get_req_sz("MacKeyLen");
          const Botan::EC_Point_Format compression_type = get_compression_type(vars.get_req_str("Format"));
-         const bool cofactor_mode = vars.get_req_sz("CofactorMode") != 0;
-         const bool old_cofactor_mode = vars.get_req_sz("OldCofactorMode") != 0;
-         const bool check_mode = vars.get_req_sz("CheckMode") != 0;
          const bool single_hash_mode = vars.get_req_sz("SingleHashMode") != 0;
          const std::string label = vars.get_req_str("Label");
          const std::vector<uint8_t> plaintext = vars.get_req_bin("Plaintext");
          const std::vector<uint8_t> ciphertext = vars.get_req_bin("Ciphertext");
-
-         const Flags flags = ecies_flags(cofactor_mode, old_cofactor_mode, check_mode, single_hash_mode);
 
          const auto group = Botan::EC_Group::from_name(curve);
 
@@ -252,7 +212,7 @@ class ECIES_Tests final : public Text_Based_Test {
          const Botan::ECDH_PrivateKey other_private_key(this->rng(), group, other_private_key_value);
 
          const Botan::ECIES_System_Params ecies_params(
-            private_key.domain(), kdf, dem, dem_key_len, mac, mac_key_len, compression_type, flags);
+            private_key.domain(), kdf, dem, dem_key_len, mac, mac_key_len, compression_type, single_hash_mode);
          check_encrypt_decrypt(
             result, private_key, other_private_key, ecies_params, iv, label, plaintext, ciphertext, this->rng());
 
@@ -269,7 +229,6 @@ Test::Result test_other_key_not_set() {
 
    auto rng = Test::new_rng("ecies_other_key_not_set");
 
-   const Flags flags = ecies_flags(false, false, false, true);
    const auto domain = Botan::EC_Group::from_name("secp521r1");
 
    const Botan::BigInt private_key_value(
@@ -285,7 +244,7 @@ Test::Result test_other_key_not_set() {
                                                  "HMAC(SHA-512)",
                                                  20,
                                                  Botan::EC_Point_Format::Compressed,
-                                                 flags);
+                                                 true);
 
    Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, *rng);
 
@@ -300,7 +259,6 @@ Test::Result test_kdf_not_found() {
 
    auto rng = Test::new_rng("ecies_kdf_not_found");
 
-   const Flags flags = ecies_flags(false, false, false, true);
    const auto domain = Botan::EC_Group::from_name("secp521r1");
 
    const Botan::BigInt private_key_value(
@@ -316,7 +274,7 @@ Test::Result test_kdf_not_found() {
                                                  "HMAC(SHA-512)",
                                                  20,
                                                  Botan::EC_Point_Format::Compressed,
-                                                 flags);
+                                                 true);
 
    result.test_throws("kdf not found", [&]() {
       const Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, *rng);
@@ -331,7 +289,6 @@ Test::Result test_mac_not_found() {
 
    auto rng = Test::new_rng("ecies_mac_not_found");
 
-   const Flags flags = ecies_flags(false, false, false, true);
    const auto domain = Botan::EC_Group::from_name("secp521r1");
 
    const Botan::BigInt private_key_value(
@@ -347,7 +304,7 @@ Test::Result test_mac_not_found() {
                                                  "XYZMAC(SHA-512)",
                                                  20,
                                                  Botan::EC_Point_Format::Compressed,
-                                                 flags);
+                                                 true);
 
    result.test_throws("mac not found", [&]() {
       const Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, *rng);
@@ -362,7 +319,6 @@ Test::Result test_cipher_not_found() {
 
    auto rng = Test::new_rng("ecies_cipher_not_found");
 
-   const Flags flags = ecies_flags(false, false, false, true);
    const auto domain = Botan::EC_Group::from_name("secp521r1");
 
    const Botan::BigInt private_key_value(
@@ -378,7 +334,7 @@ Test::Result test_cipher_not_found() {
                                                  "HMAC(SHA-512)",
                                                  20,
                                                  Botan::EC_Point_Format::Compressed,
-                                                 flags);
+                                                 true);
 
    result.test_throws("cipher not found", [&]() {
       const Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, *rng);
