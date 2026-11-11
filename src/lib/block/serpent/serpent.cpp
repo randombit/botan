@@ -391,6 +391,28 @@ void Serpent::clear() {
    zap(m_round_key);
 }
 
+size_t Serpent::parallelism() const {
+#if defined(BOTAN_HAS_SERPENT_AVX512)
+   if(CPUID::has(CPUID::Feature::AVX512)) {
+      return 16;
+   }
+#endif
+
+#if defined(BOTAN_HAS_SERPENT_SIMD8X32)
+   if(CPUID::has(CPUID::Feature::SIMD_8X32)) {
+      return 8;
+   }
+#endif
+
+#if defined(BOTAN_HAS_SERPENT_SIMD)
+   if(CPUID::has(CPUID::Feature::SIMD_4X32)) {
+      return 4;
+   }
+#endif
+
+   return 1;
+}
+
 std::string Serpent::provider() const {
 #if defined(BOTAN_HAS_SERPENT_AVX512)
    if(auto feat = CPUID::check(CPUID::Feature::AVX512)) {
