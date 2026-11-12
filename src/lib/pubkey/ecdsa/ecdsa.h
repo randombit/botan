@@ -109,8 +109,7 @@ class BOTAN_PUBLIC_API(2, 0) ECDSA_PrivateKey final : public ECDSA_PublicKey,
       * @param x the private key (if zero, generate a new random key)
       */
       BOTAN_DEPRECATED("Use one of the other constructors")
-      ECDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x) :
-            EC_PrivateKey(rng, group, x) {}
+      ECDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x);
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 

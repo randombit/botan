@@ -10,6 +10,7 @@
    #include "test_pubkey.h"
    #include "test_rng.h"
    #include <botan/ec_group.h>
+   #include <botan/ec_scalar.h>
    #include <botan/hash.h>
    #include <botan/pubkey.h>
    #include <botan/sm2.h>
@@ -34,8 +35,7 @@ std::unique_ptr<Botan::Private_Key> load_sm2_private_key(const VarMap& vars) {
 
    const auto group = Botan::EC_Group::register_custom_group(oid, p, a, b, xG, yG, order);
 
-   Botan::Null_RNG null_rng;
-   return std::make_unique<Botan::SM2_PrivateKey>(null_rng, group, x);
+   return std::make_unique<Botan::SM2_PrivateKey>(group, Botan::EC_Scalar::from_bigint(group, x));
 }
 
 class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test {

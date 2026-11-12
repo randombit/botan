@@ -107,13 +107,6 @@ EC_Scalar generate_sm2_private_key(RandomNumberGenerator& rng, const EC_Group& g
 SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group) :
       SM2_PrivateKey(group, generate_sm2_private_key(rng, group)) {}
 
-SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x) :
-      EC_PrivateKey(rng, group, x), m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()) {
-   if(m_da_inv.is_zero()) {
-      throw Decoding_Error("SM2 private key cannot equal n-1");
-   }
-}
-
 namespace {
 
 std::vector<uint8_t> sm2_compute_za(HashFunction& hash,

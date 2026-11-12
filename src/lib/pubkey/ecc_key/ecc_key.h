@@ -141,22 +141,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_PrivateKey : public virtual EC_PublicKey,
 
    protected:
       /**
-      * If x=0, creates a new private key in the domain
-      * using the given rng. If with_modular_inverse is set,
-      * the public key will be calculated by multiplying
-      * the base point with the modular inverse of
-      * x (as in ECGDSA and ECKCDSA), otherwise by
-      * multiplying directly with x (as in ECDSA).
-      *
-      * TODO: Remove, once the respective deprecated constructors of the
-      *       concrete ECC algorithms is removed.
-      */
-      EC_PrivateKey(RandomNumberGenerator& rng,
-                    const EC_Group& group,
-                    const BigInt& x,
-                    bool with_modular_inverse = false);
-
-      /**
       * Creates a new private key
       *
       * If @p with_modular_inverse is set, the public key will be calculated by

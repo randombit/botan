@@ -88,15 +88,6 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PrivateKey final : public SM2_PublicKey,
       */
       SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group);
 
-      /**
-      * Create a private key.
-      * @param rng a random number generator
-      * @param group parameters to used for this key
-      * @param x the private key (if zero, generate a new random key)
-      */
-      BOTAN_DEPRECATED("Use one of the other constructors")
-      SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x);
-
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       std::unique_ptr<Public_Key> public_key() const override;

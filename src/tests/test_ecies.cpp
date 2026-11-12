@@ -9,6 +9,7 @@
 
 #if defined(BOTAN_HAS_ECIES)
    #include <botan/bigint.h>
+   #include <botan/ec_scalar.h>
    #include <botan/ecdh.h>
    #include <botan/ecies.h>
    #include <botan/hex.h>
@@ -133,12 +134,12 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
          const auto domain = Botan::EC_Group::register_custom_group(oid, p, a, b, gx, gy, order);
 
          // keys of bob
-         const Botan::ECDH_PrivateKey other_private_key(this->rng(), domain, x);
+         const Botan::ECDH_PrivateKey other_private_key(domain, Botan::EC_Scalar::from_bigint(domain, x));
          const auto other_public_key_point = Botan::EC_AffinePoint::from_bigint_xy(domain, hx, hy).value();
          const Botan::ECDH_PublicKey other_public_key(domain, other_public_key_point);
 
          // (ephemeral) keys of alice
-         const Botan::ECDH_PrivateKey eph_private_key(this->rng(), domain, r);
+         const Botan::ECDH_PrivateKey eph_private_key(domain, Botan::EC_Scalar::from_bigint(domain, r));
          const auto eph_public_key_bin = eph_private_key.public_value(compression_type);
          result.test_bin_eq("encoded (ephemeral) public key", eph_public_key_bin, c0);
 
@@ -205,8 +206,9 @@ class ECIES_Tests final : public Text_Based_Test {
 
          const auto group = Botan::EC_Group::from_name(curve);
 
-         const Botan::ECDH_PrivateKey private_key(this->rng(), group, private_key_value);
-         const Botan::ECDH_PrivateKey other_private_key(this->rng(), group, other_private_key_value);
+         const Botan::ECDH_PrivateKey private_key(group, Botan::EC_Scalar::from_bigint(group, private_key_value));
+         const Botan::ECDH_PrivateKey other_private_key(group,
+                                                        Botan::EC_Scalar::from_bigint(group, other_private_key_value));
 
          const Botan::ECIES_System_Params ecies_params(
             private_key.domain(), kdf, dem, dem_key_len, mac, mac_key_len, compression_type, single_hash_mode);
@@ -233,7 +235,7 @@ Test::Result test_other_key_not_set() {
       "5002761777100287880684822948852132235484464537021197213998300006"
       "547176718172344447619746779823");
 
-   const Botan::ECDH_PrivateKey private_key(*rng, domain, private_key_value);
+   const Botan::ECDH_PrivateKey private_key(domain, Botan::EC_Scalar::from_bigint(domain, private_key_value));
    const Botan::ECIES_System_Params ecies_params(private_key.domain(),
                                                  "KDF1-18033(SHA-512)",
                                                  "AES-256/CBC",
@@ -263,7 +265,7 @@ Test::Result test_kdf_not_found() {
       "5002761777100287880684822948852132235484464537021197213998300006"
       "547176718172344447619746779823");
 
-   const Botan::ECDH_PrivateKey private_key(*rng, domain, private_key_value);
+   const Botan::ECDH_PrivateKey private_key(domain, Botan::EC_Scalar::from_bigint(domain, private_key_value));
    const Botan::ECIES_System_Params ecies_params(private_key.domain(),
                                                  "KDF-XYZ(SHA-512)",
                                                  "AES-256/CBC",
@@ -293,7 +295,7 @@ Test::Result test_mac_not_found() {
       "5002761777100287880684822948852132235484464537021197213998300006"
       "547176718172344447619746779823");
 
-   const Botan::ECDH_PrivateKey private_key(*rng, domain, private_key_value);
+   const Botan::ECDH_PrivateKey private_key(domain, Botan::EC_Scalar::from_bigint(domain, private_key_value));
    const Botan::ECIES_System_Params ecies_params(private_key.domain(),
                                                  "KDF1-18033(SHA-512)",
                                                  "AES-256/CBC",
@@ -323,7 +325,7 @@ Test::Result test_cipher_not_found() {
       "5002761777100287880684822948852132235484464537021197213998300006"
       "547176718172344447619746779823");
 
-   const Botan::ECDH_PrivateKey private_key(*rng, domain, private_key_value);
+   const Botan::ECDH_PrivateKey private_key(domain, Botan::EC_Scalar::from_bigint(domain, private_key_value));
    const Botan::ECIES_System_Params ecies_params(private_key.domain(),
                                                  "KDF1-18033(SHA-512)",
                                                  "AES-XYZ-256/CBC",
@@ -357,8 +359,9 @@ Test::Result test_system_params_short_ctor() {
       "5866095315090327914760325168219669828915074071456176066304457448"
       "25404691681749451640151380153");
 
-   const Botan::ECDH_PrivateKey private_key(*rng, domain, private_key_value);
-   const Botan::ECDH_PrivateKey other_private_key(*rng, domain, other_private_key_value);
+   const Botan::ECDH_PrivateKey private_key(domain, Botan::EC_Scalar::from_bigint(domain, private_key_value));
+   const Botan::ECDH_PrivateKey other_private_key(domain,
+                                                  Botan::EC_Scalar::from_bigint(domain, other_private_key_value));
 
    const Botan::ECIES_System_Params ecies_params(
       private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32, "HMAC(SHA-512)", 16);
@@ -400,8 +403,9 @@ Test::Result test_ciphertext_too_short() {
 
    auto rng = Test::new_rng("ecies_ciphertext_too_short");
 
-   const Botan::ECDH_PrivateKey private_key(*rng, domain, private_key_value);
-   const Botan::ECDH_PrivateKey other_private_key(*rng, domain, other_private_key_value);
+   const Botan::ECDH_PrivateKey private_key(domain, Botan::EC_Scalar::from_bigint(domain, private_key_value));
+   const Botan::ECDH_PrivateKey other_private_key(domain,
+                                                  Botan::EC_Scalar::from_bigint(domain, other_private_key_value));
 
    const Botan::ECIES_System_Params ecies_params(
       private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32, "HMAC(SHA-512)", 16);

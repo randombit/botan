@@ -12,6 +12,7 @@
 
    #include <botan/der_enc.h>
    #include <botan/ec_apoint.h>
+   #include <botan/ec_scalar.h>
    #include <botan/p11_mechanism.h>
    #include <botan/pk_ops.h>
    #include <botan/pk_options_readers.h>
@@ -28,9 +29,8 @@ ECDH_PublicKey PKCS11_ECDH_PublicKey::export_key() const {
 
 ECDH_PrivateKey PKCS11_ECDH_PrivateKey::export_key() const {
    auto priv_key = get_attribute_value(AttributeType::Value);
-
-   Null_RNG rng;
-   return ECDH_PrivateKey(rng, domain(), BigInt::from_bytes(priv_key));
+   // CKA_VALUE need not be zero padded to the order length, so deserialize may reject it
+   return ECDH_PrivateKey(domain(), EC_Scalar::from_bigint(domain(), BigInt::from_bytes(priv_key)));
 }
 
 std::unique_ptr<Public_Key> PKCS11_ECDH_PrivateKey::public_key() const {

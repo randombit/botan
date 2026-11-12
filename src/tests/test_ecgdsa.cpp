@@ -12,6 +12,7 @@
    #include "test_pubkey.h"
    #include <botan/bigint.h>
    #include <botan/ec_group.h>
+   #include <botan/ec_scalar.h>
    #include <botan/ecgdsa.h>
 #endif
 
@@ -37,7 +38,7 @@ class ECGDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
          const BigInt x = vars.get_req_bn("X");
          const auto group = Botan::EC_Group::from_name(group_id);
 
-         return std::make_unique<Botan::ECGDSA_PrivateKey>(this->rng(), group, x);
+         return std::make_unique<Botan::ECGDSA_PrivateKey>(group, Botan::EC_Scalar::from_bigint(group, x));
       }
 
       std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Hash"); }
