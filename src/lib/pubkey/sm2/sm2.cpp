@@ -73,17 +73,14 @@ bool SM2_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
 
 SM2_PrivateKey::SM2_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
       EC_PrivateKey(assert_sm2_algorithm_identifier(alg_id), key_bits),
-      m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
-      m_da_inv_legacy(m_da_inv.to_bigint()) {
+      m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()) {
    if(m_da_inv.is_zero()) {
       throw Decoding_Error("SM2 private key cannot equal n-1");
    }
 }
 
 SM2_PrivateKey::SM2_PrivateKey(const EC_Group& group, const EC_Scalar& x) :
-      EC_PrivateKey(group, x),
-      m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
-      m_da_inv_legacy(m_da_inv.to_bigint()) {
+      EC_PrivateKey(group, x), m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()) {
    if(m_da_inv.is_zero()) {
       throw Decoding_Error("SM2 private key cannot equal n-1");
    }
@@ -111,9 +108,7 @@ SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group
       SM2_PrivateKey(group, generate_sm2_private_key(rng, group)) {}
 
 SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x) :
-      EC_PrivateKey(rng, group, x),
-      m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
-      m_da_inv_legacy(m_da_inv.to_bigint()) {
+      EC_PrivateKey(rng, group, x), m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()) {
    if(m_da_inv.is_zero()) {
       throw Decoding_Error("SM2 private key cannot equal n-1");
    }

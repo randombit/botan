@@ -107,14 +107,10 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PrivateKey final : public SM2_PublicKey,
       std::unique_ptr<PK_Ops::Decryption> _create_decryption_op(
          RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const override;
 
-      // TODO(Botan4) remove this and the member variable
-      BOTAN_DEPRECATED("Deprecated no replacement") const BigInt& get_da_inv() const { return m_da_inv_legacy; }
-
       const EC_Scalar& _get_da_inv() const { return m_da_inv; }
 
    private:
       EC_Scalar m_da_inv;
-      BigInt m_da_inv_legacy;
 };
 
 BOTAN_DIAGNOSTIC_POP

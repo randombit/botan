@@ -292,35 +292,6 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
       */
       EC_AffinePoint& operator=(EC_AffinePoint&& other) noexcept;
 
-      /**
-      * Multiply by the group generator returning a complete point
-      * @param scalar the scalar to multiply the generator by
-      * @param rng a random number generator, used for blinding
-      * @return the resulting point
-      */
-      BOTAN_DEPRECATED("Use version without workspace arg")
-      static EC_AffinePoint g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& /*ws*/) {
-         return EC_AffinePoint::g_mul(scalar, rng);
-      }
-
-      /**
-      * Multiply a point by a scalar returning a complete point
-      * @param scalar the scalar to multiply this point by
-      * @param rng a random number generator, used for blinding
-      * @return the resulting point
-      */
-      BOTAN_DEPRECATED("Use version without workspace arg")
-      EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& /*ws*/) const {
-         return this->mul(scalar, rng);
-      }
-
-      /// Multiply a point by a scalar, returning the byte encoding of the x coordinate only
-      secure_vector<uint8_t> mul_x_only(const EC_Scalar& scalar,
-                                        RandomNumberGenerator& rng,
-                                        std::vector<BigInt>& /*ws*/) const {
-         return this->mul_x_only(scalar, rng);
-      }
-
       ~EC_AffinePoint();
 
       /**

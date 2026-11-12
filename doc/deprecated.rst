@@ -96,9 +96,6 @@ elliptic curve points.
   Currently explicit parameters are accepted if they match a builtin group or
   a group registered by the application.
 
-- Currently an application specific ``EC_Group`` may use a prime as small as
-  128 bits. In a future release the minimum will be 192 bits.
-
 - The SEC1 standard specifies that the identity element is encoded as a single
   byte consisting of 0. This was not well thought out. In addition identity
   elements are rarely if ever useful serialized into a protocol.  Support for

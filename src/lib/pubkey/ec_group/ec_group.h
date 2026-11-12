@@ -147,9 +147,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       *  - An object identifier must be provided
       *
       *  - The prime must be at least 192 bits and at most 512 bits, and a multiple
-      *    of 32 bits. Currently, as long as BOTAN_DISABLE_DEPRECATED_FEATURES is not
-      *    set, this function will accept primes as small as 128 bits - this lower
-      *    bound will be removed in the next major release.
+      *    of 32 bits.
       *
       *  - As an extension of the above restriction, the prime can also be exactly
       *    the 521-bit Mersenne prime (2**521-1) or exactly the 239-bit prime used in

@@ -106,21 +106,6 @@ class BOTAN_PUBLIC_API(3, 6) EC_Scalar final {
       static EC_Scalar gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng);
 
       /**
-      * Compute the elliptic curve scalar multiplication (g*k) where g is the
-      * standard base point on the curve. Then extract the x coordinate of
-      * the resulting point, and reduce it modulo the group order.
-      *
-      * @param scalar the scalar k to multiply the base point by
-      * @param rng a random number generator, used for blinding
-      * @return the x coordinate of g*k reduced modulo the group order
-      */
-      BOTAN_DEPRECATED("Use version without workspace arg")
-      static EC_Scalar
-         gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& /*ws*/) {
-         return EC_Scalar::gk_x_mod_order(scalar, rng);
-      }
-
-      /**
       * Return the elliptic curve group this scalar is associated with
       */
       EC_Group group() const;

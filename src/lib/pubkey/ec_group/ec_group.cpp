@@ -240,7 +240,7 @@ std::pair<std::shared_ptr<const EC_Group_Data>, bool> EC_Group::DER_decode_EC_gr
          throw Decoding_Error("Invalid ECC cofactor parameter");
       }
 
-      if(p.bits() < 112 || p.bits() > 521 || p.signum() < 0) {
+      if(p.bits() < 192 || p.bits() > 521 || p.signum() < 0) {
          throw Decoding_Error("ECC p parameter is invalid size");
       }
 
@@ -397,14 +397,7 @@ EC_Group EC_Group::register_custom_group(const OID& oid,
                                          const BigInt& order) {
    BOTAN_ARG_CHECK(oid.has_value(), "An OID is required for creating an EC_Group");
 
-   // TODO(Botan4) remove this and require 192 bits minimum
-#if defined(BOTAN_DISABLE_DEPRECATED_FEATURES)
-   constexpr size_t p_bits_lower_bound = 192;
-#else
-   constexpr size_t p_bits_lower_bound = 128;
-#endif
-
-   BOTAN_ARG_CHECK(p.bits() >= p_bits_lower_bound, "EC_Group p too small");
+   BOTAN_ARG_CHECK(p.bits() >= 192, "EC_Group p too small");
    BOTAN_ARG_CHECK(p.bits() <= 521, "EC_Group p too large");
 
    if(p.bits() == 521) {

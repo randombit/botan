@@ -136,8 +136,6 @@ class EC_Group_Data final {
 
       const BigInt& g_y() const { return m_g_y; }
 
-      size_t p_words() const { return m_p_words; }
-
       size_t p_bits() const { return m_p_bits; }
 
       size_t p_bytes() const { return (m_p_bits + 7) / 8; }
@@ -183,7 +181,6 @@ class EC_Group_Data final {
 
       OID m_oid;
       std::vector<uint8_t> m_der_named_curve;
-      size_t m_p_words;
       size_t m_p_bits;
       size_t m_order_bits;
       size_t m_order_bytes;

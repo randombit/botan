@@ -294,6 +294,7 @@ class EC_Group_Registration_Tests final : public Test {
             results.push_back(test_ec_group_explicit_requires_registration());
             results.push_back(test_ec_group_duplicate_orders());
             results.push_back(test_ec_group_incorrect_order());
+            results.push_back(test_ec_group_too_small());
             results.push_back(test_ec_group_registration_with_custom_oid());
             results.push_back(test_ec_group_registration_with_mismatched_custom_oid());
             results.push_back(test_ec_group_alias_oid_cache());
@@ -661,6 +662,32 @@ class EC_Group_Registration_Tests final : public Test {
          result.test_throws<Botan::Decoding_Error>("Explicit group with a cofactor is rejected",
                                                    "Invalid ECC cofactor parameter",
                                                    [&] { static_cast<void>(Botan::EC_Group(cofactor_der)); });
+
+         return result;
+      }
+
+      Test::Result test_ec_group_too_small() {
+         Test::Result result("EC_Group rejects primes smaller than 192 bits");
+
+         Botan::EC_Group::clear_registered_curve_data();
+
+         // secp160r1
+         const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFF");
+         const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFC");
+         const Botan::BigInt b("0x1C97BEFC54BD7A8B65ACF89F81D4D4ADC565FA45");
+         const Botan::BigInt g_x("0x4A96B5688EF573284664698968C38BB913CBFC82");
+         const Botan::BigInt g_y("0x23A628553168947D59DCC912042351377AC5FB32");
+         const Botan::BigInt order("0x0100000000000000000001F4C8F927AED3CA752257");
+
+         result.test_throws<Botan::Invalid_Argument>("Custom 160-bit group is rejected", "EC_Group p too small", [&] {
+            static_cast<void>(Botan::EC_Group::register_custom_group(
+               Botan::OID("1.3.6.1.4.1.25258.100.103"), p, a, b, g_x, g_y, order));
+         });
+
+         const auto der = encode_explicit_group(p, a, b, g_x, g_y, order, 1);
+         result.test_throws<Botan::Decoding_Error>("Explicit 160-bit group is rejected",
+                                                   "ECC p parameter is invalid size",
+                                                   [&] { static_cast<void>(Botan::EC_Group(der)); });
 
          return result;
       }
