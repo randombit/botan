@@ -29,9 +29,10 @@ Random Number Generators
 
       Creates a buffer with some unique values and calls ``randomize_with_input``
 
-      The buffer consists of an 8 byte timestamp. The remainder of the 22 byte
-      buffer is filled from the system RNG if available, otherwise the process ID
-      is appended.
+      The buffer consists of an 8 byte timestamp, followed by 8 bytes from the
+      processor's hardware RNG if one is available and fast. The remainder of
+      the 22 byte buffer is filled from the system RNG if available, otherwise
+      from the processor's hardware RNG if one is available.
 
    .. cpp:function:: uint8_t next_byte()
 
@@ -396,8 +397,11 @@ system RNG into every request, which keeps its output distinct between
 the copies as long as the operating system's own generator was
 reseeded at the restore (on Linux this happens when the hypervisor
 provides a VM generation ID and the guest kernel carries the
-``vmgenid`` driver); the internal state is still the image's until the
-next reseed.
+``vmgenid`` driver). On processors whose hardware RNG instruction
+(``rdrand``, ``darn``, or ``rndr``) is fast enough for routine use,
+its output is mixed in as well, which does not depend on the guest
+kernel being notified at all. The internal state is still the image's
+until the next reseed.
 
 Therefore, as after a fork, it is strongly recommended to explicitly
 reseed any userspace random generators after a restore. An application

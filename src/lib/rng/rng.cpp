@@ -23,6 +23,10 @@
    #include <botan/internal/os_utils.h>
 #endif
 
+#if defined(BOTAN_HAS_HWRNG)
+   #include <botan/internal/hwrng.h>
+#endif
+
 #include <array>
 
 namespace Botan {
@@ -42,12 +46,9 @@ constexpr size_t RollbackInputBytes = 22;
 * repeats its output after a VM rollback the guest was not informed of.
 * Returns the number of bytes written.
 *
-* Ideally, we would use the processor RNG here (RDRAND/DARN), if available.
-* Unfortunately there is a huge variance in the performance of this instruction
-* depending on uarch and microcode; uops.info reports RDRAND instruction costs
-* ranging between 65 to 13800 cycles. On the higher end, a single RDRAND
-* invocation costs more than everything else (clock/pid read, system RNG draw,
-* and the HMAC_DRBG itself)
+* The clock and system RNG are included even if the processor RNG is used, so
+* that a buggy or compromised processor RNG (eg the Zen 2 RDRAND bug which
+* returned all ones) does not control the entire input.
 */
 size_t rollback_unique_input(std::span<uint8_t, RollbackInputBytes> out) {
    BufferStuffer stuffer(out);
@@ -57,11 +58,22 @@ size_t rollback_unique_input(std::span<uint8_t, RollbackInputBytes> out) {
    stuffer.append(store_le(OS::get_high_resolution_clock()));
 #endif
 
+#if defined(BOTAN_HAS_HWRNG)
+   // Output of the processor RNG (RDRAND/DARN/RNDR) cannot be rolled back, but on
+   // some uarchs one read costs more than everything else here, so it is only
+   // used if timing has shown it to be fast
+   if(const auto output = HWRNG::read_if_fast()) {
+      stuffer.append(store_le(*output));
+   }
+#endif
+
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    system_rng().randomize(stuffer.next(stuffer.remaining_capacity()));
-#elif defined(BOTAN_HAS_OS_UTILS)
-   if(const uint32_t pid = OS::get_process_id(); pid != 0) {
-      stuffer.append(store_le(pid));
+#elif defined(BOTAN_HAS_HWRNG)
+   // Without a system RNG the processor RNG is the only unpredictable input, so it is used even if slow
+   if(HWRNG::is_available()) {
+      // This input is best effort, so a hardware failure is ignored
+      std::ignore = HWRNG::fill(stuffer.next(stuffer.remaining_capacity()));
    }
 #endif
 
