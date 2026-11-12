@@ -20,6 +20,8 @@
    #include <botan/x509_key.h>
    #include <botan/internal/ec_inner_data.h>
    #include <array>
+   #include <string_view>
+   #include <utility>
    #if defined(BOTAN_HAS_ECDSA)
       #include <botan/ecdsa.h>
       #include <botan/hash.h>
@@ -139,7 +141,7 @@ Test::Result test_decoding_with_seed() {
          const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
          const auto secp384r1_with_seed =
             Botan::EC_Group::from_PEM(Test::read_data_file("x509/ecc/secp384r1_seed.pem"));
-         result.test_is_true("decoding worked", secp384r1_with_seed.initialized());
+         result.test_is_true("decoding worked", secp384r1_with_seed == secp384r1);
          result.test_bn_eq("P-384 prime", secp384r1_with_seed.get_p(), secp384r1.get_p());
       }
    } catch(Botan::Exception& e) {
@@ -218,6 +220,34 @@ Test::Result test_group_accessor() {
    return result;
 }
 
+Test::Result test_group_never_empty() {
+   Test::Result result("EC_Group is never empty");
+
+   if(Botan::EC_Group::supports_named_group("secp256r1") && Botan::EC_Group::supports_named_group("secp384r1")) {
+      const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
+
+      auto source = secp256r1;
+      const Botan::EC_Group constructed(std::move(source));
+      result.test_is_true("Move construction", constructed == secp256r1);
+      // NOLINTNEXTLINE(*-use-after-move,*-invalid-access-moved,clang-analyzer-cplusplus.Move)
+      result.test_is_true("Move construction leaves the source unchanged", source == secp256r1);
+
+      auto assigned = Botan::EC_Group::from_name("secp384r1");
+      assigned = std::move(source);
+      result.test_is_true("Move assignment", assigned == secp256r1);
+      // NOLINTNEXTLINE(*-use-after-move,*-invalid-access-moved,clang-analyzer-cplusplus.Move)
+      result.test_is_true("Move assignment leaves the source unchanged", source == secp256r1);
+   }
+
+   BOTAN_DIAGNOSTIC_PUSH
+   BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
+   result.test_throws<Botan::Invalid_Argument>("Empty string is rejected",
+                                               [] { static_cast<void>(Botan::EC_Group(std::string_view())); });
+   BOTAN_DIAGNOSTIC_POP
+
+   return result;
+}
+
 class ECC_Unit_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -227,6 +257,7 @@ class ECC_Unit_Tests final : public Test {
          results.push_back(test_mixed_points());
          results.push_back(test_mixed_scalars());
          results.push_back(test_group_accessor());
+         results.push_back(test_group_never_empty());
 
          return results;
       }

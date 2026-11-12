@@ -235,11 +235,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       }
 
       /**
-      * Create an uninitialized EC_Group
-      */
-      BOTAN_DEPRECATED("Deprecated no replacement") EC_Group();
-
-      /**
       * Unregister a previously registered group.
       *
       * Using this is discouraged for normal use. This is only useful or necessary if
@@ -258,8 +253,10 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
 
       /**
       * Move constructor
+      *
+      * This copies, so a moved-from group remains valid
       */
-      EC_Group(EC_Group&&) = default;
+      EC_Group(EC_Group&& other) noexcept;
 
       /**
       * Copy assignment
@@ -270,16 +267,10 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /**
       * Move assignment
       * @return reference to this
-      */
-      EC_Group& operator=(EC_Group&&) = default;
-
-      /**
-      * Return true if this group has been initialized with domain parameters
       *
-      * This is only false for groups created using the deprecated default
-      * constructor.
+      * This copies, so a moved-from group remains valid
       */
-      bool initialized() const { return (m_data != nullptr); }
+      EC_Group& operator=(EC_Group&& other) noexcept;
 
       /**
        * Verify EC_Group domain

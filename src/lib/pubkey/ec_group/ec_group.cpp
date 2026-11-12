@@ -20,6 +20,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/primality.h>
 #include <map>
+#include <utility>
 #include <vector>
 
 namespace Botan {
@@ -277,13 +278,19 @@ std::pair<std::shared_ptr<const EC_Group_Data>, bool> EC_Group::DER_decode_EC_gr
    }
 }
 
-EC_Group::EC_Group() = default;
-
 EC_Group::~EC_Group() = default;
 
 EC_Group::EC_Group(const EC_Group&) = default;
 
 EC_Group& EC_Group::operator=(const EC_Group&) = default;
+
+// Moving copies, so a moved-from EC_Group is never left empty
+// NOLINTNEXTLINE(performance-move-constructor-init,cert-oop11-cpp)
+EC_Group::EC_Group(EC_Group&& other) noexcept : EC_Group(std::as_const(other)) {}
+
+EC_Group& EC_Group::operator=(EC_Group&& other) noexcept {
+   return (*this = std::as_const(other));
+}
 
 // Internal constructor
 EC_Group::EC_Group(std::shared_ptr<const EC_Group_Data> data) : m_data(std::move(data)) {}
@@ -366,10 +373,6 @@ EC_Group EC_Group::from_name(std::string_view name) {
 }
 
 EC_Group::EC_Group(std::string_view str) {
-   if(str.empty()) {
-      return;  // no initialization / uninitialized
-   }
-
    try {
       const OID oid = OID::from_string(str);
       if(oid.has_value()) {
@@ -574,7 +577,7 @@ bool EC_Group::operator==(const EC_Group& other) const {
 bool EC_Group::verify_group(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
    // Builtin groups are trusted, and register_custom_group fully validates
    // the parameters of any other group before it can be used
-   BOTAN_STATE_CHECK(initialized());
+   BOTAN_STATE_CHECK(m_data != nullptr);
    return true;
 }
 
