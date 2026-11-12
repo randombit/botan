@@ -513,6 +513,46 @@ class CBC_Invalid_Padding_Test final : public Test {
 
 BOTAN_REGISTER_TEST("modes", "cbc_invalid_padding", CBC_Invalid_Padding_Test);
 
+class CCM_Max_Length_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("CCM max length message");
+
+   #if defined(BOTAN_HAS_AEAD_CCM) && defined(BOTAN_HAS_AES)
+         // With L=2 the longest allowed message is 2^16-1 bytes
+         auto enc = Botan::Cipher_Mode::create_or_throw("AES-128/CCM(16,2)", Botan::Cipher_Dir::Encryption);
+         auto dec = Botan::Cipher_Mode::create_or_throw("AES-128/CCM(16,2)", Botan::Cipher_Dir::Decryption);
+
+         const std::vector<uint8_t> key(16, 0xAB);
+         const std::vector<uint8_t> nonce(13, 0xCD);
+         const Botan::secure_vector<uint8_t> ptext(65535, 0x42);
+
+         Botan::secure_vector<uint8_t> ctext = ptext;
+         enc->set_key(key);
+         enc->start(nonce);
+         enc->finish(ctext);
+
+         // The decryptor also buffers the tag, which must not count against the limit
+         dec->set_key(key);
+         dec->start(nonce);
+         result.test_no_throw("update accepts ciphertext plus tag", [&]() { dec->update(ctext); });
+
+         Botan::secure_vector<uint8_t> recovered;
+         result.test_no_throw("finish accepts ciphertext plus tag", [&]() { dec->finish(recovered); });
+         result.test_bin_eq("plaintext recovered", recovered, ptext);
+
+         // One byte more than that is still rejected
+         Botan::secure_vector<uint8_t> too_long(65536 + 16);
+         dec->start(nonce);
+         result.test_throws<Botan::Invalid_State>("update rejects too long input", [&]() { dec->update(too_long); });
+   #endif
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("modes", "ccm_max_length", CCM_Max_Length_Test);
+
 #endif
 
 }  // namespace
