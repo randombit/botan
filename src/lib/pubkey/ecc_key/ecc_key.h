@@ -10,28 +10,21 @@
 #ifndef BOTAN_ECC_PUBLIC_KEY_BASE_H_
 #define BOTAN_ECC_PUBLIC_KEY_BASE_H_
 
-#include <botan/ec_point_format.h>
 #include <botan/pk_keys.h>
 #include <memory>
 
 namespace Botan {
 
+enum class EC_Point_Format : uint8_t;
 class EC_AffinePoint;
-class EC_Point;
 class EC_Group;
 class EC_Scalar;
 class EC_PublicKey_Data;
 class EC_PrivateKey_Data;
 
 /**
-* This class represents abstract ECC public keys. When encoding a key
-* via an encoder that can be accessed via the corresponding member
-* functions, the key will decide upon its internally stored encoding
-* information whether to encode itself with or without domain
-* parameters, or using the domain parameter oid. Furthermore, a public
-* key without domain parameters can be decoded. In that case, it
-* cannot be used for verification until its domain parameters are set
-* by calling the corresponding member function.
+* This class represents abstract ECC public keys. The domain parameters
+* of a key are always encoded as a named curve OID.
 */
 class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
    public:
@@ -108,8 +101,10 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
 
       EC_PublicKey() = default;
 
-      std::shared_ptr<const EC_PublicKey_Data> m_public_key;             // NOLINT(*non-private-member-variable*)
-      EC_Point_Format m_point_encoding = EC_Point_Format::Uncompressed;  // NOLINT(*non-private-member-variable*)
+      std::shared_ptr<const EC_PublicKey_Data> m_public_key;  // NOLINT(*non-private-member-variable*)
+
+      // Value initialization gives EC_Point_Format::Uncompressed
+      EC_Point_Format m_point_encoding{};  // NOLINT(*non-private-member-variable*)
 };
 
 /**

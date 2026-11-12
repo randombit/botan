@@ -8,7 +8,6 @@
 #define BOTAN_EC_APOINT_H_
 
 #include <botan/concepts.h>
-#include <botan/ec_point_format.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <memory>
@@ -26,6 +25,9 @@ class EC_Scalar;
 
 class EC_Group_Data;
 class EC_AffinePoint_Data;
+
+// Defined in ec_group.h
+enum class EC_Point_Format : uint8_t;
 
 /**
 * Elliptic Curve Point in Affine Representation

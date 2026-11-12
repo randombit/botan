@@ -10,6 +10,7 @@
 #ifndef BOTAN_ECDH_KEY_H_
 #define BOTAN_ECDH_KEY_H_
 
+#include <botan/ec_group.h>
 #include <botan/ecc_key.h>
 
 namespace Botan {

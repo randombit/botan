@@ -13,13 +13,21 @@
 #include <botan/asn1_obj.h>
 #include <botan/bigint.h>
 #include <botan/ec_apoint.h>
-#include <botan/ec_point_format.h>
 #include <botan/ec_scalar.h>
 #include <memory>
 #include <set>
 #include <span>
 
 namespace Botan {
+
+/**
+* This enum indicates the format used to encode an elliptic curve point
+* as an octet string, as specified in SEC1 section 2.3.3
+*/
+enum class EC_Point_Format : uint8_t {
+   Uncompressed = 0,
+   Compressed = 1,
+};
 
 /**
 * This enum indicates the source of the elliptic curve parameters
