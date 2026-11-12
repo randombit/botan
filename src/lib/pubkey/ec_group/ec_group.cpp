@@ -11,7 +11,6 @@
 #include <botan/ec_group.h>
 
 #include <botan/ber_dec.h>
-#include <botan/der_enc.h>
 #include <botan/mutex.h>
 #include <botan/pem.h>
 #include <botan/rng.h>
@@ -557,43 +556,8 @@ std::vector<uint8_t> EC_Group::DER_encode() const {
    return data().der_named_curve();
 }
 
-std::vector<uint8_t> EC_Group::DER_encode(EC_Group_Encoding form) const {
-   if(form == EC_Group_Encoding::Explicit) {
-      std::vector<uint8_t> output;
-      DER_Encoder der(output);
-      const size_t ecpVers1 = 1;
-      const OID curve_type("1.2.840.10045.1.1");  // prime field
-
-      const size_t p_bytes = get_p_bytes();
-
-      const auto generator = EC_AffinePoint::generator(*this).serialize_uncompressed();
-
-      der.start_sequence()
-         .encode(ecpVers1)
-         .start_sequence()
-         .encode(curve_type)
-         .encode(get_p())
-         .end_cons()
-         .start_sequence()
-         .encode(get_a().serialize(p_bytes), ASN1_Type::OctetString)
-         .encode(get_b().serialize(p_bytes), ASN1_Type::OctetString)
-         .end_cons()
-         .encode(generator, ASN1_Type::OctetString)
-         .encode(get_order())
-         .encode(static_cast<size_t>(1))  // cofactor
-         .end_cons();
-      return output;
-   } else if(form == EC_Group_Encoding::NamedCurve) {
-      return this->DER_encode();
-   } else if(form == EC_Group_Encoding::ImplicitCA) {
-      return {0x00, 0x05};
-   } else {
-      throw Internal_Error("EC_Group::DER_encode: Unknown encoding");
-   }
-}
-
-std::string EC_Group::PEM_encode(EC_Group_Encoding form) const {
-   const std::vector<uint8_t> der = DER_encode(form);
+std::string EC_Group::PEM_encode() const {
+   const std::vector<uint8_t> der = DER_encode();
    return PEM_Code::encode(der, "EC PARAMETERS");
 }
 

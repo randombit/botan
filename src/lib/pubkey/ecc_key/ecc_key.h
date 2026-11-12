@@ -58,32 +58,15 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
       const EC_Group& domain() const;
 
       /**
-      * Set the domain parameter encoding to be used when encoding this key.
-      * @param enc the encoding to use
-      *
-      * This function is deprecated; in a future major release only namedCurve
-      * encoding of domain parameters will be allowed.
-      */
-      BOTAN_DEPRECATED("Support for explicit point encoding is deprecated")
-      void set_parameter_encoding(EC_Group_Encoding enc);
-
-      /**
       * Set the point encoding method to be used when encoding this key.
       * @param enc the encoding to use
       */
       void set_point_encoding(EC_Point_Format enc);
 
       /**
-      * Return the DER encoding of this keys domain in whatever format
-      * is preset for this particular key
+      * Return the DER encoding of this key's domain, using namedCurve format
       */
       std::vector<uint8_t> DER_domain() const;
-
-      /**
-      * Get the domain parameter encoding to be used when encoding this key.
-      * @result the encoding to use
-      */
-      EC_Group_Encoding domain_format() const { return m_domain_encoding; }
 
       /**
       * Get the point encoding method to be used when encoding this key.
@@ -125,9 +108,8 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
 
       EC_PublicKey() = default;
 
-      std::shared_ptr<const EC_PublicKey_Data> m_public_key;                // NOLINT(*non-private-member-variable*)
-      EC_Group_Encoding m_domain_encoding = EC_Group_Encoding::NamedCurve;  // NOLINT(*non-private-member-variable*)
-      EC_Point_Format m_point_encoding = EC_Point_Format::Uncompressed;     // NOLINT(*non-private-member-variable*)
+      std::shared_ptr<const EC_PublicKey_Data> m_public_key;             // NOLINT(*non-private-member-variable*)
+      EC_Point_Format m_point_encoding = EC_Point_Format::Uncompressed;  // NOLINT(*non-private-member-variable*)
 };
 
 /**

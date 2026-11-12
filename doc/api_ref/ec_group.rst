@@ -65,13 +65,8 @@ fields are supported.
 
       .. cpp:function:: std::vector<uint8_t> DER_encode() const
 
-         Return the DER encoding of this group.
-
-      .. cpp:function:: std::vector<uint8_t> DER_encode(EC_Group_Encoding form) const
-
-         Return the DER encoding of this group. This variant is deprecated, but allows
-         the curve to be encoded using the explicit (vs OID) encoding. All support for
-         explicitly encoded elliptic curves is deprecated and will be removed in Botan4.
+         Return the DER encoding of this group, which is always the OID of the
+         named curve.
 
       .. cpp:function:: std::string PEM_encode() const
 

@@ -1224,10 +1224,8 @@ Test::Result test_ecdsa_generate_private_key() {
    return result;
 }
 
-PKCS11_ECDSA_KeyPair generate_ecdsa_keypair(const TestSession& test_session,
-                                            const std::string& curve,
-                                            EC_Group_Encoding enc) {
-   EC_PublicKeyGenerationProperties pub_props(EC_Group::from_name(curve).DER_encode(enc));
+PKCS11_ECDSA_KeyPair generate_ecdsa_keypair(const TestSession& test_session, const std::string& curve) {
+   EC_PublicKeyGenerationProperties pub_props(EC_Group::from_name(curve).DER_encode());
    pub_props.set_label("BOTAN_TEST_ECDSA_PUB_KEY");
    pub_props.set_token(true);
    pub_props.set_verify(true);
@@ -1255,7 +1253,7 @@ Test::Result test_ecdsa_generate_keypair() {
    curves.push_back("brainpool512r1");
 
    for(const auto& curve : curves) {
-      const PKCS11_ECDSA_KeyPair keypair = generate_ecdsa_keypair(test_session, curve, EC_Group_Encoding::NamedCurve);
+      const PKCS11_ECDSA_KeyPair keypair = generate_ecdsa_keypair(test_session, curve);
 
       result.test_bin_eq("private key has the public key",
                          keypair.second.public_key()->public_key_bits(),
@@ -1269,8 +1267,8 @@ Test::Result test_ecdsa_generate_keypair() {
    return result;
 }
 
-Test::Result test_ecdsa_sign_verify_core(EC_Group_Encoding enc, const std::string& test_name) {
-   Test::Result result(test_name);
+Test::Result test_ecdsa_sign_verify() {
+   Test::Result result("PKCS11 ECDSA sign and verify");
    const TestSession test_session(true);
    std::vector<std::string> curves;
 
@@ -1285,7 +1283,7 @@ Test::Result test_ecdsa_sign_verify_core(EC_Group_Encoding enc, const std::strin
 
    for(const auto& curve : curves) {
       // generate key pair
-      PKCS11_ECDSA_KeyPair keypair = generate_ecdsa_keypair(test_session, curve, enc);
+      PKCS11_ECDSA_KeyPair keypair = generate_ecdsa_keypair(test_session, curve);
 
       std::vector<uint8_t> plaintext(20, 0x01);
 
@@ -1359,16 +1357,6 @@ Test::Result test_ecdsa_sign_verify_core(EC_Group_Encoding enc, const std::strin
    return result;
 }
 
-Test::Result test_ecdsa_sign_verify() {
-   // pass the curve OID to the PKCS#11 library
-   return test_ecdsa_sign_verify_core(EC_Group_Encoding::NamedCurve, "PKCS11 ECDSA sign and verify");
-}
-
-Test::Result test_ecdsa_curve_import() {
-   // pass the curve parameters to the PKCS#11 library and perform sign/verify to test them
-   return test_ecdsa_sign_verify_core(EC_Group_Encoding::Explicit, "PKCS11 ECDSA sign and verify with imported curve");
-}
-
       #if defined(BOTAN_HAS_RSA)
 Test::Result test_typed_key_search() {
    Test::Result result("PKCS11 typed key search");
@@ -1376,8 +1364,7 @@ Test::Result test_typed_key_search() {
 
    // RSA and EC keys share the same object classes
    const PKCS11_RSA_KeyPair rsa_keypair = generate_rsa_keypair(test_session);
-   const PKCS11_ECDSA_KeyPair ecdsa_keypair =
-      generate_ecdsa_keypair(test_session, "secp256r1", EC_Group_Encoding::NamedCurve);
+   const PKCS11_ECDSA_KeyPair ecdsa_keypair = generate_ecdsa_keypair(test_session, "secp256r1");
 
    const auto check_search = [&]<typename T>(const std::string& what, ObjectHandle expected) {
       try {
@@ -1415,7 +1402,6 @@ class PKCS11_ECDSA_Tests final : public Test {
             {STRING_AND_FUNCTION(test_ecdsa_generate_private_key)},
             {STRING_AND_FUNCTION(test_ecdsa_generate_keypair)},
             {STRING_AND_FUNCTION(test_ecdsa_sign_verify)},
-            {STRING_AND_FUNCTION(test_ecdsa_curve_import)},
       #if defined(BOTAN_HAS_RSA)
             {STRING_AND_FUNCTION(test_typed_key_search)},
       #endif

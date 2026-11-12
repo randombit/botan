@@ -8,8 +8,6 @@
 #include <botan/assert.h>
 #include <botan/tls_signature_scheme.h>
 
-#include <botan/ec_group.h>
-#include <botan/ecc_key.h>
 #include <botan/hex.h>
 #include <botan/pk_keys.h>
 #include <botan/pss_params.h>
@@ -451,11 +449,6 @@ bool Signature_Scheme::is_suitable_for(const Private_Key& private_key) const {
 
    // Each TLS 1.3 ECDSA scheme names the curve of the key
    if(algorithm_name() == "ECDSA") {
-      // Compare the curve itself, as an EC_PublicKey may be set to encode it explicitly
-      if(const auto* ec_key = dynamic_cast<const EC_PublicKey*>(&private_key)) {
-         const auto& curve = ec_key->domain().get_curve_oid();
-         return curve.has_value() && curve.BER_encode() == key_algorithm_identifier().parameters();
-      }
       return key_algorithm_identifier() == private_key.algorithm_identifier();
    }
 

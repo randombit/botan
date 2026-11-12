@@ -111,7 +111,8 @@ class EC_Group_Tests : public Test {
             result.test_is_true("EC_Group via OID is not considered explicit encoding",
                                 !group_via_oid.used_explicit_encoding());
 
-            const auto group_der_explicit = group.DER_encode(Botan::EC_Group_Encoding::Explicit);
+            const auto group_der_explicit = encode_explicit_group(
+               group.get_p(), group.get_a(), group.get_b(), group.get_g_x(), group.get_g_y(), group.get_order(), 1);
             const Botan::EC_Group group_via_explicit(group_der_explicit);
             result.test_is_true("EC_Group via explicit DER is considered explicit encoding",
                                 group_via_explicit.used_explicit_encoding());

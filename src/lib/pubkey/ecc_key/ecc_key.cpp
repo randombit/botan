@@ -73,7 +73,7 @@ std::vector<uint8_t> EC_PublicKey::public_key_bits() const {
 }
 
 std::vector<uint8_t> EC_PublicKey::DER_domain() const {
-   return domain().DER_encode(domain_format());
+   return domain().DER_encode();
 }
 
 void EC_PublicKey::set_point_encoding(EC_Point_Format enc) {
@@ -82,10 +82,6 @@ void EC_PublicKey::set_point_encoding(EC_Point_Format enc) {
    }
 
    m_point_encoding = enc;
-}
-
-void EC_PublicKey::set_parameter_encoding(EC_Group_Encoding form) {
-   m_domain_encoding = form;
 }
 
 const BigInt& EC_PrivateKey::private_value() const {
