@@ -10,14 +10,10 @@
 
 #include "tests.h"
 #include <botan/rng.h>
+#include <memory>
 #include <optional>
+#include <span>
 #include <string>
-
-namespace Botan {
-
-class BlockCipher;
-
-}
 
 namespace Botan_Tests {
 
@@ -144,40 +140,14 @@ class Request_Counting_RNG final : public Botan::RandomNumberGenerator {
       size_t m_randomize_count = 0;
 };
 
-#if defined(BOTAN_HAS_AES)
+#if defined(BOTAN_HAS_CTR_DRBG) && defined(BOTAN_HAS_AES)
 
-// A number of PQC algorithms use CTR_DRBG with AES-256 as a source
-// of randomness for their test vectors. This is not a complete
-// CTR_DRBG implementation, but is sufficient for running such tests
-class CTR_DRBG_AES256 final : public Botan::RandomNumberGenerator {
-   public:
-      std::string name() const override { return "CTR_DRBG(AES-256)"; }
-
-      void clear() override;
-
-      bool accepts_input() const override { return true; }
-
-      bool is_seeded() const override { return true; }
-
-      explicit CTR_DRBG_AES256(std::span<const uint8_t> seed);
-
-      ~CTR_DRBG_AES256() override;
-
-      CTR_DRBG_AES256(const CTR_DRBG_AES256& other) = delete;
-      CTR_DRBG_AES256(CTR_DRBG_AES256&& other) = default;
-      CTR_DRBG_AES256& operator=(const CTR_DRBG_AES256& other) = delete;
-      CTR_DRBG_AES256& operator=(CTR_DRBG_AES256&& other) = delete;
-
-   private:
-      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override;
-
-      void incr_V_into(std::span<uint8_t> output);
-
-      void update(std::span<const uint8_t> provided_data);
-
-      uint64_t m_V0 = 0, m_V1 = 0;
-      std::unique_ptr<Botan::BlockCipher> m_cipher;
-};
+/**
+* A number of PQC algorithms use CTR_DRBG(AES-256) without the derivation
+* function as a source of randomness for their test vectors. Returns such
+* a DRBG instantiated with the given (48 byte) seed.
+*/
+std::unique_ptr<Botan::RandomNumberGenerator> make_pqc_kat_drbg(std::span<const uint8_t> seed);
 
 #endif
 

@@ -48,7 +48,8 @@ Random Number Generators
 
       The caller asserts that the data is full entropy seed material. A stateful
       RNG such as ``HMAC_DRBG`` considers itself seeded once a single call
-      provides at least ``security_level()`` bits. To mix in data which should
+      provides at least ``required_seed_bits()`` bits, which is normally its
+      security level. To mix in data which should
       not be credited use :cpp:func:`RandomNumberGenerator::randomize_with_input`
       with an empty output buffer instead.
 
@@ -61,7 +62,9 @@ Random Number Generators
    .. cpp:function:: void reseed_from_rng(RandomNumberGenerator& rng, \
                      size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS)
 
-      Reseed by calling ``rng`` to acquire ``poll_bits`` data.
+      Reseed by calling ``rng`` to acquire ``poll_bits`` data. A stateful RNG
+      such as ``HMAC_DRBG`` always requests at least enough data to seed
+      itself.
 
 
 RNG Types
@@ -204,6 +207,81 @@ identical seeds (e.g. in KATs or unit tests).
          Like the constructor just taking a PRF, except instead of a PRF object,
          a string specifying what hash to use with HMAC is provided.
 
+CTR_DRBG
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. versionadded:: 3.15.0
+
+CTR_DRBG is a random number generator designed by NIST and specified in SP
+800-90A. It runs a 128-bit block cipher (normally AES) in counter mode, and
+is typically considerably faster than ``HMAC_DRBG``, especially on processors
+with hardware support for AES.
+
+The block cipher must have a 128-bit block size and a 128, 192, or 256 bit
+key. The security level of the DRBG is the key length of the cipher.
+
+All inputs are processed using the block cipher derivation function
+(``Block_Cipher_df``) and may be of any length. The seed material includes a
+nonce, so seeding requires 3/2 of the security level in bits (for example 48
+bytes for AES-256).
+
+.. note::
+   There is no reason to use this class directly unless your application
+   requires CTR_DRBG for some standards conformance reason, or to reproduce
+   test vectors which use it. If you just want a userspace RNG, use
+   ``AutoSeeded_RNG``.
+
+``CTR_DRBG``'s constructors are:
+
+.. cpp:class:: CTR_DRBG
+
+      .. cpp:function:: CTR_DRBG(std::unique_ptr<BlockCipher> cipher, \
+                        RandomNumberGenerator& underlying_rng, \
+                        size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL, \
+                        size_t max_number_of_bytes_per_request = 64 * 1024)
+
+         Creates a DRBG which will automatically reseed as required by making
+         calls to ``underlying_rng`` either after being invoked
+         ``reseed_interval`` times, or if use of ``fork`` system call is
+         detected.
+
+         Like ``HMAC_DRBG``, requests for more than
+         ``max_number_of_bytes_per_request`` bytes are treated as if they were
+         multiple requests each of (at most) the maximum size.
+
+      .. cpp:function:: CTR_DRBG(std::unique_ptr<BlockCipher> cipher, \
+                        Entropy_Sources& entropy_sources, \
+                        size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL, \
+                        size_t max_number_of_bytes_per_request = 64 * 1024)
+
+         Like above function, but instead of an RNG taking a set of entropy
+         sources to seed from as required.
+
+      .. cpp:function:: CTR_DRBG(std::unique_ptr<BlockCipher> cipher, \
+                        RandomNumberGenerator& underlying_rng, \
+                        Entropy_Sources& entropy_sources, \
+                        size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL, \
+                        size_t max_number_of_bytes_per_request = 64 * 1024)
+
+         Like above function, but taking both an RNG and a set of entropy
+         sources to seed from as required.
+
+      .. cpp:function:: CTR_DRBG(std::unique_ptr<BlockCipher> cipher)
+
+         Creates an unseeded DRBG. You must explicitly provide seed data later
+         on in order to use this RNG. Since no source of data is available to
+         automatically reseed, automatic reseeding is disabled when this
+         constructor is used.
+
+         Since this constructor provides no way to reseed automatically, the
+         DRBG refuses to produce output once 2\ :sup:`48` requests have been
+         made since it was last seeded.
+
+      .. cpp:function:: CTR_DRBG(std::string_view cipher)
+
+         Like the constructor just taking a block cipher object, except instead
+         the name of the cipher (such as "AES-256") is provided.
+
 ChaCha_RNG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -318,7 +396,7 @@ estimate. The accumulator's ``goal_reached`` function tells a source when it may
 stop early.
 
 The RNG which initiated the poll considers itself seeded once the total reaches
-its security level. Estimates are summed over the poll, and if sufficient data
+the amount it requires, which is normally its security level. Estimates are summed over the poll, and if sufficient data
 is available in that poll then the RNG is considered seeded. A failed/incomplete
 poll on an unseeded RNG leaves it in an unseeded state; entropy estimates do not
 carry over between polls.

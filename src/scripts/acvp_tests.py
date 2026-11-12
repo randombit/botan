@@ -2899,6 +2899,62 @@ def handle_hmac_drbg(_header: dict, group: dict, test: dict, exp: dict) -> None:
         )
 
 
+# ---- CTR_DRBG ----
+
+_CTR_DRBG_MODES = {"AES-128", "AES-192", "AES-256"}
+
+
+@register("ctrDRBG-1.0", "ctrDRBG-SP800-90Ar1")
+def handle_ctr_drbg(_header: dict, group: dict, test: dict, exp: dict) -> None:
+    _require_aft(group)
+
+    mode = group["mode"]
+    if mode not in _CTR_DRBG_MODES:
+        raise TestSkip(f"Unsupported CTR_DRBG cipher: {mode}")
+
+    # Botan increments all 128 bits of V; this only differs from a shorter
+    # counter field if the counter wraps, which is negligible for 64 bits
+    ctr_len = group.get("counterFieldLen", 128)
+    if ctr_len < 64:
+        raise TestSkip(f"CTR_DRBG counter field length {ctr_len} not supported")
+
+    # The variant without the derivation function is only available to the C++ tests
+    if not group["derFunc"]:
+        raise TestSkip("CTR_DRBG without the derivation function is not exposed")
+
+    entropy = _from_hex(test["entropyInput"])
+    nonce = _opt_hex(test, "nonce")
+    perso = _opt_hex(test, "persoString")
+    out_len = group["returnedBitsLen"] // 8
+    pred_resistance = group.get("predResistance", False)
+
+    drbg = botan.RandomNumberGenerator.drbg(f"CTR_DRBG({mode})", entropy + nonce + perso)
+
+    out = b""
+    for item in test["otherInput"]:
+        ai = _opt_hex(item, "additionalInput")
+        ent = _opt_hex(item, "entropyInput")
+
+        if item["intendedUse"] == "reSeed":
+            drbg.add_entropy(ent + ai)
+        elif pred_resistance and ent:
+            # With prediction resistance, reseed using the additional input
+            # then generate without any additional input
+            drbg.add_entropy(ent + ai)
+            out = drbg.generate_with_input(out_len, b"")
+        else:
+            out = drbg.generate_with_input(out_len, ai)
+
+    if out.hex() != exp["returnedBits"].lower():
+        raise TestFailure(
+            {
+                "Mode": mode,
+                "ReturnedBits": exp["returnedBits"],
+                "ComputedBits": out.hex(),
+            }
+        )
+
+
 # ---- XECDH (RFC 7748) ----
 
 
@@ -3011,8 +3067,6 @@ _registry.ignore(
     "safePrimes-keyGen-1.0",
     "XECDH-SSC-RFC7748",
     # Unimplemented DRBGs and support fns
-    "ctrDRBG-1.0",
-    "ctrDRBG-SP800-90Ar1",
     "hashDRBG-1.0",
     "hashDRBG-SP800-90Ar1",
     "ConditioningComponent-AES-CBC-MAC-Sp800-90B",

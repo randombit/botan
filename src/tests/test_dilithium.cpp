@@ -43,7 +43,8 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_DILITHIUM_COMMON) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SHA3)
+#if defined(BOTAN_HAS_DILITHIUM_COMMON) && defined(BOTAN_HAS_CTR_DRBG) && defined(BOTAN_HAS_AES) && \
+   defined(BOTAN_HAS_SHA3)
 
 template <typename DerivedT>
 class Dilithium_KAT_Tests : public Text_Based_Test {
@@ -64,7 +65,7 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
 
          auto sha3_256 = Botan::HashFunction::create_or_throw("SHA-3(256)");
 
-         auto dilithium_test_rng = std::make_unique<CTR_DRBG_AES256>(ref_seed);
+         auto dilithium_test_rng = make_pqc_kat_drbg(ref_seed);
 
          const Botan::Dilithium_PrivateKey priv_key(*dilithium_test_rng, DerivedT::mode);
 
@@ -145,6 +146,10 @@ REGISTER_ML_DSA_KAT_TEST(4x4, Randomized);
 REGISTER_ML_DSA_KAT_TEST(6x5, Randomized);
 REGISTER_ML_DSA_KAT_TEST(8x7, Randomized);
    #endif
+
+#endif
+
+#if defined(BOTAN_HAS_DILITHIUM_COMMON) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SHA3)
 
 class DilithiumRoundtripTests final : public Test {
    public:
@@ -796,7 +801,7 @@ BOTAN_REGISTER_TEST("pubkey", "dilithium_private_key_formats", Dilithium_Privkey
 
 #endif
 
-#if defined(BOTAN_HAS_ML_DSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+#if defined(BOTAN_HAS_ML_DSA) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 class MLDSA_Privkey_Tests : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -925,10 +930,8 @@ class MLDSA_Privkey_Tests : public Test {
             }
 
             std::vector<uint8_t> ref_msg = {0, 1, 2, 4};
-            std::vector<uint8_t> rng_seed(48);
-            Botan_Tests::CTR_DRBG_AES256 rng(rng_seed);
-            auto signer = Botan::PK_Signer(*priv_key, rng, Botan::PK_Signature_Options());
-            auto signature = signer.sign_message(ref_msg.data(), ref_msg.size(), rng);
+            auto signer = Botan::PK_Signer(*priv_key, this->rng(), Botan::PK_Signature_Options());
+            auto signature = signer.sign_message(ref_msg.data(), ref_msg.size(), this->rng());
 
             auto pub_key = priv_key->public_key();
             auto verifier = Botan::PK_Verifier(*pub_key, Botan::PK_Signature_Options());
