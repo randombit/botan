@@ -39,9 +39,6 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       m_p_bits(p.bits()),
       m_order_bits(order.bits()),
       m_order_bytes((m_order_bits + 7) / 8),
-      m_a_is_minus_3(a == p - 3),
-      m_a_is_zero(a.is_zero()),
-      m_order_is_less_than_p(m_order < p),
       m_source(source) {
    BOTAN_ARG_CHECK(m_oid.has_value(), "EC_Group OID must be set");
 

@@ -10,7 +10,9 @@
 
 #include <botan/ecdsa.h>
 
+#include <botan/bigint.h>
 #include <botan/ec_group.h>
+#include <botan/ec_scalar.h>
 #include <botan/pk_options_readers.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/keypair.h>

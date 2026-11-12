@@ -8,6 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ECIES)
+   #include <botan/bigint.h>
    #include <botan/ecdh.h>
    #include <botan/ecies.h>
    #include <botan/hex.h>

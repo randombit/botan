@@ -13,6 +13,7 @@
    #include <botan/data_src.h>
    #include <botan/der_enc.h>
    #include <botan/ec_group.h>
+   #include <botan/ec_scalar.h>
    #include <botan/hex.h>
    #include <botan/pk_keys.h>
    #include <botan/rng.h>
@@ -116,18 +117,6 @@ class EC_Group_Tests : public Test {
             const Botan::EC_Group group_via_explicit(group_der_explicit);
             result.test_is_true("EC_Group via explicit DER is considered explicit encoding",
                                 group_via_explicit.used_explicit_encoding());
-
-            if(group.a_is_minus_3()) {
-               result.test_bn_eq("Group A equals -3", group.get_a(), group.get_p() - 3);
-            } else {
-               result.test_bn_ne("Group " + group_name + " A does not equal -3", group.get_a(), group.get_p() - 3);
-            }
-
-            if(group.a_is_zero()) {
-               result.test_bn_eq("Group A is zero", group.get_a(), BigInt(0));
-            } else {
-               result.test_bn_ne("Group " + group_name + " A does not equal zero", group.get_a(), BigInt(0));
-            }
 
             result.end_timer();
 

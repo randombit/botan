@@ -8,7 +8,9 @@
 #ifndef BOTAN_FFI_EC_H_
 #define BOTAN_FFI_EC_H_
 
+#include <botan/ec_apoint.h>
 #include <botan/ec_group.h>
+#include <botan/ec_scalar.h>
 #include <botan/internal/ffi_util.h>
 
 extern "C" {

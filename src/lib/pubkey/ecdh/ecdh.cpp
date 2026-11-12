@@ -11,6 +11,7 @@
 
 #include <botan/bigint.h>
 #include <botan/ec_group.h>
+#include <botan/ec_scalar.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/pk_options_impl.h>

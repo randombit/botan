@@ -9,6 +9,7 @@
 */
 
 #include <botan/ec_group.h>
+#include <botan/ec_scalar.h>
 
 #include <botan/ber_dec.h>
 #include <botan/mutex.h>

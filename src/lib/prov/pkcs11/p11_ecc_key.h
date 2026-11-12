@@ -14,6 +14,7 @@
 
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
    #include <botan/asn1_obj.h>
+   #include <botan/bigint.h>
    #include <botan/ec_group.h>
    #include <botan/ecc_key.h>
    #include <vector>

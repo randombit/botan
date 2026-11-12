@@ -6,6 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/bigint.h>
 #include <botan/ec_group.h>
 
 namespace Botan {

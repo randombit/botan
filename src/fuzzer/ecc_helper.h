@@ -10,6 +10,7 @@
 #include "fuzzers.h"
 
 #include <botan/ec_group.h>
+#include <botan/ec_scalar.h>
 #include <botan/hex.h>
 #include <botan/numthry.h>
 #include <botan/internal/barrett.h>

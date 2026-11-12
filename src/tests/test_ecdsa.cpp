@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_ECDSA)
    #include "test_pubkey.h"
    #include "test_rng.h"
+   #include <botan/bigint.h>
    #include <botan/ec_group.h>
    #include <botan/ecdsa.h>
    #include <botan/hash.h>

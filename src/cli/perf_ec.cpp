@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_ECC_GROUP)
    #include <botan/assert.h>
    #include <botan/ec_group.h>
+   #include <botan/ec_scalar.h>
    #include <botan/rng.h>
 #endif
 

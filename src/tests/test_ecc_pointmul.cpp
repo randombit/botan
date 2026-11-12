@@ -10,6 +10,7 @@
    #include <botan/assert.h>
    #include <botan/bigint.h>
    #include <botan/ec_group.h>
+   #include <botan/ec_scalar.h>
    #include <botan/rng.h>
    #include <botan/internal/fmt.h>
 #endif

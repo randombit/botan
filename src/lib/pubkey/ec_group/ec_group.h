@@ -11,14 +11,19 @@
 #define BOTAN_ECC_DOMAIN_PARAMETERS_H_
 
 #include <botan/asn1_obj.h>
-#include <botan/bigint.h>
 #include <botan/ec_apoint.h>
-#include <botan/ec_scalar.h>
 #include <memory>
+#include <optional>
 #include <set>
 #include <span>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace Botan {
+
+class BigInt;
+class EC_Scalar;
 
 /**
 * This enum indicates the format used to encode an elliptic curve point
@@ -531,96 +536,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @return the inner representation of this group
       */
       const std::shared_ptr<const EC_Group_Data>& _data() const { return m_data; }
-
-      /**
-      * Return if a == -3 mod p
-      */
-      BOTAN_DEPRECATED("Deprecated no replacement") bool a_is_minus_3() const { return get_a() + 3 == get_p(); }
-
-      /**
-      * Return if a == 0 mod p
-      */
-      BOTAN_DEPRECATED("Deprecated no replacement") bool a_is_zero() const { return get_a().is_zero(); }
-
-      /**
-      * Reduce x modulo the order
-      * @param x the value to reduce
-      * @return x reduced modulo the group order
-      */
-      BOTAN_DEPRECATED("Use EC_Scalar") BigInt mod_order(const BigInt& x) const {
-         return EC_Scalar::from_bytes_mod_order(*this, x.serialize()).to_bigint();
-      }
-
-      /**
-      * Return inverse of x modulo the order
-      * @param x the value to invert
-      * @return the multiplicative inverse of x modulo the group order
-      */
-      BOTAN_DEPRECATED("Use EC_Scalar") BigInt inverse_mod_order(const BigInt& x) const {
-         return EC_Scalar::from_bigint(*this, x).invert().to_bigint();
-      }
-
-      /**
-      * Reduce (x*x) modulo the order
-      * @param x the value to square
-      * @return (x*x) reduced modulo the group order
-      */
-      BOTAN_DEPRECATED("Use EC_Scalar") BigInt square_mod_order(const BigInt& x) const {
-         auto xs = EC_Scalar::from_bigint(*this, x);
-         xs.square_self();
-         return xs.to_bigint();
-      }
-
-      /**
-      * Reduce (x*y) modulo the order
-      * @param x the first factor
-      * @param y the second factor
-      * @return (x*y) reduced modulo the group order
-      */
-      BOTAN_DEPRECATED("Use EC_Scalar") BigInt multiply_mod_order(const BigInt& x, const BigInt& y) const {
-         const auto xs = EC_Scalar::from_bigint(*this, x);
-         const auto ys = EC_Scalar::from_bigint(*this, y);
-         return (xs * ys).to_bigint();
-      }
-
-      /**
-      * Reduce (x*y*z) modulo the order
-      * @param x the first factor
-      * @param y the second factor
-      * @param z the third factor
-      * @return (x*y*z) reduced modulo the group order
-      */
-      BOTAN_DEPRECATED("Use EC_Scalar")
-      BigInt multiply_mod_order(const BigInt& x, const BigInt& y, const BigInt& z) const {
-         const auto xs = EC_Scalar::from_bigint(*this, x);
-         const auto ys = EC_Scalar::from_bigint(*this, y);
-         const auto zs = EC_Scalar::from_bigint(*this, z);
-         return (xs * ys * zs).to_bigint();
-      }
-
-      /**
-      * Return x^3 modulo the order
-      * @param x the value to cube
-      * @return (x*x*x) reduced modulo the group order
-      */
-      BOTAN_DEPRECATED("Deprecated no replacement") BigInt cube_mod_order(const BigInt& x) const {
-         const auto xs = EC_Scalar::from_bigint(*this, x);
-         return (xs * xs * xs).to_bigint();
-      }
-
-      /**
-      * Return the size in bytes of a point encoded in the given format
-      * @param format the point encoding format
-      * @return the length of the encoding in bytes
-      */
-      BOTAN_DEPRECATED("Just serialize the point and check") size_t point_size(EC_Point_Format format) const {
-         // Uncompressed is (x,y), compressed is x, +1 format byte
-         if(format == EC_Point_Format::Compressed) {
-            return (1 + get_p_bytes());
-         } else {
-            return (1 + 2 * get_p_bytes());
-         }
-      }
 
    private:
       friend class EC_Group_Data_Map;

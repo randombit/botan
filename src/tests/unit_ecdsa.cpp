@@ -11,6 +11,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ECDSA)
+   #include <botan/bigint.h>
    #include <botan/data_src.h>
    #include <botan/ec_group.h>
    #include <botan/ecdsa.h>

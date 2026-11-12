@@ -132,8 +132,6 @@ class EC_Group_Data final {
 
       const BigInt& order() const { return m_order; }
 
-      bool order_is_less_than_p() const { return m_order_is_less_than_p; }
-
       const BigInt& g_x() const { return m_g_x; }
 
       const BigInt& g_y() const { return m_g_y; }
@@ -147,10 +145,6 @@ class EC_Group_Data final {
       size_t order_bits() const { return m_order_bits; }
 
       size_t order_bytes() const { return m_order_bytes; }
-
-      bool a_is_minus_3() const { return m_a_is_minus_3; }
-
-      bool a_is_zero() const { return m_a_is_zero; }
 
       EC_Group_Source source() const { return m_source; }
 
@@ -193,9 +187,6 @@ class EC_Group_Data final {
       size_t m_p_bits;
       size_t m_order_bits;
       size_t m_order_bytes;
-      bool m_a_is_minus_3;
-      bool m_a_is_zero;
-      bool m_order_is_less_than_p;
       EC_Group_Source m_source;
       EC_Group_Engine m_engine;
 };

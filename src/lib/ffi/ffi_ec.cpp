@@ -7,6 +7,7 @@
 
 #include <botan/ffi.h>
 
+#include <botan/ec_scalar.h>
 #include <botan/internal/ffi_ec.h>
 #include <botan/internal/ffi_mp.h>
 #include <botan/internal/ffi_oid.h>

@@ -9,7 +9,9 @@
 #if defined(BOTAN_HAS_ECDH)
    #include "test_pubkey.h"
    #include <botan/asn1_obj.h>
+   #include <botan/bigint.h>
    #include <botan/ec_group.h>
+   #include <botan/ec_scalar.h>
    #include <botan/ecdh.h>
    #include <botan/pubkey.h>
 #endif
