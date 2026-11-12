@@ -619,7 +619,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @return the length of the encoding in bytes
       */
       BOTAN_DEPRECATED("Just serialize the point and check") size_t point_size(EC_Point_Format format) const {
-         // Hybrid and standard format are (x,y), compressed is y, +1 format byte
+         // Uncompressed is (x,y), compressed is x, +1 format byte
          if(format == EC_Point_Format::Compressed) {
             return (1 + get_p_bytes());
          } else {

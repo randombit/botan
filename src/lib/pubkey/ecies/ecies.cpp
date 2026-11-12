@@ -237,12 +237,7 @@ size_t ECIES_Decryptor::do_decrypt(uint8_t& valid_mask,
       } else if(format == EC_Point_Format::Uncompressed) {
          return EC_AffinePoint::deserialize_uncompressed(group, key);
       } else {
-         // TODO(Botan4) remove this branch
-         if(key.empty() || (key[0] != 0x06 && key[0] != 0x07)) {
-            return {};
-         } else {
-            return EC_AffinePoint::deserialize(group, key);
-         }
+         return {};
       }
    }(m_params.group(), m_params.point_format(), other_public_key_bin);
 

@@ -882,20 +882,15 @@ class EC_PointEnc_Tests final : public Test {
                   result.test_failure("Failed to deserialize compressed point");
                }
 
-               // The deprecated hybrid encoding; accepted by the permissive
-               // deserialization (until Botan4) but not the strict variants
+               // The SEC1 hybrid encoding is not supported
                const auto pt_h = [&]() {
                   auto x = pt_u;
                   x[0] = ((pt_u[pt_u.size() - 1] & 0x01) == 0x01) ? 0x07 : 0x06;
                   return x;
                }();
 
-               if(auto d_pt_h = Botan::EC_AffinePoint::deserialize(group, pt_h)) {
-                  result.test_bin_eq(
-                     "Permissive deserialization accepts hybrid encoding", d_pt_h->serialize_uncompressed(), pt_u);
-               } else {
-                  result.test_failure("Failed to deserialize hybrid point");
-               }
+               result.test_is_false("deserialize rejects hybrid",
+                                    Botan::EC_AffinePoint::deserialize(group, pt_h).has_value());
 
                if(auto d_pt_u = Botan::EC_AffinePoint::deserialize_uncompressed(group, pt_u)) {
                   result.test_bin_eq(

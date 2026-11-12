@@ -193,22 +193,6 @@ std::optional<EC_AffinePoint> EC_AffinePoint::deserialize(const EC_Group& group,
          return EC_AffinePoint::deserialize_compressed(group, bytes);
       case 0x04:
          return EC_AffinePoint::deserialize_uncompressed(group, bytes);
-      case 0x06:
-      case 0x07: {
-         // The deprecated "hybrid" point format
-         // TODO(Botan4) remove this
-         const bool hdr_y_is_even = bytes[0] == 0x06;
-         const bool y_is_even = (bytes.back() & 0x01) == 0;
-         const size_t expected_len = 1 + 2 * group.get_p_bytes();
-
-         if(hdr_y_is_even == y_is_even && bytes.size() == expected_len) {
-            std::vector<uint8_t> sec1(bytes.begin(), bytes.end());
-            sec1[0] = 0x04;
-            return EC_AffinePoint::deserialize_uncompressed(group, sec1);
-         } else {
-            return {};
-         }
-      }
       default:
          return {};
    }
@@ -295,12 +279,7 @@ std::vector<uint8_t> EC_AffinePoint::serialize(EC_Point_Format format) const {
    } else if(format == EC_Point_Format::Uncompressed) {
       return this->serialize_uncompressed();
    } else {
-      // The deprecated "hybrid" point encoding
-      // TODO(Botan4) Remove this
-      auto enc = this->serialize_uncompressed();
-      const bool y_is_odd = (enc[enc.size() - 1] & 0x01) == 0x01;
-      enc.front() = y_is_odd ? 0x07 : 0x06;
-      return enc;
+      throw Invalid_Argument("Unknown EC point format");
    }
 }
 

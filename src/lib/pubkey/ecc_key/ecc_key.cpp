@@ -77,7 +77,7 @@ std::vector<uint8_t> EC_PublicKey::DER_domain() const {
 }
 
 void EC_PublicKey::set_point_encoding(EC_Point_Format enc) {
-   if(enc != EC_Point_Format::Compressed && enc != EC_Point_Format::Uncompressed && enc != EC_Point_Format::Hybrid) {
+   if(enc != EC_Point_Format::Compressed && enc != EC_Point_Format::Uncompressed) {
       throw Invalid_Argument("Invalid point encoding for EC_PublicKey");
    }
 

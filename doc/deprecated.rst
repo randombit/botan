@@ -99,14 +99,6 @@ elliptic curve points.
 - Currently an application specific ``EC_Group`` may use a prime as small as
   128 bits. In a future release the minimum will be 192 bits.
 
-- Elliptic curve points can be encoded in several different ways.  The
-  most common are "compressed" and "uncompressed"; both are widely
-  used in various systems. Botan additionally supports a "hybrid"
-  encoding format which is effectively uncompressed but with an
-  additional indicator of the parity of the y coordinate. This
-  format is quite obscure and seemingly rarely implemented. Support
-  for this encoding will be removed in a future release.
-
 - The SEC1 standard specifies that the identity element is encoded as a single
   byte consisting of 0. This was not well thought out. In addition identity
   elements are rarely if ever useful serialized into a protocol.  Support for

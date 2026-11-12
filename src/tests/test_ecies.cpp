@@ -25,8 +25,6 @@ Botan::EC_Point_Format get_compression_type(const std::string& format) {
       return Botan::EC_Point_Format::Uncompressed;
    } else if(format == "compressed") {
       return Botan::EC_Point_Format::Compressed;
-   } else if(format == "hybrid") {
-      return Botan::EC_Point_Format::Hybrid;
    }
    throw Botan::Invalid_Argument("invalid compression format");
 }
@@ -152,9 +150,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
          result.test_bin_eq("derived secret key", secret_key.bits_of(), k);
 
          // test encryption / decryption
-         for(const auto comp_type : {Botan::EC_Point_Format::Uncompressed,
-                                     Botan::EC_Point_Format::Compressed,
-                                     Botan::EC_Point_Format::Hybrid}) {
+         for(const auto comp_type : {Botan::EC_Point_Format::Uncompressed, Botan::EC_Point_Format::Compressed}) {
             for(const bool single_hash_mode : {true, false}) {
                const Botan::ECIES_System_Params ecies_params(eph_private_key.domain(),
                                                              "KDF2(SHA-1)",

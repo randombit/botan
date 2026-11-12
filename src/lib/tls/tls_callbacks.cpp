@@ -229,8 +229,8 @@ std::unique_ptr<Public_Key> TLS::Callbacks::tls_deserialize_peer_public_key(
    if(group_params.is_ecdh_named_curve()) {
       const auto ec_group = EC_Group::from_name(group_params.to_algorithm_spec().value());
       // TLS 1.3 requires uncompressed points (checked when parsing the key
-      // share); TLS 1.2 may negotiate the compressed format. The deprecated
-      // hybrid encoding and the identity element are never accepted.
+      // share); TLS 1.2 may negotiate the compressed format. The identity
+      // element is never accepted.
 
       const auto point = [&]() -> EC_AffinePoint {
          if(auto pt_uncompressed = EC_AffinePoint::deserialize_uncompressed(ec_group, key_bits)) {

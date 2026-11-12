@@ -138,10 +138,6 @@ Test::Result test_encoding_options() {
          result.test_sz_lt("Compressed points are smaller", enc_compressed.size(), enc_uncompressed.size());
          const size_t size_diff = enc_uncompressed.size() - enc_compressed.size();
          result.test_sz_gte("Compressed points smaller by group size", size_diff, group.get_p_bytes());
-         key.set_point_encoding(Botan::EC_Point_Format::Hybrid);
-         result.test_is_true("set_point_encoding works", key.point_encoding() == Botan::EC_Point_Format::Hybrid);
-         const std::vector<uint8_t> enc_hybrid = key.public_key_bits();
-         result.test_sz_eq("Hybrid point same size as uncompressed", enc_uncompressed.size(), enc_hybrid.size());
       }
    } catch(Botan::Exception& e) {
       result.test_failure(e.what());
