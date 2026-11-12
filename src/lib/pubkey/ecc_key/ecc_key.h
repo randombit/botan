@@ -77,8 +77,12 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
       */
       const EC_AffinePoint& public_ec_point() const;
 
-      // TODO(Botan4) remove this
-      const EC_AffinePoint& _public_ec_point() const { return public_ec_point(); }
+      /**
+      * Return the public point of this key
+      *
+      * @note in Botan3 and prior this returned EC_Point, which was removed in 4.0
+      */
+      const EC_AffinePoint& public_point() const { return public_ec_point(); }
 
    protected:
       /**

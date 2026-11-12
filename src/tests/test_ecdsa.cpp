@@ -385,7 +385,7 @@ class ECDSA_AllGroups_Test : public Test {
       }
 };
 
-class ECDSA_BigInt_Constructor_Test final : public Test {
+class ECDSA_Deprecated_API_Test final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("ECDSA_PrivateKey BigInt constructor");
@@ -412,7 +412,16 @@ class ECDSA_BigInt_Constructor_Test final : public Test {
          result.test_throws<Botan::Invalid_Argument>(
             "Out of range x is rejected", [&] { const Botan::ECDSA_PrivateKey bad(rng(), group, group.get_order()); });
 
-         return {result};
+         Test::Result point_result("EC_PublicKey::public_point affine coordinates");
+
+         const auto& point = from_scalar.public_point();
+         point_result.test_is_true("public_point is public_ec_point", &point == &from_scalar.public_ec_point());
+
+         const auto [affine_x, affine_y] = point.to_bigint_xy();
+         point_result.test_bn_eq("get_affine_x", point.get_affine_x(), affine_x);
+         point_result.test_bn_eq("get_affine_y", point.get_affine_y(), affine_y);
+
+         return {result, point_result};
       }
 };
 
@@ -465,7 +474,7 @@ BOTAN_REGISTER_TEST("pubkey", "ecdsa_keygen", ECDSA_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_keygen_stability", ECDSA_Keygen_Stability_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_invalid", ECDSA_Invalid_Key_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_all_groups", ECDSA_AllGroups_Test);
-BOTAN_REGISTER_TEST("pubkey", "ecdsa_bigint_ctor", ECDSA_BigInt_Constructor_Test);
+BOTAN_REGISTER_TEST("pubkey", "ecdsa_deprecated_api", ECDSA_Deprecated_API_Test);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_explicit_curve_key", ECDSA_ExplicitCurveKey_Test);
 
 #endif

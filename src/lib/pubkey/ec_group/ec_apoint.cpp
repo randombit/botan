@@ -116,6 +116,14 @@ std::pair<BigInt, BigInt> EC_AffinePoint::to_bigint_xy() const {
    return std::make_pair(BigInt::from_bytes(x_bytes), BigInt::from_bytes(y_bytes));
 }
 
+BigInt EC_AffinePoint::get_affine_x() const {
+   return BigInt::from_bytes(this->x_bytes<std::vector<uint8_t>>());
+}
+
+BigInt EC_AffinePoint::get_affine_y() const {
+   return BigInt::from_bytes(this->y_bytes<std::vector<uint8_t>>());
+}
+
 EC_Group EC_AffinePoint::group() const {
    return EC_Group(inner().group());
 }
