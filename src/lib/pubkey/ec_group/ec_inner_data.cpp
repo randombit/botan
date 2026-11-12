@@ -60,7 +60,7 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
             }
 
             if(const auto group_oid = OID::from_name(*name)) {
-               if(const auto group_info = EC_Group::EC_group_info(*group_oid)) {
+               if(const auto group_info = EC_group_info(*group_oid)) {
                   return group_info->params_match(p, a, b, g_x, g_y, order);
                }
             }

@@ -90,7 +90,7 @@ class EC_Group_Tests : public Test {
             result.test_sz_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
             result.test_sz_eq("EC_Group has byte size", group.get_p().bytes(), group.get_p_bytes());
 
-            const Botan::OID from_order = Botan::EC_Group::EC_group_identity_from_order(group.get_order());
+            const Botan::OID from_order = Botan::EC_group_identity_from_order(group.get_order());
 
             result.test_str_eq(
                "EC_group_identity_from_order works", from_order.to_string(), group.get_curve_oid().to_string());
@@ -339,7 +339,7 @@ class EC_Group_Registration_Tests final : public Test {
       Test::Result test_ec_key_with_equivalent_group() {
          Test::Result result("EC key construction with equivalent but distinct EC_Group");
 
-         Botan::EC_Group::clear_registered_curve_data();
+         Botan::EC_Group::_clear_registered_curve_data();
 
          // numsp384d1 is not a builtin group; registering it under two OIDs
          // creates equivalent groups with distinct inner data
@@ -397,7 +397,7 @@ class EC_Group_Registration_Tests final : public Test {
 
             // Clearing the registry causes builtin groups to get fresh inner data as well
             const Botan::ECDSA_PrivateKey sk3(rng(), secp256r1);
-            Botan::EC_Group::clear_registered_curve_data();
+            Botan::EC_Group::_clear_registered_curve_data();
             const auto secp256r1_again = Botan::EC_Group::from_name("secp256r1");
             result.test_is_true("Builtin group has distinct inner data after registry clear",
                                 secp256r1_again._data() != secp256r1._data());
@@ -421,7 +421,7 @@ class EC_Group_Registration_Tests final : public Test {
       Test::Result test_ec_group_bad_registration() {
          Test::Result result("EC_Group registering non-match");
 
-         Botan::EC_Group::clear_registered_curve_data();
+         Botan::EC_Group::_clear_registered_curve_data();
 
          // secp256r1 params except with a bad B param
          const Botan::BigInt p("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
@@ -447,7 +447,7 @@ class EC_Group_Registration_Tests final : public Test {
       Test::Result test_ec_group_off_curve_generator() {
          Test::Result result("EC_Group rejects off-curve generator");
 
-         Botan::EC_Group::clear_registered_curve_data();
+         Botan::EC_Group::_clear_registered_curve_data();
 
          // secp256r1 params, but g_y has its low bit flipped so (g_x, g_y) is not on the curve
          const Botan::BigInt p("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
@@ -470,7 +470,7 @@ class EC_Group_Registration_Tests final : public Test {
       Test::Result test_ec_group_explicit_requires_registration() {
          Test::Result result("EC_Group explicit encoding requires a known group");
 
-         Botan::EC_Group::clear_registered_curve_data();
+         Botan::EC_Group::_clear_registered_curve_data();
 
          // numsp384d1, which is not a builtin group
          const Botan::BigInt p(
@@ -506,7 +506,7 @@ class EC_Group_Registration_Tests final : public Test {
       Test::Result test_ec_group_duplicate_orders() {
          Test::Result result("EC_Group with duplicate group order");
 
-         Botan::EC_Group::clear_registered_curve_data();
+         Botan::EC_Group::_clear_registered_curve_data();
 
          // secp256r1
          const Botan::BigInt p("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
@@ -538,7 +538,7 @@ class EC_Group_Registration_Tests final : public Test {
       Test::Result test_ec_group_registration_with_custom_oid() {
          Test::Result result("EC_Group registration of standard group with custom OID");
 
-         Botan::EC_Group::clear_registered_curve_data();
+         Botan::EC_Group::_clear_registered_curve_data();
 
          const Botan::OID secp256r1_oid("1.2.840.10045.3.1.7");
          const auto secp256r1 = Botan::EC_Group::from_OID(secp256r1_oid);
@@ -588,7 +588,7 @@ class EC_Group_Registration_Tests final : public Test {
       Test::Result test_ec_group_incorrect_order() {
          Test::Result result("EC_Group rejects incorrect generator order");
 
-         Botan::EC_Group::clear_registered_curve_data();
+         Botan::EC_Group::_clear_registered_curve_data();
 
          const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
          const Botan::BigInt wrong_order("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC6325EB");
@@ -669,7 +669,7 @@ class EC_Group_Registration_Tests final : public Test {
       Test::Result test_ec_group_too_small() {
          Test::Result result("EC_Group rejects primes smaller than 192 bits");
 
-         Botan::EC_Group::clear_registered_curve_data();
+         Botan::EC_Group::_clear_registered_curve_data();
 
          // secp160r1
          const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFF");
@@ -695,7 +695,7 @@ class EC_Group_Registration_Tests final : public Test {
       Test::Result test_ec_group_registration_with_mismatched_custom_oid() {
          Test::Result result("EC_Group registration of non-standard group with aliased OID");
 
-         Botan::EC_Group::clear_registered_curve_data();
+         Botan::EC_Group::_clear_registered_curve_data();
 
          const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
          const Botan::OID custom_oid("1.3.6.1.4.1.25258.100.100");
@@ -723,7 +723,7 @@ class EC_Group_Registration_Tests final : public Test {
       Test::Result test_supports_named_group_with_registration() {
          Test::Result result("EC_Group::supports_named_group with custom registration");
 
-         Botan::EC_Group::clear_registered_curve_data();
+         Botan::EC_Group::_clear_registered_curve_data();
 
          result.test_is_false("Unknown name is not supported",
                               Botan::EC_Group::supports_named_group("not_a_real_curve_name_xyz"));
@@ -787,7 +787,7 @@ class EC_Group_Registration_Tests final : public Test {
          }};
 
          for(const auto& order : orderings) {
-            Botan::EC_Group::clear_registered_curve_data();
+            Botan::EC_Group::_clear_registered_curve_data();
 
             const auto first = Botan::EC_Group::from_OID(order[0]);
             const auto second = Botan::EC_Group::from_OID(order[1]);
@@ -812,7 +812,7 @@ class EC_Group_Registration_Tests final : public Test {
       Test::Result test_ec_group_unregistration() {
          Test::Result result("EC_Group unregistration of group");
 
-         Botan::EC_Group::clear_registered_curve_data();
+         Botan::EC_Group::_clear_registered_curve_data();
 
          const Botan::OID secp256r1_oid("1.2.840.10045.3.1.7");
          const auto secp256r1 = Botan::EC_Group::from_OID(secp256r1_oid);

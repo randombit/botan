@@ -162,7 +162,7 @@ class PerfTest_EllipticCurve_Misc final : public PerfTest {
             auto init_timer = config.make_timer(group_name + " initialization");
 
             while(init_timer->under(run)) {
-               Botan::EC_Group::clear_registered_curve_data();
+               Botan::EC_Group::_clear_registered_curve_data();
                init_timer->run([&]() { Botan::EC_Group::from_name(group_name); });
             }
 

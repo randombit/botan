@@ -466,42 +466,13 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       const BigInt& get_order() const;
 
       /**
-      * Look up the parameters of a builtin group by OID
-      *
-      * For internal use only
-      *
-      * @param oid the OID of the group to look up
-      * @return the group data, or nullptr if the OID is not a known group
-      *
-      * TODO(Botan4): Move this to an internal header
-      */
-      static std::shared_ptr<EC_Group_Data> EC_group_info(const OID& oid);
-
-      /**
       * Discard all cached and application registered group data
       *
-      * For internal use only
-      *
       * @warning this invalidates pointers and can cause memory corruption.
-      * This function exists only to be called in tests.
       *
       * @return the number of groups which were discarded
-      *
-      * TODO(Botan4): Move this to an internal header
       */
-      static size_t clear_registered_curve_data();
-
-      /**
-      * Identify a builtin group by its order
-      *
-      * For internal use only
-      *
-      * @param order the group order to look up
-      * @return the OID of the matching group, or an empty OID if none matches
-      *
-      * TODO(Botan4): Move this to an internal header
-      */
-      static OID EC_group_identity_from_order(const BigInt& order);
+      static size_t _clear_registered_curve_data();
 
       /**
       * For internal use only
@@ -521,14 +492,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       static bool verify_generator_order(std::shared_ptr<const EC_Group_Data> data);
 
       static std::pair<std::shared_ptr<const EC_Group_Data>, bool> DER_decode_EC_group(std::span<const uint8_t> der);
-
-      static std::shared_ptr<EC_Group_Data> load_EC_group_info(const char* p,
-                                                               const char* a,
-                                                               const char* b,
-                                                               const char* g_x,
-                                                               const char* g_y,
-                                                               const char* order,
-                                                               const OID& oid);
 
       const EC_Group_Data& data() const;
 

@@ -53,7 +53,7 @@ class EC_Group_Data_Map final {
          }
 
          // Not found, check hardcoded data
-         if(const auto data = EC_Group::EC_group_info(oid)) {
+         if(const auto data = EC_group_info(oid)) {
             // The requested OID may be an alias for a curve whose canonical OID differs,
             // in which case the canonical curve may already be registered
             // TODO(Botan4) remove this once we require exactly one canonical OID per curve
@@ -96,7 +96,7 @@ class EC_Group_Data_Map final {
          * Not found in current list, so we need to create a new entry
          */
          const auto new_group = [&] {
-            if(auto g = EC_Group::EC_group_info(oid); g != nullptr) {
+            if(auto g = EC_group_info(oid); g != nullptr) {
                /*
                * This turned out to be the OID of one of the builtin groups. Verify
                * that all of the provided parameters match that builtin group.
@@ -132,9 +132,9 @@ class EC_Group_Data_Map final {
          }
 
          // Try to use the order as a hint to look up the group id
-         const OID oid_from_order = EC_Group::EC_group_identity_from_order(order);
+         const OID oid_from_order = EC_group_identity_from_order(order);
          if(oid_from_order.has_value()) {
-            const auto new_group = EC_Group::EC_group_info(oid_from_order);
+            const auto new_group = EC_group_info(oid_from_order);
 
             // Have to check all params in the (unlikely/malicious) event of an order collision
             if(new_group && new_group->params_match(p, a, b, base_pt, order)) {
@@ -169,28 +169,8 @@ EC_Group_Data_Map& EC_Group::ec_group_data() {
 }
 
 //static
-size_t EC_Group::clear_registered_curve_data() {
+size_t EC_Group::_clear_registered_curve_data() {
    return ec_group_data().clear();
-}
-
-//static
-std::shared_ptr<EC_Group_Data> EC_Group::load_EC_group_info(const char* p_str,
-                                                            const char* a_str,
-                                                            const char* b_str,
-                                                            const char* g_x_str,
-                                                            const char* g_y_str,
-                                                            const char* order_str,
-                                                            const OID& oid) {
-   BOTAN_ARG_CHECK(oid.has_value(), "EC_Group::load_EC_group_info OID must be set");
-
-   const BigInt p(p_str);
-   const BigInt a(a_str);
-   const BigInt b(b_str);
-   const BigInt g_x(g_x_str);
-   const BigInt g_y(g_y_str);
-   const BigInt order(order_str);
-
-   return EC_Group_Data::create(p, a, b, g_x, g_y, order, oid, EC_Group_Source::Builtin);
 }
 
 //static

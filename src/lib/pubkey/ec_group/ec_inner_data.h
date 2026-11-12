@@ -189,6 +189,22 @@ class EC_Group_Data final {
 };
 
 /**
+* Look up the parameters of a builtin group by OID
+*
+* @param oid the OID of the group to look up
+* @return the group data, or nullptr if the OID is not a known group
+*/
+std::shared_ptr<EC_Group_Data> EC_group_info(const OID& oid);
+
+/**
+* Identify a builtin group by its order
+*
+* @param order the group order to look up
+* @return the OID of the matching group, or an empty OID if none matches
+*/
+OID BOTAN_TEST_API EC_group_identity_from_order(const BigInt& order);
+
+/**
 * Instantiate the named hash and return a closure implementing the
 * expand_message function of RFC 9380
 *
