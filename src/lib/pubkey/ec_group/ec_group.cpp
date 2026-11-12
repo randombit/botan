@@ -372,30 +372,6 @@ EC_Group EC_Group::from_name(std::string_view name) {
    return EC_Group(std::move(data));
 }
 
-EC_Group::EC_Group(std::string_view str) {
-   try {
-      const OID oid = OID::from_string(str);
-      if(oid.has_value()) {
-         m_data = ec_group_data().lookup(oid);
-      }
-   } catch(...) {}
-
-   if(m_data == nullptr) {
-      if(str.size() > 30 && str.starts_with("-----BEGIN EC PARAMETERS-----")) {
-         // OK try it as PEM ...
-         const auto der = PEM_Code::decode_check_label(str, "EC PARAMETERS");
-
-         const auto data = DER_decode_EC_group(der);
-         this->m_data = data.first;
-         this->m_explicit_encoding = data.second;
-      }
-   }
-
-   if(m_data == nullptr) {
-      throw Invalid_Argument(fmt("Unknown ECC group '{}'", str));
-   }
-}
-
 //static
 EC_Group EC_Group::from_PEM(std::string_view pem) {
    const auto der = PEM_Code::decode_check_label(pem, "EC PARAMETERS");

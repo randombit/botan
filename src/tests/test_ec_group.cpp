@@ -239,10 +239,26 @@ Test::Result test_group_never_empty() {
       result.test_is_true("Move assignment leaves the source unchanged", source == secp256r1);
    }
 
+   return result;
+}
+
+Test::Result test_deprecated_name_constructor() {
+   Test::Result result("EC_Group string constructor");
+
    BOTAN_DIAGNOSTIC_PUSH
    BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
+
+   if(Botan::EC_Group::supports_named_group("secp256r1")) {
+      result.test_is_true("Equivalent to from_name",
+                          Botan::EC_Group(std::string_view("secp256r1")) == Botan::EC_Group::from_name("secp256r1"));
+   }
+
+   result.test_throws<Botan::Invalid_Argument>(
+      "Dotted OID is rejected", [] { static_cast<void>(Botan::EC_Group(std::string_view("1.2.840.10045.3.1.7"))); });
+
    result.test_throws<Botan::Invalid_Argument>("Empty string is rejected",
                                                [] { static_cast<void>(Botan::EC_Group(std::string_view())); });
+
    BOTAN_DIAGNOSTIC_POP
 
    return result;
@@ -258,6 +274,7 @@ class ECC_Unit_Tests final : public Test {
          results.push_back(test_mixed_scalars());
          results.push_back(test_group_accessor());
          results.push_back(test_group_never_empty());
+         results.push_back(test_deprecated_name_constructor());
 
          return results;
       }

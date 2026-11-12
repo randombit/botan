@@ -245,7 +245,7 @@ class ECDSA_Keygen_Tests final : public PK_Key_Generation_Test {
       std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view keygen_params,
                                                              std::string_view /* provider */,
                                                              std::span<const uint8_t> raw_pk) const override {
-         const auto group = Botan::EC_Group(keygen_params);
+         const auto group = Botan::EC_Group::from_name(keygen_params);
          const auto public_key = Botan::EC_AffinePoint(group, raw_pk);
          return std::make_unique<Botan::ECDSA_PublicKey>(group, public_key);
       }

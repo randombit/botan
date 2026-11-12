@@ -18,6 +18,7 @@
 #include <botan/internal/workfactor.h>
 
 #include <memory>
+#include <optional>
 
 namespace Botan {
 
@@ -158,18 +159,19 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
       .end_cons()
       .verify_end();
 
-   std::unique_ptr<EC_Group> group;
+   std::optional<EC_Group> group;
 
    if(!alg_id.parameters_are_empty()) {
-      group = std::make_unique<EC_Group>(alg_id.parameters());
+      group = EC_Group(alg_id.parameters());
    }
    if(!key_parameters.empty()) {
+      const auto key_group = EC_Group::from_OID(key_parameters);
       if(group) {
-         if(EC_Group(key_parameters) != *group) {
+         if(key_group != *group) {
             throw Decoding_Error("ECPrivateKey parameters do not match the AlgorithmIdentifier parameters");
          }
       } else {
-         group = std::make_unique<EC_Group>(key_parameters);
+         group = key_group;
       }
    }
    if(!group) {

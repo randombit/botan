@@ -195,20 +195,12 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       EC_Group(const uint8_t der[], size_t der_len) : EC_Group(std::span{der, der_len}) {}
 
       /**
-      * Create an EC domain by OID (or throw if unknown)
-      * @param oid the OID of the EC domain to create
-      */
-      BOTAN_DEPRECATED("Use EC_Group::from_OID") explicit EC_Group(const OID& oid) { *this = EC_Group::from_OID(oid); }
-
-      /**
-      * Create an EC domain from PEM encoding (as from PEM_encode()), or
-      * from an OID name (eg "secp256r1", or "1.2.840.10045.3.1.7")
-      * @param pem_or_oid PEM-encoded data, or an OID
+      * Create an EC group from a curve name, eg "secp256r1"
       *
-      * @warning Support for PEM in this function is deprecated. Use
-      * EC_Group::from_PEM or EC_Group::from_OID or EC_Group::from_name
+      * This is equivalent to EC_Group::from_name
       */
-      BOTAN_DEPRECATED("Use EC_Group::from_{name,OID,PEM}") explicit EC_Group(std::string_view pem_or_oid);
+      BOTAN_DEPRECATED("Use EC_Group::from_name")
+      explicit EC_Group(std::string_view name) : EC_Group(EC_Group::from_name(name)) {}
 
       /**
       * Initialize an EC group from the PEM/ASN.1 encoding
@@ -224,15 +216,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * Initialize an EC group from a group common name (eg "secp256r1")
       */
       static EC_Group from_name(std::string_view name);
-
-      /**
-      * Initialize an EC group from the PEM/ASN.1 encoding
-      * @param pem the PEM encoded group
-      * @return the decoded group
-      */
-      BOTAN_DEPRECATED("Use EC_Group::from_PEM") static EC_Group EC_Group_from_PEM(std::string_view pem) {
-         return EC_Group::from_PEM(pem);
-      }
 
       /**
       * Unregister a previously registered group.

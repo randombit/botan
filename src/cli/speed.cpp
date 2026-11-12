@@ -278,7 +278,7 @@ std::vector<std::string> interpret_ecc_groups(const std::string& arg) {
    if(arg == "generic") {
       std::vector<std::string> groups;
       for(const auto& group_name : Botan::EC_Group::known_named_groups()) {
-         const Botan::EC_Group group(group_name);
+         const auto group = Botan::EC_Group::from_name(group_name);
          if(group.engine() == Botan::EC_Group_Engine::Generic) {
             groups.push_back(group_name);
          }
@@ -289,7 +289,7 @@ std::vector<std::string> interpret_ecc_groups(const std::string& arg) {
    if(arg == "pcurves") {
       std::vector<std::string> groups;
       for(const auto& group_name : Botan::EC_Group::known_named_groups()) {
-         const Botan::EC_Group group(group_name);
+         const auto group = Botan::EC_Group::from_name(group_name);
          if(group.engine() == Botan::EC_Group_Engine::Optimized) {
             groups.push_back(group_name);
          }
