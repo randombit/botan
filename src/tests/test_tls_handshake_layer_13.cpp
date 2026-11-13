@@ -16,6 +16,7 @@
    #include <botan/internal/concat_util.h>
    #include <botan/internal/tls_handshake_layer_13.h>
    #include <botan/internal/tls_transcript_hash_13.h>
+   #include <tuple>
 
 using namespace Botan::TLS;
 
@@ -25,6 +26,12 @@ namespace {
 
 template <typename T>
 bool has_message(Test::Result& test_result, const std::optional<Handshake_Message_13>& read_result) {
+   test_result.require("has a message", read_result.has_value());
+   return std::holds_alternative<T>(read_result.value());
+}
+
+template <typename T>
+bool has_message(Test::Result& test_result, const std::optional<Post_Handshake_Message_13>& read_result) {
    test_result.require("has a message", read_result.has_value());
    return std::holds_alternative<T>(read_result.value());
 }
@@ -99,6 +106,11 @@ const auto client_finished_message = Botan::hex_decode_locked(
    "14 00 00 20 a8 ec 43 6d 67 76 34 ae 52 5a c1"
    "fc eb e1 1a 03 9e c1 76 94 fa c6 e9 85 27 b6 42 f2 ed d5 ce 61");
 
+const auto key_update_not_requested = Botan::hex_decode_locked("18 00 00 01 00");
+
+const auto new_session_ticket =  // ticket lifetime: 86400, nonce: 0xaa, ticket: 0xdeadbeef, no extensions
+   Botan::hex_decode_locked("04 00 00 12 00 01 51 80 00 00 00 00 01 aa 00 04 de ad be ef 00 00");
+
 //
 // ###################################################################
 //
@@ -150,6 +162,7 @@ Botan::TLS::Handshake_Record as_hs_record(std::span<const uint8_t> payload) {
          .type = Botan::TLS::Record_Type::Handshake,
          .sequence_number = std::nullopt,
          .payload = {payload.begin(), payload.end()},
+         .epoch = std::nullopt,
       },
    };
 }
@@ -175,8 +188,21 @@ std::vector<Test::Result> read_handshake_messages() {
             [&](auto& result) {
                auto hl = TLS_Handshake_Layer(Connection_Side::Client);
                Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
-               hl.copy_data(Policy(), as_hs_record(std::array<uint8_t, 3>{0x00, 0x01, 0x02}));
+               std::ignore = hl.copy_data(Policy(), as_hs_record(std::array<uint8_t, 3>{0x01, 0x02, 0x03}));
                result.test_is_true("needs more bytes", !hl.next_message(Policy(), th));
+               check_transcript_hash_empty(result, th);
+            }),
+
+      CHECK("reject incomplete header with invalid type",
+            [&](auto& result) {
+               auto hl = TLS_Handshake_Layer(Connection_Side::Client);
+               Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
+
+               // The type tag is validated as soon as its first byte arrived,
+               // without waiting for the rest of the header.
+               std::ignore = hl.copy_data(Policy(), as_hs_record(std::array<uint8_t, 3>{0xD4, 0x00, 0x00}));
+               result.template test_throws<TLS_Exception>(
+                  "message is rejected", "Unknown handshake message received", [&] { hl.next_message(Policy(), th); });
                check_transcript_hash_empty(result, th);
             }),
 
@@ -184,7 +210,7 @@ std::vector<Test::Result> read_handshake_messages() {
             [&](auto& result) {
                auto hl = TLS_Handshake_Layer(Connection_Side::Client);
                Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
-               hl.copy_data(Policy(), as_hs_record(client_hello_message));
+               std::ignore = hl.copy_data(Policy(), as_hs_record(client_hello_message));
                result.test_is_true("is a client hello",
                                    has_message<Client_Hello_13>(result, hl.next_message(Policy(), th)));
                check_transcript_hash_filled(result, th);
@@ -194,7 +220,7 @@ std::vector<Test::Result> read_handshake_messages() {
             [&](auto& result) {
                auto hl = TLS_Handshake_Layer(Connection_Side::Client);
                Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
-               hl.copy_data(Policy(), as_hs_record(server_hello_message));
+               std::ignore = hl.copy_data(Policy(), as_hs_record(server_hello_message));
                result.test_is_true("is a server hello",
                                    has_message<Server_Hello_13>(result, hl.next_message(Policy(), th)));
                check_transcript_hash_filled(result, th);
@@ -204,7 +230,7 @@ std::vector<Test::Result> read_handshake_messages() {
             [&](auto& result) {
                auto hl = TLS_Handshake_Layer(Connection_Side::Client);
                Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
-               hl.copy_data(Policy(), as_hs_record(server_hello_12_message));
+               std::ignore = hl.copy_data(Policy(), as_hs_record(server_hello_12_message));
                result.test_is_true("is a legacy server hello",
                                    has_message<Server_Hello_12_Shim>(result, hl.next_message(Policy(), th)));
                check_transcript_hash_filled(result, th);
@@ -217,13 +243,13 @@ std::vector<Test::Result> read_handshake_messages() {
 
                const Botan::secure_vector<uint8_t> partial_client_hello_message(client_hello_message.cbegin(),
                                                                                 client_hello_message.cend() - 15);
-               hl.copy_data(Policy(), as_hs_record(partial_client_hello_message));
+               std::ignore = hl.copy_data(Policy(), as_hs_record(partial_client_hello_message));
                result.test_is_true("needs more bytes", !hl.next_message(Policy(), th));
                result.test_is_true("holds pending message data", hl.has_pending_data());
 
                const Botan::secure_vector<uint8_t> remaining_client_hello_message(client_hello_message.cend() - 15,
                                                                                   client_hello_message.cend());
-               hl.copy_data(Policy(), as_hs_record(remaining_client_hello_message));
+               std::ignore = hl.copy_data(Policy(), as_hs_record(remaining_client_hello_message));
                result.test_is_true("is a client hello",
                                    has_message<Client_Hello_13>(result, hl.next_message(Policy(), th)));
 
@@ -234,12 +260,91 @@ std::vector<Test::Result> read_handshake_messages() {
             [&](auto& result) {
                auto hl = TLS_Handshake_Layer(Connection_Side::Client);
                Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
-               hl.copy_data(Policy(), as_hs_record(Botan::concat(server_hello_message, encrypted_extensions)));
+               const Text_Policy policy("minimum_rsa_bits = 1024");  // for the RFC 8448 certificate
+
+               // After the ServerHello, a key change is expected. Handshake_Layer
+               // validates that no additional messages are pending when emitting a
+               // ServerHello. We have to read it independently (just like in a real
+               // handshake).
+               std::ignore = hl.copy_data(policy, as_hs_record(server_hello_message));
                result.test_is_true("is a server hello",
-                                   has_message<Server_Hello_13>(result, hl.next_message(Policy(), th)));
+                                   has_message<Server_Hello_13>(result, hl.next_message(policy, th)));
+
+               // ... the remaining server handshake messages may legally be
+               // coalesced in a single record, as long as any message that can
+               // precede a key change (like Finished) is the last one in it.
+               std::ignore = hl.copy_data(policy, as_hs_record(server_handshake_messages));
                result.test_is_true("is encrypted extensions",
-                                   has_message<Encrypted_Extensions>(result, hl.next_message(Policy(), th)));
+                                   has_message<Encrypted_Extensions>(result, hl.next_message(policy, th)));
+               result.test_is_true("is certificate", has_message<Certificate_13>(result, hl.next_message(policy, th)));
+               result.test_is_true("is certificate verify",
+                                   has_message<Certificate_Verify_13>(result, hl.next_message(policy, th)));
+               result.test_is_true("is finished", has_message<Finished_13>(result, hl.next_message(policy, th)));
                check_transcript_hash_filled(result, th);
+            }),
+
+      CHECK("reject server hello coalesced with other messages",
+            [&](auto& result) {
+               auto hl = TLS_Handshake_Layer(Connection_Side::Client);
+               Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
+
+               std::ignore =
+                  hl.copy_data(Policy(), as_hs_record(Botan::concat(server_hello_message, encrypted_extensions)));
+               result.template test_throws<TLS_Exception>("coalesced ServerHello is rejected",
+                                                          "Unexpected additional handshake data at epoch boundary",
+                                                          [&] { hl.next_message(Policy(), th); });
+               check_transcript_hash_empty(result, th);
+            }),
+
+      CHECK("reject client hello coalesced with other messages",
+            [&](auto& result) {
+               auto hl = TLS_Handshake_Layer(Connection_Side::Server);
+               Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
+
+               std::ignore =
+                  hl.copy_data(Policy(), as_hs_record(Botan::concat(client_hello_message, client_hello_message)));
+               result.template test_throws<TLS_Exception>("coalesced ClientHello is rejected",
+                                                          "Unexpected additional handshake data at epoch boundary",
+                                                          [&] { hl.next_message(Policy(), th); });
+               check_transcript_hash_empty(result, th);
+            }),
+
+      CHECK("reject finished coalesced with other messages",
+            [&](auto& result) {
+               auto hl = TLS_Handshake_Layer(Connection_Side::Server);
+               Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
+
+               std::ignore =
+                  hl.copy_data(Policy(), as_hs_record(Botan::concat(client_finished_message, encrypted_extensions)));
+               result.template test_throws<TLS_Exception>("coalesced Finished is rejected",
+                                                          "Unexpected additional handshake data at epoch boundary",
+                                                          [&] { hl.next_message(Policy(), th); });
+               check_transcript_hash_empty(result, th);
+            }),
+
+      CHECK("read post-handshake messages",
+            [&](auto& result) {
+               auto hl = TLS_Handshake_Layer(Connection_Side::Client);
+
+               std::ignore = hl.copy_data(Policy(), as_hs_record(key_update_not_requested));
+               const auto ku = hl.next_post_handshake_message(Policy(), EpochNumber::create(3));
+               result.test_is_true("is a key update", has_message<Key_Update>(result, ku));
+
+               std::ignore = hl.copy_data(Policy(), as_hs_record(new_session_ticket));
+               const auto nst = hl.next_post_handshake_message(Policy(), EpochNumber::create(3));
+               result.test_is_true("is a new session ticket", has_message<New_Session_Ticket_13>(result, nst));
+            }),
+
+      CHECK("reject key update coalesced with other messages",
+            [&](auto& result) {
+               auto hl = TLS_Handshake_Layer(Connection_Side::Client);
+
+               std::ignore =
+                  hl.copy_data(Policy(), as_hs_record(Botan::concat(key_update_not_requested, new_session_ticket)));
+               result.template test_throws<TLS_Exception>(
+                  "coalesced KeyUpdate is rejected",
+                  "Unexpected additional post-handshake data at epoch boundary",
+                  [&] { hl.next_post_handshake_message(Policy(), EpochNumber::create(3)); });
             }),
 
       CHECK("reject TLS 1.2 messages",
@@ -248,7 +353,7 @@ std::vector<Test::Result> read_handshake_messages() {
                   auto hl = TLS_Handshake_Layer(Connection_Side::Client);
                   Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
 
-                  hl.copy_data(Policy(), as_hs_record(msg));
+                  std::ignore = hl.copy_data(Policy(), as_hs_record(msg));
                   result.template test_throws<TLS_Exception>("message is rejected",
                                                              [&] { hl.next_message(Policy(), th); });
 
@@ -264,11 +369,11 @@ std::vector<Test::Result> read_handshake_messages() {
                // This caused a deadlock as we waited to receive the complete message, rather than validating the type
                // tag to exit early.
                const auto data = Botan::hex_decode_locked("D4B028717D0FA310FF8664127B9448D7952E06A4F9EA23");
-               // data from the bogo test --          ~~~~~~ <- length
-               //                                   ~~ <- bogus message type
+               // data from the bogo test --                 ~~~~~~ <- length
+               //                                          ~~ <- bogus message type
                auto hl = TLS_Handshake_Layer(Connection_Side::Client);
                Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
-               hl.copy_data(Policy(), as_hs_record(data));
+               std::ignore = hl.copy_data(Policy(), as_hs_record(data));
                result.template test_throws<TLS_Exception>(
                   "message is rejected", "Unknown handshake message received", [&] { hl.next_message(Policy(), th); });
             }),
@@ -289,8 +394,8 @@ std::vector<Test::Result> test_prepare_message() {
 
       CHECK("prepare server hello",
             [&](auto& result) {
-               auto hello = std::get<Server_Hello_13>(
-                  Server_Hello_13::parse({server_hello_message.cbegin() + 4, server_hello_message.cend()}));
+               auto hello = std::get<Server_Hello_13>(Server_Hello_13::parse(
+                  {server_hello_message.cbegin() + 4, server_hello_message.cend()}, TLS_Flavor::TLS));
                const auto hl = TLS_Handshake_Layer(Connection_Side::Server);
                Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
                result.test_bin_eq("produces the same message", prepare_message(hello, th), server_hello_message);
@@ -316,7 +421,7 @@ std::vector<Test::Result> full_client_handshake() {
 
       CHECK("server hello",
             [&](auto& result) {
-               hl.copy_data(Policy(), as_hs_record(server_hello_message));
+               std::ignore = hl.copy_data(Policy(), as_hs_record(server_hello_message));
 
                const auto server_hello = hl.next_message(policy, th);
                result.test_is_true("is a Server Hello", has_message<Server_Hello_13>(result, server_hello));
@@ -336,7 +441,7 @@ std::vector<Test::Result> full_client_handshake() {
       CHECK(
          "server handshake messages",
          [&](auto& result) {
-            hl.copy_data(Policy(), as_hs_record(server_handshake_messages));
+            std::ignore = hl.copy_data(Policy(), as_hs_record(server_handshake_messages));
 
             const auto enc_exts = hl.next_message(policy, th);
             result.test_is_true("is Encrypted Extensions", has_message<Encrypted_Extensions>(result, enc_exts));
@@ -390,7 +495,7 @@ std::vector<Test::Result> hello_retry_request_handshake() {
 
       CHECK("hello retry request",
             [&](auto& result) {
-               hl.copy_data(Policy(), as_hs_record(hrr_hello_retry_request_msg));
+               std::ignore = hl.copy_data(Policy(), as_hs_record(hrr_hello_retry_request_msg));
 
                const auto hrr = hl.next_message(policy, th);
                result.test_is_true("is a Hello Retry Request", has_message<Hello_Retry_Request>(result, hrr));
