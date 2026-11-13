@@ -40,8 +40,7 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
       return BigInt::from_s32(-1);
    }
 
-   const auto mod_p = Barrett_Reduction::for_public_modulus(p);
-   const Montgomery_Params monty_p(p, mod_p);
+   const Montgomery_Params monty_p(p);
 
    // If p == 3 (mod 4) there is a simple solution
    if(p % 4 == 3) {
@@ -55,12 +54,19 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
    q -= 1;
    q >>= 1;
 
-   BigInt r = monty_exp_vartime(monty_p, a, q).value();
-   BigInt n = mod_p.multiply(a, mod_p.square(r));
-   r = mod_p.multiply(r, a);
+   secure_vector<word> ws;
+   const auto one = Montgomery_Int::one(monty_p);
+   const Montgomery_Int a_m(monty_p, a);
 
-   if(n == 1) {
-      return r;
+   auto r = monty_exp_vartime(monty_p, a, q);
+   auto n = a_m.mul(r.square(ws), ws);
+   r.mul_by(a_m, ws);
+
+   // All values here are public, so variable time comparisons are fine
+   const auto is_one = [&](const Montgomery_Int& x) { return x.repr() == one.repr(); };
+
+   if(is_one(n)) {
+      return r.value();
    }
 
    // find random quadratic nonresidue z
@@ -82,14 +88,14 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
       }
    }
 
-   BigInt c = monty_exp_vartime(monty_p, BigInt::from_word(z), (q << 1) + 1).value();
+   auto c = monty_exp_vartime(monty_p, BigInt::from_word(z), (q << 1) + 1);
 
-   while(n > 1) {
-      q = n;
+   while(!n.is_zero() && !is_one(n)) {
+      auto t = n;
 
       size_t i = 0;
-      while(q != 1) {
-         q = mod_p.square(q);
+      while(!is_one(t)) {
+         t.square_this_n_times(ws, 1);
          ++i;
 
          if(i >= s) {
@@ -98,17 +104,17 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
       }
 
       BOTAN_ASSERT_NOMSG(s >= (i + 1));  // No underflow!
-      c = monty_exp_vartime(monty_p, c, BigInt::power_of_2(s - i - 1)).value();
-      r = mod_p.multiply(r, c);
-      c = mod_p.square(c);
-      n = mod_p.multiply(n, c);
+      c.square_this_n_times(ws, s - i - 1);
+      r.mul_by(c, ws);
+      c.square_this_n_times(ws, 1);
+      n.mul_by(c, ws);
 
       // s decreases as the algorithm proceeds
       BOTAN_ASSERT_NOMSG(s >= i);
       s = i;
    }
 
-   return r;
+   return r.value();
 }
 
 /*
