@@ -82,9 +82,11 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
       /*
       * The expected number of tests to find a non-residue modulo a
       * prime is 2. If we have not found one after 256 then almost
-      * certainly we have been given a non-prime p.
+      * certainly we have been given a non-prime p, for which there
+      * may be no non-residue at all (eg if p is a perfect square).
+      * But some primes do have a larger least non-residue, so check.
       */
-      if(z >= 256) {
+      if(z == 256 && !is_bailie_psw_probable_prime_vartime(p, monty_p)) {
          return BigInt::from_s32(-1);
       }
    }
