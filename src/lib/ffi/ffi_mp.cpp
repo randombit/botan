@@ -9,7 +9,6 @@
 
 #include <botan/assert.h>
 #include <botan/numthry.h>
-#include <botan/internal/barrett.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/ffi_mp.h>
 #include <botan/internal/ffi_rng.h>
@@ -264,8 +263,12 @@ int botan_mp_mod_inverse(botan_mp_t out, const botan_mp_t in, const botan_mp_t m
 
 int botan_mp_mod_mul(botan_mp_t out, const botan_mp_t x, const botan_mp_t y, const botan_mp_t modulus) {
    return BOTAN_FFI_VISIT(out, [=](auto& o) {
-      const auto reducer = Botan::Barrett_Reduction::for_secret_modulus(safe_get(modulus));
-      o = reducer.multiply(safe_get(x), safe_get(y));
+      const auto& mod = safe_get(modulus);
+      const auto& xv = safe_get(x);
+      const auto& yv = safe_get(y);
+      BOTAN_ARG_CHECK(xv.signum() >= 0 && xv.is_less_than(mod), "Invalid x param for modular multiply");
+      BOTAN_ARG_CHECK(yv.signum() >= 0 && yv.is_less_than(mod), "Invalid y param for modular multiply");
+      o = Botan::ct_modulo(xv * yv, mod);
    });
 }
 
