@@ -1265,6 +1265,11 @@ class EC_Point_Arithmetic_Tests final : public Test {
             const auto id2 = id.add(id);
             result.test_is_true("identity plus itself is identity", id2.is_identity());
 
+            result.test_bn_eq("generator get_affine_x", g.get_affine_x(), group.get_g_x());
+            result.test_bn_eq("generator get_affine_y", g.get_affine_y(), group.get_g_y());
+            result.test_throws<Botan::Invalid_State>("identity get_affine_x throws", [&] { id.get_affine_x(); });
+            result.test_throws<Botan::Invalid_State>("identity get_affine_y throws", [&] { id.get_affine_y(); });
+
             const auto g_one = Botan::EC_AffinePoint::g_mul(one, rng);
             result.test_bin_eq("g*one == generator", g_one.serialize_uncompressed(), g_bytes);
 
