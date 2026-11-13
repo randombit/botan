@@ -256,6 +256,8 @@ class FFI_TLS_Credentials_Test final : public Test {
          TEST_FFI_RC(BOTAN_FFI_ERROR_NOT_IMPLEMENTED, botan_tls_credentials_use_system_store, (creds));
    #endif
 
+   #if defined(BOTAN_HAS_RSA)
+         // The test certificates and keys are RSA
          botan_x509_cert_t cert1 = nullptr;
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&cert1, Test::data_file("x509/certstor/cert1.crt").c_str()));
 
@@ -291,6 +293,7 @@ class FFI_TLS_Credentials_Test final : public Test {
          result.test_sz_eq("Chain is found after the handles were destroyed", chain.size(), 1);
          const auto key = mgr.private_key_for(leaf, "tls-server", "");
          result.test_not_null("Key is found after the handles were destroyed", key);
+   #endif
 
          TEST_FFI_OK(botan_tls_credentials_destroy, (creds));
          TEST_FFI_OK(botan_tls_credentials_destroy, (nullptr));
@@ -341,6 +344,7 @@ class FFI_TLS_Credentials_Test final : public Test {
          }
    #endif
 
+   #if defined(BOTAN_HAS_RSA)
          // Two RSA chains with the same key: CN=cert1 and CN=cert2, both
          // self-signed, so each is issued by a different "CA"
          botan_x509_cert_t cert1 = nullptr;
@@ -417,6 +421,7 @@ class FFI_TLS_Credentials_Test final : public Test {
          }
          result.test_is_true("No key for an unrelated certificate",
                              mgr.private_key_for(unrelated, "tls-server", "") == nullptr);
+   #endif
 
          TEST_FFI_OK(botan_tls_credentials_destroy, (creds));
 

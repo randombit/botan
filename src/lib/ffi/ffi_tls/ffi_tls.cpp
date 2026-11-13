@@ -164,6 +164,7 @@ void FFI_TLS_Callbacks::tls_emit_data(std::span<const uint8_t> data) {
       throw Botan::TLS::TLS_Exception(Botan::TLS::AlertType::InternalError,
                                       "TLS emit_data callback failed with rc=" + std::to_string(rc));
    }
+   ++m_emitted;
 }
 
 void FFI_TLS_Callbacks::tls_record_received(uint64_t seq_no, std::span<const uint8_t> data) {
@@ -178,10 +179,22 @@ void FFI_TLS_Callbacks::tls_alert(Botan::TLS::Alert alert) {
    const auto code = static_cast<uint16_t>(alert.type());
    m_last_alert = Last_Alert{code, alert.is_fatal(), true};
 
+   // The channel reacts to the alert before reporting it here: a fatal alert
+   // (in TLS 1.3 only a fatal error alert) has closed it for writing, so no
+   // alert of ours can follow. A close_notify closes it once this callback
+   // returned and the library answered it.
+   if(m_channel != nullptr && m_channel->is_closed_for_writing()) {
+      m_peer_closed = true;
+   }
+
    const int rc = m_table.alert_received(m_ctx, code, alert.is_fatal() ? 1 : 0);
    if(rc != 0) {
       throw Botan::TLS::TLS_Exception(Botan::TLS::AlertType::InternalError,
                                       "TLS alert_received callback failed with rc=" + std::to_string(rc));
+   }
+
+   if(alert.type() == Botan::TLS::AlertType::CloseNotify) {
+      m_peer_closed = true;
    }
 }
 
@@ -281,34 +294,37 @@ bool handshake_done(const FFI_TLS_Channel& c) {
 /*
 * Runs a channel operation that may invoke callbacks and records the alert
 * the channel sends when it fails with an exception, mirroring the channel's
-* own catch blocks. After a transport failure nothing was sent, so nothing
-* is recorded.
+* own catch blocks. The alert is recorded only if the channel could emit it:
+* a valid alert, not after a transport failure, not once an alert from the
+* peer has closed the channel for writing, and not when nothing was emitted
+* during the operation, as on a server whose policy allows only TLS 1.2
+* before its first received_data call. An operation that completes with the
+* transport failed reports the failure.
 */
 template <typename F>
 int run_with_alert_capture(FFI_TLS_Channel& c, F fn) {
    auto& cb = *c.callbacks;
    const FFI_TLS_Callbacks::Depth_Guard guard(cb);
-   try {
-      return fn();
-   } catch(Botan::TLS::TLS_Exception& e) {
-      if(!cb.failed()) {
-         cb.record_sent_alert(e.type(), true);
+   const size_t emitted_before = cb.emitted();
+   const auto record = [&](Botan::TLS::AlertType type) {
+      if(Botan::TLS::Alert(type).is_valid() && !cb.failed() && !cb.peer_closed() && cb.emitted() > emitted_before) {
+         cb.record_sent_alert(type, true);
       }
+   };
+   try {
+      const int rc = fn();
+      return cb.failed() ? BOTAN_FFI_ERROR_TLS_ERROR : rc;
+   } catch(Botan::TLS::TLS_Exception& e) {
+      record(e.type());
       throw;
    } catch(Botan::Invalid_Authentication_Tag&) {
-      if(!cb.failed()) {
-         cb.record_sent_alert(Botan::TLS::AlertType::BadRecordMac, true);
-      }
+      record(Botan::TLS::AlertType::BadRecordMac);
       throw;
    } catch(Botan::Decoding_Error&) {
-      if(!cb.failed()) {
-         cb.record_sent_alert(Botan::TLS::AlertType::DecodeError, true);
-      }
+      record(Botan::TLS::AlertType::DecodeError);
       throw;
    } catch(std::exception&) {
-      if(!cb.failed()) {
-         cb.record_sent_alert(Botan::TLS::AlertType::InternalError, true);
-      }
+      record(Botan::TLS::AlertType::InternalError);
       throw;
    }
 }
@@ -353,6 +369,7 @@ int init_channel(botan_tls_channel_t* chan,
       state->channel =
          std::make_unique<Botan::TLS::Server>(state->callbacks, session_manager, credentials, policy_ptr, rng_ptr);
    }
+   state->callbacks->set_channel(state->channel.get());
 
    return ffi_new_object(chan, std::move(state));
 }
@@ -706,6 +723,10 @@ int botan_tls_channel_send(botan_tls_channel_t chan, const uint8_t data[], size_
 }
 
 int botan_tls_channel_send_alert(botan_tls_channel_t chan, uint16_t alert_code, int is_fatal) {
+   if(alert_code > 255) {
+      return BOTAN_FFI_ERROR_BAD_PARAMETER;
+   }
+
    return BOTAN_FFI_VISIT(chan, [=](auto& c) -> int {
       if(c.callbacks->depth() > 0 || c.callbacks->failed()) {
          return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
@@ -713,11 +734,19 @@ int botan_tls_channel_send_alert(botan_tls_channel_t chan, uint16_t alert_code, 
 
       const FFI_TLS_Callbacks::Depth_Guard guard(*c.callbacks);
       const auto type = static_cast<Botan::TLS::AlertType>(alert_code);
+      const bool error_alert =
+         type != Botan::TLS::AlertType::CloseNotify && type != Botan::TLS::AlertType::UserCanceled;
+      const bool was_writable = !c.channel->is_closed_for_writing();
+      const size_t emitted_before = c.callbacks->emitted();
       c.channel->send_alert(Botan::TLS::Alert(type, is_fatal != 0));
       if(c.callbacks->failed()) {
          return BOTAN_FFI_ERROR_TLS_ERROR;
       }
-      c.callbacks->record_sent_alert(type, is_fatal != 0);
+      if(c.callbacks->emitted() > emitted_before) {
+         // TLS 1.3 sends every error alert as fatal and closes the channel
+         const bool fatal = is_fatal != 0 || (error_alert && was_writable && c.channel->is_closed_for_writing());
+         c.callbacks->record_sent_alert(type, fatal);
+      }
       return BOTAN_FFI_SUCCESS;
    });
 }
@@ -728,13 +757,13 @@ int botan_tls_channel_close(botan_tls_channel_t chan) {
          return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
       }
 
-      const bool was_writable = !c.channel->is_closed_for_writing();
+      const size_t emitted_before = c.callbacks->emitted();
       const FFI_TLS_Callbacks::Depth_Guard guard(*c.callbacks);
       c.channel->close();
       if(c.callbacks->failed()) {
          return BOTAN_FFI_ERROR_TLS_ERROR;
       }
-      if(was_writable) {
+      if(c.callbacks->emitted() > emitted_before) {
          c.callbacks->record_sent_alert(Botan::TLS::AlertType::CloseNotify, false);
       }
       return BOTAN_FFI_SUCCESS;

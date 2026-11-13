@@ -142,6 +142,17 @@ class FFI_TLS_Callbacks final : public Botan::TLS::Callbacks {
 
       void record_sent_alert(Botan::TLS::AlertType type, bool fatal);
 
+      /// Number of emit_data callbacks that succeeded so far
+      size_t emitted() const { return m_emitted; }
+
+      /// True once an alert from the peer closed the channel for writing or a
+      /// close_notify arrived; the library sends nothing after that
+      bool peer_closed() const { return m_peer_closed; }
+
+      /// The channel these callbacks belong to, set once it exists; queried only
+      /// from inside its callbacks, which it outlives
+      void set_channel(const Botan::TLS::Channel* channel) { m_channel = channel; }
+
       /// True after an emit_data callback failed; the channel is unusable then
       bool failed() const { return m_failed; }
 
@@ -154,12 +165,15 @@ class FFI_TLS_Callbacks final : public Botan::TLS::Callbacks {
    private:
       FFI_TLS_Callbacks_Table m_table;
       void* m_ctx;
+      const Botan::TLS::Channel* m_channel = nullptr;
       std::vector<std::string> m_server_protocols;
       std::optional<Botan::TLS::Session_Summary> m_summary;
       std::optional<Last_Alert> m_last_alert;
       bool m_failed = false;
       bool m_in_emit = false;
+      bool m_peer_closed = false;
       size_t m_depth = 0;
+      size_t m_emitted = 0;
 };
 
 /**

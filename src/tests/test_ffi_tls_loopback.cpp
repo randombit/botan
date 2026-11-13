@@ -18,7 +18,9 @@
    #include <botan/ffi_tls.h>
    #include <botan/pk_keys.h>
    #include <botan/pkcs8.h>
-   #include <botan/rsa.h>
+   #if defined(BOTAN_HAS_RSA)
+      #include <botan/rsa.h>
+   #endif
    #include <botan/secmem.h>
    #include <botan/tls_session_manager_memory.h>
    #include <botan/tls_session_manager_noop.h>
@@ -34,15 +36,12 @@
    #include <vector>
 #endif
 
-#if defined(BOTAN_HAS_CERTSTOR_SYSTEM)
-   #include <botan/certstor_system.h>
-#endif
-
 namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_FFI_TLS)
+// The loopback needs a protocol implementation; ffi_tls itself builds without one
+#if defined(BOTAN_HAS_FFI_TLS) && (defined(BOTAN_HAS_TLS_12) || defined(BOTAN_HAS_TLS_13))
 
 // NOLINTBEGIN(*-macro-usage)
 
@@ -106,6 +105,8 @@ struct Endpoint final {
       // misuse from inside callbacks
       bool reenter_from_record = false;
       int reenter_rc = 0;
+      bool fail_nested_send_from_record = false;
+      int nested_send_rc = 0;
       bool send_from_emit = false;
       int send_from_emit_rc = 0;
       std::string send_from_handshake;
@@ -132,6 +133,12 @@ int ep_record(void* ctx, uint64_t /*seq_no*/, const uint8_t data[], size_t len) 
    ep->received.insert(ep->received.end(), data, data + len);
    if(ep->reenter_from_record) {
       ep->reenter_rc = botan_tls_channel_received_data(ep->chan, data, len, nullptr);
+   }
+   if(ep->fail_nested_send_from_record) {
+      // a nested send whose transport failure this callback then ignores
+      ep->fail_nested_send_from_record = false;
+      ep->emit_rc = -1;
+      ep->nested_send_rc = botan_tls_channel_send(ep->chan, data, len);
    }
    return ep->record_rc;
 }
@@ -170,19 +177,24 @@ void pump(Endpoint& a, Endpoint& b) {
 }
 
 // Certificates generated once per test run: an ECDSA CA with a server and a
-// client certificate, a CRL, and an RSA server certificate for a second chain
+// client certificate, a CRL, and (with RSA built) an RSA server certificate for
+// a second chain
 struct Fixture final {
       std::vector<uint8_t> ca_der;
       std::vector<uint8_t> server_der;
       std::vector<uint8_t> server_key_der;
+   #if defined(BOTAN_HAS_RSA)
       std::vector<uint8_t> rsa_server_der;
       std::vector<uint8_t> rsa_server_key_der;
+   #endif
       std::vector<uint8_t> client_der;
       std::vector<uint8_t> client_key_der;
       std::vector<uint8_t> crl_der;
       // subject public key bits, to recognize a certificate through the FFI
       std::vector<uint8_t> server_key_bits;
+   #if defined(BOTAN_HAS_RSA)
       std::vector<uint8_t> rsa_server_key_bits;
+   #endif
       std::vector<uint8_t> client_key_bits;
 };
 
@@ -208,11 +220,13 @@ const Fixture& fixture() {
       const auto server_cert =
          ca.sign_request(Botan::X509::create_cert_req(server_opts, server_key, "SHA-256", rng), rng, start, end);
 
+   #if defined(BOTAN_HAS_RSA)
       Botan::X509_Cert_Options rsa_opts("rsa.example.com/VT");
       rsa_opts.dns = "rsa.example.com";
       const Botan::RSA_PrivateKey rsa_key(rng, 2048);
       const auto rsa_cert =
          ca.sign_request(Botan::X509::create_cert_req(rsa_opts, rsa_key, "SHA-256", rng), rng, start, end);
+   #endif
 
       const Botan::X509_Cert_Options client_opts("client/VT");
       const Botan::ECDSA_PrivateKey client_key(rng, group);
@@ -223,13 +237,15 @@ const Fixture& fixture() {
       f.ca_der = ca_cert.BER_encode();
       f.server_der = server_cert.BER_encode();
       f.server_key_der = Botan::unlock(Botan::PKCS8::BER_encode(server_key));
+   #if defined(BOTAN_HAS_RSA)
       f.rsa_server_der = rsa_cert.BER_encode();
       f.rsa_server_key_der = Botan::unlock(Botan::PKCS8::BER_encode(rsa_key));
+      f.rsa_server_key_bits = rsa_cert.subject_public_key_bits();
+   #endif
       f.client_der = client_cert.BER_encode();
       f.client_key_der = Botan::unlock(Botan::PKCS8::BER_encode(client_key));
       f.crl_der = ca.new_crl(rng).BER_encode();
       f.server_key_bits = server_cert.subject_public_key_bits();
-      f.rsa_server_key_bits = rsa_cert.subject_public_key_bits();
       f.client_key_bits = client_cert.subject_public_key_bits();
       return f;
    }();
@@ -346,7 +362,9 @@ class Handles final {
          creds.push_back(c);
          add_chain(c, fixture().server_der, fixture().server_key_der);
          if(with_rsa_chain) {
+   #if defined(BOTAN_HAS_RSA)
             add_chain(c, fixture().rsa_server_der, fixture().rsa_server_key_der);
+   #endif
          }
          if(trust_clients) {
             botan_tls_credentials_add_trusted_cert(c, cert(fixture().ca_der));
@@ -659,6 +677,31 @@ class FFI_TLS_Loopback_Test final : public Test {
                             BOTAN_FFI_ERROR_TLS_ERROR);
          result.test_is_true("No channel after emit failure", broken.chan == nullptr);
 
+   #if defined(BOTAN_HAS_TLS_12)
+         // A server whose policy allows only TLS 1.2 cannot send before the
+         // ClientHello: closing it or sending an alert emits nothing and
+         // records no alert, but closes the channel
+         auto* tls12_only = h.text_policy("allow_tls13 = false\n");
+         Endpoint early_close;
+         if(result.test_rc_ok("init", h.server(early_close, cb, tls12_only, server_creds, nullptr))) {
+            TEST_FFI_OK(botan_tls_channel_close, (early_close.chan));
+            result.test_sz_eq("early close: nothing emitted", early_close.emit_calls, 0);
+            result.test_i32_eq("early close: closed", botan_tls_channel_is_closed(early_close.chan), 1);
+            TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE,
+                        botan_tls_channel_get_last_alert,
+                        (early_close.chan, nullptr, nullptr, nullptr));
+         }
+         Endpoint early_alert;
+         if(result.test_rc_ok("init", h.server(early_alert, cb, tls12_only, server_creds, nullptr))) {
+            TEST_FFI_OK(botan_tls_channel_send_alert, (early_alert.chan, BOTAN_TLS_ALERT_INTERNAL_ERROR, 1));
+            result.test_sz_eq("early alert: nothing emitted", early_alert.emit_calls, 0);
+            result.test_i32_eq("early alert: closed", botan_tls_channel_is_closed(early_alert.chan), 1);
+            TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE,
+                        botan_tls_channel_get_last_alert,
+                        (early_alert.chan, nullptr, nullptr, nullptr));
+         }
+   #endif
+
          return result;
       }
 
@@ -875,12 +918,16 @@ class FFI_TLS_Loopback_Test final : public Test {
          auto* server_creds = h.server_creds(true);
          auto* trusted = h.trust_ca();
 
-         // The server has an ECDSA chain for server.example.com and an RSA
-         // chain for rsa.example.com; the name the client asks for decides
-         for(const auto& [name, expected_key] : std::vector<std::pair<std::string, const std::vector<uint8_t>*>>{
-                {"server.example.com", &fixture().server_key_bits},
-                {"rsa.example.com", &fixture().rsa_server_key_bits},
-             }) {
+         // The server has an ECDSA chain for server.example.com and, with RSA
+         // built, an RSA chain for rsa.example.com; the name the client asks for
+         // decides
+         const std::vector<std::pair<std::string, const std::vector<uint8_t>*>> names = {
+            {"server.example.com", &fixture().server_key_bits},
+   #if defined(BOTAN_HAS_RSA)
+            {"rsa.example.com", &fixture().rsa_server_key_bits},
+   #endif
+         };
+         for(const auto& [name, expected_key] : names) {
             Endpoint client;
             Endpoint server;
             if(result.test_rc_ok("init", h.server(server, cb, policy, server_creds, nullptr)) &&
@@ -1010,12 +1057,56 @@ class FFI_TLS_Loopback_Test final : public Test {
                result.test_is_true("Garbage input is an error", rc < 0);
                result.test_i32_eq("Garbage input closes the channel", botan_tls_channel_is_closed(server.chan), 1);
                uint16_t code = 0;
+   #if defined(BOTAN_HAS_TLS_13)
+               // A TLS 1.3 capable server can answer with an alert before any handshake record
                TEST_FFI_OK(botan_tls_channel_get_last_alert, (server.chan, &code, nullptr, nullptr));
                result.test_is_true("An alert was sent", code != 0);
+   #else
+               // A TLS 1.2 server cannot send before the client's first handshake record
+               TEST_FFI_RC(
+                  BOTAN_FFI_ERROR_NO_VALUE, botan_tls_channel_get_last_alert, (server.chan, &code, nullptr, nullptr));
+               result.test_sz_eq("Nothing could be sent", server.emit_calls, 0);
+   #endif
                size_t needed = 1;
                TEST_FFI_OK(botan_tls_channel_received_data,
                            (server.chan, reinterpret_cast<const uint8_t*>(garbage.data()), garbage.size(), &needed));
                result.test_sz_eq("Further input is ignored", needed, 0);
+            }
+         }
+
+         // close before the handshake completed: the client can no longer answer
+         // the server's flight. A TLS 1.2 client rejects the handshake data, a
+         // TLS 1.3 client fails when it would have to send; both end up closed
+         {
+            Endpoint client;
+            Endpoint server;
+            auto* trusted = h.trust_ca();
+            if(result.test_rc_ok("init", h.server(server, cb, policy, server_creds, nullptr)) &&
+               result.test_rc_ok("init",
+                                 h.client(client, cb, policy, trusted, nullptr, "server.example.com", version))) {
+               const std::vector<uint8_t> hello = std::move(client.out);
+               client.out.clear();
+               TEST_FFI_OK(botan_tls_channel_received_data, (server.chan, hello.data(), hello.size(), nullptr));
+               TEST_FFI_OK(botan_tls_channel_close, (client.chan));
+               const size_t client_emits = client.emit_calls;
+               const int rc =
+                  botan_tls_channel_received_data(client.chan, server.out.data(), server.out.size(), nullptr);
+               if(expected_version(version) == BOTAN_TLS_VERSION_TLS_13) {
+                  result.test_i32_eq(
+                     "close during handshake: TLS 1.3 cannot send", rc, BOTAN_FFI_ERROR_INVALID_OBJECT_STATE);
+               } else {
+                  result.test_i32_eq("close during handshake: TLS 1.2 rejects the data", rc, BOTAN_FFI_ERROR_TLS_ERROR);
+               }
+               result.test_i32_eq("close during handshake: closed", botan_tls_channel_is_closed(client.chan), 1);
+               result.test_sz_eq("close during handshake: nothing emitted", client.emit_calls, client_emits);
+               uint16_t code = 1;
+               int fatal = -1;
+               int from_peer = -1;
+               TEST_FFI_OK(botan_tls_channel_get_last_alert, (client.chan, &code, &fatal, &from_peer));
+               result.test_u16_eq(
+                  "close during handshake: close_notify stays recorded", code, BOTAN_TLS_ALERT_CLOSE_NOTIFY);
+               result.test_i32_eq("close during handshake: warning", fatal, 0);
+               result.test_i32_eq("close during handshake: from us", from_peer, 0);
             }
          }
 
@@ -1090,6 +1181,175 @@ class FFI_TLS_Loopback_Test final : public Test {
                pump(client, server);
                result.test_i32_eq("alert failure: server reports TLS error", server.last_rc, BOTAN_FFI_ERROR_TLS_ERROR);
                result.test_sz_eq("alert failure: callback ran", server.alerts.size(), 1);
+               // The channel was still open, so the internal_error really went out
+               uint16_t code = 0;
+               int fatal = 0;
+               int from_peer = 1;
+               TEST_FFI_OK(botan_tls_channel_get_last_alert, (server.chan, &code, &fatal, &from_peer));
+               result.test_u16_eq("alert failure: internal_error recorded", code, BOTAN_TLS_ALERT_INTERNAL_ERROR);
+               result.test_i32_eq("alert failure: fatal", fatal, 1);
+               result.test_i32_eq("alert failure: sent by us", from_peer, 0);
+               result.test_is_true("alert failure: client received it",
+                                   !client.alerts.empty() &&
+                                      client.alerts.back().first == BOTAN_TLS_ALERT_INTERNAL_ERROR &&
+                                      client.alerts.back().second == 1);
+            }
+         }
+
+         // alert_received fails for a fatal alert: the channel is already closed,
+         // so nothing is sent and the peer's alert stays the last one
+         {
+            Endpoint client;
+            Endpoint server;
+            server.alert_rc = 3;
+            if(result.test_rc_ok("init", h.server(server, cb, policy, server_creds, nullptr)) &&
+               result.test_rc_ok("init",
+                                 h.client(client, cb, policy, trusted, nullptr, "server.example.com", version))) {
+               pump(client, server);
+               const size_t server_emits = server.emit_calls;
+               TEST_FFI_OK(botan_tls_channel_send_alert, (client.chan, BOTAN_TLS_ALERT_INTERNAL_ERROR, 1));
+               pump(client, server);
+               result.test_i32_eq(
+                  "fatal alert, failing callback: server reports TLS error", server.last_rc, BOTAN_FFI_ERROR_TLS_ERROR);
+               result.test_sz_eq("fatal alert, failing callback: nothing emitted", server.emit_calls, server_emits);
+               uint16_t code = 0;
+               int fatal = 0;
+               int from_peer = 0;
+               TEST_FFI_OK(botan_tls_channel_get_last_alert, (server.chan, &code, &fatal, &from_peer));
+               result.test_u16_eq(
+                  "fatal alert, failing callback: the peer's alert is kept", code, BOTAN_TLS_ALERT_INTERNAL_ERROR);
+               result.test_i32_eq("fatal alert, failing callback: fatal", fatal, 1);
+               result.test_i32_eq("fatal alert, failing callback: from the peer", from_peer, 1);
+            }
+         }
+
+         // alert_received fails on a fatal-level close_notify or user_canceled:
+         // TLS 1.2 has closed the channel, so nothing is sent and the peer's
+         // alert stays the last one; TLS 1.3 ignores the level of these two
+         // alerts and still sends its internal_error
+         const uint16_t closure_alerts[] = {BOTAN_TLS_ALERT_CLOSE_NOTIFY, BOTAN_TLS_ALERT_USER_CANCELED};
+         for(const uint16_t closure_alert : closure_alerts) {
+            Endpoint client;
+            Endpoint server;
+            server.alert_rc = 3;
+            if(result.test_rc_ok("init", h.server(server, cb, policy, server_creds, nullptr)) &&
+               result.test_rc_ok("init",
+                                 h.client(client, cb, policy, trusted, nullptr, "server.example.com", version))) {
+               pump(client, server);
+               const size_t server_emits = server.emit_calls;
+               TEST_FFI_OK(botan_tls_channel_send_alert, (client.chan, closure_alert, 1));
+               pump(client, server);
+               const std::string what = "fatal-level closure alert, failing callback";
+               result.test_i32_eq(what + ": server reports TLS error", server.last_rc, BOTAN_FFI_ERROR_TLS_ERROR);
+               result.test_i32_eq(what + ": server closed", botan_tls_channel_is_closed(server.chan), 1);
+               uint16_t code = 0;
+               int fatal = -1;
+               int from_peer = -1;
+               TEST_FFI_OK(botan_tls_channel_get_last_alert, (server.chan, &code, &fatal, &from_peer));
+               result.test_i32_eq(what + ": fatal", fatal, 1);
+               if(expected_version(version) == BOTAN_TLS_VERSION_TLS_13) {
+                  result.test_sz_eq(what + ": TLS 1.3 server sent its alert", server.emit_calls, server_emits + 1);
+                  result.test_u16_eq(what + ": internal_error recorded", code, BOTAN_TLS_ALERT_INTERNAL_ERROR);
+                  result.test_i32_eq(what + ": sent by us", from_peer, 0);
+                  result.test_is_true(what + ": client received it",
+                                      !client.alerts.empty() &&
+                                         client.alerts.back().first == BOTAN_TLS_ALERT_INTERNAL_ERROR &&
+                                         client.alerts.back().second == 1);
+               } else {
+                  result.test_sz_eq(what + ": TLS 1.2 server emitted nothing", server.emit_calls, server_emits);
+                  result.test_u16_eq(what + ": the peer's alert is kept", code, closure_alert);
+                  result.test_i32_eq(what + ": from the peer", from_peer, 1);
+               }
+            }
+         }
+
+         // A fatal-level user_canceled closes a TLS 1.2 channel; a TLS 1.3
+         // channel ignores the level, stays active and answers a damaged
+         // record with its own bad_record_mac
+         {
+            Endpoint client;
+            Endpoint server;
+            if(result.test_rc_ok("init", h.server(server, cb, policy, server_creds, nullptr)) &&
+               result.test_rc_ok("init",
+                                 h.client(client, cb, policy, trusted, nullptr, "server.example.com", version))) {
+               pump(client, server);
+               TEST_FFI_OK(botan_tls_channel_send_alert, (client.chan, BOTAN_TLS_ALERT_USER_CANCELED, 1));
+               pump(client, server);
+               result.test_i32_eq("fatal user_canceled: server accepted it", server.last_rc, 0);
+               uint16_t code = 0;
+               int fatal = -1;
+               int from_peer = -1;
+               if(expected_version(version) == BOTAN_TLS_VERSION_TLS_13) {
+                  result.test_i32_eq(
+                     "fatal user_canceled: TLS 1.3 client still active", botan_tls_channel_is_active(client.chan), 1);
+                  result.test_i32_eq(
+                     "fatal user_canceled: TLS 1.3 server still active", botan_tls_channel_is_active(server.chan), 1);
+                  const uint8_t hello[] = {'h', 'i'};
+                  TEST_FFI_OK(botan_tls_channel_send, (client.chan, hello, sizeof(hello)));
+                  client.out.back() = static_cast<uint8_t>(client.out.back() ^ 0x01);
+                  pump(client, server);
+                  result.test_i32_eq("damaged record: server reports BAD_MAC", server.last_rc, BOTAN_FFI_ERROR_BAD_MAC);
+                  TEST_FFI_OK(botan_tls_channel_get_last_alert, (server.chan, &code, &fatal, &from_peer));
+                  result.test_u16_eq("damaged record: bad_record_mac recorded", code, BOTAN_TLS_ALERT_BAD_RECORD_MAC);
+                  result.test_i32_eq("damaged record: fatal", fatal, 1);
+                  result.test_i32_eq("damaged record: sent by us", from_peer, 0);
+                  result.test_is_true("damaged record: client received it",
+                                      !client.alerts.empty() &&
+                                         client.alerts.back().first == BOTAN_TLS_ALERT_BAD_RECORD_MAC &&
+                                         client.alerts.back().second == 1);
+               } else {
+                  result.test_i32_eq(
+                     "fatal user_canceled: TLS 1.2 client closed", botan_tls_channel_is_closed(client.chan), 1);
+                  result.test_i32_eq(
+                     "fatal user_canceled: TLS 1.2 server closed", botan_tls_channel_is_closed(server.chan), 1);
+                  TEST_FFI_OK(botan_tls_channel_get_last_alert, (server.chan, &code, &fatal, &from_peer));
+                  result.test_u16_eq(
+                     "fatal user_canceled: the peer's alert is kept", code, BOTAN_TLS_ALERT_USER_CANCELED);
+                  result.test_i32_eq("fatal user_canceled: fatal", fatal, 1);
+                  result.test_i32_eq("fatal user_canceled: from the peer", from_peer, 1);
+               }
+            }
+         }
+
+         // emit_data fails while the library answers the peer's close_notify
+         {
+            Endpoint client;
+            Endpoint server;
+            if(result.test_rc_ok("init", h.server(server, cb, policy, server_creds, nullptr)) &&
+               result.test_rc_ok("init",
+                                 h.client(client, cb, policy, trusted, nullptr, "server.example.com", version))) {
+               pump(client, server);
+               TEST_FFI_OK(botan_tls_channel_close, (client.chan));
+               server.emit_rc = -1;
+               pump(client, server);
+               result.test_i32_eq(
+                  "emit failure in the reply: server reports TLS error", server.last_rc, BOTAN_FFI_ERROR_TLS_ERROR);
+               result.test_i32_eq("emit failure in the reply: closed", botan_tls_channel_is_closed(server.chan), 1);
+               const uint8_t data[] = {'x'};
+               TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE,
+                           botan_tls_channel_received_data,
+                           (server.chan, data, 1, nullptr));
+            }
+         }
+
+         // emit_data fails inside a nested send whose error the callback ignores
+         {
+            Endpoint client;
+            Endpoint server;
+            server.fail_nested_send_from_record = true;
+            if(result.test_rc_ok("init", h.server(server, cb, policy, server_creds, nullptr)) &&
+               result.test_rc_ok("init",
+                                 h.client(client, cb, policy, trusted, nullptr, "server.example.com", version))) {
+               pump(client, server);
+               const uint8_t hello[] = {'h', 'i'};
+               TEST_FFI_OK(botan_tls_channel_send, (client.chan, hello, sizeof(hello)));
+               pump(client, server);
+               result.test_i32_eq("ignored nested failure: the nested send reported it",
+                                  server.nested_send_rc,
+                                  BOTAN_FFI_ERROR_TLS_ERROR);
+               result.test_i32_eq(
+                  "ignored nested failure: received_data reports it too", server.last_rc, BOTAN_FFI_ERROR_TLS_ERROR);
+               result.test_i32_eq("ignored nested failure: closed", botan_tls_channel_is_closed(server.chan), 1);
             }
          }
 
@@ -1144,6 +1404,47 @@ class FFI_TLS_Loopback_Test final : public Test {
                                       server.alerts.back().first == BOTAN_TLS_ALERT_INTERNAL_ERROR &&
                                       server.alerts.back().second == 1);
                result.test_i32_eq("send_alert: server closed", botan_tls_channel_is_closed(server.chan), 1);
+            }
+         }
+
+         // send_alert rejects codes that cannot be encoded on the wire, and a
+         // warning-level error alert is fatal in TLS 1.3
+         {
+            Endpoint client;
+            Endpoint server;
+            if(result.test_rc_ok("init", h.server(server, cb, policy, server_creds, nullptr)) &&
+               result.test_rc_ok("init",
+                                 h.client(client, cb, policy, trusted, nullptr, "server.example.com", version))) {
+               pump(client, server);
+               TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_tls_channel_send_alert, (client.chan, 256, 1));
+               TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_tls_channel_send_alert, (client.chan, 0xFFFF, 0));
+               result.test_i32_eq("bad alert code: still active", botan_tls_channel_is_active(client.chan), 1);
+               TEST_FFI_RC(
+                  BOTAN_FFI_ERROR_NO_VALUE, botan_tls_channel_get_last_alert, (client.chan, nullptr, nullptr, nullptr));
+
+               TEST_FFI_OK(botan_tls_channel_send_alert, (client.chan, BOTAN_TLS_ALERT_INTERNAL_ERROR, 0));
+               uint16_t code = 0;
+               int fatal = -1;
+               int from_peer = -1;
+               TEST_FFI_OK(botan_tls_channel_get_last_alert, (client.chan, &code, &fatal, &from_peer));
+               result.test_u16_eq("warning alert: recorded", code, BOTAN_TLS_ALERT_INTERNAL_ERROR);
+               result.test_i32_eq("warning alert: from us", from_peer, 0);
+               pump(client, server);
+               if(expected_version(version) == BOTAN_TLS_VERSION_TLS_13) {
+                  result.test_i32_eq("warning alert: TLS 1.3 sent it as fatal", fatal, 1);
+                  result.test_i32_eq(
+                     "warning alert: TLS 1.3 client closed", botan_tls_channel_is_closed(client.chan), 1);
+                  result.test_is_true("warning alert: server got a fatal alert",
+                                      !server.alerts.empty() && server.alerts.back().second == 1);
+               } else {
+                  result.test_i32_eq("warning alert: TLS 1.2 kept the level", fatal, 0);
+                  result.test_i32_eq(
+                     "warning alert: TLS 1.2 client still active", botan_tls_channel_is_active(client.chan), 1);
+                  result.test_is_true("warning alert: server got a warning",
+                                      !server.alerts.empty() &&
+                                         server.alerts.back().first == BOTAN_TLS_ALERT_INTERNAL_ERROR &&
+                                         server.alerts.back().second == 0);
+               }
             }
          }
 
