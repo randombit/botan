@@ -59,10 +59,13 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello {
 
       /**
       * This validates that a Client Hello received after sending a Hello
-      * Retry Request was updated in accordance with RFC 8446 4.1.2. If issues
+      * Retry Request was updated in accordance with RFC 9846 4.2.2. If issues
       * are found, this method throws accordingly.
+      *
+      * @param new_ch Client Hello received after sending Hello Retry Request
+      * @param hrr    Hello Retry Request that was sent to the peer
       */
-      void validate_updates(const Client_Hello_13& new_ch);
+      void validate_updates(const Client_Hello_13& new_ch, const Hello_Retry_Request& hrr) const;
 
    private:
       explicit Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data);
