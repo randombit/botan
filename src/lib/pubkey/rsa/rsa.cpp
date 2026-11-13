@@ -13,7 +13,6 @@
 #include <botan/numthry.h>
 #include <botan/pss_params.h>
 #include <botan/internal/algorithm_spec.h>
-#include <botan/internal/barrett.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/fmt.h>
@@ -51,8 +50,7 @@ class RSA_Public_Data final {
       RSA_Public_Data(BigInt&& n, BigInt&& e) :
             m_n(std::move(n)),
             m_e(std::move(e)),
-            m_mod_n(Barrett_Reduction::for_public_modulus(m_n)),
-            m_monty_n(m_n, m_mod_n),
+            m_monty_n(m_n),
             m_public_modulus_bits(m_n.bits()),
             m_public_modulus_bytes(m_n.bytes()) {}
 
@@ -72,12 +70,9 @@ class RSA_Public_Data final {
 
       const Montgomery_Params& monty_n() const { return m_monty_n; }
 
-      const Barrett_Reduction& reducer_mod_n() const { return m_mod_n; }
-
    private:
       BigInt m_n;
       BigInt m_e;
-      Barrett_Reduction m_mod_n;
       const Montgomery_Params m_monty_n;
       size_t m_public_modulus_bits;
       size_t m_public_modulus_bytes;
@@ -180,7 +175,9 @@ class RSA_Private_Data final {
             m_monty_q(m_q),
             m_c_monty(m_monty_p, m_c),
             m_p_bits(m_p.bits()),
-            m_q_bits(m_q.bits()) {}
+            m_q_bits(m_q.bits()),
+            m_blinding_fwd(m_public->monty_n()),
+            m_blinding_inv(m_public->monty_n()) {}
 
       const BigInt& get_d() const { return m_d; }
 
@@ -243,13 +240,13 @@ class RSA_Private_Data final {
       }
 
       /**
-      * Return the next pair of base blinding values (k^e mod n, k^-1 mod n)
+      * Return the next pair of base blinding values (k^e mod n, k^-1 mod n), in Montgomery form
       *
       * The blinding sequence is shared by all private key operations using this
       * key. Each pair is the square of the previous one; after BlindingReinitInterval
       * uses a fresh random k is chosen.
       */
-      std::pair<BigInt, BigInt> next_blinding_pair(RandomNumberGenerator& rng) const {
+      std::pair<Montgomery_Int, Montgomery_Int> next_blinding_pair(RandomNumberGenerator& rng) const {
          const lock_guard_type<mutex_type> lock(m_blinding_mutex);
 
          if(m_blinding_uses == 0 || m_blinding_uses >= BlindingReinitInterval) {
@@ -257,14 +254,14 @@ class RSA_Private_Data final {
             // pool) so that no operation has to wait for it
             const BigInt k(rng, m_public->public_modulus_bits() - 1);
             CT::poison(k);
-            auto [fwd, inv] = fresh_blinding_pair(k);
-            m_blinding_fwd = std::move(fwd);
-            m_blinding_inv = std::move(inv);
+            const auto [fwd, inv] = fresh_blinding_pair(k);
+            m_blinding_fwd = Montgomery_Int(m_public->monty_n(), fwd);
+            m_blinding_inv = Montgomery_Int(m_public->monty_n(), inv);
             m_blinding_uses = 0;
          } else {
-            const auto& mod_n = m_public->reducer_mod_n();
-            m_blinding_fwd = mod_n.square(m_blinding_fwd);
-            m_blinding_inv = mod_n.square(m_blinding_inv);
+            secure_vector<word> ws;
+            m_blinding_fwd.square_this_n_times(ws, 1);
+            m_blinding_inv.square_this_n_times(ws, 1);
          }
 
          m_blinding_uses += 1;
@@ -347,8 +344,8 @@ class RSA_Private_Data final {
       size_t m_q_bits;
 
       mutable mutex_type m_blinding_mutex;
-      mutable BigInt m_blinding_fwd;
-      mutable BigInt m_blinding_inv;
+      mutable Montgomery_Int m_blinding_fwd;
+      mutable Montgomery_Int m_blinding_inv;
       mutable size_t m_blinding_uses = 0;
 };
 
@@ -818,9 +815,15 @@ class RSA_Private_Operation {
          const auto scope = CT::scoped_poison(*m_private);
 
          const auto [blind_fwd, blind_inv] = m_private->next_blinding_pair(m_rng);
-         const auto& mod_n = m_public->reducer_mod_n();
+         const auto& monty_n = m_public->monty_n();
 
-         const BigInt recovered = mod_n.multiply(rsa_private_op(mod_n.multiply(input_bn, blind_fwd)), blind_inv);
+         // The blinding values are in Montgomery form, so these products are in standard form
+         secure_vector<word> ws;
+         BigInt blinded_input;
+         monty_n.mul(blinded_input, input_bn, blind_fwd.repr(), ws);
+         const BigInt blinded_output = rsa_private_op(blinded_input);
+         BigInt recovered;
+         monty_n.mul(recovered, blinded_output, blind_inv.repr(), ws);
          // Any further secret handling of the output is up to the caller
          CT::unpoison(recovered);
          BOTAN_ASSERT(input_bn == m_public->public_op(recovered), "RSA consistency check");
