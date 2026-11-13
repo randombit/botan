@@ -38,8 +38,8 @@ class BOTAN_TEST_API Record_Layer {
       virtual ~Record_Layer() = default;
       Record_Layer(const Record_Layer&) = delete;
       Record_Layer& operator=(const Record_Layer&) = delete;
-      Record_Layer(Record_Layer&&) = delete;
-      Record_Layer& operator=(Record_Layer&&) = delete;
+      Record_Layer(Record_Layer&&) = default;
+      Record_Layer& operator=(Record_Layer&&) = default;
 
       using ReadResult = variant_append_t<Record, BytesNeeded>;
 
@@ -51,11 +51,18 @@ class BOTAN_TEST_API Record_Layer {
        * processing during the invocation of `next_record()`.
        *
        * @param data_from_peer  The data to be parsed.
+       * @param has_cryptographic_association  Indicates whether there is already an
+       *                                       established cryptographic association
+       *                                       with the peer (i.e. a shared secret).
+       *
+       * @returns true if the data was successfully ingested, false if something
+       *          went wrong. Typically DTLS record layers will return false if
+       *          the passed-in datagram was somehow invalid and got discarded.
        */
-      virtual void copy_data(std::span<const uint8_t> data_from_peer) = 0;
+      virtual bool copy_data(std::span<const uint8_t> data_from_peer, bool has_cryptographic_association) = 0;
 
       /**
-       * Parses one record off the internal buffer that is being filled using `copy_data`.
+       * Parses one record off the internal buffer that is being filled using `ingest`.
        *
        * Return value contains either the number of bytes (`size_t`) needed to proceed
        * with processing TLS records or a single plaintext TLS record content containing
@@ -85,6 +92,8 @@ class BOTAN_TEST_API Record_Layer {
        *                      this cipher state. Pass nullptr to prepare a
        *                      plaintext record.
        * @param out           The container the marshalled record is written to
+       * @param epoch         Optionally, the epoch number that shall be used to
+       *                      protect the record (relevant for DTLS only)
        *
        * @returns The record number (epoch and sequence number) of the
        *          prepared record
@@ -93,7 +102,8 @@ class BOTAN_TEST_API Record_Layer {
                                           std::span<const uint8_t> payload,
                                           const Policy& policy,
                                           Cipher_State* cipher_state,
-                                          secure_vector<uint8_t>& out) = 0;
+                                          secure_vector<uint8_t>& out,
+                                          std::optional<EpochNumber> epoch = std::nullopt) = 0;
 
       /// @}
 
@@ -101,10 +111,13 @@ class BOTAN_TEST_API Record_Layer {
        * Returns the maximum number of bytes that can be put into a record.
        *
        * Both the specified and negotiated record size limit is taken into
-       * account. Depending on the @p cipher_state, the size of the record
-       * overhead (e.g. MAC, padding, record header, etc.) is also considered.
+       * account. As well as the user-specified MTU for DTLS. Depending on the
+       * @p cipher_state, the size of the record overhead (e.g. MAC, padding,
+       * record header, etc.) is also considered.
        */
-      virtual uint16_t record_payload_size_limit(const Policy& policy, Cipher_State* cipher_state = nullptr) const = 0;
+      virtual uint16_t record_payload_size_limit(const Policy& policy,
+                                                 Cipher_State* cipher_state = nullptr,
+                                                 std::optional<EpochNumber> epoch = std::nullopt) const = 0;
 
       /**
        * Clears any data currently stored in the read buffer. This is typically
@@ -132,6 +145,13 @@ class BOTAN_TEST_API Record_Layer {
 
       uint16_t incoming_record_size_limit() const noexcept { return m_incoming_record_size_limit; }
 
+      /**
+       * Extracts the current sequence numbers (before rolling over into any
+       * protected epoch). This is used to downgrade a DTLS 1.3 handshake to a
+       * DTLS 1.2 handshake.
+       */
+      virtual std::optional<Epoch0_SequenceNumbers> epoch0_sequence_numbers() const noexcept { return std::nullopt; }
+
       void disable_receiving_compat_mode() noexcept { m_receiving_compat_mode = false; }
 
       bool receiving_compat_mode() const noexcept { return m_receiving_compat_mode; }
@@ -152,18 +172,24 @@ class BOTAN_TEST_API TLS_Record_Layer final : public Record_Layer {
    public:
       explicit TLS_Record_Layer(Connection_Side side);
 
-      void copy_data(std::span<const uint8_t> data) override;
+      bool copy_data(std::span<const uint8_t> data_from_peer, bool has_cryptographic_association) override;
       ReadResult next_record(Cipher_State* cipher_state = nullptr) override;
       RecordNumber prepare_record(Record_Type type,
                                   std::span<const uint8_t> payload,
                                   const Policy& policy,
                                   Cipher_State* cipher_state,
-                                  secure_vector<uint8_t>& out) override;
+                                  secure_vector<uint8_t>& out,
+                                  std::optional<EpochNumber> epoch = std::nullopt) override;
 
       void clear_read_buffer() override;
 
-      uint16_t record_payload_size_limit(const Policy& policy, Cipher_State* cipher_state = nullptr) const override;
+      uint16_t record_payload_size_limit(const Policy& policy,
+                                         Cipher_State* cipher_state = nullptr,
+                                         std::optional<EpochNumber> epoch = std::nullopt) const override;
 
+      /// Disables the sending compatibility mode that uses legacy record
+      /// version 0x0301 for the initial (unprotected) flight. Must be called
+      /// once the first flight's unprotected messages have been sent.
       void disable_sending_compat_mode() noexcept { m_sending_compat_mode = false; }
 
    private:

@@ -264,6 +264,11 @@ class BOTAN_PUBLIC_API(2, 0) Policy /* NOLINT(*-special-member-functions) */ {
       virtual bool allow_dtls12() const;
 
       /**
+      * Allow DTLS v1.3
+      */
+      virtual bool allow_dtls13() const;
+
+      /**
       * For ephemeral Diffie-Hellman key exchange, the server sends a group
       * parameter. Return the 2 Byte TLS group identifier specifying the group
       * parameter a server should use.
@@ -918,6 +923,8 @@ class BOTAN_PUBLIC_API(2, 0) Text_Policy : public Policy {
       bool allow_tls13() const override;
 
       bool allow_dtls12() const override;
+
+      bool allow_dtls13() const override;
 
       bool allow_insecure_renegotiation() const override;
 

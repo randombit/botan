@@ -184,14 +184,13 @@ Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
                                  std::optional<std::string> psk_identity,
                                  bool session_was_resumed,
                                  Server_Information server_info,
-                                 std::chrono::system_clock::time_point current_timestamp) :
+                                 std::chrono::system_clock::time_point current_timestamp,
+                                 uint16_t srtp_profile) :
       Session_Base(current_timestamp,
                    server_hello.selected_version(),
                    server_hello.ciphersuite(),
                    side,
-
-                   // TODO: SRTP might become necessary when DTLS 1.3 is being implemented
-                   0,
+                   srtp_profile,
 
                    // RFC 8446 Appendix D
                    //    Because TLS 1.3 always hashes in the transcript up to the server
@@ -266,7 +265,6 @@ Session::Session(const secure_vector<uint8_t>& master_secret,
 }
 
 #if defined(BOTAN_HAS_TLS_13)
-
 Session::Session(const secure_vector<uint8_t>& session_psk,
                  const std::optional<uint32_t>& max_early_data_bytes,
                  uint32_t ticket_age_add,
@@ -278,13 +276,36 @@ Session::Session(const secure_vector<uint8_t>& session_psk,
                  std::shared_ptr<const Public_Key> peer_raw_public_key,
                  const Server_Information& server_info,
                  std::chrono::system_clock::time_point current_timestamp) :
+      Session(session_psk,
+              max_early_data_bytes,
+              ticket_age_add,
+              lifetime_hint,
+              version,
+              ciphersuite,
+              side,
+              peer_certs,
+              std::move(peer_raw_public_key),
+              server_info,
+              /*srtp_profile=*/0,
+              current_timestamp) {}
+
+Session::Session(const secure_vector<uint8_t>& session_psk,
+                 const std::optional<uint32_t>& max_early_data_bytes,
+                 uint32_t ticket_age_add,
+                 std::chrono::seconds lifetime_hint,
+                 Protocol_Version version,
+                 uint16_t ciphersuite,
+                 Connection_Side side,
+                 const std::vector<X509_Certificate>& peer_certs,
+                 std::shared_ptr<const Public_Key> peer_raw_public_key,
+                 const Server_Information& server_info,
+                 uint16_t srtp_profile,
+                 std::chrono::system_clock::time_point current_timestamp) :
       Session_Base(current_timestamp,
                    version,
                    ciphersuite,
                    side,
-
-                   // TODO: SRTP might become necessary when DTLS 1.3 is being implemented
-                   0,
+                   srtp_profile,
 
                    // RFC 8446 Appendix D
                    //    Because TLS 1.3 always hashes in the transcript up to the server
@@ -362,7 +383,7 @@ Session::Session(std::span<const uint8_t> ber_data) /* NOLINT(*-member-init) */ 
    m_version = Protocol_Version(major_version, minor_version);
    // A session for a version that is disabled in this build is still well formed
    if(m_version != Protocol_Version::TLS_V12 && m_version != Protocol_Version::DTLS_V12 &&
-      m_version != Protocol_Version::TLS_V13) {
+      m_version != Protocol_Version::TLS_V13 && m_version != Protocol_Version::DTLS_V13) {
       throw Decoding_Error("Serialized TLS session contains unknown protocol version " + m_version.to_string());
    }
 
