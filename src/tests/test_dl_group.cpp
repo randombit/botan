@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_DL_GROUP)
    #include <botan/dl_group.h>
+   #include <botan/exceptn.h>
    #include <botan/hex.h>
    #include <botan/internal/workfactor.h>
 #endif
@@ -36,6 +37,12 @@ class DL_Group_Tests final : public Test {
             const Botan::DL_Group dl;
             dl.get_p();
          });
+
+         result.test_throws<Botan::Decoding_Error>(
+            "Subgroup order of 1 is rejected", "Invalid DL group subgroup order", []() {
+               const auto group = Botan::DL_Group::from_name("modp/ietf/1024");
+               const Botan::DL_Group dl(group.get_p(), Botan::BigInt::one(), group.get_g());
+            });
 
          return result;
       }
