@@ -371,11 +371,10 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
 }
 
 void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
-   // RFC 8446 4.1.2
+   // RFC 9846 4.2.2
    //    The client will also send a ClientHello when the server has responded
    //    to its ClientHello with a HelloRetryRequest. In that case, the client
    //    MUST send the same ClientHello without modification, except as follows:
-
    if(m_data->legacy_version() != new_ch.m_data->legacy_version() ||
       m_data->session_id() != new_ch.m_data->session_id() || m_data->random() != new_ch.m_data->random() ||
       m_data->ciphersuites() != new_ch.m_data->ciphersuites() ||
@@ -386,27 +385,27 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
    const auto oldexts = extension_types();
    const auto newexts = new_ch.extension_types();
 
-   // Check that extension omissions are justified. RFC 8446 4.1.2 lists the
+   // Check that extension omissions are justified. RFC 9846 4.2.2 lists the
    // only mutations the client may make between CH1 and CH2; any other
    // extension removal is an illegal parameter regardless of whether the
    // extension is one this implementation recognizes.
    for(const auto oldext : oldexts) {
       if(!newexts.contains(oldext)) {
-         // RFC 8446 4.1.2
+         // RFC 9846 4.2.2
          //    Removing the "early_data" extension (Section 4.2.10) if one was
          //    present.  Early data is not permitted after a HelloRetryRequest.
          if(oldext == EarlyDataIndication::static_type()) {
             continue;
          }
 
-         // RFC 8446 4.1.2
+         // RFC 9846 4.2.2
          //    Optionally adding, removing, or changing the length of the
          //    "padding" extension.
          if(oldext == Extension_Code::Padding) {
             continue;
          }
 
-         // RFC 8446 4.1.2
+         // RFC 9846 4.2.2
          //    Updating the "pre_shared_key" extension if present by
          //    recomputing the "obfuscated_ticket_age" and binder values
          //    and (optionally) removing any PSKs which are incompatible
@@ -425,14 +424,14 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
    // RFC-listed mutations are allowed, including for unknown extension codes.
    for(const auto newext : newexts) {
       if(!oldexts.contains(newext)) {
-         // RFC 8446 4.1.2
+         // RFC 9846 4.2.2
          //    Including a "cookie" extension if one was provided in the
          //    HelloRetryRequest.
          if(newext == Cookie::static_type()) {
             continue;
          }
 
-         // RFC 8446 4.1.2
+         // RFC 9846 4.2.2
          //    Optionally adding, removing, or changing the length of the
          //    "padding" extension.
          if(newext == Extension_Code::Padding) {
@@ -443,7 +442,7 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
       }
    }
 
-   // RFC 8446 4.1.2
+   // RFC 9846 4.2.2
    //    Removing the "early_data" extension (Section 4.2.10) if one was
    //    present.  Early data is not permitted after a HelloRetryRequest.
    if(new_ch.extensions().has<EarlyDataIndication>()) {
