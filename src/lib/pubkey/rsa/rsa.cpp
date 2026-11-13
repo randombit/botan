@@ -305,7 +305,8 @@ class RSA_Private_Data final {
          };
 
 #if defined(BOTAN_RSA_USE_ASYNC)
-         // Precompute e.sig_words in the main thread, see rsa_private_op
+         // Both threads exponentiate by e, which computes and caches e.sig_words();
+         // do that here first so that the threads only read the cached value
          e.sig_words();
 
          auto future_p = Thread_Pool::global_instance().run([&]() { return half(kp_monty, kp, m_p); });
@@ -848,13 +849,6 @@ class RSA_Private_Operation {
          CT::poison(d1_mask);
 
 #if defined(BOTAN_RSA_USE_ASYNC)
-         /*
-         * Precompute m.sig_words in the main thread before calling async. Otherwise
-         * the two threads race (during Barrett_Reduction::reduce) and while the output
-         * is correct in both threads, helgrind warns.
-         */
-         m.sig_words();
-
          auto future_j1 = Thread_Pool::global_instance().run([this, &m, &d1_mask]() {
 #endif
             const BigInt masked_d1 = m_private->blinded_d1(d1_mask);
