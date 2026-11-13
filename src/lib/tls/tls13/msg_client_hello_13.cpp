@@ -370,7 +370,7 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
    }
 }
 
-void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
+void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch, const Hello_Retry_Request& hrr) const {
    // RFC 9846 4.2.2
    //    The client will also send a ClientHello when the server has responded
    //    to its ClientHello with a HelloRetryRequest. In that case, the client
@@ -449,19 +449,35 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
       throw TLS_Exception(Alert::IllegalParameter, "Updated Client Hello indicates early data");
    }
 
-   // RFC 8446 4.1.2
-   //    The client MUST send the same ClientHello without modification,
-   //    except as follows: [key_share, pre_shared_key, early_data, cookie, padding]
-   //
    // Verify that extensions whose content must not change between the
    // initial and retried Client Hello have identical wire encodings.
-   const std::set<Extension_Code> extensions_allowed_to_change = {
-      Extension_Code::KeyShare,
-      Extension_Code::PresharedKey,
-      Extension_Code::EarlyData,
-      Extension_Code::Cookie,
-      Extension_Code::Padding,
-   };
+   const auto extensions_allowed_to_change = [&] {
+      // RFC 9846 4.2.2
+      //    [...], the client MUST send the same ClientHello without
+      //    modification, except as follows:
+      //      * Removing the "early_data" extension [...]
+      //      * Including a "cookie" extension [...]
+      //      * Updating the "pre_shared_key" extension [...]
+      //      * [...] adding, removing, or changing [...] the "padding"
+      std::set<Extension_Code> result{
+         Extension_Code::PresharedKey,
+         Extension_Code::EarlyData,
+         Extension_Code::Cookie,
+         Extension_Code::Padding,
+      };
+
+      // RFC 9846 4.2.2
+      //    [...], the client MUST send the same ClientHello without modification,
+      //    except as follows:
+      //      * If a "key_share" extension was supplied in the
+      //        HelloRetryRequest, replacing the list of shares with a list
+      //        containing a single KeyShareEntry from the indicated group.
+      if(hrr.extensions().has<Key_Share>()) {
+         result.insert(Extension_Code::KeyShare);
+      }
+
+      return result;
+   }();
 
    // As quoted above, PSKs may only be removed. Their identities must
    // otherwise be retained in the same order.

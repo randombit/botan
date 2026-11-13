@@ -16,7 +16,7 @@ Client_Hello_13& Handshake_State_13_Base::store(Client_Hello_13 client_hello, co
    if(m_client_hello) {
       // Make sure that the updated Client Hello is compatible to the initial one.
       BOTAN_STATE_CHECK(has_hello_retry_request());
-      m_client_hello->validate_updates(client_hello);
+      m_client_hello->validate_updates(client_hello, *m_hello_retry_request);
    }
 
    m_client_hello = std::move(client_hello);
