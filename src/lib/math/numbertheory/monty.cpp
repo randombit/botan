@@ -48,20 +48,39 @@ Montgomery_Params::Data::Data(const BigInt& p, const Barrett_Reduction& mod_p) {
    m_p_words = m_p.sig_words();
    m_p_dash = monty_inverse(m_p.word_at(0));
 
+   const size_t p_words = m_p_words;
+   const BigInt& mu = mod_p.mu();
+
    // floor(2^(bits(p) - 1 + WB) / p), derived from Barrett's floor(2^(2*WB*p_words) / p)
-   m_p_top_mu =
-      (mod_p.mu() >> (2 * WordInfo<word>::bits * m_p_words - (m_p_bits - 1 + WordInfo<word>::bits))).word_at(0);
+   m_p_top_mu = (mu >> (2 * WordInfo<word>::bits * p_words - (m_p_bits - 1 + WordInfo<word>::bits))).word_at(0);
 
-   const BigInt r = BigInt::power_of_2(m_p_words * WordInfo<word>::bits);
+   secure_vector<word> ws(4 * p_words);
 
-   m_r1 = mod_p.reduce(r);
-   m_r2 = mod_p.square(m_r1);
-   m_r3 = mod_p.multiply(m_r1, m_r2);
+   // Since mu = floor(R^2 / p), R^2 mod p = R^2 - mu*p, which is less than p < R
+   // so it is also -mu*p mod R, and only the low words of mu are needed
+   secure_vector<word> mu_p(2 * p_words);
+   bigint_mul(
+      mu_p.data(), mu_p.size(), mu._data(), p_words, p_words, m_p._data(), p_words, p_words, ws.data(), ws.size());
+   secure_vector<word> r2(p_words);
+   bigint_sub2(r2.data(), p_words, mu_p.data(), p_words);
 
-   // Barrett should be at least zero prefixing up to modulus size
-   BOTAN_ASSERT_NOMSG(m_r1.size() >= m_p_words);
-   BOTAN_ASSERT_NOMSG(m_r2.size() >= m_p_words);
-   BOTAN_ASSERT_NOMSG(m_r3.size() >= m_p_words);
+   secure_vector<word> r1(2 * p_words);
+   if(m_p_bits == WordInfo<word>::bits * p_words) {
+      // p > R/2 so R mod p = R - p
+      bigint_sub2(r1.data(), p_words, m_p._data(), p_words);
+   } else {
+      // R = R^2 / R
+      copy_mem(r1.data(), r2.data(), p_words);
+      bigint_monty_redc_inplace(r1.data(), m_p._data(), p_words, m_p_dash, ws.data(), ws.size());
+   }
+
+   // R^3 = R^2 * R^2 / R
+   secure_vector<word> r3(p_words);
+   bigint_monty_sqr(r3.data(), r2.data(), m_p._data(), p_words, m_p_dash, ws.data(), ws.size());
+
+   m_r1 = BigInt::_from_words(r1);
+   m_r2 = BigInt::_from_words(r2);
+   m_r3 = BigInt::_from_words(r3);
 }
 
 Montgomery_Params::Montgomery_Params(const BigInt& p, const Barrett_Reduction& mod_p) :
