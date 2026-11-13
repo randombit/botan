@@ -9,8 +9,8 @@
 #define BOTAN_BLINDER_H_
 
 #include <botan/bigint.h>
-#include <botan/internal/barrett.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/monty.h>
 #include <functional>
 
 namespace Botan {
@@ -63,17 +63,17 @@ class Blinder final {
       void _const_time_unpoison() const { CT::unpoison_all(m_e, m_d); }
 
       /**
-      * @param reducer precomputed Barrett reduction for the modulus
+      * @param monty Montgomery parameters for the modulus
       * @param rng the RNG to use for generating the nonce
       * @param fwd_func a function that calculates the modular
       * exponentiation of the public exponent and the given value (the nonce)
       * @param inv_func a function that calculates the modular inverse
       * of the given value (the nonce)
       *
-      * @note Lifetime: The rng and reducer arguments are captured by
+      * @note Lifetime: The rng argument is captured by
       * reference and must live as long as the Blinder does
       */
-      Blinder(const Barrett_Reduction& reducer,
+      Blinder(const Montgomery_Params& monty,
               RandomNumberGenerator& rng,
               std::function<BigInt(const BigInt&)> fwd_func,
               std::function<BigInt(const BigInt&)> inv_func);
@@ -89,13 +89,14 @@ class Blinder final {
    private:
       BigInt blinding_nonce() const;
 
-      const Barrett_Reduction& m_reducer;
       RandomNumberGenerator& m_rng;
       std::function<BigInt(const BigInt&)> m_fwd_fn;
       std::function<BigInt(const BigInt&)> m_inv_fn;
       size_t m_modulus_bits = 0;
 
-      mutable BigInt m_e, m_d;
+      // The blinding values are kept in Montgomery form, so multiplying by them
+      // with a Montgomery multiplication yields a result in standard form
+      mutable Montgomery_Int m_e, m_d;
       mutable size_t m_counter = 0;
 };
 

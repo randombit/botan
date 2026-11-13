@@ -178,7 +178,7 @@ class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_Paddin
             PK_Ops::Decryption_with_Padding(options),
             m_key(key),
             m_blinder(
-               m_key->group()._reducer_mod_p(),
+               m_key->group()._monty_params_p(),
                rng,
                [](const BigInt& k) { return k; },
                [this](const BigInt& k) { return powermod_x_p(k); }) {}
