@@ -24,6 +24,40 @@
 
 namespace Botan::TLS {
 
+namespace {
+
+void check_for_cookie_secret(TLS_Flavor flavor,
+                             const std::shared_ptr<const Policy>& policy,
+                             const std::shared_ptr<Credentials_Manager>& creds) {
+   if(flavor != TLS_Flavor::DTLS || policy == nullptr || creds == nullptr) {
+      return;
+   }
+
+   if(!policy->dtls_server_require_cookie_exchange()) {
+      return;
+   }
+
+   const bool cookie_secret_missing = [&] {
+      try {
+         return creds->psk("tls-server", "dtls-cookie-secret", "").empty();
+      } catch(...) {
+         return true;
+      }
+   }();
+
+   if(cookie_secret_missing) {
+      // TODO(Botan4): Simplify this error message that was meant to ease the
+      //               burden on users running into a deliberate semver violation.
+      throw Invalid_State(
+         "Since Botan 3.13 DTLS server requires setting a non-empty cookie secret. "
+         "Either override Credentials_Manager::dtls_cookie_secret() or disable the "
+         "cookie exchange using TLS::Policy::dtls_server_require_cookie_exchange(), "
+         "if you understand the security implications of doing so.");
+   }
+}
+
+}  // namespace
+
 /*
 * TLS Server Constructor
 */
@@ -37,6 +71,10 @@ Server::Server(const std::shared_ptr<Callbacks>& callbacks,
    BOTAN_ARG_CHECK(policy != nullptr, "Policy must not be null");
    const auto max_version = policy->latest_supported_version(is_datagram);
    const auto flavor = is_datagram ? TLS_Flavor::DTLS : TLS_Flavor::TLS;
+
+   // Try to load the cookie secret on initialization, rather than waiting to
+   // fail until the first client connects.
+   check_for_cookie_secret(flavor, policy, creds);
 
 #if defined(BOTAN_HAS_TLS_13)
    if(!max_version.is_pre_tls_13()) {
