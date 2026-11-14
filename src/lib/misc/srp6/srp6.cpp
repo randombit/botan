@@ -12,6 +12,7 @@
 #include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/dl_element.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mp_core.h>
 
@@ -107,7 +108,7 @@ std::pair<BigInt, SymmetricKey> srp6_client_agree(std::string_view identifier,
    const BigInt a(rng, a_bits);
    CT::poison(a);
 
-   const BigInt A = group.power_g_p(a, a_bits);
+   const BigInt A = DL_Element::g_pow(group, a, a_bits).to_bigint();
    CT::unpoison(A);
 
    const BigInt u = hash_seq(*hash_fn, p_bytes, A, B);
@@ -116,9 +117,9 @@ std::pair<BigInt, SymmetricKey> srp6_client_agree(std::string_view identifier,
    const BigInt x = compute_x(*hash_fn, identifier, password, salt);
    CT::poison(x);
 
-   const BigInt g_x_p = group.power_g_p(x, hash_fn->output_length() * 8);
+   const auto g_x_p = DL_Element::g_pow(group, x, hash_fn->output_length() * 8);
 
-   const BigInt B_k_g_x_p = group.mod_p(B + group.mod_p(p - group.multiply_mod_p(k, g_x_p)));
+   const auto B_k_g_x_p = DL_Element::from_bigint(group, B) - DL_Element::from_bigint(group, k) * g_x_p;
 
    // a + u*x, with lengths that depend only on the sizes of the inputs, not on their values
    secure_vector<word> a_ux_words(std::max(a.size(), u.size() + x.size()) + 1);
@@ -133,12 +134,12 @@ std::pair<BigInt, SymmetricKey> srp6_client_agree(std::string_view identifier,
    const size_t max_aux_bits = std::max<size_t>(a_bits, 2 * 8 * hash_fn->output_length()) + 1;
    BOTAN_ASSERT_NOMSG(max_aux_bits >= a_ux.bits());
 
-   const BigInt S = group.power_b_p(B_k_g_x_p, a_ux, max_aux_bits);
+   const auto S = B_k_g_x_p.pow(a_ux, max_aux_bits);
 
    // Any further secret handling of the output is up to the caller
    CT::unpoison_all(a, x, S);
 
-   const SymmetricKey Sk(S.serialize<secure_vector<uint8_t>>(p_bytes));
+   const SymmetricKey Sk(S.serialize<secure_vector<uint8_t>>());
 
    return std::make_pair(A, Sk);
 }
@@ -164,7 +165,7 @@ BigInt srp6_generate_verifier(std::string_view identifier,
 
    const BigInt x = compute_x(*hash_fn, identifier, password, salt);
    const auto scope = CT::scoped_poison(x);
-   return CT::driveby_unpoison(group.power_g_p(x, hash_fn->output_length() * 8));
+   return CT::driveby_unpoison(DL_Element::g_pow(group, x, hash_fn->output_length() * 8).to_bigint());
 }
 
 BigInt SRP6_Server_Session::step1(const BigInt& v,
@@ -202,8 +203,9 @@ BigInt SRP6_Server_Session::step1(
 
    const BigInt k = hash_seq(*hash_fn, m_group->p_bytes(), p, g);
 
-   const auto scope = CT::scoped_poison(m_v, m_b);
-   m_B = m_group->mod_p(m_v * k + m_group->power_g_p(m_b, b_bits));
+   const auto v_e = DL_Element::from_bigint(*m_group, m_v);
+   const auto scope = CT::scoped_poison(v_e, m_b);
+   m_B = (DL_Element::from_bigint(*m_group, k) * v_e + DL_Element::g_pow(*m_group, m_b, b_bits)).to_bigint();
    CT::unpoison(m_B);
 
    return m_B;
@@ -224,19 +226,20 @@ SymmetricKey SRP6_Server_Session::step2(const BigInt& A) {
    const BigInt u = hash_seq(*hash_fn, m_group->p_bytes(), A, m_B);
    BOTAN_ASSERT_NOMSG(!u.is_zero());
 
-   const auto scope = CT::scoped_poison(m_v, m_b);
+   const auto v_e = DL_Element::from_bigint(*m_group, m_v);
+   const auto scope = CT::scoped_poison(v_e, m_b);
 
    // The maximum length of u is fixed based on the chosen hash function
    const size_t u_bits = hash_fn->output_length() * 8;
-   const BigInt vup = m_group->power_b_p(m_v, u, u_bits);
+   const auto vup = v_e.pow(u, u_bits);
 
    // The size of b is chosen by either a formula or the application; either way it is public
-   const BigInt S = m_group->power_b_p(m_group->multiply_mod_p(A, vup), m_b, m_b_bits);
+   const auto S = (DL_Element::from_bigint(*m_group, A) * vup).pow(m_b, m_b_bits);
 
    // Any further secret handling of the output is up to the caller
    CT::unpoison(S);
 
-   return SymmetricKey(S.serialize<secure_vector<uint8_t>>(m_group->p_bytes()));
+   return SymmetricKey(S.serialize<secure_vector<uint8_t>>());
 }
 
 }  // namespace Botan
