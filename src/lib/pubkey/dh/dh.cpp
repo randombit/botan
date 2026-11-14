@@ -7,8 +7,8 @@
 
 #include <botan/dh.h>
 
-#include <botan/internal/blinding.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/dl_element.h>
 #include <botan/internal/dl_scheme.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/pk_options_impl.h>
@@ -110,12 +110,7 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
                       RandomNumberGenerator& rng) :
             PK_Ops::Key_Agreement_with_KDF(options),
             m_key(key),
-            m_key_bits(m_key->max_private_key_bits()),
-            m_blinder(
-               m_key->group()._monty_params_p(),
-               rng,
-               [](const BigInt& k) { return k; },
-               [this](const BigInt& k) { return powermod_x_p(group().inverse_mod_p(k)); }) {}
+            m_powermod_x(key, DL_PrivateKey_Exponentiation::Output::Power, rng) {}
 
       size_t agreed_value_size() const override { return group().p_bytes(); }
 
@@ -124,30 +119,25 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
    private:
       const DL_Group& group() const { return m_key->group(); }
 
-      BigInt powermod_x_p(const BigInt& v) const { return group().power_b_p(v, m_key->private_key(), m_key_bits); }
-
       std::shared_ptr<const DL_PrivateKey> m_key;
-      const size_t m_key_bits;
-      Blinder m_blinder;
+      DL_PrivateKey_Exponentiation m_powermod_x;
 };
 
 secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_len) {
-   BigInt v = BigInt::from_bytes(std::span{w, w_len});
+   const BigInt v = BigInt::from_bytes(std::span{w, w_len});
 
    if(v <= 1 || v >= group().get_p() - 1) {
       throw Invalid_Argument("DH agreement - invalid key provided");
    }
 
-   const auto scope = CT::scoped_poison(m_key->private_key(), m_blinder);
+   const auto scope = CT::scoped_poison(m_key->private_key(), m_powermod_x);
 
-   v = m_blinder.blind(v);
-   v = powermod_x_p(v);
-   v = m_blinder.unblind(v);
+   const auto z = m_powermod_x.pow(DL_Element::from_bigint(group(), v));
 
    // Any further secret handling of the output is up to the caller
-   CT::unpoison(v);
+   CT::unpoison(z);
 
-   return v.serialize<secure_vector<uint8_t>>(group().p_bytes());
+   return z.serialize<secure_vector<uint8_t>>();
 }
 
 }  // namespace
