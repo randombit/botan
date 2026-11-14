@@ -3450,6 +3450,26 @@ class FFI_MP_Test final : public FFI_Test {
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
          result.test_str_eq("botan_mp_mod_mul", str_buf, "123945920473931248854653259523111998693");
 
+         // An even modulus is accepted, and the output may alias the modulus
+         botan_mp_t m;
+         botan_mp_init(&m);
+         TEST_FFI_OK(botan_mp_set_from_str, (m, "340282366920938463463374607431768211456"));
+         TEST_FFI_OK(botan_mp_mod_mul, (m, x, y, m));
+         str_len = sizeof(str_buf);
+         TEST_FFI_OK(botan_mp_to_str, (m, 10, str_buf, &str_len));
+         result.test_str_eq("botan_mp_mod_mul even modulus", str_buf, "294087103934400480586340563238996104360");
+         botan_mp_destroy(m);
+
+         // The output may alias an input
+         TEST_FFI_OK(botan_mp_mod_mul, (y, x, y, p));
+         TEST_FFI_RC(1, botan_mp_equal, (y, r));
+
+         // Inputs must be in [0, p)
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_mp_mod_mul, (r, p, x, p));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_mp_mod_mul, (r, x, p, p));
+         TEST_FFI_OK(botan_mp_flip_sign, (y));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_mp_mod_mul, (r, x, y, p));
+
          str_len = 0;
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_mp_to_str, (r, 10, str_buf, &str_len));
 

@@ -147,11 +147,10 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
                                       RandomNumberGenerator& rng) :
             m_key(key),
             m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(options)),
-            m_mod_n(Barrett_Reduction::for_public_modulus(m_key.get_n())),
-            m_monty_n(m_key.get_n(), m_mod_n),
+            m_monty_n(m_key.get_n()),
             m_bits(m_key.get_n().bits() - 1),
             m_blinder(
-               m_mod_n,
+               m_monty_n,
                rng,
                [this](const BigInt& k) {
                   const size_t powm_window = 1;
@@ -214,7 +213,6 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
    private:
       PKCS11_RSA_PrivateKey m_key;
       MechanismWrapper m_mechanism;
-      Barrett_Reduction m_mod_n;
       const Montgomery_Params m_monty_n;
       size_t m_bits;
       Blinder m_blinder;

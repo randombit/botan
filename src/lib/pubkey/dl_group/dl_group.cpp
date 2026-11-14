@@ -35,9 +35,33 @@ void check_dl_group_params(const BigInt& p, const BigInt& g) {
    }
 }
 
+// Compute x*y mod p as a Montgomery multiplication followed by a multiplication by R^2
+BigInt mul_mod(const Montgomery_Params& monty, const BigInt& x, const BigInt& y) {
+   const auto& p = monty.p();
+   BOTAN_ARG_CHECK(x.signum() >= 0 && x.is_less_than(p), "Invalid x param for modular multiply");
+   BOTAN_ARG_CHECK(y.signum() >= 0 && y.is_less_than(p), "Invalid y param for modular multiply");
+   secure_vector<word> ws;
+   BigInt xy_r;
+   monty.mul(xy_r, x, y, ws);
+   BigInt z;
+   monty.mul(z, xy_r, monty.R2(), ws);
+   return z;
+}
+
+BigInt sqr_mod(const Montgomery_Params& monty, const BigInt& x) {
+   const auto& p = monty.p();
+   BOTAN_ARG_CHECK(x.signum() >= 0 && x.is_less_than(p), "Invalid x param for modular square");
+   secure_vector<word> ws;
+   BigInt x2_r;
+   monty.sqr(x2_r, x, ws);
+   BigInt z;
+   monty.mul(z, x2_r, monty.R2(), ws);
+   return z;
+}
+
 void check_dl_group_params(const BigInt& p, const BigInt& q, const BigInt& g) {
    check_dl_group_params(p, g);
-   if(q.signum() <= 0 || q.is_even() || q.bits() >= p.bits()) {
+   if(q < 3 || q.is_even() || q.bits() >= p.bits()) {
       throw Decoding_Error("Invalid DL group subgroup order");
    }
 }
@@ -68,6 +92,7 @@ class DL_Group_Data final {
             m_mod_p(Barrett_Reduction::for_public_modulus(p)),
             m_mod_q(Barrett_Reduction::for_public_modulus(q)),
             m_monty_params(m_p, m_mod_p),
+            m_monty_q(Montgomery_Params(m_q, *m_mod_q)),
             m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
             m_p_bits(p.bits()),
             m_q_bits(q.bits()),
@@ -113,6 +138,11 @@ class DL_Group_Data final {
 
       const Montgomery_Params& monty_params_p() const { return m_monty_params; }
 
+      const Montgomery_Params& monty_params_q() const {
+         BOTAN_STATE_CHECK(m_monty_q);
+         return *m_monty_q;
+      }
+
       size_t p_bits() const { return m_p_bits; }
 
       size_t q_bits() const { return m_q_bits; }
@@ -156,6 +186,7 @@ class DL_Group_Data final {
       Barrett_Reduction m_mod_p;
       std::optional<Barrett_Reduction> m_mod_q;
       Montgomery_Params m_monty_params;
+      std::optional<Montgomery_Params> m_monty_q;
       std::shared_ptr<const Montgomery_Exponentiation_State> m_monty;
       size_t m_p_bits;
       size_t m_q_bits;
@@ -582,7 +613,7 @@ BigInt DL_Group::mod_p(const BigInt& x) const {
 }
 
 BigInt DL_Group::multiply_mod_p(const BigInt& x, const BigInt& y) const {
-   return data().reducer_mod_p().multiply(x, y);
+   return mul_mod(data().monty_params_p(), x, y);
 }
 
 const Barrett_Reduction& DL_Group::_reducer_mod_p() const {
@@ -602,7 +633,7 @@ BigInt DL_Group::mod_q(const BigInt& x) const {
 
 BigInt DL_Group::multiply_mod_q(const BigInt& x, const BigInt& y) const {
    data().assert_q_is_set("multiply_mod_q");
-   return data().reducer_mod_q().multiply(x, y);
+   return mul_mod(data().monty_params_q(), x, y);
 }
 
 BigInt DL_Group::multiply_mod_q(const BigInt& x, const BigInt& y, const BigInt& z) const {
@@ -612,7 +643,7 @@ BigInt DL_Group::multiply_mod_q(const BigInt& x, const BigInt& y, const BigInt& 
 
 BigInt DL_Group::square_mod_q(const BigInt& x) const {
    data().assert_q_is_set("square_mod_q");
-   return data().reducer_mod_q().square(x);
+   return sqr_mod(data().monty_params_q(), x);
 }
 
 BigInt DL_Group::multi_exponentiate(const BigInt& x, const BigInt& y, const BigInt& z) const {

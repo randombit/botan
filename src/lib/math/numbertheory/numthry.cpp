@@ -9,10 +9,11 @@
 #include <botan/numthry.h>
 
 #include <botan/exceptn.h>
+#include <botan/mem_ops.h>
 #include <botan/rng.h>
-#include <botan/internal/barrett.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/divide.h>
+#include <botan/internal/mod_inv.h>
 #include <botan/internal/monty.h>
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/mp_core.h>
@@ -40,8 +41,7 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
       return BigInt::from_s32(-1);
    }
 
-   const auto mod_p = Barrett_Reduction::for_public_modulus(p);
-   const Montgomery_Params monty_p(p, mod_p);
+   const Montgomery_Params monty_p(p);
 
    // If p == 3 (mod 4) there is a simple solution
    if(p % 4 == 3) {
@@ -55,12 +55,19 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
    q -= 1;
    q >>= 1;
 
-   BigInt r = monty_exp_vartime(monty_p, a, q).value();
-   BigInt n = mod_p.multiply(a, mod_p.square(r));
-   r = mod_p.multiply(r, a);
+   secure_vector<word> ws;
+   const auto one = Montgomery_Int::one(monty_p);
+   const Montgomery_Int a_m(monty_p, a);
 
-   if(n == 1) {
-      return r;
+   auto r = monty_exp_vartime(monty_p, a, q);
+   auto n = a_m.mul(r.square(ws), ws);
+   r.mul_by(a_m, ws);
+
+   // All values here are public, so variable time comparisons are fine
+   const auto is_one = [&](const Montgomery_Int& x) { return x.repr() == one.repr(); };
+
+   if(is_one(n)) {
+      return r.value();
    }
 
    // find random quadratic nonresidue z
@@ -75,21 +82,23 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
       /*
       * The expected number of tests to find a non-residue modulo a
       * prime is 2. If we have not found one after 256 then almost
-      * certainly we have been given a non-prime p.
+      * certainly we have been given a non-prime p, for which there
+      * may be no non-residue at all (eg if p is a perfect square).
+      * But some primes do have a larger least non-residue, so check.
       */
-      if(z >= 256) {
+      if(z == 256 && !is_bailie_psw_probable_prime_vartime(p, monty_p)) {
          return BigInt::from_s32(-1);
       }
    }
 
-   BigInt c = monty_exp_vartime(monty_p, BigInt::from_word(z), (q << 1) + 1).value();
+   auto c = monty_exp_vartime(monty_p, BigInt::from_word(z), (q << 1) + 1);
 
-   while(n > 1) {
-      q = n;
+   while(!n.is_zero() && !is_one(n)) {
+      auto t = n;
 
       size_t i = 0;
-      while(q != 1) {
-         q = mod_p.square(q);
+      while(!is_one(t)) {
+         t.square_this_n_times(ws, 1);
          ++i;
 
          if(i >= s) {
@@ -98,17 +107,17 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
       }
 
       BOTAN_ASSERT_NOMSG(s >= (i + 1));  // No underflow!
-      c = monty_exp_vartime(monty_p, c, BigInt::power_of_2(s - i - 1)).value();
-      r = mod_p.multiply(r, c);
-      c = mod_p.square(c);
-      n = mod_p.multiply(n, c);
+      c.square_this_n_times(ws, s - i - 1);
+      r.mul_by(c, ws);
+      c.square_this_n_times(ws, 1);
+      n.mul_by(c, ws);
 
       // s decreases as the algorithm proceeds
       BOTAN_ASSERT_NOMSG(s >= i);
       s = i;
    }
 
-   return r;
+   return r.value();
 }
 
 /*
@@ -304,6 +313,41 @@ BigInt lcm(const BigInt& a, const BigInt& b) {
    return ct_divide(ab, g);
 }
 
+namespace {
+
+/*
+* Compute b^e mod 2^k, for b >= 0, using a constant time square and multiply ladder
+*/
+BigInt power_mod_pow2(const BigInt& b, const BigInt& e, size_t e_bits, size_t k) {
+   constexpr size_t WB = WordInfo<word>::bits;
+   const size_t k_words = (k + WB - 1) / WB;
+   const word top_mask = WordInfo<word>::max >> (k_words * WB - k);
+
+   secure_vector<word> g(k_words);
+   copy_mem(g.data(), b._data(), std::min(k_words, b.size()));
+   g[k_words - 1] &= top_mask;
+
+   secure_vector<word> accum(k_words);
+   accum[0] = 1;
+
+   secure_vector<word> t(2 * k_words);
+   secure_vector<word> ws(2 * k_words);
+
+   for(size_t i = 0; i != e_bits; ++i) {
+      bigint_mul(t.data(), t.size(), g.data(), k_words, k_words, accum.data(), k_words, k_words, ws.data(), ws.size());
+      t[k_words - 1] &= top_mask;
+      CT::conditional_copy_mem(static_cast<word>(e.get_bit(i)), accum.data(), t.data(), accum.data(), k_words);
+
+      bigint_sqr(t.data(), t.size(), g.data(), k_words, k_words, ws.data(), ws.size());
+      t[k_words - 1] &= top_mask;
+      copy_mem(g.data(), t.data(), k_words);
+   }
+
+   return BigInt::_from_words(accum);
+}
+
+}  // namespace
+
 /*
 * Modular Exponentiation
 */
@@ -319,29 +363,46 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod) {
       return BigInt::zero();
    }
 
-   const auto reduce_mod = Barrett_Reduction::for_secret_modulus(mod);
-
    const size_t exp_bits = exp.bits();
 
    if(mod.is_odd()) {
-      const Montgomery_Params monty_params(mod, reduce_mod);
+      const Montgomery_Params monty_params(mod);
       return monty_exp(monty_params, ct_modulo(base, mod), exp, exp_bits).value();
    }
 
    /*
-   Support for even modulus is just a convenience and not considered
-   cryptographically important, so this implementation is slow ...
+   * Support for even modulus is just a convenience and not considered
+   * cryptographically important.
+   *
+   * Write mod = 2^k * m with m odd, exponentiate modulo m and modulo 2^k
+   * separately, then combine the results using CRT.
    */
-   BigInt accum = BigInt::one();
-   BigInt g = ct_modulo(base, mod);
-   BigInt t;
+   const BigInt g = ct_modulo(base, mod);
+   const size_t k = low_zero_bits(mod);
+   const BigInt m = mod >> k;
 
-   for(size_t i = 0; i != exp_bits; ++i) {
-      t = reduce_mod.multiply(g, accum);
-      g = reduce_mod.square(g);
-      accum.ct_cond_assign(exp.get_bit(i), t);
+   BigInt r_2k = power_mod_pow2(g, exp, exp_bits, k);
+
+   if(m == 1) {
+      return r_2k;
    }
-   return accum;
+
+   const Montgomery_Params monty_m(m);
+   const BigInt r_m = monty_exp(monty_m, ct_modulo(g, m), exp, exp_bits).value();
+
+   // m is odd so it is always invertible modulo 2^k
+   BigInt m_low = m;
+   m_low.mask_bits(k);
+   const BigInt m_inv = inverse_mod_general(m_low, BigInt::power_of_2(k)).value();
+
+   // Compute h = (r_2k - r_m) * m^-1 mod 2^k, adding 2^k to keep the difference positive
+   BigInt r_m_low = r_m;
+   r_m_low.mask_bits(k);
+   BigInt h = (r_2k + BigInt::power_of_2(k) - r_m_low) * m_inv;
+   h.mask_bits(k);
+
+   // Then r_m + h*m is congruent to r_m mod m and to r_2k mod 2^k
+   return r_m + h * m;
 }
 
 /*

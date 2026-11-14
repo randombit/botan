@@ -998,7 +998,12 @@ class BigInt_Sqrt_Modulo_Prime_Test final : public Text_Based_Test {
 
          const Botan::BigInt a_sqrt = Botan::sqrt_modulo_prime(a, p);
 
-         result.test_bn_eq("sqrt_modulo_prime", a_sqrt, exp);
+         // Either square root is acceptable
+         if(exp.signum() > 0 && a_sqrt == p - exp) {
+            result.test_bn_eq("sqrt_modulo_prime", a_sqrt, p - exp);
+         } else {
+            result.test_bn_eq("sqrt_modulo_prime", a_sqrt, exp);
+         }
 
          if(a_sqrt > 1) {
             const Botan::BigInt a_sqrt2 = (a_sqrt * a_sqrt) % p;
@@ -1010,6 +1015,54 @@ class BigInt_Sqrt_Modulo_Prime_Test final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("math", "bn_sqrt_modulo_prime", BigInt_Sqrt_Modulo_Prime_Test);
+
+class BigInt_Sqrt_Modulo_Prime_Exhaustive_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("BigInt Sqrt Modulo Prime exhaustive");
+
+         const auto is_prime = [](uint32_t n) {
+            for(uint32_t d = 2; d * d <= n; ++d) {
+               if(n % d == 0) {
+                  return false;
+               }
+            }
+            return n >= 2;
+         };
+
+         for(uint32_t p = 2; p < 1024; ++p) {
+            if(!is_prime(p)) {
+               continue;
+            }
+
+            std::vector<bool> is_square(p);
+            for(uint32_t x = 0; x != p; ++x) {
+               is_square[(x * x) % p] = true;
+            }
+
+            const BigInt p_bn = BigInt::from_u64(p);
+
+            for(uint32_t a = 0; a != p; ++a) {
+               const BigInt r = Botan::sqrt_modulo_prime(BigInt::from_u64(a), p_bn);
+
+               bool ok = false;
+               if(is_square[a]) {
+                  ok = r.signum() >= 0 && r < p_bn && (r * r) % p_bn == a;
+               } else {
+                  ok = (r == BigInt::from_s32(-1));
+               }
+
+               if(!result.test_is_true("sqrt_modulo_prime result", ok)) {
+                  result.test_note(Botan::fmt("a = {} p = {} returned {}", a, p, r.to_dec_string()));
+               }
+            }
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("math", "bn_sqrt_modulo_prime_exhaustive", BigInt_Sqrt_Modulo_Prime_Exhaustive_Test);
 
 class BigInt_InvMod_Test final : public Text_Based_Test {
    public:

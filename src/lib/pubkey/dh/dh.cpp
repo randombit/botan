@@ -112,7 +112,7 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
             m_key(key),
             m_key_bits(m_key->max_private_key_bits()),
             m_blinder(
-               m_key->group()._reducer_mod_p(),
+               m_key->group()._monty_params_p(),
                rng,
                [](const BigInt& k) { return k; },
                [this](const BigInt& k) { return powermod_x_p(group().inverse_mod_p(k)); }) {}

@@ -384,6 +384,7 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       /*
       * For internal use only
       */
+      // TODO(Botan4) remove this as it is no longer needed
       const Barrett_Reduction& _reducer_mod_p() const;
 
    private:

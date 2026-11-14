@@ -11,19 +11,20 @@
 
 namespace Botan {
 
-Blinder::Blinder(const Barrett_Reduction& reducer,
+Blinder::Blinder(const Montgomery_Params& monty,
                  RandomNumberGenerator& rng,
                  std::function<BigInt(const BigInt&)> fwd,
                  std::function<BigInt(const BigInt&)> inv) :
-      m_reducer(reducer),
       m_rng(rng),
       m_fwd_fn(std::move(fwd)),
       m_inv_fn(std::move(inv)),
-      m_modulus_bits(reducer.modulus_bits()),
+      m_modulus_bits(monty.p_bits()),
+      m_e(monty),
+      m_d(monty),
       m_counter{} {
    const BigInt k = blinding_nonce();
-   m_e = m_fwd_fn(k);
-   m_d = m_inv_fn(k);
+   m_e = Montgomery_Int(monty, m_fwd_fn(k));
+   m_d = Montgomery_Int(monty, m_inv_fn(k));
    _const_time_unpoison();
 }
 
@@ -31,24 +32,40 @@ BigInt Blinder::blinding_nonce() const {
    return CT::driveby_poison(BigInt(m_rng, m_modulus_bits - 1));
 }
 
+namespace {
+
+// Multiply a standard form x by a Montgomery form y, yielding x*y in standard form
+BigInt mul_by_monty(const BigInt& x, const Montgomery_Int& y) {
+   const auto& monty = y._params();
+   BOTAN_ARG_CHECK(x.signum() >= 0 && x.is_less_than(monty.p()), "Invalid input for blinding");
+   secure_vector<word> ws;
+   BigInt z;
+   monty.mul(z, x, y.repr(), ws);
+   return z;
+}
+
+}  // namespace
+
 BigInt Blinder::blind(const BigInt& i) const {
    ++m_counter;
 
    if((ReinitInterval > 0) && (m_counter > ReinitInterval)) {
       const BigInt k = blinding_nonce();
-      m_e = m_fwd_fn(k);
-      m_d = m_inv_fn(k);
+      const auto& monty = m_e._params();
+      m_e = Montgomery_Int(monty, m_fwd_fn(k));
+      m_d = Montgomery_Int(monty, m_inv_fn(k));
       m_counter = 0;
    } else {
-      m_e = m_reducer.square(m_e);
-      m_d = m_reducer.square(m_d);
+      secure_vector<word> ws;
+      m_e.square_this_n_times(ws, 1);
+      m_d.square_this_n_times(ws, 1);
    }
 
-   return m_reducer.multiply(i, m_e);
+   return mul_by_monty(i, m_e);
 }
 
 BigInt Blinder::unblind(const BigInt& i) const {
-   return m_reducer.multiply(i, m_d);
+   return mul_by_monty(i, m_d);
 }
 
 }  // namespace Botan
