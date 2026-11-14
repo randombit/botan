@@ -364,11 +364,11 @@ int botan_cipher_get_tag_length(botan_cipher_t cipher, size_t* tl) {
 }
 
 int botan_cipher_is_authenticated(botan_cipher_t cipher) {
-   return BOTAN_FFI_VISIT(cipher, [=](const auto& c) { return c.authenticated() ? 1 : 0; });
+   return BOTAN_FFI_VISIT(cipher, [](const auto& c) { return c.authenticated() ? 1 : 0; });
 }
 
 int botan_cipher_requires_entire_message(botan_cipher_t cipher) {
-   return BOTAN_FFI_VISIT(cipher, [=](const auto& c) { return c.requires_entire_message() ? 1 : 0; });
+   return BOTAN_FFI_VISIT(cipher, [](const auto& c) { return c.requires_entire_message() ? 1 : 0; });
 }
 
 int botan_cipher_name(botan_cipher_t cipher, char* name, size_t* name_len) {

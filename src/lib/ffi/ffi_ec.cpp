@@ -122,7 +122,7 @@ int botan_ec_group_from_name(botan_ec_group_t* ec_group, const char* name) {
 }
 
 int botan_ec_group_unregister(botan_asn1_oid_t oid) {
-   return BOTAN_FFI_VISIT(oid, [=](const auto& o) -> int { return Botan::EC_Group::unregister(o) ? 1 : 0; });
+   return BOTAN_FFI_VISIT(oid, [](const auto& o) -> int { return Botan::EC_Group::unregister(o) ? 1 : 0; });
 }
 
 int botan_ec_group_view_der(botan_ec_group_t ec_group, botan_view_ctx ctx, botan_view_bin_fn view) {
@@ -348,7 +348,7 @@ int botan_ec_point_get_group(botan_ec_point_t ec_point, botan_ec_group_t* ec_gro
 }
 
 int botan_ec_point_is_identity(botan_ec_point_t ec_point) {
-   return BOTAN_FFI_VISIT(ec_point, [=](const auto& p) -> int { return p.is_identity() ? 1 : 0; });
+   return BOTAN_FFI_VISIT(ec_point, [](const auto& p) -> int { return p.is_identity() ? 1 : 0; });
 }
 
 int botan_ec_point_equal(botan_ec_point_t x_w, botan_ec_point_t y_w) {
