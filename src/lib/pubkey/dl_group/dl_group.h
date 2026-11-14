@@ -207,38 +207,39 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       * Reduce an integer modulo p
       * @return x % p
       */
-      BigInt mod_p(const BigInt& x) const;
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt mod_p(const BigInt& x) const;
 
       /**
       * Multiply and reduce an integer modulo p
       * @return (x*y) % p
       */
-      BigInt multiply_mod_p(const BigInt& x, const BigInt& y) const;
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt multiply_mod_p(const BigInt& x, const BigInt& y) const;
 
       /**
       * Return the inverse of x mod p
       */
-      BigInt inverse_mod_p(const BigInt& x) const;
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt inverse_mod_p(const BigInt& x) const;
 
       /**
       * Reduce an integer modulo q
       * Throws if q is unset on this DL_Group
       * @return x % q
       */
-      BigInt mod_q(const BigInt& x) const;
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt mod_q(const BigInt& x) const;
 
       /**
       * Multiply and reduce an integer modulo q
       * Throws if q is unset on this DL_Group
       * @return (x*y) % q
       */
-      BigInt multiply_mod_q(const BigInt& x, const BigInt& y) const;
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt multiply_mod_q(const BigInt& x, const BigInt& y) const;
 
       /**
       * Multiply and reduce an integer modulo q
       * Throws if q is unset on this DL_Group
       * @return (x*y*z) % q
       */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       BigInt multiply_mod_q(const BigInt& x, const BigInt& y, const BigInt& z) const;
 
       /**
@@ -246,13 +247,13 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       * Throws if q is unset on this DL_Group
       * @return (x*x) % q
       */
-      BigInt square_mod_q(const BigInt& x) const;
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt square_mod_q(const BigInt& x) const;
 
       /**
       * Return the inverse of x mod q
       * Throws if q is unset on this DL_Group
       */
-      BigInt inverse_mod_q(const BigInt& x) const;
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt inverse_mod_q(const BigInt& x) const;
 
       /**
       * Modular exponentiation
@@ -263,9 +264,7 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       *
       * @return (g^x) % p
       */
-      BOTAN_DEPRECATED("Use version taking bitlength upper bound") inline BigInt power_g_p(const BigInt& x) const {
-         return power_g_p(x, x.bits());
-      }
+      BOTAN_DEPRECATED("Use version taking bitlength upper bound") BigInt power_g_p(const BigInt& x) const;
 
       /**
       * Modular exponentiation
@@ -274,7 +273,7 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       *
       * @return (g^x) % p
       */
-      BigInt power_g_p(const BigInt& x, size_t max_x_bits) const;
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt power_g_p(const BigInt& x, size_t max_x_bits) const;
 
       /**
       * Modular exponentiation
@@ -284,6 +283,7 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       *
       * @return (b^x) % p
       */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       BigInt power_b_p(const BigInt& b, const BigInt& x, size_t max_x_bits) const;
 
       /**
@@ -293,7 +293,7 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       *
       * @return (b^x) % p
       */
-      BigInt power_b_p(const BigInt& b, const BigInt& x) const;
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt power_b_p(const BigInt& b, const BigInt& x) const;
 
       /**
       * Multi-exponentiate
@@ -301,6 +301,7 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       *
       * @warning this function is variable time and should not be used with secret inputs
       */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       BigInt multi_exponentiate(const BigInt& x, const BigInt& y, const BigInt& z) const;
 
       /**
@@ -379,13 +380,13 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       *
       * For internal use only
       */
-      const Montgomery_Params& _monty_params_p() const;
+      BOTAN_DEPRECATED("Deprecated no replacement") const Montgomery_Params& _monty_params_p() const;
 
       /*
       * For internal use only
       */
       // TODO(Botan4) remove this as it is no longer needed
-      const Barrett_Reduction& _reducer_mod_p() const;
+      BOTAN_DEPRECATED("Deprecated no replacement") const Barrett_Reduction& _reducer_mod_p() const;
 
       /*
       * For internal use only

@@ -627,6 +627,10 @@ BigInt DL_Group::multi_exponentiate(const BigInt& x, const BigInt& y, const BigI
    return monty_multi_exp(data().monty_params_p(), get_g(), x, y, z).value();
 }
 
+BigInt DL_Group::power_g_p(const BigInt& x) const {
+   return power_g_p(x, x.bits());
+}
+
 BigInt DL_Group::power_g_p(const BigInt& x, size_t max_x_bits) const {
    return data().power_g_p(x, max_x_bits);
 }
