@@ -1,0 +1,32 @@
+<defines>
+CMS -> 20261105
+</defines>
+
+<module_info>
+name -> "Cryptographic Message Syntax"
+brief -> "CMS (RFC 5652) SignedData and EnvelopedData/AuthEnvelopedData"
+</module_info>
+
+<requires>
+aes
+asn1
+cbc
+gcm
+hkdf
+kdf
+modes
+nist_keywrap
+pubkey
+rng
+sha2_32
+sha2_64
+x509
+</requires>
+
+<header:public>
+cms.h
+</header:public>
+
+<header:internal>
+cms_helpers.h
+</header:internal>
