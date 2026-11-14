@@ -10,7 +10,9 @@
 
 #include <botan/ecdsa.h>
 
+#include <botan/bigint.h>
 #include <botan/ec_group.h>
+#include <botan/ec_scalar.h>
 #include <botan/pk_options_readers.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/keypair.h>
@@ -27,10 +29,6 @@ namespace {
 
 EC_AffinePoint recover_ecdsa_public_key(
    const EC_Group& group, const std::vector<uint8_t>& msg, const BigInt& r, const BigInt& s, uint8_t v) {
-   if(group.has_cofactor()) {
-      throw Invalid_Argument("ECDSA public key recovery only supported for prime order groups");
-   }
-
    if(v >= 4) {
       throw Invalid_Argument("Unexpected v param for ECDSA public key recovery");
    }
@@ -105,6 +103,9 @@ uint8_t ECDSA_PublicKey::recovery_param(const std::vector<uint8_t>& msg, const B
 
    throw Internal_Error("Could not determine ECDSA recovery parameter");
 }
+
+ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x) :
+      ECDSA_PrivateKey(group, x.is_zero() ? EC_Scalar::random(group, rng) : EC_Scalar::from_bigint(group, x)) {}
 
 std::unique_ptr<Public_Key> ECDSA_PrivateKey::public_key() const {
    return std::make_unique<ECDSA_PublicKey>(domain(), public_ec_point());

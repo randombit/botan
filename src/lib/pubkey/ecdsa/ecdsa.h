@@ -26,15 +26,6 @@ class BOTAN_PUBLIC_API(2, 0) ECDSA_PublicKey : public virtual EC_PublicKey {
       */
       ECDSA_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key) : EC_PublicKey(group, public_key) {}
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      /**
-      * Create a public key from a given public point.
-      * @param group the domain parameters associated with this key
-      * @param public_point the public point defining this key
-      */
-      ECDSA_PublicKey(const EC_Group& group, const EC_Point& public_point) : EC_PublicKey(group, public_point) {}
-#endif
-
       /**
       * Load a public key.
       * @param alg_id the X.509 algorithm identifier
@@ -118,8 +109,7 @@ class BOTAN_PUBLIC_API(2, 0) ECDSA_PrivateKey final : public ECDSA_PublicKey,
       * @param x the private key (if zero, generate a new random key)
       */
       BOTAN_DEPRECATED("Use one of the other constructors")
-      ECDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x) :
-            EC_PrivateKey(rng, group, x) {}
+      ECDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x);
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 

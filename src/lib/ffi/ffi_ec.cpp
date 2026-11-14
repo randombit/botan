@@ -7,6 +7,7 @@
 
 #include <botan/ffi.h>
 
+#include <botan/ec_scalar.h>
 #include <botan/internal/ffi_ec.h>
 #include <botan/internal/ffi_mp.h>
 #include <botan/internal/ffi_oid.h>
@@ -131,9 +132,8 @@ int botan_ec_group_view_der(botan_ec_group_t ec_group, botan_view_ctx ctx, botan
 }
 
 int botan_ec_group_view_pem(botan_ec_group_t ec_group, botan_view_ctx ctx, botan_view_str_fn view) {
-   return BOTAN_FFI_VISIT(ec_group, [=](const auto& g) -> int {
-      return invoke_view_callback(view, ctx, g.PEM_encode(Botan::EC_Group_Encoding::NamedCurve));
-   });
+   return BOTAN_FFI_VISIT(ec_group,
+                          [=](const auto& g) -> int { return invoke_view_callback(view, ctx, g.PEM_encode()); });
 }
 
 int botan_ec_group_get_curve_oid(botan_asn1_oid_t* oid, botan_ec_group_t ec_group) {

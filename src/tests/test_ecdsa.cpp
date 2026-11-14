@@ -10,7 +10,9 @@
 #if defined(BOTAN_HAS_ECDSA)
    #include "test_pubkey.h"
    #include "test_rng.h"
+   #include <botan/bigint.h>
    #include <botan/ec_group.h>
+   #include <botan/ec_scalar.h>
    #include <botan/ecdsa.h>
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
@@ -134,7 +136,7 @@ class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
          const BigInt x = vars.get_req_bn("X");
          const auto group = Botan::EC_Group::from_name(group_id);
 
-         return std::make_unique<Botan::ECDSA_PrivateKey>(this->rng(), group, x);
+         return std::make_unique<Botan::ECDSA_PrivateKey>(group, Botan::EC_Scalar::from_bigint(group, x));
       }
 
       std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Hash"); }
@@ -244,7 +246,7 @@ class ECDSA_Keygen_Tests final : public PK_Key_Generation_Test {
       std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view keygen_params,
                                                              std::string_view /* provider */,
                                                              std::span<const uint8_t> raw_pk) const override {
-         const auto group = Botan::EC_Group(keygen_params);
+         const auto group = Botan::EC_Group::from_name(keygen_params);
          const auto public_key = Botan::EC_AffinePoint(group, raw_pk);
          return std::make_unique<Botan::ECDSA_PublicKey>(group, public_key);
       }
@@ -383,6 +385,46 @@ class ECDSA_AllGroups_Test : public Test {
       }
 };
 
+class ECDSA_Deprecated_API_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("ECDSA_PrivateKey BigInt constructor");
+
+         if(!Botan::EC_Group::supports_named_group("secp256r1")) {
+            result.test_note("Skipping due to missing secp256r1");
+            return {result};
+         }
+
+         const auto group = Botan::EC_Group::from_name("secp256r1");
+
+         const auto x = Botan::EC_Scalar::random(group, rng());
+         const Botan::ECDSA_PrivateKey from_scalar(group, x);
+         const Botan::ECDSA_PrivateKey from_bigint(rng(), group, x.to_bigint());
+         result.test_bin_eq("Same private key", from_bigint.raw_private_key_bits(), from_scalar.raw_private_key_bits());
+         result.test_bin_eq("Same public key", from_bigint.public_key_bits(), from_scalar.public_key_bits());
+
+         const Botan::ECDSA_PrivateKey random1(rng(), group, Botan::BigInt::zero());
+         const Botan::ECDSA_PrivateKey random2(rng(), group, Botan::BigInt::zero());
+         result.test_is_true("Zero generates a valid key", random1.check_key(rng(), true));
+         result.test_bin_ne(
+            "Zero generates a new key each time", random1.raw_private_key_bits(), random2.raw_private_key_bits());
+
+         result.test_throws<Botan::Invalid_Argument>(
+            "Out of range x is rejected", [&] { const Botan::ECDSA_PrivateKey bad(rng(), group, group.get_order()); });
+
+         Test::Result point_result("EC_PublicKey::public_point affine coordinates");
+
+         const auto& point = from_scalar.public_point();
+         point_result.test_is_true("public_point is public_ec_point", &point == &from_scalar.public_ec_point());
+
+         const auto [affine_x, affine_y] = point.to_bigint_xy();
+         point_result.test_bn_eq("get_affine_x", point.get_affine_x(), affine_x);
+         point_result.test_bn_eq("get_affine_y", point.get_affine_y(), affine_y);
+
+         return {result, point_result};
+      }
+};
+
 class ECDSA_ExplicitCurveKey_Test : public Text_Based_Test {
    public:
       ECDSA_ExplicitCurveKey_Test() : Text_Based_Test("pubkey/ecdsa_explicit.vec", "Key") {}
@@ -432,6 +474,7 @@ BOTAN_REGISTER_TEST("pubkey", "ecdsa_keygen", ECDSA_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_keygen_stability", ECDSA_Keygen_Stability_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_invalid", ECDSA_Invalid_Key_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_all_groups", ECDSA_AllGroups_Test);
+BOTAN_REGISTER_TEST("pubkey", "ecdsa_deprecated_api", ECDSA_Deprecated_API_Test);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_explicit_curve_key", ECDSA_ExplicitCurveKey_Test);
 
 #endif

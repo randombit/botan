@@ -11,6 +11,7 @@
 #if defined(BOTAN_HAS_ECDSA)
 
    #include <botan/assert.h>
+   #include <botan/ec_scalar.h>
    #include <botan/p11_mechanism.h>
    #include <botan/pk_ops.h>
    #include <botan/pk_options_readers.h>
@@ -37,9 +38,8 @@ bool PKCS11_ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong)
 
 ECDSA_PrivateKey PKCS11_ECDSA_PrivateKey::export_key() const {
    auto priv_key = get_attribute_value(AttributeType::Value);
-
-   Null_RNG rng;
-   return ECDSA_PrivateKey(rng, domain(), BigInt::from_bytes(priv_key));
+   // CKA_VALUE need not be zero padded to the order length, so deserialize may reject it
+   return ECDSA_PrivateKey(domain(), EC_Scalar::from_bigint(domain(), BigInt::from_bytes(priv_key)));
 }
 
 secure_vector<uint8_t> PKCS11_ECDSA_PrivateKey::private_key_bits() const {

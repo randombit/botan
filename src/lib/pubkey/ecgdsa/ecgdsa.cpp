@@ -10,6 +10,7 @@
 
 #include <botan/assert.h>
 #include <botan/ec_group.h>
+#include <botan/ec_scalar.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/pk_ops_impl.h>

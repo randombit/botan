@@ -28,15 +28,6 @@ class BOTAN_PUBLIC_API(2, 0) GOST_3410_PublicKey : public virtual EC_PublicKey {
       */
       GOST_3410_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key) : EC_PublicKey(group, public_key) {}
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      /**
-      * Construct a public key from a given public point.
-      * @param group the domain parameters associated with this key
-      * @param public_point the public point defining this key
-      */
-      GOST_3410_PublicKey(const EC_Group& group, const EC_Point& public_point) : EC_PublicKey(group, public_point) {}
-#endif
-
       /**
       * Load a public key.
       * @param alg_id the X.509 algorithm identifier
@@ -94,7 +85,7 @@ class BOTAN_PUBLIC_API(2, 0) GOST_3410_PrivateKey final : public GOST_3410_Publi
       * @param domain curve parameters to bu used for this key
       * @param x      the private key
       */
-      GOST_3410_PrivateKey(const EC_Group& domain, const BigInt& x);
+      GOST_3410_PrivateKey(const EC_Group& domain, const EC_Scalar& x);
 
       /**
       * Create a new private key
@@ -102,15 +93,6 @@ class BOTAN_PUBLIC_API(2, 0) GOST_3410_PrivateKey final : public GOST_3410_Publi
       * @param domain parameters to used for this key
       */
       GOST_3410_PrivateKey(RandomNumberGenerator& rng, EC_Group domain);
-
-      /**
-      * Generate a new private key
-      * @param rng a random number generator
-      * @param domain parameters to used for this key
-      * @param x the private key; if zero, a new random key is generated
-      */
-      BOTAN_DEPRECATED("Use one of the other constructors")
-      GOST_3410_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x);
 
       std::unique_ptr<Public_Key> public_key() const override;
 

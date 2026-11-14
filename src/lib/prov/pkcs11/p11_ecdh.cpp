@@ -12,6 +12,7 @@
 
    #include <botan/der_enc.h>
    #include <botan/ec_apoint.h>
+   #include <botan/ec_scalar.h>
    #include <botan/p11_mechanism.h>
    #include <botan/pk_ops.h>
    #include <botan/pk_options_readers.h>
@@ -19,10 +20,6 @@
    #include <botan/internal/p11_object_guard.h>
    #include <botan/internal/pk_options_impl.h>
    #include <botan/internal/scoped_cleanup.h>
-
-   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      #include <botan/ec_point.h>
-   #endif
 
 namespace Botan::PKCS11 {
 
@@ -32,9 +29,8 @@ ECDH_PublicKey PKCS11_ECDH_PublicKey::export_key() const {
 
 ECDH_PrivateKey PKCS11_ECDH_PrivateKey::export_key() const {
    auto priv_key = get_attribute_value(AttributeType::Value);
-
-   Null_RNG rng;
-   return ECDH_PrivateKey(rng, domain(), BigInt::from_bytes(priv_key));
+   // CKA_VALUE need not be zero padded to the order length, so deserialize may reject it
+   return ECDH_PrivateKey(domain(), EC_Scalar::from_bigint(domain(), BigInt::from_bytes(priv_key)));
 }
 
 std::unique_ptr<Public_Key> PKCS11_ECDH_PrivateKey::public_key() const {
@@ -64,22 +60,6 @@ class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement {
          }
          if(peer_point->is_identity()) {
             throw Decoding_Error("ECDH - Invalid elliptic curve point: identity");
-         }
-
-         /*
-         * CKM_ECDH1_DERIVE does not clear the cofactor, so a point with a small
-         * order component would reveal the private scalar modulo that order.
-         * CKM_ECDH1_COFACTOR_DERIVE is not an alternative, since it computes a
-         * different value than ECDH in software does.
-         */
-         if(m_key.domain().has_cofactor()) {
-   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
-            if(!(m_key.domain().get_order() * peer_point->to_legacy_point()).is_zero()) {
-               throw Decoding_Error("ECDH - Invalid elliptic curve point: not in the prime order subgroup");
-            }
-   #else
-            throw Not_Implemented("PKCS#11 ECDH with a cofactor is not available in this build configuration");
-   #endif
          }
 
          std::vector<uint8_t> der_encoded_other_key;
@@ -146,15 +126,11 @@ std::unique_ptr<PK_Ops::Key_Agreement> PKCS11_ECDH_PrivateKey::_create_key_agree
 
    /*
    * The token performs the derivation, so the KDF names the PKCS #11 key
-   * derivation function (a hash name, optionally with ",Cofactor") rather
-   * than a Botan KDF; see MechanismWrapper::create_ecdh_mechanism
+   * derivation function (a hash name) rather than a Botan KDF; see
+   * MechanismWrapper::create_ecdh_mechanism
    *
    * The raw agreed value is requested via with_raw_shared_key as for any
-   * other key, so "Raw" alone is rejected here. The only exception is the
-   * cofactor variant with raw output ("Raw,Cofactor"), which the options
-   * cannot otherwise express.
-   *
-   * TODO(Botan4) remove the cofactor variant along with the rest
+   * other key, so naming "Raw" as the KDF is rejected here.
    */
    const std::string params = [&]() -> std::string {
       if(options.using_kdf()) {

@@ -11,6 +11,6 @@ void fuzz(std::span<const uint8_t> in) {
    if(in.size() > 2 * 512 / 8) {
       return;
    }
-   static const Botan::EC_Group bp512("brainpool512r1");
+   static const auto bp512 = Botan::EC_Group::from_name("brainpool512r1");
    return check_ecc_math(bp512, in);
 }

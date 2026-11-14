@@ -8,7 +8,6 @@
 #define BOTAN_EC_APOINT_H_
 
 #include <botan/concepts.h>
-#include <botan/ec_point_format.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <memory>
@@ -24,12 +23,11 @@ class RandomNumberGenerator;
 class EC_Group;
 class EC_Scalar;
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-class EC_Point;
-#endif
-
 class EC_Group_Data;
 class EC_AffinePoint_Data;
+
+// Defined in ec_group.h
+enum class EC_Point_Format : uint8_t;
 
 /**
 * Elliptic Curve Point in Affine Representation
@@ -39,26 +37,26 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
       /// Point deserialization. Throws if wrong length or not a valid point
       ///
       /// This accepts SEC1 compressed or uncompressed formats. It also (for
-      /// backward compatibility) accepts the deprecated hybrid format, and
-      /// the encoding of the identity element as a single zero byte. Prefer
-      /// deserialize_compressed or deserialize_uncompressed, which accept
-      /// exactly one well-defined encoding.
+      /// backward compatibility) accepts the encoding of the identity element
+      /// as a single zero byte. Prefer deserialize_compressed or
+      /// deserialize_uncompressed, which accept exactly one well-defined
+      /// encoding.
       EC_AffinePoint(const EC_Group& group, std::span<const uint8_t> bytes);
 
       /// Point deserialization. Returns nullopt if wrong length or not a valid point
       ///
       /// This accepts SEC1 compressed or uncompressed formats. It also (for
-      /// backward compatibility) accepts the deprecated hybrid format, and
-      /// the encoding of the identity element as a single zero byte. Prefer
-      /// deserialize_compressed or deserialize_uncompressed, which accept
-      /// exactly one well-defined encoding.
+      /// backward compatibility) accepts the encoding of the identity element
+      /// as a single zero byte. Prefer deserialize_compressed or
+      /// deserialize_uncompressed, which accept exactly one well-defined
+      /// encoding.
       static std::optional<EC_AffinePoint> deserialize(const EC_Group& group, std::span<const uint8_t> bytes);
 
       /// Point deserialization, accepting only the SEC1 compressed format
       ///
       /// The encoding must be exactly 1 + field_element_bytes long, with a
       /// header byte of either 0x02 or 0x03. All other encodings (including
-      /// the uncompressed, hybrid, and identity encodings) are rejected.
+      /// the uncompressed and identity encodings) are rejected.
       ///
       /// Returns nullopt if the encoding was rejected or not a valid point
       static std::optional<EC_AffinePoint> deserialize_compressed(const EC_Group& group,
@@ -67,8 +65,8 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
       /// Point deserialization, accepting only the SEC1 uncompressed format
       ///
       /// The encoding must be exactly 1 + 2*field_element_bytes long, with a
-      /// header byte of 0x04. All other encodings (including the compressed,
-      /// hybrid, and identity encodings) are rejected.
+      /// header byte of 0x04. All other encodings (including the compressed
+      /// and identity encodings) are rejected.
       ///
       /// Returns nullopt if the encoding was rejected or not a valid point
       static std::optional<EC_AffinePoint> deserialize_uncompressed(const EC_Group& group,
@@ -165,6 +163,20 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
 
       /// Convert *this to two BigInts (x, y)
       std::pair<BigInt, BigInt> to_bigint_xy() const;
+
+      /**
+      * Return the affine x coordinate
+      *
+      * This function will fail if this point is the identity element
+      */
+      BigInt get_affine_x() const;
+
+      /**
+      * Return the affine y coordinate
+      *
+      * This function will fail if this point is the identity element
+      */
+      BigInt get_affine_y() const;
 
       /// Write the fixed length encoding of affine x coordinate
       ///
@@ -293,47 +305,6 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
       * @return reference to this
       */
       EC_AffinePoint& operator=(EC_AffinePoint&& other) noexcept;
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      /**
-      * Deprecated conversion
-      */
-      EC_AffinePoint(const EC_Group& group, const EC_Point& pt);
-
-      /**
-      * Deprecated conversion
-      */
-      EC_Point to_legacy_point() const;
-#endif
-
-      /**
-      * Multiply by the group generator returning a complete point
-      * @param scalar the scalar to multiply the generator by
-      * @param rng a random number generator, used for blinding
-      * @return the resulting point
-      */
-      BOTAN_DEPRECATED("Use version without workspace arg")
-      static EC_AffinePoint g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& /*ws*/) {
-         return EC_AffinePoint::g_mul(scalar, rng);
-      }
-
-      /**
-      * Multiply a point by a scalar returning a complete point
-      * @param scalar the scalar to multiply this point by
-      * @param rng a random number generator, used for blinding
-      * @return the resulting point
-      */
-      BOTAN_DEPRECATED("Use version without workspace arg")
-      EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& /*ws*/) const {
-         return this->mul(scalar, rng);
-      }
-
-      /// Multiply a point by a scalar, returning the byte encoding of the x coordinate only
-      secure_vector<uint8_t> mul_x_only(const EC_Scalar& scalar,
-                                        RandomNumberGenerator& rng,
-                                        std::vector<BigInt>& /*ws*/) const {
-         return this->mul_x_only(scalar, rng);
-      }
 
       ~EC_AffinePoint();
 

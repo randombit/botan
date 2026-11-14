@@ -85,45 +85,16 @@ elliptic curve points.
 - Botan currently contains support for a number of relatively weak or little
   used elliptic curves. These are deprecated.
 
-  The curves "secp160k1", "secp160r1", "secp160r2", "brainpool160r1" and
-  "secp224k1" will be removed in Botan4, and it *will not be possible* to add
-  support for them as an application specified curve. If your application makes
-  use of any of these curves please open an issue asap so we can understand your
-  use case.
-
-  Other curves including "secp192k1", "brainpool192r1", "brainpool224r1",
+  The curves "secp192k1", "brainpool192r1", "brainpool224r1",
   "brainpool320r1", "x962_p192v2", "x962_p192v3", "x962_p239v1", "x962_p239v2",
-  "x962_p239v3", "gost_256A", "gost_512A" are deprecated, and may also be
+  "x962_p239v3", "gost_256A", "gost_512A" are deprecated, and may be
   removed from Botan4. However it will be possible to add support for any
   curves from this list as an application specified curve.
 
-- The EC_Point type is deprecated and will be removed. Use EC_AffinePoint.
-
 - Support for explicit ECC curve parameters and ImplicitCA encoded parameters in
   ``EC_Group`` and all users (including X.509 certificates and PKCS#8 private keys).
-
-- Currently it is possible to create an ``EC_Group`` with cofactor > 1. None of
-  the builtin groups have composite order, and in the future it will be
-  impossible to create composite order ``EC_Group``.
-
-- Currently it is possible to create an application specific
-  ``EC_Group`` with parameters of effectively arbitrary size. In a
-  future release the parameters of application provided elliptic curve
-  will be limited in the following ways.
-
-  a) The bitlength must be between 192 and 512 bits, and a multiple of 32
-  b) As an extension of (a) you can also use the 521 bit Mersenne prime
-     or the X9.62 239 bit prime.
-  c) The prime must be congruent to 3 modulo 4
-  d) The bitlength of the prime and the bitlength of the order must be equal
-
-- Elliptic curve points can be encoded in several different ways.  The
-  most common are "compressed" and "uncompressed"; both are widely
-  used in various systems. Botan additionally supports a "hybrid"
-  encoding format which is effectively uncompressed but with an
-  additional indicator of the parity of the y coordinate. This
-  format is quite obscure and seemingly rarely implemented. Support
-  for this encoding will be removed in a future release.
+  Currently explicit parameters are accepted if they match a builtin group or
+  a group registered by the application.
 
 - The SEC1 standard specifies that the identity element is encoded as a single
   byte consisting of 0. This was not well thought out. In addition identity

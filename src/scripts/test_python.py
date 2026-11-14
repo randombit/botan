@@ -1057,7 +1057,7 @@ ofvkP1EDmpx50fHLawIDAQAB
                 00000006597fa94b1fd90000000000000000000000000000021b8c7dd77f9a956279
                 22eceefea73f028f1ec95ba9b8fa95a3ad24bdf9fff414""")
 
-            with self.assertRaisesRegex(botan.BotanException, r".*Hasse bound.*"):
+            with self.assertRaisesRegex(botan.BotanException, r".*do not match any builtin or registered group.*"):
                 botan.PublicKey.load(pub_almost_secp256r1)
 
         for grp in ['secp256r1', 'secp384r1', 'brainpool256r1']:

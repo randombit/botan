@@ -10,6 +10,7 @@
    #include <botan/assert.h>
    #include <botan/bigint.h>
    #include <botan/ec_group.h>
+   #include <botan/ec_scalar.h>
    #include <botan/rng.h>
    #include <botan/internal/fmt.h>
 #endif
@@ -37,12 +38,6 @@ class ECC_Basepoint_Mul_Tests final : public Text_Based_Test {
          const auto group = Botan::EC_Group::from_name(group_id);
 
          const Botan::BigInt k(k_bytes);
-
-   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
-         const auto pt = group.OS2ECP(P_bytes);
-         const Botan::EC_Point p1 = group.get_base_point() * k;
-         result.test_bin_eq("EC_Point Montgomery ladder", p1.encode(Botan::EC_Point_Format::Uncompressed), P_bytes);
-   #endif
 
          const auto scalar = Botan::EC_Scalar::from_bigint(group, k);
          const auto apg = Botan::EC_AffinePoint::g_mul(scalar, this->rng());
@@ -74,11 +69,6 @@ class ECC_Varpoint_Mul_Tests final : public Text_Based_Test {
          const auto z = vars.get_req_bin("Z");
 
          const auto group = Botan::EC_Group::from_name(group_id);
-
-   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
-         const Botan::EC_Point p1 = group.OS2ECP(p) * k;
-         result.test_bin_eq("EC_Point Montgomery ladder", p1.encode(Botan::EC_Point::Compressed), z);
-   #endif
 
          const auto s_k = Botan::EC_Scalar::from_bigint(group, k);
          const auto apt = Botan::EC_AffinePoint::deserialize(group, p).value();

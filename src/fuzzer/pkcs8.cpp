@@ -24,5 +24,5 @@ void fuzz(std::span<const uint8_t> in) {
    * TODO(Botan4) we can remove this call once support for explicit curves
    * is removed
    */
-   Botan::EC_Group::clear_registered_curve_data();
+   Botan::EC_Group::_clear_registered_curve_data();
 }

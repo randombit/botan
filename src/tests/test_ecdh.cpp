@@ -9,7 +9,9 @@
 #if defined(BOTAN_HAS_ECDH)
    #include "test_pubkey.h"
    #include <botan/asn1_obj.h>
+   #include <botan/bigint.h>
    #include <botan/ec_group.h>
+   #include <botan/ec_scalar.h>
    #include <botan/ecdh.h>
    #include <botan/pubkey.h>
 #endif
@@ -33,7 +35,7 @@ class ECDH_KAT_Tests final : public PK_Key_Agreement_Test {
       std::unique_ptr<Botan::Private_Key> load_our_key(const std::string& group_id, const VarMap& vars) override {
          const auto group = Botan::EC_Group::from_name(group_id);
          const Botan::BigInt secret = vars.get_req_bn("Secret");
-         return std::make_unique<Botan::ECDH_PrivateKey>(this->rng(), group, secret);
+         return std::make_unique<Botan::ECDH_PrivateKey>(group, Botan::EC_Scalar::from_bigint(group, secret));
       }
 
       std::vector<uint8_t> load_their_key(const std::string& /*header*/, const VarMap& vars) override {
@@ -53,7 +55,7 @@ class ECDH_Keygen_Tests final : public PK_Key_Generation_Test {
       std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view keygen_params,
                                                              std::string_view /* provider */,
                                                              std::span<const uint8_t> raw_pk) const override {
-         const auto group = Botan::EC_Group(keygen_params);
+         const auto group = Botan::EC_Group::from_name(keygen_params);
          const auto public_key = Botan::EC_AffinePoint(group, raw_pk);
          return std::make_unique<Botan::ECDH_PublicKey>(group, public_key);
       }

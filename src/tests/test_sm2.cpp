@@ -10,6 +10,7 @@
    #include "test_pubkey.h"
    #include "test_rng.h"
    #include <botan/ec_group.h>
+   #include <botan/ec_scalar.h>
    #include <botan/hash.h>
    #include <botan/pubkey.h>
    #include <botan/sm2.h>
@@ -34,8 +35,7 @@ std::unique_ptr<Botan::Private_Key> load_sm2_private_key(const VarMap& vars) {
 
    const auto group = Botan::EC_Group::register_custom_group(oid, p, a, b, xG, yG, order);
 
-   Botan::Null_RNG null_rng;
-   return std::make_unique<Botan::SM2_PrivateKey>(null_rng, group, x);
+   return std::make_unique<Botan::SM2_PrivateKey>(group, Botan::EC_Scalar::from_bigint(group, x));
 }
 
 class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
@@ -99,7 +99,7 @@ class SM2_Keygen_Tests final : public PK_Key_Generation_Test {
       std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view keygen_params,
                                                              std::string_view /* provider */,
                                                              std::span<const uint8_t> raw_pk) const override {
-         const auto group = Botan::EC_Group(keygen_params);
+         const auto group = Botan::EC_Group::from_name(keygen_params);
          const auto public_key = Botan::EC_AffinePoint(group, raw_pk);
          return std::make_unique<Botan::SM2_PublicKey>(group, public_key);
       }

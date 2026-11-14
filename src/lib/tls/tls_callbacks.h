@@ -12,7 +12,6 @@
 #ifndef BOTAN_TLS_CALLBACKS_H_
 #define BOTAN_TLS_CALLBACKS_H_
 
-#include <botan/ec_point_format.h>
 #include <botan/kdf.h>
 #include <botan/pubkey.h>
 #include <botan/tls_alert.h>
@@ -26,6 +25,7 @@
 
 namespace Botan {
 
+enum class EC_Point_Format : uint8_t;
 enum class Signature_Format : uint8_t;
 enum class Usage_Type : uint8_t;
 class DL_Group;
