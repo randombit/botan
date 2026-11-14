@@ -128,7 +128,7 @@ std::shared_ptr<Client_Impl_12> Client_Impl_12::create(const std::shared_ptr<Cal
                                                 reserved_io_buffer_size);
 
    BOTAN_ASSERT_NONNULL(self->m_creds);
-   const auto version = (flavor == TLS_Flavor::DTLS) ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
+   const auto version = flavor.legacy_version();
    Handshake_State& state = self->create_handshake_state(version);
    self->send_client_hello(state, false, version, std::nullopt /* no a-priori session to resume */, next_protocols);
 
@@ -141,8 +141,7 @@ std::shared_ptr<Client_Impl_12> Client_Impl_12::create_for_downgrade(
    Channel_Impl::Downgrade_Information& downgrade_info) {
    auto self = std::make_shared<Client_Impl_12>(Private{}, downgrade_info);
 
-   const auto version =
-      (downgrade_info.flavor == TLS_Flavor::DTLS) ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
+   const auto version = downgrade_info.flavor.legacy_version();
 
    if(downgrade_info.client_hello.has_value()) {
       // Downgrade detected after receiving a (D)TLS 1.2 server hello. We need
@@ -151,7 +150,7 @@ std::shared_ptr<Client_Impl_12> Client_Impl_12::create_for_downgrade(
 
       // For DTLS we have to initialize the record sequence numbers as
       // transferred from the TLS 1.3 implementation.
-      BOTAN_ASSERT_IMPLICATION(downgrade_info.flavor == TLS_Flavor::DTLS,
+      BOTAN_ASSERT_IMPLICATION(downgrade_info.flavor.is_datagram(),
                                downgrade_info.epoch0_sequence_numbers.has_value(),
                                "downgrading DTLS requires transferring the record sequence numbers");
 
@@ -178,7 +177,7 @@ std::shared_ptr<Client_Impl_12> Client_Impl_12::create_for_downgrade(
          std::exchange(downgrade_info.client_hello, {}).value(), state.handshake_io(), state.hash()));
 
       self->secure_renegotiation_check(state.maybe_client_hello());
-      if(downgrade_info.flavor == TLS_Flavor::DTLS) {
+      if(downgrade_info.flavor.is_datagram()) {
          state.set_expected_next(Handshake_Type::HelloVerifyRequest);  // optional
       }
       state.set_expected_next(Handshake_Type::ServerHello);
@@ -187,8 +186,7 @@ std::shared_ptr<Client_Impl_12> Client_Impl_12::create_for_downgrade(
       // has happened yet but the found session should be used for resumption.
       BOTAN_ASSERT_NOMSG(downgrade_info.tls12_session.has_value() &&
                          downgrade_info.tls12_session->session.version().is_pre_tls_13());
-      BOTAN_ASSERT_NOMSG(downgrade_info.tls12_session->session.version().is_datagram_protocol() ==
-                         (downgrade_info.flavor == TLS_Flavor::DTLS));
+      BOTAN_ASSERT_NOMSG(downgrade_info.tls12_session->session.version().flavor() == downgrade_info.flavor);
 
       // When resuming based on an existing session, the (D)TLS 1.3
       // implementation won't have emitted any data prior to the downgrade.
@@ -215,7 +213,7 @@ std::unique_ptr<Handshake_State> Client_Impl_12::new_handshake_state(std::unique
 */
 void Client_Impl_12::initiate_handshake(Handshake_State& state, bool force_full_renegotiation) {
    // we don't support TLS < 1.2 anymore and TLS 1.3 should not use this client impl
-   const auto version = state.version().is_datagram_protocol() ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
+   const auto version = state.version().flavor().legacy_version();
    send_client_hello(state, force_full_renegotiation, version);
 }
 

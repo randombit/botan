@@ -15,6 +15,7 @@
 #include <botan/secmem.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_magic.h>
+#include <botan/tls_version.h>
 
 #include <botan/internal/tls_record_13.h>
 #include <botan/internal/tls_transcript_hash_13.h>
