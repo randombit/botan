@@ -10,6 +10,8 @@
    #include "test_pubkey.h"
    #include <botan/dl_group.h>
    #include <botan/elgamal.h>
+   #include <botan/pubkey.h>
+   #include <botan/rng.h>
 #endif
 
 namespace Botan_Tests {
@@ -60,6 +62,40 @@ class ElGamal_Keygen_Tests final : public PK_Key_Generation_Test {
                                                            Botan::BigInt(raw_pk));
       }
 };
+
+   #if defined(BOTAN_HAS_EME_PKCS1)
+
+class ElGamal_Repeated_Decryption_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("ElGamal repeated decryption");
+
+         const auto group = Botan::DL_Group::from_name("modp/ietf/1024");
+         const Botan::ElGamal_PrivateKey key(rng(), group);
+
+         const Botan::PK_Encryptor_EME enc(key, rng(), "PKCS1v15");
+         const Botan::PK_Decryptor_EME dec(key, rng(), "PKCS1v15");
+
+         std::vector<std::pair<std::vector<uint8_t>, std::vector<uint8_t>>> msgs;
+         for(size_t i = 0; i != 3; ++i) {
+            auto ptext = rng().random_vec<std::vector<uint8_t>>(16);
+            auto ctext = enc.encrypt(ptext, rng());
+            msgs.emplace_back(std::move(ptext), std::move(ctext));
+         }
+
+         // Enough decryptions with one decryptor that the blinding is refreshed
+         for(size_t i = 0; i != 150; ++i) {
+            const auto& [ptext, ctext] = msgs[i % msgs.size()];
+            result.test_bin_eq("decryption", dec.decrypt(ctext), ptext);
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "elgamal_repeated_decrypt", ElGamal_Repeated_Decryption_Tests);
+
+   #endif
 
 BOTAN_REGISTER_TEST("pubkey", "elgamal_encrypt", ElGamal_Encrypt_Tests);
 BOTAN_REGISTER_TEST("pubkey", "elgamal_decrypt", ElGamal_Decrypt_Tests);

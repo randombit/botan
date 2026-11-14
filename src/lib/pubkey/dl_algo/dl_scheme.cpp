@@ -169,4 +169,53 @@ const BigInt& DL_PrivateKey::get_int_field(std::string_view algo, std::string_vi
    }
 }
 
+DL_PrivateKey_Exponentiation::DL_PrivateKey_Exponentiation(std::shared_ptr<const DL_PrivateKey> key,
+                                                           Output output,
+                                                           RandomNumberGenerator& rng) :
+      m_key(std::move(key)),
+      m_rng(rng),
+      m_output(output),
+      m_e(DL_Element::random(m_key->group(), m_rng)),
+      m_d(unblinder(m_e)) {}
+
+DL_Element DL_PrivateKey_Exponentiation::unblinder(const DL_Element& e) const {
+   const auto& x = m_key->private_key();
+   const size_t x_bits = m_key->max_private_key_bits();
+
+   if(m_output == Output::Power) {
+      return e.invert().pow(x, x_bits);
+   } else {
+      return e.pow(x, x_bits);
+   }
+}
+
+DL_Element DL_PrivateKey_Exponentiation::pow(const DL_Element& b) {
+   ++m_counter;
+
+   if(m_counter > ReinitInterval) {
+      m_e = DL_Element::random(m_key->group(), m_rng);
+      m_d = unblinder(m_e);
+      m_counter = 0;
+   } else {
+      m_e = m_e.square();
+      m_d = m_d.square();
+   }
+
+   const auto r = (b * m_e).pow(m_key->private_key(), m_key->max_private_key_bits());
+
+   if(m_output == Output::Power) {
+      return r * m_d;
+   } else {
+      return r.invert() * m_d;
+   }
+}
+
+void DL_PrivateKey_Exponentiation::_const_time_poison() const {
+   CT::poison_all(m_e, m_d);
+}
+
+void DL_PrivateKey_Exponentiation::_const_time_unpoison() const {
+   CT::unpoison_all(m_e, m_d);
+}
+
 }  // namespace Botan
