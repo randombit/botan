@@ -1,0 +1,30 @@
+<defines>
+HQC -> 20260925
+</defines>
+
+<module_info>
+name -> "HQCr4"
+brief -> "HQCr4 KEM (HQC round-4 submission), backed by the Rust crate rust-hqc via its C API"
+</module_info>
+
+load_on request
+
+<requires>
+pubkey
+rng
+sha3
+shake_xof
+</requires>
+
+<header:external>
+rust/include/hqc_c_api.h
+</header:external>
+
+<header:public>
+hqc.h
+hqc_mode.h
+</header:public>
+
+<header:internal>
+hqc_ffi.h
+</header:internal>
