@@ -387,6 +387,11 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       // TODO(Botan4) remove this as it is no longer needed
       const Barrett_Reduction& _reducer_mod_p() const;
 
+      /*
+      * For internal use only
+      */
+      const std::shared_ptr<const DL_Group_Data>& _data() const;
+
    private:
       explicit DL_Group(std::shared_ptr<DL_Group_Data> data) : m_data(std::move(data)) {}
 
@@ -399,7 +404,7 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
                                                                 DL_Group_Source source);
 
       const DL_Group_Data& data() const;
-      std::shared_ptr<DL_Group_Data> m_data;
+      std::shared_ptr<const DL_Group_Data> m_data;
 };
 
 }  // namespace Botan
