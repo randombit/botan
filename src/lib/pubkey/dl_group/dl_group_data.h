@@ -59,6 +59,9 @@ class DL_Group_Data final {
 
       const Montgomery_Params& monty_params_p() const { return m_monty_params; }
 
+      // Only set if q is at most 256 bits, as used by DSA
+      bool has_monty_params_q() const { return m_monty_q.has_value(); }
+
       const Montgomery_Params& monty_params_q() const {
          BOTAN_STATE_CHECK(m_monty_q);
          return *m_monty_q;

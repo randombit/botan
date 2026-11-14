@@ -60,6 +60,23 @@ BigInt sqr_mod(const Montgomery_Params& monty, const BigInt& x) {
    return z;
 }
 
+// For multiply_mod_q and square_mod_q when q has no Montgomery parameters
+BigInt mul_mod_ct_modulo(const BigInt& m, const BigInt& x, const BigInt& y) {
+   BOTAN_ARG_CHECK(x.signum() >= 0 && x.is_less_than(m), "Invalid x param for modular multiply");
+   BOTAN_ARG_CHECK(y.signum() >= 0 && y.is_less_than(m), "Invalid y param for modular multiply");
+   return ct_modulo(x * y, m);
+}
+
+// TODO(DSA) remove this once DSA is removed
+std::optional<Montgomery_Params> dsa_monty_params_q(const BigInt& q, const Barrett_Reduction& mod_q) {
+   // Only DSA needs fast arithmetic modulo q, and it requires q of at most 256 bits
+   if(q.bits() <= 256) {
+      return Montgomery_Params(q, mod_q);
+   } else {
+      return std::nullopt;
+   }
+}
+
 void check_dl_group_params(const BigInt& p, const BigInt& q, const BigInt& g) {
    check_dl_group_params(p, g);
    if(q < 3 || q.is_even() || q.bits() >= p.bits()) {
@@ -91,7 +108,7 @@ DL_Group_Data::DL_Group_Data(const BigInt& p, const BigInt& q, const BigInt& g, 
       m_mod_p(Barrett_Reduction::for_public_modulus(p)),
       m_mod_q(Barrett_Reduction::for_public_modulus(q)),
       m_monty_params(m_p, m_mod_p),
-      m_monty_q(Montgomery_Params(m_q, *m_mod_q)),
+      m_monty_q(dsa_monty_params_q(m_q, *m_mod_q)),
       m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
       m_p_bits(p.bits()),
       m_q_bits(q.bits()),
@@ -585,7 +602,11 @@ BigInt DL_Group::mod_q(const BigInt& x) const {
 
 BigInt DL_Group::multiply_mod_q(const BigInt& x, const BigInt& y) const {
    data().assert_q_is_set("multiply_mod_q");
-   return mul_mod(data().monty_params_q(), x, y);
+   if(data().has_monty_params_q()) {
+      return mul_mod(data().monty_params_q(), x, y);
+   } else {
+      return mul_mod_ct_modulo(get_q(), x, y);
+   }
 }
 
 BigInt DL_Group::multiply_mod_q(const BigInt& x, const BigInt& y, const BigInt& z) const {
@@ -595,7 +616,11 @@ BigInt DL_Group::multiply_mod_q(const BigInt& x, const BigInt& y, const BigInt& 
 
 BigInt DL_Group::square_mod_q(const BigInt& x) const {
    data().assert_q_is_set("square_mod_q");
-   return sqr_mod(data().monty_params_q(), x);
+   if(data().has_monty_params_q()) {
+      return sqr_mod(data().monty_params_q(), x);
+   } else {
+      return mul_mod_ct_modulo(get_q(), x, x);
+   }
 }
 
 BigInt DL_Group::multi_exponentiate(const BigInt& x, const BigInt& y, const BigInt& z) const {

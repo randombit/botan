@@ -24,7 +24,7 @@ class RandomNumberGenerator;
 /**
 * An integer modulo the prime order q of a DL group
 *
-* This requires that the group has a known q.
+* This requires that the group has a known q of at most 256 bits.
 *
 * The value is stored in Montgomery form with a fixed length based on the
 * size of q. All operations are constant time unless named _vartime.

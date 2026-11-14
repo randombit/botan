@@ -29,11 +29,41 @@ class DL_Group_Tests final : public Test {
 
          results.push_back(test_dl_encoding());
          results.push_back(test_dl_errors());
+         results.push_back(test_mod_q_arithmetic());
 
          return results;
       }
 
    private:
+      // These are deprecated, but have separate code paths for small and large q
+      Test::Result test_mod_q_arithmetic() {
+         Test::Result result("DL_Group mod q arithmetic");
+
+         for(const auto& name : {"dsa/jce/1024", "ffdhe/ietf/2048"}) {
+            const auto group = Botan::DL_Group::from_name(name);
+            const Botan::BigInt& q = group.get_q();
+
+            std::vector<Botan::BigInt> values = {Botan::BigInt::zero(), Botan::BigInt::one(), q - 1};
+            for(size_t i = 0; i != 4; ++i) {
+               values.push_back(Botan::BigInt::random_integer(rng(), Botan::BigInt::zero(), q));
+            }
+
+            for(const auto& x : values) {
+               result.test_bn_eq("square_mod_q", group.square_mod_q(x), (x * x) % q);
+               for(const auto& y : values) {
+                  result.test_bn_eq("multiply_mod_q", group.multiply_mod_q(x, y), (x * y) % q);
+                  result.test_bn_eq("multiply_mod_q 3 arg", group.multiply_mod_q(x, y, x), (x * y * x) % q);
+               }
+            }
+
+            result.test_throws<Botan::Invalid_Argument>("multiply_mod_q rejects q",
+                                                        [&]() { group.multiply_mod_q(q, Botan::BigInt::one()); });
+            result.test_throws<Botan::Invalid_Argument>("square_mod_q rejects q", [&]() { group.square_mod_q(q); });
+         }
+
+         return result;
+      }
+
       static Test::Result test_dl_errors() {
          Test::Result result("DL_Group errors");
          result.test_throws("Uninitialized", "DL_Group uninitialized", []() {
@@ -204,12 +234,11 @@ BOTAN_REGISTER_TEST("pubkey", "dl_element", DL_Element_Tests);
 class DL_Scalar_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         // q of 160 and 256 bits, and a q almost as long as p
+         // q of 160 and 256 bits
          const std::vector<std::string> groups = {
             "dsa/jce/1024",
             "dsa/botan/2048",
             "dsa/botan/3072",
-            "ffdhe/ietf/2048",
          };
 
          std::vector<Test::Result> results;
@@ -340,6 +369,10 @@ class DL_Scalar_Tests final : public Test {
          const auto no_q = Botan::DL_Group::from_name("modp/srp/1024");
          result.test_throws<Botan::Invalid_State>("group without q",
                                                   [&]() { Botan::DL_Scalar::from_bigint(no_q, Botan::BigInt::one()); });
+
+         const auto large_q = Botan::DL_Group::from_name("ffdhe/ietf/2048");
+         result.test_throws<Botan::Invalid_State>(
+            "group with large q", [&]() { Botan::DL_Scalar::from_bigint(large_q, Botan::BigInt::one()); });
 
          return result;
       }
