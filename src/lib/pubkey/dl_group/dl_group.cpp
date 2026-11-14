@@ -113,8 +113,12 @@ DL_Group_Data::DL_Group_Data(const BigInt& p, const BigInt& g, DL_Group_Source s
       m_exponent_bits(dl_exponent_size(m_p_bits)),
       m_source(source) {}
 
+Montgomery_Int DL_Group_Data::monty_power_g_p(const BigInt& k, size_t max_k_bits) const {
+   return monty_execute(*m_monty, k, max_k_bits);
+}
+
 BigInt DL_Group_Data::power_g_p(const BigInt& k, size_t max_k_bits) const {
-   return monty_execute(*m_monty, k, max_k_bits).value();
+   return monty_power_g_p(k, max_k_bits).value();
 }
 
 BigInt DL_Group_Data::power_g_p_vartime(const BigInt& k) const {

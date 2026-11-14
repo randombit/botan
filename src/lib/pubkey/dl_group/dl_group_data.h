@@ -76,6 +76,8 @@ class DL_Group_Data final {
 
       size_t exponent_bits() const { return m_exponent_bits; }
 
+      Montgomery_Int monty_power_g_p(const BigInt& k, size_t max_k_bits) const;
+
       BigInt power_g_p(const BigInt& k, size_t max_k_bits) const;
 
       BigInt power_g_p_vartime(const BigInt& k) const;
