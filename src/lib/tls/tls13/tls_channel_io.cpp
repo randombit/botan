@@ -523,7 +523,7 @@ std::shared_ptr<Channel_IO> Channel_IO::create(Connection_Side side,
                                                TLS_Flavor flavor,
                                                std::shared_ptr<const Policy> policy,
                                                std::shared_ptr<Callbacks> callbacks) {
-   if(flavor == TLS_Flavor::DTLS) {
+   if(flavor.is_datagram()) {
       throw Not_Implemented("DTLS 1.3 is not yet supported");
    } else {
       return std::make_shared<TLS_Channel_IO>(side, std::move(policy), std::move(callbacks));

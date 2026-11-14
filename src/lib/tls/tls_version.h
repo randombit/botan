@@ -15,6 +15,48 @@
 
 namespace Botan::TLS {
 
+class Protocol_Version;
+
+/**
+* Distinguishes the stream-oriented TLS protocol from the datagram-oriented DTLS
+*/
+class BOTAN_PUBLIC_API(3, 15) TLS_Flavor final {
+   public:
+      enum Code : uint8_t /* NOLINT(*-use-enum-class) */ {
+         TLS,
+         DTLS,
+      };
+
+      // NOLINTNEXTLINE(*-explicit-conversions,*-explicit-constructor)
+      constexpr TLS_Flavor(Code code) : m_code(code) {}
+
+      /**
+      * @return true iff this is TLS
+      */
+      constexpr bool is_streaming() const { return m_code == TLS; }
+
+      /**
+      * @return true iff this is DTLS
+      */
+      constexpr bool is_datagram() const { return m_code == DTLS; }
+
+      /**
+      * @return TLS 1.2 or DTLS 1.2, which is also the legacy_version
+      *         used by TLS 1.3 or DTLS 1.3 respectively
+      */
+      Protocol_Version legacy_version() const;
+
+      /**
+      * @return TLS 1.3 or DTLS 1.3
+      */
+      Protocol_Version tls_13_version() const;
+
+      constexpr bool operator==(const TLS_Flavor& other) const = default;
+
+   private:
+      Code m_code;
+};
+
 enum class Version_Code : uint16_t {
    /// TLSv1.0 (no longer supported)
    TLS_V10 = 0x0301,
@@ -110,6 +152,11 @@ class BOTAN_PUBLIC_API(2, 0) Protocol_Version final {
       * @return true iff this is a DTLS version
       */
       bool is_datagram_protocol() const;
+
+      /**
+      * @return the flavor (TLS or DTLS) of this version
+      */
+      TLS_Flavor flavor() const;
 
       /**
        * @return true if this version indicates (D)TLS 1.2 or older

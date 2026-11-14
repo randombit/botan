@@ -527,7 +527,7 @@ Record_Header read_record(TLS_Flavor flavor,
                           Connection_Sequence_Numbers* sequence_numbers,
                           const get_cipherstate_fn& get_cipherstate,
                           bool allow_epoch0_restart) {
-   if(flavor == TLS_Flavor::DTLS) {
+   if(flavor.is_datagram()) {
       return read_dtls_record(
          readbuf, input, input_len, consumed, recbuf, sequence_numbers, get_cipherstate, allow_epoch0_restart);
    } else {

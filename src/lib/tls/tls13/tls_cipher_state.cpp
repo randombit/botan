@@ -115,7 +115,7 @@
 namespace Botan::TLS {
 
 std::unique_ptr<Cipher_State> Cipher_State::create(Connection_Side side, TLS_Flavor flavor, std::string_view prf_algo) {
-   if(flavor == TLS_Flavor::DTLS) {
+   if(flavor.is_datagram()) {
       throw Not_Implemented("DTLS 1.3 is not yet supported");
    } else {
       return std::make_unique<TLS_Cipher_State>(side, prf_algo);
