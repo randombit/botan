@@ -101,7 +101,7 @@ DL_PrivateKey::DL_PrivateKey(const DL_Group& group, const BigInt& private_key) :
       m_group(group),
       m_private_key(check_dl_private_key_input(private_key, m_group)),
       m_max_private_key_bits(dl_private_key_max_bits(m_private_key, m_group)),
-      m_public_key(m_group.power_g_p(m_private_key, m_max_private_key_bits)) {
+      m_public_key(DL_Element::g_pow(m_group, m_private_key, m_max_private_key_bits).to_bigint()) {
    CT::unpoison_all(m_private_key, m_public_key);
 }
 
@@ -109,7 +109,7 @@ DL_PrivateKey::DL_PrivateKey(const DL_Group& group, RandomNumberGenerator& rng) 
       m_group(group),
       m_private_key(generate_private_dl_key(group, rng)),
       m_max_private_key_bits(dl_private_key_max_bits(m_private_key, m_group)),
-      m_public_key(m_group.power_g_p(m_private_key, m_max_private_key_bits)) {
+      m_public_key(DL_Element::g_pow(m_group, m_private_key, m_max_private_key_bits).to_bigint()) {
    CT::unpoison_all(m_private_key, m_public_key);
 }
 
@@ -119,7 +119,7 @@ DL_PrivateKey::DL_PrivateKey(const AlgorithmIdentifier& alg_id,
       m_group(alg_id.parameters(), format),
       m_private_key(check_dl_private_key_input(decode_single_bigint(key_bits), m_group)),
       m_max_private_key_bits(dl_private_key_max_bits(m_private_key, m_group)),
-      m_public_key(m_group.power_g_p(m_private_key, m_max_private_key_bits)) {
+      m_public_key(DL_Element::g_pow(m_group, m_private_key, m_max_private_key_bits).to_bigint()) {
    CT::unpoison_all(m_private_key, m_public_key);
 }
 
