@@ -88,6 +88,18 @@ class BigInt_Unit_Tests final : public Test {
          }
          result.test_sz_lte("Repeated operator*= by a word does not grow the register", x.size(), 16);
 
+         // operator% returns its input as is if it is already reduced, so
+         // a product must not be sized from the registers of its operands
+         const BigInt p = BigInt::power_of_2(127) - 1;
+         const size_t bound = 2 * p.sig_words() + 8;
+         for(const Botan::word start : {1, 2}) {
+            BigInt r = BigInt::from_word(start);
+            for(size_t i = 0; i != 64 && r.size() <= bound; ++i) {
+               r = (r * r) % p;
+            }
+            result.test_sz_lte("Repeated modular squaring does not grow the register", r.size(), bound);
+         }
+
          return result;
       }
 

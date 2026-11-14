@@ -58,7 +58,8 @@ BigInt operator*(const BigInt& x, const BigInt& y) {
    const size_t x_sw = x.sig_words();
    const size_t y_sw = y.sig_words();
 
-   BigInt z = BigInt::with_capacity(x.size() + y.size());
+   // An operand's register may be much larger than its value requires
+   BigInt z = BigInt::with_capacity(x_sw + y_sw);
 
    if(x_sw == 1 && y_sw > 0) {
       bigint_linmul3(z.mutable_data(), y._data(), y_sw, x.word_at(0));
