@@ -21,4 +21,5 @@ dl_group.h
 <header:internal>
 dl_element.h
 dl_group_data.h
+dl_scalar.h
 </header:internal>
