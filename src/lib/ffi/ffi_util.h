@@ -274,6 +274,11 @@ concept ffi_visitor_fn = ffi_raw_visitor_fn<FnT, HandleT> || ffi_sp_visitor_fn<F
  */
 template <ffi_object HandleT, ffi_visitor_fn<HandleT> VisitorFnT>
 int botan_ffi_visit(HandleT* o, VisitorFnT func, const char* func_name) {
+   // MSVC 19.52 tries to default construct an empty visitor when it is named
+   // in the decltype below, so a lambda like [=] which captures nothing fails
+   static_assert(!std::is_empty_v<VisitorFnT> || std::is_default_constructible_v<VisitorFnT>,
+                 "A visitor which captures nothing must use [] rather than [=] or [&]");
+
    if(!o) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }

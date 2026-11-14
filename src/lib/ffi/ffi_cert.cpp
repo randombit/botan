@@ -407,7 +407,7 @@ int botan_x509_cert_view_string_values_count(botan_x509_cert_t cert, botan_x509_
 
 int botan_x509_cert_is_ca(botan_x509_cert_t cert) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return c.is_CA_cert() ? 1 : 0; });
+   return BOTAN_FFI_VISIT(cert, [](const auto& c) { return c.is_CA_cert() ? 1 : 0; });
 #else
    BOTAN_UNUSED(cert);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;

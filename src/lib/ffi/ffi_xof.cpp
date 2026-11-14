@@ -59,7 +59,7 @@ int botan_xof_name(botan_xof_t this_xof, char* name, size_t* name_len) {
 }
 
 int botan_xof_accepts_input(botan_xof_t this_xof) {
-   return BOTAN_FFI_VISIT(this_xof, [=](const auto& xof) { return xof.accepts_input() ? 1 : 0; });
+   return BOTAN_FFI_VISIT(this_xof, [](const auto& xof) { return xof.accepts_input() ? 1 : 0; });
 }
 
 int botan_xof_clear(botan_xof_t this_xof) {
