@@ -252,6 +252,23 @@ concept ffi_visit_result = std::is_void_v<T> || std::same_as<T, int> || std::sam
 template <typename FnT, typename ArgT>
 concept ffi_visitor_for = std::invocable<FnT, ArgT> && ffi_visit_result<std::invoke_result_t<FnT, ArgT>>;
 
+/**
+ * Runs the visitor inside the FFI guard; a visitor returning void yields
+ * BOTAN_FFI_SUCCESS. A plain function template on purpose: MSVC 19.52 fails to
+ * parse decltype(func(ref)) on a captured visitor inside a generic lambda.
+ */
+template <typename FnT, typename RefT>
+int call_ffi_visitor(const char* func_name, FnT& func, RefT& ref) {
+   if constexpr(std::is_void_v<std::invoke_result_t<FnT&, RefT&>>) {
+      return ffi_guard_thunk(func_name, [&] {
+         func(ref);
+         return BOTAN_FFI_SUCCESS;
+      });
+   } else {
+      return ffi_guard_thunk(func_name, [&] { return func(ref); });
+   }
+}
+
 }  // namespace detail
 
 template <typename FnT, typename HandleT>
@@ -287,24 +304,13 @@ int botan_ffi_visit(HandleT* o, VisitorFnT func, const char* func_name) {
       return BOTAN_FFI_ERROR_INVALID_OBJECT;
    }
 
-   auto call_visitor = [&](auto&& ref) -> int {
-      if constexpr(std::is_void_v<decltype(func(ref))>) {
-         return ffi_guard_thunk(func_name, [&] {
-            func(ref);
-            return BOTAN_FFI_SUCCESS;
-         });
-      } else {
-         return ffi_guard_thunk(func_name, [&] { return func(ref); });
-      }
-   };
-
    // Call the visitor either with a reference to the visitee or its inner smart
    // pointer depending on what the visitor expects. If it could handle both,
    // the reference is preferred.
    if constexpr(ffi_raw_visitor_fn<VisitorFnT, HandleT>) {
-      return call_visitor(*p);
+      return detail::call_ffi_visitor(func_name, func, *p);
    } else {
-      return call_visitor(p);
+      return detail::call_ffi_visitor(func_name, func, p);
    }
 }
 
