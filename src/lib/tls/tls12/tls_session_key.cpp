@@ -10,6 +10,8 @@
 #include <botan/kdf.h>
 #include <botan/mem_ops.h>
 #include <botan/tls_messages_12.h>
+#include <botan/internal/concat_util.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/tls_handshake_state.h>
 
 namespace Botan::TLS {
@@ -20,6 +22,8 @@ namespace Botan::TLS {
 Session_Keys::Session_Keys(const Handshake_State* state,
                            const secure_vector<uint8_t>& pre_master_secret,
                            bool resuming) {
+   using namespace std::literals;
+
    BOTAN_ASSERT_NONNULL(state);
 
    const auto& suite = state->ciphersuite();
@@ -33,41 +37,24 @@ Session_Keys::Session_Keys(const Handshake_State* state,
 
    const size_t prf_gen = 2 * (mac_keylen + cipher_keylen + cipher_nonce_bytes);
 
-   const uint8_t MASTER_SECRET_MAGIC[] = {0x6D, 0x61, 0x73, 0x74, 0x65, 0x72, 0x20, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74};
-
-   const uint8_t EXT_MASTER_SECRET_MAGIC[] = {0x65, 0x78, 0x74, 0x65, 0x6E, 0x64, 0x65, 0x64, 0x20, 0x6D, 0x61,
-                                              0x73, 0x74, 0x65, 0x72, 0x20, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74};
-
-   const uint8_t KEY_GEN_MAGIC[] = {0x6B, 0x65, 0x79, 0x20, 0x65, 0x78, 0x70, 0x61, 0x6E, 0x73, 0x69, 0x6F, 0x6E};
-
    auto prf = state->protocol_specific_prf();
 
    if(resuming) {
       // This is actually the master secret saved as part of the session
       m_master_sec = pre_master_secret;
    } else {
-      std::vector<uint8_t> salt;
-      std::vector<uint8_t> label;
-      if(extended_master_secret) {
-         label.assign(EXT_MASTER_SECRET_MAGIC, EXT_MASTER_SECRET_MAGIC + sizeof(EXT_MASTER_SECRET_MAGIC));
-         salt += state->hash().final(suite.prf_algo());
-      } else {
-         label.assign(MASTER_SECRET_MAGIC, MASTER_SECRET_MAGIC + sizeof(MASTER_SECRET_MAGIC));
-         salt += state->client_hello().random();
-         salt += state->server_hello().random();
-      }
+      const auto label = extended_master_secret  //
+                            ? "extended master secret"sv
+                            : "master secret"sv;
+      const auto salt = extended_master_secret  //
+                           ? state->hash().final(suite.prf_algo())
+                           : concat(state->client_hello().random(), state->server_hello().random());
 
-      m_master_sec = prf->derive_key(48, pre_master_secret, salt, label);
+      m_master_sec = prf->derive_key(48, pre_master_secret, salt, as_span_of_bytes(label));
    }
 
-   std::vector<uint8_t> salt;
-   std::vector<uint8_t> label;
-   label.assign(KEY_GEN_MAGIC, KEY_GEN_MAGIC + sizeof(KEY_GEN_MAGIC));
-   salt += state->server_hello().random();
-   salt += state->client_hello().random();
-
-   const secure_vector<uint8_t> prf_output = prf->derive_key(
-      prf_gen, m_master_sec.data(), m_master_sec.size(), salt.data(), salt.size(), label.data(), label.size());
+   const auto salt = concat(state->server_hello().random(), state->client_hello().random());
+   const auto prf_output = prf->derive_key(prf_gen, m_master_sec, salt, as_span_of_bytes("key expansion"sv));
 
    const uint8_t* key_data = prf_output.data();
 

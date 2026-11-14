@@ -11,7 +11,7 @@
 #include <botan/kdf.h>
 #include <botan/internal/concat_util.h>
 #include <botan/internal/loadstor.h>
-#include <array>
+#include <botan/internal/mem_utils.h>
 #include <limits>
 
 namespace Botan::TLS {
@@ -104,9 +104,8 @@ ExternalPSK PSKImporter::derive_imported_psk(Protocol_Version version, std::stri
    const auto expand_out_len = static_cast<uint16_t>(target_hash_len);
 
    auto hkdf_expand = KDF::create_or_throw("HKDF-Expand(" + m_hash + ")");
-   // "tls13 derived psk" as bytes
-   const std::array<uint8_t, 17> prefixed_label = {
-      't', 'l', 's', '1', '3', ' ', 'd', 'e', 'r', 'i', 'v', 'e', 'd', ' ', 'p', 's', 'k'};
+   using namespace std::literals;
+   const auto prefixed_label = "tls13 derived psk"sv;
 
    // TLS 1.3 HkdfLabel: length (2) || label length (1) || label || context length (1) || context
 
@@ -114,7 +113,7 @@ ExternalPSK PSKImporter::derive_imported_psk(Protocol_Version version, std::stri
    const auto identity_hash_len = static_cast<uint8_t>(identity_hash.size());
    const auto hkdf_label = concat<std::vector<uint8_t>>(store_be(expand_out_len),
                                                         store_be(prefixed_label_len),
-                                                        prefixed_label,
+                                                        as_span_of_bytes(prefixed_label),
                                                         store_be(identity_hash_len),
                                                         identity_hash);
 
