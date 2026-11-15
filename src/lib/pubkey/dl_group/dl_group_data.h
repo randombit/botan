@@ -50,6 +50,9 @@ class DL_Group_Data final {
 
       const BigInt& g() const { return m_g; }
 
+      // Only set where this is cheap to compute
+      const std::optional<BigInt>& g_inv() const { return m_g_inv; }
+
       const Barrett_Reduction& reducer_mod_p() const { return m_mod_p; }
 
       const Barrett_Reduction& reducer_mod_q() const {
@@ -99,6 +102,7 @@ class DL_Group_Data final {
       BigInt m_p;
       BigInt m_q;  // zero if no q set
       BigInt m_g;
+      std::optional<BigInt> m_g_inv;
       Barrett_Reduction m_mod_p;
       std::optional<Barrett_Reduction> m_mod_q;
       Montgomery_Params m_monty_params;

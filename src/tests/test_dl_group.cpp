@@ -495,6 +495,17 @@ class DL_Named_Group_Tests final : public Test {
                result.test_bn_eq("DL_Group q is not set for SRP groups", group.get_q(), 0);
             }
 
+            const auto g_inv = Botan::DL_Element::inverse_of_g(group);
+            if(group.get_g() == 2) {
+               result.test_is_true("g^-1 is precomputed for g = 2", g_inv.has_value());
+               if(g_inv) {
+                  result.test_bn_eq(
+                     "g^-1 is the inverse of g", (group.get_g() * g_inv->to_bigint()) % group.get_p(), 1);
+               }
+            } else {
+               result.test_is_false("g^-1 is not precomputed for other g", g_inv.has_value());
+            }
+
             if(group.p_bits() <= 1536 || Test::run_long_tests()) {
                result.test_is_true(name + " verifies", group.verify_group(this->rng()));
             }

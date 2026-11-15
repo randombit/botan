@@ -131,13 +131,17 @@ class DL_PrivateKey_Exponentiation final {
       void _const_time_unpoison() const;
 
    private:
-      DL_Element unblinder(const DL_Element& e) const;
+      struct Blinding {
+            DL_Element e;
+            DL_Element d;  // e^-x for Power, e^x for InversePower
+      };
+
+      Blinding new_blinding() const;
 
       std::shared_ptr<const DL_PrivateKey> m_key;
       RandomNumberGenerator& m_rng;
       Output m_output;
-      DL_Element m_e;
-      DL_Element m_d;  // e^-x for Power, e^x for InversePower
+      Blinding m_blinding;
       size_t m_counter = 0;
 };
 
