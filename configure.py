@@ -1452,12 +1452,8 @@ class CompilerInfo(InfoObject):
         if self.ct_value_barrier:
             for pref in [options.arch, 'default']:
                 if pref in self.ct_value_barrier:
-                    x = self.ct_value_barrier[pref]
-                    if x == 'asm' and not options.enable_asm:
-                        return None
-                    if x == 'none':
-                        return None
-                    return x
+                    vb = self.ct_value_barrier[pref]
+                    return None if vb == 'none' else vb
 
         return None
 
