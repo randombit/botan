@@ -1755,10 +1755,60 @@ def handle_primality(_data: dict, _group: dict, test: dict) -> None:
         )
 
 
+# ---- Format preserving encryption handler ----
+
+
+@register("AES-FF1")
+def handle_ff1(_data: dict, group: dict, test: dict) -> None:
+    radix = group["radix"]
+    alphabet = group.get("alphabet")
+    tweak = _from_hex(test["tweak"])
+    flags = test.get("flags", [])
+
+    def _fields(**extra):
+        fields = {
+            "Radix": radix,
+            "Key": test["key"],
+            "Tweak": test["tweak"],
+            "Msg": test["msg"],
+            "CT": test["ct"],
+        }
+        fields.update(extra)
+        return fields
+
+    def _crypt():
+        ff1 = botan.FormatPreservingEncryptionFF1(radix, _from_hex(test["key"]))
+        if alphabet is not None:
+            ct = ff1.encrypt_str(test["msg"], alphabet, tweak)
+            return (ct, ff1.decrypt_str(test["ct"], alphabet, tweak))
+        else:
+            ct = ff1.encrypt(test["msg"], tweak)
+            return (ct, ff1.decrypt(test["ct"], tweak))
+
+    if test["result"] == "invalid":
+        try:
+            _crypt()
+        except (botan.BotanException, ValueError):
+            return
+        raise TestFailure(_fields(Error="invalid input was accepted"))
+
+    try:
+        (ct, pt) = _crypt()
+    except botan.BotanException as e:
+        # We enforce the SP 800-38G Rev 1 minimum domain size
+        if "SmallMessageSize" in flags:
+            return
+        raise TestFailure(_fields(Error=str(e))) from e
+
+    if ct != test["ct"]:
+        raise TestFailure(_fields(Got=ct))
+    if pt != test["msg"]:
+        raise TestFailure(_fields(Decrypted=pt))
+
+
 # ---- Ignored algorithms ----
 
 _registry.ignore(
-    "AES-FF1",         # Not implemented
     "A128CBC-HS256",   # Not implemented
     "A192CBC-HS384",   # Not implemented
     "A256CBC-HS512",   # Not implemented

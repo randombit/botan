@@ -1089,6 +1089,33 @@ def handle_aes_key_wrap(header: dict, group: dict, test: dict, exp: dict) -> Non
         )
 
 
+# ---- Format preserving encryption ----
+
+
+@register("ACVP-AES-FF1-1.0")
+def handle_aes_ff1(_header: dict, group: dict, test: dict, exp: dict) -> None:
+    _require_aft(group)
+
+    encrypting = group["direction"] == "encrypt"
+    (in_field, out_field) = ("pt", "ct") if encrypting else ("ct", "pt")
+
+    ff1 = botan.FormatPreservingEncryptionFF1(group["radix"], _from_hex(test["key"]))
+    crypt = ff1.encrypt_str if encrypting else ff1.decrypt_str
+    got = crypt(test[in_field], group["alphabet"], _from_hex(test["tweak"]))
+
+    if got != exp[out_field]:
+        raise TestFailure(
+            {
+                "Radix": group["radix"],
+                "Key": test["key"],
+                "Tweak": test["tweak"],
+                "Input": test[in_field],
+                "Expected": exp[out_field],
+                "Computed": got,
+            }
+        )
+
+
 # ---- HMAC ----
 
 
@@ -2983,8 +3010,7 @@ _registry.ignore(
     "ACVP-TDES-CFB1-1.0",
     # GCM-SIV currently not implemented
     "ACVP-AES-GCM-SIV-1.0",
-    # Unimplemented FPE schemes
-    "ACVP-AES-FF1-1.0",
+    # FF3-1 is not implemented
     "ACVP-AES-FF3-1-1.0",
     # Weirdo modes
     "ACVP-AES-XPN-1.0",

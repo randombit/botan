@@ -4701,6 +4701,64 @@ BOTAN_FFI_EXPORT(2, 8)
 int botan_fpe_decrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size_t tweak_len);
 
 /**
+* Format Preserving Encryption using FF1 (NIST SP 800-38G)
+*/
+typedef struct botan_fpe_ff1_struct* botan_fpe_ff1_t;
+
+/**
+* Initialize an FF1 format preserving encryption object, which encrypts
+* strings of numerals in the range [0, radix)
+* @param fpe the new object will be placed here
+* @param radix the base of the numerals, between 2 and 65536
+* @param key the AES key
+* @param key_len length of key in bytes; must be 16, 24 or 32
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 15)
+int botan_fpe_ff1_init(botan_fpe_ff1_t* fpe, size_t radix, const uint8_t key[], size_t key_len);
+
+/**
+* Frees all resources of the FF1 object
+* @param fpe the FF1 object to destroy
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_FFI_EXPORT(3, 15)
+int botan_fpe_ff1_destroy(botan_fpe_ff1_t fpe);
+
+/**
+* Get the length of the shortest numeral string this FF1 object will accept
+* @param fpe the FF1 object
+* @param min_len set to the minimum length, in numerals
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 15)
+int botan_fpe_ff1_minimum_length(botan_fpe_ff1_t fpe, size_t* min_len);
+
+/**
+* Encrypt a string of numerals, replacing it with the result
+* @param fpe the FF1 object
+* @param x the numerals to encrypt, modified in place; each must be less than radix
+* @param x_len the number of numerals in x
+* @param tweak the tweak, may be NULL if tweak_len is 0
+* @param tweak_len length of tweak in bytes
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 15)
+int botan_fpe_ff1_encrypt(botan_fpe_ff1_t fpe, uint16_t x[], size_t x_len, const uint8_t tweak[], size_t tweak_len);
+
+/**
+* Decrypt a string of numerals, replacing it with the result
+* @param fpe the FF1 object
+* @param x the numerals to decrypt, modified in place; each must be less than radix
+* @param x_len the number of numerals in x
+* @param tweak the tweak, may be NULL if tweak_len is 0
+* @param tweak_len length of tweak in bytes
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 15)
+int botan_fpe_ff1_decrypt(botan_fpe_ff1_t fpe, uint16_t x[], size_t x_len, const uint8_t tweak[], size_t tweak_len);
+
+/**
 * SRP-6 Server Session type
 */
 typedef struct botan_srp6_server_session_struct* botan_srp6_server_session_t;

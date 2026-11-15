@@ -15,7 +15,6 @@ New Ciphers/Hashes/MACs
 * SIV-PMAC
 * Threefish-1024
 * Skein-MAC
-* FFX format preserving encryption (NIST 800-38G)
 * Blake3
 
 Hardware Specific Optimizations

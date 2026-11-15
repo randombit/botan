@@ -209,6 +209,13 @@ Format Preserving Encryption (FE1 scheme)
 .. autoclass:: FormatPreservingEncryptionFE1
    :members:
 
+Format Preserving Encryption (FF1 scheme)
+-----------------------------------------
+.. versionadded:: 3.15.0
+
+.. autoclass:: FormatPreservingEncryptionFF1
+   :members:
+
 HOTP
 -----------------------------------------
 .. versionadded:: 2.8.0
