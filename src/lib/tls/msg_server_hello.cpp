@@ -38,7 +38,7 @@ std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
    //    their Random value to the bytes: [DOWNGRADE_TLS12]
    //
    // DTLS 1.3 is not implemented, so a DTLS server never sets these.
-   if(flavor == TLS_Flavor::TLS && offered_version.is_pre_tls_13() && policy.allow_tls13()) {
+   if(flavor.is_streaming() && offered_version.is_pre_tls_13() && policy.allow_tls13()) {
       constexpr size_t downgrade_signal_length = sizeof(DOWNGRADE_TLS12);
       BOTAN_ASSERT_NOMSG(random.size() >= downgrade_signal_length);
       const auto lastbytes = std::span{random}.last(downgrade_signal_length);

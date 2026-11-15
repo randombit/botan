@@ -9,6 +9,7 @@
 #ifndef BOTAN_TLS_CHANNEL_IO_BASE_H_
 #define BOTAN_TLS_CHANNEL_IO_BASE_H_
 
+#include <botan/tls_version.h>
 #include <botan/internal/tls_flight_13.h>
 #include <botan/internal/tls_record_13.h>
 #include <optional>

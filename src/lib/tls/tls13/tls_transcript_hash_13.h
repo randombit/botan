@@ -10,6 +10,7 @@
 #define BOTAN_TLS_TRANSCRIPT_HASH_13_H_
 
 #include <botan/tls_magic.h>
+#include <botan/tls_version.h>
 #include <botan/internal/tls_types_13.h>
 #include <memory>
 #include <span>

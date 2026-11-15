@@ -13,6 +13,14 @@
 
 namespace Botan::TLS {
 
+Protocol_Version TLS_Flavor::legacy_version() const {
+   return is_datagram() ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
+}
+
+Protocol_Version TLS_Flavor::tls_13_version() const {
+   return is_datagram() ? Protocol_Version::DTLS_V13 : Protocol_Version::TLS_V13;
+}
+
 Protocol_Version Protocol_Version::latest_tls_version() {
 #if defined(BOTAN_HAS_TLS_13)
    return Protocol_Version::TLS_V13;
@@ -53,6 +61,10 @@ std::string Protocol_Version::to_string() const {
 
 bool Protocol_Version::is_datagram_protocol() const {
    return major_version() > 250;
+}
+
+TLS_Flavor Protocol_Version::flavor() const {
+   return is_datagram_protocol() ? TLS_Flavor::DTLS : TLS_Flavor::TLS;
 }
 
 bool Protocol_Version::is_pre_tls_13() const {

@@ -397,7 +397,7 @@ std::shared_ptr<Server_Impl_12> Server_Impl_12::create(const std::shared_ptr<Cal
 
    // Try to load the cookie secret on initialization, rather than waiting to fail
    // until the first client connects.
-   if(flavor == TLS_Flavor::DTLS && policy->dtls_server_require_cookie_exchange()) {
+   if(flavor.is_datagram() && policy->dtls_server_require_cookie_exchange()) {
       load_dtls_cookie_secret(*self->m_creds);
    }
 
@@ -530,8 +530,7 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
    const Protocol_Version client_offer = pending_state.client_hello().legacy_version();
    const bool datagram = client_offer.is_datagram_protocol();
 
-   const auto peer_flavor = datagram ? TLS_Flavor::DTLS : TLS_Flavor::TLS;
-   if(peer_flavor != flavor()) {
+   if(client_offer.flavor() != flavor()) {
       throw TLS_Exception(Alert::ProtocolVersion, "Client offered a version of the wrong protocol type");
    }
 
