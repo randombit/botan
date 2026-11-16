@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_ECC_GROUP)
    #include <botan/assert.h>
    #include <botan/ec_group.h>
+   #include <botan/ec_scalar.h>
    #include <botan/rng.h>
 #endif
 
@@ -161,7 +162,7 @@ class PerfTest_EllipticCurve_Misc final : public PerfTest {
             auto init_timer = config.make_timer(group_name + " initialization");
 
             while(init_timer->under(run)) {
-               Botan::EC_Group::clear_registered_curve_data();
+               Botan::EC_Group::_clear_registered_curve_data();
                init_timer->run([&]() { Botan::EC_Group::from_name(group_name); });
             }
 

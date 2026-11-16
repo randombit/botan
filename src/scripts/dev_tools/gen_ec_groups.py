@@ -70,7 +70,6 @@ def curve_info(src):
 def format_names(names):
     # This would be quite complicated to render in the Jinja template language so
     # we pre-render it as a string and insert it directly
-    legacy = []
     generic = []
     pcurves = []
     pcurves_no_generic = []
@@ -80,32 +79,24 @@ def format_names(names):
             pcurves.append(nm)
             if 'generic' not in impl:
                 pcurves_no_generic.append(nm)
-        elif 'generic' in impl:
-            generic.append(nm)
         else:
-            assert 'legacy' in impl
-            legacy.append(nm)
+            assert 'generic' in impl
+            generic.append(nm)
 
-    legacy_macro = "defined(BOTAN_HAS_LEGACY_EC_POINT)"
     generic_macro = "defined(BOTAN_HAS_PCURVES_GENERIC)"
     for nm in sorted(pcurves):
         nm_macro = "BOTAN_HAS_PCURVES_%s" % (nm.upper())
 
         if nm in pcurves_no_generic:
-            yield "#if defined(%s) || %s" % (nm_macro, legacy_macro)
+            yield "#if defined(%s)" % (nm_macro)
             yield "      // Not supported by pcurves_generic"
         else:
-            yield "#if defined(%s) || %s || %s" % (nm_macro, legacy_macro, generic_macro)
+            yield "#if defined(%s) || %s" % (nm_macro, generic_macro)
         yield '      \"%s\",' % (nm)
         yield "#endif\n"
 
-    yield "#if %s || %s" % (legacy_macro, generic_macro)
+    yield "#if %s" % (generic_macro)
     for nm in sorted(generic):
-        yield '      \"%s\",' % (nm)
-    yield "#endif\n"
-
-    yield "#if %s" % (legacy_macro)
-    for nm in sorted(legacy):
         yield '      \"%s\",' % (nm)
     yield "#endif\n"
 

@@ -11,6 +11,6 @@ void fuzz(std::span<const uint8_t> in) {
    if(in.size() > 2 * 256 / 8) {
       return;
    }
-   static const Botan::EC_Group p256("secp256r1");
+   static const auto p256 = Botan::EC_Group::from_name("secp256r1");
    return check_ecc_math(p256, in);
 }

@@ -26,15 +26,6 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PublicKey : public virtual EC_PublicKey {
       */
       SM2_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key) : EC_PublicKey(group, public_key) {}
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      /**
-      * Create a public key from a given public point.
-      * @param group the domain parameters associated with this key
-      * @param public_point the public point defining this key
-      */
-      SM2_PublicKey(const EC_Group& group, const EC_Point& public_point) : EC_PublicKey(group, public_point) {}
-#endif
-
       /**
       * Load a public key.
       * @param alg_id the X.509 algorithm identifier
@@ -97,15 +88,6 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PrivateKey final : public SM2_PublicKey,
       */
       SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group);
 
-      /**
-      * Create a private key.
-      * @param rng a random number generator
-      * @param group parameters to used for this key
-      * @param x the private key (if zero, generate a new random key)
-      */
-      BOTAN_DEPRECATED("Use one of the other constructors")
-      SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x);
-
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       std::unique_ptr<Public_Key> public_key() const override;
@@ -116,14 +98,10 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PrivateKey final : public SM2_PublicKey,
       std::unique_ptr<PK_Ops::Decryption> _create_decryption_op(
          RandomNumberGenerator& rng, const PK_Encryption_Options_Reader& options) const override;
 
-      // TODO(Botan4) remove this and the member variable
-      BOTAN_DEPRECATED("Deprecated no replacement") const BigInt& get_da_inv() const { return m_da_inv_legacy; }
-
       const EC_Scalar& _get_da_inv() const { return m_da_inv; }
 
    private:
       EC_Scalar m_da_inv;
-      BigInt m_da_inv_legacy;
 };
 
 BOTAN_DIAGNOSTIC_POP
@@ -138,19 +116,6 @@ class HashFunction;
 BOTAN_DEPRECATED("Deprecated unclear usage")
 std::vector<uint8_t> BOTAN_PUBLIC_API(3, 7)
    sm2_compute_za(HashFunction& hash, std::string_view user_id, const EC_Group& group, const EC_AffinePoint& pubkey);
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-/*
-* This is deprecated because it's not clear what it is useful for
-*
-* Open an issue on GH if you are using this
-*/
-BOTAN_DEPRECATED("Deprecated unclear usage")
-inline std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
-                                           std::string_view user_id,
-                                           const EC_Group& group,
-                                           const EC_Point& pubkey);
-#endif
 
 // For compat with versions 2.2 - 2.7
 typedef SM2_PublicKey SM2_Signature_PublicKey;

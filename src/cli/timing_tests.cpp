@@ -44,6 +44,7 @@
 
 #if defined(BOTAN_HAS_ECC_GROUP)
    #include <botan/ec_group.h>
+   #include <botan/ec_scalar.h>
 #endif
 
 #if defined(BOTAN_HAS_DL_GROUP)

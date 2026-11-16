@@ -178,14 +178,11 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id, std:
    m_public_key = std::make_shared<EC_PublicKey_Data>(group, encoding);
 }
 
-GOST_3410_PrivateKey::GOST_3410_PrivateKey(const EC_Group& domain, const BigInt& x) :
-      EC_PrivateKey(check_domain(domain), EC_Scalar::from_bigint(domain, x)) {}
+GOST_3410_PrivateKey::GOST_3410_PrivateKey(const EC_Group& domain, const EC_Scalar& x) :
+      EC_PrivateKey(check_domain(domain), x) {}
 
 GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng, EC_Group domain) :
       EC_PrivateKey(rng, check_domain(std::move(domain))) {}
-
-GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x) :
-      EC_PrivateKey(rng, check_domain(domain), x) {}
 
 GOST_3410_PrivateKey::GOST_3410_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
       EC_PrivateKey(gost_private_key_alg_id(alg_id), key_bits) {}

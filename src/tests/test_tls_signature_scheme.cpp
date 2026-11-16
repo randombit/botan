@@ -140,17 +140,6 @@ std::vector<Test::Result> test_signature_scheme() {
          result.test_is_false("secp256r1 key with brainpool scheme", bp_scheme.is_suitable_for(p256));
          result.test_is_false("secp256r1 key with secp384r1 scheme",
                               Sig(Sig::ECDSA_SECP384R1_TLS13_SHA384).is_suitable_for(p256));
-
-         // The curve is what matters, not how the key encodes it
-         Botan::ECDSA_PrivateKey p256_explicit(*rng, Botan::EC_Group::from_name("secp256r1"));
-         BOTAN_DIAGNOSTIC_PUSH
-         BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
-         p256_explicit.set_parameter_encoding(Botan::EC_Group_Encoding::Explicit);
-         BOTAN_DIAGNOSTIC_POP
-         result.test_is_true("explicitly encoded secp256r1 key with secp256r1 scheme",
-                             p256_scheme.is_suitable_for(p256_explicit));
-         result.test_is_false("explicitly encoded secp256r1 key with brainpool scheme",
-                              bp_scheme.is_suitable_for(p256_explicit));
       }));
    }
    #endif

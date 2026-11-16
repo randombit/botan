@@ -18,10 +18,7 @@
 #include <botan/internal/workfactor.h>
 
 #include <memory>
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-   #include <botan/ec_point.h>
-#endif
+#include <optional>
 
 namespace Botan {
 
@@ -33,18 +30,6 @@ size_t EC_PublicKey::estimated_strength() const {
    return ecp_work_factor(key_length());
 }
 
-namespace {
-
-EC_Group_Encoding default_encoding_for(const EC_Group& group) {
-   if(group.get_curve_oid().empty()) {
-      return EC_Group_Encoding::Explicit;
-   } else {
-      return EC_Group_Encoding::NamedCurve;
-   }
-}
-
-}  // namespace
-
 const AlgorithmIdentifier& EC_PublicKey::assert_algorithm_identifier(const AlgorithmIdentifier& alg_id,
                                                                      std::string_view alg_name) {
    if(alg_id.oid() != OID::from_string(alg_name)) {
@@ -55,35 +40,16 @@ const AlgorithmIdentifier& EC_PublicKey::assert_algorithm_identifier(const Algor
    return alg_id;  // NOLINT(*-return-const-ref-from-parameter)
 }
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-EC_PublicKey::EC_PublicKey(const EC_Group& group, const EC_Point& pub_point) {
-   auto pt = EC_AffinePoint(group, pub_point);
-   m_public_key = std::make_shared<const EC_PublicKey_Data>(group, std::move(pt));
-   m_domain_encoding = default_encoding_for(domain());  // NOLINT(*-prefer-member-initializer)
-}
-#endif
+EC_PublicKey::EC_PublicKey(const EC_Group& group, const EC_AffinePoint& pub_point) :
+      m_public_key(std::make_shared<const EC_PublicKey_Data>(group, pub_point)) {}
 
-EC_PublicKey::EC_PublicKey(const EC_Group& group, const EC_AffinePoint& pub_point) {
-   m_public_key = std::make_shared<const EC_PublicKey_Data>(group, pub_point);
-   m_domain_encoding = default_encoding_for(domain());  // NOLINT(*-prefer-member-initializer)
-}
-
-EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
-   m_public_key = std::make_shared<const EC_PublicKey_Data>(EC_Group(alg_id.parameters()), key_bits);
-   m_domain_encoding = default_encoding_for(domain());  // NOLINT(*-prefer-member-initializer)
-}
+EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
+      m_public_key(std::make_shared<const EC_PublicKey_Data>(EC_Group(alg_id.parameters()), key_bits)) {}
 
 const EC_Group& EC_PublicKey::domain() const {
    BOTAN_STATE_CHECK(m_public_key != nullptr);
    return m_public_key->group();
 }
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-const EC_Point& EC_PublicKey::public_point() const {
-   BOTAN_STATE_CHECK(m_public_key != nullptr);
-   return m_public_key->legacy_point();
-}
-#endif
 
 const EC_AffinePoint& EC_PublicKey::public_ec_point() const {
    BOTAN_STATE_CHECK(m_public_key != nullptr);
@@ -108,23 +74,17 @@ std::vector<uint8_t> EC_PublicKey::public_key_bits() const {
 }
 
 std::vector<uint8_t> EC_PublicKey::DER_domain() const {
-   return domain().DER_encode(domain_format());
+   return domain().DER_encode();
 }
 
+static_assert(EC_Point_Format{} == EC_Point_Format::Uncompressed, "EC_PublicKey default point encoding");
+
 void EC_PublicKey::set_point_encoding(EC_Point_Format enc) {
-   if(enc != EC_Point_Format::Compressed && enc != EC_Point_Format::Uncompressed && enc != EC_Point_Format::Hybrid) {
+   if(enc != EC_Point_Format::Compressed && enc != EC_Point_Format::Uncompressed) {
       throw Invalid_Argument("Invalid point encoding for EC_PublicKey");
    }
 
    m_point_encoding = enc;
-}
-
-void EC_PublicKey::set_parameter_encoding(EC_Group_Encoding form) {
-   if(form == EC_Group_Encoding::NamedCurve && domain().get_curve_oid().empty()) {
-      throw Invalid_Argument("Cannot used NamedCurve encoding for a curve without an OID");
-   }
-
-   m_domain_encoding = form;
 }
 
 const BigInt& EC_PrivateKey::private_value() const {
@@ -140,30 +100,17 @@ const EC_Scalar& EC_PrivateKey::_private_key() const {
 /**
 * EC_PrivateKey constructor
 */
-EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
-                             const EC_Group& ec_group,
-                             const BigInt& x,
-                             bool with_modular_inverse) :
-      m_with_modular_inverse(with_modular_inverse) {
-   auto scalar = (x.is_zero()) ? EC_Scalar::random(ec_group, rng) : EC_Scalar::from_bigint(ec_group, x);
-   m_private_key = std::make_shared<EC_PrivateKey_Data>(ec_group, std::move(scalar));
-   m_public_key = m_private_key->public_key(rng, with_modular_inverse);
-   m_domain_encoding = default_encoding_for(domain());
-}
-
 EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng, const EC_Group& ec_group, bool with_modular_inverse) :
       m_with_modular_inverse(with_modular_inverse) {
    auto scalar = EC_Scalar::random(ec_group, rng);
    m_private_key = std::make_shared<EC_PrivateKey_Data>(ec_group, std::move(scalar));
    m_public_key = m_private_key->public_key(rng, with_modular_inverse);
-   m_domain_encoding = default_encoding_for(domain());
 }
 
 EC_PrivateKey::EC_PrivateKey(const EC_Group& ec_group, const EC_Scalar& x, bool with_modular_inverse) :
       m_with_modular_inverse(with_modular_inverse) {
    m_private_key = std::make_shared<EC_PrivateKey_Data>(ec_group, x);
    m_public_key = m_private_key->public_key(with_modular_inverse);
-   m_domain_encoding = default_encoding_for(domain());
 }
 
 secure_vector<uint8_t> EC_PrivateKey::raw_private_key_bits() const {
@@ -202,18 +149,19 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
       .end_cons()
       .verify_end();
 
-   std::unique_ptr<EC_Group> group;
+   std::optional<EC_Group> group;
 
    if(!alg_id.parameters_are_empty()) {
-      group = std::make_unique<EC_Group>(alg_id.parameters());
+      group = EC_Group(alg_id.parameters());
    }
    if(!key_parameters.empty()) {
+      const auto key_group = EC_Group::from_OID(key_parameters);
       if(group) {
-         if(EC_Group(key_parameters) != *group) {
+         if(key_group != *group) {
             throw Decoding_Error("ECPrivateKey parameters do not match the AlgorithmIdentifier parameters");
          }
       } else {
-         group = std::make_unique<EC_Group>(key_parameters);
+         group = key_group;
       }
    }
    if(!group) {
@@ -230,8 +178,6 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
          throw Decoding_Error("ECPrivateKey public key does not match the private key");
       }
    }
-
-   m_domain_encoding = default_encoding_for(domain());
 }
 
 bool EC_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
@@ -262,8 +208,6 @@ const BigInt& EC_PublicKey::get_int_field(std::string_view field) const {
       return this->domain().get_a();
    } else if(field == "b") {
       return this->domain().get_b();
-   } else if(field == "cofactor") {
-      return this->domain().get_cofactor();
    } else if(field == "order") {
       return this->domain().get_order();
    } else {

@@ -1999,12 +1999,10 @@ Key Agreement Options
 
       For keys held in a PKCS#11 token the derivation is performed by the
       token, and this instead names the PKCS#11 key derivation function by its
-      hash (``SHA-256`` and so on), optionally followed by ``,Cofactor`` to
-      select the cofactor variant of the mechanism; see :doc:`pkcs11`. Naming
-      ``Raw`` here is rejected; the raw value is requested with
+      hash (``SHA-256`` and so on); see :doc:`pkcs11`. Naming ``Raw`` here is
+      rejected; the raw value is requested with
       :cpp:func:`PK_Key_Agreement_Options::with_raw_shared_key` as for any
-      other key. The one exception is ``Raw,Cofactor``, the cofactor variant
-      with raw output, which cannot otherwise be expressed.
+      other key.
 
       This cannot be combined with
       :cpp:func:`PK_Key_Agreement_Options::with_raw_shared_key`.

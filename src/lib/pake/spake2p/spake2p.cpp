@@ -222,8 +222,6 @@ SystemParameters SystemParameters::rfc9383_p521_sha512() {
 SystemParameters SystemParameters::custom(const EC_Group& group,
                                           std::span<const uint8_t> seed,
                                           std::string_view hash_fn) {
-   BOTAN_ARG_CHECK(group.has_cofactor() == false, "SPAKE2+ is not supported for groups with a cofactor");
-
    if(!group.hash_to_curve_supported(hash_fn)) {
       throw Not_Implemented("SPAKE2+ custom params require hash2curve support which is not available for this curve");
    }

@@ -12,7 +12,6 @@
 #include <botan/pk_options_readers.h>
 #include <botan/internal/algorithm_spec.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/parsing.h>
 #include <botan/internal/pk_options_impl.h>
 #include <tuple>
 
@@ -322,7 +321,7 @@ MechanismWrapper MechanismWrapper::create_ecdsa_mechanism(std::string_view hash_
    throw Lookup_Error(fmt("PKCS #11 ECDSA sign/verify does not support {}", hash_spec));
 }
 
-MechanismWrapper MechanismWrapper::create_ecdh_mechanism(std::string_view params) {
+MechanismWrapper MechanismWrapper::create_ecdh_mechanism(std::string_view kdf_name) {
    // note: when updating this map, update the documentation for `MechanismWrapper::create_ecdh_mechanism`
    static const std::map<std::string_view, KeyDerivation> EcdhHash = {{"Raw", KeyDerivation::Null},
                                                                       {"SHA-1", KeyDerivation::Sha1Kdf},
@@ -331,38 +330,11 @@ MechanismWrapper MechanismWrapper::create_ecdh_mechanism(std::string_view params
                                                                       {"SHA-384", KeyDerivation::Sha384Kdf},
                                                                       {"SHA-512", KeyDerivation::Sha512Kdf}};
 
-   const std::vector<std::string> param_parts = split_on(params, ',');
-
-   if(param_parts.empty() || param_parts.size() > 2) {
-      throw Invalid_Argument(fmt("PKCS #11 ECDH key derivation bad params {}", params));
-   }
-
-   // TODO(Botan4) remove this cofactor nonsense
-   bool use_cofactor = false;
-   std::string kdf_name;
-   for(const auto& part : param_parts) {
-      if(part == "Cofactor") {
-         if(use_cofactor) {
-            throw Invalid_Argument(fmt("PKCS #11 ECDH key derivation bad params {}", params));
-         }
-         use_cofactor = true;
-      } else {
-         if(!kdf_name.empty()) {
-            throw Invalid_Argument(fmt("PKCS #11 ECDH key derivation bad params {}", params));
-         }
-         kdf_name = part;
-      }
-   }
-
-   if(kdf_name.empty()) {
-      throw Invalid_Argument(fmt("PKCS #11 ECDH key derivation bad params {}", params));
-   }
-
    const auto kdf = EcdhHash.find(kdf_name);
    if(kdf == EcdhHash.end()) {
-      throw Lookup_Error("PKCS#11 ECDH key derivation does not support KDF " + kdf_name);
+      throw Lookup_Error(fmt("PKCS#11 ECDH key derivation does not support KDF {}", kdf_name));
    }
-   MechanismWrapper mech(use_cofactor ? MechanismType::Ecdh1CofactorDerive : MechanismType::Ecdh1Derive);
+   MechanismWrapper mech(MechanismType::Ecdh1Derive);
    mech.m_parameters = std::make_shared<MechanismParameters>();
    mech.m_parameters->ecdh_params.kdf = static_cast<CK_EC_KDF_TYPE>(kdf->second);
    mech.m_mechanism.pParameter = mech.m_parameters.get();

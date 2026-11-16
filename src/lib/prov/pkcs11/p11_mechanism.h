@@ -57,13 +57,11 @@ class BOTAN_PUBLIC_API(3, 7) MechanismWrapper final {
       static MechanismWrapper create_ecdsa_mechanism(std::string_view hash);
 
       /**
-      * Creates the CK_MECHANISM data for ECDH key derivation (CKM_ECDH1_DERIVE or CKM_ECDH1_COFACTOR_DERIVE)
-      * @param params specifies the key derivation function to use.
+      * Creates the CK_MECHANISM data for ECDH key derivation (CKM_ECDH1_DERIVE)
+      * @param kdf_name specifies the key derivation function to use.
       * Supported KDFs are Raw and SHA-1 to SHA-512.
-      * Params can also include the string "Cofactor" if the cofactor
-      * key derivation mechanism should be used, for example "SHA-512,Cofactor"
       */
-      static MechanismWrapper create_ecdh_mechanism(std::string_view params);
+      static MechanismWrapper create_ecdh_mechanism(std::string_view kdf_name);
 
       /**
       * Sets the salt for the ECDH mechanism parameters.

@@ -13,10 +13,6 @@
 
 #include <botan/bigint.h>
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-   #include <botan/ec_point.h>
-#endif
-
 namespace Botan {
 
 class RandomNumberGenerator;
@@ -31,16 +27,9 @@ class EC_PublicKey_Data final {
 
       const EC_AffinePoint& public_key() const { return m_point; }
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      const EC_Point& legacy_point() const { return m_legacy_point; }
-#endif
-
    private:
       EC_Group m_group;
       EC_AffinePoint m_point;
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      EC_Point m_legacy_point;
-#endif
 };
 
 class EC_PrivateKey_Data final {

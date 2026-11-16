@@ -475,8 +475,6 @@ Test::Result test_hpke_ec_key_encoding() {
    auto rng = Test::new_rng("hpke_ec_key_encoding");
    const auto msg = to_bytes("uncompressed HPKE encoding");
 
-   BOTAN_DIAGNOSTIC_PUSH
-   BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
    for(const auto kem : {KEM_Code::DHKEM_P256, KEM_Code::DHKEM_P384, KEM_Code::DHKEM_P521}) {
       const Suite suite(kem, KDF_Code::HKDF_SHA256, AEAD_Code::AES_128_GCM);
       if(!suite.is_available()) {
@@ -484,24 +482,22 @@ Test::Result test_hpke_ec_key_encoding() {
       }
       const auto generated = Private_Key::generate(kem, *rng);
       const auto canonical_pk = generated.public_key().serialize();
-      for(const auto format : {Botan::EC_Point_Format::Compressed, Botan::EC_Point_Format::Hybrid}) {
-         auto underlying_pk = generated.underlying().public_key();
-         dynamic_cast<Botan::ECDH_PublicKey&>(*underlying_pk).set_point_encoding(format);
-         const auto pk = Public_Key::from_key(kem, std::move(underlying_pk));
-         result.test_bin_eq("imported public key encoding", pk.serialize(), canonical_pk);
 
-         auto underlying_sk = KEM_Ops::create(kem)->deserialize_private(generated.serialize());
-         dynamic_cast<Botan::ECDH_PrivateKey&>(*underlying_sk).set_point_encoding(format);
-         const auto sk = Private_Key::from_key(kem, std::move(underlying_sk));
-         result.test_bin_eq("imported private key public encoding", sk.public_key().serialize(), canonical_pk);
+      auto underlying_pk = generated.underlying().public_key();
+      dynamic_cast<Botan::ECDH_PublicKey&>(*underlying_pk).set_point_encoding(Botan::EC_Point_Format::Compressed);
+      const auto pk = Public_Key::from_key(kem, std::move(underlying_pk));
+      result.test_bin_eq("imported public key encoding", pk.serialize(), canonical_pk);
 
-         // Both roles use imported keys, including the sender identity in Auth.
-         auto sender = Sender_Context::setup_auth(suite, pk, sk, *rng);
-         auto recipient = Recipient_Context::setup_auth(suite, sk, sender.encapsulated_key(), pk, *rng);
-         result.test_bin_eq("imported keys round trip", recipient.open({}, sender.seal({}, msg)), msg);
-      }
+      auto underlying_sk = KEM_Ops::create(kem)->deserialize_private(generated.serialize());
+      dynamic_cast<Botan::ECDH_PrivateKey&>(*underlying_sk).set_point_encoding(Botan::EC_Point_Format::Compressed);
+      const auto sk = Private_Key::from_key(kem, std::move(underlying_sk));
+      result.test_bin_eq("imported private key public encoding", sk.public_key().serialize(), canonical_pk);
+
+      // Both roles use imported keys, including the sender identity in Auth.
+      auto sender = Sender_Context::setup_auth(suite, pk, sk, *rng);
+      auto recipient = Recipient_Context::setup_auth(suite, sk, sender.encapsulated_key(), pk, *rng);
+      result.test_bin_eq("imported keys round trip", recipient.open({}, sender.seal({}, msg)), msg);
    }
-   BOTAN_DIAGNOSTIC_POP
    return result;
 }
 

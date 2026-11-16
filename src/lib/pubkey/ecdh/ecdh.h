@@ -10,6 +10,7 @@
 #ifndef BOTAN_ECDH_KEY_H_
 #define BOTAN_ECDH_KEY_H_
 
+#include <botan/ec_group.h>
 #include <botan/ecc_key.h>
 
 namespace Botan {
@@ -26,15 +27,6 @@ class BOTAN_PUBLIC_API(2, 0) ECDH_PublicKey : public virtual EC_PublicKey {
       */
       ECDH_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
             EC_PublicKey(alg_id, key_bits) {}
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      /**
-      * Construct a public key from a given public point.
-      * @param group the domain parameters associated with this key
-      * @param public_point the public point defining this key
-      */
-      ECDH_PublicKey(const EC_Group& group, const EC_Point& public_point) : EC_PublicKey(group, public_point) {}
-#endif
 
       /**
       * Construct a public key from a given public point.
@@ -99,16 +91,6 @@ class BOTAN_PUBLIC_API(2, 0) ECDH_PrivateKey final : public ECDH_PublicKey,
       * @param group parameters to used for this key
       */
       ECDH_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group) : EC_PrivateKey(rng, group) {}
-
-      /**
-      * Generate a new private key
-      * @param rng a random number generator
-      * @param group parameters to used for this key
-      * @param x the private key; if zero, a new random key is generated
-      */
-      BOTAN_DEPRECATED("Use one of the other constructors")
-      ECDH_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x) :
-            EC_PrivateKey(rng, group, x) {}
 
       std::unique_ptr<Public_Key> public_key() const override;
 

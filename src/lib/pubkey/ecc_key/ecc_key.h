@@ -10,28 +10,21 @@
 #ifndef BOTAN_ECC_PUBLIC_KEY_BASE_H_
 #define BOTAN_ECC_PUBLIC_KEY_BASE_H_
 
-#include <botan/ec_point_format.h>
 #include <botan/pk_keys.h>
 #include <memory>
 
 namespace Botan {
 
+enum class EC_Point_Format : uint8_t;
 class EC_AffinePoint;
-class EC_Point;
 class EC_Group;
 class EC_Scalar;
 class EC_PublicKey_Data;
 class EC_PrivateKey_Data;
 
 /**
-* This class represents abstract ECC public keys. When encoding a key
-* via an encoder that can be accessed via the corresponding member
-* functions, the key will decide upon its internally stored encoding
-* information whether to encode itself with or without domain
-* parameters, or using the domain parameter oid. Furthermore, a public
-* key without domain parameters can be decoded. In that case, it
-* cannot be used for verification until its domain parameters are set
-* by calling the corresponding member function.
+* This class represents abstract ECC public keys. The domain parameters
+* of a key are always encoded as a named curve OID.
 */
 class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
    public:
@@ -40,16 +33,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
       EC_PublicKey(EC_PublicKey&& other) = delete;
       EC_PublicKey& operator=(EC_PublicKey&& other) = delete;
       ~EC_PublicKey() override = default;
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      /**
-      * Get the public point of this key.
-      * @throw Invalid_State is thrown if the
-      * domain parameters of this point are not set
-      * @result the public point of this key
-      */
-      BOTAN_DEPRECATED("Avoid accessing the point directly") const EC_Point& public_point() const;
-#endif
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
@@ -68,32 +51,15 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
       const EC_Group& domain() const;
 
       /**
-      * Set the domain parameter encoding to be used when encoding this key.
-      * @param enc the encoding to use
-      *
-      * This function is deprecated; in a future major release only namedCurve
-      * encoding of domain parameters will be allowed.
-      */
-      BOTAN_DEPRECATED("Support for explicit point encoding is deprecated")
-      void set_parameter_encoding(EC_Group_Encoding enc);
-
-      /**
       * Set the point encoding method to be used when encoding this key.
       * @param enc the encoding to use
       */
       void set_point_encoding(EC_Point_Format enc);
 
       /**
-      * Return the DER encoding of this keys domain in whatever format
-      * is preset for this particular key
+      * Return the DER encoding of this key's domain, using namedCurve format
       */
       std::vector<uint8_t> DER_domain() const;
-
-      /**
-      * Get the domain parameter encoding to be used when encoding this key.
-      * @result the encoding to use
-      */
-      EC_Group_Encoding domain_format() const { return m_domain_encoding; }
 
       /**
       * Get the point encoding method to be used when encoding this key.
@@ -111,20 +77,14 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
       */
       const EC_AffinePoint& public_ec_point() const;
 
-      // TODO(Botan4) remove this
-      const EC_AffinePoint& _public_ec_point() const { return public_ec_point(); }
+      /**
+      * Return the public point of this key
+      *
+      * @note in Botan3 and prior this returned EC_Point, which was removed in 4.0
+      */
+      const EC_AffinePoint& public_point() const { return public_ec_point(); }
 
    protected:
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      /**
-      * Load a public key from the point.
-      *
-      * @param group EC domain parameters
-      * @param pub_point public point on the curve
-      */
-      EC_PublicKey(const EC_Group& group, const EC_Point& pub_point);
-#endif
-
       /**
       * Load a public key from the point.
       *
@@ -145,9 +105,10 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
 
       EC_PublicKey() = default;
 
-      std::shared_ptr<const EC_PublicKey_Data> m_public_key;                // NOLINT(*non-private-member-variable*)
-      EC_Group_Encoding m_domain_encoding = EC_Group_Encoding::NamedCurve;  // NOLINT(*non-private-member-variable*)
-      EC_Point_Format m_point_encoding = EC_Point_Format::Uncompressed;     // NOLINT(*non-private-member-variable*)
+      std::shared_ptr<const EC_PublicKey_Data> m_public_key;  // NOLINT(*non-private-member-variable*)
+
+      // Value initialization gives EC_Point_Format::Uncompressed
+      EC_Point_Format m_point_encoding{};  // NOLINT(*non-private-member-variable*)
 };
 
 /**
@@ -183,22 +144,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_PrivateKey : public virtual EC_PublicKey,
       const EC_Scalar& _private_key() const;
 
    protected:
-      /**
-      * If x=0, creates a new private key in the domain
-      * using the given rng. If with_modular_inverse is set,
-      * the public key will be calculated by multiplying
-      * the base point with the modular inverse of
-      * x (as in ECGDSA and ECKCDSA), otherwise by
-      * multiplying directly with x (as in ECDSA).
-      *
-      * TODO: Remove, once the respective deprecated constructors of the
-      *       concrete ECC algorithms is removed.
-      */
-      EC_PrivateKey(RandomNumberGenerator& rng,
-                    const EC_Group& group,
-                    const BigInt& x,
-                    bool with_modular_inverse = false);
-
       /**
       * Creates a new private key
       *

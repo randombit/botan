@@ -6,7 +6,6 @@
 #include "fuzzers.h"
 
 #include <botan/ec_group.h>
-#include <botan/ec_point.h>
 
 namespace {
 

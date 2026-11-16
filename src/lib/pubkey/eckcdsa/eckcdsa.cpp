@@ -10,6 +10,7 @@
 #include <botan/eckcdsa.h>
 
 #include <botan/ec_group.h>
+#include <botan/ec_scalar.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
 #include <botan/pk_options_readers.h>

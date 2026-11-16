@@ -59,10 +59,6 @@ EC_PublicKey_Data::EC_PublicKey_Data(EC_Group group, EC_AffinePoint pt) :
          throw Decoding_Error("ECC public key point is not an element of the specified group");
       }
    }
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-   m_legacy_point = m_point.to_legacy_point();
-#endif
 }
 
 EC_PrivateKey_Data::EC_PrivateKey_Data(EC_Group group, EC_Scalar x) :

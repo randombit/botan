@@ -24,6 +24,7 @@
 #endif
 
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+   #include <botan/ec_scalar.h>
    #include <botan/ecc_key.h>
 #endif
 
@@ -110,9 +111,8 @@ int privkey_load_ec(std::unique_ptr<ECPrivateKey_t>& key, const Botan::BigInt& s
       return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
    }
 
-   Botan::Null_RNG null_rng;
    const auto grp = Botan::EC_Group::from_name(curve_name);
-   key.reset(new ECPrivateKey_t(null_rng, grp, scalar));
+   key.reset(new ECPrivateKey_t(grp, Botan::EC_Scalar::from_bigint(grp, scalar)));
    return BOTAN_FFI_SUCCESS;
 }
 

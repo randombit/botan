@@ -10,6 +10,7 @@
 #include "fuzzers.h"
 
 #include <botan/ec_group.h>
+#include <botan/ec_scalar.h>
 #include <botan/hex.h>
 #include <botan/numthry.h>
 #include <botan/internal/barrett.h>
@@ -56,11 +57,10 @@ inline void check_ecc_math(const Botan::EC_Group& group, std::span<const uint8_t
    }
 
    auto& rng = fuzzer_rng();
-   std::vector<Botan::BigInt> ws;
 
-   const auto P1 = Botan::EC_AffinePoint::g_mul(a, rng, ws);
-   const auto Q1 = Botan::EC_AffinePoint::g_mul(b, rng, ws);
-   const auto R1 = Botan::EC_AffinePoint::g_mul(c, rng, ws);
+   const auto P1 = Botan::EC_AffinePoint::g_mul(a, rng);
+   const auto Q1 = Botan::EC_AffinePoint::g_mul(b, rng);
+   const auto R1 = Botan::EC_AffinePoint::g_mul(c, rng);
 
    const auto S1 = P1.add(Q1);
    const auto T1 = Q1.add(P1);
@@ -70,9 +70,9 @@ inline void check_ecc_math(const Botan::EC_Group& group, std::span<const uint8_t
 
    const auto g = Botan::EC_AffinePoint::generator(group);
 
-   const auto P2 = g.mul(a, rng, ws);
-   const auto Q2 = g.mul(b, rng, ws);
-   const auto R2 = g.mul(c, rng, ws);
+   const auto P2 = g.mul(a, rng);
+   const auto Q2 = g.mul(b, rng);
+   const auto R2 = g.mul(c, rng);
 
    const auto S2 = P2.add(Q2);
    const auto T2 = Q2.add(P2);
