@@ -9,7 +9,9 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <algorithm>
+#include <concepts>
 #include <cstring>
+#include <vector>
 
 namespace Botan_Tests {
 
@@ -46,6 +48,12 @@ class CT_Mask_Tests final : public Test {
          result.test_u32_eq("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(0xFFFFFFFF, 5).value(), 0x00000000);
          result.test_u32_eq("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(5, 0xFFFFFFFF).value(), 0xFFFFFFFF);
 
+         test_mask_comparisons<uint8_t>("uint8_t", result);
+         test_mask_comparisons<uint16_t>("uint16_t", result);
+         test_mask_comparisons<uint32_t>("uint32_t", result);
+         test_mask_comparisons<uint64_t>("uint64_t", result);
+         test_mask_comparisons<size_t>("size_t", result);
+
          for(const auto bad_input : {0, 1}) {
             for(size_t input_length = 0; input_length != 64; ++input_length) {
                for(size_t offset = 0; offset != input_length + 5; ++offset) {
@@ -77,6 +85,60 @@ class CT_Mask_Tests final : public Test {
          }
 
          return {result};
+      }
+
+   private:
+      template <std::unsigned_integral T>
+      void test_mask_comparisons(const char* type_name, Result& result) {
+         using Botan::CT::Mask;
+
+         const auto tname = Botan::fmt("CT::Mask<{}> comparisons", type_name);
+         constexpr size_t tbits = sizeof(T) * 8;
+         constexpr T all_set = static_cast<T>(~static_cast<T>(0));
+
+         const auto matches = [&](T x, T y) {
+            const T lt = (x < y) ? all_set : 0;
+            const T gt = (x > y) ? all_set : 0;
+
+            return Mask<T>::is_lt(x, y).value() == lt && Mask<T>::is_gt(x, y).value() == gt &&
+                   Mask<T>::is_lte(x, y).value() == static_cast<T>(~gt) &&
+                   Mask<T>::is_gte(x, y).value() == static_cast<T>(~lt);
+         };
+
+         // Values around each power of 2
+         std::vector<T> values = {0, all_set};
+         for(size_t b = 0; b != tbits; ++b) {
+            const T pow2 = static_cast<T>(static_cast<T>(1) << b);
+            values.push_back(static_cast<T>(pow2 - 1));
+            values.push_back(pow2);
+            values.push_back(static_cast<T>(pow2 + 1));
+         }
+
+         for(size_t i = 0; i != 256; ++i) {
+            T v = 0;
+            for(size_t j = 0; j != sizeof(T); ++j) {
+               v = static_cast<T>((v << 8) | this->rng().next_byte());
+            }
+            values.push_back(v);
+         }
+
+         for(const T x : values) {
+            bool ok = matches(x, static_cast<T>(x - 1)) && matches(x, static_cast<T>(x + 1));
+            for(const T y : values) {
+               ok = ok && matches(x, y);
+            }
+            result.test_is_true(tname, ok);
+         }
+
+         if constexpr(sizeof(T) == 1) {
+            for(size_t x = 0; x != 256; ++x) {
+               bool ok = true;
+               for(size_t y = 0; y != 256; ++y) {
+                  ok = ok && matches(static_cast<T>(x), static_cast<T>(y));
+               }
+               result.test_is_true(tname, ok);
+            }
+         }
       }
 };
 

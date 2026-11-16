@@ -17,6 +17,7 @@
 #include <botan/assert.h>
 #include <botan/range_concepts.h>
 #include <botan/secmem.h>
+#include <botan/types.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/scoped_cleanup.h>
 #include <botan/internal/target_info.h>
@@ -453,8 +454,22 @@ class Mask final {
       * Return a Mask<T> which is set if x < y
       */
       static constexpr Mask<T> is_lt(T x, T y) {
-         T u = x ^ ((x ^ y) | ((x - y) ^ x));
-         return Mask<T>::expand_top_bit(u);
+#if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
+         using widest = uint128_t;
+#else
+         using widest = uint64_t;
+#endif
+
+         if constexpr(sizeof(T) < sizeof(widest)) {
+            // Compute x - y in a wider type: the bits above the size of T
+            // are all set if x < y, and all clear otherwise
+            using W = std::conditional_t<(sizeof(T) < sizeof(uint64_t)), uint64_t, widest>;
+            const W diff = static_cast<W>(x) - static_cast<W>(y);
+            return Mask<T>(value_barrier<T>(static_cast<T>(diff >> (8 * sizeof(T)))));
+         } else {
+            const T u = x ^ ((x ^ y) | ((x - y) ^ x));
+            return Mask<T>::expand_top_bit(u);
+         }
       }
 
       /**
