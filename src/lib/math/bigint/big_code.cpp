@@ -12,8 +12,11 @@
 #include <botan/hex.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/buffer_stuffer.h>
-#include <botan/internal/divide.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/mp_core.h>
+#include <algorithm>
+#include <array>
+#include <bit>
 
 namespace Botan {
 
@@ -35,6 +38,16 @@ consteval size_t decimal_conversion_radix_digits() {
    }
 }
 
+/*
+* Return floor(x / 10) using a multiplication by ceil(2^(W+3) / 10)
+*/
+constexpr word divide_by_10(word x) {
+   constexpr word reciprocal = (WordInfo<word>::max / 5) * 4 + 1;
+   word hi = 0;
+   word_madd2(x, reciprocal, &hi);
+   return hi >> 3;
+}
+
 }  // namespace
 
 std::string BigInt::to_dec_string() const {
@@ -42,65 +55,80 @@ std::string BigInt::to_dec_string() const {
    constexpr word conversion_radix = decimal_conversion_radix();
    constexpr size_t radix_digits = decimal_conversion_radix_digits();
 
+   // Each division by the radix removes at least this many bits from the value
+   constexpr size_t radix_bits = std::bit_width(conversion_radix) - 1;
+
+   constexpr auto div_radix = divide_precomp<word>::setup(conversion_radix);
+
+   /*
+   * A division produces its quotient words most significant first, which is
+   * the order the following division consumes them in. So several successive
+   * divisions can be done in a single pass over the value. The remainders are
+   * independent dependency chains which the CPU can execute in parallel.
+   */
+   constexpr size_t divisions_per_pass = 3;
+
    // (over-)estimate of the number of digits needed; log2(10) ~ 3.3219
    const size_t digit_estimate = static_cast<size_t>(1 + (static_cast<double>(this->bits()) / 3.32));
 
    // (over-)estimate of db such that conversion_radix^db > *this
    const size_t digit_blocks = (digit_estimate + radix_digits - 1) / radix_digits;
 
-   BigInt value = *this;
-   value.set_sign(Positive);
+   secure_vector<word> value(_data(), _data() + sig_words());
+   size_t value_bits = this->bits();
 
-   // Extract groups of digits into words
-   std::vector<word> digit_groups(digit_blocks);
+   // The digits are written starting from the least significant, at the
+   // end of the string. The extra leading character leaves room for a sign.
+   std::string s(1 + digit_blocks * radix_digits, '0');
+   size_t s_pos = s.size();
 
-   for(size_t i = 0; i != digit_blocks; ++i) {
-      word remainder = 0;
-      ct_divide_word(value, conversion_radix, value, remainder);
-      digit_groups[i] = remainder;
-   }
+   for(size_t i = 0; i < digit_blocks; i += divisions_per_pass) {
+      const size_t value_words = (value_bits + WordInfo<word>::bits - 1) / WordInfo<word>::bits;
 
-   BOTAN_ASSERT_NOMSG(value.is_zero());
+      // Extract groups of digits into words
+      std::array<word, divisions_per_pass> digit_groups = {};
 
-   // Extract digits from the groups
-   std::vector<uint8_t> digits(digit_blocks * radix_digits);
-
-   constexpr auto div_10 = divide_precomp<word>::setup(10);
-
-   for(size_t i = 0; i != digit_blocks; ++i) {
-      word remainder = digit_groups[i];
-      for(size_t j = 0; j != radix_digits; ++j) {
-         const auto [q, digit] = div_10.divmod_2to1_ct(0, remainder);
-         digits[radix_digits * i + j] = static_cast<uint8_t>(digit);
-         remainder = q;
+      for(size_t j = value_words; j > 0; --j) {
+         word w = value[j - 1];
+         for(size_t k = 0; k != divisions_per_pass; ++k) {
+            const auto [q, r] = div_radix.divmod_2to1_ct(digit_groups[k], w);
+            digit_groups[k] = r;
+            w = q;
+         }
+         value[j - 1] = w;
       }
+
+      for(size_t k = 0; k != divisions_per_pass; ++k) {
+         if(i + k < digit_blocks) {
+            // Extract digits from the group
+            word remainder = digit_groups[k];
+            for(size_t j = 0; j != radix_digits; ++j) {
+               const word q = divide_by_10(remainder);
+               s_pos -= 1;
+               s[s_pos] = static_cast<char>('0' + (remainder - q * 10));  // assumes ASCII
+               remainder = q;
+            }
+         } else {
+            BOTAN_ASSERT_NOMSG(digit_groups[k] == 0);
+         }
+      }
+
+      value_bits -= std::min(value_bits, divisions_per_pass * radix_bits);
    }
 
-   // remove leading zeros
-   while(!digits.empty() && digits.back() == 0) {
-      digits.pop_back();
-   }
+   BOTAN_ASSERT_NOMSG(CT::all_zeros(value.data(), value.size()).as_bool());
 
-   BOTAN_ASSERT_NOMSG(digit_estimate >= digits.size());
+   // remove leading zeros, but always keeping at least one digit
+   size_t first_digit = std::min(s.find_first_not_of('0'), s.size() - 1);
 
-   // Reverse the digits to big-endian and format to text
-   std::string s;
-   s.reserve(1 + digits.size());
+   BOTAN_ASSERT_NOMSG(digit_estimate >= s.size() - first_digit);
 
    if(signum() < 0) {
-      s += '-';
+      first_digit -= 1;
+      s[first_digit] = '-';
    }
 
-   // Reverse and convert to textual digits
-   // TODO(Botan4) use std::ranges::reverse_view here once available (need newer Clang)
-   // NOLINTNEXTLINE(modernize-loop-convert)
-   for(auto i = digits.rbegin(); i != digits.rend(); ++i) {
-      s.push_back(*i + '0');  // assumes ASCII
-   }
-
-   if(s.empty()) {
-      s += '0';
-   }
+   s.erase(0, first_digit);
 
    return s;
 }
@@ -148,34 +176,35 @@ BigInt BigInt::from_radix_digits(std::string_view digits, size_t radix) {
       constexpr word conversion_radix = decimal_conversion_radix();
       constexpr size_t radix_digits = decimal_conversion_radix_digits();
 
-      BigInt r;
+      const size_t blocks = (digits.size() + radix_digits - 1) / radix_digits;
 
-      // Handle the initial partial block (if digit count is not a multiple of radix_digits)
+      // After b blocks the value is less than conversion_radix^b so fits in b words
+      secure_vector<word> r(blocks);
+
+      // The initial block is short if the digit count is not a multiple of radix_digits
       const size_t partial_block = digits.size() % radix_digits;
+      size_t block_digits = (partial_block > 0) ? partial_block : radix_digits;
+      size_t offset = 0;
 
-      if(partial_block > 0) {
+      for(size_t b = 0; b != blocks; ++b) {
          word acc = 0;
-         for(size_t i = 0; i < partial_block; ++i) {
-            const char c = digits[i];
+         for(size_t j = 0; j != block_digits; ++j) {
+            const char c = digits[offset + j];
             BOTAN_ARG_CHECK(c >= '0' && c <= '9', "Invalid decimal character");
             acc = acc * 10 + static_cast<word>(c - '0');
          }
-         r += acc;
-      }
+         offset += block_digits;
+         block_digits = radix_digits;
 
-      // Process full blocks of radix_digits
-      for(size_t i = partial_block; i != digits.size(); i += radix_digits) {
-         word acc = 0;
-         for(size_t j = 0; j < radix_digits; ++j) {
-            const char c = digits[i + j];
-            BOTAN_ARG_CHECK(c >= '0' && c <= '9', "Invalid decimal character");
-            acc = acc * 10 + static_cast<word>(c - '0');
+         // r = r * conversion_radix + acc
+         word carry = acc;
+         for(size_t i = 0; i != b; ++i) {
+            r[i] = word_madd2(r[i], conversion_radix, &carry);
          }
-         r *= conversion_radix;
-         r += acc;
+         r[b] = carry;
       }
 
-      return r;
+      return BigInt::_from_words(r);
    } else {
       throw Invalid_Argument("BigInt::from_radix_digits unknown radix");
    }
