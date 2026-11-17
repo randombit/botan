@@ -43,6 +43,7 @@ class BigInt_Unit_Tests final : public Test {
          results.push_back(test_is_prime_strong());
          results.push_back(test_encode());
          results.push_back(test_bigint_io());
+         results.push_back(test_decimal_round_trip());
          results.push_back(test_get_substring());
 
          return results;
@@ -228,6 +229,29 @@ class BigInt_Unit_Tests final : public Test {
 
                result.test_sz_eq("Same value", size_t(val), size_t(cmp));
             }
+         }
+
+         return result;
+      }
+
+      static Test::Result test_decimal_round_trip() {
+         Test::Result result("BigInt decimal round trip");
+
+         auto rng = Test::new_rng("bigint_decimal_round_trip");
+
+         const auto check_round_trip = [&](const BigInt& n) {
+            const std::string dec = n.to_dec_string();
+            result.test_bn_eq("decimal round trip", BigInt::from_radix_digits(dec, 10), n);
+            result.test_str_eq("negative decimal", (-n).to_dec_string(), "-" + dec);
+         };
+
+         for(size_t bits = 1; bits <= 1024; ++bits) {
+            check_round_trip(BigInt(*rng, bits));
+            check_round_trip(BigInt::power_of_2(bits) - 1);
+         }
+
+         for(const size_t bits : {2048, 4096, 10000}) {
+            check_round_trip(BigInt(*rng, bits));
          }
 
          return result;
@@ -1403,6 +1427,14 @@ class BigInt_FromRadix_Tests final : public Text_Based_Test {
             const Botan::BigInt n = Botan::BigInt::from_radix_digits(input, radix);
             const auto serialized = n.serialize();
             result.test_bin_eq("from_radix_digits", serialized, expected_output);
+
+            if(radix == 10) {
+               // Decimal formatting does not include leading zeros
+               const size_t first_nonzero = input.find_first_not_of('0');
+               const std::string canonical = (first_nonzero == std::string::npos) ? "0" : input.substr(first_nonzero);
+               const auto value = Botan::BigInt::from_bytes(vars.get_req_bin("Output"));
+               result.test_str_eq("to_dec_string", value.to_dec_string(), canonical);
+            }
          } else if(header == "Invalid") {
             try {
                Botan::BigInt::from_radix_digits(input, radix);
