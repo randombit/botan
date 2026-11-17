@@ -239,6 +239,7 @@ class PerfTest_IsPrime final : public PerfTest {
 
             auto mr_timer = config.make_timer("Miller-Rabin" + suffix);
             auto mr_vt_timer = config.make_timer("Miller-Rabin-vartime" + suffix);
+            auto mr_base2_timer = config.make_timer("Miller-Rabin-base2" + suffix);
             auto lucas_timer = config.make_timer("Lucas" + suffix);
             auto lucas_vt_timer = config.make_timer("Lucas-vartime" + suffix);
             auto bpsw_timer = config.make_timer("Bailie-PSW" + suffix);
@@ -254,6 +255,7 @@ class PerfTest_IsPrime final : public PerfTest {
                mr_timer->run([&]() { return Botan::is_miller_rabin_probable_prime(n, monty_n, config.rng(), 1); });
                mr_vt_timer->run(
                   [&]() { return Botan::is_miller_rabin_probable_prime_vartime(n, monty_n, config.rng(), 1); });
+               mr_base2_timer->run([&]() { return Botan::is_miller_rabin_base2_probable_prime(n, monty_n); });
 
                lucas_timer->run([&]() { return Botan::is_lucas_probable_prime(n, monty_n); });
                lucas_vt_timer->run([&]() { return Botan::is_lucas_probable_prime_vartime(n, monty_n); });
@@ -267,6 +269,7 @@ class PerfTest_IsPrime final : public PerfTest {
 
             config.record_result(*mr_timer);
             config.record_result(*mr_vt_timer);
+            config.record_result(*mr_base2_timer);
             config.record_result(*lucas_timer);
             config.record_result(*lucas_vt_timer);
             config.record_result(*bpsw_timer);

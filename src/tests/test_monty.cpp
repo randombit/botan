@@ -192,11 +192,12 @@ class Montgomery_Exponentiation_Tests : public Test {
          /*
          * The sizes just below and above multiples of 416 bits exercise each of the
          * vector widths used by the AVX-512 implementation, and the sizes just past
-         * its upper limit (4158 bits) fall back to the generic code.
+         * its upper limit (4158 bits) fall back to the generic code. 1036 bits is
+         * the largest size of its width with the headroom for base 2 doubling.
          */
          const std::vector<size_t> p_bits_to_test = {64,   128,  300,  414,  415,  416,  512,  830,  831,  1024, 1025,
-                                                     1100, 1246, 1247, 1536, 1662, 1663, 2048, 2078, 2079, 2494, 2495,
-                                                     2910, 2911, 3072, 3326, 3327, 3328, 4096, 4158, 4159};
+                                                     1036, 1037, 1100, 1246, 1247, 1536, 1662, 1663, 2048, 2078, 2079,
+                                                     2494, 2495, 2910, 2911, 3072, 3326, 3327, 3328, 4096, 4158, 4159};
 
          for(const size_t p_bits : p_bits_to_test) {
             std::vector<Botan::BigInt> moduli;
@@ -291,6 +292,8 @@ class Montgomery_Exponentiation_Tests : public Test {
 
          const std::string desc = " mod " + std::to_string(p_bits) + " bit p";
 
+         const auto base2 = Botan::monty_precompute_base2(params);
+
          for(const auto& [base, exp] : cases) {
             const auto expected = ref_powmod(base, exp, mod_p);
 
@@ -298,6 +301,14 @@ class Montgomery_Exponentiation_Tests : public Test {
             result.test_bn_eq("exp" + desc, Botan::monty_exp(params, base, exp, exp.bits()).value(), expected);
             result.test_bn_eq("padded exp" + desc, Botan::monty_exp(params, base, exp, p_bits + 64).value(), expected);
             result.test_bn_eq("vartime exp" + desc, Botan::monty_exp_vartime(params, base, exp).value(), expected);
+
+            const auto expected2 = ref_powmod(Botan::BigInt::from_word(2), exp, mod_p);
+
+            result.test_bn_eq("base 2 exp" + desc, Botan::monty_execute(*base2, exp, exp.bits()).value(), expected2);
+            result.test_bn_eq(
+               "base 2 padded exp" + desc, Botan::monty_execute(*base2, exp, p_bits + 64).value(), expected2);
+            result.test_bn_eq(
+               "base 2 vartime exp" + desc, Botan::monty_execute_vartime(*base2, exp).value(), expected2);
          }
       }
 };

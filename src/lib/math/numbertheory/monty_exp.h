@@ -54,6 +54,15 @@ BOTAN_TEST_API std::shared_ptr<const Montgomery_Exponentiation_State> monty_prec
                                                                                        size_t window_bits);
 
 /*
+* Set up for calculating values 2^x mod p
+*
+* This is faster than monty_precompute with g = 2, since multiplying by the
+* base is just a doubling
+*/
+BOTAN_TEST_API std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute_base2(
+   const Montgomery_Params& params_p);
+
+/*
 * Return g^k mod p
 */
 BOTAN_TEST_API Montgomery_Int monty_execute(const Montgomery_Exponentiation_State& precomputed_state,

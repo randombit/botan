@@ -161,9 +161,9 @@ BigInt random_prime_with_sieve(RandomNumberGenerator& rng,
 
          /*
          Perform a single initial Miller-Rabin test first before other potentially more
-         expensive checks like gcd
+         expensive checks like gcd. This uses base 2, which is faster than a random base.
          */
-         if(!is_miller_rabin_probable_prime(p, monty_p, rng, 1)) {
+         if(!is_miller_rabin_base2_probable_prime(p, monty_p)) {
             continue;
          }
 
@@ -186,18 +186,16 @@ BigInt random_prime_with_sieve(RandomNumberGenerator& rng,
          if(sieve_check_2p1) {
             const BigInt p2 = (p << 1) + 1;
             const Montgomery_Params monty_p2(p2);
-            if(!is_miller_rabin_probable_prime(p2, monty_p2, rng, 1)) {
+            if(!is_miller_rabin_base2_probable_prime(p2, monty_p2)) {
                continue;
             }
          }
 
          /*
-         * Now run the remainder of the Miller-Rabin trials
+         * Now run the Miller-Rabin trials with random bases
          */
-         if(mr_trials > 1) {
-            if(!is_miller_rabin_probable_prime(p, monty_p, rng, mr_trials - 1)) {
-               continue;
-            }
+         if(!is_miller_rabin_probable_prime(p, monty_p, rng, mr_trials)) {
+            continue;
          }
 
          /*
