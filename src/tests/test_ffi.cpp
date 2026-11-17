@@ -3534,6 +3534,56 @@ class FFI_FPE_Test final : public FFI_Test {
       }
 };
 
+class FFI_FPE_FF1_Test final : public FFI_Test {
+   public:
+      std::string name() const override { return "FFI FPE FF1"; }
+
+      void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
+         // Sample 2 from NIST SP 800-38G
+         const std::vector<uint8_t> key = Botan::hex_decode("2B7E151628AED2A6ABF7158809CF4F3C");
+         const std::vector<uint8_t> tweak = Botan::hex_decode("39383736353433323130");
+         const std::vector<uint16_t> pt = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+         const std::vector<uint16_t> ct = {6, 1, 2, 4, 2, 0, 0, 7, 7, 3};
+
+         botan_fpe_ff1_t fpe;
+         if(!TEST_FFI_INIT(botan_fpe_ff1_init, (&fpe, 10, key.data(), key.size()))) {
+            return;
+         }
+
+         botan_fpe_ff1_t bad_fpe;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_fpe_ff1_init, (&bad_fpe, 1, key.data(), key.size()));
+         TEST_FFI_RC(
+            BOTAN_FFI_ERROR_INVALID_KEY_LENGTH, botan_fpe_ff1_init, (&bad_fpe, 10, key.data(), key.size() - 1));
+
+         size_t min_len = 0;
+         TEST_FFI_OK(botan_fpe_ff1_minimum_length, (fpe, &min_len));
+         result.test_sz_eq("FF1 minimum length", min_len, 6);
+
+         std::vector<uint16_t> buf = pt;
+         TEST_FFI_OK(botan_fpe_ff1_encrypt, (fpe, buf.data(), buf.size(), tweak.data(), tweak.size()));
+         result.test_is_true("FF1 ciphertext", buf == ct);
+
+         TEST_FFI_OK(botan_fpe_ff1_decrypt, (fpe, buf.data(), buf.size(), tweak.data(), tweak.size()));
+         result.test_is_true("FF1 round trip", buf == pt);
+
+         TEST_FFI_OK(botan_fpe_ff1_encrypt, (fpe, buf.data(), buf.size(), nullptr, 0));
+         TEST_FFI_OK(botan_fpe_ff1_decrypt, (fpe, buf.data(), buf.size(), nullptr, 0));
+         result.test_is_true("FF1 round trip with empty tweak", buf == pt);
+
+         // Too short
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_fpe_ff1_encrypt, (fpe, buf.data(), 5, nullptr, 0));
+
+         // Numeral out of range
+         buf[0] = 10;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_fpe_ff1_encrypt, (fpe, buf.data(), buf.size(), nullptr, 0));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_fpe_ff1_decrypt, (fpe, buf.data(), buf.size(), nullptr, 0));
+
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_fpe_ff1_encrypt, (fpe, nullptr, buf.size(), nullptr, 0));
+
+         TEST_FFI_OK(botan_fpe_ff1_destroy, (fpe));
+      }
+};
+
 class FFI_TOTP_Test final : public FFI_Test {
    public:
       std::string name() const override { return "FFI TOTP"; }
@@ -6298,6 +6348,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_base64", FFI_Base64_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_hex", FFI_Hex_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_mp", FFI_MP_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_fpe", FFI_FPE_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_fpe_ff1", FFI_FPE_FF1_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_totp", FFI_TOTP_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_hotp", FFI_HOTP_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_keywrap", FFI_Keywrap_Test);

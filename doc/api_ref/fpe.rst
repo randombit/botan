@@ -9,12 +9,108 @@ credit card number with a valid checksum, or similarly for bank
 account numbers, US Social Security numbers, or even more general
 mappings like English words onto other English words.
 
-The scheme currently implemented in botan is called FE1, and described
-in the paper `Format Preserving Encryption
+Two schemes are implemented. FF1 is specified by NIST in `SP 800-38G
+<https://csrc.nist.gov/pubs/sp/800/38/g/upd1/final>`_ and is what new
+applications should use. FE1 is an older design which was never standardized,
+and is not implemented by other libraries.
+
+FF1
+----------------------------------------
+
+FF1 encrypts a string of *numerals*, each of which is an integer in the range
+[0,radix). The output is a string of numerals of the same length and radix. For
+example to encrypt decimal digits use radix 10, with the numerals being the
+values of the digits; to encrypt strings of lowercase letters use radix 26 and
+map 'a' to 0, 'b' to 1, and so on.
+
+FF1 is always used with AES; the key must be 16, 24, or 32 bytes long.
+
+The security of FF1 depends on there being sufficiently many possible inputs.
+As required by the draft revision of SP 800-38G, inputs are rejected unless
+there are at least one million possible strings of that length; for example
+with radix 10 the input must have at least 6 digits. In addition the input must
+always consist of at least 2 numerals. If the set of plausible inputs is small
+(for example when most digits of an account number are fixed or guessable), an
+attacker who can observe many encryptions may be able to recover plaintexts
+no matter which FPE scheme is used.
+
+The interfaces for FF1 are defined in the header ``fpe_ff1.h``:
+
+.. versionadded:: 3.15.0
+
+.. cpp:class:: FPE_FF1
+
+   .. cpp:function:: FPE_FF1(size_t radix)
+
+      Create an FF1 instance for the specified radix, which must be between 2
+      and 65536 inclusive.
+
+   .. cpp:function:: void set_key(std::span<const uint8_t> key)
+
+      Set the AES key. This must be called before encrypting or decrypting.
+
+   .. cpp:function:: size_t radix() const
+
+      Return the radix.
+
+   .. cpp:function:: size_t minimum_length() const
+
+      Return the length of the shortest numeral string which will be accepted
+      for encryption or decryption.
+
+   .. cpp:function:: void encrypt(std::span<uint16_t> x, std::span<const uint8_t> tweak) const
+
+      Encrypt the numerals in *x*, in place. Each must be less than the radix.
+      The *tweak* is a value that does not need to be secret which
+      parameterizes the encryption; for example a database row identifier, or
+      the digits of an account number which are being left unencrypted. It may
+      be empty. Using distinct tweaks where possible is recommended, since
+      otherwise equal plaintexts produce equal ciphertexts.
+
+   .. cpp:function:: void decrypt(std::span<uint16_t> x, std::span<const uint8_t> tweak) const
+
+      Decrypt the numerals in *x*, in place. The *tweak* must be the same
+      value that was used during encryption.
+
+.. literalinclude:: ../../src/examples/fpe_ff1.cpp
+   :language: cpp
+
+Encrypting integers in an arbitrary range
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+FF1 directly handles any set of inputs whose size is a power of the radix, which
+covers the common cases such as strings of digits or letters. Occasionally it is
+necessary to instead encrypt integers in the range [0,n) for some *n* which is
+not of this form, for example an index into a list of 50000 words. This can be
+done on top of FF1 using a technique called *cycle walking*:
+
+1. Choose a radix and length such that there are at least *n* possible numeral
+   strings. Ideally the number of such strings should not be much larger than
+   *n*; using radix 2 ensures it is less than twice *n*.
+
+2. To encrypt *x*, convert it to a numeral string and encrypt it with FF1, then
+   convert the result back to an integer.
+
+3. If the result is less than *n*, it is the ciphertext. Otherwise encrypt the
+   result again, repeating until a value less than *n* is produced.
+
+Decryption is identical, except using FF1 decryption in each step. The same
+tweak is used for every step.
+
+This always terminates, and the expected number of FF1 operations is the number
+of possible numeral strings divided by *n*. Note that the number of steps, and
+so the time taken, varies depending on the input.
+
+The requirement for a sufficiently large number of possible inputs applies to
+*n* itself; a small range does not become safe to encrypt by embedding it in a
+larger one.
+
+FE1
+----------------------------------------
+
+FE1 is described in the paper `Format Preserving Encryption
 <https://eprint.iacr.org/2009/251>`_ by Mihir Bellare, Thomas
-Ristenpart, Phillip Rogaway, and Till Stegers. FPE is an area of
-ongoing standardization and it is likely that other schemes will be
-included in the future.
+Ristenpart, Phillip Rogaway, and Till Stegers.
 
 To encrypt an arbitrary value using FE1, you need to use a ranking
 method. Basically, the idea is to assign an integer to every value you
