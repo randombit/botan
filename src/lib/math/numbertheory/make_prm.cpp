@@ -366,8 +366,11 @@ BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits) {
       /*
       Generate q == 2 (mod 3), since otherwise [in the case of q == 1 (mod 3)],
       2*q+1 == 3 (mod 3) and so certainly not prime.
+
+      Also generate q == 3 (mod 4), so that p == 7 (mod 8) and thus 2 is a
+      quadratic residue modulo p. Combined this is q == 11 (mod 12)
       */
-      q = random_prime_with_sieve(rng, bits - 1, BigInt::zero(), 2, 3, error_bound, true);
+      q = random_prime_with_sieve(rng, bits - 1, BigInt::zero(), 11, 12, error_bound, true);
       p = (q << 1) + 1;
 
       if(is_prime(p, rng, error_bound, true)) {

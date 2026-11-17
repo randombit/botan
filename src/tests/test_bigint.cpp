@@ -174,6 +174,7 @@ class BigInt_Unit_Tests final : public Test {
          result.test_sz_eq("Safe prime size", safe_prime.bits(), safe_prime_bits);
          result.test_is_true("P is prime", Botan::is_prime(safe_prime, *rng));
          result.test_is_true("(P-1)/2 is prime", Botan::is_prime((safe_prime - 1) / 2, *rng));
+         result.test_sz_eq("Safe prime is 7 mod 8", safe_prime % 8, 7);
 
          for(const size_t modulo : {3, 5, 7, 11}) {
             const size_t equiv = (modulo - 1) / 2;
