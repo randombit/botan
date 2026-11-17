@@ -243,6 +243,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         # Workaround for https://github.com/actions/runner-images/issues/10004
         flags += ['--extra-cxxflags=/D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR']
 
+        # Workaround for https://github.com/microsoft/STL/issues/6291
+        flags += ['--extra-cxxflags=/D_DISABLE_OPTIONAL_ANNOTATION']
+
     if target in ['minimized']:
         flags += ['--minimized-build', '--enable-modules=system_rng,sha2*,aes']
 
