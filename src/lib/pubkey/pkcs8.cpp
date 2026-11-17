@@ -174,7 +174,7 @@ std::vector<uint8_t> BER_encode(const Private_Key& key,
    const auto pbe_params = choose_pbe_params(pbe_algo, key.algo_name());
 
    const std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbe_info =
-      pbes2_encrypt_msec(PKCS8::BER_encode(key), pass, msec, nullptr, pbe_params.first, pbe_params.second, rng);
+      pbes2_encrypt_msec(PKCS8::BER_encode(key), pass, msec, nullptr, pbe_params.first, pbe_params.second, rng, true);
 
    std::vector<uint8_t> output;
    DER_Encoder der(output);
@@ -218,7 +218,8 @@ std::vector<uint8_t> BER_encode_encrypted_pbkdf_iter(const Private_Key& key,
                          pbkdf_iterations,
                          cipher.empty() ? "AES-256/CBC" : cipher,
                          pbkdf_hash.empty() ? "SHA-256" : pbkdf_hash,
-                         rng);
+                         rng,
+                         true);
 
    std::vector<uint8_t> output;
    DER_Encoder der(output);
@@ -263,7 +264,8 @@ std::vector<uint8_t> BER_encode_encrypted_pbkdf_msec(const Private_Key& key,
                          pbkdf_iterations,
                          cipher.empty() ? "AES-256/CBC" : cipher,
                          pbkdf_hash.empty() ? "SHA-256" : pbkdf_hash,
-                         rng);
+                         rng,
+                         true);
 
    std::vector<uint8_t> output;
    DER_Encoder(output)
