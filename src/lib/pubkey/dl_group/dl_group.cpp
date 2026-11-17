@@ -13,6 +13,7 @@
 #include <botan/pem.h>
 #include <botan/internal/barrett.h>
 #include <botan/internal/divide.h>
+#include <botan/internal/dl_group_data.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mod_inv.h>
 #include <botan/internal/monty.h>
@@ -59,6 +60,23 @@ BigInt sqr_mod(const Montgomery_Params& monty, const BigInt& x) {
    return z;
 }
 
+// For multiply_mod_q and square_mod_q when q has no Montgomery parameters
+BigInt mul_mod_ct_modulo(const BigInt& m, const BigInt& x, const BigInt& y) {
+   BOTAN_ARG_CHECK(x.signum() >= 0 && x.is_less_than(m), "Invalid x param for modular multiply");
+   BOTAN_ARG_CHECK(y.signum() >= 0 && y.is_less_than(m), "Invalid y param for modular multiply");
+   return ct_modulo(x * y, m);
+}
+
+// TODO(DSA) remove this once DSA is removed
+std::optional<Montgomery_Params> dsa_monty_params_q(const BigInt& q, const Barrett_Reduction& mod_q) {
+   // Only DSA needs fast arithmetic modulo q, and it requires q of at most 256 bits
+   if(q.bits() <= 256) {
+      return Montgomery_Params(q, mod_q);
+   } else {
+      return std::nullopt;
+   }
+}
+
 void check_dl_group_params(const BigInt& p, const BigInt& q, const BigInt& g) {
    check_dl_group_params(p, g);
    if(q < 3 || q.is_even() || q.bits() >= p.bits()) {
@@ -68,132 +86,75 @@ void check_dl_group_params(const BigInt& p, const BigInt& q, const BigInt& g) {
 
 }  // namespace
 
-class DL_Group_Data final {
-   public:
-      static std::shared_ptr<DL_Group_Data> create(const BigInt& p,
-                                                   const BigInt& q,
-                                                   const BigInt& g,
-                                                   DL_Group_Source source) {
-         check_dl_group_params(p, q, g);
-         return std::make_shared<DL_Group_Data>(p, q, g, source);
-      }
+//static
+std::shared_ptr<DL_Group_Data> DL_Group_Data::create(const BigInt& p,
+                                                     const BigInt& q,
+                                                     const BigInt& g,
+                                                     DL_Group_Source source) {
+   check_dl_group_params(p, q, g);
+   return std::make_shared<DL_Group_Data>(p, q, g, source);
+}
 
-      static std::shared_ptr<DL_Group_Data> create(const BigInt& p, const BigInt& g, DL_Group_Source source) {
-         check_dl_group_params(p, g);
-         return std::make_shared<DL_Group_Data>(p, g, source);
-      }
+//static
+std::shared_ptr<DL_Group_Data> DL_Group_Data::create(const BigInt& p, const BigInt& g, DL_Group_Source source) {
+   check_dl_group_params(p, g);
+   return std::make_shared<DL_Group_Data>(p, g, source);
+}
 
-      // This constructor is public because C++ is terrible but all DL_Group_Data should
-      // be created via DL_Group_Data::create
-      DL_Group_Data(const BigInt& p, const BigInt& q, const BigInt& g, DL_Group_Source source) :
-            m_p(p),
-            m_q(q),
-            m_g(g),
-            m_mod_p(Barrett_Reduction::for_public_modulus(p)),
-            m_mod_q(Barrett_Reduction::for_public_modulus(q)),
-            m_monty_params(m_p, m_mod_p),
-            m_monty_q(Montgomery_Params(m_q, *m_mod_q)),
-            m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
-            m_p_bits(p.bits()),
-            m_q_bits(q.bits()),
-            // For DL crypto in a prime-order subgroup, security is bounded by
-            // both the NFS cost in Z_p* and Pollard rho in the q-order subgroup.
-            m_estimated_strength(std::min(dl_work_factor(m_p_bits), m_q_bits / 2)),
-            m_exponent_bits(dl_exponent_size(m_p_bits)),
-            m_source(source) {}
+DL_Group_Data::DL_Group_Data(const BigInt& p, const BigInt& q, const BigInt& g, DL_Group_Source source) :
+      m_p(p),
+      m_q(q),
+      m_g(g),
+      m_mod_p(Barrett_Reduction::for_public_modulus(p)),
+      m_mod_q(Barrett_Reduction::for_public_modulus(q)),
+      m_monty_params(m_p, m_mod_p),
+      m_monty_q(dsa_monty_params_q(m_q, *m_mod_q)),
+      m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
+      m_p_bits(p.bits()),
+      m_q_bits(q.bits()),
+      // For DL crypto in a prime-order subgroup, security is bounded by
+      // both the NFS cost in Z_p* and Pollard rho in the q-order subgroup.
+      m_estimated_strength(std::min(dl_work_factor(m_p_bits), m_q_bits / 2)),
+      m_exponent_bits(dl_exponent_size(m_p_bits)),
+      m_source(source) {}
 
-      // This constructor is public because C++ is terrible but all DL_Group_Data should
-      // be created via DL_Group_Data::create
-      DL_Group_Data(const BigInt& p, const BigInt& g, DL_Group_Source source) :
-            m_p(p),
-            m_g(g),
-            m_mod_p(Barrett_Reduction::for_public_modulus(p)),
-            m_monty_params(m_p, m_mod_p),
-            m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
-            m_p_bits(p.bits()),
-            m_q_bits(0),
-            m_estimated_strength(dl_work_factor(m_p_bits)),
-            m_exponent_bits(dl_exponent_size(m_p_bits)),
-            m_source(source) {}
+DL_Group_Data::DL_Group_Data(const BigInt& p, const BigInt& g, DL_Group_Source source) :
+      m_p(p),
+      m_g(g),
+      m_mod_p(Barrett_Reduction::for_public_modulus(p)),
+      m_monty_params(m_p, m_mod_p),
+      m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
+      m_p_bits(p.bits()),
+      m_q_bits(0),
+      m_estimated_strength(dl_work_factor(m_p_bits)),
+      m_exponent_bits(dl_exponent_size(m_p_bits)),
+      m_source(source) {}
 
-      ~DL_Group_Data() = default;
+Montgomery_Int DL_Group_Data::monty_power_g_p(const BigInt& k, size_t max_k_bits) const {
+   return monty_execute(*m_monty, k, max_k_bits);
+}
 
-      DL_Group_Data(const DL_Group_Data& other) = delete;
-      DL_Group_Data(DL_Group_Data&& other) = delete;
-      DL_Group_Data& operator=(const DL_Group_Data& other) = delete;
-      DL_Group_Data& operator=(DL_Group_Data&& other) = delete;
+BigInt DL_Group_Data::power_g_p(const BigInt& k, size_t max_k_bits) const {
+   return monty_power_g_p(k, max_k_bits).value();
+}
 
-      const BigInt& p() const { return m_p; }
+BigInt DL_Group_Data::power_g_p_vartime(const BigInt& k) const {
+   return monty_execute_vartime(*m_monty, k).value();
+}
 
-      const BigInt& q() const { return m_q; }
+BigInt DL_Group_Data::power_b_p(const BigInt& b, const BigInt& k, size_t max_k_bits) const {
+   return monty_exp(m_monty_params, b, k, max_k_bits).value();
+}
 
-      const BigInt& g() const { return m_g; }
+BigInt DL_Group_Data::power_b_p_vartime(const BigInt& b, const BigInt& k) const {
+   return monty_exp_vartime(m_monty_params, b, k).value();
+}
 
-      const Barrett_Reduction& reducer_mod_p() const { return m_mod_p; }
-
-      const Barrett_Reduction& reducer_mod_q() const {
-         BOTAN_STATE_CHECK(m_mod_q);
-         return *m_mod_q;
-      }
-
-      const Montgomery_Params& monty_params_p() const { return m_monty_params; }
-
-      const Montgomery_Params& monty_params_q() const {
-         BOTAN_STATE_CHECK(m_monty_q);
-         return *m_monty_q;
-      }
-
-      size_t p_bits() const { return m_p_bits; }
-
-      size_t q_bits() const { return m_q_bits; }
-
-      size_t p_bytes() const { return (m_p_bits + 7) / 8; }
-
-      size_t q_bytes() const { return (m_q_bits + 7) / 8; }
-
-      size_t estimated_strength() const { return m_estimated_strength; }
-
-      size_t exponent_bits() const { return m_exponent_bits; }
-
-      BigInt power_g_p(const BigInt& k, size_t max_k_bits) const {
-         return monty_execute(*m_monty, k, max_k_bits).value();
-      }
-
-      BigInt power_g_p_vartime(const BigInt& k) const { return monty_execute_vartime(*m_monty, k).value(); }
-
-      BigInt power_b_p(const BigInt& b, const BigInt& k, size_t max_k_bits) const {
-         return monty_exp(m_monty_params, b, k, max_k_bits).value();
-      }
-
-      BigInt power_b_p_vartime(const BigInt& b, const BigInt& k) const {
-         return monty_exp_vartime(m_monty_params, b, k).value();
-      }
-
-      bool q_is_set() const { return m_q_bits > 0; }
-
-      void assert_q_is_set(std::string_view function) const {
-         if(!q_is_set()) {
-            throw Invalid_State(fmt("DL_Group::{}: q is not set for this group", function));
-         }
-      }
-
-      DL_Group_Source source() const { return m_source; }
-
-   private:
-      BigInt m_p;
-      BigInt m_q;  // zero if no q set
-      BigInt m_g;
-      Barrett_Reduction m_mod_p;
-      std::optional<Barrett_Reduction> m_mod_q;
-      Montgomery_Params m_monty_params;
-      std::optional<Montgomery_Params> m_monty_q;
-      std::shared_ptr<const Montgomery_Exponentiation_State> m_monty;
-      size_t m_p_bits;
-      size_t m_q_bits;
-      size_t m_estimated_strength;
-      size_t m_exponent_bits;
-      DL_Group_Source m_source;
-};
+void DL_Group_Data::assert_q_is_set(std::string_view function) const {
+   if(!q_is_set()) {
+      throw Invalid_State(fmt("DL_Group::{}: q is not set for this group", function));
+   }
+}
 
 //static
 std::shared_ptr<DL_Group_Data> DL_Group::DER_decode_DL_group(const std::span<const uint8_t> data,
@@ -449,6 +410,14 @@ const DL_Group_Data& DL_Group::data() const {
    throw Invalid_State("DL_Group uninitialized");
 }
 
+const std::shared_ptr<const DL_Group_Data>& DL_Group::_data() const {
+   if(m_data) {
+      return m_data;
+   }
+
+   throw Invalid_State("DL_Group uninitialized");
+}
+
 bool DL_Group::verify_public_element(const BigInt& y) const {
    const BigInt& p = get_p();
    const BigInt& q = get_q();
@@ -633,7 +602,11 @@ BigInt DL_Group::mod_q(const BigInt& x) const {
 
 BigInt DL_Group::multiply_mod_q(const BigInt& x, const BigInt& y) const {
    data().assert_q_is_set("multiply_mod_q");
-   return mul_mod(data().monty_params_q(), x, y);
+   if(data().has_monty_params_q()) {
+      return mul_mod(data().monty_params_q(), x, y);
+   } else {
+      return mul_mod_ct_modulo(get_q(), x, y);
+   }
 }
 
 BigInt DL_Group::multiply_mod_q(const BigInt& x, const BigInt& y, const BigInt& z) const {
@@ -643,11 +616,19 @@ BigInt DL_Group::multiply_mod_q(const BigInt& x, const BigInt& y, const BigInt& 
 
 BigInt DL_Group::square_mod_q(const BigInt& x) const {
    data().assert_q_is_set("square_mod_q");
-   return sqr_mod(data().monty_params_q(), x);
+   if(data().has_monty_params_q()) {
+      return sqr_mod(data().monty_params_q(), x);
+   } else {
+      return mul_mod_ct_modulo(get_q(), x, x);
+   }
 }
 
 BigInt DL_Group::multi_exponentiate(const BigInt& x, const BigInt& y, const BigInt& z) const {
    return monty_multi_exp(data().monty_params_p(), get_g(), x, y, z).value();
+}
+
+BigInt DL_Group::power_g_p(const BigInt& x) const {
+   return power_g_p(x, x.bits());
 }
 
 BigInt DL_Group::power_g_p(const BigInt& x, size_t max_x_bits) const {

@@ -131,10 +131,38 @@ class Diffie_Hellman_Keygen_Tests final : public PK_Key_Generation_Test {
       }
 };
 
+class DH_Repeated_Agreement_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("DH repeated key agreement");
+
+         const auto group = Botan::DL_Group::from_name("modp/ietf/1024");
+         const Botan::DH_PrivateKey key(rng(), group);
+
+         std::vector<std::pair<std::vector<uint8_t>, Botan::SymmetricKey>> peers;
+         for(size_t i = 0; i != 3; ++i) {
+            const Botan::DH_PrivateKey peer(rng(), group);
+            const Botan::PK_Key_Agreement peer_ka(peer, rng(), "Raw");
+            peers.emplace_back(peer.public_value(), peer_ka.derive_key(0, key.public_value()));
+         }
+
+         const Botan::PK_Key_Agreement ka(key, rng(), "Raw");
+
+         // Enough agreements with one operation that the blinding is refreshed
+         for(size_t i = 0; i != 150; ++i) {
+            const auto& [peer_pub, expected] = peers[i % peers.size()];
+            result.test_bin_eq("agreement", ka.derive_key(0, peer_pub).bits_of(), expected.bits_of());
+         }
+
+         return {result};
+      }
+};
+
 BOTAN_REGISTER_TEST("pubkey", "dh_kat", Diffie_Hellman_KAT_Tests);
 BOTAN_REGISTER_TEST("pubkey", "dh_invalid", DH_Invalid_Key_Tests);
 
 BOTAN_REGISTER_TEST("pubkey", "dh_keygen", Diffie_Hellman_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "dh_repeated_agreement", DH_Repeated_Agreement_Tests);
 
 #endif
 

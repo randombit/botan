@@ -17,3 +17,9 @@ pem
 <header:public>
 dl_group.h
 </header:public>
+
+<header:internal>
+dl_element.h
+dl_group_data.h
+dl_scalar.h
+</header:internal>

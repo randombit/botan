@@ -10,6 +10,9 @@
    #include <botan/dl_group.h>
    #include <botan/exceptn.h>
    #include <botan/hex.h>
+   #include <botan/rng.h>
+   #include <botan/internal/dl_element.h>
+   #include <botan/internal/dl_scalar.h>
    #include <botan/internal/workfactor.h>
 #endif
 
@@ -26,11 +29,41 @@ class DL_Group_Tests final : public Test {
 
          results.push_back(test_dl_encoding());
          results.push_back(test_dl_errors());
+         results.push_back(test_mod_q_arithmetic());
 
          return results;
       }
 
    private:
+      // These are deprecated, but have separate code paths for small and large q
+      Test::Result test_mod_q_arithmetic() {
+         Test::Result result("DL_Group mod q arithmetic");
+
+         for(const auto& name : {"dsa/jce/1024", "ffdhe/ietf/2048"}) {
+            const auto group = Botan::DL_Group::from_name(name);
+            const Botan::BigInt& q = group.get_q();
+
+            std::vector<Botan::BigInt> values = {Botan::BigInt::zero(), Botan::BigInt::one(), q - 1};
+            for(size_t i = 0; i != 4; ++i) {
+               values.push_back(Botan::BigInt::random_integer(rng(), Botan::BigInt::zero(), q));
+            }
+
+            for(const auto& x : values) {
+               result.test_bn_eq("square_mod_q", group.square_mod_q(x), (x * x) % q);
+               for(const auto& y : values) {
+                  result.test_bn_eq("multiply_mod_q", group.multiply_mod_q(x, y), (x * y) % q);
+                  result.test_bn_eq("multiply_mod_q 3 arg", group.multiply_mod_q(x, y, x), (x * y * x) % q);
+               }
+            }
+
+            result.test_throws<Botan::Invalid_Argument>("multiply_mod_q rejects q",
+                                                        [&]() { group.multiply_mod_q(q, Botan::BigInt::one()); });
+            result.test_throws<Botan::Invalid_Argument>("square_mod_q rejects q", [&]() { group.square_mod_q(q); });
+         }
+
+         return result;
+      }
+
       static Test::Result test_dl_errors() {
          Test::Result result("DL_Group errors");
          result.test_throws("Uninitialized", "DL_Group uninitialized", []() {
@@ -79,6 +112,273 @@ class DL_Group_Tests final : public Test {
 };
 
 BOTAN_REGISTER_TEST("pubkey", "dl_group", DL_Group_Tests);
+
+class DL_Element_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         // Groups with and without q, including primes whose length is not a multiple of the word size
+         const std::vector<std::pair<std::string, Botan::DL_Group>> groups = {
+            {"modp/srp/1024", Botan::DL_Group::from_name("modp/srp/1024")},
+            {"dsa/jce/1024", Botan::DL_Group::from_name("dsa/jce/1024")},
+            {"modp/ietf/2048", Botan::DL_Group::from_name("modp/ietf/2048")},
+            {"ffdhe/ietf/3072", Botan::DL_Group::from_name("ffdhe/ietf/3072")},
+            {"2^127-1", Botan::DL_Group(Botan::BigInt::power_of_2(127) - 1, Botan::BigInt::from_word(3))},
+            {"2^61-1", Botan::DL_Group(Botan::BigInt::power_of_2(61) - 1, Botan::BigInt::from_word(37))},
+         };
+
+         std::vector<Test::Result> results;
+         results.reserve(groups.size() + 1);
+         for(const auto& [name, group] : groups) {
+            results.push_back(test_arithmetic(name, group));
+         }
+         results.push_back(test_errors(groups[0].second, groups[1].second));
+         return results;
+      }
+
+   private:
+      // Square and multiply using only BigInt arithmetic
+      static Botan::BigInt ref_pow(const Botan::BigInt& b, const Botan::BigInt& k, const Botan::BigInt& p) {
+         Botan::BigInt r = Botan::BigInt::one();
+         for(size_t i = k.bits(); i > 0; --i) {
+            r = (r * r) % p;
+            if(k.get_bit(i - 1)) {
+               r = (r * b) % p;
+            }
+         }
+         return r;
+      }
+
+      Test::Result test_arithmetic(const std::string& name, const Botan::DL_Group& group) {
+         Test::Result result("DL_Element " + name);
+
+         const Botan::BigInt& p = group.get_p();
+         const Botan::BigInt& g = group.get_g();
+         const size_t p_bytes = group.p_bytes();
+
+         std::vector<Botan::BigInt> values = {
+            Botan::BigInt::zero(), Botan::BigInt::one(), Botan::BigInt::from_word(2), p - 2, p - 1};
+         for(size_t i = 0; i != 6; ++i) {
+            values.push_back(Botan::BigInt::random_integer(rng(), Botan::BigInt::zero(), p));
+         }
+
+         const auto elem = [&](const Botan::BigInt& x) { return Botan::DL_Element::from_bigint(group, x); };
+
+         for(const auto& x : values) {
+            const auto ex = elem(x);
+
+            result.test_bn_eq("to_bigint", ex.to_bigint(), x);
+            result.test_bin_eq("serialize", ex.serialize(), x.serialize(p_bytes));
+            result.test_bn_eq("square", ex.square().to_bigint(), (x * x) % p);
+
+            if(x.is_nonzero()) {
+               result.test_bn_eq("invert", (ex.invert() * ex).to_bigint(), Botan::BigInt::one());
+            }
+
+            for(const auto& y : values) {
+               const auto ey = elem(y);
+               result.test_bn_eq("mul", (ex * ey).to_bigint(), (x * y) % p);
+               result.test_bn_eq("add", (ex + ey).to_bigint(), (x + y) % p);
+               result.test_bn_eq("sub", (ex - ey).to_bigint(), x >= y ? x - y : x + p - y);
+            }
+         }
+
+         for(const size_t k_bits : {0, 1, 2, 63, 64, 65, 200}) {
+            const Botan::BigInt k =
+               (k_bits == 0) ? Botan::BigInt::zero()
+                             : Botan::BigInt::random_integer(
+                                  rng(), Botan::BigInt::power_of_2(k_bits - 1), Botan::BigInt::power_of_2(k_bits));
+
+            // The bound may be larger than the exponent
+            for(const size_t max_k_bits : {k_bits, k_bits + 17}) {
+               result.test_bn_eq("g_pow", Botan::DL_Element::g_pow(group, k, max_k_bits).to_bigint(), ref_pow(g, k, p));
+
+               for(const auto& x : values) {
+                  result.test_bn_eq("pow", elem(x).pow(k, max_k_bits).to_bigint(), ref_pow(x, k, p));
+               }
+            }
+         }
+
+         for(size_t i = 0; i != 10; ++i) {
+            const auto r = Botan::DL_Element::random(group, rng()).to_bigint();
+            result.test_is_true("random in range", r > 0 && r < p);
+         }
+
+         return result;
+      }
+
+      static Test::Result test_errors(const Botan::DL_Group& group1, const Botan::DL_Group& group2) {
+         Test::Result result("DL_Element errors");
+
+         const Botan::BigInt& p = group1.get_p();
+
+         result.test_throws<Botan::Invalid_Argument>("p is out of range",
+                                                     [&]() { Botan::DL_Element::from_bigint(group1, p); });
+         result.test_throws<Botan::Invalid_Argument>(
+            "negative is out of range", [&]() { Botan::DL_Element::from_bigint(group1, Botan::BigInt::from_s32(-1)); });
+         result.test_throws<Botan::Invalid_Argument>(
+            "zero has no inverse", [&]() { Botan::DL_Element::from_bigint(group1, Botan::BigInt::zero()).invert(); });
+
+         const auto x = Botan::DL_Element::from_bigint(group1, Botan::BigInt::from_word(5));
+         const auto y = Botan::DL_Element::from_bigint(group2, Botan::BigInt::from_word(5));
+         result.test_throws<Botan::Invalid_Argument>("group mismatch", [&]() { x.mul(y); });
+
+         std::vector<uint8_t> short_buf(group1.p_bytes() - 1);
+         result.test_throws<Botan::Invalid_Argument>("short output", [&]() { x.serialize_to(short_buf); });
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "dl_element", DL_Element_Tests);
+
+class DL_Scalar_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         // q of 160 and 256 bits
+         const std::vector<std::string> groups = {
+            "dsa/jce/1024",
+            "dsa/botan/2048",
+            "dsa/botan/3072",
+         };
+
+         std::vector<Test::Result> results;
+         results.reserve(groups.size() + 1);
+         for(const auto& name : groups) {
+            results.push_back(test_arithmetic(name, Botan::DL_Group::from_name(name)));
+         }
+         results.push_back(test_errors());
+         return results;
+      }
+
+   private:
+      Test::Result test_arithmetic(const std::string& name, const Botan::DL_Group& group) {
+         Test::Result result("DL_Scalar " + name);
+
+         const Botan::BigInt& p = group.get_p();
+         const Botan::BigInt& q = group.get_q();
+         const size_t q_bytes = group.q_bytes();
+
+         std::vector<Botan::BigInt> values = {
+            Botan::BigInt::zero(), Botan::BigInt::one(), Botan::BigInt::from_word(2), q - 2, q - 1};
+         for(size_t i = 0; i != 6; ++i) {
+            values.push_back(Botan::BigInt::random_integer(rng(), Botan::BigInt::zero(), q));
+         }
+
+         const auto scalar = [&](const Botan::BigInt& x) { return Botan::DL_Scalar::from_bigint(group, x); };
+
+         for(const auto& x : values) {
+            const auto sx = scalar(x);
+
+            result.test_bn_eq("to_bigint", sx.to_bigint(), x);
+            result.test_bin_eq("serialize", sx.serialize(), x.serialize(q_bytes));
+            result.test_bn_eq("square", sx.square().to_bigint(), (x * x) % q);
+            result.test_is_true("is_zero", sx.is_zero() == x.is_zero());
+
+            const auto decoded = Botan::DL_Scalar::deserialize(group, x.serialize(q_bytes));
+            result.test_is_true("deserialize", decoded.has_value() && decoded.value() == sx);
+
+            if(x.is_nonzero()) {
+               result.test_bn_eq("invert", (sx.invert() * sx).to_bigint(), Botan::BigInt::one());
+            }
+
+            for(const auto& y : values) {
+               const auto sy = scalar(y);
+               result.test_bn_eq("mul", (sx * sy).to_bigint(), (x * y) % q);
+               result.test_bn_eq("add", (sx + sy).to_bigint(), (x + y) % q);
+               result.test_is_true("is_eq", (sx == sy) == (x == y));
+            }
+         }
+
+         // Exponentiations are checked against DL_Element and BigInt reduction
+         const auto ref_mod_q = [&](const Botan::DL_Element& e) { return e.to_bigint() % q; };
+
+         for(const auto& k : values) {
+            result.test_bn_eq("g_pow_mod_q",
+                              Botan::DL_Scalar::g_pow_mod_q(scalar(k)).to_bigint(),
+                              ref_mod_q(Botan::DL_Element::g_pow(group, k, group.q_bits())));
+         }
+
+         for(size_t i = 0; i != 4; ++i) {
+            const auto y = Botan::BigInt::random_integer(rng(), Botan::BigInt::one(), p);
+            const auto a = Botan::BigInt::random_integer(rng(), Botan::BigInt::zero(), q);
+            const auto b =
+               (i == 0) ? Botan::BigInt::zero() : Botan::BigInt::random_integer(rng(), Botan::BigInt::zero(), q);
+
+            const auto expected = ref_mod_q(Botan::DL_Element::g_pow(group, a, group.q_bits()) *
+                                            Botan::DL_Element::from_bigint(group, y).pow(b, group.q_bits()));
+
+            result.test_bn_eq("multi_exp_mod_q_vartime",
+                              Botan::DL_Scalar::multi_exp_mod_q_vartime(scalar(a), y, scalar(b)).to_bigint(),
+                              expected);
+         }
+
+         for(const size_t len : {size_t(1), q_bytes - 1, q_bytes, q_bytes + 1, size_t(64)}) {
+            const auto bytes = rng().random_vec(len);
+            Botan::BigInt expected = Botan::BigInt::from_bytes(bytes);
+            if(8 * len > group.q_bits()) {
+               expected >>= 8 * len - group.q_bits();
+            }
+            result.test_bn_eq("from_bytes_with_trunc",
+                              Botan::DL_Scalar::from_bytes_with_trunc(group, bytes).to_bigint(),
+                              expected % q);
+         }
+
+         // Also exercises the reduction of a truncated value which is >= q
+         const std::vector<uint8_t> all_ones(q_bytes + 3, 0xFF);
+         result.test_bn_eq("from_bytes_with_trunc max",
+                           Botan::DL_Scalar::from_bytes_with_trunc(group, all_ones).to_bigint(),
+                           (Botan::BigInt::power_of_2(group.q_bits()) - 1) % q);
+
+         result.test_is_true("deserialize rejects q", !Botan::DL_Scalar::deserialize(group, q.serialize(q_bytes)));
+         result.test_is_true("deserialize rejects short input",
+                             !Botan::DL_Scalar::deserialize(group, std::vector<uint8_t>(q_bytes - 1)));
+         result.test_is_true("deserialize rejects long input",
+                             !Botan::DL_Scalar::deserialize(group, std::vector<uint8_t>(q_bytes + 1)));
+
+         for(size_t i = 0; i != 10; ++i) {
+            const auto r = Botan::DL_Scalar::random(group, rng()).to_bigint();
+            result.test_is_true("random in range", r > 0 && r < q);
+         }
+
+         return result;
+      }
+
+      static Test::Result test_errors() {
+         Test::Result result("DL_Scalar errors");
+
+         const auto group1 = Botan::DL_Group::from_name("dsa/jce/1024");
+         const auto group2 = Botan::DL_Group::from_name("dsa/botan/2048");
+         const Botan::BigInt& q = group1.get_q();
+
+         result.test_throws<Botan::Invalid_Argument>("q is out of range",
+                                                     [&]() { Botan::DL_Scalar::from_bigint(group1, q); });
+         result.test_throws<Botan::Invalid_Argument>(
+            "negative is out of range", [&]() { Botan::DL_Scalar::from_bigint(group1, Botan::BigInt::from_s32(-1)); });
+         result.test_throws<Botan::Invalid_Argument>(
+            "zero has no inverse", [&]() { Botan::DL_Scalar::from_bigint(group1, Botan::BigInt::zero()).invert(); });
+
+         const auto x = Botan::DL_Scalar::from_bigint(group1, Botan::BigInt::from_word(5));
+         const auto y = Botan::DL_Scalar::from_bigint(group2, Botan::BigInt::from_word(5));
+         result.test_throws<Botan::Invalid_Argument>("group mismatch", [&]() { x.mul(y); });
+         result.test_throws<Botan::Invalid_Argument>("group mismatch in comparison",
+                                                     [&]() { static_cast<void>(x == y); });
+
+         std::vector<uint8_t> short_buf(group1.q_bytes() - 1);
+         result.test_throws<Botan::Invalid_Argument>("short output", [&]() { x.serialize_to(short_buf); });
+
+         const auto no_q = Botan::DL_Group::from_name("modp/srp/1024");
+         result.test_throws<Botan::Invalid_State>("group without q",
+                                                  [&]() { Botan::DL_Scalar::from_bigint(no_q, Botan::BigInt::one()); });
+
+         const auto large_q = Botan::DL_Group::from_name("ffdhe/ietf/2048");
+         result.test_throws<Botan::Invalid_State>(
+            "group with large q", [&]() { Botan::DL_Scalar::from_bigint(large_q, Botan::BigInt::one()); });
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "dl_scalar", DL_Scalar_Tests);
 
 class DL_Generate_Group_Tests final : public Test {
    public:

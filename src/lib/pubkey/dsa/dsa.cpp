@@ -12,7 +12,7 @@
 #include <botan/pk_options_readers.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
-#include <botan/internal/divide.h>
+#include <botan/internal/dl_scalar.h>
 #include <botan/internal/dl_scheme.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/pk_ops_impl.h>
@@ -164,16 +164,17 @@ class DSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
       DSA_Signature_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
                               const PK_Signature_Options_Reader& options,
                               RandomNumberGenerator& rng) :
-            PK_Ops::Signature_with_Hash(options), m_key(key), m_deterministic(options.using_deterministic_signature()) {
+            PK_Ops::Signature_with_Hash(options),
+            m_key(key),
+            m_x(DL_Scalar::from_bigint(m_key->group(), m_key->private_key())),
+            m_b(DL_Scalar::random(m_key->group(), rng)),
+            m_b_inv(m_b.invert()),
+            m_deterministic(options.using_deterministic_signature()) {
 #if !defined(BOTAN_HAS_RFC6979_GENERATOR)
          if(m_deterministic) {
             throw Not_Implemented("Deterministic DSA signatures require RFC 6979 support");
          }
 #endif
-         m_b = BigInt::random_integer(rng, BigInt::from_s32(2), m_key->group().get_q());
-         CT::poison(m_b);
-         m_b_inv = m_key->group().inverse_mod_q(m_b);
-         CT::unpoison_all(m_b, m_b_inv);
       }
 
       size_t signature_length() const override { return 2 * m_key->group().q_bytes(); }
@@ -184,8 +185,10 @@ class DSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
 
    private:
       std::shared_ptr<const DL_PrivateKey> m_key;
+      DL_Scalar m_x;
+      DL_Scalar m_b;
+      DL_Scalar m_b_inv;
       bool m_deterministic;
-      BigInt m_b, m_b_inv;
 };
 
 AlgorithmIdentifier DSA_Signature_Operation::algorithm_identifier() const {
@@ -196,47 +199,37 @@ AlgorithmIdentifier DSA_Signature_Operation::algorithm_identifier() const {
 
 std::vector<uint8_t> DSA_Signature_Operation::raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
    const DL_Group& group = m_key->group();
-   const BigInt& q = group.get_q();
 
-   BigInt m = BigInt::from_bytes_with_max_bits(msg.data(), msg.size(), group.q_bits());
+   const auto m = DL_Scalar::from_bytes_with_trunc(group, msg);
 
-   if(m >= q) {
-      m -= q;
-   }
+   const auto scope = CT::scoped_poison(m_key->private_key(), m_x, m_b, m_b_inv);
 
-   const auto scope = CT::scoped_poison(m_key->private_key(), m_b, m_b_inv);
-
+   const auto k = [&]() {
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-   const BigInt k = m_deterministic ? generate_rfc6979_nonce(m_key->private_key(), q, m, this->rfc6979_hash_function())
-                                    : BigInt::random_integer(rng, 1, q);
-#else
-   const BigInt k = BigInt::random_integer(rng, 1, q);
+      if(m_deterministic) {
+         return DL_Scalar::from_bigint(
+            group,
+            generate_rfc6979_nonce(m_key->private_key(), group.get_q(), m.to_bigint(), this->rfc6979_hash_function()));
+      }
 #endif
+      return DL_Scalar::random(group, rng);
+   }();
    CT::poison(k);
 
-   const BigInt k_inv = group.multiply_mod_q(group.inverse_mod_q(group.mod_q(m_b * k)), m_b);
+   const auto k_inv = (m_b * k).invert() * m_b;
 
-   /*
-   * It may not be strictly necessary for the reduction (g^k mod p) mod q to be
-   * const time, since r is published as part of the signature, and deriving
-   * anything useful about k from g^k mod p would seem to require computing a
-   * discrete logarithm.
-   *
-   * However it only increases the cost of signatures by about 7-10%, and DSA is
-   * only for legacy use anyway so we don't care about the performance so much.
-   */
-   const BigInt r = ct_modulo(group.power_g_p(k, group.q_bits()), group.get_q());
+   const auto r = DL_Scalar::g_pow_mod_q(k);
 
    /*
    * Blind the input message and compute x*r+m as (x*r*b + m*b)/b
    */
-   m_b = group.square_mod_q(m_b);
-   m_b_inv = group.square_mod_q(m_b_inv);
+   m_b = m_b.square();
+   m_b_inv = m_b_inv.square();
 
-   m = group.multiply_mod_q(m_b, m);
-   const BigInt xr = group.multiply_mod_q(m_b, m_key->private_key(), r);
+   const auto mb = m_b * m;
+   const auto xrb = m_b * m_x * r;
 
-   const BigInt s = group.multiply_mod_q(m_b_inv, k_inv, group.mod_q(xr + m));
+   const auto s = m_b_inv * k_inv * (xrb + mb);
 
    CT::unpoison_all(r, s);
 
@@ -245,7 +238,7 @@ std::vector<uint8_t> DSA_Signature_Operation::raw_sign(std::span<const uint8_t> 
       throw Internal_Error("Computed zero r/s during DSA signature");
    }
 
-   const size_t q_bytes = q.bytes();
+   const size_t q_bytes = group.q_bytes();
    std::vector<uint8_t> sig(2 * q_bytes);
    BufferStuffer stuffer(sig);
    r.serialize_to(stuffer.next(q_bytes));
@@ -272,41 +265,28 @@ class DSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
 };
 
 bool DSA_Verification_Operation::verify(std::span<const uint8_t> input, std::span<const uint8_t> sig) {
-   const auto group = m_key->group();
+   const DL_Group& group = m_key->group();
 
-   const BigInt& q = group.get_q();
-   const size_t q_bytes = q.bytes();
+   const size_t q_bytes = group.q_bytes();
 
    if(sig.size() != 2 * q_bytes) {
       return false;
    }
 
-   const BigInt r(sig.first(q_bytes));
-   BigInt s(sig.last(q_bytes));
+   const auto r = DL_Scalar::deserialize(group, sig.first(q_bytes));
+   const auto s = DL_Scalar::deserialize(group, sig.last(q_bytes));
 
-   if(r == 0 || r >= q || s == 0 || s >= q) {
+   if(!r || !s || r->is_zero() || s->is_zero()) {
       return false;
    }
 
-   BigInt i = BigInt::from_bytes_with_max_bits(input.data(), input.size(), group.q_bits());
-   if(i >= q) {
-      i -= q;
-   }
+   const auto i = DL_Scalar::from_bytes_with_trunc(group, input);
 
-   s = group.inverse_mod_q(s);
+   const auto w = s->invert();
 
-   // Since we already checked for s == 0 above this shouldn't happen
-   if(s.is_zero()) {
-      return false;
-   }
+   const auto v = DL_Scalar::multi_exp_mod_q_vartime(w * i, m_key->public_key(), w * (*r));
 
-   const BigInt sr = group.multiply_mod_q(s, r);
-   const BigInt si = group.multiply_mod_q(s, i);
-
-   s = group.multi_exponentiate(si, m_key->public_key(), sr);
-
-   // s is too big for Barrett, and verification doesn't need to be const-time
-   return (s % group.get_q() == r);
+   return (v == *r);
 }
 
 }  // namespace

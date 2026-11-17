@@ -7,12 +7,11 @@
 
 #include <botan/elgamal.h>
 
-#include <botan/internal/blinding.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/dl_element.h>
 #include <botan/internal/dl_scheme.h>
 #include <botan/internal/keypair.h>
-#include <botan/internal/monty_exp.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/pk_options_impl.h>
 
@@ -116,10 +115,9 @@ class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_Paddin
    public:
       ElGamal_Encryption_Operation(const std::shared_ptr<const DL_PublicKey>& key,
                                    const PK_Encryption_Options_Reader& options) :
-            PK_Ops::Encryption_with_Padding(options), m_key(key) {
-         const size_t powm_window = 4;
-         m_monty_y_p = monty_precompute(m_key->group()._monty_params_p(), m_key->public_key(), powm_window);
-      }
+            PK_Ops::Encryption_with_Padding(options),
+            m_key(key),
+            m_y(DL_Element::from_bigint(m_key->group(), m_key->public_key())) {}
 
       size_t ciphertext_length(size_t /*ptext_len*/) const override { return 2 * m_key->group().p_bytes(); }
 
@@ -129,7 +127,7 @@ class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_Paddin
 
    private:
       std::shared_ptr<const DL_PublicKey> m_key;
-      std::shared_ptr<const Montgomery_Exponentiation_State> m_monty_y_p;
+      DL_Element m_y;
 };
 
 std::vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(std::span<const uint8_t> ptext,
@@ -153,10 +151,11 @@ std::vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(std::span<const u
    const size_t k_bits = group.p_bits() - 1;
    const BigInt k(rng, k_bits, false);
 
-   const auto scope = CT::scoped_poison(m, k);
+   const auto m_e = DL_Element::from_bigint(group, m);
+   const auto scope = CT::scoped_poison(m_e, k);
 
-   const BigInt a = group.power_g_p(k, k_bits);
-   const BigInt b = group.multiply_mod_p(m, monty_execute(*m_monty_y_p, k, k_bits).value());
+   const auto a = DL_Element::g_pow(group, k, k_bits);
+   const auto b = m_e * m_y.pow(k, k_bits);
    CT::unpoison_all(a, b);
 
    const size_t p_bytes = group.p_bytes();
@@ -177,11 +176,7 @@ class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_Paddin
                                    RandomNumberGenerator& rng) :
             PK_Ops::Decryption_with_Padding(options),
             m_key(key),
-            m_blinder(
-               m_key->group()._monty_params_p(),
-               rng,
-               [](const BigInt& k) { return k; },
-               [this](const BigInt& k) { return powermod_x_p(k); }) {}
+            m_powermod_x(key, DL_PrivateKey_Exponentiation::Output::InversePower, rng) {}
 
       size_t plaintext_length(size_t /*ctext_len*/) const override { return m_key->group().p_bytes(); }
 
@@ -190,12 +185,8 @@ class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_Paddin
       secure_vector<uint8_t> raw_decrypt(std::span<const uint8_t> ctext) override;
 
    private:
-      BigInt powermod_x_p(const BigInt& v) const {
-         return m_key->group().power_b_p(v, m_key->private_key(), m_key->max_private_key_bits());
-      }
-
       std::shared_ptr<const DL_PrivateKey> m_key;
-      Blinder m_blinder;
+      DL_PrivateKey_Exponentiation m_powermod_x;
 };
 
 secure_vector<uint8_t> ElGamal_Decryption_Operation::raw_decrypt(std::span<const uint8_t> ctext) {
@@ -207,7 +198,7 @@ secure_vector<uint8_t> ElGamal_Decryption_Operation::raw_decrypt(std::span<const
       throw Invalid_Argument("ElGamal decryption: Invalid message");
    }
 
-   BigInt a(ctext.first(p_bytes));
+   const BigInt a(ctext.first(p_bytes));
    const BigInt b(ctext.last(p_bytes));
 
    if(!group.verify_public_element(a)) {
@@ -218,17 +209,15 @@ secure_vector<uint8_t> ElGamal_Decryption_Operation::raw_decrypt(std::span<const
       throw Invalid_Argument("ElGamal decryption: Invalid message");
    }
 
-   const auto scope = CT::scoped_poison(m_key->private_key(), m_blinder);
+   const auto scope = CT::scoped_poison(m_key->private_key(), m_powermod_x);
 
-   a = m_blinder.blind(a);
-
-   const BigInt r = group.multiply_mod_p(group.inverse_mod_p(powermod_x_p(a)), b);
+   // b * a^-x
+   const auto ptext = m_powermod_x.pow(DL_Element::from_bigint(group, a)) * DL_Element::from_bigint(group, b);
 
    // Any further secret handling of the output is up to the caller
-   const BigInt ptext = m_blinder.unblind(r);
    CT::unpoison(ptext);
 
-   return ptext.serialize<secure_vector<uint8_t>>(p_bytes);
+   return ptext.serialize<secure_vector<uint8_t>>();
 }
 
 }  // namespace
