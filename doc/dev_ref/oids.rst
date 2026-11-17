@@ -130,3 +130,8 @@ Values currently assigned are::
   -- and are not included in oids.txt
   sm2test     OBJECT IDENTIFIER ::= { ellipticCurve 5459250 }
   iso18003    OBJECT IDENTIFIER ::= { ellipticCurve 18003 }
+
+  privateKeyAttributes OBJECT IDENTIFIER ::= { randombit 5 }
+
+  -- See "Authenticating CBC Encrypted Keys" in doc/api_ref/pubkey.rst
+  pkcs8-mac OBJECT IDENTIFIER ::= { privateKeyAttributes 1 }
