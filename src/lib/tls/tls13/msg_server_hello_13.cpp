@@ -96,7 +96,7 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
 
 std::variant<Hello_Retry_Request, Server_Hello_13, Server_Hello_12_Shim> Server_Hello_13::parse(
    std::span<const uint8_t> buf, TLS_Flavor flavor) {
-   auto data = std::make_unique<Server_Hello_Internal>(buf);
+   auto data = std::make_unique<Server_Hello_Internal>(buf, flavor);
 
    // RFC 8446 4.1.3
    //    Upon receiving a message with type server_hello, implementations MUST

@@ -154,7 +154,7 @@ class BOTAN_UNSTABLE_API Client_Hello : public Handshake_Message {
  */
 class BOTAN_UNSTABLE_API Client_Hello_12_Shim : public Client_Hello {
    public:
-      explicit Client_Hello_12_Shim(std::span<const uint8_t> buf);
+      explicit Client_Hello_12_Shim(std::span<const uint8_t> buf, TLS_Flavor flavor);
 
    protected:
       using Client_Hello::Client_Hello;
@@ -213,7 +213,7 @@ class BOTAN_UNSTABLE_API Server_Hello : public Handshake_Message {
  */
 class BOTAN_UNSTABLE_API Server_Hello_12_Shim : public Server_Hello {
    public:
-      explicit Server_Hello_12_Shim(std::span<const uint8_t> buf);
+      explicit Server_Hello_12_Shim(std::span<const uint8_t> buf, TLS_Flavor flavor);
 
    protected:
       friend class Server_Hello_13;  // to allow construction by Server_Hello_13::parse()

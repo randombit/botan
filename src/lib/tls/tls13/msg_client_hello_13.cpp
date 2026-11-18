@@ -312,8 +312,9 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    }
 }
 
-std::variant<Client_Hello_13, Client_Hello_12_Shim> Client_Hello_13::parse(std::span<const uint8_t> buf) {
-   auto data = std::make_unique<Client_Hello_Internal>(buf);
+std::variant<Client_Hello_13, Client_Hello_12_Shim> Client_Hello_13::parse(std::span<const uint8_t> buf,
+                                                                           TLS_Flavor flavor) {
+   auto data = std::make_unique<Client_Hello_Internal>(buf, flavor);
    const auto version = data->version();
 
    if(version.is_pre_tls_13()) {

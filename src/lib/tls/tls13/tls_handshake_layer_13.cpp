@@ -41,7 +41,7 @@ Handshake_Message_13 Handshake_Layer::parse_handshake_message(Handshake_Type typ
       // from non-TLS 1.3 peers. Hence, their parsing is somewhat different.
       case Handshake_Type::ClientHello:
          // ... might be TLS 1.2 Client Hello or TLS 1.3 Client Hello
-         return generalize_to<Handshake_Message_13>(Client_Hello_13::parse(msg));
+         return generalize_to<Handshake_Message_13>(Client_Hello_13::parse(msg, tls_flavor()));
       case Handshake_Type::ServerHello:
          // ... might be TLS 1.2 Server Hello or TLS 1.3 Server Hello or
          // a TLS 1.3 Hello Retry Request disguising as a Server Hello

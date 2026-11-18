@@ -526,7 +526,7 @@ void Server_Impl_12::process_client_hello_msg(Server_Handshake_State& pending_st
       throw TLS_Exception(Alert::UnexpectedMessage, "Have data remaining in buffer after ClientHello");
    }
 
-   pending_state.client_hello(std::make_unique<Client_Hello_12>(contents));
+   pending_state.client_hello(std::make_unique<Client_Hello_12>(contents, flavor()));
    const Protocol_Version client_offer = pending_state.client_hello().legacy_version();
    const bool datagram = client_offer.is_datagram_protocol();
 

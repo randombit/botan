@@ -43,7 +43,7 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello {
                       std::vector<ExternalPSK> psks,
                       TLS_Flavor flavor);
 
-      static std::variant<Client_Hello_13, Client_Hello_12_Shim> parse(std::span<const uint8_t> buf);
+      static std::variant<Client_Hello_13, Client_Hello_12_Shim> parse(std::span<const uint8_t> buf, TLS_Flavor flavor);
 
       void retry(const Hello_Retry_Request& hrr,
                  const Transcript_Hash_State& transcript_hash_state,

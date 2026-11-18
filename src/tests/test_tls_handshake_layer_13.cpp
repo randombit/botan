@@ -282,8 +282,8 @@ std::vector<Test::Result> test_prepare_message() {
    return {
       CHECK("prepare client hello",
             [&](auto& result) {
-               auto hello = std::get<Client_Hello_13>(
-                  Client_Hello_13::parse({client_hello_message.cbegin() + 4, client_hello_message.cend()}));
+               auto hello = std::get<Client_Hello_13>(Client_Hello_13::parse(
+                  {client_hello_message.cbegin() + 4, client_hello_message.cend()}, TLS_Flavor::TLS));
                const auto hl = TLS_Handshake_Layer(Connection_Side::Client);
                Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
                result.test_bin_eq("produces the same message", prepare_message(hello, th), client_hello_message);
@@ -311,8 +311,8 @@ std::vector<Test::Result> full_client_handshake() {
    return {
       CHECK("client hello",
             [&](auto& result) {
-               auto hello = std::get<Client_Hello_13>(
-                  Client_Hello_13::parse({client_hello_message.cbegin() + 4, client_hello_message.cend()}));
+               auto hello = std::get<Client_Hello_13>(Client_Hello_13::parse(
+                  {client_hello_message.cbegin() + 4, client_hello_message.cend()}, TLS_Flavor::TLS));
                prepare_message(hello, th);
                check_transcript_hash_empty(result, th);
             }),
@@ -384,8 +384,8 @@ std::vector<Test::Result> hello_retry_request_handshake() {
    return {
       CHECK("client hello 1",
             [&](auto& result) {
-               auto hello = std::get<Client_Hello_13>(
-                  Client_Hello_13::parse({hrr_client_hello_msg.cbegin() + 4, hrr_client_hello_msg.cend()}));
+               auto hello = std::get<Client_Hello_13>(Client_Hello_13::parse(
+                  {hrr_client_hello_msg.cbegin() + 4, hrr_client_hello_msg.cend()}, TLS_Flavor::TLS));
                const auto msg = prepare_message(hello, th);
                result.test_bin_eq("parsing and re-marshalling produces same message", msg, hrr_client_hello_msg);
                check_transcript_hash_empty(result, th);

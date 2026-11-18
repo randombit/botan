@@ -123,11 +123,11 @@ class TLS_Client_Hello_Reader final : public Command {
 
          try {
             output() << format_hello([&]() -> std::variant<Botan::TLS::Client_Hello_13, Botan::TLS::Client_Hello_12> {
-               auto data = Botan::TLS::Client_Hello_13::parse(input);
+               auto data = Botan::TLS::Client_Hello_13::parse(input, Botan::TLS::TLS_Flavor::TLS);
                if(std::holds_alternative<Botan::TLS::Client_Hello_13>(data)) {
                   return std::get<Botan::TLS::Client_Hello_13>(std::move(data));
                } else {
-                  return Botan::TLS::Client_Hello_12(input);
+                  return Botan::TLS::Client_Hello_12(input, Botan::TLS::TLS_Flavor::TLS);
                }
             }());
          } catch(std::exception& e) {
