@@ -13,26 +13,23 @@
 #include <fstream>
 #include <iostream>
 #include <stdint.h>
-#include <stdlib.h>  // for setenv
+#include <stdlib.h>
 #include <vector>
+
+/*
+* Overwrites within the mlock pool are opaque to ASan or other instrumentation.
+* The pool is set up before main is entered, so it must be disabled in the build.
+*/
+#if defined(BOTAN_HAS_LOCKING_ALLOCATOR) && !defined(BOTAN_FUZZER_IS_TEST)
+   #error "Fuzzers must be built with --disable-modules=locking_allocator"
+#endif
 
 static constexpr size_t max_fuzzer_input_size = 8192;
 
 extern void fuzz(std::span<const uint8_t> in);
 
-// Need to declare these before defining them;
-extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv);
+// Need to declare this before defining it
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t in[], size_t len);
-
-// NOLINTNEXTLINE(*-definitions-in-headers)
-extern "C" int LLVMFuzzerInitialize(int* /*argc*/, char*** /*argv*/) {
-   /*
-   * This disables the mlock pool, as overwrites within the pool are
-   * opaque to ASan or other instrumentation.
-   */
-   ::setenv("BOTAN_MLOCK_POOL_SIZE", "0", 1);
-   return 0;
-}
 
 // Called by main() in libFuzzer or in main for AFL below
 // NOLINTNEXTLINE(*-definitions-in-headers)
@@ -124,9 +121,7 @@ inline int fuzz_files(char* files[]) {
    #endif
 
 // NOLINTNEXTLINE(*-definitions-in-headers)
-int main(int argc, char* argv[]) {
-   LLVMFuzzerInitialize(&argc, &argv);
-
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
    #if defined(BOTAN_FUZZER_IS_TEST)
    if(argc > 1) {
       return fuzz_files(&argv[1]);
@@ -153,9 +148,7 @@ int main(int argc, char* argv[]) {
    #include <klee/klee.h>
 
 // NOLINTNEXTLINE(*-definitions-in-headers)
-int main(int argc, char* argv[]) {
-   LLVMFuzzerInitialize(&argc, &argv);
-
+int main() {
    uint8_t input[max_fuzzer_input_size] = {0};
    klee_make_symbolic(&input, sizeof(input), "input");
 

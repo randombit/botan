@@ -36,7 +36,6 @@ void fuzz(std::span<const uint8_t> in) {
    check_os2ecp(p256, in);
    check_os2ecp(p384, in);
    check_os2ecp(p521, in);
-   check_os2ecp(p521, in);
    check_os2ecp(bp256, in);
    check_os2ecp(bp512, in);
 }
