@@ -50,7 +50,7 @@ std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
    return random;
 }
 
-Server_Hello_Internal::Server_Hello_Internal(std::span<const uint8_t> buf) {
+Server_Hello_Internal::Server_Hello_Internal(std::span<const uint8_t> buf, TLS_Flavor flavor) {
    if(buf.size() < 38) {
       throw Decoding_Error("Server_Hello: Packet corrupted");
    }
@@ -61,6 +61,13 @@ Server_Hello_Internal::Server_Hello_Internal(std::span<const uint8_t> buf) {
    const uint8_t minor_version = reader.get_byte();
 
    m_legacy_version = Protocol_Version(major_version, minor_version);
+
+   // The ServerHello is byte-compatible between TLS and DTLS. Hence, if the
+   // peer's legacy version disagrees with the expected transport flavor, we
+   // emit a protocol version alert.
+   if(m_legacy_version.is_datagram_protocol() != flavor.is_datagram()) {
+      throw TLS_Exception(Alert::ProtocolVersion, "Server_Hello: Received an unexpected protocol flavor");
+   }
 
    // RFC 8446 4.1.3
    //    Upon receiving a message with type server_hello, implementations MUST
@@ -84,27 +91,17 @@ Server_Hello_Internal::Server_Hello_Internal(std::span<const uint8_t> buf) {
 }
 
 Protocol_Version Server_Hello_Internal::version() const {
-   // RFC 8446 4.2.1
-   //    A server which negotiates a version of TLS prior to TLS 1.3 MUST set
-   //    ServerHello.version and MUST NOT send the "supported_versions"
-   //    extension.  A server which negotiates TLS 1.3 MUST respond by sending
-   //    a "supported_versions" extension containing the selected version
-   //    value (0x0304).
+   // RFC 9846 4.3.1
+   //    If this extension is present, clients MUST ignore the
+   //    ServerHello.legacy_version value and MUST use only the
+   //    "supported_versions" extension to determine the selected version.
    //
    // Note: Here we just take a message parsing decision, further validation of
    //       the extension's contents is done later.
-   if(const auto* sv = extensions().get<Supported_Versions>()) {
-      const auto versions = sv->versions();
-      BOTAN_ASSERT_NOMSG(versions.size() == 1);
-      const auto v = versions.front();  // May be DTLS_V13 or TLS_V13
-      if(!v.is_tls_13_or_later()) {
-         // RFC 8446 4.2.1
-         //   If the "supported_versions" extension in the ServerHello contains
-         //   a version [...] prior to TLS 1.3, the client MUST abort the
-         //   handshake with an "illegal_parameter" alert.
-         throw TLS_Exception(Alert::IllegalParameter, "supported_versions extension contains pre-TLS13 version");
-      }
-      return v;
+   if(extensions().has<Supported_Versions>()) {
+      // We use m_legacy_version to determine the transport flavor whose
+      // consistency with the expected flavor is checked in the constructor.
+      return m_legacy_version.is_datagram_protocol() ? Protocol_Version::DTLS_V13 : Protocol_Version::TLS_V13;
    }
 
    return m_legacy_version;
@@ -184,8 +181,8 @@ std::optional<Protocol_Version> Server_Hello::random_signals_downgrade() const {
    return std::nullopt;
 }
 
-Server_Hello_12_Shim::Server_Hello_12_Shim(std::span<const uint8_t> buf) :
-      Server_Hello_12_Shim(std::make_unique<Server_Hello_Internal>(buf)) {}
+Server_Hello_12_Shim::Server_Hello_12_Shim(std::span<const uint8_t> buf, TLS_Flavor flavor) :
+      Server_Hello_12_Shim(std::make_unique<Server_Hello_Internal>(buf, flavor)) {}
 
 Server_Hello_12_Shim::Server_Hello_12_Shim(std::unique_ptr<Server_Hello_Internal> data) :
       Server_Hello(std::move(data)) {

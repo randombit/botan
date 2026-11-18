@@ -71,7 +71,7 @@ class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello_12_Shim {
                       const Session_with_Handle& session_and_handle,
                       std::vector<std::string> next_protocols);
 
-      explicit Client_Hello_12(std::span<const uint8_t> buf);
+      explicit Client_Hello_12(std::span<const uint8_t> buf, TLS_Flavor flavor);
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
       /**
@@ -163,7 +163,7 @@ class BOTAN_UNSTABLE_API Server_Hello_12 final : public Server_Hello_12_Shim {
                       std::string_view next_protocol,
                       TLS_Flavor flavor);
 
-      explicit Server_Hello_12(std::span<const uint8_t> buf);
+      explicit Server_Hello_12(std::span<const uint8_t> buf, TLS_Flavor flavor);
 
    private:
       explicit Server_Hello_12(std::unique_ptr<Server_Hello_Internal> data);
