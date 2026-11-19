@@ -7,9 +7,12 @@
 #include <botan/internal/mem_pool.h>
 
 #include <botan/mem_ops.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/target_info.h>
 #include <algorithm>
+#include <bit>
 #include <exception>
+#include <limits>
 #include <optional>
 
 #if defined(BOTAN_HAS_VALGRIND) || defined(BOTAN_ENABLE_DEBUG_ASSERTS)
@@ -150,29 +153,10 @@ inline bool ptr_in_pool(const void* pool_ptr, size_t poolsize, const void* buf_p
    return (buf >= pool) && (buf + bufsize <= pool + poolsize);
 }
 
-// return index of first set bit
-template <typename T>
-size_t find_set_bit(T b) {
-   size_t s = 8 * sizeof(T) / 2;
-   size_t bit = 0;
-
-   // In this context we don't need to be const-time
-   while(s > 0) {
-      const T mask = (static_cast<T>(1) << s) - 1;
-      if((b & mask) == 0) {
-         bit += s;
-         b >>= s;
-      }
-      s /= 2;
-   }
-
-   return bit;
-}
-
 class BitMap final {
    public:
       explicit BitMap(size_t bits) : m_len(bits) {
-         m_bits.resize((bits + BITMASK_BITS - 1) / BITMASK_BITS);
+         m_bits.resize(ceil_division(bits, BITMASK_BITS));
 
          if(bits % BITMASK_BITS != 0) {
             m_last_mask = (static_cast<bitmask_type>(1) << (bits % BITMASK_BITS)) - 1;
@@ -209,9 +193,8 @@ class BitMap final {
       static const size_t BITMASK_BITS = sizeof(bitmask_type) * 8;
 
       size_t m_len;
-      // MSVC warns if the cast isn't there, clang-tidy warns that the cast is pointless
-      bitmask_type m_main_mask = static_cast<bitmask_type>(~0);  // NOLINT(bugprone-misplaced-widening-cast)
-      bitmask_type m_last_mask = static_cast<bitmask_type>(~0);  // NOLINT(bugprone-misplaced-widening-cast)
+      bitmask_type m_main_mask = std::numeric_limits<bitmask_type>::max();
+      bitmask_type m_last_mask = std::numeric_limits<bitmask_type>::max();
       std::vector<bitmask_type> m_bits;
 };
 
@@ -219,7 +202,8 @@ std::optional<size_t> BitMap::find_free() {
    for(size_t i = 0; i != m_bits.size(); ++i) {
       const bitmask_type mask = (i == m_bits.size() - 1) ? m_last_mask : m_main_mask;
       if((m_bits[i] & mask) != mask) {
-         const size_t free_bit = find_set_bit(~m_bits[i]);
+         // Index of the lowest clear bit; this need not be const-time
+         const size_t free_bit = std::countr_zero(static_cast<bitmask_type>(~m_bits[i]));
          const bitmask_type bmask = static_cast<bitmask_type>(1) << (free_bit % BITMASK_BITS);
          BOTAN_ASSERT_NOMSG((m_bits[i] & bmask) == 0);
          m_bits[i] |= bmask;
