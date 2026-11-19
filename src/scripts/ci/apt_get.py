@@ -155,7 +155,7 @@ def main():
                         help='CI compiler name (install only)')
     parser.add_argument('--attempts', default=3, type=int,
                         help='Attempts at each step before giving up')
-    parser.add_argument('--download-timeout', default=120, type=int, metavar='SECS',
+    parser.add_argument('--download-timeout', default=300, type=int, metavar='SECS',
                         help='Kill an attempt to fetch indexes or packages that runs this long')
     parser.add_argument('--silence-timeout', default=120, type=int, metavar='SECS',
                         help='Kill an attempt that prints nothing for this long')
