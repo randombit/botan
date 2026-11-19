@@ -84,6 +84,14 @@ void check_dl_group_params(const BigInt& p, const BigInt& q, const BigInt& g) {
    }
 }
 
+std::optional<BigInt> inverse_of_g(const BigInt& p, const BigInt& g) {
+   if(g == 2) {
+      // p is odd and 2 * (p+1)/2 = p+1 = 1 mod p
+      return (p + 1) >> 1;
+   }
+   return std::nullopt;
+}
+
 }  // namespace
 
 //static
@@ -105,6 +113,7 @@ DL_Group_Data::DL_Group_Data(const BigInt& p, const BigInt& q, const BigInt& g, 
       m_p(p),
       m_q(q),
       m_g(g),
+      m_g_inv(inverse_of_g(m_p, m_g)),
       m_mod_p(Barrett_Reduction::for_public_modulus(p)),
       m_mod_q(Barrett_Reduction::for_public_modulus(q)),
       m_monty_params(m_p, m_mod_p),
@@ -121,6 +130,7 @@ DL_Group_Data::DL_Group_Data(const BigInt& p, const BigInt& q, const BigInt& g, 
 DL_Group_Data::DL_Group_Data(const BigInt& p, const BigInt& g, DL_Group_Source source) :
       m_p(p),
       m_g(g),
+      m_g_inv(inverse_of_g(m_p, m_g)),
       m_mod_p(Barrett_Reduction::for_public_modulus(p)),
       m_monty_params(m_p, m_mod_p),
       m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),

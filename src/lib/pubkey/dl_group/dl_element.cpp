@@ -35,6 +35,15 @@ DL_Element DL_Element::g_pow(const DL_Group& group, const BigInt& k, size_t max_
    return DL_Element(data, data->monty_power_g_p(k, max_k_bits));
 }
 
+//static
+std::optional<DL_Element> DL_Element::inverse_of_g(const DL_Group& group) {
+   const auto& data = group._data();
+   if(const auto& g_inv = data->g_inv()) {
+      return DL_Element(data, Montgomery_Int(data->monty_params_p(), *g_inv));
+   }
+   return std::nullopt;
+}
+
 DL_Element DL_Element::pow(const BigInt& k, size_t max_k_bits) const {
    const auto table = monty_precompute(m_v, /*window bits=*/4);
    return DL_Element(m_group, monty_execute(*table, k, max_k_bits));
