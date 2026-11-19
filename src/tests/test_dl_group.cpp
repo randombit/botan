@@ -405,6 +405,7 @@ class DL_Generate_Group_Tests final : public Test {
             const Botan::DL_Group dh_strong(rng, Botan::DL_Group::Strong, 1025);
             result.test_sz_eq("DH p size", dh_strong.get_p().bits(), 1025);
             result.test_sz_eq("DH q size", dh_strong.get_q().bits(), 1024);
+            result.test_bn_eq("DH generator", dh_strong.get_g(), Botan::BigInt::from_word(2));
             result.test_is_true("DH group verifies", dh_strong.verify_group(rng, false));
          }
 
