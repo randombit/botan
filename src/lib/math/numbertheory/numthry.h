@@ -164,6 +164,10 @@ BigInt BOTAN_PUBLIC_API(2, 7) generate_rsa_prime(RandomNumberGenerator& keygen_r
 
 /**
 * Return a 'safe' prime, of the form p=2*q+1 with q prime
+*
+* The prime is always congruent to 7 modulo 8, so that 2 generates the
+* subgroup of order q.
+*
 * @param rng a random number generator
 * @param bits is how long the resulting prime should be
 * @return prime randomly chosen from safe primes of length bits

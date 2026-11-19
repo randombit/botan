@@ -463,8 +463,11 @@ class Mask final {
          if constexpr(sizeof(T) < sizeof(widest)) {
             // Compute x - y in a wider type: the bits above the size of T
             // are all set if x < y, and all clear otherwise
+            //
+            // The barrier on x prevents the difference from replacing x as a
+            // loop counter, which valgrind would flag when y is secret
             using W = std::conditional_t<(sizeof(T) < sizeof(uint64_t)), uint64_t, widest>;
-            const W diff = static_cast<W>(x) - static_cast<W>(y);
+            const W diff = static_cast<W>(value_barrier<T>(x)) - static_cast<W>(y);
             return Mask<T>(value_barrier<T>(static_cast<T>(diff >> (8 * sizeof(T)))));
          } else {
             const T u = x ^ ((x ^ y) | ((x - y) ^ x));

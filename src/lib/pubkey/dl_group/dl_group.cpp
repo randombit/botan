@@ -84,6 +84,14 @@ void check_dl_group_params(const BigInt& p, const BigInt& q, const BigInt& g) {
    }
 }
 
+std::optional<BigInt> inverse_of_g(const BigInt& p, const BigInt& g) {
+   if(g == 2) {
+      // p is odd and 2 * (p+1)/2 = p+1 = 1 mod p
+      return (p + 1) >> 1;
+   }
+   return std::nullopt;
+}
+
 }  // namespace
 
 //static
@@ -105,6 +113,7 @@ DL_Group_Data::DL_Group_Data(const BigInt& p, const BigInt& q, const BigInt& g, 
       m_p(p),
       m_q(q),
       m_g(g),
+      m_g_inv(inverse_of_g(m_p, m_g)),
       m_mod_p(Barrett_Reduction::for_public_modulus(p)),
       m_mod_q(Barrett_Reduction::for_public_modulus(q)),
       m_monty_params(m_p, m_mod_p),
@@ -121,6 +130,7 @@ DL_Group_Data::DL_Group_Data(const BigInt& p, const BigInt& q, const BigInt& g, 
 DL_Group_Data::DL_Group_Data(const BigInt& p, const BigInt& g, DL_Group_Source source) :
       m_p(p),
       m_g(g),
+      m_g_inv(inverse_of_g(m_p, m_g)),
       m_mod_p(Barrett_Reduction::for_public_modulus(p)),
       m_monty_params(m_p, m_mod_p),
       m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
@@ -324,16 +334,16 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, siz
       const BigInt q = (p - 1) / 2;
 
       /*
-      Always choose a generator that is quadratic reside mod p, this forces g to
-      be a generator of the subgroup of size q.
+      Always choose a generator that is a quadratic residue mod p, this forces g
+      to be a generator of the subgroup of size q.
 
-      We use 2 by default, but if 2 is not a quadratic reside then use 4 which
-      is always a quadratic reside, being the square of 2 (or p - 2)
+      The safe prime is always generated with p == 7 (mod 8), so 2 is always a
+      quadratic residue modulo p.
       */
-      BigInt g = BigInt::from_word(2);
-      if(jacobi(g, p) != 1) {
-         g = BigInt::from_word(4);
-      }
+      BOTAN_ASSERT_NOMSG(p % 8 == 7);
+      const BigInt g = BigInt::from_word(2);
+
+      BOTAN_DEBUG_ASSERT(jacobi(g, p) == 1);
 
       m_data = DL_Group_Data::create(p, q, g, DL_Group_Source::RandomlyGenerated);
    } else if(type == Prime_Subgroup) {

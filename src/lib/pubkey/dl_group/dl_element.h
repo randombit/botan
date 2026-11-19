@@ -11,6 +11,7 @@
 #include <botan/concepts.h>
 #include <botan/internal/monty.h>
 #include <memory>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -48,6 +49,11 @@ class BOTAN_TEST_API DL_Element final {
       * @param max_k_bits a public upper bound on the bit length of k
       */
       static DL_Element g_pow(const DL_Group& group, const BigInt& k, size_t max_k_bits);
+
+      /**
+      * Return g^-1 mod p, or nullopt if it was not precomputed for this group
+      */
+      static std::optional<DL_Element> inverse_of_g(const DL_Group& group);
 
       /**
       * Return this^k mod p

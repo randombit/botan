@@ -172,50 +172,60 @@ const BigInt& DL_PrivateKey::get_int_field(std::string_view algo, std::string_vi
 DL_PrivateKey_Exponentiation::DL_PrivateKey_Exponentiation(std::shared_ptr<const DL_PrivateKey> key,
                                                            Output output,
                                                            RandomNumberGenerator& rng) :
-      m_key(std::move(key)),
-      m_rng(rng),
-      m_output(output),
-      m_e(DL_Element::random(m_key->group(), m_rng)),
-      m_d(unblinder(m_e)) {}
+      m_key(std::move(key)), m_rng(rng), m_output(output), m_blinding(new_blinding()) {}
 
-DL_Element DL_PrivateKey_Exponentiation::unblinder(const DL_Element& e) const {
+DL_PrivateKey_Exponentiation::Blinding DL_PrivateKey_Exponentiation::new_blinding() const {
+   const auto& group = m_key->group();
    const auto& x = m_key->private_key();
    const size_t x_bits = m_key->max_private_key_bits();
 
    if(m_output == Output::Power) {
-      return e.invert().pow(x, x_bits);
+      if(auto g_inv = DL_Element::inverse_of_g(group)) {
+         // With e = g^-r and d = y^r, (b*e)^x * d = b^x * g^-rx * g^rx = b^x
+         const size_t r_bits = group.exponent_bits();
+         const BigInt r = CT::driveby_poison(BigInt(m_rng, r_bits));
+         const auto y = DL_Element::from_bigint(group, m_key->public_key()->public_key());
+         return {g_inv->pow(r, r_bits), y.pow(r, r_bits)};
+      }
+
+      auto e = DL_Element::random(group, m_rng);
+      auto d = e.invert().pow(x, x_bits);
+      return {std::move(e), std::move(d)};
    } else {
-      return e.pow(x, x_bits);
+      auto e = DL_Element::random(group, m_rng);
+      auto d = e.pow(x, x_bits);
+      return {std::move(e), std::move(d)};
    }
 }
 
 DL_Element DL_PrivateKey_Exponentiation::pow(const DL_Element& b) {
    ++m_counter;
 
+   auto& [e, d] = m_blinding;
+
    if(m_counter > ReinitInterval) {
-      m_e = DL_Element::random(m_key->group(), m_rng);
-      m_d = unblinder(m_e);
+      m_blinding = new_blinding();
       m_counter = 0;
    } else {
-      m_e = m_e.square();
-      m_d = m_d.square();
+      e = e.square();
+      d = d.square();
    }
 
-   const auto r = (b * m_e).pow(m_key->private_key(), m_key->max_private_key_bits());
+   const auto r = (b * e).pow(m_key->private_key(), m_key->max_private_key_bits());
 
    if(m_output == Output::Power) {
-      return r * m_d;
+      return r * d;
    } else {
-      return r.invert() * m_d;
+      return r.invert() * d;
    }
 }
 
 void DL_PrivateKey_Exponentiation::_const_time_poison() const {
-   CT::poison_all(m_e, m_d);
+   CT::poison_all(m_blinding.e, m_blinding.d);
 }
 
 void DL_PrivateKey_Exponentiation::_const_time_unpoison() const {
-   CT::unpoison_all(m_e, m_d);
+   CT::unpoison_all(m_blinding.e, m_blinding.d);
 }
 
 }  // namespace Botan

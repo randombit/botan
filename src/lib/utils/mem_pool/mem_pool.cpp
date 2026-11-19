@@ -52,17 +52,16 @@ namespace Botan {
 *   a request, in which case the request will be sent to calloc instead. In
 *   particular, requests which are too small or too large are rejected.
 *
-* - Most allocations are powers of 2, the remainder are usually a multiple of 8
-*
 * - Free requests include the size of the allocation, so there is no need to
 *   track this within the pool.
 *
-* - Alignment is important to the caller. For this allocator, any allocation of
-*   size N is aligned evenly at N bytes.
+* - Alignment is important to the caller. For this allocator, every allocation
+*   is aligned to 64 bytes.
 *
 * Initially each page is in the free page list. Each page is used for just one
-* size of allocation, with requests bucketed into a small number of common
-* sizes. If the allocation would be too big or too small it is rejected by the pool.
+* size of allocation, with requests rounded up to a multiple of 64 bytes so that
+* no two allocations share a cache line. If the allocation would be too big or
+* too small it is rejected by the pool.
 *
 * The free list is maintained by a bitmap, one per page/Bucket. Since each
 * Bucket only maintains objects of a single size, each bit set or clear
@@ -102,11 +101,6 @@ namespace Botan {
 * RNG, or maybe a ChaCha_RNG seeded with system RNG). Then the bucket to use and
 * the offset within the bucket would be chosen randomly, instead of using first fit.
 *
-* Right now we don't make any provision for threading, so if two threads both
-* allocate 32 byte values one after the other, the two allocations will likely
-* share a cache line. Ensuring that distinct threads will (tend to) use distinct
-* buckets would reduce this.
-*
 * Supporting a realloc-style API may be useful.
 */
 
@@ -114,37 +108,16 @@ namespace {
 
 size_t choose_bucket(size_t n) {
    constexpr size_t MINIMUM_ALLOCATION = 16;
-   constexpr size_t MAXIMUM_ALLOCATION = 256;
+   constexpr size_t MAXIMUM_ALLOCATION = 512;
+
+   // The typical cache line size, so distinct allocations never share a line
+   constexpr size_t BUCKET_STEP = 64;
 
    if(n < MINIMUM_ALLOCATION || n > MAXIMUM_ALLOCATION) {
       return 0;
    }
 
-   // Need to tune these
-
-   constexpr size_t buckets[] = {
-      16,
-      24,
-      32,
-      48,
-      64,
-      80,
-      96,
-      112,
-      128,
-      160,
-      192,
-      256,
-      0,
-   };
-
-   for(size_t i = 0; buckets[i] != 0; ++i) {
-      if(n <= buckets[i]) {
-         return buckets[i];
-      }
-   }
-
-   return 0;
+   return BUCKET_STEP * ((n + BUCKET_STEP - 1) / BUCKET_STEP);
 }
 
 inline bool ptr_in_pool(const void* pool_ptr, size_t poolsize, const void* buf_ptr, size_t bufsize) {
