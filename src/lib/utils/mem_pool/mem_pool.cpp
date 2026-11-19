@@ -172,18 +172,18 @@ class BitMap final {
 };
 
 std::optional<size_t> BitMap::find_free() {
-   for(size_t i = 0; i != m_bits.size(); ++i) {
-      const bitmask_type mask = (i == m_bits.size() - 1) ? m_last_mask : m_main_mask;
-      if((m_bits[i] & mask) != mask) {
+   for(auto& m_bit : m_bits) {
+      const bitmask_type mask = (&m_bit == &m_bits.back()) ? m_last_mask : m_main_mask;
+      if((m_bit & mask) != mask) {
          // Index of the lowest clear bit; this need not be const-time
-         const size_t free_bit = std::countr_zero(static_cast<bitmask_type>(~m_bits[i]));
-         const bitmask_type bmask = static_cast<bitmask_type>(1) << (free_bit % BITMASK_BITS);
-         BOTAN_ASSERT_NOMSG((m_bits[i] & bmask) == 0);
-         m_bits[i] |= bmask;
-         return BITMASK_BITS * i + free_bit;
+         const size_t free_bit = std::countr_zero(static_cast<bitmask_type>(~m_bit));
+         const bitmask_type bmask = static_cast<bitmask_type>(1) << free_bit;
+         BOTAN_ASSERT_NOMSG((m_bit & bmask) == 0);
+         m_bit |= bmask;
+         const auto index = static_cast<size_t>(std::distance(m_bits.data(), &m_bit));
+         return BITMASK_BITS * index + free_bit;
       }
    }
-
    return {};
 }
 
@@ -272,8 +272,8 @@ Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) : m_
 Memory_Pool::~Memory_Pool() noexcept  // NOLINT(*-use-equals-default)
 {
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
-   for(size_t i = 0; i != m_free_pages.size(); ++i) {
-      OS::page_allow_access(m_free_pages[i]);
+   for(auto* page : m_free_pages) {
+      OS::page_allow_access(page);
    }
 #endif
 }
