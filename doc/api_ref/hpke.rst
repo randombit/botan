@@ -17,6 +17,11 @@ sequence of messages which the recipient's context decrypts ("opens") in the
 same order, and both contexts can also export additional shared secrets for
 use elsewhere in the application.
 
+Besides the Diffie-Hellman based KEMs of RFC 9180, the post-quantum KEMs of
+`draft-ietf-hpke-pq <https://datatracker.ietf.org/doc/draft-ietf-hpke-pq/>`_
+are available in an experimental module which is not part of a default
+build; see :ref:`hpke_pq_kems`.
+
 HPKE defines four modes. In *base* mode the sender is anonymous. The *psk*
 mode additionally authenticates the sender via a pre-shared key, *auth* mode
 via the sender's own KEM key pair, and *auth_psk* combines both. The *auth*
@@ -50,6 +55,12 @@ DHKEM(P-384, HKDF-SHA384)   0x0011     yes
 DHKEM(P-521, HKDF-SHA512)   0x0012     yes
 DHKEM(X25519, HKDF-SHA256)  0x0020     yes
 DHKEM(X448, HKDF-SHA512)    0x0021     yes
+ML-KEM-512                  0x0040     no
+ML-KEM-768                  0x0041     no
+ML-KEM-1024                 0x0042     no
+MLKEM768-P256               0x0050     no
+MLKEM1024-P384              0x0051     no
+MLKEM768-X25519             0x647A     no
 ==========================  =========  ==========
 
 The known KDFs are HKDF-SHA256 (0x0001), HKDF-SHA384 (0x0002), and
@@ -61,7 +72,9 @@ still export secrets.
 .. cpp:enum-class:: HPKE::KEM_Code : uint16_t
 
    The known KEM codepoints: ``DHKEM_P256``, ``DHKEM_P384``, ``DHKEM_P521``,
-   ``DHKEM_X25519``, and ``DHKEM_X448``.
+   ``DHKEM_X25519``, and ``DHKEM_X448``, plus ``ML_KEM_512``, ``ML_KEM_768``,
+   ``ML_KEM_1024``, ``MLKEM768_P256``, ``MLKEM1024_P384``, and
+   ``MLKEM768_X25519`` for the :ref:`post-quantum KEMs <hpke_pq_kems>`.
 
 .. cpp:enum-class:: HPKE::KDF_Code : uint16_t
 
@@ -91,6 +104,19 @@ still export secrets.
    .. cpp:function:: bool is_available() const
 
       True if the algorithms this KEM requires are available in this build.
+
+   .. cpp:function:: bool is_dhkem() const
+
+      True for the Diffie-Hellman based KEMs of RFC 9180.
+
+   .. cpp:function:: bool is_ml_kem() const
+
+      True for ML-KEM-512, ML-KEM-768, and ML-KEM-1024.
+
+   .. cpp:function:: bool is_pq_hybrid() const
+
+      True for the KEMs which combine ML-KEM with an elliptic curve group:
+      MLKEM768-P256, MLKEM1024-P384, and MLKEM768-X25519.
 
    .. cpp:function:: bool supports_auth_modes() const
 
@@ -180,7 +206,8 @@ a context is set up.
       *DeserializePublicKey* from RFC 9180. Accepts exactly the wire format
       the KEM defines (raw bytes for X25519/X448, an uncompressed SEC1
       point for the NIST curves), throwing ``Decoding_Error`` if the length
-      or encoding is wrong or a NIST curve point is not on the curve.
+      or encoding is wrong or a NIST curve point is not on the curve. See
+      :ref:`hpke_pq_kems` for the checks applied to the keys of those KEMs.
 
    .. cpp:function:: static Public_Key from_key(KEM_Id kem, std::unique_ptr<Botan::Public_Key> key)
 
@@ -215,12 +242,14 @@ a context is set up.
       from full-entropy secret keying material of at least *Nsk* bytes. As
       an exception, DHKEM(P-521) accepts 64 bytes, because MLS (:rfc:`9420`)
       derives the P-521 node keys of its ratchet tree from 64-byte secrets.
+      The post-quantum KEMs require at least 32 bytes.
 
    .. cpp:function:: static Private_Key deserialize(KEM_Id kem, std::span<const uint8_t> bytes)
 
       *DeserializePrivateKey* from RFC 9180: accepts *Nsk* raw bytes. The
       scalar is range-checked for the NIST curves, and clamped (:rfc:`7748`
-      section 5) for X25519 and X448.
+      section 5) for X25519 and X448. For the post-quantum KEMs the bytes
+      are the seed.
 
    .. cpp:function:: static Private_Key from_key(KEM_Id kem, std::unique_ptr<Botan::Private_Key> key)
 
@@ -238,9 +267,88 @@ a context is set up.
 
       *SerializePrivateKey* from RFC 9180, suitable for persisting eg an ECH
       server key. For X25519 and X448 the output is clamped, as the RFC
-      requires. PKCS #8 encoding remains available via ``underlying()``.
+      requires. PKCS #8 encoding remains available via ``underlying()``,
+      except for the hybrid post-quantum KEMs.
 
    .. cpp:function:: const Botan::Private_Key& underlying() const
+
+.. _hpke_pq_kems:
+
+Post-Quantum KEMs (Experimental)
+----------------------------------------
+
+.. warning::
+
+   These KEMs are experimental. They are provided by the module ``hpke_pq``,
+   which is not part of a default build; configure with
+   ``--enable-modules=hpke_pq`` or ``--enable-experimental-features`` to
+   build it. They are implemented as specified by draft-ietf-hpke-pq-05,
+   which is not yet a published RFC. If the specification changes, the
+   implementation will be changed to follow it, even where that is
+   incompatible with the current behavior, until the module is marked
+   stable.
+
+The ``hpke_pq`` module provides the KEMs of `draft-ietf-hpke-pq
+<https://datatracker.ietf.org/doc/draft-ietf-hpke-pq/>`_, which protect
+against an adversary who records traffic now in order to decrypt it using
+a quantum computer later. It requires the ``ml_kem`` module, and
+MLKEM768-X25519 additionally requires ``x25519``. C++ code can detect the
+module at compile time by testing for the macro ``BOTAN_HAS_HPKE_PQ``. In a
+build without the module the codepoints are still known, so that for example
+their lengths can be queried, but :cpp:func:`HPKE::KEM_Id::is_available`
+returns false for them and using one throws ``Not_Implemented``.
+
+There are two kinds:
+
+* ML-KEM-512, ML-KEM-768, and ML-KEM-1024 use ML-KEM (FIPS 203) directly.
+
+* MLKEM768-P256, MLKEM1024-P384, and MLKEM768-X25519 are hybrids which
+  combine ML-KEM with an elliptic curve Diffie-Hellman exchange, and remain
+  secure as long as either of the two does. These are the KEMs defined in
+  draft-irtf-cfrg-concrete-hybrid-kems-03; MLKEM768-X25519 is also known as
+  X-Wing.
+
+They are used through exactly the same interface as the other KEMs, with
+the following differences:
+
+* Public keys and encapsulations are much larger, between 768 and 1665
+  bytes; see :cpp:func:`HPKE::KEM_Id::public_key_length` and
+  :cpp:func:`HPKE::KEM_Id::encapsulation_length`.
+
+* The *auth* and *auth_psk* modes are not available. The *psk* mode is.
+
+* The serialized private key is a seed, of 64 bytes for ML-KEM and 32 bytes
+  for the hybrids, from which the actual key material is expanded.
+
+* A modified ML-KEM ciphertext is rejected *implicitly*. Setting up a
+  recipient context with a corrupted encapsulation normally succeeds, and
+  results in a context whose keys are unrelated to the sender's, so that the
+  first ``open`` fails. An error is reported at setup only if the
+  encapsulation has the wrong length, or (for a hybrid) its elliptic curve
+  component is invalid.
+
+* For ML-KEM, :cpp:func:`HPKE::Private_Key::from_key` and
+  :cpp:func:`HPKE::Public_Key::from_key` accept an ML-KEM key of the matching
+  parameter set, and ``underlying()`` returns such a key, so keys can be
+  stored as PKCS #8 or X.509 structures. A private key that was loaded from
+  the expanded encoding of FIPS 203, which does not include the seed, can be
+  used to set up contexts, but :cpp:func:`HPKE::Private_Key::serialize`
+  throws ``Invalid_State`` for it.
+
+* The hybrid KEMs have no standalone key type in the library. A key is
+  created using ``generate``, ``derive``, or ``deserialize``, and the key
+  returned by ``underlying()`` supports only the raw encodings; there is no
+  PKCS #8 or X.509 encoding of these keys.
+
+Deserializing a public key performs the encapsulation key check of FIPS 203,
+and for MLKEM768-P256 and MLKEM1024-P384 checks that the elliptic curve
+point uses the uncompressed encoding and is on the curve. As with the DHKEM
+it is paired with, a low order X25519 point in a MLKEM768-X25519 public key
+or encapsulation is detected (causing ``Invalid_Argument``) only when a
+context is set up.
+
+The SHAKE and TurboSHAKE based KDFs which draft-ietf-hpke-pq also defines
+are not implemented.
 
 Pre-shared keys
 ----------------------------------------

@@ -39,7 +39,9 @@ BOTAN_TEST_API secure_vector<uint8_t> labeled_expand(std::string_view hash,
 /**
 * Internal interface for the KEM operations HPKE requires
 *
-* Implemented by DHKEM (RFC 9180 Section 4.1) over the key agreement algorithms.
+* Implemented by DHKEM (RFC 9180 Section 4.1) over the key agreement algorithms,
+* and by the ML-KEM based KEMs of draft-ietf-hpke-pq in the experimental hpke_pq
+* module.
 */
 class BOTAN_TEST_API KEM_Ops {
    public:
