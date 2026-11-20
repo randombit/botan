@@ -43,6 +43,8 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt(std::span<con
 * @param cipher specifies the block cipher to use to encrypt
 * @param digest specifies the PRF to use with PBKDF2 (eg "HMAC(SHA-1)")
 * @param rng a random number generator
+* @param pkcs8_mac if true and the cipher mode is CBC, key_bits must be a
+* DER encoded PrivateKeyInfo, which is authenticated by adding a MAC attribute
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt_msec(std::span<const uint8_t> key_bits,
                                                                         std::string_view passphrase,
@@ -50,7 +52,8 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt_msec(std::spa
                                                                         size_t* out_iterations_if_nonnull,
                                                                         std::string_view cipher,
                                                                         std::string_view digest,
-                                                                        RandomNumberGenerator& rng);
+                                                                        RandomNumberGenerator& rng,
+                                                                        bool pkcs8_mac);
 
 /**
 * Encrypt with PBES2 from PKCS #5 v2.0
@@ -60,23 +63,30 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt_msec(std::spa
 * @param cipher specifies the block cipher to use to encrypt
 * @param digest specifies the PRF to use with PBKDF2 (eg "HMAC(SHA-1)")
 * @param rng a random number generator
+* @param pkcs8_mac if true and the cipher mode is CBC, key_bits must be a
+* DER encoded PrivateKeyInfo, which is authenticated by adding a MAC attribute
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt_iter(std::span<const uint8_t> key_bits,
                                                                         std::string_view passphrase,
                                                                         size_t iterations,
                                                                         std::string_view cipher,
                                                                         std::string_view digest,
-                                                                        RandomNumberGenerator& rng);
+                                                                        RandomNumberGenerator& rng,
+                                                                        bool pkcs8_mac);
 
 /**
 * Decrypt a PKCS #5 v2.0 encrypted stream
+*
+* If the salt indicates the plaintext is a PrivateKeyInfo carrying a MAC
+* attribute, the MAC is verified before the plaintext is returned.
+*
 * @param key_bits the input
 * @param passphrase the passphrase to use for decryption
 * @param params the PBES2 parameters
 */
-secure_vector<uint8_t> pbes2_decrypt(std::span<const uint8_t> key_bits,
-                                     std::string_view passphrase,
-                                     const std::vector<uint8_t>& params);
+BOTAN_TEST_API secure_vector<uint8_t> pbes2_decrypt(std::span<const uint8_t> key_bits,
+                                                    std::string_view passphrase,
+                                                    const std::vector<uint8_t>& params);
 
 }  // namespace Botan
 

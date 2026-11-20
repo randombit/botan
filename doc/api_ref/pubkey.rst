@@ -679,6 +679,9 @@ encrypted storage.
   other libraries only support CBC mode for private key encryption. GCM has
   been supported in PBES2 since 2.0. SIV has been supported since 2.8.
 
+  When CBC mode is used, the key is additionally authenticated with a MAC; see
+  :ref:`pkcs8_cbc_mac`.
+
 .. cpp:function:: std::string PKCS8::PEM_encode(const Private_Key& key, \
    RandomNumberGenerator& rng, const std::string& pass, const std::string& pbe_algo = "")
 
@@ -688,6 +691,56 @@ encrypted storage.
   software, for transmission over 8-bit unclean channels, because it can be
   identified by a human without special tools, and because it sometimes allows
   more sane behavior of tools that process the data.
+
+.. _pkcs8_cbc_mac:
+
+Authenticating CBC Encrypted Keys
+------------------------------------
+
+PBES2 with CBC mode provides no integrity protection, so an attacker who can
+modify an encrypted key can alter the decrypted key material without this being
+detected. Since 3.15.0, when Botan encrypts a private key using CBC mode, it also
+includes a MAC, in a way that other PKCS #8 implementations ignore.
+
+The salt passed to PBKDF2 or Scrypt is the 16 byte ASCII string ``Botan PKCS#8
+MAC``, followed by one byte specifying the expected PKCS #7 padding length,
+followed by 16 random bytes. The padding length is between 1 and the cipher's
+block size, inclusive. RFC 8018 section 4.1 describes using a salt which contains
+such non-random data.
+
+The ``PrivateKeyInfo`` which is encrypted ends with the following attribute::
+
+  id-botan-pkcs8-mac OBJECT IDENTIFIER ::= { 1 3 6 1 4 1 25258 5 1 }
+
+  -- Attribute { type id-botan-pkcs8-mac, values SET SIZE (1) OF Pkcs8Mac }
+  Pkcs8Mac ::= SEQUENCE {
+     macAlgorithm  AlgorithmIdentifier,  -- hmacWithSHA256 with NULL parameters
+     mac           OCTET STRING          -- 32 bytes
+  }
+
+The MAC is HMAC-SHA-256 of the DER encoded ``PrivateKeyInfo``, excluding the
+final 32 bytes (that is, the MAC value itself). The HMAC key is derived from
+the cipher key using HKDF-SHA-256 with an empty salt, with the 16 byte ASCII
+label used as the HKDF info.
+
+When decrypting, if the salt begins with the label, it must have exactly the
+33 byte format above and the cipher mode must be CBC. The ``PrivateKeyInfo``
+must end with the attribute, using exactly the encoding above, and both the MAC
+and padding must be valid. Otherwise decryption fails. Since the salt is an
+input to the key derivation, neither the label nor the expected padding length
+can be changed without also changing the key. If the salt does not begin with
+the label, the attribute is ignored.
+
+The padding length is placed in the salt so that a modified key cannot be used
+as a padding oracle. Since the position of the MAC then does not depend on the
+decrypted data, the padding, attribute encoding, and MAC are verified together,
+and every modification fails with the same error and timing. As a consequence
+the exact length of the ``PrivateKeyInfo`` is revealed, rather than only its
+length rounded up to the cipher block size.
+
+Some libraries reject a ``PrivateKeyInfo`` containing any attributes, notably
+mbedTLS 3.5 and later, and Crypto++ for Ed25519 keys. These libraries cannot
+load keys Botan encrypts using CBC mode.
 
 Unencrypted serialization is also supported.
 

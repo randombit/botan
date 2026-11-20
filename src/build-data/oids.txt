@@ -354,6 +354,9 @@
 
 1.3.6.1.4.1.11591.4.11 = Scrypt
 
+# Attribute carrying a MAC of a PBES2 CBC encrypted PrivateKeyInfo
+1.3.6.1.4.1.25258.5.1 = Botan.PKCS8.MAC
+
 # PKCS#12 PBE algorithms (password-based encryption)
 1.2.840.113549.1.12.1.3 = PBE-SHA1-3DES
 1.2.840.113549.1.12.1.4 = PBE-SHA1-2DES

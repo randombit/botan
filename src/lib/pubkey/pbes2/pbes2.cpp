@@ -9,18 +9,114 @@
 #include <botan/internal/pbes2.h>
 
 #include <botan/asn1_obj.h>
+#include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/cipher_mode.h>
 #include <botan/der_enc.h>
+#include <botan/kdf.h>
+#include <botan/mac.h>
+#include <botan/mem_ops.h>
 #include <botan/pwdhash.h>
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/parsing.h>
+#include <algorithm>
 
 namespace Botan {
 
 namespace {
+
+/*
+* Botan extension authenticating a CBC encrypted PrivateKeyInfo; see doc/api_ref/pubkey.rst
+* The salt begins with this label, and since the salt is a KDF input the label cannot be removed.
+*/
+constexpr std::string_view Pkcs8MacLabel = "Botan PKCS#8 MAC";
+constexpr size_t Pkcs8MacLength = 32;
+// The label, the expected CBC padding length, then 16 random bytes
+constexpr size_t Pkcs8MacSaltLength = Pkcs8MacLabel.size() + 1 + 16;
+constexpr std::string_view Pkcs8MacFailure = "PBES2: Incorrect password or the ciphertext was modified";
+
+bool salt_has_pkcs8_mac_label(std::span<const uint8_t> salt) {
+   const auto label = as_span_of_bytes(Pkcs8MacLabel);
+   return salt.size() >= label.size() && std::ranges::equal(salt.first(label.size()), label);
+}
+
+/*
+* The DER encoding of the MAC attribute, excluding the MAC value which follows it
+*/
+std::vector<uint8_t> pkcs8_mac_attribute_prefix() {
+   std::vector<uint8_t> attr;
+   DER_Encoder(attr)
+      .start_context_specific(0)
+      .start_sequence()
+      .encode(OID::from_string("Botan.PKCS8.MAC"))
+      .start_set()
+      .start_sequence()
+      .encode(AlgorithmIdentifier("HMAC(SHA-256)", AlgorithmIdentifier::USE_NULL_PARAM))
+      .encode(std::vector<uint8_t>(Pkcs8MacLength), ASN1_Type::OctetString)
+      .end_cons()
+      .end_cons()
+      .end_cons()
+      .end_cons();
+   attr.resize(attr.size() - Pkcs8MacLength);
+   return attr;
+}
+
+secure_vector<uint8_t> compute_pkcs8_mac(std::span<const uint8_t> cipher_key, std::span<const uint8_t> input) {
+   const auto hkdf = KDF::create_or_throw("HKDF(SHA-256)");
+   auto hmac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
+   hmac->set_key(hkdf->derive_key(hmac->output_length(), cipher_key, "", Pkcs8MacLabel));
+   hmac->update(input);
+   return hmac->final();
+}
+
+/*
+* Append the MAC attribute with a placeholder value to a DER encoded PrivateKeyInfo.
+* Its final size determines the padding length encoded in the salt before key derivation.
+*/
+secure_vector<uint8_t> pkcs8_add_mac_attribute(std::span<const uint8_t> private_key_info) {
+   BER_Decoder dec(private_key_info, BER_Decoder::Limits::DER());
+   const BER_Object pki = dec.get_next_object();
+   dec.verify_end();
+   pki.assert_is_a(ASN1_Type::Sequence, ASN1_Class::Constructed, "PrivateKeyInfo");
+
+   // The MAC covers the entire encoding except for the MAC value itself
+   secure_vector<uint8_t> output;
+   DER_Encoder(output)
+      .start_sequence()
+      .raw_bytes(pki.data())
+      .raw_bytes(pkcs8_mac_attribute_prefix())
+      .raw_bytes(std::vector<uint8_t>(Pkcs8MacLength))
+      .end_cons();
+
+   return output;
+}
+
+bool pkcs8_mac_is_valid(std::span<const uint8_t> padded_private_key_info,
+                        std::span<const uint8_t> cipher_key,
+                        uint8_t padding_length) {
+   const auto prefix = pkcs8_mac_attribute_prefix();
+
+   // Both lengths are public. Never use the decrypted padding to locate the MAC.
+   if(padded_private_key_info.size() < prefix.size() + Pkcs8MacLength + padding_length) {
+      return false;
+   }
+
+   const auto poison = CT::scoped_poison(padded_private_key_info);
+   const auto private_key_info = padded_private_key_info.first(padded_private_key_info.size() - padding_length);
+   const auto recv_prefix = private_key_info.last(prefix.size() + Pkcs8MacLength).first(prefix.size());
+   const auto recv_mac = private_key_info.last(Pkcs8MacLength);
+   const auto mac = compute_pkcs8_mac(cipher_key, private_key_info.first(private_key_info.size() - Pkcs8MacLength));
+
+   const auto prefix_ok = CT::is_equal<uint8_t>(recv_prefix, prefix);
+   const auto mac_ok = CT::is_equal<uint8_t>(recv_mac, mac);
+   const auto padding_ok = CT::is_equal<uint8_t>(padded_private_key_info.last(padding_length),
+                                                 std::vector<uint8_t>(padding_length, padding_length));
+   return (prefix_ok & mac_ok & padding_ok).as_bool();
+}
 
 class Pbes2KdfParameters {
    public:
@@ -33,12 +129,35 @@ class Pbes2KdfParameters {
       static std::unique_ptr<Pbes2KdfParameters> decode(const AlgorithmIdentifier& alg_id);
 
       static std::unique_ptr<Pbes2KdfParameters> tune(std::string_view digest,
-                                                      RandomNumberGenerator& rng,
+                                                      std::vector<uint8_t> salt,
                                                       size_t key_length,
                                                       size_t* msec_in_iterations_out,
                                                       size_t iterations_if_msec_null);
 
+      static std::vector<uint8_t> generate_salt(RandomNumberGenerator& rng, std::optional<uint8_t> padding_length) {
+         if(!padding_length) {
+            return rng.random_vec<std::vector<uint8_t>>(DefaultSaltBytes);
+         }
+
+         const auto label = as_span_of_bytes(Pkcs8MacLabel);
+         std::vector<uint8_t> salt(Pkcs8MacSaltLength);
+         copy_mem(std::span{salt}.first(label.size()), label);
+         salt[label.size()] = *padding_length;
+         rng.randomize(std::span{salt}.subspan(label.size() + 1));
+         return salt;
+      }
+
       secure_vector<uint8_t> derive_key(std::string_view passphrase, size_t default_key_size) const;
+
+      std::optional<uint8_t> pkcs8_mac_padding_length() const {
+         if(!salt_has_pkcs8_mac_label(m_salt)) {
+            return std::nullopt;
+         }
+         if(m_salt.size() != Pkcs8MacSaltLength) {
+            throw Decoding_Error(Pkcs8MacFailure);
+         }
+         return m_salt[Pkcs8MacLabel.size()];
+      }
 
       virtual AlgorithmIdentifier algorithm_identifier(bool include_key_length) const = 0;
 
@@ -55,10 +174,6 @@ class Pbes2KdfParameters {
                          std::optional<size_t> key_length,
                          std::unique_ptr<PasswordHash> pwdhash) :
             m_salt(std::move(salt)), m_key_length(key_length), m_pwdhash(std::move(pwdhash)) {}
-
-      static std::vector<uint8_t> generate_salt(RandomNumberGenerator& rng) {
-         return rng.random_vec<std::vector<uint8_t>>(DefaultSaltBytes);
-      }
 
       static void validate_pbes2_params(size_t salt_len, std::optional<size_t> key_length) {
          if(key_length && (key_length.value() < 8 || key_length.value() >= 256)) {
@@ -80,7 +195,7 @@ class Pbes2Pbkdf2Parameters final : public Pbes2KdfParameters {
       static std::unique_ptr<Pbes2Pbkdf2Parameters> decode(const AlgorithmIdentifier& kdf_algo);
 
       static std::unique_ptr<Pbes2Pbkdf2Parameters> tune(std::string_view digest,
-                                                         RandomNumberGenerator& rng,
+                                                         std::vector<uint8_t> salt,
                                                          size_t key_length,
                                                          size_t* msec_in_iterations_out,
                                                          size_t iterations_if_msec_null);
@@ -103,7 +218,7 @@ class Pbes2ScryptParameters final : public Pbes2KdfParameters {
    public:
       static std::unique_ptr<Pbes2ScryptParameters> decode(const AlgorithmIdentifier& kdf_algo);
 
-      static std::unique_ptr<Pbes2ScryptParameters> tune(RandomNumberGenerator& rng,
+      static std::unique_ptr<Pbes2ScryptParameters> tune(std::vector<uint8_t> salt,
                                                          size_t key_length,
                                                          size_t* msec_in_iterations_out,
                                                          size_t iterations_if_msec_null);
@@ -129,14 +244,15 @@ secure_vector<uint8_t> Pbes2KdfParameters::derive_key(std::string_view passphras
 }
 
 std::unique_ptr<Pbes2KdfParameters> Pbes2KdfParameters::tune(std::string_view digest,
-                                                             RandomNumberGenerator& rng,
+                                                             std::vector<uint8_t> salt,
                                                              size_t key_length,
                                                              size_t* msec_in_iterations_out,
                                                              size_t iterations_if_msec_null) {
    if(digest == "Scrypt") {
-      return Pbes2ScryptParameters::tune(rng, key_length, msec_in_iterations_out, iterations_if_msec_null);
+      return Pbes2ScryptParameters::tune(std::move(salt), key_length, msec_in_iterations_out, iterations_if_msec_null);
    } else {
-      return Pbes2Pbkdf2Parameters::tune(digest, rng, key_length, msec_in_iterations_out, iterations_if_msec_null);
+      return Pbes2Pbkdf2Parameters::tune(
+         digest, std::move(salt), key_length, msec_in_iterations_out, iterations_if_msec_null);
    }
 }
 
@@ -153,7 +269,7 @@ std::unique_ptr<Pbes2KdfParameters> Pbes2KdfParameters::decode(const AlgorithmId
 /* PBES2 PBKDF2 handling */
 
 std::unique_ptr<Pbes2Pbkdf2Parameters> Pbes2Pbkdf2Parameters::tune(std::string_view digest,
-                                                                   RandomNumberGenerator& rng,
+                                                                   std::vector<uint8_t> salt,
                                                                    size_t key_length,
                                                                    size_t* msec_in_iterations_out,
                                                                    size_t iterations_if_msec_null) {
@@ -175,7 +291,7 @@ std::unique_ptr<Pbes2Pbkdf2Parameters> Pbes2Pbkdf2Parameters::tune(std::string_v
    // Ensure we will accept these same parameters when decoding
    validate_params(pwhash->iterations());
 
-   return std::make_unique<Pbes2Pbkdf2Parameters>(generate_salt(rng), key_length, std::move(pwhash), prf);
+   return std::make_unique<Pbes2Pbkdf2Parameters>(std::move(salt), key_length, std::move(pwhash), prf);
 }
 
 //static
@@ -245,7 +361,7 @@ AlgorithmIdentifier Pbes2Pbkdf2Parameters::algorithm_identifier(bool include_key
 
 /* PBES2 Scrypt handling */
 
-std::unique_ptr<Pbes2ScryptParameters> Pbes2ScryptParameters::tune(RandomNumberGenerator& rng,
+std::unique_ptr<Pbes2ScryptParameters> Pbes2ScryptParameters::tune(std::vector<uint8_t> salt,
                                                                    size_t key_length,
                                                                    size_t* msec_in_iterations_out,
                                                                    size_t iterations_if_msec_null) {
@@ -262,7 +378,7 @@ std::unique_ptr<Pbes2ScryptParameters> Pbes2ScryptParameters::tune(RandomNumberG
    // Ensure we will accept these same parameters when decoding
    validate_params(pwhash->memory_param(), pwhash->iterations(), pwhash->parallelism());
 
-   return std::make_unique<Pbes2ScryptParameters>(generate_salt(rng), key_length, std::move(pwhash));
+   return std::make_unique<Pbes2ScryptParameters>(std::move(salt), key_length, std::move(pwhash));
 }
 
 //static
@@ -341,7 +457,8 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt_shared(std::s
                                                                           size_t iterations_if_msec_null,
                                                                           std::string_view cipher,
                                                                           std::string_view prf,
-                                                                          RandomNumberGenerator& rng) {
+                                                                          RandomNumberGenerator& rng,
+                                                                          bool pkcs8_mac) {
    auto enc = Cipher_Mode::create(cipher, Cipher_Dir::Encryption);
 
    const auto cipher_spec = split_on(cipher, '/');
@@ -356,13 +473,31 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt_shared(std::s
 
    const bool include_key_length_in_struct = enc->key_spec().minimum_keylength() != enc->key_spec().maximum_keylength();
 
-   auto kdf_params = Pbes2KdfParameters::tune(prf, rng, key_length, msec_in_iterations_out, iterations_if_msec_null);
+   // AEAD modes are already authenticated
+   const bool add_mac = pkcs8_mac && cipher_spec[1] == "CBC";
+   secure_vector<uint8_t> ctext =
+      add_mac ? pkcs8_add_mac_attribute(key_bits) : secure_vector<uint8_t>(key_bits.begin(), key_bits.end());
+   std::optional<uint8_t> padding_length;
+   if(add_mac) {
+      // A CBC IV is one block long; aligned plaintext receives a full padding block.
+      padding_length = static_cast<uint8_t>(iv.size() - ctext.size() % iv.size());
+   }
+
+   auto kdf_params = Pbes2KdfParameters::tune(prf,
+                                              Pbes2KdfParameters::generate_salt(rng, padding_length),
+                                              key_length,
+                                              msec_in_iterations_out,
+                                              iterations_if_msec_null);
    const auto derived_key = kdf_params->derive_key(passphrase, key_length);
    const auto kdf_algo = kdf_params->algorithm_identifier(include_key_length_in_struct);
 
+   if(add_mac) {
+      const std::span<uint8_t> ptext{ctext};
+      copy_mem(ptext.last(Pkcs8MacLength), compute_pkcs8_mac(derived_key, ptext.first(ptext.size() - Pkcs8MacLength)));
+   }
+
    enc->set_key(derived_key);
    enc->start(iv);
-   secure_vector<uint8_t> ctext(key_bits.begin(), key_bits.end());
    enc->finish(ctext);
 
    std::vector<uint8_t> encoded_iv;
@@ -389,7 +524,7 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt(std::span<con
                                                                    std::string_view digest,
                                                                    RandomNumberGenerator& rng) {
    size_t msec_in_iterations_out = static_cast<size_t>(msec.count());
-   return pbes2_encrypt_shared(key_bits, passphrase, &msec_in_iterations_out, 0, cipher, digest, rng);
+   return pbes2_encrypt_shared(key_bits, passphrase, &msec_in_iterations_out, 0, cipher, digest, rng, false);
    // return value msec_in_iterations_out discarded
 }
 
@@ -399,10 +534,11 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt_msec(std::spa
                                                                         size_t* out_iterations_if_nonnull,
                                                                         std::string_view cipher,
                                                                         std::string_view digest,
-                                                                        RandomNumberGenerator& rng) {
+                                                                        RandomNumberGenerator& rng,
+                                                                        bool pkcs8_mac) {
    size_t msec_in_iterations_out = static_cast<size_t>(msec.count());
 
-   auto ret = pbes2_encrypt_shared(key_bits, passphrase, &msec_in_iterations_out, 0, cipher, digest, rng);
+   auto ret = pbes2_encrypt_shared(key_bits, passphrase, &msec_in_iterations_out, 0, cipher, digest, rng, pkcs8_mac);
 
    if(out_iterations_if_nonnull != nullptr) {
       *out_iterations_if_nonnull = msec_in_iterations_out;
@@ -416,8 +552,9 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt_iter(std::spa
                                                                         size_t pbkdf_iter,
                                                                         std::string_view cipher,
                                                                         std::string_view digest,
-                                                                        RandomNumberGenerator& rng) {
-   return pbes2_encrypt_shared(key_bits, passphrase, nullptr, pbkdf_iter, cipher, digest, rng);
+                                                                        RandomNumberGenerator& rng,
+                                                                        bool pkcs8_mac) {
+   return pbes2_encrypt_shared(key_bits, passphrase, nullptr, pbkdf_iter, cipher, digest, rng, pkcs8_mac);
 }
 
 secure_vector<uint8_t> pbes2_decrypt(std::span<const uint8_t> key_bits,
@@ -447,7 +584,14 @@ secure_vector<uint8_t> pbes2_decrypt(std::span<const uint8_t> key_bits,
    std::vector<uint8_t> iv;
    BER_Decoder(enc_algo.parameters(), BER_Decoder::Limits::DER()).decode(iv, ASN1_Type::OctetString).verify_end();
 
-   auto dec = Cipher_Mode::create(cipher, Cipher_Dir::Decryption);
+   auto pbkdf = Pbes2KdfParameters::decode(kdf_algo);
+   const auto padding_length = pbkdf->pkcs8_mac_padding_length();
+   if(padding_length && !cipher.ends_with("/CBC")) {
+      throw Decoding_Error(Pkcs8MacFailure);
+   }
+
+   // Labeled CBC files authenticate padding using its public length from the salt.
+   auto dec = Cipher_Mode::create(padding_length ? cipher + "/NoPadding" : cipher, Cipher_Dir::Decryption);
    if(!dec) {
       throw Decoding_Error(fmt("PBES2 cannot decrypt due to unavailable cipher '{}'", cipher));
    }
@@ -458,14 +602,29 @@ secure_vector<uint8_t> pbes2_decrypt(std::span<const uint8_t> key_bits,
       throw Decoding_Error("PBES2 cipher AlgorithmIdentifier has invalid IV length");
    }
 
+   if(padding_length) {
+      if(*padding_length == 0 || *padding_length > iv.size() || key_bits.empty() || key_bits.size() % iv.size() != 0) {
+         throw Decoding_Error(Pkcs8MacFailure);
+      }
+      BOTAN_ASSERT(key_bits.size() >= *padding_length, "Ciphertext includes the padding");
+   }
+
    const size_t default_key_size = dec->key_spec().maximum_keylength();
-   auto pbkdf = Pbes2KdfParameters::decode(kdf_algo);
-   dec->set_key(pbkdf->derive_key(passphrase, default_key_size));
+   const auto derived_key = pbkdf->derive_key(passphrase, default_key_size);
+   dec->set_key(derived_key);
 
    dec->start(iv);
 
    secure_vector<uint8_t> buf(key_bits.begin(), key_bits.end());
+
    dec->finish(buf);
+
+   if(padding_length) {
+      if(!pkcs8_mac_is_valid(buf, derived_key, *padding_length)) {
+         throw Decoding_Error(Pkcs8MacFailure);
+      }
+      buf.resize(buf.size() - *padding_length);
+   }
 
    return buf;
 }

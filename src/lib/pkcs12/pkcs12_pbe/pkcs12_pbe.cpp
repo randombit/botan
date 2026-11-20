@@ -137,11 +137,11 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pkcs12_pbe_encrypt(std::spa
    }
 
    if(algo == "PBES2-SHA256-AES256") {
-      auto [aid, ct] = pbes2_encrypt_iter(plaintext, password, iterations, "AES-256/CBC", "SHA-256", rng);
+      auto [aid, ct] = pbes2_encrypt_iter(plaintext, password, iterations, "AES-256/CBC", "SHA-256", rng, false);
       return {std::move(aid), std::move(ct)};
    }
    if(algo == "PBES2-SHA256-AES128") {
-      auto [aid, ct] = pbes2_encrypt_iter(plaintext, password, iterations, "AES-128/CBC", "SHA-256", rng);
+      auto [aid, ct] = pbes2_encrypt_iter(plaintext, password, iterations, "AES-128/CBC", "SHA-256", rng, false);
       return {std::move(aid), std::move(ct)};
    }
 
