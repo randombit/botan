@@ -126,6 +126,20 @@ bool BOTAN_TEST_API is_bailie_psw_probable_prime_vartime(const BigInt& n);
 size_t miller_rabin_test_iterations(size_t n_bits, size_t prob, bool random);
 
 /**
+* Perform a single Miller-Rabin primality test with base 2
+*
+* This is faster than a test with a random base, and still rejects almost
+* all composites, which makes it a good first test when searching for a prime.
+*
+* @warning it is easy to construct composite integers which pass this test
+*
+* @param n the positive integer to test
+* @param monty_n pre-created Montgomery parameters for n
+* @return true if n seems probably prime, false if n is composite
+*/
+bool BOTAN_TEST_API is_miller_rabin_base2_probable_prime(const BigInt& n, const Montgomery_Params& monty_n);
+
+/**
 * Perform t iterations of a Miller-Rabin primality test with random bases
 *
 * @param n the positive integer to test

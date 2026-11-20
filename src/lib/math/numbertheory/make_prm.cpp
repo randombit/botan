@@ -153,17 +153,21 @@ BigInt random_prime_with_sieve(RandomNumberGenerator& rng,
 
          BOTAN_DEBUG_ASSERT(no_small_multiples(p, sieve));
 
+         if(p.bits() > bits) {
+            break;
+         }
+
          const Montgomery_Params monty_p(p);
 
-         if(coprime > 1) {
-            /*
-            First do a single M-R iteration to quickly eliminate most non-primes,
-            before doing the coprimality check which is expensive
-            */
-            if(!is_miller_rabin_probable_prime(p, monty_p, rng, 1)) {
-               continue;
-            }
+         /*
+         Perform a single initial Miller-Rabin test first before other potentially more
+         expensive checks like gcd. This uses base 2, which is faster than a random base.
+         */
+         if(!is_miller_rabin_base2_probable_prime(p, monty_p)) {
+            continue;
+         }
 
+         if(coprime > 1) {
             /*
             * Check if p - 1 and coprime are relatively prime, using gcd.
             * The gcd computation is const-time
@@ -173,14 +177,30 @@ BigInt random_prime_with_sieve(RandomNumberGenerator& rng,
             }
          }
 
-         if(p.bits() > bits) {
-            break;
+         /*
+         * If we are generating this as a strong prime, also perform a single
+         * Miller-Rabin on 2*p+1 before further checks. This avoids wasting
+         * computation fully validating that p is prime just to throw it away
+         * when 2*p+1 is found to be composite.
+         */
+         if(sieve_check_2p1) {
+            const BigInt p2 = (p << 1) + 1;
+            const Montgomery_Params monty_p2(p2);
+            if(!is_miller_rabin_base2_probable_prime(p2, monty_p2)) {
+               continue;
+            }
          }
 
+         /*
+         * Now run the Miller-Rabin trials with random bases
+         */
          if(!is_miller_rabin_probable_prime(p, monty_p, rng, mr_trials)) {
             continue;
          }
 
+         /*
+         * Finally run a Lucas test
+         */
          if(prob > 32 && !is_lucas_probable_prime(p, monty_p)) {
             continue;
          }

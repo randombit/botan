@@ -92,6 +92,16 @@ std::optional<BigInt> inverse_of_g(const BigInt& p, const BigInt& g) {
    return std::nullopt;
 }
 
+std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute_g(const Montgomery_Params& params,
+                                                                          const BigInt& g) {
+   // Most standardized groups use g = 2, which has a faster exponentiation
+   if(g == 2) {
+      return monty_precompute_base2(params);
+   } else {
+      return monty_precompute(params, g, /*window bits=*/4);
+   }
+}
+
 }  // namespace
 
 //static
@@ -118,7 +128,7 @@ DL_Group_Data::DL_Group_Data(const BigInt& p, const BigInt& q, const BigInt& g, 
       m_mod_q(Barrett_Reduction::for_public_modulus(q)),
       m_monty_params(m_p, m_mod_p),
       m_monty_q(dsa_monty_params_q(m_q, *m_mod_q)),
-      m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
+      m_monty(monty_precompute_g(m_monty_params, m_g)),
       m_p_bits(p.bits()),
       m_q_bits(q.bits()),
       // For DL crypto in a prime-order subgroup, security is bounded by
@@ -133,7 +143,7 @@ DL_Group_Data::DL_Group_Data(const BigInt& p, const BigInt& g, DL_Group_Source s
       m_g_inv(inverse_of_g(m_p, m_g)),
       m_mod_p(Barrett_Reduction::for_public_modulus(p)),
       m_monty_params(m_p, m_mod_p),
-      m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
+      m_monty(monty_precompute_g(m_monty_params, m_g)),
       m_p_bits(p.bits()),
       m_q_bits(0),
       m_estimated_strength(dl_work_factor(m_p_bits)),

@@ -33,6 +33,14 @@ constexpr size_t ifma_digits(size_t p_bits) {
 }
 
 /*
+* Return true if 16*p < 2^(52*k), in which case the Montgomery product of
+* values in [0, 4p) is in [0, 2p)
+*/
+constexpr bool ifma_has_doubling_headroom(size_t p_bits) {
+   return DigitBits * ifma_digits(p_bits) >= p_bits + 4;
+}
+
+/*
 * Low 52 bits of a*b
 *
 * The product is kept opaque to the optimizer; otherwise the SLP vectorizer
@@ -216,6 +224,14 @@ class IFMA_Modulus final {
       * Input and output are in [0, 2p). The output may alias the input.
       */
       void sqr(std::span<uint64_t, Lanes> z, std::span<const uint64_t, Lanes> a) const;
+
+      /**
+      * If cond is set, double x without reducing it
+      *
+      * This maps [0, 2p) to [0, 4p), which is a valid input to sqr or mul
+      * only if ifma_has_doubling_headroom
+      */
+      void cond_double(std::span<uint64_t, Lanes> x, bool cond) const;
 
       /**
       * Return 1 in the radix 2^52 Montgomery domain
@@ -493,6 +509,26 @@ void BOTAN_FN_ISA_AVX512 IFMA_Modulus<N>::sqr_rounds(std::array<SIMD_8x64, N>& a
 }
 
 template <size_t N>
+void BOTAN_FN_ISA_AVX512 IFMA_Modulus<N>::cond_double(std::span<uint64_t, Lanes> x, bool cond) const {
+   const auto digit_mask = SIMD_8x64::splat(DigitMask);
+   const auto doubling = SIMD_8x64::splat(CT::Mask<uint64_t>::expand_bool(cond).value());
+
+   std::array<SIMD_8x64, N> xv;
+   std::array<SIMD_8x64, N> carry;
+   for(size_t i = 0; i != N; ++i) {
+      xv[i] = SIMD_8x64::load_le(&x[8 * i]);
+      // The top bit of each digit becomes the low bit of the next digit up
+      carry[i] = xv[i].template shr<DigitBits - 1>();
+   }
+   shift_lanes_up(carry);
+
+   for(size_t i = 0; i != N; ++i) {
+      const auto doubled = (xv[i].template shl<1>() | carry[i]) & digit_mask;
+      SIMD_8x64::choose(doubling, doubled, xv[i]).store_le(&x[8 * i]);
+   }
+}
+
+template <size_t N>
 class Montgomery_Exponentiation_AVX512 final : public Montgomery_Exponentiation_State {
    public:
       static constexpr size_t Lanes = IFMA_Modulus<N>::Lanes;
@@ -601,38 +637,86 @@ class Montgomery_Exponentiation_AVX512 final : public Montgomery_Exponentiation_
       size_t m_window_bits;
 };
 
+/**
+* Exponentiation with a base of 2
+*
+* Multiplying by the base is a doubling, which is left unreduced; the squaring
+* that follows brings the value back into [0, 2p).
+*/
 template <size_t N>
-std::unique_ptr<Montgomery_Exponentiation_State> make_monty_exp(const Montgomery_Int& g, size_t window_bits) {
-   return std::make_unique<Montgomery_Exponentiation_AVX512<N>>(g, window_bits);
+class Montgomery_Exponentiation_Base2_AVX512 final : public Montgomery_Exponentiation_State {
+   public:
+      using Digits = typename IFMA_Modulus<N>::Digits;
+
+      explicit Montgomery_Exponentiation_Base2_AVX512(const Montgomery_Params& params) : m_monty(params) {
+         BOTAN_ASSERT_NOMSG(ifma_has_doubling_headroom(params.p().bits()));
+      }
+
+      Montgomery_Int exponentiation(const BigInt& scalar, size_t max_k_bits) const override {
+         BOTAN_ARG_CHECK(scalar.signum() >= 0, "Invalid scalar for Montgomery exponentiation");
+         BOTAN_DEBUG_ASSERT(scalar.bits() <= max_k_bits);
+
+         Digits x = m_monty.one();
+
+         for(size_t i = max_k_bits; i > 0; --i) {
+            m_monty.sqr(x, x);
+            m_monty.cond_double(x, scalar.get_bit(i - 1));
+         }
+
+         return m_monty.to_monty_int(x);
+      }
+
+      Montgomery_Int exponentiation_vartime(const BigInt& scalar) const override {
+         return this->exponentiation(scalar, scalar.bits());
+      }
+
+   private:
+      IFMA_Modulus<N> m_monty;
+};
+
+template <template <size_t> class Exp, typename... Args>
+std::unique_ptr<Montgomery_Exponentiation_State> make_monty_exp(size_t p_bits, const Args&... args) {
+   const size_t vectors = (ifma_digits(p_bits) + 7) / 8;
+
+   switch(vectors) {
+      case 2: /* 415 - 830 bits */
+         return std::make_unique<Exp<2>>(args...);
+      case 3: /* 831 - 1246 bits */
+         return std::make_unique<Exp<3>>(args...);
+      case 4: /* 1247 - 1662 bits */
+         return std::make_unique<Exp<4>>(args...);
+      case 5: /* 1663 - 2078 bits */
+         return std::make_unique<Exp<5>>(args...);
+      case 6: /* 2079 - 2494 bits */
+         return std::make_unique<Exp<6>>(args...);
+      case 7: /* 2495 - 2910 bits */
+         return std::make_unique<Exp<7>>(args...);
+      case 8: /* 2911 - 3326 bits */
+         return std::make_unique<Exp<8>>(args...);
+      case 9: /* 3327 - 3742 bits */
+         return std::make_unique<Exp<9>>(args...);
+      case 10: /* 3743 - 4158 bits */
+         return std::make_unique<Exp<10>>(args...);
+      default:
+         // Moduli under 415 bits or over 4158 bits do not seem of practical interest
+         return nullptr;
+   }
 }
 
 }  // namespace
 
 std::unique_ptr<Montgomery_Exponentiation_State> make_monty_exp_avx512(const Montgomery_Int& g, size_t window_bits) {
-   const size_t vectors = (ifma_digits(g._params().p().bits()) + 7) / 8;
+   return make_monty_exp<Montgomery_Exponentiation_AVX512>(g._params().p().bits(), g, window_bits);
+}
 
-   switch(vectors) {
-      case 2: /* 415 - 830 bits */
-         return make_monty_exp<2>(g, window_bits);
-      case 3: /* 831 - 1246 bits */
-         return make_monty_exp<3>(g, window_bits);
-      case 4: /* 1247 - 1662 bits */
-         return make_monty_exp<4>(g, window_bits);
-      case 5: /* 1663 - 2078 bits */
-         return make_monty_exp<5>(g, window_bits);
-      case 6: /* 2079 - 2494 bits */
-         return make_monty_exp<6>(g, window_bits);
-      case 7: /* 2495 - 2910 bits */
-         return make_monty_exp<7>(g, window_bits);
-      case 8: /* 2911 - 3326 bits */
-         return make_monty_exp<8>(g, window_bits);
-      case 9: /* 3327 - 3742 bits */
-         return make_monty_exp<9>(g, window_bits);
-      case 10: /* 3743 - 4158 bits */
-         return make_monty_exp<10>(g, window_bits);
-      default:
-         // Moduli under 415 bits or over 4158 bits do not seem of practical interest
-         return nullptr;
+std::unique_ptr<Montgomery_Exponentiation_State> make_monty_exp_base2_avx512(const Montgomery_Params& params) {
+   const size_t p_bits = params.p().bits();
+
+   if(ifma_has_doubling_headroom(p_bits)) {
+      return make_monty_exp<Montgomery_Exponentiation_Base2_AVX512>(p_bits, params);
+   } else {
+      // The few sizes without the headroom use the general algorithm
+      return make_monty_exp_avx512(Montgomery_Int(params, BigInt::from_word(2)), 4);
    }
 }
 

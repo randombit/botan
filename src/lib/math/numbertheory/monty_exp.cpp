@@ -130,7 +130,72 @@ Montgomery_Int Montgomery_Exponentiation_Generic::exponentiation_vartime(const B
    return x;
 }
 
+/*
+* Exponentiation with a base of 2
+*
+* Multiplying by a small power of 2 is much cheaper than a general Montgomery
+* multiplication, and needs no table
+*/
+class Montgomery_Exponentiation_Base2 final : public Montgomery_Exponentiation_State {
+   public:
+      explicit Montgomery_Exponentiation_Base2(const Montgomery_Params& params) : m_params(params) {}
+
+      Montgomery_Int exponentiation(const BigInt& k, size_t max_k_bits) const override;
+
+      Montgomery_Int exponentiation_vartime(const BigInt& k) const override {
+         return this->exponentiation(k, k.bits());
+      }
+
+   private:
+      // 2^(2^WindowBits - 1) must be small enough for Montgomery_Int::mul_by_word
+      static constexpr size_t WindowBits = 4;
+
+      Montgomery_Params m_params;
+};
+
+Montgomery_Int Montgomery_Exponentiation_Base2::exponentiation(const BigInt& scalar, size_t max_k_bits) const {
+   BOTAN_ARG_CHECK(scalar.signum() >= 0, "Invalid scalar for Montgomery exponentiation");
+   BOTAN_DEBUG_ASSERT(scalar.bits() <= max_k_bits);
+
+   const size_t exp_nibbles = (max_k_bits + WindowBits - 1) / WindowBits;
+
+   secure_vector<word> ws(2 * m_params.p_words());
+
+   Montgomery_Int x = Montgomery_Int::one(m_params);
+
+   for(size_t i = exp_nibbles; i > 0; --i) {
+      if(i != exp_nibbles) {
+         x.square_this_n_times(ws, WindowBits);
+      }
+
+      const word nibble = scalar.get_substring(WindowBits * (i - 1), WindowBits);
+
+      // Compute 2^nibble without shifting by a secret amount
+      word pow2 = 1;
+      for(size_t b = 0; b != WindowBits; ++b) {
+         const auto bit_set = CT::Mask<word>::expand_bit(nibble, b);
+         pow2 = bit_set.select(pow2 << (static_cast<size_t>(1) << b), pow2);
+      }
+
+      x.mul_by_word(pow2);
+   }
+
+   return x;
+}
+
 }  // namespace
+
+std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute_base2(const Montgomery_Params& params) {
+#if defined(BOTAN_HAS_MONTY_EXP_AVX512)
+   if(CPUID::has(CPUID::Feature::AVX512)) {
+      if(auto state = make_monty_exp_base2_avx512(params)) {
+         return state;
+      }
+   }
+#endif
+
+   return std::make_shared<const Montgomery_Exponentiation_Base2>(params);
+}
 
 std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Int& g, size_t window_bits) {
    if(window_bits == 0) {

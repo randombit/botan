@@ -620,12 +620,12 @@ def cli_argon2_tests(_tmp_dir):
 def cli_gen_dl_group_tests(_tmp_dir):
 
     pem = """-----BEGIN X9.42 DH PARAMETERS-----
-MIIBJAKBgwd7rmVd5CnnwyuhpoAF9NAK67SGewOREjxUAtv2crGCuVnj1JSbTLnB
-XlbNyB9qzTr0yl6Gi4NKNChFYJKwIu/0sVxm+bkpbF3GqjCjh5848+2n+axNUPUf
-oaLUZ2N3Nqh6yMGMPgp56+4DzuyN1t8OxkvNduWVBlkm3Jl2ae9m94NjAoGDAz+k
-VeNOBNf3sDZ76+lLR2yonEEw/fEUsd0AgabNOqb9ZHcImT0D3Th+fYj+LxL7m4Wp
-SVXVTdrMYnzVs1dlWZUjgPN0uZm7fxNwUKZGE9a71JEG3erPuJtptnx2SvyhFCSk
-0gZdWFCH5FKZWS5K3bxa0Mmm3ud2wghS19mMZE7WlRICFjgPiPatvmWssQw2AuZ9
+MIIBJAKBgwVq1368y4XfD30ol/o0bpEYqDLuBaucJeaZgEc1MrBzX7B0JuGZK6Rm
+/svFImxGo9p7bggWvAcdfmImhXMIkqmpcd1AqDOJCeNGV0Cye+nC+xccRV6e30VU
+qWymo18P4e7B3rWY5kmhL6sEDs6X4o7RHTyRm2zNDoVxxa5LtGZ3gEVlAoGDATNS
+C+7tBeq5QbqpVgT31KLBu08Vi1p1fwy3lmee4KwMKSRlp/UiI4L+xSiOjqbbbKpf
+U6eWrxXREwt17TD1MF4GZPaU3pmc0M0AAaV+V7JCWKAdZAbsUbLgo1vTGrk4oZBR
+CGRWwbJU2BZVKe0hC2miyVkCBYmTOrtXejmMS7tyak8CFjgPiPatvmWssQw2AuZ9
 mFvAZ/8wZ90=
 -----END X9.42 DH PARAMETERS-----"""
 

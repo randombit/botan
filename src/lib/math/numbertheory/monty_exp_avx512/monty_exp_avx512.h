@@ -19,6 +19,13 @@ namespace Botan {
 */
 std::unique_ptr<Montgomery_Exponentiation_State> make_monty_exp_avx512(const Montgomery_Int& g, size_t window_bits);
 
+/**
+* Montgomery exponentiation with a base of 2 using AVX-512 IFMA
+*
+* Returns nullptr if the CPU or the size of the modulus is not supported
+*/
+std::unique_ptr<Montgomery_Exponentiation_State> make_monty_exp_base2_avx512(const Montgomery_Params& params);
+
 }  // namespace Botan
 
 #endif
