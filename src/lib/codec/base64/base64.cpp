@@ -7,6 +7,7 @@
 
 #include <botan/base64.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/charset.h>
@@ -171,6 +172,7 @@ size_t base64_encode(char out[], const uint8_t in[], size_t input_length, size_t
 #if defined(BOTAN_HAS_BASE64_AVX512)
    if(input_length >= 48 && CPUID::has(CPUID::Feature::AVX512)) {
       consumed = base64_encode_avx512(out, in, input_length);
+      BOTAN_ASSERT_NOMSG(consumed <= input_length && consumed % 3 == 0);
       produced = consumed / 3 * 4;
    }
 #endif
@@ -212,6 +214,7 @@ size_t base64_decode(uint8_t output[], const char input[], size_t input_length, 
       // padding, or an invalid character
       const uint8_t* in8 = as_span_of_bytes(input, input_length).data();
       const size_t bulk = base64_decode_avx512(output, in8, input_length);
+      BOTAN_ASSERT_NOMSG(bulk <= input_length && bulk % 4 == 0);
       size_t written = bulk / 4 * 3;
 
       const uint8_t* rest = in8 + bulk;
@@ -223,14 +226,19 @@ size_t base64_decode(uint8_t output[], const char input[], size_t input_length, 
       if(ignore_ws && rest_len > 128) {
          compacted.resize(rest_len);
          const size_t clean_len = base64_strip_ws_avx512(compacted.data(), rest, rest_len);
+         BOTAN_ASSERT_NOMSG(clean_len <= compacted.size());
          rest = compacted.data();
          rest_len = clean_len;
 
          const size_t bulk2 = base64_decode_avx512(output + written, rest, rest_len);
+         BOTAN_ASSERT_NOMSG(bulk2 <= rest_len && bulk2 % 4 == 0);
          written += bulk2 / 4 * 3;
          rest += bulk2;
          rest_len -= bulk2;
       }
+
+      // The scalar decoder may write up to its maximum output for the remainder
+      BOTAN_ASSERT_NOMSG(written + Base64::decode_max_output(rest_len) <= Base64::decode_max_output(input_length));
 
       // The scalar decoder handles the final blocks, and with them all of
       // the padding logic and error reporting

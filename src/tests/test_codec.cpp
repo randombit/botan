@@ -8,6 +8,9 @@
 
 #include <botan/exceptn.h>
 #include <botan/hex.h>
+#include <botan/mem_ops.h>
+#include <algorithm>
+#include <optional>
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
    #include <botan/base64.h>
@@ -269,7 +272,123 @@ class Base64_Tests final : public Text_Based_Test {
             result.test_note("rejected corrupted base64");
          }
 
+         test_buffer_bounds(result);
+
          return {result};
+      }
+
+   private:
+      static constexpr size_t CanaryLen = 64;
+      static constexpr uint8_t Canary = 0xA5;
+
+      static bool canaries_intact(std::span<const uint8_t> buf) {
+         const auto is_canary = [](uint8_t b) { return b == Canary; };
+         const auto head = buf.first(CanaryLen);
+         const auto tail = buf.last(CanaryLen);
+         return std::all_of(head.begin(), head.end(), is_canary) && std::all_of(tail.begin(), tail.end(), is_canary);
+      }
+
+      static void check_decode_bounds(Test::Result& result, std::string_view input, bool ignore_ws) {
+         // An exact size allocation lets sanitizers see any read past the end
+         const std::vector<char> in(input.begin(), input.end());
+         const size_t max_output = Botan::base64_decode_max_output(in.size());
+
+         // The streaming decoder never uses the SIMD bulk paths
+         std::vector<uint8_t> ref(max_output);
+         std::optional<size_t> ref_len;
+         try {
+            size_t consumed = 0;
+            const size_t written = Botan::base64_decode(ref.data(), in.data(), in.size(), consumed, true, ignore_ws);
+            if(consumed == in.size()) {
+               ref_len = written;
+            }
+         } catch(Botan::Invalid_Argument&) {}
+
+         std::vector<uint8_t> buf(CanaryLen + max_output + CanaryLen, Canary);
+         const auto out = std::span{buf}.subspan(CanaryLen, max_output);
+         std::optional<size_t> out_len;
+         try {
+            out_len = Botan::base64_decode(out.data(), in.data(), in.size(), ignore_ws);
+         } catch(Botan::Invalid_Argument&) {}
+
+         const std::string what = "base64 decoding " + std::to_string(in.size()) + " chars";
+
+         if(!canaries_intact(buf)) {
+            result.test_failure(what + " wrote outside of the output buffer");
+         } else if(out_len.has_value() != ref_len.has_value()) {
+            result.test_failure(what + " disagrees with the streaming decoder on validity");
+         } else if(out_len.has_value()) {
+            if(result.test_sz_eq(what + " length", *out_len, *ref_len)) {
+               result.test_bin_eq(what, out.first(*out_len), std::span{ref}.first(*ref_len));
+            }
+         } else {
+            result.test_success();
+         }
+      }
+
+      static void check_encode_bounds(Test::Result& result, size_t len) {
+         std::vector<uint8_t> bin(len);
+         for(size_t i = 0; i != len; ++i) {
+            bin[i] = static_cast<uint8_t>(i * 7 + len);
+         }
+
+         const size_t max_output = Botan::base64_encode_max_output(len);
+         std::vector<uint8_t> buf(CanaryLen + max_output + CanaryLen, Canary);
+         char* out = Botan::cast_uint8_ptr_to_char(&buf[CanaryLen]);
+
+         size_t consumed = 0;
+         const size_t produced = Botan::base64_encode(out, bin.data(), bin.size(), consumed, true);
+
+         const std::string what = "base64 encoding " + std::to_string(len) + " bytes";
+
+         if(!canaries_intact(buf)) {
+            result.test_failure(what + " wrote outside of the output buffer");
+         } else if(produced != max_output || consumed != len) {
+            result.test_failure(what + " returned unexpected lengths");
+         } else {
+            std::vector<uint8_t> decoded(Botan::base64_decode_max_output(produced));
+            size_t decode_consumed = 0;
+            decoded.resize(Botan::base64_decode(decoded.data(), out, produced, decode_consumed, true, false));
+            result.test_bin_eq(what, decoded, bin);
+         }
+      }
+
+      // Every buffer is exactly the documented size, and the outputs are
+      // surrounded by canaries, so any write outside of them is detected
+      static void test_buffer_bounds(Test::Result& result) {
+         constexpr size_t max_len = 320;
+         const std::string_view alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+         for(size_t len = 0; len <= max_len; ++len) {
+            check_encode_bounds(result, len);
+
+            for(const bool all_zero : {true, false}) {
+               std::string body(len, 'A');
+               if(!all_zero) {
+                  for(size_t i = 0; i != len; ++i) {
+                     body[i] = alphabet[(i * 7 + len) % alphabet.size()];
+                  }
+               }
+
+               // Includes excess padding, and padding following complete groups
+               for(size_t pads = 0; pads <= 3; ++pads) {
+                  const std::string padded = body + std::string(pads, '=');
+
+                  // PEM style line wrapping
+                  std::string wrapped;
+                  for(size_t i = 0; i < padded.size(); i += 64) {
+                     wrapped += padded.substr(i, 64);
+                     wrapped += '\n';
+                  }
+
+                  for(const auto& input : {padded, wrapped, " " + padded}) {
+                     for(const bool ignore_ws : {true, false}) {
+                        check_decode_bounds(result, input, ignore_ws);
+                     }
+                  }
+               }
+            }
+         }
       }
 };
 
