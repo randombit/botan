@@ -14,6 +14,7 @@
 #include <exception>
 #include <limits>
 #include <optional>
+#include <vector>
 
 #if defined(BOTAN_HAS_VALGRIND) || defined(BOTAN_ENABLE_DEBUG_ASSERTS)
    /**
@@ -117,13 +118,7 @@ size_t choose_bucket(size_t n) {
       return 0;
    }
 
-   return BUCKET_STEP * ((n + BUCKET_STEP - 1) / BUCKET_STEP);
-}
-
-inline bool ptr_in_pool(const void* pool_ptr, size_t poolsize, const void* buf_ptr, size_t bufsize) {
-   const uintptr_t pool = reinterpret_cast<uintptr_t>(pool_ptr);
-   const uintptr_t buf = reinterpret_cast<uintptr_t>(buf_ptr);
-   return (buf >= pool) && (buf + bufsize <= pool + poolsize);
+   return BUCKET_STEP * ceil_division(n, BUCKET_STEP);
 }
 
 class BitMap final {
@@ -181,6 +176,7 @@ std::optional<size_t> BitMap::find_free() {
          BOTAN_ASSERT_NOMSG((m_bit & bmask) == 0);
          m_bit |= bmask;
          const auto index = static_cast<size_t>(std::distance(m_bits.data(), &m_bit));
+         // slot = (number of complete words before this one) × (slots per word) + (position within this word)
          return BITMASK_BITS * index + free_bit;
       }
    }
@@ -191,32 +187,29 @@ std::optional<size_t> BitMap::find_free() {
 
 class Bucket final {
    public:
-      Bucket(uint8_t* mem, size_t mem_size, size_t item_size) :
-            m_item_size(item_size),
-            m_page_size(mem_size),
-            m_range(mem),
-            m_bitmap(mem_size / item_size),
-            m_is_full(false) {}
+      Bucket(std::span<uint8_t> mem, size_t item_size) :
+            m_item_size(item_size), m_range(mem), m_bitmap(mem.size() / item_size), m_is_full(false) {}
 
-      uint8_t* alloc() {
+      std::span<uint8_t> alloc() {
          if(m_is_full) {
             // I know I am full
-            return nullptr;
+            return {};
          }
 
          auto offset = m_bitmap.find_free();
-         if(!offset) {
+         if(offset.has_value()) {
+            BOTAN_ASSERT(*offset * m_item_size < m_range.size(), "Offset is in range");
+            return m_range.subspan(*offset * m_item_size, m_item_size);
+         } else {
             // I just found out I am full
             m_is_full = true;
-            return nullptr;
-         } else {
-            BOTAN_ASSERT(*offset * m_item_size < m_page_size, "Offset is in range");
-            return m_range + m_item_size * (*offset);
+            return {};
          }
       }
 
-      bool free(void* p) {
-         if(!in_this_bucket(p)) {
+      bool free(std::span<uint8_t> p) {
+         const auto offset = offset_of(p);
+         if(!offset.has_value()) {
             return false;
          }
 
@@ -226,40 +219,57 @@ class Bucket final {
          */
          std::memset(p, 0, m_item_size);
 
-         const size_t offset = (reinterpret_cast<uintptr_t>(p) - reinterpret_cast<uintptr_t>(m_range)) / m_item_size;
-
-         m_bitmap.free(offset);
+         m_bitmap.free(*offset / m_item_size);
          m_is_full = false;
 
          return true;
       }
 
-      bool in_this_bucket(void* p) const { return ptr_in_pool(m_range, m_page_size, p, m_item_size); }
+      bool in_this_bucket(const void* p) const { return offset_of(p).has_value(); }
 
       bool empty() const { return m_bitmap.empty(); }
 
-      uint8_t* ptr() const { return m_range; }
+      std::span<uint8_t> span() const { return m_range; }
 
    private:
+      /**
+      * Byte offset of p within this bucket's page, or nullopt if an item
+      * starting at p would not fit entirely inside the page.
+      */
+      std::optional<size_t> offset_of(const void* p) const {
+         // Compare as integers: p may point outside the page, and relational
+         // comparison of unrelated pointers is unspecified.
+         const uintptr_t start = reinterpret_cast<uintptr_t>(m_range.data());
+         const uintptr_t addr = reinterpret_cast<uintptr_t>(p);
+         if(addr < start) {
+            return std::nullopt;
+         }
+         const size_t offset = addr - start;
+         if(offset > m_range.size() || m_item_size > m_range.size() - offset) {
+            return std::nullopt;
+         }
+         return offset;
+      }
+
       size_t m_item_size;
-      size_t m_page_size;
-      uint8_t* m_range;
+      std::span<uint8_t> m_range;
       BitMap m_bitmap;
       bool m_is_full;
 };
 
-Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) : m_page_size(page_size) {
-   for(auto* page : pages) {
-      const uintptr_t p = reinterpret_cast<uintptr_t>(page);
+Memory_Pool::Memory_Pool(const std::vector<std::span<uint8_t>>& pages, size_t page_size) : m_page_size(page_size) {
+   for(const auto& page : pages) {
+      BOTAN_ARG_CHECK(page.size() == page_size, "Each page must be exactly page_size bytes");
 
+      const uintptr_t p = reinterpret_cast<uintptr_t>(page.data());
       m_min_page_ptr = std::min(p, m_min_page_ptr);
       m_max_page_ptr = std::max(p, m_max_page_ptr);
 
-      clear_bytes(page, m_page_size);
+      clear_bytes(page.data(), page.size());
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
-      OS::page_prohibit_access(page);
+      OS::page_prohibit_access(page.data());
 #endif
-      m_free_pages.push_back(static_cast<uint8_t*>(page));
+      m_free_pages.push_back(page);
    }
 
    /*
@@ -272,8 +282,8 @@ Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) : m_
 Memory_Pool::~Memory_Pool() noexcept  // NOLINT(*-use-equals-default)
 {
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
-   for(auto* page : m_free_pages) {
-      OS::page_allow_access(page);
+   for(const auto& page : m_free_pages) {
+      OS::page_allow_access(page.data());
    }
 #endif
 }
@@ -297,9 +307,8 @@ void* Memory_Pool::allocate(size_t n) {
       recycled.
       */
       for(auto& bucket : buckets) {
-         // NOLINTNEXTLINE(*-const-correctness) bug in clang-tidy
-         if(uint8_t* p = bucket.alloc()) {
-            return p;
+         if(const auto p = bucket.alloc(); !p.empty()) {
+            return p.data();
          }
 
          // If the bucket is full, maybe move it to the end of the list?
@@ -307,16 +316,15 @@ void* Memory_Pool::allocate(size_t n) {
       }
 
       if(!m_free_pages.empty()) {
-         uint8_t* ptr = m_free_pages[0];
+         const auto page = m_free_pages.front();
          m_free_pages.pop_front();
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
-         OS::page_allow_access(ptr);
+         OS::page_allow_access(page.data());
 #endif
-         buckets.push_front(Bucket(ptr, m_page_size, n_bucket));
-         // NOLINTNEXTLINE(*-const-correctness) bug in clang-tidy
-         void* p = buckets[0].alloc();
-         BOTAN_ASSERT_NOMSG(p != nullptr);
-         return p;
+         buckets.push_front(Bucket(page, n_bucket));
+         const auto p = buckets[0].alloc();
+         BOTAN_ASSERT_NOMSG(!p.empty());
+         return p.data();
       }
    }
 
@@ -344,9 +352,9 @@ bool Memory_Pool::deallocate(void* p, size_t len) noexcept {
             if(bucket.free(p)) {
                if(bucket.empty()) {
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
-                  OS::page_prohibit_access(bucket.ptr());
+                  OS::page_prohibit_access(bucket.span().data());
 #endif
-                  m_free_pages.push_back(bucket.ptr());
+                  m_free_pages.push_back(bucket.span());
 
                   if(i != buckets.size() - 1) {
                      std::swap(buckets.back(), buckets[i]);

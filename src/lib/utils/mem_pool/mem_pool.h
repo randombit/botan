@@ -12,6 +12,7 @@
 #include <deque>
 #include <limits>
 #include <map>
+#include <span>
 #include <vector>
 
 namespace Botan {
@@ -27,7 +28,7 @@ class BOTAN_TEST_API Memory_Pool final {
       * @param page_size the system page size, each page should
       *        point to exactly this much memory.
       */
-      Memory_Pool(const std::vector<void*>& pages, size_t page_size);
+      Memory_Pool(const std::vector<std::span<uint8_t>>& pages, size_t page_size);
 
       ~Memory_Pool() noexcept;
 
@@ -46,7 +47,7 @@ class BOTAN_TEST_API Memory_Pool final {
 
       mutex_type m_mutex;
 
-      std::deque<uint8_t*> m_free_pages;
+      std::deque<std::span<uint8_t>> m_free_pages;
       std::map<size_t, std::deque<Bucket>> m_buckets_for;
       uintptr_t m_min_page_ptr = std::numeric_limits<uintptr_t>::max();
       uintptr_t m_max_page_ptr = 0;

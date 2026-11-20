@@ -10,6 +10,7 @@
 
 #include <botan/types.h>
 #include <memory>
+#include <span>
 #include <vector>
 
 namespace Botan {
@@ -35,7 +36,7 @@ class mlock_allocator final {
 
    private:
       std::unique_ptr<Memory_Pool> m_pool;
-      std::vector<void*> m_locked_pages;
+      std::vector<std::span<uint8_t>> m_locked_pages;
 };
 
 }  // namespace Botan

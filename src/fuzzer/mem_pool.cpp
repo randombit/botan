@@ -10,6 +10,7 @@
 #include <botan/internal/mem_pool.h>
 #include <cstring>
 #include <map>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -25,19 +26,23 @@ size_t compute_expected_alignment(size_t plen) {
    }
 }
 
+/**
+* Owns one page allocated with posix_memalign. Move-only, since copying
+* would free the same page twice.
+*/
 struct RawPage {
    public:
-      explicit RawPage(void* p) : m_p(p) {}
+      explicit RawPage(std::span<uint8_t> p) : m_p(p) {}
 
       ~RawPage() {
          // NOLINTNEXTLINE(*-no-malloc,*-owning-memory)
-         std::free(m_p);
+         std::free(m_p.data());
       }
 
-      RawPage(const RawPage& other) = default;
-      RawPage& operator=(const RawPage& other) = default;
+      RawPage(const RawPage& other) = delete;
+      RawPage& operator=(const RawPage& other) = delete;
 
-      RawPage(RawPage&& other) noexcept : m_p(nullptr) { std::swap(m_p, other.m_p); }
+      RawPage(RawPage&& other) noexcept { std::swap(m_p, other.m_p); }
 
       RawPage& operator=(RawPage&& other) noexcept {
          if(this != &other) {
@@ -46,10 +51,10 @@ struct RawPage {
          return (*this);
       }
 
-      void* ptr() const { return m_p; }
+      std::span<uint8_t> span() const { return m_p; }
 
    private:
-      void* m_p;
+      std::span<uint8_t> m_p;
 };
 
 std::vector<RawPage> allocate_raw_pages(size_t count, size_t page_size) {
@@ -63,7 +68,7 @@ std::vector<RawPage> allocate_raw_pages(size_t count, size_t page_size) {
       FUZZER_ASSERT_EQUAL(rc, 0);
 
       if(ptr != nullptr) {
-         pages.push_back(RawPage(ptr));
+         pages.emplace_back(std::span<uint8_t>(static_cast<uint8_t*>(ptr), page_size));
       }
    }
 
@@ -79,10 +84,10 @@ void fuzz(std::span<const uint8_t> in) {
    // static to avoid repeated allocations
    static const std::vector<RawPage> raw_mem = allocate_raw_pages(page_count, page_size);
 
-   std::vector<void*> mem_pages;
+   std::vector<std::span<uint8_t>> mem_pages;
    mem_pages.reserve(raw_mem.size());
    for(const auto& rm : raw_mem) {
-      mem_pages.push_back(rm.ptr());
+      mem_pages.push_back(rm.span());
    }
 
    Botan::Memory_Pool pool(mem_pages, page_size);

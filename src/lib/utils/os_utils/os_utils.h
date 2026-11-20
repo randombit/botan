@@ -13,6 +13,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -182,13 +183,13 @@ size_t read_env_variable_sz(std::string_view var_name, size_t def_value = 0);
 *
 * @param count requested number of locked pages
 */
-std::vector<void*> allocate_locked_pages(size_t count);
+std::vector<std::span<uint8_t>> allocate_locked_pages(size_t count);
 
 /**
 * Free memory allocated by allocate_locked_pages
 * @param pages a list of pages returned by allocate_locked_pages
 */
-void free_locked_pages(const std::vector<void*>& pages);
+void free_locked_pages(const std::vector<std::span<uint8_t>>& pages);
 
 /**
 * Set the MMU to prohibit access to this page
