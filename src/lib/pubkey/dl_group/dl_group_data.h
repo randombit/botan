@@ -10,6 +10,7 @@
 
 #include <botan/bigint.h>
 #include <botan/dl_group.h>
+#include <botan/mutex.h>
 #include <botan/internal/barrett.h>
 #include <botan/internal/monty.h>
 #include <memory>
@@ -99,6 +100,8 @@ class DL_Group_Data final {
       DL_Group_Source source() const { return m_source; }
 
    private:
+      const Montgomery_Exponentiation_State& monty_g() const;
+
       BigInt m_p;
       BigInt m_q;  // zero if no q set
       BigInt m_g;
@@ -107,7 +110,8 @@ class DL_Group_Data final {
       std::optional<Barrett_Reduction> m_mod_q;
       Montgomery_Params m_monty_params;
       std::optional<Montgomery_Params> m_monty_q;
-      std::shared_ptr<const Montgomery_Exponentiation_State> m_monty;
+      mutable mutex_type m_monty_mutex;
+      mutable std::shared_ptr<const Montgomery_Exponentiation_State> m_monty;
       size_t m_p_bits;
       size_t m_q_bits;
       size_t m_estimated_strength;
