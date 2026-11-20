@@ -406,7 +406,7 @@ void Client_Impl_12::process_handshake_msg(Handshake_State& state_base,
       // Cookie ClientHello is a new outgoing flight with a fresh deadline.
       maybe_arm_dtls_retransmission_timer();
    } else if(type == Handshake_Type::ServerHello) {
-      state.server_hello(std::make_unique<Server_Hello_12>(contents));
+      state.server_hello(std::make_unique<Server_Hello_12>(contents, flavor()));
 
       if(!state.server_hello().legacy_version().valid()) {
          throw TLS_Exception(Alert::ProtocolVersion, "Server replied with an invalid version");

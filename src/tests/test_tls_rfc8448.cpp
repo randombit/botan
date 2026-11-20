@@ -832,6 +832,7 @@ Botan::TLS::Session as_server_session(const Botan::TLS::Session& session) {
       {},
       nullptr,
       session.server_info(),
+      0,
       session.start_time());
 }
 

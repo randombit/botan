@@ -154,7 +154,7 @@ class BOTAN_UNSTABLE_API Client_Hello : public Handshake_Message {
  */
 class BOTAN_UNSTABLE_API Client_Hello_12_Shim : public Client_Hello {
    public:
-      explicit Client_Hello_12_Shim(std::span<const uint8_t> buf);
+      explicit Client_Hello_12_Shim(std::span<const uint8_t> buf, TLS_Flavor flavor);
 
    protected:
       using Client_Hello::Client_Hello;
@@ -186,6 +186,11 @@ class BOTAN_UNSTABLE_API Server_Hello : public Handshake_Message {
       const Extensions& extensions() const;
       const Session_ID& session_id() const;
 
+      /**
+       * Return desired downgrade version indicated by hello random, if any.
+       */
+      std::optional<Protocol_Version> random_signals_downgrade() const;
+
       virtual Protocol_Version selected_version() const = 0;
 
    protected:
@@ -208,7 +213,7 @@ class BOTAN_UNSTABLE_API Server_Hello : public Handshake_Message {
  */
 class BOTAN_UNSTABLE_API Server_Hello_12_Shim : public Server_Hello {
    public:
-      explicit Server_Hello_12_Shim(std::span<const uint8_t> buf);
+      explicit Server_Hello_12_Shim(std::span<const uint8_t> buf, TLS_Flavor flavor);
 
    protected:
       friend class Server_Hello_13;  // to allow construction by Server_Hello_13::parse()
@@ -219,11 +224,6 @@ class BOTAN_UNSTABLE_API Server_Hello_12_Shim : public Server_Hello {
        * @returns the selected version as indicated in the legacy_version field
        */
       Protocol_Version selected_version() const final;
-
-      /**
-       * Return desired downgrade version indicated by hello random, if any.
-       */
-      std::optional<Protocol_Version> random_signals_downgrade() const;
 };
 
 /**

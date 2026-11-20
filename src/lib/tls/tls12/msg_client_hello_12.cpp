@@ -274,8 +274,8 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    hash.update(io.send(*this));
 }
 
-Client_Hello_12::Client_Hello_12(std::span<const uint8_t> buf) :
-      Client_Hello_12(std::make_unique<Client_Hello_Internal>(buf)) {}
+Client_Hello_12::Client_Hello_12(std::span<const uint8_t> buf, TLS_Flavor flavor) :
+      Client_Hello_12(std::make_unique<Client_Hello_Internal>(buf, flavor)) {}
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
 

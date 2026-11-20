@@ -1041,8 +1041,11 @@ class TLS_Unit_Tests final : public Test {
                policy->set("allow_dtls12", "true");
             } else if(version == Botan::TLS::Protocol_Version::TLS_V13) {
                policy->set("allow_tls13", "true");
+            } else if(version == Botan::TLS::Protocol_Version::DTLS_V13) {
+               policy->set("allow_dtls13", "true");
+            } else {
+               throw Test_Error("Unknown version " + version.to_string());
             }
-            // TODO(DTLS13): once implemented, map DTLS_V13 -> allow_dtls13 here.
          }
       }
 
@@ -1054,7 +1057,7 @@ class TLS_Unit_Tests final : public Test {
          policy->set("allow_tls12", "false");
          policy->set("allow_tls13", "false");
          policy->set("allow_dtls12", "false");
-         // TODO(DTLS13): once implemented, also set allow_dtls13=false here.
+         policy->set("allow_dtls13", "false");
 
          enable_versions(policy, versions);
       }
@@ -1633,6 +1636,7 @@ class TLS_Unit_Tests final : public Test {
                .offer_version = PV::TLS_V12,
                .expected_version = std::nullopt,
             },
+
          };
 
          const auto make_policy = [&](std::span<const PV> versions) {
@@ -2873,6 +2877,29 @@ class TLS_Unit_Tests final : public Test {
 
             half_closed_result.test_is_true("server is still active", server.is_active());
             half_closed_result.test_bin_eq("client received server data intact", client_cb->received(), server_msg);
+            half_closed_result.test_sz_eq("no key update below the write limit", server_cb->key_updates_sent(), 0);
+
+            // Three more records bring the server to its write limit of 4;
+            // the next send must rekey. As the peer will never send again,
+            // the server must not request a reciprocal KeyUpdate.
+            const std::vector<uint8_t> more_msg{'1', '2', '3'};
+            for(const uint8_t byte : more_msg) {
+               server.send(&byte, 1);
+            }
+            pump();
+            half_closed_result.test_sz_eq("no key update before the write limit", server_cb->key_updates_sent(), 0);
+
+            const uint8_t limit_byte = '4';
+            server.send(&limit_byte, 1);
+            pump();
+
+            half_closed_result.test_sz_eq("write limit triggered a key update", server_cb->key_updates_sent(), 1);
+            half_closed_result.test_sz_eq(
+               "no reciprocal update requested from half-closed peer", server_cb->key_updates_requested(), 0);
+            half_closed_result.test_is_true("server is still active after key update", server.is_active());
+
+            const std::vector<uint8_t> expected_msg{'b', 'y', 'e', '1', '2', '3', '4'};
+            half_closed_result.test_bin_eq("client received all server data", client_cb->received(), expected_msg);
 
             server.close();
             pump();
@@ -3075,7 +3102,7 @@ class TLS_Unit_Tests final : public Test {
 
          // TLS version negotiation / downgrade (and mismatch failures)
 
-   #if defined(BOTAN_HAS_TLS_12) && defined(BOTAN_HAS_TLS_13)
+   #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
          test_version_negotiation(results, creds, rng);
    #endif
 
