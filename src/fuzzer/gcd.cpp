@@ -25,7 +25,7 @@ Botan::BigInt ref_gcd(Botan::BigInt a, Botan::BigInt b) {
 void fuzz(std::span<const uint8_t> in) {
    static const size_t max_bits = 4096;
 
-   if(2 * in.size() * 8 > max_bits) {
+   if(in.size() > 2 * max_bits / 8) {
       return;
    }
 

@@ -12,10 +12,12 @@ Fuzzing with libFuzzer
 As of Clang Version 6.0 libFuzzer is automatically included in the compiler. Therefore you don't need to install any new software.
 You can build the fuzzers by running ::
 
-  $ ./configure.py --cc=clang --build-fuzzer=libfuzzer --enable-sanitizers=fuzzer
+  $ ./configure.py --cc=clang --build-fuzzer=libfuzzer --enable-sanitizers=fuzzer --disable-modules=locking_allocator
   $ make fuzzers
 
 The option `--enable-sanitizers=fuzzer` compiles the library for coverage-guided fuzzing.
+Disabling the `locking_allocator` module is required, since writes within the mlock pool
+are not visible to the sanitizers.
 You can add additional sanitizers like `address`, `undefined` and `memory` or with/without
 additional information during building by either adding `--unsafe-fuzzer-mode` or `--with-debug-info`.
 The `coverage` sanitizer is not compatible with this configuration.
@@ -41,14 +43,14 @@ Please make sure that you have installed AFL++ according to https://aflplus.plus
 The version of Clang should match the version of `afl-clang-fast++`/ `afl-clang-fast`.
 You can fuzz with AFL++ in LLVM mode (https://github.com/AFLplusplus/AFLplusplus/blob/stable/instrumentation/README.llvm.md) by running ::
 
-  $ ./configure.py --cc=clang --with-sanitizers --build-fuzzer=afl --unsafe-fuzzer-mode --cc-bin=afl-clang-fast++
+  $ ./configure.py --cc=clang --with-sanitizers --build-fuzzer=afl --unsafe-fuzzer-mode --disable-modules=locking_allocator --cc-bin=afl-clang-fast++
   $ make fuzzers
 
 For AFL++ in GCC mode make sure that you have `afl-g++-fast` installed.
 Otherwise follow https://github.com/AFLplusplus/AFLplusplus/blob/stable/instrumentation/README.gcc_plugin.md to build and install it.
 You can configure the build by running ::
 
-  $ ./configure.py --cc=gcc --with-sanitizers --build-fuzzer=afl --unsafe-fuzzer-mode --cc-bin=afl-g++-fast
+  $ ./configure.py --cc=gcc --with-sanitizers --build-fuzzer=afl --unsafe-fuzzer-mode --disable-modules=locking_allocator --cc-bin=afl-g++-fast
   $ make fuzzers
 
 The fuzzer binaries will be in `build/fuzzer`. To run them you need to

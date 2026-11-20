@@ -49,8 +49,8 @@ void fuzz(std::span<const uint8_t> in) {
    if(lib_idx.has_value().as_bool() && ref_idx.has_value().as_bool()) {
       FUZZER_ASSERT_EQUAL(lib_idx.value(), ref_idx.value());
    } else if(lib_idx.has_value().as_bool() && !ref_idx.has_value().as_bool()) {
-      FUZZER_WRITE_AND_CRASH("Ref accepted but lib rejected\n");
-   } else if(!lib_idx.has_value().as_bool() && ref_idx.has_value().as_bool()) {
       FUZZER_WRITE_AND_CRASH("Lib accepted but ref rejected\n");
+   } else if(!lib_idx.has_value().as_bool() && ref_idx.has_value().as_bool()) {
+      FUZZER_WRITE_AND_CRASH("Ref accepted but lib rejected\n");
    }
 }

@@ -46,8 +46,8 @@ void fuzz_mp_redc(std::span<const uint8_t> in) {
    for(size_t i = 0; i != N; ++i) {
       if(r_script[i] != r_ref[i]) {
          dump_word_vec("input", z, 2 * N);
-         dump_word_vec("r_script", r_script, 2 * N);
-         dump_word_vec("r_ref", r_ref, 2 * N);
+         dump_word_vec("r_script", r_script, N);
+         dump_word_vec("r_ref", r_ref, N);
          dump_word_vec("p", p, N);
          dump_word_vec("p_dash", &p_dash, 1);
          std::abort();
