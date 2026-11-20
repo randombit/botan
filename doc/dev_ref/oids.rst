@@ -95,6 +95,13 @@ Values currently assigned are::
   mceliece8192128pc   OBJECT IDENTIFIER ::= { mceliece 5 }
   mceliece8192128pcf  OBJECT IDENTIFIER ::= { mceliece 6 }
 
+  hqcr4 OBJECT IDENTIFIER ::= { publicKey 19 }
+
+  -- hqcr4 1, 3 and 5 are reserved for the final (standardized) version of HQC
+  hqcr4-1 OBJECT IDENTIFIER ::= { hqcr4 101 }
+  hqcr4-3 OBJECT IDENTIFIER ::= { hqcr4 103 }
+  hqcr4-5 OBJECT IDENTIFIER ::= { hqcr4 105 }
+
   symmetricKey OBJECT IDENTIFIER ::= { randombit 3 }
 
   ocbModes OBJECT IDENTIFIER ::= { symmetricKey 2 }

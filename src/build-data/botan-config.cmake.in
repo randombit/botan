@@ -134,7 +134,8 @@ if(NOT TARGET botan::botan-static)
       IMPORTED_LOCATION                 "${_Botan_LIB_PREFIX}/%{static_lib_name}"
       INTERFACE_INCLUDE_DIRECTORIES     "${_Botan_INCLUDE_DIR}"
       IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
-      INTERFACE_LINK_OPTIONS            "SHELL:%{cxx_abi_flags}")
+      INTERFACE_LINK_OPTIONS            "SHELL:%{cxx_abi_flags}"
+      INTERFACE_LINK_LIBRARIES          "%{hqc_native_libs_cmake}")
 
   # TODO(Botan4): Remove this alias
   if(NOT ${CMAKE_VERSION} VERSION_LESS "3.18.0") # 3.18 allows creating ALIAS targets to non-GLOBAL targets

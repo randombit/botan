@@ -146,8 +146,17 @@ ct_selftest: %{out_dir}/botan_ct_selftest
 
 # Library targets
 
-%{if build_static_lib}
+%{if with_hqc}
+%{hqc_rust_archive}: %{hqc_rust_sources}
+	"$(PYTHON_EXE)" -c "import os; os.makedirs('%{hqc_rust_dir}', exist_ok=True)"
+	"%{hqc_rustc}" %{hqc_rust_flags} %{hqc_rust_crate} -o $@
+%{endif}
 
+%{if build_static_lib_with_hqc}
+%{out_dir}/%{static_lib_name}: $(LIBOBJS) %{hqc_rust_archive} %{scripts_dir}/build_hqc_archive.py
+	"$(PYTHON_EXE)" "$(SCRIPTS_DIR)/build_hqc_archive.py" --ar="$(AR)" --ar-options="$(AR_OPTIONS)" --output="$@" --rust-archive="%{hqc_rust_archive}" $(LIBOBJS)
+%{endif}
+%{if build_static_lib_without_hqc}
 %{out_dir}/%{static_lib_name}: $(LIBOBJS)
 	$(AR) $(AR_OPTIONS) %{ar_output_to}$@ $(LIBOBJS)
 
@@ -155,8 +164,8 @@ ct_selftest: %{out_dir}/botan_ct_selftest
 
 %{if build_shared_lib}
 
-%{out_dir}/%{shared_lib_name}: $(LIBOBJS)
-	%{lib_link_cmd} $(ABI_FLAGS) $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) %{output_to_exe}$@
+%{out_dir}/%{shared_lib_name}: $(LIBOBJS) %{hqc_rust_archive}
+	%{lib_link_cmd} $(ABI_FLAGS) $(LDFLAGS) $(LIBOBJS) %{hqc_rust_archive} %{hqc_rust_link_flags} $(LIB_LINKS_TO) %{output_to_exe}$@
 %{endif}
 %{if symlink_shared_lib}
 	cd %{out_dir} && ln -fs %{shared_lib_name} %{soname_base}
