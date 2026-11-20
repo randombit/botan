@@ -980,11 +980,20 @@ read one input from stdin and then exit.
 
 Specify an additional library that fuzzer binaries must link with.
 
+``--with-plzn-dir=DIR``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specify the location of a `plzn <https://github.com/randombit/plzn>`_ checkout.
+This is required for the ``plzn_shim`` build target. The shim is compiled
+together with the sources of plzn's shim helper library in ``DIR/shims/common``,
+so nothing in the checkout needs to be built beforehand; the plzn runner itself
+(``cargo build``) is only needed to run the suite.
+
 ``--build-targets=BUILD_TARGETS``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Build only the specific targets and tools
-(``static``, ``shared``, ``cli``, ``tests``, ``bogo_shim``).
+(``static``, ``shared``, ``cli``, ``tests``, ``bogo_shim``, ``plzn_shim``).
 
 
 ``--without-documentation``
