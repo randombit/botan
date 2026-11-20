@@ -43,6 +43,20 @@ std::optional<KEM_Info> kem_info(KEM_Code code) {
          return KEM_Info{32, 32, 32, 32, "DHKEM(X25519, HKDF-SHA256)"};
       case KEM_Code::DHKEM_X448:
          return KEM_Info{64, 56, 56, 56, "DHKEM(X448, HKDF-SHA512)"};
+
+      // See draft-ietf-hpke-pq-05 Sections 8.1 and 8.2
+      case KEM_Code::ML_KEM_512:
+         return KEM_Info{32, 768, 800, 64, "ML-KEM-512"};
+      case KEM_Code::ML_KEM_768:
+         return KEM_Info{32, 1088, 1184, 64, "ML-KEM-768"};
+      case KEM_Code::ML_KEM_1024:
+         return KEM_Info{32, 1568, 1568, 64, "ML-KEM-1024"};
+      case KEM_Code::MLKEM768_P256:
+         return KEM_Info{32, 1153, 1249, 32, "MLKEM768-P256"};
+      case KEM_Code::MLKEM1024_P384:
+         return KEM_Info{32, 1665, 1665, 32, "MLKEM1024-P384"};
+      case KEM_Code::MLKEM768_X25519:
+         return KEM_Info{32, 1120, 1216, 32, "MLKEM768-X25519"};
    }
    return std::nullopt;
 }

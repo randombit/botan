@@ -267,7 +267,13 @@ Test::Result test_hpke_suite_ids() {
                           KEM_Code::DHKEM_P384,
                           KEM_Code::DHKEM_P521,
                           KEM_Code::DHKEM_X25519,
-                          KEM_Code::DHKEM_X448}) {
+                          KEM_Code::DHKEM_X448,
+                          KEM_Code::ML_KEM_512,
+                          KEM_Code::ML_KEM_768,
+                          KEM_Code::ML_KEM_1024,
+                          KEM_Code::MLKEM768_P256,
+                          KEM_Code::MLKEM1024_P384,
+                          KEM_Code::MLKEM768_X25519}) {
       result.test_is_true("defined KEM is known", KEM_Id(code).is_known());
       result.test_is_true("defined KEM is known from the wire", KEM_Id(KEM_Id(code).wire_code()).is_known());
       result.test_is_true("defined KEM has a name", KEM_Id(code).to_string().has_value());
