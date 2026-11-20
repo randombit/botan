@@ -17,6 +17,7 @@
 #include <botan/internal/kyber_algos.h>
 #include <botan/internal/kyber_constants.h>
 #include <botan/internal/kyber_types.h>
+#include <memory>
 
 namespace Botan {
 
@@ -64,8 +65,20 @@ secure_vector<uint8_t> encode_ml_kem_private_key(const KyberInternalKeypair& key
 
 class Kyber_PublicKeyInternal final {
    public:
-      Kyber_PublicKeyInternal(KyberConstants mode, KyberSerializedPublicKey public_key);
-      Kyber_PublicKeyInternal(KyberConstants mode, KyberPolyVecNTT polynomials, KyberSeedRho seed);
+      /**
+      * @param At the transposed matrix A of this key, if the caller already has it
+      */
+      Kyber_PublicKeyInternal(KyberConstants mode,
+                              KyberSerializedPublicKey public_key,
+                              std::shared_ptr<const KyberPolyMat> At = {});
+
+      /**
+      * @param At the transposed matrix A of this key, if the caller already has it
+      */
+      Kyber_PublicKeyInternal(KyberConstants mode,
+                              KyberPolyVecNTT polynomials,
+                              KyberSeedRho seed,
+                              std::shared_ptr<const KyberPolyMat> At = {});
 
       void indcpa_encrypt(StrongSpan<KyberCompressedCiphertext> out_ct,
                           StrongSpan<const KyberMessage> m,
@@ -92,6 +105,9 @@ class Kyber_PublicKeyInternal final {
 
       const KyberHashedPublicKey& H_public_key_bits_raw() const { return m_H_public_key_bits_raw; }
 
+      /// The transposed matrix A, or null if it was not available when the key was created
+      const std::shared_ptr<const KyberPolyMat>& precomputed_matrix_At() const { return m_At; }
+
       Kyber_PublicKeyInternal() = delete;
 
    private:
@@ -100,6 +116,9 @@ class Kyber_PublicKeyInternal final {
       const KyberHashedPublicKey m_H_public_key_bits_raw;
       KyberPolyVecNTT m_t;
       const KyberSeedRho m_rho;
+      // Kept when key generation or decoding computes it anyway, so that
+      // creating the KEM operations does not need to sample it again
+      const std::shared_ptr<const KyberPolyMat> m_At;
 };
 
 class Kyber_PrivateKeyInternal final {

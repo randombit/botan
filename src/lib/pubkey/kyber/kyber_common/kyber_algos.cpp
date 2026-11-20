@@ -14,6 +14,7 @@
 
 #include <botan/internal/kyber_algos.h>
 
+#include <botan/mem_ops.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/kyber_helpers.h>
@@ -399,8 +400,17 @@ KyberInternalKeypair expand_keypair(KyberPrivateKeySeed seed, KyberConstants mod
 
    CT::unpoison_all(d, t, s);
 
+   // The KEM operations need the transpose of A, so keep it rather than
+   // sampling the matrix again
+   auto At = std::make_shared<KyberPolyMat>(mode.k(), mode.k());
+   for(size_t i = 0; i != mode.k(); ++i) {
+      for(size_t j = 0; j != mode.k(); ++j) {
+         copy_mem((*At)[i][j].coefficients(), A[j][i].coefficients());
+      }
+   }
+
    return {
-      std::make_shared<Kyber_PublicKeyInternal>(mode, std::move(t), std::move(rho)),
+      std::make_shared<Kyber_PublicKeyInternal>(mode, std::move(t), std::move(rho), std::move(At)),
       std::make_shared<Kyber_PrivateKeyInternal>(std::move(mode), std::move(s), std::move(seed)),
    };
 }
