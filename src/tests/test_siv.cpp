@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_AEAD_SIV)
    #include <botan/aead.h>
+   #include <botan/exceptn.h>
    #include <botan/hex.h>
    #include <botan/rng.h>
    #include <botan/internal/parsing.h>
@@ -107,6 +108,14 @@ class SIV_Noncontiguous_AD_Tests final : public Test {
          dec->start();
          dec->finish(buf_gapped, 0);
          result.test_bin_eq("gapped AD round-trips", buf_gapped, input);
+
+         // With every AD slot used there is no room left for a nonce in S2V.
+         // This must be rejected before any decryption happens (GH #5905)
+         auto full = Botan::AEAD_Mode::create("AES-128/SIV", Botan::Cipher_Dir::Decryption);
+         full->set_key(key);
+         full->set_associated_data_n(full->maximum_associated_data_inputs() - 1, {});
+         result.test_throws<Botan::Invalid_Argument>("SIV rejects a nonce when all AD slots are used",
+                                                     [&]() { full->start(rng().random_vec(16)); });
 
          return {result};
       }
