@@ -58,7 +58,7 @@ std::vector<uint8_t> calculate_cookie(std::span<const uint8_t> client_hello_bits
    return hmac->final_stdvec();
 }
 
-Client_Hello_Internal::Client_Hello_Internal(std::span<const uint8_t> buf) {
+Client_Hello_Internal::Client_Hello_Internal(std::span<const uint8_t> buf, TLS_Flavor flavor) {
    /*
    Minimum possible client hello
 
@@ -82,6 +82,13 @@ Client_Hello_Internal::Client_Hello_Internal(std::span<const uint8_t> buf) {
    const uint8_t minor_version = reader.get_byte();
 
    m_legacy_version = Protocol_Version(major_version, minor_version);
+
+   // The DTLS ClientHello is not byte-compatible with the TLS ClientHello.
+   // Hence, if the legacy version disagrees with the expected transport
+   // flavor, we emit a decoding error alert.
+   if(m_legacy_version.is_datagram_protocol() != flavor.is_datagram()) {
+      throw Decoding_Error("Client_Hello: Received an unexpected protocol flavor");
+   }
 
    // DTLS has an additional 1 byte cookie length field
    if(m_legacy_version.is_datagram_protocol() && buf.size() < MinimumClientHelloBytes + 1) {
@@ -123,16 +130,16 @@ Protocol_Version Client_Hello_Internal::version() const {
    //    TLS 1.3 ClientHellos are identified as having a legacy_version of
    //    0x0303 and a supported_versions extension present with 0x0304 as
    //    the highest version indicated therein.
+   const bool is_dtls = m_legacy_version.is_datagram_protocol();
+   const auto protocol_version_13 = is_dtls ? Protocol_Version::DTLS_V13 : Protocol_Version::TLS_V13;
    if(!extensions().has<Supported_Versions>() ||
-      !extensions().get<Supported_Versions>()->supports(Protocol_Version::TLS_V13)) {
-      // The exact legacy_version is ignored we just inspect it to
-      // distinguish TLS and DTLS.
-      return m_legacy_version.flavor().legacy_version();
+      !extensions().get<Supported_Versions>()->supports(protocol_version_13)) {
+      return is_dtls ? Protocol_Version::DTLS_V12 : Protocol_Version::TLS_V12;
    }
 
    // Note: The Client_Hello_13 class will make sure that legacy_version
    //       is exactly 0x0303 (aka ossified TLS 1.2)
-   return Protocol_Version::TLS_V13;
+   return protocol_version_13;
 }
 
 Client_Hello::Client_Hello(Client_Hello&&) noexcept = default;
@@ -267,17 +274,7 @@ std::string Client_Hello::sni_hostname() const {
 }
 
 bool Client_Hello::offered_tls13() const {
-   // RFC 9846 4.2.2
-   //    TLS 1.3 ClientHellos are identified as having a legacy_version of
-   //    0x0303 and a "supported_versions" extension present with 0x0304 as the
-   //    highest version indicated therein.
-   const auto* versions = m_data->extensions().get<Supported_Versions>();
-   if(versions == nullptr) {
-      return false;
-   }
-
-   return versions->supports(Protocol_Version::TLS_V13) ||  //
-          versions->supports(Protocol_Version::DTLS_V13);
+   return m_data->version().is_tls_13_or_later();
 }
 
 std::vector<Protocol_Version> Client_Hello::supported_versions() const {
@@ -316,7 +313,7 @@ const std::vector<uint8_t>& Client_Hello::cookie() const {
 Client_Hello_12_Shim::Client_Hello_12_Shim(std::unique_ptr<Client_Hello_Internal> data) :
       Client_Hello(std::move(data)) {}
 
-Client_Hello_12_Shim::Client_Hello_12_Shim(std::span<const uint8_t> buf) :
-      Client_Hello_12_Shim(std::make_unique<Client_Hello_Internal>(buf)) {}
+Client_Hello_12_Shim::Client_Hello_12_Shim(std::span<const uint8_t> buf, TLS_Flavor flavor) :
+      Client_Hello_12_Shim(std::make_unique<Client_Hello_Internal>(buf, flavor)) {}
 
 }  // namespace Botan::TLS

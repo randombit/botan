@@ -203,7 +203,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
                } else if(algo == "client_hello") {
                   const std::string extensions = vars.get_req_str("AdditionalData");
                   const Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
-                  const Botan::TLS::Client_Hello_12 message(buffer);
+                  const Botan::TLS::Client_Hello_12 message(buffer, Botan::TLS::TLS_Flavor::TLS);
                   result.test_str_eq("Protocol version", message.legacy_version().to_string(), pv.to_string());
                   std::vector<uint8_t> buf;
                   for(const Botan::TLS::Extension_Code& type : message.extension_types()) {
@@ -223,7 +223,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
                   const Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
                   const Botan::TLS::Ciphersuite cs =
                      Botan::TLS::Ciphersuite::by_id(Botan::make_uint16(ciphersuite[0], ciphersuite[1])).value();
-                  const Botan::TLS::Server_Hello_12 message(buffer);
+                  const Botan::TLS::Server_Hello_12 message(buffer, Botan::TLS::TLS_Flavor::TLS);
                   result.test_str_eq("Protocol version", message.legacy_version().to_string(), pv.to_string());
                   result.test_is_true("Ciphersuite", (message.ciphersuite() == cs.ciphersuite_code()));
                   std::vector<uint8_t> buf;
@@ -265,7 +265,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
                });
             } else if(algo == "client_hello") {
                result.test_throws("invalid client_hello input", exception, [&buffer]() {
-                  const Botan::TLS::Client_Hello_12 message(buffer);
+                  const Botan::TLS::Client_Hello_12 message(buffer, Botan::TLS::TLS_Flavor::TLS);
                });
             } else if(algo == "hello_verify") {
                result.test_throws("invalid hello_verify input", exception, [&buffer]() {
@@ -285,7 +285,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
                });
             } else if(algo == "server_hello") {
                result.test_throws("invalid server_hello input", exception, [&buffer]() {
-                  const Botan::TLS::Server_Hello_12 message(buffer);
+                  const Botan::TLS::Server_Hello_12 message(buffer, Botan::TLS::TLS_Flavor::TLS);
                });
             } else if(algo == "alert") {
                result.test_throws("invalid alert input", exception, [&buffer]() {
@@ -618,7 +618,7 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
 
                      result.test_is_true("this is a positive test that should not have failed yet", is_positive_test);
                   },
-                  Botan::TLS::Client_Hello_13::parse(buffer));
+                  Botan::TLS::Client_Hello_13::parse(buffer, Botan::TLS::TLS_Flavor::TLS));
             } catch(const std::exception& ex) {
                result.test_str_eq("correct error produced", ex.what(), exception);
                result.test_is_true("negative test", !is_positive_test);
@@ -653,7 +653,7 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
                      }
                      result.test_bin_eq("Hello extensions", buf, extensions);
                   },
-                  Botan::TLS::Server_Hello_13::parse(buffer));
+                  Botan::TLS::Server_Hello_13::parse(buffer, Botan::TLS::TLS_Flavor::TLS));
             } catch(const std::exception& ex) {
                result.test_str_eq("correct error produced", ex.what(), exception);
                result.test_is_true("negative test", !is_positive_test);

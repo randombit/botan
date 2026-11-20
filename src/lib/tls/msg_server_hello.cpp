@@ -17,6 +17,7 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/tls_reader.h>
 
 namespace Botan::TLS {
@@ -37,8 +38,9 @@ std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
    //    If negotiating TLS 1.2, TLS 1.3 servers MUST set the last 8 bytes of
    //    their Random value to the bytes: [DOWNGRADE_TLS12]
    //
-   // DTLS 1.3 is not implemented, so a DTLS server never sets these.
-   if(flavor.is_streaming() && offered_version.is_pre_tls_13() && policy.allow_tls13()) {
+   // DTLS 1.3 servers signal downgrades just as TLS 1.3 servers do.
+   const bool server_supports_13 = flavor.is_datagram() ? policy.allow_dtls13() : policy.allow_tls13();
+   if(offered_version.is_pre_tls_13() && server_supports_13) {
       constexpr size_t downgrade_signal_length = sizeof(DOWNGRADE_TLS12);
       BOTAN_ASSERT_NOMSG(random.size() >= downgrade_signal_length);
       const auto lastbytes = std::span{random}.last(downgrade_signal_length);
@@ -48,7 +50,7 @@ std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
    return random;
 }
 
-Server_Hello_Internal::Server_Hello_Internal(std::span<const uint8_t> buf) {
+Server_Hello_Internal::Server_Hello_Internal(std::span<const uint8_t> buf, TLS_Flavor flavor) {
    if(buf.size() < 38) {
       throw Decoding_Error("Server_Hello: Packet corrupted");
    }
@@ -59,6 +61,13 @@ Server_Hello_Internal::Server_Hello_Internal(std::span<const uint8_t> buf) {
    const uint8_t minor_version = reader.get_byte();
 
    m_legacy_version = Protocol_Version(major_version, minor_version);
+
+   // The ServerHello is byte-compatible between TLS and DTLS. Hence, if the
+   // peer's legacy version disagrees with the expected transport flavor, we
+   // emit a protocol version alert.
+   if(m_legacy_version.is_datagram_protocol() != flavor.is_datagram()) {
+      throw TLS_Exception(Alert::ProtocolVersion, "Server_Hello: Received an unexpected protocol flavor");
+   }
 
    // RFC 8446 4.1.3
    //    Upon receiving a message with type server_hello, implementations MUST
@@ -82,16 +91,20 @@ Server_Hello_Internal::Server_Hello_Internal(std::span<const uint8_t> buf) {
 }
 
 Protocol_Version Server_Hello_Internal::version() const {
-   // RFC 8446 4.2.1
-   //    A server which negotiates a version of TLS prior to TLS 1.3 MUST set
-   //    ServerHello.version and MUST NOT send the "supported_versions"
-   //    extension.  A server which negotiates TLS 1.3 MUST respond by sending
-   //    a "supported_versions" extension containing the selected version
-   //    value (0x0304).
+   // RFC 9846 4.3.1
+   //    If this extension is present, clients MUST ignore the
+   //    ServerHello.legacy_version value and MUST use only the
+   //    "supported_versions" extension to determine the selected version.
    //
    // Note: Here we just take a message parsing decision, further validation of
    //       the extension's contents is done later.
-   return (extensions().has<Supported_Versions>()) ? Protocol_Version::TLS_V13 : m_legacy_version;
+   if(extensions().has<Supported_Versions>()) {
+      // We use m_legacy_version to determine the transport flavor whose
+      // consistency with the expected flavor is checked in the constructor.
+      return m_legacy_version.is_datagram_protocol() ? Protocol_Version::DTLS_V13 : Protocol_Version::TLS_V13;
+   }
+
+   return m_legacy_version;
 }
 
 Server_Hello::Server_Hello(std::unique_ptr<Server_Hello_Internal> data) : m_data(std::move(data)) {}
@@ -156,8 +169,20 @@ const Extensions& Server_Hello::extensions() const {
    return m_data->extensions();
 }
 
-Server_Hello_12_Shim::Server_Hello_12_Shim(std::span<const uint8_t> buf) :
-      Server_Hello_12_Shim(std::make_unique<Server_Hello_Internal>(buf)) {}
+std::optional<Protocol_Version> Server_Hello::random_signals_downgrade() const {
+   const uint64_t last8 = load_be<uint64_t>(m_data->random().data(), 3);
+   if(last8 == DOWNGRADE_TLS11) {
+      return Protocol_Version::TLS_V11;
+   }
+   if(last8 == DOWNGRADE_TLS12) {
+      return Protocol_Version::TLS_V12;
+   }
+
+   return std::nullopt;
+}
+
+Server_Hello_12_Shim::Server_Hello_12_Shim(std::span<const uint8_t> buf, TLS_Flavor flavor) :
+      Server_Hello_12_Shim(std::make_unique<Server_Hello_Internal>(buf, flavor)) {}
 
 Server_Hello_12_Shim::Server_Hello_12_Shim(std::unique_ptr<Server_Hello_Internal> data) :
       Server_Hello(std::move(data)) {
@@ -168,18 +193,6 @@ Server_Hello_12_Shim::Server_Hello_12_Shim(std::unique_ptr<Server_Hello_Internal
 
 Protocol_Version Server_Hello_12_Shim::selected_version() const {
    return legacy_version();
-}
-
-std::optional<Protocol_Version> Server_Hello_12_Shim::random_signals_downgrade() const {
-   const uint64_t last8 = load_be<uint64_t>(m_data->random().data(), 3);
-   if(last8 == DOWNGRADE_TLS11) {
-      return Protocol_Version::TLS_V11;
-   }
-   if(last8 == DOWNGRADE_TLS12) {
-      return Protocol_Version::TLS_V12;
-   }
-
-   return std::nullopt;
 }
 
 }  // namespace Botan::TLS
