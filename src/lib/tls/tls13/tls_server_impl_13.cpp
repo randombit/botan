@@ -360,15 +360,15 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
    // NOTE: the server_hello variable is moved into the handshake state. Later
    //       references to the Server Hello will need to consult the handshake
    //       state object!
-   auto flight = Flight(*m_transcript_hash, callbacks())  //
-                    .add(m_handshake->state.sending(std::move(server_hello)));
+   auto sh_flight = Flight(*m_transcript_hash, callbacks())  //
+                       .add(m_handshake->state.sending(std::move(server_hello)));
 
    // RFC 9846 E.4
    //    The server sends a dummy change_cipher_spec record immediately after
    //    its first handshake message. This may either be after a ServerHello or
    //    a HelloRetryRequest.
    if(compat_mode_ccs_requested() && !m_handshake->state.has_hello_retry_request()) {
-      flight.add_dummy_change_cipher_spec();
+      sh_flight.add_dummy_change_cipher_spec();
    }
 
    // Setup encryption for all the remaining handshake messages. Note that this
@@ -400,6 +400,16 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
                                                      secret_logger());
       }
    }();
+
+   // Send the ServerHello (and dummy CCS) right away, rather than holding it
+   // back until the rest of the flight is assembled. This allows the peer to
+   // process the ServerHello (key exchange and handshake key derivation) while
+   // we create the Certificate, sign the CertificateVerify, etc. Promote the
+   // cipher state immediately before the ServerHello is sent (see comment at
+   // declaration of new_cipher_state).
+   auto& cs = setup_cipher_state(std::move(new_cipher_state));
+   send_flight(sh_flight.commit());
+   auto flight = Flight(*m_transcript_hash, callbacks());
 
    // Decide up front whether we will request client authentication so the
    // EncryptedExtensions can attach client_certificate_type when applicable
@@ -467,7 +477,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
                                                                rng())));
    }
 
-   flight.add(m_handshake->state.sending(Finished_13(*new_cipher_state, m_transcript_hash->current())));
+   flight.add(m_handshake->state.sending(Finished_13(cs, m_transcript_hash->current())));
 
    if(client_hello.extensions().has<Record_Size_Limit>() &&
       m_handshake->state.encrypted_extensions().extensions().has<Record_Size_Limit>()) {
@@ -492,9 +502,6 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
       set_record_size_limits(outgoing_limit->limit(), incoming_limit->limit());
    }
 
-   // Promote cipher state immediately before sending the flight (see comment
-   // at declaration of new_cipher_state).
-   auto& cs = setup_cipher_state(std::move(new_cipher_state));
    send_flight(flight.commit());
 
    cs.advance_with_server_finished(m_transcript_hash->current());
