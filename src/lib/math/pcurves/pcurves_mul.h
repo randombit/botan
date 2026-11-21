@@ -317,7 +317,7 @@ class SharedZPointTable final {
       *
       * The multiples are computed as a chain of mixed additions, each of which
       * multiplies Z by a known value H, so the rescaling factors Zt/Z_i are
-      * products of H values.
+      * products of H values. If p is the identity then so is every entry.
       *
       * @param p the point whose multiples are tabulated
       * @param n the number of multiples
@@ -370,10 +370,16 @@ class SharedZPointTable final {
       explicit SharedZPointTable(Table t) : m_table(std::move(t.pts)), m_z(t.z), m_a(t.a) {}
 
       // Return the affine point corresponding to pt after multiplying its Z by f
+      //
+      // The projective identity is (x, y, 0) with y != 0, and scaling that does
+      // not in general result in (0, 0), which is the only encoding of the
+      // identity that the mixed addition formulas recognize
       static AffinePoint rescale(const ProjectivePoint& pt, const FieldElement& f) {
          const auto f2 = f.square();
          const auto f3 = f2 * f;
-         return AffinePoint(pt.x() * f2, pt.y() * f3);
+         auto scaled = AffinePoint(pt.x() * f2, pt.y() * f3);
+         scaled.conditional_assign(pt.is_identity(), AffinePoint::identity(scaled));
+         return scaled;
       }
 
       static Table finish(std::vector<AffinePoint> pts, const FieldElement& zt, const FieldElement& a) {
@@ -463,7 +469,7 @@ class SharedZPointTable final {
          for(size_t i = n; i > 0; --i) {
             const size_t idx = i - 1;
 
-            auto pt = [&]() {
+            const auto pt = [&]() {
                // Conditional ok: idx is public
                if(idx == 0) {
                   return rescale(pts[idx], suffix);
@@ -471,7 +477,6 @@ class SharedZPointTable final {
                   return rescale(pts[idx], prefix[idx - 1] * suffix);
                }
             }();
-            pt.conditional_assign(pts[idx].is_identity(), AffinePoint::identity(pt));
             scaled.push_back(pt);
 
             suffix *= z[idx];
