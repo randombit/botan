@@ -130,6 +130,15 @@ secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_le
       throw Invalid_Argument("DH agreement - invalid key provided");
    }
 
+   /*
+   * Note that we omit any subgroup check on v. This check is not necessary for
+   * the commonly used safe primes, the check costs almost as much as the
+   * agreement itself, and almost all uses of FFDHE are ephemeral anyway.
+   *
+   * Applications choosing to use static DH keys with non-safe groups should
+   * verify the peer's share using ``DL_Group::verify_public_element``
+   */
+
    const auto scope = CT::scoped_poison(m_key->private_key(), m_powermod_x);
 
    const auto z = m_powermod_x.pow(DL_Element::from_bigint(group(), v));

@@ -197,6 +197,20 @@ std::optional<X509_Certificate> Certificate_Store_In_Memory::find_cert_by_issuer
 }
 
 void Certificate_Store_In_Memory::add_crl(const X509_CRL& crl) {
+
+   /*
+   * Currently only one CRL is kept per issuer name, regardless of key or
+   * distribution point, which prevents using partitioned CRLs correctly and
+   * which can lead to one CRL ejecting another unrelated CRL.
+   *
+   * Would be nice to fix this but worst case scenario is loss of revocation
+   * data causing the certificate to be rejected. An application which performs
+   * path validation without requiring fresh revocation data can indeed be
+   * tricked into accepting a revoked certificate if a CRL evicts another, but
+   * such an application has explicitly opted into not requiring fresh
+   * revocation data.
+   */
+
    auto& store = impl();
    const X509_DN& crl_issuer = crl.issuer_dn();
 

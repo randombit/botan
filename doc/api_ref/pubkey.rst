@@ -543,6 +543,11 @@ require much larger keys than elliptic curve schemes, and are typically much slo
    example ``DL_Group::from_name("modp/ietf/3072")``, where 3072 refers to the
    number of bits in the prime modulus.
 
+   Key agreement does not check that the peer's public value is in the prime
+   order subgroup. This is not necessary for safe prime groups such as the MODP
+   and FFDHE groups. If a private key is reused with any other group, check the
+   peer's public value with ``DL_Group::verify_public_element`` first.
+
 .. cpp:function:: DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng, const DL_Group& group)
 
    Create a new DSA private key. DSA requires groups of a special form. The best way to create
@@ -729,6 +734,12 @@ The versions taking a ``std::string`` attempt to decrypt using the password
 given (if the key is encrypted; if it is not, the passphase value will be
 ignored). If the passphrase does not decrypt the key, an exception will be
 thrown.
+
+Decrypting a key runs the password hash using the parameters stored in the key,
+before the passphrase can be checked. These parameters are bounded, but a key
+using the largest allowed parameters can take a long time and (with scrypt) up
+to about 8 GiB of memory to load. Apply resource limits when loading encrypted
+keys from untrusted sources.
 
 .. _serializing_public_keys:
 

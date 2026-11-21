@@ -20,11 +20,17 @@ namespace Botan {
 * Perform base58 encoding
 *
 * This is raw base58 encoding, without the checksum
+*
+* @note base58 encoding is quadratic in cost so an application may want to
+* limit the lengths passed to this function.
 */
 std::string BOTAN_PUBLIC_API(2, 9) base58_encode(const uint8_t input[], size_t input_length);
 
 /**
 * Perform base58 encoding with checksum
+*
+* @note base58 encoding is quadratic in cost so an application may want to
+* limit the lengths passed to this function.
 */
 std::string BOTAN_PUBLIC_API(2, 9) base58_check_encode(const uint8_t input[], size_t input_length);
 
@@ -32,11 +38,17 @@ std::string BOTAN_PUBLIC_API(2, 9) base58_check_encode(const uint8_t input[], si
 * Perform base58 decoding
 *
 * This is raw base58 encoding, without the checksum
+*
+* @note base58 decoding is quadratic in cost so an application may want to
+* limit the lengths passed to this function.
 */
 std::vector<uint8_t> BOTAN_PUBLIC_API(2, 9) base58_decode(const char input[], size_t input_length);
 
 /**
 * Perform base58 decoding with checksum
+*
+* @note base58 decoding is quadratic in cost so an application may want to
+* limit the lengths passed to this function.
 */
 std::vector<uint8_t> BOTAN_PUBLIC_API(2, 9) base58_check_decode(const char input[], size_t input_length);
 
@@ -47,6 +59,9 @@ std::vector<uint8_t> BOTAN_PUBLIC_API(2, 9) base58_check_decode(const char input
 *
 * This is raw base58 encoding, without the checksum
 *
+* @note base58 encoding is quadratic in cost so an application may want to
+* limit the lengths passed to this function.
+*
 * @param vec the bytes to encode
 * @return the base58 encoding of vec
 */
@@ -56,6 +71,10 @@ inline std::string base58_encode(std::span<const uint8_t> vec) {
 
 /**
 * Perform base58 encoding with checksum
+*
+* @note base58 encoding is quadratic in cost so an application may want to
+* limit the lengths passed to this function.
+*
 * @param vec the bytes to encode
 * @return the base58check encoding of vec
 */
@@ -68,6 +87,9 @@ inline std::string base58_check_encode(std::span<const uint8_t> vec) {
 *
 * This is raw base58 decoding, without the checksum
 *
+* @note base58 decoding is quadratic in cost so an application may want to
+* limit the lengths passed to this function.
+*
 * @param s the string to decode
 * @return the decoded bytes
 */
@@ -77,6 +99,10 @@ inline std::vector<uint8_t> base58_decode(std::string_view s) {
 
 /**
 * Perform base58 decoding with checksum
+*
+* @note base58 decoding is quadratic in cost so an application may want to
+* limit the lengths passed to this function.
+*
 * @param s the string to decode
 * @return the decoded bytes
 */

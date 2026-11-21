@@ -104,6 +104,9 @@ EC_Point EC_Point_Base_Point_Precompute::mul(const BigInt& k,
       same trick as OpenSSL and add one or two copies of the order to normalize
       the length of the scalar at order.bits()+1. This at least ensures the loop
       bound does not leak information about the high bits of the scalar.
+
+      Without blinding this code has known side channels. All normal curves
+      go through pcurves which is not affected.
       */
       scalar += group_order;
       if(scalar.bits() == group_order.bits()) {
