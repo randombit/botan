@@ -27,6 +27,16 @@ bool is_space(char c) {
    return c == ' ' || c == '\t';
 }
 
+/*
+* Whitespace for the purposes of name comparison. RFC 5280 Section 7.1
+* compares attribute values using the RFC 4518 string preparation, and
+* RFC 4518 Section 2.2 maps TAB, LF, VT, FF and CR to SPACE before the
+* insignificant space handling is applied.
+*/
+bool is_x500_space(char c) {
+   return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
+}
+
 std::optional<uint8_t> hex_digit_value(char c) {
    if(c >= '0' && c <= '9') {
       return static_cast<uint8_t>(c - '0');
@@ -80,7 +90,7 @@ class X500_Char_Iterator final {
    public:
       explicit X500_Char_Iterator(std::string_view s) : m_str(s), m_pos(0) {
          // Skip leading whitespace
-         while(m_pos < m_str.size() && is_space(m_str[m_pos])) {
+         while(m_pos < m_str.size() && is_x500_space(m_str[m_pos])) {
             ++m_pos;
          }
       }
@@ -91,9 +101,9 @@ class X500_Char_Iterator final {
             return std::nullopt;
          }
 
-         if(is_space(m_str[m_pos])) {
+         if(is_x500_space(m_str[m_pos])) {
             // Skip the entire whitespace run
-            while(m_pos < m_str.size() && is_space(m_str[m_pos])) {
+            while(m_pos < m_str.size() && is_x500_space(m_str[m_pos])) {
                ++m_pos;
             }
             // Emit a single space only if more content follows (strip trailing ws)
