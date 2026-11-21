@@ -217,6 +217,9 @@ appends a 4-byte checksum equal to the first four bytes of ``SHA-256(SHA-256(inp
 to the input before encoding. The checked form is what is commonly meant by
 "base58" in cryptocurrency contexts.
 
+Unlike the other encodings, base58 encoding and decoding take time quadratic in
+the length of the input, so bound the length of untrusted inputs.
+
 .. cpp:function:: std::string base58_encode(const uint8_t input[], size_t input_length)
 .. cpp:function:: std::string base58_encode(std::span<const uint8_t> input)
 
