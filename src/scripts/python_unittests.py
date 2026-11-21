@@ -222,6 +222,58 @@ class ModulesChooserResolveDependencies(unittest.TestCase):
         self.assertEqual(modules, {"G", "A", "C", "E"})
 
 
+class ModulesChooserResolveRecommendedDependencies(unittest.TestCase):
+    def test_no_recommendations(self):
+        available_modules = {"A", "B"}
+        table = {"A": [], "B": []}
+        recommended = {"A": [], "B": []}
+        modules = ModulesChooser.resolve_recommended_dependencies(available_modules, table, recommended, {"A"})
+        self.assertEqual(modules, {"A"})
+
+    def test_recommendation(self):
+        available_modules = {"A", "B", "C"}
+        table = {"A": [], "B": [], "C": []}
+        recommended = {"A": ["B"], "B": [], "C": []}
+        modules = ModulesChooser.resolve_recommended_dependencies(available_modules, table, recommended, {"A"})
+        self.assertEqual(modules, {"A", "B"})
+
+    def test_input_not_modified(self):
+        available_modules = {"A", "B"}
+        table = {"A": [], "B": []}
+        recommended = {"A": ["B"], "B": []}
+        loaded = {"A"}
+        ModulesChooser.resolve_recommended_dependencies(available_modules, table, recommended, loaded)
+        self.assertEqual(loaded, {"A"})
+
+    def test_recommendation_not_available(self):
+        available_modules = {"A"}
+        table = {"A": [], "B": []}
+        recommended = {"A": ["B"], "B": []}
+        modules = ModulesChooser.resolve_recommended_dependencies(available_modules, table, recommended, {"A"})
+        self.assertEqual(modules, {"A"})
+
+    def test_recommendation_pulls_in_dependencies(self):
+        available_modules = {"A", "B", "C"}
+        table = {"A": [], "B": ["C"], "C": []}
+        recommended = {"A": ["B"], "B": [], "C": []}
+        modules = ModulesChooser.resolve_recommended_dependencies(available_modules, table, recommended, {"A"})
+        self.assertEqual(modules, {"A", "B", "C"})
+
+    def test_recommendation_unresolvable(self):
+        available_modules = {"A", "B", "D"}
+        table = {"A": [], "B": ["C"], "C": [], "D": []}
+        recommended = {"A": ["B", "D"], "B": [], "C": [], "D": []}
+        modules = ModulesChooser.resolve_recommended_dependencies(available_modules, table, recommended, {"A"})
+        self.assertEqual(modules, {"A", "D"})
+
+    def test_transitive_recommendations(self):
+        available_modules = {"A", "B", "C", "D"}
+        table = {"A": [], "B": ["C"], "C": [], "D": []}
+        recommended = {"A": ["B"], "B": [], "C": ["D"], "D": ["A"]}
+        modules = ModulesChooser.resolve_recommended_dependencies(available_modules, table, recommended, {"A"})
+        self.assertEqual(modules, {"A", "B", "C", "D"})
+
+
 if __name__ == '__main__':
     unittest.TestCase.longMessage = True
     unittest.main()

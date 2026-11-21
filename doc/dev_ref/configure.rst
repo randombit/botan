@@ -170,6 +170,13 @@ Lists:
  * ``requires`` is a list of module dependencies. An ``os_features`` can be
    specified as a condition for needing the dependency by writing it before
    the module name and separated by a ``?``, e.g. ``rtlgenrandom?dyn_load``.
+ * ``recommended`` is a list of optional module dependencies, using the same
+   syntax as ``requires`` (alternatives separated by ``|`` are not supported).
+   The module must build and work without them. They are only enabled if
+   ``configure.py`` is invoked with ``--enable-recommended-dependencies``, and
+   only if they are available and not disabled by the user or the module
+   policy. This is mostly relevant for ``--minimized-build``, where such
+   modules would otherwise be left out.
  * ``header:internal`` is the list of headers (from the current module)
    which are internal-only.
  * ``header:public`` is a the list of headers (from the

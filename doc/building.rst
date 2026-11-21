@@ -665,6 +665,18 @@ compatibility with obsolete clients or servers.
 For TLS another useful feature which is not enabled by default is the
 ChaCha20Poly1305 ciphersuites. To enable these, add ``chacha20poly1305``.
 
+Some modules declare optional "recommended" dependencies: modules which are not
+strictly needed to build or use the module, but which most applications will
+want to have. For example ``tls13`` recommends ``chacha20poly1305`` and
+``x25519``. A minimized build does not include them by default. Use
+``--enable-recommended-dependencies`` to additionally enable the recommended
+dependencies of all enabled modules::
+
+ $ ./configure.py --minimized-build --enable-modules=tls13 --enable-recommended-dependencies
+
+Recommended dependencies which are disabled with ``--disable-modules``,
+prohibited by a module policy, or not usable on the target are skipped.
+
 
 Configure Script Options
 ---------------------------
@@ -1038,6 +1050,14 @@ Disable some specific modules
 Start with the bare minimum. This is mostly useful in conjunction with
 ``--enable-modules`` to get a build that has just the features a
 particular application requires.
+
+``--enable-recommended-dependencies``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Also enable the optional recommended dependencies of all enabled modules (and,
+recursively, those of the modules enabled this way), unless they are disabled,
+prohibited by the module policy, or unavailable on the target. This is mostly
+useful in conjunction with ``--minimized-build``. See :ref:`minimized_builds`.
 
 ``--with-boost``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

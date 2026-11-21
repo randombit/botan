@@ -627,6 +627,9 @@ def process_command_line(args):
     mods_group.add_option('--minimized-build', action='store_true', dest='no_autoload',
                           help='minimize build')
 
+    add_enable_disable_pair(mods_group, 'recommended-dependencies', False,
+                            'also enable the recommended dependencies of all enabled modules')
+
     add_enable_disable_pair(mods_group, 'experimental-features', False,
                             'enable building of experimental features and modules')
 
@@ -881,7 +884,7 @@ class ModuleInfo(InfoObject):
         lex = lex_me_harder(
             infofile,
             ['header:internal', 'header:public', 'header:external', 'requires',
-             'os_features', 'arch', 'isa', 'cc', 'comment', 'warning'],
+             'recommended', 'os_features', 'arch', 'isa', 'cc', 'comment', 'warning'],
             ['defines', 'internal_defines', 'libs', 'frameworks', 'module_info'],
             {
                 'load_on': 'auto',
@@ -939,6 +942,7 @@ class ModuleInfo(InfoObject):
         self.isa = lex.isa
         self.os_features = lex.os_features
         self.requires = lex.requires
+        self.recommended = lex.recommended
         self.warning = combine_lines(lex.warning)
         self._parse_module_info(lex)
 
@@ -1157,24 +1161,42 @@ class ModuleInfo(InfoObject):
 
         return True
 
+    @staticmethod
+    def _filter_conditional_modules(entries, osinfo, archinfo):
+        """
+        Evaluate entries like "arm64?cpuid_aarch64" against the target. If
+        neither osinfo nor archinfo is given, all conditional entries are kept.
+        """
+        modules = []
+        for entry in entries:
+            if entry.find('?') != -1:
+                (cond, modname) = entry.split('?')
+                if osinfo is None and archinfo is None:
+                    modules.append(modname)
+                else:
+                    if cond == archinfo.basename or cond in osinfo.target_features:
+                        modules.append(modname)
+            else:
+                modules.append(entry)
+
+        return modules
+
     def dependencies(self, osinfo, archinfo):
         # base is an implicit dep for all submodules
         deps = ['base']
         if self.parent_module is not None:
             deps.append(self.parent_module)
 
-        for req in self.requires:
-            if req.find('?') != -1:
-                (cond, dep) = req.split('?')
-                if osinfo is None and archinfo is None:
-                    deps.append(dep)
-                else:
-                    if cond == archinfo.basename or cond in osinfo.target_features:
-                        deps.append(dep)
-            else:
-                deps.append(req)
+        deps += self._filter_conditional_modules(self.requires, osinfo, archinfo)
 
         return deps
+
+    def recommended_dependencies(self, osinfo, archinfo):
+        """
+        Optional dependencies which are only pulled in if the user asks for them
+        with --enable-recommended-dependencies
+        """
+        return self._filter_conditional_modules(self.recommended, osinfo, archinfo)
 
     def dependencies_exist(self, modules):
         """
@@ -1188,7 +1210,8 @@ class ModuleInfo(InfoObject):
 
             return this_module.parent_module != dependency.basename
 
-        missing = [s for s in self.dependencies(None, None) if s not in modules or is_dependency_on_virtual(self, modules[s])]
+        all_deps = self.dependencies(None, None) + self.recommended_dependencies(None, None)
+        missing = [s for s in all_deps if s not in modules or is_dependency_on_virtual(self, modules[s])]
 
         for modname in missing:
             if modname not in modules:
@@ -2706,10 +2729,49 @@ class ModulesChooser:
 
         return True, loaded_modules
 
+    @staticmethod
+    def resolve_recommended_dependencies(available_modules, dependency_table, recommendation_table, loaded_modules):
+        """
+        Parameters
+        - available_modules: modules to choose from. Constant.
+        - dependency_table: module to dependencies map. Constant.
+        - recommendation_table: module to recommended dependencies map. Constant.
+        - loaded_modules: modules already loaded, with all dependencies resolved. Constant.
+
+        Returns loaded_modules extended by the recommended dependencies of all
+        loaded modules, including recommendations of the modules added this way.
+        A recommended module is skipped if it is not available or if its
+        (non-optional) dependencies cannot be resolved.
+        """
+        loaded_modules = set(loaded_modules)
+        pending = sorted(loaded_modules)
+
+        while pending:
+            modname = pending.pop(0)
+            for recommended in recommendation_table.get(modname, []):
+                if recommended in loaded_modules:
+                    continue
+
+                ok, modules = ModulesChooser.resolve_dependencies(
+                    available_modules, dependency_table, recommended, loaded_modules)
+                if ok:
+                    new_modules = modules - loaded_modules
+                    logging.debug('Enabling %s as recommended by %s', ' '.join(sorted(new_modules)), modname)
+                    loaded_modules.update(new_modules)
+                    pending.extend(sorted(new_modules))
+
+        return loaded_modules
+
     def _modules_dependency_table(self):
         out = {}
         for modname in self._modules:
             out[modname] = self._modules[modname].dependencies(self._osinfo, self._archinfo)
+        return out
+
+    def _modules_recommendation_table(self):
+        out = {}
+        for modname in self._modules:
+            out[modname] = self._modules[modname].recommended_dependencies(self._osinfo, self._archinfo)
         return out
 
     def _resolve_dependencies_for_all_modules(self):
@@ -2727,6 +2789,10 @@ class ModulesChooser:
             else:
                 # Skip this module
                 pass
+
+        if self._options.enable_recommended_dependencies:
+            successfully_loaded = self.resolve_recommended_dependencies(
+                available_modules, dependency_table, self._modules_recommendation_table(), successfully_loaded)
 
         self._not_using_because['dependency failure'].update(self._to_load - successfully_loaded)
         self._to_load = successfully_loaded
