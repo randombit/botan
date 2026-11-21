@@ -27,6 +27,9 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption {
    public:
       SM2_Encryption_Operation(const SM2_Encryption_PublicKey& key, std::string_view kdf_hash) :
             m_group(key.domain()), m_peer(key.public_ec_point()) {
+         if(m_group.has_cofactor()) {
+            throw Not_Implemented("SM2 does not support curves with cofactors");
+         }
          m_hash = HashFunction::create_or_throw(kdf_hash);
          m_kdf = KDF::create_or_throw(fmt("KDF2({})", kdf_hash));
       }

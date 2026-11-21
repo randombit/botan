@@ -26,6 +26,9 @@ class BOTAN_PUBLIC_API(2, 11) Flatfile_Certificate_Store final : public Certific
       * Construct a new Certificate_Store given a file path to a file including
       * PEMs of trusted self-signed CAs.
       *
+      * Each such CA is trusted for any purpose; OpenSSL trust or reject
+      * settings attached to a TRUSTED CERTIFICATE are ignored.
+      *
       * @param file the name of the file to read certificates from
       * @param ignore_non_ca if true, certs that are not self-signed CA certs will
       * be ignored. Otherwise (if false), an exception will be thrown instead.

@@ -51,6 +51,9 @@ constexpr word divide_by_10(word x) {
 }  // namespace
 
 std::string BigInt::to_dec_string() const {
+   // Note that this is quadratic in the length of the input, applications should
+   // check sizes are acceptable before printing
+
    // Use the largest power of 10 that fits in a word
    constexpr word conversion_radix = decimal_conversion_radix();
    constexpr size_t radix_digits = decimal_conversion_radix_digits();
@@ -170,6 +173,9 @@ BigInt BigInt::from_radix_digits(std::string_view digits, size_t radix) {
 
       return BigInt::from_bytes(binary);
    } else if(radix == 10) {
+      // Note that this is quadratic in the length of the input, applications should
+      // check sizes are acceptable before parsing
+
       // Use the largest power of 10 that fits in a word, accumulating
       // groups of digits into word-sized chunks to minimize the number
       // of multiprecision multiplications.
