@@ -713,6 +713,9 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
          // TODO(Botan4): CN fallback is deprecated for removal in Botan4.
          // Check CN instead...
          for(const std::string& cn : dn.get_attribute("CN")) {
+            // We do not apply DNS name constraints to dotless CNs since they may not
+            // be a DNS name at all (eg "CN=FooCorp") and no RFC even requires applying
+            // DNS name constraints to the CN; we do so only on a best-effort basis.
             if(cn.find('.') == std::string::npos) {
                continue;
             }
@@ -1099,6 +1102,7 @@ bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unk
                return false;
             }
          } else if(cn.find('.') != std::string::npos) {
+            // See comment above re FooCorp
             if(auto dns_form = DNSName::from_san_string(cn)) {
                if(!is_permitted_dns_name(*dns_form)) {
                   return false;
@@ -1386,6 +1390,7 @@ bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unkn
                return true;
             }
          } else if(cn.find('.') != std::string::npos) {
+            // See comment above re FooCorp
             if(auto dns_form = DNSName::from_san_string(cn)) {
                if(is_excluded_dns_name(*dns_form)) {
                   return true;

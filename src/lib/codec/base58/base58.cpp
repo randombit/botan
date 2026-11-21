@@ -160,6 +160,9 @@ secure_vector<word> to_le_words(std::span<const uint8_t> input) {
 }
 
 std::string base58_encode(std::span<word> v, size_t leading_zeros) {
+   // Note that this is quadratic in the length of the input; applications should
+   // limit the length of untrusted inputs they process
+
    constexpr size_t radix_digits = base58_conversion_radix_digits();
 
    // Each division removes at least radix_bits bits, so after chunks
@@ -357,6 +360,9 @@ std::vector<uint8_t> base58_decode(const char input[], size_t input_length) {
    const auto poison_guard = CT::scoped_poison(digits);
 
    constexpr size_t radix_digits = base58_conversion_radix_digits();
+
+   // Note that this is quadratic in the length of the input; applications should
+   // limit the length of untrusted inputs they process
 
    // Since 58 < 2^6, any value of digits.size() base58 digits fits in
    // 6 bits per digit

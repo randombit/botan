@@ -280,6 +280,9 @@ void Pbes2ScryptParameters::validate_params(size_t N, size_t r, size_t p) {
    /*
    * Practically speaking this work limit aligns relatively closely to the 100 million
    * iteration limit applied in PBES2 and PKCS12
+   *
+   * The allowed parameters can still use up to about 8 GiB of memory on 64-bit
+   * systems; this is intentional.
    */
    const uint64_t scrypt_work = uint64_t(N) * r * p;
    constexpr uint64_t MaximumPbes2ScryptWork = (1 << 26);

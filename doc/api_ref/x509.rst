@@ -325,7 +325,8 @@ information. For example::
 After that, pass the ``X509_CRL`` object to a ``Certificate_Store_In_Memory`` object
 with :cpp:func:`Certificate_Store_In_Memory::add_crl`
 
-and all future verifications will take into account the provided CRL.
+and all future verifications will take into account the provided CRL, unless it is
+later replaced by another CRL with the same issuer name.
 
 Certificate Stores
 ----------------------------------------
@@ -405,6 +406,12 @@ later.
 
      Add a certificate revocation list (CRL) to the store.
 
+     The store currently only keeps one CRL per issuer name. A CRL replaces any
+     CRL already present with the same issuer name and an earlier or equal
+     ``thisUpdate``, even if it was signed by a different key or covers a
+     different distribution point. The CRL is not verified until it is used
+     during path validation.
+
 System Certificate Stores
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -415,11 +422,16 @@ Flatfile Certificate Stores
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``Flatfile_Certificate_Store`` is an implementation of certificate store that
-reads certificates as files from a directory. This is also used as the
+reads PEM encoded certificates from a single file. This is also used as the
 implementation of the Unix/Linux system certificate store.
 
-The constructor takes a path to the directory to read, along with an optional
+The constructor takes a path to the file to read, along with an optional
 boolean indicating if non-CA certificates should be ignored.
+
+Every self-signed CA certificate in the file is trusted for any purpose.
+Certificates with the PEM label ``TRUSTED CERTIFICATE`` are accepted, because
+some Linux distributions ship their trust roots in this format, but any OpenSSL
+specific trust or reject settings which follow the certificate are ignored.
 
 SQL-backed Certificate Stores
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
