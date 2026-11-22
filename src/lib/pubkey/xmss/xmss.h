@@ -164,8 +164,26 @@ enum class WOTS_Derivation_Method : uint8_t {
 
 /**
  * An XMSS: Extended Hash-Based Signature private key.
- * The XMSS private key does not support the X509 and PKCS7 standard. Instead
- * the raw format described in [1] is used.
+ *
+ * The format of an XMSS private key is not standardized. We use the following
+ * format (big endian), identified by the OID XMSS-Private-Key
+ * (1.3.6.1.4.1.25258.1.20):
+ *
+ * PrivateKey = u32str(OID) || root || SEED || u32str(idx) || SK_PRF || S_XMSS ||
+ *              u8(WOTS+ derivation method) ||
+ *              u32str(N) || Section[0] || ... || Section[N-1]
+ *
+ * Section = u32str(tag) || u32str(length) || body
+ *
+ * Sections with unknown tags are ignored. Tag 1 holds the nodes at height
+ * max(0, h - 10) of the tree from left to right, so that they need not be
+ * recomputed.
+ *
+ * Keys in the legacy format, which ends with the WOTS+ derivation method (or
+ * before it, for keys created by Botan 2), identified by the OID XMSS and
+ * wrapped in an OCTET STRING, are also accepted. Raw key bytes, which carry no
+ * OID, are taken to be in the legacy format if they are wrapped in an OCTET
+ * STRING or nothing follows the WOTS+ derivation method.
  *
  * [1] XMSS: Extended Hash-Based Signatures,
  *     Request for Comments: 8391
@@ -261,14 +279,11 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
 
       secure_vector<uint8_t> private_key_bits() const override;
 
+      AlgorithmIdentifier pkcs8_algorithm_identifier() const override;
+
       /**
        * Generates a non standardized byte sequence representing the XMSS
-       * private key.
-       *
-       * @return byte sequence consisting of the following elements in order:
-       *         4-byte OID, n-byte root node, n-byte public seed,
-       *         4-byte unused leaf index, n-byte prf seed, n-byte private seed.
-       *         At last 1-byte that encodes the WOTS+ key derivation method.
+       * private key, in the format described above.
        **/
       secure_vector<uint8_t> raw_private_key() const;
 
@@ -277,42 +292,26 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
    private:
       friend class XMSS_Signature_Operation;
 
-      // The seeds and the precomputed Merkle root produced during key
-      // generation, used to construct the (immutable) public key before the
-      // derived private key body runs.
-      struct Keygen_Material;
+      explicit XMSS_PrivateKey(std::shared_ptr<XMSS_PrivateKey_Internal> sk);
 
-      XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
-                      WOTS_Derivation_Method wots_derivation_method,
-                      Keygen_Material material);
+      /**
+       * Reserve the next unused leaf
+       *
+       * @param auth_path Output buffer for the leaf's authentication path
+       * @param hash The hash function to use
+       * @return The index of the leaf
+       */
+      size_t reserve_leaf(std::span<uint8_t> auth_path, XMSS_Hash& hash) const;
 
-      static Keygen_Material generate_keygen_material(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
-                                                      RandomNumberGenerator& rng,
-                                                      WOTS_Derivation_Method wots_derivation_method);
-
-      size_t reserve_unused_leaf_index();
+      /**
+       * Discard the tree nodes kept for signing, so that they are recomputed
+       * from the seed
+       */
+      void discard_cached_tree() const;
 
       const secure_vector<uint8_t>& prf_value() const;
 
       XMSS_WOTS_PrivateKey wots_private_key_for(const XMSS_Address& adrs, XMSS_Hash& hash) const;
-
-      /**
-       * Algorithm 9: "treeHash"
-       * Computes the internal n-byte nodes of a Merkle tree.
-       *
-       * @param start_idx The start index.
-       * @param target_node_height Height of the target node.
-       * @param adrs Address of the tree containing the target node.
-       * @param hash The hash function to use
-       *
-       * @return The root node of a tree of height target_node height with the
-       *         leftmost leaf being the hash of the WOTS+ pk with index
-       *         start_idx.
-       **/
-      secure_vector<uint8_t> tree_hash(size_t start_idx,
-                                       size_t target_node_height,
-                                       const XMSS_Address& adrs,
-                                       XMSS_Hash& hash) const;
 
       std::shared_ptr<const XMSS_PrivateKey_Internal> m_private;
 };

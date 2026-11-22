@@ -627,6 +627,8 @@ std::optional<std::string_view> OID_Map::lookup_static_oid(const OID& oid) {
          return if_match(oid, {1, 3, 6, 1, 4, 1, 25258, 1, 13}, "HSS-LMS-Private-Key-legacy");
       case 0xA0D71:
          return if_match(oid, {1, 3, 6, 1, 4, 1, 25258, 1, 19}, "HSS-LMS-Private-Key");
+      case 0xA0D72:
+         return if_match(oid, {1, 3, 6, 1, 4, 1, 25258, 1, 20}, "XMSS-Private-Key");
       case 0xA0EE1:
          return if_match(oid, {1, 3, 6, 1, 4, 1, 25258, 3, 1}, "Serpent/CBC");
       case 0xA0EE2:
@@ -1413,6 +1415,8 @@ std::optional<OID> OID_Map::lookup_static_oid_name(std::string_view req) {
          return if_match(req, "gost_512B", {1, 2, 643, 7, 1, 2, 1, 2, 2});
       case 0xBA1D8:
          return if_match(req, "X520.StreetAddress", {2, 5, 4, 9});
+      case 0xBC6A5:
+         return if_match(req, "XMSS-Private-Key", {1, 3, 6, 1, 4, 1, 25258, 1, 20});
       case 0xBCB45:
          return if_match(req, "PKCS12.CRLBag", {1, 2, 840, 113549, 1, 12, 10, 1, 4});
       case 0xBCC82:

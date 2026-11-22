@@ -64,6 +64,27 @@ class XMSS_Common_Ops {
                                       size_t element_size);
 
       /**
+       * Algorithm 7: "RAND_HASH", applied to many pairs of nodes at once,
+       * batching the hash calls across all of them.
+       *
+       * @param[out] out The resulting randomized hash of each pair
+       * @param[in] children The left and right input of each pair, 2*n
+       *            bytes per pair, contiguous
+       * @param[in,out] addrs Per pair, the address of the hash function
+       *                call. The key/mask mode is modified.
+       * @param[in] seed The public seed
+       * @param[in] hash Instance of XMSS_Hash, that may only be used by the
+       *            thread executing randomize_tree_hashes.
+       * @param[in] element_size Size of each node in bytes, the parameter "n"
+       **/
+      static void randomize_tree_hashes(std::span<uint8_t> out,
+                                        std::span<const uint8_t> children,
+                                        std::span<XMSS_Address> addrs,
+                                        std::span<const uint8_t> seed,
+                                        XMSS_Hash& hash,
+                                        size_t element_size);
+
+      /**
        * Algorithm 8: "ltree"
        * Create an L-tree used to compute the leaves of the binary hash tree.
        * Takes a WOTS+ public key and compresses it to a single n-byte value.

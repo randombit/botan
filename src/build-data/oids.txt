@@ -130,6 +130,11 @@
 # draft-vangeest-x509-hash-sigs-03
 0.4.0.127.0.15.1.1.13.0 = XMSS
 
+# XMSS private key (since the format of an XMSS private key is not specified,
+#  we define an OID for the one we use, which includes cached tree data). The
+#  original format, containing only the secret, used the OID XMSS.
+1.3.6.1.4.1.25258.1.20 = XMSS-Private-Key
+
 # X9.62 ecPublicKey, valid for ECDSA and ECDH (RFC 3279 sec 2.3.5)
 1.2.840.10045.2.1 = ECDSA
 1.3.132.1.12 = ECDH

@@ -845,8 +845,8 @@ class HSS_LMS_Encoding_Test_Base : public Test {
 
          const auto& top = layout.sections[0];
          const auto& bottom = layout.sections[1];
-         const size_t bottom_row_size =
-            Botan::LMS_Treetop::row_size(params.params_at_level(Botan::HSS_Level(1)).lms_params());
+         const auto& bottom_lms_params = params.params_at_level(Botan::HSS_Level(1)).lms_params();
+         const size_t bottom_row_size = Botan::Merkle_Treetop::row_size(bottom_lms_params.h(), bottom_lms_params.m());
 
          const auto signs_validly_after_flipping = [&](std::string_view what, size_t offset) {
             auto corrupted = bytes;
@@ -956,7 +956,7 @@ class HSS_LMS_Encoding_Test_Base : public Test {
          const Botan::HSS_LMS_Params params(hss_params_str);
          const auto& lms_params = params.params_at_level(Botan::HSS_Level(0)).lms_params();
          const auto& lmots_params = params.params_at_level(Botan::HSS_Level(0)).lmots_params();
-         result.test_u32_eq("subtree height", Botan::LMS_Treetop::subtree_height(lms_params), 5);
+         result.test_u32_eq("subtree height", Botan::Merkle_Treetop::subtree_height(lms_params.h()), 5);
 
          const Botan::HSS_LMS_PrivateKey sk(Test::rng(), hss_params_str);
          const auto layout = hss_lms_sk_layout(sk.private_key_bits(), params);
@@ -985,16 +985,15 @@ class HSS_LMS_Encoding_Test_Base : public Test {
          const Botan::LMS_Tree_Node_Idx q(40);
          const auto [treetop, subtree] = lms_sk.build_tree(q);
          result.test_u32_eq("leaf 40 is in subtree 1", subtree.index(), 1);
-         result.test_bin_eq(
-            "subtree root is part of the treetop", subtree.node(1), treetop.node((uint32_t(1) << 10) + 1));
+         result.test_bin_eq("subtree root is part of the treetop", subtree.node(5, 1), treetop.node(5, 1));
          result.test_bin_eq("treetop from its row",
-                            Botan::LMS_Treetop::from_row(lms_params, identifier, treetop.row()).root(),
+                            Botan::lms_treetop_from_row(lms_params, identifier, treetop.row()).root(),
                             treetop.root());
 
          const auto rebuilt = lms_sk.build_subtree(treetop, q);
          result.test_is_true("subtree is recomputed", rebuilt.has_value());
          if(rebuilt.has_value()) {
-            result.test_bin_eq("recomputed subtree matches", rebuilt->node(2), subtree.node(2));
+            result.test_bin_eq("recomputed subtree matches", rebuilt->node(4, 2), subtree.node(4, 2));
          }
          result.test_is_true("subtree of another key does not match the treetop",
                              !other_lms_sk.build_subtree(treetop, q).has_value());

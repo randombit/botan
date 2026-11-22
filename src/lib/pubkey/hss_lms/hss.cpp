@@ -66,7 +66,8 @@ constexpr uint32_t HSS_SECTION_LMS_TREE = 1;
  */
 size_t encoded_tree_size(const HSS_LMS_Params& params, HSS_Level level) {
    const auto& level_params = params.params_at_level(level);
-   size_t size = sizeof(uint32_t) + sizeof(uint64_t) + LMS_Treetop::row_size(level_params.lms_params());
+   size_t size = sizeof(uint32_t) + sizeof(uint64_t) +
+                 Merkle_Treetop::row_size(level_params.lms_params().h(), level_params.lms_params().m());
    if(level > 0U) {
       const auto& parent_params = params.params_at_level(level - 1);
       size += LMS_Signature::size(parent_params.lms_params(), parent_params.lmots_params());
@@ -264,7 +265,8 @@ std::shared_ptr<HSS_LMS_PrivateKeyInternal> HSS_LMS_PrivateKeyInternal::from_byt
          }
 
          const auto tree_number = take_u64(body);
-         const auto row = body.take(LMS_Treetop::row_size(hss_params.params_at_level(level).lms_params()));
+         const auto& lms_params = hss_params.params_at_level(level).lms_params();
+         const auto row = body.take(Merkle_Treetop::row_size(lms_params.h(), lms_params.m()));
          const auto signed_pub_key = body.take(body.remaining());
          encoded_trees.push_back(Encoded_Tree{level, tree_number, row, signed_pub_key});
       }
@@ -308,7 +310,7 @@ void HSS_LMS_PrivateKeyInternal::adopt_encoded_trees(HSS_Sig_Idx idx, const std:
          const auto& params = hss_params().params_at_level(level);
 
          if(level == 0U) {
-            auto treetop = LMS_Treetop::from_row(params.lms_params(), m_identifier, tree.row);
+            auto treetop = lms_treetop_from_row(params.lms_params(), m_identifier, tree.row);
             if(!std::ranges::equal(treetop.root(), m_root.value())) {
                return;
             }
@@ -327,7 +329,7 @@ void HSS_LMS_PrivateKeyInternal::adopt_encoded_trees(HSS_Sig_Idx idx, const std:
             return;
          }
 
-         auto treetop = LMS_Treetop::from_row(params.lms_params(), pub.identifier(), tree.row);
+         auto treetop = lms_treetop_from_row(params.lms_params(), pub.identifier(), tree.row);
          const LMS_PublicKey treetop_pub(
             params.lms_params(), params.lmots_params(), pub.identifier(), LMS_Tree_Node(treetop.root()));
          if(treetop_pub.to_bytes() != pub_bytes) {
@@ -439,7 +441,7 @@ std::vector<LMS_PrivateKey> HSS_LMS_PrivateKeyInternal::derive_lms_private_keys(
    return sks;
 }
 
-const LMS_Subtree* HSS_LMS_PrivateKeyInternal::cached_subtree(HSS_Level level) const {
+const Merkle_Subtree* HSS_LMS_PrivateKeyInternal::cached_subtree(HSS_Level level) const {
    const auto& subtree = m_subtrees.at(level.get());
    return (subtree != nullptr) ? &subtree->subtree() : nullptr;
 }
@@ -447,7 +449,7 @@ const LMS_Subtree* HSS_LMS_PrivateKeyInternal::cached_subtree(HSS_Level level) c
 bool HSS_LMS_PrivateKeyInternal::ensure_subtree(HSS_Level level,
                                                 const Tree_Position& pos,
                                                 const LMS_PrivateKey& sk) const {
-   const uint32_t k = LMS_Treetop::subtree_height(hss_params().params_at_level(level).lms_params());
+   const uint32_t k = Merkle_Treetop::subtree_height(hss_params().params_at_level(level).lms_params().h());
    if(k == 0) {
       // The treetop is the whole tree
       return true;

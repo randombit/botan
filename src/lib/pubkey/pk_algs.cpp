@@ -417,7 +417,8 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #endif
 
 #if defined(BOTAN_HAS_XMSS_RFC8391)
-   if(alg_name == "XMSS") {
+   // TODO(Botan4) Remove the legacy private key format with OID XMSS
+   if(alg_name == "XMSS-Private-Key" || alg_name == "XMSS") {
       return std::make_unique<XMSS_PrivateKey>(alg_id, key_bits);
    }
 #endif

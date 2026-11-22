@@ -124,12 +124,12 @@ class BOTAN_TEST_API HSS_LMS_Params final {
  * @brief The encodings of an HSS-LMS private key
  */
 enum class HSS_LMS_PrivateKey_Format : uint8_t {
-   /// The parameters, index and secret only (OID HSS-LMS-Private-Key-legacy)
+   /** The parameters, index and secret only (OID HSS-LMS-Private-Key-legacy) */
    // TODO(Botan4) Remove the legacy format
    Legacy,
-   /// Additionally the root and cached tree data (OID HSS-LMS-Private-Key)
+   /** Additionally the root and cached tree data (OID HSS-LMS-Private-Key) */
    Current,
-   /// Raw bytes, which carry no OID: either of the above
+   /** Raw bytes, which carry no OID: either of the above */
    // TODO(Botan4) Remove; raw bytes are then always in the current format
    Either,
 };
@@ -139,7 +139,7 @@ enum class HSS_LMS_PrivateKey_Format : uint8_t {
  */
 class HSS_Cached_Tree final {
    public:
-      HSS_Cached_Tree(uint64_t tree_number, LMS_Treetop treetop, std::vector<uint8_t> signed_pub_key) :
+      HSS_Cached_Tree(uint64_t tree_number, Merkle_Treetop treetop, std::vector<uint8_t> signed_pub_key) :
             m_tree_number(tree_number), m_treetop(std::move(treetop)), m_signed_pub_key(std::move(signed_pub_key)) {}
 
       /**
@@ -147,7 +147,7 @@ class HSS_Cached_Tree final {
        */
       uint64_t tree_number() const { return m_tree_number; }
 
-      const LMS_Treetop& treetop() const { return m_treetop; }
+      const Merkle_Treetop& treetop() const { return m_treetop; }
 
       /**
        * @brief The parent tree's LMS signature over this tree's public key,
@@ -158,7 +158,7 @@ class HSS_Cached_Tree final {
 
    private:
       uint64_t m_tree_number;
-      LMS_Treetop m_treetop;
+      Merkle_Treetop m_treetop;
       std::vector<uint8_t> m_signed_pub_key;
 };
 
@@ -167,16 +167,16 @@ class HSS_Cached_Tree final {
  */
 class HSS_Cached_Subtree final {
    public:
-      HSS_Cached_Subtree(uint64_t tree_number, LMS_Subtree subtree) :
+      HSS_Cached_Subtree(uint64_t tree_number, Merkle_Subtree subtree) :
             m_tree_number(tree_number), m_subtree(std::move(subtree)) {}
 
       uint64_t tree_number() const { return m_tree_number; }
 
-      const LMS_Subtree& subtree() const { return m_subtree; }
+      const Merkle_Subtree& subtree() const { return m_subtree; }
 
    private:
       uint64_t m_tree_number;
-      LMS_Subtree m_subtree;
+      Merkle_Subtree m_subtree;
 };
 
 /**
@@ -334,7 +334,7 @@ class HSS_LMS_PrivateKeyInternal final {
 
       bool ensure_subtree(HSS_Level level, const Tree_Position& pos, const LMS_PrivateKey& sk) const;
 
-      const LMS_Subtree* cached_subtree(HSS_Level level) const;
+      const Merkle_Subtree* cached_subtree(HSS_Level level) const;
 
       const LMS_Tree_Node& root_locked() const;
 

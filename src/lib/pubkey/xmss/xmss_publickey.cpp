@@ -54,8 +54,8 @@ std::vector<uint8_t> extract_raw_public_key(std::span<const uint8_t> key_bits) {
       // and they might be either a sole public key or a concatenation of public
       // and private key (with the optional WOTS+ derivation identifier).
       const XMSS_Parameters params = XMSS_Parameters::from_id(deserialize_xmss_oid(raw_key));
-      if(raw_key.size() != params.raw_public_key_size() && raw_key.size() != params.raw_private_key_size() &&
-         raw_key.size() != params.raw_legacy_private_key_size()) {
+      if(raw_key.size() != params._raw_public_key_size() && raw_key.size() != params._raw_private_key_size() &&
+         raw_key.size() != params._raw_legacy_private_key_size()) {
          throw Decoding_Error("unpacked XMSS key does not have the correct length");
       }
    } catch(Decoding_Error&) {
@@ -123,11 +123,11 @@ XMSS_PublicKey::XMSS_PublicKey(const AlgorithmIdentifier& alg_id,
    const auto params = XMSS_Parameters::from_id(xmss_oid);
 
    if(encoding == Key_Encoding::PublicKey) {
-      if(raw_key.size() != params.raw_public_key_size()) {
+      if(raw_key.size() != params._raw_public_key_size()) {
          throw Decoding_Error("Invalid XMSS public key size detected");
       }
-   } else if(raw_key.size() != params.raw_private_key_size() &&
-             raw_key.size() != params.raw_legacy_private_key_size()) {
+   } else if(raw_key.size() != params._raw_private_key_size() &&
+             raw_key.size() != params._raw_legacy_private_key_size()) {
       throw Decoding_Error("Invalid XMSS private key size");
    }
 

@@ -13,6 +13,7 @@
 #include <botan/internal/xmss_address.h>
 #include <botan/internal/xmss_hash.h>
 #include <botan/internal/xmss_signature.h>
+#include <botan/internal/xmss_verification_operation.h>
 #include <botan/internal/xmss_wots.h>
 
 namespace Botan {
@@ -49,6 +50,8 @@ class XMSS_Signature_Operation final : public virtual PK_Ops::Signature {
    private:
       XMSS_PrivateKey m_priv_key;
       XMSS_Hash m_hash;
+      // Checks each signature before it is released
+      XMSS_Verification_Operation m_verifier;
       std::vector<uint8_t> m_msg_buffer;
 };
 

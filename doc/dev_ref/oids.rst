@@ -87,6 +87,8 @@ Values currently assigned are::
   HSS-LMS-Private-Key-legacy OBJECT IDENTIFIER ::= { publicKey 13 }
   HSS-LMS-Private-Key OBJECT IDENTIFIER ::= { publicKey 19 }
 
+  XMSS-Private-Key OBJECT IDENTIFIER ::= { publicKey 20 }
+
   mceliece OBJECT IDENTIFIER ::= { publicKey 18 }
 
   mceliece6688128pc   OBJECT IDENTIFIER ::= { mceliece 1 }

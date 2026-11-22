@@ -46,6 +46,61 @@ void XMSS_Common_Ops::randomize_tree_hash(secure_vector<uint8_t>& result,
    hash.h(result, key, concat_xor);
 }
 
+void XMSS_Common_Ops::randomize_tree_hashes(std::span<uint8_t> out,
+                                            std::span<const uint8_t> children,
+                                            std::span<XMSS_Address> addrs,
+                                            std::span<const uint8_t> seed,
+                                            XMSS_Hash& hash,
+                                            size_t element_size) {
+   const size_t count = addrs.size();
+   const size_t n = element_size;
+
+   BOTAN_ASSERT_NOMSG(out.size() == count * n);
+   BOTAN_ASSERT_NOMSG(children.size() == count * 2 * n);
+
+   if(count == 0) {
+      return;
+   }
+
+   const size_t adrs_len = addrs[0].size();
+
+   // Per pair the three PRF addresses (key, bitmask left/right), the key,
+   // and the masked concatenation of both children
+   std::vector<uint8_t> adrs_buf(3 * count * adrs_len);
+   secure_vector<uint8_t> keys(count * n);
+   secure_vector<uint8_t> masked(count * 2 * n);
+
+   std::vector<std::span<uint8_t>> prf_outs(3 * count);
+   std::vector<std::span<const uint8_t>> prf_ins(3 * count);
+
+   for(size_t p = 0; p != count; ++p) {
+      const auto adrs_lane = [&](size_t lane, XMSS_Address::Key_Mask mode, std::span<uint8_t> dest) {
+         addrs[p].set_key_mask_mode(mode);
+         const auto lane_adrs = std::span(adrs_buf).subspan(lane * adrs_len, adrs_len);
+         copy_mem(lane_adrs, addrs[p].bytes());
+         prf_ins[lane] = lane_adrs;
+         prf_outs[lane] = dest;
+      };
+      adrs_lane(3 * p, XMSS_Address::Key_Mask::Key_Mode, std::span(keys).subspan(p * n, n));
+      adrs_lane(3 * p + 1, XMSS_Address::Key_Mask::Mask_MSB_Mode, std::span(masked).subspan(2 * p * n, n));
+      adrs_lane(3 * p + 2, XMSS_Address::Key_Mask::Mask_LSB_Mode, std::span(masked).subspan((2 * p + 1) * n, n));
+   }
+   hash.prf_batch(prf_outs, seed, prf_ins);
+
+   // The bitmasks of all pairs are laid out like the children
+   xor_buf(std::span(masked), children);
+
+   std::vector<std::span<uint8_t>> h_outs(count);
+   std::vector<std::span<const uint8_t>> h_keys(count);
+   std::vector<std::span<const uint8_t>> h_ins(count);
+   for(size_t p = 0; p != count; ++p) {
+      h_outs[p] = out.subspan(p * n, n);
+      h_keys[p] = std::span(keys).subspan(p * n, n);
+      h_ins[p] = std::span(masked).subspan(2 * p * n, 2 * n);
+   }
+   hash.h_batch(h_outs, h_keys, h_ins);
+}
+
 void XMSS_Common_Ops::create_l_tree(secure_vector<uint8_t>& result,
                                     const wots_keysig_t& pk,
                                     XMSS_Address adrs,

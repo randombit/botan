@@ -2472,6 +2472,13 @@ width defined by the corresponding parameter set. Choosing `XMSS-SHA2_10_256`
 for instance will use the SHA2-256 hash function to generate a tree of height
 ten.
 
+Besides the secret, the private key encoding holds 1024 nodes from the upper
+part of the tree, which avoids recomputing the tree when signing, at the cost of
+between 24 and 64 KiB of encoding. Keys in the older encoding, which lacks this data, are
+still accepted, but keys are always written in the new encoding. It uses a
+different PKCS #8 algorithm identifier, which older versions of Botan do not
+recognize.
+
 .. _xmss_example:
 
 Code Example: XMSS

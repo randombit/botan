@@ -929,8 +929,8 @@ def main(args=None):
                     'pk_concurrent_ops', 'pwdhash', 'rsa_encrypt', 'rsa_pss', 'rsa_pss_raw', 'scrypt',
                     'sphincsplus', 'sphincsplus_fors', 'slh_dsa_keygen', 'slh_dsa', 'srp6_kat',
                     'srp6_rt', 'unit_tls', 'x509_path_bsi', 'x509_path_rsa_pss',
-                    'xmss_keygen', 'xmss_keygen_reference', 'xmss_sign', 'xmss_unit_tests',
-                    'xmss_verify', 'xmss_verify_invalid',
+                    'xmss_encoding', 'xmss_keygen', 'xmss_keygen_reference', 'xmss_sign', 'xmss_subtrees',
+                    'xmss_unit_tests', 'xmss_verify', 'xmss_verify_invalid',
                 ]
                 slow_tests += [f"dilithium_kat_{mode}_{rand}" for mode in ('6x5', '8x7', '6x5_AES', '8x7_AES') for rand in ('Deterministic', 'Randomized')]
                 slow_tests += [f"ml_dsa_kat_{mode}_{rand}" for mode in ('6x5', '8x7') for rand in ('Deterministic', 'Randomized')]
