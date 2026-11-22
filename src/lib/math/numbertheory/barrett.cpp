@@ -181,10 +181,15 @@ BigInt Barrett_Reduction::reduce(const BigInt& x) const {
    const size_t x_sw = x.sig_words();
    BOTAN_ARG_CHECK(x_sw <= 2 * m_mod_words, "Argument is too large for Barrett reduction");
 
-   x.grow_to(2 * m_mod_words);
-
    secure_vector<word> ws;
-   return barrett_reduce(m_mod_words, m_modulus, m_mu, x._as_span(), ws);
+
+   if(x.size() >= 2 * m_mod_words) {
+      return barrett_reduce(m_mod_words, m_modulus, m_mu, x._as_span(), ws);
+   } else {
+      secure_vector<word> xc(2 * m_mod_words);
+      copy_mem(xc.data(), x._data(), x.size());
+      return barrett_reduce(m_mod_words, m_modulus, m_mu, xc, ws);
+   }
 }
 
 }  // namespace Botan

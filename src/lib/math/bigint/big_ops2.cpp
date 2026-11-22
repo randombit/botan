@@ -80,7 +80,9 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
    BOTAN_ARG_CHECK(mod_sw > 0, "BigInt::mod_add modulus must be positive");
 
    this->grow_to(mod_sw);
-   s.grow_to(mod_sw);
+
+   // May be smaller than mod_sw, and we shouldn't resize through a const reference
+   const size_t s_words = std::min(s.size(), mod_sw);
 
    // First mod_sw for p - s, 2*mod_sw for bigint_addsub workspace
    if(ws.size() < 3 * mod_sw) {
@@ -89,7 +91,7 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
 
    // NOLINTBEGIN(readability-container-data-pointer)
 
-   word borrow = bigint_sub3(&ws[0], mod._data(), mod_sw, s._data(), mod_sw);
+   word borrow = bigint_sub3(&ws[0], mod._data(), mod_sw, s._data(), s_words);
    BOTAN_DEBUG_ASSERT(borrow == 0);
    BOTAN_UNUSED(borrow);
 
@@ -97,7 +99,7 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
    borrow = bigint_sub3(&ws[mod_sw], this->_data(), mod_sw, &ws[0], mod_sw);
 
    // Compute t + s
-   bigint_add3(&ws[mod_sw * 2], this->_data(), mod_sw, s._data(), mod_sw);
+   bigint_add3(&ws[mod_sw * 2], this->_data(), mod_sw, s._data(), s_words);
 
    CT::conditional_copy_mem(borrow, &ws[0], &ws[mod_sw * 2], &ws[mod_sw], mod_sw);
    set_words(&ws[0], mod_sw);
@@ -119,13 +121,15 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
    const size_t mod_sw = mod.sig_words();
 
    this->grow_to(mod_sw);
-   s.grow_to(mod_sw);
+
+   // May be smaller than mod_sw, and we shouldn't resize through a const reference
+   const size_t s_words = std::min(s.size(), mod_sw);
 
    if(ws.size() < mod_sw) {
       ws.resize(mod_sw);
    }
 
-   const word borrow = bigint_sub3(ws.data(), mutable_data(), mod_sw, s._data(), mod_sw);
+   const word borrow = bigint_sub3(ws.data(), mutable_data(), mod_sw, s._data(), s_words);
 
    // Conditionally add back the modulus
    bigint_cnd_add(borrow, ws.data(), mod._data(), mod_sw);
