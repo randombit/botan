@@ -16,6 +16,7 @@
 #include <botan/internal/hash_engine.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tree_hash.h>
+#include <algorithm>
 
 namespace Botan {
 namespace {
@@ -117,26 +118,128 @@ auto lms_gen_leaves_func(const LMS_PrivateKey& lms_sk) {
    };
 }
 
-void lms_treehash(StrongSpan<LMS_Tree_Node> out_root,
-                  std::optional<StrongSpan<LMS_AuthenticationPath>> out_auth_path,
-                  std::optional<LMS_Tree_Node_Idx> leaf_idx,
-                  const LMS_PrivateKey& lms_sk) {
-   auto hash_pair_func = get_hash_pair_func_for_identifier(lms_sk.lms_params(), lms_sk.identifier());
-   auto gen_leaves = lms_gen_leaves_func(lms_sk);
-   TreeAddress lms_tree_address(lms_sk.lms_params().h());
+/**
+ * Interior node hash: H(I || u32str(r) || u16str(D_INTR) || left || right)
+ */
+void lms_hash_pair(std::span<uint8_t> out,
+                   HashFunction& hash,
+                   const LMS_Identifier& identifier,
+                   uint32_t r,
+                   std::span<const uint8_t> left,
+                   std::span<const uint8_t> right) {
+   hash.update(identifier);
+   hash.update(store_be(r));
+   hash.update(store_be(D_INTR));
+   hash.update(left);
+   hash.update(right);
+   hash.final(out);
+}
 
-   treehash(out_root,
-            out_auth_path,
-            leaf_idx,
-            lms_sk.lms_params().m(),
-            LMS_TreeLayerIndex(lms_sk.lms_params().h()),
-            0,
-            std::move(hash_pair_func),
-            std::move(gen_leaves),
-            lms_tree_address);
+/**
+ * Compute every node of the subtree of height @p height whose leftmost leaf is
+ * @p first_leaf, calling on_node(j, t, node) for each node, where j is the
+ * height of the node and t its index within that layer of the whole tree.
+ */
+template <typename F>
+void lms_walk_subtree(const LMS_PrivateKey& sk, uint32_t first_leaf, uint32_t height, F on_node) {
+   const uint32_t h = sk.lms_params().h();
+   const size_t m = sk.lms_params().m();
+   BOTAN_ASSERT_NOMSG(height <= h);
+   BOTAN_ASSERT_NOMSG(first_leaf % (uint32_t(1) << height) == 0 && first_leaf < (uint32_t(1) << h));
+
+   const auto gen_leaves = lms_gen_leaves_func(sk);
+   const auto hash = sk.lms_params().hash();
+
+   const uint32_t leaf_count = uint32_t(1) << height;
+   // Leaves are created in batches to enable batched hashing. Both the
+   // batch size and the leaf count are powers of two, so batches are
+   // always full.
+   const uint32_t leaves_per_batch = std::min<uint32_t>(leaf_count, 32);
+   std::vector<uint8_t> leaves(leaves_per_batch * m);
+   // The left child at each height which is waiting for its right sibling
+   std::vector<uint8_t> left_children(height * m);
+   std::vector<uint8_t> node(m);
+
+   // Post-order traversal, combining each right child with its left sibling
+   for(uint32_t i = 0; i != leaf_count; ++i) {
+      const uint32_t batch_pos = i % leaves_per_batch;
+      if(batch_pos == 0) {
+         gen_leaves(std::span(leaves), LMS_Tree_Node_Idx(first_leaf + i), leaves_per_batch);
+      }
+      copy_mem(std::span(node), std::span(leaves).subspan(batch_pos * m, m));
+
+      uint32_t t = first_leaf + i;
+      for(uint32_t j = 0; true; ++j) {
+         on_node(j, t, std::span<const uint8_t>(node));
+         if(j == height) {
+            break;
+         }
+         const auto left = std::span(left_children).subspan(j * m, m);
+         if(t % 2 == 0) {
+            copy_mem(left, std::span<const uint8_t>(node));
+            break;
+         }
+         t /= 2;
+         lms_hash_pair(node, *hash, sk.identifier(), (uint32_t(1) << (h - j - 1)) + t, left, node);
+      }
+   }
 }
 
 }  // namespace
+
+uint32_t LMS_Treetop::subtree_height(const LMS_Params& lms_params) {
+   constexpr uint32_t max_row_height = 10;
+   return lms_params.h() > max_row_height ? lms_params.h() - max_row_height : 0;
+}
+
+size_t LMS_Treetop::row_size(const LMS_Params& lms_params) {
+   return (size_t(1) << (lms_params.h() - subtree_height(lms_params))) * lms_params.m();
+}
+
+LMS_Treetop::LMS_Treetop(uint32_t h, uint32_t k, size_t m, std::vector<uint8_t> nodes) :
+      m_h(h), m_k(k), m_m(m), m_nodes(std::move(nodes)) {
+   BOTAN_ASSERT_NOMSG(k <= h && m_nodes.size() == (size_t(1) << (h - k + 1)) * m);
+}
+
+LMS_Treetop LMS_Treetop::from_row(const LMS_Params& lms_params,
+                                  const LMS_Identifier& identifier,
+                                  std::span<const uint8_t> row) {
+   BOTAN_ARG_CHECK(row.size() == row_size(lms_params), "Invalid LMS treetop row size");
+
+   const uint32_t h = lms_params.h();
+   const uint32_t k = subtree_height(lms_params);
+   const size_t m = lms_params.m();
+   const uint32_t row_start = uint32_t(1) << (h - k);
+
+   std::vector<uint8_t> nodes(2 * row_start * m);
+   copy_mem(std::span(nodes).subspan(row_start * m), row);
+
+   const auto hash = lms_params.hash();
+   for(uint32_t r = row_start - 1; r != 0; --r) {
+      lms_hash_pair(std::span(nodes).subspan(r * m, m),
+                    *hash,
+                    identifier,
+                    r,
+                    std::span(nodes).subspan(2 * r * m, m),
+                    std::span(nodes).subspan((2 * r + 1) * m, m));
+   }
+
+   return LMS_Treetop(h, k, m, std::move(nodes));
+}
+
+std::span<const uint8_t> LMS_Treetop::row() const {
+   return std::span(m_nodes).subspan((size_t(1) << (m_h - m_k)) * m_m);
+}
+
+std::span<const uint8_t> LMS_Treetop::node(uint32_t r) const {
+   BOTAN_ASSERT_NOMSG(r >= 1 && r < (uint32_t(1) << (m_h - m_k + 1)));
+   return std::span(m_nodes).subspan(r * m_m, m_m);
+}
+
+std::span<const uint8_t> LMS_Subtree::node(uint32_t local_r) const {
+   BOTAN_ASSERT_NOMSG(local_r >= 1 && (local_r + 1) * m_m <= m_nodes.size());
+   return std::span(m_nodes).subspan(local_r * m_m, m_m);
+}
 
 std::unique_ptr<HashFunction> LMS_Params::hash() const {
    return HashFunction::create_or_throw(hash_name());
@@ -274,24 +377,99 @@ LMS_Params::LMS_Params(LMS_Algorithm_Type algorithm_type, std::string_view hash_
 LMS_PublicKey LMS_PrivateKey::sign_and_get_pk(StrongSpan<LMS_Signature_Bytes> out_sig,
                                               LMS_Tree_Node_Idx q,
                                               const LMS_Message& msg) const {
-   // Pre-alloc space for the signature
+   const auto [treetop, subtree] = build_tree(q);
+   sign_with_nodes(out_sig, q, msg, treetop, &subtree);
+   const auto root = treetop.root();
+   return LMS_PublicKey(lms_params(), lmots_params(), identifier(), LMS_Tree_Node(root.begin(), root.end()));
+}
+
+std::pair<LMS_Treetop, LMS_Subtree> LMS_PrivateKey::build_tree(LMS_Tree_Node_Idx q) const {
+   const uint32_t h = lms_params().h();
+   const uint32_t k = LMS_Treetop::subtree_height(lms_params());
+   const size_t m = lms_params().m();
+   BOTAN_ARG_CHECK(q.get() < (uint32_t(1) << h), "Invalid LMS leaf index");
+   const uint32_t s = q.get() >> k;
+
+   std::vector<uint8_t> top((size_t(1) << (h - k + 1)) * m);
+   std::vector<uint8_t> sub((size_t(1) << (k + 1)) * m);
+
+   lms_walk_subtree(*this, 0, h, [&](uint32_t j, uint32_t t, std::span<const uint8_t> node) {
+      if(j >= k) {
+         const uint32_t r = (uint32_t(1) << (h - j)) + t;
+         copy_mem(std::span(top).subspan(r * m, m), node);
+      }
+      if(j <= k && (t >> (k - j)) == s) {
+         const uint32_t layer_mask = (uint32_t(1) << (k - j)) - 1;
+         const uint32_t local_r = (uint32_t(1) << (k - j)) + (t & layer_mask);
+         copy_mem(std::span(sub).subspan(local_r * m, m), node);
+      }
+   });
+
+   // The nodes are public, being part of signatures or the public key
+   CT::unpoison(top);
+   CT::unpoison(sub);
+
+   return {LMS_Treetop(h, k, m, std::move(top)), LMS_Subtree(s, m, std::move(sub))};
+}
+
+std::optional<LMS_Subtree> LMS_PrivateKey::build_subtree(const LMS_Treetop& treetop, LMS_Tree_Node_Idx q) const {
+   const uint32_t h = lms_params().h();
+   const uint32_t k = LMS_Treetop::subtree_height(lms_params());
+   const size_t m = lms_params().m();
+   BOTAN_ARG_CHECK(treetop.h() == h && treetop.k() == k && treetop.m() == m, "Treetop does not belong to this tree");
+   BOTAN_ARG_CHECK(q.get() < (uint32_t(1) << h), "Invalid LMS leaf index");
+   const uint32_t s = q.get() >> k;
+
+   std::vector<uint8_t> sub((size_t(1) << (k + 1)) * m);
+
+   lms_walk_subtree(*this, s << k, k, [&](uint32_t j, uint32_t t, std::span<const uint8_t> node) {
+      const uint32_t layer_mask = (uint32_t(1) << (k - j)) - 1;
+      const uint32_t local_r = (uint32_t(1) << (k - j)) + (t & layer_mask);
+      copy_mem(std::span(sub).subspan(local_r * m, m), node);
+   });
+
+   CT::unpoison(sub);
+
+   LMS_Subtree subtree(s, m, std::move(sub));
+   const auto expected_root = treetop.node((uint32_t(1) << (h - k)) + s);
+   if(!std::ranges::equal(subtree.node(1), expected_root)) {
+      return std::nullopt;
+   }
+   return subtree;
+}
+
+void LMS_PrivateKey::sign_with_nodes(StrongSpan<LMS_Signature_Bytes> out_sig,
+                                     LMS_Tree_Node_Idx q,
+                                     const LMS_Message& msg,
+                                     const LMS_Treetop& treetop,
+                                     const LMS_Subtree* subtree) const {
+   const uint32_t h = lms_params().h();
+   const uint32_t k = LMS_Treetop::subtree_height(lms_params());
    BOTAN_ARG_CHECK(out_sig.size() == LMS_Signature::size(lms_params(), lmots_params()), "Invalid output buffer size");
+   BOTAN_ARG_CHECK(q.get() < (uint32_t(1) << h), "Invalid LMS leaf index");
+   BOTAN_ARG_CHECK(treetop.h() == h && treetop.k() == k && treetop.m() == lms_params().m(),
+                   "Treetop does not belong to this tree");
+   BOTAN_ARG_CHECK(k == 0 || (subtree != nullptr && subtree->index() == (q.get() >> k)),
+                   "Subtree does not contain the signing leaf");
 
    BufferStuffer sig_stuffer(out_sig);
    sig_stuffer.append(store_be(q));
    const LMOTS_Private_Key lmots_sk(lmots_params(), identifier(), q, seed());
    lmots_sk.sign(sig_stuffer.next<LMOTS_Signature_Bytes>(LMOTS_Signature::size(lmots_params())), msg);
    sig_stuffer.append(store_be(lms_params().algorithm_type()));
-   const auto auth_path_buffer = sig_stuffer.next<LMS_AuthenticationPath>(lms_params().m() * lms_params().h());
+
+   // path[j] is the sibling of the node at height j on the way from leaf q to the root
+   for(uint32_t j = 0; j != h; ++j) {
+      const uint32_t sibling = (q.get() >> j) ^ 1;
+      if(j >= k) {
+         sig_stuffer.append(treetop.node((uint32_t(1) << (h - j)) + sibling));
+      } else {
+         const uint32_t layer_mask = (uint32_t(1) << (k - j)) - 1;
+         sig_stuffer.append(subtree->node((uint32_t(1) << (k - j)) + (sibling & layer_mask)));
+      }
+   }
 
    BOTAN_ASSERT_NOMSG(sig_stuffer.full());
-
-   const TreeAddress lms_tree_address(lms_params().h());
-   LMS_Tree_Node pk_buffer(lms_params().m());
-   lms_treehash(StrongSpan<LMS_Tree_Node>(pk_buffer.get()), auth_path_buffer, q, *this);
-
-   CT::unpoison(pk_buffer);
-   return LMS_PublicKey(lms_params(), lmots_params(), identifier(), std::move(pk_buffer));
 }
 
 LMS_PublicKey LMS_PublicKey::from_bytes_or_throw(BufferSlicer& slicer) {
@@ -380,7 +558,8 @@ LMS_Signature LMS_Signature::from_bytes_or_throw(BufferSlicer& slicer) {
 
 LMS_PublicKey::LMS_PublicKey(const LMS_PrivateKey& sk) :
       /* NOLINT(*-slicing) */ LMS_Instance(sk), m_lms_root(sk.lms_params().m()) {
-   lms_treehash(StrongSpan<LMS_Tree_Node>(m_lms_root), std::nullopt, std::nullopt, sk);
+   const auto treetop = sk.build_tree(LMS_Tree_Node_Idx(0)).first;
+   copy_mem(m_lms_root, treetop.root());
 }
 
 bool LMS_PublicKey::verify_signature(const LMS_Message& msg, const LMS_Signature& sig) const {

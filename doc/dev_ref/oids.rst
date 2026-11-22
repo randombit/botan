@@ -84,7 +84,8 @@ Values currently assigned are::
   SphincsPlus-haraka-256s-r3.1 OBJECT IDENTIFIER ::= { SphincsPlus-haraka 5 }
   SphincsPlus-haraka-256f-r3.1  OBJECT IDENTIFIER ::= { SphincsPlus-haraka 6 }
 
-  HSS-LMS-Private-Key OBJECT IDENTIFIER ::= { publicKey 13 }
+  HSS-LMS-Private-Key-legacy OBJECT IDENTIFIER ::= { publicKey 13 }
+  HSS-LMS-Private-Key OBJECT IDENTIFIER ::= { publicKey 19 }
 
   mceliece OBJECT IDENTIFIER ::= { publicKey 18 }
 

@@ -92,20 +92,40 @@ BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
  * the number and size of LMS layers of the chosen HSS/LMS instance. For the selection
  * of a sensible parameter set, refer to RFC 8554 6.4.
  *
- * The format of the HSS/LMS private key is not defined in
- * RFC 8554. We use the following format (big endian):
+ * The format of the HSS/LMS private key is not defined in RFC 8554. We use the
+ * following format (big endian), identified by the OID HSS-LMS-Private-Key
+ * (1.3.6.1.4.1.25258.1.19):
  *
  * PrivateKey = u32str(L) || u64str(idx) ||
  *              u32str(LMS algorithm id (root layer)) || u32str(LMOTS algorithm id (root layer)) ||
  *              ... ||
  *              u32str(LMS algorithm id (bottom layer)) || u32str(LMOTS algorithm id (bottom layer)) ||
- *              HSS_SEED || HSS_Identifier
+ *              HSS_SEED || HSS_Identifier || T[1] ||
+ *              u32str(N) || Section[0] || ... || Section[N-1]
  *
  *  L: Number of LMS layers
  *  Idx: Number of signatures already created using this private key
  *  HSS_SEED: Seed to derive LMS Seeds (see RFC 8554 Appendix A) like in SECRET_METHOD 2 of
  *            https://github.com/cisco/hash-sigs. As long as the hash functions output length.
  *  HSS_Identifier: 16 bytes long.
+ *  T[1]: Root of the top LMS tree.
+ *
+ * Section = u32str(tag) || u32str(length) || body
+ *
+ * Sections with unknown tags are ignored. Tag 1 holds the public data of an
+ * LMS tree used by the next signature, so that it need not be recomputed:
+ *
+ * body = u32str(level) || u64str(tree number) || nodes || [ sig[level-1] || pub[level] ]
+ *
+ *  nodes: The nodes at height max(0, h - 10) of the tree, from left to right.
+ *  sig[level-1] || pub[level]: Only for levels below the top; the signature
+ *            by the parent tree over the tree's public key, followed by that
+ *            public key, as they appear in an HSS signature.
+ *
+ * Keys in the legacy format, identified by the OID HSS-LMS-Private-Key-legacy
+ * (1.3.6.1.4.1.25258.1.13), which only consists of the fields from L to
+ * HSS_Identifier, are also accepted. Raw key bytes, which carry no OID, are
+ * taken to be in the legacy format if nothing follows HSS_Identifier.
  *
  * The HSS/LMS instance to use for creating new keys is defined using an algorithm parameter sting,
  * i.e. to define which hash function (hash), LMS tree height (h)
@@ -156,6 +176,12 @@ class BOTAN_PUBLIC_API(3, 5) HSS_LMS_PrivateKey final : public virtual HSS_LMS_P
       std::unique_ptr<Public_Key> public_key() const override;
 
       AlgorithmIdentifier pkcs8_algorithm_identifier() const override;
+
+      /**
+       * A strong check computes the whole top LMS tree, to verify that the
+       * public key matches the secret seed.
+       */
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       bool stateful_operation() const override { return true; }
 

@@ -13,6 +13,7 @@
 #include <botan/internal/lm_ots.h>
 
 #include <optional>
+#include <span>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -181,6 +182,97 @@ class BOTAN_TEST_API LMS_Instance {
       LMS_Identifier m_identifier;
 };
 
+/**
+ * @brief The top part of an LMS tree: every node at height k or above, where
+ *        k = subtree_height(). Together with the LMS_Subtree containing a
+ *        leaf, it provides the authentication path of that leaf.
+ */
+class BOTAN_TEST_API LMS_Treetop final {
+   public:
+      /**
+       * @brief Height of the subtrees below the treetop, chosen so that the
+       *        lowest row of the treetop has at most 2^10 nodes.
+       */
+      static uint32_t subtree_height(const LMS_Params& lms_params);
+
+      /**
+       * @brief Size in bytes of the lowest row of the treetop.
+       */
+      static size_t row_size(const LMS_Params& lms_params);
+
+      /**
+       * @brief Compute a treetop from its lowest row.
+       *
+       * @param lms_params The LMS parameters of the tree.
+       * @param identifier The identifier (I) of the tree.
+       * @param row The nodes at height k from left to right (see row()).
+       */
+      static LMS_Treetop from_row(const LMS_Params& lms_params,
+                                  const LMS_Identifier& identifier,
+                                  std::span<const uint8_t> row);
+
+      /**
+       * @brief The nodes at height k from left to right.
+       */
+      std::span<const uint8_t> row() const;
+
+      /**
+       * @brief The root node of the tree.
+       */
+      std::span<const uint8_t> root() const { return node(1); }
+
+      /**
+       * @brief The node with node number @p r (as defined in RFC 8554 Section 5.3)
+       */
+      std::span<const uint8_t> node(uint32_t r) const;
+
+      uint32_t h() const { return m_h; }
+
+      uint32_t k() const { return m_k; }
+
+      size_t m() const { return m_m; }
+
+   private:
+      friend class LMS_PrivateKey;
+
+      LMS_Treetop(uint32_t h, uint32_t k, size_t m, std::vector<uint8_t> nodes);
+
+      uint32_t m_h;
+      uint32_t m_k;
+      size_t m_m;
+      // Indexed by node number r, so the first entry is unused
+      std::vector<uint8_t> m_nodes;
+};
+
+/**
+ * @brief All nodes of one of the subtrees of height k hanging below an LMS_Treetop.
+ */
+class BOTAN_TEST_API LMS_Subtree final {
+   public:
+      /**
+       * @brief The subtree's position, counting from the left. Leaf q is in
+       *        subtree number q >> k.
+       */
+      uint32_t index() const { return m_index; }
+
+      /**
+       * @brief Node of the subtree, numbered as an RFC 8554 tree of height k
+       *        (the subtree root is number 1)
+       */
+      std::span<const uint8_t> node(uint32_t local_r) const;
+
+   private:
+      friend class LMS_PrivateKey;
+
+      LMS_Subtree(uint32_t index, size_t m, std::vector<uint8_t> nodes) :
+            m_index(index), m_m(m), m_nodes(std::move(nodes)) {}
+
+      uint32_t m_index;
+      size_t m_m;
+      // Indexed by local node number, so the first entry is unused
+      std::vector<uint8_t> m_nodes;
+};
+
 class LMS_PublicKey;
 
 /**
@@ -211,6 +303,37 @@ class BOTAN_TEST_API LMS_PrivateKey final : public LMS_Instance {
       LMS_PublicKey sign_and_get_pk(StrongSpan<LMS_Signature_Bytes> out_sig,
                                     LMS_Tree_Node_Idx q,
                                     const LMS_Message& msg) const;
+
+      /**
+       * @brief Compute the whole tree.
+       *
+       * @return The treetop, and the subtree containing leaf @p q.
+       */
+      std::pair<LMS_Treetop, LMS_Subtree> build_tree(LMS_Tree_Node_Idx q) const;
+
+      /**
+       * @brief Compute the subtree containing leaf @p q.
+       *
+       * @return The subtree, or nullopt if its root does not match @p treetop
+       */
+      std::optional<LMS_Subtree> build_subtree(const LMS_Treetop& treetop, LMS_Tree_Node_Idx q) const;
+
+      /**
+       * @brief Sign a message using leaf @p q, taking the authentication path
+       *        from already computed nodes (RFC 8554 5.4.1).
+       *
+       * @param out_sig Output buffer of size LMS_Signature::size()
+       * @param q The leaf to sign with
+       * @param msg The message to sign
+       * @param treetop The treetop of this tree
+       * @param subtree The subtree containing @p q. Unused, and may be null,
+       *                if LMS_Treetop::subtree_height() is zero.
+       */
+      void sign_with_nodes(StrongSpan<LMS_Signature_Bytes> out_sig,
+                           LMS_Tree_Node_Idx q,
+                           const LMS_Message& msg,
+                           const LMS_Treetop& treetop,
+                           const LMS_Subtree* subtree) const;
 
    private:
       LMS_Seed m_seed;

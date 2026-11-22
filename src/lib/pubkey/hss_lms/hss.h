@@ -10,11 +10,13 @@
 #define BOTAN_HSS_H_
 
 #include <botan/asn1_obj.h>
+#include <botan/mutex.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/lms.h>
 #include <botan/internal/stateful_key_index_registry.h>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string_view>
 #include <utility>
@@ -119,10 +121,73 @@ class BOTAN_TEST_API HSS_LMS_Params final {
 };
 
 /**
+ * @brief The encodings of an HSS-LMS private key
+ */
+enum class HSS_LMS_PrivateKey_Format : uint8_t {
+   /// The parameters, index and secret only (OID HSS-LMS-Private-Key-legacy)
+   // TODO(Botan4) Remove the legacy format
+   Legacy,
+   /// Additionally the root and cached tree data (OID HSS-LMS-Private-Key)
+   Current,
+   /// Raw bytes, which carry no OID: either of the above
+   // TODO(Botan4) Remove; raw bytes are then always in the current format
+   Either,
+};
+
+/**
+ * @brief Public data of one LMS tree of the HSS hypertree, kept between signatures.
+ */
+class HSS_Cached_Tree final {
+   public:
+      HSS_Cached_Tree(uint64_t tree_number, LMS_Treetop treetop, std::vector<uint8_t> signed_pub_key) :
+            m_tree_number(tree_number), m_treetop(std::move(treetop)), m_signed_pub_key(std::move(signed_pub_key)) {}
+
+      /**
+       * @brief The position of the tree within its level, counting from the left.
+       */
+      uint64_t tree_number() const { return m_tree_number; }
+
+      const LMS_Treetop& treetop() const { return m_treetop; }
+
+      /**
+       * @brief The parent tree's LMS signature over this tree's public key,
+       *        followed by that public key (sig[i-1] || pub[i] of an HSS
+       *        signature). Empty for the top tree.
+       */
+      std::span<const uint8_t> signed_pub_key() const { return m_signed_pub_key; }
+
+   private:
+      uint64_t m_tree_number;
+      LMS_Treetop m_treetop;
+      std::vector<uint8_t> m_signed_pub_key;
+};
+
+/**
+ * @brief A subtree of an HSS_Cached_Tree, kept between signatures.
+ */
+class HSS_Cached_Subtree final {
+   public:
+      HSS_Cached_Subtree(uint64_t tree_number, LMS_Subtree subtree) :
+            m_tree_number(tree_number), m_subtree(std::move(subtree)) {}
+
+      uint64_t tree_number() const { return m_tree_number; }
+
+      const LMS_Subtree& subtree() const { return m_subtree; }
+
+   private:
+      uint64_t m_tree_number;
+      LMS_Subtree m_subtree;
+};
+
+/**
  * @brief The internal HSS-LMS private key.
  *
  * Note that the format is not specified in the RFC 8554,
  * and is Botan specific.
+ *
+ * Besides the secret, the key keeps the public nodes and signatures of the
+ * LMS trees in use, so that a signature only requires a single LM-OTS
+ * signature in the common case. This data is also stored in the encoding.
  */
 class HSS_LMS_PrivateKeyInternal final {
    public:
@@ -138,10 +203,12 @@ class HSS_LMS_PrivateKeyInternal final {
        * @brief Parse a private HSS-LMS key.
        *
        * @param key_bytes The private key bytes to parse.
+       * @param format The expected format of @p key_bytes.
        * @return The internal HSS-LMS private key.
        * @throws Decoding_Error If parsing the private key fails.
        */
-      static std::shared_ptr<HSS_LMS_PrivateKeyInternal> from_bytes_or_throw(std::span<const uint8_t> key_bytes);
+      static std::shared_ptr<HSS_LMS_PrivateKeyInternal> from_bytes_or_throw(std::span<const uint8_t> key_bytes,
+                                                                             HSS_LMS_PrivateKey_Format format);
 
       /**
        * @brief Returns the used HSS-LMS parameters.
@@ -152,6 +219,20 @@ class HSS_LMS_PrivateKeyInternal final {
        * @brief Returns the key in its encoded format.
        */
       secure_vector<uint8_t> to_bytes() const;
+
+      /**
+       * @brief The public key of the top LMS tree.
+       *
+       * If the key was loaded from an encoding that does not contain the
+       * root of the top tree, this computes the whole top tree.
+       */
+      LMS_PublicKey top_lms_public_key() const;
+
+      /**
+       * @brief Check that the root of the top tree matches the seed, which
+       *        requires computing the whole top tree.
+       */
+      bool root_matches_seed() const;
 
       /**
        * @brief Get the number of remaining signatures for this key.
@@ -177,10 +258,9 @@ class HSS_LMS_PrivateKeyInternal final {
        *
        * See RFC 8554 6.2 - Algorithm 8.
        *
-       * For each signature creation the hypertree is computed once
-       * again, so no data is stored between multiple signatures. However,
-       * storing data between multiple signatures could be an optimization
-       * if applications create multiple signatures in one go.
+       * Trees are only computed when they are first used, or when the
+       * cached data does not match the seed. The signature is verified
+       * before it is returned.
        *
        * @param msg The message to sign.
        */
@@ -206,6 +286,24 @@ class HSS_LMS_PrivateKeyInternal final {
       void _const_time_unpoison() const { CT::unpoison(m_hss_seed); }
 
    private:
+      /**
+       * @brief The tree and leaf used at each level for some HSS index.
+       */
+      struct Tree_Position final {
+            std::vector<LMS_Tree_Node_Idx> q;
+            std::vector<uint64_t> tree_number;
+      };
+
+      /**
+       * @brief A cached tree as found in the encoding, before validation.
+       */
+      struct Encoded_Tree final {
+            HSS_Level level;
+            uint64_t tree_number;
+            std::span<const uint8_t> row;
+            std::span<const uint8_t> signed_pub_key;
+      };
+
       HSS_LMS_PrivateKeyInternal(HSS_LMS_Params hss_params, LMS_Seed hss_seed, LMS_Identifier identifier);
 
       /**
@@ -214,10 +312,35 @@ class HSS_LMS_PrivateKeyInternal final {
        */
       HSS_Sig_Idx reserve_next_idx() const;
 
+      Tree_Position tree_position(HSS_Sig_Idx idx) const;
+
       /**
-       * @brief Returns the size in bytes the key would have in its encoded format.
+       * @brief Derive the LMS private keys of the trees used at @p pos, from top to bottom.
        */
-      size_t size() const;
+      std::vector<LMS_PrivateKey> derive_lms_private_keys(const Tree_Position& pos) const;
+
+      /**
+       * @brief Keep the encoded trees which are consistent with each other,
+       *        the root, and the index @p idx.
+       */
+      void adopt_encoded_trees(HSS_Sig_Idx idx, const std::vector<Encoded_Tree>& encoded);
+
+      // The following require m_cache_mutex to be held. The functions returning
+      // bool return false if cached data turned out not to match the seed.
+
+      bool populate_cache(const Tree_Position& pos, const std::vector<LMS_PrivateKey>& sks) const;
+
+      bool ensure_tree(HSS_Level level, const Tree_Position& pos, const std::vector<LMS_PrivateKey>& sks) const;
+
+      bool ensure_subtree(HSS_Level level, const Tree_Position& pos, const LMS_PrivateKey& sk) const;
+
+      const LMS_Subtree* cached_subtree(HSS_Level level) const;
+
+      const LMS_Tree_Node& root_locked() const;
+
+      LMS_PublicKey top_lms_public_key_locked() const;
+
+      void clear_cache_locked() const;
 
       /**
        * @brief Derive the seed and identifier of an LMS tree from its parent LMS tree.
@@ -239,6 +362,13 @@ class HSS_LMS_PrivateKeyInternal final {
       LMS_Identifier m_identifier;
       Stateful_Key_Index_Registry::KeyId m_keyid;
       const size_t m_sig_size;
+
+      mutable mutex_type m_cache_mutex;
+      // Root of the top tree, if known
+      mutable std::optional<LMS_Tree_Node> m_root;
+      // Most recently used tree and subtree at each level
+      mutable std::vector<std::shared_ptr<const HSS_Cached_Tree>> m_trees;
+      mutable std::vector<std::shared_ptr<const HSS_Cached_Subtree>> m_subtrees;
 };
 
 class HSS_Signature;
