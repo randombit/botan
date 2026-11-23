@@ -204,52 +204,78 @@ std::string base64_encode(const uint8_t input[], size_t input_length) {
 
 size_t base64_decode(
    uint8_t out[], const char in[], size_t input_length, size_t& input_consumed, bool final_inputs, bool ignore_ws) {
-   return base_decode(Base64(), out, in, input_length, input_consumed, final_inputs, ignore_ws);
-}
-
-size_t base64_decode(uint8_t output[], const char input[], size_t input_length, bool ignore_ws) {
 #if defined(BOTAN_HAS_BASE64_AVX512)
    if(input_length >= 128 && CPUID::has(CPUID::Feature::AVX512, CPUID::Feature::POPCNT)) {
       // Decoding directly stops at the first block containing whitespace,
       // padding, or an invalid character
-      const uint8_t* in8 = as_span_of_bytes(input, input_length).data();
-      const size_t bulk = base64_decode_avx512(output, in8, input_length);
+      const uint8_t* in8 = as_span_of_bytes(in, input_length).data();
+      const size_t bulk = base64_decode_avx512(out, in8, input_length);
       BOTAN_ASSERT_NOMSG(bulk <= input_length && bulk % 4 == 0);
       size_t written = bulk / 4 * 3;
 
       const uint8_t* rest = in8 + bulk;
-      size_t rest_len = input_length - bulk;
-
-      // If the stop may have been due to whitespace, compact the remainder
-      // and continue decoding
-      secure_vector<uint8_t> compacted;
-      if(ignore_ws && rest_len > 128) {
-         compacted.resize(rest_len);
-         const size_t clean_len = base64_strip_ws_avx512(compacted.data(), rest, rest_len);
-         BOTAN_ASSERT_NOMSG(clean_len <= compacted.size());
-         rest = compacted.data();
-         rest_len = clean_len;
-
-         const size_t bulk2 = base64_decode_avx512(output + written, rest, rest_len);
-         BOTAN_ASSERT_NOMSG(bulk2 <= rest_len && bulk2 % 4 == 0);
-         written += bulk2 / 4 * 3;
-         rest += bulk2;
-         rest_len -= bulk2;
-      }
+      const size_t rest_len = input_length - bulk;
 
       // The scalar decoder may write up to its maximum output for the remainder
       BOTAN_ASSERT_NOMSG(written + Base64::decode_max_output(rest_len) <= Base64::decode_max_output(input_length));
 
-      // The scalar decoder handles the final blocks, and with them all of
-      // the padding logic and error reporting
-      const size_t tail_written =
-         base_decode_full(Base64(), output + written, cast_uint8_ptr_to_char(rest), rest_len, ignore_ws);
+      // If the stop may have been due to whitespace, compact the remainder
+      // and continue decoding
+      if(ignore_ws && rest_len > 128) {
+         secure_vector<uint8_t> compacted(rest_len);
+         const size_t clean_len = base64_strip_ws_avx512(compacted.data(), rest, rest_len);
+         BOTAN_ASSERT_NOMSG(clean_len <= compacted.size());
 
-      return written + tail_written;
+         const size_t bulk2 = base64_decode_avx512(out + written, compacted.data(), clean_len);
+         BOTAN_ASSERT_NOMSG(bulk2 <= clean_len && bulk2 % 4 == 0);
+         written += bulk2 / 4 * 3;
+
+         // The scalar decoder handles the final blocks, and with them all of
+         // the padding logic and error reporting
+         size_t tail_consumed = 0;
+         written += base_decode(Base64(),
+                                out + written,
+                                cast_uint8_ptr_to_char(compacted.data() + bulk2),
+                                clean_len - bulk2,
+                                tail_consumed,
+                                final_inputs,
+                                ignore_ws);
+
+         // Characters left unconsumed are all data or padding, so map their
+         // count back to the position of the first of them in the input
+         size_t unconsumed = clean_len - bulk2 - tail_consumed;
+         size_t rest_consumed = rest_len;
+         while(unconsumed > 0) {
+            --rest_consumed;
+            if(Base64::lookup_binary_value(static_cast<char>(rest[rest_consumed])) != 0x80) {
+               --unconsumed;
+            }
+         }
+
+         input_consumed = bulk + rest_consumed;
+         return written;
+      }
+
+      size_t rest_consumed = 0;
+      written += base_decode(
+         Base64(), out + written, cast_uint8_ptr_to_char(rest), rest_len, rest_consumed, final_inputs, ignore_ws);
+      input_consumed = bulk + rest_consumed;
+      return written;
    }
 #endif
 
-   return base_decode_full(Base64(), output, input, input_length, ignore_ws);
+   return base_decode(Base64(), out, in, input_length, input_consumed, final_inputs, ignore_ws);
+}
+
+size_t base64_decode(uint8_t output[], const char input[], size_t input_length, bool ignore_ws) {
+   size_t consumed = 0;
+   const size_t written = base64_decode(output, input, input_length, consumed, true, ignore_ws);
+
+   if(consumed != input_length) {
+      throw Invalid_Argument("base64 decoding failed, input did not have full bytes");
+   }
+
+   return written;
 }
 
 size_t base64_decode(uint8_t output[], std::string_view input, bool ignore_ws) {
