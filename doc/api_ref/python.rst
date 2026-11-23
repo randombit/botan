@@ -277,6 +277,12 @@ X509Cert
 .. autoclass:: X509Cert
    :members:
 
+.. autoclass:: X509GeneralNameType
+   :members:
+
+.. autoclass:: X509GeneralName
+   :members:
+
 X509CRL
 -----------------------------------------
 
