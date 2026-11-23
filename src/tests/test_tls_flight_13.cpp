@@ -54,11 +54,11 @@ constexpr auto empty_certificate_body = "00 00 00 00";
 constexpr auto new_session_ticket_body = "00 00 1e 00 01 02 03 04 01 42 00 03 aa bb cc 00 00";
 
 Client_Hello_13 make_client_hello() {
-   return std::get<Client_Hello_13>(Client_Hello_13::parse(Botan::hex_decode(client_hello_body)));
+   return std::get<Client_Hello_13>(Client_Hello_13::parse(Botan::hex_decode(client_hello_body), TLS_Flavor::TLS));
 }
 
 Server_Hello_13 make_server_hello() {
-   return std::get<Server_Hello_13>(Server_Hello_13::parse(Botan::hex_decode(server_hello_body)));
+   return std::get<Server_Hello_13>(Server_Hello_13::parse(Botan::hex_decode(server_hello_body), TLS_Flavor::TLS));
 }
 
 Certificate_13 make_certificate() {

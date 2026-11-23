@@ -230,7 +230,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Summary final : public Session_Base {
                       std::optional<std::string> psk_identity,
                       bool session_was_resumed,
                       Server_Information server_info,
-                      std::chrono::system_clock::time_point current_timestamp);
+                      std::chrono::system_clock::time_point current_timestamp,
+                      uint16_t srtp_profile);
 #endif
 
       void set_session_id(Session_ID id) { m_session_id = std::move(id); }
@@ -283,6 +284,22 @@ class BOTAN_PUBLIC_API(3, 0) Session final : public Session_Base {
               const std::vector<X509_Certificate>& peer_certs,
               std::shared_ptr<const Public_Key> peer_raw_public_key,
               const Server_Information& server_info,
+              std::chrono::system_clock::time_point current_timestamp);
+
+      /**
+      * New TLS 1.3 session (sets session start time) with an srtp_profile
+      */
+      Session(const secure_vector<uint8_t>& session_psk,
+              const std::optional<uint32_t>& max_early_data_bytes,
+              uint32_t ticket_age_add,
+              std::chrono::seconds lifetime_hint,
+              Protocol_Version version,
+              uint16_t ciphersuite,
+              Connection_Side side,
+              const std::vector<X509_Certificate>& peer_certs,
+              std::shared_ptr<const Public_Key> peer_raw_public_key,
+              const Server_Information& server_info,
+              uint16_t srtp_profile,
               std::chrono::system_clock::time_point current_timestamp);
 
 #endif

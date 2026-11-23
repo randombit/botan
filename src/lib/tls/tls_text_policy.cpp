@@ -68,6 +68,10 @@ bool Text_Policy::allow_dtls12() const {
    return get_bool("allow_dtls12", Policy::allow_dtls12());
 }
 
+bool Text_Policy::allow_dtls13() const {
+   return get_bool("allow_dtls13", Policy::allow_dtls13());
+}
+
 bool Text_Policy::allow_insecure_renegotiation() const {
    return get_bool("allow_insecure_renegotiation", Policy::allow_insecure_renegotiation());
 }

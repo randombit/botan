@@ -790,11 +790,11 @@ class Test_TLS12_Server_Rejects_DTLS_ClientHello final : public Test {
             "0002C02B"
             "0100");
 
-         result.test_throws<Botan::TLS::TLS_Exception>("ClientHello is rejected",
-                                                       [&] { server.received_data(client_hello); });
+         result.test_throws<Botan::Decoding_Error>("ClientHello is rejected",
+                                                   [&] { server.received_data(client_hello); });
 
-         // A protocol_version alert framed as a TLS record
-         result.test_bin_eq("alert", callbacks->emitted(), "15030300020246");
+         // A decode_error alert framed as a TLS record
+         result.test_bin_eq("alert", callbacks->emitted(), "15030300020232");
          return {result};
       }
 };
@@ -861,13 +861,17 @@ class Test_DTLS12_Server_Rejects_TLS_ClientHello final : public Test {
          try {
             server.received_data(client_hello);
             result.test_failure("ClientHello was accepted");
-         } catch(const Botan::TLS::TLS_Exception& e) {
-            result.test_enum_eq("protocol_version alert", e.type(), Botan::TLS::Alert::ProtocolVersion);
+         } catch(const Botan::Decoding_Error& e) {
+            // The flavor mismatch is rejected while deserializing the Client
+            // Hello and surfaces as a decode_error alert (see below).
+            result.test_str_contains("rejection reason", e.what(), "unexpected protocol flavor");
          }
 
          // Neither a HelloVerifyRequest nor a ServerHello, just the alert
          const auto emitted = callbacks->emitted();
          result.test_is_true("an alert record was sent", !emitted.empty() && emitted[0] == 0x15);
+         result.test_is_true("alert is fatal/decode_error",
+                             emitted.size() >= 2 && emitted[emitted.size() - 2] == 0x02 && emitted.back() == 0x32);
          return {result};
       }
 };
