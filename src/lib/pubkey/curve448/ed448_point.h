@@ -55,7 +55,7 @@ class BOTAN_TEST_API Ed448Point final {
       /// Scalar multiplication
       Ed448Point scalar_mul(const Scalar448& scalar) const;
 
-      /// Fixed base point scalar multiplication (precomputed table, no doublings)
+      /// Fixed base point scalar multiplication (precomputed table)
       static Ed448Point base_point_mul(const Scalar448& scalar);
 
       /// Variable-time double scalar multiplication using Shamir's trick: [s1]P + [s2]Q

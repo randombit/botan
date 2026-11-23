@@ -8,7 +8,9 @@
 #include <botan/internal/ed448_point.h>
 
 #include <botan/exceptn.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/mp_core.h>
 #include <vector>
 
 namespace Botan {
@@ -187,55 +189,184 @@ Ed448Point Ed448Point::scalar_mul(const Scalar448& s) const {
    return res;
 }
 
+namespace {
+
+/**
+* An affine point (x, y) of the base point table, along with d*x*y
+*/
+struct Ed448AffineEntry {
+      std::array<uint64_t, WORDS_448> x;
+      std::array<uint64_t, WORDS_448> y;
+      std::array<uint64_t, WORDS_448> dxy;
+};
+
+/**
+* A point in extended coordinates (X:Y:Z:T) with x = X/Z, y = Y/Z, x*y = T/Z
+*
+* See "Twisted Edwards Curves Revisited" (Hisil, Wong, Carter, Dawson, 2008)
+*/
+class Ed448ExtendedPoint final {
+   public:
+      static Ed448ExtendedPoint identity() {
+         return Ed448ExtendedPoint(Gf448Elem::zero(), Gf448Elem::one(), Gf448Elem::one(), Gf448Elem::zero());
+      }
+
+      Ed448ExtendedPoint(const Gf448Elem& x, const Gf448Elem& y, const Gf448Elem& z, const Gf448Elem& t) :
+            m_x(x), m_y(y), m_z(z), m_t(t) {}
+
+      Ed448Point to_projective() const { return Ed448Point(m_x, m_y, m_z); }
+
+      // madd-2008-hwcd with a = 1
+      Ed448ExtendedPoint add_affine(const Gf448Elem& x2, const Gf448Elem& y2, const Gf448Elem& dxy2) const {
+         const Gf448Elem A = m_x * x2;
+         const Gf448Elem B = m_y * y2;
+         const Gf448Elem C = m_t * dxy2;
+         const Gf448Elem E = (m_x + m_y) * (x2 + y2) - A - B;
+         const Gf448Elem F = m_z - C;
+         const Gf448Elem G = m_z + C;
+         const Gf448Elem H = B - A;
+         return Ed448ExtendedPoint(E * F, G * H, F * G, E * H);
+      }
+
+      // dbl-2008-hwcd with a = 1
+      Ed448ExtendedPoint double_point() const {
+         const Gf448Elem A = square(m_x);
+         const Gf448Elem B = square(m_y);
+         const Gf448Elem Z2 = square(m_z);
+         const Gf448Elem C = Z2 + Z2;
+         const Gf448Elem E = square(m_x + m_y) - A - B;
+         const Gf448Elem G = A + B;
+         const Gf448Elem F = G - C;
+         const Gf448Elem H = A - B;
+         return Ed448ExtendedPoint(E * F, G * H, F * G, E * H);
+      }
+
+   private:
+      Gf448Elem m_x;
+      Gf448Elem m_y;
+      Gf448Elem m_z;
+      Gf448Elem m_t;
+};
+
+std::vector<Ed448AffineEntry> to_affine_entries(const std::vector<Ed448Point>& pts) {
+   // Montgomery's trick: one inversion for all of the points
+   std::vector<Gf448Elem> z_prod;
+   z_prod.reserve(pts.size());
+   z_prod.push_back(pts[0].z_proj());
+   for(size_t i = 1; i != pts.size(); ++i) {
+      z_prod.push_back(z_prod[i - 1] * pts[i].z_proj());
+   }
+
+   auto inv = Gf448Elem::one() / z_prod.back();
+
+   std::vector<Ed448AffineEntry> entries(pts.size());
+   for(size_t i = pts.size(); i-- > 0;) {
+      auto z_inv = inv;
+      if(i > 0) {
+         z_inv = inv * z_prod[i - 1];
+         inv = inv * pts[i].z_proj();
+      }
+
+      const auto x = pts[i].x_proj() * z_inv;
+      const auto y = pts[i].y_proj() * z_inv;
+      // d = -39081
+      const auto dxy = -mul_a24(x * y);
+
+      copy_mem(entries[i].x, x.words());
+      copy_mem(entries[i].y, y.words());
+      copy_mem(entries[i].dxy, dxy.words());
+   }
+
+   return entries;
+}
+
+}  // namespace
+
 Ed448Point Ed448Point::base_point_mul(const Scalar448& scalar) {
    /*
    Fixed base point multiplication
 
-   Same idea as base point multiply used in pcurves
+   Same idea as base point multiply used in pcurves: Booth recoded W-bit
+   digits with a table of affine points. To keep the table small, row j holds
+   multiples of 2^(W*Passes*j)*B, so each row serves Passes digits (a comb),
+   at the cost of W*(Passes-1) doublings.
    */
-   constexpr size_t W = 4;
-   constexpr size_t WindowElements = (1 << W) - 1;         // 15
-   constexpr size_t Windows = (448 + W - 1) / W;           // 112
-   constexpr size_t TableSize = Windows * WindowElements;  // 1680
+   constexpr size_t W = 5;
+   constexpr size_t RowElements = 1 << (W - 1);  // 16
+   // The top digit's sign bit is at or above bit 446 so it is never negative
+   constexpr size_t Digits = (446 + W) / W;  // 90
+   constexpr size_t Passes = 3;
+   constexpr size_t Rows = Digits / Passes;  // 30
+   static_assert(Rows * Passes == Digits);
 
    static const auto table = []() {
-      std::vector<Ed448Point> tbl(TableSize, Ed448Point::identity());
+      std::vector<Ed448Point> pts;
+      pts.reserve(Rows * RowElements);
 
-      auto accum = Ed448Point::base_point();
+      auto row_base = Ed448Point::base_point();
 
-      for(size_t i = 0; i < TableSize; i += WindowElements) {
-         tbl[i] = accum;
+      for(size_t r = 0; r != Rows; ++r) {
+         const size_t row = pts.size();
+         pts.push_back(row_base);
 
-         for(size_t j = 1; j < WindowElements; ++j) {
-            if(j % 2 == 1) {
-               tbl[i + j] = tbl[i + j / 2].double_point();
+         for(size_t k = 2; k <= RowElements; ++k) {
+            if(k % 2 == 0) {
+               pts.push_back(pts[row + k / 2 - 1].double_point());
             } else {
-               tbl[i + j] = tbl[i + j - 1] + tbl[i];
+               pts.push_back(pts[row + k - 2] + row_base);
             }
          }
 
-         accum = tbl[i + (WindowElements / 2)].double_point();
+         // 2^(W*Passes) * row_base, starting from the last entry 2^(W-1) * row_base
+         row_base = pts.back();
+         for(size_t i = 0; i != W * Passes - (W - 1); ++i) {
+            row_base = row_base.double_point();
+         }
       }
 
-      return tbl;
+      return to_affine_entries(pts);
    }();
 
-   auto res = Ed448Point::identity();
+   auto accum = Ed448ExtendedPoint::identity();
 
-   for(size_t i = 0; i != Windows; ++i) {
-      const uint8_t w = static_cast<uint8_t>(scalar.get_window(i * W, W));
-
-      // Constant-time table lookup from this window's 15-entry subtable
-      auto selected = Ed448Point::identity();
-      for(size_t j = 0; j != WindowElements; ++j) {
-         const auto assign = CT::Mask<uint64_t>::is_equal(j + 1, w);
-         selected.ct_conditional_assign(assign, table[i * WindowElements + j]);
+   for(size_t pass = Passes; pass-- > 0;) {
+      if(pass != Passes - 1) {
+         for(size_t i = 0; i != W; ++i) {
+            accum = accum.double_point();
+         }
       }
 
-      res = res + selected;
+      for(size_t r = 0; r != Rows; ++r) {
+         const size_t d = Passes * r + pass;
+
+         // The W+1 bit window overlaps the previous one by a bit; the first has an implicit zero below
+         const size_t raw = (d == 0) ? (scalar.get_window(0, W) << 1) : scalar.get_window(W * d - 1, W + 1);
+         const auto [idx, neg] = booth_recode<W>(raw);
+
+         // Constant time lookup of entry idx, with idx = 0 giving the identity
+         std::array<uint64_t, WORDS_448> x{};
+         std::array<uint64_t, WORDS_448> y{1};
+         std::array<uint64_t, WORDS_448> dxy{};
+         for(size_t k = 0; k != RowElements; ++k) {
+            const auto found = CT::Mask<uint64_t>::is_equal(k + 1, idx);
+            const auto& e = table[r * RowElements + k];
+            found.select_n(x.data(), e.x.data(), x.data(), WORDS_448);
+            found.select_n(y.data(), e.y.data(), y.data(), WORDS_448);
+            found.select_n(dxy.data(), e.dxy.data(), dxy.data(), WORDS_448);
+         }
+
+         // -(x, y) = (-x, y)
+         const auto neg_mask = CT::Mask<uint64_t>::from_choice(neg);
+         auto px = Gf448Elem(x);
+         auto pdxy = Gf448Elem(dxy);
+         px.ct_cond_assign(neg_mask, -px);
+         pdxy.ct_cond_assign(neg_mask, -pdxy);
+
+         accum = accum.add_affine(px, Gf448Elem(y), pdxy);
+      }
    }
 
-   return res;
+   return accum.to_projective();
 }
 
 Ed448Point Ed448Point::double_scalar_mul_vartime(const Scalar448& s1,
