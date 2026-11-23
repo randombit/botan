@@ -26,10 +26,13 @@ CT::Option<size_t> CT::copy_output(CT::Choice accept,
    * at their own time.
    */
 
-   /**
-   * Zeroize the entire output buffer to get started
+   const size_t n = input.size();
+
+   /*
+   * Start with the input at the front of the output buffer, and zeros after it
    */
-   clear_mem(output);
+   copy_mem(output.first(n), input);
+   clear_mem(output.subspan(n));
 
    /*
    * If the offset is greater than input length, then the arguments are
@@ -37,43 +40,37 @@ CT::Option<size_t> CT::copy_output(CT::Choice accept,
    * information about the offset. Instead treat it as if the input
    * was invalid.
    */
-   accept = accept && CT::Mask<size_t>::is_lte(offset, input.size()).as_choice();
+   accept = accept && CT::Mask<size_t>::is_lte(offset, n).as_choice();
 
    /*
    * If the input is invalid, then set offset == input_length
    */
-   offset = CT::Mask<size_t>::from_choice(accept).select(offset, input.size());
+   offset = CT::Mask<size_t>::from_choice(accept).select(offset, n);
 
    /*
-   * Move the desired output bytes to the front using a slow (O^n)
-   * but constant time loop that does not leak the value of the offset
+   * Move the desired output bytes to the front by shifting the buffer left by
+   * each power of two which is set in offset, using a constant time selection
+   * so that the access pattern does not depend on offset. Zeros are shifted in
+   * at the end.
+   *
+   * Since offset <= input_length, every bit of offset is covered. If the input
+   * was invalid then offset == input_length, so every input byte is shifted
+   * out and the output is all zero.
    */
-   for(size_t i = 0; i != input.size(); ++i) {
-      /*
-      * If bad_input was set then we modified offset to equal the input_length.
-      * In that case, this_loop will be greater than input_length, and so is_eq
-      * mask will always be false. As a result none of the input values will be
-      * written to output.
-      *
-      * This is ignoring the possibility of integer overflow of offset + i. But
-      * for this to happen the input would have to consume nearly the entire
-      * address space.
-      */
-      const size_t this_loop = offset + i;
+   for(size_t bit = 0, shift = 1; shift <= n; ++bit, shift <<= 1) {
+      const CT::Mask<uint8_t> shift_mask(CT::Mask<size_t>::expand_bit(offset, bit));
 
-      /*
-      start index from i rather than 0 since we know j must be >= i + offset
-      to have any effect, and starting from i does not reveal information
-      */
-      for(size_t j = i; j != input.size(); ++j) {
-         const uint8_t b = input[j];
-         const auto is_eq = CT::Mask<size_t>::is_equal(j, this_loop);
-         output[i] |= is_eq.if_set_return(b);
+      // In increasing order, so output[i + shift] is read before it is overwritten
+      for(size_t i = 0; i != n - shift; ++i) {
+         output[i] = shift_mask.select(output[i + shift], output[i]);
+      }
+      for(size_t i = n - shift; i != n; ++i) {
+         output[i] = shift_mask.if_not_set_return(output[i]);
       }
    }
 
    // This will always be zero if the input was invalid
-   const size_t output_bytes = input.size() - offset;
+   const size_t output_bytes = n - offset;
 
    return CT::Option<size_t>(output_bytes, accept);
 }
