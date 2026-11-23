@@ -394,45 +394,45 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/']
             elif target in ['cross-arm64', 'cross-arm64-amalgamation']:
                 flags += ['--cpu=aarch64']
-                cc_bin = 'aarch64-linux-gnu-g++'
                 test_prefix = ['qemu-aarch64', '-L', '/usr/aarch64-linux-gnu/']
+                cc_bin = None
             elif target == 'cross-alpha':
                 flags += ['--cpu=alpha']
-                cc_bin = 'alpha-linux-gnu-g++'
+                cc_bin = None
                 test_prefix = ['qemu-alpha', '-L', '/usr/alpha-linux-gnu/']
                 flags += ['--without-stack-protector'] # not supported
             elif target == 'cross-sh4':
                 flags += ['--cpu=sh4']
-                cc_bin = 'sh4-linux-gnu-g++'
+                cc_bin = None
                 test_prefix = ['qemu-sh4', '-L', '/usr/sh4-linux-gnu/']
             elif target == 'cross-m68k':
                 flags += ['--cpu=m68k']
-                cc_bin = 'm68k-linux-gnu-g++'
+                cc_bin = None
                 test_prefix = ['qemu-m68k', '-L', '/usr/m68k-linux-gnu/']
             elif target == 'cross-hppa64':
                 flags += ['--cpu=hppa']
-                cc_bin = 'hppa-linux-gnu-g++'
+                cc_bin = None
                 test_prefix = ['qemu-hppa', '-L', '/usr/hppa-linux-gnu/']
             elif target == 'cross-sparc64':
                 flags += ['--cpu=sparc64']
-                cc_bin = 'sparc64-linux-gnu-g++'
+                cc_bin = None
                 test_prefix = ['qemu-sparc64', '-L', '/usr/sparc64-linux-gnu/']
             elif target == 'cross-ppc32':
                 flags += ['--cpu=ppc32']
-                cc_bin = 'powerpc-linux-gnu-g++'
+                cc_bin = None
                 test_prefix = ['qemu-ppc', '-L', '/usr/powerpc-linux-gnu/']
                 test_cmd = None # qemu crashes ...
             elif target == 'cross-ppc64':
                 flags += ['--cpu=ppc64']
-                cc_bin = 'powerpc64le-linux-gnu-g++'
+                cc_bin = None
                 test_prefix = ['qemu-ppc64le', '-cpu', 'power10', '-L', '/usr/powerpc64le-linux-gnu/']
             elif target == 'cross-riscv64':
                 flags += ['--cpu=riscv64']
-                cc_bin = 'riscv64-linux-gnu-g++'
+                cc_bin = None
                 test_prefix = ['qemu-riscv64', '-L', '/usr/riscv64-linux-gnu/']
             elif target == 'cross-s390x':
                 flags += ['--cpu=s390x']
-                cc_bin = 's390x-linux-gnu-g++'
+                cc_bin = None
                 test_prefix = ['qemu-s390x', '-L', '/usr/s390x-linux-gnu/']
             elif target == 'cross-loongarch64':
                 flags += ['--cpu=loongarch64']
@@ -440,7 +440,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 test_prefix = ['qemu-loongarch64', '-L', '/usr/loongarch64-linux-gnu/']
             elif target == 'cross-mips':
                 flags += ['--cpu=mips32']
-                cc_bin = 'mips-linux-gnu-g++'
+                cc_bin = None
                 test_prefix = ['qemu-mips', '-L', '/usr/mips-linux-gnu/']
             elif target == 'cross-mips64':
                 flags += ['--cpu=mips64']
@@ -530,7 +530,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             # slower tests to take as long as 5 minutes
             test_cmd.remove('--run-long-tests')
 
-    if os.getenv('CXX') is None:
+    if os.getenv('CXX') is None and cc_bin is not None:
         flags += ['--cc-bin=%s' % (cc_bin)]
 
     if test_cmd is None:

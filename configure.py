@@ -3245,20 +3245,36 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os):
         if options.compiler == 'clang' and run_compiler(options, info_cc['clang'], '?', ['--version']).startswith('Apple clang'):
             options.compiler = 'xcode'
 
+    if options.cpu is None:
+        (arch, cpu) = guess_processor(info_arch)
+        options.arch = arch
+        options.cpu = cpu
+        logging.info('Guessing target processor is a %s (use --cpu to set)', options.arch)
+
+    canonicalize_options(options, info_os, info_arch)
+
     if options.compiler is None and options.os in info_os:
         options.compiler = info_os[options.os].default_compiler
+
+    if options.arch is not None and options.compiler_binary is None:
+        if options.compiler == "gcc":
+            candidates = [info_arch[options.arch].basename] + info_arch[options.arch].aliases
+            candidates = ["%s-%s-gnu-g++" % (x, options.os) for x in candidates]
+            for candidate in candidates:
+                if have_program(candidate):
+                    options.compiler_binary = candidate
+                    break
+            else:
+                logging.error("Guessed compiler is %s based on target architecture, but could not find a suitbable one (tried %s); use --cc to set",
+                        options.compiler, ", ".join(candidates))
+        elif options.compiler == "clang":
+            assert 0 == 1 # todo :)
 
         if not have_program(info_cc[options.compiler].binary_name):
             logging.error("Default compiler is %s but could not find '%s'; use --cc to set",
                           options.compiler, info_cc[options.compiler].binary_name)
 
         logging.info('Guessing to use compiler %s (use --cc or CXX to set)', options.compiler)
-
-    if options.cpu is None:
-        (arch, cpu) = guess_processor(info_arch)
-        options.arch = arch
-        options.cpu = cpu
-        logging.info('Guessing target processor is a %s (use --cpu to set)', options.arch)
 
     if options.with_documentation is True:
         if options.with_sphinx is None and have_program('sphinx-build'):
@@ -3788,8 +3804,6 @@ def main(argv):
     logging.debug('Known CPU names: %s', ' '.join(cpu_names))
 
     set_defaults_for_unset_options(options, info_arch, info_cc, info_os)
-    canonicalize_options(options, info_os, info_arch)
-
     validate_options(options, info_os, info_cc, info_module_policies)
 
     cc = info_cc[options.compiler]
