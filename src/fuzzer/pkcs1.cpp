@@ -62,6 +62,9 @@ void fuzz(std::span<const uint8_t> in) {
       FUZZER_WRITE_AND_CRASH("Library rejected input accepted by ref " << Botan::hex_encode(ref_result));
    } else if(ref_rejected == true && lib_rejected == false) {
       FUZZER_WRITE_AND_CRASH("Library accepted input rejected by ref " << Botan::hex_encode(lib_result));
+   } else if(lib_rejected == false && lib_result != ref_result) {
+      FUZZER_WRITE_AND_CRASH("Library output " << Botan::hex_encode(lib_result) << " differs from ref "
+                                               << Botan::hex_encode(ref_result));
    }
    // otherwise the two implementations agree
 }

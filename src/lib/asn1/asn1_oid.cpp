@@ -9,6 +9,7 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/internal/asn1_utils.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/fmt.h>
@@ -309,5 +310,14 @@ std::ostream& operator<<(std::ostream& out, const OID& oid) {
    out << oid.to_string();
    return out;
 }
+
+namespace ASN1 {
+
+bool has_prefix(const OID& oid, std::span<const uint32_t> prefix) {
+   const auto& c = oid.get_components();
+   return c.size() >= prefix.size() && std::equal(prefix.begin(), prefix.end(), c.begin());
+}
+
+}  // namespace ASN1
 
 }  // namespace Botan

@@ -27,6 +27,13 @@ std::vector<std::vector<uint8_t>> decode_all_certificates(DataSource& source) {
       try {
          cert = unlock(PEM_Code::decode(source, label));
 
+         /*
+         The OpenSSL settings following a TRUSTED CERTIFICATE are ignored.
+
+         We accept this only because some Linux distros ship their trust roots
+         in this format. We assume the trust root file contains only trusted roots.
+         */
+
          if(label == "CERTIFICATE" || label == "X509 CERTIFICATE" || label == "TRUSTED CERTIFICATE") {
             pems.push_back(cert);
          }

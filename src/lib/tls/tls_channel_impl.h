@@ -261,6 +261,11 @@ class Channel_Impl : public std::enable_shared_from_this<Channel_Impl> {
          m_downgrade_info->client_hello.emplace(std::move(client_hello));
       }
 
+      void preserve_sequence_numbers(std::optional<Epoch0_SequenceNumbers> epoch0_sec_nums) {
+         BOTAN_STATE_CHECK(m_downgrade_info);
+         m_downgrade_info->epoch0_sequence_numbers = epoch0_sec_nums;
+      }
+
       friend class Client;
       friend class Server;
 

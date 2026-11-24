@@ -72,12 +72,10 @@ class Fuzzer_TLS_Server_Creds : public Botan::Credentials_Manager {
       }
 
       std::shared_ptr<Botan::Private_Key> private_key_for(const Botan::X509_Certificate& /*cert*/,
-                                                          const std::string& type,
+                                                          const std::string& /*type*/,
                                                           const std::string& /*context*/) override {
-         if(type == "ECDSA") {
-            return m_ecdsa_key;
-         }
-         return nullptr;
+         // The only certificate we ever offer is the ECDSA one
+         return m_ecdsa_key;
       }
 
       Botan::secure_vector<uint8_t> session_ticket_key() override {
@@ -147,10 +145,11 @@ class Fuzzer_TLS_Server_Callbacks : public Botan::TLS::Callbacks {
       }
 
       std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos) override {
-         if(client_protos.size() > 1) {
-            return client_protos[0];
+         // The server rejects any choice which the client did not offer
+         if(client_protos.empty()) {
+            return "";
          } else {
-            return "fuzzy";
+            return client_protos[0];
          }
       }
 

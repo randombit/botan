@@ -209,7 +209,12 @@ For details see pcurves_impl.h in src/lib/math/pcurves/pcurves_impl
    The legacy implementation has several known side channels, which are
    partially addressed by use of blinding. Passing a `Null_RNG` (or any other
    unseeded RNG object) disables the blinding and exposes these side channels.
-   The `legacy_ec_point` module will be removed in the next major release.
+   Some operations never have an RNG available, notably computing the public
+   key from the private key when a key is loaded or checked, and so always run
+   without blinding. The legacy implementation is used only for curves which
+   pcurves does not support, namely curves with a cofactor and a few curves with
+   unusual parameters such as secp160r1 and secp224k1. The `legacy_ec_point`
+   module will be removed in the next major release.
 
 ECDH
 ----------------------

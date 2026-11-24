@@ -96,8 +96,8 @@ void fuzz(std::span<const uint8_t> in) {
    size_t in_len = in.size();
    const auto* x = in.data();
    while(in_len > 0) {
-      const uint8_t op = in[0] % 2;
-      size_t idx = (in[0] >> 1);
+      const uint8_t op = x[0] % 2;
+      size_t idx = (x[0] >> 1);
       x += 1;
       in_len -= 1;
 

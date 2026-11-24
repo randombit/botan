@@ -892,6 +892,11 @@ class BigInt_IsPrime_Test final : public Text_Based_Test {
             result.test_bool_eq("is_bailie_psw_probable_prime_vartime",
                                 Botan::is_bailie_psw_probable_prime_vartime(value, monty),
                                 is_prime);
+
+            if(is_prime) {
+               result.test_is_true("Prime passes Miller-Rabin base 2",
+                                   Botan::is_miller_rabin_base2_probable_prime(value, monty));
+            }
          }
 
          return result;
@@ -1190,6 +1195,52 @@ class BigInt_Rand_Test final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("math", "bn_rand", BigInt_Rand_Test);
+
+class Miller_Rabin_Base2_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         const uint32_t max = (Test::run_long_tests() ? 100000 : 10000) + 1;
+
+         // OEIS A001262
+         const std::set<uint32_t> strong_pp{
+            2047,
+            3277,
+            4033,
+            4681,
+            8321,
+            15841,
+            29341,
+            42799,
+            49141,
+            52633,
+            65281,
+            74665,
+            80581,
+            85489,
+            88357,
+            90751,
+         };
+
+         Test::Result result("Miller-Rabin base 2 test");
+
+         for(uint32_t i = 3; i <= max; i += 2) {
+            const auto i_bn = Botan::BigInt::from_word(i);
+            const Botan::Montgomery_Params monty_i(i_bn);
+            const bool passes = Botan::is_miller_rabin_base2_probable_prime(i_bn, monty_i);
+            const bool is_prime = Botan::is_prime(i_bn, this->rng());
+
+            if(is_prime) {
+               result.test_is_true("Prime passes base 2 test", passes);
+            } else {
+               result.test_bool_eq("Composite passes only if a strong pseudoprime", passes, strong_pp.contains(i));
+            }
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("math", "miller_rabin_base2", Miller_Rabin_Base2_Test);
 
 class Lucas_Primality_Test final : public Test {
    public:

@@ -20,6 +20,10 @@ Botan::BigInt simple_power_mod(Botan::BigInt x, Botan::BigInt n, const Botan::Bi
    }
 
    auto mod_p = Botan::Barrett_Reduction::for_public_modulus(p);
+
+   // Barrett multiplication requires that the inputs are already reduced
+   x %= p;
+
    Botan::BigInt y = 1;
 
    while(n > 1) {

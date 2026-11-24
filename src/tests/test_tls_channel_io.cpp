@@ -784,8 +784,8 @@ std::vector<Test::Result> send_flights() {
                const auto io = make_channel_io(TLS::Connection_Side::Client, callbacks);
                auto th = make_transcript_hash();
 
-               auto client_hello = std::get<TLS::Client_Hello_13>(
-                  TLS::Client_Hello_13::parse(Botan::hex_decode(rfc8448::client_hello_body)));
+               auto client_hello = std::get<TLS::Client_Hello_13>(TLS::Client_Hello_13::parse(
+                  Botan::hex_decode(rfc8448::client_hello_body), Botan::TLS::TLS_Flavor::TLS));
                auto flight = TLS::Flight(*th, *callbacks).add(client_hello).add_dummy_change_cipher_spec();
 
                io->send(flight.commit());

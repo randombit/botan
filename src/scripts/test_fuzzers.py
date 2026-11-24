@@ -109,6 +109,7 @@ def main(args=None):
     fuzzers_with_corpus = fuzzers & corpii
 
     crash_count = 0
+    total_crash_count = 0
     stderr_count = 0
     stdout_count = 0
 
@@ -147,13 +148,14 @@ def main(args=None):
             duration = time.time() - start
             print("Tested fuzzer %s with %d test cases, %d crashes in %.02f seconds" % (
                 fuzzer, len(corpus_files), crash_count, duration))
+            total_crash_count += crash_count
             crash_count = 0
             sys.stdout.flush()
     else:
         # Generate a random corpus for fuzzers without a corpus
         random_corpus_dir = tempfile.mkdtemp(prefix='fuzzer_corpus_')
 
-        slow_fuzzers = ['invert', 'ecc_p521', 'pow_mod']
+        slow_fuzzers = ['gcd', 'invert', 'ecc_p521', 'pow_mod']
         random_corpus_size = 1000
         random_corpus_size_for_slow_fuzzers = 100
 
@@ -196,10 +198,11 @@ def main(args=None):
 
             print("Tested fuzzer %s with %d test cases, %d crashes in %.02f seconds" % (
                 fuzzer, len(corpus_files), crash_count, duration))
+            total_crash_count += crash_count
             crash_count = 0
 
-    if crash_count > 0 or stderr_count > 0 or stdout_count > 0:
-        print("Ran fuzzer tests, %d crashes %d stdout %d stderr" % (crash_count, stdout_count, stderr_count))
+    if total_crash_count > 0 or stderr_count > 0 or stdout_count > 0:
+        print("Ran fuzzer tests, %d crashes %d stdout %d stderr" % (total_crash_count, stdout_count, stderr_count))
         return 2
     return 0
 

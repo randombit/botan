@@ -12,6 +12,8 @@
    #include "test_pubkey.h"
    #include "test_rng.h"
 
+   #include <botan/asn1_obj.h>
+   #include <botan/ber_dec.h>
    #include <botan/data_src.h>
    #include <botan/exceptn.h>
    #include <botan/pk_algs.h>
@@ -1037,6 +1039,101 @@ class PK_Key_Decoding_Test : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("pubkey", "pk_key_decoding", PK_Key_Decoding_Test);
+
+   #if defined(BOTAN_HAS_PKCS5_PBES2) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SHA2_32)
+
+/**
+* Check which cipher PKCS #8 encryption chooses when the caller does not specify one
+*/
+class PKCS8_Default_Cipher_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+
+         results.push_back(test_default_cipher("ECDSA", "secp256r1", "AES-256/CBC"));
+         results.push_back(test_default_cipher("Ed25519", "", "AES-256/CBC"));
+
+         // Algorithm OID is under our private arc
+         results.push_back(test_default_cipher("FrodoKEM", "FrodoKEM-640-SHAKE", nonstandard_cipher()));
+         results.push_back(test_default_cipher("Kyber", "Kyber-512-r3", nonstandard_cipher()));
+
+         // Public key OID is standard but the PKCS #8 encoding is under our private arc
+         results.push_back(test_default_cipher("HSS-LMS", "SHA-256,HW(5,1)", nonstandard_cipher()));
+
+         return results;
+      }
+
+   private:
+      static std::string nonstandard_cipher() {
+      #if defined(BOTAN_HAS_AEAD_SIV)
+         return "AES-256/SIV";
+      #elif defined(BOTAN_HAS_AEAD_GCM)
+         return "AES-256/GCM";
+      #else
+         return "AES-256/CBC";
+      #endif
+      }
+
+      static std::string pbes2_cipher(std::span<const uint8_t> encrypted_key) {
+         Botan::AlgorithmIdentifier pbe_alg;
+         std::vector<uint8_t> ciphertext;
+         Botan::BER_Decoder(encrypted_key)
+            .start_sequence()
+            .decode(pbe_alg)
+            .decode(ciphertext, Botan::ASN1_Type::OctetString)
+            .end_cons()
+            .verify_end();
+
+         Botan::AlgorithmIdentifier kdf_alg;
+         Botan::AlgorithmIdentifier cipher_alg;
+         Botan::BER_Decoder(pbe_alg.parameters()).start_sequence().decode(kdf_alg).decode(cipher_alg).end_cons();
+
+         return cipher_alg.oid().to_formatted_string();
+      }
+
+      Test::Result test_default_cipher(const std::string& algo,
+                                       const std::string& params,
+                                       const std::string& expected_cipher) {
+         const std::string key_desc = params.empty() ? algo : Botan::fmt("{} {}", algo, params);
+         Test::Result result("PKCS #8 default cipher for " + key_desc);
+
+         std::unique_ptr<Botan::Private_Key> key;
+         try {
+            key = Botan::create_private_key(algo, this->rng(), params);
+         } catch(Botan::Not_Implemented&) {
+         } catch(Botan::Lookup_Error&) {}
+
+         if(!key) {
+            result.note_missing(key_desc);
+            return result;
+         }
+
+         const std::string pass = "hunter2";
+
+         try {
+            const auto msec_enc = Botan::PKCS8::BER_encode(*key, this->rng(), pass, std::chrono::milliseconds(1));
+            result.test_str_eq("BER_encode cipher", pbes2_cipher(msec_enc), expected_cipher);
+
+            const auto iter_enc = Botan::PKCS8::BER_encode_encrypted_pbkdf_iter(*key, this->rng(), pass, 1000);
+            result.test_str_eq("BER_encode_encrypted_pbkdf_iter cipher", pbes2_cipher(iter_enc), expected_cipher);
+
+            const auto msec2_enc = Botan::PKCS8::BER_encode_encrypted_pbkdf_msec(
+               *key, this->rng(), pass, std::chrono::milliseconds(1), nullptr);
+            result.test_str_eq("BER_encode_encrypted_pbkdf_msec cipher", pbes2_cipher(msec2_enc), expected_cipher);
+
+            const auto reloaded = Botan::PKCS8::load_key(msec_enc, pass);
+            result.test_bin_eq("reloaded key matches", reloaded->private_key_info(), key->private_key_info());
+         } catch(std::exception& e) {
+            result.test_failure("PKCS #8 encryption failed", e.what());
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "pkcs8_default_cipher", PKCS8_Default_Cipher_Test);
+
+   #endif
 
 }  // namespace
 

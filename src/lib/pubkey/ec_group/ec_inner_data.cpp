@@ -45,24 +45,24 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       m_order(order),
       m_cofactor(cofactor),
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      m_mod_field(Barrett_Reduction::for_public_modulus(p)),
-      m_mod_order(Barrett_Reduction::for_public_modulus(order)),
+      m_mod_field(Barrett_Reduction::for_public_modulus(m_p)),
+      m_mod_order(Barrett_Reduction::for_public_modulus(m_order)),
       m_monty(m_p, m_mod_field),
 #endif
       m_oid(oid),
-      m_p_words(p.sig_words()),
-      m_p_bits(p.bits()),
-      m_order_bits(order.bits()),
+      m_p_words(m_p.sig_words()),
+      m_p_bits(m_p.bits()),
+      m_order_bits(m_order.bits()),
       m_order_bytes((m_order_bits + 7) / 8),
-      m_a_is_minus_3(a == p - 3),
-      m_a_is_zero(a.is_zero()),
+      m_a_is_minus_3(m_a == m_p - 3),
+      m_a_is_zero(m_a.is_zero()),
       m_has_cofactor(m_cofactor != 1),
-      m_order_is_less_than_p(m_order < p),
+      m_order_is_less_than_p(m_order < m_p),
       m_source(source) {
    // Verify the generator (x, y) satisfies y^2 = x^3 + a*x + b (mod p)
-   const auto mod_p = Barrett_Reduction::for_public_modulus(p);
-   const BigInt y2 = mod_p.square(g_y);
-   const BigInt x3_ax_b = mod_p.reduce(mod_p.cube(g_x) + mod_p.multiply(a, g_x) + b);
+   const auto mod_p = Barrett_Reduction::for_public_modulus(m_p);
+   const BigInt y2 = mod_p.square(m_g_y);
+   const BigInt x3_ax_b = mod_p.reduce(mod_p.cube(m_g_x) + mod_p.multiply(m_a, m_g_x) + m_b);
    if(y2 != x3_ax_b) {
       throw Invalid_Argument("EC_Group generator is not on the curve");
    }
@@ -81,7 +81,7 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
 
                if(const auto group_oid = OID::from_name(*name)) {
                   if(const auto group_info = EC_Group::EC_group_info(*group_oid)) {
-                     return group_info->params_match(p, a, b, g_x, g_y, order, cofactor);
+                     return group_info->params_match(m_p, m_a, m_b, m_g_x, m_g_y, m_order, m_cofactor);
                   }
                }
 
@@ -100,7 +100,7 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
 
    // Try a generic pcurves instance
    if(!m_pcurve && !m_has_cofactor) {
-      m_pcurve = PCurve::PrimeOrderCurve::from_params(p, a, b, g_x, g_y, order);
+      m_pcurve = PCurve::PrimeOrderCurve::from_params(m_p, m_a, m_b, m_g_x, m_g_y, m_order);
       if(m_pcurve) {
          m_engine = EC_Group_Engine::Generic;
       }
@@ -110,8 +110,8 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
    secure_vector<word> ws;
-   m_a_r = m_monty.mul(a, m_monty.R2(), ws);
-   m_b_r = m_monty.mul(b, m_monty.R2(), ws);
+   m_a_r = m_monty.mul(m_a, m_monty.R2(), ws);
+   m_b_r = m_monty.mul(m_b, m_monty.R2(), ws);
    if(!m_pcurve) {
       m_engine = EC_Group_Engine::Legacy;
    }

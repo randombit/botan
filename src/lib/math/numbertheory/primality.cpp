@@ -260,16 +260,28 @@ class Miller_Rabin_Test final {
       * Perform a single Miller-Rabin test with the specified base
       */
       bool passes(const BigInt& a) const {
-         Montgomery_Int y = [&]() {
-            if(m_vartime) {
-               const auto powm_a = monty_precompute(m_monty_n, a, vartime_window_bits(m_d_bits));
-               return monty_execute_vartime(*powm_a, m_d);
-            } else {
-               const auto powm_a = monty_precompute(m_monty_n, a, 4);
-               return monty_execute(*powm_a, m_d, m_d_bits);
-            }
-         }();
+         if(m_vartime) {
+            const auto powm_a = monty_precompute(m_monty_n, a, vartime_window_bits(m_d_bits));
+            return this->check_power(monty_execute_vartime(*powm_a, m_d));
+         } else {
+            const auto powm_a = monty_precompute(m_monty_n, a, 4);
+            return this->check_power(monty_execute(*powm_a, m_d, m_d_bits));
+         }
+      }
 
+      /**
+      * Perform a single Miller-Rabin test with base 2
+      */
+      bool passes_base2() const {
+         const auto powm_2 = monty_precompute_base2(m_monty_n);
+         return this->check_power(monty_execute(*powm_2, m_d, m_d_bits));
+      }
+
+   private:
+      /**
+      * Complete the test, given y = a^d mod n
+      */
+      bool check_power(Montgomery_Int y) const {
          if(is_one(y) || is_minus_one(y)) {
             return true;
          }
@@ -295,7 +307,6 @@ class Miller_Rabin_Test final {
          return false;
       }
 
-   private:
       bool is_one(const Montgomery_Int& y) const {
          return CT::is_equal(y.repr().data(), m_one.data(), m_one.size()).as_bool();
       }
@@ -441,10 +452,21 @@ bool bailie_psw_test(const BigInt& n, const Montgomery_Params& monty_n, bool var
    }
 
    const Miller_Rabin_Test mr(n, monty_n, vartime);
-   return mr.passes(BigInt::from_word(2)) && lucas_test(n, monty_n, vartime);
+   return mr.passes_base2() && lucas_test(n, monty_n, vartime);
 }
 
 }  // namespace
+
+bool is_miller_rabin_base2_probable_prime(const BigInt& n, const Montgomery_Params& monty_n) {
+   if(n == 2) {
+      return true;
+   } else if(n <= 1 || CT::driveby_unpoison(n.is_even())) {
+      return false;
+   }
+
+   const Miller_Rabin_Test mr(n, monty_n, false);
+   return mr.passes_base2();
+}
 
 bool is_lucas_probable_prime(const BigInt& n, const Montgomery_Params& monty_n) {
    return lucas_test(n, monty_n, false);

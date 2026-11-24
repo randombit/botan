@@ -158,8 +158,8 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
    hash.update(io.send(*this));
 }
 
-Server_Hello_12::Server_Hello_12(std::span<const uint8_t> buf) :
-      Server_Hello_12(std::make_unique<Server_Hello_Internal>(buf)) {}
+Server_Hello_12::Server_Hello_12(std::span<const uint8_t> buf, TLS_Flavor flavor) :
+      Server_Hello_12(std::make_unique<Server_Hello_Internal>(buf, flavor)) {}
 
 Server_Hello_12::Server_Hello_12(std::unique_ptr<Server_Hello_Internal> data) : Server_Hello_12_Shim(std::move(data)) {}
 

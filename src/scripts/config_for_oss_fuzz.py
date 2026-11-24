@@ -26,6 +26,7 @@ args = [
     "--disable-shared",
     "--disable-modules=locking_allocator",
     "--unsafe-fuzzer-mode",
+    "--unsafe-terminate-on-asserts",
     "--build-fuzzers=libfuzzer",
     "--build-targets=static",
     "--without-os-features=getrandom,getentropy",

@@ -1,6 +1,166 @@
 Release Notes
 ========================================
 
+Version 3.15.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+General Notes
+-------------
+
+New APIs and Features
+----------------------------------------
+
+* Add ``EC_AffinePoint::get_affine_x`` and ``EC_AffinePoint::get_affine_y``,
+  to ease migrating applications from ``EC_Point``. (GH #6126)
+
+* Continue preparing for DTLS 1.3, including epoch and record number tracking
+  in the TLS 1.3 record layer, and threading the protocol flavor through the
+  TLS 1.3 handshake. ``TLS::Policy::allow_dtls13`` has been added, but DTLS 1.3
+  itself is not yet available. (GH #6055 #6062 #6104 #6115 #6127 #6132)
+
+Security and Hardening
+----------------------------------------
+
+* When encrypting a private key with the default parameters, PKCS #8 now uses
+  an AEAD (AES-256/SIV, or AES-256/GCM if SIV is not available) for every key
+  encoding which is specific to this library, including Classic McEliece,
+  FrodoKEM, and HSS-LMS. Previously this was only done for McEliece and XMSS,
+  and only by some of the encryption functions; other keys used AES-256/CBC.
+  (GH #6158)
+
+* Fix a side channel in variable point elliptic curve multiplication,
+  introduced in 3.14.0. If the input point was the identity element, a
+  different code path was taken depending on some bits of the scalar. ECDH,
+  ECIES, and SM2 are not affected since they reject the identity element prior
+  to the multiplication. (GH #6153)
+
+* Distinguished name comparisons, including those used for name constraints,
+  now map TAB, LF, VT, FF, and CR to a space as required by RFC 4518.
+  Previously only space and tab were treated as equivalent. (GH #6154)
+
+* DH, DSA, ElGamal, and SRP6 now perform arithmetic modulo p (and for DSA,
+  modulo q) using a fixed length Montgomery representation, so the sizes of
+  intermediate values no longer depend on their values. (GH #6135)
+
+* On processors where the hardware RNG instruction (RDRAND, DARN, or RNDR) is
+  fast, ``AutoSeeded_RNG`` now also mixes 64 bits of its output into each
+  request. This provides protection against VM rollback which does not depend
+  on the guest kernel being notified. (GH #6092)
+
+Behavior Changes
+----------------------------------------
+
+* ``random_safe_prime``, and thus the generation of a strong prime ``DL_Group``,
+  now always produces a prime p == 7 (mod 8), so the generator of such a group
+  is always 2. Previously a generator of 4 was used if 2 was not a quadratic
+  residue. (GH #6141 #6146)
+
+* DSA now additionally requires that p is a multiple of 64 bits, and that q is a
+  multiple of 8 bits. (GH #6119)
+
+* SM2 encryption now rejects curves with a cofactor, since SM2 is only defined
+  for the sm2p256v1 curve. (GH #6151)
+
+* The ``BOTAN_CLEAR_CPUID`` environment variable now accepts the special value
+  ``all``, which disables use of every CPU extension. (GH #6121)
+
+Optimizations
+----------------------------------------
+
+* Fix a performance regression in memory zeroization introduced in 3.12.0,
+  which made, among other things, AES/GCM encryption of short messages up to
+  3x slower. (GH #6116)
+
+* Avoid the modular inverse when setting up DH blinding for groups with a
+  generator of 2, which includes all of the FFDHE and IPsec groups. A one-shot
+  DH-2048 key agreement is about 5x faster. (GH #6139)
+
+* Loading RSA and DSA public keys is now about twice as fast, and DSA
+  verification uses the AVX-512 IFMA modular exponentiation when available.
+  (GH #6120 #6147)
+
+* During PKCS1 v1.5 encryption invoke the RNG just once for the entire random
+  padding block, rather than generating the padding one byte at a time. (GH #6163)
+
+* Make the constant time copy used during RSA decryption O(n log n), which
+  improves overall RSA-2048 decryption by about 20%. (GH #6159)
+
+* Add a Montgomery exponentiation specialized for base 2, which makes the
+  base 2 Miller-Rabin test about 30% faster, and when generating a safe prime
+  test 2*p+1 before fully validating p. (GH #6146)
+
+* Optimize BigInt decimal formatting and parsing. (GH #6137)
+
+* Use fixed length Montgomery-form arithmetic in more places. (GH #6128)
+
+* Add POWER8 support for parallel SHA-2 hashing, improving SLH-DSA by 3-5x,
+  XMSS by 1.5-2x, and HSS-LMS signing and key generation by 2-3x on POWER10.
+  (GH #6112)
+
+* HMAC now defers hashing the inner padded key until it is actually needed,
+  rather than doing so eagerly after keying and after each message. (GH #6117)
+
+* ``Memory_Pool`` now uses only buckets which are a multiple of 64 bytes, which
+  on most systems avoids different threads sharing a cache line. (GH #6144)
+
+Bug Fixes
+----------------------------------------
+
+* Fix ``sqrt_modulo_prime``, which returned -1 for primes where every integer
+  less than 257 is a quadratic residue. (GH #6128)
+
+* Fix CCM decryption using ``update`` rejecting a valid ciphertext for a
+  message of the maximum length allowed by the L parameter, since the tag was
+  counted against the length limit. (GH #6125)
+
+* Fix unbounded memory growth when repeatedly computing a product of small
+  values and reducing it, such as ``(1*1) % p``. No code path within the
+  library could trigger this. (GH #6129)
+
+* Serpent now correctly reports its parallelism, which was previously always 4
+  regardless of CPU support. (GH #6122)
+
+Deprecations and Cleanups
+----------------------------------------
+
+* Deprecate the ``DL_Group`` arithmetic functions, including ``mod_p``,
+  ``multiply_mod_p``, ``multiply_mod_q``, ``inverse_mod_q``, ``power_g_p``,
+  ``power_b_p``, and ``multi_exponentiate``. These are no longer used within the
+  library. (GH #6128 #6135)
+
+* The header ``mem_ops.h`` is no longer deprecated. It will remain public in
+  Botan4, though most of its contents will be removed. (GH #6110)
+
+Command Line Utility
+----------------------------------------
+
+* Fix a buffer overrun in the base32 and base64 benchmarks of ``speed``. (GH #6148)
+
+Documentation
+----------------------------------------
+
+* Document the expected behavior of several APIs whose intentional behavior
+  has repeatedly been reported as a security issue. (GH #6151)
+
+* Improve the documentation and examples for loading ECC keys from raw values. (GH #6113)
+
+Build and Infrastructure
+----------------------------------------
+
+* ``--disable-asm`` no longer disables the inline asm value barrier. A build
+  which cannot use inline asm at all must now explicitly request
+  ``--ct-value-barrier-type=none`` (or ``volatile``). (GH #6134)
+
+* Fix various build issues, including missing module dependencies found when
+  testing minimized configurations, a workaround for a bug in MSVC 19.52, and
+  making the sodium compat layer available when SipHash is disabled.
+  (GH #6102 #6108 #6130)
+
+* Fix various bugs in the fuzzers. (GH #6145)
+
+* CI fixes including working around a false positive in the MSVC ASan build.
+  (GH #6140)
+
 Version 3.14.1, 2026-11-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

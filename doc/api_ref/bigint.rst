@@ -32,6 +32,9 @@ the processor.
       prefix, instead it is treated as hexadecimal. A ``-`` prefix to indicate
       negative numbers is also accepted.
 
+      Decimal conversion takes time quadratic in the length of the string, so
+      bound the length of untrusted inputs.
+
    .. cpp:function:: static BigInt::from_bytes(std::span<const uint8_t> buf)
 
       Create a BigInt from a binary array (big-endian encoding). The result of
@@ -56,7 +59,8 @@ the processor.
 
    .. cpp:function:: std::string to_dec_string() const
 
-      Encode the integer as a decimal string.
+      Encode the integer as a decimal string. This takes time quadratic in the
+      size of the integer.
 
    .. cpp:function:: std::string to_hex_string() const
 

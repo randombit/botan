@@ -100,9 +100,13 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * Create BigInt from a string.
        *
-       * If the string starts with 0x the rest of the string will be
-       * interpreted as hexadecimal digits. Otherwise, it will be
-       * interpreted as a decimal number.
+       * If the string starts with 0x the rest of the string will be interpreted
+       * as hexadecimal digits. Otherwise, it will be interpreted as a decimal
+       * number.
+       *
+       * @note Parsing decimal integer strings is quadratic in the length of the
+       * string, and can become expensive for strings thousands of digits long.
+       * Consider bounding the length of untrusted inputs you pass to this function.
        *
        * A prefix of "-" will result in a negative integer
        *
@@ -566,7 +570,11 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
 
       /**
        * Convert this value to a decimal string.
-       * Warning: decimal conversions are relatively slow
+       *
+       * @note Decimal integer conversions are quadratic in cost, so can become
+       * expensive for very large (tens of thousands of bit) integers. If handling
+       * untrusted BigInt values consider checking the size (using `bits`) before
+       * formatting as a decimal string.
        *
        * If the integer is zero then "0" is returned.
        * If the integer is negative then "-" is prefixed.

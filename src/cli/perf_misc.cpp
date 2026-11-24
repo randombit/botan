@@ -5,6 +5,7 @@
 */
 
 #include "perf.h"
+#include <algorithm>
 #include <cstring>
 
 // Always available:
@@ -78,8 +79,8 @@ class PerfTest_Base32 final : public PerfTest {
       void go(const PerfConfig& config) override {
          for(const size_t buf_size : config.buffer_sizes()) {
             std::vector<uint8_t> ibuf(buf_size);
-            std::vector<uint8_t> rbuf(buf_size);
             const size_t olen = Botan::base32_encode_max_output(ibuf.size());
+            std::vector<uint8_t> rbuf(Botan::base32_decode_max_output(olen));
 
             auto enc_timer = config.make_timer("base32", ibuf.size(), "encode", "", ibuf.size());
 
@@ -92,8 +93,9 @@ class PerfTest_Base32 final : public PerfTest {
 
                std::string b32 = enc_timer->run([&]() { return Botan::base32_encode(ibuf); });
 
-               dec_timer->run([&]() { Botan::base32_decode(rbuf.data(), b32); });
-               BOTAN_ASSERT(rbuf == ibuf, "Encode/decode round trip ok");
+               const size_t rlen = dec_timer->run([&]() { return Botan::base32_decode(rbuf.data(), b32); });
+               BOTAN_ASSERT(rlen == ibuf.size() && std::equal(ibuf.begin(), ibuf.end(), rbuf.begin()),
+                            "Encode/decode round trip ok");
             }
 
             config.record_result(*enc_timer);
@@ -112,8 +114,8 @@ class PerfTest_Base64 final : public PerfTest {
       void go(const PerfConfig& config) override {
          for(const size_t buf_size : config.buffer_sizes()) {
             std::vector<uint8_t> ibuf(buf_size);
-            std::vector<uint8_t> rbuf(buf_size);
             const size_t olen = Botan::base64_encode_max_output(ibuf.size());
+            std::vector<uint8_t> rbuf(Botan::base64_decode_max_output(olen));
 
             auto enc_timer = config.make_timer("base64", ibuf.size(), "encode", "", ibuf.size());
 
@@ -124,8 +126,9 @@ class PerfTest_Base64 final : public PerfTest {
             config.rng().randomize(ibuf);
 
             // Check the roundtrip once, outside of the timed loop
-            Botan::base64_decode(rbuf.data(), Botan::base64_encode(ibuf));
-            BOTAN_ASSERT(rbuf == ibuf, "Encode/decode round trip ok");
+            const size_t rlen = Botan::base64_decode(rbuf.data(), Botan::base64_encode(ibuf));
+            BOTAN_ASSERT(rlen == ibuf.size() && std::equal(ibuf.begin(), ibuf.end(), rbuf.begin()),
+                         "Encode/decode round trip ok");
 
             while(enc_timer->under(msec) && dec_timer->under(msec)) {
                const std::string b64 = enc_timer->run([&]() { return Botan::base64_encode(ibuf); });

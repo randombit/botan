@@ -9,6 +9,7 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/mutex.h>
 #include <botan/numthry.h>
 #include <botan/pem.h>
 #include <botan/internal/barrett.h>
@@ -92,6 +93,16 @@ std::optional<BigInt> inverse_of_g(const BigInt& p, const BigInt& g) {
    return std::nullopt;
 }
 
+std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute_g(const Montgomery_Params& params,
+                                                                          const BigInt& g) {
+   // Most standardized groups use g = 2, which has a faster exponentiation
+   if(g == 2) {
+      return monty_precompute_base2(params);
+   } else {
+      return monty_precompute(params, g, /*window bits=*/4);
+   }
+}
+
 }  // namespace
 
 //static
@@ -118,7 +129,6 @@ DL_Group_Data::DL_Group_Data(const BigInt& p, const BigInt& q, const BigInt& g, 
       m_mod_q(Barrett_Reduction::for_public_modulus(q)),
       m_monty_params(m_p, m_mod_p),
       m_monty_q(dsa_monty_params_q(m_q, *m_mod_q)),
-      m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
       m_p_bits(p.bits()),
       m_q_bits(q.bits()),
       // For DL crypto in a prime-order subgroup, security is bounded by
@@ -133,15 +143,22 @@ DL_Group_Data::DL_Group_Data(const BigInt& p, const BigInt& g, DL_Group_Source s
       m_g_inv(inverse_of_g(m_p, m_g)),
       m_mod_p(Barrett_Reduction::for_public_modulus(p)),
       m_monty_params(m_p, m_mod_p),
-      m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
       m_p_bits(p.bits()),
       m_q_bits(0),
       m_estimated_strength(dl_work_factor(m_p_bits)),
       m_exponent_bits(dl_exponent_size(m_p_bits)),
       m_source(source) {}
 
+const Montgomery_Exponentiation_State& DL_Group_Data::monty_g() const {
+   const lock_guard_type<mutex_type> lock(m_monty_mutex);
+   if(!m_monty) {
+      m_monty = monty_precompute_g(m_monty_params, m_g);
+   }
+   return *m_monty;
+}
+
 Montgomery_Int DL_Group_Data::monty_power_g_p(const BigInt& k, size_t max_k_bits) const {
-   return monty_execute(*m_monty, k, max_k_bits);
+   return monty_execute(monty_g(), k, max_k_bits);
 }
 
 BigInt DL_Group_Data::power_g_p(const BigInt& k, size_t max_k_bits) const {
@@ -149,7 +166,7 @@ BigInt DL_Group_Data::power_g_p(const BigInt& k, size_t max_k_bits) const {
 }
 
 BigInt DL_Group_Data::power_g_p_vartime(const BigInt& k) const {
-   return monty_execute_vartime(*m_monty, k).value();
+   return monty_execute_vartime(monty_g(), k).value();
 }
 
 BigInt DL_Group_Data::power_b_p(const BigInt& b, const BigInt& k, size_t max_k_bits) const {

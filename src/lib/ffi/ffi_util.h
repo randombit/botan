@@ -431,7 +431,7 @@ inline int write_output(T out[], size_t* out_len, const T buf[], size_t buf_len)
       return rc;
    }
 
-   if(out != nullptr) {
+   if(out != nullptr && buf != nullptr && buf_len > 0) {
       std::memcpy(out, buf, sizeof(T) * buf_len);
    }
 

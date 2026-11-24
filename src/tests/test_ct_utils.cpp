@@ -57,29 +57,23 @@ class CT_Mask_Tests final : public Test {
          for(const auto bad_input : {0, 1}) {
             for(size_t input_length = 0; input_length != 64; ++input_length) {
                for(size_t offset = 0; offset != input_length + 5; ++offset) {
-                  const auto accept = !Botan::CT::Choice::from_int(static_cast<uint32_t>(bad_input));
+                  test_copy_output(result, bad_input > 0, input_length, input_length, offset);
+               }
+            }
 
-                  std::vector<uint8_t> input(input_length);
-                  this->rng().randomize(input.data(), input.size());
-
-                  std::vector<uint8_t> output(input_length);
-
-                  const auto written = Botan::CT::copy_output(accept, output, input, offset);
-
-                  if(bad_input > 0) {
-                     result.test_is_true("If bad input, no output", !written.has_value().as_bool());
-                  } else {
-                     if(offset > input_length) {
-                        result.test_is_true("If offset is too large, no output", !written.has_value().as_bool());
-                     } else {
-                        const size_t bytes = written.value();
-                        result.test_sz_eq("CT::copy_output length", bytes, input.size() - offset);
-
-                        for(size_t i = 0; i != bytes; ++i) {
-                           result.test_u8_eq("CT::copy_output offset", output[i], input[i + offset]);
-                        }
-                     }
-                  }
+            // Sizes used by RSA, with a larger output buffer
+            for(const size_t input_length : {255, 256, 257, 512, 1000}) {
+               for(const size_t offset : {size_t(0),
+                                          size_t(1),
+                                          size_t(2),
+                                          size_t(11),
+                                          size_t(128),
+                                          size_t(255),
+                                          input_length / 2,
+                                          input_length - 1,
+                                          input_length,
+                                          input_length + 1}) {
+                  test_copy_output(result, bad_input > 0, input_length, input_length + 7, offset);
                }
             }
          }
@@ -88,6 +82,36 @@ class CT_Mask_Tests final : public Test {
       }
 
    private:
+      void test_copy_output(Result& result, bool bad_input, size_t input_length, size_t output_length, size_t offset) {
+         const auto accept = !Botan::CT::Choice::from_int(static_cast<uint32_t>(bad_input));
+
+         std::vector<uint8_t> input(input_length);
+         this->rng().randomize(input.data(), input.size());
+
+         // Filled with garbage which must be overwritten
+         std::vector<uint8_t> output(output_length, 0xAB);
+
+         const auto written = Botan::CT::copy_output(accept, output, input, offset);
+
+         size_t bytes = 0;
+         if(bad_input) {
+            result.test_is_true("If bad input, no output", !written.has_value().as_bool());
+         } else if(offset > input_length) {
+            result.test_is_true("If offset is too large, no output", !written.has_value().as_bool());
+         } else {
+            bytes = written.value();
+            result.test_sz_eq("CT::copy_output length", bytes, input.size() - offset);
+
+            for(size_t i = 0; i != bytes; ++i) {
+               result.test_u8_eq("CT::copy_output offset", output[i], input[i + offset]);
+            }
+         }
+
+         for(size_t i = bytes; i != output.size(); ++i) {
+            result.test_u8_eq("CT::copy_output zeroizes the rest of the output", output[i], 0);
+         }
+      }
+
       template <std::unsigned_integral T>
       void test_mask_comparisons(const char* type_name, Result& result) {
          using Botan::CT::Mask;

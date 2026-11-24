@@ -424,6 +424,9 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
       cert_status[0].insert(Certificate_Status_Code::CERT_NAME_NOMATCH);
    }
 
+   // Usage is checked only on the end entity; an EKU in a CA certificate does
+   // not restrict its descendants under any RFC specified certificate processing.
+   // EKU chaining is a CABF-specific rule that we do not currently enforce (see #5821)
    if(!cert_path[0].allowed_usage(usage)) {
       if(usage == Usage_Type::OCSP_RESPONDER) {
          cert_status[0].insert(Certificate_Status_Code::OCSP_RESPONSE_MISSING_KEYUSAGE);
