@@ -48,6 +48,12 @@ bool is_single_der_object(std::span<const uint8_t> bytes, ASN1_Type expected_typ
 */
 bool is_der_sequence_header(std::span<const uint8_t> bytes);
 
+/**
+* Return true if @p prefix is a prefix of the components of @p oid.
+* An OID is considered to be a prefix of itself.
+*/
+BOTAN_TEST_API bool has_prefix(const OID& oid, std::span<const uint32_t> prefix);
+
 }  // namespace Botan::ASN1
 
 #endif

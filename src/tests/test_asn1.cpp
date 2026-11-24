@@ -17,8 +17,10 @@
    #include <botan/hex.h>
    #include <botan/pss_params.h>
    #include <botan/strong_type.h>
+   #include <botan/internal/asn1_utils.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/parsing.h>
+   #include <array>
 #endif
 
 namespace Botan_Tests {
@@ -986,6 +988,27 @@ Test::Result test_der_default_value_encoding() {
    return result;
 }
 
+Test::Result test_oid_has_prefix() {
+   Test::Result result("ASN.1 OID prefix matching");
+
+   const std::array<uint32_t, 7> arc = {1, 3, 6, 1, 4, 1, 25258};
+
+   result.test_is_true("deeper OID under arc", Botan::ASN1::has_prefix(Botan::OID("1.3.6.1.4.1.25258.1.3"), arc));
+   result.test_is_true("much deeper OID under arc",
+                       Botan::ASN1::has_prefix(Botan::OID("1.3.6.1.4.1.25258.1.12.1.1"), arc));
+   result.test_is_true("single arc below", Botan::ASN1::has_prefix(Botan::OID("1.3.6.1.4.1.25258.1"), arc));
+   result.test_is_true("OID equal to prefix", Botan::ASN1::has_prefix(Botan::OID("1.3.6.1.4.1.25258"), arc));
+   result.test_is_true("empty prefix", Botan::ASN1::has_prefix(Botan::OID("1.2.3"), std::span<const uint32_t>{}));
+
+   result.test_is_false("OID shorter than prefix", Botan::ASN1::has_prefix(Botan::OID("1.3.6.1.4.1"), arc));
+   result.test_is_false("last arc differs", Botan::ASN1::has_prefix(Botan::OID("1.3.6.1.4.1.25259.1.3"), arc));
+   result.test_is_false("compares arcs not digits", Botan::ASN1::has_prefix(Botan::OID("1.3.6.1.4.1.252580.1"), arc));
+   result.test_is_false("first arc differs", Botan::ASN1::has_prefix(Botan::OID("2.3.6.1.4.1.25258.1"), arc));
+   result.test_is_false("empty OID", Botan::ASN1::has_prefix(Botan::OID(), arc));
+
+   return result;
+}
+
 class ASN1_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -1016,6 +1039,7 @@ class ASN1_Tests final : public Test {
          results.push_back(test_pss_params_rejects_trailing_data_in_mgf1_params());
          results.push_back(test_alg_id_parameter_validation());
          results.push_back(test_der_default_value_encoding());
+         results.push_back(test_oid_has_prefix());
 
          return results;
       }

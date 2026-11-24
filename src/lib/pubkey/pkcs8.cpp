@@ -15,7 +15,9 @@
 #include <botan/pk_algs.h>
 #include <botan/rng.h>
 #include <botan/internal/algorithm_spec.h>
+#include <botan/internal/asn1_utils.h>
 #include <botan/internal/fmt.h>
+#include <array>
 
 #if defined(BOTAN_HAS_PKCS5_PBES2)
    #include <botan/internal/pbes2.h>
@@ -127,25 +129,49 @@ std::string PEM_encode(const Private_Key& key) {
 
 namespace {
 
-std::pair<std::string, std::string> choose_pbe_params(std::string_view pbe_algo, std::string_view key_algo) {
-   if(pbe_algo.empty()) {
-      /*
-      * For algorithms where we are using a non-RFC format anyway, default to
-      * SIV or GCM. For others (RSA, ECDSA, ...) default to something widely
-      * compatible.
-      */
-      const bool nonstandard_pk = (key_algo == "McEliece" || key_algo == "XMSS");
+bool is_nonstandard_private_key_format(const Private_Key& key) {
+   const auto alg = key.pkcs8_algorithm_identifier();
 
-      if(nonstandard_pk) {
-   #if defined(BOTAN_HAS_AEAD_SIV) && defined(BOTAN_HAS_SHA2_64)
-         return std::make_pair("AES-256/SIV", "SHA-512");
-   #elif defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
-         return std::make_pair("AES-256/GCM", "SHA-512");
+   // If we are encoding under our own private arc the key is effectively non-standard
+   // and specific to this implementation
+   constexpr std::array<uint32_t, 7> botan_arc = {1, 3, 6, 1, 4, 1, 25258};
+   if(ASN1::has_prefix(alg.oid(), botan_arc)) {
+      return true;
+   }
+
+   // XMSS identifies using the public key OID but the private key format is non-standard
+   if(key.algo_name() == "XMSS") {
+      return true;
+   }
+
+   return false;
+}
+
+std::string preferred_pbe_cipher(const Private_Key& key) {
+   /*
+   * For algorithms where we are using a non-RFC format anyway, default to SIV
+   * or GCM if available. For others (RSA, ECDSA, ...)  default to something
+   * widely compatible.
+   */
+   if(is_nonstandard_private_key_format(key)) {
+   #if defined(BOTAN_HAS_AEAD_SIV)
+      return "AES-256/SIV";
+   #elif defined(BOTAN_HAS_AEAD_GCM)
+      return "AES-256/GCM";
    #endif
-      }
+   }
 
-      // Default is something compatible with everyone else
-      return std::make_pair("AES-256/CBC", "SHA-256");
+   // Default is something compatible with everyone else
+   return "AES-256/CBC";
+}
+
+std::string preferred_pbe_hash([[maybe_unused]] const Private_Key& key) {
+   return "SHA-256";
+}
+
+std::pair<std::string, std::string> choose_pbe_params(std::string_view pbe_algo, const Private_Key& key) {
+   if(pbe_algo.empty()) {
+      return std::make_pair(preferred_pbe_cipher(key), preferred_pbe_hash(key));
    }
 
    const AlgorithmSpec request(pbe_algo);
@@ -171,7 +197,7 @@ std::vector<uint8_t> BER_encode(const Private_Key& key,
                                 std::chrono::milliseconds msec,
                                 std::string_view pbe_algo) {
 #if defined(BOTAN_HAS_PKCS5_PBES2)
-   const auto pbe_params = choose_pbe_params(pbe_algo, key.algo_name());
+   const auto pbe_params = choose_pbe_params(pbe_algo, key);
 
    const std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbe_info =
       pbes2_encrypt_msec(PKCS8::BER_encode(key), pass, msec, nullptr, pbe_params.first, pbe_params.second, rng);
@@ -216,8 +242,8 @@ std::vector<uint8_t> BER_encode_encrypted_pbkdf_iter(const Private_Key& key,
       pbes2_encrypt_iter(key.private_key_info(),
                          pass,
                          pbkdf_iterations,
-                         cipher.empty() ? "AES-256/CBC" : cipher,
-                         pbkdf_hash.empty() ? "SHA-256" : pbkdf_hash,
+                         cipher.empty() ? preferred_pbe_cipher(key) : cipher,
+                         pbkdf_hash.empty() ? preferred_pbe_hash(key) : pbkdf_hash,
                          rng);
 
    std::vector<uint8_t> output;
@@ -261,8 +287,8 @@ std::vector<uint8_t> BER_encode_encrypted_pbkdf_msec(const Private_Key& key,
                          pass,
                          pbkdf_msec,
                          pbkdf_iterations,
-                         cipher.empty() ? "AES-256/CBC" : cipher,
-                         pbkdf_hash.empty() ? "SHA-256" : pbkdf_hash,
+                         cipher.empty() ? preferred_pbe_cipher(key) : cipher,
+                         pbkdf_hash.empty() ? preferred_pbe_hash(key) : pbkdf_hash,
                          rng);
 
    std::vector<uint8_t> output;
