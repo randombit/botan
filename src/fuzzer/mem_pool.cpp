@@ -109,7 +109,7 @@ void fuzz(std::span<const uint8_t> in) {
 
       if(op == 0) {
          const size_t plen = idx + 1;  // ensure non-zero
-         uint8_t* p = static_cast<uint8_t*>(pool.allocate(plen));
+         uint8_t* p = pool.allocate(plen).data();
 
          if(p != nullptr) {
             const size_t expected_alignment = compute_expected_alignment(plen);
@@ -172,7 +172,7 @@ void fuzz(std::span<const uint8_t> in) {
          }
 
          //printf("free %p %d\n", itr->first, itr->second);
-         FUZZER_ASSERT_TRUE(pool.deallocate(itr->first, itr->second));
+         FUZZER_ASSERT_TRUE(pool.deallocate(std::span<uint8_t>(itr->first, itr->second)));
          ptrs.erase(itr);
       }
    }

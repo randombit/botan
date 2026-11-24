@@ -21,9 +21,18 @@ class mlock_allocator final {
    public:
       static mlock_allocator& instance() noexcept;
 
-      void* allocate(size_t num_elems, size_t elem_size);
+      /**
+      * Allocate bytes from the locked memory pool
+      * @return the allocated bytes, or an empty span if the pool is
+      *         unavailable or cannot serve the request
+      */
+      std::span<uint8_t> allocate(size_t bytes);
 
-      bool deallocate(void* p, size_t num_elems, size_t elem_size) noexcept;
+      /**
+      * Return memory to the locked memory pool
+      * @return true if buf was allocated from this pool and released
+      */
+      bool deallocate(std::span<uint8_t> buf) noexcept;
 
       mlock_allocator(const mlock_allocator&) = delete;
       mlock_allocator(mlock_allocator&&) = delete;

@@ -32,9 +32,19 @@ class BOTAN_TEST_API Memory_Pool final {
 
       ~Memory_Pool() noexcept;
 
-      void* allocate(size_t size);
+      /**
+      * Allocate size bytes from the pool
+      * @return the allocated (zeroed) bytes, or an empty span if the
+      *         request cannot be served from the pool
+      */
+      std::span<uint8_t> allocate(size_t size);
 
-      bool deallocate(void* p, size_t size) noexcept;
+      /**
+      * Return memory to the pool
+      * @param buf a span previously returned by allocate
+      * @return true if buf belonged to this pool and was released
+      */
+      bool deallocate(std::span<uint8_t> buf) noexcept;
 
       Memory_Pool(const Memory_Pool&) = delete;
       Memory_Pool(Memory_Pool&&) = delete;

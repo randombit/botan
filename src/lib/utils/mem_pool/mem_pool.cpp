@@ -16,6 +16,11 @@
 #include <optional>
 #include <vector>
 
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+   #include <functional>
+   #include <thread>
+#endif
+
 #if defined(BOTAN_HAS_VALGRIND) || defined(BOTAN_ENABLE_DEBUG_ASSERTS)
    /**
     * @brief Prohibits access to unused memory pages in Botan's memory pool
@@ -198,8 +203,8 @@ class Bucket final {
 
          auto offset = m_bitmap.find_free();
          if(offset.has_value()) {
-            BOTAN_ASSERT(*offset * m_item_size < m_range.size(), "Offset is in range");
-            return m_range.subspan(*offset * m_item_size, m_item_size);
+            BOTAN_ASSERT(offset.value() * m_item_size < m_range.size(), "Offset is in range");
+            return m_range.subspan(offset.value() * m_item_size, m_item_size);
          } else {
             // I just found out I am full
             m_is_full = true;
@@ -207,8 +212,8 @@ class Bucket final {
          }
       }
 
-      bool free(std::span<uint8_t> p) {
-         const auto offset = offset_of(p);
+      bool free(std::span<uint8_t> buf) {
+         const auto offset = offset_of(buf.data());
          if(!offset.has_value()) {
             return false;
          }
@@ -217,7 +222,8 @@ class Bucket final {
          Zero also any trailing bytes, which should not have been written to,
          but maybe the user was bad and wrote past the end.
          */
-         std::memset(p, 0, m_item_size);
+         const auto slot = m_range.subspan(*offset, m_item_size);
+         std::memset(slot.data(), 0, slot.size());
 
          m_bitmap.free(*offset / m_item_size);
          m_is_full = false;
@@ -265,7 +271,8 @@ Memory_Pool::Memory_Pool(const std::vector<std::span<uint8_t>>& pages, size_t pa
       m_min_page_ptr = std::min(p, m_min_page_ptr);
       m_max_page_ptr = std::max(p, m_max_page_ptr);
 
-      clear_bytes(page.data(), page.size());
+      std::fill(page.begin(), page.end(), 0);
+
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
       OS::page_prohibit_access(page.data());
 #endif
@@ -288,9 +295,9 @@ Memory_Pool::~Memory_Pool() noexcept  // NOLINT(*-use-equals-default)
 #endif
 }
 
-void* Memory_Pool::allocate(size_t n) {
+std::span<uint8_t> Memory_Pool::allocate(size_t n) {
    if(n > m_page_size) {
-      return nullptr;
+      return {};
    }
 
    const size_t n_bucket = choose_bucket(n);
@@ -307,8 +314,8 @@ void* Memory_Pool::allocate(size_t n) {
       recycled.
       */
       for(auto& bucket : buckets) {
-         if(const auto p = bucket.alloc(); !p.empty()) {
-            return p.data();
+         if(const auto slot = bucket.alloc(); !slot.empty()) {
+            return slot.first(n);
          }
 
          // If the bucket is full, maybe move it to the end of the list?
@@ -322,34 +329,46 @@ void* Memory_Pool::allocate(size_t n) {
          OS::page_allow_access(page.data());
 #endif
          buckets.push_front(Bucket(page, n_bucket));
-         const auto p = buckets[0].alloc();
-         BOTAN_ASSERT_NOMSG(!p.empty());
-         return p.data();
+
+         /*
+         * A per-thread value used as the starting point when searching for a free
+         * bucket or slot. Each thread always starts from the same place, so its
+         * allocations tend to cluster together instead of being interleaved with
+         * those of other threads. This is only a placement hint; any thread may
+         * use or free any slot.
+         */
+         auto thread_index = [](size_t array_size) -> size_t {
+            uint64_t raw_id = std::hash<std::thread::id>{}(std::this_thread::get_id());
+            constexpr uint64_t KNUTH_MAGIC = 0x9E3779B97F4A7C15ULL;
+            return (raw_id * KNUTH_MAGIC) % array_size;
+         };
+
+         size_t idx = thread_index(buckets.size());
+         const auto slot = buckets[idx].alloc();
+         BOTAN_ASSERT_NOMSG(!slot.empty());
+         return slot.first(n);
       }
    }
 
    // out of room
-   return nullptr;
+   return {};
 }
 
-bool Memory_Pool::deallocate(void* p, size_t len) noexcept {
+bool Memory_Pool::deallocate(std::span<uint8_t> buf) noexcept {
    // Do a fast range check first, before taking the lock
-   const uintptr_t p_val = reinterpret_cast<uintptr_t>(p);
-   if(p_val < m_min_page_ptr || p_val > m_max_page_ptr) {
+   const uintptr_t p_val = reinterpret_cast<uintptr_t>(buf.data());
+   if(p_val < m_min_page_ptr || p_val >= m_max_page_ptr) {
       return false;
    }
-
-   const size_t n_bucket = choose_bucket(len);
-
+   const size_t n_bucket = choose_bucket(buf.size());
    if(n_bucket != 0) {
       try {
          const lock_guard_type<mutex_type> lock(m_mutex);
-
          std::deque<Bucket>& buckets = m_buckets_for[n_bucket];
 
          for(size_t i = 0; i != buckets.size(); ++i) {
             Bucket& bucket = buckets[i];
-            if(bucket.free(p)) {
+            if(bucket.free(buf)) {
                if(bucket.empty()) {
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
                   OS::page_prohibit_access(bucket.span().data());
