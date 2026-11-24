@@ -1,9 +1,9 @@
 
 release_major = 3
-release_minor = 14
-release_patch = 1
+release_minor = 15
+release_patch = 0
 
-release_so_abi_rev = 14
+release_so_abi_rev = 15
 
 release_suffix = ''
 
