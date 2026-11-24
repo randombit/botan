@@ -397,6 +397,7 @@ class Speed final : public Command {
             "ML-DSA",
             "SLH-DSA",
             "FrodoKEM",
+            "HQCr4",
             "HSS-LMS",
          };
          // clang-format on

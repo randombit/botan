@@ -103,7 +103,7 @@ def main(args=None):
         remove_file(build_config['makefile_path'])
         remove_dir(build_dir)
     else:
-        for dir_type in ['libobj_dir', 'cliobj_dir', 'testobj_dir', 'pch_dir', 'handbook_output_dir', 'doc_output_dir_doxygen']:
+        for dir_type in ['libobj_dir', 'cliobj_dir', 'testobj_dir', 'pch_dir', 'handbook_output_dir', 'doc_output_dir_doxygen', 'hqc_rust_dir']:
             dir_path = build_config.get(dir_type)
             if dir_path:
                 remove_all_in_dir(dir_path)
