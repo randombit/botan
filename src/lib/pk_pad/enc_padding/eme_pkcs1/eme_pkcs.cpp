@@ -37,8 +37,13 @@ size_t EME_PKCS1v15::pad(std::span<uint8_t> output,
    }();
 
    stuffer.append(0x02);
-   for(size_t i = 0; i != padding_bytes; ++i) {
-      stuffer.append(rng.next_nonzero_byte());
+   // Draw the padding at once, then replace the few (1 in 256) zero bytes
+   const auto padding = stuffer.next(padding_bytes);
+   rng.randomize(padding);
+   for(auto& b : padding) {
+      if(b == 0) {
+         b = rng.next_nonzero_byte();
+      }
    }
    stuffer.append(0x00);
    stuffer.append(input);
