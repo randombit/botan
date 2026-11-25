@@ -34,6 +34,13 @@
     },
 %{endif}
 
+%{if build_plzn_shim}
+    { "directory": "%{abs_root_dir}",
+      "command": "%{cxx}  %{cc_sysroot} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{cc_compile_flags} %{cc_warning_flags} %{public_include_flags} %{external_include_flags} %{plzn_shim_include_flags} -DBOTAN_PLZN_SHIM_EXPECTATIONS='\"%{plzn_shim_expectations}\"' %{dash_c} %{plzn_shim_src} %{dash_o}%{out_dir}/botan_plzn_shim",
+      "file": "%{plzn_shim_src}"
+    },
+%{endif}
+
 
 %{for cli_build_info}
     { "directory": "%{abs_root_dir}",
