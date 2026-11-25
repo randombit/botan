@@ -231,8 +231,38 @@ class Ed448_Utils_Test final : public Test {
          return result;
       }
 
+      Test::Result test_base_point_mul() {
+         Test::Result result("Ed448Point::base_point_mul");
+
+         const BigInt L = group_order();
+         std::vector<BigInt> scalars = {BigInt::zero(), BigInt::one(), L - 1, L - 2};
+
+         // Single bits and runs of ones cover each digit position and the carries between them
+         for(size_t k = 1; k != 446; ++k) {
+            scalars.push_back(BigInt::power_of_2(k));
+            scalars.push_back(BigInt::power_of_2(k) - 1);
+         }
+
+         for(size_t i = 0; i != 16; ++i) {
+            scalars.push_back(BigInt::random_integer(this->rng(), BigInt::zero(), L));
+         }
+
+         const auto base_point = Botan::Ed448Point::base_point();
+
+         for(const auto& s : scalars) {
+            const Botan::Scalar448 scalar(to_le_bytes(s, 56));
+            result.test_bin_eq("base_point_mul matches scalar_mul",
+                               Botan::Ed448Point::base_point_mul(scalar).encode(),
+                               base_point.scalar_mul(scalar).encode());
+         }
+
+         return result;
+      }
+
    public:
-      std::vector<Test::Result> run() override { return {test_reduce_mod_L(), test_bytes_are_reduced()}; }
+      std::vector<Test::Result> run() override {
+         return {test_reduce_mod_L(), test_bytes_are_reduced(), test_base_point_mul()};
+      }
 };
 
 }  // namespace

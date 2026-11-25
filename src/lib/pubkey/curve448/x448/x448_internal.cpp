@@ -9,6 +9,8 @@
 
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/curve448_gf.h>
+#include <botan/internal/curve448_scalar.h>
+#include <botan/internal/ed448_point.h>
 
 namespace Botan {
 
@@ -39,8 +41,16 @@ ScalarX448 decode_scalar(std::span<const uint8_t> scalar_bytes) {
 
 /// Multiply a scalar with the base group element (5)
 Point448 x448_basepoint(const ScalarX448& k) {
-   const Point448 u({5});
-   return x448(k, u);
+   /*
+   * Compute [k]B on Ed448 using the fixed-base table, then map it to Curve448
+   * with the 4-isogeny u = y^2/x^2 (RFC 7748 Section 4.2), which sends the
+   * Ed448 base point to u = 5. B has prime order L, so reducing k is fine here.
+   *
+   * The identity (from the clamped scalar k = 4*L) has X = 0; inversion of zero
+   * returns zero, so u = 0, which is also what the Montgomery ladder produces.
+   */
+   const auto p = Ed448Point::base_point_mul(Scalar448(k));
+   return Point448(square(p.y_proj() / p.x_proj()).to_bytes());
 }
 
 // Algorithm see RFC 7748, Section 5:

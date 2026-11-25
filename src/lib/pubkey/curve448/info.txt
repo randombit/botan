@@ -7,4 +7,5 @@ type -> "Internal"
 <header:internal>
 curve448_gf.h
 curve448_scalar.h
+ed448_point.h
 </header:internal>
