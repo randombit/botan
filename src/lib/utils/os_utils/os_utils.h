@@ -149,7 +149,7 @@ size_t get_memory_locking_limit();
 * Return the size of a memory page, if that can be derived on the
 * current system. Otherwise returns some default value (eg 4096)
 */
-size_t system_page_size();
+size_t BOTAN_TEST_API system_page_size();
 
 /**
 * Read the value of an environment variable, setting it to value_out if it
