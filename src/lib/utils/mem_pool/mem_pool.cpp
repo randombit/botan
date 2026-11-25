@@ -264,6 +264,7 @@ class Bucket final {
 };
 
 Memory_Pool::Memory_Pool(const std::vector<std::span<uint8_t>>& pages, size_t page_size) : m_page_size(page_size) {
+   m_free_pages.reserve(pages.size());
    for(const auto& page : pages) {
       BOTAN_ARG_CHECK(page.size() == page_size, "Each page must be exactly page_size bytes");
 
@@ -313,38 +314,43 @@ std::span<uint8_t> Memory_Pool::allocate(size_t n) {
       chance of becoming later freed and then the whole page can be
       recycled.
       */
-      for(auto& bucket : buckets) {
+      /*
+      * A per-thread value used as the starting point when searching for a free
+      * bucket or slot. Each thread always starts from the same place, so its
+      * allocations tend to cluster together instead of being interleaved with
+      * those of other threads. This is only a placement hint; any thread may
+      * use or free any slot.
+      */
+      auto thread_index = [](size_t array_size) -> size_t {
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+         const uint64_t raw_id = std::hash<std::thread::id>{}(std::this_thread::get_id());
+         constexpr uint64_t KNUTH_MAGIC = 0x9E3779B97F4A7C15ULL;
+         // The low bits of the product are poorly mixed, use the high ones
+         return static_cast<size_t>((raw_id * KNUTH_MAGIC) >> 32) % array_size;
+#else
+         BOTAN_UNUSED(array_size);
+         return 0;
+#endif
+      };
+
+      const size_t start = buckets.empty() ? 0 : thread_index(buckets.size());
+      for(size_t i = 0; i != buckets.size(); ++i) {
+         Bucket& bucket = buckets[(start + i) % buckets.size()];
          if(const auto slot = bucket.alloc(); !slot.empty()) {
             return slot.first(n);
          }
-
-         // If the bucket is full, maybe move it to the end of the list?
-         // Otoh bucket search should be very fast
       }
 
       if(!m_free_pages.empty()) {
-         const auto page = m_free_pages.front();
-         m_free_pages.pop_front();
+         const auto page = m_free_pages.back();
+         m_free_pages.pop_back();
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
          OS::page_allow_access(page.data());
 #endif
          buckets.push_front(Bucket(page, n_bucket));
 
-         /*
-         * A per-thread value used as the starting point when searching for a free
-         * bucket or slot. Each thread always starts from the same place, so its
-         * allocations tend to cluster together instead of being interleaved with
-         * those of other threads. This is only a placement hint; any thread may
-         * use or free any slot.
-         */
-         auto thread_index = [](size_t array_size) -> size_t {
-            uint64_t raw_id = std::hash<std::thread::id>{}(std::this_thread::get_id());
-            constexpr uint64_t KNUTH_MAGIC = 0x9E3779B97F4A7C15ULL;
-            return (raw_id * KNUTH_MAGIC) % array_size;
-         };
-
-         size_t idx = thread_index(buckets.size());
-         const auto slot = buckets[idx].alloc();
+         // The bucket we just created is empty, so allocate from it
+         const auto slot = buckets[0].alloc();
          BOTAN_ASSERT_NOMSG(!slot.empty());
          return slot.first(n);
       }
