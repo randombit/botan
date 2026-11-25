@@ -160,6 +160,17 @@ class BOTAN_TEST_API Channel_IO {
       virtual void notify_received_final_flight() { /* don't care */
       }
 
+      /**
+       * Returns the next retransmission timeout, if any. This is relevant for
+       * DTLS only: if a flight is not acknowledged within the timeout, it must
+       * be retransmitted. If no timeout is armed, this returns std::nullopt.
+       *
+       * Note that this also reports the timeout for the next ACK timer, if any.
+       * However, it does not report internal housekeeping timers (e.g. for
+       * deferred epoch pruning).
+       */
+      virtual std::optional<std::chrono::milliseconds> next_retransmission_timeout() const = 0;
+
       std::optional<Epoch0_SequenceNumbers> epoch0_sequence_numbers() const;
 
       /// @}
@@ -218,9 +229,7 @@ class BOTAN_TEST_API Channel_IO {
 
       const Policy& policy() const { return *m_policy; }
 
-      const Callbacks& callbacks() const { return *m_callbacks; }
-
-      Callbacks& callbacks() { return *m_callbacks; }
+      Callbacks& callbacks() const { return *m_callbacks; }
 
    private:
       bool needs_traffic_based_key_update() const;
