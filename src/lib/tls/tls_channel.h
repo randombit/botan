@@ -123,10 +123,19 @@ class BOTAN_PUBLIC_API(2, 0) Channel {
       virtual bool is_active() const = 0;
 
       /**
-      * @return the remaining time until timeout_check() might retransmit
-      *         handshake data, or std::nullopt if no timeout check is needed.
+      * This accessor determines whether a DTLS association currently has some
+      * retransmission pending and if so, how long until the next retransmission
+      * is scheduled.
+      *
+      * If you're still using the deprecated timeout_check() function and this
+      * returns a non-empty value, you should call timeout_check() after the
+      * specified duration has elapsed. If you are already using the new
+      * TLS::Callbacks::tls_register_deferred_operation() mechanism, this
+      * function still reports the correct times but is purely informational.
+      *
+      * @return the remaining time until the next retransmission or std::nullopt
+      *         if no retransmission is currently scheduled
       */
-      BOTAN_DEPRECATED("Use TLS::Callbacks::tls_register_deferred_operation instead")  //
       virtual std::optional<std::chrono::milliseconds> next_retransmission_timeout() const = 0;
 
       /**
