@@ -494,6 +494,10 @@ class TLS_Channel_IO final : public Channel_IO {
          std::ignore = m_handshake_layer.copy_data(policy(), record);
       }
 
+      std::optional<std::chrono::milliseconds> next_retransmission_timeout() const override {
+         return std::nullopt;  // TLS does not have retransmissions
+      }
+
       Record_Layer& record_layer() override { return m_record_layer; }
 
       const Record_Layer& record_layer() const override { return m_record_layer; }

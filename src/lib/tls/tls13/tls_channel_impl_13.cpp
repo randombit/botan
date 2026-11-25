@@ -225,13 +225,7 @@ bool Channel_Impl_13::timeout_check() {
 }
 
 std::optional<std::chrono::milliseconds> Channel_Impl_13::next_retransmission_timeout() const {
-   if(!is_datagram()) {
-      return std::nullopt;
-   }
-
-   throw Not_Implemented(
-      "next_retransmission_timeout() is not implemented for DTLS 1.3, please "
-      "implement TLS::Callbacks::tls_register_deferred_operation() instead");
+   return m_channel_io->next_retransmission_timeout();
 }
 
 SecretLoggerFn Channel_Impl_13::secret_logger() const {
