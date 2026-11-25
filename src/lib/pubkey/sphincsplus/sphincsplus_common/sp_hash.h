@@ -126,9 +126,10 @@ class BOTAN_TEST_API Sphincs_Hash_Functions /* NOLINT(*-special-member-functions
       virtual size_t address_encoding_len() const = 0;
 
       /**
-      * Write the encoding of @p address used for tweaked hashing to @p out
+      * Write the encodings of @p addresses used for tweaked hashing to @p out,
+      * one after another, each address_encoding_len() bytes long
       */
-      virtual void encode_address(std::span<uint8_t> out, const Sphincs_Address& address) const = 0;
+      virtual void encode_addresses(std::span<uint8_t> out, std::span<const Sphincs_Address> addresses) const = 0;
 
       virtual std::vector<uint8_t> H_msg_digest(StrongSpan<const SphincsMessageRandomness> r,
                                                 const SphincsTreeNode& root,
