@@ -125,10 +125,10 @@ class Threaded_Hash_Engine final : public Hash_Engine {
       void batch_hash(std::span<std::span<uint8_t>> outputs,
                       std::span<std::span<const uint8_t>> inputs1,
                       std::span<std::span<const uint8_t>> inputs2) override {
-         check_batch_args(outputs, inputs1, inputs2);
-
+         // Batches hashed by a single engine are left to it to check
          const size_t count = inputs1.size();
          if(count == 0) {
+            m_engines[0]->batch_hash(outputs, inputs1, inputs2);
             return;
          }
 
@@ -169,6 +169,8 @@ class Threaded_Hash_Engine final : public Hash_Engine {
             m_engines[0]->batch_hash(outputs, inputs1, inputs2);
             return;
          }
+
+         check_batch_args(outputs, inputs1, inputs2);
 
          while(m_engines.size() < threads) {
             auto eng = make_base_engine(m_hash_fn, common_prefix(), "");

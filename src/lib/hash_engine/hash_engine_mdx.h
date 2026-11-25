@@ -211,8 +211,7 @@ class MDx_MB_Engine final : public Hash_Engine {
 
             const size_t used_lanes = std::min(m_lanes, count - base);
             for(size_t l = 0; l != used_lanes; ++l) {
-               copy_mem(outputs[base + l].first(m_output_length),
-                        std::span(m_digests).subspan(l * DIGEST_BYTES, m_output_length));
+               copy_short(outputs[base + l].data(), &m_digests[l * DIGEST_BYTES], m_output_length);
             }
          }
       }
@@ -245,7 +244,7 @@ class MDx_MB_Engine final : public Hash_Engine {
          const size_t i0 = std::max(lo, offset);
          const size_t i1 = std::min(hi, offset + src.size());
          if(i0 < i1) {
-            copy_mem(dest + (i0 - lo), src.data() + (i0 - offset), i1 - i0);
+            copy_short(dest + (i0 - lo), src.data() + (i0 - offset), i1 - i0);
          }
       }
 

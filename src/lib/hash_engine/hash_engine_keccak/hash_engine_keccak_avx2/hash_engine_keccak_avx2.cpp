@@ -67,15 +67,13 @@ BOTAN_FN_ISA_SIMD_4X64 void keccak_mb_permute_x4(uint64_t* states) {
    }
 }
 
-BOTAN_FN_ISA_SIMD_4X64 void keccak_mb_absorb_x4(uint64_t* states,
-                                                const uint8_t* const* blocks,
-                                                size_t rate_words,
-                                                size_t nblocks) {
+BOTAN_FN_ISA_SIMD_4X64 void keccak_mb_absorb_x4(
+   uint64_t* states, const uint64_t* states_in, const uint8_t* const* blocks, size_t rate_words, size_t nblocks) {
    SIMD_4x64 A[25];
    SIMD_4x64 T[25];
 
    for(size_t w = 0; w != 25; ++w) {
-      A[w] = SIMD_4x64::load_le(states + 4 * w);
+      A[w] = SIMD_4x64::load_le(states_in + 4 * w);
    }
 
    for(size_t b = 0; b != nblocks; ++b) {
