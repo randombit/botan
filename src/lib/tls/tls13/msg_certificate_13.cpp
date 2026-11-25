@@ -390,7 +390,7 @@ Certificate_13::Certificate_Entry& Certificate_13::Certificate_Entry::operator=(
    Certificate_13::Certificate_Entry&& other) noexcept = default;
 
 Certificate_13::Certificate_Entry::Certificate_Entry(const X509_Certificate& cert) :
-      m_certificate(std::make_unique<X509_Certificate>(cert)), m_raw_public_key(m_certificate->subject_public_key()) {}
+      m_certificate(std::make_unique<X509_Certificate>(cert)) {}
 
 Certificate_13::Certificate_Entry::Certificate_Entry(std::shared_ptr<Public_Key> raw_public_key) :
       m_raw_public_key(std::move(raw_public_key)) {
@@ -403,8 +403,11 @@ const X509_Certificate& Certificate_13::Certificate_Entry::certificate() const {
 }
 
 std::shared_ptr<const Public_Key> Certificate_13::Certificate_Entry::public_key() const {
-   BOTAN_ASSERT_NONNULL(m_raw_public_key);
-   return m_raw_public_key;
+   if(m_raw_public_key) {
+      return m_raw_public_key;
+   }
+   BOTAN_ASSERT_NONNULL(m_certificate);
+   return m_certificate->subject_public_key();
 }
 
 std::vector<uint8_t> Certificate_13::Certificate_Entry::serialize() const {

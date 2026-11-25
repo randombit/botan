@@ -220,7 +220,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
 
          private:
             std::unique_ptr<X509_Certificate> m_certificate;  // possibly null if raw public key in use
-            std::shared_ptr<Public_Key> m_raw_public_key;     // null for a non-leaf certificate sent by the peer
+            std::shared_ptr<Public_Key> m_raw_public_key;     // only set for raw public keys and the peer's leaf
             Extensions m_extensions;
       };
 
