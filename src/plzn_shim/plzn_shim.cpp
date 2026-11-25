@@ -956,17 +956,6 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
          }
       }
 
-      // Remaining time until the armed retransmission timer fires, if any
-      std::optional<uint64_t> next_timeout_ms() const {
-         std::optional<uint64_t> next;
-         const uint64_t now = tls_current_monotonic_clock_ms();
-         for(const auto& deferred : m_deferred_operations) {
-            const uint64_t remaining = deferred.deadline_ms > now ? deferred.deadline_ms - now : 0;
-            next = std::min(next.value_or(remaining), remaining);
-         }
-         return next;
-      }
-
       std::string tls_peer_network_identity() override { return "plzn-shim-peer"; }
 
    private:
@@ -1100,14 +1089,14 @@ void run_tls_connection(const ShimConfig& cfg,
             // Let a stale timer (eg from a flight the peer has since answered)
             // retire itself before reporting what is armed
             run_timers();
-            const auto actual = callbacks->next_timeout_ms();
+            const auto actual = chan->next_retransmission_timeout();
             const bool expected_none = ev.nanos == UINT64_MAX;
             if(expected_none != !actual.has_value()) {
                throw std::runtime_error(expected_none ? "expected no DTLS timeout, but one is armed"
                                                       : "expected an armed DTLS timeout, but got none");
             }
             if(actual.has_value()) {
-               const uint64_t actual_ns = *actual * 1'000'000;
+               const uint64_t actual_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(*actual).count();
                if(actual_ns != ev.nanos) {
                   throw std::runtime_error("DTLS next timeout mismatch: expected " + std::to_string(ev.nanos) +
                                            "ns, got " + std::to_string(actual_ns) + "ns");
