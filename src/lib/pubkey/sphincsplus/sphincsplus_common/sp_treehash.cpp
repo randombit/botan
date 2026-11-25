@@ -31,14 +31,9 @@ void treehash(StrongSpan<SphincsTreeNode> out_root,
    // Not has_value() || value(), which GCC may compile to test the payload first
    BOTAN_ASSERT_NOMSG(leaf_idx.value_or(TreeNodeIndex(0)) <= max_idx);
 
-   std::vector<uint8_t> stack(total_tree_height * params.n());
+   const size_t n = params.n();
 
-   // Leaves are created in batches to enable batched hashing. Both the batch
-   // size and the leaf count are powers of two, so batches are always full.
-   const uint32_t leaves_per_batch = std::min<uint32_t>(uint32_t(1) << total_tree_height, 128);
-   std::vector<uint8_t> leaves(leaves_per_batch * params.n());
-
-   /* Traverse the tree from the left-most leaf, matching siblings and up until
+   /* Traverse the tree from the left-most node, matching siblings and up until
    * the root (Post-order traversal). Collect the adjacent nodes (A) to build
    * the authentication path (X) along the way.
    *
@@ -47,65 +42,105 @@ void treehash(StrongSpan<SphincsTreeNode> out_root,
    *      3X    6A
    *     / \    / \
    *   1X  2A  4   5
+   *
+   * push() takes the next node of layer h in this order, combining it with the
+   * left siblings saved on the stack until reaching a left child or the root.
    */
-   for(TreeNodeIndex idx(0); true; ++idx) {
-      const uint32_t batch_pos = idx.get() % leaves_per_batch;
-      if(batch_pos == 0) {
-         gen_leaves(leaves, idx + idx_offset, leaves_per_batch);
-      }
-      // Current logical node, evolved in place as siblings are combined
-      const auto current_node = std::span(leaves).subspan(batch_pos * params.n(), params.n());
+   std::vector<uint8_t> stack(total_tree_height * n);
 
-      // Now combine the freshly generated right node with previously generated
-      // left ones
-      uint32_t internal_idx_offset = idx_offset;
-      TreeNodeIndex internal_idx = idx;
-      auto internal_leaf = leaf_idx;
-
-      for(TreeLayerIndex h(0); true; ++h) {
+   const auto push = [&](std::span<uint8_t> node, uint32_t h, uint32_t idx) {
+      for(;; ++h, idx /= 2) {
          // Check if we hit the top of the tree
-         if(h.get() == total_tree_height) {
-            copy_mem(out_root, current_node);
+         if(h == total_tree_height) {
+            copy_mem(out_root, node);
             return;
          }
 
          // Check if the node we have is a part of the authentication path; if
-         // it is, write it out. The XOR sum of both nodes (at internal_idx and internal_leaf)
-         // is 1 iff they have the same parent node in the FORS tree
-         if(internal_leaf.has_value() && (internal_idx ^ internal_leaf.value()) == 0x01U) {
-            const auto auth_path_location = out_auth_path.get().subspan(h.get() * params.n(), params.n());
-            copy_mem(auth_path_location, current_node);
+         // it is, write it out. The XOR sum of both nodes (at idx and the signed
+         // leaf's ancestor) is 1 iff they have the same parent node in the tree
+         if(leaf_idx.has_value() && (idx ^ (leaf_idx->get() >> h)) == 0x01U) {
+            copy_mem(out_auth_path.get().subspan(h * n, n), node);
          }
 
          // At this point we know that we'll need to use the stack. Get a
          // reference to the correct location.
-         const auto stack_location = std::span(stack).subspan(h.get() * params.n(), params.n());
+         const auto stack_location = std::span(stack).subspan(h * n, n);
 
-         // Check if we're at a left child; if so, stop going up the stack
-         // Exception: if we've reached the end of the tree, keep on going (so
-         // we combine the last 4 nodes into the one root node in two more
-         // iterations)
-         if((internal_idx & 1) == 0U && idx < max_idx) {
-            // We've hit a left child; save the current for when we get the
-            // corresponding right child.
-            copy_mem(stack_location, current_node);
-            break;
+         // Check if we're at a left child; if so, save it for when we get the
+         // corresponding right child, and stop going up the stack
+         if((idx & 1) == 0) {
+            copy_mem(stack_location, node);
+            return;
          }
 
          // Ok, we're at a right node. Now combine the left and right logical
-         // nodes together.
+         // nodes together, setting the address of the node we're creating.
+         tree_address.set_tree_height(TreeLayerIndex(h + 1));
+         tree_address.set_tree_index(TreeNodeIndex(idx / 2 + (idx_offset >> (h + 1))));
+         hashes.T(node, tree_address, stack_location, node);
+      }
+   };
 
-         // Set the address of the node we're creating.
-         internal_idx_offset /= 2;
-         tree_address.set_tree_height(h + 1);
-         tree_address.set_tree_index(internal_idx / 2 + internal_idx_offset);
+   // Leaves are created in chunks, and the lower layers of each chunk hashed
+   // layer by layer, to enable batched hashing. Both the chunk size and the
+   // leaf count are powers of two, so chunks are always full. Once a layer is
+   // too narrow to batch well, its nodes go through the stack one at a time.
+   constexpr uint32_t max_chunk_height = 7;
+   constexpr uint32_t min_batch = 16;
 
-         hashes.T(current_node, tree_address, stack_location, current_node);
+   const uint32_t chunk_height = std::min(total_tree_height, max_chunk_height);
+   const uint32_t leaves_per_chunk = uint32_t(1) << chunk_height;
 
-         internal_idx /= 2;
-         if(internal_leaf.has_value()) {
-            internal_leaf.value() /= 2;
+   // Layers of a chunk alternate between these, as each fits half the last
+   std::vector<uint8_t> layer_bufs(leaves_per_chunk * n + leaves_per_chunk / 2 * n);
+   const auto layer_buf_a = std::span(layer_bufs).first(leaves_per_chunk * n);
+   const auto layer_buf_b = std::span(layer_bufs).subspan(leaves_per_chunk * n);
+
+   std::vector<Sphincs_Address> addrs;
+   std::vector<std::span<uint8_t>> parents;
+   std::vector<std::span<const uint8_t>> children;
+
+   const uint32_t chunks = uint32_t(1) << (total_tree_height - chunk_height);
+   for(uint32_t chunk = 0; chunk != chunks; ++chunk) {
+      const uint32_t first_leaf = chunk * leaves_per_chunk;
+      auto layer = layer_buf_a;
+      auto next_layer = layer_buf_b;
+
+      gen_leaves(layer, TreeNodeIndex(first_leaf + idx_offset), leaves_per_chunk);
+
+      // Within a chunk, auth path nodes only come from the chunk with the leaf
+      const bool chunk_has_leaf = leaf_idx.has_value() && (leaf_idx->get() >> chunk_height) == chunk;
+
+      uint32_t h = 0;
+      uint32_t width = leaves_per_chunk;
+
+      for(; h != chunk_height && width / 2 >= min_batch; ++h, width /= 2) {
+         const uint32_t first = first_leaf >> h;
+
+         if(chunk_has_leaf) {
+            const uint32_t sibling = (leaf_idx->get() >> h) ^ 1;
+            copy_mem(out_auth_path.get().subspan(h * n, n), layer.subspan((sibling - first) * n, n));
          }
+
+         const uint32_t count = width / 2;
+         addrs.assign(count, tree_address);
+         parents.resize(count);
+         children.resize(count);
+         for(uint32_t i = 0; i != count; ++i) {
+            addrs[i]
+               .set_tree_height(TreeLayerIndex(h + 1))
+               .set_tree_index(TreeNodeIndex((first >> 1) + i + (idx_offset >> (h + 1))));
+            parents[i] = next_layer.subspan(i * n, n);
+            children[i] = layer.subspan(2 * i * n, 2 * n);
+         }
+
+         hashes.T_batch(parents, addrs, children);
+         std::swap(layer, next_layer);
+      }
+
+      for(uint32_t i = 0; i != width; ++i) {
+         push(layer.subspan(i * n, n), h, (first_leaf >> h) + i);
       }
    }
 }
