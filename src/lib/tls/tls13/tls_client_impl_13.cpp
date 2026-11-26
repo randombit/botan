@@ -82,7 +82,8 @@ std::shared_ptr<Client_Impl_13> Client_Impl_13::create(const std::shared_ptr<Cal
    // TODO(0-RTT): When implementing early data, we need to add the dummy CCS
    //              record to this initial ClientHello flight!
 
-   self->send_flight(flight.commit());
+   // The server will reply with its first flight to our ClientHello.
+   self->send_flight(flight.commit(), Expected_Response::Flight);
 
    // on a pure TLS connection.
    if(self->is_datagram()) {
@@ -445,8 +446,9 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr) {
    // peer uses TLS 1.3. The HRR also supersedes our previous flight.
    m_channel_io->notify_protocol_version_committed_and_flight_superseded();
 
-   // by definition HRR is the "final" message of this flight.
-   m_channel_io->notify_received_complete_flight();
+   // HelloRetryRequest is the final message of a single-message flight, the
+   // server expects us to reply with an updated ClientHello flight.
+   m_channel_io->notify_received_complete_flight(Expected_Response::Flight);
 
    auto& ch = m_handshake->state.client_hello();
 
@@ -494,7 +496,8 @@ void Client_Impl_13::handle(const Hello_Retry_Request& hrr) {
    }
    flight.add(ch);
 
-   send_flight(flight.commit());
+   // The server will reply with its main flight to our updated ClientHello.
+   send_flight(flight.commit(), Expected_Response::Flight);
 
    // RFC 8446 4.1.4
    //    If a client receives a second HelloRetryRequest in the same connection [...],
@@ -742,8 +745,9 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
    BOTAN_ASSERT_NONNULL(m_handshake);
    BOTAN_ASSERT_NOMSG(m_transcript_hash.has_value());
 
-   // The Server's Finished message is the last handshake message in the flight.
-   m_channel_io->notify_received_complete_flight();
+   // The server's Finished message is the last handshake message of it's main
+   // flight. It expects us to reply with our final message.
+   m_channel_io->notify_received_complete_flight(Expected_Response::Flight);
 
    auto* cs = cipher_state();
    BOTAN_ASSERT_NONNULL(cs);
@@ -806,7 +810,9 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
    // send client finished handshake message (still using handshake traffic secrets)
    flight.add(m_handshake->state.sending(Finished_13(*cs, m_transcript_hash->current())));
 
-   send_flight(flight.commit());
+   // Our Finished message concludes the handshake and we don't expect any further
+   // handshake messages from the server after this.
+   send_flight(flight.commit(), Expected_Response::None);
 
    // derives the sending application traffic secrets
    cs->advance_with_client_finished(m_transcript_hash->current());

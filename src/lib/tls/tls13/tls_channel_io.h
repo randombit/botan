@@ -76,8 +76,12 @@ class BOTAN_TEST_API Channel_IO {
       /// @name Emission of outgoing data
       /// @{
 
-      /// Sends a flight of handshake messages to the peer.
-      void send(std::vector<Flight::Message> flight);
+      /**
+       * Sends a flight of handshake messages to the peer.
+       *
+       * @param expected  the type of response the flight expects from the peer
+       */
+      void send(std::vector<Flight::Message> flight, Expected_Response expected);
 
       /// Sends application data to the peer.
       void send(std::span<const uint8_t> payload);
@@ -143,21 +147,17 @@ class BOTAN_TEST_API Channel_IO {
       /**
        * Notifies that the last message completing a flight was received.
        *
-       * This is relevant for DTLS: At that point, everything we need
-       * was received and the ACK mechanism is no longer needed.
-       */
-      virtual void notify_received_complete_flight() { /* don't care */
-      }
-
-      /**
-       * Notifies that a complete flight was received that expects no response,
-       * i.e., the final flight of the peer (the client's Finished).
+       * This is relevant for DTLS where it drives retransmissions and
+       * acknowledgements as well as progress timeouts.
        *
-       * This is relevant for DTLS: since there is no response flight
-       * that would implicitly acknowledge it, the flight must be acknowledged
-       * explicitly with an ACK message.
+       * @param expected_by_peer  defines the response the peer expects in
+       *                          return for the flight it just completed.
+       *
+       * @note This is only ever called for flights that we were actually
+       *       waiting for.
        */
-      virtual void notify_received_final_flight() { /* don't care */
+      virtual void notify_received_complete_flight(Expected_Response expected_by_peer) {
+         BOTAN_UNUSED(expected_by_peer);
       }
 
       /**
@@ -210,7 +210,13 @@ class BOTAN_TEST_API Channel_IO {
        */
       virtual bool can_send_key_update() const { return true; }
 
-      virtual void send_flight(std::vector<Flight::Message> flight) = 0;
+      /**
+       * Sends a flight of handshake messages to the peer.
+       *
+       * @param expected  the type of response we expect from the peer in reply
+       *                  to this flight.
+       */
+      virtual void send_flight(std::vector<Flight::Message> flight, Expected_Response expected) = 0;
 
       /// Marshalls and sends the given KeyUpdate message, then advances the
       /// write epoch.

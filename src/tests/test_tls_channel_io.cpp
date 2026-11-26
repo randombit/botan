@@ -748,7 +748,7 @@ std::vector<Test::Result> send_flights() {
                   .serialized = TLS::SerializedHandshakeMessage(std::vector<uint8_t>(message_size)),
                };
 
-               io->send({big_message});
+               io->send({big_message}, TLS::Expected_Response::Flight);
 
                const auto headers = record_headers(callbacks->emitted());
                result.test_sz_eq("large message was sharded into two records", headers.size(), 2);
@@ -770,7 +770,7 @@ std::vector<Test::Result> send_flights() {
                   .header = TLS::TLS_Handshake_Layer::prepare_header(TLS::Handshake_Type::Finished, 5),
                   .serialized = TLS::SerializedHandshakeMessage(std::vector<uint8_t>(5)),
                };
-               io->send({small_message});
+               io->send({small_message}, TLS::Expected_Response::None);
 
                const auto headers_after = record_headers(callbacks->emitted());
                result.test_sz_eq("one record", headers_after.size(), 1);
@@ -788,7 +788,7 @@ std::vector<Test::Result> send_flights() {
                   Botan::hex_decode(rfc8448::client_hello_body), Botan::TLS::TLS_Flavor::TLS));
                auto flight = TLS::Flight(*th, *callbacks).add(client_hello).add_dummy_change_cipher_spec();
 
-               io->send(flight.commit());
+               io->send(flight.commit(), TLS::Expected_Response::Flight);
 
                const auto headers = record_headers(callbacks->emitted());
                result.test_sz_eq("two records emitted", headers.size(), 2);

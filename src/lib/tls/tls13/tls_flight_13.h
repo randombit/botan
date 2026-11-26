@@ -22,6 +22,21 @@ class Callbacks;
 class Transcript_Hash_State;
 
 /**
+ * The type of response a flight of handshake messages expects from the peer.
+ *
+ * Note that this distinction is relevant for DTLS to steer acknowledgements of
+ * flights. TLS simply ignores this information.
+ */
+enum class Expected_Response : bool {
+   /// The peer is expected to respond with a further flight, which
+   /// implicitly acknowledges this flight.
+   Flight = true,
+
+   /// The peer is not expected to send a further flight in response.
+   None = false,
+};
+
+/**
  * Helper class to coalesce handshake messages into a TLS flight. The class
  * keeps track of the serialized messages and updates the transcript hash
  * accordingly.

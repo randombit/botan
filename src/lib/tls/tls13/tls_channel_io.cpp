@@ -141,8 +141,8 @@ Channel_IO::ReceiveEvent Channel_IO::next_pending_event(std::optional<Transcript
    }
 }
 
-void Channel_IO::send(std::vector<Flight::Message> flight) {
-   send_flight(std::move(flight));
+void Channel_IO::send(std::vector<Flight::Message> flight, Expected_Response expected) {
+   send_flight(std::move(flight), expected);
 }
 
 void Channel_IO::send(std::span<const uint8_t> payload) {
@@ -417,7 +417,9 @@ class TLS_Channel_IO final : public Channel_IO {
          callbacks().tls_emit_data(output);
       }
 
-      void send_flight(std::vector<Flight::Message> flight) override {
+      void send_flight(std::vector<Flight::Message> flight, Expected_Response expected) override {
+         BOTAN_UNUSED(expected);
+
          // Go through all messages of the flight, grouping them into (at
          // most) two runs: one for the unprotected messages and one for the
          // protected messages. Each run is sent in as little records as
