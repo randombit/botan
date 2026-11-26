@@ -196,14 +196,13 @@ std::vector<Test::Result> read_handshake_messages() {
       CHECK("reject incomplete header with invalid type",
             [&](auto& result) {
                auto hl = TLS_Handshake_Layer(Connection_Side::Client);
-               Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
 
                // The type tag is validated as soon as its first byte arrived,
                // without waiting for the rest of the header.
-               std::ignore = hl.copy_data(Policy(), as_hs_record(std::array<uint8_t, 3>{0xD4, 0x00, 0x00}));
                result.template test_throws<TLS_Exception>(
-                  "message is rejected", "Unknown handshake message received", [&] { hl.next_message(Policy(), th); });
-               check_transcript_hash_empty(result, th);
+                  "message is rejected", "Unknown handshake message received", [&] {
+                     std::ignore = hl.copy_data(Policy(), as_hs_record(std::array<uint8_t, 3>{0xD4, 0x00, 0x00}));
+                  });
             }),
 
       CHECK("read client hello",
@@ -347,18 +346,69 @@ std::vector<Test::Result> read_handshake_messages() {
                   [&] { hl.next_post_handshake_message(Policy(), EpochNumber::create(3)); });
             }),
 
-      CHECK("reject TLS 1.2 messages",
+      CHECK("accept TLS 1.2 messages before a TLS 1.3 hello was seen",
+            [&](auto& result) {
+               // A TLS 1.2 server may coalesce its entire flight into a single
+               // record. As long as the peer did not unambiguously reveal itself
+               // as a TLS 1.3 peer, the handshake layer must buffer such
+               // messages, so the state machine can still decide to downgrade
+               // to TLS 1.2 based on the first message of the flight.
+               auto hl = TLS_Handshake_Layer(Connection_Side::Client);
+               Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS);
+
+               std::ignore =
+                  hl.copy_data(Policy(), as_hs_record(Botan::concat(server_hello_12_message, tls_12_only_messages[2])));
+               result.test_is_true("is a legacy server hello",
+                                   has_message<Server_Hello_12_Shim>(result, hl.next_message(Policy(), th)));
+               result.test_is_true("holds the coalesced TLS 1.2 message", hl.has_pending_data());
+            }),
+
+      CHECK("reject TLS 1.2 messages after a TLS 1.3 ServerHello",
             [&](auto& result) {
                for(const auto& msg : tls_12_only_messages) {
                   auto hl = TLS_Handshake_Layer(Connection_Side::Client);
-                  Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
+                  Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS);
 
-                  std::ignore = hl.copy_data(Policy(), as_hs_record(msg));
-                  result.template test_throws<TLS_Exception>("message is rejected",
-                                                             [&] { hl.next_message(Policy(), th); });
+                  std::ignore = hl.copy_data(Policy(), as_hs_record(server_hello_message));
+                  result.test_is_true("is a server hello",
+                                      has_message<Server_Hello_13>(result, hl.next_message(Policy(), th)));
 
-                  check_transcript_hash_empty(result, th);
+                  result.template test_throws<TLS_Exception>(
+                     "message is rejected", "Unexpected TLS 1.2 message received", [&] {
+                        std::ignore = hl.copy_data(Policy(), as_hs_record(msg));
+                     });
                }
+            }),
+
+      CHECK("reject TLS 1.2 messages after a Hello Retry Request",
+            [&](auto& result) {
+               for(const auto& msg : tls_12_only_messages) {
+                  auto hl = TLS_Handshake_Layer(Connection_Side::Client);
+                  Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS);
+
+                  std::ignore = hl.copy_data(Policy(), as_hs_record(hrr_hello_retry_request_msg));
+                  result.test_is_true("is a hello retry request",
+                                      has_message<Hello_Retry_Request>(result, hl.next_message(Policy(), th)));
+
+                  result.template test_throws<TLS_Exception>(
+                     "message is rejected", "Unexpected TLS 1.2 message received", [&] {
+                        std::ignore = hl.copy_data(Policy(), as_hs_record(msg));
+                     });
+               }
+            }),
+
+      CHECK("reject oversized message before buffering its payload",
+            [&](auto& result) {
+               // The 3-byte length field claims a message of 0xFFFFFF bytes which
+               // exceeds the default policy's maximum_handshake_message_size of
+               // 64 KiB. The message is rejected as soon as its header is complete,
+               // i.e. before any payload byte is buffered.
+               const Botan::secure_vector<uint8_t> oversized_message_header{
+                  static_cast<uint8_t>(Handshake_Type::Certificate), 0xFF, 0xFF, 0xFF, 0x42};
+               auto hl = TLS_Handshake_Layer(Connection_Side::Client);
+               result.template test_throws<TLS_Exception>("message is rejected", "policy maximum", [&] {
+                  std::ignore = hl.copy_data(Policy(), as_hs_record(oversized_message_header));
+               });
             }),
 
       CHECK("reject incomplete messages with invalid type",
@@ -372,10 +422,10 @@ std::vector<Test::Result> read_handshake_messages() {
                // data from the bogo test --                 ~~~~~~ <- length
                //                                          ~~ <- bogus message type
                auto hl = TLS_Handshake_Layer(Connection_Side::Client);
-               Transcript_Hash_State th(Botan::TLS::TLS_Flavor::TLS, "SHA-256");
-               std::ignore = hl.copy_data(Policy(), as_hs_record(data));
                result.template test_throws<TLS_Exception>(
-                  "message is rejected", "Unknown handshake message received", [&] { hl.next_message(Policy(), th); });
+                  "message is rejected", "Unknown handshake message received", [&] {
+                     std::ignore = hl.copy_data(Policy(), as_hs_record(data));
+                  });
             }),
    };
 }

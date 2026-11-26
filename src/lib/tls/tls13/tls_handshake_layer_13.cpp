@@ -2,6 +2,7 @@
 * TLS handshake state (machine) implementation for TLS 1.3
 * (C) 2022 Jack Lloyd
 *     2022 Hannes Rantzsch, René Meusel - neXenio GmbH
+*     2026 René Meusel, Amos Treiber - Rohde & Schwarz Networks and Cybersecurity GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -25,73 +26,242 @@ namespace {
 
 constexpr size_t HEADER_LENGTH = 4;
 
-void verify_handshake_message_size(size_t msg_len, size_t max_size) {
-   if(max_size > 0 && msg_len > max_size) {
-      throw TLS_Exception(Alert::HandshakeFailure,
-                          Botan::fmt("Handshake message is {} bytes, policy maximum is {}", msg_len, max_size));
-   }
-}
-
 }  // namespace
 
-std::optional<Handshake_Type> Handshake_Layer::read_handshake_message_type(uint8_t value) {
-   const auto type = static_cast<Handshake_Type>(value);
-   switch(type) {
-      using enum Handshake_Type;
+Handshake_Type Handshake_Layer::read_handshake_message_type(uint8_t msg_type_byte) const {
+   const auto msg_type = static_cast<Handshake_Type>(msg_type_byte);
 
-      case ClientHello:
-      case ServerHello:
-      case HelloVerifyRequest:
-      // NYI: needs PSK/resumption support -- won't be offered in Client Hello for now
-      // case EndOfEarlyData:
-      case EncryptedExtensions:
-      case Certificate:
-      case CertificateRequest:
-      case CertificateVerify:
-      case Finished:
-      case NewSessionTicket:
-      case KeyUpdate:
-         return type;
-      default:
-         return std::nullopt;
+   struct Type_Validation {
+         bool tls12 = false;
+         bool tls13 = false;
+         bool dtls_only = false;
+   };
+
+   const auto v = [&]() -> Type_Validation {
+      switch(msg_type) {
+         using enum Handshake_Type;
+
+         case CertificateStatus:
+         case CertificateUrl:
+         case ClientKeyExchange:
+         case HelloRequest:
+         case ServerHelloDone:
+         case ServerKeyExchange:
+            return {.tls12 = true};
+
+         case HelloVerifyRequest:
+            return {.tls12 = true, .dtls_only = true};
+
+         case Certificate:
+         case CertificateRequest:
+         case CertificateVerify:
+         case ClientHello:
+         case Finished:
+         case NewSessionTicket:
+         case ServerHello:
+            return {.tls12 = true, .tls13 = true};
+
+         case EncryptedExtensions:
+         case EndOfEarlyData:
+         case KeyUpdate:
+            return {.tls13 = true};
+
+         // Those are added to avoid a 'default' case in the switch statement.
+         // They aren't valid wire values and must not appear in handshake
+         // message headers.
+         case HandshakeCCS:
+         case HelloRetryRequest:
+         case MessageHash:
+         case None:
+            return {};
+      }
+
+      return {};
+   }();
+
+   const bool unknown = !v.tls12 && !v.tls13;
+   const bool tls12_only = v.tls12 && !v.tls13;
+
+   if(unknown) {
+      throw TLS_Exception(Alert::UnexpectedMessage, "Unknown handshake message received");
    }
+
+   if(tls12_only && m_peer_speaks_tls13) {
+      throw TLS_Exception(Alert::UnexpectedMessage, "Unexpected TLS 1.2 message received");
+   }
+
+   if(v.dtls_only && tls_flavor().is_streaming()) {
+      throw TLS_Exception(Alert::UnexpectedMessage, "Unexpected DTLS message received");
+   }
+
+   // TODO: Validate post-handshake messages.
+   // The handshake layer currently isn't aware of handshake completion. Thus,
+   // this validation is currently done after buffering the message but before
+   // parsing it. See `parse[_post]_handshake_message()`.
+
+   // TODO: Validate server-only and client-only handshake messages based on the
+   //       information in m_peer.
+   // That would allow to early-reject messages that cannot originate from the
+   // given peer (e.g., a CertificateRequest coming from a Client). Currently,
+   // this validation is done as part of the handshake state machine.
+
+   return msg_type;
 }
+
+class TLS_Handshake_Layer::PendingMessage final {
+   public:
+      enum Header_Completion_State : uint8_t {
+         Empty,
+         Partial,
+         Complete,
+      };
+
+   public:
+      Header_Completion_State append_to_header(std::span<const uint8_t> bytes) {
+         BOTAN_ASSERT_NOMSG(bytes.size() <= missing_bytes_in_header());
+         copy_mem(std::span{m_message.header}.subspan(m_header_bytes_consumed, bytes.size()), bytes);
+         m_header_bytes_consumed += bytes.size();
+
+         if(m_header_bytes_consumed == 0) {
+            return Header_Completion_State::Empty;
+         } else if(m_header_bytes_consumed < HEADER_LENGTH) {
+            return Header_Completion_State::Partial;
+         } else {
+            return Header_Completion_State::Complete;
+         }
+      }
+
+      bool append_to_payload(std::span<const uint8_t> bytes) {
+         BOTAN_ASSERT_NOMSG(bytes.size() <= missing_bytes().value_or(0));
+         m_message.payload.get().insert(m_message.payload.get().end(), bytes.begin(), bytes.end());
+         return completed();
+      }
+
+      void set_type(Handshake_Type type) {
+         BOTAN_STATE_CHECK(m_header_bytes_consumed > 0);
+         BOTAN_DEBUG_ASSERT(type_byte() == to_underlying(type));
+         m_message.type = type;
+      }
+
+      bool completed() const {
+         if(auto msg_len = message_length()) {
+            return m_message.payload.size() == *msg_len;
+         } else {
+            return false;
+         }
+      }
+
+      uint8_t type_byte() const {
+         BOTAN_STATE_CHECK(m_header_bytes_consumed > 0);
+         return m_message.header[0];
+      }
+
+      size_t missing_bytes_in_header() const {
+         BOTAN_DEBUG_ASSERT(m_header_bytes_consumed <= HEADER_LENGTH);
+         return HEADER_LENGTH - m_header_bytes_consumed;
+      }
+
+      /// @returns the number of bytes missing to complete the entire message
+      ///          (std::nullopt if the header is not yet complete and we thus
+      ///          cannot determine the full message length)
+      std::optional<size_t> missing_bytes() const {
+         if(auto msg_len = message_length()) {
+            BOTAN_DEBUG_ASSERT(*msg_len >= m_message.payload.size());
+            return *msg_len - m_message.payload.size();
+         } else {
+            return std::nullopt;
+         }
+      }
+
+      /// @returns the total length of the handshake message (w/o header)
+      std::optional<size_t> message_length() const {
+         if(missing_bytes_in_header() > 0) {
+            return std::nullopt;
+         }
+
+         return load_be<uint32_t>(m_message.header) & 0x00FFFFFF;
+      }
+
+      /// Extract the collected complete handshake message. The message must be
+      /// fully received before calling this method.
+      Handshake_Layer::Message take() {
+         BOTAN_STATE_CHECK(completed());
+         return std::exchange(m_message, {});
+      }
+
+   private:
+      Handshake_Layer::Message m_message;
+      size_t m_header_bytes_consumed = 0;
+};
+
+TLS_Handshake_Layer::TLS_Handshake_Layer(Connection_Side whoami) : Handshake_Layer(whoami) {}
+
+TLS_Handshake_Layer::~TLS_Handshake_Layer() = default;
 
 TLS_Handshake_Layer::CopyDataResult TLS_Handshake_Layer::copy_data(const Policy& policy,
                                                                    const Handshake_Record& data_from_peer) {
-   BOTAN_UNUSED(policy);
+   BufferSlicer slicer(data_from_peer.payload);
 
-   // Compact consumed data before appending new data
-   BOTAN_ASSERT_NOMSG(m_read_offset <= m_read_buffer.size());
-   if(m_read_offset > 0) {
-      m_read_buffer.erase(m_read_buffer.begin(), m_read_buffer.begin() + m_read_offset);
-      m_read_offset = 0;
+   while(!slicer.empty()) {
+      // Get the latest (incomplete) pending handshake message or create a fresh
+      // one to hold the received handshake message bytes.
+      auto& pending_msg = [&]() -> PendingMessage& {
+         if(m_pending_messages.empty() || m_pending_messages.back().completed()) {
+            return m_pending_messages.emplace_back();
+         } else {
+            return m_pending_messages.back();
+         }
+      }();
+
+      // First consume the header bytes if the header is not completed yet.
+      auto missing_in_header = pending_msg.missing_bytes_in_header();
+      if(missing_in_header > 0) {
+         const auto header_state =
+            pending_msg.append_to_header(slicer.take(std::min(slicer.remaining(), missing_in_header)));
+
+         using enum PendingMessage::Header_Completion_State;
+
+         if(header_state != Empty) {
+            // We received at least the type byte of the handshake message and
+            // can check its sanity
+            pending_msg.set_type(read_handshake_message_type(pending_msg.type_byte()));
+         }
+
+         if(header_state == Complete) {
+            // We just completed reading the header, so we can...
+
+            // ... obtain the expected message length
+            const auto msg_size = pending_msg.message_length();
+            BOTAN_DEBUG_ASSERT(msg_size.has_value());
+
+            // ... (optionally) check that length against the policy
+            const auto max_size = policy.maximum_handshake_message_size();
+            if(max_size > 0 && *msg_size > max_size) {
+               throw TLS_Exception(
+                  Alert::HandshakeFailure,
+                  Botan::fmt("Handshake message is {} bytes, policy maximum is {}", *msg_size, max_size));
+            }
+         }
+      }
+
+      const auto missing_overall = pending_msg.missing_bytes();
+      if(missing_overall.has_value() && *missing_overall > 0) {
+         // Here the header is fully parsed and we can now consume the payload.
+         pending_msg.append_to_payload(slicer.take(std::min(slicer.remaining(), *missing_overall)));
+      }
    }
 
-   m_read_buffer.insert(m_read_buffer.end(), data_from_peer.payload.begin(), data_from_peer.payload.end());
    return CopyDataResult::Consumed;
-}
-
-std::optional<Handshake_Layer::MessageBufferView> Handshake_Layer::next_message_buffer_view(const Policy& policy) {
-   auto buffer_view = fetch_next_message_buffer_view();
-   if(!buffer_view.has_value()) {
-      return std::nullopt;
-   }
-
-   // TODO(Botan4) this is split out due to a GCC 11 ICE, can be inlined
-   verify_handshake_message_size(buffer_view->payload_size(), policy.maximum_handshake_message_size());
-
-   return buffer_view;
 }
 
 std::optional<Handshake_Message_13> Handshake_Layer::next_message(const Policy& policy,
                                                                   Transcript_Hash_State& transcript_hash) {
-   const auto buffer_view = next_message_buffer_view(policy);
-   if(!buffer_view.has_value()) {
+   const auto raw_msg = take_next_message();
+   if(!raw_msg.has_value()) {
       return std::nullopt;
    }
 
-   auto msg = parse_handshake_message(buffer_view->type(), buffer_view->payload(), policy);
+   auto msg = parse_handshake_message(*raw_msg, policy);
 
    // RFC 9846 5.1
    //    Handshake messages MUST NOT span key changes.  Implementations
@@ -119,18 +289,27 @@ std::optional<Handshake_Message_13> Handshake_Layer::next_message(const Policy& 
    // cannot be present in the queue yet, because we can successfully deprotect
    // it only after said key change.)
    if(holds_any_of<Client_Hello_12_Shim, Client_Hello_13, Server_Hello_13, Hello_Retry_Request, Finished_13>(msg) &&
-      !buffer_view->was_final_message_in_queue()) {
+      has_pending_data()) {
       throw TLS_Exception(Alert::UnexpectedMessage, "Unexpected additional handshake data at epoch boundary");
    }
 
-   transcript_hash.update(buffer_view->header(), buffer_view->payload());
+   // The peer just proved that it speaks TLS 1.3 by sending a handshake message
+   // that only exists in TLS 1.3 (or a ServerHello that was parsed as TLS 1.3).
+   if(holds_any_of<Client_Hello_13, Server_Hello_13, Hello_Retry_Request>(msg)) {
+      BOTAN_ASSERT_NOMSG(!has_pending_data());
+      m_peer_speaks_tls13 = true;
+   }
+
+   transcript_hash.update(raw_msg->header, raw_msg->payload);
    return msg;
 }
 
 std::optional<Post_Handshake_Message_13> Handshake_Layer::next_post_handshake_message(
    const Policy& policy, EpochNumber latest_read_epoch_number) {
-   const auto buffer_view = next_message_buffer_view(policy);
-   if(!buffer_view.has_value()) {
+   BOTAN_UNUSED(policy);
+
+   const auto raw_msg = take_next_message();
+   if(!raw_msg.has_value()) {
       return std::nullopt;
    }
 
@@ -154,11 +333,11 @@ std::optional<Post_Handshake_Message_13> Handshake_Layer::next_post_handshake_me
    // Note that we currently enforce this by throwing Invalid_State when the
    // user explicitly requests sending any post-handshake message while a
    // KeyUpdate is pending in DTLS.
-   if(buffer_view->epoch_number().has_value() && buffer_view->epoch_number().value() != latest_read_epoch_number) {
+   if(raw_msg->epoch_number.has_value() && raw_msg->epoch_number.value() != latest_read_epoch_number) {
       throw TLS_Exception(Alert::UnexpectedMessage, "Received a new post-handshake message under an outdated epoch");
    }
 
-   auto msg = parse_post_handshake_message(buffer_view->type(), buffer_view->payload());
+   auto msg = parse_post_handshake_message(*raw_msg);
 
    // RFC 9846 5.1
    //    Handshake messages MUST NOT span key changes.  Implementations
@@ -174,110 +353,62 @@ std::optional<Post_Handshake_Message_13> Handshake_Layer::next_post_handshake_me
    // ordering enforced by the check above. RFC 9147 does not strictly prohibit
    // protecting post-handshake messages with an epoch that is about to be
    // retired by a pending KeyUpdate.
-   if(std::holds_alternative<Key_Update>(msg) && !buffer_view->was_final_message_in_queue()) {
+   if(std::holds_alternative<Key_Update>(msg) && has_pending_data()) {
       throw TLS_Exception(Alert::UnexpectedMessage, "Unexpected additional post-handshake data at epoch boundary");
    }
 
    return msg;
 }
 
-std::optional<Handshake_Layer::MessageBufferView> TLS_Handshake_Layer::fetch_next_message_buffer_view() {
-   BOTAN_ASSERT_NOMSG(m_read_offset <= m_read_buffer.size());
-
-   BufferSlicer bs(m_read_buffer);
-   bs.skip(m_read_offset);
-
-   if(bs.empty()) {
-      return std::nullopt;
-   }
-
-   // Validate the message type early, before committing to wait for a
-   // potentially bogus and huge message body.
-   if(!read_handshake_message_type(bs.peek_byte()).has_value()) {
-      throw TLS_Exception(AlertType::UnexpectedMessage, "Unknown handshake message received");
-   }
-
-   if(bs.remaining() < HEADER_LENGTH) {
-      return std::nullopt;
-   }
-
-   const auto header = typecast_copy<HandshakeProtocolHeader>(bs.take<HEADER_LENGTH>());
-   const auto msg_len = load_be<uint32_t>(header) & 0x00FFFFFF;
-
-   if(bs.remaining() < msg_len) {
-      return std::nullopt;
-   }
-
-   const bool is_final_message = bs.remaining() == msg_len;
-   return MessageBufferView(std::nullopt,  // TLS 1.3 does not have epochs
-                            is_final_message,
-                            header,
-                            bs.take<SerializedHandshakeMessage>(msg_len),
-                            [this, msg_len]() {
-                               m_read_offset += HEADER_LENGTH + msg_len;
-                               BOTAN_ASSERT_NOMSG(m_read_offset <= m_read_buffer.size());
-
-                               if(m_read_offset == m_read_buffer.size()) {
-                                  m_read_buffer.clear();
-                                  m_read_offset = 0;
-                               }
-                            });
+bool TLS_Handshake_Layer::has_pending_data() const {
+   return !m_pending_messages.empty();
 }
 
-Handshake_Layer::MessageBufferView::MessageBufferView(std::optional<EpochNumber> epoch_number,
-                                                      bool final_message,
-                                                      HandshakeProtocolHeader header,
-                                                      StrongSpan<const SerializedHandshakeMessage> payload,
-                                                      CleanupFunction cleanup) :
-      m_epoch_number(epoch_number),
-      m_final_message(final_message),
-      m_header(header),
-      m_payload(payload),
-      m_cleanup(std::move(cleanup)) {
-   if(auto type = read_handshake_message_type(header[0])) {
-      m_type = *type;
-   } else {
-      throw TLS_Exception(AlertType::UnexpectedMessage, "Unknown handshake message received");
+std::optional<Handshake_Layer::Message> TLS_Handshake_Layer::take_next_message() {
+   if(m_pending_messages.empty() || !m_pending_messages.front().completed()) {
+      return std::nullopt;
    }
+
+   auto msg = m_pending_messages.front().take();
+   m_pending_messages.erase(m_pending_messages.begin());
+
+   return msg;
 }
 
-Handshake_Message_13 Handshake_Layer::parse_handshake_message(Handshake_Type type,
-                                                              std::span<const uint8_t> msg,
-                                                              const Policy& policy) const {
-   switch(type) {
+Handshake_Message_13 Handshake_Layer::parse_handshake_message(const Message& message, const Policy& policy) const {
+   switch(message.type) {
       // Client Hello and Server Hello messages are ambiguous. Both may come
       // from non-TLS 1.3 peers. Hence, their parsing is somewhat different.
       case Handshake_Type::ClientHello:
          // ... might be TLS 1.2 Client Hello or TLS 1.3 Client Hello
-         return generalize_to<Handshake_Message_13>(Client_Hello_13::parse(msg, tls_flavor()));
+         return generalize_to<Handshake_Message_13>(Client_Hello_13::parse(message.payload, tls_flavor()));
       case Handshake_Type::ServerHello:
          // ... might be TLS 1.2 Server Hello or TLS 1.3 Server Hello or
          // a TLS 1.3 Hello Retry Request disguising as a Server Hello
-         return generalize_to<Handshake_Message_13>(Server_Hello_13::parse(msg, tls_flavor()));
+         return generalize_to<Handshake_Message_13>(Server_Hello_13::parse(message.payload, tls_flavor()));
       // case Handshake_Type::EndOfEarlyData:
       //    return End_Of_Early_Data(msg);
       case Handshake_Type::EncryptedExtensions:
-         return Encrypted_Extensions(msg);
+         return Encrypted_Extensions(message.payload);
       case Handshake_Type::Certificate:
-         return Certificate_13(msg, policy, peer(), certificate_type());
+         return Certificate_13(message.payload, policy, peer(), certificate_type());
       case Handshake_Type::CertificateRequest:
-         return Certificate_Request_13(msg, peer());
+         return Certificate_Request_13(message.payload, peer());
       case Handshake_Type::CertificateVerify:
-         return Certificate_Verify_13(msg, peer());
+         return Certificate_Verify_13(message.payload, peer());
       case Handshake_Type::Finished:
-         return Finished_13({msg.begin(), msg.end()});
+         return Finished_13(message.payload.get());
       default:
          throw TLS_Exception(AlertType::UnexpectedMessage, "Unexpected handshake message received");
    }
 }
 
-Post_Handshake_Message_13 Handshake_Layer::parse_post_handshake_message(Handshake_Type type,
-                                                                        std::span<const uint8_t> msg) const {
-   switch(type) {
+Post_Handshake_Message_13 Handshake_Layer::parse_post_handshake_message(const Message& message) const {
+   switch(message.type) {
       case Handshake_Type::NewSessionTicket:
-         return New_Session_Ticket_13(msg, peer());
+         return New_Session_Ticket_13(message.payload, peer());
       case Handshake_Type::KeyUpdate:
-         return Key_Update(msg);
+         return Key_Update(message.payload);
       default:
          throw TLS_Exception(AlertType::UnexpectedMessage, "Unexpected post-handshake message received");
    }

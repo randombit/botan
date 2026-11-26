@@ -361,10 +361,6 @@ void Client_Impl_13::handle(const Server_Hello_13& sh) {
    } else {
       // We just received a TLS 1.3 ServerHello without ever receiving a
       // HelloRetryRequest. Now, we can be sure that our peer uses TLS 1.3.
-      //
-      // This is a no-op for TLS; in DTLS this notification drives the
-      // retransmission state once the peer has committed to the protocol
-      // version (see Channel_IO::notify_protocol_version_committed()).
       m_channel_io->notify_protocol_version_committed();
    }
 

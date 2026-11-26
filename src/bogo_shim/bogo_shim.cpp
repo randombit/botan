@@ -368,6 +368,8 @@ std::string map_to_bogo_error(const std::string& e, std::string_view test_name) 
        ":UNEXPECTED_MESSAGE:"},
       {"Unexpected state transition in handshake got a finished expected certificate_verify seen server_hello+certificate+encrypted_extensions",
        ":BAD_HELLO_REQUEST:"},
+      {"Unexpected TLS 1.2 message received", ":UNEXPECTED_MESSAGE:"},
+      {"Unexpected handshake message received", ":UNEXPECTED_MESSAGE:"},
       {"Unknown TLS handshake message type 43", ":UNEXPECTED_MESSAGE:"},
       {"Unknown TLS handshake message type 44", ":UNEXPECTED_MESSAGE:"},
       {"Unknown TLS handshake message type 45", ":UNEXPECTED_MESSAGE:"},
