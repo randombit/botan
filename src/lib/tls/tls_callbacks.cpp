@@ -96,6 +96,39 @@ bool TLS::Callbacks::tls_should_persist_resumption_information(const Session& se
    return session.lifetime_hint().count() > 0 || session.version().is_pre_tls_13();
 }
 
+namespace {
+
+/*
+* The path validation policy which follows from a TLS policy
+*/
+class Cert_Chain_Validation_Policy final : public Path_Validation_Policy {
+   public:
+      explicit Cert_Chain_Validation_Policy(const TLS::Policy& policy) : m_policy(policy) {}
+
+      bool key_is_acceptable(const Public_Key& key) const override {
+         if(key.estimated_strength() < m_policy.minimum_signature_strength()) {
+            return false;
+         }
+
+         const std::string algo_name = key.algo_name();
+
+         if(algo_name == "RSA") {
+            return key.key_length() >= m_policy.minimum_rsa_bits();
+         } else if(algo_name == "ECDSA") {
+            return key.key_length() >= m_policy.minimum_ecdsa_group_size();
+         } else {
+            return true;
+         }
+      }
+
+      bool require_revocation_information() const override { return m_policy.require_cert_revocation_info(); }
+
+   private:
+      const TLS::Policy& m_policy;
+};
+
+}  // namespace
+
 void TLS::Callbacks::tls_verify_cert_chain(const std::vector<X509_Certificate>& cert_chain,
                                            const std::vector<std::optional<OCSP::Response>>& ocsp_responses,
                                            const std::vector<Certificate_Store*>& trusted_roots,
@@ -106,8 +139,7 @@ void TLS::Callbacks::tls_verify_cert_chain(const std::vector<X509_Certificate>& 
       throw Invalid_Argument("Certificate chain was empty");
    }
 
-   const Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
-                                                   policy.minimum_signature_strength());
+   const Cert_Chain_Validation_Policy restrictions(policy);
 
    /*
    Hostname is always provided in order to allow host-specific logic if required,

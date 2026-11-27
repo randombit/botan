@@ -345,7 +345,7 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
                                              std::chrono::system_clock::time_point ref_time,
                                              std::string_view hostname,
                                              Usage_Type usage,
-                                             const Path_Validation_Restrictions& restrictions) {
+                                             const Path_Validation_Policy& restrictions) {
    if(cert_path.empty()) {
       throw Invalid_Argument("PKIX::check_chain cert_path empty");
    }
@@ -385,7 +385,7 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
          }
 
          if(issuer_key) {
-            if(issuer_key->estimated_strength() < restrictions.minimum_key_strength()) {
+            if(!restrictions.key_is_acceptable(*issuer_key)) {
                status.insert(Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK);
             }
 
@@ -397,9 +397,8 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
                // Signature is valid, check if hash used was acceptable
                const std::string hash_used_for_signature = sig_status.second;
                BOTAN_ASSERT_NOMSG(!hash_used_for_signature.empty());
-               const auto& trusted_hashes = restrictions.trusted_hashes();
 
-               if(!trusted_hashes.empty() && !trusted_hashes.contains(hash_used_for_signature)) {
+               if(!restrictions.hash_is_trusted(hash_used_for_signature)) {
                   status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
                }
             }
@@ -560,12 +559,25 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
 
 namespace {
 
+// Whether a lack of revocation information is an error
+enum class Missing_Revocation_Info : uint8_t { PerPolicy, Accepted };
+
+Path_Validation_Result validate_path(const std::vector<X509_Certificate>& end_certs,
+                                     const Path_Validation_Policy& restrictions,
+                                     const std::vector<Certificate_Store*>& trusted_roots,
+                                     std::string_view hostname,
+                                     Usage_Type usage,
+                                     std::chrono::system_clock::time_point ref_time,
+                                     std::chrono::milliseconds ocsp_timeout,
+                                     const std::vector<std::optional<OCSP::Response>>& ocsp_resp,
+                                     Missing_Revocation_Info missing_revocation_info);
+
 Certificate_Status_Code verify_ocsp_signing_cert(const X509_Certificate& signing_cert,
                                                  const X509_Certificate& ca,
                                                  const std::vector<X509_Certificate>& extra_certs,
                                                  const std::vector<Certificate_Store*>& certstores,
                                                  std::chrono::system_clock::time_point ref_time,
-                                                 const Path_Validation_Restrictions& restrictions) {
+                                                 const Path_Validation_Policy& restrictions) {
    // RFC 6960 4.2.2.2
    //    [Applications] MUST reject the response if the certificate
    //    required to validate the signature on the response does not
@@ -646,24 +658,16 @@ Certificate_Status_Code verify_ocsp_signing_cert(const X509_Certificate& signing
    // which is not an option for some applications (e.g. that require a proxy
    // for external HTTP requests).
    const auto ocsp_timeout = std::chrono::milliseconds::zero();
-   const auto relaxed_restrictions =
-      Path_Validation_Restrictions(false /* do not enforce revocation data */,
-                                   restrictions.minimum_key_strength(),
-                                   false /* OCSP is not available, so don't try for intermediates */,
-                                   restrictions.trusted_hashes(),
-                                   /* max_ocsp_age */ std::chrono::seconds(0),
-                                   /* trusted_responders */ {},
-                                   restrictions.ignore_trusted_root_time_range(),
-                                   restrictions.require_self_signed_trust_anchors(),
-                                   restrictions.accept_ocsp_softfail());
 
-   const auto validation_result = x509_path_validate(concat(std::vector{signing_cert}, extra_certs),
-                                                     relaxed_restrictions,
-                                                     certstores,
-                                                     {} /* hostname */,
-                                                     Botan::Usage_Type::OCSP_RESPONDER,
-                                                     ref_time,
-                                                     ocsp_timeout);
+   const auto validation_result = validate_path(concat(std::vector{signing_cert}, extra_certs),
+                                                restrictions,
+                                                certstores,
+                                                {} /* hostname */,
+                                                Botan::Usage_Type::OCSP_RESPONDER,
+                                                ref_time,
+                                                ocsp_timeout,
+                                                {} /* OCSP is not available */,
+                                                Missing_Revocation_Info::Accepted /* do not enforce revocation data */);
 
    return validation_result.result();
 }
@@ -674,7 +678,7 @@ std::set<Certificate_Status_Code> evaluate_ocsp_response(const OCSP::Response& o
                                                          const std::vector<X509_Certificate>& cert_path,
                                                          const std::vector<Certificate_Store*>& certstores,
                                                          std::chrono::system_clock::time_point ref_time,
-                                                         const Path_Validation_Restrictions& restrictions) {
+                                                         const Path_Validation_Policy& restrictions) {
    // Handle softfail conditions (eg. OCSP unavailable)
    if(auto dummy_status = ocsp_response.dummy_status()) {
       return {dummy_status.value()};
@@ -709,7 +713,7 @@ CertificatePathStatusCodes PKIX::check_ocsp(const std::vector<X509_Certificate>&
                                             const std::vector<std::optional<OCSP::Response>>& ocsp_responses,
                                             const std::vector<Certificate_Store*>& certstores,
                                             std::chrono::system_clock::time_point ref_time,
-                                            const Path_Validation_Restrictions& restrictions) {
+                                            const Path_Validation_Policy& restrictions) {
    if(cert_path.empty()) {
       throw Invalid_Argument("PKIX::check_ocsp cert_path empty");
    }
@@ -741,13 +745,13 @@ CertificatePathStatusCodes PKIX::check_ocsp(const std::vector<X509_Certificate>&
 CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
                                            const std::vector<std::optional<X509_CRL>>& crls,
                                            std::chrono::system_clock::time_point ref_time) {
-   return PKIX::check_crl(cert_path, crls, ref_time, Path_Validation_Restrictions());
+   return PKIX::check_crl(cert_path, crls, ref_time, Path_Validation_Policy());
 }
 
 CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
                                            const std::vector<std::optional<X509_CRL>>& crls,
                                            std::chrono::system_clock::time_point ref_time,
-                                           const Path_Validation_Restrictions& restrictions) {
+                                           const Path_Validation_Policy& restrictions) {
    if(cert_path.empty()) {
       throw Invalid_Argument("PKIX::check_crl cert_path empty");
    }
@@ -790,11 +794,10 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
 
          const auto ca_key = ca.subject_public_key();
          const auto sig_status = crls[i]->verify_signature(*ca_key);
-         const auto& trusted_hashes = restrictions.trusted_hashes();
 
          if(sig_status.first != Certificate_Status_Code::VERIFIED) {
             status.insert(Certificate_Status_Code::CRL_BAD_SIGNATURE);
-         } else if(!trusted_hashes.empty() && !trusted_hashes.contains(sig_status.second)) {
+         } else if(!restrictions.hash_is_trusted(sig_status.second)) {
             status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
          } else {
             /*
@@ -839,13 +842,13 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
 CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
                                            const std::vector<Certificate_Store*>& certstores,
                                            std::chrono::system_clock::time_point ref_time) {
-   return PKIX::check_crl(cert_path, certstores, ref_time, Path_Validation_Restrictions());
+   return PKIX::check_crl(cert_path, certstores, ref_time, Path_Validation_Policy());
 }
 
 CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
                                            const std::vector<Certificate_Store*>& certstores,
                                            std::chrono::system_clock::time_point ref_time,
-                                           const Path_Validation_Restrictions& restrictions) {
+                                           const Path_Validation_Policy& restrictions) {
    if(cert_path.empty()) {
       throw Invalid_Argument("PKIX::check_crl cert_path empty");
    }
@@ -877,7 +880,7 @@ CertificatePathStatusCodes PKIX::check_ocsp_online(const std::vector<X509_Certif
                                                    const std::vector<Certificate_Store*>& trusted_certstores,
                                                    std::chrono::system_clock::time_point ref_time,
                                                    std::chrono::milliseconds timeout,
-                                                   const Path_Validation_Restrictions& restrictions) {
+                                                   const Path_Validation_Policy& restrictions) {
    if(cert_path.empty()) {
       throw Invalid_Argument("PKIX::check_ocsp_online cert_path empty");
    }
@@ -958,7 +961,7 @@ CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certifi
                                                   Certificate_Store_In_Memory* crl_store,
                                                   std::chrono::system_clock::time_point ref_time,
                                                   std::chrono::milliseconds timeout) {
-   return PKIX::check_crl_online(cert_path, certstores, crl_store, ref_time, timeout, Path_Validation_Restrictions());
+   return PKIX::check_crl_online(cert_path, certstores, crl_store, ref_time, timeout, Path_Validation_Policy());
 }
 
 CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certificate>& cert_path,
@@ -966,7 +969,7 @@ CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certifi
                                                   Certificate_Store_In_Memory* crl_store,
                                                   std::chrono::system_clock::time_point ref_time,
                                                   std::chrono::milliseconds timeout,
-                                                  const Path_Validation_Restrictions& restrictions) {
+                                                  const Path_Validation_Policy& restrictions) {
    if(cert_path.empty()) {
       throw Invalid_Argument("PKIX::check_crl_online cert_path empty");
    }
@@ -1127,7 +1130,7 @@ Certificate_Status_Code PKIX::build_all_certificate_paths(std::vector<std::vecto
 void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
                                    const CertificatePathStatusCodes& crl_status,
                                    const CertificatePathStatusCodes& ocsp_status,
-                                   const Path_Validation_Restrictions& restrictions) {
+                                   const Path_Validation_Policy& restrictions) {
    if(chain_status.empty()) {
       throw Invalid_Argument("PKIX::merge_revocation_status chain_status was empty");
    }
@@ -1198,14 +1201,17 @@ Certificate_Status_Code PKIX::overall_status(const CertificatePathStatusCodes& c
    return overall_status;
 }
 
-Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& end_certs,
-                                          const Path_Validation_Restrictions& restrictions,
-                                          const std::vector<Certificate_Store*>& trusted_roots,
-                                          std::string_view hostname,
-                                          Usage_Type usage,
-                                          std::chrono::system_clock::time_point ref_time,
-                                          std::chrono::milliseconds ocsp_timeout,
-                                          const std::vector<std::optional<OCSP::Response>>& ocsp_resp) {
+namespace {
+
+Path_Validation_Result validate_path(const std::vector<X509_Certificate>& end_certs,
+                                     const Path_Validation_Policy& restrictions,
+                                     const std::vector<Certificate_Store*>& trusted_roots,
+                                     std::string_view hostname,
+                                     Usage_Type usage,
+                                     std::chrono::system_clock::time_point ref_time,
+                                     std::chrono::milliseconds ocsp_timeout,
+                                     const std::vector<std::optional<OCSP::Response>>& ocsp_resp,
+                                     Missing_Revocation_Info missing_revocation_info) {
    if(end_certs.empty()) {
       throw Invalid_Argument("x509_path_validate called with no subjects");
    }
@@ -1290,9 +1296,11 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
          PKIX::merge_revocation_status(status, crl_status, ocsp_status, restrictions);
 
          // merge_revocation_status flags NO_REVOCATION_DATA when require_revocation
-         // is set; clear it for certs where RFC 9608 Section 4 says to skip the check.
+         // is set; clear it for certs where RFC 9608 Section 4 says to skip the check,
+         // or if the caller accepts missing revocation information.
+         const bool missing_accepted = (missing_revocation_info == Missing_Revocation_Info::Accepted);
          for(size_t i = 0; i + 1 < cert_path->size() && i < status.size(); ++i) {
-            if((*cert_path)[i].skip_revocation_check()) {
+            if(missing_accepted || (*cert_path)[i].skip_revocation_check()) {
                status[i].erase(Certificate_Status_Code::NO_REVOCATION_DATA);
             }
          }
@@ -1317,8 +1325,29 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
    }
 }
 
+}  // namespace
+
+Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& end_certs,
+                                          const Path_Validation_Policy& restrictions,
+                                          const std::vector<Certificate_Store*>& trusted_roots,
+                                          std::string_view hostname,
+                                          Usage_Type usage,
+                                          std::chrono::system_clock::time_point ref_time,
+                                          std::chrono::milliseconds ocsp_timeout,
+                                          const std::vector<std::optional<OCSP::Response>>& ocsp_resp) {
+   return validate_path(end_certs,
+                        restrictions,
+                        trusted_roots,
+                        hostname,
+                        usage,
+                        ref_time,
+                        ocsp_timeout,
+                        ocsp_resp,
+                        Missing_Revocation_Info::PerPolicy);
+}
+
 Path_Validation_Result x509_path_validate(const X509_Certificate& end_cert,
-                                          const Path_Validation_Restrictions& restrictions,
+                                          const Path_Validation_Policy& restrictions,
                                           const std::vector<Certificate_Store*>& trusted_roots,
                                           std::string_view hostname,
                                           Usage_Type usage,
@@ -1331,7 +1360,7 @@ Path_Validation_Result x509_path_validate(const X509_Certificate& end_cert,
 }
 
 Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& end_certs,
-                                          const Path_Validation_Restrictions& restrictions,
+                                          const Path_Validation_Policy& restrictions,
                                           const Certificate_Store& store,
                                           std::string_view hostname,
                                           Usage_Type usage,
@@ -1345,7 +1374,7 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
 }
 
 Path_Validation_Result x509_path_validate(const X509_Certificate& end_cert,
-                                          const Path_Validation_Restrictions& restrictions,
+                                          const Path_Validation_Policy& restrictions,
                                           const Certificate_Store& store,
                                           std::string_view hostname,
                                           Usage_Type usage,
@@ -1360,6 +1389,35 @@ Path_Validation_Result x509_path_validate(const X509_Certificate& end_cert,
 
    return x509_path_validate(certs, restrictions, trusted_roots, hostname, usage, when, ocsp_timeout, ocsp_resp);
 }
+
+namespace {
+
+// TODO(Botan4) when Path_Validation_Restrictions::trusted_hashes is removed
+// we can drop m_trusted_hashes and replace this with simple comparisons in hash_is_trusted
+constexpr std::string_view DefaultTrustedHashes[] = {
+   "SHA-224",
+   "SHA-256",
+   "SHA-384",
+   "SHA-512",
+   "SHAKE-256(512)",  // Dilithium/ML-DSA
+   "SHAKE-256(912)",  // Ed448
+
+   // SLH-DSA-SHAKE reports the H_msg output length, which depends on the parameter set
+   "SHAKE-256(240)",  // SLH-DSA-SHAKE-128s
+   "SHAKE-256(272)",  // SLH-DSA-SHAKE-128f
+   "SHAKE-256(312)",  // SLH-DSA-SHAKE-192s
+   "SHAKE-256(336)",  // SLH-DSA-SHAKE-192f
+   "SHAKE-256(376)",  // SLH-DSA-SHAKE-256s
+   "SHAKE-256(392)",  // SLH-DSA-SHAKE-256f
+
+   // Hashes used by HSS-LMS and XMSS parameter sets
+   "SHAKE-128(256)",          // XMSS-SHAKE_*_256
+   "SHAKE-256(192)",          // HSS-LMS and XMSS with SHAKE-256/192
+   "SHAKE-256(256)",          // HSS-LMS and XMSS with SHAKE-256/256
+   "Truncated(SHA-256,192)",  // HSS-LMS and XMSS with SHA-256/192
+};
+
+}  // namespace
 
 Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
                                                            size_t key_strength,
@@ -1381,26 +1439,177 @@ Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
       m_trusted_hashes.insert("SHA-1");
    }
 
-   m_trusted_hashes.insert("SHA-224");
-   m_trusted_hashes.insert("SHA-256");
-   m_trusted_hashes.insert("SHA-384");
-   m_trusted_hashes.insert("SHA-512");
-   m_trusted_hashes.insert("SHAKE-256(512)");  // Dilithium/ML-DSA
-   m_trusted_hashes.insert("SHAKE-256(912)");  // Ed448
+   for(const auto hash : DefaultTrustedHashes) {
+      m_trusted_hashes.emplace(hash);
+   }
+}
 
-   // SLH-DSA-SHAKE reports the H_msg output length, which depends on the parameter set
-   m_trusted_hashes.insert("SHAKE-256(240)");  // SLH-DSA-SHAKE-128s
-   m_trusted_hashes.insert("SHAKE-256(272)");  // SLH-DSA-SHAKE-128f
-   m_trusted_hashes.insert("SHAKE-256(312)");  // SLH-DSA-SHAKE-192s
-   m_trusted_hashes.insert("SHAKE-256(336)");  // SLH-DSA-SHAKE-192f
-   m_trusted_hashes.insert("SHAKE-256(376)");  // SLH-DSA-SHAKE-256s
-   m_trusted_hashes.insert("SHAKE-256(392)");  // SLH-DSA-SHAKE-256f
+bool Path_Validation_Restrictions::hash_is_trusted(std::string_view hash_name) const {
+   return m_trusted_hashes.empty() || m_trusted_hashes.contains(std::string(hash_name));
+}
 
-   // Hashes used by HSS-LMS and XMSS parameter sets
-   m_trusted_hashes.insert("SHAKE-128(256)");          // XMSS-SHAKE_*_256
-   m_trusted_hashes.insert("SHAKE-256(192)");          // HSS-LMS and XMSS with SHAKE-256/192
-   m_trusted_hashes.insert("SHAKE-256(256)");          // HSS-LMS and XMSS with SHAKE-256/256
-   m_trusted_hashes.insert("Truncated(SHA-256,192)");  // HSS-LMS and XMSS with SHA-256/192
+bool Path_Validation_Restrictions::key_is_acceptable(const Public_Key& key) const {
+   return key.estimated_strength() >= m_minimum_key_strength;
+}
+
+bool Path_Validation_Policy::hash_is_trusted(std::string_view hash_name) const {
+   return std::find(std::begin(DefaultTrustedHashes), std::end(DefaultTrustedHashes), hash_name) !=
+          std::end(DefaultTrustedHashes);
+}
+
+bool Path_Validation_Policy::key_is_acceptable(const Public_Key& key) const {
+   return key.estimated_strength() >= 110;
+}
+
+bool Path_Validation_Policy::require_revocation_information() const {
+   return false;
+}
+
+bool Path_Validation_Policy::ocsp_all_intermediates() const {
+   return false;
+}
+
+std::chrono::seconds Path_Validation_Policy::max_ocsp_age() const {
+   return std::chrono::hours(24 * 7);
+}
+
+const Certificate_Store* Path_Validation_Policy::trusted_ocsp_responders() const {
+   return nullptr;
+}
+
+bool Path_Validation_Policy::ignore_trusted_root_time_range() const {
+   return false;
+}
+
+bool Path_Validation_Policy::require_self_signed_trust_anchors() const {
+   return true;
+}
+
+bool Path_Validation_Policy::accept_ocsp_softfail() const {
+   return false;
+}
+
+Path_Validation_Options Path_Validation_Options::with_required_revocation_information(bool required) const {
+   auto next = (*this);
+   next.m_require_revocation_information = required;
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_ocsp_for_all_intermediates(bool enabled) const {
+   auto next = (*this);
+   next.m_ocsp_all_intermediates = enabled;
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_max_ocsp_age(std::chrono::seconds max_age) const {
+   auto next = (*this);
+   next.m_max_ocsp_age = max_age;
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_trusted_ocsp_responders(
+   std::shared_ptr<const Certificate_Store> responders) const {
+   auto next = (*this);
+   next.m_trusted_ocsp_responders = std::move(responders);
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_accepted_ocsp_softfail(bool accepted) const {
+   auto next = (*this);
+   next.m_accept_ocsp_softfail = accepted;
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_ignored_trusted_root_time_range(bool ignored) const {
+   auto next = (*this);
+   next.m_ignore_trusted_root_time_range = ignored;
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_non_self_signed_trust_anchors(bool allowed) const {
+   auto next = (*this);
+   next.m_require_self_signed_trust_anchors = !allowed;
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_minimum_key_strength(size_t strength) const {
+   auto next = (*this);
+   next.m_minimum_key_strength = strength;
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_accepted_key_algorithm(std::string_view algo,
+                                                                             size_t minimum_key_bits) const {
+   auto next = (*this);
+   next.m_key_algorithms.insert_or_assign(std::string(algo), minimum_key_bits);
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_forbidden_key_algorithm(std::string_view algo) const {
+   auto next = (*this);
+   next.m_key_algorithms.insert_or_assign(std::string(algo), std::nullopt);
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_trusted_hash(std::string_view hash_name) const {
+   auto next = (*this);
+   next.m_hashes.insert_or_assign(std::string(hash_name), true);
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_untrusted_hash(std::string_view hash_name) const {
+   auto next = (*this);
+   next.m_hashes.insert_or_assign(std::string(hash_name), false);
+   return next;
+}
+
+bool Path_Validation_Options::hash_is_trusted(std::string_view hash_name) const {
+   if(const auto i = m_hashes.find(hash_name); i != m_hashes.end()) {
+      return i->second;
+   }
+
+   return Path_Validation_Policy::hash_is_trusted(hash_name);
+}
+
+bool Path_Validation_Options::key_is_acceptable(const Public_Key& key) const {
+   if(const auto i = m_key_algorithms.find(key.algo_name()); i != m_key_algorithms.end()) {
+      const auto& minimum_key_bits = i->second;
+      return minimum_key_bits.has_value() && key.key_length() >= minimum_key_bits.value();
+   }
+
+   if(m_minimum_key_strength.has_value()) {
+      return key.estimated_strength() >= m_minimum_key_strength.value();
+   }
+
+   return Path_Validation_Policy::key_is_acceptable(key);
+}
+
+bool Path_Validation_Options::require_revocation_information() const {
+   return m_require_revocation_information.value_or(Path_Validation_Policy::require_revocation_information());
+}
+
+bool Path_Validation_Options::ocsp_all_intermediates() const {
+   return m_ocsp_all_intermediates.value_or(Path_Validation_Policy::ocsp_all_intermediates());
+}
+
+std::chrono::seconds Path_Validation_Options::max_ocsp_age() const {
+   return m_max_ocsp_age.value_or(Path_Validation_Policy::max_ocsp_age());
+}
+
+const Certificate_Store* Path_Validation_Options::trusted_ocsp_responders() const {
+   return m_trusted_ocsp_responders.get();
+}
+
+bool Path_Validation_Options::ignore_trusted_root_time_range() const {
+   return m_ignore_trusted_root_time_range.value_or(Path_Validation_Policy::ignore_trusted_root_time_range());
+}
+
+bool Path_Validation_Options::require_self_signed_trust_anchors() const {
+   return m_require_self_signed_trust_anchors.value_or(Path_Validation_Policy::require_self_signed_trust_anchors());
+}
+
+bool Path_Validation_Options::accept_ocsp_softfail() const {
+   return m_accept_ocsp_softfail.value_or(Path_Validation_Policy::accept_ocsp_softfail());
 }
 
 namespace {

@@ -547,13 +547,13 @@ bool Response::is_issued_by(const X509_Certificate& candidate) const {
 }
 
 Certificate_Status_Code Response::verify_signature(const X509_Certificate& issuer) const {
-   const Path_Validation_Restrictions restrictions;
+   const Path_Validation_Policy restrictions;
 
    return this->verify_signature(issuer, restrictions);
 }
 
 Certificate_Status_Code Response::verify_signature(const X509_Certificate& issuer,
-                                                   const Path_Validation_Restrictions& restrictions) const {
+                                                   const Path_Validation_Policy& restrictions) const {
    if(m_dummy_response_status) {
       return m_dummy_response_status.value();
    }
@@ -582,12 +582,11 @@ Certificate_Status_Code Response::verify_signature(const X509_Certificate& issue
          return Certificate_Status_Code::UNKNOWN_CRITICAL_EXTENSION;
       }
 
-      const auto& trusted_hashes = restrictions.trusted_hashes();
-      if(!trusted_hashes.empty() && !trusted_hashes.contains(verifier.hash_function())) {
+      if(!restrictions.hash_is_trusted(verifier.hash_function())) {
          return Certificate_Status_Code::UNTRUSTED_HASH;
       }
 
-      if(pub_key->estimated_strength() < restrictions.minimum_key_strength()) {
+      if(!restrictions.key_is_acceptable(*pub_key)) {
          return Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK;
       }
 

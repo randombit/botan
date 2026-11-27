@@ -64,14 +64,10 @@ class Callbacks : public Botan::TLS::Callbacks {
 
          // As a diagnostic tool we want to attempt OCSP but still connect if
          // the responder was unavailable or the certs have no OCSP URL
-         const Botan::Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
-                                                                policy.minimum_signature_strength(),
-                                                                /* ocsp_all_intermediates */ false,
-                                                                std::chrono::hours(24 * 7),
-                                                                /* trusted_ocsp_responders */ nullptr,
-                                                                /* ignore_trusted_root_time_range */ false,
-                                                                /* require_self_signed_trust_anchors */ true,
-                                                                /* accept_ocsp_softfail */ true);
+         const auto restrictions = Botan::Path_Validation_Options()
+                                      .with_required_revocation_information(policy.require_cert_revocation_info())
+                                      .with_minimum_key_strength(policy.minimum_signature_strength())
+                                      .with_accepted_ocsp_softfail();
 
          const auto ocsp_timeout = std::chrono::milliseconds(1000);
 

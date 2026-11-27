@@ -97,9 +97,14 @@ class BOTAN_PUBLIC_API(2, 0) Policy /* NOLINT(*-special-member-functions) */ {
       /**
       * The minimum signature strength we will accept
       *
-      * Returning 80 allows RSA 1024 and SHA-1. Values larger than 80 disable
-      * SHA-1 support. Returning 110 allows RSA 2048. Return 128 to force ECC
-      * (P-256) or large (~3000 bit) RSA keys.
+      * Returning 80 allows RSA 1024. Returning 110 allows RSA 2048. Return 128
+      * to force ECC (P-256) or large (~3000 bit) RSA keys.
+      *
+      * RSA and ECDSA keys must also satisfy minimum_rsa_bits() and
+      * minimum_ecdsa_group_size() respectively.
+      *
+      * SHA-1 signatures in a certificate chain are not accepted, whatever
+      * value is returned here.
       *
       * Default is 110
       */
@@ -307,6 +312,9 @@ class BOTAN_PUBLIC_API(2, 0) Policy /* NOLINT(*-special-member-functions) */ {
       * client will accept.
       * This policy is currently only enforced on the server by the client.
       *
+      * This also applies to any ECDSA key which signed a certificate in
+      * the peer's certificate chain.
+      *
       * Default: 256
       */
       virtual size_t minimum_ecdsa_group_size() const;
@@ -325,9 +333,8 @@ class BOTAN_PUBLIC_API(2, 0) Policy /* NOLINT(*-special-member-functions) */ {
       * Return the minimum bit size we're willing to accept for RSA
       * key exchange or server signatures.
       *
-      * It does not place any requirements on the size of any RSA signature(s)
-      * which were used to check the server certificate. This is only
-      * concerned with the server's public key.
+      * This also applies to any RSA key which signed a certificate in
+      * the peer's certificate chain.
       *
       * Default is 2048 which is smallest RSA key size still secure
       * for medium term security.
