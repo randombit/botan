@@ -597,8 +597,9 @@ The result of the validation is returned as a class:
 A ``Path_Validation_Policy`` is passed to the path validator and
 specifies restrictions and options for the validation step. Each
 decision is a virtual function. An application can use the defaults by
-passing a ``Path_Validation_Policy`` as is, or derive from it and
-override just the decisions it wants to change.
+passing a ``Path_Validation_Policy`` as is, set specific options using
+``Path_Validation_Options``, or derive from ``Path_Validation_Policy``
+and override just the decisions it wants to change.
 
 .. cpp:class:: Path_Validation_Policy
 
@@ -661,8 +662,82 @@ override just the decisions it wants to change.
      unavailable are accepted as satisfying revocation requirements.
      Defaults to false.
 
+``Path_Validation_Options`` is a ``Path_Validation_Policy`` which is
+set up in a builder style. Each function returns a new object with one
+setting changed, and anything which is not set follows the defaults
+described above. For example
+
+.. code-block:: cpp
+
+   const auto options = Botan::Path_Validation_Options()
+                           .with_required_revocation_information()
+                           .with_minimum_key_strength(128);
+
+.. cpp:class:: Path_Validation_Options
+
+  .. cpp:function:: Path_Validation_Options with_required_revocation_information(bool required = true) const
+
+     Require revocation information for the end entity certificate.
+
+  .. cpp:function:: Path_Validation_Options with_ocsp_for_all_intermediates(bool enabled = true) const
+
+     Require revocation information for all intermediate CA certificates.
+
+  .. cpp:function:: Path_Validation_Options with_max_ocsp_age(std::chrono::seconds max_age) const
+
+     Set the maximum age of an OCSP response which does not have a
+     next_update field.
+
+  .. cpp:function:: Path_Validation_Options with_trusted_ocsp_responders( \
+                       std::shared_ptr<const Certificate_Store> responders) const
+
+     Trust the certificates in this store to sign OCSP responses.
+
+  .. cpp:function:: Path_Validation_Options with_accepted_ocsp_softfail(bool accepted = true) const
+
+     Accept OCSP soft fail conditions as satisfying revocation
+     requirements. Not recommended.
+
+  .. cpp:function:: Path_Validation_Options with_ignored_trusted_root_time_range(bool ignored = true) const
+
+     Only warn about a trust anchor which is outside of its validity period.
+
+  .. cpp:function:: Path_Validation_Options with_non_self_signed_trust_anchors(bool allowed = true) const
+
+     Allow certificates which do not appear to be self-signed to be
+     used as trust anchors.
+
+  .. cpp:function:: Path_Validation_Options with_minimum_key_strength(size_t strength) const
+
+     Set the minimum estimated strength of the key of a CA or OCSP
+     responder. This applies to any key whose algorithm was not named
+     to ``with_accepted_key_algorithm`` or ``with_forbidden_key_algorithm``.
+
+  .. cpp:function:: Path_Validation_Options with_accepted_key_algorithm( \
+                       std::string_view algo, size_t minimum_key_bits) const
+
+     Accept keys of the named algorithm if they are at least
+     `minimum_key_bits` long. For this algorithm, this takes the place
+     of the minimum key strength. The name is that returned by
+     ``Public_Key::algo_name`` and the length is that returned by
+     ``Public_Key::key_length``, for example the size of the modulus
+     for RSA or of the field for ECDSA.
+
+  .. cpp:function:: Path_Validation_Options with_forbidden_key_algorithm(std::string_view algo) const
+
+     Reject all keys of the named algorithm.
+
+  .. cpp:function:: Path_Validation_Options with_trusted_hash(std::string_view hash_name) const
+
+     Trust a hash function, in addition to the defaults.
+
+  .. cpp:function:: Path_Validation_Options with_untrusted_hash(std::string_view hash_name) const
+
+     Do not trust a hash function, even if it is trusted by default.
+
 ``Path_Validation_Restrictions`` is a ``Path_Validation_Policy`` where
-each choice is fixed when the object is constructed. See ``x509path.h``
+each choice is fixed when the object is constructed. It is deprecated;
+use ``Path_Validation_Options`` instead. See ``x509path.h``
 for the complete list of constructor arguments. The two constructors are:
 
   .. cpp:function:: Path_Validation_Restrictions(bool require_rev, \

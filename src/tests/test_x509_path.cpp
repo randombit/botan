@@ -2575,13 +2575,135 @@ class Path_Validation_Policy_Tests final : public Test {
          return result;
       }
 
+      static Test::Result test_options() {
+         Test::Result result("X509 path validation options");
+
+         const Botan::Path_Validation_Policy defaults;
+         const Botan::Path_Validation_Options options;
+
+         result.test_bool_eq("default require_revocation_information",
+                             options.require_revocation_information(),
+                             defaults.require_revocation_information());
+         result.test_bool_eq(
+            "default ocsp_all_intermediates", options.ocsp_all_intermediates(), defaults.ocsp_all_intermediates());
+         result.test_is_true("default max_ocsp_age", options.max_ocsp_age() == defaults.max_ocsp_age());
+         result.test_is_true("default trusted_ocsp_responders", options.trusted_ocsp_responders() == nullptr);
+         result.test_bool_eq("default ignore_trusted_root_time_range",
+                             options.ignore_trusted_root_time_range(),
+                             defaults.ignore_trusted_root_time_range());
+         result.test_bool_eq("default require_self_signed_trust_anchors",
+                             options.require_self_signed_trust_anchors(),
+                             defaults.require_self_signed_trust_anchors());
+         result.test_bool_eq(
+            "default accept_ocsp_softfail", options.accept_ocsp_softfail(), defaults.accept_ocsp_softfail());
+
+         result.test_is_true("with_required_revocation_information",
+                             options.with_required_revocation_information().require_revocation_information());
+         result.test_is_false("with_required_revocation_information(false)",
+                              options.with_required_revocation_information()
+                                 .with_required_revocation_information(false)
+                                 .require_revocation_information());
+         result.test_is_true("with_ocsp_for_all_intermediates",
+                             options.with_ocsp_for_all_intermediates().ocsp_all_intermediates());
+         result.test_is_true(
+            "with_max_ocsp_age",
+            options.with_max_ocsp_age(std::chrono::minutes(5)).max_ocsp_age() == std::chrono::minutes(5));
+         result.test_is_true("with_accepted_ocsp_softfail",
+                             options.with_accepted_ocsp_softfail().accept_ocsp_softfail());
+         result.test_is_true("with_ignored_trusted_root_time_range",
+                             options.with_ignored_trusted_root_time_range().ignore_trusted_root_time_range());
+         result.test_is_false("with_non_self_signed_trust_anchors",
+                              options.with_non_self_signed_trust_anchors().require_self_signed_trust_anchors());
+
+         const auto responders = std::make_shared<Botan::Certificate_Store_In_Memory>();
+         result.test_is_true(
+            "with_trusted_ocsp_responders",
+            options.with_trusted_ocsp_responders(responders).trusted_ocsp_responders() == responders.get());
+
+         result.test_is_false("The original is not modified", options.require_revocation_information());
+
+         const auto with_sha1 = options.with_trusted_hash("SHA-1");
+         result.test_is_false("SHA-1 is not trusted by default", options.hash_is_trusted("SHA-1"));
+         result.test_is_true("with_trusted_hash", with_sha1.hash_is_trusted("SHA-1"));
+         result.test_is_true("with_trusted_hash keeps the defaults", with_sha1.hash_is_trusted("SHA-256"));
+         result.test_is_false("with_untrusted_hash", options.with_untrusted_hash("SHA-256").hash_is_trusted("SHA-256"));
+         result.test_is_true("with_untrusted_hash keeps the other defaults",
+                             options.with_untrusted_hash("SHA-256").hash_is_trusted("SHA-384"));
+         result.test_is_false("The last setting for a hash is used",
+                              with_sha1.with_untrusted_hash("SHA-1").hash_is_trusted("SHA-1"));
+
+         const Botan::X509_Certificate ca(Test::data_file("x509/crl_hash/ca.pem"));
+         const auto p256 = ca.subject_public_key();
+
+         result.test_is_true("P-256 is accepted by default", options.key_is_acceptable(*p256));
+         result.test_is_false("with_minimum_key_strength",
+                              options.with_minimum_key_strength(192).key_is_acceptable(*p256));
+         result.test_is_true(
+            "with_accepted_key_algorithm takes the place of the strength",
+            options.with_minimum_key_strength(192).with_accepted_key_algorithm("ECDSA", 256).key_is_acceptable(*p256));
+         result.test_is_false("with_accepted_key_algorithm checks the length",
+                              options.with_accepted_key_algorithm("ECDSA", 384).key_is_acceptable(*p256));
+         result.test_is_false("with_forbidden_key_algorithm",
+                              options.with_forbidden_key_algorithm("ECDSA").key_is_acceptable(*p256));
+         result.test_is_true("Other algorithms are not affected",
+                             options.with_forbidden_key_algorithm("RSA").key_is_acceptable(*p256));
+         result.test_is_true("The last setting for an algorithm is used",
+                             options.with_forbidden_key_algorithm("ECDSA")
+                                .with_accepted_key_algorithm("ECDSA", 256)
+                                .key_is_acceptable(*p256));
+
+      #if defined(BOTAN_HAS_RSA)
+         // A 1024 bit RSA key
+         const auto rsa1024 = Botan::X509_Certificate(Test::data_file("x509/nist/root.crt")).subject_public_key();
+         const auto accepting_rsa1024 = options.with_accepted_key_algorithm("RSA", 1024);
+
+         result.test_is_false("1024 bit RSA is rejected by default", options.key_is_acceptable(*rsa1024));
+         result.test_is_true("1024 bit RSA accepted by length", accepting_rsa1024.key_is_acceptable(*rsa1024));
+         result.test_is_false("Accepting a key algorithm does not affect the hashes",
+                              accepting_rsa1024.hash_is_trusted("SHA-1"));
+         result.test_is_false("1024 bit RSA rejected by length",
+                              options.with_accepted_key_algorithm("RSA", 2048).key_is_acceptable(*rsa1024));
+      #endif
+
+         const Botan::X509_Certificate leaf(Test::data_file("x509/crl_hash/leaf.pem"));
+         const auto validation_time = Botan::calendar_point(2027, 1, 1, 0, 0, 0).to_std_timepoint();
+
+         Botan::Certificate_Store_In_Memory trusted;
+         trusted.add_certificate(ca);
+         trusted.add_crl(Botan::X509_CRL(Test::data_file("x509/crl_hash/crl_sha256.pem")));
+
+         const auto validate = [&](const Botan::Path_Validation_Options& opts) {
+            return Botan::x509_path_validate(leaf, opts, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time)
+               .result();
+         };
+
+         result.test_enum_eq("Validation with default options", validate(options), Botan::Certificate_Status_Code::OK);
+         result.test_enum_eq("Validation requiring revocation information",
+                             validate(options.with_required_revocation_information()),
+                             Botan::Certificate_Status_Code::OK);
+         result.test_enum_eq("Validation with a minimum strength above the issuer key",
+                             validate(options.with_minimum_key_strength(192)),
+                             Botan::Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK);
+         result.test_enum_eq("Validation with an accepted key algorithm",
+                             validate(options.with_minimum_key_strength(192).with_accepted_key_algorithm("ECDSA", 256)),
+                             Botan::Certificate_Status_Code::OK);
+         result.test_enum_eq("Validation with a forbidden key algorithm",
+                             validate(options.with_forbidden_key_algorithm("ECDSA")),
+                             Botan::Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK);
+         result.test_enum_eq("Validation with an untrusted hash",
+                             validate(options.with_untrusted_hash("SHA-256")),
+                             Botan::Certificate_Status_Code::UNTRUSTED_HASH);
+
+         return result;
+      }
+
    public:
       std::vector<Test::Result> run() override {
          if(Botan::has_filesystem_impl() == false) {
             return {Test::Result::Note("X509 path validation policy", "Skipping due to missing filesystem access")};
          }
 
-         return {test_defaults(), test_custom_policy()};
+         return {test_defaults(), test_custom_policy(), test_options()};
       }
 };
 

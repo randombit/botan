@@ -13,8 +13,12 @@
 #include <botan/pkix_enums.h>
 #include <botan/x509cert.h>
 #include <chrono>
+#include <map>
+#include <memory>
 #include <optional>
 #include <set>
+#include <string>
+#include <string_view>
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS) && defined(BOTAN_HAS_HTTP_UTIL)
    #define BOTAN_HAS_ONLINE_REVOCATION_CHECKS
@@ -31,14 +35,18 @@ typedef std::vector<std::set<Certificate_Status_Code>> CertificatePathStatusCode
 /**
 * The policy applied during PKIX path validation
 *
-* Each decision can be customized by overriding the relevant function. The
-* defaults are those of a default constructed Path_Validation_Restrictions.
+* Each decision can be customized by overriding the relevant function, or
+* by using Path_Validation_Options. An object of this type applies the
+* default for every decision.
 */
 class BOTAN_PUBLIC_API(3, 15) Path_Validation_Policy /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~Path_Validation_Policy() = default;
 
       /**
+      * The default trusts SHA-2, and the hash functions which are fixed by
+      * the signature scheme for Ed448, ML-DSA, SLH-DSA, XMSS and HSS-LMS
+      *
       * @param hash_name the hash function used for a signature on a
       * certificate, CRL, or OCSP response
       * @return true if signatures using this hash function are accepted
@@ -49,25 +57,27 @@ class BOTAN_PUBLIC_API(3, 15) Path_Validation_Policy /* NOLINT(*-special-member-
       * This is consulted for each key which signed a certificate, CRL or OCSP
       * response. It is not consulted for the key of the end entity certificate.
       *
+      * The default accepts keys with an estimated strength of at least 110 bits
+      *
       * @param key the public key of a CA or OCSP responder
       * @return true if signatures created by this key are accepted
       */
       virtual bool key_is_acceptable(const Public_Key& key) const;
 
       /**
-      * @return whether revocation information is required
+      * @return whether revocation information is required. Default is false
       */
       virtual bool require_revocation_information() const;
 
       /**
       * @return whether all intermediate CAs should also be OCSPed. If false
-      * then only end entity OCSP is required/requested.
+      * then only end entity OCSP is required/requested. Default is false
       */
       virtual bool ocsp_all_intermediates() const;
 
       /**
       * @return maximum age of OCSP responses w/o next_update.
-      * If zero, there is no maximum age
+      * If zero, there is no maximum age. Default is one week
       */
       virtual std::chrono::seconds max_ocsp_age() const;
 
@@ -75,33 +85,151 @@ class BOTAN_PUBLIC_API(3, 15) Path_Validation_Policy /* NOLINT(*-special-member-
       * Certificates in this store are trusted to sign OCSP responses
       * additionally to the CA's responder certificates.
       * @return certificate store containing trusted OCSP responder certs,
-      * or nullptr if there are none
+      * or nullptr if there are none, which is the default
       */
       virtual const Certificate_Store* trusted_ocsp_responders() const;
 
       /**
       * @return true if a trust anchor outside of its validity period
-      * should result in a warning rather than an error
+      * should result in a warning rather than an error. Default is false
       */
       virtual bool ignore_trusted_root_time_range() const;
 
       /**
       * @return true if only certificates which appear to be self-signed
       * are allowed as trust anchors. The self-signature itself is not verified.
+      * Default is true
       */
       virtual bool require_self_signed_trust_anchors() const;
 
       /**
       * @return true if OCSP soft fail conditions (such as a network error)
-      * count as satisfying revocation requirements
+      * count as satisfying revocation requirements. Default is false
       */
       virtual bool accept_ocsp_softfail() const;
 };
 
 /**
+* A Path_Validation_Policy which is set up in a builder style, eg
+*
+* Path_Validation_Options()
+*   .with_required_revocation_information()
+*   .with_trusted_hash("SHA-3(256)")
+*
+* Anything which is not set follows the default policy.
+*/
+class BOTAN_PUBLIC_API(3, 15) Path_Validation_Options final : public Path_Validation_Policy {
+   public:
+      /**
+      * Require revocation information for the end entity certificate
+      */
+      Path_Validation_Options with_required_revocation_information(bool required = true) const;
+
+      /**
+      * Require revocation information for all intermediate CA certificates,
+      * and make OCSP requests for them if OCSP is enabled
+      */
+      Path_Validation_Options with_ocsp_for_all_intermediates(bool enabled = true) const;
+
+      /**
+      * Set the maximum age of OCSP responses w/o next_update.
+      * If zero, there is no maximum age
+      */
+      Path_Validation_Options with_max_ocsp_age(std::chrono::seconds max_age) const;
+
+      /**
+      * Trust the certificates in this store to sign OCSP responses,
+      * additionally to the CA's responder certificates.
+      */
+      Path_Validation_Options with_trusted_ocsp_responders(std::shared_ptr<const Certificate_Store> responders) const;
+
+      /**
+      * Accept OCSP soft fail conditions (such as a network error) as
+      * satisfying revocation requirements. Not recommended.
+      */
+      Path_Validation_Options with_accepted_ocsp_softfail(bool accepted = true) const;
+
+      /**
+      * Only warn about a trust anchor which is outside of its validity period
+      */
+      Path_Validation_Options with_ignored_trusted_root_time_range(bool ignored = true) const;
+
+      /**
+      * Allow certificates which do not appear to be self-signed, such as
+      * intermediate or leaf certificates, to be used as trust anchors
+      */
+      Path_Validation_Options with_non_self_signed_trust_anchors(bool allowed = true) const;
+
+      /**
+      * Set the minimum estimated strength (in terms of operations, eg 80
+      * means 2^80) of a key. This applies to any key whose algorithm was
+      * not named to with_accepted_key_algorithm or with_forbidden_key_algorithm.
+      */
+      Path_Validation_Options with_minimum_key_strength(size_t strength) const;
+
+      /**
+      * Accept keys of an algorithm if they are at least a certain length.
+      * For this algorithm, this takes the place of the minimum key strength.
+      *
+      * @param algo an algorithm name as returned by Public_Key::algo_name
+      * @param minimum_key_bits the minimum acceptable Public_Key::key_length
+      */
+      Path_Validation_Options with_accepted_key_algorithm(std::string_view algo, size_t minimum_key_bits) const;
+
+      /**
+      * Reject all keys of an algorithm
+      *
+      * @param algo an algorithm name as returned by Public_Key::algo_name
+      */
+      Path_Validation_Options with_forbidden_key_algorithm(std::string_view algo) const;
+
+      /**
+      * Trust a hash function, in addition to the defaults
+      */
+      Path_Validation_Options with_trusted_hash(std::string_view hash_name) const;
+
+      /**
+      * Do not trust a hash function, even if it is trusted by default
+      */
+      Path_Validation_Options with_untrusted_hash(std::string_view hash_name) const;
+
+      bool hash_is_trusted(std::string_view hash_name) const override;
+
+      bool key_is_acceptable(const Public_Key& key) const override;
+
+      bool require_revocation_information() const override;
+
+      bool ocsp_all_intermediates() const override;
+
+      std::chrono::seconds max_ocsp_age() const override;
+
+      const Certificate_Store* trusted_ocsp_responders() const override;
+
+      bool ignore_trusted_root_time_range() const override;
+
+      bool require_self_signed_trust_anchors() const override;
+
+      bool accept_ocsp_softfail() const override;
+
+   private:
+      std::optional<bool> m_require_revocation_information;
+      std::optional<bool> m_ocsp_all_intermediates;
+      std::optional<std::chrono::seconds> m_max_ocsp_age;
+      std::shared_ptr<const Certificate_Store> m_trusted_ocsp_responders;
+      std::optional<bool> m_accept_ocsp_softfail;
+      std::optional<bool> m_ignore_trusted_root_time_range;
+      std::optional<bool> m_require_self_signed_trust_anchors;
+      std::optional<size_t> m_minimum_key_strength;
+      // Minimum key length for each named algorithm, or nullopt if forbidden
+      std::map<std::string, std::optional<size_t>, std::less<>> m_key_algorithms;
+      std::map<std::string, bool, std::less<>> m_hashes;
+};
+
+/**
 * Specifies restrictions on the PKIX path validation
 */
-class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final : public Path_Validation_Policy {
+class BOTAN_DEPRECATED_API("Use Path_Validation_Options") Path_Validation_Restrictions final
+      : public Path_Validation_Policy {
    public:
       /**
       * @param require_rev if true, revocation information is required
@@ -567,9 +695,9 @@ CertificatePathStatusCodes BOTAN_PUBLIC_API(3, 14) check_crl(const std::vector<X
 /**
 * Check CRLs for revocation information
 *
-* Equivalent to calling check_crl with a default Path_Validation_Restrictions
+* Equivalent to calling check_crl with a default Path_Validation_Policy
 */
-BOTAN_DEPRECATED("Use overload taking Path_Validation_Restrictions")
+BOTAN_DEPRECATED("Use overload taking Path_Validation_Policy")
 CertificatePathStatusCodes BOTAN_PUBLIC_API(2, 0) check_crl(const std::vector<X509_Certificate>& cert_path,
                                                             const std::vector<std::optional<X509_CRL>>& crls,
                                                             std::chrono::system_clock::time_point ref_time);
@@ -591,9 +719,9 @@ CertificatePathStatusCodes BOTAN_PUBLIC_API(3, 14) check_crl(const std::vector<X
 /**
 * Check CRLs for revocation information
 *
-* Equivalent to calling check_crl with a default Path_Validation_Restrictions
+* Equivalent to calling check_crl with a default Path_Validation_Policy
 */
-BOTAN_DEPRECATED("Use overload taking Path_Validation_Restrictions")
+BOTAN_DEPRECATED("Use overload taking Path_Validation_Policy")
 CertificatePathStatusCodes BOTAN_PUBLIC_API(2, 0) check_crl(const std::vector<X509_Certificate>& cert_path,
                                                             const std::vector<Certificate_Store*>& certstores,
                                                             std::chrono::system_clock::time_point ref_time);
@@ -646,9 +774,9 @@ CertificatePathStatusCodes BOTAN_PUBLIC_API(3, 14)
 /**
 * Check CRL using online (HTTP) access.
 *
-* Equivalent to calling check_crl_online with a default Path_Validation_Restrictions
+* Equivalent to calling check_crl_online with a default Path_Validation_Policy
 */
-BOTAN_DEPRECATED("Use overload taking Path_Validation_Restrictions")
+BOTAN_DEPRECATED("Use overload taking Path_Validation_Policy")
 CertificatePathStatusCodes BOTAN_PUBLIC_API(2, 0)
    check_crl_online(const std::vector<X509_Certificate>& cert_path,
                     const std::vector<Certificate_Store*>& trusted_certstores,

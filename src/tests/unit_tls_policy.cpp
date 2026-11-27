@@ -10,11 +10,16 @@
 
 #if defined(BOTAN_HAS_TLS)
    #include <botan/assert.h>
+   #include <botan/certstor.h>
+   #include <botan/ocsp.h>
    #include <botan/pk_keys.h>
    #include <botan/tls_callbacks.h>
    #include <botan/tls_ciphersuite.h>
    #include <botan/tls_exceptn.h>
    #include <botan/tls_policy.h>
+   #include <botan/x509_crl.h>
+   #include <botan/x509cert.h>
+   #include <botan/internal/calendar.h>
 #endif
 
 #if defined(BOTAN_HAS_RSA)
@@ -66,6 +71,7 @@ class TLS_Policy_Unit_Tests final : public Test {
          results.push_back(test_dtls_refuses_weak_ciphersuites());
          results.push_back(test_default_groups_are_available());
          results.push_back(test_group_availability_matches_key_generation(this->rng()));
+         results.push_back(test_cert_chain_validation());
    #if defined(BOTAN_HAS_TLS_13_PQC) && defined(BOTAN_HAS_ML_KEM) && defined(BOTAN_HAS_X25519)
          results.push_back(test_hybrid_peer_key_acceptable(this->rng()));
    #endif
@@ -299,6 +305,70 @@ class TLS_Policy_Unit_Tests final : public Test {
             result.test_success("Correctly rejecting short bit DH keys");
          }
    #endif
+         return result;
+      }
+
+      static Test::Result test_cert_chain_validation() {
+         Test::Result result("TLS Policy certificate chain validation");
+
+   #if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+         class Fixed_Time_Callbacks final : public Botan::TLS::Callbacks {
+            public:
+               void tls_emit_data(std::span<const uint8_t> /*data*/) override {}
+
+               void tls_record_received(uint64_t /*seq_no*/, std::span<const uint8_t> /*data*/) override {}
+
+               void tls_alert(Botan::TLS::Alert /*alert*/) override {}
+
+               std::chrono::system_clock::time_point tls_current_timestamp() override {
+                  return Botan::calendar_point(2027, 1, 1, 0, 0, 0).to_std_timepoint();
+               }
+         };
+
+         // The CA has a P-256 key and signs with SHA-256
+         const Botan::X509_Certificate ca(Test::data_file("x509/crl_hash/ca.pem"));
+         const Botan::X509_Certificate leaf(Test::data_file("x509/crl_hash/leaf.pem"));
+         const Botan::X509_CRL crl_sha256(Test::data_file("x509/crl_hash/crl_sha256.pem"));
+         const Botan::X509_CRL crl_sha1(Test::data_file("x509/crl_hash/crl_sha1.pem"));
+
+         using TP = Botan::TLS::Text_Policy;
+
+         const auto chain_is_accepted = [&](const std::optional<Botan::X509_CRL>& crl, const TP& policy) {
+            Botan::Certificate_Store_In_Memory trusted;
+            trusted.add_certificate(ca);
+            if(crl.has_value()) {
+               trusted.add_crl(crl.value());
+            }
+
+            Fixed_Time_Callbacks callbacks;
+            try {
+               callbacks.tls_verify_cert_chain({leaf}, {}, {&trusted}, Botan::Usage_Type::UNSPECIFIED, "", policy);
+               return true;
+            } catch(Botan::TLS::TLS_Exception&) {
+               return false;
+            }
+         };
+
+         result.test_is_true("Chain accepted by default policy", chain_is_accepted(crl_sha256, TP("")));
+
+         result.test_is_false("Chain rejected without revocation information", chain_is_accepted(std::nullopt, TP("")));
+         result.test_is_true("Chain accepted without revocation information if not required",
+                             chain_is_accepted(std::nullopt, TP("require_cert_revocation_info = false")));
+
+         result.test_is_true("Chain accepted at the strength of the issuer key",
+                             chain_is_accepted(crl_sha256, TP("minimum_signature_strength = 128")));
+         result.test_is_false("Chain rejected above the strength of the issuer key",
+                              chain_is_accepted(crl_sha256, TP("minimum_signature_strength = 129")));
+
+         result.test_is_false("SHA-1 signed CRL not used by default", chain_is_accepted(crl_sha1, TP("")));
+         result.test_is_false("SHA-1 signed CRL not used at 81 bit strength",
+                              chain_is_accepted(crl_sha1, TP("minimum_signature_strength = 81")));
+      #if defined(BOTAN_HAS_SHA1)
+         result.test_is_true("SHA-1 signed CRL used at 80 bit strength",
+                             chain_is_accepted(crl_sha1, TP("minimum_signature_strength = 80")));
+      #endif
+   #endif
+
          return result;
       }
 

@@ -547,7 +547,7 @@ bool Response::is_issued_by(const X509_Certificate& candidate) const {
 }
 
 Certificate_Status_Code Response::verify_signature(const X509_Certificate& issuer) const {
-   const Path_Validation_Restrictions restrictions;
+   const Path_Validation_Policy restrictions;
 
    return this->verify_signature(issuer, restrictions);
 }

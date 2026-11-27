@@ -29,6 +29,17 @@ namespace Botan_FFI {
 
 namespace {
 
+Botan::Path_Validation_Options validation_options_for(size_t required_strength) {
+   auto options = Botan::Path_Validation_Options().with_minimum_key_strength(required_strength);
+
+   // The strength is documented as also covering the hash function
+   if(required_strength <= 80) {
+      options = options.with_trusted_hash("SHA-1");
+   }
+
+   return options;
+}
+
 /**
  * As specified in RFC 5280 Section 4.2.1.6. alternative names essentially are a
  * collection of GeneralNames. This allows mapping a single entry of @p altnames
@@ -996,7 +1007,7 @@ int botan_x509_cert_verify(int* result_code,
          trusted_roots.push_back(trusted_extra.get());
       }
 
-      const Botan::Path_Validation_Restrictions restrictions(false, required_strength);
+      const auto restrictions = validation_options_for(required_strength);
 
       const auto validation_result =
          Botan::x509_path_validate(end_certs, restrictions, trusted_roots, hostname, usage, validation_time);
@@ -1532,7 +1543,7 @@ int botan_x509_cert_verify_with_crl(int* result_code,
          trusted_roots.push_back(trusted_crls.get());
       }
 
-      const Botan::Path_Validation_Restrictions restrictions(false, required_strength);
+      const auto restrictions = validation_options_for(required_strength);
 
       const auto validation_result =
          Botan::x509_path_validate(end_certs, restrictions, trusted_roots, hostname, usage, validation_time);

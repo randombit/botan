@@ -18,7 +18,7 @@ int main() {
    end_certs.emplace_back(Botan::X509_Certificate("int1.crt"));  // intermediate 1
 
    // Optional: Set up restrictions, e.g. min. key strength, maximum age of OCSP responses
-   const Botan::Path_Validation_Restrictions restrictions;
+   const Botan::Path_Validation_Options restrictions;
 
    // Optional: Specify usage type, compared against the key usage in end_certs[0]
    const Botan::Usage_Type usage = Botan::Usage_Type::UNSPECIFIED;

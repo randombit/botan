@@ -41,6 +41,9 @@ X509/PKIX Deprecations
   extension is not included in the certificate. In a future major release, CN
   fallback will be removed entirely.
 
+* ``Path_Validation_Restrictions`` is deprecated. Use ``Path_Validation_Options``,
+  or derive from ``Path_Validation_Policy``.
+
 TLS Protocol Deprecations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

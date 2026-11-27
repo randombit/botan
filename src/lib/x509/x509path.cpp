@@ -745,7 +745,7 @@ CertificatePathStatusCodes PKIX::check_ocsp(const std::vector<X509_Certificate>&
 CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
                                            const std::vector<std::optional<X509_CRL>>& crls,
                                            std::chrono::system_clock::time_point ref_time) {
-   return PKIX::check_crl(cert_path, crls, ref_time, Path_Validation_Restrictions());
+   return PKIX::check_crl(cert_path, crls, ref_time, Path_Validation_Policy());
 }
 
 CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
@@ -842,7 +842,7 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
 CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
                                            const std::vector<Certificate_Store*>& certstores,
                                            std::chrono::system_clock::time_point ref_time) {
-   return PKIX::check_crl(cert_path, certstores, ref_time, Path_Validation_Restrictions());
+   return PKIX::check_crl(cert_path, certstores, ref_time, Path_Validation_Policy());
 }
 
 CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
@@ -961,7 +961,7 @@ CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certifi
                                                   Certificate_Store_In_Memory* crl_store,
                                                   std::chrono::system_clock::time_point ref_time,
                                                   std::chrono::milliseconds timeout) {
-   return PKIX::check_crl_online(cert_path, certstores, crl_store, ref_time, timeout, Path_Validation_Restrictions());
+   return PKIX::check_crl_online(cert_path, certstores, crl_store, ref_time, timeout, Path_Validation_Policy());
 }
 
 CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certificate>& cert_path,
@@ -1487,6 +1487,129 @@ bool Path_Validation_Policy::require_self_signed_trust_anchors() const {
 
 bool Path_Validation_Policy::accept_ocsp_softfail() const {
    return false;
+}
+
+Path_Validation_Options Path_Validation_Options::with_required_revocation_information(bool required) const {
+   auto next = (*this);
+   next.m_require_revocation_information = required;
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_ocsp_for_all_intermediates(bool enabled) const {
+   auto next = (*this);
+   next.m_ocsp_all_intermediates = enabled;
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_max_ocsp_age(std::chrono::seconds max_age) const {
+   auto next = (*this);
+   next.m_max_ocsp_age = max_age;
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_trusted_ocsp_responders(
+   std::shared_ptr<const Certificate_Store> responders) const {
+   auto next = (*this);
+   next.m_trusted_ocsp_responders = std::move(responders);
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_accepted_ocsp_softfail(bool accepted) const {
+   auto next = (*this);
+   next.m_accept_ocsp_softfail = accepted;
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_ignored_trusted_root_time_range(bool ignored) const {
+   auto next = (*this);
+   next.m_ignore_trusted_root_time_range = ignored;
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_non_self_signed_trust_anchors(bool allowed) const {
+   auto next = (*this);
+   next.m_require_self_signed_trust_anchors = !allowed;
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_minimum_key_strength(size_t strength) const {
+   auto next = (*this);
+   next.m_minimum_key_strength = strength;
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_accepted_key_algorithm(std::string_view algo,
+                                                                             size_t minimum_key_bits) const {
+   auto next = (*this);
+   next.m_key_algorithms.insert_or_assign(std::string(algo), minimum_key_bits);
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_forbidden_key_algorithm(std::string_view algo) const {
+   auto next = (*this);
+   next.m_key_algorithms.insert_or_assign(std::string(algo), std::nullopt);
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_trusted_hash(std::string_view hash_name) const {
+   auto next = (*this);
+   next.m_hashes.insert_or_assign(std::string(hash_name), true);
+   return next;
+}
+
+Path_Validation_Options Path_Validation_Options::with_untrusted_hash(std::string_view hash_name) const {
+   auto next = (*this);
+   next.m_hashes.insert_or_assign(std::string(hash_name), false);
+   return next;
+}
+
+bool Path_Validation_Options::hash_is_trusted(std::string_view hash_name) const {
+   if(const auto i = m_hashes.find(hash_name); i != m_hashes.end()) {
+      return i->second;
+   }
+
+   return Path_Validation_Policy::hash_is_trusted(hash_name);
+}
+
+bool Path_Validation_Options::key_is_acceptable(const Public_Key& key) const {
+   if(const auto i = m_key_algorithms.find(key.algo_name()); i != m_key_algorithms.end()) {
+      const auto& minimum_key_bits = i->second;
+      return minimum_key_bits.has_value() && key.key_length() >= minimum_key_bits.value();
+   }
+
+   if(m_minimum_key_strength.has_value()) {
+      return key.estimated_strength() >= m_minimum_key_strength.value();
+   }
+
+   return Path_Validation_Policy::key_is_acceptable(key);
+}
+
+bool Path_Validation_Options::require_revocation_information() const {
+   return m_require_revocation_information.value_or(Path_Validation_Policy::require_revocation_information());
+}
+
+bool Path_Validation_Options::ocsp_all_intermediates() const {
+   return m_ocsp_all_intermediates.value_or(Path_Validation_Policy::ocsp_all_intermediates());
+}
+
+std::chrono::seconds Path_Validation_Options::max_ocsp_age() const {
+   return m_max_ocsp_age.value_or(Path_Validation_Policy::max_ocsp_age());
+}
+
+const Certificate_Store* Path_Validation_Options::trusted_ocsp_responders() const {
+   return m_trusted_ocsp_responders.get();
+}
+
+bool Path_Validation_Options::ignore_trusted_root_time_range() const {
+   return m_ignore_trusted_root_time_range.value_or(Path_Validation_Policy::ignore_trusted_root_time_range());
+}
+
+bool Path_Validation_Options::require_self_signed_trust_anchors() const {
+   return m_require_self_signed_trust_anchors.value_or(Path_Validation_Policy::require_self_signed_trust_anchors());
+}
+
+bool Path_Validation_Options::accept_ocsp_softfail() const {
+   return m_accept_ocsp_softfail.value_or(Path_Validation_Policy::accept_ocsp_softfail());
 }
 
 namespace {

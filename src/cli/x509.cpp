@@ -217,7 +217,7 @@ class OCSP_Check final : public Command {
          const Botan::OCSP::Response resp = Botan::OCSP::online_check(issuer, subject, timeout);
 
          const auto ref_time = std::chrono::system_clock::now();
-         const Botan::Path_Validation_Restrictions restrictions;
+         const Botan::Path_Validation_Policy restrictions;
          const std::vector<Botan::Certificate_Store*> certstores = {&cas};
          const auto ocsp_status = Botan::PKIX::check_ocsp(std::vector{subject, issuer},
                                                           std::vector<std::optional<Botan::OCSP::Response>>{resp},
@@ -258,7 +258,7 @@ class Cert_Verify final : public Command {
             trusted.add_certificate(Botan::X509_Certificate(certfile));
          }
 
-         const Botan::Path_Validation_Restrictions restrictions;
+         const Botan::Path_Validation_Policy restrictions;
 
          const Botan::Path_Validation_Result result = Botan::x509_path_validate(subject_cert, restrictions, trusted);
 

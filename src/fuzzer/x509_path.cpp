@@ -21,7 +21,7 @@ void fuzz(std::span<const uint8_t> in) {
       const std::unique_ptr<Botan::Certificate_Store> root_store(new Botan::Certificate_Store_In_Memory(issuer));
       roots.push_back(root_store.get());
 
-      const Botan::Path_Validation_Restrictions restrictions;
+      const Botan::Path_Validation_Policy restrictions;
 
       x509_path_validate({subject}, restrictions, roots);
    } catch(const Botan::Exception& e) {}
