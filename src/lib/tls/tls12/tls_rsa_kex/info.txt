@@ -10,5 +10,5 @@ lifecycle -> "Deprecated"
 
 <requires>
 eme_pkcs1
-rsa
+tls_rsa
 </requires>

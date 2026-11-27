@@ -256,19 +256,38 @@ std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenera
                                                      ecdsa_crl);
 }
 
+std::optional<std::string> test_certificate_group() {
+   return Test::supported_ec_group_name({"secp384r1", "secp521r1"});
+}
+
 std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenerator& rng,
                                                        bool with_client_certs = false) {
-   // RSA and ECDSA are required for the TLS module, but we need to find an
+   // ECDSA is required for the TLS module, but we need to find an
    // ECC group that is supported in this build or skip this test.
    //
    // secp256r1 is excluded because the Strict_Policy requires at least SHA-384
    // and TLS 1.3 enforces that hash lengths match the key strength.
-   const auto ec_group = Test::supported_ec_group_name({"secp384r1", "secp521r1"});
+   const auto ec_group = test_certificate_group();
    if(!ec_group) {
       return nullptr;
    }
 
    return create_creds(rng, Botan::EC_Group::from_name(*ec_group), with_client_certs);
+}
+
+/**
+ * If the server can only authenticate using its ECDSA certificate, then in
+ * TLS 1.2 the client must also support the group of that certificate
+ */
+std::string with_group_of_test_certificate(const std::string& groups) {
+   #if !defined(BOTAN_HAS_TLS_RSA)
+   const auto cert_group = test_certificate_group();
+   if(cert_group && groups.find(*cert_group) == std::string::npos) {
+      return groups + " " + *cert_group;
+   }
+   #endif
+
+   return groups;
 }
 
 /**
@@ -1183,7 +1202,11 @@ class TLS_Unit_Tests final : public Test {
          }
 
          for(const auto& kv : extra_policies) {
-            policy->set(kv.first, kv.second);
+            if(kv.first == "groups") {
+               policy->set(kv.first, with_group_of_test_certificate(kv.second));
+            } else {
+               policy->set(kv.first, kv.second);
+            }
          }
 
          const auto versions = versions_for_policy(results, available_versions(), cipher_policy, mac_policy);
@@ -1804,7 +1827,9 @@ class TLS_Unit_Tests final : public Test {
             }(ecdh_group, version);
 
             const auto policy = std::make_shared<Test_Policy>();
-            policy->set("groups", "0x" + Botan::hex_encode(Botan::store_be(group_for_version.wire_code())));
+            policy->set("groups",
+                        with_group_of_test_certificate(
+                           "0x" + Botan::hex_encode(Botan::store_be(group_for_version.wire_code()))));
 
             TLS_Handshake_Test test("Client uses a custom ECDH provider for " + ecdh_group.to_string().value() +
                                        " in " + version.to_string(),
@@ -2917,7 +2942,8 @@ class TLS_Unit_Tests final : public Test {
       #endif
          }
 
-      #if defined(BOTAN_HAS_TLS_FFDHE)
+      // In TLS 1.2 all DH ciphersuites are authenticated using RSA
+      #if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA)
          test_legacy_versions("AES-128 DH", results, creds, rng, "DH", "AES-128", "SHA-256");
       #endif
 
@@ -2940,8 +2966,12 @@ class TLS_Unit_Tests final : public Test {
    #endif
          test_modern_versions("AES-128/GCM ECDH", results, creds, rng, "ECDH", "AES-128/GCM");
 
-         test_modern_versions(
-            "AES-128/GCM ECDH RSA", results, creds, rng, "ECDH", "AES-128/GCM", "AEAD", {{"signature_methods", "RSA"}});
+   #if defined(BOTAN_HAS_TLS_RSA)
+         test_modern_versions("AES-128/GCM ECDH RSA", results, creds, rng, "ECDH", "AES-128/GCM", "AEAD", {{
+                                 "signature_methods",
+                                 "RSA"
+                              }});
+   #endif
 
          test_modern_versions("AES-128/GCM ECDH no OCSP",
                               results,
@@ -3011,7 +3041,7 @@ class TLS_Unit_Tests final : public Test {
                               }});
    #endif
 
-   #if defined(BOTAN_HAS_TLS_FFDHE)
+   #if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA)
          test_modern_versions("AES-128/GCM FFDHE-2048", results, creds, rng, "DH", "AES-128/GCM", "AEAD", {{
                                  "groups",
                                  "ffdhe/ietf/2048"

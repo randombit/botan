@@ -155,6 +155,20 @@ Test::Result test_padding_extension() {
 
    return result;
 }
+
+Test::Result test_certificate_request_cert_types() {
+   Test::Result result("certificate_request certificate types");
+
+   // The only certificate type is rsa_sign and the only signature algorithm
+   // is rsa_pkcs1_sha256. No certificate authorities are named.
+   const auto msg = Botan::hex_decode("0101000204010000");
+
+   const Botan::TLS::Certificate_Request_12 req(msg);
+   result.test_sz_eq("certificate type is retained", req.acceptable_cert_types().size(), 1);
+   result.test_bin_eq("message is serialized as it was received", req.serialize(), msg);
+
+   return result;
+}
    #endif
 
 class Test_Callbacks : public Botan::TLS::Callbacks {
@@ -307,6 +321,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
          results.push_back(test_srtp_extension());
          results.push_back(test_certificate_status_request());
          results.push_back(test_padding_extension());
+         results.push_back(test_certificate_request_cert_types());
 
          return results;
       }

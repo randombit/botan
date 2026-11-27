@@ -23,7 +23,7 @@ consteval auto available_ciphersuites() {
 #if defined(BOTAN_HAS_TLS_RSA_KEX) && defined(BOTAN_HAS_DES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
       uint16_t{0x000A},  // RSA_WITH_3DES_EDE_CBC_SHA
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_DES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_DES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
       uint16_t{0x0016},  // DHE_RSA_WITH_3DES_EDE_CBC_SHA
 #endif
 #if defined(BOTAN_HAS_TLS_NULL) && defined(BOTAN_HAS_SHA1)
@@ -32,13 +32,13 @@ consteval auto available_ciphersuites() {
 #if defined(BOTAN_HAS_TLS_RSA_KEX) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
       uint16_t{0x002F},  // RSA_WITH_AES_128_CBC_SHA
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
       uint16_t{0x0033},  // DHE_RSA_WITH_AES_128_CBC_SHA
 #endif
 #if defined(BOTAN_HAS_TLS_RSA_KEX) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
       uint16_t{0x0035},  // RSA_WITH_AES_256_CBC_SHA
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
       uint16_t{0x0039},  // DHE_RSA_WITH_AES_256_CBC_SHA
 #endif
 #if defined(BOTAN_HAS_TLS_RSA_KEX) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA2_32)
@@ -47,10 +47,10 @@ consteval auto available_ciphersuites() {
 #if defined(BOTAN_HAS_TLS_RSA_KEX) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0x003D},  // RSA_WITH_AES_256_CBC_SHA256
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0x0067},  // DHE_RSA_WITH_AES_128_CBC_SHA256
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0x006B},  // DHE_RSA_WITH_AES_256_CBC_SHA256
 #endif
 #if defined(BOTAN_HAS_DES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
@@ -68,10 +68,10 @@ consteval auto available_ciphersuites() {
 #if defined(BOTAN_HAS_TLS_RSA_KEX) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
       uint16_t{0x009D},  // RSA_WITH_AES_256_GCM_SHA384
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0x009E},  // DHE_RSA_WITH_AES_128_GCM_SHA256
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
       uint16_t{0x009F},  // DHE_RSA_WITH_AES_256_GCM_SHA384
 #endif
 #if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
@@ -119,16 +119,16 @@ consteval auto available_ciphersuites() {
 #if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
       uint16_t{0xC00A},  // ECDHE_ECDSA_WITH_AES_256_CBC_SHA
 #endif
-#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_TLS_NULL) && defined(BOTAN_HAS_SHA1)
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_TLS_NULL) && defined(BOTAN_HAS_SHA1)
       uint16_t{0xC010},  // ECDHE_RSA_WITH_NULL_SHA
 #endif
-#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_DES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_DES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
       uint16_t{0xC012},  // ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
 #endif
-#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
       uint16_t{0xC013},  // ECDHE_RSA_WITH_AES_128_CBC_SHA
 #endif
-#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
       uint16_t{0xC014},  // ECDHE_RSA_WITH_AES_256_CBC_SHA
 #endif
 #if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA2_32)
@@ -137,10 +137,10 @@ consteval auto available_ciphersuites() {
 #if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA2_64)
       uint16_t{0xC024},  // ECDHE_ECDSA_WITH_AES_256_CBC_SHA384
 #endif
-#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xC027},  // ECDHE_RSA_WITH_AES_128_CBC_SHA256
 #endif
-#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA2_64)
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA2_64)
       uint16_t{0xC028},  // ECDHE_RSA_WITH_AES_256_CBC_SHA384
 #endif
 #if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
@@ -149,10 +149,10 @@ consteval auto available_ciphersuites() {
 #if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
       uint16_t{0xC02C},  // ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
 #endif
-#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xC02F},  // ECDHE_RSA_WITH_AES_128_GCM_SHA256
 #endif
-#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
       uint16_t{0xC030},  // ECDHE_RSA_WITH_AES_256_GCM_SHA384
 #endif
 #if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_DES) && defined(BOTAN_HAS_TLS_CBC) && defined(BOTAN_HAS_SHA1)
@@ -185,10 +185,10 @@ consteval auto available_ciphersuites() {
 #if defined(BOTAN_HAS_TLS_RSA_KEX) && defined(BOTAN_HAS_ARIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
       uint16_t{0xC051},  // RSA_WITH_ARIA_256_GCM_SHA384
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_ARIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_ARIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xC052},  // DHE_RSA_WITH_ARIA_128_GCM_SHA256
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_ARIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_ARIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
       uint16_t{0xC053},  // DHE_RSA_WITH_ARIA_256_GCM_SHA384
 #endif
 #if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_ARIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
@@ -197,10 +197,10 @@ consteval auto available_ciphersuites() {
 #if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_ARIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
       uint16_t{0xC05D},  // ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384
 #endif
-#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_ARIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_ARIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xC060},  // ECDHE_RSA_WITH_ARIA_128_GCM_SHA256
 #endif
-#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_ARIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_ARIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
       uint16_t{0xC061},  // ECDHE_RSA_WITH_ARIA_256_GCM_SHA384
 #endif
 #if defined(BOTAN_HAS_ARIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
@@ -215,10 +215,10 @@ consteval auto available_ciphersuites() {
 #if defined(BOTAN_HAS_TLS_RSA_KEX) && defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
       uint16_t{0xC07B},  // RSA_WITH_CAMELLIA_256_GCM_SHA384
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xC07C},  // DHE_RSA_WITH_CAMELLIA_128_GCM_SHA256
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
       uint16_t{0xC07D},  // DHE_RSA_WITH_CAMELLIA_256_GCM_SHA384
 #endif
 #if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
@@ -227,10 +227,10 @@ consteval auto available_ciphersuites() {
 #if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
       uint16_t{0xC087},  // ECDHE_ECDSA_WITH_CAMELLIA_256_GCM_SHA384
 #endif
-#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xC08A},  // ECDHE_RSA_WITH_CAMELLIA_128_GCM_SHA256
 #endif
-#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
       uint16_t{0xC08B},  // ECDHE_RSA_WITH_CAMELLIA_256_GCM_SHA384
 #endif
 #if defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_32)
@@ -245,10 +245,10 @@ consteval auto available_ciphersuites() {
 #if defined(BOTAN_HAS_TLS_RSA_KEX) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_CCM) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xC09D},  // RSA_WITH_AES_256_CCM
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_CCM) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_CCM) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xC09E},  // DHE_RSA_WITH_AES_128_CCM
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_CCM) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_CCM) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xC09F},  // DHE_RSA_WITH_AES_256_CCM
 #endif
 #if defined(BOTAN_HAS_TLS_RSA_KEX) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_CCM) && defined(BOTAN_HAS_SHA2_32)
@@ -257,10 +257,10 @@ consteval auto available_ciphersuites() {
 #if defined(BOTAN_HAS_TLS_RSA_KEX) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_CCM) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xC0A1},  // RSA_WITH_AES_256_CCM_8
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_CCM) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_CCM) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xC0A2},  // DHE_RSA_WITH_AES_128_CCM_8
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_CCM) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_CCM) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xC0A3},  // DHE_RSA_WITH_AES_256_CCM_8
 #endif
 #if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_CCM) && defined(BOTAN_HAS_SHA2_32)
@@ -287,13 +287,13 @@ consteval auto available_ciphersuites() {
 #if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_CCM) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xC0AF},  // ECDHE_ECDSA_WITH_AES_256_CCM_8
 #endif
-#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xCCA8},  // ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 #endif
 #if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xCCA9},  // ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
 #endif
-#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_TLS_FFDHE) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xCCAA},  // DHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 #endif
 #if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305) && defined(BOTAN_HAS_SHA2_32)
@@ -314,7 +314,7 @@ consteval auto available_ciphersuites() {
 #if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_CCM) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xD005},  // ECDHE_PSK_WITH_AES_128_CCM_SHA256
 #endif
-#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_OCB) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_OCB) && defined(BOTAN_HAS_SHA2_32)
       uint16_t{0xFFC3},  // ECDHE_RSA_WITH_AES_256_OCB_SHA256
 #endif
 #if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_OCB) && defined(BOTAN_HAS_SHA2_32)

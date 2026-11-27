@@ -38,7 +38,7 @@ const std::vector<Signature_Scheme>& Signature_Scheme::all_available_schemes() {
       ECDSA_SECP521R1_TLS13_SHA512,
       ECDSA_SECP256R1_TLS13_SHA256,
 
-#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PSSR)
+#if defined(BOTAN_HAS_TLS_RSA)
       RSA_PSS_SHA384,
       RSA_PSS_SHA256,
       RSA_PSS_SHA512,
@@ -48,7 +48,7 @@ const std::vector<Signature_Scheme>& Signature_Scheme::all_available_schemes() {
       ECDSA_BRAINPOOL256R1_TLS13_SHA256,
       ECDSA_BRAINPOOL512R1_TLS13_SHA512,
 
-#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1)
+#if defined(BOTAN_HAS_TLS_RSA)
       RSA_PKCS1_SHA384,
       RSA_PKCS1_SHA512,
       RSA_PKCS1_SHA256,
@@ -127,12 +127,10 @@ Signature_Scheme::Signature_Scheme(Signature_Scheme::Code wire_code) : m_code(wi
 
 bool Signature_Scheme::is_available() const noexcept {
    switch(m_code) {
-#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PSSR)
+#if defined(BOTAN_HAS_TLS_RSA)
       case RSA_PSS_SHA384:
       case RSA_PSS_SHA256:
       case RSA_PSS_SHA512:
-#endif
-#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1)
       case RSA_PKCS1_SHA384:
       case RSA_PKCS1_SHA512:
       case RSA_PKCS1_SHA256:

@@ -340,7 +340,16 @@ std::vector<Certificate_Type> Text_Policy::read_cert_type_list(const std::string
 std::vector<Signature_Scheme> Text_Policy::read_sig_scheme_list(std::string_view sig_scheme_str) const {
    std::vector<Signature_Scheme> sig_schemes;
    for(const auto& sig_scheme_name : split_on(sig_scheme_str, ' ')) {
-      sig_schemes.push_back(Signature_Scheme::from_string(sig_scheme_name));
+      const auto sig_scheme = Signature_Scheme::from_string(sig_scheme_name);
+
+#if !defined(BOTAN_HAS_TLS_RSA)
+      // Do not offer the peer an algorithm which this build cannot use
+      if(sig_scheme.algorithm_name() == "RSA") {
+         continue;
+      }
+#endif
+
+      sig_schemes.push_back(sig_scheme);
    }
    return sig_schemes;
 }

@@ -55,8 +55,6 @@ TLS
 ----------------------------------------
 
 * Make DTLS support optional at build time
-* Make RSA optional at build time
-* Make finite field DH optional at build time
 * Certificate Transparency extensions
 * TLS supplemental authorization data (RFC 4680, RFC 5878)
 * DTLS-SCTP (RFC 6083)

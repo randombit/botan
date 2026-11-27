@@ -243,7 +243,7 @@ constexpr std::string_view encrypted_extensions_message =
    "00 17 00 18 00 19 01 00 01 01 01 02 01 03 01 04 00 1c 00 02 40"
    "01 00 00 00 00";
 
-constexpr std::string_view server_handshake_messages_record =
+[[maybe_unused]] constexpr std::string_view server_handshake_messages_record =
    "17 03 03 02 a2 d1 ff 33 4a 56 f5 bf"
    "f6 59 4a 07 cc 87 b5 80 23 3f 50 0f 45 e4 89 e7 f3 3a f3 5e df"
    "78 69 fc f4 0a a4 0a a2 b8 ea 73 f8 48 a7 ca 07 61 2e f9 f9 45"
@@ -495,7 +495,7 @@ std::vector<Test::Result> receive_unprotected_records() {
 
 std::vector<Test::Result> receive_protected_records() {
    return {
-   #if defined(BOTAN_HAS_RSA)
+   #if defined(BOTAN_HAS_TLS_RSA)
       CHECK("client receives the encrypted handshake flight",
             [&](Test::Result& result) {
                const auto callbacks = std::make_shared<Mock_Callbacks>();

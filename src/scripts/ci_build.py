@@ -69,6 +69,7 @@ def known_targets():
         'no_tls12',
         'optional-rngs',
         'no_tls13',
+        'no_tls_rsa_ffdhe',
         'pkcs11',
         'plzn',
         'policy-bsi',
@@ -261,12 +262,15 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target in ['no_tls13']:
         flags += ['--disable-modules=tls13']
 
+    if target in ['no_tls_rsa_ffdhe']:
+        flags += ['--disable-modules=tls_rsa,tls_ffdhe']
+
     if target in ['amalgamation', 'cross-arm64-amalgamation', 'cross-android-arm64-amalgamation']:
         flags += ['--amalgamation']
 
     if target.startswith('policy-'):
         # ffi and tls are optional for bsi/fips140 - add to build to verify these work with the minimized config
-        flags += ['--module-policy=%s' % (target.replace('policy-', '')), '--enable-modules=ffi,tls12,tls13,tls_ffdhe', '--disable-deprecated-features']
+        flags += ['--module-policy=%s' % (target.replace('policy-', '')), '--enable-modules=ffi,tls12,tls13,tls_rsa,tls_ffdhe', '--disable-deprecated-features']
 
     if target in ['docs']:
         flags += ['--with-doxygen', '--with-sphinx', '--with-rst2man']

@@ -855,6 +855,9 @@ policy settings from a file.
 
      Default: "ECDSA", "RSA"
 
+     "RSA" is only available if the ``tls_rsa`` module was enabled at
+     build time.
+
      Also allowed (disabled by default): "IMPLICIT"
 
      "IMPLICIT" enables ciphersuites which are authenticated not by a signature

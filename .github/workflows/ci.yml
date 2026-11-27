@@ -316,6 +316,9 @@ jobs:
           - target: no_tls13
             compiler: gcc
             host_os: ubuntu-26.04
+          - target: no_tls_rsa_ffdhe
+            compiler: gcc
+            host_os: ubuntu-26.04
           - target: policy-bsi
             compiler: gcc
             host_os: ubuntu-26.04

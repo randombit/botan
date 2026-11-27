@@ -15,6 +15,7 @@
    #include <botan/tls_ciphersuite.h>
    #include <botan/tls_exceptn.h>
    #include <botan/tls_policy.h>
+   #include <botan/tls_signature_scheme.h>
 #endif
 
 #if defined(BOTAN_HAS_RSA)
@@ -64,6 +65,7 @@ class TLS_Policy_Unit_Tests final : public Test {
          results.push_back(test_key_exchange_groups_to_offer());
          results.push_back(test_text_policy_groups_by_code_point());
          results.push_back(test_require_extended_master_secret());
+         results.push_back(test_text_policy_rsa_signature_schemes());
          results.push_back(test_dtls_refuses_weak_ciphersuites());
          results.push_back(test_default_groups_are_available());
          results.push_back(test_group_availability_matches_key_generation(this->rng()));
@@ -204,6 +206,21 @@ class TLS_Policy_Unit_Tests final : public Test {
                              !TP("require_extended_master_secret = false").require_extended_master_secret());
          result.test_is_true("text policy override re-enables EMS requirement",
                              TP("require_extended_master_secret = true").require_extended_master_secret());
+         return result;
+      }
+
+      static Test::Result test_text_policy_rsa_signature_schemes() {
+         Test::Result result("TLS Text_Policy RSA signature schemes");
+
+         const Botan::TLS::Text_Policy policy("signature_schemes = RSA_PSS_SHA256 ECDSA_SHA256");
+         const auto schemes = policy.allowed_signature_schemes();
+
+   #if defined(BOTAN_HAS_TLS_RSA)
+         result.test_sz_eq("RSA signature scheme is used", schemes.size(), 2);
+   #else
+         result.test_sz_eq("unavailable RSA signature scheme is skipped", schemes.size(), 1);
+   #endif
+
          return result;
       }
 

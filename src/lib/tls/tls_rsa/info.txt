@@ -1,0 +1,14 @@
+<defines>
+TLS_RSA -> 20261127
+</defines>
+
+<module_info>
+name -> "TLS RSA authentication"
+brief -> "RSA signatures and certificates in TLS"
+</module_info>
+
+<requires>
+emsa_pkcs1
+emsa_pssr
+rsa
+</requires>

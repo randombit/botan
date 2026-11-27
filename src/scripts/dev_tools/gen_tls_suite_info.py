@@ -306,7 +306,7 @@ def main(args = None):
         if sig_algo == 'ECDSA':
             feat.append('ECDSA')
         elif sig_algo == 'RSA':
-            feat.append('RSA')
+            feat.append('TLS_RSA')
 
         # Cipher + mode
         if cipher_algo == 'NULL':

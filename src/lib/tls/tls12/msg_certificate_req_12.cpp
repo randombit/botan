@@ -40,6 +40,14 @@ std::string cert_type_code_to_name(uint8_t code) {
    }
 }
 
+std::vector<std::string> supported_cert_key_types() {
+#if defined(BOTAN_HAS_TLS_RSA)
+   return {"RSA", "ECDSA"};
+#else
+   return {"ECDSA"};
+#endif
+}
+
 uint8_t cert_type_name_to_code(std::string_view name) {
    if(name == "RSA") {
       return 1;
@@ -60,7 +68,7 @@ Certificate_Request_12::Certificate_Request_12(Handshake_IO& io,
                                                Handshake_Hash& hash,
                                                const Policy& policy,
                                                std::vector<X509_DN> ca_certs) :
-      m_names(std::move(ca_certs)), m_cert_key_types({"RSA", "ECDSA"}) {
+      m_names(std::move(ca_certs)), m_cert_key_types(supported_cert_key_types()) {
    for(const auto scheme : policy.acceptable_signature_schemes()) {
       if(scheme.is_compatible_with(Protocol_Version::TLS_V12)) {
          m_schemes.push_back(scheme);

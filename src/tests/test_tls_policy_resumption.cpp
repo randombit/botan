@@ -7,7 +7,7 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_X509_CERTIFICATES) && \
+#if defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_X509_CERTIFICATES) && \
    ((defined(BOTAN_HAS_TLS_12) && defined(BOTAN_HAS_ECDH)) || defined(BOTAN_HAS_TLS_13))
    #include <botan/credentials_manager.h>
    #include <botan/rsa.h>
@@ -32,7 +32,7 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_X509_CERTIFICATES) && \
+#if defined(BOTAN_HAS_TLS_RSA) && defined(BOTAN_HAS_X509_CERTIFICATES) && \
    ((defined(BOTAN_HAS_TLS_12) && defined(BOTAN_HAS_ECDH)) || defined(BOTAN_HAS_TLS_13))
 
 class Pipe_Callbacks final : public Botan::TLS::Callbacks {
