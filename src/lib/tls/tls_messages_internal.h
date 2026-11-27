@@ -14,6 +14,7 @@
 #include <botan/tls_extensions.h>
 #include <botan/tls_session.h>
 #include <botan/tls_version.h>
+#include <botan/internal/hex_array.h>
 #include <vector>
 
 namespace Botan {
@@ -27,6 +28,15 @@ class Policy;
 }  // namespace Botan
 
 namespace Botan::TLS {
+
+/**
+ * RFC 8446 4.1.3:
+ *   For reasons of backward compatibility with middleboxes, the
+ *   HelloRetryRequest message uses the same structure as the ServerHello, but
+ *   with Random set to the special value of the SHA-256 of "HelloRetryRequest":
+ */
+constexpr auto HELLO_RETRY_REQUEST_MARKER =
+   hex_decode_array("CF21AD74E59A6111BE1D8C021E65B891C2A211167ABB8C5E079E09E2C8A8339C");
 
 /**
  * Generate a (client) hello random value.

@@ -21,6 +21,7 @@
 #include <botan/internal/concat_util.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/hex_array.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
@@ -2050,6 +2051,101 @@ class ScopedCleanup_Tests : public Test {
 };
 
 BOTAN_REGISTER_TEST("utils", "scoped_cleanup", ScopedCleanup_Tests);
+
+class HexDecoding : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         return {
+            CHECK("constexpr decoding to std::array<>",
+                  [this](Test::Result& result) {
+                     constexpr char char_array[] = {'d', 'e', 'a', 'd', 'b', 'e', 'e', 'f'};
+                     result.test_sz_eq("char array does not contain null-terminator", sizeof(char_array), 8);
+                     constexpr auto from_char_array = Botan::hex_decode_array(char_array);
+                     result.test_sz_eq("4 bytes", from_char_array.size(), 4);
+                     result.test_bin_eq("decoded char array", from_char_array, "DEADBEEF");
+
+                     constexpr auto from_string_literal = Botan::hex_decode_array("baADcAFe133742");
+                     result.test_sz_eq("7 bytes", from_string_literal.size(), 7);
+                     result.test_bin_eq("decoded string literal", from_string_literal, "BaaDCafE133742");
+
+                     // the smallest valid input: just the null terminator
+                     const auto from_empty_char_array = Botan::hex_decode_array("");
+                     result.test_sz_eq("0 bytes", from_empty_char_array.size(), 0);
+
+                     char random_char_array[17] = {};
+                     for(size_t i = 0; i < sizeof(random_char_array) - 1 /* zero termination */; ++i) {
+                        const auto chr = Test::rng().next_byte() % 16;
+                        random_char_array[i] =
+                           (chr < 10) ? static_cast<uint8_t>('0' + chr) : static_cast<uint8_t>('a' + chr - 10);
+                     }
+
+                     // random_char_array is not known at compile-time, hence no constexpr
+                     const auto from_random_char_array = Botan::hex_decode_array(random_char_array);
+                     result.test_sz_eq("8 bytes", from_random_char_array.size(), 8);
+                     result.test_bin_eq(
+                        "decoded random char array", from_random_char_array, Botan::hex_decode(random_char_array));
+                  }),
+
+            CHECK("constexpr hex literal",
+                  [](Test::Result& result) {
+                     using namespace Botan::literals;
+
+                     constexpr auto from_literal = "deaDBeef42"_hex;
+                     result.test_sz_eq("5 bytes", from_literal.size(), 5);
+                     result.test_bin_eq("decoded literal", from_literal, "DEADBEEF42");
+
+                     constexpr auto from_literal_with_colon = "ba:ad:ca:fe"_hex;
+                     result.test_sz_eq("4 bytes", from_literal_with_colon.size(), 4);
+                     result.test_bin_eq("decoded literal with colons", from_literal_with_colon, "baadcafe");
+
+                     constexpr auto from_literal_with_whitespace = "c0 01 be ef"_hex;
+                     result.test_sz_eq("4 bytes", from_literal_with_whitespace.size(), 4);
+                     result.test_bin_eq("decoded literal with whitespace", from_literal_with_whitespace, "c001beef");
+
+                     constexpr auto from_empty_literal = ""_hex;
+                     result.test_sz_eq("0 bytes", from_empty_literal.size(), 0);
+                  }),
+
+            CHECK("runtime decoding of a non-null-terminated char array",
+                  [](Test::Result& result) {
+                     struct Buffer {
+                           char hex[8];    // deliberately not null-terminated
+                           char after[8];  // strlen() would wrongly consume this
+                     } buf{};
+
+                     for(size_t i = 0; i < sizeof(buf.hex); ++i) {
+                        buf.hex[i] = "deadbeef"[i];
+                        buf.after[i] = 'X';
+                     }
+
+                     const auto from_char_array = Botan::hex_decode_array(buf.hex);
+                     result.test_sz_eq("4 bytes", from_char_array.size(), 4);
+                     result.test_bin_eq("decoded non-null-terminated char array", from_char_array, "DEADBEEF");
+                  }),
+
+            CHECK("runtime decoding error cases",
+                  [](Test::Result& result) {
+                     char odd_length[7];
+                     for(size_t i = 0; i < sizeof(odd_length); ++i) {
+                        odd_length[i] = "deadbee"[i];
+                     }
+
+                     result.test_throws("odd number of hex characters", [&] { Botan::hex_decode_array(odd_length); });
+
+                     char embedded_null[10];
+                     const char pattern[10] = {'d', 'e', 'a', 'd', '\0', 'b', 'e', 'e', 'f', 'X'};
+                     for(size_t i = 0; i < sizeof(embedded_null); ++i) {
+                        embedded_null[i] = pattern[i];
+                     }
+
+                     result.test_throws("embedded null is not a hex character",
+                                        [&] { Botan::hex_decode_array(embedded_null); });
+                  }),
+         };
+      }
+};
+
+BOTAN_REGISTER_TEST("utils", "hex_decode", HexDecoding);
 
 }  // namespace
 
