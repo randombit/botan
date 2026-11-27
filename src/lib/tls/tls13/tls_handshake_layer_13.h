@@ -10,8 +10,9 @@
 #ifndef BOTAN_TLS_HANDSHAKE_LAYER_13_H_
 #define BOTAN_TLS_HANDSHAKE_LAYER_13_H_
 
+#include <deque>
+#include <memory>
 #include <optional>
-#include <vector>
 
 #include <botan/tls_magic.h>
 #include <botan/tls_messages_13.h>
@@ -215,7 +216,9 @@ class BOTAN_TEST_API TLS_Handshake_Layer final : public Handshake_Layer {
       TLS_Flavor tls_flavor() const override { return TLS_Flavor::TLS; }
 
    private:
-      std::vector<PendingMessage> m_pending_messages;
+      // Allocated on the heap because `PendingMessage` is an incomplete type
+      // here and the standard does not allow std::deque of incomplete types.
+      std::unique_ptr<std::deque<PendingMessage>> m_pending_messages;
 };
 
 }  // namespace Botan::TLS

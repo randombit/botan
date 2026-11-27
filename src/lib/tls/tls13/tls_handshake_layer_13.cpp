@@ -194,7 +194,8 @@ class TLS_Handshake_Layer::PendingMessage final {
       size_t m_header_bytes_consumed = 0;
 };
 
-TLS_Handshake_Layer::TLS_Handshake_Layer(Connection_Side whoami) : Handshake_Layer(whoami) {}
+TLS_Handshake_Layer::TLS_Handshake_Layer(Connection_Side whoami) :
+      Handshake_Layer(whoami), m_pending_messages(std::make_unique<std::deque<PendingMessage>>()) {}
 
 TLS_Handshake_Layer::~TLS_Handshake_Layer() = default;
 
@@ -206,10 +207,10 @@ TLS_Handshake_Layer::CopyDataResult TLS_Handshake_Layer::copy_data(const Policy&
       // Get the latest (incomplete) pending handshake message or create a fresh
       // one to hold the received handshake message bytes.
       auto& pending_msg = [&]() -> PendingMessage& {
-         if(m_pending_messages.empty() || m_pending_messages.back().completed()) {
-            return m_pending_messages.emplace_back();
+         if(m_pending_messages->empty() || m_pending_messages->back().completed()) {
+            return m_pending_messages->emplace_back();
          } else {
-            return m_pending_messages.back();
+            return m_pending_messages->back();
          }
       }();
 
@@ -361,16 +362,16 @@ std::optional<Post_Handshake_Message_13> Handshake_Layer::next_post_handshake_me
 }
 
 bool TLS_Handshake_Layer::has_pending_data() const {
-   return !m_pending_messages.empty();
+   return !m_pending_messages->empty();
 }
 
 std::optional<Handshake_Layer::Message> TLS_Handshake_Layer::take_next_message() {
-   if(m_pending_messages.empty() || !m_pending_messages.front().completed()) {
+   if(m_pending_messages->empty() || !m_pending_messages->front().completed()) {
       return std::nullopt;
    }
 
-   auto msg = m_pending_messages.front().take();
-   m_pending_messages.erase(m_pending_messages.begin());
+   auto msg = m_pending_messages->front().take();
+   m_pending_messages->erase(m_pending_messages->begin());
 
    return msg;
 }
