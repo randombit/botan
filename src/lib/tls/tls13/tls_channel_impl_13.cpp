@@ -236,12 +236,12 @@ SecretLoggerFn Channel_Impl_13::secret_logger() const {
    };
 }
 
-void Channel_Impl_13::send_flight(std::vector<Flight::Message> flight) {
+void Channel_Impl_13::send_flight(std::vector<Flight::Message> flight, Expected_Response expected) {
    BOTAN_STATE_CHECK(!flight.empty());
    BOTAN_STATE_CHECK(!is_downgrading());
    BOTAN_STATE_CHECK(m_can_write);
 
-   m_channel_io->send(std::move(flight));
+   m_channel_io->send(std::move(flight), expected);
 }
 
 std::optional<BytesNeeded> Channel_Impl_13::process(Handshake_Message_13 handshake_msg) {

@@ -167,7 +167,8 @@ size_t Server_Impl_13::send_new_session_tickets(const size_t tickets) {
    }
 
    if(tickets_created > 0) {
-      send_flight(flight.commit());
+      // NewSessionTickets don't expect any explicit reply.
+      send_flight(flight.commit(), Expected_Response::None);
    }
 
    return tickets_created;
@@ -509,7 +510,11 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
    // Promote cipher state immediately before sending the flight (see comment
    // at declaration of new_cipher_state).
    auto& cs = setup_cipher_state(std::move(new_cipher_state));
-   send_flight(flight.commit());
+
+   // After the Server's Finished, the handshake is complete from the server's
+   // perspective, however, the client still needs to send its Finished message
+   // and optionally client authentication messages.
+   send_flight(flight.commit(), Expected_Response::Flight);
 
    cs.advance_with_server_finished(m_transcript_hash->current());
 
@@ -543,7 +548,9 @@ void Server_Impl_13::handle_reply_to_client_hello(Hello_Retry_Request hello_retr
       flight.add_dummy_change_cipher_spec();
    }
 
-   send_flight(flight.commit());
+   // After a HelloRetryRequest the client is expected to send an updated
+   // ClientHello, essentially a single-message flight.
+   send_flight(flight.commit(), Expected_Response::Flight);
 
    m_transcript_hash =
       Transcript_Hash_State::recreate_after_hello_retry_request(cipher->prf_algo(), *m_transcript_hash);
@@ -593,8 +600,8 @@ void Server_Impl_13::handle(const Client_Hello_13& client_hello) {
    // before committing the protocol version anyway.
    m_channel_io->notify_protocol_version_committed();
 
-   // By definition, SH is the "final" message of this flight.
-   m_channel_io->notify_received_complete_flight();
+   // The ClientHello is the final message of this single-message flight.
+   m_channel_io->notify_received_complete_flight(Expected_Response::Flight);
 
    if(is_initial_client_hello) {
       const auto preferred_version = client_hello.highest_supported_version(policy());
@@ -809,7 +816,10 @@ void Server_Impl_13::handle(const Finished_13& finished_msg) {
 
    cs->advance_with_client_finished(m_transcript_hash->current());
 
-   m_channel_io->notify_received_final_flight();
+   // After the client's Finished, the handshake is complete also from the
+   // client's perspective and it doesn't expect any further handshake message
+   // from us.
+   m_channel_io->notify_received_complete_flight(Expected_Response::None);
 
    // no more handshake messages expected
    m_handshake->transitions.set_expected_next({});

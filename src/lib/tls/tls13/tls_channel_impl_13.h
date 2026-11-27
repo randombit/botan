@@ -168,7 +168,7 @@ class Channel_Impl_13 : public Channel_Impl {
 
       bool is_datagram() const { return m_flavor.is_datagram(); }
 
-      void send_flight(std::vector<Flight::Message> flight);
+      void send_flight(std::vector<Flight::Message> flight, Expected_Response expected);
 
    private:
       std::optional<BytesNeeded> process(Handshake_Message_13 handshake_msg);
