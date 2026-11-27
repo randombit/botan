@@ -19,7 +19,7 @@
 
 namespace Botan {
 
-class Path_Validation_Restrictions;
+class Path_Validation_Policy;
 class Certificate_Store;
 class URI;
 
@@ -232,7 +232,7 @@ class BOTAN_PUBLIC_API(2, 0) Response final {
       * @return status code indicating the validity of the signature
       */
       Certificate_Status_Code verify_signature(const X509_Certificate& signing_certificate,
-                                               const Path_Validation_Restrictions& restrictions) const;
+                                               const Path_Validation_Policy& restrictions) const;
 
       /**
       * @return the status of the response

@@ -120,6 +120,41 @@ std::vector<Botan::Path_Validation_Restrictions> restrictions_to_test(bool req_r
    return restrictions;
 }
 
+// The default policy, except that signatures created by the key of one certificate are refused
+class Policy_Rejecting_Key final : public Botan::Path_Validation_Policy {
+   public:
+      explicit Policy_Rejecting_Key(const Botan::X509_Certificate& cert) :
+            m_rejected_key(cert.subject_public_key()->subject_public_key()) {}
+
+      bool key_is_acceptable(const Botan::Public_Key& key) const override {
+         return key.subject_public_key() != m_rejected_key && Path_Validation_Policy::key_is_acceptable(key);
+      }
+
+   private:
+      std::vector<uint8_t> m_rejected_key;
+};
+
+// The default policy, except that exactly the named hashes are trusted
+class Policy_Trusting_Hashes final : public Botan::Path_Validation_Policy {
+   public:
+      explicit Policy_Trusting_Hashes(std::set<std::string> hashes) : m_hashes(std::move(hashes)) {}
+
+      bool hash_is_trusted(std::string_view hash_name) const override {
+         return m_hashes.contains(std::string(hash_name));
+      }
+
+   private:
+      std::set<std::string> m_hashes;
+};
+
+// The default policy, except that revocation information is required for all certificates
+class Policy_Requiring_Revocation_Info final : public Botan::Path_Validation_Policy {
+   public:
+      bool require_revocation_information() const override { return true; }
+
+      bool ocsp_all_intermediates() const override { return true; }
+};
+
 class X509test_Path_Validation_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -1225,7 +1260,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run_with_restrictions(
 
          const Botan::Path_Validation_Restrictions restrictions(
             use_crl,
-            restriction_template.minimum_key_strength(),
+            80 /*some tests use SHA-1*/,
             use_crl,
             restriction_template.max_ocsp_age(),
             std::make_unique<Botan::Certificate_Store_In_Memory>(),
@@ -1863,8 +1898,102 @@ class Path_Validation_With_OCSP_Tests final : public Test {
          return result;
       }
 
+      static Test::Result check_ocsp_with_custom_policy() {
+         Test::Result result("ocsp check with a custom path validation policy");
+
+         const auto ee = load_test_X509_cert("x509/ocsp/bdr.pem");
+         const auto ca = load_test_X509_cert("x509/ocsp/bdr-int.pem");
+         const auto trust_root = load_test_X509_cert("x509/ocsp/bdr-root.pem");
+         const auto responder = load_test_X509_cert("x509/ocsp/bdr-ocsp-responder.pem");
+
+         // These are signed by delegated responders issued by `ca` and `trust_root` respectively
+         const auto ocsp_ee = load_test_OCSP_resp("x509/ocsp/bdr-ocsp-resp.der");
+         const auto ocsp_ca = load_test_OCSP_resp("x509/ocsp/bdr-int-ocsp-resp.der");
+
+         Botan::Certificate_Store_In_Memory trusted;
+         trusted.add_certificate(trust_root);
+
+         const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
+         const auto valid_time = Botan::calendar_point(2022, 9, 19, 16, 30, 0).to_std_timepoint();
+
+         const auto ee_status = [&](const Botan::Path_Validation_Policy& policy) {
+            const auto status = Botan::PKIX::check_ocsp(cert_path, {ocsp_ee}, {&trusted}, valid_time, policy);
+            return status.empty() ? std::set<Botan::Certificate_Status_Code>() : status[0];
+         };
+
+         result.test_is_true(
+            "Default policy accepts the response",
+            ee_status(Botan::Path_Validation_Policy()).contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD));
+
+         // The responder's key is consulted when verifying the signature on the response
+         const auto rejecting_responder = ee_status(Policy_Rejecting_Key(responder));
+         result.test_is_true("Rejected responder key is reported",
+                             rejecting_responder.contains(Botan::Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK));
+         result.test_is_false("Rejected responder key is not a problem with the responder's chain",
+                              rejecting_responder.contains(Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED));
+         result.test_is_false("Response from rejected responder key is not used",
+                              rejecting_responder.contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD));
+
+         // The root's key signs nothing here except within the responder's own chain
+         const auto rejecting_root = ee_status(Policy_Rejecting_Key(trust_root));
+         result.test_is_true("Policy is applied to the chain of the responder",
+                             rejecting_root.contains(Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED));
+         result.test_is_false("Response from untrusted responder is not used",
+                              rejecting_root.contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD));
+
+         const auto no_hashes = ee_status(Policy_Trusting_Hashes({}));
+         result.test_is_true("Untrusted hash is reported",
+                             no_hashes.contains(Botan::Certificate_Status_Code::UNTRUSTED_HASH));
+         result.test_is_false("Response using untrusted hash is not used",
+                              no_hashes.contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD));
+
+         // Here the response is signed by the issuing CA itself
+         {
+            const std::vector<Botan::X509_Certificate> direct_path = {load_test_X509_cert("x509/ocsp/randombit.pem"),
+                                                                      load_test_X509_cert("x509/ocsp/letsencrypt.pem"),
+                                                                      load_test_X509_cert("x509/ocsp/identrust.pem")};
+            const auto direct_ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
+            const auto direct_time = Botan::calendar_point(2016, 11, 18, 12, 30, 0).to_std_timepoint();
+
+            Botan::Certificate_Store_In_Memory direct_trusted;
+            direct_trusted.add_certificate(direct_path.back());
+
+            const auto direct_status = [&](const Botan::Path_Validation_Policy& policy) {
+               const auto status =
+                  Botan::PKIX::check_ocsp(direct_path, {direct_ocsp}, {&direct_trusted}, direct_time, policy);
+               return status.empty() ? std::set<Botan::Certificate_Status_Code>() : status[0];
+            };
+
+            result.test_is_true("Default policy accepts the CA signed response",
+                                direct_status(Botan::Path_Validation_Policy())
+                                   .contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD));
+
+            const auto direct_no_hashes = direct_status(Policy_Trusting_Hashes({}));
+            result.test_is_true("Untrusted hash on CA signed response is reported",
+                                direct_no_hashes.contains(Botan::Certificate_Status_Code::UNTRUSTED_HASH));
+            result.test_sz_eq("Untrusted hash is the only status", direct_no_hashes.size(), 1);
+         }
+
+         // Revocation information is not demanded for the responder certificates themselves
+         const auto path_result = Botan::x509_path_validate(cert_path,
+                                                            Policy_Requiring_Revocation_Info(),
+                                                            trusted,
+                                                            "",
+                                                            Botan::Usage_Type::UNSPECIFIED,
+                                                            valid_time,
+                                                            std::chrono::milliseconds(0),
+                                                            {ocsp_ee, ocsp_ca});
+
+         result.test_enum_eq("Path validates under a policy requiring revocation information",
+                             path_result.result(),
+                             Botan::Certificate_Status_Code::OK);
+
+         return result;
+      }
+
       std::vector<Test::Result> run() override {
-         return {validate_with_ocsp_with_next_update_without_max_age(),
+         return {check_ocsp_with_custom_policy(),
+                 validate_with_ocsp_with_next_update_without_max_age(),
                  validate_with_ocsp_with_next_update_with_max_age(),
                  validate_with_ocsp_without_next_update_without_max_age(),
                  validate_with_ocsp_without_next_update_with_max_age(),
@@ -2312,6 +2441,151 @@ class Trust_Anchor_Signature_Not_Verified_Test final : public Test {
 };
 
 BOTAN_REGISTER_TEST("x509", "x509_path_trust_anchor_sig_not_verified", Trust_Anchor_Signature_Not_Verified_Test);
+
+class Path_Validation_Policy_Tests final : public Test {
+   private:
+      static Test::Result test_defaults() {
+         Test::Result result("X509 path validation policy defaults");
+
+         const Botan::Path_Validation_Policy policy;
+         const Botan::Path_Validation_Restrictions restrictions;
+
+         result.test_bool_eq("require_revocation_information",
+                             policy.require_revocation_information(),
+                             restrictions.require_revocation_information());
+         result.test_bool_eq(
+            "ocsp_all_intermediates", policy.ocsp_all_intermediates(), restrictions.ocsp_all_intermediates());
+         result.test_is_true("max_ocsp_age", policy.max_ocsp_age() == restrictions.max_ocsp_age());
+         result.test_is_true("trusted_ocsp_responders",
+                             policy.trusted_ocsp_responders() == restrictions.trusted_ocsp_responders());
+         result.test_bool_eq("ignore_trusted_root_time_range",
+                             policy.ignore_trusted_root_time_range(),
+                             restrictions.ignore_trusted_root_time_range());
+         result.test_bool_eq("require_self_signed_trust_anchors",
+                             policy.require_self_signed_trust_anchors(),
+                             restrictions.require_self_signed_trust_anchors());
+         result.test_bool_eq(
+            "accept_ocsp_softfail", policy.accept_ocsp_softfail(), restrictions.accept_ocsp_softfail());
+
+         for(const std::string hash : {"SHA-224",
+                                       "SHA-256",
+                                       "SHA-384",
+                                       "SHA-512",
+                                       "SHAKE-256(512)",
+                                       "SHAKE-256(912)",
+                                       "SHAKE-256(240)",
+                                       "Truncated(SHA-256,192)"}) {
+            result.test_is_true("Policy trusts " + hash, policy.hash_is_trusted(hash));
+            result.test_is_true("Restrictions trust " + hash, restrictions.hash_is_trusted(hash));
+         }
+
+         for(const std::string hash : {"SHA-1", "MD5", "Streebog-256", "SHA-3(256)", ""}) {
+            result.test_is_false("Policy does not trust '" + hash + "'", policy.hash_is_trusted(hash));
+            result.test_is_false("Restrictions do not trust '" + hash + "'", restrictions.hash_is_trusted(hash));
+         }
+
+         const auto test_key = [&](const std::string& cert_file, bool expected) {
+            const auto key = Botan::X509_Certificate(Test::data_file(cert_file)).subject_public_key();
+            result.test_bool_eq("Policy on key of " + cert_file, policy.key_is_acceptable(*key), expected);
+            result.test_bool_eq("Restrictions on key of " + cert_file, restrictions.key_is_acceptable(*key), expected);
+         };
+
+         test_key("x509/crl_hash/ca.pem", true);
+      #if defined(BOTAN_HAS_RSA)
+         // A 1024 bit RSA key
+         test_key("x509/nist/root.crt", false);
+      #endif
+
+         // The existing quirks of Path_Validation_Restrictions
+         const Botan::Path_Validation_Restrictions weak(false, 80);
+         result.test_is_true("Strength of 80 implies trusting SHA-1", weak.hash_is_trusted("SHA-1"));
+
+         const Botan::Path_Validation_Restrictions any_hash(false, 110, false, std::set<std::string>());
+         result.test_is_true("Empty set of hashes trusts everything", any_hash.hash_is_trusted("MD5"));
+
+         return result;
+      }
+
+      static Test::Result test_custom_policy() {
+         Test::Result result("X509 path validation with a custom policy");
+
+         // Trusts SHA-1 in addition to the defaults, without accepting weaker keys
+         class Policy_Also_Trusting_SHA1 final : public Botan::Path_Validation_Policy {
+            public:
+               bool hash_is_trusted(std::string_view hash_name) const override {
+                  return hash_name == "SHA-1" || Path_Validation_Policy::hash_is_trusted(hash_name);
+               }
+
+               bool require_revocation_information() const override { return true; }
+         };
+
+         const Botan::X509_Certificate ca(Test::data_file("x509/crl_hash/ca.pem"));
+         const Botan::X509_Certificate leaf(Test::data_file("x509/crl_hash/leaf.pem"));
+         const Botan::X509_CRL crl_sha256(Test::data_file("x509/crl_hash/crl_sha256.pem"));
+         const Botan::X509_CRL crl_sha1(Test::data_file("x509/crl_hash/crl_sha1.pem"));
+
+         const auto validation_time = Botan::calendar_point(2027, 1, 1, 0, 0, 0).to_std_timepoint();
+
+         const auto path_validate = [&](const Botan::Path_Validation_Policy& policy, const Botan::X509_CRL& crl) {
+            Botan::Certificate_Store_In_Memory trusted;
+            trusted.add_certificate(ca);
+            trusted.add_crl(crl);
+            return Botan::x509_path_validate(
+               leaf, policy, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
+         };
+
+         const auto leaf_statuses = [](const Botan::Path_Validation_Result& path_result) {
+            const auto& all = path_result.all_statuses();
+            return all.empty() ? std::set<Botan::Certificate_Status_Code>() : all[0];
+         };
+
+         const auto default_result = path_validate(Botan::Path_Validation_Policy(), crl_sha256);
+         result.test_enum_eq("Default policy", default_result.result(), Botan::Certificate_Status_Code::OK);
+
+         const auto rejected_key = path_validate(Policy_Rejecting_Key(ca), crl_sha256);
+         result.test_enum_eq(
+            "Rejected issuer key", rejected_key.result(), Botan::Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK);
+
+         // The key of the end entity certificate is not examined
+         const auto rejected_leaf_key = path_validate(Policy_Rejecting_Key(leaf), crl_sha256);
+         result.test_enum_eq("Rejected end entity key", rejected_leaf_key.result(), Botan::Certificate_Status_Code::OK);
+
+         const auto rejected_hash = path_validate(Policy_Trusting_Hashes({"SHA-384"}), crl_sha256);
+         result.test_enum_eq("Rejected hash", rejected_hash.result(), Botan::Certificate_Status_Code::UNTRUSTED_HASH);
+
+         const auto sha256_crl = path_validate(Policy_Also_Trusting_SHA1(), crl_sha256);
+         result.test_enum_eq("SHA-256 CRL", sha256_crl.result(), Botan::Certificate_Status_Code::OK);
+         result.test_is_true("SHA-256 CRL was used",
+                             leaf_statuses(sha256_crl).contains(Botan::Certificate_Status_Code::VALID_CRL_CHECKED));
+
+         const auto sha1_crl_default = path_validate(Policy_Requiring_Revocation_Info(), crl_sha1);
+         result.test_enum_eq("SHA-1 CRL is not used by default",
+                             sha1_crl_default.result(),
+                             Botan::Certificate_Status_Code::NO_REVOCATION_DATA);
+         result.test_is_true("SHA-1 CRL reports untrusted hash",
+                             leaf_statuses(sha1_crl_default).contains(Botan::Certificate_Status_Code::UNTRUSTED_HASH));
+
+      #if defined(BOTAN_HAS_SHA1)
+         const auto sha1_crl = path_validate(Policy_Also_Trusting_SHA1(), crl_sha1);
+         result.test_enum_eq("SHA-1 CRL with SHA-1 trusted", sha1_crl.result(), Botan::Certificate_Status_Code::OK);
+         result.test_is_true("SHA-1 CRL was used",
+                             leaf_statuses(sha1_crl).contains(Botan::Certificate_Status_Code::VALID_CRL_CHECKED));
+      #endif
+
+         return result;
+      }
+
+   public:
+      std::vector<Test::Result> run() override {
+         if(Botan::has_filesystem_impl() == false) {
+            return {Test::Result::Note("X509 path validation policy", "Skipping due to missing filesystem access")};
+         }
+
+         return {test_defaults(), test_custom_policy()};
+      }
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_path_validation_policy", Path_Validation_Policy_Tests);
 
    #endif
 

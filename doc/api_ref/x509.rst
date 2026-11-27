@@ -512,9 +512,18 @@ signatures of all certificates in the chain are verified, except for
 the trust anchor itself: a trust anchor is trusted because it was
 provided by the application, not because of its (self-)signature.
 
+.. warning::
+
+   The public key of the end entity certificate is not examined during
+   path validation. A successful validation establishes that a trusted
+   authority attested to the contents of the certificate, including its
+   public key. It does not establish that the key is strong, or even
+   that it is of a supported algorithm or can be decoded. Applications
+   must check that the key is suitable before using it.
+
 .. cpp:function:: Path_Validation_Result \
    x509_path_validate(const X509_Certificate& end_cert, \
-   const Path_Validation_Restrictions& restrictions, \
+   const Path_Validation_Policy& restrictions, \
    const Certificate_Store& store, const std::string& hostname = "", \
    Usage_Type usage = Usage_Type::UNSPECIFIED, \
    std::chrono::system_clock::time_point validation_time = std::chrono::system_clock::now(), \
@@ -585,9 +594,76 @@ The result of the validation is returned as a class:
      implicitly trusted for this validation to be correct.
 
 
-A ``Path_Validation_Restrictions`` is passed to the path
-validator and specifies restrictions and options for the validation
-step. The two constructors are:
+A ``Path_Validation_Policy`` is passed to the path validator and
+specifies restrictions and options for the validation step. Each
+decision is a virtual function. An application can use the defaults by
+passing a ``Path_Validation_Policy`` as is, or derive from it and
+override just the decisions it wants to change.
+
+.. cpp:class:: Path_Validation_Policy
+
+  .. cpp:function:: virtual bool hash_is_trusted(std::string_view hash_name) const
+
+     Return true if signatures using this hash function are accepted.
+     Any untrusted hash will cause the error case `UNTRUSTED_HASH`.
+     The default trusts all SHA-2 variants along with the hash
+     functions used by Ed448 and the hash-based and post-quantum
+     signature schemes.
+
+     An override which wants to extend or reduce the default set can
+     call the base class implementation for any name it does not
+     itself handle.
+
+  .. cpp:function:: virtual bool key_is_acceptable(const Public_Key& key) const
+
+     Return true if signatures created by this key are accepted,
+     otherwise the error case `SIGNATURE_METHOD_TOO_WEAK` results. This
+     is consulted for the key of each CA and OCSP responder. It is not
+     consulted for the key of the end entity certificate. The default
+     accepts any key with an estimated strength of at least 110 bits.
+
+  .. cpp:function:: virtual bool require_revocation_information() const
+
+     If true, then any path without revocation information (CRL or
+     OCSP check) for the end entity certificate is rejected with the
+     code `NO_REVOCATION_DATA`. Defaults to false.
+
+  .. cpp:function:: virtual bool ocsp_all_intermediates() const
+
+     If true, then revocation information is also required for all
+     intermediate CA certificates. Defaults to false.
+
+  .. cpp:function:: virtual std::chrono::seconds max_ocsp_age() const
+
+     The maximum age of an OCSP response which does not have a
+     next_update field. If zero, there is no maximum age. Defaults to
+     one week.
+
+  .. cpp:function:: virtual const Certificate_Store* trusted_ocsp_responders() const
+
+     Certificates in this store are trusted to sign OCSP responses,
+     in addition to the responders authorized by the CA. Defaults to
+     ``nullptr``.
+
+  .. cpp:function:: virtual bool ignore_trusted_root_time_range() const
+
+     If true, a trust anchor which is outside of its validity period
+     causes a warning rather than an error. Defaults to false.
+
+  .. cpp:function:: virtual bool require_self_signed_trust_anchors() const
+
+     If true, only certificates which appear to be self-signed are
+     allowed as trust anchors. Defaults to true.
+
+  .. cpp:function:: virtual bool accept_ocsp_softfail() const
+
+     If true, OCSP soft fail conditions such as the responder being
+     unavailable are accepted as satisfying revocation requirements.
+     Defaults to false.
+
+``Path_Validation_Restrictions`` is a ``Path_Validation_Policy`` where
+each choice is fixed when the object is constructed. See ``x509path.h``
+for the complete list of constructor arguments. The two constructors are:
 
   .. cpp:function:: Path_Validation_Restrictions(bool require_rev, \
                                                  size_t minimum_key_strength, \
@@ -603,11 +679,11 @@ step. The two constructors are:
     untrusted hash will cause the error case `UNTRUSTED_HASH`.
 
   .. cpp:function:: Path_Validation_Restrictions(bool require_rev = false, \
-                                                 size_t minimum_key_strength = 80, \
+                                                 size_t minimum_key_strength = 110, \
                                                  bool ocsp_all_intermediates = false)
 
     A variant of the above with some convenient defaults. The current
-    default `minimum_key_strength` of 80 roughly corresponds to 1024
+    default `minimum_key_strength` of 110 roughly corresponds to 2048
     bit RSA. The set of trusted hashes is set to all SHA-2 variants
     along with the hash functions used by Ed448 and the hash-based and
     post-quantum signature schemes, and, if `minimum_key_strength` is less
