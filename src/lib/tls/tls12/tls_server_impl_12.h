@@ -60,7 +60,9 @@ class Server_Impl_12 final : public Channel_Impl_12 {
                      TLS_Flavor flavor = TLS_Flavor::TLS,
                      size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE) :
             Channel_Impl_12(callbacks, session_manager, rng, policy, true, flavor, reserved_io_buffer_size),
-            m_creds(creds) {}
+            m_creds(creds) {
+         BOTAN_ASSERT_NONNULL(m_creds);
+      }
 
 #if defined(BOTAN_HAS_TLS_DOWNGRADE_SUPPORT)
 
@@ -77,7 +79,9 @@ class Server_Impl_12 final : public Channel_Impl_12 {
                             true /* is_server*/,
                             downgrade_info.flavor,
                             downgrade_info.io_buffer_size),
-            m_creds(downgrade_info.creds) {}
+            m_creds(downgrade_info.creds) {
+         BOTAN_ASSERT_NONNULL(m_creds);
+      }
 
 #endif
 

@@ -47,6 +47,8 @@ std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng, Callbacks& cb
 std::vector<uint8_t> calculate_cookie(std::span<const uint8_t> client_hello_bits,
                                       std::string_view client_identity,
                                       std::span<const uint8_t> cookie_secret) {
+   BOTAN_ARG_CHECK(!cookie_secret.empty(), "calculate_cookie: secret must not be empty");
+
    auto hmac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
    hmac->set_key(cookie_secret);
 
