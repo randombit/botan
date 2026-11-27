@@ -320,9 +320,12 @@ class TLS_Policy_Unit_Tests final : public Test {
 
                void tls_alert(Botan::TLS::Alert /*alert*/) override {}
 
-               std::chrono::system_clock::time_point tls_current_timestamp() override {
-                  return Botan::calendar_point(2027, 1, 1, 0, 0, 0).to_std_timepoint();
-               }
+               explicit Fixed_Time_Callbacks(std::chrono::system_clock::time_point now) : m_now(now) {}
+
+               std::chrono::system_clock::time_point tls_current_timestamp() override { return m_now; }
+
+            private:
+               std::chrono::system_clock::time_point m_now;
          };
 
          // The CA has a P-256 key and signs with SHA-256
@@ -340,7 +343,7 @@ class TLS_Policy_Unit_Tests final : public Test {
                trusted.add_crl(crl.value());
             }
 
-            Fixed_Time_Callbacks callbacks;
+            Fixed_Time_Callbacks callbacks(Botan::calendar_point(2027, 1, 1, 0, 0, 0).to_std_timepoint());
             try {
                callbacks.tls_verify_cert_chain({leaf}, {}, {&trusted}, Botan::Usage_Type::UNSPECIFIED, "", policy);
                return true;
@@ -361,11 +364,54 @@ class TLS_Policy_Unit_Tests final : public Test {
                               chain_is_accepted(crl_sha256, TP("minimum_signature_strength = 129")));
 
          result.test_is_false("SHA-1 signed CRL not used by default", chain_is_accepted(crl_sha1, TP("")));
-         result.test_is_false("SHA-1 signed CRL not used at 81 bit strength",
-                              chain_is_accepted(crl_sha1, TP("minimum_signature_strength = 81")));
-      #if defined(BOTAN_HAS_SHA1)
-         result.test_is_true("SHA-1 signed CRL used at 80 bit strength",
-                             chain_is_accepted(crl_sha1, TP("minimum_signature_strength = 80")));
+         result.test_is_false("SHA-1 signed CRL not used at 80 bit strength",
+                              chain_is_accepted(crl_sha1, TP("minimum_signature_strength = 80")));
+         result.test_is_true("SHA-256 signed CRL used at 80 bit strength",
+                             chain_is_accepted(crl_sha256, TP("minimum_signature_strength = 80")));
+
+         result.test_is_true("Chain accepted at the size of the ECDSA issuer key",
+                             chain_is_accepted(crl_sha256, TP("minimum_ecdsa_group_size = 256")));
+         result.test_is_false("Chain rejected above the size of the ECDSA issuer key",
+                              chain_is_accepted(crl_sha256, TP("minimum_ecdsa_group_size = 257")));
+         result.test_is_false(
+            "Minimum ECDSA size applies whatever the minimum strength",
+            chain_is_accepted(crl_sha256, TP("minimum_signature_strength = 80\nminimum_ecdsa_group_size = 384")));
+         result.test_is_true("Minimum RSA size does not apply to ECDSA keys",
+                             chain_is_accepted(crl_sha256, TP("minimum_rsa_bits = 4096")));
+
+      #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1)
+         // Here both the intermediate and the root have 2048 bit RSA keys
+         const Botan::X509_Certificate rsa_leaf(Test::data_file("x509/ocsp/bdr.pem"));
+         const Botan::X509_Certificate rsa_int(Test::data_file("x509/ocsp/bdr-int.pem"));
+         const Botan::X509_Certificate rsa_root(Test::data_file("x509/ocsp/bdr-root.pem"));
+
+         const auto rsa_chain_is_accepted = [&](const std::string& policy_text) {
+            Botan::Certificate_Store_In_Memory trusted;
+            trusted.add_certificate(rsa_root);
+
+            const TP policy("require_cert_revocation_info = false\n" + policy_text);
+
+            Fixed_Time_Callbacks callbacks(Botan::calendar_point(2022, 9, 19, 16, 30, 0).to_std_timepoint());
+            try {
+               callbacks.tls_verify_cert_chain(
+                  {rsa_leaf, rsa_int}, {}, {&trusted}, Botan::Usage_Type::UNSPECIFIED, "", policy);
+               return true;
+            } catch(Botan::TLS::TLS_Exception&) {
+               return false;
+            }
+         };
+
+         result.test_is_true("RSA chain accepted by default sizes", rsa_chain_is_accepted(""));
+         result.test_is_true("RSA chain accepted at the size of the issuer keys",
+                             rsa_chain_is_accepted("minimum_rsa_bits = 2048"));
+         result.test_is_false("RSA chain rejected above the size of the issuer keys",
+                              rsa_chain_is_accepted("minimum_rsa_bits = 2049"));
+         result.test_is_false("Minimum RSA size applies whatever the minimum strength",
+                              rsa_chain_is_accepted("minimum_signature_strength = 80\nminimum_rsa_bits = 3072"));
+         result.test_is_false("Minimum strength applies whatever the minimum RSA size",
+                              rsa_chain_is_accepted("minimum_signature_strength = 128\nminimum_rsa_bits = 1024"));
+         result.test_is_true("Minimum ECDSA size does not apply to RSA keys",
+                             rsa_chain_is_accepted("minimum_ecdsa_group_size = 521"));
       #endif
    #endif
 

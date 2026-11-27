@@ -99,6 +99,11 @@ additional information about the connection.
      certificate is the first element. Throws an exception if any
      error makes this certificate chain unacceptable.
 
+     The default implementation does not accept SHA-1 signatures on
+     certificates, CRLs or OCSP responses, whatever the policy. An
+     application which must accept them, for example for a private CA,
+     has to override this function and perform its own path validation.
+
      If usage is `Usage_Type::TLS_SERVER_AUTH`, then *hostname* should
      match the information in the server certificate. If usage is
      `TLS_CLIENT_AUTH`, then *hostname* specifies the host the client
@@ -960,6 +965,10 @@ policy settings from a file.
      Use 80 to enable RSA-1024 (*not recommended*), or 128 to require
      either ECC or large (~3000 bit) RSA keys.
 
+     RSA and ECDSA keys which signed a certificate in the chain must
+     also satisfy ``minimum_rsa_bits`` and ``minimum_ecdsa_group_size``
+     respectively. SHA-1 signatures are not accepted for any value.
+
      Default: 110 (allowing 2048 bit RSA)
 
  .. cpp:function:: bool require_cert_revocation_info() const
@@ -1000,11 +1009,15 @@ policy settings from a file.
 
  .. cpp:function:: size_t minimum_rsa_bits() const
 
-     Minimum accepted RSA key size. Default 2048 bits.
+     Minimum accepted RSA key size. Default 2048 bits. This applies to
+     the key of the peer, and to any key which signed a certificate in
+     the peer's certificate chain.
 
  .. cpp:function:: size_t minimum_ecdsa_group_size() const
 
-     Minimum size for ECDSA keys (256 bits).
+     Minimum size for ECDSA keys (256 bits). This applies to the key of
+     the peer, and to any key which signed a certificate in the peer's
+     certificate chain.
 
  .. cpp:function:: size_t minimum_ecdh_group_size() const
 

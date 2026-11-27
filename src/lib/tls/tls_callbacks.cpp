@@ -105,17 +105,20 @@ class Cert_Chain_Validation_Policy final : public Path_Validation_Policy {
    public:
       explicit Cert_Chain_Validation_Policy(const TLS::Policy& policy) : m_policy(policy) {}
 
-      bool hash_is_trusted(std::string_view hash_name) const override {
-         // SHA-1 is only acceptable to a policy which accepts 80 bit security
-         if(hash_name == "SHA-1") {
-            return m_policy.minimum_signature_strength() <= 80;
+      bool key_is_acceptable(const Public_Key& key) const override {
+         if(key.estimated_strength() < m_policy.minimum_signature_strength()) {
+            return false;
          }
 
-         return Path_Validation_Policy::hash_is_trusted(hash_name);
-      }
+         const std::string algo_name = key.algo_name();
 
-      bool key_is_acceptable(const Public_Key& key) const override {
-         return key.estimated_strength() >= m_policy.minimum_signature_strength();
+         if(algo_name == "RSA") {
+            return key.key_length() >= m_policy.minimum_rsa_bits();
+         } else if(algo_name == "ECDSA") {
+            return key.key_length() >= m_policy.minimum_ecdsa_group_size();
+         } else {
+            return true;
+         }
       }
 
       bool require_revocation_information() const override { return m_policy.require_cert_revocation_info(); }
