@@ -77,7 +77,11 @@
         "ServerCertificateType-Client-RequestsRPKOnly-ServerSentEmptyRPK-TLS13": "Empty RPK rejected with generic ASN.1 error rather than INVALID_RAW_PUBLIC_KEY",
         "ClientCertificateType-Server-RPKReceived-RPKAccepted-ClientSentX509InError-VerifyPeer-TLS13": "Botan parses RPK as X.509 and fails with BER decode error rather than DECODE_ERROR cleanly",
         "ClientCertificateType-Server-RPKReceived-RPKAccepted-ClientSentX509InError-FailIfNoClientCert-TLS13": "Botan parses RPK as X.509 and fails with BER decode error rather than DECODE_ERROR cleanly",
-        "ClientCertificateType-Server-ClientSentEmptyRPK-TLS13": "Empty RPK rejected with generic ASN.1 error rather than INVALID_RAW_PUBLIC_KEY"
+        "ClientCertificateType-Server-ClientSentEmptyRPK-TLS13": "Empty RPK rejected with generic ASN.1 error rather than INVALID_RAW_PUBLIC_KEY",
+        "TrailingDataWithFinished-Client-TLS13": "Too picky error mapping (we detect an unexpected message during parsing)",
+        "TrailingDataWithFinished-Resume-Client-TLS13": "Too picky error mapping (we detect an unexpected message during parsing)",
+        "TrailingDataWithFinished-Server-TLS13": "Too picky error mapping (we detect an unexpected message during parsing)",
+        "TrailingDataWithFinished-Resume-Server-TLS13": "Too picky error mapping (we detect an unexpected message during parsing)"
     },
     "DisabledTests": {
         "*ML-DSA*": "Need support for the LAMPS tagged seed keys",

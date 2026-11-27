@@ -164,6 +164,11 @@ class Channel_Impl : public std::enable_shared_from_this<Channel_Impl> {
       * Additionally, anything but TLS 1.3 servers will return 0 (because they
       * don't support sending such session tickets).
       *
+      * @throws Invalid_State when the channel cannot send post-handshake
+      *                       messages either because the handshake is not yet
+      *                       complete or if a DTLS association is waiting on
+      *                       an acknowledgement for a pending KeyUpdate.
+      *
       * @returns the number of session tickets successfully sent to the client
       */
       virtual size_t send_new_session_tickets(const size_t /* tickets */) { return 0; }
@@ -171,6 +176,11 @@ class Channel_Impl : public std::enable_shared_from_this<Channel_Impl> {
       /**
       * Attempt to update the session's traffic key material
       * Note that this is possible with a TLS 1.3 channel, only.
+      *
+      * @throws Invalid_State when the channel cannot send post-handshake
+      *                       messages either because the handshake is not yet
+      *                       complete or if a DTLS association is waiting on
+      *                       an acknowledgement for a previous KeyUpdate.
       *
       * @param request_peer_update if true, require a reciprocal key update
       */
