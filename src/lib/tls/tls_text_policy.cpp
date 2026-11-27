@@ -299,10 +299,6 @@ std::vector<Group_Params> Text_Policy::read_group_list(std::string_view group_st
    for(const auto& group_name : split_on(group_str, ' ')) {
       Group_Params group_id = Group_Params::from_string(group_name).value_or(Group_Params::NONE);
 
-      if(!group_id.is_available()) {
-         continue;
-      }
-
       if(group_id == Group_Params::NONE) {
          try {
             size_t consumed = 0;
@@ -323,7 +319,8 @@ std::vector<Group_Params> Text_Policy::read_group_list(std::string_view group_st
          }
       }
 
-      if(group_id != Group_Params::NONE) {
+      // Skip a group this build cannot use, whether it was named or given as a code point
+      if(group_id != Group_Params::NONE && group_id.is_available()) {
          groups.push_back(group_id);
       }
    }

@@ -62,6 +62,7 @@ class TLS_Policy_Unit_Tests final : public Test {
          results.push_back(test_peer_key_acceptable_ecdsa(this->rng()));
          results.push_back(test_peer_key_acceptable_dh());
          results.push_back(test_key_exchange_groups_to_offer());
+         results.push_back(test_text_policy_groups_by_code_point());
          results.push_back(test_require_extended_master_secret());
          results.push_back(test_dtls_refuses_weak_ciphersuites());
          results.push_back(test_default_groups_are_available());
@@ -299,6 +300,36 @@ class TLS_Policy_Unit_Tests final : public Test {
             result.test_success("Correctly rejecting short bit DH keys");
          }
    #endif
+         return result;
+      }
+
+      static Test::Result test_text_policy_groups_by_code_point() {
+         Test::Result result("TLS Text_Policy groups given by code point");
+
+         // ffdhe2048, x25519, and a code point which is not assigned to any group
+         const uint16_t ffdhe2048 = 0x0100;
+         const uint16_t x25519 = 0x001D;
+         const uint16_t unknown = 0xFEFF;
+
+         const auto groups =
+            Botan::TLS::Text_Policy("key_exchange_groups = 0x0100 0x001D 0xFEFF").key_exchange_groups();
+
+         const auto has_group = [&](uint16_t code) {
+            for(const auto group : groups) {
+               if(group.wire_code() == code) {
+                  return true;
+               }
+            }
+            return false;
+         };
+
+         for(const uint16_t code : {ffdhe2048, x25519}) {
+            result.test_is_true("a known group is used only if it is available",
+                                has_group(code) == Botan::TLS::Group_Params(code).is_available());
+         }
+
+         result.test_is_true("an unknown group is used", has_group(unknown));
+
          return result;
       }
 
