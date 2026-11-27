@@ -324,6 +324,15 @@ class TLS_Key_Share_CH_Generation_Test final : public Text_Based_Test {
                             "Groups,Rng_Data,Expected_Content",
                             "Offered_Groups") {}
 
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
+         #if defined(BOTAN_HAS_TLS_FFDHE)
+         BOTAN_UNUSED(vars);
+         return false;
+         #else
+         return vars.get_req_str("Groups").find("ffdhe") != std::string::npos;
+         #endif
+      }
+
       Test::Result run_one_test(const std::string& extension, const VarMap& vars) override {
          Test::Result result(extension + " generation");
 

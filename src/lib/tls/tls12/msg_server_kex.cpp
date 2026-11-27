@@ -20,7 +20,9 @@
 #include <botan/internal/tls_messages_internal.h>
 #include <botan/internal/tls_reader.h>
 
-#include <botan/dh.h>
+#if defined(BOTAN_HAS_TLS_FFDHE)
+   #include <botan/dh.h>
+#endif
 
 namespace Botan::TLS {
 
@@ -45,6 +47,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
    }
 
    if(kex_algo == Kex_Algo::DH) {
+#if defined(BOTAN_HAS_TLS_FFDHE)
       const std::vector<Group_Params> dh_groups = state.client_hello().supported_dh_groups();
 
       m_shared_group = Group_Params::NONE;
@@ -88,6 +91,9 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       append_tls_length_value(m_params, dh->get_int_field("p").serialize(), 2);
       append_tls_length_value(m_params, dh->get_int_field("g").serialize(), 2);
       append_tls_length_value(m_params, dh->public_value(), 2);
+#else
+      throw Internal_Error("Server_Key_Exchange: DH key exchange is not available");
+#endif
    } else if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK) {
       const std::vector<Group_Params> ec_groups =
          groups_usable_in_version(state.client_hello().supported_ecc_curves(), Protocol_Version::TLS_V12);

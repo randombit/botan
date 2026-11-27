@@ -191,7 +191,7 @@ bool Group_Params::is_available() const {
       return EC_Group::supports_named_group(to_algorithm_spec().value());
    }
 
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+#if defined(BOTAN_HAS_TLS_FFDHE)
    if(is_dh_named_group()) {
       return true;
    }

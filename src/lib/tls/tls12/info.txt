@@ -26,7 +26,6 @@ tls_session_key.h
 </header:internal>
 
 <requires>
-eme_pkcs1
 emsa_pkcs1
 prf_tls
 rsa

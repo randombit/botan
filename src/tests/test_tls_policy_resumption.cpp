@@ -230,6 +230,7 @@ class AES256_Only_Policy final : public TLS12_Policy {
       std::vector<std::string> allowed_ciphers() const override { return {"AES-256/GCM"}; }
 };
 
+      #if defined(BOTAN_HAS_TLS_RSA_KEX)
 class Static_RSA_Kex_Policy final : public TLS12_Policy {
    public:
       std::vector<std::string> allowed_key_exchange_methods() const override { return {"RSA"}; }
@@ -243,6 +244,7 @@ class RSA_Or_ECDHE_Kex_Policy final : public TLS12_Policy {
 
       std::vector<std::string> allowed_signature_methods() const override { return {"RSA", "IMPLICIT"}; }
 };
+      #endif
 
       #if defined(BOTAN_HAS_TLS_13) && defined(BOTAN_HAS_TLS_CBC)
 class CBC_Only_Policy final : public TLS12_Policy {
@@ -373,6 +375,7 @@ class TLS12_Policy_Resumption_Tests final : public Test {
                "connection renegotiated the currently allowed cipher", renegotiated.cipher, "AES-256/GCM");
          }
 
+      #if defined(BOTAN_HAS_TLS_RSA_KEX)
          // The client must not offer resumption of a session whose ciphersuite
          // its own current policy no longer allows (e.g. after dropping a key
          // exchange method); the server would happily resume it.
@@ -405,6 +408,7 @@ class TLS12_Policy_Resumption_Tests final : public Test {
             result.test_is_true("connection renegotiated an allowed key exchange",
                                 renegotiated.kex == Botan::TLS::Kex_Algo::ECDH);
          }
+      #endif
 
       #if defined(BOTAN_HAS_TLS_13) && defined(BOTAN_HAS_TLS_CBC)
          // A stored TLS 1.3 session must not break a TLS 1.2 connection whose

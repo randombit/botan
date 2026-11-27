@@ -1,0 +1,14 @@
+<defines>
+TLS_RSA_KEX -> 20261127
+</defines>
+
+<module_info>
+name -> "TLS 1.2 RSA key exchange"
+brief -> "Static RSA key exchange for TLS 1.2"
+lifecycle -> "Deprecated"
+</module_info>
+
+<requires>
+eme_pkcs1
+rsa
+</requires>

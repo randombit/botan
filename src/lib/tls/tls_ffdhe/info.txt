@@ -1,0 +1,12 @@
+<defines>
+TLS_FFDHE -> 20261127
+</defines>
+
+<module_info>
+name -> "TLS FFDHE"
+brief -> "Finite field Diffie-Hellman key exchange in TLS"
+</module_info>
+
+<requires>
+dh
+</requires>

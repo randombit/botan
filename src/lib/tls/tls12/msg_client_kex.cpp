@@ -11,7 +11,6 @@
 #include <botan/credentials_manager.h>
 #include <botan/dl_group.h>
 #include <botan/rng.h>
-#include <botan/rsa.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_extensions.h>
 #include <botan/tls_policy.h>
@@ -23,6 +22,10 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages_internal.h>
 #include <botan/internal/tls_reader.h>
+
+#if defined(BOTAN_HAS_TLS_RSA_KEX)
+   #include <botan/rsa.h>
+#endif
 
 namespace Botan::TLS {
 
@@ -40,6 +43,8 @@ void strip_leading_zeros(secure_vector<uint8_t>& z) {
    const size_t leading_zeros = CT::count_leading_zero_bytes(z);
    z.erase(z.begin(), z.begin() + leading_zeros);
 }
+
+#if defined(BOTAN_HAS_TLS_FFDHE)
 
 /*
 * If the (p, g) pair the server sent corresponds to a known group
@@ -62,6 +67,8 @@ std::optional<DL_Group> match_well_known_dh_group(const BigInt& p, const BigInt&
 
    return std::nullopt;
 }
+
+#endif
 
 }  // namespace
 
@@ -119,6 +126,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
       }
 
       if(kex_algo == Kex_Algo::DH) {
+#if defined(BOTAN_HAS_TLS_FFDHE)
          const auto modulus = BigInt::from_bytes(reader.get_range<uint8_t>(2, 1, 65535));
          const auto generator = BigInt::from_bytes(reader.get_range<uint8_t>(2, 1, 65535));
          const std::vector<uint8_t> peer_public_value = reader.get_range<uint8_t>(2, 1, 65535);
@@ -155,6 +163,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
             state.callbacks().tls_ephemeral_key_agreement(group, *private_key, peer_public_value, rng, policy);
          strip_leading_zeros(m_pre_master);
          append_tls_length_value(m_key_material, private_key->public_value(), 2);
+#else
+         throw Internal_Error("Client_Key_Exchange: DH key exchange is not available");
+#endif
       } else if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK) {
          const uint8_t curve_type = reader.get_byte();
          if(curve_type != 3) {
@@ -223,6 +234,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          throw Unexpected_Message("No server kex message, but negotiated a key exchange that required it");
       }
 
+#if defined(BOTAN_HAS_TLS_RSA_KEX)
       if(server_public_key == nullptr) {
          throw Internal_Error("No server public key for RSA exchange");
       }
@@ -243,6 +255,10 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          throw TLS_Exception(Alert::HandshakeFailure,
                              "Expected a RSA key in server cert but got " + server_public_key->algo_name());
       }
+#else
+      BOTAN_UNUSED(server_public_key);
+      throw Internal_Error("Client_Key_Exchange: RSA key exchange is not available");
+#endif
    }
 
    state.hash().update(io.send(*this));
@@ -260,6 +276,7 @@ Client_Key_Exchange::Client_Key_Exchange(std::span<const uint8_t> contents,
    const Kex_Algo kex_algo = state.ciphersuite().kex_method();
 
    if(kex_algo == Kex_Algo::STATIC_RSA) {
+#if defined(BOTAN_HAS_TLS_RSA_KEX)
       BOTAN_ASSERT(!state.server_certs().cert_chain().empty(),
                    "RSA key exchange negotiated so server sent a certificate");
 
@@ -311,6 +328,10 @@ Client_Key_Exchange::Client_Key_Exchange(std::span<const uint8_t> contents,
       } catch(Decoding_Error&) {
          m_pre_master = rng.random_vec(expected_plaintext_size);
       }
+#else
+      BOTAN_UNUSED(server_rsa_kex_key);
+      throw Internal_Error("Client_Key_Exchange: RSA key exchange is not available");
+#endif
    } else {
       TLS_Data_Reader reader("ClientKeyExchange", contents);
 

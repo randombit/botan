@@ -2904,16 +2904,22 @@ class TLS_Unit_Tests final : public Test {
 
    #if defined(BOTAN_HAS_TLS_CBC)
          for(const bool etm_setting : {false, true}) {
+      #if defined(BOTAN_HAS_TLS_RSA_KEX)
             test_legacy_versions("AES-128 RSA", results, creds, rng, "RSA", "AES-128", "SHA-256 SHA-1", etm_setting);
+      #endif
             test_legacy_versions("AES-128 ECDH", results, creds, rng, "ECDH", "AES-128", "SHA-256 SHA-1", etm_setting);
 
       #if defined(BOTAN_HAS_DES)
+         #if defined(BOTAN_HAS_TLS_RSA_KEX)
             test_legacy_versions("3DES RSA", results, creds, rng, "RSA", "3DES", "SHA-1", etm_setting);
+         #endif
             test_legacy_versions("3DES ECDH", results, creds, rng, "ECDH", "3DES", "SHA-1", etm_setting);
       #endif
          }
 
+      #if defined(BOTAN_HAS_TLS_FFDHE)
          test_legacy_versions("AES-128 DH", results, creds, rng, "DH", "AES-128", "SHA-256");
+      #endif
 
    #endif
 
@@ -2929,7 +2935,9 @@ class TLS_Unit_Tests final : public Test {
          test_with_policy("Suite B", results, creds, {Botan::TLS::Protocol_Version::TLS_V12}, suiteb_128, rng);
    #endif
 
+   #if defined(BOTAN_HAS_TLS_RSA_KEX)
          test_legacy_versions("AES-128/GCM RSA", results, creds, rng, "RSA", "AES-128/GCM");
+   #endif
          test_modern_versions("AES-128/GCM ECDH", results, creds, rng, "ECDH", "AES-128/GCM");
 
          test_modern_versions(
@@ -3003,14 +3011,12 @@ class TLS_Unit_Tests final : public Test {
                               }});
    #endif
 
-         test_modern_versions("AES-128/GCM FFDHE-2048",
-                              results,
-                              creds,
-                              rng,
-                              "DH",
-                              "AES-128/GCM",
-                              "AEAD",
-                              {{"groups", "ffdhe/ietf/2048"}});
+   #if defined(BOTAN_HAS_TLS_FFDHE)
+         test_modern_versions("AES-128/GCM FFDHE-2048", results, creds, rng, "DH", "AES-128/GCM", "AEAD", {{
+                                 "groups",
+                                 "ffdhe/ietf/2048"
+                              }});
+   #endif
 
          test_modern_versions("AES-128/GCM with record padding",
                               results,

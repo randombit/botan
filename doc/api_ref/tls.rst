@@ -820,6 +820,9 @@ policy settings from a file.
 
      Also allowed: "RSA", "ECDHE_PSK", "PSK"
 
+     "DH" is only available if the ``tls_ffdhe`` module was enabled at
+     build time, and "RSA" only if the ``tls_rsa_kex`` module was.
+
      .. note::
 
         Static RSA ciphersuites are disabled by default since 1.11.34.

@@ -298,10 +298,9 @@ def main(args = None):
         if kex_algo in ('ECDH', 'ECDHE_PSK'):
             feat.append('ECDH')
         elif kex_algo == 'DH':
-            feat.append('DIFFIE_HELLMAN')
+            feat.append('TLS_FFDHE')
         elif kex_algo == 'STATIC_RSA':
-            feat.append('RSA')
-            feat.append('PKCSV15_ENCRYPTION_PADDING')
+            feat.append('TLS_RSA_KEX')
 
         # Authentication
         if sig_algo == 'ECDSA':

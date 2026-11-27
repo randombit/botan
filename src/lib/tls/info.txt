@@ -48,7 +48,7 @@ tls_reader.h
 aead
 aes
 asn1
-dh
+dl_group
 ecdh
 ecdsa
 gcm

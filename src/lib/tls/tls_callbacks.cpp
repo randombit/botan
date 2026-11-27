@@ -10,7 +10,6 @@
 
 #include <botan/tls_callbacks.h>
 
-#include <botan/dh.h>
 #include <botan/dl_group.h>
 #include <botan/ec_group.h>
 #include <botan/ecdh.h>
@@ -23,6 +22,10 @@
 #include <botan/x509path.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/stl_util.h>
+
+#if defined(BOTAN_HAS_TLS_FFDHE)
+   #include <botan/dh.h>
+#endif
 
 #if defined(BOTAN_HAS_X25519)
    #include <botan/x25519.h>
@@ -178,6 +181,8 @@ bool TLS::Callbacks::tls_verify_message(const Public_Key& key,
    return verifier.verify_message(msg, sig);
 }
 
+#if defined(BOTAN_HAS_TLS_FFDHE)
+
 namespace {
 
 bool is_dh_group(const std::variant<TLS::Group_Params, DL_Group>& group) {
@@ -199,8 +204,11 @@ DL_Group get_dl_group(const std::variant<TLS::Group_Params, DL_Group>& group) {
 
 }  // namespace
 
+#endif
+
 std::unique_ptr<Public_Key> TLS::Callbacks::tls_deserialize_peer_public_key(
    const std::variant<TLS::Group_Params, DL_Group>& group, std::span<const uint8_t> key_bits) {
+#if defined(BOTAN_HAS_TLS_FFDHE)
    if(is_dh_group(group)) {
       // TLS 1.2 allows specifying arbitrary DL_Group parameters in-lieu of
       // a standardized DH group identifier.
@@ -220,6 +228,7 @@ std::unique_ptr<Public_Key> TLS::Callbacks::tls_deserialize_peer_public_key(
 
       return std::make_unique<DH_PublicKey>(dl_group, Y);
    }
+#endif
 
    // The special case for TLS 1.2 with an explicit DH group definition is
    // handled above. All other cases are based on the opaque group definition.
@@ -379,10 +388,12 @@ secure_vector<uint8_t> TLS::Callbacks::tls_kem_decapsulate(TLS::Group_Params gro
 
 std::unique_ptr<PK_Key_Agreement_Key> TLS::Callbacks::tls_generate_ephemeral_key(
    const std::variant<TLS::Group_Params, DL_Group>& group, RandomNumberGenerator& rng) {
+#if defined(BOTAN_HAS_TLS_FFDHE)
    if(is_dh_group(group)) {
       const DL_Group dl_group = get_dl_group(group);
       return std::make_unique<DH_PrivateKey>(rng, dl_group);
    }
+#endif
 
    BOTAN_ASSERT_NOMSG(std::holds_alternative<TLS::Group_Params>(group));
    const auto group_params = std::get<TLS::Group_Params>(group);

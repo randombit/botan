@@ -266,7 +266,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     if target.startswith('policy-'):
         # ffi and tls are optional for bsi/fips140 - add to build to verify these work with the minimized config
-        flags += ['--module-policy=%s' % (target.replace('policy-', '')), '--enable-modules=ffi,tls12,tls13', '--disable-deprecated-features']
+        flags += ['--module-policy=%s' % (target.replace('policy-', '')), '--enable-modules=ffi,tls12,tls13,tls_ffdhe', '--disable-deprecated-features']
 
     if target in ['docs']:
         flags += ['--with-doxygen', '--with-sphinx', '--with-rst2man']

@@ -57,7 +57,8 @@ in a future major release:
 
 - Support for renegotiation in TLS v1.2
 
-- All ciphersuites using static RSA key exchange
+- All ciphersuites using static RSA key exchange. These can already be
+  removed from a build by disabling the ``tls_rsa_kex`` module.
 
 - Support for CCM-8 ciphersuites
 
